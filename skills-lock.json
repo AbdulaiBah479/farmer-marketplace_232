@@ -13,6 +13,12 @@
       "skillPath": "skills/ad-creative/SKILL.md",
       "computedHash": "822b7c608a6546680bb1389f619bcd00556974b7bc1a060b217cec94afc22ae0"
     },
+    "add-best-practice": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/add-best-practice/SKILL.md",
+      "computedHash": "a70e852425711f6cf63be3e8fd3898cee8fddfc4c16f6f561151885b8e10eae6"
+    },
     "ads": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
@@ -97,6 +103,12 @@
       "skillPath": "plugins/cwc-makers/skills/cardputer-buddy/SKILL.md",
       "computedHash": "769de30bec3e3f88898d070b96e1eeb77bc5df8816994b399de317e68abec49e"
     },
+    "check-upstream-flake": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/check-upstream-flake/SKILL.md",
+      "computedHash": "c5e5fa71918759b0c4f8a7c0d5f839f76c2b1c95723054ce89929ccbcca363fe"
+    },
     "claude-automation-recommender": {
       "source": "anthropics/claude-plugins-official",
       "sourceType": "github",
@@ -108,6 +120,12 @@
       "sourceType": "github",
       "skillPath": "plugins/claude-md-management/skills/claude-md-improver/SKILL.md",
       "computedHash": "d6707ed0467d9664d0f9d2c44724c8fb1814475ec6d3c62a5d54bbbe807e0775"
+    },
+    "clean-branches": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/clean-branches/SKILL.md",
+      "computedHash": "1afad0ca63892b9341d4c90f13bcd413a47a597fb52b28458ca7b22907cb2692"
     },
     "command-development": {
       "source": "anthropics/claude-plugins-official",
@@ -133,6 +151,18 @@
       "skillPath": "skills/find-skills/SKILL.md",
       "computedHash": "d31e234f0c90694a670222cdd1dafa853e051d7066beda389f1097c22dadd461"
     },
+    "fix-bp-docs": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/fix-bp-docs/SKILL.md",
+      "computedHash": "9dc5ce8c63a1c28a6f5e726fd40f3d73f899f5b60898d9cfb4609302fb83aab5"
+    },
+    "force-push-downstream": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/force-push-downstream/SKILL.md",
+      "computedHash": "af8666ac162b243122efc6feaabb0f838fd37cbaaa47110d6bf1bc1274683212"
+    },
     "frontend-design": {
       "source": "anthropics/claude-plugins-official",
       "sourceType": "github",
@@ -150,6 +180,12 @@
       "sourceType": "github",
       "skillPath": "skills/images-search/SKILL.md",
       "computedHash": "e3beb91731658260cb49da1a7e0bc3f79aedae72a45c9ac5a99c327ecb062f5e"
+    },
+    "impl-review": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/impl-review/SKILL.md",
+      "computedHash": "6dde180d2f77afefac16a0139d1d253a87260788da537624484d3ea59e18b363"
     },
     "improve-codebase-architecture": {
       "source": "mattpocock/skills",
@@ -180,6 +216,12 @@
       "sourceType": "github",
       "skillPath": "plugins/cwc-makers/skills/m5-onboard/SKILL.md",
       "computedHash": "213795eb11869200c6fdd74c1376adedaf1034200efe0f208d19f20cfda7f9ce"
+    },
+    "make-ci-green": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/make-ci-green/SKILL.md",
+      "computedHash": "b45ce55d34459f2807e294685dc1a0fa01bcdb6431136e4d9d6cfcf50cfbf5db"
     },
     "math-olympiad": {
       "source": "anthropics/claude-plugins-official",
@@ -217,11 +259,47 @@
       "skillPath": "plugins/plugin-dev/skills/plugin-structure/SKILL.md",
       "computedHash": "1fd8152a20ae6b51e75064619cdf87db5d487c8514506774c66d2708001148a9"
     },
+    "pr": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/pr/SKILL.md",
+      "computedHash": "1309dc21a083af98b605d0d2768e2c49e1bb54840dc9839064c527d97d4b82b1"
+    },
+    "preflight": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/preflight/SKILL.md",
+      "computedHash": "e99df30b20b7d89f4e7cc2093fccba5ab69e1990967718caa5f48e5ddd755a63"
+    },
     "programmatic-seo": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
       "skillPath": "skills/programmatic-seo/SKILL.md",
       "computedHash": "0bbdcbacfbe46fd78d774041ee49afd313505bb435b775dc246f4b8e6981d797"
+    },
+    "prs-reviewed": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/prs-reviewed/SKILL.md",
+      "computedHash": "6b50e533ed0217bee0ecb8f42dfab587faac2ad5c757c3e69e1b678e3b31588d"
+    },
+    "rebase-downstream": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/rebase-downstream/SKILL.md",
+      "computedHash": "54f7643c78fe249a56364b9bbb4fcb40fca9c9b6658c0dd6a10abf8f8f03e5be"
+    },
+    "review": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/review/SKILL.md",
+      "computedHash": "7c3ca33ad5caa5af8df7ef25a34d73bf361390b19e310f51e8f32cca184f1f68"
+    },
+    "review-prs": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/review-prs/SKILL.md",
+      "computedHash": "aee4d32925cdf7af6fd16fe01217725db0924cc2099e79e69bf3b29cf138b872"
     },
     "seo-audit": {
       "source": "coreyhaines31/marketingskills",
@@ -258,6 +336,12 @@
       "sourceType": "github",
       "skillPath": "skills/suggest/SKILL.md",
       "computedHash": "2a1764a28f1fca6d65e1b17dd7dcfdb44d40058bd5fe8675caf146e1cdbc822b"
+    },
+    "top-crashers": {
+      "source": "brave/brave-core",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/top-crashers/SKILL.md",
+      "computedHash": "e69788a6f0e713300691f4d3493e82c0371aee6712cd396c7b68308844d5aac4"
     },
     "videos-search": {
       "source": "brave/brave-search-skills",

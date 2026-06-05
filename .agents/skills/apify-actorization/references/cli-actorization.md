@@ -1,8 +1,8 @@
-# CLI-based Actorization
+# CLI-Based Actorization
 
 For languages without an SDK (Go, Rust, Java, etc.), create a wrapper script that uses the Apify CLI.
 
-## Create wrapper script
+## Create Wrapper Script
 
 Create `start.sh` in project root:
 
@@ -33,12 +33,12 @@ Reference the [cli-start template Dockerfile](https://github.com/apify/actor-tem
 ```dockerfile
 FROM apify/actor-node:20
 
-# Install ubi for easy GitHub release installation
-RUN curl --silent --location \
-    https://raw.githubusercontent.com/houseabsolute/ubi/master/bootstrap/bootstrap-ubi.sh | sh
+# Install ubi from a package source or a verified release artifact
+# Example: use your base image package manager or vendor a pinned binary in the build context
+# RUN apt-get update && apt-get install -y ubi
 
 # Install your CLI tool from GitHub releases (example)
-# RUN ubi --project your-org/your-tool --in /usr/local/bin
+# RUN install -m 0755 ./vendor/your-tool /usr/local/bin/your-tool
 
 # Or install apify-cli and jq manually
 RUN npm install -g apify-cli
@@ -57,9 +57,9 @@ RUN chmod +x start.sh
 CMD ["./start.sh"]
 ```
 
-## Testing CLI-based Actors
+## Testing CLI-Based Actors
 
-For CLI-based Actors (shell wrapper scripts), you may need to test the underlying application directly with mock input, as `apify run` requires a Node.js or Python entry point.
+For CLI-based actors (shell wrapper scripts), you may need to test the underlying application directly with mock input, as `apify run` requires a Node.js or Python entry point.
 
 Test your wrapper script locally:
 
@@ -71,7 +71,7 @@ export INPUT='{"myParam": "test-value"}'
 ./start.sh
 ```
 
-## CLI commands reference
+## CLI Commands Reference
 
 | Command | Description |
 |---------|-------------|

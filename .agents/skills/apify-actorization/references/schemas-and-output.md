@@ -1,6 +1,6 @@
-# Schemas and output configuration
+# Schemas and Output Configuration
 
-## Input schema
+## Input Schema
 
 Map your application's inputs to `.actor/input_schema.json`. Validate against the JSON Schema from the `@apify/json_schemas` npm package (`input.schema.json`).
 
@@ -29,23 +29,23 @@ Map your application's inputs to `.actor/input_schema.json`. Validate against th
 }
 ```
 
-### Mapping guidelines
+### Mapping Guidelines
 
 - Command-line arguments → input schema properties
 - Environment variables → input schema or Actor env vars in actor.json
 - Config files → input schema with object/array types
 - Flatten deeply nested structures for better UX
 
-## Output schema
+## Output Schema
 
 Define output structure in `.actor/output_schema.json`. Validate against the JSON Schema from the `@apify/json_schemas` npm package (`output.schema.json`).
 
-### For table-like data (multiple items)
+### For Table-Like Data (Multiple Items)
 
 - Use `Actor.pushData()` (JS) or `Actor.push_data()` (Python)
 - Each item becomes a row in the dataset
 
-### For single files or blobs
+### For Single Files or Blobs
 
 - Use key-value store: `Actor.setValue()` / `Actor.set_value()`
 - Get the public URL and include it in the dataset:
@@ -62,7 +62,7 @@ const publicUrl = `https://api.apify.com/v2/key-value-stores/${storeInfo.id}/rec
 await Actor.pushData({ reportUrl: publicUrl });
 ```
 
-### For multiple files with a common prefix (collections)
+### For Multiple Files with a Common Prefix (Collections)
 
 ```javascript
 // Store multiple files with a prefix
@@ -72,7 +72,7 @@ for (const [name, data] of files) {
 // Files are accessible at: .../records/screenshots%2F{name}
 ```
 
-## Actor configuration (actor.json)
+## Actor Configuration (actor.json)
 
 Configure `.actor/actor.json`. Validate against the JSON Schema from the `@apify/json_schemas` npm package (`actor.schema.json`).
 
@@ -81,7 +81,7 @@ Configure `.actor/actor.json`. Validate against the JSON Schema from the `@apify
     "actorSpecification": 1,
     "name": "my-actor",
     "title": "My Actor",
-    "description": "Brief description of what the Actor does",
+    "description": "Brief description of what the actor does",
     "version": "1.0.0",
     "meta": {
         "templateId": "ts_empty",
@@ -94,9 +94,9 @@ Configure `.actor/actor.json`. Validate against the JSON Schema from the `@apify
 
 **Important:** Fill in the `generatedBy` property with the tool/model used.
 
-## State management
+## State Management
 
-### Request queue - for pausable task processing
+### Request Queue - For Pausable Task Processing
 
 The request queue works for any task processing, not just web scraping. Use a dummy URL with custom `uniqueKey` and `userData` for non-URL tasks:
 
@@ -129,7 +129,7 @@ while ((request = await requestQueue.fetchNextRequest())) {
 }
 ```
 
-### Key-value store - for checkpoint state
+### Key-Value Store - For Checkpoint State
 
 ```javascript
 // Save state

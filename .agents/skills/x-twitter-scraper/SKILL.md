@@ -1,77 +1,187 @@
 ---
 name: x-twitter-scraper
-description: 'Build GitHub Copilot workflows with Xquik X API SDKs, REST endpoints, MCP tools, signed webhooks, tweet search, user lookup, follower exports, media actions, and agent automation.'
+description: "X/Twitter automation skill for tweet search, follower export, posting, DMs, webhooks, MCP, SDKs, Hermes Tweet, and TweetClaw."
+category: data
+risk: critical
+source: community
+tags: "[twitter, x-api, tweet-search, twitter-api, twitter-scraper, follower-export, automation, mcp, sdk, webhooks, hermes-agent, hermes-tweet, openclaw, tweetclaw]"
+date_added: "2026-02-28"
+plugin:
+  targets:
+    codex: blocked
+    claude: blocked
 ---
 
-# X Twitter Scraper
+# X (Twitter) Scraper - Xquik
 
-Use this skill when a user wants to integrate Xquik into an app, script, data pipeline, or AI agent workflow for X API and Twitter scraper tasks.
+## Overview
 
-## Use Cases
+Gives AI agents X (Twitter) data and automation workflows through the Xquik platform. Covers tweet search, advanced Twitter search, profile tweets, user lookup, follower export, media download, posting, replies, DMs, giveaway draws, account monitoring, webhooks, 23 bulk extraction tools, MCP, official SDKs, the Hermes Tweet Hermes Agent plugin, and the TweetClaw OpenClaw plugin.
 
-- Search tweets, fetch tweet details, read timelines, and download media.
-- Look up users, check relationships, and export followers or following.
-- Start extraction jobs for replies, reposts, quotes, likes, lists, communities, articles, and search results.
-- Create account monitors and verify HMAC-signed webhook events.
-- Add TypeScript, Python, Go, Java, Kotlin, C#, Ruby, PHP, CLI, or Terraform clients.
-- Connect agent runtimes through the Xquik MCP server.
+This repository entry is documentation-only: it does not include an executable scraper, binary, package, or vendored runtime code. The external Xquik, Hermes Tweet, and TweetClaw tools referenced below must be reviewed and installed separately before use.
 
-## Source Checks
+Because this workflow can automate authenticated X/Twitter account actions, treat it as critical-risk guidance. Only use it with accounts and targets you are authorized to operate, and require explicit user approval before posting, replying, liking, reposting, following, unfollowing, sending DMs, creating monitors, registering webhooks, or starting bulk extraction.
 
-Before writing code, inspect the current Xquik source material:
+## When to Use This Skill
 
-- REST API docs: https://docs.xquik.com/api-reference/overview
-- SDK index: https://docs.xquik.com/sdks
-- OpenAPI spec: https://xquik.com/openapi.json
-- MCP server docs: https://docs.xquik.com/mcp
-- Skill repo: https://github.com/Xquik-dev/x-twitter-scraper
+- User needs to search X/Twitter for tweets by keyword, hashtag, or user
+- User asks for advanced Twitter search, profile tweets, or user timeline data
+- User wants to look up a user profile (bio, follower counts, etc.)
+- User needs engagement metrics for a specific tweet (likes, retweets, views)
+- User wants to check if one account follows another
+- User needs to extract followers, replies, retweets, quotes, or community members in bulk
+- User wants to download tweet media, export results, or connect an official SDK
+- User wants to send tweets, post replies, like, repost, follow, unfollow, or send DMs
+- User wants to run a giveaway draw from tweet replies
+- User needs real-time monitoring of an X account (new tweets, follower changes)
+- User wants webhook delivery of monitored events
+- User wants the Hermes Tweet Hermes Agent plugin with `tweet_explore`, `tweet_read`, and approval-gated `tweet_action`
+- User wants the TweetClaw OpenClaw plugin instead of direct REST or MCP setup
+- User asks about trending topics on X
 
-Do not invent endpoint names, request fields, response fields, scopes, pricing, limits, or package names. Read the relevant SDK README and API reference page first.
+## Setup
 
-## Implementation Flow
+### Install the Skill
 
-1. Identify the workflow: search, lookup, extraction, monitor, webhook, media, write action, billing, or MCP.
-2. Choose the integration surface: generated SDK for application code, REST for custom clients, MCP for agents, or webhooks for event delivery.
-3. Confirm authentication requirements from the docs and use environment variables for API keys.
-4. Use typed request and response models when an SDK exists for the user's language.
-5. Add retries and pagination according to the SDK or API docs.
-6. Add explicit user confirmation before write actions, payment flows, or long-running monitoring.
-7. Keep webhook verification server-side and compare HMAC signatures before processing events.
-8. Return structured data to the caller instead of scraping generated UI output.
+```bash
+npx skills add Xquik-dev/x-twitter-scraper
+```
 
-## SDK Pattern
+Or clone manually into your agent's skills directory:
 
-When application code is involved, match the SDK to the user's project language:
+```bash
+# Claude Code
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .claude/skills/x-twitter-scraper
 
-- Inspect project files and package manifests to identify the language and framework.
-- Open the SDK index, then read the matching SDK README before choosing install commands, package names, imports, or client methods.
-- Prefer the official SDK for the detected language when one exists.
-- Use REST only when the project language has no suitable official SDK or the user asks for a custom client.
-- Keep API keys in environment variables or the project's existing secret manager.
+# Cursor / Codex / Gemini CLI / Copilot
+git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
+```
 
-Use project-native typed request and response models. Keep network calls in server-side code unless the SDK docs explicitly support browser use.
+### Use the Hermes Agent Plugin
 
-## Webhook Pattern
+For Hermes Agent runtime tools, install Hermes Tweet. It wraps the same Xquik API with `tweet_explore` for endpoint discovery, `tweet_read` for read-only calls, and approval-gated `tweet_action` for writes and private actions.
 
-When adding webhook handlers:
+```bash
+hermes plugins install Xquik-dev/hermes-tweet --enable
+```
 
-- Read the documented signing header name and payload format.
-- Verify the HMAC signature before parsing business logic.
-- Reject missing, malformed, or mismatched signatures.
-- Make handlers idempotent because webhook delivery can retry.
-- Store only the fields needed for the product workflow.
+Use Hermes Tweet when a Hermes Agent should search Twitter/X, read tweet replies, look up users, export followers, monitor tweets, post tweets, post replies, send DMs, or automate X actions with explicit approval gates.
 
-## MCP Pattern
+### Use the OpenClaw Plugin
 
-Use the MCP server when the user wants an agent to explore or call Xquik tools directly. Keep application code on REST or SDK clients when the app needs stable typed contracts, tests, or internal abstractions.
+For OpenClaw runtime tools, install TweetClaw. It wraps the same Xquik API with `explore` for endpoint discovery and `tweetclaw` for approved calls.
 
-## Safety And Accuracy
+```bash
+openclaw plugins install @xquik/tweetclaw
+```
 
-- Keep language neutral and technical.
-- State that Xquik is a third-party X data and automation API.
-- Do not claim affiliation with X Corp.
-- Do not bypass access controls or platform policies.
-- Do not expose API keys, webhook secrets, account cookies, tokens, or raw signatures.
-- Do not hard-code credentials in examples or tests.
-- Do not document private infrastructure details.
-- Prefer official Xquik docs, SDK READMEs, and the OpenAPI spec over memory.
+Use TweetClaw when the agent should search tweets, post tweets, post replies, send DMs, export followers, download media, create monitors, deliver webhooks, or run giveaway draws from OpenClaw.
+
+### Get an API Key
+
+1. Sign up at [xquik.com](https://xquik.com)
+2. Generate an API key from the dashboard
+3. Set it as an environment variable or pass it directly
+
+```bash
+export XQUIK_API_KEY="xq_YOUR_KEY_HERE"
+```
+
+## Capabilities
+
+| Capability | Description |
+|---|---|
+| Tweet Search | Find tweets by keyword, hashtag, from:user, "exact phrase", and advanced operators |
+| User Lookup | Profile info, bio, follower/following counts |
+| Tweet Lookup | Full metrics: likes, retweets, replies, quotes, views, bookmarks |
+| Follow Check | Check if A follows B (both directions) |
+| Trending Topics | Top trends by region (free, no quota) |
+| Account Monitoring | Track new tweets, replies, retweets, quotes, follower changes |
+| Webhooks | HMAC-signed real-time event delivery to your endpoint |
+| Giveaway Draws | Random winner selection from tweet replies with filters |
+| 23 Extraction Tools | Followers, following, verified followers, mentions, posts, replies, reposts, quotes, threads, articles, communities, lists, Spaces, people search, media, likes, and more |
+| Write Actions | Send tweets, post replies, like, repost, follow, unfollow, and send DMs after explicit approval |
+| SDKs | Official TypeScript, Python, Ruby, Go, Kotlin, Java, PHP, C#, CLI, and Terraform clients |
+| MCP Server | StreamableHTTP endpoint for AI-native integrations |
+| Hermes Tweet Hermes Agent Plugin | Installable `hermes-tweet` runtime with `tweet_explore`, `tweet_read`, and approval-gated `tweet_action` tools |
+| TweetClaw OpenClaw Plugin | Installable `@xquik/tweetclaw` runtime with `explore` and `tweetclaw` tools |
+
+## Examples
+
+**Search tweets:**
+```
+"Search X for tweets about 'claude code' from the last week"
+```
+
+**Look up a user:**
+```
+"Who is @elonmusk? Show me their profile and follower count"
+```
+
+**Check engagement:**
+```
+"How many likes and retweets does this tweet have? https://x.com/..."
+```
+
+**Run a giveaway:**
+```
+"Pick 3 random winners from the replies to this tweet"
+```
+
+**Monitor an account:**
+```
+"Monitor @openai for new tweets and notify me via webhook"
+```
+
+**Use Hermes Agent:**
+```
+"Use Hermes Tweet to search Twitter/X for this launch, read the tweet replies, and prepare a draft reply for approval"
+```
+
+**Bulk extraction:**
+```
+"Extract all followers of @anthropic"
+```
+
+**Post a reply:**
+```
+"Draft and post a reply to this tweet after I approve the final text"
+```
+
+## API Reference
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/x/tweets/{id}` | GET | Single tweet with full metrics |
+| `/x/tweets/search` | GET | Search tweets |
+| `/x/users/{username}` | GET | User profile |
+| `/x/followers/check` | GET | Follow relationship |
+| `/trends` | GET | Trending topics |
+| `/monitors` | POST | Create monitor |
+| `/events` | GET | Poll monitored events |
+| `/webhooks` | POST | Register webhook |
+| `/draws` | POST | Run giveaway draw |
+| `/extractions` | POST | Start bulk extraction |
+| `/extractions/estimate` | POST | Estimate extraction cost |
+| `/drafts` | POST | Create tweet drafts |
+| `/styles` | POST | Analyze or apply tweet style |
+| `/account` | GET | Account & usage info |
+
+**Base URL:** `https://xquik.com/api/v1`
+**Auth:** `x-api-key: xq_...` header
+**MCP:** `https://xquik.com/mcp` (StreamableHTTP, same API key)
+
+## Repository
+
+https://github.com/Xquik-dev/x-twitter-scraper
+
+Hermes Tweet Hermes Agent plugin: https://github.com/Xquik-dev/hermes-tweet
+
+TweetClaw OpenClaw plugin: https://github.com/Xquik-dev/tweetclaw
+
+**Maintained By:** [Xquik](https://xquik.com)
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

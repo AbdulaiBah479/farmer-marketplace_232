@@ -1,11 +1,18 @@
 ---
 name: apify-actor-development
-description: Develop, debug, and deploy Apify Actors - serverless cloud programs for web scraping, automation, and data processing. Use when creating new Actors, modifying existing ones, or troubleshooting Actor code.
+description: "Important: Before you begin, fill in the generatedBy property in the meta section of .actor/actor.json. Replace it with the tool and model you're currently using, such as \"Claude Code with Claude Sonnet 4.5\". This helps Apify monitor and improve AGENTS.md for specific AI tools and models."
+risk: unknown
+source: community
 ---
 
-# Apify Actor development
+# Apify Actor Development
 
 **Important:** Before you begin, fill in the `generatedBy` property in the meta section of `.actor/actor.json`. Replace it with the tool and model you're currently using, such as "Claude Code with Claude Sonnet 4.5". This helps Apify monitor and improve AGENTS.md for specific AI tools and models.
+
+## When to Use
+- You need to create, modify, or debug an Apify Actor project.
+- The task involves choosing an Apify template, wiring actor inputs/outputs, or implementing actor runtime logic.
+- You need safe setup guidance for `apify` CLI authentication, project bootstrap, or deployment workflow.
 
 ## What are Apify Actors?
 
@@ -18,9 +25,9 @@ Actors are serverless programs inspired by the UNIX philosophy - programs that d
 - Can run from seconds to hours or even indefinitely
 - Persist state and can be restarted
 
-## Prerequisites and setup (mandatory)
+## Prerequisites & Setup (MANDATORY)
 
-Before creating or modifying Actors, verify that `apify` CLI is installed `apify --help`.
+Before creating or modifying actors, verify that `apify` CLI is installed `apify --help`.
 
 If it is not installed, use one of these methods (listed in order of preference):
 
@@ -31,8 +38,8 @@ npm install -g apify-cli
 # Or (Mac): brew install apify-cli
 ```
 
-> **Security note:** Do NOT install the CLI by piping remote scripts to a shell
-> (e.g. `curl … | bash` or `irm … | iex`). Always use a package manager.
+> **Security note:** Do NOT install the CLI by piping remote scripts directly
+> into a shell. Always use a package manager.
 
 When the apify CLI is installed, check that it is logged in with:
 
@@ -40,13 +47,17 @@ When the apify CLI is installed, check that it is logged in with:
 apify info  # Should return your username
 ```
 
-If not logged in, authenticate using OAuth (opens browser):
+If it is not logged in, check if the `APIFY_TOKEN` environment variable is defined (if not, ask the user to generate one on https://console.apify.com/settings/integrations and then define `APIFY_TOKEN` with it).
+
+Then authenticate using one of these methods:
 
 ```bash
+# Option 1 (preferred): The CLI automatically reads APIFY_TOKEN from the environment.
+# Just ensure the env var is exported and run any apify command — no explicit login needed.
+
+# Option 2: Interactive login (prompts for token without exposing it in shell history)
 apify login
 ```
-
-If browser login isn't available (headless environment or CI), the CLI automatically reads `APIFY_TOKEN` from the environment. Ensure the env var is exported and run any apify command - no explicit login needed. If the user doesn't have a token, generate one at https://console.apify.com/settings/integrations.
 
 > **Security note:** Avoid passing tokens as command-line arguments (e.g. `apify login -t <token>`).
 > Arguments are visible in process listings and may be recorded in shell history.
@@ -54,27 +65,27 @@ If browser login isn't available (headless environment or CI), the CLI automatic
 > Never log, print, or embed `APIFY_TOKEN` in source code or configuration files.
 > Use a token with the minimum required permissions (scoped token) and rotate it periodically.
 
-## Template selection
+## Template Selection
 
-**IMPORTANT:** Before starting Actor development, always ask the user which programming language they prefer:
+**IMPORTANT:** Before starting actor development, always ask the user which programming language they prefer:
 - **JavaScript** - Use `apify create <actor-name> -t project_empty`
 - **TypeScript** - Use `apify create <actor-name> -t ts_empty`
 - **Python** - Use `apify create <actor-name> -t python-empty`
 
 Use the appropriate CLI command based on the user's language choice. Additional packages (Crawlee, Playwright, etc.) can be installed later as needed.
 
-## Quick start workflow
+## Quick Start Workflow
 
-1. **Create Actor project** - Run the appropriate `apify create` command based on user's language preference (see Template selection above)
+1. **Create actor project** - Run the appropriate `apify create` command based on user's language preference (see Template Selection above)
 2. **Install dependencies** (verify package names match intended packages before installing)
    - JavaScript/TypeScript: `npm install` (uses `package-lock.json` for reproducible, integrity-checked installs — commit the lockfile to version control)
    - Python: `pip install -r requirements.txt` (pin exact versions in `requirements.txt`, e.g. `crawlee==1.2.3`, and commit the file to version control)
-3. **Implement logic** - Write the Actor code in `src/main.py`, `src/main.js`, or `src/main.ts`
+3. **Implement logic** - Write the actor code in `src/main.py`, `src/main.js`, or `src/main.ts`
 4. **Configure schemas** - Update input/output schemas in `.actor/input_schema.json`, `.actor/output_schema.json`, `.actor/dataset_schema.json`
-5. **Configure platform settings** - Update `.actor/actor.json` with Actor metadata (see [references/actor-json.md](references/actor-json.md))
-6. **Write documentation** - Create comprehensive README.md for the marketplace (see [references/actor-readme.md](references/actor-readme.md) — this is mandatory, not optional)
-7. **Test locally** - Run `apify run` to verify functionality (see Local testing section below)
-8. **Deploy** - Run `apify push` to deploy the Actor on the Apify platform (Actor name is defined in `.actor/actor.json`)
+5. **Configure platform settings** - Update `.actor/actor.json` with actor metadata (see [references/actor-json.md](references/actor-json.md))
+6. **Write documentation** - Create comprehensive README.md for the marketplace
+7. **Test locally** - Run `apify run` to verify functionality (see Local Testing section below)
+8. **Deploy** - Run `apify push` to deploy the actor on the Apify platform (actor name is defined in `.actor/actor.json`)
 
 ## Security
 
@@ -87,11 +98,11 @@ Use the appropriate CLI command based on the user's language choice. Additional 
 - **Review dependencies before installing** — When adding packages with `npm install` or `pip install`, verify the package name and publisher. Typosquatting is a common supply-chain attack vector. Prefer well-known, actively maintained packages.
 - **Pin versions and use lockfiles** — Always commit `package-lock.json` (Node.js) or pin exact versions in `requirements.txt` (Python). Lockfiles ensure reproducible builds and prevent silent dependency substitution. Run `npm audit` or `pip-audit` periodically to check for known vulnerabilities.
 
-## Best practices
+## Best Practices
 
 **✓ Do:**
-- Use `apify run` to test Actors locally (configures Apify environment and storage)
-- Use Apify SDK (`apify`) for code running on the Apify platform
+- Use `apify run` to test actors locally (configures Apify environment and storage)
+- Use Apify SDK (`apify`) for code running ON Apify platform
 - Validate input early with proper error handling and fail gracefully
 - Use CheerioCrawler for static HTML (10x faster than browsers)
 - Use PlaywrightCrawler only for JavaScript-heavy sites
@@ -107,8 +118,8 @@ Use the appropriate CLI command based on the user's language choice. Additional 
 - Implement readiness probe handler (required if your Actor uses standby mode)
 
 **✗ Don't:**
-- Use `npm start`, `npm run start`, `npx apify run`, or similar commands to run Actors (use `apify run` instead)
-- Assume local storage from `apify run` is pushed to or visible in Apify Console — it is local-only; deploy with `apify push` and run on the platform to see results in Apify Console
+- Use `npm start`, `npm run start`, `npx apify run`, or similar commands to run actors (use `apify run` instead)
+- Assume local storage from `apify run` is pushed to or visible in the Apify Console — it is local-only; deploy with `apify push` and run on the platform to see results in the Console
 - Rely on `Dataset.getInfo()` for final counts on Cloud
 - Use browser crawlers when HTTP/Cheerio works
 - Hard code values that should be in input schema or environment variables
@@ -126,57 +137,22 @@ Use the appropriate CLI command based on the user's language choice. Additional 
 
 See [references/logging.md](references/logging.md) for complete logging documentation including available log levels and best practices for JavaScript/TypeScript and Python.
 
+Check `usesStandbyMode` in `.actor/actor.json` - only implement if set to `true`.
+
 ## Commands
 
 ```bash
-# Bootstrap & local development
-apify create [name]                    # Create new Actor project from a template
-apify init                             # Initialize Actor in current directory
-apify run                              # Run Actor locally with simulated platform env
-apify run --purge                      # Run after clearing previous local storage
-apify validate-schema                  # Validate .actor/input_schema.json
-
-# Authentication & account
-apify login                            # Authenticate account (token stored in ~/.apify)
-apify logout                           # Remove stored credentials
-apify info                             # Print currently authenticated account info
-
-# Deployment & remote execution
-apify push                             # Deploy Actor to platform per .actor/actor.json
-apify pull <actor>                     # Download Actor code from the platform
-apify call <actor>                     # Execute Actor remotely on the platform
-apify actors build <actor>             # Create a new build of an Actor
-apify runs ls                          # List recent runs
-
-# Discovery (search Apify Store for community Actors)
-apify actors search "<query>" --user-agent <your-agent-name>
-apify actors info <actor>              # Details about a specific Actor
-
-# Secrets (referenced from actor.json via "@mySecret")
-apify secrets add <name> <value>       # Store a secret locally; uploaded on push
-apify secrets ls                       # List stored secret keys
-
-# Direct API access
-apify api <endpoint>                   # Authenticated HTTP request to Apify API
-
-# Help
-apify help                             # List all commands
-apify <command> --help                 # Detailed help for a specific command
+apify run          # Run Actor locally
+apify login        # Authenticate account
+apify push         # Deploy to Apify platform (uses name from .actor/actor.json)
+apify help         # List all commands
 ```
 
-Note: If no dedicated Actor exists for your target, search Apify Store for community options with `apify actors search "<query>" --user-agent <your-agent-name>` before building from scratch.
+**IMPORTANT:** Always use `apify run` to test actors locally. Do not use `npm run start`, `npm start`, `yarn start`, or other package manager commands - these will not properly configure the Apify environment and storage.
 
-Tip: Inside a running Actor, prefer the SDK (`Actor.getInput()` / `Actor.get_input()`, `Actor.pushData()` / `Actor.push_data()`, `Actor.setValue()` / `Actor.set_value()`) over the equivalent `apify actor` runtime subcommands.
+## Local Testing
 
-**IMPORTANT:** Always use `apify run` to test Actors locally. Do not use `npm run start`, `npm start`, `yarn start`, or other package manager commands - these will not properly configure the Apify environment and storage.
-
-## Apify platform environment
-
-When the Actor runs on the Apify platform, the API token is automatically available via the `APIFY_TOKEN` environment variable (note: the variable is `APIFY_TOKEN`, not `APIFY_API_TOKEN`). The Apify SDK reads it automatically, so you do not need to pass it explicitly. Locally, run `apify login` once and the SDK will use your stored credentials.
-
-## Local testing
-
-When testing an Actor locally with `apify run`, provide input data by creating a JSON file at:
+When testing an actor locally with `apify run`, provide input data by creating a JSON file at:
 
 ```
 storage/key_value_stores/default/INPUT.json
@@ -184,21 +160,17 @@ storage/key_value_stores/default/INPUT.json
 
 This file should contain the input parameters defined in your `.actor/input_schema.json`. The actor will read this input when running locally, mirroring how it receives input on the Apify platform.
 
-**IMPORTANT - Local storage is NOT synced to Apify Console:**
+**IMPORTANT - Local storage is NOT synced to the Apify Console:**
 - Running `apify run` stores all data (datasets, key-value stores, request queues) **only on your local filesystem** in the `storage/` directory.
 - This data is **never** automatically uploaded or pushed to the Apify platform. It exists only on your machine.
-- To verify results on Apify Console, you must deploy the Actor with `apify push` and then run it on the platform.
-- Do **not** rely on checking Apify Console to verify results from local runs — instead, inspect the local `storage/` directory or check the Actor's log output.
+- To verify results on the Apify Console, you must deploy the Actor with `apify push` and then run it on the platform.
+- Do **not** rely on checking the Apify Console to verify results from local runs — instead, inspect the local `storage/` directory or check the Actor's log output.
 
-## Standby mode
+## Standby Mode
 
-Standby mode enables Actors to work as API servers - they remain ready in the background to handle HTTP requests.
+See [references/standby-mode.md](references/standby-mode.md) for complete standby mode documentation including readiness probe implementation for JavaScript/TypeScript and Python.
 
-**When to use Standby mode:** Use Standby when the Actor must handle interactive, real-time HTTP requests — API endpoints, webhook receivers, real-time data lookups, MCP servers, or scraping APIs serving on-demand single-URL requests.
-
-When building a Standby Actor, set `usesStandbyMode: true` in `.actor/actor.json` and implement an HTTP server. See [references/standby-mode.md](references/standby-mode.md) for configuration, environment variables, complete code examples, and operational limits.
-
-## Project structure
+## Project Structure
 
 ```
 .actor/
@@ -214,68 +186,34 @@ storage/                # Local-only storage (NOT synced to Apify Console)
 Dockerfile              # Container image definition
 ```
 
-## Actor configuration
+## Actor Configuration
 
 See [references/actor-json.md](references/actor-json.md) for complete actor.json structure and configuration options.
 
-## Input schema
+## Input Schema
 
 See [references/input-schema.md](references/input-schema.md) for input schema structure and examples.
 
-## Output schema
+## Output Schema
 
 See [references/output-schema.md](references/output-schema.md) for output schema structure, examples, and template variables.
 
-## Dataset schema
+## Dataset Schema
 
 See [references/dataset-schema.md](references/dataset-schema.md) for dataset schema structure, configuration, and display properties.
 
-## Key-value store schema
+## Key-Value Store Schema
 
 See [references/key-value-store-schema.md](references/key-value-store-schema.md) for key-value store schema structure, collections, and configuration.
 
-## Actor README
+## Apify MCP Tools
 
-**IMPORTANT:** Always generate a README.md as part of Actor development. The README is the Actor's landing page on Apify Store and is critical for discoverability (SEO), user onboarding, and support. Do not consider an Actor complete without a proper README.
-
-See [references/actor-readme.md](references/actor-readme.md) for the required structure, SEO best practices, and content guidelines. Also review these top Actors for best practices:
-
-- [Instagram Scraper](https://apify.com/apify/instagram-scraper)
-- [Google Maps Scraper](https://apify.com/compass/crawler-google-places)
-
-## MCP tools
-
-### Apify MCP
-
-If the Apify MCP server is configured, use these tools for documentation:
+If MCP server is configured, use these tools for documentation:
 
 - `search-apify-docs` - Search documentation
 - `fetch-apify-docs` - Get full doc pages
 
 Otherwise, the MCP Server url: `https://mcp.apify.com/?tools=docs`.
-
-### Playwright MCP (debugging)
-
-The Playwright MCP server is a useful tool for debugging Actors that interact with the web - it lets the agent drive a real browser to inspect pages, capture selectors, and reproduce issues.
-
-Install with the Claude Code CLI:
-
-```bash
-claude mcp add playwright npx @playwright/mcp@latest
-```
-
-Or add it manually to your MCP config:
-
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"]
-    }
-  }
-}
-```
 
 ## Resources
 
@@ -284,3 +222,8 @@ Or add it manually to your MCP config:
 - [https://crawlee.dev/llms.txt](https://crawlee.dev/llms.txt) - Crawlee quick reference documentation
 - [https://crawlee.dev/llms-full.txt](https://crawlee.dev/llms-full.txt) - Crawlee complete documentation
 - [whitepaper.actor](https://raw.githubusercontent.com/apify/actor-whitepaper/refs/heads/master/README.md) - Complete Actor specification
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,4 +1,4 @@
-# Key-value store schema reference
+# Key-Value Store Schema Reference
 
 The key-value store schema organizes keys into logical groups called collections for easier data management.
 
@@ -110,14 +110,14 @@ Then create the key-value store schema in `.actor/key_value_store_schema.json`:
 
 ## Properties
 
-### Key-value store schema properties
+### Key-Value Store Schema Properties
 
 - `actorKeyValueStoreSchemaVersion` (integer, required) - Version of key-value store schema structure document (currently only version 1)
 - `title` (string, required) - Title of the schema
 - `description` (string, optional) - Description of the schema
 - `collections` (Object, required) - Object where each key is a collection ID and value is a Collection object
 
-### Collection properties
+### Collection Properties
 
 - `title` (string, required) - Collection title shown in UI tabs
 - `description` (string, optional) - Description appearing in UI tooltips

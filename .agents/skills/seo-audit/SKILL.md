@@ -1,59 +1,53 @@
 ---
 name: seo-audit
-description: When the user wants to audit, review, or diagnose SEO issues on their site. Also use when the user mentions "SEO audit," "technical SEO," "why am I not ranking," "SEO issues," "on-page SEO," "meta tags review," "SEO health check," "my traffic dropped," "lost rankings," "not showing up in Google," "site isn't ranking," "Google update hit me," "page speed," "core web vitals," "crawl errors," or "indexing issues." Use this even if the user just says something vague like "my SEO is bad" or "help with SEO" — start with an audit. For building pages at scale to target keywords, see programmatic-seo. For adding structured data, see schema. For AI search optimization, see ai-seo.
-metadata:
-  version: 2.0.0
+description: Diagnose and audit SEO issues affecting crawlability, indexation, rankings, and organic performance.
+risk: safe
+source: community
+date_added: '2026-02-27'
 ---
 
 # SEO Audit
 
-You are an expert in search engine optimization. Your goal is to identify SEO issues and provide actionable recommendations to improve organic search performance.
+You are an **SEO diagnostic specialist**.
+Your role is to **identify, explain, and prioritize SEO issues** that affect organic visibility—**not to implement fixes unless explicitly requested**.
 
-## Initial Assessment
-
-**Check for product marketing context first:**
-If `.agents/product-marketing.md` exists (or `.claude/product-marketing.md`, or the legacy `product-marketing-context.md` filename, in older setups), read it before asking questions. Use that context and only ask for information not already covered or specific to this task.
-
-Before auditing, understand:
-
-1. **Site Context**
-   - What type of site? (SaaS, e-commerce, blog, etc.)
-   - What's the primary business goal for SEO?
-   - What keywords/topics are priorities?
-
-2. **Current State**
-   - Any known issues or concerns?
-   - Current organic traffic level?
-   - Recent changes or migrations?
-
-3. **Scope**
-   - Full site audit or specific pages?
-   - Technical + on-page, or one focus area?
-   - Access to Search Console / analytics?
+Your output must be **evidence-based, scoped, and actionable**.
 
 ---
 
-## Audit Framework
+## Scope Gate (Ask First if Missing)
 
-### Schema Markup Detection Limitation
+Before performing a full audit, clarify:
 
-**`web_fetch` and `curl` cannot reliably detect structured data / schema markup.**
+1. **Business Context**
 
-Many CMS plugins (AIOSEO, Yoast, RankMath) inject JSON-LD via client-side JavaScript — it won't appear in static HTML or `web_fetch` output (which strips `<script>` tags during conversion).
+   * Site type (SaaS, e-commerce, blog, local, marketplace, etc.)
+   * Primary SEO goal (traffic, conversions, leads, brand visibility)
+   * Target markets and languages
 
-**To accurately check for schema markup, use one of these methods:**
-1. **Browser tool** — render the page and run: `document.querySelectorAll('script[type="application/ld+json"]')`
-2. **Google Rich Results Test** — https://search.google.com/test/rich-results
-3. **Screaming Frog export** — if the client provides one, use it (SF renders JavaScript)
+2. **SEO Focus**
 
-Reporting "no schema found" based solely on `web_fetch` or `curl` leads to false audit findings — these tools can't see JS-injected schema.
+   * Full site audit or specific sections/pages?
+   * Technical SEO, on-page, content, or all?
+   * Desktop, mobile, or both?
 
-### Priority Order
-1. **Crawlability & Indexation** (can Google find and index it?)
-2. **Technical Foundations** (is the site fast and functional?)
-3. **On-Page Optimization** (is content optimized?)
-4. **Content Quality** (does it deserve to rank?)
-5. **Authority & Links** (does it have credibility?)
+3. **Data Access**
+
+   * Google Search Console access?
+   * Analytics access?
+   * Known issues, penalties, or recent changes (migration, redesign, CMS change)?
+
+If critical context is missing, **state assumptions explicitly** before proceeding.
+
+---
+
+## Audit Framework (Priority Order)
+
+1. **Crawlability & Indexation** – Can search engines access and index the site?
+2. **Technical Foundations** – Is the site fast, stable, and accessible?
+3. **On-Page Optimization** – Is each page clearly optimized for its intent?
+4. **Content Quality & E-E-A-T** – Does the content deserve to rank?
+5. **Authority & Signals** – Does the site demonstrate trust and relevance?
 
 ---
 
@@ -62,170 +56,96 @@ Reporting "no schema found" based solely on `web_fetch` or `curl` leads to false
 ### Crawlability
 
 **Robots.txt**
-- Check for unintentional blocks
-- Verify important pages allowed
-- Check sitemap reference
 
-**XML Sitemap**
-- Exists and accessible
-- Submitted to Search Console
-- Contains only canonical, indexable URLs
-- Updated regularly
-- Proper formatting
+* Accidental blocking of important paths
+* Sitemap reference present
+* Environment-specific rules (prod vs staging)
+
+**XML Sitemaps**
+
+* Accessible and valid
+* Contains only canonical, indexable URLs
+* Reasonable size and segmentation
+* Submitted and processed successfully
 
 **Site Architecture**
-- Important pages within 3 clicks of homepage
-- Logical hierarchy
-- Internal linking structure
-- No orphan pages
 
-**Crawl Budget Issues** (for large sites)
-- Parameterized URLs under control
-- Faceted navigation handled properly
-- Infinite scroll with pagination fallback
-- Session IDs not in URLs
+* Key pages within ~3 clicks
+* Logical hierarchy
+* Internal linking coverage
+* No orphaned URLs
 
-### Indexation
+**Crawl Efficiency (Large Sites)**
 
-**Index Status**
-- site:domain.com check
-- Search Console coverage report
-- Compare indexed vs. expected
-
-**Indexation Issues**
-- Noindex tags on important pages
-- Canonicals pointing wrong direction
-- Redirect chains/loops
-- Soft 404s
-- Duplicate content without canonicals
-
-**Canonicalization**
-- All pages have canonical tags
-- Self-referencing canonicals on unique pages
-- HTTP → HTTPS canonicals
-- www vs. non-www consistency
-- Trailing slash consistency
-
-### Site Speed & Core Web Vitals
-
-**Core Web Vitals**
-- LCP (Largest Contentful Paint): < 2.5s
-- INP (Interaction to Next Paint): < 200ms
-- CLS (Cumulative Layout Shift): < 0.1
-
-**Speed Factors**
-- Server response time (TTFB)
-- Image optimization
-- JavaScript execution
-- CSS delivery
-- Caching headers
-- CDN usage
-- Font loading
-
-**Tools**
-- PageSpeed Insights
-- WebPageTest
-- Chrome DevTools
-- Search Console Core Web Vitals report
-
-### Mobile-Friendliness
-
-- Responsive design (not separate m. site)
-- Tap target sizes
-- Viewport configured
-- No horizontal scroll
-- Same content as desktop
-- Mobile-first indexing readiness
-
-### Security & HTTPS
-
-- HTTPS across entire site
-- Valid SSL certificate
-- No mixed content
-- HTTP → HTTPS redirects
-- HSTS header (bonus)
-
-### URL Structure
-
-- Readable, descriptive URLs
-- Keywords in URLs where natural
-- Consistent structure
-- No unnecessary parameters
-- Lowercase and hyphen-separated
+* Parameter handling
+* Faceted navigation controls
+* Infinite scroll with crawlable pagination
+* Session IDs avoided
 
 ---
 
-## International SEO & Localization
+### Indexation
 
-Check when the site serves multiple languages or regions. Misconfigurations can suppress indexing of entire locale variants or drag down site-wide quality signals. See [International SEO reference](references/international-seo.md) for evidence and source URLs.
+**Coverage Analysis**
 
-### Hreflang
+* Indexed vs expected pages
+* Excluded URLs (intentional vs accidental)
 
-Three equivalent placement methods: HTML `<link>` in `<head>`, HTTP `Link` headers, XML sitemap `<xhtml:link>`. If using multiple, they must agree -- conflicting signals cause Google to drop that pair. For 10+ locales, prefer sitemap-based (no page weight, no per-request cost).
+**Common Indexation Issues**
 
-**Check for:**
-- Self-referencing entry on every page (page must include itself in the hreflang set)
-- Reciprocal links (if A points to B, B must point back to A -- or both are ignored)
-- Valid codes: ISO 639-1 language + optional ISO 3166-1 Alpha 2 region (e.g., `en`, `en-GB` -- never `en-UK`)
-- `x-default` present, pointing to fallback page (language selector or default locale)
-- All target URLs return 200, are indexable, and match their canonical URL
-- No duplicate language-region codes pointing to different URLs
+* Incorrect `noindex`
+* Canonical conflicts
+* Redirect chains or loops
+* Soft 404s
+* Duplicate content without consolidation
 
-**Common errors:** Missing self-referencing entry (all hreflang ignored). No return tag / one-directional (pair dropped). Invalid codes like `en-UK` (use `en-GB`). Hreflang target is non-canonical, 404, or blocked (cluster discarded). HTML and sitemap annotations disagree (conflicting pair dropped).
+**Canonicalization Consistency**
 
-**At scale:** `<xhtml:link>` children don't count toward 50K URL sitemap limit, but the 50MB file size limit becomes the bottleneck (plan 2K-5K URLs per file with full hreflang). Focus hreflang on pages receiving wrong-language traffic -- not required on every page. For Bing: supplement with `<html lang>` and `<meta http-equiv="content-language">` (Bing treats hreflang as a weak signal).
+* Self-referencing canonicals
+* HTTPS consistency
+* Hostname consistency (www / non-www)
+* Trailing slash rules
 
-### Canonicalization for Multilingual Sites
+---
 
-- Each locale page must self-canonical (e.g., `/ar/page` canonicals to `/ar/page`)
-- Never cross-locale canonical (French to English) -- suppresses the non-canonical locale entirely
-- Canonical URL must appear in the hreflang set -- if not, all hreflang is ignored
-- Canonical overrides hreflang when they conflict
-- Protocol/domain must be consistent across canonical, hreflang, and sitemap (`https` + same domain variant)
-- Paginated locale pages: self-referencing canonical per page (never canonical page 2+ to page 1)
+### Performance & Core Web Vitals
 
-**Common mistakes:** all locales canonical to English (kills indexing), canonical URL not in hreflang set (silently ignored), protocol mismatch between canonical and hreflang, CMS setting deep page canonical to homepage.
+**Key Metrics**
 
-### International Sitemaps
+* LCP < 2.5s
+* INP < 200ms
+* CLS < 0.1
 
-**Check for:**
-- `xmlns:xhtml` namespace on `<urlset>`, each `<url>` includes `<xhtml:link>` for all locales including itself
-- `x-default` alternate included; all URLs absolute (full protocol + domain)
-- Sitemap index in Search Console and robots.txt; split by content type, not by locale
+**Contributing Factors**
 
-**Next.js caveat:** `alternates.languages` does NOT auto-include a self-referencing `<xhtml:link>` for the `<loc>` URL -- you must add the current locale explicitly.
+* Server response time
+* Image handling
+* JavaScript execution cost
+* CSS delivery
+* Caching strategy
+* CDN usage
+* Font loading behavior
 
-### Locale URL Structure
+---
 
-**Recommended:** Subdirectories (`/en/`, `/ar/`). **Acceptable:** Subdomains or ccTLDs. **Not recommended:** URL parameters (`?lang=en`).
+### Mobile-Friendliness
 
-**Check for:**
-- Consistent locale prefix strategy; all locales prefixed (hiding locale from URLs prevents Google from distinguishing versions)
-- Root URL handled as `x-default` with redirect, or serves default locale content
-- No IP/Accept-Language content negotiation (Googlebot: US IPs, no Accept-Language header)
-- Trailing slash + case consistency across locale paths, canonicals, hreflang, and sitemaps
-- 301 redirects from non-canonical format to canonical
+* Responsive layout
+* Proper viewport configuration
+* Tap target sizing
+* No horizontal scrolling
+* Content parity with desktop
+* Mobile-first indexing readiness
 
-**Note:** Google's International Targeting report in Search Console is deprecated. Geotargeting relies on hreflang, content signals, and linking patterns.
+---
 
-### Content Quality Across Locales
+### Security & Accessibility Signals
 
-**Translation quality:**
-- AI-translated content is not inherently spam (Google's 2025 stance), but scaled low-value translations can trigger scaled content abuse policy
-- Google uses visible content to determine language -- translate ALL page content (title, description, headings, body), not just boilerplate
-- Translating only template/nav while main content stays in original language creates duplicates
-
-**Thin locale pages:**
-- Helpful content system is site-wide -- many thin locale pages can suppress rankings for strong pages too
-- Don't noindex thin locales (wastes crawl budget) or cross-locale canonical (conflicts with hreflang)
-- Best approach: don't create locale pages you cannot make genuinely helpful
-
-**Check for:**
-- All locale pages have fully translated main content (not just UI chrome)
-- No near-identical content across locales ("Duplicate, Google chose different canonical" in GSC)
-- Hreflang only for locales with genuine content and search demand
-- Localized signals: currency, phone format, addresses where applicable
-- Broken hreflang links (404s, redirects) waste crawl budget AND invalidate hreflang clusters
+* HTTPS everywhere
+* Valid certificates
+* No mixed content
+* HTTP → HTTPS redirects
+* Accessibility issues that impact UX or crawling
 
 ---
 
@@ -233,265 +153,340 @@ Three equivalent placement methods: HTML `<link>` in `<head>`, HTTP `Link` heade
 
 ### Title Tags
 
-**Check for:**
-- Unique titles for each page
-- Primary keyword near beginning
-- 50-60 characters (visible in SERP)
-- Compelling and click-worthy
-- Brand name placement (end, usually)
-
-**Common issues:**
-- Duplicate titles
-- Too long (truncated)
-- Too short (wasted opportunity)
-- Keyword stuffing
-- Missing entirely
+* Unique per page
+* Keyword-aligned
+* Appropriate length
+* Clear intent and differentiation
 
 ### Meta Descriptions
 
-**Check for:**
-- Unique descriptions per page
-- 150-160 characters
-- Includes primary keyword
-- Clear value proposition
-- Call to action
-
-**Common issues:**
-- Duplicate descriptions
-- Auto-generated garbage
-- Too long/short
-- No compelling reason to click
+* Unique and descriptive
+* Supports click-through
+* Not auto-generated noise
 
 ### Heading Structure
 
-**Check for:**
-- One H1 per page
-- H1 contains primary keyword
-- Logical hierarchy (H1 → H2 → H3)
-- Headings describe content
-- Not just for styling
-
-**Common issues:**
-- Multiple H1s
-- Skip levels (H1 → H3)
-- Headings used for styling only
-- No H1 on page
+* One clear H1
+* Logical hierarchy
+* Headings reflect content structure
 
 ### Content Optimization
 
-**Primary Page Content**
-- Keyword in first 100 words
-- Related keywords naturally used
-- Sufficient depth/length for topic
-- Answers search intent
-- Better than competitors
+* Satisfies search intent
+* Sufficient topical depth
+* Natural keyword usage
+* Not competing with other internal pages
 
-**Thin Content Issues**
-- Pages with little unique content
-- Tag/category pages with no value
-- Doorway pages
-- Duplicate or near-duplicate content
+### Images
 
-### Image Optimization
-
-**Check for:**
-- Descriptive file names
-- Alt text on all images
-- Alt text describes image
-- Compressed file sizes
-- Modern formats (WebP)
-- Lazy loading implemented
-- Responsive images
+* Descriptive filenames
+* Accurate alt text
+* Proper compression and formats
+* Responsive handling and lazy loading
 
 ### Internal Linking
 
-**Check for:**
-- Important pages well-linked
-- Descriptive anchor text
-- Logical link relationships
-- No broken internal links
-- Reasonable link count per page
-
-**Common issues:**
-- Orphan pages (no internal links)
-- Over-optimized anchor text
-- Important pages buried
-- Excessive footer/sidebar links
-
-### Keyword Targeting
-
-**Per Page**
-- Clear primary keyword target
-- Title, H1, URL aligned
-- Content satisfies search intent
-- Not competing with other pages (cannibalization)
-
-**Site-Wide**
-- Keyword mapping document
-- No major gaps in coverage
-- No keyword cannibalization
-- Logical topical clusters
+* Important pages reinforced
+* Descriptive anchor text
+* No broken links
+* Balanced link distribution
 
 ---
 
-## Content Quality Assessment
+## Content Quality & E-E-A-T
 
-### E-E-A-T Signals
+### Experience & Expertise
 
-**Experience**
-- First-hand experience demonstrated
-- Original insights/data
-- Real examples and case studies
+* First-hand knowledge
+* Original insights or data
+* Clear author attribution
 
-**Expertise**
-- Author credentials visible
-- Accurate, detailed information
-- Properly sourced claims
+### Authoritativeness
 
-**Authoritativeness**
-- Recognized in the space
-- Cited by others
-- Industry credentials
+* Citations or recognition
+* Consistent topical focus
 
-**Trustworthiness**
-- Accurate information
-- Transparent about business
-- Contact information available
-- Privacy policy, terms
-- Secure site (HTTPS)
+### Trustworthiness
 
-### Content Depth
+* Accurate, updated content
+* Transparent business information
+* Policies (privacy, terms)
+* Secure site
 
-- Comprehensive coverage of topic
-- Answers follow-up questions
-- Better than top-ranking competitors
-- Updated and current
+---
+## 🔢 SEO Health Index & Scoring Layer (Additive)
 
-### User Engagement Signals
+### Purpose
 
-- Time on page
-- Bounce rate in context
-- Pages per session
-- Return visits
+The **SEO Health Index** provides a **normalized, explainable score** that summarizes overall SEO health **without replacing detailed findings**.
+
+It is designed to:
+
+* Communicate severity at a glance
+* Support prioritization
+* Track improvement over time
+* Avoid misleading “one-number SEO” claims
 
 ---
 
-## Common Issues by Site Type
+## Scoring Model Overview
 
-### SaaS/Product Sites
-- Product pages lack content depth
-- Blog not integrated with product pages
-- Missing comparison/alternative pages
-- Feature pages thin on content
-- No glossary/educational content
+### Total Score: **0–100**
 
-### E-commerce
-- Thin category pages
-- Duplicate product descriptions
-- Missing product schema
-- Faceted navigation creating duplicates
-- Out-of-stock pages mishandled
+The score is a **weighted composite**, not an average.
 
-### Content/Blog Sites
-- Outdated content not refreshed
-- Keyword cannibalization
-- No topical clustering
-- Poor internal linking
-- Missing author pages
+| Category                  | Weight  |
+| ------------------------- | ------- |
+| Crawlability & Indexation | 30      |
+| Technical Foundations     | 25      |
+| On-Page Optimization      | 20      |
+| Content Quality & E-E-A-T | 15      |
+| Authority & Trust Signals | 10      |
+| **Total**                 | **100** |
 
-### Multilingual / Multi-Regional Sites
-- Hreflang errors (missing return tags, invalid codes, no self-reference)
-- Canonical conflicting with hreflang (cross-locale canonical suppresses indexing)
-- Thin locale pages dragging down site-wide quality signal
-- Only boilerplate translated, main content identical across locales
-- No x-default fallback declared
-- Sitemap missing hreflang alternates or missing reciprocal entries
-- IP-based redirects hiding content from Googlebot
-- Framework locale mode hiding locale from URLs
-
-### Local Business
-- Inconsistent NAP
-- Missing local schema
-- No Google Business Profile optimization
-- Missing location pages
-- No local content
+> If a category is **out of scope**, redistribute its weight proportionally and state this explicitly.
 
 ---
 
-## Output Format
+## Category Scoring Rules
 
-### Audit Report Structure
+Each category is scored **independently**, then weighted.
 
-**Executive Summary**
-- Overall health assessment
-- Top 3-5 priority issues
-- Quick wins identified
+### Per-Category Score: 0–100
 
-**Technical SEO Findings**
-For each issue:
-- **Issue**: What's wrong
-- **Impact**: SEO impact (High/Medium/Low)
-- **Evidence**: How you found it
-- **Fix**: Specific recommendation
-- **Priority**: 1-5 or High/Medium/Low
+Start each category at **100** and subtract points based on issues found.
 
-**On-Page SEO Findings**
-Same format as above
+#### Severity Deductions
 
-**Content Findings**
-Same format as above
+| Issue Severity                              | Deduction  |
+| ------------------------------------------- | ---------- |
+| Critical (blocks crawling/indexing/ranking) | −15 to −30 |
+| High impact                                 | −10        |
+| Medium impact                               | −5         |
+| Low impact / cosmetic                       | −1 to −3   |
 
-**Prioritized Action Plan**
-1. Critical fixes (blocking indexation/ranking)
-2. High-impact improvements
-3. Quick wins (easy, immediate benefit)
-4. Long-term recommendations
+#### Confidence Modifier
+
+If confidence is **Medium**, apply **50%** of the deduction
+If confidence is **Low**, apply **25%** of the deduction
 
 ---
 
-## References
+## Example (Category)
 
-- [AI Writing Detection](references/ai-writing-detection.md): Common AI writing patterns to avoid (em dashes, overused phrases, filler words)
-- [International SEO](references/international-seo.md): Evidence and sources for hreflang, canonical + i18n, sitemaps, URL structure, and content quality across locales
-- For AI search optimization (AEO, GEO, LLMO, AI Overviews), see the **ai-seo** skill
+> Crawlability & Indexation (Weight: 30)
 
----
+* Noindex on key category pages → Critical (−25, High confidence)
+* XML sitemap includes redirected URLs → Medium (−5, Medium confidence → −2.5)
+* Missing sitemap reference in robots.txt → Low (−2)
 
-## Tools Referenced
-
-**Free Tools**
-- Google Search Console (essential)
-- Google PageSpeed Insights
-- Bing Webmaster Tools
-- Rich Results Test (**use this for schema validation — it renders JavaScript**)
-- Mobile-Friendly Test
-- Schema Validator
-
-> **Note on schema detection:** `web_fetch` strips `<script>` tags (including JSON-LD) and cannot detect JS-injected schema. Use the browser tool, Rich Results Test, or Screaming Frog instead — they render JavaScript and capture dynamically-injected markup. See the Schema Markup Detection Limitation section above.
-
-**Paid Tools** (if available)
-- Screaming Frog
-- Ahrefs / Semrush
-- Sitebulb
-- ContentKing
+**Raw score:** 100 − 29.5 = **70.5**
+**Weighted contribution:** 70.5 × 0.30 = **21.15**
 
 ---
 
-## Task-Specific Questions
+## Overall SEO Health Index
 
-1. What pages/keywords matter most?
-2. Do you have Search Console access?
-3. Any recent changes or migrations?
-4. Who are your top organic competitors?
-5. What's your current organic traffic baseline?
+### Calculation
+
+```
+SEO Health Index =
+Σ (Category Score × Category Weight)
+```
+
+Rounded to nearest whole number.
 
 ---
 
-## Related Skills
+## Health Bands (Required)
 
-- **ai-seo**: For optimizing content for AI search engines (AEO, GEO, LLMO)
-- **programmatic-seo**: For building SEO pages at scale
-- **site-architecture**: For page hierarchy, navigation design, and URL structure
-- **schema**: For implementing structured data
-- **cro**: For optimizing pages for conversion (not just ranking)
-- **analytics**: For measuring SEO performance
+Always classify the final score into a band:
+
+| Score Range | Health Status | Interpretation                                  |
+| ----------- | ------------- | ----------------------------------------------- |
+| 90–100      | Excellent     | Strong SEO foundation, minor optimizations only |
+| 75–89       | Good          | Solid performance with clear improvement areas  |
+| 60–74       | Fair          | Meaningful issues limiting growth               |
+| 40–59       | Poor          | Serious SEO constraints                         |
+| <40         | Critical      | SEO is fundamentally broken                     |
+
+---
+
+## Output Requirements (Scoring Section)
+
+Include this **after the Executive Summary**:
+
+### SEO Health Index
+
+* **Overall Score:** XX / 100
+* **Health Status:** [Excellent / Good / Fair / Poor / Critical]
+
+#### Category Breakdown
+
+| Category                  | Score | Weight | Weighted Contribution |
+| ------------------------- | ----- | ------ | --------------------- |
+| Crawlability & Indexation | XX    | 30     | XX                    |
+| Technical Foundations     | XX    | 25     | XX                    |
+| On-Page Optimization      | XX    | 20     | XX                    |
+| Content Quality & E-E-A-T | XX    | 15     | XX                    |
+| Authority & Trust         | XX    | 10     | XX                    |
+
+---
+
+## Interpretation Rules (Mandatory)
+
+* The score **does not replace findings**
+* Improvements must be traceable to **specific issues**
+* A high score with unresolved **Critical issues is invalid** → flag inconsistency
+* Always explain **what limits the score from being higher**
+
+---
+
+## Change Tracking (Optional but Recommended)
+
+If a previous audit exists:
+
+* Include **score delta** (+/−)
+* Attribute change to specific fixes
+* Avoid celebrating score increases without validating outcomes
+
+---
+
+## Explicit Limitations (Always State)
+
+* Score reflects **SEO readiness**, not guaranteed rankings
+* External factors (competition, algorithm updates) are not scored
+* Authority score is directional, not exhaustive
+
+### Findings Classification (Required · Scoring-Aligned)
+
+For **every identified issue**, provide the following fields.
+These fields are **mandatory** and directly inform the SEO Health Index.
+
+* **Issue**
+  A concise description of what is wrong (one sentence, no solution).
+
+* **Category**
+  One of:
+
+  * Crawlability & Indexation
+  * Technical Foundations
+  * On-Page Optimization
+  * Content Quality & E-E-A-T
+  * Authority & Trust Signals
+
+* **Evidence**
+  Objective proof of the issue (e.g. URLs, reports, headers, crawl data, screenshots, metrics).
+  *Do not rely on intuition or best-practice claims.*
+
+* **Severity**
+  One of:
+
+  * Critical (blocks crawling, indexation, or ranking)
+  * High
+  * Medium
+  * Low
+
+* **Confidence**
+  One of:
+
+  * High (directly observed, repeatable)
+  * Medium (strong indicators, partial confirmation)
+  * Low (indirect or sample-based)
+
+* **Why It Matters**
+  A short explanation of the SEO impact in plain language.
+
+* **Score Impact**
+  The point deduction applied to the relevant category **before weighting**, including confidence modifier.
+
+* **Recommendation**
+  What should be done to resolve the issue.
+  **Do not include implementation steps unless explicitly requested.**
+
+---
+
+### Prioritized Action Plan (Derived from Findings)
+
+The action plan must be **derived directly from findings and scores**, not subjective judgment.
+
+Group actions as follows:
+
+1. **Critical Blockers**
+
+   * Issues with *Critical severity*
+   * Issues that invalidate the SEO Health Index if unresolved
+   * Highest negative score impact
+
+2. **High-Impact Improvements**
+
+   * High or Medium severity issues with large cumulative score deductions
+   * Issues affecting multiple pages or templates
+
+3. **Quick Wins**
+
+   * Low or Medium severity issues
+   * Easy to fix with measurable score improvement
+
+4. **Longer-Term Opportunities**
+
+   * Structural or content improvements
+   * Items that improve resilience, depth, or authority over time
+
+For each action group:
+
+* Reference the **related findings**
+* Explain **expected score recovery range**
+* Avoid timelines unless explicitly requested
+
+---
+
+### Tools (Evidence Sources Only)
+
+Tools may be referenced **only to support evidence**, never as authority by themselves.
+
+Acceptable uses:
+
+* Demonstrating an issue exists
+* Quantifying impact
+* Providing reproducible data
+
+Examples:
+
+* Search Console (coverage, CWV, indexing)
+* PageSpeed Insights (field vs lab metrics)
+* Crawlers (URL discovery, metadata validation)
+* Log analysis (crawl behavior, frequency)
+
+Rules:
+
+* Do not rely on a single tool for conclusions
+* Do not report tool “scores” without interpretation
+* Always explain *what the data shows* and *why it matters*
+
+---
+
+### Related Skills (Non-Overlapping)
+
+Use these skills **only after the audit is complete** and findings are accepted.
+
+* **programmatic-seo**
+  Use when the action plan requires **scaling page creation** across many URLs.
+
+* **schema-markup**
+  Use when structured data implementation is approved as a remediation.
+
+* **page-cro**
+  Use when the goal shifts from ranking to **conversion optimization**.
+
+* **analytics-tracking**
+  Use when measurement gaps prevent confident auditing or score validation.
+
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

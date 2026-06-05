@@ -49,6 +49,12 @@
       "skillPath": "skills/news-search/SKILL.md",
       "computedHash": "38ed8fa771c2958f56b4c7dbffdf9ab0808036a173ad2c6949d668ecdb0dcaf8"
     },
+    "seo-audit": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/seo-audit/SKILL.md",
+      "computedHash": "f2dc52130189068981f21e1c0bdc4471ac7cd9b08d8a1320604411aa0f950385"
+    },
     "spellcheck": {
       "source": "brave/brave-search-skills",
       "sourceType": "github",

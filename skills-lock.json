@@ -31,6 +31,12 @@
       "skillPath": "skills/images-search/SKILL.md",
       "computedHash": "e3beb91731658260cb49da1a7e0bc3f79aedae72a45c9ac5a99c327ecb062f5e"
     },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "computedHash": "ef32aea0a8fab9b365ff9e08a95f8d353e20ca21ea46ec2e73587c86dd341351"
+    },
     "llm-context": {
       "source": "brave/brave-search-skills",
       "sourceType": "github",

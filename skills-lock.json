@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "skills": {
+    "answers": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/answers/SKILL.md",
+      "computedHash": "3cf1ef1b735566503eb2693aaadd50f2e163f79e14ebe5bb65e9ddaccb7a74b7"
+    },
+    "bx": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/bx/SKILL.md",
+      "computedHash": "b846bd21e3476a10f262d40a765e65149e339e85b37d7dfa8f128317e7cbf090"
+    },
+    "images-search": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/images-search/SKILL.md",
+      "computedHash": "e3beb91731658260cb49da1a7e0bc3f79aedae72a45c9ac5a99c327ecb062f5e"
+    },
+    "llm-context": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/llm-context/SKILL.md",
+      "computedHash": "0b7616f5be0e4f59ddec4102e4068e3bdeb83c43df3df6ffe32b059cdcd7c683"
+    },
+    "local-descriptions": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/local-descriptions/SKILL.md",
+      "computedHash": "267837070da3c75692f7824b8b28836d75b58411b0abe8113e3dff12d53af27c"
+    },
+    "local-pois": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/local-pois/SKILL.md",
+      "computedHash": "6bde7cab81b809721a67612dab3b006c2ee4e5e7c5d201a890e3bae430b40fc1"
+    },
+    "news-search": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/news-search/SKILL.md",
+      "computedHash": "38ed8fa771c2958f56b4c7dbffdf9ab0808036a173ad2c6949d668ecdb0dcaf8"
+    },
+    "spellcheck": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/spellcheck/SKILL.md",
+      "computedHash": "a6586d3567654d79420fb77771eace1a1b146e81d05db5c29e41db15ab9a03d3"
+    },
+    "suggest": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/suggest/SKILL.md",
+      "computedHash": "2a1764a28f1fca6d65e1b17dd7dcfdb44d40058bd5fe8675caf146e1cdbc822b"
+    },
+    "videos-search": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/videos-search/SKILL.md",
+      "computedHash": "f40140b8a8035d5f3c8b82b0c6140792548049d5a4d27df9066b04493dc6da5a"
+    },
+    "web-search": {
+      "source": "brave/brave-search-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-search/SKILL.md",
+      "computedHash": "3bd3c40e767bbba3cfc4fd466dbe22aab5d0cb8476633d472655e20fa560ba92"
+    }
+  }
+}

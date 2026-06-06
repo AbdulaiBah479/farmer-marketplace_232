@@ -955,6 +955,12 @@
       "skillPath": "skills/attack-tree-construction/SKILL.md",
       "computedHash": "a591b7cce39c02a5aa8dd3ca8be1541197997be385cd44c718240c9560eed9c7"
     },
+    "audience-growth-tracker-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/audience-growth-tracker-sms/SKILL.md",
+      "computedHash": "8a5f0e3803982ae713cbce6f0234cab538fceeb622d632c15ffcd0ecfecc2401"
+    },
     "audio-transcriber": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -3295,6 +3301,12 @@
       "skillPath": "skills/blueprint/SKILL.md",
       "computedHash": "2efc1f843cdec34bfe796a0a8481658ca89465863092c81b5ed87f367bc83f74"
     },
+    "bluesky-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/bluesky-post/SKILL.md",
+      "computedHash": "5cb68e111f603fcd65503a13cbfa5e7b1ca965c19a640c8152151eecb195061a"
+    },
     "boost-prompt": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -3571,11 +3583,23 @@
       "skillPath": "skills/canvas-design/SKILL.md",
       "computedHash": "4ba993c7ae18cc09a06e09eba558b422dc41b36948e09f466d887d839b678722"
     },
+    "caption-writer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/caption-writer-sms/SKILL.md",
+      "computedHash": "07e871f6e157475df3849bcbff336fabee83a5093469cb165ddc7fb765f4a467"
+    },
     "cardputer-buddy": {
       "source": "anthropics/claude-plugins-official",
       "sourceType": "github",
       "skillPath": "plugins/cwc-makers/skills/cardputer-buddy/SKILL.md",
       "computedHash": "769de30bec3e3f88898d070b96e1eeb77bc5df8816994b399de317e68abec49e"
+    },
+    "carousel-writer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/carousel-writer-sms/SKILL.md",
+      "computedHash": "58cbcf94dfeb6bbb899388fd2ccdb388b1742ce8783e1422a48ec97bb95a88fa"
     },
     "carrier-relationship-management": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -4081,6 +4105,12 @@
       "skillPath": "skills/competitor-alternatives/SKILL.md",
       "computedHash": "7fbab31288349fc65843a8f5267bcaa9d3186ae3567f4e109be31a11cf1aa690"
     },
+    "competitor-profiling": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/competitor-profiling/SKILL.md",
+      "computedHash": "d691200df7b02d85327192dd2203f97eec5a01e7748e9b171a5c9d6a584dc181"
+    },
     "complexity-cuts": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -4213,6 +4243,12 @@
       "skillPath": "skills/containerize-aspnetcore/SKILL.md",
       "computedHash": "23f73cb98109f2a56c0b49b5121fc6132a5fddf1fd3bb145db94085f36f7d205"
     },
+    "content-calendar-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/content-calendar-sms/SKILL.md",
+      "computedHash": "072497335e3d19b2ea238d4f61764663f7ec5b1039a4e13387c25cf26fc1d040"
+    },
     "content-creator": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -4231,6 +4267,18 @@
       "skillPath": "skills/content-marketer/SKILL.md",
       "computedHash": "3d5d56912cc26b353f9872537988c49f537d84a21933d1280c331e73f35efac5"
     },
+    "content-pattern-analyzer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/content-pattern-analyzer-sms/SKILL.md",
+      "computedHash": "61144e3747c1e8b0cfbb18ac8063be1580a061f9ce904668b731be3230be16df"
+    },
+    "content-repurposer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/content-repurposer-sms/SKILL.md",
+      "computedHash": "1c03fd0244b7bbab1658f1f98d7ccfce2bc67fa2ad8155bac871e7cbad7cc1d5"
+    },
     "content-research-writer": {
       "source": "ComposioHQ/awesome-claude-skills",
       "sourceType": "github",
@@ -4242,6 +4290,12 @@
       "sourceType": "github",
       "skillPath": "skills/content-strategy/SKILL.md",
       "computedHash": "14de4907b881528606d60862815e5d0fe09b7978e9379d99c5a3f71c8eefbeb6"
+    },
+    "content-strategy-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/content-strategy-sms/SKILL.md",
+      "computedHash": "36f997fb0d595e7b5112e69019ce02c413df294b77f100f685615ff49ac1452b"
     },
     "context-agent": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -4728,6 +4782,12 @@
       "sourceType": "github",
       "skillPath": "skills/customer-psychographic-profiler/SKILL.md",
       "computedHash": "c943ea41376403069438dedc248abe13455368f4f1161738669f728ca547ce5a"
+    },
+    "customer-research": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/customer-research/SKILL.md",
+      "computedHash": "cc68018a343c1a75ef9aed44b7037928795f654bdde0b28372176f686c1982be"
     },
     "customer-support": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -5544,6 +5604,12 @@
       "sourceType": "github",
       "skillPath": "skills/email-systems/SKILL.md",
       "computedHash": "56c3b0e7472238be0e1d7f5d81fdf89b2b23d4abd355f9fa2d8d4d6c32ad3731"
+    },
+    "emails": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/emails/SKILL.md",
+      "computedHash": "261d986c2a1f1f5f823f8c889e16db723edb8a9d0fa5ede8412f981594715c49"
     },
     "embedding-strategies": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -7063,6 +7129,12 @@
       "skillPath": "plugins/plugin-dev/skills/hook-development/SKILL.md",
       "computedHash": "7bda9057df5162ac7a141dab5d5b4876c2fa37516eb757f3efc6f7dcebe73aa2"
     },
+    "hook-writer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/hook-writer-sms/SKILL.md",
+      "computedHash": "92d8693aeb96fc0c8108cd21d503da5eebeda8f28c4ca040fa39a404bc3048ec"
+    },
     "hosted-agents": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -7267,6 +7339,12 @@
       "skillPath": "skills/ilya-sutskever/SKILL.md",
       "computedHash": "50fff322fbc4c8ebb9bc3187324dcd1a44a26058275591d8037422b86b6a0425"
     },
+    "image": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/image/SKILL.md",
+      "computedHash": "e4b5511566d08a79f6f5fd26319eaaac0e18e1e238848c5a3fb2e9839e306ebe"
+    },
     "image-annotations": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -7404,6 +7482,12 @@
       "sourceType": "github",
       "skillPath": "skills/instagram-automation/SKILL.md",
       "computedHash": "f4e5391b003a8464708fd9683f269deb2fcab8f30724decec49eab8ffb459a74"
+    },
+    "instagram-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/instagram-post/SKILL.md",
+      "computedHash": "5f0653597a7d51ecdd775734d8d0dab8a7bae73b2666d52e6a70161b1574eaea"
     },
     "integrate-context-matic": {
       "source": "github/awesome-copilot",
@@ -7820,10 +7904,10 @@
       "computedHash": "b8d92fd36be1b422d92a69a5e664e80fa395e08d0aef5f356d6ec3ad38d1d18d"
     },
     "lead-magnets": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
       "skillPath": "skills/lead-magnets/SKILL.md",
-      "computedHash": "76086cbd72aeb34af4426467e036550257f747761976bdb1ba4fd556d52442d1"
+      "computedHash": "268c83c38cc49d3e437042f5d4e3c31b822deb6012b9d5d7a1370ae500058018"
     },
     "lead-research-assistant": {
       "source": "ComposioHQ/awesome-claude-skills",
@@ -7933,6 +8017,12 @@
       "skillPath": "skills/linear-claude-skill/SKILL.md",
       "computedHash": "0585af56bcea1c7030faced15008fbce469474147a46d08ee6e92be036dc89b1"
     },
+    "linkedin-analytics": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/linkedin-analytics/SKILL.md",
+      "computedHash": "d0191302d6136ce86f3be69ed4d5c0c2f8b1acbccf0849bca46c432903d7548d"
+    },
     "linkedin-automation": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -7950,6 +8040,12 @@
       "sourceType": "github",
       "skillPath": "skills/linkedin-content-generator/SKILL.md",
       "computedHash": "14352d6af98382482a1fcdf456c192d9fb2c3e66a42c492ee19540822299e2c7"
+    },
+    "linkedin-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/linkedin-post/SKILL.md",
+      "computedHash": "f7e135531a2f45f102b64d4d83ac73ab26ae516b8f0f10b313f9e02bcde6ff59"
     },
     "linkedin-post-formatter": {
       "source": "github/awesome-copilot",
@@ -8282,16 +8378,16 @@
       "computedHash": "aaafb694be20f230405c9c75fedc182b7c5a5c5511e3299ae9ec92796f356ca8"
     },
     "marketing-ideas": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
       "skillPath": "skills/marketing-ideas/SKILL.md",
-      "computedHash": "dcacc55c273a178b3bc508ffaaba799d31b3ce5ede114579b5b46e05856fa57d"
+      "computedHash": "c2a310c97126a0c493bae2b4b0e9fa767598bb2d139a747217fa1d8d7615e85d"
     },
     "marketing-psychology": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
       "skillPath": "skills/marketing-psychology/SKILL.md",
-      "computedHash": "138facd4c51ff0384dfb30970831b277c5aa7709ad279a7a7608600ea46685ca"
+      "computedHash": "50d735eb0f5c36f379ed2200f21aeacc9b9ad85667b5d33ec6111857352a1340"
     },
     "matematico-tao": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -9349,6 +9445,12 @@
       "skillPath": "skills/notion-template-business/SKILL.md",
       "computedHash": "a510fc393ed79f00eb6d51e245199e18184d3a2b294f0ce85b509287dd496318"
     },
+    "noxinfluencer": {
+      "source": "NoxInfluencer/skills",
+      "sourceType": "github",
+      "skillPath": "skills/noxinfluencer/SKILL.md",
+      "computedHash": "dd65c9f82c7567dfa1d71cab25f831bf8a8c1f97a57465ee64b642a3d9410b10"
+    },
     "nuget-manager": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -9655,6 +9757,12 @@
       "skillPath": "skills/onboard-context-matic/SKILL.md",
       "computedHash": "ef32055c42e70a407d48afc7525b8ae35964a58f90559b0db4400ba5b8307380"
     },
+    "onboarding": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/onboarding/SKILL.md",
+      "computedHash": "634b9ba0a4446d9358d3cbc316feefc2e9d618cd88d5a77f0bc6ec895ed5eb5f"
+    },
     "onboarding-cro": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -9702,6 +9810,12 @@
       "sourceType": "github",
       "skillPath": "skills/openclaw-github-repo-commander/SKILL.md",
       "computedHash": "c0f9742227b111b78ab254df178b7c2ea5d8c25c2774516983d27f0b8ed0b079"
+    },
+    "optimization-advisor-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/optimization-advisor-sms/SKILL.md",
+      "computedHash": "bd68f4719cbd561324b3c5e200ae41e394a79009c6ba270f54c2a5af7b38ca35"
     },
     "optimize-simplicite-logs": {
       "source": "github/awesome-copilot",
@@ -9852,6 +9966,12 @@
       "sourceType": "github",
       "skillPath": "skills/pentest-commands/SKILL.md",
       "computedHash": "d5ce7f60e0686b0f6141635ecd1b49c32d541d63a1e95bbf6a9e83ef31201b69"
+    },
+    "performance-analyzer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/performance-analyzer-sms/SKILL.md",
+      "computedHash": "4b2d2aa657222b46c46fcc767df58f9de55eee0eb2cffb62c52232b61e67ed80"
     },
     "performance-engineer": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -10021,6 +10141,12 @@
       "skillPath": "skills/plantuml-ascii/SKILL.md",
       "computedHash": "2fb2b41487ea6559f4ccf877fe397c87214b35049528685ff1c02bb792b027d1"
     },
+    "platform-strategy-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/platform-strategy-sms/SKILL.md",
+      "computedHash": "e93f5fb37e0348ed563ab194a3bfc5011d923b5376b80f983fffefe50d8585bf"
+    },
     "playground": {
       "source": "anthropics/claude-plugins-official",
       "sourceType": "github",
@@ -10117,11 +10243,23 @@
       "skillPath": "skills/popup-cro/SKILL.md",
       "computedHash": "313f9faf64a808a709c2bd582f32f4e054cec272979d194ce2b50de2c7405f81"
     },
+    "popups": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/popups/SKILL.md",
+      "computedHash": "95c5cb45dcbb05362168255d97ee68d53a5916d8de779bd08f5f70c9b0cabd36"
+    },
     "posix-shell-pro": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/posix-shell-pro/SKILL.md",
       "computedHash": "4073cbf2d2695f0119902c076ab0a412215bb198e11148f8a98c5a7bfad984c1"
+    },
+    "post-writer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/post-writer-sms/SKILL.md",
+      "computedHash": "33e7e04f23d2e3e31bd8d10a42c508d6260db7218ab51fc3965bc03fff5d9582"
     },
     "postgres-best-practices": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -10320,6 +10458,12 @@
       "sourceType": "github",
       "skillPath": "skills/product-manager-toolkit/SKILL.md",
       "computedHash": "2ceda3574bf6a565d30d2901119109b3d8048871589d6b9a2e7a36cbfddafd03"
+    },
+    "product-marketing": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/product-marketing/SKILL.md",
+      "computedHash": "2fe9e9093e385345d17e0e77d032d68015417c37ceffeb5fb34fc761c46c94a0"
     },
     "product-marketing-context": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -11809,6 +11953,12 @@
       "skillPath": "skills/shuffle-json-data/SKILL.md",
       "computedHash": "9035306ade3aed0a8898046bfc83fa01dd519f00d9f78ec1a7977288a38be514"
     },
+    "signup": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/signup/SKILL.md",
+      "computedHash": "9efbe9bc357581a924baa33a696b6d58a7126b7a4e4c472cebf18ed3d52cd2fd"
+    },
     "signup-flow-cro": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -12019,11 +12169,23 @@
       "skillPath": "skills/snowflake-semanticview/SKILL.md",
       "computedHash": "42d1bf4bd7a1edd92e0637ae3189ec21edb052dca9de06f0501926c567bb48b2"
     },
+    "social": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/social/SKILL.md",
+      "computedHash": "45f19eb1da07de3505f4db57ea0a83906c73bc30bc6af1fdb4d576d5d2dee310"
+    },
     "social-content": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/social-content/SKILL.md",
       "computedHash": "943cec2b49f9a3f09de2d3ec02f4ea383bc4896cde5179c39eab9ebd308be943"
+    },
+    "social-media-context-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/social-media-context-sms/SKILL.md",
+      "computedHash": "c44e39ac41123668151e99afd091eb9cd6a3139084d70b7dbebc0669bdacee45"
     },
     "social-metadata-hardening": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -12036,6 +12198,12 @@
       "sourceType": "github",
       "skillPath": "skills/social-orchestrator/SKILL.md",
       "computedHash": "f2bc57ed5c87a06474bcaef489963bcebf8f6ea4da4966582d7f8d6b6a74b3a0"
+    },
+    "social-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/social-post/SKILL.md",
+      "computedHash": "9a2a597e83aaf286b71bd9422a964f09c87d49c99474835c694585771f89752f"
     },
     "social-post-writer-seo": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -12631,6 +12799,12 @@
       "skillPath": "skills/telegram-mini-app/SKILL.md",
       "computedHash": "e19acb241d3d9d8dd2f275be5588dd129fd36f97f93d0dd18fa7b93b67d2e205"
     },
+    "telegram-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/telegram-post/SKILL.md",
+      "computedHash": "ee8631f5c6afa942bf3f9283f94905acd7462744c94f8120f354535109405ffa"
+    },
     "template-skill": {
       "source": "ComposioHQ/awesome-claude-skills",
       "sourceType": "github",
@@ -12733,6 +12907,18 @@
       "skillPath": "skills/theme-factory/SKILL.md",
       "computedHash": "4f140b148ee7e9a276ac9bdf8dc3d91ce0c9749bd335c07f86fa388810261a19"
     },
+    "thread-writer-sms": {
+      "source": "blacktwist/social-media-skills",
+      "sourceType": "github",
+      "skillPath": "skills/thread-writer-sms/SKILL.md",
+      "computedHash": "9ca7045fba6bee6b98e95b56c5a70aa0e97196bdf98580f1129b0d27366106fa"
+    },
+    "threads-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/threads-post/SKILL.md",
+      "computedHash": "cfabeb486f0a3762788c74fad49e9c51a5016792f209dd4b719d96fdd391a5d3"
+    },
     "threat-mitigation-mapping": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -12822,6 +13008,12 @@
       "sourceType": "github",
       "skillPath": "skills/tiktok-automation/SKILL.md",
       "computedHash": "c3ef15682b7e85926b80dcb6e57c8ab3f08def55b97ebab505e2ca152705caf6"
+    },
+    "tiktok-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/tiktok-post/SKILL.md",
+      "computedHash": "d6167a5fc2af038be7231904ff0baa57adc26540ec5fa005fc830b7b6ef8d8ee"
     },
     "tilegym-adding-cutile-kernel": {
       "source": "nvidia/skills",
@@ -13363,6 +13555,12 @@
       "skillPath": "skills/viboscope/SKILL.md",
       "computedHash": "896e4224eba3ef93c94a2d894af03d18fc084fd16e48b5e21d68e7ebd4c36479"
     },
+    "video": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/video/SKILL.md",
+      "computedHash": "8286d39be8d86f9fc1c39b3c340cdebcf9a490f7606ffde566572baa163b1fe7"
+    },
     "videodb": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -13812,6 +14010,12 @@
       "sourceType": "github",
       "skillPath": "skills/x-article-publisher-skill/SKILL.md",
       "computedHash": "66bca15a0e504cd8139c33101b44eca441175cbe65dfade708233d84c1841466"
+    },
+    "x-post": {
+      "source": "publora/skills",
+      "sourceType": "github",
+      "skillPath": "skills/x-post/SKILL.md",
+      "computedHash": "1836945941a49b1d9c4cd25625683965685d99f14edb52fcec1459b16f280081"
     },
     "x-twitter-scraper": {
       "source": "sickn33/antigravity-awesome-skills",

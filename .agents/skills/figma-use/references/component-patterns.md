@@ -12,7 +12,6 @@
 - Component Properties: addComponentProperty API
 - Linking Properties to Child Nodes (Required)
 - INSTANCE_SWAP: Avoiding Variant Explosion
-- Slots: createSlot and SLOT Properties
 - Discovering Existing Conventions in the File
 - Importing Components by Key
 - Working with Instances (finding variants, setProperties, text overrides, detachInstance)
@@ -107,12 +106,7 @@ const iconSlotKey = comp.addComponentProperty('Icon', 'INSTANCE_SWAP', iconCompo
 
 A property that is added but not linked to a child node does **nothing**. You must set `componentPropertyReferences` on the child:
 
-Follows the [canonical text-edit recipe](gotchas.md#canonical-text-edit-recipe-font-load--await--mutate--return-ids) — load the font for every (family, style) you'll mutate (here `Inter Regular`; same rule for every other font) before any `characters`/`fontName`/`fontSize` write.
-
 ```javascript
-// Load required font BEFORE any text mutation
-await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-
 // TEXT property → link to a text node's characters
 const labelKey = comp.addComponentProperty('Label', 'TEXT', 'Button');
 const textNode = figma.createText();
@@ -135,90 +129,6 @@ iconInstance.componentPropertyReferences = {
 - `characters` — TEXT property on a TextNode
 - `visible` — BOOLEAN property (any node)
 - `mainComponent` — INSTANCE_SWAP property on an InstanceNode
-
-## Slots: createSlot and SLOT Properties
-
-Slots are designated drop zones inside a component where designers can place arbitrary content in instances — more flexible than INSTANCE_SWAP (which only swaps component instances). They appear as `SlotNode` (type `'SLOT'`) in the Plugin API and as a `SLOT`-typed component property.
-
-### Option 1 — `component.createSlot()` (preferred)
-
-Creates a `SlotNode` as a direct child of the component and automatically creates a linked `SLOT` component property. No manual wiring needed.
-
-```javascript
-const card = figma.createComponent();
-card.name = "Card";
-card.layoutMode = "VERTICAL";
-card.primaryAxisSizingMode = "AUTO";
-card.counterAxisSizingMode = "FIXED";
-card.resize(320, 100);
-
-// Creates a SlotNode and auto-wires a SLOT component property
-const contentSlot = card.createSlot();
-contentSlot.name = "Content";
-contentSlot.layoutMode = "VERTICAL"; // GRID is NOT allowed on slots
-contentSlot.resize(320, 200);
-
-// The auto-created property key is accessible via componentPropertyReferences
-const slotPropKey = contentSlot.componentPropertyReferences["slotContentId"];
-// e.g. "Content#7:1"
-```
-
-Multiple slots are supported — each call to `createSlot()` produces a separate slot and property:
-
-```javascript
-const contentSlot = card.createSlot();
-contentSlot.name = "Content";
-
-const footerSlot = card.createSlot();
-footerSlot.name = "Footer";
-
-// Component now has two SLOT properties automatically
-return Object.keys(card.componentPropertyDefinitions);
-// → ["Content#7:1", "Footer#7:2"]
-```
-
-### Option 2 — Manual binding via addComponentProperty
-
-Link a regular frame to a `SLOT` property with `componentPropertyReferences`:
-
-```javascript
-const slotPropKey = component.addComponentProperty("Content", "SLOT", "");
-const slotFrame = figma.createFrame();
-component.appendChild(slotFrame);
-// slotFrame must not have GRID layoutMode, and must be a direct child (not nested inside another slot)
-slotFrame.componentPropertyReferences = { slotContentId: slotPropKey };
-```
-
-### Populating slots in instances
-
-In a component instance, slot nodes are accessible by `findOne()`. Build content and append it to the slot like any other node. In narrow cases the original node handle can be invalidated by the append, so if a post-append edit throws `"Internal Figma Error: Parent not found"`, re-find the sublayer through the slot's `children` and edit through the fresh handle.
-
-```javascript
-const instance = card.createInstance();
-figma.currentPage.appendChild(instance);
-
-const btn = figma.createFrame();
-btn.layoutMode = "HORIZONTAL";
-btn.cornerRadius = 8;
-
-// Use the type-indexed criteria for the type filter, then narrow by name.
-const contentSlot = instance
-  .findAllWithCriteria({ types: ["SLOT"] })
-  .find(n => n.name === "Content");
-contentSlot.appendChild(btn);
-
-// If a post-append edit throws "Parent not found", re-find via the slot:
-// const appended = contentSlot.children[contentSlot.children.length - 1];
-// appended.someProperty = ...;
-```
-
-### Slot restrictions
-
-- `GRID` layoutMode is not allowed on slot nodes
-- Widgets, Stickies, and ComponentNodes cannot be appended directly to a slot
-- Frames nested inside another slot cannot themselves be bound to a slot property
-- `instance.setProperties({ [slotPropKey]: ... })` throws — slot content is set by appending children, not via `setProperties`
-- `slotNode.resetSlot()` (in an instance) reverts the slot to its default empty state
 
 ## INSTANCE_SWAP: Avoiding Variant Explosion
 
@@ -247,62 +157,54 @@ This works for icons, avatars, badges, or any swappable nested element.
 
 ### List all existing components across all pages
 
-`search_design_system` (MCP tool) is an option for published components. For on-canvas components, **don't loop pages inside one script** — even for read-only discovery.
-
-**Prefer the two-step fan-out:**
-
 ```javascript
-// Step 1 — one cheap use_figma call, no page switch. Returns the page IDs to fan out over.
-return figma.root.children.map(p => ({ id: p.id, name: p.name }));
+(async () => {
+  try {
+    const results = [];
+    for (const page of figma.root.children) {
+      await figma.setCurrentPageAsync(page);
+      page.findAll(n => {
+        if (n.type === 'COMPONENT') results.push(`[${page.name}] ${n.name} (COMPONENT) id=${n.id}`);
+        if (n.type === 'COMPONENT_SET') results.push(`[${page.name}] ${n.name} (COMPONENT_SET) id=${n.id}`);
+        return false;
+      });
+    }
+    figma.closePlugin(results.join('\n'));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
-
-Then in the **next assistant turn, emit one `use_figma` per page in parallel** (a single message with N tool-use blocks). Each script runs:
-
-```javascript
-// Read-only discovery — skip invisible instance interiors for speed.
-figma.skipInvisibleInstanceChildren = true;
-
-// Step 2 — one call per page, currentPage set exactly once.
-// The agent MUST issue N of these in parallel in one message — do not loop pages inside the script.
-const page = await figma.getNodeByIdAsync(PAGE_ID); // PAGE_ID supplied by caller
-await figma.setCurrentPageAsync(page);
-// Indexed type lookup — much faster than findAll with a side-effect predicate.
-const matches = page.findAllWithCriteria({ types: ['COMPONENT', 'COMPONENT_SET'] });
-return matches.map(n => ({ pageName: page.name, name: n.name, type: n.type, id: n.id }));
-```
-
-See [gotchas.md → Set current page once per `use_figma` call](gotchas.md#set-current-page-once-per-use_figma-call--split-multi-page-work-into-parallel-calls) for the full rule.
 
 ### Inspect an existing component set's variant naming pattern
 
 ```javascript
-const cs = await figma.getNodeByIdAsync('COMPONENT_SET_ID');
-const variantNames = cs.children.map(c => c.name);
-const propDefs = cs.componentPropertyDefinitions;
-return { variantNames, propDefs };
+(async () => {
+  try {
+    const cs = await figma.getNodeByIdAsync('COMPONENT_SET_ID');
+    const variantNames = cs.children.map(c => c.name);
+    const propDefs = cs.componentPropertyDefinitions;
+    figma.closePlugin(JSON.stringify({ variantNames, propDefs }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
 
 ### Find existing components in the file
 
-`search_design_system` is an option for published components. For on-canvas components, use the two-step fan-out from the section above — **don't loop pages inside one script.**
-
-**Step 1** — one cheap `use_figma` call returns page IDs:
-
 ```javascript
-return figma.root.children.map(p => ({ id: p.id, name: p.name }));
-```
-
-**Step 2** — the agent MUST emit one `use_figma` per page in parallel (a single message with N tool-use blocks). Each script:
-
-```javascript
-// Read-only discovery — skip invisible instance interiors for speed.
-figma.skipInvisibleInstanceChildren = true;
-
-const page = await figma.getNodeByIdAsync(PAGE_ID);
-await figma.setCurrentPageAsync(page);
-// Indexed type lookup — much faster than findAll with a side-effect predicate.
-const components = page.findAllWithCriteria({ types: ['COMPONENT'] });
-return components.map(n => ({ name: n.name, id: n.id, page: page.name, w: n.width, h: n.height }));
+(async () => {
+  try {
+    const components = [];
+    for (const page of figma.root.children) {
+      await figma.setCurrentPageAsync(page);
+      page.findAll(n => {
+        if (n.type === 'COMPONENT') {
+          components.push({ name: n.name, id: n.id, page: page.name, w: n.width, h: n.height });
+        }
+        return false;
+      });
+    }
+    figma.closePlugin(JSON.stringify(components));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
 
 ## Importing Components by Key (Team Libraries)
@@ -310,15 +212,12 @@ return components.map(n => ({ name: n.name, id: n.id, page: page.name, w: n.widt
 `importComponentByKeyAsync` and `importComponentSetByKeyAsync` import components from **team libraries** (not the same file you're working in). For components in the current file, use `figma.getNodeByIdAsync()` or `findOne()`/`findAll()` to locate them directly.
 
 ```javascript
-// Batch independent imports with Promise.all — sequential awaits multiply
-// IPC latency by the number of imports for no benefit.
-const [comp, set] = await Promise.all([
-  figma.importComponentByKeyAsync("COMPONENT_KEY"),
-  figma.importComponentSetByKeyAsync("COMPONENT_SET_KEY"),
-]);
-
+// Import a component from a team library
+const comp = await figma.importComponentByKeyAsync("COMPONENT_KEY");
 const instance = comp.createInstance();
 
+// Import a component set from a team library and pick a variant
+const set = await figma.importComponentSetByKeyAsync("COMPONENT_SET_KEY");
 const variant = set.children.find(c =>
   c.type === "COMPONENT" && c.name.includes("size=md")
 ) || set.defaultVariant;
@@ -366,13 +265,13 @@ instance.setProperties({
 const instance = comp.createInstance();
 const propDefs = instance.componentProperties;
 // Returns e.g.: { "Label#2:0": { type: "TEXT", value: "Button" }, "Has Icon#4:64": { type: "BOOLEAN", value: true } }
-return propDefs;
+figma.closePlugin(JSON.stringify(propDefs));
 ```
 
 Also check nested instances — a parent component may not expose text properties directly, but its nested child instances might:
 
 ```javascript
-const nestedInstances = instance.findAllWithCriteria({ types: ["INSTANCE"] });
+const nestedInstances = instance.findAll(n => n.type === "INSTANCE");
 const nestedProps = nestedInstances.map(ni => ({
   name: ni.name,
   id: ni.id,
@@ -395,10 +294,7 @@ for (const [key, def] of Object.entries(propDefs)) {
 For nested instances that expose their own TEXT properties, call `setProperties()` on the nested instance:
 
 ```javascript
-// Use the type-indexed criteria for the type filter, then narrow by name.
-const nestedHeading = instance
-  .findAllWithCriteria({ types: ["INSTANCE"] })
-  .find(n => n.name === "Text Heading");
+const nestedHeading = instance.findOne(n => n.type === "INSTANCE" && n.name === "Text Heading");
 if (nestedHeading) {
   nestedHeading.setProperties({ "Text#2104:5": "Actual heading text" });
 }
@@ -407,15 +303,9 @@ if (nestedHeading) {
 **Step 3: Only fall back to direct node.characters for unmanaged text.** If text is NOT controlled by any component property, find text nodes directly. **Always load the node's actual font first** — instance text nodes inherit fonts from the source component, so don't assume Inter Regular:
 
 ```javascript
-const textNodes = instance.findAllWithCriteria({ types: ["TEXT"] });
-// Dedupe fonts and load them in parallel before mutating text. Awaiting
-// loadFontAsync per node in the loop serializes one IPC round-trip per
-// text node and reloads the same font repeatedly.
-const uniqueFonts = [...new Map(
-  textNodes.map(t => [JSON.stringify(t.fontName), t.fontName])
-).values()];
-await Promise.all(uniqueFonts.map(f => figma.loadFontAsync(f)));
+const textNodes = instance.findAll(n => n.type === "TEXT");
 for (const t of textNodes) {
+  await figma.loadFontAsync(t.fontName);
   t.characters = "Updated text";
 }
 ```
@@ -584,11 +474,15 @@ async function getPublishedComponentMetadata(componentKey) {
 ### Full metadata extraction script
 
 ```javascript
-// For local components, use getLocalComponentMetadata:
-const result = await getLocalComponentMetadata('COMPONENT_OR_SET_ID');
-return result;
+(async () => {
+  try {
+    // For local components, use getLocalComponentMetadata:
+    const result = await getLocalComponentMetadata('COMPONENT_OR_SET_ID');
+    figma.closePlugin(JSON.stringify(result));
 
-// For published components, use getPublishedComponentMetadata:
-// const result = await getPublishedComponentMetadata('COMPONENT_KEY');
-// return result;
+    // For published components, use getPublishedComponentMetadata:
+    // const result = await getPublishedComponentMetadata('COMPONENT_KEY');
+    // figma.closePlugin(JSON.stringify(result));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```

@@ -12,7 +12,6 @@
 - Variable Scopes: What They Are and How to Set Them
 - Variable Aliasing (VARIABLE_ALIAS)
 - Code Syntax (setVariableCodeSyntax)
-- Importing Library Variables
 - Discovering Existing Variables in the File
 - Effect Styles (For Shadows)
 
@@ -119,7 +118,7 @@ node.effects = [newEffect];
 
 ```javascript
 // All bound children of this frame will resolve to the specified mode's values
-frame.setExplicitVariableModeForCollection(collection, modeId);
+frame.setExplicitVariableModeForCollection(collection.id, modeId);
 ```
 
 Without this, all nodes use the collection's default (first) mode.
@@ -138,8 +137,6 @@ variable.scopes = [];                              // hidden from all pickers
 
 **All valid scope values:**
 `ALL_SCOPES`, `TEXT_CONTENT`, `CORNER_RADIUS`, `WIDTH_HEIGHT`, `GAP`, `ALL_FILLS`, `FRAME_FILL`, `SHAPE_FILL`, `TEXT_FILL`, `STROKE_COLOR`, `STROKE_FLOAT`, `EFFECT_FLOAT`, `EFFECT_COLOR`, `OPACITY`, `FONT_FAMILY`, `FONT_STYLE`, `FONT_WEIGHT`, `FONT_SIZE`, `LINE_HEIGHT`, `LETTER_SPACING`, `PARAGRAPH_SPACING`, `PARAGRAPH_INDENT`
-
-**Always set scopes explicitly** — `ALL_SCOPES` is the default but almost never what you want. For a comprehensive scope-to-use-case mapping table, see [token-creation.md § Variable Scopes — Complete Reference Table](../../figma-generate-library/references/token-creation.md).
 
 **Always check the existing file's scope patterns before creating variables** — match whatever convention is already in use. See "Discovering Existing Variables" below.
 
@@ -182,36 +179,6 @@ variable.setVariableCodeSyntax('iOS', 'Color.bgDefault');
 `var(${token.cssVar})`
 ```
 
-## Importing Library Variables
-
-For variables from **team libraries** (not the current file), use `importVariableByKeyAsync`:
-
-```javascript
-// Import a single variable by its key
-const colorVar = await figma.variables.importVariableByKeyAsync("VARIABLE_KEY");
-// Now use it like any local variable
-const paint = figma.variables.setBoundVariableForPaint(
-  { type: 'SOLID', color: { r: 0, g: 0, b: 0 } }, 'color', colorVar
-);
-node.fills = [paint];
-```
-
-To discover available library variable collections and their variables:
-
-```javascript
-// List all available library variable collections
-const libCollections = await figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync();
-// Each has: name, key, libraryName
-
-// Get variables in a specific library collection
-const libVars = await figma.teamLibrary.getVariablesInLibraryCollectionAsync(libCollections[0].key);
-// Each has: name, key, resolvedType
-// Import the ones you need:
-const imported = await figma.variables.importVariableByKeyAsync(libVars[0].key);
-```
-
-**When to import vs. use local:** If `variable.remote === true`, it's from a library — you can reference it directly if already imported, or import by key. If `remote === false`, it's local to the file — use `getVariableByIdAsync` directly.
-
 ## Discovering Existing Variables in the File
 
 **Always inspect the file's existing variables before creating new ones.** Different files use different naming conventions, scope patterns, and collection structures. Match what's already there.
@@ -219,41 +186,45 @@ const imported = await figma.variables.importVariableByKeyAsync(libVars[0].key);
 ### List collections with mode info
 
 ```javascript
-const collections = await figma.variables.getLocalVariableCollectionsAsync();
-const results = collections.map(c => ({
-  name: c.name,
-  id: c.id,
-  varCount: c.variableIds.length,
-  modes: c.modes.map(m => ({ name: m.name, id: m.modeId }))
-}));
-return results;
+(async () => {
+  try {
+    const collections = figma.variables.getLocalVariableCollections();
+    const results = collections.map(c => ({
+      name: c.name,
+      id: c.id,
+      varCount: c.variableIds.length,
+      modes: c.modes.map(m => ({ name: m.name, id: m.modeId }))
+    }));
+    figma.closePlugin(JSON.stringify(results));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
 
 ### Inspect scope patterns used in existing variables
 
 ```javascript
-const collections = await figma.variables.getLocalVariableCollectionsAsync();
-// Batch every getVariableByIdAsync into a single Promise.all — sequential
-// awaits inside the loop would serialize one IPC round-trip per variable.
-const allIds = collections.flatMap(c => c.variableIds);
-const allVars = await Promise.all(
-  allIds.map(id => figma.variables.getVariableByIdAsync(id))
-);
-const scopeGroups = {};
-for (const v of allVars) {
-  if (!v) continue;
-  const key = JSON.stringify(v.scopes);
-  if (!scopeGroups[key]) scopeGroups[key] = [];
-  scopeGroups[key].push(v.name);
-}
-return scopeGroups;
+(async () => {
+  try {
+    const collections = figma.variables.getLocalVariableCollections();
+    const scopeGroups = {};
+    for (const c of collections) {
+      for (const id of c.variableIds) {
+        const v = figma.variables.getVariableById(id);
+        const key = JSON.stringify(v.scopes);
+        if (!scopeGroups[key]) scopeGroups[key] = [];
+        scopeGroups[key].push(v.name);
+      }
+    }
+    figma.closePlugin(JSON.stringify(scopeGroups));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
 
 ### Build a name→variable lookup for reuse
 
 ```javascript
 const varByName = {};
-for (const v of await figma.variables.getLocalVariablesAsync()) {
+for (const v of figma.variables.getLocalVariables()) {
   varByName[v.name] = v;
 }
 
@@ -288,31 +259,33 @@ The async API returns richer data including code syntax and scopes per variable:
  */
 async function listVariableCollectionsAndVariables() {
   const collections = await figma.variables.getLocalVariableCollectionsAsync();
-  // flatMap every variable ID across all collections into one Promise.all,
-  // then look up per-collection from a Map. Avoids nested Promise.all and
-  // still issues every lookup in parallel.
-  const allIds = collections.flatMap(c => c.variableIds);
-  const fetched = await Promise.all(
-    allIds.map(id => figma.variables.getVariableByIdAsync(id))
-  );
-  const byId = new Map(allIds.map((id, i) => [id, fetched[i]]));
-  return collections.map(collection => ({
-    name: collection.name,
-    id: collection.id,
-    modes: collection.modes.map(m => [m.name, m.modeId]),
-    variables: collection.variableIds
-      .map(id => byId.get(id))
-      .filter(v => v)
-      .map(v => [v.name, v.id, v.codeSyntax, v.scopes])
-  }));
+  const results = [];
+  for (const collection of collections) {
+    const vars = [];
+    for (const id of collection.variableIds) {
+      const v = await figma.variables.getVariableByIdAsync(id);
+      vars.push([v.name, v.id, v.codeSyntax, v.scopes]);
+    }
+    results.push({
+      name: collection.name,
+      id: collection.id,
+      modes: collection.modes.map(m => [m.name, m.modeId]),
+      variables: vars
+    });
+  }
+  return results;
 }
 ```
 
 Full runnable script:
 
 ```javascript
-const results = await listVariableCollectionsAndVariables();
-return results;
+(async () => {
+  try {
+    const results = await listVariableCollectionsAndVariables();
+    figma.closePlugin(JSON.stringify(results));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
 
 ## Setting and Removing Code Syntax

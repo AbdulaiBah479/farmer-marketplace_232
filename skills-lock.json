@@ -43,6 +43,12 @@
       "skillPath": "skills/ab-test-setup/SKILL.md",
       "computedHash": "8ba2bd5cdc00b7b5b1dca0ddb36cce62deccae251b55c9dc16fb005c5942efdc"
     },
+    "accelerated-computing-cudf": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/accelerated-computing-cudf/SKILL.md",
+      "computedHash": "d373532ba6e389d8cee27e37500c56cae0c413e15d9527bdaa412ee6be2778c5"
+    },
     "acceptance-orchestrator": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -319,6 +325,12 @@
       "skillPath": "skills/agenttrace-session-audit/SKILL.md",
       "computedHash": "1d17af613dacf0b3fd977ba1b954a3783747262dd59817d646e9cc070bcfe893"
     },
+    "agora": {
+      "source": "AgoraIO/skills",
+      "sourceType": "github",
+      "skillPath": "skills/agora/SKILL.md",
+      "computedHash": "3441705d67c44f25c3f1d943b7472683385813e51b6966c65899b6aaab5071fe"
+    },
     "ai-agent-development": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -415,6 +427,18 @@
       "skillPath": "skills/ai-wrapper-product/SKILL.md",
       "computedHash": "2e7b059b03463152c9aa74e846ac94ba09855db4cb78df1d3fd4339a47517b9b"
     },
+    "aiq-deploy": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/aiq-deploy/SKILL.md",
+      "computedHash": "f18d4d7dcc639775f7f1ceffbca1941f9d098bb8382068a54119ed9cd5ed4c83"
+    },
+    "aiq-research": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/aiq-research/SKILL.md",
+      "computedHash": "72e5cfba937778e7bfc28db11587c87972bebec65603645252472157145001ce"
+    },
     "airflow-dag-patterns": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -426,6 +450,12 @@
       "sourceType": "github",
       "skillPath": "skills/airtable-automation/SKILL.md",
       "computedHash": "2db54b40b820bbd73c7feb0c6e06d19cff6f79b3efc17efa7b39bc0d6661fbd0"
+    },
+    "airunway-aks-setup": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/airunway-aks-setup/SKILL.md",
+      "computedHash": "9016a43551692be0396db38fccdf0f0fa549f5194d1c288287f2f720c9e38359"
     },
     "akf-trust-metadata": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -740,10 +770,10 @@
       "computedHash": "c9930121f35f7cfded7dbcf76e0704e7097779cc78ca15a8e2838402a8fe9273"
     },
     "appinsights-instrumentation": {
-      "source": "github/awesome-copilot",
+      "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/appinsights-instrumentation/SKILL.md",
-      "computedHash": "cba7f689ea8f79d1fd259755a1a37b955db87a0b691eedc18b02b2d8331fa567"
+      "computedHash": "a70f5b6abca44d75b1879bc68aa2926b0355c55cae654d79db97fdbb20c36337"
     },
     "apple-appstore-reviewer": {
       "source": "github/awesome-copilot",
@@ -756,6 +786,12 @@
       "sourceType": "github",
       "skillPath": "skills/application-performance-performance-optimization/SKILL.md",
       "computedHash": "eb3b1c4e2c10045f823284e968fe5d7204dcccd4a272eed46eb63b02d6d3d0d1"
+    },
+    "applicationinsights-web-ts": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/applicationinsights-web-ts/SKILL.md",
+      "computedHash": "a118fb1629fd9e8d43b8634aebdd9fc0fba625999e4be8839ad920dbc41b0cea"
     },
     "arch-linux-triage": {
       "source": "github/awesome-copilot",
@@ -882,6 +918,12 @@
       "sourceType": "github",
       "skillPath": "skills/aspire/SKILL.md",
       "computedHash": "aa502e4ff4c9cb28baa2c9ebd14b48fe7ed572fd291a9e24cda5226654413903"
+    },
+    "aspnet-core": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/aspnet-core/SKILL.md",
+      "computedHash": "8c10311b9afeeeaf0d8db4372322d020fc7e05ccd09f85f806ec8756de9ecc09"
     },
     "aspnet-minimal-api-openapi": {
       "source": "github/awesome-copilot",
@@ -1087,6 +1129,24 @@
       "skillPath": "skills/azd-deployment/SKILL.md",
       "computedHash": "e679655d270d7f28abd1b9853c84821ab3ad97acb21e768cbc9b42779d7bb45f"
     },
+    "azure-active-directory-b2c": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-active-directory-b2c/SKILL.md",
+      "computedHash": "c853168cc42b28084d92557e0b44671ed29e881882bd1b7a296083374c5157e0"
+    },
+    "azure-advisor": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-advisor/SKILL.md",
+      "computedHash": "e8dc8123e70d9f9607e305ff2ee0b5917b40fc98a40bf3f851efddcf29814c10"
+    },
+    "azure-ai": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-ai/SKILL.md",
+      "computedHash": "4d6e69d68a30bf05988677616fb213f7c01d2d97e7d2bcec9ffabb1c3c6ada81"
+    },
     "azure-ai-agents-persistent-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -1213,6 +1273,12 @@
       "skillPath": "skills/azure-ai-translation-ts/SKILL.md",
       "computedHash": "71ff783578b5ff9389935c4be3db6fb148b2e15705b64e45e0469b8d6da8af7d"
     },
+    "azure-ai-vision": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-ai-vision/SKILL.md",
+      "computedHash": "34922411d0810db74344b7f077be029037ddce42536fa98e0c4b993f3cf696e5"
+    },
     "azure-ai-vision-imageanalysis-java": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -1249,6 +1315,60 @@
       "skillPath": "skills/azure-ai-voicelive-ts/SKILL.md",
       "computedHash": "204f3fa9615ff588ed59883e291179b8b4b181f15649314e43a3733a7a7fc042"
     },
+    "azure-aigateway": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-aigateway/SKILL.md",
+      "computedHash": "ce4fbc6e2e04fa6fa0b83ee206d87fdf7320c06cc126374c029d7d7c56fa10c8"
+    },
+    "azure-aks-edge-essentials": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-aks-edge-essentials/SKILL.md",
+      "computedHash": "dc21ce1959f23a5180bb7a6d75ec17ab0c2c252a9bba910590e0f5dc8b43dbbd"
+    },
+    "azure-analysis-services": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-analysis-services/SKILL.md",
+      "computedHash": "539c8b4ed38c39b8bd0365b07c5ca20cf5089ca99bb8e0230660dea1f090dd26"
+    },
+    "azure-anomaly-detector": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-anomaly-detector/SKILL.md",
+      "computedHash": "64d715de1bd4562c9eafcdd9a975a9ca442b1dfb58e5f224cf541081b43ddaa2"
+    },
+    "azure-api-center": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-api-center/SKILL.md",
+      "computedHash": "d24467b4de7dc0d068330612e5913f38fff184fae52e86b3fa39a2b7dac33312"
+    },
+    "azure-api-management": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-api-management/SKILL.md",
+      "computedHash": "e45777df8a561b0abfbd5d4dd15054765c3eb08c41d15eab51e265d2f6d899b5"
+    },
+    "azure-app-configuration": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-app-configuration/SKILL.md",
+      "computedHash": "e7ab58a3e5d686201d4fdf554898a8120f8924686a13adf0cb565cd8c03eeedb"
+    },
+    "azure-app-service": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-app-service/SKILL.md",
+      "computedHash": "d11ae9dd938be5f0a8854bc6b664218d83e25ee5a44678bf64b936ab04ceeee2"
+    },
+    "azure-app-testing": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-app-testing/SKILL.md",
+      "computedHash": "cf9128eafd5456f3c85d56e417f4b1eb916df34f3c69ae48187dc2298a9db864"
+    },
     "azure-appconfiguration-java": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -1267,11 +1387,155 @@
       "skillPath": "skills/azure-appconfiguration-ts/SKILL.md",
       "computedHash": "b4e12e83953384d76ae981de9495e2d40215f57fa6d3b97bfa741a26a575e5a9"
     },
+    "azure-application-gateway": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-application-gateway/SKILL.md",
+      "computedHash": "4b11c4c8494ad8934bd92a6bce497518bb3fc16ea5ddac2dafbd01b9299ecc2d"
+    },
+    "azure-arc": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-arc/SKILL.md",
+      "computedHash": "dd09e389a64b69fc59df75774bae85574225edb2d4ac43bb195419a795000ea7"
+    },
+    "azure-architecture": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-architecture/SKILL.md",
+      "computedHash": "b38c4add6978ad819f319fbef5d0a4df5fa1713d0dc01e45938cad0f8865649c"
+    },
     "azure-architecture-autopilot": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/azure-architecture-autopilot/SKILL.md",
       "computedHash": "866de92f0f99f506ce7e2b9df6bfb4f7721ca440fbbae1fd8068ddd08935946f"
+    },
+    "azure-artifact-signing": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-artifact-signing/SKILL.md",
+      "computedHash": "6b6565b911376738e252ea9425fdbcf7cb382a6d7b12a9703fa170e953ca1c5a"
+    },
+    "azure-artifacts": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-artifacts/SKILL.md",
+      "computedHash": "e50f45f72dc1ca9d63d04fc61fa1ace22b7077bada34fc563373b2d15dac1424"
+    },
+    "azure-attestation": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-attestation/SKILL.md",
+      "computedHash": "518d3985473975ed693dc0db4aa37505b4993128d0d45defac139773cb62be39"
+    },
+    "azure-automation": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-automation/SKILL.md",
+      "computedHash": "33ee2641eaec326e29628c856030bb74a66d41fbec9e8ff84eee621c9f20e1ac"
+    },
+    "azure-backup": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-backup/SKILL.md",
+      "computedHash": "6bc32825e332b2cf0e0c1441141994ec8a96a0423c17c2ae92d94c1daec52be3"
+    },
+    "azure-bastion": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-bastion/SKILL.md",
+      "computedHash": "6fb74c7c4e3e1dcf1064751ff95598f9557bcdc69e82c836068aa8b1c94a1268"
+    },
+    "azure-batch": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-batch/SKILL.md",
+      "computedHash": "17e851e10eb609a0d484e6b6f48a9d0779aafea592fe4b5e6fffdf299ded276f"
+    },
+    "azure-blob-storage": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-blob-storage/SKILL.md",
+      "computedHash": "36fa06580e1171976ec439b0d2e976918974e23334ad58c8f3da69769f8c5d87"
+    },
+    "azure-blueprints": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-blueprints/SKILL.md",
+      "computedHash": "0bbdb061e3bf1f93ed4f2ec917509da673db76e60235139d389983d280fd99ed"
+    },
+    "azure-boards": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-boards/SKILL.md",
+      "computedHash": "e33ee072f35f0d14b09515fed33c1700e0c1b2a7fca04630a7111060ee1e9eec"
+    },
+    "azure-bot-service": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-bot-service/SKILL.md",
+      "computedHash": "49d816e56dab67d076054304a67015cac5d0234de1809b42de6ef6f11ccb9de3"
+    },
+    "azure-business-process-tracking": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-business-process-tracking/SKILL.md",
+      "computedHash": "697b24e318476cd6b0493e6c0008ca7570a997ca44b972d5f5be14ef1a0d1b05"
+    },
+    "azure-cache-redis": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cache-redis/SKILL.md",
+      "computedHash": "36634508cb4b6af83db52af5942e12917a134134b24cbb9d7346a153de555af8"
+    },
+    "azure-carbon-optimization": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-carbon-optimization/SKILL.md",
+      "computedHash": "1dbfead519f8c30f7903ba71e4bb29083fa7a98b3e72bd86d25da0228b1e259e"
+    },
+    "azure-chaos-studio": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-chaos-studio/SKILL.md",
+      "computedHash": "feade2645eabedabd7966355f64f31a858a8bae7f367c96384548cfbf2bc2254"
+    },
+    "azure-cloud-adoption-framework": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cloud-adoption-framework/SKILL.md",
+      "computedHash": "aa4541aad91672a3ae6bce8e0a6c72d831321c467b411037245000c5a7ffa506"
+    },
+    "azure-cloud-hsm": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cloud-hsm/SKILL.md",
+      "computedHash": "f50b1348a8fb576a4307320b185e58aa6d613764f47d290eb0c071c960d498ab"
+    },
+    "azure-cloud-migrate": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cloud-migrate/SKILL.md",
+      "computedHash": "353daa0fc4b05b03ed08df298be3a6948279da7d9ff0b37ac368e9c1e37e7ceb"
+    },
+    "azure-cloud-services": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cloud-services/SKILL.md",
+      "computedHash": "aed8e1c6c2840c1c0265b28b44228a726662ef9b715c3358165c450ea659246a"
+    },
+    "azure-cloud-shell": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cloud-shell/SKILL.md",
+      "computedHash": "55402706c1ba4ab5909a461f97c7503d5c1283d599934bfda5ece93f72fe5693"
+    },
+    "azure-cognitive-search": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cognitive-search/SKILL.md",
+      "computedHash": "0071353dac33ff7d0a79b0b024835a3ba653445c54cf260ac25d4ce4746b90b4"
     },
     "azure-communication-callautomation-java": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1297,11 +1561,29 @@
       "skillPath": "skills/azure-communication-common-java/SKILL.md",
       "computedHash": "3efb135cfc1a5bfbf4223d19572beaef4f7b9f17af08ce042febf18be956fc47"
     },
+    "azure-communication-services": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-communication-services/SKILL.md",
+      "computedHash": "467c9b5f52df1360b3437f465725bc019bf30b5052be32c2762ce1fa87ca25e6"
+    },
     "azure-communication-sms-java": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-communication-sms-java/SKILL.md",
       "computedHash": "5403e5f3ea355bfa6dc055bfa2ace9db1f5712f27adb48904710ecf515fcbdde"
+    },
+    "azure-compliance": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-compliance/SKILL.md",
+      "computedHash": "9925a074f6cabb23b4316eed17e6b538d1e5c0b47e4f8905dc4a64c691e514f5"
+    },
+    "azure-compute": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-compute/SKILL.md",
+      "computedHash": "b5d3813cb5066d1d11c725c3f336848e7a3c2d7a472e6a9ab3cf288bafb3c6cd"
     },
     "azure-compute-batch-java": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1309,11 +1591,65 @@
       "skillPath": "skills/azure-compute-batch-java/SKILL.md",
       "computedHash": "60542e3fbfaea8a5ebaa26b8b750a9d38a1db040975af3bf2b317143cd219807"
     },
+    "azure-confidential-computing": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-confidential-computing/SKILL.md",
+      "computedHash": "7da280ec1e3e3ebf6d93b4b3e8e77e1e5b80060730c11b4b9b4fe3835394af2b"
+    },
+    "azure-confidential-ledger": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-confidential-ledger/SKILL.md",
+      "computedHash": "5b2d05667f3126f473c5a124c57310b33b7e5efeb5d1f95ca88b5b3dda475de1"
+    },
+    "azure-container-apps": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-container-apps/SKILL.md",
+      "computedHash": "54e23e2831e581e377c41ba8b2c6c47ea33e0428d4bfd3a351f24db489664a73"
+    },
+    "azure-container-instances": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-container-instances/SKILL.md",
+      "computedHash": "7626207487ce3b1434e29f21ef20bf409a390054130093e32126258fbec853cd"
+    },
+    "azure-container-registry": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-container-registry/SKILL.md",
+      "computedHash": "e1a6f54d5d09fbcdd8c7b95feb59b4ceeff816ca6d2848f4731bd06771015993"
+    },
+    "azure-container-storage": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-container-storage/SKILL.md",
+      "computedHash": "cd535a3b4a136ad0c48e8201eecceef2bea05aabfe2daf4ead40f27693282f9b"
+    },
     "azure-containerregistry-py": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-containerregistry-py/SKILL.md",
       "computedHash": "faa3e796efad8421f125ea846772d0e5bdf2cb87a6543c77c18799c942ef5019"
+    },
+    "azure-content-safety": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-content-safety/SKILL.md",
+      "computedHash": "20ca11f220d2061cad0c25d94b5ac8b5428264807d71c6a6f256551408b8e1c5"
+    },
+    "azure-copilot": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-copilot/SKILL.md",
+      "computedHash": "18b3a672a30160972186c98252214f66ca61b06e2107a1ea4a145cfcf508d0f8"
+    },
+    "azure-cosmos-db": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cosmos-db/SKILL.md",
+      "computedHash": "d76249491bd5bed0127ef02c072fdf683e1f6971b3dfeb0f634e77e45e3a2a10"
     },
     "azure-cosmos-db-py": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1334,16 +1670,82 @@
       "computedHash": "7f4df3766585307b86d301829db54df371a646203aacc26d80bd039ddc9f9080"
     },
     "azure-cosmos-rust": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/azure-cosmos-rust/SKILL.md",
-      "computedHash": "3cea0fcf61a63fefbcbda40451832db77413ce684eed03fa89ea0a52208d1122"
+      "skillPath": ".github/skills/azure-cosmos-rust/SKILL.md",
+      "computedHash": "90eacf38c559caa5ffa49c88bcc1fde24610f67f9870a8f64b75a3d5f4637a22"
     },
     "azure-cosmos-ts": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-cosmos-ts/SKILL.md",
       "computedHash": "2f192bbab7ad199e1b14d6ae9dcbe947aa088b849c166bfa75dffcaf5c900289"
+    },
+    "azure-cost": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cost/SKILL.md",
+      "computedHash": "b0aa9ed07b4adf1b68dcfe37cb6043410291d96e18a4315369f28b1c8722530c"
+    },
+    "azure-cost-management": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cost-management/SKILL.md",
+      "computedHash": "5cabedcad02e2084f3ec9fe1f17689427162bfab87eafbe27e12b2027641f6b7"
+    },
+    "azure-custom-vision": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-custom-vision/SKILL.md",
+      "computedHash": "65555c2228275adbe982e7ac30a689b023ebe5a2be7a205e84f0106ba6e86cf3"
+    },
+    "azure-cyclecloud": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-cyclecloud/SKILL.md",
+      "computedHash": "d4cde7015ebf5c9bd7406c15d3af0b65079818e3a49efbd6c3965746ee3abd03"
+    },
+    "azure-data-api-builder": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-data-api-builder/SKILL.md",
+      "computedHash": "5104f2ab6f75ffca62c3b145f12d1bcaf8220a986902aab1cc3ae10cdf007bf4"
+    },
+    "azure-data-box-family": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-data-box-family/SKILL.md",
+      "computedHash": "7a02fcdd247192ab58150e04da0f0698bc75354ed5eeae7f0b7a387bfbf5f2b2"
+    },
+    "azure-data-explorer": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-data-explorer/SKILL.md",
+      "computedHash": "3439bc7acc0d6987d3a3750d3b42239b3372b16f23437798967853ce832e6478"
+    },
+    "azure-data-factory": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-data-factory/SKILL.md",
+      "computedHash": "fe04cc03f3f76fb39359eb34238c6b2183900701165778df7257ad5664f242f9"
+    },
+    "azure-data-manager-for-agri": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-data-manager-for-agri/SKILL.md",
+      "computedHash": "55c39a90b2b2d02c90c93fc5d350cc17a0e1a37a3be8531abba6a8502c76d885"
+    },
+    "azure-data-science-vm": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-data-science-vm/SKILL.md",
+      "computedHash": "15a074bfc9cbbba041e201ece2a10ac8a6965f20f43f88b7b57507db0786de5e"
+    },
+    "azure-data-share": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-data-share/SKILL.md",
+      "computedHash": "f9d67ad561d494b89c073c56bfbe734b803b662f8055086e9a9c6a765fc4a594"
     },
     "azure-data-tables-java": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1357,17 +1759,155 @@
       "skillPath": "skills/azure-data-tables-py/SKILL.md",
       "computedHash": "1fe909dab6b4af1d73ba9b79b41a70b8fdb04c7df3ed1cacea93ef81ad167cc6"
     },
+    "azure-database-migration": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-database-migration/SKILL.md",
+      "computedHash": "b8b74c07071e7387fcd7da9786b1d55757e56674edb080e883f428782eb1d501"
+    },
+    "azure-database-mysql": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-database-mysql/SKILL.md",
+      "computedHash": "f8d5bcc8e3707598a1ac15f8cf69d952744b3d9bac53b8dac0492931ff0b4912"
+    },
+    "azure-database-postgresql": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-database-postgresql/SKILL.md",
+      "computedHash": "589a714f4f74764d0d0b2045f880fa0a95afda32c8d003530a8669f78971c2c3"
+    },
+    "azure-databricks": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-databricks/SKILL.md",
+      "computedHash": "09b22e271f903746c98afcc4a6f2ef963c74e6c0aff94efc4bcd14a082d6275d"
+    },
+    "azure-ddos-protection": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-ddos-protection/SKILL.md",
+      "computedHash": "ef80fcafbb2198e457cf74012983b5f372d259cebdfd1994f47c35f2749d756d"
+    },
+    "azure-dedicated-hsm": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-dedicated-hsm/SKILL.md",
+      "computedHash": "3eff633b38ce7aee764861f19aa94daf9df9b11969f1b9a12cf66071678c3305"
+    },
+    "azure-defender-for-cloud": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-defender-for-cloud/SKILL.md",
+      "computedHash": "4829bec059ff7182717e5d00cf6584e8d383a522db153b59f8cd4d9d77997ca5"
+    },
+    "azure-defender-for-iot": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-defender-for-iot/SKILL.md",
+      "computedHash": "45c4e388dc75ce48fd0b5738598e66ddfe73eb33be8b6f50316508fedd220343"
+    },
+    "azure-deploy": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-deploy/SKILL.md",
+      "computedHash": "12e032e33a0c716377cbdd3c13abea89ef2883f7e5471585b648eb64bb630a18"
+    },
+    "azure-deployment-environments": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-deployment-environments/SKILL.md",
+      "computedHash": "593cec2f43fc81e0ab7435728049c885640951171aa7ad02f9f690864b1c1fc9"
+    },
     "azure-deployment-preflight": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/azure-deployment-preflight/SKILL.md",
       "computedHash": "7d9fe2c80b9c3cc50cc3aa53db7e2b11ea9572aee70f353cf3c2ff7e6de6527a"
     },
+    "azure-dev-box": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-dev-box/SKILL.md",
+      "computedHash": "bdc91e6f1c0dba430d28f2e7ea1ae9b1d5146f138e1f7c8122a8d77b22f82050"
+    },
+    "azure-devops": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-devops/SKILL.md",
+      "computedHash": "88d580be45df91d8334f6a0fe95c04519db8d6da4b1d2fae5e9b08525be5c53e"
+    },
     "azure-devops-cli": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/azure-devops-cli/SKILL.md",
       "computedHash": "da5ebe107d2f8618f0ae41a5c48d5cfde11cb7b86789ba8fbfddc34a18dc17ab"
+    },
+    "azure-devtest-labs": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-devtest-labs/SKILL.md",
+      "computedHash": "d434bedc58635b667ae1ae05c916579f26af71fa47d89e853fc366eeace665b1"
+    },
+    "azure-diagnostics": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-diagnostics/SKILL.md",
+      "computedHash": "76ea4baf950b3207883bd60c8fa9b6df8962eb1d52949d88996b2b145a95d239"
+    },
+    "azure-digital-twins": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-digital-twins/SKILL.md",
+      "computedHash": "fb5bb2e7da996d8449aca061903658ffb0776c4e1579ded77ac1cf964fc05908"
+    },
+    "azure-dns": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-dns/SKILL.md",
+      "computedHash": "af543c0daa6ea2fc58e3596cecae19adef0c17cc83820db2f7a193dce11a6380"
+    },
+    "azure-document-intelligence": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-document-intelligence/SKILL.md",
+      "computedHash": "feee6d63c606026d4828b6f9361c6bfc5f326ef22764920dce8f6d2f2ee09f4f"
+    },
+    "azure-education-hub": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-education-hub/SKILL.md",
+      "computedHash": "0c2d242ac48652830637797e23a2a046933b1ca9aef258b92526cbdcbf0ff16c"
+    },
+    "azure-elastic-san": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-elastic-san/SKILL.md",
+      "computedHash": "ac51cda8a8864087a58f11bb8040c6009b9d0e489d61862c289acf865c697845"
+    },
+    "azure-energy-data-services": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-energy-data-services/SKILL.md",
+      "computedHash": "d4a94c7541b040a051e161f1e2a1d4e7b94ed13d0039d13a46681d4fb5aa37e3"
+    },
+    "azure-enterprise-infra-planner": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-enterprise-infra-planner/SKILL.md",
+      "computedHash": "b18e104bcbac43ce400ccac4ba3088b5cc03eaa46585088ad50475364c117b90"
+    },
+    "azure-event-grid": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-event-grid/SKILL.md",
+      "computedHash": "7b1ad35dab528347c8188b113e20578c8fd0fb9c2191e13c1567f40b12a5d466"
+    },
+    "azure-event-hubs": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-event-hubs/SKILL.md",
+      "computedHash": "5a4bff5783d8b4fb9a46fdd3cdcb0c32912fb185e65995c77f52ff4ef51ef874"
     },
     "azure-eventgrid-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1406,10 +1946,10 @@
       "computedHash": "8e9a990a75894689d0b51a2f1136ac01b71afffefb233ba2aa27460b6f046dec"
     },
     "azure-eventhub-rust": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/azure-eventhub-rust/SKILL.md",
-      "computedHash": "d89ae8ff71476703da74480ebd64cfb99fa4a15450b5328a003974e2aaedc04c"
+      "skillPath": ".github/skills/azure-eventhub-rust/SKILL.md",
+      "computedHash": "c4543c9cd933bd631e88505aa41eba32fe6b19951698a627e3b9342ab0454147"
     },
     "azure-eventhub-ts": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1417,11 +1957,95 @@
       "skillPath": "skills/azure-eventhub-ts/SKILL.md",
       "computedHash": "4bc50628e261efcf4ba3c00f683b6a210f6b02bf4a5f658bc58732ab78cf4f97"
     },
+    "azure-expressroute": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-expressroute/SKILL.md",
+      "computedHash": "8a4ee6c7aa8243a3a540a598efd184075052826344f689a6862e7854c97ff648"
+    },
+    "azure-extended-zones": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-extended-zones/SKILL.md",
+      "computedHash": "95a3bfb19f110f039aa0616ed353ec62b9c1b7c92cecb8cf2206e44d6891562e"
+    },
+    "azure-external-attack-surface-management": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-external-attack-surface-management/SKILL.md",
+      "computedHash": "d47d3c974266c12ac80d517fec1b424092f6346059f85c1a623320cfac725991"
+    },
+    "azure-files": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-files/SKILL.md",
+      "computedHash": "24602fa5ae234f28ed3ee5419b1419b446cf957981b3dbde05f85d712dd93cb1"
+    },
+    "azure-firewall": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-firewall/SKILL.md",
+      "computedHash": "4d3e43ff8731f6091f6290778f438656d0f2b0f4bee243275b308e87826fb23f"
+    },
+    "azure-firewall-manager": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-firewall-manager/SKILL.md",
+      "computedHash": "3feb91ab80808ed3e1a45a8b1d14a852cf96bf189bfe988f026acae20f07a225"
+    },
+    "azure-firmware-analysis": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-firmware-analysis/SKILL.md",
+      "computedHash": "a0648582527f35ed214b29c5df3b0763095048bd560526954292a54ba05eedf0"
+    },
+    "azure-fluid-relay": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-fluid-relay/SKILL.md",
+      "computedHash": "64333db2f0910ebfc8e85bf1689b049f10d83d240888764ee10c0502d79b61ba"
+    },
+    "azure-front-door": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-front-door/SKILL.md",
+      "computedHash": "c53ff790f89733d99d7360efaf016b6363dce6c6d969512fb05f3db8322f5d44"
+    },
     "azure-functions": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "MicrosoftDocs/Agent-Skills",
       "sourceType": "github",
       "skillPath": "skills/azure-functions/SKILL.md",
-      "computedHash": "dbbbfd332b0caa3e84124ea8506056b6647ae0315b9c975324ede92a8f9837d0"
+      "computedHash": "62107bb3e665b62a37e6b3c5710aa5eaeca8bf2dee0d578414c03ef8cdc9c9c6"
+    },
+    "azure-hdinsight": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-hdinsight/SKILL.md",
+      "computedHash": "5f749a24fe5d39d0832cfd739fcc3de7e43c1b0bd24991a2044c7f391b4d4383"
+    },
+    "azure-health-bot": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-health-bot/SKILL.md",
+      "computedHash": "bb0d62559ab1042a02b26022a0f7910894415572a7a328e509eeba8324447a28"
+    },
+    "azure-health-data-services": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-health-data-services/SKILL.md",
+      "computedHash": "ed0bd54e10ae0504b120c73b8ae69f3d6b12be497ac6e0490d3783e068502e86"
+    },
+    "azure-hosted-copilot-sdk": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-hosted-copilot-sdk/SKILL.md",
+      "computedHash": "380fd85ab934ee3e23353fcce320aaf67a4bbef4a4c55e9c93955aef2488cd9c"
+    },
+    "azure-hpc-cache": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-hpc-cache/SKILL.md",
+      "computedHash": "b9e213e38be861d07842689f7706d76f12fd35a1e3b41e38bdb23a346657dffa"
     },
     "azure-identity-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1442,10 +2066,10 @@
       "computedHash": "d764501809c776647d3e90f9fa8237e982cb7e18a8b9792958accc3f250f8b08"
     },
     "azure-identity-rust": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/azure-identity-rust/SKILL.md",
-      "computedHash": "139a96f3b934c7127266f02062b083a7b79de918ae0fd5f4b418db4db4dd9369"
+      "skillPath": ".github/skills/azure-identity-rust/SKILL.md",
+      "computedHash": "634f901d5eadb9ccfdb447f4c2c50ab930ba8aaf7a901b5280b862038c0ab662"
     },
     "azure-identity-ts": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1453,17 +2077,83 @@
       "skillPath": "skills/azure-identity-ts/SKILL.md",
       "computedHash": "31f6d96a75a84cd1eb709a09fa707ac847856801b9179f733a135b9b7049d4a8"
     },
-    "azure-keyvault-certificates-rust": {
-      "source": "sickn33/antigravity-awesome-skills",
+    "azure-immersive-reader": {
+      "source": "MicrosoftDocs/Agent-Skills",
       "sourceType": "github",
-      "skillPath": "skills/azure-keyvault-certificates-rust/SKILL.md",
-      "computedHash": "07162d3c59abe0a844154709e6087dfaf9f70c1190db0878dd4a8ec9859134c5"
+      "skillPath": "skills/azure-immersive-reader/SKILL.md",
+      "computedHash": "467d49b5434e8efa955cdfa8c65c7037014fc5a1426710023ed02e1c6409cf50"
+    },
+    "azure-impact-reporting": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-impact-reporting/SKILL.md",
+      "computedHash": "3c8cb09dab80cb16ff0dfea27b8e494a87866e374fac0e5334775a92d0047d30"
+    },
+    "azure-import-export": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-import-export/SKILL.md",
+      "computedHash": "bb71cab292849e911bb1eaf70845e3482828bef4aa490b330e629c8b3d4b5292"
+    },
+    "azure-information-protection": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-information-protection/SKILL.md",
+      "computedHash": "9f26bb701ad8682554981b1427fb96400aa22e2315ddfefa47657fbe221121ef"
+    },
+    "azure-internet-peering": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-internet-peering/SKILL.md",
+      "computedHash": "7f5f7c413af53b93d666497eea9a85141e7a0806cfd8c8edb6987d29629968d4"
+    },
+    "azure-iot": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-iot/SKILL.md",
+      "computedHash": "b67ba814265d7d3b4581bd51cf67c7712e5fadbd00ddde5016b6e49e9bd8f85a"
+    },
+    "azure-iot-central": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-iot-central/SKILL.md",
+      "computedHash": "5b8fdaf113c6248aae70a1425ee8fed81bff76fe236fcb47a53ade0970187a9d"
+    },
+    "azure-iot-edge": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-iot-edge/SKILL.md",
+      "computedHash": "a022b3c10e099630a676de84ba913ea4aad071f47b9084b633542c54cd3f8289"
+    },
+    "azure-iot-hub": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-iot-hub/SKILL.md",
+      "computedHash": "bdb17680f8c02ec1732774a92edc16213669ecb7cfdd9ee350ce1c4fe62e4399"
+    },
+    "azure-iot-operations": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-iot-operations/SKILL.md",
+      "computedHash": "bfeac793bc74f21470ed4c90dca558f2acbe205fb3e87afc02b9134207b95900"
+    },
+    "azure-key-vault": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-key-vault/SKILL.md",
+      "computedHash": "86a44688495317e8fd9a70538f2b529d153585c6e97940e92fe00bf31235d969"
+    },
+    "azure-keyvault-certificates-rust": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/azure-keyvault-certificates-rust/SKILL.md",
+      "computedHash": "eec56675aeeda8f715fb49927c2376eeac1d561f0b5cb59bdf4cfc36b00188df"
     },
     "azure-keyvault-keys-rust": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/azure-keyvault-keys-rust/SKILL.md",
-      "computedHash": "bf1891238f92f3643cc0f5b5ae69247fecd7932b5f50a8ae904d1e9d72b8ea60"
+      "skillPath": ".github/skills/azure-keyvault-keys-rust/SKILL.md",
+      "computedHash": "59d9bec17b7812604778a55ad64b2f1003ea3c916c164673819de52225ffdb82"
     },
     "azure-keyvault-keys-ts": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1478,10 +2168,10 @@
       "computedHash": "62c81fd03dab034768ba1f8576b4da082b084c7fa7296531bcfc9ebce0a063fb"
     },
     "azure-keyvault-secrets-rust": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/azure-keyvault-secrets-rust/SKILL.md",
-      "computedHash": "b5059277bd51d0624eac8b104a4aaca5d13de1da5cca8ec1e4710c846ce22115"
+      "skillPath": ".github/skills/azure-keyvault-secrets-rust/SKILL.md",
+      "computedHash": "7bbe5c37db38bee66b025fe13318bd524b858f1f23570edeb01a2e612c9c781b"
     },
     "azure-keyvault-secrets-ts": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1489,11 +2179,113 @@
       "skillPath": "skills/azure-keyvault-secrets-ts/SKILL.md",
       "computedHash": "53417d9d826c4cc3438f257cf250276054079fd4755a0aa6501aa601e892c423"
     },
+    "azure-kubernetes": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-kubernetes/SKILL.md",
+      "computedHash": "9f68c118ffc7f202edb728fdc30398e13e9f9e68389b9439f093386ddb7d265e"
+    },
+    "azure-kubernetes-service": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-kubernetes-service/SKILL.md",
+      "computedHash": "c7aad8e652063229c17c26ccaf9fd5fa9726c98ccf5dfd76eb3dc773caab1b15"
+    },
+    "azure-kusto": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-kusto/SKILL.md",
+      "computedHash": "88a3b6ded86237a0f082917685989fb0a1484e967a7869bbdd944ae994c27556"
+    },
+    "azure-lab-services": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-lab-services/SKILL.md",
+      "computedHash": "c6f394ba51c4e194efd77b8060656917d0b4ce78a3692c69a5a9cf65c5796b63"
+    },
+    "azure-language-service": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-language-service/SKILL.md",
+      "computedHash": "6dfd84d1dbec4e60d71d59f85c7b9a69dd5e7fbe106db8cf6ca9bad3387d9ce0"
+    },
+    "azure-large-instances": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-large-instances/SKILL.md",
+      "computedHash": "0742ba0748d80484117ceb4b4e3d6ecb8dfce1bbac7831c39ed795c35798d4bb"
+    },
+    "azure-lighthouse": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-lighthouse/SKILL.md",
+      "computedHash": "e112912aea5cc7d5de5a382ce2772470db84a1d1f80473730c9952a5b5f91d4b"
+    },
+    "azure-load-balancer": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-load-balancer/SKILL.md",
+      "computedHash": "983cd9ae3b9fb5cc74f619e4e7c4115d0a41535597443169707ed1274710ce28"
+    },
+    "azure-local": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-local/SKILL.md",
+      "computedHash": "a199609251cac76baa49b77a674cf10ee9f666660cca31f76f0ad02dfc986401"
+    },
+    "azure-logic-apps": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-logic-apps/SKILL.md",
+      "computedHash": "a8da83b498f660de6dbdb9f54ff98843421d1202fb4c1cf8c48d8b11fac4043a"
+    },
+    "azure-machine-learning": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-machine-learning/SKILL.md",
+      "computedHash": "48badc9da4311011c2ce5bd7ba96ce51c8279f801707e42fe67a3ac8c6613153"
+    },
+    "azure-managed-applications": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-managed-applications/SKILL.md",
+      "computedHash": "cd6274022db0a3f34582b86bc3a41de2a3e7d5d1b4a821602f9d5b2a5114b65e"
+    },
+    "azure-managed-grafana": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-managed-grafana/SKILL.md",
+      "computedHash": "35b2520ef86661cd5c28652920a7839225a16faeede1d6a45344528992f862e6"
+    },
+    "azure-managed-lustre": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-managed-lustre/SKILL.md",
+      "computedHash": "11c661a97bba4831cfffa7cd2edbe4efdfb2b4bf5afa622b61726a42d7415ad0"
+    },
+    "azure-managed-redis": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-managed-redis/SKILL.md",
+      "computedHash": "c11da9e343d05b61c56f4577e04d11258e053c42bbd2e08c2712bd075b30b20d"
+    },
+    "azure-maps": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-maps/SKILL.md",
+      "computedHash": "dc3d893405a03b36ab2556c3240d0e9dd2e7b4a7d12a35c8eef592c88987fb79"
+    },
     "azure-maps-search-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-maps-search-dotnet/SKILL.md",
       "computedHash": "634a2e3f4bd504e71d6f1c2699ade52a589c636eed254df56d1d09dd3bc569fb"
+    },
+    "azure-messaging": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-messaging/SKILL.md",
+      "computedHash": "8fa417cf6a4a358b9cef0a533e651323842701c5152112990c28778f12e9f100"
     },
     "azure-messaging-webpubsub-java": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1506,6 +2298,12 @@
       "sourceType": "github",
       "skillPath": "skills/azure-messaging-webpubsubservice-py/SKILL.md",
       "computedHash": "158b7b724c0bb9e1c10290e2a3270072a3164190e4d3c88cd19492f5929c2c68"
+    },
+    "azure-metrics-advisor": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-metrics-advisor/SKILL.md",
+      "computedHash": "040c651a532c46fbc18d1859dd3f48dac075d02f3b8e56f9e0787ee0ceb59956"
     },
     "azure-mgmt-apicenter-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1579,11 +2377,29 @@
       "skillPath": "skills/azure-mgmt-weightsandbiases-dotnet/SKILL.md",
       "computedHash": "202f30727bfd18c03e613e64b6badd849ebd2128f4da21433dd161a0fd4f00b1"
     },
+    "azure-microsoft-discovery": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-microsoft-discovery/SKILL.md",
+      "computedHash": "72efa5e7a4dbb4ec390dd09350b2ab5821433b59cd187cb68d52953d558cb315"
+    },
     "azure-microsoft-playwright-testing-ts": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-microsoft-playwright-testing-ts/SKILL.md",
       "computedHash": "fe28b8b1e66e49ec054c3878ac97957729c2e971f513796593fd874578bc9b62"
+    },
+    "azure-migrate": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-migrate/SKILL.md",
+      "computedHash": "e48805996a383c7efe92fb65fcdb59e6381c85da00aa71e90c17586ce6cc1b49"
+    },
+    "azure-monitor": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-monitor/SKILL.md",
+      "computedHash": "c0f71bfbf546fa9d134010f6b8b40b2fd148691b0a626077bfc51aebbaf98976"
     },
     "azure-monitor-ingestion-java": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1633,11 +2449,137 @@
       "skillPath": "skills/azure-monitor-query-py/SKILL.md",
       "computedHash": "d0f743cdd8b81e42a359d07b5dfb4ad4ea5830806c4f9e9b14d9f0380cc330d0"
     },
+    "azure-nat-gateway": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-nat-gateway/SKILL.md",
+      "computedHash": "7db48a77025177fa3c302b1a268823d73f3e7cf8a631ae3beca47a27d85cb040"
+    },
+    "azure-netapp-files": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-netapp-files/SKILL.md",
+      "computedHash": "1c6075ebce83f3c51d7100d9d9458a093ebfe6a2567e88ac1ebb0c1c9e62b2a9"
+    },
+    "azure-network-function-manager": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-network-function-manager/SKILL.md",
+      "computedHash": "03803e812351982d0f723d824994adc007215c5fc8837ab3460a42cc1bed386e"
+    },
+    "azure-network-watcher": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-network-watcher/SKILL.md",
+      "computedHash": "0390afe5c71c9994539a0d791a4f6e8f531c8fc93f568695c1bfd6a7a14cf953"
+    },
+    "azure-networking": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-networking/SKILL.md",
+      "computedHash": "0cc6eb0d770b82e9886abfd5590fc5c0cce96b074da9a4bb0d96162913e7f689"
+    },
+    "azure-notification-hubs": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-notification-hubs/SKILL.md",
+      "computedHash": "f7f3c573e38a4bb26696cb1316b6c33fe328a96de4c9696fb9f2eeee98de80f6"
+    },
+    "azure-open-datasets": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-open-datasets/SKILL.md",
+      "computedHash": "186879c4099fd3a9f12ec5dc923ba41e49daa8a086f4eb2ffabac028991e7726"
+    },
+    "azure-operator-nexus": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-operator-nexus/SKILL.md",
+      "computedHash": "a3a4a6de67eaa28574c55505fc733d3a174dd8fc51da91db02707e2f8e937926"
+    },
+    "azure-operator-service-manager": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-operator-service-manager/SKILL.md",
+      "computedHash": "bd37566dbd8cc6e68c3e927a1ae72337483d89130eaf1fc7019872cd35448e63"
+    },
+    "azure-oracle": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-oracle/SKILL.md",
+      "computedHash": "88a8379cf315cea770b9d26a64bd68d15fd9510ad56e85bf6593b99aaa85c984"
+    },
+    "azure-osconfig": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-osconfig/SKILL.md",
+      "computedHash": "731f47bb31123e371ed4a8af6c1fe913095de530473d82ee1d1f92eb38f5536c"
+    },
+    "azure-partner-solutions": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-partner-solutions/SKILL.md",
+      "computedHash": "9e9d16d44195186e3d0066cf82102fc1846c9a0313f563f4b44b320c9630b1f6"
+    },
+    "azure-payment-hsm": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-payment-hsm/SKILL.md",
+      "computedHash": "dd811958f12a901c65937e74a8dfdf119a8940f1616d15bb91fc79e9739b443f"
+    },
+    "azure-peering-service": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-peering-service/SKILL.md",
+      "computedHash": "b39154a504b05484fa635c6c668ae70602c12014b9ef500594c943907e101066"
+    },
+    "azure-personalizer": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-personalizer/SKILL.md",
+      "computedHash": "7a0f288ac531494e628cecbdbc49a1d4166537e2a65881810cf810478b441175"
+    },
+    "azure-pipelines": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-pipelines/SKILL.md",
+      "computedHash": "1734a9ab8b8248fe43e4b40b3bf86ea5a5b3e6fe28c8f09b7fa64ff1410bb02b"
+    },
+    "azure-planetary-computer-pro": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-planetary-computer-pro/SKILL.md",
+      "computedHash": "62a27df01a9c50d29e63d534e3683cd4eb5dd2b11eebc34d39f16fc285c84d0c"
+    },
+    "azure-playwright-workspaces": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-playwright-workspaces/SKILL.md",
+      "computedHash": "87732531b02abf2a3dfc11e1c5279c1e64683f3b4a879734916b42c2bc336693"
+    },
+    "azure-policy": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-policy/SKILL.md",
+      "computedHash": "47a5546ded95e28ff3a6aa414a6afe91e31e591ca4f83ef2bf6560ca8e4fa25d"
+    },
+    "azure-portal": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-portal/SKILL.md",
+      "computedHash": "9530eba43a32864a47851f1ee9cf12c7607227ec8df3c9a6a02657592d9d80bb"
+    },
     "azure-postgres-ts": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-postgres-ts/SKILL.md",
       "computedHash": "d8e28326458ab5e447d486ea701da7157644b4366f358c40777aaf4804259e28"
+    },
+    "azure-prepare": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-prepare/SKILL.md",
+      "computedHash": "b215a2cd75ef021af64daf17cbb9375488c8a81dab77243055a72c21348d3c1b"
     },
     "azure-pricing": {
       "source": "github/awesome-copilot",
@@ -1645,11 +2587,89 @@
       "skillPath": "skills/azure-pricing/SKILL.md",
       "computedHash": "016ade0ccf0b90e239ba770223cbc788fce83345dd71fa39c5464016447d6a5b"
     },
+    "azure-private-link": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-private-link/SKILL.md",
+      "computedHash": "9c8fa9a10264d7a4b7fc349e4dde57194fe4719ed13a7e03a0f735dc9826ab68"
+    },
+    "azure-quantum": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-quantum/SKILL.md",
+      "computedHash": "dae8283957a6273276137bd06fa4f9f753d815c8f09917d325037b8efd3fd3af"
+    },
+    "azure-queue-storage": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-queue-storage/SKILL.md",
+      "computedHash": "28a5f4f47a134ebe4cad711069995f24a6014448248bcbc8e220e1bf568b81f3"
+    },
+    "azure-quotas": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-quotas/SKILL.md",
+      "computedHash": "e63a6a74239d716a33e90633e97f969fb183268207029ed3d35ffb99cb829c83"
+    },
+    "azure-rbac": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-rbac/SKILL.md",
+      "computedHash": "26b19206a52249eb74a15d9eb473319ad387be5254396d9f15aa1da6bdaaea4b"
+    },
+    "azure-redhat-openshift": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-redhat-openshift/SKILL.md",
+      "computedHash": "90f43179eaa0573513ef9cdaa8eb1b88bd9bbbadc968bf2823e13703c3d53a49"
+    },
+    "azure-relay": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-relay/SKILL.md",
+      "computedHash": "f6d4be4dd591e79db33f67031bf8cbde48af807319d6ad63da94385efaf7425b"
+    },
+    "azure-reliability": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-reliability/SKILL.md",
+      "computedHash": "720eb76019e2c9167d4670e6916fb3ce48674e83e30de9bdd29d4e53362586d8"
+    },
+    "azure-repos": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-repos/SKILL.md",
+      "computedHash": "6856504e0766a9b7e8fb0b291690cb8bc7183d65744252ec93f332372b79a2c1"
+    },
+    "azure-resiliency": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-resiliency/SKILL.md",
+      "computedHash": "76dd4f1023d2ea0c6b97c340a2dda3e9fd9715a8c371eddecf4fb29a258999bf"
+    },
+    "azure-resource-graph": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-resource-graph/SKILL.md",
+      "computedHash": "2deb0b3618650dff518d2c50d87995114366e72c45544217903e966ed4c12371"
+    },
     "azure-resource-health-diagnose": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/azure-resource-health-diagnose/SKILL.md",
       "computedHash": "b58a96f0f25e6e031c68eb516f91de9ff994dfdd7f146eae583f50171022036a"
+    },
+    "azure-resource-lookup": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-resource-lookup/SKILL.md",
+      "computedHash": "cace60773f5c5a6aedd039613177be3d136dec5b5b5f2cc6f1708ac5f3c79938"
+    },
+    "azure-resource-manager": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-resource-manager/SKILL.md",
+      "computedHash": "59f2728ab32836a47902a191d885d9c3c2c6fba774c9b1115556e8bd516e092d"
     },
     "azure-resource-manager-cosmosdb-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1694,16 +2714,28 @@
       "computedHash": "2cc7892023967bffea912aac6739e6e3df814106eb22a20f78777017e5b2bf86"
     },
     "azure-resource-visualizer": {
-      "source": "github/awesome-copilot",
+      "source": "microsoft/azure-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-resource-visualizer/SKILL.md",
-      "computedHash": "ffa93d60058eafad8d48fc37f7986e5cacead5780de036c05e672c79cf49ed61"
+      "computedHash": "9d4db5ae1aa433706b1d3fcdbf1617cdda80756992406a7889d6546704bc93ab"
     },
     "azure-role-selector": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/azure-role-selector/SKILL.md",
       "computedHash": "5ecf0325ccde3e3a86fc6a33dd3d99ed547c809af6bcd614a5efab72505632bc"
+    },
+    "azure-route-server": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-route-server/SKILL.md",
+      "computedHash": "d88d998bbd90031844dc29202ccce7917e7b4d1c60deb1f7fe26add774065f04"
+    },
+    "azure-sap": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-sap/SKILL.md",
+      "computedHash": "299c75ca29a2f8f6df3e4d2e347e1676cdd8f67519b767bfe75d7fbef316d82b"
     },
     "azure-search-documents-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1723,6 +2755,12 @@
       "skillPath": "skills/azure-search-documents-ts/SKILL.md",
       "computedHash": "6e8376ddf99c7239be0997e2b8a8d3b84372e25bf18dcd567b9a33688a8aef70"
     },
+    "azure-security": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-security/SKILL.md",
+      "computedHash": "0b7ef4930b3206d053dbf39e9bd0528b87fe2fa682ca78df7f1f0e6310414137"
+    },
     "azure-security-keyvault-keys-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -1740,6 +2778,36 @@
       "sourceType": "github",
       "skillPath": "skills/azure-security-keyvault-secrets-java/SKILL.md",
       "computedHash": "4b7d0154d82a9628808496a606bc1513ddd2276e6aa35167e0dba1a5166d5446"
+    },
+    "azure-sentinel": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-sentinel/SKILL.md",
+      "computedHash": "9e18b1a85137734f82dce58d3dc49ee42aafbbe7e8664ccc42d36a1cbfdc3227"
+    },
+    "azure-service-bus": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-service-bus/SKILL.md",
+      "computedHash": "e6c2228c776ca2ef40bf634c4ce9412253f9f61d68b7527d0e97ec9fbe490727"
+    },
+    "azure-service-connector": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-service-connector/SKILL.md",
+      "computedHash": "0df19a9d6645a6482fcfb13b587185deb1462f6cc330b564453f6773f98a41cd"
+    },
+    "azure-service-fabric": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-service-fabric/SKILL.md",
+      "computedHash": "51a7a08e0221b0b0a4b54775c2a54cc7ea2c85850e7f525f6f2ad2831665a4d4"
+    },
+    "azure-service-health": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-service-health/SKILL.md",
+      "computedHash": "598472caede4f20b4ffbc459018675b4c17ea1a124f2bd84079501445b3a5da7"
     },
     "azure-servicebus-dotnet": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1759,11 +2827,35 @@
       "skillPath": "skills/azure-servicebus-ts/SKILL.md",
       "computedHash": "29891941e50d4882796dbe81e17a34a4158b60ba769715b3c77af650def99b2e"
     },
+    "azure-signalr-service": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-signalr-service/SKILL.md",
+      "computedHash": "bc2e08c39fd0838d986f59d81606518d51709728704804b7f6daca94dd8fcd2d"
+    },
+    "azure-site-recovery": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-site-recovery/SKILL.md",
+      "computedHash": "2f3aefa20760e4aeff0b052ede57bac07ae1543fe3648ef958d182229f5af232"
+    },
     "azure-smart-city-iot-solution-builder": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/azure-smart-city-iot-solution-builder/SKILL.md",
       "computedHash": "d9aefc457efdd771f2ed9d361e65023360b2013d6494118a1d2ff7d256e7110a"
+    },
+    "azure-sovereign-us": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-sovereign-us/SKILL.md",
+      "computedHash": "682a033b8a972fb3fd9af26516d443e1aa6cf03e92a411302915ea133a273cbf"
+    },
+    "azure-speech": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-speech/SKILL.md",
+      "computedHash": "654a7e3b90f972cbc1ed20b21757c7eed4a4d22d2b1be2514b127fb2546547e2"
     },
     "azure-speech-to-text-rest-py": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1771,11 +2863,53 @@
       "skillPath": "skills/azure-speech-to-text-rest-py/SKILL.md",
       "computedHash": "912342a715784c41d3ab35a94ee70d25ece3ac49adcf694de7b0efb6bb47359f"
     },
+    "azure-spring-apps": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-spring-apps/SKILL.md",
+      "computedHash": "cd6736336ec8cea6bdc7e7d73eeb1ff1076804612a066d23efb7ee335d355ca7"
+    },
+    "azure-sql-database": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-sql-database/SKILL.md",
+      "computedHash": "178431b3896067f445096c3060cc4f6cb4e816db619b9bfe42b264a5db5547cd"
+    },
+    "azure-sql-managed-instance": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-sql-managed-instance/SKILL.md",
+      "computedHash": "d0bd553234cb28036c854a5f95563c6689d4dfcbb78764fd4bc8fb7411e2fb8b"
+    },
+    "azure-sql-virtual-machines": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-sql-virtual-machines/SKILL.md",
+      "computedHash": "182a13b46381684fe853146fd79a723214ff3c31f7eb7d092a6849c1504a004a"
+    },
+    "azure-sre-agent": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-sre-agent/SKILL.md",
+      "computedHash": "5713777bcb52bbf4267c486bf083479b2bc9a8ef705f06cb678e24578dc08ce4"
+    },
+    "azure-stack-edge": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-stack-edge/SKILL.md",
+      "computedHash": "f309f1ccdd51cb3b92e668ba3e943da12d12ea74a770292e638c9aad2861a672"
+    },
     "azure-static-web-apps": {
-      "source": "github/awesome-copilot",
+      "source": "MicrosoftDocs/Agent-Skills",
       "sourceType": "github",
       "skillPath": "skills/azure-static-web-apps/SKILL.md",
-      "computedHash": "d8aa020f4c266800d5dce80d7ff9683d5114d42716f49776b3cc3d675b9aebc2"
+      "computedHash": "e804e8a1087df60dd2f87f2514a4c2bf261a3faa2afdbd7873f483aaef63e980"
+    },
+    "azure-storage": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-storage/SKILL.md",
+      "computedHash": "7373be6f1fa6c5ccde0d512acbe238be42de2deffb5e26e3123978b91eea1106"
     },
     "azure-storage-blob-java": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1790,10 +2924,10 @@
       "computedHash": "38a2049ed684dcaa791d03eec054c4650f201db24631a855170d9f2e34e51723"
     },
     "azure-storage-blob-rust": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/azure-storage-blob-rust/SKILL.md",
-      "computedHash": "dd09ea17b7487d203f6e6595ff308ed799d387319a62e421bc115e9e48392c1a"
+      "skillPath": ".github/skills/azure-storage-blob-rust/SKILL.md",
+      "computedHash": "481889c2a09fd1b7aaf34a7d687de4965fce103810018cd2bee673f2c1d996d3"
     },
     "azure-storage-blob-ts": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -1831,11 +2965,137 @@
       "skillPath": "skills/azure-storage-queue-ts/SKILL.md",
       "computedHash": "a158808d08582ab1b52125b54e5fe941a3c3c098c7c714b5594d5ee8f1526267"
     },
+    "azure-stream-analytics": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-stream-analytics/SKILL.md",
+      "computedHash": "dab48b4d9759a658901cd8f1cb981503781a82d8c910526380f57a7045d86026"
+    },
+    "azure-synapse-analytics": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-synapse-analytics/SKILL.md",
+      "computedHash": "40c2651e2ad7b1d88a2b3ebb13a1bc61aee6a3954e323a3bd6f8e8c1b2df1663"
+    },
+    "azure-table-storage": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-table-storage/SKILL.md",
+      "computedHash": "7f8e0e1ef1af50bb4bb13c4dda94fc295ed55d6236f611d5f192b74ac84d189a"
+    },
+    "azure-test-plans": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-test-plans/SKILL.md",
+      "computedHash": "4b0b5d7d5897afc85ce43ff55ccfcaaec1168914957ffac18e64b9eb04264609"
+    },
+    "azure-traffic-manager": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-traffic-manager/SKILL.md",
+      "computedHash": "149ca407d865f0eead4a069c13c7a03d9cd1e165bebb4c1ee88d6477fcfbff67"
+    },
+    "azure-translator": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-translator/SKILL.md",
+      "computedHash": "ccdad58d81f027758510de2b7330887c281e2e2d0d1781f43e93dee9d696b5ac"
+    },
+    "azure-update-manager": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-update-manager/SKILL.md",
+      "computedHash": "84ca9fbfad183f05ab163dd1e0462c8c80809244f303b43ba4cd83193ee54ac7"
+    },
+    "azure-upgrade": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-upgrade/SKILL.md",
+      "computedHash": "578182734705ebe414427ba46c84a96131a8ec88a3f48c2611ea29156e04194d"
+    },
+    "azure-validate": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-validate/SKILL.md",
+      "computedHash": "67e401745a9cb9b1aae5c813b092ad9dbe4e632f252a4a15750401b5156f5ab5"
+    },
+    "azure-video-indexer": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-video-indexer/SKILL.md",
+      "computedHash": "1bd3622cdea731915cb7aa7a9756d6fc464e1bb18ef5574ffb3f07ae5a5bec3a"
+    },
+    "azure-virtual-desktop": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-virtual-desktop/SKILL.md",
+      "computedHash": "c4d9ef8ecba3febb41b873a091205ec4644c99bdae11245af876216360c6f5a3"
+    },
+    "azure-virtual-machines": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-virtual-machines/SKILL.md",
+      "computedHash": "b0771915a84bad1cb2264786acbf494d2784d207e4e4d497f397703541579d96"
+    },
+    "azure-virtual-network": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-virtual-network/SKILL.md",
+      "computedHash": "70428832be437fcd423c3edb5ae8dca29b7cfe012103a957c41137477f22e98d"
+    },
+    "azure-virtual-network-manager": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-virtual-network-manager/SKILL.md",
+      "computedHash": "8954dd13296f212e1fc265a46229503e57a4c505166e3671847dcc03148a0163"
+    },
+    "azure-virtual-wan": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-virtual-wan/SKILL.md",
+      "computedHash": "04e297b06e442fcf0e43310d4f7183310d190c0602b74b5525fcffd0aa719c75"
+    },
+    "azure-vm-scalesets": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-vm-scalesets/SKILL.md",
+      "computedHash": "64a7c94c35fe57994620e7557d546b3af9b18d9e4cd9356470eb6e67f1de4e6e"
+    },
+    "azure-vmware-solution": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-vmware-solution/SKILL.md",
+      "computedHash": "e784cd6fa0ca427e76896e8725f9f0b876e530b358ca4579f54a8a3bcf33405a"
+    },
+    "azure-vpn-gateway": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-vpn-gateway/SKILL.md",
+      "computedHash": "5bc1fcfe0739fa520c7b95b47c5cb5bd5a2905e536cdb7f8dfe7c4bdff796a4b"
+    },
+    "azure-web-application-firewall": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-web-application-firewall/SKILL.md",
+      "computedHash": "0c710c69057231b8e543d0d43b7712a8128350076eac44f2c75fb9c3b9d79d1a"
+    },
+    "azure-web-pubsub": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-web-pubsub/SKILL.md",
+      "computedHash": "32ffe0cdaae638b249982033e750f59e0958c255b64dc2b7341aaf119065ddf6"
+    },
     "azure-web-pubsub-ts": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/azure-web-pubsub-ts/SKILL.md",
       "computedHash": "b0e8ea34c578648352cb3c418ef593f4648e9c5b207ad580b0bcc25694e10453"
+    },
+    "azure-well-architected": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/azure-well-architected/SKILL.md",
+      "computedHash": "f3cca25eb6bd6d864273dd4b903685b4644c122180f127140eca98b284d2ba5e"
     },
     "backend-architect": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -2401,6 +3661,12 @@
       "skillPath": "skills/chat-widget/SKILL.md",
       "computedHash": "f1b7d1a6e9e8f756b450549377a646a5fed4057ba629cd02145a32375a48b87e"
     },
+    "chatgpt-apps": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/chatgpt-apps/SKILL.md",
+      "computedHash": "71759cbfd2e81141e962584fe14ac158d2ce404383460513b5b01c638068a568"
+    },
     "check-upstream-flake": {
       "source": "brave/brave-core",
       "sourceType": "github",
@@ -2563,6 +3829,12 @@
       "skillPath": "skills/clerk-auth/SKILL.md",
       "computedHash": "95a768b8d2fca5ecfa0652d6721f5862bd7b3a8709bfa95faa6b63061803c02c"
     },
+    "cli-creator": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/cli-creator/SKILL.md",
+      "computedHash": "bd8f6db9268abf0483e17215ae6a39852a8780429c54b65658780c6f94bb4f61"
+    },
     "cli-mastery": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -2610,6 +3882,18 @@
       "sourceType": "github",
       "skillPath": "skills/cloud-penetration-testing/SKILL.md",
       "computedHash": "0cce6323ca99a7492f6373d3f0d13143862311342ca4b736d58a7609829c70ec"
+    },
+    "cloud-solution-architect": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/cloud-solution-architect/SKILL.md",
+      "computedHash": "da8814acf9e93bf735c7eb81c4e9c1516ea47c1f3d5d30438e4869486ff2803b"
+    },
+    "cloudflare-deploy": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/cloudflare-deploy/SKILL.md",
+      "computedHash": "72e2f6fec78aecc84994c1c23e74fcd7f09328c8ab61ff12d957a956e1784179"
     },
     "cloudflare-workers-expert": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -3037,6 +4321,12 @@
       "skillPath": "skills/context7-auto-research/SKILL.md",
       "computedHash": "f1391637f475291e78383aa2ab2662e737e3a5c697a25b7003e4ef4364e4b848"
     },
+    "continual-learning": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/continual-learning/SKILL.md",
+      "computedHash": "1f7c1a79d6ee166aac48591acbc9165778d2384fa9e84405099750b6e065c0c7"
+    },
     "conventional-branch": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -3086,10 +4376,10 @@
       "computedHash": "45fd25e507349b05f80a0cafc159109071ed6c24ac5f014b9c749fd6846bd62b"
     },
     "copilot-sdk": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/copilot-sdk/SKILL.md",
-      "computedHash": "198cac4ba521f51aa28aa394a5039369b3e955dd764c3ca27853aaaddded1112"
+      "skillPath": ".github/skills/copilot-sdk/SKILL.md",
+      "computedHash": "68cf61978927b44dbafa74133305fc37a0973774fc6e1e68fbe7ed02ed690b27"
     },
     "copilot-spaces": {
       "source": "github/awesome-copilot",
@@ -3331,6 +4621,108 @@
       "skillPath": "skills/csharp-xunit/SKILL.md",
       "computedHash": "3c224e79f92ec027de3d5f44d0ca3077f076cb1e1bfff6b0db5b09c34c3aecd2"
     },
+    "cudaq-guide": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cudaq-guide/SKILL.md",
+      "computedHash": "a7fbe0043f08758fc59c8dded234b832b3ee97670164dfadc41d5b4b287ffd45"
+    },
+    "cuopt-developer": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-developer/SKILL.md",
+      "computedHash": "4c8146972598517b479c945f4cdf5309eea4d91df3e1d8e94771bade4b6f0210"
+    },
+    "cuopt-install": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-install/SKILL.md",
+      "computedHash": "7f380cc185d50034ab33ef9cf189f8b92eb6af4003f547c1138828696129fffb"
+    },
+    "cuopt-numerical-optimization-api-c": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-numerical-optimization-api-c/SKILL.md",
+      "computedHash": "535ea6bebae44945e4406c6f280205fdf3e30f668739a1c5173717b5bce2aace"
+    },
+    "cuopt-numerical-optimization-api-cli": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-numerical-optimization-api-cli/SKILL.md",
+      "computedHash": "59349a22b1fccc68e89e435aa3e7b96f0d4d28922ec0810938f3fdf37cfa6420"
+    },
+    "cuopt-numerical-optimization-api-python": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-numerical-optimization-api-python/SKILL.md",
+      "computedHash": "31439fbba00facb756b83756d9cb6be32e99800d6b1188d12f9dc0edd696dc0c"
+    },
+    "cuopt-numerical-optimization-formulation": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-numerical-optimization-formulation/SKILL.md",
+      "computedHash": "93aefcd619ccdce2f6306b480fb9fc9e78110678bcbbc95768b3174910199cce"
+    },
+    "cuopt-routing-api-python": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-routing-api-python/SKILL.md",
+      "computedHash": "e41c453f857a7fa2d9a0358f76348977828495b930e3c453de9567e966d4380c"
+    },
+    "cuopt-routing-formulation": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-routing-formulation/SKILL.md",
+      "computedHash": "c616e5d6105d1371b91adae06ccc92d103601cac00aeda6689b41fcd8fc8fcb4"
+    },
+    "cuopt-server-api-python": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-server-api-python/SKILL.md",
+      "computedHash": "2e4c58c25750ddc55fc04b4e7e81091b0c784a80cdb86664642918a12e0eb375"
+    },
+    "cuopt-server-common": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-server-common/SKILL.md",
+      "computedHash": "3d7467e619cb804f2c47adb5222d64eb86efbbed6b83dbd13a54692dbbf4a21c"
+    },
+    "cuopt-skill-evolution": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-skill-evolution/SKILL.md",
+      "computedHash": "71dae45c4e6f56ad7ee3b3ec12d5de13030995a60f7be03912de56c20aca3dd8"
+    },
+    "cuopt-user-rules": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cuopt-user-rules/SKILL.md",
+      "computedHash": "6e056d3217e9b57cc5dec20ce6b5ebcc91d81382ad88e875f2084550dc203ee2"
+    },
+    "cupynumeric-hdf5": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cupynumeric-hdf5/SKILL.md",
+      "computedHash": "e4456412f2b042164fa3acfb6e8ee11c42c6c38d609f129e2493df18958012a4"
+    },
+    "cupynumeric-install": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cupynumeric-install/SKILL.md",
+      "computedHash": "56f98ed404ef698addf19cff316ba4bfa8b0618e80fc50f60b45803944e98a23"
+    },
+    "cupynumeric-migration-readiness": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cupynumeric-migration-readiness/SKILL.md",
+      "computedHash": "031a6d14ce8027f7845fb16e2eb6b0833783c9e5f8345f832b1b1e8ea992d2d1"
+    },
+    "cupynumeric-parallel-data-load": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cupynumeric-parallel-data-load/SKILL.md",
+      "computedHash": "95ac6288b5be634edc23da19c76c679b3334043c89aa7ce084125a33735c7b8a"
+    },
     "customer-psychographic-profiler": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -3373,11 +4765,23 @@
       "skillPath": "skills/daily-prep/SKILL.md",
       "computedHash": "205915474441d698548c8eeeb9271cfb8367ae370efc26130a1c14d198d803d8"
     },
+    "dali-dynamic-mode": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dali-dynamic-mode/SKILL.md",
+      "computedHash": "2b572cc2b6c23a8be9f279c7f9238ae960ced366247d0211ebb0cf1ffd007428"
+    },
     "data-breach-blast-radius": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/data-breach-blast-radius/SKILL.md",
       "computedHash": "3dbd2b1836bef9becae18981f83fe9c68ef0de97d099783b99019827343a68a0"
+    },
+    "data-designer": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/data-designer/SKILL.md",
+      "computedHash": "c87e3b56a6960e7ac62004f36b760d82aef6f7621e4d218a72b2cb7031a876cb"
     },
     "data-engineer": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -3607,11 +5011,29 @@
       "skillPath": "skills/deep-research/SKILL.md",
       "computedHash": "0ff6fa9901a11aca566911bbe261e2583a179131199e35041e18d0beec128517"
     },
+    "deepstream-dev": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/deepstream-dev/SKILL.md",
+      "computedHash": "6ad4ad542610d4862c2767ab258947cf2eaef915246dd3ec99c9fddd8eaadd80"
+    },
+    "deepstream-import-vision-model": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/deepstream-import-vision-model/SKILL.md",
+      "computedHash": "a00419f55cbd451f403f4d95aba586b50c09a19d51752a29519ad47bfb51dcd7"
+    },
     "defi-protocol-templates": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/defi-protocol-templates/SKILL.md",
       "computedHash": "59b0df1d571bb65648e7aba0e45717b6c737fcbb5ce8c39e1da7e87d5fcf36b2"
+    },
+    "define-goal": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/define-goal/SKILL.md",
+      "computedHash": "3f58ba41ac666bcfb723bbc82a31a7dfd0efaf3aa4a03573ea32da228f721aeb"
     },
     "defuddle": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -3733,11 +5155,53 @@
       "skillPath": "skills/diary/SKILL.md",
       "computedHash": "ce3c5daf56785409c6c5fff05120b09b9d20aab917d28611e00422f5a7a96ea2"
     },
+    "dicom-metadata-extract": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dicom-metadata-extract/SKILL.md",
+      "computedHash": "f35f4fe0ded7166ebf2abd57510d8d353cd5fa8348431aff4ede21e9672d4a2b"
+    },
+    "dicom-series-preflight": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dicom-series-preflight/SKILL.md",
+      "computedHash": "7eb9218cdc1561738bc707d7e98409f46ee3dea120628f10b9252d091c82531d"
+    },
+    "dicom-series-to-volume": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dicom-series-to-volume/SKILL.md",
+      "computedHash": "752a5f39aecd119c07574de763eb6f471586891b2a08af5899ccc9cc0afd1ead"
+    },
     "differential-review": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/differential-review/SKILL.md",
       "computedHash": "15aa5f2a38195a07ebeb3e496f4fb288754b6e57292ae210fe019803650782cf"
+    },
+    "digital-health-clinical-asr-build": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/digital-health-clinical-asr-build/SKILL.md",
+      "computedHash": "da63fa7e682cfe9726b237dd60db4297e3a6ef49362c13e3d848c23c49484e1f"
+    },
+    "digital-health-clinical-asr-eval": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/digital-health-clinical-asr-eval/SKILL.md",
+      "computedHash": "21fe79d20cf50a9984349f937e4d33918a7c6f2c1d56c0cb2265d1cf67075ef2"
+    },
+    "digital-health-clinical-asr-finetune": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/digital-health-clinical-asr-finetune/SKILL.md",
+      "computedHash": "c07417728f1a06ae9b32c864dda0643a9d6226efdc613eeb6484f462e5208673"
+    },
+    "digital-health-clinical-asr-setup": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/digital-health-clinical-asr-setup/SKILL.md",
+      "computedHash": "157417dbe94466131f46e2b685b6b3d5a13a3ec43fef431d90bf0e33c73752d3"
     },
     "discord-automation": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -3955,6 +5419,30 @@
       "skillPath": "skills/dx-optimizer/SKILL.md",
       "computedHash": "52a9fa72f69d27c800b0ba6226d1a1d2ec8e5aa421dde63fcaee9f2b2444fc99"
     },
+    "dynamo-interconnect-check": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dynamo-interconnect-check/SKILL.md",
+      "computedHash": "8d7f619bba47baa2b1a97b74a7c08f6427151265d24ae0e92b7686f4821c08f2"
+    },
+    "dynamo-recipe-runner": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dynamo-recipe-runner/SKILL.md",
+      "computedHash": "f10843481e10decfe22fc1b9c4b08b5123458fe2355a423f206971fc9c028044"
+    },
+    "dynamo-router-starter": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dynamo-router-starter/SKILL.md",
+      "computedHash": "c4603eea29919f85c6cb5c76d057fc5185281b9d9487e3080b19e5a2b4230aaa"
+    },
+    "dynamo-troubleshoot": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dynamo-troubleshoot/SKILL.md",
+      "computedHash": "ab930037e00509ac6a9506fd948b9c41181022ca7a109597de8af5775e6ce502"
+    },
     "e2e-testing": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -3972,6 +5460,30 @@
       "sourceType": "github",
       "skillPath": "skills/earllm-build/SKILL.md",
       "computedHash": "7ec423a2c0491d024b1af70225427554dcb2d6fda5d71cc88c4082f5158fb278"
+    },
+    "earth2studio-data-fetch": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/earth2studio-data-fetch/SKILL.md",
+      "computedHash": "9bdbf43ba9a76d171b02ea02560c7c26e04e455e127e08807729d76a9ece9f12"
+    },
+    "earth2studio-deterministic-forecast": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/earth2studio-deterministic-forecast/SKILL.md",
+      "computedHash": "d747c72a64b673b79a5fd290954a3c53fde916e3a09ebb65d4e95502fd0d4dcb"
+    },
+    "earth2studio-discover": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/earth2studio-discover/SKILL.md",
+      "computedHash": "b252b08fe5353005a6411ff7a7b8c11174c2d3144a44a53c0a7a96ca78de910e"
+    },
+    "earth2studio-install": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/earth2studio-install/SKILL.md",
+      "computedHash": "589f3c6d56d991819375b1cd9a30803317925f84b34ff7e9107ffe03c7fd4711"
     },
     "editorconfig": {
       "source": "github/awesome-copilot",
@@ -4075,11 +5587,23 @@
       "skillPath": "skills/enhance-prompt/SKILL.md",
       "computedHash": "5de8876c694a1d9c4910ec7d14bf31a29ed530a568f5afe69b349168b2c7b2e7"
     },
+    "entra-agent-id": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/entra-agent-id/SKILL.md",
+      "computedHash": "db321d866f2d9418b17f7274e766368e9a0e592717dff74e9cccec428ee7a5cf"
+    },
     "entra-agent-user": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/entra-agent-user/SKILL.md",
       "computedHash": "e2a7744aa594d4e2e16948e0524e59b60a28732e03a310470da03709d90eb2cf"
+    },
+    "entra-app-registration": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/entra-app-registration/SKILL.md",
+      "computedHash": "793e83d36c7575710c5e29c84dc87367d989f0a0d0ffad2b1887e306066d97cc"
     },
     "environment-setup-guide": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -4381,6 +5905,12 @@
       "skillPath": "skills/ffuf-web-fuzzing/SKILL.md",
       "computedHash": "4fd35fa2560dac58e6d7b631004e2e216bc26214b5a80dc2c0e8b841e2faeddc"
     },
+    "figma": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/figma/SKILL.md",
+      "computedHash": "be357ea39dc912911c0da826a1638513e3544d7315dc5a206a0d7aec1bae9ed7"
+    },
     "figma-automation": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -4393,17 +5923,29 @@
       "skillPath": "skills/figma-code-connect/SKILL.md",
       "computedHash": "97115879461e3fb0766ea31d35a370e47f140c0e2896e33ccdd1f8a693e78358"
     },
-    "figma-create-new-file": {
-      "source": "figma/mcp-server-guide",
+    "figma-code-connect-components": {
+      "source": "openai/skills",
       "sourceType": "github",
-      "skillPath": "skills/figma-create-new-file/SKILL.md",
-      "computedHash": "8013ae97a1d34753bdd916225ef781500e072631ef94f7a38975fc15394f0dc2"
+      "skillPath": "skills/.curated/figma-code-connect-components/SKILL.md",
+      "computedHash": "755e8bd95ab4154de4ebd871752520c4f172a009b1062bef8bb0a0beb85e333c"
+    },
+    "figma-create-design-system-rules": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/figma-create-design-system-rules/SKILL.md",
+      "computedHash": "b53e004819bb2067c46f759a6fdba1133c645d7115c371de0ebf048477f7266c"
+    },
+    "figma-create-new-file": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/figma-create-new-file/SKILL.md",
+      "computedHash": "73f2a7192374ad0873a0b8662eb8d60ceb2a095dd59fbf3eb7a19585a9a5e37b"
     },
     "figma-generate-design": {
-      "source": "figma/mcp-server-guide",
+      "source": "openai/skills",
       "sourceType": "github",
-      "skillPath": "skills/figma-generate-design/SKILL.md",
-      "computedHash": "736613c1270855fb0043f5ffd56a9aa67eaefd0b570566e7ebe7ff1626aada68"
+      "skillPath": "skills/.curated/figma-generate-design/SKILL.md",
+      "computedHash": "049787f3bc0d4c0b1fac5852f1f14145556b8b12251af0f72e571db469e0bd9b"
     },
     "figma-generate-diagram": {
       "source": "figma/mcp-server-guide",
@@ -4412,16 +5954,22 @@
       "computedHash": "94535a994b6af987fe7f313df9835d8f5cb3d96c0f343be5f7c07b06421c1e2e"
     },
     "figma-generate-library": {
-      "source": "figma/mcp-server-guide",
+      "source": "openai/skills",
       "sourceType": "github",
-      "skillPath": "skills/figma-generate-library/SKILL.md",
-      "computedHash": "1fe6a1fd0417e4c4786ea30a44b521f92390c5dd89d2ce40a484a21e754a9876"
+      "skillPath": "skills/.curated/figma-generate-library/SKILL.md",
+      "computedHash": "3219dc3c760661e61dca39c16b79ad9214e8a7512bffc8c9daee7a9735932361"
+    },
+    "figma-implement-design": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/figma-implement-design/SKILL.md",
+      "computedHash": "78b017706f6e3732a1f9e87968cdc8ce7f31b0a59741f7d0f7cf9a531fe47e7a"
     },
     "figma-use": {
-      "source": "figma/mcp-server-guide",
+      "source": "openai/skills",
       "sourceType": "github",
-      "skillPath": "skills/figma-use/SKILL.md",
-      "computedHash": "e2ccd2ea5fe77bcdc2f7149ddc020b98e056c261cfd395a8d40cf0e2aee21a40"
+      "skillPath": "skills/.curated/figma-use/SKILL.md",
+      "computedHash": "16a9525ff765fe282c65bc027b6a40bff0cf623eb45a492d532cbb1a18e6b1e8"
     },
     "figma-use-figjam": {
       "source": "figma/mcp-server-guide",
@@ -4795,6 +6343,12 @@
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "bb3f72187c172a39c64e74bee56d08df99029e5d45c16828b433eb0a2b28b663"
     },
+    "frontend-design-review": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/frontend-design-review/SKILL.md",
+      "computedHash": "bdfcadec9604ec0225f337ffbcecb8c8a5ddf69b6b1a1335963df97a0665472e"
+    },
     "frontend-dev-guidelines": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -4939,6 +6493,18 @@
       "skillPath": "skills/geoffrey-hinton/SKILL.md",
       "computedHash": "d7e3139e0dc75adaacd3af02073b6755ce4b235d28cdd25549181b9b8f446175"
     },
+    "gh-address-comments": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/gh-address-comments/SKILL.md",
+      "computedHash": "0a480d4fe8deb31852cd47ec8708e66b66b94875a23ba7679b17cf11ae9255a0"
+    },
+    "gh-fix-ci": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/gh-fix-ci/SKILL.md",
+      "computedHash": "1b1ce4eeeae2bfc175d05f1b69e07b17dfa1fddf99a96c22b6dcae7e5fb4e550"
+    },
     "gh-review-requests": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -5048,10 +6614,10 @@
       "computedHash": "7b29145c2d3255c38d7333c41e2872411f668658c2c2f4782e420400abf08175"
     },
     "github-issue-creator": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/github-issue-creator/SKILL.md",
-      "computedHash": "7cb23e15606c557f69ff68e653abd7e3f521b24bed3cc042b9ea27b775f4ff70"
+      "skillPath": ".github/skills/github-issue-creator/SKILL.md",
+      "computedHash": "935524128eee5662d480aea71a72ab663d54ff31111a09afcfb56d413eb189ac"
     },
     "github-issues": {
       "source": "github/awesome-copilot",
@@ -5317,6 +6883,12 @@
       "skillPath": "skills/haskell-pro/SKILL.md",
       "computedHash": "f9388539901aa6276cc441e5f569445e2a8da1c7c0a696e79d4c963f0f355e4b"
     },
+    "hatch-pet": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/hatch-pet/SKILL.md",
+      "computedHash": "83655c6cbedb1da1f64b2487fbec0fd54ac411ba2c9c48826a514d5cb7385808"
+    },
     "headline-psychologist": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -5443,6 +7015,42 @@
       "skillPath": "skills/high-end-visual-design/SKILL.md",
       "computedHash": "d8c2d396b640494b6bfc8093b1cfe306e553c4677a28187f3eb4476f8e46b6dc"
     },
+    "holoscan-install-conda": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/holoscan-install-conda/SKILL.md",
+      "computedHash": "2b8be182db080e50f05fa9c0b5e262265c082c2162cbf86bb5059d0150f13307"
+    },
+    "holoscan-install-container": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/holoscan-install-container/SKILL.md",
+      "computedHash": "d563bd1cc1352f2081a2ef7e5e309e73d95bdd54df43f6871ff52f82daef5bc1"
+    },
+    "holoscan-install-debian": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/holoscan-install-debian/SKILL.md",
+      "computedHash": "8eb0a31668ba072bc949f509c5c97a6e75bd55b898f6ac0b687a52fd0ba597aa"
+    },
+    "holoscan-install-source": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/holoscan-install-source/SKILL.md",
+      "computedHash": "e1e66ca86af8a9342dc7f70e2303988b151c3f47c5d569f8c3c96823ad46891b"
+    },
+    "holoscan-install-wheel": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/holoscan-install-wheel/SKILL.md",
+      "computedHash": "9c882af38640e9f61682cf79a314b4e08def4fa7171ccb0316d5f50c7b180137"
+    },
+    "holoscan-setup": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/holoscan-setup/SKILL.md",
+      "computedHash": "8a76cc93384dc92d3bc9f57cf01e6c0227d0f21a32793956a084bfc4762fef38"
+    },
     "hono": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -5472,6 +7080,30 @@
       "sourceType": "github",
       "skillPath": "skills/hr-pro/SKILL.md",
       "computedHash": "646aa4c9eda4c922e16cae2260c78ab7c9b52cc58799d3c42270ee78bf8481af"
+    },
+    "hsb-app": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hsb-app/SKILL.md",
+      "computedHash": "5bde746177708ee82babbf9d13e22998f27655c2f61f80b500be41ebe35d2848"
+    },
+    "hsb-flash": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hsb-flash/SKILL.md",
+      "computedHash": "5f8c56075aa4c1786f7ec0d58c348fc72507d8e039f0f0f82a95d096ca401fa8"
+    },
+    "hsb-setup": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hsb-setup/SKILL.md",
+      "computedHash": "af9644f0337dde8d31df64ac160b5db5f7312d1cbe7f1636e54231bd4ec36e16"
+    },
+    "hsb-test": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hsb-test/SKILL.md",
+      "computedHash": "227796a36f22e3f44bd5003f2617cd31bb0e13c7fc07bf53373e0fbdce00f00c"
     },
     "html-injection-testing": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -5658,6 +7290,12 @@
       "sourceType": "github",
       "skillPath": "skills/image-studio/SKILL.md",
       "computedHash": "16d646e83473434d456e6bf0d0e558cc4df5dc7e19a85f3b5f6ca75d95039433"
+    },
+    "imagegen": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.system/imagegen/SKILL.md",
+      "computedHash": "9f14832d6538d83047ef41223ba9b0fb4a8c393d144ad4015ce4c10cc3d5414c"
     },
     "imagen": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -6007,6 +7645,12 @@
       "skillPath": "skills/junta-leiloeiros/SKILL.md",
       "computedHash": "3352a92ac03f895be08f9f28c1b236a31ae77e65f3f920cc8af19adba9647535"
     },
+    "jupyter-notebook": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/jupyter-notebook/SKILL.md",
+      "computedHash": "aec85b4976af33923f957db1667207dfe8418592ddd91bbe4da24bbdc3058d8c"
+    },
     "k6-load-testing": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -6072,6 +7716,12 @@
       "sourceType": "github",
       "skillPath": "skills/kpi-dashboard-design/SKILL.md",
       "computedHash": "27640218409d51f47f46dbd079c6bce6fe863aff01964fab1fc93afd06079072"
+    },
+    "kql": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/kql/SKILL.md",
+      "computedHash": "49cdf22f6185f2321a969557d19d9d61ac716d6b5ee1036dd067d135a66c4ccb"
     },
     "kubernetes-architect": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -6156,6 +7806,12 @@
       "sourceType": "github",
       "skillPath": "skills/latex-paper-conversion/SKILL.md",
       "computedHash": "6cf71f1f7c0c837a4bd712cfc1a6ae91fa0efdfb0d6935847d2bbb3847227ee2"
+    },
+    "launch-nemo-rl": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/launch-nemo-rl/SKILL.md",
+      "computedHash": "70e48922a13b7410225f4414b1c0ebccf4fdfc7b68c3ad54b123206e80398813"
     },
     "launch-strategy": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -6258,6 +7914,12 @@
       "sourceType": "github",
       "skillPath": "skills/lightning-factory-explainer/SKILL.md",
       "computedHash": "b69047559990fe9547cc3b4e2a3c15e68d4e1056daba0bdb3a27491cc5bb1223"
+    },
+    "linear": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/linear/SKILL.md",
+      "computedHash": "702e1b8bb122bb981d276fbdcaa2fde1435b8c548910e1b365f088735b7a5365"
     },
     "linear-automation": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -6661,11 +8323,41 @@
       "skillPath": "skills/maxia/SKILL.md",
       "computedHash": "6b027d41986294437e259256419cd794ab933052e8bee40b5b31e87bc62c07f2"
     },
-    "mcp-builder": {
-      "source": "sickn33/antigravity-awesome-skills",
+    "mcore-create-issue": {
+      "source": "nvidia/skills",
       "sourceType": "github",
-      "skillPath": "skills/mcp-builder/SKILL.md",
-      "computedHash": "7d85b2761016512557dabf450afabc34bee8ead8abfbd852a4ad6d8d50a3b456"
+      "skillPath": "skills/mcore-create-issue/SKILL.md",
+      "computedHash": "a36952f4b0374171ed759369c4de80d94012bc2a5276edec0e5e9fe2a65908e8"
+    },
+    "mcore-linting-and-formatting": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcore-linting-and-formatting/SKILL.md",
+      "computedHash": "a580a3746a52de7ffc37c5d9d67b6753d45f9d7731d6e60a507cd78378ac1d36"
+    },
+    "mcore-run-on-slurm": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcore-run-on-slurm/SKILL.md",
+      "computedHash": "c936c70ae3b51867342066ec779460edf21d545d570e67d5d0dba43750b9a04f"
+    },
+    "mcore-split-pr": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcore-split-pr/SKILL.md",
+      "computedHash": "198cc68f0e7f6f9f037ee0f81e262f5fbe01f45da3ffb7f47079b500dc958361"
+    },
+    "mcore-testing": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcore-testing/SKILL.md",
+      "computedHash": "bebb87cce7fac651f209b36588f0e3a3acbe5d5d9274f2a2f9d63b1697c43cf4"
+    },
+    "mcp-builder": {
+      "source": "microsoft/skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/mcp-builder/SKILL.md",
+      "computedHash": "2bc10d4edaafe921eb77bb2f1ff9e27a0dd15bddc309a7ef5986e0e54eb5a0e6"
     },
     "mcp-builder-ms": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -6830,10 +8522,34 @@
       "computedHash": "2a86c1b1a876f777a8f99e0e27a9b2d5fa360352bd2dd396102e3110212dd296"
     },
     "microsoft-docs": {
-      "source": "github/awesome-copilot",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/microsoft-docs/SKILL.md",
-      "computedHash": "e49127ff2162330ac79bfde9e7ed1297df15be9ade09164fdebfe697153fcc36"
+      "skillPath": ".github/skills/microsoft-docs/SKILL.md",
+      "computedHash": "0acd8d2629937e021d605fd1426e641295909e13bab47cad1153793f5564e85e"
+    },
+    "microsoft-foundry": {
+      "source": "microsoft/azure-skills",
+      "sourceType": "github",
+      "skillPath": "skills/microsoft-foundry/SKILL.md",
+      "computedHash": "19052fb81ee82243a4ba697d4f427ee650ff91cd1002bc7d17962d94a45fb2f3"
+    },
+    "microsoft-foundry-classic": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/microsoft-foundry-classic/SKILL.md",
+      "computedHash": "a294e0538e3b55df01d50b5d7bdb7dbe16f1fa12c054bd25668db257adeabe30"
+    },
+    "microsoft-foundry-local": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/microsoft-foundry-local/SKILL.md",
+      "computedHash": "df0a1ebc851d0191cbd0e5306f9198aa01c1cb1d07e1ef4ad9824adafd6718ea"
+    },
+    "microsoft-foundry-tools": {
+      "source": "MicrosoftDocs/Agent-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/microsoft-foundry-tools/SKILL.md",
+      "computedHash": "cfd2c04202140bfcabaddf90f95fdeead822f957e685ac1881b96873d4b84c32"
     },
     "microsoft-skill-creator": {
       "source": "github/awesome-copilot",
@@ -6846,6 +8562,12 @@
       "sourceType": "github",
       "skillPath": "skills/microsoft-teams-automation/SKILL.md",
       "computedHash": "4e1bb3ac896720cfd33d2c258be2f151579446ce96d80470e3e3efefa42c0850"
+    },
+    "migrate-to-codex": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/migrate-to-codex/SKILL.md",
+      "computedHash": "23d69489c36cf1fb7f960949e2c5ec64bf154ddb490e3f94ae0d2f9e3ecc3ec3"
     },
     "migrating-oracle-to-postgres-stored-procedures": {
       "source": "github/awesome-copilot",
@@ -7183,6 +8905,276 @@
       "skillPath": "skills/native-data-fetching/SKILL.md",
       "computedHash": "f405407904baa1d0a020c3f54935b56ce2625346d4c269e653c30feecdec3e98"
     },
+    "nemo-automodel-distributed-training": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-automodel-distributed-training/SKILL.md",
+      "computedHash": "b82a75238ab6ef124b05c74fef481c6cb0654c2b7533c16e0eedd7883639a6ff"
+    },
+    "nemo-automodel-launcher-config": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-automodel-launcher-config/SKILL.md",
+      "computedHash": "352ed7983536ade4c4c4afea70e2c6411191a25e11652c5e9040fd0b38cca632"
+    },
+    "nemo-automodel-model-onboarding": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-automodel-model-onboarding/SKILL.md",
+      "computedHash": "27bf882e29c1172718b3ef9407bfd4c9a36f7571201dd961ea85b2b44daf7438"
+    },
+    "nemo-automodel-recipe-development": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-automodel-recipe-development/SKILL.md",
+      "computedHash": "e7f33119ad8fa8a09de79a461c4645d7bb610b6197241ff396c1055219326ea6"
+    },
+    "nemo-data-designer-plugin": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-data-designer-plugin/SKILL.md",
+      "computedHash": "24479d51216e65b013bdafd1e3440219cbcdc49ace312530b75880d6ca6e8a46"
+    },
+    "nemo-evaluator-plugin": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-evaluator-plugin/SKILL.md",
+      "computedHash": "b44cbb9008b57819b469f1b5dcfd2b727defd57a4fa111617c94e50448edd9fd"
+    },
+    "nemo-mbridge-mlm-bridge-training": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-mlm-bridge-training/SKILL.md",
+      "computedHash": "72416c98d7c95d58897a0bb9aae9334e6653b83f2912386da46038a2ae8ba819"
+    },
+    "nemo-mbridge-multi-node-slurm": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-multi-node-slurm/SKILL.md",
+      "computedHash": "e752275d8c6b27c8df094345be7a59ad0a23247e258121529c57bef18f69e93a"
+    },
+    "nemo-mbridge-perf-activation-recompute": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-activation-recompute/SKILL.md",
+      "computedHash": "3e1ee355cac34c664064ae7f17639adaf3bc021bd8138013025a7c5c509e3a08"
+    },
+    "nemo-mbridge-perf-cpu-offloading": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-cpu-offloading/SKILL.md",
+      "computedHash": "6c93dec4ef2b5f4154144519ebaeab8372d430ece492502ceeee29f0b7ae8389"
+    },
+    "nemo-mbridge-perf-cuda-graphs": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-cuda-graphs/SKILL.md",
+      "computedHash": "2359839d4d1c638cea208ab53ffa187143f7c9f7a79b2d65ee844470383098ed"
+    },
+    "nemo-mbridge-perf-expert-parallel-overlap": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-expert-parallel-overlap/SKILL.md",
+      "computedHash": "93002d233dbbe84586ac9c643c400f8b0e314d67ba8bc98e7df9f8f3b84b8478"
+    },
+    "nemo-mbridge-perf-hierarchical-context-parallel": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-hierarchical-context-parallel/SKILL.md",
+      "computedHash": "4075dbfdce03caeb82c6b11a54c0f8a0e646939986002264efb71075dbed2179"
+    },
+    "nemo-mbridge-perf-megatron-fsdp": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-megatron-fsdp/SKILL.md",
+      "computedHash": "6b1daaa42e42edf7c9a4e73602ee41f7c7c88d540ff4717f6632ff2dce90d984"
+    },
+    "nemo-mbridge-perf-memory-tuning": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-memory-tuning/SKILL.md",
+      "computedHash": "17cd57a083100ad818b27e5ebd6d7bb8b0ba7cc3116e1c9279af9f82499b4a30"
+    },
+    "nemo-mbridge-perf-moe-comm-overlap": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-moe-comm-overlap/SKILL.md",
+      "computedHash": "32870da252b489cc361cf3358a598827a8c52e2b79a0c50d954bdc3b29c4d826"
+    },
+    "nemo-mbridge-perf-moe-dispatcher-selection": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-moe-dispatcher-selection/SKILL.md",
+      "computedHash": "6944034b21d03d57742ee3cd4bb751b7c0fa1016f3c936550cd66af8eaf6851c"
+    },
+    "nemo-mbridge-perf-moe-hardware-configs": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-moe-hardware-configs/SKILL.md",
+      "computedHash": "0fbc1da8d358d253ae021e6decc541f938945031a044fc951e7c5799278ab834"
+    },
+    "nemo-mbridge-perf-moe-long-context": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-moe-long-context/SKILL.md",
+      "computedHash": "590f4653e7410a65913e60c66aa3e63298e9fcf501fd00a3db0373735f2a6da9"
+    },
+    "nemo-mbridge-perf-moe-optimization-workflow": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-moe-optimization-workflow/SKILL.md",
+      "computedHash": "d941d846836170d0af1604e4fa7e5584452ddf65c8060774ce4a04b09705116b"
+    },
+    "nemo-mbridge-perf-moe-vlm-training": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-moe-vlm-training/SKILL.md",
+      "computedHash": "939d7cccf05d48080a28dd0d33145b15f94f8fef4191471ef759f9ebcc7e4b32"
+    },
+    "nemo-mbridge-perf-parallelism-strategies": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-parallelism-strategies/SKILL.md",
+      "computedHash": "72257f19e6d20682ddd761d1d7965466c8c34b0415217718c02ac4a08de67ca7"
+    },
+    "nemo-mbridge-perf-sequence-packing": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-sequence-packing/SKILL.md",
+      "computedHash": "4cafeccb77b0fa2e5c49185dfa9f3f6604c0856a343704170caf7a983b88a3f9"
+    },
+    "nemo-mbridge-perf-tp-dp-comm-overlap": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-perf-tp-dp-comm-overlap/SKILL.md",
+      "computedHash": "83be74416eda840c03b0373d3c07d5c7a330d63e8d188a6e4890c2118224677f"
+    },
+    "nemo-mbridge-recipe-recommender": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-recipe-recommender/SKILL.md",
+      "computedHash": "7230d035d392901029ab7ba66775da59119e0fd2846cd65e1ec742958db6648b"
+    },
+    "nemo-mbridge-resiliency": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-mbridge-resiliency/SKILL.md",
+      "computedHash": "4bbaa827752ade476f17a89f9c68527c913672c39a56ec7d47926ff491a2128e"
+    },
+    "nemo-retriever": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-retriever/SKILL.md",
+      "computedHash": "928da8c720b2eb54054b15676c9217ccc162b1827c8b89c6695e37adb629c86d"
+    },
+    "nemo-rl-auto-research": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-rl-auto-research/SKILL.md",
+      "computedHash": "ea45e4cff33d2d7ff0f9493cc107011670de4c660e39317a47d0d561f8757769"
+    },
+    "nemo-rl-brev-etiquette": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-rl-brev-etiquette/SKILL.md",
+      "computedHash": "eb109ae913352bef976d3a2f061be232f73fd17b135a8030ed12cae4f9ed7c3a"
+    },
+    "nemo-rl-docs": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-rl-docs/SKILL.md",
+      "computedHash": "fffc3da66e32d251a916a24d7e0a911ec350ddb8e15d3e94c59cb336e8df121b"
+    },
+    "nemo-rl-session-memory": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemo-rl-session-memory/SKILL.md",
+      "computedHash": "227fc965ec35b69731af6e8a967de5d7a75d87d2327cffcb903f032c78ac4247"
+    },
+    "nemoclaw-user-agent-skills": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-agent-skills/SKILL.md",
+      "computedHash": "42bd2f63921b78a4d811a617124be725e4ae5146c3c3d0dc6db86c225fc888f8"
+    },
+    "nemoclaw-user-configure-inference": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-configure-inference/SKILL.md",
+      "computedHash": "69289f1e38565fd441e175d2cce362192fa57f6a6f3a44e0b7b8967bb44e70f5"
+    },
+    "nemoclaw-user-configure-security": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-configure-security/SKILL.md",
+      "computedHash": "1ca1117b0d324d3c5f57e7320246d1a192d0edbcee0c57800ecf9b9730c6eb5c"
+    },
+    "nemoclaw-user-deploy-remote": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-deploy-remote/SKILL.md",
+      "computedHash": "97e8dea5ed54f9206014867a7a003400c76e180c0a0db75fe2b5b49f7a24a70b"
+    },
+    "nemoclaw-user-get-started": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-get-started/SKILL.md",
+      "computedHash": "93a769dc30442375edf2bc31876662037e15e30295e53b669e3a87eac4c9c6f8"
+    },
+    "nemoclaw-user-manage-policy": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-manage-policy/SKILL.md",
+      "computedHash": "f6df3a8ef5fb430c42bb3eaa354a0e7bd1c19fb84f14a5809b06ecabaf171765"
+    },
+    "nemoclaw-user-manage-sandboxes": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-manage-sandboxes/SKILL.md",
+      "computedHash": "54510fe130a3083ff172e2cc3b8c9eb581d42d26f6162f8cc02763a17ac8836b"
+    },
+    "nemoclaw-user-monitor-sandbox": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-monitor-sandbox/SKILL.md",
+      "computedHash": "e8074e60e3b3ddcd4fe6fe4c676ac3b65203ed987fa377c0b34478a57d3c086d"
+    },
+    "nemoclaw-user-overview": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-overview/SKILL.md",
+      "computedHash": "cabccfe8edfb5cfa73b1d65740e69ba5aa13fd868c46d99c6f711482f4515ff5"
+    },
+    "nemoclaw-user-reference": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemoclaw-user-reference/SKILL.md",
+      "computedHash": "1e94a0399bf9623cc2c09b5b2b0305956017240f05cf626c119fadc98ea7bcaa"
+    },
+    "nemotron-customize": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemotron-customize/SKILL.md",
+      "computedHash": "16987fa38e2f8a4e7540a0de63e419c3f341f0b9203921b786b8caf94061d95c"
+    },
+    "nemotron-policy-generator": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemotron-policy-generator/SKILL.md",
+      "computedHash": "052f54e1bbef8ed61e232de8b27502f0af457b0a097825c53e80070eda3d059b"
+    },
+    "nemotron-retrieval-recipes": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemotron-retrieval-recipes/SKILL.md",
+      "computedHash": "709882b463997389ad96a7d59c8a8be93c621b1f1e690ddce41daae54a2a5239"
+    },
+    "nemotron-speech": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nemotron-speech/SKILL.md",
+      "computedHash": "c26f0cbe1e3faae0d673c02473a9546efe60307584c9a9dc5a9ebec990accf09"
+    },
     "neon-postgres": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -7206,6 +9198,12 @@
       "sourceType": "github",
       "skillPath": "skills/nestjs-expert/SKILL.md",
       "computedHash": "d370926a87d009fb6df3838fc6e3cc56c327c753d954016fe282eac97678990e"
+    },
+    "netlify-deploy": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/netlify-deploy/SKILL.md",
+      "computedHash": "1c8b071c2673df67a4ed681bd5c06e236c7a9ca7265cb1088a54f2ef3b906f9e"
     },
     "network-101": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -7321,6 +9319,30 @@
       "skillPath": "skills/notion-automation/SKILL.md",
       "computedHash": "f25f2a856958f999fb4065c3e8ea60834539511a9d6995f9bc07742beac7ac6e"
     },
+    "notion-knowledge-capture": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/notion-knowledge-capture/SKILL.md",
+      "computedHash": "c1376422aec0fb3a4733e5a8a99eed4feff24fa45e25a2ffddaf07a68eed9198"
+    },
+    "notion-meeting-intelligence": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/notion-meeting-intelligence/SKILL.md",
+      "computedHash": "72f8805776688085ca6f748c313bdce9ebdc088ea1e9ac192689746b6b39fb33"
+    },
+    "notion-research-documentation": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/notion-research-documentation/SKILL.md",
+      "computedHash": "8dcb27b1c12f087568b4cd8b1f7ea576067a0c8df9af6addab78ef6975742ac3"
+    },
+    "notion-spec-to-implementation": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/notion-spec-to-implementation/SKILL.md",
+      "computedHash": "887f15eb25fa806869f8eb04b16a697f678431da4a744ecdf9d136ef76c4132b"
+    },
     "notion-template-business": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -7338,6 +9360,60 @@
       "sourceType": "github",
       "skillPath": "skills/nutrition-analyzer/SKILL.md",
       "computedHash": "1bf21cca36583eaff4ff24d112b683f949e6565baf19aa33b2c7848a1216dccf"
+    },
+    "nv-generate-ct-rflow": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-generate-ct-rflow/SKILL.md",
+      "computedHash": "78e50ea870af96c285d7b89aa0971c0c8eb11fad4842ce495a232cad3b3d4cca"
+    },
+    "nv-generate-mr": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-generate-mr/SKILL.md",
+      "computedHash": "8d821a3c10c727e7b1d7bf9ea4b975ed8424b809ca6c9436bf1238244c629316"
+    },
+    "nv-generate-mr-brain": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-generate-mr-brain/SKILL.md",
+      "computedHash": "179b559179711ac8fc31bad75a8b399bbcf924dbd551854bfea7b11a7bc01326"
+    },
+    "nv-generate-mr-brain-finetune": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-generate-mr-brain-finetune/SKILL.md",
+      "computedHash": "4e4762a9208410707a63542732c3de82396c38df3a058982278081a4b98dbfda"
+    },
+    "nv-generate-vae-finetune": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-generate-vae-finetune/SKILL.md",
+      "computedHash": "e4a20ff2b69c7497854aed5a94ec4f722efe2c7dca5402f919747acca3a5dffd"
+    },
+    "nv-reason-cxr": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-reason-cxr/SKILL.md",
+      "computedHash": "6b13350a47a01402c92c6e0eec652ecfcfb7238cfd938ad8b83251d7397f36f4"
+    },
+    "nv-segment-ct": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-segment-ct/SKILL.md",
+      "computedHash": "33e34cdd60d577ea1f652254b221dd5c9fe1919876dbe2c1fbb73e76722408db"
+    },
+    "nv-segment-ct-finetune": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-segment-ct-finetune/SKILL.md",
+      "computedHash": "8c99cf68a7640838431ace925988c2a5c0ff1e5e96880bcdb92924189afc6225"
+    },
+    "nv-segment-ctmr": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nv-segment-ctmr/SKILL.md",
+      "computedHash": "29d5da58811e504a7f8d06bdf4a71e7254d3d139687fbe2f5f75d89dbac335d4"
     },
     "nx-workspace-patterns": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -7549,6 +9625,24 @@
       "skillPath": "skills/office-productivity/SKILL.md",
       "computedHash": "44080ad536810d6448bbc4c8b2531e6129edd045122afccb99c070323d902fb9"
     },
+    "omniverse-cad-to-simready": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omniverse-cad-to-simready/SKILL.md",
+      "computedHash": "b45c3ce9adf58a029e959e2062cf9bd6611d670493a90609fd5f9114a5f792a2"
+    },
+    "omniverse-realtime-viewer": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omniverse-realtime-viewer/SKILL.md",
+      "computedHash": "24db0b267ac7d2dea774639ac0b02d51d8fed980518485b12d674d4c105f0e17"
+    },
+    "omniverse-usd-performance-tuning": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omniverse-usd-performance-tuning/SKILL.md",
+      "computedHash": "ee3b82732b74cac20145b4e33a6b2a49510457dc1e64032273277e2320c1c32b"
+    },
     "on-call-handoff-patterns": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -7584,6 +9678,12 @@
       "sourceType": "github",
       "skillPath": "skills/oo-component-documentation/SKILL.md",
       "computedHash": "5d92d232f6cd4bab9177811da0b7b8ee5bc3fa92d707f943835541d9959d7e78"
+    },
+    "openai-docs": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/openai-docs/SKILL.md",
+      "computedHash": "22df00be935748ce5f8cce0604fefe89a7dda2c5221d58e627529d9f53a385b8"
     },
     "openapi-spec-generation": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -7711,6 +9811,12 @@
       "skillPath": "skills/pci-compliance/SKILL.md",
       "computedHash": "87175992e115064bd684db21591156f7ba3280e5fa5d4f8d1b145715e657a4a5"
     },
+    "pdf": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/pdf/SKILL.md",
+      "computedHash": "ae0a8fde8447e83a08edd0baf5373cd52febce32494e47e17d5d695a441a1884"
+    },
     "pdf-conversion-router": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -7837,6 +9943,36 @@
       "skillPath": "skills/php-pro/SKILL.md",
       "computedHash": "762bbfec4d30644180b783339a5b7a820e7afafaaa5e0951596ff43ea48d373b"
     },
+    "physical-ai-defect-image-generation": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/physical-ai-defect-image-generation/SKILL.md",
+      "computedHash": "43ef5b51544146e6d375e4299d7a64c02556a38ebd1f9f3abe68b49aa9044adc"
+    },
+    "physical-ai-infrastructure-setup-and-resilient-scaling": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/physical-ai-infrastructure-setup-and-resilient-scaling/SKILL.md",
+      "computedHash": "f0c5dc290bce7085be5592d049677d43c381d79e8fe50ea3460ee81167463038"
+    },
+    "physical-ai-neural-reconstruction": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/physical-ai-neural-reconstruction/SKILL.md",
+      "computedHash": "5481ac1ad1976fe3b2b888f03a1aca20823986f9f0f4512aa8f0fd7ac5247b5e"
+    },
+    "physical-ai-video-data-augmentation": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/physical-ai-video-data-augmentation/SKILL.md",
+      "computedHash": "7279965598cc22b74d4fe5abf6dea9725b195216ae5e19b3b39ef8edb0091e9c"
+    },
+    "physicsnemo-discover": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/physicsnemo-discover/SKILL.md",
+      "computedHash": "499e26cbaa07458a15d29a500facb2c836bcd57efda4fcbf7cbde4c6738b8d1c"
+    },
     "pipecat-friday-agent": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -7891,6 +10027,12 @@
       "skillPath": "plugins/playground/skills/playground/SKILL.md",
       "computedHash": "a499ef286b1bcda80afe4de53b2d0a5a84c317c11cfdafc2af6e53985c77940d"
     },
+    "playwright": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/playwright/SKILL.md",
+      "computedHash": "595a334de3bd5335f442a33d1bdefb01207c88c99fe43e3bd99b0d5435f230de"
+    },
     "playwright-automation-fill-in-form": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -7908,6 +10050,12 @@
       "sourceType": "github",
       "skillPath": "skills/playwright-generate-test/SKILL.md",
       "computedHash": "8f963da3e25f705ff39755b8b990f20da0c0320cb86ac83fcc4d2d4eca91f6e4"
+    },
+    "playwright-interactive": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/playwright-interactive/SKILL.md",
+      "computedHash": "6a8871c4fba50a9a1f4c90a7955d94cef920d866c2ba7640fa009a26c73e0c83"
     },
     "playwright-java": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -7927,6 +10075,12 @@
       "skillPath": "skills/plotly/SKILL.md",
       "computedHash": "d7e7edd09c830f7bc2d23098b0d0b17a5158763bfef703157bdf0d4e9f4200fa"
     },
+    "plugin-creator": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.system/plugin-creator/SKILL.md",
+      "computedHash": "f6cd2ab74e30276067cb68aa2f41d56a762b41fe9dfb9dd914f2dbc27d0010f9"
+    },
     "plugin-settings": {
       "source": "anthropics/claude-plugins-official",
       "sourceType": "github",
@@ -7940,10 +10094,10 @@
       "computedHash": "1fd8152a20ae6b51e75064619cdf87db5d487c8514506774c66d2708001148a9"
     },
     "podcast-generation": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "microsoft/skills",
       "sourceType": "github",
-      "skillPath": "skills/podcast-generation/SKILL.md",
-      "computedHash": "5c37c20219ea2e63999228f00d7e9a94f32fde1e2296a9d107a0b51cf636eb3f"
+      "skillPath": ".github/skills/podcast-generation/SKILL.md",
+      "computedHash": "6248549130377ca9ea3f65764588a03b3d9970e267fc95d8c2babc6f25ddc973"
     },
     "polars": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -8503,17 +10657,35 @@
       "skillPath": "raffle-winner-picker/SKILL.md",
       "computedHash": "cd97da2fa280d9545b6f60dfc07335663af4932acb58d83d6801a1bb3b8a8aae"
     },
+    "rag-blueprint": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/rag-blueprint/SKILL.md",
+      "computedHash": "5c057a857193fdd137a8f040cfb95cf033c74fbc27eb5346c5255a5b34e1459b"
+    },
     "rag-engineer": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/rag-engineer/SKILL.md",
       "computedHash": "09a5e174bca621f134235ec59e942499c6298101cc72effda9b7b9046baf6806"
     },
+    "rag-eval": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/rag-eval/SKILL.md",
+      "computedHash": "5e11b2d28098f4504c60501dba2b7c4d916b413cfbc9d4b0d1efa13fe1f0f8b3"
+    },
     "rag-implementation": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/rag-implementation/SKILL.md",
       "computedHash": "0c86261f73ff427f4594b9419b1bd8e94a184002d57c8af31fc4ac2e7dbe8fe2"
+    },
+    "rag-perf": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/rag-perf/SKILL.md",
+      "computedHash": "2cefe6f1fe560333a15a9a0eb0b0758301fa29cc84788f72d63a1c952e4b63a4"
     },
     "rayden-code": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -8790,6 +10962,12 @@
       "sourceType": "github",
       "skillPath": "skills/render-automation/SKILL.md",
       "computedHash": "0c72a14b62fcecec34e057759b1eba058da55f0c7213a58e9577da11909a70dd"
+    },
+    "render-deploy": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/render-deploy/SKILL.md",
+      "computedHash": "3d5d532563bea44a0bd852b9d890fea848e1549035638e3ca119f0016bfb4632"
     },
     "repo-story-time": {
       "source": "github/awesome-copilot",
@@ -9121,6 +11299,12 @@
       "skillPath": "skills/screen-recording/SKILL.md",
       "computedHash": "d0574cf904de9243778697464f0c41d073691a96e53231f16dd8176df1b46afd"
     },
+    "screenshot": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/screenshot/SKILL.md",
+      "computedHash": "2dc50b3537ea27a1020a660ff17f12860f6ad05bcf40539165eb4655e5010d73"
+    },
     "screenshots": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -9169,6 +11353,12 @@
       "skillPath": "skills/security-auditor/SKILL.md",
       "computedHash": "771d0b237eb7557818e4350488f266faf35c883b643c9ab375d14e19141882f8"
     },
+    "security-best-practices": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/security-best-practices/SKILL.md",
+      "computedHash": "c27616fb4e27999605b90b261dc729784420c8d77bd1a98748384ffaa5b35704"
+    },
     "security-bluebook-builder": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -9180,6 +11370,12 @@
       "sourceType": "github",
       "skillPath": "skills/security-compliance-compliance-check/SKILL.md",
       "computedHash": "2d33196014d57075f8b442bdfff8383797157617baa4f7701fda4478b7caa03b"
+    },
+    "security-ownership-map": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/security-ownership-map/SKILL.md",
+      "computedHash": "0eefbaabdbe0ccfc39555195b9a7f7c8369abe1b4dc969aabb2e5aec8c3705ab"
     },
     "security-requirement-extraction": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -9210,6 +11406,12 @@
       "sourceType": "github",
       "skillPath": "skills/security-scanning-security-sast/SKILL.md",
       "computedHash": "432a3eea84fceea5785cdfb0cda6ecf9258f8aab27d54a660313f063669253fd"
+    },
+    "security-threat-model": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/security-threat-model/SKILL.md",
+      "computedHash": "b3ad2dc0b2eee1f189680fdb8cf3b17853f12ab3403d389393f4237ebc6f9821"
     },
     "seek-and-analyze-video": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -9288,6 +11490,12 @@
       "sourceType": "github",
       "skillPath": "skills/senior-fullstack/SKILL.md",
       "computedHash": "337a526661c4ab6916cf399209bc41628605b6299cb080cd5cddf9c587939af9"
+    },
+    "sentry": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/sentry/SKILL.md",
+      "computedHash": "ac32ffd194fee6dfc777e8d16b85ea7f9c5975cf4c7488d2616dc3e5dfa07386"
     },
     "sentry-automation": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -9631,6 +11839,12 @@
       "skillPath": "skills/skill-audit/SKILL.md",
       "computedHash": "aa7ab898de9b95937431f697e12a73049eb855b22c7961d2818c1615724b7e2e"
     },
+    "skill-card-generator": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-card-generator/SKILL.md",
+      "computedHash": "455c8dc74d79943344cf901ef97548a256073527720ca4692af759b73da50a1c"
+    },
     "skill-check": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -9638,10 +11852,10 @@
       "computedHash": "a708ec15862dcf212011b804b46c6f62d4cdfc4ed4c1075cb7365311523f8972"
     },
     "skill-creator": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "openai/skills",
       "sourceType": "github",
-      "skillPath": "skills/skill-creator/SKILL.md",
-      "computedHash": "7dd56bb412e0b17ef0fc3e910286a552479210713dcb2107fc35c482f5355156"
+      "skillPath": "skills/.system/skill-creator/SKILL.md",
+      "computedHash": "c1f04920b03c2a412e1d0b90680dc10b6de64793db7daae7e4bf64535b9fdf75"
     },
     "skill-creator-ms": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -9668,10 +11882,10 @@
       "computedHash": "1d478c318543af34285e2395ff392157fe43bf44e3cd4833398bd5675db69e0b"
     },
     "skill-installer": {
-      "source": "sickn33/antigravity-awesome-skills",
+      "source": "openai/skills",
       "sourceType": "github",
-      "skillPath": "skills/skill-installer/SKILL.md",
-      "computedHash": "eef32de1591c93030021b3bf9f87a566df1db4954da0b5c2659105983a3e83b0"
+      "skillPath": "skills/.system/skill-installer/SKILL.md",
+      "computedHash": "44e8f0fda4a4aff2b98ae8587ceb812c15e7e5dba230f16295017c2f416f6d05"
     },
     "skill-issue": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -9870,6 +12084,12 @@
       "sourceType": "github",
       "skillPath": "skills/speckit-updater/SKILL.md",
       "computedHash": "41da374152e5670a6b69b80719e45ebb902d9a81bd728822419ee5201380bae1"
+    },
+    "speech": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/speech/SKILL.md",
+      "computedHash": "767adf188f0beb4b45f4b60cfe1945f1f104884ff3d1597e09825dadcea5f7fa"
     },
     "speed": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -10171,11 +12391,23 @@
       "skillPath": "skills/suggest-awesome-github-copilot-skills/SKILL.md",
       "computedHash": "326ab63e60c60b2880781cc05e7289c911612e4d74c71b3bbaf8cad2c531ab8e"
     },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase/SKILL.md",
+      "computedHash": "d414d598b9428b3e851c4ce61898649906b19e55aa7415bb42a286bd9ca2ab32"
+    },
     "supabase-automation": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "skillPath": "skills/supabase-automation/SKILL.md",
       "computedHash": "ea2fdfbaa09092313e32cdf18811f61cb983056769e62f7ceb231cff8da85b43"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "0d2c4857a7d6fdcd3fbc46e458fa4c497f029cab89a01548b3defce203003932"
     },
     "superpowers-lab": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -10591,6 +12823,12 @@
       "skillPath": "skills/tiktok-automation/SKILL.md",
       "computedHash": "c3ef15682b7e85926b80dcb6e57c8ab3f08def55b97ebab505e2ca152705caf6"
     },
+    "tilegym-adding-cutile-kernel": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/tilegym-adding-cutile-kernel/SKILL.md",
+      "computedHash": "5366f0aa66e55abf5d6115d5c5f004080fd135b709ac46d9d946e2e5ea89d271"
+    },
     "tldr-prompt": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -10644,6 +12882,12 @@
       "sourceType": "github",
       "skillPath": "skills/track-management/SKILL.md",
       "computedHash": "fc6c452a1e6c8f2ba8afcb4dcfe1f1a0d9e8ea8f2cca8703acbe480cf1467e2a"
+    },
+    "transcribe": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/transcribe/SKILL.md",
+      "computedHash": "0391b3fba28374df131946e0b515e62f5e2a9b51013d05a35791944ca6853dff"
     },
     "transformers-js": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -11047,6 +13291,12 @@
       "skillPath": "skills/vercel-cli-with-tokens/SKILL.md",
       "computedHash": "d08a8477077df15d00999b6ff8425af364bfc28ef179f8f1654fc50364881f60"
     },
+    "vercel-deploy": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/vercel-deploy/SKILL.md",
+      "computedHash": "1bbc267739a93506229ae565d8dc56a13caae8dfc3b727957b966109a8da00d0"
+    },
     "vercel-deployment": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -11178,6 +13428,96 @@
       "sourceType": "github",
       "skillPath": "skills/vscode-extension-guide-en/SKILL.md",
       "computedHash": "b00fca82851fb3ae6bd297dd7af36f694bab431b6c4708ca0c8540f9b50c6a8e"
+    },
+    "vss-ask-video": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-ask-video/SKILL.md",
+      "computedHash": "d61276ee5eaf73c3008a8d64b28e3eea564dd3e9a6da17749197e0cf139d38f2"
+    },
+    "vss-deploy-dense-captioning": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-deploy-dense-captioning/SKILL.md",
+      "computedHash": "53ebe5ef39c4209ee03e8b84a9bf3f6879bf5501331059040202461285ceb104"
+    },
+    "vss-deploy-detection-tracking-2d": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-deploy-detection-tracking-2d/SKILL.md",
+      "computedHash": "4c7c13ee9a4285e9d7678116dc96257877953236f4476fa456275de7f036702e"
+    },
+    "vss-deploy-detection-tracking-3d": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-deploy-detection-tracking-3d/SKILL.md",
+      "computedHash": "82122e348d2e73e574b85c3b41fba1b17a0995efa4ebf2e147ffb590526e0ac0"
+    },
+    "vss-deploy-profile": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-deploy-profile/SKILL.md",
+      "computedHash": "5ca6944d13231c0b15321febee0bf4eb34bc52a8b04e3bc278454c2cae995db6"
+    },
+    "vss-deploy-video-embedding": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-deploy-video-embedding/SKILL.md",
+      "computedHash": "2b23db825c0665f9bfda66f527e4808a29c1757695e6b5e5e2291adccb883a26"
+    },
+    "vss-generate-video-calibration": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-generate-video-calibration/SKILL.md",
+      "computedHash": "5e3848f8c6fd316b15d7cfc165a29e220934cdf5bfdd27db6e2b798d5ee6ae4f"
+    },
+    "vss-generate-video-report": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-generate-video-report/SKILL.md",
+      "computedHash": "81c37bda07b6efc60ebd74face938b0e7fb86a2c9ecd0cd0ac89f40e7c3e611c"
+    },
+    "vss-manage-alerts": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-manage-alerts/SKILL.md",
+      "computedHash": "9037b8b0bb892058e5cc7733d8bc6cc6b809f4f4aac482fb6bc268d3d4dbead8"
+    },
+    "vss-manage-video-io-storage": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-manage-video-io-storage/SKILL.md",
+      "computedHash": "ecbaf7d345c3e9a58bb193cb6e076dc043d36fb8663763fd1acee9c6c022d405"
+    },
+    "vss-query-analytics": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-query-analytics/SKILL.md",
+      "computedHash": "855dcca32a3e78a4c0edd6cda870813c9ac1b92999223dccf73771d7a6f395f2"
+    },
+    "vss-search-archive": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-search-archive/SKILL.md",
+      "computedHash": "265833dba7134b5b02da12f2b7add79020902cf8c606a8401187a0d42c0dcbc6"
+    },
+    "vss-setup-behavior-analytics": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-setup-behavior-analytics/SKILL.md",
+      "computedHash": "1d9fe321b67a2090c5c5c7d2cfa233d83d0f14e86394f8af0f90e8a2f541a4a4"
+    },
+    "vss-setup-video-analytics-api": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-setup-video-analytics-api/SKILL.md",
+      "computedHash": "cc401075a868215d3c1af88282e9a4a5b8cdab92bf5ee77dc287677726b85c7e"
+    },
+    "vss-summarize-video": {
+      "source": "nvidia/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vss-summarize-video/SKILL.md",
+      "computedHash": "a40da56ae7fc0bb303c62a90c5f229b9a57afbfcc0b41e2a610a0e3c82dbe5ec"
     },
     "vulnerability-scanner": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -11353,6 +13693,12 @@
       "skillPath": "skills/winmd-api-search/SKILL.md",
       "computedHash": "e49949740f6cdbeff41a12f6ff041b43b5d3ecfc00f55dab5985ed701882d147"
     },
+    "winui-app": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/winui-app/SKILL.md",
+      "computedHash": "6231a756230fbf412b05e38249d47c3ced6ab51944bcfb6ea3452f026bcbe848"
+    },
     "winui3-migration-guide": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -11526,6 +13872,12 @@
       "sourceType": "github",
       "skillPath": "skills/yann-lecun-tecnico/SKILL.md",
       "computedHash": "c49e3ec857cc067b2baa6161d440edc9510a9dc008ede0ec8d6e1fffb0ace5b5"
+    },
+    "yeet": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/yeet/SKILL.md",
+      "computedHash": "51c969727afd4e96b5e7b3d4eadfffa9b5ca0c95cdd45b0f88c2518fe4f4688d"
     },
     "yes-md": {
       "source": "sickn33/antigravity-awesome-skills",

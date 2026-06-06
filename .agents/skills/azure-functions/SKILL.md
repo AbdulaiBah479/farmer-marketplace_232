@@ -1,1350 +1,305 @@
 ---
 name: azure-functions
-description: Expert patterns for Azure Functions development including isolated
-  worker model, Durable Functions orchestration, cold start optimization, and
-  production patterns. Covers .NET, Python, and Node.js programming models.
-risk: none
-source: vibeship-spawner-skills (Apache 2.0)
-date_added: 2026-02-27
+description: Expert knowledge for Azure Functions development including troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. Use when building Functions with HTTP/queue triggers, Durable workflows, container hosting, CI/CD, or VNet‑secured endpoints, and other Azure Functions related development tasks. Not for Azure App Service (use azure-app-service), Azure Logic Apps (use azure-logic-apps), Azure Container Apps (use azure-container-apps), Azure Kubernetes Service (AKS) (use azure-kubernetes-service).
+compatibility: Requires network access. Uses mcp_microsoftdocs:microsoft_docs_fetch or fetch_webpage to retrieve documentation.
+metadata:
+  generated_at: "2026-05-31"
+  generator: "docs2skills/1.0.0"
 ---
-
-# Azure Functions
-
-Expert patterns for Azure Functions development including isolated worker model,
-Durable Functions orchestration, cold start optimization, and production patterns.
-Covers .NET, Python, and Node.js programming models.
-
-## Patterns
-
-### Isolated Worker Model (.NET)
-
-Modern .NET execution model with process isolation
-
-**When to use**: Building new .NET Azure Functions apps
-
-### Template
-
-// Program.cs - Isolated Worker Model
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
-    .ConfigureServices(services =>
-    {
-        // Add Application Insights
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
-
-        // Add HttpClientFactory (prevents socket exhaustion)
-        services.AddHttpClient();
-
-        // Add your services
-        services.AddSingleton<IMyService, MyService>();
-    })
-    .Build();
-
-host.Run();
-
-// HttpTriggerFunction.cs
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.Logging;
-
-public class HttpTriggerFunction
-{
-    private readonly ILogger<HttpTriggerFunction> _logger;
-    private readonly IMyService _service;
-
-    public HttpTriggerFunction(
-        ILogger<HttpTriggerFunction> logger,
-        IMyService service)
-    {
-        _logger = logger;
-        _service = service;
-    }
-
-    [Function("HttpTrigger")]
-    public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
-    {
-        _logger.LogInformation("Processing request");
-
-        try
-        {
-            var result = await _service.ProcessAsync(req);
-
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(result);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing request");
-            var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = "Internal server error" });
-            return response;
-        }
-    }
-}
-
-### Notes
-
-- In-process model deprecated November 2026
-- Isolated worker supports .NET 8, 9, 10, and .NET Framework
-- Full dependency injection support
-- Custom middleware support
-
-### Node.js v4 Programming Model
-
-Modern code-centric approach for TypeScript/JavaScript
-
-**When to use**: Building Node.js Azure Functions
-
-### Template
-
-// src/functions/httpTrigger.ts
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-
-export async function httpTrigger(
-  request: HttpRequest,
-  context: InvocationContext
-): Promise<HttpResponseInit> {
-  context.log(`Http function processed request for url "${request.url}"`);
-
-  try {
-    const name = request.query.get("name") || (await request.text()) || "world";
-
-    return {
-      status: 200,
-      jsonBody: { message: `Hello, ${name}!` }
-    };
-  } catch (error) {
-    context.error("Error processing request:", error);
-    return {
-      status: 500,
-      jsonBody: { error: "Internal server error" }
-    };
-  }
-}
-
-// Register function with app object
-app.http("httpTrigger", {
-  methods: ["GET", "POST"],
-  authLevel: "function",
-  handler: httpTrigger
-});
-
-// Timer trigger example
-app.timer("timerTrigger", {
-  schedule: "0 */5 * * * *",  // Every 5 minutes
-  handler: async (myTimer, context) => {
-    context.log("Timer function executed at:", new Date().toISOString());
-  }
-});
-
-// Blob trigger example
-app.storageBlob("blobTrigger", {
-  path: "samples-workitems/{name}",
-  connection: "AzureWebJobsStorage",
-  handler: async (blob, context) => {
-    context.log(`Blob trigger processing: ${context.triggerMetadata.name}`);
-    context.log(`Blob size: ${blob.length} bytes`);
-  }
-});
-
-### Notes
-
-- v4 model is code-centric, no function.json files
-- Uses app object similar to Express.js
-- TypeScript first-class support
-- All triggers registered in code
-
-### Python v2 Programming Model
-
-Decorator-based approach for Python functions
-
-**When to use**: Building Python Azure Functions
-
-### Template
-
-# function_app.py
-import azure.functions as func
-import logging
-import json
-
-app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
-
-@app.route(route="hello", methods=["GET", "POST"])
-async def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info("Python HTTP trigger function processed a request.")
-
-    try:
-        name = req.params.get("name")
-        if not name:
-            try:
-                req_body = req.get_json()
-                name = req_body.get("name")
-            except ValueError:
-                pass
-
-        if name:
-            return func.HttpResponse(
-                json.dumps({"message": f"Hello, {name}!"}),
-                mimetype="application/json"
-            )
-        else:
-            return func.HttpResponse(
-                json.dumps({"message": "Hello, World!"}),
-                mimetype="application/json"
-            )
-    except Exception as e:
-        logging.error(f"Error processing request: {str(e)}")
-        return func.HttpResponse(
-            json.dumps({"error": "Internal server error"}),
-            status_code=500,
-            mimetype="application/json"
-        )
-
-@app.timer_trigger(schedule="0 */5 * * * *", arg_name="myTimer")
-def timer_trigger(myTimer: func.TimerRequest) -> None:
-    logging.info("Timer trigger executed")
-
-@app.blob_trigger(arg_name="myblob", path="samples-workitems/{name}",
-                  connection="AzureWebJobsStorage")
-def blob_trigger(myblob: func.InputStream):
-    logging.info(f"Blob trigger: {myblob.name}, Size: {myblob.length} bytes")
-
-@app.queue_trigger(arg_name="msg", queue_name="myqueue",
-                   connection="AzureWebJobsStorage")
-def queue_trigger(msg: func.QueueMessage) -> None:
-    logging.info(f"Queue message: {msg.get_body().decode('utf-8')}")
-
-### Notes
-
-- v2 model uses decorators, no function.json files
-- Python runs out-of-process (always isolated)
-- Linux-based hosting required for Python
-- Async functions supported
-
-### Durable Functions - Function Chaining
-
-Sequential execution with state persistence
-
-**When to use**: Need sequential workflow with automatic retry
-
-### Template
-
-// C# Isolated Worker - Function Chaining
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.DurableTask;
-using Microsoft.DurableTask.Client;
-
-public class OrderWorkflow
-{
-    [Function("OrderOrchestrator")]
-    public static async Task<OrderResult> RunOrchestrator(
-        [OrchestrationTrigger] TaskOrchestrationContext context)
-    {
-        var order = context.GetInput<Order>();
-
-        // Functions execute sequentially, state persisted between each
-        var validated = await context.CallActivityAsync<ValidatedOrder>(
-            "ValidateOrder", order);
-
-        var payment = await context.CallActivityAsync<PaymentResult>(
-            "ProcessPayment", validated);
-
-        var shipped = await context.CallActivityAsync<ShippingResult>(
-            "ShipOrder", new ShipRequest { Order = validated, Payment = payment });
-
-        var notification = await context.CallActivityAsync<bool>(
-            "SendNotification", shipped);
-
-        return new OrderResult
-        {
-            OrderId = order.Id,
-            Status = "Completed",
-            TrackingNumber = shipped.TrackingNumber
-        };
-    }
-
-    [Function("ValidateOrder")]
-    public static async Task<ValidatedOrder> ValidateOrder(
-        [ActivityTrigger] Order order, FunctionContext context)
-    {
-        var logger = context.GetLogger<OrderWorkflow>();
-        logger.LogInformation("Validating order {OrderId}", order.Id);
-
-        // Validation logic...
-        return new ValidatedOrder { /* ... */ };
-    }
-
-    [Function("ProcessPayment")]
-    public static async Task<PaymentResult> ProcessPayment(
-        [ActivityTrigger] ValidatedOrder order, FunctionContext context)
-    {
-        // Payment processing with built-in retry...
-        return new PaymentResult { /* ... */ };
-    }
-
-    [Function("OrderWorkflow_HttpStart")]
-    public static async Task<HttpResponseData> HttpStart(
-        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
-        [DurableClient] DurableTaskClient client,
-        FunctionContext context)
-    {
-        var order = await req.ReadFromJsonAsync<Order>();
-        string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-            "OrderOrchestrator", order);
-
-        return client.CreateCheckStatusResponse(req, instanceId);
-    }
-}
-
-### Notes
-
-- State automatically persisted between activities
-- Automatic retry on transient failures
-- Survives process restarts
-- Built-in status endpoint for monitoring
-
-### Durable Functions - Fan-Out/Fan-In
-
-Parallel execution with result aggregation
-
-**When to use**: Processing multiple items in parallel
-
-### Template
-
-// C# Isolated Worker - Fan-Out/Fan-In
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.DurableTask;
-
-public class ParallelProcessing
-{
-    [Function("ProcessImagesOrchestrator")]
-    public static async Task<ProcessingResult> RunOrchestrator(
-        [OrchestrationTrigger] TaskOrchestrationContext context)
-    {
-        var images = context.GetInput<List<string>>();
-
-        // Fan-out: Start all tasks in parallel
-        var tasks = images.Select(image =>
-            context.CallActivityAsync<ImageResult>("ProcessImage", image));
-
-        // Fan-in: Wait for all tasks to complete
-        var results = await Task.WhenAll(tasks);
-
-        // Aggregate results
-        var successful = results.Count(r => r.Success);
-        var failed = results.Count(r => !r.Success);
-
-        return new ProcessingResult
-        {
-            TotalProcessed = results.Length,
-            Successful = successful,
-            Failed = failed,
-            Results = results.ToList()
-        };
-    }
-
-    [Function("ProcessImage")]
-    public static async Task<ImageResult> ProcessImage(
-        [ActivityTrigger] string imageUrl, FunctionContext context)
-    {
-        var logger = context.GetLogger<ParallelProcessing>();
-        logger.LogInformation("Processing image: {Url}", imageUrl);
-
-        try
-        {
-            // Image processing logic...
-            await Task.Delay(1000); // Simulated work
-
-            return new ImageResult
-            {
-                Url = imageUrl,
-                Success = true,
-                ProcessedUrl = $"processed-{imageUrl}"
-            };
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to process {Url}", imageUrl);
-            return new ImageResult { Url = imageUrl, Success = false };
-        }
-    }
-
-    // Python equivalent
-    // @app.orchestration_trigger(context_name="context")
-    // def process_images_orchestrator(context: df.DurableOrchestrationContext):
-    //     images = context.get_input()
-    //
-    //     # Fan-out: Create parallel tasks
-    //     tasks = [context.call_activity("ProcessImage", img) for img in images]
-    //
-    //     # Fan-in: Wait for all
-    //     results = yield context.task_all(tasks)
-    //
-    //     return {"processed": len(results), "results": results}
-}
-
-### Notes
-
-- Parallel execution for independent tasks
-- Results aggregated when all complete
-- Memory efficient - only stores task IDs
-- Up to thousands of parallel activities
-
-### Cold Start Optimization
-
-Minimize cold start latency in production
-
-**When to use**: Need fast response times in production
-
-### Template
-
-// 1. Use Premium Plan with pre-warmed instances
-// host.json
-{
-  "version": "2.0",
-  "extensions": {
-    "durableTask": {
-      "hubName": "MyTaskHub"
-    }
-  },
-  "functionTimeout": "00:30:00"
-}
-
-// 2. Add warmup trigger (Premium Plan)
-[Function("Warmup")]
-public static void Warmup(
-    [WarmupTrigger] object warmupContext,
-    FunctionContext context)
-{
-    var logger = context.GetLogger("Warmup");
-    logger.LogInformation("Warmup trigger executed - initializing dependencies");
-
-    // Pre-initialize expensive resources
-    // Database connections, HttpClients, etc.
-}
-
-// 3. Use static/singleton clients with DI
-public class Startup
-{
-    public void ConfigureServices(IServiceCollection services)
-    {
-        // HttpClientFactory prevents socket exhaustion
-        services.AddHttpClient<IMyApiClient, MyApiClient>(client =>
-        {
-            client.BaseAddress = new Uri("https://api.example.com");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
-
-        // Singleton for expensive initialization
-        services.AddSingleton<IExpensiveService>(sp =>
-        {
-            // Initialize once, reuse across invocations
-            return new ExpensiveService();
-        });
-    }
-}
-
-// 4. Reduce package size
-// .csproj - exclude unnecessary dependencies
-<PropertyGroup>
-  <PublishTrimmed>true</PublishTrimmed>
-  <TrimMode>partial</TrimMode>
-</PropertyGroup>
-
-// 5. Run from package deployment
-// Azure CLI
-// az functionapp deployment source config-zip \
-//   --resource-group myResourceGroup \
-//   --name myFunctionApp \
-//   --src myapp.zip \
-//   --build-remote true
-
-### Notes
-
-- Cold starts improved ~53% across all regions/languages
-- Premium Plan provides pre-warmed instances
-- Warmup trigger initializes before traffic
-- Package deployment can reduce cold start
-
-### Queue Trigger with Error Handling
-
-Reliable message processing with poison queue
-
-**When to use**: Processing messages from Azure Storage Queue
-
-### Template
-
-// C# Isolated Worker - Queue Trigger
-using Microsoft.Azure.Functions.Worker;
-
-public class QueueProcessor
-{
-    private readonly ILogger<QueueProcessor> _logger;
-    private readonly IMyService _service;
-
-    public QueueProcessor(ILogger<QueueProcessor> logger, IMyService service)
-    {
-        _logger = logger;
-        _service = service;
-    }
-
-    [Function("ProcessQueueMessage")]
-    public async Task Run(
-        [QueueTrigger("myqueue-items", Connection = "AzureWebJobsStorage")]
-        QueueMessage message)
-    {
-        _logger.LogInformation("Processing message: {Id}", message.MessageId);
-
-        try
-        {
-            var payload = JsonSerializer.Deserialize<MyPayload>(message.Body);
-            await _service.ProcessAsync(payload);
-
-            _logger.LogInformation("Message processed successfully: {Id}", message.MessageId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing message: {Id}", message.MessageId);
-
-            // Message will be retried up to maxDequeueCount (default 5)
-            // Then moved to poison queue: myqueue-items-poison
-            throw;
-        }
-    }
-
-    // Optional: Monitor poison queue
-    [Function("ProcessPoisonQueue")]
-    public async Task ProcessPoison(
-        [QueueTrigger("myqueue-items-poison", Connection = "AzureWebJobsStorage")]
-        QueueMessage message)
-    {
-        _logger.LogWarning("Processing poison message: {Id}", message.MessageId);
-
-        // Log to monitoring, alert, or store for manual review
-        await _service.HandlePoisonMessageAsync(message);
-    }
-}
-
-// host.json - Queue configuration
-// {
-//   "version": "2.0",
-//   "extensions": {
-//     "queues": {
-//       "maxPollingInterval": "00:00:02",
-//       "visibilityTimeout": "00:00:30",
-//       "batchSize": 16,
-//       "maxDequeueCount": 5,
-//       "newBatchThreshold": 8
-//     }
-//   }
-// }
-
-### Notes
-
-- Messages retried up to maxDequeueCount times
-- Failed messages moved to poison queue
-- Configure visibilityTimeout for processing time
-- batchSize controls parallel processing
-
-### HTTP Trigger with Long-Running Pattern
-
-Handle work exceeding 230-second HTTP limit
-
-**When to use**: HTTP request triggers long-running work
-
-### Template
-
-// Async HTTP pattern - return immediately, poll for status
-[Function("StartLongRunning")]
-public static async Task<HttpResponseData> StartLongRunning(
-    [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
-    [DurableClient] DurableTaskClient client,
-    FunctionContext context)
-{
-    var input = await req.ReadFromJsonAsync<WorkRequest>();
-
-    // Start orchestration (returns immediately)
-    string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-        "LongRunningOrchestrator", input);
-
-    // Return status URLs for polling
-    return client.CreateCheckStatusResponse(req, instanceId);
-}
-
-// Response includes:
-// {
-//   "id": "abc123",
-//   "statusQueryGetUri": "https://.../instances/abc123",
-//   "sendEventPostUri": "https://.../instances/abc123/raiseEvent/{eventName}",
-//   "terminatePostUri": "https://.../instances/abc123/terminate"
-// }
-
-// Alternative: Queue-based pattern without Durable Functions
-[Function("StartWork")]
-[QueueOutput("work-queue")]
-public static async Task<WorkItem> StartWork(
-    [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
-    FunctionContext context)
-{
-    var input = await req.ReadFromJsonAsync<WorkRequest>();
-    var workId = Guid.NewGuid().ToString();
-
-    // Queue the work, return immediately
-    var workItem = new WorkItem
-    {
-        Id = workId,
-        Request = input
-    };
-
-    // Return work ID for status checking
-    var response = req.CreateResponse(HttpStatusCode.Accepted);
-    await response.WriteAsJsonAsync(new
-    {
-        workId = workId,
-        statusUrl = $"/api/status/{workId}"
-    });
-
-    return workItem;
-}
-
-[Function("ProcessWork")]
-public static async Task ProcessWork(
-    [QueueTrigger("work-queue")] WorkItem work,
-    FunctionContext context)
-{
-    // Long-running processing here
-    // Update status in storage for polling
-}
-
-### Notes
-
-- HTTP timeout is 230 seconds regardless of plan
-- Use Durable Functions for async patterns
-- Return immediately with status endpoint
-- Client polls for completion
-
-## Sharp Edges
-
-### HTTP Timeout is 230 Seconds Regardless of Plan
-
-Severity: HIGH
-
-Situation: HTTP-triggered functions with long processing time
-
-Symptoms:
-504 Gateway Timeout after ~4 minutes.
-Request terminates before function completes.
-Client receives timeout even though function continues.
-host.json timeout setting has no effect for HTTP.
-
-Why this breaks:
-The Azure Load Balancer has a hard-coded 230-second idle timeout for HTTP
-requests. This applies regardless of your function app timeout setting.
-
-Even if you set functionTimeout to 30 minutes in host.json, HTTP triggers
-will timeout after 230 seconds from the client's perspective.
-
-The function may continue running after timeout, but the client won't
-receive the response.
-
-Recommended fix:
-
-## Use async pattern with Durable Functions
-
-```csharp
-[Function("StartLongProcess")]
-public static async Task<HttpResponseData> Start(
-    [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
-    [DurableClient] DurableTaskClient client)
-{
-    var input = await req.ReadFromJsonAsync<WorkRequest>();
-
-    // Start orchestration, returns immediately
-    string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-        "LongRunningOrchestrator", input);
-
-    // Returns status URLs for polling
-    return client.CreateCheckStatusResponse(req, instanceId);
-}
-
-// Client polls statusQueryGetUri until complete
-```
-
-## Use queue-based async pattern
-
-```csharp
-[Function("StartWork")]
-public static async Task<HttpResponseData> StartWork(
-    [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
-    [QueueOutput("work-queue")] out WorkItem workItem)
-{
-    var workId = Guid.NewGuid().ToString();
-
-    workItem = new WorkItem { Id = workId, /* ... */ };
-
-    var response = req.CreateResponse(HttpStatusCode.Accepted);
-    await response.WriteAsJsonAsync(new {
-        id = workId,
-        statusUrl = $"/api/status/{workId}"
-    });
-    return response;
-}
-```
-
-## Use webhook callback pattern
-
-```csharp
-// Client provides callback URL
-// Function queues work, returns 202 Accepted
-// When done, POST result to callback URL
-```
-
-### Socket Exhaustion from HttpClient Instantiation
-
-Severity: HIGH
-
-Situation: Creating HttpClient instances inside function code
-
-Symptoms:
-SocketException: "Unable to connect to remote server"
-"An attempt was made to access a socket in a way forbidden"
-Sporadic connection failures under load.
-Works locally but fails in production.
-
-Why this breaks:
-Creating a new HttpClient for each request creates a new socket connection.
-Sockets linger in TIME_WAIT state for 240 seconds after closing.
-
-In a serverless environment with high throughput, you quickly exhaust
-available sockets. This affects all network clients, not just HttpClient.
-
-Azure Functions shares network resources among multiple customers,
-making this even more critical.
-
-Recommended fix:
-
-## Use IHttpClientFactory (Recommended)
-
-```csharp
-// Program.cs
-var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
-    .ConfigureServices(services =>
-    {
-        services.AddHttpClient<IMyApiClient, MyApiClient>(client =>
-        {
-            client.BaseAddress = new Uri("https://api.example.com");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
-    })
-    .Build();
-
-// MyApiClient.cs
-public class MyApiClient : IMyApiClient
-{
-    private readonly HttpClient _client;
-
-    public MyApiClient(HttpClient client)
-    {
-        _client = client;  // Injected, managed by factory
-    }
-
-    public async Task<string> GetDataAsync()
-    {
-        return await _client.GetStringAsync("/data");
-    }
-}
-```
-
-## Use static client (Alternative)
-
-```csharp
-public static class MyFunction
-{
-    // Static HttpClient, reused across invocations
-    private static readonly HttpClient _httpClient = new HttpClient
-    {
-        Timeout = TimeSpan.FromSeconds(30)
-    };
-
-    [Function("MyFunction")]
-    public static async Task Run(...)
-    {
-        var result = await _httpClient.GetAsync("...");
-    }
-}
-```
-
-## Same pattern for Azure SDK clients
-
-```csharp
-// Also applies to:
-// - BlobServiceClient
-// - CosmosClient
-// - ServiceBusClient
-// Use DI or static instances
-```
-
-### Blocking Async Calls Cause Thread Starvation
-
-Severity: HIGH
-
-Situation: Using .Result, .Wait(), or Thread.Sleep in async code
-
-Symptoms:
-Deadlocks under load.
-Requests hang indefinitely.
-"A task was canceled" exceptions.
-Works with low concurrency, fails with high.
-
-Why this breaks:
-Azure Functions thread pool is limited. Blocking calls (.Result, .Wait())
-hold a thread hostage while waiting, preventing other work.
-
-Thread.Sleep blocks a thread that could be handling other requests.
-
-With multiple concurrent executions, you quickly run out of threads,
-causing deadlocks and timeouts.
-
-Recommended fix:
-
-## Always use async/await
-
-```csharp
-// BAD - blocks thread
-var result = httpClient.GetAsync(url).Result;
-someTask.Wait();
-Thread.Sleep(5000);
-
-// GOOD - yields thread
-var result = await httpClient.GetAsync(url);
-await someTask;
-await Task.Delay(5000);
-```
-
-## Fix synchronous method calls
-
-```csharp
-// BAD - sync over async
-public void ProcessData()
-{
-    var data = GetDataAsync().Result;  // Blocks!
-}
-
-// GOOD - async all the way
-public async Task ProcessDataAsync()
-{
-    var data = await GetDataAsync();
-}
-```
-
-## Configure async in console/startup
-
-```csharp
-// If you must call async from sync context
-public static void Main(string[] args)
-{
-    // Use GetAwaiter().GetResult() at entry point only
-    MainAsync(args).GetAwaiter().GetResult();
-}
-
-private static async Task MainAsync(string[] args)
-{
-    // Async code here
-}
-```
-
-### Consumption Plan 10-Minute Timeout Limit
-
-Severity: MEDIUM
-
-Situation: Running long processes on Consumption plan
-
-Symptoms:
-Function terminates after 10 minutes.
-"Function timed out" in logs.
-Incomplete processing with no error caught.
-Works in development (with longer timeout) but fails in production.
-
-Why this breaks:
-Consumption plan has a hard limit of 10 minutes execution time.
-Default is 5 minutes if not configured.
-
-This cannot be increased beyond 10 minutes on Consumption plan.
-Long-running work requires Premium plan or different architecture.
-
-Recommended fix:
-
-## Configure maximum timeout (Consumption)
-
-```json
-// host.json
-{
-  "version": "2.0",
-  "functionTimeout": "00:10:00"  // Max for Consumption
-}
-```
-
-## Upgrade to Premium plan for longer timeouts
-
-```json
-// Premium plan - 30 min default, unbounded available
-{
-  "version": "2.0",
-  "functionTimeout": "00:30:00"  // Or remove for unbounded
-}
-```
-
-## Use Durable Functions for long workflows
-
-```csharp
-[Function("LongWorkflowOrchestrator")]
-public static async Task<string> RunOrchestrator(
-    [OrchestrationTrigger] TaskOrchestrationContext context)
-{
-    // Each activity has its own timeout
-    // Workflow can run for days
-    await context.CallActivityAsync("Step1", input);
-    await context.CallActivityAsync("Step2", input);
-    await context.CallActivityAsync("Step3", input);
-    return "Complete";
-}
-```
-
-## Break work into smaller chunks
-
-```csharp
-// Queue-based chunking
-[Function("ProcessChunk")]
-[QueueOutput("work-queue")]
-public static IEnumerable<WorkChunk> ProcessChunk(
-    [QueueTrigger("work-queue")] WorkChunk chunk)
-{
-    var results = Process(chunk);
-
-    // Queue next chunks if more work
-    if (chunk.HasMore)
-    {
-        yield return chunk.Next();
-    }
-}
-```
-
-### .NET In-Process Model Deprecated November 2026
-
-Severity: HIGH
-
-Situation: Creating new .NET functions or maintaining existing
-
-Symptoms:
-Using in-process model in new projects.
-Dependency conflicts with host runtime.
-Cannot use latest .NET versions.
-Future migration burden.
-
-Why this breaks:
-The in-process model runs your code in the same process as the
-Azure Functions host. This causes:
-- Assembly version conflicts
-- Limited to LTS .NET versions
-- No access to latest .NET features
-- Tighter coupling with host runtime
-
-Support ends November 10, 2026. After this date, in-process apps
-may stop working or receive no security updates.
-
-Recommended fix:
-
-## Use isolated worker for new projects
-
-```bash
-# Create new isolated worker project
-func init MyFunctionApp --worker-runtime dotnet-isolated
-
-# Or with .NET 8
-dotnet new func --name MyFunctionApp --framework net8.0
-```
-
-## Migrate existing in-process to isolated
-
-```csharp
-// OLD - In-process (FunctionName attribute)
-public class InProcessFunction
-{
-    [FunctionName("MyFunction")]
-    public async Task<IActionResult> Run(
-        [HttpTrigger] HttpRequest req,
-        ILogger log)
-    {
-        log.LogInformation("Processing");
-        return new OkResult();
-    }
-}
-
-// NEW - Isolated worker (Function attribute)
-public class IsolatedFunction
-{
-    private readonly ILogger<IsolatedFunction> _logger;
-
-    public IsolatedFunction(ILogger<IsolatedFunction> logger)
-    {
-        _logger = logger;
-    }
-
-    [Function("MyFunction")]
-    public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get")]
-        HttpRequestData req)
-    {
-        _logger.LogInformation("Processing");
-        return req.CreateResponse(HttpStatusCode.OK);
-    }
-}
-```
-
-## Key migration changes
-- FunctionName → Function attribute
-- HttpRequest → HttpRequestData
-- IActionResult → HttpResponseData
-- ILogger injection → constructor injection
-- Add Program.cs with HostBuilder
-
-### ILogger Not Outputting to Console or AppInsights
-
-Severity: MEDIUM
-
-Situation: Using dependency-injected ILogger in isolated worker
-
-Symptoms:
-Logs not appearing in local console.
-Logs not appearing in Application Insights.
-Logs work with context.GetLogger() but not injected ILogger.
-Must pass logger through all method calls.
-
-Why this breaks:
-In isolated worker model, the dependency-injected ILogger may not
-be properly connected to the Azure Functions logging pipeline.
-
-Local development especially affected - logs may go nowhere.
-Application Insights requires explicit configuration.
-
-The ILogger from FunctionContext works differently than
-the injected ILogger<T>.
-
-Recommended fix:
-
-## Configure Application Insights properly
-
-```csharp
-// Program.cs
-var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
-    .ConfigureServices(services =>
-    {
-        // Add App Insights telemetry
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
-    })
-    .Build();
-```
-
-## Configure logging levels
-
-```json
-// host.json
-{
-  "version": "2.0",
-  "logging": {
-    "applicationInsights": {
-      "samplingSettings": {
-        "isEnabled": true,
-        "excludedTypes": "Request"
-      }
-    },
-    "logLevel": {
-      "default": "Information",
-      "Host.Results": "Error",
-      "Function": "Information",
-      "Host.Aggregator": "Trace"
-    }
-  }
-}
-```
-
-## Use context.GetLogger for reliability
-
-```csharp
-[Function("MyFunction")]
-public async Task Run(
-    [HttpTrigger] HttpRequestData req,
-    FunctionContext context)
-{
-    // This logger always works
-    var logger = context.GetLogger<MyFunction>();
-    logger.LogInformation("Processing request");
-}
-```
-
-## Local development - check local.settings.json
-
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=..."
-  }
-}
-```
-
-### Missing Extension Packages Cause Silent Failures
-
-Severity: MEDIUM
-
-Situation: Using triggers/bindings without installing extensions
-
-Symptoms:
-Function not triggering on events.
-"No job functions found" warning.
-Bindings not working despite correct configuration.
-Works after adding extension package.
-
-Why this breaks:
-Azure Functions v2+ uses extension bundles for triggers and bindings.
-If extensions aren't properly configured or packages aren't installed,
-the function host can't recognize the bindings.
-
-In isolated worker, you need explicit NuGet packages.
-In in-process, you need Microsoft.Azure.WebJobs.Extensions.*.
-
-Recommended fix:
-
-## Check extension bundle (most common)
-
-```json
-// host.json - Extension bundles handle most cases
-{
-  "version": "2.0",
-  "extensionBundle": {
-    "id": "Microsoft.Azure.Functions.ExtensionBundle",
-    "version": "[4.*, 5.0.0)"
-  }
-}
-```
-
-## Install explicit packages for isolated worker
-
-```xml
-<!-- .csproj - Isolated worker packages -->
-<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
-<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.16.0" />
-
-<!-- Storage triggers/bindings -->
-<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="6.2.0" />
-
-<!-- Service Bus -->
-<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="5.14.0" />
-
-<!-- Cosmos DB -->
-<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.6.0" />
-
-<!-- Durable Functions -->
-<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" Version="1.1.0" />
-```
-
-## Verify function registration
-
-```bash
-# Check registered functions
-func host start --verbose
-
-# Look for:
-# "Found the following functions:"
-# If empty, check extensions and attributes
-```
-
-### Premium Plan Still Has Cold Start on New Instances
-
-Severity: MEDIUM
-
-Situation: Using Premium plan expecting zero cold start
-
-Symptoms:
-Still experiencing cold starts despite Premium plan.
-First request to new instance is slow.
-Latency spikes during scale-out events.
-Pre-warmed instances not being used.
-
-Why this breaks:
-Premium plan provides pre-warmed instances, but:
-- Only one pre-warmed instance by default
-- Rapid scale-out still creates cold instances
-- Pre-warmed instances still run YOUR code initialization
-- Warmup trigger runs, but your code may still be slow
-
-Pre-warmed means the runtime is ready, not your application.
-
-Recommended fix:
-
-## Add warmup trigger to initialize your code
-
-```csharp
-[Function("Warmup")]
-public void Warmup(
-    [WarmupTrigger] object warmupContext,
-    FunctionContext context)
-{
-    var logger = context.GetLogger("Warmup");
-    logger.LogInformation("Warmup trigger fired");
-
-    // Initialize expensive resources
-    _cosmosClient.GetContainer("db", "container");
-    _httpClient.GetAsync("https://api.example.com/health").Wait();
-}
-```
-
-## Configure pre-warmed instance count
-
-```bash
-# Increase pre-warmed instances (costs more)
-az functionapp config set \
-  --name <app-name> \
-  --resource-group <rg> \
-  --prewarmed-instance-count 3
-```
-
-## Optimize application initialization
-
-```csharp
-// Lazy initialize heavy resources
-private static readonly Lazy<ExpensiveClient> _client =
-    new Lazy<ExpensiveClient>(() => new ExpensiveClient());
-
-// Connection pooling
-services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(connectionString, sql =>
-        sql.MinPoolSize(5)));
-```
-
-## Use always-ready instances (most expensive)
-
-```bash
-# Instances always running, no cold start
-az functionapp config set \
-  --name <app-name> \
-  --resource-group <rg> \
-  --minimum-elastic-instance-count 2
-```
-
-## Validation Checks
-
-### Hardcoded Connection String
-
-Severity: ERROR
-
-Connection strings must never be hardcoded
-
-Message: Hardcoded connection string. Use Key Vault or App Settings.
-
-### Hardcoded API Key in Code
-
-Severity: ERROR
-
-API keys should use Key Vault or App Settings
-
-Message: Hardcoded API key. Use Key Vault or environment variables.
-
-### Anonymous Authorization Level in Production
-
-Severity: WARNING
-
-Anonymous endpoints should be protected by other means
-
-Message: Anonymous authorization. Ensure protected by API Management or other auth.
-
-### Blocking .Result Call
-
-Severity: ERROR
-
-Using .Result blocks threads and causes deadlocks
-
-Message: Blocking .Result call. Use await instead.
-
-### Blocking .Wait() Call
-
-Severity: ERROR
-
-Using .Wait() blocks threads
-
-Message: Blocking .Wait() call. Use await instead.
-
-### Thread.Sleep Usage
-
-Severity: ERROR
-
-Thread.Sleep blocks threads
-
-Message: Thread.Sleep blocks threads. Use await Task.Delay() instead.
-
-### New HttpClient Instance
-
-Severity: WARNING
-
-Creating HttpClient per request causes socket exhaustion
-
-Message: New HttpClient per request. Use IHttpClientFactory or static client.
-
-### HttpClient in Using Statement
-
-Severity: WARNING
-
-Disposing HttpClient causes socket exhaustion
-
-Message: HttpClient in using statement. Use IHttpClientFactory for proper lifecycle.
-
-### In-Process FunctionName Attribute
-
-Severity: INFO
-
-In-process model deprecated November 2026
-
-Message: In-process FunctionName attribute. Consider migrating to isolated worker.
-
-### Missing Function Attribute
-
-Severity: WARNING
-
-Isolated worker requires [Function] attribute
-
-Message: HttpTrigger without [Function] attribute (isolated worker requires it).
-
-## Collaboration
-
-### Delegation Triggers
-
-- user needs AWS serverless -> aws-serverless (Lambda, API Gateway, SAM)
-- user needs GCP serverless -> gcp-cloud-run (Cloud Run, Cloud Functions)
-- user needs container-based deployment -> gcp-cloud-run (Azure Container Apps or Cloud Run)
-- user needs database design -> postgres-wizard (Azure SQL, Cosmos DB data modeling)
-- user needs authentication -> auth-specialist (Azure AD, Easy Auth, managed identity)
-- user needs complex orchestration -> workflow-automation (Logic Apps, Power Automate)
-
-## When to Use
-- User mentions or implies: azure function
-- User mentions or implies: azure functions
-- User mentions or implies: durable functions
-- User mentions or implies: azure serverless
-- User mentions or implies: function app
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+# Azure Functions Skill
+
+This skill provides expert guidance for Azure Functions. Covers troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. It combines local quick-reference content with remote documentation fetching capabilities.
+
+## How to Use This Skill
+
+> **IMPORTANT for Agent**: Use the **Category Index** below to locate relevant sections. For categories with line ranges (e.g., `L35-L120`), use `read_file` with the specified lines. For categories with file links (e.g., `[security.md](security.md)`), use `read_file` on the linked reference file
+
+> **IMPORTANT for Agent**: If `metadata.generated_at` is more than 3 months old, suggest the user pull the latest version from the repository. If `mcp_microsoftdocs` tools are not available, suggest the user install it: [Installation Guide](https://github.com/MicrosoftDocs/mcp/blob/main/README.md)
+
+This skill requires **network access** to fetch documentation content:
+- **Preferred**: Use `mcp_microsoftdocs:microsoft_docs_fetch` with query string `from=learn-agent-skill`. Returns Markdown.
+- **Fallback**: Use `fetch_webpage` with query string `from=learn-agent-skill&accept=text/markdown`. Returns Markdown.
+
+## Category Index
+
+| Category | Lines | Description |
+|----------|-------|-------------|
+| Troubleshooting | L37-L60 | Diagnosing and fixing Azure Functions runtime errors (AZFD/AZFW codes), storage/config issues, timers, networking, and language-specific (Node.js/Python) deployment and execution problems. |
+| Best Practices | L61-L78 | Best practices for coding, performance, reliability, error handling, DI, idempotency, connections, and language-specific (C#, Java, Node.js, Python) patterns in Azure Functions. |
+| Decision Making | L79-L99 | Guidance on choosing Functions hosting/runtime models, estimating costs, and planning or executing migrations (plans, runtimes, languages, platforms like AWS Lambda or Express) and key extensions. |
+| Architecture & Design Patterns | L100-L105 | Running Functions in Linux containers, Durable Functions design with Azure Storage, and hosting Functions on Azure Container Apps for scalable, container-based architectures. |
+| Limits & Quotas | L106-L114 | Details on Functions hosting limits: legacy and Flex Consumption plans, scaling behavior, concurrency and target-based scaling settings, and supported languages/versions. |
+| Security | L115-L131 | Securing Functions apps: encryption at rest, storage hardening, keys and secrets, managed identity, SQL access, private endpoints, VNet/network access controls, and App Service security features. |
+| Configuration | L132-L169 | Configuring Azure Functions apps: bindings, triggers, app/host settings, monitoring/telemetry, runtime versions, plans, networking, and local/Core Tools or legacy runtime setup. |
+| Integrations & Coding Patterns | L170-L275 | Configuring Azure Functions triggers/bindings to integrate with data stores, messaging, AI/OpenAI, MCP, Dapr, APIs, and other Azure/third‑party services, including input/output and trigger patterns. |
+| Deployment | L276-L305 | Deploying and hosting Azure Functions: provisioning plans (Consumption, Flex, Kubernetes), zip/package/container deployments, CI/CD (GitHub, Azure Pipelines), and migration/zero‑downtime strategies. |
+
+### Troubleshooting
+| Topic | URL |
+|-------|-----|
+| Resolve AZFD0001 missing AzureWebJobsStorage setting | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0001 |
+| Fix AZFD0002 invalid AzureWebJobsStorage value | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0002 |
+| Troubleshoot AZFD0003 StorageException fetching diagnostics | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0003 |
+| Resolve AZFD0004 Azure Functions host ID collision | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004 |
+| Fix AZFD0005 external startup exception in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0005 |
+| Handle AZFD0006 expiring SAS token warnings | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0006 |
+| Resolve AZFD0007 too many secrets backups | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0007 |
+| Fix AZFD0008 archive-tier Blob secrets repository | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0008 |
+| Resolve AZFD0009 unable to parse host.json | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0009 |
+| Fix AZFD0010 TZ/WEBSITE_TIME_ZONE on Linux Consumption | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0010 |
+| Resolve AZFD0011 missing FUNCTIONS_WORKER_RUNTIME | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0011 |
+| Fix AZFD0013 mismatched FUNCTIONS_WORKER_RUNTIME and payload | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0013 |
+| Resolve AZFD0015 non-CRON timer trigger schedule | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0015 |
+| Fix AZFW0001 invalid binding attributes in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/net-worker-rules/azfw0001 |
+| Handle errors and configure retries in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-error-pages |
+| Resolve common Azure Functions networking issues | https://learn.microsoft.com/en-us/azure/azure-functions/functions-networking-faq |
+| Troubleshoot Node.js Azure Functions deployment and runtime issues | https://learn.microsoft.com/en-us/azure/azure-functions/functions-node-troubleshoot |
+| Fix 'Azure Functions Runtime is unreachable' storage errors | https://learn.microsoft.com/en-us/azure/azure-functions/functions-recover-storage-account |
+| Troubleshoot common issues in Python Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/recover-python-functions |
+| Diagnose and fix Start/Stop VMs for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/start-stop-v2/troubleshoot |
+
+### Best Practices
+| Topic | URL |
+|-------|-----|
+| Avoid async void in Azure Functions (AZF0001) | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/sdk-rules/azf0001 |
+| Optimize HttpClient usage in Functions (AZF0002) | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/sdk-rules/azf0002 |
+| Apply Azure Functions design and coding best practices | https://learn.microsoft.com/en-us/azure/azure-functions/functions-best-practices |
+| Handle errors and configure retries in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-error-pages |
+| Implement dependency injection in .NET Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection |
+| Design idempotent Azure Functions for duplicate events | https://learn.microsoft.com/en-us/azure/azure-functions/functions-idempotent |
+| Apply core development guidance across Azure Functions languages | https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference |
+| Develop Java-based Azure Functions with triggers and bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-java |
+| Apply Node.js-specific patterns in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-node |
+| Implement reliable event processing with Event Hubs and Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-reliable-event-processing |
+| Manage connection usage efficiently in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/manage-connections |
+| Optimize Azure Functions performance and reliability | https://learn.microsoft.com/en-us/azure/azure-functions/performance-reliability |
+| Profile and reduce memory usage in Python Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/python-memory-profiler-reference |
+| Optimize throughput and scaling for Python Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/python-scale-performance-reference |
+
+### Decision Making
+| Topic | URL |
+|-------|-----|
+| Choose Azure Functions file access strategy | https://learn.microsoft.com/en-us/azure/azure-functions/concept-file-access-options |
+| Plan migration from legacy Azure Functions Consumption plan | https://learn.microsoft.com/en-us/azure/azure-functions/consumption-plan |
+| Choose and use Azure Functions Dedicated hosting | https://learn.microsoft.com/en-us/azure/azure-functions/dedicated-plan |
+| Compare in-process vs isolated .NET Azure Functions models | https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-in-process-differences |
+| Choose between Azure Functions, Logic Apps, WebJobs, and Power Automate | https://learn.microsoft.com/en-us/azure/azure-functions/functions-compare-logic-apps-ms-flow-webjobs |
+| Estimate and compare Azure Functions consumption plan costs | https://learn.microsoft.com/en-us/azure/azure-functions/functions-consumption-costs |
+| Choose the right Azure Functions hosting plan | https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale |
+| Choose the right Azure Functions hosting plan | https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale |
+| Choose the right Azure Functions runtime version | https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions |
+| Understand Azure Functions language support lifecycle | https://learn.microsoft.com/en-us/azure/azure-functions/language-support-policy |
+| Migrate Azure Functions from in-process to isolated | https://learn.microsoft.com/en-us/azure/azure-functions/migrate-dotnet-to-isolated-model |
+| Migrate Azure Functions Service Bus extension v4 to v5 | https://learn.microsoft.com/en-us/azure/azure-functions/migrate-service-bus-version-4-version-5 |
+| Migrate Azure Functions apps from runtime v1 to v4 | https://learn.microsoft.com/en-us/azure/azure-functions/migrate-version-1-version-4 |
+| Migrate Azure Functions apps from runtime v3 to v4 | https://learn.microsoft.com/en-us/azure/azure-functions/migrate-version-3-version-4 |
+| Plan migration of AWS Lambda workloads to Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/migration/migrate-aws-lambda-to-azure-functions |
+| Migrate Linux Consumption Functions to Flex Consumption | https://learn.microsoft.com/en-us/azure/azure-functions/migration/scenario-migrate-linux-consumption-to-flex |
+| Refactor Express.js APIs to Azure Functions endpoints | https://learn.microsoft.com/en-us/azure/azure-functions/shift-expressjs |
+
+### Architecture & Design Patterns
+| Topic | URL |
+|-------|-----|
+| Run Azure Functions in Linux containers | https://learn.microsoft.com/en-us/azure/azure-functions/container-concepts |
+| Host Azure Functions on Azure Container Apps | https://learn.microsoft.com/en-us/azure/azure-functions/functions-container-apps-hosting |
+
+### Limits & Quotas
+| Topic | URL |
+|-------|-----|
+| Understand event-driven scaling limits in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/event-driven-scaling |
+| Understand Azure Functions Flex Consumption hosting | https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-plan |
+| Configure concurrency behavior in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-concurrency |
+| Use target-based scaling for Azure Functions triggers | https://learn.microsoft.com/en-us/azure/azure-functions/functions-target-based-scaling |
+| Review supported languages and versions for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/supported-languages |
+
+### Security
+| Topic | URL |
+|-------|-----|
+| Encrypt Azure Functions application source at rest | https://learn.microsoft.com/en-us/azure/azure-functions/configure-encrypt-at-rest-using-cmk |
+| Use secured storage accounts with Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/configure-networking-how-to |
+| Handle AZFD0012 non-highly identifiable secret warnings | https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0012 |
+| Manage and use access keys for Azure Functions endpoints | https://learn.microsoft.com/en-us/azure/azure-functions/function-keys-how-to |
+| Restrict Azure Functions access using private site access | https://learn.microsoft.com/en-us/azure/azure-functions/functions-create-private-site-access |
+| Secure Azure Functions with VNet private endpoints | https://learn.microsoft.com/en-us/azure/azure-functions/functions-create-vnet |
+| Secure Azure Functions SQL access with managed identity | https://learn.microsoft.com/en-us/azure/azure-functions/functions-identity-access-azure-sql-with-managed-identity |
+| Configure identity-based connections for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-identity-based-connections-tutorial |
+| Use managed identity with Functions triggers and bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-identity-based-connections-tutorial-2 |
+| Securely host MCP servers on Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-mcp-tutorial |
+| Configure Azure Functions networking and access controls | https://learn.microsoft.com/en-us/azure/azure-functions/functions-networking-options |
+| Secure Azure Functions with App Service features | https://learn.microsoft.com/en-us/azure/azure-functions/security-concepts |
+| Configure Azure Functions storage and encryption securely | https://learn.microsoft.com/en-us/azure/azure-functions/storage-considerations |
+
+### Configuration
+| Topic | URL |
+|-------|-----|
+| Add input and output bindings to existing Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/add-bindings-existing-function |
+| Configure Application Insights monitoring for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring |
+| Disable and enable individual Azure Functions via settings | https://learn.microsoft.com/en-us/azure/azure-functions/disable-function |
+| Configure Azure Functions extension bundles for non-.NET apps | https://learn.microsoft.com/en-us/azure/azure-functions/extension-bundles |
+| Configure and manage Azure Functions Flex Consumption apps | https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-how-to |
+| Configure Azure Functions app settings and environment variables | https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings |
+| Configure Azure SQL trigger for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-sql-trigger |
+| Configure Azure Cosmos DB output binding for Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cosmosdb-v2-output |
+| Configure Azure Cosmos DB trigger binding for Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cosmosdb-v2-trigger |
+| Configure Azure Event Hubs output bindings in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-hubs-output |
+| Configure Azure Event Hubs trigger bindings in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-hubs-trigger |
+| Use Azure Functions binding expressions and patterns | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-expressions-patterns |
+| Register and configure Azure Functions binding extensions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-register |
+| Configure Azure Service Bus output bindings in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-service-bus-output |
+| Configure Azure Functions timer trigger schedules | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer |
+| Configure Azure Functions warmup trigger behavior | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-warmup |
+| Use Azure Functions Core Tools command reference | https://learn.microsoft.com/en-us/azure/azure-functions/functions-core-tools-reference |
+| Configure Azure Functions custom handlers for any runtime | https://learn.microsoft.com/en-us/azure/azure-functions/functions-custom-handlers |
+| Configure and run Azure Functions locally with Core Tools | https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-local |
+| Develop legacy in-process C# class library Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library |
+| Configure host.json settings for Azure Functions v2+ | https://learn.microsoft.com/en-us/azure/azure-functions/functions-host-json |
+| Configure host.json settings for Azure Functions v1 | https://learn.microsoft.com/en-us/azure/azure-functions/functions-host-json-v1 |
+| Configure function app settings for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings |
+| Configure NAT gateway for Azure Functions outbound IP | https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-nat-gateway |
+| Configure Azure Functions Elastic Premium plan settings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-premium-plan |
+| Develop Azure Functions using legacy C# script (.csx) | https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-csharp |
+| Configure and code Azure Functions using PowerShell | https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-powershell |
+| Manage inbound and outbound IPs for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/ip-addresses |
+| Configure OpenTelemetry distributed tracing for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/monitor-functions-opentelemetry-distributed-tracing |
+| Reference for Azure Functions monitoring data schema | https://learn.microsoft.com/en-us/azure/azure-functions/monitor-functions-reference |
+| Configure OpenTelemetry export for Azure Functions logs | https://learn.microsoft.com/en-us/azure/azure-functions/opentelemetry-howto |
+| Target specific Azure Functions runtime versions | https://learn.microsoft.com/en-us/azure/azure-functions/set-runtime-version |
+| Manage and monitor VMs with Start/Stop VMs v2 | https://learn.microsoft.com/en-us/azure/azure-functions/start-stop-v2/manage |
+| Update language runtime versions for Azure Functions apps | https://learn.microsoft.com/en-us/azure/azure-functions/update-language-versions |
+
+### Integrations & Coding Patterns
+| Topic | URL |
+|-------|-----|
+| Create Python worker extensions for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/develop-python-worker-extensions |
+| Integrate Azure Functions with .NET Aspire applications | https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-aspire-integration |
+| Configure Event Grid triggers and bindings in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/event-grid-how-tos |
+| Integrate Azure Functions with Azure OpenAI completions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-add-openai-text-completion |
+| Use Azure SQL output bindings in Azure Functions (VS Code) | https://learn.microsoft.com/en-us/azure/azure-functions/functions-add-output-binding-azure-sql-vs-code |
+| Use Cosmos DB output bindings in Azure Functions (VS Code) | https://learn.microsoft.com/en-us/azure/azure-functions/functions-add-output-binding-cosmos-db-vs-code |
+| Connect HTTP-triggered function to Storage queue via CLI | https://learn.microsoft.com/en-us/azure/azure-functions/functions-add-output-binding-storage-queue-cli |
+| Add Azure Storage queue output binding in Visual Studio | https://learn.microsoft.com/en-us/azure/azure-functions/functions-add-output-binding-storage-queue-vs |
+| Configure Storage queue output binding in VS Code | https://learn.microsoft.com/en-us/azure/azure-functions/functions-add-output-binding-storage-queue-vs-code |
+| Use Azure Data Explorer bindings with Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-data-explorer |
+| Configure Azure Data Explorer input binding for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-data-explorer-input |
+| Configure Azure Data Explorer output binding for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-data-explorer-output |
+| Use Azure Database for MySQL bindings in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-mysql |
+| Configure Azure Database for MySQL input binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-mysql-input |
+| Configure Azure Database for MySQL output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-mysql-output |
+| Use Azure Database for MySQL trigger binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-mysql-trigger |
+| Use Azure SQL bindings with Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-sql |
+| Configure Azure SQL input binding for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-sql-input |
+| Use Azure SQL output binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-azure-sql-output |
+| Integrate Azure Functions with Azure Cache for Redis | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache |
+| Configure Azure Cache for Redis input binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-input |
+| Configure Azure Cache for Redis output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-output |
+| Use RedisListTrigger binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redislist |
+| Use RedisPubSubTrigger binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redispubsub |
+| Use RedisStreamTrigger binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redisstream |
+| Use Azure Cosmos DB bindings with Azure Functions 1.x | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cosmosdb |
+| Use Azure Cosmos DB bindings with Azure Functions v4 | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cosmosdb-v2 |
+| Configure Azure Cosmos DB input binding for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cosmosdb-v2-input |
+| Integrate Azure Functions with Dapr extension bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr |
+| Access secrets with Dapr input binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-input-secret |
+| Use Dapr state input binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-input-state |
+| Send data via Dapr binding output in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-output |
+| Invoke Dapr applications with Azure Functions output binding | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-output-invoke |
+| Publish Dapr topic messages from Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-output-publish |
+| Write Dapr state with output binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-output-state |
+| Configure Dapr input binding triggers for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-trigger |
+| Use Dapr service invocation trigger in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-trigger-svc-invoke |
+| Configure Dapr topic triggers for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-dapr-trigger-topic |
+| Use Azure DocumentDB bindings in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-documentdb |
+| Configure Azure DocumentDB input binding for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-documentdb-input |
+| Configure Azure DocumentDB output binding for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-documentdb-output |
+| Configure Azure DocumentDB trigger for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-documentdb-trigger |
+| Use Azure Event Grid triggers and bindings in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-grid |
+| Send events with Event Grid output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-grid-output |
+| Configure Azure Event Grid trigger for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-grid-trigger |
+| Integrate Azure Functions with Event Hubs bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-hubs |
+| Integrate Azure Functions with IoT Hub bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-iot |
+| Configure Azure IoT Hub trigger for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-iot-trigger |
+| Use HTTP triggers and bindings in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook |
+| Customize HTTP responses with Azure Functions output binding | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-output |
+| Configure HTTP trigger for Azure Functions APIs | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger |
+| Integrate Azure Functions with Apache Kafka bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-kafka |
+| Send messages with Kafka output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-kafka-output |
+| Configure Apache Kafka trigger for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-kafka-trigger |
+| Expose Azure Functions as MCP tools via bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-mcp |
+| Use MCP prompt trigger in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-mcp-prompt-trigger |
+| Implement MCP resource triggers in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-mcp-resource-trigger |
+| Configure MCP tool trigger endpoints in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-mcp-tool-trigger |
+| Use Azure Mobile Apps bindings in Azure Functions 1.x | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-mobile-apps |
+| Send push notifications with Notification Hubs output binding | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-notification-hubs |
+| Configure Azure OpenAI extension for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai |
+| Use Azure OpenAI assistant trigger in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-assistant-trigger |
+| Use Azure OpenAI assistant create output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-assistantcreate-output |
+| Use Azure OpenAI assistant post input binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-assistantpost-input |
+| Use Azure OpenAI assistant query input binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-assistantquery-input |
+| Use Azure OpenAI embeddings input binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-embeddings-input |
+| Use Azure OpenAI embeddings store output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-embeddingsstore-output |
+| Use Azure OpenAI semantic search input binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-semanticsearch-input |
+| Use Azure OpenAI text completion input binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-openai-textcompletion-input |
+| Integrate Azure Functions with RabbitMQ bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-rabbitmq |
+| Send messages with RabbitMQ output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-rabbitmq-output |
+| Configure RabbitMQ trigger for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-rabbitmq-trigger |
+| Use Azure Functions SendGrid output binding | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-sendgrid |
+| Configure Azure Service Bus bindings for Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-service-bus |
+| Configure Azure Service Bus trigger for Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-service-bus-trigger |
+| Configure Azure Functions SignalR Service bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-signalr-service |
+| Use SignalR input binding to issue access tokens | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-signalr-service-input |
+| Send messages with SignalR output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-signalr-service-output |
+| Handle SignalR Service messages with Functions trigger | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-signalr-service-trigger |
+| Integrate Azure Functions with Blob storage triggers | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob |
+| Use Blob storage input binding in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-input |
+| Use Azure Blob storage output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-output |
+| Configure Azure Blob storage trigger for Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-trigger |
+| Integrate Azure Functions with Queue storage bindings | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue |
+| Create messages with Queue storage output binding in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue-output |
+| Configure Azure Queue storage trigger for Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue-trigger |
+| Use Azure Tables bindings with Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-table |
+| Configure Azure Tables input binding for Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-table-input |
+| Write entities with Azure Tables output binding | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-table-output |
+| Send SMS with Azure Functions Twilio binding | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-twilio |
+| Use Azure Web PubSub bindings in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-web-pubsub |
+| Use Web PubSub input bindings in Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-web-pubsub-input |
+| Send messages with Web PubSub output binding | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-web-pubsub-output |
+| Handle Azure Web PubSub triggers in Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-web-pubsub-trigger |
+| Connect PowerShell Azure Functions to on-premises via Hybrid Connections | https://learn.microsoft.com/en-us/azure/azure-functions/functions-hybrid-powershell |
+| Integrate Azure Functions with Azure Cosmos DB for unstructured data | https://learn.microsoft.com/en-us/azure/azure-functions/functions-integrate-store-unstructured-data-cosmosdb |
+| Connect MCP servers on Azure Functions to Foundry Agent Service | https://learn.microsoft.com/en-us/azure/azure-functions/functions-mcp-foundry-tools |
+| Expose Azure Functions as APIs via API Management | https://learn.microsoft.com/en-us/azure/azure-functions/functions-openapi-definition |
+| Develop and configure Python Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-python |
+| Integrate Azure Functions with Logic Apps and AI | https://learn.microsoft.com/en-us/azure/azure-functions/functions-twitter-email |
+| Register Azure Functions–hosted MCP servers in Azure API Center | https://learn.microsoft.com/en-us/azure/azure-functions/register-mcp-server-api-center |
+| Add Logic Apps preactions to Start/Stop VMs v2 schedules | https://learn.microsoft.com/en-us/azure/azure-functions/start-stop-v2/actions |
+
+### Deployment
+| Topic | URL |
+|-------|-----|
+| Provision Azure Functions hosting resources with PowerShell | https://learn.microsoft.com/en-us/azure/azure-functions/create-resources-azure-powershell |
+| Use zip push deployment for Azure Functions apps | https://learn.microsoft.com/en-us/azure/azure-functions/deployment-zip-push |
+| Configure zero-downtime site updates in Flex Consumption | https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-site-updates |
+| Configure continuous deployment for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-continuous-deployment |
+| Provision Azure Functions resources using Bicep | https://learn.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-bicep |
+| Deploy Azure Functions with ARM templates | https://learn.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-resource-manager |
+| Provision Azure Functions Flex plan using Terraform | https://learn.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-terraform |
+| Create an Azure Functions app in the portal with correct hosting plan | https://learn.microsoft.com/en-us/azure/azure-functions/functions-create-function-app-portal |
+| Deploy containerized Azure Functions on Linux in Azure | https://learn.microsoft.com/en-us/azure/azure-functions/functions-deploy-container |
+| Deploy containerized Azure Functions to Container Apps | https://learn.microsoft.com/en-us/azure/azure-functions/functions-deploy-container-apps |
+| Use deployment slots with Azure Functions apps | https://learn.microsoft.com/en-us/azure/azure-functions/functions-deployment-slots |
+| Select deployment technologies for Azure Functions apps | https://learn.microsoft.com/en-us/azure/azure-functions/functions-deployment-technologies |
+| Develop and publish C# Azure Functions with Visual Studio | https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs |
+| Develop and deploy Azure Functions using Visual Studio Code | https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code |
+| Set up Azure Pipelines CI/CD for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-azure-devops |
+| Run Azure Functions in custom Linux containers on Container Apps | https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-custom-container |
+| Configure GitHub Actions CI/CD for Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-github-actions |
+| Automate Azure Functions deployment with Bicep and ARM | https://learn.microsoft.com/en-us/azure/azure-functions/functions-infrastructure-as-code |
+| Host Azure Functions on Kubernetes with KEDA | https://learn.microsoft.com/en-us/azure/azure-functions/functions-kubernetes-keda |
+| Configure zone-redundant Azure Functions apps | https://learn.microsoft.com/en-us/azure/azure-functions/functions-zone-redundancy |
+| Migrate Azure Cosmos DB Functions extension from v3 to v4 | https://learn.microsoft.com/en-us/azure/azure-functions/migrate-cosmos-db-version-3-version-4 |
+| Migrate Azure Functions from Consumption to Flex plan | https://learn.microsoft.com/en-us/azure/azure-functions/migration/migrate-plan-consumption-to-flex |
+| Build and deploy Python Azure Functions using supported methods | https://learn.microsoft.com/en-us/azure/azure-functions/python-build-options |
+| Run Azure Functions directly from package files | https://learn.microsoft.com/en-us/azure/azure-functions/run-functions-from-deployment-package |
+| Host self‑contained MCP servers on Azure Functions | https://learn.microsoft.com/en-us/azure/azure-functions/self-hosted-mcp-servers |
+| Deploy Start/Stop VMs v2 to your Azure subscription | https://learn.microsoft.com/en-us/azure/azure-functions/start-stop-v2/deploy |
+| Remove the Start/Stop VMs v2 solution from Azure | https://learn.microsoft.com/en-us/azure/azure-functions/start-stop-v2/remove |

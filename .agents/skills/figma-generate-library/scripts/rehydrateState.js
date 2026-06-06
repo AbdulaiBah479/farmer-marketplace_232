@@ -9,11 +9,6 @@
  * @returns {{ runId: string, taggedNodes: Object<string, {nodeId: string, type: string, name: string, phase: string}>, variableCollections: Array, variables: Array, styles: Array }}
  */
 async function rehydrateState(runId) {
-  // Read-only inventory — dsb-tagged nodes are user-created top-level frames,
-  // never inside instances, so skip invisible instance interiors for the
-  // hundreds-of-times-faster findAllWithCriteria.
-  figma.skipInvisibleInstanceChildren = true
-
   const taggedNodes = {}
   const variableCollections = []
   const variables = []
@@ -35,13 +30,8 @@ async function rehydrateState(runId) {
       }
     }
 
-    // Use findAllWithCriteria with the pluginData index — drastically faster
-    // than findAll + getPluginData on every node, because the engine narrows
-    // to nodes that actually have these keys.
-    const tagged = page.findAllWithCriteria({
-      pluginData: { keys: ['dsb_key', 'dsb_run_id'] },
-    })
-    for (const node of tagged) {
+    // Scan all descendants
+    page.findAll((node) => {
       const nodeRunId = node.getPluginData('dsb_run_id')
       const nodeKey = node.getPluginData('dsb_key')
       if (nodeKey && (!runId || nodeRunId === runId)) {
@@ -52,11 +42,12 @@ async function rehydrateState(runId) {
           phase: node.getPluginData('dsb_phase') || 'unknown',
         }
       }
-    }
+      return false // don't collect, just scan
+    })
   }
 
   // Inventory variable collections (variables don't support pluginData — use name-based lookup)
-  const collections = await figma.variables.getLocalVariableCollectionsAsync()
+  const collections = figma.variables.getLocalVariableCollections()
   for (const coll of collections) {
     variableCollections.push({
       id: coll.id,
@@ -67,7 +58,7 @@ async function rehydrateState(runId) {
   }
 
   // Inventory variables (name + collection for idempotency key)
-  const allVars = await figma.variables.getLocalVariablesAsync()
+  const allVars = figma.variables.getLocalVariables()
   for (const v of allVars) {
     variables.push({
       id: v.id,

@@ -2,33 +2,32 @@
 
 # Error Recovery Reference
 
-Protocol for handling failures and incomplete runs across a 20–100+ call design system build.
-
-> **Design files only.** Every snippet here (including `figma.createPage()`) targets Figma Design files (`figma.com/design/...`). `figma.createPage()` throws in both FigJam (`figma.com/board/...`) and Slides (`figma.com/slides/...`).
+Protocol for handling failures, partial state, and incomplete runs across a 20–100+ call design system build.
 
 ---
 
-## 1. Core Protocol: STOP → Inspect → Fix → Retry
+## 1. Core Protocol: STOP → Inspect → Identify → Clean → Fix → Retry
 
-**`use_figma` is atomic — a failed script does not execute.** If a script errors, no changes are made to the file. There are no partial nodes or half-built state from the failed call itself. Retrying after a fix is safe.
+**Never retry a failed script without cleanup first.** A failed script may have created partial state — frames, components, or variables that are half-built. Retrying on top of partial state compounds the problem and can make recovery impossible.
 
-However, in multi-step workflows (20–100+ calls), **previously successful calls** will have created state that persists. If a workflow is abandoned mid-way, nodes from earlier successful calls remain in the file. The cleanup and idempotency patterns in this document handle that scenario.
-
-The recovery sequence for a failed script:
+The mandatory recovery sequence:
 
 ```
-1. STOP    — Do not run any more use_figma writes.
-2. INSPECT — Read the error message carefully. Optionally call get_metadata or get_screenshot to understand the current file state.
-3. FIX     — Correct the script that failed.
-4. RETRY   — Re-run the corrected script.
-5. PERSIST — Update the state ledger with the outcome.
+1. STOP   — Do not run any more use_figma writes.
+2. INSPECT — Call get_metadata on the current page. Optionally call get_screenshot.
+3. IDENTIFY — Find artifacts from the failed attempt using dsb_run_id pluginData tags.
+4. CLEAN   — Run a targeted cleanup script to remove orphaned nodes (pluginData-based, never name-based).
+5. VERIFY  — Run get_metadata again to confirm cleanup was complete.
+6. FIX     — Correct the script that failed.
+7. RETRY   — Re-run the corrected script from the last clean checkpoint.
+8. PERSIST — Update the state ledger with the outcome.
 ```
 
-For **abandoned multi-step workflows** (where you need to roll back nodes from previous *successful* calls), use the cleanup protocol in Section 2.
+Do not skip step 4 even if the failure seems minor. Partial frames and components accumulate and cause confusing results in later steps.
 
 ---
 
-## 2. `sharedPluginData`-Based Cleanup: Why Name Matching is Dangerous
+## 2. `pluginData`-Based Cleanup: Why Name Matching is Dangerous
 
 ### Why name-prefix matching fails
 
@@ -36,83 +35,82 @@ A cleanup script that deletes "all nodes whose name starts with `Button`" will a
 
 Furthermore, variant names (`Size=Medium, Style=Primary, State=Default`) do not have consistent prefixes that are safe to target without also hitting legitimate nodes.
 
-### How `setSharedPluginData` / `getSharedPluginData` works
+### How `setPluginData` / `getPluginData` works
 
-`sharedPluginData` is a key-value store attached to individual nodes. It persists across sessions and is invisible to the user in the Figma UI. Data is scoped by namespace — we use `'dsb'`. Use three keys:
+`pluginData` is a key-value store attached to individual nodes. It persists across sessions and is invisible to the user in the Figma UI. Only plugins with the same `pluginId` can read/write data scoped to that plugin. Use three keys:
 
 ```javascript
-node.setSharedPluginData('dsb', 'run_id', 'ds-build-2024-001'); // identifies the build run
-node.setSharedPluginData('dsb', 'phase',  'phase3');             // which phase created this node
-node.setSharedPluginData('dsb', 'key',    'componentset/button');// unique logical key
+node.setPluginData('dsb_run_id', 'ds-build-2024-001'); // identifies the build run
+node.setPluginData('dsb_phase',  'phase3');             // which phase created this node
+node.setPluginData('dsb_key',    'componentset/button');// unique logical key
 
 // Reading:
-const runId = node.getSharedPluginData('dsb', 'run_id'); // returns '' if never set
-const key   = node.getSharedPluginData('dsb', 'key');
+const runId = node.getPluginData('dsb_run_id'); // returns '' if never set
+const key   = node.getPluginData('dsb_key');
 ```
 
-`getSharedPluginData` returns `''` (empty string, not null) for unset keys. Always check for `!== ''`.
+`getPluginData` returns `''` (empty string, not null) for unset keys. Always check for `!== ''`.
 
-**Tag every created node immediately after creation** — this enables safe cleanup if the multi-step workflow is abandoned later. Tag in the same statement sequence as creation:
+**Tag every created node immediately after creation** — before any further operations that might fail. If a failure happens between `createComponent()` and the tagging line, the node will be an untagged orphan. To minimize this window, tag in the same statement sequence as creation:
 
 ```javascript
 const comp = figma.createComponent();
-comp.setSharedPluginData('dsb', 'run_id', RUN_ID);  // tag immediately
-comp.setSharedPluginData('dsb', 'key', key);         // tag immediately
+comp.setPluginData('dsb_run_id', RUN_ID);  // tag immediately
+comp.setPluginData('dsb_key', key);         // tag immediately
 // ... then do the rest of the setup
 ```
 
-### Complete `cleanupOrphans` script using `run_id`
+### Complete `cleanupOrphans` script using `dsb_run_id`
 
-This script finds all nodes tagged with a given `run_id` and optionally a `phase` filter, then removes them. Run it on the specific page where the failure occurred.
+This script finds all nodes tagged with a given `dsb_run_id` and optionally a `dsb_phase` filter, then removes them. Run it on the specific page where the failure occurred.
 
 ```javascript
-const TARGET_RUN_ID = 'ds-build-2024-001'; // run ID to clean
-const TARGET_PHASE  = 'phase3';            // optionally filter by phase ('' = all phases)
-const PAGE_NAME     = 'Button';            // page to clean (or null for all pages)
+(async () => {
+  try {
+    const TARGET_RUN_ID = 'ds-build-2024-001'; // run ID to clean
+    const TARGET_PHASE  = 'phase3';            // optionally filter by phase ('' = all phases)
+    const PAGE_NAME     = 'Button';            // page to clean (or null for all pages)
 
-const pagesToSearch = PAGE_NAME
-  ? [figma.root.children.find(p => p.name === PAGE_NAME)].filter(Boolean)
-  : figma.root.children;
+    const pagesToSearch = PAGE_NAME
+      ? [figma.root.children.find(p => p.name === PAGE_NAME)].filter(Boolean)
+      : figma.root.children;
 
-const removed = [];
-const skipped = [];
+    const removed = [];
+    const skipped = [];
 
-for (const page of pagesToSearch) {
-  await figma.setCurrentPageAsync(page);
+    for (const page of pagesToSearch) {
+      await figma.setCurrentPageAsync(page);
 
-  // Use the sharedPluginData index instead of findAll + getSharedPluginData
-  // on every node. The engine narrows to nodes that actually carry the
-  // namespace/keys before any JS callback runs.
-  const candidates = page.findAllWithCriteria({
-    sharedPluginData: { namespace: 'dsb', keys: ['run_id'] },
-  });
-  const orphans = candidates.filter(node => {
-    if (node.getSharedPluginData('dsb', 'run_id') !== TARGET_RUN_ID) return false;
-    if (TARGET_PHASE && node.getSharedPluginData('dsb', 'phase') !== TARGET_PHASE) return false;
-    return true;
-  });
+      const orphans = page.findAll(node => {
+        const runId = node.getPluginData('dsb_run_id');
+        if (runId !== TARGET_RUN_ID) return false;
+        if (TARGET_PHASE && node.getPluginData('dsb_phase') !== TARGET_PHASE) return false;
+        return true;
+      });
 
-  // Remove leaf-first to avoid removing parents before children
-  // Sort by depth (deepest first) to avoid double-remove errors
-  const sorted = orphans.slice().sort((a, b) => {
-    let depthA = 0, depthB = 0;
-    let n = a; while (n.parent) { depthA++; n = n.parent; }
-    n = b; while (n.parent) { depthB++; n = n.parent; }
-    return depthB - depthA;
-  });
+      // Remove leaf-first to avoid removing parents before children
+      // Sort by depth (deepest first) to avoid double-remove errors
+      const sorted = orphans.slice().sort((a, b) => {
+        let depthA = 0, depthB = 0;
+        let n = a; while (n.parent) { depthA++; n = n.parent; }
+        n = b; while (n.parent) { depthB++; n = n.parent; }
+        return depthB - depthA;
+      });
 
-  for (const node of sorted) {
-    try {
-      if (node.removed) continue; // already removed (was a child of removed parent)
-      node.remove();
-      removed.push({ id: node.id, name: node.name, key: node.getSharedPluginData('dsb', 'key') });
-    } catch (e) {
-      skipped.push({ id: node.id, name: node.name, error: e.message });
+      for (const node of sorted) {
+        try {
+          if (node.removed) continue; // already removed (was a child of removed parent)
+          node.remove();
+          removed.push({ id: node.id, name: node.name, key: node.getPluginData('dsb_key') });
+        } catch (e) {
+          skipped.push({ id: node.id, name: node.name, error: e.message });
+        }
+      }
     }
-  }
-}
 
-return { removed: removed.length, skipped: skipped.length, details: removed };
+    figma.closePlugin(JSON.stringify({ removed: removed.length, skipped: skipped.length, details: removed }));
+  } catch (e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 After running cleanup, call `get_metadata` on the target page to confirm the orphaned nodes are gone before retrying.
@@ -121,106 +119,117 @@ After running cleanup, call `get_metadata` on the target page to confirm the orp
 
 ## 3. Idempotency Patterns: Check-Before-Create
 
-Run an idempotency check at the start of every create operation. If the entity already exists (tagged with the expected `key`), skip creation and return the existing ID.
+Run an idempotency check at the start of every create operation. If the entity already exists (tagged with the expected `dsb_key`), skip creation and return the existing ID.
 
 ### Check-before-create for a variable collection
 
 ```javascript
-const KEY = 'collection/color';
-const RUN_ID = 'ds-build-2024-001';
-const COLLECTION_NAME = 'Color';
+(async () => {
+  try {
+    const KEY = 'collection/color';
+    const RUN_ID = 'ds-build-2024-001';
+    const COLLECTION_NAME = 'Color';
 
-// Check: does a collection tagged with this key already exist?
-const allCollections = await figma.variables.getLocalVariableCollectionsAsync();
-// Variables/collections support sharedPluginData too — check by name as fallback
-// Note: VariableCollection sharedPluginData is set via collection.setSharedPluginData(...)
-const existing = allCollections.find(c =>
-  c.getSharedPluginData('dsb', 'key') === KEY
-);
+    // Check: does a collection tagged with this key already exist?
+    const allCollections = await figma.variables.getLocalVariableCollectionsAsync();
+    // Variables/collections support pluginData too — check by name as fallback
+    // Note: VariableCollection pluginData is set via collection.setPluginData(...)
+    const existing = allCollections.find(c =>
+      c.getPluginData('dsb_key') === KEY
+    );
 
-if (existing) {
-  return {
-    collectionId: existing.id,
-    modeIds: existing.modes.map(m => ({ name: m.name, id: m.modeId })),
-    alreadyExisted: true,
-  };
-}
+    if (existing) {
+      figma.closePlugin(JSON.stringify({
+        collectionId: existing.id,
+        modeIds: existing.modes.map(m => ({ name: m.name, id: m.modeId })),
+        alreadyExisted: true,
+      }));
+      return;
+    }
 
-// Create fresh
-const collection = figma.variables.createVariableCollection(COLLECTION_NAME);
-collection.setSharedPluginData('dsb', 'run_id', RUN_ID);
-collection.setSharedPluginData('dsb', 'key', KEY);
+    // Create fresh
+    const collection = figma.variables.createVariableCollection(COLLECTION_NAME);
+    collection.setPluginData('dsb_run_id', RUN_ID);
+    collection.setPluginData('dsb_key', KEY);
 
-// Rename default mode, add second mode
-collection.renameMode(collection.modes[0].modeId, 'Light');
-const darkModeId = collection.addMode('Dark');
+    // Rename default mode, add second mode
+    collection.renameMode(collection.modes[0].modeId, 'Light');
+    const darkModeId = collection.addMode('Dark');
 
-return {
-  collectionId: collection.id,
-  modeIds: [
-    { name: 'Light', id: collection.modes[0].modeId },
-    { name: 'Dark',  id: darkModeId },
-  ],
-};
+    figma.closePlugin(JSON.stringify({
+      collectionId: collection.id,
+      modeIds: [
+        { name: 'Light', id: collection.modes[0].modeId },
+        { name: 'Dark',  id: darkModeId },
+      ],
+    }));
+  } catch (e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 ### Check-before-create for a page
 
 ```javascript
-const KEY = 'page/button';
-const PAGE_NAME = 'Button';
-const RUN_ID = 'ds-build-2024-001';
+(async () => {
+  try {
+    const KEY = 'page/button';
+    const PAGE_NAME = 'Button';
+    const RUN_ID = 'ds-build-2024-001';
 
-// Check by sharedPluginData key first, then by name as fallback
-let page = figma.root.children.find(p => p.getSharedPluginData('dsb', 'key') === KEY);
-if (!page) {
-  page = figma.root.children.find(p => p.name === PAGE_NAME);
-}
+    // Check by pluginData key first, then by name as fallback
+    let page = figma.root.children.find(p => p.getPluginData('dsb_key') === KEY);
+    if (!page) {
+      page = figma.root.children.find(p => p.name === PAGE_NAME);
+    }
 
-if (page) {
-  // Ensure it's tagged if it was found by name only
-  if (!page.getSharedPluginData('dsb', 'key')) {
-    page.setSharedPluginData('dsb', 'run_id', RUN_ID);
-    page.setSharedPluginData('dsb', 'key', KEY);
-  }
-  return { pageId: page.id, alreadyExisted: true };
-}
+    if (page) {
+      // Ensure it's tagged if it was found by name only
+      if (!page.getPluginData('dsb_key')) {
+        page.setPluginData('dsb_run_id', RUN_ID);
+        page.setPluginData('dsb_key', KEY);
+      }
+      figma.closePlugin(JSON.stringify({ pageId: page.id, alreadyExisted: true }));
+      return;
+    }
 
-page = figma.createPage();
-page.name = PAGE_NAME;
-page.setSharedPluginData('dsb', 'run_id', RUN_ID);
-page.setSharedPluginData('dsb', 'key', KEY);
+    page = figma.createPage();
+    page.name = PAGE_NAME;
+    page.setPluginData('dsb_run_id', RUN_ID);
+    page.setPluginData('dsb_key', KEY);
 
-return { pageId: page.id, alreadyExisted: false };
+    figma.closePlugin(JSON.stringify({ pageId: page.id, alreadyExisted: false }));
+  } catch (e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 ### Check-before-create for a component set
 
 ```javascript
-const KEY = 'componentset/button';
-const PAGE_ID = 'PAGE_ID_FROM_STATE';
-const RUN_ID = 'ds-build-2024-001';
+(async () => {
+  try {
+    const KEY = 'componentset/button';
+    const PAGE_ID = 'PAGE_ID_FROM_STATE';
+    const RUN_ID = 'ds-build-2024-001';
 
-const page = await figma.getNodeByIdAsync(PAGE_ID);
-await figma.setCurrentPageAsync(page);
+    const page = await figma.getNodeByIdAsync(PAGE_ID);
+    await figma.setCurrentPageAsync(page);
 
-// Indexed lookup: only COMPONENT_SET nodes with the dsb namespace + key.
-const existing = page
-  .findAllWithCriteria({
-    types: ['COMPONENT_SET'],
-    sharedPluginData: { namespace: 'dsb', keys: ['key'] },
-  })
-  .filter(n => n.getSharedPluginData('dsb', 'key') === KEY);
+    const existing = page.findAll(n =>
+      n.type === 'COMPONENT_SET' && n.getPluginData('dsb_key') === KEY
+    );
 
-if (existing.length > 0) {
-  return {
-    componentSetId: existing[0].id,
-    alreadyExisted: true,
-  };
-}
+    if (existing.length > 0) {
+      figma.closePlugin(JSON.stringify({
+        componentSetId: existing[0].id,
+        alreadyExisted: true,
+      }));
+      return;
+    }
 
-// ... proceed with creation
-return { componentSetId: null, alreadyExisted: false };
+    // ... proceed with creation
+    figma.closePlugin(JSON.stringify({ componentSetId: null, alreadyExisted: false }));
+  } catch (e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 ---
@@ -298,7 +307,7 @@ Maintain a state ledger in your context (not in the Figma file) across calls. Th
 ### Persisting between calls
 
 After every successful `use_figma` call:
-1. Extract all IDs from the return value
+1. Extract all IDs from the `closePlugin` return value
 2. Add them to the appropriate `entities` section of the ledger
 3. Add the completed step to `completedSteps`
 4. Remove from `pendingValidations` if this call validated something
@@ -309,28 +318,25 @@ After every successful `use_figma` call:
 If a conversation is interrupted and resumed, read the state ledger and verify key entities still exist:
 
 ```javascript
-// Verify that critical nodes from the ledger still exist
-const toVerify = {
-  'color-collection':  'VariableCollectionId:1234:5679',
-  'button-page':       '0:3',
-  'button-componentset': '4567:1',
-};
+(async () => {
+  try {
+    // Verify that critical nodes from the ledger still exist
+    const toVerify = {
+      'color-collection':  'VariableCollectionId:1234:5679',
+      'button-page':       '0:3',
+      'button-componentset': '4567:1',
+    };
 
-// Batch the lookups — awaiting getNodeByIdAsync per entry serializes the
-// round-trips. Resolve them all in parallel with Promise.all, then walk the
-// results.
-const entries = Object.entries(toVerify);
-const nodes = await Promise.all(
-  entries.map(([, id]) => figma.getNodeByIdAsync(id).catch(() => null))
-);
-const results = {};
-for (let i = 0; i < entries.length; i++) {
-  const [label] = entries[i];
-  const node = nodes[i];
-  results[label] = node ? { found: true, name: node.name } : { found: false };
-}
+    const results = {};
+    for (const [label, id] of Object.entries(toVerify)) {
+      const node = await figma.getNodeByIdAsync(id)
+        .catch(() => null);
+      results[label] = node ? { found: true, name: node.name } : { found: false };
+    }
 
-return results;
+    figma.closePlugin(JSON.stringify(results));
+  } catch (e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 If any entity is missing, treat the phase that created it as incomplete and re-run from that checkpoint.
@@ -339,54 +345,50 @@ If any entity is missing, treat the phase that created it as incomplete and re-r
 
 ## 5. Resume Protocol
 
-### Step 1: Inspect the file for `run_id` tags
+### Step 1: Inspect the file for `dsb_run_id` tags
 
 ```javascript
-// Read-only resume inventory — dsb-tagged nodes are top-level user-created
-// frames, never inside instances, so skip invisible instance interiors.
-figma.skipInvisibleInstanceChildren = true;
+(async () => {
+  try {
+    const TARGET_RUN_ID = 'ds-build-2024-001';
+    const inventory = { pages: [], variables: [], componentSets: [], frames: [] };
 
-const TARGET_RUN_ID = 'ds-build-2024-001';
-const inventory = { pages: [], variables: [], componentSets: [], frames: [] };
-
-// Scan pages
-for (const page of figma.root.children) {
-  if (page.getSharedPluginData('dsb', 'run_id') === TARGET_RUN_ID) {
-    inventory.pages.push({ id: page.id, name: page.name, key: page.getSharedPluginData('dsb', 'key') });
-  }
-}
-
-// Scan variables
-const allVars = await figma.variables.getLocalVariablesAsync();
-for (const v of allVars) {
-  if (v.getSharedPluginData('dsb', 'run_id') === TARGET_RUN_ID) {
-    inventory.variables.push({ id: v.id, name: v.name, key: v.getSharedPluginData('dsb', 'key') });
-  }
-}
-
-// Scan all component sets and frames on each page
-for (const page of figma.root.children) {
-  await figma.setCurrentPageAsync(page);
-  // Indexed sharedPluginData lookup — much faster than findAll + getSharedPluginData per node.
-  const candidates = page.findAllWithCriteria({
-    sharedPluginData: { namespace: 'dsb', keys: ['run_id'] },
-  });
-  const nodes = candidates.filter(n => n.getSharedPluginData('dsb', 'run_id') === TARGET_RUN_ID);
-  for (const n of nodes) {
-    if (n.type === 'COMPONENT_SET') {
-      inventory.componentSets.push({ id: n.id, name: n.name, key: n.getSharedPluginData('dsb', 'key') });
-    } else if (n.type === 'FRAME') {
-      inventory.frames.push({ id: n.id, name: n.name, key: n.getSharedPluginData('dsb', 'key') });
+    // Scan pages
+    for (const page of figma.root.children) {
+      if (page.getPluginData('dsb_run_id') === TARGET_RUN_ID) {
+        inventory.pages.push({ id: page.id, name: page.name, key: page.getPluginData('dsb_key') });
+      }
     }
-  }
-}
 
-return inventory;
+    // Scan variables
+    const allVars = await figma.variables.getLocalVariablesAsync();
+    for (const v of allVars) {
+      if (v.getPluginData('dsb_run_id') === TARGET_RUN_ID) {
+        inventory.variables.push({ id: v.id, name: v.name, key: v.getPluginData('dsb_key') });
+      }
+    }
+
+    // Scan all component sets and frames on each page
+    for (const page of figma.root.children) {
+      await figma.setCurrentPageAsync(page);
+      const nodes = page.findAll(n => n.getPluginData('dsb_run_id') === TARGET_RUN_ID);
+      for (const n of nodes) {
+        if (n.type === 'COMPONENT_SET') {
+          inventory.componentSets.push({ id: n.id, name: n.name, key: n.getPluginData('dsb_key') });
+        } else if (n.type === 'FRAME') {
+          inventory.frames.push({ id: n.id, name: n.name, key: n.getPluginData('dsb_key') });
+        }
+      }
+    }
+
+    figma.closePlugin(JSON.stringify(inventory));
+  } catch (e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 ### Step 2: Reconstruct state from inventory
 
-Map the inventory keys back to the state ledger schema. For each entity found with a `key`, add its ID to the appropriate section. Mark the corresponding step as `completedSteps`.
+Map the inventory keys back to the state ledger schema. For each entity found with a `dsb_key`, add its ID to the appropriate section. Mark the corresponding step as `completedSteps`.
 
 Example mapping:
 ```
@@ -424,8 +426,8 @@ These can be fixed and retried without affecting already-created entities:
 | Missing property wiring | `componentPropertyReferences` not set | Find component set by ID, re-run the property wiring step |
 | Variable binding omission | A fill was hardcoded instead of bound | Find nodes by `dsb_key`, re-bind the fill |
 | Wrong variable bound | Bound to wrong variable ID | Re-bind with correct variable ID |
-| Text not visible | Font not loaded before text write | Call `listAvailableFontsAsync()` to verify the font exists, then re-run text creation with `loadFontAsync` |
-| Script timeout | Script exceeded time limit before completing | Script is atomic — nothing was created. Reduce scope (fewer nodes per call) and retry |
+| Text not visible | Font not loaded before text write | Re-run text creation with `loadFontAsync` first |
+| Partial variant creation | Only 12 of 18 variants created before timeout | Run cleanup for the partial set, re-run full variant creation |
 
 ### Structural Corruption (Requires Rollback or Restart)
 
@@ -453,7 +455,7 @@ These errors leave the file in a state where continuing forward is unreliable:
 | `"Cannot read properties of null"` | `getNodeByIdAsync` returned null — node was deleted | Run the resume protocol to find what exists, update state ledger |
 | `"Expected nodes to be component nodes"` | Passed a non-ComponentNode to `combineAsVariants` | Filter the array: `nodes.filter(n => n.type === 'COMPONENT')` |
 | `"in createVariable: Cannot create variable"` | Collection was deleted or ID is wrong | Verify collection exists with `getVariableCollectionByIdAsync` |
-| `"font not loaded"` | Called a text property setter without `loadFontAsync` first | Call `await figma.listAvailableFontsAsync()` to discover available fonts and verify the font name, then `await figma.loadFontAsync({ family, style })` before the text operation |
+| `"font not loaded"` | Called a text property setter without `loadFontAsync` first | Add `await figma.loadFontAsync({ family, style })` before the text operation |
 | `"Cannot set properties of a read-only array"` | Tried to mutate fills/strokes in-place | Clone first: `const fills = JSON.parse(JSON.stringify(node.fills))` |
 | `"Expected RGBA color"` | Color value out of 0–1 range | Divide RGB 0–255 values by 255: `{ r: 65/255, g: 85/255, b: 143/255 }` |
 | `"Cannot add children to a non-parent node"` | Tried to append a child to a leaf node (text, rect) | Ensure the parent is a FrameNode, ComponentNode, or GroupNode |
@@ -466,58 +468,56 @@ These errors leave the file in a state where continuing forward is unreliable:
 
 ## 8. Per-Phase Recovery Guidance
 
-### Phase 1 fails (variable creation)
+### Phase 1 fails mid-execution (variable creation)
 
-Since `use_figma` is atomic, a failed call creates nothing. The most common scenario is that some calls in Phase 1 succeeded (creating some variables) while a later call failed.
+Symptoms: partial variable collections exist; some variables are missing; some have wrong values.
 
 Recovery steps:
-1. Run inspection script to find all variables tagged with your `run_id`
-2. Compare against the plan to identify which variables were successfully created and which are still missing
-3. If a successfully created variable has wrong values, call `variable.remove()` and recreate it
-4. Fix the failed script and retry — it's safe since the failed call created nothing
+1. Run inspection script to find all variables tagged with your `dsb_run_id`
+2. For each variable with `dsb_key` matching the plan, verify its `valuesByMode` and `scopes` are correct
+3. If a variable is malformed, call `variable.remove()` and recreate it
+4. If the collection itself is malformed, remove the entire collection and recreate from scratch
 5. Do NOT proceed to Phase 2 until ALL planned variables exist with correct scopes and code syntax
 
-**The most common Phase 1 failure:** script timeout when creating many variables. Fix: batch variable creation — create at most 20–30 variables per call.
+**The most common Phase 1 failure:** running out of time in a single `use_figma` call when creating many variables. Fix: batch variable creation — create at most 20–30 variables per call.
 
 ### Phase 2 fails mid-execution (page/file structure)
 
 Symptoms: some pages exist, others are missing; foundations doc frames are incomplete.
 
 Recovery steps:
-1. Identify which pages were successfully created (check for `key` tags)
+1. Identify which pages were successfully created (check for `dsb_key` tags)
 2. Mark remaining pages as pending and create them in subsequent calls
 3. If a foundations doc frame is malformed, run `cleanupOrphans` for `dsb_phase: 'phase2'` on that page, then recreate
 
 Phase 2 failures rarely require Phase 1 rollback unless the page structure itself is corrupted (which is unusual).
 
-### Phase 3 fails (component creation)
+### Phase 3 fails mid-execution (component creation)
 
-This is the most common failure mode in long builds. Since `use_figma` is atomic, a failed call creates nothing — but previous successful calls in the component creation sequence will have created state. Handle by which call in the sequence failed:
+This is the most common failure mode in long builds. Handle by component:
 
 ```
 If failure in Call 1 (page creation):
-  → Nothing was created. Fix the script and retry.
+  → Idempotency check will handle on retry. Safe to re-run.
 
 If failure in Call 2 (doc frame):
-  → Call 1's page exists. Fix Call 2 and retry — idempotency check handles it.
+  → cleanupOrphans for dsb_key='doc/{component}', then re-run.
 
 If failure in Call 3 (base component):
-  → Calls 1-2 succeeded. Fix Call 3 and retry.
+  → Remove the partial base component node, re-run from Call 3.
 
 If failure in Call 4 (variant creation):
-  → Call 3's base component exists. Fix Call 4 and retry.
-  → If you need to restart from Call 3, clean up Call 3's nodes first
-    using cleanupOrphans scoped to the component page.
+  → cleanupOrphans for dsb_phase='phase3' on the component page (scoped by page).
+  → Re-run from Call 3 (base) or Call 4 if base was successfully tagged.
 
 If failure in Call 5 (combineAsVariants + layout):
-  → Variant ComponentNodes from Call 4 exist but aren't combined yet.
-  → Fix Call 5 and retry.
-  → If the component set was already created by a prior attempt of Call 5
-    that succeeded, remove it first, then re-run.
+  → Remove the malformed component set.
+  → Remove all variant ComponentNodes for this component (by dsb_key pattern).
+  → Re-run from Call 3.
 
 If failure in Call 6 (component properties):
   → The component set already exists and is structurally sound.
-  → Fix Call 6 and retry — addComponentProperty is safe to retry if
+  → Re-run Call 6 only — addComponentProperty is safe to retry if
     you first check componentPropertyDefinitions for existing properties.
   → Idempotency check: if 'Label' property already exists, skip addComponentProperty.
 ```
@@ -536,5 +536,5 @@ const labelKey = existingDefs['Label']
 Phase 4 is non-destructive. Failures here do not corrupt Phase 3 work. Common failures:
 
 - **Accessibility audit finds contrast failures:** do not attempt auto-fix. Report the specific variable IDs and token names that fail, then ask the user which value to update.
-- **Naming audit finds duplicates:** list all duplicates with their `key` values, ask user which to keep, then remove the duplicates.
+- **Naming audit finds duplicates:** list all duplicates with their `dsb_key` values, ask user which to keep, then remove the duplicates.
 - **Code Connect mapping fails:** treat as incomplete, not broken. Continue and leave as pending.

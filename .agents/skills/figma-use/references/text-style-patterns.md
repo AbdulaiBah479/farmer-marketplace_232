@@ -2,17 +2,14 @@
 
 > Part of the [use_figma skill](../SKILL.md). How to create, apply, and inspect text styles using the Plugin API.
 >
-> Every example here assumes the [canonical text-edit recipe](gotchas.md#canonical-text-edit-recipe-font-load--await--mutate--return-ids): load font → `await` → mutate → return affected IDs. Examples use `Inter` because it's available everywhere, but the rule applies identically to any font family/style.
->
-> For design system context (when to create text styles, how they relate to tokens, `use_figma` limitations), see [wwds-text-styles](working-with-design-systems/wwds-text-styles.md).
+> For design system context (when to create text styles, how they relate to tokens, headless limitations), see [wwds-text-styles](working-with-design-systems/wwds-text-styles.md).
 
 ## Contents
 
 - Listing Text Styles
 - Creating a Text Style
-- Discovering Available Font Styles
+- Probing Font Styles
 - Creating a Type Ramp (Multi-Step)
-- Importing Library Text Styles
 - Applying Text Styles to Nodes
 
 ## Listing Text Styles
@@ -40,8 +37,12 @@ async function listTextStyles() {
 Full runnable script:
 
 ```javascript
-const results = await listTextStyles();
-return results;
+(async () => {
+  try {
+    const results = await listTextStyles();
+    figma.closePlugin(JSON.stringify(results));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
 
 ## Creating a Text Style
@@ -73,28 +74,36 @@ function createTextStyleFull(name, fontName, fontSize, lineHeight, letterSpacing
 }
 ```
 
-## Discovering Available Font Styles
+## Probing Font Styles
 
-Font style names vary per provider and per file.  Use `figma.listAvailableFontsAsync()` to discover exact style strings — never guess or probe with try/catch:
+Font style names vary per provider and per file (`"SemiBold"` vs `"Semi Bold"`). Always probe before hardcoding:
 
 ```javascript
 /**
- * Discovers available font styles for a given family using listAvailableFontsAsync.
+ * Probes available font styles for a given family.
+ * Useful when font style names are unknown (e.g. "SemiBold" vs "Semi Bold").
  *
  * @param {string} family - Font family name, e.g. "Inter"
- * @returns {Promise<string[]>} - All available style names for the family
+ * @param {string[]} stylesToTest - Candidate style names to probe
+ * @returns {Promise<string[]>} - Style names that loaded successfully
  */
-async function getAvailableFontStyles(family) {
-  const allFonts = await figma.listAvailableFontsAsync();
-  return allFonts
-    .filter(f => f.fontName.family === family)
-    .map(f => f.fontName.style);
+async function probeAvailableFontStyles(family, stylesToTest) {
+  const available = [];
+  for (const style of stylesToTest) {
+    try {
+      await figma.loadFontAsync({ family, style });
+      available.push(style);
+    } catch (_) {}
+  }
+  return available;
 }
 ```
 
 ## Creating a Type Ramp (Multi-Step)
 
 Handles font loading, deduplication, and idempotency. Each entry: `[name, fontFamily, fontStyle, fontSize_px, lineHeight, cssVar]`.
+
+**HEADLESS NOTE:** `setBoundVariable` on `TextStyle` is not supported in `use_figma`. This function sets raw values. To bind variables, do it interactively in Figma after creation.
 
 ```javascript
 /**
@@ -144,29 +153,20 @@ async function createTypeRamp(defs) {
 Full runnable script:
 
 ```javascript
-const defs = [
-  ['heading/xl', 'Inter', 'Bold',      48, { unit: 'PIXELS', value: 56 }, '--font-heading-xl'],
-  ['heading/lg', 'Inter', 'Bold',      36, { unit: 'PIXELS', value: 44 }, '--font-heading-lg'],
-  ['body/base',  'Inter', 'Regular',   16, { unit: 'AUTO' },              '--font-body-base'],
-  ['body/sm',    'Inter', 'Regular',   14, { unit: 'AUTO' },              '--font-body-sm'],
-  ['code/base',  'Roboto Mono', 'Regular', 14, { unit: 'AUTO' },          '--font-code-base'],
-];
-const result = await createTypeRamp(defs);
-return result;
+(async () => {
+  try {
+    const defs = [
+      ['heading/xl', 'Inter', 'Bold',      48, { unit: 'PIXELS', value: 56 }, '--font-heading-xl'],
+      ['heading/lg', 'Inter', 'Bold',      36, { unit: 'PIXELS', value: 44 }, '--font-heading-lg'],
+      ['body/base',  'Inter', 'Regular',   16, { unit: 'AUTO' },              '--font-body-base'],
+      ['body/sm',    'Inter', 'Regular',   14, { unit: 'AUTO' },              '--font-body-sm'],
+      ['code/base',  'Roboto Mono', 'Regular', 14, { unit: 'AUTO' },          '--font-code-base'],
+    ];
+    const result = await createTypeRamp(defs);
+    figma.closePlugin(JSON.stringify(result));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```
-
-## Importing Library Text Styles
-
-For text styles from **team libraries**, use `importStyleByKeyAsync`:
-
-```javascript
-// Import a library text style by key
-const headingStyle = await figma.importStyleByKeyAsync("TEXT_STYLE_KEY");
-// Apply to a text node
-await textNode.setTextStyleIdAsync(headingStyle.id);
-```
-
-`search_design_system` with `includeStyles: true` returns style keys you can import this way. Prefer importing library styles over creating new ones.
 
 ## Applying Text Styles to Nodes
 
@@ -180,18 +180,24 @@ await textNode.setTextStyleIdAsync(headingStyle.id);
  */
 async function applyTextStyleToMatchingNodes(styleId, nodeNamePattern) {
   const textNodes = figma.currentPage.findAllWithCriteria({ types: ['TEXT'] });
-  const matching = textNodes.filter(n => n.name.includes(nodeNamePattern));
-  // Batch the style applications with Promise.all — each setTextStyleIdAsync
-  // call is independent, so awaiting them serially in a for-loop multiplies
-  // the IPC latency by the number of matches.
-  await Promise.all(matching.map(n => n.setTextStyleIdAsync(styleId)));
-  return matching.length;
+  let applied = 0;
+  for (const node of textNodes) {
+    if (node.name.includes(nodeNamePattern)) {
+      await node.setTextStyleIdAsync(styleId);
+      applied++;
+    }
+  }
+  return applied;
 }
 ```
 
 Full runnable script:
 
 ```javascript
-const applied = await applyTextStyleToMatchingNodes('STYLE_ID', 'Heading');
-return { applied };
+(async () => {
+  try {
+    const applied = await applyTextStyleToMatchingNodes('STYLE_ID', 'Heading');
+    figma.closePlugin(JSON.stringify({ applied }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})()
 ```

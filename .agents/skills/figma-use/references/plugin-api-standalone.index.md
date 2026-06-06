@@ -1,6 +1,6 @@
 # Plugin API Index
 
-> Full typings: `plugin-api-standalone.d.ts` (11,292 lines)  
+> Full typings: `plugin-api-standalone.d.ts` (11,292 lines)
 > Grep by symbol name to jump to definition. All `L#` line numbers refer to that file.
 
 ---
@@ -16,7 +16,7 @@
 | `mode`                          | `'default' \| 'textreview' \| 'inspect' \| 'codegen' \| 'linkpreview' \| 'auth'` |
 | `fileKey`                       | `string \| undefined`                                                            |
 | `root`                          | `DocumentNode`                                                                   |
-| `currentPage`                   | `PageNode` — **read-only**; sync setter `figma.currentPage = page` does NOT work and throws; use `await figma.setCurrentPageAsync(page)` instead |
+| `currentPage`                   | `PageNode` — assign via `setCurrentPageAsync`                                    |
 | `currentUser`                   | `User \| null`                                                                   |
 | `mixed`                         | `unique symbol` — sentinel for mixed values in selection                         |
 | `skipInvisibleInstanceChildren` | `boolean`                                                                        |
@@ -25,7 +25,7 @@
 
 | Method                      | Returns                                                 |
 | --------------------------- | ------------------------------------------------------- |
-| `setCurrentPageAsync(page)` | `Promise<void>` — **MUST use this**; sync setter `figma.currentPage = page` does NOT work |
+| `setCurrentPageAsync(page)` | `Promise<void>` — **MUST use this**; sync setter throws |
 | `getNodeByIdAsync(id)`      | `Promise<BaseNode \| null>`                             |
 | `getNodeById(id)`           | `BaseNode \| null`                                      |
 | `getStyleByIdAsync(id)`     | `Promise<BaseStyle \| null>`                            |
@@ -36,7 +36,6 @@
 | Method                              | Returns                     |
 | ----------------------------------- | --------------------------- |
 | `createFrame()`                     | `FrameNode`                 |
-| `createAutoLayout(direction?)`      | `FrameNode`                 |
 | `createComponent()`                 | `ComponentNode`             |
 | `createComponentFromNode(node)`     | `ComponentNode`             |
 | `createRectangle()`                 | `RectangleNode`             |
@@ -47,7 +46,7 @@
 | `createVector()`                    | `VectorNode`                |
 | `createText()`                      | `TextNode`                  |
 | `createSection()`                   | `SectionNode`               |
-| `createPage()`                      | `PageNode` — **Design files only** (`figma.com/design/...`); throws in both FigJam (`figma.com/board/...`) and Slides (`figma.com/slides/...`) |
+| `createPage()`                      | `PageNode`                  |
 | `createSlice()`                     | `SliceNode`                 |
 | `createBooleanOperation()`          | `BooleanOperationNode`      |
 | `createTable(rows?, cols?)`         | `TableNode`                 |
@@ -83,8 +82,8 @@
 
 | Method                                  | Notes                                                        |
 | --------------------------------------- | ------------------------------------------------------------ |
-| `closePlugin(message?)`                 | Auto-called; use `return` instead to pass results back       |
-| `closePluginWithFailure(message?)`      | Auto-called on errors; do not call manually                  |
+| `closePlugin(message?)`                 | **MUST call on success paths**                               |
+| `closePluginWithFailure(message?)`      | **MUST call in catch blocks — never use closePlugin for errors** |
 | `commitUndo()`                          | Snapshot to undo history                                     |
 | `triggerUndo()`                         | Revert to last snapshot                                      |
 | `saveVersionHistoryAsync(title, desc?)` | `Promise<VersionHistoryResult>`                              |
@@ -115,10 +114,14 @@
 ## VariablesAPI — figma.variables (L2016)
 
 ```
-getVariableByIdAsync(id)                 Promise<Variable | null>    ← preferred; sync deprecated
-getVariableCollectionByIdAsync(id)       Promise<VariableCollection | null>    ← preferred; sync deprecated
-getLocalVariablesAsync(type?)            Promise<Variable[]>         ← preferred; filter by VariableResolvedDataType; sync deprecated
-getLocalVariableCollectionsAsync()       Promise<VariableCollection[]>    ← preferred; sync deprecated
+getVariableById(id)                      Variable | null
+getVariableByIdAsync(id)                 Promise<Variable | null>
+getVariableCollectionById(id)            VariableCollection | null
+getVariableCollectionByIdAsync(id)       Promise<VariableCollection | null>
+getLocalVariables(type?)                 Variable[]           ← sync works; filter by VariableResolvedDataType
+getLocalVariablesAsync(type?)            Promise<Variable[]>
+getLocalVariableCollections()            VariableCollection[] ← sync works
+getLocalVariableCollectionsAsync()       Promise<VariableCollection[]> ← may not be available; use sync
 createVariable(name, collection, type)   Variable
 createVariableCollection(name)           VariableCollection
 createVariableAlias(variable)            VariableAlias
@@ -204,7 +207,7 @@ type BaseNode   (L10913) = DocumentNode | PageNode | SceneNode
 | `PublishableMixin`           | L7875 | `description`, `key`, `getPublishStatusAsync()`                                                 |
 | `VariantMixin`               | L8182 | `variantProperties`                                                                             |
 | `ComponentPropertiesMixin`   | L8229 | `componentProperties`, `addComponentProperty()`                                                 |
-| `PluginDataMixin`            | L5443 | `getSharedPluginData()`, `setSharedPluginData()` supported; `getPluginData()`, `setPluginData()` **NOT supported** |
+| `PluginDataMixin`            | L5443 | `getPluginData()`, `setPluginData()`, `getSharedPluginData()`                                   |
 | `FramePrototypingMixin`      | L7651 | `overflowDirection`, `numberOfFixedChildren`                                                    |
 | `BaseFrameMixin`             | L7939 | ChildrenMixin + LayoutMixin + AutoLayoutMixin + GeometryMixin + …                               |
 | `DefaultFrameMixin`          | L7997 | BaseFrameMixin + FramePrototypingMixin + ReactionMixin                                          |
@@ -436,30 +439,3 @@ ExportSettingsConstraints
 User                    ActiveUser              BaseUser                Image
 Video                   VersionHistoryResult    FindAllCriteria
 ```
-
----
-
-## Additional APIs (available via use_figma)
-
-### Node Methods
-
-| Method / Property             | Returns / Type    | Description |
-| ----------------------------- | ----------------- | ----------- |
-| `node.query(selector)`        | `QueryResult`     | CSS-like selector search within subtree |
-| `node.matches(selector)`      | `boolean`         | Test if node matches a selector |
-| `node.set(props)`             | `this`            | Set multiple properties at once, chainable |
-| `await node.screenshot(opts?)` | `Promise<void>`  | Capture PNG inline in tool response |
-| `node.placeholder`            | `boolean`         | Show/hide shimmer overlay |
-
-### figma.io Namespace
-
-| Method                        | Returns           | Description |
-| ----------------------------- | ----------------- | ----------- |
-| `figma.io.write(path, data)`  | `void`            | Write image/data to be returned in tool response |
-
-### Types
-
-| Type                | Description |
-| ------------------- | ----------- |
-| `QueryResult`       | Iterable result from `node.query()` with `.first()`, `.last()`, `.each()`, `.map()`, `.filter()`, `.values()`, `.set()`, `.query()` |
-| `ScreenshotOptions` | `{ scale?: number, contentsOnly?: boolean }` |

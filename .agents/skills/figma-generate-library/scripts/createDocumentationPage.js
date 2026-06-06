@@ -33,23 +33,9 @@
  *   `frameIds` is an ordered list of IDs for the root frame and each section frame.
  */
 async function createDocumentationPage(pageName, config, runId) {
-  // Verify required fonts are available before loading
-  const allFonts = await figma.listAvailableFontsAsync()
-  const requiredStyles = ['Bold', 'Regular', 'Medium']
-  for (const style of requiredStyles) {
-    const found = allFonts.some((f) => f.fontName.family === 'Inter' && f.fontName.style === style)
-    if (!found) {
-      const interFonts = allFonts.filter((f) => f.fontName.family === 'Inter')
-      throw new Error(
-        `Font "Inter ${style}" not available. Available Inter styles: ${interFonts.map((f) => f.fontName.style).join(', ') || 'none'}`,
-      )
-    }
-  }
-  await Promise.all([
-    figma.loadFontAsync({ family: 'Inter', style: 'Bold' }),
-    figma.loadFontAsync({ family: 'Inter', style: 'Regular' }),
-    figma.loadFontAsync({ family: 'Inter', style: 'Medium' }),
-  ])
+  await figma.loadFontAsync({ family: 'Inter', style: 'Bold' })
+  await figma.loadFontAsync({ family: 'Inter', style: 'Regular' })
+  await figma.loadFontAsync({ family: 'Inter', style: 'Medium' })
 
   // Create and activate the page
   const page = figma.createPage()
@@ -64,8 +50,9 @@ async function createDocumentationPage(pageName, config, runId) {
   const frameIds = []
 
   // Root scroll container — 1440px wide, auto-height
-  const root = figma.createAutoLayout('VERTICAL')
+  const root = figma.createFrame()
   root.name = pageName
+  root.layoutMode = 'VERTICAL'
   root.primaryAxisAlignItems = 'MIN'
   root.counterAxisAlignItems = 'MIN'
   root.itemSpacing = 80
@@ -73,8 +60,9 @@ async function createDocumentationPage(pageName, config, runId) {
   root.paddingBottom = 120
   root.paddingLeft = 80
   root.paddingRight = 80
-  root.resize(1440, 1)
   root.layoutSizingHorizontal = 'FIXED'
+  root.layoutSizingVertical = 'HUG'
+  root.resize(1440, 1)
   root.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }]
   root.x = 0
   root.y = 0
@@ -88,12 +76,14 @@ async function createDocumentationPage(pageName, config, runId) {
   frameIds.push(root.id)
 
   // Page header: title + optional description
-  const header = figma.createAutoLayout('VERTICAL')
+  const header = figma.createFrame()
   header.name = 'Header'
+  header.layoutMode = 'VERTICAL'
   header.itemSpacing = 12
+  header.layoutSizingHorizontal = 'FILL'
+  header.layoutSizingVertical = 'HUG'
   header.fills = []
   root.appendChild(header)
-  header.layoutSizingHorizontal = 'FILL'
 
   const titleNode = figma.createText()
   titleNode.fontName = { family: 'Inter', style: 'Bold' }
@@ -116,12 +106,14 @@ async function createDocumentationPage(pageName, config, runId) {
 
   // Sections
   for (const section of config.sections) {
-    const sectionFrame = figma.createAutoLayout('VERTICAL')
+    const sectionFrame = figma.createFrame()
     sectionFrame.name = `Section/${section.name}`
+    sectionFrame.layoutMode = 'VERTICAL'
     sectionFrame.itemSpacing = 20
+    sectionFrame.layoutSizingHorizontal = 'FILL'
+    sectionFrame.layoutSizingVertical = 'HUG'
     sectionFrame.fills = []
     root.appendChild(sectionFrame)
-    sectionFrame.layoutSizingHorizontal = 'FILL'
 
     if (runId) {
       sectionFrame.setPluginData('dsb_run_id', runId)

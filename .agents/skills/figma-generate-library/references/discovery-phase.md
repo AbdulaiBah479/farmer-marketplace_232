@@ -147,7 +147,7 @@ CSS `0 4px 6px -1px rgba(0,0,0,0.1)` → Figma:
 |---|---|
 | `font-size: 16px` | FLOAT variable (scope `FONT_SIZE`) or Text Style `fontSize` |
 | `line-height: 1.5` | Text Style `lineHeight: {value: 24, unit: "PIXELS"}` |
-| `font-weight: 600` | STRING variable (scope `FONT_STYLE`, holds a font-specific style name like `"Regular"` — discover via `listAvailableFontsAsync()`) or Text Style `fontName.style` |
+| `font-weight: 600` | Text Style `fontName: {family: "Inter", style: "Semi Bold"}` |
 | `letter-spacing: -0.02em` | Text Style `letterSpacing: {value: -2, unit: "PERCENT"}` |
 | `font-family: "Inter"` | STRING variable (scope `FONT_FAMILY`) or Text Style `fontName.family` |
 
@@ -184,13 +184,17 @@ Run these `use_figma` snippets at the start of every build. All are read-only an
 ### List All Pages
 
 ```javascript
-const pages = figma.root.children.map((p, i) => ({
-  index: i,
-  name: p.name,
-  id: p.id,
-  childCount: p.children.length
-}));
-return { pages };
+(async () => {
+  try {
+    const pages = figma.root.children.map((p, i) => ({
+      index: i,
+      name: p.name,
+      id: p.id,
+      childCount: p.children.length
+    }));
+    figma.closePlugin(JSON.stringify({ pages }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 Interpret: note page names for naming convention (are they PascalCase? sentence case?), count separator pages (`---`), identify existing component pages vs foundations pages.
@@ -198,15 +202,19 @@ Interpret: note page names for naming convention (are they PascalCase? sentence 
 ### List Variable Collections With Modes
 
 ```javascript
-const collections = await figma.variables.getLocalVariableCollectionsAsync();
-const result = collections.map(c => ({
-  id: c.id,
-  name: c.name,
-  modes: c.modes,                    // [{modeId, name}, ...]
-  variableCount: c.variableIds.length,
-  defaultModeId: c.defaultModeId
-}));
-return { collections: result };
+(async () => {
+  try {
+    const collections = await figma.variables.getLocalVariableCollectionsAsync();
+    const result = collections.map(c => ({
+      id: c.id,
+      name: c.name,
+      modes: c.modes,                    // [{modeId, name}, ...]
+      variableCount: c.variableIds.length,
+      defaultModeId: c.defaultModeId
+    }));
+    figma.closePlugin(JSON.stringify({ collections: result }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 Interpret: identify existing primitive/semantic split, note mode names (do they use "Light/Dark" or "SDS Light/SDS Dark"?), count variables to understand scope.
@@ -214,25 +222,29 @@ Interpret: identify existing primitive/semantic split, note mode names (do they 
 ### List Variables in a Collection (with names, types, scopes, and sample values)
 
 ```javascript
-const collections = await figma.variables.getLocalVariableCollectionsAsync();
-const targetName = "Color"; // change to the collection you want to inspect
-const coll = collections.find(c => c.name === targetName);
-if (!coll) { return { error: `Collection "${targetName}" not found` }; }
+(async () => {
+  try {
+    const collections = await figma.variables.getLocalVariableCollectionsAsync();
+    const targetName = "Color"; // change to the collection you want to inspect
+    const coll = collections.find(c => c.name === targetName);
+    if (!coll) { figma.closePlugin(JSON.stringify({ error: `Collection "${targetName}" not found` })); return; }
 
-const allVars = await figma.variables.getLocalVariablesAsync();
-const vars = allVars.filter(v => v.variableCollectionId === coll.id);
+    const allVars = await figma.variables.getLocalVariablesAsync();
+    const vars = allVars.filter(v => v.variableCollectionId === coll.id);
 
-const result = vars.map(v => ({
-  id: v.id,
-  name: v.name,
-  resolvedType: v.resolvedType,
-  scopes: v.scopes,
-  codeSyntax: v.codeSyntax,
-  // First mode value only, for a sample
-  sampleValue: v.valuesByMode[coll.defaultModeId]
-}));
+    const result = vars.map(v => ({
+      id: v.id,
+      name: v.name,
+      resolvedType: v.resolvedType,
+      scopes: v.scopes,
+      codeSyntax: v.codeSyntax,
+      // First mode value only, for a sample
+      sampleValue: v.valuesByMode[coll.defaultModeId]
+    }));
 
-return { collection: coll.name, variableCount: result.length, variables: result };
+    figma.closePlugin(JSON.stringify({ collection: coll.name, variableCount: result.length, variables: result }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 Interpret: check if variables use `ALL_SCOPES` (bad), check naming convention (slash-separated hierarchy?), check if code syntax is set, identify alias chains.
@@ -240,132 +252,103 @@ Interpret: check if variables use `ALL_SCOPES` (bad), check naming convention (s
 ### List Component Sets with Properties
 
 ```javascript
-// Read-only inspection — skip invisible instance interiors for speed.
-figma.skipInvisibleInstanceChildren = true;
-
-// To inspect a specific page, switch to it first:
-// await figma.setCurrentPageAsync(targetPage);
-const componentSets = figma.currentPage.findAllWithCriteria({ types: ['COMPONENT_SET'] });
-const result = componentSets.map(cs => ({
-  id: cs.id,
-  name: cs.name,
-  variantCount: cs.children.length,
-  properties: Object.entries(cs.componentPropertyDefinitions).map(([key, def]) => ({
-    name: key,
-    type: def.type,
-    variantOptions: def.variantOptions || null,
-    defaultValue: def.defaultValue
-  }))
-}));
-return { componentSets: result, count: result.length };
+(async () => {
+  try {
+    await figma.setCurrentPageAsync(figma.currentPage); // ensures page context
+    const componentSets = figma.currentPage.findAll(n => n.type === 'COMPONENT_SET');
+    const result = componentSets.map(cs => ({
+      id: cs.id,
+      name: cs.name,
+      variantCount: cs.children.length,
+      properties: Object.entries(cs.componentPropertyDefinitions).map(([key, def]) => ({
+        name: key,
+        type: def.type,
+        variantOptions: def.variantOptions || null,
+        defaultValue: def.defaultValue
+      }))
+    }));
+    figma.closePlugin(JSON.stringify({ componentSets: result, count: result.length }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
-Note: to search ALL pages, **do not iterate `figma.root.children` and `setCurrentPageAsync` inside one script.** Run a cheap discovery call first (`figma.root.children.map(p => ({id: p.id, name: p.name}))`), then in the next assistant turn emit **one `use_figma` per page in parallel** — a single message with N tool-use blocks — each setting `currentPage` once. See [figma-use → gotchas.md → Set current page once per `use_figma` call](../../figma-use/references/gotchas.md#set-current-page-once-per-use_figma-call--split-multi-page-work-into-parallel-calls).
+Note: to search ALL pages, iterate `figma.root.children` and `setCurrentPageAsync` for each.
 
 ### List All Styles
 
 ```javascript
-const [textStyles, effectStyles, paintStyles] = await Promise.all([
-  figma.getLocalTextStylesAsync(),
-  figma.getLocalEffectStylesAsync(),
-  figma.getLocalPaintStylesAsync()
-]);
+(async () => {
+  try {
+    const [textStyles, effectStyles, paintStyles] = await Promise.all([
+      figma.getLocalTextStylesAsync(),
+      figma.getLocalEffectStylesAsync(),
+      figma.getLocalPaintStylesAsync()
+    ]);
 
-return {
-  textStyles: textStyles.map(s => ({ id: s.id, name: s.name, fontSize: s.fontSize, fontName: s.fontName })),
-  effectStyles: effectStyles.map(s => ({ id: s.id, name: s.name, effectCount: s.effects.length })),
-  paintStyles: paintStyles.map(s => ({ id: s.id, name: s.name })),
-  counts: { text: textStyles.length, effect: effectStyles.length, paint: paintStyles.length }
-};
+    figma.closePlugin(JSON.stringify({
+      textStyles: textStyles.map(s => ({ id: s.id, name: s.name, fontSize: s.fontSize, fontName: s.fontName })),
+      effectStyles: effectStyles.map(s => ({ id: s.id, name: s.name, effectCount: s.effects.length })),
+      paintStyles: paintStyles.map(s => ({ id: s.id, name: s.name })),
+      counts: { text: textStyles.length, effect: effectStyles.length, paint: paintStyles.length }
+    }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 ### Check Naming Conventions on an Existing Component
 
 ```javascript
-// Replace with the node ID of an existing component to analyze
-const node = await figma.getNodeByIdAsync("YOUR_NODE_ID");
-if (!node) { return { error: "Node not found" }; }
+(async () => {
+  try {
+    // Replace with the node ID of an existing component to analyze
+    const node = await figma.getNodeByIdAsync("YOUR_NODE_ID");
+    if (!node) { figma.closePlugin(JSON.stringify({ error: "Node not found" })); return; }
 
-// Check fills for variable bindings
-const fillInfo = [];
-if ('fills' in node && Array.isArray(node.fills)) {
-  for (const fill of node.fills) {
-    if (fill.type === 'SOLID' && fill.boundVariables?.color) {
-      fillInfo.push({ type: 'variable_alias', id: fill.boundVariables.color.id });
-    } else if (fill.type === 'SOLID') {
-      fillInfo.push({ type: 'hardcoded', r: fill.color.r, g: fill.color.g, b: fill.color.b });
+    // Check fills for variable bindings
+    const fillInfo = [];
+    if ('fills' in node && Array.isArray(node.fills)) {
+      for (const fill of node.fills) {
+        if (fill.type === 'SOLID' && fill.boundVariables?.color) {
+          fillInfo.push({ type: 'variable_alias', id: fill.boundVariables.color.id });
+        } else if (fill.type === 'SOLID') {
+          fillInfo.push({ type: 'hardcoded', r: fill.color.r, g: fill.color.g, b: fill.color.b });
+        }
+      }
     }
-  }
-}
 
-return {
-  name: node.name,
-  type: node.type,
-  fills: fillInfo,
-  sharedPluginData: node.getSharedPluginData('dsb', 'key') || null
-};
+    figma.closePlugin(JSON.stringify({
+      name: node.name,
+      type: node.type,
+      fills: fillInfo,
+      pluginData: node.getPluginData('dsb_key') || null
+    }));
+  } catch(e) { figma.closePluginWithFailure(e.toString()); }
+})();
 ```
 
 ---
 
-## 3. Library Discovery and search_design_system
+## 3. Using search_design_system
 
-### Step 1: Discover available libraries with `get_libraries`
+### What It Searches
 
-Before searching, call `get_libraries` to see what libraries the file has access to:
-
-```
-get_libraries({ fileKey: "abc123" })
-// offset is optional; omit (or pass 0) for the first page
-```
-
-Returns:
-- **`libraries_added_to_file`** — libraries currently subscribed (team libraries, community UI kits already enabled)
-- **`libraries_available_to_add`** — community UI kits and org libraries not yet subscribed
-- **`libraries_available_to_add_next_offset`** — non-null when more org libraries are available; pass it back as `offset` to fetch the next page
-
-Each library entry includes `name`, `libraryKey`, `description`, and `source` ("team", "community", or "organization"). Use the `libraryKey` values to scope searches in the next step.
-
-**Pagination.** Org libraries paginate in batches of 20. Community UI kits are only returned on the first page (`offset=0`), so subsequent pages contain only org libraries. If the user is looking for a specific library by name and it isn't in the current page, page further (call `get_libraries` again with `offset: libraries_available_to_add_next_offset`) or ask them to subscribe it to the file.
-
-```
-// Page 1
-get_libraries({ fileKey: "abc123" })
-// → { ..., libraries_available_to_add_next_offset: 20 }
-
-// Page 2
-get_libraries({ fileKey: "abc123", offset: 20 })
-// → { ..., libraries_available_to_add_next_offset: 40 | null }
-```
-
-### Step 2: Search with `search_design_system`
-
-`search_design_system` runs three parallel searches against design libraries for the given file:
+`search_design_system` runs three parallel searches against **subscribed design libraries** for the given file:
 
 1. **Components** — published library components, searched by name/description via a recommendation engine (relevance-ranked, not exact match)
 2. **Variables** — design tokens (colors, spacing, etc.) across subscribed libraries
 3. **Styles** — paint styles, text styles, and effect styles
 
-By default it searches all accessible libraries. Pass `includeLibraryKeys` to search within specific libraries only. This is useful when you have many libraries and want targeted results.
+Only libraries the file has subscribed to are searched. If results are empty, the file may not be subscribed to any design system libraries.
 
 ### Input
 
 ```
-// Search all libraries
 search_design_system({
   query: "button",              // required — text query
   fileKey: "abc123",            // required — your file key
   includeComponents: true,      // default true
   includeVariables: true,       // default true
   includeStyles: true           // default true
-})
-
-// Search a specific library only (use libraryKey from get_libraries)
-search_design_system({
-  query: "button",
-  fileKey: "abc123",
-  includeLibraryKeys: ["lk-abc123..."],
-  includeComponents: true
 })
 ```
 
@@ -388,7 +371,7 @@ search_design_system({
       "variableType": "COLOR",
       "variableSetKey": "set1key",
       "key": "var1key",
-      "scopes": ["FRAME_FILL", "SHAPE_FILL"],
+      "scopes": ["FILL_COLOR"],
       "variableCollectionName": "Colors"
     }
   ],

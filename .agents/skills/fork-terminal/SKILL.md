@@ -1,166 +1,265 @@
 ---
-name: Fork Terminal
-description: Spawn parallel AI agents in new terminal windows for true concurrency
-triggers:
-  - "fork terminal"
-  - "spawn agent"
-  - "parallel execution"
-  - "fork"
-  - "run in parallel"
+name: fork-terminal
+description: Spawn new terminal windows to run Claude Code, Gemini CLI, or raw CLI commands in parallel. Use when the user wants to fork a task, spawn an agent, run parallel work, delegate a task to a new terminal, or mentions "fork", "spawn", "new terminal", "parallel agent".
 ---
 
 # Fork Terminal Skill
 
-Execute multiple AI agents concurrently in separate terminal windows, each with full context and task isolation.
+Spawn new terminal windows to run AI agents or CLI commands in parallel sessions.
+Enables "out-of-loop" agentic coding where forked agents handle routine tasks independently.
 
-## Core Concept
+## Variables
 
-**Compute Advantage Equation**:
+```yaml
+# Feature Flags
+enable_gemini_cli: false          # Set to true to enable Gemini CLI support
+enable_raw_cli: true              # Enable raw CLI command execution
+auto_context_handoff: true        # Automatically pass context summary
+capture_output: true              # Save output to logs/forks/
+
+# Defaults
+default_model: sonnet             # haiku | sonnet | opus
+
+# Model Mapping
+model_haiku: claude-3-5-haiku-20241022
+model_sonnet: claude-sonnet-4-20250514
+model_opus: claude-opus-4-20250514
 ```
-Engineering Output = (# of Parallel Agents) × (Quality of Specs) × (Agent Autonomy)
-```
 
-Forking terminals allows you to multiply your development capacity by running agents in parallel.
+## When to Use
 
-## Supported Agents
+Activate this skill when the user:
+- Says "fork", "spawn agent", "run in new terminal", "delegate", "parallel"
+- Wants to run Claude Code or Gemini in a separate session
+- Needs parallel work on different tasks
+- Mentions "new window", "background task", "separate agent"
+- Wants to delegate routine tasks (bug fixes, tests, research)
 
-| Agent | Command Prefix | Best For |
-|-------|---------------|----------|
-| Claude Code | `claude code` | Backend, architecture, TypeScript, Python, full-stack |
-| Gemini CLI | `gemini` | Frontend, UI/UX, design, animations, creative work |
-| GPT-4 CLI | `gpt4` | Documentation, content, general tasks |
+## Quick Reference (Natural Language)
 
-## Usage Patterns
+| User Says | What Happens |
+|-----------|--------------|
+| "Fork a Claude agent to [task]" | Spawn Claude Code agent with task |
+| "Fork Gemini to [task]" | Spawn Gemini CLI (if enabled) |
+| "Fork a raw terminal to run [command]" | Run CLI command in new terminal |
+| "Show fork status" | Show running/completed tasks |
+| "List all forked tasks" | List all tracked forks |
+| "Kill fork [id]" | Terminate a running fork |
+| "Kill all forks" | Terminate all running forks |
+| "Fork a bugfix agent for [desc]" | Preset: spawn bugfix agent |
+| "Fork a research agent to explore [topic]" | Preset: spawn research agent |
+| "Fork to run tests" | Preset: run and fix tests |
+| "Fork a review agent" | Preset: code review agent |
 
-### Single Fork
+## Flags
+
+All commands support these flags:
+
+| Flag | Purpose |
+|------|---------|
+| `--model haiku\|sonnet\|opus` | Select model tier |
+| `--with-context` | Pass condensed context summary to forked agent |
+| `--worktree` | Create git worktree for isolation |
+| `--no-output` | Don't capture output to logs |
+| `--skip-permissions` | Add --dangerously-skip-permissions (trusted automation) |
+| `--new-window` | Force new window instead of tab (Windows Terminal only) |
+
+## Instructions
+
+### Step 1: Parse Request
+
+Determine the fork type from user's message:
+
+1. **Check for preset names first:**
+   - "bugfix", "research", "tests", "review" → Route to preset handling
+   - Read `cookbook/presets.md` for preset configuration
+
+2. **Determine fork type:**
+   - Mentions "claude", "code", or no specific CLI → Claude Code fork
+   - Mentions "gemini" AND `enable_gemini_cli=true` → Gemini CLI fork
+   - Mentions "raw", "cli", "command", "run" → Raw CLI fork
+   - Mentions "status", "list", "kill" → Management command (no spawn)
+
+3. **Extract the task:**
+   - The task is whatever the user wants the forked agent to do
+   - Be specific and actionable
+
+### Step 2: Handle Management Commands
+
+If request is a management command (status, list, kill):
+
+**For "show fork status":**
 ```bash
-"fork terminal use claude code to implement backend API from specs/api-spec.md"
+uv run tools/task_registry.py status
 ```
 
-### Multiple Parallel Forks
+**For "list forked tasks":**
 ```bash
-"fork 3 terminals:
- 1. Claude Code: Implement database migrations
- 2. Gemini: Design and build UI components
- 3. Claude Code: Write integration tests"
+uv run tools/task_registry.py list
 ```
 
-### With Model Override
+**For "kill fork [id]":**
 ```bash
-"fork terminal use claude code with opus model to refactor entire codebase architecture"
+uv run tools/task_registry.py update --id <id> --status failed --notes "Manually killed"
+```
+Note: This marks the task as failed but doesn't actually terminate the terminal.
+Inform user they may need to close the terminal manually.
+
+**For "kill all forks":**
+```bash
+uv run tools/task_registry.py clear --status running
 ```
 
-## Context Handoff
+Skip remaining steps for management commands.
 
-When forking, automatically pass:
-- Current project specification (SPEC_TEMPLATE.md)
-- Recent conversation (last 5-10 messages)
-- Relevant file paths and contents
-- Active task from TodoWrite
-- Project context from CLAUDE.md
+### Step 3: Parse Flags
 
-## Implementation
+Extract flags from the request:
 
-Uses `fork_terminal.py` (if available) or manual terminal spawning:
+| If user says... | Flag |
+|-----------------|------|
+| "--model X" or "use X model" | `--model X` |
+| "--with-context" or "pass context" or "include context" | `--with-context` |
+| "--worktree" or "use worktree" or "isolate" | `--worktree` |
+| "--no-output" or "no logs" | `--no-output` |
+| "skip permissions" or "trusted" | `--skip-permissions` |
 
-1. Detect OS (macOS: `open`, Linux: `gnome-terminal` or `xterm`, Windows: `cmd`)
-2. Spawn new terminal window
-3. Navigate to project directory
-4. Start agent with context file
-5. Monitor via logs in `temp/logs/fork-{timestamp}.log`
+### Step 4: Context Handoff (if --with-context)
 
-## Git Worktree Integration
+If context handoff is requested:
 
-For complete isolation:
+1. **Read the fork summary user prompt:**
+   Read `prompts/fork_summary_user_prompt.md` to understand how to generate a summary.
+
+2. **Generate a condensed context summary:**
+   Following the prompt's instructions, create a summary including:
+   - The delegated task (most important)
+   - What you've been working on
+   - Key files touched
+   - Important decisions made
+   - Current state/blockers
+
+3. **Save the context:**
+   ```bash
+   uv run tools/context_builder.py --task "<delegated task>" --context "<background>" --files <file1> <file2>
+   ```
+
+4. **Note the context file path** for passing to fork_terminal.py
+
+### Step 5: Create Worktree (if --worktree)
+
+If worktree isolation is requested:
+
+1. **Read worktree guide:**
+   Read `cookbook/worktree-guide.md` for patterns.
+
+2. **Create worktree:**
+   ```bash
+   uv run tools/worktree_manager.py create --branch fork/<task-name> --task "<task>"
+   ```
+
+3. **Note the worktree path** - use it as the CWD for fork_terminal.py
+
+### Step 6: Execute Fork
+
+Run the fork terminal script:
 
 ```bash
-# Create isolated environment
-git worktree add ../project-feature-x -b feature/x
-
-# Fork into worktree
-"fork terminal in worktree ../project-feature-x use claude code to implement feature X"
+uv run tools/fork_terminal.py \
+  --type <claude|gemini|raw> \
+  --task "<task>" \
+  --model <haiku|sonnet|opus> \
+  --cwd "<working-directory>" \
+  [--with-context <context-file>] \
+  [--no-output] \
+  [--skip-permissions]
 ```
 
-Each agent works in separate git worktree = zero conflicts.
+### Step 7: Register Task
 
-## Monitoring
+The fork_terminal.py script returns a JSON result. Extract the task_id and register it:
 
-All forked agents log to:
-- `temp/logs/fork-{agent}-{timestamp}.log`
-- Monitored via hooks system (if enabled)
-- Aggregated in main session
-
-## Best Practices
-
-**When to Fork**:
-- Independent features that can be built in parallel
-- Frontend + Backend simultaneous development
-- Research while implementation continues
-- Testing while new features are being developed
-
-**When NOT to Fork**:
-- Tasks depend on each other sequentially
-- Single file needs editing by multiple agents (conflicts)
-- Simple tasks that take <5 minutes
-
-## Example Workflows
-
-### Full-Stack Parallel Development
 ```bash
-"I'm building a SaaS dashboard.
-
-Fork 3 terminals:
-1. Claude Code: Create Next.js API routes for user management
-   - Read: SPEC_TEMPLATE.md section on backend
-   - Create: src/app/api/users/route.ts
-   - Implement: CRUD operations with Supabase
-
-2. Gemini: Design dashboard UI components
-   - Read: SPEC_TEMPLATE.md section on UI requirements
-   - Reference: .ai/design.json for design system
-   - Create: src/components/Dashboard.tsx
-
-3. Claude Code: Set up database schema and RLS
-   - Read: SPEC_TEMPLATE.md database requirements
-   - Create: database/migrations/001_initial_schema.sql
-   - Enable: RLS on all tables"
+uv run tools/task_registry.py add \
+  --id <task_id> \
+  --task "<task>" \
+  --type <claude|gemini|raw> \
+  --model <model> \
+  --cwd "<cwd>" \
+  --output-file "<output-file>" \
+  [--context-file "<context-file>"] \
+  [--preset "<preset-name>"]
 ```
 
-### Research + Implementation
-```bash
-"fork 2 terminals:
-1. Claude Code (research): Research best practices for WebSocket implementation in Next.js 14
-   - Use Deep Research skill
-   - Save findings to: temp/research/websocket-patterns.md
+### Step 8: Confirm to User
 
-2. Claude Code (implementation): Continue building REST API
-   - Complete all CRUD endpoints
-   - Add error handling
-   - Write tests"
+Report back to the user:
+
+1. **Task ID** for tracking
+2. **Command** being executed
+3. **Output location** if capturing
+4. **How to check status** (say "show fork status")
+
+Example confirmation:
+```
+Forked Claude Code agent (task: abc123)
+- Task: Fix the null pointer in user.email validation
+- Model: sonnet
+- Working directory: C:\project
+- Output: logs/forks/2024-12-27_fix-null-pointer_abc123.md
+
+Say "show fork status" or "list forked tasks" to check progress.
 ```
 
-### Experimental Approaches
-```bash
-"fork 2 terminals to try different approaches:
-1. Claude Code: Implement feature using LangGraph multi-agent pattern
-2. Claude Code: Implement same feature using simple sequential processing
+## Progressive Disclosure
 
-Test both, keep the better one."
-```
+### If fork type is Claude Code:
+Read `cookbook/claude-code.md` for Claude CLI flags, patterns, and best practices.
 
-## Integration with Main Session
+### If fork type is Gemini CLI:
+Read `cookbook/gemini-cli.md` for Gemini CLI usage.
+Note: Only available if `enable_gemini_cli=true` in variables.
 
-Forked agents report back by:
-1. Updating shared `PROGRESS.md`
-2. Committing code to feature branches
-3. Adding entries to `directives/learning.json`
-4. Logging to `temp/logs/`
+### If using a preset:
+Read `cookbook/presets.md` and apply the matching preset configuration.
+Presets define model tier, context settings, and task templates.
 
-Main session monitors forks and can:
-- Check progress via log files
-- Review commits via `git log`
-- Aggregate results when forks complete
+### If --worktree flag used:
+Read `cookbook/worktree-guide.md` for worktree creation and management.
 
----
+## Error Handling
 
-**Remember**: Forking is about multiplying your capacity. Use it liberally for parallel work!
+| Error | Action |
+|-------|--------|
+| Windows Terminal not found | Fall back to PowerShell (automatic) |
+| Task fails to spawn | Report error, don't register task |
+| Output capture fails | Continue without capture, warn user |
+| Git worktree creation fails | Abort, report error to user |
+| Not in git repo (worktree) | Inform user worktree requires git repo |
+| Gemini CLI requested but disabled | Inform user to enable in variables |
+
+## Key Principles
+
+From IndyDevDan's agentic coding philosophy:
+
+1. **Fresh context windows are essential** - Forked agents start clean, avoiding context pollution
+2. **In-loop vs Out-of-loop** - Complex work = in-loop (current session); routine tasks = out-of-loop (forked)
+3. **Simple solutions are better** - Don't over-engineer the fork; let the agent figure things out
+4. **Eliminate confusion** - Be specific about what the forked agent should do
+5. **There's no reason to manually fix small bugs** when agents can handle them out-of-loop
+
+## Files Reference
+
+| File | Purpose |
+|------|---------|
+| `tools/fork_terminal.py` | Core cross-platform terminal spawning |
+| `tools/task_registry.py` | Track running/completed tasks |
+| `tools/context_builder.py` | Build context handoff files |
+| `tools/worktree_manager.py` | Git worktree management |
+| `prompts/fork_summary_user_prompt.md` | How to generate context summary |
+| `prompts/fork-summary.md` | Template forked agent receives |
+| `cookbook/claude-code.md` | Claude CLI reference |
+| `cookbook/presets.md` | Preset definitions |
+| `cookbook/worktree-guide.md` | Worktree patterns |
+| `data/forked-tasks.json` | Task registry (auto-created) |
+| `logs/forks/` | Output logs from forked agents |

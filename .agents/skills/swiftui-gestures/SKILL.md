@@ -1,13 +1,13 @@
 ---
 name: swiftui-gestures
-description: "Implement, review, or improve SwiftUI gesture handling. Use when adding tap, long press, drag, magnify, or rotate gestures, composing gestures with simultaneously/sequenced/exclusively, managing transient state with @GestureState, resolving parent/child gesture conflicts with highPriorityGesture or simultaneousGesture, building custom Gesture protocol conformances, or migrating from deprecated MagnificationGesture to MagnifyGesture or using the newer RotateGesture."
+description: "Implement, review, or improve SwiftUI gesture handling. Use when adding tap, long press, drag, magnify, or rotate gestures, composing gestures with simultaneously/sequenced/exclusively, managing transient state with @GestureState, resolving parent/child gesture conflicts with highPriorityGesture or simultaneousGesture, building custom Gesture protocol conformances, or migrating from deprecated MagnificationGesture/RotationGesture to MagnifyGesture/RotateGesture."
 ---
 
 # SwiftUI Gestures (iOS 26+)
 
 Review, write, and fix SwiftUI gesture interactions. Apply modern gesture APIs
 with correct composition, state management, and conflict resolution using
-Swift 6.3 patterns.
+Swift 6.2 patterns.
 
 ## Contents
 
@@ -18,7 +18,7 @@ Swift 6.3 patterns.
 - [MagnifyGesture (iOS 17+)](#magnifygesture-ios-17)
 - [RotateGesture (iOS 17+)](#rotategesture-ios-17)
 - [Gesture Composition](#gesture-composition)
-- [`@GestureState`](#gesturestate)
+- [@GestureState](#gesturestate)
 - [Adding Gestures to Views](#adding-gestures-to-views)
 - [Custom Gesture Protocol](#custom-gesture-protocol)
 - [Common Mistakes](#common-mistakes)
@@ -147,7 +147,7 @@ Image("photo")
 
 ## RotateGesture (iOS 17+)
 
-`RotateGesture` is the newer alternative to `RotationGesture`. Tracks two-finger rotation angle.
+Replaces the deprecated `RotationGesture`. Tracks two-finger rotation angle.
 
 ```swift
 @State private var angle = Angle.zero
@@ -224,7 +224,7 @@ let doubleTapOrLongPress = TapGesture(count: 2)
     }
 ```
 
-## `@GestureState`
+## @GestureState
 
 `@GestureState` is a property wrapper that **automatically resets** to its
 initial value when the gesture ends. Use for transient feedback; use `@State`
@@ -354,7 +354,7 @@ VStack {
 .simultaneousGesture(TapGesture().onEnded { parentAction() })
 ```
 
-### 2. Using `@State` instead of `@GestureState` for transient state
+### 2. Using @State instead of @GestureState for transient state
 
 ```swift
 // DON'T: @State doesn't auto-reset — view stays offset after gesture ends
@@ -394,11 +394,12 @@ LongPressGesture(minimumDuration: 2.0)
 
 ```swift
 // DON'T: Deprecated since iOS 17
-MagnificationGesture()   // deprecated — use MagnifyGesture()
+MagnificationGesture()   // deprecated
+RotationGesture()        // deprecated
 
-// DO: Use newer gesture types
+// DO: Use modern replacements
 MagnifyGesture()         // iOS 17+
-RotateGesture()          // iOS 17+ (newer alternative to RotationGesture)
+RotateGesture()          // iOS 17+
 ```
 
 ### 5. Heavy computation in onChanged
@@ -422,28 +423,6 @@ DragGesture()
     }
 ```
 
-### 6. Using onTapGesture for actions that should be a Button
-
-```swift
-// DON'T: onTapGesture has no accessibility traits, VoiceOver role,
-// Voice Control targeting, Switch Control scanning, or keyboard activation
-Text("Delete")
-    .onTapGesture { deleteItem() }
-
-// DO: Button provides all of these automatically
-Button("Delete", role: .destructive) { deleteItem() }
-
-// DO: For custom visuals, use ButtonStyle instead of onTapGesture
-Button { toggleExpanded() } label: {
-    CardView()
-}
-.buttonStyle(.plain)
-```
-
-Reserve `onTapGesture` for multi-tap (`count: 2+`), tap-location-dependent
-behavior, or adding tap recognition to non-interactive content that already
-has appropriate accessibility traits.
-
 ## Review Checklist
 
 - [ ] Correct gesture type: `MagnifyGesture`/`RotateGesture` (not deprecated `Magnification`/`Rotation` variants)
@@ -456,11 +435,10 @@ has appropriate accessibility traits.
 - [ ] Custom `Gesture` conformances use `var body: some Gesture` (not `View`)
 - [ ] Gesture-driven animations use `.spring` or similar for natural deceleration
 - [ ] `GestureMask` considered when mixing gestures across view hierarchy levels
-- [ ] `onTapGesture` only used where `count > 1`, tap location, or coordinate space matters — plain single-tap actions use `Button` instead
 
 ## References
 
-- See [references/gesture-patterns.md](references/gesture-patterns.md) for drag-to-reorder, pinch-to-zoom, combined rotate+scale, velocity calculations, and SwiftUI/UIKit gesture interop.
+- See `references/gesture-patterns.md` for drag-to-reorder, pinch-to-zoom, combined rotate+scale, velocity calculations, and SwiftUI/UIKit gesture interop.
 - [Gesture protocol](https://sosumi.ai/documentation/swiftui/gesture)
 - [TapGesture](https://sosumi.ai/documentation/swiftui/tapgesture)
 - [LongPressGesture](https://sosumi.ai/documentation/swiftui/longpressgesture)

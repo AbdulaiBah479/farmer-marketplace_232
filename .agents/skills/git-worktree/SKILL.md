@@ -1,169 +1,206 @@
 ---
-name: git-worktree
-description: >
-  Git worktree を使った複数ブランチの同時作業管理。
-  使用タイミング: (1) 複数機能を並行開発したい時 (2) PRレビュー中に別作業したい時
-  (3) 本番ホットフィックスと開発を同時進行したい時 (4) worktreeの使い方を知りたい時。
-  トリガー例: 「worktreeで」「別ブランチを同時に」「並行開発したい」
-  「PRレビューしながら開発」「ホットフィックス用のworktree」
+name: git:worktree
+description: Create and manage git worktrees for parallel development and testing
 ---
 
-# git-worktree - Git Worktree 操作
+# Git Worktree Skill
 
-複数ブランチを同時に作業するための Git worktree 管理。
+Manage git worktrees for parallel development workflows.
 
----
+## When to Use
 
-## 概要
+- Need to work on multiple branches simultaneously
+- Testing features in isolation
+- Reviewing PRs without switching branches
+- Running CI-like tests locally
 
-Git worktree を使うと、1つのリポジトリから複数の作業ディレクトリを作成できる。
+## Quick Start
 
-**メリット**:
-- ブランチ切り替えなしで複数機能を並行開発
-- PRレビュー中に別作業が可能
-- 本番ホットフィックスと開発を同時進行
-
----
-
-## 基本コマンド
-
-### Worktree 作成
+### Create Worktree
 
 ```bash
-# 新規ブランチで作成
-git worktree add ../project-feature-x feature-x
+# New branch from main
+git worktree add .worktrees/<name> -b <branch-name> main
 
-# 既存ブランチで作成
-git worktree add ../project-hotfix hotfix/urgent-fix
+# Existing branch
+git worktree add .worktrees/<name> <existing-branch>
 
-# リモートブランチをチェックアウト
-git worktree add ../project-review origin/feature-y
+# Specific commit
+git worktree add .worktrees/<name> <commit-sha>
 ```
 
-### Worktree 一覧
+### List Worktrees
 
 ```bash
 git worktree list
 ```
 
-出力例:
-```
-/path/to/project          abc1234 [main]
-/path/to/project-feature  def5678 [feature-x]
-/path/to/project-hotfix   ghi9012 [hotfix/urgent-fix]
-```
-
-### Worktree 削除
+### Remove Worktree
 
 ```bash
-# 作業ディレクトリを削除
-rm -rf ../project-feature-x
+# Normal remove
+git worktree remove .worktrees/<name>
 
-# Git から登録解除
+# Force remove (discards changes)
+git worktree remove --force .worktrees/<name>
+
+# Prune stale references
 git worktree prune
 ```
 
-または一括:
-```bash
-git worktree remove ../project-feature-x
-```
+## Recommended Workflow
 
----
-
-## ワークフロー例
-
-### 1. 機能開発中にホットフィックス
+### 1. Create Feature Worktree
 
 ```bash
-# 現在: feature-x ブランチで開発中
-# 緊急: 本番バグ発生
-
-# ホットフィックス用 worktree 作成
-git worktree add ../project-hotfix -b hotfix/login-fix main
-
-# ホットフィックス作業
-cd ../project-hotfix
-# ... 修正 ...
-git commit -m "fix: resolve login issue"
-git push origin hotfix/login-fix
-
-# 元の作業に戻る
-cd ../project
-# feature-x の作業を継続
+# Create worktree for new feature
+git worktree add .worktrees/feature-auth -b feature-auth main
+cd .worktrees/feature-auth
 ```
 
-### 2. PRレビュー
+### 2. Work in Worktree
 
 ```bash
-# レビュー対象のブランチを worktree で開く
-git fetch origin
-git worktree add ../project-review origin/feature-y
-
-# レビュー
-cd ../project-review
-npm install
-npm run dev
-
-# レビュー完了後
-cd ../project
-git worktree remove ../project-review
+# Make changes, commit, push
+git add .
+git commit -m "Add auth feature"
+git push -u origin feature-auth
 ```
 
----
-
-## ベストプラクティス
-
-### ディレクトリ命名
-
-```
-project/              # メイン (main)
-project-feature-x/    # 機能開発
-project-hotfix/       # ホットフィックス
-project-review/       # PRレビュー
-```
-
-### 定期クリーンアップ
+### 3. Deploy and Test from Worktree
 
 ```bash
-# 不要な worktree を確認
-git worktree list
+# Source environment
+source ~/.kagenti-hypershift-env.sh
 
-# マージ済みブランチの worktree を削除
-git worktree remove ../project-merged-feature
+# Deploy from worktree to cluster
+KUBECONFIG=$HOSTED_KUBECONFIG ./deployments/ansible/run-install.sh --env ocp
 
-# 孤立した worktree を整理
+# Or use local-setup scripts
+./.github/scripts/local-setup/kind-full-test.sh --skip-cluster-destroy
+```
+
+### 4. Clean Up
+
+```bash
+# Return to main
+cd /path/to/main/repo
+
+# Remove worktree
+git worktree remove .worktrees/feature-auth
+
+# Delete branch if merged
+git branch -d feature-auth
+```
+
+## Directory Structure
+
+Keep worktrees organized:
+
+```
+kagenti/                    # Main worktree (main branch)
+├── .worktrees/             # Feature worktrees
+│   ├── feature-auth/       # Auth feature
+│   ├── fix-keycloak/       # Bug fix
+│   └── pr-review-123/      # PR review
+└── ...
+```
+
+Add to `.git/info/exclude`:
+```
+.worktrees/
+```
+
+## Using with TODO Docs
+
+Point worktree work to a TODO document in the main repo:
+
+```bash
+# Create worktree for TODO item
+git worktree add .worktrees/todo-phoenix -b todo-phoenix main
+cd .worktrees/todo-phoenix
+
+# Reference TODO from main repo
+cat /path/to/main/repo/docs/TODO_PHOENIX.md
+
+# Implement based on TODO
+# ...
+
+# Test deployment
+./.github/scripts/local-setup/hypershift-full-test.sh --skip-cluster-destroy
+```
+
+## Using with HyperShift
+
+Test worktree code on HyperShift clusters:
+
+```bash
+# Create worktree
+git worktree add .worktrees/my-feature -b my-feature main
+cd .worktrees/my-feature
+
+# Source environment (shared kubeconfig)
+source ~/.kagenti-hypershift-env.sh
+
+# Deploy to existing cluster
+KUBECONFIG=$HOSTED_KUBECONFIG ./deployments/ansible/run-install.sh --env ocp
+
+# Or create new cluster with this code
+./.github/scripts/local-setup/hypershift-full-test.sh --skip-cluster-destroy
+```
+
+## Using with Kind
+
+Test worktree code on local Kind cluster:
+
+```bash
+# Create worktree
+git worktree add .worktrees/my-feature -b my-feature main
+cd .worktrees/my-feature
+
+# Full test cycle
+./.github/scripts/local-setup/kind-full-test.sh --skip-cluster-destroy
+
+# Access UI
+./.github/scripts/kind/access-ui.sh
+```
+
+## Best Practices
+
+1. **Use .worktrees/ directory**: Keep worktrees in one place
+2. **Name descriptively**: `feature-auth`, `fix-keycloak`, `pr-123`
+3. **Share kubeconfigs**: Store in `$HOME`, not in worktree
+4. **Clean up regularly**: Remove merged worktrees
+5. **Prune stale refs**: Run `git worktree prune` periodically
+
+## Troubleshooting
+
+### Branch already checked out
+
+```bash
+# Find which worktree has the branch
+git worktree list | grep <branch-name>
+```
+
+### Worktree already exists
+
+```bash
+# Remove existing worktree
+git worktree remove .worktrees/<name>
+# Or force if changes exist
+git worktree remove --force .worktrees/<name>
+```
+
+### Stale worktree references
+
+```bash
+# Prune after manually deleting worktree directories
 git worktree prune
 ```
 
-### 注意点
+## Related Skills
 
-1. **同じブランチを複数 worktree で開けない**
-2. **node_modules は各 worktree で別途インストール必要**
-3. **.env ファイルもコピーが必要**
-
----
-
-## トラブルシューティング
-
-### "already checked out" エラー
-
-```bash
-# 別の worktree で使用中のブランチ
-git worktree list  # どこで使われているか確認
-```
-
-### 孤立した worktree
-
-```bash
-# ディレクトリを手動削除した場合
-git worktree prune
-```
-
-### ブランチ削除時
-
-```bash
-# worktree で使用中のブランチは削除できない
-# 先に worktree を削除する
-git worktree remove ../project-feature
-git branch -d feature
-```
+- **tdd:ci**: CI-driven TDD workflow (auto-creates worktree from upstream/main for GH issues/PRs)
+- **kind:cluster**: Local Kind cluster management
+- **hypershift:cluster**: HyperShift cluster management
+- **kagenti:operator**: Deploy Kagenti platform

@@ -1,397 +1,856 @@
 ---
 name: swiftui-patterns
-description: "Builds SwiftUI views with modern MV architecture, state management, and view composition patterns. Covers @Observable ownership rules, @State/@Bindable/@Environment wiring, view decomposition, custom ViewModifiers, environment values, async data loading with .task, iOS 26+ APIs, Writing Tools, and performance guidelines. Use when structuring a SwiftUI app, managing state with @Observable, composing view hierarchies, or applying SwiftUI best practices."
+description: SwiftUI開発パターン・ベストプラクティス。状態管理、ナビゲーション、レイアウト、アニメーション、パフォーマンス最適化など、モダンなSwiftUIアプリケーション開発の実践的なガイド。
 ---
 
-# SwiftUI Patterns
+# SwiftUI Patterns Skill
 
-Modern SwiftUI patterns targeting iOS 26+ with Swift 6.3. Covers architecture, state management, view composition, environment wiring, async loading, design polish, and platform/share integration. Navigation and layout patterns live in dedicated sibling skills. Patterns are backward-compatible to iOS 17 unless noted.
+## 📋 目次
 
-## Contents
+1. [概要](#概要)
+2. [状態管理パターン](#状態管理パターン)
+3. [ナビゲーション](#ナビゲーション)
+4. [レイアウトシステム](#レイアウトシステム)
+5. [データフロー](#データフロー)
+6. [パフォーマンス最適化](#パフォーマンス最適化)
+7. [アニメーション](#アニメーション)
+8. [再利用可能なコンポーネント](#再利用可能なコンポーネント)
+9. [テスト戦略](#テスト戦略)
+10. [よくある問題と解決策](#よくある問題と解決策)
 
-- [Architecture: Model-View (MV) Pattern](#architecture-model-view-mv-pattern)
-- [State Management](#state-management)
-- [View Ordering Convention](#view-ordering-convention)
-- [View Composition](#view-composition)
-- [Environment](#environment)
-- [Async Data Loading](#async-data-loading)
-- [iOS 26+ New APIs](#ios-26-new-apis)
-- [Performance Guidelines](#performance-guidelines)
-- [HIG Alignment](#hig-alignment)
-- [Writing Tools (iOS 18+)](#writing-tools-ios-18)
-- [Common Mistakes](#common-mistakes)
-- [Review Checklist](#review-checklist)
-- [References](#references)
+## 概要
 
-**Scope boundary:** This skill covers architecture, state ownership, composition, environment wiring, async loading, and related SwiftUI app structure patterns. Detailed navigation patterns are covered in the `swiftui-navigation` skill, including `NavigationStack`, `NavigationSplitView`, sheets, tabs, and deep-linking patterns. Detailed layout, container, and component patterns are covered in the `swiftui-layout-components` skill, including stacks, grids, lists, scroll view patterns, forms, controls, search UI with `.searchable`, overlays, and related layout components.
+SwiftUIアプリケーション開発における実践的なパターンとベストプラクティスを提供します。
 
-## Architecture: Model-View (MV) Pattern
+**対象:**
+- SwiftUIアプリケーション開発者
+- iOSエンジニア
+- モバイルアプリアーキテクト
 
-Default to MV -- views are lightweight state expressions; models and services own business logic. Do not introduce view models unless the existing code already uses them.
+**このSkillでできること:**
+- 適切な状態管理パターンの選択と実装
+- スケーラブルなナビゲーション設計
+- パフォーマンスの高いUIの構築
+- 保守性の高いコードベースの維持
 
-**Core principles:**
-- Favor `@State`, `@Environment`, `@Query`, `.task`, and `.onChange` for orchestration
-- Inject services and shared models via `@Environment`; keep views small and composable
-- Split large views into smaller subviews rather than introducing a view model
-- Test models, services, and business logic; keep views simple and declarative
+## 📚 公式ドキュメント・参考リソース
+
+**このガイドで学べること**: SwiftUI状態管理、ナビゲーション設計、レイアウトシステム、パフォーマンス最適化
+**公式で確認すべきこと**: 最新のSwiftUIアップデート、新しいAPIとモディファイア、iOS新機能
+
+### 主要な公式ドキュメント
+
+- **[SwiftUI Documentation](https://developer.apple.com/documentation/swiftui)** - Apple公式SwiftUIドキュメント
+  - [Tutorials](https://developer.apple.com/tutorials/swiftui)
+  - [Views and Controls](https://developer.apple.com/documentation/swiftui/views-and-controls)
+  - [State and Data Flow](https://developer.apple.com/documentation/swiftui/state-and-data-flow)
+
+- **[SwiftUI by Example](https://www.hackingwithswift.com/quick-start/swiftui)** - 実践的なSwiftUI学習リソース
+
+- **[Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)** - iOSデザインガイドライン
+  - [iOS Design](https://developer.apple.com/design/human-interface-guidelines/)
+
+- **[Combine Framework](https://developer.apple.com/documentation/combine)** - リアクティブプログラミング
+
+### 関連リソース
+
+- **[Swift by Sundell](https://www.swiftbysundell.com/)** - Swift/SwiftUIベストプラクティス
+- **[Point-Free](https://www.pointfree.co/)** - 高度なSwiftUI技法
+- **[SwiftUI Lab](https://swiftui-lab.com/)** - SwiftUI深掘り記事
+
+---
+
+## 状態管理パターン
+
+### @State - ローカル状態
+
+**使用場面:**
+- 単一Viewに閉じた状態
+- シンプルな値型の管理
 
 ```swift
-struct FeedView: View {
-    @Environment(FeedClient.self) private var client
-
-    enum ViewState {
-        case loading, error(String), loaded([Post])
-    }
-
-    @State private var viewState: ViewState = .loading
+struct CounterView: View {
+    @State private var count = 0
 
     var body: some View {
-        List {
-            switch viewState {
-            case .loading:
-                ProgressView()
-            case .error(let message):
-                ContentUnavailableView("Error", systemImage: "exclamationmark.triangle",
-                                       description: Text(message))
-            case .loaded(let posts):
-                ForEach(posts) { post in
-                    PostRow(post: post)
+        VStack {
+            Text("Count: \(count)")
+            Button("Increment") {
+                count += 1
+            }
+        }
+    }
+}
+```
+
+**ベストプラクティス:**
+- private修飾子を付ける
+- 値型（struct, enum, Int, String等）に使用
+- View階層外に公開しない
+
+### @Binding - 状態の共有
+
+**使用場面:**
+- 親Viewから状態を受け取る
+- 双方向データバインディング
+
+```swift
+struct ToggleView: View {
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle("Setting", isOn: $isOn)
+    }
+}
+
+struct ParentView: View {
+    @State private var setting = false
+
+    var body: some View {
+        ToggleView(isOn: $setting)
+    }
+}
+```
+
+**ベストプラクティス:**
+- 状態の所有権を明確にする
+- データの流れを一方向に保つ
+- プレビューでは.constant()を使用
+
+### @StateObject - 参照型の状態管理
+
+**使用場面:**
+- ObservableObjectのライフサイクル管理
+- View所有の複雑な状態
+
+```swift
+class TimerManager: ObservableObject {
+    @Published var seconds = 0
+    private var timer: Timer?
+
+    func start() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.seconds += 1
+        }
+    }
+
+    func stop() {
+        timer?.invalidate()
+    }
+}
+
+struct TimerView: View {
+    @StateObject private var timerManager = TimerManager()
+
+    var body: some View {
+        VStack {
+            Text("\(timerManager.seconds)")
+            Button("Start") { timerManager.start() }
+            Button("Stop") { timerManager.stop() }
+        }
+    }
+}
+```
+
+**ベストプラクティス:**
+- View所有のオブジェクトに使用
+- 初期化は@StateObjectで行う
+- 親から受け取る場合は@ObservedObject使用
+
+### @ObservedObject - 外部所有の状態
+
+**使用場面:**
+- 親から受け取ったObservableObject
+- 複数Viewで共有される状態
+
+```swift
+struct SettingsView: View {
+    @ObservedObject var settings: AppSettings
+
+    var body: some View {
+        Form {
+            Toggle("Notifications", isOn: $settings.notificationsEnabled)
+            Toggle("Dark Mode", isOn: $settings.darkModeEnabled)
+        }
+    }
+}
+```
+
+### @EnvironmentObject - グローバル状態
+
+**使用場面:**
+- アプリ全体で共有される状態
+- 深い階層への状態の伝播
+
+```swift
+class UserSession: ObservableObject {
+    @Published var isLoggedIn = false
+    @Published var username = ""
+}
+
+@main
+struct MyApp: App {
+    @StateObject private var session = UserSession()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(session)
+        }
+    }
+}
+
+struct ProfileView: View {
+    @EnvironmentObject var session: UserSession
+
+    var body: some View {
+        Text("Hello, \(session.username)")
+    }
+}
+```
+
+**ベストプラクティス:**
+- 本当に必要な場合のみ使用
+- プレビューでの注入を忘れない
+- 依存関係を明示的にする
+
+## ナビゲーション
+
+### NavigationStack（iOS 16+）
+
+**基本パターン:**
+
+```swift
+struct ContentView: View {
+    @State private var path = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            List {
+                NavigationLink("Settings", value: Route.settings)
+                NavigationLink("Profile", value: Route.profile)
+            }
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .settings:
+                    SettingsView()
+                case .profile:
+                    ProfileView()
                 }
             }
         }
-        .task { await loadFeed() }
-        .refreshable { await loadFeed() }
     }
+}
 
-    private func loadFeed() async {
-        do {
-            let posts = try await client.getFeed()
-            viewState = .loaded(posts)
-        } catch {
-            viewState = .error(error.localizedDescription)
+enum Route: Hashable {
+    case settings
+    case profile
+}
+```
+
+**プログラマティックナビゲーション:**
+
+```swift
+struct MainView: View {
+    @State private var path = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            VStack {
+                Button("Go to Detail") {
+                    path.append(DetailRoute.detail(id: 1))
+                }
+                Button("Go Deep") {
+                    path.append(DetailRoute.detail(id: 1))
+                    path.append(DetailRoute.subDetail(id: 2))
+                }
+                Button("Pop to Root") {
+                    path.removeLast(path.count)
+                }
+            }
+            .navigationDestination(for: DetailRoute.self) { route in
+                DetailView(route: route)
+            }
         }
     }
 }
 ```
 
-For MV pattern rationale, app wiring, and lightweight client examples, see [references/architecture-patterns.md](references/architecture-patterns.md).
+### Modal Presentation
 
-## State Management
-
-### `@Observable` Ownership Rules
-
-**Important:** Always annotate `@Observable` view model classes with `@MainActor` to ensure UI-bound state is updated on the main thread. Required for Swift 6 concurrency safety.
-
-| Wrapper | When to Use |
-|---------|-------------|
-| `@State` | View owns the object or value. Creates and manages lifecycle. |
-| `let` | View receives an `@Observable` object. Read-only observation -- no wrapper needed. |
-| `@Bindable` | View receives an `@Observable` object and needs two-way bindings (`$property`). |
-| `@Environment(Type.self)` | Access shared `@Observable` object from environment. |
-| `@State` (value types) | View-local simple state: toggles, counters, text field values. Always `private`. |
-| `@Binding` | Two-way connection to parent's `@State` or `@Bindable` property. |
-
-### Ownership Pattern
+**Sheet:**
 
 ```swift
-// @Observable view model -- always @MainActor
-@MainActor
-@Observable final class ItemStore {
-    var title = ""
-    var items: [Item] = []
+struct ContentView: View {
+    @State private var showingSheet = false
+
+    var body: some View {
+        Button("Show Sheet") {
+            showingSheet = true
+        }
+        .sheet(isPresented: $showingSheet) {
+            SheetView()
+        }
+    }
+}
+```
+
+**FullScreenCover:**
+
+```swift
+struct ContentView: View {
+    @State private var showingFullScreen = false
+
+    var body: some View {
+        Button("Show Full Screen") {
+            showingFullScreen = true
+        }
+        .fullScreenCover(isPresented: $showingFullScreen) {
+            FullScreenView()
+        }
+    }
+}
+```
+
+## レイアウトシステム
+
+### Stack Layouts
+
+**VStack - 垂直配置:**
+
+```swift
+VStack(alignment: .leading, spacing: 16) {
+    Text("Title")
+        .font(.headline)
+    Text("Subtitle")
+        .font(.subheadline)
+    Text("Body")
+        .font(.body)
+}
+```
+
+**HStack - 水平配置:**
+
+```swift
+HStack(alignment: .center, spacing: 8) {
+    Image(systemName: "star.fill")
+    Text("Favorite")
+    Spacer()
+    Text("100")
+}
+```
+
+**ZStack - 重ね配置:**
+
+```swift
+ZStack(alignment: .bottomTrailing) {
+    Image("background")
+        .resizable()
+        .aspectRatio(contentMode: .fill)
+
+    Text("Overlay")
+        .padding()
+        .background(.ultraThinMaterial)
+}
+```
+
+### Custom Layout（iOS 16+）
+
+```swift
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+        let height = rows.reduce(0) { $0 + $1.height } + CGFloat(rows.count - 1) * spacing
+        return CGSize(width: proposal.width ?? 0, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+        var y = bounds.minY
+
+        for row in rows {
+            var x = bounds.minX
+            for index in row.indices {
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: .unspecified)
+                x += subviews[index].sizeThatFits(.unspecified).width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+
+    private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [[Int]] {
+        // Flow layout implementation
+        []
+    }
+}
+```
+
+### GeometryReader
+
+**適切な使用例:**
+
+```swift
+struct AdaptiveView: View {
+    var body: some View {
+        GeometryReader { geometry in
+            if geometry.size.width > 600 {
+                HStack {
+                    Sidebar()
+                    Content()
+                }
+            } else {
+                VStack {
+                    Content()
+                }
+            }
+        }
+    }
+}
+```
+
+**避けるべきパターン:**
+
+```swift
+// ❌ 不必要なGeometryReader
+GeometryReader { geometry in
+    Text("Hello")
+        .frame(width: geometry.size.width) // .frame(maxWidth: .infinity)で十分
 }
 
-// View that OWNS the model
+// ✅ より良い方法
+Text("Hello")
+    .frame(maxWidth: .infinity)
+```
+
+## データフロー
+
+### MVVM パターン
+
+```swift
+// Model
+struct User: Identifiable {
+    let id: UUID
+    var name: String
+    var email: String
+}
+
+// ViewModel
+class UserListViewModel: ObservableObject {
+    @Published var users: [User] = []
+    @Published var isLoading = false
+    @Published var error: Error?
+
+    private let repository: UserRepository
+
+    init(repository: UserRepository = .shared) {
+        self.repository = repository
+    }
+
+    @MainActor
+    func loadUsers() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            users = try await repository.fetchUsers()
+        } catch {
+            self.error = error
+        }
+    }
+}
+
+// View
+struct UserListView: View {
+    @StateObject private var viewModel = UserListViewModel()
+
+    var body: some View {
+        List(viewModel.users) { user in
+            UserRow(user: user)
+        }
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+            }
+        }
+        .task {
+            await viewModel.loadUsers()
+        }
+        .alert(error: $viewModel.error)
+    }
+}
+```
+
+### Unidirectional Data Flow
+
+```swift
+// State
+struct AppState {
+    var users: [User] = []
+    var isLoading = false
+}
+
+// Action
+enum AppAction {
+    case loadUsers
+    case usersLoaded([User])
+    case usersFailed(Error)
+}
+
+// Reducer
+func appReducer(state: inout AppState, action: AppAction) {
+    switch action {
+    case .loadUsers:
+        state.isLoading = true
+    case .usersLoaded(let users):
+        state.users = users
+        state.isLoading = false
+    case .usersFailed:
+        state.isLoading = false
+    }
+}
+
+// Store
+class Store: ObservableObject {
+    @Published private(set) var state = AppState()
+
+    func send(_ action: AppAction) {
+        appReducer(state: &state, action: action)
+    }
+}
+```
+
+## パフォーマンス最適化
+
+### 不要な再描画を避ける
+
+**EquatableView:**
+
+```swift
+struct ExpensiveView: View, Equatable {
+    let data: ComplexData
+
+    var body: some View {
+        // 重い描画処理
+        ComplexRenderingView(data: data)
+    }
+
+    static func == (lhs: ExpensiveView, rhs: ExpensiveView) -> Bool {
+        lhs.data.id == rhs.data.id
+    }
+}
+
 struct ParentView: View {
-    @State var viewModel = ItemStore()
+    @State private var counter = 0
+    let data: ComplexData
 
     var body: some View {
-        ChildView(store: viewModel)
-            .environment(viewModel)
-    }
-}
+        VStack {
+            Text("Counter: \(counter)")
+            Button("Increment") { counter += 1 }
 
-// View that READS (no wrapper needed for @Observable)
-struct ChildView: View {
-    let store: ItemStore
-
-    var body: some View { Text(store.title) }
-}
-
-// View that BINDS (needs two-way access)
-struct EditView: View {
-    @Bindable var store: ItemStore
-
-    var body: some View {
-        TextField("Title", text: $store.title)
-    }
-}
-
-// View that reads from ENVIRONMENT
-struct DeepView: View {
-    @Environment(ItemStore.self) var store
-
-    var body: some View {
-        @Bindable var s = store
-        TextField("Title", text: $s.title)
+            // dataが変わらない限り再描画されない
+            EquatableView(data: data)
+                .equatable()
+        }
     }
 }
 ```
 
-**Granular tracking:** SwiftUI only re-renders views that read properties that changed. If a view reads `items` but not `isLoading`, changing `isLoading` does not trigger a re-render. This is a major performance advantage over `ObservableObject`.
-
-### Legacy ObservableObject
-
-Only use if supporting iOS 16 or earlier. `@StateObject` → `@State`, `@ObservedObject` → `let`, `@EnvironmentObject` → `@Environment(Type.self)`.
-
-## View Ordering Convention
-
-Order members top to bottom: 1) `@Environment` 2) `let` properties 3) `@State` / stored properties 4) computed `var` 5) `init` 6) `body` 7) view builders / helpers 8) async functions
-
-## View Composition
-
-### Extract Subviews
-
-Break views into focused subviews. Each should have a single responsibility.
+### LazyStack の活用
 
 ```swift
-var body: some View {
+// ✅ 大量のアイテムにはLazyVStack
+ScrollView {
+    LazyVStack {
+        ForEach(0..<1000) { index in
+            RowView(index: index)
+        }
+    }
+}
+
+// ❌ 全て一度に描画される
+ScrollView {
     VStack {
-        HeaderSection(title: title, isPinned: isPinned)
-        DetailsSection(details: details)
-        ActionsSection(onSave: onSave, onCancel: onCancel)
+        ForEach(0..<1000) { index in
+            RowView(index: index)
+        }
     }
 }
 ```
 
-### Computed View Properties
-
-Keep related subviews as computed properties in the same file; extract to a standalone `View` struct when reuse is intended or the subview carries its own state.
+### @Published の最適化
 
 ```swift
-var body: some View {
-    List {
-        header
-        filters
-        results
-    }
-}
+class ViewModel: ObservableObject {
+    // ✅ 必要なプロパティのみPublished
+    @Published var displayText: String = ""
 
-private var header: some View {
-    VStack(alignment: .leading) {
-        Text(title).font(.title2)
-        Text(subtitle).font(.subheadline)
+    // ❌ 頻繁に変わる内部状態をPublishedにしない
+    private var internalCounter = 0
+
+    func updateDisplay() {
+        internalCounter += 1
+        // 10回に1回だけUIを更新
+        if internalCounter % 10 == 0 {
+            displayText = "Count: \(internalCounter)"
+        }
     }
 }
 ```
 
-### ViewBuilder Functions
+## アニメーション
 
-For conditional logic that does not warrant a separate struct:
+### 基本アニメーション
 
 ```swift
-@ViewBuilder
-private func statusBadge(for status: Status) -> some View {
-    switch status {
-    case .active: Text("Active").foregroundStyle(.green)
-    case .inactive: Text("Inactive").foregroundStyle(.secondary)
+struct AnimatedView: View {
+    @State private var scale: CGFloat = 1.0
+
+    var body: some View {
+        Circle()
+            .fill(.blue)
+            .frame(width: 100, height: 100)
+            .scaleEffect(scale)
+            .onTapGesture {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    scale = scale == 1.0 ? 1.5 : 1.0
+                }
+            }
     }
 }
 ```
 
-### Custom View Modifiers
+### カスタムトランジション
 
-Extract repeated styling into `ViewModifier`:
+```swift
+extension AnyTransition {
+    static var slideAndFade: AnyTransition {
+        .asymmetric(
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
+        )
+    }
+}
+
+struct ContentView: View {
+    @State private var showDetail = false
+
+    var body: some View {
+        VStack {
+            if showDetail {
+                DetailView()
+                    .transition(.slideAndFade)
+            }
+        }
+        .animation(.easeInOut, value: showDetail)
+    }
+}
+```
+
+### Matched Geometry Effect
+
+```swift
+struct MatchedView: View {
+    @State private var isExpanded = false
+    @Namespace private var animation
+
+    var body: some View {
+        if isExpanded {
+            VStack {
+                Circle()
+                    .fill(.blue)
+                    .matchedGeometryEffect(id: "circle", in: animation)
+                    .frame(width: 200, height: 200)
+                Text("Expanded")
+            }
+        } else {
+            Circle()
+                .fill(.blue)
+                .matchedGeometryEffect(id: "circle", in: animation)
+                .frame(width: 50, height: 50)
+        }
+    }
+}
+```
+
+## 再利用可能なコンポーネント
+
+### View Modifiers
 
 ```swift
 struct CardStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding()
-            .background(.background)
-            .clipShape(.rect(cornerRadius: 12))
-            .shadow(radius: 2)
+            .background(.white)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
     }
 }
-extension View { func cardStyle() -> some View { modifier(CardStyle()) } }
-```
 
-### Stable View Tree
-
-Avoid top-level conditional view swapping. Prefer a single stable base view with conditions inside sections or modifiers. When a view file exceeds ~300 lines, split with extensions and `// MARK: -` comments.
-
-## Environment
-
-### Custom Environment Values
-
-Use `@Entry` for custom environment values and actions. It generates the entry boilerplate for `EnvironmentValues`.
-
-```swift
-extension EnvironmentValues {
-    @Entry var theme: Theme = .default
-    @Entry var refreshFeed: @Sendable () async -> Void = {}
+extension View {
+    func cardStyle() -> some View {
+        modifier(CardStyle())
+    }
 }
 
-// Usage
-.environment(\.theme, customTheme)
-.environment(\.refreshFeed) { await feedStore.refresh() }
-
-@Environment(\.theme) private var theme
-@Environment(\.refreshFeed) private var refreshFeed
+// 使用例
+Text("Card Content")
+    .cardStyle()
 ```
 
-For iOS 17-compatible code or older compatibility shims, use manual `EnvironmentKey` types instead.
-
-### Common Built-in Environment Values
+### Custom Containers
 
 ```swift
-@Environment(\.dismiss) var dismiss
-@Environment(\.colorScheme) var colorScheme
-@Environment(\.dynamicTypeSize) var dynamicTypeSize
-@Environment(\.horizontalSizeClass) var sizeClass
-@Environment(\.isSearching) var isSearching
-@Environment(\.openURL) var openURL
-@Environment(\.modelContext) var modelContext
-```
+struct Section<Content: View, Header: View>: View {
+    let header: Header
+    let content: Content
 
-## Async Data Loading
-
-Always use `.task` -- it cancels automatically on view disappear:
-
-```swift
-struct ItemListView: View {
-    @State var store = ItemStore()
+    init(@ViewBuilder content: () -> Content, @ViewBuilder header: () -> Header) {
+        self.content = content()
+        self.header = header()
+    }
 
     var body: some View {
-        List(store.items) { item in
-            ItemRow(item: item)
+        VStack(alignment: .leading, spacing: 8) {
+            header
+                .font(.headline)
+            content
         }
-        .task { await store.load() }
-        .refreshable { await store.refresh() }
+        .padding()
+        .cardStyle()
+    }
+}
+
+// 使用例
+Section {
+    Text("Content here")
+} header: {
+    Text("Title")
+}
+```
+
+## テスト戦略
+
+### ViewInspector でのテスト
+
+```swift
+import XCTest
+import ViewInspector
+@testable import MyApp
+
+final class CounterViewTests: XCTestCase {
+    func testInitialState() throws {
+        let view = CounterView()
+        let text = try view.inspect().find(text: "Count: 0")
+        XCTAssertNotNil(text)
+    }
+
+    func testIncrement() throws {
+        let view = CounterView()
+        try view.inspect().find(button: "Increment").tap()
+        let text = try view.inspect().find(text: "Count: 1")
+        XCTAssertNotNil(text)
     }
 }
 ```
 
-Use `.task(id:)` to re-run when a dependency changes:
+### Snapshot Testing
 
 ```swift
-.task(id: searchText) {
-    guard !searchText.isEmpty else { return }
-    await search(query: searchText)
-}
-```
+import SnapshotTesting
+import XCTest
 
-Never create manual `Task` in `onAppear` unless you need to store a reference for cancellation. Exception: `Task {}` is acceptable in synchronous action closures (e.g., Button actions) for immediate state updates before async work.
-
-## iOS 26+ New APIs
-
-- **`.scrollEdgeEffectStyle(.soft, for: .top)`** -- fading edge effect on scroll edges
-- **`.backgroundExtensionEffect()`** -- mirror/blur at safe area edges
-- **`@Animatable`** macro -- synthesizes `AnimatableData` conformance automatically (see `swiftui-animation` skill)
-- **`TextEditor`** -- now accepts `AttributedString` for rich text
-
-## Performance Guidelines
-
-- **Lazy stacks/grids:** Use `LazyVStack`, `LazyHStack`, `LazyVGrid`, `LazyHGrid` for large collections. Regular stacks render all children immediately.
-- **Stable IDs:** All items in `List`/`ForEach` must conform to `Identifiable` with stable IDs. Never use array indices.
-- **Avoid body recomputation:** Move filtering and sorting to computed properties or the model, not inline in `body`.
-- **Equatable views:** For complex views that re-render unnecessarily, conform to `Equatable`.
-
-## HIG Alignment
-
-Follow Apple Human Interface Guidelines for layout, typography, color, and accessibility. Key rules:
-
-- Use semantic colors (`Color.primary`, `.secondary`, `Color(uiColor: .systemBackground)`) for automatic light/dark mode
-- Use system font styles (`.title`, `.headline`, `.body`, `.caption`) for Dynamic Type support
-- Use `ContentUnavailableView` for empty and error states
-- Omit `spacing:` on stacks unless a specific value is required — `nil` (the default) uses platform-appropriate adaptive spacing
-- Support adaptive layouts via `horizontalSizeClass`
-- Provide VoiceOver labels (`.accessibilityLabel`) and support Dynamic Type accessibility sizes by switching layout orientation
-
-See [references/design-polish.md](references/design-polish.md) for HIG, theming, haptics, focus, transitions, and loading patterns.
-
-## Writing Tools (iOS 18+)
-
-Control the Apple Intelligence Writing Tools experience on text views with `.writingToolsBehavior(_:)`.
-
-| Level | Effect | When to use |
-|-------|--------|-------------|
-| `.complete` | Full inline rewriting (proofread, rewrite, transform) | Notes, email, documents |
-| `.limited` | Reduced overlay-panel experience | Code editors, validated forms |
-| `.disabled` | Writing Tools hidden entirely | Passwords, search bars |
-| `.automatic` | System chooses based on context (default) | Most views |
-
-```swift
-TextEditor(text: $body)
-    .writingToolsBehavior(.complete)
-TextField("Search…", text: $query)
-    .writingToolsBehavior(.disabled)
-```
-
-**Detecting active sessions:** Read `isWritingToolsActive` on `UITextView` (UIKit) to defer validation or suspend undo grouping until a rewrite finishes.
-
-> **Docs:** [WritingToolsBehavior](https://sosumi.ai/documentation/swiftui/writingtoolsbehavior) · [writingToolsBehavior(_:)](https://sosumi.ai/documentation/swiftui/view/writingtoolsbehavior(_:))
-
-## Common Mistakes
-
-1. Using `@ObservedObject` to create objects -- use `@StateObject` (legacy) or `@State` (modern)
-2. Heavy computation in view `body` -- move to model or computed property
-3. Not using `.task` for async work -- manual `Task` in `onAppear` leaks if not cancelled
-4. Array indices as `ForEach` IDs -- causes incorrect diffing and UI bugs
-5. Forgetting `@Bindable` -- `$property` syntax on `@Observable` requires `@Bindable`
-6. Over-using `@State` -- only for view-local state; shared state belongs in `@Observable`
-7. Not extracting subviews -- long body blocks are hard to read and optimize
-8. Using `NavigationView` -- deprecated; use `NavigationStack`
-9. Reaching for `foregroundColor(_:)` when `foregroundStyle(_:)` better matches semantic styling
-10. Inline closures in body -- extract complex closures to methods
-11. `.sheet(isPresented:)` when state represents a model -- use `.sheet(item:)` instead
-12. **Using `AnyView` for type erasure** -- causes identity resets and disables diffing. Use `@ViewBuilder`, `Group`, or generics instead. See [references/deprecated-migration.md](references/deprecated-migration.md)
-13. **Putting `@AppStorage` inside an `@Observable` class** -- `@AppStorage` is a SwiftUI `DynamicProperty`; it only triggers view updates when used directly in a `View`. Inside an `@Observable` class, observation tracking never sees the change. Keep `@AppStorage` in views, or read/write `UserDefaults` directly inside the `@Observable` class:
-
-```swift
-// Wrong -- @AppStorage is invisible to @Observable tracking
-@MainActor @Observable final class Settings {
-    @AppStorage("theme") var theme: String = "system" // view won't update
-}
-
-// Right -- UserDefaults read/write with a normal stored property
-@MainActor @Observable final class Settings {
-    var theme: String {
-        didSet { UserDefaults.standard.set(theme, forKey: "theme") }
-    }
-
-    init() {
-        theme = UserDefaults.standard.string(forKey: "theme") ?? "system"
+final class SnapshotTests: XCTestCase {
+    func testUserCard() {
+        let view = UserCard(user: .mock)
+        assertSnapshot(matching: view, as: .image(layout: .device(config: .iPhone13)))
     }
 }
 ```
 
-14. Hard-coding `spacing:` on every stack -- omit it to get adaptive platform spacing; only specify when the value is intentional
+## よくある問題と解決策
 
-## Review Checklist
+### 問題1: Viewが予期せず再描画される
 
-- [ ] `@Observable` used for shared state models (not `ObservableObject` on iOS 17+)
-- [ ] `@State` owns objects; `let`/`@Bindable` receives them
-- [ ] `NavigationStack` used (not `NavigationView`)
-- [ ] `.task` modifier for async data loading
-- [ ] `LazyVStack`/`LazyHStack` for large collections
-- [ ] Stable `Identifiable` IDs (not array indices)
-- [ ] Views decomposed into focused subviews
-- [ ] No heavy computation in view `body`
-- [ ] Environment used for deeply shared state
-- [ ] `foregroundStyle(_:)` used when semantic styling is preferable to a fixed color
-- [ ] Custom `ViewModifier` for repeated styling
-- [ ] `.sheet(item:)` preferred over `.sheet(isPresented:)`
-- [ ] Sheets own their actions and call `dismiss()` internally
-- [ ] MV pattern followed -- no unnecessary view models
-- [ ] `@Observable` view model classes are `@MainActor`-isolated
-- [ ] Model types passed across concurrency boundaries are `Sendable`
-- [ ] Stack `spacing:` omitted unless a specific value is required (prefer adaptive default)
+**原因:** 親Viewの状態変更
 
-## References
+**解決策:**
+```swift
+// ❌ 問題のあるコード
+struct ParentView: View {
+    @State private var counter = 0
 
-- Architecture, app wiring, and lightweight clients: [references/architecture-patterns.md](references/architecture-patterns.md)
-- Design polish (HIG, theming, haptics, transitions, loading, focus): [references/design-polish.md](references/design-polish.md)
-- Deprecated API migration: [references/deprecated-migration.md](references/deprecated-migration.md)
-- Platform and sharing patterns (Transferable, media, menus, macOS settings): [references/platform-and-sharing.md](references/platform-and-sharing.md)
+    var body: some View {
+        VStack {
+            Text("\(counter)")
+            ExpensiveChildView() // 毎回再作成される
+        }
+    }
+}
 
+// ✅ 改善したコード
+struct ParentView: View {
+    @State private var counter = 0
+
+    var body: some View {
+        VStack {
+            Text("\(counter)")
+            ExpensiveChildView()
+                .equatable() // Equatableに準拠させる
+        }
+    }
+}
+```
+
+### 問題2: リストのパフォーマンスが悪い
+
+**解決策:**
+```swift
+// ✅ LazyVStackとonAppear活用
+ScrollView {
+    LazyVStack {
+        ForEach(items) { item in
+            RowView(item: item)
+                .onAppear {
+                    if item == items.last {
+                        loadMore()
+                    }
+                }
+        }
+    }
+}
+```
+
+### 問題3: NavigationStackでメモリリークする
+
+**解決策:**
+```swift
+// ✅ pathを明示的に管理
+struct ContentView: View {
+    @State private var path = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            // ...
+        }
+        .onDisappear {
+            // 必要に応じてクリーンアップ
+            path = NavigationPath()
+        }
+    }
+}
+```
+
+---
+
+**関連Skills:**
+- [ios-development](../ios-development/SKILL.md) - iOS開発全般
+- [ios-project-setup](../ios-project-setup/SKILL.md) - プロジェクト初期設定
+- [testing-strategy](../testing-strategy/SKILL.md) - テスト戦略
+- [frontend-performance](../frontend-performance/SKILL.md) - パフォーマンス最適化の考え方
+
+**更新履歴:**
+- 2025-12-24: 初版作成

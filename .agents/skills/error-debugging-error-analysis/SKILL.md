@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: error-debugging-error-analysis
 description: "You are an expert error analysis specialist with deep expertise in debugging distributed systems, analyzing production incidents, and implementing comprehensive observability solutions."
 ---
@@ -45,3 +46,8 @@ The analysis scope may include specific error messages, stack traces, log files,
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed analysis frameworks and checklists.
+
+
+## 🧠 Knowledge Modules (Fractal Skills)
+
+### 1. [implementation-playbook](./sub-skills/implementation-playbook.md)

@@ -1,70 +1,111 @@
 ---
-name: PlatformIO
-description: PlatformIO embedded development ecosystem. Covers CLI, build system, debugging, and board configurations.
+name: platformio
+description: |
+  Builds and deploys ESP32 firmware with PlatformIO for the VanDaemon LED dimmer hardware.
+  Use when: Building, uploading, or debugging ESP32 firmware in hw/LEDDimmer/
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash
 ---
 
-# Platformio Skill
+# PlatformIO Skill
 
-Comprehensive assistance with PlatformIO development, generated from official documentation.
+PlatformIO manages the ESP32 firmware for VanDaemon's 8-channel PWM LED dimmer. The firmware handles MQTT communication, WiFi provisioning via captive portal, and NVS state persistence. All firmware lives in `hw/LEDDimmer/firmware/`.
 
-## When to Use This Skill
+## Quick Start
 
-This skill should be triggered when:
-- Working with PlatformIO
-- Asking about PlatformIO features or APIs
-- Implementing PlatformIO solutions
-- Debugging PlatformIO code
-- Learning PlatformIO best practices
+### Build and Upload
 
-## Quick Reference
+```bash
+cd hw/LEDDimmer/firmware
 
-### Common Patterns
+# Build for 8-channel variant (default)
+pio run -e 8ch
 
-*Quick reference patterns will be added as you use the skill.*
+# Upload via USB
+pio run -e 8ch -t upload
 
-## Reference Files
+# Build 4-channel variant
+pio run -e 4ch -t upload
+```
 
-This skill includes comprehensive documentation in `references/`:
+### Monitor Serial Output
 
-- **other.md** - Other documentation
+```bash
+# Start serial monitor at 115200 baud
+pio device monitor -e 8ch
 
-Use `view` to read specific reference files when detailed information is needed.
+# Monitor with timestamp
+pio device monitor -e 8ch --filter time
+```
 
-## Working with This Skill
+## Key Concepts
 
-### For Beginners
-Start with the getting_started or tutorials reference files for foundational concepts.
+| Concept | Usage | Example |
+|---------|-------|---------|
+| Environment | Build target variant | `-e 8ch`, `-e 4ch`, `-e 8ch-ota` |
+| Upload | Flash firmware to device | `pio run -e 8ch -t upload` |
+| Monitor | Serial debugging | `pio device monitor` |
+| Clean | Remove build artifacts | `pio run -t clean` |
+| OTA | Over-the-air updates | `-e 8ch-ota` environment |
 
-### For Specific Features
-Use the appropriate category reference file (api, guides, etc.) for detailed information.
+## Common Patterns
 
-### For Code Examples
-The quick reference section above contains common patterns extracted from the official docs.
+### Full Development Cycle
 
-## Resources
+**When:** Making firmware changes
 
-### references/
-Organized documentation extracted from official sources. These files contain:
-- Detailed explanations
-- Code examples with language annotations
-- Links to original documentation
-- Table of contents for quick navigation
+```bash
+# Clean, build, upload, then monitor
+pio run -e 8ch -t clean && pio run -e 8ch -t upload && pio device monitor -e 8ch
+```
 
-### scripts/
-Add helper scripts here for common automation tasks.
+### OTA Update
 
-### assets/
-Add templates, boilerplate, or example projects here.
+**When:** Device deployed and accessible via WiFi
 
-## Notes
+```bash
+# Build and upload via OTA (requires device IP in platformio.ini)
+pio run -e 8ch-ota -t upload
+```
 
-- This skill was automatically generated from official documentation
-- Reference files preserve the structure and examples from source docs
-- Code examples include language detection for better syntax highlighting
-- Quick reference patterns are extracted from common usage examples in the docs
+### Upload Filesystem
 
-## Updating
+**When:** Updating SPIFFS/LittleFS data
 
-To refresh this skill with updated documentation:
-1. Re-run the scraper with the same configuration
-2. The skill will be rebuilt with the latest information
+```bash
+pio run -e 8ch -t uploadfs
+```
+
+## Pin Configuration
+
+```cpp
+// PWM Outputs (8 channels)
+GPIO 25, 26, 27, 14, 4, 5, 18, 19
+
+// Status LED (WS2812)
+GPIO 16
+
+// Buttons
+GPIO 32 (Button 1), GPIO 33 (Button 2)
+```
+
+## MQTT Integration
+
+The firmware publishes to topics under `vandaemon/leddimmer/{deviceId}/`:
+- `status` - online/offline
+- `config` - device configuration JSON
+- `channel/{N}/state` - current brightness (0-255)
+
+Subscribes to `channel/{N}/set` for brightness commands.
+
+See the **mqttnet** skill for backend MQTT handling.
+
+## See Also
+
+- [patterns](references/patterns.md) - Build configurations and debugging
+- [workflows](references/workflows.md) - Development and deployment workflows
+
+## Related Skills
+
+- **kicad** - PCB design for the LED dimmer hardware
+- **mqttnet** - Backend MQTT communication with the dimmer
+- **docker** - Running MQTT broker for testing

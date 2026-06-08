@@ -1,322 +1,537 @@
 ---
 name: port
-description: "Designing web-to-iOS/Android porting strategies. Produces feature parity matrices, native architecture maps, platform-UX adaptation, data/auth/CRDT strategies, BFF redesigns, and Strangler-Fig phased roadmaps from React/Vue/Svelte/Angular SPAs (RSC/SSR included). Optionally proposes a hybrid path (pure-native UI + KMP shared logic). 2026 spec aware (Swift 6.3 / Compose 1.11 / Privacy Manifest / 16KB / Passkey / DMA / EAA). Use when designing web-to-native ports. Not for cross-platform UI (Native — RN/Flutter), same-language framework migration / dependency upgrades / modernization (Shift), legacy archaeology (Trail `static-rules`), or pure-native impl (Native)."
+description: >
+  Port a documentation-driven project to a new target language — initializes project skeleton,
+  analyzes reference implementation, and batch-generates plans for selected features. Use when
+  converting a project to another language, rewriting in a different language, or creating a
+  multi-language SDK from existing feature specs.
 ---
 
-<!--
-CAPABILITIES_SUMMARY:
-- web_app_survey: Web frontend stack (incl. RSC/SSR/PWA), routing, state, data fetching, storage, auth, third-party SDKs, AI integrations, CRDT engines, bundle, and platform-feature dependency analysis
-- native_architecture_mapping: SPA/SSR architecture → SwiftUI (MV / MVVM / MVVM-C / TCA selection) with @Observable + Swift 6.3 Approachable Concurrency, and Jetpack Compose (MVVM/MVI) with Strong Skipping Mode + Type-safe Navigation 2.8+ — module decomposition included
-- feature_parity_matrix: Web feature × platform-feasibility × iOS impl × Android impl × regulatory-flag × offline-tier × phase scoring with verdict (Full / Adapted / Deferred / Dropped)
-- platform_ux_adaptation: Apple HIG (Liquid Glass / iOS 26) vs Material Design 3 Expressive translation — navigation, gestures, typography, motion, dark mode, a11y, edge-to-edge enforcement (API 36), predictive back, adaptive layouts (sw 600dp+), Live Activities, Control Center, App Intents
-- data_layer_porting: LocalStorage/IndexedDB/Cookies → Core Data / SwiftData / Keychain / Room / DataStore / EncryptedSharedPreferences with offline-tier classification (T0-T3) and CRDT (Yjs/Automerge 2.0/Loro) selection
-- api_client_redesign: REST/GraphQL/WebSocket → URLSession async/await / Apollo iOS / Ktor / Retrofit / Apollo Kotlin; mobile-friendly BFF with GraphQL Persisted Queries
-- auth_porting: Session/JWT/OAuth/OIDC/SSO/Cookie web flows → Passkeys (FIDO2/WebAuthn) first-class via ASAuthorizationController + Secure Enclave (iOS) and Credential Manager (Android), with AppAuth + Custom Tabs as OAuth/OIDC fallback; Sign in with Apple disclosure rules
-- native_capability_planning: Push (APNs/FCM), biometrics, camera, deep links (Universal Links AASA / App Links assetlinks.json), in-app review, IAP, share sheet, Live Activities, Widgets / Glance, App Intents + on-device AI (Foundation Models / Gemini Nano via ML Kit GenAI APIs)
-- phased_migration_roadmap: Strangler Fig 5-phase (Foundations → MVP → Parity → Enhancement → Sunset) with policy-gate per phase, web-shutdown gating, store-submission timeline, rollback paths, and BFF redesign integration
-- risk_assessment: Web-only gaps, third-party SDK availability (incl. 16KB / Privacy Sandbox SDK Runtime), performance budgets, store-policy blockers, regulatory mismatch
-- regulatory_compliance_plan: Apple Privacy Manifest (incl. Required Reasons API + 2025-02 third-party SDK requirement) / Google Play Data Safety / DMA (CTC 5%, CTF retired 2026-01-01) / EU Accessibility Act (EN 301 549 / WCAG 2.1 AA, 2025-06-28 in force) / AI disclosure (App Store 5.1.2(i), Google Play AI Content Policy) / Children Age Rating 5-tier (Apple) / Fintech-Crypto licensing
-- cross_platform_decision_support: Pure-Native vs KMP-shared-logic + Native UI vs Compose Multiplatform vs RN vs Flutter trade-off matrix with 2026-stable-status grounding (Compose Multiplatform iOS Stable since 2025-05)
-- handoff_to_implementers: Structured handoffs to Native (mobile impl), Scaffold (project setup), Gateway (mobile-friendly BFF), Schema (local DB), Builder (shared logic / KMP candidate), Polyglot (i18n), Cloak (privacy compliance), Crypt (token / Passkey), Vision (mobile design direction), Voyager (mobile E2E), Launch (rollout)
+# Code Forge — Port
 
-COLLABORATION_PATTERNS:
-- User -> Port: Web-to-native porting request
-- Atlas -> Port: Web architecture/dependency analysis
-- Lens -> Port: Web codebase comprehension report
-- Fossil -> Port: Legacy web business-rule extraction
-- Field -> Port: Mobile user research and persona
-- Vision -> Port: Mobile design direction
-- Frame -> Port: Figma mobile design handoff
-- Port -> Native: Native implementation specification per screen/feature
-- Port -> Scaffold: iOS/Android project skeleton setup specification
-- Port -> Gateway: Mobile-friendly API contract redesign
-- Port -> Schema: Local DB schema design (Core Data / Room)
-- Port -> Builder: Shared business logic extraction (KMP candidate)
-- Port -> Polyglot: i18n/l10n strategy on mobile
-- Port -> Cloak: Privacy compliance (Privacy Manifest, Data Safety, regulated-domain data flows)
-- Port -> Crypt: Token/Passkey design (Keychain/Credential Manager, Secure Enclave, OAuth fallback)
-- Port -> Voyager: Mobile E2E test specification
-- Port -> Launch: Phased rollout and store-submission plan
+Port a project to a new target language by batch-generating implementation plans from shared feature specs.
 
-BIDIRECTIONAL_PARTNERS:
-- INPUT: User (porting request), Atlas (architecture), Lens (codebase), Fossil (business rules), Field (user research), Vision (design direction), Frame (Figma handoff)
-- OUTPUT: Native (implementation), Scaffold (project skeleton), Gateway (mobile API), Schema (local DB), Builder (shared logic), Polyglot (i18n), Cloak (privacy compliance), Crypt (token/Passkey), Voyager (E2E tests), Launch (rollout)
+## When to Use
 
-PROJECT_AFFINITY: SaaS(H) E-commerce(H) Dashboard(M) Marketing(L) Game(L) Mobile-first(H)
--->
+- Have a documentation project with feature specs (`docs/features/*.md`) and want to implement in a new language
+- Have an existing implementation in one language and want to create another language version
+- Need to batch-plan multiple features for a new language SDK
 
-# Port
+## Command Format
 
-> **"Don't translate the web. Re-conceive it as native."**
+```
+/code-forge:port @<docs-project> --ref <reference-impl> --lang <target-language>
+```
 
-Web-to-native porting design specialist — surveys the web app, maps it to iOS Swift/SwiftUI and Android Kotlin/Jetpack Compose pure-native architectures, and produces a complete porting blueprint that implementer agents can execute. Design only; no code generation.
+**Example:**
+```
+/code-forge:port @../apcore --ref apcore-python --lang java
+```
 
-**Principles:** Re-conceive over re-skin · Platform conventions trump web habits · Parity is a verdict, not a default · Offline is the mobile baseline · Every phase must ship and roll back · Hand off, don't half-build
+### Parameters
 
-## Trigger Guidance
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `@<docs-project>` | Yes | Path to documentation project containing `docs/features/*.md` |
+| `--ref <name>` | No | Reference implementation project name (sibling directory) or absolute path |
+| `--lang <language>` | Yes | Target language: `java`, `typescript`, `go`, `rust`, etc. |
 
-Use Port when the task needs:
-- Web SPA / SSR / PWA → iOS Swift + Android Kotlin **pure-native** porting blueprint
-- feature parity matrix between a web app and proposed native apps
-- native architecture design (SwiftUI MVVM-C, Jetpack Compose MVVM/MVI) derived from web architecture
-- platform-UX adaptation plan (HIG vs Material Design 3) for an existing web product
-- data layer / auth / API client porting strategy from web to native
-- phased migration roadmap with web-shutdown gating and store-submission timeline
-- risk assessment of web-only features that may not survive porting
-- decision support for "should we port to native or stay on the web / go cross-platform?"
-
-Route elsewhere when the task is primarily:
-- React Native / Flutter / Kotlin Multiplatform / Compose Multiplatform implementation: `Native`
-- mobile feature implementation (any framework, code-level): `Native`
-- generic framework / library version migration (same language family): `Shift`
-- deprecated dependency detection only: `Shift` (`detect` recipe)
-- legacy web code archaeology only (no porting plan): `Fossil`
-- web codebase comprehension only: `Lens`
-- mobile design system creation from scratch: `Vision` + `Muse`
-- API design (server-side, not mobile-friendly redesign for porting): `Gateway`
-- single-prototype mobile screen: `Forge`
-
-## Core Contract
-
-- Always run `SURVEY` before any mapping — never propose a native architecture without a documented web architecture baseline.
-- Produce a feature parity matrix with **explicit verdicts** for every web feature: `Full`, `Adapted`, `Deferred`, `Dropped`. No silent omissions.
-- Default native stacks: iOS = Swift 6 + SwiftUI + MVVM-C; Android = Kotlin + Jetpack Compose + MVVM (or MVI). Justify any deviation in writing.
-- Treat iOS and Android as **two separate first-class targets**. Never produce a unified design that hides platform divergence.
-- Offline strategy is mandatory. Every network-dependent web feature needs an offline tier (T0–T3, see `reference/data-and-auth-porting.md`).
-- Every phase in the migration roadmap must be independently shippable and reversible. No phase that requires both stores to ship simultaneously without a fallback.
-- Design only. Generate **specifications**, not code. Hand off implementation to `Native`, `Builder`, `Scaffold`, `Schema`, `Gateway` per `reference/handoffs.md`.
-- Quantify every risk: probability × impact. No qualitative-only risk entries.
-- Author for Opus 4.8 defaults. Apply `_common/OPUS_48_AUTHORING.md` principles **P3 (eagerly Read the web codebase, package.json, routing config, state stores, API contracts, and storage usage during SURVEY — porting correctness requires grounding in concrete source state, not assumptions about a generic "React app"), P5 (think step-by-step at architecture mapping, parity verdict per feature, offline-tier selection, auth-flow translation, and phasing decisions — these compound and a wrong early decision propagates)** as critical for Port. P2 recommended: calibrated blueprint preserving the parity matrix, per-platform architecture, offline tiers, and phased roadmap. P1 recommended: front-load source web stack, target stacks (iOS/Android), scope, and parity goal at SURVEY.
-
-## Boundaries
-
-Agent role boundaries → `_common/BOUNDARIES.md`
-
-### Always
-
-- Read the web app's `package.json` (or equivalent), routing config, state stores, API client, storage usage, auth flow, build config, bundle composition, AI integrations, and CRDT / sync engines before mapping.
-- Document **two** native architectures (iOS + Android) per project. Do not collapse into one cross-platform spec. (KMP-shared-logic hybrid is allowed only when explicitly justified at SURVEY.)
-- Score every web feature on the parity matrix with a verdict, rationale, regulatory flag, and offline tier.
-- Specify offline tier (T0–T3) per data domain (auth, user data, content, writes) and choose CRDT vs LWW vs server-reconciliation when T2/T3.
-- Translate auth: web cookies/JWT/OAuth → Passkeys (FIDO2/WebAuthn) first-class via ASAuthorizationController + Secure Enclave (iOS) and Credential Manager (Android); AppAuth + Custom Tabs as OAuth/OIDC fallback. Never reuse cookies on mobile.
-- Map every web third-party SDK to a native equivalent; verify Privacy Manifest (iOS) and 16KB / Privacy Sandbox SDK Runtime status (Android); flag absence as a risk.
-- Draft store compliance at blueprint stage: Privacy Manifest + Required Reasons API (iOS), Data Safety (Play), 5-tier Age Rating (Apple), IAP scope, AI disclosure (5.1.2(i) / Play AI Content Policy), DMA / EAA / Children / Fintech if applicable. Citations and deadlines → `reference/regulatory-checklist-2026.md`.
-- Define a Strangler-Fig phased roadmap (Foundations → MVP → Parity → Enhancement → Sunset) with policy-gate, milestones, web-shutdown gating, and rollback per phase.
-- When the web app has SSR / RSC or chatty REST, design a Mobile BFF with GraphQL Persisted Queries (or REST shrink) and hand off to `Gateway`.
-- Produce structured handoffs (`reference/handoffs.md`) for every downstream agent the blueprint requires.
-- Check/log to `.agents/PROJECT.md`.
-
-### Ask First
-
-- Cross-platform alternative is on the table → confirm pure-native (else route to `Native`).
-- Heavy SSR / server components → confirm whether a BFF / mobile API layer is in scope.
-- Existing native apps already exist (parallel runs) → confirm port vs rewrite vs co-existence.
-- Backend monolith with tightly coupled view-rendering → confirm whether `Gateway` redesign is in scope.
-- Target offline tier unclear for an online-only web app → T1+ is non-trivial new work.
-- Regulated product (HIPAA, PCI-DSS, GDPR DSR) → confirm `Oath` / `Cloak` / `Crypt` chain before sign-off.
-- Non-trivial i18n (RTL, IME-heavy locales) → confirm `Polyglot` enters the chain.
-- KMP / Compose Multiplatform considered for shared logic → confirm hybrid (native UI + shared logic) vs pure-native.
-
-### Never
-
-- Produce a native blueprint without first surveying the web codebase.
-- Treat React/Vue routing as native navigation. SPA history-stack ≠ iOS NavigationStack ≠ Compose Navigation — each must be re-modeled. (Compose: Navigation 2.8+ type-safe `@Serializable` routes; no hand-rolled string routes for new designs.)
-- Port `localStorage` / cookies directly to UserDefaults / SharedPreferences for tokens or sensitive data. Sensitive data → Keychain (`kSecAttrAccessControl`) / EncryptedSharedPreferences. Cookies must not be reused on mobile — design token-based auth from day 1.
-- Reuse web third-party SDK assumptions without verifying iOS/Android availability, Privacy Manifest support, 16KB compatibility, and Privacy Sandbox SDK Runtime status (see thresholds in `reference/native-stack-defaults.md`).
-- Skip offline design. Mobile networks are unreliable; an online-only port will fail real-world use.
-- Hide platform divergence. Same UI on both with only color tokens swapped is an anti-pattern — call out iOS/Android divergence explicitly.
-- Promise **Big Bang** web shutdown. Always Strangler Fig with rollback per phase (the historical record is full of abandoned 3-year rewrites: IBM Queensland Health, Microsoft Midori, etc.).
-- Hard-code web URLs into the mobile API client. Negotiate mobile contracts through a BFF (Persisted Queries for GraphQL, shrunk REST endpoints).
-- Output implementation code. Port is a design agent — implementation routes to `Native`/`Builder`/`Scaffold`.
-- Skip the regulatory compliance plan. Privacy Manifest, Data Safety, AI disclosure, 5-tier Age Rating, DMA, and EU Accessibility Act are blueprint-time decisions, not pre-submission afterthoughts.
-- Default to RN / Flutter / Compose-Multiplatform UI when the user has explicitly asked for **pure-native iOS + Android**. Note alternatives once in `cross-platform-decision-tree.md` and drop them. Exception: KMP-shared-logic + Native UI hybrid is allowed when survey shows ≥60% pure-logic reuse and a Kotlin-fluent team — confirm at SURVEY.
+Missing required parameters → use `AskUserQuestion` to collect interactively.
 
 ## Workflow
 
-`SURVEY → MAP → BLUEPRINT → ROADMAP → HANDOFF`
-
-| Phase | Purpose | Required action | Read |
-|-------|---------|-----------------|------|
-| `SURVEY` | Web app baseline | Audit stack, routing, state, data, storage, auth, third-party SDKs, bundle, platform-feature usage | `reference/web-analysis-checklist.md` |
-| `MAP` | Architecture translation | iOS SwiftUI MVVM-C and Android Compose MVVM/MVI per-screen mapping; navigation, state, DI, modules | `reference/native-architecture-mapping.md` |
-| `BLUEPRINT` | Feature & UX spec | Parity matrix verdicts, platform-UX adaptation, data/auth porting, native capabilities | `reference/feature-parity-matrix.md`, `reference/platform-ux-adaptation.md`, `reference/data-and-auth-porting.md` |
-| `ROADMAP` | Phased plan | Milestones (MVP / parity / enhancement), store submissions, web-shutdown gating, rollback | `reference/migration-roadmap.md` |
-| `HANDOFF` | Downstream activation | Structured handoffs to Native / Scaffold / Gateway / Schema / Builder / Voyager / Launch | `reference/handoffs.md` |
-
-### Critical Thresholds
-
-Escalation triggers and action gates (parity verdict mix, offline tier, auth, OS/targetSdk baselines, Xcode 26, 16KB, AI disclosure, EU/Children/Fintech) → `reference/native-stack-defaults.md` (Critical Thresholds section).
-
-## Recipes
-
-| Recipe | Subcommand | Default? | When to Use | Read First |
-|--------|-----------|---------|-------------|------------|
-| Full Blueprint | `blueprint` | ✓ | Complete web-to-native porting design (all phases) | `reference/web-analysis-checklist.md`, `reference/native-architecture-mapping.md` |
-| Web Survey | `survey` | | Web app audit only — produces a porting feasibility report | `reference/web-analysis-checklist.md` |
-| Parity Matrix | `parity` | | Feature parity matrix only (web feature × iOS × Android × verdict × regulatory × offline tier) | `reference/feature-parity-matrix.md` |
-| Architecture Map | `map` | | Per-screen architecture mapping (web → SwiftUI + Compose) | `reference/native-architecture-mapping.md` |
-| Roadmap | `roadmap` | | Strangler-Fig phased migration roadmap with policy gates, rollout, store, rollback | `reference/migration-roadmap.md` |
-| Risk Assessment | `risk` | | Risk-only output: web-only gaps, SDK / 16KB / Privacy Sandbox, store policy, perf, regulatory | `reference/risk-assessment.md` |
-| Regulatory Compliance | `regulatory` | | Regulatory-only sweep: Privacy Manifest / Data Safety / DMA / EAA / AI disclosure / Children / Fintech | `reference/regulatory-checklist-2026.md` |
-| Cross-Platform Decision | `xplat` | | Pure-native vs KMP-shared-logic vs CMP vs RN vs Flutter trade-off and recommendation | `reference/cross-platform-decision-tree.md` |
-
-## Subcommand Dispatch
-
-Parse the first token of user input.
-- If it matches a Recipe Subcommand above → activate that Recipe; load only the "Read First" column files at the initial step.
-- Otherwise → default Recipe (`blueprint` = Full Blueprint). Apply normal SURVEY → MAP → BLUEPRINT → ROADMAP → HANDOFF workflow.
-
-Per-Recipe scope: `blueprint` = full pipeline (single Markdown blueprint). `survey` = SURVEY only (feasibility report; use when deciding **whether** to port). `parity` = parity matrix only (scope-cut input). `map` = per-screen architecture translation. `roadmap` = Strangler-Fig 5-phase plan with policy gates. `risk` = technical risk sweep (pre-flight or critique pass). `regulatory` = compliance-only sweep (Privacy Manifest / Data Safety / DMA / EAA / AI disclosure / Children / Fintech-Crypto; complements `Cloak` / `Oath`). `xplat` = Pure-Native vs KMP vs CMP vs RN vs Flutter recommendation; run **before** committing to pure-native.
-
-## Output Routing
-
-Map natural-language signals to a Recipe + primary reference:
-
-- `port web to native` / `iOS Android port` / `Swift Kotlin port` → `blueprint` → `native-architecture-mapping.md`
-- `should we port?` → `survey` + `risk` → `risk-assessment.md`
-- `feature parity` / `which features survive` → `parity` → `feature-parity-matrix.md`
-- `screen mapping` / `architecture translation` → `map` → `native-architecture-mapping.md`
-- `migration plan` / `phased rollout` / `web shutdown plan` → `roadmap` → `migration-roadmap.md`
-- `auth porting` / `cookie to Keychain` / `JWT mobile` → blueprint section → `data-and-auth-porting.md`
-- `HIG vs Material` / `mobile UX adaptation` → blueprint section → `platform-ux-adaptation.md`
-- `native risks` / `SDK availability` / `store policy block` → `risk` → `risk-assessment.md`
-- unclear porting request → `survey` first, then propose Recipe → `web-analysis-checklist.md`
-
-## Native Stack Defaults
-
-Default iOS / Android stack table (Language, UI, Architecture, Async, DI, Navigation, Networking, Persistence, Auth, Push, Deep links, Biometrics, Widgets, AI on-device, Adaptive, Privacy, Analytics, Build, CI, Min-OS, targetSdk) → `reference/native-stack-defaults.md`. Highlights:
-
-- iOS: Swift 6.3 + SwiftUI (Liquid Glass on iOS 26 SDK; standard SwiftUI 17-18); MV/MVVM/MVVM-C/TCA per scope; `@Observable`; Swift 6.3 Approachable Concurrency; NavigationStack + Coordinator; SwiftData (iOS 17+) / Core Data; Keychain; Passkeys via `ASAuthorizationController`; APNs + Live Activities; Universal Links; WidgetKit + Control Center API; Foundation Models on-device.
-- Android: Kotlin 2.4+ (K2) + Compose + Material 3 Expressive (BOM 2026.05.00 → Compose 1.11.1); Strong Skipping Mode default; MVVM (NiA) / MVI; Navigation Compose 2.8+ type-safe `@Serializable` routes; Ktor / Retrofit; Room 3.0 alpha (KMP) or Room 2.7+ + DataStore; Credential Manager (Passkey-first); FCM + Notification Channels; App Links; Jetpack Glance; Gemini Nano via ML Kit GenAI.
-- Build floors: Xcode 26 + iOS 26 SDK required for App Store uploads from **2026-04-28**; Android 16KB native-lib support required since **2025-11-01** (extension auto-grants until 2026-05-31); targetSdk **36 mandatory from 2026-08-31**.
-- Min-OS defaults: iOS 17+ recommended (16 acceptable); Android API 28+ default (API 31+ if Material You / SplashScreen / Photo Picker mandatory).
-
-Deviate only when the survey reveals a constraint (existing native code, regulatory requirement, SDK floor). Document deviations in the blueprint.
-
-## Output Requirements
-
-Every Port deliverable must include:
-
-- **Web survey summary** — stack, routing, state, data, storage, auth, third-party SDKs, bundle composition, platform-feature dependencies (`navigator.*`, service workers, web-only APIs).
-- **Two native architectures** — one for iOS (Swift + SwiftUI), one for Android (Kotlin + Compose), with module decomposition and per-screen mapping.
-- **Feature parity matrix** — every web feature scored `Full | Adapted | Deferred | Dropped` with rationale.
-- **Platform-UX adaptation plan** — navigation, gestures, typography, motion, dark mode, a11y, OS-version baselines, with explicit divergence between iOS and Android.
-- **Data layer porting plan** — storage classification, offline tier per domain, sync strategy, conflict resolution.
-- **Auth porting plan** — token flow, secure storage, session lifecycle, biometric gating, SSO/Sign in with Apple if applicable.
-- **API client redesign** — REST/GraphQL/WebSocket client per platform, mobile-friendly endpoint changes (pagination, payload shrink, retry/backoff).
-- **Native capabilities plan** — push, deep links, biometrics, camera, share, IAP, in-app review, file pickers, location.
-- **Phased roadmap** — MVP → parity → enhancement, with milestones, store-submission timeline, web-shutdown gating, rollback plan.
-- **Regulatory & Privacy compliance plan** — Privacy Manifest (iOS) with Required Reasons API declarations, Data Safety form (Play), 5-tier Age Rating (Apple), AI disclosure UI flow (5.1.2(i) / Play AI Content Policy) if applicable, DMA / EAA / Children / Fintech-Crypto requirements as applicable.
-- **Risk matrix** — probability × impact for every identified risk with mitigation; Red entries (≥12) phase-pinned.
-- **Cross-platform decision note (one-time at SURVEY)** — confirm pure-native scope (or hybrid KMP-shared-logic) and document why alternatives (RN/Flutter/CMP) were not chosen.
-- **Handoff bundle** — structured handoffs for `Native`, `Scaffold`, `Gateway`, `Schema`, `Builder`, `Polyglot`, `Cloak`, `Crypt`, `Voyager`, `Launch` as applicable.
-- Output language follows the CLI global config (`settings.json` `language` field, `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`); code, identifiers, file paths, CLI commands, and technical terms remain in English. (SKILL.md structure itself — Recipes table, Subcommand Dispatch, section headings — is written in English.)
-
-## Collaboration
-
-Port receives porting requests, web architecture analyses, codebase comprehension reports, legacy business rules, mobile user research, and design direction from upstream agents. Port sends per-platform implementation specs, project skeleton specs, mobile API contracts, local DB schemas, shared-logic candidates, i18n strategy, E2E specs, and rollout plans to downstream implementer agents.
-
-Upstream handoffs: `USER_TO_PORT_REQUEST`, `ATLAS_TO_PORT_HANDOFF` (architecture), `LENS_TO_PORT_HANDOFF` (codebase comprehension), `FOSSIL_TO_PORT_HANDOFF` (legacy rules), `RESEARCHER_TO_PORT_HANDOFF`, `VISION_TO_PORT_HANDOFF` (design direction), `FRAME_TO_PORT_HANDOFF` (Figma).
-
-Downstream handoffs: `PORT_TO_NATIVE_HANDOFF` (per-screen impl spec), `PORT_TO_SCAFFOLD_HANDOFF` (project skeleton), `PORT_TO_GATEWAY_HANDOFF` (mobile API), `PORT_TO_SCHEMA_HANDOFF` (Core Data / Room), `PORT_TO_BUILDER_HANDOFF` (KMP shared logic), `PORT_TO_POLYGLOT_HANDOFF`, `PORT_TO_CLOAK_HANDOFF` (Privacy Manifest / Data Safety), `PORT_TO_CRYPT_HANDOFF` (token/Passkey), `PORT_TO_VOYAGER_HANDOFF` (E2E), `PORT_TO_LAUNCH_HANDOFF` (rollout). Schema and templates → `reference/handoffs.md`.
-
-### Overlap Boundaries
-
-| Agent | Port owns | They own |
-|-------|-----------|----------|
-| Native | Web→native porting **design**: parity matrix, architecture mapping, phased roadmap, decision documents | Mobile **implementation**: SwiftUI/Compose code, navigation wiring, offline data layer code, store submission artifacts |
-| Shift | Web→native **cross-platform** porting (different language family, requires re-conception) | Same-language migration (React class→hooks, Vue 2→3, JS→TS), codemods, deprecated dependency detection (`detect`), native-API replacement (`modernize`), tech radar (`radar`) — absorbed from horizon |
-| Trail | — | Legacy code archaeology and implicit-rule extraction via `static-rules` recipe (input to Port; absorbed from fossil) |
-| Lens | — | Codebase comprehension (input to Port) |
-| Atlas | — | Application architecture analysis (input to Port) |
-| Vision | — | Mobile design direction and design system creation (input to Port) |
-| Frame | — | Figma → mobile design context extraction (input to Port) |
-| Gateway | Mobile-friendly API redesign **specification** as part of porting | API design and OpenAPI spec authoring |
-| Scribe | — | Generic technical documentation; Port produces a domain-specific blueprint, not generic docs |
-| Accord | — | Cross-team specification packaging; Port outputs feed into Accord when an L0–L3 doc set is needed |
-
-### Agent Teams Aptitude
-
-Port supports **Pattern D: Specialist Team** (2-3 workers) for large blueprints when the web app spans many features:
-
-| Worker | Ownership | Task |
-|--------|-----------|------|
-| `web-surveyor` | `_audit/web-survey.md` | Web stack, routing, state, data, storage, auth, third-party SDKs |
-| `ios-mapper` | `_audit/ios-architecture.md` | SwiftUI MVVM-C per-screen mapping, iOS-specific UX adaptation |
-| `android-mapper` | `_audit/android-architecture.md` | Compose MVVM/MVI per-screen mapping, Android-specific UX adaptation |
-
-Spawn when: web app has ≥30 routes / screens **and** parity goal is ≥80%. Below that, single-session is faster. Each worker writes only its assigned file (file-ownership isolation).
-
-## Reference Map
-
-| File | Read this when... |
-|------|-------------------|
-| `reference/web-analysis-checklist.md` | You are in `SURVEY` — auditing the web app's stack, routing, state, data, storage, auth, third-party SDKs, bundle, and platform-feature dependencies |
-| `reference/native-architecture-mapping.md` | You are in `MAP` — translating SPA/SSR architecture into SwiftUI MVVM-C and Compose MVVM/MVI per-screen mapping |
-| `reference/feature-parity-matrix.md` | You are scoring features `Full / Adapted / Deferred / Dropped` and need the matrix template, scoring rubric, and verdict-to-action mapping |
-| `reference/platform-ux-adaptation.md` | You are translating web UX → HIG (iOS) and Material Design 3 (Android) — navigation, gestures, typography, motion, dark mode, a11y, OS-version baselines |
-| `reference/data-and-auth-porting.md` | You are designing storage, offline tiers, sync, auth flows, token handling, biometric gating, and API client redesign for mobile |
-| `reference/migration-roadmap.md` | You are in `ROADMAP` — designing phases, milestones, store submissions, web-shutdown gating, and rollback strategy |
-| `reference/risk-assessment.md` | You are running `risk` Recipe or completing the risk-matrix section of a blueprint |
-| `reference/regulatory-checklist-2026.md` | You are running `regulatory` Recipe, drafting the regulatory-compliance plan, or pre-flighting submission. Covers Privacy Manifest, Data Safety, DMA, EAA, AI disclosure, Children, Fintech-Crypto |
-| `reference/cross-platform-decision-tree.md` | You are running `xplat` Recipe, or you need to confirm pure-native vs KMP-shared-logic vs CMP vs RN vs Flutter at SURVEY |
-| `reference/native-stack-defaults.md` | You need the full Native Stack Defaults matrix (iOS/Android per layer) or the Critical Thresholds table (parity verdict mix, offline tier, OS/targetSdk baselines, Xcode 26, 16KB, AI disclosure, EU/Children/Fintech) |
-| `reference/handoffs.md` | You are in `HANDOFF` — generating structured handoff blocks for downstream agents |
-| [`_common/BOUNDARIES.md`](../_common/BOUNDARIES.md) | Role boundaries are ambiguous (especially vs Native, Shift, Atlas, Lens) |
-| [`_common/OPERATIONAL.md`](../_common/OPERATIONAL.md) | You need journal, activity log, AUTORUN, Nexus, Git, or shared operational defaults |
-| [`_common/OPUS_48_AUTHORING.md`](../_common/OPUS_48_AUTHORING.md) | You are sizing the blueprint, deciding adaptive thinking depth at architecture mapping or parity-verdict decisions, or front-loading source/target stacks at SURVEY. Critical for Port: P3, P5. |
-
-## Operational
-
-**Journal** (`.agents/port.md`): Record only project-specific porting insights — web-feature → native-feature translation patterns that worked, third-party SDK availability gaps discovered, store-policy blockers encountered, offline-tier rationale that informed downstream decisions. Skip routine surveys and standard architecture mappings.
-
-- Activity log: append `| YYYY-MM-DD | Port | (action) | (files) | (outcome) |` to `.agents/PROJECT.md`.
-- Follow `_common/GIT_GUIDELINES.md`.
-
-Shared protocols: [`_common/OPERATIONAL.md`](../_common/OPERATIONAL.md)
-
-## AUTORUN Support
-
-See `_common/AUTORUN.md` for the protocol (`_AGENT_CONTEXT` input, mode semantics, error handling). Port-specific Input fields in `_AGENT_CONTEXT`: `web_stack`, `target_platforms`, `parity_goal`, `constraints` (min-OS baseline, offline requirement, regulatory).
-
-Port-specific `_STEP_COMPLETE.Output` schema:
-
-```yaml
-_STEP_COMPLETE:
-  Agent: Port
-  Status: SUCCESS | PARTIAL | BLOCKED | FAILED
-  Output:
-    deliverable: [blueprint path or inline]
-    artifact_type: Blueprint | Survey | Parity Matrix | Architecture Map | Roadmap | Risk Matrix
-    parameters:
-      web_stack: [detected stack]
-      target_platforms: ["iOS", "Android"]
-      parity_summary: "Full=N Adapted=N Deferred=N Dropped=N"
-      offline_tier_default: T0 | T1 | T2 | T3
-      phase_count: [N phases]
-      ios_min: [iOS NN]
-      android_min: [API NN]
-  Validations:
-    completeness: complete | partial | blocked
-    quality_check: passed | flagged | skipped
-  Handoffs:
-    - target: Native;    content: [per-platform implementation spec ref]
-    - target: Scaffold;  content: [project skeleton spec ref]
-    - target: Gateway;   content: [mobile API contract spec ref]
-  Risks: [High-impact risk and mitigation]
-  Next: Native | Scaffold | Gateway | Schema | Launch | DONE
+```
+Step 0 → 1 → 2 → 3 → 4 → 5 → 6 (sub-agent loop) → 7 → 8
 ```
 
-## Nexus Hub Mode
+## Context Management
 
-When input contains `## NEXUS_ROUTING`, return via `## NEXUS_HANDOFF` (canonical schema in `_common/HANDOFF.md`).
+Step 2 and Step 6 are offloaded to sub-agents. Step 2 uses a single sub-agent to analyze the reference implementation. Step 6 dispatches one sub-agent per feature (serial) to generate plans. The main context retains only concise summaries.
 
-Port-specific findings to surface in handoff:
-- Web stack detected; iOS arch (SwiftUI + MVVM-C, min iOS NN); Android arch (Compose + MVVM/MVI, min API NN)
-- Parity verdict mix: Full=N Adapted=N Deferred=N Dropped=N
-- Offline tier baseline + phase count
-- Top 3 risks with probability × impact
+## Detailed Steps
+
+### Step 0: Configuration Detection and Loading
+
+@../shared/configuration.md
+
+**Port-specific additions to Step 0:**
+
+- **0.2 additional defaults:** `port.source_docs` = `""`, `port.reference_impl` = `""`, `port.target_lang` = `""`
+- **0.4 note:** During Steps 1-4 (before target project exists), config loading runs against the current working directory. After Step 5 creates the target project, subsequent steps use the target project's config.
 
 ---
 
-> Don't translate the web. Re-conceive it as native. Two platforms, one product, zero pretending they're the same.
+### Step 1: Parse Arguments and Discover Feature Specs
+
+#### 1.1 Resolve Docs Project Path
+
+**1.1.0 Path-Like Input Guard:** If the docs project argument does NOT start with `@` but looks like a path (contains `/`, starts with `.`, or matches an existing directory on disk), use `AskUserQuestion`:
+
+```
+Your input looks like a directory path: "{input}"
+Did you mean to use @{input}? (directory paths require an @ prefix)
+```
+
+- Options:
+  - "Yes, use as directory path" → prepend `@` and continue
+  - "No, this is not a path" → display usage instructions and stop
+
+Parse the `@<path>` argument:
+1. Resolve to absolute path
+2. Validate directory exists
+3. Look for feature specs at `<docs-project>/docs/features/*.md`
+4. If none found, try `<docs-project>/features/*.md`, then `<docs-project>/*.md`
+5. If still none: display error with directory contents and stop
+
+Store `docs_project_path` and `feature_specs[]` (list of absolute file paths).
+
+#### 1.2 Resolve Reference Implementation
+
+If `--ref <name>` is provided:
+1. Try sibling directory: `<docs-project>/../<name>/`
+2. If not found, try as absolute path
+3. Validate: directory exists and contains `planning/` with at least one `*/state.json`
+4. If invalid: warn `"Reference '{name}' not found or has no planning data. Continuing without reference."` and set `ref_project_path = null`
+
+If `--ref` not provided: set `ref_project_path = null`.
+
+#### 1.3 Resolve Target Language
+
+Validate `--lang` value. Recognized identifiers:
+- `java`, `typescript` (alias: `ts`), `go` (alias: `golang`), `rust`, `python`, `csharp` (alias: `cs`), `kotlin`, `swift`
+- Unrecognized value: warn and continue (do not reject — new languages are valid)
+
+#### 1.4 Derive Target Project Path
+
+- Default: `<docs-project>/../<docs-name>-<lang>/` (e.g., `../apcore-java/`)
+- Display derived path and use `AskUserQuestion`:
+  - "Use `{derived-path}` (Recommended)" — proceed
+  - "Custom path" — user provides path
+
+#### 1.5 Display Discovery Summary
+
+```
+Docs project:      ../apcore (7 feature specs)
+Reference impl:    ../apcore-python (planning/ found)
+Target language:   java
+Target project:    ../apcore-java
+```
+
+Proceed directly — no confirmation needed.
+
+---
+
+### Step 2: Analyze Reference Implementation (Sub-agent)
+
+**Skip if `ref_project_path` is null.**
+
+Spawn an `Agent` tool call with:
+- `subagent_type`: `"general-purpose"`
+- `description`: `"Analyze reference implementation"`
+
+**Sub-agent prompt:**
+
+```
+Analyze the reference implementation at {ref_project_path} for a cross-language porting operation.
+
+Read the following files:
+1. {ref_project_path}/planning/overview.md — project-level overview with dependency graph
+2. All {ref_project_path}/planning/*/plan.md — implementation plans per feature
+3. All {ref_project_path}/planning/*/state.json — completion status per feature
+
+Return ONLY a structured summary in this exact format:
+
+REFERENCE_IMPL: {project-name}
+REFERENCE_LANG: {detected language from build files or plan content}
+OVERALL_STATUS: {completed-count}/{total-count} features complete
+
+DEPENDENCY_ORDER:
+- {feature-1} (no deps)
+- {feature-2} (depends on: feature-1)
+...
+
+PER_FEATURE:
+- {feature-name}:
+  STATUS: completed | in_progress | pending
+  TASK_COUNT: {N}
+  KEY_DECISIONS: {2-3 bullet points of important architecture decisions from plan.md}
+  LESSONS: {any notable patterns, gotchas, or non-obvious choices}
+
+Keep the summary concise — target ~2-3KB total.
+```
+
+**Main context retains:** Only the returned summary. Store as `reference_summary`.
+
+---
+
+### Step 3: Display Feature List and User Selection
+
+Build a feature display table combining discovered specs with reference data (if available).
+
+**With reference:**
+```
+Feature specs discovered: 7 (from ../apcore/docs/features/)
+Reference: apcore-python (7/7 complete)
+
+  #  Feature              Ref Status    Ref Tasks
+  1  acl-system           ✅ complete   5 tasks
+  2  core-executor        ✅ complete   5 tasks
+  3  decorator-bindings   ✅ complete   6 tasks
+  4  middleware-system     ✅ complete   4 tasks
+  5  observability        ✅ complete   7 tasks
+  6  registry-system      ✅ complete   8 tasks
+  7  schema-system        ✅ complete   7 tasks
+```
+
+**Without reference:**
+```
+Feature specs discovered: 7 (from ../apcore/docs/features/)
+
+  #  Feature
+  1  acl-system
+  2  core-executor
+  ...
+```
+
+Use `AskUserQuestion`:
+- Question: "Which features do you want to port to {lang}?"
+- First option: "All features (Recommended)" — if selected, set `selected_features` to the full list
+- Remaining options: one per feature — if the user wants multiple (but not all), run additional `AskUserQuestion` rounds until they say "done"
+
+Store `selected_features[]`.
+
+---
+
+### Step 4: Confirm Target Tech Stack
+
+Use a **single** `AskUserQuestion` with up to 3 questions based on target language. Skip questions that have obvious single answers.
+
+**For Java:**
+- Question 1 — Build tool: "Maven (Recommended)" / "Gradle"
+- Question 2 — Java version: "Java 17+ (Recommended)" / "Java 21+" / "Java 11+"
+- Question 3 — Test framework: "JUnit 5 (Recommended)" / "TestNG"
+
+**For TypeScript:**
+- Question 1 — Runtime: "Node.js (Recommended)" / "Deno" / "Bun"
+- Question 2 — Package manager: "pnpm (Recommended)" / "npm" / "yarn"
+- Question 3 — Test framework: "Vitest (Recommended)" / "Jest"
+
+**For Go:**
+- Question 1 — Go version: "1.21+ (Recommended)" / "1.22+"
+- Question 2 — Test extras: "Standard testing (Recommended)" / "testify"
+
+**For Rust:**
+- Question 1 — Async runtime: "tokio (Recommended)" / "async-std" / "None (sync only)"
+- Question 2 — Serialization: "serde (Recommended)" / "Other"
+
+**For other languages:** Ask a single open-ended question: "What tech stack and key libraries should be used for {lang}?"
+
+Store `tech_stack` decisions.
+
+---
+
+### Step 5: Initialize Target Project Skeleton
+
+#### 5.1 Create Target Directory
+
+1. If target directory already exists:
+   - Use `AskUserQuestion`: "Target directory `{path}` already exists."
+     - "Update config only (Recommended)" — overwrite `.code-forge.json`, keep everything else
+     - "Use as-is" — skip all initialization, jump to Step 6
+     - "Cancel" — stop
+2. If not exists: `mkdir -p <target-path>`
+
+**Do NOT copy feature specs:** Never copy `docs/features/` or any feature spec files from the docs project into the target project. Feature specs are accessed from the source docs project via relative paths configured in `directories.input`. The target project must NOT contain its own copy of feature specs.
+
+If the user explicitly requests local copies of feature specs, use `AskUserQuestion` to confirm before copying:
+- "Copy feature specs locally (creates `docs/features/` in target)" — copy and update `directories.input` to `"docs/features/"`
+- "Keep remote references (Recommended)" — do not copy, keep relative path in config
+
+#### 5.2 Generate .code-forge.json
+
+Write to `<target-path>/.code-forge.json`:
+
+```json
+{
+  "_tool": {
+    "name": "code-forge",
+    "description": "Transform documentation into actionable development plans with task breakdown and status tracking",
+    "url": "https://github.com/tercel/code-forge"
+  },
+  "directories": {
+    "base": "./",
+    "input": "<relative-path-to-docs>/docs/features",
+    "output": "planning/"
+  },
+  "reference_docs": {
+    "sources": ["<relative-path-to-ref>/planning/*/plan.md"]
+  },
+  "port": {
+    "source_docs": "<relative-path-to-docs>",
+    "reference_impl": "<relative-path-to-ref>",
+    "target_lang": "<lang>"
+  },
+  "execution": {
+    "default_mode": "ask",
+    "auto_tdd": true,
+    "task_granularity": "medium"
+  }
+}
+```
+
+Use relative paths from the target project to the docs and reference projects.
+
+If no reference: omit `reference_docs.sources` and `port.reference_impl`.
+
+#### 5.3 Generate Project Skeleton (Sub-agent)
+
+Spawn an `Agent` sub-agent (`subagent_type: "general-purpose"`):
+
+**Sub-agent prompt:**
+
+```
+Initialize a {lang} project skeleton at {target_path}.
+
+Project name: {project-name}
+Language: {lang}
+Tech stack: {tech_stack decisions from Step 4}
+
+Create the following files:
+1. Build file — {pom.xml | package.json | go.mod | Cargo.toml | etc.} with project metadata and minimal dependencies
+2. .gitignore — language-appropriate patterns
+3. README.md — minimal: project name, one-line description ("apcore SDK for {lang}"), link to docs project
+
+Do NOT create src/ or test/ directories — those are created by feature tasks during implementation.
+Do NOT copy docs/features/ or any feature spec files into this project.
+
+You MUST create all three files listed above (build file, .gitignore, README.md). Return the list of files created.
+```
+
+**Verify skeleton files:** After sub-agent completes, check that the following files exist in `{target_path}`:
+- Build file (`pom.xml` / `package.json` / `go.mod` / `Cargo.toml` / etc.)
+- `.gitignore`
+- `README.md`
+
+If any are missing, create them directly in the main context. Do NOT skip this verification.
+
+Also verify that `docs/features/` does NOT exist in the target project. If it was created, delete it immediately.
+
+#### 5.4 Initialize Git Repository
+
+```bash
+cd <target-path> && git init && git add . && git commit -m "chore: initialize {project-name} project skeleton"
+```
+
+Only if not already a git repo.
+
+---
+
+### Step 6: Batch Generate Plans (Sub-agent per Feature, Serial)
+
+Process each selected feature in order. Use dependency order from Step 2 reference summary if available; otherwise alphabetical.
+
+#### 6.0 Display Batch Header
+
+```
+Generating plans for {count} features...
+```
+
+#### 6.1 Per-Feature Loop
+
+For each feature in `selected_features[]`:
+
+**6.1.1 Check Existing Plan**
+
+If `<target>/planning/<feature>/state.json` exists:
+- Display: `[{i}/{total}] {feature} — skipped (plan already exists)`
+- Continue to next feature
+
+**6.1.2 Create Feature Directory**
+
+```
+mkdir -p <target>/planning/<feature>/tasks/
+```
+
+**6.1.3 Dispatch Plan Sub-agent**
+
+Spawn an `Agent` sub-agent (`subagent_type: "general-purpose"`):
+
+**Sub-agent prompt:**
+
+```
+Generate an implementation plan for porting the "{feature}" feature to {lang}.
+
+## Input
+- Feature spec: {docs_project_path}/docs/features/{feature}.md (read this file)
+- Target project: {target_path}
+- Target language: {lang}
+- Tech stack: {tech_stack}
+{if type_mapping_exists:}
+- Type mapping reference: {docs_project_path}/docs/spec/type-mapping.md (read this file for cross-language type translations)
+{end if}
+
+## Reference Context (from existing {ref_lang} implementation)
+{reference_summary — the per-feature section for this feature from Step 2}
+
+## Output Files
+Write ALL of the following files:
+
+### 1. {target}/planning/{feature}/plan.md
+Required sections:
+- **Goal** — one sentence
+- **Architecture Design** — component structure, data flow, technology choices with rationale
+- **Task Breakdown** — mermaid dependency graph + task list with estimated time and dependencies
+- **Risks and Considerations** — technical challenges
+- **Acceptance Criteria** — checklist
+- **References** — related docs
+
+Ensure the plan uses {lang}-idiomatic patterns (not a line-by-line translation of the reference).
+
+**Task ID naming:** Task IDs must be descriptive names **without numeric prefixes**. Use `setup`, `models`, `api` — NOT `01-setup`, `02-models`. Execution order is defined in overview.md, not by filename ordering.
+
+### 2. {target}/planning/{feature}/tasks/{name}.md (one per task)
+Each task file must include:
+- **Goal** — what this task accomplishes
+- **Files Involved** — files to create/modify
+- **Steps** — numbered, TDD-first (write tests → run → implement → verify), with {lang}-specific commands and code examples
+- **Acceptance Criteria** — checklist
+- **Dependencies** — depends on / required by
+- **Estimated Time**
+
+**Naming (critical):** Use descriptive filenames — `setup.md`, `models.md`, `api.md`. **NO numeric prefixes** (`01-setup.md`, `02-models.md` are WRONG). Execution order is controlled by `overview.md` Task Execution Order table and `state.json`, never by filename ordering.
+
+### 3. {target}/planning/{feature}/overview.md
+Sections:
+- **Overview** — feature summary
+- **Scope** — included/excluded
+- **Technology Stack** — language, framework, key deps, test tools
+- **Task Execution Order** — table: #, Task File, Description, Status
+- **Progress** — counts
+- **Reference Documents** — link to source spec
+
+## Return Format
+Return ONLY a concise summary:
+FEATURE: {feature}
+STATUS: planned
+TASK_COUNT: <N>
+TASKS:
+- <id>: <title> (~<estimate>)
+EXECUTION_ORDER: <id1>, <id2>, ...
+```
+
+**6.1.3.1 Verify Plan Output**
+
+After sub-agent completes, verify the following files were created:
+- `{target}/planning/{feature}/plan.md` — must exist and be non-empty
+- `{target}/planning/{feature}/tasks/` — must contain at least one `.md` file
+- `{target}/planning/{feature}/overview.md` — must exist and be non-empty
+
+If any file is missing, this is a sub-agent failure. Follow the error handling in 6.2 (display failure, ask user to skip/retry/stop). Do NOT proceed to state.json creation with missing plan files.
+
+**6.1.4 Initialize state.json**
+
+After sub-agent completes, parse its summary and create `<target>/planning/<feature>/state.json`:
+
+```json
+{
+  "feature": "{feature}",
+  "created": "{ISO timestamp}",
+  "updated": "{ISO timestamp}",
+  "status": "pending",
+  "execution_order": ["{id1}", "{id2}", "..."],
+  "progress": {
+    "total_tasks": {N},
+    "completed": 0,
+    "in_progress": 0,
+    "pending": {N}
+  },
+  "tasks": [
+    {
+      "id": "{task-id}",
+      "file": "tasks/{task-id}.md",
+      "title": "{task-title}",
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "assignee": null,
+      "commits": []
+    }
+  ],
+  "metadata": {
+    "source_doc": "{relative-path-to-feature-spec}",
+    "created_by": "code-forge:port",
+    "version": "1.0",
+    "ported_from": {
+      "reference_impl": "{ref-project-name or null}",
+      "reference_lang": "{ref-lang or null}",
+      "target_lang": "{lang}"
+    }
+  }
+}
+```
+
+**6.1.5 Display Progress**
+
+```
+[{i}/{total}] {feature} planned ({task_count} tasks, ~{estimate})
+```
+
+#### 6.2 Error Handling
+
+If a sub-agent fails for a feature:
+- Display: `[{i}/{total}] {feature} — FAILED: {error summary}`
+- Use `AskUserQuestion`: "Feature planning failed."
+  - "Skip and continue" — mark as skipped, continue to next feature
+  - "Skip all future failures" — auto-skip any remaining failures without prompting
+  - "Retry" — re-dispatch sub-agent
+  - "Stop" — exit the batch loop
+
+---
+
+### Step 7: Generate Project Overview
+
+@../shared/overview-generation.md
+
+Scan `<target>/planning/*/state.json` and generate `<target>/planning/overview.md`.
+
+Display: `Project overview generated: planning/overview.md`
+
+---
+
+### Step 8: Display Results and Next Steps
+
+```
+Port completed!
+
+Target project: {target_path}
+Features planned: {planned}/{selected} ({skipped} skipped)
+Total tasks: {total_task_count}
+
+Feature Summary:
+  #  Feature              Tasks  Estimated
+  1  schema-system        7      ~14h
+  2  core-executor        5      ~10h
+  ...
+
+Next steps:
+  cd {target_path}
+  /code-forge:status                         View project dashboard
+  /code-forge:impl {first-feature}           Start implementing first feature
+```
+
+## Coordination with Other Skills
+
+- **After port:** `cd` to target project, use `/code-forge:impl {feature}` to execute tasks
+- **With /code-forge:status:** View overall progress across all ported features
+- **With /code-forge:review:** Review completed features
+- **With /code-forge:fixbug:** Debug issues in ported code
+- Port does NOT invoke impl — the user controls when to start implementation
+
+## Notes
+
+1. **Serial execution:** Features are planned one at a time for cross-feature consistency and user control
+2. **Reference is optional:** Port works without `--ref`, just without architecture reference context
+3. **Idiomatic porting:** Sub-agents are instructed to use target-language idioms, not translate line-by-line
+4. **Type mapping:** If `docs/spec/type-mapping.md` exists in the docs project, it's provided to sub-agents for cross-language type translation guidance
+5. **Resumable:** Re-running port skips features that already have `state.json` — safe to resume after interruption
+6. **Standard output:** Generated plans are indistinguishable from regular `/code-forge:plan` output — all downstream skills work unchanged

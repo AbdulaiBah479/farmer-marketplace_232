@@ -1,477 +1,196 @@
 ---
-name: debug
-description: Fix bugs systematically instead of guessing. Use when features break, users report errors, or tests fail. Covers reproducing bugs, gathering diagnostic info, and working with AI tools to fix issues efficiently for non-technical founders.
+name: Debug
+description: Conventions and tools for the `debug` npm package. Run tests with debug output.
+allowed-tools:
+  - Bash
 ---
 
-# Debug
+# debug
 
-## Debugging Workflow
+Conventions for the `debug` npm package.
 
-```
-Debug Process:
-- [ ] Reproduce bug consistently
-- [ ] Capture what's happening (screenshots, errors)
-- [ ] Check what changed recently
-- [ ] Gather diagnostic info
-- [ ] Give info to AI to diagnose
-- [ ] AI proposes fix
-- [ ] Test fix works
-- [ ] Verify didn't break anything else
-```
+## Setup
 
-See [DEBUG-CHECKLIST.md](DEBUG-CHECKLIST.md) for detailed steps.
+```typescript
+import createDebug from 'debug';
 
----
+// Server: include app/library name
+const Debug = createDebug('MyApp:ClassName');
 
-## The Golden Rule
-
-**NO GUESSING. GATHER INFO FIRST.**
-
-Bad approach:
-1. Something broke
-2. Try random fix
-3. Doesn't work
-4. Try another fix
-5. Still broken after 5 attempts
-
-Good approach:
-1. Something broke
-2. Reproduce it consistently
-3. Gather diagnostic info
-4. Give to AI to diagnose
-5. AI fixes it (usually first try)
-
-**Diagnosis before fixes.**
-
----
-
-## Reproducing Bugs
-
-**Before asking AI to fix, reproduce it:**
-
-```
-Can you reproduce it?
-- [ ] Exact steps to trigger bug
-- [ ] Happens every time
-- [ ] Happens on specific browser/device
-- [ ] Happens with specific data
-
-If can't reproduce:
-- Ask user for exact steps
-- Try different browser/device
-- Try with different data
-- Check if intermittent (timing issue)
+// Client: class name only
+const Debug = createDebug('ClassName');
 ```
 
-**Tell AI:**
-```
-Bug: [description]
+## In Methods
 
-Steps to reproduce:
-1. [Step]
-2. [Step]
-3. [Bug happens]
+```typescript
+async processOrder(orderId: string, items: Item[]) {
+  const debug = Debug.extend('processOrder');
+  debug('orderId %j', orderId);
+  debug('items.length %j', items.length);  // Don't log large arrays
 
-Happens: [Always / Sometimes / Once]
-Browser: [Chrome 120 on Mac]
-Screenshot: [attach]
-```
+  const result = await this.orderService.create(orderId, items);
+  debug('result %j', result);
 
----
+  return result;
+}
 
-## Capturing Error Info
-
-### Browser Console Errors
-
-**Open console:**
-1. Right-click page → Inspect
-2. Click "Console" tab
-3. Look for red errors
-
-**Screenshot errors and give to AI:**
-```
-I see this error in console:
-[paste error message]
-
-When it happens:
-[what you were doing]
-
-Please:
-1. Explain what this means
-2. Identify the cause
-3. Fix the issue
+// Extend again inside callbacks when needed
+items.forEach((item, index) => {
+  const cbDebug = debug.extend(`item-${index}`);
+  cbDebug('processing %j', item);
+});
 ```
 
-### Network Errors
+## Rules
 
-**Check network tab:**
-1. Open DevTools → Network
-2. Reproduce bug
-3. Look for failed requests (red)
-4. Click failed request
-5. Check response
+1. **Blank line after debug statements** - separates logging from logic
+   ```typescript
+   // Good
+   debug('orderId %j', orderId);
+   debug('items.length %j', items.length);
 
-**Tell AI:**
-```
-API call failing:
-URL: /api/endpoint
-Status: 500 Internal Server Error
-Response: [paste error response]
+   const result = await this.process(orderId);
+   debug('result %j', result);
 
-This happens when: [action]
-```
+   return result;
 
-### Visual Bugs
+   // Bad - debug mixed with logic
+   debug('orderId %j', orderId);
+   const result = await this.process(orderId);
+   debug('result %j', result);
+   return result;
+   ```
 
-**Screenshot everything:**
-- What you expected to see
-- What actually shows
-- Full page context
-- Error messages
+2. **One item per debug statement**
+   ```typescript
+   // Good
+   debug('this.userId %j', this.userId);
+   debug('this.token %j', this.token);
 
-**Tell AI:**
-```
-Visual bug: [description]
-Expected: [screenshot or description]
-Actual: [screenshot]
-Device: [iPhone 14, Chrome on Mac, etc]
-```
+   // Bad
+   debug('userId=%s token=%s', this.userId, this.token);
+   ```
 
----
+3. **Keep labels simple** - use variable name, not prose
+   ```typescript
+   // Good
+   debug('order %j', order);
 
-## What Changed?
+   // Bad
+   debug('The current order is: %j', order);
+   ```
 
-**Ask yourself:**
-- Did this work yesterday?
-- What did AI change today?
-- Did you deploy recently?
-- Did you change any settings?
+4. **Label must match value** - no transformations
+   ```typescript
+   // Good - label matches value exactly
+   debug('this.maxDate', this.maxDate);
 
-**Tell AI:**
-```
-This worked yesterday, broke today.
-Changes made today:
-- [Change 1]
-- [Change 2]
+   // Bad - label says maxDate but value is toISO() result
+   debug('this.maxDate', this.maxDate.toISO());
+   ```
 
-Which could cause: [the bug]?
-```
+5. **Prose-only for flow markers** - when there's no value to log
+   ```typescript
+   debug('initialized');
+   debug('enter pressed');
+   debug('no loader registered');
+   ```
 
----
+6. **Use %j for Server Side Only** (usually)
+   ```typescript
+   // Server: always use %j
+   debug('config %j', config);
 
-## Common Bug Types
+   // Client: don't use %j - browser console lets you inspect objects
+   debug('config', config);
 
-### "Nothing happens when I click"
+   // Exception: use %j client-side for timing issues where you need
+   // to see object state at multiple points in time (otherwise you
+   // only see the final state when you expand the object)
+   ```
 
-**Check:**
-- Console errors?
-- Network request failing?
-- Button actually clickable?
+7. **Log length for arrays** - don't flood output
+   ```typescript
+   debug('users.length %j', users.length);
+   ```
 
-**Tell AI:**
-```
-Button does nothing when clicked.
-Button: [which button]
-Expected: [what should happen]
-Console errors: [paste any errors]
-```
+8. **Debug early returns** - so you can trace why execution stopped
+   ```typescript
+   if (!date) {
+     debug('date %j', date);
 
-### "Page won't load"
+     this.control.setValue(null);
+     return;
+   }
+   ```
 
-**Check:**
-- Network errors?
-- JavaScript errors?
-- Infinite redirect?
+9. **Debug inputs and outputs** - trace execution flow
+   ```typescript
+   async getUser(id: string) {
+     const debug = Debug.extend('getUser');
+     debug('id %j', id);
 
-**Tell AI:**
-```
-Page won't load: /page/url
-Browser shows: [blank / error / loading forever]
-Console errors: [paste]
-Network errors: [paste]
-```
+     const user = await this.db.findUser(id);
+     debug('user %j', user);
 
-### "Wrong data showing"
+     return user;
+   }
+   ```
 
-**Check:**
-- API returning wrong data?
-- Caching issue?
-- State management bug?
+10. **Debug intermediate results** - after each method call
+   ```typescript
+   const user = await this.userService.getUser(id);
+   debug('user %j', user);
 
-**Tell AI:**
-```
-Showing wrong data.
-Expected: [User A's profile]
-Showing: [User B's profile]
-API response: [paste from Network tab]
-```
+   const permissions = await this.authService.getPermissions(user.role);
+   debug('permissions %j', permissions);
 
-### "Form doesn't submit"
+   const filtered = permissions.filter(p => p.active);
+   debug('filtered.length %j', filtered.length);
+   ```
 
-**Check:**
-- Validation errors?
-- Console errors?
-- Network request happening?
+11. **Debug loop iterations** when needed
+   ```typescript
+   for (const item of items) {
+     debug('item %j', item);
+     // ... process item
+   }
+   ```
 
-**Tell AI:**
-```
-Form won't submit.
-Form: [which form]
-Filled: [what data entered]
-Validation errors: [any visible]
-Console errors: [paste]
-```
+12. **Use console for always-on logging**
+   ```typescript
+   console.log('Server started on port', port);  // Always show
+   console.error('Fatal error:', err);           // Always show
+   debug('request %j', req);                     // Only when DEBUG enabled
+   ```
 
----
+## Enabling Debug Output
 
-## Working with AI to Debug
+Server-side DEBUG strings can get long. Remember that wildcards work well:
 
-### Step 1: Gather Info
+```bash
+# Full namespace
+DEBUG=MyApp:OrderService:processOrder node app.js
 
-```
-Before asking AI to fix, provide:
-- Exact steps to reproduce
-- Expected vs actual behavior
-- Screenshots/error messages
-- Browser and device
-- What changed recently (if known)
-```
-
-### Step 2: AI Diagnoses
-
-```
-[Paste all info above]
-
-Before proposing fixes:
-1. What do you think is wrong?
-2. Why is it happening?
-3. What needs to change?
-
-Explain in plain English first.
+# Wildcard - often sufficient
+DEBUG=*processOrder node app.js
+DEBUG=*Order* node app.js
 ```
 
-### Step 3: AI Fixes
+## Running Tests with Debug
 
-```
-Okay, now please fix it.
+Use the debug-test script to run tests with DEBUG output:
 
-After fixing:
-- Explain what you changed
-- How to test the fix
-- What to watch out for
-```
+```bash
+# Run specific test file with debug output
+bash .claude/skills/debug/scripts/debug-test.sh '*OrderService*' -- src/order.spec.ts
 
-### Step 4: Verify Fix
+# Run test by name pattern
+bash .claude/skills/debug/scripts/debug-test.sh '*processOrder*' -- -t "should process order"
 
-```
-Test the fix:
-- [ ] Original bug is gone
-- [ ] Tested same steps, works now
-- [ ] Related features still work
-- [ ] No new console errors
+# Run all tests in a directory with debug
+bash .claude/skills/debug/scripts/debug-test.sh 'MyApp:*' -- src/services/
 ```
 
-See [DEBUG-PROMPTS.md](DEBUG-PROMPTS.md) for more patterns.
-
----
-
-## When You're Stuck
-
-**After 2 failed fix attempts:**
-
-Stop. Don't try a 3rd fix.
-
-**Ask AI:**
-```
-Tried 2 fixes, both didn't work.
-
-Original bug: [description]
-Fix 1: [what we tried] - didn't work
-Fix 2: [what we tried] - still broken
-
-Questions:
-- Are we fixing the wrong thing?
-- Is there a better approach?
-- Should we start over?
-```
-
-**If 3+ fixes failed:** Probably need to rethink approach, not try more fixes.
-
----
-
-## Intermittent Bugs
-
-**"It works sometimes, breaks sometimes"**
-
-**Likely causes:**
-- Race condition (timing)
-- Caching issue
-- Network timing
-- External API flakiness
-
-**Tell AI:**
-```
-Bug is intermittent.
-Works: [X] out of 10 times
-Fails: [Y] out of 10 times
-
-Pattern noticed:
-- Fails more often when [condition]
-- Never fails when [condition]
-
-Please add logging to capture when it fails.
-```
-
----
-
-## Bugs in Production
-
-**Users reporting bugs in live app:**
-
-**Priority 1: Can users work around it?**
-- Yes → Fix in next deployment
-- No → Emergency fix needed
-
-**For emergency fixes:**
-```
-Production bug blocking users.
-Bug: [description]
-Impact: [how many users affected]
-
-Need quick fix:
-- Simplest solution that works
-- Don't optimize, just unblock users
-- Can improve later
-```
-
-**For non-urgent:**
-```
-Production bug reported by user.
-Bug: [description]
-Impact: [minor / major]
-Can work around: [yes / no]
-
-Reproduce in development:
-[steps]
-
-Then fix and test before deploying.
-```
-
----
-
-## Reading Error Messages
-
-**Common error patterns:**
-
-**"Cannot read property of undefined"**
-- Trying to access something that doesn't exist
-- Check: Is data loaded before accessing it?
-
-**"Maximum call stack exceeded"**
-- Infinite loop or recursion
-- Check: Function calling itself forever?
-
-**"Network request failed"**
-- API call not working
-- Check: Network tab for status code
-
-**"Unauthorized" or "401"**
-- Authentication issue
-- Check: Are you logged in? Token valid?
-
-**"Internal Server Error" or "500"**
-- Backend problem
-- Check: Server logs for details
-
-See [ERROR-MESSAGES.md](ERROR-MESSAGES.md) for more.
-
----
-
-## Debugging Tools
-
-**Built into browser:**
-- Console: See errors and logs
-- Network: See API calls and responses
-- Elements: Inspect HTML/CSS
-- Sources: Set breakpoints (advanced)
-
-**How to use:**
-1. Open DevTools (F12 or right-click → Inspect)
-2. Click relevant tab
-3. Reproduce bug
-4. Look for errors/failed requests
-
-**Screenshot and give to AI** - AI can interpret errors.
-
----
-
-## Common Mistakes
-
-| Mistake | Fix |
-|---------|-----|
-| Trying fixes without info | Gather diagnostic info first |
-| "It doesn't work" | Be specific: what doesn't work? |
-| Not reproducing first | Find consistent steps to trigger bug |
-| Random fixes | Diagnose root cause first |
-| Ignoring console errors | Always check console |
-| Not testing after fix | Verify fix works, didn't break other things |
-
----
-
-## When to Get Help
-
-**Consider hiring developer when:**
-- Stuck after following this process
-- Critical bug can't figure out
-- Same bug keeps coming back
-- Bug in complex integration
-- Need production fixed urgently
-
-**For most bugs:** Following this process with AI is sufficient.
-
----
-
-## Prevention
-
-**After fixing, ask AI:**
-```
-Bug is fixed. 
-
-How could we have prevented this?
-- Better validation?
-- Better error handling?
-- Testing we should add?
-```
-
-**Build prevention into next features.**
-
----
-
-## Quick Debug Checklist
-
-**When something breaks:**
-
-```
-Quick Debug:
-- [ ] Can I reproduce it?
-- [ ] Any console errors?
-- [ ] Any network errors?
-- [ ] What changed recently?
-- [ ] Screenshot the issue
-- [ ] Gather all info
-- [ ] Give to AI with context
-- [ ] Test AI's fix
-```
-
-**5 minutes of diagnosis > 2 hours of guessing**
-
----
-
-## Success Looks Like
-
-✅ Bugs fixed on first or second try  
-✅ Can explain what was wrong  
-✅ Know how to reproduce bugs  
-✅ Gather complete info before asking for fixes  
-✅ Verify fixes work and don't break other things  
-✅ Bugs getting rarer over time (learning patterns)
+The script sets the DEBUG environment variable and passes remaining arguments to `npm test`.

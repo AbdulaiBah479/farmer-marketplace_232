@@ -1,13 +1,17 @@
 ---
-name: Global Commenting
-description: Your approach to handling global commenting. Use this skill when working on files where global commenting comes into play.
+name: global--commenting
+description: Apply the Agent OS standard for global commenting.
+tags: [agent-os, standard, global]
 ---
 
 # Global Commenting
 
-This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle global commenting.
+Use this skill when working on global commenting in this repo.
 
 ## Instructions
 
-For details, refer to the information provided in this file:
-[global commenting](../../../agent-os/standards/global/commenting.md)
+- Follow the standard in `agent-os/standards/global/commenting.md`.
+
+## References
+
+- `agent-os/standards/global/commenting.md`

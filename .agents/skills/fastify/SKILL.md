@@ -1,337 +1,390 @@
 ---
-name: fastify
-description: Fastify plugins, hooks, validation, serialization, and performance optimization patterns.
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+name: Fastify
+description: Expert guidance for Fastify web framework including server setup, routing, plugins, hooks, validation, error handling, and TypeScript integration. Use this when building high-performance Node.js web servers and REST APIs.
 ---
 
-# Fastify Skill
+# Fastify
 
-Expert assistance for building high-performance APIs with Fastify.
+Expert assistance with Fastify - Fast and low overhead web framework for Node.js.
 
-## Capabilities
+## Overview
 
-- Configure Fastify with plugins
-- Implement hooks for lifecycle management
-- Set up JSON Schema validation
-- Optimize serialization for performance
-- Build type-safe APIs with TypeScript
-- Create reusable plugins
+Fastify is a highly performant web framework:
+- **Fast**: One of the fastest Node.js frameworks
+- **Low Overhead**: Minimal resource consumption
+- **Schema-based**: JSON Schema validation
+- **TypeScript**: Excellent TypeScript support
+- **Plugin Architecture**: Extensible with plugins
+- **Logging**: Built-in logging with Pino
 
-## Usage
+## Installation
 
-Invoke this skill when you need to:
-- Build high-performance APIs
-- Implement schema validation
-- Create custom plugins
-- Optimize JSON serialization
-- TypeScript integration
+```bash
+npm install fastify
+npm install --save-dev @types/node
 
-## Inputs
+# Common plugins
+npm install @fastify/cors          # CORS support
+npm install @fastify/websocket     # WebSocket support
+npm install @fastify/cookie        # Cookie parsing
+npm install @fastify/jwt           # JWT authentication
+npm install @fastify/helmet        # Security headers
+npm install @fastify/rate-limit    # Rate limiting
+```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| routePrefix | string | Yes | Route prefix |
-| validation | boolean | No | Add JSON Schema validation |
-| plugins | array | No | Plugins to use |
-
-## Patterns
-
-### Application Setup
+## Quick Start
 
 ```typescript
-// src/app.ts
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
+
+const server = Fastify({
+  logger: true, // Enable Pino logging
+});
+
+server.get('/ping', async (request, reply) => {
+  return { pong: 'it worked!' };
+});
+
+await server.listen({ port: 3000, host: '0.0.0.0' });
+console.log('Server listening on http://localhost:3000');
+```
+
+## Server Configuration
+
+```typescript
+import Fastify from 'fastify';
+
+const server = Fastify({
+  logger: {
+    level: 'info',
+    transport: {
+      target: 'pino-pretty', // Pretty printing in development
+    },
+  },
+  bodyLimit: 1048576, // 1MB body limit
+  caseSensitive: true, // Case-sensitive routes
+  ignoreTrailingSlash: false,
+  requestIdHeader: 'x-request-id',
+  requestIdLogLabel: 'reqId',
+  trustProxy: true, // Trust proxy headers
+});
+```
+
+## Routing
+
+### Basic Routes
+
+```typescript
+// GET
+server.get('/users', async (request, reply) => {
+  return [{ id: 1, name: 'John' }];
+});
+
+// POST
+server.post('/users', async (request, reply) => {
+  const { name, email } = request.body;
+  return { id: 2, name, email };
+});
+
+// PUT
+server.put('/users/:id', async (request, reply) => {
+  const { id } = request.params;
+  const { name } = request.body;
+  return { id, name };
+});
+
+// DELETE
+server.delete('/users/:id', async (request, reply) => {
+  const { id } = request.params;
+  return { deleted: id };
+});
+
+// PATCH
+server.patch('/users/:id', async (request, reply) => {
+  return { updated: true };
+});
+```
+
+### Route Parameters
+
+```typescript
+// URL parameters
+server.get<{
+  Params: { id: string };
+}>('/users/:id', async (request, reply) => {
+  const { id } = request.params; // Typed!
+  return { id };
+});
+
+// Multiple parameters
+server.get<{
+  Params: { userId: string; postId: string };
+}>('/users/:userId/posts/:postId', async (request, reply) => {
+  const { userId, postId } = request.params;
+  return { userId, postId };
+});
+
+// Query parameters
+server.get<{
+  Querystring: { search?: string; limit?: number };
+}>('/search', async (request, reply) => {
+  const { search, limit = 10 } = request.query;
+  return { search, limit };
+});
+```
+
+### TypeScript Types
+
+```typescript
+import { FastifyRequest, FastifyReply } from 'fastify';
+
+interface CreateUserBody {
+  name: string;
+  email: string;
+}
+
+interface UserParams {
+  id: string;
+}
+
+server.post<{
+  Body: CreateUserBody;
+}>('/users', async (request, reply) => {
+  const { name, email } = request.body; // Fully typed
+  return { id: '1', name, email };
+});
+
+server.get<{
+  Params: UserParams;
+}>('/users/:id', async (request, reply) => {
+  const { id } = request.params;
+  return { id };
+});
+```
+
+## Validation
+
+### JSON Schema Validation
+
+```typescript
+const createUserSchema = {
+  body: {
+    type: 'object',
+    required: ['name', 'email'],
+    properties: {
+      name: { type: 'string', minLength: 2 },
+      email: { type: 'string', format: 'email' },
+      age: { type: 'number', minimum: 18 },
+    },
+  },
+  response: {
+    201: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        email: { type: 'string' },
+      },
+    },
+  },
+};
+
+server.post('/users', {
+  schema: createUserSchema,
+}, async (request, reply) => {
+  const { name, email, age } = request.body;
+  reply.status(201);
+  return { id: '1', name, email };
+});
+```
+
+## Plugins
+
+### Register Plugins
+
+```typescript
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import swagger from '@fastify/swagger';
-import swaggerUi from '@fastify/swagger-ui';
 
-import { usersRoutes } from './routes/users';
-import { authRoutes } from './routes/auth';
-import { errorHandler } from './plugins/error-handler';
+// CORS
+await server.register(cors, {
+  origin: true, // Reflect origin
+  credentials: true,
+});
 
-export async function buildApp(): Promise<FastifyInstance> {
-  const app = Fastify({
-    logger: {
-      level: process.env.LOG_LEVEL || 'info',
-      transport: process.env.NODE_ENV !== 'production'
-        ? { target: 'pino-pretty' }
-        : undefined,
-    },
-    ajv: {
-      customOptions: {
-        removeAdditional: 'all',
-        coerceTypes: true,
-        useDefaults: true,
-      },
-    },
-  });
+// Security headers
+await server.register(helmet);
 
-  // Security plugins
-  await app.register(helmet);
-  await app.register(cors, {
-    origin: process.env.CORS_ORIGIN || true,
-    credentials: true,
-  });
-  await app.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 minute',
-  });
-
-  // Documentation
-  await app.register(swagger, {
-    openapi: {
-      info: {
-        title: 'API Documentation',
-        version: '1.0.0',
-      },
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-          },
-        },
-      },
-    },
-  });
-  await app.register(swaggerUi, {
-    routePrefix: '/docs',
-  });
-
-  // Custom plugins
-  await app.register(errorHandler);
-
-  // Routes
-  await app.register(authRoutes, { prefix: '/api/auth' });
-  await app.register(usersRoutes, { prefix: '/api/users' });
-
-  // Health check
-  app.get('/health', async () => ({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  }));
-
-  return app;
-}
+// Rate limiting
+await server.register(rateLimit, {
+  max: 100, // 100 requests
+  timeWindow: '1 minute',
+});
 ```
 
-### Routes with Schema Validation
+### Custom Plugin
 
 ```typescript
-// src/routes/users.ts
-import { FastifyPluginAsync } from 'fastify';
-import { Type, Static } from '@sinclair/typebox';
-import { UsersService } from '../services/users.service';
-
-const UserSchema = Type.Object({
-  id: Type.String(),
-  name: Type.String(),
-  email: Type.String({ format: 'email' }),
-  role: Type.Union([Type.Literal('user'), Type.Literal('admin')]),
-  createdAt: Type.String({ format: 'date-time' }),
-});
-
-const CreateUserSchema = Type.Object({
-  name: Type.String({ minLength: 1 }),
-  email: Type.String({ format: 'email' }),
-  password: Type.String({ minLength: 8 }),
-  role: Type.Optional(Type.Union([Type.Literal('user'), Type.Literal('admin')])),
-});
-
-const UpdateUserSchema = Type.Partial(CreateUserSchema);
-
-const PaginationSchema = Type.Object({
-  page: Type.Optional(Type.Number({ minimum: 1, default: 1 })),
-  limit: Type.Optional(Type.Number({ minimum: 1, maximum: 100, default: 10 })),
-  search: Type.Optional(Type.String()),
-});
-
-type User = Static<typeof UserSchema>;
-type CreateUser = Static<typeof CreateUserSchema>;
-type UpdateUser = Static<typeof UpdateUserSchema>;
-type Pagination = Static<typeof PaginationSchema>;
-
-export const usersRoutes: FastifyPluginAsync = async (fastify) => {
-  const service = new UsersService();
-
-  fastify.get<{ Querystring: Pagination }>('/', {
-    schema: {
-      tags: ['users'],
-      querystring: PaginationSchema,
-      response: {
-        200: Type.Object({
-          data: Type.Array(UserSchema),
-          meta: Type.Object({
-            total: Type.Number(),
-            page: Type.Number(),
-            limit: Type.Number(),
-          }),
-        }),
-      },
-    },
-    preHandler: [fastify.authenticate],
-  }, async (request) => {
-    return service.findAll(request.query);
-  });
-
-  fastify.get<{ Params: { id: string } }>('/:id', {
-    schema: {
-      tags: ['users'],
-      params: Type.Object({ id: Type.String() }),
-      response: { 200: UserSchema },
-    },
-    preHandler: [fastify.authenticate],
-  }, async (request, reply) => {
-    const user = await service.findById(request.params.id);
-    if (!user) {
-      return reply.status(404).send({ error: 'User not found' });
-    }
-    return user;
-  });
-
-  fastify.post<{ Body: CreateUser }>('/', {
-    schema: {
-      tags: ['users'],
-      body: CreateUserSchema,
-      response: { 201: UserSchema },
-    },
-    preHandler: [fastify.authenticate, fastify.authorize(['admin'])],
-  }, async (request, reply) => {
-    const user = await service.create(request.body);
-    return reply.status(201).send(user);
-  });
-
-  fastify.put<{ Params: { id: string }; Body: UpdateUser }>('/:id', {
-    schema: {
-      tags: ['users'],
-      params: Type.Object({ id: Type.String() }),
-      body: UpdateUserSchema,
-      response: { 200: UserSchema },
-    },
-    preHandler: [fastify.authenticate],
-  }, async (request) => {
-    return service.update(request.params.id, request.body);
-  });
-
-  fastify.delete<{ Params: { id: string } }>('/:id', {
-    schema: {
-      tags: ['users'],
-      params: Type.Object({ id: Type.String() }),
-    },
-    preHandler: [fastify.authenticate, fastify.authorize(['admin'])],
-  }, async (request, reply) => {
-    await service.delete(request.params.id);
-    return reply.status(204).send();
-  });
-};
-```
-
-### Hooks and Plugins
-
-```typescript
-// src/plugins/auth.ts
-import { FastifyPluginAsync, FastifyRequest } from 'fastify';
-import fp from 'fastify-plugin';
-import jwt from '@fastify/jwt';
-
-declare module 'fastify' {
-  interface FastifyInstance {
-    authenticate: (request: FastifyRequest) => Promise<void>;
-    authorize: (roles: string[]) => (request: FastifyRequest) => Promise<void>;
-  }
-}
-
-declare module '@fastify/jwt' {
-  interface FastifyJWT {
-    payload: { id: string; email: string; role: string };
-    user: { id: string; email: string; role: string };
-  }
-}
-
-const authPlugin: FastifyPluginAsync = async (fastify) => {
-  await fastify.register(jwt, {
-    secret: process.env.JWT_SECRET!,
-  });
-
-  fastify.decorate('authenticate', async (request: FastifyRequest) => {
-    await request.jwtVerify();
-  });
-
-  fastify.decorate('authorize', (roles: string[]) => {
-    return async (request: FastifyRequest) => {
-      await request.jwtVerify();
-      if (!roles.includes(request.user.role)) {
-        throw fastify.httpErrors.forbidden('Insufficient permissions');
-      }
-    };
-  });
-};
-
-export default fp(authPlugin, {
-  name: 'auth-plugin',
-});
-
-// src/plugins/error-handler.ts
-import { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
 
-const errorHandler: FastifyPluginAsync = async (fastify) => {
-  fastify.setErrorHandler((error, request, reply) => {
-    fastify.log.error(error);
-
-    if (error.validation) {
-      return reply.status(400).send({
-        error: 'Validation Error',
-        details: error.validation,
-      });
-    }
-
-    const statusCode = error.statusCode || 500;
-    const message = statusCode === 500 && process.env.NODE_ENV === 'production'
-      ? 'Internal Server Error'
-      : error.message;
-
-    return reply.status(statusCode).send({ error: message });
+const myPlugin = fp(async (fastify, options) => {
+  // Add decorator
+  fastify.decorate('myUtility', () => {
+    return 'Hello from plugin!';
   });
-};
 
-export default fp(errorHandler, {
-  name: 'error-handler',
+  // Add hook
+  fastify.addHook('onRequest', async (request, reply) => {
+    // Do something on every request
+  });
+}, {
+  name: 'my-plugin',
+  fastify: '4.x',
+});
+
+await server.register(myPlugin);
+
+// Use decorator
+server.get('/test', async (request, reply) => {
+  return { message: server.myUtility() };
 });
 ```
 
-### Custom Hooks
+## Hooks
 
 ```typescript
-// Lifecycle hooks
-fastify.addHook('onRequest', async (request, reply) => {
-  request.startTime = Date.now();
+// Application hooks
+server.addHook('onRequest', async (request, reply) => {
+  // Called before route handler
+  request.log.info('Incoming request');
 });
 
-fastify.addHook('onResponse', async (request, reply) => {
-  const duration = Date.now() - request.startTime;
-  request.log.info({ duration }, 'Request completed');
+server.addHook('preHandler', async (request, reply) => {
+  // Called after validation, before handler
+  if (!request.headers.authorization) {
+    reply.code(401).send({ error: 'Unauthorized' });
+  }
 });
 
-fastify.addHook('onSend', async (request, reply, payload) => {
-  // Modify response before sending
+server.addHook('onSend', async (request, reply, payload) => {
+  // Called before sending response
   return payload;
+});
+
+server.addHook('onResponse', async (request, reply) => {
+  // Called after response sent
+  request.log.info({ responseTime: reply.getResponseTime() });
+});
+
+server.addHook('onError', async (request, reply, error) => {
+  // Called on error
+  request.log.error(error);
+});
+```
+
+## Error Handling
+
+```typescript
+// Custom error handler
+server.setErrorHandler((error, request, reply) => {
+  request.log.error(error);
+
+  if (error.validation) {
+    reply.status(400).send({
+      error: 'Validation Error',
+      message: error.message,
+      details: error.validation,
+    });
+    return;
+  }
+
+  reply.status(error.statusCode || 500).send({
+    error: error.name,
+    message: error.message,
+  });
+});
+
+// Throw errors in routes
+server.get('/error', async (request, reply) => {
+  throw new Error('Something went wrong!');
+});
+
+// Send error responses
+server.get('/not-found', async (request, reply) => {
+  reply.code(404).send({ error: 'Not found' });
+});
+```
+
+## tRPC Integration
+
+```typescript
+import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
+import { appRouter } from './trpc/router';
+import { createContext } from './trpc/context';
+
+// Register tRPC
+await server.register(fastifyTRPCPlugin, {
+  prefix: '/trpc',
+  trpcOptions: {
+    router: appRouter,
+    createContext,
+  },
+});
+```
+
+## WebSocket Support
+
+```typescript
+import websocket from '@fastify/websocket';
+
+await server.register(websocket);
+
+server.get('/ws', { websocket: true }, (connection, request) => {
+  connection.socket.on('message', (message) => {
+    connection.socket.send('Hello from server!');
+  });
+});
+```
+
+## Testing
+
+```typescript
+import { test } from 'node:test';
+import Fastify from 'fastify';
+
+test('GET /ping returns pong', async (t) => {
+  const server = Fastify();
+
+  server.get('/ping', async () => {
+    return { pong: 'it worked!' };
+  });
+
+  const response = await server.inject({
+    method: 'GET',
+    url: '/ping',
+  });
+
+  t.assert.strictEqual(response.statusCode, 200);
+  t.assert.deepStrictEqual(response.json(), { pong: 'it worked!' });
 });
 ```
 
 ## Best Practices
 
-- Use JSON Schema for validation
-- Leverage TypeBox for TypeScript schemas
-- Create reusable plugins with fastify-plugin
-- Use hooks for cross-cutting concerns
-- Enable schema serialization for performance
+1. **Use Plugins**: Encapsulate functionality in plugins
+2. **Schema Validation**: Always validate input with JSON Schema
+3. **Error Handling**: Set up global error handler
+4. **Logging**: Use built-in Pino logger
+5. **TypeScript**: Leverage type safety
+6. **Hooks**: Use hooks for cross-cutting concerns
+7. **Async/Await**: Use async handlers
+8. **Testing**: Use fastify.inject() for testing
+9. **Performance**: Enable HTTP/2 for better performance
+10. **Security**: Use @fastify/helmet for security headers
 
-## Target Processes
+## Resources
 
-- high-performance-api
-- nodejs-microservices
-- api-development
-- backend-optimization
+- Documentation: https://www.fastify.io/docs/latest/
+- GitHub: https://github.com/fastify/fastify
+- Plugins: https://www.fastify.io/ecosystem/

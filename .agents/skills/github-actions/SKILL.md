@@ -1,474 +1,291 @@
 ---
-name: github-actions
-description: Create and configure GitHub Actions. Use when building custom actions, setting up runners, implementing security practices, or publishing to the marketplace.
+name: "GitHub Actions"
+description: "Detect GitHub repositories, check GitHub Actions status, find workflow runs by commit/branch/PR, download and analyze CI logs, show workflow status and timing. Use when user asks about CI failures, workflow logs, Actions status, pipeline issues, or needs to troubleshoot failed builds."
 ---
 
-# GitHub Actions
+# GitHub Actions Troubleshooting Skill
 
-Activate when creating, modifying, troubleshooting, or optimizing GitHub Actions components. This skill covers action development, marketplace integration, and best practices.
+This skill helps analyze and troubleshoot GitHub Actions workflows in the current repository.
 
 ## When to Use This Skill
 
-Activate when:
-- Creating custom GitHub Actions (JavaScript, Docker, or composite)
-- Publishing actions to GitHub Marketplace
-- Configuring action metadata and inputs/outputs
-- Implementing action security and permissions
-- Troubleshooting action execution
-- Selecting or evaluating marketplace actions
-- Optimizing action performance and reliability
+- User asks about CI/CD failures or build errors
+- User mentions "GitHub Actions", "workflow", "pipeline", or "CI logs"
+- User wants to see status of recent workflow runs
+- User needs to troubleshoot a failed commit or pull request
+- User asks about a specific workflow run
 
-## Action Types
+## Prerequisites
 
-### JavaScript Actions
-
-Execute directly on runners with fast startup and cross-platform compatibility.
-
-**Structure:**
-```
-my-action/
-├── action.yml        # Metadata and interface
-├── index.js          # Entry point
-├── package.json      # Dependencies
-└── node_modules/     # Bundled dependencies
-```
-
-**Key Requirements:**
-- Use `@actions/core` for inputs/outputs
-- Use `@actions/github` for GitHub API access
-- Bundle all dependencies (use @vercel/ncc)
-- Support Node.js LTS versions
-
-**Example action.yml:**
-```yaml
-name: 'My JavaScript Action'
-description: 'Performs custom task'
-inputs:
-  token:
-    description: 'GitHub token'
-    required: true
-  config:
-    description: 'Configuration file path'
-    required: false
-    default: 'config.yml'
-outputs:
-  result:
-    description: 'Action result'
-runs:
-  using: 'node20'
-  main: 'dist/index.js'
-```
-
-### Docker Container Actions
-
-Provide consistent execution environment with all dependencies packaged.
-
-**Structure:**
-```
-my-action/
-├── action.yml
-├── Dockerfile
-├── entrypoint.sh
-└── src/
-```
-
-**Key Requirements:**
-- Use lightweight base images (Alpine when possible)
-- Set proper file permissions
-- Handle signals gracefully
-- Output to STDOUT/STDERR correctly
-
-**Example Dockerfile:**
-```dockerfile
-FROM alpine:3.18
-
-RUN apk add --no-cache bash curl jq
-
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
-```
-
-### Composite Actions
-
-Combine multiple steps and actions into reusable units.
-
-**Structure:**
-```yaml
-name: 'Setup Environment'
-description: 'Configure development environment'
-inputs:
-  node-version:
-    description: 'Node.js version'
-    required: false
-    default: '20'
-runs:
-  using: 'composite'
-  steps:
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ inputs.node-version }}
-    - run: npm ci
-      shell: bash
-    - run: npm run build
-      shell: bash
-```
-
-## Action Metadata (action.yml)
-
-### Required Fields
-
-```yaml
-name: 'Action Name'           # Marketplace display name
-description: 'What it does'   # Clear, concise purpose
-runs:                         # Execution configuration
-  using: 'node20'            # or 'docker' or 'composite'
-```
-
-### Optional Fields
-
-```yaml
-author: 'Your Name'
-branding:                    # Marketplace icon/color
-  icon: 'activity'
-  color: 'blue'
-inputs:                      # Define all inputs
-  input-name:
-    description: 'Purpose'
-    required: true
-    default: 'value'
-outputs:                     # Define all outputs
-  output-name:
-    description: 'What it contains'
-```
-
-## Inputs and Outputs
-
-### Reading Inputs
-
-**JavaScript:**
-```javascript
-const core = require('@actions/core');
-const token = core.getInput('token', { required: true });
-const config = core.getInput('config') || 'default.yml';
-```
-
-**Shell:**
+Check for `gh` CLI availability:
 ```bash
-TOKEN="${{ inputs.token }}"
-CONFIG="${{ inputs.config }}"
+which gh
 ```
 
-### Setting Outputs
+If `gh` is not available, inform the user that the GitHub CLI (`gh`) is required and provide installation instructions for their platform.
 
-**JavaScript:**
-```javascript
-core.setOutput('result', 'success');
-core.setOutput('artifact-url', artifactUrl);
-```
+### Authentication and Access
 
-**Shell:**
-```bash
-echo "result=success" >> $GITHUB_OUTPUT
-echo "artifact-url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
-```
-
-## GitHub Actions Toolkit
-
-Essential npm packages for JavaScript actions:
-
-### @actions/core
-```javascript
-const core = require('@actions/core');
-
-// Inputs/Outputs
-const input = core.getInput('name');
-core.setOutput('name', value);
-
-// Logging
-core.info('Information message');
-core.warning('Warning message');
-core.error('Error message');
-core.debug('Debug message');
-
-// Grouping
-core.startGroup('Group name');
-// ... operations
-core.endGroup();
-
-// Failure
-core.setFailed('Action failed: reason');
-
-// Secrets
-core.setSecret('sensitive-value');  // Masks in logs
-
-// Environment
-core.exportVariable('VAR_NAME', 'value');
-```
-
-### @actions/github
-```javascript
-const github = require('@actions/github');
-
-// Context
-const context = github.context;
-console.log(context.repo);        // { owner, repo }
-console.log(context.sha);         // Commit SHA
-console.log(context.ref);         // Branch/tag ref
-console.log(context.actor);       // Triggering user
-console.log(context.payload);     // Webhook payload
-
-// Octokit client
-const token = core.getInput('token');
-const octokit = github.getOctokit(token);
-
-// API operations
-const { data: issues } = await octokit.rest.issues.listForRepo({
-  owner: context.repo.owner,
-  repo: context.repo.repo,
-  state: 'open'
-});
-```
-
-### @actions/exec
-```javascript
-const exec = require('@actions/exec');
-
-// Execute commands
-await exec.exec('npm', ['install']);
-
-// Capture output
-let output = '';
-await exec.exec('git', ['log', '--oneline'], {
-  listeners: {
-    stdout: (data) => { output += data.toString(); }
-  }
-});
-```
-
-## Security Best Practices
-
-### Input Validation
-
-Always validate and sanitize inputs:
-```javascript
-const core = require('@actions/core');
-
-function validateInput(input) {
-  // Check for command injection
-  if (/[;&|`$()]/.test(input)) {
-    throw new Error('Invalid characters in input');
-  }
-  return input;
-}
-
-const userInput = core.getInput('user-input');
-const safeInput = validateInput(userInput);
-```
-
-### Token Permissions
-
-Request minimal required permissions:
-```yaml
-permissions:
-  contents: read           # Read repository
-  pull-requests: write     # Comment on PRs
-  issues: write           # Create issues
-```
-
-### Secret Handling
-
-```javascript
-// Mask secrets in logs
-core.setSecret(sensitiveValue);
-
-// Never log tokens
-core.debug(`Token: ${token}`);  // ❌ WRONG
-core.debug('Token received');   // ✅ CORRECT
-
-// Secure token usage
-const octokit = github.getOctokit(token);
-// Token automatically included in requests
-```
-
-### Dependency Security
+Before proceeding, verify that `gh` is authenticated **with the correct account** that has access to the repository:
 
 ```bash
-# Audit dependencies
-npm audit
+# Check current authentication status
+gh auth status
 
-# Use specific versions
-npm install @actions/core@1.10.0
-
-# Bundle dependencies
-npm install -g @vercel/ncc
-ncc build index.js -o dist
+# Verify which account is active
+gh api user --jq '.login'
 ```
 
-## Marketplace Publishing
+**IMPORTANT**: If the repository is in an organization (e.g., `organization/repo`), ensure the authenticated account has access to that organization.
 
-### Prerequisites
+#### Interactive Account Switching
 
-- Public repository
-- action.yml in repository root
-- README.md with usage examples
-- LICENSE file
-- Repository topics (optional)
+The `check_gh_cli()` function automatically validates repo access and, when running in an interactive terminal:
+- Detects if current account lacks access to the repository
+- Lists all available authenticated accounts
+- Prompts you to select and switch to the correct account
+- Verifies the selected account has access
+- Automatically proceeds if access is granted
 
-### Publishing Process
+**Example interactive session:**
+```
+Current account 'personal-user' cannot access 'company/private-repo'
 
-1. Create release with semantic version tag:
+Available accounts:
+ 1. personal-user
+ 2. work-user
+
+Select an account to switch to (1-2, or 'n' to skip): 2
+Switching to account: work-user
+Successfully switched to work-user
+✓ Account work-user has access to company/private-repo
+```
+
+In non-interactive environments (scripts, CI/CD), the function will display an error message with manual instructions instead of prompting.
+
+Common authentication issues:
+- **Wrong account**: Authenticated with personal account but repo is in organization
+- **Multiple accounts**: Need to switch to the right one using `gh auth switch`
+- **Missing permissions**: Account lacks access to private repo or organization
+
+## Step 1: Detect GitHub Repository
+
+Check if the current directory is a GitHub repository:
+
 ```bash
-git tag -a v1.0.0 -m "Release v1.0.0"
-git push origin v1.0.0
+git remote get-url origin 2>/dev/null | grep -q github.com
 ```
 
-2. Create GitHub Release from tag
-3. Check "Publish this Action to GitHub Marketplace"
-4. Select primary category
-5. Verify branding icon/color
+If this fails or returns non-GitHub URL, inform user this is not a GitHub repository.
 
-### Version Management
-
-Use semantic versioning with major version tags:
+Extract owner and repo name:
 ```bash
-# Release v1.2.3
-git tag -a v1.2.3 -m "Release v1.2.3"
-git tag -fa v1 -m "Update v1 to v1.2.3"
-git push origin v1.2.3 v1 --force
+git remote get-url origin | sed -E 's#.*github\.com[:/]([^/]+)/([^.]+)(\.git)?#\1/\2#'
 ```
 
-Users reference by major version:
-```yaml
-- uses: owner/action@v1  # Tracks latest v1.x.x
-```
+## Step 2: Check if GitHub Actions is Enabled
 
-## Testing Actions Locally
+Two methods to verify Actions is configured:
 
-Use `act` for local testing (see act skill):
+**Method 1: Check for workflow files**
 ```bash
-# Test action in current directory
-act -j test
-
-# Test with specific event
-act push
-
-# Test with secrets
-act -s GITHUB_TOKEN=ghp_xxx
+ls -la .github/workflows/
 ```
 
-## Common Patterns
-
-### Matrix Testing Action
-
-```yaml
-# action.yml
-name: 'Matrix Test Runner'
-description: 'Run tests across multiple configurations'
-inputs:
-  matrix-config:
-    description: 'JSON matrix configuration'
-    required: true
-runs:
-  using: 'composite'
-  steps:
-    - run: |
-        echo "Testing with config: ${{ inputs.matrix-config }}"
-        # Parse and execute tests
-      shell: bash
+**Method 2: Query GitHub API**
+```bash
+gh api repos/:owner/:repo/actions/workflows --jq '.total_count'
 ```
 
-### Cache Management Action
+If no workflows exist, inform user that GitHub Actions is not configured for this repository.
 
-```javascript
-const core = require('@actions/core');
-const cache = require('@actions/cache');
+## Step 3: Finding Workflow Runs
 
-async function run() {
-  const paths = [
-    'node_modules',
-    '.npm'
-  ];
+### By Commit SHA
+When user mentions a specific commit or references HEAD:
+```bash
+# Get commit SHA if needed
+COMMIT_SHA=$(git rev-parse HEAD)
 
-  const key = `deps-${process.platform}-${hashFiles('package-lock.json')}`;
-
-  // Restore cache
-  const cacheKey = await cache.restoreCache(paths, key);
-
-  if (!cacheKey) {
-    core.info('Cache miss, installing dependencies');
-    await exec.exec('npm', ['ci']);
-    await cache.saveCache(paths, key);
-  } else {
-    core.info(`Cache hit: ${cacheKey}`);
-  }
-}
+# Find runs for that commit
+gh run list --commit $COMMIT_SHA --json databaseId,status,conclusion,workflowName,headBranch,createdAt --limit 10
 ```
 
-### Artifact Upload Action
-
-```javascript
-const artifact = require('@actions/artifact');
-
-async function uploadArtifact() {
-  const artifactClient = artifact.create();
-  const files = [
-    'dist/bundle.js',
-    'dist/styles.css'
-  ];
-
-  const rootDirectory = 'dist';
-  const options = {
-    continueOnError: false
-  };
-
-  const uploadResponse = await artifactClient.uploadArtifact(
-    'build-artifacts',
-    files,
-    rootDirectory,
-    options
-  );
-
-  core.setOutput('artifact-id', uploadResponse.artifactId);
-}
+### By Branch
+```bash
+gh run list --branch <branch-name> --json databaseId,status,conclusion,workflowName,createdAt --limit 10
 ```
 
-## Troubleshooting
-
-### Action Not Found
-
-- Verify repository is public or accessible
-- Check action.yml exists in repository root
-- Confirm version tag exists
-
-### Permission Denied
-
-```yaml
-# Add required permissions to workflow
-permissions:
-  contents: write
-  pull-requests: write
+### Recent Failures
+```bash
+gh run list --status failure --json databaseId,status,conclusion,workflowName,headBranch,createdAt --limit 5
 ```
 
-### Node Modules Missing
+### All Recent Runs
+```bash
+gh run list --limit 20 --json databaseId,status,conclusion,workflowName,headBranch,createdAt
+```
 
-- Bundle dependencies with ncc
-- Check dist/ folder is committed
-- Verify node_modules excluded from .gitignore for dist/
+## Step 4: Viewing Workflow Run Details
 
-### Docker Action Fails
+### Summary View
+```bash
+gh run view <run-id> --verbose
+```
 
-- Check Dockerfile syntax
-- Verify entrypoint has execute permissions
-- Test container locally: `docker build -t test . && docker run test`
+This shows:
+- Workflow name and status
+- Triggered by and event
+- All jobs with their status
+- Job steps when using --verbose
 
-## Anti-Fabrication Requirements
+### Check Status Only
+```bash
+gh run view <run-id> --json status,conclusion,workflowName,headBranch --jq '.'
+```
 
-- Execute Read or Glob tools to verify action files exist before claiming structure
-- Use Bash to test commands before documenting syntax
-- Validate action.yml schema against actual files using tool analysis
-- Execute actual API calls with @actions/github before documenting responses
-- Test permission configurations in real workflows before recommending settings
-- Never claim action capabilities without reading actual implementation code
-- Report actual npm audit results when discussing security, not fabricated vulnerability counts
+## Step 5: Analyzing Logs
+
+### Failed Steps Only (Recommended First)
+```bash
+gh run view <run-id> --log-failed
+```
+
+This shows only the logs for steps that failed, making it easier to identify issues.
+
+### Full Logs
+```bash
+gh run view <run-id> --log
+```
+
+### Specific Job Logs
+```bash
+# First, list jobs to get job ID
+gh run view <run-id> --json jobs --jq '.jobs[] | {id: .databaseId, name: .name, status: .status, conclusion: .conclusion}'
+
+# Then view specific job
+gh run view <run-id> --job <job-id> --log
+```
+
+## Step 6: Common Troubleshooting Patterns
+
+### Pattern: Recent push failed
+```bash
+# Get the last commit SHA
+COMMIT_SHA=$(git rev-parse HEAD)
+
+# Find runs for that commit
+RUNS=$(gh run list --commit $COMMIT_SHA --json databaseId,status,conclusion,workflowName)
+
+# If any failed, get the run ID and show failed logs
+RUN_ID=$(echo "$RUNS" | jq -r 'first(.[] | select(.conclusion == "failure")) | .databaseId')
+
+if [ -n "$RUN_ID" ]; then
+  echo "Found failed run: $RUN_ID"
+  gh run view $RUN_ID --log-failed
+fi
+```
+
+### Pattern: Check CI status before merging
+```bash
+# Get current branch
+BRANCH=$(git branch --show-current)
+
+# Show recent runs on this branch
+gh run list --branch $BRANCH --limit 5 --json databaseId,status,conclusion,workflowName,createdAt
+```
+
+### Pattern: Compare with successful runs
+```bash
+# Find last successful run of a workflow
+gh run list --workflow <workflow-name> --status success --limit 1 --json databaseId,headSha
+
+# Find failed runs
+gh run list --workflow <workflow-name> --status failure --limit 5 --json databaseId,headSha,createdAt
+```
+
+## Helper Script
+
+Use the helper script in `scripts/gh_actions_helper.sh` for common operations:
+
+```bash
+source "$(dirname "$0")/scripts/gh_actions_helper.sh"
+
+# Check if in GitHub repo with Actions
+check_github_actions_repo
+
+# Get latest run for current commit
+get_latest_run_for_commit "$(git rev-parse HEAD)"
+
+# Analyze common failure patterns in logs
+analyze_failure_logs "$RUN_ID"
+```
+
+## Error Handling
+
+### `gh` not authenticated
+```bash
+gh auth status
+```
+
+If not authenticated:
+```bash
+gh auth login
+```
+
+### Wrong account or insufficient access
+
+If you see errors like `HTTP 404: Not Found` when accessing organization repositories:
+
+```bash
+# Check which account is currently active
+gh auth status
+gh api user --jq '.login'
+
+# List all authenticated accounts
+gh auth status --show-token=false
+
+# Switch to a different account
+gh auth switch
+
+# Or login with the correct account
+gh auth login
+```
+
+The `check_gh_cli()` helper function will detect this automatically and provide specific guidance about which account you're using and what's needed.
+
+### Rate limiting
+GitHub API has rate limits. Check status:
+```bash
+gh api rate_limit
+```
+
+### Private repositories
+Ensure `gh` has appropriate permissions:
+```bash
+gh auth refresh -s read:org,repo
+```
+
+## Output to User
+
+Always provide:
+1. **Context**: What workflow/job failed
+2. **Status**: Current state (failed, in_progress, etc.)
+3. **Key errors**: Extract relevant error messages from logs
+4. **Actionable next steps**: What to fix or investigate
+
+Example response format:
+```
+Workflow "CI" failed on commit abc123 (5 minutes ago)
+
+Failed job: "test"
+Failed step: "Run tests"
+
+Error found:
+  ERROR: Test suite failed
+  FAILED tests/test_api.py::test_endpoint - AssertionError
+
+Next steps:
+- Run `pytest tests/test_api.py::test_endpoint` locally
+- Check recent changes to test_api.py or endpoint logic
+```

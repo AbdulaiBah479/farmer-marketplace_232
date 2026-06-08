@@ -1,68 +1,66 @@
 ---
 name: request-refactor-plan
-description: Create a detailed refactor plan with tiny commits via user interview, then file it as a GitHub issue. Use when user wants to plan a refactor, create a refactoring RFC, or break a refactor into safe incremental steps.
+description: Plan a refactor as a sequence of tiny, working commits via adversarial interview. Default output is a markdown plan at `<project-root>/docs/refactor-plans/<name>.md`; pass `--emit-issue` to also file a GitHub issue. Trigger on structural refactors (rename, extract, move, split, dedupe) — NOT new features.
 ---
 
-This skill will be invoked when the user wants to create a refactor request. You should go through the steps below. You may skip steps if you don't consider them necessary.
+Adversarial interview to break a refactor into the smallest commits that each leave the codebase green.
 
-1. Ask the user for a long, detailed description of the problem they want to solve and any potential ideas for solutions.
+## Scope fence
 
-2. Explore the repo to verify their assertions and understand the current state of the codebase.
+Refactor-plan is **structural-only and scope-narrow**: rename, extract, move, split, merge, dedupe, type-tighten, dependency invert. No behavior change. No new features. No bug fixes bundled in.
 
-3. Ask whether they have considered other options, and present other options to them.
+For general feature work or behavior change, use general implementation planning. For executing a refactor that intentionally breaks compat, use the break-compat refactor workflow.
 
-4. Interview the user about the implementation. Be extremely detailed and thorough.
+## Output
 
-5. Hammer out the exact scope of the implementation. Work out what you plan to change and what you plan not to change.
+**Default:** write plan to `<project-root>/docs/refactor-plans/<kebab-name>.md`.
 
-6. Look in the codebase to check for test coverage of this area of the codebase. If there is insufficient test coverage, ask the user what their plans for testing are.
+**Optional `--emit-issue`:** after writing the file, also file a GitHub issue with `gh issue create --body-file <path>`.
 
-7. Break the implementation into a plan of tiny commits. Remember Martin Fowler's advice to "make each refactoring step as small as possible, so that you can always see the program working."
+## Interview protocol (linear)
 
-8. Create a GitHub issue with the refactor plan. Use the following template for the issue description:
+1. Solicit a long description of the perceived problem and any sketched solutions. Do not act yet.
+2. Dispatch Explore agent to verify the user's claims against the actual code; produce a structural map of the affected surface.
+3. Confront with alternatives. List 2-3 options with concrete trade-offs and a recommendation.
+4. Pin scope explicitly. Enumerate what changes AND what stays untouched.
+5. Audit test coverage of the affected surface. Use `git grep -l` for callsite-adjacent assertions, plus extension-and-glob test discovery: `fd -g '*.test.ts' -g '*.spec.ts'` (Node), `fd -g '*_test.go'` (Go), `fd -g 'test_*.py' -g '*_test.py'` (Python), `fd -g '*_test.rs'` plus `git grep -n '#\[test\]'` (Rust), `fd -g 'test_*.ml' -g '*_test.ml'` (OCaml).
+6. Decompose into the smallest commits where each leaves the tree green. Fowler's rule: "make each refactoring step as small as possible."
+7. Write the plan file using the template below.
+8. If `--emit-issue` was passed, mirror to GitHub.
 
-<refactor-plan-template>
+## Plan file template
 
-## Problem Statement
+```
+# Refactor: <name>
 
-The problem that the developer is facing, from the developer's perspective.
+## Problem
+<developer's framing of the pain>
 
 ## Solution
-
-The solution to the problem, from the developer's perspective.
+<chosen approach in one paragraph>
 
 ## Commits
+<numbered list; each commit is one concern; each leaves the tree green; plain English, no file paths>
 
-A LONG, detailed implementation plan. Write the plan in plain English, breaking down the implementation into the tiniest commits possible. Each commit should leave the codebase in a working state.
+## Decisions
+- modules touched
+- interfaces modified
+- schema/API contract changes
+- explicit non-decisions
 
-## Decision Document
+## Testing
+- what counts as a good test (external behavior, not internals)
+- modules under test
+- prior-art tests in the repo
 
-A list of implementation decisions that were made. This can include:
+## Out of scope
+<explicit non-goals>
+```
 
-- The modules that will be built/modified
-- The interfaces of those modules that will be modified
-- Technical clarifications from the developer
-- Architectural decisions
-- Schema changes
-- API contracts
-- Specific interactions
+Avoid file paths and code snippets in the plan; both go stale within hours.
 
-Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
+## Parallel examples
 
-## Testing Decisions
+**TypeScript (Nest module split):** "Extract `BillingModule` from `AppModule`" decomposes into: (1) move providers, (2) re-export public types, (3) update import sites in batches of 5, (4) delete dead re-exports. Each commit passes `pnpm typecheck && pnpm test`.
 
-A list of testing decisions that were made. Include:
-
-- A description of what makes a good test (only test external behavior, not implementation details)
-- Which modules will be tested
-- Prior art for the tests (i.e. similar types of tests in the codebase)
-
-## Out of Scope
-
-A description of the things that are out of scope for this refactor.
-
-## Further Notes (optional)
-
-Any further notes about the refactor.
-
-</refactor-plan-template>
+**Rust (crate carve-out):** "Split `parser` from `core` crate" decomposes into: (1) add new `parser` crate skeleton, (2) move types with `pub use` shim, (3) move impls behind shim, (4) flip downstream `use` paths, (5) delete shim. Each commit passes `cargo check --workspace && cargo test`.

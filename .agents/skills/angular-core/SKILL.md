@@ -1,207 +1,73 @@
 ---
 name: angular-core
-description: >
-  Angular core patterns: standalone components, signals, inject, control flow, zoneless.
-  Trigger: When creating Angular components, using signals, or setting up zoneless.
-metadata:
-  author: gentleman-programming
-  version: "1.0"
+description: Guía esencial de Angular 17+ (Standalone, Signals, Inject).
+trigger: angular OR frontend OR spa OR typescript OR component
+scope: global
 ---
 
-## Standalone Components (REQUIRED)
+# Angular Core (Modern Practices)
 
-Components are standalone by default. Do NOT set `standalone: true`.
+Esta skill documenta el estándar moderno de Angular (v17+), enfocándose en eliminar boilerplate y mejorar reactividad.
+
+## 1. Standalone Components (Default)
+
+Ya no usamos `NgModules` para cada cosa. Los componentes son `standalone: true`.
 
 ```typescript
 @Component({
-  selector: 'app-user',
-  imports: [CommonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `...`
+  standalone: true,
+  selector: "app-user-profile",
+  imports: [CommonModule, UserAvatarComponent], // Importar dependencias directas
+  template: `...`,
 })
-export class UserComponent {}
+export class UserProfileComponent {}
 ```
 
----
+## 2. Signals (State Management)
 
-## Input/Output Functions (REQUIRED)
-
-```typescript
-// ✅ ALWAYS: Function-based
-readonly user = input.required<User>();
-readonly disabled = input(false);
-readonly selected = output<User>();
-readonly checked = model(false);  // Two-way binding
-
-// ❌ NEVER: Decorators
-@Input() user: User;
-@Output() selected = new EventEmitter<User>();
-```
-
----
-
-## Signals for State (REQUIRED)
+Reemplaza `BehaviorSubject` para estado local y derivado.
 
 ```typescript
-readonly count = signal(0);
-readonly doubled = computed(() => this.count() * 2);
+export class CounterComponent {
+  // Estado Reactivo
+  count = signal(0);
 
-// Update
-this.count.set(5);
-this.count.update(prev => prev + 1);
+  // Estado Derivado (Computed)
+  double = computed(() => this.count() * 2);
 
-// Side effects
-effect(() => localStorage.setItem('count', this.count().toString()));
-```
-
----
-
-## NO Lifecycle Hooks (REQUIRED)
-
-Signals replace lifecycle hooks. Do NOT use `ngOnInit`, `ngOnChanges`, `ngOnDestroy`.
-
-```typescript
-// ❌ NEVER: Lifecycle hooks
-ngOnInit() {
-  this.loadUser();
-}
-
-ngOnChanges(changes: SimpleChanges) {
-  if (changes['userId']) {
-    this.loadUser();
+  increment() {
+    this.count.update((n) => n + 1);
   }
 }
-
-// ✅ ALWAYS: Signals + effect
-readonly userId = input.required<string>();
-readonly user = signal<User | null>(null);
-
-private userEffect = effect(() => {
-  // Runs automatically when userId() changes
-  this.loadUser(this.userId());
-});
-
-// ✅ For derived data, use computed
-readonly displayName = computed(() => this.user()?.name ?? 'Guest');
 ```
 
-### When to Use What
+## 3. Dependency Injection (`inject`)
 
-| Need | Use |
-|------|-----|
-| React to input changes | `effect()` watching the input signal |
-| Derived/computed state | `computed()` |
-| Side effects (API calls, localStorage) | `effect()` |
-| Cleanup on destroy | `DestroyRef` + `inject()` |
+Preferimos `inject()` sobre inyección en constructor para mayor flexibilidad y tipado.
 
 ```typescript
-// Cleanup example
-private readonly destroyRef = inject(DestroyRef);
+export class UserParams {
+  // Antes: constructor(private route: ActivatedRoute) {}
+  private route = inject(ActivatedRoute);
 
-constructor() {
-  const subscription = someObservable$.subscribe();
-  this.destroyRef.onDestroy(() => subscription.unsubscribe());
+  id = this.route.snapshot.params["id"];
 }
 ```
 
----
+## 4. Control Flow (Nuevo Web Syntax)
 
-## inject() Over Constructor (REQUIRED)
-
-```typescript
-// ✅ ALWAYS
-private readonly http = inject(HttpClient);
-
-// ❌ NEVER
-constructor(private http: HttpClient) {}
-```
-
----
-
-## Native Control Flow (REQUIRED)
+Adiós `*ngIf`, hola `@if`.
 
 ```html
-@if (loading()) {
-  <spinner />
+@if (isLoggedIn()) {
+<user-dashboard />
 } @else {
-  @for (item of items(); track item.id) {
-    <item-card [data]="item" />
-  } @empty {
-    <p>No items</p>
-  }
-}
-
-@switch (status()) {
-  @case ('active') { <span>Active</span> }
-  @default { <span>Unknown</span> }
+<login-page />
+} @for (item of items(); track item.id) {
+<item-card [data]="item" />
 }
 ```
 
----
+## Referencia
 
-## RxJS - Only When Needed
-
-Signals are the default. Use RxJS ONLY for complex async operations.
-
-| Use Signals | Use RxJS |
-|-------------|----------|
-| Component state | Combining multiple streams |
-| Derived values | Debounce/throttle |
-| Simple async (single API call) | Race conditions |
-| Input/Output | WebSockets, real-time |
-| | Complex error retry logic |
-
-```typescript
-// ✅ Simple API call - use signals
-readonly user = signal<User | null>(null);
-readonly loading = signal(false);
-
-async loadUser(id: string) {
-  this.loading.set(true);
-  this.user.set(await firstValueFrom(this.http.get<User>(`/api/users/${id}`)));
-  this.loading.set(false);
-}
-
-// ✅ Complex stream - use RxJS
-readonly searchResults$ = this.searchTerm$.pipe(
-  debounceTime(300),
-  distinctUntilChanged(),
-  switchMap(term => this.http.get<Results>(`/api/search?q=${term}`))
-);
-
-// Convert to signal when needed in template
-readonly searchResults = toSignal(this.searchResults$, { initialValue: [] });
-```
-
----
-
-## Zoneless Angular (REQUIRED)
-
-Angular is zoneless. Use `provideZonelessChangeDetection()`.
-
-```typescript
-bootstrapApplication(AppComponent, {
-  providers: [provideZonelessChangeDetection()]
-});
-```
-
-Remove ZoneJS:
-```bash
-npm uninstall zone.js
-```
-
-Remove from `angular.json` polyfills: `zone.js` and `zone.js/testing`.
-
-### Zoneless Requirements
-- Use `OnPush` change detection
-- Use signals for state (auto-notifies Angular)
-- Use `AsyncPipe` for observables
-- Use `markForCheck()` when needed
-
----
-
-## Resources
-
-- https://angular.dev/guide/signals
-- https://angular.dev/guide/templates/control-flow
-- https://angular.dev/guide/zoneless
+- Generado con Context7 / Angular.dev

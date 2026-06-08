@@ -1,1223 +1,1384 @@
 ---
-name: sdd:plan
-description: Refine, parallelize, and verify a draft task specification into a fully planned implementation-ready task
-argument-hint: Path to draft task file (e.g., ".specs/tasks/draft/add-validation.feature.md") [options]
+name: sdd-plan
+description: Plan-first development methodology that creates detailed specifications before coding. Use when building features, refactoring code, or implementing complex changes. Creates structured plans with phases, file-level details, and verification steps to prevent drift and ensure production-ready code.
 ---
 
-# Refine Task Workflow
+## Core Philosophy
 
-## Role
+**Plan First, Code Second**: Every development task begins with a detailed specification that acts as a contract between intent and implementation. This prevents the common failure mode where AI "works once and then falls apart" in real codebases.
 
-You are a task refinement orchestrator. Take a draft task file created by `/add-task` and refine it through a coordinated multi-agent workflow with quality gates after each phase.
+**Staged Planning (Recommended)**: For complex features, create specifications in two stages: (1) high-level phase structure for user review and approval, then (2) detailed task breakdown. This reduces wasted effort and enables early course correction before detailed planning begins.
 
-## Goal
+**Atomic Tasks**: Each task represents a single, focused change to one file. Tasks are the fundamental unit of work in SDD, and keeping them atomic provides:
+- **Precise dependency tracking**: File-level dependencies are explicit and clear
+- **Granular progress monitoring**: Each completed task represents concrete, verifiable progress
+- **Parallel implementation**: Independent tasks can be worked on simultaneously
+- **Straightforward verification**: Each task has a focused scope and clear success criteria
+- **Easy rollback**: Changes can be reverted at the file level without affecting other work
 
-This workflow command refines an existing draft task through:
+When a feature requires changes across multiple files, decompose it into multiple tasks with proper dependencies, or use subtasks to organize related file changes under a parent task. Never bundle multiple file changes into a single task. Always practice atomic task decomposition and verification.
 
-1. **Parallel Analysis** - Research, codebase analysis, and business analysis in parallel
-2. **Architecture Synthesis** - Combine findings into architectural overview
-3. **Decomposition** - Break into implementation steps with risks
-4. **Parallelize** - Reorganize steps for maximum parallel execution
-5. **Verify** - Add LLM-as-Judge verification sections
-6. **Promote** - Move refined task from `draft/` to `todo/`
+**Key Benefits:**
+- Reduces hallucinated APIs and misread intent
+- Prevents breaking existing functionality
+- Provides clear verification criteria
+- Enables confident iteration
+- Creates auditable development process
+- Early feedback checkpoint reduces rework (staged approach)
 
-All phases include judge validation to prevent error propagation and ensure quality thresholds are met.
+## When to Use This Skill
 
-## User Input
+Use `Skill(sdd-toolkit:sdd-plan)` (this skill) for:
+- New features or significant functionality additions
+- Complex refactoring across multiple files
+- API integrations or external service connections
+- Architecture changes or system redesigns
+- Any task where precision and reliability are critical
+- Large codebases where context drift is a risk
 
-```text
-$ARGUMENTS
-```
+**Do NOT use for:**
+- Simple one-file changes or bug fixes
+- Trivial modifications or formatting changes
+- Exploratory prototyping or spikes
+- Quick experiments or proof-of-concepts
+- Updating existing specs (use Skill(sdd-toolkit:sdd-update))
+- Finding what to work on next (use Skill(sdd-toolkit:sdd-next))
+- Tracking task progress (use Skill(sdd-toolkit:sdd-update))
 
----
+## The Spec-Driven Development Process
 
-## Command Arguments
+### Phase 1: Specification Creation
 
-Parse the following arguments from `$ARGUMENTS`:
+Create a detailed specification document before writing any code.
 
-### Argument Definitions
+Start by reading the JSON schema for the JSON you will be generating:
+Run `sdd schema` to get the complete spec schema JSON.
 
-| Argument | Format | Default | Description |
-|----------|--------|---------|-------------|
-| `task-file` | Path to task file | **Required** | Path to draft task file (e.g., `.specs/tasks/draft/add-validation.feature.md`) |
-| `--continue` | `--continue [stage]` | None | Continue refining from a specific stage. Stage is optional - resolve from context if not provided. |
-| `--target-quality` | `--target-quality X.X` | `3.5` | Target threshold value (out of 5.0) for judge pass/fail decisions. |
-| `--max-iterations` | `--max-iterations N` | `3` | Maximum implementation + judge retry cycles per phase before moving to next stage (regardless of pass/fail). |
-| `--included-stages` | `--included-stages stage1,stage2,...` | All stages | Comma-separated list of stages to include. |
-| `--skip` | `--skip stage1,stage2,...` | None | Comma-separated list of stages to exclude. |
-| `--fast` | `--fast` | N/A | Alias for `--target-quality 3.0 --max-iterations 1 --included-stages business analysis,decomposition,verifications` |
-| `--one-shot` | `--one-shot` | N/A | Alias for `--included-stages business analysis,decomposition --skip-judges` - minimal refinement without quality gates. |
-| `--human-in-the-loop` | `--human-in-the-loop phase1,phase2,...` | None | Phases after which to pause for human verification. |
-| `--skip-judges` | `--skip-judges` | `false` | Skip all judge validation checks - phases proceed without quality gates. |
-| `--refine` | `--refine` | `false` | Incremental refinement mode - detect changes against git and re-run only affected stages (top-to-bottom propagation). |
+This will tell you what fields are required and optional in the specification, and what data types are expected for each field.
 
-### Stage Names (for `--included-stages` / `--skip`)
+#### 1.0 High-Level Phase Planning Stage (Recommended First Step)
 
-| Stage Name | Phase | Description |
-|------------|-------|-------------|
-| `research` | 2a | Gather relevant resources, documentation, libraries |
-| `codebase analysis` | 2b | Identify affected files, interfaces, integration points |
-| `business analysis` | 2c | Refine description and create acceptance criteria |
-| `architecture synthesis` | 3 | Synthesize research and analysis into architecture |
-| `decomposition` | 4 | Break into implementation steps with risks |
-| `parallelize` | 5 | Reorganize steps for parallel execution |
-| `verifications` | 6 | Add LLM-as-Judge verification rubrics |
+**Purpose**: Before diving into detailed task planning, create a high-level phase structure for user review and approval. This staged approach reduces wasted effort and enables early course correction.
 
-### Configuration Resolution
+**When to Use Staged Planning:**
+- Complex features requiring multiple phases (3+ phases expected)
+- Projects where requirements might need adjustment
+- Situations where you want early stakeholder feedback
+- Large refactorings affecting many files
 
-Parse `$ARGUMENTS` and resolve configuration as follows:
+**When to Skip to Full Planning:**
+- Simple, well-understood tasks (1-2 phases max)
+- Urgent changes where speed is critical
+- When you're highly confident in the approach
 
-```
+**Staged Planning Workflow:**
 
-# Extract task file path (first positional argument, required)
-TASK_FILE = first argument that is a file path (must exist in .specs/tasks/draft/)
+1. **Generate Phase-Only Plan** (Markdown format for easy review)
+2. **User Review & Approval Checkpoint**
+3. **Generate Detailed Tasks** (Complete JSON spec)
 
-# Parse alias flags first (they set multiple defaults)
-if --fast present:
-    THRESHOLD = 3.0
-    MAX_ITERATIONS = 1
-    INCLUDED_STAGES = ["business analysis", "decomposition", "verifications"]
+##### 1.0.1 Creating the Phase-Only Plan
 
-if --one-shot present:
-    INCLUDED_STAGES = ["business analysis", "decomposition"]
-    SKIP_JUDGES = true
+Generate a concise markdown document outlining just the high-level phases. **Do not create detailed tasks yet.**
 
-# Initialize defaults
-THRESHOLD ?= --target-quality || 3.5
-MAX_ITERATIONS ?= --max-iterations || 3
-INCLUDED_STAGES ?= --included-stages || ["research", "codebase analysis", "business analysis", "architecture synthesis", "decomposition", "parallelize", "verifications"]
-SKIP_STAGES = --skip || []
-HUMAN_IN_THE_LOOP_PHASES = --human-in-the-loop || []
-SKIP_JUDGES = --skip-judges || false
-REFINE_MODE = --refine || false
-CONTINUE_STAGE = null
-
-if --continue [stage] present:
-    CONTINUE_STAGE = stage or resolve from context
-
-# Compute final active stages
-ACTIVE_STAGES = INCLUDED_STAGES - SKIP_STAGES
-```
-
-### Context Resolution for `--continue`
-
-When `--continue` is used without explicit stage:
-
-1. **Stage Resolution:**
-   - Parse the task file for completion markers (e.g., `[x]` checkboxes)
-   - Identify the last completed phase/judge
-   - Resume from the next incomplete phase
-
-### Refine Mode Behavior (`--refine`)
-
-When `--refine` is used:
-
-1. **Change Detection:**
-   - First check file status: `git status --porcelain -- <TASK_FILE>`
-   - Compare current task file against last git commit: `git diff HEAD -- <TASK_FILE>`
-     - This captures both staged and unstaged changes vs HEAD
-   - If file is untracked or has no git history, compare against the original task structure
-   - Identify which sections have been modified by the user
-   - Look for `//` comment markers indicating user feedback/corrections
-
-2. **Top-to-Bottom Propagation:**
-   - Determine the **earliest modified section** (highest in document)
-   - Re-run only stages that correspond to or come **after** the modified section
-   - Earlier stages (above the modification) are preserved as-is
-
-3. **Section-to-Stage Mapping:**
-
-   | Modified Section | Re-run From Stage |
-   |------------------|-------------------|
-   | Description / Acceptance Criteria | `business analysis` (Phase 2c) |
-   | Architecture Overview | `architecture synthesis` (Phase 3) |
-   | Implementation Process / Steps | `decomposition` (Phase 4) |
-   | Parallelization / Dependencies | `parallelize` (Phase 5) |
-   | Verification sections | `verifications` (Phase 6) |
-
-4. **Refine Execution:**
-   - Skip research (2a) and codebase analysis (2b) unless explicitly requested
-   - Pass user modifications and `//` comments as additional context to agents
-   - Agents should incorporate user feedback while preserving unchanged content
-
-5. **Example:**
-
-   ```bash
-   # User edited the Architecture Overview section
-   /plan .specs/tasks/todo/my-task.feature.md --refine
-   
-   # Detects Architecture section changed → re-runs from Phase 3 onwards
-   # Skips: research, codebase analysis, business analysis
-   # Runs: architecture synthesis, decomposition, parallelize, verifications
-   ```
-
-### Human-in-the-Loop Behavior
-
-Human verification checkpoints occur:
-
-1. **Trigger Conditions:**
-   - After implementation + judge verification **PASS** for a phase in `HUMAN_IN_THE_LOOP_PHASES`
-   - After implementation + judge + implementation retry (before the next judge retry)
-
-2. **At Checkpoint:**
-   - Display current phase results summary
-   - Display generated artifacts with paths
-   - Display judge score and feedback
-   - Ask user: "Review phase output. Continue? [Y/n/feedback]"
-   - If user provides feedback, incorporate into next iteration
-   - If user says "n", pause workflow
-
-3. **Checkpoint Message Format:**
-
-   ```markdown
-   ---
-   ## 🔍 Human Review Checkpoint - Phase X
-
-   **Phase:** {phase name}
-   **Judge Score:** {score}/{THRESHOLD} threshold
-   **Status:** ✅ PASS / ⚠️ RETRY {n}/{MAX_ITERATIONS}
-
-   **Artifacts:**
-   - {artifact_path_1}
-   - {artifact_path_2}
-
-   **Judge Feedback:**
-   {feedback summary}
-
-   **Action Required:** Review the above artifacts and provide feedback or continue.
-
-   > Continue? [Y/n/feedback]:
-   ---
-   ```
-
----
-
-## Usage Examples
-
-```bash
-# Refine a draft task with all stages
-/plan .specs/tasks/draft/add-validation.feature.md
-
-# Fast refinement with minimal stages
-/plan .specs/tasks/draft/quick-fix.bug.md --fast
-
-# Continue from a specific stage
-/plan .specs/tasks/draft/complex-feature.feature.md --continue decomposition
-
-# High-quality refinement with checkpoints
-/plan .specs/tasks/draft/critical-api.feature.md --target-quality 4.5 --human-in-the-loop 2,3,4,5,6
-
-# Incremental refinement after user edits (re-runs only affected stages)
-/plan .specs/tasks/todo/my-task.feature.md --refine
-```
-
-## Pre-Flight Checks
-
-Before starting workflow:
-
-1. **Validate task file exists:**
-   - If `REFINE_MODE` is false: Check that `TASK_FILE` exists in `.specs/tasks/draft/`
-   - If `REFINE_MODE` is true: Check that `TASK_FILE` exists in `.specs/tasks/todo/` or `.specs/tasks/draft/`
-   - If not found, show error and exit
-
-2. **Parse and display resolved configuration:**
-
-   ```markdown
-   ### Configuration
-
-   | Setting | Value |
-   |---------|-------|
-   | **Task File** | {TASK_FILE} |
-   | **Target Quality** | {THRESHOLD}/5.0 |
-   | **Max Iterations** | {MAX_ITERATIONS} |
-   | **Active Stages** | {ACTIVE_STAGES as comma-separated list} |
-   | **Human Checkpoints** | Phase {HUMAN_IN_THE_LOOP_PHASES as comma-separated} |
-   | **Skip Judges** | {SKIP_JUDGES} |
-   | **Refine Mode** | {REFINE_MODE} |
-   | **Continue From** | {CONTINUE_STAGE} or "Start" |
-   ```
-
-3. **Handle `--continue` mode:**
-
-   If `CONTINUE_STAGE` is set:
-   - Read the task file to get current state
-   - Identify completed phases from task file content
-   - Skip to `CONTINUE_STAGE` (or auto-detected next incomplete stage)
-   - Pre-populate captured values from existing artifacts
-   - Resume workflow from the appropriate phase
-
-4. **Handle `--refine` mode:**
-
-   If `REFINE_MODE` is true:
-   - Check file status: `git status --porcelain -- <TASK_FILE>`
-     - `M` (staged) or `M` (unstaged) or `MM` (both) → proceed with diff
-     - `??` (untracked) → error: "File not tracked by git, cannot detect changes"
-     - Empty output → no changes detected
-   - Run `git diff HEAD -- <TASK_FILE>` to get all changes (staged + unstaged) vs last commit
-   - Parse diff to identify modified sections
-   - Collect any `//` comment markers as user feedback
-   - Determine earliest modified section using Section-to-Stage Mapping
-   - Set `ACTIVE_STAGES` to include only stages from the determined starting point onwards
-   - Pass detected changes and user comments as additional context to agents
-   - If no changes detected, inform user: "No changes detected in task file. Edit the file first, then run --refine." and exit
-
-5. **Extract task info from file:**
-   - Read task file to extract title and type from filename
-   - Parse frontmatter for title and depends_on
-
-6. **Initialize workflow progress tracking** using TodoWrite:
-
-   Only include todos for phases in `ACTIVE_STAGES`. If continuing, mark completed phases as `completed`.
-
-   ```json
-   {
-     "todos": [
-       {"content": "Ensure directories exist", "status": "pending", "activeForm": "Ensuring directories exist"},
-       {"content": "Phase 2a: Research relevant resources and documentation", "status": "pending", "activeForm": "Researching resources"},
-       {"content": "Judge 2a: PASS research quality (> {THRESHOLD})", "status": "pending", "activeForm": "Validating research"},
-       {"content": "Phase 2b: Analyze codebase impact and affected files", "status": "pending", "activeForm": "Analyzing codebase impact"},
-       {"content": "Judge 2b: PASS codebase analysis (> {THRESHOLD})", "status": "pending", "activeForm": "Validating codebase analysis"},
-       {"content": "Phase 2c: Business analysis and acceptance criteria", "status": "pending", "activeForm": "Analyzing business requirements"},
-       {"content": "Judge 2c: PASS business analysis (> {THRESHOLD})", "status": "pending", "activeForm": "Validating business analysis"},
-       {"content": "Phase 3: Architecture synthesis from research and analysis", "status": "pending", "activeForm": "Synthesizing architecture"},
-       {"content": "Judge 3: PASS architecture synthesis (> {THRESHOLD})", "status": "pending", "activeForm": "Validating architecture"},
-       {"content": "Phase 4: Decompose into implementation steps", "status": "pending", "activeForm": "Decomposing into steps"},
-       {"content": "Judge 4: PASS decomposition (> {THRESHOLD})", "status": "pending", "activeForm": "Validating decomposition"},
-       {"content": "Phase 5: Parallelize implementation steps", "status": "pending", "activeForm": "Parallelizing steps"},
-       {"content": "Judge 5: PASS parallelization (> {THRESHOLD})", "status": "pending", "activeForm": "Validating parallelization"},
-       {"content": "Phase 6: Define verification rubrics", "status": "pending", "activeForm": "Defining verifications"},
-       {"content": "Judge 6: PASS verifications (> {THRESHOLD})", "status": "pending", "activeForm": "Validating verifications"},
-       {"content": "Move task to todo folder", "status": "pending", "activeForm": "Promoting task"},
-       {"content": "Human checkpoint reviews", "status": "pending", "activeForm": "Awaiting human review"}
-     ]
-   }
-   ```
-
-   **Note:** Filter todos based on configuration:
-   - If `SKIP_JUDGES` is true, omit ALL Judge todos (Judge 2a, 2b, 2c, 3, 4, 5, 6)
-   - If `research` not in `ACTIVE_STAGES`, omit Phase 2a and Judge 2a todos
-   - If `codebase analysis` not in `ACTIVE_STAGES`, omit Phase 2b and Judge 2b todos
-   - If `business analysis` not in `ACTIVE_STAGES`, omit Phase 2c and Judge 2c todos
-   - If `architecture synthesis` not in `ACTIVE_STAGES`, omit Phase 3 and Judge 3 todos
-   - If `decomposition` not in `ACTIVE_STAGES`, omit Phase 4 and Judge 4 todos
-   - If `parallelize` not in `ACTIVE_STAGES`, omit Phase 5 and Judge 5 todos
-   - If `verifications` not in `ACTIVE_STAGES`, omit Phase 6 and Judge 6 todos
-   - If `HUMAN_IN_THE_LOOP_PHASES` is empty, omit human checkpoint todo
-
-7. **Ensure directories exist**:
-
-   Run the folder creation script to create task directories and configure gitignore:
-
-   ```bash
-   bash ${CLAUDE_PLUGIN_ROOT}/scripts/create-folders.sh
-   ```
-
-   This creates:
-
-   - `.specs/tasks/draft/` - New tasks awaiting analysis
-   - `.specs/tasks/todo/` - Tasks ready to implement
-   - `.specs/tasks/in-progress/` - Currently being worked on
-   - `.specs/tasks/done/` - Completed tasks
-   - `.specs/scratchpad/` - Temporary working files (gitignored)
-   - `.specs/analysis/` - Codebase impact analysis files
-   - `.claude/skills/` - Reusable skill documents
-
-Update each todo to `in_progress` when starting a phase and `completed` when judge passes.
-
-## CRITICAL
-
-- Do not mark PASS for any judge if it did not pass the rubric. Retry the judge after each implementation change till it passes the check!
-- Do not read task files in .claude or .specs directories, your job is orchestrate agents that will do the work, not do it by yourself!
-- Use `THRESHOLD` (default 3.5) for all judge pass/fail decisions, not hardcoded values!
-- Use `MAX_ITERATIONS` (default 3) for retry limits, not hardcoded values!
-- **After `MAX_ITERATIONS` reached: PROCEED to next stage automatically - do NOT ask user unless phase is in `HUMAN_IN_THE_LOOP_PHASES`!**
-- Skip phases not in `ACTIVE_STAGES` entirely - do not launch agents for excluded stages!
-- Trigger human-in-the-loop checkpoints ONLY after phases in `HUMAN_IN_THE_LOOP_PHASES`!
-- **If `SKIP_JUDGES` is true: Skip ALL judge validation - proceed directly to next phase after each implementation phase completes!**
-- **Task file must exist in `.specs/tasks/draft/` before running this command (unless `--refine` mode)!**
-- **If `REFINE_MODE` is true: Detect changes via git diff, skip unchanged stages, pass user feedback to agents!**
-
-### Execution & Evaluation Rules
-
-- **Use foreground agents only**: Do not use background agents. Launch parallel agents when possible. Background agents constantly run in permissions issues and other errors.
-
-Relaunch judge till you get valid results, of following happens:
-
-- Reject Long Reports: If an agent returns a very long report instead of using the scratchpad as requested, reject the result. This indicates the agent failed to follow the "use scratchpad" instruction.
-- Judge Score 5.0 is a Hallucination: If a judge returns a score of 5.0/5.0, treat it as a hallucination or lazy evaluation. Reject it and re-run the judge. Perfect scores are practically impossible in this rigorous framework.
-- Reject Missing Scores: If a judge report is missing the numerical score, reject it. This indicates the judge failed to read or follow the rubric instructions.
-
-## Workflow Execution
-
-You MUST launch for each step a separate agent, instead of performing all steps yourself.
-
-**CRITICAL:** For each agent you MUST:
-
-1. Use the **Agent** type and **Model** specified in the step
-2. Provide the task file path and user input as context
-3. **Provide the value of `${CLAUDE_PLUGIN_ROOT}` so agents can resolve paths like `@${CLAUDE_PLUGIN_ROOT}/scripts/create-scratchpad.sh`**
-4. Require agent to implement exactly that step, not more, not less
-5. After each sub-phase, launch a judge agent to validate quality before proceeding
-
-### Complete Workflow Overview
-
-**Note:** Phases not in `ACTIVE_STAGES` are skipped. If `SKIP_JUDGES` is true, all judge steps are skipped entirely. Human checkpoints (🔍) occur after phases in
-`HUMAN_IN_THE_LOOP_PHASES`.
-
-```
-Input: Draft Task File (.specs/tasks/draft/*.md)
-    │
-    ▼
-Phase 2: Parallel Analysis
-    │
-    ├─────────────────────┬─────────────────────┐
-    ▼                     ▼                     ▼
-Phase 2a:             Phase 2b:             Phase 2c:
-Research              Codebase Analysis     Business Analysis
-[sdd:researcher sonnet]   [sdd:code-explorer sonnet]  [sdd:business-analyst opus]
-Judge 2a              Judge 2b              Judge 2c
-(pass: >THRESHOLD)     (pass: >THRESHOLD)     (pass: >THRESHOLD)
-    │                     │                     │
-    └─────────────────────┴─────────────────────┘
-                          │
-                          ▼
-                    Phase 3: Architecture Synthesis
-                    [sdd:software-architect opus]
-                    Judge 3 (pass: >THRESHOLD)
-                          │
-                          ▼
-                    Phase 4: Decomposition
-                    [sdd:tech-lead opus]
-                    Judge 4 (pass: >THRESHOLD)
-                          │
-                          ▼
-                    Phase 5: Parallelize
-                    [sdd:team-lead opus]
-                    Judge 5 (pass: >THRESHOLD)
-                          │
-                          ▼
-                    Phase 6: Verifications
-                    [sdd:qa-engineer opus]
-                    Judge 6 (pass: >THRESHOLD)
-                          │
-                          ▼
-                    Move task: draft/ → todo/
-                          │
-                          ▼
-                    Complete
-```
-
----
-
-## Phase 2: Parallel Analysis
-
-Phase 2 launches three analysis phases in parallel, each with its own judge validation.
-
-### Phase 2a/2b/2c: Parallel Sub-Phases
-
-Launch these three phases **in parallel** immediately:
-
----
-
-#### Phase 2a: Research
-
-**Model:** `sonnet`
-**Agent:** `sdd:researcher`
-**Depends on:** Task file exists
-**Purpose:** Gather relevant resources, documentation, libraries, and prior art. Creates or updates a reusable skill.
-
-Launch agent:
-
-- **Description**: "Research task resources and create/update skill"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Task File: <TASK_FILE>
-  Task Title: <title from task file>
-
-  CRITICAL: DO NOT OUTPUT YOUR RESEARCH, ONLY CREATE THE SCRATCHPAD AND SKILL FILE.
-  ```
-
-**Capture:**
-
-- Skill file path (e.g., `.claude/skills/<skill-name>/SKILL.md`)
-- Skill action (Created new / Updated existing)
-- Scratchpad file path (e.g., `.specs/scratchpad/<hex-id>.md`)
-- Number of resources gathered
-- Key recommendation summary
-
-CRITICAL: If expected files not created, launch the agent again with the same prompt.
-
----
-
-#### Phase 2b: Codebase Impact Analysis
-
-**Model:** `sonnet`
-**Agent:** `sdd:code-explorer`
-**Depends on:** Task file exists
-**Purpose:** Identify affected files, interfaces, and integration points
-
-Launch agent:
-
-- **Description**: "Analyze codebase impact"
-- **Prompt**:
-
-  ```text
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Task File: <TASK_FILE>
-  Task Title: <title from task file>
-
-  CRITICAL: DO NOT OUTPUT YOUR ANALYSIS, ONLY CREATE THE SCRATCHPAD AND ANALYSIS FILE.
-  ```
-
-**Capture:**
-
-- Analysis file path (e.g., `.specs/analysis/analysis-{name}.md`)
-- Scratchpad file path (e.g., `.specs/scratchpad/<hex-id>.md`)
-- Files affected count (modify/create/delete)
-- Risk level assessment
-- Key integration points
-
-CRITICAL: If expected files not created, launch the agent again with the same prompt.
-
----
-
-#### Phase 2c: Business Analysis
-
-**Model:** `opus`
-**Agent:** `sdd:business-analyst`
-**Depends on:** Task file exists
-**Purpose:** Refine description and create acceptance criteria
-
-Launch agent:
-
-- **Description**: "Business analysis"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read ${CLAUDE_PLUGIN_ROOT}/skills/plan/analyse-business-requirements.md and execute it exactly as is!
-
-  Task File: <TASK_FILE>
-  Task Title: <title from task file>
-
-  CRITICAL: DO NOT OUTPUT YOUR BUSINESS ANALYSIS, ONLY CREATE THE SCRATCHPAD AND UPDATE THE TASK FILE.
-  ```
-
-**Capture:**
-
-- Scratchpad file path (e.g., `.specs/scratchpad/<hex-id>.md`)
-- Acceptance criteria count
-- Scope defined (yes/no)
-- User scenarios documented
-
----
-
-### Judge 2a/2b/2c: Validate Parallel Phases
-
-After **each** parallel phase completes, launch its respective judge **with the same agent type and model**.
-
-#### Judge 2a: Validate Research/Skill
-
-**Model:** `sonnet`
-**Agent:** `sdd:researcher`
-**Depends on:** Phase 2a completion
-**Purpose:** Validate skill completeness and relevance
-
-Launch judge:
-
-- **Description**: "Judge skill quality"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read @${CLAUDE_PLUGIN_ROOT}/prompts/judge.md for evaluation methodology and execute.
-
-  ### Artifact Path
-  {path to skill file from Phase 2a}
-
-  ### Context
-  This is a skill document for task: {task title}. Evaluate comprehensiveness and reusability.
-
-  ### Rubric
-  1. Resource Coverage (weight: 0.30)
-     - Documentation and references gathered?
-     - Libraries and tools identified with recommendations?
-     - 1=Missing critical resources, 2=Basic coverage, 3=Adequate, 4=Comprehensive, 5=Excellent
-
-  2. Pattern Relevance (weight: 0.25)
-     - Are identified patterns applicable?
-     - Are recommendations actionable?
-     - 1=Irrelevant, 2=Somewhat useful, 3=Adequate, 4=Well-targeted, 5=Perfect fit
-
-  3. Issue Anticipation (weight: 0.20)
-     - Common pitfalls identified with solutions?
-     - 1=None identified, 2=Few issues, 3=Adequate, 4=Good coverage, 5=Comprehensive
-
-  4. Reusability (weight: 0.15)
-     - Is the skill general enough to help multiple tasks?
-     - Does it avoid task-specific details?
-     - 1=Too specific, 2=Limited reuse, 3=Adequate, 4=Good, 5=Highly reusable
-
-  5. Task Integration (weight: 0.10)
-     - Was task file updated with skill reference?
-     - 1=Not updated, 3=Updated, 5=Updated with clear instructions
-  ```
-
-CRITICAL: use prompt exactly as is, do not add anything else. Including output of implementation agent!!!
-
-**Decision Logic:**
-
-- **PASS** (score >= `THRESHOLD`): Research complete, proceed
-- **FAIL** (score < `THRESHOLD`): Re-launch Phase 2a with feedback
-- **MAX_ITERATIONS reached**: Proceed to next stage regardless of score (log warning)
-
----
-
-#### Judge 2b: Validate Codebase Analysis
-
-**Model:** `sonnet`
-**Agent:** `sdd:code-explorer`
-**Depends on:** Phase 2b completion
-**Purpose:** Validate file identification accuracy and integration mapping
-
-Launch judge:
-
-- **Description**: "Judge codebase analysis quality"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read @${CLAUDE_PLUGIN_ROOT}/prompts/judge.md for evaluation methodology and execute.
-
-  ### Artifact Path
-  {path to analysis file from Phase 2b}
-
-  ### Context
-  This is codebase impact analysis for task: {task title}. Evaluate accuracy and completeness.
-
-  ### Rubric
-  1. File Identification Accuracy (weight: 0.35)
-     - All affected files identified with specific paths?
-     - New files and modifications distinguished?
-     - 1=Major files missing, 2=Mostly correct, 3=Adequate, 4=Precise, 5=Complete
-
-  2. Interface Documentation (weight: 0.25)
-     - Key functions/classes documented with signatures?
-     - Change requirements clear?
-     - 1=Missing, 2=Partial, 3=Adequate, 4=Good, 5=Complete
-
-  3. Integration Point Mapping (weight: 0.25)
-     - Integration points identified with impact?
-     - Similar patterns in codebase found?
-     - 1=Missing, 2=Partial, 3=Adequate, 4=Good, 5=Comprehensive
-
-  4. Risk Assessment (weight: 0.15)
-     - High risk areas identified with mitigations?
-     - 1=No assessment, 2=Basic, 3=Adequate, 4=Good, 5=Thorough
-  ```
-
-CRITICAL: use prompt exactly as is, do not add anything else. Including output of implementation agent!!!
-
-**Decision Logic:**
-
-- **PASS** (score >= `THRESHOLD`): Analysis complete, proceed
-- **FAIL** (score < `THRESHOLD`): Re-launch Phase 2b with feedback
-- **MAX_ITERATIONS reached**: Proceed to next stage regardless of score (log warning)
-
----
-
-#### Judge 2c: Validate Business Analysis
-
-**Model:** `opus`
-**Agent:** `sdd:business-analyst`
-**Depends on:** Phase 2c completion
-**Purpose:** Validate acceptance criteria quality and scope definition
-
-Launch judge:
-
-- **Description**: "Judge business analysis quality"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read @${CLAUDE_PLUGIN_ROOT}/prompts/judge.md for evaluation methodology and execute.
-
-  ### Artifact Path
-  {path to task file from Phase 2c}
-
-  ### Context
-  This is business analysis output. Evaluate description clarity and acceptance criteria quality.
-
-  ### Rubric
-  1. Description Clarity (weight: 0.30)
-     - What/Why clearly explained?
-     - Scope boundaries defined?
-     - 1=Vague, 2=Basic, 3=Adequate, 4=Clear, 5=Excellent
-
-  2. Acceptance Criteria Quality (weight: 0.35)
-     - Criteria specific and testable?
-     - Given/When/Then format for complex criteria?
-     - 1=Missing/vague, 2=Basic, 3=Adequate, 4=Good, 5=Excellent
-
-  3. Scenario Coverage (weight: 0.20)
-     - Primary flow documented?
-     - Error scenarios considered?
-     - 1=Missing, 2=Basic, 3=Adequate, 4=Good, 5=Comprehensive
-
-  4. Scope Definition (weight: 0.15)
-     - In-scope/out-of-scope explicit?
-     - No implementation details in description?
-     - 1=Missing, 2=Partial, 3=Adequate, 4=Good, 5=Clear
-  ```
-
-CRITICAL: use prompt exactly as is, do not add anything else. Including output of implementation agent!!!
-
-**Decision Logic:**
-
-- **PASS** (score >= `THRESHOLD`): Business analysis complete, proceed
-- **FAIL** (score < `THRESHOLD`): Re-launch Phase 2c with feedback
-- **MAX_ITERATIONS reached**: Proceed to next stage regardless of score (log warning)
-
----
-
-### Synchronization Point
-
-**Wait for ALL three parallel phases (2a, 2b, 2c) AND their judges to PASS before proceeding to Phase 3.**
-
----
-
-## Phase 3: Architecture Synthesis
-
-**Model:** `opus`
-**Agent:** `sdd:software-architect`
-**Depends on:** Phase 2a + Judge 2a PASS, Phase 2b + Judge 2b PASS, Phase 2c + Judge 2c PASS
-**Purpose:** Synthesize research, analysis, and business requirements into architectural overview
-
-Launch agent:
-
-- **Description**: "Architecture synthesis"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Task File: <TASK_FILE>
-  Skill File: <skill file path from Phase 2a>
-  Analysis File: <analysis file path from Phase 2b>
-
-  CRITICAL: DO NOT OUTPUT YOUR ARCHITECTURE SYNTHESIS, ONLY CREATE THE SCRATCHPAD AND UPDATE THE TASK FILE.
-  ```
-
-**Capture:**
-
-- Scratchpad file path (e.g., `.specs/scratchpad/<hex-id>.md`)
-- Sections added to task file
-- Key architectural decisions count
-- Components identified (if applicable)
-- Contracts defined (if applicable)
-
----
-
-### Judge 3: Validate Architecture Synthesis
-
-**Model:** `opus`
-**Agent:** `sdd:software-architect`
-**Depends on:** Phase 3 completion
-**Purpose:** Validate architectural coherence and completeness
-
-Launch judge:
-
-- **Description**: "Judge architecture synthesis quality"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read @${CLAUDE_PLUGIN_ROOT}/prompts/judge.md for evaluation methodology and execute.
-
-  ### Artifact Path
-  {path to task file after Phase 3}
-
-  ### Context
-  This is architecture synthesis output. The Architecture Overview section should contain
-  solution strategy, key decisions, and only relevant architectural sections.
-
-  ### Rubric
-  1. Solution Strategy Clarity (weight: 0.30)
-     - Approach clearly explained?
-     - Key decisions documented with reasoning?
-     - Trade-offs stated?
-     - 1=Missing/unclear, 2=Basic, 3=Adequate, 4=Clear, 5=Excellent
-
-  2. Reference Integration (weight: 0.20)
-     - Links to research and analysis files?
-     - Insights from both integrated?
-     - 1=No links, 2=Partial, 3=Adequate, 4=Good, 5=Fully integrated
-
-  3. Section Relevance (weight: 0.25)
-     - Only relevant sections included (not all)?
-     - Sections appropriate for task complexity?
-     - 1=Wrong sections, 2=Mostly appropriate, 3=Adequate, 4=Good, 5=Precisely targeted
-
-  4. Expected Changes Accuracy (weight: 0.25)
-     - Files to create/modify listed?
-     - Consistent with codebase analysis?
-     - 1=Missing/inconsistent, 2=Partial, 3=Adequate, 4=Good, 5=Complete
-
-  ```
-
-CRITICAL: use prompt exactly as is, do not add anything else. Including output of implementation agent!!!
-
-**Decision Logic:**
-
-- **PASS** (score >= `THRESHOLD`): Architecture synthesis complete, proceed
-- **FAIL** (score < `THRESHOLD`): Re-launch Phase 3 with feedback
-- **MAX_ITERATIONS reached**: Proceed to Phase 4 regardless of score (log warning)
-
-**Wait for PASS before Phase 4.**
-
----
-
-## Phase 4: Decomposition
-
-**Model:** `opus`
-**Agent:** `sdd:tech-lead`
-**Depends on:** Phase 3 + Judge 3 PASS
-**Purpose:** Break architecture into implementation steps with success criteria and risks
-
-Launch agent:
-
-- **Description**: "Decompose into implementation steps"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Task File: <TASK_FILE>
-
-  CRITICAL: DO NOT OUTPUT YOUR DECOMPOSITION, ONLY CREATE THE SCRATCHPAD AND UPDATE THE TASK FILE.
-  ```
-
-**Capture:**
-
-- Scratchpad file path (e.g., `.specs/scratchpad/<hex-id>.md`)
-- Implementation steps count
-- Total subtasks count
-- Critical path steps
-- High priority risks count
-
----
-
-### Judge 4: Validate Decomposition
-
-**Model:** `opus`
-**Agent:** `sdd:tech-lead`
-**Depends on:** Phase 4 completion
-**Purpose:** Validate implementation steps quality and completeness
-
-Launch judge:
-
-- **Description**: "Judge decomposition quality"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read @${CLAUDE_PLUGIN_ROOT}/prompts/judge.md for evaluation methodology and execute.
-
-  ### Artifact Path
-  {path to task file after Phase 4}
-
-  ### Context
-  This is decomposition output. The Implementation Process section should contain
-  ordered steps with success criteria, subtasks, blockers, and risks.
-
-  ### Rubric
-  1. Step Quality (weight: 0.30)
-     - Each step has clear goal, output, success criteria?
-     - Steps ordered by dependency?
-     - No step too large (>Large estimate)?
-     - 1=Vague/missing, 2=Basic, 3=Adequate, 4=Good, 5=Excellent
-
-  2. Success Criteria Testability (weight: 0.25)
-     - Criteria specific and verifiable?
-     - Use actual file paths, function names?
-     - Subtasks clearly defined with actionable descriptions?
-     - 1=Vague, 2=Partially testable, 3=Adequate, 4=Good, 5=All testable
-
-  3. Risk Coverage (weight: 0.25)
-     - Blockers identified with resolutions?
-     - Risks identified with mitigations?
-     - High-risk tasks identified with decomposition recommendations?
-     - 1=None, 2=Basic, 3=Adequate, 4=Good, 5=Comprehensive
-
-  4. Completeness (weight: 0.20)
-     - All architecture components have corresponding steps?
-     - Implementation summary table present?
-     - Definition of Done included?
-     - Phases organized: Setup → Foundational → User Stories → Polish?
-     - 1=Incomplete, 2=Partial, 3=Adequate, 4=Good, 5=Complete
-  ```
-
-CRITICAL: use prompt exactly as is, do not add anything else. Including output of implementation agent!!!
-
-**Decision Logic:**
-
-- **PASS** (score >= `THRESHOLD`): Decomposition complete, proceed to Phase 5
-- **FAIL** (score < `THRESHOLD`): Re-launch Phase 4 with feedback
-- **MAX_ITERATIONS reached**: Proceed to Phase 5 regardless of score (log warning)
-
-**Wait for PASS before Phase 5.**
-
----
-
-## Phase 5: Parallelize Steps
-
-**Model:** `opus`
-**Agent:** `sdd:team-lead`
-**Depends on:** Phase 4 + Judge 4 PASS
-**Purpose:** Reorganize implementation steps for maximum parallel execution
-
-Launch agent:
-
-- **Description**: "Parallelize implementation steps"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Task File: <TASK_FILE>
-
-  Use agents only from this list: {list ALL available agents with plugin prefix if available, e.g. sdd:developer, code-review:bug-hunter. Also include general agents: opus, sonnet, haiku}
-
-  CRITICAL: DO NOT OUTPUT YOUR PARALLELIZATION, ONLY CREATE THE SCRATCHPAD AND UPDATE THE TASK FILE.
-  ```
-
-**Capture:**
-
-- Scratchpad file path (e.g., `.specs/scratchpad/<hex-id>.md`)
-- Number of steps reorganized
-- Maximum parallelization depth
-- Agent distribution summary
-
----
-
-### Judge 5: Validate Parallelization
-
-**Model:** `opus`
-**Agent:** `sdd:team-lead`
-**Depends on:** Phase 5 completion
-**Purpose:** Validate dependency accuracy and parallelization optimization
-
-Launch judge:
-
-- **Description**: "Judge parallelization quality"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read @${CLAUDE_PLUGIN_ROOT}/prompts/judge.md for evaluation methodology and execute.
-
-  ### Artifact Path
-  {path to parallelized task file from Phase 5}
-
-  ### Context
-  This is the output of Phase 5: Parallelize Steps. The artifact should contain implementation steps
-  reorganized for maximum parallel execution with explicit dependencies, agent assignments, and
-  parallelization diagram.
-
-  Use agents only from this list: {list ALL available agents with plugin prefix if available, e.g. sdd:developer, code-review:bug-hunter. Also include general agents: opus, sonnet, haiku}
-
-  ### Rubric
-  1. Dependency Accuracy (weight: 0.35)
-     - Are step dependencies correctly identified?
-     - No false dependencies (steps marked dependent when they're not)?
-     - No missing dependencies (steps that actually depend on others)?
-     - 1=Major dependency errors, 2=Mostly correct, 3=Acceptable, 5=Precise dependencies
-
-  2. Parallelization Maximized (weight: 0.30)
-     - Are parallelizable steps correctly marked with "Parallel with:"?
-     - Is the parallelization diagram logical?
-     - 1=No parallelization/wrong, 2=Some optimization, 3=Acceptable, 5=Maximum parallelization
-
-  3. Agent Selection Correctness (weight: 0.20)
-     - Are agent types appropriate for outputs (opus by default, haiku for trivial, sonnet for simple but high in volume)?
-     - Does selection follow the Agent Selection Guide?
-     - Are only agents from the provided available agents list used?
-     - 1=Wrong agents, 2=Mostly appropriate, 3=Acceptable, 4=Optimal selection, 5=Perfect selection
-
-  4. Execution Directive Present (weight: 0.15)
-     - Is the sub-agent execution directive present?
-     - Are "MUST" requirements for parallel execution clear?
-     - 1=Missing directive, 2=Partial, 3=Acceptable, 4=Complete directive, 5=Perfect directive
-  ```
-
-CRITICAL: use prompt exactly as is, do not add anything else. Including output of implementation agent!!!
-
-**Decision Logic:**
-
-- **PASS** (score >= `THRESHOLD`): Proceed to Phase 6
-- **FAIL** (score < `THRESHOLD`): Re-launch Phase 5 with feedback
-- **MAX_ITERATIONS reached**: Proceed to Phase 6 regardless of score (log warning)
-
-**Wait for PASS before Phase 6.**
-
----
-
-## Phase 6: Define Verifications
-
-**Model:** `opus`
-**Agent:** `sdd:qa-engineer`
-**Depends on:** Phase 5 + Judge 5 PASS
-**Purpose:** Add LLM-as-Judge verification sections with rubrics
-
-Launch agent:
-
-- **Description**: "Define verification rubrics"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Task File: <TASK_FILE>
-
-  CRITICAL: DO NOT OUTPUT YOUR VERIFICATIONS, ONLY CREATE THE SCRATCHPAD AND UPDATE THE TASK FILE.
-  ```
-
-**Capture:**
-
-- Scratchpad file path (e.g., `.specs/scratchpad/<hex-id>.md`)
-- Number of steps with verification
-- Total evaluations defined
-- Verification breakdown (Panel/Per-Item/None)
-
----
-
-### Judge 6: Validate Verifications
-
-**Model:** `opus`
-**Agent:** `sdd:qa-engineer`
-**Depends on:** Phase 6 completion
-**Purpose:** Validate verification rubrics and thresholds
-
-Launch judge:
-
-- **Description**: "Judge verification quality"
-- **Prompt**:
-
-  ```
-  CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}
-
-  Read @${CLAUDE_PLUGIN_ROOT}/prompts/judge.md for evaluation methodology and execute.
-
-  ### Artifact Path
-  {path to task file with verifications from Phase 6}
-
-  ### Context
-  This is the output of Phase 6: Define Verifications. The artifact should contain LLM-as-Judge
-  verification sections for each implementation step, including verification levels, custom rubrics,
-  thresholds, and a verification summary table.
-
-  ### Rubric
-  1. Verification Level Appropriateness (weight: 0.30)
-     - Do verification levels match artifact criticality?
-     - HIGH criticality → Panel, MEDIUM → Single/Per-Item, LOW/NONE → None?
-     - 1=Mismatched levels, 2=Mostly appropriate, 3=Acceptable, 5=Precisely calibrated
-
-  2. Rubric Quality (weight: 0.30)
-     - Are criteria specific to the artifact type (not generic)?
-     - Do weights sum to 1.0?
-     - Are descriptions clear and measurable?
-     - 1=Generic/broken rubrics, 2=Adequate, 3=Acceptable, 5=Excellent custom rubrics
-
-  3. Threshold Appropriateness (weight: 0.20)
-     - Are thresholds reasonable (typically 4.0/5.0)?
-     - Higher for critical, lower for experimental?
-     - 1=Wrong thresholds, 2=Standard applied, 3=Acceptable, 5=Context-appropriate
-
-  4. Coverage Completeness (weight: 0.20)
-     - Does every step have a Verification section?
-     - Is the Verification Summary table present?
-     - 1=Missing verifications, 2=Most covered, 3=Acceptable, 5=100% coverage
-  ```
-
-CRITICAL: use prompt exactly as is, do not add anything else. Including output of implementation agent!!!
-
-**Decision Logic:**
-
-- **PASS** (score >= `THRESHOLD`): Workflow complete, promote task
-- **FAIL** (score < `THRESHOLD`): Re-launch Phase 6 with feedback
-- **MAX_ITERATIONS reached**: Complete workflow regardless of score (log warning)
-
----
-
-## Phase 7: Promote Task
-
-**Purpose:** Move the refined task from draft to todo folder
-
-After all phases complete:
-
-1. **Move task file from draft to todo:**
-
-   ```bash
-   git mv <TASK_FILE> .specs/tasks/todo/
-   # Fallback if git not available: mv <TASK_FILE> .specs/tasks/todo/
-   ```
-
-2. **Update any references** in research and analysis files if needed
-
----
-
-## Completion
-
-After all executed phases and judges complete:
-
-1. Use git tool to stage the task file, skill file, analysis file, and scratchpad files (only those that were created)
-2. Summarize the workflow results and output to user:
+**Phase-Only Markdown Template:**
 
 ```markdown
-### Task Refined
+# High-Level Plan: [Feature/Change Name]
 
-| Property | Value |
-|----------|-------|
-| **Original File** | `<original TASK_FILE path>` |
-| **Final Location** | `.specs/tasks/todo/<filename>` (ready for implementation) |
-| **Title** | `<task title>` |
-| **Type** | `<feature/bug/refactor/test/docs/chore/ci>` (from filename) |
-| **Skill** | `<skill file path or "Skipped">` |
-| **Skill Action** | `<Created new / Updated existing / Skipped>` |
-| **Analysis** | `<analysis file path or "Skipped">` |
-| **Scratchpad** | `<scratchpad file path>` |
-| **Implementation Steps** | `<count or "N/A">` |
-| **Parallelization Depth** | `<max parallel agents or "N/A">` |
-| **Total Verifications** | `<count or "N/A">` |
+## Overview
+Brief description of what this change accomplishes and why.
 
-### Configuration Used
+## Objectives
+- Primary objective
+- Secondary objectives
+- Success criteria
 
-| Setting | Value |
-|---------|-------|
-| **Target Quality** | {THRESHOLD}/5.0 |
-| **Max Iterations** | {MAX_ITERATIONS} |
-| **Active Stages** | {ACTIVE_STAGES as comma-separated list} |
-| **Skipped Stages** | {SKIP_STAGES or stages not in ACTIVE_STAGES} |
-| **Human Checkpoints** | Phase {HUMAN_IN_THE_LOOP_PHASES as comma-separated} |
-| **Skip Judges** | {SKIP_JUDGES} |
-| **Refine Mode** | {REFINE_MODE} |
+## Proposed Phases
 
-### Quality Gates Summary
+### Phase 1: [Phase Name]
+**Purpose**: What this phase accomplishes
+**Dependencies**: What must exist before starting
+**Risk Level**: Low/Medium/High
+**Key Deliverables**:
+- Deliverable 1
+- Deliverable 2
 
-| Phase | Judge Score | Verdict |
-|-------|-------------|---------|
-| Phase 2a: Research | X.X/5.0 | ✅ PASS / ⚠️ PROCEEDED (max iter) / ⏭️ SKIPPED |
-| Phase 2b: Codebase Analysis | X.X/5.0 | ✅ PASS / ⚠️ PROCEEDED (max iter) / ⏭️ SKIPPED |
-| Phase 2c: Business Analysis | X.X/5.0 | ✅ PASS / ⚠️ PROCEEDED (max iter) / ⏭️ SKIPPED |
-| Phase 3: Architecture Synthesis | X.X/5.0 | ✅ PASS / ⚠️ PROCEEDED (max iter) / ⏭️ SKIPPED |
-| Phase 4: Decomposition | X.X/5.0 | ✅ PASS / ⚠️ PROCEEDED (max iter) / ⏭️ SKIPPED |
-| Phase 5: Parallelize | X.X/5.0 | ✅ PASS / ⚠️ PROCEEDED (max iter) / ⏭️ SKIPPED |
-| Phase 6: Verify | X.X/5.0 | ✅ PASS / ⚠️ PROCEEDED (max iter) / ⏭️ SKIPPED |
+**Estimated Files Affected**: 3-5 files
+**Estimated Complexity**: Low/Medium/High
 
-**Threshold Used:** {THRESHOLD}/5.0 (or N/A if SKIP_JUDGES)
+### Phase 2: [Phase Name]
+[Repeat structure for each phase]
 
-**Legend:**
-- ✅ PASS - Score >= THRESHOLD
-- ⚠️ PROCEEDED (max iter) - Score < THRESHOLD but MAX_ITERATIONS reached, proceeded anyway
-- ⏭️ SKIPPED - Stage not in ACTIVE_STAGES
+### Phase N: [Phase Name]
+[Repeat structure for each phase]
 
-### Artifacts Generated
+## Implementation Order
+1. Phase X (must complete first)
+2. Phase Y (depends on X)
+3. Phase Z (can run parallel to Y)
 
+## Key Integration Points
+- How phases connect to each other
+- Critical dependencies between phases
+- Potential breaking points or risks
+
+## Questions for Review
+- Any specific concerns about this approach?
+- Are there phases missing or phases that should be combined?
+- Does the order make sense?
 ```
 
-.claude/
-└── skills/
-    └── <skill-name>/
-        └── SKILL.md             # Reusable skill document (if research stage ran)
+**Guidelines for Phase Planning:**
+- **Be concise**: Each phase description should be 3-5 sentences max
+- **Focus on "what" not "how"**: Save implementation details for later
+- **Identify dependencies**: Make phase ordering clear
+- **Highlight risks**: Call out high-risk phases early
+- **Estimate scope**: Rough file counts help set expectations
+- **Ask questions**: Invite feedback on unclear areas
 
-.specs/
-├── tasks/
-│   ├── draft/                   # Draft tasks (source - now empty for this task)
-│   ├── todo/
-│   │   └── <name>.<type>.md     # Complete task specification (ready for implementation)
-│   ├── in-progress/             # Tasks being implemented (empty)
-│   └── done/                    # Completed tasks (empty)
-├── analysis/
-│   └── analysis-<name>.md       # Codebase impact analysis (if codebase analysis stage ran)
-└── scratchpad/
-    └── <hex-id>.md              # Architecture thinking scratchpad
+##### 1.0.2 User Review & Approval Checkpoint
+
+**Present the phase-only plan to the user and explicitly request approval before proceeding.**
+
+**Example Interaction Pattern:**
 
 ```
+AI: "Let me first propose the high-level phase structure for this feature.
+    This will help us ensure we're on the right track before diving into
+    detailed task planning."
 
-### Task Status Management
+[AI generates phase-only markdown following template above]
 
-Task status is managed by folder location:
-- `draft/` - Tasks created but not yet refined
-- `todo/` - Tasks ready for implementation
-- `in-progress/` - Tasks currently being worked on
-- `done/` - Completed tasks
+AI: "I've outlined 4 phases for implementing user authentication:
+    1. Database Schema (foundational)
+    2. Auth Service Layer (core logic)
+    3. API Integration (connects to app)
+    4. Testing & Verification (ensures quality)
 
-### Next Steps
+    Does this phase structure make sense? Any phases you'd like to add,
+    remove, or reorganize before I create the detailed task breakdown?"
 
-1. Review task: `.specs/tasks/todo/<filename>`
-   - Edit the task file directly to make corrections
-   - Add `//` comments to lines that need clarification or changes
-   - Run `/plan` again with `--refine` to incorporate your feedback — it detects changes against git and propagates updates **top-to-bottom** (editing a section only affects sections below it, not above)
-2. If everything is fine, begin implementation: `/implement` (will auto-select the task from todo/)
+[User reviews and responds]
+
+User: "Looks good, but let's add a phase for migration of existing users
+       between Phase 2 and 3."
+
+AI: "Great point! I'll add 'Phase 3: User Migration' between Auth Service
+    and API Integration. Let me update the plan..."
+
+[AI revises phase structure]
+
+AI: "Updated plan with migration phase. Does this revised structure work?"
+
+User: "Perfect, go ahead with the detailed planning."
+
+AI: "Excellent! Now I'll create the complete specification with detailed
+    tasks for each phase..."
+
+[AI proceeds to section 1.1-1.3.2 to generate full JSON spec]
 ```
+
+**Key Points for This Checkpoint:**
+- ✅ **Explicit approval required**: Don't proceed without clear confirmation
+- ✅ **Invite feedback**: Encourage the user to suggest changes
+- ✅ **Be flexible**: Expect iteration on phase structure
+- ✅ **Summarize changes**: Clearly state what you're updating
+- ✅ **Confirm before proceeding**: Get final "go ahead" before detailed work
+
+##### 1.0.3 Benefits of Staged Planning
+
+**For Users:**
+- Review and redirect early (5 minutes vs 30 minutes)
+- Easier to understand high-level structure
+- Natural checkpoint for collaboration
+- Confidence that detailed work will be on target
+
+**For AI:**
+- Validated direction before detailed generation
+- Clearer constraints and requirements
+- Reduced rework from misunderstanding
+- Better context for task generation
+
+##### 1.0.4 Proceeding to Detailed Planning
+
+Once the phase structure is approved:
+1. **Proceed to section 1.1**: Understand the Intent (if not already done)
+2. **Continue to section 1.2**: Analyze the Codebase
+3. **Generate full spec in section 1.3.2**: Using approved phases as structure
+4. **Reference approval**: "Based on the approved phase structure, I'll now create detailed tasks for each phase..."
+
+**Important**: The approved phase structure should guide your detailed JSON generation. Maintain consistency between what was approved and what you generate.
 
 ---
 
-## Error Handling
+#### 1.1 Understand the Intent
 
-### Phase Agent Failure (Exception/Crash)
+Begin by deeply understanding what needs to be accomplished:
+- **Core objective**: What is the primary goal?
+- **User perspective**: How will users interact with this?
+- **Success criteria**: What defines "done"?
+- **Constraints**: What limitations or requirements exist?
 
-If any phase agent fails unexpectedly:
+#### 1.2 Analyze the Codebase
 
-1. Report the failure with agent output
-2. Ask clarification questions from user that can help resolve the issue
-3. Launch the phase agent again with list of questions and answers to resolve the issue
+Before creating the plan, explore the relevant parts of the codebase:
+- Identify existing patterns and conventions
+- Locate related functionality
+- Map dependencies and integration points
+- Review similar implementations for consistency
+- Note potential conflicts or breaking changes
 
-### Judge Returns FAIL
+**Automatic Documentation Availability Check:**
 
-If any judge returns FAIL (score < `THRESHOLD`):
+This skill automatically checks if codebase documentation is available to enhance planning quality and speed.
 
-1. **Automatic retry**: Re-launch the phase agent with judge feedback
-2. **Human-in-the-loop check**: If phase is in `HUMAN_IN_THE_LOOP_PHASES`, trigger human checkpoint **before** the next judge retry (after implementation retry but before re-judging)
-3. **After `MAX_ITERATIONS` reached**: **Proceed to next stage automatically** (do NOT ask user unless `--human-in-the-loop` includes this phase)
-4. Log warning in completion summary: `⚠️ Phase X did not pass quality threshold (X.X/THRESHOLD) after MAX_ITERATIONS iterations`
+**How It Works:**
 
-### Retry Flow
+1. **Automatic Check**: Before manual codebase exploration, the skill runs `sdd doc stats` to verify documentation availability
+2. **Smart Prompting**: If documentation is missing or stale, you'll receive a clear prompt explaining the benefits
+3. **User Decision**: You can choose to generate documentation now (2-5 minutes) or proceed with manual analysis
+4. **Graceful Degradation**: If you skip documentation, the skill seamlessly falls back to manual codebase exploration
+
+**Value Proposition:**
+
+With documentation available, codebase analysis becomes **dramatically more effective**:
+- **Comprehensive Understanding**: See the entire codebase structure, patterns, and relationships at a glance
+- **Better Specs**: Create more accurate plans based on complete knowledge of existing implementations
+- **Faster Planning**: Reduce analysis time from hours to minutes
+- **Consistency**: Automatically align new features with existing architectural patterns
+- **Future Benefit**: Documentation accelerates all subsequent planning and development tasks
+
+**When Documentation Is Unavailable:**
+
+You'll see a prompt like:
+```
+ℹ️  Codebase documentation not found
+
+Documentation enables:
+- Comprehensive codebase understanding
+- Faster, more accurate planning
+- Automatic pattern and dependency discovery
+
+Generate documentation now? (2-5 minutes)
+1. Yes, generate for better planning
+2. No, use manual codebase exploration
+```
+
+**Recommendation**: For medium to large codebases or complex features, generating documentation upfront significantly improves spec quality and saves planning time.
+
+**Quick Reference: Useful Documentation Commands for Planning**
+
+When documentation is available, these commands accelerate codebase analysis and planning:
+
+**Recommended Starting Point:**
+
+| Command | Purpose | Example Usage |
+|---------|---------|---------------|
+| `sdd doc scope <module> --plan` | **Get focused planning context for a module** (recommended baseline) | `sdd doc scope src/auth/login.ts --plan` |
+
+This gives you module summary, complexity analysis, and architectural overview in a single command.
+
+**When to Use Existing Commands Instead:**
+
+While `scope --plan` provides comprehensive context, use individual commands when you need focused, specific information:
+
+| Use Case | Recommended Command | When to Choose This |
+|----------|---------------------|---------------------|
+| **Quick module overview** | `sdd doc describe-module <path>` | You only need a summary without complexity/dependency details |
+| **Complexity-focused analysis** | `sdd doc complexity <file>` | Planning refactoring or assessing technical debt for a specific file |
+| **Dependency mapping** | `sdd doc dependencies <file>` | Impact analysis or understanding integration points |
+| **Reverse dependency check** | `sdd doc dependencies --reverse <file>` | Breaking change impact assessment |
+
+Choose individual commands when:
+- You need targeted information quickly (avoid information overload)
+- Working within strict context limits
+- Performing specific analysis tasks (complexity assessment, impact analysis)
+- Documentation is stale/incomplete and you need just one aspect
+
+Choose `scope --plan` when:
+- Starting a new feature or major change (comprehensive context needed)
+- Need balanced view of module for task planning
+- Want architectural patterns + complexity + dependencies together
+
+**Additional Commands:**
+
+| Command | Purpose | Example Usage |
+|---------|---------|---------------|
+| `sdd doc stats` | Check documentation status and metrics | `sdd doc stats` |
+| `sdd doc search <query>` | Find relevant implementations and patterns | `sdd doc search "authentication flow"` |
+| `sdd doc context <file>` | Get comprehensive file context and relationships | `sdd doc context src/auth/login.ts` |
+| `sdd doc dependencies --reverse <file>` | Find what depends on a file (impact analysis) | `sdd doc dependencies --reverse src/models/User.ts` |
+| `sdd doc complexity <file>` | Assess code complexity and maintainability | `sdd doc complexity src/services/payment.ts` |
+| `sdd doc list-modules` | Get overview of all modules in the codebase | `sdd doc list-modules` |
+
+**Common Planning Workflows with Documentation:**
+
+- **Understanding existing features:** `sdd doc search` → find similar implementations
+- **Impact analysis:** `sdd doc dependencies --reverse` → see what will be affected
+- **Complexity assessment:** `sdd doc complexity` → estimate effort and risks
+- **Pattern discovery:** `sdd doc context` → understand existing architectural patterns
+- **Codebase overview:** `sdd doc list-modules` + `sdd doc stats` → understand project structure
+
+#### 1.2.1 Using `Skill(sdd-toolkit:doc-query)` for Efficient Codebase Analysis
+
+**Proactive Documentation Generation**
+
+Before starting codebase analysis, **automatically check** if documentation exists. If missing, offer to generate it for faster and more accurate planning.
+
+**Auto-Detection Workflow:**
+
+1. **Check for existing documentation** (fast check):
+```bash
+sdd doc stats
+```
+
+2. **If documentation not found**, proactively ask the user:
+```
+I notice this codebase doesn't have documentation yet. Would you like me to
+generate it? This will enable much faster and more accurate codebase analysis.
+
+Generating documentation will take 2-5 minutes but will speed up all future
+planning tasks.
+
+Generate documentation now? [Y/n]
+```
+
+3. **If user agrees**, use Task tool to invoke llm-doc-gen subagent for documentation generation:
+```
+Task(
+  subagent_type: "sdd-toolkit:llm-doc-gen",
+  prompt: "Generate codebase documentation",
+  description: "Generate docs"
+)
+```
+
+Then use Task tool with doc-query subagent for codebase analysis.
+
+4. **If user declines** or generation fails, fall back to manual exploration using `Explore`, or alternatively Glob/Read.
+
+**Documentation-First Approach:**
+- **10x faster codebase analysis** - Seconds vs minutes of manual exploration
+- **Better quality specs** - Comprehensive understanding of patterns and dependencies
+- **Future time savings** - Documentation used across all subsequent planning tasks
+- **Consistency** - Follow existing patterns automatically
+
+---
+
+**Using Existing Documentation:**
+
+If codebase documentation has been generated, use Task tool with doc-query subagent to efficiently gather context before planning. This provides structured, comprehensive codebase understanding without manual exploration.
+
+**Recommended Analysis Workflow:**
+
+The doc-query subagent provides the following capabilities (command examples shown for reference):
+
+**Step 1: Get Codebase Overview**
+```bash
+# See overall structure and metrics
+sdd doc stats
+
+# Example output:
+# Total Modules: 37
+# Total Classes: 84
+# Total Functions: 53
+# Average Complexity: 2.42
+# Max Complexity: 8
+```
+
+**Step 2: Search for Similar Implementations**
+```bash
+# Find existing implementations of similar features
+sdd doc search "feature-keyword"
+
+# Example: Planning authentication? Search for "auth"
+sdd doc search "auth"
+# Finds: AuthService, authentication middleware, User model, etc.
+```
+
+**Step 3: Gather Feature Area Context**
+```bash
+# Get all entities related to feature area
+sdd doc context "feature-area"
+
+# Example: Planning user management
+sdd doc context "user"
+# Returns: All classes, functions, modules related to users
+```
+
+**Step 4: Analyze Target Module Complexity**
+```bash
+# Identify high-complexity functions in target area
+sdd doc complexity --threshold 5 --module target_module.py
+
+# Use to:
+# - Identify refactoring needs
+# - Plan testing strategy
+# - Estimate implementation complexity
+```
+
+**Step 5: Map Dependencies and Impact**
+```bash
+# Check what a module depends on
+sdd doc dependencies app/services/module.py
+
+# Check what depends on it (reverse dependencies - impact analysis)
+sdd doc dependencies app/services/module.py --reverse
+
+# Use to:
+# - Understand integration points
+# - Identify breaking change risks
+# - Plan implementation order
+```
+
+**Step 6: Find Test Files and Coverage**
+```bash
+# Find tests for a module
+sdd doc search "test.*module_name"
+```
+
+**Integration Example:**
+
+When planning "Add JWT Authentication" feature:
+
+```bash
+# 1. Check docs exist
+sdd doc stats
+
+# 2. Search for existing auth
+sdd doc search "auth"
+# Found: app/middleware/auth.py, app/models/session.py
+
+# 3. Get full auth context
+sdd doc context "auth"
+# Returns: 4 classes, 3 functions, dependencies
+
+# 4. Check auth middleware dependencies
+sdd doc dependencies app/middleware/auth.py --reverse
+# Shows: 5 routes depend on this middleware
+
+# 5. Find similar implementations
+sdd doc find-class ".*Service.*" --pattern
+# Identify service layer patterns to follow
+
+# 6. Check complexity of related code
+sdd doc complexity --module auth.py
+# Understand existing auth complexity
+```
+
+**When codebase documentation has not been generated:**
+Fall back to manual codebase exploration:
+- Use `Explore` to explore the codebase
+- Use `Glob` to find files: `**/*auth*.py`
+- Use `Grep` to search code: `class.*Service`
+- Use `Read` to examine files directly
+
+**After Analysis:**
+Use gathered insights to create accurate, well-informed specifications in Phase 1.3.
+
+#### 1.3 Create the Specification Document
+
+**NOTE**: If you used staged planning (section 1.0), you should now have an approved phase structure. Use that as the foundation for your detailed specification. Maintain consistency with what the user approved.
+
+**IMPORTANT**: The specification is a JSON file (created in section 1.3.2). The markdown template below is a **conceptual planning guide** to help you gather and organize information before creating the JSON. You will NOT create this markdown file - it shows what information to plan for.
+
+**PLANNING GUIDE (Markdown Template for Information Gathering):**
+
+NOTE: This template shows WHAT to plan, not WHAT to create. Use it to organize your thoughts, then proceed to section 1.3.2 to create the actual JSON spec file.
+
+**SPECIFICATION TEMPLATE:**
+
+```markdown
+# Specification: [Feature/Change Name]
+
+## Overview
+Brief description of what this change accomplishes and why.
+
+## Objectives
+- Primary objective
+- Secondary objectives
+- Success criteria
+
+## Phases
+
+### Phase 1: [Phase Name]
+**Purpose**: What this phase accomplishes
+**Dependencies**: What must exist before starting
+**Risk Level**: Low/Medium/High
+
+**Files to Modify:**
+- `path/to/file1.ext`
+  - **Changes**: Specific modifications needed
+  - **Reasoning**: Why these changes are necessary
+  - **Integration points**: How this connects to other parts
+
+- `path/to/file2.ext`
+  - **Changes**: Specific modifications needed
+  - **Reasoning**: Why these changes are necessary
+  - **Integration points**: How this connects to other parts
+
+**Verification Steps:**
+1. Specific check to perform
+2. Expected outcome
+3. How to validate correctness
+
+### Phase 2: [Phase Name]
+[Repeat structure for each phase]
+
+## Implementation Order
+1. Phase X (must complete first)
+2. Phase Y (depends on X)
+3. Phase Z (can run parallel to Y)
+
+## Verification Checklist
+- [ ] All planned files modified
+- [ ] No unintended side effects
+- [ ] Tests pass
+- [ ] Documentation updated
+- [ ] No regressions introduced
+- [ ] Follows existing patterns
+- [ ] Performance acceptable
+- [ ] Security considerations addressed
+
+## Rollback Plan
+How to revert changes if issues arise.
+
+## Post-Implementation
+- Monitoring requirements
+- Documentation to update
+- Team communication needs
+```
+
+**Critical Specification Requirements:**
+- **File-level detail**: Specify EXACTLY which files will be modified
+- **Clear reasoning**: Every change must have explicit justification
+- **Phase ordering**: Define clear dependencies between phases
+- **Verification criteria**: Include specific, testable checks
+- **Integration awareness**: Note how changes affect other systems
+
+#### 1.3.1 Plan the Task Hierarchy (Visualization Guide)
+
+**IMPORTANT**: This section shows hierarchy notation for PLANNING and VISUALIZATION only. You will NOT create files in this format. This is a way to conceptualize the structure before creating the JSON in section 1.3.2.
+
+Use this notation to plan your hierarchy, then translate it into JSON structure in section 1.3.2.
+
+**Hierarchy Levels:**
+1. **[Spec]** - Root of entire specification
+2. **[Phase]** - Major implementation phase from spec
+3. **[Group]** - Container for related tasks ("File Modifications", "Verifications")
+4. **[Task]** - Individual file modification or logical unit
+5. **[Subtask]** - Specific change within a file
+6. **[Verify]** - Verification step (automated or manual)
+
+**Format Requirements:**
+
+**Spec Level** (root of everything):
+```
+[Spec] Feature Name (0/total tasks, 0%) {#spec-root}
+```
+- Always uses ID `{#spec-root}`
+- Shows total task count across all phases
+- Initial progress always 0%
+
+**Phase Level** (major implementation stages):
+```
+[Phase] Phase Name (0/phase_task_count tasks) {#phase-N}
+```
+- Sequential numbering: phase-1, phase-2, etc.
+- Task count only for this phase
+- All phases start as `[pending]`
+
+**Group Level** (task containers within phase):
+```
+[Group] File Modifications (0/group_task_count tasks) {#phase-N-files}
+[Group] Verification (0/verify_task_count tasks) {#phase-N-verify}
+```
+- Two standard groups per phase: `-files` and `-verify`
+- Additional phase-specific groups (e.g., `{#phase-1-investigation}`) are allowed when useful—keep IDs in the `phase-N-*` format
+- File modifications group typically comes first
+- Verification group is usually blocked by the primary work groups
+
+**Task Level** (individual work units):
+```
+[Task] path/to/file.ext [pending] {#task-N-M}
+[Task] path/to/file.ext [pending] [depends: task-X-Y] {#task-N-M}
+[Task] path/to/file.ext [pending] [blocked-by: task-X-Y] {#task-N-M}
+[Task] path/to/file.ext [pending] [parallel-safe] {#task-N-M}
+```
+- One task per file or logical unit
+- N = phase number, M = task number within phase
+- Dependency markers optional but important
+
+**Subtask Level** (granular steps):
+```
+[Subtask] Specific change description [pending] {#task-N-M-P}
+```
+- P = subtask number
+- Use when task needs breakdown
+- Each should be < 30 minutes
+
+**Verification Level** (validation steps):
+```
+[Verify] What to check [pending] [auto] {#verify-N-M}
+[Verify] What to check [pending] [manual] {#verify-N-M}
+[Verify] What to check [pending] [fidelity] {#verify-N-M}
+```
+- Mark as `[auto]` if can be scripted (e.g., running tests)
+- Mark as `[manual]` if requires human judgment (e.g., code review checklist)
+- Mark as `[fidelity]` for implementation-vs-spec comparison (uses sdd-fidelity-review skill)
+- Include command for automated checks
+- Include skill/scope/target metadata for fidelity checks
+
+**Example Hierarchy:**
+```
+[Spec] User Authentication (0/23 tasks, 0%) {#spec-root}
+│
+├─ [Phase] Database Schema (0/7 tasks) {#phase-1}
+│   │
+│   ├─ [Group] File Modifications (0/3 tasks) {#phase-1-files}
+│   │   │
+│   │   ├─ [Task] db/migrations/001_add_users.sql [pending] {#task-1-1}
+│   │   │   ├─ [Subtask] Create users table [pending] {#task-1-1-1}
+│   │   │   ├─ [Subtask] Add constraints [pending] {#task-1-1-2}
+│   │   │   └─ [Subtask] Create indexes [pending] {#task-1-1-3}
+│   │   │
+│   │   ├─ [Task] src/models/User.ts [pending] [depends: task-1-1] {#task-1-2}
+│   │   │   └─ [Subtask] Define interface [pending] {#task-1-2-1}
+│   │   │
+│   │   └─ [Task] src/types/index.ts [pending] [parallel-safe] {#task-1-3}
+│   │       └─ [Subtask] Export User type [pending] {#task-1-3-1}
+│   │
+│   └─ [Group] Verification [blocked-by: phase-1-files] (0/5 tasks) {#phase-1-verify}
+│       ├─ [Verify] Migration runs [pending] [auto] {#verify-1-1}
+│       │   └─ Command: `npm run migrate`
+│       ├─ [Verify] Model imports [pending] [auto] {#verify-1-2}
+│       ├─ [Verify] Tests pass [pending] [auto] {#verify-1-3}
+│       │   └─ Command: `npm test -- user.spec.ts`
+│       ├─ [Verify] Implementation fidelity [pending] [fidelity] {#verify-1-4}
+│       │   └─ Skill: sdd-fidelity-review
+│       │   └─ Scope: phase
+│       │   └─ Target: phase-1
+│       └─ [Verify] Validation works [pending] [manual] {#verify-1-5}
+```
+
+**Verification Steps:**
+- Group all verifications together (separate from file modifications)
+- One verification per test/check
+- Include command/steps for automated verifications
+- Mark manual verifications clearly
+- Add fidelity reviews at phase boundaries to ensure implementation matches spec
+
+**Rule of Thumb:**
+- Each task/subtask should be completable in < 30 minutes
+- If estimating > 30 minutes, break into subtasks
+- Verification tasks can be longer (might include multiple test runs)
+
+### Dependency Tracking
+
+**Dependency Types:**
+
+**Hard Dependencies** (`[blocked-by: task-id]`):
+- Cannot start until dependency completes
+- Used for sequential requirements
+- Example: Can't write tests until model is created
+```
+[Task] tests/user.spec.ts [pending] [blocked-by: task-1-2] {#task-1-4}
+```
+
+**Soft Dependencies** (`[depends: task-id]`):
+- Recommended order but not strictly required
+- Used for logical sequencing
+- Example: Should implement helper before service, but not required
+```
+[Task] src/services/auth.ts [pending] [depends: task-1-2] {#task-2-1}
+```
+
+**Blocks** (`[blocks: task-id]`):
+- Explicit marker that this task blocks others
+- Usually redundant with blocked-by but helps navigation
+- Used sparingly for critical path items
+
+**Parallel-Safe** (`[parallel-safe]`):
+- Can be done in any order
+- No dependencies on other tasks
+- Can be implemented simultaneously
+```
+[Task] src/types/index.ts [pending] [parallel-safe] {#task-1-3}
+```
+
+**Phase Dependencies:**
+- Phases are sequential by default
+- Later phases blocked by earlier phases
+- Make this explicit in hierarchy:
+```
+[Phase] Auth Service [blocked-by: phase-1] (0/8 tasks) {#phase-2}
+```
+
+### Progress Indicators
+
+**Multi-Level Progress Tracking:**
+
+Show progress at every level of hierarchy:
+```
+[Spec] Feature (0/23 tasks, 0%) {#spec-root}
+└─ [Phase] Setup [pending] (0/7 tasks, 0%) {#phase-1}
+    └─ [Group] File Modifications (0/3 tasks, 0%) {#phase-1-files}
+```
+
+**Progress Calculation (At Creation Time):**
+- All tasks start at `[pending]`
+- All progress percentages are 0%
+- Task counts come from spec structure
+- Progress format: `(completed/total tasks, percentage%)`
+
+**Status Values (At Creation):**
+- `[pending]` - All tasks initially pending
+- No tasks marked as `in_progress`, `completed`, or `blocked` at creation
+- Implementation status tracking happens later via sdd-update
+
+**Display Format:**
+- Spec level: Total task count and percentage
+- Phase level: Task count for that phase
+- Group level: Task count for that group
+- Individual tasks: Status only, no count
+
+**Automatic Task Count Calculation:**
+
+You don't need to manually calculate task counts - the sdd-validate subagent can fix this automatically:
 
 ```
-Implementation → Judge FAIL → Implementation Retry → Judge Retry
-                                                          ↓
-                              PASS → Continue to next stage
-                              FAIL → Repeat until MAX_ITERATIONS
-                                          ↓
-                              MAX_ITERATIONS reached → Proceed to next stage (with warning)
+# Preview fixes without applying (recommended first step)
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Preview auto-fixes for specs/pending/your-spec.json. Show what would be changed without applying.",
+  description: "Preview task count fixes"
+)
+
+# Apply fixes to task counts and hierarchy integrity
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Auto-fix specs/pending/your-spec.json. Apply all fixable issues.",
+  description: "Apply task count fixes"
+)
 ```
 
-### Retry Flow with Human-in-the-Loop
+**How it works:**
+- Uses `recalculate_progress()` from `sdd_common/progress.py`
+- Recursively calculates counts from leaf nodes up through hierarchy
+- Leaf nodes (individual tasks/subtasks) = 1 task each
+- Parent nodes sum their children's counts
+- Ensures counts stay synchronized as spec evolves
 
-When phase is in `HUMAN_IN_THE_LOOP_PHASES`:
+**When to use:**
+- After adding/removing tasks from JSON hierarchy
+- When validation reports count mismatches
+- Before running sdd-next (ensures accurate counts)
+- Any time counts seem out of sync
+
+**Common pitfall:** Don't manually update `total_tasks` or `completed_tasks` in the JSON - let the sdd-validate subagent or `sdd-update` handle it automatically to avoid arithmetic errors.
+
+### Task ID Format
+
+**Hierarchical ID Structure:**
+- Spec: `{#spec-root}`
+- Phase: `{#phase-N}`
+- Group: `{#phase-N-files}` or `{#phase-N-verify}`
+- Task: `{#task-N-M}` (phase number, task number)
+- Subtask: `{#task-N-M-P}` (includes subtask number)
+- Verification: `{#verify-N-M}`
+
+**Examples:**
+```
+{#spec-root}          - Root spec
+{#phase-1}            - Phase 1
+{#phase-1-files}      - Phase 1 file modifications group
+{#task-1-1}           - Phase 1, task 1
+{#task-1-1-1}         - Phase 1, task 1, subtask 1
+{#phase-1-verify}     - Phase 1 verification group
+{#verify-1-1}         - Phase 1, verification 1
+```
+
+**ID Stability:**
+- IDs assigned at creation time
+- Remain stable during refinement if possible
+- If structure changes significantly, regenerate with new IDs
+- Never reuse IDs within same spec
+
+#### 1.3.2 Create the JSON Spec File (Single Source of Truth)
+
+**THIS IS THE ACTUAL SPEC FILE YOU WILL CREATE.** After planning your structure using the guides in sections 1.3 and 1.3.1, now create the JSON file that will be used by sdd-next, sdd-update, and all other SDD tools.
+
+**If you completed staged planning (section 1.0):** Base your JSON hierarchy on the approved phase structure. The phase names, ordering, and dependencies should match what the user approved. Now you're adding the detailed task breakdown within each phase.
+
+**Note:** Generate this JSON file manually following the structure described below.
+
+**Location:**
+`specs/pending/{spec-id}.json`
+
+**Initial Spec File Structure:**
+
+```json
+{
+  "spec_id": "user-auth-2025-10-18-001",
+  "generated": "2025-10-18T10:00:00Z",
+  "last_updated": "2025-10-18T10:00:00Z",
+
+  "hierarchy": {
+    "spec-root": {
+      "type": "spec",
+      "title": "User Authentication",
+      "status": "pending",
+      "parent": null,
+      "children": ["phase-1", "phase-2", "phase-3"],
+      "total_tasks": 24,
+      "completed_tasks": 0,
+      "metadata": {}
+    },
+
+    "phase-1": {
+      "type": "phase",
+      "title": "Database Schema",
+      "status": "pending",
+      "parent": "spec-root",
+      "children": ["phase-1-files", "phase-1-verify"],
+      "total_tasks": 8,
+      "completed_tasks": 0,
+      "metadata": {}
+    },
+
+    "phase-1-files": {
+      "type": "group",
+      "title": "File Modifications",
+      "status": "pending",
+      "parent": "phase-1",
+      "children": ["task-1-0", "task-1-1", "task-1-2", "task-1-3"],
+      "total_tasks": 4,
+      "completed_tasks": 0,
+      "metadata": {}
+    },
+
+    "task-1-0": {
+      "type": "task",
+      "title": "Analyze existing user data schema",
+      "status": "pending",
+      "parent": "phase-1-files",
+      "children": [],
+      "dependencies": {
+        "blocks": ["task-1-1"],
+        "blocked_by": [],
+        "depends": []
+      },
+      "total_tasks": 1,
+      "completed_tasks": 0,
+      "metadata": {
+        "task_category": "investigation",
+        "estimated_hours": 2
+      }
+    },
+
+    "task-1-1": {
+      "type": "task",
+      "title": "db/migrations/001_add_users.sql",
+      "status": "pending",
+      "parent": "phase-1-files",
+      "children": ["task-1-1-1", "task-1-1-2", "task-1-1-3"],
+      "dependencies": {
+        "blocks": [],
+        "blocked_by": ["task-1-0"],
+        "depends": []
+      },
+      "total_tasks": 3,
+      "completed_tasks": 0,
+      "metadata": {
+        "file_path": "db/migrations/001_add_users.sql",
+        "estimated_hours": 1,
+        "task_category": "implementation"
+      }
+    },
+
+    "task-1-1-1": {
+      "type": "subtask",
+      "title": "Create users table",
+      "status": "pending",
+      "parent": "task-1-1",
+      "children": [],
+      "dependencies": {
+        "blocks": [],
+        "blocked_by": [],
+        "depends": []
+      },
+      "total_tasks": 1,
+      "completed_tasks": 0,
+      "metadata": {}
+    },
+
+    "phase-1-verify": {
+      "type": "group",
+      "title": "Verification",
+      "status": "pending",
+      "parent": "phase-1",
+      "children": ["verify-1-1", "verify-1-2"],
+      "dependencies": {
+        "blocks": [],
+        "blocked_by": ["phase-1-files"],
+        "depends": []
+      },
+      "total_tasks": 2,
+      "completed_tasks": 0,
+      "metadata": {}
+    },
+
+    "verify-1-1": {
+      "type": "verify",
+      "title": "Migration runs without errors",
+      "status": "pending",
+      "parent": "phase-1-verify",
+      "children": [],
+      "dependencies": {
+        "blocks": [],
+        "blocked_by": [],
+        "depends": []
+      },
+      "total_tasks": 1,
+      "completed_tasks": 0,
+      "metadata": {
+        "verification_type": "auto",
+        "command": "npm run migrate",
+        "expected": "Migration completes successfully"
+      }
+    },
+
+    "verify-1-2": {
+      "type": "verify",
+      "title": "Phase 1 implementation fidelity review",
+      "status": "pending",
+      "parent": "phase-1-verify",
+      "children": [],
+      "dependencies": {
+        "blocks": [],
+        "blocked_by": [],
+        "depends": []
+      },
+      "total_tasks": 1,
+      "completed_tasks": 0,
+      "metadata": {
+        "verification_type": "fidelity",
+        "skill": "sdd-fidelity-review",
+        "scope": "phase",
+        "target": "phase-1",
+        "on_failure": {
+          "consult": true,
+          "revert_status": "in_progress",
+          "continue_on_failure": false
+        }
+      }
+    }
+  }
+}
+```
+
+**Spec File Generation Rules:**
+1. Every node in the hierarchy becomes an entry
+2. All statuses initially "pending"
+3. All completed_tasks initially 0
+4. Parent-child relationships must be bidirectional
+5. Include dependency objects when a node blocks or depends on others (omit when no relationships exist)
+6. Metadata should include `file_path` for tasks that target specific files (strongly recommended for implementation/refactoring work)
+7. Metadata should include `task_category` to classify work type (optional but recommended)
+8. Generated and last_updated timestamps at root
+9. `spec_id` must follow `{feature}-{YYYY-MM-DD}-{nnn}` (three-digit sequence) to satisfy schema validation
+
+**Critical:**
+- JSON spec file is the single source of truth
+- Updated by sdd-update, not this skill
+- Read by sdd-next to find next tasks
+- Store in specs/pending/ (new specs), specs/active/ (in progress), specs/completed/, or specs/archived/
+- Consider adding to .gitignore (user preference)
+- Human-readable views can be generated on-demand using `sdd render`
+
+#### Task Category Metadata
+
+Tasks should include a `task_category` field in their metadata to classify the type of work being performed. This helps with task planning, time estimation, and workflow optimization.
+
+**Available Categories:**
+
+- **`investigation`**: Exploring or analyzing existing code to understand behavior, trace bugs, or map dependencies
+- **`implementation`**: Writing new functionality, features, or code that adds capabilities
+- **`refactoring`**: Improving code structure, organization, or quality without changing external behavior
+- **`decision`**: Architectural or design choices requiring analysis, comparison, or selection between alternatives
+- **`research`**: Gathering information, reading documentation, exploring external libraries, or learning new technologies
+
+**Category Selection Guidelines:**
+
+| Category | When to Use | Typical Duration | Needs file_path? |
+|----------|-------------|------------------|-----------------|
+| `investigation` | Need to understand existing code before making changes | Short-Medium | No (optional) |
+| `implementation` | Creating new files, adding features, writing new code | Medium-Long | Yes (strongly recommended) |
+| `refactoring` | Reorganizing existing code without changing behavior | Medium | Yes (strongly recommended) |
+| `decision` | Need to choose between approaches or make architectural decisions | Short | No |
+| `research` | Learning about external tools, reading specs, exploring patterns | Short-Medium | No |
+
+**Examples:**
+
+```json
+// Investigation task - analyzing existing code
+{
+  "task-1-1": {
+    "type": "subtask",
+    "title": "Analyze current authentication flow",
+    "status": "pending",
+    "parent": "phase-1",
+    "children": [],
+    "metadata": {
+      "task_category": "investigation",
+      "estimated_hours": 2
+    }
+  }
+}
+
+// Implementation task - writing new functionality
+{
+  "task-2-1": {
+    "type": "task",
+    "title": "src/services/authService.ts",
+    "status": "pending",
+    "parent": "phase-2-files",
+    "children": [],
+    "metadata": {
+      "file_path": "src/services/authService.ts",
+      "task_category": "implementation",
+      "estimated_hours": 4
+    }
+  }
+}
+
+// Refactoring task - improving code structure
+{
+  "task-3-1": {
+    "type": "task",
+    "title": "Extract validation logic to utility module",
+    "status": "pending",
+    "parent": "phase-3-files",
+    "children": [],
+    "metadata": {
+      "file_path": "src/utils/validation.ts",
+      "task_category": "refactoring",
+      "estimated_hours": 3
+    }
+  }
+}
+
+// Decision task - architectural choice
+{
+  "task-1-2": {
+    "type": "subtask",
+    "title": "Choose between JWT vs session-based authentication",
+    "status": "pending",
+    "parent": "phase-1",
+    "children": [],
+    "metadata": {
+      "task_category": "decision",
+      "estimated_hours": 1
+    }
+  }
+}
+
+// Research task - external learning
+{
+  "task-1-3": {
+    "type": "subtask",
+    "title": "Review OAuth 2.0 best practices and security guidelines",
+    "status": "pending",
+    "parent": "phase-1",
+    "children": [],
+    "metadata": {
+      "task_category": "research",
+      "estimated_hours": 2
+    }
+  }
+}
+```
+
+#### Verification Task Metadata
+
+When creating verification tasks with automated execution:
+
+```json
+{
+  "verify-1-1": {
+    "type": "verify",
+    "metadata": {
+      "verification_type": "auto",
+      "agent": "run-tests",
+      "command": "npm test"
+    }
+  },
+  "verify-1-2": {
+    "type": "verify",
+    "metadata": {
+      "verification_type": "fidelity",
+      "agent": "sdd-fidelity-review",
+      "scope": "phase",
+      "target": "phase-1"
+    }
+  }
+}
+```
+
+**Important:**
+- Use the `"agent"` field (base agent name) whenever the verification will be run by an automation tool; purely manual checks can omit it
+- Supported automation agent values today: `"run-tests"`, `"sdd-fidelity-review"`
+- When `agent` is provided, the system invokes automation via `Task(subagent_type: "sdd-toolkit:{skill-name}-subagent")`
+
+**Setting Default Category (CLI):**
+
+When creating specs via the CLI, you can set a default category that will be stored in the spec metadata:
+
+```bash
+# Create spec with explicit default category
+sdd create "User Authentication" --template medium --category investigation
+
+# Create spec without default category
+sdd create "User Authentication" --template medium
+```
+
+The `--category` flag is useful when most tasks in a spec will be the same type (e.g., an investigation-heavy spec or a refactoring-focused spec).
+
+**Best Practices:**
+
+**Choosing the Right Category:**
+- Use **`investigation`** when you need to understand existing code, trace dependencies, or analyze current behavior before making changes
+- Use **`implementation`** when creating new functionality, adding features, or writing new code files
+- Use **`refactoring`** when improving code structure without changing external behavior (e.g., extracting functions, renaming variables)
+- Use **`decision`** when you need to evaluate alternatives or make architectural choices (often early in phases)
+- Use **`research`** when gathering external information, reading documentation, or learning about libraries/tools
+
+**Task Ordering:**
+- **Always use `investigation` before `implementation`**: Understanding code first prevents mistakes and reduces rework
+- **Place `decision` and `research` tasks early in phases**: These inform later implementation work
+- **Group `refactoring` separately from `implementation`**: Keep behavioral changes distinct from structural improvements
+- **Combine `decision` with `research`**: Research tasks often provide the information needed for decision tasks
+
+**Mixed-Type Phases:**
+- Phases often contain multiple task categories (investigation → decision → implementation → verification)
+- Start phases with investigation/research tasks to gather context
+- Place decision tasks after investigation but before implementation
+- End phases with verification tasks to validate the work
+- Use dependencies to enforce proper ordering between different category types
+
+**Other Guidelines:**
+- **Always specify category for tasks**: Helps with accurate time estimation and resource planning
+- **Optional for subtasks**: If a subtask's category is obvious from its parent, it can be omitted
+- **Add `file_path` for implementation/refactoring tasks whenever a single file is the focus**: This keeps downstream tools precise without blocking broader refactors
+- **Skip `file_path` for investigation/decision/research**: These categories often span multiple files or are conceptual
+
+### Phase 2: Spec Validation
+
+After creating a JSON specification, validate it to ensure correct format and sdd-next compatibility.
+
+**About Validation:**
+
+The JSON spec file is validated for:
+- Hierarchy integrity and consistency
+- Task count accuracy
+- Dependency graph validity
+- Required field presence
+- Proper node relationships
+
+**Validation is JSON-only** - markdown files are optional generated artifacts, not validated.
+
+**Using the sdd-validate Subagent:**
+
+To validate specs within Claude Code, invoke the sdd-validate subagent using the Task tool:
 
 ```
-Implementation → Judge FAIL → Implementation Retry
-                                    ↓
-                    🔍 Human Checkpoint (optional feedback)
-                                    ↓
-                              Judge Retry
-                                    ↓
-                    PASS → Continue | FAIL → Repeat until MAX_ITERATIONS
-                                                    ↓
-                              MAX_ITERATIONS → 🔍 Final Human Checkpoint
-                                                    ↓
-                                    User confirms → Proceed to next stage
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Validate the spec at specs/pending/your-spec.json. Check for structural errors, missing fields, and dependency issues.",
+  description: "Validate spec file"
+)
 ```
+
+**When to invoke the subagent:**
+- After creating a new spec (verify initial structure)
+- Before implementation begins (ensure spec is valid)
+- After manual JSON edits (check for errors)
+- When validation errors are suspected (diagnose issues)
+
+#### 2.1 Using the sdd-validate Subagent
+
+The sdd-validate subagent provides validation, reporting, fixing, and statistics operations for spec files.
+
+**Core Operations:**
+- **validate** – Validate JSON spec structure and integrity
+- **report** – Generate detailed analysis with actionable guidance
+- **fix** – Preview/apply auto-fixes for common hierarchy and metadata issues
+- **stats** – Summarize hierarchy size, verification coverage, and complexity metrics
+
+##### Validate Operation (Recommended)
+
+Validates the JSON spec file structure, hierarchy, and integrity.
+
+**Invocation:**
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Validate the spec at specs/pending/your-spec.json. Check for structural errors, missing fields, and dependency issues.",
+  description: "Validate spec file"
+)
+```
+
+##### Report Operation
+
+Produces in-depth analysis, grouped by severity, with suggested remedies.
+
+**Invocation:**
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Generate a detailed validation report for specs/pending/your-spec.json. Save the report to specs/reports/your-spec.md.",
+  description: "Generate validation report"
+)
+```
+
+##### Fix Operation
+
+Automatically fixes common JSON spec issues. Preview before applying.
+
+**Invocation for preview:**
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Preview auto-fixes for specs/pending/your-spec.json. Show what would be changed without applying.",
+  description: "Preview spec fixes"
+)
+```
+
+**Invocation to apply fixes:**
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Auto-fix specs/pending/your-spec.json. Apply all fixable issues and validate afterward.",
+  description: "Apply spec fixes"
+)
+```
+
+##### Stats Operation (Optional)
+
+Summarizes hierarchy composition, depth, and verification footprint.
+
+**Invocation:**
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Generate comprehensive statistics for specs/pending/your-spec.json. Include quality score, progress metrics, and completeness analysis.",
+  description: "Generate spec statistics"
+)
+```
+
+**Note:** JSON remains the source of truth. Markdown reports generated via the subagent are helpful for review, but edits must be made in the JSON and re-rendered.
+
+#### 2.2 Validation Checklist
+
+**Before sdd-next Usage:**
+
+Invoke the sdd-validate subagent to ensure the JSON spec file is properly formatted:
+
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Validate the spec at specs/pending/your-spec.json. Check for structural errors, missing fields, and dependency issues.",
+  description: "Validate spec before implementation"
+)
+```
+
+**Required for sdd-next:**
+- ✅ All errors must be fixed
+- ✅ Hierarchy integrity maintained
+- ✅ Task counts are accurate across hierarchy
+- ✅ All required fields present
+- ✅ Dependencies are valid
+
+**If Validation Fails:**
+
+| Error Type | Solution |
+|------------|----------|
+| Task count mismatch | Use auto-fix via subagent or regenerate spec file manually |
+| Hierarchy integrity issues | Use auto-fix via subagent or check parent/child references manually |
+| Missing required fields | Add missing fields, then re-validate with subagent |
+| Invalid dependencies | Check dependency IDs match actual task IDs |
+| Circular dependencies | Remove or adjust blocking relationships |
+
+**Auto-Fix Workflow:**
+
+If validation fails with fixable errors, use the sdd-validate subagent to preview and apply fixes:
+
+**Step 1: Preview fixes**
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Preview auto-fixes for specs/pending/your-spec.json. Show what would be changed without applying.",
+  description: "Preview fixes"
+)
+```
+
+**Step 2: Apply fixes if preview looks good**
+```
+Task(
+  subagent_type: "sdd-toolkit:sdd-validate-subagent",
+  prompt: "Auto-fix specs/pending/your-spec.json. Apply all fixable issues and validate afterward.",
+  description: "Apply fixes"
+)
+```
+
+**Step 3: Validation confirmation**
+The subagent will automatically re-validate after applying fixes and report the results.
+
+## Best Practices
+
+### Specification Quality
+- **Be specific**: "Add error handling to API calls" not "improve error handling"
+- **Include examples**: Show what the change looks like in context
+- **Think ahead**: Consider maintenance, testing, and documentation needs
+- **Stay grounded**: Base plans on actual codebase exploration, not assumptions
+
+## Common Pitfalls to Avoid
+
+❌ **Skipping codebase analysis**: Don't guess at file locations or patterns
+❌ **Vague specifications**: "Improve performance" is not actionable
+❌ **Premature optimization**: Don't add features not in the spec
+❌ **Verification shortcuts**: Every step matters, don't skip any
+❌ **Spec drift**: Keep spec updated if requirements change
+❌ **Over-engineering**: Match complexity to actual requirements
+
+## Quick Reference
+
+**Short task (<5 files, simple changes)**
+- **Phases**: 1-2 phases maximum
+- **Hierarchy depth**: 2-3 levels (spec → phase → task, minimal subtasks)
+- **Task count**: 3-8 tasks total
+- **Verification**: 1-2 verifications per phase (minimum 20% coverage)
+- **Spec structure**: Brief objectives, files, key changes, basic verification
+- **Focus**: Verification to prevent breaks, keep hierarchy flat
+
+**Medium task (5-15 files, moderate complexity)**
+- **Phases**: 2-4 phases with clear dependencies
+- **Hierarchy depth**: 3-4 levels (spec → phase → group → task → subtask)
+- **Task count**: 10-25 tasks with selective subtask breakdown
+- **Verification**: 2-4 verifications per phase (aim for 30-40% coverage)
+- **Spec structure**: Full specification with detailed file-level planning
+- **Focus**: Risk assessment, comprehensive verification steps, dependency tracking
+
+**Large task (>15 files or high complexity)**
+- **Phases**: 4-6 phases (if more, split into multiple specs)
+- **Hierarchy depth**: 4-5 levels maximum (deeper = harder to manage)
+- **Task count**: 25-50 tasks (>50 suggests splitting into multiple specs)
+- **Verification**: 3-5 verifications per phase (target 40-50% coverage)
+- **Spec structure**: Detailed multi-phase with extensive verification and rollback planning
+- **Focus**: Consider splitting if >6 phases or >50 tasks; higher user involvement in refinement
+
+**Rule of thumb**: If hierarchy exceeds 5 levels or a single phase has >15 tasks, reorganize or split the spec.
+
+---
+
+**Remember**: The time spent on specification pays exponential dividends in implementation quality and developer confidence. Never skip the planning phase.

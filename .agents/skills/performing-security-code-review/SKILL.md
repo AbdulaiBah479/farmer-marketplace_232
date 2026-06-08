@@ -1,15 +1,8 @@
 ---
-name: performing-security-code-review
+name: Performing Security Code Review
 description: |
-  Execute this skill enables AI assistant to conduct a security-focused code review using the security-agent plugin. it analyzes code for potential vulnerabilities like sql injection, xss, authentication flaws, and insecure dependencies. AI assistant uses this skill wh... Use when assessing security or running audits. Trigger with phrases like 'security scan', 'audit', or 'vulnerability'.
-allowed-tools: Read, Write, Edit, Grep, Glob, Bash(cmd:*)
-version: 1.0.0
-author: Jeremy Longshore <jeremy@intentsolutions.io>
-license: MIT
+  This skill enables Claude to conduct a security-focused code review using the security-agent plugin. It analyzes code for potential vulnerabilities like SQL injection, XSS, authentication flaws, and insecure dependencies. Claude uses this skill when the user explicitly requests a security audit, asks for a code review with a focus on security, or mentions security concerns related to code. The security-agent plugin then provides structured security findings with severity ratings, code locations, impact assessments, and remediation guidance.
 ---
-# Security Agent
-
-This skill provides automated assistance for security agent tasks.
 
 ## Overview
 
@@ -55,30 +48,3 @@ The skill will:
 ## Integration
 
 This skill integrates with Claude's code understanding capabilities and leverages the security-agent plugin to provide specialized security analysis. It can be used in conjunction with other code analysis tools to provide a comprehensive assessment of code quality and security.
-
-## Prerequisites
-
-- Appropriate file access permissions
-- Required dependencies installed
-
-## Instructions
-
-1. Invoke this skill when the trigger conditions are met
-2. Provide necessary context and parameters
-3. Review the generated output
-4. Apply modifications as needed
-
-## Output
-
-The skill produces structured output relevant to the task.
-
-## Error Handling
-
-- Invalid input: Prompts for correction
-- Missing dependencies: Lists required components
-- Permission errors: Suggests remediation steps
-
-## Resources
-
-- Project documentation
-- Related skills and commands

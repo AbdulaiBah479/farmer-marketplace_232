@@ -5,10 +5,6 @@ description: |
   Use when user asks to: send a message on Google Chat, read chat messages, list chat spaces,
   find a chat room, send a DM, or create a new chat space. Lightweight alternative to full
   Google Workspace MCP server with standalone OAuth authentication.
-license: Apache-2.0
-metadata:
-  author: sanjay3290
-  version: "1.0"
 ---
 
 # Google Chat
@@ -51,14 +47,8 @@ python scripts/chat.py get-messages spaces/AAAA123 --limit 10
 # Send a message to a space
 python scripts/chat.py send-message spaces/AAAA123 "Hello team!"
 
-# Send a message with file attachment
-python scripts/chat.py send-message spaces/AAAA123 "Here's the report" --attachment /path/to/file.pdf
-
 # Send a direct message
 python scripts/chat.py send-dm user@example.com "Hey, quick question..."
-
-# Send a DM with file attachment
-python scripts/chat.py send-dm user@example.com "Please review" --attachment /path/to/file.pdf
 
 # Find or create DM space with someone
 python scripts/chat.py find-dm user@example.com

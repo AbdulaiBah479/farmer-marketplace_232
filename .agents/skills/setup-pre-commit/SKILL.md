@@ -1,91 +1,113 @@
 ---
 name: setup-pre-commit
-description: Set up Husky pre-commit hooks with lint-staged (Prettier), type checking, and tests in the current repo. Use when user wants to add pre-commit hooks, set up Husky, configure lint-staged, or add commit-time formatting/typechecking/testing.
+description: Install git pre-commit hooks via the project's hook tool — Husky+lint-staged (JS), pre-commit (Python/OCaml), lefthook (Go), cargo-husky (Rust). Use when the user wants commit-time formatting, linting, type-checking, or test gates. Detects ecosystem first.
 ---
 
-# Setup Pre-Commit Hooks
+Detect the ecosystem, pick the right hook tool, install with formatter + type-check + test gates.
 
-## What This Sets Up
+## Detection (run first)
 
-- **Husky** pre-commit hook
-- **lint-staged** running Prettier on all staged files
-- **Prettier** config (if missing)
-- **typecheck** and **test** scripts in the pre-commit hook
+Dispatch Explore agent — or for a single-language repo, probe directly via `fd` for lockfile / manifest signature. Map the first manifest hit to an ecosystem. Multi-language repos: ask the maintainer which surface to gate, or apply both.
 
-## Steps
+## Ecosystem → hook tool
 
-### 1. Detect package manager
+| Ecosystem            | Hook tool                  | Install command                                                  |
+| -------------------- | -------------------------- | ---------------------------------------------------------------- |
+| npm / yarn / pnpm / bun | husky + lint-staged     | `<pm> add -D husky lint-staged prettier && npx husky init`       |
+| Python (poetry/pip)  | pre-commit (framework)     | `pipx install pre-commit && pre-commit install`                  |
+| Go                   | lefthook (or pre-commit)   | `go install github.com/evilmartians/lefthook@latest && lefthook install` |
+| Rust (cargo)         | cargo-husky (or pre-commit)| add `cargo-husky` as `[dev-dependencies]`; runs on `cargo test`  |
+| OCaml (dune)         | pre-commit + dune hooks    | `pipx install pre-commit && pre-commit install`                  |
 
-Check for `package-lock.json` (npm), `pnpm-lock.yaml` (pnpm), `yarn.lock` (yarn), `bun.lockb` (bun). Use whichever is present. Default to npm if unclear.
+## Per-ecosystem hook contents
 
-### 2. Install dependencies
-
-Install as devDependencies:
-
-```
-husky lint-staged prettier
-```
-
-### 3. Initialize Husky
-
-```bash
-npx husky init
-```
-
-This creates `.husky/` dir and adds `prepare: "husky"` to package.json.
-
-### 4. Create `.husky/pre-commit`
-
-Write this file (no shebang needed for Husky v9+):
+**Node ecosystems** — write `.husky/pre-commit`:
 
 ```
 npx lint-staged
-npm run typecheck
-npm run test
+<pm> run typecheck
+<pm> run test
 ```
 
-**Adapt**: Replace `npm` with detected package manager. If repo has no `typecheck` or `test` script in package.json, omit those lines and tell the user.
-
-### 5. Create `.lintstagedrc`
+Drop missing scripts and tell the user. Write `.lintstagedrc`:
 
 ```json
-{
-  "*": "prettier --ignore-unknown --write"
-}
+{ "*": "prettier --ignore-unknown --write" }
 ```
 
-### 6. Create `.prettierrc` (if missing)
+Formatter policy is **out of scope** for this skill. Do NOT auto-create `.prettierrc`. If no Prettier config exists, surface that fact and ask the user.
 
-Only create if no Prettier config exists. Use these defaults:
+**Python** — write `.pre-commit-config.yaml`:
 
-```json
-{
-  "useTabs": false,
-  "tabWidth": 2,
-  "printWidth": 80,
-  "singleQuote": false,
-  "trailingComma": "es5",
-  "semi": true,
-  "arrowParens": "always"
-}
+```yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0
+    hooks:
+      - id: ruff
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright
+        entry: pyright
+        language: system
+        pass_filenames: false
+      - id: pytest
+        name: pytest
+        entry: pytest -q
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
 ```
 
-### 7. Verify
+**Go** — write `lefthook.yml`:
 
-- [ ] `.husky/pre-commit` exists and is executable
-- [ ] `.lintstagedrc` exists
-- [ ] `prepare` script in package.json is `"husky"`
-- [ ] `prettier` config exists
-- [ ] Run `npx lint-staged` to verify it works
+```yaml
+pre-commit:
+  parallel: true
+  commands:
+    fmt:    { run: gofmt -l -w {staged_files} }
+    vet:    { run: go vet ./... }
+    test:   { run: go test -race ./... }
+```
 
-### 8. Commit
+**Rust** — `Cargo.toml`:
 
-Stage all changed/created files and commit with message: `Add pre-commit hooks (husky + lint-staged + prettier)`
+```toml
+[dev-dependencies]
+cargo-husky = { version = "1", default-features = false, features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt"] }
+```
 
-This will run through the new pre-commit hooks — a good smoke test that everything works.
+**OCaml** — `.pre-commit-config.yaml`:
 
-## Notes
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: dune-fmt
+        name: dune fmt
+        entry: dune fmt
+        language: system
+        pass_filenames: false
+      - id: dune-build
+        name: dune build
+        entry: dune build
+        language: system
+        pass_filenames: false
+      - id: dune-test
+        name: dune runtest
+        entry: dune runtest
+        language: system
+        pass_filenames: false
+```
 
-- Husky v9+ doesn't need shebangs in hook files
-- `prettier --ignore-unknown` skips files Prettier can't parse (images, etc.)
-- The pre-commit runs lint-staged first (fast, staged-only), then full typecheck and tests
+## Verify
+
+- `fd -d 2 -t f '\.husky|\.pre-commit-config\.yaml|lefthook\.yml'` shows the expected file.
+- The hook is executable.
+- Run a no-op commit (`git commit --allow-empty -m "chore: verify hooks"`) — every gate must run and pass.
+
+## Commit
+
+`chore: install pre-commit hooks (<tool>)`. The commit itself trips the new hook — first-class smoke test.

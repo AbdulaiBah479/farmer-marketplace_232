@@ -1,213 +1,266 @@
 ---
-name: "Requirements Engineering"
-description: "Translate user prompts into structured requirements, user stories, and beads tasks. Use when: (1) Parsing user feature requests, (2) Creating acceptance criteria, (3) Breaking down epics into tasks, (4) Auto-generating beads issues. Trigger keywords: requirements, user story, acceptance criteria, as a, i want, so that, given when then, task breakdown, epic creation"
-version: 1.1.0
+name: requirements-engineering
+description: Transform vague feature ideas into clear, testable requirements using EARS format. Capture user stories, define acceptance criteria, identify edge cases, and validate completeness before moving to design.
+license: MIT
+compatibility: Claude Code, Cursor, VS Code, Windsurf
+metadata:
+  category: methodology
+  complexity: beginner
+  author: Kiro Team
+  version: "1.0.0"
 ---
 
 # Requirements Engineering
 
-Translate natural language prompts into structured requirements and tasks.
+Master the art of capturing what needs to be built before diving into how to build it. This skill teaches the EARS (Easy Approach to Requirements Syntax) format for creating clear, testable requirements.
 
-## Requirements Format Decision Tree
+## When to Use This Skill
 
+Use requirements engineering when:
+- Starting any new feature or project
+- Clarifying ambiguous stakeholder requests
+- Creating acceptance criteria for user stories
+- Documenting system behavior for testing
+- Ensuring all team members share understanding
+
+## The EARS Format
+
+EARS provides consistent patterns for writing requirements that are specific, testable, and unambiguous.
+
+### Basic Patterns
+
+**Event-Response (Most Common):**
 ```
-What format is the user using?
-│
-├─ "As a... I want... So that..."
-│   └─ User Story format → Extract actor, feature, benefit
-│
-├─ "Given... When... Then..."
-│   └─ BDD format → Extract precondition, action, outcome
-│
-├─ "Add/Implement/Build X with Y"
-│   └─ Feature request → Extract action, components, technology
-│
-├─ "Fix/Debug X"
-│   └─ Bug report → Route to debug workflow
-│
-└─ "Refactor/Optimize X"
-    └─ Refactoring → Route to refactor workflow
-```
-
----
-
-## NEVER Do This
-
-**NEVER** accept vague requirements:
-```
-# BAD - Too vague, can't test
-"Add payment saving"
-"Make authentication work"
-
-# GOOD - Specific, testable
-"User can save credit card with last 4 digits displayed"
-"User receives JWT token on successful email/password login"
+WHEN [triggering event] THEN [system] SHALL [required response]
 ```
 
-**NEVER** create broad acceptance criteria:
+**Conditional Behavior:**
 ```
-# BAD - Not testable
-- [ ] Payment should work
-- [ ] Authentication is secure
-
-# GOOD - Specific and verifiable
-- [ ] Card is validated before saving
-- [ ] Card number shows only last 4 digits in UI
-- [ ] Access token expires in 15 minutes
+IF [precondition is met] THEN [system] SHALL [required response]
 ```
 
-**NEVER** skip task dependencies:
+**Complex Conditions:**
 ```
-# BAD - Missing dependencies
-PAY-005: Payment service (no deps listed)
-
-# GOOD - Explicit dependencies
-PAY-005: Payment service
-└─ Dependencies: PAY-002 (payments table), PAY-004 (Payment model)
+WHEN [event] AND [additional condition] THEN [system] SHALL [response]
 ```
 
----
-
-## User Story Template
-
+**Optional Conditions:**
 ```
-As a [actor/role]
-I want [feature/capability]
-So that [business benefit/value]
+WHEN [event] OR [alternative event] THEN [system] SHALL [response]
 ```
 
-**Example**:
+### Advanced Patterns
+
+**State-Based:**
+```
+WHEN [system is in specific state] THEN [system] SHALL [behavior]
+```
+
+**Performance:**
+```
+WHEN [user action] THEN [system] SHALL [respond within X seconds/milliseconds]
+```
+
+**Security:**
+```
+IF [authentication condition] THEN [system] SHALL [security response]
+```
+
+## Step-by-Step Process
+
+### Step 1: Capture User Stories
+
+Format: **As a [role], I want [feature], so that [benefit]**
+
+Focus on:
+- Who is the user? (role)
+- What do they want to accomplish? (feature)
+- Why does it matter? (benefit/value)
+
+**Example:**
 ```markdown
-## User Story
-
-**As a** customer
-**I want** to save my payment method
-**So that** I can checkout faster on future purchases
-
-## Acceptance Criteria
-
-- [ ] User can add credit card
-- [ ] Card is validated before saving
-- [ ] Card number masked (only last 4 digits)
-- [ ] Saved cards appear in checkout dropdown
+As a returning customer, I want to save my payment methods, so that I can checkout faster in the future.
 ```
 
----
+### Step 2: Generate Acceptance Criteria
 
-## BDD Acceptance Criteria
+For each user story, define specific acceptance criteria using EARS:
 
-```
-Given [initial context/precondition]
-When [action/event occurs]
-Then [expected outcome/result]
-```
-
-**Example**:
+**Example for payment methods:**
 ```markdown
-**Given** a registered user
-**When** they enter valid credentials
-**Then** they receive a JWT access token
-**And** the access token expires in 15 minutes
+**User Story:** As a returning customer, I want to save my payment methods, so that I can checkout faster.
+
+**Acceptance Criteria:**
+1. WHEN user adds a valid credit card THEN system SHALL securely store card details
+2. WHEN user adds a card with invalid number THEN system SHALL display validation error
+3. WHEN user has saved cards THEN system SHALL display list during checkout
+4. WHEN user selects saved card THEN system SHALL pre-fill payment form
+5. WHEN user deletes saved card THEN system SHALL remove card from list
+6. IF user is not authenticated THEN system SHALL redirect to login before saving card
+7. WHEN user adds card THEN system SHALL mask all but last 4 digits in display
 ```
 
----
+### Step 3: Identify Edge Cases
 
-## Task Breakdown Template
+For each requirement, ask:
+- What if the input is empty/null?
+- What if the input is at boundary values?
+- What if the operation fails?
+- What if the user is not authorized?
+- What if there are concurrent operations?
 
-Break features into Rails technical layers:
+**Edge case patterns:**
+```markdown
+**Error Handling:**
+- WHEN [operation fails] THEN system SHALL [display error / retry / log]
 
-| Layer | Example Tasks |
-|-------|---------------|
-| Database | Migrations, schema changes |
-| Model | ActiveRecord, validations, associations |
-| Service | Business logic, external APIs |
-| Controller | HTTP endpoints, routing |
-| View/Component | UI, Hotwire, ViewComponents |
-| Testing | RSpec tests for each layer |
+**Boundary Conditions:**
+- WHEN [value equals minimum/maximum] THEN system SHALL [specific behavior]
 
-### Dependency Flow
+**Concurrent Access:**
+- WHEN [multiple users access same resource] THEN system SHALL [conflict resolution]
 
-```
-Database → Models → Services → Controllers → Views → Tests
-```
-
----
-
-## Action Verb → Intent Mapping
-
-| Verb | Intent | Workflow |
-|------|--------|----------|
-| Implement/Build/Create | New Feature | `/reactree-dev` |
-| Add/Include | Enhancement | `/reactree-feature` |
-| Fix/Debug | Bug Fix | `/reactree-debug` |
-| Refactor/Cleanup | Refactoring | `/reactree-refactor` |
-| Optimize/Improve | Performance | `/reactree-dev --refactor` |
-
----
-
-## Quick Extraction Patterns
-
-```bash
-# Actor: "As a/an X"
-ACTOR=$(echo "$prompt" | grep -ioE "as an? [a-z ]+" | sed 's/as an? //')
-
-# Feature: "I want X"
-FEATURE=$(echo "$prompt" | grep -ioE "i want [^.]*" | sed 's/i want //')
-
-# Benefit: "So that X"
-BENEFIT=$(echo "$prompt" | grep -ioE "so that [^.]*" | sed 's/so that //')
-
-# Components: "with X and Y"
-COMPONENTS=$(echo "$prompt" | grep -ioE "with [a-z, and]+" | sed 's/with //')
-
-# Technology: "using Z"
-TECH=$(echo "$prompt" | grep -ioE "using [a-z ]+" | sed 's/using //')
+**Empty States:**
+- WHEN [collection is empty] THEN system SHALL [display empty state message]
 ```
 
----
+### Step 4: Validate Requirements
 
-## Complexity Scoring
+Use this checklist:
 
-| Word Count | Complexity | Components | Action |
-|------------|------------|------------|--------|
-| < 10 | Low | 1-2 | Simple task, no epic |
-| 10-20 | Medium | 2-3 | Feature, create tasks |
-| > 20 | High | 4+ | Epic with subtasks |
+**Completeness:**
+- [ ] All user roles identified and addressed
+- [ ] Normal flow scenarios covered
+- [ ] Edge cases documented
+- [ ] Error cases handled
+- [ ] Business rules captured
 
----
+**Clarity:**
+- [ ] Each requirement uses precise language
+- [ ] No ambiguous terms (fast, easy, user-friendly)
+- [ ] Technical jargon avoided or defined
+- [ ] Expected behaviors are specific
 
-## Beads Task Creation
+**Consistency:**
+- [ ] EARS format used throughout
+- [ ] Terminology consistent across requirements
+- [ ] No contradictory requirements
+- [ ] Similar scenarios handled similarly
 
-For complex features, auto-create beads structure:
+**Testability:**
+- [ ] Each requirement can be verified
+- [ ] Success criteria are observable
+- [ ] Inputs and expected outputs specified
+- [ ] Performance requirements are measurable
 
-```bash
-# Create epic
-EPIC_ID=$(bd create --type epic --title "$FEATURE_TITLE")
+## Common Mistakes to Avoid
 
-# Create subtasks with dependencies
-bd create --type task --title "Add schema" --deps "$EPIC_ID"
-bd create --type task --title "Add models" --deps "$EPIC_ID,$SCHEMA_TASK"
-bd create --type task --title "Add services" --deps "$MODEL_TASK"
+### Mistake 1: Vague Requirements
+**Bad:** "System should be fast"
+**Good:** "WHEN user submits search THEN system SHALL return results within 2 seconds"
+
+### Mistake 2: Implementation Details
+**Bad:** "System shall use Redis for caching"
+**Good:** "WHEN user requests frequently accessed data THEN system SHALL return cached results"
+
+### Mistake 3: Missing Error Cases
+**Bad:** Only documenting happy path
+**Good:** Include WHEN/IF statements for all error conditions
+
+### Mistake 4: Untestable Requirements
+**Bad:** "System should be user-friendly"
+**Good:** "WHEN new user completes onboarding THEN system SHALL require no more than 3 clicks to reach main dashboard"
+
+### Mistake 5: Conflicting Requirements
+**Bad:** Requirements that contradict each other
+**Good:** Review all requirements together, resolve conflicts explicitly
+
+## Examples
+
+### Example 1: File Upload Feature
+
+```markdown
+**User Story:** As a user, I want to upload files, so that I can share documents with my team.
+
+**Acceptance Criteria:**
+1. WHEN user selects file under 10MB THEN system SHALL accept file for upload
+2. WHEN user selects file over 10MB THEN system SHALL display "file too large (max 10MB)" error
+3. WHEN user selects unsupported file type THEN system SHALL display "unsupported format" error with list of allowed types
+4. WHEN upload is in progress THEN system SHALL display progress indicator with percentage
+5. WHEN upload completes successfully THEN system SHALL display success message with file link
+6. WHEN upload fails due to network error THEN system SHALL display retry option
+7. IF user is not authenticated THEN system SHALL redirect to login before upload
+8. WHEN user uploads file with same name as existing file THEN system SHALL prompt for rename or replace
+
+**Supported File Types:** PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, GIF
+**Maximum File Size:** 10MB
+**Maximum Files Per Upload:** 5
 ```
 
----
+### Example 2: Search Feature
 
-## Output Checklist
+```markdown
+**User Story:** As a customer, I want to search products, so that I can find items quickly.
 
-Before implementation, verify:
+**Acceptance Criteria:**
+1. WHEN user enters search term THEN system SHALL display matching products
+2. WHEN search returns results THEN system SHALL show result count
+3. WHEN search returns no results THEN system SHALL display "no products found" with suggestions
+4. WHEN user searches with special characters THEN system SHALL sanitize input and search
+5. WHEN user submits empty search THEN system SHALL display validation message
+6. WHEN results exceed 20 items THEN system SHALL paginate with 20 items per page
+7. WHEN user searches THEN system SHALL return results within 2 seconds
+8. WHEN user types in search box THEN system SHALL show autocomplete suggestions after 3 characters
 
-- [ ] User story has actor, feature, benefit (if applicable)
-- [ ] Acceptance criteria are specific and testable
-- [ ] Technical components identified
-- [ ] Task breakdown follows layer strategy
-- [ ] Dependencies explicitly stated
-- [ ] Beads epic created (for complex features)
+**Search Fields:** Product name, description, category, SKU
+**Minimum Search Length:** 2 characters
+```
 
----
+## Requirements Document Template
 
-## References
+```markdown
+# Requirements Document: [Feature Name]
 
-Detailed patterns and scripts in `references/`:
-- `formats-and-patterns.md` - Extraction logic, intent classification
-- `task-breakdown.md` - Layer strategy, dependency detection, examples
-- `beads-integration.md` - Auto task creation, workflow routing
+## Overview
+[Brief description of the feature and its purpose]
+
+## User Roles
+- [Role 1]: [Description of this user type]
+- [Role 2]: [Description of this user type]
+
+## Requirements
+
+### Requirement 1: [Name]
+**User Story:** As a [role], I want [feature], so that [benefit]
+
+**Acceptance Criteria:**
+1. WHEN [event] THEN system SHALL [response]
+2. IF [condition] THEN system SHALL [response]
+3. WHEN [event] AND [condition] THEN system SHALL [response]
+
+**Edge Cases:**
+- [Edge case 1 and how it's handled]
+- [Edge case 2 and how it's handled]
+
+### Requirement 2: [Name]
+[Continue pattern...]
+
+## Non-Functional Requirements
+- **Performance:** [Specific metrics]
+- **Security:** [Security requirements]
+- **Accessibility:** [Accessibility standards]
+
+## Out of Scope
+- [Items explicitly not included in this feature]
+
+## Open Questions
+- [Questions that need stakeholder input]
+```
+
+## Next Steps
+
+After completing requirements:
+1. Review with stakeholders for accuracy
+2. Get explicit approval before proceeding
+3. Move to Design Phase to create technical architecture
+4. Use requirements as foundation for acceptance testing

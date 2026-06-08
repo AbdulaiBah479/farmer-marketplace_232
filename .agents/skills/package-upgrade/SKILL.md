@@ -1,213 +1,178 @@
 ---
-name: package-upgrade
-description: Use when the user asks to analyze package upgrades, check for outdated dependencies, plan npm/NuGet updates, or assess breaking changes in package updates. Triggers on keywords like "upgrade packages", "outdated", "npm update", "breaking changes", "dependency upgrade", "package update", "version upgrade".
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task, WebFetch, WebSearch, TodoWrite
+name: Package Upgrade
+description: Systematic approach for upgrading packages in the Baseplate monorepo, ensuring consistency between monorepo dependencies and generated project code.
 ---
 
-# Frontend Package Upgrade Analysis & Planning
+# Package Upgrade Skill
 
-You are to operate as an expert frontend package management specialist, npm ecosystem analyst, and software architecture expert to analyze package.json files, research latest versions, collect breaking changes and migration guides, and generate a comprehensive upgrade plan.
+Use this skill when the user asks to upgrade packages, update dependencies, or mentions upgrading specific npm packages in the Baseplate monorepo.
 
-**IMPORTANT**: Always thinks hard, plan step by step to-do list first before execute. Always remember to-do list, never compact or summary it when memory context limit reach. Always preserve and carry your to-do list through every operation.
+## Overview
 
----
+Baseplate has a dual-location package management system:
 
-## Core Anti-Hallucination Protocols
+1. **Monorepo catalog** (`pnpm-workspace.yaml`) - Defines versions for the Baseplate development environment
+2. **Generator constants** - Defines versions that get injected into generated projects
 
-### ASSUMPTION_VALIDATION_CHECKPOINT
+Both locations must be kept in sync to ensure generated projects use the intended package versions.
 
-Before every major operation:
+## Step-by-Step Process
 
-1. "What assumptions am I making about [X]?"
-2. "Have I verified this with actual code evidence?"
-3. "Could I be wrong about [specific pattern/relationship]?"
+### 1. Identify Package Locations
 
-### EVIDENCE_CHAIN_VALIDATION
+Before upgrading, identify where the package is defined:
 
-Before claiming any relationship:
+**Common generator constants locations:**
+- `packages/react-generators/src/constants/react-packages.ts` - React, Vite, Tailwind, UI libraries
+- `packages/fastify-generators/src/constants/fastify-packages.ts` - Fastify, server-side packages
+- `packages/core-generators/src/constants/core-packages.ts` - Core Node.js utilities
 
-- "I believe package X is compatible because..." → show actual compatibility matrix
-- "This version has breaking changes because..." → cite official changelog
-- "Migration effort is Y hours because..." → show evidence from similar migrations
+Search commands:
+```bash
+# Search for package in catalog
+grep "package-name" pnpm-workspace.yaml
 
-### TOOL_EFFICIENCY_PROTOCOL
-
-- Batch multiple WebSearch calls for related packages
-- Use parallel Read operations for package.json files
-- Batch package research into groups of 10
-
-### CONTEXT_ANCHOR_SYSTEM
-
-Every 10 packages researched:
-
-1. Re-read the original task description
-2. Verify the current operation aligns with original goals
-3. Update the `Current Focus` in `## Progress` section
-
----
-
-## PHASE 1: PACKAGE INVENTORY & CURRENT STATE ANALYSIS
-
-Build package inventory in `.ai/workspace/analysis/frontend-package-upgrade-analysis.md`.
-
-### PHASE 1A: INITIALIZATION AND PACKAGE DISCOVERY
-
-Initialize analysis file with:
-
-- `## Metadata` - Original prompt and task description
-- `## Progress` - Track phase, items processed, total items
-- `## Package Inventory` - All package.json files and dependencies
-- `## Version Research Results` - Latest versions and changelogs
-- `## Breaking Changes Analysis` - Breaking changes catalog
-- `## Migration Complexity Assessment` - Risk levels and effort estimates
-- `## Upgrade Strategy` - Phased migration plan
-
-**Find all package.json files**:
-
-```
-src/Frontend/package.json
-src/Frontend/apps/*/package.json
-src/Frontend/libs/*/package.json
+# Search for package in generator constants
+grep -r "package-name" packages/*/src/constants/
 ```
 
-For each package.json, document:
+### 2. Check Current and Latest Versions
 
-- Project Name & Location
-- Framework Version
-- Dependencies (categorized: Framework, UI, Build Tools, Testing, Utilities)
-- DevDependencies
+```bash
+# Get latest version from npm
+npm view package-name version
 
-Create **Master Package List** consolidating all unique packages.
+# Get all available versions (helpful for major version planning)
+npm view package-name versions --json
+```
 
-### PHASE 1B: PACKAGE USAGE ANALYSIS
+### 3. Research Breaking Changes
 
-For each unique package, analyze codebase usage:
+Before upgrading, especially for major versions:
+- Check the package's CHANGELOG.md or release notes
+- Look for migration guides
+- Check compatibility with other packages (peer dependencies)
 
-- **Projects Using**: Which projects depend on this
-- **Import Count**: Number of files importing
-- **Key Usage Areas**: Where primarily used
-- **Configuration Files**: Config files for this package
-- **Upgrade Risk Level**: Low/Medium/High/Critical based on usage breadth
+### 4. Update Package Versions
 
+#### 4.1 Update Monorepo Catalog
+
+Edit `pnpm-workspace.yaml`:
+```yaml
+catalog:
+  package-name: NEW_VERSION
+```
+
+#### 4.2 Update Generator Constants
+
+Find and update the appropriate constants file:
+```typescript
+export const PACKAGES = {
+  'package-name': 'NEW_VERSION',
+} as const;
+```
+
+### 5. Install and Resolve Dependencies
+
+```bash
+# Install new versions
+pnpm install
+
+# Resolve duplicate dependencies and conflicts
+pnpm dedupe
+```
+
+**Note:** `pnpm dedupe` is crucial as it resolves version conflicts that can occur when upgrading packages with complex dependency trees.
+
+### 6. Sync Generated Projects
+
+Update all example projects to use the new package versions:
+
+```bash
+# Sync all example projects
+pnpm start sync-examples
+```
+
+This command:
+- Regenerates all projects in `examples/` directory
+- Updates `package.json` files with new versions
+- Ensures generated code reflects any API changes
+
+### 7. Verification and Testing
+
+```bash
+# Run type checking across all packages
+pnpm typecheck
+
+# Run linting (with auto-fix)
+pnpm lint:only:affected -- --fix
+
+# Run tests if available
+pnpm test:affected
+
+# Build all packages to ensure compatibility
+pnpm build
+```
+
+### 8. Create Changeset
+
+After successfully upgrading packages, create a changeset:
+
+```bash
+echo "---
+'@baseplate-dev/react-generators': patch
 ---
 
-## PHASE 2: WEB RESEARCH & VERSION DISCOVERY
+Upgrade package-name to X.Y.Z
 
-**IMPORTANT: BATCH INTO GROUPS OF 10**
+- package-name: OLD_VERSION → NEW_VERSION" > .changeset/upgrade-package-name.md
+```
 
-For EACH package in Master Package List:
+**Changeset guidelines:**
+- Use patch level for most package upgrades unless they introduce breaking changes
+- Include affected package names in the frontmatter
+- List all upgraded packages with version changes
 
-### Latest Version Discovery
+## Package Categories
 
-- Search: "[package-name] npm latest version"
-- Check: https://www.npmjs.com/package/[package-name]
-- Extract: Latest stable version, release date, downloads
+### Frontend Packages (React Generators)
+**Location:** `packages/react-generators/src/constants/react-packages.ts`
 
-### Breaking Changes Research
+Common packages: `react`, `react-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `@tailwindcss/vite`, `@tanstack/react-router`, `@apollo/client`, `graphql`
 
-- Search: "[package-name] migration guide [old-version] to [new-version]"
-- Search: "[package-name] v[X] breaking changes"
-- Search: "[package-name] changelog"
-- GitHub: Check CHANGELOG.md, releases
+### Backend Packages (Fastify Generators)
+**Location:** `packages/fastify-generators/src/constants/fastify-packages.ts`
 
-### Ecosystem Compatibility
+Common packages: `fastify`, `@pothos/core`, `prisma`, `zod`
 
-- Angular version compatibility
-- Check peerDependencies
-- Cross-package dependencies
+### Core Packages (Core Generators)
+**Location:** `packages/core-generators/src/constants/core-packages.ts`
 
-Document:
+Common packages: `typescript`, `eslint`, `prettier`, `vitest`
 
-- Current vs. Latest versions
-- Version gap (major/minor/patch versions behind)
-- Breaking changes with migration steps
-- Deprecation warnings
-- Peer dependency changes
+## Troubleshooting
 
----
+### Peer Dependency Warnings
+1. Check if newer versions of the package are available
+2. Look for compatibility matrices in package documentation
+3. Use `pnpm dedupe` to resolve conflicts
 
-## PHASE 3: RISK ASSESSMENT & PRIORITIZATION
+### Type Errors After Upgrade
+1. Check the package's TypeScript definitions
+2. Update imports and usage to match new API
+3. Install updated `@types/*` packages if needed
 
-### Risk Categories
+### Build Failures
+1. Check package changelog for breaking configuration changes
+2. Update relevant config files (vite.config.ts, etc.)
+3. Look for migration guides in package documentation
 
-- **Critical Risk**: 5+ major versions behind, framework packages, 50+ breaking changes
-- **High Risk**: 3-4 major versions, state management, 20-30 breaking changes
-- **Medium Risk**: 1-2 major versions, some breaking changes
-- **Low Risk**: Patch/minor updates, backward compatible
+## Best Practices
 
-### Dependency Graph (Upgrade Order)
-
-1. Foundation packages (Node.js, TypeScript)
-2. Framework packages (Angular Core, CLI)
-3. Framework extensions (Material, RxJS)
-4. Third-party libraries
-5. Dev tools last
-
----
-
-## PHASE 4: COMPREHENSIVE REPORT GENERATION
-
-Generate report at `ai_package_upgrade_reports/[YYYY-MM-DD]-frontend-package-upgrade-report.md`:
-
-### Report Structure
-
-1. **Executive Summary**
-2. **Package Inventory by Project**
-3. **Version Gap Analysis**
-4. **Breaking Changes Catalog**
-5. **Migration Complexity Assessment**
-6. **Ecosystem Compatibility Analysis**
-7. **Recommended Upgrade Strategy** (Phased Migration Plan)
-8. **Detailed Migration Guides**
-9. **Testing Strategy**
-10. **Rollback Plan**
-11. **Timeline & Resource Estimation**
-12. **Appendices**
-
----
-
-## PHASE 5: APPROVAL GATE
-
-**CRITICAL**: Present comprehensive package upgrade report for explicit approval. **DO NOT** proceed without it.
-
----
-
-## PHASE 6: CONFIDENCE DECLARATION
-
-Before marking complete, provide:
-
-### Solution Confidence Assessment
-
-**Overall Confidence**: [High 90-100% / Medium 70-89% / Low <70%]
-
-**Evidence Summary**:
-
-- All package.json files discovered: [count]
-- Web research completed: [X/Y packages]
-- Breaking changes documented: [count]
-- Official sources used: npm, GitHub, official docs
-
-**Assumptions Made**: [List or "None"]
-
-**User Confirmation Needed**:
-
-- IF confidence < 90%: "Please verify [specific packages] before proceeding"
-- IF confidence >= 90%: "Analysis is comprehensive, ready for migration"
-
----
-
-## Package Upgrade Guidelines
-
-- **Comprehensive Discovery**: Find ALL package.json files
-- **Web Research Accuracy**: Use official sources only (npm, GitHub, official docs)
-- **Breaking Changes Focus**: Prioritize identifying breaking changes requiring code changes
-- **Risk Assessment**: Evaluate complexity based on breaking changes, usage breadth, dependencies
-- **Practical Planning**: Create actionable phased plan with realistic effort estimates
-- **Evidence-Based Decisions**: Base ALL recommendations on actual research with sources cited
-- **Confidence Declaration**: Declare confidence level; if < 90%, request user confirmation
-- **Batch Processing**: Research packages in batches of 10
-
-## IMPORTANT Task Planning Notes
-
-- Always plan and break many small todo tasks
-- Always add a final review todo task to review the works done at the end to find any fix or enhancement needed
+1. **Batch Related Updates** - Group related packages together (e.g., React ecosystem, Vite ecosystem)
+2. **Test Major Upgrades Separately** - Create a separate branch for major version upgrades
+3. **Check Example Projects** - Manually test generated example projects after upgrading
+4. **Version Pinning Strategy:**
+   - Patch versions: Generally safe to auto-update
+   - Minor versions: Review changelog, usually safe
+   - Major versions: Always test thoroughly, may require code changes

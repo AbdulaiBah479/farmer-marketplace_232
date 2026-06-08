@@ -1,423 +1,300 @@
 ---
 name: react-testing
-description: React component testing with React Testing Library, Vitest/Jest, MSW for network mocking, accessibility assertions with axe, and the decision boundary between component tests and Playwright/Cypress end-to-end runs. Use when writing or fixing tests for React components, hooks, or pages.
-origin: ECC
+description: React testing with Vitest, React Testing Library, and MSW. Focuses on user-centric testing, component isolation, and API mocking. Use when writing tests for React components, hooks, or debugging test failures in frontend code.
 ---
 
 # React Testing
 
-Comprehensive React testing patterns for behavior-focused component tests, custom hook tests, accessibility assertions, and network-level mocking.
+Testing patterns for React 19 + TypeScript projects with Vitest.
 
-## When to Activate
+## When to Use
 
-- Writing tests for React components, custom hooks, or pages
-- Adding test coverage to legacy untested components
-- Migrating from Enzyme or class-component-era patterns to React Testing Library
-- Setting up Vitest or Jest for a new React project
-- Mocking HTTP requests in tests
-- Asserting accessibility violations
-- Deciding which tests belong in RTL vs Playwright Component Testing vs full E2E
+- Writing component tests
+- Testing custom hooks
+- Mocking API calls with MSW
+- Debugging test failures
+- Improving frontend test coverage
 
-## Core Principle
+## MCP Workflow
 
-Test what the user sees and does, not implementation details.
+```typescript
+# 1. Find existing test patterns
+serena.search_for_pattern("describe|it|test", relative_path="src/", paths_include_glob="**/*.test.{ts,tsx}")
 
-A test should:
+# 2. Check test utilities
+serena.get_symbols_overview(relative_path="src/test/")
 
-- Render the component with the same providers it has in production
-- Interact with it via accessible queries (role, label) and `userEvent`
-- Assert visible output and observable side effects (callback fired, request sent)
+# 3. Find component test patterns
+jetbrains.search_in_files_by_text("render(", fileMask="*.test.tsx")
 
-A test should NOT:
+# 4. React Testing Library docs
+context7.get-library-docs("/testing-library/react-testing-library", "queries")
+```
 
-- Inspect component state, props passed to children, or which hooks were called
-- Mock React itself or framework hooks
-- Assert on the number of renders or DOM structure beyond what affects users
+## Testing Principles
 
-## Library Choice
-
-| Runner | When | Note |
-|---|---|---|
-| **Vitest** | Vite, Remix, modern setups | Faster, native ESM, Jest-compatible API |
-| **Jest** | Next.js, CRA, established repos | Default for many React projects |
-| **Playwright Component Testing** | Real browser engine needed | Use when JSDOM lacks the required feature |
-| **Cypress Component Testing** | Real browser, Cypress already in use | Alternative to Playwright CT |
-
-Pick one. Do not run RTL + Vitest AND Playwright CT in the same repo unless you have a clear lane separation.
+1. **Test user behavior**, not implementation
+2. **Query by accessibility**: `getByRole` > `getByTestId`
+3. **Avoid testing internal state** directly
+4. **Mock at boundaries**: API calls, not internal functions
 
 ## Query Priority
 
-React Testing Library exposes queries in three tiers — use top-down:
+| Priority | Query | Use When |
+|----------|-------|----------|
+| 1 | `getByRole` | Interactive elements (button, input) |
+| 2 | `getByLabelText` | Form fields |
+| 3 | `getByPlaceholderText` | Input with placeholder |
+| 4 | `getByText` | Non-interactive text |
+| 5 | `getByTestId` | Last resort |
 
-1. **Accessible to everyone**: `getByRole`, `getByLabelText`, `getByPlaceholderText`, `getByText`, `getByDisplayValue`
-2. **Semantic**: `getByAltText`, `getByTitle`
-3. **Test IDs (escape hatch)**: `getByTestId`
+## Component Test Patterns
 
-```tsx
-// Best
-screen.getByRole("button", { name: /save/i });
+### Basic Component Test
 
-// OK for inputs
-screen.getByLabelText("Email");
+```typescript
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { UserCard } from './UserCard';
 
-// Last resort
-screen.getByTestId("save-btn");
-```
+describe('UserCard', () => {
+  it('should display user name', () => {
+    render(<UserCard user={{ id: '1', name: 'Alice' }} />);
 
-Variants:
+    expect(screen.getByRole('heading')).toHaveTextContent('Alice');
+  });
 
-- `getBy*` — throws if no match
-- `queryBy*` — returns `null` (use for "assert absence")
-- `findBy*` — async, returns a Promise (use for elements that appear after async work)
+  it('should call onSelect when clicked', async () => {
+    const user = userEvent.setup();
+    const handleSelect = vi.fn();
 
-## User Interaction with `userEvent`
+    render(
+      <UserCard
+        user={{ id: '1', name: 'Alice' }}
+        onSelect={handleSelect}
+      />
+    );
 
-```tsx
-import userEvent from "@testing-library/user-event";
+    await user.click(screen.getByRole('button', { name: /select/i }));
 
-test("submits the form", async () => {
-  const user = userEvent.setup();
-  const onSubmit = vi.fn();
-  render(<UserForm onSubmit={onSubmit} />);
-
-  await user.type(screen.getByLabelText("Email"), "user@example.com");
-  await user.click(screen.getByRole("button", { name: /save/i }));
-
-  expect(onSubmit).toHaveBeenCalledWith({ email: "user@example.com" });
+    expect(handleSelect).toHaveBeenCalledWith('1');
+  });
 });
 ```
 
-- Always `await` userEvent calls
-- Call `userEvent.setup()` once per test, reuse the returned `user`
-- `userEvent` simulates a real browser sequence; `fireEvent` dispatches a single synthetic event — prefer `userEvent`
+### Async Component Test
 
-## Async Patterns
+```typescript
+import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { UserList } from './UserList';
 
-```tsx
-// Element that appears after async work
-expect(await screen.findByText("Loaded")).toBeInTheDocument();
+describe('UserList', () => {
+  it('should show loading then data', async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <UserList />
+      </QueryClientProvider>
+    );
 
-// Side effect assertion
-await waitFor(() => expect(saveSpy).toHaveBeenCalled());
+    // Loading state
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
 
-// Element that should disappear
-await waitForElementToBeRemoved(() => screen.queryByText("Loading"));
+    // Wait for data
+    await waitFor(() => {
+      expect(screen.getByRole('list')).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+  });
+});
 ```
 
-Never `setTimeout` + assertion — flaky. Use the matchers above.
+## Custom Hook Testing
 
-## Network Mocking with MSW
+```typescript
+import { renderHook, waitFor } from '@testing-library/react';
+import { useDebounce } from './useDebounce';
 
-Mock Service Worker mocks at the network layer. The component, hooks, and fetch library all behave exactly as in production.
+describe('useDebounce', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should debounce value changes', async () => {
+    const { result, rerender } = renderHook(
+      ({ value }) => useDebounce(value, 500),
+      { initialProps: { value: 'initial' } }
+    );
+
+    expect(result.current).toBe('initial');
+
+    rerender({ value: 'updated' });
+    expect(result.current).toBe('initial'); // Not updated yet
+
+    vi.advanceTimersByTime(500);
+    await waitFor(() => {
+      expect(result.current).toBe('updated');
+    });
+  });
+});
+```
+
+## MSW API Mocking
 
 ### Setup
 
-```ts
-// test/setup.ts
-import { setupServer } from "msw/node";
-import { http, HttpResponse } from "msw";
+```typescript
+// src/test/mocks/handlers.ts
+import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  http.get("/api/users/:id", ({ params }) =>
-    HttpResponse.json({ id: params.id, name: "Alice" }),
-  ),
-  http.post("/api/users", async ({ request }) => {
+  http.get('/api/users', () => {
+    return HttpResponse.json([
+      { id: '1', name: 'Alice' },
+      { id: '2', name: 'Bob' },
+    ]);
+  }),
+
+  http.post('/api/users', async ({ request }) => {
     const body = await request.json();
-    return HttpResponse.json({ id: "new-id", ...body }, { status: 201 });
+    return HttpResponse.json({ id: '3', ...body }, { status: 201 });
+  }),
+
+  http.get('/api/users/:id', ({ params }) => {
+    return HttpResponse.json({ id: params.id, name: 'User' });
   }),
 ];
+```
+
+### Test Setup
+
+```typescript
+// src/test/setup.ts
+import { beforeAll, afterEach, afterAll } from 'vitest';
+import { setupServer } from 'msw/node';
+import { handlers } from './mocks/handlers';
 
 export const server = setupServer(...handlers);
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 ```
 
-Configure `onUnhandledRequest: "error"` so any unmocked request fails the test loudly — silent passes are worse than red.
+### Override Handler in Test
 
-### Per-test override
+```typescript
+import { server } from '@/test/setup';
+import { http, HttpResponse } from 'msw';
 
-```tsx
-test("renders error on 500", async () => {
+it('should handle API error', async () => {
   server.use(
-    http.get("/api/users/:id", () => new HttpResponse(null, { status: 500 })),
+    http.get('/api/users', () => {
+      return HttpResponse.json({ error: 'Server error' }, { status: 500 });
+    })
   );
-  render(<UserPage id="1" />);
-  expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
-});
-```
 
-## Provider Wrapping
+  render(<UserList />);
 
-Wrap providers once in a `test-utils.tsx`:
-
-```tsx
-// test-utils.tsx
-import { render, RenderOptions } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-export function renderWithProviders(
-  ui: React.ReactElement,
-  options?: RenderOptions,
-) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+  await waitFor(() => {
+    expect(screen.getByText(/error/i)).toBeInTheDocument();
   });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={lightTheme}>
-        <MemoryRouter>{ui}</MemoryRouter>
-      </ThemeProvider>
-    </QueryClientProvider>,
-    options,
-  );
-}
-
-export * from "@testing-library/react";
-```
-
-Then `import { renderWithProviders, screen } from "test-utils"` in every test file.
-
-## Custom Hook Testing
-
-```tsx
-import { renderHook, act } from "@testing-library/react";
-
-test("useCounter increments and decrements", () => {
-  const { result } = renderHook(() => useCounter(0));
-
-  expect(result.current.count).toBe(0);
-
-  act(() => result.current.increment());
-  expect(result.current.count).toBe(1);
-
-  act(() => result.current.decrement());
-  expect(result.current.count).toBe(0);
-});
-
-test("useCounter accepts initial value", () => {
-  const { result } = renderHook(() => useCounter(10));
-  expect(result.current.count).toBe(10);
-});
-
-test("useUser fetches user data", async () => {
-  // Instantiate QueryClient ONCE per test outside the wrapper so it survives re-renders.
-  // Creating it inside the wrapper closure resets cache state on every render, producing flaky tests.
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-
-  const { result } = renderHook(() => useUser("1"), { wrapper });
-
-  await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  expect(result.current.data).toEqual({ id: "1", name: "Alice" });
 });
 ```
 
-- Wrap state-changing calls in `act`
-- Test through the hook's public API only
-- For hooks that use context, pass a `wrapper`
+## Testing Patterns for TanStack Query
 
-## Accessibility Assertions
+```typescript
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-```tsx
-import { axe, toHaveNoViolations } from "jest-axe"; // or vitest-axe
-expect.extend(toHaveNoViolations);
-
-test("UserCard has no a11y violations", async () => {
-  const { container } = render(<UserCard user={mockUser} />);
-  expect(await axe(container)).toHaveNoViolations();
-});
-```
-
-Run axe in component tests for every interactive component. Catches:
-
-- Missing labels on form inputs
-- Invalid ARIA usage
-- Poor color contrast (limited — JSDOM has no real CSS engine, so this works for inline styles only; visual contrast belongs in Playwright)
-- Missing alt text on images
-- Heading order violations
-
-Cross-link: [skills/accessibility/SKILL.md](../accessibility/SKILL.md) for the broader a11y testing playbook.
-
-## When NOT to Use Snapshot Tests
-
-Snapshots of rendered output:
-
-- Break on every styling change
-- Get rubber-stamped during review
-- Test implementation detail (DOM structure), not behavior
-
-Acceptable snapshot uses:
-
-- Pure data serialization functions (`formatInvoice(invoice)` -> stable string)
-- Generated config files (e.g., webpack config output)
-
-For visual regression on components, use Playwright/Cypress screenshots or Percy/Chromatic — actual visual diffs, not DOM strings.
-
-## When to Reach for Playwright / Cypress
-
-JSDOM (used by Vitest/Jest) cannot:
-
-- Render real layout (flexbox, grid, viewport queries)
-- Run native browser animation, CSS transitions
-- Test scrolling behavior, drag-and-drop, paste from clipboard
-- Handle iframes, popups, downloads, cross-origin flows
-- Run real network in a controlled environment with full DevTools support
-
-For any of those, use Playwright Component Testing (component test in real browser) or full E2E. See [e2e-testing skill](../e2e-testing/SKILL.md).
-
-Decision boundary:
-
-- A hook, a presentational component, a form with logic -> RTL
-- A component whose layout matters or that uses browser APIs not in JSDOM -> Playwright CT
-- A full user flow across multiple pages -> Playwright/Cypress E2E
-
-## Coverage Targets
-
-| Layer | Target |
-|---|---|
-| Pure utilities | >=90% |
-| Custom hooks | >=85% |
-| Presentational components | >=80% — behavior, not lines |
-| Container components | >=70% — golden paths + error states |
-| Pages | E2E covered separately; smoke test minimum |
-
-Configure via `vitest.config.ts` / `jest.config.js`:
-
-```ts
-// vitest.config.ts
-test: {
-  coverage: {
-    provider: "v8",
-    reporter: ["text", "html", "lcov"],
-    thresholds: {
-      lines: 80,
-      functions: 80,
-      branches: 70,
-      statements: 80,
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,        // Don't retry in tests
+        gcTime: Infinity,    // Keep cache during test
+      },
     },
-  },
+  });
 }
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  const client = createTestQueryClient();
+  return (
+    <QueryClientProvider client={client}>
+      {children}
+    </QueryClientProvider>
+  );
+}
+
+// Usage
+render(<UserList />, { wrapper });
 ```
 
 ## Anti-Patterns
 
-- `container.querySelector("...")` — bypasses accessibility queries, lets tests pass when real users would fail
-- Asserting on number of renders — implementation detail
-- `jest.mock("react", ...)` — never mock React. Refactor the component instead
-- Mocking child components by default — tests the integration, not isolation. Mock only when the child has heavy side effects
-- Ignoring `act()` warnings — they signal real bugs (state update after unmount, missing async wrapping)
-- Sharing mutable state across tests — flakes when test order changes
-- Tests that pass with `it.skip()` removed — your test does not actually assert what you think
+| Pattern | Problem | Solution |
+|---------|---------|----------|
+| `getByTestId` for buttons | Tests implementation | Use `getByRole('button')` |
+| Testing state directly | Brittle | Test rendered output |
+| `fireEvent` for clicks | Doesn't match user | Use `userEvent` |
+| Mocking child components | Over-isolation | Render real children |
+| `await waitFor(() => {})` empty | Flaky | Wait for specific element |
+| Testing third-party libs | Wasted effort | Trust libraries work |
 
-## TDD Workflow
+## TDD Workflow for React
 
-```
-RED     -> Write failing test for the next requirement
-GREEN   -> Write minimal component code to pass
-REFACTOR -> Improve the component, tests stay green
-REPEAT  -> Next requirement
-```
+### 1. RED: Write Failing Test
 
-For new components:
-
-1. Define the component's prop type and signature
-2. Write the first test for the simplest case
-3. Verify it fails for the right reason
-4. Implement just enough to pass
-5. Add the next test case
-6. Refactor when the third similar test reveals a pattern
-
-## Test Commands
-
-```bash
-# Vitest
-vitest                            # watch
-vitest run                        # one-shot
-vitest run --coverage             # with coverage
-vitest run path/to/file.test.tsx  # single file
-
-# Jest
-jest --watch
-jest --coverage
-jest path/to/file.test.tsx
-
-# CI mode
-CI=true vitest run --coverage
-```
-
-## Related
-
-- Rules: [rules/react/testing.md](../../rules/react/testing.md)
-- Skills: [react-patterns](../react-patterns/SKILL.md), [accessibility](../accessibility/SKILL.md), [e2e-testing](../e2e-testing/SKILL.md), [tdd-workflow](../tdd-workflow/SKILL.md)
-- Agents: `react-reviewer` (reviews test quality during code review), `tdd-guide` (enforces TDD process)
-- Commands: `/react-test`, `/react-review`
-
-## Examples
-
-### Form submission with MSW and userEvent
-
-```tsx
-test("submits user form and shows success", async () => {
-  server.use(
-    http.post("/api/users", () =>
-      HttpResponse.json({ id: "1", name: "Alice" }, { status: 201 }),
-    ),
-  );
-
+```typescript
+it('should show error when name is empty', async () => {
   const user = userEvent.setup();
-  renderWithProviders(<UserForm />);
+  render(<CreateUserForm />);
 
-  await user.type(screen.getByLabelText("Name"), "Alice");
-  await user.type(screen.getByLabelText("Email"), "alice@example.com");
-  await user.click(screen.getByRole("button", { name: /save/i }));
+  await user.click(screen.getByRole('button', { name: /submit/i }));
 
-  expect(await screen.findByText(/saved successfully/i)).toBeInTheDocument();
+  expect(screen.getByRole('alert')).toHaveTextContent('Name is required');
 });
 ```
 
-### Testing an error boundary
+### 2. GREEN: Implement
 
-```tsx
-function Broken() {
-  throw new Error("boom");
-}
+```typescript
+export function CreateUserForm() {
+  const [error, setError] = useState<string | null>(null);
 
-test("error boundary renders fallback", () => {
-  // Suppress React's console.error noise for the expected throw, then restore so
-  // the spy does not leak across tests and hide real errors elsewhere.
-  const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-  try {
-    render(
-      <ErrorBoundary fallback={<div>Something went wrong</div>}>
-        <Broken />
-      </ErrorBoundary>,
-    );
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    if (!form.name.value) {
+      setError('Name is required');
+      return;
+    }
+  };
 
-    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
-  } finally {
-    errorSpy.mockRestore();
-  }
-});
-```
-
-### Testing a Suspense boundary
-
-```tsx
-test("shows loading then content", async () => {
-  renderWithProviders(
-    <Suspense fallback={<div>Loading...</div>}>
-      <UserDetail id="1" />
-    </Suspense>,
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" />
+      {error && <div role="alert">{error}</div>}
+      <button type="submit">Submit</button>
+    </form>
   );
-
-  expect(screen.getByText("Loading...")).toBeInTheDocument();
-  expect(await screen.findByText("Alice")).toBeInTheDocument();
-});
+}
 ```
+
+### 3. REFACTOR: Improve accessibility, extract validation
+
+## Quality Checklist
+
+- [ ] Tests query by role/label, not testId
+- [ ] `userEvent` used instead of `fireEvent`
+- [ ] Async operations use `waitFor`
+- [ ] MSW for API mocking (not `vi.mock`)
+- [ ] Loading/error states tested
+- [ ] No testing of implementation details
+- [ ] Test names describe user behavior

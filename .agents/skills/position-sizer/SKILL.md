@@ -1,181 +1,351 @@
 ---
-name: position-sizer
-description: Calculate risk-based position sizes for long stock trades. Use when user asks about position sizing, how many shares to buy, risk per trade, Kelly criterion, ATR-based sizing, or portfolio risk allocation. Supports stop-loss distance calculation, volatility scaling, and sector concentration checks.
+skill_id: position_sizer
+name: Position Sizer
+version: 1.0.0
+description: Calculates optimal position sizes using volatility-adjusted methods, Kelly Criterion, and risk management
+author: Trading System CTO
+tags: [position-sizing, risk-management, volatility, kelly-criterion, trading]
+tools:
+  - calculate_position_size
+  - calculate_portfolio_heat
+  - adjust_position_for_volatility
+  - calculate_kelly_fraction
+dependencies:
+  - src/core/risk_manager.py
+  - src/agents/risk_agent.py
+integrations:
+  - src/core/risk_manager.py::RiskManager.calculate_position_size
+  - src/agents/risk_agent.py::RiskAgent._calculate_position_size
 ---
 
-# Position Sizer
+# Position Sizer Skill
+
+Advanced position sizing using multiple methodologies to optimize risk-adjusted returns.
 
 ## Overview
 
-Calculate the optimal number of shares to buy for a long stock trade based on risk management principles. Supports three sizing methods:
+This skill provides:
+- Fixed percentage method (simple risk-based sizing)
+- Volatility-adjusted sizing (normalizes risk across assets)
+- Kelly Criterion (optimal growth rate calculation)
+- ATR-based sizing (Average True Range volatility)
+- Portfolio heat management (total risk exposure)
+- Dynamic position adjustments based on volatility changes
 
-- **Fixed Fractional**: Risk a fixed percentage of account equity per trade (default: 1%)
-- **ATR-Based**: Use Average True Range to set volatility-adjusted stop distances
-- **Kelly Criterion**: Calculate mathematically optimal risk allocation from historical win/loss statistics
+## Position Sizing Methods
 
-All methods apply portfolio constraints (max position %, max sector %) and output a final recommended share count with full risk breakdown.
+### 1. Fixed Percentage Method
+Risk a fixed % of account per trade (e.g., 1-2%).
 
-## When to Use
+**Formula**: `Position Size = (Account Value × Risk %) ÷ (Entry Price - Stop Price)`
 
-- User asks "how many shares should I buy?"
-- User wants to calculate position size for a specific trade setup
-- User mentions risk per trade, stop-loss sizing, or portfolio allocation
-- User asks about Kelly Criterion or ATR-based position sizing
-- User wants to check if a position fits within portfolio concentration limits
+**Best For**:
+- Consistent risk management
+- Beginning traders
+- Low volatility markets
 
-## Prerequisites
+### 2. Volatility-Adjusted Method
+Adjusts size based on asset volatility.
 
-- No API keys required
-- Python 3.9+ with standard library only
+**Formula**: `Adjusted Size = Base Size × (Target Vol ÷ Asset Vol)`
 
-## Workflow
+**Best For**:
+- Multi-asset portfolios
+- Variable volatility regimes
+- Professional risk management
 
-### Step 1: Gather Trade Parameters
+### 3. Kelly Criterion
+Maximizes long-term growth rate based on edge.
 
-Collect from the user:
-- **Required**: Account size (total equity)
-- **Mode A (Fixed Fractional)**: Entry price, stop price, risk percentage (default 1%)
-- **Mode B (ATR-Based)**: Entry price, ATR value, ATR multiplier (default 2.0x), risk percentage
-- **Mode C (Kelly Criterion)**: Win rate, average win, average loss; optionally entry and stop for share calculation
-- **Optional constraints**: Max position % of account, max sector %, current sector exposure
+**Formula**: `Kelly % = (Win Rate × Avg Win/Loss Ratio - (1 - Win Rate)) ÷ Avg Win/Loss Ratio`
 
-If the user provides a stock ticker but not specific prices, use available tools to look up the current price and suggest entry/stop levels based on technical analysis.
+**Best For**:
+- Systems with known edge
+- Experienced traders
+- Always use fractional Kelly (25-50%)
 
-### Step 2: Execute Position Sizer Script
+### 4. ATR-Based Method
+Uses Average True Range for volatility assessment.
 
-Run the position sizing calculation:
+**Formula**: `Position Size = (Account × Risk %) ÷ (ATR × Multiplier)`
 
-```bash
-# Fixed Fractional (most common)
-python3 skills/position-sizer/scripts/position_sizer.py \
-  --account-size 100000 \
-  --entry 155 \
-  --stop 148.50 \
-  --risk-pct 1.0 \
-  --output-dir reports/
+**Best For**:
+- Trend-following strategies
+- Volatile markets
+- Technical traders
 
-# ATR-Based
-python3 skills/position-sizer/scripts/position_sizer.py \
-  --account-size 100000 \
-  --entry 155 \
-  --atr 3.20 \
-  --atr-multiplier 2.0 \
-  --risk-pct 1.0 \
-  --output-dir reports/
+## Tools
 
-# Kelly Criterion (budget mode - no entry)
-python3 skills/position-sizer/scripts/position_sizer.py \
-  --account-size 100000 \
-  --win-rate 0.55 \
-  --avg-win 2.5 \
-  --avg-loss 1.0 \
-  --output-dir reports/
+### 1. calculate_position_size
 
-# Kelly Criterion (shares mode - with entry/stop)
-python3 skills/position-sizer/scripts/position_sizer.py \
-  --account-size 100000 \
-  --entry 155 \
-  --stop 148.50 \
-  --win-rate 0.55 \
-  --avg-win 2.5 \
-  --avg-loss 1.0 \
-  --output-dir reports/
-```
+Calculates optimal position size for a trade.
 
-### Step 3: Load Methodology Reference
+**Parameters:**
+- `symbol` (required): Trading symbol
+- `account_value` (required): Current account value
+- `risk_per_trade_pct` (optional): Risk per trade % (default: 1.0)
+- `method` (optional): Sizing method ("fixed_pct", "volatility_adjusted", "kelly", "atr", default: "volatility_adjusted")
+- `current_price` (optional): Current market price
+- `stop_loss_price` (optional): Planned stop loss price
+- `win_rate` (optional): Historical win rate (for Kelly, default: 0.55)
+- `avg_win_loss_ratio` (optional): Average win/loss ratio (for Kelly, default: 1.5)
 
-Read `references/sizing_methodologies.md` to provide context on the chosen method, risk guidelines, and portfolio constraint best practices.
-
-### Step 4: Calculate Multiple Scenarios
-
-If the user has not specified a single method, run multiple scenarios for comparison:
-- Fixed Fractional at 0.5%, 1.0%, and 1.5% risk
-- ATR-based at 1.5x, 2.0x, and 3.0x multipliers
-- Present a comparison table showing shares, position value, and dollar risk for each
-
-### Step 5: Apply Portfolio Constraints and Determine Final Size
-
-Add constraints if the user has portfolio context:
-
-```bash
-python3 skills/position-sizer/scripts/position_sizer.py \
-  --account-size 100000 \
-  --entry 155 \
-  --stop 148.50 \
-  --risk-pct 1.0 \
-  --max-position-pct 10 \
-  --max-sector-pct 30 \
-  --current-sector-exposure 22 \
-  --output-dir reports/
-```
-
-Explain which constraint is binding and why it limits the position.
-
-### Step 6: Generate Position Report
-
-Present the final recommendation including:
-- Method used and rationale
-- Exact share count and position value
-- Dollar risk and percentage of account
-- Stop-loss price
-- Any binding constraints
-- Risk management reminders (portfolio heat, loss-cutting discipline)
-
-## Output Format
-
-### JSON Report
-
+**Returns:**
 ```json
 {
-  "schema_version": "1.0",
-  "mode": "shares",
-  "parameters": {
-    "entry_price": 155.0,
-    "account_size": 100000,
-    "stop_price": 148.50,
-    "risk_pct": 1.0
-  },
-  "calculations": {
-    "fixed_fractional": {
-      "method": "fixed_fractional",
-      "shares": 153,
-      "risk_per_share": 6.50,
-      "dollar_risk": 1000.0,
-      "stop_price": 148.50
+  "success": true,
+  "symbol": "AAPL",
+  "recommendations": {
+    "primary_method": {
+      "method": "volatility_adjusted",
+      "position_size_dollars": 5420.00,
+      "position_size_shares": 35,
+      "rationale": "Adjusted for 18.5% annualized volatility"
     },
-    "atr_based": null,
-    "kelly": null
+    "alternative_methods": {
+      "fixed_percentage": {
+        "position_size_dollars": 5000.00,
+        "position_size_shares": 32
+      },
+      "kelly_criterion": {
+        "position_size_dollars": 6250.00,
+        "position_size_shares": 40,
+        "kelly_fraction": 0.25
+      },
+      "atr_based": {
+        "position_size_dollars": 5100.00,
+        "position_size_shares": 33
+      }
+    }
   },
-  "constraints_applied": [],
-  "final_recommended_shares": 153,
-  "final_position_value": 23715.0,
-  "final_risk_dollars": 994.50,
-  "final_risk_pct": 0.99,
-  "binding_constraint": null
+  "risk_metrics": {
+    "dollar_risk": 500.00,
+    "risk_pct": 1.0,
+    "position_value_pct": 5.42,
+    "estimated_volatility": 0.185,
+    "max_loss_at_stop": 500.00
+  },
+  "constraints": {
+    "max_position_size_dollars": 10000.00,
+    "max_position_size_pct": 10.0,
+    "min_position_size_dollars": 100.00,
+    "constrained": false
+  },
+  "validation": {
+    "within_risk_limits": true,
+    "sufficient_buying_power": true,
+    "liquidity_adequate": true
+  }
 }
 ```
 
-### Markdown Report
+**Usage:**
+```bash
+python scripts/position_sizer.py calculate_position_size \
+    --symbol AAPL \
+    --account-value 100000 \
+    --risk-per-trade-pct 1.0 \
+    --method volatility_adjusted \
+    --current-price 155.00 \
+    --stop-loss-price 150.00
+```
 
-Generated automatically alongside the JSON report. Contains:
-- Parameters summary
-- Calculation details for the active method
-- Constraints analysis (if any)
-- Final recommendation with shares, value, and risk
+### 2. calculate_portfolio_heat
 
-Reports are saved to `reports/` with filenames `position_sizer_YYYY-MM-DD_HHMMSS.json` and `.md`.
+Calculates total risk exposure across all positions.
 
-## Resources
+**Parameters:**
+- `account_value` (required): Current account value
+- `positions` (required): Array of current open positions
+- `pending_trades` (optional): Array of trades being considered
 
-- `references/sizing_methodologies.md`: Comprehensive guide to Fixed Fractional, ATR-based, and Kelly Criterion methods with examples, comparison table, and risk management principles
-- `scripts/position_sizer.py`: Main calculation script (CLI interface)
+**Returns:**
+```json
+{
+  "success": true,
+  "portfolio_heat": {
+    "total_risk_dollars": 2500.00,
+    "total_risk_pct": 2.5,
+    "individual_positions": [
+      {
+        "symbol": "AAPL",
+        "position_value": 5000.00,
+        "risk_dollars": 500.00,
+        "risk_pct": 0.5,
+        "stop_loss": 148.50
+      }
+    ],
+    "risk_distribution": {
+      "tech_sector": 1.2,
+      "finance_sector": 0.8,
+      "healthcare_sector": 0.5
+    },
+    "capacity": {
+      "max_total_risk_pct": 5.0,
+      "remaining_capacity_pct": 2.5,
+      "remaining_capacity_dollars": 2500.00
+    }
+  },
+  "recommendations": {
+    "can_add_position": true,
+    "max_new_position_dollars": 1000.00,
+    "warnings": []
+  }
+}
+```
 
-## Key Principles
+### 3. adjust_position_for_volatility
 
-1. **Survival first**: Position sizing is about surviving losing streaks, not maximizing winners
-2. **The 1% rule**: Default to 1% risk per trade; never exceed 2% without exceptional reason
-3. **Round down**: Always round shares down to whole numbers (never round up)
-4. **Strictest constraint wins**: When multiple limits apply, the tightest one determines final size
-5. **Half Kelly**: Never use full Kelly in practice; half Kelly captures 75% of growth with far less risk
-6. **Portfolio heat**: Total open risk should not exceed 6-8% of account equity
-7. **Asymmetry of losses**: A 50% loss requires a 100% gain to recover; size accordingly
+Adjusts existing position size based on volatility changes.
+
+**Parameters:**
+- `symbol` (required): Trading symbol
+- `current_position_value` (required): Current position value
+- `target_volatility` (optional): Target volatility % (default: 20.0)
+- `rebalance_threshold` (optional): Rebalance if exceeds threshold (default: 0.15)
+
+**Returns:**
+```json
+{
+  "success": true,
+  "symbol": "AAPL",
+  "analysis": {
+    "current_position_value": 5000.00,
+    "current_volatility": 0.28,
+    "target_volatility": 0.20,
+    "volatility_ratio": 1.40
+  },
+  "recommendation": {
+    "action": "reduce",
+    "target_position_value": 3571.00,
+    "adjustment_amount": -1429.00,
+    "adjustment_shares": -9,
+    "rationale": "Current volatility 40% above target"
+  },
+  "execution_plan": {
+    "recommended": true,
+    "urgency": "medium",
+    "method": "market_order"
+  }
+}
+```
+
+### 4. calculate_kelly_fraction
+
+Calculates Kelly Criterion for position sizing.
+
+**Parameters:**
+- `win_rate` (required): Probability of winning (0-1)
+- `avg_win_loss_ratio` (required): Average win ÷ average loss
+- `kelly_multiplier` (optional): Conservative multiplier (default: 0.25)
+
+**Returns:**
+```json
+{
+  "success": true,
+  "kelly_calculation": {
+    "raw_kelly_pct": 25.5,
+    "adjusted_kelly_pct": 6.375,
+    "kelly_multiplier": 0.25,
+    "inputs": {
+      "win_rate": 0.55,
+      "avg_win_loss_ratio": 1.8
+    },
+    "formula": "(win_rate * avg_win_loss_ratio - (1 - win_rate)) / avg_win_loss_ratio"
+  },
+  "recommendation": {
+    "position_size_pct": 6.375,
+    "rationale": "Using 25% Kelly for conservative approach",
+    "warnings": [
+      "Full Kelly (25.5%) is aggressive - using fractional Kelly"
+    ]
+  }
+}
+```
+
+## Safety Constraints
+
+### Hard Limits
+- **Max Single Position**: 10% of account value (configurable)
+- **Max Total Risk**: 5% of account value
+- **Min Position Size**: $100 (avoid excessive trading costs)
+- **Max Leverage**: 2x (if using margin)
+
+### Dynamic Adjustments
+- Reduce size after losing streaks
+- Increase size cautiously after winning streaks
+- Scale down in high volatility
+- Respect circuit breakers
+
+## Integration with Risk Manager
+
+This skill wraps and extends the existing `src/core/risk_manager.py`:
+
+```python
+from claude_skills import load_skill
+
+position_skill = load_skill("position_sizer")
+
+# Calculate position size for new trade
+position = position_skill.calculate_position_size(
+    symbol="AAPL",
+    account_value=100000,
+    risk_per_trade_pct=1.0,
+    method="volatility_adjusted",
+    current_price=155.00,
+    stop_loss_price=150.00
+)
+
+# Check portfolio capacity before adding
+heat = position_skill.calculate_portfolio_heat(
+    account_value=100000,
+    positions=current_positions,
+    pending_trades=[position]
+)
+
+if heat["recommendations"]["can_add_position"]:
+    execute_trade(position)
+```
+
+## Usage Example
+
+```python
+from claude_skills import load_skill
+
+position_skill = load_skill("position_sizer")
+
+# Calculate position size for new trade
+position = position_skill.calculate_position_size(
+    symbol="AAPL",
+    account_value=100000,
+    risk_per_trade_pct=1.0,
+    method="volatility_adjusted",
+    current_price=155.00,
+    stop_loss_price=150.00
+)
+
+# Check portfolio capacity
+heat = position_skill.calculate_portfolio_heat(
+    account_value=100000,
+    positions=current_positions
+)
+
+if heat["recommendations"]["can_add_position"]:
+    execute_trade(position)
+```
+
+## CLI Usage
+
+```bash
+# Calculate position size
+python scripts/position_sizer.py calculate_position_size \
+    --symbol AAPL --account-value 100000 --risk-per-trade-pct 1.0
+
+# Calculate portfolio heat
+python scripts/position_sizer.py calculate_portfolio_heat \
+    --account-value 100000 --positions-file positions.json
+
+# Calculate Kelly fraction
+python scripts/position_sizer.py calculate_kelly_fraction \
+    --win-rate 0.55 --avg-win-loss-ratio 1.8
+```

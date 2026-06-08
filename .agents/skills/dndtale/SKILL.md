@@ -1,5 +1,5 @@
 ---
-name: dndtale
+name: Dndtale
 description: A comprehensive DnD campaign and adventure creation skill for game masters and creative content creators. Helps design complete campaigns, adventures, NPCs, encounters, maps, and storylines tailored for tabletop play. Use this when designing D&D content, creating campaign worlds, developing adventure hooks, designing encounters, or building narrative structures for player tables.
 ---
 
@@ -82,21 +82,15 @@ Every campaign should follow this structure:
 ```
 campaigns/[campaign-name]/
 ├── campaign-overview.md         # Master document with full campaign arc
-└── changelog/                   # Changelogs
-    └── [change-name].md         # Documented changes to the campaign
-├── README.md                  # Player-facing session zero document (spoiler-free)
+├── briefing.md                  # Player-facing session zero document (spoiler-free)
 ├── chapter-01.md                # Detailed session content
 ├── chapter-02.md                # Continue for each chapter/session
-├── chapters-summary.md          # Chapter/Scene-level summaries for all chapters of the campaign
 ├── npcs.md                      # Important characters with stats and motivations
 ├── locations.md                 # Key places with descriptions
 ├── factions.md                  # Organizations and their goals (optional)
-├── timeline.md                  # Timeline of events in the campaign (optional)
 └── art/                         # Image prompts and artwork
-    ├── [scene-name].md          # Image generation prompts for scenes
-    ├── [location-name].md       # Image generation prompts for locations/environment
-    ├── [npc-name].md            # Image generation prompts for unique NPCs
-    └── [generated-images.jpg]   # Actual artwork *.jpg (if generated)
+    ├── [scene-name].md          # Image generation prompts
+    └── [generated-images]       # Actual images (if generated)
 ```
 
 ---
@@ -108,9 +102,7 @@ Use these as starting points for all campaign documents:
 
 - **[campaign-overview.md](templates/campaign-overview.md)** - Master campaign document
 - **[chapter-template.md](templates/chapter-template.md)** - Individual session structure
-- **[chapters-summary.md](templates/chapters-summary.md)** - Scene-level overview for all chapters of the campaign
-- **[timeline.md](templates/timeline.md)** - Timeline of events in the campaign
-- **[README.md](templates/README.md)** - Player-facing session zero document
+- **[briefing.md](templates/briefing.md)** - Player-facing session zero document
 - **[npcs.md](templates/npcs.md)** - NPC roster and details
 - **[locations.md](templates/locations.md)** - Location descriptions and maps
 - **[factions.md](templates/factions.md)** - Organizations and politics
@@ -145,30 +137,28 @@ Complete sample campaigns demonstrating all templates:
 
 ### Creating a New Campaign
 
-**Phase 1: Gather Requirements**
+**Phase 1: Gather Requirements** (15-30 minutes)
 1. Use TodoWrite to create planning checklist
 2. Use AskUserQuestion if briefing incomplete
 3. Collect: story idea, length, level, setting, tone
 
-**Phase 2: Campaign Framework** 
+**Phase 2: Campaign Framework** (1-2 hours)
 1. Choose campaign type (see [modules/campaign-types.md](modules/campaign-types.md))
 2. Create campaign-overview.md (use [template](templates/campaign-overview.md))
 3. Plan chapter breakdown
-4. Create chapters-summary.md (use [template](templates/chapters-summary.md))
-5. Identify major NPCs and locations
+4. Identify 3-5 major NPCs and locations
 
-**Phase 3: Detailed Development** 
+**Phase 3: Detailed Development** (3-5 hours for short campaign)
 1. Write each chapter (use [template](templates/chapter-template.md))
 2. Detail NPCs (use [template](templates/npcs.md))
 3. Detail locations (use [template](templates/locations.md))
 4. Create factions if needed (use [template](templates/factions.md))
-5. Create 
 
-**Phase 4: Player-Facing Content** 
-1. Write README.md (use [template](templates/README.md))
-2. Ensure there are NO SPOILERS in the briefing
+**Phase 4: Player-Facing Content** (30-60 minutes)
+1. Write briefing.md (use [template](templates/briefing.md))
+2. Ensure NO SPOILERS in briefing
 
-**Phase 5: Polish & QA** 
+**Phase 5: Polish & QA** (1-2 hours)
 1. Create image prompts for key scenes
 2. Run through [campaign-quality-checklist.md](checklists/campaign-quality-checklist.md)
 3. Read entire campaign for flow and consistency
@@ -252,7 +242,7 @@ Complete sample campaigns demonstrating all templates:
 
 Unless stated otherwise, campaigns are written for consenting adults. When content might be disturbing or NSFW:
 
-- Include content warnings in README.md
+- Include content warnings in briefing.md
 - Suggest Session Zero discussion topics
 - Recommend safety tools (X-Card, Lines & Veils)
 - Clearly mark mature content
@@ -388,7 +378,7 @@ You:
 3. Choose campaign type: Sandbox (city hub with multiple quest lines)
 4. Create campaign-overview.md from template
 5. Create 3 chapters, npcs.md, locations.md
-6. Create README.md for players
+6. Create briefing.md for players
 7. Run quality checklist
 8. Deliver organized campaign
 ```

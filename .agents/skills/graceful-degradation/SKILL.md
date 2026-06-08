@@ -1,354 +1,226 @@
 ---
-name: graceful-degradation
-description: Build resilient systems that degrade gracefully under failure. Implement fallbacks, feature flags, and partial responses when dependencies fail.
-license: MIT
-compatibility: TypeScript/JavaScript, Python
-metadata:
-  category: resilience
-  time: 3h
-  source: drift-masterguide
+id: SKL-graceful-GRACEFULDEGRADATION
+name: Graceful Degradation
+description: Graceful Degradation is the practice of designing systems to maintain
+  partial functionality during failures or outages. Instead of complete failure, the
+  system operates in a degraded mode that provide
+version: 1.0.0
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
 # Graceful Degradation
 
-Keep your app running even when things break.
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
-## When to Use This Skill
+## Overview
+Graceful Degradation is the practice of designing systems to maintain partial functionality during failures or outages. Instead of complete failure, the system operates in a degraded mode that provides essential features while non-critical features are disabled or simplified.
 
-- External API dependencies
-- Non-critical features
-- High-availability requirements
-- Microservices architecture
-- Third-party integrations
+**Core Principle**: "Better partial service than no service at all."
 
-## Degradation Strategies
+## Why This Matters
+- **User Experience**: Users can still access critical functionality during outages
+- **Business Continuity**: Core operations continue even when secondary systems fail
+- **Reduced Support Load**: Fewer users affected by complete outages
+- **Better Resource Utilization**: Focus limited resources on critical paths
+- **Controlled Failure**: Predictable behavior under stress
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  User Request                        │
-└─────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────┐
-│              Primary Service                         │
-│                                                     │
-│  Try primary implementation                         │
-│  ├─ Success → Return result                         │
-│  └─ Failure → Try fallback                          │
-└─────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────┐
-│              Fallback Options                        │
-│                                                     │
-│  1. Cached data (stale but available)               │
-│  2. Default values                                  │
-│  3. Reduced functionality                           │
-│  4. Queue for later                                 │
-│  5. Graceful error message                          │
-└─────────────────────────────────────────────────────┘
-```
+---
 
-## TypeScript Implementation
+## Core Concepts & Rules
 
-### Fallback Service
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-```typescript
-// fallback-service.ts
-interface FallbackOptions<T> {
-  primary: () => Promise<T>;
-  fallback: () => Promise<T> | T;
-  shouldFallback?: (error: Error) => boolean;
-  onFallback?: (error: Error) => void;
-  timeout?: number;
-}
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-async function withFallback<T>(options: FallbackOptions<T>): Promise<T> {
-  const { primary, fallback, shouldFallback, onFallback, timeout = 5000 } = options;
 
-  try {
-    // Add timeout to primary
-    const result = await Promise.race([
-      primary(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout')), timeout)
-      ),
-    ]);
-    return result;
-  } catch (error) {
-    // Check if we should use fallback
-    if (shouldFallback && !shouldFallback(error as Error)) {
-      throw error;
-    }
+## Inputs / Outputs / Contracts
+* **Inputs**:
+  - Feature categorization and priority levels
+  - System health metrics and thresholds
+  - Fallback data and responses
+* **Entry Conditions**:
+  - Feature flags system is implemented
+  - Health checks are configured for all dependencies
+  - Fallback data is available and up-to-date
+* **Outputs**:
+  - Degradation configuration and thresholds
+  - Monitoring dashboards for degraded state
+  - Runbooks for activating/deactivating degradation modes
+* **Artifacts Required (Deliverables)**:
+  - Feature flag configuration
+  - Fallback response data
+  - Degradation runbooks
+* **Acceptance Evidence**:
+  - Load test showing degraded state handling
+  - Monitoring screenshots of graceful degradation
+  - Fallback verification test results
+* **Success Criteria**:
+  - Critical features remain available during degradation
+  - Non-critical features gracefully disabled
+  - System recovers to full functionality when conditions improve
 
-    // Log fallback usage
-    onFallback?.(error as Error);
-    console.warn('Using fallback due to:', (error as Error).message);
+## Skill Composition
+* **Depends on**: Circuit Breaker, Monitoring & Observability
+* **Compatible with**: Bulkhead Patterns, Retry Strategies
+* **Conflicts with**: Systems that cannot function in degraded state
+* **Related Skills**: 
+  - [40-system-resilience/bulkhead-patterns](40-system-resilience/bulkhead-patterns/SKILL.md) - Resource isolation for critical paths
+  - [40-system-resilience/retry-timeout-strategies](40-system-resilience/retry-timeout-strategies/SKILL.md) - Handling failures gracefully
+  - [40-system-resilience/chaos-engineering](40-system-resilience/chaos-engineering/SKILL.md) - Testing degradation
 
-    // Return fallback value
-    const fallbackResult = fallback();
-    return fallbackResult instanceof Promise ? await fallbackResult : fallbackResult;
-  }
-}
+---
 
-export { withFallback, FallbackOptions };
-```
+## Quick Start / Implementation Example
 
-### Practical Examples
-
-```typescript
-// product-service.ts
-class ProductService {
-  private cache: Cache;
-  private searchClient: SearchClient;
-
-  // Example 1: Cache fallback
-  async getProduct(id: string): Promise<Product> {
-    return withFallback({
-      primary: () => this.fetchFromDatabase(id),
-      fallback: () => this.cache.get(`product:${id}`),
-      onFallback: (err) => metrics.increment('product.cache_fallback'),
-    });
-  }
-
-  // Example 2: Search with degraded results
-  async searchProducts(query: string): Promise<SearchResult> {
-    return withFallback({
-      primary: async () => {
-        // Full-featured Elasticsearch search
-        return this.searchClient.search({
-          query,
-          facets: true,
-          suggestions: true,
-          personalization: true,
-        });
-      },
-      fallback: async () => {
-        // Degraded: Simple database LIKE query
-        const products = await db.products.findMany({
-          where: { name: { contains: query } },
-          take: 20,
-        });
-        return {
-          results: products,
-          facets: null,        // Not available
-          suggestions: null,   // Not available
-          degraded: true,      // Signal to frontend
-        };
-      },
-      timeout: 2000,
-    });
-  }
-
-  // Example 3: Recommendations with default fallback
-  async getRecommendations(userId: string): Promise<Product[]> {
-    return withFallback({
-      primary: () => this.mlService.getPersonalizedRecommendations(userId),
-      fallback: () => this.getPopularProducts(), // Generic fallback
-      shouldFallback: (err) => err.message !== 'User not found',
-    });
-  }
-}
-```
-
-### Partial Response Pattern
-
-```typescript
-// dashboard-service.ts
-interface DashboardData {
-  user: User;
-  stats: Stats | null;
-  notifications: Notification[] | null;
-  recommendations: Product[] | null;
-  errors: string[];
-}
-
-async function getDashboard(userId: string): Promise<DashboardData> {
-  const errors: string[] = [];
-
-  // User is required - fail if unavailable
-  const user = await userService.getUser(userId);
-
-  // Stats are nice to have
-  const stats = await withFallback({
-    primary: () => statsService.getUserStats(userId),
-    fallback: () => null,
-    onFallback: () => errors.push('Stats temporarily unavailable'),
-  });
-
-  // Notifications are nice to have
-  const notifications = await withFallback({
-    primary: () => notificationService.getUnread(userId),
-    fallback: () => null,
-    onFallback: () => errors.push('Notifications temporarily unavailable'),
-  });
-
-  // Recommendations are nice to have
-  const recommendations = await withFallback({
-    primary: () => recommendationService.getForUser(userId),
-    fallback: () => null,
-    onFallback: () => errors.push('Recommendations temporarily unavailable'),
-  });
-
-  return { user, stats, notifications, recommendations, errors };
-}
-```
-
-### Feature Degradation with Flags
-
-```typescript
-// feature-degradation.ts
-class FeatureDegradation {
-  private degradedFeatures = new Set<string>();
-
-  async execute<T>(
-    feature: string,
-    primary: () => Promise<T>,
-    fallback: () => T | Promise<T>
-  ): Promise<T> {
-    // Check if feature is already degraded
-    if (this.degradedFeatures.has(feature)) {
-      return fallback instanceof Function ? fallback() : fallback;
-    }
-
-    try {
-      return await primary();
-    } catch (error) {
-      // Auto-degrade feature after failures
-      this.degradedFeatures.add(feature);
-      
-      // Schedule recovery check
-      setTimeout(() => this.checkRecovery(feature, primary), 30000);
-      
-      return fallback instanceof Function ? fallback() : fallback;
-    }
-  }
-
-  private async checkRecovery(feature: string, healthCheck: () => Promise<unknown>) {
-    try {
-      await healthCheck();
-      this.degradedFeatures.delete(feature);
-      console.log(`Feature ${feature} recovered`);
-    } catch {
-      // Still failing, check again later
-      setTimeout(() => this.checkRecovery(feature, healthCheck), 60000);
-    }
-  }
-}
-
-const degradation = new FeatureDegradation();
-
-// Usage
-const searchResults = await degradation.execute(
-  'elasticsearch',
-  () => elasticSearch.query(term),
-  () => sqlSearch.query(term)
-);
-```
-
-## Python Implementation
+1. Review requirements and constraints
+2. Set up development environment
+3. Implement core functionality following patterns
+4. Write tests for critical paths
+5. Run tests and fix issues
+6. Document any deviations or decisions
 
 ```python
-# fallback.py
-from typing import TypeVar, Callable, Optional
-import asyncio
-
-T = TypeVar('T')
-
-async def with_fallback(
-    primary: Callable[[], T],
-    fallback: Callable[[], T],
-    timeout: float = 5.0,
-    on_fallback: Optional[Callable[[Exception], None]] = None,
-) -> T:
-    try:
-        result = await asyncio.wait_for(primary(), timeout=timeout)
-        return result
-    except Exception as e:
-        if on_fallback:
-            on_fallback(e)
-        return await fallback() if asyncio.iscoroutinefunction(fallback) else fallback()
-
-# Usage
-async def get_product(product_id: str) -> Product:
-    return await with_fallback(
-        primary=lambda: fetch_from_database(product_id),
-        fallback=lambda: cache.get(f"product:{product_id}"),
-        timeout=2.0,
-        on_fallback=lambda e: logger.warning(f"Using cache fallback: {e}"),
-    )
+# Example implementation following best practices
+def example_function():
+    # Your implementation here
+    pass
 ```
 
-### Decorator Pattern
 
-```python
-# degradable.py
-from functools import wraps
+## Assumptions / Constraints / Non-goals
 
-def degradable(fallback_value=None, fallback_func=None, timeout=5.0):
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            try:
-                return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=timeout
-                )
-            except Exception as e:
-                logger.warning(f"{func.__name__} degraded: {e}")
-                if fallback_func:
-                    return await fallback_func(*args, **kwargs)
-                return fallback_value
-        return wrapper
-    return decorator
+* **Assumptions**:
+  - Development environment is properly configured
+  - Required dependencies are available
+  - Team has basic understanding of domain
+* **Constraints**:
+  - Must follow existing codebase conventions
+  - Time and resource limitations
+  - Compatibility requirements
+* **Non-goals**:
+  - This skill does not cover edge cases outside scope
+  - Not a replacement for formal training
 
-# Usage
-@degradable(fallback_value=[], timeout=2.0)
-async def get_recommendations(user_id: str) -> list[Product]:
-    return await ml_service.get_recommendations(user_id)
-```
 
-## Frontend Handling
+## Compatibility & Prerequisites
 
-```typescript
-// React component handling degraded responses
-function Dashboard({ data }: { data: DashboardData }) {
-  return (
-    <div>
-      <UserProfile user={data.user} />
-      
-      {data.stats ? (
-        <StatsPanel stats={data.stats} />
-      ) : (
-        <DegradedNotice message="Stats temporarily unavailable" />
-      )}
-      
-      {data.recommendations ? (
-        <Recommendations items={data.recommendations} />
-      ) : (
-        <PopularProducts /> // Fallback UI
-      )}
-      
-      {data.errors.length > 0 && (
-        <SystemNotice errors={data.errors} />
-      )}
-    </div>
-  );
-}
-```
+* **Supported Versions**:
+  - Python 3.8+
+  - Node.js 16+
+  - Modern browsers (Chrome, Firefox, Safari, Edge)
+* **Required AI Tools**:
+  - Code editor (VS Code recommended)
+  - Testing framework appropriate for language
+  - Version control (Git)
+* **Dependencies**:
+  - Language-specific package manager
+  - Build tools
+  - Testing libraries
+* **Environment Setup**:
+  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
 
-## Best Practices
 
-1. **Identify critical vs non-critical** - Know what can fail
-2. **Always have a fallback** - Even if it's just an error message
-3. **Signal degradation to users** - Don't hide failures
-4. **Monitor fallback usage** - Track when degradation happens
-5. **Test failure scenarios** - Chaos engineering
+## Test Scenario Matrix (QA Strategy)
 
-## Common Mistakes
+| Type | Focus Area | Required Scenarios / Mocks |
+| :--- | :--- | :--- |
+| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
+| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
+| **E2E** | User Journey | Critical user flows to test |
+| **Performance** | Latency / Load | Benchmark requirements |
+| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
+| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
 
-- No fallback for external dependencies
-- Hiding degradation from users
-- Fallback that's also likely to fail
-- Not monitoring fallback frequency
-- Cascading failures from one service
+
+## Technical Guardrails & Security Threat Model
+
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
+
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
+
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
+
+
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+
+
+## Definition of Done (DoD) Checklist
+
+- [ ] Tests passed + coverage met
+- [ ] Lint/Typecheck passed
+- [ ] Logging/Metrics/Trace implemented
+- [ ] Security checks passed
+- [ ] Documentation/Changelog updated
+- [ ] Accessibility/Performance requirements met (if frontend)
+
+
+## Anti-patterns / Pitfalls
+
+* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
+* ⚠️ **Watch out for**: Common symptoms and quick fixes
+* 💡 **Instead**: Use proper error handling, pagination, and logging
+
+
+## Reference Links & Examples
+
+* Internal documentation and examples
+* Official documentation and best practices
+* Community resources and discussions
+
+
+## Versioning & Changelog
+
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
+

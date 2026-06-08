@@ -1,99 +1,174 @@
 ---
-name: dev:story
-description: |
-  ストーリーからTDD/E2E/TASK分岐付きタスクリスト（TODO.md）を生成。
-  ストーリー駆動開発の起点となるスキル。
-  「タスクを作成」「/dev:story」で起動。
-
-  Trigger:
-  タスクを作成, ストーリーからタスク, /dev:story, story to tasks
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Glob
-  - Grep
-  - Task
-  - AskUserQuestion
+name: dev-story
+description: Implementation de stories avec workflow en 10 etapes, modes batch/parallel/epic, tracking et retour d'experience
 ---
 
-# ストーリー → タスク生成（dev:story）
+# Dev Story
 
-## エージェント委譲ルール
+## Objectif
 
-**⚠️ 分析・分解・分類は必ずTaskエージェントに委譲する。自分で実行しない。**
+Implementer une story selon un workflow rigoureux en 10 etapes, avec tracking du temps, retour d'experience et mise a jour du sprint-status.yaml.
 
-呼び出しパターン（全ステップ共通）:
+## Modes d'execution
+
+| Mode | Declencheur | Description |
+|------|------------|-------------|
+| Story specifique | `--story <id>` | Implementer une story par son ID |
+| Prochaine auto | `--next` | Prendre la prochaine story disponible (todo, dependances resolues) |
+| Batch | `--batch <id1,id2,...>` | Implementer plusieurs stories sequentiellement |
+| Parallel | `--parallel <id1,id2,...>` | Lancer des agents workers en parallele |
+| Epic filtre | `--epic <slug>` | Toutes les stories d'un epic, sequentiellement |
+| All epic | `--all-epic <slug>` | Toutes les stories d'un epic, en parallele si possible |
+
+## Pre-requis
+
+- Un sprint genere par `sprint-planner` avec `sprint-status.yaml`
+- La story cible doit avoir le statut `todo`
+- Les dependances de la story doivent avoir le statut `done`
+
+## Workflow en 10 etapes
+
+### Etape 1 : Pre-flight
+
+1. Lire `sprint-status.yaml`
+2. Verifier que la story existe et est `todo`
+3. Verifier que les dependances sont `done`
+4. Mettre le statut a `in_progress` et enregistrer `started_at`
+5. Lire le fichier story pour les specs detaillees
+
+### Etape 2 : Scan contextuel et adaptive context loading
+
+1. Lire les fichiers cibles listes dans la story
+2. Scanner le code environnant pour comprendre le contexte
+3. **Adaptive context loading** : Identifier le stack concerne par la story, puis charger UNIQUEMENT les docs evan-workflow pertinentes :
+   - Lire `~/evan-workflow/common/manifest.yaml` et charger les fichiers des scopes `always` + scopes pertinents au projet (frontend, backend)
+   - `~/evan-workflow/technos/{stack}/patterns/{pattern}.md` references dans la story
+   - Ne PAS charger tout le dossier technos, seulement ce qui est necessaire
+4. Identifier les impacts potentiels sur d'autres fichiers
+
+### Etape 3 : Checkpoint git
+
+1. **Creer un checkpoint git** avant toute modification :
+   ```
+   git stash   # si des changements en cours
+   ```
+2. S'assurer que le working tree est propre
+3. Cela permet un rollback facile si l'implementation echoue
+
+### Etape 4 : Implementation
+
+1. Implementer selon les specs de la story
+2. Respecter les patterns charges a l'etape 2
+3. Suivre les conventions evan-workflow chargees via le manifeste (scope `always` + scopes du projet)
+4. Suivre les regles de style de `~/evan-workflow/technos/{stack}/code-style.md`
+5. Creer/modifier uniquement les fichiers listes dans la story (sauf si un impact cascade l'exige)
+
+### Etape 5 : Verification impact cascade
+
+1. Verifier que les modifications ne cassent pas d'autres parties du code
+2. Chercher les references aux fichiers modifies
+3. Verifier les imports, les types, les interfaces
+4. Si un impact est detecte, corriger ou documenter
+
+### Etape 6 : Tests
+
+1. Ecrire les tests listes dans la story
+2. Executer les tests unitaires concernes
+3. Verifier que les tests existants passent encore
+4. Si des tests echouent, corriger l'implementation
+
+### Etape 7 : Documentation update
+
+1. Si la story impacte une documentation existante, la mettre a jour
+2. Appeler `feature-doc --update` si necessaire (mode depuis dev-story)
+3. Mettre a jour les commentaires de code si pertinent
+
+### Etape 8 : Retour d'experience
+
+1. Enregistrer dans sprint-status.yaml pour cette story :
+   - `difficulty` : easy | medium | hard | extreme
+   - `lessons_learned` : Ce qui a ete appris, les pieges rencontres
+   - `duration_minutes` : Temps reel d'implementation
+2. Si la taille estimee etait incorrecte, le noter
+
+### Etape 9 : Commit
+
+1. Creer un commit atomique avec un message clair :
+   ```
+   feat({scope}): {description courte}
+
+   Story {id}: {titre de la story}
+
+   - {changement 1}
+   - {changement 2}
+   ```
+2. Suivre les conventions du scope `commit` du manifeste evan-workflow (`~/evan-workflow/common/git-conventions.md`)
+3. Un commit par story (sauf si la story est decoupee en sous-taches logiques)
+
+### Etape 10 : Status update et proposition next
+
+1. Mettre le statut a `done` dans `sprint-status.yaml`
+2. Enregistrer `completed_at`
+3. Recalculer les compteurs `summary`
+4. Identifier la prochaine story disponible
+5. Afficher un resume :
+
 ```
-agentContent = Read(".claude/skills/dev/story/agents/{agent}.md")
-Task({ prompt: agentContent + 追加コンテキスト, subagent_type: "general-purpose", model: {指定モデル} })
+Story {id} terminee : {titre}
+Duree : {N} minutes | Difficulte : {level}
+Lecons : {resume}
+
+Sprint progress : [========>          ] 40% (8/20)
+Prochaine story : {id} - {titre} ({taille})
 ```
 
-| Step | agent | model | 追加コンテキスト |
-|------|-------|-------|-----------------|
-| 1a | analyze-story.md | opus | ユーザーのストーリー |
-| 1b | resolve-slug.md | haiku | story-analysis.json + 既存slug一覧 |
-| 2 | decompose-tasks.md | sonnet | story-analysis.jsonのパス |
-| 3 | assign-workflow.md | haiku | task-list.jsonのパス |
+## Mode parallel
 
-## 出力先
+### Fonctionnement
 
-`docs/features/{feature-slug}/{story-slug}/` に3ファイルを**順次**保存する。
+1. Identifier les stories sans dependances mutuelles
+2. Pour chaque story, creer une instruction worker avec :
+   - Le contexte complet de la story
+   - Les fichiers a modifier (SANS conflit avec les autres workers)
+   - Les patterns evan-workflow a respecter
+3. Chaque worker suit le workflow complet (etapes 1-10)
+4. **Fresh context** : Chaque agent worker demarre avec un contexte propre, sans pollution des stories precedentes
+5. Consolider les resultats dans sprint-status.yaml
 
----
+### Regles du mode parallel
 
-## ★ 実行手順（必ずこの順序で実行）
+- Deux stories ne peuvent PAS modifier le meme fichier en parallele
+- Si un conflit de fichier est detecte, la story est mise en attente
+- Le sprint-status.yaml est mis a jour de maniere atomique apres chaque worker
 
-### Step 1: ストーリー分析 → story-analysis.json
+## Mode batch
 
-1. ユーザーからストーリーを聞き取る
-2. → **エージェント委譲**（analyze-story.md / opus）
-3. → **エージェント委譲**（resolve-slug.md / haiku）— 既存slugとの類似判定・候補整理
-4. **AskUserQuestion** で feature-slug / story-slug を確定（resolve-slugの推奨順で選択肢提示）
-5. `mkdir -p docs/features/{feature-slug}/{story-slug}`
-6. **Write** で `story-analysis.json` を保存
+Execution sequentielle des stories listees :
+1. Pour chaque story dans l'ordre donne
+2. Executer le workflow complet
+3. Si une story echoue, proposer : continuer | arreter | skip
 
-**ゲート**: `story-analysis.json` が存在しなければ次に進まない。
+## Mode epic
 
-### Step 2: タスク分解 → task-list.json
+1. Lister toutes les stories de l'epic
+2. Trier par dependances
+3. Executer sequentiellement (--epic) ou en parallele quand possible (--all-epic)
 
-1. → **エージェント委譲**（decompose-tasks.md / sonnet）
-   - エージェント内でGlob/Readによるコード探索・context作成を行う
-2. 技術選定・方針に判断が必要ならAskUserQuestionで確認（自明ならスキップ可）
-3. **Write** で `task-list.json` を保存
+## Gestion des erreurs
 
-**ゲート**: `task-list.json` が存在しなければ次に進まない。
+| Situation | Action |
+|-----------|--------|
+| Dependance non resolue | Bloquer la story, suggerer l'ordre correct |
+| Test echoue | Tenter de corriger, sinon marquer `blocked` |
+| Conflit de fichier (parallel) | Mettre en attente, traiter sequentiellement |
+| Story trop complexe | Suggerer un redecoupe, marquer `blocked` |
+| Implementation echouee | Rollback via checkpoint git, marquer `blocked` |
 
-### Step 3: ワークフロー分類 → TODO.md
+## Sortie attendue
 
-1. → **エージェント委譲**（assign-workflow.md / haiku）
-2. **Write** で `TODO.md` を保存
-
-**ゲート**: `TODO.md` が存在しなければ次に進まない。
-
-### Step 4: ユーザー確認
-
-- **実装開始** → dev:developing を呼び出し
-- **修正が必要** → ユーザー指示に従いTODO.mdを修正 → 再確認
-
----
-
-## 完了条件
-
-以下3ファイルがすべて保存されていること:
-
-| ファイル | Phase |
-|----------|-------|
-| `story-analysis.json` | Step 1 |
-| `task-list.json` | Step 2 |
-| `TODO.md` | Step 3 |
-
-- 各タスクにTDD/E2E/TASKラベルが付与されている
-- ユーザーが承認済み
-
-## 参照
-
-- agents/: analyze-story.md, decompose-tasks.md, assign-workflow.md
-- references/: tdd-criteria.md, e2e-criteria.md, task-criteria.md
-- ルール: `.claude/rules/workflow/workflow-branching.md`（自動適用）
+Pour chaque story terminee :
+- Resume de l'implementation
+- Fichiers crees/modifies
+- Tests passes
+- Retour d'experience
+- Proposition de prochaine story

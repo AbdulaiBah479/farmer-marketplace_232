@@ -1,5 +1,5 @@
 ---
-name: telegram-bot-ui-design
+name: Telegram Bot UI Design
 description: Expert in designing Telegram bot interfaces with keyboards, buttons, conversational flows, and mobile-first UX patterns.
 ---
 

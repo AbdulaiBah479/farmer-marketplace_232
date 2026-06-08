@@ -1,94 +1,65 @@
 ---
-name: java-best-practices
-description: Java 编码最佳实践与设计模式
-version: 1.0.0
-category: development
-triggers:
-  - java best practice
-  - Java 最佳实践
-  - 设计模式
-  - Java 编码规范
-scriptPath: check-java-env.sh
-scriptType: bash
-autoExecute: true
-scriptTimeout: 5
+name: Java Best Practices
+description: Core engineering principles inspired by Effective Java and Clean Code.
+metadata:
+  labels: [java, best-practices, effective-java, clean-code]
+  triggers:
+    files: ['**/*.java']
+    keywords: [refactor, clean code, smells, patterns, design]
 ---
 
-# Java 最佳实践技能包
+# Java Best Practices
 
-## 编码规范
+## **Priority: P1 (HIGH)**
 
-### 命名规范
-- **类名**：PascalCase（UserService）
-- **方法/变量**：camelCase（getUserById）
-- **常量**：UPPER_SNAKE_CASE（MAX_SIZE）
-- **包名**：小写（com.example.service）
+Core engineering principles for robust, maintainable Java systems.
 
-### 常用设计模式
+## Implementation Guidelines
 
-**单例模式（枚举实现）**：
+- **Immutability**: Prefer immutable objects (`final` fields, unmodifiable collections).
+- **Access Modifiers**: Minimize visibility. Default to **package-private** (no modifier). Use `private` for all fields. Only `public` for API contracts.
+- **Composition > Inheritance**: Favor `Has-A` over `Is-A`. Avoid deep hierarchies.
+- **Constructors**: Use Static Factory Methods (`User.of()`) over complex constructors.
+- **Builder Pattern**: Use for objects with 4+ parameters.
+- **Exceptions**: Use Checked vs Unchecked wisely. Recoverable -> Checked; Programming Error -> Unchecked.
+- **Fail Fast**: Validate parameters (`Objects.requireNonNull`) at the method start.
+- **Interfaces**: Code to interfaces (`List`, `Map`), not implementations (`ArrayList`, `HashMap`).
+- **Dependency Injection**: Invert control. Inject dependencies via constructor.
+- **Method References**: Use `String::toUpperCase` over `s -> s.toUpperCase()` where readable.
+
+## Anti-Patterns
+
+- **Return Null**: Returns empty `Optional` or Collection instead.
+- **Empty Catch**: Never swallow exceptions. Log or rethrow.
+- **God Class**: Single Responsibility Principle. Break it down.
+- **Magic Numbers**: Extract constants with meaningful names.
+- **Mutable Statics**: Avoid `public static` fields (Global state).
+
+## Code
+
 ```java
-public enum Singleton {
-    INSTANCE;
-    public void doSomething() {}
+// Static Factory + Builder (Implicit via Library or Manual)
+public class Pizza {
+  private final int size;
+  private final boolean cheese;
+
+  private Pizza(Builder b) { ... }
+
+  public static Pizza of(int size) {
+    return new Pizza(size, false);
+  }
+}
+
+// Composition
+public class Service {
+  private final Repository repo; // Injected
+
+  public Service(Repository repo) {
+    this.repo = Objects.requireNonNull(repo);
+  }
 }
 ```
 
-**工厂模式**：
-```java
-public class UserFactory {
-    public static User createUser(String type) {
-        return switch (type) {
-            case "admin" -> new AdminUser();
-            case "guest" -> new GuestUser();
-            default -> new RegularUser();
-        };
-    }
-}
-```
+## Related Topics
 
-**Builder 模式**：
-```java
-User user = User.builder()
-    .name("张三")
-    .age(25)
-    .build();
-```
-
-## Stream API
-
-```java
-List<String> names = users.stream()
-    .filter(u -> u.getAge() > 18)
-    .map(User::getName)
-    .collect(Collectors.toList());
-```
-
-## 异常处理
-
-```java
-try {
-    // 业务逻辑
-} catch (SpecificException e) {
-    log.error("Error: {}", e.getMessage(), e);
-    throw new BusinessException("操作失败");
-} finally {
-    // 清理资源
-}
-```
-
-## 并发编程
-
-```java
-ExecutorService executor = Executors.newFixedThreadPool(10);
-executor.submit(() -> {
-    // 异步任务
-});
-```
-
-## Optional 使用
-
-```java
-Optional<User> user = userRepository.findById(id);
-return user.orElseThrow(() -> new NotFoundException());
-```
+language | concurrency | tooling

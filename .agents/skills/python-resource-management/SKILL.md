@@ -419,13 +419,3 @@ async def process_connections(hosts: list[str]) -> list[dict]:
 8. **Track metrics** - Time-to-first-byte matters for streaming
 9. **Document behavior** - Especially exception suppression
 10. **Test cleanup paths** - Verify resources are released on errors
-
----
-
-## Gotchas
-
-- **`with open()` inside a generator: file closes when the generator is GC'd, not at end of iteration** — fine in CPython (reference counting), risky in PyPy/IronPython.
-- **`ExitStack`: `enter_context` for `__enter__`/`__exit__` protocol; `push` for cleanup-only callbacks** — mixing them with mistaken ordering can swallow exceptions in the cleanup chain.
-- **Async context managers MUST use `async with`** — `with` on an async manager silently returns the coroutine, no cleanup runs.
-- **`tempfile.NamedTemporaryFile` on Windows can't be reopened while open** — `delete=False` + explicit cleanup is the cross-platform path.
-- **`contextlib.suppress(Exception)` swallows including `KeyboardInterrupt` if you pass `BaseException`** — be specific about what's suppressed.

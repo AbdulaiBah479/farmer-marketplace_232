@@ -1,468 +1,550 @@
 ---
 name: create-architecture
-description: "Guided, section-by-section authoring of the master architecture document for the game. Reads all GDDs, the systems index, existing ADRs, and the engine reference library to produce a complete architecture blueprint before any code is written. Engine-version-aware: flags knowledge gaps and validates decisions against the pinned engine version."
-argument-hint: "[focus-area: full | layers | data-flow | api-boundaries | adr-audit] [--review full|lean|solo]"
-user-invocable: true
-allowed-tools: Read, Glob, Grep, Write, Bash, AskUserQuestion, Task
-model: sonnet
-agent: technical-director
+description: Generate comprehensive system architecture documents from requirements, supporting Frontend, Backend, and Fullstack projects with scale-adaptive depth and Architecture Decision Records. Use when translating requirements (PRD/epic) into technical architecture for new projects or major features.
+acceptance:
+  - architecture_created: "Architecture document created at docs/architecture.md"
+  - all_sections_present: "All required sections present for project type"
+  - tech_stack_justified: "Technology stack decisions documented with justification"
+  - adrs_created: "At least 3 Architecture Decision Records created"
+  - nfrs_addressed: "Non-functional requirements addressed in architecture"
+inputs:
+  requirements_file:
+    type: string
+    required: true
+    description: "Path to PRD or requirements document"
+  project_type:
+    type: string
+    required: false
+    description: "frontend | backend | fullstack (auto-detected if not provided)"
+  complexity:
+    type: string
+    required: false
+    description: "simple | medium | complex (auto-calculated if not provided)"
+  existing_architecture:
+    type: string
+    required: false
+    description: "Path to existing architecture (for brownfield projects)"
+outputs:
+  architecture_file:
+    type: string
+    description: "Path to created architecture document"
+  project_type:
+    type: string
+    description: "Detected or specified project type"
+  complexity_score:
+    type: number
+    description: "Calculated complexity score (0-100)"
+  adrs_created:
+    type: number
+    description: "Number of ADRs created"
+  sections_included:
+    type: array
+    description: "List of architecture sections included"
+telemetry:
+  emit: "skill.create-architecture.completed"
+  track:
+    - project_type
+    - complexity_score
+    - adrs_created
+    - duration_ms
+    - tech_stack_size
 ---
 
 # Create Architecture
 
-This skill produces `docs/architecture/architecture.md` — the master architecture
-document that translates all approved GDDs into a concrete technical blueprint.
-It sits between design and implementation, and must exist before sprint planning begins.
+## Purpose
 
-**Distinct from `/architecture-decision`**: ADRs record individual point decisions.
-This skill creates the whole-system blueprint that gives ADRs their context.
+Generate comprehensive, production-ready system architecture documents from requirements. Supports Frontend, Backend, and Fullstack projects with scale-adaptive depth, proven architectural patterns, and Architecture Decision Records (ADRs).
 
-Resolve the review mode (once, store for all gate spawns this run):
-1. If `--review [full|lean|solo]` was passed → use that
-2. Else read `production/review-mode.txt` → use that value
-3. Else → default to `lean`
-
-See `.claude/docs/director-gates.md` for the full check pattern.
-
-**Argument modes:**
-- **No argument / `full`**: Full guided walkthrough — all sections, start to finish
-- **`layers`**: Focus on the system layer diagram only
-- **`data-flow`**: Focus on data flow between modules only
-- **`api-boundaries`**: Focus on API boundary definitions only
-- **`adr-audit`**: Audit existing ADRs for engine compatibility gaps only
+**Core Principles:**
+- **Multi-domain support:** Frontend, Backend, Fullstack architectures
+- **Scale-adaptive:** Adjusts detail based on project complexity
+- **Pattern-driven:** Leverages proven architectural patterns catalog
+- **Decision-focused:** Documents key decisions as ADRs
+- **Technology-agnostic:** Considers multiple options, recommends best fit
 
 ---
 
-## Phase 0: Load All Context
+## Prerequisites
 
-Before anything else, load the full project context in this order:
-
-### 0a. Engine Context (Critical)
-
-Read the engine reference library completely:
-
-1. `docs/engine-reference/[engine]/VERSION.md`
-   → Extract: engine name, version, LLM cutoff, post-cutoff risk levels
-2. `docs/engine-reference/[engine]/breaking-changes.md`
-   → Extract: all HIGH and MEDIUM risk changes
-3. `docs/engine-reference/[engine]/deprecated-apis.md`
-   → Extract: APIs to avoid
-4. `docs/engine-reference/[engine]/current-best-practices.md`
-   → Extract: post-cutoff best practices that differ from training data
-5. All files in `docs/engine-reference/[engine]/modules/`
-   → Extract: current API patterns per domain
-
-If no engine is configured, stop and prompt:
-> "No engine is configured. Run `/setup-engine` first. Architecture cannot be
-> written without knowing which engine and version you are targeting."
-
-### 0b. Design Context + Technical Requirements Extraction
-
-Read all approved design documents and extract technical requirements from each:
-
-1. `design/gdd/game-concept.md` — game pillars, genre, core loop
-2. `design/gdd/systems-index.md` — all systems, dependencies, priority tiers
-3. `.claude/docs/technical-preferences.md` — naming conventions, performance budgets,
-   allowed libraries, forbidden patterns
-4. **Every GDD in `design/gdd/`** — for each, extract technical requirements:
-   - Data structures implied by the game rules
-   - Performance constraints stated or implied
-   - Engine capabilities the system requires
-   - Cross-system communication patterns (what talks to what, how)
-   - State that must persist (save/load implications)
-   - Threading or timing requirements
-
-Build a **Technical Requirements Baseline** — a flat list of all extracted
-requirements across all GDDs, numbered `TR-[gdd-slug]-[NNN]`. This is the
-complete set of what the architecture must cover. Present it as:
-
-```
-## Technical Requirements Baseline
-Extracted from [N] GDDs | [X] total requirements
-
-| Req ID | GDD | System | Requirement | Domain |
-|--------|-----|--------|-------------|--------|
-| TR-combat-001 | combat.md | Combat | Hitbox detection per-frame | Physics |
-| TR-combat-002 | combat.md | Combat | Combo state machine | Core |
-| TR-inventory-001 | inventory.md | Inventory | Item persistence | Save/Load |
-```
-
-This baseline feeds into every subsequent phase. No GDD requirement should be
-left without an architectural decision to support it by the end of this session.
-
-### 0c. Existing Architecture Decisions
-
-Read all files in `docs/architecture/` to understand what has already been decided.
-List any ADRs found and their domains.
-
-### 0d. Generate Knowledge Gap Inventory
-
-Before proceeding, display a structured summary:
-
-```
-## Engine Knowledge Gap Inventory
-Engine: [name + version]
-LLM Training Covers: up to approximately [version]
-Post-Cutoff Versions: [list]
-
-### HIGH RISK Domains (must verify against engine reference before deciding)
-- [Domain]: [Key changes]
-
-### MEDIUM RISK Domains (verify key APIs)
-- [Domain]: [Key changes]
-
-### LOW RISK Domains (in training data, likely reliable)
-- [Domain]: [no significant post-cutoff changes]
-
-### Systems from GDD that touch HIGH/MEDIUM risk domains:
-- [GDD system name] → [domain] → [risk level]
-```
-
-Use `AskUserQuestion`:
-- Prompt: "One or more engine domains are HIGH RISK — the LLM's knowledge may be unreliable for these areas. Architectural recommendations in these domains should be cross-referenced with the engine docs before being acted on. How would you like to proceed?"
-- Options:
-  - `[A] Proceed — flag HIGH RISK domains throughout the output`
-  - `[B] Let me check the engine reference first — pause here`
-  - `[C] Show me which domains are HIGH RISK and why`
+- Requirements document exists (PRD, epic, or user stories)
+- Non-functional requirements (NFRs) defined or inferable
+- Target user scale and data volume known or estimable
+- Project constraints documented (team, timeline, budget)
 
 ---
 
-## Phase 1: System Layer Mapping
+## Workflow
 
-Map every system from `systems-index.md` into an architecture layer. The standard
-game architecture layers are:
+### 1. Load and Analyze Requirements
 
-```
-┌─────────────────────────────────────────────┐
-│  PRESENTATION LAYER                         │  ← UI, HUD, menus, VFX, audio
-├─────────────────────────────────────────────┤
-│  FEATURE LAYER                              │  ← gameplay systems, AI, quests
-├─────────────────────────────────────────────┤
-│  CORE LAYER                                 │  ← physics, input, combat, movement
-├─────────────────────────────────────────────┤
-│  FOUNDATION LAYER                           │  ← engine integration, save/load,
-│                                             │    scene management, event bus
-├─────────────────────────────────────────────┤
-│  PLATFORM LAYER                             │  ← OS, hardware, engine API surface
-└─────────────────────────────────────────────┘
+**Action:** Read requirements document using bmad-commands
+
+Execute:
+```bash
+python .claude/skills/bmad-commands/scripts/read_file.py \
+  --path {requirements_file} \
+  --output json
 ```
 
-For each GDD system, ask:
-- Which layer does it belong to?
-- What are its module boundaries?
-- What does it own exclusively? (data, state, behaviour)
+**Extract from requirements:**
+- Functional requirements (features, capabilities)
+- Non-functional requirements (performance, security, scalability)
+- Business goals and constraints
+- Technical constraints (technologies, platforms)
+- User scale estimates
+- Data volume estimates
+- Integration requirements
 
-Present the proposed layer assignment and ask for approval before proceeding to
-the next section. Write the approved layer map immediately to the skeleton file.
+**If brownfield:** Also load existing architecture for context.
 
-**Engine awareness check**: For each system assigned to the Core and Foundation
-layers, flag if it touches a HIGH or MEDIUM risk engine domain. Show the relevant
-engine reference excerpt inline.
+**See:** `references/requirements-analysis-guide.md` for extraction techniques
 
 ---
 
-## Phase 2: Module Ownership Map
+### 2. Detect Project Type
 
-For each module defined in Phase 1, define ownership:
+**Analyze requirements to determine domain:**
 
-- **Owns**: what data and state this module is solely responsible for
-- **Exposes**: what other modules may read or call
-- **Consumes**: what it reads from other modules
-- **Engine APIs used**: which specific engine classes/nodes/signals this module
-  calls directly (with version and risk level noted)
+**Frontend-only indicators:**
+- UI/UX requirements are dominant
+- No backend/API requirements mentioned
+- Focus on components, state, routing, styling
+- Technologies: React, Vue, Angular, Svelte
 
-Format as a table per layer, then as an ASCII dependency diagram.
+**Backend-only indicators:**
+- API/service requirements dominant
+- No UI requirements mentioned
+- Focus on business logic, data processing, integrations
+- Technologies: Node.js, Python, Java, Go, Rust
 
-**Engine awareness check**: For every engine API listed, verify against the
-relevant module reference doc. If an API is post-cutoff, flag it:
+**Fullstack indicators:**
+- Both frontend and backend requirements
+- End-to-end user journeys described
+- Integration between UI and services
+- Technologies span both domains
 
+**Default:** If unclear, select **Fullstack** (most comprehensive)
+
+**See:** `references/project-type-patterns.md` for detailed detection criteria
+
+---
+
+### 3. Assess Complexity
+
+**Calculate complexity score based on weighted factors:**
+
+| Factor | Weight | Scoring |
+|--------|--------|---------|
+| User scale | 25% | <1K=10, 1K-10K=30, 10K-100K=60, >100K=90 |
+| Data volume | 20% | <10GB=10, 10GB-1TB=40, >1TB=80 |
+| Integration points | 20% | 0-2=10, 3-5=40, 6-10=70, >10=90 |
+| Performance reqs | 15% | None=0, Standard=30, Strict=70 |
+| Security reqs | 10% | Basic=10, Standard=40, Advanced=80 |
+| Deployment | 10% | Single=10, Multi-region=50, Global=80 |
+
+**Complexity Formula:**
 ```
-⚠️  [ClassName.method()] — Godot 4.6 (post-cutoff, HIGH risk)
-    Verified against: docs/engine-reference/godot/modules/[domain].md
-    Behaviour confirmed: [yes / NEEDS VERIFICATION]
+Score = (scale × 0.25) + (data × 0.20) + (integrations × 0.20) +
+        (perf × 0.15) + (security × 0.10) + (deploy × 0.10)
 ```
 
-Get user approval on the ownership map before writing.
+**Categories:**
+- **0-30:** Simple (single-tier, standard patterns)
+- **31-60:** Medium (multi-tier, moderate patterns)
+- **61-100:** Complex (distributed, advanced patterns)
+
+**This determines:** Architecture depth, pattern selection, ADR count
+
+**See:** `references/complexity-assessment.md` for detailed scoring guide
 
 ---
 
-## Phase 3: Data Flow
+### 4. Select Architectural Patterns
 
-Define how data moves between modules during key game scenarios. Cover at minimum:
+**Based on project type and complexity, select patterns:**
 
-1. **Frame update path**: Input → Core systems → State → Rendering
-2. **Event/signal path**: How systems communicate without tight coupling
-3. **Save/load path**: What state is serialised, which module owns serialisation
-4. **Initialisation order**: Which modules must boot before others
+**Frontend Patterns:**
+- Component architecture (atomic design, compound components)
+- State management (Redux, Zustand, Context, Recoil)
+- Routing strategies (file-based, declarative, nested)
+- Styling approach (CSS-in-JS, Tailwind, CSS Modules)
+- Data fetching (React Query, SWR, Apollo)
 
-Use ASCII sequence diagrams where helpful. For each data flow:
-- Name the data being transferred
-- Identify the producer and consumer
-- State whether this is synchronous call, signal/event, or shared state
-- Flag any data flows that cross thread boundaries
+**Backend Patterns:**
+- API design (REST, GraphQL, tRPC, gRPC)
+- Service architecture (monolith, microservices, modular monolith)
+- Data modeling (relational, document, event-sourced)
+- Integration patterns (message queues, event buses, webhooks)
+- Caching strategies (Redis, Memcached, CDN)
 
-Get user approval per scenario before writing.
+**Fullstack Patterns:**
+- Framework selection (Next.js, Remix, SvelteKit, Nuxt)
+- Monorepo structure (Turborepo, Nx, Lerna)
+- API layers (BFF, API Gateway, tRPC)
+- Deployment (Vercel, Netlify, AWS, Docker/K8s)
+- Authentication (NextAuth, Passport, Auth0, Clerk)
 
----
-
-## Phase 4: API Boundaries
-
-Define the public contracts between modules. For each boundary:
-
-- What is the interface a module exposes to the rest of the system?
-- What are the entry points (functions/signals/properties)?
-- What invariants must callers respect?
-- What must the module guarantee to callers?
-
-Write in pseudocode or the project's actual language (from technical preferences).
-These become the contracts programmers implement against.
-
-**Engine awareness check**: If any interface uses engine-specific types (e.g.
-`Node`, `Resource`, `Signal` in Godot), flag the version and verify the type
-exists and has not changed signature in the target engine version.
+**See:** `references/patterns-catalog.md` for complete pattern library
 
 ---
 
-## Phase 5: ADR Audit + Traceability Check
+### 5. Evaluate Technology Stack
 
-Review all existing ADRs from Phase 0c against both the architecture built in
-Phases 1-4 AND the Technical Requirements Baseline from Phase 0b.
+**For each architectural component, evaluate options:**
 
-### ADR Quality Check
+**Evaluation Criteria:**
+1. Requirements fit (does it meet functional/NFRs?)
+2. Team expertise (can team use this effectively?)
+3. Community support (strong ecosystem?)
+4. Performance (meets requirements?)
+5. Scalability (scales with growth?)
+6. Cost (licensing/infrastructure costs?)
+7. Maintenance (long-term burden?)
+8. Migration path (can we change later?)
 
-For each ADR:
-- [ ] Does it have an Engine Compatibility section?
-- [ ] Is the engine version recorded?
-- [ ] Are post-cutoff APIs flagged?
-- [ ] Does it have a "GDD Requirements Addressed" section?
-- [ ] Does it conflict with the layer/ownership decisions made in this session?
-- [ ] Is it still valid for the pinned engine version?
+**Decision Process:**
+1. Identify requirements for component
+2. Generate 3-5 alternatives
+3. Evaluate against criteria
+4. Select best fit
+5. Document in ADR
 
-| ADR | Engine Compat | Version | GDD Linkage | Conflicts | Valid |
-|-----|--------------|---------|-------------|-----------|-------|
-| ADR-0001: [title] | ✅/❌ | ✅/❌ | ✅/❌ | None/[conflict] | ✅/⚠️ |
-
-### Traceability Coverage Check
-
-Map every requirement from the Technical Requirements Baseline to existing ADRs.
-For each requirement, check if any ADR's "GDD Requirements Addressed" section
-or decision text covers it:
-
-| Req ID | Requirement | ADR Coverage | Status |
-|--------|-------------|--------------|--------|
-| TR-combat-001 | Hitbox detection per-frame | ADR-0003 | ✅ |
-| TR-combat-002 | Combo state machine | — | ❌ GAP |
-
-Count: X covered, Y gaps. For each gap, it becomes a **Required New ADR**.
-
-### Required New ADRs
-
-List all decisions made during this architecture session (Phases 1-4) that do
-not yet have a corresponding ADR, PLUS all uncovered Technical Requirements.
-Group by layer — Foundation first:
-
-**Foundation Layer (must create before any coding):**
-- `/architecture-decision [title]` → covers: TR-[id], TR-[id]
-
-**Core Layer:**
-- `/architecture-decision [title]` → covers: TR-[id]
+**See:** `references/technology-decision-framework.md` for evaluation matrices
 
 ---
 
-## Phase 6: Missing ADR List
+### 6. Generate Architecture Document
 
-Based on the full architecture, produce a complete list of ADRs that should exist
-but don't yet. Group by priority:
+**Create comprehensive architecture at docs/architecture.md:**
 
-**Must have before coding starts (Foundation & Core decisions):**
-- [e.g. "Scene management and scene loading strategy"]
-- [e.g. "Event bus vs direct signal architecture"]
-
-**Should have before the relevant system is built:**
-- [e.g. "Inventory serialisation format"]
-
-**Can defer to implementation:**
-- [e.g. "Specific shader technique for water"]
-
----
-
-## Phase 7: Write the Master Architecture Document
-
-Once all sections are approved, write the complete document to
-`docs/architecture/architecture.md`.
-
-Display a one-paragraph summary of what the document will contain (layers, modules, data flows, ADR gaps). Then use `AskUserQuestion`:
-- "All sections approved. May I write the master architecture document?"
-  - [A] Yes — write to `docs/architecture/architecture.md` now
-  - [B] Show me the full draft inline first, then ask again
-  - [C] Not yet — I have more changes to discuss
-
-The document structure:
+**Structure (adapt based on project type):**
 
 ```markdown
-# [Game Name] — Master Architecture
+# [Project Name] Architecture
 
-## Document Status
-- Version: [N]
-- Last Updated: [date]
-- Engine: [name + version]
-- GDDs Covered: [list]
-- ADRs Referenced: [list]
+## 1. System Overview
+[High-level description, context, goals]
 
-## Engine Knowledge Gap Summary
-[Condensed from Phase 0d inventory — HIGH/MEDIUM risk domains and their implications]
+## 2. Architecture Diagrams
+[C4 context, container, component diagrams]
 
-## System Layer Map
-[From Phase 1]
+## 3. Frontend Architecture (if applicable)
+[Component design, state management, routing, styling, build]
 
-## Module Ownership
-[From Phase 2]
+## 4. Backend Architecture (if applicable)
+[API design, services, data layer, business logic, integrations]
 
-## Data Flow
-[From Phase 3]
+## 5. Fullstack Integration (if applicable)
+[End-to-end flows, API contracts, auth, deployment]
 
-## API Boundaries
-[From Phase 4]
+## 6. Data Architecture
+[Data models, relationships, migrations, caching]
 
-## ADR Audit
-[From Phase 5]
+## 7. Technology Stack
+[All technologies with justifications]
 
-## Required ADRs
-[From Phase 6]
+## 8. Deployment Architecture
+[Infrastructure, environments, CI/CD, monitoring]
 
-## Architecture Principles
-[3-5 key principles that govern all technical decisions for this project,
-derived from the game concept, GDDs, and technical preferences]
+## 9. Security Architecture
+[Authentication, authorization, data protection, compliance]
 
-## Open Questions
-[Decisions deferred — must be resolved before the relevant layer is built]
+## 10. Performance Architecture
+[Caching, optimization, CDN, load balancing]
+
+## 11. Scalability Plan
+[Horizontal/vertical scaling, bottlenecks, growth plan]
+
+## 12. Architecture Decision Records (ADRs)
+[Key decisions with context, options considered, rationale]
+
+## 13. Migration Strategy (brownfield only)
+[Current state, target state, migration path, risks]
+
+## 14. Open Questions & Risks
+[Unknowns, risks, mitigation strategies]
+```
+
+**Scale adaptation:**
+- **Simple:** Focus on sections 1, 3-7, 12 (10-15 pages)
+- **Medium:** Include sections 1-12 (15-25 pages)
+- **Complex:** All sections with deep analysis (25-40 pages)
+
+**See:** `references/templates.md` for section templates
+
+---
+
+### 7. Create Architecture Decision Records (ADRs)
+
+**For each significant decision, create ADR:**
+
+**ADR Template:**
+```markdown
+# ADR-XXX: [Decision Title]
+
+**Date:** YYYY-MM-DD
+**Status:** Proposed | Accepted | Deprecated | Superseded
+
+## Context
+[Problem and constraints]
+
+## Decision
+[What we decided]
+
+## Alternatives Considered
+1. Option A: [pros/cons]
+2. Option B: [pros/cons]
+3. Option C: [pros/cons]
+
+## Rationale
+[Why this option]
+
+## Consequences
+[Positive and negative impacts]
+
+## Related Decisions
+[Links to other ADRs]
+```
+
+**Minimum ADRs:**
+- Simple architecture: 3-5 ADRs
+- Medium architecture: 5-10 ADRs
+- Complex architecture: 10-15 ADRs
+
+**Common ADR topics:**
+- Primary technology stack selection
+- Database choice
+- API design approach
+- State management strategy
+- Authentication mechanism
+- Deployment platform
+- Monitoring and observability approach
+
+**See:** `references/adr-examples.md` for ADR examples
+
+---
+
+### 8. Address Non-Functional Requirements
+
+**Ensure architecture addresses all NFRs:**
+
+**Performance:**
+- Response time targets (p50, p95, p99)
+- Throughput requirements (req/sec)
+- Optimization strategies (caching, CDN, lazy loading)
+
+**Scalability:**
+- User growth projections
+- Data growth projections
+- Horizontal scaling strategy
+- Bottleneck identification
+
+**Security:**
+- Authentication and authorization
+- Data encryption (at rest, in transit)
+- Input validation and sanitization
+- Compliance requirements (GDPR, HIPAA, etc.)
+
+**Reliability:**
+- Availability targets (99%, 99.9%, 99.99%)
+- Fault tolerance strategies
+- Disaster recovery plan
+- Backup and restore procedures
+
+**Maintainability:**
+- Code organization principles
+- Testing strategy
+- Documentation standards
+- Technical debt management
+
+**See:** `references/nfr-architecture-mapping.md` for NFR checklist
+
+---
+
+### 9. Generate Supplementary Artifacts (Optional)
+
+**If requested or beneficial:**
+
+**Architecture Diagrams:**
+```bash
+python .claude/skills/bmad-commands/scripts/generate_architecture_diagram.py \
+  --architecture docs/architecture.md \
+  --type c4-context \
+  --output docs/diagrams/
+```
+
+**Technology Analysis Report:**
+```bash
+python .claude/skills/bmad-commands/scripts/analyze_tech_stack.py \
+  --architecture docs/architecture.md \
+  --output json
+```
+
+**Extract ADRs to separate files:**
+```bash
+python .claude/skills/bmad-commands/scripts/extract_adrs.py \
+  --architecture docs/architecture.md \
+  --output docs/adrs/
 ```
 
 ---
 
-## Phase 7b: Technical Director Sign-Off + Lead Programmer Feasibility Review
+### 10. Validate Completeness
 
-After writing the master architecture document, perform an explicit sign-off before handoff.
+**Self-validate before marking complete:**
 
-**Step 1 — Technical Director self-review** (this skill runs as technical-director):
+**Check all required sections present:**
+- ✅ System Overview
+- ✅ Architecture appropriate for project type
+- ✅ Technology Stack documented
+- ✅ NFRs addressed
+- ✅ At least 3 ADRs created
+- ✅ Security considerations included
+- ✅ Scalability plan defined
 
-Apply gate **TD-ARCHITECTURE** (`.claude/docs/director-gates.md`) as a self-review. Check all four criteria from that gate definition against the completed document.
+**Quality check:**
+- ✅ All technology choices justified
+- ✅ Alternatives considered
+- ✅ Risks identified
+- ✅ No critical gaps
 
-**Review mode check** — apply before spawning LP-FEASIBILITY:
-- `solo` → skip. Note: "LP-FEASIBILITY skipped — Solo mode." Proceed to Phase 8 handoff.
-- `lean` → skip (not a PHASE-GATE). Note: "LP-FEASIBILITY skipped — Lean mode." Proceed to Phase 8 handoff.
-- `full` → spawn as normal.
+**If validation fails:** Address gaps before completion.
 
-**Step 2 — Spawn `lead-programmer` via Task using gate LP-FEASIBILITY (`.claude/docs/director-gates.md`):**
+---
 
-Pass: architecture document path, technical requirements baseline summary, ADR list.
+## Common Scenarios
 
-**Step 3 — Present both assessments to the user:**
+### Scenario 1: Greenfield Frontend Application
 
-Show the Technical Director assessment and Lead Programmer verdict side by side.
+**Input:** React dashboard requirements
+**Output:** Frontend-only architecture with component design, state (Zustand), routing (React Router), styling (Tailwind), build (Vite)
 
-Use `AskUserQuestion` — "Technical Director and Lead Programmer have reviewed the architecture. How would you like to proceed?"
-Options: `Accept — proceed to handoff` / `Revise flagged items first` / `Discuss specific concerns`
+### Scenario 2: Backend API Service
 
-**Step 4 — Record sign-off in the architecture document:**
+**Input:** REST API requirements for mobile app
+**Output:** Backend-only architecture with Express.js, PostgreSQL, Prisma, Redis caching, JWT auth
 
-Update the Document Status section:
+### Scenario 3: Fullstack E-commerce Platform
+
+**Input:** Comprehensive e-commerce requirements
+**Output:** Fullstack architecture with Next.js, tRPC, PostgreSQL, Stripe integration, Vercel deployment
+
+### Scenario 4: Brownfield System Modernization
+
+**Input:** Legacy monolith + modernization requirements
+**Output:** Migration architecture with incremental microservices extraction, API gateway, strangler fig pattern
+
+**See:** `references/example-architectures.md` for complete examples
+
+---
+
+## Success Criteria
+
+An architecture is complete and ready for implementation when:
+
+### Documentation Completeness
+- ✅ Architecture document created at `docs/architecture.md`
+- ✅ All required sections present for project type:
+  - System Overview & Context
+  - Technology Stack (complete and justified)
+  - Deployment Architecture
+  - Security Architecture
+  - Architecture Decision Records (ADRs)
+  - Project-specific sections (Frontend/Backend/Fullstack)
+- ✅ Architecture diagrams included (minimum 1, recommended 2-3)
+- ✅ Technology stack fully documented with versions
+
+### Decision Quality
+- ✅ Minimum ADR count met:
+  - Simple (0-30): ≥3 ADRs
+  - Medium (31-60): ≥5 ADRs
+  - Complex (61-100): ≥10 ADRs
+- ✅ Each ADR includes:
+  - Context and problem statement
+  - Decision made
+  - Alternatives considered (minimum 2)
+  - Rationale with data/benchmarks
+  - Consequences (positive and negative)
+- ✅ Technology choices justified with alternatives
+
+### NFR Coverage
+- ✅ All Non-Functional Requirements addressed:
+  - Performance: Targets specified (e.g., p95 <500ms)
+  - Scalability: Growth projections and scaling plan
+  - Security: Auth, authorization, encryption, compliance
+  - Reliability: Availability target, redundancy, failover
+  - Maintainability: Testing strategy, code organization
+- ✅ NFRs mapped to concrete architecture decisions
+
+### Quality Gates
+- ✅ No critical gaps or missing sections
+- ✅ No contradictory decisions
+- ✅ Security considerations documented
+- ✅ Scalability approach defined
+- ✅ Deployment strategy clear
+- ✅ Cost implications considered
+
+### Validation Ready
+- ✅ Architecture can be validated with validate-architecture skill
+- ✅ Expected validation score ≥70
+- ✅ Ready for team review
+- ✅ Implementation-ready (developers can start coding)
+
+**Checklist:**
 ```
-- Technical Director Sign-Off: [date] — APPROVED / APPROVED WITH CONDITIONS
-- Lead Programmer Feasibility: FEASIBLE / CONCERNS ACCEPTED / REVISED
+[ ] Architecture document created
+[ ] All required sections present
+[ ] Minimum ADR count met
+[ ] Technologies justified
+[ ] NFRs addressed
+[ ] Diagrams included
+[ ] Security documented
+[ ] Deployment defined
+[ ] No critical gaps
+[ ] Validation score ≥70
 ```
 
-Show the proposed Document Status block inline, then use `AskUserQuestion`:
-- "May I update the Document Status section with the sign-off results?"
-  - [A] Yes — apply to `docs/architecture/architecture.md`
-  - [B] Not yet — I want to revisit the concerns first
+---
+
+## Best Practices
+
+1. **Start with requirements** - Architecture follows requirements, not the reverse
+2. **Consider alternatives** - Evaluate 3-5 options for major decisions
+3. **Document decisions** - Every significant choice becomes an ADR
+4. **Think long-term** - Consider maintenance, scaling, team growth
+5. **Be pragmatic** - Choose appropriate tools, not trendy ones
+6. **Address NFRs explicitly** - Don't assume performance/security
+7. **Plan for failure** - Include error handling, monitoring, resilience
+8. **Keep it readable** - Architecture doc is for humans, not just completeness
 
 ---
 
-## Phase 8: Handoff
+## Reference Files
 
-**Step 1 — Update session state**: Write a summary to `production/session-state/active.md` covering: artifact written, TD/LP sign-off verdicts, any blockers, required ADRs remaining, and next step.
-
-**Step 2 — Output the handoff** using exactly this template (no freeform prose, no rephrasing of section titles):
-
----
-
-## Architecture Complete
-
-`docs/architecture/architecture.md` v1.0 — [TD verdict: APPROVED / APPROVED WITH CONCERNS / CONCERNS]. [One sentence on what the architecture covers.]
-
----
-
-## Run These ADRs Next
-
-**1. `/architecture-decision "[Title]"` → ADR-[XXXX]**
-[One sentence: what it defines and what it unblocks.]
-
-**2. `/architecture-decision "[Title]"` → ADR-[XXXX]**
-[One sentence.]
-
-**3. `/architecture-decision "[Title]"` → ADR-[XXXX]**
-[One sentence.]
-
-List top 3 from Phase 6 in priority order. If fewer than 3 remain, list only what's outstanding.
+- `references/requirements-analysis-guide.md` - Requirement extraction techniques
+- `references/project-type-patterns.md` - Project type detection criteria
+- `references/complexity-assessment.md` - Detailed complexity scoring
+- `references/patterns-catalog.md` - Complete architectural patterns library
+- `references/technology-decision-framework.md` - Tech evaluation matrices
+- `references/templates.md` - Architecture document templates
+- `references/adr-examples.md` - ADR examples by domain
+- `references/nfr-architecture-mapping.md` - NFR to architecture mapping
+- `references/example-architectures.md` - Complete architecture examples
 
 ---
 
-## Gate-Check Readiness
+## When to Escalate
 
-> **Required before `/gate-check [stage]`:**
-> - [ ] Accept ADRs: [list Proposed ADR IDs that must be Accepted]
-> - [ ] Write ADRs: [list ADR IDs that must still be written]
-> - [ ] Run `/test-setup` — scaffolds `tests/unit/`, `tests/integration/`, CI workflow, and an example test file
-> - [ ] Run `/ux-design` — creates `design/ux/interaction-patterns.md` and `design/accessibility-requirements.md`
->
-> Run `/gate-check [stage]` when all boxes are checked.
-
-If nothing is blocking, write instead:
-> No blockers — run `/gate-check [stage]` now.
+Escalate to user when:
+- Requirements are insufficient or contradictory
+- Conflicting NFRs (e.g., cost vs. performance)
+- Missing critical information (user scale, data volume unknown)
+- Highly complex system (score >80) requires expert input
+- Compliance requirements (HIPAA, PCI-DSS, SOC2) need legal review
+- Technology choices have significant business impact
+- Budget constraints eliminate viable options
 
 ---
 
-## Open Questions to Watch
-
-| ID | Summary | Priority | Resolution Path |
-|----|---------|----------|-----------------|
-| QQ-XX | [short description] | High / Medium / Low | [ADR or system that resolves it] |
-
-Omit this section entirely if there are no open QQs.
-
----
-
-(End of handoff. Do not add trailing commentary after the closing rule.)
-
----
-
-## Collaborative Protocol
-
-This skill follows the collaborative design principle at every phase:
-
-1. **Load context silently** — do not narrate file reads
-2. **Present findings** — show the knowledge gap inventory and layer proposals
-3. **Ask before deciding** — present options for each architectural choice
-4. **Draft before approval** — show the content inline before asking to write it.
-   Never ask approval for a section the user has not yet seen.
-5. **Use `AskUserQuestion` for write approvals** — plain text "May I?" is not
-   sufficient. Use the structured tool with labeled options [A]/[B]/[C] (write now /
-   show full draft first / not yet). For multi-file changesets, list every file
-   and what changes, then ask once grouped — not separate plain-text asks per file.
-6. **Incremental writing** — write each approved section immediately; do not
-   accumulate everything and write at the end. This survives session crashes.
-
-Never make a binding architectural decision without user input. If the user is
-unsure, present 2-4 options with pros/cons before asking them to decide.
-
----
-
-## Recommended Next Steps
-
-- Run `/architecture-decision [title]` for each required ADR listed in Phase 6 — Foundation layer ADRs first
-- Run `/architecture-review` — bootstraps the Requirements Traceability Matrix and TR registry from the ADRs just written. Required before the Pre-Production gate.
-- Run `/test-setup` to scaffold `tests/unit/`, `tests/integration/`, CI workflow, and an example test (required for gate-check)
-- Run `/ux-design` to initialize `design/ux/interaction-patterns.md` and `design/accessibility-requirements.md` (required for gate-check)
-- Run `/create-control-manifest` once the required ADRs are written to produce the layer rules manifest
-- Run `/gate-check pre-production` when all required ADRs, `/test-setup`, and `/ux-design` are complete
+*Part of BMAD Enhanced Planning Suite*

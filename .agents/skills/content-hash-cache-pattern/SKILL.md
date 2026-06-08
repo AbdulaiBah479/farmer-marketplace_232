@@ -1,25 +1,46 @@
 ---
 name: content-hash-cache-pattern
-description: Cache expensive file processing results using SHA-256 content hashes — path-independent, auto-invalidating, with service layer separation.
-origin: ECC
+description: "Use when caching expensive file processing results. SHA-256 content-hash keying with frozen CacheEntry and service layer wrapper."
+license: MIT
+metadata:
+  author: shimo4228
+  version: "1.0"
+  extracted: "2026-02-10"
 ---
 
 # Content-Hash File Cache Pattern
+# コンテンツハッシュキャッシュパターン
 
-Cache expensive file processing results (PDF parsing, text extraction, image analysis) using SHA-256 content hashes as cache keys. Unlike path-based caching, this approach survives file moves/renames and auto-invalidates when content changes.
+**Extracted / 抽出日:** 2026-02-10
+**Context / コンテキスト:** ファイル処理結果をSHA-256ハッシュでキャッシュし、サービス層でラップするパターン
 
-## When to Activate
+---
 
-- Building file processing pipelines (PDF, images, text extraction)
-- Processing cost is high and same files are processed repeatedly
-- Need a `--cache/--no-cache` CLI option
-- Want to add caching to existing pure functions without modifying them
+## Problem / 課題
 
-## Core Pattern
+ファイル処理（PDF解析、テキスト抽出等）は時間がかかるが、同じファイルの再処理は無駄：
+
+```python
+# WRONG: 毎回フルパイプライン実行
+def process_file(path: Path) -> Result:
+    return expensive_extraction(path)  # Always re-runs
+
+# WRONG: パスベースキャッシュ（ファイル移動で無効化）
+cache = {"/path/to/file.pdf": result}  # Path changes → cache miss
+
+# WRONG: 既存関数にキャッシュパラメータ追加（SRP違反）
+def extract_text(path, *, cache_enabled=False, cache_dir=None):
+    if cache_enabled:  # Extraction function now has cache responsibility
+        ...
+```
+
+---
+
+## Solution / 解決策
 
 ### 1. Content-Hash Based Cache Key
 
-Use file content (not path) as the cache key:
+ファイルパスではなくファイル内容のSHA-256ハッシュをキーに使う：
 
 ```python
 import hashlib
@@ -41,7 +62,7 @@ def compute_file_hash(path: Path) -> str:
     return sha256.hexdigest()
 ```
 
-**Why content hash?** File rename/move = cache hit. Content change = automatic invalidation. No index file needed.
+**利点:** ファイル移動・リネームでもキャッシュヒット、内容変更で自動無効化
 
 ### 2. Frozen Dataclass for Cache Entry
 
@@ -55,47 +76,54 @@ class CacheEntry:
     document: ExtractedDocument  # The cached result
 ```
 
-### 3. File-Based Cache Storage
+### 3. JSON Serialization of Frozen Dataclasses
 
-Each cache entry is stored as `{hash}.json` — O(1) lookup by hash, no index file required.
+`dataclasses.asdict()` はネストしたfrozen dataclassで問題が起きるため、手動マッピング：
 
 ```python
 import json
 from typing import Any
 
-def write_cache(cache_dir: Path, entry: CacheEntry) -> None:
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    cache_file = cache_dir / f"{entry.file_hash}.json"
-    data = serialize_entry(entry)
-    cache_file.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+def _serialize_entry(entry: CacheEntry) -> dict[str, Any]:
+    """Manual mapping for full control over serialized format."""
+    doc = entry.document
+    return {
+        "file_hash": entry.file_hash,
+        "source_path": entry.source_path,
+        "document": {
+            "text": doc.text,
+            "chunks": list(doc.chunks),  # tuple → list for JSON
+            "file_type": doc.file_type,
+            # ... other fields
+        },
+    }
 
-def read_cache(cache_dir: Path, file_hash: str) -> CacheEntry | None:
-    cache_file = cache_dir / f"{file_hash}.json"
-    if not cache_file.is_file():
-        return None
-    try:
-        raw = cache_file.read_text(encoding="utf-8")
-        data = json.loads(raw)
-        return deserialize_entry(data)
-    except (json.JSONDecodeError, ValueError, KeyError):
-        return None  # Treat corruption as cache miss
+def _deserialize_entry(data: dict[str, Any]) -> CacheEntry:
+    doc_data = data["document"]
+    document = ExtractedDocument(
+        text=doc_data["text"],
+        chunks=tuple(doc_data["chunks"]),  # list → tuple
+        file_type=doc_data["file_type"],
+    )
+    return CacheEntry(
+        file_hash=data["file_hash"],
+        source_path=data["source_path"],
+        document=document,
+    )
 ```
 
 ### 4. Service Layer Wrapper (SRP)
 
-Keep the processing function pure. Add caching as a separate service layer.
+**純粋な処理関数を変更せず**、サービス層でキャッシュロジックをラップ：
 
 ```python
-def extract_with_cache(
-    file_path: Path,
-    *,
-    cache_enabled: bool = True,
-    cache_dir: Path = Path(".cache"),
-) -> ExtractedDocument:
-    """Service layer: cache check -> extraction -> cache write."""
-    if not cache_enabled:
+# service.py — cache wrapper
+def extract_with_cache(file_path: Path, *, config: AppConfig) -> ExtractedDocument:
+    """Service layer: cache check → extraction → cache write."""
+    if not config.cache_enabled:
         return extract_text(file_path)  # Pure function, no cache knowledge
 
+    cache_dir = Path(config.cache_dir)
     file_hash = compute_file_hash(file_path)
 
     # Check cache
@@ -104,7 +132,7 @@ def extract_with_cache(
         logger.info("Cache hit: %s (hash=%s)", file_path.name, file_hash[:12])
         return cached.document
 
-    # Cache miss -> extract -> store
+    # Cache miss → extract → store
     logger.info("Cache miss: %s (hash=%s)", file_path.name, file_hash[:12])
     doc = extract_text(file_path)
     entry = CacheEntry(file_hash=file_hash, source_path=str(file_path), document=doc)
@@ -112,50 +140,54 @@ def extract_with_cache(
     return doc
 ```
 
-## Key Design Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| SHA-256 content hash | Path-independent, auto-invalidates on content change |
-| `{hash}.json` file naming | O(1) lookup, no index file needed |
-| Service layer wrapper | SRP: extraction stays pure, cache is a separate concern |
-| Manual JSON serialization | Full control over frozen dataclass serialization |
-| Corruption returns `None` | Graceful degradation, re-processes on next run |
-| `cache_dir.mkdir(parents=True)` | Lazy directory creation on first write |
-
-## Best Practices
-
-- **Hash content, not paths** — paths change, content identity doesn't
-- **Chunk large files** when hashing — avoid loading entire files into memory
-- **Keep processing functions pure** — they should know nothing about caching
-- **Log cache hit/miss** with truncated hashes for debugging
-- **Handle corruption gracefully** — treat invalid cache entries as misses, never crash
-
-## Anti-Patterns to Avoid
+### 5. Graceful Corruption Handling
 
 ```python
-# BAD: Path-based caching (breaks on file move/rename)
-cache = {"/path/to/file.pdf": result}
-
-# BAD: Adding cache logic inside the processing function (SRP violation)
-def extract_text(path, *, cache_enabled=False, cache_dir=None):
-    if cache_enabled:  # Now this function has two responsibilities
-        ...
-
-# BAD: Using dataclasses.asdict() with nested frozen dataclasses
-# (can cause issues with complex nested types)
-data = dataclasses.asdict(entry)  # Use manual serialization instead
+def read_cache(cache_dir: Path, file_hash: str) -> CacheEntry | None:
+    cache_file = cache_dir / f"{file_hash}.json"
+    if not cache_file.is_file():
+        return None
+    try:
+        raw = cache_file.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        return _deserialize_entry(data)
+    except (json.JSONDecodeError, ValueError, KeyError):
+        logger.warning("Corrupted cache entry: %s", cache_file)
+        return None  # Treat corruption as cache miss
 ```
 
-## When to Use
+---
 
-- File processing pipelines (PDF parsing, OCR, text extraction, image analysis)
-- CLI tools that benefit from `--cache/--no-cache` options
-- Batch processing where the same files appear across runs
-- Adding caching to existing pure functions without modifying them
+## Key Design Choices / 設計上のポイント
 
-## When NOT to Use
+| Choice / 選択 | Reason / 理由 |
+|-------|--------|
+| SHA-256 content hash | Path-independent, auto-invalidates on content change |
+| `{hash}.json` file naming | O(1) lookup, no index file needed |
+| Service layer wrapper | SRP: extraction stays pure, cache is separate concern |
+| Manual JSON serialization | Full control over frozen dataclass serialization |
+| Corruption → None | Graceful degradation, re-extracts on next run |
+| `cache_dir.mkdir(parents=True)` | Lazy directory creation on first write |
 
-- Data that must always be fresh (real-time feeds)
-- Cache entries that would be extremely large (consider streaming instead)
-- Results that depend on parameters beyond file content (e.g., different extraction configs)
+---
+
+## When to Use / 使用すべき場面
+
+- ファイル処理パイプライン（PDF解析、画像処理、テキスト抽出）
+- 処理コストが高く、同一ファイルの再処理が頻繁な場合
+- CLI ツールで `--cache/--no-cache` オプションが必要な場合
+- 既存の純粋関数にキャッシュを追加する場合（SRP維持）
+
+## When NOT to Use / 使用すべきでない場面
+
+- リアルタイム更新が必要なデータ（常に最新が必要）
+- キャッシュエントリが非常に大きい場合（メモリ/ディスク圧迫）
+- 処理結果がファイル内容以外のパラメータに依存する場合（設定変更でキャッシュ無効化が必要）
+
+---
+
+## Related Patterns / 関連パターン
+
+- `python-immutable-accumulator.md` — frozen dataclass + slotsパターン
+- `backward-compatible-frozen-extension.md` — frozen dataclass拡張
+- `cost-aware-llm-pipeline.md` — LLMパイプラインでのキャッシュ活用

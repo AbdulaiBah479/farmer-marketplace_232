@@ -1,97 +1,160 @@
 ---
-name: notifications
-description: View and manage sync notifications - import completions, discrepancies, sync failures. Filter by type and severity, show details, dismiss notifications.
+name: Notifications
+description: Push notifications and in-app alerts
 ---
 
-# Notifications Command
+# Notifications
 
-View and manage sync notifications - import completions, discrepancies, sync failures, and more.
+## Setup
 
-## Usage
+```typescript
+import * as Notifications from 'expo-notifications';
 
-```bash
-/sw:notifications                     # List pending notifications
-/sw:notifications --all               # Include dismissed notifications
-/sw:notifications --type sync-failure # Filter by type
-/sw:notifications --severity warning  # Filter by severity
-/sw:notifications show <id>           # Show notification details
-/sw:notifications dismiss <id>        # Dismiss a notification
-/sw:notifications dismiss-all         # Dismiss all pending notifications
+// Configure handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 ```
 
-## Arguments
+## Request Permissions
 
-- `--all`: Include dismissed notifications in the list
-- `--type <type>`: Filter by notification type:
-  - `import-complete`: Import job finished
-  - `discrepancy`: Code-spec discrepancy detected
-  - `sync-failure`: Sync operation failed
-  - `drift`: Status drift detected
-  - `job-complete`: Scheduled job finished
-- `--severity <level>`: Filter by severity: `info`, `warning`, `critical`
-- `--json`: Output as JSON for scripting
-
-## Subcommands
-
-### list (default)
-
-Lists notifications with severity emoji, title, and age.
-
-```
-📬 PENDING NOTIFICATIONS (3)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-notif-abc123   ❗ CRITICAL   GitHub sync failed           2m ago
-notif-def456   ⚠️ WARNING    2 discrepancies in FS-045    1h ago
-notif-ghi789   ℹ️ INFO       107 items imported           3h ago
-
-Use '/sw:notifications show <id>' to view details
-Use '/sw:notifications dismiss <id>' to dismiss
+```typescript
+async function requestPermissions() {
+  const { status } = await Notifications.requestPermissionsAsync();
+  return status === 'granted';
+}
 ```
 
-### show <id>
+## Local Notifications
 
-Shows full notification details including data payload.
+```typescript
+// Schedule immediate notification
+await Notifications.scheduleNotificationAsync({
+  content: {
+    title: 'New Chapter',
+    body: 'Manga X has a new chapter!',
+    data: { mangaId: '123', type: 'new_chapter' },
+  },
+  trigger: null, // Immediate
+});
 
-```
-📬 NOTIFICATION DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Schedule delayed notification
+await Notifications.scheduleNotificationAsync({
+  content: {
+    title: 'Reminder',
+    body: 'Continue reading...',
+  },
+  trigger: { seconds: 3600 }, // 1 hour
+});
 
-ID:        notif-abc123
-Type:      sync-failure
-Severity:  ❗ critical
-Title:     GitHub sync failed
-Message:   Rate limit exceeded. Retry in 15 minutes.
-Created:   2025-12-01 12:00:00 (2m ago)
-
-Data:
-  platform: github
-  error: Rate limit exceeded
-  retryAfter: 900
-```
-
-### dismiss <id>
-
-Dismisses a single notification.
-
-```
-✅ Dismissed notification notif-abc123
-
-Remaining: 2 pending notifications
+// Cancel all
+await Notifications.cancelAllScheduledNotificationsAsync();
 ```
 
-### dismiss-all
+## Notification Listeners
 
-Dismisses all pending notifications with confirmation.
+```typescript
+useEffect(() => {
+  // Notification received while app is open
+  const receivedSub = Notifications.addNotificationReceivedListener(
+    (notification) => {
+      console.log('Received:', notification);
+    }
+  );
 
+  // User tapped notification
+  const responseSub = Notifications.addNotificationResponseReceivedListener(
+    (response) => {
+      const data = response.notification.request.content.data;
+      if (data.type === 'new_chapter') {
+        navigation.navigate('MangaDetail', { mangaId: data.mangaId });
+      }
+    }
+  );
+
+  return () => {
+    receivedSub.remove();
+    responseSub.remove();
+  };
+}, []);
 ```
-⚠️ This will dismiss 3 pending notifications.
-Proceed? [y/N]: y
 
-✅ Dismissed 3 notifications
+## Notification Service
+
+```typescript
+// services/notificationService.ts
+import * as Notifications from 'expo-notifications';
+
+export const notificationService = {
+  async notifyNewChapter(manga: Manga, chapter: Chapter) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: manga.title,
+        body: `Chapter ${chapter.chapNum} is available`,
+        data: { mangaId: manga.id, chapterId: chapter.id },
+      },
+      trigger: null,
+    });
+  },
+
+  async notifyDownloadComplete(manga: Manga, chapterCount: number) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Download Complete',
+        body: `${manga.title} - ${chapterCount} chapters`,
+        data: { mangaId: manga.id, type: 'download' },
+      },
+      trigger: null,
+    });
+  },
+};
 ```
 
-## Related
+## Progress Notifications (Android)
 
-- `/sw:sync-monitor`: Dashboard showing notification summary
-- `/sw:discrepancies`: View and act on discrepancy notifications
+```typescript
+// For download progress, use BackgroundService notifications
+import BackgroundService from 'react-native-background-actions';
+
+await BackgroundService.updateNotification({
+  taskTitle: 'Downloading',
+  taskDesc: `${current}/${total} pages`,
+  progressBar: { max: total, value: current },
+});
+```
+
+## Badge Count
+
+```typescript
+// Set badge
+await Notifications.setBadgeCountAsync(5);
+
+// Clear badge
+await Notifications.setBadgeCountAsync(0);
+
+// Get badge
+const count = await Notifications.getBadgeCountAsync();
+```
+
+## App Config
+
+```json
+// app.json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FA6432"
+        }
+      ]
+    ]
+  }
+}
+```

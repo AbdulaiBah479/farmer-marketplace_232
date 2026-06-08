@@ -1,6 +1,6 @@
 ---
 name: frontend-ui-engineering
-description: Builds production-quality UIs. Use when building or modifying user-facing interfaces. Use when creating components, implementing layouts, managing state, or when the output needs to look and feel production-quality rather than AI-generated.
+description: Use when building or modifying user-facing interfaces. Use when creating components, implementing layouts, managing state, or when the output needs to look and feel production-quality rather than AI-generated.
 ---
 
 # Frontend UI Engineering
@@ -119,16 +119,16 @@ Global store (Zustand, Redux)    → Complex client state shared app-wide
 
 AI-generated UI has recognizable patterns. Avoid all of them:
 
-| AI Default | Why It Is a Problem | Production Quality |
-|---|---|---|
-| Purple/indigo everything | Models default to visually "safe" palettes, making every app look identical | Use the project's actual color palette |
-| Excessive gradients | Gradients add visual noise and clash with most design systems | Flat or subtle gradients matching the design system |
-| Rounded everything (rounded-2xl) | Maximum rounding signals "friendly" but ignores the hierarchy of corner radii in real designs | Consistent border-radius from the design system |
-| Generic hero sections | Template-driven layout with no connection to the actual content or user need | Content-first layouts |
-| Lorem ipsum-style copy | Placeholder text hides layout problems that real content reveals (length, wrapping, overflow) | Realistic placeholder content |
-| Oversized padding everywhere | Equal generous padding destroys visual hierarchy and wastes screen space | Consistent spacing scale |
-| Stock card grids | Uniform grids are a layout shortcut that ignores information priority and scanning patterns | Purpose-driven layouts |
-| Shadow-heavy design | Layered shadows add depth that competes with content and slows rendering on low-end devices | Subtle or no shadows unless the design system specifies |
+| AI Default | Production Quality |
+|---|---|
+| Purple/indigo everything | Use the project's actual color palette |
+| Excessive gradients | Flat or subtle gradients matching the design system |
+| Rounded everything (rounded-2xl) | Consistent border-radius from the design system |
+| Generic hero sections | Content-first layouts |
+| Lorem ipsum-style copy | Realistic placeholder content |
+| Oversized padding everywhere | Consistent spacing scale |
+| Stock card grids | Purpose-driven layouts |
+| Shadow-heavy design | Subtle or no shadows unless the design system specifies |
 
 ### Spacing and Layout
 
@@ -173,13 +173,7 @@ Every component must meet these standards:
 <button onClick={handleClick}>Click me</button>        // ✓ Focusable by default
 <div onClick={handleClick}>Click me</div>               // ✗ Not focusable
 <div role="button" tabIndex={0} onClick={handleClick}    // ✓ But prefer <button>
-     onKeyDown={e => {
-       if (e.key === 'Enter') handleClick();
-       if (e.key === ' ') e.preventDefault();
-     }}
-     onKeyUp={e => {
-       if (e.key === ' ') handleClick();
-     }}>
+     onKeyDown={e => e.key === 'Enter' && handleClick()}>
   Click me
 </div>
 ```
@@ -291,10 +285,6 @@ function useToggleTask() {
   });
 }
 ```
-
-## See Also
-
-For detailed accessibility requirements and testing tools, see `references/accessibility-checklist.md`.
 
 ## Common Rationalizations
 

@@ -1,16 +1,36 @@
 ---
 name: invariant-guard
-description: "Correctness-first: forces writing the function contract, loop invariant, termination argument, and edge cases BEFORE code. Catches Boyer-Moore, leftmost binary search, QuickSelect traps."
-risk: safe
-source: community
-source_repo: morsechimwai/lemmaly
-source_type: community
-date_added: "2026-05-26"
-author: morsechimwai
-tags: [algorithms, correctness, loop-invariants, contracts, edge-cases, verification]
-tools: [claude-code, antigravity, cursor, gemini-cli, codex-cli]
-license: "Apache-2.0"
-license_source: "https://github.com/morsechimwai/lemmaly/blob/main/LICENSE"
+description: Use when writing or reviewing algorithms where the obvious implementation is subtly wrong — postcondition stronger than the loop's natural invariant (Boyer–Moore majority, Floyd cycle, leftmost vs any binary search, QuickSelect partition); in-place mutation with read+write pointers (dedup-in-place, partition, rotate); recursion with multiple parameters or accumulator state; off-by-one suspects with duplicates, empty inputs, boundary values; iterative refinements that must terminate (fixed-point, Newton, EM); any function where you catch yourself thinking "I know this algorithm" — the trap is usually in the contract, not the loop body. Forces writing the function contract (especially the postcondition) and loop invariant BEFORE code. Pairs with lemmaly (picks the algorithm) and mathguard (picks the math).
+metadata:
+  priority: 2
+  role: correctness
+  pathPatterns:
+    - '**/*.{js,jsx,ts,tsx,mjs,cjs}'
+    - '**/*.py'
+    - '**/*.go'
+    - '**/*.rs'
+    - '**/*.java'
+    - '**/*.kt'
+    - '**/*.cs'
+    - '**/*.{cpp,cc,cxx,hpp,hh,hxx}'
+    - '**/*.php'
+    - '**/*.rb'
+    - '**/*.{sh,bash}'
+  chainTo:
+    - skill: lemmaly
+      when: 'algorithm choice is unsettled — pick the family first, then prove it'
+    - skill: mathguard
+      when: 'invariants involve ε-bounds (approximate / randomized algorithms)'
+  retrieval:
+    aliases:
+      - loop-invariants
+      - correctness-first
+      - postcondition-first
+    intents:
+      - prove the algorithm is correct
+      - write loop invariants
+      - handle edge cases
+      - off-by-one safety
 ---
 
 # invariant-guard — Correctness-First Coding
@@ -20,19 +40,6 @@ The model knows what a loop invariant is. It knows recursion needs a base case. 
 invariant-guard fixes the behavior. State the invariants. State the base case. State the termination argument. State the edge cases. Then write the code — and verify that the code maintains what you stated.
 
 **Violating the letter of these rules is violating the spirit of the skill.** "I know this algorithm" is the exact rationalization that ships off-by-one and missing-postcondition bugs.
-
-## When to Use This Skill
-
-Use **invariant-guard** when writing or reviewing algorithms where the obvious implementation is subtly wrong:
-
-- Postcondition stronger than the loop's natural invariant: Boyer–Moore majority, Floyd's cycle detection, leftmost vs any binary search, QuickSelect partition.
-- In-place mutation with read+write pointers: dedup-in-place, partition, rotate.
-- Recursion with multiple parameters or accumulator state.
-- Off-by-one suspects with duplicates, empty inputs, boundary values.
-- Iterative refinements that must terminate: fixed-point, Newton, EM.
-- Any function where you catch yourself thinking "I know this algorithm" — the trap is usually in the contract, not the loop body.
-
-Pairs with `lemmaly` (picks the algorithm) and `mathguard` (picks the math). Load `invariant-guard` *after* the algorithm has been chosen and *before* the loop body is written.
 
 ## The Iron Law
 
@@ -104,7 +111,7 @@ If any of 1–6 is missing, do not emit code.
 
 ## Worked trap — Boyer–Moore majority vote
 
-This is the canonical "the trap is in the contract, not the loop body" case.
+This is the canonical "the trap is in the contract, not the loop body" case. Every step of the protocol either catches the bug or fails to — observe which.
 
 **Naive baseline (what gets shipped without the skill):**
 
@@ -167,14 +174,14 @@ Most "I know binary search" implementations are written for "find any match." Th
 
 **Problem.** Given a sorted array with duplicates, return the index of the **leftmost** occurrence of `target`, or `-1`.
 
-### Without the protocol — returns any match
+<Bad>
 
 ```ts
 function leftmost(a: number[], target: number): number {
   let lo = 0, hi = a.length - 1;
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
-    if (a[mid] === target) return mid;       // returns ANY occurrence
+    if (a[mid] === target) return mid;       // ❌ returns ANY occurrence
     if (a[mid] < target) lo = mid + 1; else hi = mid - 1;
   }
   return -1;
@@ -182,9 +189,11 @@ function leftmost(a: number[], target: number): number {
 // leftmost([1,2,2,2,3], 2) → may return 2, not 1
 ```
 
-The loop invariant ("target lies in `a[lo..hi]` if anywhere") is satisfied. But the postcondition ("returned index is the *smallest* `i` with `a[i] === target`") is strictly stronger. The loop body's early return abandons the search before reaching the leftmost.
+The loop invariant ("target lies in a[lo..hi] if anywhere") is satisfied. But the postcondition ("returned index is the *smallest* i with a[i] === target") is strictly stronger. The loop body's early return abandons the search before reaching the leftmost.
 
-### With the protocol — contract-driven leftmost
+</Bad>
+
+<Good>
 
 ```ts
 function leftmost(a: number[], target: number): number {
@@ -202,6 +211,8 @@ function leftmost(a: number[], target: number): number {
   return lo < a.length && a[lo] === target ? lo : -1;
 }
 ```
+
+</Good>
 
 Same loop shape. The difference is the contract was written first — and the loop body was chosen to maintain an invariant that *implies* the postcondition.
 
@@ -246,11 +257,13 @@ Code you emit must:
 
 ## When to escalate or redirect
 
-- The function is performance-critical and you have not picked the algorithm — go back to **`lemmaly`** first; pick the algorithm, then state its invariants here.
-- The technique is mathematical (probabilistic, FFT, geometry) — load **`mathguard`**; invariants for approximate algorithms include ε-bounds, not equality.
+- The function is performance-critical and you have not picked the algorithm — go back to **lemmaly** first; pick the algorithm, then state its invariants here.
+- The technique is mathematical (probabilistic, FFT, geometry) — load **mathguard**; invariants for approximate algorithms include ε-bounds, not equality.
 - The code is concurrent — invariants must account for interleaving; explicitly state "single-threaded only" if that is the assumption.
 
 ## Rationalizations to watch for
+
+These are real verbatim thoughts captured from a controlled test where confidence in a "well-known algorithm" caused the model to ship a Boyer–Moore implementation that was wrong on `[1,2,3]` and `[2,2,1,1]`:
 
 | Excuse | Reality |
 | --- | --- |
@@ -260,6 +273,8 @@ Code you emit must:
 | "Tests will catch it." | Tests catch the examples you thought of. The trap is the example you did not. Postconditions catch all examples. |
 | "The postcondition is implied." | If it were, the natural loop invariant would equal it. When they differ (Boyer–Moore, leftmost search, QuickSelect), you need a second pass, an extra check, or auxiliary state. |
 | "Adding a verification pass feels redundant." | Boyer–Moore voting + verification is still O(n). "Feels redundant" is the rationalization that ships the bug. |
+
+If any of these sound familiar mid-thought: stop, write the contract and the invariant, check that one implies the other.
 
 ## Red flags — STOP and write the invariant first
 
@@ -272,6 +287,8 @@ Code you emit must:
 - About to silently swallow an error in the middle of a loop ("just continue").
 - Tests pass but you did not actually state what the function guarantees.
 - "It works on the examples I tried."
+
+All of these mean: stop, restart the eight-step protocol, write the invariant, then write the code.
 
 ## Verification checklist
 
@@ -288,20 +305,6 @@ Before claiming the function is correct:
 
 Cannot check every box? The code is example-correct, not behavior-correct. Either fill the gap or downgrade the function's claimed contract.
 
-## Limitations
-
-- **Not an automated prover.** invariant-guard requires the author to *write* invariants; it does not mechanically check them. Pair with property-based tests for stronger evidence.
-- **Concurrency is out of scope by default.** Stated invariants assume single-threaded execution unless explicitly extended; multi-threaded reasoning needs additional happens-before / linearizability arguments.
-- **Float and overflow edge cases are language-specific.** The edge-case table is a checklist, not a substitute for understanding your language's numeric semantics.
-- **Will slow down trivial code.** For one-liners that obviously cannot fail, the protocol is overhead; reserve it for non-trivial loops, recursion, and in-place mutation.
-- **Documentation is the only enforcement.** If the author skips writing the invariants, this skill cannot detect that — pair with code review or a PR template that asks for the contract.
-
 ## The thesis, in one line
 
 > **Tests verify examples. Invariants verify behavior. AI assistants ship example-correct, behavior-wrong code by default. invariant-guard makes them reason about behavior first.**
-
-## Related Skills
-
-- `lemmaly` — algorithm choice must be settled before invariants; load lemmaly first if the algorithm family is unclear.
-- `mathguard` — ε-bounded postconditions for approximate / randomized algorithms.
-- `complexity-cuts` — if 3+ optimization transformations have failed tests, the bug is a missing contract, not a missing optimization — escalate here.

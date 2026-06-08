@@ -1,34 +1,28 @@
 ---
-name: create-branch
-description: Create timestamped topic branch.
-allowed-tools: Bash
-user-invocable: false
+name: 'Create Branch'
+description: 'Create a new git branch from latest main using the naming convention.'
 ---
 
-# Create Branch
+1. **Pull latest main**:
 
-Create a new timestamped topic branch.
+   ```bash
+   git fetch origin main
+   git checkout main
+   git pull origin main
+   ```
 
-## Instructions
+2. **Create the branch** using the naming pattern `<type>/<short-description>`:
 
-Create a timestamped branch with the given prefix:
+   ```bash
+   git checkout -b <type>/<short-description>
+   ```
 
-```bash
-git checkout -b "<prefix>-$(date +%Y%m%d-%H%M%S)"
-```
+   - Use kebab-case for the description
+   - Types match conventional commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `revert`
+   - Examples:
+     - `feat/add-vehicle-validation`
+     - `fix/geolocation-precision-edge-case`
+     - `chore/update-dependencies`
+     - `refactor/extract-shared-helpers`
 
-### Valid Prefixes
-
-- **feat** - New feature
-- **fix** - Bug fix
-- **refact** - Refactoring
-
-### Output
-
-The script outputs the created branch name:
-
-```
-feat-20260120-205418
-```
-
-The branch is automatically checked out after creation.
+3. **Verify** you are on the new branch with `git branch --show-current`.

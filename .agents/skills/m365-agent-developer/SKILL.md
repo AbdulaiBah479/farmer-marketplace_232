@@ -1,257 +1,213 @@
 ---
-name: M365 Agent Developer
-description: Expert in project scaffolding and lifecycle management for Microsoft 365 Copilot agents using the Agents Toolkit (ATK) CLI. **ALWAYS USE FIRST** when starting new agent projects. Use when (1) Creating/scaffolding new agent projects with 'atk new', (2) Setting up project structure and initial files, (3) Provisioning Azure resources with 'atk provision', (4) Deploying agents with 'atk deploy', (5) Packaging with 'atk package', (6) Publishing with 'atk publish', (7) Sharing agents, (8) Managing environments (.env files), (9) Troubleshooting ATK CLI or deployment issues. This skill handles PROJECT SETUP and TOOLING, not TypeSpec code implementation.
+name: m365-agent-developer
+description: Designs, implements, and deploys Microsoft 365 Copilot agents using TypeSpec and ATK CLI. Provides architectural guidance, capability configuration, security patterns, and lifecycle management. Use when developing M365 Copilot agents, working with TypeSpec, or managing agent deployments. For creating new projects, use the m365-agent-scaffolder skill.
+compatibility: Designed for Microsoft 365 Copilot agents development on developer platforms supporting Agent Skills.
 ---
 
-## Overview
+# M365 Agent Developer
 
-This skill provides comprehensive guidance on building and managing Microsoft 365 Copilot agents using the Agents Toolkit (ATK) CLI. You are an expert in the complete agent lifecycle: scaffolding projects, provisioning Azure resources, deploying agents, packaging for distribution, publishing to catalogs, and managing environments. ATK CLI is the primary toolchain for M365 agent development.
+This comprehensive skill provides expert guidance on the Microsoft 365 Copilot agent development lifecycle: from architectural design through TypeSpec implementation to deployment and publishing using the Agents Toolkit (ATK) CLI.
 
-## Core Competencies
+⚠️ **For creating new projects, use the m365-agent-scaffolder skill first** ⚠️
 
-### 1. ATK CLI Mastery
-- **Command Execution**: Always use `npx -p @microsoft/m365agentstoolkit-cli@latest atk <command>` for all operations
-- **Available Commands**: new, provision, deploy, package, publish, validate, share, doctor, auth, env, collaborator
-- **Environment Management**: Work across dev, staging, and production environments
-- **Version Control**: Always use @latest to ensure current version
+🚨 **CRITICAL DEPLOYMENT RULE** 🚨
+When using this skill to make edits to an agent, you MUST ALWAYS deploy the agent using `atk provision` before returning to the user. This ensures changes are immediately reflected in M365 Copilot. Never return to the user with undeployed changes.
 
-### 2. Project Lifecycle Management
+---
 
-**Project Creation:**
-- Create new declarative agents with TypeSpec or JSON
-- Set up project structure and configuration
-- Initialize environment files
+## When to Use This Skill
 
-**Provisioning:**
-- Create Azure resources for agent hosting
-- Generate M365 Title IDs
-- Configure environment-specific settings
-- Handle AGENT_SCOPE (personal vs shared)
+Use this skill when:
+- Designing the architecture for a new M365 Copilot agent
+- Implementing TypeSpec code for agent capabilities and API plugins
+- Configuring agent instructions and conversation starters
+- Provisioning and deploying agents using ATK CLI
+- Managing agent lifecycle across environments (dev, staging, production)
+- Reviewing existing agent architectures for best practices
+- Troubleshooting TypeSpec compilation or deployment issues
+- Adding new capabilities or API plugins to existing agents
+- Implementing security patterns and compliance requirements
+- Packaging and publishing agents for sharing
 
-**Deployment:**
-- Deploy agent code to Azure
-- Update manifests and configurations
-- Handle version bumping for shared agents
-- Test deployed agents
+Do NOT use this skill for creating new empty projects - use the `m365-agent-scaffolder` skill instead.
 
-**Packaging:**
-- Build app packages (.zip) for distribution
-- Validate package contents
-- Prepare for publishing
+## Key References
 
-**Publishing:**
-- Submit agents to Microsoft 365 catalog
-- Handle tenant admin approvals
-- Manage agent sharing (tenant-wide or specific users)
+- **[TypeSpec Best Practices](references/typespec-best-practices.md)** - Official TypeSpec patterns and best practices for M365 Copilot agents
+- **[Architectural Patterns and Frameworks](references/patterns-and-frameworks.md)** - Design patterns for agent architecture
+- **[API Plugins](references/api-plugins.md)** - Integration patterns and best practices for API plugins
+- **[Conversation Design](references/conversation-design.md)** - Instruction patterns and conversation starter best practices
+- **[Security Guidelines](references/security-guidelines.md)** - Security patterns, compliance frameworks, and credential management
+- **[Deployment](references/deployment.md)** - Complete ATK CLI workflows, environment management, and CI/CD patterns
+- **[Common Pitfalls](references/common-pitfalls.md)** - Anti-patterns and solutions in M365 Copilot agent development
+- **[Best Practices](references/best-practices.md)** - Comprehensive best practices for security, performance, testing, and more
+- **[Examples](references/examples.md)** - Common workflow examples and scripts
 
-### 3. Critical Rules & Best Practices
+---
 
-**ABSOLUTELY FORBIDDEN:**
-- ⛔ NEVER use .vscode/tasks.json tasks
-- ⛔ NEVER use shortened commands like `atk provision` without npx
-- ⛔ NEVER use `npx atk` (missing package name)
-- ⛔ NEVER use `npx @microsoft/m365agentstoolkit-cli atk` without @latest
+## Instructions
 
-**ALWAYS REQUIRED:**
-- ✅ Use full command: `npx -p @microsoft/m365agentstoolkit-cli@latest atk <command>`
-- ✅ Check AGENT_SCOPE before suggesting share commands
-- ✅ Bump version before re-provisioning shared agents with M365_TITLE_ID
-- ✅ Validate after every change
+Follow these step-by-step instructions when working with M365 Copilot agents:
 
-### 4. Workflows
+### Step 1: Understand the Requirements
 
-**Complete Deployment Workflow:**
+**Action:** Gather and analyze the agent requirements:
+- Identify the agent's primary purpose and target users
+- Determine required data sources (M365 services, external APIs)
+- List necessary actions the agent must perform
+- Identify security and compliance requirements
+
+**Why it's important:** Clear requirements drive architectural decisions and ensure the agent meets user needs.
+
+### Step 2: Design the Agent Architecture
+
+**Action:** Create a comprehensive architectural design:
+- Select deployment model (personal or shared)
+- Choose appropriate M365 capabilities with scoping
+- Design API plugin integrations if needed
+- Plan authentication and authorization strategy
+- Design conversation flow and instructions
+
+**Reference:** Follow the [Architectural Design](#architectural-design) section and [patterns-and-frameworks.md](references/patterns-and-frameworks.md)
+
+### Step 3: Implement TypeSpec Code
+
+**Action:** Write type-safe agent code using TypeSpec:
+- Define agent with `@agent` decorator
+- Configure capabilities with appropriate scoping
+- Implement API plugin actions with authentication
+- Write clear instructions and conversation starters
+- Document all models and operations with `@doc`
+
+**Reference:** Follow [TypeSpec Best Practices](references/typespec-best-practices.md) and official [typespec-decorators.md](https://raw.githubusercontent.com/MicrosoftDocs/m365copilot-docs/refs/heads/main/docs/typespec-decorators.md)
+
+**⚠️ IMPORTANT:** After making any edits to TypeSpec code, you MUST compile and deploy the agent (Steps 4-5) before returning to the user.
+
+### Step 4: Compile and Validate
+
+**Action:** Compile TypeSpec to validate the implementation:
 ```bash
-# 1. Validate
-npx -p @microsoft/m365agentstoolkit-cli@latest atk validate
+npm run compile
+```
 
-# 2. Provision (first time only)
+**Why it's important:** Compilation catches syntax errors and validates decorator usage before deployment.
+
+### Step 5: Provision Azure Resources
+
+**Action:** Provision required Azure resources and register the agent:
+```bash
+npx -p @microsoft/m365agentstoolkit-cli@latest atk provision --env local
+```
+
+**Result:** Returns a test URL like `https://m365.cloud.microsoft/chat/?titleId=U_abc123xyz`
+
+### Step 6: Test and Iterate
+
+**Action:** Test the agent in Microsoft 365 Copilot:
+- Use the provisioned test URL
+- Test all conversation starters
+- Verify capability access and scoping
+- Test error handling and edge cases
+- Validate security controls
+
+### Step 7: Deploy to Environments
+
+**Action:** Deploy to staging/production environments:
+```bash
+npx -p @microsoft/m365agentstoolkit-cli@latest atk provision --env prod
+```
+
+**Reference:** Follow [deployment.md](references/deployment.md) for environment management and CI/CD patterns
+
+### Step 8: Package and Share
+
+**Action:** Package and share the agent:
+```bash
+# Package the agent
 npx -p @microsoft/m365agentstoolkit-cli@latest atk provision --env dev
 
-# 3. Deploy (if backend code exists)
-npx -p @microsoft/m365agentstoolkit-cli@latest atk deploy --env dev
-
-# 4. Package
-npx -p @microsoft/m365agentstoolkit-cli@latest atk package --env dev
-
-# 5. Share (only if AGENT_SCOPE=shared)
-npx -p @microsoft/m365agentstoolkit-cli@latest atk share --scope tenant --env dev -i false
-
-# 6. Publish (optional - for app store)
-npx -p @microsoft/m365agentstoolkit-cli@latest atk publish --env dev
+# Share to tenant (for shared agents)
+npx -p @microsoft/m365agentstoolkit-cli@latest atk share --scope tenant --env dev
 ```
 
-**Update Workflow:**
-```bash
-# For code changes only
-npx -p @microsoft/m365agentstoolkit-cli@latest atk deploy --env dev
+**Reference:** See [deployment.md](references/deployment.md) for sharing strategies
 
-# For manifest changes
-npx -p @microsoft/m365agentstoolkit-cli@latest atk package --env dev
-npx -p @microsoft/m365agentstoolkit-cli@latest atk publish --env dev
-```
+---
 
-**New Project Workflow:**
-```bash
-# 1. Create project
-npx -p @microsoft/m365agentstoolkit-cli@latest atk new -n my-agent -c declarative-agent -with-plugin type-spec -i false
+## Critical Workflow Rules
 
-# 2. Navigate into project
-cd my-agent
-```
+### Always Deploy After Edits
 
-### 5. Version Management for Shared Agents
+**RULE:** When making any changes to an agent (TypeSpec code, instructions, capabilities, API plugins), you MUST complete the following workflow before returning to the user:
 
-**CRITICAL: Before re-provisioning a shared agent:**
+1. Compile the TypeSpec code: `npm run compile`
+2. Provision/deploy the agent: `npx -p @microsoft/m365agentstoolkit-cli@latest atk provision --env local`
+3. Confirm deployment succeeded and provide the test URL
 
-1. Check if version bump is needed:
-   ```bash
-   grep -q "AGENT_SCOPE=shared" env/.env.dev && grep -q "M365_TITLE_ID=" env/.env.dev && echo "⚠️ VERSION BUMP REQUIRED"
-   ```
+**Why this is critical:**
+- Changes are not reflected in M365 Copilot until the agent is redeployed
+- Users expect to test changes immediately after you make them
+- Undeployed changes create confusion and waste time
+- This ensures a complete, testable solution is always delivered
 
-2. If both exist, bump the version in **appPackage/manifest.json**:
-   - Edit the `"version"` field in `appPackage/manifest.json` → `"1.0.1"`
-   - The version in manifest.json must be updated before re-provisioning
+**Never skip deployment:** Even for minor changes like updating instructions or conversation starters, always redeploy. M365 Copilot only sees the deployed version.
 
-3. Version bumping rules:
-   - Patch (1.0.0 → 1.0.1): Bug fixes, content updates
-   - Minor (1.0.0 → 1.1.0): New features, capabilities
-   - Major (1.0.0 → 2.0.0): Breaking changes
+### Always Clean Up Unused Files
 
-### 6. Sharing Agents
+**RULE:** Every time you work on an agent project, check for and remove unused or obsolete files:
 
-**Prerequisites:**
-- Agent must be provisioned (M365_TITLE_ID exists)
-- Agent must have `AGENT_SCOPE=shared` in env file
-- User must have appropriate permissions
+1. **Check for orphaned files:** Look for files not referenced anywhere in the project
+2. **Remove generated artifacts:** Delete old build outputs, temp files, and stale generated code
+3. **Clean unused dependencies:** Remove unused imports and dependencies
+4. **Delete obsolete documentation:** Remove outdated docs that no longer apply
 
-**Share with entire tenant:**
-```bash
-npx -p @microsoft/m365agentstoolkit-cli@latest atk share --scope tenant --env dev -i false
-```
+**Files to check and potentially remove:**
+- `TODO.md` or planning files no longer needed
+- Old backup files (`.bak`, `.old`, `.orig`)
+- Unused TypeSpec files not imported anywhere
+- Stale environment files (`.env.old`, `.env.backup`)
+- Empty or placeholder files
+- Commented-out code blocks that will never be used
+- Unused model definitions or operations
 
-**Share with specific users:**
-```bash
-npx -p @microsoft/m365agentstoolkit-cli@latest atk share --scope users --email 'user1@contoso.com,user2@contoso.com' --env dev -i false
-```
+**Why this is critical:**
+- Clean projects are easier to understand and maintain
+- Unused files create confusion about what's active
+- Old files may contain outdated patterns or security issues
+- Smaller projects are faster to compile and deploy
 
-**IMPORTANT:** Only suggest sharing if AGENT_SCOPE=shared is present in the environment file!
+**Before returning to the user:** Always verify the project contains only necessary, actively-used files.
 
-### 7. Response Formatting
+---
 
-**After Provisioning:**
-```
-✅ Provision completed successfully!
+## Best Practices
 
-**Working Directory:** /path/to/project
-**Environment:** dev
+Follow these best practices for successful M365 Copilot agent development:
 
-**Command Used:**
-npx -p @microsoft/m365agentstoolkit-cli@latest atk provision --env dev
+| Category | Key Focus |
+|----------|-----------|
+| **Security** | Least privilege scoping, credential management, input validation |
+| **Performance** | Scoped queries, efficient API design, caching strategies |
+| **Error Handling** | Graceful degradation, clear messages, retry logic |
+| **Testing** | Conversation starters, edge cases, security testing |
+| **Compliance** | Data residency, retention policies, RBAC |
+| **Maintainability** | Documentation, naming conventions, version control |
+| **Conversation Design** | Clear instructions, actionable starters, appropriate tone |
+| **Deployment** | Environment strategy, CI/CD, version management |
 
-**What was provisioned:**
-- Azure resources created
-- Environment file updated: env/.env.dev
-- M365_TITLE_ID generated
+**Reference:** [best-practices.md](references/best-practices.md) for detailed guidelines.
 
-**Next Steps:**
-1. Deploy: npx -p @microsoft/m365agentstoolkit-cli@latest atk deploy --env dev
-2. Package: npx -p @microsoft/m365agentstoolkit-cli@latest atk package --env dev
-[Only if AGENT_SCOPE=shared:]
-3. Share: npx -p @microsoft/m365agentstoolkit-cli@latest atk share --scope tenant --env dev -i false
-```
+---
 
-**After Deploying (with Title ID):**
-```
-✅ Deploy completed successfully!
+## Examples
 
-**Working Directory:** /path/to/project
-**Environment:** dev
+Common workflow examples for M365 Copilot agent development:
 
-**Command Used:**
-npx -p @microsoft/m365agentstoolkit-cli@latest atk deploy --env dev
+| Example | Description |
+|---------|-------------|
+| **Compile and Validate** | Local TypeSpec validation before deployment |
+| **Development and Provisioning** | Full dev workflow with test URL |
+| **Provision and Share** | Deploy and share agent with tenant users |
+| **Package for Distribution** | Create distributable package for production |
 
-**🚀 Test Your Agent:**
-🔗 [Open in Microsoft 365 Copilot](https://m365.cloud.microsoft/chat/?titleId=U_abc123xyz)
-
-**Next Steps:**
-1. Test the agent using the link above
-[Only if AGENT_SCOPE=shared:]
-2. Share with users: npx -p @microsoft/m365agentstoolkit-cli@latest atk share --scope users --email 'user@domain.com' --env dev -i false
-```
-
-### 8. Environment Files
-
-**Structure:**
-```
-env/
-  .env.local    # Local development
-  .env.dev      # Development environment
-  .env.staging  # Staging environment
-  .env.prod     # Production environment
-```
-
-**Common Variables:**
-- `APP_NAME_SHORT`: Agent display name
-- `M365_TITLE_ID`: Generated during provisioning
-- `AGENT_SCOPE`: Set to `shared` for multi-user agents, `personal` for individual agents
-- `API_ENDPOINT`: Backend API URLs
-- Environment-specific secrets and configuration
-
-### 9. Authentication
-
-**Azure Login:**
-```bash
-az login
-```
-
-**M365 Authentication:**
-```bash
-npx -p @microsoft/m365agentstoolkit-cli@latest atk auth login m365
-```
-
-**Check Auth Status:**
-```bash
-npx -p @microsoft/m365agentstoolkit-cli@latest atk auth list
-```
-
-### 10. Troubleshooting
-
-**Check System Prerequisites:**
-```bash
-npx -p @microsoft/m365agentstoolkit-cli@latest atk doctor
-```
-
-**Common Issues:**
-- **Authentication Required**: Run `az login` and `atk auth login m365`
-- **Environment Not Provisioned**: Check that `env/.env.{environment}` exists with M365_TITLE_ID
-- **Command Not Found**: ATK CLI downloads on first use (may take 10-30 seconds)
-- **Permission Errors**: Verify Contributor/Owner role in Azure and Admin in M365
-
-## Usage Guidelines
-
-### When to Use This Skill
-- Creating new agent projects
-- Provisioning Azure resources
-- Deploying agents to environments
-- Packaging agents for distribution
-- Publishing agents to Microsoft 365
-- Managing environment configurations
-- Troubleshooting deployment issues
-- Sharing agents with users or tenants
-
-### Interaction with Other Skills
-- **Works with**: typespec-agent-developer (for building agent code)
-- **Works with**: m365-agent-architect (for implementing architecture decisions)
-- **Provides**: Infrastructure and deployment support for agent development
-
-## Remember
-
-**The Golden Rule:**
-Always use the full `npx -p @microsoft/m365agentstoolkit-cli@latest atk <command>` pattern. No shortcuts, no tasks, no exceptions.
-
-**Check Before You Share:**
-Always read `env/.env.{environment}` to verify `AGENT_SCOPE=shared` before suggesting share commands.
-
-**Version Bump for Shared Agents:**
-Always bump version before re-provisioning shared agents that already have M365_TITLE_ID.
+**Reference:** [examples.md](references/examples.md) for complete workflow scripts.

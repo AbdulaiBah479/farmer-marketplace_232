@@ -1,474 +1,383 @@
 ---
-name: Pattern Matching
-description: This skill should be used when the user asks about "Effect Match", "pattern matching", "Match.type", "Match.tag", "Match.when", "Schema.is()", "Schema.is with Match", "exhaustive matching", "discriminated unions", "Match.value", "converting switch to Match", "converting if/else to Match", "TaggedClass with Match", or needs to understand how Effect provides type-safe exhaustive pattern matching.
-version: 1.0.0
+name: pattern-matching
+description: Expert skill for implementing pattern matching including exhaustiveness checking, decision tree compilation, and efficient match dispatch code generation.
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
-# Pattern Matching in Effect
+# Pattern Matching Skill
 
-## Overview
+Implement pattern matching for programming languages including exhaustiveness checking, usefulness analysis, and efficient compilation to decision trees.
 
-**Pattern matching replaces ALL imperative control flow in Effect code.** There should be ZERO `if/else` statements, `switch/case` blocks, or ternary operators in idiomatic Effect code.
+## Capabilities
 
-Effect's `Match` module provides:
+- Parse pattern syntax (constructor, wildcard, binding, literals)
+- Implement exhaustiveness and usefulness checking
+- Compile patterns to decision trees
+- Implement guard clause handling
+- Design or-patterns and as-patterns
+- Implement nested pattern matching
+- Optimize pattern match coverage
+- Generate efficient match dispatch code
 
-- **Exhaustive matching** - Compiler ensures all cases handled
-- **Type narrowing** - Automatic type inference in each branch
-- **Composable matchers** - Build complex patterns from simple ones
-- **Predicate support** - Match on conditions, not just values
+## Usage
 
-### What to Use Instead of Imperative Code
+Invoke this skill when you need to:
+- Add pattern matching to a language
+- Implement exhaustiveness checking
+- Compile patterns efficiently
+- Handle complex pattern features
 
-| Imperative Pattern | Effect Replacement |
-|-------------------|-------------------|
-| `if/else` chains | `Match.value` + `Match.when` |
-| `switch/case` statements | `Match.type` + `Match.tag` |
-| Ternary operators (`? :`) | `Match.value` + `Match.when` |
-| Null checks | `Option.match` |
-| Error checks | `Either.match` or `Effect.match` |
-| Type guards | `Match.when` with `Schema.is()` |
+## Inputs
 
-**When you encounter imperative control flow, refactor it to pattern matching immediately.**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| patternTypes | array | Yes | Types of patterns to support |
+| targetLanguage | string | Yes | Language for implementation |
+| compilationStrategy | string | No | Strategy (decision-tree, backtracking) |
+| features | array | No | Advanced features to implement |
 
-## Basic Matching
+### Pattern Types
 
-### Match.value - Match a Value
-
-```typescript
-import { Match } from "effect"
-
-const result = Match.value(input).pipe(
-  Match.when("admin", () => "Full access"),
-  Match.when("user", () => "Limited access"),
-  Match.when("guest", () => "Read only"),
-  Match.exhaustive
-)
+```json
+{
+  "patternTypes": [
+    "wildcard",
+    "variable",
+    "literal",
+    "constructor",
+    "tuple",
+    "record",
+    "list",
+    "or-pattern",
+    "as-pattern",
+    "guard"
+  ]
+}
 ```
 
-### Match.type - Create Reusable Matcher
+### Feature Options
 
-```typescript
-const rolePermissions = Match.type<"admin" | "user" | "guest">().pipe(
-  Match.when("admin", () => "Full access"),
-  Match.when("user", () => "Limited access"),
-  Match.when("guest", () => "Read only"),
-  Match.exhaustive
-)
-
-// Use multiple times
-const perm1 = rolePermissions("admin")
-const perm2 = rolePermissions("guest")
+```json
+{
+  "features": [
+    "exhaustiveness-checking",
+    "usefulness-checking",
+    "decision-tree-compilation",
+    "guard-clauses",
+    "nested-patterns",
+    "view-patterns",
+    "active-patterns"
+  ]
+}
 ```
 
-## Matching Discriminated Unions
+## Output Structure
 
-### Match.tag - Match by _tag
-
-```typescript
-type Shape =
-  | { _tag: "Circle"; radius: number }
-  | { _tag: "Rectangle"; width: number; height: number }
-  | { _tag: "Triangle"; base: number; height: number }
-
-const area = Match.type<Shape>().pipe(
-  Match.tag("Circle", ({ radius }) => Math.PI * radius ** 2),
-  Match.tag("Rectangle", ({ width, height }) => width * height),
-  Match.tag("Triangle", ({ base, height }) => (base * height) / 2),
-  Match.exhaustive
-)
-
-area({ _tag: "Circle", radius: 5 }) // 78.54...
+```
+pattern-matching/
+├── syntax/
+│   ├── pattern.grammar            # Pattern syntax
+│   └── match-expr.grammar         # Match expression syntax
+├── analysis/
+│   ├── exhaustiveness.ts          # Exhaustiveness checker
+│   ├── usefulness.ts              # Usefulness/redundancy checker
+│   └── pattern-types.ts           # Pattern type inference
+├── compilation/
+│   ├── decision-tree.ts           # Decision tree builder
+│   ├── code-generator.ts          # Code generation
+│   └── optimizer.ts               # Pattern optimization
+├── runtime/
+│   ├── matcher.ts                 # Runtime matching (interpreter)
+│   └── guards.ts                  # Guard evaluation
+└── tests/
+    ├── exhaustiveness.test.ts
+    ├── compilation.test.ts
+    └── runtime.test.ts
 ```
 
-### Handling Effect Errors
+## Pattern Syntax
 
 ```typescript
-type AppError =
-  | { _tag: "NetworkError"; url: string }
-  | { _tag: "ValidationError"; field: string; message: string }
-  | { _tag: "AuthError"; reason: string }
+// Pattern ADT
+type Pattern =
+  | { type: 'wildcard' }                              // _
+  | { type: 'variable'; name: string }                // x
+  | { type: 'literal'; value: Literal }               // 42, "hello", true
+  | { type: 'constructor'; name: string; args: Pattern[] }  // Some(x), Cons(h, t)
+  | { type: 'tuple'; elements: Pattern[] }            // (x, y, z)
+  | { type: 'record'; fields: Map<string, Pattern> }  // { name: n, age: a }
+  | { type: 'list'; elements: Pattern[]; rest?: Pattern }  // [x, y, ...rest]
+  | { type: 'or'; patterns: Pattern[] }               // p1 | p2
+  | { type: 'as'; pattern: Pattern; name: string }    // p as x
+  | { type: 'guard'; pattern: Pattern; guard: Expr }; // p if cond
 
-const handleError = Match.type<AppError>().pipe(
-  Match.tag("NetworkError", (e) => `Failed to fetch ${e.url}`),
-  Match.tag("ValidationError", (e) => `${e.field}: ${e.message}`),
-  Match.tag("AuthError", (e) => `Auth failed: ${e.reason}`),
-  Match.exhaustive
-)
-```
-
-## Conditional Matching
-
-### Match.when - Match with Predicate
-
-```typescript
-const describeNumber = Match.type<number>().pipe(
-  Match.when((n) => n < 0, () => "negative"),
-  Match.when((n) => n === 0, () => "zero"),
-  Match.when((n) => n > 0 && n < 10, () => "small positive"),
-  Match.when((n) => n >= 10, () => "large positive"),
-  Match.exhaustive
-)
-```
-
-### Match.when with Refinement
-
-```typescript
-const processInput = Match.type<string | number | boolean>().pipe(
-  Match.when(
-    (x): x is string => typeof x === "string",
-    (s) => `String: ${s.toUpperCase()}`
-  ),
-  Match.when(
-    (x): x is number => typeof x === "number",
-    (n) => `Number: ${n * 2}`
-  ),
-  Match.when(
-    (x): x is boolean => typeof x === "boolean",
-    (b) => `Boolean: ${!b}`
-  ),
-  Match.exhaustive
-)
-```
-
-## Non-Exhaustive Matching
-
-### Match.orElse - Provide Default
-
-```typescript
-const greet = Match.type<string>().pipe(
-  Match.when("morning", () => "Good morning!"),
-  Match.when("evening", () => "Good evening!"),
-  Match.orElse(() => "Hello!")
-)
-
-greet("morning")  // "Good morning!"
-greet("afternoon") // "Hello!"
-```
-
-### Match.orElseAbsurd - Assert Exhaustive
-
-```typescript
-// Use when you believe all cases are covered
-// Throws at runtime if unhandled case reached
-const handle = Match.type<"a" | "b">().pipe(
-  Match.when("a", () => 1),
-  Match.when("b", () => 2),
-  Match.orElseAbsurd
-)
-```
-
-## Advanced Patterns
-
-### Match.not - Negative Matching
-
-```typescript
-const classify = Match.type<number>().pipe(
-  Match.when((n) => n === 0, () => "zero"),
-  Match.not((n) => n > 0, () => "negative"),  // Matches when NOT positive
-  Match.orElse(() => "positive")
-)
-```
-
-### Match.whenOr - Multiple Patterns
-
-```typescript
-const isWeekend = Match.type<string>().pipe(
-  Match.whenOr("Saturday", "Sunday", () => true),
-  Match.orElse(() => false)
-)
-```
-
-### Match.whenAnd - Combined Conditions
-
-```typescript
-interface User {
-  role: "admin" | "user"
-  verified: boolean
+// Match expression
+interface MatchExpr {
+  scrutinee: Expr;
+  arms: MatchArm[];
 }
 
-const canDelete = Match.type<User>().pipe(
-  Match.whenAnd(
-    { role: "admin" },
-    (u) => u.verified,
-    () => true
-  ),
-  Match.orElse(() => false)
-)
-```
-
-## Pattern Objects
-
-### Matching Object Shapes
-
-```typescript
-const processEvent = Match.type<Event>().pipe(
-  Match.when({ type: "click" }, (e) => handleClick(e)),
-  Match.when({ type: "keydown" }, (e) => handleKeydown(e)),
-  Match.when({ type: "submit" }, (e) => handleSubmit(e)),
-  Match.orElse(() => { /* unknown event */ })
-)
-```
-
-### Nested Pattern Matching
-
-```typescript
-interface Response {
-  status: number
-  data: { type: string; value: unknown }
+interface MatchArm {
+  pattern: Pattern;
+  guard?: Expr;
+  body: Expr;
 }
-
-const handleResponse = Match.type<Response>().pipe(
-  Match.when(
-    { status: 200, data: { type: "user" } },
-    (r) => `User: ${r.data.value}`
-  ),
-  Match.when(
-    { status: 200, data: { type: "product" } },
-    (r) => `Product: ${r.data.value}`
-  ),
-  Match.when({ status: 404 }, () => "Not found"),
-  Match.when({ status: 500 }, () => "Server error"),
-  Match.orElse(() => "Unknown response")
-)
 ```
 
-## Converting from if/else
-
-### Before (if/else)
+## Exhaustiveness Checking
 
 ```typescript
-function processStatus(status: Status): string {
-  if (status === "pending") {
-    return "Waiting..."
-  } else if (status === "active") {
-    return "In progress"
-  } else if (status === "completed") {
-    return "Done!"
-  } else if (status === "failed") {
-    return "Error occurred"
+// Based on "Warnings for Pattern Matching" (Maranget)
+
+type PatternMatrix = Pattern[][];  // rows = arms, columns = scrutinees
+
+// Check if pattern matrix is exhaustive
+function isExhaustive(matrix: PatternMatrix, types: Type[]): boolean {
+  if (matrix.length === 0) return false;
+  if (types.length === 0) return true;
+
+  const firstCol = matrix.map(row => row[0]);
+  const sigma = getConstructorSignature(types[0]);
+
+  if (sigma.isComplete(firstCol)) {
+    // All constructors present - check specializations
+    return sigma.constructors.every(ctor =>
+      isExhaustive(specialize(matrix, ctor), specializationTypes(types, ctor))
+    );
   } else {
-    return "Unknown"
+    // Some constructors missing - check default matrix
+    return isExhaustive(defaultMatrix(matrix), types.slice(1));
+  }
+}
+
+// Generate witness for non-exhaustiveness
+function findUncoveredCase(matrix: PatternMatrix, types: Type[]): Pattern[] | null {
+  if (matrix.length === 0) {
+    // Empty matrix - any value is uncovered
+    return types.map(generateWildcard);
+  }
+  if (types.length === 0) return null;  // Exhaustive
+
+  const sigma = getConstructorSignature(types[0]);
+  const firstCol = matrix.map(row => row[0]);
+
+  if (sigma.isComplete(firstCol)) {
+    for (const ctor of sigma.constructors) {
+      const witness = findUncoveredCase(
+        specialize(matrix, ctor),
+        specializationTypes(types, ctor)
+      );
+      if (witness) {
+        return [applyConstructor(ctor, witness.slice(0, ctor.arity)), ...witness.slice(ctor.arity)];
+      }
+    }
+    return null;
+  } else {
+    // Find missing constructor
+    const missing = sigma.constructors.find(c => !firstCol.some(p => matchesCtor(p, c)));
+    if (missing) {
+      return [generatePattern(missing), ...types.slice(1).map(generateWildcard)];
+    }
+    return findUncoveredCase(defaultMatrix(matrix), types.slice(1));
   }
 }
 ```
 
-### After (Match)
+## Decision Tree Compilation
 
 ```typescript
-const processStatus = Match.type<Status>().pipe(
-  Match.when("pending", () => "Waiting..."),
-  Match.when("active", () => "In progress"),
-  Match.when("completed", () => "Done!"),
-  Match.when("failed", () => "Error occurred"),
-  Match.exhaustive // Compile error if status type changes!
-)
-```
+// Decision tree for efficient matching
+type DecisionTree =
+  | { type: 'fail' }
+  | { type: 'leaf'; bindings: Map<string, Access>; body: Expr }
+  | { type: 'switch'; access: Access; cases: SwitchCase[]; default?: DecisionTree };
 
-## Converting from switch
+interface SwitchCase {
+  constructor: Constructor;
+  tree: DecisionTree;
+}
 
-### Before (switch)
+interface Access {
+  root: string;
+  path: AccessStep[];
+}
 
-```typescript
-function getDiscount(userType: UserType): number {
-  switch (userType) {
-    case "regular":
-      return 0
-    case "premium":
-      return 10
-    case "vip":
-      return 20
-    default:
-      return 0
+type AccessStep =
+  | { type: 'field'; index: number }
+  | { type: 'deref' };
+
+// Compile patterns to decision tree
+function compilePatterns(arms: MatchArm[], scrutinee: Access): DecisionTree {
+  if (arms.length === 0) return { type: 'fail' };
+
+  // Find best column to split on (heuristic)
+  const column = selectColumn(arms);
+
+  // Group arms by constructor in that column
+  const groups = groupByConstructor(arms, column);
+
+  if (groups.size === 0) {
+    // All wildcards - just use first arm
+    const bindings = extractBindings(arms[0].pattern, scrutinee);
+    return { type: 'leaf', bindings, body: arms[0].body };
   }
-}
-```
 
-### After (Match)
-
-```typescript
-const getDiscount = Match.type<UserType>().pipe(
-  Match.when("regular", () => 0),
-  Match.when("premium", () => 10),
-  Match.when("vip", () => 20),
-  Match.exhaustive
-)
-```
-
-## With Effects
-
-```typescript
-const handleError = (error: AppError) =>
-  Match.value(error).pipe(
-    Match.tag("NetworkError", (e) =>
-      Effect.gen(function* () {
-        yield* Effect.logError("Network failure", { url: e.url })
-        return yield* Effect.fail(e)
-      })
-    ),
-    Match.tag("ValidationError", (e) =>
-      Effect.succeed({ field: e.field, message: e.message })
-    ),
-    Match.tag("AuthError", () =>
-      Effect.redirect("/login")
-    ),
-    Match.exhaustive
-  )
-```
-
-## Schema.is() with Match (For Schema Types Only)
-
-**Use Schema.is() in Match.when patterns** to combine Schema validation with pattern matching. This works with `Schema.TaggedClass` and other Schema types.
-
-**Use `Schema.TaggedError` for domain errors** - they work with `Schema.is()`, `Effect.catchTag`, and `Match.tag`:
-- Use `Schema.is(ErrorClass)` for type guards on errors
-- Use `Effect.catchTag("ErrorName", ...)` for error handling
-- Use `Match.tag("ErrorName", ...)` when matching on errors (including predicates)
-
-### Schema.is() as Type Guard
-
-```typescript
-import { Schema, Match } from "effect"
-
-// Define schemas with TaggedClass for methods
-class Circle extends Schema.TaggedClass<Circle>()("Circle", {
-  radius: Schema.Number
-}) {
-  get area() { return Math.PI * this.radius ** 2 }
-  get circumference() { return 2 * Math.PI * this.radius }
-}
-
-class Rectangle extends Schema.TaggedClass<Rectangle>()("Rectangle", {
-  width: Schema.Number,
-  height: Schema.Number
-}) {
-  get area() { return this.width * this.height }
-  get perimeter() { return 2 * (this.width + this.height) }
-}
-
-const Shape = Schema.Union(Circle, Rectangle)
-type Shape = Schema.Schema.Type<typeof Shape>
-
-// Schema.is() provides type guard + access to class methods
-const describeShape = (shape: Shape) =>
-  Match.value(shape).pipe(
-    Match.when(Schema.is(Circle), (c) =>
-      `Circle: area=${c.area.toFixed(2)}, circumference=${c.circumference.toFixed(2)}`
-    ),
-    Match.when(Schema.is(Rectangle), (r) =>
-      `Rectangle: area=${r.area}, perimeter=${r.perimeter}`
-    ),
-    Match.exhaustive
-  )
-```
-
-### Schema.is() vs Match.tag
-
-```typescript
-// Match.tag - simpler, when you just need the data
-const getShapeName = (shape: Shape) =>
-  Match.value(shape).pipe(
-    Match.tag("Circle", () => "circle"),
-    Match.tag("Rectangle", () => "rectangle"),
-    Match.exhaustive
-  )
-
-// Schema.is() - when you need class methods or type narrowing
-const processShape = (shape: Shape) =>
-  Match.value(shape).pipe(
-    Match.when(Schema.is(Circle), (c) => c.area),      // Can use .area method
-    Match.when(Schema.is(Rectangle), (r) => r.area),   // Can use .area method
-    Match.exhaustive
-  )
-```
-
-### Validating Unknown Data with Schema.is()
-
-```typescript
-// Schema.is() also works for runtime validation of unknown data
-const handleUnknown = (input: unknown) =>
-  Match.value(input).pipe(
-    Match.when(Schema.is(Circle), (c) => `Valid circle with radius ${c.radius}`),
-    Match.when(Schema.is(Rectangle), (r) => `Valid rectangle ${r.width}x${r.height}`),
-    Match.orElse(() => "Invalid shape")
-  )
-
-// Or use for type narrowing
-const processInput = (input: unknown) => {
-  if (Schema.is(Circle)(input)) {
-    console.log(`Circle area: ${input.area}`)  // Type is Circle, has methods
+  // Build switch node
+  const cases: SwitchCase[] = [];
+  for (const [ctor, ctorArms] of groups) {
+    const specializedAccess = extendAccess(scrutinee, ctor);
+    cases.push({
+      constructor: ctor,
+      tree: compilePatterns(specializeArms(ctorArms, ctor), specializedAccess)
+    });
   }
+
+  const defaultArms = arms.filter(arm => isWildcard(arm.pattern, column));
+  const defaultTree = defaultArms.length > 0
+    ? compilePatterns(defaultArms, scrutinee)
+    : undefined;
+
+  return { type: 'switch', access: scrutinee, cases, default: defaultTree };
 }
 ```
 
-### Complete Example: State Machine
+## Guard Clause Handling
 
 ```typescript
-import { Schema, Match, Effect } from "effect"
-
-// Define states with TaggedClass
-class Draft extends Schema.TaggedClass<Draft>()("Draft", {
-  content: Schema.String
-}) {
-  get isEmpty() { return this.content.trim().length === 0 }
+// Guards complicate exhaustiveness - we must be conservative
+interface GuardedArm {
+  pattern: Pattern;
+  guard: Expr | null;
+  body: Expr;
 }
 
-class Published extends Schema.TaggedClass<Published>()("Published", {
-  content: Schema.String,
-  publishedAt: Schema.Date
-}) {
-  get daysSincePublish() {
-    return Math.floor((Date.now() - this.publishedAt.getTime()) / 86400000)
+// For exhaustiveness: treat guarded patterns as potentially failing
+function exhaustivenessWithGuards(arms: GuardedArm[], types: Type[]): Warning[] {
+  const warnings: Warning[] = [];
+
+  // Remove guards for exhaustiveness check (conservative)
+  const unguardedMatrix = arms.map(arm => [arm.pattern]);
+  if (!isExhaustive(unguardedMatrix, types)) {
+    // May still be exhaustive if guards cover all cases
+    // But we can't know statically - warn
+    warnings.push({
+      type: 'possibly-non-exhaustive',
+      message: 'Match may not be exhaustive (guards present)',
+      suggestion: 'Consider adding a catch-all pattern'
+    });
+  }
+
+  return warnings;
+}
+
+// Decision tree with guards
+type GuardedTree =
+  | { type: 'fail' }
+  | { type: 'guard'; test: Expr; success: GuardedTree; failure: GuardedTree }
+  | { type: 'leaf'; bindings: Map<string, Access>; body: Expr }
+  | { type: 'switch'; access: Access; cases: SwitchCase[]; default?: GuardedTree };
+```
+
+## Code Generation
+
+```typescript
+// Generate code from decision tree
+function generateCode(tree: DecisionTree, target: CodeTarget): Code {
+  switch (tree.type) {
+    case 'fail':
+      return target.emitMatchFailure();
+
+    case 'leaf':
+      const setup = Array.from(tree.bindings.entries())
+        .map(([name, access]) => target.emitBinding(name, access));
+      return target.emitBlock([...setup, target.emitExpr(tree.body)]);
+
+    case 'switch':
+      return target.emitSwitch(
+        target.emitAccess(tree.access),
+        tree.cases.map(c => ({
+          test: target.emitConstructorTest(c.constructor),
+          body: generateCode(c.tree, target)
+        })),
+        tree.default ? generateCode(tree.default, target) : target.emitMatchFailure()
+      );
   }
 }
 
-class Archived extends Schema.TaggedClass<Archived>()("Archived", {
-  content: Schema.String,
-  archivedReason: Schema.String
-}) {}
-
-const Article = Schema.Union(Draft, Published, Archived)
-type Article = Schema.Schema.Type<typeof Article>
-
-// Process with Schema.is() to access class methods
-const getArticleStatus = (article: Article) =>
-  Match.value(article).pipe(
-    Match.when(Schema.is(Draft), (d) =>
-      d.isEmpty ? "Empty draft" : "Draft with content"
-    ),
-    Match.when(Schema.is(Published), (p) =>
-      `Published ${p.daysSincePublish} days ago`
-    ),
-    Match.when(Schema.is(Archived), (a) =>
-      `Archived: ${a.archivedReason}`
-    ),
-    Match.exhaustive
-  )
+// Example output for Rust
+function emitRustMatch(tree: DecisionTree): string {
+  // Input: match x { Some(y) => y + 1, None => 0 }
+  // Output:
+  // match x {
+  //   Some(ref __0) => {
+  //     let y = __0;
+  //     y + 1
+  //   }
+  //   None => 0
+  // }
+}
 ```
 
-## Best Practices
+## Or-Patterns and As-Patterns
 
-### CRITICAL: No Imperative Code
+```typescript
+// Or-pattern: matches if any sub-pattern matches
+// (Red | Green | Blue) => "color"
 
-1. **NEVER use if/else** - Replace with Match.value + Match.when
-2. **NEVER use switch/case** - Replace with Match.type + Match.tag
-3. **NEVER use ternary operators** - Replace with Match.value + Match.when
-4. **NEVER use `if (x != null)`** - Replace with Option.match
-5. **NEVER check error flags** - Replace with Either.match or Effect.match
-6. **NEVER access `._tag` directly** - Replace with Match.tag or Schema.is()
-7. **Refactor imperative code immediately** - This is mandatory, not optional
+function expandOrPattern(pattern: Pattern): Pattern[] {
+  if (pattern.type === 'or') {
+    return pattern.patterns.flatMap(expandOrPattern);
+  }
+  // Recursively expand in sub-patterns
+  // ...
+  return [pattern];
+}
 
-### General Best Practices
+// As-pattern: binds entire match to name
+// (x :: xs) as list => (list, x)
 
-1. **Use Schema.is() in Match.when** - Access class methods with proper type narrowing
-2. **Use Schema.TaggedClass with Match** - Define unions with classes, match with Schema.is()
-3. **Prefer Match.exhaustive** - Catch missing cases at compile time
-4. **Use Match.tag for simple cases** - When you don't need class methods
-5. **Create reusable matchers** - Use Match.type() for repeated patterns
-6. **Handle edge cases with Match.when** - Predicates for complex logic
+function handleAsPattern(
+  pattern: AsPattern,
+  access: Access,
+  bindings: Map<string, Access>
+): void {
+  // Bind the name to current access
+  bindings.set(pattern.name, access);
+  // Continue with inner pattern
+  extractBindings(pattern.pattern, access, bindings);
+}
+```
 
-## Additional Resources
+## Workflow
 
-For comprehensive pattern matching documentation, consult `${CLAUDE_PLUGIN_ROOT}/references/llms-full.txt`.
+1. **Define pattern syntax** - Grammar for patterns
+2. **Implement pattern parser** - Parse patterns to AST
+3. **Build exhaustiveness checker** - Matrix-based analysis
+4. **Add usefulness checker** - Detect redundant patterns
+5. **Implement decision tree compilation** - Efficient matching
+6. **Generate target code** - From decision trees
+7. **Handle guards** - Conservative guard analysis
+8. **Write tests** - Exhaustiveness, compilation, runtime
 
-Search for these sections:
-- "Pattern Matching" for full API reference
+## Best Practices Applied
+
+- Conservative exhaustiveness with guards
+- Informative non-exhaustiveness witnesses
+- Efficient decision tree compilation
+- Proper binding extraction order
+- Support for nested patterns
+- Clear redundancy warnings
+
+## References
+
+- Warnings for Pattern Matching (Maranget): https://moscova.inria.fr/~maranget/papers/warn/
+- Compiling Pattern Matching: https://www.cs.tufts.edu/~nr/cs257/archive/luc-maranget/jun08.pdf
+- Rust Pattern Matching: https://doc.rust-lang.org/reference/patterns.html
+- OCaml Pattern Matching: https://ocaml.org/docs/pattern-matching
+
+## Target Processes
+
+- pattern-matching-implementation.js
+- parser-development.js
+- code-generation-llvm.js
+- interpreter-implementation.js

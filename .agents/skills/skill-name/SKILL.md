@@ -1,21 +1,8 @@
 ---
-name: <skill-name>
-description: <one-line description of what the skill does and when to use it>
+name: skill-name
+description: Description that helps Codex select the skill
+metadata:
+  short-description: Optional user-facing description
 ---
-# <Skill Title>
 
-## Purpose
-
-<Short, imperative instructions for the workflow this skill enables.>
-
-## Resources
-
-- scripts/: <when to use>
-- references/: <what to load on demand>
-- assets/: <templates or files to reuse>
-
-## Workflow
-
-1. <Step 1>
-2. <Step 2>
-3. <Step 3>
+Skill instructions for the Codex agent to follow when using this skill.

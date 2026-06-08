@@ -1,145 +1,374 @@
 ---
-name: backend-implementation
-description: Backend Implementation Workflow Agent. Backend만 구현이 필요한 경우 사용합니다. API 추가, 서비스 로직 구현, DB 스키마 변경 등을 오케스트레이션합니다.
-allowed-tools: Read, Write, Edit, Task, AskUserQuestion, TodoWrite, Glob, Grep, Bash, Skill
+name: Backend Implementation
+description: Backend development with Kotlin, Spring Boot, REST APIs. Use for backend, api, service, kotlin, rest tags. Provides validation commands, testing patterns, and blocker scenarios.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
-# Backend Implementation Workflow Agent
+# Backend Implementation Skill
 
-## 역할
-Backend만 구현이 필요한 경우 (API 추가, 서비스 로직, DB 변경 등)를 총괄하는 오케스트레이터입니다.
+Domain-specific guidance for backend API development, service implementation, and business logic.
 
-## 워크플로우 개요
+## When To Use This Skill
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   /backend-implementation                     │
-└─────────────────────────────────────────────────────────────┘
-         │
-         ▼
-Phase 1: 설계
-┌─────────────────────────────────────────────────────────────┐
-│  ┌──────────────────┐      ┌──────────────────┐            │
-│  │ backend-architect │  →  │ dba-architect    │            │
-│  │ (API 설계)        │      │ (스키마 설계)    │            │
-│  └──────────────────┘      └──────────────────┘            │
-└─────────────────────────────────────────────────────────────┘
-         │
-         ▼
-Phase 2: 구현
-┌─────────────────────────────────────────────────────────────┐
-│  ┌──────────────────┐                                      │
-│  │ backend-developer│                                      │
-│  │ (핵심 로직)       │                                      │
-│  └────────┬─────────┘                                      │
-│           ▼                                                │
-│  ┌──────────────────┐                                      │
-│  │ backend-{lang}   │  ← 사용자 선택 (Java/Kotlin/Node/Go/PHP) │
-│  │ (언어별 구현)     │                                      │
-│  └────────┬─────────┘                                      │
-│           ▼                                                │
-│  ┌──────────────────┐                                      │
-│  │ dba-tuner        │                                      │
-│  │ (쿼리 최적화)     │                                      │
-│  └──────────────────┘                                      │
-└─────────────────────────────────────────────────────────────┘
-         │
-         ▼
-Phase 3: 검증
-┌─────────────────────────────────────────────────────────────┐
-│  ┌────────────┐  ┌─────────────────┐  ┌────────────────┐   │
-│  │ qa-tester  │  │ security-auditor│  │ backend-reviewer│  │
-│  │ (테스트)   │  │ (보안 감사)      │  │ (코드 리뷰)     │  │
-│  └────────────┘  └─────────────────┘  └────────────────┘   │
-│                      (병렬 실행)                             │
-└─────────────────────────────────────────────────────────────┘
-         │
-         ▼
-Phase 4: 배포
-┌─────────────────────────────────────────────────────────────┐
-│  ┌──────────────────┐      ┌──────────────────┐            │
-│  │ devops-jenkins   │  →   │ devops-deployer  │            │
-│  │ (CI/CD)          │      │ (배포)            │            │
-│  └──────────────────┘      └──────────────────┘            │
-└─────────────────────────────────────────────────────────────┘
-```
+Load this Skill when task has tags:
+- `backend`, `api`, `service`, `kotlin`, `rest`
+- `spring`, `spring-boot`, `controller`, `repository`
 
-## Phase별 상세
+## Validation Commands
 
-### Phase 1: 설계 (순차)
-
-| 순서 | Agent | 역할 | 산출물 |
-|------|-------|------|--------|
-| 1 | backend-architect | API 엔드포인트 설계, 인터페이스 정의 | API 명세서 |
-| 2 | dba-architect | DB 스키마 설계, 마이그레이션 생성 | 마이그레이션 파일 |
-
-### Phase 2: 구현 (순차)
-
-| 순서 | Agent | 역할 | 산출물 |
-|------|-------|------|--------|
-| 1 | backend-developer | 핵심 비즈니스 로직, 서비스 레이어 | 서비스 코드 |
-| 2 | backend-{lang} | 언어별 컨트롤러, 라우터, DTO | API 구현 |
-| 3 | dba-tuner | 쿼리 최적화, 인덱스 설계 | 인덱스 설정 |
-
-**언어 선택 옵션**:
-- `backend-java`: Java/Spring Boot
-- `backend-kotlin`: Kotlin/Spring Boot
-- `backend-node`: Node.js/NestJS/Express
-- `backend-golang`: Go/Gin/Echo
-- `backend-php`: PHP/Laravel
-
-### Phase 3: 검증 (병렬)
-
-| Agent | 역할 | 산출물 |
-|-------|------|--------|
-| qa-tester | 단위 테스트, 통합 테스트 | 테스트 리포트 |
-| security-auditor | 보안 감사, 취약점 스캔 | 보안 리포트 |
-| backend-reviewer | 코드 리뷰, 품질 검토 | 리뷰 코멘트 |
-
-### Phase 4: 배포 (순차)
-
-| 순서 | Agent | 역할 | 산출물 |
-|------|-------|------|--------|
-| 1 | devops-jenkins | CI/CD 파이프라인 실행 | 빌드 로그 |
-| 2 | devops-deployer | 프로덕션 배포 | 배포 완료 |
-
-## 산출물 디렉토리 구조
-
-```
-docs/implementation/<기능명>/backend/
-├── README.md           # 구현 개요
-├── api-spec.md         # API 명세
-├── db-schema.sql       # DB 스키마
-├── impl-notes.md       # 구현 노트
-├── test-report.md      # 테스트 결과
-├── security-audit.md   # 보안 감사
-└── deploy-log.md       # 배포 로그
-```
-
-## 사용 방법
-
+### Run Tests
 ```bash
-/backend-implementation <기능명>
+# Full test suite
+./gradlew test
+
+# Specific test class
+./gradlew test --tests "UserServiceTest"
+
+# Single test method
+./gradlew test --tests "UserServiceTest.shouldCreateUser"
+
+# With build
+./gradlew clean test
 ```
 
-### 예시
+### Build Project
 ```bash
-/backend-implementation 사용자 인증 API
-/backend-implementation 결제 처리 로직
-/backend-implementation 파일 업로드 기능
+# Build JAR
+./gradlew build
+
+# Build without tests (for quick syntax check)
+./gradlew build -x test
 ```
 
-## 협업 Agent
+### Run Application
+```bash
+# Local development
+./gradlew bootRun
 
-| Agent | 용도 |
-|-------|------|
-| tech-implementation | 전체 구현 (Backend + Frontend) |
-| frontend-implementation | Frontend 연동 필요 시 |
-| dba-admin | DB 백업/복구 필요 시 |
+# With specific profile
+./gradlew bootRun --args='--spring.profiles.active=dev'
+```
 
-## 주의사항
+## Success Criteria (Before Completing Task)
 
-- Phase 3 검증 통과 후 자동 배포
-- 보안 감사 Critical 이슈 시 배포 차단
-- 테스트 커버리지 80% 미만 시 경고
-- 기존 API 변경 시 하위 호환성 검토 필수
+✅ **ALL tests MUST pass** (0 failures, 0 errors)
+✅ **Build MUST succeed** without compilation errors
+✅ **Code follows project conventions** (existing patterns)
+✅ **API endpoints tested** (integration tests)
+✅ **Error handling implemented** (try-catch, validation)
+
+## Common Backend Tasks
+
+### REST API Endpoints
+- Controller with request mapping
+- Request/response DTOs
+- Service layer business logic
+- Repository integration
+- Error handling (400, 401, 404, 500)
+- Validation (@Valid annotations)
+
+### Service Implementation
+- Business logic in service classes
+- Transaction management (@Transactional)
+- Error handling and exceptions
+- Dependency injection (@Autowired, constructor injection)
+
+### Database Integration
+- Repository interfaces (JPA, Exposed ORM)
+- Entity mapping
+- Query methods
+- Transaction boundaries
+
+## Testing Principles for Backend
+
+### Use Real Infrastructure for Integration Tests
+
+❌ **AVOID mocking repositories in integration tests:**
+```kotlin
+// BAD - Mocking repositories misses SQL errors, constraints
+@Mock private lateinit var userRepository: UserRepository
+when(userRepository.findById(any())).thenReturn(mockUser)
+```
+
+✅ **USE real in-memory database:**
+```kotlin
+// GOOD - Tests actual integration
+@SpringBootTest
+@Transactional  // Auto-rollback after each test
+class UserApiTest {
+    @Autowired private lateinit var userRepository: UserRepository
+    @Autowired private lateinit var userService: UserService
+    // Tests real database, serialization, constraints
+}
+```
+
+### Test Incrementally, Not in Batches
+
+❌ **Avoid:** Write 200 lines code + 15 tests → run all → 12 failures → no idea which code caused which failure
+
+✅ **Do:**
+1. Write basic implementation
+2. Write ONE happy path test
+3. Run ONLY that test: `./gradlew test --tests "ToolTest.shouldHandleBasicCase"`
+4. Fix until passes
+5. Add ONE edge case test
+6. Run ONLY that test
+7. Repeat
+
+**Benefits:** Feedback in seconds, isolates root cause immediately.
+
+### Debug with Actual Output
+
+When test fails:
+1. **Read error message carefully** - tells you what's wrong
+2. **Print actual output:**
+   ```kotlin
+   println("Full response: $result")
+   println("Response keys: ${result.jsonObject.keys}")
+   ```
+3. **Verify assumptions about test data** - count manually
+4. **Fix root cause, not symptoms**
+
+### Create Complete Test Entities
+
+❌ **BAD - Missing required fields:**
+```kotlin
+val task = Task(
+    id = UUID.randomUUID(),
+    title = "Test Task",
+    status = TaskStatus.PENDING
+    // Missing: summary, priority, complexity, timestamps
+)
+taskRepository.create(task)  // FAILS: NOT NULL constraint
+```
+
+✅ **GOOD - Complete entity:**
+```kotlin
+val task = Task(
+    id = UUID.randomUUID(),
+    title = "Test Task",
+    summary = "Test summary",               // Required
+    status = TaskStatus.PENDING,            // Required
+    priority = Priority.HIGH,               // Required
+    complexity = 5,                         // Required
+    tags = listOf("test"),
+    projectId = testProjectId,
+    createdAt = Instant.now(),              // Required
+    modifiedAt = Instant.now()              // Required
+)
+```
+
+**How to find required fields:** Check migration SQL or ORM model definition.
+
+## Common Blocker Scenarios
+
+### Blocker 1: Missing Database Schema
+
+**Issue:** Tests expect column that doesn't exist
+```
+SQLSyntaxErrorException: Unknown column 'users.password_hash'
+```
+
+**What to try:**
+- Check migration files - is column defined?
+- Review prerequisite database tasks - marked complete but incomplete?
+- Check if column was renamed
+
+**If blocked:** Report to orchestrator - database task may need reopening
+
+### Blocker 2: NullPointerException in Service
+
+**Issue:** NPE at runtime in service class
+```
+NullPointerException: Cannot invoke method on null object
+```
+
+**What to try:**
+- Check dependency injection - is @Autowired present?
+- Check constructor injection - all parameters provided?
+- Check @Configuration on config class
+- Check @Service or @Component on service class
+- Add null safety (Kotlin: use `?` operator, nullable types)
+
+**Common causes:**
+- Missing @Configuration annotation
+- Spring not scanning package
+- Circular dependency
+
+### Blocker 3: Integration Test Failures
+
+**Issue:** Integration tests pass locally but fail in CI or for others
+
+**What to try:**
+- Check test isolation - are tests cleaning up state?
+- Check @Transactional with rollback
+- Check test order dependencies (tests should be independent)
+- Check H2/in-memory DB configuration matches production DB type
+- Check test data initialization
+
+### Blocker 4: Architectural Conflict
+
+**Issue:** Task requirements conflict with existing architecture
+```
+Task requires middleware auth but project uses annotation-based security
+```
+
+**What to try:**
+- Review existing patterns in codebase
+- Check architecture documentation
+- Look for similar implementations
+
+**If blocked:** Report to orchestrator - may need architectural decision or task revision
+
+### Blocker 5: External Dependency Bug
+
+**Issue:** Third-party library has known bug
+```
+JWT library v3.2.1 has refresh token bug - expires immediately
+```
+
+**What to try:**
+- Check library changelog - is fix available in newer version?
+- Search for known issues in library's issue tracker
+- Try workaround if documented
+
+**If blocked:** Report to orchestrator - may need to wait for library update or use alternative
+
+## Blocker Report Format
+
+```
+⚠️ BLOCKED - Requires Senior Engineer
+
+Issue: [Specific problem - NPE at UserService.kt:42, missing column, etc.]
+
+Attempted Fixes:
+- [What you tried #1]
+- [What you tried #2]
+- [Why attempts didn't work]
+
+Root Cause (if known): [Your analysis]
+
+Partial Progress: [What work you DID complete]
+
+Context for Senior Engineer:
+- Error output: [Paste error]
+- Test results: [Test failures]
+- Related files: [Files involved]
+
+Requires: [What needs to happen - Senior Engineer investigation, etc.]
+```
+
+## Quick Reference
+
+### Spring Boot Patterns
+
+**Controller:**
+```kotlin
+@RestController
+@RequestMapping("/api/users")
+class UserController(private val userService: UserService) {
+
+    @PostMapping
+    fun createUser(@Valid @RequestBody request: CreateUserRequest): User {
+        return userService.createUser(request)
+    }
+
+    @GetMapping("/{id}")
+    fun getUser(@PathVariable id: UUID): User {
+        return userService.findById(id)
+            ?: throw NotFoundException("User not found")
+    }
+}
+```
+
+**Service:**
+```kotlin
+@Service
+@Transactional
+class UserService(
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder
+) {
+    fun createUser(request: CreateUserRequest): User {
+        val user = User(
+            email = request.email,
+            passwordHash = passwordEncoder.encode(request.password)
+        )
+        return userRepository.save(user)
+    }
+}
+```
+
+**Repository:**
+```kotlin
+@Repository
+interface UserRepository : JpaRepository<User, UUID> {
+    fun findByEmail(email: String): User?
+}
+```
+
+### Error Handling
+
+```kotlin
+@RestControllerAdvice
+class GlobalExceptionHandler {
+
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFound(ex: NotFoundException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(ex.message))
+    }
+
+    @ExceptionHandler(ValidationException::class)
+    fun handleValidation(ex: ValidationException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(ex.message))
+    }
+}
+```
+
+## Common Patterns to Follow
+
+1. **Controller → Service → Repository** layering
+2. **Constructor injection** over field injection
+3. **@Transactional on service layer** for database operations
+4. **DTO pattern** for request/response (don't expose entities)
+5. **Exception handling** with @RestControllerAdvice
+6. **Validation** with @Valid and constraint annotations
+7. **Testing with real database** for integration tests
+
+## What NOT to Do
+
+❌ Don't mock repositories in integration tests
+❌ Don't skip tests and mark task complete
+❌ Don't expose entities directly in API responses
+❌ Don't put business logic in controllers
+❌ Don't forget @Transactional for database operations
+❌ Don't hardcode configuration (use application.yml)
+
+## Focus Areas
+
+When reading task sections, prioritize:
+- `requirements` - What API endpoints need to be built
+- `technical-approach` - How to implement (patterns, libraries)
+- `implementation` - Specific implementation details
+- `testing-strategy` - How to test the implementation
+
+## Remember
+
+- **Run tests incrementally** - one test at a time for fast feedback
+- **Use real infrastructure** - in-memory database for integration tests
+- **Debug with actual output** - print what you got, don't assume
+- **Report blockers promptly** - don't wait, communicate to orchestrator
+- **Follow existing patterns** - check codebase for similar implementations
+- **Complete test entities** - all required fields must be populated
+- **Validation is mandatory** - ALL tests must pass before completion
+
+## Additional Resources
+
+For deeper patterns and examples, see:
+- **PATTERNS.md** - Spring Security, REST API design patterns (load if needed)
+- **BLOCKERS.md** - Detailed blocker scenarios with solutions (load if stuck)
+- **examples.md** - Complete working examples (load if uncertain)

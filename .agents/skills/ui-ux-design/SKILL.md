@@ -1,228 +1,601 @@
 ---
-name: ui-ux-design
-description: "UI/UX design reference database. 50+ styles, 21 palettes, 50 font pairings, 20 charts, 8 stacks (React, Next.js, Vue, Svelte, SwiftUI, React Native, Flutter, Tailwind). Actions: plan, build, create, design, implement, review, fix, improve, optimize, enhance, refactor, check UI/UX code. Projects: website, landing page, dashboard, admin panel, e-commerce, SaaS, portfolio, blog, mobile app, .html, .tsx, .vue, .svelte. Elements: button, modal, navbar, sidebar, card, table, form, chart. Styles: glassmorphism, claymorphism, minimalism, brutalism, neumorphism, bento grid, dark mode, responsive, skeuomorphism, flat design. Topics: color palette, accessibility, animation, layout, typography, font pairing, spacing, hover, shadow, gradient."
+name: "UI/UX Design"
+description: "User interface design, user experience optimization, accessibility compliance, design systems"
 ---
 
-# UI Design Reference - Searchable Pattern Database
+# UI/UX Design
 
-Curated reference database of UI/UX patterns, styles, color palettes, font pairings, chart types, product recommendations, UX guidelines, and stack-specific best practices. Use this as a lookup tool to find proven design patterns and implementation guidance.
+**Domain**: User interface design, user experience optimization, accessibility compliance, design systems  
+**Applicable To**: Web applications, VS Code extensions, mobile apps, desktop software  
+**Skill Type**: Systematic design audit, accessibility validation, design system implementation
 
-## Prerequisites
+---
 
-Check if Python is installed:
+## Level 1: Quick Reference
 
+### Core Design Principles
+
+**Visual Hierarchy**
+- Typography scale: base size ≥11px for WCAG AA compliance
+- Weight progression: 400 (regular) → 500 (medium) → 600 (semibold) → 700 (bold)
+- Size jumps: ~2px increments (11px → 13px → 14px → 16px → 18px → 20px)
+
+**Spacing System**
+- Base unit: 4px or 8px (8px recommended for touch interfaces)
+- Scale: base × 0.5, 1, 2, 3, 4, 6, 8, 12 (e.g., 4px, 8px, 16px, 24px, 32px, 48px, 64px, 96px)
+- Consistency: All margins, padding, gaps use scale values
+
+**Color & Contrast**
+- WCAG AA minimum: 4.5:1 for normal text, 3:1 for large text (≥18px or ≥14px bold)
+- WCAG AAA enhanced: 7:1 for normal text, 4.5:1 for large text
+- Color-blind safety: Never rely on color alone (add icons, patterns, text labels)
+
+**Touch Targets**
+- Minimum size: 44×44px (WCAG 2.1 AA Level 2.5.5)
+- Recommended: 48×48px for primary actions
+- Spacing: Minimum 8px between adjacent targets
+
+### WCAG 2.1 AA Compliance Checklist
+
+**Perceivable**
+- ✓ Text alternatives (alt text, aria-label) for non-text content
+- ✓ Color contrast ratio ≥4.5:1 for normal text, ≥3:1 for large text
+- ✓ Text resizable up to 200% without loss of functionality
+- ✓ No information conveyed by color alone
+
+**Operable**
+- ✓ All functionality available via keyboard (tabindex, focus management)
+- ✓ Focus indicators visible (:focus-visible styles)
+- ✓ Touch targets ≥44×44px
+- ✓ No keyboard traps (can tab away from all interactive elements)
+
+**Understandable**
+- ✓ Semantic HTML (header, nav, main, article, aside, footer)
+- ✓ ARIA roles for custom components (button, dialog, menu, tab, progressbar)
+- ✓ Form labels associated with inputs (for/id or aria-labelledby)
+- ✓ Error messages clear and actionable
+
+**Robust**
+- ✓ Valid HTML (no unclosed tags, proper nesting)
+- ✓ ARIA attributes used correctly (aria-valuenow/min/max for progressbar)
+- ✓ Compatible with assistive technologies (screen readers, keyboard-only)
+
+### Design System Quick Setup
+
+**CSS Variables Pattern**
+```css
+:root {
+  /* Typography Scale */
+  --font-xs: 11px;    /* Minimum legal size */
+  --font-sm: 12px;    /* Secondary text */
+  --font-md: 14px;    /* Body text (VS Code default) */
+  --font-lg: 16px;    /* Headings, emphasis */
+  --font-xl: 18px;    /* Large headings */
+  
+  /* Spacing Scale (8px base) */
+  --spacing-xs: 4px;  /* Tight spacing */
+  --spacing-sm: 8px;  /* Default gap */
+  --spacing-md: 16px; /* Section padding */
+  --spacing-lg: 24px; /* Card padding */
+  --spacing-xl: 32px; /* Page margins */
+  
+  /* Theme-aware Colors */
+  --text-primary: var(--vscode-foreground);
+  --text-secondary: var(--vscode-descriptionForeground);
+  --bg-primary: var(--vscode-editor-background);
+  --bg-secondary: var(--vscode-sideBar-background);
+  --border-color: var(--vscode-panel-border);
+  --accent: var(--vscode-button-background);
+}
+```
+
+---
+
+## Level 2: Detailed Practices
+
+### Systematic UI/UX Audit Process
+
+**Phase 1: Visual Assessment**
+1. **Typography Audit**
+   - Measure all font sizes (dev tools inspector)
+   - Flag sizes <11px (WCAG AA violation)
+   - Check line-height: 1.4-1.6 for body text
+   - Verify font-weight consistency (avoid random weights like 450, 550)
+
+2. **Spacing Audit**
+   - Inspect margins/padding across components
+   - Identify spacing values (e.g., 7px, 13px, 21px = inconsistent)
+   - Calculate base unit: find GCD of all spacing values
+   - Normalize to scale (e.g., 13px → 12px or 16px)
+
+3. **Color Audit**
+   - Screenshot all color combinations (text on background)
+   - Use contrast checker (WebAIM, Chrome DevTools)
+   - Document violations with severity:
+     - **P0**: <3:1 ratio (immediate fix)
+     - **P1**: 3:1-4.49:1 ratio (fails AA for normal text)
+     - **P2**: 4.5:1-6.99:1 ratio (passes AA, fails AAA)
+
+4. **Touch Target Audit**
+   - Measure interactive elements (buttons, links, checkboxes)
+   - Flag elements <44px in either dimension
+   - Check spacing between adjacent targets (<8px = risk of mis-taps)
+
+**Phase 2: Accessibility Assessment**
+1. **Keyboard Navigation Test**
+   - Tab through entire interface
+   - Verify focus visible on all interactive elements
+   - Check focus order matches visual order
+   - Ensure no keyboard traps (can tab away from modals, menus)
+
+2. **Screen Reader Test**
+   - Use NVDA (Windows), VoiceOver (Mac), or Narrator
+   - Verify all interactive elements have labels
+   - Check landmark regions announced (navigation, main, complementary)
+   - Confirm form fields have associated labels
+
+3. **Semantic HTML Audit**
+   - Inspect DOM structure
+   - Replace `<div>` buttons with `<button>` or `role="button"`
+   - Use `<nav>`, `<article>`, `<aside>`, `<section>` for structure
+   - Add ARIA roles only when semantic HTML insufficient
+
+4. **Color-Blind Safety Test**
+   - Use color-blindness simulator (Coblis, Chrome DevTools)
+   - Check status indicators (success/warning/error) visible without color
+   - Add icons, patterns, or text labels to color-coded elements
+
+**Phase 3: Design System Implementation**
+1. **Extract Design Tokens**
+   - List all unique font sizes → create typography scale
+   - List all unique spacing values → create spacing scale
+   - List all colors → map to semantic variables (primary, secondary, accent, etc.)
+
+2. **Create CSS Variables**
+   - Define tokens in `:root` or component scope
+   - Use semantic names (`--font-body`, not `--font-14px`)
+   - Reference theme colors (`var(--vscode-foreground)`, not hardcoded hex)
+
+3. **Apply Design Tokens**
+   - Replace hardcoded values with variables
+   - Example: `font-size: 14px` → `font-size: var(--font-md)`
+   - Example: `margin: 16px` → `margin: var(--spacing-md)`
+
+4. **Document Design System**
+   - Create design system reference (README or style guide)
+   - Include token table with usage guidelines
+   - Add code examples for common patterns
+
+### Accessibility Patterns Library
+
+**Focus Indicators**
+```css
+/* VS Code-aware focus styling */
+:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+**Color-Blind Safe Status Indicators**
+```css
+/* Status dots with icons via ::after */
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-dot.success {
+  background: #4caf50; /* Green */
+}
+.status-dot.success::after {
+  content: '✓'; /* Checkmark icon */
+  position: absolute;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  top: -1px;
+  left: 1px;
+}
+
+.status-dot.warning {
+  background: #ff9800; /* Orange */
+}
+.status-dot.warning::after {
+  content: '⚠'; /* Warning icon */
+  position: absolute;
+  color: white;
+  font-size: 10px;
+  top: -2px;
+  left: 0px;
+}
+
+.status-dot.error {
+  background: #f44336; /* Red */
+}
+.status-dot.error::after {
+  content: '✗'; /* X icon */
+  position: absolute;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  top: -1px;
+  left: 2px;
+}
+```
+
+**ARIA Progressbar**
+```html
+<!-- Accessible progress bar -->
+<div role="progressbar" 
+     aria-valuenow="65" 
+     aria-valuemin="0" 
+     aria-valuemax="100"
+     aria-label="Task completion">
+  <div class="progress-fill" style="width: 65%"></div>
+</div>
+```
+
+**Accessible Buttons**
+```html
+<!-- Semantic button with ARIA -->
+<button type="button" 
+        tabindex="0"
+        aria-label="Generate architecture diagram"
+        class="action-button">
+  Generate Diagram
+</button>
+
+<!-- Div styled as button (use sparingly) -->
+<div role="button" 
+     tabindex="0"
+     aria-label="Close panel"
+     class="close-button"
+     onclick="handleClick()"
+     onkeypress="if(event.key==='Enter'||event.key===' ')handleClick()">
+  ×
+</div>
+```
+
+**Card Layout with Semantic HTML**
+```html
+<article class="card" role="article">
+  <header>
+    <h3>Skill Name</h3>
+  </header>
+  <div class="card-body">
+    <p>Description text...</p>
+  </div>
+  <footer>
+    <button aria-label="Activate skill">Activate</button>
+  </footer>
+</article>
+```
+
+### Design System Implementation Workflow
+
+**Step 1: Audit Current State**
 ```bash
-python3 --version || python --version
+# Extract all font-size declarations
+grep -r "font-size:" src/ | grep -oP "\d+px" | sort -u
+
+# Extract all spacing values (margin, padding)
+grep -r -E "(margin|padding):" src/ | grep -oP "\d+px" | sort -u
+
+# Count unique colors
+grep -r -E "(color|background):" src/ | grep -oP "#[0-9a-fA-F]{3,6}" | sort -u
 ```
 
-If Python is not installed, install it based on user's OS:
-
-**macOS:**
-```bash
-brew install python3
+**Step 2: Calculate Base Unit**
+```
+Spacing values found: 4px, 8px, 12px, 16px, 20px, 24px, 32px
+GCD = 4px → Base unit = 4px
+Scale: 1×, 2×, 3×, 4×, 5×, 6×, 8× (0.25rem, 0.5rem, 0.75rem, 1rem, 1.25rem, 1.5rem, 2rem)
 ```
 
-**Ubuntu/Debian:**
-```bash
-sudo apt update && sudo apt install python3
+**Step 3: Create Token System**
+```javascript
+// Design tokens as JavaScript object
+const tokens = {
+  typography: {
+    xs: '11px',  // Legal minimum
+    sm: '12px',  // Secondary
+    md: '14px',  // Body
+    lg: '16px',  // Heading
+    xl: '18px'   // Large heading
+  },
+  spacing: {
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '24px',
+    xl: '32px'
+  },
+  colors: {
+    primary: 'var(--vscode-button-background)',
+    secondary: 'var(--vscode-button-secondaryBackground)',
+    text: 'var(--vscode-foreground)',
+    textMuted: 'var(--vscode-descriptionForeground)',
+    border: 'var(--vscode-panel-border)',
+    success: '#4caf50',
+    warning: '#ff9800',
+    error: '#f44336'
+  }
+};
 ```
 
-**Windows:**
-```powershell
-winget install Python.Python.3.12
+**Step 4: Generate CSS Variables**
+```css
+:root {
+  /* Typography */
+  --font-xs: 11px;
+  --font-sm: 12px;
+  --font-md: 14px;
+  --font-lg: 16px;
+  --font-xl: 18px;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Colors (theme-aware) */
+  --color-primary: var(--vscode-button-background);
+  --color-text: var(--vscode-foreground);
+  --color-border: var(--vscode-panel-border);
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-error: #f44336;
+}
+```
+
+**Step 5: Apply Design Tokens**
+```css
+/* Before: Hardcoded values */
+.button {
+  font-size: 14px;
+  padding: 8px 16px;
+  background: #007acc;
+  color: #ffffff;
+}
+
+/* After: Design tokens */
+.button {
+  font-size: var(--font-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-primary);
+  color: var(--color-text);
+}
+```
+
+### Testing & Validation
+
+**Manual Testing Checklist**
+- [ ] Tab through all interactive elements (keyboard navigation)
+- [ ] Verify focus visible on all focusable elements
+- [ ] Test with screen reader (NVDA, VoiceOver, Narrator)
+- [ ] Zoom to 200% (Ctrl/Cmd +) - verify no content cut off
+- [ ] Test with Windows High Contrast mode
+- [ ] Simulate color blindness (Deuteranopia, Protanopia, Tritanopia)
+- [ ] Test on mobile device or touch simulator (Chrome DevTools)
+- [ ] Verify minimum touch target size (44×44px)
+
+**Automated Testing Tools**
+- **axe DevTools**: Browser extension for WCAG violations
+- **Lighthouse**: Chrome DevTools → Accessibility score
+- **WAVE**: Web Accessibility Evaluation Tool
+- **Color Contrast Analyzer**: Desktop app for WCAG contrast checking
+- **Pa11y**: Command-line accessibility testing
+
+**Validation Scripts**
+```javascript
+// Check for minimum font sizes
+const elements = document.querySelectorAll('*');
+elements.forEach(el => {
+  const fontSize = parseFloat(window.getComputedStyle(el).fontSize);
+  if (fontSize < 11 && fontSize > 0) {
+    console.warn('Font too small:', el, fontSize + 'px');
+  }
+});
+
+// Check for touch target sizes
+const interactive = document.querySelectorAll('button, a, input, [role="button"]');
+interactive.forEach(el => {
+  const rect = el.getBoundingClientRect();
+  if (rect.width < 44 || rect.height < 44) {
+    console.warn('Touch target too small:', el, rect.width + '×' + rect.height + 'px');
+  }
+});
+
+// Check for missing ARIA labels
+const buttons = document.querySelectorAll('button, [role="button"]');
+buttons.forEach(btn => {
+  if (!btn.textContent.trim() && !btn.getAttribute('aria-label')) {
+    console.error('Button missing label:', btn);
+  }
+});
 ```
 
 ---
 
-## How to Use This Skill
+## Level 3: Resources & References
 
-When user requests UI/UX work (design, build, create, implement, review, fix, improve), follow this workflow:
+### WCAG 2.1 Specification
 
-### Step 1: Analyze User Requirements
+**Official Documentation**
+- WCAG 2.1 Guidelines: https://www.w3.org/WAI/WCAG21/quickref/
+- Understanding WCAG 2.1: https://www.w3.org/WAI/WCAG21/Understanding/
+- ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
 
-Extract key information from user request:
-- **Product type**: SaaS, e-commerce, portfolio, dashboard, landing page, etc.
-- **Style keywords**: minimal, playful, professional, elegant, dark mode, etc.
-- **Industry**: healthcare, fintech, gaming, education, etc.
-- **Stack**: React, Vue, Next.js, or default to `html-tailwind`
+**Key Success Criteria**
+- **1.4.3 Contrast (Minimum)** - Level AA: 4.5:1 normal text, 3:1 large text
+- **1.4.6 Contrast (Enhanced)** - Level AAA: 7:1 normal text, 4.5:1 large text
+- **1.4.10 Reflow** - Content reflows at 320px width (400% zoom)
+- **1.4.11 Non-text Contrast** - 3:1 for UI components and graphical objects
+- **1.4.12 Text Spacing** - No loss of content with increased spacing
+- **2.1.1 Keyboard** - All functionality via keyboard
+- **2.4.7 Focus Visible** - Keyboard focus indicator visible
+- **2.5.5 Target Size** - Touch targets ≥44×44px (Level AAA)
+- **4.1.2 Name, Role, Value** - ARIA attributes for custom components
 
-### Step 2: Search Relevant Domains
+### Design Systems Examples
 
-Use `search.py` multiple times to gather comprehensive information. Search until you have enough context.
+**Material Design 3**
+- Typography: 11 type scales (Display, Headline, Title, Body, Label)
+- Spacing: 4px base unit, 8dp grid system
+- Color: Dynamic color from seed, contrast-safe palettes
+- Components: 40+ accessible components with ARIA
+- Link: https://m3.material.io/
 
-```bash
-python3 .claude/skills/ui-ux-design/scripts/search.py "<keyword>" --domain <domain> [-n <max_results>]
+**Apple Human Interface Guidelines**
+- Typography: SF Pro font family, Dynamic Type support
+- Spacing: 8pt grid, consistent margins
+- Touch Targets: 44pt minimum
+- Accessibility: VoiceOver, Dynamic Type, Reduced Motion
+- Link: https://developer.apple.com/design/human-interface-guidelines/
+
+**Microsoft Fluent Design**
+- Typography: Segoe UI Variable, type ramp
+- Spacing: 4px base unit
+- Components: React, Web Components, .NET
+- Accessibility: Built-in ARIA, keyboard navigation
+- Link: https://fluent2.microsoft.design/
+
+**VS Code Design Guidelines**
+- Colors: Theme-aware CSS variables (`--vscode-*`)
+- Typography: VS Code font stack, 13px default
+- Icons: Codicons icon font
+- Components: Webview UI Toolkit
+- Link: https://code.visualstudio.com/api/references/extension-guidelines
+
+### Design Tools & Resources
+
+**Accessibility Testing**
+- **axe DevTools**: https://www.deque.com/axe/devtools/
+- **WAVE**: https://wave.webaim.org/
+- **Lighthouse**: Built into Chrome DevTools
+- **Color Contrast Analyzer**: https://www.tpgi.com/color-contrast-checker/
+- **WebAIM Contrast Checker**: https://webaim.org/resources/contrastchecker/
+
+**Color-Blindness Simulators**
+- **Coblis**: https://www.color-blindness.com/coblis-color-blindness-simulator/
+- **Chrome DevTools**: DevTools → Rendering → Emulate vision deficiencies
+- **Photoshop/Figma**: Built-in color-blind preview modes
+
+**Design Token Tools**
+- **Style Dictionary**: Build system for design tokens
+- **Theo**: Salesforce design token tool
+- **Tokens Studio**: Figma plugin for design tokens
+- **CSS Variables Spec**: https://www.w3.org/TR/css-variables/
+
+**Screen Readers**
+- **NVDA** (Windows, free): https://www.nvaccess.org/
+- **VoiceOver** (Mac, built-in): Cmd+F5 to enable
+- **Narrator** (Windows, built-in): Win+Ctrl+Enter to enable
+- **JAWS** (Windows, commercial): https://www.freedomscientific.com/products/software/jaws/
+
+### Code Examples Repository
+
+**Accessible Component Patterns**
+```html
+<!-- Modal Dialog -->
+<div role="dialog" 
+     aria-labelledby="dialog-title"
+     aria-describedby="dialog-desc"
+     aria-modal="true">
+  <h2 id="dialog-title">Confirm Action</h2>
+  <p id="dialog-desc">Are you sure you want to proceed?</p>
+  <button aria-label="Confirm">OK</button>
+  <button aria-label="Cancel">Cancel</button>
+</div>
+
+<!-- Tab Panel -->
+<div role="tablist" aria-label="Settings tabs">
+  <button role="tab" aria-selected="true" aria-controls="panel-1">General</button>
+  <button role="tab" aria-selected="false" aria-controls="panel-2">Advanced</button>
+</div>
+<div id="panel-1" role="tabpanel">General settings...</div>
+<div id="panel-2" role="tabpanel" hidden>Advanced settings...</div>
+
+<!-- Combobox (Autocomplete) -->
+<label for="search">Search</label>
+<input id="search" 
+       role="combobox"
+       aria-autocomplete="list"
+       aria-expanded="false"
+       aria-controls="results">
+<ul id="results" role="listbox" hidden>
+  <li role="option">Result 1</li>
+  <li role="option">Result 2</li>
+</ul>
 ```
 
-**Recommended search order:**
+### Related Skills
 
-1. **Product** - Get style recommendations for product type
-2. **Style** - Get detailed style guide (colors, effects, frameworks)
-3. **Typography** - Get font pairings with Google Fonts imports
-4. **Color** - Get color palette (Primary, Secondary, CTA, Background, Text, Border)
-5. **Landing** - Get page structure (if landing page)
-6. **Chart** - Get chart recommendations (if dashboard/analytics)
-7. **UX** - Get best practices and anti-patterns
-8. **Stack** - Get stack-specific guidelines (default: html-tailwind)
+**Direct Dependencies**
+- **graphic-design**: Visual identity, logo design, brand consistency
+- **code-review**: Accessibility code quality validation
+- **testing-strategies**: Automated accessibility testing integration
 
-### Step 3: Stack Guidelines (Default: html-tailwind)
+**Complementary Skills**
+- **markdown-mermaid**: Diagram accessibility (alt text, semantic structure)
+- **vscode-extension-patterns**: Webview UI patterns, theme integration
+- **localization**: Internationalization, RTL support, cultural considerations
 
-If user doesn't specify a stack, **default to `html-tailwind`**.
+### Common Pitfalls
 
-```bash
-python3 .claude/skills/ui-ux-design/scripts/search.py "<keyword>" --stack html-tailwind
-```
+**Typography Mistakes**
+- Using font sizes <11px (WCAG violation)
+- Inconsistent font weights (mixing 450, 500, 550)
+- Line-height too tight (<1.4 for body text)
+- Font color insufficient contrast
 
-Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`, `react-native`, `flutter`
+**Spacing Mistakes**
+- Random spacing values (7px, 13px, 21px) instead of scale
+- Inconsistent padding within similar components
+- Touch targets too close together (<8px spacing)
 
----
+**Accessibility Mistakes**
+- Using `<div>` instead of `<button>` for clickable elements
+- Missing `aria-label` on icon-only buttons
+- No visible focus indicator
+- Color-only status indicators (no icons/text)
+- Touch targets <44×44px
 
-## Search Reference
+**Design Token Mistakes**
+- Hardcoding theme colors (breaks dark mode)
+- Using presentational names (`--blue-500`) instead of semantic (`--color-primary`)
+- Not using CSS variables consistently
+- Missing fallback values for older browsers
 
-### Available Domains
+### Performance Considerations
 
-| Domain | Use For | Example Keywords |
-|--------|---------|------------------|
-| `product` | Product type recommendations | SaaS, e-commerce, portfolio, healthcare, beauty, service |
-| `style` | UI styles, colors, effects | glassmorphism, minimalism, dark mode, brutalism |
-| `typography` | Font pairings, Google Fonts | elegant, playful, professional, modern |
-| `color` | Color palettes by product type | saas, ecommerce, healthcare, beauty, fintech, service |
-| `landing` | Page structure, CTA strategies | hero, hero-centric, testimonial, pricing, social-proof |
-| `chart` | Chart types, library recommendations | trend, comparison, timeline, funnel, pie |
-| `ux` | Best practices, anti-patterns | animation, accessibility, z-index, loading |
-| `prompt` | AI prompts, CSS keywords | (style name) |
+**CSS Variables Performance**
+- CSS variables have minimal performance impact
+- Prefer `:root` scope for global tokens
+- Use component scope for component-specific overrides
+- Avoid excessive `calc()` operations with variables
 
-### Available Stacks
+**Accessibility Tree Performance**
+- Excessive ARIA attributes can slow screen readers
+- Use semantic HTML instead of ARIA when possible
+- Minimize DOM depth for better screen reader performance
+- Cache accessibility tree calculations in JS
 
-| Stack | Focus |
-|-------|-------|
-| `html-tailwind` | Tailwind utilities, responsive, a11y (DEFAULT) |
-| `react` | State, hooks, performance, patterns |
-| `nextjs` | SSR, routing, images, API routes |
-| `vue` | Composition API, Pinia, Vue Router |
-| `svelte` | Runes, stores, SvelteKit |
-| `swiftui` | Views, State, Navigation, Animation |
-| `react-native` | Components, Navigation, Lists |
-| `flutter` | Widgets, State, Layout, Theming |
+### Version History
 
----
-
-## Example Workflow
-
-**User request:** "Làm landing page cho dịch vụ chăm sóc da chuyên nghiệp"
-
-**AI should:**
-
-```bash
-# 1. Search product type
-python3 .claude/skills/ui-ux-design/scripts/search.py "beauty spa wellness service" --domain product
-
-# 2. Search style (based on industry: beauty, elegant)
-python3 .claude/skills/ui-ux-design/scripts/search.py "elegant minimal soft" --domain style
-
-# 3. Search typography
-python3 .claude/skills/ui-ux-design/scripts/search.py "elegant luxury" --domain typography
-
-# 4. Search color palette
-python3 .claude/skills/ui-ux-design/scripts/search.py "beauty spa wellness" --domain color
-
-# 5. Search landing page structure
-python3 .claude/skills/ui-ux-design/scripts/search.py "hero-centric social-proof" --domain landing
-
-# 6. Search UX guidelines
-python3 .claude/skills/ui-ux-design/scripts/search.py "animation" --domain ux
-python3 .claude/skills/ui-ux-design/scripts/search.py "accessibility" --domain ux
-
-# 7. Search stack guidelines (default: html-tailwind)
-python3 .claude/skills/ui-ux-design/scripts/search.py "layout responsive" --stack html-tailwind
-```
-
-**Then:** Synthesize all search results and implement the design.
-
----
-
-## Tips for Better Results
-
-1. **Be specific with keywords** - "healthcare SaaS dashboard" > "app"
-2. **Search multiple times** - Different keywords reveal different insights
-3. **Combine domains** - Style + Typography + Color = Complete design system
-4. **Always check UX** - Search "animation", "z-index", "accessibility" for common issues
-5. **Use stack flag** - Get implementation-specific best practices
-6. **Iterate** - If first search doesn't match, try different keywords
-
----
-
-## Common Rules for Professional UI
-
-These are frequently overlooked issues that make UI look unprofessional:
-
-### Icons & Visual Elements
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **No emoji icons** | Use SVG icons (Heroicons, Lucide, Simple Icons) | Use emojis like 🎨 🚀 ⚙️ as UI icons |
-| **Stable hover states** | Use color/opacity transitions on hover | Use scale transforms that shift layout |
-| **Correct brand logos** | Research official SVG from Simple Icons | Guess or use incorrect logo paths |
-| **Consistent icon sizing** | Use fixed viewBox (24x24) with w-6 h-6 | Mix different icon sizes randomly |
-
-### Interaction & Cursor
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **Cursor pointer** | Add `cursor-pointer` to all clickable/hoverable cards | Leave default cursor on interactive elements |
-| **Hover feedback** | Provide visual feedback (color, shadow, border) | No indication element is interactive |
-| **Smooth transitions** | Use `transition-colors duration-200` | Instant state changes or too slow (>500ms) |
-
-### Light/Dark Mode Contrast
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **Glass card light mode** | Use `bg-white/80` or higher opacity | Use `bg-white/10` (too transparent) |
-| **Text contrast light** | Use `#0F172A` (slate-900) for text | Use `#94A3B8` (slate-400) for body text |
-| **Muted text light** | Use `#475569` (slate-600) minimum | Use gray-400 or lighter |
-| **Border visibility** | Use `border-gray-200` in light mode | Use `border-white/10` (invisible) |
-
-### Layout & Spacing
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **Floating navbar** | Add `top-4 left-4 right-4` spacing | Stick navbar to `top-0 left-0 right-0` |
-| **Content padding** | Account for fixed navbar height | Let content hide behind fixed elements |
-| **Consistent max-width** | Use same `max-w-6xl` or `max-w-7xl` | Mix different container widths |
-
----
-
-## Pre-Delivery Checklist
-
-Before delivering UI code, verify these items:
-
-### Visual Quality
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] Brand logos are correct (verified from Simple Icons)
-- [ ] Hover states don't cause layout shift
-- [ ] Use theme colors directly (bg-primary) not var() wrapper
-
-### Interaction
-- [ ] All clickable elements have `cursor-pointer`
-- [ ] Hover states provide clear visual feedback
-- [ ] Transitions are smooth (150-300ms)
-- [ ] Focus states visible for keyboard navigation
-
-### Light/Dark Mode
-- [ ] Light mode text has sufficient contrast (4.5:1 minimum)
-- [ ] Glass/transparent elements visible in light mode
-- [ ] Borders visible in both modes
-- [ ] Test both modes before delivery
-
-### Layout
-- [ ] Floating elements have proper spacing from edges
-- [ ] No content hidden behind fixed navbars
-- [ ] Responsive at 320px, 768px, 1024px, 1440px
-- [ ] No horizontal scroll on mobile
-
-### Accessibility
-- [ ] All images have alt text
-- [ ] Form inputs have labels
-- [ ] Color is not the only indicator
-- [ ] `prefers-reduced-motion` respected
+**v1.0.0** (2026-02-15)
+- Initial skill creation based on Alex v5.8.0 accessibility implementation session
+- WCAG 2.1 AA compliance patterns from welcomeView.ts refactoring
+- Design system implementation workflow from production experience
+- Accessibility audit checklist validated against real-world deployment

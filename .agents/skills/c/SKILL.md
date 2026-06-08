@@ -1,61 +1,33 @@
 ---
-name: c
-description: 'World C Skill'
-version: 1.0.0
+name: C
+slug: c
+version: 1.0.1
+description: Write safe C avoiding memory corruption, buffer overflows, and undefined behavior traps.
+metadata: {"clawdbot":{"emoji":"⚙️","requires":{"bins":["gcc","clang"]},"os":["linux","darwin","win32"]}}
 ---
 
-# World C Skill
+## Quick Reference
 
-**Trit**: +1 (PLUS (generator/executor))
-**Color Range**: Warm hues (0-60°, 300-360°)
-**Index**: 2
-**Wallet**: world_c_aptos
-**MCP Server**: `mcp__world_c_aptos__*`
+| Topic | File |
+|-------|------|
+| malloc/free, leaks, double free | `memory.md` |
+| Null, dangling, pointer arithmetic | `pointers.md` |
+| Null terminator, buffer overflow | `strings.md` |
+| Integer overflow, signed/unsigned | `types.md` |
+| Macro traps, include guards | `preprocessor.md` |
+| Common undefined behavior | `undefined.md` |
 
-## GF(3) Role
+## Critical Rules
 
-This world operates as **PLUS (generator/executor)** in the triadic system.
-
-Conservation law: `Σ trits ≡ 0 (mod 3)` across all parallel operations.
-
-## Usage
-
-Access blockchain operations via MCP tools:
-
-```
-mcp__world_c_aptos__aptos_balance      # Check APT balance
-mcp__world_c_aptos__aptos_transfer     # Transfer APT (requires approval)
-mcp__world_c_aptos__aptos_swap         # Swap tokens on DEX
-mcp__world_c_aptos__aptos_stake        # Stake with validator
-mcp__world_c_aptos__aptos_view         # Call view function (read-only)
-mcp__world_c_aptos__aptos_intent       # Natural language intent
-mcp__world_c_aptos__aptos_pending      # List pending decisions
-mcp__world_c_aptos__aptos_approve      # Approve/reject decision
-```
-
-## World Description
-
-Cognitect/Clojure ecosystem
-
-## Triadic Coordination
-
-When operating in parallel with other worlds:
-
-| Your Role | Partner Roles | Combined |
-|-----------|--------------|----------|
-| +1 | Need -1, 0 | Σ = 0 ✓ |
-
-## Related Skills
-
-- `aptos-agent` - Core Aptos interaction patterns
-- `aptos-society` - World Extractable Value (WEV) contracts
-- `gay-mcp` - Deterministic color generation from seed
-- `plurigrid-asi-integrated` - Unified skill orchestration
-
-## Customization
-
-Add world-specific configurations below this line:
-
----
-
-<!-- World C custom content -->
+- `malloc` returns `void*` — cast required in C++, optional in C but check for NULL
+- `free(ptr); ptr = NULL;` — always null after free to prevent double-free
+- `sizeof(array)` in function gives pointer size, not array size — pass length separately
+- `char str[5] = "hello";` — no room for null terminator, UB when used as string
+- `strcpy` doesn't check bounds — use `strncpy` and manually null-terminate
+- Signed overflow is UB — compiler can optimize assuming it never happens
+- `i++ + i++` is UB — no sequence point between modifications
+- Returning pointer to local variable — dangling pointer, UB on use
+- `#define SQUARE(x) x*x` — `SQUARE(1+2)` = `1+2*1+2` = 5, not 9
+- `memcpy` with overlapping regions — use `memmove` instead
+- Uninitialized variables — contain garbage, UB if used
+- Array out of bounds — no runtime check, silent corruption or crash

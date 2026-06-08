@@ -1,283 +1,115 @@
 ---
-name: visual-style-guide
-description: This skill should be used when the user asks about "colors", "hex codes", "path colors", "tile background", "rendering order", "sorting order", "token design", "SVG styling", "stroke width", "line cap", "grid lines", "glow effect", "visual style", or discusses Zero-Day Attack visual design and styling.
-version: 0.3.0
+name: Visual Style Guide
+description: |
+  Reference for consistent visual style across procedurally generated assets.
+
+  **Triggers:** "visual style", "art style", "color palette", "material", "PBR".
+
+  **Before generating:** Check `.studio/visual-style.md` for project style.
+
+  **Load references when:**
+  - Style tokens → `references/style-tokens.md`
+  - Color palettes → `references/color-palettes.md`
+  - PBR materials → `references/material-database.md`
+  - Metal materials → `references/materials-metals.md`
+  - Natural materials → `references/materials-natural.md`
+  - Generation recipes → `references/generation-recipes.md`
+  - Quality assessment → `references/quality-heuristics.md`
+version: 3.1.0
 ---
 
 # Visual Style Guide
 
-Expert knowledge of Zero-Day Attack visual design, color palette, rendering specifications, and SVG styling conventions.
+Maintain consistent visual style across procedurally generated assets through style tokens, color palettes, and material definitions.
 
-## Color Palette
+## Core Concepts
 
-### Background Elements
+| Concept | Purpose | Reference |
+|---------|---------|-----------|
+| Style Token | Modifies generation parameters (roughness, saturation, detail) | `style-tokens.md` |
+| Color Palette | HSL ranges for consistent colors | `color-palettes.md` |
+| Material | PBR parameters for surfaces | `material-database.md` |
+| Recipe | Bundles token + palette + material + constraints | `generation-recipes.md` |
 
-| Element          | Hex       | RGB          | Description                    |
-| ---------------- | --------- | ------------ | ------------------------------ |
-| Tile Background  | `#151820` | (21, 24, 32) | Very dark blue-gray            |
-| Grid Lines       | `#222630` | (34, 38, 48) | Slightly lighter (50% opacity) |
-| Board Background | `#0D0F14` | (13, 15, 20) | Darkest blue-gray              |
+## Style Token Quick Reference
 
-### Path Colors
+| Token | Roughness | Saturation | Detail | Use For |
+|-------|-----------|------------|--------|---------|
+| RUSTIC | +0.3 | 0.7x | Medium | Medieval, weathered |
+| PRISTINE | -0.2 | 1.0x | High | Sci-fi, clean |
+| CYBERPUNK | -0.1 | 1.3x | Extreme | Neon, tech |
+| GOTHIC | +0.2 | 0.6x | High | Horror, ornate |
+| ORGANIC | +0.1 | 0.9x | High | Natural, living |
 
-| Color  | Hex       | RGB             | Purpose           |
-| ------ | --------- | --------------- | ----------------- |
-| Red    | `#FF2244` | (255, 34, 68)   | Red player paths  |
-| Blue   | `#44BBFF` | (68, 187, 255)  | Blue player paths |
-| Purple | `#BB88FF` | (187, 136, 255) | Shared paths      |
+See `references/style-tokens.md` for 15+ tokens with full parameters.
 
-### Color Accessibility
+## Color Palette Quick Reference
 
-Colors tested for color vision deficiencies:
+| Palette | Hue Range | Saturation | Use For |
+|---------|-----------|------------|---------|
+| WarmEarthy | 15-45 (orange-brown) | 0.3-0.6 | Wood, leather |
+| CoolMetal | 200-240 (blue-gray) | 0.1-0.3 | Steel, chrome |
+| Neon | 280-320, 160-200 | 0.8-1.0 | Cyberpunk |
+| Muted | Any | 0.1-0.3 | Stone, worn |
+| Vibrant | Any | 0.7-1.0 | Fantasy, cartoon |
 
-- High contrast between paths and background
-- Red appears brownish but distinct in colorblind view
-- Blue remains clearly visible
-- Purple maintains unique identity
+See `references/color-palettes.md` for 12 palettes with specifications.
 
-## Path Specifications
+## Material Quick Reference
 
-### SVG Path Attributes
+Use dot notation: `category.variant`
 
-```svg
-<path d="M [start] C [control1], [control2], [end]"
-      fill="none"
-      stroke="#FF2244"
-      stroke-width="8"
-      stroke-linecap="butt"/>
+| Category | Variants | Key Properties |
+|----------|----------|----------------|
+| metal | polished, brushed, rusted, chrome | High metallic |
+| wood | fresh, weathered, painted, charred | Low metallic, high roughness |
+| stone | polished, rough, mossy, marble | Varied roughness |
+| fabric | cotton, silk, leather, velvet | Medium roughness |
+| crystal | clear, colored, magical | Low roughness, optional emission |
+
+See `references/material-database.md` for 40+ materials with PBR values.
+
+## Semantic Description Examples
+
+| Natural Language | Style Translation |
+|------------------|------------------|
+| "rusty old barrel" | Style: Rustic, Material: metal.rusted |
+| "glowing crystal" | Style: Fantasy, Material: crystal.magical, Emission: 0.8 |
+| "clean sci-fi panel" | Style: Pristine, Material: metal.brushed |
+| "neon cyberpunk sign" | Style: Cyberpunk, Material: tech.hologram |
+
+## Creative Workflow
+
+```
+1. DESCRIBE  →  "weathered medieval barrel"
+2. INTERPRET →  Style: Rustic, Palette: WarmEarthy, Material: wood.weathered
+3. GENERATE  →  Produce mesh + textures
+4. ASSESS    →  Run quality heuristics
+5. ITERATE   →  Adjust based on feedback
 ```
 
-| Attribute      | Value       | Purpose                       |
-| -------------- | ----------- | ----------------------------- |
-| fill           | none        | Paths are stroked, not filled |
-| stroke         | (color hex) | Path color                    |
-| stroke-width   | **8**       | Path thickness in SVG units   |
-| stroke-linecap | **butt**    | Square end caps               |
-
-### Path Connections
-
-- Paths connect at edge midpoints (100 units from corners on 200×200 tile)
-- Curved paths use bezier curves with consistent radius
-- Paths do NOT connect where they visually cross (gap indicates underpass)
-
-## Grid Line Styling
-
-### Cyberpunk Glow Effect
-
-Two-layer rendering:
-
-```csharp
-// Glow layer (sorting order 1)
-Color glowColor = new Color(0.73f, 0.53f, 1f, 0.3f);  // #BB88FF @ 30%
-float glowWidth = 0.2f;
-
-// Core layer (sorting order 2)
-Color coreColor = new Color(0.73f, 0.53f, 1f, 0.9f);  // #BB88FF @ 90%
-float coreWidth = 0.08f;
-```
-
-### Grid Structure
-
-- 5×5 grid with 40-unit spacing in SVG terms
-- Lines rendered at 50% opacity
-- Reserve zone boundaries: Blue on left, Red on right
-
-## Token Design
-
-### Attack Token
-
-```text
-Design: Filled target
-- Three concentric circles (solid fill)
-- Cross pattern overlay
-- Player color fill
-```
-
-### Exploit Token
-
-```text
-Design: Hollow rings
-- Two concentric circles (outline only)
-- Faint crosshair overlay
-- Player color stroke
-```
-
-### Ghost Token
-
-```text
-Design: Gradient opacity
-- Four concentric circles
-- Graduated opacity: 30%, 50%, 70%, 100%
-- Player color with transparency
-```
-
-### Token Dimensions
-
-| Attribute    | Value                   |
-| ------------ | ----------------------- |
-| SVG viewBox  | 80×80 units             |
-| World Size   | 0.4 units (20% of tile) |
-| Texture Size | 40 pixels (at 100 PPU)  |
-
-## Tile Dimensions
-
-| Attribute    | Value            |
-| ------------ | ---------------- |
-| SVG viewBox  | 200×200 units    |
-| World Size   | 2.0×2.0 units    |
-| Texture Size | 200 (at 100 PPU) |
-
-### SVG Import Settings (CRITICAL)
-
-**Always use PPU = 100. Adjust Texture Size for world size.**
-
-```text
-World Size = Texture Size ÷ 100
-```
-
-| Asset  | Texture Size | PPU | World Size |
-| ------ | ------------ | --- | ---------- |
-| Tiles  | 200          | 100 | 2.0        |
-| Tokens | 40           | 100 | 0.4        |
-
-## Rendering Order (Sorting Layers)
-
-Higher sorting order = renders in front.
-
-| Layer         | Order  | Content               | Component           |
-| ------------- | ------ | --------------------- | ------------------- |
-| Background    | -10    | Board color           | BackgroundRenderer  |
-| Tiles         | 0      | Tile sprites          | TileView            |
-| Grid Glow     | 1      | Wide purple lines     | GridOverlayRenderer |
-| Grid Core     | 2      | Thin purple lines     | GridOverlayRenderer |
-| Reserve Lines | 1      | Zone boundaries       | GridOverlayRenderer |
-| Edge Nodes    | 3      | Connection indicators | (future)            |
-| UI            | Canvas | Text, scores          | Unity UI            |
-
-### Critical: Grid Above Tiles
-
-Grid sorting order MUST be higher than tiles:
-
-- Tiles: 0
-- Grid Glow: 1
-- Grid Core: 2
-
-If grid order is lower, tiles cover the grid lines.
-
-## Board Layout
-
-### Display Specifications
-
-Target: 1920×1080 pixels = 19.2×10.8 world units (100 PPU)
-
-### Horizontal Layout Visual
-
-```text
-┌─────────┬──────────┬────────────────────────────┬──────────┬─────────┐
-│ Blue UI │ Blue Res │       5×5 PLAYABLE GRID    │ Red Res  │ Red UI  │
-│   2.1   │   2.0    │           10.0             │   2.0    │  2.1    │
-│`#44BBFF`│ `#44BBFF`│    `#BB88FF` (firewall)    │ `#FF2244`│`#FF2244`│
-└─────────┴──────────┴────────────────────────────┴──────────┴─────────┘
-← Blue player sits here                           Red player sits here →
-```
-
-### Player Orientation
-
-- **Blue player**: Views from LEFT side (x < 0)
-- **Red player**: Views from RIGHT side (x > 0)
-- UI text rotated appropriately for each player's viewing angle
-
-## SVG Technical Specifications
-
-### Tile Template
-
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- Background -->
-  <rect width="200" height="200" fill="#151820"/>
-
-  <!-- Grid (40-unit spacing, 50% opacity) -->
-  <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160"
-        stroke="#222630" stroke-width="1" opacity="0.5"/>
-  <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200"
-        stroke="#222630" stroke-width="1" opacity="0.5"/>
-
-  <!-- Paths -->
-  <path d="M 100 0 C 100 50, 150 100, 200 100"
-        fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
-</svg>
-```
-
-### Edge Node Positions (200×200 viewBox)
-
-| Node   | Position   |
-| ------ | ---------- |
-| Top    | (100, 0)   |
-| Right  | (200, 100) |
-| Bottom | (100, 200) |
-| Left   | (0, 100)   |
-
-### Path Types
-
-**Quarter-curve (adjacent nodes)**:
-
-```svg
-<!-- Left to Top -->
-<path d="M 0 100 C 50 100, 100 50, 100 0" .../>
-```
-
-**Straight line (opposite nodes)**:
-
-```svg
-<!-- Left to Right -->
-<path d="M 0 100 L 200 100" .../>
-```
-
-## Unity Color Usage
-
-### In C# Code
-
-```csharp
-// Background
-Color boardBackground = new Color(0.05f, 0.06f, 0.08f);  // #0D0F14
-Color tileBackground = new Color(0.08f, 0.09f, 0.13f);   // #151820
-
-// Paths
-Color redPath = new Color(1f, 0.13f, 0.27f);             // #FF2244
-Color bluePath = new Color(0.27f, 0.73f, 1f);            // #44BBFF
-Color purplePath = new Color(0.73f, 0.53f, 1f);          // #BB88FF
-
-// Grid
-Color gridLine = new Color(0.13f, 0.15f, 0.19f, 0.5f);   // #222630 @ 50%
-```
-
-### In Inspector
-
-Enter hex values directly: `#FF2244`, `#44BBFF`, etc.
-
-## Consistency Rules
-
-1. **Path width**: Always 8 SVG units
-2. **Line cap**: Always "butt"
-3. **Grid opacity**: Always 50%
-4. **Grid spacing**: Always 40 SVG units
-5. **Token size**: Always 20% of tile size
-
-## Additional Resources
-
-### Reference Files
-
-This skill's `references/` folder contains:
-
-| File                    | Contains                           | Read When                           |
-| ----------------------- | ---------------------------------- | ----------------------------------- |
-| `color-system.md`       | Full palette, hex codes, RGB       | Need exact color values             |
-| `rendering-order.md`    | 7 layers, sorting order details    | Fixing z-order/visibility issues    |
-| `svg-specifications.md` | viewBox, stroke widths, path types | Creating or modifying SVG assets    |
-| `token-designs.md`      | Attack/Exploit/Ghost visual specs  | Designing or updating token visuals |
-| `tile-styling.md`       | Tile background, path rendering    | Styling tile graphics               |
-
-### Project Files
-
-- **Assets/Tiles/** - Reference existing tile SVGs
-- **Assets/Tokens/** - Reference existing token SVGs
+## Quality Heuristics Summary
+
+**Texture:**
+- Contrast > 0.15
+- Noise coherence > 0.4
+- Histogram balance > 0.3
+
+**Mesh:**
+- Triangle count within budget
+- Degenerate triangles = 0
+- UV coverage > 0.95
+
+See `references/quality-heuristics.md` for measurement code.
+
+## Game Type Recommendations
+
+| Game Type | Recipe |
+|-----------|--------|
+| Medieval RPG | Rustic + WarmEarthy + wood/stone |
+| Sci-Fi | Pristine + CoolMetal + metal/tech |
+| Horror | Gothic + Muted + stone/organic |
+| Cartoon | Stylized + Vibrant + any |
+| Cyberpunk | Cyberpunk + Neon + metal/tech |
+
+See `references/generation-recipes.md` for complete recipe code.

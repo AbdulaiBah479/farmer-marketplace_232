@@ -1,39 +1,52 @@
 ---
 name: mathguard
-description: "Math-heavy escalation for n >= 10^6 — Bloom, HyperLogLog, Count-Min, MinHash/LSH, FFT, JL projection, sweep line. Use when classical O(n log n) is the floor and approximate or math wins."
-risk: safe
-source: community
-source_repo: morsechimwai/lemmaly
-source_type: community
-date_added: "2026-05-26"
-author: morsechimwai
-tags: [algorithms, probabilistic-data-structures, approximate-algorithms, bloom-filter, hyperloglog, fft, performance]
-tools: [claude-code, antigravity, cursor, gemini-cli, codex-cli]
-license: "Apache-2.0"
-license_source: "https://github.com/morsechimwai/lemmaly/blob/main/LICENSE"
+description: Use when working with large-scale data, similarity search, deduplication, top-K / heavy-hitters, streaming analytics, cardinality estimation, embeddings, recommender systems, signal/image processing, polynomial or big-integer arithmetic, convolution, graph distance, computational geometry, randomized algorithms, or any problem with n >= 10^6 where exact computation is wasteful. Recognizes when classical algorithms hit their lower bound and an approximate or math-heavy technique (Bloom filter, HyperLogLog, Count-Min Sketch, MinHash/LSH, FFT/NTT, Johnson-Lindenstrauss projection, sweep line, kd-tree/BVH, fast exponentiation, monoid parallel reduction, amortized potential method) gives an asymptotic win. Load after lemmaly when a classical O(n log n) is the floor but smarter math wins.
+metadata:
+  priority: 3
+  role: math-escalation
+  pathPatterns:
+    - '**/*.{js,jsx,ts,tsx,mjs,cjs}'
+    - '**/*.py'
+    - '**/*.rs'
+    - '**/*.go'
+    - '**/*.{cpp,cc,cxx,hpp,hh,hxx}'
+    - '**/*.java'
+    - '**/*.cs'
+  importPatterns:
+    - 'numpy'
+    - 'scipy'
+    - 'torch'
+    - 'sklearn'
+    - 'faiss'
+    - 'annoy'
+    - 'hnswlib'
+  chainTo:
+    - skill: lemmaly
+      when: 'classical algorithm has not been ruled out yet'
+    - skill: invariant-guard
+      when: 'need to state ε-bounds as part of the postcondition'
+    - skill: complexity-cuts
+      when: 'baseline code exists and bottleneck is CPU/memory, not approximation'
+  retrieval:
+    aliases:
+      - probabilistic-structures
+      - approximate-algorithms
+      - math-heavy
+    intents:
+      - approximate at scale
+      - bloom filter or hll
+      - similarity search at large n
+      - fft convolution
+      - dimensionality reduction
 ---
 
 # mathguard — Math-Heavy Optimization for AI Code
 
-`lemmaly` makes you pick the right classical algorithm. `mathguard` kicks in when the classical algorithm is already optimal but **mathematics gives a better bound** — usually by accepting bounded approximation, exploiting structure, or moving to a smarter algebraic space.
+lemmaly makes you pick the right classical algorithm. mathguard kicks in when the classical algorithm is already optimal but **mathematics gives a better bound** — usually by accepting bounded approximation, exploiting structure, or moving to a smarter algebraic space.
 
 The model knows these techniques. It almost never proposes them spontaneously. mathguard fixes that.
 
 **Violating the letter of these rules is violating the spirit of the skill.** A Bloom filter where the caller assumed exact answers is a production incident, not an optimization.
-
-## When to Use This Skill
-
-Use **mathguard** when:
-
-- Working with large-scale data (`n ≥ 10⁶`): similarity search, deduplication, top-K / heavy-hitters, streaming analytics, cardinality estimation, embeddings, recommender systems.
-- Doing signal/image processing, polynomial or big-integer arithmetic, convolution, graph distance, computational geometry, randomized algorithms.
-- The classical O(n log n) is already the floor and you need an asymptotic win (Bloom filter, HyperLogLog, Count-Min Sketch, MinHash/LSH, FFT/NTT, Johnson-Lindenstrauss projection, sweep line, kd-tree/BVH, fast exponentiation, monoid parallel reduction, amortized potential method).
-- Loaded *after* `lemmaly` has confirmed the classical answer is not enough.
-
-Do **not** use mathguard when:
-- The caller needs exact answers (auth, billing, dedup-for-correctness, primary keys).
-- `n` is small (n < 10⁴) and the path is not hot.
-- The bottleneck is I/O, not CPU/memory.
 
 ## The Iron Law
 
@@ -162,7 +175,7 @@ If any of 1–7 is missing, do not propose the technique.
 
 **Problem.** Count unique users seen across a 24-hour event stream. ~2B events/day, ~50M unique users. Reported on a dashboard, ±2% is acceptable.
 
-### Without the protocol — silent OOM, or worse, silent billing error
+<Bad>
 
 ```ts
 // "Just use a Set" — silently OOMs the box at ~50M strings
@@ -175,7 +188,9 @@ return seen.size; // exact, but the process died at row 41M
 
 Or worse — proposed *with* a HyperLogLog "for performance" but plugged into the billing pipeline, which keys off the result. Billing then sees 49.7M instead of 50.0M users and a fraction never get charged.
 
-### With the protocol — auditable HLL
+</Bad>
+
+<Good>
 
 ```ts
 // Classical floor: O(unique) memory for an exact Set. At 50M strings × ~50B each, ~2.5GB.
@@ -194,7 +209,9 @@ for await (const event of stream) {
 return hll.estimate(); // 49.6M ± 0.4M; dashboard reads ~50M
 ```
 
-The first version is not "no HLL" — it is "HLL without writing down ε and who tolerates it." The second is identical in technique but auditable: ε is in the comment, the caller is named, the disqualifier (billing) is explicit.
+</Good>
+
+The Bad version is not "no HLL" — it is "HLL without writing down ε and who tolerates it." The Good version is identical in technique but auditable: ε is in the comment, the caller is named, the disqualifier (billing) is explicit.
 
 ## Output discipline
 
@@ -207,12 +224,14 @@ Code that uses a math-level technique must include:
 
 ## When to escalate or redirect
 
-- The bottleneck is I/O, not CPU/memory → go back to `lemmaly` rule 4; math will not help.
+- The bottleneck is I/O, not CPU/memory → go back to lemmaly rule 4; math will not help.
 - You need bit-exact reproducibility → avoid floating FFT, randomized projections, and probabilistic structures.
 - The result is consumed by a downstream system that assumes exact → keep classical or wrap with a validation pass.
 - You need a correctness proof (not just a bound) → load **invariant-guard** after picking the technique.
 
 ## Rationalizations to watch for
+
+These are real verbatim thoughts captured from a controlled test where the model noticed a probabilistic structure was needed but still shipped the naive answer:
 
 | Excuse | Reality |
 | --- | --- |
@@ -222,6 +241,8 @@ Code that uses a math-level technique must include:
 | "I'll just shard the set across machines." | Sharding multiplies your infra cost; HLL solves it in 12KB on one box. Ask whether you actually need exact. |
 | "FFT is overkill for this." | True 99% of the time. But state the n. At n ≥ ~64 for polynomial mult, schoolbook is already losing. |
 | "JL projection feels too lossy for embeddings." | At ε = 0.1, JL preserves pairwise distances within 10%. For ANN this is almost always fine — measure recall, do not eyeball. |
+
+If any of these sound familiar mid-thought: stop, run the eight-step protocol, pick parameters with derivation.
 
 ## Red flags — STOP
 
@@ -233,6 +254,8 @@ Code that uses a math-level technique must include:
 - Naming a technique you cannot derive the bound for.
 - Math optimization where n is small and not on a hot path.
 - "Should be O(log n) on average" with no average-case argument.
+
+All of these mean: back up, re-run the eight-step pre-proposal protocol, or fall back to lemmaly's classical playbook.
 
 ## Verification checklist
 
@@ -249,21 +272,6 @@ Before shipping code that uses a math-level technique:
 
 Cannot check every box? The technique is not ready to ship. Keep classical, or stop and ask.
 
-## Limitations
-
-- **Not for exact-required pipelines.** Any system where the result is a primary key, dedup key, billing input, or auth decision is out of scope — keep classical.
-- **Assumes representative inputs.** ε/δ bounds are average-case or high-probability; adversarial inputs can blow past them. State the threat model.
-- **Library quality varies.** Bloom / HLL / MinHash implementations differ in seed strategy, hash function, and memory layout — pick a maintained library and pin the version.
-- **Numerical stability.** Floating FFT, randomized SVD, and JL projection accumulate float error; for combinatorial exactness use NTT or exact integer variants.
-- **Team-familiarity risk.** A technique nobody can debug at 3 a.m. is a liability — write the maintainer note next to the trade-off.
-- **Not a profiler.** mathguard tells you which asymptotic ceiling you can break; it does not measure constant factors. Benchmark before claiming a wall-clock win.
-
 ## The thesis, in one line
 
 > **When classical algorithms hit their floor, mathematics still has another floor below. mathguard makes the model reach for it instead of accepting the first answer.**
-
-## Related Skills
-
-- `lemmaly` — gateway; pick the classical algorithm first before reaching for math.
-- `invariant-guard` — for stating ε-bounds as part of the postcondition of an approximate algorithm.
-- `complexity-cuts` — when baseline code already exists and the bottleneck is CPU/memory, not approximation.

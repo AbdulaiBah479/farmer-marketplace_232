@@ -1,160 +1,255 @@
 ---
-name: Observability
-description: Real-time monitoring dashboard for PAI multi-agent activity. USE WHEN user says 'start observability', 'stop dashboard', 'restart observability', 'monitor agents', 'show agent activity', or needs to debug multi-agent workflows.
+name: observability
+description: Use when diagnosing operation failures, stuck or slow operations, querying Jaeger traces, working with Grafana dashboards, debugging distributed system issues, or investigating worker selection and service communication problems.
 ---
 
-# Agent Observability Dashboard
+# Observability & Debugging
 
-Real-time monitoring of PAI multi-agent activity with WebSocket streaming.
+Load this skill when:
+- Diagnosing operation failures, stuck operations, or slow operations
+- Working with Jaeger traces or Grafana dashboards
+- Debugging distributed system issues
+- Investigating worker selection or service communication problems
 
-## Quick Start
+---
+
+## First Rule: Check Observability Before Logs
+
+When users report issues with operations, use Jaeger first — not logs. KTRDR has comprehensive OpenTelemetry instrumentation that provides complete visibility into distributed operations.
+
+This enables **first-response diagnosis** instead of iterative detective work.
+
+---
+
+## When to Query Jaeger
+
+Query Jaeger when user reports:
+
+| Symptom | What Jaeger Shows |
+|---------|-------------------|
+| "Operation stuck" | Which phase is stuck and why |
+| "Operation failed" | Exact error with full context |
+| "Operation slow" | Bottleneck span immediately |
+| "No workers selected" | Worker selection decision |
+| "Missing data" | Data flow from IB to cache |
+| "Service not responding" | HTTP call attempt and result |
+
+---
+
+## Quick Start Workflow
+
+### Step 1: Get operation ID
+From CLI output or API response (e.g., `op_training_20251113_123456_abc123`)
+
+### Step 2: Query Jaeger API
 
 ```bash
-# Start server and dashboard
-~/.claude/skills/observability/manage.sh start
-
-# Stop everything
-~/.claude/skills/observability/manage.sh stop
-
-# Restart both
-~/.claude/skills/observability/manage.sh restart
-
-# Check status
-~/.claude/skills/observability/manage.sh status
+OPERATION_ID="op_training_20251113_123456_abc123"
+curl -s "http://localhost:16686/api/traces?tag=operation.id:$OPERATION_ID&limit=1" | jq
 ```
 
-## Access Points
+### Step 3: Analyze trace structure
 
-- **Dashboard UI**: http://localhost:5172
-- **Server API**: http://localhost:4000
-- **WebSocket Stream**: ws://localhost:4000/stream
-
-## What It Monitors
-
-### Real-Time Tracking
-- Agent session starts/ends
-- Tool calls across all agents
-- Hook event execution
-- Session timelines and traces
-- WebSocket live updates
-
-### Data Sources
-- **Primary**: `~/.claude/history/raw-outputs/YYYY-MM/YYYY-MM-DD_all-events.jsonl`
-- **Format**: JSONL with structured event data
-- **Hooks**: Events logged automatically by PAI hook system
-
-## Architecture
-
-**Stack:**
-- Server: Bun + Express + TypeScript
-- Client: Vite + Vue + TypeScript
-- Storage: In-memory streaming (no database)
-- Protocol: WebSocket for real-time updates
-
-**Key Features:**
-- Watch filesystem with automatic reload
-- Tail-follow for today's event file
-- Cache events in-memory
-- Broadcast WebSocket to all clients
-- No persistence (fresh start each launch)
-
-## When to Activate This Skill
-
-- "Start observability"
-- "Stop the dashboard"
-- "Restart observability"
-- "Monitor agents"
-- "Show agent activity"
-- "Observability status"
-- "Debug agent workflow"
-
-## Examples
-
-**Example 1: Start monitoring agents**
-```
-User: "start observability"
-→ Launches server on port 4000
-→ Starts dashboard on port 5172
-→ Opens browser to live agent activity view
-```
-
-**Example 2: Debug a stuck workflow**
-```
-User: "something's weird with my agents, show me what's happening"
-→ Opens observability dashboard
-→ Shows real-time tool calls across all agents
-→ Reveals which agent is blocked or looping
-```
-
-**Example 3: Check dashboard status**
-```
-User: "is observability running?"
-→ Runs manage.sh status
-→ Reports server and client running state
-→ Shows access URLs if active
-```
-
-## Development
-
-### Server
 ```bash
-cd ~/.claude/skills/observability/apps/server
-bun install
-bun run dev
+# Get span summary with durations
+curl -s "http://localhost:16686/api/traces?tag=operation.id:$OPERATION_ID" | jq '
+  .data[0].spans[] |
+  {
+    span: .operationName,
+    service: .process.serviceName,
+    duration_ms: (.duration / 1000),
+    error: ([.tags[] | select(.key == "error" and .value == "true")] | length > 0)
+  }' | jq -s 'sort_by(.duration_ms) | reverse'
 ```
 
-### Client
+### Step 4: Extract relevant attributes
+
 ```bash
-cd ~/.claude/skills/observability/apps/client
-bun install
-bun run dev
+curl -s "http://localhost:16686/api/traces?tag=operation.id:$OPERATION_ID" | jq '
+  .data[0].spans[] |
+  {
+    span: .operationName,
+    attributes: (.tags | map({key: .key, value: .value}) | from_entries)
+  }'
 ```
 
-## Troubleshooting
+---
 
-### Dashboard not loading
-- Check server is running: `curl http://localhost:4000/health`
-- Check client is running: `curl http://localhost:5172`
-- Restart: `./manage.sh restart`
+## Common Diagnostic Patterns
 
-### No events showing
-- Verify events file exists: `~/.claude/history/raw-outputs/YYYY-MM/YYYY-MM-DD_all-events.jsonl`
-- Check hooks are configured in `~/.claude/settings.json`
-- Try triggering an event (use any tool or agent)
+### Pattern 1: Operation Stuck
 
-### Port conflicts
-- Server uses: 4000
-- Client uses: 5172
-- Check nothing else is using these ports
-
-## Files
-
-```
-~/.claude/skills/observability/
-├── SKILL.md                          # This file
-├── manage.sh                         # Control script
-├── apps/
-│   ├── server/                       # Backend (Bun + Express)
-│   │   ├── src/index.ts
-│   │   └── package.json
-│   └── client/                       # Frontend (Vite + Vue)
-│       ├── src/
-│       ├── package.json
-│       └── vite.config.ts
-└── scripts/                          # Utility scripts
+```bash
+# Check for worker selection and dispatch
+curl -s "http://localhost:16686/api/traces?tag=operation.id:$OP_ID" | jq '
+  .data[0].spans[] |
+  select(.operationName == "worker_registry.select_worker") |
+  .tags[] |
+  select(.key | startswith("worker_registry.")) |
+  {key: .key, value: .value}'
 ```
 
-## Key Principles
+Look for:
+- `worker_registry.total_workers: 0` → No workers started
+- `worker_registry.capable_workers: 0` → No capable workers
+- `worker_registry.selection_status: NO_WORKERS_AVAILABLE` → All busy
 
-1. **Real-time** - Events stream as they happen
-2. **Ephemeral** - No persistence, in-memory only
-3. **Simple** - No database, no configuration
-4. **Transparent** - Full visibility into agent activity
-5. **Unobtrusive** - Doesn't interfere with PAI operation
+### Pattern 2: Operation Failed
 
-## Hook Integration
+```bash
+# Extract error details
+curl -s "http://localhost:16686/api/traces?tag=operation.id:$OP_ID" | jq '
+  .data[0].spans[] |
+  select(.tags[] | select(.key == "error" and .value == "true")) |
+  {
+    span: .operationName,
+    service: .process.serviceName,
+    exception_type: (.tags[] | select(.key == "exception.type") | .value),
+    exception_message: (.tags[] | select(.key == "exception.message") | .value)
+  }'
+```
 
-For the observability dashboard to receive events, configure your PAI hooks to log to:
-`~/.claude/history/raw-outputs/YYYY-MM/YYYY-MM-DD_all-events.jsonl`
+Common errors:
+- `ConnectionRefusedError` → Service not running (check `http.url`)
+- `ValueError` → Invalid input parameters
+- `DataNotFoundError` → Data not loaded (check `data.symbol`, `data.timeframe`)
 
-The `capture-all-events.ts` hook in `~/.claude/hooks/` handles this automatically.
+### Pattern 3: Operation Slow
+
+```bash
+# Find bottleneck span (longest duration)
+curl -s "http://localhost:16686/api/traces?tag=operation.id:$OP_ID" | jq '
+  .data[0].spans[] |
+  {
+    span: .operationName,
+    duration_ms: (.duration / 1000)
+  }' | jq -s 'sort_by(.duration_ms) | reverse | .[0]'
+```
+
+Common bottlenecks:
+- `training.training_loop` → Check `training.device` (GPU vs CPU)
+- `data.fetch` → Check `ib.latency_ms`
+- `ib.fetch_historical` → Check `data.bars_requested`
+
+### Pattern 4: Service Communication Failure
+
+```bash
+# Check HTTP calls between services
+curl -s "http://localhost:16686/api/traces?tag=operation.id:$OP_ID" | jq '
+  .data[0].spans[] |
+  select(.operationName | startswith("POST") or startswith("GET")) |
+  {
+    http_call: .operationName,
+    url: (.tags[] | select(.key == "http.url") | .value),
+    status: (.tags[] | select(.key == "http.status_code") | .value),
+    error: (.tags[] | select(.key == "error.type") | .value)
+  }'
+```
+
+Look for:
+- `http.status_code: null` → Connection failed
+- `error.type: ConnectionRefusedError` → Target service not running
+- `http.url` → Shows which service was being called
+
+---
+
+## Key Span Attributes Reference
+
+### Operation Attributes
+- `operation.id` — Operation identifier
+- `operation.type` — TRAINING, BACKTESTING, DATA_DOWNLOAD
+- `operation.status` — PENDING, RUNNING, COMPLETED, FAILED
+
+### Worker Selection
+- `worker_registry.total_workers` — Total registered workers
+- `worker_registry.available_workers` — Available workers
+- `worker_registry.capable_workers` — Capable workers for this operation
+- `worker_registry.selected_worker_id` — Which worker was chosen
+- `worker_registry.selection_status` — SUCCESS, NO_WORKERS_AVAILABLE, NO_CAPABLE_WORKERS
+
+### Progress Tracking
+- `progress.percentage` — Current progress (0-100)
+- `progress.phase` — Current execution phase
+- `operations_service.instance_id` — OperationsService instance (check for mismatches)
+
+### Error Context
+- `exception.type` — Python exception class
+- `exception.message` — Error message
+- `exception.stacktrace` — Full stack trace
+- `error.symbol`, `error.strategy` — Business context
+
+### Performance
+- `http.status_code` — HTTP response status
+- `http.url` — Target URL for HTTP calls
+- `ib.latency_ms` — IB Gateway latency
+- `training.device` — cuda:0 or cpu
+- `gpu.utilization_percent` — GPU usage
+
+---
+
+## Response Template
+
+When diagnosing with observability, use this structure:
+
+```
+🔍 **Trace Analysis for operation_id: {operation_id}**
+
+**Trace Summary**:
+- Trace ID: {trace_id}
+- Total Duration: {duration_ms}ms
+- Services: {list of services}
+- Status: {OK/ERROR}
+
+**Execution Flow**:
+1. {span_name} ({service}) - {duration_ms}ms
+2. {span_name} ({service}) - {duration_ms}ms
+...
+
+**Diagnosis**:
+{identified_issue_with_evidence_from_spans}
+
+**Root Cause**:
+{root_cause_explanation_with_span_attributes}
+
+**Solution**:
+{recommended_fix_with_commands}
+```
+
+---
+
+## Grafana Dashboards
+
+Check Grafana for quick diagnostics before diving into traces.
+
+**URL**: http://localhost:3000
+
+| Dashboard | Path | Use Case |
+|-----------|------|----------|
+| System Overview | `/d/ktrdr-system-overview` | Service health, error rates, latency |
+| Worker Status | `/d/ktrdr-worker-status` | Worker capacity, resource usage |
+| Operations | `/d/ktrdr-operations` | Operation counts, success rates |
+
+### Quick Workflows
+
+- **"Is it working?"** → System Overview: Healthy Services count
+- **"Why is it slow?"** → System Overview: P95 Latency panel
+- **"Workers missing?"** → Worker Status: Healthy Workers and Health Matrix
+- **"Operations failing?"** → Operations: Success Rate and Status Distribution
+
+---
+
+## Benefits of Observability-First Debugging
+
+- **Diagnosis in FIRST response** (not 10+ messages later)
+- **Complete context** (all services, all phases, all attributes)
+- **Objective evidence** (no guessing or assumptions)
+- **Distributed visibility** (Backend → Worker → Host Service)
+- **Performance insights** (identify bottlenecks immediately)
+- **Root cause analysis** (trace error from source to root)
+
+---
+
+## Full Documentation
+
+For comprehensive workflows and scenarios:
+[docs/debugging/observability-debugging-workflows.md](docs/debugging/observability-debugging-workflows.md)

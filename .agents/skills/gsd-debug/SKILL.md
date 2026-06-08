@@ -1,145 +1,42 @@
 ---
-name: gsd-debug
-description: Structured debugging workflow with session persistence and investigation tracking
-allowed-tools: Task, Read, Edit, Bash
-argument-hint: [issue]
+name: gsd:debug
+description: Debug issues using systematic investigation
+version: 1.0.0
+triggers: [debug, troubleshoot, fix issue]
+tools: [Bash, Glob, Grep, Write]
 ---
 
-<objective>
-Debug issues using scientific method with subagent isolation.
+# GSD Debug
 
-**Orchestrator role:** Gather symptoms, spawn gsd-debugger agent, handle checkpoints, spawn continuations.
+Systematically debugs issues using gsd-debugger agent with structured investigation.
 
-**Why subagent:** Investigation burns context fast (reading files, forming hypotheses, testing). Fresh 200k context per investigation. Main context stays lean for user interaction.
-</objective>
+## When to Use
 
-<context>
-User's issue: $ARGUMENTS
+- When bugs are encountered during execution
+- When verification fails
+- When unexpected behavior occurs
 
-Check for active sessions:
-```bash
-ls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5
-```
-</context>
+## Process
 
-<process>
+1. Describe the problem
+2. Run gsd-debugger agent
+3. Follow investigation steps
+4. Apply fix
+5. Verify fix works
 
-## 1. Check Active Sessions
+## Investigation Techniques
 
-If active sessions exist AND no $ARGUMENTS:
-- List sessions with status, hypothesis, next action
-- User picks number to resume OR describes new issue
+- Read error messages
+- Check logs
+- Review recent changes
+- Trace execution flow
+- Write minimal reproduction
 
-If $ARGUMENTS provided OR user describes new issue:
-- Continue to symptom gathering
+## Success Criteria
 
-## 2. Gather Symptoms (if new issue)
+Issue identified and fixed with verification.
 
-Use AskUserQuestion for each:
+## Related Skills
 
-1. **Expected behavior** - What should happen?
-2. **Actual behavior** - What happens instead?
-3. **Error messages** - Any errors? (paste or describe)
-4. **Timeline** - When did this start? Ever worked?
-5. **Reproduction** - How do you trigger it?
-
-After all gathered, confirm ready to investigate.
-
-## 3. Spawn gsd-debugger Agent
-
-Fill prompt and spawn:
-
-```markdown
-<objective>
-Investigate issue: {slug}
-
-**Summary:** {trigger}
-</objective>
-
-<symptoms>
-expected: {expected}
-actual: {actual}
-errors: {errors}
-reproduction: {reproduction}
-timeline: {timeline}
-</symptoms>
-
-<mode>
-symptoms_prefilled: true
-goal: find_and_fix
-</mode>
-
-<debug_file>
-Create: .planning/debug/{slug}.md
-</debug_file>
-```
-
-```
-Task(
-  prompt=filled_prompt,
-  subagent_type="gsd-debugger",
-  description="Debug {slug}"
-)
-```
-
-## 4. Handle Agent Return
-
-**If `## ROOT CAUSE FOUND`:**
-- Display root cause and evidence summary
-- Offer options:
-  - "Fix now" - spawn fix subagent
-  - "Plan fix" - suggest {{COMMAND_PREFIX}}plan-phase --gaps
-  - "Manual fix" - done
-
-**If `## CHECKPOINT REACHED`:**
-- Present checkpoint details to user
-- Get user response
-- Spawn continuation agent (see step 5)
-
-**If `## INVESTIGATION INCONCLUSIVE`:**
-- Show what was checked and eliminated
-- Offer options:
-  - "Continue investigating" - spawn new agent with additional context
-  - "Manual investigation" - done
-  - "Add more context" - gather more symptoms, spawn again
-
-## 5. Spawn Continuation Agent (After Checkpoint)
-
-When user responds to checkpoint, spawn fresh agent:
-
-```markdown
-<objective>
-Continue debugging {slug}. Evidence is in the debug file.
-</objective>
-
-<prior_state>
-Debug file: @.planning/debug/{slug}.md
-</prior_state>
-
-<checkpoint_response>
-**Type:** {checkpoint_type}
-**Response:** {user_response}
-</checkpoint_response>
-
-<mode>
-goal: find_and_fix
-</mode>
-```
-
-```
-Task(
-  prompt=continuation_prompt,
-  subagent_type="gsd-debugger",
-  description="Continue debug {slug}"
-)
-```
-
-</process>
-
-<success_criteria>
-- [ ] Active sessions checked
-- [ ] Symptoms gathered (if new)
-- [ ] gsd-debugger spawned with context
-- [ ] Checkpoints handled correctly
-- [ ] Root cause confirmed before fixing
-</success_criteria>
+@skills/gsd/agents/debugger - Agent that investigates issues
+@skills/gsd/commands/verify-work - Verifies fixes

@@ -1,153 +1,388 @@
 ---
-name: frontend-implementation
-category: role
-user-invocable: false
-description: デザインツール（Figma/Pencil等）やUI要件を「壊れない・拡張しやすい」実装へ翻訳するための判断軸。px写経を避け、比率・構造・制約・状態を先に設計してからUIを組み立てる。
+name: Frontend Implementation
+description: Frontend development with React, Vue, Angular, modern web technologies. Use for frontend, ui, react, vue, angular, web, component tags. Provides validation commands, component patterns, accessibility guidance.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
 # Frontend Implementation Skill
 
-## 発火条件（適用タイミング）
-- 依頼が「UI実装」「デザインから実装」「Figmaから実装」「Pencilから実装」「コンポーネント実装」「スタイル調整」「レスポンシブ対応」「既存UIの崩れ修正」なら適用する。
-- 技術（React/Next/Svelte/Tailwind等）は別skillに委ねる。このSkillは「読み替え」と「実装の判断基準」に集中する。
-- デザインツールの種類は問わない（Figma/Pencil/Canva/手書きスケッチ等）。
+Domain-specific guidance for frontend UI development, component implementation, and user interactions.
 
-## このSkillの基本方針（整理軸）
-- 基本方針: 目的は「細部の写経」ではなく「全体の比率・整合・崩れ耐性・一貫性」。
-- 翻訳: デザインツールの数値（px）は参考値。実装は **スケール/比率/構造** に変換する。
-- 例外管理: 固定値は例外。採用するなら「なぜ固定が必要か」を言語化する（仕様・メディア・タップ領域等）。
+## When To Use This Skill
 
-## 思想（判断ルール）
-1. UIは“絵”ではなく“制約の集合”。状態（loading/error/empty/disabled）まで含めて完成。
-2. “揃え”は margin の微調整で作らない。構造（flex/grid）と `gap` で整える。
-3. 高さ固定を避け、`min/max/overflow` を先に検討する。
-4. タイポは役割ベース。数値コピペで増殖させない。
-5. 例外（長文/0件/失敗/遅延）は後付け禁止。最初から扱う。
-6. デザインの意図（何を目立たせ、どう視線誘導するか）を先に言語化し、それを壊さない構造に落とす。
-7. **横幅は"切り出さない"**。デザインの基準ビューポート（RDDのターゲット表示環境）に対して、UIは原則「画面幅に追従」させる（SCALE/FILLの意図を優先）。
-   - 左から“表示範囲だけ”を作る（画面の一部を切り出して終わる）実装は禁止。
-   - full-bleed（背景が端まで伸びる）と content（本文の最大幅）を分け、背景は `w-full`、本文は `max-width` + `margin-inline: auto` 等で表現する。
+Load this Skill when task has tags:
+- `frontend`, `ui`, `react`, `vue`, `angular`, `web`
+- `component`, `jsx`, `tsx`, `styling`, `responsive`
 
-## 読み替えの手順（デザインツール → 実装）
-### 1) 数値より先に読む（抽出するもの）
-- 目的（この画面でユーザーに最初に何を理解/実行させたいか）
-- 視線誘導（最初に見る→次に見る→最後に見る、の順序）
-- 強弱（強調の主役/準主役/脇役）
-- 階層（何が親で、何がグループか）
-- 伸縮意図・状態（Auto Layout / Constraints / Variants 等、ツール固有の表現を読み替える）
-- 余白規則（gap/paddingの法則）
-- 整列（どこが揃っているか、何を基準に揃えるか）
-- 可変要素（文言長、一覧件数、画像比率、入力値）
+## Validation Commands
 
-### 2) 実装へ変換する（ルール）
-- px → **スケールへ丸める**（例: 4/8/12/16/24/32/40/48）
-- font-size → **役割へマッピング**（見出し/本文/補足）
-- marginの局所調整 → **レイアウト構造へ変換**（flex/grid/gap、親子の責務を整理）
-- 幅/高さの固定 → **制約へ変換**（min/max、折り返し、ellipsis、overflow）
- - 横幅の設計 → **背景/コンテナ/コンテンツの責務へ変換**（背景は画面幅、コンテンツは最大幅と余白規則で担保）
+### Run Tests
+```bash
+# Full test suite
+npm test
 
-### 2.5) 「揃える/揃えない」を判断する（比率・視線誘導）
-- **揃える（align）べきとき**
-  - 反復する要素（カード/リスト/フォーム）で“比較”させたい
-  - 主列（本文/主要入力/主要CTA）の視線の通り道を作りたい
-  - 迷いを減らすのが目的（管理画面/設定/入力が多い）
-- **揃えない（break align）を許すとき**
-  - “主役”を意図的に浮かせたい（ヒーロー/主要CTA/重要通知）
-  - 情報のグルーピングを切りたい（セクション境界を強調したい）
-  - 装飾やメディアが主役で、規則より印象が優先（ただし崩れ耐性は担保）
-- **揃えない場合のルール（事故防止）**
-  - どこか1本は“基準線”を残す（例: 見出しの左端だけは揃える）
-  - ズラしは 1〜2種類に限定（ズラしパターンが増えると一貫性が死ぬ）
-  - レスポンシブ時は“揃える側”へ寄せる（狭幅でズラしを減らす）
+# With coverage
+npm test -- --coverage
 
-### 2.6) 横並びの「幅配分（重み）」を守る（均等割り事故を防ぐ）
-- **幅配分は視線誘導そのもの**。1列目・2列目を太く、3列目は補助…のような“重み”は意図として扱う。
-- **やってはいけないこと（よくある事故）**
-  - 横並びを雑に均等化して、脇役が主役と同じ存在感になる（例: `flex: 1` を全要素に付ける）
-  - 「端は揃っているけど、重要度が揃ってしまった」状態にする
-- **守るべき判断**
-  - 「主役/準主役/脇役」の列（またはブロック）をまず決め、**比率（幅の段差）**を仕様として残す
-  - “揃える”は **基準線の整列** と **幅配分** を分けて扱う（整列は揃っても、幅は揃えないことがある）
-- **実装へ落とすときの指針（技術は問わない）**
-  - 比率で表現できるなら **比率（例: 2 : 2 : 1 / 5 : 3 : 2）** を優先する
-  - 可変長で崩れるなら **最小幅（min）** と **折返し/詰め方** を先に決める
-  - 狭幅では段組み変更（縦積み）も許容し、重要度順を維持する
+# Watch mode
+npm test -- --watch
 
-#### flex / grid を前提にした「比率の表現」メモ（CSS概念）
-- **比率（重み）は “成長” で表現する**
-  - flex: 各要素の「伸び方（growの重み）」で比率を表現する（均等化の罠に注意）
-  - grid: 列の「比率（fr等の重み）」で比率を表現する（列の役割を仕様化しやすい）
-- **比率だけだと壊れるので、必ず制約もセットで持つ**
-  - 最小幅（小さくなりすぎない）／最大幅（太りすぎない）／折返し（wrap/改行）／省略（ellipsis）をセットで設計する
-- **比率を崩す条件を明文化する**
-  - 例: 狭幅では「脇役列は下に落とす」、主役→準主役→脇役の順序は維持する
+# Specific test file
+npm test -- UserProfile.test.tsx
 
-#### 典型パターン別の判断（汎用）
-- **(a) 一覧/カード列（比較させたい）**
-  - 意図: “同じ種類”を比較するので、基本は揃える（基準線・カード高さ・主情報の位置）。
-  - 幅配分: 目立たせたいカード（推し/おすすめ）がある場合のみ比率を崩す（それ以外は均等寄り）。
-  - 狭幅: 1列化（縦積み）しても、主情報→補助情報の順序は維持する。
-- **(b) フォーム行（入力の効率を上げたい）**
-  - 意図: 迷いを減らすため揃える（ラベル列/入力列/補助列の基準線を作る）。
-  - 幅配分: 主役は入力欄、脇役は補助（例: 単位/ヒント/操作）なので、補助列は小さくして存在感を落とす（均等割りにしない）。
-  - 狭幅: ラベルを上、入力を下、補助をその下に落とす（順序は維持）。
-- **(c) ヘッダー（検索 + ボタン + 補助）**
-  - 意図: 主役は検索/タイトル/主要CTAのどれか1つに寄せ、他は補助に落とす（主役を2つ作らない）。
-  - 幅配分: 主役（例: 検索）を太く、補助（例: フィルタ/ヘルプ/件数）を細くして重みを表現する（均等割りにしない）。
-  - 狭幅: 補助は折り返し/メニュー化/省略を許容し、主役の操作性を優先する。
+# Specific test pattern
+npm test -- -t "should render profile"
+```
 
-### 3) 不明点の扱い（短問の順序）
-- 入出力（表示/操作/結果）
-- 状態遷移（いつloading/error/disabledになるか）
-- 制約（レスポンシブ/可変長/最大行数/折返しルール）
-- エッジケース（0件/長文/通信失敗/遅延/低速端末）
+### Build Project
+```bash
+# Production build
+npm run build
 
-## 実装規約（壊れにくさのルール）
-### タイポグラフィ（比率と可読性）
-- 単位は原則 `rem`（必要なら `clamp()`）。`em` は「親の比率で揃えたい」場面に限定して使う（乱用しない）。
-- `line-height` は原則単位なし（例: 1.5〜1.7）。
-- 本文は可読性優先（目安: `max-width: 60ch`）。
+# Development build
+npm run build:dev
 
-### スペーシング（スケールと責務）
-- 余白はスケールに丸める（“端数”を増やさない）。
-- 子要素へmarginを散らさず、親の `gap/padding` を優先する。
+# Type checking (TypeScript)
+npm run type-check
 
-### 比率（プロポーション）を守る
-- “全体の見た目”は数値一致ではなく比率で担保する（列幅の比、余白の段差、タイポの段差）。
-- 固定幅より「最大幅＋余白のルール」を優先する（狭幅/広幅で破綻しにくい）。
-- 横並びで“目立たせない列”がある場合、均等割りで存在感を揃えない（幅配分の意図を守る）。
+# Linting
+npm run lint
+```
 
-### レイアウト（揃えを構造で作る）
-- 一方向の並び: flex、二次元の配置: grid、間隔: gap を基本にする。
-- `position: absolute` は重なり/装飾など目的があるときだけ。
-- 画像は比率維持を基本にし、必要なら `aspect-ratio` 相当の設計を入れる。
+### Run Application
+```bash
+# Development server
+npm start
 
-### 固定値を許す条件（例外）
-- アイコン/サムネ等のメディア、タップ領域、仕様で確定したヘッダー高さ等。
-- 崩れ防止が目的でも、まず `min/max` を検討してから固定に落とす。
+# With specific port
+PORT=3001 npm start
+```
 
-## 状態と耐性（必須）
-- default/hover/active/focus/disabled/loading/error/empty を実装仕様に含める。
-- 長文・0件・通信失敗・遅延を最初から扱う（後付け禁止）。
+## Success Criteria (Before Completing Task)
 
-## 出力フォーマット（必ずこの順）
-1. 目的（このUIで何を達成するか）
-2. 前提（デザイン入力の種類 / 既存規約 / 制約）
-3. 読み替え結果（階層/揃え/余白規則/可変要素）
-4. 実装方針（レイアウト構造 / スケール / 例外条件）
-5. 状態設計（default/hover/active/focus/disabled/loading/error/empty）
-6. チェックリスト自己判定（OK/要対応）
+✅ **ALL tests MUST pass** (0 failures)
+✅ **Build MUST succeed** without errors
+✅ **No TypeScript/linting errors**
+✅ **Component renders without errors**
+✅ **Responsive design works** (mobile, tablet, desktop)
+✅ **Accessibility standards met** (ARIA labels, keyboard navigation)
 
-## チェックリスト（仕上げの品質）
-- [ ] empty / loading / error がある
-- [ ] disabled条件がある（連打/不正防止）
-- [ ] 長文で崩れない（wrap/ellipsis/最大幅/overflow）
-- [ ] キーボード操作とフォーカスがある
-- [ ] 狭幅/モバイルで破綻しない
-- [ ] 余白/文字/色が規約（トークン/スケール）に寄っている
+## Common Frontend Tasks
 
-## よくある落とし穴
-- デザインデータのpx写経で、例外状態やレスポンシブが破綻する
-- marginの微調整が増殖して、保守不能になる
-- “見た目の一致”を優先して、状態（loading/error/empty）が後付けになる
+### Component Development
+- Create functional components (React hooks, Vue composition API)
+- Props and state management
+- Event handling
+- Conditional rendering
+- List rendering with keys
 
+### Styling
+- CSS modules or styled-components
+- Responsive design (media queries)
+- Mobile-first approach
+- Consistent with design system
+
+### Forms and Validation
+- Form state management (Formik, React Hook Form)
+- Input validation (client-side)
+- Error display
+- Submit handling
+
+### API Integration
+- Fetch data with useEffect/axios
+- Loading states
+- Error handling
+- Data transformation
+
+## Testing Principles for Frontend
+
+### Component Testing (Preferred)
+
+✅ **Test user interactions:**
+```tsx
+test('submits form with valid data', () => {
+  render(<LoginForm onSubmit={mockSubmit} />)
+
+  fireEvent.change(screen.getByLabelText('Email'), {
+    target: { value: 'user@example.com' }
+  })
+  fireEvent.change(screen.getByLabelText('Password'), {
+    target: { value: 'password123' }
+  })
+  fireEvent.click(screen.getByText('Login'))
+
+  expect(mockSubmit).toHaveBeenCalledWith({
+    email: 'user@example.com',
+    password: 'password123'
+  })
+})
+```
+
+### What to Test
+
+✅ **DO test:**
+- Component renders without errors
+- Correct content displays
+- User interactions work (clicks, inputs)
+- Conditional rendering logic
+- Form validation
+- Error states
+- Accessibility (ARIA attributes, keyboard navigation)
+
+❌ **DON'T test:**
+- Implementation details (state variable names)
+- Third-party library internals
+- Styling specifics (unless critical)
+
+### Test User-Facing Behavior
+
+```tsx
+// ✅ GOOD - Tests what user sees
+expect(screen.getByText('Welcome, John')).toBeInTheDocument()
+expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled()
+
+// ❌ BAD - Tests implementation details
+expect(component.state.username).toBe('John')
+expect(mockFunction).toHaveBeenCalledTimes(1)
+```
+
+## Common Blocker Scenarios
+
+### Blocker 1: API Not Ready
+
+**Issue:** Frontend needs API endpoint that doesn't exist yet
+
+**What to try:**
+- Check if backend task is marked complete
+- Mock API responses for development
+- Create mock data file
+
+**If blocked:** Report to orchestrator - backend task may be incomplete
+
+### Blocker 2: Design Assets Missing
+
+**Issue:** Need icons, images, colors not provided
+
+**What to try:**
+- Check design system documentation
+- Use placeholder assets temporarily
+- Check with design team
+
+**If blocked:** Report to orchestrator - need design assets or specifications
+
+### Blocker 3: TypeScript Type Errors
+
+**Issue:** Complex types from API don't match frontend expectations
+
+**What to try:**
+- Check API response format (console.log actual response)
+- Generate types from API schema (OpenAPI, GraphQL)
+- Use `unknown` type and validate at runtime
+
+**Common causes:**
+- API changed but types not updated
+- Optional fields not marked with `?`
+- Nested objects not properly typed
+
+### Blocker 4: Test Environment Issues
+
+**Issue:** Tests fail in CI but pass locally
+
+**What to try:**
+- Check Node version consistency
+- Check test environment variables
+- Check for timing issues (add waitFor)
+- Check for browser-specific APIs used without polyfills
+
+### Blocker 5: Responsive Design Conflicts
+
+**Issue:** Component works on desktop but breaks on mobile
+
+**What to try:**
+- Test in browser dev tools mobile view
+- Check media queries
+- Check for fixed widths vs responsive units
+- Check for overflow issues
+
+## Blocker Report Format
+
+```
+⚠️ BLOCKED - Requires Senior Engineer
+
+Issue: [Specific problem - API endpoint 404, missing design specs, etc.]
+
+Attempted Fixes:
+- [What you tried #1]
+- [What you tried #2]
+- [Why attempts didn't work]
+
+Root Cause (if known): [Your analysis]
+
+Partial Progress: [What work you DID complete]
+
+Context for Senior Engineer:
+- Error output: [Console errors, network errors]
+- Screenshots: [If visual issue]
+- Related files: [Files involved]
+
+Requires: [What needs to happen]
+```
+
+## Quick Reference
+
+### React Functional Component
+
+```tsx
+import React, { useState, useEffect } from 'react';
+
+interface UserProfileProps {
+  userId: string;
+  onUpdate?: (user: User) => void;
+}
+
+export const UserProfile: React.FC<UserProfileProps> = ({ userId, onUpdate }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/users/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [userId]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!user) return <div>User not found</div>;
+
+  return (
+    <div className="user-profile">
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+};
+```
+
+### Form with Validation
+
+```tsx
+import { useState } from 'react';
+
+export const LoginForm = ({ onSubmit }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const newErrors = {};
+    if (!email) newErrors.email = 'Email required';
+    if (!email.includes('@')) newErrors.email = 'Invalid email';
+    if (!password) newErrors.password = 'Password required';
+    if (password.length < 8) newErrors.password = 'Min 8 characters';
+    return newErrors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    onSubmit({ email, password });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? "email-error" : undefined}
+        />
+        {errors.email && <span id="email-error" role="alert">{errors.email}</span>}
+      </div>
+      <div>
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          aria-invalid={!!errors.password}
+        />
+        {errors.password && <span role="alert">{errors.password}</span>}
+      </div>
+      <button type="submit">Login</button>
+    </form>
+  );
+};
+```
+
+## Accessibility Checklist
+
+✅ **ARIA labels** for all interactive elements
+✅ **Keyboard navigation** works (Tab, Enter, Escape)
+✅ **Focus indicators** visible
+✅ **Color contrast** meets WCAG AA standards
+✅ **Screen reader** compatible
+✅ **Semantic HTML** (button, nav, main, header)
+✅ **Alt text** for images
+✅ **Form labels** associated with inputs
+
+## Common Patterns to Follow
+
+1. **Mobile-first responsive design**
+2. **Component composition** over inheritance
+3. **Props for configuration, state for interaction**
+4. **Lifting state up** when shared between components
+5. **Error boundaries** for error handling
+6. **Loading states** for async operations
+7. **Accessibility by default** (ARIA, keyboard support)
+
+## What NOT to Do
+
+❌ Don't use inline styles for complex styling
+❌ Don't forget key prop in lists
+❌ Don't mutate state directly
+❌ Don't skip accessibility features
+❌ Don't hardcode API URLs (use environment variables)
+❌ Don't skip loading and error states
+❌ Don't forget mobile responsiveness
+
+## Focus Areas
+
+When reading task sections, prioritize:
+- `requirements` - What UI needs to be built
+- `technical-approach` - Component structure, state management
+- `design` - Visual specifications, layout
+- `ux` - User interactions, flows
+
+## Remember
+
+- **Test user interactions** - what users see and do, not implementation
+- **Accessibility is mandatory** - ARIA labels, keyboard navigation
+- **Mobile-first** - design for mobile, enhance for desktop
+- **Error and loading states** - always handle async operations
+- **Report blockers promptly** - missing APIs, design assets, specifications
+- **Follow existing patterns** - check codebase for similar components
+- **Validation is mandatory** - ALL tests must pass before completion
+
+## Additional Resources
+
+For deeper patterns and examples, see:
+- **PATTERNS.md** - React hooks patterns, state management (load if needed)
+- **BLOCKERS.md** - Detailed frontend-specific blockers (load if stuck)
+- **examples.md** - Complete component examples (load if uncertain)

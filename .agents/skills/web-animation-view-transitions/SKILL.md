@@ -5,7 +5,7 @@ description: View Transitions API patterns - same-document transitions, cross-do
 
 # View Transitions API Patterns
 
-> **Quick Guide:** Use the View Transitions API for native page/state transitions. `document.startViewTransition()` for same-document, `@view-transition { navigation: auto }` for cross-document MPA. Always feature-detect before use and respect `prefers-reduced-motion`. Use the options form `startViewTransition({ update, types })` when you need typed transitions.
+> **Quick Guide:** Use the View Transitions API for native page/state transitions. `document.startViewTransition()` for same-document, `@view-transition { navigation: auto }` for cross-document MPA. Always feature-detect before use and respect `prefers-reduced-motion`.
 
 ---
 
@@ -29,7 +29,7 @@ description: View Transitions API patterns - same-document transitions, cross-do
 
 ---
 
-**Auto-detection:** View Transitions API, startViewTransition, view-transition-name, @view-transition, ::view-transition, pageswap, pagereveal, ViewTransition, view-transition-class, match-element, active-view-transition-type
+**Auto-detection:** View Transitions API, startViewTransition, view-transition-name, @view-transition, ::view-transition, pageswap, pagereveal, ViewTransition, view-transition-class
 
 **When to use:**
 
@@ -53,14 +53,13 @@ description: View Transitions API patterns - same-document transitions, cross-do
 
 - Complex physics-based animations (use animation libraries)
 - Animations requiring precise timeline control
+- Browsers without View Transitions support (always provide fallback)
 - Simple hover/focus effects (use CSS transitions)
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Feature detection, state transitions, promise handling, CSS customization
-- [examples/spa.md](examples/spa.md) - Theme switcher, form steps, tab panels, list reordering
-- [examples/shared-elements.md](examples/shared-elements.md) - Hero animations, multiple shared elements, MPA shared elements, modals
-- [reference.md](reference.md) - Decision frameworks, pseudo-element reference, browser support, anti-patterns
+- For code examples, see [examples/](examples/) folder
+- For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
@@ -88,7 +87,9 @@ The View Transitions API provides a native browser mechanism for creating animat
 
 ### Pattern 1: Feature Detection with Fallback
 
-Always check for API support before using View Transitions. See [examples/core.md](examples/core.md) Pattern 1 for full utility.
+Always check for API support before using View Transitions.
+
+#### Basic Feature Detection
 
 ```typescript
 const SUPPORTS_VIEW_TRANSITIONS =
@@ -99,49 +100,98 @@ function updateWithTransition(updateFn: () => void | Promise<void>): void {
     updateFn();
     return;
   }
+
   document.startViewTransition(() => updateFn());
 }
 ```
 
-**Why good:** Prevents runtime errors in unsupported browsers, provides seamless fallback
+**Why good:** Prevents runtime errors in unsupported browsers, provides seamless fallback, named constant for reusability
+
+```typescript
+// Bad Example - No feature detection
+document.startViewTransition(() => updateDOM()); // Crashes in Firefox < 144!
+```
+
+**Why bad:** Crashes in unsupported browsers, no fallback for users without support
 
 ---
 
 ### Pattern 2: Same-Document (SPA) Transitions
 
-Animate DOM state changes within a single page. See [examples/core.md](examples/core.md) Patterns 2-5 for state transitions, async loading, promise handling, and skip logic.
+Animate DOM state changes within a single page using startViewTransition().
+
+#### Basic State Transition
 
 ```typescript
-// startViewTransition accepts a callback or an options object
-const transition = document.startViewTransition(async () => {
-  await updateFn();
-});
+const TRANSITION_DURATION_MS = 300;
 
-// Options form - set types for CSS targeting
-const transition = document.startViewTransition({
-  update: () => updateDOM(),
-  types: ["slide-forward"],
-});
+type ViewTransitionCallback = () => void | Promise<void>;
 
-await transition.finished;
+async function transitionTo(updateFn: ViewTransitionCallback): Promise<void> {
+  if (!document.startViewTransition) {
+    await updateFn();
+    return;
+  }
+
+  const transition = document.startViewTransition(async () => {
+    await updateFn();
+  });
+
+  await transition.finished;
+}
+
+// Usage
+function handleNavigation(page: string): void {
+  transitionTo(() => {
+    setCurrentPage(page);
+  });
+}
 ```
 
-**ViewTransition object provides three promises:**
+**Why good:** Wraps feature detection, handles async updates, returns promise for chaining
 
-| Promise                         | Resolves when                 |
-| ------------------------------- | ----------------------------- |
-| `transition.ready`              | Pseudo-element tree created   |
-| `transition.updateCallbackDone` | DOM update callback completed |
-| `transition.finished`           | Animation complete            |
+#### ViewTransition Object Properties
+
+```typescript
+interface ViewTransitionPromises {
+  ready: Promise<void>; // Pseudo-element tree created
+  updateCallbackDone: Promise<void>; // DOM update complete
+  finished: Promise<void>; // Animation finished
+}
+
+async function transitionWithCustomAnimation(
+  updateFn: () => void,
+): Promise<void> {
+  if (!document.startViewTransition) {
+    updateFn();
+    return;
+  }
+
+  const transition = document.startViewTransition(updateFn);
+
+  // Wait for pseudo-elements to be ready
+  await transition.ready;
+
+  // Now safe to apply custom animations via Web Animations API
+  console.log("Pseudo-elements ready for custom animation");
+
+  await transition.finished;
+  console.log("Transition complete");
+}
+```
+
+**Why good:** Shows the three promise stages for different timing needs
 
 ---
 
 ### Pattern 3: Cross-Document (MPA) Transitions
 
-Enable transitions between separate pages without JavaScript. Both pages must opt in.
+Enable transitions between separate pages without JavaScript.
+
+#### CSS Opt-In
 
 ```css
-/* Include on BOTH source and destination pages */
+/* styles.css - Include on BOTH pages */
 @view-transition {
   navigation: auto;
 }
@@ -149,51 +199,114 @@ Enable transitions between separate pages without JavaScript. Both pages must op
 
 **Why good:** No JavaScript required, works for traverse/push/replace navigations
 
-**Obsolete syntax:** `<meta name="view-transition" content="same-origin">` - use the CSS at-rule instead.
+```css
+/* Bad Example - Obsolete meta tag syntax */
+/* <meta name="view-transition" content="same-origin"> */
+
+/* Good - Use CSS at-rule instead */
+@view-transition {
+  navigation: auto;
+}
+```
+
+**Why bad:** Meta tag syntax is obsolete, CSS at-rule is the current standard
 
 ---
 
 ### Pattern 4: Shared Element Transitions
 
-Create hero animations by giving matching elements the same `view-transition-name`. See [examples/shared-elements.md](examples/shared-elements.md) for full product list-to-detail, multi-element, and MPA examples.
+Create hero animations by giving matching elements the same view-transition-name.
+
+#### CSS Shared Elements
 
 ```css
-:root {
-  --hero-duration: 300ms;
-  --hero-easing: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Same name on both pages/states creates shared element animation */
+/* On list page */
 .product-thumbnail {
   view-transition-name: product-hero;
 }
+
+/* On detail page */
 .product-image {
   view-transition-name: product-hero;
 }
 
+/* Customize the transition */
 ::view-transition-group(product-hero) {
-  animation-duration: var(--hero-duration);
-  animation-timing-function: var(--hero-easing);
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 ```
 
-**Key rules:** Names must be unique across the document. Clean up dynamically assigned names after `transition.finished`.
+**Why good:** Same name creates automatic shared element transition, custom timing via pseudo-element
+
+#### Dynamic Name Assignment
+
+```typescript
+function setTransitionNames(elements: Array<[HTMLElement, string]>): void {
+  elements.forEach(([el, name]) => {
+    el.style.viewTransitionName = name;
+  });
+}
+
+function clearTransitionNames(elements: HTMLElement[]): void {
+  elements.forEach((el) => {
+    el.style.viewTransitionName = "";
+  });
+}
+
+async function transitionWithSharedElement(
+  element: HTMLElement,
+  name: string,
+  updateFn: () => void,
+): Promise<void> {
+  if (!document.startViewTransition) {
+    updateFn();
+    return;
+  }
+
+  element.style.viewTransitionName = name;
+
+  const transition = document.startViewTransition(updateFn);
+  await transition.finished;
+
+  // Clean up to prevent conflicts
+  element.style.viewTransitionName = "";
+}
+```
+
+**Why good:** Dynamic assignment allows programmatic control, cleanup prevents name conflicts
 
 ---
 
 ### Pattern 5: Custom CSS Animations
 
-Override default cross-fade with custom animations via pseudo-elements. See [examples/core.md](examples/core.md) Pattern 6 for full examples.
+Override default cross-fade with custom animations via pseudo-elements.
+
+#### Slide Transitions
 
 ```css
+/* Named constants as CSS custom properties */
 :root {
   --transition-duration: 300ms;
   --transition-easing: ease-in-out;
 }
 
+@keyframes slide-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
 ::view-transition-old(root) {
   animation: slide-out-left var(--transition-duration) var(--transition-easing);
 }
+
 ::view-transition-new(root) {
   animation: slide-in-right var(--transition-duration) var(--transition-easing);
 }
@@ -201,13 +314,49 @@ Override default cross-fade with custom animations via pseudo-elements. See [exa
 
 **Why good:** CSS custom properties for timing constants, GPU-accelerated transforms
 
+#### Scale and Fade
+
+```css
+:root {
+  --scale-duration: 250ms;
+  --scale-hidden: 0.95;
+}
+
+@keyframes scale-down {
+  to {
+    transform: scale(var(--scale-hidden));
+    opacity: 0;
+  }
+}
+
+@keyframes scale-up {
+  from {
+    transform: scale(calc(1 / var(--scale-hidden)));
+    opacity: 0;
+  }
+}
+
+::view-transition-old(root) {
+  animation: scale-down var(--scale-duration) ease-in;
+}
+
+::view-transition-new(root) {
+  animation: scale-up var(--scale-duration) ease-out;
+}
+```
+
+**Why good:** Scale and opacity are GPU-accelerated, CSS variables for consistent values
+
 ---
 
 ### Pattern 6: Direction-Aware Transitions
 
-Use different animations for forward vs backward navigation. Use the `types` parameter or `ViewTransition.types` set.
+Use different animations for forward vs backward navigation.
+
+#### CSS with active-view-transition-type
 
 ```css
+/* Forward navigation */
 html:active-view-transition-type(forwards) {
   &::view-transition-old(content) {
     animation-name: slide-out-left;
@@ -217,6 +366,7 @@ html:active-view-transition-type(forwards) {
   }
 }
 
+/* Backward navigation */
 html:active-view-transition-type(backwards) {
   &::view-transition-old(content) {
     animation-name: slide-out-right;
@@ -225,21 +375,55 @@ html:active-view-transition-type(backwards) {
     animation-name: slide-in-left;
   }
 }
+
+@keyframes slide-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
 ```
+
+#### Setting Navigation Types
 
 ```typescript
-// Preferred: set types via options parameter
-document.startViewTransition({
-  update: () => navigateForward(),
-  types: ["forwards"],
-});
+function setNavigationType(
+  transition: ViewTransition,
+  type: "forwards" | "backwards",
+): void {
+  if ("types" in transition) {
+    (transition.types as Set<string>).add(type);
+  }
+}
 
-// Alternative: mutate types set on existing transition
-const transition = document.startViewTransition(updateFn);
-transition.types.add("forwards");
+// For MPA, use pagereveal event
+window.addEventListener("pagereveal", (e) => {
+  const event = e as PageRevealEvent;
+  if (event.viewTransition && "activation" in navigation) {
+    const navActivation = navigation.activation;
+    if (navActivation) {
+      const fromUrl = navActivation.from?.url;
+      const toUrl = navActivation.entry?.url;
+
+      // Determine direction based on URL structure
+      if (fromUrl && toUrl) {
+        const isForward = toUrl.includes("/detail");
+        setNavigationType(
+          event.viewTransition,
+          isForward ? "forwards" : "backwards",
+        );
+      }
+    }
+  }
+});
 ```
 
-See [examples/spa.md](examples/spa.md) for form step and tab panel examples.
+**Why good:** Different animations for different navigation directions improve UX
 
 ---
 
@@ -247,89 +431,181 @@ See [examples/spa.md](examples/spa.md) for form step and tab panel examples.
 
 Always respect user preferences for reduced motion.
 
+#### CSS Approach
+
 ```css
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /* Or disable entirely */
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
-    animation-duration: 0.01ms !important;
+    animation: none !important;
+  }
+}
+
+/* Provide subtle alternative feedback */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root) {
+    animation: fade-out 150ms ease-out;
+  }
+  ::view-transition-new(root) {
+    animation: fade-in 150ms ease-in;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
   }
 }
 ```
+
+**Why good:** Respects user preferences, provides subtle alternative instead of nothing
+
+#### JavaScript Approach
 
 ```typescript
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 function shouldEnableTransitions(): boolean {
-  if (window.matchMedia(REDUCED_MOTION_QUERY).matches) return false;
+  // Check reduced motion preference
+  if (window.matchMedia(REDUCED_MOTION_QUERY).matches) {
+    return false;
+  }
+
+  // Check for API support
   return "startViewTransition" in document;
+}
+
+function transitionWithAccessibility(updateFn: () => void): void {
+  if (!shouldEnableTransitions()) {
+    updateFn();
+    return;
+  }
+
+  document.startViewTransition(updateFn);
+}
+
+// Hook for monitoring preference changes
+function useReducedMotion(): boolean {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+  let prefersReduced = query.matches;
+
+  query.addEventListener("change", (e) => {
+    prefersReduced = e.matches;
+  });
+
+  return prefersReduced;
 }
 ```
 
-See [examples/spa.md](examples/spa.md) for a full accessible transition wrapper with preference change monitoring.
+**Why good:** Checks preference before initiating transition, reactive to preference changes
 
 ---
 
 ### Pattern 8: Circular Reveal Effect
 
-Advanced custom animation using Web Animations API. Must `await transition.ready` before animating pseudo-elements.
+Advanced custom animation using Web Animations API.
 
 ```typescript
-const REVEAL_DURATION_MS = 400;
+interface ClickPosition {
+  x: number;
+  y: number;
+}
+
+let lastClickPosition: ClickPosition = { x: 0, y: 0 };
+
+document.addEventListener("click", (e: MouseEvent) => {
+  lastClickPosition = { x: e.clientX, y: e.clientY };
+});
+
+const REVEAL_DURATION_MS = 500;
 const REVEAL_EASING = "ease-in-out";
 
-const transition = document.startViewTransition(updateFn);
-await transition.ready;
+async function circularRevealTransition(updateFn: () => void): Promise<void> {
+  if (!document.startViewTransition) {
+    updateFn();
+    return;
+  }
 
-document.documentElement.animate(
-  {
-    clipPath: [`circle(0 at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`],
-  },
-  {
-    duration: REVEAL_DURATION_MS,
-    easing: REVEAL_EASING,
-    pseudoElement: "::view-transition-new(root)",
-  },
-);
+  const { x, y } = lastClickPosition;
+  const endRadius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y),
+  );
+
+  const transition = document.startViewTransition(updateFn);
+
+  await transition.ready;
+
+  document.documentElement.animate(
+    {
+      clipPath: [
+        `circle(0 at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ],
+    },
+    {
+      duration: REVEAL_DURATION_MS,
+      easing: REVEAL_EASING,
+      pseudoElement: "::view-transition-new(root)",
+    },
+  );
+}
 ```
 
-See [examples/spa.md](examples/spa.md) for a complete theme-switcher circular reveal implementation.
+**Supporting CSS:**
+
+```css
+::view-transition-image-pair(root) {
+  isolation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  display: block;
+}
+```
+
+**Why good:** Creates engaging circular reveal from click point, uses Web Animations API for precise control
 
 </patterns>
 
 ---
 
-<red_flags>
+<integration>
 
-## RED FLAGS
+## Integration Guide
 
-**High Priority Issues:**
+**View Transitions is a browser-native API.** It works with any JavaScript approach and styling solution.
 
-- **Missing feature detection** - Calling `startViewTransition()` without checking support crashes in older browsers
-- **Duplicate view-transition-name values** - Two visible elements with the same name breaks the transition entirely
-- **Not cleaning up dynamic names** - Leftover names cause conflicts in subsequent transitions
-- **Ignoring prefers-reduced-motion** - Mandatory for accessibility; always provide reduced or no animation
-- **Magic numbers for timing** - All duration/delay values must be named constants or CSS custom properties
+**Works with:**
 
-**Medium Priority Issues:**
+- **Any DOM manipulation**: Updates via direct DOM, signals, or virtual DOM all work
+- **Any routing solution**: Wrap route changes in startViewTransition()
+- **Any styling approach**: Customize via CSS pseudo-elements
 
-- **Using obsolete meta tag syntax** - `<meta name="view-transition">` is deprecated; use `@view-transition` CSS
-- **Not awaiting transition.ready for custom animations** - Web Animations API must wait for pseudo-elements to exist
-- **Missing @view-transition on both MPA pages** - Cross-document transitions require opt-in on source AND destination
-- **Setting view-transition-name in CSS for dynamic lists** - Causes name conflicts; use JavaScript assignment or `match-element`
+**Key integration points:**
 
-**Gotchas & Edge Cases:**
+- Call `document.startViewTransition()` before DOM updates
+- Use CSS `@view-transition` for cross-document navigation
+- Set `view-transition-name` via CSS or JavaScript for shared elements
 
-- **Old state is a screenshot** - Videos, animations, GIFs freeze in the old snapshot
-- **New state is "live"** - Interactive content continues playing in the new snapshot
-- **Transition names are global** - Same name on different page sections will conflict
-- **Animations block interaction** - User cannot interact until transition completes; keep animations under 300ms
-- **Cross-document needs same-origin** - Different origins cannot share transitions
-- **`match-element` requires Chrome 137+/Safari 18.4+** - Not yet available in Firefox
-- **`pagereveal` must be registered early** - Put handler in `<head>` or use `blocking="render"`
-- **Reserved names** (`auto`, `inherit`, `none`, `unset`) are CSS keywords, not valid custom identifiers
-
-</red_flags>
+</integration>
 
 ---
 

@@ -1,11 +1,11 @@
 ---
 name: swiftui-layout-components
-description: "Build SwiftUI layouts using stacks, grids, lists, scroll views, forms, and controls. Covers VStack/HStack/ZStack, LazyVGrid/LazyHGrid, List with sections and swipe actions, ScrollView with ScrollPosition, Form with validation, Toggle/Picker/Slider, .searchable, and overlay patterns. Use when building data-driven layouts, collection views, settings screens, search interfaces, or transient overlay UI."
+description: "Build SwiftUI layouts using stacks, grids, lists, scroll views, forms, and controls. Covers VStack/HStack/ZStack, LazyVGrid/LazyHGrid, List with sections and swipe actions, ScrollView with ScrollViewReader, Form with validation, Toggle/Picker/Slider, .searchable, and overlay patterns. Use when building data-driven layouts, collection views, settings screens, search interfaces, or transient overlay UI."
 ---
 
 # SwiftUI Layout & Components
 
-Layout and component patterns for SwiftUI apps targeting iOS 26+ with Swift 6.3. Covers stack and grid layouts, list patterns, scroll views, forms, controls, search, and overlays. Patterns are backward-compatible to iOS 17 unless noted.
+Layout and component patterns for SwiftUI apps targeting iOS 26+ with Swift 6.2. Covers stack and grid layouts, list patterns, scroll views, forms, controls, search, and overlays. Patterns are backward-compatible to iOS 17 unless noted.
 
 ## Contents
 
@@ -27,7 +27,7 @@ Layout and component patterns for SwiftUI apps targeting iOS 26+ with Swift 6.3.
 Use `VStack`, `HStack`, and `ZStack` for small, fixed-size content. They render all children immediately.
 
 ```swift
-VStack(alignment: .leading) {
+VStack(alignment: .leading, spacing: 8) {
     Text(title).font(.headline)
     Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
 }
@@ -39,7 +39,7 @@ Use `LazyVStack` and `LazyHStack` inside `ScrollView` for large or dynamic colle
 
 ```swift
 ScrollView {
-    LazyVStack {
+    LazyVStack(spacing: 12) {
         ForEach(items) { item in
             ItemRow(item: item)
         }
@@ -60,7 +60,7 @@ Use `LazyVGrid` for icon pickers, media galleries, and dense visual selections. 
 // Adaptive grid -- columns adjust to fit
 let columns = [GridItem(.adaptive(minimum: 120, maximum: 1024))]
 
-LazyVGrid(columns: columns) {
+LazyVGrid(columns: columns, spacing: 6) {
     ForEach(items) { item in
         ThumbnailView(item: item)
             .aspectRatio(1, contentMode: .fit)
@@ -79,9 +79,9 @@ LazyVGrid(columns: columns, spacing: 4) {
 }
 ```
 
-Use `.aspectRatio` for cell sizing. Never place `GeometryReader` inside lazy containers -- it forces eager measurement and defeats lazy loading. Use `.onGeometryChange` (iOS 16+) if you need to read dimensions.
+Use `.aspectRatio` for cell sizing. Never place `GeometryReader` inside lazy containers -- it forces eager measurement and defeats lazy loading. Use `.onGeometryChange` (iOS 18+) if you need to read dimensions.
 
-See [references/grids.md](references/grids.md) for full grid patterns and design choices.
+See `references/grids.md` for full grid patterns and design choices.
 
 ## List Patterns
 
@@ -104,13 +104,13 @@ List {
 - `.listStyle(.plain)` for feed layouts, `.insetGrouped` for settings
 - `.scrollContentBackground(.hidden)` + custom background for themed surfaces
 - `.listRowInsets(...)` and `.listRowSeparator(.hidden)` for spacing and separator control
-- Use `ScrollPosition` with `.scrollPosition($scrollPosition)` for scroll-to-top or jump-to-id
+- Pair with `ScrollViewReader` for scroll-to-top or jump-to-id
 - Use `.refreshable { }` for pull-to-refresh feeds
 - Use `.contentShape(Rectangle())` on rows that should be tappable end-to-end
 
 **iOS 26:** Apply `.scrollEdgeEffectStyle(.soft, for: .top)` for modern scroll edge effects.
 
-See [references/list.md](references/list.md) for full list patterns including feed lists with scroll-to-top.
+See `references/list.md` for full list patterns including feed lists with scroll-to-top.
 
 ## ScrollView
 
@@ -118,7 +118,7 @@ Use `ScrollView` with lazy stacks when you need custom layout, mixed content, or
 
 ```swift
 ScrollView(.horizontal, showsIndicators: false) {
-    LazyHStack {
+    LazyHStack(spacing: 8) {
         ForEach(chips) { chip in
             ChipView(chip: chip)
         }
@@ -126,26 +126,24 @@ ScrollView(.horizontal, showsIndicators: false) {
 }
 ```
 
-**ScrollPosition:** Enables declarative, bidirectional scroll position tracking and programmatic scrolling.
+**ScrollViewReader:** Enables programmatic scrolling to specific items.
 
 ```swift
-@State private var scrollPosition = ScrollPosition(edge: .bottom)
-
-ScrollView {
-    LazyVStack {
-        ForEach(messages) { message in
-            MessageRow(message: message)
+ScrollViewReader { proxy in
+    ScrollView {
+        LazyVStack {
+            ForEach(messages) { message in
+                MessageRow(message: message).id(message.id)
+            }
         }
     }
-    .scrollTargetLayout()
-}
-.scrollPosition($scrollPosition)
-.onChange(of: messages.last?.id) {
-    withAnimation { scrollPosition.scrollTo(edge: .bottom) }
+    .onChange(of: messages.last?.id) { _, newValue in
+        if let id = newValue {
+            withAnimation { proxy.scrollTo(id, anchor: .bottom) }
+        }
+    }
 }
 ```
-
-See [references/scrollview.md](references/scrollview.md) for full `ScrollPosition` patterns including scroll-to-id and user-scroll detection.
 
 **`safeAreaInset(edge:)`** pins content (input bars, toolbars) above the keyboard without affecting scroll layout.
 
@@ -154,7 +152,7 @@ See [references/scrollview.md](references/scrollview.md) for full `ScrollPositio
 - `.backgroundExtensionEffect()` -- mirror/blur at safe area edges (use sparingly, one per screen)
 - `.safeAreaBar(edge:)` -- attach bar views that integrate with scroll effects
 
-See [references/scrollview.md](references/scrollview.md) for full scroll patterns and iOS 26 edge effects.
+See `references/scrollview.md` for full scroll patterns and iOS 26 edge effects.
 
 ## Form and Controls
 
@@ -218,7 +216,7 @@ Picker("Default Visibility", selection: $visibility) {
 
 Avoid `.pickerStyle(.segmented)` for large sets; use menu or inline styles. Don't hide labels for sliders; always show context.
 
-See [references/form.md](references/form.md) for full form examples.
+See `references/form.md` for full form examples.
 
 ## Searchable
 
@@ -314,7 +312,6 @@ Prefer overlays for transient UI rather than embedding in layout stacks. Use tra
 8. Running searches on empty strings -- always guard against empty queries
 9. Mixing `List` and `ScrollView` in the same hierarchy -- gesture conflicts
 10. Using `.pickerStyle(.segmented)` for large option sets -- use menu or inline styles
-11. Hard-coding `spacing:` on stacks and grids by default -- omit to get platform-adaptive spacing; only specify for intentional tight (0–4pt) or wide gaps
 
 ## Review Checklist
 
@@ -328,13 +325,12 @@ Prefer overlays for transient UI rather than embedding in layout stacks. Use tra
 - [ ] Overlays use transitions and auto-dismiss timers
 - [ ] `.contentShape(Rectangle())` on tappable rows
 - [ ] `@FocusState` manages keyboard focus in forms
-- [ ] Stack/grid `spacing:` omitted unless a specific value is required
 
 ## References
 
-- Grid patterns: [references/grids.md](references/grids.md)
-- List and section patterns: [references/list.md](references/list.md)
-- ScrollView and lazy stacks: [references/scrollview.md](references/scrollview.md)
-- Form patterns: [references/form.md](references/form.md)
+- Grid patterns: `references/grids.md`
+- List and section patterns: `references/list.md`
+- ScrollView and lazy stacks: `references/scrollview.md`
+- Form patterns: `references/form.md`
 - Architecture and state management: see `swiftui-patterns` skill
 - Navigation patterns: see `swiftui-navigation` skill

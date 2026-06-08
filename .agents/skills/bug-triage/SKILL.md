@@ -1,59 +1,80 @@
 ---
-name: bug-triage
-description: Reproduce, isolate, and fix a bug (or failing build/test), then summarize root cause, fix, and verification steps. Use when the user reports a bug, regression, or failing build/test and wants a fix.
+name: "Bug Triage"
+description: "Systematically reproduce, diagnose, and analyze bugs to determine root cause, assess severity, and plan fix strategy"
+category: "analysis"
+required_tools: ["Read", "Write", "Grep", "Glob", "Bash"]
 ---
 
-# Bug triage
+# Bug Triage
 
-## Goal
-Turn an ambiguous bug report into:
-- a reliable repro (or a clear “cannot reproduce yet” with next info to collect)
-- a root-cause explanation
-- a minimal, reviewed fix
-- verification steps (commands + manual checks)
+## Purpose
+Systematically analyze bug reports to reproduce issues, identify root causes, assess severity and impact, and determine the appropriate fix strategy and priority.
 
-## First checks
-1) Read any repo-specific guidance (`AGENTS.md`, `CONTRIBUTING.md`, README).
-2) Clarify impact: severity, who is affected, and whether it’s a regression.
+## When to Use
+- Analyzing incoming bug reports
+- Investigating production issues
+- Diagnosing test failures
+- Planning bug fix work
+- Prioritizing bug backlog
 
-## If info is missing, ask for it
-- Exact steps to reproduce (starting state + inputs).
-- Expected vs actual behavior.
-- Error text / stack trace / logs (full, unedited if possible).
-- Environment: OS, runtime versions (Node/Bun), browser, commit hash/tag.
-- Frequency: always / sometimes / only certain data.
-- “Last known good” version or approximate date when it started.
+## Key Capabilities
+1. **Bug Reproduction** - Create reliable steps to reproduce the issue
+2. **Root Cause Analysis** - Identify underlying cause, not just symptoms
+3. **Severity Assessment** - Determine impact and urgency accurately
 
-## Workflow (checklist)
-1) Reproduce locally
-   - Prefer the simplest, fastest repro.
-   - If it’s flaky, try to reduce nondeterminism (seed, fixed time, retries).
-2) Localize the failure
-   - Narrow to a file/function/component/config.
-   - Use `rg` to find relevant code paths and error strings.
-3) Identify root cause
-   - Form a hypothesis, confirm with logs/breakpoints, then refine.
-   - If it’s a regression and git history exists, consider `git bisect`.
-4) Implement the minimal fix
-   - Fix the cause, not the symptom.
-   - Avoid drive-by refactors and formatting churn.
-5) Verify
-   - Run the project’s standard checks (lint/tests/build).
-   - Re-run the repro steps and confirm the fix.
+## Approach
+1. **Understand the Report** - Read bug description and symptoms
+2. **Reproduce the Bug** - Create minimal reproduction steps
+3. **Isolate the Cause** - Use logs, debugging, code inspection
+4. **Assess Impact** - Determine affected users and severity
+5. **Determine Fix Strategy** - Quick patch vs architectural fix
+6. **Document Findings** - Clear report for implementation team
 
-## Repo-aware command hints
-Use what the repo actually uses:
-- If `bun.lock` exists: prefer `bun ...` (e.g. `bun lint`, `bun build`, `bun dev`).
-- Otherwise: use the project’s documented commands (`npm`, `pnpm`, `yarn`, etc.).
- - If `bun.lock` exists but `bun` is not available, tell the user and ask whether to install `bun` or use the repo’s alternative package manager.
+## Example
+**Context**: Bug report "Users can't log in"
+```markdown
+## Bug Analysis
 
-## Deliverable (paste this in the chat / PR / issue)
-Use this format:
-- **Summary:** ...
-- **Repro:** ...
-- **Root cause:** ...
-- **Fix:** ...
-- **Verification:** ...
-- **Risk/notes:** ...
+**Symptoms**:
+- Users see "Invalid credentials" error
+- Occurs only for accounts created after Oct 15
+- Works fine for older accounts
 
-If you need a bug-report structure to ask the user for, use `references/bug-report-template.md`.
+**Reproduction Steps**:
+1. Create new user account
+2. Log out
+3. Attempt to log in with correct credentials
+4. Observe error message
+
+**Root Cause**:
+- Code inspection of auth system
+- Found: Password hashing algorithm changed Oct 15
+- Old accounts use bcrypt, new accounts use argon2
+- Login validation only checks bcrypt
+
+**Location**: `src/auth/validator.py:45-67`
+
+**Impact**:
+- Severity: Critical (blocks all new users)
+- Affected: ~500 accounts created in last week
+- Workaround: None available
+
+**Fix Strategy**:
+- Update validator to check both hash types
+- Add migration for existing argon2 hashes
+- Estimated effort: 2 hours (small fix)
+- Testing required: Auth system regression tests
+
+**Priority**: Critical - Fix immediately
+**Recommended Agent**: implementer (straightforward code fix)
+```
+
+## Best Practices
+- ✅ Always try to reproduce before diagnosing
+- ✅ Check logs and error messages first
+- ✅ Use Grep/Glob to find related code quickly
+- ✅ Document exact reproduction steps
+- ✅ Consider data issues, not just code bugs
+- ✅ Assess severity objectively (not all bugs are critical)
+- ❌ Avoid: Assuming the cause without investigation
+- ❌ Avoid: Treating all bugs as equally urgent

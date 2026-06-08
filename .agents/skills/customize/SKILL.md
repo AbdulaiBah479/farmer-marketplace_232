@@ -1,101 +1,108 @@
 ---
 name: customize
-description: >
-  Guided customization of your commercial contracts practice profile — change
-  one thing without re-running the whole cold-start interview. Adjust risk
-  posture, escalation contacts, playbook positions, NDA triage preferences,
-  house style, review preferences, or matter workspace paths. Use when the
-  user says "change my [thing]", "update my profile", "edit my playbook",
-  "tune my config", or "customize".
-argument-hint: "[section name, or describe what you want to change]"
+description: Add new capabilities or modify NanoClaw behavior. Use when user wants to add channels (Telegram, Slack, email input), change triggers, add integrations, modify the router, or make any other customizations. This is an interactive skill that asks questions to understand what the user wants.
 ---
 
-# /customize
+# NanoClaw Customization
 
-## When this runs
+This skill helps users add capabilities or modify behavior. Use AskUserQuestion to understand what they want before making changes.
 
-The user typed `/commercial-legal:customize`. They want to change something
-in their practice profile — a risk posture, an escalation contact, a playbook
-position, a jurisdiction, an output format — without re-running the whole
-cold-start interview and without hand-editing YAML.
+## Workflow
 
-## What to do
+1. **Understand the request** - Ask clarifying questions
+2. **Plan the changes** - Identify files to modify
+3. **Implement** - Make changes directly to the code
+4. **Test guidance** - Tell user how to verify
 
-1. **Read the config.** Read
-   `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`
-   (and `~/.claude/plugins/config/claude-for-legal/company-profile.md` one
-   level up). If the plugin config does not exist or still contains
-   `[PLACEHOLDER]` values, say:
+## Key Files
 
-   > You haven't run setup yet. Run `/commercial-legal:cold-start-interview`
-   > first — customize is for adjusting a profile you already have.
+| File | Purpose |
+|------|---------|
+| `src/config.ts` | Assistant name, trigger pattern, directories |
+| `src/index.ts` | Message routing, WhatsApp connection, agent invocation |
+| `src/db.ts` | Database initialization and queries |
+| `src/types.ts` | TypeScript interfaces |
+| `src/whatsapp-auth.ts` | Standalone WhatsApp authentication script |
+| `.mcp.json` | MCP server configuration (reference) |
+| `groups/CLAUDE.md` | Global memory/persona |
 
-2. **Show the customizable map.** List what's in the profile, grouped, with a
-   one-line summary of the current value:
+## Common Customization Patterns
 
-   - **Company / who you are** — name, industry, jurisdictions, stage, practice
-     setting, sales-side vs. purchasing-side orientation *(shared across all
-     12 plugins — changes flow through `company-profile.md`)*
-   - **Risk posture** — conservative / middle / aggressive, what each means
-     for fallback positions and escalation triggers
-   - **People** — escalation chain, approvers by dollar threshold and by
-     clause type
-   - **Playbook positions** — the substantive contract positions: liability
-     caps, indemnity scope, IP ownership, data protection, termination,
-     auto-renewal, price escalation, and the fallbacks for each
-   - **NDA triage preferences** — what green / yellow / red looks like for
-     inbound NDAs
-   - **Review preferences** — redline style, explanation depth, whether to
-     produce a stakeholder summary by default
-   - **House style** — document format, signature block, renewal-alert
-     channel, deviation-log format
-   - **Workflow** — matter workspace paths, intake path, renewal watcher
-     cadence
-   - **Integrations** — Ironclad / DocuSign / Slack / document storage
-     status, fallbacks
+### Adding a New Input Channel (e.g., Telegram, Slack, Email)
 
-3. **Ask what they want to change.**
+Questions to ask:
+- Which channel? (Telegram, Slack, Discord, email, SMS, etc.)
+- Same trigger word or different?
+- Same memory hierarchy or separate?
+- Should messages from this channel go to existing groups or new ones?
 
-   > What would you like to adjust? Pick a section, or describe the change in
-   > your own words.
+Implementation pattern:
+1. Find/add MCP server for the channel
+2. Add connection and message handling in `src/index.ts`
+3. Store messages in the database (update `src/db.ts` if needed)
+4. Ensure responses route back to correct channel
 
-4. **Make the change.** Show the current value, ask for the new value, explain
-   what changes downstream, confirm, write it to the config.
+### Adding a New MCP Integration
 
-   Examples:
-   - *Liability cap fallback 12 months → 6 months:* "`/review` will now flag
-     anything above 6 months as a deviation; existing deal-debrief entries
-     stay as logged."
-   - *New escalation approver:* "Any redline exceeding your own authority
-     will now route to this approver — `/escalation-flagger` will include them by
-     default for the matching risk band."
-   - *Risk posture middle → aggressive:* "I'll accept more vendor-friendly
-     positions without flagging them and shift the `[review]` bar higher."
+Questions to ask:
+- What service? (Calendar, Notion, database, etc.)
+- What operations needed? (read, write, both)
+- Which groups should have access?
 
-5. **For shared-profile changes** (company name, industry, jurisdictions,
-   practice setting, stage): write to
-   `~/.claude/plugins/config/claude-for-legal/company-profile.md` and note:
+Implementation:
+1. Add MCP server to the `mcpServers` config in `src/index.ts`
+2. Add tools to `allowedTools` array
+3. Document in `groups/CLAUDE.md`
 
-   > This change affects all 12 plugins — any plugin that reads your
-   > jurisdiction footprint now sees [new value].
+### Changing Assistant Behavior
 
-6. **Close.**
+Questions to ask:
+- What aspect? (name, trigger, persona, response style)
+- Apply to all groups or specific ones?
 
-   > Done. Your next output will reflect the change. Anything else? You can
-   > run `/commercial-legal:customize` anytime.
+Simple changes → edit `src/config.ts`
+Persona changes → edit `groups/CLAUDE.md`
+Per-group behavior → edit specific group's `CLAUDE.md`
 
-## Guardrails
+### Adding New Commands
 
-- **Never delete a section.** If the user wants to "remove" something, set it
-  to `[Not configured]` and explain what that means for the plugin's behavior.
-- **Flag internal inconsistency.** If the change would make the profile
-  inconsistent (e.g., risk posture aggressive + "every redline needs GC
-  approval"; or "sales-side" + a purchasing-side playbook position), flag the
-  tension and ask which one they want.
-- **Flag guardrail degradation.** If the user asks to turn off a guardrail
-  (drop the `[review]` flag, skip the privilege header, remove `[verify]`
-  tags), explain what the guardrail protects against and confirm they
-  understand the trade-off. The `[review]` flag, source attribution tags, and
-  `[verify]` tags on cited statutes are load-bearing and should not be
-  removed.
-- **One change at a time.** Don't re-ask the whole interview.
+Questions to ask:
+- What should the command do?
+- Available in all groups or main only?
+- Does it need new MCP tools?
+
+Implementation:
+1. Add command handling in `processMessage()` in `src/index.ts`
+2. Check for the command before the trigger pattern check
+
+### Changing Deployment
+
+Questions to ask:
+- Target platform? (Linux server, Docker, different Mac)
+- Service manager? (systemd, Docker, supervisord)
+
+Implementation:
+1. Create appropriate service files
+2. Update paths in config
+3. Provide setup instructions
+
+## After Changes
+
+Always tell the user:
+```bash
+# Rebuild and restart
+npm run build
+launchctl unload ~/Library/LaunchAgents/com.nanoclaw.plist
+launchctl load ~/Library/LaunchAgents/com.nanoclaw.plist
+```
+
+## Example Interaction
+
+User: "Add Telegram as an input channel"
+
+1. Ask: "Should Telegram use the same @Andy trigger, or a different one?"
+2. Ask: "Should Telegram messages create separate conversation contexts, or share with WhatsApp groups?"
+3. Find Telegram MCP or library
+4. Add connection handling in index.ts
+5. Update message storage in db.ts
+6. Tell user how to authenticate and test

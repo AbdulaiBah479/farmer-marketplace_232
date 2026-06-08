@@ -1,90 +1,182 @@
 ---
 name: ui-review
-description: "Review UI code for StyleSeed design-system compliance, accessibility, mobile ergonomics, spacing discipline, and implementation quality."
-category: design
-risk: safe
-source: community
-source_repo: bitjaru/styleseed
-source_type: community
-date_added: "2026-04-08"
-author: bitjaru
-tags: [ui, review, design-system, accessibility, styleseed]
-tools: [claude, cursor, codex, gemini]
+description: Review SwiftUI code for iOS/watchOS Human Interface Guidelines compliance, font usage, Dynamic Type support, and accessibility. Use when user mentions UI review, HIG, accessibility audit, font checks, or wants to verify interface design against Apple standards.
+allowed-tools: [Read, Glob, Grep, WebFetch]
 ---
 
-# UI Review
+# UI Review Skill
 
-## Overview
+Performs comprehensive UI/UX review of SwiftUI code against Apple's Human Interface Guidelines, font best practices, and accessibility standards for iOS and watchOS.
 
-Part of [StyleSeed](https://github.com/bitjaru/styleseed), this skill audits UI code against the Toss seed's conventions instead of reviewing it as generic frontend work. It focuses on design-token discipline, component ergonomics, accessibility, mobile readiness, typography, and spacing consistency.
+## When This Skill Activates
 
-## When to Use
-- Use when a component or page should follow the StyleSeed Toss design language
-- Use when reviewing a UI-heavy PR for consistency and design-system violations
-- Use when the output looks "mostly fine" but feels off in subtle ways
-- Use when you need a structured review with concrete fixes
+Use this skill when the user:
+- Asks to review UI/UX code
+- Mentions HIG compliance or Apple guidelines
+- Requests accessibility audit
+- Wants font usage checked
+- Asks about Dynamic Type support
+- Requests design review against Apple standards
 
-## Review Checklist
+## Review Process
 
-### Design Tokens
+### 1. Identify Files to Review
 
-- no hardcoded hex colors when semantic tokens exist
-- no improvised shadow values when tokenized shadows exist
-- no arbitrary radius choices outside the system scale
-- no random spacing values that break the seed rhythm
+- If user specifies files/views, review those
+- Otherwise, ask which views to review or scan recent SwiftUI files
+- Prioritize user-facing views over components
 
-### Component Conventions
+### 2. Load Reference Materials
 
-- uses the project's class merge helper
-- supports `className` extension when appropriate
-- uses the agreed typing pattern
-- avoids wrapper components that only forward one class string
-- reuses existing primitives before inventing new ones
+Before starting the review, familiarize yourself with the reference materials by reading the following files in `.claude/skills/ui-review/`:
 
-### Accessibility
+- **hig-checklist.md** - Comprehensive HIG compliance checklist for iOS and watchOS
+- **font-guidelines.md** - Font usage, Dynamic Type, and typography best practices
+- **accessibility-quick-ref.md** - Quick reference for accessibility implementation
 
-- touch targets large enough for mobile
-- visible keyboard focus states
-- labels and `aria-*` attributes where needed
-- adequate color contrast
-- reduced-motion respect for animation
+You may also reference the official Apple guidelines using WebFetch when needed:
+- **iOS HIG**: https://developer.apple.com/design/human-interface-guidelines/designing-for-ios
+- **watchOS HIG**: https://developer.apple.com/design/human-interface-guidelines/designing-for-watchos
 
-### Mobile UX
+### 3. Review Categories
 
-- no horizontal overflow
-- safe-area handling where relevant
-- readable text sizes
-- thumb-friendly interaction spacing
-- bottom nav or sticky actions do not obscure content
+Apply these review categories based on the code type:
 
-### Typography and Spacing
+**HIG Compliance:**
+- Layout & spacing (tap targets, safe areas, padding)
+- Navigation patterns (NavigationStack, sheets, alerts)
+- Colors & visuals (semantic colors, dark mode, contrast)
+- Platform-specific requirements (iOS vs watchOS)
+- Loading/empty/error states
 
-- uses the system type hierarchy
-- display and headings are not overly loose
-- body text remains readable
-- spacing follows the seed grid instead of arbitrary values
+**Font Usage:**
+- Dynamic Type support
+- System text styles vs fixed sizes
+- Font hierarchy and semantic usage
+- Custom fonts scaling properly
+- Text formatting and truncation
+
+**Accessibility:**
+- Labels and hints for interactive elements
+- Traits and roles
+- VoiceOver navigation order
+- Custom actions
+- Dynamic content announcements
+- Testing with assistive technologies
+
+### 4. Common Issues to Flag
+
+**Anti-patterns:**
+- Hardcoded colors (`.foregroundColor(.black)`)
+- Fixed font sizes (`.font(.system(size: 14))`)
+- Missing accessibility labels on icon-only buttons
+- Tap targets smaller than 44pt (iOS) or 40pt (watchOS)
+- Important info conveyed by color only
+- Missing loading/error states
+- Direct UIColor usage (use `Color(.systemBackground)`)
+- `.frame()` without considering Dynamic Type expansion
+- Missing keyboard shortcuts (iPad/Mac)
+
+**Good Patterns:**
+- Semantic color usage
+- System font styles with Dynamic Type
+- Comprehensive accessibility labels
+- Clear visual hierarchy
+- Consistent spacing
+- Proper error handling
+- Responsive layouts
 
 ## Output Format
 
-Return:
-1. A verdict: Pass, Needs Improvement, or Fail
-2. A prioritized list of issues with file and line references when available
-3. Concrete fixes for each issue
-4. Any open questions where the design intent is ambiguous
+Provide review in this structure:
 
-## Best Practices
+### ✅ HIG Compliance
+- List items that comply well
+- Highlight good practices
 
-- Review against the seed, not against personal taste
-- Separate stylistic drift from real usability or accessibility bugs
-- Prefer actionable diffs over abstract criticism
-- Call out duplication when an existing component already solves the problem
+### ⚠️ HIG Issues Found
+- Specific line references: `filename.swift:lineNumber`
+- Description of issue
+- Suggested fix with code example
 
-## Additional Resources
+### ✅ Font Usage
+- Proper Dynamic Type usage
+- Good font hierarchy
 
-- [StyleSeed repository](https://github.com/bitjaru/styleseed)
-- [Source skill](https://github.com/bitjaru/styleseed/blob/main/seeds/toss/.claude/skills/ui-review/SKILL.md)
+### ⚠️ Font Issues Found
+- Hardcoded sizes or missing Dynamic Type support
+- Suggested fixes
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+### ✅ Accessibility
+- Well-implemented accessibility features
+- Good label/hint usage
+
+### ⚠️ Accessibility Issues Found
+- Missing labels or hints
+- Incorrect traits
+- Navigation problems
+- Suggested fixes with code examples
+
+### 📋 Testing Recommendations
+- Specific tests to run (VoiceOver, Dynamic Type, Dark Mode)
+- Accessibility Inspector checks
+- Device/simulator testing suggestions
+
+## Example Review Output
+
+```
+Reviewing: AddOrUpdateExpenseView.swift
+
+✅ HIG Compliance
+- Good use of semantic colors throughout
+- Proper NavigationStack implementation
+- Safe area handling is correct
+
+⚠️ HIG Issues Found
+1. AddOrUpdateExpenseView.swift:145 - Delete button tap target may be small
+   Suggested fix: Ensure .frame(minWidth: 44, minHeight: 44)
+
+2. AddOrUpdateExpenseView.swift:203 - Hardcoded color
+   Current: .foregroundColor(.red)
+   Suggested: .foregroundColor(Color(.systemRed))
+
+✅ Font Usage
+- Excellent use of .headline for section headers
+- Proper .body for content text
+
+⚠️ Font Issues Found
+1. AddOrUpdateExpenseView.swift:178 - Hardcoded font size
+   Current: .font(.system(size: 14))
+   Suggested: .font(.subheadline)
+
+✅ Accessibility
+- Good labels on most form fields
+- Proper form structure
+
+⚠️ Accessibility Issues Found
+1. AddOrUpdateExpenseView.swift:92 - Icon button missing label
+   Current: Button { } label: { Image(systemName: "calendar") }
+   Suggested: Add .accessibilityLabel("Select date")
+
+📋 Testing Recommendations
+1. Test with VoiceOver enabled
+2. Test at largest Dynamic Type size (Accessibility → Display)
+3. Verify in Dark Mode
+4. Use Accessibility Inspector to check contrast ratios
+```
+
+## References
+
+Always reference these when in doubt:
+- [iOS HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-ios)
+- [watchOS HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-watchos)
+- [SF Symbols](https://developer.apple.com/sf-symbols/)
+- [Accessibility on Apple platforms](https://developer.apple.com/accessibility/)
+
+## Notes
+
+- Be constructive and specific
+- Provide code examples for fixes
+- Reference exact line numbers
+- Prioritize user-impacting issues
+- Consider context (some exceptions are valid)

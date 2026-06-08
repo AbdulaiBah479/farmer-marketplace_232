@@ -1,81 +1,82 @@
 ---
 name: improve-codebase-architecture
-description: Find deepening opportunities in a codebase, informed by the domain language in CONTEXT.md and the decisions in docs/adr/. Use when the user wants to improve architecture, find refactoring opportunities, consolidate tightly-coupled modules, or make a codebase more testable and AI-navigable.
+description: Surface deepening refactors that turn shallow modules into deep ones, informed by `CONTEXT.md` and `docs/adr/`. Use when the user asks to improve architecture, find refactor candidates, raise testability, or make a codebase more agent-navigable. Skip for single localized fixes.
+disable-model-invocation: true
 ---
 
-# Improve Codebase Architecture
+Iteration loop: explore for friction, present deepening candidates, grill the chosen one, update domain artifacts inline. Vocabulary is load-bearing — see `references/LANGUAGE.md`.
 
-Surface architectural friction and propose **deepening opportunities** — refactors that turn shallow modules into deep ones. The aim is testability and AI-navigability.
+## Vocabulary [LOAD-BEARING]
 
-## Glossary
+Use these terms exactly. Do not substitute "component," "service," "API," or "boundary." Full definitions in `references/LANGUAGE.md`.
 
-Use these terms exactly in every suggestion. Consistent language is the point — don't drift into "component," "service," "API," or "boundary." Full definitions in [LANGUAGE.md](LANGUAGE.md).
+- **Module** — anything with an interface and an implementation (function, class, package, slice). Scale-agnostic.
+- **Interface** — every fact a caller must know: types, invariants, ordering, error modes, config, performance shape. Not just signature.
+- **Depth** — leverage at the interface. Deep = much behaviour behind a small interface. Shallow = interface as complex as implementation.
+- **Seam** (Feathers) — where an interface lives; a place behaviour can be altered without editing in place. Use this, not "boundary."
+- **Adapter** — a concrete thing satisfying an interface at a seam. Role, not substance.
+- **Leverage** — capability callers gain per unit of interface learned.
+- **Locality** — concentration of change, bug, and knowledge at one site for maintainers.
 
-- **Module** — anything with an interface and an implementation (function, class, package, slice).
-- **Interface** — everything a caller must know to use the module: types, invariants, error modes, ordering, config. Not just the type signature.
-- **Implementation** — the code inside.
-- **Depth** — leverage at the interface: a lot of behaviour behind a small interface. **Deep** = high leverage. **Shallow** = interface nearly as complex as the implementation.
-- **Seam** — where an interface lives; a place behaviour can be altered without editing in place. (Use this, not "boundary.")
-- **Adapter** — a concrete thing satisfying an interface at a seam.
-- **Leverage** — what callers get from depth.
-- **Locality** — what maintainers get from depth: change, bugs, knowledge concentrated in one place.
+## Principles
 
-Key principles (see [LANGUAGE.md](LANGUAGE.md) for the full list):
-
-- **Deletion test**: imagine deleting the module. If complexity vanishes, it was a pass-through. If complexity reappears across N callers, it was earning its keep.
-- **The interface is the test surface.**
-- **One adapter = hypothetical seam. Two adapters = real seam.**
-
-This skill is _informed_ by the project's domain model. The domain language gives names to good seams; ADRs record decisions the skill should not re-litigate.
+- **Deletion test:** imagine deleting the module. If complexity vanishes, it was a pass-through. If complexity reappears across N callers, it was earning its keep.
+- **Interface = test surface.** Tests cross the same seam callers cross. Wanting to test past the interface = wrong shape.
+- **One adapter = hypothetical seam. Two adapters = real seam.** No port without two real implementations (production + test).
 
 ## Process
 
-### 1. Explore
+### 1. Explore [Dispatch-First]
 
-Read the project's domain glossary and any ADRs in the area you're touching first.
+First tool call MUST be Explore-agent dispatch — not direct reads. The agent's brief:
 
-Then use the Agent tool with `subagent_type=Explore` to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
+- Read `CONTEXT.md` (or `CONTEXT-MAP.md` + per-context `CONTEXT.md`) and any `docs/adr/`. If absent, proceed silently.
+- Walk the codebase organically; classify friction:
+  - Concept understanding requires bouncing across many small modules → shallow cluster.
+  - Interface complexity matches implementation complexity → shallow module.
+  - Pure functions extracted only for testability while real bugs hide in callers → no locality.
+  - Tightly coupled modules leaking across their seams.
+- For each suspect, run the deletion test before reporting.
 
-- Where does understanding one concept require bouncing between many small modules?
-- Where are modules **shallow** — interface nearly as complex as the implementation?
-- Where have pure functions been extracted just for testability, but the real bugs hide in how they're called (no **locality**)?
-- Where do tightly-coupled modules leak across their seams?
-- Which parts of the codebase are untested, or hard to test through their current interface?
+### 2. Present candidates
 
-Apply the **deletion test** to anything you suspect is shallow: would deleting it concentrate complexity, or just move it? A "yes, concentrates" is the signal you want.
+Numbered list. Each candidate: **Files**, **Problem** (concrete friction; cite deletion test), **Solution** (plain-English description; no interface yet), **Benefits** (locality, leverage, testability deltas).
 
-### 2. Present candidates as an HTML report
+ADR conflicts: surface only when friction warrants reopening; mark explicitly: _"contradicts ADR-0007 — worth reopening because…"_.
 
-Write a self-contained HTML file to the OS temp directory so nothing lands in the repo. Resolve the temp dir from `$TMPDIR`, falling back to `/tmp` (or `%TEMP%` on Windows), and write to `<tmpdir>/architecture-review-<timestamp>.html` so each run gets a fresh file. Open it for the user — `xdg-open <path>` on Linux, `open <path>` on macOS, `start <path>` on Windows — and tell them the absolute path.
-
-The report uses **Tailwind via CDN** for layout and styling, and **Mermaid via CDN** for diagrams where a graph/flow/sequence reliably communicates the structure. Mix Mermaid with hand-crafted CSS/SVG visuals — use Mermaid when relationships are graph-shaped (call graphs, dependencies, sequences), and hand-built divs/SVG when you want something more editorial (mass diagrams, cross-sections, collapse animations). Each candidate gets a **before/after visualisation**. Be visual.
-
-For each candidate, the same template as before, but rendered as a card:
-
-- **Files** — which files/modules are involved
-- **Problem** — why the current architecture is causing friction
-- **Solution** — plain English description of what would change
-- **Benefits** — explained in terms of locality and leverage, and how tests would improve
-- **Before / After diagram** — side-by-side, custom-drawn, illustrating the shallowness and the deepening
-- **Recommendation strength** — one of `Strong`, `Worth exploring`, `Speculative`, rendered as a badge
-
-End the report with a **Top recommendation** section: which candidate you'd tackle first and why.
-
-**Use CONTEXT.md vocabulary for the domain, and [LANGUAGE.md](LANGUAGE.md) vocabulary for the architecture.** If `CONTEXT.md` defines "Order," talk about "the Order intake module" — not "the FooBarHandler," and not "the Order service."
-
-**ADR conflicts**: if a candidate contradicts an existing ADR, only surface it when the friction is real enough to warrant revisiting the ADR. Mark it clearly in the card (e.g. a warning callout: _"contradicts ADR-0007 — but worth reopening because…"_). Don't list every theoretical refactor an ADR forbids.
-
-See [HTML-REPORT.md](HTML-REPORT.md) for the full HTML scaffold, diagram patterns, and styling guidance.
-
-Do NOT propose interfaces yet. After the file is written, ask the user: "Which of these would you like to explore?"
+Ask: "Which candidate to explore?" Do not propose interfaces yet.
 
 ### 3. Grilling loop
 
-Once the user picks a candidate, drop into a grilling conversation. Walk the design tree with them — constraints, dependencies, the shape of the deepened module, what sits behind the seam, what tests survive.
+Once user picks, drop into adversarial interview — walk the design tree, resolve dependencies one decision at a time, recommend an answer per question. Side effects happen inline:
 
-Side effects happen inline as decisions crystallize:
+- New domain term emerging? Update `CONTEXT.md` immediately (lazy create).
+- User rejects with a load-bearing reason that future explorers would need? Offer ADR.
+- User wants alternative interfaces for the chosen candidate? Pivot to `references/INTERFACE-DESIGN.md` — parallel sub-agent design twice (Ousterhout).
 
-- **Naming a deepened module after a concept not in `CONTEXT.md`?** Add the term to `CONTEXT.md` — same discipline as `/grill-with-docs` (see [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md)). Create the file lazily if it doesn't exist.
-- **Sharpening a fuzzy term during the conversation?** Update `CONTEXT.md` right there.
-- **User rejects the candidate with a load-bearing reason?** Offer an ADR, framed as: _"Want me to record this as an ADR so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing — skip ephemeral reasons ("not worth it right now") and self-evident ones. See [ADR-FORMAT.md](../grill-with-docs/ADR-FORMAT.md).
-- **Want to explore alternative interfaces for the deepened module?** See [INTERFACE-DESIGN.md](INTERFACE-DESIGN.md).
+## Deepening categories (testing strategy per dependency class)
+
+Full treatment in `references/DEEPENING.md`. Summary:
+
+| Class | Deepenable? | Test strategy |
+|---|---|---|
+| In-process (pure / in-memory) | Always | Merge modules; test through new interface directly. No adapter. |
+| Local-substitutable (PGLite, in-memory FS) | Yes if stand-in exists | Stand-in runs in tests; seam stays internal. |
+| Remote but owned (microservices) | Yes via Ports & Adapters | Port at seam; HTTP/gRPC adapter prod, in-memory adapter test. |
+| True external (Stripe, Twilio) | Yes | Injected port; mock adapter for tests. |
+
+Replace, don't layer: delete shallow-module tests once interface tests exist.
+
+## Language-neutral examples
+
+**Rust** — shallow `validate_address` + `format_address` + `geocode_address` separately called by a `Shipment` aggregator. Deletion test: removing `format_address` concentrates string-handling at one call site → was a pass-through. Deepen into `address::Resolver` with `resolve(raw) -> Result<Resolved, AddressError>`; tests cross the new interface; in-memory `Geocoder` adapter for tests, HTTP adapter for production.
+
+**Python** — module exposes `parse_invoice`, `apply_tax`, `round_total` as separate top-level functions; every caller chains all three. Deepen into `billing.Invoice.finalize(raw) -> Invoice`. Internal seams (tax tables, rounding rules) stay private; the test surface is `Invoice.finalize`.
+
+## Reference docs
+
+- `references/LANGUAGE.md` — full vocabulary, principles, rejected framings.
+- `references/DEEPENING.md` — dependency taxonomy, seam discipline, replace-don't-layer testing.
+- `references/INTERFACE-DESIGN.md` — parallel sub-agent "Design It Twice" workflow when the chosen candidate's interface needs alternatives.
+
+Forbidden: proposing interfaces in step 2 (premature commitment), bundling unrelated refactors, re-litigating ADRs without a load-bearing reason.

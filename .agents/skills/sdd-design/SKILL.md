@@ -1,165 +1,95 @@
 ---
 name: sdd-design
-description: >
-  Create technical design document with architecture decisions and approach.
-  Trigger: When the orchestrator launches you to write or update the technical design for a change.
-license: MIT
-metadata:
-  author: gentleman-programming
-  version: "2.0"
+description: C4モデルに基づく設計ドキュメント(design.md)を生成。Context/Container/Component図をMermaidで作成し、API契約・データモデル・セキュリティ設計を含む。
+argument-hint: "[spec-slug] [target-dir(optional)]"
+disable-model-invocation: true
+allowed-tools: Read, Write, Edit, Glob, Grep
+model: opus
 ---
 
-## Purpose
+# sdd-design — C4 Model Design Document Generator
 
-You are a sub-agent responsible for TECHNICAL DESIGN. You take the proposal and specs, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, and technical rationale.
+## 0. 目的
+- C4モデル（Context, Container, Component, Code）に基づく設計ドキュメントを生成
+- Mermaid図で視覚的なアーキテクチャを表現
+- API契約、データモデル、セキュリティ設計を含む包括的な設計書
 
-## What You Receive
+## 1. 入力と出力
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
+### 入力
+- /sdd-design $ARGUMENTS
+  - $0 = spec-slug（例: google-ad-report）
+  - $1 = target-dir（任意。未指定なら `.kiro/specs/<spec-slug>/` を使う）
+- 前提: requirements.md が既に存在すること
 
-## Execution and Persistence Contract
+### 出力（必須）
+- <target-dir>/design.md
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+### 参照
+- templates/design.template.md : 設計書テンプレート
+- <target-dir>/requirements.md : 要件定義（入力として読む）
 
-- **engram**: Read `sdd/{change-name}/proposal` (required) and `sdd/{change-name}/spec` (optional — may not exist if running in parallel with sdd-spec). Save as `sdd/{change-name}/design`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram AND write `design.md` to filesystem. Retrieve dependencies from Engram (primary) with filesystem fallback.
-- **none**: Return result only. Never create or modify project files.
+## 2. 重要ルール
 
-## What to Do
+1. **C4モデル厳守**: Context → Container → Component の順で抽象度を下げる
+2. **Mermaid形式**: 全図はMermaid記法で記述（プレビュー可能）
+3. **要件トレーサビリティ**: 各コンポーネントがどのREQを実現するか明記
+4. **セキュリティバイデザイン**: セキュリティ考慮を設計段階で組み込む
 
-### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+## 3. 手順
 
-### Step 2: Read the Codebase
+### Step A: 要件の読み込み
+1. <target-dir>/requirements.md を読み込む
+2. 機能要件・非機能要件・セキュリティ要件を抽出
+3. ステークホルダーと外部システムを特定
 
-Before designing, read the actual code that will be affected:
-- Entry points and module structure
-- Existing patterns and conventions
-- Dependencies and interfaces
-- Test infrastructure (if any)
+### Step B: C4レベル1 - Context図
+1. システムの境界を定義
+2. 外部アクター（ユーザー、外部システム）を配置
+3. 主要なデータフローを示す
 
-### Step 3: Write design.md
+### Step C: C4レベル2 - Container図
+1. システム内の主要コンテナ（アプリ、DB、キャッシュ等）を配置
+2. 技術スタックを明記
+3. コンテナ間の通信プロトコルを示す
 
-**IF mode is `openspec` or `hybrid`:** Create the design document:
+### Step D: C4レベル3 - Component図
+1. 各コンテナ内の主要コンポーネントを配置
+2. 責務と依存関係を明確化
+3. 要件とのマッピング（REQ-xxx）
 
-```
-openspec/changes/{change-name}/
-├── proposal.md
-├── specs/
-└── design.md              ← You create this
-```
+### Step E: API契約
+1. 主要エンドポイントの定義
+2. リクエスト/レスポンス形式
+3. エラーコード体系
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the design content in memory — you will persist it in Step 4.
+### Step F: データモデル
+1. エンティティ関係図（ER図）
+2. 主要テーブル/コレクションの定義
+3. インデックス戦略
 
-#### Design Document Format
+### Step G: セキュリティ設計
+1. 認証・認可の仕組み
+2. データ暗号化方針
+3. 監査ログ設計
 
-```markdown
-# Design: {Change Title}
+### Step H: 非機能設計
+1. スケーラビリティ戦略
+2. 可観測性（Observability）設計
+3. 障害復旧設計
 
-## Technical Approach
+## 4. 出力形式
 
-{Concise description of the overall technical strategy.
-How does this map to the proposal's approach? Reference specs.}
+design.template.md に従って出力する。
 
-## Architecture Decisions
+## 5. 実行例
 
-### Decision: {Decision Title}
-
-**Choice**: {What we chose}
-**Alternatives considered**: {What we rejected}
-**Rationale**: {Why this choice over alternatives}
-
-### Decision: {Decision Title}
-
-**Choice**: {What we chose}
-**Alternatives considered**: {What we rejected}
-**Rationale**: {Why this choice over alternatives}
-
-## Data Flow
-
-{Describe how data moves through the system for this change.
-Use ASCII diagrams when helpful.}
-
-    Component A ──→ Component B ──→ Component C
-         │                              │
-         └──────── Store ───────────────┘
-
-## File Changes
-
-| File | Action | Description |
-|------|--------|-------------|
-| `path/to/new-file.ext` | Create | {What this file does} |
-| `path/to/existing.ext` | Modify | {What changes and why} |
-| `path/to/old-file.ext` | Delete | {Why it's being removed} |
-
-## Interfaces / Contracts
-
-{Define any new interfaces, API contracts, type definitions, or data structures.
-Use code blocks with the project's language.}
-
-## Testing Strategy
-
-| Layer | What to Test | Approach |
-|-------|-------------|----------|
-| Unit | {What} | {How} |
-| Integration | {What} | {How} |
-| E2E | {What} | {How} |
-
-## Migration / Rollout
-
-{If this change requires data migration, feature flags, or phased rollout, describe the plan.
-If not applicable, state "No migration required."}
-
-## Open Questions
-
-- [ ] {Any unresolved technical question}
-- [ ] {Any decision that needs team input}
+```bash
+/sdd-design google-ad-report
 ```
 
-### Step 4: Persist Artifact
+前提:
+- .kiro/specs/google-ad-report/requirements.md が存在
 
-**This step is MANDATORY — do NOT skip it.**
-
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
-- artifact: `design`
-- topic_key: `sdd/{change-name}/design`
-- type: `architecture`
-
-### Step 5: Return Summary
-
-Return to the orchestrator:
-
-```markdown
-## Design Created
-
-**Change**: {change-name}
-**Location**: `openspec/changes/{change-name}/design.md` (openspec/hybrid) | Engram `sdd/{change-name}/design` (engram) | inline (none)
-
-### Summary
-- **Approach**: {one-line technical approach}
-- **Key Decisions**: {N decisions documented}
-- **Files Affected**: {N new, M modified, K deleted}
-- **Testing Strategy**: {unit/integration/e2e coverage planned}
-
-### Open Questions
-{List any unresolved questions, or "None"}
-
-### Next Step
-Ready for tasks (sdd-tasks).
-```
-
-## Rules
-
-- ALWAYS read the actual codebase before designing — never guess
-- Every decision MUST have a rationale (the "why")
-- Include concrete file paths, not abstract descriptions
-- Use the project's ACTUAL patterns and conventions, not generic best practices
-- If you find the codebase uses a pattern different from what you'd recommend, note it but FOLLOW the existing pattern unless the change specifically addresses it
-- Keep ASCII diagrams simple — clarity over beauty
-- Apply any `rules.design` from `openspec/config.yaml`
-- If you have open questions that BLOCK the design, say so clearly — don't guess
-- **Size budget**: Design artifact MUST be under 800 words. Architecture decisions as tables (option | tradeoff | decision). Code snippets only for non-obvious patterns.
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+出力:
+- .kiro/specs/google-ad-report/design.md

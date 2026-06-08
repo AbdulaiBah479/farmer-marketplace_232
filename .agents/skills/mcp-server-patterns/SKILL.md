@@ -1,69 +1,130 @@
 ---
 name: mcp-server-patterns
-description: Build MCP servers with Node/TypeScript SDK — tools, resources, prompts, Zod validation, stdio vs Streamable HTTP. Use Context7 or official MCP docs for latest API.
-origin: ECC
+description: |
+  MCPサーバー設計パターンとアーキテクチャベストプラクティス。ツール組織化、エラーハンドリング、状態管理、サーバーライフサイクル管理の実証済みパターンを提供。
+
+  Anchors:
+  • Clean Architecture / 適用: サーバー構造と依存関係管理 / 目的: テスト可能で保守性の高いコード
+  • Domain-Driven Design / 適用: ツールドメインモデリングと境界付きコンテキスト / 目的: 機能別ツール組織化
+  • Pragmatic Programmer / 適用: エラーハンドリングと回復性パターン / 目的: 堅牢なサーバー構築
+
+  Trigger:
+  Use when designing MCP server architecture, organizing tool definitions, implementing error handling patterns, managing server state, structuring MCP server projects, or refactoring existing MCP servers.
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 ---
 
 # MCP Server Patterns
 
-The Model Context Protocol (MCP) lets AI assistants call tools, read resources, and use prompts from your server. Use this skill when building or maintaining MCP servers. The SDK API evolves; check Context7 (query-docs for "MCP") or the official MCP documentation for current method names and signatures.
+> **相対パス**: `SKILL.md`
+> **読込条件**: スキル使用時（自動）
 
-For the broader routing decision of when a capability should be a rule, a skill, MCP, or a plain CLI/API workflow, see [docs/capability-surface-selection.md](../../docs/capability-surface-selection.md).
+---
 
-## When to Use
+## 概要
 
-Use when: implementing a new MCP server, adding tools or resources, choosing stdio vs HTTP, upgrading the SDK, or debugging MCP registration and transport issues.
+MCP サーバー設計パターンとアーキテクチャベストプラクティス。
 
-## How It Works
+**対象領域**:
 
-### Core concepts
+| 領域               | 説明                                   |
+| ------------------ | -------------------------------------- |
+| サーバー構造       | 3 層アーキテクチャ、プロジェクト構成   |
+| ツール組織化       | ドメイン別、規模別組織化パターン       |
+| エラーハンドリング | 分類、中央集権化、リトライ             |
+| 状態管理           | セッション、キャッシュ、ライフサイクル |
 
-- **Tools**: Actions the model can invoke (e.g. search, run a command). Register with `registerTool()` or `tool()` depending on SDK version.
-- **Resources**: Read-only data the model can fetch (e.g. file contents, API responses). Register with `registerResource()` or `resource()`. Handlers typically receive a `uri` argument.
-- **Prompts**: Reusable, parameterised prompt templates the client can surface (e.g. in Claude Desktop). Register with `registerPrompt()` or equivalent.
-- **Transport**: stdio for local clients (e.g. Claude Desktop); Streamable HTTP is preferred for remote (Cursor, cloud). Legacy HTTP/SSE is for backward compatibility.
+---
 
-The Node/TypeScript SDK may expose `tool()` / `resource()` or `registerTool()` / `registerResource()`; the official SDK has changed over time. Always verify against the current [MCP docs](https://modelcontextprotocol.io) or Context7.
+## ワークフロー
 
-### Connecting with stdio
+### Phase 1: アーキテクチャ設計
 
-For local clients, create a stdio transport and pass it to your server’s connect method. The exact API varies by SDK version (e.g. constructor vs factory). See the official MCP documentation or query Context7 for "MCP stdio server" for the current pattern.
+**Task**: `agents/architecture-designer.md`
 
-Keep server logic (tools + resources) independent of transport so you can plug in stdio or HTTP in the entrypoint.
+| 入力         | 出力             |
+| ------------ | ---------------- |
+| 要件・ツール | 設計ドキュメント |
 
-### Remote (Streamable HTTP)
+**参照**: `references/basics.md`
 
-For Cursor, cloud, or other remote clients, use **Streamable HTTP** (single MCP HTTP endpoint per current spec). Support legacy HTTP/SSE only when backward compatibility is required.
+### Phase 2: 実装構造
 
-## Examples
+**Task**: `agents/implementation-guide.md`
 
-### Install and server setup
+| 入力     | 出力             |
+| -------- | ---------------- |
+| 設計仕様 | 実装済みサーバー |
 
-```bash
-npm install @modelcontextprotocol/sdk zod
-```
+**参照**: `references/patterns.md`, `assets/`
 
-```typescript
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
+### Phase 3: ライフサイクル管理
 
-const server = new McpServer({ name: "my-server", version: "1.0.0" });
-```
+**Task**: `agents/lifecycle-manager.md`
 
-Register tools and resources using the API your SDK version provides: some versions use `server.tool(name, description, schema, handler)` (positional args), others use `server.tool({ name, description, inputSchema }, handler)` or `registerTool()`. Same for resources — include a `uri` in the handler when the API provides it. Check the official MCP docs or Context7 for the current `@modelcontextprotocol/sdk` signatures to avoid copy-paste errors.
+| 入力     | 出力         |
+| -------- | ------------ |
+| サーバー | 状態管理実装 |
 
-Use **Zod** (or the SDK’s preferred schema format) for input validation.
+**参照**: `references/patterns.md`
 
-## Best Practices
+---
 
-- **Schema first**: Define input schemas for every tool; document parameters and return shape.
-- **Errors**: Return structured errors or messages the model can interpret; avoid raw stack traces.
-- **Idempotency**: Prefer idempotent tools where possible so retries are safe.
-- **Rate and cost**: For tools that call external APIs, consider rate limits and cost; document in the tool description.
-- **Versioning**: Pin SDK version in package.json; check release notes when upgrading.
+## ベストプラクティス
 
-## Official SDKs and Docs
+| すべきこと                                        | 避けるべきこと                   |
+| ------------------------------------------------- | -------------------------------- |
+| ドメイン/機能別にツールを整理                     | モノリシックなツール定義         |
+| 適切な MCP エラーコードで包括的エラー処理         | 汎用エラーメッセージ             |
+| テスタビリティのための DI 使用                    | 密結合実装                       |
+| 関心の分離: トランスポート/ロジック/データ        | ビジネスロジックとプロトコル混在 |
+| 適切なライフサイクル管理（初期化/クリーンアップ） | 適切な状態管理なしの可変状態保持 |
+| TypeScript で型安全なツールスキーマ               | any 型の使用                     |
 
-- **JavaScript/TypeScript**: `@modelcontextprotocol/sdk` (npm). Use Context7 with library name "MCP" for current registration and transport patterns.
-- **Go**: Official Go SDK on GitHub (`modelcontextprotocol/go-sdk`).
-- **C#**: Official C# SDK for .NET.
+---
+
+## Task ナビゲーション
+
+| Task                       | 目的               | 参照リソース  |
+| -------------------------- | ------------------ | ------------- |
+| `architecture-designer.md` | サーバー設計       | `basics.md`   |
+| `implementation-guide.md`  | 実装ガイダンス     | `patterns.md` |
+| `lifecycle-manager.md`     | ライフサイクル実装 | `patterns.md` |
+
+---
+
+## リソース参照
+
+### References
+
+| ファイル      | 内容                                   | 読込条件   |
+| ------------- | -------------------------------------- | ---------- |
+| `basics.md`   | サーバー構造、ツール定義、基本パターン | 初回使用時 |
+| `patterns.md` | 高度なアーキテクチャ、状態管理、回復性 | 設計時     |
+
+### Assets
+
+| ファイル           | 内容                       |
+| ------------------ | -------------------------- |
+| `tool-template.ts` | ツール定義テンプレート     |
+| `error-handler.ts` | エラーハンドラテンプレート |
+
+### Scripts
+
+| スクリプト           | 用途       |
+| -------------------- | ---------- |
+| `validate-skill.mjs` | スキル検証 |
+| `log_usage.mjs`      | 使用記録   |
+
+---
+
+## 関連スキル
+
+- `mcp-protocol` - MCP プロトコル仕様とツールスキーマ定義
+- `clean-architecture-principles` - 全体的なアーキテクチャ設計
+- `error-handling-patterns` - エラー処理パターン

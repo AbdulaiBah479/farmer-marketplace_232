@@ -5,8 +5,6 @@ description: "Debug iOS apps and profile performance using LLDB, Memory Graph De
 
 # Debugging and Instruments
 
-Diagnose crashes, memory leaks, retain cycles, main thread hangs, and performance bottlenecks in iOS apps using LLDB, Memory Graph Debugger, and Instruments. Covers breakpoint workflows, memory graph analysis, hang detection, build failure triage, and Instruments profiling for CPU, memory, energy, and network.
-
 ## Contents
 
 - [LLDB Debugging](#lldb-debugging)
@@ -168,43 +166,33 @@ timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self]
 - **Allocations template**: Track memory growth over time. Use the
   "Mark Generation" feature to isolate allocations created between
   user actions (e.g., open/close a screen).
-- **Leaks template**: Detects leaked allocations, including isolated retain
-  cycles the process can no longer reach. Run alongside Allocations for a
-  complete picture.
+- **Leaks template**: Automatically detects reference cycles at runtime.
+  Run alongside Allocations for a complete picture.
 - Filter by your app's module name to exclude system allocations.
-
-For leak or memory-growth triage, pair the tools: use Allocations **Mark
-Generation** before and after the reproduction step to prove retained growth,
-then use Memory Graph Debugger to inspect object ownership and Malloc Stack
-Logging to recover allocation call stacks.
 
 ### Malloc Stack Logging
 
-Enable in Scheme > Run > Diagnostics > Malloc Stack Logging. This records
-allocation backtraces so the Memory Graph Debugger, Allocations instrument,
-and exported `.memgraph` files can show where objects were created.
+Enable in Scheme > Run > Diagnostics > Malloc Stack Logging (All
+Allocations). This records the call stack for every allocation, letting
+the Memory Graph Debugger and `leaks` CLI show where objects were created.
 
 ```bash
-# Inspect an exported memory graph from Xcode or Instruments
-leaks MyApp.memgraph
+# CLI leak detection
+leaks --atExit -- ./MyApp.app/MyApp
+# Symbolicate with dSYMs for readable stacks
 ```
 
 ## Hang Diagnostics
 
 ### Identifying Main Thread Hangs
 
-For discrete interactions, delays under 100 ms are rarely noticeable; a few
-hundred milliseconds can make an app feel unresponsive. Apple developer tools
-typically start reporting main-run-loop busy periods over 250 ms. Common
-detection tools:
+A hang occurs when the main thread is blocked for > 250ms (noticeable) or
+> 1s (severe). Common detection tools:
 
 - **Thread Checker** (Xcode Diagnostics): warns about non-main-thread UI calls
-- **Thread Performance Checker**: reports priority inversions while debugging
-- **On-device Hang Detection**: Developer Settings reports hangs from device use
-- **Time Profiler / CPU Profiler / Hitches**: profile reproducible hangs
 - **os_signpost** and `OSSignposter`: mark intervals for Instruments
 - **MetricKit** hang diagnostics: production hang detection (see
-  `metrickit` skill for `MXHangDiagnostic`)
+  `metrickit-diagnostics` skill for `MXHangDiagnostic`)
 
 ```swift
 import os
@@ -284,8 +272,8 @@ Build settings to inspect first:
 | **Leaks** | Suspect retain cycles or abandoned objects |
 | **Network** | Inspecting HTTP request/response timing and payloads |
 | **SwiftUI** | Profiling view body evaluations and update frequency |
-| **Animation Hitches / Core Animation instruments** | Frame drops, hitches, blending, and commit/render work |
-| **Power Profiler** | Battery drain, thermal pressure, background energy impact |
+| **Core Animation** | Frame drops, off-screen rendering, blending issues |
+| **Energy Log** | Battery drain, background energy impact |
 | **File Activity** | Excessive disk I/O, slow file operations |
 | **System Trace** | Thread scheduling, syscalls, virtual memory faults |
 
@@ -295,9 +283,8 @@ Build settings to inspect first:
 # Record a trace from the command line
 xcrun xctrace record --device "My iPhone" \
     --template "Time Profiler" \
-    --instrument "Allocations" \
     --output profile.trace \
-    --launch -- /path/to/MyApp.app
+    --launch MyApp.app
 
 # Export trace data as XML for automated analysis
 xcrun xctrace export --input profile.trace --xpath '/trace-toc/run/data/table'
@@ -309,19 +296,19 @@ xcrun xctrace list templates
 xcrun xctrace list devices
 ```
 
-Use one `--template` per recording; add extra instruments with
-`--instrument`. Use `xctrace` in CI pipelines to catch performance regressions
+Use `xctrace` in CI pipelines to catch performance regressions
 automatically. Compare exported metrics between builds.
 
 ## Common Mistakes
 
 ### DON'T: Use print() for debugging instead of os.Logger
 
-`print()` output is unstructured, has no subsystem/category or privacy
-metadata, and is harder to filter than unified logging.
+`print()` output is not filterable, has no log levels, and is not
+automatically stripped from release builds. It pollutes the console and
+makes it impossible to isolate relevant output.
 
 ```swift
-// WRONG — unstructured and not filterable by subsystem/category
+// WRONG — unstructured, not filterable, stays in release builds
 print("user tapped button, state: \(viewModel.state)")
 print("network response: \(data)")
 
@@ -335,7 +322,7 @@ logger.info("Network response received, bytes: \(data.count)")
 ```
 
 `Logger` messages appear in Console.app with filtering by subsystem and
-category, and `.debug` messages are written to the in-memory log store only (not persisted to disk in release builds).
+category, and `.debug` messages are automatically excluded from release builds.
 
 ### DON'T: Forget to enable Malloc Stack Logging before memory debugging
 
@@ -386,7 +373,7 @@ for item in items {
 ### DON'T: Ignore Thread Sanitizer warnings
 
 Thread Sanitizer (TSan) warnings indicate data races that may only crash
-intermittently. Treat them as real bugs unless you have isolated a tool issue.
+intermittently. They are real bugs, not false positives.
 
 ```swift
 // WRONG — ignoring TSan warning about concurrent access
@@ -401,23 +388,8 @@ actor CacheActor {
 }
 ```
 
-Enable TSan: Scheme > Run > Diagnostics > Thread Sanitizer. For iOS, iPadOS,
-tvOS, visionOS, and watchOS apps, run TSan in Simulator; Apple documents device
-support only for 64-bit macOS apps.
-
-### Correction Pattern: Flawed Memory and Hang Plans
-
-When correcting another diagnostic plan, explicitly check these points:
-
-- **Leaks scope**: Leaks can catch unreachable abandoned allocations and
-  isolated retain cycles the process can no longer reach; it does not prove
-  every retain cycle still reachable from roots.
-- **Memory growth**: Use Allocations **Mark Generation** before and after the
-  reproduction step, then use Memory Graph Debugger for ownership and Malloc
-  Stack Logging for allocation backtraces.
-- **Hang severity**: Distinguish tool reporting from severity. Developer tools
-  commonly report main-run-loop busy periods over 250 ms, while a few hundred
-  milliseconds can still feel unresponsive to users.
+Enable TSan: Scheme > Run > Diagnostics > Thread Sanitizer. Note: TSan
+cannot run simultaneously with Address Sanitizer.
 
 ## Review Checklist
 
@@ -427,7 +399,7 @@ When correcting another diagnostic plan, explicitly check these points:
 - [ ] Delegates declared as `weak var` to prevent retain cycles
 - [ ] Closures stored as properties use `[weak self]` capture lists
 - [ ] Timers use closure-based API with `[weak self]`
-- [ ] Thread Sanitizer enabled in Simulator test schemes for race triage
+- [ ] Thread Sanitizer enabled in test schemes
 - [ ] No synchronous I/O or heavy computation on the main thread
 - [ ] Time Profiler run on Release build for performance baselines
 - [ ] Build failures triaged from the first error in the build log
@@ -444,9 +416,7 @@ When correcting another diagnostic plan, explicitly check these points:
 - [Diagnosing memory, thread, and crash issues early](https://sosumi.ai/documentation/xcode/diagnosing-memory-thread-and-crash-issues-early)
 - [Data races](https://sosumi.ai/documentation/xcode/data-races)
 - [Reducing your app's memory use](https://sosumi.ai/documentation/xcode/reducing-your-app-s-memory-use)
-- [Profiling apps using Instruments](https://developer.apple.com/tutorials/instruments)
-- [Improving app responsiveness](https://sosumi.ai/documentation/xcode/improving-app-responsiveness)
-- [Analyzing your app's battery use](https://sosumi.ai/documentation/xcode/analyzing-your-app-s-battery-use)
+- [Profiling apps using Instruments](https://sosumi.ai/tutorials/instruments)
 - [Analyzing the performance of your shipping app](https://sosumi.ai/documentation/xcode/analyzing-the-performance-of-your-shipping-app)
-- LLDB command reference: [references/lldb-patterns.md](references/lldb-patterns.md)
-- Instruments template guide: [references/instruments-guide.md](references/instruments-guide.md)
+- LLDB command reference: `references/lldb-patterns.md`
+- Instruments template guide: `references/instruments-guide.md`

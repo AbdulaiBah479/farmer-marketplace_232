@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: framework-migration-code-migrate
 description: "You are a code migration expert specializing in transitioning codebases between frameworks, languages, versions, and platforms. Generate comprehensive migration plans, automated migration scripts, and"
 ---
@@ -46,3 +47,8 @@ Focus on minimizing disruption, maintaining functionality, and providing clear p
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed patterns and examples.
+
+
+## 🧠 Knowledge Modules (Fractal Skills)
+
+### 1. [implementation-playbook](./sub-skills/implementation-playbook.md)

@@ -1,78 +1,49 @@
 ---
-name: requirements-analysis
-description: Analyze and refine product requirements. Use when clarifying scope, identifying gaps, or validating requirements. Covers requirement types and analysis techniques.
-allowed-tools: Read, Write, Glob, Grep
+name: requirements analysis
+description: Waterfall Phase 1 - Requirements Analysis (需求分析)
 ---
 
-# Requirements Analysis
+# Phase 1: Requirements Analysis
 
-## Requirement Types
+## Gate: 必須完成需求文件才能進入下一階段
 
-### Functional Requirements
-What the system should DO.
-- "Users can log in with email and password"
-- "System sends order confirmation email"
+1. Gather Requirements
+   User, 請描述您的需求。我會幫您整理成正式的需求文件。
 
-### Non-Functional Requirements
-How the system should BEHAVE.
-- Performance: "Page loads in < 2 seconds"
-- Security: "Passwords stored with bcrypt"
-- Scalability: "Supports 10,000 concurrent users"
+2. Create Requirements Document
+   ```bash
+   mkdir -p docs/specs
+   touch docs/specs/FEATURE_NAME-requirements.md
+   ```
 
-### Constraints
-Limitations on the solution.
-- "Must use existing authentication system"
-- "Must run on AWS"
+3. Document Requirements
+   I will create/update `docs/specs/FEATURE_NAME-requirements.md` with:
+   - User Stories
+   - Acceptance Criteria
+   - Non-functional requirements
 
-## Analysis Techniques
+4. Create Gherkin Feature Files (框架)
+   ```bash
+   mkdir -p e2e/features
+   ```
+   I will create `.feature` files with:
+   - Feature description (As a... I want... So that...)
+   - Scenario titles only (不含 Given/When/Then 細節)
+   
+   範例：
+   ```gherkin
+   Feature: Blog CMS
+     As a blogger
+     I want to create posts
+     
+     Scenario: Create a new blog post
+     Scenario: Publish a draft post
+   ```
 
-### Ask "Why?" Five Times
-Uncover the real requirement.
-
-```
-Requirement: "Add export to Excel button"
-Why? → "Users need to share reports"
-Why? → "Finance reviews monthly sales"
-Why? → "They compare against targets"
-Why? → "To identify underperforming regions"
-Real Need: Regional performance dashboard
-```
-
-### SMART Criteria
-Requirements should be:
-- **S**pecific: Clear and unambiguous
-- **M**easurable: Can verify completion
-- **A**chievable: Technically feasible
-- **R**elevant: Aligned with goals
-- **T**ime-bound: Has deadline
-
-### Edge Case Analysis
-- What happens with no data?
-- What happens with too much data?
-- What if the user is offline?
-- What if permissions are denied?
-
-## Requirement Validation
-
-- [ ] Is it testable?
-- [ ] Is it achievable?
-- [ ] Is it necessary?
-- [ ] Is it consistent with other requirements?
-- [ ] Is it complete?
-- [ ] Is the priority clear?
-
-## Documenting Requirements
-
-```markdown
-**REQ-001**: User Authentication
-
-**Description**: Users must authenticate to access the system.
-
-**Acceptance Criteria**:
-1. Given valid credentials, user gains access
-2. Given invalid credentials, user sees error
-3. After 5 failed attempts, account is locked
-
-**Priority**: Must Have
-**Dependencies**: REQ-002 (User Management)
-```
+5. Review Gate
+   User, 請審閱：
+   - `docs/specs/requirements.md`
+   - `e2e/features/*.feature` (Scenario 標題)
+   
+   **您必須明確說「需求批准」才能進入 Phase 2 (系統設計)。**
+   ⚠️ 進入下一階段後，需求將被凍結。

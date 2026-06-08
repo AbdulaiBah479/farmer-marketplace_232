@@ -1,126 +1,46 @@
 ---
 name: release-notes
-description: Generates structured release notes from git history between two references (tags, commits, branches). Groups changes by type (features, fixes, docs, breaking), extracts PR references, and produces a publish-ready document.
-license: MIT
-compatibility: opencode
-metadata:
-  category: release
-  phase: publish
+description: Draft release notes and changelog entries from git history or merged PRs between two refs (tags/SHAs/branches), including breaking changes, migrations, and upgrade steps. Use when the user asks for release notes, changelog updates, or a GitHub Release draft.
 ---
 
-# Skill: Release Notes
+# Release notes
 
-## What This Skill Does
+## Goal
+Produce accurate, scannable release notes (Markdown) for a specific release range.
 
-Generates **publish-ready release notes** from git log. Parses conventional commits, groups by type, extracts PR numbers, highlights breaking changes, and produces a document ready for GitHub Releases, CHANGELOG, or team communication.
+## Inputs to ask for (if missing)
+- Release version + date (or "unreleased").
+- Range to summarize: `from_ref..to_ref` (tags/SHAs/branches). If unknown, ask: "last release tag?" and "target branch/tag?"
+- Target audience: end users, developers, internal ops, or all.
+- What to include/exclude: internal refactors, dependency bumps, infra-only changes.
 
-## When to Use
+## Workflow (checklist)
+1) Determine the release range
+   - Prefer tags: pick the previous tag and the new tag/HEAD.
+   - If no tags: use the last release branch point or a date-based window.
+   - Commands to gather candidates:
+     - `git tag --sort=-creatordate | Select-Object -First 20`
+     - `git log --first-parent --oneline <from_ref>..<to_ref>`
+     - If GitHub CLI is available: list merged PRs for the range and use titles for grouping.
+2) Collect and categorize changes
+   - Start from merge commits (first-parent) to avoid noise.
+   - Categorize into: Highlights, Breaking changes, Features, Fixes, Performance, Security, Deprecations, Docs, Dependencies, Infra/ops.
+   - Flag anything requiring action: config changes, env vars, DB migrations, API contract changes.
+3) Identify breaking changes and upgrade steps
+   - Look for: renamed/removed endpoints, changed request/response fields, changed config keys, Java/Kotlin/Node version bumps, DB schema changes.
+   - Add explicit "Upgrade" and "Rollback" notes when impact is non-trivial.
+4) Write release notes using the template
+   - Use short bullets, active voice, and user-facing wording.
+   - Prefer "what changed" + "why it matters" over implementation details.
+   - Include PR/issue references only if they are stable in your repo hosting.
+   - Use `references/release-notes-template.md` to keep structure consistent.
+5) Sanity check for omissions and accuracy
+   - Diff the range: `git diff --stat <from_ref>..<to_ref>`
+   - Scan for config/migrations: `rg -n \"ENV|config|migration|Flyway|Liquibase\" -S`
+   - Ensure breaking changes are called out and have upgrade steps.
 
-- Before creating a GitHub Release
-- When the user says "what changed since last release?"
-- After merging a release branch
-- When updating CHANGELOG.md for a new version
+## Deliverable
+Provide:
+- Release notes Markdown (ready to paste into a GitHub Release / changelog).
+- A short "Risk/notes" section listing any required migrations, config changes, or rollback concerns.
 
-## Execution Model
-
-- **Always**: the primary agent runs this skill directly.
-- **Token budget**: ~2-4k tokens.
-- **Output**: chat-based release notes + optional write to `CHANGELOG.md` or GitHub Release.
-
-## Workflow
-
-### Step 1: Determine Range
-
-Identify the git range to analyze:
-
-```bash
-# Find latest tag
-git describe --tags --abbrev=0
-
-# List recent tags
-git tag --sort=-version:refname | head -5
-```
-
-Range options:
-
-- **Tag to HEAD**: `git log v1.0.0..HEAD`
-- **Between tags**: `git log v1.0.0..v1.1.0`
-- **Custom range**: user-specified
-
-### Step 2: Collect Commits
-
-```bash
-git log <range> --oneline --no-merges
-```
-
-For each commit, extract:
-
-- **Type**: from conventional commit prefix (feat, fix, docs, ci, chore)
-- **Scope**: from conventional commit scope (if present)
-- **Description**: the commit message
-- **PR number**: from merge commit or commit body
-
-### Step 3: Group by Category
-
-| Category | Prefix | Description |
-|----------|--------|-------------|
-| Features | feat | New functionality |
-| Bug Fixes | fix | Fixed issues |
-| Documentation | docs | Documentation changes |
-| Maintenance | chore, ci, build | Internal improvements |
-| Breaking Changes | ! or BREAKING CHANGE | Require migration |
-
-### Step 4: Detect Breaking Changes
-
-Scan for breaking change indicators:
-
-- `feat!:` or `fix!:` prefix
-- `BREAKING CHANGE:` in commit body
-- Removed exports or changed public APIs (if detectable from commits)
-
-### Step 5: Generate Release Notes
-
-```markdown
-# <version> — YYYY-MM-DD
-
-## Breaking Changes
-
-- <description> (#PR)
-
-## Features
-
-- <description> (#PR)
-- <description> (#PR)
-
-## Bug Fixes
-
-- <description> (#PR)
-
-## Documentation
-
-- <description> (#PR)
-
-## Maintenance
-
-- <description> (#PR)
-
----
-
-**Full Changelog**: <compare-url>
-```
-
-### Step 6: Publish Options
-
-Ask the user:
-
-1. **GitHub Release**: `gh release create <tag> --notes-file /tmp/release-notes.md`
-2. **CHANGELOG.md**: prepend to the changelog file
-3. **Chat only**: just show the notes
-
-## Rules
-
-1. **Conventional commits are the source**: if the project doesn't use conventional commits, fall back to grouping by changed files (source vs tests vs docs).
-2. **Breaking changes are prominent**: always list breaking changes first with clear migration guidance.
-3. **PR references where possible**: link to PRs for traceability.
-4. **Concise entries**: one line per change. Details belong in the PR, not in release notes.
-5. **No built-in explore agent**: do NOT use the built-in `explore` subagent type.

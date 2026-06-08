@@ -1,522 +1,177 @@
 ---
-name: skill-writing
-description: Create new Claude Code skills following best practices including optimal descriptions, progressive disclosure, proper structure, and testing guidelines. Use when creating new skills or skill templates.
-version: 1.0.0
+name: Skill Writing
+description: Creates effective Claude Code skills following best practices. Use when the user asks to create a skill, write a SKILL.md, or needs help authoring agent instructions.
 ---
 
 # Skill Writing
 
-## Purpose
+## Quick Start
 
-Guide the creation of new Claude Code skills following official best practices to ensure optimal performance, discoverability, and maintainability.
-
-## Quick Start Workflow
-
-### Step 1: Identify the Gap
-
-**Ask:** Does Claude really need this skill?
-
-```bash
-# Test Claude's baseline performance WITHOUT the skill
-# - Can Claude already do this task reasonably well?
-# - What specific knowledge/capability is missing?
-# - Will a skill genuinely improve results?
-```
-
-**Only create a skill if:**
-
-- ✅ Claude lacks specific domain knowledge
-- ✅ Task requires exact procedures or formats
-- ✅ Performance improvement is measurable
-- ❌ Claude can already handle it well
-- ❌ Only saves a few minutes
-- ❌ Task is too variable/creative
-
-### Step 2: Create Evaluations First
-
-**Before writing extensive documentation:**
-
-```python
-# Create 3+ test scenarios
-evaluations = [
-    {
-        "input": "Process this PDF with forms",
-        "expected": "Extracted form data in JSON format",
-        "baseline_performance": "fails to extract structured data"
-    },
-    {
-        "input": "Generate chart from spreadsheet",
-        "expected": "Bar chart with proper labels",
-        "baseline_performance": "creates chart but missing labels"
-    },
-    # Add more scenarios...
-]
-```
-
-**Test baseline:** Run scenarios without skill, measure gaps
-
-### Step 3: Write Minimal SKILL.md
-
-**Keep under 500 lines**
-
-```bash
-# Create skill directory
-mkdir -p ~/.claude/skills/my-skill
-
-# Create SKILL.md
-touch ~/.claude/skills/my-skill/Skill.md
-```
-
-**Start with this template:**
+Every skill needs a `SKILL.md` file with YAML frontmatter and markdown body:
 
 ```markdown
 ---
-name: processing-pdfs
-description: Extract text, tables, and forms from PDF files including scanned documents. Use when working with PDFs or document extraction tasks.
-version: 1.0.0
+name: Task Name (gerund form preferred)
+description: What it does and when to use it (third person, specific)
 ---
 
-# PDF Processing
+# Task Name
 
-## Purpose
-
-[One sentence: what this skill does]
-
-## Workflow
-
-### Step 1: [Action]
-
-\`\`\`bash
-
-# Concrete command
-
-\`\`\`
-
-### Step 2: [Action]
-
-[Clear instructions]
-
-## Examples
-
-[2-3 input/output examples]
+[Concise instructions here]
 ```
 
-### Step 4: Test with Fresh Instances
+## Core Workflow
 
-```bash
-# Open new Claude Code session
-# Test skill by triggering scenarios
-# Observe where Claude struggles
-# Note which files get accessed
-```
-
-### Step 5: Iterate Based on Usage
-
-```markdown
-# Refinement cycle:
-
-1. Observe real usage patterns
-2. Identify missing information
-3. Add only what's needed
-4. Test again
-5. Repeat until evaluations pass
-```
-
-## Skill Structure Requirements
-
-### Directory Structure
+Copy and track your progress:
 
 ```
-skill-name/                    # Use gerund: verb + -ing
-├── Skill.md                   # Required (capital S)
-├── REFERENCE.md               # Optional (large reference material)
-├── TEMPLATE.md                # Optional (output templates)
-└── scripts/                   # Optional (executables)
-    └── helper.py
+Skill Creation:
+- [ ] Step 1: Identify the reusable pattern
+- [ ] Step 2: Draft concise instructions
+- [ ] Step 3: Add metadata (name, description)
+- [ ] Step 4: Test with target model(s)
+- [ ] Step 5: Iterate based on usage
 ```
 
-### YAML Frontmatter (Required)
+**Step 1: Identify the reusable pattern**
+
+What context do you repeatedly provide? What procedural knowledge is needed?
+
+**Step 2: Draft concise instructions**
+
+Start minimal. Claude is already smart - only add what Claude doesn't know.
+
+Challenge each piece of information:
+- Does Claude really need this explanation?
+- Can I assume Claude knows this?
+- Does this paragraph justify its token cost?
+
+**Step 3: Add metadata**
+
+Write description in third person, including:
+- What the skill does
+- When to use it (key terms and triggers)
 
 ```yaml
----
-name: processing-pdfs # Gerund form, lowercase-with-hyphens, max 64 chars
-description: Extract text, tables, and forms from PDF files including scanned documents. Use when working with PDFs or document extraction tasks. # Max 1024 chars, third person, specific
-version: 1.0.0 # SemVer format
-dependencies: python>=3.8, pdfplumber>=0.9.0 # Optional, list required packages
----
+description: Extract text from PDFs, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
 ```
 
-**Naming Rules:**
+**Step 4: Test with target model(s)**
 
-- ✅ Use gerund form (verb + -ing): `processing-pdfs`, `analyzing-spreadsheets`
-- ✅ Max 64 characters
-- ✅ Lowercase letters, numbers, hyphens only
-- ❌ Avoid vague names: `helper`, `utils`, `tool`
+- Haiku: Does it provide enough guidance?
+- Sonnet: Is it clear and efficient?
+- Opus: Does it avoid over-explaining?
 
-**Description Rules:**
+**Step 5: Iterate based on usage**
 
-- ✅ Third person: "Extracts text from PDFs"
-- ❌ First/second person: "I can extract" or "You can use"
-- ✅ Specific: "Extract text, tables, and forms from PDF files"
-- ❌ Vague: "Helps with documents"
-- ✅ Include WHAT it does: "Extracts text, tables, forms"
-- ✅ Include WHEN to use: "Use when working with PDFs"
-- ✅ Include key terms: "PDF", "document extraction", "tables"
+Observe how Claude uses the skill. Watch for:
+- Unexpected exploration paths
+- Missed connections
+- Overreliance on certain sections
+- Ignored content
 
-### Good vs Bad Descriptions
+## Set Appropriate Degrees of Freedom
 
-```yaml
-# ❌ Bad - Vague, first person, no triggers
-description: I help you process different types of files and documents.
+Match specificity to task fragility:
 
-# ❌ Bad - Too generic, missing context
-description: Processes data efficiently.
+**High freedom** (text instructions): Multiple approaches valid, context-dependent
+**Medium freedom** (pseudocode/templates): Preferred pattern exists, variation acceptable
+**Low freedom** (exact scripts): Operations fragile, consistency critical
 
-# ❌ Bad - Second person, unclear
-description: You can use this to work with files.
+## Progressive Disclosure
 
-# ✅ Good - Specific, third person, clear triggers
-description: Extract text, tables, and forms from PDF files including scanned documents. Use when working with PDFs or document extraction tasks.
-
-# ✅ Good - Clear capability and context
-description: Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing tabular data or Excel files.
-```
-
-## Content Organization
-
-### Progressive Disclosure Pattern
-
-**Keep SKILL.md under 500 lines for optimal performance (target: under 300 lines for complex skills)**
-
-#### Directory Structure
-
-```
-skill-name/
-├── SKILL.md                      # Main file (always loaded, <500 lines)
-└── references/                   # On-demand detailed content
-    ├── WORKFLOW-STEPS.md         # Detailed step-by-step procedures
-    ├── TROUBLESHOOTING.md        # Error handling and edge cases
-    ├── TEMPLATE-EXAMPLES.md      # Templates and code examples
-    └── [DOMAIN-SPECIFIC].md      # Skill-specific detailed content
-```
-
-#### SKILL.md Structure (Always Loaded)
+Keep SKILL.md body under 500 lines. Split into separate files:
 
 ```markdown
-## Workflow (Quick Summary)
+# SKILL.md
 
-### Core Steps
+## Quick start
+[Basic usage here]
 
-1. **Step Name**: Brief description of what to do
-2. **Step Name**: Brief description of what to do
-   [...concise steps...]
-
-**For detailed step-by-step workflow with commands and examples:**
-
-\`\`\`
-Read `~/.claude/skills/[skill-name]/references/WORKFLOW-STEPS.md`
-\`\`\`
-
-Use when: Performing the task, need specific commands, or understanding each step
+## Advanced features
+**Form filling**: See [FORMS.md](FORMS.md)
+**API reference**: See [REFERENCE.md](REFERENCE.md)
 ```
 
-#### Loading Guidance Format
+Important:
+- Keep references one level deep from SKILL.md
+- Use forward slashes in paths (not backslashes)
+- Add table of contents for files >100 lines
 
-Always include explicit loading instructions with "Use when" context:
+## Common Patterns
 
-```markdown
-**For [detailed topic]:**
-
-\`\`\`
-Read `~/.claude/skills/[skill-name]/references/[FILENAME].md`
-\`\`\`
-
-Use when: [specific scenario requiring this content]
-```
-
-#### What to Extract to references/
-
-| Content Type       | Reference File         | Extract When                   |
-| ------------------ | ---------------------- | ------------------------------ |
-| Detailed workflows | WORKFLOW-STEPS.md      | Steps exceed 20 lines          |
-| Troubleshooting    | TROUBLESHOOTING.md     | >5 error scenarios             |
-| Templates/examples | TEMPLATE-EXAMPLES.md   | Complex output formats         |
-| Domain checks      | [DOMAIN]-CHECKS.md     | Language/tool-specific details |
-| Validation rules   | VERIFICATION-CHECKS.md | Detailed verification criteria |
-
-#### Example: Before and After
-
-**Before (680 lines - too long):**
-
+**Workflow pattern** (complex tasks):
 ```markdown
 ## Workflow
-
-### Step 1: Discovery
-
-[50 lines of detailed commands and examples]
-
-### Step 2: Extraction
-
-[80 lines of detailed procedures]
-...
+Copy this checklist:
+- [ ] Step 1: Do first thing
+- [ ] Step 2: Do second thing
+[Detailed steps below]
 ```
 
-**After (200 lines - optimal):**
-
+**Feedback loop** (quality-critical):
 ```markdown
-## Workflow (Quick Summary)
-
-### Core Steps
-
-1. **Discovery**: Identify files using grep/glob patterns
-2. **Extraction**: Read source, copy exact signatures
-3. **Documentation**: Use templates, follow patterns
-4. **Verification**: Check accuracy against source
-
-**For detailed workflow with commands and verification checklists:**
-\`\`\`
-Read `~/.claude/skills/my-skill/references/WORKFLOW-STEPS.md`
-\`\`\`
+1. Create output
+2. Validate: `python scripts/validate.py`
+3. If validation fails, fix and repeat
+4. Only proceed when validation passes
 ```
 
-#### Reference File Guidelines
-
-- ✅ Keep references ONE level deep (SKILL.md → references/FILE.md)
-- ✅ Use ALL CAPS for reference filenames
-- ✅ Include complete, standalone content (don't reference other references)
-- ✅ Start each reference with brief context of what it contains
-- ❌ Don't nest references (references/A.md → references/B.md)
-- ❌ Don't duplicate content between SKILL.md and references
-
-### File Naming Conventions
-
-```
-✅ Good:
-- Skill.md (capital S, required)
-- REFERENCE.md (all caps for supporting docs)
-- TEMPLATE.md (all caps)
-- FORMS.md (all caps)
-
-❌ Bad:
-- skill.md (lowercase s)
-- reference.txt (wrong extension)
-- my_template.md (underscores)
-```
-
-## Instruction Clarity
-
-### Sequential Workflows
-
+**Template pattern** (consistent output):
 ```markdown
-## Workflow
-
-### Step 1: Validate Input
-
-\`\`\`bash
-
-# Check file exists
-
-test -f document.pdf || echo "File not found"
-\`\`\`
-
-### Step 2: Extract Text
-
-\`\`\`python
-import pdfplumber
-with pdfplumber.open('document.pdf') as pdf:
-text = pdf.pages[0].extract_text()
-\`\`\`
-
-### Step 3: Verify Output
-
-Expected format:
-\`\`\`json
-{
-"pages": 5,
-"text": "extracted content..."
-}
-\`\`\`
+ALWAYS use this exact structure:
+[Template here]
 ```
 
-### Concrete Examples Pattern
+## Anti-Patterns to Avoid
 
-**Provide 2-3 examples minimum:**
+❌ Windows-style paths (`scripts\\helper.py`)
+✓ Unix-style paths (`scripts/helper.py`)
 
-```markdown
-## Examples
+❌ Too many options ("You can use X, or Y, or Z...")
+✓ Provide default with escape hatch ("Use X. For special case, use Y instead.")
 
-### Example 1: Simple Text Extraction
+❌ Time-sensitive info ("Before August 2025...")
+✓ Use "Current method" and "Old patterns" sections
 
-**Input:**
-\`\`\`
-document.pdf (invoice)
-\`\`\`
+❌ Inconsistent terminology (mix "field", "box", "element")
+✓ Choose one term, use consistently
 
-**Output:**
-\`\`\`json
-{
-"invoice_number": "INV-001",
-"amount": "$100.00",
-"date": "2024-01-01"
-}
-\`\`\`
+❌ Deeply nested references (SKILL.md → advanced.md → details.md)
+✓ One level deep (SKILL.md → details.md)
 
-### Example 2: Table Extraction
+## For Skills with Code
 
-**Input:**
-\`\`\`
-spreadsheet.pdf (financial data)
-\`\`\`
+**Utility scripts**: Provide pre-made scripts rather than having Claude write them
+- More reliable than generated code
+- Save tokens and time
+- Ensure consistency
 
-**Output:**
-\`\`\`json
-[
-{"month": "Jan", "revenue": 1000},
-{"month": "Feb", "revenue": 1200}
-]
-\`\`\`
-```
+**Package dependencies**: List required packages and verify availability
 
-### Template Patterns
+**Visual analysis**: Convert to images for Claude to analyze layouts
 
-**When output format matters:**
-
-```markdown
-## Output Template
-
-\`\`\`json
-{
-"field1": "value", // Required
-"field2": 123, // Optional, number
-"field3": ["array"], // Optional, array of strings
-"metadata": { // Required
-"timestamp": "ISO8601",
-"version": "1.0"
-}
-}
-\`\`\`
-```
-
-### Validation Steps
-
-```markdown
-## Validation Checklist
-
-After extraction:
-
-- [ ] All required fields present
-- [ ] Data types correct
-- [ ] Values within expected ranges
-- [ ] No parsing errors in logs
-```
-
-## Common Pitfalls to Avoid
-
-**Key anti-patterns to watch for:**
-
-- ❌ Offering too many options (pick ONE default approach)
-- ❌ Vague descriptions (be specific about what skill does)
-- ❌ Deeply nested references (max one level: Skill.md → REFERENCE.md)
-- ❌ Inconsistent terminology (choose one term per concept)
-- ❌ First/second person (use third person in descriptions)
-- ❌ Too much context (Claude knows programming basics)
-- ❌ Missing "When NOT to Use" section
-- ❌ No concrete examples (need 2-3 minimum)
-- ❌ Placeholder values in examples (use realistic values)
-
-**See REFERENCE.md Section 1 for detailed anti-patterns with examples.**
-
-## Code and Script Guidance
-
-**Best practices for code in skills:**
-
-- ✅ Explicit error handling (catch specific exceptions)
-- ✅ Configuration comments explain WHY, not WHAT
-- ✅ Forward slashes in all paths (cross-platform)
-- ✅ Input validation (fail fast with clear errors)
-- ✅ Resource cleanup (use context managers)
-
-**See REFERENCE.md Section 2 for detailed code guidance with examples.**
-
-## Testing Guidelines
-
-**Required testing before releasing a skill:**
-
-- ✅ Create 3+ evaluation scenarios first (test-driven approach)
-- ✅ Test across models (Haiku, Sonnet, Opus)
-- ✅ Fresh instance testing (no prior context)
-- ✅ Baseline comparison (prove skill adds value)
-- ✅ Real-world validation (actual user tasks)
-- ✅ Continuous improvement (iterate based on usage)
-
-**See REFERENCE.md Section 3 for comprehensive testing guidelines.**
-
-## Quality Checklist
-
-Before sharing a skill, verify:
-
-### Core Quality
-
-- [ ] Description includes specific key terms and usage triggers
-- [ ] Description written in third person
-- [ ] SKILL.md body under 500 lines
-- [ ] Additional details in separate reference files
-- [ ] Reference files one level deep from SKILL.md
-- [ ] Consistent terminology throughout
-- [ ] Concrete examples provided (2-3 minimum)
-- [ ] Clear workflow steps with verification points
-
-### Naming & Structure
-
-- [ ] Name uses gerund form (verb + -ing)
-- [ ] Name max 64 characters, lowercase-with-hyphens
-- [ ] Directory named correctly (matches skill name)
-- [ ] Skill.md with capital S
-- [ ] YAML frontmatter complete (name, description, version)
-
-### Content Quality
-
-- [ ] Only includes info Claude doesn't already know
-- [ ] Progressive disclosure pattern used
-- [ ] One default approach (not too many options)
-- [ ] No time-sensitive information
-- [ ] No deeply nested references
-- [ ] No vague confidence language
-
-### Code Quality (if applicable)
-
-- [ ] Scripts handle errors explicitly
-- [ ] All constants justified in comments
-- [ ] Required packages listed and verified available
-- [ ] Validation steps for critical operations
-- [ ] Forward slashes in all file paths
-
-### Testing
-
-- [ ] At least 3 evaluations created
-- [ ] Tested with Haiku, Sonnet, and Opus
-- [ ] Real-world usage scenarios validated
-- [ ] Fresh instance testing completed
-- [ ] Team feedback incorporated
-
-## Resources
-
-- [Official Skill Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
-- [Skill Template](TEMPLATE.md)
-- [Example Skills](EXAMPLES.md)
-- [Claude Documentation](https://platform.claude.com/docs)
+**Verifiable outputs**: Create plan files that get validated before execution
 
 ## Quick Reference
 
-```bash
-# Create new skill
-mkdir -p ~/.claude/skills/my-skill-name
-cd ~/.claude/skills/my-skill-name
+**Naming**: Use gerund form ("Processing PDFs", "Analyzing Data")
 
-# Copy template
-cp ~/.claude/skills/skill-writing/TEMPLATE.md ./Skill.md
+**Description**: Third person, specific, includes when to use
 
-# Edit frontmatter and content
-# Test with fresh Claude instance
-# Iterate based on usage
-```
+**File limit**: Keep SKILL.md under 500 lines
+
+**Structure**: YAML frontmatter + markdown body
+
+**Testing**: Test with all target models
+
+**Conciseness**: Assume Claude is smart, only add what's needed
+
+## Detailed Reference
+
+For comprehensive guidance, see [specs/skills-best-practices.md](../../specs/skills-best-practices.md):
+- Complete examples for all patterns
+- Advanced progressive disclosure techniques
+- Evaluation-driven development
+- Runtime environment details
+- MCP tool references

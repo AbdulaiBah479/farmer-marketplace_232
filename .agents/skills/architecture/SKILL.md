@@ -1,55 +1,43 @@
 ---
-name: architecture
-description: Architectural decision-making framework. Requirements analysis, trade-off evaluation, ADR documentation. Use when making architecture decisions or analyzing system design.
-allowed-tools: Read, Glob, Grep
+name: Architecture
+description: Standards for structural design, Clean Architecture, and project layout in Golang.
+metadata:
+  labels: [golang, architecture, clean-arch, project-layout, ddd]
+  triggers:
+    files: ['go.mod', 'internal/**']
+    keywords:
+      [architecture, structure, folder layout, clean arch, dependency injection]
 ---
 
-# Architecture Decision Framework
+# Golang Architecture Standards
 
-> "Requirements drive architecture. Trade-offs inform decisions. ADRs capture rationale."
+## **Priority: P0 (CRITICAL)**
 
-## 🎯 Selective Reading Rule
+## Principles
 
-**Read ONLY files relevant to the request!** Check the content map, find what you need.
+- **Clean Architecture**: Separate concerns. Inner layers (Domain) rely on nothing. Outer layers (Adapters) rely on Inner.
+- **Project Layout**: Follow standard Go project layout (`cmd`, `internal`, `pkg`).
+- **Dependency Injection**: Explicitly pass dependencies via constructors. Avoid global singletons.
+- **Package Oriented Design**: Organize by feature/domain, not by layer (avoid `controllers/`, `services/` at root).
+- **Interface Segregation**: Define interfaces where they are _used_ (Consumer implementation).
 
-| File | Description | When to Read |
-|------|-------------|--------------|
-| `context-discovery.md` | Questions to ask, project classification | Starting architecture design |
-| `trade-off-analysis.md` | ADR templates, trade-off framework | Documenting decisions |
-| `pattern-selection.md` | Decision trees, anti-patterns | Choosing patterns |
-| `examples.md` | MVP, SaaS, Enterprise examples | Reference implementations |
-| `patterns-reference.md` | Quick lookup for patterns | Pattern comparison |
+## Standard Project Layout
 
----
+See [Standard Project Layout](references/project-layout.md) for directory tree.
 
-## 🔗 Related Skills
+### Layer Rules
 
-| Skill | Use For |
-|-------|---------|
-| `@[skills/database-design]` | Database schema design |
-| `@[skills/api-patterns]` | API design patterns |
-| `@[skills/deployment-procedures]` | Deployment architecture |
+- **Domain**: Inner-most. No deps.
+- **UseCase**: Depends on Domain.
+- **Adapter**: Outer-most. Depends on UseCase/Domain.
 
----
+## Guidelines
 
-## Core Principle
+- **Use Constructors**: `NewService(repo Repository) *Service`.
+- **Inversion of Control**: Service depends on `Repository` interface, not `SQLRepository` struct.
+- **Wire up in Main**: Main function composes the dependency graph.
 
-**"Simplicity is the ultimate sophistication."**
+## References
 
-- Start simple
-- Add complexity ONLY when proven necessary
-- You can always add patterns later
-- Removing complexity is MUCH harder than adding it
-
----
-
-## Validation Checklist
-
-Before finalizing architecture:
-
-- [ ] Requirements clearly understood
-- [ ] Constraints identified
-- [ ] Each decision has trade-off analysis
-- [ ] Simpler alternatives considered
-- [ ] ADRs written for significant decisions
-- [ ] Team expertise matches chosen patterns
+- [Standard Project Layout](references/project-layout.md)
+- [Clean Architecture Layers](references/clean-arch.md)

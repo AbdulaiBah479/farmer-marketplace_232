@@ -1,299 +1,250 @@
 ---
-name: creating-agent-skills
-description: Expert guidance for creating, writing, and refining Claude Code Skills. Use when working with SKILL.md files, authoring new skills, improving existing skills, or understanding skill structure and best practices.
+name: Creating Agent Skills
+description: Creates or improves Agent Skills following official documentation and best practices. Use when creating new skills, improving existing skills, evaluating skill quality, or ensuring skills follow naming conventions, structure requirements, and discovery patterns. Guides through description writing, progressive disclosure, workflows, and testing.
 ---
 
 # Creating Agent Skills
 
-This skill teaches how to create effective Claude Code Skills following Anthropic's official specification.
+Creates or improves Agent Skills following official Claude Code documentation and best practices.
 
-## Core Principles
+## What you should do
 
-### 1. Skills Are Prompts
+When invoked, help the user create or improve Agent Skills by:
 
-All prompting best practices apply. Be clear, be direct. Assume Claude is smart - only add context Claude doesn't have.
+1. **Understanding the goal** - Determine what the user needs:
+   - Create a new skill from scratch
+   - Improve an existing skill's discovery or structure
+   - Evaluate a skill against best practices
+   - Convert informal knowledge into a skill
+   - Debug why a skill isn't being discovered
 
-### 2. Standard Markdown Format
+2. **Apply best practices** - Follow the official patterns:
+   - Use gerund form naming ("Managing X", "Building Y", "Processing Z")
+   - Write third-person descriptions with specific trigger words
+   - Keep SKILL.md under 500 lines (use progressive disclosure if needed)
+   - Include both what the skill does and when to use it
+   - Be concise (assume Claude is already smart)
 
-Use YAML frontmatter + markdown body. **No XML tags** - use standard markdown headings.
+3. **Structure properly** - Ensure correct format:
+   - Directory: `skill-name/SKILL.md`
+   - YAML frontmatter with `name` and `description`
+   - Clear sections and examples
+   - Reference files for detailed content (if needed)
 
-```markdown
+4. **Test and iterate** - Validate the skill works:
+   - Check description triggers skill discovery
+   - Verify structure is valid
+   - Test with real scenarios
+   - Iterate based on usage
+
+## Skill structure requirements
+
+### YAML frontmatter
+
+```yaml
 ---
-name: my-skill-name
-description: What it does and when to use it
+name: Skill Name (64 chars max, use gerund form)
+description: What it does and when to use it (1024 chars max, third person)
 ---
-
-# My Skill Name
-
-## Quick Start
-Immediate actionable guidance...
-
-## Instructions
-Step-by-step procedures...
-
-## Examples
-Concrete usage examples...
 ```
 
-### 3. Progressive Disclosure
+### Naming conventions
 
-Keep SKILL.md under 500 lines. Split detailed content into reference files. Load only what's needed.
+**Use gerund form** (verb + -ing):
 
-```
-my-skill/
-├── SKILL.md              # Entry point (required)
-├── reference.md          # Detailed docs (loaded when needed)
-├── examples.md           # Usage examples
-└── scripts/              # Utility scripts (executed, not loaded)
-```
+**Good**: "Processing PDFs", "Analyzing Spreadsheets", "Managing Databases"
 
-### 4. Effective Descriptions
+**Avoid**: "Helper", "Utils", "Tools", "Documents", "Data"
 
-The description field enables skill discovery. Include both what the skill does AND when to use it. Write in third person.
+### Writing effective descriptions
 
-**Good:**
+**Always write in third person**:
+
+- ✅ "Processes Excel files and generates reports"
+- ❌ "I can help you process Excel files"
+- ❌ "You can use this to process Excel files"
+
+**Include both what and when**:
+
 ```yaml
 description: Extracts text and tables from PDF files, fills forms, merges documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
 ```
 
-**Bad:**
+**Be specific** - include key trigger words that users would mention.
+
+### Progressive disclosure
+
+Keep SKILL.md under 500 lines. Move detailed content to separate files:
+
+```
+my-skill/
+├── SKILL.md              # Overview and navigation
+├── REFERENCE.md          # Detailed API docs
+├── EXAMPLES.md           # Usage examples
+└── scripts/
+    └── helper.py         # Utility scripts
+```
+
+Reference from SKILL.md:
+
+```markdown
+**Form filling**: See [FORMS.md](FORMS.md) for complete guide
+**API reference**: See [REFERENCE.md](REFERENCE.md) for all methods
+```
+
+Claude loads additional files only when needed.
+
+## Quick skill creation workflow
+
+When user asks to create a skill:
+
+1. **Understand the domain**:
+   - What tasks will this skill help with?
+   - What context or knowledge needs to be captured?
+   - What are the common patterns or workflows?
+
+2. **Draft the structure**:
+
 ```yaml
-description: Helps with documents
-```
-
-## Skill Structure
-
-### Required Frontmatter
-
-| Field | Required | Max Length | Description |
-|-------|----------|------------|-------------|
-| `name` | Yes | 64 chars | Lowercase letters, numbers, hyphens only |
-| `description` | Yes | 1024 chars | What it does AND when to use it |
-| `allowed-tools` | No | - | Tools Claude can use without asking |
-| `model` | No | - | Specific model to use |
-
-### Naming Conventions
-
-Use **gerund form** (verb + -ing) for skill names:
-
-- `processing-pdfs`
-- `analyzing-spreadsheets`
-- `generating-commit-messages`
-- `reviewing-code`
-
-Avoid: `helper`, `utils`, `tools`, `anthropic-*`, `claude-*`
-
-### Body Structure
-
-Use standard markdown headings:
-
-```markdown
-# Skill Name
-
-## Quick Start
-Fastest path to value...
-
-## Instructions
-Core guidance Claude follows...
-
-## Examples
-Input/output pairs showing expected behavior...
-
-## Advanced Features
-Additional capabilities (link to reference files)...
-
-## Guidelines
-Rules and constraints...
-```
-
-## What Would You Like To Do?
-
-1. **Create new skill** - Build from scratch
-2. **Audit existing skill** - Check against best practices
-3. **Add component** - Add workflow/reference/example
-4. **Get guidance** - Understand skill design
-
-## Creating a New Skill
-
-### Step 1: Choose Type
-
-**Simple skill (single file):**
-- Under 500 lines
-- Self-contained guidance
-- No complex workflows
-
-**Progressive disclosure skill (multiple files):**
-- SKILL.md as overview
-- Reference files for detailed docs
-- Scripts for utilities
-
-### Step 2: Create SKILL.md
-
-```markdown
 ---
-name: your-skill-name
-description: [What it does]. Use when [trigger conditions].
+name: [Gerund form name]
+description: [Third person, what + when, specific triggers]
 ---
 
-# Your Skill Name
+# [Skill Title]
 
-## Quick Start
+[Brief overview]
 
-[Immediate actionable example]
+## What you should do
 
-```[language]
-[Code example]
+[Step-by-step instructions for Claude]
+
+## [Section 2: Domain-specific content]
+
+[Examples, patterns, or references]
 ```
 
-## Instructions
+3. **Keep it concise**:
+   - Challenge every paragraph: "Does Claude really need this?"
+   - Remove explanations of common knowledge
+   - Focus on domain-specific information
 
-[Core guidance]
+4. **Add progressive disclosure** (if needed):
+   - Move detailed reference to separate files
+   - Keep SKILL.md as navigation guide
+   - Link to details: "See [REFERENCE.md](REFERENCE.md)"
 
-## Examples
+5. **Test discovery**:
+   - Does the description trigger the skill when relevant?
+   - Test with fresh Claude instance
+   - Iterate based on actual usage
 
-**Example 1:**
-Input: [description]
-Output:
-```
-[result]
-```
+## Checklist for effective skills
 
-## Guidelines
+Before finalizing a skill:
 
-- [Constraint 1]
-- [Constraint 2]
-```
-
-### Step 3: Add Reference Files (If Needed)
-
-Link from SKILL.md to detailed content:
-
-```markdown
-For API reference, see [REFERENCE.md](REFERENCE.md).
-For form filling guide, see [FORMS.md](FORMS.md).
-```
-
-Keep references **one level deep** from SKILL.md.
-
-### Step 4: Add Scripts (If Needed)
-
-Scripts execute without loading into context:
-
-```markdown
-## Utility Scripts
-
-Extract fields:
-```bash
-python scripts/analyze.py input.pdf > fields.json
-```
-```
-
-### Step 5: Test With Real Usage
-
-1. Test with actual tasks, not test scenarios
-2. Observe where Claude struggles
-3. Refine based on real behavior
-4. Test with Haiku, Sonnet, and Opus
-
-## Auditing Existing Skills
-
-Check against this rubric:
-
-- [ ] Valid YAML frontmatter (name + description)
-- [ ] Description includes trigger keywords
-- [ ] Uses standard markdown headings (not XML tags)
-- [ ] SKILL.md under 500 lines
-- [ ] References one level deep
-- [ ] Examples are concrete, not abstract
-- [ ] Consistent terminology
+### Core quality
+- [ ] Description uses third person voice
+- [ ] Description includes both what and when
+- [ ] Description has specific trigger keywords
+- [ ] Name uses gerund form
+- [ ] SKILL.md body under 500 lines
 - [ ] No time-sensitive information
-- [ ] Scripts handle errors explicitly
+- [ ] Consistent terminology throughout
+- [ ] Concrete examples (not abstract)
+- [ ] File references one level deep
+- [ ] Forward slashes in all paths (not backslashes)
 
-## Common Patterns
+### Testing
+- [ ] Tested with real usage scenarios
+- [ ] Description triggers skill appropriately
+- [ ] Structure follows official format
 
-### Template Pattern
+## Common patterns by skill type
 
-Provide output templates for consistent results:
+### Data analysis skills
+**Pattern**: Domain-specific schemas + common queries + filters
 
-```markdown
-## Report Template
+Example: BigQuery with table schemas, naming conventions, filtering rules
 
-```markdown
-# [Analysis Title]
+### Document processing skills
+**Pattern**: Workflows + validation + utility scripts
 
-## Executive Summary
-[One paragraph overview]
+Example: PDF form filling with analyze → map → validate → fill
 
-## Key Findings
-- Finding 1
-- Finding 2
+### Code generation skills
+**Pattern**: Templates + examples + style guide
 
-## Recommendations
-1. [Action item]
-2. [Action item]
+Example: Commit messages with format + examples
+
+### Configuration skills
+**Pattern**: Project-specific settings + references
+
+Example: GitHub Projects with pre-configured IDs and field options
+
+## Output format
+
+When creating a skill, provide:
+
+1. **Complete SKILL.md content** with proper frontmatter
+2. **File structure** showing any additional reference files
+3. **Testing suggestions** - scenarios to verify discovery
+4. **Usage examples** - how to invoke naturally
+
+Example output:
+
 ```
-```
+I'll create a skill for [domain]. Here's the structure:
 
-### Workflow Pattern
+```yaml
+---
+name: [Gerund form name]
+description: [Third person, what + when, specific triggers]
+---
 
-For complex multi-step tasks:
+# [Skill Title]
 
-```markdown
-## Migration Workflow
-
-Copy this checklist:
-
-```
-- [ ] Step 1: Backup database
-- [ ] Step 2: Run migration script
-- [ ] Step 3: Validate output
-- [ ] Step 4: Update configuration
-```
-
-**Step 1: Backup database**
-Run: `./scripts/backup.sh`
-...
-```
-
-### Conditional Pattern
-
-Guide through decision points:
-
-```markdown
-## Choose Your Approach
-
-**Creating new content?** Follow "Creation workflow" below.
-**Editing existing?** Follow "Editing workflow" below.
+[Content following best practices...]
 ```
 
-## Anti-Patterns to Avoid
+**File structure**:
+```
+skill-name/
+├── SKILL.md
+└── REFERENCE.md (if needed)
+```
 
-- **XML tags in body** - Use markdown headings instead
-- **Vague descriptions** - Be specific with trigger keywords
-- **Deep nesting** - Keep references one level from SKILL.md
-- **Too many options** - Provide a default with escape hatch
-- **Windows paths** - Always use forward slashes
-- **Punting to Claude** - Scripts should handle errors
-- **Time-sensitive info** - Use "old patterns" section instead
+**Testing**:
+Try these scenarios to verify discovery:
+- "[Natural request that should trigger]"
+- "[Another scenario]"
+```
 
-## Reference Files
+## Best practices reference
 
-For detailed guidance, see:
+For complete best practices including:
+- Degrees of freedom
+- Content guidelines
+- Anti-patterns to avoid
+- Evaluation strategies
+- Common skill types
+- Detailed examples
 
-- [official-spec.md](references/official-spec.md) - Anthropic's official skill specification
-- [best-practices.md](references/best-practices.md) - Skill authoring best practices
+See [BEST-PRACTICES.md](BEST-PRACTICES.md)
 
-## Success Criteria
+## Remember
 
-A well-structured skill:
-- Has valid YAML frontmatter with descriptive name and description
-- Uses standard markdown headings (not XML tags)
-- Keeps SKILL.md under 500 lines
-- Links to reference files for detailed content
-- Includes concrete examples with input/output pairs
-- Has been tested with real usage
+- Skills are **model-invoked** - Claude decides when to use them
+- Good descriptions are critical for discovery
+- Conciseness preserves context window
+- Test with real usage, not just theory
+- Iterate based on observed behavior
 
-Sources:
-- [Agent Skills - Claude Code Docs](https://code.claude.com/docs/en/skills)
-- [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
-- [GitHub - anthropics/skills](https://github.com/anthropics/skills)
+## Official documentation
+
+For complete details and latest updates:
+
+- **Agent Skills quickstart**: https://docs.claude.com/en/docs/claude-code/skills
+- **Best practices guide**: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices
+- **Skills overview**: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview
+- **Claude Code plugins** (for sharing skills): https://docs.claude.com/en/docs/claude-code/plugins

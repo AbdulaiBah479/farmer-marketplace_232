@@ -1,108 +1,86 @@
 ---
-name: unity-ui-toolkit
-description: Unity UI Toolkit skill for runtime UI development, USS styling, UXML templates, and custom visual elements.
-allowed-tools: Read, Grep, Write, Bash, Edit, Glob, WebFetch
+name: Unity UI Toolkit
+description: Assists with Unity UI Toolkit development - UXML structure, USS styling, C# VisualElement manipulation, data binding, and custom controls. Use when implementing UI Toolkit interfaces.
+allowed-tools: Read, Write, Glob
 ---
 
-# Unity UI Toolkit Skill
+# Unity UI Toolkit
 
-UI Toolkit development for Unity runtime and editor interfaces.
+Assists with Unity UI Toolkit development including UXML markup, USS styling, C# VisualElement API, and modern UI patterns.
 
-## Overview
+## What This Skill Helps With
 
-This skill provides capabilities for building user interfaces using Unity's UI Toolkit, including UXML templates, USS styling, and custom visual elements.
-
-## Capabilities
-
-### UXML Templates
-- Create UXML document structure
-- Define reusable templates
-- Implement data binding
-- Handle template inheritance
+### UXML Structure
+- Proper element hierarchy and naming conventions
+- Common controls: TextField, Button, Toggle, Slider, ObjectField, ListView
+- Layout containers: VisualElement, ScrollView, Foldout, TwoPaneSplitView
+- Data-driven UI with templates and bindings
 
 ### USS Styling
-- Write USS stylesheets
-- Implement responsive layouts
-- Create theme variants
-- Handle hover/focus states
+- Class-based styling and selectors
+- Flexbox layout (flex-direction, justify-content, align-items)
+- USS variables and dark theme optimization
+- Pseudo-classes (:hover, :active, :disabled)
+- Transitions and animations
 
-### Visual Elements
-- Build custom visual elements
-- Implement manipulators
-- Handle input events
-- Create animations
+### C# VisualElement API
+- Query API: `rootElement.Q<Button>("my-button")`
+- Event handling: `.clicked +=` and `.RegisterValueChangedCallback()`
+- Dynamic UI creation with constructors
+- Data binding with `Bind()` and `SerializedObject`
 
-### Data Binding
-- Bind to data sources
-- Implement MVVM patterns
-- Handle list views and collections
-- Create reactive UI
+### Best Practices
+- UXML for structure, USS for styling, C# for logic
+- Name elements for Query API access
+- Use classes for styling, not inline styles
+- Cache VisualElement references in fields
+- Proper event cleanup in `OnDestroy()`
 
-## Prerequisites
+## Common Patterns
 
-- Unity 2021.3+
-- UI Toolkit package (built-in)
-
-## Usage Patterns
-
-### UXML Template
-
-```xml
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <ui:VisualElement class="container">
-        <ui:Label name="health-label" text="Health: 100" />
-        <ui:ProgressBar name="health-bar" value="100" />
-        <ui:Button name="heal-button" text="Heal" />
-    </ui:VisualElement>
-</ui:UXML>
-```
-
-### USS Stylesheet
-
-```css
-.container {
-    flex-direction: column;
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.8);
-}
-
-#health-bar {
-    height: 20px;
-    margin: 5px 0;
-}
-
-#heal-button:hover {
-    background-color: #4CAF50;
-}
-```
-
-### C# Binding
-
+**Editor Window Setup:**
 ```csharp
-public class HealthUI : MonoBehaviour
-{
-    [SerializeField] private UIDocument uiDocument;
-    private ProgressBar healthBar;
+public void CreateGUI() {
+    var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("path/to.uxml");
+    visualTree.CloneTree(rootVisualElement);
 
-    void Start()
-    {
-        var root = uiDocument.rootVisualElement;
-        healthBar = root.Q<ProgressBar>("health-bar");
-        root.Q<Button>("heal-button").clicked += OnHealClicked;
-    }
-
-    void OnHealClicked() { /* Handle heal */ }
+    var button = rootVisualElement.Q<Button>("my-button");
+    button.clicked += OnButtonClick;
 }
 ```
 
-## Best Practices
+**USS Class Toggle:**
+```csharp
+element.AddToClassList("active");
+element.RemoveFromClassList("active");
+element.ToggleInClassList("active");
+```
 
-1. Use USS for styling over inline styles
-2. Create reusable UXML templates
-3. Implement proper event handling
-4. Test across resolutions
-5. Use UI Builder for visual editing
+**Data Binding:**
+```csharp
+var so = new SerializedObject(target);
+rootVisualElement.Bind(so);
+```
 
-## References
+## Unity Version Requirements
 
-- [UI Toolkit Documentation](https://docs.unity3d.com/Manual/UIElements.html)
+- **Unity 2021.2+** for runtime UI Toolkit
+- **Unity 2019.4+** for editor-only UI Toolkit (limited features)
+
+See [ui-toolkit-reference.md](ui-toolkit-reference.md) for complete API documentation.
+
+## When to Use vs Other Components
+
+**Use this Skill when**: Building UI Toolkit interfaces, writing UXML/USS, or manipulating VisualElements in C#
+
+**Use unity-ui-selector skill when**: Choosing between UGUI and UI Toolkit for a project
+
+**Use @unity-scripter agent when**: Implementing complex UI logic or custom VisualElement controls
+
+**Use EditorScriptUIToolkit templates when**: Generating new UI Toolkit editor windows with UXML/USS files
+
+## Related Skills
+
+- **unity-ui-selector**: Helps choose between UGUI and UI Toolkit
+- **unity-template-generator**: Generates UI Toolkit editor script templates
+- **unity-script-validator**: Validates UI Toolkit code patterns

@@ -1,65 +1,35 @@
 ---
-name: dart-best-practices
-description: |-
-  General best practices for Dart development.
-  Covers code style, effective Dart, and language features.
-license: Apache-2.0
+name: Dart Best Practices
+description: General purity standards for Dart development.
+metadata:
+  labels: [dart, clean-code]
+  triggers:
+    files: ['**/*.dart']
+    keywords: [import, final, const, var, global]
 ---
 
 # Dart Best Practices
 
-## 1. When to use this skill
-Use this skill when:
--   Writing or reviewing Dart code.
--   Looking for guidance on idiomatic Dart usage.
+## **Priority: P1 (OPERATIONAL)**
 
-## 2. Best Practices
+Best practices for writing clean, maintainable Dart code.
 
-### Multi-line Strings
-Prefer using multi-line strings (`'''`) over concatenating strings with `+` and
-`\n`, especially for large blocks of text like SQL queries, HTML, or
-PEM-encoded keys. This improves readability and avoids
-`lines_longer_than_80_chars` lint errors by allowing natural line breaks.
+- **Scoping**:
+  - No global variables.
+  - Private globals (if required) must start with `_`.
+- **Immutability**: Use `const` > `final` > `var`.
+- **Config**: Use `--dart-define` for secrets. Never hardcode API keys.
+- **Naming**: Follow [effective-dart](https://dart.dev/guides/language/effective-dart) (PascalCase classes, camelCase members).
+- **Strings**: Prefer single quotes; use double quotes only for interpolation needs.
+- **Trailing Commas**: Always use trailing commas for multi-line literals/params.
+- **Expression Bodies**: Prefer `=>` for single-expression functions/getters.
+- **Collections**:
+  - Use `.map`, `.where`, `.fold`, `.any` over manual loops when clarity improves.
+  - Type empty collections (`<String>[]`, `<String, User>{}`) to avoid `dynamic`.
+  - Use collection `if`/`for` and spread operators for composable lists/maps.
+- **Async**: Always `await` futures unless intentionally fire-and-forget.
 
-**Avoid:**
 ```dart
-final pem = '-----BEGIN RSA PRIVATE KEY-----\n' +
-    base64Encode(fullBytes) +
-    '\n-----END RSA PRIVATE KEY-----';
+import 'models/user.dart'; // Good
+import 'package:app/models/user.dart'; // Avoid local absolute
 ```
-
-**Prefer:**
-```dart
-final pem = '''
------BEGIN RSA PRIVATE KEY-----
-${base64Encode(fullBytes)}
------END RSA PRIVATE KEY-----''';
-```
-
-### Line Length
-Avoid lines longer than 80 characters, even in Markdown files and comments.
-This ensures code is readable in split-screen views and on smaller screens
-without horizontal scrolling.
-
-**Prefer:**
-Target 80 characters for wrapping text. Exceptions are allowed for long URLs
-or identifiers that cannot be broken.
-
-## Discovery
-
-### Multi-line Strings
-To find candidates for multi-line strings, search for string concatenation
-with `+` involving newlines:
-- **Regex**: `['"]\s*\+\s*['"]`
-- **Regex**: `\+\s*['"].*\\n`
-
-### Line Length
-- Rely on the `lines_longer_than_80_chars` lint from the analyzer.
-
-## Related Skills
-
-- **[dart-modern-features]**: For idiomatic
-  usage of modern Dart features like Pattern Matching (useful for deep JSON
-  extraction), Records, and Switch Expressions.
-
-[dart-modern-features]: https://github.com/kevmoo/dash_skills/blob/main/skills/dart-modern-features/SKILL.md

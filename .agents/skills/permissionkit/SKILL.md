@@ -5,17 +5,12 @@ description: "Create child communication safety experiences using PermissionKit 
 
 # PermissionKit
 
-> **Note:** PermissionKit APIs span multiple 26.x releases. Verify signatures
-> and availability against the current Xcode 26 SDK before shipping.
+> **Note:** PermissionKit is new in iOS 26. Method signatures should be verified against the latest Xcode 26 beta SDK.
 
 Request permission from a parent or guardian to modify a child's communication
 rules. PermissionKit creates communication safety experiences that let children
 ask for exceptions to communication limits set by their parents. Targets
-Swift 6.3 / iOS 26+.
-
-PermissionKit communication experiences are available only through iMessage.
-Use it for parent/guardian approval flows, not as a general in-app contact
-permission, moderation, or chat-safety framework.
+Swift 6.2 / iOS 26+.
 
 ## Contents
 
@@ -33,27 +28,13 @@ permission, moderation, or chat-safety framework.
 
 ## Setup
 
-Import `PermissionKit`. Do not invent PermissionKit entitlement keys; verify
-current Apple documentation and Xcode capabilities before adding signing
-requirements.
+Import `PermissionKit`. No special entitlements are required.
 
 ```swift
 import PermissionKit
 ```
 
-**Platform availability:**
-
-When reviewing or correcting code, state these exact tiers instead of collapsing
-PermissionKit to "iOS 26+":
-
-- Core topic, handle, question, response, choice, and `CommunicationLimits`
-  APIs: iOS 26.0+, iPadOS 26.0+, Mac Catalyst 26.0+, macOS 26.0+,
-  visionOS 26.0+.
-- `AskError`: iOS 26.1+, iPadOS 26.1+, Mac Catalyst 26.1+, macOS 26.1+,
-  visionOS 26.1+.
-- `AskCenter`, `AskCenter.ask(_:in:)`, `AskCenter.responses(for:)`,
-  `PermissionButton`, and `SignificantAppUpdateTopic`: iOS/iPadOS/
-  Mac Catalyst/macOS/visionOS 26.2+.
+**Platform availability:** iOS 26+, iPadOS 26+, macOS 26+.
 
 ## Core Concepts
 
@@ -76,33 +57,25 @@ PermissionKit manages a flow where:
 | `PermissionButton` | SwiftUI button that triggers the permission flow |
 | `CommunicationTopic` | Topic for communication-related permission requests |
 | `CommunicationHandle` | A phone number, email, or custom identifier |
-| `CommunicationLimits` | Checks which communication handles are known to the system |
+| `CommunicationLimits` | Checks whether communication limits apply |
 | `SignificantAppUpdateTopic` | Topic for significant app update permission requests |
 
 ## Checking Communication Limits
 
-Use `CommunicationLimits.current` to check whether the system already knows a
-communication handle for your app. This is not an "are communication limits
-enabled?" probe. If limits are not enabled, `AskCenter.shared.ask(_:in:)`
-throws `AskError.communicationLimitsNotEnabled`; handle that path when asking.
-
-`knownHandles(in:)` also requires the calling app to have a non-nil, nonempty
-bundle identifier. Corrected code should guard `Bundle.main.bundleIdentifier`
-before calling it.
+Before presenting a permission request, check if communication limits are
+enabled and whether the handle is known.
 
 ```swift
 import PermissionKit
 
-func needsPermissionPrompt(for handle: CommunicationHandle) async -> Bool {
+func checkCommunicationStatus(for handle: CommunicationHandle) async -> Bool {
     let limits = CommunicationLimits.current
     let isKnown = await limits.isKnownHandle(handle)
-    return !isKnown
+    return isKnown
 }
 
-// Check multiple handles at once.
+// Check multiple handles at once
 func filterKnownHandles(_ handles: Set<CommunicationHandle>) async -> Set<CommunicationHandle> {
-    guard Bundle.main.bundleIdentifier?.isEmpty == false else { return [] }
-
     let limits = CommunicationLimits.current
     return await limits.knownHandles(in: handles)
 }
@@ -186,10 +159,7 @@ let question = PermissionQuestion<CommunicationTopic>(communicationTopic: topic)
 
 ## Requesting Permission with AskCenter
 
-Use `AskCenter.shared` to request that the child send the permission question
-to their parent or guardian. The async `ask` call starts the send flow; parent
-decisions arrive later through `responses(for:)`. If the child cancels the send
-flow, the system does not deliver a `PermissionResponse` for that question.
+Use `AskCenter.shared` to present the permission request to the child.
 
 ```swift
 import PermissionKit
@@ -200,11 +170,11 @@ func requestPermission(
 ) async {
     do {
         try await AskCenter.shared.ask(question, in: viewController)
-        // Question send flow was started; wait for responses(for:) separately.
+        // Question was presented to the child
     } catch let error as AskError {
         switch error {
         case .communicationLimitsNotEnabled:
-            // Communication limits not active -- continue with normal app flow.
+            // Communication limits not active -- no permission needed
             break
         case .contactSyncNotSetup:
             // Contact sync not configured
@@ -228,10 +198,8 @@ func requestPermission(
 
 ## SwiftUI Integration with PermissionButton
 
-`PermissionButton` is a SwiftUI view that triggers the permission flow when
-tapped. It uses the same response model as `AskCenter`: observe responses and
-model a pending/canceled state instead of assuming every tap produces a parent
-decision.
+`PermissionButton` is a SwiftUI view that triggers the permission flow
+when tapped.
 
 ```swift
 import SwiftUI
@@ -250,30 +218,36 @@ struct ContactPermissionView: View {
 }
 ```
 
-For richer SwiftUI flows, custom topics, and long-lived managers, read
-[references/permissionkit-patterns.md](references/permissionkit-patterns.md).
+### PermissionButton with Custom Topic
+
+```swift
+struct CustomPermissionView: View {
+    var body: some View {
+        let personInfo = CommunicationTopic.PersonInformation(
+            handle: CommunicationHandle(value: "user456", kind: .custom),
+            nameComponents: nil,
+            avatarImage: nil
+        )
+        let topic = CommunicationTopic(
+            personInformation: [personInfo],
+            actions: [.follow]
+        )
+        let question = PermissionQuestion<CommunicationTopic>(
+            communicationTopic: topic
+        )
+
+        PermissionButton(question: question) {
+            Text("Ask to Follow")
+        }
+    }
+}
+```
 
 ## Handling Responses
 
-Listen for permission responses asynchronously. Track pending questions by
-`question.id`, and give the UI a retry or expiration path because a child can
-cancel the iMessage send flow without producing a response.
-When combining known-handle checks with response handling, carry forward the
-bundle-identifier guard from `knownHandles(in:)`.
+Listen for permission responses asynchronously.
 
 ```swift
-enum PermissionRequestState {
-    case pending, approved, denied, expired
-}
-
-var requestStates: [UUID: PermissionRequestState] = [:]
-
-func expireIfStillPending(_ id: UUID) {
-    guard requestStates[id] == .pending else { return }
-    requestStates[id] = .expired
-    // Re-enable asking or show retry/canceled UI.
-}
-
 func observeResponses() async {
     let responses = AskCenter.shared.responses(for: CommunicationTopic.self)
 
@@ -284,11 +258,9 @@ func observeResponses() async {
         switch choice.answer {
         case .approval:
             // Parent approved -- enable communication
-            requestStates[question.id] = .approved
             print("Approved for topic: \(question.topic)")
         case .denial:
             // Parent denied -- keep restriction
-            requestStates[question.id] = .denied
             print("Denied")
         @unknown default:
             break
@@ -313,10 +285,6 @@ let declined = PermissionChoice.decline
 ## Significant App Update Topic
 
 Request permission for significant app updates that require parental approval.
-Your app determines what counts as significant based on applicable regulations
-and should consult qualified legal counsel for compliance interpretation.
-Use concise, understandable descriptions that state the concrete change parents
-are approving.
 
 ```swift
 let updateTopic = SignificantAppUpdateTopic(
@@ -329,46 +297,38 @@ let question = PermissionQuestion<SignificantAppUpdateTopic>(
 
 // Present the question
 try await AskCenter.shared.ask(question, in: viewController)
-requestStates[question.id] = .pending
-scheduleExpiration(for: question.id)
 
 // Listen for responses
 for await response in AskCenter.shared.responses(for: SignificantAppUpdateTopic.self) {
     switch response.choice.answer {
     case .approval:
         // Proceed with update
-        requestStates[response.question.id] = .approved
+        break
     case .denial:
         // Skip update
-        requestStates[response.question.id] = .denied
+        break
     @unknown default:
         break
     }
 }
-
-// If no response arrives before your pending window expires, keep the update
-// blocked or offer a retry. Child cancellation produces no denial response.
 ```
 
 ## Common Mistakes
 
-### DON'T: Treat known-handle checks as enabled-limits checks
+### DON'T: Skip checking if communication limits are enabled
 
-`isKnownHandle(_:)` and `knownHandles(in:)` only classify handles. They do not
-replace handling `.communicationLimitsNotEnabled` from `ask(_:in:)`.
+If communication limits are not enabled, calling `ask` throws
+`.communicationLimitsNotEnabled`. Check first or handle the error.
 
 ```swift
-// WRONG: Assuming a handle lookup proves active limits
-let isKnown = await CommunicationLimits.current.isKnownHandle(handle)
-if !isKnown {
-    try await AskCenter.shared.ask(question, in: viewController)
-}
+// WRONG: Assuming limits are always active
+try await AskCenter.shared.ask(question, in: viewController)
 
 // CORRECT: Handle the case where limits are not enabled
 do {
     try await AskCenter.shared.ask(question, in: viewController)
 } catch AskError.communicationLimitsNotEnabled {
-    // Communication limits not active -- continue with normal app flow.
+    // Communication limits not active -- allow communication directly
     allowCommunication()
 } catch {
     handleError(error)
@@ -423,11 +383,10 @@ let handle = CommunicationHandle(value: "+1234567890", kind: .phoneNumber)
 let question = PermissionQuestion<CommunicationTopic>(handle: handle)
 ```
 
-### DON'T: Forget to observe responses and pending states
+### DON'T: Forget to observe responses
 
-Presenting a question without listening for the response means you never know
-if the parent approved. A child can also cancel the send flow, so do not wait
-forever for a response to every question.
+Presenting a question without listening for the response means you never
+know if the parent approved.
 
 ```swift
 // WRONG: Fire and forget
@@ -460,28 +419,20 @@ PermissionButton(question: question) {
 
 ## Review Checklist
 
-- [ ] iMessage-only routing understood before choosing PermissionKit
-- [ ] Corrected guidance states exact availability tiers: core communication
-  types/limits 26.0+, `AskError` 26.1+, and `AskCenter`/`PermissionButton`/
-  responses/significant-update topics 26.2+
 - [ ] `AskError.communicationLimitsNotEnabled` handled to allow fallback
 - [ ] `AskError` cases handled individually with appropriate user feedback
 - [ ] `CommunicationHandle` created with correct `Kind` (phone, email, custom)
-- [ ] Known-handle examples guard a non-nil, nonempty bundle identifier before
-  `knownHandles(in:)`
-- [ ] Known-handle checks are not treated as active-limits checks
 - [ ] `PermissionQuestion` includes at least one handle or person information
 - [ ] `AskCenter.shared.responses(for:)` observed to receive parent decisions
 - [ ] `PermissionButton` used instead of deprecated `CommunicationLimitsButton`
 - [ ] Person information includes name components for a clear permission prompt
 - [ ] Communication actions match the app's actual communication capabilities
-- [ ] Pending/canceled/expired question states handled when no response arrives
 - [ ] Response handling updates UI on the main actor
 - [ ] Error states provide clear guidance to the user
 
 ## References
 
-- Extended patterns (response handling, multi-topic, UIKit): [references/permissionkit-patterns.md](references/permissionkit-patterns.md)
+- Extended patterns (response handling, multi-topic, UIKit): `references/permissionkit-patterns.md`
 - [PermissionKit framework](https://sosumi.ai/documentation/permissionkit)
 - [AskCenter](https://sosumi.ai/documentation/permissionkit/askcenter)
 - [PermissionQuestion](https://sosumi.ai/documentation/permissionkit/permissionquestion)

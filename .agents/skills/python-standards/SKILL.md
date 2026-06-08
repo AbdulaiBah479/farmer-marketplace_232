@@ -1,118 +1,267 @@
 ---
-name: python-standards
-description: |
-  Modern Python development with uv, ruff, mypy, and pytest. Use when:
-  - Writing or reviewing Python code
-  - Setting up Python projects or pyproject.toml
-  - Choosing dependency management (uv, poetry, pip)
-  - Configuring linting, formatting, or type checking
-  - Organizing Python packages
-  Keywords: Python, pyproject.toml, uv, ruff, mypy, pytest, type hints,
-  virtual environment, lockfile, package structure
+name: Python Standards
+description: Apply Python tooling standards including uv package management, pytest testing, ruff/basedpyright code quality, one-line docstrings, and self-documenting code practices. Use this skill when working with Python backend code, managing dependencies, running tests, or ensuring code quality. Apply when installing packages, writing tests, formatting code, type checking, adding docstrings, organizing imports, or deciding whether to create new files vs. extending existing ones. Use for any Python development task requiring adherence to tooling standards and best practices.
 ---
 
 # Python Standards
 
-Modern Python with uv + ruff + mypy + pytest. All config in pyproject.toml.
+**Core Rule:** Use uv for all package operations, pytest for testing, ruff for formatting/linting. Write self-documenting code with minimal comments.
 
-## Toolchain
+## When to use this skill
 
-| Tool | Purpose |
-|------|---------|
-| **uv** | Dependencies + virtual envs (lockfile: `uv.lock`) |
-| **ruff** | Linting + formatting (replaces black, isort, flake8) |
-| **mypy** | Type checking (strict mode) |
-| **pytest** | Testing + coverage |
+- When installing or managing Python packages and dependencies
+- When writing or running unit tests, integration tests, or test suites
+- When formatting Python code or fixing linting issues
+- When adding type hints or running type checking
+- When writing function/method docstrings
+- When organizing imports in Python files
+- When deciding whether to create a new Python file or extend existing ones
+- When setting up code quality checks (linting, formatting, type checking)
+- When running coverage reports or analyzing test results
+- When ensuring code follows Python best practices and tooling standards
+
+This Skill provides Claude Code with specific guidance on how to adhere to Python tooling standards and best practices for backend development.
+
+## Package Management - uv Only
+
+**MANDATORY: Use `uv` for all Python package operations. Never use `pip` directly.**
 
 ```bash
-# Setup
-uv init && uv add <deps> && uv sync
+# Installing packages
+uv pip install package-name
+uv pip install -r requirements.txt
 
-# Daily workflow
-uv run ruff check . --fix && uv run ruff format .
-uv run mypy . && uv run pytest
+# Package information
+uv pip list
+uv pip show package-name
+
+# Running Python scripts/modules
+uv run python script.py
+uv run pytest
 ```
+
+**Why uv:** Faster dependency resolution, better lock file management, project standard for consistency.
+
+**If you catch yourself typing `pip`:** Stop and use `uv pip` instead.
+
+## Testing with pytest
+
+**Run tests using `uv run pytest`:**
+
+```bash
+uv run pytest                                      # All tests
+uv run pytest -m unit                              # Unit tests only
+uv run pytest -m integration                       # Integration tests only
+uv run pytest tests/unit/test_module.py            # Specific file
+uv run pytest tests/unit/test_module.py::test_name # Specific test
+uv run pytest -v                                   # Verbose output
+uv run pytest -s                                   # Show print statements
+uv run pytest --cov=src --cov-report=term-missing  # Coverage report
+uv run pytest --cov-fail-under=80                  # Enforce 80% coverage
+```
+
+**Test markers:** Use `@pytest.mark.unit` and `@pytest.mark.integration` to categorize tests.
+
+## Code Quality Tools
+
+**Ruff (Linting & Formatting):**
+```bash
+ruff check .           # Check for issues
+ruff check . --fix     # Auto-fix issues
+ruff format .          # Format all code
+```
+
+**Type Checking:**
+```bash
+basedpyright src            # Type checker
+```
+
+**Run quality checks before marking work complete.** Use `getDiagnostics` tool to verify no errors.
+
+## Code Style
+
+### Docstrings
+
+**Use concise one-line docstrings for most functions:**
+
+```python
+def calculate_discount(price: float, rate: float) -> float:
+    """Calculate discounted price by applying rate."""
+    return price * (1 - rate)
+```
+
+**Multi-line docstrings only for complex functions:**
+
+```python
+def process_payment(order_id: str, payment_method: str) -> PaymentResult:
+    """
+    Process payment for order using specified method.
+
+    Validates payment method, charges customer, updates order status,
+    and sends confirmation email. Rolls back on any failure.
+    """
+    # Implementation
+```
+
+**Don't document obvious behavior:**
+```python
+# BAD - docstring adds no value
+def get_user_email(user_id: str) -> str:
+    """Get the email address for a user by their ID."""
+
+# GOOD - name is self-explanatory
+def get_user_email(user_id: str) -> str:
+    return db.query(User).filter_by(id=user_id).first().email
+```
+
+### Comments
+
+**Write self-documenting code. Minimize inline comments.**
+
+Use clear names instead of comments:
+
+```python
+# BAD - comment explains unclear code
+# Check if user has permission
+if u.r == 'admin' or u.r == 'moderator':
+
+# GOOD - code explains itself
+if user.is_admin() or user.is_moderator():
+```
+
+**Use comments only for:**
+- Complex algorithms requiring explanation
+- Non-obvious business logic or domain rules
+- Workarounds for external library bugs (include issue link)
+- Performance optimizations that sacrifice clarity
+
+### Import Organization
+
+**Order:** Standard library → Third-party → Local application
+
+```python
+# Standard library
+import os
+from datetime import datetime
+
+# Third-party
+import pytest
+from sqlalchemy import Column, Integer
+
+# Local application
+from app.models import User
+from app.services import EmailService
+```
+
+**Ruff automatically organizes imports.** Run `ruff check . --fix` to sort.
+
+**Remove unused imports immediately.** Use `getDiagnostics` to identify them.
 
 ## Type Hints
 
-**All functions and classes must have explicit type hints:**
+**Add type hints to all function signatures:**
+
 ```python
-def fetch_user(user_id: str) -> User | None:
-    """Fetch user by ID."""
-    ...
+# Required
+def process_order(order_id: str, user_id: int) -> Order:
+    pass
 
-def process_items(items: list[Item]) -> dict[str, int]:
-    ...
+# Not required for simple private methods
+def _format_price(amount):
+    return f"${amount:.2f}"
 ```
 
-**mypy strict mode:**
-```toml
-[tool.mypy]
-strict = true
-disallow_untyped_defs = true
-disallow_any_generics = true
-```
-
-## Package Structure
-
-Feature-based, not layer-based:
-```
-src/myproject/
-  users/           # Domain
-    __init__.py    # Public API: __all__ = ['User', 'UserService']
-    models.py
-    services.py
-  orders/          # Another domain
-  shared/          # Cross-cutting concerns
-```
-
-## Error Handling
-
-**Catch specific exceptions with context:**
+**Use modern type syntax (Python 3.10+):**
 ```python
+# Good
+def get_users(ids: list[int]) -> list[User]:
+    pass
+
+# Avoid (old style)
+from typing import List
+def get_users(ids: List[int]) -> List[User]:
+    pass
+```
+
+## File Organization
+
+**Prefer editing existing files over creating new ones.**
+
+Before creating a new Python file, ask:
+1. Can this fit in an existing module?
+2. Is there a related file to extend?
+3. Does this truly need to be separate?
+
+**Benefits:** Reduces file sprawl, maintains coherent structure, easier navigation.
+
+**When to create new files:**
+- New model/entity with distinct responsibility
+- New service layer for separate domain
+- Test file for new module
+- Clear architectural boundary
+
+## Common Patterns
+
+**Avoid bare `except`:**
+```python
+# BAD
 try:
-    result = parse_config(path)
-except FileNotFoundError:
-    logger.warning(f"Config not found: {path}")
-    return defaults
-except json.JSONDecodeError as e:
-    raise ConfigError(f"Invalid JSON in {path}") from e
+    process()
+except:
+    pass
+
+# GOOD
+try:
+    process()
+except ValueError as e:
+    logger.error(f"Invalid value: {e}")
+    raise
 ```
 
-Never: bare `except:`, silent swallowing, `except Exception`.
+**Use context managers for resources:**
+```python
+# GOOD
+with open(file_path) as f:
+    data = f.read()
 
-## pyproject.toml
-
-Single source of truth (no setup.py, requirements.txt):
-```toml
-[project]
-name = "myproject"
-version = "1.0.0"
-requires-python = ">=3.11"
-dependencies = ["httpx", "pydantic"]
-
-[project.optional-dependencies]
-dev = ["pytest", "mypy", "ruff"]
-
-[tool.ruff]
-select = ["E", "W", "F", "I", "B", "UP", "SIM", "S", "ANN"]
-line-length = 88
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = ["--cov=src", "--cov-fail-under=85"]
+# GOOD
+with db.session() as session:
+    user = session.query(User).first()
 ```
 
-## Anti-Patterns
+**Prefer pathlib over os.path:**
+```python
+# GOOD
+from pathlib import Path
+config_path = Path(__file__).parent / "config.yaml"
 
-- `Any` without documented justification
-- Layer-based folders (`/controllers`, `/models`, `/views`)
-- Circular imports
-- Legacy tools (pip, black+isort, flake8)
-- Multiple config files
-- `noqa` comments without justification
+# Avoid
+import os
+config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
+```
 
-## References
+## Verification Checklist
 
-- [testing-patterns.md](references/testing-patterns.md) - pytest, fixtures, parametrize
-- [ruff-config.md](references/ruff-config.md) - Complete ruff rule configuration
+Before marking Python work complete:
+
+- [ ] Used `uv` for all package operations (not `pip`)
+- [ ] All tests pass: `uv run pytest`
+- [ ] Code formatted: `ruff format .`
+- [ ] No linting issues: `ruff check .`
+- [ ] Type checking passes: `basedpyright src`
+- [ ] No unused imports (check with `getDiagnostics`)
+- [ ] Docstrings added to public functions
+- [ ] Type hints on function signatures
+- [ ] Coverage ≥ 80%: `uv run pytest --cov=src --cov-fail-under=80`
+
+## Quick Reference
+
+| Task                 | Command                       |
+| -------------------- | ----------------------------- |
+| Install package      | `uv pip install package-name` |
+| Run tests            | `uv run pytest`               |
+| Run with coverage    | `uv run pytest --cov=src`     |
+| Format code          | `ruff format .`               |
+| Fix linting          | `ruff check . --fix`          |
+| Type check (pyright) | `basedpyright src`            |
+| Run Python script    | `uv run python script.py`     |

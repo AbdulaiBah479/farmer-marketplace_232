@@ -1,72 +1,192 @@
 ---
-name: research-methodology
-description: Ethan Perez's tips for empirical alignment research - velocity, experimentation, collaboration
+name: Research Methodology
+description: This skill should be used when the user asks about "how to research", "research best practices", "evaluate sources", "source credibility", "academic research", "find reliable information", "cite sources", "research methodology", or needs guidance on conducting thorough web research and evaluating information quality.
+version: 1.0.0
 ---
 
-# Research Methodology: Tips for Empirical Alignment Research
+# Research Methodology
 
-*Based on [Ethan Perez's post](https://www.alignmentforum.org/posts/dZFpEdKyb9Bf4xYn7/tips-for-empirical-alignment-research). Applies to highly experimental LLM alignment research (scalable oversight, adversarial robustness, chain-of-thought faithfulness, process-based oversight, model organisms of misalignment).*
+This skill provides guidance for conducting thorough, high-quality web research and generating well-structured academic-style reports.
 
-## Core Principles
+## Core Research Process
 
-### 1. Hard Work Pays Off
-- Run as many experiments as you can, tinker a lot, try lots of stuff
-- Often many reasonable-sounding ideas need testing—sometimes the 5th or 20th thing is what works
-- **"Rich get richer" effect**: the more you experiment, the better you get at picking the right experiments
-- More things work when you try more stuff → easier to stay motivated
+### Phase 1: Define Research Scope
 
-### 2. Rapid Iteration (Velocity)
-- **Reduce uncertainty at the fastest possible rate** (Jacob Steinhardt)
-- Get quick feedback and iterate on ideas rapidly
-- With LLMs, you can reduce uncertainty really quickly—even with a single message to GPT-4/Claude
-- Can gain 1+ OOMs more information per unit time by derisking ideas in the quickest way possible
+Before searching, clarify the research parameters:
 
-### 3. Avoid the "Swamp"
-- The **swamp** = getting stuck when you really want technique X to work but nothing succeeds
-- Solution: **high velocity**—test as many ideas as possible per unit time until you escape
-- For LLM research: you should rarely be stuck in a swamp
-  - If stuck → you've likely exhausted low-hanging fruit on that problem/approach
-  - There's other low-hanging fruit elsewhere—go pick that instead
+1. **Identify the core question** - What specific information is needed?
+2. **Determine scope boundaries** - What aspects are in/out of scope?
+3. **Establish depth requirements** - Surface overview or deep dive?
+4. **Identify key terms** - What search terms will yield relevant results?
 
-### 4. Low-Hanging Fruit Abundance
-- The field is moving so quickly that there's **much more low-hanging fruit** than almost any other field
-- Each new model capability = time to be opportunistic, explore what's now possible
-- High velocity is useful for both:
-  - Picking low-hanging fruit quickly
-  - Getting through swamps when you must solve a particular problem
+Ask clarifying questions when the topic is broad or ambiguous:
+- "What specific aspect of [topic] interests you most?"
+- "Are you looking for recent developments or historical context?"
+- "Should I focus on any particular region or industry?"
 
-## Collaboration & Communication
+### Phase 2: Gather Sources
 
-### Strong Collaborator Qualities
-Ethan puts **70% weight on "getting ideas to work quickly"** as criteria. Other qualities:
-- Receptive to feedback
-- Adds emotional energy rather than draining it
-- Transparent/communicative about issues faced
-- High-trust relationship where various topics can be discussed easily
-- Notices and calls out room for improvement in collaboration
+Target 10+ diverse sources for thorough research:
 
-### Communication Best Practices
-- **Overcommunicate**: bring up issues during meetings or privately—nip problems in the bud
-- **Close mentorship** is maybe the fastest path to become an expert in a domain
-- Take agency: organize coworking, discussion groups, standups—whatever helps
-- Get feedback from peers, iterate on project plans
+**Source Diversity Goals:**
+- Official documentation and primary sources
+- Academic or research publications
+- Industry expert perspectives
+- News and current developments
+- Multiple viewpoints on controversial topics
 
-## Research Workflow
+**Search Strategy:**
+1. Start with broad searches to map the landscape
+2. Refine with specific queries for depth
+3. Follow citations and references from quality sources
+4. Search for counterarguments and alternative perspectives
 
-- Have a clear project plan with motivation and research goals
-- List all experiments you can think of running
-- Think about milestones and deliverables to stay accountable
-- Know what tools are available—sharing tooling increases experimental velocity
+### Phase 3: Evaluate Source Credibility
 
-## Paper Writing
+Apply the CRAAP test to each source:
 
-- See [ethanperez.net/easy-paper-writing-tips/](https://ethanperez.net/easy-paper-writing-tips/) for ML paper writing tips
-- Write short paragraphs composed of short sentences
-- Write comprehensive abstracts
-- Seek feedback from a naive audience
-- Distinguish confirmation from exploration in your writeup
+| Criterion | Questions to Ask |
+|-----------|------------------|
+| **Currency** | When was it published? Is timeliness important for this topic? |
+| **Relevance** | Does it address the research question directly? |
+| **Authority** | Who is the author? What are their credentials? |
+| **Accuracy** | Is the information supported by evidence? Can it be verified? |
+| **Purpose** | Why does this source exist? Is there bias? |
 
-## Related Resources
-- [Tips and Code for Empirical Research Workflows](https://www.alignmentforum.org/posts/6P8GYb4AjtPXx6LLB/tips-and-code-for-empirical-research-workflows)
-- Jacob Steinhardt's blog on reducing uncertainty
-- Michael Bernstein's slides on velocity
+**Red Flags:**
+- No author or publication date
+- Sensational headlines or claims
+- No citations or sources
+- Single-source information on contested topics
+- Clear commercial or political agenda without disclosure
+
+**Green Flags:**
+- Peer-reviewed or editorially reviewed
+- Clear author credentials
+- Citations to primary sources
+- Balanced presentation of multiple perspectives
+- Recent updates or corrections noted
+
+### Phase 4: Synthesize Information
+
+Organize findings thematically rather than source-by-source:
+
+1. **Identify themes** - Group related information across sources
+2. **Note consensus** - What do multiple sources agree on?
+3. **Flag disagreements** - Where do sources conflict? Why?
+4. **Extract key insights** - What are the most important findings?
+5. **Identify gaps** - What questions remain unanswered?
+
+### Phase 5: Generate Report
+
+Structure reports in academic format for clarity and credibility.
+
+## Academic Report Structure
+
+### 1. Abstract (100-200 words)
+Concise summary of the entire report:
+- Research question or topic
+- Key methodology (sources consulted)
+- Main findings (2-3 sentences)
+- Primary conclusion
+
+### 2. Introduction
+Set context for the research:
+- Background on the topic
+- Why this research matters
+- Scope and limitations
+- Brief outline of what follows
+
+### 3. Findings (Organized by Theme)
+Present discoveries organized thematically:
+- Use clear section headings
+- Lead with most important findings
+- Include specific data and quotes with citations
+- Note where sources agree or disagree
+- Present multiple perspectives on contested topics
+
+### 4. Conclusion
+Synthesize and reflect:
+- Key takeaways (3-5 main points)
+- Implications of findings
+- Remaining questions or areas for further research
+- Recommendations if applicable
+
+### 5. References
+List all sources consulted:
+- Use consistent citation format
+- Include URLs for web sources
+- Note access dates for online content
+- Group by type if helpful (academic, news, official)
+
+## Citation Best Practices
+
+Always attribute information to sources:
+
+**Inline Citations:**
+```markdown
+According to [Source Name](URL), finding here.
+Research from [Organization](URL) indicates that...
+```
+
+**Reference Section Format:**
+```markdown
+## References
+
+1. [Article Title](URL) - Author/Organization, Date
+2. [Report Name](URL) - Publisher, Date
+```
+
+**When to Cite:**
+- Direct quotes (always)
+- Specific statistics or data
+- Unique findings or claims
+- Controversial statements
+- Information not common knowledge
+
+## Research Quality Standards
+
+### Thoroughness Checklist
+- [ ] Consulted 10+ sources
+- [ ] Included diverse source types
+- [ ] Searched for opposing viewpoints
+- [ ] Verified key claims across sources
+- [ ] Noted limitations and gaps
+
+### Report Quality Checklist
+- [ ] Clear, specific abstract
+- [ ] Logical organization by theme
+- [ ] All claims properly cited
+- [ ] Sources evaluated for credibility
+- [ ] Balanced presentation of perspectives
+- [ ] Complete reference list with URLs
+
+## File Organization
+
+Save research to `./reports/` directory:
+
+**Naming Convention:**
+```
+./reports/YYYY-MM-DD-topic-name.md
+./reports/2024-03-15-ai-trends.md
+./reports/2024-03-15-renewable-energy-analysis.md
+```
+
+**Report Structure:** See `references/template-guide.md` for selection guidance. Templates available:
+- `references/templates/academic.md` - Standard Academic Report (comprehensive)
+- `references/templates/executive-summary.md` - Executive Summary (decision-focused)
+- `references/templates/comparative-analysis.md` - Comparative Analysis (evaluating options)
+- `references/templates/literature-review.md` - Literature Review (academic survey)
+- `references/templates/quick-report.md` - Quick Report (rapid research)
+- `references/templates/technical-implementation.md` - Technical Implementation Guide (library/tool selection)
+
+## Additional Resources
+
+### Reference Files
+
+For detailed guidance, consult:
+- **`references/source-evaluation.md`** - Extended CRAAP criteria and source assessment techniques
+- **`references/template-guide.md`** - Template selection guide
+- **`references/templates/`** - Individual template files
+
+Use these references when deeper guidance is needed on source evaluation or report formatting.

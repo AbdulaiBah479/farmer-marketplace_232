@@ -1,20 +1,10 @@
 ---
-name: generate-component-story
-description: Create story examples for components. Use when writing stories, creating examples, or demonstrating component usage.
+name: Generate Component Story
+description: Generate a comprehensive story for a new component for as example.
 ---
 
-## Instructions
+## Rules
 
-When creating component stories:
-
-1. **Follow existing patterns**: Base stories on the styles found in `crates/story/src/stories` (examples: `tabs_story.rs`, `group_box_story.rs`, etc.)
-2. **Use sections**: Organize the story with `section!` calls for each major part
-3. **Comprehensive coverage**: Include all options, variants, and usage examples of the component
-
-## Examples
-
-A typical story structure includes:
-- Basic usage examples
-- Different variants and states
-- Interactive examples
-- Edge cases and error states
+- Based on existing story styles in the `crates/story/src/stories` folder, examples: `tabs_story.rs`, `group_box_story.rs`, etc.
+- Use `section` for each major part of the story.
+- Cover all options, variants, and usage examples of the component.

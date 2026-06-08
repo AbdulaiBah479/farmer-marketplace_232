@@ -1,451 +1,445 @@
 ---
-name: accessibility-standards
-description: Implement WCAG 2.1 accessibility standards for Vue 3 apps. Use when adding ARIA labels, keyboard navigation, screen reader support, or checking color contrast. Mentions "accessibility", "ARIA", "keyboard nav", "screen reader", or "color contrast".
-allowed-tools: Read, Edit, Grep, Glob
+name: Accessibility Standards
+description: Build accessible user interfaces using semantic HTML, proper ARIA attributes, keyboard navigation, color contrast, and screen reader compatibility. Use this skill when creating or modifying frontend components, HTML templates, React/Vue/Svelte components, forms, interactive elements, navigation menus, modals, or any UI elements. Apply when working with HTML files, JSX/TSX components, template files, ensuring keyboard accessibility, implementing focus management, adding alt text to images, creating form labels, testing with screen readers, managing ARIA attributes, maintaining color contrast ratios, or building heading hierarchies. Use for any task involving UI accessibility compliance, WCAG standards, or inclusive design patterns.
 ---
 
 # Accessibility Standards
 
-WCAG 2.1 AA compliance guidelines for Vue 3 applications.
+**Core Rule:** Build accessible interfaces that work for all users, including those using assistive technologies.
 
-## When to Activate
+## When to use this skill
 
-Use this skill when the user:
-- Says "make it accessible" or "add ARIA labels"
-- Asks "keyboard navigation" or "tab order"
-- Mentions "screen reader", "WCAG", or "color contrast"
-- Wants to "support assistive technology"
+- When creating or modifying frontend components (React, Vue, Svelte, web components, etc.)
+- When writing HTML templates or JSX/TSX component markup
+- When implementing forms and ensuring all inputs have proper labels
+- When adding images and needing to provide descriptive alt text
+- When building interactive elements that need keyboard navigation support
+- When implementing focus management in modals, dialogs, or single-page applications
+- When ensuring color contrast ratios meet WCAG standards (4.5:1 for normal text)
+- When adding ARIA attributes to enhance complex component accessibility
+- When creating proper heading hierarchies (h1-h6) for document structure
+- When testing components with screen readers or accessibility testing tools
+- When building navigation menus, buttons, or links that need to be keyboard accessible
 
-## Core Principles
+This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle frontend accessibility.
 
-1. **Perceivable**: Content must be presentable to users
-2. **Operable**: UI must be navigable via keyboard
-3. **Understandable**: Information must be clear
-4. **Robust**: Compatible with assistive technologies
+## Semantic HTML First
 
----
+Use native HTML elements that convey meaning to assistive technologies.
 
-## 1. Keyboard Navigation
+**Correct elements:**
+```html
+<!-- Navigation -->
+<nav><a href="/about">About</a></nav>
 
-### Tab Order
+<!-- Buttons that perform actions -->
+<button onClick={handleSubmit}>Submit</button>
 
-**Proper Focus Flow**: Left → Right, Top → Bottom
+<!-- Links that navigate -->
+<a href="/profile">View Profile</a>
 
-```vue
-<template>
-  <!-- Header actions -->
-  <button tabindex="0" @click="refresh">刷新</button>
-  <button tabindex="0" @click="settings">设置</button>
+<!-- Main content area -->
+<main><article>...</article></main>
 
-  <!-- Filter panel -->
-  <select tabindex="0" v-model="selectedInstitution">...</select>
-  <button tabindex="0" @click="applyFilters">应用筛选</button>
-
-  <!-- Main content -->
-  <div tabindex="0" role="main">...</div>
-</template>
+<!-- Form structure -->
+<form>
+  <label for="email">Email</label>
+  <input id="email" type="email" />
+</form>
 ```
 
-### Skip Links
+**Avoid:**
+```html
+<!-- BAD - div/span without semantic meaning -->
+<div onClick={navigate}>Go to page</div>
+<span onClick={handleClick}>Submit</span>
+```
 
-```vue
-<template>
-  <a href="#main-content" class="skip-link">跳至主内容</a>
+**When to use each element:**
+- `<button>`: Actions (submit, open modal, toggle)
+- `<a>`: Navigation to different pages/sections
+- `<nav>`: Navigation landmarks
+- `<main>`: Primary page content
+- `<header>`, `<footer>`, `<aside>`: Page structure
+- `<article>`, `<section>`: Content grouping
 
-  <header>...</header>
+## Keyboard Navigation
 
-  <main id="main-content" tabindex="-1">
-    <!-- Main content -->
-  </main>
-</template>
+All interactive elements must be keyboard accessible.
 
-<style>
-.skip-link {
-  position: absolute;
-  left: -9999px;
+**Requirements:**
+- Tab key moves focus through interactive elements
+- Enter/Space activates buttons and links
+- Escape closes modals and dialogs
+- Arrow keys navigate menus and lists (when appropriate)
+- Focus indicators are clearly visible
+
+**Implementation:**
+```jsx
+// Native elements are keyboard accessible by default
+<button onClick={handleClick}>Click me</button>
+
+// Custom interactive elements need tabIndex
+<div
+  role="button"
+  tabIndex={0}
+  onClick={handleClick}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleClick();
+    }
+  }}
+>
+  Custom button
+</div>
+
+// Focus styles must be visible
+button:focus {
+  outline: 2px solid blue;
+  outline-offset: 2px;
 }
-
-.skip-link:focus {
-  position: static;
-  left: 0;
-}
-</style>
 ```
 
-### Keyboard Event Handling
+**Never:**
+- Remove focus outlines without providing alternative indicators
+- Use `tabIndex` values other than 0 or -1
+- Create keyboard traps (user can't escape with keyboard)
 
-```vue
-<template>
-  <button
-    @click="handleAction"
-    @keydown.enter="handleAction"
-    @keydown.space.prevent="handleAction"
-  >
-    操作按钮
-  </button>
+## Form Labels and Inputs
 
-  <!-- Custom component -->
-  <FilterPanel
-    tabindex="0"
-    @keydown.esc="closePanel"
-    aria-label="筛选面板"
-  />
-</template>
-```
+Every form input must have an associated label.
 
----
+**Correct patterns:**
+```html
+<!-- Explicit label association -->
+<label for="username">Username</label>
+<input id="username" type="text" />
 
-## 2. ARIA Labels
+<!-- Implicit label wrapping -->
+<label>
+  Email
+  <input type="email" />
+</label>
 
-### Button ARIA
-
-```vue
-<!-- Icon button needs aria-label -->
-<button aria-label="刷新数据" @click="refresh">
-  <RefreshIcon />
+<!-- aria-label for icon-only buttons -->
+<button aria-label="Close dialog">
+  <CloseIcon />
 </button>
 
-<!-- Text button doesn't need it -->
-<button @click="save">保存</button>
-
-<!-- Disabled button -->
-<button disabled aria-disabled="true">已禁用</button>
+<!-- aria-describedby for help text -->
+<label for="password">Password</label>
+<input
+  id="password"
+  type="password"
+  aria-describedby="password-help"
+/>
+<span id="password-help">Must be at least 8 characters</span>
 ```
 
-### Form ARIA
+**Required attributes:**
+- `id` on input, matching `for` on label
+- `type` attribute on inputs (text, email, password, etc.)
+- `aria-label` or `aria-labelledby` when visual label isn't present
+- `aria-describedby` for additional context or error messages
 
-```vue
-<template>
-  <div class="form-field">
-    <label for="institution-select">三级机构</label>
-    <select
-      id="institution-select"
-      v-model="selectedInstitution"
-      aria-describedby="institution-help"
-      aria-required="true"
+## Alternative Text for Images
+
+Provide descriptive alt text that conveys the image's purpose.
+
+**Guidelines:**
+```jsx
+<!-- Informative images -->
+<img src="chart.png" alt="Sales increased 40% in Q4 2024" />
+
+<!-- Functional images (buttons, links) -->
+<a href="/search">
+  <img src="search-icon.svg" alt="Search" />
+</a>
+
+<!-- Decorative images -->
+<img src="decoration.png" alt="" />
+{/* or */}
+<img src="decoration.png" role="presentation" />
+
+<!-- Complex images need longer descriptions -->
+<img
+  src="architecture.png"
+  alt="System architecture diagram"
+  aria-describedby="arch-description"
+/>
+<div id="arch-description">
+  The system consists of three layers: frontend React app,
+  Node.js API server, and PostgreSQL database...
+</div>
+```
+
+**Alt text rules:**
+- Describe the content and function, not "image of"
+- Keep concise (under 150 characters when possible)
+- Use empty alt (`alt=""`) for purely decorative images
+- Don't include "image", "picture", "photo" (screen readers announce this)
+
+## Color Contrast
+
+Maintain sufficient contrast ratios for readability.
+
+**WCAG Requirements:**
+- Normal text (< 18pt): 4.5:1 contrast ratio
+- Large text (≥ 18pt or ≥ 14pt bold): 3:1 contrast ratio
+- UI components and graphics: 3:1 contrast ratio
+
+**Don't rely on color alone:**
+```jsx
+// BAD - color only
+<span style={{color: 'red'}}>Error</span>
+
+// GOOD - color + icon + text
+<span style={{color: 'red'}}>
+  <ErrorIcon aria-hidden="true" />
+  Error: Invalid email format
+</span>
+
+// BAD - color-coded status
+<div style={{backgroundColor: status === 'active' ? 'green' : 'red'}} />
+
+// GOOD - color + text label
+<div>
+  <StatusBadge color={status === 'active' ? 'green' : 'red'}>
+    {status === 'active' ? 'Active' : 'Inactive'}
+  </StatusBadge>
+</div>
+```
+
+**Tools to verify contrast:**
+- Browser DevTools (Chrome, Firefox have built-in checkers)
+- WebAIM Contrast Checker
+- Axe DevTools extension
+
+## ARIA Attributes
+
+Use ARIA to enhance semantics when HTML alone isn't sufficient.
+
+**Common ARIA patterns:**
+```jsx
+// Roles for custom components
+<div role="dialog" aria-modal="true">
+  <h2 id="dialog-title">Confirm Action</h2>
+  <div aria-describedby="dialog-desc">...</div>
+</div>
+
+// States and properties
+<button aria-expanded={isOpen} aria-controls="menu">
+  Menu
+</button>
+<ul id="menu" hidden={!isOpen}>...</ul>
+
+// Live regions for dynamic content
+<div aria-live="polite" aria-atomic="true">
+  {statusMessage}
+</div>
+
+// Hide decorative elements
+<span aria-hidden="true">→</span>
+```
+
+**ARIA rules:**
+1. Use semantic HTML first, ARIA second
+2. Don't override native semantics (`<button role="link">` is wrong)
+3. All interactive ARIA roles need keyboard support
+4. Test with actual screen readers
+
+**Common ARIA attributes:**
+- `aria-label`: Accessible name for element
+- `aria-labelledby`: References element(s) that label this one
+- `aria-describedby`: References element(s) that describe this one
+- `aria-expanded`: Whether element is expanded (true/false)
+- `aria-hidden`: Hide from assistive tech (use sparingly)
+- `aria-live`: Announce dynamic content changes (polite/assertive)
+
+## Heading Hierarchy
+
+Use heading levels (h1-h6) in logical order to create document structure.
+
+**Correct structure:**
+```html
+<h1>Page Title</h1>
+  <h2>Section 1</h2>
+    <h3>Subsection 1.1</h3>
+    <h3>Subsection 1.2</h3>
+  <h2>Section 2</h2>
+    <h3>Subsection 2.1</h3>
+```
+
+**Rules:**
+- One `<h1>` per page (page title)
+- Don't skip levels (h2 → h4 is wrong)
+- Don't choose headings based on visual size (use CSS for styling)
+- Headings create an outline for screen reader navigation
+
+**Styling headings:**
+```css
+/* Separate semantic level from visual appearance */
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+
+/* If you need h3 to look like h1 */
+.h3-large {
+  font-size: 2rem;
+}
+```
+
+## Focus Management
+
+Manage focus in dynamic interfaces to maintain keyboard navigation flow.
+
+**Modal dialogs:**
+```jsx
+function Modal({ isOpen, onClose, children }) {
+  const modalRef = useRef();
+
+  useEffect(() => {
+    if (isOpen) {
+      // Save previously focused element
+      const previousFocus = document.activeElement;
+
+      // Move focus to modal
+      modalRef.current?.focus();
+
+      // Trap focus within modal
+      // (use library like focus-trap-react)
+
+      return () => {
+        // Restore focus when modal closes
+        previousFocus?.focus();
+      };
+    }
+  }, [isOpen]);
+
+  return (
+    <div
+      ref={modalRef}
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
     >
-      <option>达州</option>
-      <option>德阳</option>
-    </select>
-    <span id="institution-help" class="help-text">
-      选择业务员所属机构
-    </span>
-  </div>
-</template>
-```
-
-### Live Region (Status Updates)
-
-```vue
-<template>
-  <!-- Announce status changes to screen readers -->
-  <div
-    role="status"
-    aria-live="polite"
-    aria-atomic="true"
-    class="sr-only"
-  >
-    {{ statusMessage }}
-  </div>
-</template>
-
-<script setup>
-const statusMessage = ref('')
-
-watch(isLoading, (loading) => {
-  statusMessage.value = loading ? '正在加载数据' : '数据加载完成'
-})
-</script>
-
-<style>
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-</style>
-```
-
-### Dialog ARIA
-
-```vue
-<template>
-  <div
-    v-if="visible"
-    role="dialog"
-    aria-labelledby="dialog-title"
-    aria-describedby="dialog-desc"
-    aria-modal="true"
-  >
-    <h2 id="dialog-title">确认操作</h2>
-    <p id="dialog-desc">您确定要删除此项吗？</p>
-    <button @click="confirm">确认</button>
-    <button @click="cancel">取消</button>
-  </div>
-</template>
-```
-
----
-
-## 3. Color Contrast
-
-### WCAG 2.1 AA Requirements
-
-- **Normal text**: Contrast ratio ≥ 4.5:1
-- **Large text** (18pt+): Contrast ratio ≥ 3:1
-
-### Current Platform Colors (Verified)
-
-| Combination | Ratio | Status |
-|-------------|-------|--------|
-| Primary text (#2C3E50) / White | 12.6:1 | ✅ Excellent |
-| Secondary text (#8B95A5) / White | 4.8:1 | ✅ Pass |
-| Primary color (#5B8DEF) / White | 4.2:1 | ⚠️ Borderline |
-| Error color (#EF4444) / White | 5.1:1 | ✅ Pass |
-
-### Improvements
-
-```css
-/* Use primary color with bold text for better readability */
-.link-primary {
-  color: var(--primary-500);
-  font-weight: 600;  /* Bold improves perceived contrast */
-}
-
-/* Add icon support for color-blind users */
-.status-success {
-  color: var(--success-600);
-}
-.status-success::before {
-  content: '✓';  /* Icon doesn't rely on color alone */
+      {children}
+      <button onClick={onClose}>Close</button>
+    </div>
+  );
 }
 ```
 
----
+**Dynamic content:**
+```jsx
+// Announce content changes to screen readers
+<div aria-live="polite">
+  {loading ? 'Loading...' : `Loaded ${items.length} items`}
+</div>
 
-## 4. Focus Indicators
-
-### Visible Focus
-
-```css
-/* Default browser focus */
-*:focus {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 2px;
-}
-
-/* Custom focus for buttons */
-.btn:focus-visible {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px var(--primary-100);
-}
-
-/* Remove outline for mouse users */
-.btn:focus:not(:focus-visible) {
-  outline: none;
+// Move focus to new content after navigation
+function handlePageChange(newPage) {
+  loadPage(newPage);
+  // Focus the main heading of new content
+  document.querySelector('h1')?.focus();
 }
 ```
 
-### Focus Management
+## Verification Checklist
 
-```javascript
-// Focus first interactive element in modal
-const focusFirstElement = () => {
-  nextTick(() => {
-    const firstInput = modalRef.value?.querySelector('button, input, select')
-    firstInput?.focus()
-  })
-}
-```
-
----
-
-## 5. Screen Reader Support
-
-### Image Alt Text
-
-```vue
-<!-- Decorative image -->
-<img src="icon.svg" alt="" role="presentation" />
-
-<!-- Informative image -->
-<img src="chart.png" alt="周对比保费趋势图，显示最近3周保费上升" />
-```
-
-### Chart Accessibility
-
-```vue
-<template>
-  <div
-    class="chart-container"
-    role="img"
-    :aria-label="chartDescription"
-  >
-    <ECharts :option="chartOption" />
-  </div>
-
-  <!-- Provide data table alternative -->
-  <details class="chart-data">
-    <summary>查看数据表格</summary>
-    <table>
-      <caption>周对比保费数据</caption>
-      <thead>
-        <tr>
-          <th>日期</th>
-          <th>保费（万元）</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in chartData" :key="item.date">
-          <td>{{ item.date }}</td>
-          <td>{{ item.value }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </details>
-</template>
-
-<script setup>
-const chartDescription = computed(() =>
-  `周对比保费趋势图，显示${chartData.length}个数据点，保费范围从${minValue}到${maxValue}万元`
-)
-</script>
-```
-
-### Loading Announcements
-
-```vue
-<template>
-  <div aria-busy="true" aria-live="polite">
-    <Loading v-if="isLoading" />
-    <span class="sr-only">{{ loadingMessage }}</span>
-  </div>
-</template>
-
-<script setup>
-const loadingMessage = computed(() =>
-  isLoading.value ? '正在加载数据，请稍候' : '数据加载完成'
-)
-</script>
-```
-
----
-
-## 6. Motion and Animation
-
-### Respect User Preferences
-
-```css
-/* Disable animations for users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-```
-
-### Safe Defaults
-
-```css
-/* Use subtle animations by default */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-/* No flashing or rapid movements */
-```
-
----
-
-## Accessibility Checklist
-
-### Before Shipping
+Before marking UI work complete:
 
 - [ ] All interactive elements are keyboard accessible
-- [ ] Focus indicators are visible
+- [ ] Focus indicators are visible on all focusable elements
 - [ ] All images have appropriate alt text
-- [ ] Forms have associated labels
-- [ ] Color contrast meets WCAG AA (4.5:1)
-- [ ] ARIA roles and properties are correct
-- [ ] Screen reader tested (NVDA/JAWS/VoiceOver)
-- [ ] Keyboard navigation tested (Tab/Shift+Tab/Arrow keys/Enter/Esc)
-- [ ] Reduced motion preference respected
-- [ ] Error messages are announced to screen readers
+- [ ] All form inputs have associated labels
+- [ ] Color contrast meets WCAG standards (4.5:1 for text)
+- [ ] Heading hierarchy is logical (no skipped levels)
+- [ ] ARIA attributes are used correctly (if needed)
+- [ ] Modals and dialogs manage focus appropriately
+- [ ] No information conveyed by color alone
+- [ ] Tested with keyboard navigation (Tab, Enter, Escape)
 
----
+## Common Mistakes to Avoid
 
-## Testing Tools
+**Using divs/spans for buttons:**
+```jsx
+// BAD
+<div onClick={handleClick}>Submit</div>
 
-### Browser Extensions
-- **axe DevTools** - Automated accessibility testing
-- **WAVE** - Visual accessibility evaluation
-- **Lighthouse** - Built into Chrome DevTools
-
-### Screen Readers
-- **NVDA** (Windows, free)
-- **JAWS** (Windows, paid)
-- **VoiceOver** (macOS, built-in)
-
-### Keyboard Testing
-- Use only keyboard (no mouse)
-- Tab through entire interface
-- Verify all actions are accessible
-- Check focus indicators are visible
-
----
-
-## Troubleshooting
-
-### "Screen reader doesn't announce changes"
-Add `aria-live` region:
-```vue
-<div role="status" aria-live="polite">{{ message }}</div>
+// GOOD
+<button onClick={handleClick}>Submit</button>
 ```
 
-### "Keyboard navigation skips elements"
-Check `tabindex`:
-- `0` = Normal tab order
-- `-1` = Not in tab order, but focusable programmatically
-- `1+` = Avoid (disrupts natural order)
+**Missing form labels:**
+```jsx
+// BAD
+<input type="text" placeholder="Username" />
 
-### "Focus indicator not visible"
-Don't remove `:focus` styles. Customize instead:
+// GOOD
+<label for="username">Username</label>
+<input id="username" type="text" />
+```
+
+**Removing focus outlines:**
 ```css
-*:focus-visible {
-  outline: 2px solid var(--primary-500);
+/* BAD */
+button:focus { outline: none; }
+
+/* GOOD - provide alternative indicator */
+button:focus {
+  outline: 2px solid blue;
+  outline-offset: 2px;
 }
 ```
 
----
+**Redundant ARIA:**
+```jsx
+// BAD - button already has button role
+<button role="button">Click</button>
 
-## Related Files
+// GOOD - use native semantics
+<button>Click</button>
+```
 
-**Component examples**:
-- [Header.vue](../../../frontend/src/components/Header.vue)
-- [FilterPanel.vue](../../../frontend/src/components/dashboard/FilterPanel.vue)
+**Inaccessible custom components:**
+```jsx
+// BAD - no keyboard support
+<div onClick={handleClick}>Custom button</div>
 
-**Create**:
-- `utils/accessibility.js` - Helper functions
-- `composables/useFocusTrap.js` - Modal focus management
+// GOOD - full keyboard support
+<div
+  role="button"
+  tabIndex={0}
+  onClick={handleClick}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  }}
+>
+  Custom button
+</div>
+```
 
-**Related Skills**:
-- `vue-component-dev` - Component development
-- `user-guidance-flows` - Help text and guidance
+## Testing Accessibility
 
----
+**Manual testing:**
+1. Navigate entire interface using only keyboard
+2. Verify all interactive elements are reachable and activatable
+3. Check focus indicators are visible
+4. Test with browser zoom at 200%
+5. Use browser DevTools accessibility inspector
 
-**Skill Version**: v1.0
-**Created**: 2025-11-09
-**Focuses On**: Accessibility standards only
+**Automated testing:**
+- Axe DevTools browser extension
+- Lighthouse accessibility audit
+- WAVE browser extension
+- eslint-plugin-jsx-a11y (for React)
+
+**Screen reader testing:**
+- macOS: VoiceOver (Cmd+F5)
+- Windows: NVDA (free) or JAWS
+- Test critical user flows with screen reader enabled
+
+**Remember:** Automated tools catch ~30% of issues. Manual testing is essential.

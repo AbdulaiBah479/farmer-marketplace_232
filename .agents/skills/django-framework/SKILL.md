@@ -1,249 +1,458 @@
 ---
-name: Django Framework
-description: Build production-ready web applications with Django MVC, ORM, authentication, and REST APIs
-version: "2.1.0"
-sasmp_version: "1.3.0"
-bonded_agent: 02-web-development
-bond_type: PRIMARY_BOND
-
-# Skill Configuration
-retry_strategy: exponential_backoff
-observability:
-  logging: true
-  metrics: request_latency
+name: django-framework
+description: "Master Django framework for building robust Python web applications with ORM, authentication, and REST APIs. Use for: developing full-stack web applications, creating REST APIs with Django REST Framework, implementing authentication and authorization, database modeling with Django ORM, building admin interfaces, handling forms and validation, deploying Django applications, and integrating third-party packages."
 ---
 
 # Django Framework
 
+Build robust, scalable web applications and REST APIs with Django's batteries-included Python framework.
+
 ## Overview
 
-Master Django, the high-level Python web framework that encourages rapid development and clean, pragmatic design. Learn to build secure, scalable web applications with Django's batteries-included approach.
+Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. It follows the "batteries-included" philosophy, providing built-in features for authentication, ORM, admin interface, forms, and more. Django REST Framework (DRF) extends Django to build powerful Web APIs with minimal code.
 
-## Learning Objectives
+## When to Use Django
 
-- Build full-stack web applications using Django MVC pattern
-- Design and implement database models with Django ORM
-- Implement user authentication and authorization
-- Create RESTful APIs with Django REST Framework
-- Deploy Django applications to production
+| Scenario | Reason | Key Feature |
+|----------|--------|-------------|
+| Full-stack web applications | Complete framework with everything built-in | MTV architecture, ORM, admin |
+| REST API development | Powerful API toolkit | Django REST Framework |
+| Database-driven applications | Robust ORM with migrations | Models, QuerySets |
+| Rapid prototyping | Quick development with conventions | Admin interface, scaffolding |
+| Enterprise applications | Security, scalability, maintainability | Built-in security features |
+| Content management systems | Admin interface and permissions | Django Admin |
+| Authentication-heavy apps | Comprehensive auth system | User model, permissions |
 
-## Core Topics
+## Core Architecture
 
-### 1. Django Basics & Project Structure
-- Django project setup and configuration
-- Understanding MVT (Model-View-Template) pattern
-- URL routing and views
-- Django settings and environment variables
-- Static files and media handling
+### MTV Pattern (Model-Template-View)
 
-**Code Example:**
+**Model**: Data layer (database schema)
+**Template**: Presentation layer (HTML)
+**View**: Business logic layer (request handling)
+
+**URL Configuration**: Maps URLs to views
+
 ```python
-# myapp/views.py
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import Product
+# urls.py
+from django.urls import path
+from . import views
 
-def product_list(request):
-    products = Product.objects.all()
-    return render(request, 'products/list.html', {'products': products})
-
-def product_api(request):
-    products = Product.objects.values('id', 'name', 'price')
-    return JsonResponse(list(products), safe=False)
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('post/<int:pk>/', views.post_detail, name='post_detail'),
+]
 ```
 
-### 2. Django ORM & Database Models
-- Model definition and field types
-- Relationships (ForeignKey, ManyToMany, OneToOne)
-- QuerySets and database queries
-- Migrations and schema management
-- Database optimization (select_related, prefetch_related)
+## Django ORM
 
-**Code Example:**
+### Models
+
 ```python
-# models.py
 from django.db import models
-from django.contrib.auth.models import User
 
-class Category(models.Model):
-    name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name_plural = "Categories"
-
-    def __str__(self):
-        return self.name
-
-class Product(models.Model):
-    name = models.CharField(max_length=200)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    is_active = models.BooleanField(default=True)
+class Post(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    published = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Posts'
+    
     def __str__(self):
-        return self.name
-
-# Efficient querying
-products = Product.objects.select_related('category', 'created_by').filter(is_active=True)
+        return self.title
 ```
 
-### 3. Authentication & Authorization
-- User registration and login
-- Password management
-- Session management
-- Permissions and groups
-- Custom user models
-- Social authentication
+### QuerySets
 
-**Code Example:**
 ```python
-# views.py
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import redirect, render
+# Retrieve all posts
+Post.objects.all()
 
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-    return render(request, 'login.html')
+# Filter
+Post.objects.filter(published=True)
+
+# Get single object
+Post.objects.get(pk=1)
+
+# Chaining
+Post.objects.filter(published=True).order_by('-created_at')[:10]
+
+# Complex queries
+from django.db.models import Q
+Post.objects.filter(Q(title__icontains='django') | Q(content__icontains='django'))
+
+# Aggregation
+from django.db.models import Count, Avg
+Post.objects.aggregate(total=Count('id'), avg_length=Avg('content__length'))
+```
+
+### Relationships
+
+```python
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='books')
+    
+class Tag(models.Model):
+    name = models.CharField(max_length=50)
+    
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    tags = models.ManyToManyField(Tag, related_name='articles')
+```
+
+## Views
+
+### Function-Based Views
+
+```python
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+
+def post_list(request):
+    posts = Post.objects.filter(published=True)
+    return render(request, 'blog/post_list.html', {'posts': posts})
+
+def post_detail(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    return render(request, 'blog/post_detail.html', {'post': post})
+```
+
+### Class-Based Views
+
+```python
+from django.views.generic import ListView, DetailView, CreateView
+from django.urls import reverse_lazy
+
+class PostListView(ListView):
+    model = Post
+    template_name = 'blog/post_list.html'
+    context_object_name = 'posts'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Post.objects.filter(published=True)
+
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/post_detail.html'
+
+class PostCreateView(CreateView):
+    model = Post
+    fields = ['title', 'content']
+    success_url = reverse_lazy('post_list')
+```
+
+## Django REST Framework
+
+### Serializers
+
+```python
+from rest_framework import serializers
+from .models import Post
+
+class PostSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.username', read_only=True)
+    
+    class Meta:
+        model = Post
+        fields = ['id', 'title', 'content', 'author', 'author_name', 'created_at']
+        read_only_fields = ['author', 'created_at']
+    
+    def validate_title(self, value):
+        if len(value) < 5:
+            raise serializers.ValidationError("Title must be at least 5 characters")
+        return value
+```
+
+### ViewSets
+
+```python
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def publish(self, request, pk=None):
+        post = self.get_object()
+        post.published = True
+        post.save()
+        return Response({'status': 'published'})
+```
+
+### Routers
+
+```python
+from rest_framework.routers import DefaultRouter
+from .views import PostViewSet
+
+router = DefaultRouter()
+router.register(r'posts', PostViewSet)
+
+urlpatterns = router.urls
+```
+
+## Authentication
+
+### Built-in Authentication
+
+```python
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 @login_required
-def dashboard(request):
-    return render(request, 'dashboard.html')
+def protected_view(request):
+    return render(request, 'protected.html')
 
-@permission_required('products.add_product')
-def add_product(request):
-    # Only users with 'add_product' permission can access
-    return render(request, 'products/add.html')
+class ProtectedView(LoginRequiredMixin, View):
+    login_url = '/login/'
 ```
 
-### 4. Django REST Framework
-- Serializers and validation
-- ViewSets and routers
-- Authentication (JWT, Token)
-- Permissions and throttling
-- Pagination and filtering
+### DRF Authentication
 
-**Code Example:**
+**Token Authentication:**
 ```python
-# serializers.py
-from rest_framework import serializers
-from .models import Product, Category
+# settings.py
+INSTALLED_APPS = [
+    'rest_framework',
+    'rest_framework.authtoken',
+]
 
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'slug']
-
-class ProductSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    category_id = serializers.IntegerField(write_only=True)
-
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'description', 'price', 'category', 'category_id', 'created_at']
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 
 # views.py
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.authtoken.views import obtain_auth_token
 
-class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        category = self.request.query_params.get('category')
-        if category:
-            queryset = queryset.filter(category__slug=category)
-        return queryset
+urlpatterns = [
+    path('api/token/', obtain_auth_token),
+]
 ```
 
-## Hands-On Practice
+**JWT Authentication:**
+```python
+# Install: pip install djangorestframework-simplejwt
 
-### Project 1: Blog Application
-Build a full-featured blog with user authentication.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
 
-**Requirements:**
-- User registration and login
-- Create, edit, delete posts
-- Comments system
-- Categories and tags
-- Search functionality
-- Admin interface
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-**Key Skills:** Django models, views, forms, authentication
+urlpatterns = [
+    path('api/token/', TokenObtainPairView.as_view()),
+    path('api/token/refresh/', TokenRefreshView.as_view()),
+]
+```
 
-### Project 2: E-commerce API
-Create a RESTful API for an e-commerce platform.
+## Permissions
 
-**Requirements:**
-- Product catalog with categories
-- Shopping cart management
-- Order processing
-- User authentication with JWT
-- API documentation
-- Rate limiting
+```python
+from rest_framework import permissions
 
-**Key Skills:** Django REST Framework, serializers, authentication
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.author == request.user
 
-### Project 3: Task Management System
-Build a collaborative task management application.
+class PostViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+```
 
-**Requirements:**
-- User registration and teams
-- Create and assign tasks
-- Task status tracking
-- File attachments
-- Real-time notifications
-- Permission-based access
+## Forms and Validation
 
-**Key Skills:** Complex models, permissions, file handling
+```python
+from django import forms
+from .models import Post
 
-## Assessment Criteria
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ['title', 'content']
+        widgets = {
+            'content': forms.Textarea(attrs={'rows': 10}),
+        }
+    
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        if Post.objects.filter(title=title).exists():
+            raise forms.ValidationError("Title already exists")
+        return title
+```
 
-- [ ] Set up Django projects with proper structure
-- [ ] Design normalized database schemas
-- [ ] Implement CRUD operations efficiently
-- [ ] Secure applications with authentication
-- [ ] Build RESTful APIs following best practices
-- [ ] Write Django tests (unit and integration)
-- [ ] Deploy to production environment
+## Middleware
 
-## Resources
+```python
+class CustomMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        # Before view
+        request.custom_attribute = 'value'
+        
+        response = self.get_response(request)
+        
+        # After view
+        response['X-Custom-Header'] = 'value'
+        
+        return response
 
-### Official Documentation
-- [Django Docs](https://docs.djangoproject.com/) - Official documentation
-- [Django REST Framework](https://www.django-rest-framework.org/) - DRF documentation
-- [Django Girls Tutorial](https://tutorial.djangogirls.org/) - Beginner-friendly
+# settings.py
+MIDDLEWARE = [
+    'myapp.middleware.CustomMiddleware',
+]
+```
 
-### Learning Platforms
-- [Django for Beginners](https://djangoforbeginners.com/) - Book and tutorials
-- [Two Scoops of Django](https://www.feldroy.com/books/two-scoops-of-django-3-x) - Best practices
-- [TestDriven.io](https://testdriven.io/) - Django with TDD
+## Admin Interface
 
-### Tools
-- [Django Debug Toolbar](https://django-debug-toolbar.readthedocs.io/) - Debugging
-- [django-extensions](https://django-extensions.readthedocs.io/) - Useful utilities
-- [Celery](https://docs.celeryproject.org/) - Async tasks
-- [PostgreSQL](https://www.postgresql.org/) - Recommended database
+```python
+from django.contrib import admin
+from .models import Post
 
-## Next Steps
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ['title', 'author', 'published', 'created_at']
+    list_filter = ['published', 'created_at']
+    search_fields = ['title', 'content']
+    date_hierarchy = 'created_at'
+    ordering = ['-created_at']
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(author=request.user)
+```
 
-After mastering Django, explore:
-- **FastAPI** - Modern, fast web framework
-- **Celery** - Asynchronous task queue
-- **Docker** - Containerization for deployment
-- **AWS/Heroku** - Cloud deployment platforms
+## Database Migrations
+
+```bash
+# Create migrations
+python manage.py makemigrations
+
+# Apply migrations
+python manage.py migrate
+
+# Show migrations
+python manage.py showmigrations
+
+# Rollback
+python manage.py migrate myapp 0003
+```
+
+## Testing
+
+```python
+from django.test import TestCase, Client
+from django.contrib.auth.models import User
+from .models import Post
+
+class PostModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('testuser', 'test@example.com', 'password')
+        self.post = Post.objects.create(title='Test', content='Content', author=self.user)
+    
+    def test_post_creation(self):
+        self.assertEqual(self.post.title, 'Test')
+        self.assertEqual(str(self.post), 'Test')
+
+class PostAPITest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', 'test@example.com', 'password')
+    
+    def test_post_list(self):
+        response = self.client.get('/api/posts/')
+        self.assertEqual(response.status_code, 200)
+```
+
+## Performance Optimization
+
+### Query Optimization
+
+```python
+# Use select_related for ForeignKey
+posts = Post.objects.select_related('author').all()
+
+# Use prefetch_related for ManyToMany
+articles = Article.objects.prefetch_related('tags').all()
+
+# Only fetch needed fields
+posts = Post.objects.only('title', 'created_at')
+
+# Defer heavy fields
+posts = Post.objects.defer('content')
+```
+
+### Caching
+
+```python
+from django.core.cache import cache
+
+def get_posts():
+    posts = cache.get('posts')
+    if posts is None:
+        posts = list(Post.objects.all())
+        cache.set('posts', posts, 300)  # 5 minutes
+    return posts
+```
+
+## Deployment
+
+### Production Settings
+
+```python
+# settings.py
+DEBUG = False
+ALLOWED_HOSTS = ['yourdomain.com']
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': '5432',
+    }
+}
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+```
+
+### WSGI/ASGI
+
+**Gunicorn:**
+```bash
+gunicorn myproject.wsgi:application --bind 0.0.0.0:8000
+```
+
+**Uvicorn (ASGI):**
+
+---
+
+**Note:** This file was automatically condensed to meet the 500-line requirement. Additional content has been moved to the references/ folder.

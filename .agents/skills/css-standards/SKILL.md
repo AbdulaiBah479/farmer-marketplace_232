@@ -1,309 +1,283 @@
 ---
-name: css-standards
-description: CSS coding standards for Oh My Brand! theme. BEM methodology, custom properties, theme.json integration, responsive design, and accessibility. Use when styling blocks, templates or components.
-metadata:
-  author: Wesley Smits
-  version: "1.0.0"
+name: CSS Standards
+description: Write consistent, maintainable CSS following the project's methodology (Tailwind, BEM, utility classes, CSS modules) with design system adherence and performance optimization. Use this skill when writing or modifying styles, CSS files, utility classes, CSS-in-JS, styled components, or any styling code. Apply when working with .css, .scss, .module.css files, Tailwind utility classes, styled-components, CSS modules, design tokens (colors, spacing, typography), framework-specific styling approaches, optimizing CSS for production, implementing CSS purging or tree-shaking, or avoiding style overrides. Use for any task involving visual styling, layout styling, design system implementation, or CSS organization.
 ---
 
 # CSS Standards
 
-CSS coding standards and patterns for the Oh My Brand! WordPress FSE theme.
+**Rule:** Follow project CSS methodology consistently, leverage framework patterns, maintain design system tokens.
 
----
+## When to use this skill
 
-## When to Use
+- When writing or modifying CSS files (.css, .scss, .sass, .less, .module.css)
+- When applying utility classes in Tailwind CSS or similar utility-first frameworks
+- When implementing CSS-in-JS or styled-components in React/Vue/Svelte components
+- When defining or using design tokens (colors, spacing, typography, shadows)
+- When maintaining consistency with the project's CSS methodology (BEM, OOCSS, SMACSS, utility-first)
+- When optimizing CSS for production with purging or tree-shaking unused styles
+- When avoiding excessive framework style overrides by working with framework patterns
+- When implementing global styles or theme configurations
+- When refactoring inline styles or scattered CSS into organized, maintainable patterns
+- When establishing or following CSS naming conventions for the project
 
-- Styling block components
-- Writing responsive layouts
-- Defining CSS custom properties
-- Implementing accessible focus states
-- Working with WordPress design tokens
+This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle frontend CSS.
 
----
+## Identify Project Methodology First
 
-## Reference Files
+Before writing any styles, check existing codebase for:
 
-| File | Purpose |
-|------|---------|
-| [gallery-block.css](references/gallery-block.css) | Complete block styling example |
-| [theme-json-tokens.css](references/theme-json-tokens.css) | WordPress design token usage |
-| [accessibility.css](references/accessibility.css) | Focus, reduced motion, contrast |
-
----
-
-## BEM Naming
-
-BEM (Block, Element, Modifier) naming convention:
-
-```
-.block                    → Component container
-.block__element           → Child element
-.block--modifier          → Block variation
-.block__element--modifier → Element variation
+**Utility-first (Tailwind/UnoCSS):**
+```jsx
+<div className="flex items-center gap-4 p-6 bg-white rounded-lg shadow-md">
 ```
 
-### Block Class Prefix
+**CSS Modules:**
+```jsx
+import styles from './Component.module.css'
+<div className={styles.container}>
+```
 
-| Block Type | Prefix | Example |
-|------------|--------|---------|
-| Native blocks | `wp-block-theme-oh-my-brand-` | `.wp-block-theme-oh-my-brand-gallery` |
-| ACF blocks | `wp-block-acf-` | `.wp-block-acf-gallery` |
+**BEM (Block Element Modifier):**
+```css
+.card { }
+.card__header { }
+.card__header--highlighted { }
+```
 
-### BEM Examples
+**CSS-in-JS (styled-components/emotion):**
+```jsx
+const Button = styled.button`
+  padding: 1rem;
+  background: ${props => props.theme.primary};
+`
+```
+
+**Once identified, use that methodology exclusively. Never mix methodologies.**
+
+## Design System Tokens
+
+**Always use design tokens instead of hardcoded values:**
+
+Bad:
+```css
+color: #3b82f6;
+padding: 16px;
+font-size: 14px;
+```
+
+Good (Tailwind):
+```jsx
+className="text-blue-500 p-4 text-sm"
+```
+
+Good (CSS variables):
+```css
+color: var(--color-primary);
+padding: var(--spacing-4);
+font-size: var(--text-sm);
+```
+
+**Check for existing tokens before creating new ones:**
+1. Search for color/spacing/typography definitions
+2. Use existing tokens if available
+3. Only create new tokens if genuinely needed
+4. Document new tokens in design system file
+
+## Framework Patterns Over Overrides
+
+**Work with framework, not against it:**
+
+Bad (fighting Tailwind):
+```jsx
+<div className="flex items-center" style={{gap: '17px', padding: '13px'}}>
+```
+
+Good (using framework values):
+```jsx
+<div className="flex items-center gap-4 p-3">
+```
+
+Bad (overriding component library):
+```css
+.MuiButton-root {
+  padding: 12px !important;
+  background: red !important;
+}
+```
+
+Good (using component API):
+```jsx
+<Button sx={{ padding: 3, bgcolor: 'error.main' }}>
+```
+
+**If you need `!important` or deep style overrides, reconsider your approach.**
+
+## Minimize Custom CSS
+
+**Prefer framework utilities over custom CSS:**
+
+Bad:
+```css
+.custom-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+```
+
+Good (Tailwind):
+```jsx
+<div className="flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm">
+```
+
+**Only write custom CSS for:**
+- Complex animations
+- Unique visual effects not in framework
+- Third-party library integration
+- Browser-specific fixes
+
+## Naming Conventions
+
+**Follow project convention consistently:**
+
+BEM:
+```css
+.block-name { }
+.block-name__element { }
+.block-name--modifier { }
+```
+
+CSS Modules (camelCase):
+```css
+.cardContainer { }
+.cardHeader { }
+.isActive { }
+```
+
+Utility-first (descriptive class names for custom components):
+```css
+.prose-headings { }
+.custom-scrollbar { }
+```
+
+## Organization Patterns
+
+**Structure CSS logically:**
 
 ```css
-/* Block */
-.wp-block-theme-oh-my-brand-gallery { }
+/* 1. Layout */
+.component {
+  display: flex;
+  position: relative;
+}
 
-/* Elements */
-.wp-block-theme-oh-my-brand-gallery__track { }
-.wp-block-theme-oh-my-brand-gallery__slide { }
-.wp-block-theme-oh-my-brand-gallery__button { }
+/* 2. Box model */
+.component {
+  width: 100%;
+  padding: 1rem;
+  margin: 0 auto;
+}
 
-/* Block modifiers */
-.wp-block-theme-oh-my-brand-gallery--fullwidth { }
+/* 3. Typography */
+.component {
+  font-size: 1rem;
+  line-height: 1.5;
+}
 
-/* Element modifiers */
-.wp-block-theme-oh-my-brand-gallery__button--prev { }
-.wp-block-theme-oh-my-brand-gallery__slide--active { }
+/* 4. Visual */
+.component {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border-radius: 0.5rem;
+}
+
+/* 5. Misc */
+.component {
+  cursor: pointer;
+  transition: all 0.2s;
+}
 ```
 
----
+**Group related styles, separate concerns with comments.**
 
-## Custom Properties
+## Performance Optimization
 
-Define custom properties at the block root:
+**Production CSS should be optimized:**
 
+Tailwind (purge unused):
+```js
+// tailwind.config.js
+module.exports = {
+  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+  // Only includes classes actually used
+}
+```
+
+CSS Modules (automatic tree-shaking):
+```js
+// Unused styles automatically removed in production
+```
+
+**Avoid:**
+- Importing entire CSS frameworks when using few components
+- Duplicate style definitions across files
+- Overly specific selectors (`.a .b .c .d .e`)
+- Large inline styles that could be extracted
+
+## Common Mistakes
+
+**Mixing methodologies:**
+```jsx
+// BAD - mixing Tailwind with inline styles and CSS modules
+<div className={`${styles.card} flex p-4`} style={{gap: '12px'}}>
+```
+
+**Hardcoding values:**
 ```css
-.wp-block-theme-oh-my-brand-gallery {
-    /* Layout */
-    --visible-images: 3;
-    --block-gap: 1rem;
+/* BAD */
+color: #3b82f6;
+padding: 17px;
 
-    /* Animation */
-    --transition-duration: 300ms;
-    --transition-timing: ease-out;
-
-    /* Colors (use theme tokens) */
-    --button-bg: var(--wp--preset--color--primary);
-    --button-text: var(--wp--preset--color--base);
-}
+/* GOOD */
+color: var(--color-primary);
+padding: var(--spacing-4);
 ```
 
-See [gallery-block.css](references/gallery-block.css) for complete example.
-
----
-
-## Theme.json Tokens
-
-Use WordPress design tokens from `theme.json`:
-
-| Token Type | CSS Variable Pattern |
-|------------|---------------------|
-| Colors | `var(--wp--preset--color--{slug})` |
-| Spacing | `var(--wp--preset--spacing--{size})` |
-| Font Family | `var(--wp--preset--font-family--{slug})` |
-| Font Size | `var(--wp--preset--font-size--{slug})` |
-| Layout | `var(--wp--style--global--content-size)` |
-
-See [theme-json-tokens.css](references/theme-json-tokens.css) for examples.
-
----
-
-## Responsive Design
-
-Mobile-first approach using `min-width` breakpoints:
-
-| Name | Width | Target |
-|------|-------|--------|
-| Mobile | < 768px | Phones (base styles) |
-| Tablet | ≥ 768px | Tablets |
-| Desktop | ≥ 1024px | Laptops |
-| Large | ≥ 1280px | Desktops |
-
-### Example
-
+**Fighting framework:**
 ```css
-/* Base (mobile) styles */
-.wp-block-theme-oh-my-brand-gallery {
-    grid-template-columns: 1fr;
+/* BAD */
+.override {
+  margin: 13px !important;
 }
 
-/* Tablet */
-@media (min-width: 768px) {
-    .wp-block-theme-oh-my-brand-gallery {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Desktop */
-@media (min-width: 1024px) {
-    .wp-block-theme-oh-my-brand-gallery {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
+/* GOOD - use framework's spacing scale */
+className="m-3"
 ```
 
----
+## Verification Checklist
 
-## Accessibility
+Before completing CSS work:
 
-### Focus Styles
+- [ ] Identified and followed project CSS methodology
+- [ ] Used design tokens instead of hardcoded values
+- [ ] Leveraged framework utilities where possible
+- [ ] Avoided `!important` and deep overrides
+- [ ] Followed project naming conventions
+- [ ] Organized styles logically
+- [ ] Verified no unused styles in production build
+- [ ] Tested visual output in browser
 
-```css
-.wp-block-theme-oh-my-brand-gallery__button:focus-visible {
-    outline: 2px solid var(--wp--preset--color--primary);
-    outline-offset: 2px;
-}
-```
+## Quick Reference
 
-### Reduced Motion
-
-```css
-@media (prefers-reduced-motion: reduce) {
-    .wp-block-theme-oh-my-brand-gallery__track {
-        transition: none;
-    }
-}
-```
-
-### Screen Reader Only
-
-```css
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-```
-
-See [accessibility.css](references/accessibility.css) for complete patterns.
-
-### Color Contrast (WCAG 2.1 AA)
-
-| Content Type | Minimum Ratio |
-|--------------|---------------|
-| Normal text | 4.5:1 |
-| Large text (18px+ bold, 24px+) | 3:1 |
-| UI components | 3:1 |
-
----
-
-## Stylelint Rules
-
-This project uses Stylelint for CSS linting. Key rules to follow:
-
-### No Empty Blocks
-
-Stylelint disallows empty rule blocks. Never create a rule with only a comment:
-
-```css
-/* ❌ Bad - empty block causes stylelint error */
-@media (prefers-reduced-motion: reduce) {
-    .my-component {
-        /* No styles needed */
-    }
-}
-
-/* ❌ Bad - empty block */
-.my-component__element {
-}
-
-/* ✅ Good - omit the rule entirely if no styles needed */
-/* (Simply don't include the rule) */
-
-/* ✅ Good - if you need the media query, include actual styles */
-@media (prefers-reduced-motion: reduce) {
-    .my-component {
-        transition: none;
-        animation: none;
-    }
-}
-```
-
-### No Duplicate Selectors
-
-Stylelint disallows duplicate selectors within a stylesheet. Consolidate all styles for a selector in one place:
-
-```css
-/* ❌ Bad - duplicate selector causes stylelint error */
-.my-component__number {
-    font-size: 2rem;
-    font-weight: 700;
-}
-
-.my-component__label {
-    font-size: 1rem;
-}
-
-.my-component__number {
-    order: 0;  /* This duplicates the selector above! */
-}
-
-/* ✅ Good - all styles consolidated in one selector */
-.my-component__number {
-    font-size: 2rem;
-    font-weight: 700;
-    order: 0;
-}
-
-.my-component__label {
-    font-size: 1rem;
-}
-```
-
-### Hex Color Length
-
-Use shorthand hex colors when possible:
-
-```css
-/* ❌ Bad - can be shortened */
-color: #0066cc;
-background: #ffffff;
-
-/* ✅ Good - use shorthand */
-color: #06c;
-background: #fff;
-```
-
-### Key Principles
-
-1. If a rule block would be empty (even with just a comment), **do not include it**
-2. Consolidate all styles for a selector in **one place** - no duplicate selectors
-3. Use **shorthand hex colors** when all pairs are identical (e.g., `#aabbcc` → `#abc`)
-
----
-
-## Validation
-
-**Always run stylelint after making CSS changes:**
-
-```bash
-pnpm run lint:css
-```
-
-Fix any issues before committing. This ensures consistent code style and catches common errors.
-
----
-
-## Related Skills
-
-- [html-standards](../html-standards/SKILL.md) - Semantic HTML structure
-- [web-components](../web-components/SKILL.md) - Frontend Web Components
-- [native-block-development](../native-block-development/SKILL.md) - Block styling
-
----
-
-## References
-
-- [BEM Methodology](https://getbem.com/)
-- [WordPress Global Styles](https://developer.wordpress.org/themes/global-settings-and-styles/)
-- [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)
-- [CSS Custom Properties](https://css-tricks.com/a-complete-guide-to-custom-properties/)
+| Situation                      | Action                                |
+| ------------------------------ | ------------------------------------- |
+| New component styling          | Check existing patterns first         |
+| Need specific color            | Use design token, not hex code        |
+| Framework doesn't have utility | Write minimal custom CSS              |
+| Styles not applying            | Check specificity, avoid `!important` |
+| Large CSS file                 | Extract to utilities or components    |
+| Production bundle large        | Enable CSS purging/tree-shaking       |

@@ -1,101 +1,42 @@
 ---
-name: debugging-expert
-description: Expert in systematic debugging, root cause analysis, profiling, and performance troubleshooting. Use when stuck on bugs, investigating errors, or optimizing performance.
-required-capability: reasoning
+name: Debugging Expert
+description: Systematic troubleshooting using the Scientific Method (Observe, Hypothesize, Experiment, Fix).
+metadata:
+  labels: [debugging, troubleshooting, bug-fixing, root-cause]
+  triggers:
+    keywords: [debug, fix bug, crash, error, exception, troubleshooting]
 ---
 
 # Debugging Expert
 
-You are a Senior Software Engineer specializing in debugging and root cause analysis.
+## **Priority: P1 (OPERATIONAL)**
 
-## Systematic Debugging Process
+Systematic, evidence-based troubleshooting. Do not guess; prove.
 
-### 1. Reproduce the Issue
-- Get exact steps to reproduce
-- Identify the minimal reproduction case
-- Note environment differences (works on my machine?)
+## 🔬 The Scientific Method
 
-### 2. Gather Information
-- Read error messages completely
-- Check logs (application, system, network)
-- Note when it started (recent changes?)
-- Identify patterns (always fails? intermittent?)
+1. **OBSERVE**: Gather data. What exactly is happening?
+    - Logs, Stack Traces, Screenshots, Steps to Reproduce.
+2. **HYPOTHESIZE**: Formulate a theory. "I think X is causing Y because Z."
+3. **EXPERIMENT**: Test the theory.
+    - Create a reproduction case.
+    - Change _one variable at a time_ to validate the hypothesis.
+4. **FIX**: Implement the solution once the root cause is proven.
+5. **VERIFY**: Ensure the fix works and doesn't introduce regressions.
 
-### 3. Form Hypotheses
-- What could cause this behavior?
-- What changed recently?
-- What assumptions might be wrong?
+## 🚫 Anti-Patterns
 
-### 4. Test Hypotheses
-- Change one thing at a time
-- Use binary search for large changes
-- Add logging/breakpoints strategically
+- **Shotgun Debugging**: Randomly changing things hoping it works.
+- **Console Log Spam**: Leaving `print`/`console.log` in production code.
+- **Fixing Symptoms**: masking the error (e.g., `try-catch` without handling) instead of fixing the root cause.
 
-### 5. Fix and Verify
-- Implement the fix
-- Verify the original issue is resolved
-- Check for regressions
-- Document the root cause
+## 🛠 Best Practices
 
-## Common Bug Categories
+- **Diff Diagnosis**: What changed since it last worked?
+- **Minimal Repro**: Create the smallest possible code snippet that reproduces the issue.
+- **Rubber Ducking**: Explain the code line-by-line to an inanimate object (or the agent).
+- **Binary Search**: Comment out half the code to isolate the failing section.
 
-### Off-by-One Errors
-- Check loop boundaries
-- Verify array indices
-- Check fence-post conditions
+## 📚 References
 
-### Race Conditions
-- Look for shared mutable state
-- Check for missing locks/synchronization
-- Consider operation ordering
-
-### Null/Undefined References
-- Trace data flow backwards
-- Check all code paths
-- Verify API contracts
-
-### Memory Issues
-- Check for leaks (unclosed resources)
-- Look for unbounded growth
-- Profile memory usage
-
-## Debugging Tools
-
-### Browser DevTools
-- Network tab for API issues
-- Console for JS errors
-- Performance tab for bottlenecks
-- Sources tab for breakpoints
-
-### Node.js
-- `--inspect` flag for Chrome DevTools
-- `console.trace()` for call stacks
-- `process.memoryUsage()` for memory
-
-### Go
-- `dlv debug` for Delve debugger
-- `go tool pprof` for profiling
-- `GODEBUG=gctrace=1` for GC info
-
-## Performance Debugging
-
-### Identify the Bottleneck
-1. Measure first (don't guess)
-2. Profile CPU, memory, I/O
-3. Look for the 80/20 rule
-
-### Common Performance Issues
-- N+1 queries (batch or join)
-- Missing indexes
-- Synchronous I/O in hot paths
-- Excessive allocations
-- Inefficient algorithms
-
-## Questions to Ask
-
-- What changed recently?
-- Does it happen in all environments?
-- Is it reproducible?
-- What are the exact error messages?
-- What have you already tried?
-- Can you isolate the component?
+- [Bug Report Template](references/bug-report-template.md)

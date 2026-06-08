@@ -1,122 +1,61 @@
 ---
 name: adr-create
-description: Creates a single Architecture Decision Record (ADR) for a current technical decision. Unlike retrospective (which reconstructs past ADRs from git history), this skill documents decisions as they happen with full context, alternatives considered, and expected consequences.
-license: MIT
-compatibility: opencode
-metadata:
-  category: architecture
-  phase: design
+description: Create a new Architecture Decision Record with sequential numbering and AgentDB registration
+argument-hint: "<title>"
+allowed-tools: mcp__claude-flow__agentdb_hierarchical-store mcp__claude-flow__agentdb_hierarchical-query mcp__claude-flow__agentdb_causal-edge mcp__claude-flow__memory_store mcp__claude-flow__memory_search Bash Read Write Edit Grep Glob
 ---
 
-# Skill: ADR Create
+# Create ADR
 
-## What This Skill Does
+Create a new Architecture Decision Record with the next sequential number, register it in the AgentDB graph, and link it to related ADRs.
 
-Documents a **technical decision as it happens** using the ADR (Architecture Decision Record) format. While `retrospective` reconstructs past decisions from git history (inferring context), this skill captures the full decision context in real-time — including alternatives considered, trade-offs evaluated, and expected consequences.
+## When to use
 
-## When to Use
+When a significant architectural decision needs to be recorded -- new technology adoption, API design choices, data model changes, infrastructure decisions, or any cross-cutting concern that affects multiple components.
 
-- When making a significant technical decision (new dependency, architecture change, pattern choice)
-- When the user says "let's document this decision" or "why did we choose X?"
-- Before implementing a controversial or non-obvious approach
-- When `create-plan` involves architectural choices that should be recorded
+## Steps
 
-## Execution Model
+1. **Find next number** -- `Glob` for `docs/adr/ADR-*.md` and parse existing numbers to determine the next sequential ID (ADR-001, ADR-002, etc.). Create `docs/adr/` if it does not exist.
 
-- **Always**: the primary agent runs this skill directly.
-- **Output**: `docs/adrs/ADR-NNN-<title>.md`
+2. **Slugify title** -- Convert the title argument to a lowercase, hyphen-separated slug (e.g., "Use PostgreSQL for persistence" becomes `use-postgresql-for-persistence`).
 
-## Workflow
+3. **Create ADR file** -- `Write` the file at `docs/adr/ADR-NNN-<slug>.md` using the standard template:
+   ```markdown
+   # ADR-NNN: <Title>
 
-### Step 1: Identify the Decision
+   - **Status**: proposed
+   - **Date**: <today's date YYYY-MM-DD>
+   - **Deciders**: <leave blank for author to fill>
+   - **Tags**: <leave blank>
 
-Use the `question` tool to clarify:
+   ## Context
 
-1. What is the decision? (one sentence)
-2. What triggered it? (new requirement, problem, tech debt)
-3. What alternatives were considered?
-4. What was chosen and why?
+   <!-- What is the issue that motivates this decision? -->
 
-### Step 2: Gather Context
+   ## Decision
 
-Collect context from the project:
+   <!-- What is the change that we are proposing? -->
 
-- Related code or modules affected
-- Existing patterns that influenced the decision
-- Constraints (performance, compatibility, team skills)
-- Reference materials (docs, benchmarks, discussions)
+   ## Consequences
 
-### Step 3: Determine ADR Number
+   ### Positive
+   -
 
-```bash
-# Find the next ADR number
-ls docs/adrs/ 2>/dev/null | grep -o 'ADR-[0-9]*' | sort -t- -k2 -n | tail -1
-```
+   ### Negative
+   -
 
-If no `docs/adrs/` directory exists, create it and start with ADR-001.
+   ### Neutral
+   -
 
-### Step 4: Write the ADR
+   ## Links
+   ```
 
-Create `docs/adrs/ADR-NNN-<slug>.md`:
+4. **Store in AgentDB** -- Call `mcp__claude-flow__agentdb_hierarchical-store` with:
+   - path: `adr/ADR-NNN`
+   - value: `{ "id": "ADR-NNN", "title": "<title>", "status": "proposed", "date": "<today>", "file": "docs/adr/ADR-NNN-<slug>.md" }`
 
-```markdown
-# ADR-NNN: <Title>
+5. **Find related ADRs** -- Call `mcp__claude-flow__memory_search` with the title as query in namespace `adr-patterns` to find related decisions. If matches found, add them to the Links section and create causal edges with relation `depends-on`.
 
-## Status
+6. **Store pattern** -- Call `mcp__claude-flow__memory_store` in namespace `adr-patterns` with key `ADR-NNN` and the title + context as value for future semantic search.
 
-Accepted | Proposed | Superseded by ADR-NNN
-
-## Date
-
-YYYY-MM-DD
-
-## Context
-
-<What is the issue? What forces are at play? What constraints exist?>
-
-## Decision
-
-<What is the change that we're proposing and/or doing?>
-
-## Alternatives Considered
-
-### Alternative A: <name>
-- **Pros**: ...
-- **Cons**: ...
-- **Why rejected**: ...
-
-### Alternative B: <name>
-- **Pros**: ...
-- **Cons**: ...
-- **Why rejected**: ...
-
-## Consequences
-
-### Positive
-- <expected benefit>
-
-### Negative
-- <expected downside or trade-off>
-
-### Risks
-- <what could go wrong>
-
-## References
-
-- <related ADRs, docs, URLs>
-```
-
-### Step 5: Cross-Reference
-
-- If this ADR supersedes a previous one, update the old ADR's status
-- If this ADR relates to a plan, add a reference in the plan's changelog
-- If this affects module documentation, note it for `update-docs`
-
-## Rules
-
-1. **Capture the WHY**: the most valuable part of an ADR is why the decision was made and why alternatives were rejected. Implementation details belong in docs, not ADRs.
-2. **Alternatives are mandatory**: an ADR without alternatives considered is just a statement, not a decision record. Always document at least one alternative.
-3. **Consequences are honest**: list both positive and negative consequences. Every decision has trade-offs.
-4. **Keep it concise**: an ADR should be 1-2 pages. It's a record, not an essay.
-5. **Immutable once accepted**: accepted ADRs are not edited. If a decision changes, create a new ADR that supersedes the old one.
-6. **No built-in explore agent**: do NOT use the built-in `explore` subagent type.
+7. **Report** -- Output the created file path, ADR number, and any related ADRs found.

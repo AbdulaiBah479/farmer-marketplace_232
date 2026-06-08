@@ -1,408 +1,235 @@
 ---
-name: dashboard-design
-description: Design effective dashboards with clear layouts, KPI displays, data grids, and real-time updates. Covers dashboard patterns, information hierarchy, responsive grids, widget design, and admin panel layouts. Use for building analytics dashboards, admin interfaces, and monitoring displays.
+id: SKL-dashboard-DASHBOARDDESIGN
+name: Dashboard Design
+description: A dashboard is a visual display of key metrics and data points that provides
+  at-a-glance insights for monitoring, analysis, and decision-making. Effective dashboards
+  present the right information at t
+version: 1.0.0
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
 # Dashboard Design
 
-Create effective, information-rich dashboards that surface key data clearly.
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
-## Instructions
+## Overview
+A dashboard is a visual display of key metrics and data points that provides at-a-glance insights for monitoring, analysis, and decision-making. Effective dashboards present the right information at the right time, using appropriate visualizations and clear hierarchy to help users understand and act on data, saving time, improving decisions through data-driven insights, and increasing alignment through shared understanding.
 
-1. **Prioritize information** - Most important metrics at top-left
-2. **Use consistent card layouts** - Same styling for similar data types
-3. **Design for scanning** - Users glance, not read; make data obvious
-4. **Show context** - Compare to previous periods, show trends
-5. **Enable action** - Dashboards should lead to decisions
+## Why This Matters
+- **Save Time**: Quick access to key information without manual data gathering
+- **Improve Decisions**: Data-driven insights reduce reliance on intuition
+- **Increase Alignment**: Shared understanding through consistent metrics and visualizations
+- **Enable Action**: Identify issues and opportunities quickly
+- **Monitor Performance**: Track real-time operational metrics
+- **Communicate Status**: Share progress and results with stakeholders effectively
 
-## Dashboard Layout Patterns
+---
 
-### Standard Admin Dashboard
+## Core Concepts & Rules
 
-```tsx
-function AdminDashboard() {
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b shadow-sm">
-        <div className="flex items-center justify-between h-16 px-6">
-          <Logo />
-          <div className="flex items-center gap-4">
-            <SearchInput />
-            <NotificationBell />
-            <UserMenu />
-          </div>
-        </div>
-      </header>
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <aside className="hidden lg:block w-64 bg-white dark:bg-gray-800 border-r min-h-[calc(100vh-4rem)] sticky top-16">
-          <nav className="p-4 space-y-2">
-            <SidebarLink icon={HomeIcon} label="Overview" active />
-            <SidebarLink icon={ChartIcon} label="Analytics" />
-            <SidebarLink icon={UsersIcon} label="Customers" />
-            <SidebarLink icon={SettingsIcon} label="Settings" />
-          </nav>
-        </aside>
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Dashboard Overview
-            </h1>
-            <p className="text-gray-500">Welcome back, here's what's happening</p>
-          </div>
 
-          {/* KPI Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <KPICard
-              title="Total Revenue"
-              value="$45,231"
-              change="+12.5%"
-              trend="up"
-            />
-            <KPICard
-              title="Active Users"
-              value="2,345"
-              change="+5.2%"
-              trend="up"
-            />
-            <KPICard
-              title="Conversion Rate"
-              value="3.2%"
-              change="-0.4%"
-              trend="down"
-            />
-            <KPICard
-              title="Avg. Order Value"
-              value="$127"
-              change="+8.1%"
-              trend="up"
-            />
-          </div>
+## Inputs / Outputs / Contracts
+* **Inputs**:
+  - Business questions and goals
+  - Key metrics and KPIs to display
+  - Data sources (databases, APIs, analytics)
+  - User personas and use cases
+  - Brand guidelines and color palettes
+* **Entry Conditions**:
+  - Data sources accessible and reliable
+  - Metrics clearly defined and calculated
+  - Dashboard purpose and audience identified
+  - Brand guidelines available
+* **Outputs**:
+  - Dashboard wireframe/mockup
+  - Implemented dashboard with visualizations
+  - Interactive features (filters, drill-downs)
+  - Data queries and transformations
+  - Documentation (metric definitions, user guide)
+* **Artifacts Required (Deliverables)**:
+  - Dashboard wireframe/design
+  - Component library (reusable chart components)
+  - Data queries/transformations
+  - Dashboard implementation code
+  - User documentation
+  - Metric definitions document
+* **Acceptance Evidence**:
+  - Wireframe reviewed and approved
+  - Dashboard loads within performance budget
+  - All charts render correctly with test data
+  - Interactive features work as specified
+  - User acceptance testing completed
+* **Success Criteria**:
+  - Dashboard load time < 3s
+  - All key metrics visible without scrolling
+  - Interactive features responsive (< 500ms)
+  - Mobile responsive design
+  - Accessibility compliance (WCAG AA)
+  - User satisfaction score > 4/5
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <ChartCard title="Revenue Over Time">
-              <LineChart data={revenueData} />
-            </ChartCard>
-            <ChartCard title="Sales by Category">
-              <BarChart data={categoryData} />
-            </ChartCard>
-          </div>
+## Skill Composition
+* **Depends on**: [KPI Metrics](23-business-analytics/kpi-metrics/), [Data Visualization](23-business-analytics/data-visualization/)
+* **Compatible with**: [Business Intelligence](23-business-analytics/business-intelligence/), [SQL for Analytics](23-business-analytics/sql-for-analytics/)
+* **Conflicts with**: None
+* **Related Skills**: [kpi-metrics](23-business-analytics/kpi-metrics/), [data-visualization](23-business-analytics/data-visualization/), [sql-for-analytics](23-business-analytics/sql-for-analytics/)
 
-          {/* Data Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
-              <Button variant="outline" size="sm">View All</Button>
-            </CardHeader>
-            <DataTable
-              columns={orderColumns}
-              data={recentOrders}
-              pagination
-            />
-          </Card>
-        </main>
-      </div>
-    </div>
-  );
-}
+---
+
+## Quick Start / Implementation Example
+
+1. Review requirements and constraints
+2. Set up development environment
+3. Implement core functionality following patterns
+4. Write tests for critical paths
+5. Run tests and fix issues
+6. Document any deviations or decisions
+
+```python
+# Example implementation following best practices
+def example_function():
+    # Your implementation here
+    pass
 ```
 
-### KPI Card Component
 
-```tsx
-interface KPICardProps {
-  title: string;
-  value: string | number;
-  change?: string;
-  trend?: 'up' | 'down' | 'neutral';
-  icon?: React.ComponentType;
-  subtitle?: string;
-}
+## Assumptions / Constraints / Non-goals
 
-function KPICard({ title, value, change, trend, icon: Icon, subtitle }: KPICardProps) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-            {title}
-          </p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {value}
-          </p>
-          {change && (
-            <div className="mt-2 flex items-center gap-1">
-              {trend === 'up' && (
-                <ArrowUpIcon className="w-4 h-4 text-green-500" />
-              )}
-              {trend === 'down' && (
-                <ArrowDownIcon className="w-4 h-4 text-red-500" />
-              )}
-              <span className={`text-sm font-medium ${
-                trend === 'up' ? 'text-green-600' :
-                trend === 'down' ? 'text-red-600' :
-                'text-gray-500'
-              }`}>
-                {change}
-              </span>
-              <span className="text-sm text-gray-400">vs last month</span>
-            </div>
-          )}
-        </div>
-        {Icon && (
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <Icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-```
+* **Assumptions**:
+  - Development environment is properly configured
+  - Required dependencies are available
+  - Team has basic understanding of domain
+* **Constraints**:
+  - Must follow existing codebase conventions
+  - Time and resource limitations
+  - Compatibility requirements
+* **Non-goals**:
+  - This skill does not cover edge cases outside scope
+  - Not a replacement for formal training
 
-### Chart Card Component
 
-```tsx
-interface ChartCardProps {
-  title: string;
-  subtitle?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}
+## Compatibility & Prerequisites
 
-function ChartCard({ title, subtitle, action, children }: ChartCardProps) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">{title}</h3>
-          {subtitle && (
-            <p className="text-sm text-gray-500">{subtitle}</p>
-          )}
-        </div>
-        {action}
-      </div>
-      <div className="p-6">
-        {children}
-      </div>
-    </div>
-  );
-}
-```
+* **Supported Versions**:
+  - Python 3.8+
+  - Node.js 16+
+  - Modern browsers (Chrome, Firefox, Safari, Edge)
+* **Required AI Tools**:
+  - Code editor (VS Code recommended)
+  - Testing framework appropriate for language
+  - Version control (Git)
+* **Dependencies**:
+  - Language-specific package manager
+  - Build tools
+  - Testing libraries
+* **Environment Setup**:
+  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
 
-## Dashboard Grid Patterns
 
-### Responsive Dashboard Grid
+## Test Scenario Matrix (QA Strategy)
 
-```tsx
-// 12-column grid system
-<div className="grid grid-cols-12 gap-6">
-  {/* Full width */}
-  <div className="col-span-12">
-    <PageHeader />
-  </div>
+| Type | Focus Area | Required Scenarios / Mocks |
+| :--- | :--- | :--- |
+| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
+| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
+| **E2E** | User Journey | Critical user flows to test |
+| **Performance** | Latency / Load | Benchmark requirements |
+| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
+| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
 
-  {/* 4 equal KPI cards */}
-  <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-    <KPICard />
-  </div>
-  <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-    <KPICard />
-  </div>
-  <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-    <KPICard />
-  </div>
-  <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-    <KPICard />
-  </div>
 
-  {/* 2/3 + 1/3 layout */}
-  <div className="col-span-12 lg:col-span-8">
-    <MainChart />
-  </div>
-  <div className="col-span-12 lg:col-span-4">
-    <SidePanel />
-  </div>
+## Technical Guardrails & Security Threat Model
 
-  {/* 50/50 split */}
-  <div className="col-span-12 md:col-span-6">
-    <ChartA />
-  </div>
-  <div className="col-span-12 md:col-span-6">
-    <ChartB />
-  </div>
-</div>
-```
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
 
-## Real-Time Dashboard
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
 
-```tsx
-function RealTimeDashboard() {
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
 
-  useEffect(() => {
-    // WebSocket for real-time updates
-    const ws = new WebSocket('wss://api.example.com/metrics');
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setMetrics(data);
-    };
 
-    return () => ws.close();
-  }, []);
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
 
-  return (
-    <div className="space-y-6">
-      {/* Live indicator */}
-      <div className="flex items-center gap-2">
-        <span className="relative flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
-        </span>
-        <span className="text-sm text-gray-500">Live</span>
-        <span className="text-sm text-gray-400">
-          Updated {formatRelativeTime(metrics?.timestamp)}
-        </span>
-      </div>
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
 
-      {/* Real-time metrics */}
-      <div className="grid grid-cols-4 gap-4">
-        <LiveMetric
-          label="Active Users"
-          value={metrics?.activeUsers}
-          sparkline={metrics?.userHistory}
-        />
-        <LiveMetric
-          label="Requests/sec"
-          value={metrics?.requestsPerSecond}
-          unit="req/s"
-        />
-        <LiveMetric
-          label="Avg Response"
-          value={metrics?.avgResponseTime}
-          unit="ms"
-        />
-        <LiveMetric
-          label="Error Rate"
-          value={metrics?.errorRate}
-          unit="%"
-          alert={metrics?.errorRate > 1}
-        />
-      </div>
-    </div>
-  );
-}
-```
 
-## Data Table for Dashboards
+## Definition of Done (DoD) Checklist
 
-```tsx
-interface DataTableProps<T> {
-  columns: ColumnDef<T>[];
-  data: T[];
-  pagination?: boolean;
-  searchable?: boolean;
-  actions?: (row: T) => React.ReactNode;
-}
+- [ ] Tests passed + coverage met
+- [ ] Lint/Typecheck passed
+- [ ] Logging/Metrics/Trace implemented
+- [ ] Security checks passed
+- [ ] Documentation/Changelog updated
+- [ ] Accessibility/Performance requirements met (if frontend)
 
-function DataTable<T>({ columns, data, pagination, searchable }: DataTableProps<T>) {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
 
-  const filteredData = useMemo(() => {
-    if (!search) return data;
-    return data.filter(row =>
-      Object.values(row).some(val =>
-        String(val).toLowerCase().includes(search.toLowerCase())
-      )
-    );
-  }, [data, search]);
+## Anti-patterns / Pitfalls
 
-  const paginatedData = useMemo(() => {
-    if (!pagination) return filteredData;
-    const start = (page - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, page, pagination]);
+* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
+* ⚠️ **Watch out for**: Common symptoms and quick fixes
+* 💡 **Instead**: Use proper error handling, pagination, and logging
 
-  return (
-    <div>
-      {searchable && (
-        <div className="mb-4">
-          <input
-            type="search"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border rounded-lg w-full max-w-sm"
-          />
-        </div>
-      )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-800">
-            <tr>
-              {columns.map(col => (
-                <th key={col.key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {paginatedData.map((row, i) => (
-              <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                {columns.map(col => (
-                  <td key={col.key} className="px-6 py-4 whitespace-nowrap text-sm">
-                    {col.render ? col.render(row) : row[col.key]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+## Reference Links & Examples
 
-      {pagination && (
-        <Pagination
-          page={page}
-          totalPages={Math.ceil(filteredData.length / pageSize)}
-          onPageChange={setPage}
-        />
-      )}
-    </div>
-  );
-}
-```
+* Internal documentation and examples
+* Official documentation and best practices
+* Community resources and discussions
 
-## Best Practices
 
-1. **5-second rule** - Key metrics should be understood in 5 seconds
-2. **Above the fold** - Critical data visible without scrolling
-3. **Consistent time ranges** - All charts use same time period
-4. **Progressive disclosure** - Summary → details on demand
-5. **Empty states** - Show meaningful content when no data
-6. **Loading states** - Skeleton screens while loading
+## Versioning & Changelog
 
-## When to Use
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
 
-- Building admin panels and back-office tools
-- Creating analytics dashboards
-- Monitoring systems and real-time displays
-- Data-heavy business applications
-- Internal tools and management interfaces
-
-## Notes
-
-- Consider user role - executives vs analysts have different needs
-- Mobile dashboards need different layouts, not just responsive
-- Performance matters - virtualize long lists, lazy load charts
-- Allow customization - users can arrange their own dashboards

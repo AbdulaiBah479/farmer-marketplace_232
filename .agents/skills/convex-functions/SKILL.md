@@ -1,6 +1,5 @@
 ---
-name: convex-functions
-displayName: Convex Functions
+name: Convex Functions
 description: Writing queries, mutations, actions, and HTTP actions with proper argument validation, error handling, internal functions, and runtime considerations
 version: 1.0.0
 author: Convex

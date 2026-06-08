@@ -1,15 +1,15 @@
 ---
 name: prisma-cli
-description: Prisma CLI commands reference covering all available commands, options, and usage patterns. Use when running Prisma CLI commands, setting up projects, generating client, running migrations, managing databases, or starting Prisma's MCP server. Triggers on "prisma init", "prisma generate", "prisma migrate", "prisma db", "prisma studio", "prisma mcp".
+description: Prisma CLI commands reference covering all available commands, options, and usage patterns. Use when running Prisma CLI commands, setting up projects, generating client, running migrations, or managing databases. Triggers on "prisma init", "prisma generate", "prisma migrate", "prisma db", "prisma studio".
 license: MIT
 metadata:
   author: prisma
-  version: "7.6.0"
+  version: "7.0.0"
 ---
 
 # Prisma CLI Reference
 
-Complete reference for all Prisma CLI commands. This skill provides guidance on command usage, options, and best practices for current Prisma releases.
+Complete reference for all Prisma CLI commands. This skill provides guidance on command usage, options, and best practices for Prisma ORM 7.x.
 
 ## When to Apply
 
@@ -30,7 +30,7 @@ Reference this skill when:
 | 3 | Development | HIGH | `dev` |
 | 4 | Database | HIGH | `db-` |
 | 5 | Migrations | CRITICAL | `migrate-` |
-| 6 | Utility | MEDIUM | `studio`, `validate`, `format`, `debug`, `mcp` |
+| 6 | Utility | MEDIUM | `studio`, `validate`, `format`, `debug` |
 
 ## Command Categories
 
@@ -42,7 +42,7 @@ Reference this skill when:
 | Development | `dev` | Local Prisma Postgres for development |
 | Database | `db pull`, `db push`, `db seed`, `db execute` | Direct database operations |
 | Migrations | `migrate dev`, `migrate deploy`, `migrate reset`, `migrate status`, `migrate diff`, `migrate resolve` | Schema migrations |
-| Utility | `studio`, `mcp`, `version`, `debug` | Development and AI tooling |
+| Utility | `studio`, `version`, `debug` | Development tools |
 
 ## Quick Reference
 
@@ -60,8 +60,8 @@ prisma init --datasource-provider sqlite
 # Initialize with Prisma Postgres (cloud)
 prisma init --db
 
-# Initialize with an example model
-prisma init --with-model
+# Initialize with AI-generated schema
+prisma init --prompt "E-commerce app with users, products, orders"
 ```
 
 ### Client Generation
@@ -72,6 +72,9 @@ prisma generate
 
 # Watch mode for development
 prisma generate --watch
+
+# Generate without engine (for Accelerate/edge)
+prisma generate --no-engine
 
 # Generate specific generator only
 prisma generate --generator client
@@ -159,9 +162,6 @@ prisma migrate diff --from-config-datasource --to-schema schema.prisma --script
 # Open Prisma Studio (database GUI)
 prisma studio
 
-# Start Prisma's MCP server for AI tools
-prisma mcp
-
 # Show version info
 prisma version
 prisma -v
@@ -176,11 +176,11 @@ prisma validate
 prisma format
 ```
 
-## Current Prisma CLI Setup
+## Prisma 7 Changes
 
 ### New Configuration File
 
-Use `prisma.config.ts` for CLI configuration:
+Prisma 7 uses `prisma.config.ts` for CLI configuration:
 
 ```typescript
 import 'dotenv/config'
@@ -198,15 +198,16 @@ export default defineConfig({
 })
 ```
 
-### Current Command Behavior
+### Removed Flags
 
-- Run `prisma generate` explicitly after `migrate dev`, `db push`, or other schema syncs when you need fresh client output
-- Run `prisma db seed` explicitly after `migrate dev` or `migrate reset` when you need seed data
-- Use `prisma db execute --file ...` for raw SQL scripts
+- `--skip-generate` removed from `migrate dev` and `db push`
+- `--skip-seed` removed from `migrate dev`
+- `--schema` and `--url` removed from `db execute`
+- Run `prisma generate` explicitly after migrations
 
 ### Environment Variables
 
-Load environment variables explicitly in `prisma.config.ts`, commonly with `dotenv`:
+Environment variables are no longer auto-loaded. Use `dotenv`:
 
 ```typescript
 // prisma.config.ts
@@ -232,7 +233,6 @@ references/migrate-status.md - Migration status
 references/migrate-resolve.md - Migration resolution
 references/migrate-diff.md   - Schema diffing
 references/studio.md         - Database GUI
-references/mcp.md            - Prisma MCP server
 references/validate.md       - Schema validation
 references/format.md         - Schema formatting
 references/debug.md          - Debug info

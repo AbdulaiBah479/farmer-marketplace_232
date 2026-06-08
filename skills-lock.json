@@ -3109,6 +3109,12 @@
       "skillPath": "skills/code-review/SKILL.md",
       "computedHash": "209efee7befb7db891695f8cc81ca2b72c2c67f4c328e4eb3de767a844512683"
     },
+    "code-security": {
+      "source": "semgrep/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-security/SKILL.md",
+      "computedHash": "56cbeeac5ccf346461e60f08fde411aa1f6e97ffed94fc83d871c2e4ce2ee4a6"
+    },
     "code-simplifier": {
       "source": "WalletConnect/skills",
       "sourceType": "github",
@@ -4369,6 +4375,12 @@
       "skillPath": "skills/literature-search/SKILL.md",
       "computedHash": "7be38ca2921ef82afc578b0c2a140c4fb404a74a4c322a0635499dae6124bf7b"
     },
+    "llm-security": {
+      "source": "semgrep/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/llm-security/SKILL.md",
+      "computedHash": "c6f01f4b16c45c4a68aa7679ada409647435207d3bce7185d8fa62be9dbe7553"
+    },
     "lobster-bioinformatics": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -5604,6 +5616,12 @@
       "sourceType": "github",
       "skillPath": "legal-clinic/skills/semester-handoff/SKILL.md",
       "computedHash": "281f390ab9ace9e928e200ca95b9b1c6a644b1ad305c3d8d85d956a9ba519b58"
+    },
+    "semgrep": {
+      "source": "semgrep/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/semgrep/SKILL.md",
+      "computedHash": "2ea1b9502a5cebbc74b5791dcabac00090bb00fc9a67d87a54bbd895c74a1cd6"
     },
     "seq-wrangler": {
       "source": "bitroc-ai/medical-skills",

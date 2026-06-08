@@ -51,9 +51,6 @@ GPAI model providers releasing under open-source/free licenses need only comply 
 
 ### Art. 51 — Systemic Risk Classification
 
-**GPAI classification threshold (Commission guidelines, July 2025):**
-Models trained with cumulative compute ≥ **10²³ FLOPs** are subject to GPAI obligations under Arts. 53–55.
-
 **Automatic presumption of systemic risk when:**
 Training compute exceeds **10²⁵ FLOPs** (floating point operations, cumulative across all training runs)
 
@@ -100,20 +97,9 @@ In addition to Art. 53 universal obligations, providers of systemic-risk GPAI mo
 - Includes protection against model theft, unauthorized access, adversarial attacks on model weights
 
 **Compliance pathways for GPAI obligations:**
-1. **GPAI Code of Practice** (primary pathway) — Final CoP published 10 July 2025, endorsed by Commission and AI Board 1 August 2025. Operates from 2 August 2025. Three chapters: (i) Transparency, (ii) Copyright, (iii) Safety and Security (systemic risk only). Non-signatories must demonstrate compliance by alternative means and explain their approach to the AI Office.
-2. **Harmonised standards** — when published under Commission mandate; compliance gives presumption of conformity. prEN 18286 (QMS for AI Act) entered public enquiry October 2025; key standards expected Q4 2026.
-3. **Alternative adequate means** — provider demonstrates compliance through other methods acceptable to Commission.
-
-**GPAI Code of Practice — Key obligations by chapter:**
-- **Transparency chapter:** Model Documentation Form covering technical properties, training data, energy consumption, intended use; retained for 10 years. Downstream providers can request additional information within 14 days.
-- **Copyright chapter:** Written copyright policy; compliance with robots.txt and technical opt-out protocols; rightsholder complaints mechanism; prohibition of infringing uses in acceptable use policies.
-- **Safety and Security chapter (systemic risk only):** Safety and Security Framework established within **4 weeks of notification to the Commission** and **at least 2 weeks before market placement**; Safety and Security Model Reports submitted to AI Office before market placement; adversarial testing (red-teaming); serious incident reporting with staggered timelines; cybersecurity measures.
-
-**Legacy GPAI models** (placed on market before 2 August 2025): deadline to comply is **2 August 2027**.
-
-**Confirmed CoP signatories (as of April 2026):** Aleph Alpha, Amazon, Anthropic, Black Forest Labs, Cohere, Google, IBM, Microsoft, Mistral AI, OpenAI, ServiceNow, WRITER, and others. Note: xAI signed only the Safety and Security chapter, committing to demonstrate compliance with Transparency and Copyright by alternative means.
-
-A **Signatory Taskforce**, chaired by the AI Office, facilitates coherent CoP implementation.
+1. **Codes of Practice** — voluntary, developed with AI Office involvement; interim compliance pathway
+2. **Harmonised standards** — when published under Commission mandate; compliance gives presumption of conformity
+3. **Alternative adequate means** — provider demonstrates compliance through other methods acceptable to Commission
 
 ---
 
@@ -129,17 +115,6 @@ A **Signatory Taskforce**, chaired by the AI Office, facilitates coherent CoP im
 - Provides secretariat support for the AI Board
 - Key contact point for: systemic risk notifications, Codes of Practice development, serious incident reports from GPAI providers
 - Issues non-binding guidance; makes recommendations to the Commission
-- Full enforcement powers over GPAI providers (information requests, model evaluations, fines) activate **2 August 2026**
-
-**Key guidance and actions published by the AI Office (chronological):**
-- **4 Feb 2025:** Guidelines on prohibited AI practices under Art. 5 — with practical examples for all 8 categories
-- **6 Feb 2025:** Guidelines on the definition of an AI system (Art. 3(1)) — clarifying what falls within the regulation's scope
-- **July 2025:** Final GPAI Code of Practice published; GPAI scope guidelines published; Commission training data summary template published (for Art. 53(1)(d))
-- **October 2025:** AI Act Whistleblower Tool launched — secure channel for reporting suspected violations
-- **December 2025:** First draft of Code of Practice on Marking and Labelling of AI-generated Content
-- **5 March 2026:** Second draft of the AI-generated content marking CoP
-- **8 May 2026:** Draft guidelines on Art. 50 transparency obligations opened for consultation; three studies on Art. 5 prohibited practices published; three studies on technical marking/detection of AI-generated content published
-- **19 May 2026:** Draft guidelines on high-risk AI system classification opened for public consultation
 
 ### European Artificial Intelligence Board — AI Board (Art. 65)
 
@@ -183,7 +158,7 @@ Each Member State designates one or more national competent authorities with pow
 
 ### AI Regulatory Sandboxes (Art. 57)
 
-- At least one operational per Member State by **2 August 2027** (deadline extended from 2 Aug 2026 by AI Omnibus)
+- At least one operational per Member State by 2 August 2026
 - Enable controlled testing of innovative AI systems under regulatory supervision before market placement
 - Participants: reduced administrative burden; authorities: supervisory insight
 - Participation does not provide automatic compliance certification
@@ -283,7 +258,7 @@ The AI Act operates concurrently with GDPR — both apply when AI systems proces
 | **Provider/deployer/notified body violations** (Arts. 16, 22, 23, 24, 26, 31, 33, 34, 50) | €15,000,000 or **3%** of total worldwide annual turnover (higher applies) |
 | **Incorrect/misleading information** to notified bodies or competent authorities | €7,500,000 or **1%** of total worldwide annual turnover (higher applies) |
 
-**SME / startup / SMC reduction:** For SMEs, startups, and — per the AI Omnibus — **small mid-cap companies (SMCs)**, the lower of the fixed amount or percentage applies (Art. 99(6)).
+**SME / startup reduction:** For SMEs and startups, the lower of the fixed amount or percentage applies (Art. 99(6)).
 
 **Proportionality factors:** Nature, gravity, and duration; prior infringements; company size and market share; intentionality; cooperation level; mitigation measures taken; actual damage caused.
 

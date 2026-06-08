@@ -5,7 +5,7 @@ description: Native WebSocket API patterns, connection lifecycle, reconnection s
 
 # WebSocket Real-Time Communication Patterns
 
-> **Quick Guide:** Use native WebSocket API for real-time bidirectional communication. Implement exponential backoff with jitter for reconnection. Use discriminated unions for type-safe message handling. Queue messages during disconnection for delivery on reconnect. Close connections on `pagehide` to allow bfcache.
+> **Quick Guide:** Use native WebSocket API for real-time bidirectional communication. Implement exponential backoff with jitter for reconnection. Use discriminated unions for type-safe message handling. Queue messages during disconnection for delivery on reconnect.
 
 ---
 
@@ -23,11 +23,11 @@ description: Native WebSocket API patterns, connection lifecycle, reconnection s
 
 **(You MUST implement heartbeat/ping-pong to detect dead connections)**
 
-**(You MUST set `binaryType` to 'arraybuffer' when handling binary data)**
+**(You MUST set `binaryType` to 'arraybuffer' when handling binary data for synchronous processing)**
 
-**(You MUST use wss:// for secure origins - browsers block ws:// on HTTPS pages except localhost)**
+**(You MUST use wss:// for secure origins - modern browsers block ws:// on HTTPS pages except localhost)**
 
-**(You MUST handle bfcache with pagehide/pageshow events)**
+**(You MUST handle bfcache compatibility with pagehide/pageshow events for better navigation performance)**
 
 </critical_requirements>
 
@@ -42,13 +42,6 @@ description: Native WebSocket API patterns, connection lifecycle, reconnection s
 - Creating live dashboards or collaborative editing features
 - Streaming data updates with low latency requirements
 
-**When NOT to use:**
-
-- One-way server-to-client streaming only (use SSE instead)
-- Simple request-response patterns (use HTTP/REST instead)
-- When library abstractions are required (use a WebSocket wrapper library)
-- When automatic backpressure handling is critical (consider WebSocketStream when widely supported)
-
 **Key patterns covered:**
 
 - WebSocket connection lifecycle management
@@ -59,16 +52,18 @@ description: Native WebSocket API patterns, connection lifecycle, reconnection s
 - Binary data handling (ArrayBuffer, Blob)
 - Custom React hooks (useWebSocket)
 - Authentication patterns
-- Room/channel subscriptions
-- bfcache compatibility
+
+**When NOT to use:**
+
+- One-way server-to-client streaming only (use SSE instead)
+- Simple request-response patterns (use HTTP/REST instead)
+- When library abstractions are required (use Socket.IO or similar)
+- When automatic backpressure handling is critical (consider WebSocketStream when widely supported)
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Connection lifecycle, reconnection, heartbeat, queuing, auth, rooms, hooks
-- [examples/state-machine.md](examples/state-machine.md) - Connection state machine pattern
-- [examples/binary.md](examples/binary.md) - Binary data and file upload
-- [examples/presence.md](examples/presence.md) - User presence detection
-- [reference.md](reference.md) - Decision frameworks, close codes, anti-patterns
+- For code examples, see [examples/](examples/)
+- For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
@@ -88,15 +83,15 @@ WebSockets provide full-duplex communication channels over a single TCP connecti
 
 4. **Type Safety:** WebSocket messages are untyped strings. Use discriminated unions with a shared `type` field for compile-time safety.
 
-5. **bfcache Compatibility:** Open WebSocket connections prevent pages from using the browser's back/forward cache, degrading navigation performance. Close connections on `pagehide` and reconnect on `pageshow` when `event.persisted`.
-
 **Connection Lifecycle:**
 
 ```
-CONNECTING -> OPEN <-> (messages) -> CLOSING -> CLOSED
-                 |                      |
-             (error) <- reconnect <- (close)
+CONNECTING → OPEN ↔ (messages) → CLOSING → CLOSED
+                ↓                    ↓
+            (error) ← reconnect ← (close)
 ```
+
+5. **bfcache Compatibility:** Open WebSocket connections can prevent pages from using the browser's back/forward cache, degrading navigation performance. Close connections on `pagehide` and reconnect on `pageshow` when persisted.
 
 </philosophy>
 
@@ -108,252 +103,722 @@ CONNECTING -> OPEN <-> (messages) -> CLOSING -> CLOSED
 
 ### Pattern 1: Basic WebSocket Connection
 
-The native WebSocket API provides four lifecycle events: `onopen`, `onmessage`, `onerror`, and `onclose`. Always handle all four.
+The native WebSocket API provides four lifecycle events: `onopen`, `onmessage`, `onerror`, and `onclose`.
 
 ```typescript
+// ✅ Good Example - Complete lifecycle handling
 const WS_URL = "wss://api.example.com/ws";
+
 const socket = new WebSocket(WS_URL);
 
-socket.onopen = () => {
-  /* connection ready - safe to send */
+socket.onopen = (event: Event) => {
+  console.log("Connected to WebSocket server");
+  // Connection is ready - safe to send messages
 };
+
 socket.onmessage = (event: MessageEvent) => {
-  /* JSON.parse(event.data) */
+  const data = JSON.parse(event.data);
+  console.log("Received:", data);
 };
+
 socket.onerror = (event: Event) => {
-  /* always followed by onclose */
+  console.error("WebSocket error:", event);
+  // Note: onerror is always followed by onclose
 };
+
 socket.onclose = (event: CloseEvent) => {
-  /* reconnect here */
+  console.log(`Connection closed: code=${event.code}, reason=${event.reason}`);
+  // Implement reconnection logic here
 };
 ```
 
-**Why good:** All four lifecycle events handled, typed event parameters, named constant for URL
+**Why good:** All four lifecycle events handled, typed event parameters, named constant for URL, comments explain behavior
 
-> Full implementation: [examples/core.md](examples/core.md) Pattern 1
+```typescript
+// ❌ Bad Example - Missing error and close handling
+const socket = new WebSocket("wss://api.example.com/ws");
+
+socket.onmessage = (event) => {
+  console.log(event.data);
+};
+```
+
+**Why bad:** Missing onopen means messages could be sent before ready, missing onerror/onclose means connection failures are silent, hardcoded URL string
 
 ---
 
 ### Pattern 2: Exponential Backoff with Jitter
 
-Reconnection attempts must use exponential backoff with jitter to prevent all clients from reconnecting simultaneously (thundering herd problem). Cap delay at a maximum and limit total retry attempts.
+Reconnection attempts should use exponential backoff with jitter to prevent all clients from reconnecting simultaneously (thundering herd problem).
+
+#### Constants
 
 ```typescript
 const INITIAL_BACKOFF_MS = 1000;
 const MAX_BACKOFF_MS = 30000;
 const BACKOFF_MULTIPLIER = 2;
-const JITTER_FACTOR = 0.5;
+const MAX_RETRY_ATTEMPTS = 10;
+const JITTER_FACTOR = 0.5; // 50% randomness
+```
 
+#### Implementation
+
+```typescript
+// ✅ Good Example - Exponential backoff with jitter
 function calculateBackoff(attempt: number): number {
-  const exponential = Math.min(
+  const exponentialDelay = Math.min(
     INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, attempt),
     MAX_BACKOFF_MS,
   );
-  const jitter = exponential * JITTER_FACTOR * (Math.random() * 2 - 1);
-  return Math.floor(exponential + jitter);
+
+  // Add jitter: random value between 50% and 150% of delay
+  const jitter = exponentialDelay * JITTER_FACTOR * (Math.random() * 2 - 1);
+
+  return Math.floor(exponentialDelay + jitter);
+}
+
+class ReconnectingWebSocket {
+  private socket: WebSocket | null = null;
+  private url: string;
+  private retryCount = 0;
+  private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(url: string) {
+    this.url = url;
+    this.connect();
+  }
+
+  private connect(): void {
+    this.socket = new WebSocket(this.url);
+
+    this.socket.onopen = () => {
+      this.retryCount = 0; // Reset on successful connection
+    };
+
+    this.socket.onclose = (event: CloseEvent) => {
+      // Don't reconnect on intentional close (code 1000)
+      if (event.code !== 1000 && this.retryCount < MAX_RETRY_ATTEMPTS) {
+        this.scheduleReconnect();
+      }
+    };
+  }
+
+  private scheduleReconnect(): void {
+    const delay = calculateBackoff(this.retryCount);
+    this.retryCount++;
+
+    console.log(`Reconnecting in ${delay}ms (attempt ${this.retryCount})`);
+
+    this.reconnectTimeoutId = setTimeout(() => {
+      this.connect();
+    }, delay);
+  }
+
+  public close(): void {
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+    }
+    this.socket?.close(1000, "Client closed"); // Normal closure
+  }
 }
 ```
 
-**Why good:** Jitter prevents thundering herd, capped maximum delay, retry limit prevents infinite loops
+**Why good:** Jitter prevents thundering herd, capped maximum delay prevents excessive waits, retry limit prevents infinite loops, intentional close (code 1000) skips reconnect, timeout cleaned up on close
 
-> Full reconnecting class: [examples/core.md](examples/core.md) Pattern 2
+```typescript
+// ❌ Bad Example - No backoff, no jitter
+socket.onclose = () => {
+  // Immediately reconnect - causes thundering herd
+  new WebSocket(url);
+};
+```
+
+**Why bad:** Immediate reconnection overwhelms server during outages, all clients reconnect at exact same time, no retry limit causes infinite loops
 
 ---
 
 ### Pattern 3: Heartbeat/Ping-Pong
 
-Heartbeats detect dead connections and prevent intermediate infrastructure from closing idle connections. Send a `ping` on an interval; if `pong` is not received within a timeout, consider the connection dead.
+Heartbeats detect dead connections and prevent intermediate infrastructure from closing idle connections.
 
 ```typescript
+// ✅ Good Example - Client-side heartbeat implementation
 const HEARTBEAT_INTERVAL_MS = 30000;
 const HEARTBEAT_TIMEOUT_MS = 10000;
 
-// Send ping -> start timeout -> if pong received, clear timeout
-// If timeout fires without pong -> connection is dead, close and reconnect
+class HeartbeatWebSocket {
+  private socket: WebSocket;
+  private heartbeatIntervalId: ReturnType<typeof setInterval> | null = null;
+  private heartbeatTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private onConnectionLost: () => void;
+
+  constructor(url: string, onConnectionLost: () => void) {
+    this.socket = new WebSocket(url);
+    this.onConnectionLost = onConnectionLost;
+
+    this.socket.onopen = () => {
+      this.startHeartbeat();
+    };
+
+    this.socket.onmessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "pong") {
+        this.clearHeartbeatTimeout();
+        return;
+      }
+
+      // Handle other messages...
+    };
+
+    this.socket.onclose = () => {
+      this.stopHeartbeat();
+    };
+  }
+
+  private startHeartbeat(): void {
+    this.heartbeatIntervalId = setInterval(() => {
+      this.sendPing();
+    }, HEARTBEAT_INTERVAL_MS);
+  }
+
+  private sendPing(): void {
+    if (this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ type: "ping" }));
+
+      // Set timeout for pong response
+      this.heartbeatTimeoutId = setTimeout(() => {
+        console.error("Heartbeat timeout - connection lost");
+        this.socket.close();
+        this.onConnectionLost();
+      }, HEARTBEAT_TIMEOUT_MS);
+    }
+  }
+
+  private clearHeartbeatTimeout(): void {
+    if (this.heartbeatTimeoutId) {
+      clearTimeout(this.heartbeatTimeoutId);
+      this.heartbeatTimeoutId = null;
+    }
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatIntervalId) {
+      clearInterval(this.heartbeatIntervalId);
+    }
+    this.clearHeartbeatTimeout();
+  }
+}
 ```
 
-**When to use:** All WebSocket connections, especially those that may be idle for extended periods or pass through NATs/proxies.
+**Why good:** Named constants for intervals, timeout detects dead connections, cleanup prevents memory leaks, pong handler clears timeout, readyState check prevents sending on closed socket
 
-> Full implementation: [examples/core.md](examples/core.md) Pattern 3
+**When to use:** All WebSocket connections, especially those that may be idle for extended periods or pass through NATs/proxies.
 
 ---
 
 ### Pattern 4: Message Queuing During Disconnection
 
-Messages sent during disconnection are lost. Queue them and flush when connection is restored. Limit queue size to prevent unbounded memory growth.
+Messages sent during disconnection are lost. Queue them and flush when connection is restored.
 
 ```typescript
+// ✅ Good Example - Message queue with flush on reconnect
 const MAX_QUEUE_SIZE = 100;
 
-public send(data: unknown): void {
-  if (this.socket?.readyState === WebSocket.OPEN) {
-    this.socket.send(JSON.stringify(data));
-  } else {
-    this.queueMessage(data); // Queue with size limit
+interface QueuedMessage {
+  data: unknown;
+  timestamp: number;
+}
+
+class QueuedWebSocket {
+  private socket: WebSocket | null = null;
+  private messageQueue: QueuedMessage[] = [];
+  private url: string;
+
+  constructor(url: string) {
+    this.url = url;
+    this.connect();
+  }
+
+  private connect(): void {
+    this.socket = new WebSocket(this.url);
+
+    this.socket.onopen = () => {
+      this.flushQueue();
+    };
+
+    // ... other handlers
+  }
+
+  public send(data: unknown): void {
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(data));
+    } else {
+      this.queueMessage(data);
+    }
+  }
+
+  private queueMessage(data: unknown): void {
+    if (this.messageQueue.length >= MAX_QUEUE_SIZE) {
+      // Remove oldest message to make room
+      this.messageQueue.shift();
+      console.warn("Message queue full - dropping oldest message");
+    }
+
+    this.messageQueue.push({
+      data,
+      timestamp: Date.now(),
+    });
+  }
+
+  private flushQueue(): void {
+    while (this.messageQueue.length > 0) {
+      const message = this.messageQueue.shift();
+      if (message && this.socket?.readyState === WebSocket.OPEN) {
+        this.socket.send(JSON.stringify(message.data));
+      }
+    }
   }
 }
 ```
 
-**Why good:** Queue has size limit, oldest messages dropped when full, flush on reconnect, readyState check before sending
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 4
+**Why good:** Queue has size limit to prevent memory issues, oldest messages dropped when full, flush happens on successful reconnect, readyState check before sending, timestamp allows message expiration if needed
 
 ---
 
 ### Pattern 5: Type-Safe Messages with Discriminated Unions
 
-Use discriminated unions with a shared `type` field for compile-time type safety and exhaustive handling. Define separate types for client-to-server and server-to-client messages.
+Use discriminated unions with a shared `type` field for compile-time type safety and exhaustive handling.
 
 ```typescript
+// ✅ Good Example - Discriminated unions for message types
+
+// Outgoing messages (client to server)
+type ClientMessage =
+  | { type: "subscribe"; channel: string }
+  | { type: "unsubscribe"; channel: string }
+  | { type: "message"; channel: string; content: string }
+  | { type: "ping" };
+
+// Incoming messages (server to client)
 type ServerMessage =
   | { type: "subscribed"; channel: string; members: string[] }
+  | { type: "unsubscribed"; channel: string }
   | { type: "message"; channel: string; content: string; sender: string }
+  | { type: "pong" }
   | { type: "error"; code: number; message: string };
 
 function handleServerMessage(message: ServerMessage): void {
+  // TypeScript narrows the type based on the `type` field
   switch (message.type) {
     case "subscribed":
-      /* ... */ break;
+      console.log(
+        `Joined ${message.channel} with ${message.members.length} members`,
+      );
+      break;
+    case "unsubscribed":
+      console.log(`Left ${message.channel}`);
+      break;
     case "message":
-      /* ... */ break;
+      console.log(`${message.sender}: ${message.content}`);
+      break;
+    case "pong":
+      // Heartbeat response - handled elsewhere
+      break;
     case "error":
-      /* ... */ break;
+      console.error(`Error ${message.code}: ${message.message}`);
+      break;
     default:
-      const exhaustiveCheck: never = message; // Compile error if case missing
+      // Exhaustiveness check - TypeScript error if case missing
+      const exhaustiveCheck: never = message;
+      console.warn("Unknown message type:", exhaustiveCheck);
   }
 }
+
+function sendMessage(socket: WebSocket, message: ClientMessage): void {
+  socket.send(JSON.stringify(message));
+}
+
+// Usage - TypeScript enforces correct structure
+sendMessage(socket, { type: "subscribe", channel: "general" });
+sendMessage(socket, { type: "message", channel: "general", content: "Hello!" });
 ```
 
-**Why good:** Discriminated union enables type narrowing, exhaustiveness check catches missing cases at compile time, separate types for client/server messages
+**Why good:** Discriminated union enables type narrowing in switch, exhaustiveness check catches missing cases at compile time, separate types for client/server messages, type-safe send function
 
-> Full implementation: [examples/core.md](examples/core.md) Pattern 5
+```typescript
+// ❌ Bad Example - Untyped message handling
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  if (data.type === "message") {
+    // No type safety - data.content could be anything
+    console.log(data.content);
+  }
+};
+```
+
+**Why bad:** No compile-time type checking, typos in type strings not caught, missing fields cause runtime errors
 
 ---
 
 ### Pattern 6: Binary Data Handling
 
-WebSockets support binary data via ArrayBuffer or Blob. Set `binaryType` to `'arraybuffer'` for synchronous processing with DataView. Use `instanceof ArrayBuffer` to distinguish binary from text messages.
+WebSockets support binary data via ArrayBuffer or Blob. Use ArrayBuffer for synchronous processing.
 
 ```typescript
-socket.binaryType = "arraybuffer";
+// ✅ Good Example - Binary data with ArrayBuffer
 
-socket.onmessage = (event: MessageEvent) => {
-  if (event.data instanceof ArrayBuffer) {
-    const view = new DataView(event.data); // Synchronous
-  } else {
-    JSON.parse(event.data); // Text message
+const BINARY_HEADER_SIZE = 8; // 4 bytes type + 4 bytes length
+
+type BinaryMessageType = 0x01 | 0x02 | 0x03;
+
+const BinaryMessageTypes = {
+  IMAGE: 0x01 as BinaryMessageType,
+  AUDIO: 0x02 as BinaryMessageType,
+  FILE: 0x03 as BinaryMessageType,
+} as const;
+
+class BinaryWebSocket {
+  private socket: WebSocket;
+
+  constructor(url: string) {
+    this.socket = new WebSocket(url);
+
+    // Set binaryType to arraybuffer for synchronous processing
+    this.socket.binaryType = "arraybuffer";
+
+    this.socket.onmessage = (event: MessageEvent) => {
+      if (event.data instanceof ArrayBuffer) {
+        this.handleBinaryMessage(event.data);
+      } else {
+        this.handleTextMessage(event.data);
+      }
+    };
+  }
+
+  private handleBinaryMessage(buffer: ArrayBuffer): void {
+    const view = new DataView(buffer);
+
+    // Read header (big-endian by default)
+    const messageType = view.getUint32(0);
+    const payloadLength = view.getUint32(4);
+
+    // Extract payload
+    const payload = buffer.slice(
+      BINARY_HEADER_SIZE,
+      BINARY_HEADER_SIZE + payloadLength,
+    );
+
+    switch (messageType) {
+      case BinaryMessageTypes.IMAGE:
+        this.handleImage(payload);
+        break;
+      case BinaryMessageTypes.AUDIO:
+        this.handleAudio(payload);
+        break;
+      case BinaryMessageTypes.FILE:
+        this.handleFile(payload);
+        break;
+    }
+  }
+
+  public sendBinary(type: BinaryMessageType, data: ArrayBuffer): void {
+    const header = new ArrayBuffer(BINARY_HEADER_SIZE);
+    const headerView = new DataView(header);
+
+    headerView.setUint32(0, type);
+    headerView.setUint32(4, data.byteLength);
+
+    // Combine header and payload
+    const message = new Uint8Array(BINARY_HEADER_SIZE + data.byteLength);
+    message.set(new Uint8Array(header), 0);
+    message.set(new Uint8Array(data), BINARY_HEADER_SIZE);
+
+    this.socket.send(message);
+  }
+
+  private handleTextMessage(data: string): void {
+    // Handle JSON messages
+    const message = JSON.parse(data);
+    // ...
+  }
+
+  private handleImage(payload: ArrayBuffer): void {
+    /* ... */
+  }
+  private handleAudio(payload: ArrayBuffer): void {
+    /* ... */
+  }
+  private handleFile(payload: ArrayBuffer): void {
+    /* ... */
+  }
+}
+```
+
+**Why good:** binaryType set to arraybuffer for synchronous DataView access, header with type and length for protocol parsing, typed message types, instanceof check distinguishes binary from text
+
+```typescript
+// ❌ Bad Example - Using Blob (async only)
+socket.binaryType = "blob"; // Default, but forces async handling
+
+socket.onmessage = async (event) => {
+  if (event.data instanceof Blob) {
+    // Must use async API - less performant
+    const buffer = await event.data.arrayBuffer();
+    // Process buffer...
   }
 };
 ```
 
-**Why good:** ArrayBuffer enables synchronous DataView access, instanceof check distinguishes binary from text
-
-> Full implementation with binary protocol: [examples/core.md](examples/core.md) Pattern 6
+**Why bad:** Blob requires async processing, adds latency to message handling, ArrayBuffer is synchronous and faster
 
 ---
 
 ### Pattern 7: Authentication Over WebSocket
 
-WebSocket doesn't support custom HTTP headers. Authenticate via the first message after connection (not query string, which leaks tokens to logs). Queue application messages until auth is confirmed.
+WebSocket doesn't support custom HTTP headers. Authenticate via query string or first message after connection.
 
 ```typescript
-socket.onopen = () => {
-  socket.send(JSON.stringify({ type: "auth", token })); // First message
-};
-// Queue all other messages until auth_result.success received
+// ✅ Good Example - Token authentication via first message
+
+interface AuthMessage {
+  type: "auth";
+  token: string;
+}
+
+interface AuthResponse {
+  type: "auth_result";
+  success: boolean;
+  error?: string;
+}
+
+class AuthenticatedWebSocket {
+  private socket: WebSocket;
+  private authenticated = false;
+  private pendingMessages: unknown[] = [];
+  private onAuthenticated: () => void;
+  private onAuthError: (error: string) => void;
+
+  constructor(
+    url: string,
+    token: string,
+    onAuthenticated: () => void,
+    onAuthError: (error: string) => void,
+  ) {
+    this.socket = new WebSocket(url);
+    this.onAuthenticated = onAuthenticated;
+    this.onAuthError = onAuthError;
+
+    this.socket.onopen = () => {
+      // Send auth token as first message
+      const authMessage: AuthMessage = { type: "auth", token };
+      this.socket.send(JSON.stringify(authMessage));
+    };
+
+    this.socket.onmessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "auth_result") {
+        this.handleAuthResult(data as AuthResponse);
+        return;
+      }
+
+      if (!this.authenticated) {
+        console.warn("Received message before authentication");
+        return;
+      }
+
+      // Handle authenticated messages...
+    };
+  }
+
+  private handleAuthResult(response: AuthResponse): void {
+    if (response.success) {
+      this.authenticated = true;
+      this.flushPendingMessages();
+      this.onAuthenticated();
+    } else {
+      this.onAuthError(response.error || "Authentication failed");
+      this.socket.close();
+    }
+  }
+
+  public send(data: unknown): void {
+    if (!this.authenticated) {
+      this.pendingMessages.push(data);
+      return;
+    }
+
+    this.socket.send(JSON.stringify(data));
+  }
+
+  private flushPendingMessages(): void {
+    while (this.pendingMessages.length > 0) {
+      const message = this.pendingMessages.shift();
+      this.socket.send(JSON.stringify(message));
+    }
+  }
+}
 ```
 
-**Why good:** Token not in URL (avoids server logs), messages queued until authenticated, explicit auth state
+**Why good:** Token sent as first message (not in URL - avoids server logs), messages queued until authenticated, auth response handled before other messages, explicit authenticated state, callbacks for success/error
 
-> Full implementation: [examples/core.md](examples/core.md) Pattern 7
+```typescript
+// ❌ Bad Example - Token in query string
+const socket = new WebSocket(`wss://api.example.com/ws?token=${token}`);
+```
+
+**Why bad:** Token visible in server access logs, may be cached by proxies, URL length limits, harder to refresh token
 
 ---
 
 ### Pattern 8: Room/Channel Pattern
 
-Organize connections into logical channels for targeted message delivery. Track local room state (membership, joined status) and guard against sending to unjoined rooms.
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 8
-
----
-
-### Pattern 9: Custom React Hook (useWebSocket)
-
-A comprehensive custom hook encapsulating connection lifecycle, reconnection with backoff, heartbeat, message queuing, and cleanup. Exposes `status`, `send`, `close`, and `reconnect`.
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 9
-
----
-
-### Pattern 10: Shared WebSocket Connection (Context Provider)
-
-When multiple components need the same WebSocket, use a context provider with type-based message routing via a `subscribe(type, handler)` API.
-
-> Full implementation: [examples/core.md](examples/core.md) Pattern 10
-
----
-
-### Pattern 11: bfcache Compatibility
-
-Open WebSocket connections prevent pages from entering the browser's back/forward cache. Close on `pagehide` and reconnect on `pageshow` when `event.persisted`.
+Organize connections into logical channels for targeted message delivery.
 
 ```typescript
-window.addEventListener("pagehide", () => {
-  socket?.close(1000, "Page hidden");
-});
+// ✅ Good Example - Room subscription pattern
 
-window.addEventListener("pageshow", (event: PageTransitionEvent) => {
-  if (event.persisted) {
-    // Page restored from bfcache - reconnect
-    connect();
+interface RoomState {
+  id: string;
+  members: Set<string>;
+  joined: boolean;
+}
+
+class RoomWebSocket {
+  private socket: WebSocket;
+  private rooms: Map<string, RoomState> = new Map();
+  private onRoomMessage: (roomId: string, message: unknown) => void;
+
+  constructor(
+    url: string,
+    onRoomMessage: (roomId: string, message: unknown) => void,
+  ) {
+    this.socket = new WebSocket(url);
+    this.onRoomMessage = onRoomMessage;
+
+    this.socket.onmessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+      this.handleMessage(data);
+    };
   }
-});
+
+  public joinRoom(roomId: string): void {
+    if (this.rooms.has(roomId)) {
+      return; // Already in room
+    }
+
+    this.rooms.set(roomId, {
+      id: roomId,
+      members: new Set(),
+      joined: false,
+    });
+
+    this.socket.send(
+      JSON.stringify({
+        type: "join_room",
+        roomId,
+      }),
+    );
+  }
+
+  public leaveRoom(roomId: string): void {
+    if (!this.rooms.has(roomId)) {
+      return;
+    }
+
+    this.socket.send(
+      JSON.stringify({
+        type: "leave_room",
+        roomId,
+      }),
+    );
+
+    this.rooms.delete(roomId);
+  }
+
+  public sendToRoom(roomId: string, message: unknown): void {
+    const room = this.rooms.get(roomId);
+    if (!room?.joined) {
+      console.warn(`Cannot send to room ${roomId} - not joined`);
+      return;
+    }
+
+    this.socket.send(
+      JSON.stringify({
+        type: "room_message",
+        roomId,
+        payload: message,
+      }),
+    );
+  }
+
+  private handleMessage(data: unknown): void {
+    const message = data as {
+      type: string;
+      roomId?: string;
+      [key: string]: unknown;
+    };
+
+    switch (message.type) {
+      case "room_joined": {
+        const room = this.rooms.get(message.roomId!);
+        if (room) {
+          room.joined = true;
+          room.members = new Set(message.members as string[]);
+        }
+        break;
+      }
+      case "room_message": {
+        this.onRoomMessage(message.roomId!, message.payload);
+        break;
+      }
+      case "member_joined": {
+        const room = this.rooms.get(message.roomId!);
+        room?.members.add(message.memberId as string);
+        break;
+      }
+      case "member_left": {
+        const room = this.rooms.get(message.roomId!);
+        room?.members.delete(message.memberId as string);
+        break;
+      }
+    }
+  }
+}
 ```
 
-> Full implementation: [examples/core.md](examples/core.md) Pattern 11
+**Why good:** Local room state tracks membership, guards against sending to unjoined rooms, member tracking for presence, clean subscription API
 
 </patterns>
 
 ---
 
-<red_flags>
+<integration>
 
-## RED FLAGS
+## Integration Guide
 
-### High Priority Issues
+**WebSocket is transport-agnostic.** This skill covers the native WebSocket API only. Integration with specific frameworks or libraries is handled by their respective skills.
 
-- **No reconnection logic** - Connection drops are inevitable, users see permanent disconnection
-- **Immediate reconnection without backoff** - Causes thundering herd, overwhelming server during recovery
-- **No heartbeat/ping-pong** - Dead connections go undetected, users think they're connected
-- **Untyped message handling** - Runtime errors when message shapes change, impossible to refactor safely
-- **Sending messages without readyState check** - Messages silently fail when connection is not open
-- **Missing cleanup on component unmount** - Memory leaks, zombie connections, duplicate handlers
-- **Using ws:// on HTTPS pages** - Browsers block insecure WebSocket on secure origins (except localhost)
-- **Not handling bfcache** - Open connections prevent back/forward cache, degrading navigation performance
+**Works with:**
 
-### Medium Priority Issues
+- Your React framework via custom hooks (see Pattern 9 in examples/)
+- Your state management solution for connection state
+- Your authentication system for token management
 
-- **No message queuing during disconnection** - Messages lost during brief disconnects
-- **Token in WebSocket URL query string** - Security risk: token visible in server logs
-- **Using Blob binaryType for frequent binary messages** - Performance penalty from async processing
-- **Not handling all close event codes** - Missing opportunities for smart reconnection decisions
-- **Single retry interval without randomization** - All clients reconnect at same time after outage
-- **Not monitoring bufferedAmount** - Sending faster than network can handle causes memory issues
+**Defers to:**
 
-### Gotchas & Edge Cases
+- Backend WebSocket server implementation (backend skills)
+- Socket.IO library patterns (socket-io skill if exists)
+- Server-Sent Events for one-way streams (SSE skill if exists)
+- State management for storing received data (state management skills)
 
-- **Close code 1000 is normal closure** - Don't reconnect for code 1000
-- **onerror is always followed by onclose** - Don't duplicate error handling logic
-- **WebSocket doesn't support custom HTTP headers** - Use first message for auth, not query string
-- **Use `pagehide` for cleanup, not `beforeunload`** - beforeunload prevents bfcache
-- **Some proxies have WebSocket idle timeouts** - Heartbeats prevent proxy disconnects (20-30s intervals)
-- **readyState changes are not synchronous** - Check readyState before every send
-- **Binary messages need `instanceof ArrayBuffer` check** - Don't assume message type
-- **JSON.parse can throw** - Always wrap in try-catch for incoming messages
-- **No built-in backpressure** - Check `bufferedAmount` before sending large data
-- **WebSocketStream is experimental** - Chrome/Edge 124+ only, no Firefox/Safari support
+**Alternative APIs (Future):**
 
-</red_flags>
+- **WebSocketStream** (experimental) - Promise-based API with automatic backpressure handling via Streams API. Not widely supported yet - check browser compatibility before use.
+
+</integration>
 
 ---
 
@@ -371,11 +836,11 @@ window.addEventListener("pageshow", (event: PageTransitionEvent) => {
 
 **(You MUST implement heartbeat/ping-pong to detect dead connections)**
 
-**(You MUST set `binaryType` to 'arraybuffer' when handling binary data)**
+**(You MUST set `binaryType` to 'arraybuffer' when handling binary data for synchronous processing)**
 
-**(You MUST use wss:// for secure origins - browsers block ws:// on HTTPS pages except localhost)**
+**(You MUST use wss:// for secure origins - modern browsers block ws:// on HTTPS pages except localhost)**
 
-**(You MUST handle bfcache with pagehide/pageshow events)**
+**(You MUST close WebSocket on `pagehide` and reconnect on `pageshow` when `event.persisted` to allow bfcache)**
 
 **Failure to follow these rules will result in connection storms, lost messages, blocked connections, and degraded navigation performance.**
 

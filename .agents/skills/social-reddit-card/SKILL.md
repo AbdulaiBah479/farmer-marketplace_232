@@ -3,9 +3,7 @@ name: social-reddit-card
 zh_name: "Reddit 帖子卡"
 en_name: "Reddit Post Card"
 emoji: "🔺"
-description: "Realistic Reddit post card with vote rail and comment count, suited to video overlays or story sharing."
-zh_description: "拟真 Reddit 帖子卡 + 上下投票 + 评论数, 适合视频叠加 / 故事分享"
-en_description: "Realistic Reddit post card with vote rail and comment count, suited to video overlays or story sharing."
+description: "拟真 Reddit 帖子卡 + 上下投票 + 评论数, 适合视频叠加 / 故事分享"
 category: card
 scenario: marketing
 aspect_hint: "1280×720 或 800×600"
@@ -18,21 +16,6 @@ example_tagline: "Reddit dark mode + vote rail"
 example_desc: "一条 AITA 风格故事 + 12.3k upvotes + 1.2k comments"
 example_source_url: "https://hyperframes.heygen.com/catalog"
 example_source_label: "hyperframes · reddit-post"
-od:
-  mode: prototype
-  surface: web
-  platform: desktop
-  scenario: marketing
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the Reddit Post Card template to turn my content into a realistic Reddit post card with vote rail and comment count for a video overlay or story share. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「Reddit 帖子卡」模板把我的内容做成一份「拟真 Reddit 帖子卡 + 上下投票 + 评论数, 适合视频叠加 / 故事分享」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: Reddit 帖子卡】

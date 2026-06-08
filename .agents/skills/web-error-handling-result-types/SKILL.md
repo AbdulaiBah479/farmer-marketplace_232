@@ -29,7 +29,7 @@ description: TypeScript Result/Either types for type-safe error handling, railwa
 
 ---
 
-**Auto-detection:** Result type, Either type, ok err, railway-oriented programming, error as value, flatMap andThen, tryCatch, neverthrow, Effect Either, discriminated union error, typed errors, error handling Result
+**Auto-detection:** Result type, Either type, ok err, railway-oriented programming, error as value, flatMap andThen, tryCatch, neverthrow, fp-ts Either, discriminated union error, typed errors
 
 **When to use:**
 
@@ -55,7 +55,7 @@ description: TypeScript Result/Either types for type-safe error handling, railwa
 - Unrecoverable errors (configuration missing at startup)
 - Optional values without error info (use `T | null` or Option type)
 - Simple boolean checks (use plain boolean)
-- Framework boundaries that expect exceptions (framework error handlers)
+- Framework boundaries that expect exceptions (Express error handlers)
 
 **Detailed Resources:**
 
@@ -420,8 +420,8 @@ if (!result.ok) {
     case "NOT_FOUND":
       console.log(`User ${result.error.id} not found`);
       break;
-    case "VALIDATION_ERROR":
-      showFieldError(result.error.field);
+    case "UNAUTHORIZED":
+      redirectToLogin();
       break;
     case "NETWORK_ERROR":
       showRetryButton();
@@ -478,12 +478,12 @@ Is this an expected, recoverable error?
 
 ```
 What are your requirements?
-├─ Zero dependencies, full control → Custom implementation (recommended default)
-├─ Full effect system + error channel → Effect (active ecosystem, steeper learning curve)
-└─ Just learning → Custom implementation (understand the pattern first)
+├─ Zero dependencies → Custom implementation
+├─ Simple needs + small bundle → neverthrow (~2KB)
+├─ Full FP ecosystem → fp-ts (~30KB)
+├─ Production app with async → neverthrow (ResultAsync)
+└─ Just learning → Custom implementation (understand the pattern)
 ```
-
-> **Note:** neverthrow and fp-ts are no longer actively maintained. Custom implementations cover most needs. Effect is the modern choice for complex error handling ecosystems.
 
 ### Result vs Nullable
 
@@ -520,42 +520,11 @@ What information does failure carry?
 
 **Results do NOT replace:**
 
-- **UI error boundaries**: Framework error boundaries catch render errors; Results handle business logic errors
+- **React Error Boundaries**: Boundaries catch render errors; Results handle business logic errors
 - **HTTP error handling**: Convert Results to appropriate status codes at API boundary
 - **Form validation**: Use Results internally, display errors via your form library
 
 </integration>
-
----
-
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- Ignoring Result return values - defeats entire purpose of Result types
-- Mixing throw and Result in same function - signature lies about error contract
-- Using generic `Error` or `string` as error type - loses type safety benefits
-- Unwrapping Result without checking `ok` - runtime crash waiting to happen
-- Not wrapping throwable operations (`JSON.parse`) - hidden exceptions in Result code
-
-**Medium Priority Issues:**
-
-- Deep nesting instead of flatMap - hard to read, doesn't compose
-- Creating new error objects in hot paths - pre-create static error constants
-- Error type too generic for domain - caller can't handle specifically
-
-**Gotchas & Edge Cases:**
-
-- `flatMap` unions error types - can grow large with long chains
-- TypeScript narrowing requires checking `result.ok` (not just truthy check on the result object)
-- Error objects are usually not `instanceof Error` - custom comparison needed
-- Result of `void` operation: use `Result<void, E>` not `Result<undefined, E>`
-- Async Results: always await before checking `ok` property
-- Pre-created error constants help performance but lose dynamic context
-
-</red_flags>
 
 ---
 

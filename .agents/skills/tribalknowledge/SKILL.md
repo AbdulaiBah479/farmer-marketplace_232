@@ -1,6 +1,10 @@
 ---
-name: Tribalknowledge
-description: Capture and preserve machinist expertise before it retires. Structured knowledge extraction for CNC operations, troubleshooting, and process optimization. USE WHEN user says 'capture knowledge', 'document expertise', 'what does [name] know', 'troubleshooting tips', 'how do we handle', 'interview machinist', or 'tribal knowledge'.
+name: TribalKnowledge
+description: |
+  Capture and preserve machinist expertise before it retires. Structured knowledge extraction
+  for CNC operations, troubleshooting, and process optimization.
+  USE WHEN user says 'capture knowledge', 'document expertise', 'what does [name] know',
+  'troubleshooting tips', 'how do we handle', 'interview machinist', or 'tribal knowledge'.
 ---
 
 # TribalKnowledge - Expertise Preservation System

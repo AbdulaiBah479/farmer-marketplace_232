@@ -1,167 +1,215 @@
 ---
 name: bridge
-description: |
-  Bridge integration. Manage data, records, and automate workflows. Use when the user wants to interact with Bridge data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: "Cross-chain token transfers using Wormhole and CCTP"
+emoji: "🌉"
+gates:
+  envs:
+    anyOf:
+      - SOLANA_PRIVATE_KEY
+      - EVM_PRIVATE_KEY
 ---
 
-# Bridge
+# Bridge - Complete API Reference
 
-Bridge is a SaaS platform that helps companies connect and manage their learning, performance, and engagement initiatives. It's used by HR and learning and development professionals to create a more engaging employee experience.
+Transfer tokens across chains using Wormhole and Circle CCTP protocols.
 
-Official docs: https://developer.atlassian.com/cloud/trello/rest/api-group-bridges/
+## Supported Chains
 
-## Bridge Overview
+| Chain | Wormhole | CCTP (USDC) |
+|-------|----------|-------------|
+| Solana | Yes | Yes |
+| Ethereum | Yes | Yes |
+| Polygon | Yes | Yes |
+| Arbitrum | Yes | Yes |
+| Optimism | Yes | Yes |
+| Avalanche | Yes | Yes |
+| Base | Yes | Yes |
 
-- **Meeting**
-  - **Participant**
-- **Transcription**
-- **Summary**
-- **Topic**
-- **Action Item**
-- **Question**
-- **Keyword**
-- **Sentiment**
-- **Speaker**
-- **File**
-- **Integration**
-- **Workspace**
-- **User**
-- **Notification**
-- **Label**
-- **Segment**
-- **Analytics**
-- **Search**
+---
 
-## Working with Bridge
+## Chat Commands
 
-This skill uses the Membrane CLI to interact with Bridge. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+### Quote
 
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
-
-```bash
-npm install -g @membranehq/cli@latest
+```
+/bridge quote 100 USDC sol to eth           # Quote 100 USDC Solana → Ethereum
+/bridge quote 1000 USDC arb to base         # Quote Arbitrum → Base
+/bridge quote 50 USDC eth to sol            # Quote Ethereum → Solana
 ```
 
-### Authentication
+### Execute Transfer
 
-```bash
-membrane login --tenant --clientName=<agentType>
+```
+/bridge send 100 USDC sol to eth            # Send 100 USDC Solana → Ethereum
+/bridge send 1000 USDC arb to base          # Send Arbitrum → Base
+/bridge send 50 USDC eth to sol --address <dest>  # To specific address
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### Redeem (Claim)
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
-
-```bash
-membrane login complete <code>
+```
+/bridge redeem <tx-hash>                    # Claim transferred tokens
+/bridge pending                             # List pending redemptions
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+### Status
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Bridge
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://bridgeapi.io/" --json
 ```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+/bridge status <tx-hash>                    # Check transfer status
+/bridge history                             # View transfer history
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+---
 
-The resulting state tells you what to do next:
+## TypeScript API Reference
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+### Wormhole Bridge
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+```typescript
+import { executeWormholeBridge, executeWormholeRedeem } from 'clodds/bridge/wormhole';
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
+// Get quote
+const quote = await getWormholeQuote({
+  sourceChain: 'solana',
+  destChain: 'ethereum',
+  token: 'USDC',
+  amount: 100,
+});
 
-### Searching for actions
+console.log(`Transfer 100 USDC: Solana → Ethereum`);
+console.log(`Fee: $${quote.fee}`);
+console.log(`Est. time: ${quote.estimatedTime} seconds`);
 
-Search using a natural language description of what you want to do:
+// Execute transfer
+const transfer = await executeWormholeBridge({
+  sourceChain: 'solana',
+  destChain: 'ethereum',
+  token: 'USDC',
+  amount: 100,
 
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+  // Source wallet
+  sourcePrivateKey: process.env.SOLANA_PRIVATE_KEY,
+
+  // Destination address (optional, defaults to your address)
+  destAddress: '0x1234...',
+});
+
+console.log(`Transfer initiated: ${transfer.txHash}`);
+console.log(`VAA: ${transfer.vaa}`);
+console.log(`Status: ${transfer.status}`);
+
+// Redeem on destination chain
+const redeem = await executeWormholeRedeem({
+  destChain: 'ethereum',
+  vaa: transfer.vaa,
+  destPrivateKey: process.env.EVM_PRIVATE_KEY,
+});
+
+console.log(`Redeemed: ${redeem.txHash}`);
+console.log(`Amount received: ${redeem.amount} USDC`);
 ```
 
-You should always search for actions in the context of a specific connection.
+### CCTP (Circle) Bridge
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+```typescript
+import { executeCCTPBridge, redeemCCTP } from 'clodds/bridge/cctp';
 
-## Popular actions
+// CCTP is optimized for USDC transfers
+const transfer = await executeCCTPBridge({
+  sourceChain: 'arbitrum',
+  destChain: 'base',
+  amount: 1000,  // USDC
 
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
+  sourcePrivateKey: process.env.EVM_PRIVATE_KEY,
+  destAddress: '0x1234...',
+});
 
-### Running actions
+console.log(`CCTP transfer: ${transfer.txHash}`);
+console.log(`Message: ${transfer.messageHash}`);
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+// Wait for attestation (usually ~15 minutes)
+await waitForAttestation(transfer.messageHash);
+
+// Redeem
+const redeem = await redeemCCTP({
+  destChain: 'base',
+  messageHash: transfer.messageHash,
+  destPrivateKey: process.env.EVM_PRIVATE_KEY,
+});
 ```
 
-To pass JSON parameters:
+### Check Status
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+```typescript
+import { getTransferStatus } from 'clodds/bridge';
+
+const status = await getTransferStatus(txHash);
+
+console.log(`Status: ${status.status}`);
+// 'pending' | 'confirming' | 'attesting' | 'redeemable' | 'completed' | 'failed'
+
+console.log(`Source confirmations: ${status.sourceConfirmations}`);
+console.log(`VAA status: ${status.vaaStatus}`);
+console.log(`Redeemed: ${status.redeemed}`);
+
+if (status.status === 'redeemable') {
+  console.log(`Ready to redeem! VAA: ${status.vaa}`);
+}
 ```
 
-The result is in the `output` field of the response.
+### Get Pending Redemptions
 
+```typescript
+import { getPendingRedemptions } from 'clodds/bridge';
 
-### Proxy requests
+const pending = await getPendingRedemptions({
+  chains: ['ethereum', 'solana', 'arbitrum'],
+  address: myAddress,
+});
 
-When the available actions don't cover your use case, you can send requests directly to the Bridge API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+for (const p of pending) {
+  console.log(`${p.sourceChain} → ${p.destChain}`);
+  console.log(`  Amount: ${p.amount} ${p.token}`);
+  console.log(`  Status: ${p.status}`);
+  console.log(`  Age: ${p.age} minutes`);
+}
 ```
 
-Common options:
+---
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+## Transfer Flow
 
+### Wormhole
 
-## Best practices
+1. **Lock tokens** on source chain
+2. **Wait for confirmations** (varies by chain)
+3. **Guardian attestation** (VAA generation)
+4. **Redeem** on destination chain
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+### CCTP
+
+1. **Burn USDC** on source chain
+2. **Wait for attestation** (~15 min)
+3. **Mint USDC** on destination chain
+
+---
+
+## Fees & Times
+
+| Route | Fee | Time |
+|-------|-----|------|
+| Solana → Ethereum | ~$5 | 15-20 min |
+| Ethereum → Solana | ~$20 | 15-20 min |
+| Arbitrum → Base (CCTP) | ~$0.50 | 15-20 min |
+| Polygon → Arbitrum | ~$1 | 15-20 min |
+
+---
+
+## Best Practices
+
+1. **Use CCTP for USDC** - Faster and cheaper
+2. **Check gas prices** - High gas can increase costs
+3. **Save VAA/message hash** - Needed for redemption
+4. **Monitor pending transfers** - Don't forget to redeem
+5. **Start with small amounts** - Test before large transfers
+6. **Verify destination address** - Double-check before sending

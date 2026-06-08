@@ -1,108 +1,242 @@
 ---
 name: image-to-video
-description: >
-  Animate a still image into a finished, moving video with Pexo. Upload a photo and Pexo adds
-  natural motion, camera moves, and transitions, auto-picks the best image-to-video model
-  (Seedance, Kling, Wan, and more), and returns a publish-ready clip with music. Use when the
-  user has an IMAGE to bring to life: "image to video", "animate this photo", "make a video from
-  this picture", "turn my image into a video". NOT for text-only prompts (use the text-to-video
-  skill) or editing an existing video.
-homepage: https://pexo.ai
-repository: https://github.com/pexoai/pexo-skills
-version: "0.1.0"
-requires:
-  env: [PEXO_API_KEY, PEXO_BASE_URL]
-  runtime: [curl, jq, file]
-metadata:
-  author: pexoai
+description: "Still-to-video conversion guide: model selection, motion prompting, and camera movement. Covers Wan 2.5 i2v, Seedance, Fabric, Grok Video with when to use each. Use for: animating images, creating video from stills, adding motion, product animations. Triggers: image to video, i2v, animate image, still to video, add motion to image, image animation, photo to video, animate still, wan i2v, image2video, bring image to life, animate photo, motion from image"
+allowed-tools: Bash(infsh *)
 ---
 
-# Image to Video — Pexo
+# Image to Video
 
-**Pexo:** https://pexo.ai — get an API key, watch your project render, and buy credits there.
+Convert still images to animated videos via [inference.sh](https://inference.sh) CLI.
 
-Bring a still image to life as a finished video. You upload the user's image, hand the request
-to the hosted Pexo agent, and deliver the result — Pexo adds the motion, camera movement, music,
-and assembles the final clip.
+## Quick Start
 
-## Your role: relay, don't create
-
-Create a project, send the user's request **verbatim**, poll, deliver. Pexo's backend handles
-all creative work — scriptwriting, model choice, prompts, music. Adding your own direction
-(duration, style, models the user didn't ask for) overrides its judgment and produces worse
-videos.
-
-## Config
-
-`~/.pexo/config`:
-```
-PEXO_BASE_URL="https://pexo.ai"
-PEXO_API_KEY="sk-<your-api-key>"
-```
-**No account / first run →** read `references/SETUP-CHECKLIST.md` and walk the user through it — it carries the signup flow with the **invite code that grants new users bonus credits**, plus how to create the config above. **Config error →** run `scripts/pexo-doctor.sh` and follow its output.
-
-## Workflow
-
-Scripts live in this skill's `scripts/`. Reply to the user in their language.
-
-1. **Create a project:** `pexo-project-create.sh "<short brief>"` → save the `project_id`.
-2. **Upload any files** the user gave: `pexo-upload.sh <project_id> <path>` → save `asset_id`,
-   reference it inline as `<original-image>asset_id</original-image>` (or `<original-video>` /
-   `<original-audio>`). Tags are required — a bare `asset_id` is ignored. Pexo can't crawl URLs —
-   download, then upload.
-3. **Send the request:** `pexo-chat.sh <project_id> "<user's exact words> <asset tags>"`.
-   Copy the user's words exactly; only add asset tags.
-4. **Tell the user** (their language): submitted ✓ · ~15–20 min · `https://pexo.ai/project/<project_id>`.
-5. **Poll:** every ≥60s run `pexo-project-get.sh <project_id>` and act on `nextAction`:
-   - **WAIT** → keep polling; every ~5 polls send a one-line update with the project link.
-   - **RESPOND** → handle each event in `recentMessages`: relay Pexo's text (wait for the
-     user's answer if it asked, then `pexo-chat.sh` their reply); for `preview_video`, run
-     `pexo-asset-get.sh <project_id> <assetId>` per option, show the URLs (A/B/C), let the user
-     pick, then `pexo-chat.sh <project_id> "<choice>" --choice <assetId>`; for a `document`
-     event, mention it to the user.
-   - **DELIVER** → `pexo-asset-get.sh <project_id> <final assetId>`, then send the user the
-     **full** asset URL as plain text — all `?…` query params, never truncated or wrapped in
-     markdown — plus the project link.
-   - **FAILED** → explain `nextActionHint` in plain terms and offer to retry.
-   - **RECONNECT** → `pexo-chat.sh <project_id> "continue"`, tell the user the connection
-     dropped and you're resuming, then keep polling.
-   - Never call `pexo-chat.sh` during WAIT — it triggers duplicate production.
-   - **Taking too long** → if it's been >30 min and still WAIT, tell the user (with the project
-     link + `https://pexo.ai/connect/openclaw`) it's running long; ask whether to keep waiting or
-     stop. Don't poll forever.
-
-## Revisions
-
-After delivery, the user's tweaks ("make it shorter", "new music", "different shot") reuse the
-**same** project: `pexo-chat.sh <project_id> "<their feedback>"`, then poll again (step 5). Never
-create a new project for a revision — it throws away Pexo's server-side context.
-
-## Credits
-
-If a script fails with "Credits balance" / "Insufficient credits": if the error carries a
-purchase link, pass it to the user; otherwise tell them to add credits at `https://pexo.ai/home`
-→ Credits → Buy Credits. Retry after they confirm.
-
-## Example
-
-User: "Animate this product photo into a 10-second clip with a slow zoom."
+> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
 
 ```bash
-pid=$(pexo-project-create.sh "animate product photo")
-pexo-chat.sh "$pid" "Animate this product photo into a 10-second clip with a slow zoom."
-# Tell the user: submitted, ~15–20 min, https://pexo.ai/project/$pid
-# Poll pexo-project-get.sh "$pid" until nextAction is DELIVER, then deliver the asset URL.
+infsh login
+
+# Generate a still image
+infsh app run falai/flux-dev-lora --input '{
+  "prompt": "serene mountain lake at sunset, snow-capped peaks reflected in still water, golden hour light, landscape photography",
+  "width": 1248,
+  "height": 832
+}'
+
+# Animate it
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "gentle ripples on the lake surface, clouds slowly drifting, warm light shifting, birds flying in the distance",
+  "image": "path/to/lake-image.png"
+}'
 ```
 
-## Scripts
 
-| Script | Usage | Returns |
-|---|---|---|
-| `pexo-project-create.sh` | `"<brief>"` | `project_id` |
-| `pexo-upload.sh` | `<project_id> <file>` | `asset_id` |
-| `pexo-chat.sh` | `<project_id> "<message>" [--choice <id>]` | ack (async) |
-| `pexo-project-get.sh` | `<project_id>` | JSON: `nextAction`, `recentMessages` |
-| `pexo-asset-get.sh` | `<project_id> <asset_id>` | JSON with `url` |
-| `pexo-doctor.sh` | — | setup diagnostic |
+## Model Selection
 
-Error codes and edge cases → `references/TROUBLESHOOTING.md`.
+| Model | App ID | Best For | Motion Style |
+|-------|--------|----------|-------------|
+| **Wan 2.5 i2v** | `falai/wan-2-5-i2v` | Realistic motion, natural movement | Photorealistic, subtle |
+| **WAN-I2V (Pruna)** | `pruna/wan-i2v` | Economical, fast, 480p/720p | Natural, efficient |
+| **Seedance 1.5 Pro** | `bytedance/seedance-1-5-pro` | Stylized, creative, animation-like | Artistic, expressive |
+| **Seedance 1.0 Pro** | `bytedance/seedance-1-0-pro` | General purpose, good quality | Balanced |
+| **Fabric 1.0** | `falai/fabric-1-0` | Cloth, fabric, liquid, flowing materials | Physics-based flow |
+| **Grok Imagine Video** | `xai/grok-imagine-video` | General animation, text-guided | Versatile |
+
+### When to Use Each
+
+| Scenario | Best Model | Why |
+|----------|-----------|-----|
+| Landscape with water/clouds | **Wan 2.5 i2v** | Best at natural, realistic motion |
+| Portrait with subtle expression | **Wan 2.5 i2v** | Maintains face fidelity |
+| Product with fabric/cloth | **Fabric 1.0** | Specialized in material physics |
+| Flag waving, curtain flowing | **Fabric 1.0** | Cloth simulation |
+| Illustrated/artistic image | **Seedance** | Matches stylized content |
+| General "bring to life" | **Seedance 1.5 Pro** | Good all-rounder |
+| Quick test/iteration | **Seedance 1.0 Lite** | Fastest, 720p |
+
+## Motion Types
+
+### Camera Movement
+
+| Movement | Prompt Keyword | Effect |
+|----------|---------------|--------|
+| Push in / Dolly forward | "slow dolly forward", "camera pushes in" | Increasing intimacy/focus |
+| Pull out / Dolly back | "camera pulls back", "slow zoom out" | Reveal, context |
+| Pan left/right | "camera pans slowly to the right" | Scanning, following |
+| Tilt up/down | "camera tilts upward" | Revealing height |
+| Orbit | "camera orbits around the subject" | 3D exploration |
+| Crane up | "camera rises upward" | Grand reveal |
+| Static | (no camera movement prompt) | Subject motion only |
+
+### Subject Motion
+
+| Type | Prompt Examples |
+|------|----------------|
+| Natural elements | "water rippling", "clouds drifting", "leaves rustling in breeze" |
+| Hair/clothing | "hair blowing gently in wind", "dress fabric flowing" |
+| Atmospheric | "fog slowly rolling", "dust particles floating in light beams" |
+| Character | "person slowly turns to camera", "subtle breathing motion" |
+| Mechanical | "gears turning", "clock hands moving" |
+| Liquid | "coffee steam rising", "paint dripping", "water pouring" |
+
+## Prompting Best Practices
+
+### The Golden Rule: Subtle > Dramatic
+
+AI video models produce better results with **gentle, subtle motion** than dramatic action. Requesting too much movement causes distortion and artifacts.
+
+```
+❌ "person running and jumping over obstacles while the camera spins"
+✅ "person slowly walking forward, gentle breeze, camera follows alongside"
+
+❌ "explosion with debris flying everywhere"
+✅ "candle flame flickering gently, warm ambient light shifting"
+
+❌ "fast zoom into the eyes with dramatic camera shake"
+✅ "slow dolly forward toward the subject, subtle focus shift"
+```
+
+### Prompt Structure
+
+```
+[Camera movement] + [Subject motion] + [Atmospheric effects] + [Mood/pace]
+```
+
+### Examples by Scenario
+
+```bash
+# Landscape animation
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "gentle camera pan right, water reflecting moving clouds, trees swaying slightly in breeze, warm golden light, peaceful and slow",
+  "image": "landscape.png"
+}'
+
+# Portrait animation
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "subtle breathing motion, slight head turn, natural eye blink, hair moving gently, soft ambient lighting shifts",
+  "image": "portrait.png"
+}'
+
+# Product shot animation
+infsh app run bytedance/seedance-1-5-pro --input '{
+  "prompt": "slow 360 degree orbit around the product, gentle spotlight movement, subtle reflections shifting, premium product showcase, smooth motion",
+  "image": "product.png"
+}'
+
+# Fabric/cloth animation
+infsh app run falai/fabric-1-0 --input '{
+  "prompt": "fabric flowing and rippling in gentle wind, natural cloth physics, soft movement",
+  "image": "fabric-scene.png"
+}'
+
+# Architectural visualization
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "slow dolly forward through the entrance, slight camera tilt upward, ambient light filtering through windows, dust particles in light beams",
+  "image": "building-interior.png"
+}'
+```
+
+## Duration Guidelines
+
+| Duration | Quality | Use For |
+|----------|---------|---------|
+| 2-3 seconds | Highest quality | GIFs, looping backgrounds, cinemagraphs |
+| 4-5 seconds | High quality | Social media posts, product reveals |
+| 6-8 seconds | Good quality | Short clips, transitions |
+| 10+ seconds | Quality degrades | Avoid unless stitching shorter clips |
+
+### Extending Duration
+
+For longer videos, generate multiple short clips and stitch:
+
+```bash
+# Generate 3 clips from the same image with progressive motion
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "slow pan left, gentle water motion",
+  "image": "scene.png"
+}' --no-wait
+
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "continuing pan, clouds shifting, light changing",
+  "image": "scene.png"
+}' --no-wait
+
+# Stitch together
+infsh app run infsh/media-merger --input '{
+  "media": ["clip1.mp4", "clip2.mp4"]
+}'
+```
+
+## The Full Workflow
+
+### Still-to-Final-Video Pipeline
+
+```bash
+# 1. Generate source image (best quality)
+infsh app run bytedance/seedream-4-5 --input '{
+  "prompt": "cinematic landscape, misty mountains at dawn, lake in foreground, dramatic clouds, golden hour, 4K quality, professional photography",
+  "size": "2K"
+}'
+
+# 2. Animate the image
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "gentle mist rolling through the valley, lake surface rippling, clouds slowly moving, birds in distance, warm light shifting",
+  "image": "landscape.png"
+}'
+
+# 3. Upscale video if needed
+infsh app run falai/topaz-video-upscaler --input '{
+  "video": "animated-landscape.mp4"
+}'
+
+# 4. Add ambient audio
+infsh app run infsh/hunyuanvideo-foley --input '{
+  "video": "animated-landscape.mp4",
+  "prompt": "gentle nature ambience, distant birds, soft wind, water lapping"
+}'
+
+# 5. Merge video with audio
+infsh app run infsh/video-audio-merger --input '{
+  "video": "upscaled-landscape.mp4",
+  "audio": "ambient-audio.mp3"
+}'
+```
+
+## Cinemagraph Effect
+
+A cinemagraph is a still photo where only one element moves (e.g., waterfall moving in an otherwise frozen scene). To achieve this:
+
+1. Generate the still image with the motion element clearly defined
+2. Prompt for motion only in that specific element
+3. Keep to 2-4 seconds for seamless looping
+
+```bash
+infsh app run falai/wan-2-5-i2v --input '{
+  "prompt": "only the waterfall is moving, everything else remains perfectly still, water cascading smoothly, rest of scene frozen",
+  "image": "waterfall-scene.png"
+}'
+```
+
+## Common Mistakes
+
+| Mistake | Problem | Fix |
+|---------|---------|-----|
+| Too much motion requested | Distortion, artifacts, warping | Subtle > dramatic, always |
+| Wrong model for content type | Poor results | Use selection guide above |
+| Clips too long (10s+) | Quality degrades significantly | Keep to 3-5 seconds, stitch if needed |
+| No camera movement specified | Random/unpredictable motion | Always specify camera behavior |
+| Conflicting motion directions | Chaotic, unnatural | One primary motion direction |
+| Low-res source image | Low-res video output | Start with highest quality source |
+| Complex action scenes | Models can't handle | Keep motion simple and natural |
+
+## Related Skills
+
+```bash
+npx skills add inference-sh/skills@ai-video-generation
+npx skills add inference-sh/skills@ai-image-generation
+npx skills add inference-sh/skills@p-video
+npx skills add inference-sh/skills@video-prompting-guide
+npx skills add inference-sh/skills@prompt-engineering
+```
+
+Browse all apps: `infsh app list`
+

@@ -1,223 +1,190 @@
 ---
-name: YouTube Transcription
-description: This skill should be used when the user wants to "transcribe a YouTube video", "get a transcript of a video", "download and transcribe audio", or needs to convert video/audio content to searchable markdown text using AssemblyAI. Supports both YouTube URLs and local audio files.
-version: 0.1.0
+name: youtube-transcription
+description: >-
+  Transcribe YouTube videos to text using OpenAI Whisper and yt-dlp. Use when
+  the user wants to get a transcript from a YouTube video, generate subtitles,
+  convert video speech to text, create SRT/VTT captions, or extract spoken
+  content from YouTube URLs.
+license: Apache-2.0
+compatibility: >-
+  Requires Python 3.8+, ffmpeg, and CUDA GPU recommended for large models.
+  Install: pip install openai-whisper yt-dlp. CPU works but is slower.
+metadata:
+  author: terminal-skills
+  version: "1.0.0"
+  category: content
+  tags: [youtube, transcription, whisper, subtitles, speech-to-text]
 ---
 
-# YouTube Transcription Skill
+# YouTube Video Transcription
 
-Convert YouTube videos and audio files to searchable, formatted markdown transcripts using AssemblyAI.
+Transcribe YouTube videos to text using OpenAI Whisper and yt-dlp.
 
-## When to Use This Skill
+## Overview
 
-Use this skill when you need to:
-- Transcribe YouTube videos into markdown documents
-- Convert audio files (MP3, WAV, M4A) to text transcripts
-- Create searchable transcripts with metadata and proper formatting
-- Add transcripts to knowledge bases or project documentation
+This skill downloads audio from YouTube videos using yt-dlp and transcribes it using OpenAI's Whisper model. Supports multiple output formats (txt, srt, vtt, json) and various model sizes for different accuracy/speed tradeoffs.
 
-## Core Workflow
+## Instructions
 
-The skill provides a three-step workflow:
-
-1. **Download Audio** (if needed) - Extract audio from YouTube video using yt-dlp with Firefox cookie authentication
-2. **Transcribe** - Send audio to AssemblyAI API for speech-to-text conversion
-3. **Format & Save** - Create markdown document with metadata and transcript text
-
-## Prerequisites
-
-- **AssemblyAI API key** - Free account at https://www.assemblyai.com (set as `ASSEMBLYAI_API_KEY` environment variable)
-- **Firefox browser** - For YouTube authentication (only needed for video downloads)
-- **yt-dlp** - Automatically installed by `uv run`
-
-## Quick Start
-
-### From YouTube URL
+### 1. Install dependencies
 
 ```bash
-export ASSEMBLYAI_API_KEY="your_key_here"
-cd /path/to/vault
-uv run --with=assemblyai ./.claude/skills/youtube-transcription/scripts/transcribe_video.py "https://youtu.be/VIDEO_ID"
+# Install whisper and yt-dlp
+pip install openai-whisper yt-dlp
+
+# Verify ffmpeg is installed (required for audio processing)
+ffmpeg -version
 ```
 
-### From Local Audio File
+If ffmpeg is missing:
+- macOS: `brew install ffmpeg`
+- Ubuntu/Debian: `sudo apt install ffmpeg`
+- Windows: Download from https://ffmpeg.org/download.html
+
+### 2. Download audio from YouTube
 
 ```bash
-export ASSEMBLYAI_API_KEY="your_key_here"
-uv run --with=assemblyai ./.claude/skills/youtube-transcription/scripts/transcribe_video.py /path/to/audio.mp3
+# Download best audio quality as WAV
+yt-dlp -x --audio-format wav -o "%(title)s.%(ext)s" "YOUTUBE_URL"
+
+# Download as MP3 (smaller file)
+yt-dlp -x --audio-format mp3 -o "%(title)s.%(ext)s" "YOUTUBE_URL"
+
+# Download with video ID as filename (safer for special characters)
+yt-dlp -x --audio-format wav -o "%(id)s.%(ext)s" "YOUTUBE_URL"
 ```
 
-**Output:** Full transcript printed to stdout + saved to `/tmp/transcript.txt`
+### 3. Choose Whisper model
 
-## Common Tasks
+| Model | Parameters | VRAM | Relative Speed | Use Case |
+|-------|------------|------|----------------|----------|
+| tiny | 39M | ~1 GB | ~32x | Quick drafts, testing |
+| base | 74M | ~1 GB | ~16x | Fast transcription |
+| small | 244M | ~2 GB | ~6x | Good balance |
+| medium | 769M | ~5 GB | ~2x | High accuracy |
+| large | 1550M | ~10 GB | 1x | Best accuracy |
 
-### Task 1: Transcribe a YouTube Video and Save to Project
+English-only models (`tiny.en`, `base.en`, `small.en`, `medium.en`) are faster for English content.
 
+### 4. Run transcription
+
+**CLI approach:**
 ```bash
-# 1. Run transcription
-export ASSEMBLYAI_API_KEY="your_key_here"
-uv run --with=assemblyai ./.claude/skills/youtube-transcription/scripts/transcribe_video.py "https://youtu.be/_gPODg6br5w"
+# Basic transcription (auto-detect language)
+whisper audio.wav --model medium
 
-# 2. Copy output to project with metadata
-# Edit the transcript file to add:
-# - Title
-# - Video ID, URL, Date
-# - Proper markdown formatting
+# Specify language for better accuracy
+whisper audio.wav --model medium --language en
 
-# 3. Save to your project
-cp /tmp/transcript.txt pages/Projects/My-Project/Video-Title-Transcript.md
+# Output specific format
+whisper audio.wav --model medium --output_format srt
+
+# All formats at once
+whisper audio.wav --model medium --output_format all
+
+# Specify output directory
+whisper audio.wav --model medium --output_dir ./transcripts
 ```
 
-### Task 2: Download YouTube Audio First (if video requires authentication)
+**Python approach:**
+```python
+import whisper
 
+# Load model (downloads on first run)
+model = whisper.load_model("medium")
+
+# Transcribe
+result = model.transcribe("audio.wav", language="en")
+
+# Get plain text
+print(result["text"])
+
+# Get segments with timestamps
+for segment in result["segments"]:
+    print(f"[{segment['start']:.2f} - {segment['end']:.2f}] {segment['text']}")
+```
+
+### 5. One-liner pipeline
+
+Combine download and transcription:
 ```bash
-# Download with Firefox cookies
-yt-dlp -x --audio-format mp3 --cookies-from-browser firefox -o "video.mp3" "https://youtu.be/VIDEO_ID"
-
-# Then transcribe the saved file
-export ASSEMBLYAI_API_KEY="your_key_here"
-uv run --with=assemblyai ./.claude/skills/youtube-transcription/scripts/transcribe_video.py ./video.mp3
+# Download and transcribe in one command
+yt-dlp -x --audio-format wav -o "audio.wav" "YOUTUBE_URL" && whisper audio.wav --model medium --output_format all
 ```
 
-### Task 3: Batch Transcribe Multiple Videos
+### 6. Alternative: yt-whisper tool
 
-Create a simple script to loop through videos:
-
+For simpler workflow, use the dedicated yt-whisper package:
 ```bash
-#!/bin/bash
-export ASSEMBLYAI_API_KEY="your_key_here"
-SKILL_PATH="./.claude/skills/youtube-transcription/scripts/transcribe_video.py"
+# Install
+pip install git+https://github.com/m1guelpf/yt-whisper.git
 
-for url in \
-    "https://youtu.be/VIDEO1" \
-    "https://youtu.be/VIDEO2" \
-    "https://youtu.be/VIDEO3"
-do
-    echo "Transcribing: $url"
-    uv run --with=assemblyai $SKILL_PATH "$url"
-    sleep 5  # Rate limiting
-done
+# Transcribe directly from URL
+yt_whisper "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# With options
+yt_whisper "YOUTUBE_URL" --model medium --language en --output_format srt
 ```
 
-## Troubleshooting
+## Output Formats
 
-### Problem: "Sign in to confirm you're not a bot"
+| Format | Extension | Description |
+|--------|-----------|-------------|
+| txt | .txt | Plain text transcript |
+| srt | .srt | SubRip subtitle format (with timestamps) |
+| vtt | .vtt | WebVTT subtitle format |
+| tsv | .tsv | Tab-separated values |
+| json | .json | Full data with word-level timestamps |
 
-YouTube is blocking yt-dlp. This happens with age-restricted or new videos.
+## Examples
 
-**Solution:** Use Firefox cookies with JavaScript runtime:
-```bash
-yt-dlp -x --audio-format mp3 \
-    --cookies-from-browser firefox \
-    --js-runtimes bun \
-    --remote-components ejs:github \
-    -o "video.mp3" \
-    "https://youtu.be/VIDEO_ID"
+<example>
+User: Transcribe this YouTube video to text
+Steps:
+1. yt-dlp -x --audio-format wav -o "video.wav" "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+2. whisper video.wav --model medium --language en --output_format txt
+Output: video.txt with full transcript
+</example>
+
+<example>
+User: Generate SRT subtitles for a YouTube lecture
+Steps:
+1. yt-dlp -x --audio-format wav -o "lecture.wav" "https://www.youtube.com/watch?v=LECTURE_ID"
+2. whisper lecture.wav --model medium --output_format srt
+Output: lecture.srt with timestamped subtitles
+</example>
+
+<example>
+User: Transcribe a Spanish YouTube video
+Steps:
+1. yt-dlp -x --audio-format wav -o "spanish.wav" "https://www.youtube.com/watch?v=VIDEO_ID"
+2. whisper spanish.wav --model medium --language es --output_format all
+Output: spanish.txt, spanish.srt, spanish.vtt, spanish.json
+</example>
+
+<example>
+User: Quick transcription of a short video (speed over accuracy)
+Command: yt-dlp -x --audio-format mp3 -o "quick.mp3" "URL" && whisper quick.mp3 --model tiny.en
+</example>
+
+<example>
+User: Get transcript with timestamps in Python
+```python
+import whisper
+model = whisper.load_model("medium")
+result = model.transcribe("audio.wav")
+for seg in result["segments"]:
+    print(f"[{seg['start']:.1f}s] {seg['text']}")
 ```
+</example>
 
-### Problem: AssemblyAI module not found
+## Guidelines
 
-Script needs the AssemblyAI package at runtime.
-
-**Solution:** Always use `--with=assemblyai` flag:
-```bash
-uv run --with=assemblyai ./scripts/transcribe_video.py <input>
-```
-
-### Problem: API key not recognized
-
-AssemblyAI requires valid API key.
-
-**Solution:** Verify environment variable is set:
-```bash
-echo $ASSEMBLYAI_API_KEY  # Should show your key
-```
-
-Set it in your shell profile to persist:
-```bash
-# Add to ~/.bashrc or ~/.zshrc
-export ASSEMBLYAI_API_KEY="your_actual_key_here"
-```
-
-## Output Format
-
-The skill outputs raw transcript text. Format it as markdown with metadata:
-
-```markdown
-# Video Title
-
-**Source:** YouTube - Creator Name (@handle)
-**Video ID:** VIDEO_ID
-**URL:** https://youtu.be/VIDEO_ID
-**Date:** YYYY-MM-DD
-**Duration:** MM:SS
-
----
-
-## Full Transcript
-
-[Transcript text...]
-
----
-
-## Key Sections
-
-- [Timestamp] Section title
-- [Timestamp] Another section
-```
-
-## Integration Tips
-
-### For [[Second Brain]] Project
-
-Save transcripts following this structure:
-
-```
-pages/Projects/Second Brain/
-├── Nate B Jones - Why 2026 Is the Year to Build a Second Brain - Transcript.md
-├── Nate B Jones - Follow-up Video - Transcript.md
-└── README.md (links to transcripts)
-```
-
-Update the project README to include:
-```markdown
-- `[[Title - Transcript]]` - Full video transcript
-```
-
-### For Knowledge Base
-
-Create a transcripts folder:
-```
-pages/PKB/Video Transcripts/
-├── Topic 1/
-│   └── Video Title - Transcript.md
-├── Topic 2/
-│   └── Another Video - Transcript.md
-```
-
-## Cost & Limits
-
-- **AssemblyAI pricing:** ~$0.60-1.00 per hour of audio
-- **Free tier:** Limited minutes per month
-- **Check usage:** https://www.assemblyai.com/dashboard
-- **Language support:** English (best), others supported but less accurate
-
-## Advanced Options
-
-See `references/assemblyai_options.md` for:
-- Language detection
-- Speaker diarization (multiple speakers)
-- Entity detection
-- Summarization options
-- Custom punctuation rules
-
-## Related Skills
-
-- [[Second Brain]] - Knowledge management project using transcripts
-- [[Git Workflow]] - For committing transcripts to version control
-
-## Resources
-
-- AssemblyAI documentation: https://www.assemblyai.com/docs/
-- yt-dlp documentation: https://github.com/yt-dlp/yt-dlp/wiki
-- Skill implementation: `.claude/skills/youtube-transcription/scripts/transcribe_video.py`
+- Use `--language` flag when you know the spoken language for significantly better accuracy
+- For long videos (>1 hour), use `small` or `medium` model to balance speed and accuracy
+- English-only models (`.en` suffix) are faster and more accurate for English content
+- GPU with CUDA dramatically speeds up transcription; CPU works but is 5-10x slower
+- If transcription fails, ensure ffmpeg is properly installed and in PATH
+- For videos with background music, larger models (medium/large) handle it better
+- Clean up audio files after transcription to save disk space
+- Use `--output_format all` to get every format at once, then choose what you need

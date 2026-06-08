@@ -1,14 +1,16 @@
 ---
 name: bitbucket-automation
-description: "Automate Bitbucket repositories, pull requests, branches, issues, and workspace management via Rube MCP (Composio). Always search tools first for current schemas."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Automate Bitbucket repositories, pull requests, branches, issues, and workspace management via Rube MCP (Composio). Always search tools first for current schemas.
+requires:
+  mcp: [rube]
+category: devops
 ---
 
 # Bitbucket Automation via Rube MCP
 
 Automate Bitbucket operations including repository management, pull request workflows, branch operations, issue tracking, and workspace administration through Composio's Bitbucket toolkit.
+
+**Toolkit docs**: [composio.dev/toolkits/bitbucket](https://composio.dev/toolkits/bitbucket)
 
 ## Prerequisites
 
@@ -224,5 +226,5 @@ Bitbucket Query Language is available on list endpoints:
 | Delete issue | `BITBUCKET_DELETE_ISSUE` | `workspace`, `repo_slug`, `issue_id` |
 | List members | `BITBUCKET_LIST_WORKSPACE_MEMBERS` | `workspace` |
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+---
+*Powered by [Composio](https://composio.dev)*

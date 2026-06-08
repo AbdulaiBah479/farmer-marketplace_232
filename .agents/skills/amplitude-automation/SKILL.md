@@ -1,14 +1,16 @@
 ---
 name: amplitude-automation
 description: "Automate Amplitude tasks via Rube MCP (Composio): events, user activity, cohorts, user identification. Always search tools first for current schemas."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+requires:
+  mcp: [rube]
+category: analytics
 ---
 
 # Amplitude Automation via Rube MCP
 
 Automate Amplitude product analytics through Composio's Amplitude toolkit via Rube MCP.
+
+**Toolkit docs**: [composio.dev/toolkits/amplitude](https://composio.dev/toolkits/amplitude)
 
 ## Prerequisites
 
@@ -216,5 +218,5 @@ For cohort membership updates:
 | Check cohort status | AMPLITUDE_CHECK_COHORT_STATUS | request_id |
 | List event categories | AMPLITUDE_GET_EVENT_CATEGORIES | (none) |
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+---
+*Powered by [Composio](https://composio.dev)*

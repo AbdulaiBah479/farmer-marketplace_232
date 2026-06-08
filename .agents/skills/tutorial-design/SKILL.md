@@ -1,251 +1,130 @@
 ---
 name: tutorial-design
-description: Design and write hands-on tutorials with progressive disclosure, exercises, and troubleshooting sections. Use when creating learning content, workshops, or step-by-step guides.
-version: 1.0.0
-tags:
-  - tutorials
-  - pedagogy
-  - learning
-  - workshops
-  - documentation
-triggers:
-  - write tutorial
-  - create workshop
-  - step-by-step guide
-  - hands-on walkthrough
-  - learning content
-  - lab exercise
-dependencies:
-  skills:
-    - documentation-production
-    - code-explanation
-  tools:
-    - Read
-    - Write
-token_estimate: ~2500
-keywords:
-  - write tutorial
-  - learning content
-  - hands-on guide
-  - tutorial
-  - tutorial design
+description: |
+  効果的な学習体験を提供するチュートリアル・学習コンテンツの設計スキル。段階的学習パス、成功体験ファースト、レベル別ガイドを組み合わせた体系的アプローチで、学習者の理解度に応じた最適な学習導線を構築します。
+
+  Anchors:
+  • The Pragmatic Programmer（Andrew Hunt, David Thomas） / 適用: 実践的改善とコンテンツ品質維持 / 目的: 学習体験の効率化
+  • Docs for Developers（Jared Bhatti） / 適用: チュートリアル設計と段階的ガイド / 目的: 学習パス最適化
+
+  Trigger:
+  チュートリアル設計、学習コンテンツ作成、段階的ガイド構築、教材構造化、学習者向けドキュメント開発時に使用
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 ---
 
-# Tutorial Design
+# Tutorial Design スキル
 
-Design and write hands-on tutorials that transform complex technical concepts into engaging,
-progressive learning experiences with exercises, checkpoints, and troubleshooting guidance.
+## 概要
 
-## When to Use This Skill
+効果的な学習体験を提供するチュートリアル・学習コンテンツを設計するスキル。段階的学習パス、成功体験ファースト、レベル別ガイドを組み合わせた体系的アプローチで、学習者の理解度に応じた最適な学習導線を構築します。
 
-- Writing a getting-started tutorial for a library, API, or tool
-- Creating workshop materials for team training or conferences
-- Building multi-part learning series with progressive difficulty
-- Designing coding exercises with self-assessment checkpoints
-- Converting existing documentation into guided learning content
-- Creating quick-start guides that get users productive fast
+## ワークフロー
 
-## Quick Reference
+### Phase 1: 学習目標と対象者の明確化
 
-| Resource | Purpose | Load when |
-|----------|---------|-----------|
-| `references/design-patterns.md` | Progressive disclosure patterns, exercise types, checkpoint design, difficulty calibration, prerequisite mapping | Planning tutorial structure or designing exercises |
+**目的**: チュートリアルが対象とする学習目標と学習者プロフィールを定義する
 
----
+**アクション**:
 
-## Workflow Overview
+1. 学習対象者のレベル（初心者/中級者/上級者）を判定
+2. 期待される学習成果と到達目標を言語化
+3. 前提知識要件を整理
 
-```
-Phase 1: Objectives   → Define learning outcomes, prerequisites, and audience
-Phase 2: Decompose    → Break concepts into atomic, sequenced steps
-Phase 3: Design       → Create exercises, checkpoints, and troubleshooting tips
-Phase 4: Write        → Produce tutorial content with runnable examples
-Phase 5: Validate     → Test the tutorial path end-to-end
-```
+**参照**: [references/Level1_basics.md](references/Level1_basics.md)
 
----
+### Phase 2: 学習パス構築と段階設計
 
-## Phase 1: Define Learning Objectives
+**目的**: レベル別ガイドを組み合わせた段階的学習パスを構築する
 
-Every tutorial starts with clear outcomes.
+**アクション**:
 
-### Opening Section Template
+1. 学習内容を論理的セクションに分割
+2. 成功体験ファーストの原則に従い、簡単な例から複雑な例へ段階化
+3. 各セクションの学習到達目標を定義
+4. テンプレートに従い、段階的ガイドを作成
 
-```markdown
-## What You'll Learn
+**参照**: [references/learning-path-design.md](references/learning-path-design.md), [assets/tutorial-template.md](assets/tutorial-template.md)
 
-- [Specific, measurable outcome 1]
-- [Specific, measurable outcome 2]
-- [Specific, measurable outcome 3]
+### Phase 3: コンテンツ検証と記録
 
-## Prerequisites
+**目的**: 成果物の検証と実行記録の保存
 
-- [Required knowledge or setup]
-- [Tools needed]
+**アクション**:
 
-## Time Estimate
+1. `scripts/validate-skill.mjs` でコンテンツ構造を確認
+2. 成果物が学習目標に合致するか検証
+3. `scripts/log_usage.mjs` を実行して記録を残す
 
-~[X] minutes
+## Task仕様（ナビゲーション）
 
-## What You'll Build
+チュートリアル設計の各タスクと対応するエージェント・リソースの対応表
 
-[Brief description or screenshot of the final result]
-```
+| Task           | エージェント                            | 思考様式       | 説明                               |
+| -------------- | --------------------------------------- | -------------- | ---------------------------------- |
+| 学習目標分析   | `agents/learning-objective-analysis.md` | Benjamin Bloom | 学習目標と到達レベルを定義         |
+| 学習パス設計   | `agents/learning-path-design.md`        | Jared Bhatti   | 段階的で効果的な学習パスを設計     |
+| コンテンツ作成 | `agents/tutorial-content-creation.md`   | Andrew Hunt    | 各セクションの具体的コンテンツ作成 |
+| 学習評価設計   | `agents/learning-assessment-design.md`  | Grant Wiggins  | 評価基準とチェックリストを設計     |
 
-**Writing good objectives:**
-- Use action verbs: "build", "configure", "debug", "deploy" — not "understand" or "learn about"
-- Make them testable: the reader should be able to verify they achieved each outcome
-- Scope realistically: 3-5 objectives per tutorial
-
----
-
-## Phase 2: Concept Decomposition
-
-Break the topic into atomic learning steps.
-
-### Sequencing Rules
-
-1. **One concept per section** — never introduce two new ideas at once
-2. **Dependency order** — concepts must build on what came before
-3. **Concrete before abstract** — show the working example, then explain the theory
-4. **Simple before complex** — start with the minimal version, layer complexity
-
-### Concept Map
-
-Before writing, sketch a dependency graph:
+### ワークフロー順序
 
 ```
-[Prerequisites] → [Core concept A] → [Core concept B]
-                                    ↘ [Variation 1]
-                  [Core concept A] → [Core concept C] → [Advanced topic]
+learning-objective-analysis → learning-path-design → tutorial-content-creation → learning-assessment-design
 ```
 
-Each node becomes a section. Dependencies become the section order.
+1. **learning-objective-analysis**: Bloom's Taxonomyで学習目標を分析・分類
+2. **learning-path-design**: 成功体験ファーストで段階的学習パスを構築
+3. **tutorial-content-creation**: 各セクションのコンテンツと実習を作成
+4. **learning-assessment-design**: 逆向き設計で評価基準とルーブリックを設計
 
----
+## ベストプラクティス
 
-## Phase 3: Design Exercises and Checkpoints
+### すべきこと
 
-### Exercise Types
+- **段階的開示**: 学習者の理解度に応じて、情報を段階的に提示する
+- **成功体験ファースト**: 初期段階で達成可能なタスクから開始し、学習者に自信をつけさせる
+- **目標の言語化**: 各セクション・レッスンで、具体的な学習目標を明記する
+- **フィードバック機構**: チェックリスト、練習問題、評価基準を含める
+- **前提知識の明確化**: 必要な前提知識を冒頭で示し、不可欠な参照資料へのリンクを提供する
 
-| Type | Difficulty | When to use |
-|------|-----------|-------------|
-| **Fill-in-the-blank** | Low | Reinforce syntax after an example |
-| **Debug challenge** | Medium | Teach error reading and common mistakes |
-| **Extension task** | Medium | Add a feature to working code |
-| **From scratch** | High | Build based on requirements only |
-| **Refactoring** | High | Improve existing implementation |
+### 避けるべきこと
 
-### Checkpoint Pattern
+- **段階なしの一気説明**: 複雑な概念を前提知識なしに説明することを避ける
+- **カテゴリ的な分類**: トピックを体系化したリストで終わらせず、必ず実行可能なステップに落とし込む
+- **仮定の多さ**: 読み手の知識や環境を仮定しすぎず、具体的な前提を明記する
+- **評価基準なし**: 学習成果の測定方法を定義しないまま進めることを避ける
 
-After every major section, insert a checkpoint:
+## リソース参照
 
-```markdown
-### Checkpoint
+### 参照資料（references/）
 
-At this point you should have:
-- [ ] A running server on port 3000
-- [ ] The `/health` endpoint returning `{ "status": "ok" }`
-- [ ] Server logs showing incoming requests
+各段階別の詳細ガイドと知識体系が外部化されています。必要に応じて参照してください：
 
-**If something's wrong**, see the [Troubleshooting](#troubleshooting) section below.
-```
+- **[Level1_basics.md](references/Level1_basics.md)**: チュートリアル設計の基礎、成功体験ファースト、レベル1学習パス
+- **[Level2_intermediate.md](references/Level2_intermediate.md)**: 段階的ガイド構築、学習パス設計の実務手順、レベル2学習パス
+- **[Level3_advanced.md](references/Level3_advanced.md)**: 複雑なコンテンツ構造化、評価設計、メタ認知の活用
+- **[Level4_expert.md](references/Level4_expert.md)**: 企業規模の学習プログラム設計、包括的学習体系、フィードバックループ構築
+- **[learning-path-design.md](references/learning-path-design.md)**: 学習パス設計の方法論、段階化手法、学習者分類
 
-### Troubleshooting Sections
+### スクリプト（scripts/）
 
-For every section, anticipate 2-3 common errors:
+- **[estimate-completion-time.mjs](scripts/estimate-completion-time.mjs)**: チュートリアル完了予想時間の推定
+- **[log_usage.mjs](scripts/log_usage.mjs)**: スキル使用履歴の記録（フィードバックループ用）
+- **[validate-skill.mjs](scripts/validate-skill.mjs)**: スキル構造と成果物の検証
 
-```markdown
-### Troubleshooting
+### アセット（assets/）
 
-**Error: `EADDRINUSE: address already in use`**
-Another process is using port 3000. Run `lsof -i :3000` to find it,
-then stop it or change your port.
+- **[tutorial-template.md](assets/tutorial-template.md)**: チュートリアル・学習ガイドの標準テンプレート
 
-**Error: `Cannot find module 'express'`**
-You haven't installed dependencies yet. Run `npm install` in the project root.
-```
+## 変更履歴
 
----
-
-## Phase 4: Write the Tutorial
-
-### Section Structure (for each concept)
-
-1. **Brief intro** (1-2 sentences) — what this section covers and why it matters
-2. **Minimal example** — complete, runnable code showing the concept
-3. **Line-by-line explanation** — walk through the important parts
-4. **Try it** — tell the reader to run the code and what to expect
-5. **Extend it** — optional exercise to deepen understanding
-6. **Troubleshooting** — common errors for this section
-
-### Writing Principles
-
-- **Show, then explain** — code first, theory second
-- **Frequent validation** — readers should run code every 2-3 minutes
-- **Fail forward** — include intentional errors to teach debugging
-- **Incremental complexity** — each step adds one thing to the previous
-- **Copy-paste friendly** — examples must work when pasted directly
-
-### Content Elements
-
-**Code blocks must:**
-- Be complete and runnable (no `...` elisions in critical paths)
-- Include expected output in a separate block
-- Use meaningful variable names
-- Have inline comments only where non-obvious
-
-**Explanations should:**
-- Connect to real-world use cases
-- Provide the "why" behind each step
-- Use analogies to familiar concepts
-- Anticipate the reader's "but what about...?" questions
-
-### Closing Section
-
-```markdown
-## Summary
-
-You've learned how to:
-- [Outcome 1 restated]
-- [Outcome 2 restated]
-
-## Next Steps
-
-- [Natural follow-on tutorial or topic]
-- [Related documentation]
-- [Community resources]
-```
-
----
-
-## Phase 5: Validate
-
-Before publishing, test the entire tutorial path:
-
-1. Follow every step from a clean environment
-2. Run every code example and verify output matches
-3. Trigger every troubleshooting scenario at least once
-4. Time the tutorial — does it match the estimate?
-5. Have someone unfamiliar with the topic attempt it
-
----
-
-## Tutorial Formats
-
-| Format | Duration | When to use |
-|--------|----------|-------------|
-| **Quick Start** | 5 min | First contact, get running fast |
-| **Deep Dive** | 30-60 min | Comprehensive single-topic exploration |
-| **Workshop Series** | Multi-part | Progressive learning across sessions |
-| **Cookbook** | Variable | Problem-solution pairs, non-linear reading |
-| **Interactive Lab** | 15-45 min | Hands-on environment with guided steps |
-
-## Anti-Patterns
-
-- Introducing concepts before they are needed ("you'll use this later")
-- Showing code snippets that cannot run standalone
-- Assuming knowledge not listed in prerequisites
-- Walls of text without code breaks
-- Exercises without solutions (even collapsed/hidden ones)
-- Skipping the "why" and only showing the "how"
+| Version | Date       | Changes                                                                                           |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------- |
+| 2.0.0   | 2025-12-31 | 18-skills.md仕様に準拠。frontmatterにAnchorsとTrigger追加、Task仕様ナビを導入、リソース参照を整理 |
+| 1.0.0   | 2025-12-24 | Spec alignment and required artifacts added                                                       |

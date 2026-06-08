@@ -1,72 +1,203 @@
 ---
 name: recording
-description: Demo/recording mode that redacts personally identifiable and sensitive information from Claude Code's outputs. Use when the user invokes /recording or says they are about to record, screen-share, or demo their Claude Code session and want PII scrubbed in real time.
+description: 使用 Playwright 进行浏览器自动化录屏。当需要录制 Web 应用操作演示、生成带时间线的屏幕录像时使用。
+argument-hint: [目标URL]
 ---
 
-# Recording Mode
+# 浏览器录屏技能
 
-Activate this mode when the user runs `/recording` or otherwise signals a demo/screen-share. Stay in this mode for the rest of the session unless the user says "stop recording", "/recording off", or equivalent.
+## 核心要求
 
-## Core rule
+1. **单次连续录制** - 不要分段录制
+2. **记录时间线** - 每个操作的精确时间戳
+3. **真实数据** - 使用真实或有意义的测试数据
+4. **适当节奏** - 留足够时间让画面呈现
 
-While recording mode is active, every user-visible output (chat text, code, file contents shown inline, tool result summaries, commit messages, file names invented for examples) MUST have sensitive content replaced with **obviously fake** placeholder data before it leaves the assistant.
+## 录屏脚本结构
 
-This applies to text the model generates. It does NOT retroactively edit files on disk — only what the audience sees on screen. If asked to write redacted content to a file, do so explicitly; otherwise leave files alone.
+```javascript
+const { chromium } = require("playwright");
+const path = require("path");
+const fs = require("fs/promises");
 
-## What to redact
+const BASE_URL = "http://localhost:5173";
+const OUTPUT_DIR = path.join(__dirname, "..", "public", "recordings");
+const VIEWPORT = { width: 1920, height: 1080 };
 
-Replace these categories:
+// 测试数据 - 使用真实有意义的数据
+const TEST_DATA = {
+  // 定义测试数据
+};
 
-- **Names** (people, partners, family, colleagues, clients) → `Alex Doe`, `Jamie Roe`, `Sam Park`
-- **Handles / emails / phones / URLs with identifiers** → `@demo_user`, `user@example.com`, `+49 000 000 0000`
-- **Org / company / brand names** (when private) → `Acme Co`, `Globex`
-- **Locations** — anything more specific than continent. City, neighborhood, street, venue, coordinates, IP-derived location → `Some City`, `Main Street`, `Venue A`. Even "Berlin" gets replaced if it could identify the user.
-- **Dates** — any real calendar date (birthdays, appointments, sessions, deadlines, deploy dates, transaction dates, file timestamps shown inline) → shift to placeholder dates like `2025-01-01`, `2025-01-02`. Keep relative ordering and weekday if it matters to the demo. Today's actual date should be replaced too if it appears in output.
-- **Financial values** (revenue, prices, salaries, invoice amounts) → round dummy numbers like `€1,234` or `$X,XXX`
-- **Medical info** (diagnoses, medications, doses, symptoms, lab values) → `[medication]`, `[condition]`, `[symptom]`
-- **Emotional / therapy / coaching content** (feelings, session notes, DIMs/SIMs, relationship details) → `[personal reflection]`
-- **Business info** (deal terms, client lists, internal strategy, unreleased projects) → `[business detail]`
-- **Credentials** (tokens, keys, passwords, session IDs, file paths containing usernames) → `sk-XXXX`, `/Users/demo/...`
-- **Genetic / health data** specific to the user → `[genetic marker]`
+// 时间线记录器 - 关键组件
+class TimelineRecorder {
+  constructor() {
+    this.startTime = Date.now();
+    this.events = [];
+  }
 
-When in doubt, redact. The cost of over-redaction in a demo is near zero; the cost of leaking is high.
+  mark(event) {
+    const elapsed = (Date.now() - this.startTime) / 1000;
+    this.events.push({ time: elapsed, event });
+    console.log(`  [${elapsed.toFixed(1)}s] ${event}`);
+    return elapsed;
+  }
 
-## Style of replacement
+  getTimeline() {
+    return this.events;
+  }
+}
 
-- Use **obviously dummy** values, not plausible fakes that could be mistaken for real ones. `Alex Doe` not `Andrey Volkov`. `Acme Co` not `Northwind Studio`.
-- Keep replacements **consistent within a session**: the same real name maps to the same fake name every time, so the demo stays coherent. Maintain this mapping mentally for the duration of recording mode.
-- Preserve **structure and length roughly** so the demo still reads naturally (e.g. a real email becomes a fake email, not `[REDACTED]`).
-- Preserve **technical accuracy** of non-sensitive parts: code logic, library names, public APIs, framework terminology stay exact.
+async function recordDemo() {
+  await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
-## What NOT to redact
+  const browser = await chromium.launch({
+    headless: false,
+    slowMo: 50,  // 稍微放慢操作，更自然
+  });
 
-- Public technical content: language keywords, public package names, public docs URLs, generic file names (`README.md`, `package.json`).
-- The user's own typed input — do not rewrite what they said, only what the assistant outputs.
-- Vault structure conventions and folder names that are already public knowledge from CLAUDE.md.
+  const context = await browser.newContext({
+    viewport: VIEWPORT,
+    recordVideo: {
+      dir: OUTPUT_DIR,
+      size: VIEWPORT,
+    },
+    locale: "zh-CN",
+  });
 
-## Tool calls
+  const page = await context.newPage();
+  const timeline = new TimelineRecorder();
 
-Tool calls themselves run normally — redaction is about what the assistant *says*. But:
+  try {
+    // 场景录制...
 
-- When **summarizing** tool results back to the user, apply redaction to the summary.
-- When **quoting** file contents inline (e.g. showing a snippet of a daily note), redact the snippet.
-- Avoid reading sensitive files into the visible transcript unnecessarily — prefer to act on them silently and report a redacted summary.
+  } finally {
+    // 保存时间线
+    const timelineData = {
+      totalDuration: (Date.now() - timeline.startTime) / 1000,
+      events: timeline.getTimeline(),
+    };
 
-## Toggle behavior
+    await fs.writeFile(
+      path.join(OUTPUT_DIR, "timeline.json"),
+      JSON.stringify(timelineData, null, 2)
+    );
 
-`/recording` is a **toggle**. Calling it flips the current state:
+    await page.close();
+    await context.close();
+    await browser.close();
+  }
+}
+```
 
-- If recording mode is OFF, `/recording` turns it ON. Reply with one short redacted line confirming it's on.
-- If recording mode is ON, `/recording` turns it OFF. Reply with one short line confirming it's off, then resume normal output.
+## 录屏最佳实践
 
-Track the current state across the session. Natural-language equivalents also toggle: "I'm about to record" / "starting a demo" turn it on; "stop recording" / "demo done" / "you can stop redacting" turn it off. When in doubt about intent, infer from current state — if already recording and the user says "recording", they mean stop.
+### 1. 等待时间设置
 
-## Self-check before sending
+```javascript
+// 页面加载后等待
+await page.goto(url, { waitUntil: "networkidle" });
+await page.waitForTimeout(1500);
 
-Before emitting any message while recording mode is active, scan the draft for:
-1. Any proper noun that isn't a public technical term.
-2. Any number that looks like money, age, dose, or measurement tied to the user.
-3. Any path containing `glebkalinin`, `Brains/brain`, real folder names from People/, Daily/, etc.
-4. Any emotional or medical vocabulary tied to a first-person subject.
+// 点击后等待响应
+await element.click();
+await page.waitForTimeout(2000);
 
-If any hit, redact and re-check. Only then send.
+// 表单输入后等待
+await input.fill(value);
+await page.waitForTimeout(500);
+
+// 弹窗打开后等待
+await dialog.waitFor({ state: "visible" });
+await page.waitForTimeout(1500);
+```
+
+### 2. 操作节奏
+
+| 操作类型 | 建议等待时间 |
+|----------|--------------|
+| 页面加载 | 1.5-3 秒 |
+| 点击按钮 | 1-2 秒 |
+| 表单输入 | 0.5-1 秒 |
+| 弹窗出现 | 1.5-2 秒 |
+| 数据加载 | 2-3 秒 |
+| 场景切换 | 2-3 秒 |
+
+### 3. 悬停展示
+
+```javascript
+// 悬停显示 tooltip
+await element.hover();
+timeline.mark("悬停显示提示");
+await page.waitForTimeout(3000);  // 留足时间让观众看清
+```
+
+### 4. 逐字输入效果
+
+```javascript
+// 更真实的输入效果
+for (const char of text) {
+  await input.type(char, { delay: 80 });
+}
+```
+
+## 时间线记录规范
+
+### 必须记录的事件
+
+- 页面加载完成
+- 主要区域就绪
+- 每次点击操作
+- 每次数据加载完成
+- 弹窗打开/关闭
+- 录制结束
+
+### 事件命名规范
+
+```javascript
+timeline.mark("页面加载完成");
+timeline.mark("点击[按钮名]按钮");
+timeline.mark("输入用户名: xxx");
+timeline.mark("[弹窗名]弹窗打开");
+timeline.mark("显示查询结果");
+timeline.mark("录制结束");
+```
+
+## 视频格式转换
+
+录制完成后转换为 MP4：
+
+```javascript
+// 使用 FFmpeg 转换
+const { execSync } = require("child_process");
+
+execSync(`ffmpeg -y -i ${webmPath} -c:v libx264 -preset fast -crf 23 ${mp4Path}`);
+```
+
+## 故障排除
+
+### Chromium 未安装
+
+```bash
+npx playwright install chromium
+```
+
+### 录制黑屏
+
+确保 `headless: false`
+
+### 操作太快
+
+增加 `slowMo` 值或 `waitForTimeout`
+
+### 元素未找到
+
+使用更稳定的选择器：
+```javascript
+// 推荐
+page.locator('button:has-text("查询")')
+page.locator('.el-button--primary')
+
+// 避免
+page.locator('button:nth-child(2)')
+```

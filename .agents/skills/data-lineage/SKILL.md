@@ -1,190 +1,426 @@
 ---
-name: Data Lineage
-description: Mapping the flow of data from source to destination for transparency, impact analysis, and troubleshooting.
+name: data-lineage
+description: Document data flow, transformation lineage, and impact analysis for traceability and compliance.
+allowed-tools: Read, Write, Glob, Grep, Task
 ---
 
-# Data Lineage
+# Data Lineage Documentation
+
+## When to Use This Skill
+
+Use this skill when:
+
+- **Data Lineage tasks** - Working on document data flow, transformation lineage, and impact analysis for traceability and compliance
+- **Planning or design** - Need guidance on Data Lineage approaches
+- **Best practices** - Want to follow established patterns and standards
 
 ## Overview
 
-Data Lineage is the process of tracking what happens to data as it flows through various stages—from its original source, through transformations (ETL), to its final destination (dashboards, ML models, or external APIs). Lineage provides the "genealogy" of a dataset.
+Data lineage tracks data from origin to destination, documenting every transformation along the way. Essential for impact analysis, debugging, compliance, and trust in data.
 
-**Core Principle**: "To trust the data, you must know where it came from and how it changed."
+## Lineage Types
 
-## Best Practices
+### Lineage Granularity
 
-- Capture lineage automatically at orchestration boundaries (Airflow, Spark, dbt) instead of manual docs.
-- Standardize dataset naming (`namespace` + `name`) and keep it stable across environments.
-- Enrich events with run context (job version/git SHA, run ID, owner/team, and environment).
-- Prioritize column-level lineage for PII and business-critical metrics; keep table-level for everything else.
-- Make lineage actionable: use it in schema change reviews and incident RCA/impact analysis.
+| Level | Description | Use Case |
+|-------|-------------|----------|
+| Dataset | Table/file level relationships | High-level architecture |
+| Column | Field-level mappings | Detailed impact analysis |
+| Cell | Record-level tracking | Audit trails |
+| Business | Logical concept flow | Business understanding |
 
-## Quick Start
+### Lineage Diagram
 
-1. Choose a lineage standard/tooling (e.g., OpenLineage + Marquez/DataHub).
-2. Instrument your orchestrator to emit lineage events for each job run.
-3. Register stable dataset identifiers (warehouse tables, S3 paths, Kafka topics).
-4. Visualize lineage and validate it during schema changes.
-5. Alert on missing lineage for critical pipelines (treat as a reliability issue).
-
-```python
-from __future__ import annotations
-
-import json
-from datetime import datetime, timezone
-from uuid import uuid4
-
-
-def build_openlineage_run_event(
-    *,
-    job_namespace: str,
-    job_name: str,
-    input_dataset: tuple[str, str],
-    output_dataset: tuple[str, str],
-    event_type: str = "COMPLETE",
-) -> dict:
-    event_time = datetime.now(tz=timezone.utc).isoformat()
-    run_id = str(uuid4())
-    input_ns, input_name = input_dataset
-    output_ns, output_name = output_dataset
-
-    return {
-        "eventType": event_type,
-        "eventTime": event_time,
-        "run": {"runId": run_id},
-        "job": {"namespace": job_namespace, "name": job_name},
-        "inputs": [{"namespace": input_ns, "name": input_name}],
-        "outputs": [{"namespace": output_ns, "name": output_name}],
-        "producer": "https://openlineage.io/",
-        "schemaURL": "https://openlineage.io/spec/1-0-0/OpenLineage.json",
-    }
-
-
-if __name__ == "__main__":
-    event = build_openlineage_run_event(
-        job_namespace="prod-etl",
-        job_name="clean_orders_job",
-        input_dataset=("db_raw", "raw_orders"),
-        output_dataset=("db_prod", "clean_orders"),
-    )
-    print(json.dumps(event, indent=2))
+```text
+SOURCE-TO-TARGET LINEAGE
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                   │
+│  ┌─────────┐    ┌─────────────┐    ┌─────────┐    ┌───────────┐ │
+│  │  CRM    │───►│   STAGING   │───►│  DWH    │───►│  REPORTS  │ │
+│  │ System  │    │   Tables    │    │  Facts  │    │   & BI    │ │
+│  └─────────┘    └─────────────┘    └─────────┘    └───────────┘ │
+│       │               │                 │                │       │
+│       │               │                 │                │       │
+│  ┌────┴────┐    ┌─────┴─────┐    ┌─────┴─────┐    ┌─────┴─────┐ │
+│  │customers│    │stg_customer│    │dim_customer│   │sales_report│ │
+│  │ orders  │    │stg_order   │    │fact_sales │   │cust_dashboard│
+│  │products │    │stg_product │    │dim_product│   │product_analytics
+│  └─────────┘    └───────────┘    └───────────┘   └───────────┘  │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
----
+## Column-Level Lineage
 
-## 1. Why Data Lineage Matters
+### Mapping Documentation Template
 
-| Benefit | Use Case |
-| :--- | :--- |
-| **Root Cause Analysis** | A dashboard is wrong; which upstream table caused the error? |
-| **Impact Analysis** | I want to delete a column; will it break any downstream reports? |
-| **Compliance** | Where exactly does PII (SSN, Email) flow in our system? (GDPR/CCPA) |
-| **Data Discovery** | How is the `active_users` metric actually calculated? |
+```markdown
+# Source-to-Target Mapping: dim_customer
 
----
+## Target Table
+- Schema: dbo
+- Table: dim_customer
+- Type: Dimension (SCD Type 2)
 
-## 2. Types of Data Lineage
+## Column Mappings
 
-1.  **Table-Level Lineage**: Shows how data moves between tables (e.g., `raw_orders` -> `clean_orders` -> `orders_summary`).
-2.  **Column-Level Lineage**: Shows how a specific field is transformed (e.g., `first_name` + `last_name` -> `full_name`).
-3.  **Business Lineage**: High-level view showing how data moves across departments or broad systems (SaaS -> Data Warehouse -> BI Dashboard).
+| Target Column | Source System | Source Table | Source Column | Transformation |
+|---------------|---------------|--------------|---------------|----------------|
+| customer_key | Generated | N/A | N/A | IDENTITY |
+| customer_id | CRM | customers | customer_id | TRIM, UPPER |
+| full_name | CRM | customers | first_name + last_name | CONCAT, TRIM |
+| email | CRM | customers | email | LOWER, TRIM |
+| segment | CRM | customers | tier | CASE mapping |
+| city | CRM | addresses | city | TRIM |
+| state | CRM | addresses | state_code | Lookup to ref_state |
+| country | CRM | addresses | country_code | Lookup to ref_country |
+| effective_date | Generated | N/A | N/A | GETUTCDATE() |
+| is_current | Generated | N/A | N/A | 1 (new records) |
 
----
+## Transformation Rules
 
-## 3. Technical Implementation
+### Rule 1: Full Name Concatenation
+```sql
+CONCAT(TRIM(first_name), ' ', TRIM(last_name))
+```
 
-### A. SQL Parsing
-Reading SQL scripts to identify `INSERT INTO... SELECT FROM` patterns.
-*   **Tool**: `sqlglot` or `sqlfluff`.
+### Rule 2: Segment Mapping
 
-### B. OpenLineage Standard
-OpenLineage is an open standard for lineage metadata collection. It uses "Jobs" and "Datasets" to represent relationships.
+```sql
+CASE tier
+    WHEN 'G' THEN 'Gold'
+    WHEN 'S' THEN 'Silver'
+    WHEN 'B' THEN 'Bronze'
+    ELSE 'Standard'
+END
+```
 
-```json
+## Join Conditions
+
+```sql
+customers c
+LEFT JOIN addresses a ON c.customer_id = a.customer_id
+    AND a.address_type = 'PRIMARY'
+LEFT JOIN ref_state rs ON a.state_code = rs.state_code
+```
+
+```text
+
+```
+
+## Data Flow Diagrams
+
+### Mermaid Flow Diagram
+
+```mermaid
+flowchart LR
+    subgraph Sources
+        CRM[(CRM)]
+        ERP[(ERP)]
+        ECOM[(E-Commerce)]
+    end
+
+    subgraph Staging
+        STG_CUST[stg_customer]
+        STG_ORD[stg_order]
+        STG_PROD[stg_product]
+    end
+
+    subgraph Transformations
+        T1[Cleanse]
+        T2[Match & Merge]
+        T3[Enrich]
+    end
+
+    subgraph Data Warehouse
+        DIM_CUST[dim_customer]
+        DIM_PROD[dim_product]
+        FACT_SALES[fact_sales]
+    end
+
+    subgraph Consumption
+        RPT[Reports]
+        DASH[Dashboards]
+        API[Data API]
+    end
+
+    CRM --> STG_CUST
+    ERP --> STG_ORD
+    ECOM --> STG_PROD
+
+    STG_CUST --> T1
+    STG_ORD --> T1
+    STG_PROD --> T1
+
+    T1 --> T2
+    T2 --> T3
+
+    T3 --> DIM_CUST
+    T3 --> DIM_PROD
+    T3 --> FACT_SALES
+
+    DIM_CUST --> RPT
+    DIM_PROD --> DASH
+    FACT_SALES --> API
+```
+
+## Transformation Catalog
+
+### Transformation Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| Direct Copy | No transformation | customer_id → customer_id |
+| Formatting | Format change | date → YYYY-MM-DD |
+| Concatenation | Combine fields | first + last → full_name |
+| Lookup | Reference data | code → description |
+| Calculation | Derived value | qty * price → amount |
+| Aggregation | Summarize | SUM(amount) → total |
+| Conditional | Business logic | CASE statements |
+| Type Conversion | Data type change | VARCHAR → INT |
+
+### Transformation Documentation
+
+```markdown
+# Transformation: Calculate Order Total
+
+## Description
+Calculates the extended amount for each order line item.
+
+## Input Columns
+| Column | Source | Type |
+|--------|--------|------|
+| quantity | stg_order | INT |
+| unit_price | stg_product | DECIMAL(10,2) |
+| discount_pct | stg_order | DECIMAL(5,2) |
+
+## Output Column
+| Column | Target | Type |
+|--------|--------|------|
+| extended_amount | fact_sales | DECIMAL(18,2) |
+
+## Logic
+```sql
+(quantity * unit_price) * (1 - COALESCE(discount_pct, 0) / 100)
+```
+
+## Business Rules
+
+- Discount cannot exceed 100%
+- Negative quantities are returns
+- NULL discount treated as 0%
+
+```text
+
+```
+
+## Impact Analysis
+
+### Forward Impact (What does this affect?)
+
+```markdown
+# Impact Analysis: customers.email
+
+## Direct Dependents
+| Object | Type | Relationship |
+|--------|------|--------------|
+| stg_customer.email | Staging Table | Source |
+| dim_customer.email | Dimension | Target |
+| marketing_list.email | Report | Display |
+
+## Indirect Dependents
+| Object | Type | Impact Path |
+|--------|------|-------------|
+| email_campaign_report | Report | dim_customer → email_metrics → report |
+| customer_dashboard | Dashboard | dim_customer → customer_360 → dashboard |
+
+## Change Impact Assessment
+- **Schema Change**: Would break ETL pipeline
+- **Data Quality Issue**: Affects all downstream reports
+- **Removal**: Requires updates to 12 dependent objects
+```
+
+### Backward Impact (Where does this come from?)
+
+```markdown
+# Backward Lineage: fact_sales.total_revenue
+
+## Immediate Sources
+| Source | Transformation |
+|--------|----------------|
+| stg_order.quantity | Direct |
+| stg_product.unit_price | Direct |
+| stg_order.discount_pct | Direct |
+
+## Origin Sources
+| System | Table | Column |
+|--------|-------|--------|
+| ERP | orders | qty |
+| ERP | order_lines | unit_price |
+| CRM | promotions | discount |
+
+## Full Lineage Path
+ERP.orders.qty → stg_order.quantity → (calculation) → fact_sales.total_revenue
+ERP.order_lines.unit_price → stg_product.unit_price → (calculation) → fact_sales.total_revenue
+CRM.promotions.discount → stg_order.discount_pct → (calculation) → fact_sales.total_revenue
+```
+
+## Lineage Metadata Schema
+
+```sql
+-- Lineage storage schema (PascalCase - SQL Server Convention)
+CREATE TABLE LineageDataset (
+    DatasetId INT IDENTITY PRIMARY KEY,
+    DatasetName VARCHAR(200) NOT NULL,
+    DatasetType VARCHAR(50), -- Table, View, File, API
+    SystemName VARCHAR(100),
+    SchemaName VARCHAR(100),
+    Description VARCHAR(500),
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
+
+CREATE TABLE LineageColumn (
+    ColumnId INT IDENTITY PRIMARY KEY,
+    DatasetId INT FOREIGN KEY REFERENCES LineageDataset(DatasetId),
+    ColumnName VARCHAR(200) NOT NULL,
+    DataType VARCHAR(50),
+    IsKey BIT,
+    IsSensitive BIT,
+    Description VARCHAR(500)
+);
+
+CREATE TABLE LineageMapping (
+    MappingId INT IDENTITY PRIMARY KEY,
+    SourceColumnId INT FOREIGN KEY REFERENCES LineageColumn(ColumnId),
+    TargetColumnId INT FOREIGN KEY REFERENCES LineageColumn(ColumnId),
+    TransformationType VARCHAR(50),
+    TransformationLogic VARCHAR(2000),
+    PipelineName VARCHAR(200),
+    CreatedAt DATETIME2 DEFAULT GETUTCDATE()
+);
+
+CREATE TABLE LineagePipeline (
+    PipelineId INT IDENTITY PRIMARY KEY,
+    PipelineName VARCHAR(200) NOT NULL,
+    PipelineType VARCHAR(50), -- ETL, CDC, Streaming
+    Schedule VARCHAR(100),
+    Owner VARCHAR(100),
+    DocumentationUrl VARCHAR(500)
+);
+```
+
+## C# Lineage Tracking
+
+```csharp
+public class LineageTracker
 {
-  "eventTime": "2024-01-15T12:00:00Z",
-  "job": { "namespace": "prod-etl", "name": "clean_orders_job" },
-  "inputs": [ { "namespace": "db_raw", "name": "raw_orders" } ],
-  "outputs": [ { "namespace": "db_prod", "name": "clean_orders" } ]
+    private readonly ILineageRepository _repository;
+
+    public async Task TrackTransformation(
+        string pipelineName,
+        IEnumerable<ColumnMapping> mappings,
+        CancellationToken ct)
+    {
+        foreach (var mapping in mappings)
+        {
+            var lineage = new LineageMapping
+            {
+                SourceDataset = mapping.Source.Dataset,
+                SourceColumn = mapping.Source.Column,
+                TargetDataset = mapping.Target.Dataset,
+                TargetColumn = mapping.Target.Column,
+                TransformationType = mapping.TransformationType,
+                TransformationLogic = mapping.Logic,
+                PipelineName = pipelineName,
+                ExecutedAt = DateTime.UtcNow
+            };
+
+            await _repository.AddAsync(lineage, ct);
+        }
+    }
+
+    public async Task<IEnumerable<LineageMapping>> GetForwardLineage(
+        string dataset,
+        string column,
+        int depth = 3,
+        CancellationToken ct = default)
+    {
+        var results = new List<LineageMapping>();
+        var queue = new Queue<(string Dataset, string Column, int Level)>();
+        queue.Enqueue((dataset, column, 0));
+
+        while (queue.Count > 0)
+        {
+            var (ds, col, level) = queue.Dequeue();
+            if (level >= depth) continue;
+
+            var mappings = await _repository.GetMappingsBySource(ds, col, ct);
+            results.AddRange(mappings);
+
+            foreach (var m in mappings)
+            {
+                queue.Enqueue((m.TargetDataset, m.TargetColumn, level + 1));
+            }
+        }
+
+        return results;
+    }
 }
 ```
 
-### C. dbt Lineage
-dbt automatically generates a lineage graph (the "DAG") from your project dependencies.
+## Lineage Visualization
 
-```bash
-# Generate and serve the lineage documentation
-dbt docs generate
-dbt docs serve
+### Graph Representation
+
+```mermaid
+graph LR
+    subgraph "Source Layer"
+        A[crm.customers] --> B[email]
+        A --> C[name]
+    end
+
+    subgraph "Staging Layer"
+        D[stg.customer] --> E[email]
+        D --> F[full_name]
+    end
+
+    subgraph "DWH Layer"
+        G[dim.customer] --> H[email]
+        G --> I[customer_name]
+    end
+
+    B -->|LOWER, TRIM| E
+    C -->|CONCAT| F
+    E -->|Direct| H
+    F -->|Direct| I
+
+    style B fill:#f9f,stroke:#333
+    style E fill:#bbf,stroke:#333
+    style H fill:#bfb,stroke:#333
 ```
 
----
+## Validation Checklist
 
-## 4. Tools for Data Lineage
+- [ ] All source-to-target mappings documented
+- [ ] Transformation logic captured for each mapping
+- [ ] Join conditions documented
+- [ ] Business rules included with mappings
+- [ ] Lineage covers all data layers
+- [ ] Impact analysis documented for critical fields
+- [ ] Lineage metadata stored in accessible format
+- [ ] Visualization available for key data flows
 
-| Tool | Focus | Best For |
-| :--- | :--- | :--- |
-| **OpenLineage** | Standard | Orchestrators like Airflow, Spark, dbt. |
-| **Amundsen** | Data Discovery | Built by Lyft; focusing on user-collaborative search. |
-| **DataHub** | Metadata Platform | Built by LinkedIn; extensive lineage and ownership tracking. |
-| **Monte Carlo** | Observability | Automatically infers lineage from query logs. |
-| **Marquez** | Metadata Store | Reference implementation for OpenLineage. |
+## Integration Points
 
----
+**Inputs from**:
 
-## 5. Root Cause Analysis (RCA) with Lineage
+- `er-modeling` skill → Table relationships
+- `migration-planning` skill → ETL specifications
+- `schema-design` skill → Physical schemas
 
-Imagine a "Monthly Revenue" dashboard shows $0.
+**Outputs to**:
 
-1.  **Check Output**: Dashboard uses `gold_monthly_revenue` table.
-2.  **Trace Upstream**: `gold_monthly_revenue` is populated from `silver_orders`.
-3.  **Investigate Link**: `silver_orders` is 10GB but usually 50GB.
-4.  **Identify Source**: `silver_orders` gets data from `raw_stripe_api`.
-5.  **Conclusion**: The Stripe API extraction job failed yesterday, causing missing data downstream.
-
----
-
-## 6. Impact Analysis Workflow
-
-*Before* running `DROP COLUMN ccv` in a production database:
-
-1.  **Query Lineage Tool**: "Search for usages of `transactions.ccv`."
-2.  **Identify Consumers**: Discovery shows it is used by the `fraud_detection_model`.
-3.  **Coordinate**: Contact the Fraud Team lead to ensure the model no longer needs the column.
-4.  **Action**: Proceed with the "Tombstoning" strategy (see `schema-management`).
-
----
-
-## 7. Tracking PII Flow
-
-Lineage is the primary tool for privacy compliance. You can "Tag" a source field as `PII` and the lineage tool will propagate that tag down the flow.
-
-*   **Source**: `users.email` (Tagged: **PII**)
-*   **Transformation**: `LOWER(email)` (Propagated: **PII**)
-*   **Target**: `marketing_leads.contact` (Auto-Propagated: **PII**)
-
-This allows security teams to identify which S3 buckets or BigQuery datasets require encryption at rest without manual audits.
-
----
-
-## 8. Automated vs. Manual Lineage
-
-*   **Automated**: Captured from query logs or orchestrator (Preferred). Low maintenance, 100% accurate.
-*   **Manual**: Documented in a Wiki. High maintenance, quickly becomes outdated, unreliable.
-
----
-
-## 9. Data Lineage Checklist
-
-- [ ] **Completeness**: Does our lineage cover cross-system boundaries (e.g., Salesforce to Snowflake)?
-- [ ] **Granularity**: Do we have column-level lineage for our most sensitive data?
-- [ ] **Orchestration**: Is lineage captured automatically from every Airflow/dbt run?
-- [ ] **Impact Analysis**: Is there a standard process to check lineage before a schema change?
-- [ ] **Ownership**: Does every table in the lineage graph have a defined team/individual owner?
-
----
-
-## Related Skills
-* `43-data-reliability/data-contracts`
-* `43-data-reliability/schema-management`
-* `44-ai-governance/ai-compliance`
+- `data-governance` skill → Data catalog
+- Impact analysis → Change management
+- Compliance → Audit trails
+- Debugging → Root cause analysis

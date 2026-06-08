@@ -1,755 +1,665 @@
 ---
 name: kubernetes-patterns
-description: Kubernetes workload patterns, resource management, RBAC, probes, autoscaling, ConfigMap/Secret handling, and kubectl debugging for production-grade deployments.
-origin: ECC
+description: Provides Kubernetes resource management, Helm chart patterns, service mesh configuration, and autoscaling strategies. Covers HPA, VPA, KEDA, operators, security contexts, and namespace isolation. Use when user mentions 'kubernetes', 'k8s', 'helm', 'istio', 'linkerd', 'service mesh', 'HPA', 'VPA', 'KEDA', 'pod security', 'resource quotas', 'operators'.
+type: skill
+category: patterns
+status: stable
+origin: tibsfox
+modified: false
+first_seen: 2026-02-07
+first_path: examples/kubernetes-patterns/SKILL.md
+superseded_by: null
 ---
-
 # Kubernetes Patterns
 
-Production-grade Kubernetes patterns for deploying, managing, and debugging workloads reliably.
+Best practices for deploying, scaling, securing, and managing workloads on Kubernetes. This skill covers resource management, Helm chart structure, service mesh configuration, autoscaling strategies, and security hardening.
 
-## When to Activate
+## Resource Management
 
-- Writing Kubernetes manifests (Deployments, Services, Ingress, Jobs)
-- Configuring resource requests/limits, liveness/readiness probes
-- Setting up RBAC, namespaces, or ServiceAccounts
-- Managing configuration and secrets in K8s
-- Debugging CrashLoopBackOff, OOMKilled, pending pods, or image pull errors
-- Configuring HPA (Horizontal Pod Autoscaler) or PodDisruptionBudgets
-- Reviewing K8s YAML for security or correctness
+Every container must declare resource requests and limits. Without them, the scheduler cannot make informed placement decisions and nodes can become overcommitted.
 
-## When to Use
+| Resource Type | Request (Guaranteed) | Limit (Maximum) | What Happens at Limit |
+|---------------|---------------------|-----------------|----------------------|
+| CPU | Reserved on node | Throttled (not killed) | Container slows down |
+| Memory | Reserved on node | OOM-killed | Container restarts |
+| Ephemeral Storage | Reserved on node | Evicted | Pod removed from node |
+| GPU | Reserved on node | Hard limit | Cannot exceed |
 
-> Same as **When to Activate** above. This alias satisfies repo skill-format conventions. Use this skill any time you are writing, reviewing, or debugging Kubernetes YAML and workloads.
+### QoS Classes
 
-## How It Works
+Kubernetes assigns QoS classes based on resource declarations. This determines eviction priority.
 
-This skill provides **copy-pasteable, production-grade YAML patterns** and **kubectl debugging commands** organized by task:
+| QoS Class | Condition | Eviction Priority |
+|-----------|-----------|-------------------|
+| Guaranteed | requests == limits for all containers | Last (highest priority) |
+| Burstable | requests < limits for at least one container | Middle |
+| BestEffort | No requests or limits set | First (lowest priority) |
 
-1. **Deployment template** — A fully configured production `Deployment` with security context, rolling update strategy, all three probe types, resource limits, and environment injection from ConfigMap/Secret.
-2. **Probes** — Decision table for startup vs liveness vs readiness, with correct `failureThreshold × periodSeconds` math.
-3. **Services & Ingress** — ClusterIP, LoadBalancer, and TLS Ingress patterns with cert-manager annotations.
-4. **ConfigMaps & Secrets** — `envFrom`, file-mount, and external secrets guidance.
-5. **Resource management** — Requests vs limits rules of thumb by workload type (web API, JVM, worker, sidecar).
-6. **RBAC** — Least-privilege ServiceAccount → Role → RoleBinding chain.
-7. **HPA & PDB** — Autoscaling and node-drain safety configurations.
-8. **Jobs & CronJobs** — One-off and scheduled workload patterns with correct `restartPolicy`.
-9. **kubectl cheatsheet** — Logs, exec, rollback, port-forward, dry-run, and common error diagnosis commands.
-10. **Anti-patterns & checklist** — What NOT to do, and a security/reliability/observability checklist.
-
-## Examples
-
-See the sections below for complete, runnable examples. Quick references:
-
-| Task | Jump to |
-|------|---------|
-| Full production Deployment YAML | [Core Workload Patterns](#core-workload-patterns) |
-| Probe configuration | [Probes](#probes--liveness-readiness-startup) |
-| RBAC least-privilege setup | [RBAC](#rbac--roles-and-serviceaccounts) |
-| Debug a CrashLoopBackOff | [kubectl Debugging Cheatsheet](#kubectl-debugging-cheatsheet) |
-| Autoscaling | [HPA](#horizontal-pod-autoscaler-hpa) |
-
----
-
-## Core Workload Patterns
-
-### Deployment — Production Template
+### Resource Declaration Best Practices
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app
-  namespace: my-namespace
-  labels:
-    app: my-app
-    version: "1.0.0"
+  name: api-server
+  namespace: production
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: my-app
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1          # Allow 1 extra pod during update
-      maxUnavailable: 0    # Never reduce below desired count
+      app: api-server
   template:
     metadata:
       labels:
-        app: my-app
-        version: "1.0.0"
+        app: api-server
+        version: v2.1.0
     spec:
-      # Security context at pod level
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        fsGroup: 1001
-
-      # Graceful shutdown
-      terminationGracePeriodSeconds: 30
-
+      # Topology spread for high availability
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: api-server
       containers:
-        - name: my-app
-          image: ghcr.io/org/my-app:1.0.0   # Never use :latest
-          imagePullPolicy: IfNotPresent
-
+        - name: api
+          image: ghcr.io/our-org/api@sha256:a1b2c3d4e5f6
           ports:
             - containerPort: 8080
               protocol: TCP
-
-          # Resource requests AND limits are both required
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: 250m        # 0.25 cores -- baseline
+              memory: 256Mi    # baseline memory
             limits:
-              cpu: "500m"
-              memory: "256Mi"
-
-          # Container security context
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-
-          # Probes (see Probes section below)
-          startupProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            failureThreshold: 30
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 0
-            periodSeconds: 30
-            failureThreshold: 3
+              cpu: "1"         # burst to 1 core
+              memory: 512Mi    # hard cap prevents OOM cascade
+          # Probes are essential for rolling updates
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /healthz
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
-            failureThreshold: 2
-
-          # Environment from ConfigMap and Secret
-          envFrom:
-            - configMapRef:
-                name: my-app-config
-          env:
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: my-app-secrets
-                  key: db-password
-
-          # Writable tmp directory when readOnlyRootFilesystem: true
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-
-      volumes:
-        - name: tmp
-          emptyDir: {}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 2
 ```
 
----
+## Namespace Isolation Strategies
 
-## Probes — Liveness, Readiness, Startup
+Namespaces provide logical boundaries. Combine with NetworkPolicies and RBAC for true isolation.
 
-Understanding when to use each probe is critical:
+| Strategy | Isolation Level | Use Case |
+|----------|----------------|----------|
+| Per-team | Medium | Small org, shared cluster |
+| Per-environment | Medium | Dev/staging/prod in one cluster |
+| Per-application | High | Microservices with strict boundaries |
+| Per-tenant | Highest | Multi-tenant SaaS |
 
-| Probe | Failure Action | Use For |
-|-------|---------------|---------|
-| `startupProbe` | Kills container if slow to start | Slow-starting apps (JVM, Python) |
-| `livenessProbe` | Restarts container | Deadlock / hung process detection |
-| `readinessProbe` | Removes from Service endpoints | Temporary unavailability (DB reconnect) |
-
-```yaml
-# Correct pattern: startupProbe covers slow startup,
-# then liveness/readiness take over
-startupProbe:
-  httpGet:
-    path: /health
-    port: 8080
-  failureThreshold: 30  # 30 * 5s = 150s max startup time
-  periodSeconds: 5
-
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8080
-  periodSeconds: 30
-  failureThreshold: 3   # 3 * 30s = 90s before restart
-
-readinessProbe:
-  httpGet:
-    path: /ready         # Separate endpoint: checks DB, cache, etc.
-    port: 8080
-  periodSeconds: 10
-  failureThreshold: 2
-```
+### Resource Quotas and Limit Ranges
 
 ```yaml
-# WRONG: initialDelaySeconds without startupProbe
-# If the app takes 60s to start, set a startupProbe instead
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8080
-  initialDelaySeconds: 60   # BAD: Arbitrary wait, race condition
-```
-
----
-
-## Services and Ingress
-
-### Service Types
-
-```yaml
-# ClusterIP (default) — internal-only
+# ResourceQuota: caps total resource consumption per namespace
 apiVersion: v1
-kind: Service
+kind: ResourceQuota
 metadata:
-  name: my-app
-  namespace: my-namespace
+  name: team-alpha-quota
+  namespace: team-alpha
 spec:
-  selector:
-    app: my-app
-  ports:
-    - port: 80
-      targetPort: 8080
-      protocol: TCP
-  type: ClusterIP
-```
-
-```yaml
-# LoadBalancer — external traffic (cloud providers)
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 443
-      targetPort: 8080
-```
-
-### Ingress with TLS
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: my-app
-  namespace: my-namespace
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - myapp.example.com
-      secretName: my-app-tls
-  rules:
-    - host: myapp.example.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: my-app
-                port:
-                  number: 80
-```
-
+  hard:
+    requests.cpu: "10"
+    requests.memory: 20Gi
+    limits.cpu: "20"
+    limits.memory: 40Gi
+    pods: "50"
+    services: "20"
+    persistentvolumeclaims: "10"
+    secrets: "30"
+    configmaps: "30"
 ---
-
-## ConfigMaps and Secrets
-
-### ConfigMap — Non-sensitive configuration
-
-```yaml
+# LimitRange: sets defaults and bounds per container
 apiVersion: v1
-kind: ConfigMap
+kind: LimitRange
 metadata:
-  name: my-app-config
-  namespace: my-namespace
-data:
-  LOG_LEVEL: "info"
-  APP_ENV: "production"
-  MAX_CONNECTIONS: "100"
-  # Mount as a file for complex config
-  app.yaml: |
-    server:
-      port: 8080
-      timeout: 30s
-```
-
-```yaml
-# Mount ConfigMap as a file
-volumes:
-  - name: config
-    configMap:
-      name: my-app-config
-      items:
-        - key: app.yaml
-          path: app.yaml
-volumeMounts:
-  - name: config
-    mountPath: /etc/app
-    readOnly: true
-```
-
-### Secrets — Sensitive data
-
-```bash
-# Create secret from literal (CLI, then store in Vault/SOPS)
-kubectl create secret generic my-app-secrets \
-  --from-literal=db-password='s3cr3t' \
-  --namespace=my-namespace \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: my-app-secrets
-  namespace: my-namespace
-type: Opaque
-# Values are base64-encoded (NOT encrypted — use Sealed Secrets or ESO for real encryption)
-data:
-  db-password: czNjcjN0  # base64 of 's3cr3t'
-```
-
-> **Important:** Raw Kubernetes Secrets are only base64-encoded, not encrypted at rest unless your cluster has encryption configured. Use [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) or [External Secrets Operator](https://external-secrets.io) for production.
-
----
-
-## Resource Requests and Limits
-
-```yaml
-resources:
-  requests:       # Scheduler uses this to place the pod
-    cpu: "100m"   # 100 millicores = 0.1 CPU
-    memory: "128Mi"
-  limits:         # Container is killed/throttled above this
-    cpu: "500m"
-    memory: "256Mi"
-```
-
-**Rules of thumb:**
-
-| Workload Type | CPU Request | Memory Request | Notes |
-|---------------|-------------|----------------|-------|
-| Web API | 100–250m | 128–256Mi | Set limits 2-4x requests |
-| Worker/consumer | 250–500m | 256–512Mi | Memory limit = request for predictability |
-| JVM app | 500m–1 | 512Mi–2Gi | Allow headroom above `-Xmx` for JVM overhead |
-| Sidecar | 10–50m | 32–64Mi | Keep minimal |
-
-```yaml
-# WRONG: No requests or limits — unpredictable scheduling, OOM evictions
-containers:
-  - name: app
-    image: myapp:latest
-    # Missing resources: {} — this is dangerous in production
-
-# WRONG: Limits without requests — requests default to limits, over-reserves capacity
-resources:
+  name: team-alpha-limits
+  namespace: team-alpha
+spec:
   limits:
-    cpu: "2"
-    memory: "1Gi"
-  # requests missing — will default to limits values
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 256Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      min:
+        cpu: 50m
+        memory: 64Mi
+      max:
+        cpu: "4"
+        memory: 4Gi
+    - type: PersistentVolumeClaim
+      min:
+        storage: 1Gi
+      max:
+        storage: 50Gi
 ```
+
+### Network Policy for Namespace Isolation
+
+```yaml
+# Default deny all ingress and egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: team-alpha
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow only within namespace + DNS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-namespace
+  namespace: team-alpha
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+```
+
+## Helm Chart Structure
+
+Helm charts package Kubernetes manifests with templating and dependency management.
+
+### Standard Chart Layout
+
+```
+my-app/
+  Chart.yaml              # Chart metadata, version, dependencies
+  Chart.lock              # Locked dependency versions
+  values.yaml             # Default configuration values
+  values-staging.yaml     # Environment-specific overrides
+  values-production.yaml  # Environment-specific overrides
+  templates/
+    _helpers.tpl          # Template helper functions
+    deployment.yaml       # Deployment manifest
+    service.yaml          # Service manifest
+    ingress.yaml          # Ingress manifest
+    hpa.yaml              # HorizontalPodAutoscaler
+    configmap.yaml        # ConfigMap
+    secret.yaml           # Secret (sealed or external)
+    serviceaccount.yaml   # ServiceAccount
+    networkpolicy.yaml    # NetworkPolicy
+    pdb.yaml              # PodDisruptionBudget
+    tests/
+      test-connection.yaml  # Helm test hooks
+  charts/                 # Dependency charts (vendored)
+```
+
+### Chart.yaml Best Practices
+
+```yaml
+apiVersion: v2
+name: my-app
+description: A Helm chart for the My App API service
+type: application
+version: 1.4.0        # Chart version (bump on chart changes)
+appVersion: "2.1.0"   # Application version (bump on app changes)
+
+dependencies:
+  - name: postgresql
+    version: "13.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "18.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+
+maintainers:
+  - name: Platform Team
+    email: platform@company.com
+```
+
+### Helm Template with Guards
+
+```yaml
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-app.fullname" . }}
+  labels:
+    {{- include "my-app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "my-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Force rollout on config changes
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "my-app.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "my-app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+```
+
+## Service Mesh: Istio Configuration
+
+Service meshes handle traffic management, security, and observability at the infrastructure layer.
+
+### Istio vs Linkerd Comparison
+
+| Aspect | Istio | Linkerd |
+|--------|-------|---------|
+| Complexity | High (many CRDs, control plane components) | Low (minimal, opinionated) |
+| Resource Overhead | ~100MB per sidecar | ~25MB per sidecar |
+| mTLS | Configurable (permissive/strict) | On by default |
+| Traffic Management | Very flexible (VirtualService, DestinationRule) | Basic (TrafficSplit, ServiceProfile) |
+| Multi-cluster | Built-in | Supported with multicluster extension |
+| Learning Curve | Steep | Gentle |
+| Best For | Complex routing, advanced policies | Simple mTLS + observability |
+
+### Istio VirtualService: Canary with Header Routing
+
+```yaml
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: api-server
+  namespace: production
+spec:
+  hosts:
+    - api-server
+    - api.company.com
+  gateways:
+    - mesh                    # In-mesh traffic
+    - api-gateway             # External traffic
+  http:
+    # Route internal testers to canary via header
+    - match:
+        - headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: api-server
+            subset: canary
+          weight: 100
+
+    # Weighted canary for production traffic
+    - route:
+        - destination:
+            host: api-server
+            subset: stable
+          weight: 90
+        - destination:
+            host: api-server
+            subset: canary
+          weight: 10
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: 5xx,reset,connect-failure
+      timeout: 10s
 
 ---
-
-## RBAC — Roles and ServiceAccounts
-
-### Principle of Least Privilege
-
-**Two patterns depending on whether the app calls the Kubernetes API:**
-
-#### Pattern A — App does NOT need the Kubernetes API (most apps)
-
-Disable token automounting on the ServiceAccount. The Role/RoleBinding are not needed.
-
-```yaml
-# ServiceAccount with token disabled — safest default
-apiVersion: v1
-kind: ServiceAccount
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
 metadata:
-  name: my-app-sa
-  namespace: my-namespace
-automountServiceAccountToken: false   # No K8s API token injected into pods
-```
-
-```yaml
-# Reference in Deployment — no token, no API access
+  name: api-server
+  namespace: production
 spec:
-  template:
-    spec:
-      serviceAccountName: my-app-sa
-      automountServiceAccountToken: false   # Belt-and-suspenders: also set at pod level
+  host: api-server
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: DEFAULT
+        maxRequestsPerConnection: 1000
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+  subsets:
+    - name: stable
+      labels:
+        version: v2.0.0
+    - name: canary
+      labels:
+        version: v2.1.0
 ```
 
-#### Pattern B — App DOES need the Kubernetes API (operators, controllers, config watchers)
+## Autoscaling Strategies
 
-Enable the token and grant only the permissions actually required.
-
-```yaml
-# 1. ServiceAccount — enable token for this SA
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: my-app-sa
-  namespace: my-namespace
-automountServiceAccountToken: true    # Token required: app calls K8s API
-```
-
-```yaml
-# 2. Role — grant only what the app needs (namespace-scoped)
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: my-app-role
-  namespace: my-namespace
-rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list", "watch"]    # Read-only, specific resource
-  - apiGroups: [""]
-    resources: ["secrets"]
-    resourceNames: ["my-app-secrets"]  # Restrict to specific secret by name
-    verbs: ["get"]
-```
-
-```yaml
-# 3. Bind Role to ServiceAccount
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: my-app-rolebinding
-  namespace: my-namespace
-subjects:
-  - kind: ServiceAccount
-    name: my-app-sa
-    namespace: my-namespace
-roleRef:
-  kind: Role
-  apiGroup: rbac.authorization.k8s.io
-  name: my-app-role
-```
-
-```yaml
-# 4. Reference SA in Deployment
-spec:
-  template:
-    spec:
-      serviceAccountName: my-app-sa
-      # automountServiceAccountToken defaults to true from SA — token is injected
-```
-
----
-
-## Horizontal Pod Autoscaler (HPA)
+### HPA with Custom Metrics
 
 ```yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: my-app-hpa
-  namespace: my-namespace
+  name: api-server-hpa
+  namespace: production
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: my-app
-  minReplicas: 2      # Always at least 2 for HA
-  maxReplicas: 10
+    name: api-server
+  minReplicas: 3
+  maxReplicas: 50
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100            # Double capacity per minute
+          periodSeconds: 60
+        - type: Pods
+          value: 5              # Or add 5 pods, whichever is higher
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 min before scaling down
+      policies:
+        - type: Percent
+          value: 25             # Remove 25% per 2 minutes
+          periodSeconds: 120
+      selectPolicy: Min
   metrics:
+    # CPU-based scaling
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70    # Scale up when avg CPU > 70%
+          averageUtilization: 70
+
+    # Memory-based scaling
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
           averageUtilization: 80
+
+    # Custom metric: requests per second from Prometheus
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"
 ```
 
-> HPA requires `resources.requests` to be set on all containers — it calculates utilization as `current / request`.
-
----
-
-## PodDisruptionBudget (PDB)
-
-Prevent too many pods going down during node drains or rolling updates:
+### KEDA ScaledObject: Event-Driven Autoscaling
 
 ```yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
 metadata:
-  name: my-app-pdb
-  namespace: my-namespace
+  name: order-processor
+  namespace: production
 spec:
-  minAvailable: 2           # OR use maxUnavailable: 1
-  selector:
-    matchLabels:
-      app: my-app
+  scaleTargetRef:
+    name: order-processor
+  pollingInterval: 15          # Check triggers every 15s
+  cooldownPeriod: 60           # Wait 60s after last trigger before scale-down
+  minReplicaCount: 1           # Minimum replicas (0 for scale-to-zero)
+  maxReplicaCount: 100
+  fallback:
+    failureThreshold: 3
+    replicas: 5                # Fallback if scaler fails
+  triggers:
+    # Scale based on Kafka consumer lag
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.production:9092
+        consumerGroup: order-processor
+        topic: orders
+        lagThreshold: "50"     # Scale up when lag > 50 per partition
+
+    # Scale based on RabbitMQ queue depth
+    - type: rabbitmq
+      metadata:
+        host: amqp://rabbitmq.production:5672
+        queueName: order-queue
+        queueLength: "100"
+
+    # Scale based on Prometheus metric
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus.monitoring:9090
+        query: |
+          sum(rate(http_requests_total{service="order-processor"}[2m]))
+        threshold: "500"
+---
+# Scale-to-zero for batch jobs
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: report-generator
+  namespace: batch
+spec:
+  scaleTargetRef:
+    name: report-generator
+  minReplicaCount: 0           # Scale to zero when idle
+  maxReplicaCount: 10
+  triggers:
+    - type: cron
+      metadata:
+        timezone: America/New_York
+        start: 0 2 * * *       # Scale up at 2 AM
+        end: 0 6 * * *         # Scale down at 6 AM
+        desiredReplicas: "5"
 ```
 
----
+### Autoscaling Strategy Comparison
 
-## Namespaces and Multi-Tenancy
+| Strategy | Scales On | Scale-to-Zero | Latency | Best For |
+|----------|-----------|---------------|---------|----------|
+| HPA (CPU/Memory) | Resource utilization | No | Seconds | Steady traffic patterns |
+| HPA (Custom) | Application metrics | No | Seconds | API servers, web apps |
+| VPA | Historical usage | No | Pod restart | Right-sizing resources |
+| KEDA | External events | Yes | Seconds | Event-driven workloads |
+| Cluster Autoscaler | Node pressure | No | Minutes | Node pool management |
+| Karpenter | Pod scheduling needs | No | Seconds | Fast, flexible node scaling |
 
-```bash
-# Create namespace with resource quotas
-kubectl create namespace my-namespace
+## Pod Security Best Practices
 
-# Apply ResourceQuota to limit namespace consumption
-kubectl apply -f - <<EOF
+### Security Context Configuration
+
+```yaml
 apiVersion: v1
-kind: ResourceQuota
+kind: Pod
 metadata:
-  name: my-namespace-quota
-  namespace: my-namespace
+  name: secure-app
+  namespace: production
 spec:
-  hard:
-    requests.cpu: "4"
-    requests.memory: 4Gi
-    limits.cpu: "8"
-    limits.memory: 8Gi
-    pods: "20"
-EOF
+  # Pod-level security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  serviceAccountName: app-service-account
+  automountServiceAccountToken: false    # Disable unless needed
+  containers:
+    - name: app
+      image: ghcr.io/our-org/app@sha256:abc123
+      # Container-level security context
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+          # Only add specific capabilities if absolutely needed
+          # add:
+          #   - NET_BIND_SERVICE
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/cache
+  volumes:
+    # Writable dirs for read-only root filesystem
+    - name: tmp
+      emptyDir:
+        sizeLimit: 100Mi
+    - name: cache
+      emptyDir:
+        sizeLimit: 500Mi
 ```
 
----
+### Pod Security Standards (PSS)
 
-## Jobs and CronJobs
+| Level | Description | Key Restrictions |
+|-------|-------------|-----------------|
+| Privileged | Unrestricted | None (cluster admin workloads) |
+| Baseline | Minimally restrictive | No hostNetwork, hostPID, hostIPC, privileged containers |
+| Restricted | Heavily restricted | runAsNonRoot, drop ALL capabilities, readOnlyRootFilesystem, seccomp |
 
 ```yaml
-# One-off Job (DB migration, data processing)
-apiVersion: batch/v1
-kind: Job
+# Enforce restricted standard on namespace
+apiVersion: v1
+kind: Namespace
 metadata:
-  name: db-migrate
-  namespace: my-namespace
-spec:
-  backoffLimit: 3          # Retry up to 3 times on failure
-  ttlSecondsAfterFinished: 3600   # Auto-delete after 1h
-  template:
-    spec:
-      restartPolicy: OnFailure    # Never for Jobs (not Always)
-      containers:
-        - name: migrate
-          image: ghcr.io/org/my-app:1.0.0
-          command: ["python", "manage.py", "migrate"]
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "256Mi"
+  name: production
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 ```
 
-```yaml
-# CronJob
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: cleanup-job
-  namespace: my-namespace
-spec:
-  schedule: "0 2 * * *"         # 2am daily
-  concurrencyPolicy: Forbid      # Don't run if previous still running
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 1
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          restartPolicy: OnFailure
-          containers:
-            - name: cleanup
-              image: ghcr.io/org/cleanup:1.0.0
-              resources:
-                requests:
-                  cpu: "50m"
-                  memory: "64Mi"
-```
+## Operator Pattern
 
----
+Operators extend Kubernetes with domain-specific controllers that encode operational knowledge.
 
-## kubectl Debugging Cheatsheet
+### When to Build an Operator
 
-```bash
-# --- Pod status and logs ---
-kubectl get pods -n my-namespace
-kubectl get pods -n my-namespace -o wide          # Show node assignment
-kubectl describe pod <pod-name> -n my-namespace   # Events and state details
-kubectl logs <pod-name> -n my-namespace           # Current logs
-kubectl logs <pod-name> -n my-namespace --previous  # Logs from crashed container
-kubectl logs <pod-name> -n my-namespace -c <container>  # Multi-container pod
+| Use Operator | Don't Use Operator |
+|-------------|-------------------|
+| Stateful applications (databases, caches) | Stateless apps (use Deployment) |
+| Complex lifecycle management | Simple CRUD workloads |
+| Custom scaling logic | Standard HPA is sufficient |
+| Automated backup/restore | Manual operations are fine |
+| Multi-step provisioning | Single manifest applies cleanly |
 
-# --- Execute into a running container ---
-kubectl exec -it <pod-name> -n my-namespace -- sh
-kubectl exec -it <pod-name> -n my-namespace -- bash
+### Operator Maturity Model
 
-# --- Check resource usage ---
-kubectl top pods -n my-namespace
-kubectl top nodes
-
-# --- Deployment operations ---
-kubectl rollout status deployment/my-app -n my-namespace
-kubectl rollout history deployment/my-app -n my-namespace
-kubectl rollout undo deployment/my-app -n my-namespace      # Rollback
-kubectl rollout undo deployment/my-app --to-revision=2 -n my-namespace
-
-# --- Scale manually ---
-kubectl scale deployment my-app --replicas=5 -n my-namespace
-
-# --- Inspect events (cluster-wide issues) ---
-kubectl get events -n my-namespace --sort-by='.lastTimestamp'
-
-# --- Port-forward for local debugging ---
-kubectl port-forward pod/<pod-name> 8080:8080 -n my-namespace
-kubectl port-forward svc/my-app 8080:80 -n my-namespace
-
-# --- Dry-run to validate YAML ---
-kubectl apply -f deployment.yaml --dry-run=client
-kubectl apply -f deployment.yaml --dry-run=server   # Validates against live cluster
-```
-
-### Diagnosing Common Errors
-
-```bash
-# CrashLoopBackOff: container keeps crashing
-kubectl logs <pod-name> --previous -n my-namespace  # Check crash logs
-kubectl describe pod <pod-name> -n my-namespace     # Check exit code & OOMKilled
-
-# ImagePullBackOff: can't pull image
-kubectl describe pod <pod-name> -n my-namespace     # Check Events section
-# Causes: wrong image tag, missing imagePullSecret, private registry
-
-# Pending pod: not scheduled
-kubectl describe pod <pod-name> -n my-namespace
-# Causes: insufficient resources, no matching node selector, taint/toleration mismatch
-
-# OOMKilled: out of memory
-# Increase memory limits, check for memory leaks
-kubectl describe pod <pod-name> -n my-namespace | grep -A5 "Last State"
-```
-
----
+| Level | Capability | Example |
+|-------|-----------|---------|
+| 1 - Basic Install | Automated install, lifecycle hooks | Helm chart with operator |
+| 2 - Seamless Upgrades | Patch and minor version upgrades | Rolling update strategy |
+| 3 - Full Lifecycle | Backup, restore, failure recovery | Automated database failover |
+| 4 - Deep Insights | Metrics, alerts, log processing | Custom Prometheus exporters |
+| 5 - Auto Pilot | Auto-scaling, tuning, anomaly detection | Self-healing database cluster |
 
 ## Anti-Patterns
 
-```yaml
-# BAD: Using :latest tag — non-deterministic deployments
-image: myapp:latest
+| Anti-Pattern | Problem | Fix |
+|--------------|---------|-----|
+| No resource requests/limits | Node overcommit, OOM kills, unpredictable scheduling | Set requests and limits on every container |
+| `latest` image tag | Non-reproducible deployments, silent breakage | Use immutable tags or `@sha256:` digest |
+| Running as root | Container escape leads to host compromise | `runAsNonRoot: true`, `runAsUser: 10001` |
+| No readiness probe | Traffic sent to unready pods, user-facing errors | Always define readinessProbe with appropriate thresholds |
+| No PodDisruptionBudget | Cluster upgrades kill all replicas simultaneously | Set PDB with `minAvailable` or `maxUnavailable` |
+| Single replica in production | Any disruption causes downtime | Minimum 3 replicas with topology spread |
+| Hardcoded config in images | Rebuilds needed for config changes | Use ConfigMaps, Secrets, environment variables |
+| ClusterRole for app workloads | Excessive permissions across all namespaces | Namespace-scoped Roles with least privilege |
+| No NetworkPolicy | All pods can talk to all pods (flat network) | Default-deny with explicit allow rules |
+| Helm values in CI pipeline | Config scattered, hard to audit | `values-{env}.yaml` files in Git |
+| `kubectl apply` in production | No rollback tracking, no drift detection | GitOps with Argo CD or Flux |
+| Ignoring pod topology spread | All replicas on same node/zone | `topologySpreadConstraints` for HA |
+| No seccomp profile | Containers can use any syscall | `seccompProfile.type: RuntimeDefault` |
+| Mounting service account tokens | Compromised pod can access API server | `automountServiceAccountToken: false` unless needed |
 
-# GOOD: Pin to a specific immutable tag (SHA or semver)
-image: ghcr.io/org/myapp:1.4.2
-# or
-image: ghcr.io/org/myapp@sha256:abc123...
+## Kubernetes Security Checklist
 
-# ---
-
-# BAD: Running as root
-securityContext: {}    # Defaults to root
-
-# GOOD: Non-root with explicit UID
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1001
-
-# ---
-
-# BAD: No resource limits — one pod can starve the entire node
-containers:
-  - name: app
-    image: myapp:1.0.0
-    # No resources defined
-
-# GOOD: Always set requests and limits
-resources:
-  requests:
-    cpu: "100m"
-    memory: "128Mi"
-  limits:
-    cpu: "500m"
-    memory: "256Mi"
-
-# ---
-
-# BAD: Storing plaintext secrets in ConfigMaps
-apiVersion: v1
-kind: ConfigMap
-data:
-  DB_PASSWORD: "mysecretpassword"   # NEVER — use Secret or external secrets manager
-
-# ---
-
-# BAD: ClusterAdmin for application service accounts
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin    # Grants god-mode to your app
-
-# ---
-
-# BAD: minAvailable: 0 in PDB — defeats the purpose
-spec:
-  minAvailable: 0
-
-# ---
-
-# BAD: restartPolicy: Always in a Job (causes infinite restart loop)
-spec:
-  restartPolicy: Always   # Use OnFailure or Never for Jobs
-```
-
----
-
-## Best Practices Checklist
-
-### Security
-- [ ] Container runs as non-root (`runAsNonRoot: true`, `runAsUser` set)
-- [ ] `readOnlyRootFilesystem: true` with `emptyDir` for writable paths
-- [ ] `allowPrivilegeEscalation: false`
-- [ ] All capabilities dropped (`capabilities.drop: [ALL]`)
-- [ ] Dedicated ServiceAccount per app, not `default`
-- [ ] `automountServiceAccountToken: false` unless needed
-- [ ] RBAC follows least privilege (use `Role`, not `ClusterRole` unless needed)
-- [ ] Secrets managed via Sealed Secrets or External Secrets Operator
-
-### Reliability
-- [ ] All 3 probe types configured (startup + liveness + readiness)
-- [ ] Resource requests AND limits set on every container
-- [ ] `minReplicas: 2+` for any production workload
-- [ ] PodDisruptionBudget defined for stateful or critical services
-- [ ] `RollingUpdate` strategy with `maxUnavailable: 0`
-- [ ] HPA configured for variable-load services
-
-### Observability
-- [ ] App exposes `/health` (liveness) and `/ready` (readiness) endpoints
-- [ ] Structured JSON logging (no PII in logs)
-- [ ] Resource labels: `app`, `version`, `environment`
-
----
-
-## Related Skills
-
-- `docker-patterns` — Multi-stage Dockerfiles and image security
-- `deployment-patterns` — CI/CD pipelines, rollback strategy, health check endpoints
-- `security-review` — Broader security hardening context
-- `git-workflow` — GitOps integration with K8s (ArgoCD / Flux patterns)
+- [ ] All containers define resource requests and limits
+- [ ] Images pinned by digest (`@sha256:`) not mutable tags
+- [ ] `runAsNonRoot: true` on all pods
+- [ ] `allowPrivilegeEscalation: false` on all containers
+- [ ] `readOnlyRootFilesystem: true` with explicit writable mounts
+- [ ] All capabilities dropped (`drop: [ALL]`), add back only as needed
+- [ ] `seccompProfile.type: RuntimeDefault` on all pods
+- [ ] `automountServiceAccountToken: false` unless API access is needed
+- [ ] NetworkPolicies enforce default-deny with explicit allow rules
+- [ ] Pod Security Standards enforced at namespace level (`restricted`)
+- [ ] RBAC uses namespace-scoped Roles (not ClusterRoles) for workloads
+- [ ] Secrets encrypted at rest (EncryptionConfiguration or KMS provider)
+- [ ] PodDisruptionBudgets defined for all production workloads
+- [ ] Topology spread constraints distribute pods across zones
+- [ ] Readiness, liveness, and startup probes configured on all containers
+- [ ] Helm charts use `values-{env}.yaml` per environment, reviewed in PRs
+- [ ] Image pull policies set to `IfNotPresent` for tagged, `Always` for `latest`
+- [ ] Service mesh mTLS enabled for inter-service communication
+- [ ] Audit logging enabled on API server with appropriate retention
+- [ ] Cluster upgrades tested in staging before production rollout

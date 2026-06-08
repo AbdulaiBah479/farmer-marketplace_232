@@ -1,399 +1,172 @@
 ---
-name: spawn-agent
-description: Spawn PAI agents via MCP factory tool. Loads identity, injects RAG context, validates spawn chain, and executes via Task(). The bridge between MCP tools and Claude Code's agent spawning.
-model_tier: sonnet
-parallel_hints:
-  can_parallel_with: []
-  must_serialize_with: [spawn-agent]
-  preferred_batch_size: 1
-context_hints:
-  max_file_context: 50
-  compression_level: 2
-  requires_git_context: true
-  requires_db_context: false
-escalation_triggers:
-  - pattern: "spawn chain violation"
-    reason: "Parent agent lacks authority to spawn requested child"
-  - pattern: "identity.*not found"
-    reason: "Agent identity card missing - needs creation"
-  - keyword: ["Deputy", "opus"]
-    reason: "Deputy spawns require ORCHESTRATOR approval"
+name: spawn:agent
+description: "Spawn an AI coding agent in a new terminal (Claude, Codex, Gemini, Cursor, OpenCode, Copilot). Defaults to Claude Code if unspecified."
 ---
 
-# Spawn Agent Skill
+# Purpose
 
-> **Purpose:** Spawn PAI agents using MCP factory pattern
-> **Created:** 2026-01-16
-> **Trigger:** `/spawn-agent <agent_name> <mission>`
-> **Model Tier:** Sonnet (Execution)
+Spawn an AI coding agent in a new terminal window. Follow the 'Instructions', execute the 'Workflow', based on the 'Cookbook'.
 
----
+## Variables
 
-## Overview
+| Variable | Default | Description |
+|----------|---------|-------------|
+| DEFAULT_AGENT | claude-code | Agent to use when not explicitly specified |
+| ENABLED_CLAUDE_CLI | true | Enable Claude Code agent |
+| ENABLED_CODEX_CLI | true | Enable OpenAI Codex agent |
+| ENABLED_GEMINI_CLI | true | Enable Google Gemini agent |
+| ENABLED_CURSOR_CLI | true | Enable Cursor agent |
+| ENABLED_OPEN_CODE_CLI | true | Enable OpenCode agent |
+| ENABLED_COPILOT_CLI | true | Enable GitHub Copilot agent |
+| LOG_TO_FILE | false | Write full terminal output to debug file |
+| LOG_AGENT_OUTPUT | true | Write clean agent JSON response to file |
+| READ_CAPTURED_OUTPUT | false | Read and display agent output after spawn |
+| AGENTIC_CODING_TOOLS | claude-code, codex-cli, gemini-cli, cursor-cli, opencode-cli, copilot-cli | Available agentic tools |
 
-This skill bridges MCP tools with Claude Code's Task() function for agent spawning.
+## Instructions
 
-**The Pattern:**
-1. MCP `spawn_agent_tool` prepares context (identity, RAG, skills)
-2. Claude Code executes via `Task(prompt=spec.full_prompt, ...)`
-3. Spawned agent runs with full Claude Code capabilities
+**MANDATORY** - You MUST follow the Workflow steps below in order. Do not skip steps.
 
-**Why This Exists:**
-- No API keys needed in MCP server
-- Spawned agents have Edit/Write/Bash/MCP tool access
-- Governance (spawn chain, audit trail) enforced centrally
+### Agent Selection
 
----
+1. **Explicit request**: If user specifies an agent (e.g., "use gemini", "spawn codex"), use that agent
+2. **No agent specified**: Use DEFAULT_AGENT (claude-code)
+3. **Check enabled**: Verify the ENABLED_*_CLI flag is true before proceeding
 
-## When to Use
+### Reading Cookbooks
 
-### Use This Skill When:
-- Need to spawn a PAI agent for a specific mission
-- Orchestrating multi-agent workflows
-- Delegating domain-specific work to specialists
-- Need RAG context injected into agent prompt
+- Based on the selected agent, follow the 'Cookbook' section to read the appropriate .md file
+- You MUST read and execute the appropriate cookbook file before spawning the agent
 
-### Do NOT Use When:
-- Simple single-shot tasks (just do it directly)
-- Research/exploration (use `/search-party` instead)
-- Need to create a new agent (use `/agent-factory` instead)
+## Red Flags - STOP and follow Cookbook
 
----
+If you're about to:
+- Spawn an agent without reading the cookbook first
+- Execute a CLI command without running --help
+- Skip steps because "this is simple"
+- Run a CLI agent with a prompt but without checking INTERACTIVE_MODE requirements
 
-## Usage
+**STOP** -> Read the appropriate cookbook file -> Follow its instructions -> Then proceed
 
-### Basic Syntax
+> **Common Mistake**: When spawning agentic CLIs (Claude, Codex, Gemini) with a prompt,
+> most require command chaining (e.g., `&& claude --continue`) to stay in interactive
+> mode after the prompt completes. Always check the cookbook for the correct pattern.
 
-```
-/spawn-agent AGENT_NAME mission description here
-```
+### Spawn Summary User Prompt
 
-### Examples
+- IF: The user requests spawning an agent with a summary of the conversation
+- THEN:
+  - Read and REPLACE the <user_prompt_summary> and <agent_response_summary> fields in './prompts/fork-summary-user-prompt.md' with the history of the conversation between you and the user.
+  - Include the next users request in the `Next User Request` field.
+  - This will be what you pass into the PROMPT field of the agentic coding tool.
+  - Spawn the agent with: fork_terminal(command: str, capture=False, log_to_file=False, log_agent_output=True)
+- Examples:
+    - "Spawn agent use claude code to <xyz> with a summary"
+    - "spin up a new terminal with <xyz> with claude code. Include a summary of the conversation."
+    - "create a new agent with claude code to <xyz>. Summarize work so far."
+    - "spawn agent use gemini to <xyz> with a summary"
 
-```
-/spawn-agent SCHEDULER Generate Block 10 schedule with ACGME compliance
-/spawn-agent COMPLIANCE_AUDITOR Audit Block 10 for work hour violations
-/spawn-agent G2_RECON Find all constraint implementations in the codebase
-/spawn-agent COORD_ENGINE Optimize solver performance for schedule generation
-```
+## Workflow
 
-### With Parent Context (for spawn chain validation)
+**MANDATORY CHECKPOINTS** - Verify each before proceeding:
 
-```
-/spawn-agent SCHEDULER Generate Block 10 --parent COORD_ENGINE
-```
+1. [ ] Understand the user's request
+2. [ ] **SELECT AGENT**: Determine which agent (explicit or DEFAULT_AGENT)
+3. [ ] READ: './fork_terminal.py' to understand the tooling
+4. [ ] Follow the Cookbook (read the appropriate .md file for selected agent)
+5. [ ] **CHECKPOINT**: Confirm cookbook instructions were followed (e.g., ran --help)
+6. [ ] Execute fork_terminal(command: str, capture=False, log_to_file=False, log_agent_output=True)
+7. [ ] IF 'READ_CAPTURED_OUTPUT' is true: Read and display the agent output using read_fork_output()
 
----
+## Cookbook
 
-## Execution Protocol
+### Claude Code (Default)
+- IF: User requests Claude Code OR no agent explicitly specified
+- THEN: Read and execute './cookbook/claude-code.md'
+- Examples:
+    - "Spawn an agent to <xyz>"
+    - "Fork terminal to <xyz>" (no agent specified = claude-code)
+    - "Spawn agent use claude code to <xyz>"
+    - "spin up a new terminal with claude code"
 
-When `/spawn-agent` is invoked, follow these steps:
+### Codex CLI
+- IF: User requests Codex/OpenAI agent and 'ENABLED_CODEX_CLI' is true
+- THEN: Read and execute './cookbook/codex-cli.md'
+- Examples:
+    - "Spawn agent use codex to <xyz>"
+    - "create a new terminal with codex cli to <xyz>"
+    - "spawn openai agent to <xyz>"
 
-### Step 1: Load MCP Tool
+### Gemini CLI
+- IF: User requests Gemini/Google agent and 'ENABLED_GEMINI_CLI' is true
+- THEN: Read and execute './cookbook/gemini-cli.md'
+- Examples:
+    - "Spawn agent use gemini to <xyz>"
+    - "create a new terminal with gemini cli to <xyz>"
+    - "spawn google agent to <xyz>"
+
+### Cursor CLI
+- IF: User requests Cursor agent and 'ENABLED_CURSOR_CLI' is true
+- THEN: Read and execute './cookbook/cursor-cli.md'
+- Examples:
+    - "Spawn agent use cursor cli to <xyz>"
+    - "create a new terminal with cursor to <xyz>"
+    - "spawn cursor agent to <xyz>"
+
+### OpenCode CLI
+- IF: User requests OpenCode agent and 'ENABLED_OPEN_CODE_CLI' is true
+- THEN: Read and execute './cookbook/opencode-cli.md'
+- Examples:
+    - "Spawn agent use opencode cli to <xyz>"
+    - "create a new terminal with opencode to <xyz>"
+    - "spawn opencode agent to <xyz>"
+
+### Copilot CLI
+- IF: User requests Copilot/GitHub agent and 'ENABLED_COPILOT_CLI' is true
+- THEN: Read and execute './cookbook/copilot-cli.md'
+- Examples:
+    - "Spawn agent use copilot cli to <xyz>"
+    - "create a new terminal with copilot to <xyz>"
+    - "spawn github copilot agent to <xyz>"
+
+## Output Retrieval
+
+The `fork_terminal()` function supports three output controls:
+
+| Parameter | Default | Output File | Description |
+|-----------|---------|-------------|-------------|
+| `log_agent_output` | `True` | `/tmp/fork-agent-*.json` | Clean agent JSON response |
+| `log_to_file` | `False` | `/tmp/fork-debug-*.txt` | Full terminal output (debug) |
+| `capture` | `False` | N/A | Block and return content directly |
+
+### Parameter Combinations
+
+| `capture` | `log_agent_output` | `log_to_file` | Behavior |
+|-----------|-------------------|---------------|----------|
+| `False` | `True` (default) | `False` | Returns agent JSON file path |
+| `False` | `False` | `True` | Returns debug file path |
+| `False` | `False` | `False` | Returns empty string |
+| `True` | `True` | * | Blocks, returns agent JSON content |
+| `True` | `False` | `True` | Blocks, returns debug content |
+
+### Retrieving Output Later
+
+When `log_agent_output=True` (default), clean agent output is logged. Use `read_fork_output(file_path)` to retrieve it:
 
 ```python
-# First, load the spawn_agent_tool
-MCPSearch(query="select:mcp__residency-scheduler__spawn_agent_tool")
+# Spawn without blocking (returns path to JSON output)
+file_path = fork_terminal(cmd, log_agent_output=True)
+print(f"Agent output will be at: {file_path}")
+
+# Later, read the output when needed
+output = read_fork_output(file_path, timeout=60)
 ```
 
-### Step 2: Call spawn_agent_tool
+### Debug Mode
+
+For debugging, enable `log_to_file=True` to capture full terminal output (including stderr):
 
 ```python
-spec = mcp__residency-scheduler__spawn_agent_tool(
-    agent_name="AGENT_NAME",
-    mission="The mission description",
-    context={"relevant": "context"},  # Optional
-    inject_rag=True,                   # Default: True
-    inject_skills=None,                # Auto-match if None
-    parent_agent="PARENT_NAME"         # Optional, for spawn chain
-)
+# Debug mode: capture everything
+file_path = fork_terminal(cmd, log_to_file=True, log_agent_output=False)
 ```
-
-### Step 3: Validate Response
-
-Check the returned spec for:
-- `spawn_chain_valid`: Must be True (or no parent specified)
-- `identity_found`: Must be True
-- `tier` and `model`: Determine execution parameters
-
-If validation fails:
-```python
-if not spec["spawn_chain_valid"]:
-    # Escalate: parent cannot spawn this child
-    raise SpawnChainViolation(spec["spawn_chain_error"])
-
-if not spec["identity_found"]:
-    # Escalate: need to create identity card first
-    raise IdentityNotFound(f"Create identity: .claude/Identities/{agent_name}.identity.md")
-```
-
-### Step 4: Execute via Task()
-
-```python
-result = Task(
-    prompt=spec["full_prompt"],
-    subagent_type=spec["subagent_type"],  # "general-purpose"
-    model=spec["model"],                   # haiku/sonnet/opus
-    max_turns=spec["max_turns"],           # 5/20/50 based on tier
-    description=f"{spec['agent_name']}: {mission[:30]}..."
-)
-```
-
-### Step 5: Handle Checkpoint (Optional)
-
-If the agent needs to persist state:
-```python
-# Agent writes checkpoint to spec["checkpoint_path"]
-# Example: .claude/Scratchpad/AGENT_SCHEDULER_20260116_143022.md
-
-# To resume later:
-# Read checkpoint, include in next spawn's context
-```
-
----
-
-## Tier-Based Execution
-
-| Tier | Model | Max Turns | Use Case |
-|------|-------|-----------|----------|
-| **Specialist** | haiku | 5 | Single-shot focused tasks |
-| **Coordinator** | sonnet | 20 | Multi-step domain work |
-| **Deputy** | opus | 50 | Strategic cross-domain work |
-| **G-Staff** | sonnet | 15 | Advisory/research roles |
-
-**Rule:** Match task complexity to tier. Don't spawn opus for simple validation.
-
----
-
-## Spawn Chain Validation
-
-The MCP tool validates that parent agents can spawn children:
-
-```yaml
-# From agents.yaml
-COORD_ENGINE:
-  can_spawn: [SCHEDULER, SWAP_MANAGER, OPTIMIZATION_SPECIALIST]
-
-ARCHITECT:
-  can_spawn: [COORD_PLATFORM, COORD_QUALITY, COORD_ENGINE, ...]
-```
-
-**If spawn chain fails:**
-- Error message tells you who CAN spawn this agent
-- Escalate to the correct parent or ORCHESTRATOR
-
----
-
-## RAG Injection
-
-By default, `inject_rag=True` queries relevant context:
-
-```python
-# spawn_agent_tool internally does:
-rag_results = rag_search(
-    query=mission,
-    doc_types=agent.relevant_doc_types,  # From agents.yaml
-    top_k=5
-)
-```
-
-**To disable (faster, less context):**
-```
-spec = spawn_agent_tool(..., inject_rag=False)
-```
-
----
-
-## Checkpoint Protocol
-
-Agents can persist state for resumption:
-
-### Writing Checkpoint (in spawned agent)
-
-```markdown
-# .claude/Scratchpad/AGENT_SCHEDULER_20260116_143022.md
-
-## Agent Checkpoint
-
-**Agent:** SCHEDULER
-**Mission:** Generate Block 10 schedule
-**Status:** In Progress
-**Timestamp:** 2026-01-16T14:30:22
-
-### Progress
-- [x] Loaded constraints
-- [x] Ran solver (15 solutions found)
-- [ ] Validation pending
-
-### State
-```json
-{
-  "block_number": 10,
-  "solutions_found": 15,
-  "best_objective": 0.87
-}
-```
-
-### Next Steps
-1. Validate ACGME compliance on top 3 solutions
-2. Select best based on fairness metric
-3. Write to database
-```
-
-### Resuming from Checkpoint
-
-```python
-# Read checkpoint
-checkpoint = Read(".claude/Scratchpad/AGENT_SCHEDULER_20260116_143022.md")
-
-# Include in new spawn context
-spec = spawn_agent_tool(
-    agent_name="SCHEDULER",
-    mission="RESUME: Complete Block 10 schedule generation",
-    context={"checkpoint": checkpoint}
-)
-```
-
----
-
-## Audit Trail
-
-Every spawn is logged to `.claude/History/agent_invocations/`:
-
-```json
-{
-  "invocation_id": "20260116_143022_SCHEDULER",
-  "timestamp": "2026-01-16T14:30:22",
-  "agent_name": "SCHEDULER",
-  "tier": "Specialist",
-  "model": "haiku",
-  "mission": "Generate Block 10 schedule",
-  "parent_agent": "COORD_ENGINE",
-  "spawn_chain_valid": true,
-  "rag_injected": true,
-  "checkpoint_path": ".claude/Scratchpad/AGENT_SCHEDULER_20260116_143022.md"
-}
-```
-
----
-
-## Error Handling
-
-### Identity Not Found
-
-```
-Error: Identity card not found for agent: NEW_AGENT
-
-Resolution:
-1. Check if agent exists in .claude/agents.yaml
-2. If not, use /agent-factory to create the agent
-3. Create identity card at .claude/Identities/NEW_AGENT.identity.md
-```
-
-### Spawn Chain Violation
-
-```
-Error: Spawn chain violation: SCHEDULER cannot spawn ARCHITECT
-
-Resolution:
-1. SCHEDULER can only spawn: [] (no children)
-2. ARCHITECT should be spawned by: ORCHESTRATOR
-3. Escalate to correct parent or invoke as ORCHESTRATOR
-```
-
-### Registry Not Found
-
-```
-Error: Agent registry not found at .claude/agents.yaml
-
-Resolution:
-1. Verify .claude/agents.yaml exists
-2. Check for YAML syntax errors
-3. Regenerate from identity cards if needed
-```
-
----
-
-## Integration Points
-
-### With ORCHESTRATOR Startup
-
-`/startupO` and `/startupO-lite` can use this skill:
-
-```python
-# In ORCHESTRATOR session
-spec = spawn_agent_tool("G2_RECON", "Explore codebase for...")
-Task(prompt=spec["full_prompt"], ...)
-```
-
-### With Coordinator Skills
-
-`/coord-engine`, `/coord-platform`, etc. spawn specialists:
-
-```python
-# COORD_ENGINE spawning SCHEDULER
-spec = spawn_agent_tool(
-    "SCHEDULER",
-    "Generate Block 10",
-    parent_agent="COORD_ENGINE"  # Validates spawn chain
-)
-```
-
-### With Party Protocols
-
-`/search-party`, `/qa-party` can spawn multiple agents in parallel:
-
-```python
-# Spawn 10 G2_RECON probes
-for i in range(10):
-    specs.append(spawn_agent_tool("G2_RECON", f"Probe {i}: {target}"))
-
-# Execute in parallel
-for spec in specs:
-    Task(prompt=spec["full_prompt"], ..., run_in_background=True)
-```
-
----
-
-## Quick Reference
-
-### Agent Tiers
-
-| Tier | Agents (Examples) |
-|------|-------------------|
-| Deputy | ARCHITECT, SYNTHESIZER |
-| Coordinator | COORD_ENGINE, COORD_PLATFORM, COORD_FRONTEND |
-| Specialist | SCHEDULER, COMPLIANCE_AUDITOR, TEST_WRITER |
-| G-Staff | G1_PERSONNEL, G2_RECON, G3_OPERATIONS |
-| SOF | SF_MEDIC, SF_ENGINEER, SF_WEAPONS |
-
-### Common Spawns
-
-```bash
-# Scheduling
-/spawn-agent SCHEDULER Generate Block X schedule
-
-# Validation
-/spawn-agent COMPLIANCE_AUDITOR Audit Block X for ACGME
-
-# Research
-/spawn-agent G2_RECON Find implementations of X
-
-# Testing
-/spawn-agent QA_TESTER Run test suite for X
-
-# Documentation
-/spawn-agent META_UPDATER Update docs for feature X
-```
-
----
-
-## Aliases
-
-- `/spawn-agent` (primary)
-- `/spawn` (short form)
-- `/agent` (alternative)
-
----
-
-*spawn-agent: The bridge between MCP governance and Claude Code execution.*

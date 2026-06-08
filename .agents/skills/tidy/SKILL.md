@@ -1,55 +1,87 @@
 ---
 name: tidy
-description: Triggered by "tidy up", "clean up transactions", "categorize uncategorized", "organize my transactions"
+description: ODIN's compress-operations dispatcher under the Compressor/Extender role. Invoke on "tidy", "clean up", "tidy this file/memory/workspace/git/docs", or when active context (current file, diff, stack, memory directory) has structural rot to resolve before touching behavior. Detects target domain from context and routes to the sibling skill. Requires explicit target or clear active-context signal — do not invoke speculatively.
 ---
 
-# Tidy Up Uncategorized Transactions
+# Tidy — ODIN's compress-operations dispatcher
 
-Batch-categorize uncategorized transactions by clustering similar ones and applying categories in bulk.
+Compress first. Before adding complexity, reduce coupling. Before changing behavior,
+improve structure. This skill detects *what* needs tidying from context and routes
+to the right sibling skill. Domain procedures live in the siblings — this skill
+owns only scope detection, dispatch, and the output contract.
 
-## Workflow
+**Invariants:**
+- Every tidy action is atomic and scoped to what is already in view.
+- Tidy commits are always separate from behavior commits.
+- No opportunistic sweeps beyond the declared or clearly active scope.
 
-1. **Fetch uncategorized transactions.** Call the `query` MCP tool:
-   ```json
-   { "detail": true, "is_uncategorized": true, "period": "last_90d", "limit": 200, "sort": "-amount" }
+---
+
+## Scope detection
+
+Inspect context in priority order and dispatch to the first matching domain:
+
+| Signal | Domain | Dispatch to |
+|---|---|---|
+| File path(s), active diff, or `cargo`/`dune` target named | **Code** | `cleanup-codebase` skill |
+| `memory/` directory, `MEMORY.md`, or memory file(s) named | **Memory** | `memory-clean` then `memory-update` skills |
+| `.outline/`, `/tmp` scratch, `*.tmp`, `*.bak`, repomix packs | **Workspace** | Inline (see below) |
+| `git sl`, commit stack, commit message(s) named | **Git** | `git-branchless` skill + `atomic-commit` skill |
+| Docs, comments, ADRs, READMEs, plan files named | **Docs** | Inline (see below) |
+| User explicitly says "tidy ICM" or names an ICM topic | **ICM state** | Inline (see below) |
+| No clear signal | — | Ask: "What are we tidying — code, memory, workspace, git, docs, or ICM?" |
+
+---
+
+## Inline procedures (workspace, docs, and ICM state)
+
+These three domains are handled inline without a dedicated sibling skill.
+
+### Workspace
+
+1. Discover scratch artifacts in scope:
+   ```sh
+   fd -t f -E '.git' -E 'target' -E '_build' \
+     '(\.(tmp|bak|outline)|repomix-output)' .
+   fd -t f /tmp -g '<session-prefix>-*' 2>/dev/null
    ```
-   If `$ARGUMENTS` contains a time period (e.g. "this month", "last 30 days"), use that instead of `last_90d`.
+2. Confirm each is truly scratch (not referenced by any open plan, task, or active diff).
+3. Remove with `rip` (not `rm`). Report count and paths.
 
-2. **Research unknown transactions.** For transactions you can't identify from the description alone:
-   - **Web search first** (if available): Search for the merchant name, any phone numbers or domains in the description, or the raw description itself. This often reveals the business behind cryptic processor names.
-   - **Search the user's email** (if available): Search for the party/merchant name to find order confirmations or receipts. If that doesn't match, search for the exact dollar amount (e.g. "$47.23") to find receipts that way.
+### Docs
 
-3. **Cluster by pattern.** Group the results by normalized description or party name. For each cluster, note the count and total amount.
+1. Scan in-scope file(s) for: stale `TODO`/`FIXME` (git-blame date > 6 months), comments contradicting current code, commented-out code blocks, multi-paragraph docstrings on non-API-surface functions, overclaims about external contracts.
+2. Show the current text + proposed change for each candidate. Edit only on confirmation or for purely cosmetic fixes (whitespace, spelling).
+3. Overclaims: annotate with `<!-- VERIFY -->` and surface to the user rather than deleting.
 
-4. **Suggest categorization.** For each cluster, propose:
-   - A **category** (pick from the user's existing categories)
-   - A **party** name (the clean merchant/counterparty name)
+### ICM state
 
-5. **Present to the user.** Show a table or list of clusters with:
-   - Pattern / merchant name
-   - Count of transactions
-   - Total amount
-   - Suggested category
-   - Whether you recommend creating a rule
+Run `icm list --sort recent | head -30`; for each stale entry show the current content plus the proposed replacement before calling `icm update`. For decisions made in this session not yet captured, show the proposed `icm store` call before executing. Write only on explicit user confirmation per entry.
 
-   Ask the user to approve, modify, or skip each cluster.
+---
 
-6. **Prefer rules over one-off annotations.** If a cluster has more than one transaction, or the merchant is likely to appear again (subscriptions, regular stores, utilities, etc.), create a rule rather than annotating individual transactions. Rules automatically categorize future transactions too.
-   - Preview first: `admin { "entity": "rule", "action": "preview", ... }`
-   - Show the preview (how many existing transactions would match)
-   - If user confirms, create: `admin { "entity": "rule", "action": "create", ... }`
+## Output contract
 
-7. **Annotate the rest.** For truly one-off transactions where a rule wouldn't help, apply directly:
-   ```json
-   { "action": "categorize", "filter": { "search": "<pattern>" }, "category_name": "<approved_category>" }
-   ```
-   Also set the party if one was approved:
-   ```json
-   { "action": "set_party", "filter": { "search": "<pattern>" }, "party_name": "<approved_party>" }
-   ```
+After completing each domain, emit exactly:
 
-8. **Summarize.** Report how many transactions were categorized, how many rules were created, and how many uncategorized transactions remain.
+```
+Tidy — <domain>
+  Removed:   N  (up to 5 paths/names; "…and M more" if larger)
+  Fixed:     N
+  Proposed:  N  (awaiting confirmation)
+  Skipped:   N  (<one-phrase reason>)
+  Next:      <one sentence, e.g. "Run build to verify" or "Nothing else in scope">
+```
 
-## Tone
+If nothing needed tidying: `Tidy — <domain>: nothing to do.`
 
-Stick to the facts. Present findings and suggestions without judgement — no commentary on spending habits. Just clear, plain-language observations and actionable options.
+---
+
+## Constitutional rules
+
+1. **Atomic commits** — tidy commits are always separate from behavior commits. No exceptions. Use `git move --fixup` when embedding alongside active work.
+2. **Scope discipline** — never tidy beyond the explicit target or the currently active file/system. No opportunistic sweeps.
+3. **Confirm before delete** — show evidence; never silently remove memories, commits, or files.
+4. **No new abstractions** — tidying is net-deletion or net-simplification only. Introducing a new pattern is a separate task.
+5. **Verify after** — after code or git tidy, run repo-native verification (build + tests + linter).
+6. **ODIN baseline wins** — if any rule here conflicts with `~/.claude/claude/system-prompt-baseline.md`, the baseline wins.

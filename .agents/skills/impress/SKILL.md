@@ -1,10 +1,11 @@
 ---
 name: impress
 description: "Presentation creation, format conversion (ODP/PPTX/PDF), slide automation with LibreOffice Impress."
-category: presentation-processing
-risk: safe
 source: personal
-date_added: "2026-02-27"
+risk: safe
+domain: office-productivity
+category: presentation-processing
+version: 1.0.0
 ---
 
 # LibreOffice Impress

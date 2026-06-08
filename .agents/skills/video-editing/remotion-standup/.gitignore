@@ -1,8 +1,0 @@
-node_modules/
-dist/
-out/
-.remotion/
-public/audio/*.wav
-public/audio/*.mp3
-public/audio/*.m4a
-public/timeline.json

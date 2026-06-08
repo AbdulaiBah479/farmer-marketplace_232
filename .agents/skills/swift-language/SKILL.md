@@ -1,12 +1,15 @@
 ---
 name: swift-language
-description: "Apply modern Swift language patterns and idioms for non-concurrency, non-SwiftUI code. Covers if/switch expressions (Swift 5.9+), typed throws (Swift 6+), result builders, property wrappers, opaque and existential types (some vs any), guard patterns, Never type, Regex builders (Swift 5.7+), basic Codable shaping (CodingKeys, custom decoding, nested containers), modern collection APIs (count(where:), contains(where:), replacing()), basic FormatStyle usage, and string interpolation patterns. Use when writing core Swift code involving generics, protocols, enums, closures, or modern language features; route deep Codable to swift-codable, detailed formatting/localization to swift-formatstyle, and API naming to swift-api-design-guidelines."
+description: "Apply modern Swift language patterns and idioms for non-concurrency, non-SwiftUI code. Covers if/switch expressions (Swift 5.9+), typed throws (Swift 6+), result builders, property wrappers, opaque and existential types (some vs any), guard patterns, Never type, Regex builders (Swift 5.7+), Codable best practices (CodingKeys, custom decoding, nested containers), modern collection APIs (count(where:), contains(where:), replacing()), FormatStyle (.formatted() on dates, numbers, measurements), and string interpolation patterns. Use when writing core Swift code involving generics, protocols, enums, closures, or modern language features."
 ---
 
 # Swift Language Patterns
 
-Core Swift language features and modern syntax patterns targeting Swift 6.3. Covers language constructs, type system features, basic Codable,
-string and collection APIs, basic formatting, C interop (`@c`), module disambiguation (`ModuleName::symbol`), and performance attributes (`@specialized`, `@inline(always)`). For `@c` corrections, enumerate invalid Swift-only signature types: `String`, `Array`, `UnsafeBufferPointer`, closures, and generic placeholders. Route deeper Codable/API decoding to `swift-codable`, detailed formatting/localization to `swift-formatstyle`, API naming to `swift-api-design-guidelines`, concurrency to `swift-concurrency`, and SwiftUI state/view work to `swiftui-patterns`.
+Core Swift language features and modern syntax patterns targeting Swift 5.9+
+through Swift 6. Covers language constructs, type system features, Codable,
+string and collection APIs, and formatting. For concurrency (actors, async/await,
+Sendable), see the `swift-concurrency` skill. For SwiftUI views and state
+management, see `swiftui-patterns`.
 
 ## Contents
 
@@ -176,13 +179,13 @@ func makeCollection() -> some Collection<Int> {
 
 Use `some` for:
 - Return types when you want to hide implementation but preserve type identity.
-- Parameter types (Swift 5.7+): `some P` is shorthand for an unnamed generic
-  parameter such as `<T: P>`.
+- Parameter types (Swift 5.9+): `func process(_ items: some Collection<Int>)` --
+  equivalent to a generic `<C: Collection<Int>>`.
 
 ### `any Protocol` (Existential Type)
 
-An existential box that can hold any conforming type at runtime. It uses dynamic
-dispatch and may allocate when the value does not fit in the inline buffer.
+An existential box that can hold any conforming type at runtime. Has overhead
+from dynamic dispatch and heap allocation.
 
 ```swift
 func process(items: [any StringProtocol]) {
@@ -238,12 +241,8 @@ func processOrder(_ order: Order?) throws -> Receipt {
 
 ## Never Type
 
-`Never` is an uninhabited type for code paths that never produce a value. It
-works as Swift's bottom type in expression contexts, but it does not implicitly
-conform to arbitrary protocols or satisfy a generic `T: SomeProtocol`
-constraint. When recommending `Result<T, Never>` or `throws(Never)`, explicitly
-state all three points: uninhabited, bottom-like, and no universal protocol
-conformance.
+`Never` indicates a function that never returns. It conforms to all protocols
+since Swift 5.5+ (bottom type).
 
 ```swift
 // Function that terminates the program
@@ -253,11 +252,13 @@ func crashWithDiagnostics(_ message: String) -> Never {
     fatalError(message)
 }
 
+// Useful in generic contexts
 enum Result<Success, Failure: Error> {
     case success(Success)
     case failure(Failure)
 }
 // Result<String, Never> -- a result that can never fail
+// Result<Never, Error>  -- a result that can never succeed
 
 // Exhaustive switch: no default needed since Never has no cases
 func handle(_ result: Result<String, Never>) {
@@ -273,7 +274,6 @@ func handle(_ result: Result<String, Never>) {
 Swift 5.7+ Regex builder DSL provides compile-time checked, readable patterns.
 
 ```swift
-import Foundation
 import RegexBuilder
 
 // Parse "2024-03-15" into components
@@ -283,7 +283,6 @@ let dateRegex = Regex {
 
 if let match = "2024-03-15".firstMatch(of: dateRegex) {
     let (_, year, month, day) = match.output
-    _ = (year, month, day)
 }
 
 // TryCapture with transform
@@ -374,7 +373,7 @@ struct Record: Decodable {
 }
 ```
 
-See [references/swift-patterns-extended.md](references/swift-patterns-extended.md) for additional Codable patterns
+See `references/swift-patterns-extended.md` for additional Codable patterns
 (enums with associated values, date strategies, unkeyed containers).
 
 ## Modern Collection APIs
@@ -384,7 +383,7 @@ Prefer these modern APIs over manual loops:
 ```swift
 let numbers = [1, 2, 3, 4, 5, 6, 7, 8]
 
-// count(where:) -- use instead of .filter { }.count
+// count(where:) -- Swift 5.0+, use instead of .filter { }.count
 let evenCount = numbers.count(where: { $0.isMultiple(of: 2) })
 
 // contains(where:) -- short-circuits on first match
@@ -454,7 +453,7 @@ let date = try Date("Mar 15, 2024", strategy: .dateTime.month().day().year())
 
 ## String Interpolation
 
-Extend `DefaultStringInterpolation` for domain-specific formatting. Use `"""` for multi-line strings (indentation is relative to the closing `"""`). See [references/swift-patterns-extended.md](references/swift-patterns-extended.md) for custom interpolation examples.
+Extend `DefaultStringInterpolation` for domain-specific formatting. Use `"""` for multi-line strings (indentation is relative to the closing `"""`). See `references/swift-patterns-extended.md` for custom interpolation examples.
 
 ## Common Mistakes
 
@@ -468,30 +467,32 @@ Extend `DefaultStringInterpolation` for domain-specific formatting. Use `"""` fo
    for optional or missing keys.
 5. **Nested if-let chains.** Use `guard let` for preconditions to keep the
    happy path at the top level.
-6. **Invalid `@c` signatures.** Name valid C types and explicitly reject:
-   `String`, `Array`, `UnsafeBufferPointer`, closures, generic placeholders.
+6. **String regex for simple operations.** Use `.replacing()` and
+   `.contains()` before reaching for Regex.
 7. **Ignoring typed throws.** When a function has a single, clear error type,
    typed throws give callers exhaustive switch without casting.
 8. **Overusing property wrappers.** A computed property is simpler when there
    is no reuse or projected value needed.
-9. **Underspecifying `Never`.** For `Result<T, Never>` or `throws(Never)`, say:
-   uninhabited, bottom-like, and not arbitrary `T: P` protocol conformance.
-10. **Owning deep formatting/localization.** Use `swift-formatstyle` for detailed
-    formatting and `ios-localization` for market/localized-display QA.
+9. **Building collections with `var` + `append` in a loop.** Prefer `map`,
+   `filter`, `compactMap`, or `reduce(into:)`.
+10. **Not using if/switch expressions.** When assigning from a condition, use
+    an expression instead of declaring `var` and mutating it.
 
 ## Review Checklist
 
-- [ ] `some` used for opaque returns and Swift 5.7+ generic-parameter shorthand
-- [ ] `guard` for preconditions; collection APIs instead of manual loops
+- [ ] `some` used over `any` where possible
+- [ ] `guard` used for preconditions, not nested `if let`
+- [ ] Collection APIs used instead of manual loops
 - [ ] `.formatted()` used instead of `DateFormatter`/`NumberFormatter`
-- [ ] Codable types use `CodingKeys` for API mapping; `decodeIfPresent` with defaults for optional fields
-- [ ] if/switch expressions for conditional assignment; property wrappers have clear reuse justification
+- [ ] Codable types use `CodingKeys` for API key mapping
+- [ ] `decodeIfPresent` with defaults for optional JSON fields
+- [ ] if/switch expressions used for simple conditional assignment
+- [ ] Property wrappers have clear reuse justification
 - [ ] Regex builder used for complex patterns (literal OK for simple ones)
+- [ ] String interpolation is clean -- no unnecessary `String(describing:)`
 - [ ] Typed throws used when callers benefit from exhaustive error handling
-- [ ] `@c` corrections enumerate rejected Swift-only types by name
-- [ ] `Never` guidance says uninhabited, bottom-like, and not arbitrary `T: P` protocol conformance
-- [ ] deep Codable, formatting/localization, naming, concurrency, and SwiftUI work routed to sibling skills
+- [ ] `Never` used appropriately in generic contexts
+
 ## References
 
-- Extended patterns and Codable examples: [references/swift-patterns-extended.md](references/swift-patterns-extended.md)
-- Attributes and C interop: [references/swift-attributes-interop.md](references/swift-attributes-interop.md)
+- Extended patterns and Codable examples: `references/swift-patterns-extended.md`

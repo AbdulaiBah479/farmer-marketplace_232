@@ -1,6 +1,8 @@
 ---
 name: video-transcript
-description: Use this skill to extract full transcripts from video content for analysis, summarization, note-taking, or research. Trigger this whenever the user shares a YouTube URL, a video ID, or explicitly asks to "transcribe this", "get the text from this video", or "convert video to text". This is essential for converting video into readable formats.
+description: Extract full transcripts from video content for analysis, summarization, note-taking, or research. Use when the user wants a written version of video content, asks to "transcribe this", "get the text from this video", "convert video to text", or shares a video URL for content extraction.
+homepage: https://transcriptapi.com
+user-invocable: true
 ---
 
 # Video Transcript
@@ -9,50 +11,49 @@ Extract transcripts from videos via [TranscriptAPI.com](https://transcriptapi.co
 
 ## Setup
 
-If `TRANSCRIPT_API_KEY` is not found in the `.env` file within the skill directory, help the user create an account (100 free credits, no card):
+If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
 
-**Step 1 — Register:** Ask the user for their email.
+**Step 1 — Register:** Ask user for their email.
 
 ```bash
-uv run scripts/auth.py register --email USER_EMAIL
+node ./scripts/tapi-auth.js register --email USER_EMAIL
 ```
 
 → OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
 
-**Step 2 — Verify:** Once the user provides the OTP:
+**Step 2 — Verify:** Once user provides the OTP:
 
 ```bash
-uv run scripts/auth.py verify --token TOKEN_FROM_STEP_1 --otp CODE
+node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
 ```
 
-> API key saved to `.env` in the skill directory. Ready to use.
+> API key saved to your shell profile and agent config. Ready to use.
 
 Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
-## Usage
-
-Use `scripts/transcribe.py` to get transcripts.
+## GET /api/v2/youtube/transcript
 
 ```bash
-uv run scripts/transcribe.py VIDEO_URL --format [json|text]
+curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
+?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
-### Options
-
-| Param | Description | Default |
-| --- | --- | --- |
-| `video_url` | YouTube URL or 11-char video ID | — |
-| `--format` | `json` (structured) or `text` (readable) | `json` |
-| `--no-timestamps`| Exclude timestamps from text output | `true` |
-| `--no-metadata` | Exclude metadata from response | `true` |
+| Param               | Required | Default | Values                                 |
+| ------------------- | -------- | ------- | -------------------------------------- |
+| `video_url`         | yes      | —       | YouTube URL or 11-char video ID        |
+| `format`            | no       | `json`  | `json` (structured), `text` (readable) |
+| `include_timestamp` | no       | `true`  | `true`, `false`                        |
+| `send_metadata`     | no       | `false` | `true`, `false`                        |
 
 Accepted URL formats:
+
 - `https://www.youtube.com/watch?v=VIDEO_ID`
 - `https://youtu.be/VIDEO_ID`
 - `https://youtube.com/shorts/VIDEO_ID`
 - Bare video ID: `dQw4w9WgXcQ`
 
-### Example Response (`--format text`)
+**Response** (`format=text&send_metadata=true`):
 
 ```json
 {
@@ -68,20 +69,33 @@ Accepted URL formats:
 }
 ```
 
+**Response** (`format=json`):
+
+```json
+{
+  "video_id": "dQw4w9WgXcQ",
+  "language": "en",
+  "transcript": [
+    { "text": "We're no strangers to love", "start": 18.0, "duration": 3.5 },
+    { "text": "You know the rules and so do I", "start": 21.5, "duration": 2.8 }
+  ]
+}
+```
+
 ## Tips
 
 - Summarize long transcripts into key points first, offer full text on request.
-- Use `json` format when you need precise timestamps for quoting specific moments.
-- Metadata includes video title and channel for additional context.
+- Use `format=json` when you need precise timestamps for quoting specific moments.
+- Use `send_metadata=true` to get video title and channel for context.
 - Works with YouTube Shorts too.
 
 ## Errors
 
-| Status | Meaning | Action |
-| --- | --- | --- |
-| 401 | Bad API key | Check key or re-setup |
-| 402 | No credits | Top up at transcriptapi.com/billing |
-| 404 | No transcript | Video may not have captions enabled |
-| 408 | Timeout | Retry once after 2s |
+| Code | Meaning       | Action                              |
+| ---- | ------------- | ----------------------------------- |
+| 401  | Bad API key   | Check key or re-setup               |
+| 402  | No credits    | Top up at transcriptapi.com/billing |
+| 404  | No transcript | Video may not have captions enabled |
+| 408  | Timeout       | Retry once after 2s                 |
 
 1 credit per successful request. Errors don't consume credits. Free tier: 100 credits, 300 req/min.

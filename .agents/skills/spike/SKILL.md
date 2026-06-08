@@ -1,197 +1,79 @@
 ---
 name: spike
-description: "Throwaway experiments to validate an idea before build."
-version: 1.0.0
-author: Hermes Agent (adapted from gsd-build/get-shit-done)
-license: MIT
-platforms: [linux, macos, windows]
-metadata:
-  hermes:
-    tags: [spike, prototype, experiment, feasibility, throwaway, exploration, research, planning, mvp, proof-of-concept]
-    related_skills: [sketch, subagent-driven-development, plan]
+description: Implement N approaches as separate branches, then compare side-by-side. Removes "implementation effort" as a variable from the decision.
+args:
+  - name: -n N
+    description: Number of spike branches to implement (default 4)
 ---
 
 # Spike
 
-Use this skill when the user wants to **feel out an idea** before committing to a real build — validating feasibility, comparing approaches, or surfacing unknowns that no amount of research will answer. Spikes are disposable by design. Throw them away once they've paid their debt.
+You can't compare approaches in the abstract. Implement each one, see how they feel in real code, then decide. This removes speculation and replaces it with evidence.
 
-Load this when the user says things like "let me try this", "I want to see if X works", "spike this out", "before I commit to Y", "quick prototype of Z", "is this even possible?", or "compare A vs B".
+## Why This Works
 
-## When NOT to use this
+Design discussions stall on hypotheticals. Implementing each approach takes the guesswork out. You get exact line counts, real dependency changes, actual lint/compile errors that reveal hidden constraints, and the visceral feel of reading the code.
 
-- The answer is knowable from docs or reading code — just do research, don't build
-- The work is production path — use the `plan` skill instead
-- The idea is already validated — jump straight to implementation
+## On Activation
 
-## If the user has the full GSD system installed
+1. **Select** — Choose N approaches to implement.
+2. **Prepare** — Identify the base branch and files to modify.
+3. **Implement** — One branch per approach, fully working.
+4. **Verify** — Each branch compiles and passes lint.
+5. **Compare** — Side-by-side table of discriminating dimensions.
 
-If `gsd-spike` shows up as a sibling skill (installed via `npx get-shit-done-cc --hermes`), prefer **`gsd-spike`** when the user wants the full GSD workflow: persistent `.planning/spikes/` state, MANIFEST tracking across sessions, Given/When/Then verdict format, and commit patterns that integrate with the rest of GSD. This skill is the lightweight standalone version for users who don't have (or don't want) the full system.
+## Phase 1: Select
 
-## Core method
+Identify exactly N approaches. Sources include `/synthesize` output, `/brainstorm` rankings, a user-specified list, or freeform description.
 
-Regardless of scale, every spike follows this loop:
+If the user hasn't specified which approaches, ask via `AskUserQuestion`.
 
-```
-decompose  →  research  →  build  →  verdict
-   ↑__________________________________________↓
-                  iterate on findings
-```
+For each approach, define a branch name (`spike/<descriptive-name>`), which option(s) it implements, and a one-line summary. Present the plan before implementing.
 
-### 1. Decompose
+Some brainstorm options are **complementary** — combine them into a single branch when they strengthen each other rather than competing.
 
-Break the user's idea into **2-5 independent feasibility questions**. Each question is one spike. Present them as a table with Given/When/Then framing:
+## Phase 2: Prepare
 
-| # | Spike | Validates (Given/When/Then) | Risk |
-|---|-------|----------------------------|------|
-| 001 | websocket-streaming | Given a WS connection, when LLM streams tokens, then client receives chunks < 100ms | High |
-| 002a | pdf-parse-pdfjs | Given a multi-page PDF, when parsed with pdfjs, then structured text is extractable | Medium |
-| 002b | pdf-parse-camelot | Given a multi-page PDF, when parsed with camelot, then structured text is extractable | Medium |
+1. **Read all files** that will be modified across branches. Load them once — they're the same starting point for every branch.
+2. **Note the base branch** — all spike branches fork from here.
+3. **Identify the verification command** (`make format lint`, `cargo clippy`, `npm run lint`, etc.). Ask if unclear.
 
-**Spike types:**
-- **standard** — one approach answering one question
-- **comparison** — same question, different approaches (shared number, letter suffix `a`/`b`/`c`)
+## Phase 3: Implement
 
-**Good spike questions:** specific feasibility with observable output.
-**Bad spike questions:** too broad, no observable output, or just "read the docs about X".
+Work through branches **sequentially** (they modify the same files). For each: check out the base branch, create `spike/<name>`, implement fully.
 
-**Order by risk.** The spike most likely to kill the idea runs first. No point prototyping the easy parts if the hard part doesn't work.
+**Fully** means: all code changes, updated imports and call sites, updated doc comments. No stubs, no TODOs. The implementation should be complete enough to merge if the team chose this approach.
 
-**Skip decomposition** only if the user already knows exactly what they want to spike and says so. Then take their idea as a single spike.
+**Handle errors as they come.** Lint failures and compile errors are expected — they reveal hidden constraints. Fix them and note them for the comparison.
 
-### 2. Align (for multi-spike ideas)
+**Equal effort across all branches.** If you spend extra time making one branch elegant, you're biasing the comparison.
 
-Present the spike table. Ask: "Build all in this order, or adjust?" Let the user drop, reorder, or re-frame before you write any code.
+## Phase 4: Verify
 
-### 3. Research (per spike, before building)
+After implementing each branch, run the verification command. Fix failures (the fix is data), re-run until clean, then commit. Every branch must compile and pass lint before moving to the next.
 
-Spikes are not research-free — you research enough to pick the right approach, then you build. Per spike:
+## Phase 5: Compare
 
-1. **Brief it.** 2-3 sentences: what this spike is, why it matters, key risk.
-2. **Surface competing approaches** if there's real choice:
+Present a side-by-side comparison table. Choose dimensions that **discriminate** — if all branches score the same on a dimension, drop it. The right dimensions come from the problem domain, not a generic checklist.
 
-   | Approach | Tool/Library | Pros | Cons | Status |
-   |----------|-------------|------|------|--------|
-   | ... | ... | ... | ... | maintained / abandoned / beta |
+**Don't pick a winner.** The comparison table is the deliverable. The user has the full picture now. Ask:
 
-3. **Pick one.** State why. If 2+ are credible, build quick variants within the spike.
-4. **Skip research** for pure logic with no external dependencies.
+> "What do you want to do with these?"
 
-Use Hermes tools for the research step:
+## Anti-patterns
 
-- `web_search("python websocket streaming libraries 2025")` — find candidates
-- `web_extract(urls=["https://websockets.readthedocs.io/..."])` — read the actual docs (returns markdown)
-- `terminal("pip show websockets | grep Version")` — check what's installed in the project's venv
+- **Stubs instead of implementations** — "TODO: implement this" is not a spike. The point is to feel the real code.
+- **Skipping verification** — A branch that doesn't compile can't be compared fairly.
+- **Generic comparison dimensions** — "Complexity: medium" is useless. Use specific, measurable dimensions.
+- **Picking the winner** — Let the human decide. You removed the implementation effort barrier; now let them apply judgment.
+- **Forgetting to return to base** — Each branch forks from the same base. Always check out the base between branches.
 
-For libraries without docs pages, clone and read their `README.md` / `examples/` via `read_file`. Context7 MCP (if the user has it configured) is also a good source — `mcp_*_resolve-library-id` then `mcp_*_query-docs`.
+## Defaults
 
-### 4. Build
+- N = 4 if `-n` not specified
+- Branch prefix: `spike/`
+- If N > 6, warn that implementation time may be excessive, but comply
 
-One directory per spike. Keep it standalone.
+---
 
-```
-spikes/
-├── 001-websocket-streaming/
-│   ├── README.md
-│   └── main.py
-├── 002a-pdf-parse-pdfjs/
-│   ├── README.md
-│   └── parse.js
-└── 002b-pdf-parse-camelot/
-    ├── README.md
-    └── parse.py
-```
-
-**Bias toward something the user can interact with.** Spikes fail when the only output is a log line that says "it works." The user wants to *feel* the spike working. Default choices, in order of preference:
-
-1. A runnable CLI that takes input and prints observable output
-2. A minimal HTML page that demonstrates the behavior
-3. A small web server with one endpoint
-4. A unit test that exercises the question with recognizable assertions
-
-**Depth over speed.** Never declare "it works" after one happy-path run. Test edge cases. Follow surprising findings. The verdict is only trustworthy when the investigation was honest.
-
-**Avoid** unless the spike specifically requires it: complex package management, build tools/bundlers, Docker, env files, config systems. Hardcode everything — it's a spike.
-
-**Building one spike** — a typical tool sequence:
-
-```
-terminal("mkdir -p spikes/001-websocket-streaming")
-write_file("spikes/001-websocket-streaming/README.md", "# 001: websocket-streaming\n\n...")
-write_file("spikes/001-websocket-streaming/main.py", "...")
-terminal("cd spikes/001-websocket-streaming && python3 main.py")
-# Observe output, iterate.
-```
-
-**Parallel comparison spikes (002a / 002b) — delegate.** When two approaches can run in parallel and both need real engineering (not 10-line prototypes), fan out with `delegate_task`:
-
-```
-delegate_task(tasks=[
-    {"goal": "Build 002a-pdf-parse-pdfjs: ...", "toolsets": ["terminal", "file", "web"]},
-    {"goal": "Build 002b-pdf-parse-camelot: ...", "toolsets": ["terminal", "file", "web"]},
-])
-```
-
-Each subagent returns its own verdict; you write the head-to-head.
-
-### 5. Verdict
-
-Each spike's `README.md` closes with:
-
-```markdown
-## Verdict: VALIDATED | PARTIAL | INVALIDATED
-
-### What worked
-- ...
-
-### What didn't
-- ...
-
-### Surprises
-- ...
-
-### Recommendation for the real build
-- ...
-```
-
-**VALIDATED** = the core question was answered yes, with evidence.
-**PARTIAL** = it works under constraints X, Y, Z — document them.
-**INVALIDATED** = doesn't work, for this reason. This is a successful spike.
-
-## Comparison spikes
-
-When two approaches answer the same question (002a / 002b), build them **back to back**, then do a head-to-head comparison at the end:
-
-```markdown
-## Head-to-head: pdfjs vs camelot
-
-| Dimension | pdfjs (002a) | camelot (002b) |
-|-----------|--------------|----------------|
-| Extraction quality | 9/10 structured | 7/10 table-only |
-| Setup complexity | npm install, 1 line | pip + ghostscript |
-| Perf on 100-page PDF | 3s | 18s |
-| Handles rotated text | no | yes |
-
-**Winner:** pdfjs for our use case. Camelot if we need table-first extraction later.
-```
-
-## Frontier mode (picking what to spike next)
-
-If spikes already exist and the user says "what should I spike next?", walk the existing directories and look for:
-
-- **Integration risks** — two validated spikes that touch the same resource but were tested independently
-- **Data handoffs** — spike A's output was assumed compatible with spike B's input; never proven
-- **Gaps in the vision** — capabilities assumed but unproven
-- **Alternative approaches** — different angles for PARTIAL or INVALIDATED spikes
-
-Propose 2-4 candidates as Given/When/Then. Let the user pick.
-
-## Output
-
-- Create `spikes/` (or `.planning/spikes/` if the user is using GSD conventions) in the repo root
-- One dir per spike: `NNN-descriptive-name/`
-- `README.md` per spike captures question, approach, results, verdict
-- Keep the code throwaway — a spike that takes 2 days to "clean up for production" was a bad spike
-
-## Attribution
-
-Adapted from the GSD (Get Shit Done) project's `/gsd-spike` workflow — MIT © 2025 Lex Christopherson ([gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done)). The full GSD system offers persistent spike state, MANIFEST tracking, and integration with a broader spec-driven development pipeline; install with `npx get-shit-done-cc --hermes --global`.
+The user has approaches to compare. Implement N spike branches. Start with Phase 1: Select the approaches.

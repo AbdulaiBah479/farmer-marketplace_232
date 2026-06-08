@@ -1,6 +1,10 @@
 ---
-name: Plantcapability
-description: MNMUK machine shop capability checker. Answers "can we make this?" queries against the plant list. Recommends optimal machine selection based on part requirements. USE WHEN user asks 'can we make', 'which machine', 'capability check', 'feasibility', 'what can we hold', 'tolerance capability', or describes a part to quote.
+name: PlantCapability
+description: |
+  MNMUK machine shop capability checker. Answers "can we make this?" queries against the plant list.
+  Recommends optimal machine selection based on part requirements.
+  USE WHEN user asks 'can we make', 'which machine', 'capability check', 'feasibility',
+  'what can we hold', 'tolerance capability', or describes a part to quote.
 ---
 
 # PlantCapability - MNMUK Machine Shop

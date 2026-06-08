@@ -1,451 +1,361 @@
 ---
-name: Multi-Agent Architect
-description: Design and orchestrate multi-agent systems. Use when building complex AI systems requiring specialization, parallel processing, or collaborative problem-solving. Covers agent coordination, communication patterns, and task delegation strategies.
-version: 1.0.0
+name: multi-agent-architect
+description: "Design and optimize production-grade multi-agent systems with LangGraph, LangChain, and DeepAgents for complex AI workflows."
+risk: safe
+source: community
+metadata:
+  category: ai-engineering
+  source_repo: pravin-python/antigravity-awesome-skills
+  source_type: community
+  date_added: "2025-05-07"
+  author: community
+  tags: [langgraph, langchain, multi-agent, orchestration, deepagents, rag, tool-calling]
+  tools: [claude, cursor, gemini]
+  license: "MIT"
+  license_source: "https://github.com/pravin-python/antigravity-awesome-skills/blob/main/LICENSE"
 ---
 
-# Multi-Agent Architect
 
-Design systems where multiple specialized agents collaborate to solve complex problems.
+# Multi-Agent Architect & Updater Skill
 
-## Core Principle
+## Overview
 
-**Divide complex tasks among specialized agents**, each expert in their domain, coordinated through clear communication patterns.
+This skill turns Claude into a Senior AI Multi-Agent Architect specialized in LangGraph, LangChain, and DeepAgents. It provides structured workflows for creating and updating production-grade multi-agent systems — including supervisor agents, planners, researchers, coders, and memory-backed autonomous pipelines. Use it whenever you need to design, build, debug, or scale any multi-agent AI system.
 
-## When to Use Multi-Agent Systems
+If this skill adapts material from an external GitHub repository, declare both:
 
-### Use Multi-Agent When:
+- `source_repo: owner/repo`
+- `source_type: official` or `source_type: community`
 
-- ✅ Task requires multiple specializations (research + writing + coding)
-- ✅ Parallel processing speeds up solution (independent subtasks)
-- ✅ Need self-correction through peer review
-- ✅ Complex workflows with decision points
-- ✅ Scaling single-agent becomes unwieldy
+## When to Use This Skill
 
-### Don't Use Multi-Agent When:
+- Use when you need to create a new agent or multi-agent workflow from scratch
+- Use when working with LangGraph state graphs, nodes, edges, or conditional routing
+- Use when the user asks about agent communication, memory systems, or tool-calling pipelines
+- Use when debugging or optimizing an existing LangChain/LangGraph agent system
+- Use when architecting supervisor, planner, research, coding, or validation agent roles
+- Use when integrating DeepAgents with hierarchical planning and delegation
 
-- ❌ Single agent can handle task efficiently
-- ❌ Task is simple and linear
-- ❌ Communication overhead > parallelization benefit
-- ❌ Team lacks multi-agent debugging expertise
+## How It Works
 
----
+### Step 1: Understand the Goal
 
-## Multi-Agent Patterns
+Before writing any code, clarify:
+- What is the **business objective** this agent system must achieve?
+- What **agent roles** are needed (supervisor, planner, researcher, coder, validator)?
+- What **tools** does each agent require?
+- What **memory** strategy is needed (Redis, Vector DB, LangChain Memory)?
+- What **communication protocol** connects agents (shared state, message passing)?
 
-### Pattern 1: Sequential Pipeline
+### Step 2: Define the State Schema
 
-**Use**: Multi-step workflow where each agent builds on previous
-
-```
-User Query → Researcher → Analyst → Writer → Editor → Output
-```
-
-**Example**: Research report generation
-
-1. Researcher: Gather sources
-2. Analyst: Synthesize findings
-3. Writer: Draft report
-4. Editor: Refine and format
-
-**Pros**: Clear dependencies, easy to debug
-**Cons**: Sequential (no parallelization), bottlenecks
-
----
-
-### Pattern 2: Hierarchical (Manager-Worker)
-
-**Use**: Complex task broken into parallel subtasks
-
-```
-              Manager Agent
-              /     |     \
-    Worker 1   Worker 2   Worker 3
-    (Search)   (Analyze)  (Summarize)
-              \     |     /
-              Aggregator Agent
-```
-
-**Example**: Market research across competitors
-
-- Manager: Decompose into per-competitor analysis
-- Workers: Research competitor A, B, C in parallel
-- Aggregator: Combine findings
-
-**Pros**: Parallelization, specialization
-**Cons**: Manager complexity, coordination overhead
-
----
-
-### Pattern 3: Peer Collaboration (Round Table)
-
-**Use**: Multiple perspectives improve quality
-
-```
-Coder ↔ Reviewer ↔ Tester
-  ↓        ↓        ↓
-      Consensus
-```
-
-**Example**: Code generation with review
-
-1. Coder: Write initial code
-2. Reviewer: Check for issues
-3. Tester: Validate functionality
-4. Iterate until consensus
-
-**Pros**: Quality through review, self-correction
-**Cons**: May not converge, expensive (multiple LLM calls)
-
----
-
-### Pattern 4: Agent Swarm
-
-**Use**: Many agents explore solution space independently
-
-```
-Agent 1 → Candidate Solution 1
-Agent 2 → Candidate Solution 2
-Agent 3 → Candidate Solution 3
-   ↓
-Selector (pick best)
-```
-
-**Example**: Creative brainstorming
-
-- 5 agents generate different approaches
-- Selector evaluates and picks best
-
-**Pros**: Exploration, creativity
-**Cons**: Cost (N agents), may produce similar solutions
-
----
-
-## Communication Patterns
-
-### 1. Shared Memory
+All agents share a typed state object passed through the graph:
 
 ```python
-shared_state = {
-    "research_findings": [],
-    "current_task": "analyze_competitors",
-    "decisions": []
-}
+from typing import TypedDict
 
-# All agents read/write to shared state
-researcher.execute(shared_state)
-analyst.execute(shared_state)
+class AgentState(TypedDict):
+    user_goal: str
+    tasks: list[str]
+    completed_tasks: list[str]
+    next_agent: str
+    context: dict
+    step_count: int          # guards against infinite loops
+    error: str | None
 ```
 
-**Pros**: Simple, all agents see full context
-**Cons**: Race conditions, hard to debug who changed what
+### Step 3: Define Agent Nodes
 
----
-
-### 2. Message Passing
+Each agent is an **async function** that reads from state and returns an updated state:
 
 ```python
-# Agent A sends message to Agent B
-message = {
-    "from": "researcher",
-    "to": "analyst",
-    "content": research_findings,
-    "metadata": {"confidence": 0.9}
-}
+import logging
+from langchain_openai import ChatOpenAI
 
-message_queue.send(message)
+logger = logging.getLogger(__name__)
+
+async def research_node(state: AgentState) -> AgentState:
+    logger.info("research_node: starting")
+    llm = ChatOpenAI(model="gpt-4o")
+    result = await llm.bind_tools(research_tools).ainvoke(state["user_goal"])
+    state["context"]["research"] = result.content
+    state["next_agent"] = "coder"
+    return state
 ```
 
-**Pros**: Clear communication flow, traceable
-**Cons**: More complex to implement
+### Step 4: Build the LangGraph
 
----
-
-### 3. Event-Driven
-
-```python
-# Agents subscribe to events
-event_bus.subscribe("research_complete", analyst.on_research_complete)
-event_bus.subscribe("analysis_complete", writer.on_analysis_complete)
-
-# Agent publishes event when done
-event_bus.publish("research_complete", research_data)
-```
-
-**Pros**: Loose coupling, scalable
-**Cons**: Harder to follow execution flow
-
----
-
-## Agent Coordination Strategies
-
-### 1. Fixed Workflow
-
-Predefined sequence, no dynamic decisions
-
-```python
-workflow = [
-    ("researcher", gather_info),
-    ("analyst", analyze_data),
-    ("writer", create_report)
-]
-
-for agent_name, task in workflow:
-    result = agents[agent_name].execute(task, context)
-    context.update(result)
-```
-
-**Use**: Predictable tasks, clear dependencies
-
----
-
-### 2. Dynamic Routing
-
-Manager decides next agent based on context
-
-```python
-class ManagerAgent:
-    def route_task(self, task, context):
-        if requires_technical_expertise(task):
-            return tech_specialist
-        elif requires_creative_input(task):
-            return creative_agent
-        else:
-            return generalist
-```
-
-**Use**: Tasks vary significantly, need flexibility
-
----
-
-### 3. Consensus-Based
-
-Agents vote or reach agreement
-
-```python
-proposals = [agent.propose_solution(task) for agent in agents]
-scores = [agent.evaluate(proposals) for agent in agents]
-best = proposals[argmax(mean(scores))]
-```
-
-**Use**: High-stakes decisions, quality critical
-
----
-
-## Implementation with CrewAI
-
-**CrewAI Pattern** (Role-based teams):
-
-```python
-from crewai import Agent, Task, Crew
-
-# Define specialized agents
-researcher = Agent(
-    role="Research Specialist",
-    goal="Gather comprehensive information on {topic}",
-    backstory="Expert researcher with 10 years experience",
-    tools=[search_tool, scrape_tool]
-)
-
-analyst = Agent(
-    role="Data Analyst",
-    goal="Synthesize research findings into insights",
-    backstory="Data scientist specialized in trend analysis",
-    tools=[analysis_tool]
-)
-
-writer = Agent(
-    role="Technical Writer",
-    goal="Create clear, compelling reports",
-    backstory="Professional writer with technical expertise",
-    tools=[writing_tool]
-)
-
-# Define tasks
-research_task = Task(
-    description="Research {topic} thoroughly",
-    agent=researcher,
-    expected_output="Comprehensive research findings with sources"
-)
-
-analysis_task = Task(
-    description="Analyze research findings for key insights",
-    agent=analyst,
-    context=[research_task],  # Depends on research_task
-    expected_output="List of key insights and trends"
-)
-
-writing_task = Task(
-    description="Write executive summary based on analysis",
-    agent=writer,
-    context=[research_task, analysis_task],
-    expected_output="500-word executive summary"
-)
-
-# Create crew and execute
-crew = Crew(
-    agents=[researcher, analyst, writer],
-    tasks=[research_task, analysis_task, writing_task],
-    verbose=True
-)
-
-result = crew.kickoff(inputs={"topic": "AI market trends"})
-```
-
----
-
-## Implementation with LangGraph
-
-**LangGraph Pattern** (State machines):
+Wire nodes together with edges and conditional routing:
 
 ```python
 from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import ToolNode
 
-class AgentState(TypedDict):
-    input: str
-    research: str
-    analysis: str
-    output: str
+def build_graph() -> StateGraph:
+    graph = StateGraph(AgentState)
 
-def research_node(state):
-    research = researcher_agent.run(state["input"])
-    return {"research": research}
+    graph.add_node("supervisor", supervisor_node)
+    graph.add_node("research",   research_node)
+    graph.add_node("coder",      coding_node)
+    graph.add_node("validator",  validation_node)
+    graph.add_node("tools",      ToolNode(all_tools))
 
-def analysis_node(state):
-    analysis = analyst_agent.run(state["research"])
-    return {"analysis": analysis}
+    graph.set_entry_point("supervisor")
 
-def writing_node(state):
-    output = writer_agent.run(state["analysis"])
-    return {"output": output}
+    graph.add_conditional_edges(
+        "supervisor",
+        route_next,
+        {"research": "research", "coder": "coder", "end": END}
+    )
 
-# Build graph
-workflow = StateGraph(AgentState)
+    graph.add_edge("research",  "supervisor")
+    graph.add_edge("coder",     "validator")
+    graph.add_edge("validator", "supervisor")
 
-workflow.add_node("research", research_node)
-workflow.add_node("analysis", analysis_node)
-workflow.add_node("writing", writing_node)
+    return graph.compile()
 
-workflow.set_entry_point("research")
-workflow.add_edge("research", "analysis")
-workflow.add_edge("analysis", "writing")
-workflow.add_edge("writing", END)
+def route_next(state: AgentState) -> str:
+    if state["step_count"] > 20:
+        return "end"
+    return state["next_agent"]
+```
 
-app = workflow.compile()
+### Step 5: Add Memory
 
-# Execute
-result = app.invoke({"input": "Analyze AI market trends"})
+```python
+from langchain_community.chat_message_histories import RedisChatMessageHistory
+
+def get_memory(session_id: str):
+    return RedisChatMessageHistory(
+        session_id=session_id,
+        url=os.getenv("REDIS_URL"),
+        ttl=3600
+    )
+```
+
+### Step 6: Run the Graph
+
+```python
+async def run(user_goal: str, session_id: str):
+    graph = build_graph()
+    initial_state = AgentState(
+        user_goal=user_goal,
+        tasks=[],
+        completed_tasks=[],
+        next_agent="supervisor",
+        context={},
+        step_count=0,
+        error=None,
+    )
+    return await graph.ainvoke(initial_state)
+```
+
+### Step 7: Expose via FastAPI (optional)
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class RunRequest(BaseModel):
+    goal: str
+    session_id: str
+
+@app.post("/run")
+async def run_agent(req: RunRequest):
+    result = await run(req.goal, req.session_id)
+    return {"result": result}
+```
+
+---
+
+## Updating an Existing Agent
+
+When the user wants to update or debug an existing agent, structure the response as:
+
+```
+## Existing Issue
+[Describe the current problem]
+
+## Root Cause
+[Identify why it's happening in the architecture]
+
+## Proposed Update
+[Outline the changes at architecture level]
+
+## Updated Code
+[Generate only the changed modules]
+
+## Migration Notes
+[What breaks, what's backward-compatible]
+
+## Performance Impact
+[Latency / token / memory delta]
+```
+
+---
+
+## Standard Folder Structure
+
+Always generate code in this layout:
+
+```
+multi_agent_system/
+├── agents/          # One file per agent role
+├── tools/           # Tool definitions and wrappers
+├── memory/          # Redis, VectorDB, LangChain memory helpers
+├── prompts/         # Prompt templates (one per agent)
+├── workflows/       # High-level orchestration logic
+├── graphs/          # LangGraph state + compiled graph definitions
+├── api/             # FastAPI routes (optional)
+├── configs/         # Config loader — no secrets in code
+├── tests/           # Unit + integration tests per agent
+└── main.py
+```
+
+---
+
+## Examples
+
+### Example 1: Research + Coding Multi-Agent Workflow
+
+```python
+# agents/research_agent.py
+async def research_node(state: AgentState) -> AgentState:
+    llm = ChatOpenAI(model="gpt-4o").bind_tools([web_search, rag_search])
+    response = await llm.ainvoke(
+        f"Research the following and return structured findings:\n{state['user_goal']}"
+    )
+    state["context"]["research"] = response.content
+    state["next_agent"] = "coder"
+    return state
+
+# agents/coding_agent.py
+async def coding_node(state: AgentState) -> AgentState:
+    llm = ChatOpenAI(model="gpt-4o").bind_tools([python_repl, github_tool])
+    response = await llm.ainvoke(
+        f"Given this research:\n{state['context']['research']}\n\nWrite production Python code."
+    )
+    state["context"]["code"] = response.content
+    state["next_agent"] = "validator"
+    return state
+```
+
+### Example 2: Supervisor with Dynamic Delegation
+
+```python
+# agents/supervisor_agent.py
+DELEGATION_PROMPT = """
+You are a supervisor. Given the current state, decide the next agent.
+Available agents: research, coder, validator, end.
+Respond with ONLY the agent name.
+
+Goal: {goal}
+Completed: {completed}
+Context keys available: {context}
+"""
+
+async def supervisor_node(state: AgentState) -> AgentState:
+    state["step_count"] += 1
+    llm = ChatOpenAI(model="gpt-4o")
+    decision = await llm.ainvoke(
+        DELEGATION_PROMPT.format(
+            goal=state["user_goal"],
+            completed=state["completed_tasks"],
+            context=list(state["context"].keys()),
+        )
+    )
+    next_agent = decision.content.strip().lower()
+    # Validate against allowlist before setting
+    allowed = {"research", "coder", "validator", "end"}
+    state["next_agent"] = next_agent if next_agent in allowed else "end"
+    return state
+```
+
+### Example 3: DeepAgents Reflection Loop
+
+```python
+async def reflection_node(state: AgentState) -> AgentState:
+    llm = ChatOpenAI(model="gpt-4o")
+    critique = await llm.ainvoke(
+        f"Evaluate this output critically:\n{state['context'].get('code', '')}\n"
+        "List any bugs, gaps, or improvements. Be concise."
+    )
+    state["context"]["critique"] = critique.content
+    state["next_agent"] = "coder" if "bug" in critique.content.lower() else "end"
+    return state
 ```
 
 ---
 
 ## Best Practices
 
-### 1. Clear Agent Roles
-
-Each agent should have specific expertise and responsibilities
-
-### 2. Minimize Communication
-
-More agents = more coordination overhead. Start simple.
-
-### 3. Idempotent Operations
-
-Agents should be restartable without side effects
-
-### 4. Failure Handling
-
-Design for agent failures (retry, fallback, skip)
-
-### 5. Observable Execution
-
-Log agent decisions, trace execution flow
-
-### 6. Cost Management
-
-Track token usage per agent, optimize expensive calls
+- ✅ One agent = one responsibility — never combine planning + coding + testing in one node
+- ✅ Use `TypedDict` for all state schemas — enables type checking and graph validation
+- ✅ Bind only the tools each agent needs — reduces hallucinated tool calls
+- ✅ Always add a `step_count` guard to prevent infinite routing loops
+- ✅ Use `async`/`await` throughout — LangGraph supports async natively
+- ✅ Store all secrets in environment variables loaded via `os.getenv()`
+- ✅ Set TTLs on all Redis keys scoped to `session_id`
+- ✅ Log at every node entry and tool call for observability
+- ✅ Validate supervisor routing output against an allowlist of agent names
+- ❌ Don't hardcode API keys, model names, or Redis URLs
+- ❌ Don't share tool lists across agents that don't need them
+- ❌ Don't skip error handling — tool failures and empty LLM responses are common
+- ❌ Don't trust unvalidated LLM routing decisions — always check against an allowlist
 
 ---
 
-## Common Multi-Agent Mistakes
+## Limitations
 
-❌ **Too many agents** → Start with 2-3, add only if needed
-❌ **Unclear responsibilities** → Define explicit roles
-❌ **No failure handling** → One agent failure breaks entire system
-❌ **Synchronous bottlenecks** → Parallelize independent agents
-❌ **Ignoring costs** → N agents = N× LLM calls
-❌ **Over-engineering** → Single agent often sufficient
+- This skill does not replace environment-specific testing, load testing, or security review before production deployment.
+- Generated LangGraph code targets the current stable API — always verify method signatures against your installed version (`pip show langgraph`).
+- Stop and ask for clarification if the agent's goal, tool permissions, or routing logic is ambiguous before generating a full architecture.
+- DeepAgents integration patterns assume the library is installed and configured in the target environment.
 
 ---
 
-## Decision Framework: Single vs Multi-Agent
+## Security & Safety Notes
 
-```
-Task Complexity?
-│
-├─ Simple, linear → Single Agent
-│
-├─ Complex, requires specialization?
-│  │
-│  ├─ Sequential steps → Pipeline Pattern
-│  ├─ Parallel subtasks → Hierarchical Pattern
-│  ├─ Need review → Peer Collaboration
-│  └─ Explore solutions → Swarm Pattern
-│
-└─ Uncertain → Start with Single Agent, refactor to Multi if needed
-```
+- Never expose API keys in generated code. All secrets must use environment variables:
+  ```python
+  OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")   # ✅ correct
+  OPENAI_API_KEY = "sk-..."                        # ❌ never do this
+  ```
+- Always validate and sanitize user inputs before injecting them into agent prompts — treat all user input as untrusted.
+- Add a permission layer before allowing agents to execute shell commands or write to filesystems.
+- If generating a Python REPL tool node, document that it must only run in a sandboxed, isolated environment.
+  <!-- security-allowlist: python_repl tool examples are for sandboxed execution environments only -->
+- For production deployments, add rate-limit handling and exponential backoff on all LLM and external API calls.
+- Scope all Redis session keys to `session_id` and set a TTL to prevent memory leaks across sessions.
 
 ---
 
-## Monitoring & Debugging
+## Common Pitfalls
 
-```python
-# Track agent execution
-class TrackedAgent(Agent):
-    def execute(self, task, context):
-        start = time.time()
-        logger.info(f"{self.name} starting: {task}")
+- **Problem:** Agent loops indefinitely between supervisor and sub-agents  
+  **Solution:** Add `step_count: int` to state; return `"end"` in `route_next()` when `step_count > N`
 
-        result = super().execute(task, context)
+- **Problem:** Supervisor routes to a non-existent agent name  
+  **Solution:** Validate the LLM's routing output against a hardcoded allowlist before setting `next_agent`
 
-        duration = time.time() - start
-        logger.info(f"{self.name} completed in {duration}s")
+- **Problem:** Memory leaks across user sessions  
+  **Solution:** Scope Redis keys to `session_id` and always set a TTL (`ttl=3600`)
 
-        metrics.record({
-            "agent": self.name,
-            "task": task,
-            "duration": duration,
-            "tokens": result.token_count,
-            "cost": result.cost
-        })
+- **Problem:** Tool results are ignored by the next agent  
+  **Solution:** Always write tool output into `state["context"]` and confirm the next node reads it
 
-        return result
-```
+- **Problem:** Agents share too many tools and hallucinate wrong tool calls  
+  **Solution:** Use `.bind_tools([only_relevant_tools])` per agent instead of a global tool list
 
-**Key Metrics**:
-
-- Agent execution time
-- Token usage per agent
-- Success/failure rates
-- Handoff delays
-- Overall workflow duration
+- **Problem:** Graph fails silently on API rate limits  
+  **Solution:** Wrap LLM calls in retry logic with exponential backoff using `tenacity`
 
 ---
 
-## Related Resources
+## Related Skills
 
-**Related Skills**:
-
-- `rag-implementer` - For knowledge-grounded agents
-- `knowledge-graph-builder` - For agent knowledge bases
-- `api-designer` - For agent communication APIs
-
-**Related Patterns**:
-
-- `META/DECISION-FRAMEWORK.md` - Framework selection (CrewAI vs LangGraph)
-- `STANDARDS/architecture-patterns/multi-agent-pattern.md` - Agent architectures (when created)
-
-**Related Playbooks**:
-
-- `PLAYBOOKS/deploy-multi-agent-system.md` - Deployment guide (when created)
-- `PLAYBOOKS/debug-agent-workflows.md` - Debugging procedures (when created)
+- `@langchain-rag` - When you need retrieval-augmented generation pipelines specifically
+- `@fastapi-backend` - When deploying agent systems as production REST APIs
+- `@python-async` - When deepening async/await patterns used throughout agent nodes

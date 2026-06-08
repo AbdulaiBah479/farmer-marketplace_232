@@ -1,23 +1,22 @@
 ---
 name: repro-enforcer
-description: Export any bioinformatics analysis as a reproducible bundle with Conda environment, Singularity container definition,
-  and Nextflow pipeline.
-license: MIT
+description: Export any bioinformatics analysis as a reproducible bundle with Conda environment, Singularity container definition, and Nextflow pipeline.
+version: 0.1.0
 metadata:
-  version: 0.1.0
   openclaw:
     requires:
       bins:
-      - python3
+        - python3
+      env: []
+      config: []
     always: false
-    emoji: 🦖
+    emoji: "🦖"
     homepage: https://github.com/ClawBio/ClawBio
-    os:
-    - darwin
-    - linux
+    os: [macos, linux]
     install:
-    - kind: uv
-      package: pyyaml
+      - kind: uv
+        package: pyyaml
+        bins: []
 ---
 
 # 🦖 Repro Enforcer

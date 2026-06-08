@@ -1,5 +1,5 @@
 ---
-name: ashby-api-guide
+name: Ashby API Guide
 description: This skill should be used when the user asks about "Ashby API", "how to use Ashby tools", "Ashby authentication", "Ashby MCP tools", "what can I do with Ashby", or needs help understanding available Ashby operations. Provides complete API documentation and tool usage guidance.
 version: 0.1.0
 ---

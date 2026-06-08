@@ -1,6 +1,10 @@
 ---
-name: Cuttingparams
-description: Cutting parameter lookup and optimization for CNC machining. Covers feeds, speeds, depths of cut for common materials and operations. USE WHEN user asks 'feeds and speeds', 'cutting parameters', 'SFM for', 'what RPM', 'feed rate for', 'DOC for', or needs machining parameter guidance.
+name: CuttingParams
+description: |
+  Cutting parameter lookup and optimization for CNC machining.
+  Covers feeds, speeds, depths of cut for common materials and operations.
+  USE WHEN user asks 'feeds and speeds', 'cutting parameters', 'SFM for', 'what RPM',
+  'feed rate for', 'DOC for', or needs machining parameter guidance.
 ---
 
 # CuttingParams - Machining Parameter Reference

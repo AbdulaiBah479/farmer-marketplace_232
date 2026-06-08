@@ -1,156 +1,180 @@
 ---
-name: onboarding-docs
-description: This skill should be used when generating developer onboarding documentation including architecture overviews, setup guides, code tours, and decision records.
+id: SKL-onboarding-ONBOARDINGDOCS
+name: Onboarding Docs
+description: Developer Onboarding Documentation provides new team members with everything
+  they need to become productive quickly. Good onboarding reduces time-to-first-commit
+  from weeks to days. **Core Principle**
+version: 1.0.0
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
-# Onboarding Documentation Skill
+# Onboarding Docs
 
-Generate comprehensive onboarding documentation for new developers.
-
-## When to Use
-
-- Creating documentation for new team members
-- Generating architecture overviews
-- Building local development setup guides
-- Creating guided code walkthroughs
-- Documenting architecture decisions (ADRs)
-
-## Reference Documents
-
-- [Architecture Overview](./references/architecture-overview.md) - High-level system documentation
-- [Setup Guide](./references/setup-guide.md) - Local development setup patterns
-- [Code Tour](./references/code-tour.md) - Guided codebase walkthrough patterns
-- [Decision Log](./references/decision-log.md) - Architecture decision records (ADR)
-
-## Documentation Structure
-
-### Recommended Layout
-
-```
-docs/
-├── onboarding/
-│   ├── README.md              # Welcome and navigation
-│   ├── architecture.md        # System architecture
-│   ├── setup.md               # Local development setup
-│   ├── code-tour.md           # Guided codebase tour
-│   └── decisions/             # Architecture Decision Records
-│       ├── 001-database.md
-│       ├── 002-api-design.md
-│       └── template.md
-├── api/                       # API documentation
-├── deployment/                # Deployment guides
-└── troubleshooting/           # Common issues
-```
-
-## Core Principles
-
-### 1. Progressive Disclosure
-
-Start with high-level concepts, then dive deeper:
-
-```markdown
-Level 1: What does this system do? (1 paragraph)
-Level 2: What are the main components? (architecture diagram)
-Level 3: How do they interact? (sequence diagrams)
-Level 4: Implementation details (code references)
-```
-
-### 2. Task-Oriented Structure
-
-Organize around what developers need to DO:
-
-```markdown
-✓ "How to set up the development environment"
-✓ "How to add a new API endpoint"
-✓ "How to debug authentication issues"
-
-✗ "The Authentication Module"
-✗ "Database Schema"
-✗ "Configuration Options"
-```
-
-### 3. Working Examples
-
-Every concept should have a working example:
-
-```markdown
-✓ Code snippets that can be copy-pasted
-✓ Complete working examples in a separate repo/directory
-✓ Links to relevant test files as examples
-
-✗ Pseudo-code that doesn't compile
-✗ Incomplete snippets
-✗ "Exercise for the reader" scenarios
-```
-
-### 4. Keep It Current
-
-Documentation should be treated as code:
-
-```markdown
-- Version control all documentation
-- Review docs in PRs that change behavior
-- Automate doc validation where possible
-- Include "last verified" dates
-```
-
-## Content Templates
-
-### Welcome Document
-
-```markdown
-# Welcome to [Project Name]
-
-## Quick Links
-- 🚀 [Setup Guide](./setup.md) - Get your local environment running
-- 🏗️ [Architecture](./architecture.md) - Understand the system
-- 🗺️ [Code Tour](./code-tour.md) - Navigate the codebase
-- 📚 [API Docs](../api/README.md) - API reference
-
-## First Day Checklist
-- [ ] Read the architecture overview
-- [ ] Complete local setup
-- [ ] Run the test suite
-- [ ] Make a small change and deploy to staging
-
-## Getting Help
-- Slack: #team-channel
-- On-call: @oncall-rotation
-- Documentation issues: File a PR
-```
-
-### Architecture Document
-
-```markdown
-# System Architecture
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
 ## Overview
-[1-2 paragraph system description]
+Developer Onboarding Documentation provides new team members with everything they need to become productive quickly. Good onboarding reduces time-to-first-commit from weeks to days.
 
-## System Diagram
-[ASCII diagram or link to diagram]
+**Core Principle**: "New developers should commit code on day 1, deploy to staging by day 3, and feel confident by week 2."
 
-## Components
-### [Component 1]
-- **Purpose:** [What it does]
-- **Technology:** [Tech stack]
-- **Location:** `src/components/...`
-- **Depends on:** [Other components]
+---
 
-## Data Flow
-[Sequence diagram or description]
+## Why This Matters
+- **<Benefit>**: <short explanation>
+- **<Benefit>**: <short explanation>
+- **<Benefit>**: <short explanation>
 
-## Key Decisions
-- [Why we chose X over Y](./decisions/001-xxx.md)
-```
+## Core Concepts & Rules
 
-## Verification Checklist
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-Before finalizing onboarding docs:
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-- [ ] New developer can complete setup in < 30 minutes
-- [ ] All code examples compile/run
-- [ ] All links are valid
-- [ ] Diagrams are up-to-date
-- [ ] No references to removed/renamed components
-- [ ] Contact information is current
+
+## Inputs / Outputs / Contracts
+* **Inputs**:
+  - <e.g., env vars, request payload, file paths, schema>
+* **Entry Conditions**:
+  - <Pre-requisites: e.g., Repo initialized, DB running, specific branch checked out>
+* **Outputs**:
+  - <e.g., artifacts (PR diff, docs, tests, dashboard JSON)>
+* **Artifacts Required (Deliverables)**:
+  - <e.g., Code Diff, Unit Tests, Migration Script, API Docs>
+* **Acceptance Evidence**:
+  - <e.g., Test Report (screenshot/log), Benchmark Result, Security Scan Report>
+* **Success Criteria**:
+  - <e.g., p95 < 300ms, coverage ≥ 80%>
+
+## Skill Composition
+* **Depends on**: None
+* **Compatible with**: None
+* **Conflicts with**: None
+* **Related Skills**: None
+
+## Quick Start
+\`\`\`bash
+git clone https://github.com/company/project.git
+cd project
+npm run setup
+npm run dev
+\`\`\`
+Visit http://localhost:3000
+
+## Assumptions
+- New developer has basic programming skills
+- Company accounts are provisioned
+- Hardware is provided
+- Team has established practices
+
+## Compatibility
+- Works with any tech stack
+- Language-agnostic principles
+- Can be adapted to any team size
+
+---
+
+## Test Scenario Matrix
+| Scenario | Expected Behavior | Notes |
+|----------|-------------------|-------|
+| New developer joins | Follow onboarding checklist | Buddy guides through process |
+| First week | Complete graduated tasks | Build confidence gradually |
+| Month 1 | Full team integration | Lead a feature end-to-end |
+| Remote onboarding | Video-based onboarding | Use async communication |
+
+---
+
+## Technical Guardrails & Security Threat Model
+
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
+
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
+
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
+
+
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+
+
+## Definition of Done
+- [ ] README with quick start guide
+- [ ] Architecture documentation with diagram
+- [ ] Development workflow guide
+- [ ] Troubleshooting guide
+- [ ] Team practices documented
+- [ ] Learning resources listed
+- [ ] First week tasks defined
+- [ ] Onboarding buddy guide
+- [ ] Documentation checklist complete
+
+---
+
+## Anti-patterns / Pitfalls
+
+* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
+* ⚠️ **Watch out for**: Common symptoms and quick fixes
+* 💡 **Instead**: Use proper error handling, pagination, and logging
+
+
+## Reference Links
+- [Onboarding Best Practices](https://hbr.org/topic/onboarding)
+- [Developer Onboarding Guide](https://stackoverflow.blog/developer-onboarding-guide/)
+- [Remote Onboarding Checklist](https://github.com/lukasz-madon/remote-onboarding-checklist)
+
+---
+
+## Versioning & Changelog
+
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
+

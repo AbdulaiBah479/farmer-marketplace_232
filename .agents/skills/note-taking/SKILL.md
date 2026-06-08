@@ -1,282 +1,64 @@
 ---
-name: Note Taking
-description: Record discussions in the posts folder on an ongoing basis when requested to, or at the end of significant events, like brainstorming, generating a pitch etc
+name: note-taking
+description: Externalising reasoning; create notes for Obsidian, blogs, docs
+category: Session Knowledge
 ---
 
-# Note Taking
+# Skill: note-taking
 
-## Overview
+## What I do
 
-Maintain an **audit trail** of discussions, decisions, and progress for each blog post or newsletter. The discussion.md file serves two purposes:
+I help you capture thoughts and information effectively to build long-term knowledge. I focus on creating notes that are easy to find and use later. I ensure that your note-taking process supports clear thinking and effective retrieval of information.
 
-1. **For Claude:** Quick context to avoid repetition and maintain holistic view
-2. **For User:** Audit trail showing what Claude did, what decisions were made, and why
+## When to use me
 
-**Core principle:** Track attribution (what Claude did vs. what user decided) and outcomes (did it work?).
+- When you're investigating a complex issue and need to track your findings.
+- When you're attending a meeting or reading a technical document.
+- When you're brainstorming ideas for a new project or feature.
+- When you're building a personal knowledge base in Obsidian.
 
-**Announce at start:** "I'm recording this discussion in discussion.md."
+## Core principles
 
-## Success Criteria
+1. **Atomic notes**, write one idea per note so they're easier to link and reuse.
+2. **Capture vs Process**, separate the act of gathering information from the act of organising it.
+3. **Linking over tagging**, use bidirectional links to build a network of ideas rather than just categorising them.
+4. **Progressive summarisation**, layer your notes so you can quickly understand the key points later.
 
-The discussion record is complete when:
+## Patterns & examples
 
-1. **Decision attribution is clear** - Shows what Claude contributed vs. what user decided
-2. **Cause and effect tracked** - "Claude did X → User decided Y because Z"
-3. **Outcomes documented** - Did the decision work? What happened?
-4. **Quick lookup enabled** - Can find key decisions without reading full narrative
-5. **Audit trail exists** - Can trace back why any decision was made
+### Atomic notes
+Keep notes focused on a single concept or topic.
+- **Example**, Create a note titled "Dependency Injection" that explains only that pattern, rather than a broad note called "Design Patterns".
 
-## File Structure
+### Progressive summarisation
+Use bolding and highlights to make key points stand out.
+- **Level 1**, Raw notes from a meeting.
+- **Level 2**, Bold the most important phrases.
+- **Level 3**, Write a one-sentence summary at the top.
 
-discussion.md follows this structure:
+### Linking to build a graph
+Use `[[Link]]` syntax to connect related ideas.
+- **Pattern**, When writing a note about "Goroutines", link to "Concurrency" and "Channels".
 
-```markdown
-# Discussion Notes: [Project Name]
+### Fleeting vs Permanent notes
+Differentiate between temporary thoughts and long-term knowledge.
+- **Fleeting**, Quick ideas captured in the moment.
+- **Permanent**, Carefully written notes that are added to your main knowledge base.
 
-## AUDIT TRAIL: Key Decision Points
+## Anti-patterns to avoid
 
-[Decision-by-decision record - see template below]
+- ❌ **The "Note Graveyard"**, capturing information without ever reviewing or linking it.
+- ❌ **Over-categorisation**, spending too much time on folder structures instead of content and links.
+- ❌ **Duplicate notes**, creating multiple notes on the same topic because you couldn't find the existing one.
+- ❌ **Copy-pasting walls of text**, always rewrite information in your own words to ensure you understand it.
 
-## WHAT CLAUDE DID (Contributions)
+## KB Reference
 
-### Research
-- [Bullet list of research performed]
+`~/vaults/baphled/3. Resources/Knowledge Base/AI Development System/Skills/Session-Knowledge/Note Taking.md`
 
-### Writing
-- [Bullet list of drafts, rewrites, sections created]
+## Related skills
 
-### Quality Control
-- [Bullet list of audits, reviews, validations]
-
-### Technical
-- [Bullet list of scripts, tools, automation]
-
-## WHAT WORKED / DIDN'T WORK
-
-### Worked Well ✅
-| What Claude Did | User Decision | Outcome |
-|-----------------|---------------|---------|
-| [action] | [decision] | [result] |
-
-### Didn't Work ❌
-| What Claude Did | Problem | Lesson |
-|-----------------|---------|--------|
-| [action] | [what failed] | [what to avoid] |
-
-## SESSIONS (Chronological Detail)
-
-[Full session-by-session narrative for context]
-```
-
-## The Process
-
-### Step 1: Determine the Post Folder
-
-- If working on existing post: locate `/posts/{post-short-title}/`
-- If creating new post: folder created during pitch generation
-- If unsure: ask user which post this relates to
-
-### Step 2: Read Existing discussion.md
-
-**CRITICAL:** Always read existing discussion.md before starting work.
-
-When reading, extract:
-- What decisions have been made (don't re-debate)
-- What content is already covered (don't repeat)
-- What approaches failed (don't retry)
-- What Claude already contributed (build on it)
-
-### Step 3: Record the Session
-
-Add session detail at bottom, then update top sections.
-
-#### For Each Session: Add to Bottom
-
-```markdown
-## Session X: [Short Title] (YYYY-MM-DD)
-
-### Context
-[Why this session happened, what triggered it]
-
-### What Claude Did
-- Research: [what research]
-- Analysis: [what analysis]
-- Writing: [what drafted/revised]
-- Tools: [what tools/scripts created]
-
-### User Decisions
-- Decision 1: [what was decided and why]
-- Decision 2: [what was decided and why]
-
-### Outcomes
-- ✅ What worked: [successes]
-- ❌ What didn't: [failures]
-- Files created/modified: [list]
-
-### Next Steps
-[What comes next]
-```
-
-#### For Major Decisions: Add to AUDIT TRAIL
-
-Use this template for significant decisions:
-
-```markdown
-### Decision: [Decision Title] (YYYY-MM-DD, Session X)
-
-**Claude's Analysis:**
-- [What research/analysis Claude performed]
-- [What data/insights Claude provided]
-- [What options Claude presented]
-
-**Claude's Recommendation:**
-[What Claude suggested and why]
-
-**User Decision:**
-[What the user actually decided]
-
-**Rationale:**
-[Why the user made this choice]
-
-**Outcome:**
-✅/❌ [What happened as a result]
-```
-
-### Step 4: Update Top Sections
-
-After adding session details, update:
-
-1. **AUDIT TRAIL** - Add major decisions with attribution
-2. **WHAT CLAUDE DID** - Add to contribution categories
-3. **WHAT WORKED / DIDN'T WORK** - Update outcome tables
-
-### Step 5: Save the Record
-
-- Append to `/posts/{post-short-title}/discussion.md`
-- Use Edit tool to update top sections
-- Don't replace existing content - build on it
-
-## When to Use This Skill
-
-**Always use after:**
-- Brainstorming sessions
-- Generating or revising pitches
-- Significant research or feedback
-- Quality control reviews
-- Publishing to Ghost
-- Major milestones in writing process
-
-**Also use when:**
-- User explicitly requests it
-- Making major decisions
-- Something fails or succeeds notably
-- End of a series or project
-
-## Recording Decisions: Best Practices
-
-**Good decision record:**
-```markdown
-### Decision: Use "150+ hours" not "600 hours" (2025-11-03)
-
-**Claude's Analysis:**
-- Git analysis: 79 commits across 36 days
-- Found error: content is automated, not manually curated
-- Revised estimate: 150-200 hours based on commit patterns
-
-**Claude's Recommendation:**
-Use "over 150 hours across several months"
-
-**User Decision:**
-Approved. Changed throughout Part 1.
-
-**Rationale:**
-More honest (admits uncertainty), shows AI's impact, still significant.
-
-**Outcome:**
-✅ More credible than 600-hour claim. Readers responded well.
-```
-
-**Bad decision record:**
-```markdown
-We decided to use 150 hours instead of 600.
-```
-(Missing: what Claude did, why decision was made, what happened)
-
-## What Makes Good Audit Trail
-
-**Capture:**
-- ✅ What Claude analyzed/researched
-- ✅ What Claude recommended
-- ✅ What user decided (might differ from recommendation!)
-- ✅ Why user made that choice
-- ✅ What happened as result
-
-**Avoid:**
-- ❌ Narrative prose without attribution
-- ❌ Decisions without rationale
-- ❌ Recommendations without alternatives considered
-- ❌ Outcomes without assessment (worked or didn't?)
-
-## For Series Work
-
-**Additional tracking needed:**
-
-1. **What's been covered** - Track to avoid repetition
-   ```markdown
-   ## WHAT'S BEEN COVERED
-   ### Part 1 established:
-   - Domain renewal decision
-   - Framework: assess, identify, clarify
-   - Zero users truth
-
-   ### Part 2 established:
-   - Three-layer architecture
-   - Cost breakdown
-   - Time savings
-   ```
-
-2. **Series state** - Track what's done/pending
-   ```markdown
-   ## SERIES STATE
-   - Part 1: PUBLISHED (Nov 7)
-   - Part 2a: PUBLISHED (Nov 14)
-   - Part 2b: POSTPONED
-   - Part 3: PUBLISHED (Nov 22)
-   ```
-
-3. **Cross-series lessons** - What worked across all parts
-   ```markdown
-   ## SERIES LESSONS
-   - ✅ Research before writing (validated decisions)
-   - ✅ Multiple reviewer perspectives
-   - ❌ Treated parts as standalone (repeated context)
-   - ❌ Didn't read discussion.md first
-   ```
-
-## Files in This Skill
-
-- `SKILL.md` (this file) - Main skill instructions
-- `decision-template.md` - Template for recording decisions
-- `session-template.md` - Template for recording sessions
-
-## Remember
-
-**For Claude:**
-- Read discussion.md FIRST before any work
-- Extract what's covered to avoid repetition
-- Check what failed to avoid retrying
-
-**For User (audit trail):**
-- Show what Claude did that led to decisions
-- Attribute clearly (Claude's work vs. User's choice)
-- Track outcomes (worked or didn't?)
-- Enable tracing: "Why did we decide X?" → full path visible
-
-**For both:**
-- Decisions need context and rationale
-- Outcomes need assessment
-- Lessons learned feed improvement
-
----
-
-The goal: Create an audit trail showing what Claude contributed, what decisions resulted, and whether they worked.
+- `knowledge-base`, for managing a large collection of notes.
+- `memory-keeper`, for capturing problem-solution pairs.
+- `documentation-writing`, for turning notes into formal docs.
+- `obsidian-structure`, for organising your vault.

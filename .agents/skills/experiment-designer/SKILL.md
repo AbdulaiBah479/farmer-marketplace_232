@@ -1,104 +1,69 @@
 ---
 name: experiment-designer
-description: Use when planning product experiments, writing testable hypotheses, estimating sample size, prioritizing tests, or interpreting A/B outcomes with practical statistical rigor.
+description: "Design statistically rigorous A/B tests and interpret experiment results. Use when asked to design an experiment, run an A/B test, calculate sample size, interpret test results, or assess whether an experiment was successful. Produces a complete experiment design with hypothesis, sample size, run time, success criteria, and risk flags — or a results interpretation with ship/iterate/kill recommendation."
 ---
 
-# Experiment Designer
+# Experiment Designer Skill
 
-Design, prioritize, and evaluate product experiments with clear hypotheses and defensible decisions.
+Produce rigorous experiment designs from product hypotheses, and interpret results with statistical and practical significance — so you can defend every decision to a sceptical engineering lead or data scientist.
 
-## When To Use
+## Required Inputs
 
-Use this skill for:
-- A/B and multivariate experiment planning
-- Hypothesis writing and success criteria definition
-- Sample size and minimum detectable effect planning
-- Experiment prioritization with ICE scoring
-- Reading statistical output for product decisions
+Ask the user for these if not provided:
+**For experiment design:**
+- Hypothesis (what change, what metric, what expected movement)
+- Current baseline metric value
+- Minimum detectable effect (MDE) — the smallest lift worth caring about
+- Available daily sample size
 
-## Core Workflow
+**For results interpretation:**
+- Control and variant results (raw numbers or percentages)
+- P-value or confidence interval
+- Run duration (days)
+- Any anomalies observed during the test
 
-1. Write hypothesis in If/Then/Because format
-- If we change `[intervention]`
-- Then `[metric]` will change by `[expected direction/magnitude]`
-- Because `[behavioral mechanism]`
+## Two-Phase Process
 
-2. Define metrics before running test
-- Primary metric: single decision metric
-- Guardrail metrics: quality/risk protection
-- Secondary metrics: diagnostics only
+### Phase 1: Experiment Design
+1. Restate hypothesis as: "If we [change], we expect [metric] to [move by X%] because [reason]"
+2. Define control and variant clearly
+3. Select primary metric (one only) and secondary guardrail metrics (2-3 max)
+4. Calculate required sample size from MDE and baseline
+5. Estimate run time in days
+6. Set pre-defined success criteria before the test runs — no moving goalposts
+7. Flag design risks: novelty effects, seasonal confounds, multiple testing issues, network effects, sample ratio mismatch
 
-3. Estimate sample size
-- Baseline conversion or baseline mean
-- Minimum detectable effect (MDE)
-- Significance level (alpha) and power
+### Phase 2: Results Interpretation
+1. Assess statistical significance (p < 0.05 threshold)
+2. Assess practical significance: was the lift meaningful for the business, not just real?
+3. Interpret confidence intervals
+4. Investigate confounding factors
+5. Recommend: Ship / Iterate / Kill / Run follow-up test
+6. **Validate** — Confirm the test ran for the full planned duration. Flag if it was stopped early (peeking problem). Confirm sample ratio mismatch did not occur.
 
-Use:
-```bash
-python3 scripts/sample_size_calculator.py --baseline-rate 0.12 --mde 0.02 --mde-type absolute
-```
+## Output Structure
 
-4. Prioritize experiments with ICE
-- Impact: potential upside
-- Confidence: evidence quality
-- Ease: cost/speed/complexity
+**[Design or Results header based on phase]**
 
-ICE Score = (Impact * Confidence * Ease) / 10
+*Hypothesis:* "If we [change], we expect [metric] to [move by X%] because [reason]"
 
-5. Launch with stopping rules
-- Decide fixed sample size or fixed duration in advance
-- Avoid repeated peeking without proper method
-- Monitor guardrails continuously
+*Primary metric:* [One metric only]
+*Guardrail metrics:* [2-3 max]
+*Required sample size:* [n per variant]
+*Estimated run time:* [days]
+*Pre-defined success threshold:* [specific number]
+*Design risk flags:* [any concerns]
 
-6. Interpret results
-- Statistical significance is not business significance
-- Compare point estimate + confidence interval to decision threshold
-- Investigate novelty effects and segment heterogeneity
+**Results (Phase 2 only):**
+*Statistical significance:* [p-value and conclusion]
+*Practical significance:* [lift size vs. business threshold]
+*Recommendation:* Ship / Iterate / Kill / Follow-up — [rationale]
 
-## Hypothesis Quality Checklist
+## Quality Checks
 
-- [ ] Contains explicit intervention and audience
-- [ ] Specifies measurable metric change
-- [ ] States plausible causal reason
-- [ ] Includes expected minimum effect
-- [ ] Defines failure condition
-
-## Common Experiment Pitfalls
-
-- Underpowered tests leading to false negatives
-- Running too many simultaneous changes without isolation
-- Changing targeting or implementation mid-test
-- Stopping early on random spikes
-- Ignoring sample ratio mismatch and instrumentation drift
-- Declaring success from p-value without effect-size context
-
-## Statistical Interpretation Guardrails
-
-- p-value < alpha indicates evidence against null, not guaranteed truth.
-- Confidence interval crossing zero/no-effect means uncertain directional claim.
-- Wide intervals imply low precision even when significant.
-- Use practical significance thresholds tied to business impact.
-
-See:
-- `references/experiment-playbook.md`
-- `references/statistics-reference.md`
-
-## Tooling
-
-### `scripts/sample_size_calculator.py`
-
-Computes required sample size (per variant and total) from:
-- baseline rate
-- MDE (absolute or relative)
-- significance level (alpha)
-- statistical power
-
-Example:
-```bash
-python3 scripts/sample_size_calculator.py \
-  --baseline-rate 0.10 \
-  --mde 0.015 \
-  --mde-type absolute \
-  --alpha 0.05 \
-  --power 0.8
-```
+- [ ] Hypothesis specifies the change, the metric, the direction, and the reason
+- [ ] Primary metric is singular — guardrail metrics are secondary
+- [ ] Success criteria are defined before the test launches (not after seeing results)
+- [ ] Test was not stopped early (or flagged clearly if it was)
+- [ ] Practical significance assessed separately from statistical significance
+- [ ] Sample ratio mismatch is checked in results interpretation

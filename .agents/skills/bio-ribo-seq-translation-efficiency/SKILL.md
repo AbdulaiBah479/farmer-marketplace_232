@@ -5,22 +5,7 @@ tool_type: mixed
 primary_tool: riborex
 ---
 
-## Version Compatibility
-
-Reference examples tested with: DESeq2 1.42+, numpy 1.26+, pandas 2.2+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- Python: `pip show <package>` then `help(module.function)` to check signatures
-- R: `packageVersion('<pkg>')` then `?function_name` to verify parameters
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Translation Efficiency
-
-**"Calculate translation efficiency from my Ribo-seq and RNA-seq"** → Compute the ratio of ribosome occupancy to mRNA abundance per gene to identify translational regulation independent of transcription changes.
-- R: `riborex` for differential TE with DESeq2 backend
-- Python: Ribo-seq/RNA-seq count ratio with statistical testing
 
 ## Concept
 
@@ -111,10 +96,6 @@ sig_te <- results[results$padj < 0.05, ]
 
 ## Using DESeq2 Interaction Model
 
-**Goal:** Test for differential translation efficiency between conditions using a formal statistical framework that separates transcriptional from translational regulation.
-
-**Approach:** Combine Ribo-seq and RNA-seq counts into one matrix, fit a DESeq2 model with a condition-by-assay interaction term, and extract the interaction coefficient which represents differential TE.
-
 ```r
 library(DESeq2)
 
@@ -178,6 +159,6 @@ def calculate_te_matrix(ribo_tpm, rna_tpm):
 
 ## Related Skills
 
-- rna-quantification - Get RNA-seq counts
-- differential-expression - Compare expression
-- orf-detection - Identify translated ORFs
+- **rna-quantification** - Get RNA-seq counts
+- **differential-expression** - Compare expression
+- **orf-detection** - Identify translated ORFs

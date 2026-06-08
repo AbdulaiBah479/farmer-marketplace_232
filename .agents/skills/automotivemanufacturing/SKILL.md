@@ -1,6 +1,12 @@
 ---
-name: Automotivemanufacturing
-description: Expert guidance for writing automotive manufacturing business processes, work instructions, and standard operating procedures. Follows IATF 16949, ISO 9001, and APQP/PPAP standards. Covers assembly, machining, quality/inspection, and material handling. USE WHEN user says 'write work instruction', 'create business process', 'automotive SOP', 'manufacturing procedure', 'APQP documentation', 'process flow', or 'quality procedure'.  Integrates with A3CriticalThinking for problem solving and SupplyChain for supplier requirements.
+name: AutomotiveManufacturing
+description: |
+  Expert guidance for writing automotive manufacturing business processes, work instructions, and standard operating procedures.
+  Follows IATF 16949, ISO 9001, and APQP/PPAP standards. Covers assembly, machining, quality/inspection, and material handling.
+  USE WHEN user says 'write work instruction', 'create business process', 'automotive SOP', 'manufacturing procedure',
+  'APQP documentation', 'process flow', or 'quality procedure'.
+
+  Integrates with A3CriticalThinking for problem solving and SupplyChain for supplier requirements.
 ---
 
 # Automotive Manufacturing Documentation

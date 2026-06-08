@@ -1,349 +1,187 @@
 ---
-name: advanced-patterns
-description: |
-  Advanced T-SQL patterns and techniques for SQL Server. Use this skill when: (1) User needs help with CTEs or recursive queries, (2) User asks about APPLY operator, (3) User wants MERGE or OUTPUT clause help, (4) User works with temporal tables, (5) User needs In-Memory OLTP guidance, (6) User asks about advanced grouping (ROLLUP, CUBE, GROUPING SETS).
+name: Advanced Patterns
+description: SCD Type 2, Closure Table, Shared Family Budget patterns
+version: 3.0.0
+author: Family Budget Team
+tags: [scd-type-2, closure-table, shared-budget, hierarchy, versioning]
+dependencies: [db-management, api-development]
+architecture_refs:
+  - $ref: ../../docs/architecture/database/history.yaml
+  - $ref: ../../docs/architecture/database/hierarchy.yaml
+  - $ref: ../../docs/architecture/guides/change-checklist.yaml#/checklists/add_history_tracking
 ---
 
-# Advanced T-SQL Patterns
+# Advanced Patterns Skill
 
-Advanced techniques for complex SQL Server scenarios.
+Реализация продвинутых архитектурных паттернов: SCD Type 2, Closure Table, Shared Family Budget.
 
-## Quick Reference
+## When to Use
 
-### Pattern Selection Guide
+- Добавить SCD Type 2 versioning к dimension таблице
+- Создать Closure Table для иерархии
+- Реализовать Shared Family Budget endpoint
+- Обновить History tracking
 
-| Task | Pattern |
-|------|---------|
-| Hierarchical data | Recursive CTE |
-| Top N per group | ROW_NUMBER + CTE |
-| Correlated subquery alternative | CROSS/OUTER APPLY |
-| Upsert (insert or update) | MERGE |
-| Capture modified rows | OUTPUT clause |
-| Historical data tracking | Temporal tables |
-| High-throughput OLTP | In-Memory OLTP |
-| Multiple aggregation levels | ROLLUP/CUBE/GROUPING SETS |
+## Architecture Context
 
-## Common Table Expressions (CTEs)
+**References:**
+- History Tables: [$ref](../../docs/architecture/database/history.yaml)
+- Hierarchy: [$ref](../../docs/architecture/database/hierarchy.yaml)
+- Change Checklist: [$ref](../../docs/architecture/guides/change-checklist.yaml#/checklists/add_history_tracking)
 
-### Basic CTE
+**Key Patterns:**
+
+### SCD Type 2 (Slowly Changing Dimension Type 2)
+
+**Purpose:** Track full history of dimension changes
+
+**Current Implementation:** SCD Type 1 (main tables) + SCD Type 2 (history tables)
+
+**Main Tables (SCD Type 1 - In-place updates):**
+- `Article`, `User`, `FinancialCenter`, `CostCenter` - NO versioning fields
+- Updates modify existing row directly
+- Stable PK for fact table FK references
+
+**History Tables (SCD Type 2 - Full versioning):**
+- `ArticleHistory`, `UserHistory`, etc. - ALL changes tracked
+- Fields: `is_current`, `valid_from`, `valid_to`, `change_type`
+- Audit trail with complete snapshot of each version
+
+**Why This Hybrid?**
+- Simple queries on main tables (no is_current filter needed)
+- Complete audit history in separate tables
+- Stable PKs for fact table relationships
+
+### Closure Table
+
+**Purpose:** O(1) hierarchical queries without recursion
+
+**Table Structure:**
 ```sql
-WITH RecentOrders AS (
-    SELECT CustomerID, OrderDate, Amount
-    FROM Orders
-    WHERE OrderDate >= DATEADD(month, -3, GETDATE())
-)
-SELECT c.CustomerName, r.Amount
-FROM Customers c
-JOIN RecentOrders r ON c.CustomerID = r.CustomerID;
-```
-
-### Multiple CTEs
-```sql
-WITH
-Sales AS (
-    SELECT ProductID, SUM(Amount) AS TotalSales FROM Orders GROUP BY ProductID
-),
-Inventory AS (
-    SELECT ProductID, SUM(Quantity) AS TotalInventory FROM Stock GROUP BY ProductID
-)
-SELECT p.ProductName, s.TotalSales, i.TotalInventory
-FROM Products p
-LEFT JOIN Sales s ON p.ProductID = s.ProductID
-LEFT JOIN Inventory i ON p.ProductID = i.ProductID;
-```
-
-### Recursive CTE (Hierarchies)
-```sql
-WITH OrgChart AS (
-    -- Anchor: Top-level (no manager)
-    SELECT EmployeeID, Name, ManagerID, 0 AS Level,
-           CAST(Name AS VARCHAR(1000)) AS Path
-    FROM Employees
-    WHERE ManagerID IS NULL
-
-    UNION ALL
-
-    -- Recursive: Subordinates
-    SELECT e.EmployeeID, e.Name, e.ManagerID, oc.Level + 1,
-           CAST(oc.Path + ' > ' + e.Name AS VARCHAR(1000))
-    FROM Employees e
-    JOIN OrgChart oc ON e.ManagerID = oc.EmployeeID
-)
-SELECT * FROM OrgChart
-OPTION (MAXRECURSION 100);  -- Default is 100, max is 32767
-```
-
-### CTE for Deleting Duplicates
-```sql
-WITH Duplicates AS (
-    SELECT *,
-           ROW_NUMBER() OVER (
-               PARTITION BY Email
-               ORDER BY CreatedDate DESC
-           ) AS RowNum
-    FROM Users
-)
-DELETE FROM Duplicates WHERE RowNum > 1;
-```
-
-## APPLY Operator
-
-### CROSS APPLY (Inner Join Behavior)
-```sql
--- Top 3 orders per customer
-SELECT c.CustomerID, c.Name, o.OrderID, o.Amount
-FROM Customers c
-CROSS APPLY (
-    SELECT TOP 3 OrderID, Amount
-    FROM Orders
-    WHERE CustomerID = c.CustomerID
-    ORDER BY OrderDate DESC
-) o;
-```
-
-### OUTER APPLY (Left Join Behavior)
-```sql
--- Last order per customer (including customers with no orders)
-SELECT c.CustomerID, c.Name, o.LastOrderDate, o.LastOrderAmount
-FROM Customers c
-OUTER APPLY (
-    SELECT TOP 1 OrderDate AS LastOrderDate, Amount AS LastOrderAmount
-    FROM Orders
-    WHERE CustomerID = c.CustomerID
-    ORDER BY OrderDate DESC
-) o;
-```
-
-### APPLY with Table-Valued Function
-```sql
--- Call function for each row
-SELECT c.CustomerID, f.MonthlyTotal, f.OrderCount
-FROM Customers c
-CROSS APPLY dbo.GetCustomerMonthlyStats(c.CustomerID) f;
-```
-
-### APPLY to Unpivot Columns
-```sql
--- Transform columns to rows
-SELECT ID, AttributeName, AttributeValue
-FROM Products
-CROSS APPLY (
-    VALUES
-        ('Color', Color),
-        ('Size', Size),
-        ('Weight', CAST(Weight AS VARCHAR))
-) AS Unpivoted(AttributeName, AttributeValue)
-WHERE AttributeValue IS NOT NULL;
-```
-
-## MERGE Statement
-
-### Basic Upsert
-```sql
-MERGE INTO TargetTable AS t
-USING SourceTable AS s
-ON t.ID = s.ID
-WHEN MATCHED THEN
-    UPDATE SET t.Name = s.Name, t.Value = s.Value, t.UpdatedAt = GETDATE()
-WHEN NOT MATCHED BY TARGET THEN
-    INSERT (ID, Name, Value, CreatedAt)
-    VALUES (s.ID, s.Name, s.Value, GETDATE())
-WHEN NOT MATCHED BY SOURCE THEN
-    DELETE
-OUTPUT $action, inserted.*, deleted.*;
-```
-
-### MERGE with Conditions
-```sql
-MERGE INTO Products AS t
-USING StagingProducts AS s
-ON t.ProductID = s.ProductID
-WHEN MATCHED AND s.Price <> t.Price THEN
-    UPDATE SET t.Price = s.Price, t.LastModified = GETDATE()
-WHEN MATCHED AND s.Discontinued = 1 THEN
-    DELETE
-WHEN NOT MATCHED THEN
-    INSERT (ProductID, Name, Price) VALUES (s.ProductID, s.Name, s.Price);
-```
-
-## OUTPUT Clause
-
-### Capture Inserted Rows
-```sql
-DECLARE @InsertedRows TABLE (ID INT, Name VARCHAR(100));
-
-INSERT INTO Customers (Name, Email)
-OUTPUT inserted.CustomerID, inserted.Name INTO @InsertedRows
-VALUES ('John', 'john@email.com'), ('Jane', 'jane@email.com');
-
-SELECT * FROM @InsertedRows;
-```
-
-### Capture Updated Rows (Before and After)
-```sql
-UPDATE Products
-SET Price = Price * 1.1
-OUTPUT deleted.ProductID, deleted.Price AS OldPrice, inserted.Price AS NewPrice
-WHERE Category = 'Electronics';
-```
-
-### Capture Deleted Rows
-```sql
-DELETE FROM ExpiredOrders
-OUTPUT deleted.*
-INTO OrderArchive
-WHERE ExpiryDate < DATEADD(year, -1, GETDATE());
-```
-
-## Advanced Grouping
-
-### ROLLUP (Hierarchical Subtotals)
-```sql
-SELECT
-    COALESCE(Region, 'Total') AS Region,
-    COALESCE(Product, 'All Products') AS Product,
-    SUM(Sales) AS TotalSales
-FROM SalesData
-GROUP BY ROLLUP (Region, Product);
--- Groups: (Region, Product), (Region), ()
-```
-
-### CUBE (All Combinations)
-```sql
-SELECT Region, Product, SUM(Sales) AS TotalSales
-FROM SalesData
-GROUP BY CUBE (Region, Product);
--- Groups: (Region, Product), (Region), (Product), ()
-```
-
-### GROUPING SETS (Custom Combinations)
-```sql
-SELECT Region, Product, Year, SUM(Sales)
-FROM SalesData
-GROUP BY GROUPING SETS (
-    (Region, Product),
-    (Region, Year),
-    (Product),
-    ()
+CREATE TABLE t_d_article_hierarchy (
+    ancestor_id INT,      -- Parent (or self)
+    descendant_id INT,    -- Child (or self)
+    depth INT,            -- 0 = self, 1 = direct child, 2+ = nested
+    PRIMARY KEY (ancestor_id, descendant_id)
 );
 ```
 
-### Identify Grouping Level
-```sql
-SELECT
-    CASE WHEN GROUPING(Region) = 1 THEN 'All' ELSE Region END AS Region,
-    CASE WHEN GROUPING(Product) = 1 THEN 'All' ELSE Product END AS Product,
-    SUM(Sales) AS TotalSales,
-    GROUPING_ID(Region, Product) AS GroupLevel
-    -- GroupLevel: 0 = both, 1 = Product rolled up, 2 = Region rolled up, 3 = both
-FROM SalesData
-GROUP BY ROLLUP (Region, Product);
+**Queries:**
+- Get all descendants: `WHERE ancestor_id = X`
+- Get all ancestors: `WHERE descendant_id = X`
+- Get direct children: `WHERE ancestor_id = X AND depth = 1`
+
+### Shared Family Budget
+
+**Purpose:** 2-5 family members see ALL transactions (full transparency)
+
+**Rules:**
+- **Fact tables**: NO user_id filtering (all see all)
+- **Dimension tables**: Admin-only CREATE/UPDATE/DELETE, all can READ
+- **user_id**: Audit trail only (who created/modified)
+
+Reference: `_shared/validation-logic.md#3-shared-budget-model-consistency`
+
+## Commands
+
+### Command: add-scd2-history
+
+**Usage:**
+```
+Добавь SCD Type 2 history tracking к модели <ModelName>.
 ```
 
-## Temporal Tables (SQL 2016+)
+**What It Does:**
+1. Create History table model with ALL fields from main table
+2. Add `is_current`, `valid_from`, `valid_to`, `change_type` fields
+3. Create service functions for history tracking
+4. Create Alembic migration for History table
 
-### Create System-Versioned Table
-```sql
-CREATE TABLE Products (
-    ProductID INT PRIMARY KEY,
-    Name NVARCHAR(100),
-    Price DECIMAL(18,2),
-    ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START,
-    ValidTo DATETIME2 GENERATED ALWAYS AS ROW END,
-    PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
-)
-WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.ProductsHistory));
+**Template Reference:**
+- `templates/scd-type-2-service.py` - History service
+- `examples/article-history.md` - Real Article history implementation
+
+**Critical:** History table MUST have ALL fields from main table!
+
+Reference: `_shared/validation-logic.md#2-history-table-field-completeness`
+
+### Command: add-closure-table
+
+**Usage:**
+```
+Добавь Closure Table для модели <ModelName> hierarchy.
 ```
 
-### Query Historical Data
-```sql
--- Point in time
-SELECT * FROM Products
-FOR SYSTEM_TIME AS OF '2024-01-01 12:00:00';
+**What It Does:**
+1. Create Hierarchy table (ancestor_id, descendant_id, depth)
+2. Create indexes on (ancestor_id, depth), (descendant_id, depth)
+3. Initialize self-references (depth=0)
+4. Create HierarchyService for CRUD operations
 
--- Time range
-SELECT * FROM Products
-FOR SYSTEM_TIME BETWEEN '2024-01-01' AND '2024-06-30';
+**Template Reference:**
+- `templates/closure-table.py` - Hierarchy model
+- `templates/hierarchy-service.py` - HierarchyService implementation
 
--- All history
-SELECT * FROM Products
-FOR SYSTEM_TIME ALL;
+### Command: implement-shared-budget
+
+**Usage:**
+```
+Реализуй Shared Budget pattern для endpoint <endpoint-name>.
 ```
 
-## In-Memory OLTP
+**What It Does:**
+1. Remove user_id filtering from fact queries
+2. Add admin checks for dimension CREATE/UPDATE/DELETE
+3. Keep user_id for audit trail only
 
-### Create Memory-Optimized Table
-```sql
--- First add filegroup
-ALTER DATABASE YourDB
-ADD FILEGROUP MemOptFG CONTAINS MEMORY_OPTIMIZED_DATA;
+**Template Reference:**
+- `templates/shared-budget-endpoint.py` - Shared Budget pattern
 
-ALTER DATABASE YourDB
-ADD FILE (NAME = 'MemOptFile', FILENAME = 'C:\Data\MemOpt') TO FILEGROUP MemOptFG;
+## Validation Checklist
 
--- Create table
-CREATE TABLE OrdersMemOpt (
-    OrderID INT NOT NULL PRIMARY KEY NONCLUSTERED HASH WITH (BUCKET_COUNT = 1000000),
-    CustomerID INT NOT NULL INDEX IX_Customer NONCLUSTERED HASH WITH (BUCKET_COUNT = 100000),
-    OrderDate DATETIME2 NOT NULL,
-    Amount DECIMAL(18,2) NOT NULL,
-    INDEX IX_Date NONCLUSTERED (OrderDate)
-) WITH (MEMORY_OPTIMIZED = ON, DURABILITY = SCHEMA_AND_DATA);
-```
+### SCD Type 2 History
+- [ ] History table has ALL fields from main table
+- [ ] NO NULL in NOT NULL columns
+- [ ] `change_type` set (CREATE/UPDATE/DELETE)
+- [ ] `valid_from`, `valid_to`, `is_current` set correctly
+- [ ] Service layer updates history on changes
 
-### Natively Compiled Procedure
-```sql
-CREATE PROCEDURE InsertOrderFast
-    @CustomerID INT,
-    @Amount DECIMAL(18,2)
-WITH NATIVE_COMPILATION, SCHEMABINDING
-AS
-BEGIN ATOMIC WITH (TRANSACTION ISOLATION LEVEL = SNAPSHOT, LANGUAGE = N'English')
-    INSERT INTO dbo.OrdersMemOpt (OrderID, CustomerID, OrderDate, Amount)
-    VALUES (NEXT VALUE FOR dbo.OrderSeq, @CustomerID, SYSDATETIME(), @Amount);
-END;
-```
+### Closure Table
+- [ ] Hierarchy table created (ancestor_id, descendant_id, depth)
+- [ ] Indexes on (ancestor_id, depth), (descendant_id, depth), (depth)
+- [ ] Self-references initialized (depth=0)
+- [ ] HierarchyService handles updates
+- [ ] NO direct SQL updates to closure table
 
-## Table-Valued Constructor
+### Shared Budget
+- [ ] Fact tables: NO user_id filtering
+- [ ] Dimension tables: Admin-only CREATE/UPDATE/DELETE
+- [ ] user_id used for audit trail only
 
-### VALUES as Table
-```sql
-SELECT * FROM (
-    VALUES
-        (1, 'Apple', 1.50),
-        (2, 'Banana', 0.75),
-        (3, 'Orange', 2.00)
-) AS Products(ID, Name, Price);
-```
+## Common Mistakes
 
-### Use in MERGE
-```sql
-MERGE INTO Products AS t
-USING (VALUES
-    (1, 'Apple', 1.60),
-    (2, 'Banana', 0.80)
-) AS s(ID, Name, Price)
-ON t.ID = s.ID
-WHEN MATCHED THEN UPDATE SET Price = s.Price
-WHEN NOT MATCHED THEN INSERT VALUES (s.ID, s.Name, s.Price);
-```
+**Forgot History field:**
+- **Symptom**: IntegrityError: null value in column "record_type"
+- **Fix**: Copy ALL fields from main table to History table
+- **Reference**: `_shared/validation-logic.md#2`
 
-## Sequences
+**User_id filtering in Shared Budget:**
+- **Symptom**: Users can't see family transactions
+- **Fix**: Remove `.where(BudgetFact.user_id == current_user.id)`
+- **Reference**: `_shared/validation-logic.md#3`
 
-### Create and Use Sequence
-```sql
-CREATE SEQUENCE OrderSeq
-    AS INT START WITH 1 INCREMENT BY 1;
+**Direct UPDATE on dimension (instead of history):**
+- **Symptom**: No history record created, audit trail broken
+- **Fix**: Use service layer to create history records
+- **Reference**: `_shared/validation-logic.md#5`
 
--- Get next value
-SELECT NEXT VALUE FOR OrderSeq;
+## Related Skills
 
--- Use in INSERT
-INSERT INTO Orders (OrderID, CustomerID)
-VALUES (NEXT VALUE FOR OrderSeq, @CustomerID);
+- **db-management**: Create models and migrations
+- **api-development**: Implement endpoints with patterns
 
--- Use as default
-ALTER TABLE Orders
-ADD CONSTRAINT DF_OrderID DEFAULT NEXT VALUE FOR OrderSeq FOR OrderID;
-```
+## Quick Links
 
+- History Tables Architecture: [$ref](../../docs/architecture/database/history.yaml)
+- Hierarchy Architecture: [$ref](../../docs/architecture/database/hierarchy.yaml)
+- Article Example: `backend/app/models/article.py`, `backend/app/models/article_history.py`

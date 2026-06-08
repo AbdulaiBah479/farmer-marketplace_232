@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: documentation-generation-doc-generate
 description: "You are a documentation expert specializing in creating comprehensive, maintainable documentation from code. Generate API docs, architecture diagrams, user guides, and technical references using AI-powered analysis and industry best practices."
 ---
@@ -46,3 +47,8 @@ $ARGUMENTS
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed examples and templates.
+
+
+## 🧠 Knowledge Modules (Fractal Skills)
+
+### 1. [implementation-playbook](./sub-skills/implementation-playbook.md)

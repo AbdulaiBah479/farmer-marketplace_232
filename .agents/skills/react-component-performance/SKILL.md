@@ -1,6 +1,9 @@
 ---
 name: react-component-performance
-description: Analyze and optimize React component performance issues (slow renders, re-render thrash, laggy lists, expensive computations). Use when asked to profile or improve a React component, reduce re-renders, or speed up UI updates in React apps.
+description: Diagnose slow React components and suggest targeted performance fixes.
+risk: safe
+source: "Dimillian/Skills (MIT)"
+date_added: "2026-03-25"
 ---
 
 # React Component Performance
@@ -8,6 +11,10 @@ description: Analyze and optimize React component performance issues (slow rende
 ## Overview
 
 Identify render hotspots, isolate expensive updates, and apply targeted optimizations without changing UI behavior.
+
+## When to Use
+- When the user asks to profile or improve a slow React component.
+- When you need to reduce re-renders, list lag, or expensive render work in React UI.
 
 ## Workflow
 
@@ -125,3 +132,8 @@ function Summary({ orders }: { orders: Order[] }) {
 ## Example Reference
 
 Load `references/examples.md` when the user wants a concrete refactor example.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

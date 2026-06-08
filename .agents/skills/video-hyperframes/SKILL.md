@@ -3,9 +3,7 @@ name: video-hyperframes
 zh_name: "Hyperframes 视频脚本"
 en_name: "Hyperframes Video"
 emoji: "🎞️"
-description: "Hyperframes / Remotion-compatible continuous frame animation with autoplay support."
-zh_description: "Hyperframes / Remotion 兼容的连续帧动画, 可自动播放"
-en_description: "Hyperframes / Remotion-compatible continuous frame animation with autoplay support."
+description: "Hyperframes / Remotion 兼容的连续帧动画, 可自动播放"
 category: video
 scenario: video
 aspect_hint: "1920×1080 (16:9)"
@@ -18,21 +16,6 @@ example_tagline: "8 帧自动播放, 含进度条 + 元数据"
 example_desc: "电影感动画脚本, 可直接喂给 Remotion 做成 mp4"
 example_source_url: "https://github.com/heygen-com/hyperframes"
 example_source_label: "heygen-com/hyperframes"
-od:
-  mode: video
-  surface: video
-  scenario: video
-  featured: 0.13
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the Hyperframes Video template to turn my content into a Hyperframes / Remotion-compatible continuous frame animation with autoplay support. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「Hyperframes 视频脚本」模板把我的内容做成一段「Hyperframes / Remotion 兼容的连续帧动画, 可自动播放」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: Hyperframes 视频帧】

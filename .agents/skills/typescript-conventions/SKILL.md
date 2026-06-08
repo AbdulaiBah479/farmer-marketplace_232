@@ -1,391 +1,204 @@
 ---
-name: typescript-conventions
-description: "Apply TypeScript conventions when writing or refactoring TypeScript code to ensure type safety and consistency. Not for JavaScript or other languages."
-user-invocable: false
+name: TypeScript Conventions
+description: |
+  TypeScript coding standards for the Exceptionless frontend. Naming, imports, error handling,
+  ESLint/Prettier configuration, and type safety.
+  Keywords: TypeScript, ESLint, Prettier, naming conventions, kebab-case, named imports,
+  type guards, interfaces, avoid any, Promise handling, try catch, braces
 ---
 
-# TypeScript Team Conventions
+# TypeScript Conventions
 
-TypeScript conventions that auto-apply when writing TypeScript code. These conventions ensure consistency, type safety, and maintainability across the codebase.
+## Style & Formatting
 
-## Type Strictness
+- Follow `.editorconfig` and ESLint + Prettier config strictly
+- Run `npm run format` before committing
+- **Minimize diffs**: Change only what's necessary, preserve existing formatting and structure
+- Match surrounding code style exactly
 
-**Always enforce:**
+## File Naming
 
-- Use strict mode: `"strict": true` in tsconfig.json
-- Never use `any` (use `unknown` instead)
-- Define explicit return types for all functions
-- Prefer interfaces over types for object shapes
+- Use **kebab-case** for files and directories
+- Component files: `user-profile.svelte`
+- TypeScript files: `api-client.ts`, `user-service.ts`
+- Test files: `user-service.test.ts` or `user-service.spec.ts`
 
-**Example - Good:**
+## Imports
+
+### Prefer Named Imports
 
 ```typescript
-interface UserRepository {
-  findById(id: UserId): Promise<Result<User, NotFoundError>>;
-  save(user: User): Promise<Result<void, DatabaseError>>;
-}
+// ✅ Good: Named imports
+import { UserService, type User } from '$lib/services/user-service';
+import { formatDate, formatNumber } from '$lib/utils/formatters';
 
-function validateEmail(email: string): Result<Email, ValidationError> {
-  // implementation
-}
+// ❌ Avoid: Namespace imports (except allowed exceptions)
+import * as utils from '$lib/utils';
 ```
 
-**Example - Bad:**
+### Allowed Namespace Imports
 
 ```typescript
-function validateEmail(email: any): any {
-  // DON'T use 'any'
-}
+// ✅ Allowed: shadcn-svelte components
+import * as Dialog from '$comp/ui/dialog';
+import * as DropdownMenu from '$comp/ui/dropdown-menu';
+
+// ✅ Allowed: Barrel exports
+import * as Field from '$comp/ui/field';
 ```
 
-## Error Handling
+## Type Safety
 
-**Requirements:**
-
-- Never throw bare errors; use typed error classes
-- Always include context: `new ValidationError('message', { context })`
-- Use Result<T> pattern for operations that can fail
-- Handle async errors with try/catch in async functions
-
-**Example - Good:**
+### Avoid `any`
 
 ```typescript
-class ValidationError extends Error {
-  constructor(
-    message: string,
-    public readonly field?: string,
-    public readonly context?: Record<string, unknown>,
-  ) {
-    super(message);
-    this.name = "ValidationError";
-  }
+// ❌ Bad
+function processData(data: any) { ... }
+
+// ✅ Good: Use interfaces/types
+interface UserData {
+    id: string;
+    name: string;
+    email: string;
 }
 
-function validateUser(
-  user: unknown,
-): Result<UserValidationResult, ValidationError> {
-  try {
-    // validation logic
-    return { success: true, data: result };
-  } catch (error) {
-    return {
-      success: false,
-      error: new ValidationError("Validation failed", "user", {
-        error: error.message,
-      }),
-    };
-  }
+function processData(data: UserData) { ... }
+
+// ✅ Good: Use unknown for truly unknown data
+function parseResponse(data: unknown): UserData {
+    if (isUserData(data)) {
+        return data;
+    }
+    throw new Error('Invalid data format');
 }
 ```
 
-**Example - Bad:**
+### Type Guards
 
 ```typescript
-function validateUser(user: any) {
-  if (!user) throw new Error("Invalid user"); // DON'T use bare Error
-  return user;
+function isUserData(data: unknown): data is UserData {
+    return (
+        typeof data === 'object' &&
+        data !== null &&
+        'id' in data &&
+        'name' in data &&
+        'email' in data
+    );
+}
+
+// Discriminated unions
+type ApiResponse =
+    | { status: 'success'; data: UserData }
+    | { status: 'error'; error: string };
+
+function handleResponse(response: ApiResponse) {
+    if (response.status === 'success') {
+        // TypeScript knows response.data exists
+        return response.data;
+    }
+    // TypeScript knows response.error exists
+    throw new Error(response.error);
 }
 ```
 
-## Naming Conventions
+## Promise Handling
 
-**Follow these patterns:**
-
-| Type                | Convention                        | Example                          |
-| ------------------- | --------------------------------- | -------------------------------- |
-| Interfaces          | PascalCase with descriptive names | `UserRepository`, `MarketData`   |
-| Types               | PascalCase                        | `UserId`, `ApiResponse<T>`       |
-| Enums               | PascalCase                        | `UserRole`, `HttpStatus`         |
-| Variables/functions | camelCase                         | `getUserById`, `userData`        |
-| Constants           | UPPER_SNAKE_CASE                  | `MAX_RETRIES`, `DEFAULT_TIMEOUT` |
-
-**Examples:**
+### Always Await
 
 ```typescript
-interface UserRepository {} // ✅ Good
-type UserId = string; // ✅ Good
-enum UserRole {} // ✅ Good
-const MAX_RETRIES = 3; // ✅ Good
-function getUserById(id: UserId) {} // ✅ Good
+// ✅ Good: Always await
+const user = await fetchUser(id);
+const [users, projects] = await Promise.all([fetchUsers(), fetchProjects()]);
+
+// ❌ Bad: Fire and forget without handling
+fetchUser(id); // Exception is lost!
 ```
 
-## Module Organization
-
-**File structure:**
-
-- Use: `src/<domain>/<feature>/<File.ts>`
-- Export only public interfaces from index.ts
-- Keep files under 300 lines
-- Use named exports, avoid default exports
-
-**Example - Good:**
+### Error Handling
 
 ```typescript
-// src/user/UserRepository.ts
-export interface UserRepository {
-  findById(id: UserId): Promise<Result<User, NotFoundError>>;
-}
-
-export class DatabaseUserRepository implements UserRepository {
-  async findById(id: UserId): Promise<Result<User, NotFoundError>> {
-    // implementation
-  }
+// ✅ Good: try/catch with proper typing
+async function loadUser(id: string): Promise<User | null> {
+    try {
+        const response = await api.get<User>(`/users/${id}`);
+        return response.data;
+    } catch (error) {
+        if (error instanceof ApiError) {
+            console.error('API Error:', error.message);
+        }
+        return null;
+    }
 }
 ```
 
-## Immutability Pattern (CRITICAL)
+## Control Statements
 
-**WHY**: Prevents stale closures, makes state predictable, enables React optimizations.
-
-**✅ ALWAYS use spread operator:**
+All single-line control statements need braces:
 
 ```typescript
-const updatedUser = { ...user, name: "New Name" };
-const updatedArray = [...items, newItem];
+// ✅ Good: Always use braces
+if (condition) {
+    doSomething();
+}
+
+for (const item of items) {
+    process(item);
+}
+
+// ❌ Bad: No braces
+if (condition) doSomething();
 ```
 
-**❌ NEVER mutate directly:**
+## Interface Naming
+
+Follow HTTP verb prefixes for API-related types:
 
 ```typescript
-user.name = "New Name"; // BAD - causes bugs
-items.push(newItem); // BAD - breaks React optimizations
-```
+// Request/Response interfaces
+interface PostOrganizationRequest {
+    name: string;
+    billing_email: string;
+}
 
-## Code Organization
+interface GetOrganizationParams {
+    id: string;
+}
 
-**Best practices:**
-
-- Group related functionality into classes or modules
-- Use dependency injection for services
-- Keep pure functions separate from side-effect code
-- Prefer composition over inheritance
-- Use early returns over deep nesting
-
-**Example - Good:**
-
-```typescript
-function processUser(user: User): Result<ProcessedUser, ValidationError> {
-  if (!user) {
-    return { success: false, error: new ValidationError("User required") };
-  }
-
-  if (!isValidEmail(user.email)) {
-    return { success: false, error: new ValidationError("Invalid email") };
-  }
-
-  return { success: true, data: process(user) };
+interface PatchUserRequest {
+    name?: string;
+    email?: string;
 }
 ```
 
-## Testing Standards
-
-**Requirements:**
-
-- Write tests for all public functions
-- Use descriptive test names: `should_return_user_when_id_exists`
-- Mock external dependencies
-- Aim for 80%+ code coverage
-
-**Example - Good:**
+## Export Patterns
 
 ```typescript
-describe("UserRepository", () => {
-  describe("findById", () => {
-    it("should return user when id exists", async () => {
-      const repo = new DatabaseUserRepository(mockDb);
-      const result = await repo.findById("user-123");
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(expectedUser);
-    });
+// Named exports preferred
+export function createUser(data: CreateUserRequest): Promise<User> { ... }
+export type { User, CreateUserRequest };
 
-    it("should return error when user not found", async () => {
-      const repo = new DatabaseUserRepository(mockDb);
-      const result = await repo.findById("non-existent");
-      expect(result.success).toBe(false);
-    });
-  });
-});
+// Re-export from barrel files
+// src/lib/features/users/index.ts
+export { createUser, updateUser, deleteUser } from './api.svelte';
+export type { User, CreateUserRequest } from './models';
 ```
 
-## Type Safety Over Convenience
-
-**WHY**: Types catch bugs at compile-time, serve as documentation, enable refactoring.
-
-**✅ GOOD (proper types):**
+## Modern ES6+ Features
 
 ```typescript
-interface Market {
-  id: string;
-  name: string;
-  status: "active" | "resolved" | "closed";
-}
+// Template literals
+const message = `Hello, ${user.name}!`;
 
-function getMarket(id: string): Promise<Market> {}
+// Destructuring
+const { id, name, email } = user;
+const [first, ...rest] = items;
+
+// Nullish coalescing
+const displayName = user.nickname ?? user.name ?? 'Anonymous';
+
+// Optional chaining
+const city = user?.address?.city;
+
+// Object shorthand
+const data = { id, name, createdAt: new Date() };
 ```
-
-**❌ BAD (using `any`):**
-
-```typescript
-function getMarket(id: any): Promise<any> {}
-```
-
-## Constants Over Magic Numbers
-
-**Use named constants instead of magic numbers:**
-
-**✅ Good:**
-
-```typescript
-const MIN_AGE = 18;
-const MAX_AGE = 120;
-const MIN_NAME_LENGTH = 2;
-const MAX_NAME_LENGTH = 100;
-
-if (user.age < MIN_AGE || user.age > MAX_AGE) {
-  throw new ValidationError("Age out of range");
-}
-```
-
-**❌ Bad:**
-
-```typescript
-if (user.age < 18 || user.age > 120) {
-  // Magic numbers
-  throw new Error("Invalid age");
-}
-```
-
-## Performance Best Practices
-
-**Use for:**
-
-- Expensive computations (`useMemo`)
-- Functions passed to children (`useCallback`)
-- Pure components (`React.memo`)
-
-```typescript
-const sortedMarkets = useMemo(() => {
-  return markets.sort((a, b) => b.volume - a.volume);
-}, [markets]);
-
-const handleSearch = useCallback((query: string) => {
-  setSearchQuery(query);
-}, []);
-```
-
-## Common Anti-Patterns to Avoid
-
-❌ **Using `any` for types**
-
-```typescript
-// DON'T
-function process(data: any): any {}
-```
-
-❌ **Default exports**
-
-```typescript
-// DON'T
-export default function process() {}
-```
-
-❌ **Bare `throw new Error()`**
-
-```typescript
-// DON'T
-throw new Error("Something went wrong");
-```
-
-❌ **Mixed concerns in single file**
-
-```typescript
-// DON'T - mixing business logic, UI, and data access
-function UserComponent() {
-  // UI logic
-  // Data access
-  // Business logic
-}
-```
-
-❌ **Magic numbers without constants**
-
-```typescript
-// DON'T
-if (retries > 3) {
-}
-```
-
-❌ **Console.log in production**
-
-```typescript
-// DON'T
-console.log("User data:", user);
-```
-
-## Verification Checklist
-
-Before considering TypeScript code complete:
-
-- [ ] Strict mode enabled in tsconfig.json
-- [ ] No `any` types (use `unknown` instead)
-- [ ] Explicit return types defined
-- [ ] Typed error classes used (not bare Error)
-- [ ] Result<T> pattern for operations that can fail
-- [ ] Immutability pattern followed (spread operators)
-- [ ] Constants instead of magic numbers
-- [ ] Descriptive naming conventions
-- [ ] Files under 300 lines
-- [ ] Named exports (no default)
-- [ ] Tests written for all public functions
-- [ ] 80%+ code coverage
-
-## Integration
-
-This skill integrates with:
-
-- `coding-standards` - Universal coding best practices
-- `engineering-lifecycle` - Testing requirements
-- `frontend-patterns` - React/TypeScript patterns
-- `backend-patterns` - TypeScript backend patterns
-
----
-
-## Dynamic Sourcing Protocol
-
-<fetch_protocol>
-**CONDITIONAL FETCH**: For TypeScript language questions, fetch from:
-
-- https://www.typescriptlang.org/docs/handbook/ (Type fundamentals)
-
-This skill contains Seed System-specific conventions (Result<T> pattern, immutability, naming conventions) that extend TypeScript fundamentals.
-</fetch_protocol>
-
----
-
-## Genetic Code
-
-This component carries essential Seed System principles for context: fork isolation:
-
-<critical_constraint>
-MANDATORY: All components MUST be self-contained (zero .claude/rules dependency)
-MANDATORY: Achieve 80-95% autonomy (0-5 AskUserQuestion rounds per session)
-MANDATORY: Description MUST use What-When-Not format in third person
-MANDATORY: No component references another component by name in description
-MANDATORY: Progressive disclosure - references/ for detailed content
-MANDATORY: Use XML for control (mission_control, critical_constraint), Markdown for data
-No exceptions. Portability invariant must be maintained.
-</critical_constraint>
-
-**Delta Standard**: Good Component = Expert Knowledge − What Claude Already Knows
-
-**Recognition Questions**:
-
-- "Would Claude know this without being told?" → Delete (zero delta)
-- "Can this work standalone?" → Fix if no (non-self-sufficient)
-- "Did I read the actual file, or just see it in grep?" → Verify before claiming
-  MANDATORY: Define explicit return types for all functions
-  MANDATORY: Use Result<T> pattern for operations that can fail
-  MANDATORY: Use typed error classes, never bare Error
-  MANDATORY: Never mutate objects directly (use spread operator)
-  No exceptions. Type safety prevents runtime bugs.
-  </critical_constraint>

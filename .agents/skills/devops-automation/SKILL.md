@@ -1,271 +1,530 @@
 ---
 name: devops-automation
-description: CI/CD pipeline design with GitHub Actions, Docker, Kubernetes, Helm, and GitOps patterns
+description: "DevOps and IT Ops automation - CI/CD, monitoring, incident management, and infrastructure workflows"
+version: "1.0.0"
+author: claude-office-skills
+license: MIT
+
+category: devops
+tags:
+  - devops
+  - ci-cd
+  - monitoring
+  - incident
+  - automation
+department: Engineering
+
+models:
+  recommended:
+    - claude-sonnet-4
+
+mcp:
+  server: devops-mcp
+  tools:
+    - github_api
+    - jenkins_trigger
+    - aws_cli
+    - kubernetes_api
+
+capabilities:
+  - ci_cd_pipelines
+  - monitoring_alerts
+  - incident_management
+  - infrastructure_automation
+  - deployment_workflows
+
+languages:
+  - en
+  - zh
+
+related_skills:
+  - slack-workflows
+  - telegram-bot
+  - ai-agent-builder
 ---
 
 # DevOps Automation
 
-## GitHub Actions Workflow Structure
+Automate DevOps workflows including CI/CD pipelines, monitoring, incident management, and infrastructure operations. Based on n8n's IT Ops workflow templates.
+
+## Overview
+
+This skill covers:
+- CI/CD pipeline automation
+- Monitoring and alerting
+- Incident management
+- Infrastructure automation
+- Deployment workflows
+
+---
+
+## CI/CD Automation
+
+### GitHub Actions Integration
 
 ```yaml
-name: CI/CD
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+workflow: "GitHub CI/CD Notifications"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+triggers:
+  - github_push
+  - github_pull_request
+  - github_workflow_run
+  
+on_push:
+  action:
+    - trigger_ci: if_main_branch
+    - notify_slack:
+        channel: "#deployments"
+        message: |
+          📦 *New Push to {branch}*
+          
+          Commit: `{commit_sha_short}`
+          Author: {author}
+          Message: {commit_message}
+          
+          [View Diff]({compare_url})
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
+on_pr_opened:
+  action:
+    - notify_slack:
+        channel: "#code-review"
+        message: |
+          🔀 *New Pull Request*
+          
+          Title: {pr_title}
+          Author: {author}
+          Branch: {head} → {base}
+          
+          [Review PR]({pr_url})
+    - assign_reviewers: based_on_codeowners
+    - run_ci_checks
+
+on_workflow_complete:
+  action:
+    - notify_slack:
+        message: |
+          {status_emoji} *Build {status}*
+          
+          Workflow: {workflow_name}
+          Branch: {branch}
+          Duration: {duration}
+          
+          {if_failed: [View Logs]({logs_url})}
+```
+
+### Deployment Pipeline
+
+```yaml
+deployment_pipeline:
+  stages:
+    build:
+      trigger: push_to_main
+      steps:
+        - checkout_code
+        - install_dependencies
+        - run_tests
+        - build_artifact
+        - push_to_registry
+        
+    staging:
+      trigger: build_success
+      steps:
+        - deploy_to_staging
+        - run_integration_tests
+        - notify_qa
+        
+    production:
+      trigger: manual_approval
+      steps:
+        - create_backup
+        - deploy_to_production
+        - run_smoke_tests
+        - notify_team
+        
+  rollback:
+    trigger: deployment_failed OR manual
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
+      - revert_to_previous
+      - notify_team
+      - create_incident
+```
 
-  test:
-    runs-on: ubuntu-latest
-    needs: lint
-    strategy:
-      matrix:
-        node-version: [20, 22]
+---
+
+## Monitoring & Alerting
+
+### Alert Routing
+
+```yaml
+alert_routing:
+  sources:
+    - prometheus
+    - datadog
+    - cloudwatch
+    - new_relic
+    
+  severity_levels:
+    critical:
+      response_time: 5_minutes
+      channels: [pagerduty, slack_urgent, sms]
+      escalation: immediate
+      
+    high:
+      response_time: 15_minutes
+      channels: [slack_alerts, email]
+      escalation: after_15_minutes
+      
+    medium:
+      response_time: 1_hour
+      channels: [slack_alerts]
+      
+    low:
+      response_time: 24_hours
+      channels: [slack_logging]
+      
+  routing_rules:
+    - if: service == "payments"
+      team: payments_oncall
+      severity_boost: +1
+      
+    - if: service == "auth"
+      team: security_oncall
+      
+    - default:
+      team: platform_oncall
+```
+
+### Alert Templates
+
+```yaml
+alert_templates:
+  infrastructure:
+    cpu_high:
+      title: "🔥 High CPU Usage"
+      body: |
+        Server: {host}
+        CPU: {cpu_percent}%
+        Duration: {duration}
+        
+        Threshold: {threshold}%
+        
+        [View Dashboard]({grafana_url})
+        
+    memory_critical:
+      title: "💾 Critical Memory"
+      body: |
+        Server: {host}
+        Memory: {memory_percent}%
+        Available: {available_mb}MB
+        
+        [SSH to Server]({ssh_link})
+        
+    disk_full:
+      title: "💿 Disk Space Critical"
+      body: |
+        Server: {host}
+        Disk: {disk_percent}%
+        Available: {available_gb}GB
+        
+        Suggestion: Clean logs or expand volume
+        
+  application:
+    error_spike:
+      title: "📈 Error Rate Spike"
+      body: |
+        Service: {service}
+        Error Rate: {error_rate}%
+        Normal: {baseline}%
+        
+        Top Errors:
+        {top_errors}
+        
+    latency_high:
+      title: "🐢 High Latency"
+      body: |
+        Service: {service}
+        P99 Latency: {p99_ms}ms
+        Threshold: {threshold_ms}ms
+```
+
+---
+
+## Incident Management
+
+### Incident Workflow
+
+```yaml
+incident_workflow:
+  detection:
+    sources: [monitoring, user_report, automated_check]
+    
+  triage:
+    auto_severity:
+      - if: affects_payments
+        severity: critical
+      - if: affects_auth
+        severity: critical
+      - if: affects_api AND error_rate > 10%
+        severity: high
+        
+  response:
+    critical:
+      - create_incident_channel: "#inc-{timestamp}"
+      - page_oncall: immediately
+      - notify_stakeholders: [engineering_lead, product]
+      - start_war_room: zoom_link
+      - create_status_page: incident
+      
+    high:
+      - create_incident_channel
+      - notify_oncall: slack
+      - create_ticket: jira
+      
+  communication:
+    internal:
+      frequency: every_30_minutes
+      channel: incident_channel
+      template: |
+        📊 *Incident Update*
+        
+        Status: {status}
+        Impact: {impact}
+        Next update: {next_update_time}
+        
+        Current actions:
+        {action_items}
+        
+    external:
+      channel: status_page
+      template: customer_facing_update
+      
+  resolution:
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci
-      - run: npm test -- --coverage
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ matrix.node-version }}
-          path: coverage/
+      - confirm_resolution
+      - update_status_page: resolved
+      - notify_stakeholders
+      - schedule_postmortem
+      - close_incident_channel: after_24h
+```
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    environment: production
+### Postmortem Template
+
+```yaml
+postmortem_template:
+  sections:
+    summary:
+      - incident_title
+      - duration
+      - severity
+      - impact
+      
+    timeline:
+      format: |
+        | Time | Event |
+        |------|-------|
+        | {time} | {event} |
+        
+    root_cause:
+      - what_happened
+      - why_it_happened
+      - contributing_factors
+      
+    impact:
+      - users_affected
+      - revenue_impact
+      - sla_breach
+      
+    resolution:
+      - how_it_was_fixed
+      - time_to_detect
+      - time_to_resolve
+      
+    action_items:
+      format: |
+        | Action | Owner | Due Date | Status |
+        |--------|-------|----------|--------|
+        
+    lessons_learned:
+      - what_went_well
+      - what_went_poorly
+      - lucky_breaks
+```
+
+---
+
+## Infrastructure Automation
+
+### Server Provisioning
+
+```yaml
+provisioning_workflow:
+  trigger: jira_ticket OR slack_request
+  
+  steps:
+    1. validate_request:
+        check: [budget_approval, security_review]
+        
+    2. create_infrastructure:
+        terraform:
+          - vpc
+          - security_groups
+          - ec2_instances
+          - load_balancer
+          
+    3. configure_server:
+        ansible:
+          - base_configuration
+          - security_hardening
+          - monitoring_agent
+          - application_setup
+          
+    4. validate:
+        - health_check
+        - security_scan
+        - performance_baseline
+        
+    5. notify:
+        slack: "✅ Server {hostname} is ready"
+        include: [ssh_access, dashboard_link]
+```
+
+### Scheduled Maintenance
+
+```yaml
+maintenance_automation:
+  tasks:
+    certificate_renewal:
+      schedule: "30 days before expiry"
+      action:
+        - request_new_cert: letsencrypt
+        - deploy_cert
+        - verify_ssl
+        - notify: if_failure
+        
+    security_patching:
+      schedule: "weekly"
+      action:
+        - check_updates
+        - if_critical: immediate_patch
+        - else: schedule_maintenance_window
+        
+    log_rotation:
+      schedule: "daily"
+      action:
+        - rotate_logs
+        - compress_old
+        - upload_to_s3
+        - delete_local: older_than_7_days
+        
+    backup_verification:
+      schedule: "weekly"
+      action:
+        - restore_to_test_env
+        - run_integrity_checks
+        - report_status
+```
+
+---
+
+## Kubernetes Automation
+
+### K8s Workflows
+
+```yaml
+kubernetes_automation:
+  deployment:
+    trigger: docker_image_pushed
     steps:
-      - uses: actions/checkout@v4
-      - run: ./deploy.sh
+      - update_manifest: with_new_image_tag
+      - apply_to_staging
+      - run_tests
+      - if_success: apply_to_production
+      
+  scaling:
+    trigger: metric_threshold
+    rules:
+      - if: cpu > 80%
+        action: scale_up
+        max_replicas: 10
+      - if: cpu < 20%
+        action: scale_down
+        min_replicas: 2
+        
+  rollback:
+    trigger: health_check_failed
+    action:
+      - kubectl_rollout_undo
+      - notify_team
+      - create_incident
 ```
 
-Key patterns:
-- Use `concurrency` to cancel outdated runs
-- Cache dependencies with setup action's `cache` option
-- Use `needs` for job dependencies
-- Gate deploys with `environment` protection rules
-- Use matrix for cross-version testing
+---
 
-## Docker Multi-Stage Builds
+## Output Example
 
-```dockerfile
-FROM node:22-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --production
+**Request**: "Set up deployment notifications for GitHub Actions"
 
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+**Output**:
 
-FROM node:22-alpine AS runner
-WORKDIR /app
-RUN addgroup -g 1001 appgroup && adduser -u 1001 -G appgroup -S appuser
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
-USER appuser
-EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:3000/health || exit 1
-CMD ["node", "dist/server.js"]
-```
+```markdown
+# GitHub Actions Deployment Notifications
 
-Rules:
-- Use specific image tags, never `latest`
-- Run as non-root user
-- Copy only necessary files into final stage
-- Add `HEALTHCHECK` for orchestrator integration
-- Use `.dockerignore` to exclude `node_modules`, `.git`, tests
-
-## Kubernetes Deployment Manifest
+## n8n Workflow
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: api-server
-  labels:
-    app: api-server
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: api-server
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
-  template:
-    metadata:
-      labels:
-        app: api-server
-    spec:
-      containers:
-        - name: api
-          image: registry.example.com/api:v1.2.3
-          ports:
-            - containerPort: 3000
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: api-secrets
-                  key: database-url
+trigger: GitHub Webhook
+events: [workflow_run]
 ```
 
-Always set resource requests and limits. Always define readiness and liveness probes. Use `maxUnavailable: 0` for zero-downtime deploys.
+## Notification Templates
 
-## Helm Chart Structure
+**Build Started:**
+```
+🚀 *Deployment Started*
 
+Branch: main
+Commit: abc1234
+Author: @developer
+Triggered by: Push
+
+[View Workflow](https://github.com/...)
 ```
-chart/
-  Chart.yaml
-  values.yaml
-  values-staging.yaml
-  values-production.yaml
-  templates/
-    deployment.yaml
-    service.yaml
-    ingress.yaml
-    hpa.yaml
-    _helpers.tpl
+
+**Build Success:**
 ```
+✅ *Deployment Successful*
+
+Environment: Production
+Duration: 3m 42s
+Version: v1.2.3
+
+Changes:
+• Feature X
+• Bug fix Y
+
+[View Deployment](https://app.example.com)
+```
+
+**Build Failed:**
+```
+❌ *Deployment Failed*
+
+Stage: Test
+Error: npm test failed
+
+[View Logs](https://github.com/...)
+[Retry](https://github.com/...)
+```
+
+## Slack Integration
 
 ```yaml
-# values.yaml
-replicaCount: 2
-image:
-  repository: registry.example.com/api
-  tag: latest
-  pullPolicy: IfNotPresent
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 500m
-    memory: 512Mi
-ingress:
-  enabled: true
-  host: api.example.com
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilization: 70
+channel: "#deployments"
+mention_on_failure: "@oncall"
+thread_replies: true
+```
 ```
 
-Use `values-{env}.yaml` overrides per environment. Lint charts with `helm lint`. Test with `helm template` before deploying.
+---
 
-## ArgoCD GitOps Pattern
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: api-server
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/org/k8s-manifests
-    targetRevision: main
-    path: apps/api-server
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: production
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-```
-
-GitOps principles:
-- Git is the single source of truth for cluster state
-- All changes go through PRs (no `kubectl apply` in production)
-- ArgoCD auto-syncs from Git to cluster
-- Enable `selfHeal` to revert manual cluster changes
-- Separate app code repos from deployment manifest repos
-
-## Monitoring Stack
-
-```yaml
-# Prometheus ServiceMonitor
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: api-server
-spec:
-  selector:
-    matchLabels:
-      app: api-server
-  endpoints:
-    - port: metrics
-      interval: 15s
-      path: /metrics
-```
-
-Key metrics to expose:
-- `http_request_duration_seconds` (histogram) - request latency by route and status
-- `http_requests_total` (counter) - request count by route and status
-- `process_resident_memory_bytes` (gauge) - memory usage
-- `db_query_duration_seconds` (histogram) - database query latency
-
-Alert on: error rate >1%, P99 latency >2s, memory >80% of limit, pod restarts >3 in 10 minutes.
-
-## Pipeline Best Practices
-
-1. Keep CI under 10 minutes (parallelize jobs, cache aggressively)
-2. Run linting and type checking before tests
-3. Use ephemeral environments for PR previews
-4. Pin all action versions to SHA, not tags
-5. Store secrets in GitHub Secrets, never in workflow files
-6. Use OIDC for cloud provider authentication (no long-lived keys)
-7. Tag images with git SHA, not `latest`
-8. Run security scans (Trivy, Snyk) on container images in CI
+*DevOps Automation Skill - Part of Claude Office Skills*

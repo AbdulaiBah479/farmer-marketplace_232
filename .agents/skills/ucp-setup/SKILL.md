@@ -1,9 +1,8 @@
 ---
 name: ucp-setup
-description: >
-  Set up a UCP project — scaffold a merchant server or platform client with
-  discovery profile, SDK installation, and project structure. Use when starting
-  a new UCP implementation.
+description: Set up a UCP project — scaffold a merchant server or platform client with discovery profile, SDK installation, and project structure. Use when starting a new UCP implementation.
+disable-model-invocation: true
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # UCP Project Setup

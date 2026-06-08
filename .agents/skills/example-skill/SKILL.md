@@ -1,24 +1,20 @@
 ---
-name: example-skill
-description: Example skill demonstrating the full skill directory structure with scripts, references, assets, and examples. Use when learning how to structure Codex skills.
+id: example-skill
+name: Example Skill
+description: Step-by-step guidance for example.
+category: Documentation
 ---
 
 # Example Skill
 
-This is a demonstration skill showing all possible subdirectories.
+Support example workflows with clear steps and best practices.
 
-## Quick Start
+## When to Use
 
-1. Check `references/patterns.md` for detailed patterns
-2. Use `assets/component-template.tsx` as a starter
-3. Run `scripts/validate.sh` to check your code
-4. See `examples/good-example.tsx` for reference
+- You need help with example skill.
+- You want a clear, actionable next step.
 
-## Structure
+## Output
 
-- `scripts/` - Executable automation scripts
-- `references/` - Detailed documentation
-- `assets/` - Templates and resources
-- `examples/` - Real code examples
-
-
+- Summary of goals and plan
+- Key tips and precautions

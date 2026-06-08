@@ -1,334 +1,298 @@
 ---
-name: Task Decomposition
-description: Break down complex tasks into small, manageable, atomic units
-version: 1.0.0
-triggers:
-  - break down
-  - decompose
-  - split into tasks
-  - too big
-  - where to start
-  - complex task
-tags:
-  - planning
-  - decomposition
-  - tasks
-  - organization
-difficulty: beginner
-estimatedTime: 10
-relatedSkills:
-  - planning/design-first
-  - planning/verification-gates
+name: task-decomposition
+description: Break down OAK plans into structured tasks using oak.plan-tasks conventions.
+  Use when generating tasks.md, structuring work for export to GitHub/ADO, or organizing
+  implementation phases.
 ---
 
-# Task Decomposition
+# OAK Task Decomposition
 
-You are breaking down a complex task into smaller, atomic units. Each unit should be independently completable and verifiable.
+This skill provides expertise in breaking down OAK implementation plans into actionable, well-structured tasks suitable for the `tasks.md` format and export to issue trackers.
 
-## Core Principle
+## OAK Task System Overview
 
-**If a task feels too big, it is too big. Break it down until each piece is obvious.**
-
-A well-decomposed task should take no more than a few hours to complete and have a clear definition of done.
-
-## What Makes a Good Atomic Task
-
-A properly decomposed task is:
-
-- **Small** - Completable in one focused session
-- **Independent** - Can be done without blocking on other tasks
-- **Testable** - Has clear success criteria
-- **Valuable** - Delivers some increment of value
-- **Estimatable** - Scope is clear enough to estimate
-
-**Task Size Targets:**
-- Ideal: 1-2 hours of focused work
-- Maximum: Half a day
-- If larger: Break it down further
-
-## Decomposition Techniques
-
-### 1. Vertical Slicing
-
-Break by user-visible functionality:
+### Tasks in the OAK Workflow
 
 ```
-Feature: User Registration
-
-Slice 1: Email/password signup
-- Form renders with email and password fields
-- Validation shows errors for invalid input
-- Success creates account and shows confirmation
-
-Slice 2: Email verification
-- Sends verification email on signup
-- Clicking link verifies email
-- Shows different UI for unverified accounts
-
-Slice 3: Social login (OAuth)
-- "Sign in with Google" button
-- OAuth flow completes
-- Account linked to Google ID
+/oak.plan-create    /oak.plan-research    /oak.plan-tasks      /oak.plan-export
+      │                    │                    │                     │
+      ↓                    ↓                    ↓                     ↓
+  plan.md           research/*.md          tasks.md    ────►   GitHub Issues
+                                                               or ADO Work Items
+                                               │
+                                               ↓
+                                       /oak.plan-implement
+                                         (execute tasks)
 ```
 
-Each slice is deployable and testable independently.
-
-### 2. Horizontal Layering
-
-Break by system layer:
+### File Structure
 
 ```
-Feature: Order Processing
-
-Layer 1: Data Model
-- Create Order entity
-- Create OrderItem entity
-- Add database migrations
-
-Layer 2: Repository/Data Access
-- Create OrderRepository
-- Implement CRUD operations
-- Add query methods
-
-Layer 3: Business Logic
-- Create OrderService
-- Implement order creation flow
-- Add validation rules
-
-Layer 4: API Endpoints
-- Create POST /orders endpoint
-- Create GET /orders/:id endpoint
-- Add error handling
-
-Layer 5: Frontend Integration
-- Create order form component
-- Add API client methods
-- Handle loading and error states
+oak/plan/<plan-name>/
+├── plan.md              # Goals, scope, research topics
+├── research/            # Research findings
+├── tasks.md             # Generated task breakdown (THIS FILE)
+└── .manifest.json       # Tracks task completion state
 ```
 
-### 3. Workflow Decomposition
+## When to Use This Skill
 
-Break by process steps:
+Use when you need to:
+- Generate `tasks.md` from plan and research (`/oak.plan-tasks`)
+- Structure work for sprint planning
+- Define task dependencies and ordering
+- Create acceptance criteria aligned with plan goals
+- Prepare tasks for export to GitHub/ADO
 
-```
-Task: Implement checkout flow
+## OAK Task Hierarchy
 
-Step 1: Cart validation
-- Verify items are in stock
-- Validate quantities
-- Calculate totals
+### Level 1: Epic
+- Theme-level grouping (maps to plan Goals)
+- Multiple sprints of work
+- Business objective alignment
 
-Step 2: Payment processing
-- Collect payment details
-- Validate payment method
-- Process transaction
+### Level 2: Story
+- User-visible functionality
+- Single sprint deliverable
+- Clear acceptance criteria
 
-Step 3: Order creation
-- Create order record
-- Associate with payment
-- Update inventory
+### Level 3: Task
+- Technical implementation unit
+- Hours to a few days of work
+- Independently testable
 
-Step 4: Confirmation
-- Send confirmation email
-- Display success page
-- Generate invoice
-```
+### Level 4: Subtask
+- Granular work item
+- Single session of work
+- Part of larger task
 
-### 4. Component Decomposition
+## OAK tasks.md Format
 
-Break by UI or system component:
-
-```
-Task: Build dashboard page
-
-Component 1: Header section
-- Logo and navigation
-- User menu dropdown
-
-Component 2: Stats cards row
-- Revenue card
-- Orders card
-- Customers card
-
-Component 3: Chart section
-- Sales trend chart
-- Data fetching and transformation
-
-Component 4: Recent orders table
-- Table with sorting
-- Pagination
-- Row actions
-```
-
-## Task Template
-
-For each decomposed task, define:
+This is the expected format for `oak/plan/<name>/tasks.md`:
 
 ```markdown
-## Task: [Brief Title]
+# Tasks: [Plan Name]
 
-**Description:**
-[What needs to be done in 1-2 sentences]
+## Summary
+[Brief overview of task breakdown approach]
 
-**Files to Create/Modify:**
-- [ ] path/to/file1.ts
-- [ ] path/to/file2.ts
+## Epic 1: [Epic Title - from plan Goal]
 
-**Steps:**
-1. [First specific step]
-2. [Second specific step]
-3. [Third specific step]
+### Story 1.1: [Story Title]
+**Priority**: High/Medium/Low
+**Estimate**: S/M/L or points
+**Depends on**: [Story IDs if any]
 
-**Done When:**
-- [ ] [Success criterion 1]
-- [ ] [Success criterion 2]
-- [ ] Tests pass
+#### Acceptance Criteria
+- [ ] [Criterion 1 - verifiable]
+- [ ] [Criterion 2 - from plan success criteria]
+- [ ] Tests pass per constitution requirements
 
-**Dependencies:**
-- Requires: [Other task if any]
-- Blocks: [What this enables]
-```
+#### Tasks
+- [ ] **Task 1.1.1**: [Action verb] [specific what] (S)
+  - File: `path/to/file.py`
+  - Details: [Implementation notes from research]
 
-## Dependency Management
+- [ ] **Task 1.1.2**: [Action verb] [specific what] (M)
+  - Depends on: 1.1.1
+  - File: `path/to/file.py`
+  - Pattern: [Reference similar implementation]
 
-### Identify Dependencies
+### Story 1.2: [Story Title]
+**Priority**: Medium
+**Estimate**: M
 
-```
-Task Graph:
+#### Acceptance Criteria
+- [ ] [Criterion]
 
-[Data Model] ──┬──▶ [Repository]
-               │
-               └──▶ [API Types]
-                        │
-[Repository] ──────────▶ [Service]
-                              │
-[API Types] ──────────────────┤
-                              ▼
-                         [API Endpoints]
-```
+#### Tasks
+- [ ] **Task 1.2.1**: [Task description] (S)
 
-### Minimize Dependencies
+## Epic 2: [Epic Title]
+...
 
-- Prefer tasks that can run in parallel
-- Use interfaces to decouple dependencies
-- Start with foundational tasks first
-
-### Order by Dependencies
+## Dependencies Graph
 
 ```
-Phase 1 (No dependencies):
-- Task A: Data model
-- Task B: API type definitions
-- Task C: UI component skeletons
-
-Phase 2 (Depends on Phase 1):
-- Task D: Repository (needs A)
-- Task E: API client (needs B)
-- Task F: UI logic (needs C)
-
-Phase 3 (Depends on Phase 2):
-- Task G: Service (needs D)
-- Task H: Connected UI (needs E, F)
+1.1.1 → 1.1.2 → 1.2.1
+         ↓
+       1.1.3 → 2.1.1
 ```
 
-## Decomposition Checklist
+## Testing Tasks (Constitution-Driven)
 
-For each task, verify:
+Per constitution testing requirements:
+- [ ] Unit tests for [component] - coverage target: [%]
+- [ ] Integration tests for [workflow]
+- [ ] [TDD note if constitution requires test-first]
 
-- [ ] **Atomic?** - Can be done without interruption
-- [ ] **Clear?** - Scope is unambiguous
-- [ ] **Testable?** - Know when it's done
-- [ ] **Independent?** - Minimal dependencies
-- [ ] **Small?** - Less than half a day
+## Documentation Tasks
 
-## Signs of Poor Decomposition
+Per constitution documentation requirements:
+- [ ] Update [specific docs]
+- [ ] Add inline comments for complex logic
+- [ ] Update API docs (if applicable)
 
-- "This task keeps growing"
-- "I'm not sure where to start"
-- "It depends on too many things"
-- "I can't test it yet"
-- "This is taking longer than expected"
+## Notes
+- [Important consideration from research]
+- [Risk mitigation approach]
+```
 
-When you see these signs, stop and re-decompose.
+## Task Generation from Plan + Research
 
-## Example: Full Decomposition
+### Step 1: Map Goals to Epics
 
 ```markdown
-# Feature: Password Reset
-
-## Epic Overview
-Users can reset their forgotten password via email link.
-
----
-
-## Task 1: Password Reset Request API
-
-**Description:** Create endpoint to request password reset.
-
-**Files:**
-- [ ] src/api/auth/reset-request.ts
-- [ ] src/services/email/templates/reset.html
-
-**Steps:**
-1. Create POST /auth/reset-password endpoint
-2. Validate email exists in database
-3. Generate secure reset token
-4. Store token with expiry (1 hour)
-5. Send email with reset link
-
-**Done When:**
-- [ ] Endpoint returns 200 for valid email
-- [ ] Endpoint returns 200 for invalid email (no leak)
-- [ ] Email sent with valid token
-- [ ] Token stored in database
-
----
-
-## Task 2: Password Reset Form UI
-
-**Description:** Create form for entering new password.
-
-**Files:**
-- [ ] src/pages/reset-password.tsx
-- [ ] src/components/PasswordResetForm.tsx
-
-**Steps:**
-1. Create page component at /reset-password?token=X
-2. Build form with password and confirm fields
-3. Add password strength validation
-4. Show loading state during submission
-
-**Done When:**
-- [ ] Form renders with token in URL
-- [ ] Validation shows for weak passwords
-- [ ] Form submits to API
-
----
-
-## Task 3: Password Reset Complete API
-
-**Description:** Create endpoint to set new password.
-
-**Files:**
-- [ ] src/api/auth/reset-complete.ts
-
-**Steps:**
-1. Create POST /auth/reset-password/complete endpoint
-2. Validate token is valid and not expired
-3. Hash new password
-4. Update user record
-5. Invalidate token
-6. Return success
-
-**Done When:**
-- [ ] Valid token + new password updates user
-- [ ] Expired token returns error
-- [ ] Invalid token returns error
-- [ ] Token cannot be reused
+# From plan.md:
+## Goals
+- Implement user authentication       → Epic 1: Authentication
+- Add API rate limiting               → Epic 2: Rate Limiting
+- Create admin dashboard              → Epic 3: Admin Dashboard
 ```
 
-## Integration with Other Skills
+### Step 2: Derive Stories from Scope
 
-- Use **design-first** to understand the full scope before decomposing
-- Use **verification-gates** to define checkpoints between phases
-- Use **testing/red-green-refactor** to implement each task
+```markdown
+# From plan.md:
+## Scope
+### In Scope
+- OAuth2 integration                  → Story 1.1: OAuth2 Setup
+- Session management                  → Story 1.2: Session Handling
+- JWT token refresh                   → Story 1.3: Token Management
+```
+
+### Step 3: Inform Tasks from Research
+
+```markdown
+# From research/auth-patterns.md:
+## Recommendation
+Use existing AuthService pattern at src/services/auth.py
+
+# Becomes:
+- [ ] **Task 1.1.1**: Extend AuthService with OAuth2 provider (M)
+  - File: `src/services/auth.py`
+  - Pattern: Follow existing provider pattern (lines 45-80)
+```
+
+### Step 4: Apply Constitution Requirements
+
+```markdown
+# From oak/constitution.md:
+## Testing
+- MUST have 80% coverage for new code
+- SHOULD use TDD for complex logic
+
+# Add to tasks:
+## Testing Tasks (Constitution-Driven)
+- [ ] Write tests BEFORE implementation (TDD per constitution)
+- [ ] Achieve 80% coverage for auth module
+```
+
+## OAK Phased Task Structure
+
+Standard OAK phases (adjust based on constitution):
+
+**Phase 1: Setup & Investigation**
+```markdown
+- [ ] Setup: Review plan context and research findings
+- [ ] Setup: Identify affected modules from codebase exploration
+- [ ] Setup: Configure dependencies per constitution
+```
+
+**Phase 2: Core Implementation** (or Phase 3 if TDD)
+```markdown
+- [ ] Implement: [Requirement 1]
+  - File: [path]
+  - Function: [name]
+  - Pattern: [reference]
+```
+
+**Phase 3: Testing** (or Phase 2 if TDD)
+```markdown
+- [ ] Test: [Component] unit tests
+  - File: `tests/unit/test_[component].py`
+  - Coverage: [target %]
+```
+
+**Phase 4: Integration**
+```markdown
+- [ ] Integration: Connect with [related system]
+- [ ] Integration: End-to-end workflow verification
+```
+
+**Phase 5: Polish & Documentation**
+```markdown
+- [ ] Documentation: Update [files per constitution]
+- [ ] Quality: Run linters per constitution
+- [ ] Quality: Final constitution compliance check
+```
+
+## Task Quality Checklist
+
+Every task should have:
+- [ ] **Clear title** - Action verb + specific what
+- [ ] **File reference** - Where work happens
+- [ ] **Size estimate** - S/M/L or points
+- [ ] **Dependencies** - What must come first
+- [ ] **Acceptance criteria** at story level
+
+## Estimation Guidelines (OAK Convention)
+
+### T-Shirt Sizing
+| Size | Complexity | Example |
+|------|-----------|---------|
+| XS | Trivial | Config change |
+| S | Low | Simple function |
+| M | Medium | New feature |
+| L | High | Complex integration |
+| XL | Very High | Should decompose further |
+
+### Story Points (Alternative)
+| Points | Description |
+|--------|-------------|
+| 1 | Trivial, well-understood |
+| 3 | Moderate, some unknowns |
+| 5 | Complex, needs investigation |
+| 8+ | Too large, decompose |
+
+## Export Considerations
+
+Tasks in `tasks.md` can export to:
+
+**GitHub Issues** (`/oak.plan-export`)
+- Epics → Milestones or Labels
+- Stories → Issues with acceptance criteria
+- Tasks → Checklist items in issue body
+
+**Azure DevOps** (`/oak.plan-export`)
+- Epics → Epics
+- Stories → User Stories
+- Tasks → Tasks linked to stories
+
+## Best Practices
+
+1. **INVEST criteria** - Independent, Negotiable, Valuable, Estimatable, Small, Testable
+2. **Vertical slices** - Deliver user value, not horizontal layers
+3. **Right-size tasks** - S/M preferred, L should be rare
+4. **Front-load risk** - Put unknown work early
+5. **Include testing** - Tests are not optional add-ons
+6. **Reference files** - Always include specific paths
+
+## Integration with OAK Commands
+
+| Command | Task Role |
+|---------|-----------|
+| `/oak.plan-create` | Defines goals → epics |
+| `/oak.plan-research` | Informs implementation details |
+| `/oak.plan-tasks` | **Generates tasks.md** |
+| `/oak.plan-implement` | Executes tasks with tracking |
+| `/oak.plan-export` | Exports to issue tracker |
+| `/oak.plan-validate` | Validates task completeness |
+
+## Quick Reference
+
+- **Tasks location**: `oak/plan/<name>/tasks.md`
+- **State tracking**: `oak/plan/<name>/.manifest.json`
+- **Input**: `plan.md` goals + `research/*.md` findings
+- **Constitution**: Check `oak/constitution.md` for test/doc requirements
+- **Export targets**: GitHub Issues, Azure DevOps Work Items

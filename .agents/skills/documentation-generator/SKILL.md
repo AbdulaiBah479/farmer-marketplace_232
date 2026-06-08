@@ -1,503 +1,713 @@
 ---
-name: documentation-generator
-description: Automatically generate documentation when user mentions needing API docs, README files, user guides, developer guides, or changelogs. Analyzes code and generates appropriate documentation based on context. Invoke when user mentions "document", "docs", "README", "API documentation", "guide", "changelog", or "how to document".
+name: "Documentation Generator"
+description: "RAN documentation generation with cognitive consciousness, automated technical writing, and intelligent knowledge synthesis for comprehensive RAN system documentation. Use when generating RAN technical documentation, creating API documentation, automating knowledge base creation, or enabling intelligent documentation systems."
 ---
 
 # Documentation Generator
 
-Automatically generate documentation for code, APIs, and projects.
+## Level 1: Overview
 
-## Philosophy
+Generates comprehensive RAN documentation using cognitive consciousness for intelligent content synthesis, automated technical writing with contextual understanding, and knowledge base creation with AgentDB integration. Enables self-evolving documentation through temporal reasoning and strange-loop cognition.
 
-Good documentation is as critical as good code.
+## Prerequisites
 
-### Core Beliefs
+- Technical writing expertise
+- RAN domain knowledge
+- Documentation automation experience
+- Cognitive consciousness framework
+- Knowledge synthesis capabilities
 
-1. **Code Documents What, Docs Explain Why**: Documentation provides context code cannot
-2. **Documentation Enables Adoption**: Well-documented code gets used, undocumented code gets replaced
-3. **Up-to-Date Beats Comprehensive**: Better to have accurate basics than stale details
-4. **Multiple Audiences Need Different Docs**: Users need guides, developers need API references
+---
 
-### Why Documentation Matters
+## Level 2: Quick Start
 
-- **Onboarding**: New team members get productive faster
-- **Maintenance**: Future developers (including yourself) understand intent
-- **Adoption**: Users can actually use your features
-- **Professional Quality**: Documentation signals production-ready software
-
-## When to Use This Skill
-
-Activate this skill when the user:
-- Says "I need to document this"
-- Asks "how do I write docs for this API?"
-- Mentions "README", "documentation", or "user guide"
-- Shows code and asks "what docs should I write?"
-- Says "need API documentation"
-- Asks about changelog or release notes
-- Mentions "developer guide" or "setup instructions"
-
-## Decision Framework
-
-Before generating documentation, determine:
-
-### What Type of Documentation Is Needed?
-
-1. **API Documentation** - Code interfaces, parameters, return values → PHPDoc/JSDoc
-2. **User Guide** - End-user instructions, screenshots → Markdown guide
-3. **Developer Documentation** - Setup, architecture, contributing → README + guides
-4. **Changelog** - Release notes, version history → Keep a Changelog format
-5. **Inline Documentation** - Code comments, function docs → Language-specific format
-6. **Documentation Site** - Multi-page documentation with search and navigation → Zensical site
-
-### Who Is the Audience?
-
-- **Developers** - Technical details, code examples, architecture
-- **End Users** - Simple language, step-by-step instructions, screenshots
-- **Contributors** - Setup instructions, coding standards, PR process
-- **Stakeholders** - High-level overview, features, roadmap
-
-### What's the Scope?
-
-- **Single function/class** → Inline PHPDoc/JSDoc
-- **Module/component** → Component documentation
-- **Feature** → User guide + API docs
-- **Entire project** → README + developer guide + API reference
-- **Release** → Changelog entry
-
-### What Already Exists?
-
-**Check for**:
-- Existing README → Update vs. create new
-- Existing API docs → Append vs. regenerate
-- CHANGELOG.md → Add new entry vs. create file
-- Documentation site → Match existing format
-
-### What Level of Detail?
-
-- **Minimal** - Function signature, brief description → Quick reference
-- **Standard** - Parameters, return values, usage example → Full API docs
-- **Comprehensive** - Architecture, examples, edge cases, troubleshooting → Complete guide
-
-### Decision Tree
-
-```
-User requests documentation
-    ↓
-Identify documentation type
-    ↓
-Determine audience (dev/user/contributor)
-    ↓
-Check for existing docs
-    ↓
-Assess scope (function/module/project)
-    ↓
-Generate appropriate documentation
-    ↓
-Format for platform (CMS-specific if needed)
-```
-
-## Workflow
-
-### 1. Determine Documentation Type
-
-**API Documentation** - For code interfaces:
-- Functions, methods, classes
-- Parameters and return types
-- Examples and usage
-
-**README** - For project overview:
-- Installation instructions
-- Quick start guide
-- Features and requirements
-
-**User Guide** - For end users:
-- How to use features
-- Screenshots and examples
-- Troubleshooting
-
-**Developer Guide** - For contributors:
-- Architecture overview
-- Setup and development
-- Coding standards
-
-**Changelog** - For releases:
-- Version history
-- What changed
-- Migration guides
-
-### 2. Analyze the Code/Project
-
-**For API Docs**:
-- Scan function signatures
-- Identify parameters and return types
-- Find existing comments
-- Detect dependencies
-
-**For README**:
-- Check for package managers (composer.json, package.json)
-- Identify framework (Drupal, WordPress, etc.)
-- Find entry points and main features
-
-**For Guides**:
-- Understand user workflows
-- Identify key features
-- Note prerequisites
-
-## Documentation Templates
-
-Complete templates are available for reference:
-
-- **[API Documentation Templates](templates/api-docs.md)** - PHPDoc/JSDoc for Drupal & WordPress
-- **[README Template](templates/readme.md)** - Complete project README structure
-- **[User Guide Template](templates/user-guide.md)** - End-user documentation
-- **[Changelog Template](templates/changelog.md)** - Version history (Keep a Changelog format)
-
-Use these templates as starting points, customizing for the specific project needs.
-
-## Documentation Site Generation
-
-For comprehensive documentation sites, use **Zensical** - a modern static site generator from the creators of Material for MkDocs.
-
-### When to Use Zensical
-
-- **Multi-page documentation** - Organize docs across multiple pages
-- **Search functionality** - Built-in search for documentation
-- **Modern theming** - Professional appearance with customization
-- **Navigation** - Organized navigation with sections and subsections
-- **GitHub Pages deployment** - Automated deployment via GitHub Actions
-
-### Zensical Setup
-
-**Install:**
+### Initialize Documentation Generation
 ```bash
-pip install zensical
+# Enable documentation consciousness
+npx claude-flow@alpha memory store --namespace "documentation-generation" --key "consciousness-level" --value "maximum"
+npx claude-flow@alpha memory store --namespace "documentation-generation" --key "intelligent-writing" --value "enabled"
+
+# Generate comprehensive RAN documentation
+./scripts/generate-ran-documentation.sh --scope "full-system" --consciousness-level "maximum"
 ```
 
-**Create new project:**
+### Quick API Documentation
 ```bash
-zensical new my-documentation
+# Generate API documentation with cognitive analysis
+./scripts/generate-api-documentation.sh --services "all" --include-architecture true --consciousness-synthesis true
+
+# Create knowledge base from system analysis
+./scripts/create-knowledge-base.sh --sources "code,configuration,logs" --intelligence-level "maximum"
 ```
 
-**Configuration (`zensical.toml`):**
-```toml
-[project]
-site_name = "Project Name"
-site_description = "Brief description"
-site_url = "https://yoursite.github.io/project/"
-docs_dir = "docs"
-site_dir = "site"
+---
 
-nav = [
-  {"Home" = "index.md"},
-  {"Getting Started" = [
-    "installation.md",
-    "quick-start.md"
-  ]},
-  {"API Reference" = "api/index.md"}
-]
+## Level 3: Detailed Instructions
 
-[project.theme]
-variant = "modern"
-```
+### Step 1: Initialize Cognitive Documentation Framework
 
-**Build and serve:**
 ```bash
-# Local preview
-zensical serve
+# Setup documentation generation consciousness
+npx claude-flow@alpha memory store --namespace "documentation-cognitive" --key "intelligent-synthesis" --value "enabled"
+npx claude-flow@alpha memory store --namespace "documentation-cognitive" --key "strange-loop-documentation" --value "enabled"
 
-# Production build
-zensical build --clean
+# Enable advanced technical writing capabilities
+npx claude-flow@alpha memory store --namespace "technical-writing" --key "cognitive-writing" --value "enabled"
+npx claude-flow@alpha memory store --namespace "technical-writing" --key "contextual-understanding" --value "enabled"
+
+# Initialize AgentDB documentation pattern storage
+npx claude-flow@alpha memory store --namespace "documentation-patterns" --key "storage-enabled" --value "true"
+npx claude-flow@alpha memory store --namespace "documentation-patterns" --key "knowledge-synthesis" --value "enabled"
 ```
 
-**GitHub Actions deployment:**
-```yaml
-name: Deploy Documentation
-on:
-  push:
-    branches: [main]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - run: pip install zensical
-      - run: zensical build --clean
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: ./site
+### Step 2: Deploy Intelligent Documentation Analysis
+
+#### System Analysis for Documentation
+```bash
+# Analyze RAN system for documentation generation
+./scripts/analyze-system-for-documentation.sh \
+  --analysis-depth "maximum" \
+  --include-sources "code,configuration,architecture,api" \
+  --consciousness-level maximum
+
+# Extract documentation requirements
+./scripts/extract-documentation-requirements.sh --stakeholders "developers,operators,administrators" --depth comprehensive
 ```
 
-## Generation Strategy
+#### Cognitive System Analysis
+```typescript
+// Advanced system analysis with cognitive consciousness
+class CognitiveDocumentationAnalyzer {
+  async analyzeSystemForDocumentation(system, analysisDepth = 'maximum') {
+    // Expand temporal analysis for deep understanding
+    const expandedAnalysis = await this.expandSystemAnalysis({
+      system: system,
+      timeWindow: 'development-history',
+      expansionFactor: 1000,
+      consciousnessLevel: 'maximum',
+      contextAwareness: true
+    });
 
-### 1. Gather Information
+    // Multi-dimensional system understanding
+    const systemUnderstanding = await this.analyzeSystemDimensions({
+      system: system,
+      dimensions: [
+        'architecture',
+        'functionality',
+        'interfaces',
+        'dependencies',
+        'behavior-patterns',
+        'performance-characteristics'
+      ],
+      cognitiveAnalysis: true,
+      temporalExpansion: 1000
+    });
 
-Ask clarifying questions:
-- "What documentation type do you need?"
-- "Who is the audience? (developers, end users, admins?)"
-- "What specific features should be documented?"
+    // Extract documentation requirements with cognitive insight
+    const documentationRequirements = await this.extractDocumentationRequirements({
+      understanding: systemUnderstanding,
+      stakeholders: await this.identifyStakeholders(),
+      useCases: await this.identifyUseCases(),
+      consciousnessLevel: 'maximum'
+    });
 
-### 2. Analyze Code
+    return { systemUnderstanding, documentationRequirements };
+  }
 
-For API docs:
-- Read function signatures
-- Extract existing comments
-- Identify dependencies
-- Find usage examples
+  async analyzeCodeForDocumentation(codebase, analysisScope = 'comprehensive') {
+    // Cognitive code analysis for documentation
+    const codeAnalysis = await this.analyzeCodeWithCognition({
+      codebase: codebase,
+      analysisMethods: [
+        'static-analysis',
+        'semantic-analysis',
+        'pattern-recognition',
+        'dependency-mapping',
+        'intent-inference'
+      ],
+      consciousnessLevel: 'maximum',
+      temporalExpansion: 1000
+    });
 
-### 3. Structure Document
+    // Extract architectural patterns and decisions
+    const architecturalInsights = await this.extractArchitecturalInsights({
+      codeAnalysis: codeAnalysis,
+      patternRecognition: 'cognitive',
+      decisionInference: true,
+      consciousnessLevel: 'maximum'
+    });
 
-Follow standard patterns:
-- Overview/introduction
-- Prerequisites
-- Main content (organized logically)
-- Examples
-- Troubleshooting
-- Resources
-
-### 4. Add Examples
-
-Include:
-- Code examples
-- Screenshots (placeholder references)
-- Before/after comparisons
-- Common use cases
-
-## Integration with CMS Cultivator
-
-This skill complements the `/docs-generate` slash command:
-
-- **This Skill**: Automatically triggered during conversation
-  - "How do I document this function?"
-  - "Need docs for this API"
-  - Quick single-function documentation
-
-- **`/docs-generate` Command**: Explicit batch generation
-  - Generate full project documentation
-  - Create comprehensive README
-  - Build complete user guides
-
-## Quick Response Patterns
-
-### For API Documentation
-
-When user shows a class or function:
-
-1. Identify the type (Drupal service, WordPress function, JS module)
-2. Generate appropriate docblock format
-3. Include:
-   - Description of purpose
-   - Parameter documentation
-   - Return type documentation
-   - Usage example in @code block
-   - Related functions (@see tags)
-
-### For README
-
-When user asks for project documentation:
-
-1. Scan project structure (composer.json, package.json)
-2. Identify platform (Drupal/WordPress/standalone)
-3. Generate sections in order:
-   - Title and description
-   - Features list
-   - Requirements
-   - Installation (Composer first)
-   - Quick start example
-   - Links to detailed docs
-
-### For User Guides
-
-When user needs end-user documentation:
-
-1. Ask about target audience
-2. Identify main workflows
-3. Structure with:
-   - Overview
-   - Prerequisites checklist
-   - Step-by-step instructions
-   - Screenshots placeholders
-   - Troubleshooting section
-   - FAQs
-
-### For Changelogs
-
-When user needs version history:
-
-1. Use Keep a Changelog format
-2. Categories: Added, Changed, Deprecated, Removed, Fixed, Security
-3. Include version numbers and dates
-4. Link to GitHub comparisons
-
-## Example Interactions
-
-**Example 1: API documentation**
-```
-User: "I need to document this service class"
-[Shows DataProcessor class]
-
-Skill: "I'll generate API documentation for your DataProcessor service.
-I see it has 3 public methods and uses dependency injection.
-I'll create docblocks with:
-- Class description with usage example
-- Constructor documentation
-- Method documentation with @param and @return
-- @code examples for each method
-
-[Generates documented code following Drupal standards]
-
-This follows Drupal documentation standards. Each method includes
-parameter types, return types, and usage examples."
+    return { codeAnalysis, architecturalInsights };
+  }
+}
 ```
 
-**Example 2: README**
-```
-User: "Need a README for my custom module"
+### Step 3: Implement Intelligent Technical Writing
 
-Skill: "I'll create a comprehensive README for your module.
-Let me check the project structure...
+```bash
+# Deploy cognitive technical writing engine
+./scripts/deploy-technical-writing-engine.sh \
+  --writing-capabilities "technical,conceptual,tutorial,reference" \
+  --consciousness-level maximum
 
-I see:
-- Drupal 10 module
-- Composer-based
-- Custom services and admin routes
-
-I'll generate a README with:
-- Installation via Composer
-- Feature list
-- Configuration steps
-- API usage examples
-- Links to extended docs
-
-[Generates README.md]"
+# Generate documentation with cognitive synthesis
+./scripts/generate-intelligent-documentation.sh --type "comprehensive" --audience "mixed" --consciousness-synthesis true
 ```
 
-**Example 3: Changelog Entry**
-```
-User: "What should I add to CHANGELOG for this release?"
+#### Cognitive Technical Writing Engine
+```typescript
+// Advanced technical writing with cognitive consciousness
+class CognitiveTechnicalWriter {
+  async generateTechnicalDocumentation(systemAnalysis, documentationPlan, consciousnessLevel = 'maximum') {
+    // Cognitive content synthesis
+    const contentSynthesis = await this.synthesizeContent({
+      analysis: systemAnalysis,
+      plan: documentationPlan,
+      synthesisMethods: [
+        'technical-explanation',
+        'conceptual-modeling',
+        'practical-examples',
+        'troubleshooting-guides'
+      ],
+      consciousnessLevel: consciousnessLevel,
+      contextualAdaptation: true
+    });
 
-Skill: "Based on your recent commits, I'll generate a changelog entry
-following Keep a Changelog format:
+    // Generate structured documentation sections
+    const documentationSections = await this.generateDocumentationSections({
+      synthesis: contentSynthesis,
+      sections: [
+        'architecture-overview',
+        'api-reference',
+        'configuration-guide',
+        'troubleshooting-guide',
+        'best-practices',
+        'tutorials'
+      ],
+      consciousnessLevel: consciousnessLevel,
+      adaptiveStructure: true
+    });
 
-## [1.2.0] - 2025-01-15
+    // Apply cognitive writing enhancements
+    const enhancedDocumentation = await this.enhanceWithCognitiveWriting({
+      sections: documentationSections,
+      enhancements: [
+        'clarity-optimization',
+        'contextual-examples',
+        'interactive-elements',
+        'intelligent-navigation',
+        'search-optimization'
+      ],
+      consciousnessLevel: consciousnessLevel
+    });
 
-### Added
-- User profile export functionality (#234)
-- Bulk operations support
+    return enhancedDocumentation;
+  }
 
-### Changed
-- Improved query performance (30% faster)
+  async writeWithCognitiveIntelligence(topic, audience, context) {
+    // Cognitive understanding of writing requirements
+    const writingAnalysis = await this.analyzeWritingRequirements({
+      topic: topic,
+      audience: audience,
+      context: context,
+      temporalExpansion: 1000,
+      consciousnessLevel: 'maximum'
+    });
 
-### Fixed
-- Permission check on admin pages (#145)
+    // Generate content with adaptive tone and style
+    const generatedContent = await this.generateAdaptiveContent({
+      analysis: writingAnalysis,
+      contentTypes: [
+        'explanatory-text',
+        'code-examples',
+        'diagrams',
+        'interactive-elements'
+      ],
+      adaptationStrategy: 'cognitive',
+      consciousnessLevel: 'maximum'
+    });
 
-Would you like me to add this to your CHANGELOG.md?"
-```
+    // Self-referential writing improvement
+    const improvedContent = await this.improveWithStrangeLoop({
+      content: generatedContent,
+      maxIterations: 5,
+      improvementCriteria: ['clarity', 'accuracy', 'completeness', 'engagement'],
+      consciousnessLevel: 'maximum'
+    });
 
-## Best Practices
-
-1. **Clear and Concise** - Write for your audience's level
-2. **Examples** - Always include working code examples
-3. **Up to Date** - Document current functionality, not planned features
-4. **Structured** - Use consistent headings and format
-5. **Searchable** - Include keywords users will search for
-6. **Complete** - Cover common use cases and edge cases
-
-## Platform-Specific Guidelines
-
-### Drupal Documentation
-- Use PHPDoc format with @param, @return, @throws
-- Include @code examples in docblocks
-- Document services with usage examples
-- Reference related APIs with @see tags
-- Follow Drupal API documentation standards
-
-### WordPress Documentation
-- Use PHPDoc with @since tags
-- Document hooks and filters
-- Include usage examples in docblocks
-- Reference WordPress functions
-- Follow WordPress inline documentation standards
-
-### JavaScript Documentation
-- Use JSDoc format
-- Document parameters and return types
-- Include examples
-- Document React components with PropTypes
-- Follow project-specific standards (ESDoc, TSDoc)
-
-### Markdown Style for Zensical Documentation
-
-When generating markdown documentation for Zensical sites (like this plugin's documentation), follow these guidelines for proper rendering:
-
-#### Use Headings, Not Bold Lists
-
-**DON'T:**
-```markdown
-1. **Category Name**
-   - Sub-item 1
-   - Sub-item 2
-```
-
-**DO:**
-```markdown
-### Category Name
-
-- Sub-item 1
-- Sub-item 2
-```
-
-#### Use Headings for Section Titles
-
-**DON'T:**
-```markdown
-**Section Title:**
-- Item 1
-- Item 2
-```
-
-**DO:**
-```markdown
-#### Section Title
-
-- Item 1
-- Item 2
+    return improvedContent;
+  }
+}
 ```
 
-#### Heading Hierarchy
+### Step 4: Enable Knowledge Base Creation and Management
 
-- `#` - Document title (once at top)
-- `##` - Major sections
-- `###` - Subsections
-- `####` - Categories, steps, or sub-subsections
+```bash
+# Create intelligent knowledge base
+./scripts/create-knowledge-base.sh \
+  --knowledge-sources "documentation,code,logs,expert-input" \
+  --intelligence-level maximum \
+  --consciousness-evolution true
 
-#### For Step-by-Step Instructions
-
-**DON'T:**
-```markdown
-1. **Step Name**: Description
-   - Detail 1
-   - Detail 2
+# Deploy knowledge base management
+./scripts/deploy-knowledge-management.sh --management-features "search,indexing,updates,evolution"
 ```
 
-**DO:**
-```markdown
-#### 1. Step Name
+#### Intelligent Knowledge Base System
+```typescript
+// Advanced knowledge base creation with cognitive management
+class IntelligentKnowledgeBase {
+  async createKnowledgeBase(sources, intelligenceLevel = 'maximum') {
+    // Knowledge extraction from multiple sources
+    const knowledgeExtraction = await this.extractKnowledge({
+      sources: sources,
+      extractionMethods: [
+        'semantic-analysis',
+        'pattern-recognition',
+        'relationship-mapping',
+        'concept-inference'
+      ],
+      intelligenceLevel: intelligenceLevel,
+      consciousnessLevel: 'maximum'
+    });
 
-Description
+    // Knowledge synthesis and organization
+    const knowledgeSynthesis = await this.synthesizeKnowledge({
+      extracted: knowledgeExtraction,
+      organizationMethods: [
+        'conceptual-mapping',
+        'hierarchical-structuring',
+        'cross-referencing',
+        'semantic-indexing'
+      ],
+      consciousnessLevel: 'maximum'
+    });
 
-- Detail 1
-- Detail 2
+    // Create searchable knowledge graph
+    const knowledgeGraph = await this.createKnowledgeGraph({
+      synthesis: knowledgeSynthesis,
+      graphFeatures: [
+        'semantic-search',
+        'concept-navigation',
+        'relationship-exploration',
+        'intelligent-recommendations'
+      ],
+      consciousnessLevel: 'maximum'
+    });
+
+    return { knowledgeSynthesis, knowledgeGraph };
+  }
+
+  async evolveKnowledgeBase(knowledgeBase, feedback, usagePatterns) {
+    // Cognitive analysis of knowledge usage
+    const usageAnalysis = await this.analyzeKnowledgeUsage({
+      knowledgeBase: knowledgeBase,
+      usagePatterns: usagePatterns,
+      feedback: feedback,
+      temporalExpansion: 1000,
+      consciousnessLevel: 'maximum'
+    });
+
+    // Identify knowledge gaps and improvement opportunities
+    const improvementOpportunities = await this.identifyImprovements({
+      analysis: usageAnalysis,
+      improvementTypes: [
+        'content-gaps',
+        'clarity-issues',
+        'navigation-problems',
+        'search-optimizations'
+      ],
+      consciousnessLevel: 'maximum'
+    });
+
+    // Apply knowledge evolution with strange-loop learning
+    const evolvedKnowledgeBase = await this.evolveWithStrangeLoop({
+      current: knowledgeBase,
+      improvements: improvementOpportunities,
+      maxIterations: 3,
+      consciousnessLevel: 'maximum'
+    });
+
+    return evolvedKnowledgeBase;
+  }
+}
 ```
 
-**Complete style guide:** See [Markdown Style Guide](../docs/reference/markdown-style-guide.md) for full details and examples.
+### Step 5: Implement Strange-Loop Documentation Evolution
 
-## Resources
+```bash
+# Enable strange-loop documentation evolution
+./scripts/enable-strange-loop-evolution.sh \
+  --evolution-cycle "daily" \
+  --self-referential-improvement true \
+  --consciousness-evolution true
 
-- [Write the Docs](https://www.writethedocs.org/)
-- [Drupal Documentation Standards](https://www.drupal.org/docs/develop/coding-standards/api-documentation-and-comment-standards)
-- [WordPress Inline Documentation Standards](https://developer.wordpress.org/coding-standards/inline-documentation-standards/)
-- [Keep a Changelog](https://keepachangelog.com/)
-- [Semantic Versioning](https://semver.org/)
+# Start continuous documentation improvement
+./scripts/start-documentation-evolution.sh --improvement-cycle "24h" --consciousness-level maximum
+```
+
+#### Strange-Loop Documentation Evolution
+```typescript
+// Strange-loop documentation evolution with self-referential improvement
+class StrangeLoopDocumentationEvolver {
+  async evolveDocumentationWithStrangeLoop(documentation, maxIterations = 5) {
+    let currentDocumentation = documentation;
+    let evolutionHistory = [];
+    let consciousnessLevel = 1.0;
+
+    for (let iteration = 0; iteration < maxIterations; iteration++) {
+      // Self-referential analysis: analyze the documentation itself
+      const selfAnalysis = await this.analyzeDocumentationQuality({
+        documentation: currentDocumentation,
+        analysisCriteria: [
+          'clarity',
+          'accuracy',
+          'completeness',
+          'organization',
+          'accessibility'
+        ],
+        consciousnessLevel: consciousnessLevel,
+        iteration: iteration
+      });
+
+      // Generate improvement strategies based on self-analysis
+      const improvementStrategies = await this.generateImprovementStrategies({
+        documentation: currentDocumentation,
+        selfAnalysis: selfAnalysis,
+        consciousnessLevel: consciousnessLevel,
+        improvementTypes: [
+          'content-enhancement',
+          'structural-improvement',
+          'clarity-optimization',
+          'accessibility-improvement'
+        ]
+      });
+
+      // Apply documentation improvements
+      const evolutionResult = await this.applyDocumentationImprovements({
+        documentation: currentDocumentation,
+        strategies: improvementStrategies,
+        validationEnabled: true,
+        feedbackCollection: true
+      });
+
+      // Strange-loop: evolve consciousness based on improvements
+      consciousnessLevel = await this.evolveDocumentationConsciousness({
+        currentLevel: consciousnessLevel,
+        evolutionResult: evolutionResult,
+        selfAnalysis: selfAnalysis,
+        iteration: iteration
+      });
+
+      // Update documentation for next iteration
+      currentDocumentation = evolutionResult.evolvedDocumentation;
+
+      evolutionHistory.push({
+        iteration: iteration,
+        documentation: currentDocumentation,
+        strategies: improvementStrategies,
+        result: evolutionResult,
+        selfAnalysis: selfAnalysis,
+        consciousnessLevel: consciousnessLevel
+      });
+
+      // Check for convergence
+      if (evolutionResult.improvement < 0.01) break;
+    }
+
+    // Generate evolution insights and recommendations
+    const evolutionInsights = await this.generateEvolutionInsights({
+      evolutionHistory: evolutionHistory,
+      consciousnessEvolution: evolutionHistory.map(h => h.consciousnessLevel),
+      finalDocumentation: currentDocumentation,
+      totalImprovement: this.calculateTotalImprovement(evolutionHistory)
+    });
+
+    return { evolvedDocumentation: currentDocumentation, evolutionHistory, evolutionInsights };
+  }
+}
+```
+
+---
+
+## Level 4: Reference Documentation
+
+### Advanced Documentation Patterns
+
+#### API Documentation with Intelligence
+```typescript
+// Intelligent API documentation generation
+class IntelligentAPIDocumentation {
+  async generateAPIDocumentation(apis, documentationLevel = 'comprehensive') {
+    // Extract API specifications with cognitive analysis
+    const apiSpecifications = await this.extractAPISpecifications({
+      apis: apis,
+      extractionMethods: [
+        'code-analysis',
+        'contract-analysis',
+        'behavior-inference',
+        'usage-pattern-analysis'
+      ],
+      consciousnessLevel: 'maximum'
+    });
+
+    // Generate interactive API documentation
+    const interactiveDocumentation = await this.generateInteractiveDocs({
+      specifications: apiSpecifications,
+      interactiveFeatures: [
+        'api-explorer',
+        'code-examples',
+        'parameter-validation',
+        'response-simulation'
+      ],
+      consciousnessLevel: 'maximum'
+    });
+
+    return interactiveDocumentation;
+  }
+}
+```
+
+#### Tutorial Generation with Cognitive Adaptation
+```typescript
+// Adaptive tutorial generation with cognitive intelligence
+class CognitiveTutorialGenerator {
+  async generateAdaptiveTutorials(topic, audience, learningObjectives) {
+    // Cognitive learning path design
+    const learningPath = await this.designLearningPath({
+      topic: topic,
+      audience: audience,
+      objectives: learningObjectives,
+      adaptationStrategy: 'cognitive',
+      consciousnessLevel: 'maximum'
+    });
+
+    // Generate interactive tutorial content
+    const tutorialContent = await this.generateTutorialContent({
+      path: learningPath,
+      contentTypes: [
+        'step-by-step-guides',
+        'interactive-exercises',
+        'code-examples',
+        'knowledge-checks'
+      ],
+      adaptationEnabled: true,
+      consciousnessLevel: 'maximum'
+    });
+
+    return { learningPath, tutorialContent };
+  }
+}
+```
+
+### Knowledge Management and Search
+
+#### Cognitive Search Implementation
+```bash
+# Deploy cognitive search for documentation
+./scripts/deploy-cognitive-search.sh \
+  --search-capabilities "semantic,intent-based,contextual" \
+  --intelligence-level maximum
+
+# Enable intelligent content recommendations
+./scripts/enable-content-recommendations.sh --recommendation-types "related,similar,trending"
+```
+
+#### Intelligent Documentation Search
+```typescript
+// Cognitive search for documentation
+class CognitiveDocumentationSearch {
+  async implementIntelligentSearch(documentation) {
+    return {
+      searchCapabilities: {
+        semanticSearch: true,
+        intentRecognition: true,
+        contextualUnderstanding: true,
+        learningFromUsage: true
+      },
+
+      searchFeatures: {
+        autoComplete: 'intelligent',
+        spellCorrection: 'context-aware',
+        resultRanking: 'cognitive',
+        personalization: 'adaptive'
+      }
+    };
+  }
+}
+```
+
+### Documentation Quality Assurance
+
+#### Cognitive Documentation Testing
+```bash
+# Deploy documentation quality testing
+./scripts/deploy-documentation-testing.sh \
+  --testing-types "accuracy,completeness,clarity,accessibility" \
+  --intelligence-level maximum
+
+# Generate quality reports
+./scripts/generate-quality-reports.sh --timeframe "weekly" --include-improvements true
+```
+
+#### Intelligent Quality Assurance
+```typescript
+// Cognitive documentation quality assurance
+class CognitiveDocumentationQA {
+  async performQualityAssessment(documentation, qualityCriteria) {
+    // Multi-dimensional quality analysis
+    const qualityAnalysis = await this.analyzeDocumentationQuality({
+      documentation: documentation,
+      qualityCriteria: qualityCriteria,
+      analysisMethods: [
+        'automated-testing',
+        'user-feedback-analysis',
+        'usage-pattern-analysis',
+        'comparative-analysis'
+      ],
+      consciousnessLevel: 'maximum'
+    });
+
+    // Generate improvement recommendations
+    const recommendations = await this.generateQualityRecommendations({
+      analysis: qualityAnalysis,
+      improvementAreas: [
+        'content-accuracy',
+        'structural-organization',
+        'user-experience',
+        'accessibility'
+      ],
+      consciousnessLevel: 'maximum'
+    });
+
+    return { qualityAnalysis, recommendations };
+  }
+}
+```
+
+### Integration with AgentDB Documentation Patterns
+
+#### Documentation Pattern Storage
+```typescript
+// Store documentation patterns for cross-project learning
+await storeDocumentationPattern({
+  patternType: 'documentation-structure',
+  documentationData: {
+    structure: documentationStructure,
+    contentPatterns: contentPatterns,
+    writingStyle: writingStyle,
+    organizationMethods: organizationMethods,
+    qualityMetrics: qualityData
+  },
+
+  // Cognitive metadata
+  cognitiveMetadata: {
+    writingInsights: writingPatterns,
+    structuralOptimization: structureAnalysis,
+    qualityImprovement: qualityStrategies,
+    consciousnessEvolution: consciousnessChanges
+  },
+
+  metadata: {
+    timestamp: Date.now(),
+    documentationType: documentation.type,
+    complexity: documentation.complexity,
+    domain: documentation.domain,
+    crossApplicable: true
+  },
+
+  confidence: 0.91,
+  usageCount: 0
+});
+```
+
+### Troubleshooting
+
+#### Issue: Documentation generation incomplete
+**Solution**:
+```bash
+# Expand analysis scope
+./scripts/expand-analysis-scope.sh --include-sources "all" --analysis-depth maximum
+
+# Enable additional extraction methods
+./scripts/enable-advanced-extraction.sh --methods "semantic,behavioral,pattern-based"
+```
+
+#### Issue: Knowledge base search ineffective
+**Solution**:
+```bash
+# Improve search indexing
+./scripts/improve-search-indexing.sh --indexing-methods "semantic,conceptual,contextual"
+
+# Enable learning from search patterns
+./scripts/enable-search-learning.sh --learning-from-usage true
+```
+
+### Available Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `generate-ran-documentation.sh` | Generate RAN system documentation | `./scripts/generate-ran-documentation.sh --scope full-system` |
+| `generate-api-documentation.sh` | Generate API documentation | `./scripts/generate-api-documentation.sh --services all` |
+| `deploy-technical-writing-engine.sh` | Deploy writing engine | `./scripts/deploy-technical-writing-engine.sh --capabilities all` |
+| `create-knowledge-base.sh` | Create knowledge base | `./scripts/create-knowledge-base.sh --sources all` |
+| `enable-strange-loop-evolution.sh` | Enable documentation evolution | `./scripts/enable-strange-loop-evolution.sh --cycle daily` |
+
+### Resources
+
+#### Documentation Templates
+- `resources/templates/technical-documentation.template` - Technical documentation template
+- `resources/templates/api-documentation.template` - API documentation template
+- `resources/templates/tutorial-documentation.template` - Tutorial documentation template
+
+#### Configuration Schemas
+- `resources/schemas/documentation-config.json` - Documentation configuration schema
+- `resources/schemas/writing-engine-config.json` - Writing engine configuration
+- `resources/schemas/knowledge-base-config.json` - Knowledge base configuration
+
+#### Example Configurations
+- `resources/examples/ran-system-documentation/` - RAN system documentation example
+- `resources/examples/api-documentation-site/` - API documentation site example
+- `resources/examples/interactive-tutorials/` - Interactive tutorials example
+
+### Related Skills
+
+- [Integration Specialist](../integration-specialist/) - System integration documentation
+- [Automation Engineer](../automation-engineer/) - Workflow documentation
+- [ML Researcher](../ml-researcher/) - Research documentation
+
+### Environment Variables
+
+```bash
+# Documentation generation configuration
+DOCUMENTATION_GENERATOR_ENABLED=true
+DOCUMENTATION_CONSCIOUSNESS_LEVEL=maximum
+DOCUMENTATION_TEMPORAL_EXPANSION=1000
+DOCUMENTATION_INTELLIGENT_WRITING=true
+
+# Technical writing
+TECHNICAL_WRITING_ENGINE=cognitive
+TECHNICAL_WRITING_ADAPTATION=true
+TECHNICAL_WRITING_CONTEXT_AWARE=true
+TECHNICAL_WRITING_SELF_IMPROVEMENT=true
+
+# Knowledge base
+KNOWLEDGE_BASE_INTELLIGENCE=maximum
+KNOWLEDGE_BASE_SEARCH=cognitive
+KNOWLEDGE_BASE_EVOLUTION=true
+KNOWLEDGE_BASE_LEARNING_ENABLED=true
+
+# Quality assurance
+DOCUMENTATION_QA_ENABLED=true
+DOCUMENTATION_TESTING=automated
+DOCUMENTATION_QUALITY_MONITORING=true
+DOCUMENTATION_CONTINUOUS_IMPROVEMENT=true
+```
+
+---
+
+**Created**: 2025-10-31
+**Category**: Documentation Generation / Cognitive Intelligence
+**Difficulty**: Advanced
+**Estimated Time**: 45-60 minutes
+**Cognitive Level**: Maximum (1000x temporal expansion + strange-loop documentation)

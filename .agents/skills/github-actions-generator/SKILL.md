@@ -1,350 +1,175 @@
 ---
 name: github-actions-generator
-description: Create, generate, or scaffold GitHub Actions workflows, action.yml, or .github/workflows CI/CD pipelines.
+type: standard
+depth: full
+description: >-
+  Generates GitHub Actions workflows and custom actions (composite/Docker/JavaScript)
+  with SHA-pinned supply chain security, SLSA attestation, OIDC federation, and
+  harden-runner enforcement. Use when creating CI/CD pipelines, reusable workflows,
+  monorepo CI patterns, container build/deploy orchestration, or advanced triggers
+  (workflow_run, dispatch, ChatOps). Not for validating existing workflows—use
+  github-actions-validator.
 ---
 
-# GitHub Actions Generator
+# [H1][GITHUB-ACTIONS-GENERATOR]
+>**Dictum:** *Workflow generation enforces security, performance, and supply chain integrity.*
 
-Generate production-ready GitHub Actions workflows and custom actions following current best practices, security standards, and naming conventions. All generated resources are automatically validated using the devops-skills:github-actions-validator skill.
+<br>
 
-## Quick Reference
+Generate production-ready GitHub Actions workflows and custom actions. Validate all output with `github-actions-validator`.
 
-| Capability | When to Use | Reference |
-|------------|-------------|-----------|
-| Workflows | CI/CD, automation, testing | `references/best-practices.md` |
-| Composite Actions | Reusable step combinations | `references/custom-actions.md` |
-| Docker Actions | Custom environments/tools | `references/custom-actions.md` |
-| JavaScript Actions | API interactions, complex logic | `references/custom-actions.md` |
-| Reusable Workflows | Shared patterns across repos | `references/advanced-triggers.md` |
-| Security Scanning | Dependency review, SBOM | `references/best-practices.md` |
-| Modern Features | Summaries, environments | `references/modern-features.md` |
+**Tasks:**
+1. Gather requirements — triggers, runners, dependencies, environments, security posture.
+2. Read [→best-practices.md](./references/best-practices.md) — security hardening, supply chain, performance, anti-patterns.
+3. Read [→version-discovery.md](./references/version-discovery.md) — SHA resolution protocol, action index, permissions.
+4. Read [→expressions-and-contexts.md](./references/expressions-and-contexts.md) — contexts, functions, injection prevention.
+5. (advanced triggers) Read [→advanced-triggers.md](./references/advanced-triggers.md) — workflow_run, dispatch, ChatOps, merge queue.
+6. (custom actions) Read [→custom-actions.md](./references/custom-actions.md) — composite, Docker, JavaScript action authoring.
+7. Resolve action versions — `git ls-remote`, Context7 MCP, or WebSearch for latest SHA.
+8. Generate — SHA-pinned actions, minimal permissions, concurrency, caching, timeouts, harden-runner.
+9. Validate with `github-actions-validator`.
+10. Fix and re-validate until passing.
 
----
+**Scope:**
+- Workflow files (`.github/workflows/*.yml`).
+- Custom actions — composite, Docker, JavaScript (`.github/actions/*/action.yml`).
+- Reusable workflows (`workflow_call`).
+- Supply chain — SLSA attestation, SBOM, Cosign signing.
+- Monorepo CI — Nx affected detection, sparse checkout, pnpm workspace caching.
 
-## Trigger Decision Tree
+**Domain Navigation Map:**
 
-Route every request through this decision tree before reading references or generating files:
+| [INDEX] | [DOMAIN]              | [REFERENCE]                                                            | [LOAD_WHEN]                                                |
+| :-----: | --------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- |
+|   [1]   | **Best Practices**    | [→best-practices.md](references/best-practices.md)                     | Permissions, caching, concurrency, runners, anti-patterns. |
+|   [2]   | **Version Discovery** | [→version-discovery.md](references/version-discovery.md)               | Action references, SHA pinning, supply chain integrity.    |
+|   [3]   | **Expressions**       | [→expressions-and-contexts.md](references/expressions-and-contexts.md) | Conditionals, dynamic values, injection prevention.        |
+|   [4]   | **Advanced Triggers** | [→advanced-triggers.md](references/advanced-triggers.md)               | Workflow chaining, dispatch, ChatOps, merge queue.         |
+|   [5]   | **Custom Actions**    | [→custom-actions.md](references/custom-actions.md)                     | Composite, Docker, JavaScript action authoring.            |
 
-1. If the user asks for `.github/workflows/*.yml` CI/CD automation, choose **Workflow Generation**.
-2. If the user asks for `action.yml` or a reusable step package, choose **Custom Action Generation**.
-3. If the user asks for `workflow_call` or shared pipelines across repositories, choose **Reusable Workflow Generation**.
-4. If the request includes security-only scanning (dependency review, SBOM, CodeQL), stay on **Workflow Generation** with the security pattern.
-5. If intent is ambiguous, ask one disambiguation question: "Do you want a workflow, a custom action, or a reusable workflow?"
-
-## Progressive Disclosure Route
-
-Load only what is needed for the selected route, in this order:
-
-| Route | Load First (required) | Load Next (only if needed) | Primary Template |
-|-------|------------------------|------------------------------|------------------|
-| Workflow Generation | `references/best-practices.md` | `references/common-actions.md`, `references/expressions-and-contexts.md`, `references/modern-features.md` | `assets/templates/workflow/basic_workflow.yml` |
-| Custom Action Generation | `references/custom-actions.md` | `references/best-practices.md` | `assets/templates/action/composite/action.yml`, `assets/templates/action/docker/`, `assets/templates/action/javascript/` |
-| Reusable Workflow Generation | `references/advanced-triggers.md` | `references/best-practices.md`, `references/common-actions.md` | `assets/templates/workflow/reusable_workflow.yml` |
-
-If a required reference/template is unavailable, continue with the closest available reference and report the fallback explicitly in output.
+[REFERENCE] [→index.md](./index.md) — Complete file listing.
 
 ---
+## [1][STANDARDS]
+>**Dictum:** *Mandatory standards enforce baseline quality across all generated workflows.*
 
-## Core Capabilities
+<br>
 
-### 1. Generate Workflows
+Every generated workflow enforces defense-in-depth: supply chain integrity prevents compromised actions from executing, minimal permissions limit blast radius if a job is compromised, and harden-runner detects anomalous behavior at runtime. These layers are independent — failure of one leaves others intact.
 
-**Triggers:** "Create a workflow for...", "Build a CI/CD pipeline..."
+[CRITICAL]:
+- [ALWAYS] SHA-pin every `uses:` reference — mutable tags (`@v1`, `@main`) enable supply chain attacks. The tj-actions incident (CVE-2025-30066) compromised 23,000+ repos via tag retargeting.
+- [ALWAYS] `step-security/harden-runner` as first step in every job — detected the tj-actions breach before any other tool.
+- [ALWAYS] Top-level `permissions: {}` (deny-all default); grant minimal per-job permissions.
+- [ALWAYS] `timeout-minutes:` on every job — prevents runaway billing on stuck workflows.
 
-**Process:**
-1. Understand requirements (triggers, runners, dependencies)
-2. Define trust boundaries (internal branches vs fork PRs vs external triggers)
-3. Set default `permissions` to read-only, then elevate only per job when required
-4. Reference `references/best-practices.md` for patterns
-5. Reference `references/common-actions.md` for action versions
-6. Generate workflow with:
-   - Semantic names, pinned actions (SHA), explicit permissions
-   - Concurrency controls, caching, matrix strategies
-   - Fork-safe PR handling (no secrets in untrusted contexts)
-7. **Validate** with devops-skills:github-actions-validator skill
-8. Fix issues and re-validate if needed
+[IMPORTANT]:
+- [ALWAYS] OIDC federation (`id-token: write`) for cloud auth — eliminates static credentials entirely.
+- [ALWAYS] `actions/create-github-app-token` for cross-repo ops — scoped, 1-hour expiry, survives offboarding.
+- [ALWAYS] `>> $GITHUB_OUTPUT` for step outputs; `>> $GITHUB_STEP_SUMMARY` for job summaries.
+- [NEVER] Direct `${{ }}` interpolation of untrusted input in `run:` blocks — route through `env:` indirection.
 
-**Minimal Example:**
-```yaml
-name: CI Pipeline
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-        with:
-          node-version: '24'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm test
-```
-
-**Untrusted PR Guardrail (required for secret-using jobs):**
-```yaml
-jobs:
-  deploy:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-```
-
-### 2. Generate Custom Actions
-
-**Triggers:** "Create a composite action...", "Build a Docker action...", "Create a JavaScript action..."
-
-**Types:**
-- **Composite:** Combine multiple steps → Fast startup
-- **Docker:** Custom environment/tools → Isolated
-- **JavaScript:** API access, complex logic → Fastest
-
-**Process:**
-1. Use templates from `assets/templates/action/`
-2. Follow structure in `references/custom-actions.md`
-3. Include branding, inputs/outputs, documentation
-4. **Validate** with devops-skills:github-actions-validator skill
-
-See `references/custom-actions.md` for:
-- Action metadata and branding
-- Directory structure patterns
-- Versioning and release workflows
-
-### 3. Generate Reusable Workflows
-
-**Triggers:** "Create a reusable workflow...", "Make this workflow callable..."
-
-**Key Elements:**
-- `workflow_call` trigger with typed inputs
-- Explicit secrets (avoid `secrets: inherit`)
-- Explicit trusted-caller expectations (document org/repo boundaries)
-- Outputs mapped from job outputs
-- Minimal permissions
-
-```yaml
-on:
-  workflow_call:
-    inputs:
-      environment:
-        required: true
-        type: string
-    secrets:
-      deploy-token:
-        required: false
-    outputs:
-      result:
-        value: ${{ jobs.build.outputs.result }}
-```
-
-When secrets are required, pass only the exact secret names needed and prefer environment protection rules for deployment stages.
-
-See `references/advanced-triggers.md` for complete patterns.
-
-### 4. Generate Security Workflows
-
-**Triggers:** "Add security scanning...", "Add dependency review...", "Generate SBOM..."
-
-**Components:**
-- **Dependency Review:** `actions/dependency-review-action@v4`
-- **SBOM Attestations:** `actions/attest-sbom@v2`
-- **CodeQL Analysis:** `github/codeql-action`
-
-**Permission Model:**
-Use a read-only workflow-level baseline, then elevate only in the security job that requires write scopes.
-```yaml
-permissions:
-  contents: read
-
-jobs:
-  security-scan:
-    permissions:
-      contents: read
-      security-events: write  # For CodeQL
-      id-token: write         # For attestations
-      attestations: write     # For attestations
-```
-
-See `references/best-practices.md` section on security.
-
-### 5. Modern Features
-
-**Triggers:** "Add job summaries...", "Use environments...", "Run in container..."
-
-See `references/modern-features.md` for:
-- Job summaries (`$GITHUB_STEP_SUMMARY`)
-- Deployment environments with approvals
-- Container jobs with services
-- Workflow annotations
-
-### 6. Third-Party Action Documentation and Citation
-
-When using third-party actions (any `uses:` entry not in the same repository):
-
-1. **Search for documentation:**
-   ```
-   "[owner/repo] [version] github action documentation"
-   ```
-
-2. **Or use Context7 MCP:**
-   - `mcp__context7__resolve-library-id` to find action
-   - `mcp__context7__query-docs` for documentation
-
-3. **Pin to SHA with version comment:**
-   ```yaml
-   - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-   ```
-
-4. **Cite source and version in the response:**
-   - Action source (repository URL)
-   - Version source (release/tag/changelog URL)
-   - Selected commit SHA and human-readable version
-   - Access date for the source used
-
-See `references/common-actions.md` for pre-verified action versions.
+[REFERENCE] [→best-practices.md](./references/best-practices.md) — Security checklist, supply chain controls, anti-patterns.
 
 ---
+## [2][TEMPLATES]
+>**Dictum:** *Templates scaffold canonical workflow and action structure.*
 
-## Validation Workflow
+<br>
 
-**CRITICAL:** Every generated resource MUST be validated.
+Templates use `[PLACEHOLDER]` syntax for generation-time substitution. SHA resolution happens at generation time via the discovery protocol — templates contain placeholder SHAs, not static pins.
 
-1. Generate workflow/action file
-2. Invoke `devops-skills:github-actions-validator` skill
-3. If errors: fix and re-validate
-4. If success: present with usage instructions
+### [2.1][PLACEHOLDER_CONVENTION]
 
-**Skip validation only for:**
-- Partial code snippets
-- Documentation examples
-- User explicitly requests skip
+All templates use a unified `[UPPER_SNAKE_CASE]` placeholder convention:
 
-## Fallback Behavior (Tooling and Environment Constraints)
+| [CATEGORY]      | [PLACEHOLDERS]                                                              |
+| --------------- | --------------------------------------------------------------------------- |
+| **Identity**    | `[ACTION_NAME]`, `[WORKFLOW_NAME]`, `[DESCRIPTION]`, `[AUTHOR_NAME]`        |
+| **Runtime**     | `[RUNTIME_VERSION]`, `[RUNTIME_ENV_KEY]`, `[ENABLE_CMD]`                    |
+| **Package Mgr** | `[PACKAGE_MANAGER]`, `[INSTALL_CMD]`                                        |
+| **Build/Test**  | `[BUILD_CMD]`, `[LINT_CMD]`, `[TEST_CMD]`, `[BUILD_PATH]`, `[RESULTS_PATH]` |
+| **Deploy**      | `[ENV_NAME]`, `[ENV_URL]`, `[DEPLOY_CMD]`, `[VERIFY_CMD]`                   |
+| **Secrets**     | `[SECRET_KEY]`, `[SECRET_NAME]`, `[REGISTRY_TOKEN]`                         |
+| **Docker**      | `[BASE_IMAGE]`, `[BUILDER_IMAGE]`, `[ENTRYPOINT]`                           |
 
-If required tooling or network access is unavailable, use this deterministic fallback order:
+### [2.2][HARDEN_RUNNER_SCOPE]
 
-1. If `devops-skills:github-actions-validator` is unavailable, run local fallback checks:
-   - `actionlint` (if installed)
-   - `yamllint` (if installed)
-   - manual YAML/schema review with a clear "not tool-validated" note
-2. If Context7 or internet access is unavailable:
-   - use `references/common-actions.md` for known action versions
-   - state that external version verification could not be completed
-3. If a template path is missing:
-   - generate from the closest template pattern in `assets/templates/`
-   - document which template was substituted
+`harden-runner` is included as the first step in every **workflow** job template (basic, reusable). **Action** templates (composite, Docker, JavaScript) do NOT include `harden-runner` — the **calling workflow** is responsible for adding it as the first step in the job that invokes the action. Actions are steps, not jobs.
 
-Fallback usage must always be reported in the final output.
+### [2.3][TEMPLATE_INDEX]
 
----
+| [INDEX] | [TEMPLATE]            | [PATH]                                            | [SCAFFOLDS]                                                        |
+| :-----: | --------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+|   [1]   | **Basic Workflow**    | `assets/templates/workflow/basic_workflow.yml`    | CI pipeline: lint, test, build, deploy with parameterized runtime. |
+|   [2]   | **Reusable Workflow** | `assets/templates/workflow/reusable_workflow.yml` | `workflow_call` with typed inputs, secrets, version extraction.    |
+|   [3]   | **Composite Action**  | `assets/templates/action/composite/action.yml`    | Multi-step action with parameterized runtime and error handling.   |
+|   [4]   | **Docker Action**     | `assets/templates/action/docker/action.yml`       | Container action with distroless multi-stage Dockerfile pattern.   |
+|   [5]   | **JavaScript Action** | `assets/templates/action/javascript/action.yml`   | Node 24 action with pre/post lifecycle, typed error handling.      |
 
-## Mandatory Standards
-
-All generated resources must follow:
-
-| Standard | Implementation |
-|----------|---------------|
-| **Security** | Pin to SHA, minimal permissions, mask secrets |
-| **Performance** | Caching, concurrency, shallow checkout |
-| **Naming** | Descriptive names, lowercase-hyphen files |
-| **Error Handling** | Timeouts, cleanup with `if: always()` |
-
-See `references/best-practices.md` for complete guidelines.
+[REFERENCE] [→custom-actions.md](./references/custom-actions.md) — Action type selection, metadata, runtime deprecation.
 
 ---
+## [3][EXAMPLES]
+>**Dictum:** *Examples demonstrate production patterns for common scenarios.*
 
-## Resources
+<br>
 
-### Reference Documents
+Each example demonstrates distinct patterns with minimal overlap. Load relevant examples before generation to match the target scenario.
 
-| Document | Content | When to Use |
-|----------|---------|-------------|
-| `references/best-practices.md` | Security, performance, patterns | Every workflow |
-| `references/common-actions.md` | Action versions, inputs, outputs | Public action usage |
-| `references/expressions-and-contexts.md` | `${{ }}` syntax, contexts, functions | Complex conditionals |
-| `references/advanced-triggers.md` | workflow_run, dispatch, ChatOps | Workflow orchestration |
-| `references/custom-actions.md` | Metadata, structure, versioning | Custom action creation |
-| `references/modern-features.md` | Summaries, environments, containers | Enhanced workflows |
-
-### Templates
-
-| Template | Location |
-|----------|----------|
-| Basic Workflow | `assets/templates/workflow/basic_workflow.yml` |
-| Reusable Workflow | `assets/templates/workflow/reusable_workflow.yml` |
-| Composite Action | `assets/templates/action/composite/action.yml` |
-| Docker Action | `assets/templates/action/docker/` |
-| JavaScript Action | `assets/templates/action/javascript/` |
+| [INDEX] | [EXAMPLE]                                | [PATH]                                          | [DEMONSTRATES]                                                    |
+| :-----: | ---------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
+|   [1]   | **Node.js CI**                           | `examples/workflows/nodejs-ci.yml`              | Matrix testing, caching, artifact upload, coverage, summaries.    |
+|   [2]   | **Docker Build + Push**                  | `examples/workflows/docker-build-push.yml`      | Multi-platform builds, GHCR, BuildKit caching, SLSA provenance.   |
+|   [3]   | **Monorepo CI**                          | `examples/workflows/monorepo-ci.yml`            | Nx affected detection, pnpm workspace, sparse checkout.           |
+|   [4]   | **PR Security Gate**                     | `examples/security/dependency-review.yml`       | Multi-job security: dep review, CodeQL, Gitleaks, triage.         |
+|   [5]   | **Container Supply Chain**               | `examples/security/sbom-attestation.yml`        | SBOM, Trivy severity gating, Cosign, gh attestation verify.       |
+|   [6]   | **Composite Action (setup-node-cached)** | `examples/actions/setup-node-cached/action.yml` | Smart caching, corepack detection, cache-dir resolution.          |
+|   [7]   | **ChatOps Dispatch**                     | `examples/workflows/chatops-dispatch.yml`       | Slash commands, injection prevention, App token, env indirection. |
+|   [8]   | **Multi-Cloud OIDC Auth**                | `examples/actions/oidc-cloud-auth/action.yml`   | Composite action: AWS/GCP/Azure OIDC, output normalization.       |
+|   [9]   | **Release + Deploy**                     | `examples/workflows/release-deploy.yml`         | Environment promotion, reusable workflow, concurrency groups.     |
+|  [10]   | **Docker Lint + Scan**                   | `examples/actions/docker-lint-scan/action.yml`  | Composite action: Trivy scan, hadolint, SARIF output.             |
+|  [11]   | **PR Change Router**                     | `examples/actions/pr-change-router/action.yml`  | Composite action: paths-filter, dynamic matrix, label sync.       |
 
 ---
+## [4][ACTION_DISCOVERY]
+>**Dictum:** *Runtime version resolution prevents stale SHA pins and supply chain drift.*
 
-## Common Patterns
+<br>
 
-### Matrix Testing
-```yaml
-strategy:
-  matrix:
-    os: [ubuntu-latest, windows-latest]
-    node: [18, 20, 22]
-  fail-fast: false
-```
+Static SHA catalogs decay — actions release frequently and stale pins miss security patches. Resolve versions at generation time. Never embed hardcoded SHAs in reference docs or templates.
 
-### Conditional Deployment
-```yaml
-deploy:
-  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-```
+**Resolution protocol:**
+1. `git ls-remote --tags https://github.com/{owner}/{repo}` — verify tag exists.
+2. `gh api repos/{owner}/{repo}/git/ref/tags/{tag} --jq '.object.sha'` — resolve tag to full SHA.
+3. Format: `owner/repo@<40-char-SHA> # vX.Y.Z`.
 
-### Artifact Sharing
-```yaml
-# Upload
-- uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
-  with:
-    name: build-${{ github.sha }}
-    path: dist/
+**Fallback methods:**
+- Context7 MCP: `resolve-library-id` then `get-library-docs` for action documentation.
+- WebSearch: `"[owner/repo] [version] github action"` for release notes.
 
-# Download (in dependent job)
-- uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
-  with:
-    name: build-${{ github.sha }}
-```
+[IMPORTANT]:
+- [ALWAYS] Verify the tag exists before pinning — deleted tags return empty results.
+- [ALWAYS] Include version comment suffix (`# vX.Y.Z`) — Dependabot/Renovate parse these for automated updates.
+- [NEVER] Embed static SHAs in reference files — they decay within weeks.
 
-### Third-Party Action Citation Block
-```text
-Third-party action citations:
-- actions/checkout: https://github.com/actions/checkout (version: v6.0.2, sha: de0fac2e4500dabe0009e67214ff5f5447ce83dd, accessed: 2026-02-28)
-```
+[REFERENCE] [→version-discovery.md](./references/version-discovery.md) — Discovery protocol, SHA pinning format, common actions index, automated maintenance.
 
 ---
+## [5][VALIDATION]
+>**Dictum:** *Gates prevent non-compliant workflow output.*
 
-## Done Criteria
+<br>
 
-The task is complete only when all checks below pass:
+[VERIFY] Completion:
+- [ ] Supply chain: Every `uses:` reference SHA-pinned with `# vX.Y.Z` comment suffix.
+- [ ] Security: Top-level `permissions: {}`, per-job minimal grants, `harden-runner` first step.
+- [ ] Injection: No direct `${{ github.event.* }}` in `run:` blocks — all through `env:` indirection.
+- [ ] Performance: Caching enabled, `concurrency` groups set, `timeout-minutes:` on every job.
+- [ ] Structure: Descriptive `name:` on workflow/jobs/steps, lowercase-hyphen filenames.
+- [ ] Outputs: `>> $GITHUB_OUTPUT` for data, `>> $GITHUB_STEP_SUMMARY` for summaries.
+- [ ] Agnosticism: No hardcoded package manager, build tool, or language-specific paths in templates.
+- [ ] Harden-runner: Workflow jobs include it; action templates note caller responsibility.
+- [ ] Validator: Output passed through `github-actions-validator` skill.
 
-1. The request route was selected using the trigger decision tree.
-2. Only the minimum required references/templates were loaded first.
-3. Every third-party action is pinned to a commit SHA and has source/version citation.
-4. Validation was run, or a skip exception/fallback path was explicitly documented.
-5. Output includes assumptions, security-sensitive decisions (permissions/secrets), and generated file paths.
-
----
-
-## Workflow Summary
-
-1. **Route** the request using the trigger decision tree
-2. **Load** the minimum references/templates for that route
-3. **Generate** using mandatory security and naming standards
-4. **Cite** and pin third-party actions (source, version, SHA)
-5. **Validate** with `devops-skills:github-actions-validator` (or documented fallback)
-6. **Fix and re-validate** until clean
-7. **Present** validated output with citations, assumptions, and file paths
+[REFERENCE] [→best-practices.md§ANTI_PATTERNS](./references/best-practices.md) — Known anti-patterns with specific remediations.

@@ -3,9 +3,7 @@ name: frame-macos-notification
 zh_name: "macOS 通知横幅"
 en_name: "macOS Notification Banner"
 emoji: "🔔"
-description: "Realistic macOS notification banner with app icon, title, and body, suited to video overlays or product teasers."
-zh_description: "拟真 macOS 通知 banner + app icon + 标题正文, 适合 video overlay / 产品发布预告"
-en_description: "Realistic macOS notification banner with app icon, title, and body, suited to video overlays or product teasers."
+description: "拟真 macOS 通知 banner + app icon + 标题正文, 适合 video overlay / 产品发布预告"
 category: card
 scenario: video
 aspect_hint: "1920×1080 视频或 480×120 横幅"
@@ -18,20 +16,6 @@ example_tagline: "Big Sur 磨砂玻璃 banner"
 example_desc: "App icon + 标题 + 双行正文, 视频角落叠加用"
 example_source_url: "https://hyperframes.heygen.com/catalog"
 example_source_label: "hyperframes · macos-notification"
-od:
-  mode: video
-  surface: video
-  scenario: video
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the macOS Notification Banner template to turn my content into a realistic macOS notification banner for a video overlay or product teaser. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「macOS 通知横幅」模板把我的内容做成一段「拟真 macOS 通知 banner + app icon + 标题正文, 适合 video overlay / 产品发布预告」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: macOS 通知横幅】

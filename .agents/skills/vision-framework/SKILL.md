@@ -6,11 +6,11 @@ description: "Implement computer vision features including text recognition (OCR
 # Vision Framework
 
 Detect text, faces, barcodes, objects, and body poses in images and video using
-on-device computer vision. Patterns target iOS 26+ with Swift 6.3,
+on-device computer vision. Patterns target iOS 26+ with Swift 6.2,
 backward-compatible where noted.
 
-See [references/vision-requests.md](references/vision-requests.md) for complete code patterns and
-[references/visionkit-scanner.md](references/visionkit-scanner.md) for DataScannerViewController integration.
+See `references/vision-requests.md` for complete code patterns and
+`references/visionkit-scanner.md` for DataScannerViewController integration.
 
 ## Contents
 
@@ -288,7 +288,7 @@ for index in indices {
 }
 ```
 
-See [references/vision-requests.md](references/vision-requests.md) for mask composition and Core Image filter
+See `references/vision-requests.md` for mask composition and Core Image filter
 integration patterns.
 
 ## Object Tracking
@@ -329,7 +329,7 @@ if let result = trackRequest.results?.first {
 
 ## Other Request Types
 
-Vision provides additional requests covered in [references/vision-requests.md](references/vision-requests.md):
+Vision provides additional requests covered in `references/vision-requests.md`:
 
 | Request | Purpose |
 |---|---|
@@ -384,7 +384,7 @@ For model conversion and optimization, see the `coreml` skill.
 ## VisionKit: DataScannerViewController
 
 `DataScannerViewController` provides a full-screen live camera scanner for text
-and barcodes. See [references/visionkit-scanner.md](references/visionkit-scanner.md) for complete patterns.
+and barcodes. See `references/visionkit-scanner.md` for complete patterns.
 
 ### Quick Start
 
@@ -414,7 +414,7 @@ present(scanner, animated: true) {
 ### SwiftUI Integration
 
 Wrap `DataScannerViewController` in `UIViewControllerRepresentable`. See
-[references/visionkit-scanner.md](references/visionkit-scanner.md) for the full implementation.
+`references/visionkit-scanner.md` for the full implementation.
 
 ## Common Mistakes
 
@@ -467,8 +467,8 @@ Wrap `DataScannerViewController` in `UIViewControllerRepresentable`. See
 
 ## References
 
-- Vision request patterns: [references/vision-requests.md](references/vision-requests.md)
-- VisionKit scanner integration: [references/visionkit-scanner.md](references/visionkit-scanner.md)
+- Vision request patterns: `references/vision-requests.md`
+- VisionKit scanner integration: `references/visionkit-scanner.md`
 - Apple docs: [Vision](https://sosumi.ai/documentation/vision) |
   [VisionKit](https://sosumi.ai/documentation/visionkit) |
   [RecognizeTextRequest](https://sosumi.ai/documentation/vision/recognizetextrequest) |

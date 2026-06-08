@@ -19,21 +19,16 @@
 
 ## Risk Tier Overview
 
-> ⚠️ **AI Omnibus (May 2026):** Extended Annex III deadline to **2 Dec 2027** and Annex I deadline to **2 Aug 2028**. The original 2 Aug 2026 and 2027 dates in the regulation text are superseded.
-
 | Tier | Regulation Path | Key Obligation | Applies From |
 |------|----------------|----------------|--------------|
-| **Prohibited** | Art. 5 | Complete ban — 8 categories from 2 Feb 2025; 9th (nudification/CSAM) from 2 Dec 2026 | 2 Feb 2025 / 2 Dec 2026 |
-| **High Risk — Annex III** | Art. 6(2) + Annex III | Full conformity regime | **2 Dec 2027** (AI Omnibus) |
-| **High Risk — Annex I** | Art. 6(1) + Annex I | Full conformity regime | **2 Aug 2028** (AI Omnibus) |
-| **Limited Risk** | Art. 50 | Transparency disclosure only | 2 Aug 2026 (new systems); 2 Dec 2026 grace period for pre-existing |
+| **Prohibited** | Art. 5 | Complete ban | 2 Feb 2025 |
+| **High Risk** | Art. 6 + Annex I/III | Full conformity regime | 2 Aug 2026 (Annex III) / 2027 (Annex I) |
+| **Limited Risk** | Art. 50 | Transparency disclosure only | 2 Aug 2026 |
 | **Minimal / No Risk** | — | Voluntary codes of conduct | — |
 
 ---
 
-## Art. 5 — Prohibited AI Practices (applies from 2 February 2025 for original 8; 2 Dec 2026 for 9th)
-
-**Commission guidance:** The AI Office published guidelines on all prohibited AI practices on **4 February 2025**, with practical examples for each category. Commission also published three studies on Art. 5 in **May 2026**. Always consult these alongside the article text.
+## Art. 5 — Prohibited AI Practices (All 8, applies from 2 February 2025)
 
 ### 5(1)(a) — Subliminal / Manipulative Techniques
 AI systems using subliminal techniques beyond a person's consciousness, or purposefully manipulative/deceptive techniques, that materially distort behavior and impair informed decision-making, causing or likely to cause significant harm to those persons or third parties.
@@ -65,13 +60,6 @@ Real-time RBI systems in publicly accessible spaces for law enforcement purposes
 - (iii) Identifying suspects of serious criminal offenses carrying ≥4-year sentences listed in Annex II
 
 **Procedural requirements for exceptions:** Prior judicial or independent administrative body authorization (post-hoc authorization within 24 hours for urgency); fundamental rights impact assessment; registration in EU AI database; report to market surveillance authority after each use. **Prohibited:** use to identify protected attributes.
-
-### 5(1)(i) — Non-Consensual Sexually Explicit / Intimate Imagery and CSAM *(AI Omnibus, applies from 2 Dec 2026)*
-AI systems capable of generating **non-consensual sexually explicit or intimate imagery** (including so-called "nudification" or "nudify" applications), or **child sexual abuse material (CSAM)**.
-
-**Safe harbour:** A system benefits from a safe harbour if it has **effective technical safeguards** that reliably prevent the prohibited outputs from being generated, even when the user attempts to do so. The safe harbour is lost if the safeguards are bypassed or deactivated.
-
-**Scope note:** This prohibition targets the capability of the AI system itself, not only its use in a specific deployment. A model or application whose principal or evident purpose is to produce such imagery is prohibited regardless of intent.
 
 ---
 
@@ -171,8 +159,6 @@ AI safety components managing or used in safety-critical management of: road tra
 ---
 
 ## Art. 50 — Limited Risk Transparency Obligations (applies from 2 August 2026)
-
-> **Implementation status (May 2026):** The AI Office published a **Code of Practice on Marking and Labelling of AI-generated Content** (1st draft Dec 2025; 2nd draft 5 March 2026; finalisation expected Q2 2026) and opened consultation on **draft Art. 50 transparency guidelines in May 2026**. No formal implementing act has been adopted yet. For pre-existing systems on market before 2 Aug 2026, a grace period applies until **2 December 2026** for the machine-readable marking requirement (Art. 50(2)).
 
 ### Chatbots and AI Interaction Systems (Art. 50(1))
 Providers must ensure users are informed they are interacting with an AI system, unless:

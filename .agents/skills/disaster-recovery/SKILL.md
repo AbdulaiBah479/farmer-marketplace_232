@@ -1,259 +1,227 @@
 ---
-name: disaster-recovery
-description: 灾难恢复
+id: SKL-disaster-DISASTERRECOVERY
+name: Disaster Recovery
+description: 'Disaster Recovery encompasses strategies and procedures for recovering
+  from catastrophic failures and ensuring business continuity. This includes backup
+  strategies, failover mechanisms, data recovery '
 version: 1.0.0
-author: terminal-skills
-tags: [backup, disaster-recovery, rto, rpo, failover, ha]
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
-# 灾难恢复
+# Disaster Recovery
 
-## 概述
-灾难恢复计划、RTO/RPO、故障切换技能。
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
-## 核心概念
+## Overview
+Disaster Recovery encompasses strategies and procedures for recovering from catastrophic failures and ensuring business continuity. This includes backup strategies, failover mechanisms, data recovery procedures, and business continuity planning.
 
-### RTO 与 RPO
-```
-RPO (Recovery Point Objective)
-- 可接受的数据丢失量
-- 决定备份频率
+**Core Principle**: "Plan for the worst, hope for the best. Test your recovery plan before you need it."
 
-RTO (Recovery Time Objective)  
-- 可接受的恢复时间
-- 决定恢复策略
+## Why This Matters
+- **Data Protection**: Prevents permanent data loss from catastrophic failures
+- **Business Continuity**: Ensures operations can resume quickly after major incidents
+- **Customer Trust**: Demonstrates commitment to data protection and reliability
+- **Compliance**: Meets regulatory requirements for data backup and retention
+- **Reduced Downtime**: Minimizes RTO (Recovery Time Objective) and RPO (Recovery Point Objective)
 
-示例：
-- RPO = 1小时 → 每小时备份
-- RTO = 4小时 → 需要热备或快速恢复
-```
+---
 
-### 恢复策略
-```
-冷备 (Cold)
-- 最低成本
-- 最长 RTO
-- 适合非关键系统
+## Core Concepts & Rules
 
-温备 (Warm)
-- 中等成本
-- 中等 RTO
-- 定期同步数据
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-热备 (Hot)
-- 最高成本
-- 最短 RTO
-- 实时同步
-```
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-## 数据库恢复
 
-### MySQL 恢复
-```bash
-# 从备份恢复
-mysql -u root -p < full_backup.sql
+## Inputs / Outputs / Contracts
+* **Inputs**:
+  - System architecture and component inventory
+  - Data classification and criticality levels
+  - RPO/RTO requirements per system
+  - Regulatory compliance requirements
+* **Entry Conditions**:
+  - Backup infrastructure is in place
+  - Recovery procedures are documented
+  - Team has been trained on recovery procedures
+* **Outputs**:
+  - Backup and recovery documentation
+  - Runbooks for disaster recovery
+  - Monitoring and alerting configuration
+* **Artifacts Required (Deliverables)**:
+  - Backup schedules and retention policies
+  - Recovery runbooks with step-by-step procedures
+  - Contact information for recovery teams and vendors
+* **Acceptance Evidence**:
+  - Successful backup restoration test (screenshot/log)
+  - Recovery drill results (RTO/RPO met)
+  - Compliance audit report
+* **Success Criteria**:
+  - RPO and RTO targets met for all critical systems
+  - Backups tested and verified regularly
+  - Recovery procedures validated through drills
 
-# 应用 binlog
-mysqlbinlog mysql-bin.000001 | mysql -u root -p
+## Skill Composition
+* **Depends on**: Failure Modes Analysis, Monitoring & Observability
+* **Compatible with**: Chaos Engineering, System Resilience patterns
+* **Conflicts with**: Systems without backup infrastructure
+* **Related Skills**: 
+  - [40-system-resilience/failure-modes](40-system-resilience/failure-modes/SKILL.md) - Understanding what to recover from
+  - [40-system-resilience/chaos-engineering](40-system-resilience/chaos-engineering/SKILL.md) - Testing recovery procedures
+  - [14-monitoring-observability/metrics-collection](14-monitoring-observability/metrics-collection/SKILL.md) - Detecting failures
 
-# 时间点恢复
-mysqlbinlog --stop-datetime="2024-01-15 10:00:00" mysql-bin.* | mysql -u root -p
+---
 
-# 主从切换
-# 在从库执行
-STOP SLAVE;
-RESET SLAVE ALL;
-# 应用程序切换连接
-```
+## Quick Start / Implementation Example
 
-### PostgreSQL 恢复
-```bash
-# 从备份恢复
-pg_restore -d database backup.dump
+1. Review requirements and constraints
+2. Set up development environment
+3. Implement core functionality following patterns
+4. Write tests for critical paths
+5. Run tests and fix issues
+6. Document any deviations or decisions
 
-# PITR 恢复
-# recovery.conf
-restore_command = 'cp /archive/%f %p'
-recovery_target_time = '2024-01-15 10:00:00'
-
-# 主从切换
-pg_ctl promote -D /var/lib/postgresql/data
-```
-
-### Redis 恢复
-```bash
-# 从 RDB 恢复
-cp backup.rdb /var/lib/redis/dump.rdb
-systemctl restart redis
-
-# 从 AOF 恢复
-cp backup.aof /var/lib/redis/appendonly.aof
-redis-check-aof --fix appendonly.aof
-systemctl restart redis
-```
-
-## 系统恢复
-
-### 文件系统恢复
-```bash
-# 从 tar 备份恢复
-tar -xzvf /backup/system.tar.gz -C /
-
-# 从 rsync 备份恢复
-rsync -avz /backup/system/ /
-
-# 恢复权限
-restorecon -Rv /
+```python
+# Example implementation following best practices
+def example_function():
+    # Your implementation here
+    pass
 ```
 
-### 引导修复
-```bash
-# 进入救援模式
-# 挂载根分区
-mount /dev/sda1 /mnt
-mount --bind /dev /mnt/dev
-mount --bind /proc /mnt/proc
-mount --bind /sys /mnt/sys
-chroot /mnt
 
-# 修复 GRUB
-grub-install /dev/sda
-update-grub
-```
+## Assumptions / Constraints / Non-goals
 
-## 故障切换
+* **Assumptions**:
+  - Development environment is properly configured
+  - Required dependencies are available
+  - Team has basic understanding of domain
+* **Constraints**:
+  - Must follow existing codebase conventions
+  - Time and resource limitations
+  - Compatibility requirements
+* **Non-goals**:
+  - This skill does not cover edge cases outside scope
+  - Not a replacement for formal training
 
-### Keepalived 切换
-```bash
-# 检查状态
-systemctl status keepalived
-ip addr show | grep -w inet
 
-# 手动切换
-# 降低主节点优先级
-# /etc/keepalived/keepalived.conf
-vrrp_instance VI_1 {
-    priority 50  # 降低
-}
-systemctl reload keepalived
-```
+## Compatibility & Prerequisites
 
-### DNS 切换
-```bash
-# 修改 DNS 记录
-# 降低 TTL（提前）
-# 切换 A 记录指向备用 IP
+* **Supported Versions**:
+  - Python 3.8+
+  - Node.js 16+
+  - Modern browsers (Chrome, Firefox, Safari, Edge)
+* **Required AI Tools**:
+  - Code editor (VS Code recommended)
+  - Testing framework appropriate for language
+  - Version control (Git)
+* **Dependencies**:
+  - Language-specific package manager
+  - Build tools
+  - Testing libraries
+* **Environment Setup**:
+  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
 
-# 验证
-dig +short example.com
-nslookup example.com
-```
 
-## 常见场景
+## Test Scenario Matrix (QA Strategy)
 
-### 场景 1：完整恢复流程
-```bash
-#!/bin/bash
-# 1. 评估损失
-echo "检查系统状态..."
+| Type | Focus Area | Required Scenarios / Mocks |
+| :--- | :--- | :--- |
+| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
+| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
+| **E2E** | User Journey | Critical user flows to test |
+| **Performance** | Latency / Load | Benchmark requirements |
+| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
+| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
 
-# 2. 通知相关人员
-# send_alert "开始灾难恢复"
 
-# 3. 恢复基础设施
-echo "恢复网络配置..."
+## Technical Guardrails & Security Threat Model
 
-# 4. 恢复数据
-echo "恢复数据库..."
-mysql -u root -p < /backup/latest.sql
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
 
-# 5. 恢复应用
-echo "启动应用服务..."
-systemctl start application
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
 
-# 6. 验证
-echo "验证服务状态..."
-curl -s http://localhost/health
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
 
-# 7. 通知恢复完成
-# send_alert "灾难恢复完成"
-```
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
 
-### 场景 2：DR 演练
-```bash
-#!/bin/bash
-# DR 演练脚本
-LOG="/var/log/dr-drill.log"
 
-echo "$(date): 开始 DR 演练" >> $LOG
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
 
-# 1. 切换到备用站点
-echo "切换 DNS..." >> $LOG
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
 
-# 2. 验证服务
-echo "验证服务可用性..." >> $LOG
-curl -s http://dr-site/health >> $LOG
 
-# 3. 测试数据一致性
-echo "验证数据一致性..." >> $LOG
+## Definition of Done (DoD) Checklist
 
-# 4. 记录 RTO
-echo "实际 RTO: $(计算时间)" >> $LOG
+- [ ] Tests passed + coverage met
+- [ ] Lint/Typecheck passed
+- [ ] Logging/Metrics/Trace implemented
+- [ ] Security checks passed
+- [ ] Documentation/Changelog updated
+- [ ] Accessibility/Performance requirements met (if frontend)
 
-# 5. 切回主站点
-echo "切回主站点..." >> $LOG
-```
 
-### 场景 3：自动故障转移
-```bash
-# Keepalived 配置
-vrrp_script chk_app {
-    script "/usr/local/bin/check_app.sh"
-    interval 2
-    weight -20
-}
+## Anti-patterns / Pitfalls
 
-vrrp_instance VI_1 {
-    state MASTER
-    interface eth0
-    virtual_router_id 51
-    priority 100
-    
-    track_script {
-        chk_app
-    }
-    
-    virtual_ipaddress {
-        192.168.1.100
-    }
-}
-```
+* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
+* ⚠️ **Watch out for**: Common symptoms and quick fixes
+* 💡 **Instead**: Use proper error handling, pagination, and logging
 
-## DR 检查清单
 
-| 项目 | 检查内容 |
-|------|----------|
-| 备份 | 备份完整性、可恢复性 |
-| 文档 | 恢复步骤、联系人 |
-| 网络 | DNS、IP、防火墙 |
-| 数据 | 数据一致性、同步状态 |
-| 应用 | 配置、依赖、证书 |
+## Reference Links & Examples
 
-## 故障排查
+* Internal documentation and examples
+* Official documentation and best practices
+* Community resources and discussions
 
-```bash
-# 检查备份状态
-ls -la /backup/
-md5sum /backup/latest.tar.gz
 
-# 检查复制状态
-# MySQL
-SHOW SLAVE STATUS\G
+## Versioning & Changelog
 
-# PostgreSQL
-SELECT * FROM pg_stat_replication;
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
 
-# 检查网络连通性
-ping dr-site
-traceroute dr-site
-```

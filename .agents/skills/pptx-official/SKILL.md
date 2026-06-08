@@ -1,9 +1,6 @@
 ---
 name: pptx-official
-description: "Presentation creation, editing, and analysis. When Claude needs to work with presentations (.pptx files) for: (1) Creating new presentations, (2) Modifying or editing content, (3) Working with layo..."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: "Presentation creation, editing, and analysis. Use when working with presentations (.pptx files) for creating, modifying, or analyzing PowerPoint content and layouts."
 ---
 
 # PPTX creation, editing, and analysis

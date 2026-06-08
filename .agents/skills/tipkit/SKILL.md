@@ -126,12 +126,12 @@ to `TipViewStyle` and implement `makeBody(configuration:)`.
 ```swift
 struct CustomTipStyle: TipViewStyle {
     func makeBody(configuration: Configuration) -> some View {
-        HStack {
+        HStack(spacing: 12) {
             configuration.image?
                 .font(.title2)
                 .foregroundStyle(.tint)
 
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 4) {
                 configuration.title
                     .font(.headline)
                 configuration.message?
@@ -488,7 +488,7 @@ struct DataLossTip: Tip {
 
 ## References
 
-- See [references/tipkit-patterns.md](references/tipkit-patterns.md) for complete implementation patterns
+- See `references/tipkit-patterns.md` for complete implementation patterns
   including custom styles, event-based rules, tip groups, testing strategies,
   onboarding flows, and SwiftUI preview configuration.
 

@@ -4,47 +4,39 @@ description: "Audits game assets for compliance with naming conventions, file si
 argument-hint: "[category|all]"
 user-invocable: true
 allowed-tools: Read, Glob, Grep
-model: sonnet
-# Read-only diagnostic skill — no specialist agent delegation needed
 ---
 
-## Phase 1: Read Standards
+When this skill is invoked:
 
-Read the art bible or asset standards from the relevant design docs and the CLAUDE.md naming conventions.
+1. **Read the art bible or asset standards** from the relevant design docs and
+   the CLAUDE.md naming conventions.
 
----
+2. **Scan the target asset directory** using Glob:
+   - `assets/art/**/*` for art assets
+   - `assets/audio/**/*` for audio assets
+   - `assets/vfx/**/*` for VFX assets
+   - `assets/shaders/**/*` for shaders
+   - `assets/data/**/*` for data files
 
-## Phase 2: Scan Asset Directories
+3. **Check naming conventions**:
+   - Art: `[category]_[name]_[variant]_[size].[ext]`
+   - Audio: `[category]_[context]_[name]_[variant].[ext]`
+   - All files must be lowercase with underscores
 
-Scan the target asset directory using Glob:
+4. **Check file standards**:
+   - Textures: Power-of-two dimensions, correct format (PNG for UI, compressed
+     for 3D), within size budget
+   - Audio: Correct sample rate, format (OGG for SFX, OGG/MP3 for music),
+     within duration limits
+   - Data: Valid JSON/YAML, schema-compliant
 
-- `assets/art/**/*` for art assets
-- `assets/audio/**/*` for audio assets
-- `assets/vfx/**/*` for VFX assets
-- `assets/shaders/**/*` for shaders
-- `assets/data/**/*` for data files
+5. **Check for orphaned assets** by searching code for references to each
+   asset file.
 
----
+6. **Check for missing assets** by searching code for asset references and
+   verifying the files exist.
 
-## Phase 3: Run Compliance Checks
-
-**Naming conventions:**
-- Art: `[category]_[name]_[variant]_[size].[ext]`
-- Audio: `[category]_[context]_[name]_[variant].[ext]`
-- All files must be lowercase with underscores
-
-**File standards:**
-- Textures: Power-of-two dimensions, correct format (PNG for UI, compressed for 3D), within size budget
-- Audio: Correct sample rate, format (OGG for SFX, OGG/MP3 for music), within duration limits
-- Data: Valid JSON/YAML, schema-compliant
-
-**Orphaned assets:** Search code for references to each asset file. Flag any with no references.
-
-**Missing assets:** Search code for asset references and verify the files exist.
-
----
-
-## Phase 4: Output Audit Report
+7. **Output the audit**:
 
 ```markdown
 # Asset Audit Report -- [Category] -- [Date]
@@ -80,16 +72,4 @@ Scan the target asset directory using Glob:
 
 ## Recommendations
 [Prioritized list of fixes]
-
-## Verdict: [COMPLIANT / WARNINGS / NON-COMPLIANT]
 ```
-
-This skill is read-only — it produces a report but does not write files.
-
----
-
-## Phase 5: Next Steps
-
-- Fix naming violations using the patterns defined in CLAUDE.md.
-- Delete confirmed orphaned assets after manual review.
-- Run `/content-audit` to cross-check asset counts against GDD-specified requirements.

@@ -1,7 +1,7 @@
 ---
 name: health-check
 description: Runs plugin health checks (venv packages and skill registration). Use when the user asks to check plugin health, verify setup, or troubleshoot missing skills.
-model: haiku
+model: claude-haiku-4-5-20251001
 allowed-tools:
   - ToolSearch
   - bitwize-music-mcp

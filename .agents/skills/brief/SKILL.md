@@ -1,113 +1,208 @@
 ---
-name: "brief"
-description: "/cs:brief <topic> — Generate a one-page strategy brief from an office-hours intake. First step in the strategic sprint pipeline."
+name: brief
+description: Generate contextual briefings for legal work — daily summary, topic research, or incident response. Use when starting your day and need a scan of legal-relevant items across email, calendar, and contracts, when researching a specific legal question across internal sources, or when a developing situation (data breach, litigation threat, regulatory inquiry) needs rapid context.
+argument-hint: "[daily | topic <query> | incident]"
 ---
 
-# /cs:brief — One-Page Strategy Brief
+# /brief -- Legal Team Briefing
 
-**Command:** `/cs:brief <topic>` or `/cs:brief <office-hours-output>`
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
 
-Turns intake (raw question or office-hours output) into a one-page strategy brief that the boardroom can deliberate on. This is **Step 1** of the strategic sprint pipeline.
+Generate contextual briefings for legal work. Supports three modes: daily brief, topic brief, and incident brief.
 
-## Pipeline Position
+**Important**: This command assists with legal workflows but does not provide legal advice. Briefings should be reviewed by qualified legal professionals before being relied upon.
+
+## Invocation
 
 ```
-/cs:office-hours  →  /cs:brief  →  /cs:boardroom  →  /cs:decide  →  /cs:execute  →  /cs:post-mortem
-                       ↑ you are here
+/brief daily              # Morning brief of legal-relevant items
+/brief topic [query]      # Research brief on a specific legal question
+/brief incident [topic]   # Rapid brief on a developing situation
 ```
 
-## Inputs
+If no mode is specified, ask the user which type of brief they need.
 
-- A topic string, **or**
-- An office-hours brief (preferred — more rigor)
-- `~/.claude/company-context.md` (loaded automatically)
-
-## Output
-
-A single Markdown file under `~/.claude/briefs/YYYY-MM-DD-<slug>.md` with this structure:
-
-```markdown
-# Strategy Brief: <topic>
-**Date:** YYYY-MM-DD
-**Author:** cs-chief-of-staff
-**Status:** DRAFT | UNDER REVIEW | APPROVED | RETIRED
-
-## Context
-[1-2 paragraphs: where the company sits today on this topic — pulled from company-context.md]
-
-## Question
-[The one sentence question the boardroom must answer]
-
-## Options
-1. **Option A:** <name> — <one-sentence summary>
-2. **Option B:** <name> — <one-sentence summary>
-3. **Option C:** <name> — <one-sentence summary>
-
-(Minimum 2 options. "Do nothing" is always an option.)
-
-## Assumptions
-- <assumption 1 — explicit>
-- <assumption 2>
-- <assumption 3>
-
-## Constraints
-- Time: <by when must this decide>
-- Money: <budget envelope>
-- People: <who can / can't be reallocated>
-- Reversibility: <one-way door | two-way door>
-
-## Affected Roles
-[Which cs-* advisors should weigh in. Used to route to /cs:boardroom panel composition.]
-
-- [ ] cs-ceo-advisor
-- [ ] cs-cfo-advisor
-- [ ] cs-cto-advisor
-- [ ] cs-cmo-advisor
-- [ ] cs-cro-advisor
-- [ ] cs-cpo-advisor
-- [ ] cs-coo-advisor
-- [ ] cs-chro-advisor
-- [ ] cs-ciso-advisor
-- [ ] cs-chief-of-staff
-
-## Success Criteria
-[Measurable outcomes that define success — set BEFORE the decision]
-- <metric 1, threshold, timeframe>
-- <metric 2, threshold, timeframe>
-
-## Kill Criteria
-[What signal would tell you in 90 days that this was the wrong call]
-- <metric, threshold, action if missed>
-```
-
-## Workflow
-
-1. Load company-context.md via context-engine
-2. If input is office-hours output, parse the 6 answers
-3. If input is a raw topic, prompt the founder for the missing pieces
-4. Draft 2-3 options (never just one — every brief needs a counterfactual)
-5. Make assumptions and constraints explicit
-6. Identify affected roles → drives panel composition for `/cs:boardroom`
-7. Write success + kill criteria BEFORE the decision (this is the rigor moment)
-8. Save to `~/.claude/briefs/`
-
-## Why This Step Exists
-
-The biggest decision-making failure is debating implementation before agreeing on the question. The brief locks the question, options, and success criteria so the boardroom can deliberate without scope creep.
-
-This is also the **artifact handoff** — the next command consumes this file, not your memory.
-
-## Routing
-
-- `/cs:boardroom <brief>` — multi-role deliberation
-- `/cs:cross-eval <brief>` — multi-model sanity check before boardroom (for high-stakes)
-- `/cs:freeze <brief>` — cooldown lock for irreversible decisions
-
-## Related
-
-- Agent: [`cs-chief-of-staff`](../../agents/cs-chief-of-staff.md)
-- Skills: [`context-engine`](../../../skills/context-engine/SKILL.md), [`board-meeting`](../../../skills/board-meeting/SKILL.md)
+## Modes
 
 ---
 
-**Version:** 1.0.0
+### Daily Brief
+
+A morning summary of everything a legal team member needs to know to start their day.
+
+#### Sources to Scan
+
+Check each connected source for legal-relevant items:
+
+**Email (if connected):**
+- New contract requests or review requests
+- Compliance questions or reports
+- Responses from counterparties on active negotiations
+- Flagged or urgent items from the legal team inbox
+- External counsel communications
+- Regulatory or legal update newsletters
+
+**Calendar (if connected):**
+- Today's meetings that need legal prep (board meetings, deal reviews, vendor calls)
+- Upcoming deadlines this week (contract expirations, filing deadlines, response deadlines)
+- Recurring legal team syncs
+
+**Chat (if connected):**
+- Overnight messages in legal team channels
+- Direct messages requesting legal input
+- Mentions of legal-relevant topics (contract, compliance, privacy, NDA, terms)
+- Escalations or urgent requests
+
+**CLM (if connected):**
+- Contracts awaiting review or signature
+- Approaching expiration dates (next 30 days)
+- Newly executed agreements
+
+**CRM (if connected):**
+- Deals moving to stages that require legal involvement
+- New opportunities flagged for legal review
+
+#### Output Format
+
+```
+## Daily Legal Brief -- [Date]
+
+### Urgent / Action Required
+[Items needing immediate attention, sorted by urgency]
+
+### Contract Pipeline
+- **Awaiting Your Review**: [count and list]
+- **Pending Counterparty Response**: [count and list]
+- **Approaching Deadlines**: [items due this week]
+
+### New Requests
+[Contract review requests, NDA requests, compliance questions received since last brief]
+
+### Calendar Today
+[Meetings with legal relevance and what prep is needed]
+
+### Team Activity
+[Key messages or updates from legal team channels]
+
+### This Week's Deadlines
+[Upcoming deadlines and filing dates]
+
+### Sources Not Available
+[Any sources that were not connected or returned errors]
+```
+
+---
+
+### Topic Brief
+
+Research and brief on a specific legal question or topic across available sources.
+
+#### Workflow
+
+1. Accept the topic query from the user
+2. Search across connected sources:
+   - **Documents**: Internal memos, prior analyses, playbooks, precedent
+   - **Email**: Prior communications on the topic
+   - **Chat**: Team discussions about the topic
+   - **CLM**: Related contracts or clauses
+3. Synthesize findings into a structured brief
+
+#### Output Format
+
+```
+## Topic Brief: [Topic]
+
+### Summary
+[2-3 sentence executive summary of findings]
+
+### Background
+[Context and history from internal sources]
+
+### Current State
+[What the organization's current position or approach is, based on available documents]
+
+### Key Considerations
+[Important factors, risks, or open questions]
+
+### Internal Precedent
+[Prior decisions, memos, or positions found in internal sources]
+
+### Gaps
+[What information is missing or what sources were not available]
+
+### Recommended Next Steps
+[What the user should do with this information]
+```
+
+#### Important Notes
+- Topic briefs synthesize what is available in connected sources; they do not substitute for formal legal research
+- If the topic requires current legal authority or case law, recommend the user consult a legal research platform (Westlaw, Lexis, etc.) or outside counsel
+- Always note the limitations of the sources searched
+
+---
+
+### Incident Brief
+
+Rapid briefing for developing situations that require immediate legal attention (data breaches, litigation threats, regulatory inquiries, IP disputes, etc.).
+
+#### Workflow
+
+1. Accept the incident topic or description
+2. Rapidly scan all connected sources for relevant context:
+   - **Email**: Communications about the incident
+   - **Chat**: Real-time discussions and escalations
+   - **Documents**: Relevant policies, response plans, insurance coverage
+   - **Calendar**: Scheduled response meetings
+   - **CLM**: Affected contracts, indemnification provisions, insurance requirements
+3. Compile into an actionable incident brief
+
+#### Output Format
+
+```
+## Incident Brief: [Topic]
+**Prepared**: [timestamp]
+**Classification**: [severity assessment if determinable]
+
+### Situation Summary
+[What is known about the incident]
+
+### Timeline
+[Chronological summary of events based on available sources]
+
+### Immediate Legal Considerations
+[Regulatory notification requirements, preservation obligations, privilege concerns]
+
+### Relevant Agreements
+[Contracts, insurance policies, or other agreements that may be implicated]
+
+### Internal Response
+[What response activity has already occurred based on email/chat]
+
+### Key Contacts
+[Relevant internal and external contacts identified from sources]
+
+### Recommended Immediate Actions
+1. [Most urgent action]
+2. [Second priority]
+3. [etc.]
+
+### Information Gaps
+[What is not yet known and needs to be determined]
+
+### Sources Checked
+[What was searched and what was not available]
+```
+
+#### Important Notes for Incident Briefs
+- Speed matters. Produce the brief quickly with available information rather than waiting for complete information
+- Flag any litigation hold or preservation obligations immediately
+- Note privilege considerations (mark the brief as attorney-client privileged / work product if appropriate)
+- If the incident may involve a data breach, flag applicable notification deadlines (e.g., 72 hours for GDPR)
+- Recommend outside counsel engagement if the matter is significant
+
+## General Notes
+
+- If sources are unavailable, note the gaps prominently so the user knows what was not checked
+- For daily briefs, learn the user's preferences over time (what they find useful, what they want filtered out)
+- Briefs should be actionable: every item should have a clear next step or reason for inclusion
+- Keep briefs concise. Link to source materials rather than reproducing them in full

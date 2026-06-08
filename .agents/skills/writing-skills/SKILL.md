@@ -1,126 +1,125 @@
 ---
 name: writing-skills
-description: "Use when creating, updating, or improving agent skills."
-category: meta
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Use when creating new skills, editing existing skills, or verifying skills work before deployment - applies TDD to process documentation by testing with subagents before writing, iterating until bulletproof against rationalization
+keywords:
+  - create skill
+  - skill authoring
+  - skill development
+  - write skill
+file_patterns:
+  - '**/recommendation-rules.json'
+  - '**/skill-rules.json'
+  - '**/skills/**'
+confidence: 0.82
 ---
 
-# Writing Skills (Excellence)
+# Writing Skills
 
-Dispatcher for skill creation excellence. Use the decision tree below to find the right template and standards.
+## Overview
 
-## ⚡ Quick Decision Tree
+**Writing skills IS Test-Driven Development applied to process documentation.**
 
-### What do you need to do?
+You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
-1. **Create a NEW skill:**
-   - Is it simple (single file, <200 lines)? → [Tier 1 Architecture](references/tier-1-simple/README.md)
-   - Is it complex (multi-concept, 200-1000 lines)? → [Tier 2 Architecture](references/tier-2-expanded/README.md)
-   - Is it a massive platform (10+ products, AWS, Convex)? → [Tier 3 Architecture](references/tier-3-platform/README.md)
+**Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
-2. **Improve an EXISTING skill:**
-   - Fix "it's too long" -> [Modularize (Tier 3)](references/templates/tier-3-platform.md)
-   - Fix "AI ignores rules" -> [Anti-Rationalization](references/anti-rationalization/README.md)
-   - Fix "users can't find it" -> [CSO (Search Optimization)](references/cso/README.md)
+**Personal skills live in agent-specific directories:** `~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex
 
-3. **Verify Compliance:**
-   - Check metadata/naming -> [Standards](references/standards/README.md)
-   - Add tests -> [Testing Guide](references/testing/README.md)
-
-## 📚 Component Index
-
-| Component | Purpose |
-|-----------|---------|
-| **[CSO](references/cso/README.md)** | "SEO for LLMs". How to write descriptions that trigger. |
-| **[Standards](references/standards/README.md)** | File naming, YAML frontmatter, directory structure. |
-| **[Anti-Rationalization](references/anti-rationalization/README.md)**| How to write rules that agents won't ignore. |
-| **[Testing](references/testing/README.md)** | How to ensure your skill actually works. |
-
-## 🛠️ Templates
-
-- [Technique Skill](references/templates/technique.md) (How-to)
-- [Reference Skill](references/templates/reference.md) (Docs)
-- [Discipline Skill](references/templates/discipline.md) (Rules)
-- [Pattern Skill](references/templates/pattern.md) (Design Patterns)
+**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill.
 
 ## When to Use
-- Creating a NEW skill from scratch
-- Improving an EXISTING skill that agents ignore
-- Debugging why a skill isn't being triggered
-- Standardizing skills across a team
 
-## How It Works
+**Create a skill when:**
+- Technique wasn't intuitively obvious to you
+- You'd reference this again across projects
+- Pattern applies broadly (not project-specific)
+- Others would benefit
 
-1. **Identify goal** → Use decision tree above
-2. **Select template** → From `references/templates/`
-3. **Apply CSO** → Optimize description for discovery
-4. **Add anti-rationalization** → For discipline skills
-5. **Test** → RED-GREEN-REFACTOR cycle
+**Don't create for:**
+- One-off solutions
+- Standard practices well-documented elsewhere
+- Project-specific conventions (put in CLAUDE.md)
 
-## Quick Example
+## Skill Types
 
-```yaml
----
-name: my-technique
-description: Use when [specific symptom occurs].
-metadata:
-  category: technique
-  triggers: error-text, symptom, tool-name
----
+- **Technique**: Concrete method with steps (condition-based-waiting, root-cause-tracing)
+- **Pattern**: Way of thinking about problems (flatten-with-flags, test-invariants)
+- **Reference**: API docs, syntax guides, tool documentation (office docs)
 
-# My Technique
+## Quick Reference
 
-## When to Use
-- [Symptom A]
-- [Error message]
+| Task | Load reference |
+| --- | --- |
+| Understand TDD mapping for skills | `skills/writing-skills/references/tdd-mapping.md` |
+| Learn skill structure and organization | `skills/writing-skills/references/skill-structure.md` |
+| Optimize for search and discovery | `skills/writing-skills/references/search-optimization.md` |
+| Test skills with subagents | `skills/writing-skills/references/testing-skills.md` |
+| Code examples and flowcharts | `skills/writing-skills/references/code-and-flowcharts.md` |
+| Complete creation checklist | `skills/writing-skills/references/checklist.md` |
+
+## RED-GREEN-REFACTOR Workflow
+
+### RED: Write Failing Test (Baseline)
+1. Create pressure scenarios (3+ combined pressures for discipline skills)
+2. Run scenarios WITHOUT skill - document baseline behavior verbatim
+3. Identify patterns in rationalizations/failures
+
+**This is critical:** You must see what agents naturally do before writing the skill.
+
+### GREEN: Write Minimal Skill
+1. Write skill addressing specific baseline failures
+2. Follow structure guidelines (see skill-structure.md)
+3. Optimize for search (see search-optimization.md)
+4. Run same scenarios WITH skill - verify agents now comply
+
+### REFACTOR: Close Loopholes
+1. Identify NEW rationalizations from testing
+2. Add explicit counters for discipline skills
+3. Build rationalization table from all iterations
+4. Re-test until bulletproof
+
+**REQUIRED SUB-SKILL:** Use superpowers:testing-skills-with-subagents for complete testing methodology.
+
+## The Iron Law
+
 ```
+NO SKILL WITHOUT A FAILING TEST FIRST
+```
+
+This applies to NEW skills AND EDITS to existing skills.
+
+Write skill before testing? Delete it. Start over.
+
+**No exceptions:**
+- Not for "simple additions"
+- Not for "just adding a section"
+- Not for "documentation updates"
+- Delete means delete
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| Description summarizes workflow | Use "Use when..." triggers only |
-| No `metadata.triggers` | Add 3+ keywords |
-| Generic name ("helper") | Use gerund (`creating-skills`) |
-| Long monolithic SKILL.md | Split into `references/` |
+| Writing skill before testing | Delete skill, run baseline test first |
+| Skipping baseline (RED phase) | You don't know what to teach without seeing failure |
+| Testing with skill already present | Remove skill, get true baseline behavior |
+| "Batching" multiple skills | Complete RED-GREEN-REFACTOR for each skill before moving on |
+| Vague descriptions | Start with "Use when...", include specific triggers |
+| Using @ links to reference skills | Use skill names only, avoid force-loading |
+| Multiple mediocre code examples | One excellent example in most relevant language |
+| Narrative storytelling | Focus on reusable patterns, not one-off stories |
 
-See [gotchas.md](gotchas.md) for more.
+## STOP Before Moving to Next Skill
 
-## ✅ Pre-Deploy Checklist
+**After writing ANY skill, you MUST STOP and complete the deployment process.**
 
-Before deploying any skill:
+Do NOT create multiple skills in batch without testing each. Deploying untested skills = deploying untested code.
 
-- [ ] `name` field matches directory name exactly
-- [ ] `SKILL.md` filename is ALL CAPS
-- [ ] Description starts with "Use when..."
-- [ ] `metadata.triggers` has 3+ keywords
-- [ ] Total lines < 500 (use `references/` for more)
-- [ ] No `@` force-loading in cross-references
-- [ ] Tested with real scenarios
+See `checklist.md` for full deployment checklist.
 
-## 🔗 Related Skills
+## Resources
 
-- **opencode-expert**: For OpenCode environment configuration
-- Use `/write-skill` command for guided skill creation
-
-## Examples
-
-**Create a Tier 1 skill:**
-```bash
-mkdir -p ~/.config/opencode/skills/my-technique
-touch ~/.config/opencode/skills/my-technique/SKILL.md
-```
-
-**Create a Tier 2 skill:**
-```bash
-mkdir -p ~/.config/opencode/skills/my-skill/references/core
-touch ~/.config/opencode/skills/my-skill/{SKILL.md,gotchas.md}
-touch ~/.config/opencode/skills/my-skill/references/core/README.md
-```
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+- **Official guidance**: For Anthropic's official skill authoring best practices, see anthropic-best-practices.md
+- **Graphviz conventions**: See @graphviz-conventions.dot for flowchart style rules
+- **Testing methodology**: Use superpowers:testing-skills-with-subagents
+- **TDD fundamentals**: Use superpowers:test-driven-development

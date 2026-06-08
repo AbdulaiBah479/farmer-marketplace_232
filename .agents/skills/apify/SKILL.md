@@ -1,181 +1,513 @@
 ---
-name: apify
-description: |
-  Apify integration. Manage Actors, Datasets, KeyValueStores, RequestQueues, Tasks. Use when the user wants to interact with Apify data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+name: Apify
+description: "Scrape social media platforms, business data, and e-commerce via Apify actors — Instagram profiles/posts/hashtags/comments, LinkedIn profiles/jobs/posts, TikTok profiles/hashtags/videos/comments, YouTube channels/search/comments, Facebook posts/groups/comments, Google Maps business search with contact/review/image extraction, Amazon products/reviews/pricing, and general-purpose multi-page web crawling with custom pageFunction extraction logic. File-based TypeScript wrappers (scrapeInstagramProfile, searchGoogleMaps, scrapeAmazonProduct, scrapeWebsite, etc.) filter and transform data in code before returning to model context, achieving 95-99% token savings over direct MCP protocol. Parallel multi-platform queries via Promise.all for social listening dashboards. Lead enrichment pipeline: Google Maps → qualified filter → optional LinkedIn enrichment. Competitive analysis across Instagram, YouTube, and TikTok simultaneously. USE WHEN scrape Instagram, scrape LinkedIn, scrape TikTok, scrape YouTube, scrape Facebook, Google Maps leads, Amazon reviews, business intelligence, multi-platform social listening, competitive analysis, lead generation, social monitoring, Apify actors, web crawl, extract contacts. NOT FOR X/Twitter bookmarks (use a dedicated X-API skill) or progressive scraping (use BrightData)."
+effort: medium
 ---
 
-# Apify
+## Customization
 
-Apify is a web scraping and automation platform. It allows developers and businesses to extract data from websites, automate workflows, and build web robots. It's used by data scientists, marketers, and researchers for tasks like lead generation, market research, and content monitoring.
+**Before executing, check for user customizations at:**
+`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Apify/`
 
-Official docs: https://docs.apify.com/
+If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
-## Apify Overview
 
-- **Actor**
-  - **Run**
-- **Task**
-  - **Run**
-- **Webhook**
-- **Dataset**
-  - **Record**
-- **KeyValueStore**
-  - **Record**
-- **RequestQueue**
-  - **Request**
+## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
 
-Use action names and parameters as needed.
+**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
 
-## Working with Apify
+1. **Send voice notification**:
+   ```bash
+   curl -s -X POST http://localhost:31337/notify \
+     -H "Content-Type: application/json" \
+     -d '{"message": "Running the WORKFLOWNAME workflow in the Apify skill to ACTION"}' \
+     > /dev/null 2>&1 &
+   ```
 
-This skill uses the Membrane CLI to interact with Apify. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+2. **Output text notification**:
+   ```
+   Running the **WorkflowName** workflow in the **Apify** skill to ACTION...
+   ```
 
-### Install the CLI
+**This is not optional. Execute this curl command immediately upon skill invocation.**
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+# Apify - Social Media & Web Scraping
 
-```bash
-npm install -g @membranehq/cli@latest
+Direct TypeScript access to 9 popular Apify actors with 99% token savings.
+
+## 🔌 File-Based MCP
+
+This skill is a **file-based MCP** - a code-first API wrapper that replaces token-heavy MCP protocol calls.
+
+**Why file-based?** Filter data in code BEFORE returning to model context = 97.5% token savings.
+
+
+## 🎯 Overview
+
+Direct TypeScript access to the 9 most popular Apify actors without MCP overhead. Filter and transform data in code BEFORE it reaches the model context.
+
+## 📊 Available Actors
+
+### Social Media (5 platforms)
+- **Instagram** (145k users, 4.60★) - Profiles, posts, hashtags, comments
+- **LinkedIn** (26k users, 4.10★) - Profiles, jobs, posts
+- **TikTok** (90k users, 4.61★) - Profiles, videos, hashtags, comments
+- **YouTube** (40k users, 4.40★) - Channels, videos, comments, search
+- **Facebook** (35k users, 4.56★) - Posts, groups, comments
+
+### Business & Lead Generation
+- **Google Maps** (198k users, 4.76★) - **HIGHEST VALUE!**
+  - Search businesses, extract contacts, reviews, images
+  - Perfect for lead generation
+
+### E-commerce
+- **Amazon** (8k users, 4.97★) - Products, reviews, pricing
+
+### Web Scraping
+- **Web Scraper** (94k users, 4.39★) - General-purpose, works with ANY website
+
+## 🚀 Quick Start
+
+### Basic Usage Pattern
+
+```typescript
+import { scrapeInstagramProfile, searchGoogleMaps } from 'actors'
+
+// 1. Call the actor wrapper
+const profile = await scrapeInstagramProfile({
+  username: 'target_username',
+  maxPosts: 50
+})
+
+// 2. Filter in code - BEFORE data reaches model!
+const viral = profile.latestPosts?.filter(p => p.likesCount > 10000)
+
+// 3. Only filtered results reach model context
+console.log(viral) // ~10 posts instead of 50
 ```
 
-### Authentication
+## 📚 Examples by Use Case
 
-```bash
-membrane login --tenant --clientName=<agentType>
+### Social Media Monitoring
+
+**Instagram - Track engagement:**
+```typescript
+import { scrapeInstagramProfile, scrapeInstagramPosts } from 'actors'
+
+// Get profile with recent posts
+const profile = await scrapeInstagramProfile({
+  username: 'competitor',
+  maxPosts: 100
+})
+
+// Filter in code - only high-performing posts from last 30 days
+const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
+const topRecent = profile.latestPosts
+  ?.filter(p =>
+    new Date(p.timestamp).getTime() > thirtyDaysAgo &&
+    p.likesCount > 5000
+  )
+  .sort((a, b) => b.likesCount - a.likesCount)
+  .slice(0, 10)
+
+// Only 10 posts reach model instead of 100!
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+**LinkedIn - Job search:**
+```typescript
+import { searchLinkedInJobs } from 'actors'
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+const jobs = await searchLinkedInJobs({
+  keywords: 'AI engineer',
+  location: 'San Francisco',
+  remote: true,
+  maxResults: 200
+})
 
-```bash
-membrane login complete <code>
+// Filter in code - only senior roles at well-funded startups
+const topJobs = jobs.filter(j =>
+  j.seniority?.includes('Senior') &&
+  parseInt(j.applicants || '0') > 50
+)
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+**TikTok - Trend analysis:**
+```typescript
+import { scrapeTikTokHashtag } from 'actors'
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+const videos = await scrapeTikTokHashtag({
+  hashtag: 'ai',
+  maxResults: 500
+})
 
-### Connecting to Apify
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://apify.com" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+// Filter in code - only viral content
+const viral = videos
+  .filter(v => v.playCount > 1000000)
+  .sort((a, b) => b.playCount - a.playCount)
+  .slice(0, 20)
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+### Lead Generation (Business Intelligence)
 
-The resulting state tells you what to do next:
+**Google Maps - Local business leads:**
+```typescript
+import { searchGoogleMaps } from 'actors'
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+// Search with contact info extraction
+const places = await searchGoogleMaps({
+  query: 'restaurants in Austin',
+  maxResults: 500,
+  includeReviews: true,
+  maxReviewsPerPlace: 20,
+  scrapeContactInfo: true // Extracts emails from websites!
+})
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+// Filter in code - only highly-rated with email/phone
+const qualifiedLeads = places
+  .filter(p =>
+    p.rating >= 4.5 &&
+    p.reviewsCount >= 100 &&
+    (p.email || p.phone)
+  )
+  .map(p => ({
+    name: p.name,
+    rating: p.rating,
+    reviews: p.reviewsCount,
+    email: p.email,
+    phone: p.phone,
+    website: p.website,
+    address: p.address
+  }))
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+// Export leads - only qualified results!
+console.log(`Found ${qualifiedLeads.length} qualified leads`)
 ```
 
-You should always search for actions in the context of a specific connection.
+**Google Maps - Review sentiment analysis:**
+```typescript
+import { scrapeGoogleMapsReviews } from 'actors'
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+const reviews = await scrapeGoogleMapsReviews({
+  placeUrl: 'https://maps.google.com/maps?cid=12345',
+  maxResults: 1000
+})
 
-## Popular actions
+// Filter in code - analyze sentiment by rating
+const recentNegative = reviews
+  .filter(r => {
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
+    return (
+      r.rating <= 2 &&
+      new Date(r.publishedAtDate).getTime() > thirtyDaysAgo &&
+      r.text.length > 50
+    )
+  })
 
-| Name | Key | Description |
-| --- | --- | --- |
-| Search Actors in Store | search-actors-in-store | Search for Actors in the Apify Store |
-| Get Key-Value Store | get-key-value-store | Get details of a specific key-value store by ID |
-| Get Log | get-log | Get log for an Actor build or run |
-| Get Key-Value Store Record | get-key-value-store-record | Get a record from a key-value store |
-| Get Current User | get-current-user | Get private data of the currently authenticated user |
-| Get Monthly Usage | get-monthly-usage | Get monthly usage statistics for the current user |
-| List Key-Value Stores | list-key-value-stores | Get list of key-value stores |
-| Run Task | run-task | Run an Actor task and immediately return without waiting for the run to finish |
-| Get Task | get-task | Get details of a specific Actor task by ID |
-| Get Dataset Items | get-dataset-items | Get items from a dataset |
-| List Tasks | list-tasks | Get list of Actor tasks |
-| Get Dataset | get-dataset | Get details of a specific dataset by ID |
-| List Datasets | list-datasets | Get list of datasets |
-| Get Run | get-run | Get details of a specific Actor run by ID |
-| Run Actor | run-actor | Run an Actor and immediately return without waiting for the run to finish |
-| Get Actor | get-actor | Get details of a specific Actor by ID or name |
-| List Runs | list-runs | Get list of Actor runs for the user |
-| Abort Run | abort-run | Abort an Actor run |
-| List Actors | list-actors | Get list of Actors owned by the user |
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+// Identify common complaints
+const complaints = recentNegative.map(r => r.text)
 ```
 
-To pass JSON parameters:
+### E-commerce & Competitive Intelligence
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+**Amazon - Price monitoring:**
+```typescript
+import { scrapeAmazonProduct } from 'actors'
+
+const product = await scrapeAmazonProduct({
+  productUrl: 'https://www.amazon.com/dp/B08L5VT894',
+  includeReviews: true,
+  maxReviews: 200
+})
+
+// Filter in code - only recent negative reviews
+const recentNegative = product.reviews
+  ?.filter(r => {
+    const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000)
+    return (
+      r.rating <= 2 &&
+      new Date(r.date).getTime() > weekAgo
+    )
+  })
+
+console.log(`Price: $${product.price}`)
+console.log(`Rating: ${product.rating}/5`)
+console.log(`Recent issues: ${recentNegative?.length} complaints`)
 ```
 
-The result is in the `output` field of the response.
+### Custom Web Scraping
 
+**Any Website - Custom extraction:**
+```typescript
+import { scrapeWebsite } from 'actors'
 
-### Proxy requests
+const products = await scrapeWebsite({
+  startUrls: ['https://example.com/products'],
+  linkSelector: 'a.product-link',
+  maxPagesPerCrawl: 100,
+  pageFunction: `
+    async function pageFunction(context) {
+      const { request, $, log } = context
 
-When the available actions don't cover your use case, you can send requests directly to the Apify API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+      return {
+        url: request.url,
+        title: $('h1.product-title').text(),
+        price: $('span.price').text(),
+        inStock: $('.in-stock').length > 0,
+        description: $('.description').text()
+      }
+    }
+  `
+})
 
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+// Filter in code - only available products under $100
+const affordable = products.filter(p =>
+  p.inStock &&
+  parseFloat(p.price.replace('$', '')) < 100
+)
 ```
 
-Common options:
+## 🎨 Advanced Patterns
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+### Pattern 1: Multi-Platform Social Listening
 
+```typescript
+import {
+  scrapeInstagramHashtag,
+  scrapeTikTokHashtag,
+  searchYouTube
+} from 'actors'
 
-## Best practices
+// Run all platforms in parallel
+const [instagramPosts, tiktokVideos, youtubeVideos] = await Promise.all([
+  scrapeInstagramHashtag({ hashtag: 'ai', maxResults: 100 }),
+  scrapeTikTokHashtag({ hashtag: 'ai', maxResults: 100 }),
+  searchYouTube({ query: '#ai', maxResults: 100 })
+])
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+// Combine and filter - only viral content across all platforms
+const allViral = [
+  ...instagramPosts.filter(p => p.likesCount > 10000),
+  ...tiktokVideos.filter(v => v.playCount > 100000),
+  ...youtubeVideos.filter(v => v.viewsCount > 50000)
+]
+
+console.log(`Found ${allViral.length} viral posts across 3 platforms`)
+```
+
+### Pattern 2: Lead Enrichment Pipeline
+
+```typescript
+import { searchGoogleMaps, scrapeLinkedInProfile } from 'actors'
+
+// 1. Find businesses on Google Maps
+const restaurants = await searchGoogleMaps({
+  query: 'restaurants in SF',
+  maxResults: 100,
+  scrapeContactInfo: true
+})
+
+// 2. Filter for qualified leads
+const qualified = restaurants.filter(r =>
+  r.rating >= 4.5 &&
+  r.email &&
+  r.reviewsCount >= 50
+)
+
+// 3. Enrich with LinkedIn data (if available)
+const enriched = await Promise.all(
+  qualified.map(async (restaurant) => {
+    // Try to find LinkedIn company page
+    // ... additional enrichment logic
+    return restaurant
+  })
+)
+```
+
+### Pattern 3: Competitive Analysis Dashboard
+
+```typescript
+import {
+  scrapeInstagramProfile,
+  scrapeYouTubeChannel,
+  scrapeTikTokProfile
+} from 'actors'
+
+async function analyzeCompetitor(username: string) {
+  // Gather data from all platforms
+  const [instagram, youtube, tiktok] = await Promise.all([
+    scrapeInstagramProfile({ username, maxPosts: 30 }),
+    scrapeYouTubeChannel({ channelUrl: `https://youtube.com/@${username}`, maxVideos: 30 }),
+    scrapeTikTokProfile({ username, maxVideos: 30 })
+  ])
+
+  // Calculate engagement metrics in code
+  return {
+    username,
+    instagram: {
+      followers: instagram.followersCount,
+      avgLikes: average(instagram.latestPosts?.map(p => p.likesCount) || []),
+      engagementRate: calculateEngagement(instagram)
+    },
+    youtube: {
+      subscribers: youtube.subscribersCount,
+      avgViews: average(youtube.videos?.map(v => v.viewsCount) || [])
+    },
+    tiktok: {
+      followers: tiktok.followersCount,
+      avgPlays: average(tiktok.videos?.map(v => v.playCount) || [])
+    }
+  }
+}
+```
+
+## 💰 Token Savings Calculator
+
+**Example: Instagram profile with 100 posts**
+
+**MCP Approach:**
+```
+1. search-actors → 1,000 tokens
+2. call-actor → 1,000 tokens
+3. get-actor-output → 50,000 tokens (100 unfiltered posts)
+TOTAL: ~52,000 tokens
+```
+
+**File-Based Approach:**
+```typescript
+const profile = await scrapeInstagramProfile({
+  username: 'user',
+  maxPosts: 100
+})
+
+// Filter in code - only top 10 posts
+const top = profile.latestPosts
+  ?.sort((a, b) => b.likesCount - a.likesCount)
+  .slice(0, 10)
+
+// TOTAL: ~500 tokens (only 10 filtered posts reach model)
+```
+
+**Savings: 99% reduction (52,000 → 500 tokens)**
+
+## 🔧 Actor Reference
+
+### Social Media
+
+#### Instagram
+- `scrapeInstagramProfile(input)` - Profile + posts
+- `scrapeInstagramPosts(input)` - Posts from user
+- `scrapeInstagramHashtag(input)` - Posts by hashtag
+- `scrapeInstagramComments(input)` - Comments on post
+
+#### LinkedIn
+- `scrapeLinkedInProfile(input)` - Profile + experience + email
+- `searchLinkedInJobs(input)` - Job listings
+- `scrapeLinkedInPosts(input)` - Posts from profile/company
+
+#### TikTok
+- `scrapeTikTokProfile(input)` - Profile + videos
+- `scrapeTikTokHashtag(input)` - Videos by hashtag
+- `scrapeTikTokComments(input)` - Comments on video
+
+#### YouTube
+- `scrapeYouTubeChannel(input)` - Channel + videos
+- `searchYouTube(input)` - Search videos
+- `scrapeYouTubeComments(input)` - Comments on video
+
+#### Facebook
+- `scrapeFacebookPosts(input)` - Posts from pages
+- `scrapeFacebookGroups(input)` - Group posts
+- `scrapeFacebookComments(input)` - Post comments
+
+### Business & Lead Generation
+
+#### Google Maps
+- `searchGoogleMaps(input)` - Search places (with contact extraction!)
+- `scrapeGoogleMapsPlace(input)` - Single place details
+- `scrapeGoogleMapsReviews(input)` - Place reviews
+
+### E-commerce
+
+#### Amazon
+- `scrapeAmazonProduct(input)` - Product details + reviews
+- `scrapeAmazonReviews(input)` - Product reviews only
+
+### Web Scraping
+
+#### General Web
+- `scrapeWebsite(input)` - Custom multi-page crawling
+- `scrapePage(url, pageFunction)` - Single page extraction
+
+## ⚙️ Configuration
+
+**Environment Variables:**
+```bash
+# Required - Get from https://console.apify.com/account/integrations
+APIFY_TOKEN=apify_api_xxxxx...
+```
+
+**Actor Run Options:**
+```typescript
+{
+  memory: 2048,    // MB: 128, 256, 512, 1024, 2048, 4096, 8192
+  timeout: 300,    // seconds
+  build: 'latest'  // or specific build number
+}
+```
+
+## 🎯 When to Use This vs MCP
+
+**Use File-Based (this skill):**
+- ✅ Need to filter large datasets (>100 results)
+- ✅ Want to transform/aggregate data in code
+- ✅ Multiple sequential operations
+- ✅ Control flow (loops, conditionals)
+- ✅ Maximum token efficiency
+
+**Use MCP:**
+- ❌ Simple single operations with small results (<10 items)
+- ❌ One-off exploratory queries
+- ❌ Don't want to write code
+
+## 🔗 Links
+
+- Apify Platform: https://apify.com
+- Actor Store: https://apify.com/store
+- API Docs: https://docs.apify.com/api/v2
+
+---
+
+**Remember: Filter data in code BEFORE returning to model context. This is where the 99% token savings happen!**
+
+## Gotchas
+
+- **Actor selection matters.** Each social platform has specific actors — don't use a generic scraper for Instagram when a dedicated Instagram actor exists.
+- **Rate limits vary by platform and plan.** Check actor documentation for limits before running large scrapes.
+- **Scraped data format varies by actor.** Read the actor's output schema before processing results.
+
+## Examples
+
+**Example 1: Scrape Instagram profile**
+```
+User: "get the recent posts from this Instagram account"
+→ Selects Instagram Profile actor
+→ Runs with target profile URL
+→ Returns structured post data (text, engagement, dates)
+```
+
+**Example 2: LinkedIn company scrape**
+```
+User: "scrape this company's LinkedIn page"
+→ Selects LinkedIn Company actor
+→ Returns company info, employee count, recent posts
+```
+
+## Execution Log
+
+After completing any workflow, append a single JSONL entry:
+
+```bash
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Apify","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
+```
+
+Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.

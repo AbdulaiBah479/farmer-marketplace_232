@@ -1,9 +1,17 @@
 ---
 name: test-driven-development
-description: "Use when implementing any feature or bugfix, before writing implementation code"
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Use when implementing any feature or bugfix, before writing implementation code - write the test first, watch it fail, write minimal code to pass; ensures tests actually verify behavior by requiring failure first
+keywords:
+  - TDD
+  - integration test
+  - red green refactor
+  - test driven
+  - unit test
+file_patterns:
+  - '**/*_test.py'
+  - '**/test_*.py'
+  - '**/tests/**/*.py'
+confidence: 0.8
 ---
 
 # Test-Driven Development (TDD)
@@ -17,6 +25,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 **Violating the letter of the rules is violating the spirit of the rules.**
 
 ## When to Use
+
 **Always:**
 - New features
 - Bug fixes
@@ -356,13 +365,6 @@ Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix 
 
 Never fix bugs without a test.
 
-## Testing Anti-Patterns
-
-When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
-
 ## Final Rule
 
 ```
@@ -371,8 +373,3 @@ Otherwise → not TDD
 ```
 
 No exceptions without your human partner's permission.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

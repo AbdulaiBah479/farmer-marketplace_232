@@ -1,181 +1,190 @@
 ---
 name: design-system
-description: >-
-  Collaborative design system creation using Atomic Design methodology with
-  a structured seven-phase process (Philosophy, Tokens, Atoms, Molecules,
-  Organisms, Templates, Assembly). Produces a specification artifact with
-  philosophy traceability, named design tokens, and full component hierarchy.
-  Use when creating a design system, defining a visual language, specifying
-  UI tokens (colors, typography, spacing), building a component catalog, or
-  planning component architecture before implementation. Triggers on: "create
-  a design system", "define design tokens", "component library spec", "visual
-  language", "atoms and molecules", "style guide", "UI philosophy", "component
-  hierarchy". NOT for: implementing components in code (use atomic-design),
-  choosing frameworks (use architecture-decisions).
-license: CC0-1.0
-compatibility: Designed for any coding agent (Claude Code, Codex, Cursor, OpenCode, etc.)
-metadata:
-  author: jwilger
-  version: "1.2.1"
-  requires: []
-  context: [event-model]
-  phase: decide
-  standalone: true
-effort: high
+description: Audit, document, or extend your design system. Use when checking for naming inconsistencies or hardcoded values across components, writing documentation for a component's variants, states, and accessibility notes, or designing a new pattern that fits the existing system.
+argument-hint: "[audit | document | extend] <component or system>"
 ---
 
-# Design System
+# /design-system
 
-**Value:** Communication -- a documented design system creates shared
-vocabulary for every visual decision. When philosophy is explicit and
-tokens are named, contributors extend the system consistently without
-guessing at intent.
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
 
-## Purpose
+Manage your design system — audit for consistency, document components, or design new patterns.
 
-Facilitates collaborative creation of a design system specification.
-Produces an artifact at `docs/design-system.pen` (if Pencil MCP is
-available) or `docs/design-system.html` (single-file fallback) that
-documents philosophy, tokens, and the full component hierarchy from
-atoms through templates.
+## Usage
 
-## Practices
-
-### Detect Artifact Format
-
-Check whether the `mcp__pencil__get_editor_state` tool is available.
-
-- **Present:** Use `.pen` format. Follow `references/pencil-workflow.md`.
-- **Absent:** Use HTML format. Follow `references/html-artifact.md`.
-
-Decide the format before starting any design work. Do not switch formats
-mid-process.
-
-### Follow the Seven-Phase Collaborative Process
-
-You MUST follow `references/design-phases.md` for the full methodology.
-Each phase completes before the next begins.
-
-**Phases at a glance:**
-
-1. **Philosophy & Constraints** -- Brand, principles, accessibility,
-   responsive strategy, constraints. Every subsequent decision traces here.
-2. **Design Tokens** -- Color, typography, spacing, radii, elevation,
-   motion, breakpoints, opacity. Each token cites a philosophy principle.
-3. **Atoms** -- Indivisible elements (buttons, inputs, labels, icons).
-   Each documents states and references only tokens.
-4. **Molecules** -- Functional units composed of atoms (form fields,
-   search bars). Documents composition and interaction.
-5. **Organisms** -- Distinct UI sections composed of molecules and atoms
-   (headers, forms, data tables). Documents layout behavior.
-6. **Templates** -- Page layouts arranging organisms. Defines structure,
-   content slots, and breakpoint behavior.
-7. **Artifact Assembly** -- Compile into the chosen format with
-   philosophy as the first section.
-
-### Facilitate, Do Not Assume
-
-You are a facilitator, not a stenographer. Ask probing questions at each
-phase. Challenge choices that conflict with stated philosophy. Use
-`references/facilitation-questions.md` for question banks.
-
-1. Do not assume visual preferences -- ask
-2. Do not skip ahead when the user gives a partial answer -- probe deeper
-3. If event model wireframes exist in `docs/event_model/`, use them to
-   identify required components, but still confirm with the user
-4. Present token proposals informed by the philosophy and ask for
-   adjustments
-
-### Enforce Philosophy Traceability
-
-Every design decision traces back to the philosophy.
-
-- Tokens cite which philosophy principle they serve (e.g., `P1`)
-- Atoms reference which tokens they use
-- Molecules document which atoms they compose
-- Organisms document which molecules and atoms they compose
-- Templates document which organisms they arrange
-
-If a token cannot cite a principle, either the token is unnecessary or
-the philosophy is incomplete. Resolve before proceeding.
-
-**Do:**
-- Define philosophy before any visual decisions
-- Use only token references in components -- never raw values
-- Complete each phase before starting the next
-- Verify traceability at every level
-- Refer to `references/token-categories.md` for comprehensive token guidance
-
-**Do not:**
-- Make technology decisions (CSS framework, component library) -- those
-  belong in architecture-decisions
-- Skip the philosophy phase or treat it as optional
-- Use raw color codes, pixel values, or font names in components
-- Design multiple phases simultaneously
-- Proceed with gaps -- if something is undefined, ask
-
-## Enforcement Note
-
-Advisory in all modes. Phase gates are self-enforced: the agent must
-complete each phase's outputs and get user confirmation before proceeding.
-Token traceability is self-enforced: the agent must verify every component
-references tokens, not raw values.
-
-**Hard constraints:**
-- Phase ordering (complete each phase before starting the next): `[RP]`
-
-## Constraints
-
-- **"No raw values in components"**: This means no literal color codes, pixel
-  values, font sizes, or spacing values anywhere in component definitions.
-  "I defined a token for it" is not sufficient if the component file contains
-  the raw value instead of the token reference. Defining many single-use
-  tokens to technically satisfy this rule while defeating reusability is also
-  a violation.
-- **Philosophy phase**: Philosophy means named principles with enough
-  specificity to guide decisions. "Modern and clean" is not a philosophy --
-  it constrains nothing. Each principle should be testable: given a design
-  decision, the principle should help you choose between options. If it
-  doesn't eliminate any option, it's not specific enough.
-
-## Verification
-
-After completing work guided by this skill, verify:
-
-- [ ] Philosophy documented with named principles before any components
-- [ ] Tokens defined for all visual categories (color, typography,
-      spacing, radii, elevation, motion, breakpoints, opacity)
-- [ ] Every token cites a philosophy principle
-- [ ] Atoms reference only tokens (no raw values)
-- [ ] Molecules compose only atoms from the catalog
-- [ ] Organisms compose only molecules and atoms from the catalog
-- [ ] Templates arrange only organisms from the catalog
-- [ ] All component states documented (default, hover, focus, disabled,
-      error as applicable)
-- [ ] Wireframe fields mapped to components if event model exists
-- [ ] Artifact exists at `docs/design-system.pen` or
-      `docs/design-system.html`
-- [ ] Philosophy is the first section in the artifact
-
-If any criterion is not met, revisit the relevant phase before proceeding.
-
-## Dependencies
-
-This skill works standalone. For enhanced workflows, it integrates with:
-
-- **event-modeling:** Wireframes from event modeling sessions identify
-  which components the design system must include. Run event-modeling
-  first for best results.
-- **architecture-decisions:** The design system specification informs
-  technology decisions for UI implementation (CSS framework, component
-  library, build tooling). Run design-system before architecture-decisions.
-- **atomic-design:** The design system specification provides the token
-  definitions, component catalog, and hierarchy that atomic-design
-  implements in code.
-- **tdd:** Token values and component specifications become testable
-  contracts -- visual regression tests verify token compliance.
-
-Missing a dependency? Install with:
 ```
-npx skills add jwilger/agent-skills --skill event-modeling
+/design-system audit                    # Full system audit
+/design-system document [component]     # Document a component
+/design-system extend [pattern]         # Design a new component or pattern
 ```
+
+## Components of a Design System
+
+### Design Tokens
+Atomic values that define the visual language:
+- Colors (brand, semantic, neutral)
+- Typography (scale, weights, line heights)
+- Spacing (scale, component padding)
+- Borders (radius, width)
+- Shadows (elevation levels)
+- Motion (durations, easings)
+
+### Components
+Reusable UI elements with defined:
+- Variants (primary, secondary, ghost)
+- States (default, hover, active, disabled, loading, error)
+- Sizes (sm, md, lg)
+- Behavior (interactions, animations)
+- Accessibility (ARIA, keyboard)
+
+### Patterns
+Common UI solutions combining components:
+- Forms (input groups, validation, submission)
+- Navigation (sidebar, tabs, breadcrumbs)
+- Data display (tables, cards, lists)
+- Feedback (toasts, modals, inline messages)
+
+## Principles
+
+1. **Consistency over creativity** — The system exists so teams don't reinvent the wheel
+2. **Flexibility within constraints** — Components should be composable, not rigid
+3. **Document everything** — If it's not documented, it doesn't exist
+4. **Version and migrate** — Breaking changes need migration paths
+
+## Output — Audit
+
+```markdown
+## Design System Audit
+
+### Summary
+**Components reviewed:** [X] | **Issues found:** [X] | **Score:** [X/100]
+
+### Naming Consistency
+| Issue | Components | Recommendation |
+|-------|------------|----------------|
+| [Inconsistent naming] | [List] | [Standard to adopt] |
+
+### Token Coverage
+| Category | Defined | Hardcoded Values Found |
+|----------|---------|----------------------|
+| Colors | [X] | [X] instances of hardcoded hex |
+| Spacing | [X] | [X] instances of arbitrary values |
+| Typography | [X] | [X] instances of custom fonts/sizes |
+
+### Component Completeness
+| Component | States | Variants | Docs | Score |
+|-----------|--------|----------|------|-------|
+| Button | ✅ | ✅ | ⚠️ | 8/10 |
+| Input | ✅ | ⚠️ | ❌ | 5/10 |
+
+### Priority Actions
+1. [Most impactful improvement]
+2. [Second priority]
+3. [Third priority]
+```
+
+## Output — Document
+
+```markdown
+## Component: [Name]
+
+### Description
+[What this component is and when to use it]
+
+### Variants
+| Variant | Use When |
+|---------|----------|
+| [Primary] | [Main actions] |
+| [Secondary] | [Supporting actions] |
+
+### Props / Properties
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| [prop] | [type] | [default] | [description] |
+
+### States
+| State | Visual | Behavior |
+|-------|--------|----------|
+| Default | [description] | — |
+| Hover | [description] | [interaction] |
+| Active | [description] | [interaction] |
+| Disabled | [description] | Non-interactive |
+| Loading | [description] | [animation] |
+
+### Accessibility
+- **Role**: [ARIA role]
+- **Keyboard**: [Tab, Enter, Escape behavior]
+- **Screen reader**: [Announced as...]
+
+### Do's and Don'ts
+| ✅ Do | ❌ Don't |
+|------|---------|
+| [Best practice] | [Anti-pattern] |
+
+### Code Example
+[Framework-appropriate code snippet]
+```
+
+## Output — Extend
+
+```markdown
+## New Component: [Name]
+
+### Problem
+[What user need or gap this component addresses]
+
+### Existing Patterns
+| Related Component | Similarity | Why It's Not Enough |
+|-------------------|-----------|---------------------|
+| [Component] | [What's shared] | [What's missing] |
+
+### Proposed Design
+
+#### API / Props
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| [prop] | [type] | [default] | [description] |
+
+#### Variants
+| Variant | Use When | Visual |
+|---------|----------|--------|
+| [Variant] | [Scenario] | [Description] |
+
+#### States
+| State | Behavior | Notes |
+|-------|----------|-------|
+| Default | [Description] | — |
+| Hover | [Description] | [Interaction] |
+| Disabled | [Description] | Non-interactive |
+| Loading | [Description] | [Animation] |
+
+#### Tokens Used
+- Colors: [Which tokens]
+- Spacing: [Which tokens]
+- Typography: [Which tokens]
+
+### Accessibility
+- **Role**: [ARIA role]
+- **Keyboard**: [Expected interactions]
+- **Screen reader**: [Announced as...]
+
+### Open Questions
+- [Decision that needs design review]
+- [Edge case to resolve]
+```
+
+## If Connectors Available
+
+If **~~design tool** is connected:
+- Audit components directly in Figma — check naming, variants, and token usage
+- Pull component properties and layer structure for documentation
+
+If **~~knowledge base** is connected:
+- Search for existing component documentation and usage guidelines
+- Publish updated documentation to your wiki
+
+## Tips
+
+1. **Start with an audit** — Know where you are before deciding where to go.
+2. **Document as you build** — It's easier to document a component while designing it.
+3. **Prioritize coverage over perfection** — 80% of components documented beats 100% of 10 components.

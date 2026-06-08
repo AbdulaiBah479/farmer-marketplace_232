@@ -1,127 +1,119 @@
 ---
-name: "content-strategy"
-description: "When the user wants to plan a content strategy, decide what content to create, or figure out what topics to cover. Also use when the user mentions \"content strategy,\" \"what should I write about,\" \"content ideas,\" \"blog strategy,\" \"topic clusters,\" or \"content planning.\" For writing individual pieces, see copywriting. For SEO-specific audits, see seo-audit."
-license: MIT
-metadata:
-  version: 1.0.0
-  author: Alireza Rezvani
-  category: marketing
-  updated: 2026-03-06
+name: content-strategy
+description: >
+  Analyzes sales data from PayPal and QuickBooks to find top performers and
+  slow movers, layers in seasonality, and produces a prioritized 30-day
+  content brief: what to push, what offers to run, what to hold. Strategic
+  output only — no calendars or assets. Use when the user asks what to post,
+  wants a content plan, asks what's selling, or what to promote this month.
 ---
 
 # Content Strategy
 
-You are a content strategist. Your goal is to help plan content that drives traffic, builds authority, and generates leads by being either searchable, shareable, or both.
+> **Status:** MVP draft
+> **Owner:** JJ
+> **Version:** 0.2.0 · Phase MVP
+> **Category:** Marketing & Sales
 
-## Before Planning
+## Quick start
 
-**Check for product marketing context first:**
-If `.claude/product-marketing-context.md` exists, read it before asking questions. Use that context and only ask for information not already covered or specific to this task.
+When an SMB owner asks "what should I post this month?" or "what's my content plan?", this skill:
 
-Gather this context (ask if not provided):
+1. **Pulls sales data** from QuickBooks or PayPal (transaction history, product/service revenue by date)
+2. **Identifies patterns** — top-selling products, slow movers, seasonal trends
+3. **Layers in context** — seasonality (user-provided or industry benchmarks), past performance
+4. **Produces a 30-day brief** — ranked recommendations of what to push, what to hold, what offers to consider
+5. **Gets owner approval** before the brief feeds into `canva-creator` for asset generation
 
-### 1. Business Context
-- What does the company do?
-- Who is the ideal customer?
-- What's the primary goal for content? (traffic, leads, brand awareness, thought leadership)
-- What problems does your product solve?
-
-### 2. Customer Research
-- What questions do customers ask before buying?
-- What objections come up in sales calls?
-- What topics appear repeatedly in support tickets?
-- What language do customers use to describe their problems?
-
-### 3. Current State
-- Do you have existing content? What's working?
-- What resources do you have? (writers, budget, time)
-- What content formats can you produce? (written, video, audio)
-
-### 4. Competitive Landscape
-- Who are your main competitors?
-- What content gaps exist in your market?
+The output is strategic only — no calendar scheduling, no creative assets.
 
 ---
 
-## Searchable vs Shareable
-→ See references/content-strategy-reference.md for details
+## Workflow
 
-## Output Format
+### Step 1: Pre-flight check (QuickBooks only)
 
-When creating a content strategy, provide:
+If using QuickBooks, verify the business profile is set up:
 
-### 1. Content Pillars
-- 3-5 pillars with rationale
-- Subtopic clusters for each pillar
-- How pillars connect to product
+1. Call `company-info` to check if `Industry` is populated
+2. If missing or "Unknown":
+   - Ask: "I need your business category to pull the right seasonality benchmarks. What industry are you in?" (e.g., retail, services, SaaS)
+   - Call `quickbooks-profile-info-update` with the user's industry
+   - Confirm: "Profile updated. Ready to pull your sales data."
+3. If profile is set, proceed to Step 2
 
-### 2. Priority Topics
-For each recommended piece:
-- Topic/title
-- Searchable, shareable, or both
-- Content type (use-case, hub/spoke, thought leadership, etc.)
-- Target keyword and buyer stage
-- Why this topic (customer research backing)
+**Note:** PayPal and Square do not require profile setup.
 
-### 3. Topic Cluster Map
-Visual or structured representation of how content interconnects.
+### Step 2: Clarify priorities & metrics
+
+When triggered, ask the user:
+
+- **"How do you want me to measure 'top performers'?"**
+  - By total revenue?
+  - By profit margin?
+  - By sales velocity (how fast they're selling)?
+  - Combination of the above?
+
+- **"Do you have seasonality patterns in mind?"**
+  - If yes: "Tell me about them" (capture user's known seasonality)
+  - If no: "I'll use industry benchmarks for your category"
+
+### Step 3: Pull and analyze sales data
+
+Fetch data from the authenticated connector (QuickBooks, PayPal, or Square, user's choice):
+
+- **Date range:** Last 90 days (or full history if <90 days available)
+- **Extract:** Product/service name, date sold, revenue, quantity
+
+**Connector-specific notes:**
+
+- **QuickBooks:** Fetch invoice line items via `profit-loss-quickbooks-account` (pre-flight sets industry context)
+- **PayPal:** Fetch merchant transactions via `list_transactions`. *Rate-limiting:* If you hit rate limits, pause 30 seconds and retry once. If still blocked, gracefully offer: "PayPal is rate-limited. Would you like to switch to QuickBooks or Square instead, or I can continue with historical data I already pulled?"
+- **Square:** Requires location ID first. Call `make_api_request(service="locations", method="list")` to discover available locations, then fetch orders for each location. *Future enhancement:* Square integration is stubbed; full path documented in `reference/square-integration.md`.
+
+**Fallback:** If <3 months of data, use industry seasonality benchmarks for the SMB's category (e.g., retail, services, e-commerce)
+
+Identify:
+- **Top 3–5 performers** (by user's chosen metric)
+- **Bottom 3–5 slow movers** (consider holding or repositioning)
+- **Trending up** (gaining momentum in last 30 days)
+- **Trending down** (losing momentum)
+
+### Step 4: Layer in seasonality
+
+- **User-provided:** If they shared seasonal patterns, weight recommendations against them
+- **Industry benchmarks:** For categories without strong user data (e.g., "Q1 is strong for tax services")
+- **Timing:** Flag products that should ramp up/down in the next 30 days based on seasonal patterns
+
+### Step 5: Build the 30-day brief
+
+Structure:
+- **Executive summary** (1–2 sentences: "Your best sellers are X and Y. Seasonal shift to Z is starting.")
+- **Push hard** (Top 2–3 products + recommended content angle, e.g., "Case study on ROI", "How-to video")
+- **Hold steady** (Middle performers; maintain visibility but no heavy lift)
+- **Reposition or pause** (Slow movers; consider discounting, bundling, or pausing)
+- **Seasonal opportunities** (What's coming next month that you should position for now)
+- **Recommended offers** (Bundle, discount, or free-trial strategy based on data)
+
+Example length: **200–400 words** (brief and actionable, not essay-length).
+
+### Step 6: Owner approval & iteration
+
+Present the brief to the owner. Ask:
+- "Does this match your gut?"
+- "Anything to adjust?"
+- "Ready to feed this to canva-creator for asset generation?"
+
+Iterate if needed; once approved, return the final brief as structured JSON (ready for downstream tools).
 
 ---
 
-## Task-Specific Questions
+## Gotchas & edge cases
 
-1. What patterns emerge from your last 10 customer conversations?
-2. What questions keep coming up in sales calls?
-3. Where are competitors' content efforts falling short?
-4. What unique insights from customer research aren't being shared elsewhere?
-5. Which existing content drives the most conversions, and why?
+See [`reference/gotchas.md`](reference/gotchas.md) for common pitfalls.
 
 ---
 
-## Proactive Triggers
+## Examples
 
-Surface these issues WITHOUT being asked when you notice them in context:
-
-- **No content plan exists** → Immediately propose a 3-pillar starter strategy with 10 seed topics before asking more questions.
-- **User has content but low traffic** → Flag the searchable vs. shareable imbalance; run a quick audit of existing titles against keyword intent.
-- **User is writing content without a keyword target** → Warn that effort may be wasted; offer to identify the right keyword before they start writing.
-- **Content covers too many audiences** → Flag ICP dilution; recommend splitting pillars by persona or use-case.
-- **Competitor content clearly outranks them on core topics** → Trigger a gap analysis and surface quick-win opportunities where competition is lower.
-
----
-
-## Output Artifacts
-
-| When you ask for... | You get... |
-|---------------------|------------|
-| A content strategy | 3-5 pillars with rationale, subtopic clusters per pillar, product-content connection map |
-| Topic ideation | Prioritized topic table (keyword, volume, difficulty, buyer stage, content type, score) |
-| A content calendar | Weekly/monthly plan with topic, format, target keyword, and distribution channel |
-| Competitor analysis | Gap table showing competitor coverage vs. your coverage with opportunity ratings |
-| A content brief | Single-page brief: goal, audience, keyword, outline, CTA, internal links, proof points |
-
----
-
-## Communication
-
-All output follows the structured communication standard:
-
-- **Bottom line first** — recommendation before rationale
-- **What + Why + How** — every strategy has all three
-- **Actions have owners and deadlines** — no "you might consider"
-- **Confidence tagging** — 🟢 high confidence / 🟡 medium / 🔴 assumption
-
-Output format defaults: tables for prioritization, bullet lists for options, prose for rationale. Match depth to request — a quick question gets a quick answer, not a strategy doc.
-
----
-
-## Related Skills
-
-- **marketing-context**: USE as the foundation before any strategy work — reads product, audience, and brand context. NOT a substitute for this skill.
-- **copywriting**: USE when a topic is approved and it's time to write the actual piece. NOT for deciding what to write about.
-- **copy-editing**: USE to polish content drafts after writing. NOT for planning or strategy decisions.
-- **social-content**: USE when distributing approved content to social platforms. NOT for organic search strategy.
-- **marketing-ideas**: USE when brainstorming growth channels beyond content. NOT for deep keyword or topic planning.
-- **seo-audit**: USE when auditing existing content for technical and on-page issues. NOT for creating new strategy from scratch.
-- **content-production**: USE when scaling content volume with a repeatable production workflow. NOT for initial strategy definition.
-- **content-humanizer**: USE when AI-generated content needs to sound more authentic. NOT for topic selection.
+See [`reference/examples/`](reference/examples/) for worked examples (SaaS, retail, services).

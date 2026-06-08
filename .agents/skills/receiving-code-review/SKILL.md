@@ -1,9 +1,17 @@
 ---
 name: receiving-code-review
-description: "Code review requires technical evaluation, not emotional performance."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+keywords:
+  - address feedback
+  - code changes
+  - code review feedback
+  - receive review
+  - review comments
+file_patterns:
+  - '**/.github/pull_request*'
+  - '**/CODE_REVIEW.md'
+  - '**/pull_request_template*'
+confidence: 0.78
 ---
 
 # Code Review Reception
@@ -203,10 +211,6 @@ You understand 1,2,3,6. Unclear on 4,5.
 ✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
 ```
 
-## GitHub Thread Replies
-
-When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
-
 ## The Bottom Line
 
 **External feedback = suggestions to evaluate, not orders to follow.**
@@ -214,11 +218,3 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,9 +1,20 @@
 ---
 name: systematic-debugging
-description: "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes"
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes - four-phase framework (root cause investigation, pattern analysis, hypothesis testing, implementation) that ensures understanding before attempting solutions
+keywords:
+  - bug fix
+  - bug fix strategy
+  - debug process
+  - systematic debug
+  - troubleshoot
+file_patterns:
+  - '**/*_test.py'
+  - '**/bugs/**'
+  - '**/debug/**'
+  - '**/issues/**'
+  - '**/test_*.py'
+  - '**/tests/**/*.py'
+confidence: 0.8
 ---
 
 # Systematic Debugging
@@ -25,6 +36,7 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 If you haven't completed Phase 1, you cannot propose fixes.
 
 ## When to Use
+
 Use for ANY technical issue:
 - Test failures
 - Bugs in production
@@ -113,7 +125,7 @@ You MUST complete each phase before proceeding to the next.
 
    **WHEN error is deep in call stack:**
 
-   See `root-cause-tracing.md` in this directory for the complete backward tracing technique.
+   **REQUIRED SUB-SKILL:** Use superpowers:root-cause-tracing for backward tracing technique
 
    **Quick version:**
    - Where does bad value originate?
@@ -178,7 +190,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - **REQUIRED SUB-SKILL:** Use superpowers:test-driven-development for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -277,17 +289,16 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 
 **But:** 95% of "no root cause" cases are incomplete investigation.
 
-## Supporting Techniques
+## Integration with Other Skills
 
-These techniques are part of systematic debugging and available in this directory:
+**This skill requires using:**
+- **root-cause-tracing** - REQUIRED when error is deep in call stack (see Phase 1, Step 5)
+- **test-driven-development** - REQUIRED for creating failing test case (see Phase 4, Step 1)
 
-- **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
-- **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
-- **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
-
-**Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+**Complementary skills:**
+- **defense-in-depth** - Add validation at multiple layers after finding root cause
+- **condition-based-waiting** - Replace arbitrary timeouts identified in Phase 2
+- **verification-before-completion** - Verify fix worked before claiming success
 
 ## Real-World Impact
 
@@ -296,8 +307,3 @@ From debugging sessions:
 - Random fixes approach: 2-3 hours of thrashing
 - First-time fix rate: 95% vs 40%
 - New bugs introduced: Near zero vs common
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

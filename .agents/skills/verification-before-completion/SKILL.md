@@ -1,9 +1,25 @@
 ---
 name: verification-before-completion
-description: "Claiming work is complete without verification is dishonesty, not efficiency. Use when ANY variation of success/completion claims, ANY expression of satisfaction, or ANY positive statement about work state."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+keywords:
+  - check before complete
+  - pre-completion check
+  - validation step
+  - verify
+file_patterns:
+  - '**/.github/pull_request*'
+  - '**/.github/workflows/*release*.yml'
+  - '**/.gitlab-ci.yml'
+  - '**/CHANGELOG*'
+  - '**/CODE_REVIEW.md'
+  - '**/RELEASE*'
+  - '**/cd/**'
+  - '**/ci/**'
+  - '**/pull_request_template*'
+  - '**/release/**'
+  - '**/releases/**'
+  - .github/workflows/*.yml
+confidence: 0.78
 ---
 
 # Verification Before Completion
@@ -117,7 +133,8 @@ From 24 failure memories:
 - Time wasted on false completion → redirect → rework
 - Violates: "Honesty is a core value. If you lie, you'll be replaced."
 
-## When to Use
+## When To Apply
+
 **ALWAYS before:**
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
@@ -139,11 +156,3 @@ From 24 failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
-
-### When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

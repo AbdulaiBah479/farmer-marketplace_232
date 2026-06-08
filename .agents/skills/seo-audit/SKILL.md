@@ -1,154 +1,190 @@
 ---
-name: "seo-audit"
-description: When the user wants to audit, review, or diagnose SEO issues on their site. Also use when the user mentions "SEO audit," "technical SEO," "why am I not ranking," "SEO issues," "on-page SEO," "meta tags review," or "SEO health check." For building pages at scale to target keywords, see programmatic-seo. For adding structured data, see schema-markup.
-license: MIT
-metadata:
-  version: 1.0.0
-  author: Alireza Rezvani
-  category: marketing
-  updated: 2026-03-06
+name: seo-audit
+description: Run a comprehensive SEO audit — keyword research, on-page analysis, content gaps, technical checks, and competitor comparison. Use when assessing a site's SEO health, when finding keyword opportunities and content gaps competitors own, or when you need a prioritized action plan split into quick wins and strategic investments.
+argument-hint: "<url or topic> [audit type]"
 ---
 
-# SEO Audit
+# /seo-audit
 
-You are an expert in search engine optimization. Your goal is to identify SEO issues and provide actionable recommendations to improve organic search performance.
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
 
-## Initial Assessment
+Audit a website's SEO health, research keyword opportunities, identify content gaps, and benchmark against competitors. Produces a prioritized action plan a marketer can execute immediately.
 
-**Check for product marketing context first:**
-If `.claude/product-marketing-context.md` exists, read it before asking questions. Use that context and only ask for information not already covered or specific to this task.
+## Trigger
 
-Before auditing, understand:
+User runs `/seo-audit` or asks for an SEO audit, keyword research, content gap analysis, technical SEO check, or competitor SEO comparison.
 
-1. **Site Context**
-   - What type of site? (SaaS, e-commerce, blog, etc.)
-   - What's the primary business goal for SEO?
-   - What keywords/topics are priorities?
+## Inputs
 
-2. **Current State**
-   - Any known issues or concerns?
-   - Current organic traffic level?
-   - Recent changes or migrations?
+Gather the following from the user. If not provided, ask before proceeding:
 
-3. **Scope**
-   - Full site audit or specific pages?
-   - Technical + on-page, or one focus area?
-   - Access to Search Console / analytics?
+1. **URL or domain** — the site to audit, or a topic/keyword if running in keyword research mode
 
----
+2. **Audit type** — one of:
+   - **Full site audit** — end-to-end SEO review covering all sections below
+   - **Keyword research** — identify keyword opportunities for a topic or domain
+   - **Content gap analysis** — find topics competitors rank for that you don't
+   - **Technical SEO check** — crawlability, speed, structured data, and infrastructure issues
+   - **Competitor SEO comparison** — head-to-head SEO benchmarking against specific competitors
 
-## Audit Framework
-→ See references/seo-audit-reference.md for details
+   If not specified, default to **full site audit**.
 
-## Output Format
+3. **Target keywords or topics** (optional) — specific keywords the user is already targeting or wants to rank for
 
-### Audit Report Structure
+4. **Competitors** (optional) — domains or companies to compare against. If not provided and the audit type requires competitor data, use web search to identify 2-3 likely competitors based on the user's domain and keyword space.
 
-**Executive Summary**
-- Overall health assessment
-- Top 3-5 priority issues
-- Quick wins identified
+## Process
 
-**Technical SEO Findings**
-For each issue:
-- **Issue**: What's wrong
-- **Impact**: SEO impact (High/Medium/Low)
-- **Evidence**: How you found it
-- **Fix**: Specific recommendation
-- **Priority**: 1-5 or High/Medium/Low
+### 1. Keyword Research
 
-**On-Page SEO Findings**
-Same format as above
+Research keywords related to the user's domain, topic, or target keywords.
 
-**Content Findings**
-Same format as above
+**If ~~SEO tools are connected:**
+- Pull keyword data, search volume, keyword difficulty scores, and ranking positions automatically
+- Identify keywords the site currently ranks for and where it's gaining or losing ground
 
-**Prioritized Action Plan**
-1. Critical fixes (blocking indexation/ranking)
-2. High-impact improvements
-3. Quick wins (easy, immediate benefit)
-4. Long-term recommendations
+**If ~~product analytics are connected:**
+- Cross-reference keyword targets with actual organic traffic data to validate which keywords are driving visits and conversions
 
----
+**If tools are not connected:**
+- Use web search to research the keyword landscape
+- Note: "For more precise volume and difficulty data, connect an SEO tool like Ahrefs or Semrush via MCP. The audit will auto-populate with ranking data."
 
-## References
+For each keyword opportunity, assess:
+- **Primary keywords** — high-intent terms directly tied to the user's product or service
+- **Secondary keywords** — supporting terms and variations
+- **Search volume signals** — relative demand (high, medium, low) based on available data
+- **Keyword difficulty** — how competitive the term is (easy, moderate, hard)
+- **Long-tail opportunities** — specific, lower-competition phrases with clear intent
+- **Question-based keywords** — "how to", "what is", "why does" queries that mirror People Also Ask results
+- **Intent classification** — informational, navigational, commercial, or transactional
 
-- [SEO Audit Reference](references/seo-audit-reference.md): Full audit framework, scoring, and remediation patterns
-- [Core Web Vitals Thresholds](references/cwv-thresholds.md): LCP/INP/CLS targets and triage rules
-- [E-E-A-T Framework](references/eeat-framework.md): Experience, Expertise, Authoritativeness, Trustworthiness checklist
-- [Schema Types](references/schema-types.md): Structured data patterns by content type
+### 2. On-Page SEO Audit
 
----
+For each key page (homepage, top landing pages, recent blog posts), evaluate:
 
-## Tools Referenced
+- **Title tags** — present, unique, within 50-60 characters, includes target keyword
+- **Meta descriptions** — present, compelling, within 150-160 characters, includes a call to action
+- **H1 tags** — exactly one per page, includes primary keyword
+- **H2/H3 structure** — logical hierarchy, uses secondary keywords where natural
+- **Keyword usage** — primary keyword appears in the first 100 words, used naturally throughout, not over-stuffed
+- **Internal linking** — pages link to related content, orphan pages identified, anchor text is descriptive
+- **Image alt text** — all images have descriptive alt attributes, keywords included where relevant
+- **URL structure** — clean, readable, includes keywords, no excessive parameters or depth
 
-**Free Tools**
-- Google Search Console (essential)
-- Google PageSpeed Insights
-- Bing Webmaster Tools
-- Rich Results Test
-- Mobile-Friendly Test
-- Schema Validator
+### 3. Content Gap Analysis
 
-**Paid Tools** (if available)
-- Screaming Frog
-- Ahrefs / Semrush
-- Sitebulb
-- ContentKing
+Identify what's missing from the user's content strategy:
 
----
+- **Competitor topic coverage** — topics and keywords competitors rank for that the user's site does not cover
+- **Content freshness** — pages that haven't been updated in 12+ months and may be losing rankings
+- **Thin content** — pages with insufficient depth to rank (under 300 words for informational queries, lacking substance)
+- **Missing content types** — formats competitors use that the user doesn't (guides, comparison pages, glossaries, tools, templates)
+- **Funnel gaps** — missing content at specific buyer journey stages (awareness, consideration, decision)
+- **Topic clusters** — opportunities to build pillar pages with supporting content
 
-## Task-Specific Questions
+### 4. Technical SEO Checklist
 
-1. What pages/keywords matter most?
-2. Do you have Search Console access?
-3. Any recent changes or migrations?
-4. Who are your top organic competitors?
-5. What's your current organic traffic baseline?
+Evaluate technical foundations that affect crawlability and rankings:
 
----
+- **Page speed** — identify slow-loading pages and likely causes (large images, render-blocking scripts, excessive redirects)
+- **Mobile-friendliness** — responsive design, tap targets, font sizes, viewport configuration
+- **Structured data** — opportunities for schema markup (FAQ, HowTo, Product, Article, Organization, Breadcrumb)
+- **Crawlability** — robots.txt configuration, XML sitemap presence and accuracy, canonical tags, noindex/nofollow usage
+- **Broken links** — internal and external 404s, redirect chains
+- **HTTPS** — secure connection, mixed content issues
+- **Core Web Vitals signals** — LCP, FID/INP, CLS indicators based on observable page behavior
+- **Indexation** — pages that should be indexed but may not be, duplicate content risks
 
-## Related Skills
+### 5. Competitor SEO Comparison
 
-- **programmatic-seo** — WHEN: user wants to build SEO pages at scale after the audit identifies keyword gaps. WHEN NOT: don't use for diagnosing existing issues; stay in seo-audit mode.
-- **ai-seo** — WHEN: user wants to optimize for AI answer engines (SGE, Perplexity, ChatGPT) in addition to traditional search. WHEN NOT: don't use for purely technical crawl/indexation issues.
-- **schema-markup** — WHEN: audit reveals missing structured data opportunities (FAQ, HowTo, Product, Review schemas). WHEN NOT: don't use as a standalone fix when core technical SEO is broken.
-- **site-architecture** — WHEN: audit uncovers poor internal linking, orphan pages, or crawl depth issues that need a structural redesign. WHEN NOT: don't involve when the audit scope is limited to on-page or content issues.
-- **content-strategy** — WHEN: audit reveals thin content, keyword gaps, or lack of topical authority requiring a content plan. WHEN NOT: don't use when the problem is purely technical (robots.txt, redirects, speed).
-- **marketing-context** — WHEN: always read first if `.claude/product-marketing-context.md` exists to avoid redundant questions. WHEN NOT: skip if no context file exists and user has provided all necessary product info directly.
+For each competitor, compare:
 
----
+- **Keyword overlap** — keywords both sites rank for, and where each site ranks higher
+- **Keyword gaps** — terms the competitor ranks for that the user does not
+- **Domain authority signals** — relative site strength based on backlink profiles, referring domains, and content depth
+- **Content depth** — average content length, topic coverage breadth, publishing frequency
+- **Backlink profile observations** — types of sites linking to competitors, link-worthy content they've produced
+- **SERP feature ownership** — which competitor appears in featured snippets, People Also Ask, image packs, or knowledge panels
+- **Technical advantages** — site speed differences, mobile experience, structured data usage
 
-## Communication
+## Output
 
-All audit output follows the **SEO Audit Quality Standard**:
-- Lead with the executive summary (3-5 bullets max)
-- Findings use the Issue / Impact / Evidence / Fix / Priority format consistently
-- Prioritized Action Plan is always the final deliverable section
-- Avoid jargon without explanation; write for a technically-aware but non-SEO-specialist reader
-- Quick wins are called out explicitly and kept separate from high-effort recommendations
-- Never present recommendations without evidence or rationale
+### Executive Summary
 
----
+Open with a 3-5 sentence summary of overall SEO health. Highlight:
+- The site's biggest strength
+- The top 3 priorities that will have the most impact
+- An overall assessment: strong foundation, needs work, or critical issues
 
-## Proactive Triggers
+### Keyword Opportunity Table
 
-Automatically surface seo-audit recommendations when:
+| Keyword | Est. Difficulty | Opportunity Score | Current Ranking | Intent | Recommended Content Type |
+|---------|----------------|-------------------|-----------------|--------|--------------------------|
 
-1. **Traffic drop mentioned** — User says organic traffic dropped or rankings fell; immediately frame an audit scope.
-2. **Site migration or redesign** — User mentions a planned or recent URL change, platform switch, or redesign; flag pre/post-migration audit needs.
-3. **"Why isn't my page ranking?"** — Any ranking frustration triggers the on-page + intent checklist before external factors.
-4. **Content strategy discussion** — When content-strategy skill is active and keyword gaps appear, proactively suggest an SEO audit to validate opportunity.
-5. **New site or product launch** — User preparing a launch; proactively recommend a technical SEO pre-launch checklist from the audit framework.
+Opportunity score: high, medium, or low — based on the combination of search demand, difficulty, and relevance to the user's business.
 
----
+Include 15-25 keyword opportunities, sorted by opportunity score.
 
-## Output Artifacts
+### On-Page Issues Table
 
-| Artifact | Format | Description |
-|----------|--------|-------------|
-| Executive Summary | Markdown bullets | 3-5 top issues + quick wins, suitable for sharing with stakeholders |
-| Technical SEO Findings | Structured table | Issue / Impact / Evidence / Fix / Priority per finding |
-| On-Page SEO Findings | Structured table | Same format, focused on content and metadata |
-| Prioritized Action Plan | Numbered list | Ordered by impact × effort, grouped into Critical / High / Quick Wins |
-| Keyword Cannibalization Map | Table | Pages competing for same keyword with recommended canonical or redirect actions |
+| Page | Issue | Severity | Recommended Fix |
+|------|-------|----------|-----------------|
+
+Severity levels:
+- **Critical** — directly hurting rankings or preventing indexation
+- **High** — significant impact on SEO performance
+- **Medium** — best practice violation, moderate impact
+- **Low** — minor optimization opportunity
+
+### Content Gap Recommendations
+
+For each content gap identified, provide:
+- **Topic or keyword** to target
+- **Why it matters** — search demand, competitor coverage, funnel stage
+- **Recommended format** — blog post, landing page, guide, comparison page, etc.
+- **Priority** — high, medium, or low
+- **Estimated effort** — quick win (1-2 hours), moderate (half day), substantial (multi-day)
+
+### Technical SEO Checklist
+
+| Check | Status | Details |
+|-------|--------|---------|
+
+Status: Pass, Fail, or Warning.
+
+### Competitor Comparison Summary
+
+| Dimension | Your Site | Competitor A | Competitor B | Winner |
+|-----------|-----------|--------------|--------------|--------|
+
+Include rows for: keyword count, content depth, publishing frequency, backlink signals, technical score, SERP feature presence.
+
+### Prioritized Action Plan
+
+Split recommendations into two categories:
+
+**Quick Wins (do this week):**
+- Actions that take under 2 hours and have immediate impact
+- Examples: fix title tags, add meta descriptions, fix broken links, add alt text
+
+**Strategic Investments (plan for this quarter):**
+- Actions that require more effort but drive long-term growth
+- Examples: build a topic cluster, create a pillar page, launch a link-building campaign, overhaul site structure
+
+For each action item, include:
+- What to do (specific and concrete)
+- Expected impact (high, medium, low)
+- Effort estimate
+- Dependencies (if any)
+
+## Follow-Up
+
+After presenting the audit, ask:
+
+"Would you like me to:
+- Draft content briefs for the top keyword opportunities?
+- Create optimized title tags and meta descriptions for your key pages?
+- Build a content calendar based on the gap analysis?
+- Dive deeper into any specific section of the audit?
+- Run this same analysis for a different competitor or domain?"

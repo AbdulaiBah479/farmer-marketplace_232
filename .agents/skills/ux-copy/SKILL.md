@@ -1,83 +1,107 @@
 ---
 name: ux-copy
-description: "Generate UX microcopy in StyleSeed's Toss-inspired voice for buttons, empty states, errors, toasts, confirmations, and form guidance."
-category: design
-risk: safe
-source: community
-source_repo: bitjaru/styleseed
-source_type: community
-date_added: "2026-04-08"
-author: bitjaru
-tags: [ux, copywriting, microcopy, frontend, styleseed]
-tools: [claude, cursor, codex, gemini]
+description: Write or review UX copy — microcopy, error messages, empty states, CTAs. Trigger with "write copy for", "what should this button say?", "review this error message", or when naming a CTA, wording a confirmation dialog, filling an empty state, or writing onboarding text.
+argument-hint: "<context or copy to review>"
 ---
 
-# UX Copy
+# /ux-copy
 
-## Overview
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
 
-Part of [StyleSeed](https://github.com/bitjaru/styleseed), this skill generates concise product copy for common UI states. It follows the Toss-inspired tone: casual but polite, direct, active, and specific enough to help the user recover or proceed.
+Write or review UX copy for any interface context.
 
-## When to Use
-- Use when you need button labels, helper text, toasts, empty states, or error messages
-- Use when a feature has functional UI but weak or robotic wording
-- Use when you want consistent product voice across a flow
-- Use when confirmation dialogs or state feedback need better phrasing
+## Usage
 
-## Tone Rules
+```
+/ux-copy $ARGUMENTS
+```
 
-- casual but polite
-- active voice over passive voice
-- positive framing where it stays honest
-- plain language instead of internal jargon
-- concise wording where every word earns its place
+## What I Need From You
 
-## Common Patterns
+- **Context**: What screen, flow, or feature?
+- **User state**: What is the user trying to do? How are they feeling?
+- **Tone**: Formal, friendly, playful, reassuring?
+- **Constraints**: Character limits, platform guidelines?
 
-### Buttons
+## Principles
 
-Use a short action verb plus object when needed.
+1. **Clear**: Say exactly what you mean. No jargon, no ambiguity.
+2. **Concise**: Use the fewest words that convey the full meaning.
+3. **Consistent**: Same terms for the same things everywhere.
+4. **Useful**: Every word should help the user accomplish their goal.
+5. **Human**: Write like a helpful person, not a robot.
+
+## Copy Patterns
+
+### CTAs
+- Start with a verb: "Start free trial", "Save changes", "Download report"
+- Be specific: "Create account" not "Submit"
+- Match the outcome to the label
+
+### Error Messages
+Structure: What happened + Why + How to fix
+- "Payment declined. Your card was declined by your bank. Try a different card or contact your bank."
 
 ### Empty States
-
-Start with a friendly observation, then suggest the next action.
-
-### Errors
-
-Explain what happened in user-facing language and what to do next. Do not surface raw internal error strings.
-
-### Toasts
-
-Confirm the result quickly. Add an undo action for reversible destructive behavior.
-
-### Forms
-
-Use clear labels, useful placeholders, specific helper text, and corrective error messages.
+Structure: What this is + Why it's empty + How to start
+- "No projects yet. Create your first project to start collaborating with your team."
 
 ### Confirmation Dialogs
+- Make the action clear: "Delete 3 files?" not "Are you sure?"
+- Describe consequences: "This can't be undone"
+- Label buttons with the action: "Delete files" / "Keep files" not "OK" / "Cancel"
 
-State the action in plain language and explain the consequence if the decision is risky or irreversible.
+### Tooltips
+- Concise, helpful, never obvious
+
+### Loading States
+- Set expectations, reduce anxiety
+
+### Onboarding
+- Progressive disclosure, one concept at a time
+
+## Voice and Tone
+
+Adapt tone to context:
+- **Success**: Celebratory but not over the top
+- **Error**: Empathetic and helpful
+- **Warning**: Clear and actionable
+- **Neutral**: Informative and concise
 
 ## Output
 
-Return:
-1. The requested microcopy grouped by UI surface
-2. Notes on tone or localization considerations if relevant
-3. Any places where the UX likely needs a structural fix in addition to better copy
+```markdown
+## UX Copy: [Context]
 
-## Best Practices
+### Recommended Copy
+**[Element]**: [Copy]
 
-- Make the next action obvious
-- Avoid generic labels like "Submit" or "OK" when the action can be named precisely
-- Blame the system, not the user, when something fails
-- Keep error and empty states useful even without visual context
+### Alternatives
+| Option | Copy | Tone | Best For |
+|--------|------|------|----------|
+| A | [Copy] | [Tone] | [When to use] |
+| B | [Copy] | [Tone] | [When to use] |
+| C | [Copy] | [Tone] | [When to use] |
 
-## Additional Resources
+### Rationale
+[Why this copy works — user context, clarity, action-orientation]
 
-- [StyleSeed repository](https://github.com/bitjaru/styleseed)
-- [Source skill](https://github.com/bitjaru/styleseed/blob/main/seeds/toss/.claude/skills/ux-copy/SKILL.md)
+### Localization Notes
+[Anything translators should know — idioms to avoid, character expansion, cultural context]
+```
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+## If Connectors Available
+
+If **~~knowledge base** is connected:
+- Pull your brand voice guidelines and content style guide
+- Check for existing copy patterns and terminology standards
+
+If **~~design tool** is connected:
+- View the screen context in Figma to understand the full user flow
+- Check character limits and layout constraints from the design
+
+## Tips
+
+1. **Be specific about context** — "Error message when payment fails" is better than "error message."
+2. **Share your brand voice** — "We're professional but warm" helps me match your tone.
+3. **Consider the user's emotional state** — Error messages need empathy. Success messages can celebrate.

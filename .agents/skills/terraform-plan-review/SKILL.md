@@ -1,194 +1,215 @@
 ---
 name: terraform-plan-review
-description: Use when analyzing terraform/tofu plan output for risks, security issues, and potential service disruptions. Required before any apply operation.
+description: >-
+  Analyzes Terraform plan output as a staff DevOps engineer. Compares planned
+  changes against code diff, counts resources, identifies unexpected changes,
+  assesses risk. Use when reviewing terraform plan output locally, checking if
+  a plan is safe to apply, or doing pre-PR infrastructure review.
 ---
 
 # Terraform Plan Review
 
-## Overview
+## Goal
 
-Analyze terraform plan output using parallel agents for comprehensive risk assessment. **Never auto-apply** - always present findings and require explicit approval.
+Analyze Terraform plan output with the rigor of a staff DevOps engineer. Compare planned changes against the code diff to surface unexpected changes, assess risk, and produce a structured review report — replicating CI-based plan review quality locally for immediate feedback.
 
-**Announce at start:** "I'm using the terraform-plan-review skill to analyze these changes safely."
+## When to use
 
-## The Process
+- "Review this terraform plan"
+- "Is this plan safe to apply?"
+- "Analyze plan_output.txt"
+- "Check my terraform changes before I PR"
+- "What does this plan do?"
+- "Review my infra changes"
 
-### Step 1: Verify Environment
+## When not to use
 
-Before running any plan:
+- General Terraform code review without plan output (use code-review skill)
+- Writing or generating Terraform code
+- Terraform state management or import operations
+- Cloud cost estimation (use infracost or similar)
+- OWASP security audit (use security-audit-owasp-top-10 skill)
 
-1. **Check AWS Profile**
-   ```bash
-   aws sts get-caller-identity
+## Inputs
+
+- Terraform plan output (file path, auto-detected file, or generated via `terraform plan`)
+- Optional: stderr/log file with warnings and errors
+- Optional: git diff of `.tf`/`.tfvars`/`.hcl` changes
+
+## Outputs
+
+- Structured markdown report inline with resource counts, alignment check, risk assessment, detailed changes, and recommendations
+
+## Tool Requirements
+
+**Always use the `AskUserQuestion` tool** (never plain text) when you need clarification or confirmation from the user. This includes choosing between multiple files, confirming a command before running it, or requesting a file path.
+
+## Workflow
+
+### Phase 1: Acquire Plan Output
+
+Waterfall strategy — try each approach in order:
+
+1. **Explicit path**: If `$ARGUMENTS` contains a file path, read that file
+2. **Auto-detect**: Glob for plan output files in cwd:
    ```
-   - Verify the account ID matches expected environment
-   - Verify the role/user is appropriate for this operation
-   - If mismatch: STOP and alert user
+   Glob: plan.txt, plan_output.txt, tfplan.txt, *plan*.txt
+   ```
+   If exactly one match, use it. If multiple, use `AskUserQuestion` to ask user to pick.
+3. **Generate**: If `.terraform/` directory exists, offer to run:
+   ```bash
+   terraform plan -no-color > /tmp/plan_output.txt 2>/tmp/plan_stderr.log; echo "EXIT CODE: $?"
+   ```
+   Before running, check for `.tfvars` files (Glob `**/*.tfvars`) and if found, add `-var-file=<path>` to the command. `cd` into the directory containing `*.tf` files first if they are in a subdirectory. Use `AskUserQuestion` to confirm the command before running. Analyze the result.
+4. **Ask**: If none of the above work, use `AskUserQuestion` to ask the user to provide a file path.
 
-2. **Identify Environment**
-   - Check current directory structure (which environment?)
-   - Verify backend configuration matches environment
-
-### Step 2: Generate Plan
-
-```bash
-# Initialize if needed
-terraform init
-
-# Generate plan file (required for JSON parsing)
-terraform plan -out=plan.out
-
-# Convert to JSON for analysis
-terraform show -json plan.out > plan.json
+Also check for optional log/stderr files:
+```
+Glob: plan.log, plan_stderr.log, *plan*.log
 ```
 
-### Step 3: Dispatch Parallel Analysis Agents
+### Phase 2: Acquire Git Diff
 
-Launch these agents in a **single message with multiple Task calls**:
+For alignment checking, gather the Terraform-relevant code diff:
 
-```
-Task 1:
-  description: "Analyze plan risks"
-  prompt: |
-    Analyze this Terraform plan for risks and impact.
-    Environment: [env name]
-    Account: [account id]
+1. Detect base branch: check for `main`, then `master`, then upstream tracking branch
+2. Combine diffs:
+   ```bash
+   git diff <base>...HEAD -- '*.tf' '*.tfvars' '*.hcl'
+   git diff -- '*.tf' '*.tfvars' '*.hcl'
+   git diff --staged -- '*.tf' '*.tfvars' '*.hcl'
+   ```
+3. Filter to Terraform files only (`.tf`, `.tfvars`, `.hcl`)
+4. If not a git repo or no diff available, skip alignment check and note it in the report
 
-    Plan JSON:
-    [plan.json content]
+### Phase 3: Analyze Plan
 
-    Focus on destruction, modification risks, and cascade effects.
-  subagent_type: "terraform-plan-analyzer"
+Read the full plan output and extract:
 
-Task 2:
-  description: "Security review plan"
-  prompt: |
-    Review this Terraform plan for security implications.
-    Environment: [env name]
+1. **Summary line**: Parse `Plan: X to add, Y to change, Z to destroy` (or "No changes")
+2. **Resource changes**: Enumerate every resource action, grouped by operation type:
+   - Created (`+`)
+   - Updated in-place (`~`)
+   - Destroyed (`-`)
+   - Replaced (destroy then create, or create then destroy) (`-/+` or `+/-`)
+   - Read (data sources)
+3. **Attribute details**: For each changed resource, note which attributes are modified and whether values are known or `(known after apply)`
+4. **Context**: Read relevant `.tf` files for the changed resources:
+   ```
+   Glob: **/*.tf
+   ```
+   Read files that define or reference the changed resources.
+5. **Log analysis**: If a log/stderr file exists, parse for:
+   - Warnings (deprecations, provider issues)
+   - Errors
+   - Provider version information
 
-    Plan JSON:
-    [plan.json content]
+### Phase 4: Alignment Check + Risk Assessment
 
-    Focus on IAM, network, encryption, and compliance.
-  subagent_type: "security-reviewer"
+**Alignment Check** — compare each planned change against the git diff:
 
-Task 3:
-  description: "Check historical patterns"
-  prompt: |
-    Analyze git history for patterns related to these resources.
-    Resources being changed: [list from plan]
+- **Expected**: Change directly maps to a code modification in the diff
+- **Unexpected**: Change has no corresponding code diff — indicates drift, implicit dependencies, provider behavior changes, or module version side effects
 
-    Look for similar past changes, incidents, and outcomes.
-  subagent_type: "historical-pattern-analyzer"
-```
+**Risk Assessment** — evaluate each risk category using patterns from `REFERENCE.md`:
 
-**CRITICAL:** All three Task calls in ONE message for parallel execution.
+| Risk Category | What to look for |
+|---|---|
+| Destructive changes | Resources being destroyed or replaced, especially stateful resources (databases, storage, encryption keys) |
+| Data loss potential | Destruction of resources that contain data (RDS, S3, DynamoDB, EBS, etc.) |
+| IAM changes | New or modified IAM roles, policies, permissions — especially wildcards or admin access |
+| Network changes | Security groups, NACLs, VPC peering, route changes that could affect connectivity or exposure |
+| Force-replacements | Resources being replaced due to immutable attribute changes (name, AMI, engine version) |
+| Cost impact | New resources or scaling changes that significantly affect cost (large instances, NAT gateways, etc.) |
+| Warnings/errors | Deprecation warnings, provider errors, or validation issues from log file |
 
-**Agent prompts should include:**
-- The plan.json content (or path)
-- The environment name
-- Any relevant context from memory
+**Risk Level Classification**:
+- **High**: Any destructive change to stateful resources, IAM wildcard permissions, public network exposure, or force-replacement of critical infrastructure
+- **Medium**: Non-destructive changes to security-sensitive resources, new IAM policies with bounded scope, scaling changes
+- **Low**: Additive-only changes, tag updates, config changes to non-sensitive resources, output changes
 
-### Step 4: Aggregate Findings
+### Phase 5: Generate Report
 
-Collect results from all agents and create a unified report:
+Produce emoji-rich markdown optimized for terminal display (no HTML tags like `<details>`):
 
 ```markdown
-## Plan Analysis Summary
+## 📊 Terraform Plan Review
 
-### Risk Level: [CRITICAL/HIGH/MEDIUM/LOW]
+**Summary:**
+- Resources: X to add, Y to change, Z to destroy
+- Verdict: ✅ Safe to apply / ⚠️ Review recommended / 🚨 High risk — review carefully
+- Risk Level: Low / Medium / High
 
-### Changes Overview
-- Resources to create: X
-- Resources to update: Y
-- Resources to destroy: Z
+### 📋 Resource Summary
 
-### Risk Analysis (terraform-plan-analyzer)
-[Summary of risks identified]
+| Operation | Count | Resources |
+|-----------|-------|-----------|
+| ➕ Create | N | `resource.name`, ... |
+| 🔄 Update | N | `resource.name`, ... |
+| ❌ Destroy | N | `resource.name`, ... |
+| ♻️ Replace | N | `resource.name`, ... |
 
-### Security Analysis (security-reviewer)
-[Summary of security implications]
+### ✅ Alignment Check
 
-### Pattern Analysis (historical-pattern-analyzer)
-[Any similar past changes and their outcomes]
+**Expected Changes** (match code diff):
+- `resource.name` — <why it's expected based on diff>
 
-### Required Approvals
-- [ ] User acknowledges destruction of X resources
-- [ ] User confirms this is the correct environment
-- [ ] User approves proceeding with apply
+**Unexpected Changes** (no matching code diff):
+- `resource.name` — <likely cause: drift / implicit dependency / provider behavior>
+
+(If no git diff available: "⚠️ No git diff available — alignment check skipped")
+
+### 🔥 Risk Assessment
+
+For each risk found:
+- **[Category]**: `resource.name` — <description of risk and impact>
+
+If no risks: "✅ No significant risks identified"
+
+### 📝 Detailed Changes
+
+Group by operation type. For each resource:
+
+**➕ Create: `resource_type.name`**
+- key_attribute = "value"
+- key_attribute = (known after apply)
+
+**🔄 Update: `resource_type.name`**
+- attribute: "old_value" → "new_value"
+
+**❌ Destroy: `resource_type.name`**
+- (note if stateful / contains data)
+
+**♻️ Replace: `resource_type.name`**
+- Trigger: <attribute causing replacement>
+- ⚠️ This will destroy and recreate the resource
+
+### 💡 Recommendations
+
+Actionable next steps based on findings:
+1. <specific action items>
+2. <risk mitigations>
+3. <suggested follow-ups>
 ```
 
-### Step 5: Approval Gate
+## Decision Points
 
-Present the analysis to the user and **wait for explicit approval**:
+- **Very large plan (>100 resources)**: Summarize at category level, only detail high-risk and unexpected changes. Note truncation.
+- **No changes plan**: Report as clean — "Plan: no changes. Infrastructure is up-to-date." Skip Phases 4-5, just confirm.
+- **Plan errors**: If the plan output contains errors instead of a plan, report the errors and suggest fixes rather than analyzing a plan.
+- **Multiple workspaces**: If plan mentions workspace, note which workspace is being planned against.
 
-> "Based on my analysis, this plan has [RISK LEVEL] risk. [Summary of key findings].
->
-> Do you want me to proceed with `terraform apply`? Please respond with 'approve' to continue."
+## Validation Checklist
 
-**NEVER proceed without explicit "approve" from user.**
+- [ ] Plan output successfully read and parsed
+- [ ] Resource count matches summary line
+- [ ] Every resource change categorized (create/update/destroy/replace)
+- [ ] Alignment check performed (or noted as skipped with reason)
+- [ ] Risk assessment covers all categories from REFERENCE.md
+- [ ] Report uses consistent risk level definitions
+- [ ] Recommendations are actionable and specific
 
-### Step 6: Execute Apply (Only After Approval)
+## References
 
-If and only if user explicitly approves:
-
-```bash
-terraform apply plan.out
-```
-
-Monitor output and report results.
-
-## Risk Categories
-
-### CRITICAL - Requires Extra Scrutiny
-- Any resource destruction
-- IAM policy changes
-- Security group rule modifications
-- Database modifications
-- Encryption key changes
-- Cross-account resource access
-
-### HIGH
-- Network configuration changes
-- Load balancer modifications
-- Auto-scaling changes
-- DNS record modifications
-
-### MEDIUM
-- Instance type changes
-- Tag modifications
-- Non-critical configuration updates
-
-### LOW
-- Pure additions with no dependencies
-- Documentation-only changes
-
-## Common Patterns to Flag
-
-1. **Cascade Deletions**: Resource deletion that triggers other deletions
-2. **State Drift**: Plan shows changes that weren't in code
-3. **Dependency Chains**: Changes that affect many downstream resources
-4. **Security Relaxation**: Rules becoming more permissive
-5. **Cost Impact**: Significant size/count changes
-
-## Memory Integration
-
-Before analysis, query memory for:
-- Similar changes in this project's history
-- Known issues with affected resources
-- Past incidents related to this type of change
-
-After completion, store:
-- Outcome of this change (success/failure)
-- Any issues encountered
-- User preferences learned
-
-## Verification Checklist
-
-Before presenting to user, verify:
-- [ ] AWS profile matches environment
-- [ ] Plan was generated successfully
-- [ ] All agents completed analysis
-- [ ] Risk level is accurately assessed
-- [ ] All destruction operations are highlighted
-- [ ] Security implications are documented
+- High-risk patterns, resource types, drift causes: `REFERENCE.md`
+- Evaluation prompts: `EVALUATIONS.md`

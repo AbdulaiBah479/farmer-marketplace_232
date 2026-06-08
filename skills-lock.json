@@ -121,6 +121,12 @@
       "skillPath": "skills/agent-browser/SKILL.md",
       "computedHash": "d895385e2c55dbb9ce9a5c2e0c395a9d5c3a61142f2cab641e9a1f78db048708"
     },
+    "agent-creator": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/agent-creator/SKILL.md",
+      "computedHash": "bb23a629e88abb27e6264b4f67c697320cd9a2234c434c0a7aeab74dc9f5c570"
+    },
     "ai-analyzer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -192,6 +198,12 @@
       "sourceType": "github",
       "skillPath": "legal-builder-hub/skills/auto-updater/SKILL.md",
       "computedHash": "026f5e0e6a41b65afdaaf030332594be4e294182c6721e529a2ce340ce3fa01b"
+    },
+    "aws-limits": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/aws-limits/SKILL.md",
+      "computedHash": "e72c6e762fabf8ef249bda8e5d25ac598c9b5ec768f8355180451a1caa4d3000"
     },
     "azure-active-directory-b2c": {
       "source": "MicrosoftDocs/Agent-Skills",
@@ -3037,6 +3049,18 @@
       "skillPath": "external_plugins/cocounsel-legal/skills/deep-research/SKILL.md",
       "computedHash": "57015f1c32407aa0da252da55adc007367e3d4d2dbc1e2c22e226a16d5a9fd53"
     },
+    "code-review": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-review/SKILL.md",
+      "computedHash": "209efee7befb7db891695f8cc81ca2b72c2c67f4c328e4eb3de767a844512683"
+    },
+    "code-simplifier": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-simplifier/SKILL.md",
+      "computedHash": "1cf9f247f3660eb804c6da69803d7c84121ed9f155ebbd2c27281dc07e54e830"
+    },
     "cold-call-prep": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -3048,6 +3072,12 @@
       "sourceType": "github",
       "skillPath": "commercial-legal/skills/cold-start-interview/SKILL.md",
       "computedHash": "464a8d6b907e130fd12825dc63a35d9a7deea9f452fcae3734b64e325eda5c9e"
+    },
+    "command-creator": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/command-creator/SKILL.md",
+      "computedHash": "f24b72f30acd8ffe8b1ee8d1a8c66502902ab7319f3b7ef9b6374b209ce39e14"
     },
     "comments": {
       "source": "anthropics/claude-for-legal",
@@ -3066,6 +3096,12 @@
       "sourceType": "github",
       "skillPath": "plugins/power-pages/skills/configure-env-variables/SKILL.md",
       "computedHash": "27f8b955229266028230b46aa04049df1a735656c325b1f6bee71f8375b54bbe"
+    },
+    "context-audit": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/context-audit/SKILL.md",
+      "computedHash": "fce50ec9813dc3149c71234a03712237a19ec8774f2c3df9b5272adee75a23fa"
     },
     "convergence-study": {
       "source": "bitroc-ai/medical-skills",
@@ -3174,6 +3210,12 @@
       "sourceType": "github",
       "skillPath": "skills/deepchem/SKILL.md",
       "computedHash": "06165274e2bdaf5f3eca232bb51174aa825da76577affa9a2480e0b339b9d147"
+    },
+    "deepnote-notebook": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/deepnote-notebook/SKILL.md",
+      "computedHash": "dfb84f38bfd5ce497afa0d173ccb8002bc3e2f0a7b243f837ef527c5aecde034"
     },
     "deeptools": {
       "source": "bitroc-ai/medical-skills",
@@ -3589,6 +3631,12 @@
       "skillPath": "skills/ginkgo-cloud-lab/SKILL.md",
       "computedHash": "0cd60a3b4d84fa9a5dd0f5ed0f8f1c8c9d82879a681a32b2e4f6b038b749892b"
     },
+    "github-dependabot-report": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/github-dependabot-report/SKILL.md",
+      "computedHash": "238c8e300bd923b10bcfc46fbc5799b18a6af37a156baa249b7f2a596660f808"
+    },
     "glycoengineering": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -3955,6 +4003,12 @@
       "skillPath": "skills/hrv-alexithymia-expert/SKILL.md",
       "computedHash": "ac3d1471fd10815c958f5c95db421ceb447075e01dbead9180d81dd43ccca6fd"
     },
+    "hubspot-security-queue": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hubspot-security-queue/SKILL.md",
+      "computedHash": "da568d701225cfa484f51165d38cd9feecc8b5c8bef1e24578892e091f3fe3f0"
+    },
     "hypogenic": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -4171,11 +4225,23 @@
       "skillPath": "law-student/skills/legal-writing/SKILL.md",
       "computedHash": "a64d83fa68da47f168a6796ada0e7249b0eff25534b387582d074fd3c24f12aa"
     },
+    "license-compliance": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/license-compliance/SKILL.md",
+      "computedHash": "efe7a1fc3c72b546dde0b9dbf194a6388f2f3d982e83bc63d8afa8040230143a"
+    },
     "ligandmpnn": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/ligandmpnn/SKILL.md",
       "computedHash": "79e4d78de829579e7461d2b50c87cd01ecf479941bdae499339a56fe39b3211e"
+    },
+    "linear-cli": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/linear-cli/SKILL.md",
+      "computedHash": "c23b6c16ac535749a7edf8f35cd0b0411e3d8082091ab909a92510beae3afce4"
     },
     "linear-solvers": {
       "source": "bitroc-ai/medical-skills",
@@ -4363,6 +4429,18 @@
       "skillPath": "skills/metabolomics-workbench-database/SKILL.md",
       "computedHash": "70df94dfc1acc5a167785e8cb037b6452ade10349341d35beb8fd5a097463068"
     },
+    "metamask-agent-wallet": {
+      "source": "metamask/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metamask-agent-wallet/SKILL.md",
+      "computedHash": "74fdbc093e53ec34f50a791bc1f58882e18990f996ffacb5c06296421fa76bf7"
+    },
+    "metamask-agent-workflows": {
+      "source": "metamask/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metamask-agent-workflows/SKILL.md",
+      "computedHash": "14a017cfa2b9b11167f5561455b90fca5b31cc93af246af2070a155663062517"
+    },
     "microsoft-foundry": {
       "source": "MicrosoftDocs/Agent-Skills",
       "sourceType": "github",
@@ -4536,6 +4614,12 @@
       "sourceType": "github",
       "skillPath": "skills/opentrons-integration/SKILL.md",
       "computedHash": "79c5794e43dbec96e1d86318a2ebcc6bbb16e46d26e3bd6aba3cd298fba71640"
+    },
+    "operational-readiness": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/operational-readiness/SKILL.md",
+      "computedHash": "573c91dd3171533afa574387dc12818d9c370c0b1487e92bf3e3464097fae62f"
     },
     "oss-review": {
       "source": "anthropics/claude-for-legal",
@@ -5239,6 +5323,12 @@
       "skillPath": "commercial-legal/skills/renewal-tracker/SKILL.md",
       "computedHash": "be59f84218677da302c4e448693818637cbb32701e4493ff004ce43c29ca6f51"
     },
+    "repo-ai-setup": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/repo-ai-setup/SKILL.md",
+      "computedHash": "f713a9fba8be87f846ede7c7b5ce812da48810ea2cff7d2a12c8b3fbd4b6c616"
+    },
     "report-issue": {
       "source": "microsoft/power-platform-skills",
       "sourceType": "github",
@@ -5395,6 +5485,12 @@
       "skillPath": "skills/seaborn/SKILL.md",
       "computedHash": "c7292c8048941783cf6b769a7fb48dc1e7df9d4857ea06930bc05573fb1ee357"
     },
+    "security-audit-owasp-top-10": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/security-audit-owasp-top-10/SKILL.md",
+      "computedHash": "9f7e33d0ecd07e4e479a1e337b78927d8a145b65be8a20c7bcd56ae1e07ba675"
+    },
     "security-review": {
       "source": "microsoft/power-platform-skills",
       "sourceType": "github",
@@ -5539,6 +5635,12 @@
       "skillPath": "legal-builder-hub/skills/skill-manager/SKILL.md",
       "computedHash": "ababe9bfc0ca14eb1225052784766cf146941f39c15bbd7ab84cb61f58aefe88"
     },
+    "skill-writing": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-writing/SKILL.md",
+      "computedHash": "aa13a0c8199d8ad42fc63232212b05ef4bd9336beb847afb415756fa9c112907"
+    },
     "skills-qa": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -5682,6 +5784,12 @@
       "sourceType": "github",
       "skillPath": "employment-legal/skills/termination-review/SKILL.md",
       "computedHash": "04c8297c926b51ea0f9f17b61e3e7b6a16a9c36804c90b70d3a132538db3d424"
+    },
+    "terraform-plan-review": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/terraform-plan-review/SKILL.md",
+      "computedHash": "9d1009e3e39daac7c2148a6b4bb2da1f3418d762120e1f7a48f4c75bf6c8b42c"
     },
     "test-driven-development": {
       "source": "bitroc-ai/medical-skills",
@@ -6151,6 +6259,18 @@
       "skillPath": "employment-legal/skills/wage-hour-qa/SKILL.md",
       "computedHash": "17c8eb94364c6a8578108d331aefd12aa67119b5b6926d2d33dc299b939919c7"
     },
+    "walletconnect-pay": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/walletconnect-pay/SKILL.md",
+      "computedHash": "f57dc70d15c0b86f19c469d91b6e6eed07d61a51a64b0d939b1055623ba26849"
+    },
+    "walletconnect-pay-merchant": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/walletconnect-pay-merchant/SKILL.md",
+      "computedHash": "1e2ab1090383d0ecabd9821c4dfc1fdf3354ac4263da09dcb2dc733ca3bae05b"
+    },
     "weightloss-analyzer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -6180,6 +6300,12 @@
       "sourceType": "github",
       "skillPath": "employment-legal/skills/worker-classification/SKILL.md",
       "computedHash": "a1fc3a986ec3270c742560514d9eae9c67da667e39be4201ac76b0b899a89f03"
+    },
+    "worktree": {
+      "source": "WalletConnect/skills",
+      "sourceType": "github",
+      "skillPath": "skills/worktree/SKILL.md",
+      "computedHash": "acb0bba455cfe565af58d788ded5558591e1cd5d9f8bc574bee4603579553d90"
     },
     "wp-abilities-api": {
       "source": "automattic/agent-skills",

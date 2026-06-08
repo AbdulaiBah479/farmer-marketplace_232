@@ -1,260 +1,645 @@
 ---
 name: architectural-analysis
-description: User-triggered deep architectural analysis of a codebase or scoped subtree across eight modes — information architecture, data flow, integration points, UI surfaces, interaction patterns, data model, control flow, and failure modes. This skill should be used when the user asks to "diagram this codebase," "map the architecture," "show the data flow," "give me an ERD," "trace control flow," "find the integration points," "verify the layout pattern," "audit the UX architecture," or any similar request whose primary deliverable is mermaid diagrams plus cited reports under docs/architecture/. Dispatches haiku/sonnet sub-agents in parallel for per-mode exploration, then verifies every citation mechanically before any node lands in a diagram. Not for one-off prose explanations of code (use code-explanation) or for high-level system design from scratch (use system-design).
-keywords:
-  - architectural analysis
-  - diagram this codebase
-  - map the architecture
-  - data flow
-  - ERD
-  - control flow
-  - integration points
-  - UX architecture
+description: Deep architectural audit focused on finding dead code, duplicated functionality, architectural anti-patterns, type confusion, and code smells. Use when user asks for architectural analysis, find dead code, identify duplication, or assess codebase health.
 ---
 
 # Architectural Analysis
 
-## Overview
+## Instructions
 
-Produce diagram-first architectural reports for a codebase or a scoped subtree. The primary artifact is a set of mermaid diagrams under `docs/architecture/<report-date>/<mode>/`, accompanied by markdown reports that resolve every callout to a `path:line` citation. Every node and every edge in every diagram is grounded in the source — no exceptions outside the explicit synthesized-concept escape hatch.
+Perform comprehensive architectural audit focused on structural issues, dead code, duplication, and systemic problems.
 
-## When to use
+### Phase 1: Discovery & Planning
 
-Trigger this skill when the user asks for:
+#### Step 1: Map Codebase Structure
+```bash
+# Get directory structure
+find . -type d -not -path "*/node_modules/*" -not -path "*/.git/*"
 
-- A full architectural snapshot of a codebase ("run a full architectural analysis")
-- A scoped diagram of a subsystem ("diagram the data flow through `<path>`")
-- A specific mode by name ("ERD for this app", "where are the failure modes in `<path>`", "map the integration points")
+# Count files by type
+find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | wc -l
+```
 
-Do not trigger for:
+#### Step 2: Identify Entry Points
+- Main application entry (`index.ts`, `main.ts`, `app.ts`)
+- API routes/controllers
+- Public exports (`index.ts` files)
+- CLI entry points
+- Test files
 
-- Pure prose explanations with no diagram requirement (use `code-explanation`)
-- New-system design from a blank page (use `system-design`)
-- Single-file walkthroughs (use `diffity-tour`)
+#### Step 3: Create Comprehensive File List
+Use Glob to find all source files.
+Create todo list with one item per file to analyze.
 
-## Modes
+### Phase 2: Dead Code Detection
 
-Eight analysis modes. Each has its own callout prefix, primary mermaid diagram type, and dedicated reference file in `references/`.
+For EACH file in the todo list:
 
-| Mode | Prefix | Primary diagram | Reference |
-|---|---|---|---|
-| Information architecture | `I-` | `graph TD` (module hierarchy) or C4 container | `references/mode-information.md` |
-| Data flow | `D-` | `flowchart LR` + `sequenceDiagram` per critical path | `references/mode-data-flow.md` |
-| Integrations | `X-` | C4 context boundary | `references/mode-integrations.md` |
-| UI surfaces | `U-` | route tree + component graph | `references/mode-ui-surfaces.md` |
-| Interaction patterns | `P-` | `graph TD` per-surface pattern decomposition | `references/mode-interaction-patterns.md` |
-| Data model | `M-` | `erDiagram` | `references/mode-data-model.md` |
-| Control flow | `C-` | `stateDiagram-v2` + `sequenceDiagram` | `references/mode-control-flow.md` |
-| Failure modes | `F-` | annotated flowchart with error edges | `references/mode-failure-modes.md` |
+#### Step 1: Identify Exports
+- What does this file export?
+- Are exports functions, classes, types, constants?
+- Is anything exported at all?
 
-Callout IDs are stable across modes — `I-12` referenced from a data-flow report points to the same physical node in the IA diagram. The cross-mode index in the synthesis README binds them.
+#### Step 2: Search for Usage
 
-### Note on interaction patterns
+For each export, search if it's imported/used anywhere:
+```bash
+# Search for imports of this export
+grep -r "import.*ExportName" . --include="*.ts" --include="*.tsx"
+grep -r "from.*filename" . --include="*.ts" --include="*.tsx"
 
-UI surfaces inventories *what* user-facing entry points exist. Interaction patterns answers *how* content within those surfaces is organized: bands vs. tabs, sticky inspector, progressive disclosure, master-detail, wizard, accordion. Two layouts can have identical component imports and still create radically different user mental models — this mode reads composition shape, ARIA roles, state shape, and pattern-naming conventions to surface the difference. See `references/mode-interaction-patterns.md` for signals and the raised synthesized cap (35% vs. 20% for other modes) that reflects the inherently more emergent nature of pattern detection.
+# Search for direct usage
+grep -r "ExportName" . --include="*.ts" --include="*.tsx"
+```
 
-## Workflow
+#### Step 3: Categorize Code
 
-Doc-first. The team's in-tree docs are treated as **the spine of the report**. The analysis confirms documented behavior with citations, flags drift where the doc no longer matches code, and surfaces gaps where code does something undocumented. The deliverable is a single report — readers should not have to consult docs separately to know what's true. Each mode report leads with the doc reference (collapsed for those who already know the territory) and uses the narrative to highlight gaps and drift.
+**Dead Code** (mark for removal):
+- Exported but never imported
+- Functions defined but never called
+- Classes instantiated nowhere
+- Types defined but never used
+- Constants defined but never referenced
+- Entire files with no imports from other files
 
-Eight phases. Each has a single purpose; do not collapse them.
+**Possibly Dead** (needs verification):
+- Only used in commented-out code
+- Only used in dead code
+- Only used in other unused exports
+- Used only in tests for deprecated features
 
-### 1. Scope
+**Internal Dead Code**:
+- Functions defined in file but never called (not exported)
+- Variables assigned but never read
+- Parameters accepted but never used
 
-Establish:
+#### Step 4: Check for False Positives
 
-- **Target**: full repo, subtree, or named feature.
-- **Modes**: which of the eight (default: all if user said "full analysis").
-- **Output root**: `docs/architecture/<YYYY-MM-DD>/` — create now if missing.
-- **Codanna availability**: check for `.codanna/`. Falls back to grep if absent.
+Not dead if:
+- Used in tests (may be public API)
+- Dynamically imported/required
+- Used via reflection/string references
+- Part of public API (even if not used internally)
+- Framework hooks (lifecycle methods, callbacks)
+- Accessed via `window` or global scope
 
-### 2. Read in-tree docs (load the spine)
+#### Step 5: Record Findings
+```
+File: path/to/file.ts
+Status: [DEAD|POSSIBLY_DEAD|USED]
+Exports: [list]
+Dead Exports:
+  - ExportName - No imports found
+  - AnotherExport - Only used in test for deprecated feature
+Confidence: [HIGH|MEDIUM|LOW]
+```
 
-Find every authoritative doc and **read each one**. This is the load-bearing change: the docs become the prior the rest of the workflow operates on.
+#### Step 6: Mark Complete
+Update todo list.
+
+### Phase 3: Duplication Detection
+
+#### Step 1: Identify Duplicated Logic Patterns
+
+Search for common patterns that suggest duplication:
+- Similar function names across files
+- Repeated code blocks
+- Multiple implementations of same concept
+
+**Manual Pattern Recognition**:
+- Read files in same directory
+- Look for suspiciously similar code
+- Compare utilities/helpers across modules
+- Check for copy-pasted blocks
+
+**Grep-Based Detection**:
+```bash
+# Find similar function signatures
+grep -r "function validateEmail" . --include="*.ts"
+grep -r "async.*fetch.*api" . --include="*.ts"
+grep -r "export.*UserForm" . --include="*.tsx"
+```
+
+#### Step 2: Analyze Duplicated Functionality
+
+For each potential duplication:
+- Read both/all implementations
+- Are they actually the same logic?
+- Do they handle same cases?
+- Could one replace the other?
+- Are differences intentional or accidental?
+
+#### Step 3: Categorize Duplication
+
+**Exact Duplication** (CRITICAL):
+- Identical or near-identical code in multiple places
+- Copy-pasted functions
+- Duplicated utility functions
+- **Impact**: Bug fixes need multiple updates, maintenance burden
+
+**Similar Logic** (HIGH):
+- Same algorithm, different implementation
+- Slightly different parameter handling
+- Different names, same purpose
+- **Impact**: Inconsistency risk, harder to maintain
+
+**Conceptual Duplication** (MEDIUM):
+- Multiple ways to do the same thing
+- Competing implementations
+- Overlapping utilities
+- **Impact**: Confusion, decision paralysis
+
+**Type Duplication** (HIGH):
+- Same interface/type defined multiple times
+- Similar types that should be unified
+- Duplicate constants/enums
+- **Impact**: Type inconsistency, refactoring difficulty
+
+#### Step 4: Record Duplication
+```
+Duplication Group: Email Validation
+Type: Exact Duplication
+Instances:
+  - src/utils/validators.ts:42 - validateEmail()
+  - src/lib/email.ts:15 - isValidEmail()
+  - src/components/forms/validation.ts:67 - checkEmailFormat()
+Analysis: All three implement same regex check
+Recommendation: Keep utils/validators.ts version, remove others
+Impact: 3 places to update when logic changes
+```
+
+### Phase 4: Architectural Anti-Patterns
+
+#### Step 1: Identify God Objects/Classes
+
+Search for files that do too much:
+- Files over 500 lines
+- Classes with 10+ methods
+- Files with many responsibilities
+- Modules that import from everywhere
 
 ```bash
-find <target>/docs <target>/*/docs -maxdepth 4 -type f \( -name '*.md' -o -name 'CHANGELOG*' \) 2>/dev/null
-find <target>/CLAUDE.md <target>/*/CLAUDE.md <target>/*/README.md 2>/dev/null
-find <target>/cf-web-container*/SHUTDOWN*.md <target>/cf-web-container*/GRACEFUL*.md 2>/dev/null
+# Find large files
+find . -name "*.ts" -exec wc -l {} + | sort -rn | head -20
 ```
 
-Persist the list to `docs/architecture/<date>/docs-inventory.txt`. **Then read them all** (orchestrator, not delegated — the orchestrator owns the doc map and treats the docs as authoritative). Build a working topic→doc index — which doc is authoritative on which subsystem. The output of this phase is `docs/architecture/<date>/doc-map.md`:
+Analyze large files:
+- What does this file do?
+- Does it have single responsibility?
+- Should it be split?
+
+#### Step 2: Detect Circular Dependencies
+
+Look for:
+- File A imports from B, B imports from A
+- Circular chains: A → B → C → A
+- Module coupling cycles
+
+Use grep to trace import chains:
+```bash
+# Check what file imports
+grep "^import.*from" src/services/auth.ts
+
+# Check what imports this file
+grep -r "from.*auth" src/ --include="*.ts"
+```
+
+#### Step 3: Find Tight Coupling
+
+Identify:
+- High-level modules depending on low-level modules
+- Business logic depending on infrastructure
+- Core logic depending on framework specifics
+- Modules that import from many other modules
+
+#### Step 4: Spot Layer Violations
+
+Check architecture layers:
+- Do components import directly from database layer?
+- Do models import from views?
+- Do utilities import from business logic?
+- Is there proper separation of concerns?
+
+#### Step 5: Identify Other Anti-Patterns
+
+**Singleton Abuse**:
+- Global state everywhere
+- Module-level mutable state
+- Static class methods accessing shared state
+
+**Anemic Domain Models**:
+- Data classes with no behavior
+- All logic in services, models just have getters/setters
+
+**Shotgun Surgery**:
+- Single feature change requires touching many files
+- Indicates poor cohesion
+
+**Feature Envy**:
+- Methods that use more data from other classes than their own
+
+### Phase 5: Type Issues Analysis
+
+#### Step 1: Find Type Abuse
+
+Search for problematic type usage:
+```bash
+# Find 'any' usage
+grep -r ": any" . --include="*.ts" --include="*.tsx" -n
+
+# Find 'unknown' usage
+grep -r ": unknown" . --include="*.ts" -n
+
+# Find type assertions
+grep -r "as any" . --include="*.ts" -n
+grep -r "as unknown" . --include="*.ts" -n
+
+# Find @ts-ignore
+grep -r "@ts-ignore" . --include="*.ts" -n
+grep -r "@ts-expect-error" . --include="*.ts" -n
+```
+
+#### Step 2: Analyze Type Confusion
+
+For each file with type issues:
+- Why is `any` used?
+- Could proper type be defined?
+- Is type assertion hiding a real type error?
+- Are @ts-ignore comments masking actual problems?
+
+#### Step 3: Find Type Duplication
+
+Look for:
+- Same interface defined in multiple files
+- Similar types that could be unified
+- Types that could extend from common base
+- Constants/enums duplicated across files
+
+#### Step 4: Identify Missing Types
+
+Check for:
+- Implicit `any` from missing type annotations
+- Functions without return type
+- Callbacks without proper typing
+- Generic types that should be specific
+
+### Phase 6: Code Smells Detection
+
+#### Step 1: Long Methods/Functions
+```bash
+# Find functions with many lines
+# (manual inspection of large files)
+```
+
+Flag functions over 50 lines - likely doing too much.
+
+#### Step 2: Long Parameter Lists
+
+Search for functions with 4+ parameters:
+- Could use object parameter instead?
+- Are parameters related (should be grouped)?
+
+#### Step 3: Complex Conditionals
+
+Look for:
+- Deeply nested if statements (3+ levels)
+- Long boolean expressions
+- Switch statements with 10+ cases
+- Complex ternary operators
+
+#### Step 4: Magic Numbers/Strings
+
+Search for:
+- Hardcoded numbers with unclear meaning
+- String literals used repeatedly
+- Unexplained constants
+
+Should be named constants.
+
+#### Step 5: Commented-Out Code
+
+```bash
+# Find commented code blocks
+grep -r "^[[:space:]]*//.*function\|class\|const" . --include="*.ts"
+```
+
+Commented code should be deleted (use git history).
+
+#### Step 6: Poor Naming
+
+Look for:
+- Single letter variables (outside loops)
+- Abbreviations without context (`usr`, `msg`, `tmp`)
+- Misleading names
+- Names that don't reflect purpose
+
+### Phase 7: Generate Report
+
+Create report at `.audits/architectural-analysis-[timestamp].md`:
 
 ```markdown
-# Doc map
+# Architectural Analysis Report
+**Date**: [timestamp]
+**Files Analyzed**: X
+**Dead Code Files**: Y
+**Duplication Groups**: Z
 
-| Topic | Doc | Modes |
-|-------|-----|-------|
-| Handlebars 3-layer cache | mainwebcode/docs/HANDLEBARS_CACHING.md | data-flow, control-flow |
-| KV-store migration (cache + persist) | mainwebcode/docs/cache-migration/*.md | control-flow, data-model |
-| Container shutdown 5-layer signal flow | mainwebcode/cf-web-container-next/GRACEFUL_SHUTDOWN.md | control-flow, failure-modes |
-| WAF triage + DetectionOnly→On runway | cosential-proxy/docs/waf-triage-process.md | failure-modes, integrations |
-| Okta Admin auth handshake | mainwebcode/docs/okta-authentication-crm-admin.md | data-flow, integrations |
-| SQL metrics instrumentation | mainwebcode/docs/sql-metrics.md | failure-modes, control-flow |
-| Tests & test runner | mainwebcode/docs/tests.md | failure-modes |
-| Legacy EC2 topology (drift) | mainwebcode/docs/architecture-diagram.md | information *(stale)* |
+---
+
+## Executive Summary
+- **Dead Code**: X files, Y exports completely unused
+- **Duplicated Functionality**: Z duplication groups
+- **Architectural Anti-Patterns**: W issues
+- **Type Issues**: V problematic usages
+- **Code Smells**: U instances
+
+**Estimated Cleanup**: Remove ~X lines of dead code, consolidate Y duplications
+
+---
+
+## Dead Code
+
+### Completely Dead Files (DELETE)
+| File | Reason | Confidence |
+|------|--------|------------|
+| `src/old/legacy-processor.ts` | No imports found | HIGH |
+| `src/utils/unused-helper.ts` | Exported but never used | HIGH |
+| `src/temp/temp-service.ts` | Temporary file left behind | HIGH |
+
+**Total Lines**: X,XXX lines can be deleted
+
+### Dead Exports (REMOVE)
+| File | Export | Reason |
+|------|--------|--------|
+| `src/utils/format.ts` | `formatOldDate()` | Replaced by `formatDate()`, no usage |
+| `src/services/auth.ts` | `oldLogin()` | Deprecated, no usage found |
+
+### Possibly Dead (VERIFY)
+| File | Export | Reason | Verification Needed |
+|------|--------|--------|---------------------|
+| `src/lib/api.ts` | `fetchOldApi()` | Only used in commented code | Check if truly deprecated |
+
+### Internal Dead Code
+- `src/services/user.ts:125` - Private method `_validateLegacy()` never called
+- `src/components/form.tsx:89` - Variable `tempData` assigned but never read
+
+---
+
+## Duplicated Functionality
+
+### CRITICAL: Exact Duplicates
+
+#### Duplication Group 1: Email Validation
+**Instances**: 3
+**Files**:
+- `src/utils/validators.ts:42` - `validateEmail(email: string)`
+- `src/lib/email.ts:15` - `isValidEmail(email: string)`
+- `src/components/forms/validation.ts:67` - `checkEmailFormat(email: string)`
+
+**Analysis**: All three use identical regex pattern `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+**Lines Duplicated**: ~15 lines × 3 = 45 lines
+**Recommendation**:
+- Keep: `src/utils/validators.ts:validateEmail()`
+- Remove: Other two implementations
+- Update: All imports to use validators version
+
+#### Duplication Group 2: API Error Handling
+**Instances**: 4
+**Files**: [list]
+**Analysis**: [similar]
+
+### HIGH: Similar Logic
+
+#### Duplication Group: Date Formatting
+**Instances**: 2
+**Files**:
+- `src/utils/date.ts:30` - `formatDate()` - Uses date-fns
+- `src/lib/format.ts:45` - `formatDateTime()` - Uses native Date
+
+**Analysis**: Both format dates but use different libraries
+**Recommendation**: Standardize on date-fns, remove native version
+
+### Type Duplication
+
+#### Type Group: User Interface
+**Instances**: 3
+**Files**:
+- `src/types/user.ts` - `User` interface
+- `src/models/user.ts` - `UserModel` interface (identical fields)
+- `src/api/types.ts` - `UserData` interface (identical fields)
+
+**Recommendation**: Use single `User` type from `src/types/user.ts`
+
+---
+
+## Architectural Anti-Patterns
+
+### God Objects
+
+#### `src/services/application-manager.ts` (850 lines)
+**Responsibilities**: Database, auth, config, logging, caching, validation
+**Issue**: Violates SRP, does everything
+**Recommendation**: Split into:
+- `database.service.ts`
+- `auth.service.ts`
+- `config.service.ts`
+- `logging.service.ts`
+
+### Circular Dependencies
+
+#### Cycle 1: `auth.ts` ↔ `user.ts`
+- `auth.ts` imports `getUserById` from `user.ts`
+- `user.ts` imports `validateToken` from `auth.ts`
+**Issue**: Creates tight coupling, makes testing hard
+**Recommendation**: Extract shared types to separate file
+
+### Tight Coupling
+
+#### `components/UserForm.tsx` → `services/database.ts`
+**Issue**: UI component directly importing database layer
+**Recommendation**: Use service layer abstraction
+
+### Layer Violations
+
+#### `models/User.ts` imports from `components/`
+**Issue**: Model layer should not know about view layer
+**Recommendation**: Remove dependency, pass data via props
+
+---
+
+## Type Issues
+
+### `any` Usage (X instances)
+
+| File | Line | Context | Severity |
+|------|------|---------|----------|
+| `src/api/client.ts` | 45 | `response: any` | HIGH |
+| `src/utils/parse.ts` | 23 | `data: any` | HIGH |
+
+**Total `any` usages**: X
+**Recommendation**: Define proper types for all cases
+
+### Type Assertions (Y instances)
+
+| File | Line | Assertion | Issue |
+|------|------|-----------|-------|
+| `src/lib/api.ts` | 67 | `as User` | Unsafe cast, no validation |
+| `src/utils/parse.ts` | 89 | `as unknown as T` | Double cast to bypass types |
+
+**Issue**: Type safety bypassed, runtime errors possible
+
+### @ts-ignore Comments (Z instances)
+
+| File | Line | Reason | Should Fix |
+|------|------|--------|------------|
+| `src/legacy/old.ts` | 34 | "Type error in legacy code" | Refactor or remove file |
+
+---
+
+## Code Smells
+
+### Long Functions (>50 lines)
+
+| File | Function | Lines | Issue |
+|------|----------|-------|-------|
+| `src/services/processor.ts` | `processData()` | 127 | Does too much, hard to test |
+
+**Recommendation**: Extract smaller functions
+
+### Complex Conditionals
+
+| File | Line | Issue |
+|------|------|-------|
+| `src/utils/validator.ts` | 45 | Nested 4 levels deep |
+| `src/lib/parser.ts` | 89 | Boolean expression spans 3 lines |
+
+### Magic Numbers
+
+| File | Line | Magic Value | Should Be |
+|------|------|-------------|-----------|
+| `src/config/limits.ts` | 12 | `86400` | `SECONDS_PER_DAY` |
+| `src/utils/format.ts` | 34 | `1000` | `MS_PER_SECOND` |
+
+### Commented-Out Code
+
+**Files with commented code**: X
+- `src/old/legacy.ts` - 45 lines of commented code
+- `src/services/auth.ts` - Old implementation commented out
+
+**Recommendation**: Delete all commented code (use git history)
+
+---
+
+## Statistics
+
+**Dead Code**:
+- Files: X
+- Exports: Y
+- Lines: Z (estimated)
+
+**Duplication**:
+- Groups: X
+- Files affected: Y
+- Duplicated lines: ~Z
+
+**Architectural Issues**:
+- God objects: X
+- Circular dependencies: Y
+- Layer violations: Z
+
+**Type Issues**:
+- `any` usage: X
+- Type assertions: Y
+- @ts-ignore: Z
+
+**Code Smells**:
+- Long functions: X
+- Complex conditionals: Y
+- Magic numbers: Z
+
+---
+
+## Impact Assessment
+
+### Code Cleanup Potential
+- **Dead code removal**: ~X,XXX lines
+- **Duplication consolidation**: ~Y,YYY lines
+- **Total reduction**: ~Z,ZZZ lines (AA% of codebase)
+
+### Maintainability Improvement
+- Fewer places to update when fixing bugs
+- Clearer code responsibilities
+- Better type safety
+- Reduced cognitive load
+
+### Risk Areas
+- High coupling in `services/` directory
+- Type safety compromised in `api/` layer
+- Architectural violations in `components/`
 ```
 
-A **stale** marker is set when the orchestrator's read of the doc reveals it describes a topology or stack that's no longer current (e.g., legacy EC2 vs. current k8s). Mark the doc as `*(stale)*` in the table and treat it like a gap target rather than a spine entry.
+### Phase 8: Summary for User
 
-If a target has no docs beyond `README.md` + `CLAUDE.md`, mark this in the synthesis README ("Greenfield doc surface — analysis is gap-only") and proceed.
+Provide concise summary:
 
-### 3. Dispatch sub-agents (parallel, primed with the doc map)
+```markdown
+# Architectural Analysis Complete
 
-Each sub-agent now receives the doc map plus the doc text relevant to its mode. The contract changes shape: sub-agents don't enumerate everything they find — they classify against the documented spine.
+## Dead Code Found
+- **X completely dead files** - Can be deleted immediately
+- **Y unused exports** - Can be removed
+- **~Z,ZZZ lines** of dead code identified
 
-Read `references/subagent-dispatch.md` for the prompt template. The output contract is:
+## Top Dead Files
+1. `src/old/legacy-processor.ts` - No imports
+2. `src/temp/temp-service.ts` - Temporary file
+3. `src/utils/unused-helper.ts` - Exported but never used
 
-```yaml
-- callout_id: D-12
-  label: "Handlebars Layer 3 cache.put 60s TTL"
-  citation: app/com/util/handlebars.cfc:99
-  evidence: "this.cache.put(cbKey, local.result, 60000);"
-  classification: confirms              # confirms | drift | gap | extends
-  doc_ref: mainwebcode/docs/HANDLEBARS_CACHING.md
-  doc_claim: "Layer 3: handlebars_templates_{hash} TTL 60,000s"
-  notes: "Doc claim verified; cited line matches the TTL value."
+## Duplication Found
+- **X duplication groups** identified
+- **Most duplicated**: Email validation (3 copies)
+- **~Y,YYY lines** of duplicated code
+
+## Architectural Issues
+- **Z god objects** doing too much
+- **W circular dependencies** found
+- **V layer violations** detected
+
+## Type Issues
+- **X `any` usages** - Should have proper types
+- **Y type assertions** - Bypassing type safety
+- **Z @ts-ignore comments** - Masking errors
+
+## Code Smells
+- **X long functions** (>50 lines)
+- **Y complex conditionals** (3+ nesting)
+- **Z magic numbers** - Should be constants
+
+## Cleanup Potential
+Removing dead code and consolidating duplication could eliminate **~X,XXX lines** (Y% of codebase)
+
+**Full Report**: `.audits/architectural-analysis-[timestamp].md`
 ```
 
-- **confirms** — code matches the doc claim. Cited for evidence, but the doc is the spine.
-- **drift** — code disagrees with the doc. Cited explicitly with the doc claim quoted alongside the code claim. **Drift findings always make it into the report's Drift section, not collapsed.**
-- **gap** — code does something the docs don't cover. **Gap findings drive the synthesis README.**
-- **extends** — code adds detail the doc doesn't claim. Edge case between confirms and gap.
+## Critical Principles
 
-Sub-agents must NOT re-document territory the spine doc covers cleanly. If `HANDLEBARS_CACHING.md` already explains the 3-layer cache, the data-flow sub-agent's job is to (a) cite the canonical line for each layer (confirms) and (b) report drift or gaps — not to write its own cache description.
+- **NEVER EDIT FILES** - This is analysis only, not cleanup
+- **NEVER SKIP FILES** - Analyze entire codebase systematically
+- **BE THOROUGH** - Dead code detection requires checking all imports
+- **VERIFY DUPLICATES** - Don't just match names, check if logic is same
+- **UNDERSTAND ARCHITECTURE** - See the big picture, not just individual files
+- **QUANTIFY IMPACT** - Count lines, estimate cleanup potential
+- **BE CONFIDENT** - Mark confidence level (HIGH/MEDIUM/LOW) for findings
+- **TRACK PROGRESS** - Use todo list for file-by-file analysis
 
-Dispatch in a single message with parallel `Agent` tool calls. One sub-agent per mode. Never with `team_name`.
+## Success Criteria
 
-### 4. Verify (orchestrator)
-
-Mechanical pass per `references/verification-protocol.md`:
-
-- Resolve every cited symbol (codanna or grep).
-- `Read` each cited line; evidence string must match verbatim.
-- Absence claims (`gap` findings often) — grep first; discard if the asserted-missing symbol exists.
-- For drift findings — read both the doc claim location and the code; confirm the disagreement is real.
-- For gap findings — confirm no doc in the spine covers the behavior.
-
-### 5. Render diagrams
-
-Same as before. Author `<mode>/<diagram>.mmd` per `references/mermaid-conventions.md`. Run `bash scripts/render.sh <report-dir>/ --style corporate`.
-
-### 6. Author mode reports (doc-led, gap-first narrative)
-
-Per `references/report-template.md`. The new template's structure:
-
-1. **Summary** — one paragraph. Lead with the spine doc reference: "Per `HANDLEBARS_CACHING.md`, the cache is three-layer with TTLs 60s/no-expiry/60s; this report verifies that and surfaces N gaps." If there's no spine doc, say "No in-tree doc covers this mode; this report is the documentation."
-2. **Diagram** — the rendered .svg/.png.
-3. **Doc reference (collapsed)** — `<details class="receipts">` containing the relevant excerpt or link from the spine doc(s) plus a `confirms`-classification table. Readers who already know the territory keep it collapsed.
-4. **Drift** (only if any) — never collapsed. Each drift item: doc claim → code reality → impact → recommendation.
-5. **Gaps** — what the code does that no doc covers. The narrative section. **This is the section worth reading.** Each gap is a callout-cited finding with prose.
-6. **Receipts (collapsed)** — Callouts table, Verification log, Synthesized concepts. Available for click-through verification but not in the reading flow.
-
-The diagram is built from confirms + drift + gap nodes together. Drift edges are styled `-.->|drift|`. Gap nodes use `classDef gap fill:...,stroke-dasharray:2`.
-
-### 7. Synthesize (gap-first README)
-
-Author `docs/architecture/<date>/README.md` per `references/synthesis-readme.md`. The new shape:
-
-1. **Scope + doc map** — one paragraph + the doc-map table from Phase 2. Sets the spine.
-2. **Undocumented behaviors** — the gap inventory across all modes. The institutional risk register. **This is the lead.**
-3. **Documentation drift** — every drift finding from Phase 6 reports. Curated, not dumped.
-4. **Headline architectural findings** — 3-7 cross-cutting findings the reader should leave with. Reference both confirms and gaps.
-5. **Verification summary** — the per-mode counts (verified/drift/gap/synthesized).
-6. **Open questions** — de-duplicated from per-mode reports.
-
-Drop the standalone "Authoritative in-tree docs" table — its content is now the doc-map header (Phase 2's output) and is referenced inline by every mode report's Summary.
-
-### 8. Compile HTML (automatic)
-
-Run `bash scripts/render.sh <report-dir>/ --style corporate` then `bash scripts/compile-html.sh <report-dir>/`. The HTML carries light + dark diagram variants and a runtime theme toggle.
-
-### Optional: hand-off
-
-The architectural analysis is descriptive (with a curated gap list). If the user wants to act on it:
-
-- For undocumented behaviors that need writeup → invoke `doc-maintenance` (with the gap inventory as prior).
-- For UI↔backend mismatches surfaced in gaps → invoke `wiring-audit`.
-- For documentation drift → invoke `doc-claim-validator` to confirm before patching docs.
-- For test-coverage gaps → invoke `test-review`.
-
-Do not auto-invoke. Recommend, let the user choose.
-
-### Shareable artifacts
-
-**HTML — produce automatically.** Two-step pipeline after Phase 5/5b:
-
-```
-bash scripts/render.sh docs/architecture/<date>/ --style corporate
-bash scripts/compile-html.sh docs/architecture/<date>/
-```
-
-Defaults:
-- **Style: `corporate`** — Stripe/Linear-style modern SaaS doc. Inter font, generous whitespace, soft shadows, single deep-blue accent, card-based sections.
-- **Theme: `light`** — initial theme baked at compile time; users toggle at runtime via the top-right button (preference persists to localStorage).
-
-Available styles: `corporate` (default), `blueprint` (the engineering/violet aesthetic). Both ship with light + dark themes; the runtime toggle just swaps `data-theme` on `<html>` and CSS variables + paired SVG variants do the rest.
-
-Flags:
-- `--style {corporate|blueprint}` — visual style (must match what render.sh produced).
-- `--theme {light|dark}` — initial theme. Default `light`.
-- `--banner <path>` — header banner image, resolved relative to `--repo-root` (default cwd).
-- `--repo-root <path>` — repo root for banner resolution.
-- `--out <path>` — output HTML path. Default `<report-dir>/<dirname>.html`.
-
-**Important:** `render.sh --style <X>` produces `<base>-<X>-light.svg` and `<base>-<X>-dark.svg` for each diagram. `compile-html.sh --style <X>` looks for those exact filenames. If you compile with a style that wasn't rendered first, images will be broken; render both styles to keep all four combos available simultaneously.
-
-**PDF — only on request.** Run `bash scripts/compile-pdf.sh docs/architecture/<date>/` only if the user explicitly asks for a PDF. Defaults to landscape; pass `--portrait` to override. PDF consumes the style-agnostic `.png` files (no light/dark there). Useful for archival; HTML is preferred for everyday sharing.
-
-## Output layout
-
-```
-docs/architecture/2026-05-09/
-├── README.md                          # synthesis — gap inventory leads,
-│                                      #   then drift, then headline findings
-├── docs-inventory.txt                 # Phase 2: list of in-tree docs found
-├── doc-map.md                         # Phase 2: topic→doc index (the spine)
-├── information/
-│   ├── ia.mmd
-│   ├── ia-corporate-light.svg
-│   ├── ia-corporate-dark.svg
-│   └── report.md
-├── data-flow/{flow.mmd, *.svg, report.md}
-├── integrations/{boundaries.mmd, *.svg, report.md}
-├── ui-surfaces/{routes.mmd, *.svg, report.md}
-├── interaction-patterns/{patterns.mmd, *.svg, report.md}
-├── data-model/{erd.mmd, *.svg, report.md}
-├── control-flow/{state.mmd, *.svg, report.md}
-├── failure-modes/{failures.mmd, *.svg, report.md}
-├── 2026-05-09.html                    # automatic, compile-html.sh
-└── 2026-05-09.pdf                     # opt-in only, compile-pdf.sh
-```
-
-## Strict citation policy
-
-Read `references/citation-protocol.md` before authoring any diagram. Summary:
-
-- Every node carries a callout ID and a `path:line` citation.
-- Every edge carries a citation (line where A → B occurs) or is marked synthesized.
-- Synthesized concepts (no single owning file) are visually distinct in the diagram (`classDef synthesized stroke-dasharray:5`) and listed separately in the report. Cap: ≤20% of nodes per mode.
-- Every report carries a verification log of what was discarded and why.
-
-Fabricated citations are the dominant failure mode for diagram-first analysis. The verification phase is the load-bearing part of this skill — do not skip it.
-
-## Resources
-
-- `references/citation-protocol.md` — strict citation rules and synthesized cap
-- `references/verification-protocol.md` — orchestrator's mechanical verification pass
-- `references/subagent-dispatch.md` — agent/model matrix and the doc-led prompt template (with `confirms`/`drift`/`gap`/`extends` classification contract)
-- `references/mermaid-conventions.md` — diagram types, callout prefixes, classDef rules (including `drift` and `gap` styling)
-- `references/report-template.md` — per-mode `report.md` skeleton (doc-led, gap-first)
-- `references/synthesis-readme.md` — top-level `README.md` template (gap inventory first, drift second, headline findings third)
-- `references/doc-map.md` — Phase 2 doc map template and authoring guidance
-- `references/mode-{information,data-flow,integrations,ui-surfaces,interaction-patterns,data-model,control-flow,failure-modes}.md` — per-mode guides
-- `scripts/render.sh` — render `*.mmd` to `*.svg` AND `*.png` via `mmdc` (PNG is what compile-pdf.sh consumes; SVG for HTML/screen)
-- `scripts/compile-html.sh` — combine reports into a single self-contained styled HTML via pandoc; supports `--banner <path>`
-- `scripts/compile-pdf.sh` — combine reports into a single PDF via pandoc; defaults to landscape, supports `--portrait`; injects table-friendly CSS overlay when weasyprint is the engine
-- `scripts/verify-citations.sh` — quick path:line existence check over a report
-- `assets/template.html` — pandoc HTML template used by compile-html.sh
-- `assets/report.css` — dark theme stylesheet used by compile-html.sh
-- `assets/mermaid-config.json` — mermaid CLI config (`htmlLabels: false`, `useMaxWidth: false`) used by render.sh to keep text rendering correct in PDF and let wide diagrams scale up
+A complete architectural analysis includes:
+- All files analyzed for dead code
+- All exports checked for usage
+- Duplication groups identified and cataloged
+- Architectural anti-patterns found and explained
+- Type issues located and categorized
+- Code smells flagged
+- Impact assessment quantified
+- Structured report generated

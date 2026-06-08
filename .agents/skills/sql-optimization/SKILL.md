@@ -1,296 +1,283 @@
 ---
 name: sql-optimization
-description: 'Universal SQL performance optimization assistant for comprehensive query tuning, indexing strategies, and database performance analysis across all SQL databases (MySQL, PostgreSQL, SQL Server, Oracle). Provides execution plan analysis, pagination optimization, batch operations, and performance monitoring guidance.'
+description: SQL 优化与调优
+version: 1.0.0
+author: terminal-skills
+tags: [database, sql, optimization, performance, index]
 ---
 
-# SQL Performance Optimization Assistant
+# SQL 优化与调优
 
-Expert SQL performance optimization for ${selection} (or entire project if no selection). Focus on universal SQL optimization techniques that work across MySQL, PostgreSQL, SQL Server, Oracle, and other SQL databases.
+## 概述
+慢查询分析、执行计划、索引优化等通用 SQL 优化技能。
 
-## 🎯 Core Optimization Areas
+## 执行计划分析
 
-### Query Performance Analysis
+### MySQL EXPLAIN
 ```sql
--- ❌ BAD: Inefficient query patterns
-SELECT * FROM orders o
-WHERE YEAR(o.created_at) = 2024
-  AND o.customer_id IN (
-      SELECT c.id FROM customers c WHERE c.status = 'active'
-  );
+-- 基础执行计划
+EXPLAIN SELECT * FROM users WHERE email = 'test@example.com';
 
--- ✅ GOOD: Optimized query with proper indexing hints
-SELECT o.id, o.customer_id, o.total_amount, o.created_at
-FROM orders o
-INNER JOIN customers c ON o.customer_id = c.id
-WHERE o.created_at >= '2024-01-01' 
-  AND o.created_at < '2025-01-01'
-  AND c.status = 'active';
+-- 详细执行计划
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
 
--- Required indexes:
--- CREATE INDEX idx_orders_created_at ON orders(created_at);
--- CREATE INDEX idx_customers_status ON customers(status);
--- CREATE INDEX idx_orders_customer_id ON orders(customer_id);
+-- JSON 格式
+EXPLAIN FORMAT=JSON SELECT * FROM users WHERE email = 'test@example.com';
+
+-- 关键字段解读
+-- type: 访问类型 (system > const > eq_ref > ref > range > index > ALL)
+-- key: 使用的索引
+-- rows: 预估扫描行数
+-- Extra: 额外信息 (Using index, Using filesort, Using temporary)
 ```
 
-### Index Strategy Optimization
+### PostgreSQL EXPLAIN
 ```sql
--- ❌ BAD: Poor indexing strategy
-CREATE INDEX idx_user_data ON users(email, first_name, last_name, created_at);
+-- 基础执行计划
+EXPLAIN SELECT * FROM users WHERE email = 'test@example.com';
 
--- ✅ GOOD: Optimized composite indexing
--- For queries filtering by email first, then sorting by created_at
-CREATE INDEX idx_users_email_created ON users(email, created_at);
+-- 实际执行
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
 
--- For full-text name searches
-CREATE INDEX idx_users_name ON users(last_name, first_name);
+-- 详细信息
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT * FROM users WHERE email = 'test@example.com';
 
--- For user status queries
-CREATE INDEX idx_users_status_created ON users(status, created_at)
-WHERE status IS NOT NULL;
+-- 关键指标
+-- Seq Scan: 全表扫描
+-- Index Scan: 索引扫描
+-- Bitmap Index Scan: 位图索引扫描
+-- actual time: 实际执行时间
+-- rows: 实际返回行数
 ```
 
-### Subquery Optimization
+## 索引优化
+
+### 索引设计原则
 ```sql
--- ❌ BAD: Correlated subquery
-SELECT p.product_name, p.price
-FROM products p
-WHERE p.price > (
-    SELECT AVG(price) 
-    FROM products p2 
-    WHERE p2.category_id = p.category_id
+-- 1. 选择性高的列优先
+-- 选择性 = 不同值数量 / 总行数
+SELECT COUNT(DISTINCT column) / COUNT(*) AS selectivity FROM table;
+
+-- 2. 复合索引列顺序
+-- 遵循最左前缀原则
+-- 将选择性高的列放前面
+CREATE INDEX idx_user ON users(status, created_at, name);
+
+-- 3. 覆盖索引
+-- 索引包含查询所需的所有列
+CREATE INDEX idx_covering ON orders(user_id, status, amount);
+SELECT user_id, status, amount FROM orders WHERE user_id = 1;
+
+-- 4. 前缀索引（长字符串）
+CREATE INDEX idx_email ON users(email(20));
+```
+
+### 索引使用检查
+```sql
+-- MySQL: 查看索引使用情况
+SELECT * FROM sys.schema_index_statistics WHERE table_schema = 'mydb';
+
+-- MySQL: 未使用的索引
+SELECT * FROM sys.schema_unused_indexes WHERE object_schema = 'mydb';
+
+-- PostgreSQL: 索引使用统计
+SELECT indexrelname, idx_scan, idx_tup_read, idx_tup_fetch
+FROM pg_stat_user_indexes
+WHERE schemaname = 'public'
+ORDER BY idx_scan;
+```
+
+### 索引失效场景
+```sql
+-- 1. 函数操作
+-- 错误
+SELECT * FROM users WHERE YEAR(created_at) = 2024;
+-- 正确
+SELECT * FROM users WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';
+
+-- 2. 隐式类型转换
+-- 错误 (phone 是 varchar)
+SELECT * FROM users WHERE phone = 13800138000;
+-- 正确
+SELECT * FROM users WHERE phone = '13800138000';
+
+-- 3. LIKE 前缀通配符
+-- 错误
+SELECT * FROM users WHERE name LIKE '%john%';
+-- 正确
+SELECT * FROM users WHERE name LIKE 'john%';
+
+-- 4. OR 条件
+-- 可能不走索引
+SELECT * FROM users WHERE status = 1 OR name = 'john';
+-- 改写为 UNION
+SELECT * FROM users WHERE status = 1
+UNION
+SELECT * FROM users WHERE name = 'john';
+
+-- 5. NOT IN / NOT EXISTS
+-- 尽量避免，改用 LEFT JOIN
+SELECT * FROM users WHERE id NOT IN (SELECT user_id FROM orders);
+-- 改写
+SELECT u.* FROM users u LEFT JOIN orders o ON u.id = o.user_id WHERE o.id IS NULL;
+```
+
+## 查询优化
+
+### SELECT 优化
+```sql
+-- 1. 只查询需要的列
+-- 错误
+SELECT * FROM users;
+-- 正确
+SELECT id, name, email FROM users;
+
+-- 2. 避免 SELECT DISTINCT（考虑是否真的需要）
+-- 检查是否有重复数据的根本原因
+
+-- 3. 使用 LIMIT
+SELECT * FROM logs ORDER BY created_at DESC LIMIT 100;
+
+-- 4. 分页优化
+-- 错误（大偏移量性能差）
+SELECT * FROM users LIMIT 10000, 20;
+-- 正确（使用游标分页）
+SELECT * FROM users WHERE id > 10000 ORDER BY id LIMIT 20;
+```
+
+### JOIN 优化
+```sql
+-- 1. 小表驱动大表
+-- 确保 JOIN 顺序合理
+
+-- 2. 确保 JOIN 列有索引
+SELECT u.name, o.amount
+FROM users u
+JOIN orders o ON u.id = o.user_id  -- user_id 需要索引
+WHERE u.status = 1;
+
+-- 3. 避免过多 JOIN
+-- 超过 3-4 个表的 JOIN 考虑拆分查询
+
+-- 4. 使用 STRAIGHT_JOIN 强制顺序（MySQL）
+SELECT STRAIGHT_JOIN u.name, o.amount
+FROM users u
+JOIN orders o ON u.id = o.user_id;
+```
+
+### 子查询优化
+```sql
+-- 1. 将子查询改为 JOIN
+-- 错误
+SELECT * FROM users WHERE id IN (SELECT user_id FROM orders WHERE amount > 100);
+-- 正确
+SELECT DISTINCT u.* FROM users u JOIN orders o ON u.id = o.user_id WHERE o.amount > 100;
+
+-- 2. EXISTS 替代 IN（大数据集）
+SELECT * FROM users u WHERE EXISTS (
+    SELECT 1 FROM orders o WHERE o.user_id = u.id AND o.amount > 100
+);
+```
+
+## 慢查询分析
+
+### MySQL 慢查询
+```sql
+-- 开启慢查询日志
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 1;
+SET GLOBAL slow_query_log_file = '/var/log/mysql/slow.log';
+
+-- 查看配置
+SHOW VARIABLES LIKE 'slow_query%';
+SHOW VARIABLES LIKE 'long_query_time';
+
+-- 分析慢查询日志
+-- mysqldumpslow -s t -t 10 /var/log/mysql/slow.log
+```
+
+### PostgreSQL 慢查询
+```sql
+-- 配置 postgresql.conf
+-- log_min_duration_statement = 1000  # 记录超过1秒的查询
+
+-- 使用 pg_stat_statements
+CREATE EXTENSION pg_stat_statements;
+
+SELECT query, calls, total_time, mean_time, rows
+FROM pg_stat_statements
+ORDER BY total_time DESC
+LIMIT 10;
+```
+
+## 常见场景
+
+### 场景 1：大表分页
+```sql
+-- 使用延迟关联
+SELECT u.* FROM users u
+JOIN (SELECT id FROM users ORDER BY created_at DESC LIMIT 10000, 20) t
+ON u.id = t.id;
+
+-- 使用游标分页
+SELECT * FROM users
+WHERE id > last_seen_id
+ORDER BY id
+LIMIT 20;
+```
+
+### 场景 2：批量更新
+```sql
+-- 分批更新，避免长事务
+-- 每次更新 1000 条
+UPDATE users SET status = 1 WHERE id BETWEEN 1 AND 1000;
+UPDATE users SET status = 1 WHERE id BETWEEN 1001 AND 2000;
+-- ...
+
+-- 或使用存储过程循环
+```
+
+### 场景 3：统计查询优化
+```sql
+-- 使用汇总表
+CREATE TABLE daily_stats (
+    date DATE PRIMARY KEY,
+    total_orders INT,
+    total_amount DECIMAL(10,2)
 );
 
--- ✅ GOOD: Window function approach
-SELECT product_name, price
-FROM (
-    SELECT product_name, price,
-           AVG(price) OVER (PARTITION BY category_id) as avg_category_price
-    FROM products
-) ranked
-WHERE price > avg_category_price;
+-- 定时任务更新汇总表
+INSERT INTO daily_stats
+SELECT DATE(created_at), COUNT(*), SUM(amount)
+FROM orders
+WHERE DATE(created_at) = CURDATE() - INTERVAL 1 DAY
+GROUP BY DATE(created_at)
+ON DUPLICATE KEY UPDATE
+    total_orders = VALUES(total_orders),
+    total_amount = VALUES(total_amount);
 ```
 
-## 📊 Performance Tuning Techniques
-
-### JOIN Optimization
+### 场景 4：锁优化
 ```sql
--- ❌ BAD: Inefficient JOIN order and conditions
-SELECT o.*, c.name, p.product_name
-FROM orders o
-LEFT JOIN customers c ON o.customer_id = c.id
-LEFT JOIN order_items oi ON o.id = oi.order_id
-LEFT JOIN products p ON oi.product_id = p.id
-WHERE o.created_at > '2024-01-01'
-  AND c.status = 'active';
+-- 减少锁范围
+-- 错误：锁定整个表
+SELECT * FROM users FOR UPDATE;
 
--- ✅ GOOD: Optimized JOIN with filtering
-SELECT o.id, o.total_amount, c.name, p.product_name
-FROM orders o
-INNER JOIN customers c ON o.customer_id = c.id AND c.status = 'active'
-INNER JOIN order_items oi ON o.id = oi.order_id
-INNER JOIN products p ON oi.product_id = p.id
-WHERE o.created_at > '2024-01-01';
+-- 正确：只锁定需要的行
+SELECT * FROM users WHERE id = 1 FOR UPDATE;
+
+-- 使用乐观锁
+UPDATE users SET balance = balance - 100, version = version + 1
+WHERE id = 1 AND version = 5;
 ```
 
-### Pagination Optimization
-```sql
--- ❌ BAD: OFFSET-based pagination (slow for large offsets)
-SELECT * FROM products 
-ORDER BY created_at DESC 
-LIMIT 20 OFFSET 10000;
+## 优化检查清单
 
--- ✅ GOOD: Cursor-based pagination
-SELECT * FROM products 
-WHERE created_at < '2024-06-15 10:30:00'
-ORDER BY created_at DESC 
-LIMIT 20;
-
--- Or using ID-based cursor
-SELECT * FROM products 
-WHERE id > 1000
-ORDER BY id 
-LIMIT 20;
-```
-
-### Aggregation Optimization
-```sql
--- ❌ BAD: Multiple separate aggregation queries
-SELECT COUNT(*) FROM orders WHERE status = 'pending';
-SELECT COUNT(*) FROM orders WHERE status = 'shipped';
-SELECT COUNT(*) FROM orders WHERE status = 'delivered';
-
--- ✅ GOOD: Single query with conditional aggregation
-SELECT 
-    COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
-    COUNT(CASE WHEN status = 'shipped' THEN 1 END) as shipped_count,
-    COUNT(CASE WHEN status = 'delivered' THEN 1 END) as delivered_count
-FROM orders;
-```
-
-## 🔍 Query Anti-Patterns
-
-### SELECT Performance Issues
-```sql
--- ❌ BAD: SELECT * anti-pattern
-SELECT * FROM large_table lt
-JOIN another_table at ON lt.id = at.ref_id;
-
--- ✅ GOOD: Explicit column selection
-SELECT lt.id, lt.name, at.value
-FROM large_table lt
-JOIN another_table at ON lt.id = at.ref_id;
-```
-
-### WHERE Clause Optimization
-```sql
--- ❌ BAD: Function calls in WHERE clause
-SELECT * FROM orders 
-WHERE UPPER(customer_email) = 'JOHN@EXAMPLE.COM';
-
--- ✅ GOOD: Index-friendly WHERE clause
-SELECT * FROM orders 
-WHERE customer_email = 'john@example.com';
--- Consider: CREATE INDEX idx_orders_email ON orders(LOWER(customer_email));
-```
-
-### OR vs UNION Optimization
-```sql
--- ❌ BAD: Complex OR conditions
-SELECT * FROM products 
-WHERE (category = 'electronics' AND price < 1000)
-   OR (category = 'books' AND price < 50);
-
--- ✅ GOOD: UNION approach for better optimization
-SELECT * FROM products WHERE category = 'electronics' AND price < 1000
-UNION ALL
-SELECT * FROM products WHERE category = 'books' AND price < 50;
-```
-
-## 📈 Database-Agnostic Optimization
-
-### Batch Operations
-```sql
--- ❌ BAD: Row-by-row operations
-INSERT INTO products (name, price) VALUES ('Product 1', 10.00);
-INSERT INTO products (name, price) VALUES ('Product 2', 15.00);
-INSERT INTO products (name, price) VALUES ('Product 3', 20.00);
-
--- ✅ GOOD: Batch insert
-INSERT INTO products (name, price) VALUES 
-('Product 1', 10.00),
-('Product 2', 15.00),
-('Product 3', 20.00);
-```
-
-### Temporary Table Usage
-```sql
--- ✅ GOOD: Using temporary tables for complex operations
-CREATE TEMPORARY TABLE temp_calculations AS
-SELECT customer_id, 
-       SUM(total_amount) as total_spent,
-       COUNT(*) as order_count
-FROM orders 
-WHERE created_at >= '2024-01-01'
-GROUP BY customer_id;
-
--- Use the temp table for further calculations
-SELECT c.name, tc.total_spent, tc.order_count
-FROM temp_calculations tc
-JOIN customers c ON tc.customer_id = c.id
-WHERE tc.total_spent > 1000;
-```
-
-## 🛠️ Index Management
-
-### Index Design Principles
-```sql
--- ✅ GOOD: Covering index design
-CREATE INDEX idx_orders_covering 
-ON orders(customer_id, created_at) 
-INCLUDE (total_amount, status);  -- SQL Server syntax
--- Or: CREATE INDEX idx_orders_covering ON orders(customer_id, created_at, total_amount, status); -- Other databases
-```
-
-### Partial Index Strategy
-```sql
--- ✅ GOOD: Partial indexes for specific conditions
-CREATE INDEX idx_orders_active 
-ON orders(created_at) 
-WHERE status IN ('pending', 'processing');
-```
-
-## 📊 Performance Monitoring Queries
-
-### Query Performance Analysis
-```sql
--- Generic approach to identify slow queries
--- (Specific syntax varies by database)
-
--- For MySQL:
-SELECT query_time, lock_time, rows_sent, rows_examined, sql_text
-FROM mysql.slow_log
-ORDER BY query_time DESC;
-
--- For PostgreSQL:
-SELECT query, calls, total_time, mean_time
-FROM pg_stat_statements
-ORDER BY total_time DESC;
-
--- For SQL Server:
-SELECT 
-    qs.total_elapsed_time/qs.execution_count as avg_elapsed_time,
-    qs.execution_count,
-    SUBSTRING(qt.text, (qs.statement_start_offset/2)+1,
-        ((CASE qs.statement_end_offset WHEN -1 THEN DATALENGTH(qt.text)
-        ELSE qs.statement_end_offset END - qs.statement_start_offset)/2)+1) as query_text
-FROM sys.dm_exec_query_stats qs
-CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) qt
-ORDER BY avg_elapsed_time DESC;
-```
-
-## 🎯 Universal Optimization Checklist
-
-### Query Structure
-- [ ] Avoiding SELECT * in production queries
-- [ ] Using appropriate JOIN types (INNER vs LEFT/RIGHT)
-- [ ] Filtering early in WHERE clauses
-- [ ] Using EXISTS instead of IN for subqueries when appropriate
-- [ ] Avoiding functions in WHERE clauses that prevent index usage
-
-### Index Strategy
-- [ ] Creating indexes on frequently queried columns
-- [ ] Using composite indexes in the right column order
-- [ ] Avoiding over-indexing (impacts INSERT/UPDATE performance)
-- [ ] Using covering indexes where beneficial
-- [ ] Creating partial indexes for specific query patterns
-
-### Data Types and Schema
-- [ ] Using appropriate data types for storage efficiency
-- [ ] Normalizing appropriately (3NF for OLTP, denormalized for OLAP)
-- [ ] Using constraints to help query optimizer
-- [ ] Partitioning large tables when appropriate
-
-### Query Patterns
-- [ ] Using LIMIT/TOP for result set control
-- [ ] Implementing efficient pagination strategies
-- [ ] Using batch operations for bulk data changes
-- [ ] Avoiding N+1 query problems
-- [ ] Using prepared statements for repeated queries
-
-### Performance Testing
-- [ ] Testing queries with realistic data volumes
-- [ ] Analyzing query execution plans
-- [ ] Monitoring query performance over time
-- [ ] Setting up alerts for slow queries
-- [ ] Regular index usage analysis
-
-## 📝 Optimization Methodology
-
-1. **Identify**: Use database-specific tools to find slow queries
-2. **Analyze**: Examine execution plans and identify bottlenecks
-3. **Optimize**: Apply appropriate optimization techniques
-4. **Test**: Verify performance improvements
-5. **Monitor**: Continuously track performance metrics
-6. **Iterate**: Regular performance review and optimization
-
-Focus on measurable performance improvements and always test optimizations with realistic data volumes and query patterns.
+| 检查项 | 说明 |
+|--------|------|
+| 执行计划 | 是否全表扫描、是否使用索引 |
+| 索引设计 | 选择性、覆盖索引、复合索引顺序 |
+| 查询改写 | 避免 SELECT *、优化子查询 |
+| 分页方式 | 大偏移量使用游标分页 |
+| 批量操作 | 分批处理、避免长事务 |
+| 锁粒度 | 减少锁范围、使用乐观锁 |

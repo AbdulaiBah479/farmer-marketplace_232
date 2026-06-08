@@ -6,7 +6,6 @@ description: |
 
   Triggers: chatbot, chat app, agent dashboard, AI application, Next.js AI,
   useChat, streamText, ai-elements, build AI app, create chatbot
-argument-hint: "[app-type or description]"
 ---
 
 # AI App Generator
@@ -18,7 +17,7 @@ Build full-stack AI applications with Next.js, AI SDK, and ai-elements.
 ### 1. Scaffold Project
 
 ```bash
-bunx --bun shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=neutral&theme=neutral&iconLibrary=lucide&font=geist-sans&menuAccent=subtle&menuColor=default&radius=default" --template next my-ai-app
+bunx --bun shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=vega&baseColor=zinc&iconLibrary=lucide&font=inter" --template next my-ai-app
 cd my-ai-app
 ```
 
@@ -116,8 +115,8 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-6'),
-    messages: await convertToModelMessages(messages),
+    model: anthropic('claude-sonnet-4-5'),
+    messages: convertToModelMessages(messages),
     system: 'You are a helpful assistant.',
   });
 
@@ -134,7 +133,6 @@ export async function POST(req: Request) {
 // app/page.tsx
 'use client';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
 import {
   Conversation,
   ConversationContent,
@@ -158,9 +156,7 @@ import { useState } from 'react';
 
 export default function ChatPage() {
   const [input, setInput] = useState('');
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
-  });
+  const { messages, sendMessage, status } = useChat();
 
   const handleSubmit = (message: PromptInputMessage) => {
     if (!message.text.trim()) return;
@@ -221,8 +217,7 @@ For detailed patterns, see:
 | AI SDK functions | `/ai-sdk-6` | [core-functions.md](../ai-sdk-6/references/core-functions.md) |
 | Agents & tools | `/ai-sdk-6` | [agents.md](../ai-sdk-6/references/agents.md) |
 | Caching | `/cache-components` | [REFERENCE.md](../cache-components/REFERENCE.md) |
-| Production patterns | `/nextjs-chatbot` | DB persistence, HITL approval, consent, feedback, search |
-| Code review & cleanup | `code-simplifier` agent | DRY/KISS/YAGNI validation |
+| Code review & cleanup | `/code-simplifier` | DRY/KISS/YAGNI validation |
 
 ## Workflow
 
@@ -231,12 +226,8 @@ For detailed patterns, see:
 Ask user:
 - What type of AI app? (chatbot, agent, custom)
 - What features? (reasoning, sources, tools, file upload)
-- What style? (vega=classic, nova=compact, maia=soft/rounded, lyra=boxy/sharp, mira=dense) — default: nova
-- What font? (geist-sans, inter, jetbrains-mono, figtree, dm-sans, outfit, noto-sans, nunito-sans, roboto, raleway, public-sans) — default: geist-sans
-- What base color? (neutral, zinc, slate, gray, stone) — default: neutral
-- What theme accent? (neutral, blue, green, orange, red, rose, violet) — default: neutral
-- What border radius style? (default, sm, md, lg, xl)
-- Component library? (radix=default, base-ui)
+- What theme/colors? (zinc, neutral, blue, violet, green, orange)
+- What border radius style? (sharp 0.25rem, default 0.5rem, rounded 0.75rem, pill 1.3rem)
 
 ### Phase 2: Scaffold Project
 

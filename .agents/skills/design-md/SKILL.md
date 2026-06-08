@@ -1,199 +1,178 @@
 ---
 name: design-md
-description: Author/validate/export Google's DESIGN.md token spec files.
-version: 1.0.0
-author: Hermes Agent
-license: MIT
-platforms: [linux, macos, windows]
-metadata:
-  hermes:
-    tags: [design, design-system, tokens, ui, accessibility, wcag, tailwind, dtcg, google]
-    related_skills: [popular-web-designs, claude-design, excalidraw, architecture-diagram]
+description: "Analyze Stitch projects and synthesize a semantic design system into DESIGN.md files"
+source: "https://github.com/google-labs-code/stitch-skills/tree/main/skills/design-md"
+risk: safe
 ---
 
-# DESIGN.md Skill
+# Stitch DESIGN.md Skill
 
-DESIGN.md is Google's open spec (Apache-2.0, `google-labs-code/design.md`) for
-describing a visual identity to coding agents. One file combines:
+You are an expert Design Systems Lead. Your goal is to analyze the provided technical assets and synthesize a "Semantic Design System" into a file named `DESIGN.md`.
 
-- **YAML front matter** — machine-readable design tokens (normative values)
-- **Markdown body** — human-readable rationale, organized into canonical sections
+## When to Use This Skill
 
-Tokens give exact values. Prose tells agents *why* those values exist and how to
-apply them. The CLI (`npx @google/design.md`) lints structure + WCAG contrast,
-diffs versions for regressions, and exports to Tailwind or W3C DTCG JSON.
-
-## When to use this skill
-
-- User asks for a DESIGN.md file, design tokens, or a design system spec
-- User wants consistent UI/brand across multiple projects or tools
-- User pastes an existing DESIGN.md and asks to lint, diff, export, or extend it
-- User asks to port a style guide into a format agents can consume
-- User wants contrast / WCAG accessibility validation on their color palette
-
-For purely visual inspiration or layout examples, use `popular-web-designs`
-instead. For *process and taste* when designing a one-off HTML artifact
-from scratch (prototype, deck, landing page, component lab), use
-`claude-design`. This skill is for the *formal spec file* itself.
-
-## File anatomy
-
-```md
----
-version: alpha
-name: Heritage
-description: Architectural minimalism meets journalistic gravitas.
-colors:
-  primary: "#1A1C1E"
-  secondary: "#6C7278"
-  tertiary: "#B8422E"
-  neutral: "#F7F5F2"
-typography:
-  h1:
-    fontFamily: Public Sans
-    fontSize: 3rem
-    fontWeight: 700
-    lineHeight: 1.1
-    letterSpacing: "-0.02em"
-  body-md:
-    fontFamily: Public Sans
-    fontSize: 1rem
-rounded:
-  sm: 4px
-  md: 8px
-  lg: 16px
-spacing:
-  sm: 8px
-  md: 16px
-  lg: 24px
-components:
-  button-primary:
-    backgroundColor: "{colors.tertiary}"
-    textColor: "#FFFFFF"
-    rounded: "{rounded.sm}"
-    padding: 12px
-  button-primary-hover:
-    backgroundColor: "{colors.primary}"
----
+Use this skill when:
+- Analyzing Stitch projects
+- Creating DESIGN.md files
+- Synthesizing semantic design systems
+- Working with Stitch design language
+- Generating design documentation for Stitch projects
 
 ## Overview
 
-Architectural Minimalism meets Journalistic Gravitas...
+This skill helps you create `DESIGN.md` files that serve as the "source of truth" for prompting Stitch to generate new screens that align perfectly with existing design language. Stitch interprets design through "Visual Descriptions" supported by specific color values.
 
-## Colors
+## Prerequisites
 
-- **Primary (#1A1C1E):** Deep ink for headlines and core text.
-- **Tertiary (#B8422E):** "Boston Clay" — the sole driver for interaction.
+- Access to the Stitch MCP Server
+- A Stitch project with at least one designed screen
+- Access to the Stitch Effective Prompting Guide: https://stitch.withgoogle.com/docs/learn/prompting/
 
-## Typography
+## The Goal
 
-Public Sans for everything except small all-caps labels...
+The `DESIGN.md` file will serve as the "source of truth" for prompting Stitch to generate new screens that align perfectly with the existing design language. Stitch interprets design through "Visual Descriptions" supported by specific color values.
 
-## Components
+## Retrieval and Networking
 
-`button-primary` is the only high-emphasis action on a page...
+To analyze a Stitch project, you must retrieve screen metadata and design assets using the Stitch MCP Server tools:
+
+1. **Namespace discovery**: Run `list_tools` to find the Stitch MCP prefix. Use this prefix (e.g., `mcp_stitch:`) for all subsequent calls.
+
+2. **Project lookup** (if Project ID is not provided):
+   - Call `[prefix]:list_projects` with `filter: "view=owned"` to retrieve all user projects
+   - Identify the target project by title or URL pattern
+   - Extract the Project ID from the `name` field (e.g., `projects/13534454087919359824`)
+
+3. **Screen lookup** (if Screen ID is not provided):
+   - Call `[prefix]:list_screens` with the `projectId` (just the numeric ID, not the full path)
+   - Review screen titles to identify the target screen (e.g., "Home", "Landing Page")
+   - Extract the Screen ID from the screen's `name` field
+
+4. **Metadata fetch**: 
+   - Call `[prefix]:get_screen` with both `projectId` and `screenId` (both as numeric IDs only)
+   - This returns the complete screen object including:
+     - `screenshot.downloadUrl` - Visual reference of the design
+     - `htmlCode.downloadUrl` - Full HTML/CSS source code
+     - `width`, `height`, `deviceType` - Screen dimensions and target platform
+     - Project metadata including `designTheme` with color and style information
+
+5. **Asset download**:
+   - Use `web_fetch` or `read_url_content` to download the HTML code from `htmlCode.downloadUrl`
+   - Optionally download the screenshot from `screenshot.downloadUrl` for visual reference
+   - Parse the HTML to extract Tailwind classes, custom CSS, and component patterns
+
+6. **Project metadata extraction**:
+   - Call `[prefix]:get_project` with the project `name` (full path: `projects/{id}`) to get:
+     - `designTheme` object with color mode, fonts, roundness, custom colors
+     - Project-level design guidelines and descriptions
+     - Device type preferences and layout principles
+
+## Analysis & Synthesis Instructions
+
+### 1. Extract Project Identity (JSON)
+- Locate the Project Title
+- Locate the specific Project ID (e.g., from the `name` field in the JSON)
+
+### 2. Define the Atmosphere (Image/HTML)
+Evaluate the screenshot and HTML structure to capture the overall "vibe." Use evocative adjectives to describe the mood (e.g., "Airy," "Dense," "Minimalist," "Utilitarian").
+
+### 3. Map the Color Palette (Tailwind Config/JSON)
+Identify the key colors in the system. For each color, provide:
+- A descriptive, natural language name that conveys its character (e.g., "Deep Muted Teal-Navy")
+- The specific hex code in parentheses for precision (e.g., "#294056")
+- Its specific functional role (e.g., "Used for primary actions")
+
+### 4. Translate Geometry & Shape (CSS/Tailwind)
+Convert technical `border-radius` and layout values into physical descriptions:
+- Describe `rounded-full` as "Pill-shaped"
+- Describe `rounded-lg` as "Subtly rounded corners"
+- Describe `rounded-none` as "Sharp, squared-off edges"
+
+### 5. Describe Depth & Elevation
+Explain how the UI handles layers. Describe the presence and quality of shadows (e.g., "Flat," "Whisper-soft diffused shadows," or "Heavy, high-contrast drop shadows").
+
+## Output Guidelines
+
+- **Language:** Use descriptive design terminology and natural language exclusively
+- **Format:** Generate a clean Markdown file following the structure below
+- **Precision:** Include exact hex codes for colors while using descriptive names
+- **Context:** Explain the "why" behind design decisions, not just the "what"
+
+## Output Format (DESIGN.md Structure)
+
+```markdown
+# Design System: [Project Title]
+**Project ID:** [Insert Project ID Here]
+
+## 1. Visual Theme & Atmosphere
+(Description of the mood, density, and aesthetic philosophy.)
+
+## 2. Color Palette & Roles
+(List colors by Descriptive Name + Hex Code + Functional Role.)
+
+## 3. Typography Rules
+(Description of font family, weight usage for headers vs. body, and letter-spacing character.)
+
+## 4. Component Stylings
+* **Buttons:** (Shape description, color assignment, behavior).
+* **Cards/Containers:** (Corner roundness description, background color, shadow depth).
+* **Inputs/Forms:** (Stroke style, background).
+
+## 5. Layout Principles
+(Description of whitespace strategy, margins, and grid alignment.)
 ```
 
-## Token types
+## Usage Example
 
-| Type | Format | Example |
-|------|--------|---------|
-| Color | `#` + hex (sRGB) | `"#1A1C1E"` |
-| Dimension | number + unit (`px`, `em`, `rem`) | `48px`, `-0.02em` |
-| Token reference | `{path.to.token}` | `{colors.primary}` |
-| Typography | object with `fontFamily`, `fontSize`, `fontWeight`, `lineHeight`, `letterSpacing`, `fontFeature`, `fontVariation` | see above |
+To use this skill for the Furniture Collection project:
 
-Component property whitelist: `backgroundColor`, `textColor`, `typography`,
-`rounded`, `padding`, `size`, `height`, `width`. Variants (hover, active,
-pressed) are **separate component entries** with related key names
-(`button-primary-hover`), not nested.
+1. **Retrieve project information:**
+   ```
+   Use the Stitch MCP Server to get the Furniture Collection project
+   ```
 
-## Canonical section order
+2. **Get the Home page screen details:**
+   ```
+   Retrieve the Home page screen's code, image, and screen object information
+   ```
 
-Sections are optional, but present ones MUST appear in this order. Duplicate
-headings reject the file.
+3. **Reference best practices:**
+   ```
+   Review the Stitch Effective Prompting Guide at:
+   https://stitch.withgoogle.com/docs/learn/prompting/
+   ```
 
-1. Overview (alias: Brand & Style)
-2. Colors
-3. Typography
-4. Layout (alias: Layout & Spacing)
-5. Elevation & Depth (alias: Elevation)
-6. Shapes
-7. Components
-8. Do's and Don'ts
+4. **Analyze and synthesize:**
+   - Extract all relevant design tokens from the screen
+   - Translate technical values into descriptive language
+   - Organize information according to the DESIGN.md structure
 
-Unknown sections are preserved, not errored. Unknown token names are accepted
-if the value type is valid. Unknown component properties produce a warning.
+5. **Generate the file:**
+   - Create `DESIGN.md` in the project directory
+   - Follow the prescribed format exactly
+   - Ensure all color codes are accurate
+   - Use evocative, designer-friendly language
 
-## Workflow: authoring a new DESIGN.md
+## Best Practices
 
-1. **Ask the user** (or infer) the brand tone, accent color, and typography
-   direction. If they provided a site, image, or vibe, translate it to the
-   token shape above.
-2. **Write `DESIGN.md`** in their project root using `write_file`. Always
-   include `name:` and `colors:`; other sections optional but encouraged.
-3. **Use token references** (`{colors.primary}`) in the `components:` section
-   instead of re-typing hex values. Keeps the palette single-source.
-4. **Lint it** (see below). Fix any broken references or WCAG failures
-   before returning.
-5. **If the user has an existing project**, also write Tailwind or DTCG
-   exports next to the file (`tailwind.theme.json`, `tokens.json`).
+- **Be Descriptive:** Avoid generic terms like "blue" or "rounded." Use "Ocean-deep Cerulean (#0077B6)" or "Gently curved edges"
+- **Be Functional:** Always explain what each design element is used for
+- **Be Consistent:** Use the same terminology throughout the document
+- **Be Visual:** Help readers visualize the design through your descriptions
+- **Be Precise:** Include exact values (hex codes, pixel values) in parentheses after natural language descriptions
 
-## Workflow: lint / diff / export
+## Tips for Success
 
-The CLI is `@google/design.md` (Node). Use `npx` — no global install needed.
+1. **Start with the big picture:** Understand the overall aesthetic before diving into details
+2. **Look for patterns:** Identify consistent spacing, sizing, and styling patterns
+3. **Think semantically:** Name colors by their purpose, not just their appearance
+4. **Consider hierarchy:** Document how visual weight and importance are communicated
+5. **Reference the guide:** Use language and patterns from the Stitch Effective Prompting Guide
 
-```bash
-# Validate structure + token references + WCAG contrast
-npx -y @google/design.md lint DESIGN.md
+## Common Pitfalls to Avoid
 
-# Compare two versions, fail on regression (exit 1 = regression)
-npx -y @google/design.md diff DESIGN.md DESIGN-v2.md
-
-# Export to Tailwind theme JSON
-npx -y @google/design.md export --format tailwind DESIGN.md > tailwind.theme.json
-
-# Export to W3C DTCG (Design Tokens Format Module) JSON
-npx -y @google/design.md export --format dtcg DESIGN.md > tokens.json
-
-# Print the spec itself — useful when injecting into an agent prompt
-npx -y @google/design.md spec --rules-only --format json
-```
-
-All commands accept `-` for stdin. `lint` returns exit 1 on errors. Use the
-`--format json` flag and parse the output if you need to report findings
-structurally.
-
-### Lint rule reference (what the 7 rules catch)
-
-- `broken-ref` (error) — `{colors.missing}` points at a non-existent token
-- `duplicate-section` (error) — same `## Heading` appears twice
-- `invalid-color`, `invalid-dimension`, `invalid-typography` (error)
-- `wcag-contrast` (warning/info) — component `textColor` vs `backgroundColor`
-  ratio against WCAG AA (4.5:1) and AAA (7:1)
-- `unknown-component-property` (warning) — outside the whitelist above
-
-When the user cares about accessibility, call this out explicitly in your
-summary — WCAG findings are the most load-bearing reason to use the CLI.
-
-## Pitfalls
-
-- **Don't nest component variants.** `button-primary.hover` is wrong;
-  `button-primary-hover` as a sibling key is right.
-- **Hex colors must be quoted strings.** YAML will otherwise choke on `#` or
-  truncate values like `#1A1C1E` oddly.
-- **Negative dimensions need quotes too.** `letterSpacing: -0.02em` parses as
-  a YAML flow — write `letterSpacing: "-0.02em"`.
-- **Section order is enforced.** If the user gives you prose in a random order,
-  reorder it to match the canonical list before saving.
-- **`version: alpha` is the current spec version** (as of Apr 2026). The spec
-  is marked alpha — watch for breaking changes.
-- **Token references resolve by dotted path.** `{colors.primary}` works;
-  `{primary}` does not.
-
-## Spec source of truth
-
-- Repo: https://github.com/google-labs-code/design.md (Apache-2.0)
-- CLI: `@google/design.md` on npm
-- License of generated DESIGN.md files: whatever the user's project uses;
-  the spec itself is Apache-2.0.
+- ❌ Using technical jargon without translation (e.g., "rounded-xl" instead of "generously rounded corners")
+- ❌ Omitting color codes or using only descriptive names
+- ❌ Forgetting to explain functional roles of design elements
+- ❌ Being too vague in atmosphere descriptions
+- ❌ Ignoring subtle design details like shadows or spacing patterns

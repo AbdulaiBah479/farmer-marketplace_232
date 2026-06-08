@@ -1,495 +1,246 @@
 ---
 name: benchmarking
-description: Benchmarking and competitive analysis techniques. Compares performance, processes, and practices against industry standards, competitors, and best-in-class organizations.
-allowed-tools: Read, Glob, Grep, Task, Skill
+description: 性能基准测试
+version: 1.0.0
+author: terminal-skills
+tags: [performance, benchmark, stress, load-test, sysbench]
 ---
 
-# Benchmarking
+# 性能基准测试
 
-## When to Use This Skill
+## 概述
+压力测试、基准测试工具使用技能。
 
-Use this skill when:
+## sysbench
 
-- **Benchmarking tasks** - Working on benchmarking and competitive analysis techniques. compares performance, processes, and practices against industry standards, competitors, and best-in-class organizations
-- **Planning or design** - Need guidance on Benchmarking approaches
-- **Best practices** - Want to follow established patterns and standards
+### 安装
+```bash
+# Debian/Ubuntu
+apt install sysbench
 
-## Overview
-
-Systematically compare performance, processes, and practices against internal units, competitors, industry standards, or best-in-class organizations. Identifies gaps and improvement opportunities.
-
-## What is Benchmarking?
-
-**Benchmarking** is the process of measuring your organization's processes, products, or services against those of recognized leaders to identify gaps and improvement opportunities.
-
-### Benchmarking Purpose
-
-| Goal | Description |
-|------|-------------|
-| **Identify Gaps** | Where do we fall short of leaders? |
-| **Set Targets** | What level of performance is achievable? |
-| **Learn Practices** | How do leaders achieve superior results? |
-| **Drive Improvement** | What changes will close the gaps? |
-
-### Benchmarking vs Competitive Analysis
-
-| Aspect | Benchmarking | Competitive Analysis |
-|--------|--------------|---------------------|
-| Focus | Processes and practices | Products and market position |
-| Goal | Improve own performance | Understand competitors |
-| Scope | Can include non-competitors | Direct competitors |
-| Outcome | Improvement plan | Competitive strategy |
-
-## Types of Benchmarking
-
-### Internal Benchmarking
-
-Compare across internal units, teams, or locations:
-
-| Advantage | Disadvantage |
-|-----------|--------------|
-| Easy data access | Limited to internal best |
-| Common context | May miss external innovations |
-| Quick to implement | Political sensitivities |
-| Low cost | May perpetuate mediocrity |
-
-**When to Use:** Multiple locations, varied performance, starting point
-
-### Competitive Benchmarking
-
-Compare against direct competitors:
-
-| Advantage | Disadvantage |
-|-----------|--------------|
-| Relevant comparison | Data hard to obtain |
-| Direct market context | May be biased/incomplete |
-| Stakeholder understanding | Legal considerations |
-| Strategic relevance | Competitors may not be best |
-
-**When to Use:** Market positioning, product comparison, pricing
-
-### Functional Benchmarking
-
-Compare similar functions across different industries:
-
-| Advantage | Disadvantage |
-|-----------|--------------|
-| Best-in-class practices | Context differences |
-| Innovative ideas | May not transfer directly |
-| Less competitive sensitivity | Harder to arrange |
-| Broader perspective | More complex adaptation |
-
-**When to Use:** Process improvement, breakthrough thinking
-
-### Strategic Benchmarking
-
-Compare strategies and business models:
-
-| Advantage | Disadvantage |
-|-----------|--------------|
-| Strategic insights | High-level, less actionable |
-| Transformative potential | Longer time to implement |
-| Industry-changing ideas | Harder to measure |
-| Vision-setting | May require significant change |
-
-**When to Use:** Strategy development, transformation, disruption
-
-## Benchmarking Process
-
-### Phase 1: Plan
-
-#### Step 1: Define Scope
-
-```markdown
-## Benchmarking Scope
-
-**Subject:** [What to benchmark]
-**Type:** [Internal/Competitive/Functional/Strategic]
-**Objective:** [Why benchmarking]
-**Owner:** [Who's leading]
-**Timeline:** [Start to finish]
-
-### Success Criteria
-
-- [What constitutes a successful benchmark study]
-- [How results will be used]
+# CentOS/RHEL
+yum install sysbench
 ```
 
-#### Step 2: Identify Metrics
+### CPU 测试
+```bash
+# 单线程
+sysbench cpu run
 
-```markdown
-## Key Performance Indicators
+# 多线程
+sysbench cpu --threads=4 run
 
-| Category | Metric | Current | Definition |
-|----------|--------|---------|------------|
-| Efficiency | [Metric 1] | [Value] | [How measured] |
-| Quality | [Metric 2] | [Value] | [How measured] |
-| Speed | [Metric 3] | [Value] | [How measured] |
-| Cost | [Metric 4] | [Value] | [How measured] |
+# 指定时间
+sysbench cpu --threads=4 --time=60 run
 ```
 
-#### Step 3: Select Benchmarking Partners
+### 内存测试
+```bash
+# 顺序读写
+sysbench memory run
 
-| Criteria | Description |
-|----------|-------------|
-| **Relevant** | Similar processes or challenges |
-| **Best-in-class** | Superior performance in area |
-| **Willing** | Open to sharing |
-| **Accessible** | Data or contact available |
+# 随机读写
+sysbench memory --memory-access-mode=rnd run
 
-### Phase 2: Collect
-
-#### Step 1: Gather Internal Data
-
-```markdown
-## Internal Performance Data
-
-| Process/Area | Metric | Current Performance | Trend |
-|--------------|--------|--------------------:|-------|
-| [Process 1] | [Metric] | [Value] | [Up/Down/Stable] |
-| [Process 2] | [Metric] | [Value] | [Up/Down/Stable] |
+# 指定大小
+sysbench memory --memory-block-size=1M --memory-total-size=10G run
 ```
 
-#### Step 2: Gather External Data
+### 磁盘 IO 测试
+```bash
+# 准备测试文件
+sysbench fileio --file-total-size=10G prepare
 
-| Source | Type | Reliability |
-|--------|------|-------------|
-| Industry reports | Secondary | Medium-High |
-| Public filings | Secondary | High |
-| Surveys | Primary | Medium |
-| Site visits | Primary | High |
-| Conferences | Secondary | Medium |
-| Published case studies | Secondary | Medium |
+# 随机读写
+sysbench fileio --file-total-size=10G --file-test-mode=rndrw run
 
-#### Step 3: Normalize Data
+# 顺序读
+sysbench fileio --file-total-size=10G --file-test-mode=seqrd run
 
-Ensure comparability:
-
-- Common definitions
-- Same time periods
-- Equivalent scope
-- Currency/unit conversion
-- Size adjustments (per employee, per revenue)
-
-### Phase 3: Analyze
-
-#### Step 1: Calculate Gaps
-
-```markdown
-## Gap Analysis
-
-| Metric | Our Performance | Benchmark | Gap | Gap % |
-|--------|----------------:|----------:|----:|------:|
-| [Metric 1] | 85% | 95% | -10% | -11% |
-| [Metric 2] | 24h | 4h | +20h | +500% |
-| [Metric 3] | $50 | $30 | +$20 | +67% |
+# 清理
+sysbench fileio --file-total-size=10G cleanup
 ```
 
-#### Step 2: Identify Root Causes
+### MySQL 测试
+```bash
+# 准备数据
+sysbench oltp_read_write --mysql-host=localhost --mysql-user=root \
+    --mysql-password=pass --mysql-db=test --tables=10 --table-size=100000 prepare
 
-For each significant gap:
+# 运行测试
+sysbench oltp_read_write --mysql-host=localhost --mysql-user=root \
+    --mysql-password=pass --mysql-db=test --tables=10 --table-size=100000 \
+    --threads=16 --time=60 run
 
-- Why does the gap exist?
-- What practices enable superior performance?
-- What barriers prevent us from closing the gap?
-- What resources would be required?
-
-#### Step 3: Prioritize Gaps
-
-```mermaid
-quadrantChart
-    title Gap Prioritization
-    x-axis Low Impact --> High Impact
-    y-axis Difficult to Close --> Easy to Close
-    quadrant-1 Strategic Initiatives
-    quadrant-2 Quick Wins
-    quadrant-3 Low Priority
-    quadrant-4 Major Projects
-    "Gap A": [0.8, 0.7]
-    "Gap B": [0.3, 0.8]
-    "Gap C": [0.7, 0.3]
-    "Gap D": [0.2, 0.3]
+# 清理
+sysbench oltp_read_write --mysql-host=localhost --mysql-user=root \
+    --mysql-password=pass --mysql-db=test cleanup
 ```
 
-### Phase 4: Adapt
+## fio 磁盘测试
 
-#### Step 1: Develop Improvement Actions
+### 基础测试
+```bash
+# 顺序读
+fio --name=seqread --rw=read --bs=1M --size=1G --numjobs=1 --runtime=60
 
-```markdown
-## Improvement Plan
+# 顺序写
+fio --name=seqwrite --rw=write --bs=1M --size=1G --numjobs=1 --runtime=60
 
-### Gap: [Metric] - [Our Value] vs [Benchmark Value]
+# 随机读
+fio --name=randread --rw=randread --bs=4k --size=1G --numjobs=4 --runtime=60
 
-**Root Cause:** [Why the gap exists]
+# 随机写
+fio --name=randwrite --rw=randwrite --bs=4k --size=1G --numjobs=4 --runtime=60
 
-**Best Practice:** [What benchmark leaders do differently]
-
-**Adaptation:**
-| Action | Owner | Timeline | Resources | Expected Impact |
-|--------|-------|----------|-----------|-----------------|
-| [Action 1] | [Name] | [Date] | [Cost] | [Target] |
-| [Action 2] | [Name] | [Date] | [Cost] | [Target] |
-
-**Success Metric:** [How we'll measure improvement]
+# 混合读写
+fio --name=randrw --rw=randrw --bs=4k --size=1G --numjobs=4 --rwmixread=70 --runtime=60
 ```
 
-#### Step 2: Set Targets
+### 配置文件
+```ini
+# test.fio
+[global]
+ioengine=libaio
+direct=1
+runtime=60
+time_based
 
-| Approach | Description | When to Use |
-|----------|-------------|-------------|
-| Match benchmark | Achieve same level | Realistic, proven possible |
-| Exceed benchmark | Surpass best-in-class | Competitive advantage |
-| Incremental | Close gap by X% | Resource-constrained |
-| Breakthrough | Leapfrog to new level | Transformational |
+[seqread]
+rw=read
+bs=1M
+size=1G
 
-#### Step 3: Implement and Monitor
-
-- Execute improvement actions
-- Track progress against targets
-- Report on gap closure
-- Iterate and refine
-
-## Competitive Analysis Framework
-
-### Porter's Five Forces Context
-
-| Force | Benchmarking Focus |
-|-------|-------------------|
-| Rivalry | Direct competitor comparison |
-| New Entrants | Emerging competitor practices |
-| Substitutes | Alternative solution benchmarks |
-| Supplier Power | Supply chain efficiency |
-| Buyer Power | Customer satisfaction metrics |
-
-### Competitive Profile Matrix
-
-```markdown
-## Competitive Profile Matrix
-
-| Success Factor | Weight | Company A | Company B | Company C |
-|----------------|-------:|----------:|----------:|----------:|
-| | | Rating | Score | Rating | Score | Rating | Score |
-| Product Quality | 0.20 | 4 | 0.80 | 3 | 0.60 | 5 | 1.00 |
-| Price | 0.15 | 3 | 0.45 | 4 | 0.60 | 2 | 0.30 |
-| Market Share | 0.15 | 4 | 0.60 | 2 | 0.30 | 5 | 0.75 |
-| Customer Service | 0.20 | 3 | 0.60 | 4 | 0.80 | 3 | 0.60 |
-| Innovation | 0.15 | 2 | 0.30 | 3 | 0.45 | 5 | 0.75 |
-| Distribution | 0.15 | 4 | 0.60 | 3 | 0.45 | 4 | 0.60 |
-| **Total** | **1.00** | | **3.35** | | **3.20** | | **4.00** |
-
-Rating: 1=Major Weakness, 2=Minor Weakness, 3=Neutral, 4=Minor Strength, 5=Major Strength
+[randread]
+rw=randread
+bs=4k
+size=1G
+numjobs=4
 ```
 
-### SWOT Integration
-
-Benchmarking informs SWOT:
-
-| SWOT Element | Benchmarking Input |
-|--------------|-------------------|
-| Strengths | Where we exceed benchmarks |
-| Weaknesses | Where we fall short |
-| Opportunities | Best practices to adopt |
-| Threats | Competitor advantages |
-
-## Output Formats
-
-### Narrative Summary
-
-```markdown
-## Benchmarking Summary
-
-**Subject:** [What was benchmarked]
-**Date:** [ISO date]
-**Type:** [Internal/Competitive/Functional/Strategic]
-**Analyst:** benchmarking-analyst
-
-### Executive Summary
-
-[2-3 sentence overview of key findings]
-
-### Benchmarking Partners
-
-| Partner | Type | Why Selected |
-|---------|------|--------------|
-| [Partner 1] | [Type] | [Reason] |
-| [Partner 2] | [Type] | [Reason] |
-
-### Key Findings
-
-#### Gap 1: [Area]
-- **Our Performance:** [Value]
-- **Benchmark:** [Value]
-- **Gap:** [Delta]
-- **Root Cause:** [Why]
-- **Best Practice:** [What leaders do]
-
-#### Gap 2: [Area]
-[Same structure]
-
-### Recommendations
-
-| Priority | Gap | Action | Impact | Effort |
-|----------|-----|--------|--------|--------|
-| 1 | [Gap] | [Action] | High | Medium |
-| 2 | [Gap] | [Action] | Medium | Low |
-
-### Next Steps
-
-1. [Immediate action]
-2. [Short-term action]
-3. [Long-term initiative]
+```bash
+fio test.fio
 ```
 
-### Structured Data (YAML)
+## HTTP 压测
 
-```yaml
-benchmarking:
-  version: "1.0"
-  date: "2025-01-15"
-  subject: "Customer Service Operations"
-  type: "competitive"
-  analyst: "benchmarking-analyst"
+### ab (Apache Bench)
+```bash
+# 基础测试
+ab -n 1000 -c 100 http://localhost/
 
-  partners:
-    - name: "Company A"
-      type: "direct_competitor"
-      selection_reason: "Market leader"
-    - name: "Industry Average"
-      type: "industry_benchmark"
-      source: "Gartner Report 2024"
+# 带 Keep-Alive
+ab -n 1000 -c 100 -k http://localhost/
 
-  metrics:
-    - name: "First Response Time"
-      category: "speed"
-      our_performance:
-        value: 24
-        unit: "hours"
-      benchmark:
-        value: 4
-        unit: "hours"
-        source: "Company A"
-      gap:
-        absolute: 20
-        percentage: 500
-      priority: "critical"
-
-    - name: "Customer Satisfaction"
-      category: "quality"
-      our_performance:
-        value: 78
-        unit: "percent"
-      benchmark:
-        value: 92
-        unit: "percent"
-        source: "Industry Average"
-      gap:
-        absolute: -14
-        percentage: -15
-      priority: "high"
-
-  findings:
-    - gap: "First Response Time"
-      root_cause: "Manual ticket routing, no AI triage"
-      best_practice: "AI-powered auto-routing and chatbot first response"
-      impact: "high"
-      effort: "medium"
-
-  recommendations:
-    - priority: 1
-      gap: "First Response Time"
-      action: "Implement AI ticket triage"
-      owner: "Support Director"
-      timeline: "Q2 2025"
-      expected_improvement: "80% reduction"
-      investment: "$50,000"
-
-  targets:
-    - metric: "First Response Time"
-      current: 24
-      target: 4
-      timeline: "6 months"
-    - metric: "Customer Satisfaction"
-      current: 78
-      target: 90
-      timeline: "12 months"
+# POST 请求
+ab -n 1000 -c 100 -p data.json -T application/json http://localhost/api
 ```
 
-### Comparison Table
+### wrk
+```bash
+# 基础测试
+wrk -t4 -c100 -d30s http://localhost/
 
-```markdown
-## Competitive Comparison
-
-| Dimension | Us | Competitor A | Competitor B | Industry Avg | Best-in-Class |
-|-----------|---:|-------------:|-------------:|-------------:|--------------:|
-| Response Time | 24h | 8h | 12h | 10h | 1h |
-| Resolution Rate | 78% | 85% | 82% | 80% | 95% |
-| Cost per Ticket | $45 | $35 | $40 | $38 | $20 |
-| NPS Score | 32 | 45 | 38 | 35 | 72 |
-
-**Legend:** Green = above average, Yellow = average, Red = below average
+# 带脚本
+wrk -t4 -c100 -d30s -s post.lua http://localhost/api
 ```
 
-### Gap Visualization
+### hey
+```bash
+# 基础测试
+hey -n 1000 -c 100 http://localhost/
 
-```mermaid
-xychart-beta
-    title "Performance vs Benchmark"
-    x-axis ["Response Time", "Resolution", "Cost", "NPS"]
-    y-axis "Performance (% of benchmark)" 0 --> 150
-    bar [25, 82, 88, 44]
-    line [100, 100, 100, 100]
+# 指定时间
+hey -z 30s -c 100 http://localhost/
+
+# POST 请求
+hey -n 1000 -c 100 -m POST -d '{"key":"value"}' http://localhost/api
 ```
 
-## Benchmarking Ethics
+## 网络测试
 
-### Do's
+### iperf3
+```bash
+# 服务端
+iperf3 -s
 
-- Use publicly available information
-- Get permission for site visits/interviews
-- Share appropriately if participating in consortium
-- Protect confidential information
-- Give credit to sources
+# 客户端
+iperf3 -c server_ip
 
-### Don'ts
+# UDP 测试
+iperf3 -c server_ip -u -b 1G
 
-- Use deceptive practices to gather data
-- Violate NDAs or trade secrets
-- Misrepresent benchmarking data
-- Use competitive intelligence unethically
-- Ignore legal and antitrust considerations
+# 双向测试
+iperf3 -c server_ip -d
 
-## Common Pitfalls
+# 多线程
+iperf3 -c server_ip -P 4
+```
 
-| Pitfall | Prevention |
-|---------|------------|
-| Wrong metrics | Align with strategic objectives |
-| Poor partners | Select truly best-in-class |
-| Apples to oranges | Normalize data carefully |
-| Data without action | Focus on actionable insights |
-| One-time exercise | Continuous improvement cycle |
-| Copying blindly | Adapt to your context |
+### netperf
+```bash
+# 服务端
+netserver
 
-## Integration
+# TCP 吞吐
+netperf -H server_ip
 
-### Upstream
+# TCP 延迟
+netperf -H server_ip -t TCP_RR
+```
 
-- **swot-pestle-analysis** - Strategic context
-- **stakeholder-analysis** - Who cares about benchmarks
-- **Requirements** - Performance requirements
+## 常见场景
 
-### Downstream
+### 场景 1：服务器基准测试
+```bash
+#!/bin/bash
+echo "=== CPU 测试 ==="
+sysbench cpu --threads=$(nproc) --time=30 run
 
-- **Gap analysis** - Improvement priorities
-- **prioritization** - Resource allocation
-- **Roadmap** - Improvement initiatives
+echo "=== 内存测试 ==="
+sysbench memory --threads=$(nproc) --time=30 run
 
-## Related Skills
+echo "=== 磁盘测试 ==="
+fio --name=test --rw=randrw --bs=4k --size=1G --runtime=30 --time_based
+```
 
-- `swot-pestle-analysis` - Strategic environmental analysis
-- `prioritization` - Prioritizing improvement actions
-- `decision-analysis` - Evaluating improvement options
-- `capability-mapping` - Capability maturity benchmarking
+### 场景 2：数据库基准
+```bash
+#!/bin/bash
+# MySQL OLTP 测试
+sysbench oltp_read_write \
+    --mysql-host=localhost \
+    --mysql-user=root \
+    --mysql-password=pass \
+    --mysql-db=sbtest \
+    --tables=10 \
+    --table-size=100000 \
+    --threads=16 \
+    --time=300 \
+    --report-interval=10 \
+    run
+```
 
-## Version History
+## 结果解读
 
-- **v1.0.0** (2025-12-26): Initial release
+| 指标 | 说明 |
+|------|------|
+| TPS | 每秒事务数 |
+| QPS | 每秒查询数 |
+| IOPS | 每秒 IO 操作数 |
+| 延迟 | 响应时间 |
+| 吞吐量 | 数据传输速率 |
+
+## 故障排查
+
+```bash
+# 检查系统负载
+uptime
+vmstat 1
+
+# 检查 IO
+iostat -x 1
+
+# 检查网络
+sar -n DEV 1
+```

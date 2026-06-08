@@ -1,128 +1,187 @@
 ---
 name: accessibility-review
-description: Run a WCAG 2.1 AA accessibility audit on a design or page. Trigger with "audit accessibility", "check a11y", "is this accessible?", or when reviewing a design for color contrast, keyboard navigation, touch target size, or screen reader behavior before handoff.
-argument-hint: "<Figma URL, URL, or description>"
+description: Reviews UI for accessibility issues against WCAG 2.1/2.2 AA. Triggers on "is this accessible?", "check accessibility", or contrast/a11y review requests.
 ---
 
-# /accessibility-review
+# Accessibility Review
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+## Overview
 
-Audit a design or page for WCAG 2.1 AA accessibility compliance.
+This skill enables manual accessibility reviews of web content, components, and applications against WCAG 2.1/2.2 Level AA standards. Reviews focus on practical, modern accessibility requirements without being overly pedantic.
 
-## Usage
+## When to Use This Skill
+
+Use this skill when the user asks questions like:
+- "Is this accessible?"
+- "Can you review the color contrast?"
+- "Check this component for accessibility issues"
+- "Does this meet accessibility standards?"
+- Any request to review, check, or validate accessibility
+
+## Review Process
+
+### 1. Identify the Target
+
+Determine what needs to be reviewed:
+- Specific component (button, form, modal, etc.)
+- Full page or application
+- Code file or set of files
+- Design mockup or screenshot
+
+### 2. Conduct Manual Review
+
+Use the WCAG checklist in `references/wcag-checklist.md` to systematically review the target against modern accessibility standards.
+
+Focus on the most common and impactful issues:
+- **Perceivable**: Color contrast, text alternatives, semantic structure
+- **Operable**: Keyboard navigation, focus management, interactive elements
+- **Understandable**: Clear labels, error handling, consistent navigation
+- **Robust**: Valid HTML, ARIA usage, compatibility
+
+### 3. Prioritize Findings
+
+Classify each issue as:
+
+**Critical** - Blocks users from accessing core functionality:
+- Missing alt text on meaningful images
+- Non-keyboard accessible interactive elements
+- Insufficient color contrast (below 4.5:1 for normal text, 3:1 for large text)
+- Forms without proper labels
+- Missing focus indicators
+- Inaccessible modal/dialog patterns
+- Auto-playing media without controls
+
+**Warning** - Creates friction but doesn't fully block access:
+- Suboptimal heading hierarchy (skipped levels)
+- Missing ARIA landmarks
+- Link text that's unclear out of context
+- Redundant or unnecessary ARIA
+- Touch targets smaller than 44x44px
+- Missing skip links
+- Non-descriptive error messages
+
+### 4. Stepped Review (One Issue at a Time)
+
+**IMPORTANT**: Do NOT present all findings at once. Review issues one at a time, waiting for user decision before proceeding.
+
+**4.1 Start with Overview**
+
+Begin by telling the user how many issues were found:
 
 ```
-/accessibility-review $ARGUMENTS
+Found [X] accessibility issues ([Y] critical, [Z] warnings).
+
+Let's review them one at a time. I'll present each issue with a recommended fix, and you can decide to:
+- **Fix** — I'll implement the change
+- **Ignore** — Tell me why, and I'll note it
+
+Starting with critical issues first.
 ```
 
-Audit for accessibility: @$1
+**4.2 Present Each Issue**
 
-## WCAG 2.1 AA Quick Reference
+For each issue, present ONE at a time using this format:
 
-### Perceivable
-- **1.1.1** Non-text content has alt text
-- **1.3.1** Info and structure conveyed semantically
-- **1.4.3** Contrast ratio >= 4.5:1 (normal text), >= 3:1 (large text)
-- **1.4.11** Non-text contrast >= 3:1 (UI components, graphics)
+```
+───────────────────────────────────
+Issue [1/X]: [Critical/Warning]
+───────────────────────────────────
 
-### Operable
-- **2.1.1** All functionality available via keyboard
-- **2.4.3** Logical focus order
-- **2.4.7** Visible focus indicator
-- **2.5.5** Touch target >= 44x44 CSS pixels
+**Problem**: [Clear description of the issue]
 
-### Understandable
-- **3.2.1** Predictable on focus (no unexpected changes)
-- **3.3.1** Error identification (describe the error)
-- **3.3.2** Labels or instructions for inputs
+**Location**: `file_path:line_number`
+[Show the relevant code snippet]
 
-### Robust
-- **4.1.2** Name, role, value for all UI components
+**Impact**: [How this affects users — be specific about who and how]
 
-## Common Issues
+**Recommended Fix**:
+[Specific code change or approach]
 
-1. Insufficient color contrast
-2. Missing form labels
-3. No keyboard access to interactive elements
-4. Missing alt text on meaningful images
-5. Focus traps in modals
-6. Missing ARIA landmarks
-7. Auto-playing media without controls
-8. Time limits without extension options
-
-## Testing Approach
-
-1. Automated scan (catches ~30% of issues)
-2. Keyboard-only navigation
-3. Screen reader testing (VoiceOver, NVDA)
-4. Color contrast verification
-5. Zoom to 200% — does layout break?
-
-## Output
-
-```markdown
-## Accessibility Audit: [Design/Page Name]
-**Standard:** WCAG 2.1 AA | **Date:** [Date]
-
-### Summary
-**Issues found:** [X] | **Critical:** [X] | **Major:** [X] | **Minor:** [X]
-
-### Findings
-
-#### Perceivable
-| # | Issue | WCAG Criterion | Severity | Recommendation |
-|---|-------|---------------|----------|----------------|
-| 1 | [Issue] | [1.4.3 Contrast] | 🔴 Critical | [Fix] |
-
-#### Operable
-| # | Issue | WCAG Criterion | Severity | Recommendation |
-|---|-------|---------------|----------|----------------|
-| 1 | [Issue] | [2.1.1 Keyboard] | 🟡 Major | [Fix] |
-
-#### Understandable
-| # | Issue | WCAG Criterion | Severity | Recommendation |
-|---|-------|---------------|----------|----------------|
-| 1 | [Issue] | [3.3.2 Labels] | 🟢 Minor | [Fix] |
-
-#### Robust
-| # | Issue | WCAG Criterion | Severity | Recommendation |
-|---|-------|---------------|----------|----------------|
-| 1 | [Issue] | [4.1.2 Name, Role, Value] | 🟡 Major | [Fix] |
-
-### Color Contrast Check
-| Element | Foreground | Background | Ratio | Required | Pass? |
-|---------|-----------|------------|-------|----------|-------|
-| [Body text] | [color] | [color] | [X]:1 | 4.5:1 | ✅/❌ |
-
-### Keyboard Navigation
-| Element | Tab Order | Enter/Space | Escape | Arrow Keys |
-|---------|-----------|-------------|--------|------------|
-| [Element] | [Order] | [Behavior] | [Behavior] | [Behavior] |
-
-### Screen Reader
-| Element | Announced As | Issue |
-|---------|-------------|-------|
-| [Element] | [What SR says] | [Problem if any] |
-
-### Priority Fixes
-1. **[Critical fix]** — Affects [who] and blocks [what]
-2. **[Major fix]** — Improves [what] for [who]
-3. **[Minor fix]** — Nice to have
+───────────────────────────────────
+Fix this issue, or ignore? (If ignoring, please share why)
 ```
 
-## If Connectors Available
+**4.3 Handle User Response**
 
-If **~~design tool** is connected:
-- Inspect color values, font sizes, and touch targets directly from Figma
-- Check component ARIA roles and keyboard behavior in the design spec
+**If user says "fix":**
+1. Implement the fix
+2. Confirm: "Fixed. [Brief description of what changed]"
+3. Move to next issue
 
-If **~~project tracker** is connected:
-- Create tickets for each accessibility finding with severity and WCAG criterion
-- Link findings to existing accessibility remediation epics
+**If user says "ignore" with reason:**
+1. Acknowledge: "Noted — ignoring because: [their reason]"
+2. Track the decision (see 4.4)
+3. Move to next issue
 
-## Tips
+**If user says "ignore" without reason:**
+1. Ask: "Got it. Quick note on why? (Helps for future reference)"
+2. Accept any response and move on
 
-1. **Start with contrast and keyboard** — These catch the most common and impactful issues.
-2. **Test with real assistive technology** — My audit is a great start, but manual testing with VoiceOver/NVDA catches things I can't.
-3. **Prioritize by impact** — Fix issues that block users first, polish later.
+**4.4 Track Decisions**
+
+Keep a running tally as you go through issues. After all issues are reviewed, present a summary.
+
+### 5. Final Summary
+
+After reviewing all issues, present a summary:
+
+```
+## Accessibility Review Complete
+
+**Reviewed**: [X] issues ([Y] critical, [Z] warnings)
+
+### Fixed ([N])
+- [Issue description] — `file:line`
+- [Issue description] — `file:line`
+
+### Ignored ([N])
+- [Issue description] — Reason: [user's reason]
+- [Issue description] — Reason: [user's reason]
+
+### Remaining Concerns
+[Any patterns noticed, suggestions for future, or issues that were ignored but warrant reconsideration]
+```
+
+## Review Guidelines
+
+**Be Practical**: Focus on issues that genuinely impact users. Modern WCAG 2.1/2.2 Level AA is the standard—avoid over-engineering or citing obscure edge cases.
+
+**Be Specific**: Reference actual code locations using `file_path:line_number` format when possible.
+
+**Be Constructive**: Provide actionable fixes, not just problems. Include code examples when helpful.
+
+**Consider Context**: Some patterns may have accessibility trade-offs. Acknowledge these and suggest the most accessible approach for the use case.
+
+## Common Patterns to Check
+
+### Interactive Elements
+- All interactive elements must be keyboard accessible (Enter/Space to activate)
+- Focus must be visible with clear indicators
+- Custom controls need proper ARIA roles and states
+
+### Forms
+- All inputs must have associated labels (explicit or aria-label)
+- Error messages must be programmatically associated with fields
+- Required fields must be indicated clearly
+
+### Color and Contrast
+- Text contrast: 4.5:1 minimum for normal text, 3:1 for large text (18pt+ or 14pt+ bold)
+- UI components: 3:1 contrast for interactive elements and their states
+- Don't rely on color alone to convey information
+
+### Images and Media
+- Meaningful images need descriptive alt text
+- Decorative images should have empty alt (alt="")
+- Videos need captions, audio content needs transcripts
+
+### Structure
+- Use semantic HTML (nav, main, article, etc.)
+- Heading hierarchy should be logical (h1 → h2 → h3)
+- ARIA landmarks help screen reader navigation
+
+## Resources
+
+This skill includes:
+
+### references/wcag-checklist.md
+Comprehensive checklist of WCAG 2.1/2.2 Level AA requirements organized by principle (Perceivable, Operable, Understandable, Robust). Reference this during reviews to ensure thorough coverage of accessibility standards.

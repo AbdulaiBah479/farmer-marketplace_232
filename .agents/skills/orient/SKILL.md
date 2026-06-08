@@ -1,264 +1,217 @@
 ---
 name: orient
-description: Generates a repo-specific orientation.md resource for the learning-opportunities skill. Invoke directly when the user asks for repo orientation; do not trigger automatically.
-argument-hint: "[showboat]"
-disable-model-invocation: true
-allowed-tools: Read, Glob, Grep, Bash, Write
+description: Use when user invokes /orient with a topic keyword, entity type, project name, time qualifier, or combination. Also triggers on "what do we know about X", "remind me about X", "where did we leave off on X". Provides targeted context loading — searches the MCP Memory Server graph, knowledge files, journal entries, and research index to produce a focused orientation briefing.
 ---
 
-# Create Orientation
+# Topic-Focused Orientation
 
-## Purpose
+## Overview
 
-Generate a repo-specific `orientation.md` file inside the `learning-opportunities` skill's `resources/` directory. This file is used by that skill when invoked with the `orient` argument to run a structured learning exercise for someone new to the codebase.
+Produce a focused orientation briefing for a specific topic by searching across the knowledge graph, knowledge files, journal entries, and research index. Designed for targeted context loading — get only what's relevant instead of everything.
 
----
+**Core principles:**
+1. **Targeted, not exhaustive.** Only return information related to the requested topic.
+2. **Graceful degradation.** If MCP Memory Server is not connected, skip graph sections. Knowledge files and research still work.
+3. **Conversation output.** Briefing goes to the conversation, not files. The user can ask to save.
+4. **Token-conscious.** Output stays between ~800-2000 tokens. Orientation briefing, not document dump.
 
-## Step 1: Find where to write orientation.md
+## When to Use
 
-Always write to the **project level**, regardless of where the `learning-opportunities` skill is installed.
+User types `/orient` followed by:
+- **Topic keyword** → search everything for that topic (`membrain`, `data engineering`)
+- **Entity type name** → search graph for that type (`desires`, `open tensions`)
+- **Time qualifier** → show recent entries (`recent`, `last week`, `today`)
+- **Combination** → compound search (`recent membrain`, `desires and tensions`)
 
-When running in Codex, write to:
+## Invocation Examples
 
 ```
-.codex/skills/learning-opportunities/resources/orientation.md
+/orient membrain
+/orient desires and tensions
+/orient recent evidence
+/orient the streaming migration project
+/orient data engineering
 ```
 
-When running in Claude Code, write to:
+## Workflow Order
 
-```
-.claude/skills/learning-opportunities/resources/orientation.md
-```
-
-Both paths are relative to the current working directory.
-
-If the target directory does not exist, create it. If it already exists, leave it and any files inside it untouched — only write `orientation.md`.
-
-This keeps orientation files co-located with the repo they describe — they can be committed to version control, shared with teammates, and never collide across projects.
+Follow in order. Skip a step only when its required component is absent (e.g., MCP not connected → skip Graph).
 
 ---
 
-## Argument check
+### Step 1: Parse Input
 
-You were invoked with arguments: `$ARGUMENTS`
+Classify the argument into one or more of:
 
-If the argument is `showboat`, skip to the **Showboat Path** section below.
+| Type | Detection | Example |
+|------|-----------|---------|
+| Entity type | Matches known graph type (case-insensitive): Desire, Tension, Evidence, Project, Research, Concept, Value, Idea, Procedure, Question, Goal | `desires`, `open tensions` |
+| Time qualifier | Contains: "recent", "latest", "last week", "today", date patterns (YYYY-MM-DD) | `recent evidence` |
+| Topic keyword | Everything else — natural language | `membrain`, `data engineering` |
 
-Otherwise, continue with Steps 2–5 (the default path).
+**Time qualifier definitions (applies to journal only — graph searches are always full-graph unless the query is explicitly temporal):**
+- "today" → today's journal entry only
+- "recent" / "latest" → journal entries from the last 1 month
+- "last week" → journal entries from the last 7 days
+- Specific date (YYYY-MM-DD) → that journal entry
+- User-specified timeframe → use that instead
 
----
+**Parsing rules:**
+- Strip filler words ("the", "and", "about") when extracting the core query
+- Handle compound inputs: "desires and tensions" → two entity types
+- Combinations are valid: "recent membrain" = time qualifier + topic keyword
 
-## Step 2: Detect the repo's primary language(s)
+**Entity type vs keyword disambiguation:**
+When a word matches both a known entity type and a plausible keyword (e.g., "project", "research", "idea"), ask the user for clarity before searching:
+*"Does 'project' mean the entity type (graph nodes of type Project) or the topic keyword (anything related to projects)?"*
+Skip this check when context makes the intent obvious (e.g., "open tensions" → entity type).
 
-Check for these manifest/config files at the project root and note all that exist. A repo may use multiple languages.
-
-| Language   | Signal files                                              |
-|:-----------|:----------------------------------------------------------|
-| Python     | `pyproject.toml`, `setup.py`, `setup.cfg`, `Pipfile`, `requirements.txt` |
-| JavaScript | `package.json` (no `tsconfig.json`)                      |
-| TypeScript | `package.json` + `tsconfig.json`                         |
-| R          | `DESCRIPTION`, `NAMESPACE`, any `*.Rproj`                |
-| Ruby       | `Gemfile`, any `*.gemspec`                                |
-| Go         | `go.mod`                                                  |
-| Rust       | `Cargo.toml`                                              |
-| C/C++      | `CMakeLists.txt`, `configure.ac`, root-level `Makefile`  |
-| Java/Kotlin| `pom.xml`, `build.gradle`, `build.gradle.kts`            |
-| C#         | any `*.csproj` or `*.sln`                                |
-
-Record all detected languages. For each detected language, read its primary manifest file in full — it contains declared purpose, dependencies, entry points, and scripts/commands that are essential for orientation.
-
----
-
-## Step 3: Explore the repo
-
-Use the following sequence, drawn from research on expert program comprehension strategies. Experts read **strategically and selectively**, not exhaustively. The goal is a mental model of structure, not line-by-line understanding.
-
-### 3a. README and top-level docs
-Read `README.md`, `README.rst`, or `README` at the project root. Also check for a `docs/` directory — read its index or table of contents if present. This gives the stated purpose and intended audience.
-
-*Source: Spinellis, "Code Reading: The Open Source Perspective" (2003) — start with the build system and README before reading any application code.*
-
-### 3b. Directory tree
-Run `find . -maxdepth 3 -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*/__pycache__/*' -not -path '*/.venv/*'` to get the top-level structure. Read the directory tree as an architectural table of contents — naming conventions (`src/`, `lib/`, `tests/`, `cmd/`, `pkg/`) reveal intent before any code is read.
-
-*Source: Spinellis (2003) — "directory tree as table of contents."*
-
-### 3c. Entry points
-Identify and read the main entry points based on detected language:
-
-- **Python**: `__main__.py`, `cli.py`, `main.py`, or the `[tool.poetry.scripts]` / `[project.scripts]` section of `pyproject.toml`
-- **JavaScript/TypeScript**: `main` field in `package.json`, `index.js`, `src/index.ts`
-- **Go**: files in `cmd/*/main.go` or root `main.go`
-- **Rust**: `src/main.rs` or `src/lib.rs`
-- **R**: `R/` directory, the `DESCRIPTION` file's `Imports`
-- **Ruby**: files in `bin/`, `lib/<gem-name>.rb`
-- **C/C++**: `main.c`, `main.cpp`, or the primary target in `CMakeLists.txt`
-
-*Source: Hermans, "The Programmer's Brain" (2021, Manning) — follow the entry point and call graph one level at a time.*
-
-### 3d. Test files
-Read 2–3 test files, prioritizing integration or end-to-end tests over unit tests. Tests are executable specifications — reading test names and assertions is one of the fastest ways to understand what a module is meant to do.
-
-*Source: Storey et al., "How Software Developers Use Tools, Cognitive Strategies, and Representations to Navigate Code" (IEEE TSE, 2006) — use the test suite as a specification.*
-
-### 3e. Core modules
-Identify the 5–8 most important source files based on what you have learned. Read their top-level structure (class/function names, imports, docstrings) without necessarily reading every implementation in full.
-
-### 3f. Recent git history (if git is available)
-Run `git log --oneline -20` to see recent activity. Run `git log --format="%f" | sort | uniq -c | sort -rn | head -10` to identify the most-edited files. High-churn files are usually the core of the system.
-
-*Source: Spolsky practitioner writing — "find the biggest, most-edited file; read git history to understand why code is the way it is."*
+**Entity type reference:** Check `knowledge/reference.md` for the current schema if unsure which entity types exist.
 
 ---
 
-## Step 4: Synthesize and write orientation.md
+### Step 2: Search Graph
 
-Write the file to the path identified in Step 1. Use this exact structure:
+**Requires:** MCP Memory Server (`search_nodes`, `open_nodes` tools available)
+
+If MCP Memory Server is not connected, skip this step entirely and note it in the output: *"Graph: MCP Memory Server not connected — skipped."*
+
+**Smart query construction:**
+1. Try the topic phrase as a single `search_nodes` query first (e.g., `search_nodes("streaming migration")`)
+2. If results are sparse (<3 entities), decompose into individual domain-specific keywords — drop generic words like "project", "system", "the" — and search each keyword separately
+3. Merge and deduplicate results across queries
+4. This uses signal from the first query to decide whether decomposition is needed
+
+**Search strategy:**
+- Call `search_nodes("topic")` with the parsed topic keyword (using smart query construction above)
+- If entity type detected, also call `search_nodes("EntityType")` for each type
+- If both topic and entity type detected, search for both
+
+**Hard caps:**
+
+| Guard | Limit |
+|-------|-------|
+| `read_graph` | NEVER called — this dumps the entire graph |
+| `search_nodes` calls | Max 3 per orientation |
+| `open_nodes` calls | Max 2 per orientation |
+| Entities shown | Max 10 |
+| Observations per entity | Max 3 |
+
+**Breadth guard:** If search returns >15 results, show the top 10 most relevant and note: *(Showing top 10 of N results — narrow your query for more specific results.)*
+
+**Selection:** From results, select the top 10 most relevant entities. Show max 3 observations per entity.
+
+---
+
+### Step 3: Scan Knowledge Files
+
+1. List the `knowledge/` directory to discover what files exist
+2. Use the Grep tool to search discovered files for the topic keyword(s)
+3. For time qualifiers: list `knowledge/journal/` and read matching date entries (most recent first, per time qualifier definitions in Step 1)
+4. Extract only the enclosing section (H2/H3 level) around each match — NOT entire files
+5. **Cap:** Aim for 3-5 files; extend beyond if the topic genuinely spans more
+6. **Cap:** Read at most 3 journal entries
+7. **Prioritization:** Prefer files whose filename directly relates to the topic, or that have the most substantive matches (not incidental keyword hits). For files tied on relevance, use these hints:
+   - Technical/project topics → prefer `projects.md`, `evidence.md`, `development_log.md`
+   - Conceptual/identity topics → prefer `core_principles.md`, `identity.md`, `procedures.md`
+
+If no `knowledge/` directory exists, skip this step and note it.
+
+---
+
+### Step 4: Scan Research Index (conditional)
+
+1. If `research/INDEX.md` exists, grep it for the topic keyword(s)
+2. Check if a `research/[topic]/` directory exists — if so, list its files
+3. **List only** — do NOT read synthesis files. Offer to read specific ones.
+4. **Cap:** Show up to 5 matching research entries
+
+If no `research/` directory or INDEX.md exists, skip this step.
+
+---
+
+### Step 5: Present Briefing
+
+Use this output structure. **Omit empty sections** — do not include a section header with no content.
 
 ```markdown
-# Repo Orientation: [repo name]
+## Orient: [Topic]
 
-> Generated by orient. Re-run to update.
+### Graph
+- **EntityName** (Type) — observation 1; observation 2; observation 3
+- **EntityName** (Type) — observation 1
 
-## One-line purpose
-[Single sentence: what this repo does and why it exists. Written for someone with no prior context.]
+### Knowledge
+> From projects.md: [relevant excerpt — the enclosing section, condensed]
+> From evidence.md: [relevant excerpt]
 
-## Primary language(s)
-[List languages detected, with the dominant one first.]
+### Journal
+- **2026-03-07:** [relevant excerpt from that day's entry]
+- **2026-03-06:** [relevant excerpt]
 
-## Pipeline / workflow stages
-[Ordered list of the main stages data or requests flow through. One line each. If the repo has no pipeline, describe the main modules and their relationships instead.]
+### Research
+- `research/membrain/architecture.md` — membrain architecture reference
+- `research/agent-memory/hindsight.md` — biomimetic agent memory
 
-## Key files
-[6–10 entries in this format:]
-- `path/to/file.py` — [what it does] | [why a new developer should read it]
-
-## Core concepts
-[3–5 domain or architectural concepts essential to working in this codebase. For each:]
-**[Concept name]**: [Plain-English definition. Where in the code it lives.]
-
-## Common gotchas
-[2–3 things that commonly trip up new developers. Be specific — reference actual file paths or function names.]
-
-## Suggested exercise sequence
-[EXACTLY 2 exercises. These are orientation exercises — their job is to build a high-level mental model of the repo, not to drill implementation details.
-
-Orientation exercises follow this pattern: direct the learner to read one specific, short artifact first, then ask them to synthesize or explain what they just read. Never ask them to predict something they couldn't know without reading — the goal is comprehension and synthesis, not prior knowledge.
-
-Good orientation exercises:
-- "Open README.md and read the Features section. Then close it and explain to a non-developer what this tool produces and why someone would use it."
-- "Open `models.py`. Find the dataclass that represents everything the pipeline produces for one audio file. What fields does it have, and what does that tell you about the pipeline's stages?"
-- "Open `config/default.yaml` and skim it. What are the two or three settings you'd most likely need to change for a new project, and why?"
-
-Bad orientation exercises (save these for later sessions):
-- "Without opening any files, predict the pipeline stages" — learner has no basis for this
-- Predicting specific function outputs, column names, or algorithmic behavior
-- Tracing through individual method implementations
-- Debugging specific logic (e.g. merge suffix behavior, metadata propagation)
-
-For each exercise, specify: the exact file to open, what to read, and what synthesis question to answer after reading.]
-
-## Sources consulted
-[List the files and paths you actually read while generating this file.]
+### Suggested Queries
+- `/orient membrain governance` — governance layer details
+- `/orient membrain phase 5` — phase 5 planning context
+- `open_nodes(["Desire-Build-Something-Shippable"])` — full desire context (entity details)
 ```
 
-Keep each section concise. This is a teaching scaffold, not documentation. Prioritize clarity over completeness.
+**Rough token budget per section (guidance, not hard caps):**
+- Graph: ~500 tokens
+- Knowledge: ~500 tokens
+- Journal: ~300 tokens
+- Research: ~100 tokens (file paths only)
+- Suggested Queries: ~100 tokens
+
+**Adaptive rules:**
+- If both Graph and Knowledge are empty, say so explicitly: *"No results found for '[topic]'. Try a different keyword or check available entity types."*
+- Always include at least one populated section or a clear "nothing found" message
+- If Graph was skipped due to MCP not being connected, note that in the Graph section position
+- Suggested Queries section: include 1-3 queries. Use `/orient [topic]` for follow-on topic searches. Use `open_nodes` only when suggesting specific entities the user might want full details on. Never suggest `read_graph`.
 
 ---
 
-## Step 5: Confirm to the user
+### Step 6: Offer Follow-Up
 
-> **Note for skill maintainers**: Academic and practitioner sources for the exploration methodology in Steps 3a–3f are documented in [resources/orient-bibliography.md](resources/orient-bibliography.md). Load that file only if you need to update or cite sources — it is not needed during normal skill execution.
+End with a contextual follow-up offer:
 
-Tell the user:
-- Where the file was written
-- How many key files and concepts were identified
-- How to use it: invoke `learning-opportunities` with the `orient` argument
-- That they can re-run orient at any time to regenerate it as the codebase evolves
+- **For topic queries:** "Want me to read any of the research files, load more graph entities, or orient on a related topic?"
+- **For entity-type queries:** "Want me to open specific entities for full details?"
+- **For time queries:** "Want me to read more journal entries or search for a specific topic within this timeframe?"
+- **For compound queries:** "Want me to dig deeper into any of these threads, or orient on a sub-topic?"
 
 ---
 
-## Showboat Path
+## Scope Controls Summary
 
-This path replaces Steps 2–5 when the argument is `showboat`. It produces `orientation.md` at the same location identified in Step 1, but uses the `showboat` CLI tool (via `uvx`) to build a detailed, linear code walkthrough.
+| Guard | Limit |
+|-------|-------|
+| `read_graph` | NEVER called |
+| `search_nodes` calls | Max 3 |
+| `open_nodes` calls | Max 2 |
+| Graph entities shown | Max 10 |
+| Observations per entity | Max 3 |
+| Knowledge files read | Aim 3-5 |
+| Journal entries read | Max 3 |
+| Research entries listed | Max 5 (listed, not read) |
+| Total output | ~800-2000 tokens |
+| Broad result threshold | >15 results → show top 10 with note |
 
-### Showboat Step 1: Check for uv
+## Common Mistakes
 
-Run `command -v uv` to verify that `uv` is installed.
-
-If `uv` is not found, tell the user:
-
-> `uv` is required for showboat mode but was not found on your PATH.
-> Install it from: https://docs.astral.sh/uv/getting-started/installation/
-
-Then stop — do not proceed further.
-
-### Showboat Step 2: Read the repo and plan the document
-
-Read the repo to understand its structure, purpose, and key code paths. Then plan a linear walkthrough document with:
-
-- A title and table of contents
-- Commentary sections that explain the codebase narratively, in reading order
-- A Code Listings appendix containing the actual code snippets referenced by commentary
-- A suggested exercise sequence (same criteria as Step 4's exercise requirements — exactly 2 orientation exercises)
-
-Plan all section headings, code snippets, and sequential listing numbers **upfront before writing anything**. Each listing gets a sequential number (Listing 1, Listing 2, etc.) and a short description.
-
-### Showboat Step 3: Learn the showboat tool
-
-Run `uvx showboat --help` to learn the available commands and their syntax.
-
-### Showboat Step 4: Build orientation.md using showboat commands
-
-Use the showboat CLI to build the file. The output path is the same `orientation.md` from Step 1. Execute commands in this order:
-
-#### 4a. Initialize the document
-
-```
-uvx showboat init <path-to-orientation.md> "<Title>"
-```
-
-Then add a table of contents via `uvx showboat note`.
-
-#### 4b. Write all commentary sections
-
-Add each commentary section using `uvx showboat note`. Follow these rules for note content:
-
-- **No fenced code blocks** inside notes — use inline backtick code (`` `like_this` ``) instead
-- Reference code listings with inline links: `*([Listing N: description](#listing-N))*`
-- Write narratively — explain *why* the code is structured this way, not just *what* it does
-
-#### 4c. Write the Code Listings appendix
-
-For each listing planned in Showboat Step 2:
-
-1. Add an anchor note: `uvx showboat note` with a heading like `### Listing N: description` and an HTML anchor `<a id="listing-N"></a>`
-2. Add the code via `uvx showboat exec` to capture the actual file content (e.g., using `cat` or `sed` to extract the relevant lines)
-
-#### 4d. Append suggested exercise sequence
-
-Add a final section via `uvx showboat note` with exactly 2 orientation exercises. These follow the same criteria as the default path's Step 4:
-
-- Direct the learner to read one specific, short artifact first
-- Then ask them to synthesize or explain what they just read
-- Never ask them to predict something they couldn't know without reading
-- Specify: the exact file to open, what to read, and what synthesis question to answer
-
-#### 4e. Verify the document
-
-Run:
-
-```
-uvx showboat verify <path-to-orientation.md>
-```
-
-Fix any issues reported before proceeding.
-
-### Showboat Step 5: Confirm to the user
-
-Tell the user:
-
-- Where the file was written
-- That it was generated using showboat mode (a linear code walkthrough)
-- How to use it: `/learning-opportunities orient`
-- That they can re-run `/orient showboat` at any time to regenerate it
+| Mistake | Fix |
+|---------|-----|
+| Calling `read_graph` | NEVER. Use `search_nodes` with targeted queries only. |
+| Reading entire knowledge files | Extract only the enclosing H2/H3 section around the match. |
+| Reading research synthesis files | List them. Offer to read specific ones. Don't read proactively. |
+| Exceeding search caps | Stop at 3 `search_nodes` calls, 2 `open_nodes` calls. If you need more, offer follow-up queries. |
+| Dumping >15 graph results | Show top 10 most relevant, note the total count. |
+| Including empty sections | Omit sections that have no content. Don't show "### Research" with nothing under it. |
+| Ignoring MCP availability | Check if `search_nodes`/`open_nodes` tools exist before calling them. If not, skip Graph and note it. |
+| Wall of text | Keep output between ~800-2000 tokens. This is a briefing, not a report. Condense excerpts. |
+| Suggesting `read_graph` in follow-ups | Only suggest `/orient` calls or `open_nodes` as follow-up queries. |
+| Using grep bash command | Use the Grep tool instead for all file content searches. |
+| Applying time qualifiers to graph | Time qualifiers scope journal entries only. Graph searches are always full-graph. |

@@ -1,158 +1,539 @@
 ---
-name: microsoft-graph-api
-description: |
-  Microsoft Graph API integration. Manage data, records, and automate workflows. Use when the user wants to interact with Microsoft Graph API data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+name: "microsoft-graph-api"
+description: "Comprehensive Microsoft Graph API reference for M365 service integration"
 ---
 
-# Microsoft Graph API
+# Microsoft Graph API Skill
 
-The Microsoft Graph API is a RESTful web API that allows you to access Microsoft Cloud service resources. Developers use it to integrate their applications with Microsoft 365 services like Outlook, OneDrive, Azure AD, and more. It provides a unified endpoint to access data and insights across the Microsoft ecosystem.
+Comprehensive reference for Microsoft Graph API integration including endpoints, authentication, rate limiting, and best practices.
 
-Official docs: https://learn.microsoft.com/en-us/graph/api/overview?view=graph-rest-1.0
+## ⚠️ Staleness Warning
 
-## Microsoft Graph API Overview
+Microsoft Graph APIs evolve frequently. Permissions, endpoints, and authentication flows may change.
 
-- **User**
-  - **Mailbox Settings**
-  - **Calendar**
-    - Event
-  - **Contact**
-  - **Drive**
-    - Item
-      - Permission
-  - **Group**
-- **Organization**
+**Refresh triggers:**
+- Microsoft Graph API version updates
+- MSAL library major releases
+- Azure AD → Microsoft Entra ID migration
+- New Graph scopes or permissions
 
-## Working with Microsoft Graph API
+**Last validated:** February 2026 (Graph v1.0, MSAL 2.x)
 
-This skill uses the Membrane CLI to interact with Microsoft Graph API. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+**Check current state:** [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer), [Graph API Reference](https://learn.microsoft.com/graph/api/overview)
 
-### Install the CLI
+---
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+## API Quick Reference
 
-```bash
-npm install -g @membranehq/cli@latest
-```
+### Base URLs
+
+| Environment | URL |
+|-------------|-----|
+| **Production (v1.0)** | `https://graph.microsoft.com/v1.0` |
+| **Beta** | `https://graph.microsoft.com/beta` |
+| **China (21Vianet)** | `https://microsoftgraph.chinacloudapi.cn/v1.0` |
+
+> **Best Practice**: Use v1.0 for production. Beta endpoints can change without notice.
 
 ### Authentication
 
-```bash
-membrane login --tenant --clientName=<agentType>
+| Method | Header | Use Case |
+|--------|--------|----------|
+| **Delegated (user)** | `Authorization: Bearer {token}` | Interactive apps — acts on behalf of signed-in user |
+| **Application** | `Authorization: Bearer {token}` | Background services — acts as the app itself |
+
+**Token Acquisition (VS Code Extension)**:
+```typescript
+// Progressive scope acquisition — request minimal scopes initially
+const INITIAL_SCOPES = ['User.Read'];
+const FULL_SCOPES = [
+    'User.Read',
+    'Calendars.Read',
+    'Mail.Read',
+    'Presence.Read',
+    'People.Read',
+    'Group.Read.All'
+];
+
+async function getGraphToken(): Promise<string | null> {
+    const session = await vscode.authentication.getSession(
+        'microsoft',
+        FULL_SCOPES,
+        { createIfNone: false }
+    );
+    return session?.accessToken ?? null;
+}
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+---
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+## Permissions (Scopes) Reference
 
-```bash
-membrane login complete <code>
+### Common Delegated Scopes
+
+| Scope | Purpose |
+|-------|---------|
+| `User.Read` | Read signed-in user profile |
+| `User.ReadBasic.All` | Read basic profile of all users |
+| `Mail.Read` | Read user mail |
+| `Mail.Send` | Send mail as the user |
+| `Calendars.Read` | Read user calendar events |
+| `Calendars.ReadWrite` | Create/update calendar events |
+| `Presence.Read` | Read user presence status |
+| `People.Read` | Read user's relevant people |
+| `Group.Read.All` | Read all groups |
+| `Sites.Read.All` | Read SharePoint sites |
+| `Files.Read.All` | Read all files user can access |
+| `Tasks.Read` | Read user's tasks (To Do) |
+| `Tasks.ReadWrite` | Create/update tasks (Planner/To Do) |
+
+### Common Application Scopes
+
+| Scope | Purpose |
+|-------|---------|
+| `User.Read.All` | Read all user profiles (app-only) |
+| `Group.Read.All` | Read all groups (app-only) |
+| `Mail.Read` | Read all users' mail (requires admin consent) |
+| `AuditLog.Read.All` | Read audit logs |
+| `Reports.Read.All` | Read M365 usage reports |
+| `ServiceHealth.Read.All` | Read M365 service health |
+
+> **Principle of Least Privilege**: Request only the scopes your app actually needs. Start with `User.Read` and add incrementally.
+
+---
+
+## Key Endpoints by Service
+
+### Users
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| Get current user | GET | `/me` |
+| Get user by ID/UPN | GET | `/users/{id-or-upn}` |
+| List users | GET | `/users` |
+| Get user photo | GET | `/me/photo/$value` |
+| Get manager | GET | `/me/manager` |
+| Get direct reports | GET | `/me/directReports` |
+
+### Mail
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List messages | GET | `/me/messages` |
+| Get message | GET | `/me/messages/{message-id}` |
+| Send mail | POST | `/me/sendMail` |
+| List mail folders | GET | `/me/mailFolders` |
+
+### Calendar
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List events | GET | `/me/calendar/events` |
+| Calendar view | GET | `/me/calendarView?startDateTime={start}&endDateTime={end}` |
+| Create event | POST | `/me/calendar/events` |
+| Get event | GET | `/me/events/{event-id}` |
+
+### Presence
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| Get my presence | GET | `/me/presence` |
+| Get user presence | GET | `/users/{id}/presence` |
+| Get presence for multiple | POST | `/communications/getPresencesByUserId` |
+
+### People & Insights
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List relevant people | GET | `/me/people` |
+| Get trending docs | GET | `/me/insights/trending` |
+| Get used docs | GET | `/me/insights/used` |
+| Get shared docs | GET | `/me/insights/shared` |
+
+### SharePoint & OneDrive
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List sites | GET | `/sites` |
+| Get site by path | GET | `/sites/{hostname}:/{server-relative-path}` |
+| List drives | GET | `/me/drives` |
+| List drive items | GET | `/me/drive/root/children` |
+| Search files | GET | `/me/drive/root/search(q='{query}')` |
+| Upload file | PUT | `/me/drive/items/{parent-id}:/{filename}:/content` |
+
+### Planner (Task Management)
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List plans for group | GET | `/groups/{group-id}/planner/plans` |
+| List tasks in plan | GET | `/planner/plans/{plan-id}/tasks` |
+| Create task | POST | `/planner/tasks` |
+| Update task | PATCH | `/planner/tasks/{task-id}` |
+| Get user tasks | GET | `/me/planner/tasks` |
+
+> **Note**: Planner only supports **delegated** permissions. Application permissions are not available.
+
+### To Do
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List task lists | GET | `/me/todo/lists` |
+| Create task list | POST | `/me/todo/lists` |
+| List tasks | GET | `/me/todo/lists/{list-id}/tasks` |
+| Create task | POST | `/me/todo/lists/{list-id}/tasks` |
+| Update task | PATCH | `/me/todo/lists/{list-id}/tasks/{task-id}` |
+
+### Groups & Teams
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List groups | GET | `/groups` |
+| Get group | GET | `/groups/{group-id}` |
+| List group members | GET | `/groups/{group-id}/members` |
+| List joined teams | GET | `/me/joinedTeams` |
+| Get team channels | GET | `/teams/{team-id}/channels` |
+| Post channel message | POST | `/teams/{team-id}/channels/{channel-id}/messages` |
+
+### Service Health & Communications (FishbowlGovernance pattern)
+
+| Operation | Method | Endpoint | Scope |
+|-----------|--------|----------|-------|
+| List health overviews | GET | `/admin/serviceAnnouncement/healthOverviews` | ServiceHealth.Read.All |
+| List active issues | GET | `/admin/serviceAnnouncement/issues` | ServiceHealth.Read.All |
+| Get issue detail | GET | `/admin/serviceAnnouncement/issues/{id}` | ServiceHealth.Read.All |
+| List message center | GET | `/admin/serviceAnnouncement/messages` | ServiceMessage.Read.All |
+
+**Rate limit**: 1,500 requests / 10 minutes
+
+### Audit Logs (FishbowlGovernance pattern)
+
+| Operation | Method | Endpoint | Scope |
+|-----------|--------|----------|-------|
+| List directory audits | GET | `/auditLogs/directoryAudits` | AuditLog.Read.All |
+| List sign-in logs | GET | `/auditLogs/signIns` | AuditLog.Read.All |
+| List provisioning logs | GET | `/auditLogs/provisioning` | AuditLog.Read.All |
+
+**Rate limit**: Security endpoints = 150 requests / 10 minutes
+
+### Sensitivity Labels (Information Protection)
+
+| Operation | Method | Endpoint | Scope |
+|-----------|--------|----------|-------|
+| List labels | GET | `/informationProtection/policy/labels` | InformationProtectionPolicy.Read |
+| Evaluate classification | POST | `/informationProtection/policy/labels/evaluateClassificationResults` | InformationProtectionPolicy.Read |
+| Extract label | POST | `/informationProtection/policy/labels/extractLabel` | InformationProtectionPolicy.Read |
+
+---
+
+## Critical Patterns
+
+### Custom Error Types
+
+```typescript
+export class GraphRateLimitError extends Error {
+  public readonly retryAfter: number;
+
+  constructor(retryAfter: number, message = '') {
+    super(`Rate limited. Retry after ${retryAfter}s. ${message}`);
+    this.name = 'GraphRateLimitError';
+    this.retryAfter = retryAfter;
+  }
+}
+
+export class GraphApiError extends Error {
+  public readonly statusCode: number;
+  public readonly errorCode: string;
+
+  constructor(statusCode: number, errorCode: string, message: string) {
+    super(`Graph API ${statusCode} (${errorCode}): ${message}`);
+    this.name = 'GraphApiError';
+    this.statusCode = statusCode;
+    this.errorCode = errorCode;
+  }
+}
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+### API Client Pattern (with retry + timeout)
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+```typescript
+const GRAPH_ENDPOINT = 'https://graph.microsoft.com/v1.0';
+const DEFAULT_TIMEOUT_MS = 30000;
+const DEFAULT_MAX_RETRIES = 3;
 
-### Connecting to Microsoft Graph API
+async function graphRequest<T>(
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  endpoint: string,
+  options: RequestInit = {},
+  config: { timeoutMs?: number; maxRetries?: number; throwOnError?: boolean } = {}
+): Promise<T | null> {
+    const token = await getGraphToken();
+    if (!token) return null;
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+    const { timeoutMs = DEFAULT_TIMEOUT_MS, maxRetries = DEFAULT_MAX_RETRIES, throwOnError = false } = config;
 
-```bash
-membrane connection ensure "" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+        try {
+            const response = await fetch(`${GRAPH_ENDPOINT}${endpoint}`, {
+                method,
+                ...options,
+                signal: controller.signal,
+                headers: { 'Authorization': `Bearer ${token}`, ...options.headers }
+            });
+            clearTimeout(timeoutId);
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+            // Handle 429 rate limiting
+            if (response.status === 429) {
+                const retryAfter = parseInt(response.headers.get('Retry-After') || '10');
+                if (attempt < maxRetries) {
+                    await new Promise(r => setTimeout(r, retryAfter * 1000));
+                    continue;
+                }
+                if (throwOnError) throw new GraphRateLimitError(retryAfter);
+                return null;
+            }
 
-#### 1b. Wait for the connection to be ready
+            // Handle 5xx with exponential backoff
+            if (response.status >= 500 && attempt < maxRetries) {
+                await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+                continue;
+            }
 
-If the connection is in `BUILDING` state, poll until it's ready:
+            if (!response.ok) {
+                if (throwOnError) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new GraphApiError(response.status, err?.error?.code || 'Unknown', err?.error?.message || response.statusText);
+                }
+                return null;
+            }
 
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Microsoft Graph API API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+            return response.json();
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error instanceof Error && error.name === 'AbortError' && attempt < maxRetries) {
+                await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+                continue;
+            }
+            throw error;
+        }
+    }
+    return null;
+}
 ```
 
-Common options:
+### OData Query Parameters
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+Graph supports standard OData query parameters:
 
+| Parameter | Example | Purpose |
+|-----------|---------|---------|
+| `$select` | `?$select=id,displayName,mail` | Return only specified properties |
+| `$filter` | `?$filter=department eq 'Engineering'` | Filter results server-side |
+| `$orderby` | `?$orderby=displayName` | Sort results |
+| `$top` | `?$top=10` | Limit result count |
+| `$skip` | `?$skip=20` | Skip N results (not all APIs) |
+| `$expand` | `?$expand=manager` | Include related resources inline |
+| `$count` | `?$count=true` | Include total count in response |
+| `$search` | `?$search="displayName:Fabio"` | Full-text search |
 
-## Best practices
+**Combining parameters**:
+```http
+GET /users?$select=id,displayName,department&$filter=department eq 'Analytics'&$top=25&$orderby=displayName
+```
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+> **Not all endpoints support all parameters.** Check specific endpoint docs.
+
+### Pagination
+
+Graph uses `@odata.nextLink` for pagination:
+
+```typescript
+async function graphFetchAll<T>(path: string): Promise<T[]> {
+    const token = await getGraphToken();
+    if (!token) return [];
+    
+    const results: T[] = [];
+    let url: string | null = `${GRAPH_ENDPOINT}${path}`;
+
+    while (url) {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        results.push(...(data.value || []));
+        url = data['@odata.nextLink'] || null;
+    }
+
+    return results;
+}
+```
+
+### JSON Batching
+
+Combine up to **20 requests** in a single HTTP call:
+
+```typescript
+interface BatchRequest {
+    id: string;
+    method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+    url: string;
+    body?: unknown;
+}
+
+async function graphBatch<T>(requests: BatchRequest[]): Promise<Map<string, T>> {
+    if (requests.length > 20) {
+        console.warn('Batch limit is 20, use graphBatchAll() for unlimited');
+        requests = requests.slice(0, 20);
+    }
+
+    const response = await graphPost<{ responses: Array<{ id: string; status: number; body: T }> }>(
+        '/$batch',
+        { requests }
+    );
+
+    const results = new Map<string, T>();
+    for (const resp of response?.responses || []) {
+        if (resp.status >= 200 && resp.status < 300) {
+            results.set(resp.id, resp.body);
+        }
+    }
+    return results;
+}
+
+// Auto-chunk unlimited requests into batches of 20
+async function graphBatchAll<T>(requests: BatchRequest[]): Promise<Map<string, T>> {
+    const allResults = new Map<string, T>();
+    for (let i = 0; i < requests.length; i += 20) {
+        const chunk = requests.slice(i, i + 20);
+        const chunkResults = await graphBatch<T>(chunk);
+        for (const [id, body] of chunkResults) {
+            allResults.set(id, body);
+        }
+    }
+    return allResults;
+}
+```
+
+### Helper: Build Batch Request
+
+```typescript
+function buildBatchRequest(
+    method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+    url: string,
+    body?: unknown,
+    requestId?: string
+): BatchRequest {
+    return {
+        id: requestId || Math.random().toString(36).substring(2, 10),
+        method,
+        url,
+        body,
+    };
+}
+```
+
+---
+
+## Rate Limits & Throttling
+
+### Service-Specific Limits
+
+| Service | Per App per Tenant | Notes |
+|---------|-------------------|-------|
+| **Outlook (Mail/Calendar)** | 10,000 requests / 10 min | Standard throttling |
+| **Teams** | Varies by endpoint | Channel messages more restrictive |
+| **SharePoint/OneDrive** | Based on concurrent calls | Use batching |
+| **Directory (Users/Groups)** | 10,000 requests / 10 min | Standard throttling |
+| **Service Health** | 1,500 requests / 10 min | Lower limit - cache results |
+| **Security (Alerts/Incidents)** | 150 requests / 10 min | Much lower - batch carefully |
+| **Audit Logs** | 1,000 requests / 10 min | Lower limit - paginate wisely |
+
+### Throttled Response
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 30
+```
+
+### Best Practices for Avoiding Throttling
+
+1. Use `$select` to request only needed properties
+2. Use `$filter` server-side instead of fetching all and filtering locally
+3. Use JSON batching to reduce request count
+4. Implement exponential backoff with jitter
+5. Cache responses where data doesn't change frequently
+
+---
+
+## Token Lifetime
+
+| Token | Default Lifetime |
+|-------|-----------------|
+| Access token | 60-90 minutes |
+| Refresh token | Up to 90 days |
+| ID token | 60 minutes |
+
+> **Always use MSAL** rather than raw OAuth. MSAL handles caching, refresh, and retry automatically.
+
+---
+
+## SDKs & Client Libraries
+
+| Language | Package | Notes |
+|----------|---------|-------|
+| **TypeScript/JS** | `@microsoft/microsoft-graph-client` | Official SDK |
+| **Python** | `msgraph-sdk-python` | Official SDK |
+| **PowerShell** | `Microsoft.Graph` | `Install-Module Microsoft.Graph` |
+| **.NET** | `Microsoft.Graph` | NuGet package |
+
+---
+
+## Alex-Specific Integration Points
+
+| Feature | Endpoint | Alex Usage |
+|---------|----------|------------|
+| Calendar context | `/me/calendarView` | Meeting prep, scheduling awareness |
+| Email context | `/me/messages` | Communication context |
+| **Send email** | `/me/sendMail` | Proactive notifications, weekly reports |
+| Presence | `/me/presence` | Availability in status |
+| People | `/me/people` | Org context, relevant contacts |
+| OneDrive | `/me/drive` | Knowledge file sync |
+| **OneDrive upload** | `/me/drive/root:/{path}:/content` | File archival, exports |
+| **Service Health** | `/admin/serviceAnnouncement/healthOverviews` | Alex-aware service status |
+| **Service Issues** | `/admin/serviceAnnouncement/issues` | Proactive troubleshooting |
+| **Sensitivity Labels** | `/me/informationProtection/sensitivityLabels` | Document classification |
+
+---
+
+## Synapses
+
+```
+→ [enterprise-integration skill] AUTH_PATTERNS_AND_SCOPES (strong, bidirectional)
+→ [vscode-extension-patterns skill] VSCODE_AUTH_SESSION_API (strong, outbound)
+→ [alex-core] ENTERPRISE_MODE_GATING (strong, inbound)
+→ [localization skill] USER_PREFERRED_LANGUAGE_FROM_GRAPH (moderate, outbound)
+→ [GI-heir-promotion-pattern-graph-api-2026-02-12] PROMOTION_CASE_STUDY (strong, origin)
+→ [FishbowlGovernance DK-MICROSOFT-GRAPH.md] HEIR_SOURCE_KNOWLEDGE (strong, inbound)
+→ [error-handling-patterns] CUSTOM_ERROR_TYPES (moderate, outbound)
+→ [api-design patterns] BATCH_AUTO_CHUNKING_PATTERN (strong, outbound)
+```
+
+### Session 2026-02-12: Heir Promotion
+- Promoted from FishbowlGovernance heir's production Graph integration
+- Added: Service Health, Email, OneDrive modules
+- Added: graphBatchAll() auto-chunking pattern
+- Blocker discovered: Admin consent required for Microsoft tenants
+
+---
+
+## References
+
+- [Microsoft Graph Overview](https://learn.microsoft.com/graph/overview)
+- [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer)
+- [Graph API Reference (v1.0)](https://learn.microsoft.com/graph/api/overview?view=graph-rest-1.0)
+- [Permissions Reference](https://learn.microsoft.com/graph/permissions-reference)
+- [Graph API Throttling](https://learn.microsoft.com/graph/throttling)
+- [MSAL Overview](https://learn.microsoft.com/entra/msal/overview)
+- [JSON Batching](https://learn.microsoft.com/graph/json-batching)

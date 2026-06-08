@@ -1,572 +1,274 @@
 ---
 name: mongodb
-description: Work with MongoDB databases using best practices. Use when designing schemas, writing queries, building aggregation pipelines, or optimizing performance. Triggers on MongoDB, Mongoose, NoSQL, aggregation pipeline, document database, MongoDB Atlas.
+description: MongoDB 数据库管理
+version: 1.0.0
+author: terminal-skills
+tags: [database, mongodb, nosql, document]
 ---
 
-# MongoDB & Mongoose
+# MongoDB 数据库管理
 
-Build and query MongoDB databases with best practices.
+## 概述
+MongoDB 操作、索引优化、分片集群等技能。
 
-## Quick Start
+## 连接管理
 
 ```bash
-npm install mongodb mongoose
+# 本地连接
+mongosh
+mongosh --port 27017
+
+# 远程连接
+mongosh "mongodb://hostname:27017"
+mongosh "mongodb://user:password@hostname:27017/database"
+
+# 副本集连接
+mongosh "mongodb://host1:27017,host2:27017,host3:27017/database?replicaSet=rs0"
+
+# 执行脚本
+mongosh script.js
+mongosh --eval "db.collection.find()"
 ```
 
-### Native Driver
-```typescript
-import { MongoClient, ObjectId } from 'mongodb';
+## 基础操作
 
-const client = new MongoClient(process.env.MONGODB_URI!);
-const db = client.db('myapp');
-const users = db.collection('users');
+### 数据库操作
+```javascript
+// 显示数据库
+show dbs
 
-// Connect
-await client.connect();
+// 切换/创建数据库
+use mydb
 
-// CRUD Operations
-await users.insertOne({ name: 'Alice', email: 'alice@example.com' });
-const user = await users.findOne({ email: 'alice@example.com' });
-await users.updateOne({ _id: user._id }, { $set: { name: 'Alice Smith' } });
-await users.deleteOne({ _id: user._id });
+// 删除数据库
+db.dropDatabase()
+
+// 数据库统计
+db.stats()
 ```
 
-### Mongoose Setup
-```typescript
-import mongoose from 'mongoose';
+### 集合操作
+```javascript
+// 显示集合
+show collections
 
-await mongoose.connect(process.env.MONGODB_URI!, {
-  maxPoolSize: 10,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-});
+// 创建集合
+db.createCollection("users")
 
-// Connection events
-mongoose.connection.on('connected', () => console.log('MongoDB connected'));
-mongoose.connection.on('error', (err) => console.error('MongoDB error:', err));
-mongoose.connection.on('disconnected', () => console.log('MongoDB disconnected'));
+// 删除集合
+db.users.drop()
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  process.exit(0);
-});
+// 集合统计
+db.users.stats()
 ```
 
-## Schema Design
+### CRUD 操作
+```javascript
+// 插入
+db.users.insertOne({ name: "John", age: 30 })
+db.users.insertMany([{ name: "Jane" }, { name: "Bob" }])
 
-### Basic Schema
-```typescript
-import mongoose, { Schema, Document, Model } from 'mongoose';
+// 查询
+db.users.find()
+db.users.find({ age: { $gt: 25 } })
+db.users.findOne({ name: "John" })
+db.users.find().limit(10).skip(20).sort({ age: -1 })
 
-interface IUser extends Document {
-  email: string;
-  name: string;
-  password: string;
-  role: 'user' | 'admin';
-  profile: {
-    avatar?: string;
-    bio?: string;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
+// 更新
+db.users.updateOne({ name: "John" }, { $set: { age: 31 } })
+db.users.updateMany({ age: { $lt: 18 } }, { $set: { status: "minor" } })
+db.users.replaceOne({ name: "John" }, { name: "John", age: 32 })
 
-const userSchema = new Schema<IUser>({
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
-  },
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: 2,
-    maxlength: 100,
-  },
-  password: {
-    type: String,
-    required: true,
-    select: false,  // Never return password by default
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user',
-  },
-  profile: {
-    avatar: String,
-    bio: { type: String, maxlength: 500 },
-  },
-}, {
-  timestamps: true,  // Adds createdAt, updatedAt
-  toJSON: {
-    transform(doc, ret) {
-      delete ret.password;
-      delete ret.__v;
-      return ret;
-    },
-  },
-});
-
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ createdAt: -1 });
-userSchema.index({ name: 'text', 'profile.bio': 'text' });  // Text search
-
-const User: Model<IUser> = mongoose.model('User', userSchema);
+// 删除
+db.users.deleteOne({ name: "John" })
+db.users.deleteMany({ status: "inactive" })
 ```
 
-### Embedded Documents vs References
+## 索引管理
 
-```typescript
-// ✅ Embed when: Data is read together, doesn't grow unbounded
-const orderSchema = new Schema({
-  customer: {
-    name: String,
-    email: String,
-    address: {
-      street: String,
-      city: String,
-      country: String,
-    },
-  },
-  items: [{
-    product: String,
-    quantity: Number,
-    price: Number,
-  }],
-  total: Number,
-});
+```javascript
+// 查看索引
+db.users.getIndexes()
 
-// ✅ Reference when: Data is large, shared, or changes independently
-const postSchema = new Schema({
-  title: String,
-  content: String,
-  author: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  comments: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Comment',
-  }],
-});
+// 创建索引
+db.users.createIndex({ email: 1 })                    // 升序
+db.users.createIndex({ name: 1, age: -1 })            // 复合索引
+db.users.createIndex({ email: 1 }, { unique: true })  // 唯一索引
+db.users.createIndex({ location: "2dsphere" })        // 地理索引
+db.users.createIndex({ content: "text" })             // 文本索引
 
-// Populate references
-const post = await Post.findById(id)
-  .populate('author', 'name email')  // Select specific fields
-  .populate({
-    path: 'comments',
-    populate: { path: 'author', select: 'name' },  // Nested populate
-  });
+// 后台创建（不阻塞）
+db.users.createIndex({ field: 1 }, { background: true })
+
+// 删除索引
+db.users.dropIndex("email_1")
+db.users.dropIndexes()                                // 删除所有
+
+// 索引使用分析
+db.users.find({ email: "test@example.com" }).explain("executionStats")
 ```
 
-### Virtuals
-```typescript
-const userSchema = new Schema({
-  firstName: String,
-  lastName: String,
-});
+## 聚合操作
 
-// Virtual field (not stored in DB)
-userSchema.virtual('fullName').get(function() {
-  return `${this.firstName} ${this.lastName}`;
-});
+```javascript
+// 基础聚合
+db.orders.aggregate([
+    { $match: { status: "completed" } },
+    { $group: { _id: "$customer", total: { $sum: "$amount" } } },
+    { $sort: { total: -1 } },
+    { $limit: 10 }
+])
 
-// Virtual populate (for reverse references)
-userSchema.virtual('posts', {
-  ref: 'Post',
-  localField: '_id',
-  foreignField: 'author',
-});
+// 常用聚合操作符
+// $match - 过滤
+// $group - 分组
+// $sort - 排序
+// $limit - 限制
+// $skip - 跳过
+// $project - 投影
+// $unwind - 展开数组
+// $lookup - 关联查询
 
-// Enable virtuals in JSON
-userSchema.set('toJSON', { virtuals: true });
-userSchema.set('toObject', { virtuals: true });
+// 关联查询
+db.orders.aggregate([
+    {
+        $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user"
+        }
+    }
+])
 ```
 
-## Query Operations
+## 备份与恢复
 
-### Find Operations
-```typescript
-// Find with filters
-const users = await User.find({
-  role: 'user',
-  createdAt: { $gte: new Date('2024-01-01') },
-});
+```bash
+# 备份数据库
+mongodump --db mydb --out /backup/
+mongodump --uri="mongodb://user:pass@host:27017/mydb" --out /backup/
 
-// Query builder
-const results = await User.find()
-  .where('role').equals('user')
-  .where('createdAt').gte(new Date('2024-01-01'))
-  .select('name email')
-  .sort({ createdAt: -1 })
-  .limit(10)
-  .skip(20)
-  .lean();  // Return plain objects (faster)
+# 备份集合
+mongodump --db mydb --collection users --out /backup/
 
-// Find one
-const user = await User.findOne({ email: 'alice@example.com' });
-const userById = await User.findById(id);
+# 压缩备份
+mongodump --db mydb --gzip --archive=/backup/mydb.gz
 
-// Exists check
-const exists = await User.exists({ email: 'alice@example.com' });
+# 恢复
+mongorestore --db mydb /backup/mydb/
+mongorestore --uri="mongodb://user:pass@host:27017" /backup/
 
-// Count
-const count = await User.countDocuments({ role: 'admin' });
+# 恢复压缩备份
+mongorestore --gzip --archive=/backup/mydb.gz
+
+# 导出 JSON
+mongoexport --db mydb --collection users --out users.json
+
+# 导入 JSON
+mongoimport --db mydb --collection users --file users.json
 ```
 
-### Query Operators
-```typescript
-// Comparison
-await User.find({ age: { $eq: 25 } });      // Equal
-await User.find({ age: { $ne: 25 } });      // Not equal
-await User.find({ age: { $gt: 25 } });      // Greater than
-await User.find({ age: { $gte: 25 } });     // Greater or equal
-await User.find({ age: { $lt: 25 } });      // Less than
-await User.find({ age: { $lte: 25 } });     // Less or equal
-await User.find({ age: { $in: [20, 25, 30] } });   // In array
-await User.find({ age: { $nin: [20, 25] } });      // Not in array
+## 副本集管理
 
-// Logical
-await User.find({
-  $and: [{ age: { $gte: 18 } }, { role: 'user' }],
-});
-await User.find({
-  $or: [{ role: 'admin' }, { isVerified: true }],
-});
-await User.find({ age: { $not: { $lt: 18 } } });
+```javascript
+// 查看副本集状态
+rs.status()
+rs.conf()
 
-// Element
-await User.find({ avatar: { $exists: true } });
-await User.find({ score: { $type: 'number' } });
+// 初始化副本集
+rs.initiate({
+    _id: "rs0",
+    members: [
+        { _id: 0, host: "mongo1:27017" },
+        { _id: 1, host: "mongo2:27017" },
+        { _id: 2, host: "mongo3:27017" }
+    ]
+})
 
-// Array
-await User.find({ tags: 'nodejs' });  // Array contains value
-await User.find({ tags: { $all: ['nodejs', 'mongodb'] } });  // Contains all
-await User.find({ tags: { $size: 3 } });  // Array length
-await User.find({ 'items.0.price': { $gt: 100 } });  // Array index
+// 添加成员
+rs.add("mongo4:27017")
+rs.addArb("arbiter:27017")          // 添加仲裁节点
 
-// Text search
-await User.find({ $text: { $search: 'mongodb developer' } });
+// 移除成员
+rs.remove("mongo4:27017")
 
-// Regex
-await User.find({ name: { $regex: /^john/i } });
+// 强制主节点切换
+rs.stepDown()
 ```
 
-### Update Operations
-```typescript
-// Update one
-await User.updateOne(
-  { _id: userId },
-  { $set: { name: 'New Name' } }
-);
+## 性能监控
 
-// Update many
-await User.updateMany(
-  { role: 'user' },
-  { $set: { isVerified: true } }
-);
+```javascript
+// 服务器状态
+db.serverStatus()
 
-// Find and update (returns document)
-const updated = await User.findByIdAndUpdate(
-  userId,
-  { $set: { name: 'New Name' } },
-  { new: true, runValidators: true }  // Return updated doc, run validators
-);
+// 当前操作
+db.currentOp()
+db.currentOp({ "active": true, "secs_running": { "$gt": 5 } })
 
-// Update operators
-await User.updateOne({ _id: userId }, {
-  $set: { name: 'New Name' },          // Set field
-  $unset: { tempField: '' },           // Remove field
-  $inc: { loginCount: 1 },             // Increment
-  $mul: { score: 1.5 },                // Multiply
-  $min: { lowScore: 50 },              // Set if less than
-  $max: { highScore: 100 },            // Set if greater than
-  $push: { tags: 'new-tag' },          // Add to array
-  $pull: { tags: 'old-tag' },          // Remove from array
-  $addToSet: { tags: 'unique-tag' },   // Add if not exists
-});
+// 终止操作
+db.killOp(opid)
 
-// Upsert (insert if not exists)
-await User.updateOne(
-  { email: 'new@example.com' },
-  { $set: { name: 'New User' } },
-  { upsert: true }
-);
+// 慢查询日志
+db.setProfilingLevel(1, { slowms: 100 })
+db.system.profile.find().sort({ ts: -1 }).limit(10)
+
+// 集合扫描统计
+db.users.stats()
+
+// 连接数
+db.serverStatus().connections
 ```
 
-## Aggregation Pipeline
+## 常见场景
 
-### Basic Aggregation
-```typescript
-const results = await Order.aggregate([
-  // Stage 1: Match
-  { $match: { status: 'completed' } },
-  
-  // Stage 2: Group
-  { $group: {
-    _id: '$customerId',
-    totalOrders: { $sum: 1 },
-    totalSpent: { $sum: '$total' },
-    avgOrder: { $avg: '$total' },
-  }},
-  
-  // Stage 3: Sort
-  { $sort: { totalSpent: -1 } },
-  
-  // Stage 4: Limit
-  { $limit: 10 },
-]);
+### 场景 1：查询优化
+```javascript
+// 分析查询
+db.users.find({ email: "test@example.com" }).explain("executionStats")
+
+// 检查是否使用索引
+// "stage": "IXSCAN" 表示使用索引
+// "stage": "COLLSCAN" 表示全表扫描
+
+// 强制使用索引
+db.users.find({ name: "John" }).hint({ name: 1 })
 ```
 
-### Pipeline Stages
-```typescript
-const pipeline = [
-  // $match - Filter documents
-  { $match: { createdAt: { $gte: new Date('2024-01-01') } } },
-  
-  // $project - Shape output
-  { $project: {
-    name: 1,
-    email: 1,
-    yearJoined: { $year: '$createdAt' },
-    fullName: { $concat: ['$firstName', ' ', '$lastName'] },
-  }},
-  
-  // $lookup - Join collections
-  { $lookup: {
-    from: 'orders',
-    localField: '_id',
-    foreignField: 'userId',
-    as: 'orders',
-  }},
-  
-  // $unwind - Flatten arrays
-  { $unwind: { path: '$orders', preserveNullAndEmptyArrays: true } },
-  
-  // $group - Aggregate
-  { $group: {
-    _id: '$_id',
-    name: { $first: '$name' },
-    orderCount: { $sum: 1 },
-    orders: { $push: '$orders' },
-  }},
-  
-  // $addFields - Add computed fields
-  { $addFields: {
-    hasOrders: { $gt: ['$orderCount', 0] },
-  }},
-  
-  // $facet - Multiple pipelines
-  { $facet: {
-    topCustomers: [{ $sort: { orderCount: -1 } }, { $limit: 5 }],
-    stats: [{ $group: { _id: null, avgOrders: { $avg: '$orderCount' } } }],
-  }},
-];
+### 场景 2：数据迁移
+```javascript
+// 复制集合
+db.source.aggregate([{ $out: "target" }])
+
+// 跨数据库复制
+db.source.find().forEach(function(doc) {
+    db.getSiblingDB("otherdb").target.insert(doc)
+})
 ```
 
-### Analytics Examples
-```typescript
-// Sales by month
-const salesByMonth = await Order.aggregate([
-  { $match: { status: 'completed' } },
-  { $group: {
-    _id: {
-      year: { $year: '$createdAt' },
-      month: { $month: '$createdAt' },
-    },
-    totalSales: { $sum: '$total' },
-    orderCount: { $sum: 1 },
-  }},
-  { $sort: { '_id.year': -1, '_id.month': -1 } },
-]);
+### 场景 3：批量更新
+```javascript
+// 批量更新
+db.users.updateMany(
+    { status: "pending" },
+    { $set: { status: "active", updatedAt: new Date() } }
+)
 
-// Top products
-const topProducts = await Order.aggregate([
-  { $unwind: '$items' },
-  { $group: {
-    _id: '$items.productId',
-    totalQuantity: { $sum: '$items.quantity' },
-    totalRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
-  }},
-  { $lookup: {
-    from: 'products',
-    localField: '_id',
-    foreignField: '_id',
-    as: 'product',
-  }},
-  { $unwind: '$product' },
-  { $project: {
-    name: '$product.name',
-    totalQuantity: 1,
-    totalRevenue: 1,
-  }},
-  { $sort: { totalRevenue: -1 } },
-  { $limit: 10 },
-]);
+// 使用 bulkWrite
+db.users.bulkWrite([
+    { updateOne: { filter: { _id: 1 }, update: { $set: { x: 1 } } } },
+    { updateOne: { filter: { _id: 2 }, update: { $set: { x: 2 } } } },
+    { deleteOne: { filter: { _id: 3 } } }
+])
 ```
 
-## Middleware (Hooks)
+## 故障排查
 
-```typescript
-// Pre-save middleware
-userSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 12);
-  }
-  next();
-});
-
-// Post-save middleware
-userSchema.post('save', function(doc) {
-  console.log('User saved:', doc._id);
-});
-
-// Pre-find middleware
-userSchema.pre(/^find/, function(next) {
-  // Exclude deleted users by default
-  this.find({ isDeleted: { $ne: true } });
-  next();
-});
-
-// Pre-aggregate middleware
-userSchema.pre('aggregate', function(next) {
-  // Add match stage to all aggregations
-  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
-  next();
-});
-```
-
-## Transactions
-
-```typescript
-const session = await mongoose.startSession();
-
-try {
-  session.startTransaction();
-  
-  // All operations in the transaction
-  const user = await User.create([{ name: 'Alice' }], { session });
-  await Account.create([{ userId: user[0]._id, balance: 0 }], { session });
-  await Order.updateOne({ _id: orderId }, { $set: { status: 'paid' } }, { session });
-  
-  await session.commitTransaction();
-} catch (error) {
-  await session.abortTransaction();
-  throw error;
-} finally {
-  session.endSession();
-}
-
-// With callback
-await mongoose.connection.transaction(async (session) => {
-  await User.create([{ name: 'Alice' }], { session });
-  await Account.create([{ userId: user._id }], { session });
-});
-```
-
-## Indexing
-
-```typescript
-// Single field index
-userSchema.index({ email: 1 });
-
-// Compound index
-userSchema.index({ role: 1, createdAt: -1 });
-
-// Unique index
-userSchema.index({ email: 1 }, { unique: true });
-
-// Partial index
-userSchema.index(
-  { email: 1 },
-  { partialFilterExpression: { isActive: true } }
-);
-
-// TTL index (auto-delete after time)
-sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 });
-
-// Text index for search
-postSchema.index({ title: 'text', content: 'text' });
-
-// Geospatial index
-locationSchema.index({ coordinates: '2dsphere' });
-
-// Check indexes
-const indexes = await User.collection.getIndexes();
-```
-
-## Performance Tips
-
-```typescript
-// Use lean() for read-only queries
-const users = await User.find().lean();
-
-// Select only needed fields
-const users = await User.find().select('name email');
-
-// Use cursor for large datasets
-const cursor = User.find().cursor();
-for await (const user of cursor) {
-  // Process one at a time
-}
-
-// Bulk operations
-const bulkOps = [
-  { insertOne: { document: { name: 'User 1' } } },
-  { updateOne: { filter: { _id: id1 }, update: { $set: { name: 'Updated' } } } },
-  { deleteOne: { filter: { _id: id2 } } },
-];
-await User.bulkWrite(bulkOps);
-
-// Explain query
-const explanation = await User.find({ role: 'admin' }).explain('executionStats');
-```
-
-## MongoDB Atlas
-
-```typescript
-// Atlas connection string
-const uri = 'mongodb+srv://user:password@cluster.mongodb.net/dbname?retryWrites=true&w=majority';
-
-// Atlas Search (full-text search)
-const results = await Product.aggregate([
-  { $search: {
-    index: 'default',
-    text: {
-      query: 'wireless headphones',
-      path: ['name', 'description'],
-      fuzzy: { maxEdits: 1 },
-    },
-  }},
-  { $project: {
-    name: 1,
-    score: { $meta: 'searchScore' },
-  }},
-]);
-
-// Atlas Vector Search
-const results = await Product.aggregate([
-  { $vectorSearch: {
-    index: 'vector_index',
-    path: 'embedding',
-    queryVector: [0.1, 0.2, ...],
-    numCandidates: 100,
-    limit: 10,
-  }},
-]);
-```
-
-## Resources
-
-- **MongoDB Docs**: https://www.mongodb.com/docs/
-- **Mongoose Docs**: https://mongoosejs.com/docs/
-- **MongoDB University**: https://learn.mongodb.com/
-- **Atlas Docs**: https://www.mongodb.com/docs/atlas/
+| 问题 | 排查方法 |
+|------|----------|
+| 查询慢 | `explain()`, 检查索引 |
+| 连接数过多 | `db.serverStatus().connections` |
+| 内存不足 | 检查 WiredTiger 缓存配置 |
+| 副本集同步延迟 | `rs.status()`, 检查 oplog |
+| 磁盘空间 | `db.stats()`, compact 操作 |

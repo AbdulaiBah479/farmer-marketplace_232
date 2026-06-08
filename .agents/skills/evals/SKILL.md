@@ -1,14 +1,14 @@
 ---
 name: Evals
-description: "Comprehensive AI agent evaluation framework with three grader types (code-based: deterministic/fast; model-based: nuanced/LLM rubric; human: gold standard) and pass@k / pass^k scoring. Evaluates agent transcripts, tool-call sequences, and multi-turn conversations — not just single outputs. Supports capability evals (~70% pass target) and regression evals (~99% pass target). Workflows: RunEval, CompareModels, ComparePrompts, CreateJudge, CreateUseCase, RunScenario, CreateScenario, ViewResults. Integrates with THE ALGORITHM ISC rows for automated verification. Domain patterns pre-configured for coding, conversational, research, and computer-use agent types in Data/DomainPatterns.yaml. Tools: AlgorithmBridge.ts (ISC integration), FailureToTask.ts (failures → tasks), SuiteManager.ts (create/graduate/saturation-check), ScenarioRunner.ts (multi-turn simulated-user), TranscriptCapture.ts, PAIAgentAdapter.ts (wraps Inference.ts), ScenarioToTranscript.ts. Code-based graders: string_match, regex_match, binary_tests, static_analysis, state_check, tool_calls. Model-based graders: llm_rubric, natural_language_assert, pairwise_comparison. USE WHEN eval, evaluate, benchmark, regression test, run eval, compare models, compare prompts, create judge, test agent, quality check, pass@k, grader, agent transcript, scenario simulation, capability test, before/after comparison, suite saturation, failure to task, graduate suite. NOT FOR general research or web investigation (use Research) or scientific method framing (use Science)."
-effort: high
-context: fork
+description: Agent evaluation framework based on Anthropic's best practices. USE WHEN eval, evaluate, test agent, benchmark, verify behavior, regression test, capability test. Includes three grader types (code-based, model-based, human), transcript capture, pass@k/pass^k metrics, and ALGORITHM integration.
+implements: Science
+science_cycle_time: meso
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Evals/`
+`~/.claude/skills/CORE/USER/SKILLCUSTOMIZATIONS/Evals/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -19,7 +19,7 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 
 1. **Send voice notification**:
    ```bash
-   curl -s -X POST http://localhost:31337/notify \
+   curl -s -X POST http://localhost:8888/notify \
      -H "Content-Type: application/json" \
      -d '{"message": "Running the WORKFLOWNAME workflow in the Evals skill to ACTION"}' \
      > /dev/null 2>&1 &
@@ -44,8 +44,6 @@ Comprehensive agent evaluation system based on Anthropic's "Demystifying Evals f
 
 - "run evals", "test this agent", "evaluate", "check quality", "benchmark"
 - "regression test", "capability test"
-- "run scenario", "multi-turn eval", "simulated user test"
-- "create scenario", "simulate conversation"
 - Compare agent behaviors across changes
 - Validate agent workflows before deployment
 - Verify ALGORITHM ISC rows
@@ -79,27 +77,13 @@ Comprehensive agent evaluation system based on Anthropic's "Demystifying Evals f
 
 ## Workflow Routing
 
-| Request Pattern | Route To |
-|---|---|
-| Run eval, evaluate suite, run tests, benchmark | `Workflows/RunEval.md` |
-| Compare models, model comparison, A/B test models | `Workflows/CompareModels.md` |
-| Compare prompts, prompt comparison, test prompts | `Workflows/ComparePrompts.md` |
-| Create judge, model grader, evaluation judge | `Workflows/CreateJudge.md` |
-| Create use case, new eval, test case, create suite | `Workflows/CreateUseCase.md` |
-| Run scenario, multi-turn eval, simulated user test | `Workflows/RunScenario.md` |
-| Create scenario, new multi-turn eval, simulate conversation | `Workflows/CreateScenario.md` |
-| View results, eval results, scores, pass rate | `Workflows/ViewResults.md` |
-
-### CLI Quick Reference
-
-| Trigger | Tool |
-|---------|------|
-| Run suite | `Tools/AlgorithmBridge.ts` |
-| Log failure | `Tools/FailureToTask.ts log` |
-| Convert failures | `Tools/FailureToTask.ts convert-all` |
-| Create suite | `Tools/SuiteManager.ts create` |
-| Check saturation | `Tools/SuiteManager.ts check-saturation` |
-| Run scenario | `Tools/ScenarioRunner.ts --scenario <path>` |
+| Trigger | Workflow |
+|---------|----------|
+| "run evals", "evaluate suite" | Run suite via `Tools/AlgorithmBridge.ts` |
+| "log failure" | Log failure via `Tools/FailureToTask.ts log` |
+| "convert failures" | Convert to tasks via `Tools/FailureToTask.ts convert-all` |
+| "create suite" | Create suite via `Tools/SuiteManager.ts create` |
+| "check saturation" | Check via `Tools/SuiteManager.ts check-saturation` |
 
 ---
 
@@ -109,19 +93,19 @@ Comprehensive agent evaluation system based on Anthropic's "Demystifying Evals f
 
 ```bash
 # Run an eval suite
-bun run ${CLAUDE_SKILL_DIR}/Tools/AlgorithmBridge.ts -s <suite>
+bun run ~/.claude/skills/Evals/Tools/AlgorithmBridge.ts -s <suite>
 
 # Log a failure for later conversion
-bun run ${CLAUDE_SKILL_DIR}/Tools/FailureToTask.ts log "description" -c category -s severity
+bun run ~/.claude/skills/Evals/Tools/FailureToTask.ts log "description" -c category -s severity
 
 # Convert failures to test tasks
-bun run ${CLAUDE_SKILL_DIR}/Tools/FailureToTask.ts convert-all
+bun run ~/.claude/skills/Evals/Tools/FailureToTask.ts convert-all
 
 # Manage suites
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts create <name> -t capability -d "description"
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts list
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts check-saturation <name>
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts graduate <name>
+bun run ~/.claude/skills/Evals/Tools/SuiteManager.ts create <name> -t capability -d "description"
+bun run ~/.claude/skills/Evals/Tools/SuiteManager.ts list
+bun run ~/.claude/skills/Evals/Tools/SuiteManager.ts check-saturation <name>
+bun run ~/.claude/skills/Evals/Tools/SuiteManager.ts graduate <name>
 ```
 
 ### ALGORITHM Integration
@@ -130,7 +114,7 @@ Evals is a verification method for THE ALGORITHM ISC rows:
 
 ```bash
 # Run eval and update ISC row
-bun run ${CLAUDE_SKILL_DIR}/Tools/AlgorithmBridge.ts -s regression-core -r 3 -u
+bun run ~/.claude/skills/Evals/Tools/AlgorithmBridge.ts -s regression-core -r 3 -u
 ```
 
 ISC rows can specify eval verification:
@@ -223,10 +207,6 @@ task:
 | `Tools/SuiteManager.ts` | Suite management and saturation |
 | `Tools/FailureToTask.ts` | Convert failures to test tasks |
 | `Tools/AlgorithmBridge.ts` | ALGORITHM integration |
-| `Tools/ScenarioRunner.ts` | Multi-turn scenario runner (langwatch/scenario) |
-| `Tools/PAIAgentAdapter.ts` | Wraps PAI Inference.ts as scenario AgentAdapter |
-| `Tools/ScenarioToTranscript.ts` | Scenario result → Evals Transcript/Trial/GraderResult |
-| `Scenarios/` | Authored multi-turn scenarios (`.scenario.ts`) |
 | `Data/DomainPatterns.yaml` | Domain-specific grader configs |
 
 ---
@@ -249,40 +229,3 @@ task:
 - **ALGORITHM**: Evals is a verification method
 - **Science**: Evals implements scientific method
 - **Browser**: For visual verification graders
-
-## Gotchas
-
-- **Choose the right grader type:** Code-based for deterministic checks (fast, cheap). Model-based for nuanced quality (flexible, expensive). Human for calibration (gold standard, slow).
-- **pass@k scoring requires multiple runs.** A single run doesn't give statistical significance. Default to pass@3 minimum.
-- **Transcript capture must be enabled BEFORE the test run.** Can't retroactively capture transcripts.
-- **Eval results go to the current work directory** — not a global location. Tie evals to the work item.
-- **Don't evaluate skills with trivial prompts.** Simple one-liners may not trigger skill usage. Test prompts must be substantive.
-
-## Examples
-
-**Example 1: Compare two prompts**
-```
-User: "evaluate which prompt produces better summaries"
-→ Creates eval suite with 3+ test cases
-→ Runs both prompts against test cases
-→ Model-based grader scores quality
-→ Reports pass@k and comparative analysis
-```
-
-**Example 2: Regression test a skill change**
-```
-User: "run evals on the Research skill after the update"
-→ Uses existing test fixtures for Research
-→ Before/after comparison
-→ Reports any quality regressions
-```
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Evals","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
-
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.

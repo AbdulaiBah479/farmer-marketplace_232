@@ -7,7 +7,19 @@ description: Configure Istio traffic management including routing, load balancin
 
 Comprehensive guide to Istio traffic management for production service mesh deployments.
 
-## When to Use This Skill
+## Do not use this skill when
+
+- The task is unrelated to istio traffic management
+- You need a different domain or tool outside this scope
+
+## Instructions
+
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
+
+## Use this skill when
 
 - Configuring service-to-service routing
 - Implementing canary or blue-green deployments
@@ -20,12 +32,12 @@ Comprehensive guide to Istio traffic management for production service mesh depl
 
 ### 1. Traffic Management Resources
 
-| Resource            | Purpose                       | Scope         |
-| ------------------- | ----------------------------- | ------------- |
-| **VirtualService**  | Route traffic to destinations | Host-based    |
+| Resource | Purpose | Scope |
+|----------|---------|-------|
+| **VirtualService** | Route traffic to destinations | Host-based |
 | **DestinationRule** | Define policies after routing | Service-based |
-| **Gateway**         | Configure ingress/egress      | Cluster edge  |
-| **ServiceEntry**    | Add external services         | Mesh-wide     |
+| **Gateway** | Configure ingress/egress | Cluster edge |
+| **ServiceEntry** | Add external services | Mesh-wide |
 
 ### 2. Traffic Flow
 
@@ -271,7 +283,7 @@ spec:
   host: my-service
   trafficPolicy:
     loadBalancer:
-      simple: ROUND_ROBIN # or LEAST_CONN, RANDOM, PASSTHROUGH
+      simple: ROUND_ROBIN  # or LEAST_CONN, RANDOM, PASSTHROUGH
 ---
 # Consistent hashing for sticky sessions
 apiVersion: networking.istio.io/v1beta1
@@ -290,7 +302,6 @@ spec:
 ## Best Practices
 
 ### Do's
-
 - **Start simple** - Add complexity incrementally
 - **Use subsets** - Version your services clearly
 - **Set timeouts** - Always configure reasonable timeouts
@@ -298,7 +309,6 @@ spec:
 - **Monitor** - Use Kiali and Jaeger for visibility
 
 ### Don'ts
-
 - **Don't over-retry** - Can cause cascading failures
 - **Don't ignore outlier detection** - Enable circuit breakers
 - **Don't mirror to production** - Mirror to test environments
@@ -319,3 +329,9 @@ istioctl proxy-config endpoints deploy/my-app
 # Debug traffic
 istioctl proxy-config log deploy/my-app --level debug
 ```
+
+## Resources
+
+- [Istio Traffic Management](https://istio.io/latest/docs/concepts/traffic-management/)
+- [Virtual Service Reference](https://istio.io/latest/docs/reference/config/networking/virtual-service/)
+- [Destination Rule Reference](https://istio.io/latest/docs/reference/config/networking/destination-rule/)

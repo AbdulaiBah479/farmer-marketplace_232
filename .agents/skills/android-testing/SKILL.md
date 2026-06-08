@@ -1,102 +1,136 @@
 ---
 name: android-testing
-description: Comprehensive testing strategy involving Unit, Integration, Hilt, and Screenshot tests.
+description: |
+  Provides Android testing patterns and templates for JUnit5, MockK, Turbine,
+  and Compose UI testing. Use when writing tests, implementing TDD, validating
+  code coverage, or reviewing test quality. Use when user mentions:
+  테스트, TDD, 단위 테스트, UI 테스트, 커버리지, 목(mock), 테스트 작성,
+  테스트 템플릿, ViewModel 테스트, UseCase 테스트, Compose 테스트.
+allowed-tools: Read, Glob, Grep
 ---
 
-# Android Testing Strategies
+# Android Testing Guide
 
-This skill provides expert guidance on testing modern Android applications, inspired by "Now in Android". It covers **Unit Tests**, **Hilt Integration Tests**, and **Screenshot Testing**.
+JUnit5, MockK, Turbine, Compose UI Testing을 사용한 테스트 가이드입니다.
 
-## Testing Pyramid
+## Testing Stack
 
-1.  **Unit Tests**: Fast, isolate logic (ViewModels, Repositories).
-2.  **Integration Tests**: Test interactions (Room DAOs, Retrofit vs MockWebServer).
-3.  **UI/Screenshot Tests**: Verify UI correctness (Compose).
+| Type | Framework | Purpose |
+|------|-----------|---------|
+| **Unit** | JUnit5 + MockK | ViewModel, UseCase, Repository |
+| **Flow** | Turbine | StateFlow, Channel testing |
+| **Coroutines** | kotlinx-coroutines-test | runTest, advanceUntilIdle |
+| **UI** | Compose Testing | Composable rendering, interaction |
+| **Integration** | Hilt Testing | DI integration |
 
-## Dependencies (`libs.versions.toml`)
+## Coverage Target
 
-Ensure you have the right testing dependencies.
+- **Overall**: 80%+
+- **Domain Layer**: 90%+ (pure business logic)
+- **Presentation Layer**: 70%+ (ViewModel, state logic)
+- **Data Layer**: 60%+ (repository, mapper)
 
-```toml
-[libraries]
-junit4 = { module = "junit:junit", version = "4.13.2" }
-kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
-androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version = "1.1.5" }
-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version = "3.5.1" }
-compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
-roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
+## Quick Test Commands
+
+```bash
+# All tests
+./gradlew test
+
+# Module tests
+./gradlew :feature:home:testDebugUnitTest
+./gradlew :core:domain:test
+
+# With coverage
+./gradlew testDebugUnitTestCoverage
+
+# Single test class
+./gradlew test --tests "*.HomeViewModelTest"
 ```
 
-## Screenshot Testing with Roborazzi
+## Test Templates
 
-Screenshot tests ensure your UI doesn't regress visually. NiA uses **Roborazzi** because it runs on the JVM (fast) without needing an emulator.
+테스트 함수 이름은 되도록 한국어로 작성 해주세요.
 
-### Setup
+### ViewModel Test
+ViewModel 테스트는 state 변화와 effect 발생을 검증합니다.
 
-1.  Add the plugin to `libs.versions.toml`:
-    ```toml
-    [plugins]
-    roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
-    ```
-2.  Apply it in your module's `build.gradle.kts`:
-    ```kotlin
-    plugins {
-        alias(libs.plugins.roborazzi)
-    }
-    ```
+**상세 템플릿:** [templates/viewmodel-test.md](templates/viewmodel-test.md)
 
-### Writing a Screenshot Test
+### UseCase Test
+UseCase 테스트는 비즈니스 로직과 repository 호출을 검증합니다.
+
+**상세 템플릿:** [templates/usecase-test.md](templates/usecase-test.md)
+
+### Compose UI Test
+Compose 테스트는 UI 렌더링과 사용자 상호작용을 검증합니다.
+
+**상세 템플릿:** [templates/compose-test.md](templates/compose-test.md)
+
+## Test Naming Convention
 
 ```kotlin
-@RunWith(AndroidJUnit4::class)
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [33], qualifiers = RobolectricDeviceQualifiers.Pixel5)
-class MyScreenScreenshotTest {
+// Pattern: `given_when_then` or `should_when`
+@Test
+fun `loadData should update state with results when useCase succeeds`()
 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+@Test
+fun `should show error message when loading fails`()
 
-    @Test
-    fun captureMyScreen() {
-        composeTestRule.setContent {
-            MyTheme {
-                MyScreen()
-            }
-        }
+@Test
+fun `given empty list when render then show empty state`()
+```
 
-        composeTestRule.onRoot()
-            .captureRoboImage()
+## Common Test Setup
+
+### Dependencies (build.gradle.kts)
+
+```kotlin
+testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+testImplementation("io.mockk:mockk:1.13.8")
+testImplementation("app.cash.turbine:turbine:1.0.0")
+testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+testImplementation("androidx.compose.ui:ui-test-junit4")
+debugImplementation("androidx.compose.ui:ui-test-manifest")
+```
+
+### Test Rule Setup
+
+```kotlin
+@ExtendWith(MockKExtension::class)
+class ViewModelTest {
+
+    @MockK
+    private lateinit var useCase: SomeUseCase
+
+    @MockK
+    private lateinit var repository: SomeRepository
+
+    private lateinit var viewModel: SomeViewModel
+
+    @BeforeEach
+    fun setup() {
+        viewModel = SomeViewModel(useCase)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        clearAllMocks()
     }
 }
 ```
 
-## Hilt Testing
+## Best Practices
 
-Use `HiltAndroidRule` to inject dependencies in tests.
+### DO
+- Test behavior, not implementation
+- Use meaningful test names
+- One assertion per test (when possible)
+- Test edge cases and error scenarios
+- Use Turbine for Flow testing
 
-```kotlin
-@HiltAndroidTest
-class MyDaoTest {
-
-    @get:Rule
-    var hiltRule = HiltAndroidRule(this)
-
-    @Inject
-    lateinit var database: MyDatabase
-    private lateinit var dao: MyDao
-
-    @Before
-    fun init() {
-        hiltRule.inject()
-        dao = database.myDao()
-    }
-    
-    // ... tests
-}
-```
-
-## Running Tests
-
-*   **Unit**: `./gradlew test`
-*   **Screenshots**: `./gradlew recordRoborazziDebug` (to record) / `./gradlew verifyRoborazziDebug` (to verify)
+### DON'T
+- Test private methods directly
+- Mock everything (test real logic when possible)
+- Write flaky tests
+- Skip error case testing
+- Use Thread.sleep() (use advanceUntilIdle)

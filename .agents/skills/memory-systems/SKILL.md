@@ -1,8 +1,15 @@
 ---
 name: memory-systems
-description: Design and implement memory architectures for agent systems. Use when building agents that need to persist state across sessions, maintain entity consistency, or reason over structured knowledge.
+description: "Design short-term, long-term, and graph-based memory architectures"
+source: "https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/tree/main/skills/memory-systems"
+risk: safe
 ---
 
+## When to Use This Skill
+
+Design short-term, long-term, and graph-based memory architectures
+
+Use this skill when working with design short-term, long-term, and graph-based memory architectures.
 # Memory System Design
 
 Memory provides the persistence layer that allows agents to maintain continuity across sessions and reason over accumulated knowledge. Simple agents rely entirely on context for memory, losing all state when sessions end. Sophisticated agents implement layered memory architectures that balance immediate context needs with long-term knowledge retention. The evolution from vector stores to knowledge graphs to temporal knowledge graphs represents increasing investment in structured memory for improved retrieval and reasoning.

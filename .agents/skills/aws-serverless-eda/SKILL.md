@@ -1,23 +1,56 @@
 ---
 name: aws-serverless-eda
 description: AWS serverless and event-driven architecture expert based on Well-Architected Framework. Use when building serverless APIs, Lambda functions, REST APIs, microservices, or async workflows. Covers Lambda with TypeScript/Python, API Gateway (REST/HTTP), DynamoDB, Step Functions, EventBridge, SQS, SNS, and serverless patterns. Essential when user mentions serverless, Lambda, API Gateway, event-driven, async processing, queues, pub/sub, or wants to build scalable serverless applications with AWS best practices.
+context: fork
+skills:
+  - aws-mcp-setup
+  - aws-cdk-development
+allowed-tools:
+  - mcp__aws-mcp__*
+  - mcp__awsdocs__*
+  - mcp__cdk__*
+  - Bash(sam *)
+  - Bash(aws lambda *)
+  - Bash(aws apigateway *)
+  - Bash(aws apigatewayv2 *)
+  - Bash(aws dynamodb *)
+  - Bash(aws stepfunctions *)
+  - Bash(aws events *)
+  - Bash(aws sqs *)
+  - Bash(aws sns *)
+  - Bash(aws sts get-caller-identity)
+hooks:
+  PreToolUse:
+    - matcher: Bash(sam deploy*)
+      command: aws sts get-caller-identity --query Account --output text
+      once: true
 ---
 
 # AWS Serverless & Event-Driven Architecture
 
 This skill provides comprehensive guidance for building serverless applications and event-driven architectures on AWS based on Well-Architected Framework principles.
 
-## Integrated MCP Servers
+## AWS Documentation Requirement
 
-This skill includes 5 MCP servers for serverless development:
+**CRITICAL**: This skill requires AWS MCP tools for accurate, up-to-date AWS information.
 
-### AWS Documentation MCP Server
-**When to use**: Always verify AWS service information before implementation
-- Search AWS documentation for latest features and best practices
-- Check regional availability of AWS services
-- Verify service limits and quotas
-- Confirm API specifications and parameters
-- Access up-to-date AWS service information
+### Before Answering AWS Questions
+
+1. **Always verify** using AWS MCP tools (if available):
+   - `mcp__aws-mcp__aws___search_documentation` or `mcp__*awsdocs*__aws___search_documentation` - Search AWS docs
+   - `mcp__aws-mcp__aws___read_documentation` or `mcp__*awsdocs*__aws___read_documentation` - Read specific pages
+   - `mcp__aws-mcp__aws___get_regional_availability` - Check service availability
+
+2. **If AWS MCP tools are unavailable**:
+   - Guide user to configure AWS MCP using the `aws-mcp-setup` skill (auto-loaded as dependency)
+   - Help determine which option fits their environment:
+     - Has uvx + AWS credentials → Full AWS MCP Server
+     - No Python/credentials → AWS Documentation MCP (no auth)
+   - If cannot determine → Ask user which option to use
+
+## Serverless MCP Servers
+
+This skill can leverage serverless-specific MCP servers for enhanced development workflows:
 
 ### AWS Serverless MCP Server
 **Purpose**: Complete serverless application lifecycle with SAM CLI

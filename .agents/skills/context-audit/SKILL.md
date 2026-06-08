@@ -1,170 +1,134 @@
 ---
 name: context-audit
-description: |
-  Audits AI context files (CLAUDE.md, .cursorrules, SKILL.md, etc.) against the actual codebase. Detects stale references, vague instructions, missing coverage, and structural issues. Use when auditing AI documentation, checking context alignment, improving agent instructions, or before onboarding.
-
-  Triggers: "context audit", "check ai context", "audit context files", "context quality", "review CLAUDE.md", "improve agent docs", "ai docs quality", "context drift"
+description: Comprehensive quality audit for CLAUDE.md context files. Use when performing thorough quality checks, preparing for releases, ensuring context efficiency, or verifying token optimization.
+allowed-tools: Read, Glob, Grep, Bash
+context: fork
+agent: context-doc-agent
 ---
 
-# Context Audit
+# LLM Context Comprehensive Audit
 
-Audit AI context files in a repository for accuracy, coverage, and clarity. Produces a scored quality report with actionable fixes.
+Performs deep quality audits of CLAUDE.md context files, checking structure,
+content quality, efficiency, design doc references, and compliance with
+standards.
 
-**User Guidance:** $ARGUMENTS
+## Overview
 
-## When to Use
+This skill provides comprehensive quality auditing for LLM context files
+by running all validation checks, analyzing content efficiency, verifying
+design doc pointers, checking line limits, and generating detailed audit
+reports with prioritized recommendations.
 
-- Auditing AI documentation freshness or correctness
-- Checking if context files match the actual codebase
-- Before onboarding new team members to AI-assisted development
-- After major refactors that may have invalidated context docs
-- Periodic hygiene checks on agent instructions
+## Quick Start
 
-## When Not to Use
+**Audit all context files:**
 
-- Writing new context files from scratch (that's a creative task, not an audit)
-- Reviewing code changes (use code-review instead)
-- General documentation review (this is specific to AI agent context)
+```bash
+/context-audit
+```
 
-## Supported Context Files
+**Audit specific file:**
 
-| File Pattern | Tool |
-|--------------|------|
-| `CLAUDE.md`, `AGENTS.md` (root + nested) | Claude Code |
-| `.cursorrules`, `.cursor/rules/*.mdc` | Cursor |
-| `.github/copilot-instructions.md` | GitHub Copilot |
-| `.windsurfrules` | Windsurf |
-| `.claude/skills/*/SKILL.md` | Claude Code Skills |
-| `.agents/skills/*/SKILL.md` | Agent Skills (generic) |
-| `.claude/commands/*.md` | Claude Code Commands |
-| `.agents/context/*.md` | Agent Context docs |
+```bash
+/context-audit CLAUDE.md
+```
+
+**Audit package context:**
+
+```bash
+/context-audit pkgs/effect-type-registry/CLAUDE.md
+```
+
+**Quick audit (non-strict):**
+
+```bash
+/context-audit --strict=false
+```
+
+## Parameters
+
+### Optional
+
+- `target`: Path to CLAUDE.md file or "all" (default: all)
+- `strict`: Enable strict mode with additional checks (default: true)
+- `check-refs`: Validate design doc references exist (default: true)
+- `output`: Output file path for audit report
 
 ## Workflow
 
-### 1. Discover Context Files
+High-level audit process:
 
-Scan the repository for all AI context files listed above. Report which files were found and which tools they serve.
+1. **Parse parameters** to determine audit scope and strictness
+2. **Load design.config.json** to get quality standards (line limits, etc.)
+3. **Discover CLAUDE.md files** using Glob (root + package-level)
+4. **Run validation checks** (structure, formatting, markdown quality)
+5. **Analyze content quality** (efficiency, organization, token usage)
+6. **Check design doc pointers** (existence, validity, coverage)
+7. **Verify line limits** (root: 500, child: 300 from config)
+8. **Calculate health scores** (file, package, overall)
+9. **Identify issues** by severity (critical, high, medium, low)
+10. **Generate recommendations** prioritized by impact
+11. **Output audit report** with actionable improvements
 
-If the user provides `$ARGUMENTS` referencing specific files (e.g., "focus on CLAUDE.md only"), limit discovery and analysis to those files.
+## Instructions
 
-If **no context files are found**, skip analysis and instead:
-- Report that no AI context exists
-- Detect the repo's tech stack from package files, language files, and directory structure
-- Suggest which context files to create and what they should cover
-- Offer to generate a starter `CLAUDE.md` / `AGENTS.md`
+**IMPORTANT:** Follow the detailed step-by-step instructions in
+`instructions.md` to perform the audit correctly.
 
-### 2. Analyze with Parallel Subagents
-
-Launch **3 parallel Task subagents** (`subagent_type: general-purpose`), each focused on a different dimension. Each subagent must produce **per-file scores** as well as an **overall dimension score**.
-
-#### Subagent 1: Reference Validator
-- Extract all file paths, directory references, function/class/method names, CLI commands, and package names mentioned in context files
-- Verify each reference exists in the codebase using Glob and Grep
-- Flag references that don't resolve as **stale references**
-- Check that code examples in context files match actual code patterns
-- Score each file individually, then compute overall: **Accuracy (0-100)**
-
-#### Subagent 2: Coverage Analyzer
-- Detect the repo's actual tech stack from: package managers (`package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`), frameworks, CI/CD configs, infrastructure files
-- Identify key architectural patterns by scanning source code structure
-- Compare what the context files document vs what actually exists
-- Flag undocumented areas using the coverage checklist in [CHECKLISTS.md](CHECKLISTS.md)
-- Score each file individually, then compute overall: **Coverage (0-100)**
-
-#### Subagent 3: Quality Assessor
-- Evaluate each context file for clarity, specificity, and actionability
-- Flag vague instructions (e.g., "handle errors properly" without specifying how)
-- Check for inconsistent terminology across files
-- Assess length appropriateness (flag files under 20 lines as too sparse, over 500 lines as potentially bloated)
-- Check for presence of examples and anti-patterns
-- Verify instructions don't contradict each other across files
-- Score each file individually, then compute overall: **Clarity (0-100)**
-
-Provide each subagent with:
-- The full content of all discovered context files
-- The repo's directory structure (top 3 levels)
-- The detailed criteria from [CHECKLISTS.md](CHECKLISTS.md)
-
-### 3. Score and Rank
-
-Compute scores from subagent results. Use per-file scores to populate the "Scores by File" table, and overall dimension scores for the "Scores by Dimension" table:
-
-| Dimension | Weight | What it measures |
-|-----------|--------|-----------------|
-| Accuracy | 40% | Do references match reality? |
-| Coverage | 35% | Are key areas documented? |
-| Clarity | 25% | Are instructions specific and actionable? |
-
-**Overall = (Accuracy x 0.4) + (Coverage x 0.35) + (Clarity x 0.25)**
-
-### 4. Generate Report
-
-Consolidate findings into the output format below. Rank all issues by severity.
-
-### 5. Offer Remediation
-
-After presenting the report, ask the user:
-> "Would you like me to fix these issues? I can update the context files to resolve stale references, add missing coverage, and improve clarity."
-
-If yes, apply fixes file-by-file, showing changes before writing.
-
-## Severity Levels
-
-- **Critical**: Stale references that actively mislead the agent (wrong file paths, deleted functions referenced as current)
-- **High**: Missing coverage of major architectural components, contradictory instructions
-- **Medium**: Vague instructions, missing examples, minor stale references
-- **Low**: Style improvements, terminology consistency, length optimization
+For usage examples and common scenarios, see `examples.md`.
 
 ## Output Format
 
-```markdown
-# Context Audit Report
+The audit generates a structured report with:
 
-**Repository:** [name]
-**Files Scanned:** [count]
-**Overall Score:** [X/100] [grade: A/B/C/D/F]
+### Summary Section
 
-## Scores by File
+- Total files audited
+- Overall health score (0-100)
+- Critical/high/medium/low issue counts
+- Pass/fail status
 
-| File | Accuracy | Coverage | Clarity | Overall | Issues |
-|------|----------|----------|---------|---------|--------|
-| CLAUDE.md | 85 | 70 | 90 | 81 | 3 |
-| ... | ... | ... | ... | ... | ... |
+### File-Level Details
 
-## Scores by Dimension
+For each CLAUDE.md file:
 
-| Dimension | Score | Summary |
-|-----------|-------|---------|
-| Accuracy | X/100 | [one-line summary] |
-| Coverage | X/100 | [one-line summary] |
-| Clarity | X/100 | [one-line summary] |
+- File path and role (root vs child)
+- Line count vs limit
+- Structure validation results
+- Content quality score
+- Design doc pointer status
+- Specific issues found
 
-## Critical Issues
-- [file:line] Description — why it misleads agents
+### Recommendations
 
-## High Priority
-- [file:line] Description
+Prioritized list of improvements:
 
-## Medium Priority
-- [file:line] Description
+1. Critical issues (must fix)
+2. High priority (should fix)
+3. Medium priority (nice to have)
+4. Low priority (optional)
 
-## Low Priority / Suggestions
-- [file:line] Description
+### Quality Metrics
 
-## Missing Coverage
-Key areas of the codebase not documented in any context file:
-- [area]: [what should be documented]
+- Average line count
+- Design doc pointer coverage
+- Content efficiency score
+- Token optimization score
 
-## Remediation Summary
-[Actionable fixes grouped by file, ready to apply]
-```
+## Success Criteria
 
-## Grading Scale
+The audit passes when:
 
-| Score | Grade | Meaning |
-|-------|-------|---------|
-| 90-100 | A | Excellent — context is accurate, comprehensive, and clear |
-| 80-89 | B | Good — minor gaps or stale references |
-| 70-79 | C | Adequate — notable gaps in coverage or accuracy |
-| 60-69 | D | Poor — significant issues that mislead agents |
-| <60 | F | Failing — context is largely stale, missing, or vague |
+- All files under line limits (root: 500, child: 300)
+- No critical or high severity issues
+- All design doc pointers valid and exist
+- Content is lean imperative instructions (not implementation details)
+- Proper separation between root and child contexts
+
+## Related Skills
+
+- `/context-validate` - Basic structure and formatting validation
+- `/context-review` - Quality and efficiency review
+- `/context-update` - Update context files based on audit findings
+- `/context-split` - Split large files that exceed limits
+- `/design-audit` - Similar comprehensive audit for design docs

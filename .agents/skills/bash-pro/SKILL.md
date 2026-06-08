@@ -1,15 +1,10 @@
 ---
 name: bash-pro
-description: 'Master of defensive Bash scripting for production automation, CI/CD
-
+description: Master of defensive Bash scripting for production automation, CI/CD
   pipelines, and system utilities. Expert in safe, portable, and testable shell
-
   scripts.
-
-  '
-risk: unknown
-source: community
-date_added: '2026-02-27'
+metadata:
+  model: sonnet
 ---
 ## Use this skill when
 

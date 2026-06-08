@@ -1,48 +1,216 @@
 ---
 name: accessibility-testing
-description: Use for testing the accessibility of a web project
-license: MIT
-metadata:
-  author: conesible.de
-  version: "0.1"
+description: "WCAG 2.2 compliance testing, screen reader validation, and inclusive design verification. Use when ensuring legal compliance (ADA, Section 508), testing for disabilities, or building accessible applications for 1 billion disabled users globally."
+category: specialized-testing
+priority: high
+tokenEstimate: 1100
+agents: [qe-visual-tester, qe-test-generator, qe-quality-gate]
+implementation_status: optimized
+optimization_version: 1.0
+last_optimized: 2025-12-02
+dependencies: []
+quick_reference_card: true
+tags: [accessibility, wcag, a11y, screen-reader, ada, section-508, inclusive]
 ---
 
-Implementing accessibility correctly is crucial to deliver quality web experiences for everyone, including developers. 
+# Accessibility Testing
 
-## Software requirements & programmatic testing
+<default_to_action>
+When testing accessibility or ensuring compliance:
+1. APPLY POUR principles: Perceivable, Operable, Understandable, Robust
+2. TEST with keyboard-only navigation (Tab, Enter, Escape)
+3. VALIDATE with screen readers (VoiceOver, NVDA, JAWS)
+4. CHECK color contrast (4.5:1 for text, 3:1 for large text)
+5. AUTOMATE with axe-core, integrate in CI/CD pipeline
 
-To catch accessibility defects quickly and reliably, employ automated and rule-based accessibility checks. For this, set up a development requirement for the `pa11y/pa11y` CLI tool and the axe-core runner, and run it against fresh development builds. Also cover individual features and components, isolated from the rest of the page.
+**Quick A11y Checklist:**
+- All images have alt text (or alt="" for decorative)
+- All form fields have labels
+- Color is never the only indicator
+- Focus visible on all interactive elements
+- Keyboard navigation works throughout
 
-Include these checker tools into an existing CI pipeline. 
+**Critical Success Factors:**
+- Automated testing catches 30-50% of issues
+- Manual testing with real assistive tech required
+- Include users with disabilities in testing
+</default_to_action>
 
-## Manual checks
+## Quick Reference Card
 
-For each component, check each component for its full WCAG 2.2 level AAA conformance, and create a table that contains the number of the success criterion, its name, a short description, and the conformance status (pass, fail, not applicable, untested)
+### When to Use
+- Legal compliance (ADA, Section 508, EU Directive)
+- New feature development
+- Before release validation
+- Accessibility audits
 
-If it helps, you may also make this as a template and re-use it accordingly. 
+### WCAG 2.2 Levels
+| Level | Requirement | Target |
+|-------|-------------|--------|
+| **A** | Basic accessibility | Minimum legal |
+| **AA** | Standard (most orgs) | Industry standard |
+| **AAA** | Enhanced | Specialized sites |
 
-You may use browser based tools (like Playwright) to run checks yourself that traditionally required real users for testing. If you can't make a judgement or it might be un-reliable, note a todo with a clear and concise assessment instruction for a developer.  
+### POUR Principles
+| Principle | Meaning | Key Tests |
+|-----------|---------|-----------|
+| **Perceivable** | Can perceive content | Alt text, contrast, captions |
+| **Operable** | Can operate UI | Keyboard, no seizures, navigation |
+| **Understandable** | Can understand | Clear labels, predictable, errors |
+| **Robust** | Works with assistive tech | Valid HTML, ARIA |
 
-## Generate deliverables
+### Color Contrast Requirements
+| Content | AA Ratio | AAA Ratio |
+|---------|----------|-----------|
+| Normal text | 4.5:1 | 7:1 |
+| Large text (18pt+) | 3:1 | 4.5:1 |
+| UI components | 3:1 | - |
 
-Whenever you have made an accessibility assessment or judgement, produce a short writeup of all documented issues and suggested fixes. Never suggest quick-wins or shorthand fixes if a complete architectural overhaul would be the better and correct choice. This is especially true if the quick fix would involve ARIA patterns. 
+---
 
-## Accessibility information (European Accessibility Act requirement)
+## Keyboard Navigation Testing
 
-As required per EU law and local equivalents (e.g. Barrierefreiheitsstärkungsgesetz/BFSG in Germany), projects are required to have a public-facing information page about the accessibility of the page, with the following contents in natural language:
+```javascript
+// Test all interactive elements reachable via keyboard
+test('all interactive elements keyboard accessible', async ({ page }) => {
+  await page.goto('/');
 
-- the name of the service
-- a general description of the service
-- email address and phone number of the provider, and a physical address if available
-- names of the applicable laws
-- a mention of used tools and processes to ensure accessibility, as well as the names of any agent that is used for the assessment
-- accessibility details for each criterion in simple language (pass, fail, not applicable)
-- contact details of the governing body (in Germany for example, Marktüberwachungsstelle der Länder für die Barrierefreiheit von Produkten und Dienstleistungen, MLBF AöR, Magdeburg)
-- the date of the last assessment
-- a date at which all failed requirements are fixed
+  const focusableElements = await page.$$('button, a, input, select, textarea, [tabindex]');
 
-The law also mandates that developers inform the governing bodies of their offerings pro-actively. Draft an email for that and research the relevant email address. 
+  for (const element of focusableElements) {
+    await element.focus();
+    const isFocused = await element.evaluate(el => document.activeElement === el);
+    expect(isFocused).toBe(true);
+  }
+});
 
-This page must be available on every page, near other regulatory links such as a privacy policy.
+// Verify visible focus indicator
+test('focus indicator visible', async ({ page }) => {
+  await page.goto('/');
+  await page.keyboard.press('Tab');
 
-Implement this page in any case, even if the service may not be directly covered by the law.
+  const focusedElement = await page.locator(':focus');
+  const outline = await focusedElement.evaluate(el =>
+    getComputedStyle(el).outline
+  );
+
+  expect(outline).not.toBe('none');
+});
+```
+
+---
+
+## Automated Testing with axe-core
+
+```javascript
+import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+test('page has no accessibility violations', async ({ page }) => {
+  await page.goto('/');
+
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+    .analyze();
+
+  expect(results.violations).toEqual([]);
+});
+
+// CI/CD integration
+test('checkout flow accessible', async ({ page }) => {
+  await page.goto('/checkout');
+
+  const results = await new AxeBuilder({ page })
+    .include('#checkout-form')
+    .disableRules(['color-contrast']) // Fix in next sprint
+    .analyze();
+
+  expect(results.violations.filter(v =>
+    v.impact === 'critical' || v.impact === 'serious'
+  )).toHaveLength(0);
+});
+```
+
+---
+
+## Screen Reader Testing Checklist
+
+```markdown
+## VoiceOver (macOS) Testing
+- [ ] Page title announced on load
+- [ ] Headings hierarchy correct (h1 → h2 → h3)
+- [ ] Landmarks present (nav, main, footer)
+- [ ] Images have descriptive alt text
+- [ ] Form labels read correctly
+- [ ] Error messages announced
+- [ ] Dynamic content updates announced (aria-live)
+```
+
+---
+
+## Agent-Driven Accessibility
+
+```typescript
+// Comprehensive a11y validation
+await Task("Accessibility Validation", {
+  url: 'https://example.com/checkout',
+  standard: 'WCAG2.2',
+  level: 'AA',
+  checks: ['keyboard', 'screen-reader', 'color-contrast'],
+  includeScreenReaderSimulation: true
+}, "qe-visual-tester");
+
+// Fleet coordination for comprehensive testing
+const a11yFleet = await FleetManager.coordinate({
+  strategy: 'comprehensive-accessibility',
+  agents: [
+    'qe-visual-tester',     // Visual & keyboard checks
+    'qe-test-generator',    // Generate a11y tests
+    'qe-quality-gate'       // Enforce compliance
+  ],
+  topology: 'parallel'
+});
+```
+
+---
+
+## Agent Coordination Hints
+
+### Memory Namespace
+```
+aqe/accessibility/
+├── wcag-results/*       - WCAG audit results
+├── screen-reader/*      - Screen reader test logs
+├── remediation/*        - Fix recommendations
+└── compliance/*         - Compliance reports
+```
+
+### Fleet Coordination
+```typescript
+const a11yFleet = await FleetManager.coordinate({
+  strategy: 'accessibility-testing',
+  agents: [
+    'qe-visual-tester',   // axe-core, keyboard, focus
+    'qe-test-generator',  // Generate a11y test cases
+    'qe-quality-gate'     // Block non-compliant builds
+  ],
+  topology: 'parallel'
+});
+```
+
+---
+
+## Related Skills
+- [visual-testing-advanced](../visual-testing-advanced/) - Visual a11y checks
+- [mobile-testing](../mobile-testing/) - Mobile a11y (VoiceOver, TalkBack)
+- [compliance-testing](../compliance-testing/) - Legal compliance
+
+---
+
+## Remember
+
+**1 billion people have disabilities. Inaccessible software excludes 15% of humanity.** Legal requirements: ADA, Section 508, EU Directive 2016/2102. $13T purchasing power. 250%+ increase in lawsuits.
+
+**Automated testing catches only 30-50% of issues.** Combine with manual keyboard testing, screen reader testing, and real user testing with people with disabilities.
+
+**With Agents:** Agents automate WCAG 2.2 compliance checking, screen reader simulation, and focus management validation. Use agents to enforce accessibility standards in CI/CD and catch violations before production.

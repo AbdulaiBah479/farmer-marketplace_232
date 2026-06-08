@@ -1,198 +1,276 @@
 ---
 name: bash-script-generator
-description: Create, generate, write, or scaffold bash/shell scripts (.sh), automation, or CLI tools.
+description: Generate Bash 3.2-compatible scripts with a standardized check_requirements guardrail, friendly validation errors, and optional shfmt formatting. Use when writing or updating bash scripts that need consistent argument validation, dependency checks, and portability.
+license: MIT
+allowed-tools: Read Write Edit Bash(shfmt:*)
+metadata:
+  generated-at: "2026-01-10T00:00:00Z"
+  group: "automation"
+  category: "scripting"
+  difficulty: "intermediate"
+  step-count: "4"
 ---
 
-# Bash Script Generator
+# Structured Bash Script Generator
 
-## Overview
+## What You'll Do
+- 📥 Gather the script's goal, required positional/flag arguments, environment variables, and external program dependencies
+- 🧱 Produce a Bash 3.2-compatible script skeleton with a `check_requirements` function that validates inputs and dependencies kindly
+- 🛡️ Ensure the script sets safe defaults (`set -euo pipefail`), quotes expansions, and keeps logic portable to macOS/Linux Bash 3.2
+- ✨ Format the script with `shfmt` when available and return a polished result ready for immediate use
 
-Generate production-ready Bash scripts with clear requirements capture, deterministic generation flow, and validation-first iteration.
+---
 
-## Trigger Phrases
+## When to Use This Skill
+Use this skill whenever the user asks for a new bash script or a major refactor of an existing script and they expect:
+- Guardrails around required arguments, environment variables, or external tools
+- Friendly, actionable error messages when prerequisites are missing
+- Compatibility with older Bash versions (macOS default 3.2)
 
-Use this skill when the user asks to:
-- Create, generate, write, or build a Bash/shell script
-- Convert manual CLI steps into an automation script
-- Build a text-processing script using `grep`, `awk`, or `sed`
-- Create an operations helper script, cron script, or CI utility script
+Do **not** use this skill for:
+- POSIX `sh`-only scripts (no Bash-specific features allowed)
+- Small one-liners or trivial command snippets (respond inline instead)
+- Advanced Bash (>3.2) needs such as associative arrays or `coproc`
 
-Do not use this skill for validating an existing script only. Use `devops-skills:bash-script-validator` for validation-only requests.
+---
 
-## Execution Model
+## Phase 1 · Clarify the Script Brief
+1. Confirm the script's purpose, expected inputs, outputs, and typical usage examples.
+2. Identify all positional arguments and flags that must be provided. Capture human-friendly labels for each so the usage text and errors are clear.
+3. List required environment variables (names + meaning) and external commands (e.g., `curl`, `jq`). Note install hints when useful.
+4. Ask about optional inputs or defaults that should be applied when values are omitted.
+5. Determine whether the script writes files, consumes stdin/stdout, or needs cleanup logic.
 
-Follow stages in order. Do not skip a stage; use the documented fallback when blocked.
+> **Deliverable:** A short table (in notes or your head) of arguments, env vars, and commands you will feed into `check_requirements` and `usage` messaging.
 
-### Stage 0: Preflight
+---
 
-1. Confirm scope and target output path.
-2. Confirm shell target:
-- Default: `bash`
-- If portability is requested: POSIX `sh`
-3. Check capabilities and pick fallback path:
+## Phase 2 · Plan the Script Structure
+Lay out the sections before writing code:
 
-| Capability | Default Path | Fallback Path |
-|---|---|---|
-| Requirement clarification | AskUserQuestion tool | Ask same questions in normal chat; mark unresolved items as assumptions |
-| Script scaffold | `bash scripts/generate_script_template.sh ...` | Copy `assets/templates/standard-template.sh` manually or hand-craft minimal scaffold |
-| Validation | `devops-skills:bash-script-validator` | Local checks: `bash -n`, `shellcheck` if available, `sh -n` for POSIX mode |
+1. **Header & Safety**
+   - `#!/usr/bin/env bash`
+   - `set -euo pipefail`
+   - `IFS=$'\n\t'` only if tighter word splitting is needed.
 
-If a fallback path is used, state it explicitly in the final summary.
+2. **Metadata Comments (optional)**
+   - Summarize script purpose and prerequisites in commented lines for discoverability.
 
-### Stage 1: Capture Requirements
+3. **Usage Helper**
+   - A `usage()` function that prints how to run the script, expected args, environment variables, and examples.
 
-Collect only what is needed to generate the script correctly:
-- Input source and format
-- Output destination and format
-- Error handling behavior (fail-fast/retry/continue)
-- Security constraints (sensitive data, privilege level)
-- Performance constraints (large files, parallelism)
-- Portability requirement (Bash-only vs POSIX)
+4. **Requirement Configuration**
+   - Define `REQUIRED_ARGS`, `REQUIRED_ENV_VARS`, and `REQUIRED_PROGRAMS` as indexed arrays (compatible with Bash 3.2). When nothing is required, keep the arrays empty but present.
+   - Optionally define associative-looking notes via comments or simple `case` statements; do **not** use `declare -A` (requires Bash ≥4).
 
-Then create a `Captured Requirements` table with stable IDs.
+5. **check_requirements Function** (see Phase 3 for exact pattern)
+   - Accepts parsed arguments (or a struct) and validates all prerequisites.
+   - Emits kind, actionable errors to STDERR and returns non-zero on failure.
 
-```markdown
-## Captured Requirements
+6. **Argument Parsing**
+   - Prefer `getopts` for short flags. For long options, parse manually with a `while` loop; avoid `getopt` if portability is uncertain.
+   - Populate variables for downstream logic (use `${VAR:-}` to coexist with `set -u`).
 
-| Requirement ID | Description | Source | Implementation Plan |
-|---|---|---|---|
-| REQ-001 | Parse nginx logs from file input | User | `parse_args()` + `validate_file()` + `awk` parser |
-| REQ-002 | Output top 10 errors | User | `analyze_errors()` + `sort | uniq -c | head -10` |
-| REQ-003 | Handle large files efficiently | Assumption | Single-pass `awk`; avoid multi-pass loops |
-```
+7. **Main Logic**
+   - Encapsulate primary workflow in `main()` and finish with `main "$@"`.
 
-Rules:
-- Every major design decision maps to at least one `REQ-*`.
-- Keep assumptions explicit and minimal.
+---
 
-### Stage 2: Choose Generation Path
+## Phase 3 · Compose the Script
+Follow this recipe while writing the actual script content.
 
-Use this deterministic decision tree:
-
-```text
-Need multi-command architecture, unusual control flow, or strict non-template conventions?
-├─ Yes -> Custom generation
-└─ No
-   Need standard CLI skeleton (usage/logging/arg parsing/cleanup)?
-   ├─ Yes -> Template-first generation
-   └─ No -> Custom generation
-```
-
-Template-first is the default for single-purpose CLI utilities.
-
-### Stage 3: Load Only Relevant References
-
-Use progressive disclosure. Read only docs needed for the current request.
-
-| Need | Reference |
-|---|---|
-| Tool choice (`grep` vs `awk` vs `sed`) | `docs/text-processing-guide.md` |
-| Script structure and argument patterns | `docs/script-patterns.md` |
-| Strict mode, shell differences, safety | `docs/bash-scripting-guide.md` |
-| Naming, organization, and quality baseline | `docs/generation-best-practices.md` |
-
-Citation format (required):
-- `[Ref: docs/<file>.md -> <section>]`
-
-### Stage 4: Generate Script
-
-#### Path A: Template-first (default)
-
-1. Generate scaffold:
+### Required Guardrail: `check_requirements`
 ```bash
-bash scripts/generate_script_template.sh standard output-script.sh
+check_requirements() {
+  local -r provided_arg_count=$1
+  local missing=0
+
+  if [ ${#REQUIRED_ARGS[@]} -gt 0 ] && [ "$provided_arg_count" -lt ${#REQUIRED_ARGS[@]} ]; then
+    printf 'Error: Expected %s arguments (%s) but received %s.\n' \
+      ${#REQUIRED_ARGS[@]} "${REQUIRED_ARGS[*]}" "$provided_arg_count" >&2
+    missing=1
+  fi
+
+  local env_var
+  for env_var in "${REQUIRED_ENV_VARS[@]}"; do
+    if [ -z "${!env_var:-}" ]; then
+      printf 'Error: Missing required environment variable %s. Please set it before rerunning.\n' "$env_var" >&2
+      missing=1
+    fi
+  done
+
+  local program
+  for program in "${REQUIRED_PROGRAMS[@]}"; do
+    if ! command -v "$program" >/dev/null 2>&1; then
+      printf 'Error: Required program %s is not installed or not on PATH. Please install it first.\n' "$program" >&2
+      missing=1
+    fi
+  done
+
+  if [ "$missing" -ne 0 ]; then
+    printf '\n' >&2
+    usage >&2
+    return 1
+  fi
+}
 ```
-2. Replace placeholders and add business logic.
-3. Keep logging to stderr and data output to stdout unless requirements say otherwise.
-4. Add comments only where logic is non-obvious.
 
-#### Path B: Custom generation
+**Implementation notes:**
+- Always invoke `check_requirements` right after argument parsing, e.g. `check_requirements "$#"`.
+- If the script allows optional trailing arguments, keep `REQUIRED_ARGS` limited to the mandatory ones and validate optional parameters separately after `check_requirements "$#"` succeeds.
+- Keep error language supportive (“Please install…”) rather than punitive.
+- Route any diagnostics to STDERR (`>&2`) and exit gracefully with `return 1` so the caller can `exit 1` or handle it.
+- Only call `usage` from error paths (like failed requirement checks) so successful runs stay quiet unless the user explicitly asks for help.
 
-Build a script with at least:
-- Shebang and strict mode
-- `usage()`
-- `parse_args()`
-- Input validation and dependency checks
-- Main workflow function(s)
-- Predictable exit codes
+### Bash 3.2 Compatibility Guardrails
+- Use indexed arrays only; no associative arrays or namerefs (`local -n`).
+- Avoid `[[ string =~ regex ]]` with capture groups that rely on Bash ≥3.2. Basic regex is fine, but keep patterns simple.
+- Do not rely on `mapfile`, `readarray`, `coproc`, `printf -v`, or process substitution that requires `/dev/fd` (often missing on macOS).
+- Prefer `$( command )` subshells over backticks and quote every expansion.
+- Use `printf` instead of `echo -e` for reliable escape handling.
 
-### Stage 5: Validate and Iterate
-
-Default validation path:
-1. Invoke `devops-skills:bash-script-validator`
-2. Apply fixes
-3. Re-run validation
-4. Repeat until checks pass or blocker is identified
-
-Fallback validation path (when validator skill is unavailable):
+### Usage Function Pattern
 ```bash
-# Deterministic local gate for this skill:
-bash scripts/run_ci_checks.sh --skip-shellcheck
+usage() {
+  cat <<'EOF'
+Usage: my_script.sh <source> <destination> [--dry-run]
 
-# CI gate (shellcheck required):
-bash scripts/run_ci_checks.sh --require-shellcheck
+Required arguments:
+  source        Path to the input file (must exist)
+  destination   Output directory (will be created if missing)
+
+Environment variables:
+  API_TOKEN     Token used to authenticate API requests
+
+External tools:
+  curl, jq
+
+Examples:
+  my_script.sh ./input.csv ./out --dry-run
+EOF
+}
+```
+Tailor the body to the specific script; keep instructions kind and explicit.
+
+### Script Assembly Checklist
+1. Write header, safety settings, and optional metadata comments.
+2. Define requirement arrays (even if empty) and defaults for optional values.
+3. Implement `usage()` and `check_requirements()` exactly once.
+4. Parse arguments safely (`getopts` or manual loop) and convert into named variables.
+5. Call `check_requirements` immediately after parsing. If it fails, exit with `exit 1`.
+6. Implement `main()` with clear, modular helpers; rely on functions instead of sprawling inline code.
+7. End with `main "$@"` and ensure the script returns appropriate exit codes.
+
+---
+
+## Phase 4 · Validate, Format, and Hand Off
+1. **Self-check**
+   - Does the script run without arguments and show `usage`?
+   - Do missing env vars and programs produce the friendly errors described earlier?
+   - Do all branches respect `set -euo pipefail` (guard nullable variables with `${VAR:-}`)?
+
+2. **Formatting via `shfmt`**
+   - Detect availability: `if command -v shfmt >/dev/null 2>&1; then ... fi`
+   - Run `shfmt -i 2 -bn -ci -sr -w <path-to-script>` after writing the file.
+   - Mention in your response whether formatting ran or was skipped (and why).
+
+3. **Final Response Checklist**
+   - Provide the complete script in a fenced code block (label it `bash`).
+   - Summarize how requirements are enforced.
+   - If manual formatting was necessary (no `shfmt`), note it explicitly.
+   - Suggest any quick validation commands (dry runs, linting) if relevant.
+
+---
+
+## Reference Template
+Use this skeleton as a starting point and adapt each section based on the user's requirements:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Script: <name>
+# Purpose: <one-line description>
+# Requirements: <short summary of args/env/programs>
+
+REQUIRED_ARGS=("arg1" "arg2")
+REQUIRED_ENV_VARS=("ENV_VAR")
+REQUIRED_PROGRAMS=("curl" "jq")
+
+usage() {
+  cat <<'EOF'
+Usage: <script-name> <arg1> <arg2>
+
+Required arguments:
+  arg1   <describe>
+  arg2   <describe>
+
+Environment variables:
+  ENV_VAR   <describe>
+
+External tools:
+  curl, jq
+EOF
+}
+
+check_requirements() {
+  local -r provided_arg_count=$1
+  local missing=0
+
+  if [ ${#REQUIRED_ARGS[@]} -gt 0 ] && [ "$provided_arg_count" -lt ${#REQUIRED_ARGS[@]} ]; then
+    printf 'Error: Expected %s arguments (%s) but received %s.\n' \
+      ${#REQUIRED_ARGS[@]} "${REQUIRED_ARGS[*]}" "$provided_arg_count" >&2
+    missing=1
+  fi
+
+  local env_var
+  for env_var in "${REQUIRED_ENV_VARS[@]}"; do
+    if [ -z "${!env_var:-}" ]; then
+      printf 'Error: Missing required environment variable %s. Please set it before rerunning.\n' "$env_var" >&2
+      missing=1
+    fi
+  done
+
+  local program
+  for program in "${REQUIRED_PROGRAMS[@]}"; do
+    if ! command -v "$program" >/dev/null 2>&1; then
+      printf 'Error: Required program %s is not installed or not on PATH. Please install it first.\n' "$program" >&2
+      missing=1
+    fi
+  done
+
+  if [ "$missing" -ne 0 ]; then
+    printf '\n' >&2
+    usage >&2
+    return 1
+  fi
+}
+
+parse_args() {
+  # TODO: replace with real parsing
+  SOURCE=${1:-}
+  DEST=${2:-}
+}
+
+main() {
+  parse_args "$@"
+  check_requirements "$#" || exit 1
+
+  # TODO: script logic goes here
+  printf 'Running with source=%s dest=%s\n' "$SOURCE" "$DEST"
+}
+
+main "$@"
 ```
 
-If any check is skipped, include `Skipped check`, `Reason`, and `Risk` in the output.
+Update placeholders, replace `TODO` sections, and adjust arrays when a requirement does not apply (leave the array empty—do not delete it).
 
-### Stage 6: Final Response Contract
+---
 
-Always return:
-1. Generated script path
-2. Requirements traceability (`REQ-*` -> implementation)
-3. Validation results with rerun status
-4. Citations in standard format
-5. Any assumptions/fallbacks used
-
-## Canonical Example Flows
-
-### Example A: Full Flow (Template-first)
-
-1. Clarify missing data format and output expectations.
-2. Capture `REQ-*` table.
-3. Choose template-first path.
-4. Generate scaffold with `scripts/generate_script_template.sh`.
-5. Implement logic and map functions to `REQ-*`.
-6. Validate with `devops-skills:bash-script-validator` and rerun until clean.
-7. Return final summary with citations.
-
-### Example B: Constrained Environment Flow
-
-Use this when AskUserQuestion, validator skill, or `shellcheck` is unavailable:
-1. Ask clarifying questions in chat.
-2. Mark unresolved items as assumptions in `Captured Requirements`.
-3. Generate from template script or template file copy fallback.
-4. Run `bash -n` (and `sh -n` if relevant).
-5. If `shellcheck` is missing, report skip with risk and mitigation.
-
-## Done Criteria
-
-The task is complete only when all items are true:
-- Trigger matched and scope confirmed
-- `Captured Requirements` table exists with `REQ-*` IDs
-- Template-first vs custom decision is documented
-- Script is generated with deterministic structure
-- Validation executed and rerun policy applied
-- Any skipped checks include explicit reason and risk
-- Final response includes traceability, citations, and assumptions
-
-## Helper Scripts and Assets
-
-- Script generator: `scripts/generate_script_template.sh`
-- Deterministic CI gate: `scripts/run_ci_checks.sh`
-- Regression test suite: `scripts/test_generator.sh`
-- Standard scaffold: `assets/templates/standard-template.sh`
-- Example output style: `examples/log-analyzer.sh`
-
-## Reference Docs
-
-- `docs/bash-scripting-guide.md`
-- `docs/script-patterns.md`
-- `docs/generation-best-practices.md`
-- `docs/text-processing-guide.md`
-
-## External References
-
-- [GNU Bash Manual](https://www.gnu.org/software/bash/manual/bash.html)
-- [POSIX Shell Specification](https://pubs.opengroup.org/onlinepubs/9699919799/)
-- [ShellCheck](https://www.shellcheck.net/)
+## Quality Checklist Before Finishing
+- [ ] Script declares all requirement arrays and the `check_requirements` function
+- [ ] Error messages are friendly, specific, and routed to STDERR
+- [ ] Script avoids Bash ≥4 features and has been reviewed for 3.2 compatibility
+- [ ] `usage()` accurately reflects arguments, env vars, and dependencies
+- [ ] Formatting completed with `shfmt` (or explicitly noted why it was skipped)
+- [ ] Final response contains both summary guidance and the full script for copy/paste

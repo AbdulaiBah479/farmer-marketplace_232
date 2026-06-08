@@ -1,49 +1,58 @@
 ---
 name: your-skill-name
-description: >
-  Clear description of what this skill does and when to use it.
-  Use when the user asks about X or wants to work with Y.
-  Include specific trigger phrases so agents auto-load it correctly.
-  Max 1024 characters.
-
-# ── Agent Skills spec fields (https://agentskills.io/specification) ──────────
-# license: Apache-2.0                    # Recommended for open-source skills
-# compatibility: Claude Code, Cursor     # Only if skill has specific env requirements (max 500 chars)
-# metadata:                              # Custom key-value pairs
-#   author: grafana-labs
-# allowed-tools: Bash(git:*) Read        # Pre-approved tools (experimental)
-
-# ── Claude Code extension fields (not part of the spec) ──────────────────────
-# user-invocable: true                   # Show in / menu (default: true)
-# disable-model-invocation: false        # Prevent agent auto-loading (default: false)
+description: Brief description of what this Skill does and when to use it. This field is critical for Claude to discover when to invoke your skill.
+version: 1.0.0
 ---
 
-# Your Skill Title
+# Your Skill Name
 
 ## Overview
 
-Brief introduction to what this skill covers. Focus on Grafana-specific knowledge — don't explain
-general programming concepts the AI already knows well.
+Describe what this skill does and the problem it solves.
 
-## Key Concepts
+## Instructions
 
-Document the important concepts, patterns, or syntax. Code examples are more effective than prose.
+Provide clear, step-by-step guidance for Claude:
 
-```promql
-# Example
-rate(http_requests_total[5m])
+1. First step
+2. Second step
+3. Third step
+
+## Examples
+
+### Example 1: Basic Usage
+
+**Input:**
+```
+User request example
 ```
 
-## Common Patterns
+**Output:**
+```
+Expected output example
+```
 
-Describe the most frequently needed patterns or configurations.
+### Example 2: Advanced Usage
 
-## Best Practices
+**Input:**
+```
+More complex user request
+```
 
-- List recommendations specific to this skill's domain
-- Include common pitfalls to avoid
+**Output:**
+```
+Expected output for complex case
+```
 
----
+## Guidelines
 
-> **Keep SKILL.md under 500 lines.** Move detailed reference material to `references/` files and
-> link to them from here. See [agentskills.io/specification](https://agentskills.io/specification).
+- Best practice 1
+- Best practice 2
+- Constraint or limitation to be aware of
+
+## Additional Resources
+
+Reference additional files in your skill directory:
+- `reference.md` - Detailed documentation
+- `scripts/` - Executable helpers
+- `templates/` - Template files

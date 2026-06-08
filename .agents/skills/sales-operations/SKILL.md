@@ -1,310 +1,528 @@
 ---
 name: sales-operations
-description: >
-  Expert sales operations covering CRM management, sales analytics, territory
-  planning, compensation design, and process optimization. Use when building
-  pipeline reports, designing territories, setting quotas, creating comp plans,
-  or auditing CRM data quality.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: sales-success
-  updated: 2026-03-31
-  tags: [sales-ops, crm, analytics, territory, compensation]
+description: Эксперт Sales Ops. Используй для процессов продаж, CRM, forecasting и sales analytics.
 ---
-# Sales Operations
 
-The agent operates as an expert sales operations professional, delivering revenue infrastructure through analytics, territory design, quota modeling, compensation architecture, and process optimization.
+# Sales Operations Expert
 
-## Workflow
+Operational excellence in sales process design, systems administration, and analytics.
 
-1. **Assess current state** -- Audit CRM data quality, pipeline coverage, and rep performance baselines. Validate that required fields are populated and stage dates are current.
-2. **Analyze pipeline health** -- Calculate coverage ratios, stage conversion rates, velocity metrics, and deal aging. Flag bottlenecks where conversion drops below historical norms.
-3. **Design or refine territories** -- Balance territories by opportunity potential, workload, and geographic/industry alignment. Score accounts to inform assignment.
-4. **Model quotas** -- Run top-down (revenue target / capacity) and bottom-up (account potential analysis) models. Reconcile and risk-adjust.
-5. **Architect compensation** -- Structure OTE splits, commission tiers, accelerators, and SPIFs aligned to company stage and selling motion.
-6. **Build forecast** -- Categorize deals by confidence tier, apply probability weights, and surface the gap-to-quota with required win rates.
-7. **Validate and iterate** -- Cross-check outputs against historical actuals. Confirm territory balance, quota fairness, and forecast accuracy before publishing.
+## Sales Process Design
 
-## Sales Metrics Framework
+```yaml
+sales_stages:
+  stage_0_prospecting:
+    name: "Prospecting"
+    owner: "SDR"
+    probability: "0%"
+    activities:
+      - "Account research"
+      - "Contact identification"
+      - "Initial outreach"
+    exit_criteria:
+      - "Meeting scheduled"
+      - "Interest confirmed"
+    required_fields:
+      - "Lead source"
+      - "ICP score"
 
-**Activity Metrics:**
+  stage_1_discovery:
+    name: "Discovery"
+    owner: "AE"
+    probability: "10%"
+    activities:
+      - "Discovery call"
+      - "Needs assessment"
+      - "Stakeholder mapping"
+    exit_criteria:
+      - "Pain identified and quantified"
+      - "Budget range confirmed"
+      - "Timeline established"
+      - "Key stakeholders identified"
+    required_fields:
+      - "Primary contact"
+      - "Problem statement"
+      - "Budget range"
+      - "Expected close date"
 
-| Metric | Formula | Target |
-|--------|---------|--------|
-| Calls/Day | Total calls / Days | 50+ |
-| Meetings/Week | Total meetings / Weeks | 15+ |
-| Proposals/Month | Total proposals / Months | 8+ |
+  stage_2_qualification:
+    name: "Qualification"
+    owner: "AE"
+    probability: "25%"
+    activities:
+      - "MEDDIC completion"
+      - "Technical fit assessment"
+      - "Champion development"
+    exit_criteria:
+      - "MEDDIC 80% complete"
+      - "Technical requirements documented"
+      - "Champion identified"
+      - "Competition mapped"
+    required_fields:
+      - "Decision criteria"
+      - "Decision process"
+      - "Competitors"
+      - "Champion name"
 
-**Pipeline Metrics:**
+  stage_3_demo:
+    name: "Demo/Evaluation"
+    owner: "AE + SE"
+    probability: "50%"
+    activities:
+      - "Product demonstration"
+      - "Technical deep dive"
+      - "POC/trial if needed"
+    exit_criteria:
+      - "Demo completed successfully"
+      - "Technical approval received"
+      - "Positive feedback documented"
+    required_fields:
+      - "Demo date"
+      - "Attendees"
+      - "Technical requirements"
+      - "POC scope (if applicable)"
 
-| Metric | Formula | Target |
-|--------|---------|--------|
-| Pipeline Coverage | Pipeline / Quota | 3x+ |
-| Pipeline Velocity | Won Deals / Avg Cycle Time | -- |
-| Stage Conversion | Stage N+1 / Stage N | Varies |
+  stage_4_proposal:
+    name: "Proposal"
+    owner: "AE"
+    probability: "75%"
+    activities:
+      - "Proposal creation"
+      - "Pricing presentation"
+      - "Contract review"
+    exit_criteria:
+      - "Proposal delivered"
+      - "Pricing discussed"
+      - "No major objections"
+    required_fields:
+      - "Proposal sent date"
+      - "Proposed amount"
+      - "Contract terms"
+      - "Discount (if any)"
 
-**Outcome Metrics:**
+  stage_5_negotiation:
+    name: "Negotiation"
+    owner: "AE"
+    probability: "90%"
+    activities:
+      - "Term negotiation"
+      - "Legal review"
+      - "Final approvals"
+    exit_criteria:
+      - "Terms agreed"
+      - "Legal approved"
+      - "Signature pending"
+    required_fields:
+      - "Final contract"
+      - "Expected signature date"
+      - "Approvers"
 
-| Metric | Formula | Target |
-|--------|---------|--------|
-| Win Rate | Won / (Won + Lost) | 25%+ |
-| Average Deal Size | Revenue / Deals | Context-dependent |
-| Sales Cycle | Avg days to close | <60 |
-| Quota Attainment | Actual / Quota | 100%+ |
-
-## Account Scoring
-
-```python
-def score_account(account):
-    """Score accounts for territory assignment and prioritization."""
-    score = 0
-
-    # Company size (0-30 points)
-    if account['employees'] > 5000:
-        score += 30
-    elif account['employees'] > 1000:
-        score += 20
-    elif account['employees'] > 200:
-        score += 10
-
-    # Industry fit (0-25 points)
-    if account['industry'] in ['Technology', 'Finance']:
-        score += 25
-    elif account['industry'] in ['Healthcare', 'Manufacturing']:
-        score += 15
-
-    # Engagement (0-25 points)
-    if account['website_visits'] > 10:
-        score += 15
-    if account['content_downloads'] > 0:
-        score += 10
-
-    # Intent signals (0-20 points)
-    if account['intent_score'] > 80:
-        score += 20
-    elif account['intent_score'] > 50:
-        score += 10
-
-    return score  # Max 100; 70+ = Tier 1, 40-69 = Tier 2, <40 = Tier 3
+  stage_6_closed_won:
+    name: "Closed Won"
+    probability: "100%"
+    required_fields:
+      - "Signed contract"
+      - "Start date"
+      - "Implementation owner"
 ```
 
-## Territory Design
+## CRM Management
 
-The agent balances territories across three dimensions:
+```yaml
+crm_administration:
+  data_model:
+    objects:
+      lead:
+        purpose: "Pre-qualified prospects"
+        key_fields:
+          - "Name, Company, Email"
+          - "Lead source"
+          - "Lead score"
+          - "Status"
+        lifecycle: "Create → Qualify → Convert to Contact/Opp"
 
-- **Balance** -- Similar opportunity potential, comparable workload, fair distribution across reps.
-- **Coverage** -- Geographic proximity, industry alignment, existing account relationships.
-- **Growth** -- Room for expansion, career progression paths, untapped market potential.
+      contact:
+        purpose: "Individual people"
+        key_fields:
+          - "Name, Title, Email"
+          - "Account relationship"
+          - "Role in deals"
+        relationships: "Account, Opportunities"
 
-### Example: Territory Allocation Table
+      account:
+        purpose: "Companies"
+        key_fields:
+          - "Name, Industry, Size"
+          - "ICP score"
+          - "Owner"
+          - "Tier"
+        relationships: "Contacts, Opportunities"
 
-| Territory | Rep | Accounts | ARR Potential | Quota | Coverage |
-|-----------|-----|----------|---------------|-------|----------|
-| West Enterprise | Rep A | 45 | $3.0M | $2.7M | 111% |
-| East Mid-Market | Rep B | 62 | $2.8M | $2.4M | 117% |
-| Central (Ramping) | Rep C | 38 | $2.5M | $1.2M | 208% |
+      opportunity:
+        purpose: "Potential deals"
+        key_fields:
+          - "Name, Amount, Stage"
+          - "Close date"
+          - "Probability"
+          - "Owner"
+        relationships: "Account, Contacts, Products"
 
-## Quota Setting
+  data_hygiene:
+    rules:
+      duplicate_prevention:
+        - "Email uniqueness on Contacts"
+        - "Domain matching for Accounts"
+        - "Automated merge suggestions"
 
-### Top-Down Model
+      required_fields:
+        - "Enforce by stage"
+        - "Validation rules"
+        - "Picklist standardization"
 
-```
-Company Revenue Target: $50M
-  Growth Rate: 30%
-  Team Capacity: 20 reps
-  Average Quota: $2.5M
-  Adjustments: +/-20% based on territory potential
-```
+      data_quality:
+        - "Weekly duplicate reports"
+        - "Monthly enrichment updates"
+        - "Quarterly data audits"
 
-### Bottom-Up Model
+  automation_rules:
+    lead_routing:
+      criteria:
+        - "Territory (geography)"
+        - "Company size"
+        - "Lead score"
+        - "Round robin for overflow"
+      sla: "5 minutes to assignment"
 
-```
-Account Potential Analysis:
-  Existing accounts: $30M
-  Pipeline value: $15M
-  New logo potential: $10M
-  Total: $55M
-  Risk adjustment: -10%
-  Final: $49.5M
-```
+    opportunity_creation:
+      trigger: "Lead converted"
+      actions:
+        - "Create opportunity"
+        - "Copy MEDDIC fields"
+        - "Assign to AE"
+        - "Create tasks"
 
-The agent reconciles both models and flags divergence exceeding 10%.
-
-## Compensation Architecture
-
-```
-TOTAL ON-TARGET EARNINGS (OTE)
-  Base Salary: 50-60%
-  Variable: 40-50%
-    Commission: 80% of variable
-      New Business: 60%
-      Expansion: 40%
-    Bonus: 20% of variable
-      Quarterly accelerators
-      SPIFs
-
-COMMISSION RATE TIERS
-  0-50% quota:   0.5x rate
-  50-100% quota:  1.0x rate
-  100-150% quota: 1.5x rate
-  150%+ quota:    2.0x rate
+    stage_progression:
+      validation:
+        - "Required fields complete"
+        - "Exit criteria met"
+        - "Manager approval (if needed)"
 ```
 
 ## Forecasting
 
-### Forecast Categories
+```yaml
+forecast_methodology:
+  categories:
+    commit:
+      definition: "Will close this period"
+      confidence: ">90%"
+      criteria:
+        - "Verbal yes"
+        - "Contract in legal"
+        - "No blockers"
+      weighting: "100%"
 
-| Category | Definition | Weighting |
-|----------|------------|-----------|
-| Closed | Signed contract | 100% |
-| Commit | Verbal commit, high confidence | 90% |
-| Best Case | Strong opportunity, likely to close | 50% |
-| Pipeline | Active opportunity | 20% |
-| Upside | Early stage | 5% |
+    best_case:
+      definition: "Could close with effort"
+      confidence: "60-90%"
+      criteria:
+        - "Proposal accepted"
+        - "Negotiating terms"
+        - "Timeline aligned"
+      weighting: "70%"
 
-### Example: Weighted Forecast Output
+    pipeline:
+      definition: "May close this period"
+      confidence: "30-60%"
+      criteria:
+        - "Active evaluation"
+        - "Budget confirmed"
+        - "Possible timeline"
+      weighting: "40%"
 
-```
-Q4 Forecast - Week 8
-  Quota: $10M
+    upside:
+      definition: "Low probability this period"
+      confidence: "<30%"
+      criteria:
+        - "Early stage"
+        - "Timeline uncertain"
+        - "Budget not confirmed"
+      weighting: "10%"
 
-  Category       Deals    Amount     Weighted
-  Closed         12       $2.4M      $2.4M
-  Commit         8        $1.8M      $1.6M
-  Best Case      15       $3.2M      $1.6M
-  Pipeline       22       $4.5M      $0.9M
+  forecast_calculation:
+    weighted: |
+      Forecast =
+        (Commit × 100%) +
+        (Best Case × 70%) +
+        (Pipeline × 40%) +
+        (Upside × 10%)
 
-  Forecast (Closed + Commit): $4.0M
-  Upside (with Best Case): $5.6M
-  Gap to Quota: $6.0M
-  Required Win Rate on Pipeline: 35%
-```
+    coverage: |
+      Coverage Ratio = Total Pipeline / Quota
+      Target: 3-4x coverage
 
-## CRM Data Quality Checklist
+  forecast_cadence:
+    weekly:
+      - "Rep submits forecast (Monday)"
+      - "Manager review (Tuesday)"
+      - "Leadership call (Wednesday)"
+      - "Update actions (Thursday-Friday)"
 
-The agent validates these fields during every pipeline review:
+    monthly:
+      - "Week 1: Forecast accuracy review"
+      - "Week 2: Mid-month adjust"
+      - "Week 3: Final push planning"
+      - "Week 4: Close month"
 
-- [ ] Required fields populated on all open opportunities
-- [ ] Stage dates updated within the last 7 days
-- [ ] Close dates set to realistic future dates (no past-due)
-- [ ] Deal amounts reflect current pricing discussions
-- [ ] Contact roles assigned with at least one economic buyer
-- [ ] Next steps documented with specific actions and dates
-
-## Process Optimization
-
-### Sales Process Audit Framework
-
-```
-STAGE ANALYSIS
-  Average time in stage -> identify stalls
-  Conversion rate per stage -> find drop-off points
-  Drop-off reasons -> categorize and address
-
-ACTIVITY ANALYSIS
-  Activities per stage -> benchmark against top performers
-  Activity-to-outcome ratio -> measure efficiency
-  Time allocation -> optimize selling vs. admin time
-
-TOOL UTILIZATION
-  CRM adoption rate -> target 95%+ daily login
-  Feature usage -> identify underused capabilities
-  Data quality score -> track completeness over time
-  Automation opportunities -> reduce manual entry
-```
-
-## Scripts
-
-```bash
-# Pipeline analyzer
-python scripts/pipeline_analyzer.py --data opportunities.csv
-
-# Territory optimizer
-python scripts/territory_optimizer.py --accounts accounts.csv --reps 10
-
-# Quota calculator
-python scripts/quota_calculator.py --target 50000000 --reps team.csv
-
-# Forecast reporter
-python scripts/forecast_report.py --quarter Q4 --output report.html
+  accuracy_metrics:
+    calculation: "Actual / Forecast"
+    targets:
+      acceptable: "85-115%"
+      good: "90-110%"
+      excellent: "95-105%"
+    tracking: "Month over month trend"
 ```
 
-## Troubleshooting
+## Pipeline Analytics
 
-| Problem | Root Cause | Resolution |
-|---------|-----------|------------|
-| Forecast accuracy below 70% | Inconsistent stage definitions; reps over-committing; lack of weighted methodology | Enforce strict stage entry/exit criteria. Apply probability weights by category (Commit 90%, Best Case 50%, Pipeline 20%). Review commit deals individually in weekly forecast calls. Compare rolling 4-quarter actuals to calibrate weights. |
-| Territory imbalance causing rep attrition | Uneven account distribution; potential-to-quota mismatch exceeding 20% | Re-score accounts quarterly using the scoring model. Target less than 15% variance in potential-to-quota ratio across territories. Review territory balance monthly in high-growth periods. |
-| CRM data quality below 80% completeness | Insufficient enforcement; no automated validation; rep adoption gaps | Implement required field validation at stage transitions. Run weekly data quality reports. Tie CRM hygiene to variable compensation (5-10% of bonus). Target 95%+ daily login rate. |
-| Quota attainment below 60% team-wide | Quotas set too aggressively; insufficient pipeline; ramp time underestimated | Reconcile top-down and bottom-up models. Flag divergence exceeding 10%. Risk-adjust for ramp (ramping reps at 50-75% quota). Ensure 3-4x pipeline coverage at quarter start. |
-| Comp plan driving wrong behaviors | Misaligned incentives; rewarding volume over quality; no accelerators | Audit comp plans against strategic objectives. Ensure accelerators kick in at 100% attainment. Weight new business vs. expansion per GTM strategy. Add SPIFs for strategic priorities. |
-| Pipeline coverage drops mid-quarter | Insufficient lead flow; deals pushed or lost faster than replaced | Alert AEs when individual coverage drops below 2.5x. Coordinate with Marketing on lead generation campaigns. Implement minimum weekly prospecting activity requirements. |
-| Stage conversion rates declining | Process bottleneck; missing enablement; competitive pressure | Identify the specific stage with the highest drop-off. Compare top performer conversion rates to team average. Deploy targeted training on the bottleneck stage. Review competitive win/loss data for that stage. |
+```yaml
+pipeline_metrics:
+  volume:
+    total_pipeline: "Sum of all open opportunities"
+    new_pipeline: "Created this period"
+    pipeline_growth: "(Current - Previous) / Previous"
 
-## Success Criteria
+  velocity:
+    formula: |
+      (# Opps × Win Rate × Avg Deal Size) / Sales Cycle
+    components:
+      opportunities: "Count of qualified opps"
+      win_rate: "Won / (Won + Lost)"
+      deal_size: "Average closed won"
+      cycle_time: "Days from creation to close"
 
-| Metric | Target | Measurement Method |
-|--------|--------|--------------------|
-| Forecast accuracy | Within 10% of actual quarterly | Abs(Weighted Forecast - Actual) / Actual |
-| Pipeline coverage ratio | 3-4x quota at quarter start | Total pipeline value / Team quota |
-| CRM data completeness | 95%+ required fields populated | Weekly automated data quality audit |
-| Territory balance | Less than 15% variance in potential-to-quota | Standard deviation of potential-to-quota ratio across territories |
-| Quota attainment distribution | 60%+ of reps at or above quota | Reps at 100%+ / Total ramped reps |
-| Stage conversion rates | Improving or stable QoQ | Stage N+1 entries / Stage N entries per period |
-| Sales cycle length | Trending downward or stable | Average days from opportunity creation to close |
-| Ramp time to productivity | Under 6 months for new hires | Months until new rep reaches 75% of quota run rate |
-| Process adoption | 90%+ compliance with defined process | Audit score from monthly process compliance review |
+  conversion:
+    stage_conversion: "Moved to next stage / Started in stage"
+    lead_to_opp: "Opportunities / Leads"
+    opp_to_won: "Won / All closed"
 
-## Scope & Limitations
+  quality:
+    average_deal_size: "Sum(Amount) / Count(Won)"
+    discount_rate: "Average discount given"
+    sales_cycle: "Average days to close"
 
-**In Scope:**
-- CRM administration, data quality management, and process enforcement
-- Pipeline analytics: coverage ratios, stage conversion, velocity metrics, deal aging
-- Territory design, account scoring, and balanced assignment optimization
-- Quota modeling: top-down, bottom-up, and reconciliation approaches
-- Compensation architecture: OTE splits, commission tiers, accelerators, SPIFs
-- Forecast methodology: weighted pipeline, category-based, rolling forecasts
-- Sales process audit: stage analysis, activity benchmarking, tool utilization
-- Reporting infrastructure and dashboard design
+pipeline_analysis:
+  by_segment:
+    - "By rep/team"
+    - "By territory"
+    - "By product"
+    - "By source"
 
-**Out of Scope:**
-- Individual deal strategy, qualification, and closing (see account-executive)
-- Technical demos, RFP responses, and POC management (see sales-engineer)
-- Post-sale customer management and retention (see customer-success-manager)
-- Enterprise solution architecture and integration design (see solutions-architect)
-- Marketing attribution modeling and campaign ROI (see marketing/campaign-analytics)
-- Financial modeling beyond sales compensation (see finance)
+  trending:
+    - "Pipeline created over time"
+    - "Stage velocity trends"
+    - "Win rate by cohort"
+    - "Deal size trends"
 
-**Limitations:**
-- Territory optimization uses heuristic scoring, not mathematical optimization solvers; results are directional, not globally optimal
-- Quota models require accurate historical data; garbage in, garbage out
-- Forecast accuracy benchmarks assume consistent CRM hygiene; accuracy degrades with poor data quality
-- Scripts process CSV/JSON exports only; no direct CRM API connectivity
-- Compensation modeling does not account for tax implications or local labor law constraints
+  health_checks:
+    - "Aging deals (no activity 14+ days)"
+    - "Stalled opportunities"
+    - "Close date slippage"
+    - "Coverage by segment"
+```
 
-## Integration Points
+## Deal Desk Operations
 
-| Integration | Direction | Purpose | Handoff Artifact |
-|-------------|-----------|---------|-----------------|
-| **Account Executive** | Ops -> AE | Territory assignments, quota targets, pipeline reports, forecast templates | Territory map, quota letter, pipeline dashboard, forecast submission form |
-| **Sales Engineer** | Ops -> SE | Activity tracking, demo conversion metrics, technical win/loss data | SE activity reports, technical evaluation pipeline |
-| **Customer Success Manager** | Ops -> CSM | Renewal pipeline tracking, expansion revenue attribution, churn reporting | Renewal forecast rollup, NRR reports, churn analysis |
-| **Marketing** | Bidirectional | Lead attribution, MQL-to-SQL conversion, campaign ROI, pipeline sourcing | Attribution reports, lead routing rules, campaign pipeline reports |
-| **Finance** | Ops -> Finance | Revenue forecasting, commission calculations, quota-to-capacity planning | Forecast submissions, commission statements, headcount models |
-| **Revenue Operations** | Bidirectional | Cross-functional GTM metrics, funnel analytics, ARR reporting | Unified revenue dashboard, GTM efficiency metrics |
-| **HR** | Ops -> HR | Headcount planning, ramp modeling, performance data for reviews | Ramp timelines, quota attainment reports, territory capacity models |
+```yaml
+deal_desk:
+  approval_matrix:
+    standard_deal:
+      criteria: "Within guidelines"
+      approver: "AE manager"
+      turnaround: "Same day"
 
-**Workflow Handoff Protocol:**
-1. Sales Ops publishes territory assignments and quota letters at least 2 weeks before quarter start
-2. Sales Ops delivers weekly pipeline report to sales leadership every Monday by 10 AM
-3. Sales Ops collects forecast submissions from AEs every Friday and publishes rolled-up forecast by Monday
-4. Sales Ops runs monthly territory health review and flags imbalances exceeding 15% variance
+    non_standard_pricing:
+      criteria: "10-20% discount"
+      approver: "Sales Director"
+      turnaround: "24 hours"
 
-## Reference Materials
+    strategic_deal:
+      criteria: ">20% discount or custom terms"
+      approver: "VP Sales + Finance"
+      turnaround: "48 hours"
 
-- `references/analytics.md` -- Sales analytics guide
-- `references/territory.md` -- Territory planning
-- `references/compensation.md` -- Comp design principles
-- `references/forecasting.md` -- Forecasting methodology
+    enterprise_deal:
+      criteria: ">$100K or multi-year"
+      approver: "CRO"
+      turnaround: "48-72 hours"
+
+  pricing_guidelines:
+    discount_authority:
+      ae: "Up to 10%"
+      manager: "Up to 15%"
+      director: "Up to 20%"
+      vp: "Up to 25%"
+      cro: "Unlimited"
+
+    discount_justification:
+      required_for:
+        - "Any discount >10%"
+        - "Custom payment terms"
+        - "Multi-year deals"
+      documentation:
+        - "Competitive pressure"
+        - "Strategic value"
+        - "Reference potential"
+
+  contract_management:
+    templates:
+      - "Standard subscription"
+      - "Enterprise license"
+      - "Professional services"
+      - "NDA"
+      - "MSA + Order Form"
+
+    legal_review:
+      standard: "Pre-approved, no review"
+      modified: "1-2 business days"
+      custom: "3-5 business days"
+
+    signature_process:
+      - "DocuSign/PandaDoc"
+      - "Automated routing"
+      - "Counter-signature SLA"
+      - "Contract storage"
+```
+
+## Performance Analytics
+
+```yaml
+sales_dashboards:
+  executive:
+    metrics:
+      - "Revenue vs target"
+      - "Pipeline coverage"
+      - "Win rate trend"
+      - "Forecast accuracy"
+      - "Headcount vs plan"
+    refresh: "Daily"
+
+  manager:
+    metrics:
+      - "Team attainment"
+      - "Rep pipeline health"
+      - "Activity metrics"
+      - "Deal progression"
+      - "Coaching opportunities"
+    refresh: "Daily"
+
+  individual:
+    metrics:
+      - "Personal attainment"
+      - "Pipeline status"
+      - "Activity tracking"
+      - "Deal stages"
+      - "Commission forecast"
+    refresh: "Real-time"
+
+rep_performance:
+  quota_attainment:
+    calculation: "Closed Won / Quota"
+    targets:
+      ramp: "50% (months 1-3)"
+      full: "100%"
+      stretch: "120%"
+
+  activity_metrics:
+    calls: "Dials per day"
+    meetings: "Meetings held"
+    proposals: "Proposals sent"
+    demos: "Demos delivered"
+
+  quality_metrics:
+    win_rate: "Won / All closed"
+    avg_deal_size: "Revenue / Won deals"
+    sales_cycle: "Days to close"
+    discount_rate: "Average discount"
+
+  leading_indicators:
+    pipeline_coverage: "Pipeline / Remaining quota"
+    opportunity_creation: "New opps per month"
+    stage_progression: "Velocity through stages"
+```
+
+## Territory & Quota
+
+```yaml
+territory_management:
+  models:
+    geographic:
+      basis: "Region, country, state"
+      pros: "Simple, clear ownership"
+      cons: "Uneven potential"
+
+    named_accounts:
+      basis: "Specific account list"
+      pros: "Focus on key accounts"
+      cons: "Coverage gaps"
+
+    segment:
+      basis: "Company size, industry"
+      pros: "Specialization"
+      cons: "Complexity"
+
+    hybrid:
+      basis: "Combination of above"
+      pros: "Balanced coverage"
+      cons: "Administration overhead"
+
+  balancing:
+    factors:
+      - "Total addressable market"
+      - "Account potential"
+      - "Historical performance"
+      - "Rep capacity"
+      - "Travel requirements"
+
+    metrics:
+      - "Accounts per rep"
+      - "Potential revenue"
+      - "Win rate by territory"
+
+quota_setting:
+  methodology:
+    bottom_up:
+      calculation: "Sum of rep quotas"
+      basis: "Territory potential"
+
+    top_down:
+      calculation: "Company target / Reps"
+      basis: "Growth objectives"
+
+    blended:
+      calculation: "Average of both"
+      adjustments: "Territory factors"
+
+  factors:
+    - "Historical performance"
+    - "Territory potential"
+    - "Market growth"
+    - "Product launches"
+    - "Ramp time"
+    - "Seasonality"
+
+  quota_types:
+    bookings: "New ARR"
+    revenue: "Recognized revenue"
+    pipeline: "Pipeline generated"
+    activity: "Meetings, demos"
+```
+
+## Лучшие практики
+
+1. **Process before tools** — определи процесс, потом автоматизируй
+2. **Data quality first** — мусор на входе = мусор на выходе
+3. **Inspect what you expect** — регулярные ревью pipeline
+4. **Forecast accuracy focus** — точность > оптимизм
+5. **Enable, don't police** — помогай продавать, не усложняй
+6. **Continuous improvement** — итерации на основе данных

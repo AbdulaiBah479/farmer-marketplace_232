@@ -1,990 +1,433 @@
 ---
 name: options-strategy-advisor
-description: Options trading strategy analysis and simulation tool. Provides theoretical pricing using Black-Scholes model, Greeks calculation, strategy P/L simulation, and risk management guidance. Use when user requests options strategy analysis, covered calls, protective puts, spreads, iron condors, earnings plays, or options risk management. Includes volatility analysis, position sizing, and earnings-based strategy recommendations. Educational focus with practical trade simulation.
+description: >
+  Options strategy analysis for Indian F&O markets (NSE). Use when user requests
+  options strategy recommendations, P/L analysis, Greeks calculation, risk management,
+  or F&O strategy planning for Nifty, Bank Nifty, or stock options.
 ---
 
-# Options Strategy Advisor
+# Options Strategy Advisor — Indian F&O Markets (NSE)
 
 ## Overview
 
-This skill provides comprehensive options strategy analysis and education using theoretical pricing models. It helps traders understand, analyze, and simulate options strategies without requiring real-time market data subscriptions.
+This skill provides comprehensive options strategy analysis tailored to the Indian
+Futures & Options market on the National Stock Exchange (NSE). It covers strategy
+selection, live data retrieval, margin estimation, profit/loss simulation, Greeks
+analysis, and risk management — all adapted for the specific characteristics of
+Indian F&O trading.
 
-**Core Capabilities:**
-- **Black-Scholes Pricing**: Theoretical option prices and Greeks calculation
-- **Strategy Simulation**: P/L analysis for major options strategies
-- **Earnings Strategies**: Pre-earnings volatility plays integrated with Earnings Calendar
-- **Risk Management**: Position sizing, Greeks exposure, max loss/profit analysis
-- **Educational Focus**: Detailed explanations of strategies and risk metrics
+---
 
-**Data Sources:**
-- FMP API: Stock prices, historical volatility, dividends, earnings dates
-- User Input: Implied volatility (IV), risk-free rate
-- Theoretical Models: Black-Scholes for pricing and Greeks
+## Indian F&O Market Characteristics
 
-## Prerequisites
+### Exercise Style
+- **European-style exercise only.** Options on NSE can only be exercised at expiry,
+  not before. This simplifies pricing (Black-Scholes applies directly without
+  early-exercise adjustments) and means time value is always fully captured by
+  the seller until expiry.
 
-**Required:**
-- Python 3.8+ with `numpy`, `scipy`, `requests`
+### Expiry Schedule
+| Underlying   | Expiry Day  | Expiry Type          |
+|--------------|-------------|----------------------|
+| NIFTY        | Thursday    | Weekly + Monthly     |
+| BANK NIFTY   | Wednesday   | Weekly + Monthly     |
+| FINNIFTY     | Tuesday     | Weekly + Monthly     |
+| SENSEX (BSE) | Friday      | Weekly + Monthly     |
+| Stock Options | Last Thursday | Monthly only       |
 
-**Optional:**
-- FMP API key (for real-time stock prices and historical volatility)
-  - Set via `FMP_API_KEY` environment variable or `--api-key` argument
-  - Without API key: Use manual inputs for stock price and volatility
+- Monthly expiry is the last Thursday of the month (or preceding trading day if
+  Thursday is a holiday).
+- Weekly expiries are available only for index options, not individual stocks.
 
-**Installation:**
-```bash
-pip install numpy scipy requests
-```
+### Lot Sizes
+Lot sizes are periodically revised by the exchanges. Always verify current lot
+sizes using the Groww MCP tool `fno_mcx_contracts_search_tool` before calculating
+margin or position size. Recent reference values:
+- NIFTY: 75 (recently changed — confirm via MCP)
+- BANK NIFTY: 15 (recently changed — confirm via MCP)
+- FINNIFTY: 25
+- Stock options: Varies by stock (check contract specifications)
 
-**Quick Start Examples:**
-```bash
-# Basic call option pricing (no API key needed)
-python3 scripts/black_scholes.py
+### Margin Requirements
+SEBI mandates the following margin components for F&O:
+1. **SPAN Margin** — Risk-based margin calculated by the exchange clearing corporation.
+2. **Exposure Margin** — Additional margin over SPAN for market-wide risk.
+3. **Peak Margin** — Intraday margin snapshots; brokers must collect at least the
+   peak margin observed during the day.
 
-# With FMP API key for real-time data
-python3 scripts/black_scholes.py --ticker AAPL --api-key $FMP_API_KEY
+Use `calculate_fno_margin` to get exact margin for any trade before placing it.
 
-# Custom option parameters
-python3 scripts/black_scholes.py --stock-price 180 --strike 185 --days 30 --volatility 0.25
+### Transaction Costs
+- **STT (Securities Transaction Tax):** Levied on the sell side of options at
+  0.0625% of the intrinsic value on exercise (for ITM options at expiry). For
+  futures, STT is 0.0125% on sell side.
+- **Brokerage:** Varies by broker (Groww charges per-order flat fees).
+- **Exchange charges, GST, SEBI turnover fee, stamp duty** also apply.
 
-# Put option analysis
-python3 scripts/black_scholes.py --stock-price 180 --strike 175 --days 30 --option-type put
-```
+### F&O Ban Mechanism
+When the market-wide position limit (MWPL) for a stock's F&O contracts exceeds
+95%, SEBI places the stock under an F&O ban. During the ban:
+- No new positions can be initiated.
+- Only squaring off (closing) of existing positions is allowed.
+- The ban is lifted when MWPL drops below 80%.
 
-## When to Use This Skill
+---
 
-Use this skill when:
-- User asks about options strategies ("What's a covered call?", "How does an iron condor work?")
-- User wants to simulate strategy P/L ("What's my max profit on a bull call spread?")
-- User needs Greeks analysis ("What's my delta exposure?")
-- User asks about earnings strategies ("Should I buy a straddle before earnings?")
-- User wants to compare strategies ("Covered call vs protective put?")
-- User needs position sizing guidance ("How many contracts should I trade?")
-- User asks about volatility ("Is IV high right now?")
+## Broker MCP Tool Integration
 
-Example requests:
-- "Analyze a covered call on AAPL"
-- "What's the P/L on a $100/$105 bull call spread on MSFT?"
-- "Should I trade a straddle before NVDA earnings?"
-- "Calculate Greeks for my iron condor position"
-- "Compare protective put vs covered call for downside protection"
+This skill uses broker MCP tools for live market data and execution support. Use whichever broker is connected (Groww or Zerodha Kite). Always prefer live data over assumptions.
+
+### Groww MCP Tools (if connected)
+
+| Tool | Purpose |
+|------|---------|
+| `get_ltp` (segment=FNO, query_type=fno) | Live option/futures prices and OI |
+| `get_quotes_and_depth` (segment=FNO) | Bid/ask spreads and market depth |
+| `fno_mcx_contracts_search_tool` | Search F&O contracts, lot sizes, expiries |
+| `fetch_historical_candle_data` (segment=FNO) | Historical option price data |
+| `fetch_curated_fno` | F&O gainers, losers, most traded |
+| `get_open_interest_analysis` | OI structure, PCR, support/resistance |
+| `get_greeks_for_fno_contract` | Live Greeks for specific contracts |
+| `get_greeks_for_fno_symbol` | Greeks for all contracts of an underlying |
+| `get_atm_straddle_chart` | ATM straddle premium analysis |
+| `get_payoff_chart_steps` | Payoff diagram generation instructions |
+| `calculate_fno_margin` | Margin requirement calculation |
+| `get_available_margin_details` | User's available margin |
+| `resolve_market_time_and_calendar` | Market hours and trading calendar |
+
+### Zerodha Kite MCP Tools (if connected)
+
+| Tool | Purpose |
+|------|---------|
+| `get_ltp` | Last traded price for F&O instruments |
+| `get_quotes` | Real-time quotes with bid/ask depth |
+| `get_ohlc` | OHLC data for options/futures contracts |
+| `get_historical_data` | Historical candle data for F&O |
+| `search_instruments` | Search for F&O contracts by name/expiry |
+| `get_margins` | Account margins and available funds |
+| `get_positions` | Current F&O positions |
+| `get_orders` / `get_order_history` | Order status and execution details |
+| `place_order` / `modify_order` / `cancel_order` | Order management |
+| `place_gtt_order` / `get_gtts` | GTT order management |
+
+### Tool Equivalence Map
+
+| Action | Groww MCP | Zerodha Kite MCP |
+|--------|-----------|------------------|
+| Live price | `get_ltp` | `get_ltp` |
+| Market depth | `get_quotes_and_depth` | `get_quotes` |
+| Historical data | `fetch_historical_candle_data` | `get_historical_data` |
+| Search contracts | `fno_mcx_contracts_search_tool` | `search_instruments` |
+| Margin check | `calculate_fno_margin` / `get_available_margin_details` | `get_margins` |
+| Positions | `get_my_trading_positions_today` | `get_positions` |
+| Place orders | `place_fno_order` | `place_order` |
+
+---
 
 ## Supported Strategies
 
 ### Income Strategies
-1. **Covered Call** - Own stock, sell call (generate income, cap upside)
-2. **Cash-Secured Put** - Sell put with cash backing (collect premium, willing to buy stock)
-3. **Poor Man's Covered Call** - LEAPS call + short near-term call (capital efficient)
+1. **Covered Call** — Long underlying futures + Short OTM Call
+   - Objective: Generate income on existing long position.
+   - Best when: Mildly bullish, want to earn premium.
+   - Indian note: Use futures as underlying (no direct stock delivery for covered calls in F&O segment).
+
+2. **Cash-Secured Put** — Short OTM Put (with margin set aside)
+   - Objective: Earn premium while waiting to buy at a lower price.
+   - Best when: Bullish on underlying, willing to take delivery equivalent.
+   - Indian note: Physical settlement applies for stock options (ITM at expiry).
 
 ### Protection Strategies
-4. **Protective Put** - Own stock, buy put (insurance, limited downside)
-5. **Collar** - Own stock, sell call + buy put (limited upside/downside)
+3. **Protective Put** — Long underlying + Long Put
+   - Objective: Insure existing long position against downside.
+   - Best when: Want to cap losses while maintaining upside.
+
+4. **Collar** — Long underlying + Long Put + Short Call
+   - Objective: Cap both upside and downside. Zero-cost collar if premiums offset.
+   - Best when: Want protection without paying net premium.
 
 ### Directional Strategies
-6. **Bull Call Spread** - Buy lower strike call, sell higher strike call (limited risk/reward bullish)
-7. **Bull Put Spread** - Sell higher strike put, buy lower strike put (credit spread, bullish)
-8. **Bear Call Spread** - Sell lower strike call, buy higher strike call (credit spread, bearish)
-9. **Bear Put Spread** - Buy higher strike put, sell lower strike put (limited risk/reward bearish)
+5. **Bull Call Spread** — Long lower-strike Call + Short higher-strike Call
+   - Objective: Limited-risk bullish bet.
+   - Best when: Moderately bullish, want defined risk.
+
+6. **Bear Put Spread** — Long higher-strike Put + Short lower-strike Put
+   - Objective: Limited-risk bearish bet.
+   - Best when: Moderately bearish, want defined risk.
+
+7. **Bull Put Spread** — Short higher-strike Put + Long lower-strike Put
+   - Objective: Credit spread, profit if price stays above short strike.
+   - Best when: Mildly bullish, want to collect premium.
+
+8. **Bear Call Spread** — Short lower-strike Call + Long higher-strike Call
+   - Objective: Credit spread, profit if price stays below short strike.
+   - Best when: Mildly bearish, want to collect premium.
 
 ### Volatility Strategies
-10. **Long Straddle** - Buy ATM call + ATM put (profit from big move either direction)
-11. **Long Strangle** - Buy OTM call + OTM put (cheaper than straddle, bigger move needed)
-12. **Short Straddle** - Sell ATM call + ATM put (profit from no movement, unlimited risk)
-13. **Short Strangle** - Sell OTM call + OTM put (profit from no movement, wider range)
+9. **Long Straddle** — Long ATM Call + Long ATM Put
+   - Objective: Profit from large move in either direction.
+   - Best when: Expecting high volatility (e.g., pre-budget, RBI policy, earnings).
+   - Indian note: Popular before Union Budget day, election results, RBI MPC.
+
+10. **Short Straddle** — Short ATM Call + Short ATM Put
+    - Objective: Profit from time decay when expecting range-bound movement.
+    - Best when: Low implied volatility expected, range-bound market.
+    - Indian note: Very popular on weekly expiry day for Nifty/Bank Nifty.
+
+11. **Long Strangle** — Long OTM Call + Long OTM Put
+    - Objective: Cheaper alternative to straddle for volatility plays.
+    - Best when: Expecting very large move, want lower cost than straddle.
+
+12. **Short Strangle** — Short OTM Call + Short OTM Put
+    - Objective: Wider profit zone than short straddle, less premium received.
+    - Best when: Expecting range-bound, comfortable with wider risk.
 
 ### Range-Bound Strategies
-14. **Iron Condor** - Bull put spread + bear call spread (profit from range-bound movement)
-15. **Iron Butterfly** - Sell ATM straddle, buy OTM strangle (profit from tight range)
+13. **Iron Condor** — Bull Put Spread + Bear Call Spread
+    - Objective: Defined-risk range-bound strategy.
+    - Best when: Expecting low volatility, want defined max loss.
+    - Indian note: Very popular for weekly Nifty expiry plays.
+
+14. **Iron Butterfly** — Short ATM Call + Short ATM Put + Long OTM Call + Long OTM Put
+    - Objective: Defined-risk version of short straddle.
+    - Best when: Expecting pin at a specific strike (max pain).
 
 ### Advanced Strategies
-16. **Calendar Spread** - Sell near-term option, buy longer-term option (profit from time decay)
-17. **Diagonal Spread** - Calendar spread with different strikes (directional + time decay)
-18. **Ratio Spread** - Unbalanced spread (more contracts on one leg)
-
-## Analysis Workflow
-
-### Step 1: Gather Input Data
-
-**Required from User:**
-- Ticker symbol
-- Strategy type
-- Strike prices
-- Expiration date(s)
-- Position size (number of contracts)
-
-**Optional from User:**
-- Implied Volatility (IV) - if not provided, use Historical Volatility (HV)
-- Risk-free rate - default to current 3-month T-bill rate (~5.3% as of 2025)
-
-**Fetched from FMP API:**
-- Current stock price
-- Historical prices (for HV calculation)
-- Dividend yield
-- Upcoming earnings date (for earnings strategies)
-
-**Example User Input:**
-```
-Ticker: AAPL
-Strategy: Bull Call Spread
-Long Strike: $180
-Short Strike: $185
-Expiration: 30 days
-Contracts: 10
-IV: 25% (or use HV if not provided)
-```
-
-### Step 2: Calculate Historical Volatility (if IV not provided)
-
-**Objective:** Estimate volatility from historical price movements.
-
-**Method:**
-```python
-# Fetch 90 days of price data
-prices = get_historical_prices("AAPL", days=90)
-
-# Calculate daily returns
-returns = np.log(prices / prices.shift(1))
-
-# Annualized volatility
-HV = returns.std() * np.sqrt(252)  # 252 trading days
-```
-
-**Output:**
-- Historical Volatility (annualized percentage)
-- Note to user: "HV = 24.5%, consider using current market IV for more accuracy"
-
-**User Can Override:**
-- Provide IV from broker platform (ThinkorSwim, TastyTrade, etc.)
-- Script accepts `--iv 28.0` parameter
-
-### Step 3: Price Options Using Black-Scholes
-
-**Black-Scholes Model:**
-
-For European-style options:
-```
-Call Price = S * N(d1) - K * e^(-r*T) * N(d2)
-Put Price = K * e^(-r*T) * N(-d2) - S * N(-d1)
-
-Where:
-d1 = [ln(S/K) + (r + σ²/2) * T] / (σ * √T)
-d2 = d1 - σ * √T
-
-S = Current stock price
-K = Strike price
-r = Risk-free rate
-T = Time to expiration (years)
-σ = Volatility (IV or HV)
-N() = Cumulative standard normal distribution
-```
-
-**Adjustments:**
-- Subtract present value of dividends from S for calls
-- American options: Use approximation or note "European pricing, may undervalue American options"
-
-**Python Implementation:**
-```python
-from scipy.stats import norm
-import numpy as np
-
-def black_scholes_call(S, K, T, r, sigma, q=0):
-    """
-    S: Stock price
-    K: Strike price
-    T: Time to expiration (years)
-    r: Risk-free rate
-    sigma: Volatility
-    q: Dividend yield
-    """
-    d1 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
-    d2 = d1 - sigma*np.sqrt(T)
-
-    call_price = S*np.exp(-q*T)*norm.cdf(d1) - K*np.exp(-r*T)*norm.cdf(d2)
-    return call_price
-
-def black_scholes_put(S, K, T, r, sigma, q=0):
-    d1 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
-    d2 = d1 - sigma*np.sqrt(T)
-
-    put_price = K*np.exp(-r*T)*norm.cdf(-d2) - S*np.exp(-q*T)*norm.cdf(-d1)
-    return put_price
-```
-
-**Output for Each Option Leg:**
-- Theoretical price
-- Note: "Market price may differ due to bid-ask spread and American vs European pricing"
-
-### Step 4: Calculate Greeks
-
-**The Greeks** measure option price sensitivity to various factors:
-
-**Delta (Δ):** Change in option price per $1 change in stock price
-```python
-def delta_call(S, K, T, r, sigma, q=0):
-    d1 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
-    return np.exp(-q*T) * norm.cdf(d1)
-
-def delta_put(S, K, T, r, sigma, q=0):
-    d1 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
-    return np.exp(-q*T) * (norm.cdf(d1) - 1)
-```
-
-**Gamma (Γ):** Change in delta per $1 change in stock price
-```python
-def gamma(S, K, T, r, sigma, q=0):
-    d1 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
-    return np.exp(-q*T) * norm.pdf(d1) / (S * sigma * np.sqrt(T))
-```
-
-**Theta (Θ):** Change in option price per day (time decay)
-```python
-def theta_call(S, K, T, r, sigma, q=0):
-    d1 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
-    d2 = d1 - sigma*np.sqrt(T)
-
-    theta = (-S*norm.pdf(d1)*sigma*np.exp(-q*T)/(2*np.sqrt(T))
-             - r*K*np.exp(-r*T)*norm.cdf(d2)
-             + q*S*norm.cdf(d1)*np.exp(-q*T))
-
-    return theta / 365  # Per day
-```
-
-**Vega (ν):** Change in option price per 1% change in volatility
-```python
-def vega(S, K, T, r, sigma, q=0):
-    d1 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
-    return S * np.exp(-q*T) * norm.pdf(d1) * np.sqrt(T) / 100  # Per 1%
-```
-
-**Rho (ρ):** Change in option price per 1% change in interest rate
-```python
-def rho_call(S, K, T, r, sigma, q=0):
-    d2 = (np.log(S/K) + (r - q + 0.5*sigma**2)*T) / (sigma*np.sqrt(T)) - sigma*np.sqrt(T)
-    return K * T * np.exp(-r*T) * norm.cdf(d2) / 100  # Per 1%
-```
-
-**Position Greeks:**
-
-For a strategy with multiple legs, sum Greeks across all legs:
-```python
-# Example: Bull Call Spread
-# Long 1x $180 call
-# Short 1x $185 call
-
-delta_position = (1 * delta_long) + (-1 * delta_short)
-gamma_position = (1 * gamma_long) + (-1 * gamma_short)
-theta_position = (1 * theta_long) + (-1 * theta_short)
-vega_position = (1 * vega_long) + (-1 * vega_short)
-```
-
-**Greeks Interpretation:**
-
-| Greek | Meaning | Example |
-|-------|---------|---------|
-| **Delta** | Directional exposure | Δ = 0.50 → $50 profit if stock +$1 |
-| **Gamma** | Delta acceleration | Γ = 0.05 → Delta increases by 0.05 if stock +$1 |
-| **Theta** | Daily time decay | Θ = -$5 → Lose $5/day from time passing |
-| **Vega** | Volatility sensitivity | ν = $10 → Gain $10 if IV increases 1% |
-| **Rho** | Interest rate sensitivity | ρ = $2 → Gain $2 if rates increase 1% |
-
-### Step 5: Simulate Strategy P/L
-
-**Objective:** Calculate profit/loss at various stock prices at expiration.
-
-**Method:**
-
-Generate stock price range (e.g., ±30% from current price):
-```python
-current_price = 180
-price_range = np.linspace(current_price * 0.7, current_price * 1.3, 100)
-```
-
-For each price point, calculate P/L:
-```python
-def calculate_pnl(strategy, stock_price_at_expiration):
-    pnl = 0
-
-    for leg in strategy.legs:
-        if leg.type == 'call':
-            intrinsic_value = max(0, stock_price_at_expiration - leg.strike)
-        else:  # put
-            intrinsic_value = max(0, leg.strike - stock_price_at_expiration)
-
-        if leg.position == 'long':
-            pnl += (intrinsic_value - leg.premium_paid) * 100  # Per contract
-        else:  # short
-            pnl += (leg.premium_received - intrinsic_value) * 100
-
-    return pnl * num_contracts
-```
-
-**Key Metrics:**
-- **Max Profit**: Highest possible P/L
-- **Max Loss**: Worst possible P/L
-- **Breakeven Point(s)**: Stock price(s) where P/L = 0
-- **Profit Probability**: Percentage of price range that's profitable (simplified)
-
-**Example Output:**
-```
-Bull Call Spread: $180/$185 on AAPL (30 DTE, 10 contracts)
-
-Current Price: $180.00
-Net Debit: $2.50 per spread ($2,500 total)
-
-Max Profit: $2,500 (at $185+)
-Max Loss: -$2,500 (at $180-)
-Breakeven: $182.50
-Risk/Reward: 1:1
-
-Probability Profit: ~55% (if stock stays above $182.50)
-```
-
-### Step 6: Generate P/L Diagram (ASCII Art)
-
-**Visual representation of P/L across stock prices:**
-
-```python
-def generate_pnl_diagram(price_range, pnl_values, current_price, width=60, height=15):
-    """Generate ASCII P/L diagram"""
-
-    # Normalize to chart dimensions
-    max_pnl = max(pnl_values)
-    min_pnl = min(pnl_values)
-
-    lines = []
-    lines.append(f"\nP/L Diagram: {strategy_name}")
-    lines.append("-" * width)
-
-    # Y-axis levels
-    levels = np.linspace(max_pnl, min_pnl, height)
-
-    for level in levels:
-        if abs(level) < (max_pnl - min_pnl) * 0.05:
-            label = f"    0 |"  # Zero line
-        else:
-            label = f"{level:6.0f} |"
-
-        row = label
-        for i in range(width - len(label)):
-            idx = int(i / (width - len(label)) * len(price_range))
-            pnl = pnl_values[idx]
-            price = price_range[idx]
-
-            # Determine character
-            if abs(pnl - level) < (max_pnl - min_pnl) / height:
-                if pnl > 0:
-                    char = '█'  # Profit
-                elif pnl < 0:
-                    char = '░'  # Loss
-                else:
-                    char = '─'  # Breakeven
-            elif abs(level) < (max_pnl - min_pnl) * 0.05:
-                char = '─'  # Zero line
-            elif abs(price - current_price) < (price_range[-1] - price_range[0]) * 0.02:
-                char = '│'  # Current price line
-            else:
-                char = ' '
-
-            row += char
-
-        lines.append(row)
-
-    lines.append(" " * 6 + "|" + "-" * (width - 6))
-    lines.append(" " * 6 + f"${price_range[0]:.0f}" + " " * (width - 20) + f"${price_range[-1]:.0f}")
-    lines.append(" " * (width // 2 - 5) + "Stock Price")
-
-    return "\n".join(lines)
-```
-
-**Example Output:**
-```
-P/L Diagram: Bull Call Spread $180/$185
-------------------------------------------------------------
- +2500 |                               ████████████████████
-       |                         ██████
-       |                   ██████
-       |             ██████
-     0 |       ──────
-       | ░░░░░░
-       |░░░░░░
- -2500 |░░░░░
-      |____________________________________________________________
-       $126                  $180                   $234
-                          Stock Price
-
-Legend: █ Profit  ░ Loss  ── Breakeven  │ Current Price
-```
-
-### Step 7: Strategy-Specific Analysis
-
-Provide tailored guidance based on strategy type:
-
-**Covered Call:**
-```
-Income Strategy: Generate premium while capping upside
-
-Setup:
-- Own 100 shares of AAPL @ $180
-- Sell 1x $185 call (30 DTE) for $3.50
-
-Max Profit: $850 (Stock at $185+ = $5 stock gain + $3.50 premium)
-Max Loss: Unlimited downside (stock ownership)
-Breakeven: $176.50 (Cost basis - premium received)
-
-Greeks:
-- Delta: -0.30 (reduces stock delta from 1.00 to 0.70)
-- Theta: +$8/day (time decay benefit)
-
-Assignment Risk: If AAPL > $185 at expiration, shares called away
-
-When to Use:
-- Neutral to slightly bullish
-- Want income in sideways market
-- Willing to sell stock at $185
-
-Exit Plan:
-- Buy back call if stock rallies strongly (preserve upside)
-- Let expire if stock stays below $185
-- Roll to next month if want to keep shares
-```
-
-**Protective Put:**
-```
-Insurance Strategy: Limit downside while keeping upside
-
-Setup:
-- Own 100 shares of AAPL @ $180
-- Buy 1x $175 put (30 DTE) for $2.00
-
-Max Profit: Unlimited (stock can rise infinitely)
-Max Loss: -$7 per share = ($5 stock loss + $2 premium)
-Breakeven: $182 (Cost basis + premium paid)
-
-Greeks:
-- Delta: +0.80 (stock delta 1.00 - put delta 0.20)
-- Theta: -$6/day (time decay cost)
-
-Protection: Guaranteed to sell at $175, no matter how far stock falls
-
-When to Use:
-- Own stock, worried about short-term drop
-- Earnings coming up, want protection
-- Alternative to stop-loss (can't be stopped out)
-
-Cost: "Insurance premium" - typically 1-3% of stock value
-
-Exit Plan:
-- Let expire worthless if stock rises (cost of insurance)
-- Exercise put if stock falls below $175
-- Sell put if stock drops but want to keep shares
-```
-
-**Iron Condor:**
-```
-Range-Bound Strategy: Profit from low volatility
-
-Setup (example on AAPL @ $180):
-- Sell $175 put for $1.50
-- Buy $170 put for $0.50
-- Sell $185 call for $1.50
-- Buy $190 call for $0.50
-
-Net Credit: $2.00 ($200 per iron condor)
-
-Max Profit: $200 (if stock stays between $175-$185)
-Max Loss: $300 (if stock moves outside $170-$190)
-Breakevens: $173 and $187
-Profit Range: $175 to $185 (58% probability)
-
-Greeks:
-- Delta: ~0 (market neutral)
-- Theta: +$15/day (time decay benefit)
-- Vega: -$25 (short volatility)
-
-When to Use:
-- Expect low volatility, range-bound movement
-- After big move, think consolidation
-- High IV environment (sell expensive options)
-
-Risk: Unlimited if one side tested
-- Use stop loss at 2x credit received (exit at -$400)
-
-Adjustments:
-- If tested on one side, roll that side out in time
-- Close early at 50% max profit to reduce tail risk
-```
-
-### Step 8: Earnings Strategy Analysis
-
-**Integration with Earnings Calendar:**
-
-When user asks about earnings strategies, fetch earnings date:
-```python
-from earnings_calendar import get_next_earnings_date
-
-earnings_date = get_next_earnings_date("AAPL")
-days_to_earnings = (earnings_date - today).days
-```
-
-**Pre-Earnings Strategies:**
-
-**Long Straddle/Strangle:**
-```
-Setup (AAPL @ $180, earnings in 7 days):
-- Buy $180 call for $5.00
-- Buy $180 put for $4.50
-- Total Cost: $9.50
-
-Thesis: Expect big move (>5%) but unsure of direction
-
-Breakevens: $170.50 and $189.50
-Profit if: Stock moves >$9.50 in either direction
-
-Greeks:
-- Delta: ~0 (neutral)
-- Vega: +$50 (long volatility)
-- Theta: -$25/day (time decay hurts)
-
-IV Crush Risk: ⚠️ CRITICAL
-- Pre-earnings IV: 40% (elevated)
-- Post-earnings IV: 25% (typical)
-- IV drop: -15 points = -$750 loss even if stock doesn't move!
-
-Analysis:
-- Implied Move: √(DTE/365) × IV × Stock Price
-  = √(7/365) × 0.40 × 180 = ±$10.50
-- Breakeven Move Needed: ±$9.50
-- Probability Profit: ~30-40% (implied move > breakeven move)
-
-Recommendation:
-✅ Consider if you expect >10% move (larger than implied)
-❌ Avoid if expect normal ~5% earnings move (IV crush will hurt)
-
-Alternative: Buy further OTM strikes to reduce cost
-- $175/$185 strangle cost $4.00 (need >$8 move, but cheaper)
-```
-
-**Short Iron Condor:**
-```
-Setup (AAPL @ $180, earnings in 7 days):
-- Sell $170/$175 put spread for $2.00
-- Sell $185/$190 call spread for $2.00
-- Net Credit: $4.00
-
-Thesis: Expect stock to stay range-bound ($175-$185)
-
-Profit Zone: $175 to $185
-Max Profit: $400
-Max Loss: $100
-
-IV Crush Benefit: ✅
-- Short high IV before earnings
-- IV drops after earnings → profit on vega
-- Even if stock moves slightly, IV drop helps
-
-Greeks:
-- Delta: ~0 (market neutral)
-- Vega: -$40 (short volatility - good here!)
-- Theta: +$20/day
-
-Recommendation:
-✅ Good if expect normal earnings reaction (<8% move)
-✅ Benefit from IV crush regardless of direction
-⚠️ Risk if stock gaps outside range (>10% move)
-
-Exit Plan:
-- Close next day if IV crushed (capture profit early)
-- Use stop loss if one side tested (-2x credit)
-```
-
-### Step 9: Risk Management Guidance
-
-**Position Sizing:**
-
-```
-Account Size: $50,000
-Risk Tolerance: 2% per trade = $1,000 max risk
-
-Iron Condor Example:
-- Max loss per spread: $300
-- Max contracts: $1,000 / $300 = 3 contracts
-- Actual position: 3 iron condors
-
-Bull Call Spread Example:
-- Debit paid: $2.50 per spread
-- Max contracts: $1,000 / $250 = 4 contracts
-- Actual position: 4 spreads
-```
-
-**Portfolio Greeks Management:**
-
-```
-Portfolio Guidelines:
-- Delta: -10 to +10 (mostly neutral)
-- Theta: Positive preferred (seller advantage)
-- Vega: Monitor if >$500 (IV risk)
-
-Current Portfolio:
-- Delta: +5 (slightly bullish)
-- Theta: +$150/day (collecting $150 daily)
-- Vega: -$300 (short volatility)
-
-Interpretation:
-✅ Neutral delta (safe)
-✅ Positive theta (time working for you)
-⚠️ Short vega: If IV spikes, lose $300 per 1% IV increase
-→ Reduce short premium positions if VIX rising
-```
-
-**Adjustments and Exits:**
-
-```
-Exit Rules by Strategy:
-
-Covered Call:
-- Profit: 50-75% of max profit
-- Loss: Stock drops >5%, buy back call to preserve upside
-- Time: 7-10 DTE, roll to avoid assignment
-
-Spreads:
-- Profit: 50% of max profit (close early, reduce tail risk)
-- Loss: 2x debit paid (cut losses early)
-- Time: 21 DTE, close or roll (avoid gamma risk)
-
-Iron Condor:
-- Profit: 50% of credit (close early common)
-- Loss: One side tested, 2x credit lost
-- Adjustment: Roll tested side out in time
-
-Straddle/Strangle:
-- Profit: Stock moved >breakeven, close immediately
-- Loss: Theta eating position, stock not moving
-- Time: Day after earnings (if earnings play)
-```
-
-## Output Format
-
-**Strategy Analysis Report Template:**
-
-```markdown
-# Options Strategy Analysis: [Strategy Name]
-
-**Symbol:** [TICKER]
-**Strategy:** [Strategy Type]
-**Expiration:** [Date] ([DTE] days)
-**Contracts:** [Number]
+15. **Calendar Spread (Time Spread)** — Short near-expiry option + Long far-expiry option (same strike)
+    - Objective: Profit from differential time decay.
+    - Best when: Expecting current expiry to decay faster, longer-term view intact.
+    - Indian note: Useful between weekly and monthly expiry cycles.
+
+16. **Diagonal Spread** — Calendar spread with different strikes.
+    - Objective: Directional bias + time decay benefit.
+    - Best when: Have a directional view and want to finance via near-expiry sale.
+
+17. **Ratio Spread** — Buy N options at one strike, sell M options at another (N != M).
+    - Objective: Reduce cost of directional trade; accept risk on extreme moves.
+    - Best when: Strong view on direction but want reduced cost.
+    - Caution: Naked leg creates unlimited risk on one side.
 
 ---
 
-## Strategy Setup
+## Workflow
 
-### Leg Details
-| Leg | Type | Strike | Price | Position | Quantity |
-|-----|------|--------|-------|----------|----------|
-| 1 | Call | $180 | $5.00 | Long | 1 |
-| 2 | Call | $185 | $2.50 | Short | 1 |
+Follow this sequence when advising on an options strategy:
 
-**Net Debit/Credit:** $2.50 debit ($250 total for 1 spread)
+### Step 1: Gather Input
+Collect the following from the user:
+- **Underlying:** Which index or stock? (NIFTY, BANKNIFTY, FINNIFTY, or a specific stock)
+- **Market View:** Bullish, bearish, neutral, volatile, or range-bound?
+- **Strategy Preference:** Specific strategy or let the advisor recommend?
+- **Expiry:** Weekly or monthly? Specific date?
+- **Risk Tolerance:** Maximum loss acceptable? Capital available?
+- **Objective:** Income generation, hedging, speculation, or volatility play?
+
+### Step 2: Fetch Live Data via Groww MCP
+
+1. **Resolve market time and calendar:**
+   ```
+   resolve_market_time_and_calendar() → confirm market is open, get trading days to expiry
+   ```
+
+2. **Search for contracts:**
+   ```
+   fno_mcx_contracts_search_tool(search_term="NIFTY 25 MAR") → get exact trading symbols
+   ```
+
+3. **Get live prices:**
+   ```
+   get_ltp(search_queries=["nifty 24000 CE mar", "nifty 24000 PE mar"], segment="FNO", query_type="fno")
+   ```
+
+4. **Get Greeks:**
+   ```
+   get_greeks_for_fno_contract(search_queries=["nifty 24000 mar CE"], expiry="2026-03-26")
+   ```
+
+5. **Analyze Open Interest:**
+   ```
+   get_open_interest_analysis(symbol="NIFTY", view="all")
+   ```
+
+6. **Check ATM straddle premium (for volatility assessment):**
+   ```
+   get_atm_straddle_chart(symbol="NIFTY")
+   ```
+
+### Step 3: Calculate Margin Requirement
+
+For each leg of the strategy that involves selling (writing) options:
+```
+calculate_fno_margin(
+    trading_symbol="NIFTY25MAR24000CE",
+    num_lots=1,
+    transaction_type="SELL",
+    product="NRML"
+)
+```
+
+Also check user's available margin:
+```
+get_available_margin_details()
+```
+
+### Step 4: Simulate P/L Across Price Range
+
+Use the `scripts/black_scholes.py` script or manual calculation:
+- Define a price range (e.g., underlying +/- 5% from current price).
+- For each price point, calculate P/L for each leg.
+- Sum up P/L across all legs.
+- Identify breakeven points, max profit, max loss.
+
+Key calculations:
+- **Breakeven** = Strike +/- Net Premium (for single-leg strategies)
+- **Max Profit** = Net Premium Received (for credit strategies) or Strike Width - Net Debit (for debit spreads)
+- **Max Loss** = Net Premium Paid (for debit strategies) or Strike Width - Net Credit (for credit spreads)
+
+### Step 5: Generate ASCII P/L Diagram
+
+Create a visual payoff diagram showing:
+- X-axis: Underlying price at expiry
+- Y-axis: Profit/Loss per lot
+- Breakeven point(s) marked
+- Max profit and max loss zones labeled
+
+Also use `get_payoff_chart_steps()` for Groww's built-in payoff chart generation.
+
+### Step 6: Provide Risk Management Guidance
+
+Include in every recommendation:
+- **Position sizing:** How many lots based on capital and risk tolerance.
+- **Stop-loss levels:** When to exit (e.g., if loss exceeds 2x premium received).
+- **Adjustment triggers:** When and how to adjust the strategy.
+- **Expiry management:** Roll, close, or let expire — guidance based on ITM/OTM status.
+- **STT warning:** Remind about STT on ITM options at expiry (can erode profits significantly).
+- **Margin monitoring:** Warn about peak margin requirements and potential margin calls.
+
+### Step 7: Save Report
+
+Present the complete analysis as a structured report:
+
+```
+=== OPTIONS STRATEGY REPORT ===
+Date: [current date]
+Underlying: [symbol] @ [current price]
+Strategy: [strategy name]
+Expiry: [expiry date] ([days to expiry] days)
+
+--- LEGS ---
+Leg 1: [BUY/SELL] [qty] [CALL/PUT] @ Strike [strike] for [premium]
+Leg 2: [BUY/SELL] [qty] [CALL/PUT] @ Strike [strike] for [premium]
+
+--- KEY METRICS ---
+Net Premium: [debit/credit] [amount] per lot
+Max Profit: [amount] per lot (at [price])
+Max Loss: [amount] per lot (at [price])
+Breakeven: [price(s)]
+Risk-Reward Ratio: [ratio]
+Probability of Profit: [estimate based on delta]
+
+--- GREEKS (NET POSITION) ---
+Delta: [value] | Gamma: [value] | Theta: [value] | Vega: [value]
+
+--- MARGIN REQUIREMENT ---
+Total Margin: [amount]
+Available Margin: [amount]
+Margin Utilization: [percentage]
+
+--- P/L DIAGRAM ---
+[ASCII payoff chart]
+
+--- RISK MANAGEMENT ---
+- Stop Loss: [criteria]
+- Adjustment Plan: [when and how]
+- Expiry Action: [recommendation]
+- STT Impact: [if applicable]
+```
 
 ---
 
-## Profit/Loss Analysis
+## Strategy Selection Guide
 
-**Max Profit:** $250 (at $185+)
-**Max Loss:** -$250 (at $180-)
-**Breakeven:** $182.50
-**Risk/Reward Ratio:** 1:1
+Use this decision tree to recommend strategies based on user's market view:
 
-**Probability Analysis:**
-- Probability of Profit: ~55% (stock above $182.50)
-- Expected Value: $25 (simplified)
+### Bullish View
+- **Strong bullish:** Long Call or Bull Call Spread
+- **Mildly bullish:** Bull Put Spread (credit) or Covered Call
+- **Bullish + high IV:** Bull Put Spread (sell expensive puts)
+- **Bullish + low IV:** Long Call or Bull Call Spread (buy cheap options)
 
----
+### Bearish View
+- **Strong bearish:** Long Put or Bear Put Spread
+- **Mildly bearish:** Bear Call Spread (credit)
+- **Bearish + high IV:** Bear Call Spread (sell expensive calls)
+- **Bearish + low IV:** Long Put or Bear Put Spread
 
-## P/L Diagram
+### Neutral / Range-Bound View
+- **Tight range expected:** Short Straddle or Iron Butterfly
+- **Wider range expected:** Short Strangle or Iron Condor
+- **Neutral + want defined risk:** Iron Condor or Iron Butterfly
 
-[ASCII art diagram here]
+### Volatile View (Expecting Big Move)
+- **Direction unknown, big move expected:** Long Straddle
+- **Direction unknown, very big move expected:** Long Strangle (cheaper)
+- **Pre-event (budget, RBI, earnings):** Long Straddle or Long Strangle
 
----
-
-## Greeks Analysis
-
-### Position Greeks (1 spread)
-- **Delta:** +0.20 (gains $20 if stock +$1)
-- **Gamma:** +0.03 (delta increases by 0.03 if stock +$1)
-- **Theta:** -$5/day (loses $5 per day from time decay)
-- **Vega:** +$8 (gains $8 if IV increases 1%)
-
-### Interpretation
-- **Directional Bias:** Slightly bullish (positive delta)
-- **Time Decay:** Working against you (negative theta)
-- **Volatility:** Benefits from IV increase (positive vega)
+### Time Decay Play
+- **Near-term decay focus:** Calendar Spread
+- **Directional + decay:** Diagonal Spread
 
 ---
 
-## Risk Assessment
+## Important Indian Market Considerations
 
-### Maximum Risk
-**Scenario:** Stock falls below $180
-**Max Loss:** -$250 (100% of premium paid)
-**% of Account:** 0.5% (if $50k account)
+### India VIX
+- India VIX measures the market's expectation of 30-day volatility.
+- VIX > 20: High volatility environment — favor long volatility strategies.
+- VIX < 15: Low volatility environment — favor short volatility strategies.
+- VIX between 15-20: Normal range — use directional or range-bound strategies.
+- VIX typically spikes before elections, budgets, RBI policy, and global crises.
 
-### Assignment Risk
-**Early Assignment:** Low (calls have time value)
-**At Expiration:** Manage positions if in-the-money
+### Weekly Expiry Trading
+- **Thursday (Nifty):** Most liquid expiry. Short straddle/strangle sellers dominate.
+  Theta decay is highest on the expiry day.
+- **Wednesday (Bank Nifty):** High gamma risk. Moves can be sharp near expiry.
+- Premium sellers should be cautious of gamma risk on expiry day — a small move
+  in the underlying can cause large P/L swings.
 
----
+### Physical Settlement (Stock Options)
+- Stock options that expire ITM are physically settled — actual delivery of shares.
+- This requires full delivery margin (value of shares). Plan exits before expiry
+  to avoid unexpected margin requirements.
+- Index options are cash-settled — no delivery concerns.
 
-## Trade Management
+### Max Pain
+- Max Pain is the strike price at which the maximum number of options (calls + puts)
+  expire worthless, causing minimum payout by option writers.
+- Indian markets tend to gravitate toward max pain on expiry day, especially for
+  Nifty weekly expiry.
+- Use OI analysis to identify max pain and position accordingly.
 
-### Entry
-✅ Enter if: [Conditions]
-- Stock price $178-$182
-- IV below 30%
-- >21 DTE
-
-### Profit Taking
-- **Target 1:** 50% profit ($125) - Close half
-- **Target 2:** 75% profit ($187.50) - Close all
-
-### Stop Loss
-- **Trigger:** Stock falls below $177 (-$150 loss)
-- **Action:** Close position immediately
-
-### Adjustments
-- If stock rallies to $184, consider rolling short call higher
-- If stock drops to $179, add second spread at $175/$180
-
----
-
-## Suitability
-
-### When to Use This Strategy
-✅ Moderately bullish on AAPL
-✅ Expect upside to $185-$190
-✅ Want defined risk
-✅ 21-45 DTE timeframe
-
-### When to Avoid
-❌ Very bullish (buy stock or long call instead)
-❌ High IV environment (wait for IV to drop)
-❌ Earnings in <7 days (IV crush risk)
+### OI-Based Analysis
+- **High Call OI at a strike:** Acts as resistance. Call writers are betting the
+  price won't cross this level.
+- **High Put OI at a strike:** Acts as support. Put writers are betting the price
+  won't fall below this level.
+- **PCR (Put-Call Ratio):**
+  - PCR > 1.2: Bullish signal (more puts written, indicating support)
+  - PCR < 0.8: Bearish signal (more calls written, indicating resistance)
+  - PCR between 0.8-1.2: Neutral
 
 ---
 
-## Alternatives Comparison
+## Error Handling
 
-| Strategy | Max Profit | Max Loss | Complexity | When Better |
-|----------|-----------|----------|------------|-------------|
-| Bull Call Spread | $250 | -$250 | Medium | Moderately bullish |
-| Long Call | Unlimited | -$500 | Low | Very bullish |
-| Covered Call | $850 | Unlimited | Medium | Own stock already |
-| Bull Put Spread | $300 | -$200 | Medium | Want credit spread |
-
-**Recommendation:** Bull call spread is good balance of risk/reward for moderate bullish thesis.
-
----
-
-*Disclaimer: This is theoretical analysis using Black-Scholes pricing. Actual market prices may differ. Trade at your own risk. Options are complex instruments with significant loss potential.*
-```
-
-**File Naming Convention:**
-```
-options_analysis_[TICKER]_[STRATEGY]_[DATE].md
-```
-
-Example: `options_analysis_AAPL_BullCallSpread_2025-11-08.md`
-
-## Key Principles
-
-### Theoretical Pricing Limitations
-
-**What Users Should Know:**
-1. **Black-Scholes Assumptions:**
-   - European-style options (can't exercise early)
-   - Constant volatility (IV changes in reality)
-   - No transaction costs
-   - Continuous trading
-
-2. **Real vs Theoretical:**
-   - Bid-ask spread: Actual cost higher than theoretical
-   - American options: Can be exercised early (especially ITM puts)
-   - Liquidity: Wide markets on illiquid options
-   - Dividends: Ex-dividend dates affect pricing
-
-3. **Best Practices:**
-   - Use as educational tool and comparative analysis
-   - Get real quotes from broker before trading
-   - Understand theoretical price ≈ mid-market price
-   - Account for commissions and slippage
-
-### Volatility Guidance
-
-**Historical vs Implied Volatility:**
-
-```
-Historical Volatility (HV): What happened
-- Calculated from past price movements
-- Objective, based on data
-- Available for free (FMP API)
-
-Implied Volatility (IV): What market expects
-- Derived from option prices
-- Subjective, based on supply/demand
-- Requires live options data (user provides)
-
-Comparison:
-- IV > HV: Options expensive (consider selling)
-- IV < HV: Options cheap (consider buying)
-- IV = HV: Fairly priced
-```
-
-**IV Percentile:**
-
-User provides current IV, we calculate percentile:
-```python
-# Fetch 1-year HV data
-historical_hvs = calculate_hv_series(prices_1yr, window=30)
-
-# Calculate IV percentile
-iv_percentile = percentileofscore(historical_hvs, current_iv)
-
-if iv_percentile > 75:
-    guidance = "High IV - consider selling premium (credit spreads, iron condors)"
-elif iv_percentile < 25:
-    guidance = "Low IV - consider buying options (long calls/puts, debit spreads)"
-else:
-    guidance = "Normal IV - any strategy appropriate"
-```
-
-## Integration with Other Skills
-
-**Earnings Calendar:**
-- Fetch earnings dates automatically
-- Suggest earnings-specific strategies
-- Calculate days to earnings (DTE critical for IV)
-- Warn about IV crush risk
-
-**Technical Analyst:**
-- Use support/resistance for strike selection
-- Trend analysis for directional strategies
-- Breakout potential for straddle/strangle timing
-
-**US Stock Analysis:**
-- Fundamental analysis for longer-term strategies (LEAPS)
-- Dividend yield for covered call/put analysis
-- Earnings quality for earnings plays
-
-**Bubble Detector:**
-- High bubble risk → focus on protective puts
-- Low risk → bullish strategies
-- Critical risk → avoid long premium (theta hurts)
-
-**Portfolio Manager:**
-- Track options positions alongside stock positions
-- Aggregate Greeks across portfolio
-- Options as hedging tool for stock positions
-
-## Important Notes
-
-- **All analysis in English**
-- **Educational focus**: Strategies explained clearly
-- **Theoretical pricing**: Black-Scholes approximation
-- **User IV input**: Optional, defaults to HV
-- **No real-time data required**: FMP Free tier sufficient
-- **Dependencies**: Python 3.8+, numpy, scipy, pandas
-
-## Common Use Cases
-
-**Use Case 1: Learn Strategy**
-```
-User: "Explain a covered call"
-
-Workflow:
-1. Load strategy reference (references/strategies_guide.md)
-2. Explain concept, risk/reward, when to use
-3. Simulate example on AAPL
-4. Show P/L diagram
-5. Compare to alternatives
-```
-
-**Use Case 2: Analyze Specific Trade**
-```
-User: "Analyze $180/$185 bull call spread on AAPL, 30 days"
-
-Workflow:
-1. Fetch AAPL price from FMP
-2. Calculate HV or ask user for IV
-3. Price both options (Black-Scholes)
-4. Calculate Greeks
-5. Simulate P/L
-6. Generate analysis report
-```
-
-**Use Case 3: Earnings Strategy**
-```
-User: "Should I trade options before NVDA earnings?"
-
-Workflow:
-1. Fetch NVDA earnings date (Earnings Calendar)
-2. Calculate days to earnings
-3. Estimate IV percentile (if user provides IV)
-4. Suggest straddle/strangle vs iron condor
-5. Warn about IV crush
-6. Simulate both strategies
-```
-
-**Use Case 4: Portfolio Greeks Check**
-```
-User: "What are my total portfolio Greeks?"
-
-Workflow:
-1. User provides current positions
-2. Calculate Greeks for each position
-3. Sum Greeks across portfolio
-4. Assess overall exposure
-5. Suggest adjustments if needed
-```
-
-## Troubleshooting
-
-**Problem: IV not available**
-- Solution: Use HV as proxy, note to user
-- Ask user to provide IV from broker platform
-
-**Problem: Negative option price**
-- Solution: Check inputs (strike vs stock price)
-- Deep ITM options may have numerical issues
-
-**Problem: Greeks seem wrong**
-- Solution: Verify inputs (T, sigma, r)
-- Check if using annual vs daily values
-
-**Problem: Strategy too complex**
-- Solution: Break into legs, analyze separately
-- Refer to references for strategy details
-
-## Resources
-
-**References:**
-- `references/black_scholes_methodology.md` - Black-Scholes formulas, Greeks, and interpretation
-- `references/strategies_guide.md` - All 17+ strategies explained (future)
-- `references/greeks_explained.md` - Greeks deep dive (future)
-- `references/volatility_guide.md` - HV vs IV, when to trade (future)
-
-**Scripts:**
-- `scripts/black_scholes.py` - Pricing engine and Greeks
-- `scripts/strategy_analyzer.py` - Strategy simulation
-- `scripts/earnings_strategy.py` - Earnings-specific analysis
-
-**External Resources:**
-- Options Playbook: https://www.optionsplaybook.com/
-- CBOE Education: https://www.cboe.com/education/
-- Black-Scholes Calculator: Various online tools for verification
-
----
-
-**Version**: 1.0
-**Last Updated**: 2025-11-08
-**Dependencies**: Python 3.8+, numpy, scipy, pandas, requests
-**API**: FMP API (Free tier sufficient)
+- If broker MCP tools (Groww or Zerodha) return errors, inform the user and suggest checking market
+  hours or contract availability. Try the alternative broker's equivalent tool if available.
+- If a contract search yields no results, try alternative search terms or check
+  if the expiry has passed.
+- If margin data is unavailable, provide theoretical estimates with a disclaimer.
+- Always validate that the market is open before fetching live data — use
+  `resolve_market_time_and_calendar()`.
+- If a stock is under F&O ban, alert the user immediately and suggest alternative
+  underlyings.

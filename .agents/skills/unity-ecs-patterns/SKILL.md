@@ -7,7 +7,7 @@ description: Master Unity ECS (Entity Component System) with DOTS, Jobs, and Bur
 
 Production patterns for Unity's Data-Oriented Technology Stack (DOTS) including Entity Component System, Job System, and Burst Compiler.
 
-## When to Use This Skill
+## Use this skill when
 
 - Building high-performance Unity games
 - Managing thousands of entities efficiently
@@ -16,47 +16,18 @@ Production patterns for Unity's Data-Oriented Technology Stack (DOTS) including 
 - Converting OOP game code to ECS
 - Using Jobs and Burst for parallelization
 
-## Core Concepts
+## Do not use this skill when
 
-### 1. ECS vs OOP
+- The task is unrelated to unity ecs patterns
+- You need a different domain or tool outside this scope
 
-| Aspect      | Traditional OOP   | ECS/DOTS        |
-| ----------- | ----------------- | --------------- |
-| Data layout | Object-oriented   | Data-oriented   |
-| Memory      | Scattered         | Contiguous      |
-| Processing  | Per-object        | Batched         |
-| Scaling     | Poor with count   | Linear scaling  |
-| Best for    | Complex behaviors | Mass simulation |
+## Instructions
 
-### 2. DOTS Components
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
 
-```
-Entity: Lightweight ID (no data)
-Component: Pure data (no behavior)
-System: Logic that processes components
-World: Container for entities
-Archetype: Unique combination of components
-Chunk: Memory block for same-archetype entities
-```
+## Resources
 
-## Detailed patterns and worked examples
-
-Detailed pattern documentation lives in `references/details.md`. Read that file when the navigation tier above is insufficient.
-
-## Best Practices
-
-### Do's
-
-- **Use ISystem over SystemBase** - Better performance
-- **Burst compile everything** - Massive speedup
-- **Batch structural changes** - Use ECB
-- **Profile with Profiler** - Identify bottlenecks
-- **Use Aspects** - Clean component grouping
-
-### Don'ts
-
-- **Don't use managed types** - Breaks Burst
-- **Don't structural change in jobs** - Use ECB
-- **Don't over-architect** - Start simple
-- **Don't ignore chunk utilization** - Group similar entities
-- **Don't forget disposal** - Native collections leak
+- `resources/implementation-playbook.md` for detailed patterns and examples.

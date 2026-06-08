@@ -1,133 +1,163 @@
 ---
 name: mysql
-description: "Execute read-only SQL queries against multiple MySQL databases. Use when: (1) querying MySQL databases, (2) exploring database schemas/tables, (3) running SELECT queries for data analysis, (4) checking database contents. Supports multiple database connections with descriptions for intelligent auto-selection. Blocks all write operations (INSERT, UPDATE, DELETE, DROP, etc.) for safety."
-license: Apache-2.0
-metadata:
-  author: sanjay3290
-  version: "1.0"
+description: MySQL 数据库管理与运维
+version: 1.0.0
+author: terminal-skills
+tags: [database, mysql, mariadb, sql]
 ---
 
-# MySQL Read-Only Query Skill
+# MySQL 数据库管理
 
-Execute safe, read-only queries against configured MySQL databases.
+## 概述
+MySQL/MariaDB 数据库的日常管理、备份恢复、性能调优等运维技能。
 
-## Requirements
+## 连接管理
 
-- Python 3.8+
-- mysql-connector-python: `pip install -r requirements.txt`
-
-## Setup
-
-Create `connections.json` in the skill directory or `~/.config/claude/mysql-connections.json`.
-
-**Security**: Set file permissions to `600` since it contains credentials:
 ```bash
-chmod 600 connections.json
+# 本地连接
+mysql -u root -p
+
+# 远程连接
+mysql -h hostname -P 3306 -u user -p database
+
+# 执行 SQL 文件
+mysql -u user -p database < script.sql
+
+# 执行单条命令
+mysql -u user -p -e "SHOW DATABASES;"
 ```
 
-```json
-{
-  "databases": [
-    {
-      "name": "production",
-      "description": "Main app database - users, orders, transactions",
-      "host": "db.example.com",
-      "port": 3306,
-      "database": "app_prod",
-      "user": "readonly_user",
-      "password": "your-password",
-      "ssl_disabled": false
-    }
-  ]
-}
+## 用户与权限
+
+```sql
+-- 查看用户
+SELECT user, host FROM mysql.user;
+
+-- 创建用户
+CREATE USER 'username'@'%' IDENTIFIED BY 'password';
+
+-- 授权
+GRANT ALL PRIVILEGES ON database.* TO 'username'@'%';
+GRANT SELECT, INSERT ON database.table TO 'username'@'%';
+
+-- 刷新权限
+FLUSH PRIVILEGES;
+
+-- 查看权限
+SHOW GRANTS FOR 'username'@'%';
 ```
 
-### Config Fields
+## 数据库操作
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| name | Yes | Identifier for the database (case-insensitive) |
-| description | Yes | What data this database contains (used for auto-selection) |
-| host | Yes | Database hostname |
-| port | No | Port number (default: 3306) |
-| database | Yes | Database name |
-| user | Yes | Username |
-| password | Yes | Password |
-| ssl_disabled | No | Set to `true` to disable SSL (default: false) |
-| ssl_ca | No | Path to CA certificate file |
-| ssl_cert | No | Path to client certificate file |
-| ssl_key | No | Path to client private key file |
+```sql
+-- 数据库管理
+SHOW DATABASES;
+CREATE DATABASE dbname CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+DROP DATABASE dbname;
+USE dbname;
 
-## Usage
+-- 表管理
+SHOW TABLES;
+DESCRIBE tablename;
+SHOW CREATE TABLE tablename;
+```
 
-### List configured databases
+## 备份与恢复
+
+### mysqldump 备份
 ```bash
-python3 scripts/query.py --list
+# 备份单个数据库
+mysqldump -u root -p database > backup.sql
+
+# 备份所有数据库
+mysqldump -u root -p --all-databases > all_backup.sql
+
+# 备份表结构
+mysqldump -u root -p --no-data database > schema.sql
+
+# 压缩备份
+mysqldump -u root -p database | gzip > backup.sql.gz
 ```
 
-### Query a database
+### 恢复
 ```bash
-python3 scripts/query.py --db production --query "SELECT * FROM users LIMIT 10"
+# 恢复数据库
+mysql -u root -p database < backup.sql
+
+# 从压缩文件恢复
+gunzip < backup.sql.gz | mysql -u root -p database
 ```
 
-### List tables
-```bash
-python3 scripts/query.py --db production --tables
+## 性能监控
+
+```sql
+-- 查看进程
+SHOW PROCESSLIST;
+SHOW FULL PROCESSLIST;
+
+-- 查看状态
+SHOW STATUS;
+SHOW GLOBAL STATUS LIKE 'Threads%';
+SHOW GLOBAL STATUS LIKE 'Connections';
+
+-- 查看变量
+SHOW VARIABLES LIKE 'max_connections';
+SHOW VARIABLES LIKE '%buffer%';
+
+-- 慢查询
+SHOW VARIABLES LIKE 'slow_query%';
+SHOW GLOBAL STATUS LIKE 'Slow_queries';
 ```
 
-### Show schema
-```bash
-python3 scripts/query.py --db production --schema
+## 常见场景
+
+### 场景 1：排查慢查询
+```sql
+-- 开启慢查询日志
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 1;
+
+-- 查看慢查询日志位置
+SHOW VARIABLES LIKE 'slow_query_log_file';
+
+-- 分析执行计划
+EXPLAIN SELECT * FROM table WHERE condition;
+EXPLAIN ANALYZE SELECT * FROM table WHERE condition;
 ```
 
-### Limit results
-```bash
-python3 scripts/query.py --db production --query "SELECT * FROM orders" --limit 100
+### 场景 2：锁问题排查
+```sql
+-- 查看锁等待
+SHOW ENGINE INNODB STATUS\G
+
+-- 查看当前锁
+SELECT * FROM information_schema.INNODB_LOCKS;
+SELECT * FROM information_schema.INNODB_LOCK_WAITS;
+
+-- 查看事务
+SELECT * FROM information_schema.INNODB_TRX;
 ```
 
-## Database Selection
+### 场景 3：主从复制状态
+```sql
+-- 主库状态
+SHOW MASTER STATUS;
 
-Match user intent to database `description`:
+-- 从库状态
+SHOW SLAVE STATUS\G
 
-| User asks about | Look for description containing |
-|-----------------|--------------------------------|
-| users, accounts | users, accounts, customers |
-| orders, sales | orders, transactions, sales |
-| analytics, metrics | analytics, metrics, reports |
-| logs, events | logs, events, audit |
+-- 关键指标
+-- Slave_IO_Running: Yes
+-- Slave_SQL_Running: Yes
+-- Seconds_Behind_Master: 0
+```
 
-If unclear, run `--list` and ask user which database.
+## 故障排查
 
-## Safety Features
-
-- **Read-only session**: Connection uses MySQL `SET SESSION TRANSACTION READ ONLY` (primary protection)
-- **Query validation**: Only SELECT, SHOW, DESCRIBE, EXPLAIN, WITH queries allowed
-- **Single statement**: Multiple statements per query rejected
-- **SSL support**: Configurable SSL with CA, client cert, and key support
-- **Query timeout**: 30-second max_execution_time enforced (MySQL 5.7.8+)
-- **Memory protection**: Max 10,000 rows per query to prevent OOM
-- **Column width cap**: 100 char max per column for readable output
-- **Credential sanitization**: Error messages don't leak passwords
-
-## Troubleshooting
-
-| Error | Solution |
-|-------|----------|
-| Config not found | Create `connections.json` in skill directory |
-| Authentication failed | Check username/password in config |
-| Connection timeout | Verify host/port, check firewall/VPN |
-| SSL error | Try `"ssl_disabled": true` for local databases |
-| Permission warning | Run `chmod 600 connections.json` |
-| max_execution_time not supported | Upgrade to MySQL 5.7.8+ or MariaDB 10.1.1+ |
-
-## Exit Codes
-
-- **0**: Success
-- **1**: Error (config missing, auth failed, invalid query, database error)
-
-## Workflow
-
-1. Run `--list` to show available databases
-2. Match user intent to database description
-3. Run `--tables` or `--schema` to explore structure
-4. Execute query with appropriate LIMIT
+| 问题 | 排查方法 |
+|------|----------|
+| 连接数过多 | `SHOW PROCESSLIST`, 检查 max_connections |
+| 查询慢 | `EXPLAIN`, 检查索引 |
+| 锁等待 | `SHOW ENGINE INNODB STATUS` |
+| 复制延迟 | `SHOW SLAVE STATUS`, 检查网络和负载 |
+| 磁盘满 | 检查 binlog, 清理旧日志 |

@@ -641,14 +641,3 @@ This format is a 16-character lowercase hex string (64-bit random value).
 - [JSON Canvas Spec 1.0](https://jsoncanvas.org/spec/1.0/)
 - [JSON Canvas GitHub](https://github.com/obsidianmd/jsoncanvas)
 
-
----
-
-## Gotchas
-
-- **Node array order IS the z-index:** Editors reading `.canvas` render array[0] at the bottom and array[-1] on top. Reordering the JSON to "clean up" silently flips which node covers which — visual diff is non-obvious until you open the file.
-- **`fromNode`/`toNode` must reference existing IDs but JSON has no foreign-key enforcement:** Deleting a node without sweeping edges leaves orphan edges. Obsidian shows them as connections to nowhere; some apps silently drop them, others throw. Validate edges after every node removal.
-- **Coordinates are pixels with no DPI awareness:** A canvas designed on retina (logical px) renders differently on a 1x display. There's no `scale` field — pre-compute sizes against a known reference and accept rendering drift across machines.
-- **16-char hex IDs are conventional, not required by spec:** Any unique string works. But Obsidian's "duplicate node" feature regenerates 16-char hex — mixing UUIDs and hex IDs in the same file makes manual edits painful when grepping.
-- **`subpath` requires the `#` prefix and is case-sensitive in some apps:** `subpath: "Heading"` fails silently; `"#Heading"` works; `"#heading"` may or may not — depends on whether the target file's heading is exactly that case.
-- **Group nodes don't own their children — coordinates do:** Moving a group does NOT move the nodes inside it. They're only visually inside because their x/y happen to fall within the group's bounding box. Bulk-move requires updating every child's coordinates.

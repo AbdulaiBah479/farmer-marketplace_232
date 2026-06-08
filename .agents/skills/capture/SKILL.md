@@ -1,148 +1,172 @@
 ---
 name: capture
-description: >
-  Save a memory to Origin in flow. Active capture verb — use proactively
-  when the user states a preference, makes a decision, corrects you, or
-  shares a durable fact. Invoked as `/capture <content>`.
-argument-hint: "<content>"
-allowed-tools: ["mcp__plugin_origin_origin__capture", "mcp__plugin_origin_origin__recall", "mcp__plugin_origin_origin__create_entity", "mcp__plugin_origin_origin__create_relation", "mcp__plugin_origin_origin__accept_revision", "mcp__plugin_origin_origin__dismiss_revision", "Bash"]
+description: |
+  Save important context to persistent memory for future sessions.
+
+  PROACTIVELY USE THIS when you detect:
+  - Decisions: "let's go with", "decided to", "chose", "went with"
+  - Learnings: "I learned", "turns out", "TIL", "realized", "discovered"
+  - Errors resolved: "fixed", "the problem was", "solution was"
+  - Client info: names, emails, phone numbers, addresses, invoice amounts
+  - Preferences: "I prefer", "I like", "don't like", "always use"
+  - References: API keys locations, file paths, URLs, credentials
+  - Patterns: "pattern", "convention", "always do", "standard approach"
+  - Important commands run worth remembering
+
+  Do NOT ask permission - just capture silently when these patterns appear.
+
+user-invocable: true
+disable-model-invocation: false
+argument-hint: "[content] [--type TYPE] [--tags TAG1,TAG2]"
 ---
 
-# /capture
+# Memory Capture
 
-Capture a single memory in the moment. Active verb: agent captures the
-moment of insight, like a photograph.
+Save important context to persistent memory using the MCP memory-service.
 
-## How to invoke
+## How to Use
 
-Call the `origin` MCP server's `capture` tool with the user's content as a
-complete, self-contained statement. Attach `topic` from cwd or the
-conversation — don't make the user type it.
-
+### Manual Invocation
 ```
-capture(content="<args, written as a full sentence with WHY>",
-        memory_type="<picked from the 6 types>",
-        entity="<primary entity name, if any>",
-        space=<inferred>)
+/capture "Pinnacle Title invoice is $1,500/month"
+/capture "Billy V4 LONGS ONLY - shorts lost $2,226 in backtests" --type decision
+/capture "API key stored in /root/.env" --type reference --tags trading,credentials
 ```
 
-### `memory_type` — agent picks one of 6
+### Automatic Invocation
+When you detect important context in conversation (decisions, learnings, client info, etc.),
+call this skill SILENTLY without asking the user. Just capture and continue.
 
-The daemon classifies when a local model or API key is configured. In
-local memory mode it does not, so the agent picks the type from the content itself. Use this
-mapping:
+## Arguments
 
-| Type | Use for |
-|---|---|
-| `identity` | Durable facts about the user (role, company, language preference) |
-| `preference` | "I prefer X because Y" — a habit, a correction, a stylistic choice |
-| `decision` | "Going with A over B because C" — a specific choice with rationale |
-| `lesson` | Root cause found, workaround discovered, technical insight earned |
-| `gotcha` | Sharp edge, surprising behavior, a thing to watch out for |
-| `fact` | Durable info about people, projects, tools — anchor to `entity` when possible |
+- `$ARGUMENTS` or `$0`: The content to capture
+- `--type TYPE`: Memory type (decision, pattern, learning, preference, client, gotcha, reference)
+- `--tags TAG1,TAG2`: Comma-separated tags for categorization
 
-If two types fit, pick the one closest to *why the memory matters*. A
-decision *also* implies a preference, but `decision` is more specific.
+## Memory Types
 
-### `entity` — extract the anchor
+| Type | Use When |
+|------|----------|
+| `decision` | Architectural/technical choices made |
+| `pattern` | Reusable code/workflow patterns discovered |
+| `learning` | New knowledge or insights |
+| `preference` | User preferences and likes/dislikes |
+| `client` | Client names, contacts, business info |
+| `gotcha` | Pitfalls, bugs, things to avoid |
+| `reference` | File paths, API locations, credentials locations |
 
-Pick the single most important named thing in the content: a person,
-project, tool, place. Use the exact name. Example: "Alice prefers TDD
-because…" → `entity="Alice"`. If the content has no named anchor,
-omit `entity`.
+## Execution Steps
 
-### `topic` / `space` inference
+1. **Parse the input**: Extract content, type, and tags from arguments
+2. **Auto-classify**: Infer type from content if not provided
+3. **Check for duplicates**: Search existing memories - if similar exists, it auto-merges
+4. **Store the memory**: Use memory_store with metadata (type, tags, timestamp)
+5. **Silent operation**: Do NOT notify user - just capture and continue
 
-- cwd inside a repo → repo name (e.g. `~/Repos/origin/...` → `"origin"`).
-- Outside any repo → most recent topic from the conversation, or omit.
-- Always pass `space` when scope is known; if uncertain, run `list_spaces`
-  later (post-PR-C) or omit.
+## Capture Philosophy: REMEMBER EVERYTHING
 
-### Multiple entities or relations
+**No filtering. No threshold. Capture aggressively.**
 
-The MCP `capture` tool takes a single primary `entity`. For additional
-entities or relations, use the dedicated MCP tools. If the content
-names more than one entity, capture the memory first, then for each
-additional entity:
+When in doubt, capture it. Storage is cheap, lost context is expensive.
 
-```
-create_entity(name="<entity>", entity_type="<person|project|tool|place>")
-```
+The semantic deduplication will handle noise - similar memories get merged automatically.
+Quality ratings will surface the good stuff over time.
 
-For a relation between two entities:
+**Capture triggers (if ANY match, capture it):**
+- Decisions (even tentative ones)
+- Learnings (even small ones)
+- Names, numbers, dates, amounts
+- File paths, URLs, API references
+- Preferences (even implied ones)
+- Errors and how they were fixed
+- Patterns noticed
+- Questions asked (context for why we explored something)
 
-```
-create_relation(from_entity="<a>", to_entity="<b>", relation_type="<verb>")
-```
+**The only things to skip:**
+- Pure greetings ("hi", "thanks")
+- Confirmations ("ok", "got it", "sure")
+- Meta-discussion about the conversation itself
 
-Skip these calls when the daemon has an LLM — its post-ingest enrichment
-covers extraction.
+## Auto-Classification Rules
 
-## What to capture
+If `--type` not provided, detect from content:
+- Contains "decided", "chose", "going with" → `decision`
+- Contains "learned", "realized", "discovered" → `learning`
+- Contains "API", "key", "path", "credentials", ".env" → `reference`
+- Contains "always", "never", "convention", "pattern" → `pattern`
+- Contains "careful", "watch out", "gotcha", "bug" → `gotcha`
+- Contains email, phone, "$", "invoice", company name → `client`
+- Default → `learning`
 
-- Decisions: "Going with approach A because B"
-- Preferences: "Prefers TDD because catches regressions early"
-- Corrections: "Actually it's C, not D"
-- Identity / project facts: "Works on Origin, a local memory daemon for AI tools"
+## Auto-Tagging Rules
 
-## What NOT to capture
+Extract tags from:
+- Project names mentioned (botsniper, foodshot, etc.)
+- Technology names (python, node, react, etc.)
+- Client names (pinnacle, etc.)
+- Domain terms (trading, invoice, api, etc.)
 
-- System prompts, boot logs, heartbeats
-- Transient task state ("currently working on...")
-- Tool output, command results, architecture dumps
-- Single-word acknowledgments
-- Things the user can trivially re-derive (file paths, recent git history)
+## Storage Format
 
-## Atomic ideas
+Store using mcp__memory-service__memory_store with:
 
-One capture = one idea. "Prefers TDD" and "Uses pytest" are two captures, not
-one.
-
-## When to use
-
-- User explicitly says "remember this", "save that", "capture this".
-- User states a durable preference / decision / correction proactively (no
-  ask required — that's the floor, not the trigger).
-
-## When NOT to use
-
-- End of session bulk store → use `/handoff` (multi-item batch).
-- Pulling memories back out → use `/recall`.
-
-## Post-capture contradiction signal
-
-After `capture` returns, check `response.triggered_revisions` and `response.auto_superseded`.
-
-### auto_superseded (no action needed)
-
-If `auto_superseded` is non-empty, the daemon already resolved the contradiction. Surface it as informational:
-
-```
-Note: auto-superseded mem_X. Origin replaced a prior protected memory because
-trust=high and similarity > 0.9. No action needed.
+```json
+{
+  "content": "<the memory content>",
+  "metadata": {
+    "type": "<memory type>",
+    "tags": "<comma-separated tags>",
+    "source": "capture-skill",
+    "timestamp": "<ISO timestamp>",
+    "project": "<current working directory if relevant>"
+  }
+}
 ```
 
-No accept/dismiss call required. The revision was applied automatically.
+## Example Execution
 
-### triggered_revisions (human review needed)
+User says: "The Airtable API token for Pinnacle is stored in Voltaris-Labs/.env"
 
-If `triggered_revisions` is non-empty (and `auto_superseded` is empty), render an inline block to the user:
+Auto-capture (silent):
+1. Detect: Contains "API", "token", ".env" → type: `reference`
+2. Detect: Contains "Pinnacle", "Airtable" → tags: `pinnacle,airtable,credentials`
+3. Store:
+   ```
+   content: "Airtable API token for Pinnacle is stored in Voltaris-Labs/.env"
+   metadata: {type: "reference", tags: "pinnacle,airtable,credentials,api"}
+   ```
+4. Continue conversation without mentioning the capture
 
+## Deduplication
+
+Before storing, search for similar memories:
 ```
-Stored mem_new.
-
-This capture topic-matches a protected memory now flagged for revision:
-  - mem_target_abc
-
-Action: accept (replace original content) | dismiss (drop the revision) | leave (decide later)
+memory_search(query="<content summary>", limit=3)
 ```
 
-Inline verb map:
+If highly similar memory exists (same topic):
+- Update existing memory quality score instead of creating duplicate
+- Use memory_update to add new tags if relevant
 
-- accept: `accept_revision(target_source_id="mem_target_abc")`
-- dismiss: `dismiss_revision(target_source_id="mem_target_abc")`
-- leave: no call; surfaces again in next `/brief`
+## Quality Feedback
 
-Both fields can technically be non-empty in a single response (multiple protected matches), but in practice only one fires per capture: `auto_superseded` fires when trust=full and similarity > 0.9, `triggered_revisions` fires otherwise.
+The memory system learns from feedback. When you notice a memory was:
 
-If neither field is non-empty, the capture stored cleanly with no conflicts.
+**Useful** (helped with a task):
+```
+mcp__memory-service__memory_quality(action="rate", content_hash="<hash>", rating="1", feedback="Helped with X")
+```
+
+**Not useful** (irrelevant or wrong):
+```
+mcp__memory-service__memory_quality(action="rate", content_hash="<hash>", rating="-1", feedback="Was outdated/wrong")
+```
+
+Quality scores affect search ranking - highly-rated memories appear first.
+
+## Integration with MEMORY.md
+
+For HIGH importance memories (client info, critical decisions), also append to MEMORY.md:
+- Location: `~/.claude/projects/*/memory/MEMORY.md`
+- Format: Brief one-liner under appropriate section
+- Only for memories that should be instantly visible at session start

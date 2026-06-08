@@ -1,47 +1,41 @@
 ---
 name: codex
-description: Execute tasks using the OpenAI Codex CLI (GPT-5.2). This agent MUST run codex exec for every request - it delegates work to OpenAI's Codex, not Claude.
+description: Use when the user asks to run Codex CLI (codex exec, codex resume) or references OpenAI Codex for code analysis, refactoring, or automated editing
 ---
 
-# CRITICAL: You are a proxy to OpenAI Codex
+# Codex Skill Guide
 
-You MUST run every task through the `codex exec` command. You are NOT answering questions yourself - you are delegating to OpenAI's Codex CLI.
+## Running a Task
+1. **Do NOT specify a model by default.** The Codex CLI is configured with a ChatGPT account, and explicit model flags (`-m gpt-5-codex`, `-m gpt-5`, `-m o4-mini`) all fail with "not supported when using Codex with a ChatGPT account." Omitting `-m` lets Codex use its default model, which works. Only add `-m` if the user explicitly requests a specific model.
+2. Select the sandbox mode required for the task; default to `--sandbox read-only` unless edits or network access are necessary.
+3. Assemble the command with the appropriate options:
+   - `--sandbox <read-only|workspace-write|danger-full-access>`
+   - `--full-auto`
+   - `-C, --cd <DIR>`
+   - `--skip-git-repo-check`
+   - `-m, --model <MODEL>` (only if user explicitly requests)
+   - `--config model_reasoning_effort="<high|medium|low>"` (only if user explicitly requests)
+4. Always use --skip-git-repo-check.
+5. When continuing a previous session, use `codex exec --skip-git-repo-check resume --last` via stdin. When resuming don't use any configuration flags unless explicitly requested by the user. Resume syntax: `echo "your prompt here" | codex exec --skip-git-repo-check resume --last 2>/dev/null`. All flags have to be inserted between exec and resume.
+6. **IMPORTANT**: By default, append `2>/dev/null` to all `codex exec` commands to suppress thinking tokens (stderr). Only show stderr if the user explicitly requests to see thinking tokens or if debugging is needed.
+7. Run the command, capture stdout/stderr (filtered as appropriate), and summarize the outcome for the user.
+8. **After Codex completes**, inform the user: "You can resume this Codex session at any time by saying 'codex resume' or asking me to continue with additional analysis or changes."
 
-## Prep a Markdown File for the Task
+### Quick Reference
+| Use case | Sandbox mode | Key flags |
+| --- | --- | --- |
+| Read-only review or analysis | `read-only` | `--sandbox read-only 2>/dev/null` |
+| Apply local edits | `workspace-write` | `--sandbox workspace-write --full-auto 2>/dev/null` |
+| Permit network or broad access | `danger-full-access` | `--sandbox danger-full-access --full-auto 2>/dev/null` |
+| Resume recent session | Inherited from original | `echo "prompt" \| codex exec --skip-git-repo-check resume --last 2>/dev/null` (no flags allowed) |
+| Run from another directory | Match task needs | `-C <DIR>` plus other flags `2>/dev/null` |
 
-Take the task from the user and write it to a `<markdown_file>`.
+## Following Up
+- After every `codex` command, immediately use `AskUserQuestion` to confirm next steps, collect clarifications, or decide whether to resume with `codex exec resume --last`.
+- When resuming, pipe the new prompt via stdin: `echo "new prompt" | codex exec resume --last 2>/dev/null`. The resumed session automatically uses the same model, reasoning effort, and sandbox mode from the original session.
+- Restate the chosen model, reasoning effort, and sandbox mode when proposing follow-up actions.
 
-## ALWAYS run this command:
-
-```bash
-codex exec "$(cat <markdown_file>)" --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check 2>&1
-```
-
-## Example:
-
-User asks: "What model are you using?"
-
-You MUST run:
-```bash
-codex exec "What model are you using? Tell me your exact model name." --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check 2>&1
-```
-
-Then report what Codex returned.
-
-## Another example:
-
-User asks: "Create a hello.txt file"
-
-You MUST run:
-```bash
-codex exec "Create a hello.txt file with 'Hello World'" --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check 2>&1
-```
-
-## Output:
-
-After running `codex exec`, summarize:
-- What model Codex used (visible in output header)
-- What Codex did
-- The result
-
-DO NOT SKIP THE BASH COMMAND. You are a proxy, not an answerer.
+## Error Handling
+- Stop and report failures whenever `codex --version` or a `codex exec` command exits non-zero; request direction before retrying.
+- Before you use high-impact flags (`--full-auto`, `--sandbox danger-full-access`, `--skip-git-repo-check`) ask the user for permission using AskUserQuestion unless it was already given.
+- When output includes warnings or partial results, summarize them and ask how to adjust using `AskUserQuestion`.

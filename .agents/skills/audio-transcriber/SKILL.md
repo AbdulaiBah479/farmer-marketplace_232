@@ -1,555 +1,665 @@
 ---
 name: audio-transcriber
-description: "Transform audio recordings into professional Markdown documentation with intelligent summaries using LLM integration"
-category: content
-risk: safe
-source: community
-tags: "[audio, transcription, whisper, meeting-minutes, speech-to-text]"
-date_added: "2026-02-27"
+description: Extracts audio from dashcam MP4 files and produces GPU-accelerated timestamped transcripts with optional speaker diarization. This skill should be used when users request audio transcription from video files, mention dashcam audio/transcribe MP4/extract speech, want to analyze conversations from video footage, need timestamped transcripts with speaker identification, or ask to process video folders with audio extraction.
 ---
 
-## Purpose
+# Audio Transcriber
 
-This skill automates audio-to-text transcription with professional Markdown output, extracting rich technical metadata (speakers, timestamps, language, file size, duration) and generating structured meeting minutes and executive summaries. It uses Faster-Whisper or Whisper with zero configuration, working universally across projects without hardcoded paths or API keys.
+**Skill Type:** Media Processing & Analysis
+**Domain:** Audio Transcription, Speech Recognition, GPU Acceleration
+**Version:** 2.0
+**Last Updated:** 2025-10-26
 
-Inspired by tools like Plaud, this skill transforms raw audio recordings into actionable documentation, making it ideal for meetings, interviews, lectures, and content analysis.
+---
 
-## When to Use
+## Description
 
-Invoke this skill when:
+Extracts audio from dashcam MP4 files and produces GPU-accelerated timestamped transcripts with optional speaker diarization. Uses faster-whisper with CUDA for efficient processing, organizing outputs by date with comprehensive metadata and quality metrics.
 
-- User needs to transcribe audio/video files to text
-- User wants meeting minutes automatically generated from recordings
-- User requires speaker identification (diarization) in conversations
-- User needs subtitles/captions (SRT, VTT formats)
-- User wants executive summaries of long audio content
-- User asks variations of "transcribe this audio", "convert audio to text", "generate meeting notes from recording"
-- User has audio files in common formats (MP3, WAV, M4A, OGG, FLAC, WEBM)
+**When to Use This Skill:**
+- User requests audio transcription from video files
+- User mentions "dashcam audio", "transcribe MP4", or "extract speech"
+- User wants to analyze conversations from video footage
+- User needs timestamped transcripts with speaker identification
+- User asks to process video folders with audio extraction
 
-## Workflow
+---
 
-### Step 0: Discovery (Auto-detect Transcription Tools)
+## Quick Start
 
-**Objective:** Identify available transcription engines without user configuration.
+### User Trigger Phrases
+- "Transcribe audio from my dashcam videos"
+- "Extract and transcribe speech from [folder/date]"
+- "Generate transcripts for [MP4 files/date range]"
+- "Process dashcam audio with speaker identification"
+- "Create subtitles from video files"
 
-**Actions:**
+### Expected Inputs
+1. **Video Folder Path** (required) - Path to MP4 files or date-organized folders
+2. **Date Range** (optional) - Single day, range, or "all available"
+3. **Output Directory** (optional) - Default: parallel to input with `_transcripts` suffix
+4. **Processing Options** (optional) - Model size, formats, diarization, GPU settings
 
-Run detection commands to find installed tools:
+### Expected Outputs
+- Audio extracts (WAV files) organized by date
+- Transcripts in multiple formats (TXT, JSON, SRT, VTT)
+- Global INDEX.csv with searchable segment metadata
+- Results JSON with GPU metrics and processing statistics
+- Quality reports with confidence scores and coverage
 
-```bash
-# Check for Faster-Whisper (preferred - 4-5x faster)
-if python3 -c "import faster_whisper" 2>/dev/null; then
-    TRANSCRIBER="faster-whisper"
-    echo "✅ Faster-Whisper detected (optimized)"
-# Fallback to original Whisper
-elif python3 -c "import whisper" 2>/dev/null; then
-    TRANSCRIBER="whisper"
-    echo "✅ OpenAI Whisper detected"
-else
-    TRANSCRIBER="none"
-    echo "⚠️  No transcription tool found"
-fi
+---
 
-# Check for ffmpeg (audio format conversion)
-if command -v ffmpeg &>/dev/null; then
-    echo "✅ ffmpeg available (format conversion enabled)"
-else
-    echo "ℹ️  ffmpeg not found (limited format support)"
-fi
+## Core Capabilities
+
+### 1. User Input Acquisition (Section 0 Protocol)
+
+**CRITICAL: Always follow the Section 0 protocol before processing.**
+
+#### Step 1: Parse User Request
+```
+User: "Transcribe my dashcam videos from September 3rd"
+
+AI Detection:
+✅ Date detected: 2025-09-03
+❌ Folder path not specified → Try auto-discovery
 ```
 
-**If no transcriber found:**
+#### Step 2: Auto-Discovery
+Search these locations in order:
+1. `C:\Users\[user]\Desktop\CARDV\Movie_F\YYYYMMDD\*.MP4`
+2. `G:\My Drive\PROJECTS\INVESTIGATION\DASHCAM\Movie_F\YYYYMMDD\*.MP4`
+3. Current working directory + `\*.mp4`
+4. User-provided explicit path
 
-Offer automatic installation using the provided script:
-
-```bash
-echo "⚠️  No transcription tool found"
-echo ""
-echo "🔧 Auto-install dependencies? (Recommended)"
-read -p "Run installation script? [Y/n]: " AUTO_INSTALL
-
-if [[ ! "$AUTO_INSTALL" =~ ^[Nn] ]]; then
-    # Get skill directory (works for both repo and symlinked installations)
-    SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    
-    # Run installation script
-    if [[ -f "$SKILL_DIR/scripts/install-requirements.sh" ]]; then
-        bash "$SKILL_DIR/scripts/install-requirements.sh"
-    else
-        echo "❌ Installation script not found"
-        echo ""
-        echo "📦 Manual installation:"
-        echo "  pip install faster-whisper  # Recommended"
-        echo "  pip install openai-whisper  # Alternative"
-        echo "  brew install ffmpeg         # Optional (macOS)"
-        exit 1
-    fi
-    
-    # Verify installation succeeded
-    if python3 -c "import faster_whisper" 2>/dev/null || python3 -c "import whisper" 2>/dev/null; then
-        echo "✅ Installation successful! Proceeding with transcription..."
-    else
-        echo "❌ Installation failed. Please install manually."
-        exit 1
-    fi
-else
-    echo ""
-    echo "📦 Manual installation required:"
-    echo ""
-    echo "Recommended (fastest):"
-    echo "  pip install faster-whisper"
-    echo ""
-    echo "Alternative (original):"
-    echo "  pip install openai-whisper"
-    echo ""
-    echo "Optional (format conversion):"
-    echo "  brew install ffmpeg  # macOS"
-    echo "  apt install ffmpeg   # Linux"
-    echo ""
-    exit 1
-fi
-```
-
-This ensures users can install dependencies with one confirmation, or opt for manual installation if preferred.
-
-**If transcriber found:**
-
-Proceed to Step 0b (CLI Detection).
-
-
-### Step 1: Validate Audio File
-
-**Objective:** Verify file exists, check format, and extract metadata.
-
-**Actions:**
-
-1. **Accept file path or URL** from user:
-   - Local file: `meeting.mp3`
-   - URL: `https://example.com/audio.mp3` (download to temp directory)
-
-2. **Verify file exists:**
-
-```bash
-if [[ ! -f "$AUDIO_FILE" ]]; then
-    echo "❌ File not found: $AUDIO_FILE"
-    exit 1
-fi
-```
-
-3. **Extract metadata** using ffprobe or file utilities:
-
-```bash
-# Get file size
-FILE_SIZE=$(du -h "$AUDIO_FILE" | cut -f1)
-
-# Get duration and format using ffprobe
-DURATION=$(ffprobe -v error -show_entries format=duration \
-    -of default=noprint_wrappers=1:nokey=1 "$AUDIO_FILE" 2>/dev/null)
-FORMAT=$(ffprobe -v error -select_streams a:0 -show_entries \
-    stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$AUDIO_FILE" 2>/dev/null)
-
-# Convert duration to HH:MM:SS
-DURATION_HMS=$(date -u -r "$DURATION" +%H:%M:%S 2>/dev/null || echo "Unknown")
-```
-
-4. **Check file size** (warn if large for cloud APIs):
-
-```bash
-SIZE_MB=$(du -m "$AUDIO_FILE" | cut -f1)
-if [[ $SIZE_MB -gt 25 ]]; then
-    echo "⚠️  Large file ($FILE_SIZE) - processing may take several minutes"
-fi
-```
-
-5. **Validate format** (supported: MP3, WAV, M4A, OGG, FLAC, WEBM):
-
-```bash
-EXTENSION="${AUDIO_FILE##*.}"
-SUPPORTED_FORMATS=("mp3" "wav" "m4a" "ogg" "flac" "webm" "mp4")
-
-if [[ ! " ${SUPPORTED_FORMATS[@]} " =~ " ${EXTENSION,,} " ]]; then
-    echo "⚠️  Unsupported format: $EXTENSION"
-    if command -v ffmpeg &>/dev/null; then
-        echo "🔄 Converting to WAV..."
-        ffmpeg -i "$AUDIO_FILE" -ar 16000 "${AUDIO_FILE%.*}.wav" -y
-        AUDIO_FILE="${AUDIO_FILE%.*}.wav"
-    else
-        echo "❌ Install ffmpeg to convert formats: brew install ffmpeg"
-        exit 1
-    fi
-fi
-```
-
-
-### Step 3: Generate Markdown Output
-
-**Objective:** Create structured Markdown with metadata, transcription, meeting minutes, and summary.
-
-**Output Template:**
-
-```markdown
-# Audio Transcription Report
-
-## 📊 Metadata
-
-| Field | Value |
-|-------|-------|
-| **File Name** | {filename} |
-| **File Size** | {file_size} |
-| **Duration** | {duration_hms} |
-| **Language** | {language} ({language_code}) |
-| **Processed Date** | {process_date} |
-| **Speakers Identified** | {num_speakers} |
-| **Transcription Engine** | {engine} (model: {model}) |
-
-
-## 📋 Meeting Minutes
-
-### Participants
-- {speaker_1}
-- {speaker_2}
-- ...
-
-### Topics Discussed
-1. **{topic_1}** ({timestamp})
-   - {key_point_1}
-   - {key_point_2}
-
-2. **{topic_2}** ({timestamp})
-   - {key_point_1}
-
-### Decisions Made
-- ✅ {decision_1}
-- ✅ {decision_2}
-
-### Action Items
-- [ ] **{action_1}** - Assigned to: {speaker} - Due: {date_if_mentioned}
-- [ ] **{action_2}** - Assigned to: {speaker}
-
-
-*Generated by audio-transcriber skill v1.0.0*  
-*Transcription engine: {engine} | Processing time: {elapsed_time}s*
-```
-
-**Implementation:**
-
-Use Python or bash with AI model (Claude/GPT) for intelligent summarization:
-
+#### Step 3: Validate Files
 ```python
-def generate_meeting_minutes(segments):
-    """Extract topics, decisions, action items from transcription."""
-    
-    # Group segments by topic (simple clustering by timestamps)
-    topics = cluster_by_topic(segments)
-    
-    # Identify action items (keywords: "should", "will", "need to", "action")
-    action_items = extract_action_items(segments)
-    
-    # Identify decisions (keywords: "decided", "agreed", "approved")
-    decisions = extract_decisions(segments)
-    
-    return {
-        "topics": topics,
-        "decisions": decisions,
-        "action_items": action_items
-    }
-
-def generate_summary(segments, max_paragraphs=5):
-    """Create executive summary using AI (Claude/GPT via API or local model)."""
-    
-    full_text = " ".join([s["text"] for s in segments])
-    
-    # Use Chain of Density approach (from prompt-engineer frameworks)
-    summary_prompt = f"""
-    Summarize the following transcription in {max_paragraphs} concise paragraphs.
-    Focus on key topics, decisions, and action items.
-    
-    Transcription:
-    {full_text}
-    """
-    
-    # Call AI model (placeholder - user can integrate Claude API or use local model)
-    summary = call_ai_model(summary_prompt)
-    
-    return summary
+def validate_video_folder(folder_path):
+    # Check folder exists
+    # Count MP4 files
+    # Estimate total audio duration
+    # Check disk space for outputs
+    # Verify FFmpeg installation
 ```
 
-**Output file naming:**
+#### Step 4: Prompt for Missing Inputs
+If files not found:
+```
+🎥 I need video files to transcribe. I couldn't find MP4s in the expected location.
 
-```bash
-# v1.1.0: Use timestamp para evitar sobrescrever
-TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-TRANSCRIPT_FILE="transcript-${TIMESTAMP}.md"
-ATA_FILE="ata-${TIMESTAMP}.md"
+Please provide ONE of the following:
+1. **Direct folder path**: e.g., `C:\Users\yousu\Desktop\CARDV\Movie_F\20250903`
+2. **Parent directory**: I'll search for date subfolders
+3. **Single video file**: Process just one MP4
 
-echo "$TRANSCRIPT_CONTENT" > "$TRANSCRIPT_FILE"
-echo "✅ Transcript salvo: $TRANSCRIPT_FILE"
-
-if [[ -n "$ATA_CONTENT" ]]; then
-    echo "$ATA_CONTENT" > "$ATA_FILE"
-    echo "✅ Ata salva: $ATA_FILE"
-fi
+💡 Tip: Dashcam folders are usually organized by date (YYYYMMDD)
 ```
 
-
-#### **SCENARIO A: User Provided Custom Prompt**
-
-**Workflow:**
-
-1. **Display user's prompt:**
-   ```
-   📝 Prompt fornecido pelo usuário:
-   ┌──────────────────────────────────┐
-   │ [User's prompt preview]          │
-   └──────────────────────────────────┘
-   ```
-
-2. **Automatically improve with prompt-engineer (if available):**
-   ```bash
-   🔧 Melhorando prompt com prompt-engineer...
-   [Invokes: gh copilot -p "melhore este prompt: {user_prompt}"]
-   ```
-
-3. **Show both versions:**
-   ```
-   ✨ Versão melhorada:
-   ┌──────────────────────────────────┐
-   │ Role: Você é um documentador...  │
-   │ Instructions: Transforme...      │
-   │ Steps: 1) ... 2) ...             │
-   │ End Goal: ...                    │
-   └──────────────────────────────────┘
-
-   📝 Versão original:
-   ┌──────────────────────────────────┐
-   │ [User's original prompt]         │
-   └──────────────────────────────────┘
-   ```
-
-4. **Ask which to use:**
-   ```bash
-   💡 Usar versão melhorada? [s/n] (default: s):
-   ```
-
-5. **Process with selected prompt:**
-   - If "s": use improved
-   - If "n": use original
-
-
-#### **LLM Processing (Both Scenarios)**
-
-Once prompt is finalized:
-
-```python
-from rich.progress import Progress, SpinnerColumn, TextColumn
-
-def process_with_llm(transcript, prompt, cli_tool='claude'):
-    full_prompt = f"{prompt}\n\n---\n\nTranscrição:\n\n{transcript}"
-    
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        transient=True
-    ) as progress:
-        progress.add_task(
-            description=f"🤖 Processando com {cli_tool}...",
-            total=None
-        )
-        
-        if cli_tool == 'claude':
-            result = subprocess.run(
-                ['claude', '-'],
-                input=full_prompt,
-                capture_output=True,
-                text=True,
-                timeout=300  # 5 minutes
-            )
-        elif cli_tool == 'gh-copilot':
-            result = subprocess.run(
-                ['gh', 'copilot', 'suggest', '-t', 'shell', full_prompt],
-                capture_output=True,
-                text=True,
-                timeout=300
-            )
-    
-    if result.returncode == 0:
-        return result.stdout.strip()
-    else:
-        return None
+#### Step 5: Configuration Summary & Confirmation
 ```
+📋 **Transcription Configuration Summary**
 
-**Progress output:**
-```
-🤖 Processando com claude... ⠋
-[After completion:]
-✅ Ata gerada com sucesso!
-```
+**Input:**
+📁 Folder: C:\Users\yousu\Desktop\CARDV\Movie_F\20250903
+📹 Videos found: 47 MP4 files
+⏱️ Estimated audio: ~7.8 hours
+💾 Estimated output size: ~450 MB (transcripts only)
 
-
-#### **Final Output**
-
-**Success (both files):**
-```bash
-💾 Salvando arquivos...
-
-✅ Arquivos criados:
-  - transcript-20260203-023045.md  (transcript puro)
-  - ata-20260203-023045.md         (processado com LLM)
-
-🧹 Removidos arquivos temporários: metadata.json, transcription.json
-
-✅ Concluído! Tempo total: 3m 45s
-```
-
-**Transcript only (user declined LLM):**
-```bash
-💾 Salvando arquivos...
-
-✅ Arquivo criado:
-  - transcript-20260203-023045.md
-
-ℹ️  Ata não gerada (processamento LLM recusado pelo usuário)
-
-🧹 Removidos arquivos temporários: metadata.json, transcription.json
-
-✅ Concluído!
-```
-
-
-### Step 5: Display Results Summary
-
-**Objective:** Show completion status and next steps.
+**Processing:**
+🖥️ GPU: NVIDIA GeForce RTX 4080 (detected)
+🧠 Model: faster-whisper base (FP16, CUDA)
+🎯 Segmentation: fixed 30s chunks
+🗣️ Diarization: disabled (opt-in)
+📝 Formats: txt, json, srt
 
 **Output:**
+💾 Audio extracts: C:\Users\yousu\Desktop\CARDV\Movie_F\20250903\audio\
+📄 Transcripts: C:\Users\yousu\Desktop\CARDV\Movie_F\20250903\transcripts\
+📊 INDEX.csv: C:\Users\yousu\Desktop\CARDV\Movie_F\20250903\transcripts\INDEX.csv
 
-```bash
-echo ""
-echo "✅ Transcription Complete!"
-echo ""
-echo "📊 Results:"
-echo "  File: $OUTPUT_FILE"
-echo "  Language: $LANGUAGE"
-echo "  Duration: $DURATION_HMS"
-echo "  Speakers: $NUM_SPEAKERS"
-echo "  Words: $WORD_COUNT"
-echo "  Processing time: ${ELAPSED_TIME}s"
-echo ""
-echo "📝 Generated:"
-echo "  - $OUTPUT_FILE (Markdown report)"
-[if alternative formats:]
-echo "  - ${OUTPUT_FILE%.*}.srt (Subtitles)"
-echo "  - ${OUTPUT_FILE%.*}.json (Structured data)"
-echo ""
-echo "🎯 Next steps:"
-echo "  1. Review meeting minutes and action items"
-echo "  2. Share report with participants"
-echo "  3. Track action items to completion"
+Ready to proceed? (Yes/No)
 ```
 
+**NEVER begin processing without user confirmation.**
 
-## Example Usage
+---
 
-### **Example 1: Basic Transcription**
+### 2. Audio Processing Pipeline
 
-**User Input:**
-```bash
-copilot> transcribe audio to markdown: meeting-2026-02-02.mp3
+#### A. Audio Extraction (FFmpeg with Retry Matrix)
+
+```python
+# Primary extraction command
+ffmpeg -i video.mp4 -vn -acodec pcm_s16le -ar 16000 -ac 1 audio.wav
+
+# Retry sequence on failure:
+# 1. Codec fallback: pcm_s16le → flac
+# 2. Add demuxer args: -fflags +genpts -rw_timeout 30000000
+# 3. Extended probe: -analyzeduration 100M -probesize 100M
 ```
 
-**Skill Output:**
+**Quality Checks:**
+- Verify audio stream exists (ffprobe preflight)
+- Check duration matches video duration
+- Detect silent/corrupted audio
+- Log extraction errors to `_FAILED.json`
 
-```bash
-✅ Faster-Whisper detected (optimized)
-✅ ffmpeg available (format conversion enabled)
+#### B. Segmentation (Two Modes)
 
-📂 File: meeting-2026-02-02.mp3
-📊 Size: 12.3 MB
-⏱️  Duration: 00:45:32
+**Fixed Mode (Default):**
+- Split audio into 30-second chunks
+- Predictable processing time
+- No external VAD required
+- Best for continuous speech
 
-🎙️  Processing...
-[████████████████████] 100%
+**VAD Mode (Advanced):**
+- Use Silero VAD to detect speech regions
+- Variable-length segments (2-60s)
+- Skip long silences
+- Best for sparse audio (parking mode)
 
-✅ Language detected: Portuguese (pt-BR)
-👥 Speakers identified: 4
-📝 Generating Markdown output...
+**Mutual Exclusion:** Only one mode active at a time.
 
-✅ Transcription Complete!
+#### C. GPU Transcription (faster-whisper)
 
-📊 Results:
-  File: meeting-2026-02-02.md
-  Language: pt-BR
-  Duration: 00:45:32
-  Speakers: 4
-  Words: 6,842
-  Processing time: 127s
+```python
+# Load model with GPU optimization
+model = WhisperModel(
+    "base",
+    device="cuda",
+    compute_type="float16"
+)
 
-📝 Generated:
-  - meeting-2026-02-02.md (Markdown report)
-
-🎯 Next steps:
-  1. Review meeting minutes and action items
-  2. Share report with participants
-  3. Track action items to completion
+# Transcribe with word-level timestamps
+segments, info = model.transcribe(
+    audio_path,
+    beam_size=5,
+    word_timestamps=True,
+    vad_filter=True
+)
 ```
 
+**GPU Metrics Captured:**
+- Device name, VRAM, utilization
+- CUDA version, driver version
+- Average GPU % during run (sampled at 1-2 Hz)
+- Memory usage peaks
 
-### **Example 3: Batch Processing**
+#### D. Speaker Diarization (Optional)
 
-**User Input:**
-```bash
-copilot> transcreva estes áudios: recordings/*.mp3
+**Backends:**
+- **pyannote**: State-of-the-art (requires HF token + VRAM)
+- **speechbrain**: Good performance (no auth required)
+
+**Label Normalization:**
+- Different backends → unified `spkA`, `spkB`, etc.
+- Consistent across INDEX.csv and JSON outputs
+
+**Fallback Behavior:**
+- If HF token missing → skip diarization, log warning
+- If OOM error → disable diarization, continue transcription
+
+---
+
+### 3. Output Generation
+
+#### A. File Organization (Per-Day Structure)
+
+```
+C:\Users\yousu\Desktop\CARDV\Movie_F\
+└── 20250903\
+    ├── audio\
+    │   ├── 20250903133516_059495B.wav
+    │   ├── 20250903134120_059496B.wav
+    │   └── ... (47 files)
+    ├── transcripts\
+    │   ├── 20250903133516_059495B.txt
+    │   ├── 20250903133516_059495B.json
+    │   ├── 20250903133516_059495B.srt
+    │   └── ... (47 × 3 = 141 files)
+    └── INDEX.csv
 ```
 
-**Skill Output:**
+#### B. Format Details
 
-```bash
-📦 Batch mode: 5 files found
-  1. team-standup.mp3
-  2. client-call.mp3
-  3. brainstorm-session.mp3
-  4. product-demo.mp3
-  5. retrospective.mp3
-
-🎙️  Processing batch...
-
-[1/5] team-standup.mp3 ✅ (2m 34s)
-[2/5] client-call.mp3 ✅ (15m 12s)
-[3/5] brainstorm-session.mp3 ✅ (8m 47s)
-[4/5] product-demo.mp3 ✅ (22m 03s)
-[5/5] retrospective.mp3 ✅ (11m 28s)
-
-✅ Batch Complete!
-📝 Generated 5 Markdown reports
-⏱️  Total processing time: 6m 15s
+**TXT (Plain Text):**
+```
+[00:00:15] Speaker A: Hey, where are we going?
+[00:00:18] Speaker B: Just heading to the mall.
+[00:00:22] Speaker A: Okay, sounds good.
 ```
 
-
-### **Example 5: Large File Warning**
-
-**User Input:**
-```bash
-copilot> transcribe audio to markdown: conference-keynote.mp3
+**JSON (Complete Metadata):**
+```json
+{
+  "video_file": "20250903133516_059495B.MP4",
+  "audio_duration_sec": 60,
+  "language": "en",
+  "language_confidence": 0.95,
+  "segments": [
+    {
+      "start": 15.2,
+      "end": 17.8,
+      "text": "Hey, where are we going?",
+      "confidence": 0.89,
+      "speaker": "spkA",
+      "words": [
+        {"word": "Hey", "start": 15.2, "end": 15.4, "confidence": 0.92},
+        {"word": "where", "start": 15.5, "end": 15.8, "confidence": 0.88}
+      ]
+    }
+  ]
+}
 ```
 
-**Skill Output:**
+**SRT (SubRip Subtitles):**
+```
+1
+00:00:15,200 --> 00:00:17,800
+[spkA] Hey, where are we going?
 
-```bash
-✅ Faster-Whisper detected (optimized)
-
-📂 File: conference-keynote.mp3
-📊 Size: 87.2 MB
-⏱️  Duration: 02:15:47
-⚠️  Large file (87.2 MB) - processing may take several minutes
-
-Continue? [Y/n]:
+2
+00:00:18,000 --> 00:00:20,500
+[spkB] Just heading to the mall.
 ```
 
-**User:** `Y`
+**VTT (WebVTT):**
+```
+WEBVTT
 
-```bash
-🎙️  Processing... (this may take 10-15 minutes)
-[████░░░░░░░░░░░░░░░░] 20% - Estimated time remaining: 12m
+00:00:15.200 --> 00:00:17.800
+<v spkA>Hey, where are we going?
+
+00:00:18.000 --> 00:00:20.500
+<v spkB>Just heading to the mall.
 ```
 
+#### C. INDEX.csv (Global Search Index)
 
-This skill is **platform-agnostic** and works in any terminal context where GitHub Copilot CLI is available. It does not depend on specific project configurations or external APIs, following the zero-configuration philosophy.
+Composite key: `(video_rel, seg_idx)`
+
+| Column | Description |
+|--------|-------------|
+| `dataset` | Movie_F / Movie_R / Park_F / Park_R |
+| `date` | YYYYMMDD |
+| `video_rel` | Relative path from root |
+| `video_stem` | Filename without extension |
+| `seg_idx` | 0-based segment index |
+| `ts_start_ms` | Segment start milliseconds |
+| `ts_end_ms` | Segment end milliseconds |
+| `text` | Transcript text (truncated to 512 chars) |
+| `text_len` | Full text length |
+| `lang` | ISO language code |
+| `lang_conf` | Language detection confidence |
+| `conf_avg` | Average token confidence |
+| `speaker` | Normalized speaker label |
+| `format_mask` | Files generated (txt/json/srt/vtt) |
+| `transcript_file` | Basename |
+| `audio_file` | Basename |
+| `engine` | e.g., `faster-whisper:base:fp16` |
+| `cuda_version` | CUDA version |
+| `driver_version` | Driver version |
+| `created_utc` | ISO 8601 timestamp |
+
+#### D. Results JSON (Single Source of Truth)
+
+```json
+{
+  "status": "ok",
+  "summary": {
+    "videos_processed": 47,
+    "segments": 1847,
+    "hours_audio": 7.8,
+    "gpu_detected": true,
+    "device_count": 1,
+    "devices": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "total_mem_mb": 16384,
+        "free_mem_mb": 14200
+      }
+    ],
+    "utilization": {
+      "gpu_pct": 35,
+      "mem_pct": 42,
+      "sampling_hz": 2
+    },
+    "cuda_version": "12.1",
+    "driver_version": "546.01",
+    "torch_version": "2.2.0+cu121",
+    "errors": 0,
+    "failed_files": []
+  },
+  "artifacts": {
+    "index_csv": "C:\\Users\\yousu\\Desktop\\CARDV\\Movie_F\\20250903\\INDEX.csv",
+    "output_dir": "C:\\Users\\yousu\\Desktop\\CARDV\\Movie_F\\20250903\\transcripts"
+  }
+}
+```
+
+---
+
+### 4. Quality & Error Handling
+
+#### A. Resume Safety
+- Skip existing transcripts unless `--force` flag
+- Idempotent: re-running is safe
+- Checkpoint support for long runs
+
+#### B. Error Types & Recovery
+
+**Per-Video Failures** (`{video_stem}_FAILED.json`):
+```json
+{
+  "video_path": "C:\\...\\video.mp4",
+  "error_type": "ffmpeg_err",
+  "error_message": "Failed to decode audio stream",
+  "ffprobe_metadata": {"duration": null, "codec": "h264"},
+  "timestamp": "2025-09-03T14:30:00Z"
+}
+```
+
+Error types:
+- `ffmpeg_err`: Audio extraction failed
+- `decode_err`: Whisper decode failed
+- `OOM`: Out of GPU memory
+- `corrupted`: Container/stream corrupted
+- `no_audio`: No audio stream detected
+
+#### C. SRT/VTT Validation
+- Strictly monotonic timestamps
+- No overlapping segments
+- Clamp gaps <50ms
+- Proper timecode formatting (comma vs period)
+
+---
+
+## Implementation Guide
+
+### Phase 1: Input Acquisition
+```python
+# 1. Parse user request
+inputs = parse_user_request(user_message)
+
+# 2. Auto-discover video files
+if not inputs['video_folder']:
+    inputs['video_folder'] = auto_discover_videos()
+
+# 3. Validate inputs
+validate_video_folder(inputs['video_folder'])
+check_ffmpeg_available()
+check_gpu_available()
+
+# 4. Estimate resource requirements
+estimate_processing_time(inputs)
+estimate_disk_space(inputs)
+
+# 5. Present configuration summary
+show_configuration_summary(inputs)
+
+# 6. Wait for confirmation
+if not user_confirms():
+    return  # Do not proceed
+```
+
+### Phase 2: Audio Extraction
+```python
+for video_file in video_files:
+    # FFprobe preflight check
+    metadata = ffprobe(video_file)
+    if not has_audio_stream(metadata):
+        log_failed(video_file, "no_audio")
+        continue
+
+    # Extract audio with retry
+    try:
+        audio_path = extract_audio_ffmpeg(
+            video_file,
+            output_dir=audio_output_dir,
+            sample_rate=16000,
+            channels=1
+        )
+    except FFmpegError as e:
+        # Retry with fallback codec
+        audio_path = extract_audio_ffmpeg_retry(video_file)
+```
+
+### Phase 3: Transcription
+```python
+# Load model once (reuse for all files)
+model = load_whisper_model(
+    model_size="base",
+    device="cuda",
+    compute_type="float16"
+)
+
+for audio_file in audio_files:
+    # Segment audio
+    if segmentation_mode == "fixed":
+        chunks = segment_fixed(audio_file, chunk_size=30)
+    else:
+        chunks = segment_vad(audio_file, vad_model)
+
+    # Transcribe each chunk
+    all_segments = []
+    for chunk in chunks:
+        segments = model.transcribe(chunk)
+        all_segments.extend(segments)
+
+    # Optional: Diarization
+    if diarization_enabled:
+        all_segments = apply_diarization(audio_file, all_segments)
+```
+
+### Phase 4: Output Generation
+```python
+# Generate all formats
+for video_file, segments in results.items():
+    # TXT
+    write_txt(segments, output_dir)
+
+    # JSON
+    write_json(segments, metadata, output_dir)
+
+    # SRT
+    srt_content = generate_srt(segments)
+    validate_srt_monotonic(srt_content)
+    write_srt(srt_content, output_dir)
+
+    # VTT (optional)
+    write_vtt(segments, output_dir)
+
+    # Update INDEX.csv
+    append_to_index(segments, index_csv_path)
+```
+
+### Phase 5: Completion Report
+```python
+# Generate results JSON
+results_json = {
+    "status": "ok",
+    "summary": collect_statistics(),
+    "artifacts": list_output_files(),
+    "gpu_metrics": get_gpu_metrics()
+}
+
+# Save to file
+save_results_json(results_json, output_dir)
+
+# Report to user
+print(f"✅ Complete! Processed {video_count} videos")
+print(f"   Transcripts: {output_dir}")
+print(f"   INDEX: {index_csv_path}")
+print(f"   GPU Util: {avg_gpu_pct}%")
+```
+
+---
+
+## Reference Materials
+
+### In This Skill
+
+- **SKILL_MANIFEST.md** - Complete technical specification (v2.0)
+- **references/TECHNICAL_SPECIFICATION.md** - Detailed implementation rules
+- **scripts/batch_transcriber.py** - Main batch processing script
+- **scripts/audio_extractor.py** - FFmpeg wrapper with retry logic
+- **scripts/transcriber.py** - Whisper transcription engine
+- **scripts/diarizer.py** - Speaker diarization integration
+- **scripts/format_writers.py** - TXT/JSON/SRT/VTT generators
+- **scripts/gpu_monitor.py** - GPU metrics collection
+- **scripts/validation.py** - Input validation and checks
+- **assets/config_template.json** - Default configuration
+- **assets/params.json** - Tunable parameters
+
+### External Documentation
+
+- faster-whisper documentation
+- FFmpeg audio processing guide
+- pyannote.audio diarization guide
+- SRT/VTT subtitle format specifications
+
+---
+
+## Tunable Parameters
+
+```json
+{
+  "whisper": {
+    "model_size": "base",
+    "device": "cuda",
+    "compute_type": "float16",
+    "batch_size": 8,
+    "beam_size": 5,
+    "language": "en",
+    "detect_language": false
+  },
+  "audio": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "format": "wav",
+    "keep_intermediate": false
+  },
+  "segmentation": {
+    "mode": "fixed",
+    "chunk_length_sec": 30,
+    "vad_min_len_sec": 2,
+    "vad_max_len_sec": 60
+  },
+  "diarization": {
+    "enabled": false,
+    "backend": "pyannote",
+    "min_speakers": 1,
+    "max_speakers": 10
+  },
+  "output": {
+    "formats": ["txt", "json", "srt"],
+    "text_truncate_csv": 512
+  },
+  "parallel": {
+    "max_workers": 3
+  }
+}
+```
+
+---
+
+## Common Issues & Solutions
+
+### Issue 1: "GPU not detected"
+**Cause:** CUDA not installed or incompatible driver
+**Solution:**
+1. Check: `python -c "import torch; print(torch.cuda.is_available())"`
+2. Install/update CUDA toolkit
+3. Fallback to CPU: `--device cpu`
+
+### Issue 2: "FFmpeg command failed"
+**Cause:** FFmpeg not in PATH or unsupported codec
+**Solution:**
+1. Verify: `ffmpeg -version`
+2. Install from ffmpeg.org
+3. Use retry matrix with codec fallback
+
+### Issue 3: "Out of memory (OOM)"
+**Cause:** GPU VRAM insufficient for model + batch size
+**Solution:**
+1. Use smaller model: `tiny` or `small`
+2. Reduce batch size: `--batch 4`
+3. Process fewer files in parallel
+
+### Issue 4: "Diarization failed"
+**Cause:** HF token missing or network error
+**Solution:**
+1. Set token: `export HF_TOKEN=hf_...`
+2. Accept pyannote license on HuggingFace
+3. Disable diarization: `--no-diarize`
+
+### Issue 5: "SRT validation errors"
+**Cause:** Overlapping timestamps or malformed timecodes
+**Solution:**
+1. Enable timestamp clamping: `--clamp-gaps`
+2. Check for negative durations
+3. Validate with subtitle validator tool
+
+---
+
+## Security & Privacy Notes
+
+### Data Sensitivity
+Dashcam audio may contain:
+- Personal conversations
+- Addresses and locations
+- Phone numbers and names
+- Private information
+
+### Processing Guidelines
+1. **Local Processing Only** - Never upload audio to external services
+2. **Secure Storage** - Encrypt transcripts if sharing devices
+3. **Redaction** - Use `--redact` flag for PII patterns (phone, email)
+4. **Retention** - Delete audio extracts after transcription if not needed
+
+### Investigation Use
+- Designed for legitimate personal data analysis
+- NOT an anti-forensics tool
+- All conclusions require independent corroboration
+
+---
+
+## Skill Invocation
+
+This skill is invoked when the model detects:
+1. User mentions "transcribe audio", "dashcam transcription", or "extract speech"
+2. User requests processing of video/MP4 files for audio content
+3. User provides paths to video folders
+4. User asks for subtitles or timestamped transcripts
+
+---
+
+## Success Criteria
+
+A successful audio transcription must:
+
+✅ Obtain all required inputs from user (video folder, output preferences)
+✅ Validate all inputs before processing (files exist, FFmpeg available, GPU detected)
+✅ Present configuration summary and get confirmation
+✅ Extract audio successfully (or log failures)
+✅ Transcribe with GPU acceleration (or CPU fallback)
+✅ Generate all requested formats (TXT, JSON, SRT, VTT)
+✅ Create INDEX.csv with searchable metadata
+✅ Include GPU metrics in results JSON
+✅ Report output locations to user
+
+**Key Principle:** Never guess critical inputs. Always validate, confirm, and provide clear feedback.
+
+---
+
+## Version History
+
+- **v2.0** (2025-10-26) - Production-ready skill with GPU-first architecture
+- **v1.5** (2025-10-25) - Added diarization support and retry matrix
+- **v1.0** (2025-10-20) - Initial release with basic transcription
+
+---
+
+**Last Updated:** 2025-10-26
+**Status:** Production Ready
+**Maintained By:** Audio Transcription Pipeline Project

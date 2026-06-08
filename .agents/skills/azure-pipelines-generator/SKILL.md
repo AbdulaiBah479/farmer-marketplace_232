@@ -1,243 +1,341 @@
 ---
 name: azure-pipelines-generator
-description: Generate/create/scaffold azure-pipelines.yml, stages, jobs, steps, or reusable templates.
+description: Generate Azure Pipelines YAML for CI/CD with multi-stage builds and deployments. Use when creating Azure DevOps pipelines or automating builds.
 ---
 
-# Azure Pipelines Generator
+# Azure Pipelines Generator Skill
 
-Generate production-ready Azure DevOps pipeline YAML with deterministic steps, explicit fallbacks, and clear completion criteria.
+Azure PipelinesのYAML定義を生成するスキルです。
 
-## Trigger Guidance
+## 概要
 
-Use this skill when the user asks to generate or redesign Azure Pipelines YAML, for example:
+CI/CDパイプラインをAzure Pipelines YAML形式で自動生成します。
 
-- "Create `azure-pipelines.yml` for my Node service."
-- "Build a multi-stage Azure DevOps pipeline with staging and production."
-- "Generate Azure pipeline templates for reuse across repos."
-- "Convert this CI flow to Azure Pipelines."
+## 主な機能
 
-Do not use this skill for validation-only requests. For validation-only work, use `azure-pipelines-validator`.
+- **ビルドパイプライン**: CI設定
+- **リリースパイプライン**: CD設定
+- **マルチステージ**: ステージ分割
+- **テンプレート**: 再利用可能な設定
+- **条件付き実行**: ブランチ、タグ条件
+- **環境デプロイ**: Dev、Staging、Production
 
-## Execution Model
+## 基本パイプライン
 
-Normative keywords:
+### Node.js アプリケーション
 
-- `MUST`: required
-- `SHOULD`: default unless user asks otherwise
-- `MAY`: optional
+```yaml
+# azure-pipelines.yml
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - docs/*
+      - README.md
 
-Deterministic sequence:
+pool:
+  vmImage: 'ubuntu-latest'
 
-1. Classify request mode.
-2. Capture minimum required inputs.
-3. Load minimum references (progressive disclosure).
-4. Generate YAML using the quality checklist.
-5. Validate (validator skill, script fallback, or manual fallback).
-6. Return output in the required report format.
+variables:
+  nodeVersion: '18.x'
+  buildConfiguration: 'Release'
 
-If a step cannot run due to environment limits, use the fallback in that step and continue.
+stages:
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Application'
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: $(nodeVersion)
 
-## 1) Classify Request Mode
+          - task: Npm@1
+            displayName: 'npm install'
+            inputs:
+              command: 'install'
 
-Choose exactly one primary mode:
+          - task: Npm@1
+            displayName: 'npm run build'
+            inputs:
+              command: 'custom'
+              customCommand: 'run build'
 
-- **Basic CI:** build/test/lint for one stack.
-- **Multi-stage CI/CD:** build -> test -> deploy with environment tracking.
-- **Docker:** image build/push and optional deploy.
-- **Kubernetes:** image build/push plus Kubernetes deployment.
-- **Language-specific:** .NET, Node.js, Python, Go, Java focused.
-- **Template-based:** reusable templates plus thin root pipeline.
-- **Snippet-only:** partial YAML requested, not full pipeline.
+          - task: Npm@1
+            displayName: 'npm test'
+            inputs:
+              command: 'custom'
+              customCommand: 'test'
 
-Mode-to-example mapping:
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/test-results.xml'
 
-- Basic CI -> `examples/basic-ci.yml`
-- Multi-stage CI/CD -> `examples/multi-stage-cicd.yml`
-- .NET -> `examples/dotnet-cicd.yml`
-- Python -> `examples/python-cicd.yml`
-- Go -> `examples/go-cicd.yml`
-- Kubernetes -> `examples/kubernetes-deploy.yml`
-- Template-based -> `examples/template-usage.yml` + `examples/templates/*.yml`
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish Code Coverage'
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
 
-## 2) Capture Required Inputs
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifact: dist'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/dist'
+              ArtifactName: 'dist'
 
-Collect these before generation:
+  - stage: Deploy_Dev
+    displayName: 'Deploy to Development'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeployDev
+        displayName: 'Deploy to Dev'
+        environment: 'Development'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@0
+                  inputs:
+                    artifactName: 'dist'
 
-- App stack and package manager
-- Build/test commands and report expectations
-- Deployment target (none, Azure service, Docker registry, Kubernetes)
-- Environment flow (dev/staging/prod) and branch gates
-- Service connections, variable groups, secret handling
-- Template requirement (yes/no)
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure Web App'
+                  inputs:
+                    azureSubscription: 'Azure-Connection'
+                    appType: 'webAppLinux'
+                    appName: 'myapp-dev'
+                    package: '$(System.ArtifactsDirectory)/dist'
 
-Safe defaults when missing:
+  - stage: Deploy_Prod
+    displayName: 'Deploy to Production'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProd
+        displayName: 'Deploy to Production'
+        environment: 'Production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@0
+                  inputs:
+                    artifactName: 'dist'
 
-- CI branches: `main`, `develop`
-- Production deploy branch: `main` only
-- Agent image: pinned image (for example `ubuntu-22.04`)
-- Deploy image tag: immutable (`$(Build.BuildId)`), never deploy `latest`
-
-If key details are missing, state assumptions explicitly in final output.
-
-## 3) Load References (Progressive Disclosure)
-
-Read local references first.
-
-Always read:
-
-- `docs/yaml-schema.md`
-- `docs/best-practices.md`
-
-Read conditionally:
-
-- `docs/tasks-reference.md` when selecting tasks/inputs
-- `docs/templates-guide.md` only for template-based mode
-
-Then read only the closest example(s) from the mode mapping above.
-
-Fallback behavior for missing references:
-
-- Missing example: use nearest mode example and note substitution.
-- Missing doc section: continue with known conventions and mark uncertainty.
-- Snippet-only request: read only the minimum needed for safe output.
-
-The final response MUST include:
-
-- `References used`
-- `References skipped or missing`
-- `Impact`
-
-## 4) External Docs Escalation (Only When Needed)
-
-Escalate beyond local docs only when:
-
-- required task info is not in local docs
-- task version compatibility is unclear
-- troubleshooting a task-specific failure
-
-Use this order:
-
-1. Context7 (`mcp__context7__resolve-library-id` -> `mcp__context7__query-docs`)
-2. Official docs search (Microsoft Learn first)
-
-If network/tools are unavailable, proceed with best-known local guidance and add a residual-risk note.
-
-## 5) Pipeline Generation Checklist
-
-Apply all items below unless user asks for a narrow snippet.
-
-Security:
-
-- Never hardcode secrets.
-- Use service connections and variable groups/secrets.
-- Use immutable deploy image tags.
-
-Versioning:
-
-- Pin `vmImage` to explicit version, not `*-latest`.
-- Pin task major versions (`Task@N`).
-- `@0` is allowed only when that task uses major `0`.
-
-Reliability:
-
-- Use explicit `dependsOn`.
-- Add `timeoutInMinutes` for long-running jobs.
-- Use branch-gated deployment `condition` rules.
-- Use deployment jobs with `environment` for deploy stages.
-
-Performance:
-
-- Use `Cache@2` where it improves dependency install time.
-- Use shallow checkout when full history is not required.
-- Publish only required artifacts.
-
-Testing/observability:
-
-- Run lint/tests in CI.
-- Publish test results with `condition: succeededOrFailed()`.
-- Publish coverage when available.
-
-Maintainability:
-
-- Add `displayName` for stages/jobs/key steps.
-- Use templates when logic repeats.
-- Add short comments only for non-obvious logic.
-
-## 6) Validation Workflow
-
-Default path (MUST for full pipeline generation):
-
-1. Generate or update YAML.
-2. Validate with `azure-pipelines-validator`.
-3. Fix findings.
-4. Re-run validation until no blocking issues remain.
-
-Script fallback if validator skill is unavailable but local validator scripts exist:
-
-```bash
-bash devops-skills-plugin/skills/azure-pipelines-validator/scripts/validate_azure_pipelines.sh <pipeline-file>
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure Web App'
+                  inputs:
+                    azureSubscription: 'Azure-Connection'
+                    appType: 'webAppLinux'
+                    appName: 'myapp-prod'
+                    package: '$(System.ArtifactsDirectory)/dist'
 ```
 
-Manual fallback when neither skill nor script can run:
+### .NET アプリケーション
 
-1. YAML structure/indentation sanity
-2. Hierarchy sanity (`stages -> jobs -> steps`)
-3. Task format sanity (`Task@Major`)
-4. Secret exposure scan (no plaintext credentials/tokens)
-5. Deployment safety scan (environment usage, immutable deploy tags)
+```yaml
+trigger:
+  - main
 
-When fallback is used, final response MUST include:
+pool:
+  vmImage: 'windows-latest'
 
-- `Validation status: Manual fallback`
-- `Checks performed`
-- `Residual risk`
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
 
-Validation MAY be skipped only for:
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        steps:
+          - task: NuGetToolInstaller@1
 
-- snippet-only YAML
-- documentation-only examples
-- explicit user request to skip validation
+          - task: NuGetCommand@2
+            inputs:
+              restoreSolution: '$(solution)'
 
-## 7) Output Contract
+          - task: VSBuild@1
+            inputs:
+              solution: '$(solution)'
+              msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
 
-Final response MUST include:
+          - task: VSTest@2
+            inputs:
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
 
-1. Pipeline YAML (or template set)
-2. Required setup:
-   - service connections
-   - variable groups/secrets
-   - environments and approvals/checks
-3. Validation result:
-   - validator status, script status, or manual fallback status
-4. Assumptions
-5. References used/skipped and impact
-6. Optional next improvements
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+```
 
-## 8) Canonical Example Flows
+### Docker ビルド & プッシュ
 
-### Example A: Full multi-stage generation
+```yaml
+trigger:
+  - main
 
-1. Select mode: Multi-stage CI/CD.
-2. Capture stack/deploy/service-connection inputs.
-3. Read `docs/yaml-schema.md`, `docs/best-practices.md`, and `examples/multi-stage-cicd.yml`.
-4. Add requested customizations (stages, branch gates, environments, tasks).
-5. Validate with `azure-pipelines-validator`; fix and re-run.
-6. Return YAML + setup + validation + assumptions + references.
+pool:
+  vmImage: 'ubuntu-latest'
 
-### Example B: Quick snippet generation
+variables:
+  dockerRegistryServiceConnection: 'MyDockerRegistry'
+  imageRepository: 'myapp'
+  containerRegistry: 'myregistry.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
 
-1. Select mode: Snippet-only.
-2. Read only the minimum required reference section.
-3. Generate focused YAML snippet with safe defaults.
-4. Skip full validation and state `Validation status: Skipped (snippet-only)`.
-5. Return snippet + assumptions + references.
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndPush
+        steps:
+          - task: Docker@2
+            displayName: 'Build Docker Image'
+            inputs:
+              command: build
+              repository: $(imageRepository)
+              dockerfile: $(dockerfilePath)
+              containerRegistry: $(dockerRegistryServiceConnection)
+              tags: |
+                $(tag)
+                latest
 
-## 9) Definition of Done
+          - task: Docker@2
+            displayName: 'Push Docker Image'
+            inputs:
+              command: push
+              repository: $(imageRepository)
+              containerRegistry: $(dockerRegistryServiceConnection)
+              tags: |
+                $(tag)
+                latest
 
-The execution is complete only when all applicable checks pass:
+  - stage: Deploy
+    dependsOn: Build
+    jobs:
+      - deployment: DeployToAKS
+        environment: 'kubernetes-prod'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: KubernetesManifest@0
+                  displayName: 'Deploy to AKS'
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'AKS-Connection'
+                    namespace: 'production'
+                    manifests: |
+                      $(Pipeline.Workspace)/manifests/deployment.yml
+                      $(Pipeline.Workspace)/manifests/service.yml
+                    containers: '$(containerRegistry)/$(imageRepository):$(tag)'
+```
 
-- Request mode is explicitly chosen.
-- Assumptions are explicit for missing inputs.
-- YAML follows checklist requirements (security, versioning, reliability, performance, maintainability).
-- Validation path is documented (validator, script fallback, or manual fallback).
-- Final response follows the output contract, including references and impact.
+## テンプレート使用
+
+### メインパイプライン
+
+```yaml
+# azure-pipelines.yml
+trigger:
+  - main
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: PipelineTemplates
+      ref: refs/heads/main
+
+stages:
+  - template: templates/build-template.yml@templates
+    parameters:
+      nodeVersion: '18.x'
+
+  - template: templates/deploy-template.yml@templates
+    parameters:
+      environment: 'Production'
+      appName: 'myapp-prod'
+```
+
+### ビルドテンプレート
+
+```yaml
+# templates/build-template.yml
+parameters:
+  - name: nodeVersion
+    type: string
+    default: '18.x'
+
+jobs:
+  - job: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: ${{ parameters.nodeVersion }}
+
+      - script: |
+          npm install
+          npm run build
+          npm test
+        displayName: 'Build and Test'
+```
+
+## PR トリガー
+
+```yaml
+# PR validation
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - docs/*
+
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: Npm@1
+    displayName: 'npm install'
+    inputs:
+      command: 'install'
+
+  - task: Npm@1
+    displayName: 'Run linter'
+    inputs:
+      command: 'custom'
+      customCommand: 'run lint'
+
+  - task: Npm@1
+    displayName: 'Run tests'
+    inputs:
+      command: 'custom'
+      customCommand: 'test'
+```
+
+## バージョン情報
+
+- スキルバージョン: 1.0.0
+- 最終更新: 2025-01-22

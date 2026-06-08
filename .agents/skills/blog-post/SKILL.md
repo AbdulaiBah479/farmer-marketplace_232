@@ -1,235 +1,236 @@
 ---
 name: blog-post
-description: 'Use this skill when writing blog posts, articles, or long-form web content—from quick how-to guides to in-depth opinion pieces. Trigger phrases: ''write a blog post about'', ''draft an article on'', ''create a post for my blog''. Do NOT use for academic papers, news reporting, or content requiring real-time facts.'
-version: 1.0.0
-author: community
-tags:
-  - writing
-  - blogging
-  - content-marketing
-  - seo
-license: MIT
-keywords:
-  - write blog
-  - write article
-  - web content
-  - SEO
-  - tutorial writing
-  - blog
-  - post
-  - blog post
+description: Complete workflow for creating blog posts - from research to publication-ready draft. Handles research generation, draft creation, and style review. Use with "/blog-post <topic>" or "/blog-post --from-research <path>".
 ---
 
-# Blog Post
+# Blog Post Creation Workflow
 
-## Overview
-This skill helps you write compelling, well-structured blog posts that engage readers from the opening hook to the final call to action. It covers SEO fundamentals, headline formulas, tone matching to your brand voice, and the right word count for your goal—whether you're publishing a punchy 800-word opinion piece or a comprehensive 2,000-word tutorial. The output is publication-ready content, not a rough draft.
+## Purpose
+Streamline the daily blog post creation process by automating research, drafting, and style review in a single command.
 
-## When to Use
-- Writing how-to tutorials and step-by-step guides
-- Drafting opinion or thought-leadership articles
-- Creating listicles and roundup posts
-- Producing SEO-targeted content around a keyword
-- Repurposing research or notes into readable web content
-- Writing content marketing pieces that drive traffic
+## Usage Modes
 
-## When NOT to Use
-- Academic or peer-reviewed papers (use `academic-essay` skill instead)
-- News articles requiring verified, real-time information
-- Press releases (distinct format and distribution requirements)
-- Social media posts (use `social-media` skill instead)
-- Technical documentation (use `technical-writer` skill instead)
-
-## Quick Reference
-| Task | Approach |
-|------|----------|
-| Hook | Start with a stat, question, or bold claim in the first 2 sentences |
-| Headline | Use formulas: "How to X", "N Ways to Y", "Why Z" |
-| Word count | Tutorial: 1,200–2,000 words; Opinion: 800–1,200 words; Listicle: 1,000–1,500 words |
-| SEO | Include primary keyword in title, first paragraph, one H2, and meta description |
-| Paragraphs | Keep to 3–4 sentences max for web readability |
-| CTA | One clear call-to-action at the end; optionally one mid-post |
-| Subheadings | Every 200–300 words to break up the wall of text |
-
-## Instructions
-
-1. **Identify the post type and goal.** Determine whether this is a tutorial, opinion, listicle, or case study. Clarify the target audience (beginner vs. expert), the primary keyword if SEO matters, and the desired word count range.
-
-2. **Craft the headline first.** Use a proven formula:
-   - How-to: "How to [Achieve Result] in [Timeframe/Steps]"
-   - Listicle: "[Number] [Adjective] Ways to [Achieve Goal]"
-   - Opinion: "Why [Counterintuitive Claim] Is Actually [Positive Outcome]"
-   - Question: "Is [Common Belief] Really [Worth It/True]?"
-
-3. **Write the hook (first 100 words).** Open with one of these techniques:
-   - Surprising statistic: "73% of blog posts get zero backlinks—here's what the other 27% do differently."
-   - Relatable problem: "You've spent three hours staring at a blank document. The post is due tomorrow."
-   - Bold claim: "Most productivity advice is making you less productive."
-
-4. **Build the body structure.** Use this skeleton:
-   - **Intro (10%):** Hook + problem statement + promise of what reader will learn
-   - **Body (80%):** 3–7 sections with H2/H3 subheadings, each covering one point
-   - **Conclusion (10%):** Summary of key takeaways + CTA
-
-5. **Apply SEO basics.**
-   - Place the primary keyword in the title, within the first 100 words, in at least one H2, and in the meta description (150–160 chars)
-   - Use related/semantic keywords naturally in body copy
-   - Write a meta description that includes the keyword and a benefit
-
-6. **Match the tone to the audience.** Ask: Is this brand casual or professional? Technical or accessible? Use second-person ("you") to speak directly to the reader.
-
-7. **Write the CTA.** End with one clear next step: subscribe, download, read another post, comment. Make it specific—"Download the free checklist" outperforms "Click here."
-
-8. **Edit for web readability.** Short sentences. Active voice. Bullet lists for steps. Bold key terms. Cut every word that doesn't earn its place.
-
-## Examples
-
-### Example 1: Tech Tutorial Post
-
-**Input:** "Write a blog post on how to set up a Python virtual environment for beginners. Primary keyword: 'Python virtual environment'. Target: developers new to Python."
-
-**Output:**
-
----
-
-**Headline:** How to Set Up a Python Virtual Environment (The Right Way)
-
-**Meta description:** Learn how to set up a Python virtual environment in under 5 minutes. Keep your projects isolated, dependencies clean, and your future self happy.
-
-**Hook:**
-Every Python developer eventually hits this wall: you install a package for one project and break another. The fix is a Python virtual environment, and setting one up takes less than five minutes. This guide walks you through it step by step—no prior experience needed.
-
-**[H2] What Is a Python Virtual Environment?**
-A virtual environment is an isolated folder that contains its own Python interpreter and packages. Instead of installing libraries globally on your machine (where they can conflict), each project gets its own clean slate.
-
-Think of it like separate toolboxes for each job. The wrench in one box doesn't interfere with the wrench in another.
-
-**[H2] Prerequisites**
-- Python 3.6 or higher installed (`python --version` to check)
-- Terminal or Command Prompt access
-- That's it
-
-**[H2] Step 1: Create the Virtual Environment**
-
-Navigate to your project folder and run:
-
-```bash
-python -m venv venv
+### Mode 1: Start from scratch with a topic
+```
+/blog-post "CPU Scheduling in Hypervisors"
+/blog-post "Database Connection Pools" --category infra --tags db,performance,connections
 ```
 
-This creates a folder called `venv` inside your project. You can name it anything, but `venv` is the convention.
+This will:
+1. Run deep-dive research using `docs/deep_dive_prompt.md`
+2. Save research to `_research/` directory
+3. Generate blog post draft following style guide
+4. Review against `blog-post-style-guide.md`
+5. Create final file in `_posts/` with proper naming
 
-**[H2] Step 2: Activate It**
-
-On macOS/Linux:
-```bash
-source venv/bin/activate
+### Mode 2: From existing research document
+```
+/blog-post --from-research _research/physical-virtual-foundations/03-physical-virtual-foundations-CPU.md
+/blog-post --from-research _research/programming/01-distributed-programming-IBLT.md --series "Distributed Programming"
 ```
 
-On Windows:
-```bash
-venv\Scripts\activate
+This will:
+1. Read the research document
+2. Generate blog post draft following style guide
+3. Review against `blog-post-style-guide.md`
+4. Create final file in `_posts/` with proper naming
+
+## Workflow Steps
+
+### Step 0: Setup & Context Gathering
+
+**ALWAYS start with:**
+1. **Create todos using TodoWrite** - Track all workflow steps, mark in_progress/completed as you work
+2. **Read 2-3 recent posts** from `_posts/` to match current voice and patterns
+3. **Check for series** - If topic matches existing series (grep titles), use series format
+4. **Sequential numbering** - For research files: `ls _research/<category>/ | sort -n | tail -1` to get next number
+5. **Validate research path** (Mode 2) - Ensure file exists before proceeding
+
+### Step 1: Research Phase (Mode 1 only)
+
+**If starting from topic:**
+1. Read `docs/deep_dive_prompt.md`
+2. Use the prompt structure to conduct deep research on the topic
+3. Create comprehensive research document in `_research/` directory
+4. Organize under appropriate subdirectory (infra, programming, systems, etc.)
+5. Save as `_research/<category>/<number>-<topic-slug>.md`
+
+**Quality gate - Research must have:**
+- All 8 sections from deep_dive_prompt (Mental Model, Failure Modes, Tradeoffs, Socratic Questions, Lifecycle, Experiments, Red Flags, Operator Truths)
+- At least 5 concrete failure modes
+- 10 Socratic questions (unanswered)
+- Real examples, not hypotheticals
+
+**If from existing research:**
+1. Read the provided research document path
+2. Validate it exists and has content (if not, show available files in `_research/`)
+3. Skip to drafting phase
+
+### Step 2: Draft Generation
+
+**CRITICAL: Transform, don't copy!**
+- Blog = 30-40% of research length (800-1500 words max)
+- NEVER copy entire research sections verbatim
+- Extract 2-3 key insights, not everything
+- Add first-person narrative that research lacks ("As I explored...", "I was surprised to find...")
+- Pick 1-2 failure modes → inline examples with real commands
+- Socratic questions → DO NOT include directly, use to shape narrative flow
+- Operator truths → Final Thoughts section
+
+**Content Transformation:**
+- **Extract key insights** from research that match blog philosophy (personal learning, operational focus)
+- **Distill complexity** - research is comprehensive, blog is focused and digestible
+- **Add personal voice** - first-person, conversational, "I found myself learning..."
+- **Focus on "why it matters"** - connect theory to practice for software engineers
+- **Include concrete examples** - real commands, outputs, scenarios
+
+**Structure Requirements:**
+1. **Front matter** - Generate based on topic and user-provided options:
+   ```yaml
+   ---
+   title: "<Series Name - Specific Topic>" or "<Standalone Topic>"
+   date: <today's date in YYYY-MM-DD HH:MM:SS -0500>
+   categories: <programming|infra|ai>
+   tags: [ <3-6 relevant tags> ]
+   ---
+   ```
+   - CRITICAL: Date must be today or earlier, NEVER a future date
+   - Ask user for series name if ambiguous
+   - Suggest category and tags based on content
+
+2. **Opening (1-2 sentences)** - Personal context, direct and concise:
+   - Jump to what sparked interest
+   - No verbose setup
+   - Examples from existing posts show this pattern
+
+3. **Main sections with ## and ### headings**:
+   - Start with concept definition
+   - Include "Why should software engineers care?" section
+   - Use question-based headers when appropriate
+   - Progress simple → complex
+
+4. **Examples and visuals**:
+   - Real command outputs (not hypotheticals)
+   - ASCII diagrams for architecture
+   - Code blocks with language specifiers
+   - **Citations required**: All concrete numbers (latency, throughput, %, multipliers) MUST cite source (Intel docs, AWS specs, etc.) OR use qualitative ("significantly faster" instead of "2x")
+
+5. **Final Thoughts (optional but recommended)**:
+   - Synthesize learnings
+   - Connect to broader applications
+   - Pose implications
+
+**Voice Requirements (from style guide):**
+- First-person perspective ("I", "we")
+- Conversational without sacrificing accuracy
+- Avoid overloaded adjectives ("very", "highly", "incredibly", "remarkably")
+- No AI-sounding intensifiers
+- Trust technical content to speak for itself
+- Use concrete details over vague praise
+
+**Quality gate - Draft must have:**
+- Word count 800-1500 (concise, not research republished)
+- Opening 1-2 sentences max
+- "Why should software engineers care?" section exists
+- At least one concrete example or command output
+- No future dates in front matter
+- First-person voice throughout ("I", "we", "As I learned...")
+
+### Step 3: Style Review
+
+Review the draft against `.claude/blog-post-style-guide.md`:
+
+**Check:**
+- [ ] Front matter complete and properly formatted
+- [ ] Date is not in the future
+- [ ] Opening is concise (1-2 sentences)
+- [ ] Main concept defined early
+- [ ] "Why should software engineers care?" addressed
+- [ ] Technical terms defined on first use
+- [ ] Examples use real commands/outputs
+- [ ] Visuals are clean and readable
+- [ ] Actionable takeaways provided
+- [ ] Tone is conversational and first-person
+- [ ] No overloaded adjectives or intensifiers
+- [ ] Concrete numbers cite sources OR use qualitative descriptions
+- [ ] Logical flow from simple to complex
+
+**Provide:**
+1. List of issues found (if any)
+2. Suggested fixes for each issue
+3. Revised sections for critical problems
+4. Overall assessment: "Ready to publish" or "Needs revision"
+
+**If issues found:**
+- Auto-fix minor issues: AI intensifiers, missing citations (convert to qualitative), formatting
+- For critical issues (missing sections, wrong voice): Show before/after, apply fixes
+- Re-run style review after fixes (max 2 iterations)
+- Only ask user for major structural decisions
+
+### Step 4: File Creation
+
+**Filename format:** `YYYY-MM-DD-topic-slug.md`
+- Use today's date
+- Convert topic to lowercase kebab-case
+- Example: `2026-01-03-cpu-scheduling-hypervisors.md`
+
+**Location:** `_posts/`
+
+**Before saving:**
+- Check if file exists → Ask: "Overwrite, save as new (-v2), or cancel?"
+- Validate filename format and date
+
+**Final output:**
+1. Save the reviewed and polished draft to `_posts/<filename>`
+2. Show summary: file path, word count, series (if applicable)
+3. Ask next step: "Preview locally? Commit to git? Review file? Done?"
+
+## User Interaction
+
+**Ask for clarification when:**
+- Category is ambiguous (suggest based on content)
+- Tags are unclear (suggest 3-6 relevant tags)
+- Series name is needed but not provided
+- Topic is too broad (suggest narrowing)
+- Research document path doesn't exist
+
+**Provide feedback:**
+- "Research phase complete - saved to `_research/...`"
+- "Draft generated - reviewing against style guide..."
+- "Style review complete - found X issues"
+- "Blog post created: `_posts/YYYY-MM-DD-topic.md`"
+
+## Critical Rules
+
+1. **Transform, don't republish** - Blog is 30-40% of research length with personal narrative added
+2. **Quality gates** - Validate research completeness, draft word count, voice consistency
+3. **Voice matching** - Read recent posts before drafting, match established patterns
+4. **Citations** - All numbers cite sources OR use qualitative descriptions
+5. **Auto-fix** - Apply minor fixes automatically, iterate max 2 times
+6. **Error handling** - Validate paths, check file existence, ask before overwriting
+7. **Todo tracking** - Use TodoWrite from start, mark completed immediately after each step
+
+## Example Interactions
+
+### Example 1: From scratch
+```
+User: /blog-post "Memory Balloon Drivers"
+
+Assistant: Starting research phase on "Memory Balloon Drivers"...
+[Creates research document]
+Research complete: _research/infra/04-memory-balloon-drivers.md
+
+Generating blog post draft...
+Style review complete - 2 minor issues found
+Blog post created: _posts/2026-01-03-memory-balloon-drivers.md
 ```
 
-Your terminal prompt will change to show `(venv)`, confirming it's active.
-
-**[H2] Step 3: Install Packages**
-
-Now install packages as normal—they'll only exist inside this environment:
-
-```bash
-pip install requests
+### Example 2: From existing research
 ```
+User: /blog-post --from-research _research/infra/03-cpu-scheduling.md --series "Physical Virtual Foundations"
 
-**[H2] Step 4: Freeze Your Dependencies**
-
-Before sharing your project, save the dependency list:
-
-```bash
-pip freeze > requirements.txt
+Assistant: Reading research document...
+Generating blog post draft following "Physical Virtual Foundations" series pattern...
+Style review complete - ready to publish
+Blog post created: _posts/2026-01-03-physical-virtual-foundations-cpu-scheduling.md
 ```
-
-Anyone can recreate your environment with `pip install -r requirements.txt`.
-
-**[H2] Common Mistakes to Avoid**
-- **Committing the venv folder to Git.** Add `venv/` to your `.gitignore`.
-- **Forgetting to activate.** If packages seem missing, check that `(venv)` is in your prompt.
-
-**Conclusion:**
-Virtual environments are one of those habits that feel like extra work until the day they save you hours of debugging. Create one for every project, activate it before you code, and you'll never deal with dependency conflicts again.
-
-**CTA:** Ready to go deeper? Read our guide on managing dependencies with `pip` and `requirements.txt`.
-
----
-
-### Example 2: Opinion Piece
-
-**Input:** "Write an 800-word opinion post arguing that remote work is better for creativity than office work. Conversational tone, no specific keyword."
-
-**Output:**
-
----
-
-**Headline:** Why Your Best Ideas Never Happen at the Office
-
-**Hook:**
-The brainstorming session is over. You've filled three whiteboards, consumed two pots of coffee, and generated seventeen ideas—all of which were mediocre. Then, an hour after you got home, you're in the shower and it hits you: the actually good idea. Sound familiar?
-
-There's a reason for that, and it has everything to do with where we do our best thinking.
-
-**[H2] The Myth of Collaborative Creativity**
-We've been sold the idea that creativity is a group sport. Open offices, standing desks, and scheduled "ideation sessions" are supposed to spark innovation through proximity and spontaneous conversation. The data tells a different story.
-
-A 2022 study in Nature found that virtual meetings are better for generating creative ideas than in-person ones—remote workers produced 18% more creative output. The reason? Distance creates cognitive space. When you're not monitoring social dynamics, managing interruptions, or performing productivity for your boss, your default mode network—the brain region linked to imagination—has room to work.
-
-**[H2] Interruptions Are Creativity Killers**
-It takes an average of 23 minutes to regain deep focus after an interruption, according to research from UC Irvine. The open office is an interruption machine. Remote work lets you design your own environment: noise levels, lighting, work hours—all tuned to when you actually think best.
-
-For some people that's 6 a.m. with coffee. For others it's 10 p.m. with the TV on. Neither of these times is 2 p.m. in a fluorescent-lit conference room.
-
-**[H2] The Shower Effect Is Real**
-Insights don't arrive on command. They arrive when the mind is relaxed and the task is temporarily set aside—what researchers call "incubation." Remote workers naturally build more incubation time into their day: the walk to the kitchen, a lunch away from the desk, an afternoon without back-to-back meetings.
-
-The office optimizes for visibility. Remote work optimizes for output.
-
-**[H2] The Collaboration Counterargument**
-To be fair: execution benefits from proximity. When a creative idea needs rapid iteration—when two people need to whiteboard fast and build on each other's energy—an in-person sprint is hard to beat. Hybrid models exist for this reason.
-
-But the *generation* of the idea? That happens alone, usually in a moment of quiet.
-
-**Conclusion:**
-If your organization wants more creative thinking, the answer isn't bigger offices or more brainstorming meetings. It's more autonomy, fewer interruptions, and trust that your people are thinking—even when you can't see them doing it.
-
-The next great idea is probably happening right now in someone's shower. Let's stop scheduling it out of existence.
-
----
-
-## Best Practices
-- Write the headline and hook before the body—they set the tone and structure
-- Use subheadings every 200–300 words; readers scan before they read
-- Keep paragraphs to 3 sentences max for mobile readability
-- Use active voice: "We improved results" not "Results were improved"
-- End every section with a transition or micro-summary
-- Read the post aloud before publishing—awkward sentences become obvious
-
-## Common Mistakes
-- **Burying the lede:** Readers shouldn't have to get to paragraph four to understand what the post is about
-- **Generic headlines:** "A Guide to Email" loses every time to "7 Cold Email Templates That Get Replies"
-- **No CTA:** Every post should tell readers what to do next
-- **Keyword stuffing:** If your primary keyword appears more than once per 100 words, it's too many
-- **Too long an intro:** The hook should take 2–3 sentences, not two paragraphs of throat-clearing
-- **Passive voice overuse:** It weakens authority and bores readers
-
-## Tips & Tricks
-- Use the "inverted pyramid" for tutorials: most important info first, detail later
-- Write a working title first, then refine it after the post is done when you know what you actually wrote
-- Add a TL;DR summary near the top for long posts (1,500+ words)—readers appreciate it
-- Use numbered lists for sequential steps, bullet lists for non-sequential items
-- Compress intros: delete your first paragraph and see if the post still makes sense—often it does
-- For SEO posts, check competitors' H2s to identify subtopics you should cover
-
-## Related Skills
-- [proofreader](../../writing/proofreader/SKILL.md)
-- [copywriter](../../writing/copywriter/SKILL.md)
-- [social-media](../../writing/social-media/SKILL.md)
-- [academic-essay](../../writing/academic-essay/SKILL.md)

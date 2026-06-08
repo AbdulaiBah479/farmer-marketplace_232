@@ -1,191 +1,333 @@
 ---
 name: swot-analysis
-description: >
-  SWOT analysis (Strengths, Weaknesses, Opportunities, Threats) — the
-  foundational strategic-positioning exercise. Use when assessing a new
-  market entry, a strategic pivot, a competitive response, an org
-  restructure, or as input to annual strategic planning. Includes a
-  validator that flags generic, ungrounded, or one-sided SWOTs.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: strategy-frameworks
-  updated: 2026-05-27
-  python-tools: swot_scorer.py
-  tech-stack: swot-analysis, strategic-positioning, situation-analysis
+description: "Analyze Strengths, Weaknesses, Opportunities, and Threats when you need to make strategic decisions, evaluate positions, or plan initiatives. Not for simple technical choices, debugging, or tactical execution."
 ---
 
 # SWOT Analysis
 
-A grounded, evidence-backed SWOT — not the bullet-point ceremony most
-people perform at the start of a planning offsite.
+Analyze internal Strengths and Weaknesses, plus external Opportunities and Threats to develop strategic insights.
 
-## When to use this skill
+## Core Pattern
 
-- **Annual strategic planning** input
-- **New market entry** assessment
-- **Pivot conversations**
-- **Competitive response** decisions
-- **Org restructure** evaluation
-- **Pre-board** strategic review
-- **Pre-fundraise** investor narrative grounding
+Apply SWOT analysis by:
 
-## The 2x2
+1. Identifying internal Strengths (what you do well)
+2. Identifying internal Weaknesses (what you lack)
+3. Identifying external Opportunities (what could help)
+4. Identifying external Threats (what could hurt)
+5. Developing strategies from these insights
 
-|                | Helpful | Harmful |
-|----------------|---------|---------|
-| **Internal**   | Strengths | Weaknesses |
-| **External**   | Opportunities | Threats |
+**Key Innovation**: Mapping factors across four dimensions reveals strategic connections and action items that aren't obvious from linear thinking.
 
-Internal = within our control (people, IP, ops, brand, capital).
-External = outside our control (market, competition, regulation, tech shifts).
+## When to Use
 
-The single most-common SWOT failure: confusing internal with external.
+Use this strategic framework when:
 
-## Workflow
+- Making strategic decisions
+- Evaluating competitive position
+- Planning projects or initiatives
+- Assessing team or organization capabilities
+- Facing complex decisions with multiple factors
 
-### Step 1 — Define the scope
-A SWOT must have an explicit subject:
-- "Acme entering the European market"
-- "Our enterprise sales motion vs SMB"
-- "Our position vs Competitor X in vertical Y"
+**Recognition test:** "Is this a strategic decision with multiple factors?" If yes, map the situation.
 
-A SWOT without scope produces 4 lists of bullets that point in 4 directions.
+## The Four Dimensions
 
-### Step 2 — Strengths (with evidence)
-For each strength:
-- What is it specifically?
-- What's the evidence (data, customer quote, benchmark)?
-- How does it compare to competitors?
-- Does the market actually care?
+**Internal Factors (What you control)**
 
-A strength no customer cares about isn't a strength.
+- **Strengths**: What you do well, advantages you have
+- **Weaknesses**: What you lack, areas for improvement
 
-### Step 3 — Weaknesses (with honesty)
-For each weakness:
-- What is it specifically?
-- What's the evidence?
-- Are we fixing it? Why or why not?
-- What's the cost of leaving it?
+**External Factors (What you don't control)**
 
-A SWOT with no real weaknesses signals bias or low candor.
+- **Opportunities**: External situations you could leverage
+- **Threats**: External risks that could hurt you
 
-### Step 4 — Opportunities (with sizing)
-For each opportunity:
-- What's the trigger / shift creating this opportunity?
-- What's the size (TAM/SAM/SOM if quantifiable)?
-- What's the time window?
-- What's our right to win?
+## Step-by-Step Process
 
-"AI is hot" is not an opportunity. "Regulated industries replacing
-manual GDPR processes — $8B SAM, 36-month window" is.
+### Step 1: List Strengths (S)
 
-### Step 5 — Threats (with severity)
-For each threat:
-- What is it specifically?
-- How likely (1-5)?
-- How severe if realized (1-5)?
-- What can we do to mitigate?
-
-### Step 6 — TOWS matrix (cross-cuts)
-The most-valuable post-SWOT step:
-
-|              | Opportunities | Threats |
-|--------------|---------------|---------|
-| **Strengths** | SO: leverage strength to capture opportunity | ST: leverage strength to defend against threat |
-| **Weaknesses** | WO: address weakness to capture opportunity | WT: minimize weakness to avoid threat |
-
-This converts a static SWOT into strategic actions.
-
-### Step 7 — Run `swot_scorer.py`
-Audit for: generic items, missing evidence, internal/external misclassification,
-no quantification, no TOWS actions, one-sided SWOT.
-
-```bash
-python3 project-management/strategy-frameworks/swot-analysis/scripts/swot_scorer.py \
-  --input swot.json --format markdown
+```
+What do we do better than anyone else?
+What unique resources do we have?
+What do others see as our strengths?
 ```
 
-## Decision frameworks
+### Step 2: List Weaknesses (W)
 
-### Internal vs external — the test
+```
+What could we improve?
+What do we do poorly?
+What resources are we missing?
+```
 
-If the item depends on something we own (people, money, tech, brand,
-process, IP) → internal.
+### Step 3: List Opportunities (O)
 
-If the item depends on something we don't own (market, customers,
-competitors, regulators, technology trends) → external.
+```
+What trends could we benefit from?
+What changes are coming?
+What competitors are vulnerable?
+```
 
-Common miscategorizations:
-- "Strong brand recognition in segment X" — internal (we own it)
-- "Customers love our brand" — external (customer behavior)
-- "Strong eng team" — internal
-- "Hard to recruit eng talent" — external
-- "Our cloud bill is high" — internal
-- "Cloud prices rising" — external
+### Step 4: List Threats (T)
 
-### When to do a SWOT vs other frameworks
+```
+What competitors are strong?
+What trends work against us?
+What could go wrong?
+```
 
-| Use SWOT | Use other |
-|----------|-----------|
-| Broad strategic positioning | Industry analysis → Porter's Five Forces |
-| Multi-stakeholder alignment | Macro environment → PESTLE |
-| Annual planning input | Growth options → Ansoff Matrix |
-| New market entry overview | Business model design → BMC / Lean Canvas |
+### Step 5: Develop Strategies
 
-SWOT is breadth. Other frameworks add depth on specific dimensions.
+```
+- SO: Use Strengths to capture Opportunities
+- ST: Use Strengths to address Threats
+- WO: Overcome Weaknesses to pursue Opportunities
+- WT: Minimize Weaknesses to avoid Threats
+```
 
-### From SWOT to strategy
+## Application Examples
 
-A SWOT alone isn't a strategy. It's input. Strategy comes from:
+### Example 1: Software Project
 
-1. SWOT → identifies positioning realities
-2. TOWS → identifies strategic options
-3. Prioritization → which 2-3 options to pursue
-4. Resourcing → what we'll fund + give up
-5. KPIs → how we'll know it worked
+**Strengths**:
 
-Skipping any step produces a wall of analysis without action.
+- Experienced team with deep domain knowledge
+- Existing user base for feedback
+- Clean codebase with good test coverage
 
-## Common engagements
+**Weaknesses**:
 
-### "Run a SWOT for entering market X"
-1. Scope: explicitly "entering market X."
-2. List internal capabilities relevant to that market (Strengths, Weaknesses).
-3. List external factors specific to market X (Opportunities, Threats).
-4. Score evidence + materiality per item.
-5. Run TOWS.
-6. Recommend 2-3 strategic moves.
+- Limited budget for infrastructure
+- Small team (can't scale quickly)
+- No marketing expertise
 
-### "Audit our existing SWOT"
-1. Pull current SWOT.
-2. Run `swot_scorer.py` for generic/ungrounded/miscategorized items.
-3. Surface bias: too many strengths, no real weaknesses, vague opportunities.
-4. Add TOWS if missing.
+**Opportunities**:
 
-## Anti-patterns to avoid
+- Market trend toward our solution space
+- Competitor recently raised prices (created gap)
+- New technology enables better UX
 
-- **No explicit scope.** SWOT for "the company" = SWOT for nothing.
-- **Generic items.** "Great team, great product, growing market, competitors."
-- **Strengths = aspirations.** What you wish were true, not what is.
-- **No weaknesses.** Either bias or low candor.
-- **Opportunities = topics, not options.** "AI" isn't an opportunity.
-- **Threats = abstract anxieties.** Quantify likelihood + severity.
-- **No TOWS.** SWOT without TOWS is just a wall.
-- **Internal/external confusion.** Common; check every item.
-- **SWOT replaces strategy.** SWOT is input, not output.
+**Threats**:
 
-## References
+- Large competitor entering our space
+- Economic downturn affecting customers
+- Key dependency on third-party API
 
-- `references/swot-framework.md` — categorization, evidence standards, TOWS
-- `references/swot-anti-patterns.md` — common failures + worked fixes
+**Strategies**:
 
-## Related skills
+- **SO**: Leverage domain expertise to build better UX than competitor using new technology
+- **ST**: Use existing user base loyalty to defend against large competitor
+- **WO**: Partner with marketing-savvy company to overcome marketing weakness
+- **WT**: Reduce dependency on third-party API to avoid vendor risk
 
-- `project-management/strategy-frameworks/porters-five-forces` — competitive dynamics
-- `project-management/strategy-frameworks/ansoff-matrix` — growth options
-- `project-management/strategy-frameworks/business-model-canvas` — operational view
-- `project-management/strategy-frameworks/lean-canvas` — startup view
-- `c-level-advisor/ceo-advisor` — strategic context
+### Example 2: Career Decision
+
+**Strengths**:
+
+- Strong technical skills
+- Good communication ability
+- Network in the industry
+
+**Weaknesses**:
+
+- Limited management experience
+- Prefer technical work over meetings
+- Not interested in politics
+
+**Opportunities**:
+
+- Company growing rapidly
+- New product line launching
+- Remote work options expanding
+
+**Threats**:
+
+- Industry consolidating
+- Ageism in tech
+- Skills becoming commoditized
+
+**Strategies**:
+
+- **SO**: Use technical skills to lead new product line
+- **ST**: Deepen specialization to differentiate
+- **WO**: Develop technical leadership (not management) path
+- **WT**: Build independent income streams to reduce job dependency
+
+### Example 3: Product Feature Decision
+
+**Strengths**:
+
+- Fast development team
+- Existing infrastructure
+- User data and analytics
+
+**Weaknesses**:
+
+- Limited design resources
+- No mobile expertise
+- Spaghetti code in some areas
+
+**Opportunities**:
+
+- Mobile usage increasing
+- AI/ML becoming accessible
+- Competitors slow to adapt
+
+**Threats**:
+
+- Platform changes (API deprecations)
+- User privacy concerns increasing
+- Attention spans decreasing
+
+**Strategies**:
+
+- **SO**: Use fast development to ship AI feature before competitors
+- **ST**: Leverage user data to build better experience despite platform changes
+- **WO**: Partner with design agency for mobile, don't build in-house
+- **WT**: Refactor spaghetti code before it becomes critical
+
+## Output Format
+
+After analysis, produce structured output:
+
+```markdown
+# SWOT Analysis: [Subject]
+
+## Internal Strengths (S)
+
+1. [Strength 1] - [Why this matters]
+2. [Strength 2] - [Why this matters]
+3. [Strength 3] - [Why this matters]
+
+## Internal Weaknesses (W)
+
+1. [Weakness 1] - [Why this is a problem]
+2. [Weakness 2] - [Why this is a problem]
+3. [Weakness 3] - [Why this is a problem]
+
+## External Opportunities (O)
+
+1. [Opportunity 1] - [Potential impact]
+2. [Opportunity 2] - [Potential impact]
+3. [Opportunity 3] - [Potential impact]
+
+## External Threats (T)
+
+1. [Threat 1] - [Potential impact]
+2. [Threat 2] - [Potential impact]
+3. [Threat 3] - [Potential impact]
+
+## Strategic Matrix
+
+### SO Strategies (Strengths + Opportunities)
+
+1. [Strategy] - Use [strength] to capture [opportunity]
+2. [Strategy] - Leverage [strength] for [opportunity]
+
+### ST Strategies (Strengths + Threats)
+
+1. [Strategy] - Use [strength] to defend against [threat]
+2. [Strategy] - Leverage [strength] despite [threat]
+
+### WO Strategies (Weaknesses + Opportunities)
+
+1. [Strategy] - Overcome [weakness] to pursue [opportunity]
+2. [Strategy] - Address [weakness] to capture [opportunity]
+
+### WT Strategies (Weaknesses + Threats)
+
+1. [Strategy] - Minimize [weakness] to avoid [threat]
+2. [Strategy] - Mitigate [weakness] despite [threat]
+
+## Priority Actions
+
+1. [Most important action from strategies]
+2. [Second priority action]
+3. [Third priority action]
+
+## Key Insights
+
+- [Most important realization]
+- [Another critical insight]
+```
+
+## Recognition Questions
+
+**When identifying factors**:
+
+- "Is this truly internal (we control) or external (we don't)?"
+- "Is this specific or too vague?"
+- "Do we have evidence for this, or is it speculation?"
+
+**When developing strategies**:
+
+- "Does this strategy combine factors from two quadrants?"
+- "Is this actionable, not just theoretical?"
+- "Does this play to our strengths or address real threats?"
+
+## Common Mistakes
+
+**❌ Wrong**: Vague, generic statements ("We have good team")
+**✅ Correct**: Specific, evidence-based ("Team has 10 years domain expertise")
+
+**❌ Wrong**: Confusing internal/external (opportunities should be external)
+**✅ Correct**: Opportunities are external factors you can leverage
+
+**❌ Wrong**: Listing without developing strategies
+**✅ Correct**: Use SWOT to generate actionable strategies (SO, ST, WO, WT)
+
+**❌ Wrong**: Treating all factors as equal
+**✅ Correct**: Prioritize by impact and feasibility
+
+## Advanced: TOWS Analysis
+
+For deeper analysis, consider all four strategic combinations:
+
+1. **SO (Maxi-Max)**: Maximum strengths, maximum opportunities
+   - Aggressive growth strategies
+
+2. **ST (Maxi-Min)**: Maximum strengths, minimum threats
+   - Defensive strategies using strengths
+
+3. **WO (Mini-Max)**: Minimum weaknesses, maximum opportunities
+   - Build capabilities to capture opportunities
+
+4. **WT (Mini-Min)**: Minimum weaknesses, minimum threats
+   - Survival or retrenchment strategies
+
+**Trust intelligence** - SWOT is only as good as your honesty about weaknesses and threats. Be real, not optimistic.
+
+---
+
+## Genetic Code
+
+This component carries essential Seed System principles for context: fork isolation:
+
+<critical_constraint>
+MANDATORY: All components MUST be self-contained (zero .claude/rules dependency)
+MANDATORY: Achieve 80-95% autonomy (0-5 AskUserQuestion rounds per session)
+MANDATORY: Description MUST use What-When-Not format in third person
+MANDATORY: No component references another component by name in description
+MANDATORY: Progressive disclosure - references/ for detailed content
+MANDATORY: Use XML for control (mission_control, critical_constraint), Markdown for data
+No exceptions. Portability invariant must be maintained.
+</critical_constraint>
+
+**Delta Standard**: Good Component = Expert Knowledge − What Claude Already Knows
+
+**Recognition Questions**:
+
+- "Would Claude know this without being told?" → Delete (zero delta)
+- "Can this work standalone?" → Fix if no (non-self-sufficient)
+- "Did I read the actual file, or just see it in grep?" → Verify before claiming
+
+---
+
+<critical_constraint>
+MANDATORY: Use specific, evidence-based factors (not vague claims)
+MANDATORY: Distinguish internal (S/W) from external (O/T) factors
+MANDATORY: Develop actionable strategies (SO, ST, WO, WT combinations)
+MANDATORY: Prioritize factors by impact and feasibility
+No exceptions. SWOT without strategies is just a list.
+</critical_constraint>

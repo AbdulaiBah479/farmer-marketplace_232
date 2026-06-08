@@ -63,52 +63,12 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-**CRITICAL:** All Task calls must be in a **single message** to run in parallel.
-
-```
-// Use the Task tool with these parameters:
-
-Task 1:
-  description: "Fix abort test failures"
-  prompt: "Fix the 3 failing tests in agent-tool-abort.test.ts..."
-  subagent_type: "general-purpose"
-
-Task 2:
-  description: "Fix batch completion failures"
-  prompt: "Fix the 2 failing tests in batch-completion-behavior.test.ts..."
-  subagent_type: "general-purpose"
-
-Task 3:
-  description: "Fix race condition failures"
-  prompt: "Fix the failing test in tool-approval-race-conditions.test.ts..."
-  subagent_type: "general-purpose"
-
-// All three in ONE message = parallel execution
-```
-
-**Available subagent_type options:**
-- `general-purpose` - For most tasks (searching, coding, multi-step work)
-- `Bash` - For command execution tasks
-- `Explore` - For codebase exploration (specify thoroughness: "quick", "medium", "very thorough")
-- `Plan` - For designing implementation plans
-- Custom agents from `agents/` directory (e.g., your defined agents)
-
-**Using Explore for parallel codebase analysis:**
-```
-Task 1:
-  description: "Find auth implementation"
-  prompt: "Find how authentication is implemented. Thoroughness: medium"
-  subagent_type: "Explore"
-
-Task 2:
-  description: "Find API endpoints"
-  prompt: "Find all API endpoint definitions. Thoroughness: quick"
-  subagent_type: "Explore"
-
-Task 3:
-  description: "Find database models"
-  prompt: "Find all database model definitions. Thoroughness: medium"
-  subagent_type: "Explore"
+```typescript
+// In Claude Code / AI environment
+Task("Fix agent-tool-abort.test.ts failures")
+Task("Fix batch-completion-behavior.test.ts failures")
+Task("Fix tool-approval-race-conditions.test.ts failures")
+// All three run concurrently
 ```
 
 ### 4. Review and Integrate
@@ -201,66 +161,6 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 2. **Focus** - Each agent has narrow scope, less context to track
 3. **Independence** - Agents don't interfere with each other
 4. **Speed** - 3 problems solved in time of 1
-
-## Advanced Task Tool Features
-
-### Background Execution
-
-Run agents in background while you continue working:
-
-```
-Task:
-  description: "Run slow analysis"
-  prompt: "Analyze the entire codebase for..."
-  subagent_type: "general-purpose"
-  run_in_background: true
-
-// Returns immediately with output_file path
-// Use Read tool or `tail` to check progress later
-```
-
-### Agent Resumption
-
-Resume a previous agent to continue its work:
-
-```
-Task:
-  description: "Continue previous analysis"
-  prompt: "Continue from where you left off..."
-  subagent_type: "general-purpose"
-  resume: "<agent-id-from-previous-run>"
-
-// Agent continues with full previous context preserved
-```
-
-### Model Selection
-
-Choose appropriate model for task complexity:
-
-```
-Task:
-  description: "Quick formatting check"
-  prompt: "Check if files follow naming convention..."
-  subagent_type: "general-purpose"
-  model: "haiku"  // Fast, low-cost for simple tasks
-
-Task:
-  description: "Complex architecture analysis"
-  prompt: "Design the migration strategy..."
-  subagent_type: "general-purpose"
-  model: "opus"  // Most capable for complex reasoning
-```
-
-### Using Custom Agents
-
-Define agents in `agents/` directory, then use them:
-
-```
-Task:
-  description: "Security review"
-  prompt: "[plan content]"
-  subagent_type: "security-reviewer"  // From agents/security-reviewer.md
-```
 
 ## Verification
 

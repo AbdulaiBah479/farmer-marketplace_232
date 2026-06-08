@@ -1,135 +1,56 @@
 ---
 name: context-budget
-description: Audits Claude Code context window consumption across agents, skills, MCP servers, and rules. Identifies bloat, redundant components, and produces prioritized token-savings recommendations.
-origin: ECC
+description: "Context budget tracking and skill loading limits for agent sessions. Monitors token consumption per agent, enforces preloading limits, and alerts on context bloat. Use when spawning agents, configuring skill preloading, or optimizing token usage."
 ---
 
-# Context Budget
+# Context Budget Management
 
-Analyze token overhead across every loaded component in a Claude Code session and surface actionable optimizations to reclaim context space.
+## Why This Matters
+The system prompt already includes ~50 built-in instructions. Adding a 451-line CLAUDE.md means every agent starts with ~500 instructions, of which only 10-20 are relevant. Instruction degradation is uniform — when context bloats, ALL instructions degrade, not just those at the bottom.
 
-## When to Use
+## Skill Preloading Limits
+- **Max 5 preloaded skills per agent** (via `skills` field in agent spec)
+- **Max 500 lines total** preloaded skill content per agent
+- **Max 8 on-demand skills** available per API request (LLM selection degrades beyond 8)
+- Preloaded skills bypass the 8-skill on-demand limit entirely
 
-- Session performance feels sluggish or output quality is degrading
-- You've recently added many skills, agents, or MCP servers
-- You want to know how much context headroom you actually have
-- Planning to add more components and need to know if there's room
-- Running `/context-budget` command (this skill backs it)
+## Per-Agent Budget Targets
+| Agent Tier | Max Preloaded Skills | Max Lines | Rationale |
+|------------|---------------------|-----------|-----------|
+| Haiku (junior-coder, docs, explainer, optimizer) | 3 | 200 | Limited context capacity |
+| Sonnet (coder, tech-lead, reviewer, qa, etc.) | 5 | 400 | Standard working context |
+| Opus (planner, red-teamer, senior-coder) | 5 | 500 | Deep reasoning, can handle more |
 
-## How It Works
+## Tracking Checklist
+When spawning an agent:
+1. Count preloaded skills from agent spec `skills` field
+2. Sum total lines across all preloaded SKILL.md files
+3. If > 500 lines total → remove least-relevant skill or split skill into sub-skills
+4. Log which skills are loaded per agent session to claude-mem (for optimizer analysis)
 
-### Phase 1: Inventory
+## Context Bloat Signals
+Watch for these signs that an agent's context is overloaded:
+- Agent ignores instructions that are clearly in its preloaded skills
+- Agent repeats questions that are already answered in its context
+- Agent produces inconsistent output between similar tasks
+- Agent takes longer on simple tasks (reasoning through noise)
 
-Scan all component directories and estimate token consumption:
+## MCP Context Impact
+MCP tool descriptions load into context alongside skills. Account for:
+- Serena: ~500 tokens for tool descriptions (find_symbol, get_symbols_overview, etc.)
+- context7: ~200 tokens (query-docs, resolve-library-id)
+- claude-mem: ~300 tokens (search, save_memory, get_observations, timeline)
+- Linear: ~800 tokens (many issue/project tools)
+Total MCP overhead: ~1,800 tokens baseline, always present
+Factor this into per-agent budget calculations.
 
-**Agents** (`agents/*.md`)
-- Count lines and tokens per file (words × 1.3)
-- Extract `description` frontmatter length
-- Flag: files >200 lines (heavy), description >30 words (bloated frontmatter)
-
-**Skills** (`skills/*/SKILL.md`)
-- Count tokens per SKILL.md
-- Flag: files >400 lines
-- Check for duplicate copies in `.agents/skills/` — skip identical copies to avoid double-counting
-
-**Rules** (`rules/**/*.md`)
-- Count tokens per file
-- Flag: files >100 lines
-- Detect content overlap between rule files in the same language module
-
-**MCP Servers** (`.mcp.json` or active MCP config)
-- Count configured servers and total tool count
-- Estimate schema overhead at ~500 tokens per tool
-- Flag: servers with >20 tools, servers that wrap simple CLI commands (`gh`, `git`, `npm`, `supabase`, `vercel`)
-
-**CLAUDE.md** (project + user-level)
-- Count tokens per file in the CLAUDE.md chain
-- Flag: combined total >300 lines
-
-### Phase 2: Classify
-
-Sort every component into a bucket:
-
-| Bucket | Criteria | Action |
-|--------|----------|--------|
-| **Always needed** | Referenced in CLAUDE.md, backs an active command, or matches current project type | Keep |
-| **Sometimes needed** | Domain-specific (e.g. language patterns), not referenced in CLAUDE.md | Consider on-demand activation |
-| **Rarely needed** | No command reference, overlapping content, or no obvious project match | Remove or lazy-load |
-
-### Phase 3: Detect Issues
-
-Identify the following problem patterns:
-
-- **Bloated agent descriptions** — description >30 words in frontmatter loads into every Task tool invocation
-- **Heavy agents** — files >200 lines inflate Task tool context on every spawn
-- **Redundant components** — skills that duplicate agent logic, rules that duplicate CLAUDE.md
-- **MCP over-subscription** — >10 servers, or servers wrapping CLI tools available for free
-- **CLAUDE.md bloat** — verbose explanations, outdated sections, instructions that should be rules
-
-### Phase 4: Report
-
-Produce the context budget report:
-
-```
-Context Budget Report
-═══════════════════════════════════════
-
-Total estimated overhead: ~XX,XXX tokens
-Context model: Claude Sonnet (200K window)
-Effective available context: ~XXX,XXX tokens (XX%)
-
-Component Breakdown:
-┌─────────────────┬────────┬───────────┐
-│ Component       │ Count  │ Tokens    │
-├─────────────────┼────────┼───────────┤
-│ Agents          │ N      │ ~X,XXX    │
-│ Skills          │ N      │ ~X,XXX    │
-│ Rules           │ N      │ ~X,XXX    │
-│ MCP tools       │ N      │ ~XX,XXX   │
-│ CLAUDE.md       │ N      │ ~X,XXX    │
-└─────────────────┴────────┴───────────┘
-
-WARNING: Issues Found (N):
-[ranked by token savings]
-
-Top 3 Optimizations:
-1. [action] → save ~X,XXX tokens
-2. [action] → save ~X,XXX tokens
-3. [action] → save ~X,XXX tokens
-
-Potential savings: ~XX,XXX tokens (XX% of current overhead)
-```
-
-In verbose mode, additionally output per-file token counts, line-by-line breakdown of the heaviest files, specific redundant lines between overlapping components, and MCP tool list with per-tool schema size estimates.
-
-## Examples
-
-**Basic audit**
-```
-User: /context-budget
-Skill: Scans setup → 16 agents (12,400 tokens), 28 skills (6,200), 87 MCP tools (43,500), 2 CLAUDE.md (1,200)
-       Flags: 3 heavy agents, 14 MCP servers (3 CLI-replaceable)
-       Top saving: remove 3 MCP servers → -27,500 tokens (47% overhead reduction)
-```
-
-**Verbose mode**
-```
-User: /context-budget --verbose
-Skill: Full report + per-file breakdown showing planner.md (213 lines, 1,840 tokens),
-       MCP tool list with per-tool sizes, duplicated rule lines side by side
-```
-
-**Pre-expansion check**
-```
-User: I want to add 5 more MCP servers, do I have room?
-Skill: Current overhead 33% → adding 5 servers (~50 tools) would add ~25,000 tokens → pushes to 45% overhead
-       Recommendation: remove 2 CLI-replaceable servers first to stay under 40%
-```
-
-## Best Practices
-
-- **Token estimation**: use `words × 1.3` for prose, `chars / 4` for code-heavy files
-- **MCP is the biggest lever**: each tool schema costs ~500 tokens; a 30-tool server costs more than all your skills combined
-- **Agent descriptions are loaded always**: even if the agent is never invoked, its description field is present in every Task tool context
-- **Verbose mode for debugging**: use when you need to pinpoint the exact files driving overhead, not for regular audits
-- **Audit after changes**: run after adding any agent, skill, or MCP server to catch creep early
+## Measurement
+- Count lines of each SKILL.md: `wc -l .claude/skills/*/SKILL.md`
+- Sum per agent configuration from agent spec `skills` field
+- Log task outcomes to claude-mem using this schema:
+  ```
+  "Agent [type] ([model]) [passed|failed] [task-type]: [one-line reason]"
+  Example: "Agent coder (sonnet) passed rust-implementation: all tests green, clippy clean"
+  Example: "Agent junior-coder (haiku) failed test-writing: couldn't handle async test patterns"
+  ```
+- Run optimizer agent periodically to review budget efficiency

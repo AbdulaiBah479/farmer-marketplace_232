@@ -1,215 +1,223 @@
 ---
 name: state-management
-description: Model, review, and refactor application state so source state stays minimal, derived state is computed instead of synchronized, impossible states are not representable, and each piece of state lives in the right place. Use this whenever the user mentions state management, reducers, stores, Redux, Zustand, React state, Vue state, Pinia, selectors, derived state, duplicated state, boolean flags, invalid states, async status, useEffect soup, forms, wizards, filters, URL state, server state, or confusing UI logic, even if they do not explicitly ask for a "state model."
+description: STATE.md reading, writing, and field-level updates. Provides cross-session state persistence via .planning/STATE.md with structured fields for current task, completed phases, blockers, decisions, and quick tasks.
+allowed-tools: Read Write Edit Glob
+metadata:
+  author: babysitter-sdk
+  version: "1.0.0"
+  category: gsd-core
+  backlog-id: SK-GSD-002
 ---
 
-# State Management
+# state-management
 
-Use this skill for **state modeling first** and library mapping second.
+You are **state-management** - the skill responsible for all STATE.md CRUD operations within the GSD methodology. STATE.md is the living memory of a GSD project, persisting across sessions and context resets. This skill provides structured field-level access to the state document.
 
-The goal is not to recommend a favorite library. The goal is to produce a state model that remains sound whether the implementation ends up in local component state, a reducer, Redux, Zustand, Pinia, URL params, TanStack Query, or no library at all.
+## Overview
 
-Your job:
+STATE.md is the single source of truth for project progress within GSD. It tracks:
+- What is currently being worked on (`current_task`, `current_phase`)
+- What has been completed (`completed_phases`)
+- What is blocking progress (`blockers`)
+- What decisions have been made (`decisions`)
+- Quick task status (`quick_tasks` table)
+- Session metadata (`last_updated`, `session_count`)
 
-- reduce state to the smallest valid source of truth
-- move derived values into selectors, getters, computed values, or render-time calculations
-- replace boolean soup with explicit finite states when modes are mutually exclusive
-- define state changes in terms of events and transitions rather than arbitrary setter calls
-- place each piece of state in the right home
-- review existing code for invalid states, duplication, synchronization bugs, and misplaced effects
-- map the resulting model to the user's chosen library only after the model is clear
+This skill corresponds to the original `lib/state.cjs` module in the GSD system. Every GSD process reads STATE.md at startup and writes updates at completion.
 
-## First pass
+## Capabilities
 
-In an existing codebase:
+### 1. Read Full State
 
-1. Inspect local `package.json` files and imports.
-2. Read the component, store, reducer, and selector/getter code near the problem.
-3. Identify which state is local, global, remote, URL-backed, or external.
-4. Separate current implementation details from the actual domain model before suggesting changes.
+Parse STATE.md into structured fields:
 
-If the user wants a new design from scratch, model the domain directly and only then choose implementation.
+```markdown
+---
+last_updated: 2026-03-02T14:30:00Z
+session_count: 12
+current_milestone: v1.0
+---
 
-## Task mode
+# Project State
 
-Choose a mode before answering:
+## Current Work
+- **Phase**: 72
+- **Task**: Implement OAuth2 login flow
+- **Status**: executing
+- **Plan**: PLAN-1.md (task 3 of 5)
 
-- **Design**: build a new state model from requirements.
-- **Review**: identify bugs, risks, invalid states, and misplaced state.
-- **Refactor**: preserve behavior while simplifying the model and tightening invariants.
-- **Library mapping**: translate an already-sound model into React, Redux, Zustand, Vue/Pinia, or plain functions.
+## Completed Phases
+- [x] Phase 70: Project setup and scaffolding
+- [x] Phase 71: Database schema and migrations
 
-Do not jump straight to API advice when the real problem is a broken model.
+## Blockers
+- [ ] [HIGH] API key for OAuth provider not configured (@user, 2026-03-01)
 
-## Core taxonomy
+## Decisions
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-02-28 | Use PostgreSQL over SQLite | Need concurrent writes for API |
+| 2026-03-01 | Skip Phase 71.1 (Redis cache) | Not needed for v1.0 |
 
-Classify every value before deciding where it belongs.
+## Quick Tasks
+| # | Task | Status | Date |
+|---|------|--------|------|
+| 001 | Fix login redirect | done | 2026-02-28 |
+| 002 | Add rate limiting | in-progress | 2026-03-02 |
+```
 
-- **Source state**: authoritative facts the app must store.
-- **Derived state**: values that can be computed from source state and props/input. Do not store these unless there is a proven boundary reason.
-- **Finite state**: mutually exclusive modes such as `idle`, `editing`, `submitting`, `success`, `failure`.
-- **Server state**: remote data with loading, freshness, cache, and invalidation concerns.
-- **URL state**: values that should survive refresh, support sharing, or participate in back/forward navigation.
-- **Ephemeral mutable values**: timers, DOM handles, `AbortController`s, previous snapshots, subscriptions, and other non-visual mutable values.
-- **History state**: undo/redo stacks, audit logs, previous states, and snapshots.
+### 2. Update Individual Fields
 
-If a value does not clearly fit, you probably have not understood its role yet.
+Update a single field without affecting the rest of the document:
 
-## Core principles
+```
+update current_phase -> 73
+update current_task -> "Build API endpoints for user management"
+update status -> "planning"
+```
 
-- Keep source state minimal.
-- Prefer one source of truth for each fact.
-- Compute derived values instead of synchronizing them.
-- Represent mutually exclusive modes with one finite `status` field or a discriminated union, not several booleans.
-- Make invalid states hard or impossible to represent.
-- Model updates as domain events and transitions.
-- Keep effects at the boundary. Effects should react to state transitions, not serve as the primary coordination mechanism.
-- Put state as low as possible, but as high as necessary.
-- Distinguish client state from server cache and URL state.
-- If several values always change together, model that relationship explicitly.
+Use `Edit` tool to perform surgical updates on specific lines.
 
-## Workflow
+### 3. Append to List Fields
 
-Use this sequence unless the user explicitly asks for something narrower.
+Add items to list-type fields:
 
-1. Inventory all current or proposed state values.
-2. Classify each value using the taxonomy above.
-3. Remove duplication:
-   - delete mirrored props
-   - delete values that can be derived
-   - avoid storing both an object and its selected ID unless there is a clear cache boundary
-4. Define invariants:
-   - what combinations are valid?
-   - what combinations are impossible?
-   - what must always be true in each mode?
-5. Identify finite modes:
-   - where booleans actually describe one status, collapse them into a finite state
-6. List domain events:
-   - what can happen?
-   - who or what causes it?
-   - what data does the event carry?
-7. Sketch transitions:
-   - from which states is each event valid?
-   - what changes?
-   - what side effects happen at the boundary?
-8. Decide placement:
-   - local component state
-   - reducer/store
-   - URL
-   - server cache/query layer
-   - ref or external mutable object
-9. Map the model to the chosen library.
+```
+append completed_phases -> "Phase 72: OAuth2 authentication"
+append decisions -> { date: "2026-03-02", decision: "Use JWT tokens", rationale: "Stateless auth for API" }
+append blockers -> { severity: "MEDIUM", description: "Need design mockups", owner: "@designer" }
+```
 
-When requirements are fuzzy, show the model before the code.
+### 4. Remove from List Fields
 
-## Modeling questions
+Remove items when resolved:
 
-Use these questions before writing or revising code:
+```
+remove blocker -> "API key for OAuth provider not configured"
+```
 
-- What are the smallest facts we actually need to store?
-- Which values are derived views of those facts?
-- Which modes are mutually exclusive?
-- What states are impossible but currently representable?
-- What events can happen, and which ones are valid in each state?
-- Does this state need to survive navigation or refresh?
-- Is this really application state, or is it server cache?
-- Is this value needed for rendering, or is it an ephemeral mutable handle?
-- Who owns this state, and who is allowed to change it?
-- Are we storing implementation details instead of domain truth?
-- Are effects being used to synchronize state that should be derived?
+Mark blockers as resolved rather than deleting (change `[ ]` to `[x]`).
 
-## Choosing the representation
+### 5. Quick Tasks Table Management
 
-Prefer the simplest representation that preserves invariants.
+Add, update, and query quick tasks:
 
-- **Independent local values**: use local state only when fields are actually independent.
-- **Finite modes**: use a string literal status or discriminated union, not several booleans.
-- **Coordinated updates**: use a reducer when several fields change together or event handling depends on current state.
-- **Complex workflows**: use a state machine or actor model when there are guards, retries, cancellation, concurrency, or child processes.
-- **Relational collections**: normalize entities when nested updates become awkward or inconsistent.
-- **Derived reads**: use selectors, getters, computed values, or render-time calculations.
-- **Server data**: prefer a query/cache tool instead of forcing remote lifecycle concerns into a UI store.
-- **Non-rendering mutable data**: use refs or external mutable objects.
+```
+add_quick_task -> { number: 3, task: "Update README", status: "pending" }
+update_quick_task -> { number: 2, status: "done" }
+query_quick_tasks -> { status: "in-progress" }
+```
 
-Do not recommend a more complex abstraction unless the simpler one cannot enforce the needed invariants.
+### 6. Cross-Session Memory
 
-## Placement guidance
+STATE.md persists across context resets. On session start:
+1. Read STATE.md to restore project context
+2. Increment `session_count` in frontmatter
+3. Update `last_updated` timestamp
+4. Report state summary to orchestrator
 
-Choose where state lives by asking:
+### 7. Decision Log
 
-- Who reads it?
-- Who writes it?
-- How long must it live?
-- Must it survive refresh?
-- Must it be shareable by URL?
-- Is it authoritative app state or remote cache?
+Structured decision tracking with timestamps and rationale:
 
-Strong defaults:
+```markdown
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-03-02 | Use JWT tokens | Stateless auth for API |
+```
 
-- keep transient view-only state local
-- keep cross-component client state in a reducer/store only when multiple consumers truly need it
-- keep shareable navigation/filtering state in the URL
-- keep fetched data in a server-state/cache layer
-- keep non-visual handles out of render state
+### 8. Blocker Tracking
 
-## Anti-patterns
+Track blockers with severity and ownership:
 
-Flag these aggressively in reviews and refactors:
+```markdown
+- [ ] [HIGH] API key not configured (@user, 2026-03-01)
+- [x] [MEDIUM] Design mockups needed (@designer, 2026-02-28) - resolved 2026-03-01
+```
 
-- derived state stored and resynchronized with effects
-- mirrored props in local state
-- many booleans describing one mode
-- storing both `selectedItem` and `selectedItemId` without a clear reason
-- duplicated state across component, store, and URL
-- action names that describe setters instead of domain events
-- deep nested relational state that should be normalized
-- `useEffect` chains that coordinate business logic
-- putting most form state in a global store without a strong reason
-- nullable field soup used instead of explicit states
-- mixing server state, client state, and request lifecycle in one undifferentiated blob
+Severity levels: `HIGH` (blocks current work), `MEDIUM` (blocks future work), `LOW` (inconvenience).
 
-## Reference routing
+## Tool Use Instructions
 
-Open only the relevant references for the current task:
+### Reading State
+1. Use `Read` to load `.planning/STATE.md`
+2. Parse frontmatter for metadata (last_updated, session_count, current_milestone)
+3. Parse markdown sections into structured fields
+4. Return parsed state object
 
-- React: `references/react.md`
-- Redux and Redux Toolkit: `references/redux.md`
-- Zustand: `references/zustand.md`
-- Vue and Pinia: `references/vue-pinia.md`
-- Plain JavaScript or library-agnostic implementation: `references/no-library.md`
-- TypeScript modeling and exhaustiveness: `references/typescript-modeling.md`
-- Async lifecycle modeling: `references/async-state.md`
-- Review pass and smell detection: `references/review-checklist.md`
+### Updating a Field
+1. Use `Read` to load current STATE.md
+2. Locate the target field/section
+3. Use `Edit` with precise old_string/new_string to update only the target
+4. Verify edit succeeded by reading the section back
 
-If the problem is specifically about XState or actor systems in a codebase that already uses them, prefer the dedicated `xstate-v5` skill for implementation details.
+### Appending to Lists
+1. Use `Read` to find the end of the target list section
+2. Use `Edit` to insert new item at the correct position
+3. For tables, append new row before the section break
 
-## Output format
+### Resolving Blockers
+1. Use `Read` to find the blocker text
+2. Use `Edit` to change `- [ ]` to `- [x]` and append resolution date
 
-Prefer this answer shape:
+## Process Integration
 
-1. **State inventory**: what exists now or what must exist.
-2. **Findings or invariants**: duplication, impossible states, and design constraints.
-3. **Recommended model**:
-   - source state
-   - derived state
-   - finite states or discriminated union
-   - events and transitions
-   - placement
-4. **Library mapping**: only if the user asked for implementation in a specific stack.
-5. **Code**: only after the model is clear enough.
+This skill is used by most GSD processes:
 
-For reviews, lead with concrete problems first. For design tasks, lead with the model first.
+- `execute-phase.js` - Update current_task as each task completes, track position
+- `verify-work.js` - Add/resolve blockers based on verification results
+- `audit-milestone.js` - Read completed_phases for coverage analysis
+- `progress.js` - Read full state for progress display and routing
+- `quick.js` - Add/update quick tasks table
+- `debug.js` - Track debug sessions, add blockers for unresolved issues
+- `complete-milestone.js` - Clear completed_phases, reset current_task
+- `add-tests.js` - Update state with test coverage info
 
-## Final self-check
+## Output Format
 
-Before answering, verify:
+```json
+{
+  "operation": "read|update|append|remove",
+  "field": "current_phase|completed_phases|blockers|decisions|quick_tasks",
+  "status": "success|error",
+  "previousValue": "...",
+  "newValue": "...",
+  "stateSnapshot": {
+    "currentPhase": 72,
+    "currentTask": "Implement OAuth2",
+    "completedPhases": [70, 71],
+    "activeBlockers": 1,
+    "quickTasksTotal": 3,
+    "quickTasksPending": 1
+  }
+}
+```
 
-- every stored value really needs to be stored
-- derived values are not being mirrored as source state
-- mutually exclusive modes are not represented as unrelated booleans
-- invalid states are reduced or eliminated
-- state ownership and placement are explicit
-- effects are not doing the work of selectors or transitions
-- async status is modeled explicitly
-- the recommended abstraction is not more complex than the problem requires
-- library-specific advice matches the user's actual stack
+## Configuration
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `stateFile` | `.planning/STATE.md` | Path to STATE.md |
+| `autoTimestamp` | `true` | Auto-update last_updated on write |
+| `autoSessionCount` | `true` | Auto-increment session_count on read |
+| `blockerSeverityLevels` | `HIGH,MEDIUM,LOW` | Valid blocker severities |
+
+## Error Handling
+
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `STATE.md not found` | Planning directory not initialized | Run gsd-tools init first |
+| `Section not found` | Unexpected STATE.md format | Rebuild STATE.md from template |
+| `Edit collision` | Non-unique text match for edit | Provide more context in old_string |
+| `Frontmatter parse error` | Malformed YAML frontmatter | Fix YAML syntax or regenerate |
+| `Concurrent modification` | Multiple processes editing state | STATE.md is not lock-protected; serialize access |
+
+## Constraints
+
+- STATE.md must remain human-readable markdown at all times
+- Never delete historical entries (blockers, decisions); mark as resolved instead
+- Frontmatter must be valid YAML
+- Quick task numbers must be sequential
+- All timestamps must be ISO 8601 format
+- Decision log must be append-only (no editing past decisions)
+- Blocker resolution must preserve the original blocker text

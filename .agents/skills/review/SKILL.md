@@ -1,78 +1,88 @@
 ---
 name: review
-description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/PRD asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
+description: >
+  Analyzes a codebase's modularity imbalances using the Balanced Coupling model and produces
+  a review of design issues. Use when reviewing existing code for coupling problems, assessing
+  architecture quality, identifying distributed monolith risks, or finding areas where changes
+  are unexpectedly expensive.
+skills:
+  - balanced-coupling
+  - document
+allowed-tools: Read, Grep, Glob, LSP, AskUserQuestion, TaskCreate, TaskUpdate
 ---
 
-# Review
+# Modularity Review
 
-Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
+You analyze codebases for modularity imbalances using the Balanced Coupling model by Vlad Khononov (preloaded from the balanced-coupling skill). You produce a review that identifies concrete design issues and explains each one in terms of knowledge encapsulation, complexity, cascading changes, and how to improve the design.
 
-- **Standards** — does the code conform to this repo's documented coding standards?
-- **Spec** — does the code faithfully implement the originating issue / PRD / spec?
+Use TaskCreate to track these 4 steps: Understand the Problem Domain, Map Integrations, Apply the Balance Rule, Write the Review.
 
-Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
+## Interaction Rules
 
-The issue tracker should have been provided to you — run `/setup-matt-pocock-skills` if `docs/agents/issue-tracker.md` is missing.
+Always use `AskUserQuestion` for user input. Follow these principles:
+
+- **One question at a time.** Never batch multiple questions into one message.
+- **Multiple choice preferred.** Provide 2-4 concrete options. Easier to answer than open-ended.
+- **"Other" is automatic.** The tool always provides a free-text "Other" option — do not add one manually.
+- **Use headers.** Short labels (max 12 chars) like "Scope", "Domain", "Teams", "Pain points".
 
 ## Process
 
-### 1. Pin the fixed point
+### Step 1: Understand the Problem Domain
 
-Whatever the user said is the fixed point — a commit SHA, branch name, tag, `main`, `HEAD~5`, etc. Don't be opinionated; pass it through. If they didn't specify one, ask: "Review against what — a branch, a commit, or `main`?" Don't proceed until you have it.
+1. Use `AskUserQuestion` to ask which parts of the codebase to analyze. Header: "Scope". Options: "Entire codebase — Analyze all components", "Specific directory — I'll tell you which path", "Specific components — I'll name them". If the user picks a specific scope, follow up to collect details.
 
-Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
+2. **Read before asking.** Read all functional requirements documents in the `docs/` folder and then read the code itself. Understand the components, their responsibilities, and how they integrate. Use LSP (findReferences, goToDefinition), Grep, and Glob to navigate — do not guess.
 
-### 2. Identify the spec source
+3. **Surface your understanding.** Before asking domain questions, present a brief synthesis of what you learned from the code and requirements:
+   - Components you found and their responsibilities
+   - Integration patterns you observed (shared types, API calls, database access, event flows)
+   - Your best guess at domain classification (core / supporting / generic) with reasoning and confidence level — low confidence areas are the strongest candidates for follow-up questions
+   - Assumptions you're making about team structure, deployment topology, or design intent
 
-Look for the originating spec, in this order:
+   Use `AskUserQuestion` to validate. Header: "Summary". Options: "Looks right", "Some things are off — I'll correct", "Missing important context". If the user corrects or adds context, incorporate it before proceeding.
 
-1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.) — fetch via the workflow in `docs/agents/issue-tracker.md`.
-2. A path the user passed as an argument.
-3. A PRD/spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
-4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
+4. **Discover what you still need.** You know the Balanced Coupling model. You know you need volatility (from domain classification), distance (from organizational structure), and strength (from code). Think about what would change your coupling assessment if you knew it — then ask about those gaps. One question at a time via `AskUserQuestion`. Do not ask questions whose answers would not change your analysis — every question should fill a gap that matters for the assessment.
 
-### 3. Identify the standards sources
+   Common information gaps to consider (skip any you can already answer from code, requirements, or the user's corrections above):
+   - **Domain classification gaps** — areas where you can't tell if something is core (competitive advantage, high volatility) vs supporting vs generic. Propose your best guess and ask the user to confirm or correct.
+   - **Organizational context** — team ownership boundaries, deployment topology, shared infrastructure. These affect effective distance beyond what code structure shows.
+   - **Known pain points** — areas where changes are unexpectedly expensive, where deployments break things, or where the design feels wrong. These focus the analysis where it matters most.
+   - **Strategic direction** — upcoming migrations, business shifts, or planned changes that affect which areas are volatile.
+   - **Surprising patterns** — things you found in the code that could be intentional design choices or accidental complexity. Ask before assuming.
 
-Anything in the repo that documents how code should be written. Common locations:
+   You are not limited to these categories. If you discovered something in the code that needs clarification for a proper coupling assessment, ask about it. Ground your questions in specific code observations — reference the components, patterns, or integrations you actually found.
 
-- `CLAUDE.md`, `AGENTS.md`
-- `CONTRIBUTING.md`
-- `CONTEXT.md`, `CONTEXT-MAP.md`, per-context `CONTEXT.md` files
-- `docs/adr/` (architectural decisions are standards)
-- `.editorconfig`, `eslint.config.*`, `biome.json`, `prettier.config.*`, `tsconfig.json` (machine-enforced standards — note them but don't re-check what tooling already checks)
-- Any `STYLE.md`, `STANDARDS.md`, `STYLEGUIDE.md`, or similar at the repo root or under `docs/`
+### Step 2: Map Integrations
 
-Collect the list of files. The **Standards** sub-agent will read them.
+For each pair of components that interact, identify:
 
-### 4. Spawn both sub-agents in parallel
+- **What knowledge is shared** — implementation details, business rules, domain models, or integration contracts?
+- **Integration strength level** — intrusive, functional, model, or contract coupling?
+- **Is the shared knowledge implicit or explicit?** Implicit coupling (duplicated business rules, direct database access, assumptions about internal behavior) is particularly dangerous.
+- **Distance** — same module, same service, separate services, separate systems? Same team or different teams? Synchronous or asynchronous?
+- **Volatility** — from the business domain perspective, how likely is this area to change? For generic subdomains, distinguish between functional volatility (the problem definition) and implementation volatility (the specific provider/technology).
 
-Send a single message with two `Agent` tool calls. Use the `general-purpose` subagent for both.
+### Step 3: Apply the Balance Rule
 
-**Standards sub-agent prompt** — include:
+For each integration, apply: `BALANCE = (STRENGTH XOR DISTANCE) OR NOT VOLATILITY`
 
-- The full diff command and commit list.
-- The list of standards-source files you found in step 3.
-- The brief: "Read the standards docs. Then read the diff. Report — per file/hunk where relevant — every place the diff violates a documented standard. Cite the standard (file + the rule). Distinguish hard violations from judgement calls. Skip anything tooling enforces. Under 400 words."
+Flag every integration where coupling is **unbalanced AND volatile**:
 
-**Spec sub-agent prompt** — include:
+- **High strength + high distance + high volatility** — tight coupling in a volatile area. Urgent problem. Changes will be frequent, expensive, and unpredictable.
+- **Low strength + low distance** — potential low cohesion. Unrelated components co-located, increasing cognitive load and drift toward a big ball of mud.
+- **High strength + high distance + low volatility** — technical debt, but tolerable. Note it but don't prioritize it.
 
-- The diff command and commit list.
-- The path or fetched contents of the spec.
-- The brief: "Read the spec. Then read the diff. Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
+### Step 4: Write the Review
 
-If the spec is missing, skip the Spec sub-agent and note this in the final report.
+Using the document skill (preloaded), produce the modularity review in both Markdown and HTML formats. The document skill defines the structure and output format.
 
-### 5. Aggregate
+## Important Constraints
 
-Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the two axes are deliberately separate so the user can see them independently.
-
-End with a one-line summary: total findings per axis, and the worst single issue (if any) flagged.
-
-## Why two axes
-
-A change can pass one axis and fail the other:
-
-- Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
-- Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
-
-Reporting them separately stops one axis from masking the other.
+- **Read the code.** Never identify issues from structure alone. Read the actual integration points — the function calls, imports, shared data structures, database access patterns, API calls — to determine what knowledge is actually shared.
+- **Never evaluate coupling using only one dimension.** Always consider all three: strength, distance, and volatility.
+- **Distinguish essential from accidental volatility.** High commit frequency may indicate poor design (accidental volatility), not a volatile domain. Evaluate volatility from the business domain perspective.
+- **Don't flag everything.** Focus on the integrations that are both unbalanced and volatile. A review that flags 30 minor issues is less useful than one that identifies 5 critical ones with clear explanations.
+- **Ground every issue in the model.** Reference the specific coupling dimension, strength level, or balance rule principle that makes the integration problematic.
+- **Never recommend "just decouple everything."** Decomposition increases distance. Only recommend it when strength is already low enough to support the increased distance, or when lifecycle coupling is the primary bottleneck.
+- **Consider the organizational dimension.** Same code structure + different teams = higher effective distance. Ask about team ownership when it affects the analysis.

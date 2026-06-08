@@ -1,312 +1,496 @@
 ---
 name: security-review
-description: Security code review for vulnerabilities. Use when asked to "security review", "find vulnerabilities", "check for security issues", "audit security", "OWASP review", or review code for injection, XSS, authentication, authorization, cryptography issues. Provides systematic review with confidence-based reporting.
-allowed-tools: Read, Grep, Glob, Bash, Task
-license: LICENSE
+description: Use this skill when adding authentication, handling user input, working with secrets, creating API endpoints, or implementing payment/sensitive features. Provides comprehensive security checklist and patterns.
+author: affaan-m
+version: "1.0"
 ---
-
-<!--
-Reference material based on OWASP Cheat Sheet Series (CC BY-SA 4.0)
-https://cheatsheetseries.owasp.org/
--->
 
 # Security Review Skill
 
-Identify exploitable security vulnerabilities in code. Report only **HIGH CONFIDENCE** findings—clear vulnerable patterns with attacker-controlled input.
+This skill ensures all code follows security best practices and identifies potential vulnerabilities.
 
-## Scope: Research vs. Reporting
+## When to Activate
 
-**CRITICAL DISTINCTION:**
+- Implementing authentication or authorization
+- Handling user input or file uploads
+- Creating new API endpoints
+- Working with secrets or credentials
+- Implementing payment features
+- Storing or transmitting sensitive data
+- Integrating third-party APIs
 
-- **Report on**: Only the specific file, diff, or code provided by the user
-- **Research**: The ENTIRE codebase to build confidence before reporting
+## Security Checklist
 
-Before flagging any issue, you MUST research the codebase to understand:
-- Where does this input actually come from? (Trace data flow)
-- Is there validation/sanitization elsewhere?
-- How is this configured? (Check settings, config files, middleware)
-- What framework protections exist?
+### 1. Secrets Management
 
-**Do NOT report issues based solely on pattern matching.** Investigate first, then report only what you're confident is exploitable.
-
-## Confidence Levels
-
-| Level | Criteria | Action |
-|-------|----------|--------|
-| **HIGH** | Vulnerable pattern + attacker-controlled input confirmed | **Report** with severity |
-| **MEDIUM** | Vulnerable pattern, input source unclear | **Note** as "Needs verification" |
-| **LOW** | Theoretical, best practice, defense-in-depth | **Do not report** |
-
-## Do Not Flag
-
-### General Rules
-- Test files (unless explicitly reviewing test security)
-- Dead code, commented code, documentation strings
-- Patterns using **constants** or **server-controlled configuration**
-- Code paths that require prior authentication to reach (note the auth requirement instead)
-
-### Server-Controlled Values (NOT Attacker-Controlled)
-
-These are configured by operators, not controlled by attackers:
-
-| Source | Example | Why It's Safe |
-|--------|---------|---------------|
-| Django settings | `settings.API_URL`, `settings.ALLOWED_HOSTS` | Set via config/env at deployment |
-| Environment variables | `os.environ.get('DATABASE_URL')` | Deployment configuration |
-| Config files | `config.yaml`, `app.config['KEY']` | Server-side files |
-| Framework constants | `django.conf.settings.*` | Not user-modifiable |
-| Hardcoded values | `BASE_URL = "https://api.internal"` | Compile-time constants |
-
-**SSRF Example - NOT a vulnerability:**
-```python
-# SAFE: URL comes from Django settings (server-controlled)
-response = requests.get(f"{settings.SEER_AUTOFIX_URL}{path}")
+#### ❌ NEVER Do This
+```typescript
+const apiKey = "sk-proj-xxxxx"  // Hardcoded secret
+const dbPassword = "password123" // In source code
 ```
 
-**SSRF Example - IS a vulnerability:**
-```python
-# VULNERABLE: URL comes from request (attacker-controlled)
-response = requests.get(request.GET.get('url'))
+#### ✅ ALWAYS Do This
+```typescript
+const apiKey = process.env.OPENAI_API_KEY
+const dbUrl = process.env.DATABASE_URL
+
+// Verify secrets exist
+if (!apiKey) {
+  throw new Error('OPENAI_API_KEY not configured')
+}
 ```
 
-### Framework-Mitigated Patterns
-Check language guides before flagging. Common false positives:
+#### Verification Steps
+- [ ] No hardcoded API keys, tokens, or passwords
+- [ ] All secrets in environment variables
+- [ ] `.env.local` in .gitignore
+- [ ] No secrets in git history
+- [ ] Production secrets in hosting platform (Vercel, Railway)
 
-| Pattern | Why It's Usually Safe |
-|---------|----------------------|
-| Django `{{ variable }}` | Auto-escaped by default |
-| React `{variable}` | Auto-escaped by default |
-| Vue `{{ variable }}` | Auto-escaped by default |
-| `User.objects.filter(id=input)` | ORM parameterizes queries |
-| `cursor.execute("...%s", (input,))` | Parameterized query |
-| `innerHTML = "<b>Loading...</b>"` | Constant string, no user input |
+### 2. Input Validation
 
-**Only flag these when:**
-- Django: `{{ var|safe }}`, `{% autoescape off %}`, `mark_safe(user_input)`
-- React: `dangerouslySetInnerHTML={{__html: userInput}}`
-- Vue: `v-html="userInput"`
-- ORM: `.raw()`, `.extra()`, `RawSQL()` with string interpolation
+#### Always Validate User Input
+```typescript
+import { z } from 'zod'
 
-## Review Process
+// Define validation schema
+const CreateUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1).max(100),
+  age: z.number().int().min(0).max(150)
+})
 
-### 1. Detect Context
+// Validate before processing
+export async function createUser(input: unknown) {
+  try {
+    const validated = CreateUserSchema.parse(input)
+    return await db.users.create(validated)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, errors: error.errors }
+    }
+    throw error
+  }
+}
+```
 
-What type of code am I reviewing?
+#### File Upload Validation
+```typescript
+function validateFileUpload(file: File) {
+  // Size check (5MB max)
+  const maxSize = 5 * 1024 * 1024
+  if (file.size > maxSize) {
+    throw new Error('File too large (max 5MB)')
+  }
 
-| Code Type | Load These References |
-|-----------|----------------------|
-| API endpoints, routes | `authorization.md`, `authentication.md`, `injection.md` |
-| Frontend, templates | `xss.md`, `csrf.md` |
-| File handling, uploads | `file-security.md` |
-| Crypto, secrets, tokens | `cryptography.md`, `data-protection.md` |
-| Data serialization | `deserialization.md` |
-| External requests | `ssrf.md` |
-| Business workflows | `business-logic.md` |
-| GraphQL, REST design | `api-security.md` |
-| Config, headers, CORS | `misconfiguration.md` |
-| CI/CD, dependencies | `supply-chain.md` |
-| Error handling | `error-handling.md` |
-| Audit, logging | `logging.md` |
+  // Type check
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Invalid file type')
+  }
 
-### 2. Load Language Guide
+  // Extension check
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']
+  const extension = file.name.toLowerCase().match(/\.[^.]+$/)?.[0]
+  if (!extension || !allowedExtensions.includes(extension)) {
+    throw new Error('Invalid file extension')
+  }
 
-Based on file extension or imports:
+  return true
+}
+```
 
-| Indicators | Guide |
-|------------|-------|
-| `.py`, `django`, `flask`, `fastapi` | `languages/python.md` |
-| `.js`, `.ts`, `express`, `react`, `vue`, `next` | `languages/javascript.md` |
-| `.go`, `go.mod` | `languages/go.md` |
-| `.rs`, `Cargo.toml` | `languages/rust.md` |
-| `.java`, `spring`, `@Controller` | `languages/java.md` |
+#### Verification Steps
+- [ ] All user inputs validated with schemas
+- [ ] File uploads restricted (size, type, extension)
+- [ ] No direct use of user input in queries
+- [ ] Whitelist validation (not blacklist)
+- [ ] Error messages don't leak sensitive info
 
-### 3. Load Infrastructure Guide (if applicable)
+### 3. SQL Injection Prevention
 
-| File Type | Guide |
-|-----------|-------|
-| `Dockerfile`, `.dockerignore` | `infrastructure/docker.md` |
-| K8s manifests, Helm charts | `infrastructure/kubernetes.md` |
-| `.tf`, Terraform | `infrastructure/terraform.md` |
-| GitHub Actions, `.gitlab-ci.yml` | `infrastructure/ci-cd.md` |
-| AWS/GCP/Azure configs, IAM | `infrastructure/cloud.md` |
+#### ❌ NEVER Concatenate SQL
+```typescript
+// DANGEROUS - SQL Injection vulnerability
+const query = `SELECT * FROM users WHERE email = '${userEmail}'`
+await db.query(query)
+```
 
-### 4. Research Before Flagging
+#### ✅ ALWAYS Use Parameterized Queries
+```typescript
+// Safe - parameterized query
+const { data } = await supabase
+  .from('users')
+  .select('*')
+  .eq('email', userEmail)
 
-**For each potential issue, research the codebase to build confidence:**
+// Or with raw SQL
+await db.query(
+  'SELECT * FROM users WHERE email = $1',
+  [userEmail]
+)
+```
 
-- Where does this value actually come from? Trace the data flow.
-- Is it configured at deployment (settings, env vars) or from user input?
-- Is there validation, sanitization, or allowlisting elsewhere?
-- What framework protections apply?
+#### Verification Steps
+- [ ] All database queries use parameterized queries
+- [ ] No string concatenation in SQL
+- [ ] ORM/query builder used correctly
+- [ ] Supabase queries properly sanitized
 
-Only report issues where you have HIGH confidence after understanding the broader context.
+### 4. Authentication & Authorization
 
-### 5. Verify Exploitability
+#### JWT Token Handling
+```typescript
+// ❌ WRONG: localStorage (vulnerable to XSS)
+localStorage.setItem('token', token)
 
-For each potential finding, confirm:
+// ✅ CORRECT: httpOnly cookies
+res.setHeader('Set-Cookie',
+  `token=${token}; HttpOnly; Secure; SameSite=Strict; Max-Age=3600`)
+```
 
-**Is the input attacker-controlled?**
+#### Authorization Checks
+```typescript
+export async function deleteUser(userId: string, requesterId: string) {
+  // ALWAYS verify authorization first
+  const requester = await db.users.findUnique({
+    where: { id: requesterId }
+  })
 
-| Attacker-Controlled (Investigate) | Server-Controlled (Usually Safe) |
-|-----------------------------------|----------------------------------|
-| `request.GET`, `request.POST`, `request.args` | `settings.X`, `app.config['X']` |
-| `request.json`, `request.data`, `request.body` | `os.environ.get('X')` |
-| `request.headers` (most headers) | Hardcoded constants |
-| `request.cookies` (unsigned) | Internal service URLs from config |
-| URL path segments: `/users/<id>/` | Database content from admin/system |
-| File uploads (content and names) | Signed session data |
-| Database content from other users | Framework settings |
-| WebSocket messages | |
+  if (requester.role !== 'admin') {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 403 }
+    )
+  }
 
-**Does the framework mitigate this?**
-- Check language guide for auto-escaping, parameterization
-- Check for middleware/decorators that sanitize
+  // Proceed with deletion
+  await db.users.delete({ where: { id: userId } })
+}
+```
 
-**Is there validation upstream?**
-- Input validation before this code
-- Sanitization libraries (DOMPurify, bleach, etc.)
+#### Row Level Security (Supabase)
+```sql
+-- Enable RLS on all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
-### 6. Report HIGH Confidence Only
+-- Users can only view their own data
+CREATE POLICY "Users view own data"
+  ON users FOR SELECT
+  USING (auth.uid() = id);
 
-Skip theoretical issues. Report only what you've confirmed is exploitable after research.
+-- Users can only update their own data
+CREATE POLICY "Users update own data"
+  ON users FOR UPDATE
+  USING (auth.uid() = id);
+```
+
+#### Verification Steps
+- [ ] Tokens stored in httpOnly cookies (not localStorage)
+- [ ] Authorization checks before sensitive operations
+- [ ] Row Level Security enabled in Supabase
+- [ ] Role-based access control implemented
+- [ ] Session management secure
+
+### 5. XSS Prevention
+
+#### Sanitize HTML
+```typescript
+import DOMPurify from 'isomorphic-dompurify'
+
+// ALWAYS sanitize user-provided HTML
+function renderUserContent(html: string) {
+  const clean = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p'],
+    ALLOWED_ATTR: []
+  })
+  return <div dangerouslySetInnerHTML={{ __html: clean }} />
+}
+```
+
+#### Content Security Policy
+```typescript
+// next.config.js
+const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value: `
+      default-src 'self';
+      script-src 'self' 'unsafe-eval' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https:;
+      font-src 'self';
+      connect-src 'self' https://api.example.com;
+    `.replace(/\s{2,}/g, ' ').trim()
+  }
+]
+```
+
+#### Verification Steps
+- [ ] User-provided HTML sanitized
+- [ ] CSP headers configured
+- [ ] No unvalidated dynamic content rendering
+- [ ] React's built-in XSS protection used
+
+### 6. CSRF Protection
+
+#### CSRF Tokens
+```typescript
+import { csrf } from '@/lib/csrf'
+
+export async function POST(request: Request) {
+  const token = request.headers.get('X-CSRF-Token')
+
+  if (!csrf.verify(token)) {
+    return NextResponse.json(
+      { error: 'Invalid CSRF token' },
+      { status: 403 }
+    )
+  }
+
+  // Process request
+}
+```
+
+#### SameSite Cookies
+```typescript
+res.setHeader('Set-Cookie',
+  `session=${sessionId}; HttpOnly; Secure; SameSite=Strict`)
+```
+
+#### Verification Steps
+- [ ] CSRF tokens on state-changing operations
+- [ ] SameSite=Strict on all cookies
+- [ ] Double-submit cookie pattern implemented
+
+### 7. Rate Limiting
+
+#### API Rate Limiting
+```typescript
+import rateLimit from 'express-rate-limit'
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: 'Too many requests'
+})
+
+// Apply to routes
+app.use('/api/', limiter)
+```
+
+#### Expensive Operations
+```typescript
+// Aggressive rate limiting for searches
+const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  message: 'Too many search requests'
+})
+
+app.use('/api/search', searchLimiter)
+```
+
+#### Verification Steps
+- [ ] Rate limiting on all API endpoints
+- [ ] Stricter limits on expensive operations
+- [ ] IP-based rate limiting
+- [ ] User-based rate limiting (authenticated)
+
+### 8. Sensitive Data Exposure
+
+#### Logging
+```typescript
+// ❌ WRONG: Logging sensitive data
+console.log('User login:', { email, password })
+console.log('Payment:', { cardNumber, cvv })
+
+// ✅ CORRECT: Redact sensitive data
+console.log('User login:', { email, userId })
+console.log('Payment:', { last4: card.last4, userId })
+```
+
+#### Error Messages
+```typescript
+// ❌ WRONG: Exposing internal details
+catch (error) {
+  return NextResponse.json(
+    { error: error.message, stack: error.stack },
+    { status: 500 }
+  )
+}
+
+// ✅ CORRECT: Generic error messages
+catch (error) {
+  console.error('Internal error:', error)
+  return NextResponse.json(
+    { error: 'An error occurred. Please try again.' },
+    { status: 500 }
+  )
+}
+```
+
+#### Verification Steps
+- [ ] No passwords, tokens, or secrets in logs
+- [ ] Error messages generic for users
+- [ ] Detailed errors only in server logs
+- [ ] No stack traces exposed to users
+
+### 9. Blockchain Security (Solana)
+
+#### Wallet Verification
+```typescript
+import { verify } from '@solana/web3.js'
+
+async function verifyWalletOwnership(
+  publicKey: string,
+  signature: string,
+  message: string
+) {
+  try {
+    const isValid = verify(
+      Buffer.from(message),
+      Buffer.from(signature, 'base64'),
+      Buffer.from(publicKey, 'base64')
+    )
+    return isValid
+  } catch (error) {
+    return false
+  }
+}
+```
+
+#### Transaction Verification
+```typescript
+async function verifyTransaction(transaction: Transaction) {
+  // Verify recipient
+  if (transaction.to !== expectedRecipient) {
+    throw new Error('Invalid recipient')
+  }
+
+  // Verify amount
+  if (transaction.amount > maxAmount) {
+    throw new Error('Amount exceeds limit')
+  }
+
+  // Verify user has sufficient balance
+  const balance = await getBalance(transaction.from)
+  if (balance < transaction.amount) {
+    throw new Error('Insufficient balance')
+  }
+
+  return true
+}
+```
+
+#### Verification Steps
+- [ ] Wallet signatures verified
+- [ ] Transaction details validated
+- [ ] Balance checks before transactions
+- [ ] No blind transaction signing
+
+### 10. Dependency Security
+
+#### Regular Updates
+```bash
+# Check for vulnerabilities
+npm audit
+
+# Fix automatically fixable issues
+npm audit fix
+
+# Update dependencies
+npm update
+
+# Check for outdated packages
+npm outdated
+```
+
+#### Lock Files
+```bash
+# ALWAYS commit lock files
+git add package-lock.json
+
+# Use in CI/CD for reproducible builds
+npm ci  # Instead of npm install
+```
+
+#### Verification Steps
+- [ ] Dependencies up to date
+- [ ] No known vulnerabilities (npm audit clean)
+- [ ] Lock files committed
+- [ ] Dependabot enabled on GitHub
+- [ ] Regular security updates
+
+## Security Testing
+
+### Automated Security Tests
+```typescript
+// Test authentication
+test('requires authentication', async () => {
+  const response = await fetch('/api/protected')
+  expect(response.status).toBe(401)
+})
+
+// Test authorization
+test('requires admin role', async () => {
+  const response = await fetch('/api/admin', {
+    headers: { Authorization: `Bearer ${userToken}` }
+  })
+  expect(response.status).toBe(403)
+})
+
+// Test input validation
+test('rejects invalid input', async () => {
+  const response = await fetch('/api/users', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'not-an-email' })
+  })
+  expect(response.status).toBe(400)
+})
+
+// Test rate limiting
+test('enforces rate limits', async () => {
+  const requests = Array(101).fill(null).map(() =>
+    fetch('/api/endpoint')
+  )
+
+  const responses = await Promise.all(requests)
+  const tooManyRequests = responses.filter(r => r.status === 429)
+
+  expect(tooManyRequests.length).toBeGreaterThan(0)
+})
+```
+
+## Pre-Deployment Security Checklist
+
+Before ANY production deployment:
+
+- [ ] **Secrets**: No hardcoded secrets, all in env vars
+- [ ] **Input Validation**: All user inputs validated
+- [ ] **SQL Injection**: All queries parameterized
+- [ ] **XSS**: User content sanitized
+- [ ] **CSRF**: Protection enabled
+- [ ] **Authentication**: Proper token handling
+- [ ] **Authorization**: Role checks in place
+- [ ] **Rate Limiting**: Enabled on all endpoints
+- [ ] **HTTPS**: Enforced in production
+- [ ] **Security Headers**: CSP, X-Frame-Options configured
+- [ ] **Error Handling**: No sensitive data in errors
+- [ ] **Logging**: No sensitive data logged
+- [ ] **Dependencies**: Up to date, no vulnerabilities
+- [ ] **Row Level Security**: Enabled in Supabase
+- [ ] **CORS**: Properly configured
+- [ ] **File Uploads**: Validated (size, type)
+- [ ] **Wallet Signatures**: Verified (if blockchain)
+
+## Resources
+
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [Next.js Security](https://nextjs.org/docs/security)
+- [Supabase Security](https://supabase.com/docs/guides/auth)
+- [Web Security Academy](https://portswigger.net/web-security)
 
 ---
 
-## Severity Classification
-
-| Severity | Impact | Examples |
-|----------|--------|----------|
-| **Critical** | Direct exploit, severe impact, no auth required | RCE, SQL injection to data, auth bypass, hardcoded secrets |
-| **High** | Exploitable with conditions, significant impact | Stored XSS, SSRF to metadata, IDOR to sensitive data |
-| **Medium** | Specific conditions required, moderate impact | Reflected XSS, CSRF on state-changing actions, path traversal |
-| **Low** | Defense-in-depth, minimal direct impact | Missing headers, verbose errors, weak algorithms in non-critical context |
-
----
-
-## Quick Patterns Reference
-
-### Always Flag (Critical)
-```
-eval(user_input)           # Any language
-exec(user_input)           # Any language
-pickle.loads(user_data)    # Python
-yaml.load(user_data)       # Python (not safe_load)
-unserialize($user_data)    # PHP
-deserialize(user_data)     # Java ObjectInputStream
-shell=True + user_input    # Python subprocess
-child_process.exec(user)   # Node.js
-```
-
-### Always Flag (High)
-```
-innerHTML = userInput              # DOM XSS
-dangerouslySetInnerHTML={user}     # React XSS
-v-html="userInput"                 # Vue XSS
-f"SELECT * FROM x WHERE {user}"    # SQL injection
-`SELECT * FROM x WHERE ${user}`    # SQL injection
-os.system(f"cmd {user_input}")     # Command injection
-```
-
-### Always Flag (Secrets)
-```
-password = "hardcoded"
-api_key = "sk-..."
-AWS_SECRET_ACCESS_KEY = "..."
-private_key = "-----BEGIN"
-```
-
-### Check Context First (MUST Investigate Before Flagging)
-```
-# SSRF - ONLY if URL is from user input, NOT from settings/config
-requests.get(request.GET['url'])     # FLAG: User-controlled URL
-requests.get(settings.API_URL)       # SAFE: Server-controlled config
-requests.get(f"{settings.BASE}/{x}") # CHECK: Is 'x' user input?
-
-# Path traversal - ONLY if path is from user input
-open(request.GET['file'])            # FLAG: User-controlled path
-open(settings.LOG_PATH)              # SAFE: Server-controlled config
-open(f"{BASE_DIR}/{filename}")       # CHECK: Is 'filename' user input?
-
-# Open redirect - ONLY if URL is from user input
-redirect(request.GET['next'])        # FLAG: User-controlled redirect
-redirect(settings.LOGIN_URL)         # SAFE: Server-controlled config
-
-# Weak crypto - ONLY if used for security purposes
-hashlib.md5(file_content)            # SAFE: File checksums, caching
-hashlib.md5(password)                # FLAG: Password hashing
-random.random()                      # SAFE: Non-security uses (UI, sampling)
-random.random() for token            # FLAG: Security tokens need secrets module
-```
-
----
-
-## Output Format
-
-```markdown
-## Security Review: [File/Component Name]
-
-### Summary
-- **Findings**: X (Y Critical, Z High, ...)
-- **Risk Level**: Critical/High/Medium/Low
-- **Confidence**: High/Mixed
-
-### Findings
-
-#### [VULN-001] [Vulnerability Type] (Severity)
-- **Location**: `file.py:123`
-- **Confidence**: High
-- **Issue**: [What the vulnerability is]
-- **Impact**: [What an attacker could do]
-- **Evidence**:
-  ```python
-  [Vulnerable code snippet]
-  ```
-- **Fix**: [How to remediate]
-
-### Needs Verification
-
-#### [VERIFY-001] [Potential Issue]
-- **Location**: `file.py:456`
-- **Question**: [What needs to be verified]
-```
-
-If no vulnerabilities found, state: "No high-confidence vulnerabilities identified."
-
----
-
-## Reference Files
-
-### Core Vulnerabilities (`references/`)
-| File | Covers |
-|------|--------|
-| `injection.md` | SQL, NoSQL, OS command, LDAP, template injection |
-| `xss.md` | Reflected, stored, DOM-based XSS |
-| `authorization.md` | Authorization, IDOR, privilege escalation |
-| `authentication.md` | Sessions, credentials, password storage |
-| `cryptography.md` | Algorithms, key management, randomness |
-| `deserialization.md` | Pickle, YAML, Java, PHP deserialization |
-| `file-security.md` | Path traversal, uploads, XXE |
-| `ssrf.md` | Server-side request forgery |
-| `csrf.md` | Cross-site request forgery |
-| `data-protection.md` | Secrets exposure, PII, logging |
-| `api-security.md` | REST, GraphQL, mass assignment |
-| `business-logic.md` | Race conditions, workflow bypass |
-| `modern-threats.md` | Prototype pollution, LLM injection, WebSocket |
-| `misconfiguration.md` | Headers, CORS, debug mode, defaults |
-| `error-handling.md` | Fail-open, information disclosure |
-| `supply-chain.md` | Dependencies, build security |
-| `logging.md` | Audit failures, log injection |
-
-### Language Guides (`languages/`)
-- `python.md` - Django, Flask, FastAPI patterns
-- `javascript.md` - Node, Express, React, Vue, Next.js
-- `go.md` - Go-specific security patterns
-- `rust.md` - Rust unsafe blocks, FFI security
-- `java.md` - Spring, Java EE patterns
-
-### Infrastructure (`infrastructure/`)
-- `docker.md` - Container security
-- `kubernetes.md` - K8s RBAC, secrets, policies
-- `terraform.md` - IaC security
-- `ci-cd.md` - Pipeline security
-- `cloud.md` - AWS/GCP/Azure security
+**Remember**: Security is not optional. One vulnerability can compromise the entire platform. When in doubt, err on the side of caution.

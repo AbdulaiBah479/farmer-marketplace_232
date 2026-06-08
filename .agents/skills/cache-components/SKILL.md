@@ -1,16 +1,18 @@
 ---
 name: cache-components
-description: "Expert guidance for Next.js Cache Components and Partial Prerendering (PPR). Use when implementing 'use cache' directive, configuring cache lifetimes with cacheLife(), tagging cached data with cacheTag(), invalidating caches with updateTag()/revalidateTag(), optimizing static vs dynamic content boundaries, managing 'use cache: private' for compliance scenarios, pass-through/interleaving patterns, GET Route Handler caching, debugging cache issues, and reviewing Cache Component implementations."
-argument-hint: "[pattern or question]"
-metadata:
-  version: "1.0"
+description: |
+  Expert guidance for Next.js Cache Components and Partial Prerendering (PPR).
+
+  **PROACTIVE ACTIVATION**: Use this skill automatically when working in Next.js projects that have `cacheComponents: true` in their next.config.ts/next.config.js. When this config is detected, proactively apply Cache Components patterns and best practices to all React Server Component implementations.
+
+  **DETECTION**: At the start of a session in a Next.js project, check for `cacheComponents: true` in next.config. If enabled, this skill's patterns should guide all component authoring, data fetching, and caching decisions.
+
+  **USE CASES**: Implementing 'use cache' directive, configuring cache lifetimes with cacheLife(), tagging cached data with cacheTag(), invalidating caches with updateTag()/revalidateTag(), optimizing static vs dynamic content boundaries, debugging cache issues, and reviewing Cache Component implementations.
 ---
 
 # Next.js Cache Components
 
-> **Auto-activation**: Activate this skill automatically in Next.js projects that have
-> `cacheComponents: true` in `next.config.ts`/`next.config.js`. When detected, apply Cache
-> Components patterns to all Server Component authoring, data fetching, and caching decisions.
+> **Auto-activation**: This skill activates automatically in projects with `cacheComponents: true` in next.config.
 
 ## Project Detection
 
@@ -29,7 +31,7 @@ If `cacheComponents: true` is found, apply this skill's patterns proactively whe
 - Optimizing page performance
 - Reviewing existing component code
 
-Cache Components enable **Partial Prerendering (PPR)** - mixing static HTML shells with dynamic streaming content for optimal performance. Cache Components also enable state preservation during navigation with React's `<Activity>` component, which can keep cached component trees mounted but hidden.
+Cache Components enable **Partial Prerendering (PPR)** - mixing static HTML shells with dynamic streaming content for optimal performance.
 
 ## Philosophy: Code Over Configuration
 
@@ -62,32 +64,54 @@ Cache Components represents a shift from **segment configuration** to **composit
 └─────────────────────────────────────────────────────┘
 ```
 
-## Mental Model: The Caching Decision Steps
+## Mental Model: The Caching Decision Tree
 
-When writing a React Server Component, walk through these steps in order:
+When writing a React Server Component, ask these questions in order:
 
-1. **Does the component fetch data or perform I/O?**
-   - No → pure component, nothing to decide.
-   - Yes → continue.
+```
+┌─────────────────────────────────────────────────────────┐
+│ Does this component fetch data or perform I/O?          │
+└─────────────────────┬───────────────────────────────────┘
+                      │
+           ┌──────────▼──────────┐
+           │   YES               │ NO → Pure component, no action needed
+           └──────────┬──────────┘
+                      │
+    ┌─────────────────▼─────────────────┐
+    │ Does it depend on request context? │
+    │ (cookies, headers, searchParams)   │
+    └─────────────────┬─────────────────┘
+                      │
+         ┌────────────┴────────────┐
+         │                         │
+    ┌────▼────┐              ┌─────▼─────┐
+    │   YES   │              │    NO     │
+    └────┬────┘              └─────┬─────┘
+         │                         │
+         │                   ┌─────▼─────────────────┐
+         │                   │ Can this be cached?   │
+         │                   │ (same for all users?) │
+         │                   └─────┬─────────────────┘
+         │                         │
+         │              ┌──────────┴──────────┐
+         │              │                     │
+         │         ┌────▼────┐          ┌─────▼─────┐
+         │         │   YES   │          │    NO     │
+         │         └────┬────┘          └─────┬─────┘
+         │              │                     │
+         │              ▼                     │
+         │         'use cache'                │
+         │         + cacheTag()               │
+         │         + cacheLife()              │
+         │                                    │
+         └──────────────┬─────────────────────┘
+                        │
+                        ▼
+              Wrap in <Suspense>
+              (dynamic streaming)
+```
 
-2. **Does it depend on request context** (`cookies()`, `headers()`, `searchParams`)?
-   - No → continue to step 3.
-   - Yes → continue to step 4.
-
-3. **(No request context) Is the data the same across users?**
-   - Yes → add `'use cache'` with `cacheTag()` and `cacheLife()`.
-   - No → wrap rendering in `<Suspense>` so the dynamic part streams at request time.
-
-4. **(Has request context) Can you extract the runtime data as function arguments?**
-   - Yes → read `cookies()`/`headers()` outside the cached scope, pass values
-     into a `'use cache'` function, and wrap the dynamic caller in `<Suspense>`.
-   - No (compliance prevents cross-request sharing) → use `'use cache: private'`
-     (experimental — not recommended for production) as a last resort, still
-     wrapped in `<Suspense>`.
-
-**Key insight**: `'use cache'` is for data that is the _same across users_. User-specific
-data stays dynamic and streams through `<Suspense>`. Reach for `'use cache: private'` only
-when you cannot refactor runtime data into arguments.
+**Key insight**: The `'use cache'` directive is for data that's the _same across users_. User-specific data stays dynamic with Suspense.
 
 ## Quick Start
 
@@ -125,62 +149,6 @@ export default async function BlogPage() {
       </Suspense>
     </>
   )
-}
-```
-
-## Server Actions vs Data Fetching (Critical Rule)
-
-**Server Actions are for MUTATIONS ONLY** - never for data fetching:
-
-| Purpose         | Use                              | Example Functions                        |
-| --------------- | -------------------------------- | ---------------------------------------- |
-| **Data fetch**  | Server Component / `'use cache'` | `getProducts()`, `getUser(id)`           |
-| **Mutation**    | Server Action (`'use server'`)   | `createProduct()`, `updateUser()`, `deletePost()` |
-
-### ❌ WRONG: Server Action for Data Fetching
-
-```tsx
-"use server"
-export async function getProducts() {
-  return await db.products.findMany() // NO! This is not a mutation
-}
-
-"use server"
-export async function getTheme() {
-  return (await cookies()).get("theme")?.value // NO! Just reading data
-}
-```
-
-### ✅ CORRECT: Data Function + Server Component
-
-```tsx
-// data/products.ts - Cached data function
-export async function getProducts() {
-  "use cache"
-  cacheTag("products")
-  cacheLife("hours")
-  return await db.products.findMany()
-}
-
-// page.tsx - Server Component reads data directly
-import { cookies } from "next/headers"
-
-export default async function Page() {
-  const products = await getProducts()
-  const theme = (await cookies()).get("theme")?.value ?? "light"
-  return <ProductList products={products} theme={theme} />
-}
-```
-
-### ✅ CORRECT: Server Action for Mutation
-
-```tsx
-"use server"
-import { updateTag } from "next/cache"
-
-export async function createProduct(formData: FormData) {
-  await db.products.create({ data: formData })
-  updateTag("products") // Invalidate cache after mutation
 }
 ```
 
@@ -288,12 +256,6 @@ export async function updatePost(id: string, data: FormData) {
   revalidateTag('posts', 'max') // Serve stale, refresh in background
 }
 ```
-
-> **⚠️ Deprecated**: The single-argument form `revalidateTag('posts')` is deprecated.
-> Always pass a profile (`'max'` is recommended for stale-while-revalidate) or
-> `{ expire: <seconds> }` as the second argument. For webhooks that require immediate
-> expiration, use `revalidateTag(tag, { expire: 0 })`. For immediate read-your-own-writes
-> in Server Actions, prefer [`updateTag()`](#4-updatetag---immediate-invalidation) instead.
 
 ## When to Use Each Pattern
 
@@ -429,11 +391,70 @@ When generating Cache Component code:
 4. **Tag meaningfully** - Use semantic tags that match your invalidation needs
 5. **Extract runtime data** - Move `cookies()`/`headers()` outside cached scope
 6. **Wrap dynamic content** - Use `<Suspense>` for non-cached async components
-7. **Use `'use cache: private'` as last resort** - Experimental (not recommended for production). Only when runtime data cannot be extracted as params AND compliance requires no cross-request sharing
 
-## Review Checklist
+---
 
-When reviewing code in Cache Components projects, flag these issues:
+## Proactive Application (When Cache Components Enabled)
+
+When `cacheComponents: true` is detected in the project, **automatically apply these patterns**:
+
+### When Writing Data Fetching Components
+
+Ask yourself: "Can this data be cached?" If yes, add `'use cache'`:
+
+```tsx
+// Before: Uncached fetch
+async function ProductList() {
+  const products = await db.products.findMany()
+  return <Grid products={products} />
+}
+
+// After: With caching
+async function ProductList() {
+  'use cache'
+  cacheTag('products')
+  cacheLife('hours')
+
+  const products = await db.products.findMany()
+  return <Grid products={products} />
+}
+```
+
+### When Writing Server Actions
+
+Always invalidate relevant caches after mutations:
+
+```tsx
+'use server'
+import { updateTag } from 'next/cache'
+
+export async function createProduct(data: FormData) {
+  await db.products.create({ data })
+  updateTag('products') // Don't forget!
+}
+```
+
+### When Composing Pages
+
+Structure with static shell + cached content + dynamic streaming:
+
+```tsx
+export default async function Page() {
+  return (
+    <>
+      <StaticHeader /> {/* No cache needed */}
+      <CachedContent /> {/* 'use cache' */}
+      <Suspense fallback={<Skeleton />}>
+        <DynamicUserContent /> {/* Streams at runtime */}
+      </Suspense>
+    </>
+  )
+}
+```
+
+### When Reviewing Code
+
+Flag these issues in Cache Components projects:
 
 - [ ] Data fetching without `'use cache'` where caching would benefit
 - [ ] Missing `cacheTag()` calls (makes invalidation impossible)
@@ -444,4 +465,3 @@ When reviewing code in Cache Components projects, flag these issues:
 - [ ] **DEPRECATED**: `export const revalidate` - replace with `cacheLife()` in `'use cache'`
 - [ ] **DEPRECATED**: `export const dynamic` - replace with Suspense + cache boundaries
 - [ ] Empty `generateStaticParams()` return - must provide at least one param
-- [ ] Single-argument `revalidateTag('tag')` - use two-argument form with profile or `{ expire }`

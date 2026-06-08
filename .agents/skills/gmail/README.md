@@ -1,171 +1,148 @@
-# Gmail Skill
+# Gmail Search Skill
 
-An AI agent skill for interacting with Gmail - search emails, read messages, send emails, create drafts, and manage labels. Works with Claude Code, Gemini CLI, Cursor, OpenAI Codex, Goose, and other AI clients supporting the [Agent Skills Standard](https://agentskills.io).
+Search and fetch emails via Gmail API with flexible query options and output formats.
 
 ## Features
 
-- **Search** - Find emails using Gmail query syntax
-- **Read** - Get full message content
-- **Send** - Send plain text or HTML emails
-- **Drafts** - Create and send draft emails
-- **Labels** - Archive, star, mark read/unread
+- Free-text search with Gmail query syntax
+- Filter by sender, recipient, subject, label, date range
+- Status filters: unread, starred, has-attachment
+- Download attachments from messages
+- List all labels
+- Configurable OAuth scopes (readonly/modify/full)
+- Output as Markdown (default) or JSON
 
-Lightweight alternative to the full [Google Workspace MCP server](https://github.com/gemini-cli-extensions/workspace).
-
-> **⚠️ Requires Google Workspace account.** Personal Gmail accounts are not supported.
-
-## Quick Start
-
-### 1. Install dependencies
+## Installation
 
 ```bash
-pip install keyring
+pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
 
-### 2. Authenticate
+## Setup: Obtaining Gmail API Credentials
+
+### 1. Create Google Cloud Project
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Click project dropdown (top bar) -> "New Project"
+3. Name it (e.g., "Gmail Agent Skill") -> Create
+4. Wait for project creation, then select it
+
+### 2. Enable Gmail API
+
+1. In your project, go to "APIs & Services" -> "Library"
+2. Search for "Gmail API"
+3. Click on it and press "Enable"
+
+### 3. Configure OAuth Consent Screen
+
+1. Go to "APIs & Services" -> "OAuth consent screen"
+2. Choose "External" user type -> Create
+3. Fill in required fields:
+   - **App name:** Gmail Agent Skill
+   - **User support email:** your email
+   - **Developer contact email:** your email
+4. Click "Save and Continue"
+5. Skip "Scopes" (just click "Save and Continue")
+6. On "Test users" page, click "Add Users"
+7. Add your Gmail address as a test user
+8. Click "Save and Continue" -> "Back to Dashboard"
+
+### 4. Publish the Test App
+
+**Important:** Without this step, you'll get "Error 403: access_denied".
+
+1. Go back to "OAuth consent screen"
+2. Under "Publishing status", you'll see "Testing"
+3. Click "Publish App"
+4. Confirm by clicking "Confirm"
+
+This publishes your app in **test mode** (not production). It allows the test users you added to authenticate. The app remains unverified, which is fine for personal use - you'll just see a warning screen during authentication that you can click through.
+
+**Note:** Test mode tokens expire after 7 days, requiring re-authentication. For personal use, this is a minor inconvenience. Production publishing requires Google verification review.
+
+### 5. Create OAuth Credentials
+
+1. Go to "APIs & Services" -> "Credentials"
+2. Click "Create Credentials" -> "OAuth client ID"
+3. Application type: **Desktop app**
+4. Name: "Gmail Agent Client"
+5. Click "Create"
+
+### 6. Download and Save Credentials
+
+After creation, you'll see Client ID and Client Secret.
+
+**Option A: Download JSON**
+1. Click the download icon next to your OAuth client
+2. Save as `~/.gmail_credentials/credentials.json`
+
+**Option B: Create manually**
+
+Create `~/.gmail_credentials/credentials.json`:
+
+```json
+{
+  "installed": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "client_secret": "YOUR_CLIENT_SECRET",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "redirect_uris": ["http://localhost"]
+  }
+}
+```
+
+### 7. Authenticate
 
 ```bash
-python scripts/auth.py login
+python3 scripts/gmail_search.py auth
 ```
 
-This opens a browser for Google OAuth. Tokens are stored securely in your system keyring.
+This opens a browser. Sign in with Google, click through the "unverified app" warning (click "Advanced" -> "Go to Gmail Agent Skill (unsafe)"), approve access, and you're ready.
 
-### 3. Test connection
+## Usage
 
 ```bash
-python scripts/auth.py status
+# Check setup status
+python3 scripts/gmail_search.py setup
+
+# Search emails
+python3 scripts/gmail_search.py search "meeting notes"
+
+# Filter by sender
+python3 scripts/gmail_search.py search --from "boss@company.com"
+
+# Unread emails with attachments
+python3 scripts/gmail_search.py search --unread --has-attachment
+
+# Date range
+python3 scripts/gmail_search.py search --after 2024/11/01 --before 2024/11/30
+
+# Full body (not just snippet)
+python3 scripts/gmail_search.py search "invoice" --full
+
+# JSON output
+python3 scripts/gmail_search.py search "project" --json
+
+# Download attachments
+python3 scripts/gmail_search.py download MESSAGE_ID
+
+# List labels
+python3 scripts/gmail_search.py labels
 ```
 
-## Usage Examples
+## Scopes
 
-### Search Emails
+Change permission level:
 
 ```bash
-# Search with Gmail query syntax
-python scripts/gmail.py search "from:someone@example.com is:unread"
-
-# Get recent emails
-python scripts/gmail.py search --limit 20
-
-# Filter by label
-python scripts/gmail.py search --label INBOX --limit 10
-
-# Include spam and trash
-python scripts/gmail.py search "subject:important" --include-spam-trash
+python3 scripts/gmail_search.py scope --set readonly   # Read only (default)
+python3 scripts/gmail_search.py scope --set modify     # Read + modify labels
+python3 scripts/gmail_search.py scope --set full       # Full access
 ```
 
-### Read Emails
+## Files
 
-```bash
-# Get full message content
-python scripts/gmail.py get MESSAGE_ID
-
-# Get just metadata (headers)
-python scripts/gmail.py get MESSAGE_ID --format metadata
-```
-
-### Send Emails
-
-```bash
-# Send a simple email
-python scripts/gmail.py send --to "user@example.com" --subject "Hello" --body "Message body"
-
-# Send with CC and BCC
-python scripts/gmail.py send --to "user@example.com" --cc "cc@example.com" --bcc "bcc@example.com" \
-  --subject "Team Update" --body "Update message"
-
-# Send HTML email
-python scripts/gmail.py send --to "user@example.com" --subject "HTML Email" \
-  --body "<h1>Hello</h1><p>HTML content</p>" --html
-```
-
-### Draft Management
-
-```bash
-# Create a draft
-python scripts/gmail.py create-draft --to "user@example.com" --subject "Draft Subject" \
-  --body "Draft content"
-
-# Send an existing draft
-python scripts/gmail.py send-draft DRAFT_ID
-```
-
-### Modify Messages (Labels)
-
-```bash
-# Mark as read
-python scripts/gmail.py modify MESSAGE_ID --remove-label UNREAD
-
-# Archive (remove from inbox)
-python scripts/gmail.py modify MESSAGE_ID --remove-label INBOX
-
-# Star a message
-python scripts/gmail.py modify MESSAGE_ID --add-label STARRED
-
-# Multiple changes
-python scripts/gmail.py modify MESSAGE_ID --remove-label UNREAD --add-label STARRED
-```
-
-## Command Reference
-
-| Command | Description | Arguments |
-|---------|-------------|-----------|
-| `search [query]` | Search emails | query, `--limit`, `--label` |
-| `get <id>` | Read message | message ID, `--format` |
-| `send` | Send email | `--to`, `--subject`, `--body`, `--html` |
-| `create-draft` | Create draft | `--to`, `--subject`, `--body` |
-| `send-draft <id>` | Send draft | draft ID |
-| `modify <id>` | Change labels | `--add-label`, `--remove-label` |
-| `list-labels` | List all labels | - |
-
-## Gmail Query Syntax
-
-| Query | Description |
-|-------|-------------|
-| `from:user@example.com` | From specific sender |
-| `to:user@example.com` | To specific recipient |
-| `subject:meeting` | Subject contains "meeting" |
-| `is:unread` | Unread emails |
-| `is:starred` | Starred emails |
-| `has:attachment` | Has attachments |
-| `after:2024/01/01` | After date |
-| `newer_than:7d` | Last 7 days |
-| `label:work` | Specific label |
-
-Combine with AND (space), OR, or `-` (NOT).
-
-## Common Labels
-
-| Label | Description |
-|-------|-------------|
-| `INBOX` | Inbox |
-| `SENT` | Sent mail |
-| `STARRED` | Starred |
-| `IMPORTANT` | Important |
-| `UNREAD` | Unread |
-| `TRASH` | Trash |
-| `SPAM` | Spam |
-
-## Token Management
-
-Tokens stored securely using the system keyring:
-- **macOS**: Keychain
-- **Windows**: Windows Credential Locker
-- **Linux**: Secret Service API (GNOME Keyring, KDE Wallet)
-
-Service name: `gmail-skill-oauth`
-
-## Troubleshooting
-
-### "Failed to get access token"
-Run `python scripts/auth.py login` to authenticate.
-
-### "Message not found"
-Check the message ID. Use `search` to find valid IDs.
-
-### "Permission denied"
-Ensure you have the required Gmail permissions. Re-authenticate if needed.
-
-## License
-
-Apache 2.0
+- `~/.gmail_credentials/credentials.json` - OAuth client credentials
+- `~/.gmail_credentials/token.pickle` - Cached auth token
+- `~/.gmail_credentials/scope.txt` - Current scope setting

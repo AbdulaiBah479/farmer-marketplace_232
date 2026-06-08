@@ -1,131 +1,368 @@
 ---
 name: api-testing
-description: "Comprehensive API testing for REST and GraphQL endpoints. Use when asked to create, run, or debug API tests, validate schemas, test authentication, verify contracts, or check error handling. Covers Playwright request fixture (TypeScript) and REST Assured (Java 21+)."
+description: Test FastAPI endpoints with pytest and generate API documentation. Use when creating new APIs or verifying existing endpoints work correctly.
+allowed-tools: Read, Write, Bash, Glob, Grep
 ---
 
-# API Testing (Playwright + REST Assured)
-
-Comprehensive API testing skill covering both Playwright TypeScript (request fixture, Supertest, Zod) and Java (REST Assured, AssertJ, JSON Schema Validator). Provides deep domain expertise for the `api-tester-specialist` agent.
+You help test FastAPI endpoints for the QA Team Portal backend using pytest and manual testing tools.
 
 ## When to Use This Skill
 
-- Create API tests for REST or GraphQL endpoints
-- Validate request/response schemas (Zod, JSON Schema)
-- Test authentication flows (OAuth2, JWT, API keys, Bearer tokens)
-- Verify error handling (400, 401, 403, 404, 409, 422, 500)
-- Test pagination, filtering, sorting edge cases
-- Validate idempotency for PUT/DELETE operations
-- Contract testing between services
-- Rate limiting validation
+- Testing new API endpoints after creation
+- Verifying authentication/authorization works
+- Testing CRUD operations
+- Checking error handling and validation
+- Load/stress testing APIs
+- Generating API documentation examples
 
-## Prerequisites
+## Testing Approaches
 
-| Stack      | Requirements                                                          |
-| ---------- | --------------------------------------------------------------------- |
-| TypeScript | Node.js 18+, `@playwright/test` or `supertest`, `zod`                 |
-| Java       | Java 21+, REST Assured 5.x, AssertJ, Jackson, `json-schema-validator` |
+### 1. Automated Testing with Pytest
 
-## Core Principles
+#### Unit Tests (Fast, Isolated)
 
-1. **Schema validation on every response** — never trust an unvalidated response
-2. **Test all HTTP status codes** — happy path AND error states
-3. **Auth testing is mandatory** — verify 401/403 for protected endpoints
-4. **Data-driven** — test with valid, invalid, boundary, and empty values
-5. **Stateless where possible** — each test cleans up or uses unique data
+```python
+# tests/unit/test_team_service.py
+import pytest
+from app.services.team_service import TeamService
 
-## Quick Reference — Playwright
+def test_validate_team_member_data():
+    service = TeamService()
+    data = {"name": "John Doe", "role": "QA Lead"}
+    assert service.validate(data) is True
 
-```typescript
-import { test, expect } from "@playwright/test";
-
-test("GET /api/users returns 200 with valid schema", async ({ request }) => {
-  const response = await request.get("/api/users");
-  expect(response.ok()).toBeTruthy();
-  const body = await response.json();
-  expect(body).toMatchObject({ data: expect.any(Array) });
-});
+def test_validate_rejects_invalid_email():
+    service = TeamService()
+    data = {"name": "John", "email": "invalid"}
+    with pytest.raises(ValueError):
+        service.validate(data)
 ```
 
-## Quick Reference — REST Assured
+#### Integration Tests (Full API Flow)
 
-```java
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
+```python
+# tests/integration/test_api_team_members.py
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
 
-import java.util.List;
+client = TestClient(app)
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+def test_get_team_members():
+    response = client.get("/api/v1/team-members")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
 
-@Test
-@DisplayName("GET /api/users returns 200 with valid schema")
-void getUsers() {
-    String token = "test-token";
+def test_create_team_member_requires_auth():
+    data = {"name": "John Doe", "role": "QA Lead"}
+    response = client.post("/api/v1/team-members", json=data)
+    assert response.status_code == 401
 
-    given()
-        .header("Authorization", "Bearer " + token)
-    .when()
-        .get("/api/users")
-    .then()
-        .statusCode(200)
-        .body("data", is(instanceOf(List.class)))
-        .body("data.size()", greaterThan(0));
-}
+def test_create_team_member_with_auth(admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    data = {
+        "name": "John Doe",
+        "role": "QA Lead",
+        "email": "john@example.com"
+    }
+    response = client.post("/api/v1/team-members", json=data, headers=headers)
+    assert response.status_code == 201
+    assert response.json()["name"] == "John Doe"
+
+def test_update_team_member(admin_token, test_team_member):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    data = {"name": "Jane Doe"}
+    response = client.put(
+        f"/api/v1/team-members/{test_team_member.id}",
+        json=data,
+        headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()["name"] == "Jane Doe"
+
+def test_delete_team_member(admin_token, test_team_member):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = client.delete(
+        f"/api/v1/team-members/{test_team_member.id}",
+        headers=headers
+    )
+    assert response.status_code == 204
 ```
 
-## Common Rationalizations
+#### Pytest Fixtures
 
-> Common shortcuts and "good enough" excuses that erode test quality — and the reality behind each.
+```python
+# tests/conftest.py
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.main import app
+from app.db.base import Base
+from app.api.deps import get_db
 
-| Rationalization                                 | Reality                                                                                                      |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| "Schema validation is overkill"                 | Without schema validation, a silent field rename becomes a production incident. Validate every response.     |
-| "Happy path testing is enough"                  | Error states (400, 401, 403, 404, 409, 500) are where real failures happen. Test all status codes.           |
-| "Auth tests can wait"                           | Unauthenticated access to protected endpoints is a security vulnerability, not a backlog item.               |
-| "This endpoint won't change"                    | APIs evolve. Contract tests catch breaking changes before they reach production.                             |
-| "Manual API testing with Postman is sufficient" | Manual testing isn't repeatable, can't run in CI, and doesn't scale. Automate API tests.                     |
-| "Idempotency doesn't matter"                    | Duplicate requests happen in production. Without idempotency testing, you get duplicate records and charges. |
+# Test database
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+TestingSessionLocal = sessionmaker(bind=engine)
 
----
+@pytest.fixture(scope="function")
+def db():
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        Base.metadata.drop_all(bind=engine)
 
-## References
+@pytest.fixture
+def client(db):
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            db.close()
+    app.dependency_overrides[get_db] = override_get_db
+    return TestClient(app)
 
-| Document                                                         | Content                                             |
-| ---------------------------------------------------------------- | --------------------------------------------------- |
-| [REST API Patterns](./references/rest-api-patterns.md)           | CRUD, pagination, filtering, error patterns         |
-| [Playwright API Testing](./references/playwright-api-testing.md) | Request fixture, Supertest, TypeScript patterns     |
-| [REST Assured Testing](./references/rest-assured-testing.md)     | REST Assured, AssertJ, Java patterns                |
-| [Schema Validation](./references/schema-validation.md)           | Zod (TS), JSON Schema (Java), strict vs loose       |
-| [Contract Testing](./references/contract-testing.md)             | Request/response contracts, idempotency, versioning |
+@pytest.fixture
+def admin_token(client):
+    response = client.post("/api/v1/auth/login", json={
+        "email": "admin@test.com",
+        "password": "testpass123"
+    })
+    return response.json()["access_token"]
 
-## Templates
+@pytest.fixture
+def test_team_member(db):
+    from app.models.team_member import TeamMember
+    member = TeamMember(
+        name="Test User",
+        role="QA Engineer",
+        email="test@test.com"
+    )
+    db.add(member)
+    db.commit()
+    db.refresh(member)
+    return member
+```
 
-- [Playwright API Spec](./templates/playwright-api-spec.ts) — starter test file for API testing
-- [REST Assured Test](./templates/rest-assured-test.java) — starter Java test class
+### 2. Manual Testing with curl
 
-## Scripts
+```bash
+# Health check
+curl http://localhost:8000/health
 
-- [API Health Check](./scripts/api-health-check.sh) — validate API endpoints respond correctly
+# Get all team members (public)
+curl http://localhost:8000/api/v1/team-members
 
-## Troubleshooting
+# Login
+TOKEN=$(curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@test.com","password":"pass"}' \
+  | jq -r '.access_token')
 
-| Issue                          | Solution                                                                       |
-| ------------------------------ | ------------------------------------------------------------------------------ |
-| 401 on authenticated endpoints | Verify token is fresh; check expiry; re-authenticate                           |
-| Flaky API tests                | Add retry logic; check for rate limiting; use unique test data                 |
-| Schema validation too strict   | Use `.passthrough()` (Zod) or `additionalProperties: true` for flexible fields |
-| Timeout on slow endpoints      | Increase `timeout` in request options; check for server load                   |
+# Create team member (admin)
+curl -X POST http://localhost:8000/api/v1/team-members \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "role": "QA Lead",
+    "email": "john@example.com"
+  }'
 
----
+# Upload profile photo
+curl -X POST http://localhost:8000/api/v1/team-members/123/photo \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@profile.jpg"
 
-## Verification
+# Get with filters
+curl "http://localhost:8000/api/v1/team-members?role=QA%20Lead&active=true"
+```
 
-After completing this skill's workflow, confirm:
+### 3. Testing with HTTPie (Prettier Output)
 
-- [ ] **All CRUD operations tested** — POST, GET, PUT, PATCH, DELETE covered for the resource
-- [ ] **Status codes verified** — Success (2xx) AND error codes (4xx, 5xx) tested
-- [ ] **Schema validation in place** — Every response validated against a schema (Zod or JSON Schema)
-- [ ] **Authentication tested** — 401 returned for protected endpoints without valid credentials
-- [ ] **Idempotency verified** — PUT/DELETE produce same result when called multiple times
-- [ ] **Edge cases covered** — Empty payloads, invalid types, boundary values, SQL injection attempts
-- [ ] **All tests pass** — Playwright API tests or REST Assured tests exit successfully
+```bash
+# Install httpie
+pip install httpie
+
+# Login
+http POST localhost:8000/api/v1/auth/login email=admin@test.com password=pass
+
+# Create with auth
+http POST localhost:8000/api/v1/team-members \
+  Authorization:"Bearer $TOKEN" \
+  name="John Doe" \
+  role="QA Lead" \
+  email="john@example.com"
+
+# Pretty print JSON
+http GET localhost:8000/api/v1/team-members | jq '.'
+```
+
+## Running Tests
+
+```bash
+cd backend
+
+# Run all tests
+uv run pytest
+
+# Run with verbose output
+uv run pytest -v
+
+# Run specific test file
+uv run pytest tests/integration/test_api_team_members.py
+
+# Run specific test
+uv run pytest tests/integration/test_api_team_members.py::test_create_team_member
+
+# Run with coverage
+uv run pytest --cov=app --cov-report=html
+
+# Run only integration tests
+uv run pytest tests/integration/
+
+# Show print statements
+uv run pytest -s
+
+# Stop on first failure
+uv run pytest -x
+
+# Run tests matching pattern
+uv run pytest -k "team_member"
+```
+
+## Test Coverage
+
+```bash
+# Generate coverage report
+uv run pytest --cov=app --cov-report=term-missing
+
+# Generate HTML report
+uv run pytest --cov=app --cov-report=html
+open htmlcov/index.html
+
+# Coverage for specific module
+uv run pytest --cov=app.api.v1.endpoints --cov-report=term
+```
+
+## Load Testing
+
+```bash
+# Install locust
+uv pip install locust
+
+# Create locustfile.py
+cat > locustfile.py <<'EOF'
+from locust import HttpUser, task, between
+
+class APIUser(HttpUser):
+    wait_time = between(1, 3)
+
+    @task
+    def get_team_members(self):
+        self.client.get("/api/v1/team-members")
+
+    @task(3)
+    def get_updates(self):
+        self.client.get("/api/v1/updates")
+EOF
+
+# Run load test
+uv run locust -f locustfile.py --host=http://localhost:8000
+
+# Or headless mode
+uv run locust -f locustfile.py --host=http://localhost:8000 \
+  --users 100 --spawn-rate 10 --run-time 1m --headless
+```
+
+## API Documentation Testing
+
+```bash
+# Access interactive docs
+open http://localhost:8000/api/v1/docs
+
+# Get OpenAPI schema
+curl http://localhost:8000/api/v1/openapi.json | jq '.' > openapi.json
+
+# Validate OpenAPI schema
+npx @stoplight/spectral-cli lint openapi.json
+```
+
+## Test Checklist
+
+For each endpoint, verify:
+
+- [ ] **Success cases** - Returns 200/201/204 as expected
+- [ ] **Authentication** - Returns 401 without token
+- [ ] **Authorization** - Returns 403 for insufficient permissions
+- [ ] **Validation** - Returns 422 for invalid data
+- [ ] **Not Found** - Returns 404 for non-existent resources
+- [ ] **Edge cases** - Empty lists, null values, boundary conditions
+- [ ] **Error handling** - Doesn't expose sensitive info in errors
+- [ ] **Rate limiting** - Enforced on sensitive endpoints
+- [ ] **CORS** - Allows configured origins only
+- [ ] **Response format** - Matches schema definition
+
+## Common Test Patterns
+
+### Testing Authentication
+
+```python
+def test_endpoint_requires_authentication(client):
+    response = client.post("/api/v1/admin/users")
+    assert response.status_code == 401
+
+def test_endpoint_rejects_expired_token(client, expired_token):
+    headers = {"Authorization": f"Bearer {expired_token}"}
+    response = client.get("/api/v1/admin/users", headers=headers)
+    assert response.status_code == 401
+```
+
+### Testing Validation
+
+```python
+def test_rejects_invalid_email(client, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    data = {"name": "John", "email": "invalid"}
+    response = client.post("/api/v1/team-members", json=data, headers=headers)
+    assert response.status_code == 422
+    assert "email" in response.json()["detail"][0]["loc"]
+```
+
+### Testing Pagination
+
+```python
+def test_pagination_limits_results(client):
+    response = client.get("/api/v1/team-members?limit=5")
+    assert len(response.json()) <= 5
+
+def test_pagination_skip_offset(client):
+    response1 = client.get("/api/v1/team-members?skip=0&limit=2")
+    response2 = client.get("/api/v1/team-members?skip=2&limit=2")
+    assert response1.json()[0]["id"] != response2.json()[0]["id"]
+```
+
+## Output Format
+
+After testing, report:
+
+1. **Tests Run**: X passed, Y failed
+2. **Coverage**: X% of code covered
+3. **Failed Tests**: List with error messages
+4. **Performance**: Average response time for key endpoints
+5. **Issues Found**: Any bugs or unexpected behavior
+6. **Recommendations**: Suggested improvements
+
+## Best Practices
+
+1. **Test pyramid**: More unit tests, fewer integration tests
+2. **Independent tests**: Each test should be isolated
+3. **Descriptive names**: `test_create_team_member_requires_admin_role`
+4. **Use fixtures**: Share test data setup
+5. **Test error cases**: Not just happy path
+6. **Mock external services**: Don't depend on external APIs
+7. **Fast tests**: Keep test suite under 1 minute if possible

@@ -1,13 +1,12 @@
 ---
 name: Aphorisms
-description: "Manages a curated aphorism collection with full CRUD — content-based matching, themed search, thinker research, and database maintenance. Organizes quotes by author, theme, context, and newsletter usage history to prevent repetition. Four workflows: FindAphorism (analyze newsletter content, match themes, return 3-5 ranked recommendations with rationale), AddAphorism (parse quote + author, extract themes, validate uniqueness, update theme index), ResearchThinker (deep research on philosopher, add sourced quotes to database), SearchAphorisms (search by theme, keyword, or author). Database at ~/.claude/skills/aphorisms/Database/aphorisms.md — stores full quote text, author attribution, theme tags, context/background, source reference, and usage history per entry. Theme index supports 12+ categories: Work Ethic, Resilience, Learning, Stoicism, Risk, Wisdom, Truth-seeking, Excellence, Curiosity, Freedom, Rationality, Clarity. Supported thinkers: Hitchens, Feynman, Deutsch, Sam Harris, Spinoza, plus any requested author. Newsletter integration: tracks which quotes used in which issues to enforce variety; content theme extraction drives automated matching. USE WHEN: aphorism, quote, saying, find a quote, research thinker, add aphorism, search aphorisms, quote for newsletter, what did X say about, quotes about [topic], quote bank, find matching quote, quote collection, add this quote, check usage history. NOT FOR general creative writing or social media post generation — those go through dedicated writing/social skills."
-effort: low
+description: Aphorism management. USE WHEN aphorism, quote, saying. SkillSearch('aphorisms') for docs.
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Aphorisms/`
+`~/.claude/skills/PAI/USER/SKILLCUSTOMIZATIONS/Aphorisms/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -18,7 +17,7 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 
 1. **Send voice notification**:
    ```bash
-   curl -s -X POST http://localhost:31337/notify \
+   curl -s -X POST http://localhost:8888/notify \
      -H "Content-Type: application/json" \
      -d '{"message": "Running the WORKFLOWNAME workflow in the Aphorisms skill to ACTION"}' \
      > /dev/null 2>&1 &
@@ -39,12 +38,25 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 Running the **WorkflowName** workflow in the **Aphorisms** skill to ACTION...
 ```
 
-| Request Pattern | Route To |
-|---|---|
-| Find aphorism, quote for newsletter, match aphorism, suggest quote, aphorism recommendation | `Workflows/FindAphorism.md` |
-| Add quote, add aphorism, save quote, new aphorism, store quote | `Workflows/AddAphorism.md` |
-| Research thinker, find quotes from, what did X say, thinker quotes on | `Workflows/ResearchThinker.md` |
-| Search aphorisms, find quotes on, quotes about, quotes matching, what aphorisms | `Workflows/SearchAphorisms.md` |
+**When user requests finding perfect aphorism for newsletter content:**
+Examples: "find aphorism for this newsletter", "find quote for this content", "what aphorism fits this", "suggest quote for newsletter", "match aphorism to this article", "perfect quote for this", "aphorism recommendation"
+→ **READ:** ~/.claude/skills/aphorisms/Workflows/Find-aphorism.md
+→ **EXECUTE:** Analyze content themes and recommend matching aphorism from database
+
+**When user requests adding new aphorism to database:**
+Examples: "add this quote", "add aphorism", "save this quote", "add to aphorism database", "new aphorism", "store this quote", "include this in collection"
+→ **READ:** ~/.claude/skills/aphorisms/Workflows/Add-aphorism.md
+→ **EXECUTE:** Add new aphorism with proper metadata and theme tagging
+
+**When user requests researching specific thinker's quotes:**
+Examples: "research Hitchens quotes", "find Feynman aphorisms", "what did Spinoza say about", "get quotes from Sam Harris", "research David Deutsch wisdom", "thinker quotes on [topic]"
+→ **READ:** ~/.claude/skills/aphorisms/Workflows/Research-thinker.md
+→ **EXECUTE:** Research thinker's relevant quotes and add to database
+
+**When user requests searching aphorisms by theme or keyword:**
+Examples: "search aphorisms about resilience", "find quotes on learning", "aphorisms about stoicism", "quotes matching [keyword]", "show me quotes about [theme]", "what aphorisms do we have on"
+→ **READ:** ~/.claude/skills/aphorisms/Workflows/Search-aphorisms.md
+→ **EXECUTE:** Search database by theme, keyword, or author
 
 ---
 
@@ -369,19 +381,3 @@ Hitchens, Deutsch, Harris, Spinoza, Feynman
 ---
 
 Last Updated: 2025-11-20
-
-## Gotchas
-
-- **Search by theme, not exact text.** The collection is organized by conceptual themes, not keyword matching.
-- **Always include attribution and source when adding new aphorisms.** Unattributed quotes are useless.
-- **Duplicate detection:** Check if the aphorism already exists before adding. Same idea, different wording, still counts as duplicate.
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Aphorisms","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
-
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.

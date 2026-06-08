@@ -1,130 +1,437 @@
 ---
-name: pricing-strategist
-description: "Use when designing or revisiting product pricing — selecting a pricing model (subscription seat-based, usage-based, value-based, freemium, or hybrid), running Van Westendorp Price Sensitivity Meter analysis on WTP survey data, or designing Good/Better/Best packaging tiers. Recommends a model and a price range with trade-offs, never a single number. For Commercial leads, Product Marketing, and CMOs at the pricing-design moment — not deal-by-deal discounting, not brand positioning."
-version: 2.8.0
-author: claude-code-skills
-license: MIT
-tags: [commercial, pricing, packaging, wtp, van-westendorp, value-based-pricing, saas-pricing]
-compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
+name: Pricing Strategist
+slug: pricing-strategist
+description: Develop pricing strategies, analyze pricing models, optimize revenue, and test pricing changes
+category: business
+complexity: complex
+version: "1.0.0"
+author: "ID8Labs"
+triggers:
+  - "pricing strategy"
+  - "pricing model"
+  - "price optimization"
+  - "pricing analysis"
+  - "revenue optimization"
+  - "willingness to pay"
+tags:
+  - pricing
+  - revenue
+  - strategy
+  - monetization
+  - business-operations
 ---
 
-# pricing-strategist
+# Pricing Strategist
 
-## Purpose
+Expert pricing strategy and optimization system that helps you develop pricing models, analyze willingness to pay, optimize revenue, and test pricing changes. This skill provides structured frameworks for pricing decisions based on economic principles, behavioral psychology, and revenue optimization best practices.
 
-Help Commercial, Product Marketing, and CMO functions answer three questions at the pricing-design moment:
+Pricing is one of the most powerful levers for business growth. This skill helps you move beyond cost-plus pricing to value-based strategies, design pricing tiers that maximize revenue, and test changes scientifically. Whether you're launching a new product or optimizing existing pricing, this provides the analytical rigor and strategic thinking required.
 
-1. **Which pricing model fits this product + customer + market?** (subscription seat-based, usage-based, value-based, freemium, hybrid)
-2. **What does the customer actually pay before it feels too expensive?** (Van Westendorp PSM on WTP survey responses)
-3. **How should we package this into tiers?** (Good / Better / Best — with anti-pattern detection)
+Built on pricing psychology, behavioral economics, and SaaS pricing best practices, this skill combines willingness-to-pay research, competitive analysis, and experimentation frameworks to optimize your most important revenue lever.
 
-The skill recommends **a model and a range**. The human picks the number, owns the trade-offs, and runs the GTM.
+## Core Workflows
 
-## When to use
+### Workflow 1: Pricing Model Selection
+**Choose the right pricing structure for your business**
 
-- Launching a new SaaS / API / AI tool and choosing the first pricing model
-- Revisiting pricing after 18+ months of GTM data (model shift, not just price increase)
-- Designing or redesigning tier packaging (Good/Better/Best, Bronze/Silver/Gold)
-- You have Van Westendorp survey data and want the optimal price range
-- A board / exec is asking "what should we charge?" and you need the structured answer
-- You suspect your packaging has anti-patterns (decoy tier, feature dump, no upgrade trigger)
+1. **Common Pricing Models**
 
-**Do not use for:**
-- Per-deal discount approval → `deal-desk`
-- Strategic CMO positioning, brand, category creation → `c-level-advisor/cmo-advisor`
-- Whole-company revenue strategy → `c-level-advisor/cro-advisor`
-- Technical-sale enablement → `business-growth/sales-engineer`
+   **Cost-Plus Pricing**
+   - Formula: Cost + Markup % = Price
+   - Pros: Simple, ensures margin
+   - Cons: Ignores customer value, leaves money on table
+   - Best for: Commodities, manufacturing, retail
 
-## Workflow
+   **Competitive Pricing**
+   - Formula: Match or undercut competitor prices
+   - Pros: Fast to market, safe
+   - Cons: Race to bottom, ignores your unique value
+   - Best for: Undifferentiated markets, price-sensitive customers
 
-### Step 1 — Assess customer context
+   **Value-Based Pricing**
+   - Formula: Price based on value delivered to customer
+   - Pros: Maximizes revenue, aligns with customer outcomes
+   - Cons: Requires deep customer understanding
+   - Best for: Differentiated products, B2B SaaS, consulting
 
-Fill `assets/pricing_brief_template.md` (≈ 20 min). Capture: industry, deal size avg, customer count, value drivers, adoption curve, consumption pattern (seat / usage / value / hybrid), competitor models.
+   **Freemium**
+   - Formula: Free tier + paid premium tiers
+   - Pros: Low barrier, viral growth, try before buy
+   - Cons: Conversion rate typically 2-5%, support costs
+   - Best for: PLG (product-led growth), network effects
 
-### Step 2 — Pick the pricing model
+   **Usage-Based Pricing**
+   - Formula: Pay per unit consumed (API calls, seats, GB, transactions)
+   - Pros: Aligns cost with value, grows with customer
+   - Cons: Unpredictable revenue, complex billing
+   - Best for: Infrastructure, APIs, marketplaces
 
-Run `scripts/pricing_model_picker.py --input brief.json --profile saas --output markdown`. Output ranks 5 models by fit-score 0-100 with trade-offs. Decision logic is deterministic: low usage variance + high seat-attach → subscription wins; power-law usage + variable customer value → usage-based wins.
+   **Tiered Pricing**
+   - Formula: Good/Better/Best packages at different price points
+   - Pros: Customer segmentation, upsell path, price discrimination
+   - Cons: Complexity, analysis paralysis
+   - Best for: SaaS, subscriptions, services
 
-### Step 3 — Validate WTP with Van Westendorp PSM
+   **Performance-Based Pricing**
+   - Formula: Fee tied to results delivered (% of savings, revenue share)
+   - Pros: Aligns incentives, de-risks for customer
+   - Cons: Hard to measure, revenue uncertainty
+   - Best for: Consulting, AdTech, FinTech
 
-If you have survey data (≥ 4 questions per respondent: too cheap / bargain / getting expensive / too expensive), run `scripts/wtp_analyzer.py --input survey.json --output markdown`. Output: 4 intersection points (OPP, IDP, PMC, PME) and the Range of Acceptable Prices.
+2. **Model Selection Criteria**
+   - Customer preference (how do they want to buy?)
+   - Competitive norms (what's standard in industry?)
+   - Value delivery (when does customer realize value?)
+   - Revenue predictability (do you need stable MRR?)
+   - Sales motion (self-serve vs. enterprise sales?)
 
-PSM gives a **range**, not the price. See `references/van_westendorp_methodology.md` for common misinterpretations.
+### Workflow 2: Willingness to Pay Research
+**Understand what customers will actually pay**
 
-### Step 4 — Design packaging
+1. **Research Methods**
 
-Run `scripts/packaging_designer.py --input features.json --profile saas --output markdown`. Output: 3-tier Good/Better/Best assignment with anti-pattern flags (decoy tier, feature dump, no upgrade trigger, Bronze loss leader, Enterprise no-anchor).
+   **Van Westendorp Price Sensitivity Meter**
+   Ask 4 questions:
+   - At what price is this too expensive (wouldn't consider)?
+   - At what price is this expensive (but would consider)?
+   - At what price is this a bargain?
+   - At what price is this too cheap (would question quality)?
 
-### Step 5 — Decide
+   Plot responses to find:
+   - **Optimal Price Point**: Intersection of "expensive" and "bargain"
+   - **Acceptable Price Range**: Between "too expensive" and "too cheap"
 
-Take model + range + packaging into the pricing committee. Skill does not commit the number — you do.
+   **Conjoint Analysis**
+   - Present customers with product bundles with varying features and prices
+   - Ask to choose preferred bundle
+   - Statistically derive feature value and price sensitivity
+   - Reveals trade-offs customers make
 
-## Scripts
+   **Competitor Analysis**
+   - Research competitor pricing (public pricing pages, sales calls)
+   - Identify pricing tiers and feature differentiation
+   - Map value proposition vs. price
+   - Find gaps and opportunities
 
-- `scripts/pricing_model_picker.py` — 5-model fit scorer (subscription / usage / value / freemium / hybrid)
-- `scripts/wtp_analyzer.py` — Van Westendorp PSM implementation
-- `scripts/packaging_designer.py` — Good/Better/Best tier designer with anti-pattern detection
+   **Customer Interviews**
+   - Ask about current spend on alternatives
+   - Budget authority (how much can they approve without escalation?)
+   - ROI expectations (what value justifies investment?)
+   - Pricing structure preferences
 
-All scripts: stdlib only. `--help` and `--sample` work on all three.
+2. **Segmentation**
+   Different customer segments have different willingness to pay:
+   - **By company size**: SMB vs. Mid-Market vs. Enterprise
+   - **By use case**: High-value vs. low-value applications
+   - **By geography**: Purchasing power varies by region
+   - **By industry**: Some industries have higher budgets
 
-## References
+   Tailor pricing tiers to segments.
 
-- `references/saas_pricing_canon.md` — Skok, Tunguz, Campbell, Ramanujam, BVP, Shevlin, Stanford GSB
-- `references/van_westendorp_methodology.md` — original 1976 paper, NMS refinement, Conjoint.ly, Sawtooth, ESOMAR, Lipovetsky, Decision Analyst
-- `references/packaging_anti_patterns.md` — ProfitWell, OpenView, BVP vertical SaaS, Ramanujam, Poyar, SaaS Capital
+### Workflow 3: Pricing Tier Design
+**Structure pricing tiers to maximize revenue and customer fit**
 
-## Assumptions
+1. **Tier Strategy**
 
-- Pricing decisions are joint: Commercial owns the model + tier shape, Product owns the features-per-tier, Finance owns the discount envelope, Legal owns the contract.
-- Van Westendorp PSM is a **directional** tool. N ≥ 30 minimum, N ≥ 100 preferred. Below 30, the script emits a sample-size warning.
-- "Value-based pricing" requires a measurable customer value driver (revenue lift, cost saved, time recovered). If you can't measure it, don't pick value-based.
-- Industry profiles tune defaults — they don't override your data.
-- This is a decision-support skill, not a price oracle. Output is a model + range, never the number.
+   **3-Tier Model (Most Common)**
+   - **Starter/Basic** (Anchor):
+     - Purpose: Low barrier entry, volume play
+     - Price: $X/month (affordable, minimal friction)
+     - Features: Core functionality, limited usage
+     - Target: Small businesses, individuals, trials
 
-## Anti-patterns
+   - **Professional/Growth** (Target):
+     - Purpose: Optimized for ideal customer, highest volume
+     - Price: 3-5x Basic (most choose this)
+     - Features: Full functionality, higher limits, integrations
+     - Target: Core market, majority of customers
 
-- **Recommending a specific number.** This skill emits a model and a range. Final price is a human commercial decision involving deal-desk policy, competitive intel, and strategic intent that this skill cannot know.
-- **Using PSM with N < 30.** Statistical noise dominates. The script warns; respect the warning.
-- **Treating PSM as "the price."** PSM gives a Range of Acceptable Prices (RAP) and an Optimal Price Point (OPP). Test the range in market, don't anchor on a single intersection.
-- **Picking value-based pricing without a measurable value metric.** Without instrumentation to show customer ROI, value-based collapses into "whatever they'll pay" — which is just bad usage-based pricing.
-- **Designing tiers before picking a model.** Tier structure depends on the model. Run pricing_model_picker first.
-- **Packaging "feature dumps" into the Best tier.** If Best has 3x the features for 2x the price, customers buy Better and never upgrade. See `packaging_anti_patterns.md`.
-- **Hidden usage-based pricing inside subscription tiers.** "Up to 100k API calls/mo, then $X per 1k" disguised as a "Pro tier" is two pricing models in one. Customers notice. Pick one.
-- **Confusing this skill with deal-desk.** Pricing strategy = the menu. Deal-desk = approving discounts off the menu. Different decision, different cadence, different owner.
+   - **Enterprise** (Aspiration):
+     - Purpose: Anchor high end, premium features, custom
+     - Price: "Contact us" or 10x+ Basic
+     - Features: Unlimited, advanced, white-glove support, SLAs
+     - Target: Large companies, high-value customers
 
-## Distinct from
+2. **Feature Gating Strategy**
+   - **Good Tier**: Core features that deliver basic value
+   - **Better Tier**: Add productivity features, higher limits, integrations
+   - **Best Tier**: Add enterprise features (SSO, advanced security, SLA, dedicated support)
 
-- **deal-desk** — per-deal discount approval, MEDDIC, deal scoring. Operates daily on existing pricing.
-- **c-level-advisor/cmo-advisor** — strategic positioning, brand, category. Pricing strategist consumes positioning as input, doesn't generate it.
-- **c-level-advisor/cro-advisor** — full-funnel revenue strategy, comp plans, territory design. Pricing strategist is one input to CRO.
-- **business-growth/sales-engineer** — technical sale, POC scoping. Sales engineering operates after pricing is set.
+   Gate features by:
+   - **Usage limits**: 10 projects vs. unlimited
+   - **Advanced features**: Automations, AI, analytics
+   - **Integrations**: API access, Zapier, Salesforce
+   - **Support**: Email vs. chat vs. phone + CSM
+   - **SLAs**: Uptime guarantees, response times
 
-## Forcing-question library (Matt Pocock grill discipline)
+3. **Pricing Anchoring**
+   - **Decoy Effect**: Add expensive tier to make mid-tier seem reasonable
+   - **Price Anchoring**: Show "Most Popular" badge on target tier
+   - **Contrast**: Strike-through annual pricing to show monthly equivalent savings
+   - **Loss Aversion**: "Save $200/year" vs. "Pay $17/month"
 
-Walked one at a time by `/cs:grill-commercial` or the orchestrator. Recommended answer + canon citation per question. Never bundled.
+4. **Annual vs. Monthly**
+   - Offer both with 10-30% annual discount
+   - Annual benefits: Cash upfront, lower churn, commitment
+   - Monthly benefits: Lower barrier, easier to try
+   - Position annual as better value ("Save 2 months")
 
-1. **"Is your customer paying for outcomes, seats, or usage?"**
-   Recommended: outcomes (value-based) if you can measure them; usage if marginal cost is variable; seats only if usage is roughly flat per user.
-   Canon: Ramanujam 2016 (*Monetizing Innovation*) — Mistake #1 of 9: seat-based pricing on a usage-variable product caps TAM at ~20% of WTP.
+### Workflow 4: Pricing Psychology & Tactics
+**Leverage behavioral economics to optimize perceived value**
 
-2. **"Do you have a measurable value metric, or are you guessing?"**
-   Recommended: instrument the value metric BEFORE going to market with value-based pricing.
-   Canon: Patrick Campbell / ProfitWell research — value-based without instrumentation collapses into bad usage-based pricing.
+1. **Psychological Pricing Tactics**
 
-3. **"What's the variance in customer usage across your top decile vs. median?"**
-   Recommended: variance > 10x → usage-based wins; variance < 3x → subscription wins; in between → hybrid with usage overage.
-   Canon: Kyle Poyar (*Growth Unhinged*) — high-variance products lose 60%+ of revenue on flat-rate plans.
+   **Charm Pricing ($99 vs. $100)**
+   - Ending in .99 or .95 feels significantly cheaper
+   - Best for: Consumer products, B2C
+   - Avoid for: Enterprise (seems cheap)
 
-4. **"What's your competitor's pricing model, and why are you choosing the same or different?"**
-   Recommended: surface the differentiation hypothesis explicitly. Identical pricing = identical value claim.
-   Canon: David Skok (*For Entrepreneurs*) — pricing is a positioning signal.
+   **Prestige Pricing (Round Numbers)**
+   - $1,000 feels premium vs. $999
+   - Best for: Luxury, enterprise
 
-5. **"What sample size do you have for WTP analysis, and is it segmented?"**
-   Recommended: N≥30 per segment for PSM, N≥100 for conjoint.
-   Canon: van Westendorp 1976 / Sawtooth Software methodology — sub-30 PSM is statistical noise.
+   **Price Anchoring**
+   - Show higher price first, then discount
+   - "Was $299, Now $199" (30% off)
+   - Reference competitor pricing to anchor high
 
-6. **"What's the ONE feature that forces a tier upgrade?"**
-   Recommended: every Better and Best tier needs a single non-negotiable upgrade trigger.
-   Canon: Ramanujam (*Monetizing Innovation*) — Mistake #4: tiers with no clear differentiator make 70% of customers pick the cheapest.
+   **Decoy Pricing**
+   - Introduce asymmetrically dominated option
+   - Example: Small ($3), Large ($7), Medium ($6.50)
+   - Medium seems like bad deal, customers choose Large
 
-Walk depth-first. Lock 1-3 before opening 4-6. After all 6 are answered, invoke `pricing_model_picker.py` → `wtp_analyzer.py` → `packaging_designer.py` in sequence.
+   **Bundling**
+   - Combine products/features at discount vs. a la carte
+   - Increases perceived value
+   - "Everything you need in one plan"
+
+   **Good-Better-Best Positioning**
+   - Make middle tier the "Goldilocks" choice
+   - Add "Most Popular" badge
+   - Limit choice to 3 options (paradox of choice)
+
+2. **Framing & Presentation**
+   - **Per-unit pricing**: "$5 per user/month" (scales with value)
+   - **Total cost framing**: "$60/year" vs. "$5/month" (depends on goal)
+   - **Feature emphasis**: Lead with value, price secondary
+   - **Money-back guarantee**: De-risk purchase decision
+   - **Social proof**: "Join 10,000+ customers"
+
+### Workflow 5: Pricing Experimentation & Optimization
+**Test pricing changes scientifically to maximize revenue**
+
+1. **Experimentation Framework**
+
+   **A/B Testing**
+   - Test pricing changes with cohorts
+   - 50% see Price A, 50% see Price B
+   - Measure: Conversion rate, revenue per visitor, LTV
+   - Run until statistical significance (usually 100+ conversions)
+   - Choose winning variant
+
+   **Grandfather Clause**
+   - When raising prices, let existing customers keep old pricing
+   - Reduces churn, builds goodwill
+   - Eventually sunset after 12-24 months
+
+   **Beta Pricing**
+   - Launch at lower "early access" pricing
+   - Increase as you add features and mature
+   - Communicate value growth justifies price increase
+
+   **Cohort Analysis**
+   - Compare customer cohorts by pricing experienced
+   - LTV, churn, expansion by price point
+   - Identify optimal price/value balance
+
+2. **What to Test**
+   - **Price levels**: $99 vs. $149 vs. $199
+   - **Tier structure**: 2-tier vs. 3-tier vs. 4-tier
+   - **Feature gates**: What features in each tier?
+   - **Pricing display**: Annual vs. monthly default
+   - **Discount strategy**: 20% off vs. 2 months free
+   - **Payment terms**: Monthly vs. annual vs. quarterly
+
+3. **Metrics to Track**
+   - **Conversion rate**: % of visitors who purchase
+   - **Average Revenue Per User (ARPU)**: Total revenue / customers
+   - **Customer Lifetime Value (LTV)**: ARPU × (1 / churn rate)
+   - **Price elasticity**: % change in demand / % change in price
+   - **Tier distribution**: % of customers in each tier
+
+4. **When to Raise Prices**
+   - **Product maturity**: Added significant value/features
+   - **Market validation**: Strong demand, low churn
+   - **Competitive positioning**: Still below competitors
+   - **Customer feedback**: "Too cheap" concerns
+   - **New customer only**: Grandfather existing (avoids churn)
+
+### Workflow 6: Packaging & Discounting Strategy
+**Design packages and discounts that drive revenue**
+
+1. **Package Design**
+   - **Single Product Tiers**: Basic, Pro, Enterprise (SaaS)
+   - **Multi-Product Bundles**: Suite vs. individual products
+   - **Add-ons**: Base platform + a la carte features
+   - **Usage-Based + Base Fee**: Hybrid model
+
+2. **Discount Strategy**
+   - **Annual Discount**: 10-30% off (standard for SaaS)
+   - **Volume Discount**: Tiered pricing (10+ seats = 10% off)
+   - **Launch Discount**: Early adopter pricing (limited time)
+   - **Nonprofit/Education**: 30-50% discount (goodwill, low CAC)
+   - **Contract Length**: Multi-year commitments (3-year = 15% off)
+
+3. **When to Discount (Carefully)**
+   - **Enterprise sales**: Expected part of negotiation
+   - **Annual commitment**: To secure longer contract
+   - **Competitive displacement**: Win deal from competitor
+   - **End of quarter**: Sales team closing deals
+   - **Upsell**: Discount expansion to grow account
+
+4. **When NOT to Discount**
+   - **Self-serve SMB**: Trains customers to expect discounts
+   - **High-velocity sales**: Erodes margins at scale
+   - **Strong product-market fit**: You have leverage
+   - **First ask**: Make them earn it (ask for annual, reference, etc.)
+
+## Quick Reference
+
+| Action | Command/Trigger |
+|--------|-----------------|
+| Pricing model | "Recommend pricing model for [product]" |
+| Tier design | "Design 3-tier pricing for [product]" |
+| Willingness to pay | "Research pricing for [market]" |
+| Price optimization | "Optimize pricing for revenue" |
+| Competitive analysis | "Analyze competitor pricing for [industry]" |
+| A/B test plan | "Design pricing A/B test" |
+| Discount policy | "Create discount guidelines" |
+| Price increase | "Plan price increase for [product]" |
+| Packaging | "Design product bundle pricing" |
+| ROI calculator | "Build pricing justification tool" |
+
+## Best Practices
+
+### Research & Analysis
+- Interview 20+ customers about willingness to pay
+- Analyze competitor pricing before setting yours
+- Test pricing with beta customers before launch
+- Use multiple research methods (don't rely on one)
+- Segment pricing by customer type
+
+### Pricing Design
+- Start simple—add complexity later
+- Make default choice obvious ("Most Popular")
+- Ensure clear value differentiation between tiers
+- Don't over-gate features (freemium conversion killer)
+- Price on value, not cost
+
+### Communication
+- Explain value, not just features
+- Show ROI and payback period
+- Transparent pricing on website (for SMB)
+- Custom pricing for enterprise (protect margin)
+- Price increase notices: 30-60 days, explain value added
+
+### Experimentation
+- Change one variable at a time
+- Run tests to statistical significance
+- Document learnings and iterate
+- Grandfather existing customers when raising prices
+- Monitor churn closely after changes
+
+### Optimization
+- Review pricing quarterly
+- Track tier distribution (80% in middle tier = good design)
+- Measure price sensitivity with small tests
+- Raise prices annually (2-3% inflation minimum)
+- Don't be afraid to charge more
+
+## Common Pitfalls to Avoid
+
+- **Pricing too low**: Undervaluing your product, leaving money on table
+- **Copying competitors**: Not considering your unique value
+- **Too many tiers**: Choice paralysis (limit to 3-4)
+- **Confusing value metrics**: Unclear what customer is paying for
+- **Feature bloat**: Putting everything in basic tier
+- **No price increases**: Inflation erodes revenue over time
+- **Discounting by default**: Trains customers to expect it
+- **Ignoring psychology**: Not using anchoring, framing, charm pricing
+- **No experimentation**: Guessing instead of testing
+
+## Pricing Model Examples by Industry
+
+**SaaS (B2B):**
+- Model: Tiered subscription (per seat or per company)
+- Tiers: Starter ($49/seat), Professional ($99/seat), Enterprise (custom)
+- Example: Slack, HubSpot, Salesforce
+
+**SaaS (B2C):**
+- Model: Freemium + tiered subscription
+- Tiers: Free, Plus ($9.99/month), Premium ($19.99/month)
+- Example: Spotify, Dropbox, Notion
+
+**Marketplace:**
+- Model: Commission on transactions (GMV take rate)
+- Pricing: 10-30% of transaction value
+- Example: Airbnb (host fee + guest fee), Etsy, Uber
+
+**API/Infrastructure:**
+- Model: Usage-based (pay-per-API call, GB, request)
+- Tiers: Free tier + pay-as-you-go + volume discounts
+- Example: Stripe, AWS, Twilio
+
+**E-commerce:**
+- Model: Cost-plus with psychological pricing
+- Pricing: Charm pricing ($19.99), bundling, volume discounts
+- Example: Amazon, retail
+
+**Consulting/Services:**
+- Model: Hourly, project-based, or retainer
+- Pricing: Value-based (ROI to client)
+- Example: Strategy consulting, agencies
+
+## Pricing Analysis Template
+
+**Current State:**
+- Current pricing: $99/month
+- Average deal size: $1,188/year
+- Churn rate: 5%/month
+- LTV: $1,188 / 0.05 = $23,760
+- Tier distribution: 10% Basic, 70% Pro, 20% Enterprise
+
+**Proposed Change:**
+- Increase Pro to $149/month (+50%)
+- Hypothesis: Minimal churn, revenue increase
+
+**Impact Model:**
+| Scenario | Conversion Rate | ARPU | Churn | LTV | Revenue Impact |
+|----------|-----------------|------|-------|-----|----------------|
+| Current | 5% | $99 | 5% | $23,760 | Baseline |
+| Conservative | 4% (-20%) | $149 | 6% | $29,800 | +25% |
+| Expected | 4.5% (-10%) | $149 | 5.5% | $32,509 | +37% |
+| Optimistic | 5% (0%) | $149 | 5% | $35,760 | +50% |
+
+**Decision:** Test with cohort, monitor for 90 days, roll out if Expected or better.
+
+## Tools & Resources
+
+**Research:**
+- SurveyMonkey/Typeform: Willingness to pay surveys
+- Conjointly: Conjoint analysis platform
+- ProfitWell (by Paddle): Pricing optimization, benchmarking
+
+**Experimentation:**
+- Google Optimize: A/B testing
+- Optimizely: Advanced experimentation
+- LaunchDarkly: Feature flags for pricing tests
+
+**Competitive Intelligence:**
+- BuiltWith: Tech stack and pricing research
+- SimilarWeb: Traffic and engagement
+- Competitor websites: Public pricing pages
+
+**Pricing Psychology:**
+- "Priceless" by William Poundstone
+- "Monetizing Innovation" by Madhavan Ramanujam
+- ProfitWell blog and benchmarks

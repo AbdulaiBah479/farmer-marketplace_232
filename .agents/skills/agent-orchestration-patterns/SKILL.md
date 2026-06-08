@@ -1,466 +1,656 @@
 ---
-name: Agent Orchestration Patterns
-description: Multi-agent coordination patterns for building effective AI teams
-version: 1.0.0
-license: MIT
-tier: community
+name: agent-orchestration-patterns
+description: Automatically applies when designing multi-agent systems. Ensures proper tool schema design with Pydantic, agent state management, error handling for tool execution, and orchestration patterns.
+category: ai-llm
 ---
 
 # Agent Orchestration Patterns
 
-> **Build coordinated AI teams that work together seamlessly**
+When building multi-agent systems and tool-calling workflows, follow these patterns for reliable, maintainable orchestration.
 
-This skill provides battle-tested patterns for orchestrating multiple AI agents to solve complex problems collaboratively.
+**Trigger Keywords**: agent, multi-agent, tool calling, orchestration, subagent, tool schema, function calling, agent state, agent routing, agent graph, LangChain, LlamaIndex, Anthropic tools
 
-## Core Principles
+**Agent Integration**: Used by `ml-system-architect`, `agent-orchestrator-engineer`, `llm-app-engineer`, `security-and-privacy-engineer-ml`
 
-### 1. Single Responsibility Agents
-Each agent should have one clear purpose. Generalists create confusion; specialists create excellence.
+## ✅ Correct Pattern: Tool Schema with Pydantic
 
-```yaml
-Bad:
-  GeneralAgent: "Does everything - UI, backend, writing, testing"
+```python
+from pydantic import BaseModel, Field
+from typing import List, Literal, Optional
+from enum import Enum
 
-Good:
-  FrontendAgent: "React components, styling, accessibility"
-  BackendAgent: "APIs, database, business logic"
-  TestAgent: "Unit tests, integration tests, E2E"
+
+class SearchQuery(BaseModel):
+    """Tool input for search."""
+    query: str = Field(..., description="Search query string")
+    max_results: int = Field(
+        10,
+        ge=1,
+        le=100,
+        description="Maximum number of results to return"
+    )
+    filter_domain: Optional[str] = Field(
+        None,
+        description="Optional domain to filter results (e.g., 'python.org')"
+    )
+
+
+class SearchResult(BaseModel):
+    """Individual search result."""
+    title: str
+    url: str
+    snippet: str
+    relevance_score: float = Field(ge=0.0, le=1.0)
+
+
+class SearchResponse(BaseModel):
+    """Tool output for search."""
+    results: List[SearchResult]
+    total_found: int
+    query_time_ms: float
+
+
+async def search_tool(input: SearchQuery) -> SearchResponse:
+    """
+    Search the web and return relevant results.
+
+    Args:
+        input: Validated search parameters
+
+    Returns:
+        Search results with metadata
+
+    Example:
+        >>> result = await search_tool(SearchQuery(
+        ...     query="Python async patterns",
+        ...     max_results=5
+        ... ))
+        >>> print(result.results[0].title)
+    """
+    # Implementation
+    results = await perform_search(
+        query=input.query,
+        limit=input.max_results,
+        domain_filter=input.filter_domain
+    )
+
+    return SearchResponse(
+        results=results,
+        total_found=len(results),
+        query_time_ms=123.45
+    )
+
+
+# Convert to Claude tool schema
+def tool_to_anthropic_schema(func, input_model: type[BaseModel]) -> dict:
+    """Convert Pydantic model to Anthropic tool schema."""
+    return {
+        "name": func.__name__.replace("_tool", ""),
+        "description": func.__doc__.strip().split("\n")[0],
+        "input_schema": input_model.model_json_schema()
+    }
+
+
+# Register tool
+SEARCH_TOOL = tool_to_anthropic_schema(search_tool, SearchQuery)
 ```
 
-### 2. Clear Communication Protocols
-Define how agents share information, hand off work, and resolve conflicts.
+## Agent State Management
 
-```yaml
-Handoff Protocol:
-  From: BackendAgent
-  To: FrontendAgent
-  Includes:
-    - API contract (types, endpoints)
-    - Example payloads
-    - Error scenarios
-    - Authentication requirements
+```python
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+from pydantic import BaseModel, Field
+import uuid
+
+
+class Message(BaseModel):
+    """A single message in conversation."""
+    role: Literal["user", "assistant", "system"]
+    content: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ToolCall(BaseModel):
+    """Record of a tool execution."""
+    tool_name: str
+    input: Dict[str, Any]
+    output: Any
+    duration_ms: float
+    success: bool
+    error: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AgentState(BaseModel):
+    """State for an agent conversation."""
+    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    messages: List[Message] = Field(default_factory=list)
+    tool_calls: List[ToolCall] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    def add_message(self, role: str, content: str, **metadata):
+        """Add message to conversation history."""
+        self.messages.append(
+            Message(role=role, content=content, metadata=metadata)
+        )
+        self.updated_at = datetime.utcnow()
+
+    def add_tool_call(self, tool_call: ToolCall):
+        """Record tool execution."""
+        self.tool_calls.append(tool_call)
+        self.updated_at = datetime.utcnow()
+
+    def get_conversation_history(self) -> List[Dict[str, str]]:
+        """Get messages in format for LLM API."""
+        return [
+            {"role": msg.role, "content": msg.content}
+            for msg in self.messages
+            if msg.role != "system"
+        ]
+
+
+class AgentStateManager:
+    """Manage agent states with persistence."""
+
+    def __init__(self):
+        self._states: Dict[str, AgentState] = {}
+
+    async def get_or_create(self, session_id: str | None = None) -> AgentState:
+        """Get existing state or create new one."""
+        if session_id and session_id in self._states:
+            return self._states[session_id]
+
+        state = AgentState(session_id=session_id or str(uuid.uuid4()))
+        self._states[state.session_id] = state
+        return state
+
+    async def save(self, state: AgentState):
+        """Persist agent state."""
+        self._states[state.session_id] = state
+        # Could also save to database/redis here
+
+    async def load(self, session_id: str) -> Optional[AgentState]:
+        """Load agent state from storage."""
+        return self._states.get(session_id)
 ```
 
-### 3. Orchestrator Pattern
-One agent coordinates; others execute. Prevents chaos and conflicting directions.
+## Tool Execution with Error Handling
 
-```
-                    ┌─────────────────┐
-                    │   ORCHESTRATOR  │
-                    │  (Coordinates)  │
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-        ▼                    ▼                    ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│   Agent A     │   │   Agent B     │   │   Agent C     │
-│  (Executes)   │   │  (Executes)   │   │  (Executes)   │
-└───────────────┘   └───────────────┘   └───────────────┘
-```
+```python
+from typing import Callable, Any, Type
+import asyncio
+import logging
+from datetime import datetime
 
-## Orchestration Patterns
+logger = logging.getLogger(__name__)
 
-### Pattern 1: Sequential Pipeline
 
-Best for: Tasks with clear dependencies where each step requires the previous step's output.
+class ToolError(Exception):
+    """Base tool execution error."""
+    pass
 
-```yaml
-Pipeline:
-  1. Research Agent → Gathers information
-  2. Analysis Agent → Processes findings (needs step 1)
-  3. Writing Agent → Creates content (needs step 2)
-  4. Review Agent → Quality check (needs step 3)
-```
 
-**Implementation:**
-```markdown
-## Sequential Pipeline Protocol
+class ToolTimeoutError(ToolError):
+    """Tool execution timeout."""
+    pass
 
-### Step 1: Research Phase
-**Agent:** Research Agent
-**Input:** User query
-**Output:** Structured research document
-**Completion Signal:** "Research complete. Findings ready for analysis."
 
-### Step 2: Analysis Phase
-**Agent:** Analysis Agent
-**Input:** Research document from Step 1
-**Output:** Analyzed insights with recommendations
-**Completion Signal:** "Analysis complete. Ready for content creation."
+class ToolValidationError(ToolError):
+    """Tool input validation error."""
+    pass
 
-### Step 3: Writing Phase
-**Agent:** Writing Agent
-**Input:** Analysis from Step 2
-**Output:** Draft content
-**Completion Signal:** "Draft complete. Ready for review."
 
-### Step 4: Review Phase
-**Agent:** Review Agent
-**Input:** Draft from Step 3
-**Output:** Final content with quality assessment
-**Completion Signal:** "Review complete. Content finalized."
-```
+class ToolExecutor:
+    """Execute tools with validation and error handling."""
 
-### Pattern 2: Parallel Fan-Out
+    def __init__(self, timeout: float = 30.0):
+        self.timeout = timeout
+        self.tools: Dict[str, tuple[Callable, Type[BaseModel]]] = {}
 
-Best for: Independent tasks that can run simultaneously.
+    def register_tool(
+        self,
+        name: str,
+        func: Callable,
+        input_model: Type[BaseModel]
+    ):
+        """Register a tool with its input schema."""
+        self.tools[name] = (func, input_model)
 
-```yaml
-Fan-Out:
-  Orchestrator splits task into:
-    - Agent A: Frontend components
-    - Agent B: Backend APIs
-    - Agent C: Database schema
+    async def execute(
+        self,
+        tool_name: str,
+        tool_input: Dict[str, Any]
+    ) -> ToolCall:
+        """
+        Execute tool with validation and error handling.
 
-  Fan-In:
-    - Orchestrator collects results
-    - Integrates into unified solution
-```
+        Args:
+            tool_name: Name of tool to execute
+            tool_input: Raw input dict from LLM
 
-**Implementation:**
-```markdown
-## Parallel Fan-Out Protocol
+        Returns:
+            ToolCall record with result or error
 
-### Split Phase
-**Orchestrator Action:** Divide task into independent workstreams
-**Criteria for parallelization:**
-- No shared state dependencies
-- No sequential requirements
-- Clear interface contracts defined
+        Raises:
+            ToolError: If tool execution fails unrecoverably
+        """
+        if tool_name not in self.tools:
+            error_msg = f"Unknown tool: {tool_name}"
+            logger.error(error_msg)
+            return ToolCall(
+                tool_name=tool_name,
+                input=tool_input,
+                output=None,
+                duration_ms=0.0,
+                success=False,
+                error=error_msg
+            )
 
-### Parallel Execution
-**Agent A:** [Task description]
-- Works independently
-- Reports completion status
+        func, input_model = self.tools[tool_name]
+        start_time = datetime.utcnow()
 
-**Agent B:** [Task description]
-- Works independently
-- Reports completion status
+        try:
+            # Validate input
+            try:
+                validated_input = input_model(**tool_input)
+            except Exception as e:
+                raise ToolValidationError(
+                    f"Invalid input for {tool_name}: {str(e)}"
+                ) from e
 
-**Agent C:** [Task description]
-- Works independently
-- Reports completion status
+            # Execute with timeout
+            try:
+                output = await asyncio.wait_for(
+                    func(validated_input),
+                    timeout=self.timeout
+                )
+            except asyncio.TimeoutError:
+                raise ToolTimeoutError(
+                    f"Tool {tool_name} exceeded timeout of {self.timeout}s"
+                )
 
-### Integration Phase
-**Orchestrator Action:**
-- Wait for all agents to complete
-- Resolve any interface conflicts
-- Integrate outputs into unified result
-```
+            duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-### Pattern 3: Specialist Consultation
+            logger.info(
+                f"Tool executed successfully",
+                extra={
+                    "tool_name": tool_name,
+                    "duration_ms": duration_ms
+                }
+            )
 
-Best for: Tasks requiring domain expertise at specific points.
+            return ToolCall(
+                tool_name=tool_name,
+                input=tool_input,
+                output=output,
+                duration_ms=duration_ms,
+                success=True
+            )
 
-```yaml
-Consultation:
-  Primary Agent working...
-  → Hits domain-specific challenge
-  → Consults Specialist Agent
-  → Receives expert guidance
-  → Continues with enhanced solution
-```
+        except ToolError as e:
+            duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-**Implementation:**
-```markdown
-## Specialist Consultation Protocol
+            logger.error(
+                f"Tool execution failed",
+                extra={
+                    "tool_name": tool_name,
+                    "error": str(e),
+                    "duration_ms": duration_ms
+                }
+            )
 
-### Recognition Triggers
-The primary agent should consult a specialist when:
-- Task requires domain-specific knowledge
-- Decision has significant architectural impact
-- Quality standard requires expert validation
-- Risk mitigation requires specialized review
-
-### Consultation Format
-**From:** [Primary Agent]
-**To:** [Specialist Agent]
-**Context:** [What we're building]
-**Question:** [Specific question]
-**Constraints:** [Relevant limitations]
-**Expected Output:** [What we need back]
-
-### Response Integration
-Specialist provides:
-- Direct answer to question
-- Reasoning behind recommendation
-- Potential alternatives considered
-- Caveats or edge cases
+            return ToolCall(
+                tool_name=tool_name,
+                input=tool_input,
+                output=None,
+                duration_ms=duration_ms,
+                success=False,
+                error=str(e)
+            )
 ```
 
-### Pattern 4: Debate & Synthesis
+## Agent Orchestration Patterns
 
-Best for: Complex decisions where multiple perspectives improve outcomes.
+### Pattern 1: Sequential Agent Chain
 
-```yaml
-Debate:
-  Agent A: Argues for Approach 1
-  Agent B: Argues for Approach 2
-  Agent C: Synthesizes best of both
-  Orchestrator: Makes final decision
+```python
+from typing import List
+
+
+class SequentialOrchestrator:
+    """Execute agents in sequence, passing output to next."""
+
+    def __init__(self, agents: List[Callable]):
+        self.agents = agents
+
+    async def run(self, initial_input: str) -> str:
+        """
+        Run agents sequentially.
+
+        Args:
+            initial_input: Input for first agent
+
+        Returns:
+            Output from final agent
+        """
+        current_input = initial_input
+
+        for i, agent in enumerate(self.agents):
+            logger.info(f"Running agent {i + 1}/{len(self.agents)}")
+            current_input = await agent(current_input)
+
+        return current_input
+
+
+# Example usage
+async def research_agent(query: str) -> str:
+    """Research a topic."""
+    # Search and gather information
+    return "research results..."
+
+
+async def synthesis_agent(research: str) -> str:
+    """Synthesize research into summary."""
+    # Analyze and synthesize
+    return "synthesized summary..."
+
+
+async def writer_agent(summary: str) -> str:
+    """Write final article."""
+    # Generate polished content
+    return "final article..."
+
+
+# Chain agents
+orchestrator = SequentialOrchestrator([
+    research_agent,
+    synthesis_agent,
+    writer_agent
+])
+
+result = await orchestrator.run("Tell me about Python async patterns")
 ```
 
-**Implementation:**
-```markdown
-## Debate & Synthesis Protocol
+### Pattern 2: Parallel Agent Execution
 
-### Phase 1: Position Development
-**Agent A:** Develops Position 1
-- State the approach clearly
-- List all advantages
-- Acknowledge weaknesses
-- Provide implementation path
+```python
+import asyncio
 
-**Agent B:** Develops Position 2
-- State the approach clearly
-- List all advantages
-- Acknowledge weaknesses
-- Provide implementation path
 
-### Phase 2: Critique
-Each agent critiques the other's position:
-- What's missing?
-- What's overestimated?
-- What edge cases are unhandled?
+class ParallelOrchestrator:
+    """Execute multiple agents concurrently."""
 
-### Phase 3: Synthesis
-**Synthesis Agent:**
-- Extract best elements from each position
-- Resolve contradictions
-- Propose hybrid solution if beneficial
+    def __init__(self, agents: List[Callable]):
+        self.agents = agents
 
-### Phase 4: Decision
-**Orchestrator:**
-- Evaluate all positions and synthesis
-- Make final decision with reasoning
-- Document decision rationale
+    async def run(self, input: str) -> List[Any]:
+        """
+        Run all agents in parallel with same input.
+
+        Args:
+            input: Input for all agents
+
+        Returns:
+            List of outputs from each agent
+        """
+        tasks = [agent(input) for agent in self.agents]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Handle any failures
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.error(f"Agent {i} failed: {result}")
+
+        return results
+
+
+# Example: Multiple specialized agents
+async def technical_reviewer(code: str) -> str:
+    """Review code for technical issues."""
+    return "technical review..."
+
+
+async def security_reviewer(code: str) -> str:
+    """Review code for security issues."""
+    return "security review..."
+
+
+async def performance_reviewer(code: str) -> str:
+    """Review code for performance issues."""
+    return "performance review..."
+
+
+# Run reviewers in parallel
+orchestrator = ParallelOrchestrator([
+    technical_reviewer,
+    security_reviewer,
+    performance_reviewer
+])
+
+reviews = await orchestrator.run(code_to_review)
 ```
 
-### Pattern 5: Hierarchical Delegation
+### Pattern 3: Router-Based Orchestration
 
-Best for: Large projects requiring multiple levels of coordination.
+```python
+from enum import Enum
 
-```
-                      ┌─────────────────┐
-                      │  ORCHESTRATOR   │
-                      │   (Strategic)   │
-                      └────────┬────────┘
-                               │
-           ┌───────────────────┼───────────────────┐
-           │                   │                   │
-           ▼                   ▼                   ▼
-   ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-   │  Team Lead A  │   │  Team Lead B  │   │  Team Lead C  │
-   │  (Tactical)   │   │  (Tactical)   │   │  (Tactical)   │
-   └───────┬───────┘   └───────┬───────┘   └───────┬───────┘
-           │                   │                   │
-    ┌──────┴──────┐     ┌──────┴──────┐     ┌──────┴──────┐
-    │             │     │             │     │             │
-    ▼             ▼     ▼             ▼     ▼             ▼
-┌───────┐   ┌───────┐   ...         ...   ...         ...
-│Agent 1│   │Agent 2│
-└───────┘   └───────┘
-```
 
-## Communication Contracts
+class AgentType(str, Enum):
+    """Available agent types."""
+    TECHNICAL = "technical"
+    CREATIVE = "creative"
+    ANALYTICAL = "analytical"
 
-### Agent-to-Agent Message Format
 
-```yaml
-Message:
-  from: "agent_id"
-  to: "agent_id"
-  type: "request|response|status|handoff"
-  priority: "low|normal|high|critical"
-  content:
-    summary: "Brief description"
-    details: "Full content"
-    artifacts: ["list of outputs"]
-  context:
-    conversation_id: "unique_id"
-    parent_message: "optional_id"
-    related_tasks: ["task_ids"]
-```
+class RouterOrchestrator:
+    """Route requests to appropriate specialized agent."""
 
-### Status Reporting Protocol
+    def __init__(self):
+        self.agents: Dict[AgentType, Callable] = {}
 
-```yaml
-Status Update:
-  agent: "agent_id"
-  timestamp: "ISO 8601"
-  status: "idle|working|blocked|complete|error"
-  current_task: "description"
-  progress: "0-100%"
-  blockers: ["list of blockers"]
-  next_steps: ["planned actions"]
-  estimated_completion: "optional timestamp"
-```
+    def register(self, agent_type: AgentType, agent: Callable):
+        """Register an agent."""
+        self.agents[agent_type] = agent
 
-### Error Escalation Protocol
+    async def classify_request(self, request: str) -> AgentType:
+        """
+        Classify request to determine which agent to use.
 
-```yaml
-Error Report:
-  agent: "agent_id"
-  severity: "warning|error|critical"
-  error_type: "category"
-  description: "what went wrong"
-  attempted_solutions: ["what we tried"]
-  suggested_actions: ["what might help"]
-  requires_human: true|false
-  blocks_progress: true|false
+        Args:
+            request: User request
+
+        Returns:
+            Agent type to handle request
+        """
+        # Use LLM to classify
+        prompt = f"""Classify this request into one of:
+        - technical: Code, debugging, technical implementation
+        - creative: Writing, brainstorming, creative content
+        - analytical: Data analysis, research, evaluation
+
+        Request: {request}
+
+        Return only the category name."""
+
+        category = await llm_classify(prompt)
+        return AgentType(category.lower().strip())
+
+    async def route(self, request: str) -> str:
+        """
+        Route request to appropriate agent.
+
+        Args:
+            request: User request
+
+        Returns:
+            Response from selected agent
+        """
+        agent_type = await self.classify_request(request)
+        agent = self.agents.get(agent_type)
+
+        if not agent:
+            raise ValueError(f"No agent registered for type: {agent_type}")
+
+        logger.info(f"Routing to {agent_type} agent")
+        return await agent(request)
 ```
 
-## Quality Gates
+### Pattern 4: Hierarchical Agent System
 
-### Before Agent Assignment
+```python
+class SupervisorAgent:
+    """Supervisor that delegates to specialized sub-agents."""
 
-- [ ] Task clearly defined
-- [ ] Success criteria established
-- [ ] Dependencies mapped
-- [ ] Appropriate agent selected
-- [ ] Resources available
+    def __init__(self):
+        self.sub_agents: Dict[str, Callable] = {}
+        self.state_manager = AgentStateManager()
 
-### During Execution
+    async def delegate(
+        self,
+        task: str,
+        state: AgentState
+    ) -> str:
+        """
+        Decompose task and delegate to sub-agents.
 
-- [ ] Progress being reported
-- [ ] Blockers escalated promptly
-- [ ] Quality standards maintained
-- [ ] Timeline on track
+        Args:
+            task: High-level task description
+            state: Current conversation state
 
-### After Completion
+        Returns:
+            Final result after delegation
+        """
+        # Plan decomposition using LLM
+        plan = await self.plan_task(task, state)
 
-- [ ] Deliverables meet criteria
-- [ ] No known defects
-- [ ] Documentation complete
-- [ ] Handoff information ready
+        results = []
+        for subtask in plan.subtasks:
+            # Find appropriate sub-agent
+            agent = self.find_agent_for_task(subtask)
 
-## Anti-Patterns to Avoid
+            # Execute subtask
+            result = await agent(subtask.description, state)
+            results.append(result)
 
-### 1. The Generalist Trap
-**Problem:** One agent tries to do everything
-**Symptom:** Inconsistent quality, context overload
-**Solution:** Split into specialized agents
+            # Update state
+            state.add_message("assistant", f"Subtask result: {result}")
 
-### 2. The Circular Dependency
-**Problem:** Agent A waits for B, B waits for C, C waits for A
-**Symptom:** Deadlock, no progress
-**Solution:** Identify and break cycles, define clear ordering
+        # Synthesize final result
+        return await self.synthesize_results(task, results, state)
 
-### 3. The Silent Agent
-**Problem:** Agent works without status updates
-**Symptom:** Orchestrator has no visibility, surprises at completion
-**Solution:** Require regular status reports
+    async def plan_task(self, task: str, state: AgentState) -> TaskPlan:
+        """Decompose task into subtasks."""
+        # Use LLM to plan
+        ...
 
-### 4. The Micro-Manager
-**Problem:** Orchestrator controls every small decision
-**Symptom:** Bottleneck at orchestrator, slow progress
-**Solution:** Delegate decisions within boundaries
-
-### 5. The Scope Creeper
-**Problem:** Agent expands task beyond assignment
-**Symptom:** Delayed completion, unnecessary work
-**Solution:** Clear scope definition, confirmation before expansion
-
-## Team Templates
-
-### Minimal Development Team (3 agents)
-
-```yaml
-Team:
-  Architect:
-    Role: Orchestrator + Technical decisions
-    Responsibilities: Planning, coordination, architecture
-
-  Builder:
-    Role: Implementation
-    Responsibilities: Frontend, backend, integrations
-
-  Validator:
-    Role: Quality assurance
-    Responsibilities: Testing, review, documentation
+    def find_agent_for_task(self, subtask: SubTask) -> Callable:
+        """Select appropriate sub-agent for subtask."""
+        # Match subtask to agent capabilities
+        ...
 ```
 
-### Standard Development Team (5 agents)
+## ❌ Anti-Patterns
 
-```yaml
-Team:
-  Architect:
-    Role: Orchestrator
+```python
+# ❌ No input validation
+async def tool(input: dict) -> dict:  # Raw dict!
+    return await do_something(input["query"])
 
-  Frontend:
-    Role: UI specialist
+# ✅ Better: Use Pydantic for validation
+async def tool(input: SearchQuery) -> SearchResponse:
+    return await do_something(input.query)
 
-  Backend:
-    Role: API/data specialist
 
-  DevOps:
-    Role: Infrastructure
+# ❌ No error handling in tool execution
+async def execute_tool(name: str, input: dict):
+    func = tools[name]
+    return await func(input)  # Can fail!
 
-  QA:
-    Role: Testing specialist
+# ✅ Better: Comprehensive error handling
+async def execute_tool(name: str, input: dict) -> ToolCall:
+    try:
+        validated = InputModel(**input)
+        result = await func(validated)
+        return ToolCall(success=True, output=result)
+    except ValidationError as e:
+        return ToolCall(success=False, error=str(e))
+
+
+# ❌ No timeout on tool execution
+result = await long_running_tool(input)  # Could hang forever!
+
+# ✅ Better: Add timeout
+result = await asyncio.wait_for(
+    long_running_tool(input),
+    timeout=30.0
+)
+
+
+# ❌ Stateless conversations
+async def handle_request(prompt: str) -> str:
+    return await agent.run(prompt)  # No history!
+
+# ✅ Better: Maintain conversation state
+async def handle_request(prompt: str, session_id: str) -> str:
+    state = await state_manager.load(session_id)
+    state.add_message("user", prompt)
+    response = await agent.run(state.get_conversation_history())
+    state.add_message("assistant", response)
+    await state_manager.save(state)
+    return response
+
+
+# ❌ No logging of tool calls
+result = await tool(input)
+
+# ✅ Better: Log all tool executions
+logger.info("Executing tool", extra={
+    "tool_name": tool.__name__,
+    "input": input.model_dump()
+})
+result = await tool(input)
+logger.info("Tool completed", extra={
+    "duration_ms": duration,
+    "success": True
+})
 ```
 
-### Full Product Team (8+ agents)
+## Best Practices Checklist
 
-```yaml
-Team:
-  Product:
-    Strategist: Vision and roadmap
-    Designer: UX/UI design
+- ✅ Define tool schemas with Pydantic models
+- ✅ Validate all tool inputs before execution
+- ✅ Set timeouts on tool execution
+- ✅ Handle tool errors gracefully (don't crash)
+- ✅ Maintain conversation state across turns
+- ✅ Log all tool executions with inputs and outputs
+- ✅ Use typed responses from tools
+- ✅ Implement retry logic for transient failures
+- ✅ Redact sensitive data in tool logs
+- ✅ Use async/await throughout agent code
+- ✅ Structure agent output as Pydantic models
+- ✅ Track agent performance metrics
 
-  Engineering:
-    Architect: Technical leadership
-    Frontend: UI implementation
-    Backend: Services implementation
-    DevOps: Infrastructure
-    QA: Testing
+## Auto-Apply
 
-  Content:
-    Writer: Documentation, copy
-```
+When building multi-agent systems:
+1. Define tool schemas with Pydantic
+2. Implement ToolExecutor for safe execution
+3. Maintain AgentState for conversations
+4. Add comprehensive error handling
+5. Log all agent and tool interactions
+6. Use appropriate orchestration pattern (sequential, parallel, router, hierarchical)
+7. Set timeouts on all agent operations
 
-## Integration with Claude Code
+## Related Skills
 
-### Agent Definition Format
-
-```yaml
-# .claude/agents/example-agent.md
-
----
-name: Example Agent
-description: What this agent does
-model: sonnet|opus
-mcpServers:
-  - server-name
-workingDirectories:
-  - /path/to/focus
----
-
-# Agent Name
-
-## Mission
-What this agent aims to accomplish.
-
-## Responsibilities
-- Specific duty 1
-- Specific duty 2
-
-## Capabilities
-- What tools/skills it can use
-
-## Communication Protocol
-How it reports status and coordinates.
-```
-
-### Skill Loading
-
-```yaml
-# Reference this skill in your session
-Skills:
-  - .claude/skills/community/agent-orchestration
-```
-
----
-
-*"A team of specialized agents, well-coordinated, will always outperform a single generalist."*
+- `pydantic-models` - For tool schema definition
+- `async-await-checker` - For async agent patterns
+- `llm-app-architecture` - For LLM integration
+- `structured-errors` - For error handling
+- `observability-logging` - For agent logging
+- `type-safety` - For type-safe tool definitions

@@ -7,7 +7,7 @@ description: Map identified threats to appropriate security controls and mitigat
 
 Connect threats to controls for effective security planning.
 
-## When to Use This Skill
+## Use this skill when
 
 - Prioritizing security investments
 - Creating remediation roadmaps
@@ -16,67 +16,18 @@ Connect threats to controls for effective security planning.
 - Security architecture review
 - Risk treatment planning
 
-## Core Concepts
+## Do not use this skill when
 
-### 1. Control Categories
+- The task is unrelated to threat mitigation mapping
+- You need a different domain or tool outside this scope
 
-```
-Preventive ────► Stop attacks before they occur
-   │              (Firewall, Input validation)
-   │
-Detective ─────► Identify attacks in progress
-   │              (IDS, Log monitoring)
-   │
-Corrective ────► Respond and recover from attacks
-                  (Incident response, Backup restore)
-```
+## Instructions
 
-### 2. Control Layers
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
 
-| Layer           | Examples                             |
-| --------------- | ------------------------------------ |
-| **Network**     | Firewall, WAF, DDoS protection       |
-| **Application** | Input validation, authentication     |
-| **Data**        | Encryption, access controls          |
-| **Endpoint**    | EDR, patch management                |
-| **Process**     | Security training, incident response |
+## Resources
 
-### 3. Defense in Depth
-
-```
-                    ┌──────────────────────┐
-                    │      Perimeter       │ ← Firewall, WAF
-                    │   ┌──────────────┐   │
-                    │   │   Network    │   │ ← Segmentation, IDS
-                    │   │  ┌────────┐  │   │
-                    │   │  │  Host  │  │   │ ← EDR, Hardening
-                    │   │  │ ┌────┐ │  │   │
-                    │   │  │ │App │ │  │   │ ← Auth, Validation
-                    │   │  │ │Data│ │  │   │ ← Encryption
-                    │   │  │ └────┘ │  │   │
-                    │   │  └────────┘  │   │
-                    │   └──────────────┘   │
-                    └──────────────────────┘
-```
-
-## Templates and detailed worked examples
-
-Full template library and detailed mitigation/control mappings live in `references/details.md`. Read that file when you need the concrete templates for: Mitigation Model, Defense in Depth scoring, Executive Summary scaffolding, Critical Gaps reporting, Recommendations, Implementation Roadmap, Results by Control.
-
-## Best Practices
-
-### Do's
-
-- **Map all threats** - No threat should be unmapped
-- **Layer controls** - Defense in depth is essential
-- **Mix control types** - Preventive, detective, corrective
-- **Track effectiveness** - Measure and improve
-- **Review regularly** - Controls degrade over time
-
-### Don'ts
-
-- **Don't rely on single controls** - Single points of failure
-- **Don't ignore cost** - ROI matters
-- **Don't skip testing** - Untested controls may fail
-- **Don't set and forget** - Continuous improvement
-- **Don't ignore people/process** - Technology alone isn't enough
+- `resources/implementation-playbook.md` for detailed patterns and examples.

@@ -1,12 +1,12 @@
 ---
 name: Recon
-description: Network reconnaissance — subdomain enumeration, port scanning, DNS/WHOIS/ASN lookups, endpoint discovery from JS, mass scanning, path discovery, CIDR/netblock analysis. Passive and active modes with corporate structure mapping and bounty program tracking. USE WHEN recon, reconnaissance, bug bounty, bounty programs, attack surface, subdomains, subdomain enumeration, port scan, mass scan, DNS, WHOIS, ASN, CIDR, netblock, IP recon, domain recon, passive recon, corporate structure, endpoint discovery, path discovery, scan results, analyze scan, update tools.
+description: Security reconnaissance. USE WHEN recon, reconnaissance, bug bounty, attack surface. SkillSearch('recon') for docs.
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Recon/`
+`~/.claude/skills/CORE/USER/SKILLCUSTOMIZATIONS/Recon/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -14,30 +14,28 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 
 **Infrastructure and Network Reconnaissance**
 
+## Purpose
 
-## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
+Technical reconnaissance of network infrastructure including domains, IP addresses, netblocks, and ASNs. Combines passive intelligence gathering with authorized active scanning to map attack surfaces and identify assets.
 
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
+## Voice Notification
+
+**When executing a workflow, do BOTH:**
 
 1. **Send voice notification**:
    ```bash
    curl -s -X POST http://localhost:8888/notify \
      -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the Recon skill to ACTION"}' \
+     -d '{"message": "Running the WORKFLOWNAME workflow from the Recon skill"}' \
      > /dev/null 2>&1 &
    ```
 
 2. **Output text notification**:
    ```
-   Running the **WorkflowName** workflow in the **Recon** skill to ACTION...
+   Running the **WorkflowName** workflow from the **Recon** skill...
    ```
 
-**This is not optional. Execute this curl command immediately upon skill invocation.**
-
-## Purpose
-
-Technical reconnaissance of network infrastructure including domains, IP addresses, netblocks, and ASNs. Combines passive intelligence gathering with authorized active scanning to map attack surfaces and identify assets.
-
+**Full documentation:** `~/.claude/skills/CORE/SkillNotifications.md`
 
 ## When to Use This Skill
 
@@ -203,8 +201,8 @@ Network range reconnaissance:
 **Output:** Netblock scan report
 **Authorization:** Required for active scanning
 
-### 5. ASN Investigation
-ASN and BGP reconnaissance (performed inline using WHOIS, IPInfo, and public BGP data):
+### 5. `AsnRecon.md` - Autonomous System Investigation
+ASN and BGP reconnaissance:
 - ASN to CIDR range mapping
 - Organization information
 - All IP ranges owned by ASN
@@ -224,7 +222,7 @@ ASN and BGP reconnaissance (performed inline using WHOIS, IPInfo, and public BGP
 - API Key: `process.env.IPINFO_API_KEY`
 - Capabilities: Geolocation, ASN, organization, abuse contacts, privacy detection
 - Rate limits: Check API plan
-- Client: `Tools/IpinfoClient.ts`
+- Client: `tools/ipinfo-client.ts`
 
 **System Tools** (always available)
 - `whois` - Domain and IP WHOIS lookups
@@ -261,31 +259,43 @@ ASN and BGP reconnaissance (performed inline using WHOIS, IPInfo, and public BGP
 
 ## TypeScript Utilities
 
-Located in `Tools/` directory:
+Located in `tools/` directory:
 
-**IpinfoClient.ts**
+**ipinfo-client.ts**
 - IPInfo API wrapper with error handling
 - Batch lookup support
 - Rate limiting
 - Response parsing
 
-**DnsUtils.ts**
+**dns-utils.ts**
 - DNS enumeration helpers
 - Record type queries
 - Zone transfer attempts
 - Subdomain brute forcing
 
-**WhoisParser.ts**
+**whois-parser.ts**
 - WHOIS data parsing
 - Structured output from raw WHOIS
 - Registration date extraction
 - Contact information parsing
 
-**CidrUtils.ts**
+**cidr-utils.ts**
 - CIDR notation parsing
 - IP range calculation
 - Range validation
 - IP address generation from CIDR
+
+**cert-transparency.ts**
+- crt.sh API client
+- Certificate search
+- Subdomain extraction from certificates
+- Historical certificate data
+
+**report-generator.ts**
+- Markdown report formatting
+- JSON output generation
+- Structured data presentation
+- Integration with OSINT reports
 
 ## Output Formats
 
@@ -363,7 +373,7 @@ Located in `Tools/` directory:
 ```
 
 Reports saved to:
-- **Work directory** (`~/.claude/MEMORY/WORK/{current_work}/`) - For iterative artifacts during investigation
+- **Work scratch/** (`~/.claude/MEMORY/WORK/{current_work}/scratch/`) - For iterative artifacts during investigation
 - **MEMORY/RESEARCH/** (`~/.claude/MEMORY/RESEARCH/YYYY-MM/`) - For pentest engagements and formal assessments
 
 ## MCP Profile Requirements
@@ -421,7 +431,7 @@ Assistant: Activating recon skill with passive-recon workflow.
      [Performs WHOIS, DNS, cert transparency, IPInfo]
      [Generates report in scratchpad]
 
-     Report: ~/.claude/MEMORY/WORK/{current_work}/recon-example-com/
+     Report: ~/.claude/MEMORY/WORK/{current_work}/scratch/recon-example-com/
 ```
 
 ### Example 2: IP Investigation with Active Scan
@@ -465,7 +475,7 @@ Assistant: Activating OSINT skill...
 - Input matches IP pattern (x.x.x.x) → `IpRecon.md`
 - Input matches domain pattern → `DomainRecon.md`
 - Input matches CIDR pattern (x.x.x.x/y) → `NetblockRecon.md`
-- Input matches ASN pattern (AS####) → ASN investigation (inline using WHOIS/IPInfo/BGP data)
+- Input matches ASN pattern (AS####) → `AsnRecon.md`
 - User specifies "passive only" → `PassiveRecon.md`
 
 **User can override:**
@@ -496,8 +506,8 @@ Assistant: Activating OSINT skill...
 ## Related Documentation
 
 **Security Skills:**
-- `~/.claude/skills/Investigation/` - Entity and people reconnaissance (OSINT)
-- `~/.claude/skills/Security/WebAssessment/` - Web application testing
+- `~/.claude/skills/OSINT/` - Entity and people reconnaissance
+- `~/.claude/skills/Webassessment/` - Web application testing
 
 **Tool Documentation:**
 - IPInfo API: https://ipinfo.io/developers

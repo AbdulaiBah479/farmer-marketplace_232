@@ -1,11 +1,24 @@
 ---
 name: planning-with-files
-description: Implements Manus-style file-based planning to organize and track progress on complex tasks. Creates task_plan.md, findings.md, and progress.md. Use when asked to plan out, break down, or organize a multi-step project, research task, or any work requiring >5 tool calls. Supports automatic session recovery after /clear.
+version: "2.1.2"
+description: Implements Manus-style file-based planning for complex tasks. Creates task_plan.md, findings.md, and progress.md. Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls.
 user-invocable: true
-allowed-tools: "Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
+  - WebFetch
+  - WebSearch
 hooks:
+  SessionStart:
+    - hooks:
+        - type: command
+          command: "echo '[planning-with-files] Ready. Auto-activates for complex tasks, or invoke manually with /planning-with-files'"
   PreToolUse:
-    - matcher: "Write|Edit|Bash|Read|Glob|Grep"
+    - matcher: "Write|Edit|Bash"
       hooks:
         - type: command
           command: "cat task_plan.md 2>/dev/null | head -30 || true"
@@ -17,56 +30,38 @@ hooks:
   Stop:
     - hooks:
         - type: command
-          command: "SD=\"$HOME/.mastracode/skills/planning-with-files/scripts\"; [ -f \"$SD/check-complete.sh\" ] || SD=\".mastracode/skills/planning-with-files/scripts\"; powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$SD/check-complete.ps1\" 2>/dev/null || sh \"$SD/check-complete.sh\""
-metadata:
-  version: "2.18.1"
+          command: "${CLAUDE_PLUGIN_ROOT}/scripts/check-complete.sh"
 ---
 
 # Planning with Files
 
 Work like Manus: Use persistent markdown files as your "working memory on disk."
 
-## FIRST: Check for Previous Session (v2.2.0)
-
-**Before starting work**, check for unsynced context from a previous session:
-
-```bash
-# Linux/macOS
-$(command -v python3 || command -v python) ~/.mastracode/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
-```
-
-```powershell
-# Windows PowerShell
-& (Get-Command python -ErrorAction SilentlyContinue).Source "$env:USERPROFILE\.mastracode\skills\planning-with-files\scripts\session-catchup.py" (Get-Location)
-```
-
-If catchup report shows unsynced context:
-1. Run `git diff --stat` to see actual code changes
-2. Read current planning files
-3. Update planning files based on catchup + git diff
-4. Then proceed with task
-
 ## Important: Where Files Go
 
-- **Templates** are in this skill's `templates/` folder
-- **Your planning files** go in **your project directory**
+When using this skill:
+
+- **Templates** are stored in the skill directory at `${CLAUDE_PLUGIN_ROOT}/templates/`
+- **Your planning files** (`task_plan.md`, `findings.md`, `progress.md`) should be created in **your project directory** — the folder where you're working
 
 | Location | What Goes There |
 |----------|-----------------|
-| Skill directory | Templates, scripts, reference docs |
+| Skill directory (`${CLAUDE_PLUGIN_ROOT}/`) | Templates, scripts, reference docs |
 | Your project directory | `task_plan.md`, `findings.md`, `progress.md` |
+
+This ensures your planning files live alongside your code, not buried in the skill installation folder.
 
 ## Quick Start
 
 Before ANY complex task:
 
-1. **Create `task_plan.md`** — Use [templates/task_plan.md](templates/task_plan.md) as reference
-2. **Create `findings.md`** — Use [templates/findings.md](templates/findings.md) as reference
-3. **Create `progress.md`** — Use [templates/progress.md](templates/progress.md) as reference
+1. **Create `task_plan.md`** in your project — Use [templates/task_plan.md](templates/task_plan.md) as reference
+2. **Create `findings.md`** in your project — Use [templates/findings.md](templates/findings.md) as reference
+3. **Create `progress.md`** in your project — Use [templates/progress.md](templates/progress.md) as reference
 4. **Re-read plan before decisions** — Refreshes goals in attention window
 5. **Update after each phase** — Mark complete, log errors
 
-> **Note:** Planning files go in your project root, not the skill installation folder.
+> **Note:** All three planning files should be created in your current working directory (your project root), not in the skill's installation folder.
 
 ## The Core Pattern
 
@@ -197,12 +192,11 @@ Helper scripts for automation:
 
 - `scripts/init-session.sh` — Initialize all planning files
 - `scripts/check-complete.sh` — Verify all phases complete
-- `scripts/session-catchup.py` — Recover context from previous session (v2.2.0)
 
 ## Advanced Topics
 
-- **Manus Principles:** See [references/reference.md](references/reference.md)
-- **Real Examples:** See [references/examples.md](references/examples.md)
+- **Manus Principles:** See [reference.md](reference.md)
+- **Real Examples:** See [examples.md](examples.md)
 
 ## Anti-Patterns
 
@@ -215,38 +209,3 @@ Helper scripts for automation:
 | Start executing immediately | Create plan file FIRST |
 | Repeat failed actions | Track attempts, mutate approach |
 | Create files in skill directory | Create files in your project |
-
-## FIRST: Check for Previous Session
-
-**Before starting work**, check for unsynced context from a previous session:
-
-> **Note:** The `scripts/` directory is inside this skill's installation folder.
-
-```bash
-# Linux/macOS
-python scripts/session-catchup.py "$(pwd)"
-```
-
-```powershell
-# Windows PowerShell
-python scripts\session-catchup.py" (Get-Location)
-```
-
-**If you cannot find the script:**
-Ask Pi to locate it for you:
-`Run the session-catchup.py script from the planning-with-files skill`
-
-If catchup report shows unsynced context:
-1. Run `git diff --stat` to see actual code changes
-2. Read current planning files
-3. Update planning files based on catchup + git diff
-4. Then proceed with task
-
-## Core Principle
-
-```
-Context Window = RAM (volatile, limited)
-Filesystem = Disk (persistent, unlimited)
-
-→ Anything important gets written to disk.
-```

@@ -7,10 +7,10 @@ description: >
   tools (introspect, search, validate, execute), (4) troubleshooting
   MCP server connectivity or tool execution issues.
 license: MIT
-compatibility: Works with Claude Code, Claude Desktop, Cursor.
+compatibility: Requires rover CLI v0.37+, Node.js v18+. Works with Claude Code, Claude Desktop, Cursor.
 metadata:
   author: apollographql
-  version: "1.1.1"
+  version: "1.0"
 allowed-tools: Bash(rover:*) Bash(npx:*) Read Write Edit Glob Grep
 ---
 
@@ -23,78 +23,54 @@ Apollo MCP Server exposes GraphQL operations as MCP tools, enabling AI agents to
 ### Step 1: Install
 
 ```bash
-# Linux / MacOS
-curl -sSL https://mcp.apollo.dev/download/nix/latest | sh
+# Using npm
+npm install -g @apollo/mcp-server
 
-# Windows
-iwr 'https://mcp.apollo.dev/download/win/latest' | iex
+# Or run directly with npx
+npx @apollo/mcp-server
 ```
 
 ### Step 2: Configure
 
-Create `config.yaml` in your project root:
+Create `mcp.yaml` in your project root:
 
 ```yaml
-# config.yaml
-transport:
-  type: streamable_http
+# mcp.yaml
+endpoint: https://api.example.com/graphql
 schema:
-  source: local
+  type: local
   path: ./schema.graphql
 operations:
-  source: local
+  type: local
   paths:
-    - ./operations/
+    - ./operations/**/*.graphql
 introspection:
-  introspect:
-    enabled: true
-  search:
-    enabled: true
-  validate:
-    enabled: true
-  execute:
-    enabled: true
+  enabled: true
 ```
-
-Start the server:
-```bash
-apollo-mcp-server ./config.yaml
-```
-
-The MCP endpoint is available at `http://127.0.0.1:8000/mcp` (streamable_http defaults: address `127.0.0.1`, port `8000`). The GraphQL endpoint defaults to `http://localhost:4000/` — override with the `endpoint` key if your API runs elsewhere.
 
 ### Step 3: Connect
 
 Add to your MCP client configuration:
 
-**Streamable HTTP (recommended):**
-
-Claude Desktop (`claude_desktop_config.json`):
+**Claude Desktop (`claude_desktop_config.json`):**
 ```json
 {
   "mcpServers": {
     "graphql-api": {
       "command": "npx",
-      "args": ["mcp-remote", "http://127.0.0.1:8000/mcp"]
+      "args": ["@apollo/mcp-server", "--config", "./mcp.yaml"]
     }
   }
 }
 ```
 
-Claude Code:
-```bash
-claude mcp add graphql-api -- npx mcp-remote http://127.0.0.1:8000/mcp
-```
-
-**Stdio (client launches the server directly):**
-
-Claude Desktop (`claude_desktop_config.json`) or Claude Code (`.mcp.json`):
+**Claude Code (`.mcp.json`):**
 ```json
 {
   "mcpServers": {
     "graphql-api": {
-      "command": "./apollo-mcp-server",
-      "args": ["./config.yaml"]
+      "command": "npx",
+      "args": ["@apollo/mcp-server", "--config", "./mcp.yaml"]
     }
   }
 }
@@ -119,15 +95,13 @@ MCP tools are created from GraphQL operations. Three methods:
 
 ```yaml
 operations:
-  source: local
+  type: local
   paths:
-    - ./operations/
+    - ./operations/**/*.graphql
 ```
 
-Each file must contain exactly one operation. Each named operation becomes an MCP tool.
-
 ```graphql
-# operations/GetUser.graphql
+# operations/users.graphql
 query GetUser($id: ID!) {
   user(id: $id) {
     id
@@ -135,10 +109,7 @@ query GetUser($id: ID!) {
     email
   }
 }
-```
 
-```graphql
-# operations/CreateUser.graphql
 mutation CreateUser($input: CreateUserInput!) {
   createUser(input: $input) {
     id
@@ -147,11 +118,13 @@ mutation CreateUser($input: CreateUserInput!) {
 }
 ```
 
+Each named operation becomes an MCP tool.
+
 ### 2. Operation Collections
 
 ```yaml
 operations:
-  source: collection
+  type: collection
   id: your-collection-id
 ```
 
@@ -161,7 +134,7 @@ Use GraphOS Studio to manage operations collaboratively.
 
 ```yaml
 operations:
-  source: manifest
+  type: manifest
   path: ./persisted-query-manifest.json
 ```
 
@@ -181,28 +154,20 @@ Detailed documentation for specific topics:
 
 - **Never expose sensitive operations** without authentication
 - Use `headers` configuration for API keys and tokens
-- Disable introspection tools in production (they are disabled by default)
-- Set `overrides.mutation_mode: explicit` to require confirmation for mutations
+- Prefer `introspection.enabled: false` in production
+- Set `introspection.mutationMode: prompt` to require confirmation for mutations
 
 ### Authentication
 
 ```yaml
 # Static header
 headers:
-  Authorization: "Bearer ${env.API_TOKEN}"
+  Authorization: "Bearer ${APOLLO_API_KEY}"
 
-# Dynamic header forwarding
-forward_headers:
-  - x-forwarded-token
-
-# OAuth (streamable_http transport)
-transport:
-  type: streamable_http
-  auth:
-    servers:
-      - https://auth.example.com/.well-known/openid-configuration
-    audiences:
-      - https://api.example.com
+# Dynamic header passthrough
+headers:
+  X-User-Token:
+    from: x-forwarded-token
 ```
 
 ### Token Optimization
@@ -211,26 +176,23 @@ Enable minification to reduce token usage:
 
 ```yaml
 introspection:
-  introspect:
-    minify: true
-  search:
-    minify: true
+  minify: true
 ```
 
 Minified output uses compact notation:
 - **T** = type, **I** = input, **E** = enum
-- **s** = String, **i** = Int, **b** = Boolean, **f** = Float, **d** = ID
+- **s** = String, **i** = Int, **b** = Boolean, **f** = Float
 - **!** = required, **[]** = list
 
 ### Mutations
 
-Control mutation behavior via the `overrides` section:
+Control mutation behavior:
 
 ```yaml
-overrides:
-  mutation_mode: all       # Execute mutations directly
-  # mutation_mode: explicit  # Require explicit confirmation
-  # mutation_mode: none      # Block all mutations (default)
+introspection:
+  mutationMode: allowed   # Execute directly
+  mutationMode: prompt    # Require confirmation (default)
+  mutationMode: disabled  # Block all mutations
 ```
 
 ## Common Patterns
@@ -238,72 +200,42 @@ overrides:
 ### GraphOS Cloud Schema
 
 ```yaml
-# schema.source defaults to uplink — can be omitted when graphos is configured
+schema:
+  type: uplink
 graphos:
-  apollo_key: ${env.APOLLO_KEY}
-  apollo_graph_ref: my-graph@production
+  key: ${APOLLO_KEY}
+  graph_ref: my-graph@production
 ```
 
 ### Local Development
 
 ```yaml
-transport:
-  type: streamable_http
+endpoint: http://localhost:4000/graphql
 schema:
-  source: local
+  type: local
   path: ./schema.graphql
 introspection:
-  introspect:
-    enabled: true
-  search:
-    enabled: true
-  validate:
-    enabled: true
-  execute:
-    enabled: true
-overrides:
-  mutation_mode: all
+  enabled: true
+  mutationMode: allowed
 ```
 
 ### Production Setup
 
 ```yaml
-transport:
-  type: streamable_http
 endpoint: https://api.production.com/graphql
+schema:
+  type: uplink
 operations:
-  source: manifest
+  type: manifest
   path: ./persisted-query-manifest.json
-graphos:
-  apollo_key: ${env.APOLLO_KEY}
-  apollo_graph_ref: ${env.APOLLO_GRAPH_REF}
-headers:
-  Authorization: "Bearer ${env.API_TOKEN}"
-health_check:
-  enabled: true
-```
-
-### Docker
-
-```yaml
-transport:
-  type: streamable_http
-  address: 0.0.0.0
-  port: 8000
-endpoint: ${env.GRAPHQL_ENDPOINT}
-graphos:
-  apollo_key: ${env.APOLLO_KEY}
-  apollo_graph_ref: ${env.APOLLO_GRAPH_REF}
-health_check:
-  enabled: true
+introspection:
+  enabled: false
 ```
 
 ## Ground Rules
 
 - ALWAYS configure authentication before exposing to AI agents
-- ALWAYS use `mutation_mode: explicit` or `mutation_mode: none` in shared environments
+- ALWAYS use `mutationMode: prompt` in shared environments
 - NEVER expose introspection tools with write access to production data
 - PREFER operation files over ad-hoc execute for predictable behavior
-- PREFER streamable_http transport for remote and multi-client deployments
-- USE stdio only when the MCP client launches the server process directly
 - USE GraphOS Studio collections for team collaboration

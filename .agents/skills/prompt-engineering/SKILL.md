@@ -1,190 +1,171 @@
 ---
-id: SKL-prompt-PROMPTENGINEERING
-name: Prompt Engineering
-description: Comprehensive guide for LLM prompt engineering techniques and best practices.
-  Prompt engineering is the art and science of crafting effective prompts to elicit
-  desired outputs from language models.
-version: 1.0.0
-status: active
-owner: '@cerebra-team'
-last_updated: '2026-02-22'
-category: Backend
-tags:
-- api
-- backend
-- server
-- database
-stack:
-- Python
-- Node.js
-- REST API
-- GraphQL
-difficulty: Intermediate
+name: prompt-engineering
+description: Expert guide on prompt engineering patterns, best practices, and optimization techniques. Use when user wants to improve prompts, learn prompting strategies, or debug agent behavior.
 ---
 
-# Prompt Engineering
+# Prompt Engineering Patterns
 
-## Skill Profile
-*(Select at least one profile to enable specific modules)*
-- [ ] **DevOps**
-- [x] **Backend**
-- [ ] **Frontend**
-- [ ] **AI-RAG**
-- [ ] **Security Critical**
+Advanced prompt engineering techniques to maximize LLM performance, reliability, and controllability.
 
-## Overview
-Comprehensive guide for LLM prompt engineering techniques and best practices. Prompt engineering is the art and science of crafting effective prompts to elicit desired outputs from language models.
+## Core Capabilities
 
-## Why This Matters
-Prompt engineering is critical for:
-- **Performance**: Well-crafted prompts reduce inference time and cost
-- **Accuracy**: Clear instructions improve output quality
-- **Consistency**: Standardized prompts ensure predictable behavior
-- **Cost Optimization**: Efficient prompts reduce token usage
-- **Maintainability**: Reusable templates are easier to maintain
-- **Model Flexibility**: Good prompts work across different models
+### 1. Few-Shot Learning
 
----
+Teach the model by showing examples instead of explaining rules. Include 2-5 input-output pairs that demonstrate the desired behavior. Use when you need consistent formatting, specific reasoning patterns, or handling of edge cases. More examples improve accuracy but consume tokens—balance based on task complexity.
 
-## Core Concepts & Rules
+**Example:**
 
-### 1. Core Principles
-- Follow established patterns and conventions
-- Maintain consistency across codebase
-- Document decisions and trade-offs
+```markdown
+Extract key information from support tickets:
 
-### 2. Implementation Guidelines
-- Start with the simplest viable solution
-- Iterate based on feedback and requirements
-- Test thoroughly before deployment
+Input: "My login doesn't work and I keep getting error 403"
+Output: {"issue": "authentication", "error_code": "403", "priority": "high"}
 
+Input: "Feature request: add dark mode to settings"
+Output: {"issue": "feature_request", "error_code": null, "priority": "low"}
 
-## Inputs / Outputs / Contracts
-#
-
-## Skill Composition
-* **Depends on**: llm
-* **Compatible with**: llm, rag
-* **Conflicts with**: None
-* **Related Skills**: llm, rag, agents
-
-## Quick Start / Implementation Example
-
-1. Review requirements and constraints
-2. Set up development environment
-3. Implement core functionality following patterns
-4. Write tests for critical paths
-5. Run tests and fix issues
-6. Document any deviations or decisions
-
-```python
-# Example implementation following best practices
-def example_function():
-    # Your implementation here
-    pass
+Now process: "Can't upload files larger than 10MB, getting timeout"
 ```
 
+### 2. Chain-of-Thought Prompting
 
-## Assumptions
-- Basic understanding of Large Language Models (LLMs)
-- Familiarity with AI/ML concepts
-- Experience with using AI assistants or chatbots
-- Understanding of natural language communication
-- Knowledge of programming concepts (for code generation tasks)
+Request step-by-step reasoning before the final answer. Add "Let's think step by step" (zero-shot) or include example reasoning traces (few-shot). Use for complex problems requiring multi-step logic, mathematical reasoning, or when you need to verify the model's thought process. Improves accuracy on analytical tasks by 30-50%.
 
-## Compatibility & Prerequisites
+**Example:**
 
-* **Supported Versions**:
-  - Python 3.8+
-  - Node.js 16+
-  - Modern browsers (Chrome, Firefox, Safari, Edge)
-* **Required AI Tools**:
-  - Code editor (VS Code recommended)
-  - Testing framework appropriate for language
-  - Version control (Git)
-* **Dependencies**:
-  - Language-specific package manager
-  - Build tools
-  - Testing libraries
-* **Environment Setup**:
-  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
+```markdown
+Analyze this bug report and determine root cause.
 
+Think step by step:
 
-## Test Scenario Matrix (QA Strategy)
+1. What is the expected behavior?
+2. What is the actual behavior?
+3. What changed recently that could cause this?
+4. What components are involved?
+5. What is the most likely root cause?
 
-| Type | Focus Area | Required Scenarios / Mocks |
-| :--- | :--- | :--- |
-| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
-| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
-| **E2E** | User Journey | Critical user flows to test |
-| **Performance** | Latency / Load | Benchmark requirements |
-| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
-| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
+Bug: "Users can't save drafts after the cache update deployed yesterday"
+```
 
+### 3. Prompt Optimization
 
-## Technical Guardrails & Security Threat Model
+Systematically improve prompts through testing and refinement. Start simple, measure performance (accuracy, consistency, token usage), then iterate. Test on diverse inputs including edge cases. Use A/B testing to compare variations. Critical for production prompts where consistency and cost matter.
 
-### 1. Security & Privacy (Threat Model)
-* **Top Threats**: Injection attacks, authentication bypass, data exposure
-- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
-- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
-- [ ] **Authorization**: Validate user permissions before state changes
+**Example:**
 
-### 2. Performance & Resources
-- [ ] **Execution Efficiency**: Consider time complexity for algorithms
-- [ ] **Memory Management**: Use streams/pagination for large data
-- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+```markdown
+Version 1 (Simple): "Summarize this article"
+→ Result: Inconsistent length, misses key points
 
-### 3. Architecture & Scalability
-- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
-- [ ] **Modularity**: Decouple logic from UI/Frameworks
+Version 2 (Add constraints): "Summarize in 3 bullet points"
+→ Result: Better structure, but still misses nuance
 
-### 4. Observability & Reliability
-- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
-- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
-- [ ] **Error Handling**: Standardized error codes, no bare except
-- [ ] **Observability Artifacts**:
-    - **Log Fields**: timestamp, level, message, request_id
-    - **Metrics**: request_count, error_count, response_time
-    - **Dashboards/Alerts**: High Error Rate > 5%
+Version 3 (Add reasoning): "Identify the 3 main findings, then summarize each"
+→ Result: Consistent, accurate, captures key information
+```
 
+### 4. Template Systems
 
-## Agent Directives & Error Recovery
-*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+Build reusable prompt structures with variables, conditional sections, and modular components. Use for multi-turn conversations, role-based interactions, or when the same pattern applies to different inputs. Reduces duplication and ensures consistency across similar tasks.
 
-- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
-- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
-- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
-- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+**Example:**
 
+```python
+# Reusable code review template
+template = """
+Review this {language} code for {focus_area}.
 
-## Definition of Done (DoD) Checklist
+Code:
+{code_block}
 
-- [ ] Tests passed + coverage met
-- [ ] Lint/Typecheck passed
-- [ ] Logging/Metrics/Trace implemented
-- [ ] Security checks passed
-- [ ] Documentation/Changelog updated
-- [ ] Accessibility/Performance requirements met (if frontend)
+Provide feedback on:
+{checklist}
+"""
 
+# Usage
+prompt = template.format(
+    language="Python",
+    focus_area="security vulnerabilities",
+    code_block=user_code,
+    checklist="1. SQL injection\n2. XSS risks\n3. Authentication"
+)
+```
 
-## Anti-patterns / Pitfalls
+### 5. System Prompt Design
 
-* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
-* ⚠️ **Watch out for**: Common symptoms and quick fixes
-* 💡 **Instead**: Use proper error handling, pagination, and logging
+Set global behavior and constraints that persist across the conversation. Define the model's role, expertise level, output format, and safety guidelines. Use system prompts for stable instructions that shouldn't change turn-to-turn, freeing up user message tokens for variable content.
 
+**Example:**
 
-## Reference Links & Examples
+```markdown
+System: You are a senior backend engineer specializing in API design.
 
-* Internal documentation and examples
-* Official documentation and best practices
-* Community resources and discussions
+Rules:
 
+- Always consider scalability and performance
+- Suggest RESTful patterns by default
+- Flag security concerns immediately
+- Provide code examples in Python
+- Use early return pattern
 
-## Versioning & Changelog
+Format responses as:
 
-* **Version**: 1.0.0
-* **Changelog**:
-  - 2026-02-22: Initial version with complete template structure
+1. Analysis
+2. Recommendation
+3. Code example
+4. Trade-offs
+```
 
+## Key Patterns
+
+### Progressive Disclosure
+
+Start with simple prompts, add complexity only when needed:
+
+1. **Level 1**: Direct instruction
+
+   - "Summarize this article"
+
+2. **Level 2**: Add constraints
+
+   - "Summarize this article in 3 bullet points, focusing on key findings"
+
+3. **Level 3**: Add reasoning
+
+   - "Read this article, identify the main findings, then summarize in 3 bullet points"
+
+4. **Level 4**: Add examples
+   - Include 2-3 example summaries with input-output pairs
+
+### Instruction Hierarchy
+
+```
+[System Context] → [Task Instruction] → [Examples] → [Input Data] → [Output Format]
+```
+
+### Error Recovery
+
+Build prompts that gracefully handle failures:
+
+- Include fallback instructions
+- Request confidence scores
+- Ask for alternative interpretations when uncertain
+- Specify how to indicate missing information
+
+## Best Practices
+
+1. **Be Specific**: Vague prompts produce inconsistent results
+2. **Show, Don't Tell**: Examples are more effective than descriptions
+3. **Test Extensively**: Evaluate on diverse, representative inputs
+4. **Iterate Rapidly**: Small changes can have large impacts
+5. **Monitor Performance**: Track metrics in production
+6. **Version Control**: Treat prompts as code with proper versioning
+7. **Document Intent**: Explain why prompts are structured as they are
+
+## Common Pitfalls
+
+- **Over-engineering**: Starting with complex prompts before trying simple ones
+- **Example pollution**: Using examples that don't match the target task
+- **Context overflow**: Exceeding token limits with excessive examples
+- **Ambiguous instructions**: Leaving room for multiple interpretations
+- **Ignoring edge cases**: Not testing on unusual or boundary inputs

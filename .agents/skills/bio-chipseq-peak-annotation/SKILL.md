@@ -1,24 +1,11 @@
 ---
 name: bio-chipseq-peak-annotation
-description: Annotate ChIP-seq peaks to genomic features and genes using ChIPseeker. Assign peaks to promoters, exons, introns, and intergenic regions. Find nearest genes and calculate distance to TSS. Generate annotation plots and statistics. Use when annotating ChIP-seq peaks to genomic features.
+description: Annotate ChIP-seq peaks to genomic features and genes using ChIPseeker. Assign peaks to promoters, exons, introns, and intergenic regions. Find nearest genes and calculate distance to TSS. Generate annotation plots and statistics.
 tool_type: r
 primary_tool: ChIPseeker
 ---
 
-## Version Compatibility
-
-Reference examples tested with: MACS3 3.0+, clusterProfiler 4.10+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- R: `packageVersion('<pkg>')` then `?function_name` to verify parameters
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Peak Annotation with ChIPseeker
-
-**"Annotate my ChIP-seq peaks to genes"** → Assign peaks to genomic features (promoter, exon, intron, intergenic), find nearest genes, and calculate TSS distances.
-- R: `ChIPseeker::annotatePeak(peaks, TxDb=txdb)`
 
 ## Load Peaks and Annotations
 
@@ -29,15 +16,11 @@ library(org.Hs.eg.db)
 
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
-# Read peaks from MACS3
+# Read peaks from MACS2
 peaks <- readPeakFile('sample_peaks.narrowPeak')
 ```
 
 ## Annotate Peaks
-
-**Goal:** Assign each ChIP-seq peak to its nearest gene and genomic feature category.
-
-**Approach:** Use annotatePeak with a TxDb annotation database to classify peaks as promoter, exon, intron, or intergenic and retrieve the nearest gene symbol.
 
 ```r
 # Annotate with default settings
@@ -105,10 +88,6 @@ plotDistToTSS(peak_anno, title = 'Distribution of peaks relative to TSS')
 
 ## Compare Multiple Peak Sets
 
-**Goal:** Compare genomic feature distributions across multiple ChIP-seq experiments (e.g., different histone marks).
-
-**Approach:** Read and annotate each peak file separately, then use plotAnnoBar and plotDistToTSS on the annotation list for side-by-side comparison.
-
 ```r
 # Read multiple peak files
 peak_files <- list(
@@ -144,10 +123,6 @@ covplot(peaks, weightCol = 'V5')  # V5 is score column in narrowPeak
 
 ## Profile Heatmap Around TSS
 
-**Goal:** Visualize the distribution of ChIP-seq signal around transcription start sites.
-
-**Approach:** Extract promoter regions from the TxDb, build a tag matrix of signal at those regions, and plot as a heatmap or average profile.
-
 ```r
 # Get promoter coordinates
 promoter <- getPromoters(TxDb = txdb, upstream = 3000, downstream = 3000)
@@ -163,10 +138,6 @@ plotAvgProf(tagMatrix, xlim = c(-3000, 3000), xlab = 'Distance from TSS')
 ```
 
 ## Functional Enrichment of Peak Genes
-
-**Goal:** Determine which biological processes are enriched among genes with ChIP-seq peaks in their promoters.
-
-**Approach:** Extract Entrez IDs from annotated peaks and run GO enrichment analysis with clusterProfiler.
 
 ```r
 library(clusterProfiler)
@@ -233,7 +204,7 @@ library(org.Dr.eg.db)
 
 ## Related Skills
 
-- peak-calling - Generate peak files with MACS3
+- peak-calling - Generate peak files with MACS2
 - differential-binding - Find differential peaks
 - pathway-analysis - Functional enrichment
 - chipseq-visualization - Additional visualizations

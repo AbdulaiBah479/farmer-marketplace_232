@@ -1,13 +1,8 @@
 ---
 name: startup-business-analyst-market-opportunity
-description: 'Generate comprehensive market opportunity analysis with TAM/SAM/SOM
-
+description: Generate comprehensive market opportunity analysis with TAM/SAM/SOM
   calculations
-
-  '
-risk: unknown
-source: community
-date_added: '2026-02-27'
+allowed-tools: Read Write Edit Glob Grep Bash WebSearch WebFetch
 ---
 
 # Market Opportunity Analysis

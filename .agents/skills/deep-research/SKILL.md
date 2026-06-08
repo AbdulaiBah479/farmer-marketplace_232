@@ -1,148 +1,114 @@
 ---
-name: Deep Research
-description: Comprehensive web research with synthesis and actionable insights
-triggers:
-  - "research"
-  - "deep research"
-  - "investigate"
-  - "find information about"
-  - "best practices for"
+name: deep-research
+description: "Execute autonomous multi-step research using Google Gemini Deep Research Agent. Use for: market analysis, competitive landscaping, literature reviews, technical research, due diligence. Takes 2-10 minutes but produces detailed, cited reports. Costs $2-5 per task."
+source: "https://github.com/sanjay3290/ai-skills/tree/main/skills/deep-research"
+risk: safe
 ---
 
-# Deep Research Skill
+# Gemini Deep Research Skill
 
-Perform thorough research using web search, documentation, and intelligent synthesis to inform development decisions.
+Run autonomous research tasks that plan, search, read, and synthesize information into comprehensive reports.
 
-## Capabilities
+## When to Use This Skill
 
-- Web search via WebSearch tool
-- Documentation analysis
-- Technology trend research
-- Competitive analysis
-- Best practices discovery
-- Academic/technical paper review
+Use this skill when:
+- Performing market analysis
+- Conducting competitive landscaping
+- Creating literature reviews
+- Doing technical research
+- Performing due diligence
+- Need detailed, cited research reports
 
-## Research Methodology
+## Requirements
 
-### Phase 1: Broad Search (10-15 sources)
-- Query multiple search engines
-- Scan for credibility (check date, author, domain)
-- Filter by relevance score
-- Prioritize official docs, established blogs, GitHub repos
+- Python 3.8+
+- httpx: `pip install -r requirements.txt`
+- GEMINI_API_KEY environment variable
 
-### Phase 2: Deep Dive (Top 5 sources)
-- Read thoroughly
-- Extract key insights
-- Identify patterns and trends
-- Note contradictions or debates
-- Look for code examples and real-world applications
+## Setup
 
-### Phase 3: Synthesis
-- Combine findings into cohesive narrative
-- Create actionable recommendations
-- Document all sources
-- Generate summary report
+1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+2. Set the environment variable:
+   ```bash
+   export GEMINI_API_KEY=your-api-key-here
+   ```
+   Or create a `.env` file in the skill directory.
 
-## Output Format
+## Usage
 
-Research saved to: `temp/research/{topic}-{timestamp}.md`
-
-```markdown
-# Research: {Topic}
-
-## Executive Summary
-[3-5 bullet points - key findings]
-
-## Key Findings
-
-### 1. {Finding Title}
-- **Source**: [Link](url)
-- **Insight**: What was learned
-- **Actionable**: How to apply this
-- **Code Example**: (if applicable)
-
-### 2. {Finding Title}
-...
-
-## Recommendations
-1. **Immediate Action**: What to do now
-2. **Best Practice**: Pattern to follow
-3. **Avoid**: What not to do
-
-## Implementation Plan
-- [ ] Step 1
-- [ ] Step 2
-
-## Sources
-- [Title](URL) - Brief description
-- [Title](URL) - Brief description
-```
-
-## Usage Examples
-
-### Technology Research
+### Start a research task
 ```bash
-"deep research on LangGraph supervisor pattern for production systems
- Focus on: state management, error handling, scalability
- Save to: temp/research/langgraph-supervisor.md"
+python3 scripts/research.py --query "Research the history of Kubernetes"
 ```
 
-### Competitive Analysis
+### With structured output format
 ```bash
-"research competitors in AI code generation space
- Analyze: features, pricing, tech stack, user feedback
- Identify: gaps we can fill, unique angles
- Output: temp/research/competitive-analysis.md"
+python3 scripts/research.py --query "Compare Python web frameworks" \
+  --format "1. Executive Summary\n2. Comparison Table\n3. Recommendations"
 ```
 
-### Best Practices
+### Stream progress in real-time
 ```bash
-"research React Server Components best practices for Next.js 14
- Include: when to use vs client components, data fetching patterns, common pitfalls
- Find: code examples from Vercel and community
- Save: temp/research/rsc-best-practices.md"
+python3 scripts/research.py --query "Analyze EV battery market" --stream
 ```
 
-## Integration with Build Process
-
-Research findings automatically:
-1. **Update Learning**: Add insights to `directives/learning.json`
-2. **Create Specs**: If features found → add to backlog
-3. **Improve Docs**: Suggest updates to INSTRUCTIONS.md
-4. **Inform Architecture**: Use findings in technical decisions
-
-## Research Quality Checklist
-
-Before completing research:
-- [ ] At least 5 credible sources
-- [ ] Checked for recency (prefer <1 year old info)
-- [ ] Included official documentation
-- [ ] Found real-world examples/code
-- [ ] Synthesized conflicting information
-- [ ] Created actionable recommendations
-- [ ] Documented all sources with working links
-
-## Advanced Research Patterns
-
-### Comparative Research
+### Start without waiting
 ```bash
-"research and compare:
- Option A: Using Prisma ORM
- Option B: Using raw SQL with Postgres
- Option C: Using Drizzle ORM
-
- Compare: performance, DX, type safety, migrations, community support
- Recommend: Best option for Next.js 14 + Supabase stack"
+python3 scripts/research.py --query "Research topic" --no-wait
 ```
 
-### Trend Analysis
+### Check status of running research
 ```bash
-"research current trends in AI agent orchestration frameworks
- Analyze: LangGraph, CrewAI, AutoGPT, LangChain, Semantic Kernel
- Identify: Which is gaining traction, production-ready, best for SaaS
- Timeline: Last 6 months only"
+python3 scripts/research.py --status <interaction_id>
 ```
 
----
+### Wait for completion
+```bash
+python3 scripts/research.py --wait <interaction_id>
+```
 
-**Remember**: Great research leads to better decisions. Invest time in deep research before implementation!
+### Continue from previous research
+```bash
+python3 scripts/research.py --query "Elaborate on point 2" --continue <interaction_id>
+```
+
+### List recent research
+```bash
+python3 scripts/research.py --list
+```
+
+## Output Formats
+
+- **Default**: Human-readable markdown report
+- **JSON** (`--json`): Structured data for programmatic use
+- **Raw** (`--raw`): Unprocessed API response
+
+## Cost & Time
+
+| Metric | Value |
+|--------|-------|
+| Time | 2-10 minutes per task |
+| Cost | $2-5 per task (varies by complexity) |
+| Token usage | ~250k-900k input, ~60k-80k output |
+
+## Best Use Cases
+
+- Market analysis and competitive landscaping
+- Technical literature reviews
+- Due diligence research
+- Historical research and timelines
+- Comparative analysis (frameworks, products, technologies)
+
+## Workflow
+
+1. User requests research → Run `--query "..."`
+2. Inform user of estimated time (2-10 minutes)
+3. Monitor with `--stream` or poll with `--status`
+4. Return formatted results
+5. Use `--continue` for follow-up questions
+
+## Exit Codes
+
+- **0**: Success
+- **1**: Error (API error, config issue, timeout)
+- **130**: Cancelled by user (Ctrl+C)

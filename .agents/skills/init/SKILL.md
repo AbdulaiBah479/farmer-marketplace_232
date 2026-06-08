@@ -1,130 +1,91 @@
 ---
 name: init
-description: >
-  Frictionless setup. Detects missing daemon, installs it, configures local
-  memory, and verifies the full plugin → MCP → daemon round-trip. Run
-  after `/plugin install origin@7xuanlu`, or any time the user says "set up
-  origin", "is origin working", "fix origin".
-allowed-tools: ["Bash", "mcp__plugin_origin_origin__doctor", "mcp__plugin_origin_origin__context"]
+description: Analyze project structure and update AGENTS.md with detected tech stack, commands, and configurations.
+disable-model-invocation: true
 ---
 
-# /init
+# Initialize Project Configuration
 
-Self-healing setup. Goal: 30 seconds, two user actions max (install plugin,
-type /init). Default backend is local memory — no local model, no API key, no
-prompts. Local model and Anthropic key are opt-in upgrades documented in
-`/help`.
+Analyze this project and update **only the project-specific sections** of AGENTS.md.
+
+## Important
+
+- Do **NOT** modify the "Extensions" section and below in existing AGENTS.md
+- Only update the top project-specific sections
 
 ## Steps
 
-Run in order. Stop and report at the first failure that needs human
-attention. Otherwise, push through automatically.
+### 1. Project Analysis
 
-### 1. Daemon health probe
+Find these files to identify the tech stack:
 
-```
-Bash: curl -fsS -m 1 http://127.0.0.1:7878/api/health
-```
+- `package.json` → Node.js/TypeScript project
+- `pyproject.toml` / `setup.py` / `requirements.txt` → Python project
+- `Cargo.toml` → Rust project
+- `go.mod` → Go project
+- `Makefile` / `Dockerfile` → Build/deploy config
+- `.github/workflows/` → CI/CD config
 
-- 200 OK → skip to step 4.
-- Anything else → step 2.
+Also detect:
 
-### 2. Bootstrap (auto-install if missing)
+- npm scripts / poe tasks / make targets → Common commands
+- Major libraries/frameworks
 
-Detect whether the `origin` CLI is on PATH:
+### 2. Ask User
 
-```
-Bash: command -v origin >/dev/null 2>&1 && echo present || echo absent
-```
+Use AskUserQuestion tool to ask:
 
-If `absent`, run the installer (no human prompts):
+1. **Project overview**: What does this project do? (1-2 sentences)
+2. **Code language**: English or Japanese for comments/variable names?
+3. **Additional rules**: Any other coding conventions to follow?
 
-```
-Bash: curl -fsSL https://raw.githubusercontent.com/7xuanlu/origin/v0.6.1/install.sh | bash
-```
+### 3. Partial Update of AGENTS.md
 
-Then add it to PATH for the current session and configure local memory
-non-interactively:
+Use Edit tool to update only the top section (up to first `---`) with this format:
 
-```
-Bash: export PATH="$HOME/.origin/bin:$PATH" && origin setup --basic && origin install
-```
+```markdown
+# Project Overview
 
-If `present` (CLI exists, daemon down), just install + start:
+{User's answer}
 
-```
-Bash: origin setup --basic 2>/dev/null || true; origin install
-```
+## Language Settings
 
-`origin setup --basic` is idempotent — safe to re-run. `origin install`
-writes the launchd plist and starts the daemon.
+- **Thinking/Reasoning**: English
+- **Code**: {Based on analysis - English or Japanese}
+- **User Communication**: Japanese
 
-### 3. Re-probe daemon health
+## Tech Stack
 
-```
-Bash: for i in 1 2 3 4 5; do curl -fsS -m 1 http://127.0.0.1:7878/api/health && break; sleep 1; done
-```
-
-If the daemon still isn't reachable after ~5s, surface the error and stop.
-Likely cause: launchd plist load failure, port 7878 occupied by another
-process, or macOS Tahoe Metal init issue (daemon degrades but still binds —
-check `lsof -ti :7878`).
-
-### 4. Doctor (verify backend)
-
-Call the `origin` MCP server's `doctor` tool:
-
-```
-doctor()
+- **Language**: {Detected language}
+- **Package Manager**: {Detected tools}
+- **Dev Tools**: {Detected tools}
+- **Main Libraries**: {Detected libraries}
 ```
 
-Expected: local memory configured (no model, no key). Capture the mode
-string for the final report.
+### 4. Update Common Commands
 
-### 5. MCP round-trip
+Update the `## Common Commands` section with detected commands:
 
+```markdown
+## Common Commands
+
+```bash
+# Detected commands (example)
+{npm run dev / poe test / make build etc.}
 ```
-context()
-```
-
-Pass → continue. Fail → MCP not wired. Tell user:
-"origin-mcp didn't respond. Restart Claude Code so the plugin's
-`.mcp.json` re-spawns the server."
-
-### 6. Ready report
-
-Print:
-
-```
-Origin ready.
-  Daemon:   up on 127.0.0.1:7878
-  Mode:     <mode from doctor()>
-  MCP:      connected
-  Data:     ~/.origin/  (pages, sessions, db symlink)
-  Try:      /brief, /capture <thing>, /recall <query>, /help
 ```
 
-If this was the first /init invocation in the session, dispatch `/help`
-once so the user sees the verb cheat-sheet without asking.
+### 5. Check Unnecessary Rules
 
-## Optional upgrades (don't auto-run)
+Check rules in `.claude/rules/` and suggest removing unnecessary ones:
 
-Mention these in the ready report only if the user explicitly asks for
-"richer features" or asks about model-backed extraction:
+- Non-Python project → `dev-environment.md` (uv/ruff/ty) may not be needed
+- No-test project → `testing.md` may not be needed
 
-- `origin model install` — local Qwen for distill cycles.
-- `origin key set anthropic` — Anthropic for stronger synthesis.
+### 6. Report Completion
 
-Default flow ignores both. Storage, search, recall, and MCP memory all
-work in local memory mode.
+Report to user (in Japanese):
 
-## When to use
-
-- Right after `/plugin install origin@7xuanlu`.
-- Hook printed "daemon down — run /origin:init".
-- User says "set up origin", "is it working", "reinstall origin".
-
-## When NOT to use
-
-- Daemon already verified this session → `/brief` instead.
-- Editing one config field → `origin doctor` or settings file directly.
+- Detected tech stack
+- Updated sections
+- Recommended rules to remove (if any)

@@ -1,161 +1,280 @@
 ---
 name: azure-service-bus
-description: Expert knowledge for Azure Service Bus development including troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. Use when configuring queues/topics, JMS/RabbitMQ integration, VNet/Private Link access, NServiceBus, or geo-replication, and other Azure Service Bus related development tasks. Not for Azure Event Hubs (use azure-event-hubs), Azure Event Grid (use azure-event-grid), Azure Queue Storage (use azure-queue-storage), Azure Relay (use azure-relay).
-compatibility: Requires network access. Uses mcp_microsoftdocs:microsoft_docs_fetch or fetch_webpage to retrieve documentation.
-metadata:
-  generated_at: "2026-05-31"
-  generator: "docs2skills/1.0.0"
+description: Enterprise messaging with Azure Service Bus. Configure queues, topics, subscriptions, and message processing. Use for async communication, event-driven architectures, and reliable message delivery on Azure.
 ---
-# Azure Service Bus Skill
 
-This skill provides expert guidance for Azure Service Bus. Covers troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. It combines local quick-reference content with remote documentation fetching capabilities.
+# Azure Service Bus
 
-## How to Use This Skill
+Expert guidance for enterprise messaging on Azure.
 
-> **IMPORTANT for Agent**: Use the **Category Index** below to locate relevant sections. For categories with line ranges (e.g., `L35-L120`), use `read_file` with the specified lines. For categories with file links (e.g., `[security.md](security.md)`), use `read_file` on the linked reference file
+## Create Resources
 
-> **IMPORTANT for Agent**: If `metadata.generated_at` is more than 3 months old, suggest the user pull the latest version from the repository. If `mcp_microsoftdocs` tools are not available, suggest the user install it: [Installation Guide](https://github.com/MicrosoftDocs/mcp/blob/main/README.md)
+```bash
+# Create namespace
+az servicebus namespace create \
+  --name myservicebus \
+  --resource-group myResourceGroup \
+  --location eastus \
+  --sku Standard
 
-This skill requires **network access** to fetch documentation content:
-- **Preferred**: Use `mcp_microsoftdocs:microsoft_docs_fetch` with query string `from=learn-agent-skill`. Returns Markdown.
-- **Fallback**: Use `fetch_webpage` with query string `from=learn-agent-skill&accept=text/markdown`. Returns Markdown.
+# Create queue
+az servicebus queue create \
+  --name orders \
+  --namespace-name myservicebus \
+  --resource-group myResourceGroup \
+  --max-size 5120 \
+  --default-message-time-to-live P14D
 
-## Category Index
+# Create topic
+az servicebus topic create \
+  --name events \
+  --namespace-name myservicebus \
+  --resource-group myResourceGroup
 
-| Category | Lines | Description |
-|----------|-------|-------------|
-| Troubleshooting | L37-L46 | Diagnosing and fixing Service Bus issues: AMQP errors, tracing, deprecated/current SDK exceptions, ARM errors, and common connection, messaging, and runtime problems. |
-| Best Practices | L47-L60 | Guidance on reliable Service Bus messaging: ordering, sessions, TTL/expiration, duplicate detection, dead-lettering, locks/settlement, serialization, and performance tuning (prefetch, throughput). |
-| Decision Making | L61-L71 | Guidance on choosing Service Bus vs other messaging options, selecting Standard vs Premium, using JMS vs Java SDK, and configuring autoforwarding, geo-replication, and disaster recovery. |
-| Architecture & Design Patterns | L72-L80 | Patterns for designing resilient, federated, multi-namespace Service Bus systems, including partitioning, replication, and using NServiceBus for message-driven architectures. |
-| Limits & Quotas | L81-L87 | Service Bus capacity rules: entity size/message limits, namespace quotas, throttling behaviors, and how throughput, connections, and operations are constrained or reduced under load. |
-| Security | L88-L110 | Securing Service Bus with Entra ID, managed identities, SAS, keys, TLS, network isolation (VNet, Private Link, firewalls, NSPs), and applying Azure Policy/compliance settings. |
-| Configuration | L111-L135 | Configuring and managing Service Bus entities (queues, topics, subscriptions), including forwarding, sessions, partitioning, TTL, monitoring, filters/actions, local emulation, and management via ARM/PowerShell. |
-| Integrations & Coding Patterns | L136-L151 | Patterns and code for integrating Service Bus with JMS (1.1/2.0), RabbitMQ, Event Grid/Logic Apps/Functions, subscription filters/actions, replication tasks, and batch message deletion. |
-| Deployment | L152-L161 | Deploying Service Bus namespaces and entities (queues, topics, subscriptions, rules) using ARM/Bicep templates, and moving namespaces across Azure regions. |
+# Create subscription
+az servicebus topic subscription create \
+  --name processor \
+  --topic-name events \
+  --namespace-name myservicebus \
+  --resource-group myResourceGroup
+```
 
-### Troubleshooting
-| Topic | URL |
-|-------|-----|
-| Troubleshoot AMQP errors in Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-amqp-troubleshoot |
-| Configure end-to-end tracing for Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-end-to-end-tracing |
-| Handle deprecated Azure Service Bus messaging exceptions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-exceptions |
-| Handle Azure Service Bus messaging exceptions (current SDK) | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-exceptions-latest |
-| Diagnose Azure Service Bus Resource Manager exceptions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-exceptions |
-| Troubleshoot common Azure Service Bus issues | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-troubleshooting-guide |
+## Python SDK
 
-### Best Practices
-| Topic | URL |
-|-------|-----|
-| Configure and use Azure Service Bus duplicate detection | https://learn.microsoft.com/en-us/azure/service-bus-messaging/duplicate-detection |
-| Defer and later retrieve Azure Service Bus messages | https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-deferral |
-| Use sequencing and timestamps in Service Bus messages | https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-sequencing |
-| Implement FIFO and request-response with Service Bus sessions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-sessions |
-| Handle Service Bus message transfers, locks, and settlement correctly | https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-transfers-locks-settlement |
-| Prepare Service Bus namespaces for planned maintenance | https://learn.microsoft.com/en-us/azure/service-bus-messaging/prepare-for-planned-maintenance |
-| Use Azure Service Bus dead-letter queues for message handling | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues |
-| Handle messages and serialization in Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messages-payloads |
-| Optimize Azure Service Bus messaging performance | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-performance-improvements |
-| Tune Azure Service Bus prefetch for performance | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-prefetch |
+### Connection
 
-### Decision Making
-| Topic | URL |
-|-------|-----|
-| Choose between Event Grid, Event Hubs, and Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/compare-messaging-services |
-| Decide between Azure Storage queues and Service Bus queues | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-azure-and-service-bus-queues-compared-contrasted |
-| Set up Service Bus Geo-Disaster Recovery | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-geo-dr |
-| Configure Azure Service Bus Geo-Replication | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-geo-replication |
-| Choose between JMS and native Java SDK for Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-jms-versus-native-sdk |
-| Migrate Azure Service Bus from Standard to Premium | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-migrate-standard-premium |
-| Select Azure Service Bus standard vs premium messaging tiers | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-premium-messaging |
+```python
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
+from azure.identity import DefaultAzureCredential
 
-### Architecture & Design Patterns
-| Topic | URL |
-|-------|-----|
-| Build message-driven systems on Service Bus with NServiceBus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/build-message-driven-apps-nservicebus |
-| Design Service Bus federation and replication topologies | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-federation-overview |
-| Implement Service Bus message replication patterns | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-federation-patterns |
-| Design multi-namespace Service Bus for resilience | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-outages-disasters |
-| Design and create partitioned Service Bus queues and topics | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-partitioning |
+# Connection string
+client = ServiceBusClient.from_connection_string(conn_str)
 
-### Limits & Quotas
-| Topic | URL |
-|-------|-----|
-| Understand Azure Service Bus limits and behaviors | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-faq |
-| Reference Azure Service Bus quotas and limits | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quotas |
-| Understand throttling limits in Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-throttling |
+# Managed Identity
+credential = DefaultAzureCredential()
+client = ServiceBusClient(
+    fully_qualified_namespace="myservicebus.servicebus.windows.net",
+    credential=credential
+)
+```
 
-### Security
-| Topic | URL |
-|-------|-----|
-| Authenticate applications to Azure Service Bus with Entra ID | https://learn.microsoft.com/en-us/azure/service-bus-messaging/authenticate-application |
-| Enable confidential computing for Service Bus Premium | https://learn.microsoft.com/en-us/azure/service-bus-messaging/confidential-computing |
-| Configure customer-managed keys for Service Bus encryption | https://learn.microsoft.com/en-us/azure/service-bus-messaging/configure-customer-managed-key |
-| Disable SAS local authentication for Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/disable-local-authentication |
-| Configure network security for Azure Service Bus namespaces | https://learn.microsoft.com/en-us/azure/service-bus-messaging/network-security |
-| Associate Azure Service Bus with a network security perimeter | https://learn.microsoft.com/en-us/azure/service-bus-messaging/network-security-perimeter |
-| Use built-in Azure Policy definitions for Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/policy-reference |
-| Integrate Azure Service Bus with Private Link Service | https://learn.microsoft.com/en-us/azure/service-bus-messaging/private-link-service |
-| Apply regulatory compliance policies to Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/security-controls-policy |
-| Configure authentication and authorization for Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-authentication-and-authorization |
-| Configure IP firewall rules for Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-ip-filtering |
-| Use managed identities to securely access Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-managed-service-identity |
-| Migrate Service Bus apps to passwordless Entra ID auth | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-migrate-azure-credentials |
-| Create Service Bus authorization rules with ARM templates | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-namespace-auth-rule |
-| Implement Shared Access Signature authorization for Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-sas |
-| Configure Service Bus virtual network service endpoints | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-service-endpoints |
-| Audit Service Bus TLS minimum version compliance with Azure Policy | https://learn.microsoft.com/en-us/azure/service-bus-messaging/transport-layer-security-audit-minimum-version |
-| Configure minimum TLS version for a Service Bus namespace | https://learn.microsoft.com/en-us/azure/service-bus-messaging/transport-layer-security-configure-minimum-version |
-| Enforce minimum TLS version for Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/transport-layer-security-enforce-minimum-version |
+### Send Messages
 
-### Configuration
-| Topic | URL |
-|-------|-----|
-| Map classic Service Bus management APIs to ARM | https://learn.microsoft.com/en-us/azure/service-bus-messaging/deprecate-service-bus-management |
-| Configure auto-forwarding for Service Bus queues and subscriptions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/enable-auto-forward |
-| Enable dead-lettering for Service Bus queues and subscriptions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/enable-dead-letter |
-| Configure duplicate message detection in Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/enable-duplicate-detection |
-| Enable and configure Service Bus message sessions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/enable-message-sessions |
-| Enable partitioning for Service Bus queues and topics | https://learn.microsoft.com/en-us/azure/service-bus-messaging/enable-partitions-basic-standard |
-| Suspend and reactivate Azure Service Bus entities | https://learn.microsoft.com/en-us/azure/service-bus-messaging/entity-suspend |
-| Use Azure Service Bus message browsing and peek operations | https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-browsing |
-| Retrieve Service Bus queue and subscription message counts | https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-counters |
-| Configure message expiration and TTL in Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-expiration |
-| Configure monitoring for Azure Service Bus with Azure Monitor | https://learn.microsoft.com/en-us/azure/service-bus-messaging/monitor-service-bus |
-| Use Azure Monitor metrics and logs for Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/monitor-service-bus-reference |
-| Use AMQP request/response operations in Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-amqp-request-response |
-| Configure autoforwarding for Azure Service Bus entities | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-auto-forwarding |
-| Configure Azure Functions-based Service Bus replication tasks | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-federation-configuration |
-| Use Azure Monitor insights for Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-insights |
-| Manage Service Bus resources with Azure PowerShell | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-manage-with-ps |
-| Programmatically manage Service Bus namespaces and entities | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-management-libraries |
-| Use SQL filter syntax for Service Bus subscription rules | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-sql-filter |
-| Use SQL action syntax for Service Bus subscription rules | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-sql-rule-action |
-| Configure and run Azure Service Bus local emulator | https://learn.microsoft.com/en-us/azure/service-bus-messaging/test-locally-with-service-bus-emulator |
+```python
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
 
-### Integrations & Coding Patterns
-| Topic | URL |
-|-------|-----|
-| Programmatically delete Service Bus messages in batches | https://learn.microsoft.com/en-us/azure/service-bus-messaging/batch-delete |
-| Use JMS 2.0 API with Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/how-to-use-java-message-service-20 |
-| Develop Azure Service Bus clients using JMS 2.0 | https://learn.microsoft.com/en-us/azure/service-bus-messaging/jms-developer-guide |
-| Migrate JMS apps from ActiveMQ to Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/migrate-jms-activemq-to-servicebus |
-| Use legacy .NET Service Bus library with AMQP | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-amqp-dotnet |
-| Build Service Bus replication tasks with Azure Functions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-federation-replicator-functions |
-| Define Azure Service Bus subscription filters and actions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-filter-examples |
-| Integrate RabbitMQ with Azure Service Bus | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-integrate-with-rabbitmq |
-| Use JMS 1.1 with AMQP on Service Bus Standard | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-java-how-to-use-jms-api-amqp |
-| Integrate Azure Service Bus with Event Grid | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-to-event-grid-integration-concept |
-| Integrate Service Bus events with Event Grid and Logic Apps | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-to-event-grid-integration-example |
-| Handle Service Bus events via Event Grid and Azure Functions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-to-event-grid-integration-function |
+with ServiceBusClient.from_connection_string(conn_str) as client:
+    sender = client.get_queue_sender(queue_name="orders")
 
-### Deployment
-| Topic | URL |
-|-------|-----|
-| Move an Azure Service Bus namespace across regions | https://learn.microsoft.com/en-us/azure/service-bus-messaging/move-across-regions |
-| Create a Service Bus namespace with ARM template | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-namespace |
-| Deploy Service Bus namespace and queue via ARM template | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-namespace-queue |
-| Deploy Service Bus namespace and queue using Bicep | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-namespace-queue-bicep |
-| Deploy Service Bus namespace, topic, and subscription via ARM | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-namespace-topic |
-| Deploy Service Bus topic, subscription, and rule via ARM | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-namespace-topic-with-rule |
-| Deploy Service Bus resources using ARM templates | https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-resource-manager-overview |
+    with sender:
+        # Single message
+        message = ServiceBusMessage(
+            body="Order data",
+            application_properties={"order_id": "123"},
+            subject="new-order"
+        )
+        sender.send_messages(message)
+
+        # Batch messages
+        batch = sender.create_message_batch()
+        for i in range(10):
+            batch.add_message(ServiceBusMessage(f"Message {i}"))
+        sender.send_messages(batch)
+```
+
+### Receive Messages
+
+```python
+from azure.servicebus import ServiceBusClient, ServiceBusReceiveMode
+
+with ServiceBusClient.from_connection_string(conn_str) as client:
+    receiver = client.get_queue_receiver(
+        queue_name="orders",
+        receive_mode=ServiceBusReceiveMode.PEEK_LOCK
+    )
+
+    with receiver:
+        # Receive batch
+        messages = receiver.receive_messages(max_message_count=10, max_wait_time=5)
+
+        for msg in messages:
+            print(f"Received: {str(msg)}")
+            print(f"Properties: {msg.application_properties}")
+
+            # Complete message
+            receiver.complete_message(msg)
+
+            # Or dead-letter
+            # receiver.dead_letter_message(msg, reason="Processing failed")
+```
+
+### Async Processing
+
+```python
+import asyncio
+from azure.servicebus.aio import ServiceBusClient
+
+async def process_messages():
+    async with ServiceBusClient.from_connection_string(conn_str) as client:
+        receiver = client.get_queue_receiver(queue_name="orders")
+
+        async with receiver:
+            async for msg in receiver:
+                print(f"Received: {str(msg)}")
+                await receiver.complete_message(msg)
+
+asyncio.run(process_messages())
+```
+
+### Topics and Subscriptions
+
+```python
+# Send to topic
+with ServiceBusClient.from_connection_string(conn_str) as client:
+    sender = client.get_topic_sender(topic_name="events")
+
+    with sender:
+        message = ServiceBusMessage(
+            body="Event data",
+            subject="order.created"
+        )
+        sender.send_messages(message)
+
+# Receive from subscription
+with ServiceBusClient.from_connection_string(conn_str) as client:
+    receiver = client.get_subscription_receiver(
+        topic_name="events",
+        subscription_name="processor"
+    )
+
+    with receiver:
+        messages = receiver.receive_messages(max_message_count=10)
+        for msg in messages:
+            receiver.complete_message(msg)
+```
+
+## .NET SDK
+
+```csharp
+using Azure.Messaging.ServiceBus;
+
+// Send
+await using var client = new ServiceBusClient(connectionString);
+ServiceBusSender sender = client.CreateSender("orders");
+
+await sender.SendMessageAsync(new ServiceBusMessage("Order data"));
+
+// Receive
+ServiceBusReceiver receiver = client.CreateReceiver("orders");
+ServiceBusReceivedMessage message = await receiver.ReceiveMessageAsync();
+await receiver.CompleteMessageAsync(message);
+
+// Processor
+ServiceBusProcessor processor = client.CreateProcessor("orders");
+processor.ProcessMessageAsync += async args =>
+{
+    Console.WriteLine($"Received: {args.Message.Body}");
+    await args.CompleteMessageAsync(args.Message);
+};
+processor.ProcessErrorAsync += args =>
+{
+    Console.WriteLine($"Error: {args.Exception}");
+    return Task.CompletedTask;
+};
+
+await processor.StartProcessingAsync();
+```
+
+## Subscription Filters
+
+```bash
+# SQL filter
+az servicebus topic subscription rule create \
+  --name high-priority \
+  --subscription-name processor \
+  --topic-name events \
+  --namespace-name myservicebus \
+  --resource-group myResourceGroup \
+  --filter-sql-expression "priority = 'high'"
+
+# Correlation filter
+az servicebus topic subscription rule create \
+  --name order-events \
+  --subscription-name orders \
+  --topic-name events \
+  --namespace-name myservicebus \
+  --resource-group myResourceGroup \
+  --correlation-filter subject=order.created
+```
+
+## Sessions
+
+```python
+# Send session messages
+message = ServiceBusMessage(
+    body="Session message",
+    session_id="session-123"
+)
+sender.send_messages(message)
+
+# Receive session messages
+session_receiver = client.get_queue_receiver(
+    queue_name="session-queue",
+    session_id="session-123"
+)
+```
+
+## Dead Letter Queue
+
+```python
+# Receive from DLQ
+dlq_receiver = client.get_queue_receiver(
+    queue_name="orders",
+    sub_queue=ServiceBusSubQueue.DEAD_LETTER
+)
+
+with dlq_receiver:
+    messages = dlq_receiver.receive_messages(max_message_count=10)
+    for msg in messages:
+        print(f"Dead letter reason: {msg.dead_letter_reason}")
+        print(f"Body: {str(msg)}")
+```
+
+## Bicep Deployment
+
+```bicep
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' = {
+  name: namespaceName
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Standard'
+  }
+}
+
+resource queue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' = {
+  parent: serviceBusNamespace
+  name: 'orders'
+  properties: {
+    maxSizeInMegabytes: 5120
+    defaultMessageTimeToLive: 'P14D'
+    deadLetteringOnMessageExpiration: true
+    duplicateDetectionHistoryTimeWindow: 'PT10M'
+    requiresSession: false
+  }
+}
+
+resource topic 'Microsoft.ServiceBus/namespaces/topics@2022-10-01-preview' = {
+  parent: serviceBusNamespace
+  name: 'events'
+  properties: {
+    maxSizeInMegabytes: 5120
+  }
+}
+```
+
+## Resources
+
+- [Azure Service Bus Documentation](https://learn.microsoft.com/azure/service-bus-messaging/)
+- [Service Bus Python SDK](https://learn.microsoft.com/azure/service-bus-messaging/service-bus-python-how-to-use-queues)
+- [Best Practices](https://learn.microsoft.com/azure/service-bus-messaging/service-bus-performance-improvements)

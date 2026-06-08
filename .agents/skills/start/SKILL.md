@@ -1,245 +1,360 @@
 ---
 name: start
-description: "First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
-argument-hint: "[no arguments]"
-user-invocable: true
-allowed-tools: Read, Glob, Grep, Write, AskUserQuestion
-model: sonnet
+description: Use when starting reverse engineering on an unfamiliar codebase to identify layers, patterns, and structure before detailed analysis
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash(git:*, mkdir:*, ls:*)
+  - Write(docs/unwind/**)
+  - Edit(docs/unwind/**)
 ---
 
-# Guided Onboarding
+# Discovering Architecture
 
-This skill writes one file: `production/review-mode.txt` (review mode config set in Phase 3b).
+## Overview
 
-This skill is the entry point for new users. It does NOT assume you have a game idea, an engine preference, or any prior experience. It asks first, then routes you to the right workflow.
+Dispatch a subagent to systematically explore a codebase and identify its architectural layers, technology choices, and structure. The subagent produces a machine-parseable architecture document that drives downstream layer-by-layer analysis.
 
----
+**Output:** `docs/unwind/architecture.md`
 
-## Phase 1: Detect Project State
+## When to Use
 
-Before asking anything, silently gather context so you can tailor your guidance. Do NOT show these results unprompted — they inform your recommendations, not the conversation opener.
+- Starting work on an unfamiliar codebase
+- Onboarding to a new project
+- Before planning a migration or major refactor
+- Beginning a security audit or code review
 
-Check:
-- **Engine configured?** Read `.claude/docs/technical-preferences.md`. If the Engine field contains `[TO BE CONFIGURED]`, the engine is not set.
-- **Game concept exists?** Check for `design/gdd/game-concept.md`.
-- **Source code exists?** Glob for source files in `src/` (`*.gd`, `*.cs`, `*.cpp`, `*.h`, `*.rs`, `*.py`, `*.js`, `*.ts`).
-- **Prototypes exist?** Check for subdirectories in `prototypes/`.
-- **Design docs exist?** Count markdown files in `design/gdd/`.
-- **Production artifacts?** Check for files in `production/sprints/` or `production/milestones/`.
+## The Process
 
-Store these findings internally to validate the user's self-assessment and tailor recommendations.
+### Step 1: Gather Repository Information
 
----
+**Run these commands FIRST** to get git info for source linking:
 
-## Phase 2: Ask Where the User Is
+```bash
+git remote get-url origin 2>/dev/null
+git branch --show-current 2>/dev/null
+```
 
-This is the first thing the user sees. Use `AskUserQuestion` with these exact options so the user can click rather than type:
+Parse the remote URL:
+- SSH format: `git@github.com:owner/repo.git` → `https://github.com/owner/repo`
+- HTTPS format: `https://github.com/owner/repo.git` → `https://github.com/owner/repo`
+- If no remote: use `local` type with null URL
 
-- **Prompt**: "Welcome to Claude Code Game Studios! Before I suggest anything, I'd like to understand where you're starting from. Where are you at with your game idea right now?"
-- **Options**:
-  - `A) No idea yet` — I don't have a game concept at all. I want to explore and figure out what to make.
-  - `B) Vague idea` — I have a rough theme, feeling, or genre in mind (e.g., "something with space" or "a cozy farming game") but nothing concrete.
-  - `C) Clear concept` — I know the core idea — genre, basic mechanics, maybe a pitch sentence — but haven't formalized it into documents yet.
-  - `D) Existing work` — I already have design docs, prototypes, code, or significant planning done. I want to organize or continue the work.
+Build the repository info block:
+```yaml
+repository:
+  type: github|gitlab|bitbucket|local
+  url: https://github.com/owner/repo  # or null if local
+  branch: main                         # or null if local
+  link_format: https://github.com/owner/repo/blob/main/{path}#L{start}-L{end}
+```
 
-Wait for the user's selection. Do not proceed until they respond.
+### Step 2: Check for Existing Documentation
 
----
+Check if `docs/unwind/architecture.md` exists:
 
-## Phase 3: Route Based on Answer
+```
+Glob: docs/unwind/architecture.md
+```
 
-#### If A: No idea yet
+- If exists: Pass to subagent as "previous analysis" for refresh mode
+- If not: Fresh discovery
 
-The user needs creative exploration before anything else.
+### Step 3: Dispatch Discovery Subagent
 
-1. Acknowledge that starting from zero is completely fine
-2. Briefly explain what `/brainstorm` does (guided ideation using professional frameworks — MDA, player psychology, verb-first design). Mention that it has two modes: `/brainstorm open` for fully open exploration, or `/brainstorm [hint]` if they have even a vague theme (e.g., "space", "cozy", "horror").
-3. Recommend running `/brainstorm open` as the next step, but invite them to use a hint if something comes to mind
-4. Show the recommended path:
-   **Concept phase:**
-   - `/brainstorm open` — discover your game concept
-   - `/setup-engine` — configure the engine (brainstorm will recommend one)
-   - `/prototype` — throwaway concept build: validate the core idea is fun before designing (1–3 days)
-   - `/art-bible` — define visual identity (uses the Visual Identity Anchor brainstorm produces)
-   - `/map-systems` — decompose the concept into systems
-   - `/design-system` — author a GDD for each MVP system
-   - `/review-all-gdds` — cross-system consistency check
-   - `/gate-check` — validate readiness before architecture work
-   **Architecture phase:**
-   - `/create-architecture` — produce the master architecture blueprint and Required ADR list
-   - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
-   - `/create-control-manifest` — compile decisions into an actionable rules sheet
-   - `/architecture-review` — validate architecture coverage
-   **Pre-Production phase:**
-   - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
-   - `/vertical-slice` — production-quality end-to-end build to validate the full game loop
-   - `/playtest-report (×1+)` — document each vertical slice playtest session
-   - `/create-epics` — map systems to epics
-   - `/create-stories` — break epics into implementable stories
-   - `/sprint-plan` — plan the first sprint
-   **Production phase:** → pick up stories with `/dev-story`
+Dispatch an **Explore** subagent for fast codebase analysis. Note: Explore cannot write files, so you will write the output in Step 4.
 
-#### If B: Vague idea
+**Include the repository info from Step 1 in the prompt:**
 
-1. Ask them to share their vague idea — even a few words is enough
-2. Validate the idea as a starting point (don't judge or redirect)
-3. Recommend running `/brainstorm [their hint]` to develop it
-4. Show the recommended path:
-   **Concept phase:**
-   - `/brainstorm [hint]` — develop the idea into a full concept
-   - `/setup-engine` — configure the engine
-   - `/prototype` — throwaway concept build: validate the core idea is fun before designing (1–3 days)
-   - `/art-bible` — define visual identity (uses the Visual Identity Anchor brainstorm produces)
-   - `/map-systems` — decompose the concept into systems
-   - `/design-system` — author a GDD for each MVP system
-   - `/review-all-gdds` — cross-system consistency check
-   - `/gate-check` — validate readiness before architecture work
-   **Architecture phase:**
-   - `/create-architecture` — produce the master architecture blueprint and Required ADR list
-   - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
-   - `/create-control-manifest` — compile decisions into an actionable rules sheet
-   - `/architecture-review` — validate architecture coverage
-   **Pre-Production phase:**
-   - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
-   - `/vertical-slice` — production-quality end-to-end build to validate the full game loop
-   - `/playtest-report (×1+)` — document each vertical slice playtest session
-   - `/create-epics` — map systems to epics
-   - `/create-stories` — break epics into implementable stories
-   - `/sprint-plan` — plan the first sprint
-   **Production phase:** → pick up stories with `/dev-story`
+```
+Task(subagent_type="Explore")
+  description: "Discover codebase architecture"
+  prompt: |
+    [See Subagent Prompt below]
 
-#### If C: Clear concept
+    ## Repository Information (already gathered)
+    [paste the repository yaml block from Step 1]
+```
 
-1. Ask them to describe their concept in one sentence — genre and core mechanic. Use plain text, not AskUserQuestion (it's an open response).
-2. Acknowledge the concept, then use `AskUserQuestion` to offer two paths:
-   - **Prompt**: "How would you like to proceed?"
-   - **Options**:
-     - `Formalize it first` — Run `/brainstorm [concept]` to structure it into a proper game concept document
-     - `Jump straight in` — Go to `/setup-engine` now and write the GDD manually afterward
-3. Show the recommended path:
-   **Concept phase:**
-   - `/brainstorm` or `/setup-engine` — (their pick from step 2)
-   - `/prototype` — throwaway concept build: validate the core idea is fun before designing (1–3 days)
-   - `/art-bible` — define visual identity (after brainstorm if run, or after concept doc exists)
-   - `/design-review` — validate the concept doc
-   - `/map-systems` — decompose the concept into individual systems
-   - `/design-system` — author a GDD for each MVP system
-   - `/review-all-gdds` — cross-system consistency check
-   - `/gate-check` — validate readiness before architecture work
-   **Architecture phase:**
-   - `/create-architecture` — produce the master architecture blueprint and Required ADR list
-   - `/architecture-decision (×N)` — record key technical decisions, following the Required ADR list
-   - `/create-control-manifest` — compile decisions into an actionable rules sheet
-   - `/architecture-review` — validate architecture coverage
-   **Pre-Production phase:**
-   - `/ux-design` — author UX specs for key screens (main menu, HUD, core interactions)
-   - `/vertical-slice` — production-quality end-to-end build to validate the full game loop
-   - `/playtest-report (×1+)` — document each vertical slice playtest session
-   - `/create-epics` — map systems to epics
-   - `/create-stories` — break epics into implementable stories
-   - `/sprint-plan` — plan the first sprint
-   **Production phase:** → pick up stories with `/dev-story`
+The Explore agent should return the complete architecture document content as its output.
 
-#### If D: Existing work
+### Step 4: Write the Architecture Document
 
-1. Share what you found in Phase 1:
-   - "I can see you have [X source files / Y design docs / Z prototypes]..."
-   - "Your engine is [configured as X / not yet configured]..."
+When the Explore subagent completes with the document content:
 
-2. **Sub-case D1 — Early stage** (engine not configured or only a game concept exists):
-   - Recommend `/setup-engine` first if engine not configured
-   - Then `/project-stage-detect` for a gap inventory
+1. Create the output directory:
+   ```bash
+   mkdir -p docs/unwind
+   ```
 
-   **Sub-case D2 — GDDs, ADRs, or stories already exist:**
-   - Explain: "Having files isn't the same as the template's skills being able to use them. GDDs might be missing required sections. `/adopt` checks this specifically."
-   - Recommend:
-     1. `/project-stage-detect` — understand what phase and what's missing entirely
-     2. `/adopt` — audit whether existing artifacts are in the right internal format
+2. Write the content to `docs/unwind/architecture.md` using the Write tool
 
-3. Show the recommended path for D2:
-   - `/project-stage-detect` — phase detection + existence gaps
-   - `/adopt` — format compliance audit + migration plan
-   - `/setup-engine` — if engine not configured
-   - `/design-system retrofit [path]` — fill missing GDD sections
-   - `/architecture-decision retrofit [path]` — add missing ADR sections
-   - `/architecture-review` — bootstrap the TR requirement registry
-   - `/gate-check` — validate readiness for next phase
+3. Verify the file was created
+
+### Step 5: Present Results and Prompt User
+
+After the subagent completes, present the results to the user:
+
+```
+## Architecture Discovery Complete
+
+I've analyzed the codebase and created the architecture document.
+
+**Output:** `docs/unwind/architecture.md`
+
+### Summary
+[Include the summary from the subagent - framework, layers detected, etc.]
+
+### Detected Layers
+[List layers with their confidence levels]
+
+### Next Steps
+
+Would you like me to:
+1. **Continue with layer analysis** - Run `unwind:unwinding-codebase` to dispatch specialist subagents for each layer
+2. **Review the architecture document first** - Open `docs/unwind/architecture.md` to verify the detection is accurate
+
+[Use AskUserQuestion to let them choose]
+```
+
+**Important:** Always give the user the option to review before proceeding. The architecture document drives all subsequent analysis, so accuracy matters.
 
 ---
 
-## Phase 3c: Write Initial Stage File
+## Subagent Prompt
 
-After confirming the starting path (and before asking about review mode), write the initial stage to `production/stage.txt`. Create the `production/` directory if it does not exist.
+Use this prompt when dispatching the discovery subagent:
 
-Stage mapping:
-- **Path A, B, or C (starting from scratch)**: write `Concept`
-- **Path D, existing project, engine not configured or only a game concept exists**: write `Concept`
-- **Path D, existing project with GDDs but no architecture documents**: write `Systems Design`
-- **Path D, existing project with full architecture (ADRs, architecture doc)**: write `Technical Setup`
+```
+Explore this codebase to identify its architectural layers and structure.
 
-Do this silently — no "May I write?" needed for this single-line file.
+## Your Task
 
-Say: "I've set `production/stage.txt` to `[stage]` — this anchors your status line and stage detection."
+Systematically explore the codebase and return the architecture document content. The main agent will write the file.
+
+**Repository information has already been gathered and will be provided to you.** Use the provided `repository.link_format` for all source links.
+
+## Phase 1: Project Identification
+
+Identify the technology stack by looking for:
+
+**Build System:**
+- `package.json` → Node.js/JavaScript
+- `pom.xml` / `build.gradle` → Java
+- `requirements.txt` / `pyproject.toml` → Python
+- `go.mod` → Go
+- `Cargo.toml` → Rust
+- `*.csproj` → .NET
+
+**Framework:** Check dependencies for Spring Boot, Django, Express, Rails, Next.js, etc.
+
+**Database:** Look for connection strings, ORM config, migration directories.
+
+## Phase 2: Directory Mapping
+
+Scan source directories and map to layers:
+
+| Directory Pattern | Likely Layer |
+|-------------------|--------------|
+| `repository/`, `dao/`, `data/` | Database |
+| `model/`, `entity/`, `domain/` | Domain Model |
+| `service/`, `usecase/`, `application/` | Service Layer |
+| `controller/`, `api/`, `rest/`, `graphql/` | API Layer |
+| `messaging/`, `events/`, `queue/`, `kafka/` | Messaging |
+| `components/`, `pages/`, `views/`, `ui/` | Frontend |
+
+## Phase 3: Confidence Assessment
+
+For each layer, assess confidence:
+- **High**: Clear directory structure, multiple files, consistent naming
+- **Medium**: Some indicators but mixed patterns
+- **Low**: Minimal evidence
+- **Not Detected**: No evidence found
+
+## Phase 4: Cross-Cutting Concerns
+
+Identify aspects spanning multiple layers:
+- Authentication/Authorization
+- Logging
+- Error Handling
+- Caching
+- Validation
+
+## Phase 5: Return Architecture Document
+
+**DO NOT attempt to write the file** - you don't have write permissions. Instead, return the complete architecture document content in your response. The main agent will write it to `docs/unwind/architecture.md`.
+
+Return the document in this exact format:
+
+```markdown
+# Architecture Discovery: [Project Name]
+
+> **For Claude:** REQUIRED SUB-SKILL: Use unwind:unwinding-codebase to analyze each layer.
+
+## Discovery Metadata
+
+- **Generated:** [ISO timestamp]
+- **Project Root:** [path]
+- **Framework:** [detected framework]
+- **Language:** [primary language]
+
+## Repository Information
+
+```yaml
+repository:
+  type: github|gitlab|bitbucket|local
+  url: https://github.com/owner/repo  # or null if local
+  branch: main                         # or null if local
+  link_format: https://github.com/owner/repo/blob/main/{path}#L{start}-L{end}
+```
+
+**For all downstream agents:** Use `link_format` to create source links. Replace `{path}`, `{start}`, `{end}` with actual values.
+
+## Layer Configuration
+
+```yaml
+layers:
+  database:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/data/layer/
+    dependencies: []
+
+  domain_model:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/domain/
+    dependencies: [database]
+
+  service_layer:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/services/
+    dependencies: [domain_model]
+
+  api:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/controllers/
+    dependencies: [service_layer]
+
+  messaging:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points: []
+    dependencies: [service_layer]
+
+  frontend:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points: []
+    dependencies: [api]
+
+cross_cutting:
+  authentication:
+    touches: [api, service_layer]
+    entry_points:
+      - path/to/security/
+```
+
+## Database Layer
+
+**Status:** [Detected/Not Detected] | **Confidence:** [High/Medium/Low]
+
+**Entry Points:**
+- [directories/files]
+
+**Initial Observations:**
+- [What you found - technology, patterns, notable aspects]
 
 ---
 
-## Phase 3b: Set Review Mode
-
-Check if `production/review-mode.txt` already exists.
-
-**If it exists**: Read it and show the current mode — "Review mode is set to `[current]`." — then proceed to Phase 4. Do not ask again.
-
-**If it does not exist**: Use `AskUserQuestion`:
-
-- **Prompt**: "One setup choice: how much design review would you want as you work through the workflow?"
-- **Options**:
-  - `Full` — Director specialists review at each key workflow step. Best for teams, learning the workflow, or when you want thorough feedback on every decision.
-  - `Lean (recommended)` — Directors only at phase gate transitions (/gate-check). Skips per-skill reviews. Balanced approach for solo devs and small teams.
-  - `Solo` — No director reviews at all. Maximum speed. Best for game jams, prototypes, or if the reviews feel like overhead.
-
-Write the choice to `production/review-mode.txt` immediately after the user
-selects — no separate "May I write?" needed, as the write is a direct
-consequence of the selection:
-- `Full` → write `full`
-- `Lean (recommended)` → write `lean`
-- `Solo` → write `solo`
-
-Create the `production/` directory if it does not exist.
+[Repeat for each layer with status != not_detected]
 
 ---
 
-## Phase 4: Confirm Before Proceeding
+## Cross-Cutting Concerns
 
-After presenting the recommended path, use `AskUserQuestion` to ask the user which step they'd like to take first. Never auto-run the next skill.
+### Authentication
+**Touches:** [layers]
+[Observations]
 
-- **Prompt**: "Would you like to start with [recommended first step]?"
-- **Options**:
-  - `Yes, let's start with [recommended first step]`
-  - `I'd like to do something else first`
-
----
-
-## Phase 5: Hand Off
-
-When the user confirms their next step, respond with a single short line: "Type `[skill command]` to begin." Nothing else. Do not re-explain the skill or add encouragement. The `/start` skill's job is done.
-
-Verdict: **COMPLETE** — user oriented and handed off to next step.
+### [Other concerns...]
 
 ---
 
-## Edge Cases
+## Discovery Notes
 
-- **User picks D but project is empty**: Gently redirect — "It looks like the project is a fresh template with no artifacts yet. Would Path A or B be a better fit?"
-- **User picks A but project has code**: Mention what you found — "I noticed there's already code in `src/`. Did you mean to pick D (existing work)?"
-- **User is returning (engine configured, concept exists)**: Skip onboarding entirely — "It looks like you're already set up! Your engine is [X] and you have a game concept at `design/gdd/game-concept.md`. Review mode: `[read from production/review-mode.txt, or 'lean (default)' if missing]`. Want to pick up where you left off? Try `/sprint-plan` or just tell me what you'd like to work on."
-- **User doesn't fit any option**: Let them describe their situation in their own words and adapt.
+- [Unknowns, questions, areas needing clarification]
+```
+
+{REFRESH_CONTEXT}
+
+## Output
+
+After creating the architecture document, provide a brief summary:
+- Project type and framework
+- Which layers were detected (with confidence)
+- Any notable findings or concerns
+```
 
 ---
 
-## Collaborative Protocol
+## Refresh Mode Context
 
-1. **Ask first** — never assume the user's state or intent
-2. **Present options** — give clear paths, not mandates
-3. **User decides** — they pick the direction
-4. **No auto-execution** — recommend the next skill, don't run it without asking
-5. **Adapt** — if the user's situation doesn't fit a template, listen and adjust
+If previous architecture.md exists, add this to the subagent prompt:
+
+```
+## Previous Analysis
+
+A previous architecture analysis exists. Compare the current codebase state to this previous analysis and:
+
+1. Note any changes in the `## Changes Since Last Discovery` section
+2. Update layer status/confidence if changed
+3. Add new entry points discovered
+4. Remove entry points that no longer exist
+5. Update the `last_analyzed` timestamp
+
+Previous analysis:
+[CONTENTS OF EXISTING architecture.md]
+```
+
+---
+
+## Layer Detection Reference
+
+### Database Layer Indicators
+- Directories: `repository/`, `dao/`, `data/`, `persistence/`
+- Files: `*Repository.java`, `*_repository.py`, `*.repo.ts`
+- ORM: Hibernate, SQLAlchemy, Prisma, TypeORM, Sequelize
+- Migrations: Flyway, Liquibase, Alembic, Prisma migrations
+
+### Domain Model Indicators
+- Directories: `domain/`, `model/`, `entity/`, `entities/`
+- Files: `*Entity.java`, `models.py`, `*.entity.ts`
+- Patterns: `@Entity`, `class Model`, aggregates, value objects
+
+### Service Layer Indicators
+- Directories: `service/`, `services/`, `usecase/`, `application/`
+- Files: `*Service.java`, `*_service.py`, `*.service.ts`
+- Patterns: `@Service`, `@Transactional`, business logic methods
+
+### API Layer Indicators
+- Directories: `controller/`, `api/`, `rest/`, `routes/`, `graphql/`
+- Files: `*Controller.java`, `views.py`, `*.controller.ts`
+- Patterns: `@RestController`, `@router`, route definitions
+
+### Messaging Layer Indicators
+- Directories: `messaging/`, `events/`, `queue/`, `kafka/`, `rabbitmq/`
+- Files: `*Listener.java`, `*Consumer.py`, `*.handler.ts`
+- Configs: Kafka, RabbitMQ, SQS configuration
+
+### Frontend Layer Indicators
+- Directories: `components/`, `pages/`, `views/`, `ui/`, `src/app/`
+- Files: `*.tsx`, `*.vue`, `*.component.ts`
+- Configs: React, Vue, Angular, Next.js, Nuxt

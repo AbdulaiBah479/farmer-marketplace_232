@@ -1,153 +1,286 @@
 ---
 name: discord
-description: |
-  Discord integration. Manage data, records, and automate workflows. Use when the user wants to interact with Discord data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Post announcements and messages to Discord channels. Use when sharing updates, releases, or team communications.
 ---
 
 # Discord
 
-Discord is a voice, video, and text chat application used by communities of all sizes. It's popular with gamers, but also used for various other interest groups and professional teams.
+Post messages and announcements to Discord channels via the REST API. Navigate channels by name, send formatted messages with embeds, manage reactions, threads, and more.
 
-Official docs: https://discord.com/developers/docs/intro
+## Setup
 
-## Discord Overview
-
-- **Channel**
-  - **Message**
-- **User**
-
-Use action names and parameters as needed.
-
-## Working with Discord
-
-This skill uses the Membrane CLI to interact with Discord. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
+Run the setup script to authenticate via Discord:
 
 ```bash
-npm install -g @membranehq/cli@latest
+node .claude/skills/discord/setup.mjs https://discord-proxy.civitai.com
 ```
 
-### Authentication
+This will:
+1. Open your browser for Discord authentication
+2. Verify you're in the team server
+3. Save your personal API token to `.env`
+
+### Admin Only: Direct Bot Token
+
+If you manage the bot directly and need to bypass the proxy:
+
+1. Copy `.env.example` to `.env` in this skill directory
+2. Uncomment and set `DISCORD_BOT_TOKEN`
+3. Optionally set `DISCORD_GUILD` for auto-detection
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+cp .claude/skills/discord/.env.example .claude/skills/discord/.env
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
-
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+## Running Commands
 
 ```bash
-membrane login complete <code>
+node .claude/skills/discord/query.mjs <command> [options]
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+### Commands
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+| Command | Description |
+|---------|-------------|
+| `guilds` | List all guilds (servers) the bot is in |
+| `channels [guild]` | List text channels in a guild |
+| `send <channel> "message"` | Send a plain text message |
+| `announce <channel> "message"` | Send a formatted announcement embed |
+| `me` | Show bot information |
+| `users` | List all members in the guild |
+| `user <name\|id>` | Get user info and mention format |
+| `roles` | List all roles in the guild |
+| `role <name\|id>` | Get role info and mention format |
+| `messages <channel>` | Get recent messages from a channel |
+| `edit <msg_link> "content"` | Edit a message (bot's own only) |
+| `delete <msg_link>` | Delete a message |
+| `reply <msg_link> "content"` | Reply to a message |
+| `rich-embed <channel>` | Send embed with structured fields |
+| `react <msg_link> <emoji>` | Add reaction to a message |
+| `unreact <msg_link> <emoji>` | Remove reaction from a message |
+| `pin <msg_link>` | Pin a message |
+| `unpin <msg_link>` | Unpin a message |
+| `pins <channel>` | List pinned messages in a channel |
+| `thread <channel> --thread "name"` | Create a thread |
+| `dm <user> "message"` | Send a direct message to a user |
+| `dm-messages <user>` | Read DM history with a user |
 
-### Connecting to Discord
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://discord.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Discord API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
+### Options
 
 | Flag | Description |
 |------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+| `--json` | Output raw JSON response |
+| `--title "text"` | Set embed title |
+| `--color <hex>` | Set embed color (default: #1E88E5 blue) |
+| `--footer "text"` | Set embed footer text |
+| `--url "link"` | Add a URL to the embed title |
+| `--limit, -n <N>` | Limit results (users: default 100, messages: default 20) |
+| `--field "Name\|Value\|inline"` | Add field to rich embed (repeatable) |
+| `--thumbnail "url"` | Add thumbnail image to embed |
+| `--image "url"` | Add large image to embed |
+| `--thread "name"` | Thread name (for thread command) |
 
+## Examples
 
-## Best practices
+### Send Messages
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+```bash
+# Send to channel by name
+node .claude/skills/discord/query.mjs send dev-general "Deployment complete!"
+
+# Send to channel by ID
+node .claude/skills/discord/query.mjs send 966054537880289330 "Build passed"
+```
+
+### Send Announcements
+
+```bash
+# Basic announcement with auto-formatting
+node .claude/skills/discord/query.mjs announce dev-alerts "New feature deployed!"
+
+# Announcement with custom title and color
+node .claude/skills/discord/query.mjs announce deployments "v5.0.1381 released" --title "Release" --color "#00C853"
+```
+
+### Rich Embeds with Fields
+
+```bash
+# Structured release announcement
+node .claude/skills/discord/query.mjs rich-embed dev-general "New release is live!" \
+  --title "Release v5.0.1382" \
+  --field "Version|5.0.1382|inline" \
+  --field "Author|@justin|inline" \
+  --field "Changes|3 files modified" \
+  --footer "Civitai" \
+  --color "#00C853"
+```
+
+### Edit Messages
+
+```bash
+# Edit using message link
+node .claude/skills/discord/query.mjs edit "https://discord.com/channels/955.../966.../123..." "Updated content"
+
+# Edit using channel + message ID
+node .claude/skills/discord/query.mjs edit dev-general 1234567890 "Updated content"
+```
+
+### Delete Messages
+
+```bash
+# Delete using message link
+node .claude/skills/discord/query.mjs delete "https://discord.com/channels/955.../966.../123..."
+
+# Delete using channel + message ID
+node .claude/skills/discord/query.mjs delete dev-general 1234567890
+```
+
+### Reply to Messages
+
+```bash
+# Reply using message link
+node .claude/skills/discord/query.mjs reply "https://discord.com/channels/955.../966.../123..." "Thanks for the update!"
+
+# Reply using channel + message ID
+node .claude/skills/discord/query.mjs reply dev-general 1234567890 "Got it!"
+```
+
+### Reactions
+
+```bash
+# Add a reaction (use Unicode emoji)
+node .claude/skills/discord/query.mjs react "https://discord.com/channels/..." "U+2705"
+node .claude/skills/discord/query.mjs react dev-general 1234567890 "U+1F44D"
+
+# Remove a reaction
+node .claude/skills/discord/query.mjs unreact "https://discord.com/channels/..." "U+2705"
+```
+
+### Pin/Unpin Messages
+
+```bash
+# Pin a message
+node .claude/skills/discord/query.mjs pin "https://discord.com/channels/..."
+
+# Unpin a message
+node .claude/skills/discord/query.mjs unpin "https://discord.com/channels/..."
+
+# List pinned messages
+node .claude/skills/discord/query.mjs pins dev-general
+```
+
+### Threads
+
+```bash
+# Create thread from a message
+node .claude/skills/discord/query.mjs thread "https://discord.com/channels/..." --thread "Discussion"
+
+# Create thread in channel (no parent message)
+node .claude/skills/discord/query.mjs thread dev-general --thread "New Topic"
+```
+
+### Direct Messages
+
+```bash
+# Send DM to a user by name
+node .claude/skills/discord/query.mjs dm justin "Hey, can you review this PR?"
+
+# Send DM to a user by ID
+node .claude/skills/discord/query.mjs dm 303445765865603073 "Quick question about the deployment"
+
+# Read DM history with a user
+node .claude/skills/discord/query.mjs dm-messages justin
+
+# Read last 50 DMs
+node .claude/skills/discord/query.mjs dm-messages justin --limit 50
+```
+
+### Users and Roles
+
+```bash
+# List users
+node .claude/skills/discord/query.mjs users --limit 50
+
+# Find user to get mention format
+node .claude/skills/discord/query.mjs user justin
+# Output: Mention: <@303445765865603073>
+
+# List roles
+node .claude/skills/discord/query.mjs roles
+
+# Find role to get mention format
+node .claude/skills/discord/query.mjs role devs
+# Output: Mention: <@&955572624992382996>
+```
+
+### Mention Users and Roles
+
+```bash
+# Mention a user in a message
+node .claude/skills/discord/query.mjs send dev-general "<@303445765865603073> check this PR"
+
+# Mention a role
+node .claude/skills/discord/query.mjs announce dev-general "<@&955572624992382996> new release!" --title "Attention Devs"
+```
+
+### Read Messages
+
+```bash
+# Get last 20 messages (default)
+node .claude/skills/discord/query.mjs messages dev-general
+
+# Get last 50 messages
+node .claude/skills/discord/query.mjs messages dev-general --limit 50
+```
+
+## Message Links
+
+Most commands accept Discord message links directly:
+- Format: `https://discord.com/channels/GUILD_ID/CHANNEL_ID/MESSAGE_ID`
+- Right-click any message in Discord > "Copy Message Link"
+
+Commands that accept message links: `edit`, `delete`, `reply`, `react`, `unreact`, `pin`, `unpin`, `thread`
+
+## Channel Name Matching
+
+Channel names are matched flexibly:
+- Exact match: `dev-general`
+- Partial match: `dev-gen` matches `dev-general`
+- With or without emoji prefix: `team` matches `team`
+- Case insensitive: `DEV-GENERAL` matches `dev-general`
+
+## When to Use
+
+- **Deployments**: Announce releases to `deployments` or `dev-alerts`
+- **Bug fixes**: Share fixes with the team in `dev-general`
+- **Feature announcements**: Post to relevant channels
+- **Team updates**: Share progress in `team` or project-specific channels
+- **Automated notifications**: Post from CI/CD or scripts
+- **Mentioning users**: Look up user IDs with `user` command, then @mention them
+- **Mentioning roles**: Look up role IDs with `role` command, then @mention them
+- **Reading context**: Check recent messages with `messages` command
+- **Reactions**: Acknowledge messages with emoji reactions
+- **Organizing discussions**: Create threads for focused conversations
+- **Direct messages**: Send private DMs to team members, read DM history
+
+## Tips
+
+- Use `announce` for important updates (creates rich embed)
+- Use `send` for quick messages or automated notifications
+- Use `rich-embed` for structured data with multiple fields
+- Channel names are cached after first lookup
+- Bot must have appropriate permissions in target channel
+- Use `--json` for scripting or piping to other tools
+- Message links work across all message-targeting commands
+
+## Permissions Required
+
+The bot needs these Discord permissions:
+- `View Channels` - to list and find channels
+- `Send Messages` - to post messages
+- `Embed Links` - for rich announcements
+- `Read Message History` - to read channel messages
+- `Add Reactions` - to add reactions
+- `Manage Messages` - to pin/unpin and delete messages
+- `Create Public Threads` - to create threads
+- Server Members Intent - enabled in Discord Developer Portal (for listing members)

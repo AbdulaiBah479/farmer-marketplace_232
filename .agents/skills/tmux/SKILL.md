@@ -1,222 +1,121 @@
 ---
 name: tmux
-description: "tmux and tmuxp session configuration, management, and troubleshooting. Use when creating, editing, debugging, or optimizing tmuxp YAML configs, designing tmux workspace layouts, fixing tmux session errors, managing multi-environment terminal setups, or working with tmux panes, windows, and sessions. Also use when the user mentions tmuxp, .tmuxp, tmux layouts, session_name, or terminal workspace organization."
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+description: Remote-control tmux sessions for interactive CLIs by sending keystrokes and scraping pane output.
+metadata: {"clawdbot":{"emoji":"🧵","os":["darwin","linux"],"requires":{"bins":["tmux"]}}}
 ---
 
-# tmux & tmuxp Skill
+# tmux Skill (Clawdbot)
 
-Create, edit, debug, and optimize tmux sessions via tmuxp YAML configurations.
+Use tmux only when you need an interactive TTY. Prefer exec background mode for long-running, non-interactive tasks.
 
-## Quick Decisions
-
-| Task | Approach |
-|------|----------|
-| **New project workspace** | Create tmuxp YAML from template |
-| **Fix session load error** | Check session_name, YAML syntax, tool availability |
-| **Multi-environment K8s** | Use environment vars + per-env windows with safety guards |
-| **Simple dev setup** | 2-3 windows: editor, server, terminal |
-| **Complex infra** | before_script validation + helper scripts + monitoring windows |
-| **Capture existing layout** | `tmuxp freeze` then clean up the output |
-
-## Session Name Rules
-
-tmux session names **cannot contain periods (`.`) or colons (`:`)**.
-
-Common pitfall: using `${USER}` in session_name when the username contains periods (e.g., `first.last`). Always use a static name or sanitize:
-
-```yaml
-# BAD - breaks if USER contains periods
-session_name: ${USER}-project
-
-# GOOD - static name
-session_name: project-dev
-
-# GOOD - sanitized
-session_name: project-${USER//\./-}
-```
-
-## Configuration Structure
-
-```yaml
-session_name: project-name          # Required. No periods or colons.
-start_directory: ~/Projects/foo     # Default working dir for all windows
-environment:                        # Session-wide env vars
-  PROJECT_ROOT: ~/Projects/foo
-suppress_history: false             # Whether to hide commands from shell history
-
-before_script: |                    # Runs before session creation. Exit 1 = abort.
-  echo "Validating..."
-
-after_script: |                     # Runs after session is destroyed
-  echo "Cleaning up..."
-
-windows:
-  - window_name: editor             # Window identifier
-    focus: true                     # Make this the active window on load
-    layout: main-vertical           # Pane layout
-    start_directory: ~/Projects/foo/src
-    options:
-      main-pane-width: 70%          # Layout-specific options
-    shell_command_before:            # Runs in ALL panes before pane commands
-      - source ~/.zshrc
-    panes:
-      - focus: true                 # Active pane within window
-        shell_command:
-          - vim .
-      - shell_command:
-          - npm test -- --watch
-```
-
-## Layouts
-
-| Layout | Use For | Pane Arrangement |
-|--------|---------|------------------|
-| `main-vertical` | Editor + sidebars | Large left, stacked right |
-| `main-horizontal` | Logs + status | Large top, split bottom |
-| `even-horizontal` | Equal side-by-side | Equal horizontal splits |
-| `even-vertical` | Equal stacked | Equal vertical splits |
-| `tiled` | Monitoring dashboards | Grid of equal panes |
-
-Control main pane size via options:
-```yaml
-options:
-  main-pane-width: 70%    # For main-vertical
-  main-pane-height: 65%   # For main-horizontal
-```
-
-Capture a custom layout from a running session:
-```bash
-tmux display-message -p '#{window_layout}'
-# Returns: "bb62,159x48,0,0{79x48,0,0,79x48,80,0}"
-```
-
-## Pane Definitions
-
-```yaml
-panes:
-  # Simple command
-  - vim README.md
-
-  # Multiple commands
-  - shell_command:
-      - cd ~/project
-      - source .venv/bin/activate
-      - python app.py
-
-  # Empty pane
-  - null     # or: blank, pane
-
-  # With focus
-  - focus: true
-    shell_command:
-      - k9s
-```
-
-## Environment Variables
-
-```yaml
-environment:
-  # Static values
-  PROJECT_NAME: my-app
-
-  # Reference existing vars (expanded at load time)
-  HOME_DIR: ${HOME}
-
-  # Multi-environment pattern
-  K8S_CTX_DEV: aks-myapp-dev
-  K8S_CTX_STG: aks-myapp-stg
-  K8S_CTX_PRD: aks-myapp-prd
-
-  # Defaults
-  EDITOR: ${EDITOR:-vim}
-```
-
-Never hardcode secrets. Reference env vars from the shell: `${AZURE_SUBSCRIPTION_ID}`.
-
-## before_script Validation
-
-Use before_script to validate prerequisites. Exit 1 aborts session creation:
-
-```yaml
-before_script: |
-  # Check project exists
-  [ -d "$PROJECT_ROOT" ] || { echo "Project not found"; exit 1; }
-
-  # Check required tools
-  for tool in kubectl terraform docker; do
-    command -v $tool >/dev/null || echo "Warning: $tool not found"
-  done
-
-  # Check connectivity
-  kubectl cluster-info >/dev/null 2>&1 || echo "Warning: Cannot reach cluster"
-```
-
-## Production Safety Patterns
-
-Protect production environments with read-only access and warnings:
-
-```yaml
-- window_name: k8s-prod
-  panes:
-    - shell_command:
-        - echo "PRODUCTION - READ-ONLY ACCESS"
-        - echo "DO NOT use: apply, delete, edit, patch"
-        - kubectl config use-context $K8S_CTX_PRD
-        - k9s --readonly
-```
-
-## CLI Commands
+## Quickstart (isolated socket, exec tool)
 
 ```bash
-tmuxp load config-name          # Load from ~/.tmuxp/
-tmuxp load ./path/to/file.yaml  # Load from path
-tmuxp load -y config-name       # Skip confirmation prompt
-tmuxp load -d config-name       # Load detached (background)
-tmuxp ls                        # List available configs
-tmuxp freeze session-name       # Capture running session to YAML
-tmuxp convert file.json         # Convert JSON config to YAML
-tmuxp edit config-name          # Edit config in $EDITOR
-tmuxp debug-info                # Show environment info
+SOCKET_DIR="${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/clawdbot-tmux-sockets}"
+mkdir -p "$SOCKET_DIR"
+SOCKET="$SOCKET_DIR/clawdbot.sock"
+SESSION=clawdbot-python
+
+tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
+tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- 'PYTHON_BASIC_REPL=1 python3 -q' Enter
+tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION":0.0 -S -200
 ```
 
-## Troubleshooting
+After starting a session, always print monitor commands:
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `BadSessionName: contains periods` | `session_name` has `.` (often from `${USER}`) | Remove `${USER}` prefix or sanitize |
-| `BadSessionName: contains colons` | `session_name` has `:` | Remove colons from name |
-| Session already exists | Duplicate session_name | Kill old: `tmux kill-session -t name` |
-| Commands not executing | Shell compatibility | Test commands manually first |
-| Layout broken | Terminal too small for layout | Use predefined layouts or test with `tmuxp load -d` |
-| Env vars not expanding | Wrong syntax | Use `${VAR}` not `$VAR` in YAML values |
+```
+To monitor:
+  tmux -S "$SOCKET" attach -t "$SESSION"
+  tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION":0.0 -S -200
+```
 
-Debug: `tmuxp -v load config.yaml` for verbose output.
+## Socket convention
 
-## References
+- Use `CLAWDBOT_TMUX_SOCKET_DIR` (default `${TMPDIR:-/tmp}/clawdbot-tmux-sockets`).
+- Default socket path: `"$CLAWDBOT_TMUX_SOCKET_DIR/clawdbot.sock"`.
 
-- [WORKFLOWS.md](references/WORKFLOWS.md) - Common workflow patterns (dev, infra, monitoring)
-- [BEST-PRACTICES.md](references/BEST-PRACTICES.md) - Production patterns, safety, organization
-- [templates/](templates/) - Ready-to-use config templates
+## Targeting panes and naming
 
-## Workflow: Create New Config
+- Target format: `session:window.pane` (defaults to `:0.0`).
+- Keep names short; avoid spaces.
+- Inspect: `tmux -S "$SOCKET" list-sessions`, `tmux -S "$SOCKET" list-panes -a`.
 
-1. Identify the project type (dev, infra, monitoring, mixed)
-2. Choose a template from `templates/`
-3. Set session_name (no periods/colons), start_directory, environment vars
-4. Design windows by function (editor, server, logs, k8s, etc.)
-5. Pick layouts matching each window's purpose
-6. Add before_script validation if the project has external dependencies
-7. Add production safety guards for any prod-access windows
-8. Test: `tmuxp load -d config.yaml` then `tmux attach -t session-name`
+## Finding sessions
 
----
+- List sessions on your socket: `{baseDir}/scripts/find-sessions.sh -S "$SOCKET"`.
+- Scan all sockets: `{baseDir}/scripts/find-sessions.sh --all` (uses `CLAWDBOT_TMUX_SOCKET_DIR`).
 
-## Gotchas
+## Sending input safely
 
-- **Session names with periods break the unix-socket path:** `${USER}` containing `.` (e.g. `first.last`) produces `BadSessionName` because tmux uses the name in `/tmp/tmux-UID/` socket path. Use a static name or `${USER//\./-}` sanitization.
-- **`before_script` runs in a fresh shell, not your interactive zsh:** Aliases, functions, and `.zshrc`-sourced env vars are absent. `command -v` works but `myalias` does not. Source `~/.zshrc` explicitly if you depend on it.
-- **`shell_command_before` runs in EVERY pane of the window:** Heavy commands (sourcing 500ms+ of zsh config, activating venvs) multiply latency — a 4-pane window adds ~2s to session load. Use per-pane `shell_command` instead when only one pane needs it.
-- **`tmuxp freeze` captures live state, not intent:** Output includes the random working directories, history-expanded commands, and the literal pane sizes — review and clean before committing. Frozen YAML is a starting point, not a finished config.
-- **Env var expansion happens at YAML load, not pane start:** `environment: FOO: ${BAR}` resolves `$BAR` from the shell that invoked `tmuxp load`. If `$BAR` is unset there, it stays empty even if a later pane defines it.
-- **`focus: true` on multiple panes silently picks the last one:** No error, no warning — the file just looks misconfigured at runtime. Validate with `grep -c "focus: true"` per window before debugging.
+- Prefer literal sends: `tmux -S "$SOCKET" send-keys -t target -l -- "$cmd"`.
+- Control keys: `tmux -S "$SOCKET" send-keys -t target C-c`.
+
+## Watching output
+
+- Capture recent history: `tmux -S "$SOCKET" capture-pane -p -J -t target -S -200`.
+- Wait for prompts: `{baseDir}/scripts/wait-for-text.sh -t session:0.0 -p 'pattern'`.
+- Attaching is OK; detach with `Ctrl+b d`.
+
+## Spawning processes
+
+- For python REPLs, set `PYTHON_BASIC_REPL=1` (non-basic REPL breaks send-keys flows).
+
+## Windows / WSL
+
+- tmux is supported on macOS/Linux. On Windows, use WSL and install tmux inside WSL.
+- This skill is gated to `darwin`/`linux` and requires `tmux` on PATH.
+
+## Orchestrating Coding Agents (Codex, Claude Code)
+
+tmux excels at running multiple coding agents in parallel:
+
+```bash
+SOCKET="${TMPDIR:-/tmp}/codex-army.sock"
+
+# Create multiple sessions
+for i in 1 2 3 4 5; do
+  tmux -S "$SOCKET" new-session -d -s "agent-$i"
+done
+
+# Launch agents in different workdirs
+tmux -S "$SOCKET" send-keys -t agent-1 "cd /tmp/project1 && codex --yolo 'Fix bug X'" Enter
+tmux -S "$SOCKET" send-keys -t agent-2 "cd /tmp/project2 && codex --yolo 'Fix bug Y'" Enter
+
+# Poll for completion (check if prompt returned)
+for sess in agent-1 agent-2; do
+  if tmux -S "$SOCKET" capture-pane -p -t "$sess" -S -3 | grep -q "❯"; then
+    echo "$sess: DONE"
+  else
+    echo "$sess: Running..."
+  fi
+done
+
+# Get full output from completed session
+tmux -S "$SOCKET" capture-pane -p -t agent-1 -S -500
+```
+
+**Tips:**
+- Use separate git worktrees for parallel fixes (no branch conflicts)
+- `pnpm install` first before running codex in fresh clones
+- Check for shell prompt (`❯` or `$`) to detect completion
+- Codex needs `--yolo` or `--full-auto` for non-interactive fixes
+
+## Cleanup
+
+- Kill a session: `tmux -S "$SOCKET" kill-session -t "$SESSION"`.
+- Kill all sessions on a socket: `tmux -S "$SOCKET" list-sessions -F '#{session_name}' | xargs -r -n1 tmux -S "$SOCKET" kill-session -t`.
+- Remove everything on the private socket: `tmux -S "$SOCKET" kill-server`.
+
+## Helper: wait-for-text.sh
+
+`{baseDir}/scripts/wait-for-text.sh` polls a pane for a regex (or fixed string) with a timeout.
+
+```bash
+{baseDir}/scripts/wait-for-text.sh -t session:0.0 -p 'pattern' [-F] [-T 20] [-i 0.5] [-l 2000]
+```
+
+- `-t`/`--target` pane target (required)
+- `-p`/`--pattern` regex to match (required); add `-F` for fixed string
+- `-T` timeout seconds (integer, default 15)
+- `-i` poll interval seconds (default 0.5)
+- `-l` history lines to search (integer, default 1000)

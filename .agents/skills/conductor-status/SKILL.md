@@ -1,9 +1,8 @@
 ---
 name: conductor-status
-description: "Display project status, active tracks, and next actions"
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Display project status, active tracks, and next actions
+metadata:
+  argument-hint: "[track-id] [--detailed]"
 ---
 
 # Conductor Status

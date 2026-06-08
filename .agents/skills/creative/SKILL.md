@@ -1,83 +1,32 @@
 ---
 name: creative
-description: Playful, character-driven design with expressive typography and bold graphics for landing pages and creative projects.
-license: MIT
-metadata:
-  author: typeui.sh
+description: Creative deliverable tools for AI agents
 ---
+## Creative Deliverables
 
-<!-- TYPEUI_SH_MANAGED_START -->
-# Creative Design System Skill (Universal)
+You have powerful creative capabilities for delivering job results:
 
-## Mission
-You are an expert design-system guideline author for Creative.
-Create practical, implementation-ready guidance that can be directly used by engineers and designers.
+**Text & Documents:**
+- `store_deliverable` with content_type "text/markdown" — rich Markdown (default)
+- `store_deliverable` with content_type "application/pdf" — write Markdown, auto-generates PDF
+  - Use ![alt text](https://image-url) to embed images — they are downloaded and embedded in the PDF
+  - Write CLEAN Markdown only — no HTML tags, no <cite> tags, no raw HTML
+- `store_deliverable` with content_type "text/csv" — structured data
 
-## Brand
-cerative style for landing  pages
+**Images (AI-generated) — IMPORTANT:**
+- Call `generate_image` with prompt AND job_id — it generates, uploads to IPFS, and returns evidence_uri in ONE step
+- Then just call `xpr_deliver_job` with the evidence_uri
+- Do NOT write markdown descriptions of images — generate the actual image!
 
-## Style Foundations
-- Visual style: playful
-- Typography scale: 12/14/16/20/24/32 | Fonts: primary=Bangers, display=Bangers, mono=IBM Plex Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
-- Color palette: primary, secondary, neutral, success, warning, danger | Tokens: primary=#3B82F6, secondary=#8B5CF6, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFFFFF, text=#111827
-- Spacing scale: 4/8/12/16/24/32
+**Video (AI-generated):**
+- Call `generate_video` with prompt AND job_id — generates, uploads to IPFS, returns evidence_uri
+- Then call `xpr_deliver_job` with the evidence_uri
 
+**Images/Media from the web:**
+- Use `web_search` to find suitable content, then `store_deliverable` with source_url
 
-## Accessibility
-WCAG 2.2 AA, keyboard-first interactions, visible focus states
+**Code repositories:**
+- `create_github_repo` with all source files — creates a public GitHub repo
 
-## Writing Tone
-concise, confident, helpful
-
-## Rules: Do
-- prefer semantic tokens over raw values
-- preserve visual hierarchy
-- keep interaction states explicit
-
-## Rules: Don't
-- avoid low contrast text
-- avoid inconsistent spacing rhythm
-- avoid ambiguous labels
-
-## Expected Behavior
-- Follow the foundations first, then component consistency.
-- When uncertain, prioritize accessibility and clarity over novelty.
-- Provide concrete defaults and explain trade-offs when alternatives are possible.
-- Keep guidance opinionated, concise, and implementation-focused.
-
-## Guideline Authoring Workflow
-1. Restate the design intent in one sentence before proposing rules.
-2. Define tokens and foundational constraints before component-level guidance.
-3. Specify component anatomy, states, variants, and interaction behavior.
-4. Include accessibility acceptance criteria and content-writing expectations.
-5. Add anti-patterns and migration notes for existing inconsistent UI.
-6. End with a QA checklist that can be executed in code review.
-
-## Required Output Structure
-When generating design-system guidance, use this structure:
-- Context and goals
-- Design tokens and foundations
-- Component-level rules (anatomy, variants, states, responsive behavior)
-- Accessibility requirements and testable acceptance criteria
-- Content and tone standards with examples
-- Anti-patterns and prohibited implementations
-- QA checklist
-
-## Component Rule Expectations
-- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
-- Describe interaction behavior for keyboard, pointer, and touch.
-- State spacing, typography, and color-token usage explicitly.
-- Include responsive behavior and edge cases (long labels, empty states, overflow).
-
-## Quality Gates
-- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
-- Every accessibility statement must be testable in implementation.
-- Prefer system consistency over one-off local optimizations.
-- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
-
-## Example Constraint Language
-- Use "must" for non-negotiable rules and "should" for recommendations.
-- Pair every do-rule with at least one concrete don't-example.
-- If introducing a new pattern, include migration guidance for existing components.
-
-<!-- TYPEUI_SH_MANAGED_END -->
+NEVER say you can't create images or videos — you have the tools!
+NEVER deliver just a URL or summary — always include the actual work content.

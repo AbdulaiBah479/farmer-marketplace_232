@@ -1,9 +1,8 @@
 ---
 name: culture-index
 description: "Index and search culture documentation"
-risk: safe
 source: "https://github.com/trailofbits/skills/tree/main/plugins/culture-index"
-date_added: "2026-02-27"
+risk: safe
 ---
 
 # Culture Index

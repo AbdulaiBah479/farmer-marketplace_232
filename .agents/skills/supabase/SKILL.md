@@ -1,158 +1,357 @@
 ---
 name: supabase
-description: |
-  Supabase integration. Manage data, records, and automate workflows. Use when the user wants to interact with Supabase data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Supabase REST API via curl. Use this skill for database CRUD operations, filtering, pagination, and real-time data management.
+vm0_secrets:
+  - SUPABASE_SECRET_KEY
+vm0_vars:
+  - SUPABASE_URL
+  - SUPABASE_PUBLISHABLE_KEY
 ---
 
-# Supabase
+# Supabase REST API
 
-Supabase is an open-source Firebase alternative that provides backend-as-a-service features. It gives developers the tools to build scalable and secure applications without managing servers. Supabase is used by web and mobile developers who need a database, authentication, and real-time capabilities.
+Use the Supabase REST API via direct `curl` calls to **perform database CRUD operations**.
 
-Official docs: https://supabase.com/docs
+Supabase auto-generates a RESTful API from your PostgreSQL database schema using [PostgREST](https://postgrest.org/).
 
-## Supabase Overview
+> Official docs: `https://supabase.com/docs/guides/api`
 
-- **Database**
-  - **Table**
-    - **Row**
-- **Authentication**
-  - **User**
-- **Storage**
-  - **Bucket**
-    - **File**
+---
 
-Use action names and parameters as needed.
+## When to Use
 
-## Working with Supabase
+Use this skill when you need to:
 
-This skill uses the Membrane CLI to interact with Supabase. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+- **Read data** from Supabase tables with filtering and pagination
+- **Insert rows** into tables (single or bulk)
+- **Update rows** based on conditions
+- **Delete rows** from tables
+- **Upsert data** (insert or update)
+- **Query with complex filters** using PostgREST operators
 
-### Install the CLI
+---
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+## Prerequisites
 
-```bash
-npm install -g @membranehq/cli@latest
-```
-
-### Authentication
+1. Create a Supabase project at https://supabase.com
+2. Go to **Project Settings → API Keys**
+3. Click **Create new API Keys** if needed
+4. Copy the **Project URL** and keys
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+export SUPABASE_URL="https://your-project-ref.supabase.co"
+export SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
+export SUPABASE_SECRET_KEY="sb_secret_..."
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+**API Keys:**
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+| Key Type | Format | Use Case |
+|----------|--------|----------|
+| Publishable | `sb_publishable_...` | Client-side, respects Row Level Security (RLS) |
+| Secret | `sb_secret_...` | Server-side only, bypasses RLS |
+
+> **Note:** Legacy `anon` and `service_role` JWT keys still work but are deprecated. Use the new `sb_publishable_` and `sb_secret_` keys instead.
+
+---
+
+
+> **Important:** When using `$VAR` in a command that pipes to another command, wrap the command containing `$VAR` in `bash -c '...'`. Due to a Claude Code bug, environment variables are silently cleared when pipes are used directly.
+> ```bash
+> bash -c 'curl -s "https://api.example.com" -H "Authorization: Bearer $API_KEY"'
+> ```
+
+## How to Use
+
+Base URL: `${SUPABASE_URL}/rest/v1`
+
+All requests require the `apikey` header with your API key.
+
+---
+
+### 1. Read All Rows
+
+Get all rows from a table:
 
 ```bash
-membrane login complete <code>
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?select=*" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+---
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+### 2. Select Specific Columns
 
-### Connecting to Supabase
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+Get only specific columns:
 
 ```bash
-membrane connection ensure "https://supabase.io" --json
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?select=id,name,email" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+---
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+### 3. Filter with Operators
 
-#### 1b. Wait for the connection to be ready
+Filter rows using PostgREST operators.
 
-If the connection is in `BUILDING` state, poll until it's ready:
+**Equal to:**
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?status=eq.active" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
+**Greater than:**
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/products?price=gt.100" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
 ```
 
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
+**Multiple conditions (AND):**
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?age=gte.18&status=eq.active" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
 ```
 
-To pass JSON parameters:
+**Available Operators:**
+
+| Operator | Meaning | Example |
+|----------|---------|---------|
+| `eq` | Equals | `?status=eq.active` |
+| `neq` | Not equals | `?status=neq.deleted` |
+| `gt` | Greater than | `?age=gt.18` |
+| `gte` | Greater than or equal | `?age=gte.21` |
+| `lt` | Less than | `?price=lt.100` |
+| `lte` | Less than or equal | `?price=lte.50` |
+| `like` | Pattern match (use `*` for `%`) | `?name=like.*john*` |
+| `ilike` | Case-insensitive pattern | `?name=ilike.*john*` |
+| `in` | In list | `?id=in.(1,2,3)` |
+| `is` | Is null/true/false | `?deleted_at=is.null` |
+
+---
+
+### 4. OR Conditions
+
+Use `or` for OR logic:
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?or=(status.eq.active,status.eq.pending)" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
 ```
 
-The result is in the `output` field of the response.
+---
 
+### 5. Ordering
 
-### Proxy requests
+Sort results.
 
-When the available actions don't cover your use case, you can send requests directly to the Supabase API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+**Ascending:**
 
 ```bash
-membrane request CONNECTION_ID /path/to/endpoint
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?order=created_at.asc" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
 ```
 
-Common options:
+**Descending:**
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?order=created_at.desc" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
+```
 
+**Multiple columns:**
 
-## Best practices
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?order=status.asc,created_at.desc" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
+```
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+---
+
+### 6. Pagination
+
+Use `limit` and `offset`.
+
+**First 10 rows:**
+
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?limit=10" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
+```
+
+**Page 2 (rows 11-20):**
+
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?limit=10&offset=10" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
+```
+
+---
+
+### 7. Get Row Count
+
+Use `Prefer: count=exact` header:
+
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?select=*" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" -H "Prefer: count=exact" -I | grep -i "content-range"'
+```
+
+---
+
+### 8. Insert Single Row
+
+Write to `/tmp/supabase_request.json`:
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "${SUPABASE_URL}/rest/v1/users" -H "apikey: ${SUPABASE_SECRET_KEY}" -H "Content-Type: application/json" -H "Prefer: return=representation" -d @/tmp/supabase_request.json'
+```
+
+---
+
+### 9. Insert Multiple Rows
+
+Write to `/tmp/supabase_request.json`:
+
+```json
+[
+  {"name": "John", "email": "john@example.com"},
+  {"name": "Jane", "email": "jane@example.com"}
+]
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "${SUPABASE_URL}/rest/v1/users" -H "apikey: ${SUPABASE_SECRET_KEY}" -H "Content-Type: application/json" -H "Prefer: return=representation" -d @/tmp/supabase_request.json'
+```
+
+---
+
+### 10. Update Rows
+
+Update rows matching a filter.
+
+Write to `/tmp/supabase_request.json`:
+
+```json
+{
+  "status": "inactive"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X PATCH "${SUPABASE_URL}/rest/v1/users?id=eq.1" -H "apikey: ${SUPABASE_SECRET_KEY}" -H "Content-Type: application/json" -H "Prefer: return=representation" -d @/tmp/supabase_request.json'
+```
+
+---
+
+### 11. Upsert (Insert or Update)
+
+Use `Prefer: resolution=merge-duplicates`.
+
+Write to `/tmp/supabase_request.json`:
+
+```json
+{
+  "id": 1,
+  "name": "John Updated",
+  "email": "john@example.com"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "${SUPABASE_URL}/rest/v1/users" -H "apikey: ${SUPABASE_SECRET_KEY}" -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates,return=representation" -d @/tmp/supabase_request.json'
+```
+
+---
+
+### 12. Delete Rows
+
+Delete rows matching a filter:
+
+```bash
+bash -c 'curl -s -X DELETE "${SUPABASE_URL}/rest/v1/users?id=eq.1" -H "apikey: ${SUPABASE_SECRET_KEY}" -H "Prefer: return=representation"'
+```
+
+---
+
+### 13. Query Related Tables
+
+Embed related data using foreign keys.
+
+**Get posts with their author:**
+
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/posts?select=*,author:users(*)" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
+```
+
+**Get users with their posts:**
+
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/users?select=*,posts(*)" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
+```
+
+---
+
+### 14. Full-Text Search
+
+Search text columns:
+
+```bash
+bash -c 'curl -s "${SUPABASE_URL}/rest/v1/posts?title=fts.hello" -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"'
+```
+
+---
+
+### 15. Call RPC Functions
+
+Call PostgreSQL functions.
+
+Write to `/tmp/supabase_request.json`:
+
+```json
+{
+  "param1": "value1"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "${SUPABASE_URL}/rest/v1/rpc/my_function" -H "apikey: ${SUPABASE_SECRET_KEY}" -H "Content-Type: application/json" -d @/tmp/supabase_request.json'
+```
+
+---
+
+## Response Headers
+
+| Header | Description |
+|--------|-------------|
+| `Content-Range` | Row range and total count (e.g., `0-9/100`) |
+| `Preference-Applied` | Confirms applied preferences |
+
+---
+
+## Guidelines
+
+1. **Use publishable key** for read operations with RLS enabled
+2. **Use secret key** only server-side for write operations or admin access
+3. **Enable RLS** on tables for security when using publishable key
+4. **Use `select`** to limit returned columns for better performance
+5. **Add indexes** on frequently filtered columns
+6. **Use `Prefer: return=representation`** to get inserted/updated rows back
+7. **Avoid full-table operations** without filters to prevent accidental data loss
+
+---
+
+## API Reference
+
+- Supabase API Docs: https://supabase.com/docs/guides/api
+- API Keys Guide: https://supabase.com/docs/guides/api/api-keys
+- PostgREST Docs: https://postgrest.org/en/stable/
+- API Settings: https://supabase.com/dashboard/project/_/settings/api-keys

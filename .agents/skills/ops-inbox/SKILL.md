@@ -1,591 +1,776 @@
 ---
 name: ops-inbox
-description: Full inbox management across all channels — WhatsApp (wacli), Email (Gmail MCP), Slack (MCP), Telegram (user-auth MCP), Discord (webhook + REST read), Notion (MCP — comments, mentions, assigned tasks). Scans FULL inbox (not just unread), identifies messages needing replies, archives handled conversations.
-argument-hint: "[channel: whatsapp|email|slack|telegram|discord|notion|all]"
-allowed-tools:
-  - Bash
-  - Read
-  - Grep
-  - Glob
-  - Skill
-  - Agent
-  - AskUserQuestion
-  - TeamCreate
-  - SendMessage
-  - TaskCreate
-  - TaskUpdate
-  - TaskList
-  - CronCreate
-  - CronList
-  - mcp__gog__gmail_search
-  - mcp__gog__gmail_read_thread
-  - mcp__gog__gmail_send
-  - mcp__gog__gmail_labels
-  # Slack: MCP tools added when configured
-  # Telegram: user-auth MCP tools added when configured
-  # Notion: MCP tools (claude.ai integration or self-hosted)
-  - mcp__claude_ai_Notion__notion-search
-  - mcp__claude_ai_Notion__notion-fetch
-  - mcp__claude_ai_Notion__notion-get-comments
-  - mcp__claude_ai_Notion__notion-create-comment
-  - mcp__claude_ai_Notion__notion-update-page
-  - mcp__claude_ai_Notion__notion-create-pages
-effort: high
-maxTurns: 60
+description: Process pending Brikette customer emails and generate draft responses using MCP tools
 ---
 
-# OPS ► INBOX ZERO
+# Process Emails
 
-## Runtime Context
+Process customer emails for Hostel Brikette, generating intelligent draft responses using the knowledge base and MCP tools.
 
-Before executing, load available context:
+## When to Use
 
-1. **Preferences**: Read `${CLAUDE_PLUGIN_DATA_DIR:-$HOME/.claude/plugins/data/ops-ops-marketplace}/preferences.json`
-   - `default_channels` — which channels to scan by default
-   - `secrets_manager` / `doppler` — how to resolve channel credentials if not in env
+Run this skill when you want to process customer inquiry emails for Brikette:
+- Morning email triage (recommended: 09:00 Italy time)
+- Afternoon follow-up (recommended: 17:00 Italy time)
+- Ad-hoc when notified of urgent inquiry
 
-2. **Daemon health**: Read `${CLAUDE_PLUGIN_DATA_DIR}/daemon-health.json`
-   - Check `wacli-sync` status — if not running or auth needed, skip WhatsApp and surface the issue
-   - Also check `~/.wacli/.health` for live auth status before any wacli command
+## Prerequisites
 
-3. **Ops memories**: Check `${CLAUDE_PLUGIN_DATA_DIR}/memories/` before drafting any reply:
-   - `contact_*.md` — load profile for the contact you're about to reply to
-   - `preferences.md` — apply user's communication style and language preferences
-   - `topics_active.md` — check for active threads or deadlines related to this contact
-   - `donts.md` — never violate these restrictions in drafts
+- MCP server running locally with Gmail tools enabled
+- Gmail API credentials configured for Pete's account
+- Network access to Gmail API
+- Fallback CLI available: `scripts/ops/create-brikette-drafts.py`
 
-## CLI/API Reference
+## Workflow
 
-### wacli (WhatsApp)
+### 0. Mandatory MCP Preflight (Fail Fast)
 
-**Health file** — check `~/.wacli/.health` BEFORE any wacli command:
-- `status=connected` → proceed normally
-- `status=needs_auth` → prompt user: "Run `wacli auth` in terminal, scan QR"
-- `status=needs_reauth` → prompt user: "WhatsApp session expired. Run `wacli auth` to re-pair"
-- File missing → fall back to `wacli doctor --json`
+Before any inbox processing, run:
 
-| Command | Usage | Output |
-|---------|-------|--------|
-| `wacli doctor --json` | Check auth/connected/lock/FTS | `{data: {authenticated, connected, lock_held, fts_enabled}}` |
-| `wacli chats list --json` | All chats | `{data: [{JID, Name, Kind, LastMessageTS}]}` |
-| `wacli messages list --chat "<JID>" --limit N --json` | Messages for chat | `{data: {messages: [{FromMe, Text, Timestamp, SenderName, ChatName}]}}` |
-| `wacli messages search --query "<text>" --json` | FTS search | Same as above |
-| `wacli contacts --search "<name>" --json` | Contact lookup | Contact objects |
-| `wacli send --to "<JID>" --message "<msg>"` | Send text | Success/error |
-| `wacli history backfill --chat="<JID>" --count=50 --requests=2 --wait=30s --idle-exit=5s --json` | Fetch older messages | Backfill result |
-
-### gog CLI (Gmail/Calendar)
-
-| Command | Usage | Output |
-|---------|-------|--------|
-| `gog gmail search "in:inbox" --max 50 -j --results-only --no-input` | Full inbox scan | JSON array of threads |
-| `gog gmail thread get <threadId> -j` | Get full thread with all messages | Full message JSON |
-| `gog gmail get <messageId> -j` | Get single message | Message JSON |
-| `gog gmail archive <messageId> ... --no-input --force` | Archive messages (remove from inbox) | Archive result |
-| `gog gmail archive --query "<gmail-query>" --max N --force` | Archive by query | Archive result |
-| `gog gmail send --to "<email>" --subject "<subj>" --body "<body>"` | Send email | Send result |
-| `gog gmail send --reply-to-message-id <msgId> --reply-all --body "text"` | Reply all | Send result |
-| `gog gmail mark-read <messageId> ... --no-input` | Mark as read | Result |
-| `gog gmail labels list -j` | List all labels | Labels JSON |
-
----
-
-
-## Agent Teams support
-
-If `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set, use **Agent Teams** when processing "all channels" mode. This enables:
-- Channel agents run in parallel but can share context (e.g., WhatsApp agent finds a message referencing an email thread → email agent can prioritize it)
-- You can steer agents: "skip WhatsApp for now, focus on email first"
-- Agents report completion per-channel so you can process replies as they come in
-
-**Team setup** (only when flag is enabled, "all channels" mode):
-```
-TeamCreate("inbox-channels")
-Agent(team_name="inbox-channels", name="whatsapp-scanner", ...)
-Agent(team_name="inbox-channels", name="email-scanner", ...)
-Agent(team_name="inbox-channels", name="slack-scanner", ...)
-Agent(team_name="inbox-channels", name="telegram-scanner", ...)
-Agent(team_name="inbox-channels", name="notion-scanner", ...)
+```typescript
+health_check({ strict: false })
 ```
 
-Each agent scans its channel and reports back classified results. You then process NEEDS_REPLY items across all channels in priority order.
-
-If the flag is NOT set, process channels sequentially or use fire-and-forget subagents.
-
-## Pre-gathered data
-
-```!
-${CLAUDE_PLUGIN_ROOT}/../../bin/ops-unread 2>/dev/null || echo '{}'
-```
-
-## Environment variables
-
-All channel credentials come from env vars or CLI auth — no hardcoded secrets.
-
-| Variable            | Default     | Purpose                                              |
-| ------------------- | ----------- | ---------------------------------------------------- |
-| `GMAIL_ACCOUNT`     | auto-detect | Gmail account for `gog` CLI                          |
-| `SLACK_MCP_ENABLED` | `false`     | Set `true` when Slack MCP server is configured       |
-| `TELEGRAM_ENABLED`  | `false`     | Set `true` when Telegram user-auth MCP is configured |
-| `NOTION_MCP_ENABLED`| `false`     | Set `true` when Notion MCP integration is configured |
-| `WACLI_STORE`       | `~/.wacli`  | wacli store directory                                |
-
-## Core principle: FULL INBOX SCAN
-
-Do NOT just check unread. Scan the FULL recent inbox for each channel and classify every conversation:
-
-## Core principle: FULL CONTEXT — NEVER ASSUME
-
-**CRITICAL SAFETY RULE — NEVER SEND WITHOUT UNDERSTANDING:**
-Before drafting or sending ANY reply on ANY channel, you MUST have read the FULL conversation history (20+ messages) and PROVEN you understand it by summarizing:
-1. What the conversation is about
-2. What each party said (distinguish user messages from contact messages)
-3. What the contact is actually asking/saying in their last message
-4. What a sensible reply would address
-
-**Failure mode this prevents:** An agent reads only the last message "je kan het toch uit Klaviyo halen?" and replies "Welke data heb je nodig?" — completely wrong because the contact was telling the user to pull data themselves (they have 2FA), not asking for data. Without the full thread, the reply was nonsensical and confused the contact.
-
-**Hard rule: if you cannot summarize the conversation arc in 2 sentences, you have not read enough messages. Go back and read more.**
-
-The user does NOT remember every thread. For EVERY message you present, you MUST build full context BEFORE showing it. Never show just a subject line and ask "what do you want to do?" — the user needs to understand what it's about first.
-
-**For every NEEDS REPLY item, gather this context automatically:**
-
-1. **Full thread body** — read the ENTIRE thread (`gog gmail thread get` / `wacli messages list --limit 20`), not just the last message. Summarize the full conversation arc.
-2. **Contact profile** — search across channels to build a card:
-   - `gog gmail search "from:<contact_email>" --max 10` — recent email history
-   - `wacli contacts --search "<name>" --json` — WhatsApp presence
-   - `wacli messages search --query "<name>" --json --limit 5` — recent WhatsApp mentions
-   - If Linear configured: search for issues assigned to or mentioning this contact
-   - Present: who they are, role/company, last N interactions, relationship context
-3. **Topic context** — identify the subject matter and search for related threads:
-   - `gog gmail search "subject:<keywords>" --max 5` — related email threads
-   - `wacli messages search --query "<topic keywords>" --json --limit 5` — related WA messages
-   - Summarize: what this topic is about, any deadlines, any pending decisions
-4. **ops-memories** (if available) — check `~/.claude/plugins/data/ops-ops-marketplace/memories/` for any stored context about this contact or topic
-
-**When presenting a NEEDS REPLY item:**
-```
-━━━ [Contact Name] — [Subject] ━━━
- Who: [role, company, relationship — from contact search]
- History: [last 3 interactions across channels]
- Thread: [2-3 sentence summary of full conversation arc]
- Last msg: [full body of their last message]
- Context: [related threads/decisions/deadlines found]
- 
- Draft reply: "[contextually aware draft based on all above]"
- 
- [Send] [Edit] [Read full thread] [Skip]
-```
-
-**When drafting replies:**
-- Use the full thread history to maintain conversation continuity
-- Reference specific points from their message
-- Match the contact's communication style (formal/casual, language)
-- If ops-memories has preferences for this contact, apply them
-- Never generate a generic reply — every draft must show you read the full thread
-
-- **NEEDS REPLY** — other party sent last message, awaiting your response
-- **WAITING** — you sent last message, waiting for them (no action needed)
-- **HANDLED** — conversation concluded, can be archived
-- **FYI** — newsletters, notifications, automated messages (bulk archive)
-
-## Channel availability + fallback
-
-For each channel, detect availability at runtime:
-
-1. **Email**: Try `gog` CLI first. If `gog` unavailable, try `mcp__gog__gmail_*` MCP tools. If neither, report unavailable.
-2. **WhatsApp**: First check `~/.wacli/.health` for keepalive daemon status. If `status=needs_auth` or `status=needs_reauth`, do NOT attempt wacli commands — instead prompt the user: "WhatsApp needs re-authentication. Run `wacli auth` in a separate terminal and scan the QR code, then type 'done'." Use `AskUserQuestion`: `[Done — re-paired]`, `[Skip WhatsApp]`. On Done, restart the daemon: `launchctl kickstart -k gui/$(id -u)/com.claude-ops.wacli-keepalive`, wait 5s, re-check health. If no health file exists, fall back to `wacli doctor` for auth/connection status. If outdated (405 error), advise rebuilding from source.
-3. **Slack**: Only via MCP tools (`mcp__claude_ai_Slack__*`). Check `SLACK_MCP_ENABLED` env var.
-4. **Telegram**: Only via user-auth MCP (tdlib/MTProto). Check `TELEGRAM_ENABLED` env var. Never use BotFather bots.
-5. **Discord**: Via `${CLAUDE_PLUGIN_ROOT}/bin/ops-discord read <CHANNEL_ID> --limit 20 --json`. Requires `DISCORD_BOT_TOKEN` (v1 is channel-scoped — no DM/gateway support yet). Pre-configured read list lives at `${CLAUDE_PLUGIN_DATA_DIR}/preferences.json` under `discord.inbox_channels` (array of channel IDs). If neither a bot token nor a read list is configured, skip Discord with a one-line note ("Discord not configured — run `/ops:setup discord`") rather than prompting — ops-inbox is not a setup flow. Rule 3 still applies to `/ops:setup`.
-6. **Notion**: Only via MCP tools (`mcp__claude_ai_Notion__*` or self-hosted Notion MCP). Check `NOTION_MCP_ENABLED` env var. Searches workspace for recent comments, mentions, and assigned tasks.
-
-## Your task
-
-1. **Parse pre-gathered data** for initial counts (unread is just a starting signal).
-
-2. **For each channel, run a FULL scan** (not just unread):
-   - **Email**: Search `in:inbox` (not `is:unread`) via `gog gmail search -a $GMAIL_ACCOUNT -j --results-only --no-input --max 30 "in:inbox"`. For each thread, read the last message to determine who sent it last. Check for DRAFT or SENT labels. **Before suggesting to send a draft, verify no reply was already sent in the thread.**
-   - **WhatsApp**: Run `wacli chats list --json` to get all chats. Filter to non-archived chats with `LastMessageTS` in the last 7 days. For each, fetch the FULL conversation via `wacli messages list --chat <JID> --limit 20 --json` (20 messages, not 5 — you need the full thread). Parse `data.messages[]` with fields `FromMe`, `Text`, `Timestamp`, `ChatName`. Understand which messages are from the user (`FromMe: true`) vs the contact (`FromMe: false`). Classify by last message `FromMe` field.
-   - **Slack**: Search via Slack MCP tools. Check who sent last message in each thread.
-   - **Telegram**: Use user-auth MCP (NOT bot API) to read recent conversations.
-
-3. **Display the full inbox:**
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- OPS ► INBOX MANAGER
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
- 📱 WhatsApp    [N need reply] | [N waiting] | [N archive]
- 📧 Email       [N need reply] | [N waiting] | [N FYI]
- 💬 Slack       [N need reply] | [N waiting]
- ✈️  Telegram   [N need reply] | [N waiting]
-
-──────────────────────────────────────────────────────
-```
-
-Use **batched AskUserQuestion calls** (max 4 options each). Only show channels that are configured and have messages. If <=4 total options, use a single call.
-
-AskUserQuestion call 1:
-```
-  [All channels (fastest — one pass)]
-  [WhatsApp only]
-  [Email only]
-  [More...]
-```
-
-AskUserQuestion call 2 (only if "More..."):
-```
-  [Slack only]
-  [Telegram only]
-  [Skip — already done]
-```
-
-If only 3 channels are configured, "All channels" + 3 channel options = 4, fits in one call. Then process the selected channel(s).
-
----
-
-## Processing each channel
-
-### WhatsApp (FULL SCAN + DEEP CONTEXT)
-
-**Phase 1 — Classify:**
-1. Get all chats: `wacli chats list --json`
-2. Filter to chats with `LastMessageTS` in the last 7 days
-3. For each, fetch the FULL recent conversation: `wacli messages list --chat "<JID>" --limit 20 --json` — get 20 messages, NOT 5. You need the full conversation thread to understand context.
-4. Parse `data.messages[]` — fields: `FromMe`, `Text`, `Timestamp`, `ChatName`, `SenderName`
-5. For EVERY chat, understand the conversation:
-   - Read ALL messages in order. Know which are `FromMe: true` (user sent) vs `FromMe: false` (contact sent)
-   - Understand what the conversation is about, what was discussed, what's pending
-   - Identify the user's tone and style in their sent messages
-6. Classify each chat:
-   - **NEEDS REPLY**: Last message has `FromMe: false` (they sent last)
-   - **WAITING**: Last message has `FromMe: true` (you sent last)
-   - **ARCHIVE**: Old conversation, no recent activity, or concluded
-
-**Phase 2 — Build context for NEEDS REPLY chats (run in parallel):**
-For each NEEDS REPLY chat:
-1. **Full conversation summary** — read all 20 messages, summarize the arc: what was discussed, key decisions, open questions
-2. **Contact profile** — search for this person:
-   - `wacli messages search --query "<contact_name>" --json --limit 10` — mentions in other chats
-   - `gog gmail search -j --results-only --no-input --max 5 "from:<name> OR to:<name>"` — email history
-   - Check `~/.claude/plugins/data/ops-ops-marketplace/memories/contact_*.md` for stored profile
-   - Build: who they are, relationship, communication history across channels
-3. **Topic context** — extract keywords from the conversation and search:
-   - `wacli messages search --query "<topic keywords>" --json --limit 5` — related WA messages
-   - `gog gmail search -j --results-only --no-input --max 3 "<topic keywords>"` — related emails
-4. **User's messaging style** — from the `FromMe: true` messages in this chat, note: language (NL/EN), formality, emoji usage, typical response length
-
-**Phase 3 — Present with full context:**
-
-```
-📱 WHATSAPP — NEEDS REPLY (with context)
-
-━━━ 1. [Contact Name] ━━━
- Who: [role, company, relationship — from contact search]
- History: [last 3 interactions across channels]
- Conversation: [2-3 sentence summary of the full chat thread]
- Their message: [full text of their last message(s)]
- Your last msg: [what you said before they replied]
- Context: [related threads/topics found]
- Language: [NL/EN — match the user's previous messages in this chat]
-
- Draft reply: "[context-aware draft matching user's style + language]"
-
- [Send] [Edit] [Read full thread] [More...]
-
-If "More...":
- [Archive] [Skip]
-
-📱 WHATSAPP — WAITING (no action needed)
- N. [Contact] — you said: "[your last message]" — [time ago]
-    Thread: [1-line summary of what you're waiting for]
-```
-
-Use `AskUserQuestion` for each NEEDS REPLY chat.
-
-**When drafting WhatsApp replies:**
-- Match the user's language (if they wrote Dutch to this contact, draft in Dutch)
-- Match the user's style (casual/formal, emoji usage, message length)
-- Reference specific points from the contact's message
-- If ops-memories has preferences for this contact, apply them
-- Never generate a generic reply — every draft must show you understood the full conversation
-
-Reply via: `wacli send --to "<JID>" --message "<msg>"`
-
-**wacli CLI reference (v0.5.0):**
-
-| Command | Usage | Notes |
-|---------|-------|-------|
-| `wacli doctor` | `wacli doctor --json` | Check auth/connected/lock/FTS status |
-| `wacli auth` | `wacli auth` | QR pairing (interactive — shows QR in terminal) |
-| `wacli sync` | `wacli sync --follow --refresh-contacts --refresh-groups` | Persistent sync (managed by launchd keepalive) |
-| `wacli sync --once` | `wacli sync --once --idle-exit=10s` | One-shot sync, exits when idle |
-| `wacli chats list` | `wacli chats list --json` | All chats with JID, Name, Kind, LastMessageTS |
-| `wacli messages list` | `wacli messages list --chat "<JID>" --limit 5 --json` | Messages: ChatJID, FromMe, Text, Timestamp, SenderName |
-| `wacli messages search` | `wacli messages search --query "<text>" --json` | FTS5 search across all messages |
-| `wacli contacts` | `wacli contacts --search "<name>" --json` | Contact lookup by name |
-| `wacli send` | `wacli send --to "<JID>" --message "<msg>"` | Send text message |
-| `wacli history backfill` | `wacli history backfill --chat="<JID>" --count=50 --requests=2 --wait=30s --idle-exit=5s --json` | Fetch older messages from phone (needs store lock) |
-
-**Health file contract (`~/.wacli/.health`):**
-
-Before ANY wacli command, read `~/.wacli/.health`:
-- `status=connected` → proceed normally
-- `status=needs_auth` → prompt user: "Run `wacli auth` in terminal, scan QR"
-- `status=needs_reauth` → prompt user: "WhatsApp session expired. Run `wacli auth` to re-pair"
-- File missing → fall back to `wacli doctor --json`
-
-**Requesting backfill for @lid chats with empty messages:**
-
-The keepalive daemon holds the store lock, so you can't run backfill directly. Instead:
-1. Write JIDs to `~/.wacli/.backfill_jids` (one per line)
-2. Restart the daemon: `launchctl kickstart -k gui/$(id -u)/com.claude-ops.wacli-keepalive`
-3. The daemon runs backfill before starting persistent sync
-
-**wacli troubleshooting:**
-
-- `@lid` JIDs (linked device format) may return empty messages → request backfill via the daemon (see above)
-- "Client outdated (405)" → rebuild from source: `cd /tmp && git clone https://github.com/Lifecycle-Innovations-Limited/wacli.git && cd wacli && go build -o /usr/local/bin/wacli ./cmd/wacli/`
-- "store is locked" → the keepalive daemon holds the lock; to release: `launchctl bootout gui/$(id -u)/com.claude-ops.wacli-keepalive`
-- Auth expired → daemon writes `needs_auth` to health file; prompt user for QR scan
-- Key desync (0 messages synced) → daemon writes `needs_reauth`; user needs `wacli auth` re-pair
-
-### Email (FULL SCAN + DEEP CONTEXT)
-
-**Phase 1 — Classify:**
-1. Search `in:inbox` (NOT `is:unread`) via `gog gmail search -a $GMAIL_ACCOUNT -j --results-only --no-input --max 30 "in:inbox"`
-2. For each thread, read the FULL thread via `gog gmail thread get -a $GMAIL_ACCOUNT <threadId> -j` — read ALL messages, not just the last one
-3. Check the last message's `From` header and `labelIds` (SENT, DRAFT)
-4. Classify:
-   - **NEEDS REPLY**: Last sender is NOT you AND no unsent draft exists → action needed
-   - **WAITING**: Last sender IS you (SENT label) → waiting for response
-   - **DRAFT**: Unsent draft exists → verify no reply already sent, then offer to send
-   - **FYI**: Newsletters, automated notifications, receipts → bulk archive
-
-**Phase 2 — Build context for NEEDS REPLY items (run in parallel):**
-For each NEEDS REPLY thread, gather:
-1. **Full thread summary** — read every message in the thread, summarize the conversation arc (who said what, key decisions, open questions)
-2. **Contact profile** — for the sender:
-   - `gog gmail search -j --results-only --no-input --max 10 "from:<sender_email>"` — their recent emails to you
-   - `wacli contacts --search "<sender_name>" --json` — WhatsApp contact
-   - `wacli messages search --query "<sender_name>" --json --limit 5` — recent WhatsApp mentions
-   - Build: name, role/company, relationship history, last N interactions
-3. **Topic search** — extract key terms from subject + body, then:
-   - `gog gmail search -j --results-only --no-input --max 5 "subject:<keywords>"` — related threads
-   - Identify: pending decisions, deadlines, action items from related threads
-
-**Phase 3 — Present with full context:**
-
-```
-📧 EMAIL — NEEDS REPLY (with context)
-
-━━━ 1. [Sender] — [Subject] ━━━
- Who: [sender's role, company — from contact search]
- History: [last 3 email exchanges with this person]
- Thread summary: [2-3 sentences covering the full conversation arc]
- Their message: [full body of their last message — NOT truncated]
- Related: [any related threads or pending decisions found]
-
- Draft reply: "[context-aware draft using full thread + contact history]"
-
- [Send draft] [Edit draft] [Read full thread] [More...]
-
-If "More...":
- [Archive] [Skip]
-
-📧 EMAIL — DRAFTS (unsent)
- N. [Recipient] — [Subject] (draft ready to send)
-
-📧 EMAIL — FYI / ARCHIVE
- N. [Sender] — [Subject] (newsletter/notification)
-
-  For each NEEDS REPLY:
-  a) Read full thread + draft reply
-  b) Archive (no reply needed)
-  c) Skip
-
-  For FYI section:
-  x) Archive all FYI at once
-```
-
-Use `AskUserQuestion` for each NEEDS REPLY email with options `[Read + Reply]` / `[Archive]` / `[Skip]`.
-
-When replying, draft the reply and use `AskUserQuestion` to confirm:
-```
-Reply to [Sender] — [Subject]:
-  "[drafted reply]"
-
-  [Send]  [Edit]  [Skip]
-```
-
-For FYI bulk archive, use `AskUserQuestion`:
-```
-Archive N FYI/newsletter emails?
-  [list of subjects]
-
-  [Archive all N]  [Review each]  [Skip]
-```
-
-Draft replies via `gog gmail send`. Archive via `gog gmail archive <messageId> ... --no-input --force`.
-
-### Slack
-
-Use Slack MCP tools with `query: "in:*"` (NOT `is:unread` — scan full recent activity, not just unread) for mentions.
-For each result, show channel, sender, preview. Read thread for context.
-
-```
-  a) Read thread
-  b) Reply
-  c) Mark read / skip
-```
-
-### Telegram (FULL SCAN — User Account, NOT Bot)
-
-Telegram integration must authenticate as the user's personal account (user-auth via tdlib/MTProto), NOT a BotFather bot. The goal is to manage real conversations just like WhatsApp via wacli.
-
-Use the Telegram user-auth MCP server if available.
-
-1. List recent dialogs/conversations (last 7 days)
-2. For each, check who sent the last message
-3. Classify: NEEDS REPLY / WAITING / HANDLED
-
-```
-✈️  TELEGRAM — NEEDS REPLY
- 1. [Contact] — [preview] — [time ago]
-
-  a) Read thread + reply
-  b) Archive
-  c) Skip
-```
-
-If no Telegram user-auth tool is available, report: "Telegram not configured — needs user-auth MCP server (tdlib/MTProto)".
-
-### Notion (MCP — comments, mentions, assigned tasks)
-
-Notion serves as a knowledge base and task management channel. Unlike messaging channels, Notion "inbox" items are:
-- **Comments on pages you own or are mentioned in**
-- **Tasks assigned to you** in tracked databases
-- **Recently updated pages** in databases you monitor
-
-**Phase 1 — Discover and scan:**
-
-1. Search for recent activity using `mcp__claude_ai_Notion__notion-search`:
-   - Use broad queries like `query: ""` (empty string returns recent pages) or topic-specific terms
-   - Use `filter: {"property": "object", "value": "page"}` to limit to pages (not databases)
-   - Sort by `last_edited_time` descending to surface recent activity
-   - Note: Notion search is full-text over titles/content — it does NOT support mention-based queries or date range filters
-2. For each result, fetch full content: `mcp__claude_ai_Notion__notion-fetch` with the page URL/ID
-3. Get comments on active pages: `mcp__claude_ai_Notion__notion-get-comments` with the page ID — scan comment authors and timestamps to determine which need replies
-
-**Phase 2 — Classify:**
-
-For each page with comments or mentions:
-- **NEEDS REPLY**: Someone commented/mentioned you and you haven't responded
-- **WAITING**: You commented last, waiting for others
-- **FYI**: Page updated but no direct mention or action needed
-- **TASK**: Item assigned to you in a database (check status property)
-
-**Phase 3 — Present with context:**
-
-```
-📓 NOTION — NEEDS REPLY
-
-━━━ 1. [Page Title] — [Database Name] ━━━
- Page: [page URL]
- Comment by: [commenter name] — [time ago]
- Comment: "[full comment text]"
- Page context: [2-3 sentence summary of the page content]
-
- Draft reply: "[context-aware reply to the comment]"
-
- [Reply] [View page] [Skip] [More...]
-
-If "More...":
- [Mark resolved] [Archive]
-
-📓 NOTION — ASSIGNED TASKS
-
- N. [Task title] — [database] — Status: [status] — Due: [date]
-    Context: [1-line summary]
-
-📓 NOTION — RECENTLY UPDATED (FYI)
-
- N. [Page title] — updated by [person] — [time ago]
-```
-
-Use `AskUserQuestion` for each NEEDS REPLY item.
-
-**When replying to Notion comments:**
-- Use `mcp__claude_ai_Notion__notion-create-comment` with the page ID and reply text
-- Match the formality of the original comment
-- Reference specific page content when relevant
-
-**When updating tasks:**
-- Use `mcp__claude_ai_Notion__notion-update-page` to change status, add notes
-- Only update properties the user explicitly approves
-
-**API fallback (when MCP is down):**
-If Notion MCP tools fail or are unavailable but `NOTION_API_KEY` is set, fall back to direct API:
-```bash
-curl -s -H "Authorization: Bearer $NOTION_API_KEY" -H "Notion-Version: 2022-06-28" \
-  -H "Content-Type: application/json" \
-  -X POST https://api.notion.com/v1/search \
-  -d '{"sort":{"direction":"descending","timestamp":"last_edited_time"},"page_size":10}'
-```
-
-If `NOTION_MCP_ENABLED` is not set or Notion MCP tools are unavailable, report: "Notion not configured — set NOTION_MCP_ENABLED=true and add Notion integration via claude.ai or self-hosted MCP".
-
-### Discord (v1 — REST channel scan)
-
-Discord v1 support is channel-scoped (webhook send + REST read). DM + gateway are deferred to a v2 issue.
-
-1. Resolve the read list: read `${CLAUDE_PLUGIN_DATA_DIR}/preferences.json` → `discord.inbox_channels[]`. If empty and `DISCORD_GUILD_ID` is set, fall back to `bin/ops-discord channels --json` (list the guild's text channels and let the user pick via `AskUserQuestion`, ≤4 per Rule 1 — paginate with `[More...]`).
-2. For each channel ID:
+Then enforce these rules:
+
+1. If this call fails with tool-resolution/transport errors (for example `Tool not found`, unknown tool, or MCP disconnect), stop immediately.
+2. Do not continue to `gmail_organize_inbox` or any other MCP call in that session.
+3. Tell the user this is a stale/continued session with a dead MCP registry and require a fresh Claude Code session.
+4. Recovery command:
    ```bash
-   ${CLAUDE_PLUGIN_ROOT}/bin/ops-discord read "<CHANNEL_ID>" --limit 20 --json
+   claude
    ```
-3. Classify each channel's recent messages:
-   - **NEEDS REPLY**: Latest non-bot message mentions the operator (`<@user-id>`) or is a direct question.
-   - **FYI**: Bot-posted notifications (CI, alerts) — summarize counts and skip.
-4. For replies, reuse the `send` path documented in `skills/ops-comms/SKILL.md` → **Discord send**.
+   Then rerun `/ops-inbox`.
+5. If preflight returns `status: "unhealthy"`, stop and show the failing checks/remediation.
+6. If preflight returns `status: "degraded"`, continue only with explicit user approval.
 
-If `bin/ops-discord` exits 1 with `{"error":"no discord credential configured — run /ops:setup discord"}`, print a single-line note and continue to the next channel — do not prompt inside the inbox flow.
+After `health_check` passes, run the reconcile step:
 
-```
-💬 DISCORD — activity (last 7d)
- #channel-name  [N messages] | [M need reply]
+```typescript
+gmail_reconcile_in_progress({ dryRun: false, staleHours: 2 })
 ```
 
----
+Handle the result as follows:
+- **If the call throws or returns an error:** log a warning (`⚠️ Reconcile failed: <error message> — continuing`) and proceed. This step is fail-open and must never block the inbox run.
+- **If `counts.routedRequeued > 0`:** surface this line in the preflight output:
+  ```
+  ♻️ N stuck email(s) recovered and re-queued.
+  ```
+  (where N is the value of `counts.routedRequeued`)
+- **If all counts are zero:** say nothing about reconcile — preflight output is silent.
 
-## Completion
+If the user wants dry-run fallback (or MCP remains unavailable), queue drafts locally instead of writing Gmail drafts:
 
-After all selected channels are processed, print:
+```bash
+python3 scripts/ops/create-brikette-drafts.py \
+  --input <path-to-drafts.json> \
+  --dry-run \
+  --queue-file data/email-fallback-queue/<timestamp>-ops-inbox.jsonl
+```
+
+> **NOTE:** Dry-run and Python-fallback sessions produce no signal events. This is expected — those sessions are excluded from calibration data and will not appear in `draft_signal_stats` counts.
+
+### 1. Run Inbox Organize Cycle
+
+First, run an inbox organize pass for unread emails. This does a garbage/sort cycle:
+- trashes known garbage patterns
+- labels likely customer inquiries as `Brikette/Queue/Needs-Processing`
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- INBOX ZERO ✓ — [timestamp]
- Processed: [N] messages | Replied: [N] | Archived: [N]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Organizing unread inbox...
 ```
 
-If `$ARGUMENTS` specifies a channel (e.g. `whatsapp`), skip the menu and go directly to that channel.
-
----
-
-## Native tool usage
-
-### Tasks — inbox progress
-
-Use `TaskCreate` for each channel being processed. Update with `TaskUpdate` as messages are replied/archived/skipped. Gives the user a live inbox-zero progress bar.
-
-### Cron — scheduled inbox checks
-
-After processing, offer to schedule recurring inbox checks via `AskUserQuestion`:
+Call the tool:
+```typescript
+gmail_organize_inbox({ limit: 500 })
 ```
-  [Schedule inbox check every 2 hours]  [Schedule morning + evening]  [No schedule]
+
+Then briefly report the result:
+- scanned threads
+- trashed count
+- needs-processing count
+- promotional count
+- spam count
+- deferred count
+- deferred sender email list (for user instruction on future routing rules)
+
+### 2. Check Email Queue
+
+Use the `gmail_list_pending` MCP tool to fetch pending emails:
+
+```typescript
+gmail_list_pending({ limit: 20 })
 ```
-Use `CronCreate` if selected. Show existing schedules with `CronList`.
+
+If no pending emails, inform the user:
+```
+No pending emails in your queue. You're all caught up!
+```
+
+### 3. Display Queue Summary
+
+Present emails in a summary table:
+
+```markdown
+## Pending Emails (N total)
+
+| # | From | Subject | Received | Type |
+|---|------|---------|----------|------|
+| 1 | maria@example.com | Availability June 15-18? | 2h ago | Inquiry |
+| 2 | john@example.com | RE: Booking confirmation | 4h ago | Reply |
+...
+
+Actions:
+- "Process all" - work through queue in order
+- "Process #1" - handle specific email
+- "Skip #3" - mark as spam/not-customer
+- "Defer #5" - move to deferred manual-review label
+- "Done" - finish session
+```
+
+Classify emails by type:
+
+**Needs Draft Response:**
+- **Inquiry** - New customer question (availability, pricing, etc.)
+- **Reply** - Response to previous thread requiring answer
+- **FAQ** - Question answerable from knowledge base
+
+**No Draft Needed:**
+- **Informational** - Customer providing info, no reply needed (arrival time, "thanks", confirmation)
+- **Promotional** - Marketing/newsletters from OTAs, suppliers, services
+- **Not-Customer** - Irrelevant, wrong recipient, or automated bounce
+
+**Special Handling:**
+- **Complex** - Multi-part, complaint, or unusual request (defer for careful handling)
+- **Spam** - Suspicious, phishing, or unwanted
+
+### 4. Process Individual Emails
+
+When user selects an email to process:
+
+1. **Fetch full details** using `gmail_get_email`:
+   ```typescript
+   gmail_get_email({ emailId: "...", includeThread: true })
+   ```
+
+2. **Run Interpretation stage** using `draft_interpret`:
+   ```typescript
+   draft_interpret({
+     body: email.body.plain,
+     subject: email.subject,
+     threadContext: email.thread_context
+   })
+   ```
+   Output: `EmailActionPlan` (intents, scenario, agreement status, workflow triggers).
+
+3. **Review the Action Plan**:
+   - Confirm `scenario.category`
+   - Check detected language
+   - Inspect agreement detection status
+   - Note workflow triggers (prepayment, T&C, booking monitor)
+   - **Check `escalation_required`**: if `true`, do NOT proceed to `draft_generate`. Instead, move the email to `Brikette/Queue/Deferred` via `gmail_mark_processed({ emailId, action: "deferred" })` and stop the pipeline for this email. Inform the user that the email requires human review before a draft can be generated.
+   - If classification is ambiguous or context looks odd, default to `deferred` (manual review)
+
+4. **Run Composition stage** using `draft_generate`:
+   ```typescript
+   draft_generate({
+     actionPlan,
+     subject: email.subject,
+     recipientName: email.from.name,
+     prepaymentStep: "first" | "second" | "third" | "success",
+     prepaymentProvider: "octorate" | "hostelworld"
+   })
+   ```
+   Output: draft (plain + HTML), template_used, answered_questions, knowledge_sources.
+
+5. **Run Quality Gate** using `draft_quality_check`:
+   ```typescript
+   draft_quality_check({ actionPlan, draft })
+   ```
+   Capture the full result including `quality.question_coverage[]`.
+
+   **Gap-Patch Loop** — run this before presenting to the user:
+
+   a. Inspect every entry in `quality.question_coverage[]`:
+      - `status: "covered"` → no action needed for that question.
+      - `status: "missing"` → the question received zero keyword matches; a patch is required.
+      - `status: "partial"` → the question was touched but under the required match threshold; a patch attempt is required.
+
+   b. For each `missing` or `partial` entry, look up the question text against
+      `knowledge_summaries` returned by `draft_generate`.
+      - If a relevant snippet exists in `knowledge_summaries`: rewrite the relevant
+        paragraph to include a source-backed answer. Cite the snippet URI inline
+        if helpful. **NEVER invent an answer that has no source snippet.**
+      - If no relevant snippet exists for that question: insert the following
+        escalation sentence in place of an invented answer:
+        > "For this specific question we want to give you the most accurate
+        >  answer — Pete or Cristiana will follow up with you directly."
+        Do not attempt to paraphrase, guess, or approximate the missing information.
+
+   c. **Hard-rule categories — do NOT modify under any circumstance:**
+      - `prepayment` category text (1st/2nd/3rd attempt, cancelled, successful templates)
+      - `cancellation` category text (non-refundable, no-show templates)
+      These paragraphs are legally and operationally fixed. If a `missing`/`partial`
+      entry belongs to a question about prepayment or cancellation policy, escalate
+      using the sentence above rather than touching the template wording.
+
+   d. **Partial-subset rule:** When an email contains multiple questions and only
+      *some* can be source-backed, patch what can be sourced and escalate the rest
+      individually. Do not withhold the draft because one question lacks a snippet —
+      produce the best partial draft and flag each unanswered question explicitly
+      in the user-facing summary.
+
+   e. After applying all patches (or escalation insertions), re-render `bodyPlain`
+      and `bodyHtml`.
+
+6. **LLM Refinement Stage** — after gap-patching, Claude (not a tool call) assesses
+   the draft holistically and optionally rewrites it to improve tone, flow, and coverage.
+   Then call `draft_refine` to submit and attest the result:
+
+   ```typescript
+   draft_refine({
+     actionPlan,
+     draft_id: draftGenerateResult.draft_id,  // links this refinement to the selection signal event
+     rewrite_reason: "<reason>",  // "none" | "style" | "language-adapt" | "light-edit" | "heavy-rewrite" | "missing-info" | "wrong-template"
+     originalBodyPlain: patchedBodyPlain,  // post-gap-patch plain text
+     refinedBodyPlain: claudeRefinedBodyPlain,  // Claude's rewrite (or same text if no improvement)
+   })
+   ```
+
+   **Refinement rules:**
+   - **Claude is the refinement actor** — Claude rewrites the body; `draft_refine` is the commit
+     step only. Never invoke an external model from inside this skill.
+   - If Claude judges the draft already strong, pass `refinedBodyPlain === originalBodyPlain` —
+     `draft_refine` will return `refinement_applied: false, refinement_source: 'none'`.
+   - If Claude rewrites: `refinement_applied: true, refinement_source: 'claude-cli'`.
+   - **Hard rules — do NOT modify in refinement:**
+     - `prepayment` category text (1st/2nd/3rd attempt, cancelled, successful templates)
+     - `cancellation` category text (non-refundable, no-show templates)
+     - Never invent policy facts not present in `knowledge_summaries`.
+   - If `quality.passed: false` after refinement: inspect `failed_checks`. If resolvable
+     by a targeted patch, patch and call `draft_refine` again (max one retry). If still
+     failing, escalate to the user with `failed_checks` listed and ask how to proceed.
+   - Note: `refinement_source: 'codex'` is reserved for future CLI-based LLMs; it is
+     not an active path in this workflow.
+
+7. **Mandatory delivery_status gate** — always check before creating the Gmail draft.
+
+   `draft_generate` returns a `delivery_status` field: `"ready" | "needs_patch" | "blocked"`.
+
+   - `"ready"` — quality passed with no warnings: proceed to `gmail_create_draft`.
+   - `"needs_patch"` — quality passed but warnings exist (e.g. partial coverage): review
+     warnings, apply any needed patches via `draft_refine`, then proceed.
+   - `"blocked"` — quality failed (`quality.passed: false`): inspect `quality.failed_checks`,
+     patch and call `draft_refine` (max one retry). If still `"blocked"`, escalate to the
+     user with `failed_checks` listed and ask how to proceed. Do **not** call `gmail_create_draft`
+     while `delivery_status === "blocked"`. This is a hard gate, not advisory.
+   - `partial_question_coverage` warnings after patching are acceptable to proceed
+     if the escalation sentence has been inserted; note them in the session summary.
+
+8. **Present to user**:
+   ```markdown
+   ## Email #1: Availability Inquiry
+
+   **From:** Maria Santos <maria@example.com>
+   **Subject:** Availability June 15-18?
+   **Received:** 2 hours ago
+
+   ### Content:
+   > [Customer's email content]
+
+   ### Classification:
+   - **Scenario:** [from EmailActionPlan]
+   - **Language:** [from EmailActionPlan]
+   - **Agreement:** confirmed / likely / unclear / none
+   - **Workflow triggers:** prepayment / terms_and_conditions / booking_monitor
+
+   ### Relevant Knowledge:
+   - [Knowledge sources used]
+
+   ### Draft Response:
+
+   ---
+   [Generated draft]
+   ---
+
+   Actions:
+   - "Create draft" - save to Gmail drafts
+   - "Edit" - modify the response
+   - "Regenerate" - try a different approach
+   - "Skip" - don't respond
+   - "Flag" - mark for manual handling
+   ```
+
+### 5. Handle User Actions
+
+**Create draft** (for Inquiry/Reply/FAQ):
+```typescript
+gmail_create_draft({
+  emailId: "original_email_id",
+  subject: "RE: Original Subject",
+  bodyPlain: "Plain text version",
+  bodyHtml: "HTML version with branding"
+})
+gmail_mark_processed({ emailId: "...", action: "drafted" })
+```
+
+**Create draft (dry-run fallback queue):**
+
+Use this path when:
+- MCP tools are unavailable in the current session, or
+- user explicitly requests dry-run/no Gmail mutation.
+
+Steps:
+1. Build JSON input payload with draft candidates (`emailId`, `to`, `subject`, `recipientName`, `bodyPlain`).
+2. Run:
+   ```bash
+   python3 scripts/ops/create-brikette-drafts.py \
+     --input <path-to-drafts.json> \
+     --dry-run \
+     --queue-file data/email-fallback-queue/<timestamp>-ops-inbox.jsonl
+   ```
+3. Report the queue file path and do not call `gmail_mark_processed` in dry-run mode.
+
+**Edit request:**
+- User provides feedback: "Make it shorter", "More formal", etc.
+- Regenerate draft incorporating feedback
+- Show revised draft for approval
+
+**Acknowledge** (for Informational emails - no draft needed):
+```typescript
+gmail_mark_processed({ emailId: "...", action: "acknowledged" })
+```
+Use when customer provides info but no reply is needed:
+- "We'll arrive at 3pm"
+- "Thanks, see you tomorrow!"
+- "Here's my passport info"
+- Booking confirmations from customer
+
+**Promotional** (for marketing/newsletters):
+```typescript
+gmail_mark_processed({ emailId: "...", action: "promotional" })
+```
+Archives email and labels `Brikette/Outcome/Promotional` for batch review later.
+Use for:
+- OTA newsletters (Booking.com, Expedia marketing)
+- Travel industry promotions
+- Supplier marketing
+- Service provider updates
+
+When a promotional/spam false-positive appears in queue:
+1. Mark it `promotional` or `spam` immediately.
+2. Capture sender email/domain and subject pattern.
+3. Add the new exclusion pattern to `packages/mcp-server/src/tools/gmail.ts` (`NON_CUSTOMER_*` constants) so future organize runs stop queueing it.
+
+**Skip** (not relevant/not customer):
+```typescript
+gmail_mark_processed({ emailId: "...", action: "skipped" })
+```
+
+**Spam** (suspicious/unwanted):
+```typescript
+gmail_mark_processed({ emailId: "...", action: "spam" })
+```
+
+**Defer** (complex/needs more info):
+```typescript
+gmail_mark_processed({ emailId: "...", action: "deferred" })
+```
+Moves it out of the active queue and labels it `Brikette/Queue/Deferred` for manual follow-up.
+
+### Agreement Detection (T&C workflow)
+
+Agreement detection is high-stakes:
+- `confirmed` only for explicit agreement phrases (EN/IT/ES).
+- `likely` or `unclear` requires human confirmation before any payment workflow.
+- Always check `agreement.requires_human_confirmation`.
+
+If the email includes agreement **and** questions, treat as mixed response:
+1. Acknowledge agreement in the draft.
+2. Answer all questions.
+3. Keep the workflow state as awaiting confirmation if `likely/unclear`.
+
+**Marking agreement_received — reservation code required:**
+
+When marking an email as `agreement_received`, you **must** extract the booking reservation code and pass it as `reservationCode`. This writes activity code 21 to Firebase for all occupants on that booking.
+
+How to extract the reservation code:
+1. Check the email subject line — Octorate reservation numbers appear as `#XXXXXX` or plain numbers in subject lines like "Booking confirmation #456789".
+2. Check the email body and thread context — look for phrases like "reservation", "booking reference", "conferma prenotazione", "numero prenotazione", or a numeric/alphanumeric code near the hostel name.
+3. If the thread context includes a prior outgoing email from Brikette that mentions a booking reference, use that.
+4. If no reservation code can be found: log a warning, call `gmail_mark_processed` without `reservationCode` (labels will still be applied), and note in the session summary that the Firebase activity write was skipped.
+
+```typescript
+// When agreement is confirmed and reservation code is found:
+gmail_mark_processed({
+  emailId: "...",
+  action: "agreement_received",
+  reservationCode: "456789"  // extracted from email thread
+})
+
+// When agreement is confirmed but no reservation code found:
+gmail_mark_processed({
+  emailId: "...",
+  action: "agreement_received"
+  // No reservationCode — labels applied, Firebase write skipped
+})
+```
+
+### 6. Processing Informational Emails
+
+When an email is classified as **Informational** (customer providing info, no reply needed):
+
+```markdown
+## Email #3: Customer Information
+
+**From:** John Smith <john@example.com>
+**Subject:** RE: Booking confirmation
+**Received:** 1 hour ago
+
+### Content:
+> Thanks for confirming! Just to let you know, we'll be arriving
+> around 3pm. See you then!
+
+### Classification:
+- **Type:** Informational (arrival time notification)
+- **Action Needed:** Note arrival time
+- **Draft Required:** No
+
+### Extracted Information:
+- **Arrival time:** 3pm (approximately)
+- **Guest:** John Smith
+
+### Suggested Action:
+Note arrival time in booking system if applicable.
+
+**Mark as acknowledged?** (y/n)
+```
+
+Common informational patterns:
+- "We'll arrive at [time]" → Note arrival time
+- "Thanks!" / "See you soon!" → No action needed
+- "Here's my passport/ID" → Record in guest file
+- "Dietary requirements: vegetarian" → Note for breakfast
+- "We found it okay" → No action needed
+
+### 6. Batch Processing
+
+When user requests batch processing ("Process all FAQ emails"):
+
+1. Filter queue by type
+2. Generate drafts for all matching emails
+3. Show summary:
+   ```markdown
+   ## Batch Processing: 4 FAQ Emails
+
+   1. "Check-in time question" -> Draft created
+   2. "Breakfast included?" -> Draft created
+   3. "Pet policy" -> Draft created
+   4. "Luggage storage" -> Draft created
+
+   4 drafts created. Review them in Gmail.
+
+   Remaining in queue: 2 emails
+   ```
+
+### 7. Session Summary
+
+When user says "Done" or queue is empty:
+
+1. Call `draft_signal_stats` to retrieve event counts for this session.
+2. Call `draft_template_review` with `action: "list"` to get pending proposal count.
+3. Call `gmail_audit_labels` to check the Brikette label namespace health.
+   - If `orphaned.length > 0`: include an **Orphaned labels** warning in the summary listing each orphaned label name. These are unrecognised `Brikette/*` labels that should be reviewed or migrated.
+   - If `orphaned.length === 0`: omit the label health section entirely (silent pass).
+   - If the call fails: omit the label health section — do not fail the session summary.
+4. Output the summary block below.
+
+```markdown
+## Session Complete
+
+**Processed this session:**
+- 3 drafts created
+- 2 emails acknowledged (no reply needed)
+- 1 promotional archived
+- 1 email deferred
+
+**Drafts ready for review:**
+1. RE: Availability June 15-18? (maria@example.com)
+2. RE: Check-in time question (guest@hotel.com)
+3. RE: Breakfast options (traveler@email.com)
+
+**Acknowledged (info noted):**
+- Arrival time 3pm (john@example.com)
+- Dietary: vegetarian (jane@example.com)
+
+Remember to review and send drafts in Gmail!
+
+**Deferred for manual review:** 1 email
+
+**Signal health:**
+- N selection events · N refinement events · N joined signals this session
+- N template proposals pending review
+  - [one-line summary per pending proposal, e.g. "T05 check-in: wrong-template (2026-02-20)"]
+
+> ⚠️ **Backlog warning:** >10 pending proposals — run `draft_template_review list` and review.
+> _(Remove this line if ≤10 proposals pending.)_
+
+> 💡 **Calibration prompt:** ≥20 joined signals since last calibration — consider running `draft_ranker_calibrate`.
+> _(Remove this line if events_since_last_calibration < 20.)_
+
+<!-- Include the following block only when gmail_audit_labels returns orphaned.length > 0: -->
+> ⚠️ **Orphaned Gmail labels:** The following unrecognised `Brikette/*` labels exist in Gmail and should be reviewed or removed:
+> - [list each orphaned label name on its own line]
+```
+
+**Graceful fallback:** If `draft-signal-events.jsonl` or `template-proposals.jsonl` are missing, show `"0 events"` / `"0 proposals pending"` — do not error. If `gmail_audit_labels` fails, omit the label health section.
+
+> **NOTE:** Dry-run and Python-fallback sessions produce no signal events. Show `"0 events"` for those sessions.
+
+## Email Classification Guide
+
+Use these patterns to correctly classify incoming emails:
+
+### Needs Draft Response
+
+**Inquiry** - Customer asking a question:
+- "Do you have availability for...?"
+- "What are your rates for...?"
+- "How do I get to...?"
+- "Is breakfast included?"
+- Questions about rooms, facilities, policies
+
+**Reply** - Continuing a conversation that needs response:
+- Follow-up questions in a thread
+- Requests for clarification
+- Additional questions after initial response
+
+**FAQ** - Common questions with standard answers:
+- Check-in/check-out times
+- Parking availability
+- Pet policy
+- Age restrictions
+- Cancellation policy
+
+### No Draft Needed
+
+**Informational** - Customer providing info (acknowledge, no reply):
+- "We'll arrive at [time]" → Note arrival
+- "Thanks!" / "See you soon!" → No action
+- "Here's my passport number" → Record
+- "We're vegetarian" → Note dietary
+- "Just to confirm, booking #123" → Verify
+- "We found it okay, checking in now" → No action
+- Positive feedback with no question
+
+**Promotional** - Marketing (archive to Brikette/Outcome/Promotional):
+- Booking.com partner newsletters
+- Expedia promotions
+- Travel industry news
+- Supplier marketing
+- "Special offer for partners"
+- "New features available"
+- Software/service provider updates
+
+**Not-Customer** - Skip without reply:
+- Wrong recipient
+- Automated bounce/delivery failure
+- Unsubscribe confirmations
+- System notifications not relevant
+
+### Special Handling
+
+**Complex** - Defer for careful handling:
+- Complaints or negative feedback
+- Refund requests
+- Multiple unrelated questions
+- Special requests (events, groups)
+- Anything emotionally charged
+- Legal or liability concerns
+
+**Spam** - Mark as spam:
+- Obvious phishing
+- Unsolicited sales pitches
+- Suspicious links
+- "You've won" / lottery scams
+
+### Classification Decision Tree
+
+```
+Is it from a real person about Brikette?
+├─ No → Is it promotional?
+│       ├─ Yes → PROMOTIONAL
+│       └─ No → Is it spam?
+│               ├─ Yes → SPAM
+│               └─ No → SKIP (not-customer)
+└─ Yes → Does it contain a question or need a response?
+         ├─ Yes → Is it a complaint or complex?
+         │        ├─ Yes → DEFER (complex)
+         │        └─ No → DRAFT (inquiry/faq/reply)
+         └─ No → Is it providing useful information?
+                  ├─ Yes → ACKNOWLEDGE (informational)
+                  └─ No → ACKNOWLEDGE (no action needed)
+```
+
+## Email Draft Guidelines
+
+### Tone
+- Warm and professional
+- Friendly but not overly casual
+- Personal touch (use customer's name)
+- Helpful and solution-oriented
+
+### Structure
+1. **Greeting** - "Dear [Name]" or "Hi [Name]"
+2. **Thank them** - For their interest/inquiry
+3. **Answer their question(s)** - Directly and specifically
+4. **Provide additional helpful info** - From knowledge base
+5. **Call to action** - Booking link when appropriate
+6. **Closing** - "Warm regards" / "Best wishes"
+7. **Signature** - Peter & Cristiana, Hostel Brikette
+
+### Common Scenarios
+
+**Availability inquiry:**
+- Cannot check real-time availability
+- Direct to website booking system
+- Mention room types that might suit their needs
+- Emphasize direct booking benefits
+
+**Price question:**
+- Use menu pricing data accurately
+- Clarify breakfast inclusion policy
+- Mention direct booking discounts
+
+**Directions/Location:**
+- Provide standard directions
+- Link to relevant guides
+- Mention luggage storage
+
+**Policy questions:**
+- Use FAQ data accurately
+- Be specific about times and rules
+- Offer flexibility where possible
+
+**Complaints:**
+- Acknowledge their frustration
+- Apologize appropriately
+- Offer solution or escalation
+- Flag for Pete's careful review
+
+## Error Handling
+
+### Gmail API Error
+```markdown
+## Gmail API Error
+
+Unable to fetch emails: [Error message]
+
+Options:
+1. "Retry" - try again
+2. "Done" - end session and try later
+```
+
+### Cannot Generate Good Response
+```markdown
+## Draft Generation Issue
+
+I'm having trouble with this email because:
+- [Reason]
+
+Options:
+1. "Flag for manual" - you'll handle this directly
+2. "Use template" - generic acknowledgment response
+3. "Give context" - tell me more to help
+```
+
+### Session Interruption
+When user needs to stop:
+- Summarize progress
+- Note queue position
+- Remind about pending drafts
+
+## Quality Checks
+
+Before creating each draft, verify:
+- [ ] Addresses customer's specific question(s)
+- [ ] Information is accurate (from knowledge base)
+- [ ] Tone is appropriate
+- [ ] Call-to-action included (if appropriate)
+- [ ] No placeholder text remains
+- [ ] Signature included
+
+## References
+
+- **User guide:** `docs/guides/brikette-email-workflow.md`
+- **Workflow design:** `docs/plans/email-autodraft-workflow-design.md`
+- **Card:** `docs/business-os/cards/BRIK-ENG-0020.user.md`
+
+## MCP Resources Available
+
+| URI | Content |
+|-----|---------|
+| `brikette://faq` | 29 FAQ items |
+| `brikette://rooms` | Room details and config |
+| `brikette://pricing/menu` | Bar and breakfast prices |
+| `brikette://policies` | Check-in, age restrictions, etc. |
+| `brikette://draft-guide` | Draft quality framework |
+| `brikette://voice-examples` | Voice/tone examples |
+| `brikette://email-examples` | Classification examples |
+
+## MCP Signal & Improvement Tools
+
+| Tool | Action/Params | Purpose |
+|------|--------------|---------|
+| `draft_signal_stats` | (none) | Returns `{selection_count, refinement_count, joined_count, events_since_last_calibration}` — used in Session Summary |
+| `draft_template_review` | `action: "list"` | Lists pending template improvement proposals with one-line summaries |
+| `draft_template_review` | `action: "approve", proposal_id, expected_file_hash` | Approves a proposal and writes to `email-templates.json` (optimistic concurrency) |
+| `draft_template_review` | `action: "reject", proposal_id` | Rejects and archives a proposal |
+| `draft_ranker_calibrate` | `dry_run?: boolean` | Computes and persists ranker priors from ≥20 joined events; use when `events_since_last_calibration ≥ 20` |
+
+## Email Templates
+
+Pre-written templates are available in `packages/mcp-server/data/email-templates.json` for common response scenarios. Use these as a starting point and personalize for each customer.
+
+### Template Categories
+
+| Category | Templates | Use For |
+|----------|-----------|---------|
+| check-in | Arriving before check-in, Arrival Time, Out of hours | Check-in timing questions |
+| access | Inner/Outer Building Main Door | Door code and access questions |
+| transportation | Transportation to Hostel | How to get here questions |
+| payment | Change Credit Card Details | Payment method updates |
+| prepayment | 1st/2nd/3rd Attempt, Cancelled, Successful | Payment processing status |
+| cancellation | Non-Refundable Booking, No Show | Cancellation requests |
+| policies | Alcohol, Age Restriction | Policy explanations |
+| activities | Path of the Gods Hike | Activity recommendations |
+| booking-issues | Why cancelled | Booking troubleshooting |
+
+### Prepayment Workflow
+
+When handling prepayment chase emails, apply these mappings:
+- **Step 1:** Use the 1st attempt template (Octorate vs Hostelworld variant based on booking source). Log activity code 2.
+- **Step 2:** Use the 2nd attempt template. Log activity code 3.
+- **Step 3:** Use the cancelled-after-3rd-attempt template. Log activity code 4.
+- **Success:** Use the prepayment successful template. Log activity code 21.
+
+When updating Gmail labels, use `gmail_mark_processed` with:
+`prepayment_chase_1`, `prepayment_chase_2`, or `prepayment_chase_3`.
+
+### T&C Agreement Workflow
+
+When an incoming email is a T&C agreement reply:
+- **Sending the T&C request (outgoing):** Mark with `action: "awaiting_agreement"`.
+- **Receiving agreement confirmation (incoming):** Mark with `action: "agreement_received"` **and** pass `reservationCode` (see Agreement Detection section above). This triggers Firebase activity code 21 write for all occupants — required to prevent the booking from being auto-cancelled despite the guest having agreed.
+
+### Using Templates
+
+When drafting a response:
+
+1. **Match the scenario** - Find a template matching the customer's question
+2. **Load the template** - Reference the category and subject
+3. **Personalize** - Replace placeholders, add guest name, adjust tone
+4. **Add specifics** - Include relevant details from their booking/question
+5. **Validate** - Ensure accuracy before creating draft
+
+Templates provide consistent messaging for common scenarios while maintaining the professional, warm tone expected by guests.

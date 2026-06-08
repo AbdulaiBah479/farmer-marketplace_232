@@ -619,14 +619,3 @@ Internal notes:
 - [Callouts](https://help.obsidian.md/callouts)
 - [Properties](https://help.obsidian.md/properties)
 
-
----
-
-## Gotchas
-
-- **Wikilinks inside fenced code blocks render as literal text (correct) but are INDEXED as links** — search and graph view show them as connections, even though they don't render as such.
-- **Frontmatter list values `tags: [a, b]` (flow style) don't auto-complete in the UI; YAML block style `tags:\n  - a\n  - b` does** — same semantics, different editor support.
-- **Callout collapsing requires `>` prefix on EVERY content line, including blanks** — one missing `>` breaks the collapse without an error.
-- **Block IDs (`^id`) are scoped to a single file** — referencing across files needs the file name AND the block ID: `[[Other^id]]`.
-- **LaTeX `$$ ... $$` requires blank lines before AND after** — without them, Obsidian renders the dollars as literals.
-- **Embed `![[Note#Heading]]` is heading-name-sensitive** — renaming the heading silently breaks all embeds; there's no rename-propagation.

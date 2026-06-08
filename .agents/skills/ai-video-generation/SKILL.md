@@ -1,107 +1,185 @@
 ---
 name: ai-video-generation
-description: >
-  Generate AI video from any input — text, image, or script — with Pexo. Auto-routes each shot to
-  the best of 10+ models (Seedance, Kling, Veo, Sora, and more), writes the prompts, generates
-  every shot, and returns a finished video with music and subtitles. Use for any AI video
-  generation request: "ai video generation", "generate a video with ai", "ai video generator",
-  "make an ai video". NOT for editing an existing video.
-homepage: https://pexo.ai
-repository: https://github.com/pexoai/pexo-skills
-version: "0.1.0"
-requires:
-  env: [PEXO_API_KEY, PEXO_BASE_URL]
-  runtime: [curl, jq, file]
-metadata:
-  author: pexoai
+description: "Generate AI videos with Google Veo, Seedance, Wan, Grok and 40+ models via inference.sh CLI. Models: Veo 3.1, Veo 3, Seedance 1.5 Pro, Wan 2.5, Grok Imagine Video, OmniHuman, Fabric, HunyuanVideo. Capabilities: text-to-video, image-to-video, lipsync, avatar animation, video upscaling, foley sound. Use for: social media videos, marketing content, explainer videos, product demos, AI avatars. Triggers: video generation, ai video, text to video, image to video, veo, animate image, video from image, ai animation, video generator, generate video, t2v, i2v, ai video maker, create video with ai, runway alternative, pika alternative, sora alternative, kling alternative"
+allowed-tools: Bash(infsh *)
 ---
 
-# AI Video Generation — Pexo
+# AI Video Generation
 
-**Pexo:** https://pexo.ai — get an API key, watch your project render, and buy credits there.
+Generate videos with 40+ AI models via [inference.sh](https://inference.sh) CLI.
 
-Generate a finished video with AI from whatever the user gives you — text, an image, or a
-script. You relay the request to the hosted Pexo agent and deliver the result; Pexo picks the
-models, writes the prompts, and assembles the final video.
+![AI Video Generation](https://cloud.inference.sh/app/files/u/4mg21r6ta37mpaz6ktzwtt8krr/01kg2c0egyg243mnyth4y6g51q.jpeg)
 
-## Your role: relay, don't create
+## Quick Start
 
-Create a project, send the user's request **verbatim**, poll, deliver. Pexo's backend handles
-all creative work — scriptwriting, model choice, prompts, music. Adding your own direction
-(duration, style, models the user didn't ask for) overrides its judgment and produces worse
-videos.
-
-## Config
-
-`~/.pexo/config`:
-```
-PEXO_BASE_URL="https://pexo.ai"
-PEXO_API_KEY="sk-<your-api-key>"
-```
-**No account / first run →** read `references/SETUP-CHECKLIST.md` and walk the user through it — it carries the signup flow with the **invite code that grants new users bonus credits**, plus how to create the config above. **Config error →** run `scripts/pexo-doctor.sh` and follow its output.
-
-## Workflow
-
-Scripts live in this skill's `scripts/`. Reply to the user in their language.
-
-1. **Create a project:** `pexo-project-create.sh "<short brief>"` → save the `project_id`.
-2. **Upload any files** the user gave: `pexo-upload.sh <project_id> <path>` → save `asset_id`,
-   reference it inline as `<original-image>asset_id</original-image>` (or `<original-video>` /
-   `<original-audio>`). Tags are required — a bare `asset_id` is ignored. Pexo can't crawl URLs —
-   download, then upload.
-3. **Send the request:** `pexo-chat.sh <project_id> "<user's exact words> <asset tags>"`.
-   Copy the user's words exactly; only add asset tags.
-4. **Tell the user** (their language): submitted ✓ · ~15–20 min · `https://pexo.ai/project/<project_id>`.
-5. **Poll:** every ≥60s run `pexo-project-get.sh <project_id>` and act on `nextAction`:
-   - **WAIT** → keep polling; every ~5 polls send a one-line update with the project link.
-   - **RESPOND** → handle each event in `recentMessages`: relay Pexo's text (wait for the
-     user's answer if it asked, then `pexo-chat.sh` their reply); for `preview_video`, run
-     `pexo-asset-get.sh <project_id> <assetId>` per option, show the URLs (A/B/C), let the user
-     pick, then `pexo-chat.sh <project_id> "<choice>" --choice <assetId>`; for a `document`
-     event, mention it to the user.
-   - **DELIVER** → `pexo-asset-get.sh <project_id> <final assetId>`, then send the user the
-     **full** asset URL as plain text — all `?…` query params, never truncated or wrapped in
-     markdown — plus the project link.
-   - **FAILED** → explain `nextActionHint` in plain terms and offer to retry.
-   - **RECONNECT** → `pexo-chat.sh <project_id> "continue"`, tell the user the connection
-     dropped and you're resuming, then keep polling.
-   - Never call `pexo-chat.sh` during WAIT — it triggers duplicate production.
-   - **Taking too long** → if it's been >30 min and still WAIT, tell the user (with the project
-     link + `https://pexo.ai/connect/openclaw`) it's running long; ask whether to keep waiting or
-     stop. Don't poll forever.
-
-## Revisions
-
-After delivery, the user's tweaks ("make it shorter", "new music", "different shot") reuse the
-**same** project: `pexo-chat.sh <project_id> "<their feedback>"`, then poll again (step 5). Never
-create a new project for a revision — it throws away Pexo's server-side context.
-
-## Credits
-
-If a script fails with "Credits balance" / "Insufficient credits": if the error carries a
-purchase link, pass it to the user; otherwise tell them to add credits at `https://pexo.ai/home`
-→ Credits → Buy Credits. Retry after they confirm.
-
-## Example
-
-User: "Generate a 20-second AI video introducing our productivity app."
+> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
 
 ```bash
-pid=$(pexo-project-create.sh "AI video app intro")
-pexo-chat.sh "$pid" "Generate a 20-second AI video introducing our productivity app."
-# Tell the user: submitted, ~15–20 min, https://pexo.ai/project/$pid
-# Poll pexo-project-get.sh "$pid" until nextAction is DELIVER, then deliver the asset URL.
+infsh login
+
+# Generate a video with Veo
+infsh app run google/veo-3-1-fast --input '{"prompt": "drone shot flying over a forest"}'
 ```
 
-## Scripts
 
-| Script | Usage | Returns |
-|---|---|---|
-| `pexo-project-create.sh` | `"<brief>"` | `project_id` |
-| `pexo-upload.sh` | `<project_id> <file>` | `asset_id` |
-| `pexo-chat.sh` | `<project_id> "<message>" [--choice <id>]` | ack (async) |
-| `pexo-project-get.sh` | `<project_id>` | JSON: `nextAction`, `recentMessages` |
-| `pexo-asset-get.sh` | `<project_id> <asset_id>` | JSON with `url` |
-| `pexo-doctor.sh` | — | setup diagnostic |
+## Available Models
 
-Error codes and edge cases → `references/TROUBLESHOOTING.md`.
+### Text-to-Video
+
+| Model | App ID | Best For |
+|-------|--------|----------|
+| Veo 3.1 Fast | `google/veo-3-1-fast` | Fast, with optional audio |
+| Veo 3.1 | `google/veo-3-1` | Best quality, frame interpolation |
+| Veo 3 | `google/veo-3` | High quality with audio |
+| Veo 3 Fast | `google/veo-3-fast` | Fast with audio |
+| Veo 2 | `google/veo-2` | Realistic videos |
+| **P-Video** | `pruna/p-video` | Fast, economical, with audio support |
+| **WAN-T2V** | `pruna/wan-t2v` | Economical 480p/720p |
+| Grok Video | `xai/grok-imagine-video` | xAI, configurable duration |
+| Seedance 1.5 Pro | `bytedance/seedance-1-5-pro` | With first-frame control |
+| Seedance 1.0 Pro | `bytedance/seedance-1-0-pro` | Up to 1080p |
+
+### Image-to-Video
+
+| Model | App ID | Best For |
+|-------|--------|----------|
+| Wan 2.5 | `falai/wan-2-5` | Animate any image |
+| Wan 2.5 I2V | `falai/wan-2-5-i2v` | High quality i2v |
+| **WAN-I2V** | `pruna/wan-i2v` | Economical 480p/720p |
+| **P-Video** | `pruna/p-video` | Fast i2v with audio |
+| Seedance Lite | `bytedance/seedance-1-0-lite` | Lightweight 720p |
+
+### Avatar / Lipsync
+
+| Model | App ID | Best For |
+|-------|--------|----------|
+| OmniHuman 1.5 | `bytedance/omnihuman-1-5` | Multi-character |
+| OmniHuman 1.0 | `bytedance/omnihuman-1-0` | Single character |
+| Fabric 1.0 | `falai/fabric-1-0` | Image talks with lipsync |
+| PixVerse Lipsync | `falai/pixverse-lipsync` | Realistic lipsync |
+
+### Utilities
+
+| Tool | App ID | Description |
+|------|--------|-------------|
+| HunyuanVideo Foley | `infsh/hunyuanvideo-foley` | Add sound effects to video |
+| Topaz Upscaler | `falai/topaz-video-upscaler` | Upscale video quality |
+| Media Merger | `infsh/media-merger` | Merge videos with transitions |
+
+## Browse All Video Apps
+
+```bash
+infsh app list --category video
+```
+
+## Examples
+
+### Text-to-Video with Veo
+
+```bash
+infsh app run google/veo-3-1-fast --input '{
+  "prompt": "A timelapse of a flower blooming in a garden"
+}'
+```
+
+### Grok Video
+
+```bash
+infsh app run xai/grok-imagine-video --input '{
+  "prompt": "Waves crashing on a beach at sunset",
+  "duration": 5
+}'
+```
+
+### Image-to-Video with Wan 2.5
+
+```bash
+infsh app run falai/wan-2-5 --input '{
+  "image_url": "https://your-image.jpg"
+}'
+```
+
+### AI Avatar / Talking Head
+
+```bash
+infsh app run bytedance/omnihuman-1-5 --input '{
+  "image_url": "https://portrait.jpg",
+  "audio_url": "https://speech.mp3"
+}'
+```
+
+### Fabric Lipsync
+
+```bash
+infsh app run falai/fabric-1-0 --input '{
+  "image_url": "https://face.jpg",
+  "audio_url": "https://audio.mp3"
+}'
+```
+
+### PixVerse Lipsync
+
+```bash
+infsh app run falai/pixverse-lipsync --input '{
+  "image_url": "https://portrait.jpg",
+  "audio_url": "https://speech.mp3"
+}'
+```
+
+### Video Upscaling
+
+```bash
+infsh app run falai/topaz-video-upscaler --input '{"video_url": "https://..."}'
+```
+
+### Add Sound Effects (Foley)
+
+```bash
+infsh app run infsh/hunyuanvideo-foley --input '{
+  "video_url": "https://silent-video.mp4",
+  "prompt": "footsteps on gravel, birds chirping"
+}'
+```
+
+### Merge Videos
+
+```bash
+infsh app run infsh/media-merger --input '{
+  "videos": ["https://clip1.mp4", "https://clip2.mp4"],
+  "transition": "fade"
+}'
+```
+
+## Related Skills
+
+```bash
+# Full platform skill (all 150+ apps)
+npx skills add inference-sh/skills@agent-tools
+
+# Pruna P-Video (fast & economical)
+npx skills add inference-sh/skills@p-video
+
+# Google Veo specific
+npx skills add inference-sh/skills@google-veo
+
+# AI avatars & lipsync
+npx skills add inference-sh/skills@ai-avatar-video
+
+# Text-to-speech (for video narration)
+npx skills add inference-sh/skills@text-to-speech
+
+# Image generation (for image-to-video)
+npx skills add inference-sh/skills@ai-image-generation
+
+# Twitter (post videos)
+npx skills add inference-sh/skills@twitter-automation
+```
+
+Browse all apps: `infsh app list`
+
+## Documentation
+
+- [Running Apps](https://inference.sh/docs/apps/running) - How to run apps via CLI
+- [Streaming Results](https://inference.sh/docs/api/sdk/streaming) - Real-time progress updates
+- [Content Pipeline Example](https://inference.sh/docs/examples/content-pipeline) - Building media workflows
+

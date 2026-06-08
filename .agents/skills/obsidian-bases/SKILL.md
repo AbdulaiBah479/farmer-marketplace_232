@@ -112,7 +112,7 @@ filters:
 | `<=` | less than or equal |
 | `&&` | logical and |
 | `\|\|` | logical or |
-| <code>!</code> | logical not |
+| `!` | logical not |
 
 ## Properties
 
@@ -617,13 +617,3 @@ filters:
 - [Views](https://help.obsidian.md/bases/views)
 - [Formulas](https://help.obsidian.md/formulas)
 
-
----
-
-## Gotchas
-
-- **Bases formulas use Obsidian's own expression dialect — NOT Dataview's.** `dateformat()` and `date()` differ in syntax and arguments between the two; mixing kills filters with no error message.
-- **`.base` files are YAML; tab/space indentation inconsistency silently fails the view** — the file loads but the view is empty.
-- **Filter case-sensitivity differs from search** — search defaults case-insensitive; Bases filters default case-sensitive. A note discoverable via search may not appear in a Base view.
-- **Formula columns that reference missing properties show empty** — no error, no warning. Easy to think a formula is broken when a property is just absent on some notes.
-- **`.base` file in a non-default location requires the path to be referenced explicitly** — moving it after creating a view doesn't auto-update references.

@@ -1,312 +1,155 @@
 ---
 name: synthesize-research
-description: Synthesize user research from interviews, surveys, and feedback into structured insights. Use when you have a pile of interview notes, survey responses, or support tickets to make sense of, need to extract themes and rank findings by frequency and impact, or want to turn raw feedback into roadmap recommendations.
-argument-hint: "<research topic or question>"
+description: Synthesize interview notes, feedback, and transcripts into themed research findings with JTBD statements when the user asks to analyze research, synthesize interviews, or make sense of qualitative data
+author: chalk
+version: "1.0.0"
+metadata-version: "3"
+allowed-tools: Read, Glob, Grep, Write
+argument-hint: "[path to research files or folder]"
+read-only: false
+destructive: false
+idempotent: false
+open-world: false
+user-invocable: true
+tags: research, synthesis, analysis
 ---
 
 # Synthesize Research
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+## Overview
 
-Synthesize user research from multiple sources into structured insights and recommendations.
-
-## Usage
-
-```
-/synthesize-research $ARGUMENTS
-```
+Perform thematic analysis across multiple qualitative research sources — interview notes, user feedback, support transcripts, survey responses — to produce a structured synthesis with verbatim quotes, themed clusters, JTBD statements, contradictions, and actionable recommendations. This skill turns messy qualitative data into a decision-ready document.
 
 ## Workflow
 
-### 1. Gather Research Inputs
+1. **Read product context** — Load `.chalk/docs/product/0_product_profile.md` and any existing JTBD canvases or prior research syntheses. These provide the lens for interpreting new data: existing personas, known jobs, and previously identified themes. If no context exists, note this and proceed without assumptions.
 
-Accept research from any combination of:
-- **Pasted text**: Interview notes, transcripts, survey responses, feedback
-- **Uploaded files**: Research documents, spreadsheets, recordings summaries
-- **~~knowledge base** (if connected): Search for research documents, interview notes, survey results
-- **~~user feedback** (if connected): Pull recent support tickets, feature requests, bug reports
-- **~~product analytics** (if connected): Pull usage data, funnel metrics, behavioral data
-- **~~meeting transcription** (if connected): Pull interview recordings, meeting summaries, and discussion notes
+2. **Locate source files** — Parse `$ARGUMENTS` to identify the research inputs. These may be:
+   - Direct file paths or glob patterns (e.g., `.chalk/docs/research/*.md`)
+   - A folder to scan (e.g., `.chalk/docs/research/`)
+   - A list of file names
 
-Ask the user what they have:
-- What type of research? (interviews, surveys, usability tests, analytics, support tickets, sales call notes)
-- How many sources / participants?
-- Is there a specific question or hypothesis they are investigating?
-- What decisions will this research inform?
+   Read all source files. If fewer than 3 sources are provided, warn the user that synthesis from limited sources carries high bias risk. If no files are found, ask the user to provide paths.
 
-### 2. Process the Research
+3. **Extract verbatim quotes** — Read each source and pull out direct quotes from participants. For each quote, tag:
+   - **Speaker**: identifier or pseudonym (e.g., "P3", "User-Sarah", source filename)
+   - **Quote**: exact words, in quotation marks
+   - **Context**: what question or topic prompted this statement
+   - **Emotional intensity**: neutral, moderate, strong (based on language, emphasis, or interviewer notes)
 
-For each source, extract:
-- **Key observations**: What did users say, do, or experience?
-- **Quotes**: Verbatim quotes that illustrate important points
-- **Behaviors**: What users actually did (vs what they said they do)
-- **Pain points**: Frustrations, workarounds, and unmet needs
-- **Positive signals**: What works well, moments of delight
-- **Context**: User segment, use case, experience level
+4. **Cluster into themes** — Group quotes by emergent themes using affinity mapping logic:
+   - Start with individual quotes as atomic units
+   - Group quotes that describe the same underlying phenomenon
+   - Name each theme with a descriptive phrase (not a single word)
+   - A theme must have quotes from at least 2 different sources to be valid
+   - Track theme frequency (how many sources mention it) and intensity (how strongly they express it)
 
-### 3. Identify Themes and Patterns
+5. **Write theme analysis** — For each theme, produce:
+   - **Theme name**: descriptive phrase capturing the insight
+   - **Summary**: 2-3 sentence description of what this theme means
+   - **Frequency**: X of Y sources mentioned this
+   - **Intensity**: low / moderate / high (based on emotional language, emphasis, urgency)
+   - **Supporting quotes**: minimum 3 verbatim quotes with speaker tags
+   - **Confidence level**: high (5+ sources, consistent), medium (3-4 sources or some inconsistency), low (2 sources or contradictory)
 
-Apply thematic analysis — see **Research Synthesis Methodology** below for detailed guidance on thematic analysis, affinity mapping, and triangulation techniques.
+6. **Generate JTBD statements** — Derive Jobs-to-be-Done statements from the themes. Each JTBD follows the format:
+   - **When** [situation/trigger], **I want to** [action/goal], **so I can** [desired outcome].
+   - Link each JTBD back to the supporting theme(s)
+   - Note whether this is a new job or validates/extends an existing one from prior product docs
 
-Group observations into themes, count frequency across participants, and assess impact severity. Note contradictions and surprises.
+7. **Flag contradictions** — Identify places where sources disagree or tell conflicting stories. For each contradiction:
+   - State the conflicting positions
+   - Cite the sources on each side
+   - Hypothesize why the contradiction exists (different personas? different contexts? different stages of adoption?)
+   - Recommend how to resolve it (more research, segmentation, A/B test)
 
-Create a priority matrix:
-- **High frequency + High impact**: Top priority findings
-- **Low frequency + High impact**: Important for specific segments
-- **High frequency + Low impact**: Quality-of-life improvements
-- **Low frequency + Low impact**: Note but deprioritize
+8. **Generate recommendations** — Based on the themes and JTBD statements, produce three lists:
+   - **Build**: opportunities with strong evidence (high frequency + high intensity)
+   - **Stop**: things users don't value or actively dislike, supported by evidence
+   - **Investigate**: areas where signal is interesting but insufficient for a decision
 
-### 4. Generate the Synthesis
+9. **Determine the next file number** — Read filenames in `.chalk/docs/product/` to find the highest numbered file. The next number is `highest + 1`.
 
-Produce a structured research synthesis:
+10. **Write the file** — Save to `.chalk/docs/product/<n>_research_synthesis_<topic_slug>.md`.
 
-#### Research Overview
-- Methodology: what types of research, how many participants/sources
-- Research question(s): what we set out to learn
-- Timeframe: when the research was conducted
+11. **Confirm** — Tell the user the synthesis was created, share the file path, report the number of sources analyzed, themes identified, and highlight the top 2-3 findings and any critical contradictions.
 
-#### Key Findings
-For each major finding (aim for 5-8):
-- **Finding statement**: One clear sentence describing the insight
-- **Evidence**: Supporting quotes, data points, or observations (with source attribution)
-- **Frequency**: How many participants/sources support this finding
-- **Impact**: How significantly this affects the user experience or business
-- **Confidence level**: High (strong evidence), Medium (suggestive), Low (early signal)
+## Synthesis Structure
 
-Order findings by priority (frequency x impact).
+```markdown
+# Research Synthesis: <Topic>
 
-#### User Segments / Personas
-If the research reveals distinct user segments:
-- Segment name and description
-- Key characteristics and behaviors
-- Unique needs and pain points
-- Size estimate if data is available
+Last updated: <YYYY-MM-DD> (Initial draft)
 
-#### Opportunity Areas
-Based on the findings, identify opportunity areas:
-- What user needs are unmet or underserved
-- Where do current solutions fall short
-- What new capabilities would unlock value
-- Prioritized by potential impact
+## Research Overview
 
-#### Recommendations
-Specific, actionable recommendations:
-- What to build, change, or investigate further
-- Tied back to specific findings
-- Prioritized by impact and feasibility
+- **Sources analyzed**: <N> files
+- **Source list**: <numbered list with filenames and brief descriptions>
+- **Themes identified**: <N>
+- **JTBD statements generated**: <N>
+- **Contradictions flagged**: <N>
 
-#### Open Questions
-What the research did not answer:
-- Gaps in understanding
-- Areas needing further investigation
-- Suggested follow-up research methods
+## Themes
 
-### 5. Review and Extend
+### Theme 1: <Descriptive Theme Name>
 
-After generating the synthesis:
-- Ask if any findings need more detail or different framing
-- Offer to generate specific artifacts: persona documents, opportunity maps, research presentations
-- Offer to create follow-up research plans for open questions
-- Offer to draft product implications (how findings should influence the roadmap)
+**Frequency**: X of Y sources | **Intensity**: low/moderate/high | **Confidence**: low/medium/high
 
-## Research Synthesis Methodology
+<2-3 sentence summary of what this theme means and why it matters>
 
-### Thematic Analysis
-The core method for synthesizing qualitative research:
+**Supporting Quotes**:
+- "..." — P1 (source file)
+- "..." — P3 (source file)
+- "..." — P5 (source file)
 
-1. **Familiarization**: Read through all the data. Get a feel for the overall landscape before coding anything.
-2. **Initial coding**: Go through the data systematically. Tag each observation, quote, or data point with descriptive codes. Be generous with codes — it is easier to merge than to split later.
-3. **Theme development**: Group related codes into candidate themes. A theme captures something important about the data in relation to the research question.
-4. **Theme review**: Check themes against the data. Does each theme have sufficient evidence? Are themes distinct from each other? Do they tell a coherent story?
-5. **Theme refinement**: Define and name each theme clearly. Write a 1-2 sentence description of what each theme captures.
-6. **Report**: Write up the themes as findings with supporting evidence.
+---
 
-### Affinity Mapping
-A collaborative method for grouping observations:
+### Theme 2: <Descriptive Theme Name>
 
-1. **Capture observations**: Write each distinct observation, quote, or data point as a separate note
-2. **Cluster**: Group related notes together based on similarity. Do not pre-define categories — let them emerge from the data.
-3. **Label clusters**: Give each cluster a descriptive name that captures the common thread
-4. **Organize clusters**: Arrange clusters into higher-level groups if patterns emerge
-5. **Identify themes**: The clusters and their relationships reveal the key themes
+...
 
-**Tips for affinity mapping**:
-- One observation per note. Do not combine multiple insights.
-- Move notes between clusters freely. The first grouping is rarely the best.
-- If a cluster gets too large, it probably contains multiple themes. Split it.
-- Outliers are interesting. Do not force every observation into a cluster.
-- The process of grouping is as valuable as the output. It builds shared understanding.
+## Jobs-to-be-Done
 
-### Triangulation
-Strengthen findings by combining multiple data sources:
+| # | JTBD Statement | Supporting Themes | New or Validated |
+|---|----------------|-------------------|------------------|
+| J1 | When [situation], I want to [goal], so I can [outcome] | Theme 1, Theme 3 | New |
+| J2 | ... | ... | Validates existing |
 
-- **Methodological triangulation**: Same question, different methods (interviews + survey + analytics)
-- **Source triangulation**: Same method, different participants or segments
-- **Temporal triangulation**: Same observation at different points in time
+## Contradictions
 
-A finding supported by multiple sources and methods is much stronger than one supported by a single source. When sources disagree, that is interesting — it may reveal different user segments or contexts.
+### Contradiction 1: <Short description>
 
-## Interview Note Analysis
+- **Position A**: "<quote>" — P1, P4
+- **Position B**: "<quote>" — P2, P6
+- **Possible explanation**: ...
+- **Resolution path**: ...
 
-### Extracting Insights from Interview Notes
-For each interview, identify:
+## Recommendations
 
-**Observations**: What did the participant describe doing, experiencing, or feeling?
-- Distinguish between behaviors (what they do) and attitudes (what they think/feel)
-- Note context: when, where, with whom, how often
-- Flag workarounds — these are unmet needs in disguise
+### Build (Strong Evidence)
+- <recommendation> — Supported by Themes X, Y (N sources, high intensity)
 
-**Direct quotes**: Verbatim statements that powerfully illustrate a point
-- Good quotes are specific and vivid, not generic
-- Attribute to participant type, not name: "Enterprise admin, 200-person team" not "Sarah"
-- A quote is evidence, not a finding. The finding is your interpretation of what the quote means.
+### Stop (Evidence Against)
+- <recommendation> — Supported by Themes X (N sources)
 
-**Behaviors vs stated preferences**: What people DO often differs from what they SAY they want
-- Behavioral observations are stronger evidence than stated preferences
-- If a participant says "I want feature X" but their workflow shows they never use similar features, note the contradiction
-- Look for revealed preferences through actual behavior
-
-**Signals of intensity**: How much does this matter to the participant?
-- Emotional language: frustration, excitement, resignation
-- Frequency: how often do they encounter this issue
-- Workarounds: how much effort do they expend working around the problem
-- Impact: what is the consequence when things go wrong
-
-### Cross-Interview Analysis
-After processing individual interviews:
-- Look for patterns: which observations appear across multiple participants?
-- Note frequency: how many participants mentioned each theme?
-- Identify segments: do different types of users have different patterns?
-- Surface contradictions: where do participants disagree? This often reveals meaningful segments.
-- Find surprises: what challenged your prior assumptions?
-
-## Survey Data Interpretation
-
-### Quantitative Survey Analysis
-- **Response rate**: How representative is the sample? Low response rates may introduce bias.
-- **Distribution**: Look at the shape of responses, not just averages. A bimodal distribution (lots of 1s and 5s) tells a different story than a normal distribution (lots of 3s).
-- **Segmentation**: Break down responses by user segment. Aggregates can mask important differences.
-- **Statistical significance**: For small samples, be cautious about drawing conclusions from small differences.
-- **Benchmark comparison**: How do scores compare to industry benchmarks or previous surveys?
-
-### Open-Ended Survey Response Analysis
-- Treat open-ended responses like mini interview notes
-- Code each response with themes
-- Count frequency of themes across responses
-- Pull representative quotes for each theme
-- Look for themes that appear in open-ended responses but not in structured questions — these are things you did not think to ask about
-
-### Common Survey Analysis Mistakes
-- Reporting averages without distributions. A 3.5 average could mean everyone is lukewarm or half love it and half hate it.
-- Ignoring non-response bias. The people who did not respond may be systematically different.
-- Over-interpreting small differences. A 0.1 point change in NPS is noise, not signal.
-- Treating Likert scales as interval data. The difference between "Strongly Agree" and "Agree" is not necessarily the same as between "Agree" and "Neutral."
-- Confusing correlation with causation in cross-tabulations.
-
-## Combining Qualitative and Quantitative Insights
-
-### The Qual-Quant Feedback Loop
-- **Qualitative first**: Interviews and observation reveal WHAT is happening and WHY. They generate hypotheses.
-- **Quantitative validation**: Surveys and analytics reveal HOW MUCH and HOW MANY. They test hypotheses at scale.
-- **Qualitative deep-dive**: Return to qualitative methods to understand unexpected quantitative findings.
-
-### Integration Strategies
-- Use quantitative data to prioritize qualitative findings. A theme from interviews is more important if usage data shows it affects many users.
-- Use qualitative data to explain quantitative anomalies. A drop in retention is a number; interviews reveal it is because of a confusing onboarding change.
-- Present combined evidence: "47% of surveyed users report difficulty with X (survey), and interviews reveal this is because Y (qualitative finding)."
-
-### When Sources Disagree
-- Quantitative and qualitative sources may tell different stories. This is signal, not error.
-- Check if the disagreement is due to different populations being measured
-- Check if stated preferences (survey) differ from actual behavior (analytics)
-- Check if the quantitative question captured what you think it captured
-- Report the disagreement honestly and investigate further rather than choosing one source
-
-## Persona Development from Research
-
-### Building Evidence-Based Personas
-Personas should emerge from research data, not imagination:
-
-1. **Identify behavioral patterns**: Look for clusters of similar behaviors, goals, and contexts across participants
-2. **Define distinguishing variables**: What dimensions differentiate one cluster from another? (e.g., company size, technical skill, usage frequency, primary use case)
-3. **Create persona profiles**: For each behavioral cluster:
-   - Name and brief description
-   - Key behaviors and goals
-   - Pain points and needs
-   - Context (role, company, tools used)
-   - Representative quotes
-4. **Validate with data**: Can you size each persona segment using quantitative data?
-
-### Persona Template
-```
-[Persona Name] — [One-line description]
-
-Who they are:
-- Role, company type/size, experience level
-- How they found/started using the product
-
-What they are trying to accomplish:
-- Primary goals and jobs to be done
-- How they measure success
-
-How they use the product:
-- Frequency and depth of usage
-- Key workflows and features used
-- Tools they use alongside this product
-
-Key pain points:
-- Top 3 frustrations or unmet needs
-- Workarounds they have developed
-
-What they value:
-- What matters most in a solution
-- What would make them switch or churn
-
-Representative quotes:
-- 2-3 verbatim quotes that capture this persona's perspective
+### Investigate (Insufficient Signal)
+- <recommendation> — Based on Theme X (low confidence, needs more data)
 ```
 
-### Common Persona Mistakes
-- Demographic personas: defining by age/gender/location instead of behavior. Behavior predicts product needs better than demographics.
-- Too many personas: 3-5 is the sweet spot. More than that and they are not actionable.
-- Fictional personas: made up based on assumptions rather than research data.
-- Static personas: never updated as the product and market evolve.
-- Personas without implications: a persona that does not change any product decisions is not useful.
+## Output
 
-## Opportunity Sizing
+- **File**: `.chalk/docs/product/<n>_research_synthesis_<topic_slug>.md`
+- **Format**: Plain markdown, no YAML frontmatter
+- **First line**: `# Research Synthesis: <Topic>`
+- **Second line**: `Last updated: <YYYY-MM-DD> (Initial draft)`
 
-### Estimating Opportunity Size
-For each research finding or opportunity area, estimate:
+## Anti-patterns
 
-- **Addressable users**: How many users could benefit from addressing this? Use product analytics, survey data, or market data to estimate.
-- **Frequency**: How often do affected users encounter this issue? (Daily, weekly, monthly, one-time)
-- **Severity**: How much does this issue impact users when it occurs? (Blocker, significant friction, minor annoyance)
-- **Willingness to pay**: Would addressing this drive upgrades, retention, or new customer acquisition?
-
-### Opportunity Scoring
-Score opportunities on a simple matrix:
-
-- **Impact**: (Users affected) x (Frequency) x (Severity) = impact score
-- **Evidence strength**: How confident are we in the finding? (Multiple sources > single source, behavioral data > stated preferences)
-- **Strategic alignment**: Does this opportunity align with company strategy and product vision?
-- **Feasibility**: Can we realistically address this? (Technical feasibility, resource availability, time to impact)
-
-### Presenting Opportunity Sizing
-- Be transparent about assumptions and confidence levels
-- Show the math: "Based on support ticket volume, approximately 2,000 users per month encounter this issue. Interview data suggests 60% of them consider it a significant blocker."
-- Use ranges rather than false precision: "This affects 1,500-2,500 users monthly" not "This affects 2,137 users monthly"
-- Compare opportunities against each other to create a relative ranking, not just absolute scores
-
-## Output Format
-
-Use clear headers and structured formatting. Each finding should stand on its own — a reader should be able to read any single finding and understand it without reading the rest.
-
-## Tips
-
-- Let the data speak. Do not force findings into a predetermined narrative.
-- Distinguish between what users say and what they do. Behavioral data is stronger than stated preferences.
-- Quotes are powerful evidence. Include them generously, with attribution to participant type (not name).
-- Be explicit about confidence levels. A finding from 2 interviews is a hypothesis, not a conclusion.
-- Contradictions in the data are interesting, not inconvenient. They often reveal distinct user segments.
-- Recommendations should be specific enough to act on. "Improve onboarding" is not actionable. "Add a progress indicator to the setup flow" is.
-- Resist the temptation to synthesize too many themes. 5-8 strong findings are better than 20 weak ones.
+- **Cherry-picking quotes** — Selecting only quotes that support your preferred narrative is the cardinal sin of research synthesis. Include quotes that challenge your assumptions. If 4 out of 5 people love a feature but 1 person described a critical failure, that failure quote must appear.
+- **One-interview conclusions** — A single interview is an anecdote, not evidence. Themes require supporting quotes from at least 2 sources. If a finding comes from only one source, it goes in "Investigate", not "Build."
+- **Ignoring contradictory evidence** — Contradictions are the most valuable part of a synthesis because they reveal segmentation, context-dependence, or flawed assumptions. Never sweep them under the rug. Every contradiction gets its own section.
+- **Themes without supporting quotes** — A theme with no verbatim quotes is an opinion, not a finding. Every theme must have at least 3 supporting quotes. If you cannot find 3 quotes, it is not a theme — it is a hunch.
+- **Paraphrasing instead of quoting** — Synthesis loses power when you summarize what people said instead of quoting their actual words. Verbatim quotes carry emotional weight and specificity that summaries destroy. Use direct quotes in quotation marks with speaker attribution.
+- **Treating frequency as the only signal** — Something mentioned by every participant might be table stakes, not an opportunity. Intensity matters as much as frequency. One person describing a problem with visible frustration is stronger signal than five people casually mentioning a mild annoyance.
+- **Recommendations without evidence links** — Every recommendation must trace back to specific themes and quotes. "We should build X" without citing evidence is product opinion disguised as research.
+- **Synthesizing without reading all sources** — Skimming sources or reading only the first few guarantees a biased synthesis. Read every source document completely before starting to cluster themes.

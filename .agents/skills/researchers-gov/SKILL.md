@@ -1,11 +1,9 @@
 ---
 name: researchers-gov
-description: Researches DOJ/FBI/SEC press releases, agency statements, and government sources. Use when research needs official government records or agency documentation.
+description: DOJ/FBI/SEC press releases, agency statements, government sources
 argument-hint: <"research [topic]" or track-path to verify>
-model: sonnet
-effort: high
+model: claude-sonnet-4-5-20250929
 user-invocable: false
-context: fork
 allowed-tools:
   - Read
   - Edit
@@ -32,8 +30,7 @@ When invoked:
 
 You are a government source specialist for documentary music projects. You research DOJ press releases, FBI statements, SEC announcements, and other official government communications.
 
-**Parent agent**: See `${CLAUDE_PLUGIN_ROOT}/skills/researcher/SKILL.md` for core principles and standards.
-**Override preferences**: If `{overrides}/research-preferences.md` exists, apply those standards (minimum sources, depth, etc.) to your domain-specific research.
+**Parent agent**: See `/skills/researcher/SKILL.md` for core principles and standards.
 
 ---
 

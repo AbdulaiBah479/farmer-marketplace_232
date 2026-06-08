@@ -1,7 +1,16 @@
 ---
 name: audit-support
-description: Support SOX 404 compliance with control testing methodology, sample selection, and documentation standards. Use when generating testing workpapers, selecting audit samples, classifying control deficiencies, or preparing for internal or external audits.
-user-invocable: false
+description: "Support SOX 404 compliance with control testing methodology, sample selection, and documentation standards."
+version: 1.0.0
+category: finance
+last_updated: 2026-02-03
+source: https://github.com/anthropics/knowledge-work-plugins
+related_skills:
+  - journal-entry-prep
+  - reconciliation
+  - financial-statements
+  - variance-analysis
+  - close-management
 ---
 
 # Audit Support

@@ -1,9 +1,8 @@
 ---
 name: conductor-new-track
-description: "Create a new track with specification and phased implementation plan"
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Create a new track with specification and phased implementation plan
+metadata:
+  argument-hint: <feature|bug|chore|refactor> <name>
 ---
 
 # New Track
@@ -262,7 +261,7 @@ After spec approval, generate `conductor/tracks/{trackId}/plan.md`:
 # Implementation Plan: {Track Title}
 
 **Track ID:** {trackId}
-**Spec:** spec.md
+**Spec:** [spec.md](./spec.md)
 **Created:** {YYYY-MM-DD}
 **Status:** [ ] Not Started
 
@@ -386,8 +385,8 @@ After plan approval:
 
    ## Documents
 
-   - Specification
-   - Implementation Plan
+   - [Specification](./spec.md)
+   - [Implementation Plan](./plan.md)
 
    ## Progress
 
@@ -396,8 +395,8 @@ After plan approval:
 
    ## Quick Links
 
-   - Back to Tracks
-   - Product Context
+   - [Back to Tracks](../../tracks.md)
+   - [Product Context](../../product.md)
    ```
 
 4. Register in `conductor/tracks.md`:

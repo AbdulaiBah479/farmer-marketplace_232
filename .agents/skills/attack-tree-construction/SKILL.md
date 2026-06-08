@@ -7,68 +7,32 @@ description: Build comprehensive attack trees to visualize threat paths. Use whe
 
 Systematic attack path visualization and analysis.
 
-## When to Use This Skill
+## Use this skill when
 
 - Visualizing complex attack scenarios
 - Identifying defense gaps and priorities
 - Communicating risks to stakeholders
-- Planning defensive investments
-- Penetration test planning
-- Security architecture review
+- Planning defensive investments or test scopes
 
-## Core Concepts
+## Do not use this skill when
 
-### 1. Attack Tree Structure
+- You lack authorization or a defined scope to model the system
+- The task is a general risk review without attack-path modeling
+- The request is unrelated to security assessment or design
 
-```
-                    [Root Goal]
-                         |
-            ┌────────────┴────────────┐
-            │                         │
-       [Sub-goal 1]              [Sub-goal 2]
-       (OR node)                 (AND node)
-            │                         │
-      ┌─────┴─────┐             ┌─────┴─────┐
-      │           │             │           │
-   [Attack]   [Attack]      [Attack]   [Attack]
-    (leaf)     (leaf)        (leaf)     (leaf)
-```
+## Instructions
 
-### 2. Node Types
+- Confirm scope, assets, and the attacker goal for the root node.
+- Decompose into sub-goals with AND/OR structure.
+- Annotate leaves with cost, skill, time, and detectability.
+- Map mitigations per branch and prioritize high-impact paths.
+- If detailed templates are required, open `resources/implementation-playbook.md`.
 
-| Type     | Symbol    | Description             |
-| -------- | --------- | ----------------------- |
-| **OR**   | Oval      | Any child achieves goal |
-| **AND**  | Rectangle | All children required   |
-| **Leaf** | Box       | Atomic attack step      |
+## Safety
 
-### 3. Attack Attributes
+- Share attack trees only with authorized stakeholders.
+- Avoid including sensitive exploit details unless required.
 
-| Attribute     | Description             | Values             |
-| ------------- | ----------------------- | ------------------ |
-| **Cost**      | Resources needed        | $, $$, $$$         |
-| **Time**      | Duration to execute     | Hours, Days, Weeks |
-| **Skill**     | Expertise required      | Low, Medium, High  |
-| **Detection** | Likelihood of detection | Low, Medium, High  |
+## Resources
 
-## Templates and detailed worked examples
-
-Full template library lives in `references/details.md`. Read that file when you need concrete templates for this skill.
-
-## Best Practices
-
-### Do's
-
-- **Start with clear goals** - Define what attacker wants
-- **Be exhaustive** - Consider all attack vectors
-- **Attribute attacks** - Cost, skill, and detection
-- **Update regularly** - New threats emerge
-- **Validate with experts** - Red team review
-
-### Don'ts
-
-- **Don't oversimplify** - Real attacks are complex
-- **Don't ignore dependencies** - AND nodes matter
-- **Don't forget insider threats** - Not all attackers are external
-- **Don't skip mitigations** - Trees are for defense planning
-- **Don't make it static** - Threat landscape evolves
+- `resources/implementation-playbook.md` for detailed patterns, templates, and examples.

@@ -1,163 +1,72 @@
 ---
 name: research-methodology
-description: Structured research using sophisticated query design, source vetting, and synthesis techniques. Use when conducting competitive analysis, market scans, historical investigations, or trend research.
-tags:
-  - research
-  - analysis
-  - fact-checking
-  - synthesis
-triggers:
-  - research topic
-  - competitive analysis
-  - market scan
-  - trend analysis
-  - fact verification
-  - investigate
-keywords:
-  - research
-  - competitive analysis
-  - trend analysis
-  - methodology
-  - research methodology
+description: Ethan Perez's tips for empirical alignment research - velocity, experimentation, collaboration
 ---
 
-# Research Methodology
+# Research Methodology: Tips for Empirical Alignment Research
 
-Structured approach to finding, vetting, and synthesizing information from diverse
-sources. Turns research questions into trustworthy, actionable findings through
-systematic query design, source evaluation, and cross-referencing.
+*Based on [Ethan Perez's post](https://www.alignmentforum.org/posts/dZFpEdKyb9Bf4xYn7/tips-for-empirical-alignment-research). Applies to highly experimental LLM alignment research (scalable oversight, adversarial robustness, chain-of-thought faithfulness, process-based oversight, model organisms of misalignment).*
 
-## When to Use This Skill
+## Core Principles
 
-- Conducting competitive analysis or market scans
-- Investigating historical events, trends, or technical evolution
-- Fact-checking claims across multiple sources
-- Synthesizing research into structured deliverables (reports, tables, timelines)
-- Any research task that requires more than a single search query
+### 1. Hard Work Pays Off
+- Run as many experiments as you can, tinker a lot, try lots of stuff
+- Often many reasonable-sounding ideas need testing—sometimes the 5th or 20th thing is what works
+- **"Rich get richer" effect**: the more you experiment, the better you get at picking the right experiments
+- More things work when you try more stuff → easier to stay motivated
 
-## Quick Reference
+### 2. Rapid Iteration (Velocity)
+- **Reduce uncertainty at the fastest possible rate** (Jacob Steinhardt)
+- Get quick feedback and iterate on ideas rapidly
+- With LLMs, you can reduce uncertainty really quickly—even with a single message to GPT-4/Claude
+- Can gain 1+ OOMs more information per unit time by derisking ideas in the quickest way possible
 
-| Resource | Purpose | Load when |
-|----------|---------|-----------|
-| `references/search-strategies.md` | Query design, source vetting, fact verification, synthesis techniques | Starting any research task |
+### 3. Avoid the "Swamp"
+- The **swamp** = getting stuck when you really want technique X to work but nothing succeeds
+- Solution: **high velocity**—test as many ideas as possible per unit time until you escape
+- For LLM research: you should rarely be stuck in a swamp
+  - If stuck → you've likely exhausted low-hanging fruit on that problem/approach
+  - There's other low-hanging fruit elsewhere—go pick that instead
 
----
+### 4. Low-Hanging Fruit Abundance
+- The field is moving so quickly that there's **much more low-hanging fruit** than almost any other field
+- Each new model capability = time to be opportunistic, explore what's now possible
+- High velocity is useful for both:
+  - Picking low-hanging fruit quickly
+  - Getting through swamps when you must solve a particular problem
 
-## Workflow
+## Collaboration & Communication
 
-```
-Phase 1: Scope       → Define research objective, key questions, constraints
-Phase 2: Explore     → Design queries, search broadly, capture sources
-Phase 3: Verify      → Vet sources, cross-reference claims, assess credibility
-Phase 4: Synthesize  → Organize findings into structured deliverables
-```
+### Strong Collaborator Qualities
+Ethan puts **70% weight on "getting ideas to work quickly"** as criteria. Other qualities:
+- Receptive to feedback
+- Adds emotional energy rather than draining it
+- Transparent/communicative about issues faced
+- High-trust relationship where various topics can be discussed easily
+- Notices and calls out room for improvement in collaboration
 
----
+### Communication Best Practices
+- **Overcommunicate**: bring up issues during meetings or privately—nip problems in the bud
+- **Close mentorship** is maybe the fastest path to become an expert in a domain
+- Take agency: organize coworking, discussion groups, standups—whatever helps
+- Get feedback from peers, iterate on project plans
 
-## Phase 1: Scope the Research
+## Research Workflow
 
-Before searching, clarify the research objective:
+- Have a clear project plan with motivation and research goals
+- List all experiments you can think of running
+- Think about milestones and deliverables to stay accountable
+- Know what tools are available—sharing tooling increases experimental velocity
 
-1. **State the question** -- what exactly are we trying to learn?
-2. **Define success criteria** -- what does a complete answer look like?
-3. **Set constraints** -- time period, geography, domains, source types
-4. **List hypotheses** -- what do we expect to find? (helps detect bias)
-5. **Identify key terms** -- domain vocabulary, synonyms, related concepts
+## Paper Writing
 
-### Scoping Template
+- See [ethanperez.net/easy-paper-writing-tips/](https://ethanperez.net/easy-paper-writing-tips/) for ML paper writing tips
+- Write short paragraphs composed of short sentences
+- Write comprehensive abstracts
+- Seek feedback from a naive audience
+- Distinguish confirmation from exploration in your writeup
 
-```markdown
-**Research Question**: [precise question]
-**Success Criteria**: [what constitutes a complete answer]
-**Constraints**: [time period, scope, source types]
-**Key Terms**: [domain vocabulary and synonyms]
-**Initial Hypotheses**: [what we expect, to check against later]
-```
-
----
-
-## Phase 2: Explore
-
-Design multiple query variations and search broadly before narrowing:
-
-1. **Create 3-5 query variations** per research question
-2. **Search broadly first** -- cast a wide net with general terms
-3. **Refine iteratively** -- narrow based on initial results
-4. **Track what you searched** -- record every query for reproducibility
-
-### Query Design Principles
-
-- Use exact-match phrases in quotes for precision
-- Exclude noise with negative keywords
-- Target specific timeframes for recency or historical depth
-- Vary terminology across queries to avoid vocabulary bias
-- Use domain-specific operators when available (site:, filetype:, etc.)
-
-### Source Capture
-
-For each promising source, record:
-- URL and access date
-- Key claims with direct quotes
-- Author/publisher and their domain authority
-- Any noted biases or limitations
-
----
-
-## Phase 3: Verify
-
-Vet sources and cross-reference claims before trusting them:
-
-1. **Assess source authority** -- who wrote it, what are their credentials?
-2. **Check recency** -- is the information current enough for the question?
-3. **Detect bias** -- does the source have a commercial, political, or ideological interest?
-4. **Triangulate** -- require 2+ independent sources for any key claim
-5. **Seek primary sources** -- follow citation chains to the original data
-
-### Confidence Rating
-
-| Level | Criteria |
-|-------|----------|
-| **Confirmed** | 3+ independent, authoritative sources agree |
-| **Likely** | 2 sources agree, no contradictions found |
-| **Uncertain** | Single source or sources disagree |
-| **Contested** | Credible sources directly contradict each other |
-
----
-
-## Phase 4: Synthesize
-
-Organize findings into a structured deliverable:
-
-### Standard Research Report Structure
-
-```markdown
-## Research Summary
-[1-2 paragraph overview of findings]
-
-## Key Findings
-- [Finding 1] — [confidence level]
-- [Finding 2] — [confidence level]
-
-## Detailed Analysis
-[Organized by theme or question]
-
-## Source Credibility Assessment
-| Source | Authority | Recency | Bias Risk | Rating |
-|--------|-----------|---------|-----------|--------|
-
-## Gaps and Limitations
-[What we couldn't determine and why]
-
-## Recommendations
-[Next steps or actions based on findings]
-```
-
----
-
-## Anti-Patterns
-
-- Do not rely on a single source for any key claim
-- Do not present uncertain findings as confirmed facts
-- Do not skip source vetting for convenience
-- Do not omit contradictory evidence -- always surface disagreements
-- Do not let initial hypotheses bias which findings you report
+## Related Resources
+- [Tips and Code for Empirical Research Workflows](https://www.alignmentforum.org/posts/6P8GYb4AjtPXx6LLB/tips-and-code-for-empirical-research-workflows)
+- Jacob Steinhardt's blog on reducing uncertainty
+- Michael Bernstein's slides on velocity

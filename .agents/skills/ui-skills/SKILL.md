@@ -1,42 +1,22 @@
 ---
 name: ui-skills
-description: |
-  Opinionated, evolving constraints to guide agents when building interfaces. Useful for keeping output coherent across many small UI pieces.
-triggers:
-  - "ui constraints"
-  - "ui guide"
-  - "opinionated ui"
-  - "ui rules"
-od:
-  mode: design-system
-  category: design-systems
-  upstream: "https://github.com/ibelick/ui-skills"
+description: "Opinionated, evolving constraints to guide agents when building interfaces"
+source: "https://github.com/ibelick/ui-skills"
+risk: safe
 ---
 
-# ui-skills
+# Ui Skills
 
-> Curated from @ibelick.
+## Overview
 
-## What it does
+Opinionated, evolving constraints to guide agents when building interfaces
 
-Opinionated, evolving constraints to guide agents when building interfaces. Useful for keeping output coherent across many small UI pieces.
+## When to Use This Skill
 
-## Source
+Use this skill when you need to work with opinionated, evolving constraints to guide agents when building interfaces.
 
-- Upstream: https://github.com/ibelick/ui-skills
-- Category: `design-systems`
+## Instructions
 
-## How to use
+This skill provides guidance and patterns for opinionated, evolving constraints to guide agents when building interfaces.
 
-This catalogue entry advertises the skill in Open Design so the agent
-discovers it during planning. To run the full upstream workflow with
-its original assets, scripts, and references, install the upstream
-bundle into your active agent's skills directory:
-
-```bash
-# Inspect the upstream README for exact paths
-open https://github.com/ibelick/ui-skills
-```
-
-Then ask the agent to invoke this skill by name (`ui-skills`) or with
-one of the trigger phrases listed in this skill's frontmatter.
+For more information, see the [source repository](https://github.com/ibelick/ui-skills).

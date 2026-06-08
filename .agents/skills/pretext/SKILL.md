@@ -1,220 +1,249 @@
 ---
 name: pretext
-description: "Use when building creative browser demos with @chenglou/pretext — DOM-free text layout for ASCII art, typographic flow around obstacles, text-as-geometry games, kinetic typography, and text-powered generative art. Produces single-file HTML demos by default."
-version: 1.0.0
-author: Hermes Agent
-license: MIT
-platforms: [linux, macos, windows]
-metadata:
-  hermes:
-    tags: [creative-coding, typography, pretext, ascii-art, canvas, generative, text-layout, kinetic-typography]
-    related_skills: [p5js, claude-design, excalidraw, architecture-diagram]
+description: Create text effects impossible with CSS alone — kinetic typography, flowing text around animated obstacles, calligrams, shrinkwrap chat bubbles, typographic ASCII art, glyph path animation, variable font waves, glyph morphing, illuminated manuscripts. Single-file HTML output, zero build step. Powered by @chenglou/pretext + opentype.js. Triggers on text effects, kinetic typography, text animation, calligram, glyph art, typography art.
+argument-hint: [effect description or category]
 ---
 
-# Pretext Creative Demos
+# Pretext Text Effects
 
-## Overview
+Generate browser pages powered by Pretext (`@chenglou/pretext`)—a pure-arithmetic text measurement library that bypasses DOM layout reflow entirely. Pretext measures text with proportional font precision using canvas `measureText`, enabling effects impossible with CSS alone.
 
-[`@chenglou/pretext`](https://github.com/chenglou/pretext) is a 15KB zero-dependency TypeScript library by Cheng Lou (React core, ReasonML, Midjourney) for **DOM-free multiline text measurement and layout**. It does one thing: given `(text, font, width)`, return the line breaks, per-line widths, per-grapheme positions, and total height — all via canvas measurement, no reflow.
+**Companion library: opentype.js** (`opentype.js@1.3.4`) — direct font binary parsing for per-glyph SVG path rendering, Bezier control point access, kerning tables, and variable font axes. Pretext handles line breaking; opentype.js handles what happens *inside* each glyph. Together they unlock effects neither can achieve alone.
 
-That sounds like plumbing. It is not. Because it is fast and geometric, it is a **creative primitive**: you can reflow paragraphs around a moving sprite at 60fps, build games whose level geometry is made of real words, drive ASCII logos through prose, shatter text into particles with exact per-grapheme starting positions, or pack shrink-wrapped multiline UI without any `getBoundingClientRect` thrash.
+Output is always a **single self-contained HTML file**. No build step, no framework, runs in any modern browser.
 
-This skill exists so Hermes can make **cool demos** with it — the kind people post to X. See `pretext.cool` and `chenglou.me/pretext` for the community demo corpus.
+## Quick Start
 
-## When to Use
+Describe a text effect. Claude picks the right Pretext pattern and generates a complete HTML file.
 
-Use when the user asks for:
-- A "pretext demo" / "cool pretext thing" / "text-as-X"
-- Text flowing around a moving shape (hero sections, editorial layouts, animated long-form pages)
-- ASCII-art effects using **real words or prose**, not monospace rasters
-- Games where the playfield / obstacles / bricks are made of text (Tetris-from-letters, Breakout-of-prose)
-- Kinetic typography with per-glyph physics (shatter, scatter, flock, flow)
-- Typographic generative art, especially with non-Latin scripts or mixed scripts
-- Multiline "shrink-wrap" UI (smallest container width that still fits the text)
-- Anything that would require knowing line breaks *before* rendering
+Examples:
+- `/pretext fluid smoke ASCII art with gold characters on black`
+- `/pretext chat bubbles that shrinkwrap tighter than CSS`
+- `/pretext calligram — the word "ocean" shaped like a wave`
+- `/pretext editorial layout with text flowing around draggable circles`
+- `/pretext masonry grid of shower thoughts with instant height prediction`
+- `/pretext glyph path art — SVG letterforms with stroke animation`
+- `/pretext animated dragon cursor that pushes text aside as it moves`
+- `/pretext illuminated manuscript with live vine growth reflow`
+- `/pretext variable font wave — per-character weight animation`
+- `/pretext glyph morph — letterform interpolation from A to Z`
+- `/pretext letterbox gallery of "BEACON" in Playfair Display italic on dark background`
+- `/pretext glyph-mask calligram — letter R filled with lorem ipsum in Georgia`
 
-Don't use for:
-- Static SVG/HTML pages where CSS already solves layout — just use CSS
-- Rich text editors, general inline formatting engines (pretext is intentionally narrow)
-- Image → text (use `ascii-art` / `ascii-video` skills)
-- Pure canvas generative art with no text role — use `p5js`
+## Do NOT Use This Skill When
 
-## Creative Standard
+- Simple CSS `text-shadow`, `text-stroke`, or gradient text effects
+- CSS Shapes level 1 (`shape-outside` on floated elements) for static layouts
+- Basic `@keyframes` text animation (fade, slide, typewriter)
+- Monospace ASCII art (no proportional measurement needed)
+- SVG `<text>` without per-glyph control
+- Rich text editing (`contenteditable`, ProseMirror, TipTap)
+- PDF generation or markdown rendering
 
-This is visual art rendered in a browser. Pretext returns numbers; **you** draw the thing.
+These are all achievable without Pretext or opentype.js.
 
-- **Don't ship a "hello world" demo.** The `hello-orb-flow.html` template is the *starting* point. Every delivered demo must add intentional color, motion, composition, and one visual detail the user didn't ask for but will appreciate.
-- **Dark backgrounds, warm cores, considered palette.** Classic amber-on-black (CRT / terminal) works, but so do cold-white-on-charcoal (editorial) and desaturated pastels (risograph). Pick one and commit.
-- **Proportional fonts are the point.** Pretext's whole vibe is "not monospaced" — lean into it. Use Iowan Old Style, Inter, JetBrains Mono, Helvetica Neue, or a variable font. Never default sans.
-- **Real source/text, not lorem ipsum.** The corpus should mean something. Short manifestos, poetry, real source code, a found text, the library's own README — never `lorem ipsum`.
-- **First-paint excellence.** No loading states, no blank frames. The demo must look shippable the instant it opens.
+## Effect Categories
 
-## Stack
+### Pretext-Only Effects
 
-Single self-contained HTML file per demo. No build step.
+| Category | Pretext APIs Used | When to Use |
+|----------|-------------------|-------------|
+| **Height Prediction** | `prepare` + `layout` | Accordion, masonry, virtualized lists — anywhere you need text height without DOM reads |
+| **Shrinkwrap** | `walkLineRanges` + binary search | Chat bubbles, tooltips, labels — finding the exact tightest width for multiline text |
+| **Obstacle Routing** | `layoutNextLine` (variable width) | Text flowing around images, logos, draggable orbs — editorial layouts |
+| **Animated Obstacles** | `layoutNextLine` + `carveTextLineSlots` | Moving creatures/orbs that displace text at 60fps — slot-carving fills BOTH sides of obstacle |
+| **Typographic ASCII** | `prepareWithSegments` (char measurement) | Fluid simulations, 3D wireframes, particle systems rendered as proportional characters |
+| **Calligrams** | `prepareWithSegments` + SDF | Words rendered as shapes using their own letters — hearts, stars, spirals |
+| **Glyph-Mask Calligrams** | Canvas `measureText` + `getImageData` pixel mask | Any font glyph as calligram shape — fill a large letter with small text using pixel-mask technique (no SDF needed, no opentype.js) |
+| **Letterbox Gallery** | Glyph-mask + per-letter `<canvas>` grid | Each character in a string gets its own canvas with text fill, cursor displacement, and independent interaction |
+| **Multi-column Editorial** | All rich APIs combined | Magazine-style layouts with headline fitting, pull quotes, drop caps, column flow |
 
-| Layer | Tool | Purpose |
-|-------|------|---------|
-| Core | `@chenglou/pretext` via `esm.sh` CDN | Text measurement + line layout |
-| Render | HTML5 Canvas 2D | Glyph rendering, per-frame composition |
-| Segmentation | `Intl.Segmenter` (built-in) | Grapheme splitting for emoji / CJK / combining marks |
-| Interaction | Raw DOM events | Mouse / touch / wheel — no framework |
+### Pretext + opentype.js Effects
+
+| Category | APIs Used | When to Use |
+|----------|-----------|-------------|
+| **Glyph Path Art** | opentype `glyph.getPath()` | SVG letterforms with fill/stroke/control point modes, stroke-draw animation |
+| **Text on Path** | opentype `getPath()` + arc-length sampling | Per-glyph placement along Bezier curves with tangent rotation |
+| **Variable Font Animation** | opentype `font.tables.fvar.axes` + CSS `font-variation-settings` | Per-character weight/width waves, breathe, ripple, cascade effects |
+| **Glyph Morphing** | opentype paths + flubber `interpolate()` | Letterform interpolation between glyphs with contour-aware morphing |
+| **Outline Calligrams** | Pretext `layoutNextLine` + opentype glyph mask | Text fills the interior of a large glyph's actual contour (not SDF approximation) |
+| **Illuminated Manuscript** | All Pretext + opentype combined | Living medieval pages: wet ink, vine reflow, capital inflation, aging, erasure poetry |
+
+## Concept-to-Effect
+
+Every design decision derives from the concept. Do not default—derive.
+
+**Choose the API tier from the effect complexity:**
+- Static height only → `prepare()` + `layout()` (fastest, opaque)
+- Need line text/positions → `prepareWithSegments()` + `layoutWithLines()`
+- Need per-line width variation → `layoutNextLine()` (iterator, variable width per line)
+- Need aggregate geometry without strings → `walkLineRanges()` (no string materialization)
+- Need individual character widths → `prepareWithSegments()` on single chars
+
+**Choose the rendering target from the output type:**
+- DOM elements (`.line { position: absolute }`) → editorial, accordion, masonry
+- Canvas 2D (`ctx.fillText`) → calligrams, some ASCII art
+- HTML spans with inline styles → typographic ASCII (weight/style/opacity per character)
+
+## Architecture
+
+```
+Pretext CDN → prepare/prepareWithSegments → layout/layoutNextLine → line positions
+                                                                          ↓
+opentype.js CDN → font.parse(buffer) → glyph.getPath() ──────────> SVG <path> elements
+                                                                          ↓
+                                                              requestAnimationFrame (if animated)
+                                                              resize handler (always)
+```
+
+**Two-library split:** Pretext decides WHERE text goes (line breaking, obstacle routing). opentype.js decides HOW each glyph looks (SVG paths, Bezier curves, contour data). Use Pretext alone for DOM-positioned text. Add opentype.js when you need per-glyph SVG rendering, path animation, or glyph contour access.
+
+### CDN Imports
 
 ```html
+<!-- Pretext (ESM, required) -->
 <script type="module">
-import {
-  prepare, layout,                   // use-case 1: simple height
-  prepareWithSegments, layoutWithLines,  // use-case 2a: fixed-width lines
-  layoutNextLineRange, materializeLineRange, // use-case 2b: streaming / variable width
-  measureLineStats, walkLineRanges,  // stats without string allocation
-} from "https://esm.sh/@chenglou/pretext@0.0.6";
+import { prepare, layout, prepareWithSegments, layoutWithLines, walkLineRanges, layoutNextLine, clearCache } from 'https://esm.sh/@chenglou/pretext@0.0.2'
 </script>
+
+<!-- opentype.js (UMD, optional — only for glyph path effects) -->
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+
+<!-- Font binary for opentype.js (Inter .woff — confirmed working) -->
+<!-- const FONT_URL = 'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-400-normal.woff' -->
+
+<!-- flubber (optional — only for glyph morphing) -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/flubber@0.4.2/build/flubber.min.js"></script> -->
 ```
 
-Pin the version. `@0.0.6` at time of writing — check [npm](https://www.npmjs.com/package/@chenglou/pretext) for the latest if demo behavior is off.
+Import only the functions you need. Pin the version. opentype.js cannot parse `.woff2` — use `.woff` or `.ttf` only.
 
-## The Two Use Cases
+## Composition Parameters
 
-Almost everything reduces to one of these two shapes. Learn both.
+### All Effects
+| Parameter | Default | Notes |
+|-----------|---------|-------|
+| Font | `'18px Georgia, Palatino, serif'` | Never use `system-ui` — unreliable with Pretext |
+| Line height | `28` (px) | Must match CSS `line-height` for height prediction |
+| Background | `#08080e` or `#f5f1ea` | Dark or light — never pure black `#000` |
 
-### Use-case 1 — measure, then render with CSS/DOM
+### Typographic ASCII
+| Parameter | Range | Default |
+|-----------|-------|---------|
+| Font size | 10–18px | 14 |
+| Font family | serif preferred | `Georgia, Palatino, "Times New Roman", serif` |
+| Charset | printable ASCII | ` .,:;!+-=*#@%&a-zA-Z0-9` |
+| Weights | 1–3 | `[300, 500, 800]` |
+| Styles | normal, italic | both |
+| Opacity levels | 6–10 | 10 CSS classes `.a1`–`.a10` |
 
-```js
-const prepared = prepare(text, "16px Inter");
-const { height, lineCount } = layout(prepared, 320, 20);
+### Calligrams
+| Parameter | Range | Default |
+|-----------|-------|---------|
+| Canvas size | 200–800px | 400 |
+| Char density | 6–24px | 14 |
+| Shapes | heart, circle, star, wave, spiral | heart |
+| Animation | spring entrance | `springK: 0.08, damping: 0.75` |
+
+### Editorial / Obstacle Routing
+| Parameter | Range | Default |
+|-----------|-------|---------|
+| Columns | 1–4 | 2 |
+| Column gap | 20–60px | 40 |
+| Gutter | 30–80px | 48 |
+| Orb count | 1–6 | 5 |
+| Orb radius | 30–120px | 65–110 |
+| hPad (horizontal padding around obstacle) | 8–20px | 14 |
+| vPad (vertical padding) | 2–8px | 4 |
+| MIN_SLOT_WIDTH | 30–80px | 50 |
+
+### opentype.js — Glyph Path Effects
+| Parameter | Range | Default |
+|-----------|-------|---------|
+| Font URL | `.woff` or `.ttf` only | `@fontsource/inter@5.0.8` |
+| Font size | 10–200px | 14 (body), 42 (display) |
+| Stroke-dashoffset draw speed | 30–150ms per glyph | 80ms |
+| Wet ink amplitude | 0.5–3px | 1.8 |
+| Wet ink decay (tau) | 800–3000ms | 1500 |
+| Glyph morph easing | linear, ease-in-out, spring | ease-in-out |
+
+### Glyph-Mask Calligrams / Letterbox Gallery
+| Parameter | Range | Default |
+|-----------|-------|---------|
+| Canvas size (per letter) | 200–1000px | 500 |
+| Fill font size | 8–24px | 11 |
+| Fill model | `self`, `lorem`, `alphabet`, `custom` | `lorem` |
+| Fill case | `upper`, `lower`, `mixed` | `upper` |
+| Fill columns | 1–4 | 1 |
+| Grid columns (gallery) | 2–6 | 3 |
+| Cursor displacement radius | 50–250px | 100 |
+| Cursor displacement force | 10–50 | 35 |
+| Displacement damping | 0.85–0.98 | 0.94 |
+
+### opentype.js + flubber — Glyph Morphing
+| Parameter | Range | Default |
+|-----------|-------|---------|
+| Morph duration | 300–2000ms | 800 |
+| Flubber maxSegmentLength | 5–20 | 10 |
+| Contour strategy | equal, 1-to-many, many-to-1 | auto-detect |
+
+## References
+
+| Working on... | Load |
+|---|---|
+| Full API surface, types, caveats | `references/api-reference.md` |
+| Typographic palette, brightness, ASCII grid | `references/typographic-ascii.md` |
+| Column flow, obstacles, headline fitting, slot-carving, animated physics | `references/obstacle-routing.md` |
+| SDF shapes, proportional spacing, animation | `references/calligram-shapes.md` |
+| Pixel-mask technique, glyph-mask calligrams, cursor displacement, letterbox gallery | `references/calligram-shapes.md` (Pixel-Mask section) |
+| opentype.js + Pretext integration patterns | `references/opentype-integration.md` |
+| Working accordion template | `assets/templates/height-prediction.html` |
+| Working bubbles template | `assets/templates/shrinkwrap-bubbles.html` |
+| Working editorial template | `assets/templates/editorial-engine.html` |
+| Working ASCII art template | `assets/templates/typographic-ascii.html` |
+| Working calligram template | `assets/templates/calligram.html` |
+| Working letterbox gallery template | `assets/templates/letterbox-gallery.html` |
+| GlyphKit demos (6 working demos, local) | `~/Desktop/Programming/glyphkit/demos/` (machine-specific) |
+
+## Anti-Patterns
+
+### Pretext
+- Never use `system-ui` as font — canvas and DOM can resolve different fonts on macOS
+- Never use React/Vue/framework — vanilla JS + HTML only
+- Never omit `<meta name="viewport">` — proportional measurement depends on correct device pixels
+- Never use `setInterval` for animation — always `requestAnimationFrame`
+- Never skip the resize handler — text layout depends on container width
+- Never call `prepare()` inside the animation loop — it's the expensive one-time pass. Cache it.
+- Never omit `document.fonts.ready.then(...)` — measure after fonts load, not before
+- Never use pure black (`#000000`) — use rich off-blacks (`#06060a`, `#08080e`, `#0a0a0c`)
+- Never build line strings when you only need geometry — use `walkLineRanges` instead of `layoutWithLines`
+- Never position text with CSS flow — use `position: absolute` and place lines from Pretext coordinates
+- Never pick one side of an obstacle when the obstacle is in the middle — use `carveTextLineSlots` to fill both sides
+- Never create/destroy DOM elements per frame — use element pooling (`syncPool`)
+
+### opentype.js
+- Never use `.woff2` files — opentype.js cannot parse them. Use `.woff` or `.ttf` only
+- Never use `opentype.load()` — use `fetch().then(r => r.arrayBuffer()).then(opentype.parse)` for better error handling
+- Never render glyphs at absolute positions then try to move them — render at `(0,0)` and position via `<g transform="translate(x,y)">`
+- Never forget `font.unitsPerEm` — the scale factor is `fontSize / font.unitsPerEm`
+- Never call `glyph.getPath()` inside a tight loop without caching — cache the pathData string, regenerate only when position changes
+- Never skip kerning — always check `font.getKerningValue(glyph, nextGlyph) * scale` between adjacent glyphs
+- Never use Google Fonts TTF CDN URLs (they return 404 for programmatic access) — use `@fontsource` via jsdelivr
+
+## Post-Generation QA
+
+```bash
+python3 ~/.claude/skills/pretext/scripts/validate_pretext.py output.html
 ```
 
-You still let the browser draw the text. Pretext just tells you how tall the box will be at a given width, **without** a DOM read. Use for:
-- Virtualized lists where rows contain wrapping text
-- Masonry with precise card heights
-- "Does this label fit?" dev-time checks
-- Preventing layout shift when remote text loads
-
-**Keep `font` and `letterSpacing` exactly in sync with your CSS.** The canvas `ctx.font` format (e.g. `"16px Inter"`, `"500 17px 'JetBrains Mono'"`) must match the rendered CSS, or measurements drift.
-
-### Use-case 2 — measure *and* render yourself
-
-```js
-const prepared = prepareWithSegments(text, FONT);
-const { lines } = layoutWithLines(prepared, 320, 26);
-for (let i = 0; i < lines.length; i++) {
-  ctx.fillText(lines[i].text, 0, i * 26);
-}
-```
-
-This is where the creative work lives. You own the drawing, so you can:
-- Render to canvas, SVG, WebGL, or any coordinate system
-- Substitute per-glyph transforms (rotation, jitter, scale, opacity)
-- Use line metadata (width, grapheme positions) as geometry
-
-For **variable-width-per-line** flow (text around a shape, text in a donut band, text in a non-rectangular column):
-
-```js
-let cursor = { segmentIndex: 0, graphemeIndex: 0 };
-let y = 0;
-while (true) {
-  const lineWidth = widthAtY(y);  // your function: how wide is the corridor at this y?
-  const range = layoutNextLineRange(prepared, cursor, lineWidth);
-  if (!range) break;
-  const line = materializeLineRange(prepared, range);
-  ctx.fillText(line.text, leftEdgeAtY(y), y);
-  cursor = range.end;
-  y += lineHeight;
-}
-```
-
-This is the most important pattern in the whole library. It's what unlocks "text flowing around a dragged sprite" — the demo that went viral on X.
-
-### Helpers worth knowing
-
-- `measureLineStats(prepared, maxWidth)` → `{ lineCount, maxLineWidth }` — the widest line, i.e. multiline shrink-wrap width.
-- `walkLineRanges(prepared, maxWidth, callback)` — iterate lines without allocating strings. Use for stats/physics over graphemes when you don't need the characters.
-- `@chenglou/pretext/rich-inline` — the same system but for paragraphs mixing fonts / chips / mentions. Import from the subpath.
-
-## Demo Recipe Patterns
-
-The community corpus (see `references/patterns.md`) clusters into a handful of strong patterns. Pick one and riff — don't invent a new category unless asked.
-
-| Pattern | Key API | Example idea |
-|---|---|---|
-| **Reflow around obstacle** | `layoutNextLineRange` + per-row width function | Editorial paragraph that parts around a dragged cursor sprite |
-| **Text-as-geometry game** | `layoutWithLines` + per-line collision rects | Breakout where each brick is a measured word |
-| **Shatter / particles** | `walkLineRanges` → per-grapheme (x,y) → physics | Sentence that explodes into letters on click |
-| **ASCII obstacle typography** | `layoutNextLineRange` + measured per-row obstacle spans | Bitmap ASCII logo, shape morphs, and draggable wire objects that make text open around their actual geometry |
-| **Editorial multi-column** | `layoutNextLineRange` per column + shared cursor | Animated magazine spread with pull quotes |
-| **Kinetic type** | `layoutWithLines` + per-line transform over time | Star Wars crawl, wave, bounce, glitch |
-| **Multiline shrink-wrap** | `measureLineStats` | Quote card that auto-sizes to its tightest container |
-
-See `templates/donut-orbit.html` and `templates/hello-orb-flow.html` for working single-file starters.
-
-## Workflow
-
-1. **Pick a pattern** from the table above based on the user's brief.
-2. **Start from a template**:
-   - `templates/hello-orb-flow.html` — text reflowing around a moving orb (reflow-around-obstacle pattern)
-   - `templates/donut-orbit.html` — advanced example: measured ASCII logo obstacles, draggable wire sphere/cube, morphing shape fields, selectable DOM text, and dev-only controls
-   - `write_file` to a new `.html` in `/tmp/` or the user's workspace.
-3. **Swap the corpus** for something intentional to the brief. Real prose, 10-100 sentences, no lorem.
-4. **Tune the aesthetic** — font, palette, composition, interaction. This is the work; don't skip it.
-5. **Verify locally**:
-   ```sh
-   cd <dir-with-html> && python3 -m http.server 8765
-   # then open http://localhost:8765/<file>.html
-   ```
-6. **Check the console** — pretext will throw if `prepareWithSegments` is called with a bad font string; `Intl.Segmenter` is available in every modern browser.
-7. **Show the user the file path**, not just the code — they want to open it.
-
-## Performance Notes
-
-- `prepare()` / `prepareWithSegments()` is the expensive call. Do it **once** per text+font pair. Cache the handle.
-- On resize, only rerun `layout()` / `layoutWithLines()` — never re-prepare.
-- For per-frame animations where text doesn't change but geometry does, `layoutNextLineRange` in a tight loop is cheap enough to do every frame at 60fps for normal-length paragraphs.
-- When rendering ASCII masks per frame, keep a cell buffer (`Uint8Array`/typed arrays), derive measured per-row obstacle spans from the cells or projected geometry, merge spans, then feed those spans into `layoutNextLineRange` before drawing text.
-- Keep visual animation and layout animation coupled. If a sphere morphs into a cube, tween both the rendered cell buffer and the obstacle spans with the same value; otherwise the demo looks painted-on instead of physically reflowed.
-- For fades, prefer layer opacity over changing glyph intensity or obstacle scale. Put transient ASCII sprites on their own canvas and fade the canvas with CSS/GSAP opacity so geometry does not appear to shrink.
-- Canvas `ctx.font` setting is surprisingly slow; set it **once** per frame if font doesn't vary, not per `fillText` call.
-
-## Common Pitfalls
-
-1. **Drifting CSS/canvas font strings.** `ctx.font = "16px Inter"` measured, but CSS says `font-family: Inter, sans-serif; font-size: 16px`. Fine *if* Inter loads. If Inter 404s, CSS falls back to sans-serif and measurements drift by 5-20%. Always `preload` the font or use a web-safe family.
-
-2. **Re-preparing inside the animation loop.** Only `layout*` is cheap. Re-calling `prepare` every frame will tank perf. Keep the prepared handle in module scope.
-
-3. **Forgetting `Intl.Segmenter` for grapheme splits.** Emoji, combining marks, CJK — `"é".split("")` gives you two chars. Use `new Intl.Segmenter(undefined, { granularity: "grapheme" })` when sampling individual visible glyphs.
-
-4. **`break: 'never'` chips without `extraWidth`.** In `rich-inline`, if you use `break: 'never'` for an atomic chip/mention, you must also supply `extraWidth` for the pill padding — otherwise chip chrome overflows the container.
-
-5. **Using `@chenglou/pretext` from `unpkg` with TypeScript-only entry.** Use `esm.sh` — it compiles the TS exports to browser-ready ESM automatically. `unpkg` will 404 or serve raw TS.
-
-6. **Monospace fallbacks silently erasing the whole point.** Users seeing monospace-looking output often have a CSS `font-family` that fell through to `monospace`. Verify the actual rendered font via DevTools.
-
-7. **Skipping rows vs adjusting width** when flowing around a shape. If the corridor on this row is too narrow to fit a line, *skip the row* (`y += lineHeight; continue;`) rather than passing a tiny maxWidth to `layoutNextLineRange` — pretext will return one-grapheme lines that look broken.
-
-8. **Shipping a cold demo.** The default first-paint looks tutorial-grade. Add: vignette, subtle scanline, idle auto-motion, one carefully chosen interactive response (drag, hover, scroll, click). Without these, "cool pretext demo" lands as "intern repro of the README."
-
-## Verification Checklist
-
-- [ ] Demo is a single self-contained `.html` file — opens by double-click or `python3 -m http.server`
-- [ ] `@chenglou/pretext` imported via `esm.sh` with pinned version
-- [ ] Corpus is real prose, not lorem ipsum, and matches the demo's concept
-- [ ] Font string passed to `prepare` matches the CSS font exactly
-- [ ] `prepare()` / `prepareWithSegments()` called once, not per frame
-- [ ] Dark background + considered palette — not the default white canvas
-- [ ] At least one interactive response (drag / hover / scroll / click) or idle auto-motion
-- [ ] Tested locally with `python3 -m http.server` and confirmed no console errors
-- [ ] 60fps on a mid-tier laptop (or graceful degradation documented)
-- [ ] One "extra mile" detail the user didn't ask for
-
-## Reference: Community Demos
-
-Clone these for inspiration / patterns (all MIT-ish, linked from [pretext.cool](https://www.pretext.cool/)):
-
-- **Pretext Breaker** — breakout with word-bricks — `github.com/rinesh/pretext-breaker`
-- **Tetris × Pretext** — `github.com/shinichimochizuki/tetris-pretext`
-- **Dragon animation** — `github.com/qtakmalay/PreTextExperiments`
-- **Somnai editorial engine** — `github.com/somnai-dreams/pretext-demos`
-- **Bad Apple!! ASCII** — `github.com/frmlinn/bad-apple-pretext`
-- **Drag-sprite reflow** — `github.com/dokobot/pretext-demo`
-- **Alarmy editorial clock** — `github.com/SmisLee/alarmy-pretext-demo`
-
-Official playground: [chenglou.me/pretext](https://chenglou.me/pretext/) — accordion, bubbles, dynamic-layout, editorial-engine, justification-comparison, masonry, markdown-chat, rich-note.
+Checklist:
+1. ESM import from `esm.sh/@chenglou/pretext` present
+2. `<script type="module">` tag
+3. Named font declaration (no `system-ui`)
+4. `<meta name="viewport">` present
+5. Window resize handler
+6. `document.fonts.ready` awaited before measurement
+7. `requestAnimationFrame` loop (for animated effects)
+8. Touch event handlers (for interactive effects)
+9. No `setInterval` for animation
+10. No framework imports

@@ -1,164 +1,95 @@
 ---
 name: release
-description: |
-  Release integration. Manage data, records, and automate workflows. Use when the user wants to interact with Release data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: >-
+  Cut a software release and maintain a tiered compatibility policy. Use when the
+  user wants to release, ship a version, bump the version, tag a release, write a
+  changelog, or update COMPATIBILITY. Config-driven via release.config.json;
+  bumps version files, runs a readiness gate, updates COMPATIBILITY.md tiers and
+  deprecations, tags (→ release workflow), and reports closed issues. Teaches the
+  underlying standards as it runs.
 ---
 
-# Release
+# release — tiered compatibility & release workflow
 
-Release is a deployment management tool that helps software teams automate and orchestrate their release pipelines. It's used by DevOps engineers and release managers to streamline deployments, track changes, and reduce errors.
+A config-driven release orchestrator. Mechanics live in `scripts/release.py`
+(unit-tested, stdlib-only); this file is the workflow you (or an agent) follow.
+Read `reference/config-schema.md` for `release.config.json` and
+`reference/standards.md` for *why* each step exists.
 
-Official docs: https://developer.atlassian.com/cloud/release/
+> **Scope honesty:** reference-tested on a Tauri + Rust + SvelteKit repo (Cull).
+> Other stacks are supported *by config*, not yet validated. Treat first runs on
+> a new stack as a dry run (see "Dry run" below) until you trust it.
 
-## Release Overview
+## When to use
+The user says "release", "ship it", "cut a version", "bump version", "tag a
+release", "update the changelog/COMPATIBILITY". Requires a `release.config.json`
+at the repo root (scaffold from `templates/release.config.json.tmpl`).
 
-- **Release**
-  - **Release Channel**
-  - **Release Version**
-- **Device**
-- **User**
-- **App**
-- **Organization**
-- **Session**
-- **Event**
-- **Crash**
-  - **Crash Group**
-- **Breadcrumb**
-- **Log**
-- **Metric**
-- **Feature Flag**
-- **Experiment**
+## Mental model — your public API is your declared surfaces
+A version only means something once you declare *what you promise to keep
+working*. `release.config.json → surfaces[]` is that declaration; each surface
+has a **tier** (`experimental → preview → stable`) and a compatibility **mode**.
+Only `stable` surfaces carry the promise. Breaking a `stable` surface forces a
+**major** bump — the engine enforces this. (Standards: see `reference/standards.md`.)
 
-## Working with Release
+## Command
+`/release <patch|minor|major>` — run the steps below. On an unfamiliar repo, do a
+**dry run first** (see below). When the user asks to "explain", expand each step's
+*why* into a short lesson from `reference/standards.md`.
 
-This skill uses the Membrane CLI to interact with Release. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+## Steps
 
-### Install the CLI
+1. **Preconditions.** The configured `releaseBranch` (default `main`, in
+   `worktree` if set) is checked out, clean, and synced with `origin`. Abort
+   clearly otherwise. — *why: a release tag must point at a known-good, pushed tree.*
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+2. **Version.** `python3 scripts/release.py --config <cfg> plan <kind>` prints the
+   new version + tag. It asserts the version files currently agree. Show `old → new`.
+   — *why: SemVer math; 0.x lets minors break (pre-1.0).* [[Semantic Versioning (SemVer)]]
 
-```bash
-npm install -g @membranehq/cli@latest
-```
+3. **Readiness gate.** Run `cfg.gate` then each `cfg.extraGate[]`. All must exit 0
+   (fmt, clippy, tests, license audit, prod build, golden contract tests). Block on
+   failure. — *why: this is a Production-Readiness Review.* [[Production Readiness Review]]
+   - TODO (deferred): cargo-deny / cargo-audit / SBOM. List, don't enforce yet.
 
-### Authentication
+4. **Changelog.** Collect commit subjects since the last tag
+   (`git log <lastTag>..HEAD --format=%s`) and draft a section — the engine's
+   `draft_changelog` buckets them into Added/Changed/Fixed (Keep a Changelog).
+   Insert under the top of `CHANGELOG.md`; **hand-curate** the user-facing lines.
+   — *why: humans read changelogs; conventional commits seed them.* [[Keep a Changelog]]
 
-```bash
-membrane login --tenant --clientName=<agentType>
-```
+5. **Compatibility review.** Open `cfg.compatibility.path` (COMPATIBILITY.md). Ask:
+   - Did any surface change tier? (update the Surfaces table)
+   - New deprecations? (add a row: item / deprecated-in / removable-in / replacement)
+   - **Does this change break a `stable` surface?** If yes, the required bump is
+     `major` — re-run with `major` or the release is invalid. (Enforced by
+     `enforce_bump`.) Stamp "Last updated: <new version> (<date>)".
+   — *why: tiers + deprecation windows are how you evolve without lying.* [[Kubernetes API Deprecation Policy]]
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+6. **Bump & commit.** `python3 scripts/release.py --config <cfg> bump <kind>` writes
+   every version file; refresh `cfg.lockfiles` (e.g. `cargo update -p <crate>` or a
+   build). Commit `chore(release): v<new>` including CHANGELOG + COMPATIBILITY.
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+7. **Tag & push.** `git tag v<new>` and push the tag (→ the repo's release
+   workflow) and the branch. Confirm the tag trigger exists *before the first
+   release* (`grep -A3 '^on:' .github/workflows/*.yml`).
 
-```bash
-membrane login complete <code>
-```
+8. **Report.** Print the tag, the release-workflow URL, and issues closed since the
+   last tag (if `cfg.issueTracker` is set, e.g. bd) — those are the release notes.
 
-Add `--json` to any command for machine-readable JSON output.
+## Dry run
+There is no `--dry-run` flag — a dry run is steps 1–5 done *without mutating*:
+run `python3 scripts/release.py --config <cfg> plan <kind>` (pure: prints the
+version/tag, writes nothing) and optionally run `cfg.gate` to check readiness.
+Do NOT run `bump`, commit, or tag. The `bump` subcommand is the only engine
+command that writes (version files only); commit/tag/push are git steps you take
+in step 6–7, never the engine.
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+## Manual fallback (no skill)
+`plan` → run gate → edit CHANGELOG + COMPATIBILITY → `bump` → commit → tag → push.
+The engine is just `scripts/release.py`; everything else is git.
 
-### Connecting to Release
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://releasehub.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Release API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+## Growing into Contracts & Modes
+The readiness gate runs *golden/contract tests* (`cfg.extraGate`). Start with one
+(a DB round-trip), then add export and API contract tests. See the consuming
+repo's `docs/CONTRACTS.md` and `reference/standards.md`. [[Pact — Consumer-Driven Contract Testing]]

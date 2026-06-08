@@ -1,177 +1,345 @@
 ---
 name: changelog
-description: "Auto-generates a changelog from git commits, sprint data, and design documents. Produces both internal and player-facing versions."
-argument-hint: "[version|sprint-number]"
+description: View and manage the runtime changelog for observability
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash, Write
-context: |
-  !git log --oneline -30 2>/dev/null
-  !git tag --list --sort=-v:refname 2>/dev/null | head -5
-model: haiku
 ---
 
-## Phase 1: Parse Arguments
+# Changelog Skill
 
-Read the argument for the target version or sprint number. If a version is given, use the corresponding git tag. If a sprint number is given, use the sprint date range.
+> **Status: Experimental**
+> This feature uses Claude Code's PostToolUse hooks. The hook interface may change in future versions.
+> If hooks don't trigger as expected, events can still be logged manually via auto-loop prompts.
 
-Verify the repository is initialized: run `git rev-parse --is-inside-work-tree` to confirm git is available. If not a git repo, inform the user and abort gracefully.
+Runtime observability changelog for tracking all changes during development sessions.
 
 ---
 
-## Phase 2: Gather Change Data
+## Overview
 
-Read the git log since the last tag or release:
+This skill provides an **automated** changelog system that:
+- **Automatically** records file changes via PostToolUse hooks
+- **Automatically** logs test results when tests are run
+- **Automatically** records git commits
+- **Automatically** rotates when exceeding 500 lines
+- Enables subagents to understand context from previous actions
+- Supports session recovery and debugging
+
+---
+
+## Architecture
 
 ```
-git log --oneline [last-tag]..HEAD
-```
-
-If no tags exist, read the full log or a reasonable recent range (last 100 commits).
-
-Read sprint reports from `production/sprints/` for the relevant period to understand planned work and context behind changes.
-
-Read completed design documents from `design/gdd/` for any new features implemented during this period.
-
----
-
-## Phase 3: Categorize Changes
-
-Categorize every change into one of these categories:
-
-- **New Features**: Entirely new gameplay systems, modes, or content
-- **Improvements**: Enhancements to existing features, UX improvements, performance gains
-- **Bug Fixes**: Corrections to broken behavior
-- **Balance Changes**: Tuning of gameplay values, difficulty, economy
-- **Known Issues**: Issues the team is aware of but have not yet resolved
-- **Miscellaneous**: Changes that do not fit the above categories, or commits whose messages are too vague to classify confidently
-
-For each commit, check whether the message contains a task ID or story reference
-(e.g. `[STORY-123]`, `TR-`, `#NNN`, or similar). Count commits that lack any task reference
-and include this count in the Phase 4 Metrics section as: `Commits without task reference: [N]`.
-
----
-
-## Phase 4: Generate Internal Changelog
-
-```markdown
-# Internal Changelog: [Version]
-Date: [Date]
-Sprint(s): [Sprint numbers covered]
-Commits: [Count] ([first-hash]..[last-hash])
-
-## New Features
-- [Feature Name] -- [Technical description, affected systems]
-  - Commits: [hash1], [hash2]
-  - Owner: [who implemented it]
-  - Design doc: [link if applicable]
-
-## Improvements
-- [Improvement] -- [What changed technically and why]
-  - Commits: [hashes]
-  - Owner: [who]
-
-## Bug Fixes
-- [BUG-ID] [Description of bug and root cause]
-  - Fix: [What was changed]
-  - Commits: [hashes]
-  - Owner: [who]
-
-## Balance Changes
-- [What was tuned] -- [Old value -> New value] -- [Design intent]
-  - Owner: [who]
-
-## Technical Debt / Refactoring
-- [What was cleaned up and why]
-  - Commits: [hashes]
-
-## Miscellaneous
-- [Change that didn't fit other categories, or vague commit message]
-  - Commits: [hashes]
-
-## Known Issues
-- [Issue description] -- [Severity] -- [ETA for fix if known]
-
-## Metrics
-- Total commits: [N]
-- Files changed: [N]
-- Lines added: [N]
-- Lines removed: [N]
-- Commits without task reference: [N]
+┌─────────────────────────────────────────────────────────────────┐
+│                    Observability System                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐     ┌─────────────────────────────┐           │
+│  │ Write/Edit  │     │           Bash              │           │
+│  │    Tool     │     │   (test/commit/general)     │           │
+│  └──────┬──────┘     └──────────────┬──────────────┘           │
+│         │                           │                           │
+│         ▼                           ▼                           │
+│  ┌─────────────────────────────────────────────────────┐       │
+│  │              PostToolUse Hooks                       │       │
+│  │     log-file-change.sh       log-bash-event.sh      │       │
+│  └─────────────────────────┬───────────────────────────┘       │
+│                            │                                    │
+│                            ▼                                    │
+│  ┌─────────────────────────────────────────────────────┐       │
+│  │           _lib-changelog.sh                        │       │
+│  │  • log_event()      • rotate_if_needed()            │       │
+│  │  • archive_changelog()  • clear_changelog()         │       │
+│  └─────────────────────────┬───────────────────────────┘       │
+│                            │                                    │
+│                            ▼                                    │
+│  ┌─────────────────────────────────────────────────────┐       │
+│  │         .director-mode/changelog.jsonl               │       │
+│  │                                                      │       │
+│  │  {"event_type":"file_created",...}                  │       │
+│  │  {"event_type":"test_pass",...}                     │       │
+│  │  {"event_type":"commit",...}                        │       │
+│  └─────────────────────────────────────────────────────┘       │
+│                            │                                    │
+│              ┌─────────────┴─────────────┐                     │
+│              ▼                           ▼                     │
+│  ┌─────────────────┐         ┌─────────────────┐               │
+│  │  /changelog     │         │    Subagents    │               │
+│  │   command       │         │ code-reviewer   │               │
+│  │                 │         │ debugger        │               │
+│  └─────────────────┘         └─────────────────┘               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Phase 5: Generate Player-Facing Changelog
+## Relationship with Checkpoint
 
-```markdown
-# What is New in [Version]
+| Aspect | Checkpoint | Changelog |
+|--------|------------|-----------|
+| Location | `.auto-loop/checkpoint.json` | `.director-mode/changelog.jsonl` |
+| Purpose | Current state snapshot | Historical event stream |
+| Question answered | "Where am I now?" | "How did I get here?" |
+| Used by | Stop Hook (continue/stop decision) | Subagents (context) |
+| Format | Single JSON object | JSONL (append-only) |
+| Persistence | Overwritten each iteration | Accumulated, then rotated |
 
-## New Features
-- **[Feature Name]**: [Player-friendly description of what they can now do
-  and why it is exciting. Focus on the experience, not the implementation.]
-
-## Improvements
-- **[What improved]**: [How this makes the game better for the player.
-  Be specific but avoid jargon.]
-
-## Bug Fixes
-- Fixed an issue where [describe what the player experienced, not what was
-  wrong in the code]
-- Fixed [player-visible symptom]
-
-## Balance Changes
-- [What changed in player-understandable terms and the design intent.
-  Example: "Healing potions now restore 50 HP (up from 30) -- we felt
-  players needed more recovery options in late-game encounters."]
-
-## Known Issues
-- We are aware of [issue description in player terms] and are working on a
-  fix. [Workaround if one exists.]
+**They complement each other:**
+- **Checkpoint** = Save point for resume
+- **Changelog** = Audit trail for observability
 
 ---
-Thank you for playing! Your feedback helps us make the game better.
-Report issues at [link].
+
+## Automatic Logging via Hooks
+
+### Hook Configuration (`.claude/settings.local.json`)
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/log-file-change.sh" }]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/log-file-change.sh" }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/log-bash-event.sh" }]
+      }
+    ]
+  }
+}
+```
+
+> **Note**: Uses `$CLAUDE_PROJECT_DIR` for portable paths (resolved at runtime by Claude Code).
+
+### Hook Scripts
+
+| Script | Trigger | Events Logged |
+|--------|---------|---------------|
+| `log-file-change.sh` | Write, Edit | `file_created`, `file_modified` |
+| `log-bash-event.sh` | Bash | `test_pass`, `test_fail`, `commit` |
+
+---
+
+## Automatic Rotation
+
+**Prevents unbounded growth:**
+
+```bash
+MAX_LINES=500
+
+# When changelog exceeds 500 lines:
+# 1. Move current to changelog.YYYYMMDD_HHMMSS.jsonl
+# 2. Start fresh changelog.jsonl
+# 3. Log rotation event
+```
+
+**Result:**
+
+```
+.director-mode/
+├── changelog.jsonl                    ← Current (< 500 lines)
+├── changelog.20250113_103000.jsonl    ← Archived
+├── changelog.20250112_150000.jsonl    ← Archived
+└── changelog.20250111_090000.jsonl    ← Archived
 ```
 
 ---
 
-## Phase 6: Output
+## Session Conflict Prevention
 
-Output both changelogs to the user. The internal changelog is the primary working document. The player-facing changelog is ready for community posting after review.
+**Only one auto-loop session per project:**
 
----
+```bash
+# When starting /auto-loop:
+if checkpoint exists AND status == "in_progress":
+    → Block with message:
+      "Found interrupted session at iteration #N"
+      "Use --resume or --force"
+```
 
-## Phase 7: Offer File Write
-
-After presenting the changelogs, ask the user:
-
-> "May I write this changelog to `docs/CHANGELOG.md`?
-> [A] Yes, append this entry (recommended if the file already exists)
-> [B] Yes, overwrite the file entirely
-> [C] No — I'll copy it manually"
-
-- Check whether `docs/CHANGELOG.md` exists before asking. If it does, default the
-  recommendation to **[A] append**.
-- If the user selects [A]: append the new internal changelog entry to the top of
-  the existing file (newest entries first).
-- If the user selects [B]: overwrite the file with the new changelog.
-- If the user selects [C]: stop here without writing.
-
-After a successful write: Verdict: **CHANGELOG WRITTEN** — changelog saved to `docs/CHANGELOG.md`.
-If the user declines: Verdict: **COMPLETE** — changelog generated.
+**Options:**
+- `/auto-loop --resume` → Continue with existing checkpoint + changelog
+- `/auto-loop --force "task"` → Archive old, start fresh
 
 ---
 
-## Phase 7: Next Steps
+## Event Schema
 
-- Use `/patch-notes [version]` to generate a styled, saved version for public release.
-- Use `/release-checklist` before publishing the changelog externally.
+```json
+{
+  "id": "evt_1705142400_12345",
+  "timestamp": "2025-01-13T10:30:00.000Z",
+  "event_type": "file_modified",
+  "agent": "hook",
+  "iteration": 3,
+  "summary": "file_modified: Login.tsx",
+  "files": ["src/components/Login.tsx"]
+}
+```
 
-### Guidelines
+### Event Types
 
-- Never expose internal code references, file paths, or developer names in the player-facing changelog
-- Group related changes together rather than listing individual commits
-- If a commit message is unclear, check the associated files and sprint data for context
-- Balance changes should always include the design reasoning, not just the numbers
-- Known issues should be honest — players appreciate transparency
-- If the git history is messy (merge commits, reverts, fixup commits), clean up the narrative rather than listing every commit literally
+| Type | Source | Description |
+|------|--------|-------------|
+| `file_created` | Hook (Write) | New file created |
+| `file_modified` | Hook (Edit) | File edited |
+| `test_pass` | Hook (Bash) | Tests passing |
+| `test_fail` | Hook (Bash) | Tests failing |
+| `commit` | Hook (Bash) | Git commit made |
+| `session_start` | auto-loop | Session begins |
+| `session_end` | auto-loop | Session completes |
+| `changelog_rotated` | System | Changelog was rotated |
+
+---
+
+## Subagent Integration
+
+### code-reviewer
+
+Before review, checks changelog for:
+- What files were changed recently
+- What iteration we're on
+- Recent test results
+
+### debugger
+
+Before debugging, checks changelog for:
+- When errors first occurred
+- What files changed before errors
+- Pattern of test failures
+
+---
+
+## Core Functions (`_lib-changelog.sh`)
+
+```bash
+# Log an event
+log_event "file_created" "Created Login.tsx" "hook" '["src/Login.tsx"]'
+
+# Archive current changelog
+archive_changelog
+
+# Clear changelog
+clear_changelog
+
+# List archives
+list_archives
+```
+
+---
+
+## Querying
+
+### Via Command
+
+```bash
+/changelog                  # Recent 10 events
+/changelog --summary        # Statistics
+/changelog --type test      # Filter by type
+/changelog --list-archives  # Show old changelogs
+/changelog --export log.json
+```
+
+### Via Bash
+
+```bash
+# Last 5 events
+tail -n 5 .director-mode/changelog.jsonl | jq '.'
+
+# All file changes
+grep '"event_type":"file_' .director-mode/changelog.jsonl
+
+# Count by type
+jq -r '.event_type' .director-mode/changelog.jsonl | sort | uniq -c
+```
+
+---
+
+## Example Session Flow
+
+```
+1. /auto-loop "Implement login"
+   → Check: No existing session
+   → Archive old changelog (if > 100 lines)
+   → Create checkpoint (status: in_progress)
+   → Log: session_start
+
+2. TDD Iteration #1
+   → Write test file
+   → Hook logs: file_created
+   → Run tests (fail)
+   → Hook logs: test_fail
+   → Write implementation
+   → Hook logs: file_created
+   → Run tests (pass)
+   → Hook logs: test_pass
+   → Commit
+   → Hook logs: commit
+
+3. Session interrupted (crash/exit)
+   → Checkpoint remains: iteration=1, status=in_progress
+   → Changelog has full history
+
+4. /auto-loop "something"
+   → Check: Found in_progress session!
+   → Block: "Use --resume or --force"
+
+5. /auto-loop --resume
+   → Read checkpoint: iteration=1
+   → Read changelog: understand context
+   → Continue from iteration #2
+```
+
+---
+
+## Installation
+
+Hooks are installed with Director Mode Lite:
+
+```bash
+# After install, verify:
+ls .claude/hooks/
+# → auto-loop-stop.sh
+# → _lib-changelog.sh
+# → log-bash-event.sh
+# → log-file-change.sh
+# → pre-tool-validator.sh
+
+cat .claude/settings.local.json | jq '.hooks'
+```
+
+---
+
+## Troubleshooting
+
+### Events not logged
+
+1. Check hooks exist: `ls .claude/hooks/*.sh`
+2. Check hooks.json: `cat hooks/hooks.json`
+3. Check scripts are executable: `chmod +x .claude/hooks/*.sh`
+
+### Stale session blocking
+
+```bash
+# Check what's there
+cat .auto-loop/checkpoint.json | jq '.status'
+
+# Force restart
+/auto-loop --force "New task"
+```
+
+### Changelog too large
+
+```bash
+# Manual archive
+/changelog --archive
+
+# Or clear
+/changelog --clear
+```

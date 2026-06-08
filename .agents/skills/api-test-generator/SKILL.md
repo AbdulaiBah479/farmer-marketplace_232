@@ -1,426 +1,826 @@
 ---
 name: api-test-generator
-description: Генерация полных Python pytest тестов для REST API эндпоинтов с валидацией схемы. Использовать при создании тестов для новых эндпоинтов, добавлении покрытия для CRUD операций или валидации соответствия API с OpenAPI схемами.
-allowed-tools: Bash, Read, Grep, Glob
+description: Generate comprehensive API endpoint tests for REST and GraphQL APIs.
+  Creates tests for all HTTP methods, status codes, authentication, and validation.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
-# MikoPBX API Test Generating
+# API Test Generator Skill
 
-Generate comprehensive Python pytest tests for MikoPBX REST API endpoints with full parameter coverage, schema validation, and edge case testing.
+## Purpose
 
-## What This Skill Does
+This skill generates comprehensive integration tests for API endpoints, covering all HTTP methods, status codes, authentication, authorization, request/response validation, and error handling.
 
-Analyzes DataStructure.php files and generates complete pytest test suites including:
-- ✅ CRUD operation tests (Create, Read, Update, Delete)
-- ✅ Positive and negative test cases
-- ✅ Parameter validation tests
-- ✅ Edge cases and boundary conditions
-- ✅ Schema validation tests
-- ✅ Proper fixtures and authentication
-- ✅ Detailed assertions with error messages
+## When to Use
 
-## When to Use This Skill
+- Generate tests for REST API endpoints
+- Test GraphQL API queries and mutations
+- Validate API request/response contracts
+- Test API authentication and authorization
+- Verify API error handling and status codes
 
-Use this skill when you need to:
-- Create pytest tests for new REST API endpoints
-- Add comprehensive test coverage for existing endpoints
-- Generate tests covering all parameter combinations
-- Add schema validation tests for API responses
-- Create edge case and negative tests
-- Ensure API compliance with OpenAPI specification
+## API Test Coverage
 
-## Quick Start
+For each endpoint, test:
 
-### Basic Usage
+- ✅ **Success cases** (200, 201, 204)
+- ✅ **Validation errors** (400, 422)
+- ✅ **Authentication errors** (401)
+- ✅ **Authorization errors** (403)
+- ✅ **Not found errors** (404)
+- ✅ **Conflict errors** (409)
+- ✅ **Server errors** (500)
+- ✅ **Request body validation**
+- ✅ **Query parameter validation**
+- ✅ **Response schema validation**
 
-When the user requests test generation:
+---
 
-1. **Identify the endpoint**
-   - API path (e.g., `/pbxcore/api/v3/extensions`)
-   - HTTP methods (GET, POST, PUT, DELETE, PATCH)
-   - Resource name (e.g., Extensions)
+## API Test Generation Workflow
 
-2. **Locate DataStructure.php**
-   ```bash
-   find /Users/nb/PhpstormProjects/mikopbx/Core/src/PBXCoreREST/Lib -name "DataStructure.php" | grep -i "{resource}"
-   ```
+### 1. Analyze API Routes
 
-3. **Analyze parameter definitions**
-   Extract from `DataStructure.php`:
-   - Required vs optional parameters
-   - Data types and validation rules
-   - Default values
-   - Enum values
-   - Pattern constraints (regex)
-   - Min/max values
+**Identify endpoints:**
 
-4. **Generate test file**
-   Use the complete template from [test-template.py](templates/test-template.py)
+```bash
+# Read route definitions
+cat src/routes/users.py
+cat src/controllers/user_controller.py
 
-5. **Customize for endpoint**
-   - Replace `{ResourceName}` placeholders
-   - Fill in actual payload structures
-   - Add specific field validations
-   - Include enum and pattern validations
-
-## Test Structure
-
-### File Organization
-
-```python
-tests/api/
-├── test_{resource}_api.py        # Main test file
-└── conftest.py                   # Shared fixtures
+# Identify:
+# - Endpoints and HTTP methods
+# - Path parameters
+# - Query parameters
+# - Request body schemas
+# - Response schemas
+# - Authentication requirements
+# - Authorization requirements
 ```
 
-### Test Class Structure
+**Map endpoints:**
 
-Each test file should have these test classes:
-
-```python
-class TestCreate{ResourceName}:
-    """Test POST endpoint for creating resources"""
-    - test_create_with_valid_data()
-    - test_create_missing_required_field()
-    - test_create_with_invalid_type()
-
-class TestGet{ResourceName}:
-    """Test GET endpoint for retrieving resources"""
-    - test_get_all()
-    - test_get_by_id()
-    - test_get_nonexistent()
-
-class TestUpdate{ResourceName}:
-    """Test PUT/PATCH endpoints for updating resources"""
-    - test_update_with_valid_data()
-    - test_patch_partial_update()
-
-class TestDelete{ResourceName}:
-    """Test DELETE endpoint for removing resources"""
-    - test_delete_existing()
-    - test_delete_nonexistent()
-
-class TestSchemaValidation{ResourceName}:
-    """Test response schema validation"""
-    - test_response_matches_openapi_schema()
-
-class TestEdgeCases{ResourceName}:
-    """Test edge cases and boundary conditions"""
-    - test_special_characters_in_fields()
-    - test_empty_string_values()
-    - test_boundary_values()
+```
+GET    /api/users              - List users (public)
+GET    /api/users/:id          - Get user (public)
+POST   /api/users              - Create user (admin only)
+PUT    /api/users/:id          - Update user (auth required, owner or admin)
+DELETE /api/users/:id          - Delete user (auth required, owner or admin)
 ```
 
-### Standard Fixtures
+**Deliverable:** API endpoint inventory
+
+---
+
+### 2. Generate REST API Test Suite
+
+**Test file structure:**
 
 ```python
-@pytest.fixture
-def auth_token():
-    """Get authentication token"""
-    response = requests.post(
-        f"{BASE_URL}/pbxcore/api/v3/auth/login",
-        json={"login": "admin", "password": "123456789MikoPBX#1"},
-        verify=False
-    )
-    return response.json()["data"]["access_token"]
+"""
+Integration tests for Users API endpoints.
 
-@pytest.fixture
-def headers(auth_token):
-    """Standard headers with authentication"""
-    return {
-        "Authorization": f"Bearer {auth_token}",
-        "Content-Type": "application/json"
-    }
+Endpoints tested:
+- GET    /api/users
+- GET    /api/users/:id
+- POST   /api/users
+- PUT    /api/users/:id
+- PATCH  /api/users/:id
+- DELETE /api/users/:id
+"""
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+from src.models import User
+
+
+# ============================================================================
+# GET /api/users - List Users
+# ============================================================================
+
+class TestGetUsers:
+    """Tests for GET /api/users endpoint."""
+
+    def test_get_users_empty_returns_empty_list(self, client: TestClient):
+        """Test GET /api/users with no users returns empty list."""
+        # Act
+        response = client.get("/api/users")
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == []
+
+    def test_get_users_returns_user_list(
+        self, client: TestClient, db: Session
+    ):
+        """Test GET /api/users returns list of users."""
+        # Arrange: Create test users
+        users = [
+            User(name=f"User {i}", email=f"user{i}@example.com")
+            for i in range(3)
+        ]
+        db.add_all(users)
+        db.commit()
+
+        # Act
+        response = client.get("/api/users")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 3
+        assert all("id" in user for user in data)
+        assert all("name" in user for user in data)
+        assert all("email" in user for user in data)
+
+    def test_get_users_with_pagination(
+        self, client: TestClient, db: Session
+    ):
+        """Test GET /api/users with pagination parameters."""
+        # Arrange: Create 10 users
+        users = [
+            User(name=f"User {i}", email=f"user{i}@example.com")
+            for i in range(10)
+        ]
+        db.add_all(users)
+        db.commit()
+
+        # Act
+        response = client.get("/api/users?limit=5&offset=0")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 5
+
+    def test_get_users_with_search_filter(
+        self, client: TestClient, db: Session
+    ):
+        """Test GET /api/users with search query."""
+        # Arrange
+        users = [
+            User(name="Alice", email="alice@example.com"),
+            User(name="Bob", email="bob@example.com"),
+            User(name="Alice Smith", email="asmith@example.com"),
+        ]
+        db.add_all(users)
+        db.commit()
+
+        # Act
+        response = client.get("/api/users?search=alice")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+        assert all("alice" in user["name"].lower() for user in data)
+
+    def test_get_users_invalid_limit_returns_400(self, client: TestClient):
+        """Test GET /api/users with invalid limit parameter."""
+        # Act
+        response = client.get("/api/users?limit=-1")
+
+        # Assert
+        assert response.status_code == 400
+        assert "limit" in response.json()["detail"].lower()
+
+
+# ============================================================================
+# GET /api/users/:id - Get User by ID
+# ============================================================================
+
+class TestGetUserById:
+    """Tests for GET /api/users/:id endpoint."""
+
+    def test_get_user_by_id_returns_user(
+        self, client: TestClient, test_user: User
+    ):
+        """Test GET /api/users/:id returns specific user."""
+        # Act
+        response = client.get(f"/api/users/{test_user.id}")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == test_user.id
+        assert data["name"] == test_user.name
+        assert data["email"] == test_user.email
+        assert "password" not in data  # Sensitive data not included
+
+    def test_get_user_nonexistent_id_returns_404(self, client: TestClient):
+        """Test GET /api/users/:id with nonexistent ID returns 404."""
+        # Act
+        response = client.get("/api/users/99999")
+
+        # Assert
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+    def test_get_user_invalid_id_format_returns_400(self, client: TestClient):
+        """Test GET /api/users/:id with invalid ID format returns 400."""
+        # Act
+        response = client.get("/api/users/invalid-id")
+
+        # Assert
+        assert response.status_code == 400
+
+
+# ============================================================================
+# POST /api/users - Create User
+# ============================================================================
+
+class TestCreateUser:
+    """Tests for POST /api/users endpoint."""
+
+    def test_create_user_valid_data_returns_created(
+        self, client: TestClient, db: Session, admin_headers: dict
+    ):
+        """Test POST /api/users with valid data creates user."""
+        # Arrange
+        user_data = {
+            "name": "New User",
+            "email": "newuser@example.com",
+            "password": "SecurePass123"
+        }
+
+        # Act
+        response = client.post(
+            "/api/users",
+            json=user_data,
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == user_data["name"]
+        assert data["email"] == user_data["email"]
+        assert "id" in data
+        assert "password" not in data  # Password not returned
+        assert "created_at" in data
+
+        # Verify in database
+        user = db.query(User).filter_by(email=user_data["email"]).first()
+        assert user is not None
+        assert user.name == user_data["name"]
+
+    def test_create_user_missing_required_field_returns_400(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Test POST /api/users with missing required field returns 400."""
+        # Arrange: Missing email
+        invalid_data = {
+            "name": "User",
+            "password": "password"
+        }
+
+        # Act
+        response = client.post(
+            "/api/users",
+            json=invalid_data,
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 400
+        assert "email" in response.json()["detail"].lower()
+
+    def test_create_user_invalid_email_returns_400(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Test POST /api/users with invalid email format returns 400."""
+        # Arrange
+        invalid_data = {
+            "name": "User",
+            "email": "not-an-email",
+            "password": "password"
+        }
+
+        # Act
+        response = client.post(
+            "/api/users",
+            json=invalid_data,
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 400
+        assert "email" in response.json()["detail"].lower()
+
+    def test_create_user_weak_password_returns_400(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Test POST /api/users with weak password returns 400."""
+        # Arrange
+        invalid_data = {
+            "name": "User",
+            "email": "user@example.com",
+            "password": "123"  # Too short
+        }
+
+        # Act
+        response = client.post(
+            "/api/users",
+            json=invalid_data,
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 400
+        assert "password" in response.json()["detail"].lower()
+
+    def test_create_user_duplicate_email_returns_409(
+        self, client: TestClient, test_user: User, admin_headers: dict
+    ):
+        """Test POST /api/users with duplicate email returns 409."""
+        # Arrange
+        duplicate_data = {
+            "name": "Another User",
+            "email": test_user.email,  # Duplicate
+            "password": "password"
+        }
+
+        # Act
+        response = client.post(
+            "/api/users",
+            json=duplicate_data,
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 409
+        assert "already exists" in response.json()["detail"].lower()
+
+    def test_create_user_without_auth_returns_401(
+        self, client: TestClient
+    ):
+        """Test POST /api/users without authentication returns 401."""
+        # Arrange
+        user_data = {
+            "name": "User",
+            "email": "user@example.com",
+            "password": "password"
+        }
+
+        # Act
+        response = client.post("/api/users", json=user_data)
+
+        # Assert
+        assert response.status_code == 401
+
+    def test_create_user_as_non_admin_returns_403(
+        self, client: TestClient, auth_headers: dict
+    ):
+        """Test POST /api/users as non-admin user returns 403."""
+        # Arrange
+        user_data = {
+            "name": "User",
+            "email": "user@example.com",
+            "password": "password"
+        }
+
+        # Act
+        response = client.post(
+            "/api/users",
+            json=user_data,
+            headers=auth_headers  # Regular user, not admin
+        )
+
+        # Assert
+        assert response.status_code == 403
+
+
+# ============================================================================
+# PUT /api/users/:id - Update User (Full Replace)
+# ============================================================================
+
+class TestUpdateUser:
+    """Tests for PUT /api/users/:id endpoint."""
+
+    def test_update_user_own_account_returns_updated(
+        self, client: TestClient, test_user: User, auth_headers: dict, db: Session
+    ):
+        """Test PUT /api/users/:id to update own account."""
+        # Arrange
+        update_data = {
+            "name": "Updated Name",
+            "email": test_user.email  # Same email
+        }
+
+        # Act
+        response = client.put(
+            f"/api/users/{test_user.id}",
+            json=update_data,
+            headers=auth_headers
+        )
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Updated Name"
+
+        # Verify in database
+        db.refresh(test_user)
+        assert test_user.name == "Updated Name"
+
+    def test_update_user_other_account_as_admin_succeeds(
+        self, client: TestClient, test_user: User, admin_headers: dict, db: Session
+    ):
+        """Test PUT /api/users/:id as admin to update other user."""
+        # Arrange
+        update_data = {
+            "name": "Admin Updated",
+            "email": test_user.email
+        }
+
+        # Act
+        response = client.put(
+            f"/api/users/{test_user.id}",
+            json=update_data,
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 200
+
+    def test_update_user_other_account_as_regular_user_returns_403(
+        self, client: TestClient, db: Session, auth_headers: dict
+    ):
+        """Test PUT /api/users/:id to update other user returns 403."""
+        # Arrange: Create another user
+        other_user = User(name="Other", email="other@example.com")
+        db.add(other_user)
+        db.commit()
+
+        update_data = {"name": "Unauthorized Update"}
+
+        # Act
+        response = client.put(
+            f"/api/users/{other_user.id}",
+            json=update_data,
+            headers=auth_headers  # Regular user, not admin
+        )
+
+        # Assert
+        assert response.status_code == 403
+
+    def test_update_user_nonexistent_returns_404(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Test PUT /api/users/:id with nonexistent ID returns 404."""
+        # Arrange
+        update_data = {"name": "Updated"}
+
+        # Act
+        response = client.put(
+            "/api/users/99999",
+            json=update_data,
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 404
+
+
+# ============================================================================
+# PATCH /api/users/:id - Partial Update User
+# ============================================================================
+
+class TestPatchUser:
+    """Tests for PATCH /api/users/:id endpoint."""
+
+    def test_patch_user_single_field_updates(
+        self, client: TestClient, test_user: User, auth_headers: dict, db: Session
+    ):
+        """Test PATCH /api/users/:id updates only specified field."""
+        # Arrange
+        original_email = test_user.email
+        patch_data = {"name": "Patched Name"}
+
+        # Act
+        response = client.patch(
+            f"/api/users/{test_user.id}",
+            json=patch_data,
+            headers=auth_headers
+        )
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Patched Name"
+        assert data["email"] == original_email  # Unchanged
+
+        # Verify in database
+        db.refresh(test_user)
+        assert test_user.name == "Patched Name"
+        assert test_user.email == original_email
+
+
+# ============================================================================
+# DELETE /api/users/:id - Delete User
+# ============================================================================
+
+class TestDeleteUser:
+    """Tests for DELETE /api/users/:id endpoint."""
+
+    def test_delete_user_own_account_returns_no_content(
+        self, client: TestClient, test_user: User, auth_headers: dict, db: Session
+    ):
+        """Test DELETE /api/users/:id to delete own account."""
+        # Act
+        response = client.delete(
+            f"/api/users/{test_user.id}",
+            headers=auth_headers
+        )
+
+        # Assert
+        assert response.status_code == 204
+
+        # Verify in database
+        deleted_user = db.query(User).filter_by(id=test_user.id).first()
+        assert deleted_user is None
+
+    def test_delete_user_as_admin_succeeds(
+        self, client: TestClient, test_user: User, admin_headers: dict, db: Session
+    ):
+        """Test DELETE /api/users/:id as admin."""
+        # Act
+        response = client.delete(
+            f"/api/users/{test_user.id}",
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 204
+
+    def test_delete_user_other_account_returns_403(
+        self, client: TestClient, db: Session, auth_headers: dict
+    ):
+        """Test DELETE /api/users/:id to delete other user returns 403."""
+        # Arrange
+        other_user = User(name="Other", email="other@example.com")
+        db.add(other_user)
+        db.commit()
+
+        # Act
+        response = client.delete(
+            f"/api/users/{other_user.id}",
+            headers=auth_headers
+        )
+
+        # Assert
+        assert response.status_code == 403
+
+    def test_delete_user_without_auth_returns_401(
+        self, client: TestClient, test_user: User
+    ):
+        """Test DELETE /api/users/:id without auth returns 401."""
+        # Act
+        response = client.delete(f"/api/users/{test_user.id}")
+
+        # Assert
+        assert response.status_code == 401
+
+    def test_delete_user_nonexistent_returns_404(
+        self, client: TestClient, admin_headers: dict
+    ):
+        """Test DELETE /api/users/:id with nonexistent ID returns 404."""
+        # Act
+        response = client.delete(
+            "/api/users/99999",
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 404
 ```
 
-## Common Test Patterns
+**Deliverable:** Comprehensive REST API tests
 
-### 1. Create with Valid Data
+---
+
+### 3. Generate GraphQL API Tests
+
+**GraphQL test structure:**
 
 ```python
-def test_create_with_valid_data(self, headers):
-    """Test creating a resource with all valid required parameters"""
-    payload = {
-        # Based on DataStructure.php
-    }
+"""
+Integration tests for GraphQL API.
+"""
 
-    response = requests.post(
-        f"{BASE_URL}{API_PATH}",
-        json=payload,
-        headers=headers,
-        verify=False
-    )
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-    data = response.json()
-    assert "data" in data
-    assert "id" in data["data"]
 
-    # Validate returned values match input
-    for key, value in payload.items():
-        assert data["data"][key] == value
+class TestGraphQLQueries:
+    """Tests for GraphQL queries."""
+
+    def test_query_users_returns_list(
+        self, client: TestClient, db: Session
+    ):
+        """Test users query returns list."""
+        # Arrange
+        create_test_users(db, count=3)
+
+        query = """
+        query {
+            users {
+                id
+                name
+                email
+            }
+        }
+        """
+
+        # Act
+        response = client.post("/graphql", json={"query": query})
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data["users"]) == 3
+
+    def test_query_user_by_id_returns_user(
+        self, client: TestClient, test_user: User
+    ):
+        """Test user query by ID returns specific user."""
+        # Arrange
+        query = f"""
+        query {{
+            user(id: {test_user.id}) {{
+                id
+                name
+                email
+            }}
+        }}
+        """
+
+        # Act
+        response = client.post("/graphql", json={"query": query})
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()["data"]["user"]
+        assert data["id"] == test_user.id
+        assert data["name"] == test_user.name
+
+
+class TestGraphQLMutations:
+    """Tests for GraphQL mutations."""
+
+    def test_create_user_mutation_creates_user(
+        self, client: TestClient, db: Session, admin_headers: dict
+    ):
+        """Test createUser mutation creates new user."""
+        # Arrange
+        mutation = """
+        mutation {
+            createUser(input: {
+                name: "New User",
+                email: "newuser@example.com",
+                password: "SecurePass123"
+            }) {
+                user {
+                    id
+                    name
+                    email
+                }
+            }
+        }
+        """
+
+        # Act
+        response = client.post(
+            "/graphql",
+            json={"query": mutation},
+            headers=admin_headers
+        )
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()["data"]["createUser"]["user"]
+        assert data["name"] == "New User"
+        assert data["email"] == "newuser@example.com"
+
+        # Verify in database
+        user = db.query(User).filter_by(email="newuser@example.com").first()
+        assert user is not None
 ```
 
-### 2. Validation Tests
+**Deliverable:** GraphQL API tests
+
+---
+
+## HTTP Status Code Testing
+
+**Test all relevant status codes:**
 
 ```python
-def test_create_missing_required_field(self, headers):
-    """Test validation when required field is missing"""
-    payload = {
-        # Missing required field
-    }
-
-    response = requests.post(
-        f"{BASE_URL}{API_PATH}",
-        json=payload,
-        headers=headers,
-        verify=False
-    )
-
-    assert response.status_code == 400
-    assert "messages" in response.json()
-```
-
-### 3. Edge Cases
-
-```python
-def test_special_characters_in_fields(self, headers):
-    """Test handling of special characters"""
-    special_chars = "Test <script>alert('xss')</script> & \"quotes\""
-    payload = {
-        "string_field": special_chars,
-    }
-
-    response = requests.post(...)
+# 200 OK - Successful GET/PUT/PATCH
+def test_returns_200_on_success(client):
+    response = client.get("/api/resource")
     assert response.status_code == 200
-    assert response.json()["data"]["string_field"] == special_chars
+
+# 201 Created - Successful POST
+def test_returns_201_on_create(client):
+    response = client.post("/api/resource", json=data)
+    assert response.status_code == 201
+
+# 204 No Content - Successful DELETE
+def test_returns_204_on_delete(client):
+    response = client.delete("/api/resource/1")
+    assert response.status_code == 204
+
+# 400 Bad Request - Validation error
+def test_returns_400_on_invalid_input(client):
+    response = client.post("/api/resource", json=invalid_data)
+    assert response.status_code == 400
+
+# 401 Unauthorized - Missing/invalid auth
+def test_returns_401_without_auth(client):
+    response = client.get("/api/protected")
+    assert response.status_code == 401
+
+# 403 Forbidden - Insufficient permissions
+def test_returns_403_without_permission(client, user_token):
+    response = client.delete("/api/admin/resource", headers=user_token)
+    assert response.status_code == 403
+
+# 404 Not Found - Resource doesn't exist
+def test_returns_404_for_nonexistent(client):
+    response = client.get("/api/resource/99999")
+    assert response.status_code == 404
+
+# 409 Conflict - Duplicate resource
+def test_returns_409_on_duplicate(client):
+    response = client.post("/api/resource", json=existing_data)
+    assert response.status_code == 409
+
+# 422 Unprocessable Entity - Semantic error
+def test_returns_422_on_semantic_error(client):
+    response = client.post("/api/resource", json=invalid_semantic_data)
+    assert response.status_code == 422
+
+# 500 Internal Server Error - Server error
+def test_returns_500_on_server_error(client, mock_error):
+    response = client.get("/api/resource")
+    assert response.status_code == 500
 ```
 
-## DataStructure Analysis
+---
 
-When analyzing DataStructure.php, extract these key elements:
+## Best Practices
 
-### Parameter Structure
+1. **Test all HTTP methods:** GET, POST, PUT, PATCH, DELETE
+2. **Test all status codes:** Success and error responses
+3. **Validate request bodies:** Required fields, formats, constraints
+4. **Validate response bodies:** Schema, fields, data types
+5. **Test authentication:** With/without tokens, expired tokens
+6. **Test authorization:** Different user roles and permissions
+7. **Test edge cases:** Empty lists, null values, max limits
+8. **Verify database state:** Check data persisted correctly
+9. **Use descriptive test names:** Clearly state what's being tested
+10. **Group by endpoint:** Organize tests by API endpoint
 
-```php
-public static function getParameterDefinitions(): array
-{
-    return [
-        'request' => [
-            'POST' => [
-                'parameter_name' => [
-                    'type' => 'string',              // Extract type
-                    'description' => 'Description',  // Extract description
-                    'example' => 'value',            // Use for test data
-                    'required' => true,              // Required vs optional
-                    'default' => 'default_value',    // Default value
-                    'enum' => ['val1', 'val2'],      // Valid enum values
-                    'pattern' => '^[a-z]+$',         // Regex pattern
-                    'minLength' => 1,                // Min length
-                    'maxLength' => 100,              // Max length
-                ],
-            ],
-        ],
-    ];
-}
-```
+---
 
-### Use This Data To
+## Quality Checklist
 
-1. **Generate valid payloads** - Use `example` and `default` values
-2. **Test required fields** - Create tests omitting each required field
-3. **Test data types** - Create tests with wrong types
-4. **Test enums** - Create tests for each enum value and invalid values
-5. **Test patterns** - Create tests for valid/invalid patterns
-6. **Test boundaries** - Create tests for min/max values
+Before completing API tests:
 
-## Test Documentation Template
+- [ ] All endpoints tested
+- [ ] All HTTP methods tested
+- [ ] Success cases (200, 201, 204) covered
+- [ ] Error cases (400, 401, 403, 404, 409) covered
+- [ ] Request validation tested
+- [ ] Response schema validated
+- [ ] Authentication tested
+- [ ] Authorization tested
+- [ ] Edge cases covered
+- [ ] Database state verified
+- [ ] All tests pass
+- [ ] Tests are independent
 
-Add to the top of each test file:
+---
 
-```python
-"""
-Tests for {ResourceName} API endpoint
+## Integration with Testing Workflow
 
-API Endpoint: /pbxcore/api/v3/{resource-path}
-DataStructure: src/PBXCoreREST/Lib/{ResourceName}/DataStructure.php
+**Input:** API routes and endpoints
+**Process:** Analyze → Generate tests → Run & verify
+**Output:** Comprehensive API test suite
+**Next Step:** API documentation or deployment
 
-Test Coverage:
-- CRUD operations (Create, Read, Update, Delete)
-- Required vs optional parameters
-- Data type validations
-- Enum value validations
-- Pattern validations (regex)
-- Boundary conditions (min/max values)
-- Special characters and edge cases
-- Schema validation (when SCHEMA_VALIDATION_STRICT=1)
+---
 
-Requirements:
-- pytest
-- requests
-- Docker container running with MikoPBX
+## Remember
 
-Run tests:
-    pytest tests/api/test_{resource_name}.py -v
-
-Run with schema validation:
-    # Ensure SCHEMA_VALIDATION_STRICT=1 is set in container
-    pytest tests/api/test_{resource_name}.py -v
-"""
-```
-
-## Output Format
-
-Always generate:
-
-1. ✅ **Complete pytest file** - Runnable without modifications
-2. ✅ **Documentation block** - Clear description at the top
-3. ✅ **All test classes** - CRUD, schema validation, edge cases
-4. ✅ **Proper fixtures** - Authentication and headers
-5. ✅ **Clear assertions** - With descriptive error messages
-6. ✅ **Comments** - Explaining complex validations
-
-## Running Tests
-
-### Basic Execution
-
-```bash
-# Run all API tests
-pytest tests/api/ -v
-
-# Run specific endpoint tests
-pytest tests/api/test_extensions_api.py -v
-
-# Run specific test class
-pytest tests/api/test_extensions_api.py::TestCreateExtensions -v
-
-# Run specific test
-pytest tests/api/test_extensions_api.py::TestCreateExtensions::test_create_with_valid_data -v
-```
-
-### With Schema Validation
-
-```bash
-# Enable schema validation in container
-docker exec mikopbx_container sh -c 'export SCHEMA_VALIDATION_STRICT=1'
-
-# Run tests
-pytest tests/api/test_extensions_api.py -v
-```
-
-### Test Markers
-
-```bash
-# Run only CRUD tests
-pytest tests/api/ -m crud -v
-
-# Skip slow tests
-pytest tests/api/ -m "not slow" -v
-
-# Run smoke tests
-pytest tests/api/ -m smoke -v
-```
-
-## Important Notes
-
-### MikoPBX-Specific Considerations
-
-- **Authentication**: All tests need Bearer token from `/auth/login`
-- **HTTPS**: Use `verify=False` for self-signed certificates
-- **Base URL**: Default is `https://mikopbx-php83.localhost:8445`
-- **Schema validation**: Only active when `SCHEMA_VALIDATION_STRICT=1` in container
-- **Container restart**: Changes to PHP code require container restart
-- **Test isolation**: Each test should be independent and idempotent
-
-### Best Practices
-
-1. ✅ **Analyze DataStructure first** - Don't guess parameter structures
-2. ✅ **Include schema validation tests** - Only work with SCHEMA_VALIDATION_STRICT=1
-3. ✅ **Test success and failure cases** - Negative tests are critical
-4. ✅ **Use fixtures for auth** - Avoid code duplication
-5. ✅ **Clean up after tests** - Delete created resources in teardown
-6. ✅ **Document expected behavior** - Each test should state what it validates
-7. ✅ **Use descriptive test names** - Clear indication of what's being tested
-8. ✅ **One assertion per test** - Or group related assertions
-
-## Additional Resources
-
-### Templates
-
-Complete test templates for copy-paste usage:
-
-- **[test-template.py](templates/test-template.py)** - Complete pytest template with all test classes
-- **[crud-tests.py](templates/crud-tests.py)** - Reusable CRUD operation patterns
-- **[edge-cases.py](templates/edge-cases.py)** - Edge case and boundary test patterns
-
-### Reference Documentation
-
-- **[pytest-patterns.md](reference/pytest-patterns.md)** - Pytest patterns, fixtures, and best practices
-
-### Quick Reference
-
-**Test a new endpoint in 5 steps:**
-
-1. Find DataStructure.php
-2. Copy [test-template.py](templates/test-template.py)
-3. Replace `{ResourceName}` and `{resource-path}`
-4. Fill in payloads based on DataStructure
-5. Run `pytest tests/api/test_{resource}_api.py -v`
-
-**Need specific patterns?**
-
-- CRUD patterns → [crud-tests.py](templates/crud-tests.py)
-- Edge cases → [edge-cases.py](templates/edge-cases.py)
-- Pytest best practices → [pytest-patterns.md](reference/pytest-patterns.md)
-
-## Example Invocation
-
-**User**: "Generate pytest tests for the Extensions API endpoint"
-
-**Your response should:**
-
-1. Find `/src/PBXCoreREST/Lib/Extensions/DataStructure.php`
-2. Read and analyze parameter definitions
-3. Use [test-template.py](templates/test-template.py) as base
-4. Generate comprehensive test file with:
-   - Valid test data from DataStructure
-   - All CRUD operations
-   - Edge cases for special characters, boundaries
-   - Schema validation tests
-5. Save to `tests/api/test_extensions_api.py`
-6. Provide run instructions
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: Test fails with "Unauthorized"
-**Solution**: Check that `auth_token` fixture is working and token is valid
-
-**Issue**: Schema validation tests don't run
-**Solution**: Ensure `SCHEMA_VALIDATION_STRICT=1` is set in container
-
-**Issue**: Tests are flaky
-**Solution**: Ensure test isolation - each test should create its own resources
-
-**Issue**: Container not accessible
-**Solution**: Check container is running: `docker ps | grep mikopbx`
-
-**Issue**: SSL certificate errors
-**Solution**: Ensure `verify=False` is set in requests
-
-### Debug Commands
-
-```bash
-# Check container is running
-docker ps | grep mikopbx
-
-# Check environment variable
-docker exec mikopbx_container env | grep SCHEMA_VALIDATION_STRICT
-
-# View API logs
-docker exec mikopbx_container tail -f /storage/usbdisk1/mikopbx/log/php/error.log
-
-# Test API manually
-curl -k https://mikopbx-php83.localhost:8445/pbxcore/api/v3/system/ping
-```
+- **Test all endpoints** and HTTP methods
+- **Test success and error cases**
+- **Validate request and response schemas**
+- **Test authentication and authorization**
+- **Verify database state** after operations
+- **Use appropriate status codes**
+- **Keep tests focused** on one scenario
+- **Tests serve as API documentation**

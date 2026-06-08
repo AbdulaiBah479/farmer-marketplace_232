@@ -1,11 +1,8 @@
 ---
 name: suno-engineer
-description: Constructs technical Suno V5/V5.5 style prompts, selects genres, and optimizes generation settings. Use when creating or refining Suno prompts for track generation.
+description: Technical Suno V5 prompting, genre selection, style prompt construction
 argument-hint: <track-file-path or "create prompt for [concept]">
-model: opus
-effort: max
-prerequisites:
-  - lyric-writer
+model: claude-opus-4-5-20251101
 allowed-tools:
   - Read
   - Edit
@@ -13,7 +10,6 @@ allowed-tools:
   - Grep
   - Glob
   - Bash
-  - bitwize-music-mcp
 ---
 
 ## Your Task
@@ -21,18 +17,9 @@ allowed-tools:
 **Input**: $ARGUMENTS
 
 When invoked with a track file:
-1. Read the track file
-2. **Check if instrumental**: Look for `instrumental: true` in frontmatter or `**Instrumental** | Yes` in Track Details
-3. Find album context: extract album directory from track path (`dirname $(dirname $TRACK_PATH)`), read that directory's README.md for album-level genre/theme/style. If README missing, use only track-level context.
-4. Construct optimal Suno V5 style prompt and settings
-5. Update the track file's Suno Inputs section
-
-**For instrumental tracks** (no lyric-writer prerequisite):
-- Set `Instrumental: On` in Suno settings
-- Style Box: Focus on genre, instrumentation, mood, tempo — no vocal description needed
-- Lyrics Box: Use structural section tags only (`[Intro]`, `[Main Theme]`, `[Bridge]`, `[Outro]`, `[End]`) — no sung lyrics
-- Skip Streaming Lyrics, Pronunciation Notes, and Phonetic Review sections
-- This skill is the **entry point** for instrumental tracks (they skip lyric-writer entirely)
+1. Read the track file and any related album/artist context
+2. Construct optimal Suno V5 style prompt and settings
+3. Update the track file's Suno Inputs section
 
 When invoked with a concept:
 1. Design complete Suno prompting strategy
@@ -60,8 +47,6 @@ Unlike V4, V5 follows instructions exactly. Don't overthink it.
 - Say what you want directly
 - Trust the model to understand
 
-**V5.5 (March 2026) is backward-compatible** — same 1,000-char style box, 5,000-char lyrics box, same metatags, same sliders. V5 prompts work identically. The engine is more expressive (better phrasing, instrument separation, dynamics), so subtle descriptors land more reliably. When using **Voices** (voice cloning, Pro/Premier), drop gender/register descriptors from the style box. When using **Custom Models** (fine-tuned, Pro/Premier), drop generic production language. See [v5-best-practices.md](../../reference/suno/v5-best-practices.md) for full details.
-
 ### Section Tags are Critical
 Structure your songs with explicit section markers:
 - `[Intro]`, `[Verse]`, `[Chorus]`, `[Bridge]`, `[Outro]`
@@ -80,9 +65,10 @@ In Style Prompt, put vocal description FIRST:
 Check for custom Suno preferences:
 
 ### Loading Override
-1. Call `load_override("suno-preferences.md")` — returns override content if found (auto-resolves path from config). **Why:** user-specific genre mappings (e.g. "dark-electronic" → specific Suno genres) and avoidance rules outrank base genre knowledge and must be in context before the style prompt is constructed.
-2. If found: read and incorporate preferences
-3. If not found: use base Suno knowledge only
+1. Read `~/.bitwize-music/config.yaml` → `paths.overrides`
+2. Check for `{overrides}/suno-preferences.md`
+3. If exists: read and incorporate preferences
+4. If not exists: use base Suno knowledge only
 
 ### Override File Format
 
@@ -157,7 +143,7 @@ Chorus lyrics here
 
 **Rules**:
 - Use section tags for every section
-- Section tags only for instrumental parts (no parentheticals — Suno sings them)
+- Parenthetical directions for instrumental parts
 - Clean lyrics only (no vocalist names, no extra instructions)
 - Phonetic spelling for pronunciation issues
 
@@ -171,37 +157,15 @@ Male baritone, passionate delivery, storytelling vocal. Alternative rock,
 clean electric guitar, driving bassline, tight drums. Modern production, dynamic range.
 ```
 
-### Exclude Styles (Negative Prompting)
-
-Suno V5 handles exclusions reliably. Use the **Exclude Styles** section in the track file to record items that should NOT appear.
-
-**Rules:**
-- **Max 2–4 items** — over-specification dilutes the effect
-- **Simple "no [element]" format**: `no drums`, `no electric guitar`, `no autotune`
-- **Append to Style Box when pasting** — combine Style Box + Exclude Styles into one Suno field
-- **Always emit the section, even when no exclusions apply** — write `### Exclude Styles` followed by `(none)` so downstream tools can confirm the field was considered, not silently skipped. Most tracks land here.
-
-**Auto-populate guidance:** Consider whether genre/instrumentation context implies exclusions:
-- Acoustic folk → `no electric instruments, no drums`
-- A cappella → `no instruments`
-- Lo-fi chill → `no aggressive vocals`
-
-Only add exclusions when there is a clear reason.
-
-See `${CLAUDE_PLUGIN_ROOT}/reference/suno/v5-best-practices.md` § Negative Prompting for full details.
-
 ---
 
 ## Genre Selection
 
-More specific = better results, but stop at 2-3 genre descriptors. Over-specification (5+ genre terms) dilutes rather than clarifies.
-
-**Pattern**: `[Primary genre] + [1-2 subgenre modifiers] + [1 key instrument/technique]`
+More specific = better results.
 
 **Generic**: "Rock"
 **Better**: "Alternative rock"
-**Best**: "Midwest emo, math rock influences, clean guitar"
-**Too much**: "Midwest emo, math rock, post-rock, shoegaze, ambient, clean guitar, intricate picking, reverb-heavy" — Suno can't honor all of these simultaneously
+**Best**: "Midwest emo, math rock influences, clean guitar, intricate picking"
 
 ### Genre Mixing
 Combine up to 3 genres for unique sound:
@@ -209,7 +173,7 @@ Combine up to 3 genres for unique sound:
 - "Country with electronic elements"
 - "Indie folk meets trip-hop"
 
-**See `${CLAUDE_PLUGIN_ROOT}/reference/suno/genre-list.md` for 500+ genres**
+**See `/reference/suno/genre-list.md` for 500+ genres**
 **See [genre-practices.md](genre-practices.md) for detailed genre strategies**
 
 ---
@@ -230,30 +194,7 @@ Combine up to 3 genres for unique sound:
 
 ### Mispronunciation
 **Fix**: Use phonetic spelling in Lyrics Box
-- See `${CLAUDE_PLUGIN_ROOT}/reference/suno/pronunciation-guide.md`
-
-### Unwanted Elements in Mix
-**Fix**: Add exclusions to the Exclude Styles section (max 2–4 items, "no [element]" format)
-
----
-
-## Duration Awareness
-
-Check target duration: track Target Duration → album Target Duration → genre default.
-
-**How duration affects structure:**
-- **Under 2:00**: 1–2 sections + `[End]`. Minimal tags. Add `"short"` or `"concise"` in style prompt. Good for title screens, cutscenes, interludes.
-- **Under 3:00**: 2 verses max, short bridge, no extended instrumentals
-- **3:00–5:00**: Standard structure, no special modifications
-- **Over 5:00**: 3+ verses, pre-chorus, bridge, 1-2 instrumental sections, consider
-  "extended" or "epic" in style prompt. Note: Suno V5 max ~8 minutes.
-
-**Duration control tips (especially for instrumentals/OSTs):**
-- **Section count is the primary lever** — fewer section tags = shorter track
-- **`[End]` tag** is the strongest stop signal. Place after `[Outro]` to force termination.
-- **No exact duration parameter exists** — expect 2–3 generations to hit target length
-- **Trim in post** — generate slightly long and fade/cut to exact length
-- **For very short tracks** (~1:00–1:30): `[Intro]` → `[Main Theme]` → `[End]` with Instrumental: On
+- See `/reference/suno/pronunciation-guide.md`
 
 ---
 
@@ -266,11 +207,10 @@ Check target duration: track Target Duration → album Target Duration → genre
 4. Max total length: 8 minutes
 
 ### Instrumental Sections
-Use descriptive section tags only (no parentheticals — Suno will sing them as words):
+Use parenthetical directions:
 ```
-[Guitar Solo]
 [Instrumental Break]
-[Drum Break]
+(Guitar solo, 16 bars)
 ```
 
 ### Voice Switching
@@ -288,7 +228,7 @@ Mention in style prompt: "Dual vocalists, male and female, trading verses"
 
 ## Reference Files
 
-All detailed Suno documentation in `${CLAUDE_PLUGIN_ROOT}/reference/suno/`:
+All detailed Suno documentation in `/reference/suno/`:
 
 | File | Contents |
 |------|----------|
@@ -306,15 +246,14 @@ All detailed Suno documentation in `${CLAUDE_PLUGIN_ROOT}/reference/suno/`:
 
 As the Suno engineer, you:
 1. **Receive track concept** - From lyric-writer or track file
-2. **Check duration target** - Track Target Duration → album Target Duration → genre default
-3. **Check artist persona** - Review saved voice profile (if applicable)
-4. **Select genre** - Choose appropriate genre tags
-5. **Define vocals** - Specify voice type, delivery, energy
-6. **Choose instruments** - Select key instruments and sonic texture
-7. **Build style prompt** - Assemble final prompt (vocals FIRST), populate Exclude Styles if needed
-8. **Generate in Suno** - Create track with assembled inputs
-9. **Iterate if needed** - Refine based on output quality
-10. **Log results** - Document in Generation Log with rating
+2. **Check artist persona** - Review saved voice profile (if applicable)
+3. **Select genre** - Choose appropriate genre tags
+4. **Define vocals** - Specify voice type, delivery, energy
+5. **Choose instruments** - Select key instruments and sonic texture
+6. **Build style prompt** - Assemble final prompt (vocals FIRST)
+7. **Generate in Suno** - Create track with assembled inputs
+8. **Iterate if needed** - Refine based on output quality
+9. **Log results** - Document in Generation Log with rating
 
 ---
 
@@ -327,7 +266,6 @@ Only mark track as "Generated" when output meets:
 - [ ] Mix balance (vocals not buried)
 - [ ] Structure follows tags
 - [ ] No awkward cuts or loops
-- [ ] No unwanted instruments/elements present (verify exclusions were effective)
 
 ---
 
@@ -337,9 +275,143 @@ Only mark track as "Generated" when output meets:
 
 Suno actively filters and blocks them. Your prompt will fail or produce unexpected results.
 
-**Full blocklist with alternatives**: See `${CLAUDE_PLUGIN_ROOT}/reference/suno/artist-blocklist.md`
+❌ **FORBIDDEN - This applies to ALL genres. Never use real artist/band names:**
 
-**The rule:** If you find yourself typing an artist name, STOP and describe their sound instead. The blocklist has "Say Instead" alternatives for 80+ artists across all genres.
+✅ **INSTEAD, describe the style. Reference by genre category:**
+
+### Electronic & Dance
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Daft Punk | French house, vocoder vocals, disco-funk, filtered synths |
+| Deadmau5 | progressive house, melodic synths, building drops |
+| Aphex Twin | IDM, glitchy beats, ambient textures, experimental |
+| Skrillex | aggressive dubstep, heavy drops, distorted bass |
+| The Prodigy | big beat, aggressive electronic, rave energy |
+| Kraftwerk | robotic vocals, minimal synths, electronic pioneer |
+| Tiesto | euphoric trance, festival anthems, building energy |
+| Calvin Harris | dance pop, catchy hooks, polished production |
+
+### Hip-Hop & Rap
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Eminem | rapid-fire aggressive rap, complex rhyme schemes, intense delivery |
+| Kendrick Lamar | conscious hip-hop, jazz samples, introspective, dynamic flow |
+| Drake | melodic rap, R&B-infused, emotional, atmospheric |
+| Jay-Z | confident flow, luxury rap, storytelling, NYC style |
+| Nas | lyrical hip-hop, boom bap, street poetry, NYC golden era |
+| Kanye West | experimental hip-hop, soulful samples, genre-bending |
+| Travis Scott | dark trap, auto-tuned vocals, psychedelic, atmospheric |
+| MF DOOM | abstract lyrics, jazz samples, complex wordplay, masked villain |
+
+### Jazz & Blues
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Miles Davis | cool jazz, modal, atmospheric trumpet, sophisticated |
+| John Coltrane | spiritual jazz, intense saxophone, exploratory |
+| BB King | expressive blues guitar, soulful bends, Memphis blues |
+| Robert Johnson | delta blues, acoustic, haunting, raw |
+| Herbie Hancock | jazz fusion, funky keyboards, experimental |
+| Billie Holiday | torch song, melancholic jazz vocals, intimate |
+
+### Rock & Metal
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Metallica | thrash metal, aggressive riffs, double bass drums, heavy |
+| Led Zeppelin | blues rock, powerful vocals, heavy riffs, epic |
+| Pink Floyd | progressive rock, atmospheric, psychedelic, conceptual |
+| Nirvana | grunge, raw vocals, quiet-loud dynamics, angst |
+| Black Sabbath | doom metal, heavy riffs, occult themes, dark |
+| Radiohead | art rock, experimental, electronic textures, melancholic |
+| AC/DC | hard rock, driving riffs, raw vocals, high energy |
+| The Beatles | British invasion, melodic pop rock, harmonies |
+
+### Punk
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Pennywise | fast melodic punk, aggressive male vocals, skate punk energy |
+| Green Day | pop punk, snotty vocals, power chords, anthemic chorus |
+| Blink-182 | pop punk, nasally vocals, youthful, catchy hooks |
+| NOFX | fast punk, sarcastic, political, melodic |
+| Bad Religion | melodic hardcore, intellectual, harmonized vocals |
+| Ramones | classic punk, simple chords, fast tempo, NYC punk |
+| Sex Pistols | raw punk, sneering vocals, rebellious, aggressive |
+| Dead Kennedys | hardcore punk, satirical, surf-influenced guitar |
+
+### Pop & Contemporary
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Taylor Swift | narrative pop, confessional lyrics, polished production |
+| The Weeknd | dark synth-pop, falsetto, 80s-inspired, moody R&B |
+| Dua Lipa | disco-pop, dance-floor ready, confident female vocals |
+| Beyoncé | powerful R&B vocals, dance pop, empowering |
+| Michael Jackson | pop perfection, dance grooves, iconic hooks |
+| Madonna | dance pop, provocative, reinvention, iconic |
+| Prince | funk-pop, falsetto, genre-blending, virtuosic |
+| Lady Gaga | theatrical pop, dance beats, dramatic, avant-garde |
+
+### R&B & Soul
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Frank Ocean | alternative R&B, dreamy production, falsetto, introspective |
+| SZA | neo-soul, vulnerable vocals, atmospheric, confessional |
+| Marvin Gaye | smooth soul, romantic, socially conscious, Motown |
+| Aretha Franklin | powerful soul vocals, gospel-influenced, commanding |
+| D'Angelo | neo-soul, organic production, sensual, groove-heavy |
+| Erykah Badu | neo-soul, jazz-influenced, spiritual, eclectic |
+
+### Country & Folk
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Johnny Cash | deep baritone, traditional country, train-beat rhythm |
+| Dolly Parton | bright female country vocals, Appalachian, storytelling |
+| Willie Nelson | outlaw country, conversational vocals, acoustic guitar |
+| Bob Dylan | folk rock, poetic lyrics, harmonica, nasal vocals |
+| Joni Mitchell | folk, soprano vocals, open tunings, introspective |
+| Hank Williams | honky tonk, lonesome vocals, classic country |
+
+### World & Cultural
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Bob Marley | roots reggae, conscious lyrics, one drop rhythm |
+| Fela Kuti | afrobeat, polyrhythmic, brass sections, political |
+| Buena Vista Social Club | Cuban son, nostalgic, acoustic, warm |
+| Ravi Shankar | Indian classical, sitar, meditative, intricate |
+
+### Classical & Orchestral
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Hans Zimmer | epic film score, powerful brass, modern orchestral |
+| John Williams | sweeping orchestral, heroic themes, cinematic |
+| Beethoven | romantic classical, dramatic dynamics, symphonic |
+| Mozart | classical period, elegant, balanced, melodic |
+
+### Soundtrack & Theme
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Ennio Morricone | spaghetti western, dramatic, haunting melodies |
+| Danny Elfman | quirky film score, gothic, whimsical orchestral |
+| Vangelis | synth soundtrack, atmospheric, epic electronic |
+| Nobuo Uematsu | JRPG score, emotional, orchestral with synths |
+| Koji Kondo | video game music, melodic, adventurous, iconic |
+
+### Vocal & Choral
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Pentatonix | modern acapella, vocal percussion, pop arrangements |
+| Bobby McFerrin | vocal jazz, scatting, innovative, playful |
+| The King's Singers | classical choral, precise harmonies, British |
+| Sweet Honey in the Rock | acapella gospel, African-American spiritual, powerful |
+
+### Industrial & Experimental
+| Don't Say | Say Instead |
+|-----------|-------------|
+| Nine Inch Nails | dark industrial, grinding synths, distorted vocals, aggressive |
+| Ministry | industrial metal, aggressive, political, heavy guitars |
+| KMFDM | industrial rock, electronic beats, German, heavy |
+| Throbbing Gristle | industrial pioneer, noise, confrontational, experimental |
+| Björk | art pop, experimental, eclectic, theatrical vocals |
+
+**The rule:** If you find yourself typing an artist name, STOP and describe their sound instead.
 
 ---
 
@@ -349,19 +421,17 @@ When you discover new Suno behavior or techniques, **update the reference docume
 
 | File | Update When |
 |------|-------------|
-| `${CLAUDE_PLUGIN_ROOT}/reference/suno/v5-best-practices.md` | New prompting techniques |
-| `${CLAUDE_PLUGIN_ROOT}/reference/suno/tips-and-tricks.md` | Workarounds, discoveries |
-| `${CLAUDE_PLUGIN_ROOT}/reference/suno/CHANGELOG.md` | Any Suno update |
+| `/reference/suno/v5-best-practices.md` | New prompting techniques |
+| `/reference/suno/tips-and-tricks.md` | Workarounds, discoveries |
+| `/reference/suno/CHANGELOG.md` | Any Suno update |
 
 ---
 
 ## Remember
 
-1. **Load override first** - Call `load_override("suno-preferences.md")` at invocation
+1. **Load override first** - Check for `{overrides}/suno-preferences.md` at invocation
 2. **Suno V5 is literal** - Say what you want clearly and directly. Trust the model.
 3. **Apply genre mappings** - Use override genre preferences if available
 4. **Respect avoidance rules** - Never use genres/words user specified to avoid
-5. **Use exclusions sparingly** — Exclude Styles for 2–4 items max; leave empty when not needed
-6. **Backfill older tracks** — If an existing track file is missing the `### Exclude Styles` section, add it between Style Box and Lyrics Box (per template)
 
-Simple prompts + good lyrics + section tags + user preferences + targeted exclusions = best results.
+Simple prompts + good lyrics + section tags + user preferences = best results.

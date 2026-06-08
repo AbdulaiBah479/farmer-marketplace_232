@@ -1,9 +1,7 @@
 ---
 name: context-window-management
-description: "Strategies for managing LLM context windows including summarization, trimming, routing, and avoiding context rot Use when: context window, token limit, context management, context engineering, long..."
-risk: unknown
-source: "vibeship-spawner-skills (Apache 2.0)"
-date_added: "2026-02-27"
+description: "Strategies for managing LLM context windows including summarization, trimming, routing, and avoiding context rot Use when: context window, token limit, context management, context engineering, long context."
+source: vibeship-spawner-skills (Apache 2.0)
 ---
 
 # Context Window Management
@@ -53,6 +51,3 @@ Summarize by importance, not just recency
 ## Related Skills
 
 Works well with: `rag-implementation`, `conversation-memory`, `prompt-caching`, `llm-npc-dialogue`
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.

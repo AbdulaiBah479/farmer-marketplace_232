@@ -1,103 +1,106 @@
 ---
-name: "status"
-description: "Memory health dashboard showing line counts, topic files, capacity, stale entries, and recommendations."
+name: status
+description: Display CYNIC's self-status including packages, tests, integrations, and auto-generated roadmap. Use when asked about development status, project health, what's working, or CYNIC v1 completion.
+user-invocable: true
 ---
 
-# /si:status — Memory Health Dashboard
+# /status - CYNIC Self-Status
 
-Quick overview of your project's memory state across all memory systems.
+*"Connais-toi toi-même, puis vérifie"* - κυνικός
 
-## Usage
+Auto-tracks CYNIC's own development state. Unlike static ROADMAP.md, this is **live truth**.
+
+## Quick Start
 
 ```
-/si:status                    # Full dashboard
-/si:status --brief            # One-line summary
+/status           # Full scan (runs tests ~3min)
+/status quick     # Quick scan (cached, no tests)
+/status json      # JSON output for processing
 ```
 
-## What It Reports
+## What It Shows
 
-### Step 1: Locate all memory files
+1. **Packages** - Test status for all 12 packages
+2. **Integrations** - Hooks, skills, agents, MCP status
+3. **Features** - Implemented vs missing (derived from tests)
+4. **Roadmap** - Auto-generated from actual code state
+
+## Implementation
+
+Run the self-monitor module:
 
 ```bash
-# Auto-memory directory
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|%2F|g; s|%2F|/|; s|^/||')/memory"
+# Full scan (with tests)
+node scripts/lib/self-monitor.cjs
 
-# Count lines in MEMORY.md
-wc -l "$MEMORY_DIR/MEMORY.md" 2>/dev/null || echo "0"
+# Quick scan (no tests, uses cache)
+node scripts/lib/self-monitor.cjs --quick
 
-# List topic files
-ls "$MEMORY_DIR/"*.md 2>/dev/null | grep -v MEMORY.md
+# JSON output
+node scripts/lib/self-monitor.cjs --json
 
-# CLAUDE.md
-wc -l ./CLAUDE.md 2>/dev/null || echo "0"
-wc -l ~/.claude/CLAUDE.md 2>/dev/null || echo "0"
-
-# Rules directory
-ls .claude/rules/*.md 2>/dev/null | wc -l
+# Status line only
+node scripts/lib/self-monitor.cjs --status
 ```
 
-### Step 2: Analyze capacity
-
-| Metric | Healthy | Warning | Critical |
-|--------|---------|---------|----------|
-| MEMORY.md lines | < 120 | 120-180 | > 180 |
-| CLAUDE.md lines | < 150 | 150-200 | > 200 |
-| Topic files | 0-3 | 4-6 | > 6 |
-| Stale entries | 0 | 1-3 | > 3 |
-
-### Step 3: Quick stale check
-
-For each MEMORY.md entry that references a file path:
-```bash
-# Verify referenced files still exist
-grep -oE '[a-zA-Z0-9_/.-]+\.(ts|js|py|md|json|yaml|yml)' "$MEMORY_DIR/MEMORY.md" | while read f; do
-  [ ! -f "$f" ] && echo "STALE: $f"
-done
-```
-
-### Step 4: Output
+## Output Example
 
 ```
-📊 Memory Status
-
-  Auto-Memory (MEMORY.md):
-    Lines:        {{n}}/200 ({{bar}}) {{emoji}}
-    Topic files:  {{count}} ({{names}})
-    Last updated: {{date}}
-
-  Project Rules:
-    CLAUDE.md:    {{n}} lines
-    Rules:        {{count}} files in .claude/rules/
-    User global:  {{n}} lines (~/.claude/CLAUDE.md)
-
-  Health:
-    Capacity:     {{healthy/warning/critical}}
-    Stale refs:   {{count}} (files no longer exist)
-    Duplicates:   {{count}} (entries repeated across files)
-
-  {{if recommendations}}
-  💡 Recommendations:
-    - {{recommendation}}
-  {{endif}}
+╔═══════════════════════════════════════════════════════════════════╗
+║            🐕 CYNIC SELF-STATUS (Auto-generated)                  ║
+╠═══════════════════════════════════════════════════════════════════╣
+║                                                                   ║
+║  PACKAGES: 12/12 healthy
+║  TESTS: 1980/1980 passing (100.0%)
+║                                                                   ║
+║  ✅* core         117/117 tests
+║  ✅* protocol     230/230 tests
+║  ✅* persistence  179/179 tests
+║  ✅  anchor        54/54 tests
+║  ✅  burns         75/75 tests
+║  ✅* identity      50/50 tests
+║  ✅  emergence     43/43 tests
+║  ✅* node         614/614 tests
+║  ✅* mcp          492/492 tests
+║  ✅  holdex        44/44 tests
+║  ✅  gasdf         36/36 tests
+║  ✅  zk            46/46 tests
+║                                                                   ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  HOOKS: 5   SKILLS: 12   AGENTS: 13   LIB: 95
+║  MCP: healthy
+║                                                                   ║
+║  ROADMAP: ✅ Core  🔄 Integration  📋 External
+║                                                                   ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  * = critical package   φ⁻¹ = 61.8% max confidence               ║
+╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-### Brief mode
+## Data Storage
 
-```
-/si:status --brief
-```
+Results are cached in `~/.cynic/self/`:
+- `packages.json` - Package test results
+- `integrations.json` - Claude Code integration state
+- `features.json` - Feature detection
+- `roadmap.json` - Auto-generated roadmap
 
-Output: `📊 Memory: {{n}}/200 lines | {{count}} rules | {{status_emoji}} {{status_word}}`
+## Triggering
 
-## Interpretation
+- **On demand**: Run `/status`
+- **Session start**: Can be added to awaken.cjs for startup check
+- **Post-commit**: Can be triggered by git hooks
 
-- **Green (< 60%)**: Plenty of room. Auto-memory is working well.
-- **Yellow (60-90%)**: Getting full. Consider running `/si:review` to promote or clean up.
-- **Red (> 90%)**: Near capacity. Auto-memory may start dropping older entries. Run `/si:review` now.
+## V1 Completion Criteria
 
-## Tips
+CYNIC v1 is complete when:
+- All 6 critical packages healthy (core, protocol, persistence, identity, node, mcp)
+- All hooks operational
+- All skills accessible
+- MCP server healthy
 
-- Run `/si:status --brief` as a quick check anytime
-- If capacity is yellow+, run `/si:review` to identify promotion candidates
-- Stale entries waste space — delete references to files that no longer exist
-- Topic files are fine — Claude creates them to keep MEMORY.md under 200 lines
+## See Also
+
+- `/health` - CYNIC services health (runtime)
+- `/cockpit` - Ecosystem repos overview
+- `/ecosystem` - Cross-project status

@@ -1,9 +1,7 @@
 ---
 name: salesforce-development
-description: "Expert patterns for Salesforce platform development including Lightning Web Components (LWC), Apex triggers and classes, REST/Bulk APIs, Connected Apps, and Salesforce DX with scratch orgs and 2nd ..."
-risk: unknown
-source: "vibeship-spawner-skills (Apache 2.0)"
-date_added: "2026-02-27"
+description: "Expert patterns for Salesforce platform development including Lightning Web Components (LWC), Apex triggers and classes, REST/Bulk APIs, Connected Apps, and Salesforce DX with scratch orgs and 2nd generation packages (2GP). Use when: salesforce, sfdc, apex, lwc, lightning web components."
+source: vibeship-spawner-skills (Apache 2.0)
 ---
 
 # Salesforce Development
@@ -51,6 +49,3 @@ per transaction, 1 child job when chaining.
 | Issue | high | See docs |
 | Issue | high | See docs |
 | Issue | critical | See docs |
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.

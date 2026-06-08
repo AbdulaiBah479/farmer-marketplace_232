@@ -1,252 +1,128 @@
 ---
 name: storyboard
-description: Create a six-frame storyboard that shows a user's journey from problem to solution. Use when you need a fast narrative for alignment, concept reviews, or demos.
-intent: >-
-  Create a 6-frame visual narrative that tells the story of a user's journey from problem to solution, using the classic storytelling arc to build empathy, illustrate value, and make abstract product concepts concrete. Use this to align stakeholders, pitch features, communicate vision, or test if your solution resonates emotionally before building it.
-type: component
+description: 产品视频分镜脚本设计。当需要规划视频内容、设计场景结构、编写配音文案时使用。分镜必须在录制前完成并获得用户确认。
+argument-hint: [产品名称]
 ---
 
+# 分镜脚本设计技能
 
-## Purpose
-Create a 6-frame visual narrative that tells the story of a user's journey from problem to solution, using the classic storytelling arc to build empathy, illustrate value, and make abstract product concepts concrete. Use this to align stakeholders, pitch features, communicate vision, or test if your solution resonates emotionally before building it.
+## 核心原则
 
-This is not a UI mockup—it's a storytelling tool that brings the human side of your product to life.
+**分镜脚本是整个视频制作的基础，必须在录制前获得用户明确确认。**
 
-## Key Concepts
+## 分镜脚本要素
 
-### The 6-Frame Storyboard Structure
-Based on classic narrative arcs, the 6-frame format follows this pattern:
+### 1. 场景定义
 
-1. **Frame 1: Main Character** — Introduce the persona and their context
-2. **Frame 2: The Problem Emerges** — Show the challenge or obstacle they face
-3. **Frame 3: The "Oh Crap" Moment** — Escalate the problem to create urgency
-4. **Frame 4: The Solution Appears** — Introduce your product/feature
-5. **Frame 5: The "Aha" Moment** — Show the user experiencing the breakthrough
-6. **Frame 6: Life After the Solution** — Illustrate the improved state
+每个场景必须包含：
 
-### Why This Works
-- **Emotional engagement:** Stories create empathy in ways specs can't
-- **Concrete over abstract:** Visual narrative makes vague concepts tangible
-- **Memorable:** People remember stories better than feature lists
-- **Alignment tool:** Stakeholders can react to a story and give feedback
-- **Low-fidelity:** Doesn't require polished design—sketches work great
-
-### Anti-Patterns (What This Is NOT)
-- **Not a user flow diagram:** This is emotional storytelling, not process documentation
-- **Not a feature demo:** Focus on user outcomes, not product capabilities
-- **Not marketing copy:** Authentic narrative, not hype
-
-### When to Use This
-- Pitching a new product or feature to stakeholders
-- Aligning teams on user value (product, design, engineering, execs)
-- Testing if a product idea resonates emotionally
-- Communicating vision at all-hands or investor meetings
-- Validating problem/solution fit before building
-
-### When NOT to Use This
-- For technical implementation details (use architecture diagrams instead)
-- When the user problem is trivial or well-understood
-- As a replacement for user research (storyboards illustrate insights, don't create them)
-
----
-
-## Application
-
-Use `template.md` for the full fill-in structure.
-
-### Step 1: Gather Context
-Before creating the storyboard, ensure you have:
-- **Persona clarity:** Who is the main character? (reference `skills/proto-persona/SKILL.md`)
-- **Problem understanding:** What challenge do they face? (reference `skills/problem-statement/SKILL.md`)
-- **Solution definition:** What product/feature will help? (reference `skills/positioning-statement/SKILL.md`)
-- **Desired outcome:** What does success look like for the user?
-
-**If missing context:** Run discovery work first. Don't fabricate personas or problems.
-
----
-
-### Step 2: Answer the 7 Storyboard Questions
-
-Ask these questions one at a time to develop the narrative:
-
-1. **Who is the main character experiencing this problem?** (Name, age, role, context)
-2. **Describe the problem or challenge the main character is facing.**
-3. **Describe the "Oh Crap" moment where the problem creates a major issue.**
-4. **How is the solution introduced to the main character?**
-5. **Describe the main character using the solution and experiencing an "Aha" moment.**
-6. **What is life like for the main character after using the solution?**
-7. **Do you have any specific visual style or rendering instructions?** (Default: fat-marker sharpie sketches, minimal and monochrome)
-
----
-
-### Step 3: Write the 6-Frame Narrative
-
-Based on the answers above, draft the narrative:
-
-```markdown
-## Generated 6-Frame Storyline
-
-**Frame 1: Introducing the Main Character**
-- [Insert description of the main character, their setting, and context]
-- [Example: "Sarah, 35, is a freelance graphic designer juggling 10 client projects from her home office"]
-
-**Frame 2: The Problem Emerges**
-- [Describe the main character's challenge and how it affects their life]
-- [Example: "She's drowning in invoice tracking—8 hours per month chasing late payments via spreadsheets and email"]
-
-**Frame 3: The 'Oh Crap' Moment**
-- [Highlight the escalation of the problem into a major issue]
-- [Example: "A major client's payment is 2 weeks overdue. Sarah realizes she forgot to follow up because she was focused on design work. The client has now gone silent, and she's anxious about cash flow."]
-
-**Frame 4: The Solution Appears**
-- [Explain how the solution is introduced and the main character's initial reaction]
-- [Example: "Sarah discovers SmartInvoice, a tool that automatically sends payment reminders at optimal times. She's skeptical—will it sound too pushy?—but decides to try it."]
-
-**Frame 5: The 'Aha' Moment**
-- [Show the main character using the solution and experiencing a breakthrough]
-- [Example: "Two days later, Sarah receives a notification: 'Client XYZ just paid!' The AI-timed reminder worked—no awkward follow-up call needed. She feels relieved and in control."]
-
-**Frame 6: Life After the Solution**
-- [Describe the resolution and how life improves after overcoming the problem]
-- [Example: "Sarah now spends 30 minutes per month on invoicing instead of 8 hours. She's reclaimed her evenings, spending time with family instead of chasing payments. Her cash flow is predictable, and her anxiety is gone."]
-
-**Optional Visual Elements**
-- [If no visual style specified: "Use fat-marker, sharpie-style sketches—minimal, monochrome, hand-drawn feel"]
-- [If visual elements provided: "Include user-provided images, GIFs, or icons"]
+```json
+{
+  "scene_id": "场景唯一标识",
+  "scene_name": "场景名称",
+  "duration": "时长（秒）",
+  "start_time": "开始时间",
+  "end_time": "结束时间",
+  "description": "画面描述",
+  "operations": ["操作步骤列表"],
+  "voiceover": "配音文字",
+  "notes": "备注/特殊要求"
+}
 ```
 
----
+### 2. 标准场景类型
 
-### Step 4: Visualize Each Frame
+| 类型 | 建议时长 | 用途 |
+|------|----------|------|
+| opening | 8-12秒 | 片头动画 |
+| features | 6-10秒 | 功能亮点展示 |
+| demo | 根据内容 | 功能演示录屏 |
+| closing | 8-12秒 | 片尾动画 |
 
-For each frame, create or describe the visual:
+### 3. 配音文字要求
 
-**Frame 1: Main Character**
-- **Visual:** Sarah at her desk, surrounded by sticky notes, laptop open, coffee cup
-- **Mood:** Busy, slightly stressed
-- **Tools:** DALL·E, MidJourney, hand-drawn sketches
+- 每段配音控制在 4-10 秒
+- 中文语速约 4 字/秒
+- 配音时长 ≤ 场景时长 - 0.5秒（留缓冲）
+- 避免长句，使用短句更易控制节奏
 
-**Frame 2: The Problem Emerges**
-- **Visual:** Sarah staring at a spreadsheet labeled "Overdue Invoices," multiple browser tabs open
-- **Mood:** Overwhelmed
-- **Details:** Clock showing 10pm, to-do list getting longer
-
-**Frame 3: The 'Oh Crap' Moment**
-- **Visual:** Sarah's phone showing "Day 14: Payment Overdue from Client XYZ" notification. Her face shows worry.
-- **Mood:** Anxious, urgent
-- **Details:** Calendar showing upcoming rent due date
-
-**Frame 4: The Solution Appears**
-- **Visual:** Sarah's laptop showing the SmartInvoice landing page with headline "Stop Chasing Payments"
-- **Mood:** Curious, hopeful
-- **Details:** Testimonial quote: "Saved me 5 hours/month"
-
-**Frame 5: The 'Aha' Moment**
-- **Visual:** Sarah's phone showing notification "Client XYZ just paid! $5,000 received." She's smiling, relieved.
-- **Mood:** Joy, relief, empowerment
-- **Details:** Background shows sunset—she's done with work early
-
-**Frame 6: Life After the Solution**
-- **Visual:** Sarah playing with her kids in the backyard, laptop closed on the patio table
-- **Mood:** Peaceful, balanced
-- **Details:** Clock showing 6pm (not 10pm anymore)
-
----
-
-### Step 5: Test the Storyboard
-
-Ask these questions:
-1. **Is the main character relatable?** Would your target persona recognize themselves?
-2. **Is the problem visceral?** Do people *feel* the frustration in Frame 2-3?
-3. **Is the "Oh Crap" moment real?** Does it escalate the problem authentically?
-4. **Is the solution introduction natural?** Or does it feel forced/contrived?
-5. **Is the "Aha" moment believable?** Can users imagine experiencing this?
-6. **Is the "after" state aspirational?** Would users want this outcome?
-
-If any answer is "no," revise.
-
----
-
-## Examples
-
-See `examples/sample.md` for full storyboard examples.
-
-Mini example excerpt:
+## 分镜脚本模板
 
 ```markdown
-**Frame 1:** Sarah, 35, freelance designer juggling 10 clients\n**Frame 2:** Spends 8 hours/month chasing overdue invoices\n**Frame 3:** $5,000 payment is 2 weeks overdue\n```
+# [产品名] 产品介绍视频分镜脚本
 
----
+## 视频概要
+- 目标时长: X分X秒
+- 目标受众: [描述]
+- 核心信息: [一句话]
 
-## Common Pitfalls
+## 场景列表
 
-### Pitfall 1: Generic Persona
-**Symptom:** "Meet User, a busy professional"
+### 场景1: 片头 (0:00-0:10)
+**画面**: Logo动画 + 产品名称 + 副标题
+**配音**: "欢迎使用 [产品名]，[一句话定位]"
 
-**Consequence:** No one identifies with this character.
+### 场景2: 功能亮点 (0:10-0:18)
+**画面**: 功能卡片依次展示
+**配音**: "我们为您提供[功能概述]"
 
-**Fix:** Get specific: "Meet Sarah, 35, freelance designer, juggling 10 clients, home office, loves design but hates admin."
+### 场景3: [功能名] 演示 (0:18-0:XX)
+**画面**: [具体操作描述]
+**操作**:
+1. [步骤1]
+2. [步骤2]
+**配音**: "[功能说明]"
 
----
+### 场景N: 片尾 (X:XX-X:XX)
+**画面**: Logo + 口号 + 行动按钮
+**配音**: "[口号]，立即开始使用吧！"
 
-### Pitfall 2: Weak Problem
-**Symptom:** "User has a problem with efficiency"
+## 时间线汇总
 
-**Consequence:** Problem doesn't resonate emotionally.
+| 场景 | 开始 | 结束 | 时长 | 配音字数 |
+|------|------|------|------|----------|
+| 片头 | 0:00 | 0:10 | 10秒 | 20字 |
+| ... | ... | ... | ... | ... |
+```
 
-**Fix:** Make it visceral: "Sarah spends 8 hours/month chasing overdue invoices, missing family dinners, feeling anxious about cash flow."
+## 分镜确认检查清单
 
----
+在请求用户确认前，确保：
 
-### Pitfall 3: Forced Solution Introduction
-**Symptom:** "User magically discovers our product"
+- [ ] 所有场景时间线连续无缝隙
+- [ ] 配音字数与场景时长匹配（4字/秒）
+- [ ] 每个演示场景的操作步骤清晰可执行
+- [ ] 配音文字专业、简洁、无歧义
+- [ ] 总时长在目标范围内
 
-**Consequence:** Feels contrived, not authentic.
+## 用户确认流程
 
-**Fix:** Show realistic discovery: "Sarah sees a recommendation in a designer forum" or "Sarah's colleague mentions it."
+1. 展示完整分镜脚本
+2. 说明关键时间点和内容
+3. 询问是否需要调整
+4. 获得明确的"确认开始制作"指令
+5. 记录确认时间，开始录制
 
----
+## 常见问题处理
 
-### Pitfall 4: Feature-Centric "Aha" Moment
-**Symptom:** "User sees the dashboard and loves the features"
+### 用户要求修改分镜
 
-**Consequence:** No emotional payoff.
+1. 记录修改内容
+2. 更新分镜脚本
+3. 重新展示修改后的版本
+4. 再次确认
 
-**Fix:** Focus on outcome: "Sarah gets notification: '$5,000 received!' She's relieved—no awkward call needed."
+### 时长超出预期
 
----
+- 优先精简配音文字
+- 其次减少演示操作步骤
+- 最后考虑删除非核心场景
 
-### Pitfall 5: Vague "After" State
-**Symptom:** "Life is better now"
+### 配音文字过长
 
-**Consequence:** Not aspirational or concrete.
+计算公式：`配音字数 ≤ 场景时长(秒) × 4`
 
-**Fix:** Be specific: "Sarah leaves work at 6pm now, spending evenings with her kids instead of chasing clients. On-time payments jumped from 50% to 80%."
-
----
-
-## References
-
-### Related Skills
-- `skills/proto-persona/SKILL.md` — Defines the main character
-- `skills/problem-statement/SKILL.md` — Frames the problem for Frame 2-3
-- `skills/positioning-statement/SKILL.md` — Informs the solution introduction in Frame 4
-- `skills/jobs-to-be-done/SKILL.md` — Informs the desired outcome in Frame 6
-
-### External Frameworks
-- Joseph Campbell, *The Hero's Journey* (1949) — Classic narrative structure
-- Pixar's story rules — "Once upon a time... Every day... Until one day..."
-- Donald Miller, *Building a StoryBrand* (2017) — Story-driven marketing frameworks
-
-### Dean's Work
-- Storyboard Storytelling Prompt (6-Frame Storyline Generator)
-
-### Provenance
-- Adapted from `prompts/storyboard-storytelling-prompt.md` in the `https://github.com/deanpeters/product-manager-prompts` repo.
-
----
-
-**Skill type:** Component
-**Suggested filename:** `storyboard.md`
-**Suggested placement:** `/skills/components/`
-**Dependencies:** References `skills/proto-persona/SKILL.md`, `skills/problem-statement/SKILL.md`, `skills/positioning-statement/SKILL.md`, `skills/jobs-to-be-done/SKILL.md`
+如果超出，需要：
+1. 精简文字
+2. 或加快语速（最多 +35%）
+3. 或延长场景时长

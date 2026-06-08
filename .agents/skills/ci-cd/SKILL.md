@@ -1,496 +1,443 @@
 ---
 name: ci-cd
-description: "CI/CD pipeline design, optimization, DevSecOps security scanning, and troubleshooting. Use this skill whenever the user mentions CI/CD, GitHub Actions, GitLab CI, pipelines, workflows, builds, or DevSecOps. Triggers include creating new CI/CD workflows, debugging pipeline failures or flaky tests, implementing SAST/DAST/SCA security scanning, optimizing slow builds with caching or parallelization, setting up deployment workflows, securing pipelines with OIDC or secrets management, implementing matrix builds or test sharding, and troubleshooting Docker, permissions, or timeout issues."
+description: CI/CD 流水线配置
+version: 1.0.0
+author: terminal-skills
+tags: [devops, ci-cd, jenkins, gitlab, github-actions]
 ---
 
-# CI/CD Pipelines
+# CI/CD 流水线配置
 
-Comprehensive guide for CI/CD pipeline design, optimization, security, and troubleshooting across GitHub Actions, GitLab CI, and other platforms.
+## 概述
+Jenkins、GitLab CI、GitHub Actions 等 CI/CD 工具配置技能。
 
-## Core Workflows
+## GitHub Actions
 
-### 1. Creating a New Pipeline
-
-**Decision tree:**
-```
-What are you building?
-├── Node.js/Frontend → GitHub: templates/github-actions/node-ci.yml | GitLab: templates/gitlab-ci/node-ci.yml
-├── Python → GitHub: templates/github-actions/python-ci.yml | GitLab: templates/gitlab-ci/python-ci.yml
-├── Go → GitHub: templates/github-actions/go-ci.yml | GitLab: templates/gitlab-ci/go-ci.yml
-├── Docker Image → GitHub: templates/github-actions/docker-build.yml | GitLab: templates/gitlab-ci/docker-build.yml
-├── Other → Follow the pipeline design pattern below
-```
-
-**Basic pipeline structure:**
+### 基础工作流
 ```yaml
-# 1. Fast feedback (lint, format) - <1 min
-# 2. Unit tests - 1-5 min
-# 3. Integration tests - 5-15 min
-# 4. Build artifacts
-# 5. E2E tests (optional, main branch only) - 15-30 min
-# 6. Deploy (with approval gates)
-```
+# .github/workflows/ci.yml
+name: CI
 
-**Key principles** (from `references/best_practices.md`):
-- Fail fast: Run cheap validation first
-- Parallelize: Remove unnecessary job dependencies
-- Cache dependencies: Use `actions/cache` or GitLab cache (`references/optimization.md` for strategies)
-- Use artifacts: Build once, deploy many times
-- Add security scanning early: See `references/devsecops.md` for SAST/DAST/SCA integration
-
-### 2. Optimizing Pipeline Performance
-
-**Quick wins checklist:**
-- [ ] Add dependency caching (50-90% faster builds)
-- [ ] Remove unnecessary `needs` dependencies
-- [ ] Add path filters to skip unnecessary runs
-- [ ] Use `npm ci` instead of `npm install`
-- [ ] Add job timeouts to prevent hung builds
-- [ ] Enable concurrency cancellation for duplicate runs
-
-**Analyze existing pipeline:**
-```bash
-# Use the pipeline analyzer script
-python3 scripts/pipeline_analyzer.py --platform github --workflow .github/workflows/ci.yml
-```
-
-**Common optimizations** (detailed in `references/optimization.md`):
-- **Slow tests:** Shard tests with matrix builds
-- **Repeated dependency installs:** Add caching
-- **Sequential jobs:** Parallelize with proper `needs`
-- **Full test suite on every PR:** Use path filters or test impact analysis
-
-See [optimization.md](references/optimization.md) for detailed caching strategies, parallelization techniques, and performance tuning.
-
-### 3. Securing Your Pipeline
-
-**Essential security checklist:**
-- [ ] Use OIDC instead of static credentials
-- [ ] Pin actions/includes to commit SHAs
-- [ ] Use minimal permissions
-- [ ] Enable secret scanning
-- [ ] Add vulnerability scanning (dependencies, containers)
-- [ ] Implement branch protection
-- [ ] Separate test from deploy workflows
-
-**Quick setup - OIDC authentication:**
-
-**GitHub Actions → AWS:**
-```yaml
-permissions:
-  id-token: write
-  contents: read
-
-steps:
-  - uses: aws-actions/configure-aws-credentials@v4
-    with:
-      role-to-assume: arn:aws:iam::123456789:role/GitHubActionsRole
-      aws-region: us-east-1
-```
-
-**Secrets management:**
-- Store in platform secret stores (GitHub Secrets, GitLab CI/CD Variables)
-- Mark as "masked" in GitLab
-- Use environment-specific secrets
-- Rotate regularly (every 90 days)
-- Never log secrets
-
-See [security.md](references/security.md) for comprehensive security patterns, supply chain security, and secrets management.
-
-### 4. Troubleshooting Pipeline Failures
-
-**Systematic approach:**
-
-**Step 1: Check pipeline health**
-```bash
-gh run list --limit 20    # Recent runs with status (success/failure rates)
-gh run view <run-id>      # Detailed run info and failure logs
-gh workflow list           # All configured workflows
-```
-
-**Step 2: Identify the failure type**
-
-| Error Pattern | Common Cause | Quick Fix |
-|---------------|--------------|-----------|
-| "Module not found" | Missing dependency or cache issue | Clear cache, run `npm ci` |
-| "Timeout" | Job taking too long | Add caching, increase timeout |
-| "Permission denied" | Missing permissions | Add to `permissions:` block |
-| "Cannot connect to Docker daemon" | Docker not available | Use correct runner or DinD |
-| Intermittent failures | Flaky tests or race conditions | Add retries, fix timing issues |
-
-**Step 3: Enable debug logging**
-
-GitHub Actions:
-```yaml
-# Add repository secrets:
-# ACTIONS_RUNNER_DEBUG = true
-# ACTIONS_STEP_DEBUG = true
-```
-
-GitLab CI:
-```yaml
-variables:
-  CI_DEBUG_TRACE: "true"
-```
-
-**Step 4: Reproduce locally**
-```bash
-# GitHub Actions - use act
-act -j build
-
-# Or Docker
-docker run -it ubuntu:latest bash
-# Then manually run the failing steps
-```
-
-See [troubleshooting.md](references/troubleshooting.md) for comprehensive issue diagnosis, platform-specific problems, and solutions.
-
-### 5. Implementing Deployment Workflows
-
-**Deployment pattern selection:**
-
-| Pattern | Use Case | Complexity | Risk |
-|---------|----------|------------|------|
-| Direct | Simple apps, low traffic | Low | Medium |
-| Blue-Green | Zero downtime required | Medium | Low |
-| Canary | Gradual rollout, monitoring | High | Very Low |
-| Rolling | Kubernetes, containers | Medium | Low |
-
-**Basic deployment structure:**
-```yaml
-deploy:
-  needs: [build, test]
-  if: github.ref == 'refs/heads/main'
-  environment:
-    name: production
-    url: https://example.com
-  steps:
-    - name: Download artifacts
-    - name: Deploy
-    - name: Health check
-    - name: Rollback on failure
-```
-
-**Multi-environment setup:**
-- **Development:** Auto-deploy on develop branch
-- **Staging:** Auto-deploy on main, requires passing tests
-- **Production:** Manual approval required, smoke tests mandatory
-
-See [best_practices.md](references/best_practices.md#deployment-strategies) for detailed deployment patterns and environment management.
-
-### 6. Implementing DevSecOps Security Scanning
-
-**Security scanning types:**
-
-| Scan Type | Purpose | When to Run | Speed | Tools |
-|-----------|---------|-------------|-------|-------|
-| Secret Scanning | Find exposed credentials | Every commit | Fast (<1 min) | TruffleHog, Gitleaks |
-| SAST | Find code vulnerabilities | Every commit | Medium (5-15 min) | CodeQL, Semgrep, Bandit, Gosec |
-| SCA | Find dependency vulnerabilities | Every commit | Fast (1-5 min) | npm audit, pip-audit, Snyk |
-| Container Scanning | Find image vulnerabilities | After build | Medium (5-10 min) | Trivy, Grype |
-| DAST | Find runtime vulnerabilities | Scheduled/main only | Slow (15-60 min) | OWASP ZAP |
-
-**Quick setup - Add security to existing pipeline:**
-
-**GitHub Actions:**
-```yaml
-jobs:
-  # Add before build job
-  secret-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: trufflesecurity/trufflehog@main
-      - uses: gitleaks/gitleaks-action@v2
-
-  sast:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript  # or python, go
-      - uses: github/codeql-action/analyze@v3
-
-  build:
-    needs: [secret-scan, sast]  # Add dependencies
-```
-
-**GitLab CI:**
-```yaml
-stages:
-  - security  # Add before other stages
-  - build
-  - test
-
-# Secret scanning
-secret-scan:
-  stage: security
-  image: trufflesecurity/trufflehog:latest
-  script:
-    - trufflehog filesystem . --json --fail
-
-# SAST
-sast:semgrep:
-  stage: security
-  image: returntocorp/semgrep
-  script:
-    - semgrep scan --config=auto .
-
-# Use GitLab templates
-include:
-  - template: Security/SAST.gitlab-ci.yml
-  - template: Security/Dependency-Scanning.gitlab-ci.yml
-```
-
-**Comprehensive security pipeline templates:**
-- **GitHub Actions:** `templates/github-actions/security-scan.yml` - Complete DevSecOps pipeline with all scanning stages
-- **GitLab CI:** `templates/gitlab-ci/security-scan.yml` - Complete DevSecOps pipeline with GitLab security templates
-
-**Security gate pattern:**
-
-Add a security gate job that evaluates all security scan results and fails the pipeline if critical issues are found:
-
-```yaml
-security-gate:
-  needs: [secret-scan, sast, sca, container-scan]
-  script:
-    # Check for critical vulnerabilities
-    # Parse JSON reports and evaluate thresholds
-    # Fail if critical issues found
-```
-
-**Language-specific security tools:**
-
-- **Node.js:** CodeQL, Semgrep, npm audit, eslint-plugin-security
-- **Python:** CodeQL, Semgrep, Bandit, pip-audit, Safety
-- **Go:** CodeQL, Semgrep, Gosec, govulncheck
-
-All language-specific templates now include security scanning stages. See:
-- `templates/github-actions/node-ci.yml`
-- `templates/github-actions/python-ci.yml`
-- `templates/github-actions/go-ci.yml`
-- `templates/gitlab-ci/node-ci.yml`
-- `templates/gitlab-ci/python-ci.yml`
-- `templates/gitlab-ci/go-ci.yml`
-
-See [devsecops.md](references/devsecops.md) for comprehensive DevSecOps guide covering all security scanning types, tool comparisons, and implementation patterns.
-
-## Quick Reference Commands
-
-### GitHub Actions
-
-```bash
-# List workflows
-gh workflow list
-
-# View recent runs
-gh run list --limit 20
-
-# View specific run
-gh run view <run-id>
-
-# Re-run failed jobs
-gh run rerun <run-id> --failed
-
-# Download logs
-gh run view <run-id> --log > logs.txt
-
-# Trigger workflow manually
-gh workflow run ci.yml
-
-# Check workflow status
-gh run watch
-```
-
-### GitLab CI
-
-```bash
-# View pipelines
-gl project-pipelines list
-
-# Pipeline status
-gl project-pipeline get <pipeline-id>
-
-# Retry failed jobs
-gl project-pipeline retry <pipeline-id>
-
-# Cancel pipeline
-gl project-pipeline cancel <pipeline-id>
-
-# Download artifacts
-gl project-job artifacts <job-id>
-```
-
-## Platform-Specific Patterns
-
-### GitHub Actions
-
-**Reusable workflows:**
-```yaml
-# .github/workflows/reusable-test.yml
 on:
-  workflow_call:
-    inputs:
-      node-version:
-        required: true
-        type: string
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build
+        run: npm run build
+```
+
+### 矩阵构建
+```yaml
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [16, 18, 20]
+    
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test
 ```
 
-**Call from another workflow:**
+### Docker 构建与推送
 ```yaml
 jobs:
-  test:
-    uses: ./.github/workflows/reusable-test.yml
-    with:
-      node-version: '20'
+  docker:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: user/app:${{ github.sha }}
 ```
 
-### GitLab CI
-
-**Templates with extends:**
+### 部署到 Kubernetes
 ```yaml
-.test_template:
-  image: node:20
-  before_script:
-    - npm ci
-
-unit-test:
-  extends: .test_template
-  script:
-    - npm run test:unit
-
-integration-test:
-  extends: .test_template
-  script:
-    - npm run test:integration
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+      
+      - name: Deploy
+        run: |
+          kubectl set image deployment/app app=user/app:${{ github.sha }}
+          kubectl rollout status deployment/app
 ```
 
-**DAG pipelines with needs:**
+## GitLab CI
+
+### 基础配置
 ```yaml
+# .gitlab-ci.yml
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
 build:
   stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
 
-test:unit:
+test:
   stage: test
-  needs: [build]
-
-test:integration:
-  stage: test
-  needs: [build]
+  image: node:18
+  script:
+    - npm ci
+    - npm test
+  coverage: '/Coverage: \d+\.\d+%/'
 
 deploy:
   stage: deploy
-  needs: [test:unit, test:integration]
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl set image deployment/app app=$DOCKER_IMAGE
+  only:
+    - main
+  environment:
+    name: production
+    url: https://app.example.com
 ```
 
-## Diagnostic Scripts
-
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `pipeline_analyzer.py` | Find optimization opportunities (caching, parallelization, outdated actions) | `python3 scripts/pipeline_analyzer.py --platform github --workflow <path>` |
-
-For pipeline health checks (success/failure rates, failure patterns), use `gh` CLI: `gh run list --limit 20`, `gh run view <run-id>`, `gh workflow list`.
-
-## Reference Documentation
-
-- `references/best_practices.md` — Pipeline design, testing, deployment patterns, artifact handling
-- `references/security.md` — Secrets management, OIDC, supply chain security, secure pipeline patterns
-- `references/devsecops.md` — SAST/DAST/SCA tooling (CodeQL, Semgrep, Trivy, Snyk), security gates
-- `references/optimization.md` — Caching strategies, parallelization, test splitting, build optimization
-- `references/troubleshooting.md` — Common issues, Docker problems, authentication, platform debugging
-
-## Templates
-
-Starter templates in `assets/templates/` for both GitHub Actions and GitLab CI:
-
-| Language/Type | GitHub Actions | GitLab CI |
-|---------------|---------------|-----------|
-| Node.js | `github-actions/node-ci.yml` | `gitlab-ci/node-ci.yml` |
-| Python | `github-actions/python-ci.yml` | `gitlab-ci/python-ci.yml` |
-| Go | `github-actions/go-ci.yml` | `gitlab-ci/go-ci.yml` |
-| Docker | `github-actions/docker-build.yml` | `gitlab-ci/docker-build.yml` |
-| Security | `github-actions/security-scan.yml` | `gitlab-ci/security-scan.yml` |
-
-All templates include security scanning, caching, and multi-environment deployment.
-
-## Common Patterns
-
-### Caching Dependencies
-
-**GitHub Actions:**
+### 多环境部署
 ```yaml
-- uses: actions/cache@v4
+.deploy_template: &deploy_template
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl config use-context $KUBE_CONTEXT
+    - kubectl set image deployment/app app=$DOCKER_IMAGE
+
+deploy_staging:
+  <<: *deploy_template
+  variables:
+    KUBE_CONTEXT: staging
+  environment:
+    name: staging
+  only:
+    - develop
+
+deploy_production:
+  <<: *deploy_template
+  variables:
+    KUBE_CONTEXT: production
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+```
+
+## Jenkins
+
+### Jenkinsfile（声明式）
+```groovy
+// Jenkinsfile
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = "user/app:${BUILD_NUMBER}"
+        DOCKER_CREDENTIALS = credentials('docker-hub')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'npm ci'
+                sh 'npm run build'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+            post {
+                always {
+                    junit 'test-results/*.xml'
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+        
+        stage('Docker Push') {
+            steps {
+                sh "echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin"
+                sh "docker push ${DOCKER_IMAGE}"
+            }
+        }
+        
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh "kubectl set image deployment/app app=${DOCKER_IMAGE}"
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            slackSend channel: '#deployments', message: "Build ${BUILD_NUMBER} succeeded"
+        }
+        failure {
+            slackSend channel: '#deployments', message: "Build ${BUILD_NUMBER} failed"
+        }
+    }
+}
+```
+
+### Jenkinsfile（脚本式）
+```groovy
+node {
+    stage('Checkout') {
+        checkout scm
+    }
+    
+    stage('Build') {
+        sh 'npm ci'
+        sh 'npm run build'
+    }
+    
+    stage('Test') {
+        try {
+            sh 'npm test'
+        } finally {
+            junit 'test-results/*.xml'
+        }
+    }
+    
+    if (env.BRANCH_NAME == 'main') {
+        stage('Deploy') {
+            sh 'kubectl apply -f k8s/'
+        }
+    }
+}
+```
+
+## 通用模式
+
+### 语义化版本发布
+```yaml
+# GitHub Actions
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true
+```
+
+### 缓存依赖
+```yaml
+# GitHub Actions
+- name: Cache node modules
+  uses: actions/cache@v3
   with:
     path: ~/.npm
     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
     restore-keys: |
       ${{ runner.os }}-node-
-- run: npm ci
-```
 
-**GitLab CI:**
-```yaml
+# GitLab CI
 cache:
-  key:
-    files:
-      - package-lock.json
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
     - node_modules/
 ```
 
-### Matrix Builds
-
-**GitHub Actions:**
+### 并行测试
 ```yaml
-strategy:
-  matrix:
-    os: [ubuntu-latest, macos-latest]
-    node: [18, 20, 22]
-  fail-fast: false
+# GitHub Actions
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test -- --shard=${{ matrix.shard }}/4
 ```
 
-**GitLab CI:**
+### 条件执行
 ```yaml
-test:
-  parallel:
-    matrix:
-      - NODE_VERSION: ['18', '20', '22']
-```
+# GitHub Actions
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying..."
 
-### Conditional Execution
-
-**GitHub Actions:**
-```yaml
-- name: Deploy
-  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-```
-
-**GitLab CI:**
-```yaml
+# GitLab CI
 deploy:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: $CI_COMMIT_BRANCH == "main"
       when: manual
+    - if: $CI_COMMIT_TAG
+      when: always
 ```
 
-## Getting Started
+## 常见场景
 
-1. **New pipeline:** Start with a template from `assets/templates/`
-2. **Add security scanning:** Use DevSecOps templates or add security stages to existing pipelines (see workflow 6 above)
-3. **Optimize existing:** Run `scripts/pipeline_analyzer.py`
-4. **Debug issues:** Check `references/troubleshooting.md`
-5. **Improve security:** Review `references/security.md` and `references/devsecops.md` checklists
-6. **Speed up builds:** See `references/optimization.md`
+### 场景 1：PR 检查
+```yaml
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run lint
+      
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test
+```
+
+### 场景 2：定时任务
+```yaml
+name: Scheduled Job
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天凌晨2点
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Running cleanup..."
+```
+
+### 场景 3：手动触发
+```yaml
+name: Manual Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to ${{ inputs.environment }}"
+```
+
+## 故障排查
+
+| 问题 | 排查方法 |
+|------|----------|
+| 构建失败 | 查看日志、本地复现 |
+| 权限问题 | 检查 secrets、token |
+| 缓存失效 | 检查 cache key |
+| 超时 | 增加 timeout、优化步骤 |

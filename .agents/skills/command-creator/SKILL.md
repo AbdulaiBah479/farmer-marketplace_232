@@ -1,157 +1,130 @@
 ---
 name: command-creator
-description: Guide for creating custom Claude Code slash commands. Use when user wants to create a new command (or update an existing command) that provides a reusable prompt snippet, workflow, or automation. Triggers on requests to create /commands, slash commands, custom commands, or when user wants to define frequently-used prompts as reusable commands.
+description: 'Create Claude Code custom slash commands with proper structure, frontmatter, and best practices. Use this skill whenever the user wants to create a new command, add a slash command, build a custom command, or mentions "create-command", "new command", "add command", or "make a command" for Claude Code. Also trigger when the user wants to turn a workflow into a reusable command.'
 ---
 
 # Command Creator
 
-Create custom slash commands for Claude Code. Commands are Markdown files that define reusable prompts with support for arguments, bash execution, file references, and tool permissions.
+Create Claude Code custom slash commands with proper structure and best practices.
 
-## Command Locations
+## Understanding Commands
 
-| Type | Location | Scope |
-|------|----------|-------|
-| Project | `.claude/commands/` | Shared with team via git |
-| Personal | `~/.claude/commands/` | Available across all projects |
+Claude Code commands are Markdown files with YAML frontmatter that define reusable workflows invoked via `/command-name`. They live in specific locations depending on scope:
 
-Project commands take precedence over personal commands with the same name.
+- **Project-level**: `.claude/commands/` in the project root (shared via git)
+- **User-level**: `~/.claude/commands/` (personal, available everywhere)
+- **Categorized**: Nest under subdirectories for namespacing (e.g., `gh/review-pr.md` becomes `/gh:review-pr`)
 
-## Basic Structure
+## Process
 
-```markdown
----
-description: Brief description shown in /help
----
+### 1. Clarify Intent
 
-Your prompt instructions here.
-```
+Before writing anything, understand:
+- What should the command do? (single clear purpose)
+- Who uses it — just this user, or the whole team? (determines project vs user-level)
+- Does it need arguments? What kind?
+- What tools does it need access to?
+- Is there a category it belongs to? (e.g., `gh` for GitHub, `cc` for Claude Code meta-commands)
 
-Filename becomes the command name: `review.md` → `/review`
+### 2. Write the Command
 
-## Frontmatter Options
-
-| Field | Purpose | Default |
-|-------|---------|---------|
-| `description` | Brief description for /help | First line of prompt |
-| `allowed-tools` | Tools the command can use | Inherits from conversation |
-| `argument-hint` | Shows usage hint in autocomplete | None |
-| `model` | Specific model to use | Inherits from conversation |
-| `disable-model-invocation` | Prevent Skill tool from calling this | false |
-| `hooks` | Command-scoped hooks (PreToolUse, PostToolUse, Stop) | None |
-
-## Arguments
-
-### All arguments: `$ARGUMENTS`
+Every command file follows this structure:
 
 ```markdown
 ---
-description: Fix an issue
+description: Brief description shown in command list
+argument-hint: [expected-arguments]
+allowed-tools: Tool1, Tool2, Bash(prefix:*)
 ---
-Fix issue #$ARGUMENTS following our coding standards
+
+# Command Name
+
+What this command does and when to use it.
+
+## Process:
+
+Step-by-step instructions for the agent to follow.
+
+## Your Task:
+
+Act on "$ARGUMENTS" following these guidelines.
 ```
 
-Usage: `/fix-issue 123 high-priority` → `$ARGUMENTS` = "123 high-priority"
+#### Frontmatter fields
 
-### Positional: `$1`, `$2`, etc.
+| Field | Required | Purpose |
+|-------|----------|---------|
+| `description` | Yes | Short description shown when listing commands |
+| `argument-hint` | No | Hint for expected arguments (shown in autocomplete) |
+| `allowed-tools` | No | Restrict which tools the command can use |
+
+#### Key conventions
+
+- **`$ARGUMENTS`** is replaced with whatever the user types after the command name. Always reference it in the "Your Task" section so the command acts on user input.
+- **`allowed-tools`** uses patterns: exact names (`Read`, `Write`), or prefix globs for Bash (`Bash(git:*)`, `Bash(npm:*)`).
+- Keep commands **focused and single-purpose** — one command, one job.
+- Write instructions in the **imperative form** ("Analyze the code", not "You should analyze the code").
+- Include **concrete examples** of usage and expected behavior.
+
+### 3. Choose the Right Location
+
+| Scope | Path | When to use |
+|-------|------|-------------|
+| Project (shared) | `.claude/commands/` | Team workflows, project-specific tasks |
+| Project (categorized) | `.claude/commands/<category>/` | Grouped commands (e.g., `gh/`, `db/`) |
+| User (personal) | `~/.claude/commands/` | Personal productivity, cross-project tools |
+
+### 4. Validate
+
+After creating the command file:
+- Verify the YAML frontmatter parses correctly (no syntax errors)
+- Confirm the file is in the right directory
+- Check that `$ARGUMENTS` is referenced if the command accepts input
+- Ensure `allowed-tools` includes everything the command needs
+
+## Example: A Simple Command
 
 ```markdown
 ---
-argument-hint: [pr-number] [priority] [assignee]
-description: Review pull request
+description: Review a pull request with detailed analysis
+argument-hint: [PR-number-or-URL]
+allowed-tools: Bash(gh:*), Read, Grep, Glob
 ---
-Review PR #$1 with priority $2 and assign to $3.
+
+# Review PR
+
+Perform a thorough code review of a GitHub pull request.
+
+## Process:
+
+1. Fetch PR details and diff using `gh pr view` and `gh pr diff`
+2. Read changed files for full context
+3. Analyze changes for:
+   - Correctness and potential bugs
+   - Code style consistency
+   - Missing tests or edge cases
+   - Security concerns
+4. Provide a structured review summary
+
+## Your Task:
+
+Review PR "$ARGUMENTS" following these guidelines. If no PR number is given,
+use `gh pr list` to show recent PRs and ask which one to review.
 ```
-
-Usage: `/review-pr 456 high alice`
-
-## Bash Execution
-
-Execute bash before the command runs using the exclamation mark prefix. Output is included in context.
-
-```markdown
----
-allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
-description: Create a git commit
----
-
-## Context
-- Current git status: !\`git status\`
-- Current git diff: !\`git diff HEAD\`
-- Current branch: !\`git branch --show-current\`
-- Recent commits: !\`git log --oneline -10\`
-
-## Task
-Create a git commit based on the above changes.
-```
-
-**Required**: Include `allowed-tools` with the Bash tool when using bang execution (the exclamation mark prefix).
-
-## File References
-
-Include file contents using the `@` prefix:
-
-```markdown
-Review the implementation in @src/utils/helpers.js
-Compare @src/old-version.js with @src/new-version.js
-```
-
-## Namespacing
-
-Subdirectories group related commands. The subdirectory appears in the description:
-
-- `.claude/commands/frontend/component.md` → `/component` (project:frontend)
-- `.claude/commands/backend/test.md` → `/test` (project:backend)
-
-Commands in different subdirectories can share names.
-
-## Example: Complete Command
-
-~~~markdown
----
-allowed-tools: Bash(npm:*), Bash(git:*), Read, Edit, Write
-argument-hint: [component-name]
-description: Create a new React component with tests
-model: claude-sonnet-4-20250514
----
-
-## Context
-- Existing components: !\`ls src/components/\`
-- Project structure: !\`ls -la src/\`
-
-## Task
-Create a new React component named $1:
-1. Create component file at @src/components/$1.tsx
-2. Create test file at @src/components/$1.test.tsx
-3. Export from @src/components/index.ts
-4. Follow patterns in existing components
-~~~
-
-## Hooks in Commands
-
-Define command-scoped hooks that run during execution:
-
-```markdown
----
-description: Deploy with validation
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "./scripts/validate.sh"
-          once: true
----
-
-Deploy to staging environment.
-```
-
-The `once: true` option runs the hook only once per session.
 
 ## Best Practices
 
-1. **Keep prompts concise** - Claude is smart; don't over-explain
-2. **Use bash execution for context** - Gather relevant state before the task
-3. **Specify allowed-tools** - Limit to what the command needs
-4. **Add argument-hint** - Help users understand expected arguments
-5. **Use file references** - Point to relevant files with `@`
-6. **Namespace related commands** - Use subdirectories for organization
+- **Descriptive names**: The filename becomes the command name — make it clear (`fix-issue.md` not `fi.md`)
+- **Graceful argument handling**: Always handle the case where `$ARGUMENTS` is empty
+- **Minimal tool permissions**: Only list tools the command actually needs in `allowed-tools`
+- **Follow existing patterns**: Look at other commands in the same directory for conventions
+- **Test before shipping**: Try the command with different inputs to verify it works
+
+## Your Task
+
+Create a new command based on "$ARGUMENTS":
+
+1. If the purpose is unclear, ask clarifying questions
+2. Determine the appropriate location and category
+3. Create the command file with proper structure
+4. Explain what was created and how to use it

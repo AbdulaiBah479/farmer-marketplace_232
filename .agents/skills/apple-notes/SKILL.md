@@ -1,90 +1,50 @@
 ---
 name: apple-notes
-description: "Manage Apple Notes via memo CLI: create, search, edit."
-version: 1.0.0
-author: Hermes Agent
-license: MIT
-platforms: [macos]
-metadata:
-  hermes:
-    tags: [Notes, Apple, macOS, note-taking]
-    related_skills: [obsidian]
-prerequisites:
-  commands: [memo]
+description: Manage Apple Notes via the `memo` CLI on macOS (create, view, edit, delete, search, move, and export notes). Use when a user asks Espada to add a note, list notes, search notes, or manage note folders.
+homepage: https://github.com/antoniorodr/memo
+metadata: {"espada":{"emoji":"📝","os":["darwin"],"requires":{"bins":["memo"]},"install":[{"id":"brew","kind":"brew","formula":"antoniorodr/memo/memo","bins":["memo"],"label":"Install memo via Homebrew"}]}}
 ---
 
-# Apple Notes
+# Apple Notes CLI
 
-Use `memo` to manage Apple Notes directly from the terminal. Notes sync across all Apple devices via iCloud.
+Use `memo notes` to manage Apple Notes directly from the terminal. Create, view, edit, delete, search, move notes between folders, and export to HTML/Markdown.
 
-## Prerequisites
+Setup
+- Install (Homebrew): `brew tap antoniorodr/memo && brew install antoniorodr/memo/memo`
+- Manual (pip): `pip install .` (after cloning the repo)
+- macOS-only; if prompted, grant Automation access to Notes.app.
 
-- **macOS** with Notes.app
-- Install: `brew tap antoniorodr/memo && brew install antoniorodr/memo/memo`
-- Grant Automation access to Notes.app when prompted (System Settings → Privacy → Automation)
+View Notes
+- List all notes: `memo notes`
+- Filter by folder: `memo notes -f "Folder Name"`
+- Search notes (fuzzy): `memo notes -s "query"`
 
-## When to Use
+Create Notes
+- Add a new note: `memo notes -a`
+  - Opens an interactive editor to compose the note.
+- Quick add with title: `memo notes -a "Note Title"`
 
-- User asks to create, view, or search Apple Notes
-- Saving information to Notes.app for cross-device access
-- Organizing notes into folders
-- Exporting notes to Markdown/HTML
+Edit Notes
+- Edit existing note: `memo notes -e`
+  - Interactive selection of note to edit.
 
-## When NOT to Use
+Delete Notes
+- Delete a note: `memo notes -d`
+  - Interactive selection of note to delete.
 
-- Obsidian vault management → use the `obsidian` skill
-- Bear Notes → separate app (not supported here)
-- Quick agent-only notes → use the `memory` tool instead
+Move Notes
+- Move note to folder: `memo notes -m`
+  - Interactive selection of note and destination folder.
 
-## Quick Reference
+Export Notes
+- Export to HTML/Markdown: `memo notes -ex`
+  - Exports selected note; uses Mistune for markdown processing.
 
-### View Notes
+Limitations
+- Cannot edit notes containing images or attachments.
+- Interactive prompts may require terminal access.
 
-```bash
-memo notes                        # List all notes
-memo notes -f "Folder Name"       # Filter by folder
-memo notes -s "query"             # Search notes (fuzzy)
-```
-
-### Create Notes
-
-```bash
-memo notes -a                     # Interactive editor
-memo notes -a "Note Title"        # Quick add with title
-```
-
-### Edit Notes
-
-```bash
-memo notes -e                     # Interactive selection to edit
-```
-
-### Delete Notes
-
-```bash
-memo notes -d                     # Interactive selection to delete
-```
-
-### Move Notes
-
-```bash
-memo notes -m                     # Move note to folder (interactive)
-```
-
-### Export Notes
-
-```bash
-memo notes -ex                    # Export to HTML/Markdown
-```
-
-## Limitations
-
-- Cannot edit notes containing images or attachments
-- Interactive prompts require terminal access (use pty=true if needed)
-- macOS only — requires Apple Notes.app
-
-## Rules
-
-1. Prefer Apple Notes when user wants cross-device sync (iPhone/iPad/Mac)
-2. Use the `memory` tool for agent-internal notes that don't need to sync
-3. Use the `obsidian` skill for Markdown-native knowledge management
+Notes
+- macOS-only.
+- Requires Apple Notes.app to be accessible.
+- For automation, grant permissions in System Settings > Privacy & Security > Automation.

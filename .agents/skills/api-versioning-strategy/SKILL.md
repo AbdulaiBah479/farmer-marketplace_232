@@ -1,76 +1,82 @@
 ---
 name: api-versioning-strategy
-description: "Design versioning for custom Apex REST endpoints: URI versioning, backward compatibility, deprecation sunset. NOT for consuming external APIs."
-category: integration
-salesforce-version: "Spring '25+"
-well-architected-pillars:
-  - Reliability
-  - Operational Excellence
-triggers:
-  - "apex rest versioning"
-  - "deprecate salesforce api endpoint"
-  - "backward compatible api"
-  - "/services/apexrest version"
-tags:
-  - api
-  - versioning
-  - apex-rest
-inputs:
-  - "existing endpoints"
-  - "consumer list"
-outputs:
-  - "URI versioning scheme, deprecation policy, Apex class layout"
-dependencies: []
-version: 1.0.0
-author: Pranav Nagrecha
-updated: 2026-04-28
+description: Implements API versioning using URL paths, headers, or query parameters with backward compatibility and deprecation strategies. Use when managing multiple API versions, planning breaking changes, or designing migration paths.
 ---
 
 # API Versioning Strategy
 
-Custom Apex REST endpoints should be versioned from day one. Two accepted patterns: URI versioning (`/services/apexrest/v1/orders`) or header versioning (`Accept: application/vnd.myco.v1+json`). URI is simpler and more debuggable. This skill defines the class structure, the deprecation sunset policy, and the monitoring required to deprecate safely.
+Choose and implement API versioning approaches with proper deprecation timelines.
 
-## Adoption Signals
+## Versioning Methods
 
-Before publishing a new endpoint or when breaking changes are needed on an existing one. Not for internal-only endpoints with known single consumer.
+| Method | Example | Pros | Cons |
+|--------|---------|------|------|
+| URL Path | `/api/v1/users` | Clear, cache-friendly | URL clutter |
+| Header | `API-Version: 1` | Clean URLs | Hidden, harder to test |
+| Query | `?version=1` | Easy to use | Not RESTful |
 
-## Recommended Workflow
+## URL Path Versioning (Recommended)
 
-1. Always include a version prefix in @RestResource urlMapping, even on v1.
-2. Breaking change → new version class; reuse the service layer; deprecate old via response header `Sunset: <date>`.
-3. Instrument v1 request counts via Event Monitoring or a custom Log__c record to measure traffic.
-4. Notify consumers 90 days before sunset; provide migration doc.
-5. Remove v1 only after 0 traffic for 30 days.
+```javascript
+const v1Router = require('./routes/v1');
+const v2Router = require('./routes/v2');
 
-## Key Considerations
+app.use('/api/v1', v1Router);
+app.use('/api/v2', v2Router);
+```
 
-- Adding a new optional field is NOT a breaking change — do not version for it.
-- Renaming a field IS breaking — version.
-- Error response shape changes are breaking.
-- External consumers cache; give 30+ day sunset windows.
+## Version Adapter Pattern
 
-## Worked Examples (see `references/examples.md`)
+```javascript
+// Transform between versions
+const v1ToV2 = (v1Response) => ({
+  data: {
+    type: 'user',
+    id: v1Response.user_id,
+    attributes: {
+      name: v1Response.user_name,
+      email: v1Response.email
+    }
+  }
+});
+```
 
-- *v1 → v2 orders endpoint* — Rename `customerId` to `accountId`
-- *Sunset instrumentation* — Before deleting v1
+## Deprecation Headers
 
-## Common Gotchas (see `references/gotchas.md`)
+```javascript
+app.use('/api/v1', (req, res, next) => {
+  res.setHeader('Deprecation', 'true');
+  res.setHeader('Sunset', 'Sat, 01 Jun 2025 00:00:00 GMT');
+  res.setHeader('Link', '</api/v2>; rel="successor-version"');
+  next();
+});
+```
 
-- **No version on v1** — First breaking change forces coordinated migration.
-- **Logic in controller** — Cannot reuse across versions.
-- **Silent deletion** — Consumer breaks without warning.
+## Safe vs Breaking Changes
 
-## Top LLM Anti-Patterns (full list in `references/llm-anti-patterns.md`)
+**Safe Changes** (no version bump):
+- Adding optional fields
+- Adding new endpoints
+- Adding optional parameters
 
-- No version on initial endpoint
-- Breaking v1 without a v2
-- Logic inline in controller
+**Breaking Changes** (requires new version):
+- Removing fields
+- Changing field types
+- Restructuring responses
+- Removing endpoints
 
-## Official Sources Used
+## Deprecation Timeline
 
-- Apex REST & Callouts — https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_callouts.htm
-- Named Credentials — https://help.salesforce.com/s/articleView?id=sf.named_credentials_about.htm
-- Connect REST API — https://developer.salesforce.com/docs/atlas.en-us.chatterapi.meta/chatterapi/
-- Private Connect — https://help.salesforce.com/s/articleView?id=sf.private_connect_overview.htm
-- Bulk API 2.0 — https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/
-- Pub/Sub API — https://developer.salesforce.com/docs/platform/pub-sub-api/guide/intro.html
+| Phase | Duration | Actions |
+|-------|----------|---------|
+| Deprecated | 3 months | Add headers, docs |
+| Sunset Announced | 3 months | Email users |
+| Read-Only | 1 month | Disable writes |
+| Shutdown | - | Return 410 Gone |
+
+## Best Practices
+
+- Support N-1 versions minimum
+- Provide 6+ months migration window
+- Include migration guides with code examples
+- Monitor version usage to inform deprecation

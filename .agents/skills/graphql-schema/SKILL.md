@@ -1,172 +1,53 @@
 ---
 name: graphql-schema
-description: >
-  Guide for designing GraphQL schemas following industry best practices. Use this skill when:
-  (1) designing a new GraphQL schema or API,
-  (2) reviewing existing schema for improvements,
-  (3) deciding on type structures or nullability,
-  (4) implementing pagination or error patterns,
-  (5) ensuring security in schema design.
-license: MIT
-compatibility: Any GraphQL implementation (Apollo Server, graphql-js, Yoga, etc.)
-metadata:
-  author: apollographql
-  version: "1.0.1"
-allowed-tools: Bash(npm:*) Bash(npx:*) Read Write Edit Glob Grep
+description: Schema design, federation, and resolution strategies.
+role: eng-api
+triggers:
+  - graphql
+  - schema
+  - resolver
+  - federation
+  - apollo
+  - gql
 ---
 
-# GraphQL Schema Design Guide
+# graphql-schema Skill
 
-This guide covers best practices for designing GraphQL schemas that are intuitive, performant, and maintainable. Schema design is primarily a server-side concern that directly impacts API usability.
+This skill prevents "Graph Spaghetti" and ensuring performant Graph APIs.
 
-## Schema Design Principles
+## 1. Schema Design
+- **Consumption-First**: Design for the UI needs, not the DB schema.
+- **Naming**: `User.posts` (Good), `User.getPosts` (Bad - it's a field, not a method).
+- **Nullability**:
+  - Default to **Nullable** for fields (resilience: if one field fails, partial data returns).
+  - Use **Non-Null (!)** only for IDs and essential arguments.
 
-### 1. Design for Client Needs
+## 2. N+1 Problem (The Graph Killer)
+- **Scenario**: Querying `users { posts { comments } }`.
+- **Solution**: **DataLoader** pattern.
+  - Batches IDs from multiple resolvers.
+  - Runs *one* DB query: `SELECT * FROM posts WHERE user_id IN (1, 2, 3)`.
+  - Distributes results back to resolvers.
 
-- Think about what queries clients will write
-- Organize types around use cases, not database tables
-- Expose capabilities, not implementation details
+## 3. Pagination
+- Avoid `offset`/`limit`.
+- Use **Relay Connection Specification** (Cursor-based):
+  ```graphql
+  users(first: 10, after: "cursor") {
+    edges {
+      node { name }
+      cursor
+    }
+    pageInfo { hasNextPage }
+  }
+  ```
 
-### 2. Be Explicit
+## 4. Security
+- **Depth Limiting**: Block queries deeper than 5 levels (prevent cyclic recursion DoS).
+- **Cost Analysis**: Assign points to fields. Block query if Cost > 1000.
+- **Introspection**: Disable in Production.
 
-- Use clear, descriptive names
-- Make nullability intentional
-- Document with descriptions
-
-### 3. Design for Evolution
-
-- Plan for backwards compatibility
-- Use deprecation before removal
-- Avoid breaking changes
-
-## Quick Reference
-
-### Type Definition Syntax
-
-```graphql
-"""
-A user in the system.
-"""
-type User {
-  id: ID!
-  email: String!
-  name: String
-  posts(first: Int = 10, after: String): PostConnection!
-  createdAt: DateTime!
-}
-```
-
-### Nullability Rules
-
-| Pattern | Meaning |
-|---------|---------|
-| String | Nullable - may be null |
-| String! | Non-null - always has value |
-| [String] | Nullable list, nullable items |
-| [String!] | Nullable list, non-null items |
-| [String]! | Non-null list, nullable items |
-| [String!]! | Non-null list, non-null items |
-
-**Best Practice:** Use **[Type!]!** for lists - empty list over null, no null items.
-
-### Input vs Output Types
-
-```graphql
-# Output type - what clients receive
-type User {
-  id: ID!
-  email: String!
-  createdAt: DateTime!
-}
-
-# Input type - what clients send
-input CreateUserInput {
-  email: String!
-  name: String
-}
-
-# Mutation using input type
-type Mutation {
-  createUser(input: CreateUserInput!): User!
-}
-```
-
-### Interface Pattern
-
-```graphql
-interface Node {
-  id: ID!
-}
-
-type User implements Node {
-  id: ID!
-  email: String!
-}
-
-type Post implements Node {
-  id: ID!
-  title: String!
-}
-```
-
-### Union Pattern
-
-```graphql
-union SearchResult = User | Post | Comment
-
-type Query {
-  search(query: String!): [SearchResult!]!
-}
-```
-
-## Reference Files
-
-Detailed documentation for specific topics:
-
-- [Types](references/types.md) - Type design patterns, interfaces, unions, and custom scalars
-- [Naming](references/naming.md) - Naming conventions for types, fields, and arguments
-- [Pagination](references/pagination.md) - Connection pattern and cursor-based pagination
-- [Errors](references/errors.md) - Error modeling and result types
-- [Security](references/security.md) - Security best practices for schema design
-
-## Key Rules
-
-### Type Design
-
-- Define types based on domain concepts, not data storage
-- Use interfaces for shared fields across types
-- Use unions for mutually exclusive types
-- Keep types focused (single responsibility)
-- Avoid deep nesting - flatten when possible
-
-### Field Design
-
-- Fields should be named from client's perspective
-- Return the most specific type possible
-- Make expensive fields explicit (consider arguments)
-- Use arguments for filtering, sorting, pagination
-
-### Mutation Design
-
-- Use single input argument pattern: `mutation(input: InputType!)`
-- Return affected objects in mutation responses
-- Model mutations around business operations, not CRUD
-- Consider returning a union of success/error types
-
-### ID Strategy
-
-- Use globally unique IDs when possible
-- Implement `Node` interface for refetchability
-- Base64-encode compound IDs if needed
-
-## Ground Rules
-
-- ALWAYS add descriptions to types and fields
-- ALWAYS use non-null (**!**) for fields that cannot be null
-- ALWAYS use **[Type!]!** pattern for lists
-- NEVER expose database internals in schema
-- NEVER break backwards compatibility without deprecation
-- PREFER dedicated input types over many arguments
-- PREFER enums over arbitrary strings for fixed values
-- USE `ID` type for identifiers, not `String` or `Int`
-- USE custom scalars for domain-specific values (DateTime, Email, URL)
+## 5. Federation (Apollo)
+- Use when splitting Graph across microservices.
+- **Entity**: A type shared across subgraphs (`@key(fields: "id")`).
+- **Gateway**: Composes the Supergraph.

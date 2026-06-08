@@ -1,13 +1,13 @@
 ---
 name: Apify
-description: "Scrape social media platforms, business data, and e-commerce via Apify actors — Instagram profiles/posts/hashtags/comments, LinkedIn profiles/jobs/posts, TikTok profiles/hashtags/videos/comments, YouTube channels/search/comments, Facebook posts/groups/comments, Google Maps business search with contact/review/image extraction, Amazon products/reviews/pricing, and general-purpose multi-page web crawling with custom pageFunction extraction logic. File-based TypeScript wrappers (scrapeInstagramProfile, searchGoogleMaps, scrapeAmazonProduct, scrapeWebsite, etc.) filter and transform data in code before returning to model context, achieving 95-99% token savings over direct MCP protocol. Parallel multi-platform queries via Promise.all for social listening dashboards. Lead enrichment pipeline: Google Maps → qualified filter → optional LinkedIn enrichment. Competitive analysis across Instagram, YouTube, and TikTok simultaneously. USE WHEN scrape Instagram, scrape LinkedIn, scrape TikTok, scrape YouTube, scrape Facebook, Google Maps leads, Amazon reviews, business intelligence, multi-platform social listening, competitive analysis, lead generation, social monitoring, Apify actors, web crawl, extract contacts. NOT FOR X/Twitter bookmarks (use a dedicated X-API skill) or progressive scraping (use BrightData)."
-effort: medium
+description: Social media scraping, business data, e-commerce via Apify actors. USE WHEN Twitter, Instagram, LinkedIn, TikTok, YouTube, Facebook, Google Maps, Amazon scraping.
+context: fork
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Apify/`
+`~/.claude/skills/PAI/USER/SKILLCUSTOMIZATIONS/Apify/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -18,7 +18,7 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 
 1. **Send voice notification**:
    ```bash
-   curl -s -X POST http://localhost:31337/notify \
+   curl -s -X POST http://localhost:8888/notify \
      -H "Content-Type: application/json" \
      -d '{"message": "Running the WORKFLOWNAME workflow in the Apify skill to ACTION"}' \
      > /dev/null 2>&1 &
@@ -41,6 +41,7 @@ This skill is a **file-based MCP** - a code-first API wrapper that replaces toke
 
 **Why file-based?** Filter data in code BEFORE returning to model context = 97.5% token savings.
 
+**Architecture:** See `~/.claude/skills/PAI/SYSTEM/DOCUMENTATION/FileBasedMCPs.md`
 
 ## 🎯 Overview
 
@@ -71,7 +72,7 @@ Direct TypeScript access to the 9 most popular Apify actors without MCP overhead
 ### Basic Usage Pattern
 
 ```typescript
-import { scrapeInstagramProfile, searchGoogleMaps } from 'actors'
+import { scrapeInstagramProfile, searchGoogleMaps } from '~/.claude/skills/Apify/actors'
 
 // 1. Call the actor wrapper
 const profile = await scrapeInstagramProfile({
@@ -92,7 +93,7 @@ console.log(viral) // ~10 posts instead of 50
 
 **Instagram - Track engagement:**
 ```typescript
-import { scrapeInstagramProfile, scrapeInstagramPosts } from 'actors'
+import { scrapeInstagramProfile, scrapeInstagramPosts } from '~/.claude/skills/Apify/actors'
 
 // Get profile with recent posts
 const profile = await scrapeInstagramProfile({
@@ -115,7 +116,7 @@ const topRecent = profile.latestPosts
 
 **LinkedIn - Job search:**
 ```typescript
-import { searchLinkedInJobs } from 'actors'
+import { searchLinkedInJobs } from '~/.claude/skills/Apify/actors'
 
 const jobs = await searchLinkedInJobs({
   keywords: 'AI engineer',
@@ -133,7 +134,7 @@ const topJobs = jobs.filter(j =>
 
 **TikTok - Trend analysis:**
 ```typescript
-import { scrapeTikTokHashtag } from 'actors'
+import { scrapeTikTokHashtag } from '~/.claude/skills/Apify/actors'
 
 const videos = await scrapeTikTokHashtag({
   hashtag: 'ai',
@@ -151,7 +152,7 @@ const viral = videos
 
 **Google Maps - Local business leads:**
 ```typescript
-import { searchGoogleMaps } from 'actors'
+import { searchGoogleMaps } from '~/.claude/skills/Apify/actors'
 
 // Search with contact info extraction
 const places = await searchGoogleMaps({
@@ -185,7 +186,7 @@ console.log(`Found ${qualifiedLeads.length} qualified leads`)
 
 **Google Maps - Review sentiment analysis:**
 ```typescript
-import { scrapeGoogleMapsReviews } from 'actors'
+import { scrapeGoogleMapsReviews } from '~/.claude/skills/Apify/actors'
 
 const reviews = await scrapeGoogleMapsReviews({
   placeUrl: 'https://maps.google.com/maps?cid=12345',
@@ -211,7 +212,7 @@ const complaints = recentNegative.map(r => r.text)
 
 **Amazon - Price monitoring:**
 ```typescript
-import { scrapeAmazonProduct } from 'actors'
+import { scrapeAmazonProduct } from '~/.claude/skills/Apify/actors'
 
 const product = await scrapeAmazonProduct({
   productUrl: 'https://www.amazon.com/dp/B08L5VT894',
@@ -238,7 +239,7 @@ console.log(`Recent issues: ${recentNegative?.length} complaints`)
 
 **Any Website - Custom extraction:**
 ```typescript
-import { scrapeWebsite } from 'actors'
+import { scrapeWebsite } from '~/.claude/skills/Apify/actors'
 
 const products = await scrapeWebsite({
   startUrls: ['https://example.com/products'],
@@ -275,7 +276,7 @@ import {
   scrapeInstagramHashtag,
   scrapeTikTokHashtag,
   searchYouTube
-} from 'actors'
+} from '~/.claude/skills/Apify/actors'
 
 // Run all platforms in parallel
 const [instagramPosts, tiktokVideos, youtubeVideos] = await Promise.all([
@@ -297,7 +298,7 @@ console.log(`Found ${allViral.length} viral posts across 3 platforms`)
 ### Pattern 2: Lead Enrichment Pipeline
 
 ```typescript
-import { searchGoogleMaps, scrapeLinkedInProfile } from 'actors'
+import { searchGoogleMaps, scrapeLinkedInProfile } from '~/.claude/skills/Apify/actors'
 
 // 1. Find businesses on Google Maps
 const restaurants = await searchGoogleMaps({
@@ -330,7 +331,7 @@ import {
   scrapeInstagramProfile,
   scrapeYouTubeChannel,
   scrapeTikTokProfile
-} from 'actors'
+} from '~/.claude/skills/Apify/actors'
 
 async function analyzeCompetitor(username: string) {
   // Gather data from all platforms
@@ -478,36 +479,3 @@ APIFY_TOKEN=apify_api_xxxxx...
 ---
 
 **Remember: Filter data in code BEFORE returning to model context. This is where the 99% token savings happen!**
-
-## Gotchas
-
-- **Actor selection matters.** Each social platform has specific actors — don't use a generic scraper for Instagram when a dedicated Instagram actor exists.
-- **Rate limits vary by platform and plan.** Check actor documentation for limits before running large scrapes.
-- **Scraped data format varies by actor.** Read the actor's output schema before processing results.
-
-## Examples
-
-**Example 1: Scrape Instagram profile**
-```
-User: "get the recent posts from this Instagram account"
-→ Selects Instagram Profile actor
-→ Runs with target profile URL
-→ Returns structured post data (text, engagement, dates)
-```
-
-**Example 2: LinkedIn company scrape**
-```
-User: "scrape this company's LinkedIn page"
-→ Selects LinkedIn Company actor
-→ Returns company info, employee count, recent posts
-```
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Apify","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
-
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.

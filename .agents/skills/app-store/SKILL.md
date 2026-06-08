@@ -1,129 +1,146 @@
 ---
 name: app-store
-description: App Store optimization and marketing skills for descriptions, screenshots, keywords, review responses, and comprehensive promotional strategy. Use when user needs help with App Store presence, ASO, marketing, or customer communication.
-allowed-tools: [Read, Write, Edit, Glob, Grep, AskUserQuestion, WebSearch]
+description: Master App Store deployment - Submission, TestFlight, CI/CD, release management
+sasmp_version: "1.3.0"
+version: "2.0.0"
+bonded_agent: 07-app-store
+bond_type: PRIMARY_BOND
+last_updated: "2024-12"
 ---
 
-# App Store Optimization & Marketing Skills
+# App Store Deployment Skill
 
-Skills for optimizing your app's App Store presence and building promotional strategies — from descriptions to comprehensive marketing campaigns.
+> Ship iOS apps to the App Store with confidence
 
-## When This Skill Activates
+## Learning Objectives
 
-Use this skill when the user:
-- Needs to write App Store description or promotional text
-- Wants to plan screenshot sequence and captions
-- Asks about ASO (App Store Optimization) or keywords
-- Needs help responding to App Store reviews
-- Wants to improve app discoverability
-- Asks about marketing strategy, promotion, or user acquisition
-- Wants to use App Store features (events, custom pages, offers, featuring)
-- Asks about paid acquisition or Apple Search Ads
-- App was rejected or wants to avoid rejection
+By completing this skill, you will:
+- Navigate App Store Connect effectively
+- Master the submission and review process
+- Automate deployments with Fastlane
+- Manage TestFlight beta testing
+- Handle review rejections professionally
 
-## Available Skills
+## Prerequisites
 
-### marketing-strategy/ ⭐ NEW
-Comprehensive marketing strategy advisor — describe your app and get a tailored promotional plan.
-- Analyzes app type, monetization model, audience, and lifecycle stage
-- Recommends the right App Store features for your situation
-- Builds promotional calendar with implementation roadmap
-- Orchestrates generator sub-skills for implementation
-- Strategy templates for subscription, paid, freemium, and game apps
+| Requirement | Level |
+|-------------|-------|
+| iOS Development | Intermediate |
+| Apple Developer Account | Required |
+| Git basics | Required |
 
-### app-description-writer/
-Generate compelling App Store descriptions that convert.
-- Promotional text (170 chars)
-- Full description (4000 chars)
-- What's New text for updates
-- Localization guidance
+## Curriculum
 
-### screenshot-planner/
-Plan App Store screenshot sequences with captions.
-- 5-10 screenshot storyboard
-- Caption writing
-- Device frame recommendations
-- Localization considerations
+### Module 1: App Store Connect (3 hours)
 
-### keyword-optimizer/
-Optimize app title, subtitle, and keywords for search.
-- Keyword research methodology
-- Character limit optimization (100 chars)
-- Competitor analysis
-- Localization keyword strategy
-- **NEW:** Advanced tactics (cross-localization, screenshot indexing)
-- **NEW:** Keyword criteria (Pop/Diff sweet spots, opportunity scoring)
-- **NEW:** Existing app strategy (safe optimization)
+**Topics:**
+- App creation and configuration
+- Pricing and availability
+- Age ratings and content
+- In-app purchase setup
 
-### review-response-writer/
-Professional responses to App Store reviews.
-- Templates for common scenarios
-- Tone and brand voice guidelines
-- Turning negative reviews into opportunities
-- When to respond vs. when not to
+### Module 2: Code Signing (4 hours)
 
-### apple-search-ads/
-Apple Search Ads campaign strategy for indie developers.
-- Readiness assessment (minimum thresholds before spending)
-- Campaign types and keyword strategy
-- Budget planning by app stage (launch, growth, scale)
-- Bid optimization with CPT benchmarks by category
-- Campaign structure templates and measurement KPIs
-- Custom Product Pages integration for ad groups
+**Topics:**
+- Certificates and profiles
+- Automatic vs manual signing
+- Fastlane Match
+- Troubleshooting signing issues
 
-### rejection-handler/
-Handle App Store rejections and prepare submissions to avoid them.
-- Pre-submission audit checklist by guideline section
-- Rejection analysis and response strategy
-- Resolution Center response templates
-- Appeal escalation path (Resolution Center → phone → App Review Board)
-- Top 20 common rejections with fixes (common-rejections.md)
+### Module 3: App Submission (4 hours)
 
-## Related Generator Skills
+**Topics:**
+- Metadata requirements
+- Screenshot specifications
+- App Privacy details
+- Review notes best practices
 
-These generator skills produce code, metadata, and configuration for App Store features:
+**Submission Checklist:**
+```markdown
+[ ] App icon (all sizes)
+[ ] Screenshots (all device sizes)
+[ ] Description and keywords
+[ ] Privacy policy URL
+[ ] Support URL
+[ ] Age rating questionnaire
+[ ] Export compliance
+[ ] Privacy nutrition labels
+```
 
-| Skill | Purpose |
-|-------|---------|
-| `generators/subscription-offers` | StoreKit 2 code for all subscription offer types |
-| `generators/win-back-offers` | Win-back flow for churned subscribers |
-| `generators/promoted-iap` | Promoted In-App Purchase setup |
-| `generators/in-app-events` | In-App Event metadata templates |
-| `generators/custom-product-pages` | Custom Product Page strategy and metadata |
-| `generators/product-page-optimization` | A/B test plans for product page |
-| `generators/featuring-nomination` | App Store featuring pitch templates |
-| `generators/offer-codes-setup` | Offer code distribution strategies |
-| `generators/pre-orders` | Pre-order setup and launch timelines |
-| `generators/app-store-assets` | Asset specs for all App Store media |
+### Module 4: TestFlight (3 hours)
 
-## How to Use
+**Topics:**
+- Internal vs external testing
+- Build distribution
+- Tester feedback collection
+- Beta app review
 
-1. User requests App Store help
-2. For strategy questions → Read `marketing-strategy/SKILL.md`
-3. For paid acquisition → Read `apple-search-ads/SKILL.md`
-4. For rejections or submission prep → Read `rejection-handler/SKILL.md`
-5. For specific content → Read the relevant sub-skill's SKILL.md
-6. For code/implementation → Read the relevant generator skill
-7. Ask clarifying questions about the app
-8. Generate optimized content
-9. Provide alternatives and explain choices
+### Module 5: CI/CD with Fastlane (5 hours)
 
-## Key Principles
+**Topics:**
+- Fastlane setup
+- Lanes for test/beta/release
+- GitHub Actions integration
+- Xcode Cloud
 
-### 1. User-Focused Copy
-- Lead with benefits, not features
-- Speak to user pain points
-- Use clear, simple language
-- Include social proof where possible
+**Fastlane Example:**
+```ruby
+lane :beta do
+  increment_build_number
+  build_app(scheme: "MyApp")
+  upload_to_testflight(
+    skip_waiting_for_build_processing: true
+  )
+end
+```
 
-### 2. Platform Guidelines
-- Stay within character limits
-- Follow Apple's content guidelines
-- Avoid prohibited terms (free, best, #1)
-- Don't mention competing platforms
+### Module 6: Review Guidelines (3 hours)
 
-### 3. Search Optimization
-- Use high-value keywords naturally
-- Don't stuff keywords
-- Consider localized search terms
-- Update for seasonal relevance
+**Topics:**
+- Common rejection reasons
+- Guideline interpretation
+- Appeal process
+- Expedited review requests
+
+**Common Rejections:**
+
+| Reason | Guideline | Fix |
+|--------|-----------|-----|
+| Crashes | 2.1 | Fix and test |
+| Placeholder content | 2.3.3 | Remove placeholders |
+| Privacy issues | 5.1.1 | Add privacy labels |
+| Login required | 4.2.3 | Add demo account |
+
+### Module 7: Post-Launch (2 hours)
+
+**Topics:**
+- App Analytics
+- Crash reports (Organizer)
+- User reviews response
+- Update strategy
+
+## Assessment Criteria
+
+| Criteria | Weight |
+|----------|--------|
+| Code signing mastery | 25% |
+| Submission quality | 25% |
+| CI/CD automation | 25% |
+| Review handling | 25% |
+
+## Timeline Reference
+
+| Stage | Duration |
+|-------|----------|
+| Initial submission | 1-2 hours |
+| Review (new app) | 24-48 hours |
+| Review (update) | 24 hours |
+| Rejection response | Same day |
+| Expedited review | 24 hours |
+
+## Skill Validation
+
+1. **First Submission**: Submit app to TestFlight
+2. **CI Pipeline**: Automated beta deployment
+3. **Full Release**: App Store submission
+4. **Update Cycle**: Version update with release notes

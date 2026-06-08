@@ -1,221 +1,193 @@
 ---
 name: retrospective
-description: "Generates a sprint or milestone retrospective by analyzing completed work, velocity, blockers, and patterns. Produces actionable insights for the next iteration."
-argument-hint: "[sprint-N|milestone-name]"
-user-invocable: true
-allowed-tools: Read, Glob, Grep, Write, Bash, AskUserQuestion
-model: sonnet
+description: Interactive post-session retrospective that captures learnings, updates skills, and saves memories. Use when the user says "/retrospective", "let's do a retro", "what did we learn", "session review", "retro", or "wrap up". Also use at the end of long productive sessions when significant patterns or corrections emerged. Supports multi-session mode — by default processes all of today's sessions across projects.
 ---
 
-## Phase 1: Parse Arguments
+# Retrospective
 
-Determine whether this is a sprint retrospective (`sprint-N`) or a milestone retrospective (`milestone-name`).
+Interactive post-session retro. Scans sessions, asks focused questions, proposes concrete actions the user approves in one step.
 
----
+## Modes
 
-## Phase 1b: Check for Existing Retrospective
+### Single-session mode (default when inside a substantial conversation)
+Scans the current conversation only. This is the original behavior.
 
-Before loading any data, glob for an existing retrospective file:
+### Multi-session mode (default when invoked with no args, or with "today", or with a date)
+Scans all sessions from a given day (default: today) across all projects. Extracts user corrections, skill failures, and patterns from JSONL transcripts.
 
-- For sprint retrospectives: `production/retrospectives/retro-[sprint-slug]-*.md`
-  (also check `production/sprints/sprint-[N]-retrospective.md` as an alternate location)
-- For milestone retrospectives: `production/retrospectives/retro-[milestone-name]-*.md`
+**Trigger:** `/retrospective` at the start of a fresh session, or `/retrospective today`, or `/retrospective 2026-05-24`.
 
-If a matching file is found, use `AskUserQuestion`:
-- Prompt: "An existing retrospective was found: [filename]. How do you want to proceed?"
-- Options:
-  - `[A] Update existing — load it and add/revise sections with new data`
-  - `[B] Start fresh — generate a new retrospective (archive the old one)`
+## Multi-Session Discovery
 
-If [A]: read the existing file and carry its content forward, revising sections with new data.
-If [B]: continue to Phase 2 with a blank slate. Before writing the new file, rename the existing one with a `-archived-[date]` suffix.
+### Step 0 — Discover sessions
 
----
+```bash
+# Find today's sessions (default)
+find ~/.claude/projects -maxdepth 2 -name "*.jsonl" -not -path "*/subagents/*" -mtime 0
 
-## Phase 2: Load Sprint or Milestone Data
-
-Read the sprint or milestone plan from the appropriate location:
-
-- Sprint plans: `production/sprints/`
-- Milestone definitions: `production/milestones/`
-
-**Also check for `production/sprint-status.yaml`**: if it exists, read it alongside the sprint plan. It is the authoritative source for actual story completion status (status: done, completed dates, blockers). Use it as the primary source for completion metrics in Phase 3. Fall back to markdown scanning only if the yaml does not exist. Note discrepancies between the yaml and the sprint plan (e.g., stories in yaml not in plan, or vice versa).
-
-**If the file does not exist or is empty**, output:
-
-> "No sprint data found for [sprint/milestone]. Run `/sprint-status` to generate
-> sprint data first, or provide the sprint details manually."
-
-Then use `AskUserQuestion` to present two options:
-
-- **[A] Provide data manually** — ask the user to paste or describe the sprint
-  tasks, dates, and outcomes; use that as the source of truth for the retrospective.
-- **[B] Stop** — abort the skill. Verdict: **BLOCKED** — no sprint data available.
-
-If the user chooses [A], collect the data and continue to Phase 3 using what they provide.
-If the user chooses [B], stop here.
-
-Extract: planned tasks, estimated effort, owners, and goals.
-
-Run git log for the sprint period to understand what was actually committed and when. Use the Bash tool (which uses Git Bash on Windows — the `2>/dev/null` is bash syntax, not PowerShell):
-
-```
-Bash: git log --oneline --since="4 weeks ago" 2>/dev/null || git log --oneline -20
+# Or for a specific date, filter by file modification date
+find ~/.claude/projects -maxdepth 2 -name "*.jsonl" -not -path "*/subagents/*" -newermt "YYYY-MM-DD" ! -newermt "YYYY-MM-DD + 1 day"
 ```
 
-Adjust the `--since` date to match the sprint duration if known from the sprint plan.
+For each JSONL file found, extract a summary:
+1. Parse the project name from the path (the directory name after `projects/`, decoded from the path-encoding)
+2. Extract `user` and `assistant` messages (type `user` and `assistant`)
+3. For user messages: `message.content` (may be string or array of `{type: "text", text: "..."}`)
+4. For assistant messages: collect text blocks from `message.content` array where `type == "text"`
+5. Build a condensed transcript: first 10 user messages + last 5 user messages (to capture corrections at the end)
+6. Skip sessions with fewer than 3 user messages (too short to have learnings)
 
----
+### Step 0b — Present session list
 
-## Phase 3: Analyze Completion and Trends
+Show the user what was found:
 
-Scan for completed and incomplete tasks by comparing the plan against actual deliverables. Check for:
-
-- Tasks completed as planned
-- Tasks completed but modified from the plan
-- Tasks carried over (not completed)
-- Tasks added mid-sprint (unplanned work)
-- Tasks removed or descoped
-
-Scan the codebase for TODO/FIXME trends:
-
-- Count current TODO/FIXME/HACK comments
-- Compare to previous sprint counts if available (check previous retrospectives)
-- Note whether technical debt is growing or shrinking
-
-Read previous retrospectives (if any) from `production/retrospectives/` to check:
-
-- Were previous action items addressed?
-- Are the same problems recurring?
-- How has velocity trended?
-
----
-
-## Phase 4: Generate the Retrospective
-
-```markdown
-## Retrospective: [Sprint N / Milestone Name]
-Period: [Start Date] -- [End Date]
-Generated: [Date]
-
-### Metrics
-
-| Metric | Planned | Actual | Delta |
-|--------|---------|--------|-------|
-| Tasks | [X] | [Y] | [+/- Z] |
-| Completion Rate | -- | [Z%] | -- |
-| Story Points / Effort Days | [X] | [Y] | [+/- Z] |
-| Bugs Found | -- | [N] | -- |
-| Bugs Fixed | -- | [N] | -- |
-| Unplanned Tasks Added | -- | [N] | -- |
-| Commits | -- | [N] | -- |
-
-### Velocity Trend
-
-| Sprint | Planned | Completed | Rate |
-|--------|---------|-----------|------|
-| [N-2] | [X] | [Y] | [Z%] |
-| [N-1] | [X] | [Y] | [Z%] |
-| [N] (current) | [X] | [Y] | [Z%] |
-
-**Trend**: [Increasing / Stable / Decreasing]
-[One sentence explaining the trend]
-
-### What Went Well
-- [Observation backed by specific data or examples]
-- [Another positive observation]
-- [Recognize specific contributions or decisions that paid off]
-
-### What Went Poorly
-- [Specific issue with measurable impact -- e.g., "Feature X took 5 days
-  instead of estimated 2, blocking tasks Y and Z"]
-- [Another issue with impact]
-- [Do not assign blame -- focus on systemic causes]
-
-### Blockers Encountered
-
-| Blocker | Duration | Resolution | Prevention |
-|---------|----------|------------|------------|
-| [What blocked progress] | [How long] | [How it was resolved] | [How to prevent recurrence] |
-
-### Estimation Accuracy
-
-| Task | Estimated | Actual | Variance | Likely Cause |
-|------|-----------|--------|----------|--------------|
-| [Most overestimated task] | [X] | [Y] | [+Z] | [Why] |
-| [Most underestimated task] | [X] | [Y] | [-Z] | [Why] |
-
-**Overall estimation accuracy**: [X%] of tasks within +/- 20% of estimate
-
-[Analysis: Are we consistently over- or under-estimating? For which types of
-tasks? What adjustment should we apply?]
-
-### Carryover Analysis
-
-| Task | Original Sprint | Times Carried | Reason | Action |
-|------|----------------|---------------|--------|--------|
-| [Task that was not completed] | [Sprint N-X] | [N] | [Why] | [Complete / Descope / Redesign] |
-
-### Technical Debt Status
-- Current TODO count: [N] (previous: [N])
-- Current FIXME count: [N] (previous: [N])
-- Current HACK count: [N] (previous: [N])
-- Trend: [Growing / Stable / Shrinking]
-- [Note any areas of concern]
-
-### Previous Action Items Follow-Up
-
-| Action Item (from Sprint N-1) | Status | Notes |
-|-------------------------------|--------|-------|
-| [Previous action] | [Done / In Progress / Not Started] | [Context] |
-
-### Action Items for Next Iteration
-
-| # | Action | Owner | Priority | Deadline |
-|---|--------|-------|----------|----------|
-| 1 | [Specific, measurable action] | [Who] | [High/Med/Low] | [When] |
-| 2 | [Another action] | [Who] | [Priority] | [When] |
-
-### Process Improvements
-- [Specific change to how we work, with expected benefit]
-- [Another improvement -- keep it to 2-3 actionable items, not a wish list]
-
-### Summary
-[2-3 sentence overall assessment: Was this a good sprint/milestone? What is
-the single most important thing to change going forward?]
+```
+Found N sessions today:
+- project-name-1 (session-id[:8]) — "first user message preview..."
+- project-name-2 (session-id[:8]) — "first user message preview..."
 ```
 
----
+Then continue to Step 1a with the combined findings from all sessions. Each candidate action should note which session it came from (project name + short ID).
 
-## Phase 5: Save Retrospective
+## Single-Session Process
 
-Present the retrospective and top findings to the user (completion rate, velocity trend, top blocker, most important action item).
+### Step 0 — Gate Check (silent)
 
-Ask: "May I write this to `production/retrospectives/retro-sprint-[N]-[date].md`?" (or `production/retrospectives/retro-[milestone-name]-[date].md` for milestone retrospectives)
+Scan the conversation and estimate session depth. Look for tool calls (Read, Edit, Write, Bash, Skill invocations), errors encountered, and back-and-forth exchanges. Don't try to count exactly — judge by feel:
 
-If yes, write the file, creating the `production/retrospectives/` directory if needed. Verdict: **COMPLETE** — retrospective saved.
+- **Short session** (a quick question and answer, ~1-2 tasks) → **Fast mode** (Step 1b)
+- **Substantial session** (multiple tasks, skill usage, errors, corrections) → **Full mode** (Step 1a)
 
-If no, stop here. Verdict: **BLOCKED** — user declined write.
+### Step 1a — Full Mode
 
----
+Silently scan the conversation and collect:
 
-## Phase 6: Next Steps
+1. **Skills invoked** — which succeeded, which failed, workarounds applied
+2. **User corrections** — explicit "no, do it this way" moments (highest signal)
+3. **Repeated patterns** — same error hit multiple times, same workaround applied
+4. **Cross-skill workflows** — 3+ skills chained in sequence
 
-Use `AskUserQuestion`:
-- Prompt: "Retrospective complete. The action items and velocity data are ready. Would you like to start sprint planning now with this data pre-loaded?"
-- Options:
-  - `[A] Yes — open sprint planning with retro action items and velocity delta pre-populated`
-  - `[B] No — I'll reference the retrospective file manually when I'm ready`
+Then read existing state:
+- Find the current project's memory directory: `glob ~/.claude/projects/*/memory/MEMORY.md` and read it plus relevant memory files
+- Read skill files for any skills that were invoked (`~/.claude/skills/{name}/skill.md`)
+- Check if Linear CLI exists: `test -f ~/.claude/skills/linear/scripts/linear && echo "configured" || echo "not configured"`
 
-If the user selects [A]: Proceed to invoke `/sprint-plan new`, passing the retrospective file path and a summary of the action items and velocity change so the sprint planner can reference them.
+Generate up to **5 candidate actions**, ranked by signal strength:
+1. User corrections (highest priority)
+2. Failed/workarounded skills
+3. Repeated patterns
+4. Error patterns
+5. Workflow patterns (lowest)
 
-- If this was a milestone retrospective, run `/gate-check` to formally assess readiness for the next phase.
+**Dedup rules:**
+- If a candidate's content overlaps with an existing memory file → drop it
+- If a skill update candidate overlaps with existing skill file content → drop it
+- If Linear is not configured → omit any Linear task candidates
 
-### Guidelines
+Present everything in a **single AskUserQuestion call** (up to 4 questions):
 
-- Be honest and specific. Vague retrospectives ("communication could be better") produce vague improvements. Use data and examples.
-- Focus on systemic issues, not individual blame.
-- Limit action items to 3-5. More than that dilutes focus.
-- Every action item must have an owner and a deadline.
-- Check whether previous action items were completed. Recurring unaddressed items are a process smell.
-- If this is a milestone retrospective, also evaluate whether the milestone goals were achieved and what that means for the overall project timeline.
+| # | Question | Type |
+|---|----------|------|
+| 1 | "Quick session check?" | Single select: `Productive / Mixed / Rough / Skip retro` |
+| 2 | "What felt slow or broken?" | Free text via Other (optional) |
+| 3 | "Anything to carry forward as a rule?" | Free text via Other (optional) |
+| 4 | "Which of these should I save?" | Multi-select: generated candidates with descriptions. Always include a "Nothing / skip all" option. |
+
+If Q1 = "Skip retro" → exit immediately.
+
+If Q1 = "Rough" and Q2/Q3 are empty → exit with "Nothing to save — session closed." Don't add another question after the user already signaled they're done.
+
+### Step 1b — Fast Mode
+
+Single AskUserQuestion call with one question:
+- "Anything worth remembering from this session?" with options:
+  - "Nothing, we're done" (default)
+  - Other (free text)
+
+If "Nothing" → exit. If free text → save as memory, exit.
+
+### Step 2 — Execute (silent, no re-confirmation)
+
+For each approved item from Q4 (plus any insights from Q2/Q3 free text):
+
+1. **Read the target file** before writing
+2. **Check for conflicts/duplicates** against current content
+3. **Write the change** if clean
+4. **Skip with warning** if conflict detected
+
+Action types and their targets:
+
+| Type | Target | Tool |
+|------|--------|------|
+| Skill update | `~/.claude/skills/{name}/skill.md` | Edit |
+| Memory (feedback) | Current project's `memory/feedback_*.md` + MEMORY.md | Write |
+| Memory (project) | Current project's `memory/project_*.md` + MEMORY.md | Write |
+| CLAUDE.md rule | `~/.claude/CLAUDE.md` or project CLAUDE.md | Edit |
+| Linear task | `~/.claude/skills/linear/scripts/linear issue create --title "..." --description "..."` | Bash |
+
+### Step 3 — Summary (brief)
+
+One-line per action taken:
+```
+Updated telegram skill — added chat type mismatch note
+Saved memory — Qwen /api/chat not /api/generate
+Skipped: pdf-generation update (already documented)
+```
+
+Done. No trailing commentary.
+
+## JSONL Transcript Format
+
+Session transcripts are stored as JSONL files at `~/.claude/projects/{project-path}/{session-id}.jsonl`.
+
+Each line is a JSON object with a `type` field. Relevant types:
+- `user` — user message. Content at `message.content` (string or array of `{type: "text", text: "..."}`)
+- `assistant` — Claude's response. Content at `message.content` (array of content blocks; extract where `type == "text"`)
+- `ai-title` — auto-generated session title
+
+To extract a readable transcript from a JSONL file, use a Python one-liner or read the file and filter for `user`/`assistant` types.
+
+**Project name decoding:** The directory name uses the absolute path with slashes replaced by dashes, e.g., `-Users-glebkalinin-ai-projects-foo` → `~/ai_projects/foo`.
+
+## Mode Selection Logic
+
+When `/retrospective` is invoked:
+1. If the current conversation has 10+ user messages → **single-session mode** (retro this conversation)
+2. If the current conversation is short (just the `/retrospective` invocation) → **multi-session mode** (scan today's sessions)
+3. If args contain a date (e.g., "today", "yesterday", "2026-05-24") → **multi-session mode** for that date
+4. If args contain "all" → **multi-session mode** for today
+
+## Candidate Description Format
+
+Each candidate in Q4 must have a description showing the **exact proposed content**, not just a title. The user judges candidates by reading descriptions, not by opening files.
+
+Good: `"Add to telegram skill: get_chat_type() misclassifies private chats as channels — use Telethon client.send_message() directly for DMs"`
+
+Bad: `"Update telegram skill with DM fix"`
+
+## What This Skill Does NOT Do
+
+This skill only captures session learnings. It does not review code quality, analyze PRs, create documentation, or run tests. For those, use the appropriate dedicated skills.
+
+## Rules
+
+- Never write learnings into this skill file itself — distribute to relevant skills or memory
+- Cap candidates at 5 even if more findings exist
+- User corrections always rank above tool failures
+- The multi-select in Step 1a IS the approval — do not ask again per action
+- If the session used no skills, only offer memory and CLAUDE.md candidates
+- Keep the entire interaction to 2 moments: one question call, then silent execution
+
+## Tools
+
+- AskUserQuestion: Interactive questions (1-4 per call, single/multi select)
+- Read: Check existing memory and skill files before proposing changes
+- Edit: Update existing skill files and CLAUDE.md
+- Write: Create new memory files
+- Bash: Linear task creation, skill directory listing
+- Glob: Find skill and memory files
+
+## Testing
+
+Engine logic is tested in `retro_engine.py` with 9 scenario fixtures and 30 pytest tests.
+Run: `cd ~/.claude/skills/retrospective && python3 -m pytest test_retro_engine.py -v`

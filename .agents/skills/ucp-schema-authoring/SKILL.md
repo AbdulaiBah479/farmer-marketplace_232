@@ -1,10 +1,7 @@
 ---
 name: ucp-schema-authoring
-description: >
-  Author custom UCP schemas and extensions — create capability schemas,
-  extension schemas, and type definitions using JSON Schema 2020-12 composition.
-  Use when extending UCP with custom capabilities or building domain-specific
-  extensions.
+description: Author custom UCP schemas and extensions — create capability schemas, extension schemas, and type definitions using JSON Schema 2020-12 composition. Use when extending UCP with custom capabilities or building domain-specific extensions.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # UCP Schema Authoring

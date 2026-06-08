@@ -1,232 +1,295 @@
 ---
 name: gcloud
-description: >-
-  Interacts with Google Cloud services using the gcloud CLI safely and
-  efficiently. Covers command validation, data reduction, safety guardrails with
-  a denylist, and workflows for discovery and investigation. You MUST read this
-  skill before invoking any gcloud command. Use when managing cloud resources,
-  querying configurations, or troubleshooting issues via gcloud. Don't use when
-  writing or debugging Google Cloud client library code or raw REST/gRPC API
-  interactions.
+description: Google Cloud CLI 操作
+version: 1.0.0
+author: terminal-skills
+tags: [cloud, gcp, gcloud, gke, compute]
 ---
 
-# gcloud CLI Skill for AI Agents
+# Google Cloud CLI 操作
 
-This document provides essential guidelines and best practices for AI agents
-interacting with the Google Cloud SDK (`gcloud` CLI). Following these rules is
-critical to avoid hallucinated commands, flags, flag values, and positional
-argument syntax, prevent destructive actions, and minimize context window usage.
+## 概述
+GCP 资源管理、GKE、Cloud Functions 等技能。
 
-## Getting Started
+## 配置与认证
 
-### 1. Installation
+```bash
+# 初始化配置
+gcloud init
 
-If the `gcloud` executable is missing, refer to the official
-[Google Cloud CLI Installation Guide](https://docs.cloud.google.com/sdk/docs/install-sdk)
-to install it on your platform (Linux, macOS, Windows, etc.).
+# 登录
+gcloud auth login
+gcloud auth application-default login    # 应用默认凭证
 
-### 2. Authorization
+# 服务账号认证
+gcloud auth activate-service-account --key-file=key.json
 
-Authenticate the CLI with Google Cloud. Choose the flow that matches your
-running environment:
+# 查看配置
+gcloud config list
+gcloud config configurations list
 
-*   **User Account (Interactive)**: Run `gcloud auth login`. Follow the browser
-    prompts to sign in.
-*   **User Account (Headless Flow)**: If operating on a terminal without a web
-    browser (e.g. containers, remote SSH), append the `--no-browser` flag:
-    `gcloud auth login --no-browser`. Copy the URL, sign in on another machine,
-    and return the authentication code.
-*   **Application Default Credentials (ADC)**: To authenticate code calls from
-    local applications or SDK libraries, set up ADC via `gcloud auth
-    application-default login` (append `--no-browser` for headless
-    environments).
-*   **Service Account (Best for Detached/Headless Automation)**: Authenticate
-    directly using a JSON key file. Ideal for fully automated, background tasks
-    and pipelines: `gcloud auth activate-service-account
-    --key-file=path/to/key.json`. Note that some organizations may restrict
-    access to JSON key files for security reasons.
-*   **Service Account Impersonation (Preferred for Local Pair-Programming
-    Agents)**: Leverage the human developer's existing user credentials to
-    assume a service account identity. Best for local development assistants to
-    avoid insecure private keys on human workstations: `gcloud config set
-    auth/impersonate_service_account SERVICE_ACCT_EMAIL`
+# 设置项目
+gcloud config set project my-project
 
-*Separation of Privilege (Critical)*: Both service account approaches ensure the
-agent's permissions remain strictly distinct from the human user's wide access
-limits (enforcing least privilege), and ensure actions are properly audited
-under the agent's focused identity. *(Impersonation requires
-`roles/iam.serviceAccountTokenCreator`)*.
+# 设置区域
+gcloud config set compute/region us-central1
+gcloud config set compute/zone us-central1-a
 
-For more detailed strategies and authentication types (such as Workload Identity
-Federation), see
-[Authorizing the gcloud CLI](https://docs.cloud.google.com/sdk/docs/authorizing).
+# 创建配置
+gcloud config configurations create my-config
+gcloud config configurations activate my-config
+```
 
-## Core Principles
+## Compute Engine
 
-### 1. Explicit Command Validation (Mandatory)
+### 实例管理
+```bash
+# 列出实例
+gcloud compute instances list
 
-Your internal knowledge of `gcloud` may be stale or prone to hallucination
-(e.g., hallucinating commands, flags, flag values, or positional argument
-syntax). You are **FORBIDDEN** from executing commands until you have validated
-the exact syntax at the leaf level.
+# 创建实例
+gcloud compute instances create my-instance \
+    --zone=us-central1-a \
+    --machine-type=e2-medium \
+    --image-family=ubuntu-2204-lts \
+    --image-project=ubuntu-os-cloud \
+    --boot-disk-size=50GB
 
-*   **Action**: Always call `gcloud help <command>` for the *exact* command you
-    intend to run (e.g., `gcloud help compute instances create`).
-*   **Verify**: Ensure the command, flags, flag values, and positional argument
-    syntax are valid for that specific leaf command before attempting execution.
-    Validation is not transitive from parent groups.
+# 启动/停止实例
+gcloud compute instances start my-instance --zone=us-central1-a
+gcloud compute instances stop my-instance --zone=us-central1-a
 
-### 2. Data Reduction Strategies
+# 删除实例
+gcloud compute instances delete my-instance --zone=us-central1-a
 
-To save context window space and reduce latency, always minimize the volume of
-data returned by `gcloud`.
+# SSH 连接
+gcloud compute ssh my-instance --zone=us-central1-a
 
-*   **Projection**: Use `--format=json(key1, key2, ...)` to select only the
-    specific fields needed for your task. To understand the advanced projection
-    and formatting syntax, refer to `gcloud topic projections` and `gcloud topic
-    formats`.
+# 执行命令
+gcloud compute ssh my-instance --zone=us-central1-a --command="uptime"
+```
 
-*   **Limiting**: Use `--limit=N` to cap the number of resources returned.
+### 磁盘管理
+```bash
+# 列出磁盘
+gcloud compute disks list
 
-*   **Filtering**: Use `--filter` to narrow down results server-side. Prioritize
-    `:` for pattern matching and never quote the right side of the colon. Treat
-    the entire filter flag as a singular string without quoting or escaping
-    characters. To study the filter expression syntax, refer to `gcloud topic
-    filters`.
+# 创建磁盘
+gcloud compute disks create my-disk \
+    --zone=us-central1-a \
+    --size=100GB \
+    --type=pd-ssd
 
-*   **Schema Discovery**: Unconstrained resource lists can quickly exhaust your
-    context window with redundant data. To prevent this, discover a resource's
-    schema before executing queries. If you are unsure of the JSON key path for
-    projecting fields (`--format`) or filtering (`--filter`), run the targeted
-    resource's list command (if supported) with a single-item limit:
+# 附加磁盘
+gcloud compute instances attach-disk my-instance \
+    --disk=my-disk \
+    --zone=us-central1-a
 
-    ```bash
-    gcloud <GROUP> <RESOURCE> list --limit=1 --format=json
-    ```
+# 创建快照
+gcloud compute disks snapshot my-disk \
+    --zone=us-central1-a \
+    --snapshot-names=my-snapshot
+```
 
-    Examine this single instance's JSON structure to safely identify the correct
-    schema keys before requesting full or filtered datasets.
+### 防火墙
+```bash
+# 列出防火墙规则
+gcloud compute firewall-rules list
 
-### 3. Execution Constraints
+# 创建规则
+gcloud compute firewall-rules create allow-http \
+    --allow=tcp:80 \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=http-server
 
-*   **Single Commands**: Execute a single `gcloud` command at a time. No command
-    chaining or sequencing.
-*   **No Shell Operators**: Do not use command substitution (`$(...)`), pipes
-    (`|`), or redirection (`>`, `>>`, `<`). This is to increase command safety
-    and ensure commands are more easily understandable and reviewable by users.
-*   **No Interactivity**: Do not run interactive commands or commands requiring
-    a TTY (e.g., `gcloud interactive`). You must enforce non-interactive mode by
-    appending `--quiet` (or `-q`) to your commands. This ensures that defaults
-    are used or errors are raised if input is required.
+# 删除规则
+gcloud compute firewall-rules delete allow-http
+```
 
-### 4. Project and Location Scoping (Critical)
+## Cloud Storage
 
-To ensure commands are deterministic, non-interactive, and target the correct
-environment, you must explicitly manage project and location scoping.
+```bash
+# 列出桶
+gsutil ls
 
-*   **Explicit Project Target**: Do not rely on active configuration defaults.
-    Always append `--project=<PROJECT_ID>` to all resource-manipulating and
-    querying commands (unless running pure local config commands). This avoids
-    accidental execution against the wrong project.
+# 创建桶
+gsutil mb gs://my-bucket
+gsutil mb -l us-central1 gs://my-bucket
 
-*   **Prevent Location Prompts**: Many Google Cloud resources are regional or
-    zonal. If you omit the location flag (e.g., `--region`, `--zone`, or
-    `--location`), `gcloud` will trigger an interactive prompt to select a
-    zone/region. This violates the **No Interactivity** rule. Always provide
-    explicit location flags if the command requires them.
+# 上传文件
+gsutil cp file.txt gs://my-bucket/
+gsutil cp -r ./dir gs://my-bucket/
 
-*   **Location Discovery**: If you do not know the correct region, zone, or
-    location for a service, run discovery commands first (remembering to limit
-    results if there are many):
+# 下载文件
+gsutil cp gs://my-bucket/file.txt ./
+gsutil cp -r gs://my-bucket/dir ./
 
-    *   **Compute Engine (VMs, Networks)**:
+# 同步目录
+gsutil rsync -r ./local-dir gs://my-bucket/prefix/
+gsutil rsync -d -r ./local-dir gs://my-bucket/prefix/    # 删除多余文件
 
-        *   `gcloud compute regions list --project=<PROJECT_ID>`
-        *   `gcloud compute zones list --project=<PROJECT_ID>`
+# 删除
+gsutil rm gs://my-bucket/file.txt
+gsutil rm -r gs://my-bucket/dir/
 
-    *   **Other Services (Standard API Style)**: Many GCP services utilize a
-        unified `locations list` command:
+# 删除桶
+gsutil rb gs://my-bucket
 
-        *   `gcloud <GROUP> locations list --project=<PROJECT_ID>`
-        *   *Examples*: `gcloud artifacts locations list`, `gcloud kms locations
-            list`, `gcloud secrets locations list`.
+# 设置公开访问
+gsutil acl ch -u AllUsers:R gs://my-bucket/file.txt
 
-## Safety & Guardrails
+# 生成签名 URL
+gsutil signurl -d 1h key.json gs://my-bucket/file.txt
+```
 
-> [!CAUTION] **Destructive actions (delete, update, remove) MUST be explicitly
-> authorized by the user.** Never invoke them autonomously unless explicitly
-> instructed to do so in the context of a safe, pre-approved workflow.
+## GKE 集群
 
-### Prohibited Operations (Denylist)
+```bash
+# 列出集群
+gcloud container clusters list
 
-You are **strictly prohibited** from executing the following commands
-autonomously. These require explicit human-in-the-loop authorization:
+# 创建集群
+gcloud container clusters create my-cluster \
+    --zone=us-central1-a \
+    --num-nodes=3 \
+    --machine-type=e2-medium
 
-*   **Any IAM policy, role, or binding modification** (Security): Risk of
-    privilege escalation, administrative lockout, service disruption, or
-    unauthorized data exposure.
-*   **No Proactive API Enabling**: Assume necessary APIs are enabled. To prevent
-    unexpected resource provisioning or billing charges, do not proactively try
-    to enable APIs. User approval is required to enable any API.
-*   **`gcloud * delete`** (Destructive): Irreversible resource destruction
-    (e.g., project deletion) or data wiping.
-*   **`gcloud billing *`** (Financial): Risk of service disruption or unbounded
-    costs.
-*   **`gcloud organizations *`** (Governance): Org-level changes affect security
-    posture for all users.
-*   **`gcloud kms *`** (Encryption): Risk of permanently locking data.
-*   **`gcloud infra-manager deployments apply`** (Destructive): Autonomous IaC
-    execution can destroy managed resources.
+# 获取凭证
+gcloud container clusters get-credentials my-cluster --zone=us-central1-a
 
-### Execution Guidelines
+# 调整节点数
+gcloud container clusters resize my-cluster \
+    --zone=us-central1-a \
+    --num-nodes=5
 
-*   **Dry Run (Mandatory)**: You MUST invoke a command with `--dry-run` (or
-    equivalent) first if it exists, before executing the actual command, to
-    preview changes.
+# 升级集群
+gcloud container clusters upgrade my-cluster \
+    --zone=us-central1-a \
+    --master
 
-*   **Long Running Operations**: For commands that support it, the `--async`
-    flag is highly recommended for long-running operations to avoid blocking the
-    agentic flow. Note that not every command has an `--async` flag. For
-    commands that return an operation ID (whether via `--async` or by default),
-    you are responsible for polling for completion if the operation status is
-    needed for the next step.
+# 删除集群
+gcloud container clusters delete my-cluster --zone=us-central1-a
+```
 
-## Structured Workflows
+## Cloud Functions
 
-### Discovery Workflow
+```bash
+# 列出函数
+gcloud functions list
 
-When asked to perform a task on a service you are not familiar with:
+# 部署函数
+gcloud functions deploy my-function \
+    --runtime=nodejs18 \
+    --trigger-http \
+    --allow-unauthenticated \
+    --entry-point=handler \
+    --source=./
 
-1.  You MUST invoke help on a command (e.g., `gcloud help <COMMAND>`) before
-    invoking it.
-2.  If you do not know the exact command, traverse the command tree by invoking
-    help on a command group (e.g., `gcloud help compute`) to discover available
-    subcommands and groups.
-3.  **Schema Discovery**: If you need to filter or project fields from a list
-    command, but do not know the exact JSON keys, first run `gcloud <GROUP>
-    <RESOURCE> list --limit=1 --format=json` to safely discover the schema.
-    **Never** run a raw `list` command without scoping constraints (like
-    `--limit=1`), as unconstrained results will pollute and exhaust your context
-    window.
-4.  Execute with data reduction flags.
+# 调用函数
+gcloud functions call my-function --data='{"name":"World"}'
 
-## Quick Reference / Cheat Sheet
+# 查看日志
+gcloud functions logs read my-function
 
-Task               | Command Template
------------------- | ----------------------------------------------------------
-Discover Schema    | `gcloud <GROUP> <RESOURCE> list --limit=1 --format=json`
-Filtered List      | `gcloud <GROUP> <RESOURCE> list --filter="status:RUNNING"`
-Specific Columns   | `gcloud <GROUP> <RESOURCE> list --format="json(name, id)"`
-Learn Filters      | `gcloud topic filters`
-Learn Formats      | `gcloud topic formats`
-Learn Projections  | `gcloud topic projections`
-Asynchronous Op    | `gcloud <COMMAND> --async`
-Check Operation    | `gcloud operations describe <OPERATION_ID>`
-Common commands    | `gcloud cheat-sheet`
-List Regions (GCE) | `gcloud compute regions list --project=<PROJECT_ID>`
-List Zones (GCE)   | `gcloud compute zones list --project=<PROJECT_ID>`
-List Locations     | `gcloud <GROUP> locations list --project=<PROJECT_ID>`
+# 删除函数
+gcloud functions delete my-function
+```
 
-Refer to the
-[gcloud CLI Scripting Guide](https://docs.cloud.google.com/sdk/docs/scripting-gcloud)
-for guidance on using the gcloud CLI in automation.
+## Cloud Run
+
+```bash
+# 部署服务
+gcloud run deploy my-service \
+    --image=gcr.io/my-project/my-image \
+    --platform=managed \
+    --region=us-central1 \
+    --allow-unauthenticated
+
+# 列出服务
+gcloud run services list
+
+# 查看服务
+gcloud run services describe my-service --region=us-central1
+
+# 更新服务
+gcloud run services update my-service \
+    --region=us-central1 \
+    --memory=512Mi \
+    --concurrency=80
+
+# 删除服务
+gcloud run services delete my-service --region=us-central1
+```
+
+## IAM 管理
+
+```bash
+# 列出服务账号
+gcloud iam service-accounts list
+
+# 创建服务账号
+gcloud iam service-accounts create my-sa \
+    --display-name="My Service Account"
+
+# 创建密钥
+gcloud iam service-accounts keys create key.json \
+    --iam-account=my-sa@my-project.iam.gserviceaccount.com
+
+# 添加角色
+gcloud projects add-iam-policy-binding my-project \
+    --member="serviceAccount:my-sa@my-project.iam.gserviceaccount.com" \
+    --role="roles/storage.admin"
+
+# 查看 IAM 策略
+gcloud projects get-iam-policy my-project
+```
+
+## 常见场景
+
+### 场景 1：批量操作实例
+```bash
+# 停止所有实例
+gcloud compute instances list --format="value(name,zone)" | \
+while read name zone; do
+    gcloud compute instances stop "$name" --zone="$zone" --async
+done
+```
+
+### 场景 2：日志查询
+```bash
+# 查看日志
+gcloud logging read "resource.type=gce_instance" --limit=100
+
+# 按时间范围
+gcloud logging read "timestamp>=\"2024-01-01T00:00:00Z\"" --limit=100
+
+# 按严重级别
+gcloud logging read "severity>=ERROR" --limit=100
+```
+
+### 场景 3：导出计费数据
+```bash
+# 设置计费导出
+gcloud beta billing accounts describe BILLING_ACCOUNT_ID
+
+# 查看预算
+gcloud billing budgets list --billing-account=BILLING_ACCOUNT_ID
+```
+
+## 故障排查
+
+| 问题 | 排查方法 |
+|------|----------|
+| 认证失败 | `gcloud auth list` |
+| 权限不足 | 检查 IAM 角色 |
+| 配额超限 | `gcloud compute project-info describe` |
+| API 未启用 | `gcloud services enable compute.googleapis.com` |
+
+```bash
+# 调试模式
+gcloud compute instances list --verbosity=debug
+
+# 查看帮助
+gcloud help
+gcloud compute instances create --help
+```

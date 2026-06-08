@@ -1,239 +1,930 @@
 ---
 name: sales-coaching
-description: "Sales coaching and training — onboarding new reps, skill development, role-play practice, coaching programs, certifications, manager coaching cadences, and measuring coaching impact. Use when new reps ramping too slowly, managers not sure how to coach effectively, role-plays feel awkward or unproductive, no structured way to certify reps, coaching efforts not moving pipeline metrics, or struggling to build a coaching culture. Do NOT use for reviewing specific sales call recordings (use /sales-call-review), Seismic-specific platform help (use /sales-seismic), Allego-specific platform help (use /sales-allego), or sales content creation (use /sales-content)."
-argument-hint: "[describe your coaching question — e.g., 'build an onboarding program for new AEs' or 'create a coaching framework for frontline managers']"
-license: MIT
 version: 1.0.0
-tags: [sales, coaching, training, onboarding, enablement]
+description: >
+  AI sales coach composite. Analyzes all available sales data — email campaigns,
+  call recordings/transcripts, reply patterns, pipeline outcomes — to identify
+  what the user does well, where they struggle, and how to improve. Finds
+  patterns in top-performing emails, winning call techniques, successful objection
+  handles, and deal progression. Produces personalized coaching recommendations
+  based on their specific product, market, and selling style. Tool-agnostic.
+tags: [research]
+
+graph:
+  provides:
+    - sales-skill-assessment         # Strengths and weaknesses across sales dimensions
+    - winning-patterns               # What works in their emails, calls, and deals
+    - coaching-recommendations       # Specific, actionable improvement advice
+    - personalized-playbook          # Best practices distilled from their own data
+  requires:
+    - sales-data                     # Emails, calls, pipeline data
+    - your-company-context           # Product, market, ICP
+  connects_to:
+    - skill: sequence-performance
+      when: "Need deeper analysis of a specific campaign"
+      passes: campaign_id
+    - skill: email-drafting
+      when: "Coaching identifies email copy as a weakness — generate improved templates"
+      passes: winning-patterns, coaching-recommendations
+    - skill: sales-call-prep
+      when: "Coaching identifies call prep as a weakness — improve prep process"
+      passes: coaching-recommendations
+  capabilities: [data-analysis, call-analysis, email-analysis, reporting]
 ---
-# Sales Coaching & Training
 
-Help the user build coaching programs, onboard new reps, run role-plays, design certification paths, and measure coaching impact. This skill is tool-agnostic and applies to any enablement platform (Seismic Learning, Allego, MindTickle, SalesHood, Brainshark), conversation intelligence tool (Gong, Chorus, Observe.AI), or manual approach.
+# Sales Coaching
 
-## Step 1 — Gather context
+An AI coach that studies everything you do in sales — your emails, your calls, your deals — finds the patterns in what works and what doesn't, and gives you specific, actionable coaching to get better.
 
+This isn't generic sales advice ("always be closing"). It's coaching derived from YOUR data: your top-performing emails, your winning calls, your successful deal patterns, your most common objection fumbles, and your specific product's market.
 
-If `references/learnings.md` exists, read it first for accumulated knowledge.
+**What makes this different from `sequence-performance` and `sales-performance-review`:**
 
-Ask the user:
+| Composite | Focus | Output |
+|-----------|-------|--------|
+| `sequence-performance` | How is this campaign doing? | Campaign metrics + copy diagnosis |
+| `sales-performance-review` | What did the team do this period? | Initiative scorecards + resource allocation |
+| `sales-coaching` | How can THIS person sell better? | Personal skill assessment + coaching plan |
 
-1. **What do you need?**
-   - A) Build a new rep onboarding program
-   - B) Create a coaching framework for managers
-   - C) Design role-play/practice exercises
-   - D) Build certification or skill assessment paths
-   - E) Improve ramp time for new hires
-   - F) Measure coaching effectiveness
-   - G) Other
+The other composites analyze the work. This one coaches the worker.
 
-2. **Team size and structure?**
-   - A) Small team (<10 reps, player-coach manager)
-   - B) Mid-size (10-50 reps, dedicated managers)
-   - C) Large (50-200, enablement team)
-   - D) Enterprise (200+, enablement org)
+## When to Auto-Load
 
-3. **Current coaching tools?**
-   - A) Seismic Learning
-   - B) Allego
-   - C) Gong/Chorus (conversation intelligence)
-   - D) MindTickle
-   - E) Brainshark
-   - F) SalesHood
-   - G) LMS (generic)
-   - H) Spreadsheets/manual
-   - I) Nothing formal
+Load this composite when:
+- User says "how can I improve my sales", "coach me", "what am I doing wrong", "sales coaching", "help me sell better"
+- User says "review my selling style", "analyze my calls", "what patterns do you see in my sales"
+- User asks "why am I losing deals", "why aren't people responding", "what are my best emails doing differently"
+- After a bad quarter/month and the user wants to diagnose personal performance
+- As a periodic (monthly/quarterly) self-improvement exercise
 
-4. **Sales methodology?**
-   - A) MEDDPICC
-   - B) SPIN
-   - C) Challenger
-   - D) Sandler
-   - E) Value Selling
-   - F) Custom/none
+---
 
-**If the user's request already provides most of this context, skip directly to the relevant step.** Lead with your best-effort answer using reasonable assumptions (stated explicitly), then ask only the most critical 1-2 clarifying questions at the end — don't gate your response behind gathering complete context.
+## Step 0: Configuration (One-Time Setup)
 
-## Step 2 — Coaching strategy
+### User Profile
 
-### Onboarding program design
+| Question | Purpose | Stored As |
+|----------|---------|-----------|
+| What is your role? | Calibrate coaching level | `user_role` |
+| How long have you been in sales? | Experience-appropriate advice | `experience_level` |
+| What do you sell? (product/service, 2-3 sentences) | Context for all analysis | `product_description` |
+| What's your average deal size? | Calibrate what matters | `avg_deal_size` |
+| What's your typical sales cycle? | Calibrate velocity expectations | `sales_cycle_days` |
+| What do you think your biggest weakness is? | Starting point for coaching | `self_assessed_weakness` |
 
-**30-60-90 day framework:**
+**Role options:**
+- `"sdr"` — Focus on prospecting, outreach, qualification, meeting booking
+- `"ae"` — Focus on discovery, demos, negotiation, closing
+- `"founder"` — Focus on everything (wearing multiple hats)
+- `"sales_leader"` — Focus on team patterns, not just individual
 
-**Days 1-30 (Learn):**
-- Company/product knowledge (what we sell, who we sell to, how we win)
-- Sales process and methodology
-- Tool training (CRM, sales engagement, enablement platform)
-- Shadow 5+ calls with top performers
-- Complete product certification
-- **Milestone**: Pass product knowledge assessment (80%+ score)
+### Data Sources
 
-**Days 31-60 (Practice):**
-- Role-play discovery calls, demos, and objection handling
-- Make first prospecting calls with manager listening
-- Run first demo (manager shadows)
-- Complete methodology certification (MEDDPICC, SPIN, etc.)
-- **Milestone**: Successfully run a discovery call solo with positive manager feedback
+| Question | Options | Stored As |
+|----------|---------|-----------|
+| Where are your email campaigns? | Smartlead / Instantly / Outreach / CSV | `email_tool` |
+| Where are your call recordings/transcripts? | Gong / Chorus / Fireflies / Otter / local files / none | `call_tool` |
+| Where is your pipeline? | Salesforce / HubSpot / Pipedrive / Close / Supabase | `crm_tool` |
+| Do you have call transcripts available? | Yes (path or tool) / No | `transcripts_available` |
+| How far back should we analyze? | 30 / 60 / 90 / 180 days | `analysis_window` |
 
-**Days 61-90 (Perform):**
-- Own pipeline independently
-- Close first deal (or advance first opportunity past discovery)
-- Receive weekly 1:1 coaching from manager
-- Peer coaching sessions
-- **Milestone**: Hit 50%+ of monthly quota
+**Store config in:** `clients/<client-name>/config/sales-coaching.json` or equivalent.
 
-### Manager coaching framework
+---
 
-**Weekly 1:1 coaching structure (30 min):**
-1. **Pipeline review** (10 min) — review top 3-5 deals, identify risks, plan next actions
-2. **Skill coaching** (15 min) — review one call/meeting, identify one skill to improve, practice
-3. **Goal setting** (5 min) — one specific action item for the week
+## Step 1: Collect Sales Data
 
-**Coaching models:**
-- **GROW**: Goal → Reality → Options → Will — structured coaching conversation
-- **SBI**: Situation → Behavior → Impact — for giving feedback
-- **Ask-Tell-Ask**: Ask what they think → Share your observation → Ask how they'll apply it
+**Purpose:** Pull all available sales data for analysis. The more data types available, the richer the coaching. But the system works with whatever is available.
 
-**Monthly coaching cadence:**
-| Activity | Frequency | Duration | Purpose |
-|---|---|---|---|
-| 1:1 coaching | Weekly | 30 min | Pipeline + skill development |
-| Call review | Weekly | 15 min | Review 1 recorded call together |
-| Role-play | Bi-weekly | 20 min | Practice specific scenarios |
-| Skill assessment | Monthly | 30 min | Evaluate progress on skill goals |
-| Peer coaching | Monthly | 45 min | Small group practice and feedback |
+### Input Contract
 
-### Role-play design
+```
+data_sources: { ... }                 # From config
+analysis_window: integer              # Days to look back
+user_role: string                     # From config
+```
 
-- **Structure**: Scenario brief (2 min) → Role-play (5-10 min) → Self-assessment (2 min) → Coach feedback (5 min)
-- **Scenarios to cover**: Cold call, Discovery call, Demo, Objection handling (top 5 objections), Negotiation, Executive conversation
-- **Scoring**: Use a rubric (1-5 scale) on specific skills: questioning, listening, positioning, handling objections, next steps
-- **AI role-play**: Seismic's Role-Play Agent and similar AI tools can simulate buyer conversations for practice without needing a live partner
+### Data Collection Matrix
 
-### Certification paths
+| Data Type | What to Pull | What It Reveals |
+|-----------|-------------|----------------|
+| **Email campaigns** | All campaigns in window — copy, metrics, replies | Writing quality, messaging effectiveness, personalization skill |
+| **Email replies** | Full reply text, classification | Objection handling, how prospects respond to you |
+| **Call recordings/transcripts** | Full transcripts or recordings | Talk-to-listen ratio, discovery skill, objection handling, closing technique |
+| **Pipeline deals** | All deals in window — stage, outcome, timeline | Deal management, velocity, where deals stall or die |
+| **Meeting notes** | Post-call notes (if available) | Follow-through, note-taking discipline |
+| **Calendar** | Meetings booked, held, no-shows | Time management, meeting quality |
 
-- **Product certification**: Knowledge assessment on features, use cases, competitive positioning
-- **Methodology certification**: Demonstrate methodology application in role-play scenarios
-- **Skill-based certification**: Tiered badges (Bronze/Silver/Gold) for specific skills (discovery, negotiation, etc.)
-- **Renewal**: Certifications expire annually — re-certify to ensure skills stay current
+**Pull from each configured source:**
 
-## Step 3 — Platform-specific guidance
+#### Email Data
+```
+email_data: {
+  campaigns: [
+    {
+      name: string
+      date_range: { start: string, end: string }
+      sequence: [
+        {
+          touch: integer
+          subject: string
+          body: string
+          sent: integer
+          opens: integer
+          replies: integer
+        }
+      ]
+      replies: [
+        {
+          sender: string
+          sender_title: string
+          reply_text: string
+          category: string            # positive, objection, not interested, etc.
+          touch_triggered: integer
+        }
+      ]
+    }
+  ]
+  total_campaigns: integer
+  total_emails_sent: integer
+  total_replies: integer
+  overall_reply_rate: percentage
+}
+```
 
-For platform-specific coaching guidance (Seismic Learning, Allego, Gong/Chorus, MindTickle, SalesHood, Outdoo, Jiminny, Revenue.io, Enthu.AI, Demodesk, Balto, Cresta, Nooks, Orum, NICE CXone, Convin, MaestroQA, QEval, Solidroad, Playvox, SecondBody, Weflow, Winn.ai, Dialpad, Manual/Spreadsheet), see references/platforms.md.
+#### Call Data
+```
+call_data: {
+  calls: [
+    {
+      date: string
+      prospect_name: string
+      prospect_company: string
+      call_type: string               # discovery, demo, follow-up, negotiation
+      duration_minutes: integer
+      transcript: string | null       # Full transcript if available
+      recording_url: string | null    # Recording link if available
+      outcome: string                 # "next step agreed", "no next step", "closed won", "closed lost"
+      notes: string | null            # Post-call notes
+    }
+  ]
+  total_calls: integer
+  avg_duration: float
+  outcome_distribution: { ... }
+}
+```
 
-## Step 4 — Measuring coaching impact
+#### Pipeline Data
+```
+pipeline_data: {
+  deals: [
+    {
+      name: string
+      company: string
+      stage: string
+      created_date: string
+      close_date: string | null
+      outcome: "open" | "won" | "lost"
+      loss_reason: string | null
+      amount: number | null
+      days_in_pipeline: integer
+      source: string | null           # How the deal originated
+      touches_before_close: integer | null
+    }
+  ]
+  total_deals: integer
+  win_rate: percentage
+  avg_cycle_days: float
+  avg_deal_size: number | null
+}
+```
 
-| Metric | What it measures | Target |
-|---|---|---|
-| Ramp time | Days from start to first quota attainment | Reduce by 20%+ |
-| Time to first deal | Days from start to first closed-won | <90 days for new AEs |
-| Quota attainment by cohort | % of quota hit by onboarding cohort | 70%+ by month 6 |
-| Coaching session completion | % of scheduled 1:1s actually held | 90%+ |
-| Certification pass rate | % passing on first attempt | 80%+ |
-| Skill improvement score | Change in role-play/assessment scores over time | Positive trend |
-| Rep retention | Turnover rate for coached vs uncoached reps | Lower for coached |
+### Output Contract
 
-## Gotchas
+```
+collected_data: {
+  email_data: { ... } | null
+  call_data: { ... } | null
+  pipeline_data: { ... } | null
+  data_richness: "full" | "partial" | "minimal"
+  data_summary: string                # "Analyzing X campaigns, Y calls, Z deals over N days"
+}
+```
 
-- **Don't build an onboarding program without input from recent hires.** Claude tends to create theoretical programs. The best onboarding programs are designed with feedback from reps who completed onboarding in the last 6 months — they know what was missing.
-- **Don't conflate coaching with training.** Training teaches knowledge (product, methodology). Coaching develops skills through practice and feedback. A rep who passed product training but can't run a discovery call needs coaching, not more training.
-- **Don't skip the manager enablement.** Most coaching programs fail because managers aren't trained to coach. Build a "coaching the coaches" program before rolling out rep coaching at scale.
-- **Don't make role-plays optional.** Reps avoid practice because it's uncomfortable. The best teams make role-play a required, scheduled activity — not a suggestion. Bi-weekly minimum.
-- **Don't measure coaching by completion metrics alone.** 100% lesson completion doesn't mean reps are ready. Measure coaching impact by performance outcomes (ramp time, quota attainment, deal velocity) not just activity metrics.
+### Human Checkpoint
 
-- **Self-improving**: If you discover something not covered here, append it to `references/learnings.md` with today's date.
+```
+## Data Collected
 
-## Before recommending a specific platform skill
+| Source | Available | Volume |
+|--------|-----------|--------|
+| Email campaigns | Yes | X campaigns, Y emails sent, Z replies |
+| Call transcripts | Yes/No | X calls, Y hours |
+| Pipeline deals | Yes | X deals (W won, L lost, O open) |
 
-This skill covers a strategy domain across many platforms. **Before pointing the user to any specific platform skill** (any `/sales-{platform}` listed in `## Related skills`, e.g., `/sales-mailshake`, `/sales-klaviyo`, `/sales-apollo`), read that platform skill's actual `SKILL.md` first. The 1-line description in `## Related skills` is enough to *identify* a candidate — it's not enough to *commit* to it or to write a prompt that invokes it well.
+Analysis window: [start] to [end]
+Data richness: [full/partial/minimal]
 
-**How to read it:**
-- If `~/.claude/skills/{skill-name}/SKILL.md` exists locally, `Read` it.
-- For `sales-*` skills, `WebFetch` directly from this repo: `https://raw.githubusercontent.com/sales-skills/sales/main/skills/{skill-name}/SKILL.md` — e.g., for `sales-mailshake`: `https://raw.githubusercontent.com/sales-skills/sales/main/skills/sales-mailshake/SKILL.md`.
-- For non-`sales-*` skills (third-party), look up `{org}/{repo}` in `~/.claude/skills/sales-do/references/skill-sources.md` if installed and fetch the same `skills/{skill-name}/SKILL.md` path under that repo.
+Proceed with analysis? (Y/n)
+```
 
-**After reading,** ground your recommendation in something concrete from the SKILL.md (its scope, a sub-flow, its `argument-hint` shape, or a "Do NOT use for..." negative trigger). Align any generated invocation with the platform skill's `argument-hint`. If the platform skill turns out not to fit the user's situation, swap to another or handle the question here directly rather than recommending a poor fit.
+---
 
-## Related skills
+## Step 2: Analyze Email Performance Patterns
 
-- `/sales-seismic` — Seismic platform help (for Seismic Learning, Role-Play Agent, and coaching features)
-- `/sales-allego` — Allego platform help (for Modern Learning, AI Role-Play, and Conversation Intelligence)
-- `/sales-gong` — Gong platform help (coaching scorecards, deal boards, Smart Trackers, conversation analytics)
-- `/sales-rilla` — Rilla platform help (field sales AI coaching, virtual ridealongs, home services focus)
-- `/sales-siro` — Siro platform help (field sales AI coaching, Halftime real-time coaching, multi-industry)
-- `/sales-salesask` — Sales Ask platform help (field + call center AI coaching, Coach Dean active feedback, home services vertical)
-- `/sales-craft` — Craft platform help (real-time in-appointment AI coaching, 24/7 AI call center, revenue recovery agents, home services)
-- `/sales-outdoo` — Outdoo platform help (AI roleplay coaching, conversation intelligence, revenue intelligence, CRM automation, mid-market Gong alternative)
-- `/sales-jiminny` — Jiminny platform help (coaching-focused conversation intelligence, revenue intelligence, 8 CRM integrations, mid-market Gong alternative)
-- `/sales-enthu` — Enthu.AI platform help (contact center QA with auto-scoring, agent coaching, compliance monitoring, affordable Gong alternative)
-- `/sales-demodesk` — Demodesk platform help (AI coaching scorecards, conversation intelligence, autonomous AI agents, GDPR-native)
-- `/sales-clari-copilot` — Clari Copilot platform help (real-time battlecards, live coaching during calls, coaching scorecards, gametapes, enterprise CI)
-- `/sales-revenue-io` — Revenue.io platform help (Salesforce-native, Moments real-time in-call coaching, AI scoring with 400+ criteria, Revenue Intelligence dashboards)
-- `/sales-salesken` — Salesken platform help (AI conversation intelligence, real-time in-call coaching, QA automation on 100% of calls, multilingual transcription, APAC focus)
-- `/sales-balto` — Balto platform help (real-time AI coaching for contact centers, automated QA, compliance monitoring)
-- `/sales-cresta` — Cresta platform help (enterprise contact center AI — real-time agent assist, AI virtual agents, conversation intelligence, automated QA)
-- `/sales-convin` — Convin platform help (contact center AI with 100% automated QA, Real-Time Assist, AI Phone Call agent, LMS, 70+ languages)
-- `/sales-maestroqa` — MaestroQA platform help (conversation data QA with customizable scorecards, coaching workflows, AskAI analytics, 60+ integrations)
-- `/sales-playvox` — Playvox platform help (modular WEM with QA scorecards, WFM, coaching/eLearning, gamification, now part of NICE)
-- `/sales-qeval` — QEval platform help (AI-powered contact center QA with 100% automated scoring, compliance monitoring, agent coaching, $40-100/user/mo)
-- `/sales-solidroad` — Solidroad platform help (AI QA + training closed-loop, 100% automated scoring, AI practice simulations from quality gaps, $10-50/user/mo)
-- `/sales-secondbody` — SecondBody platform help (voice-first AI roleplay, Rory AI coach, methodology scoring SPIN/MEDDIC/Sandler, unlimited seats at $30/user/mo Pro, daily practice habit model)
-- `/sales-uniphore` — Uniphore platform help (enterprise conversation intelligence, U-Assist real-time coaching, automated QA, CSATai, Emotion AI)
-- `/sales-nooks` — Nooks platform help (AI parallel dialer with built-in call scoring, roleplay, battlecards, virtual salesfloor)
-- `/sales-orum` — Orum platform help (AI parallel dialer with AI Coaching Suite, scorecards, roleplay, virtual salesfloor)
-- `/sales-momentum` — Momentum platform help — AI revenue orchestration with Coaching Agent for data-driven call scoring, churn signals, and executive briefs (acquired by Salesforce Feb 2026)
-- `/sales-nice-cxone` — NICE CXone platform help (built-in QM coaching, AI Copilot, Interaction Analytics, $135-209/agent/mo for coaching-relevant tiers)
-- `/sales-genesys` — Genesys Cloud CX platform help (built-in QM coaching, AI agent assist on CX 4, Interaction Analytics, $75-240/user/mo)
-- `/sales-ccaas-selection` — Comparing CCaaS platforms? The selection skill walks through Genesys vs NICE vs Talkdesk vs Five9
-- `/sales-modjo` — Modjo platform help (EU-native call scoring, AI coaching insights, conversation library playlists, GDPR-compliant)
-- `/sales-winn` — Winn.ai platform help (real-time playbook adherence tracking, automated CRM updates, live coaching Enterprise, AI battle cards)
-- `/sales-rafiki` — Rafiki platform help (AI conversation intelligence with Smart Call Scoring MEDDIC/BANT/SPIN, Role Play Agent, CRM auto-sync, $19-49/user/mo)
-- `/sales-call-review` — Review specific sales calls and extract coaching insights
-- `/sales-note-taker` — Picking an AI note-taker (Fathom, Fireflies, Avoma, Gong, Modjo, etc.) or wiring its API to feed your coaching program
-- `/sales-content` — Sales content for training and enablement programs
-- `/sales-do` — Not sure which skill to use? The router matches any sales objective to the right skill. Install: `npx skills add sales-skills/sales --skill sales-do`
+**Purpose:** Go beyond campaign-level metrics. Find patterns in what makes YOUR best emails work and YOUR worst emails fail. Pure LLM reasoning.
 
-## Examples
+### Process
 
-### Example 1: 90-day onboarding program
-**User says**: "Build a 90-day onboarding program for new AEs"
-**Skill does**:
-1. Creates a 30-60-90 framework with specific milestones per phase
-2. Designs assessment gates at each phase transition (knowledge test, role-play pass, quota milestone)
-3. Includes shadowing schedule, role-play exercises, and certification path
-4. Defines measurable ramp metrics (time to first deal, quota attainment by month 6)
-5. Recommends tools and tracking approach based on team size
-**Result**: Full onboarding program with milestones, assessments, and a ramp measurement plan
+#### A) Identify Top-Performing Emails
 
-### Example 2: Manager coaching framework
-**User says**: "Create a coaching framework for our 8 frontline sales managers"
-**Skill does**:
-1. Designs a weekly 1:1 coaching structure (pipeline review + skill coaching + goal setting)
-2. Introduces the GROW coaching model for structured coaching conversations
-3. Builds a monthly coaching cadence (1:1s, call reviews, role-plays, peer coaching)
-4. Includes a "coaching the coaches" enablement plan for managers who have never coached
-5. Creates a coaching scorecard to track manager coaching effectiveness
-**Result**: Complete coaching framework with cadence, models, and manager enablement plan
+Across all campaigns, find:
+- **Highest reply-rate subject lines** — What do they have in common?
+- **Highest reply-rate email bodies** — What patterns exist?
+- **Emails that generated positive replies** — What specifically triggered interest?
+- **Emails that generated meetings** — The gold standard. What did these say?
 
-### Example 3: Seismic Learning role-plays
-**User says**: "We're using Seismic Learning — how do I set up role-plays for objection handling?"
-**Skill does**:
-1. Walks through creating practice exercises with specific objection scenarios
-2. Designs a scoring rubric for video/text submissions (1-5 on acknowledge, clarify, respond, check)
-3. Explains how to use Seismic's AI Role-Play Agent for automated buyer simulation
-4. Recommends tracking completion rates and correlating with call performance in Gong/Chorus
-5. Sets up a bi-weekly role-play cadence with manager review
-**Result**: Seismic Learning role-play setup guide with scenarios, scoring rubric, and AI practice configuration
+For each top performer, extract:
 
-## Troubleshooting
+| Pattern Element | What to Look For |
+|----------------|-----------------|
+| Subject line structure | Signal-reference? Question? Peer-framing? Length? |
+| Opening line | Lead with them or with you? Signal reference? Question? Statement? |
+| Body structure | How many paragraphs? Proof point placement? Length? |
+| Personalization depth | Tier 1/2/3? What was personalized? |
+| CTA type | Specific ask? Open-ended? Time-bound? |
+| Tone | Casual? Professional? Provocative? Empathetic? |
+| Framework used | PAS? BAB? Signal-Proof-Ask? AIDA? |
+| Proof point type | Customer name? Metric? Case study? |
 
-### New reps ramp too slowly
-**Cause**: Onboarding is too knowledge-heavy and not enough practice
-**Solution**: Add more role-plays, shadowing, and real-world exercises in weeks 2-4. Shift from 80/20 training-to-practice to 50/50 by day 15. Have new reps make their first prospecting calls by week 2 with a manager listening, not week 6.
+#### B) Identify Worst-Performing Emails
 
-### Managers skip coaching sessions
-**Cause**: No accountability and no structure
-**Solution**: Provide coaching templates so managers don't have to build the agenda from scratch. Make 1:1 completion a manager KPI reported to leadership. Train managers on the coaching framework — most skip sessions because they don't know what to do in them.
+Same analysis on the bottom performers:
+- What do low-reply emails have in common?
+- Are there anti-patterns? (Long emails, generic openers, weak CTAs, no proof)
+- Is there a consistent flaw across campaigns?
 
-### Reps pass training but underperform
-**Cause**: Assessment measures knowledge recall, not skill application
-**Solution**: Add practical assessments (recorded role-plays scored on a rubric) alongside knowledge tests. A rep who can recite MEDDPICC but can't run a discovery call needs practice, not another quiz. Require role-play pass before certifying reps as "ramped."
+#### C) Compare Winners vs. Losers
+
+| Dimension | Top 20% Emails | Bottom 20% Emails | Gap |
+|-----------|---------------|-------------------|-----|
+| Avg word count | [X] | [Y] | [shorter/longer] |
+| Subject line length | [X chars] | [Y chars] | [delta] |
+| Opens with "I" or "We" | [X%] | [Y%] | [self-focused vs. prospect-focused] |
+| Contains proof point | [X%] | [Y%] | [proof usage gap] |
+| Personalization tier | [avg tier] | [avg tier] | [personalization gap] |
+| CTA clarity | [assessment] | [assessment] | [delta] |
+| Has signal reference | [X%] | [Y%] | [signal usage gap] |
+
+#### D) Objection Pattern Analysis
+
+Across all replies classified as objections:
+
+| Analysis | What It Reveals |
+|----------|----------------|
+| Most common objection | What you're running into most often |
+| Objection by campaign/audience | Is targeting driving objections? |
+| How you handle each objection (from follow-up emails) | Are your handles effective? |
+| Objections that lead to meetings vs. dead ends | Which objections are actually handleable? |
+| Objection language patterns | Exact words prospects use (copy these into your messaging) |
+
+#### E) Reply Sentiment Analysis
+
+| Category | Count | % | Trend |
+|----------|-------|---|-------|
+| Positive interest | X | Y% | +/- vs. earlier campaigns |
+| Warm / curious | X | Y% | |
+| Objection (handleable) | X | Y% | |
+| Objection (terminal) | X | Y% | |
+| Not interested | X | Y% | |
+| Auto-reply | X | Y% | |
+
+**Key question:** Is the ratio of positive-to-negative replies improving over time? Are you getting better at writing emails that generate interest, or are you stagnating?
+
+### Output Contract
+
+```
+email_patterns: {
+  top_performers: {
+    common_patterns: string[]
+    best_subject_lines: [ { subject: string, reply_rate: percentage, pattern: string } ]
+    best_openers: [ { opener: string, campaign: string, why_it_works: string } ]
+    winning_proof_points: string[]
+    winning_ctas: string[]
+    winning_tone: string
+    winning_framework: string
+  }
+
+  bottom_performers: {
+    common_anti_patterns: string[]
+    worst_subject_lines: [ { subject: string, reply_rate: percentage, issue: string } ]
+    common_mistakes: string[]
+  }
+
+  winner_vs_loser: {
+    dimensions: [ { dimension: string, winners: string, losers: string, gap: string } ]
+    biggest_differentiator: string
+  }
+
+  objection_patterns: {
+    most_common: { objection: string, count: integer, handle_effectiveness: string }
+    handleable_objections: [ { objection: string, best_handle: string, conversion_rate: string } ]
+    terminal_objections: [ { objection: string, implication: string } ]
+  }
+
+  sentiment_trend: {
+    direction: "improving" | "stable" | "declining"
+    evidence: string
+  }
+
+  email_skill_grade: "A" | "B" | "C" | "D" | "F"
+  email_skill_summary: string
+}
+```
+
+---
+
+## Step 3: Analyze Call Performance Patterns
+
+**Purpose:** If call transcripts or recordings are available, analyze how the user performs on calls. If no call data exists, skip this step.
+
+### Process
+
+#### A) Structural Analysis (From Transcripts)
+
+For each call transcript, measure:
+
+| Metric | How to Calculate | What It Reveals |
+|--------|-----------------|----------------|
+| **Talk-to-listen ratio** | Word count (you) / word count (prospect) | >60% talking = talking too much. Best reps are 40-50% talk. |
+| **Longest monologue** | Longest uninterrupted stretch by the seller | >90 seconds = you're lecturing, not selling. Keep it under 60s. |
+| **Question count** | Number of questions asked | Discovery calls should have 10-15 questions. <5 = not discovering. |
+| **Question depth** | Surface questions ("What do you do?") vs. deep ("What happens when that process breaks?") | Deep questions = strong discovery. Surface = going through motions. |
+| **Filler word frequency** | Count of "um", "uh", "like", "you know", "basically", "honestly" | High frequency = lack of confidence or preparation. |
+| **Call duration** | Total time | Too short (<15 min for discovery) = not going deep enough. Too long (>45 min) = not controlling the call. |
+
+#### B) Discovery Quality Analysis
+
+From call transcripts, evaluate:
+
+| Dimension | What to Check | Good vs. Bad |
+|-----------|--------------|-------------|
+| **Pain discovery** | Did you uncover a real pain point? | Good: Prospect describes pain in their own words. Bad: You told them what their pain should be. |
+| **Impact quantification** | Did you help them quantify the cost of the problem? | Good: "So that's costing you roughly $X/month." Bad: Never quantified. |
+| **Decision process** | Did you ask who else is involved, timeline, budget? | Good: Clear understanding of BANT. Bad: Left the call not knowing. |
+| **Current state** | Did you understand how they solve this today? | Good: Know their current tool/process. Bad: No idea what they do now. |
+| **Compelling event** | Did you identify why now? | Good: Know the trigger (new leader, funding, deadline). Bad: No urgency established. |
+| **Next step** | Did the call end with a clear, mutually agreed next step? | Good: Specific date/time/action. Bad: "Let me think about it" or "I'll follow up." |
+
+#### C) Objection Handling on Calls
+
+For each objection raised during calls:
+
+| Analysis | What to Evaluate |
+|----------|-----------------|
+| Was the objection acknowledged? | Good: "I hear you, that's a valid concern." Bad: Immediately countering or ignoring. |
+| Was it explored? | Good: "Tell me more about that." Bad: Jumped straight to handle. |
+| Was the handle relevant? | Good: Addressed their specific concern. Bad: Generic response. |
+| Was proof provided? | Good: "Company X had the same concern, here's what happened." Bad: "Trust me." |
+| Did the conversation move forward? | Good: Objection resolved, back on track. Bad: Call stalled or ended. |
+
+#### D) Demo / Presentation Analysis
+
+If demo calls exist:
+
+| Dimension | What to Check |
+|-----------|--------------|
+| **Feature dumping** | Did you show every feature, or only what's relevant to their pain? |
+| **"So what?" test** | After showing a feature, did you connect it to their specific need? |
+| **Prospect engagement** | Did the prospect speak during the demo, or was it a monologue? |
+| **Customization** | Was the demo tailored to their use case, or generic? |
+| **Time on product vs. slides** | Were you showing the actual product, or presenting slides? |
+
+#### E) Winning vs. Losing Call Patterns
+
+Compare calls that led to progression (next step, closed won) vs. calls that stalled or lost:
+
+| Dimension | Winning Calls | Losing Calls | Gap |
+|-----------|--------------|-------------|-----|
+| Talk-to-listen | [ratio] | [ratio] | |
+| Questions asked | [count] | [count] | |
+| Pain discovered | [yes/no %] | [yes/no %] | |
+| Next step agreed | [%] | [%] | |
+| Objections surfaced | [count] | [count] | |
+| Call duration | [avg min] | [avg min] | |
+
+### Output Contract
+
+```
+call_patterns: {
+  structural: {
+    avg_talk_ratio: percentage
+    avg_longest_monologue_seconds: integer
+    avg_questions_per_call: float
+    filler_word_frequency: "low" | "moderate" | "high"
+    common_fillers: string[]
+    avg_call_duration: float
+  }
+
+  discovery_quality: {
+    pain_discovery_rate: percentage    # % of calls where real pain was uncovered
+    impact_quantification_rate: percentage
+    decision_process_mapped_rate: percentage
+    next_step_agreed_rate: percentage
+    common_gaps: string[]             # What's consistently missed in discovery
+  }
+
+  objection_handling: {
+    objections_per_call: float
+    acknowledgment_rate: percentage   # % of times objection was properly acknowledged
+    exploration_rate: percentage      # % of times the objection was explored before handling
+    resolution_rate: percentage       # % of times the objection was successfully handled
+    weakest_objection_type: string    # Which type of objection you handle worst
+    best_objection_type: string       # Which type you handle best
+  }
+
+  demo_quality: {
+    feature_dumping_detected: boolean
+    prospect_engagement_level: "high" | "moderate" | "low"
+    customization_level: "tailored" | "semi-generic" | "generic"
+    common_demo_mistakes: string[]
+  } | null
+
+  winning_vs_losing: {
+    key_differences: [ { dimension: string, winners: string, losers: string } ]
+    biggest_predictor: string         # Single biggest differentiator between winning and losing calls
+  }
+
+  call_skill_grade: "A" | "B" | "C" | "D" | "F"
+  call_skill_summary: string
+} | null
+```
+
+---
+
+## Step 4: Analyze Deal Patterns
+
+**Purpose:** Look at pipeline data to find patterns in deals you win vs. deals you lose. Pure computation + LLM reasoning.
+
+### Process
+
+#### A) Win/Loss Pattern Analysis
+
+| Dimension | What to Compare (Won vs. Lost) |
+|-----------|-------------------------------|
+| Source channel | Which channels produce deals that close? |
+| Lead persona/title | Which titles convert to closed deals? |
+| Industry | Which verticals are you winning in? |
+| Company size | What size companies do you close best? |
+| Deal size | Do larger deals win more or less often? |
+| Sales cycle length | Do faster deals win more? |
+| Number of touches | How many interactions before close? |
+| Stakeholders involved | Single-threaded vs. multi-threaded |
+| Competitive situation | Do you win more in competitive or non-competitive deals? |
+
+#### B) Velocity Analysis
+
+| Pattern | What It Reveals |
+|---------|----------------|
+| Stage where deals stall longest | Your bottleneck — need to improve skill at this stage |
+| Stage where most deals die | Your kill zone — what's going wrong here? |
+| Deals that closed fastest | Your "sweet spot" — what do easy wins have in common? |
+| Deals that dragged longest before winning | What made these hard? Can you avoid or accelerate? |
+
+#### C) Activity-to-Outcome Correlation
+
+| Activity | Correlation with Winning |
+|----------|------------------------|
+| More emails before first call | Positive, negative, or no correlation? |
+| Faster first response time | Does speed matter? |
+| Multi-channel (email + LinkedIn + call) | Do multi-channel deals win more? |
+| Number of stakeholders contacted | Does multi-threading help? |
+| Follow-up speed after calls | Does fast follow-up predict wins? |
+
+### Output Contract
+
+```
+deal_patterns: {
+  win_profile: {
+    best_source: string
+    best_persona: string
+    best_industry: string
+    best_company_size: string
+    avg_winning_cycle_days: float
+    avg_touches_to_close: float
+    common_traits: string[]
+  }
+
+  loss_profile: {
+    top_loss_reason: string
+    loss_stage: string                # Where deals die most
+    common_loss_traits: string[]
+    recoverable_losses: string        # "X% of lost deals were timing — could be re-engaged"
+  }
+
+  velocity: {
+    bottleneck_stage: string
+    kill_zone_stage: string
+    sweet_spot: string                # Description of your easiest wins
+  }
+
+  activity_correlations: [
+    { activity: string, correlation: "positive" | "negative" | "none", insight: string }
+  ]
+
+  deal_skill_grade: "A" | "B" | "C" | "D" | "F"
+  deal_skill_summary: string
+}
+```
+
+---
+
+## Step 5: Build Skill Assessment & Coaching Plan
+
+**Purpose:** Synthesize email, call, and deal analysis into a personal sales skill assessment and a specific coaching plan. Pure LLM reasoning.
+
+### Input Contract
+
+```
+email_patterns: { ... }              # From Step 2
+call_patterns: { ... } | null        # From Step 3 (if calls available)
+deal_patterns: { ... }               # From Step 4
+user_role: string                    # From config
+experience_level: string             # From config
+product_description: string          # From config
+self_assessed_weakness: string       # From config
+```
+
+### Skill Assessment Framework
+
+Assess the user across sales skill dimensions relevant to their role:
+
+#### SDR Skill Dimensions
+
+| Dimension | Data Source | What to Evaluate |
+|-----------|-----------|-----------------|
+| **Prospecting quality** | Email targeting → reply relevance | Are you reaching the right people? |
+| **Email copywriting** | Email patterns analysis | Are your emails compelling? |
+| **Personalization** | Email patterns analysis | Do you go beyond merge fields? |
+| **Signal recognition** | Email campaign angles | Are you using relevant signals? |
+| **Objection handling (written)** | Reply analysis, follow-up emails | Do you handle objections well in email? |
+| **Qualification** | Pipeline data — qualified vs. unqualified meetings | Are you booking quality meetings? |
+| **Follow-up discipline** | Campaign structure, timing, sequence length | Do you follow up effectively? |
+| **Volume & consistency** | Activity metrics over time | Are you doing enough, consistently? |
+
+#### AE Skill Dimensions
+
+| Dimension | Data Source | What to Evaluate |
+|-----------|-----------|-----------------|
+| **Discovery** | Call transcripts — questions asked, pain uncovered | Do you uncover real pain? |
+| **Active listening** | Call transcripts — talk ratio, prospect engagement | Do you listen more than talk? |
+| **Demo effectiveness** | Call transcripts — feature relevance, engagement | Do you demo to their pain? |
+| **Objection handling (verbal)** | Call transcripts — objection resolution rate | Do you handle pushback well? |
+| **Negotiation** | Deal data — discount patterns, close rates | Do you protect value? |
+| **Deal management** | Pipeline data — velocity, stage progression | Do you move deals forward? |
+| **Multi-threading** | Deal data — stakeholders contacted | Do you go wide in accounts? |
+| **Closing** | Deal data — win rate, next step agreement | Do you close confidently? |
+
+#### Founder Skill Dimensions
+
+All SDR + AE dimensions, plus:
+
+| Dimension | Data Source | What to Evaluate |
+|-----------|-----------|-----------------|
+| **Storytelling** | Call transcripts, email copy | Do you tell a compelling product story? |
+| **Market positioning** | Email angles, competitive mentions | Do you position well against competition? |
+| **Adaptability** | Variation across campaigns and calls | Do you adapt your approach to different prospects? |
+
+### Scoring
+
+For each dimension, assign a grade:
+
+| Grade | Criteria |
+|-------|---------|
+| **A** | Top quartile performance. Clear strength. Data supports excellence. |
+| **B** | Above average. Competent. Minor improvements possible. |
+| **C** | Average. Functional but not differentiating. Clear room to grow. |
+| **D** | Below average. Consistent issues visible in data. Needs focused work. |
+| **F** | Significant weakness. Data shows this is hurting results. Priority fix. |
+
+### Coaching Plan
+
+For each dimension graded C or below, produce:
+
+```
+Skill: [dimension name]
+Current grade: [grade]
+Evidence: [specific data points that drive the grade]
+Root cause: [why this is happening — not just what, but why]
+
+Coaching recommendation:
+1. [Specific, actionable thing to do differently]
+2. [Exercise or practice to build this skill]
+3. [Example from their own data of when they did this well vs. poorly]
+
+Model to follow:
+[Pull from their own top-performing emails/calls as examples.
+"Your email in Campaign X did this perfectly — replicate that approach."]
+
+Measurable goal:
+[Specific metric to track improvement. E.g., "Increase question count per
+discovery call from 6 to 12 over the next 30 days."]
+```
+
+### Personalized Playbook
+
+Distill the user's winning patterns into a personal playbook:
+
+```
+## Your Winning Formula
+
+Based on analyzing [X emails, Y calls, Z deals], here's what works for YOU:
+
+### Your Best Email Pattern
+Subject line style: [pattern]
+Opening approach: [pattern]
+Proof point that resonates: [specific proof]
+CTA that converts: [specific CTA]
+Ideal length: [word count]
+Best framework: [framework]
+
+Template (built from your own top performers):
+> [Reconstructed template from their best emails]
+
+### Your Best Call Pattern (if calls available)
+Discovery approach: [how you open well]
+Strongest questions: [questions that work for you]
+Objection handle that works: [specific handle]
+Demo style that converts: [approach]
+Close technique: [how you get next steps]
+
+### Your Win Profile
+You close best when:
+- The prospect is [title/seniority]
+- The company is [size/industry]
+- The deal came from [source]
+- The cycle is [length]
+- You [specific behavior that correlates with winning]
+```
+
+### Output Contract
+
+```
+skill_assessment: {
+  overall_grade: "A" | "B" | "C" | "D" | "F"
+  overall_summary: string
+
+  dimensions: [
+    {
+      name: string
+      grade: string
+      evidence: string[]
+      strength_or_weakness: "strength" | "neutral" | "weakness"
+    }
+  ]
+
+  top_strengths: [
+    { skill: string, evidence: string, advice: string }  # "Keep doing this"
+  ]
+
+  top_weaknesses: [
+    {
+      skill: string
+      grade: string
+      evidence: string[]
+      root_cause: string
+      coaching: string[]
+      model_from_own_data: string | null
+      measurable_goal: string
+    }
+  ]
+
+  personalized_playbook: {
+    best_email_pattern: { ... }
+    best_call_pattern: { ... } | null
+    win_profile: string
+    template_from_top_performers: string
+  }
+
+  self_assessment_validation: {
+    user_said: string                 # Their self-assessed weakness
+    data_says: string                 # What the data actually shows
+    aligned: boolean                  # Do they match?
+    surprise_finding: string | null   # Something they didn't know about themselves
+  }
+}
+```
+
+---
+
+## Step 6: Generate Coaching Report
+
+**Purpose:** Produce the final coaching report — personal, actionable, and encouraging. Not a performance review. A coaching session.
+
+### Report Structure
+
+```
+# Sales Coaching Report — [User Name]
+**Based on:** [X emails, Y calls, Z deals] over [analysis window]
+**Role:** [SDR/AE/Founder]
+**Product:** [what they sell]
+
+---
+
+## Your Sales Scorecard
+
+| Skill | Grade | Trend | Notes |
+|-------|-------|-------|-------|
+| [skill 1] | [grade] | [improving/stable/declining] | [one-line note] |
+| [skill 2] | [grade] | [trend] | [note] |
+| ... |
+
+**Overall:** [grade] — [one-sentence summary]
+
+---
+
+## What You're Great At
+
+Your data shows clear strengths in these areas. Keep doing these things.
+
+### 1. [Strength #1]
+**Evidence:** [specific data — "Your Signal-Proof-Ask emails generate 2.3x the reply rate of your other emails"]
+**Why it works:** [brief explanation]
+**Advice:** [How to lean into this strength even more]
+
+### 2. [Strength #2]
+**Evidence:** [data]
+**Why it works:** [explanation]
+
+### 3. [Strength #3]
+...
+
+---
+
+## Where to Improve
+
+These are your highest-impact coaching areas. Focus on one at a time.
+
+### Priority 1: [Biggest Weakness]
+**Current grade:** [grade]
+**Evidence:** [specific data points — not vague criticism, specific examples]
+**Root cause:** [Why this is happening. E.g., "You're asking 4 questions per discovery call. The calls
+where you asked 10+ had a 3x higher progression rate. You're not going deep enough on pain."]
+
+**What to do differently:**
+1. [Specific, actionable change]
+2. [Practice exercise]
+3. [Example from their own data: "In your call with [prospect] on [date], you DID do this well — here's the transcript excerpt. Replicate that approach."]
+
+**Your own proof it works:**
+> [Quote from their own top-performing email or call where they did this well]
+
+**Goal:** [Measurable goal with timeframe]
+
+### Priority 2: [Second Weakness]
+[Same structure]
+
+### Priority 3: [Third Weakness]
+[Same structure]
+
+---
+
+## Your Winning Patterns (Personal Playbook)
+
+These patterns come from YOUR best work — not a textbook.
+
+### Your Best Email Template
+[Reconstructed from their top-performing emails]
+
+**Subject:** [pattern]
+> [Reconstructed body using their winning patterns]
+
+**Why this works for you:** [pattern analysis]
+
+### Your Best Discovery Approach (if calls available)
+[Distilled from their winning calls]
+
+1. **Open with:** [how they open their best calls]
+2. **Key questions to always ask:** [their best questions]
+3. **When you hear [objection], say:** [their best objection handle]
+4. **Close the call with:** [how they get next steps in winning calls]
+
+### Your Win Profile
+**You close best when:**
+- Prospect is [title] at a [size] [industry] company
+- Deal came from [source/channel]
+- Cycle is [X] days
+- You [specific winning behavior]
+
+**You struggle when:**
+- Prospect is [profile]
+- Deal involves [situation]
+- You [specific losing behavior]
+
+---
+
+## Surprise Finding
+
+[Something the data reveals that the user probably doesn't know about themselves.
+E.g., "You think your weakness is closing, but your data shows your close rate is
+above average. Your actual bottleneck is discovery — you're booking meetings that
+aren't qualified. Improving qualification would have 3x more impact than working
+on closing technique."]
+
+---
+
+## 30-Day Coaching Plan
+
+| Week | Focus | Exercise | Measurable Target |
+|------|-------|----------|-------------------|
+| Week 1 | [skill] | [specific exercise] | [metric to hit] |
+| Week 2 | [skill] | [exercise] | [metric] |
+| Week 3 | [skill] | [exercise] | [metric] |
+| Week 4 | Review + adjust | Re-run this analysis | Compare grades |
+
+---
+
+## Check Back In
+
+Run this coaching analysis again in 30 days to measure improvement.
+Track these specific metrics:
+1. [Metric 1 — current: X, target: Y]
+2. [Metric 2 — current: X, target: Y]
+3. [Metric 3 — current: X, target: Y]
+```
+
+### Tone Guidance
+
+This is a **coaching session**, not a performance review.
+
+| Do | Don't |
+|----|-------|
+| Celebrate strengths first | Lead with weaknesses |
+| Use their own data as examples | Use generic advice |
+| Be specific ("your reply rate on Signal-Proof-Ask emails is 2.3x higher") | Be vague ("your emails could be better") |
+| Provide exercises and practice | Just say "improve" |
+| Show them proof from their own work that they CAN do this | Make it feel like they're failing |
+| One priority at a time | Overwhelm with 10 things to fix |
+| Frame weaknesses as "highest-impact opportunity" | Call them "failures" |
+
+### Human Checkpoint
+
+```
+[Scorecard + top strengths + top weakness rendered]
+
+---
+
+Surprise finding: [the thing they didn't know]
+
+Full coaching report includes:
+- Detailed skill assessment across [X] dimensions
+- Your winning email template (reconstructed from top performers)
+- Your winning call pattern (if call data available)
+- Your win profile (what deals you close best)
+- 30-day coaching plan with weekly exercises
+- Measurable goals to track improvement
+
+View the full coaching report?
+```
+
+---
+
+## Execution Summary
+
+| Step | Tool Dependency | Human Checkpoint | Typical Time |
+|------|----------------|-----------------|--------------|
+| 0. Config | None | First run only | 5 min (once) |
+| 1. Collect Data | Configurable (outreach tool, call tool, CRM) | Verify data volume | 2-3 min |
+| 2. Email Patterns | None (LLM reasoning) | None — feeds into assessment | Automatic |
+| 3. Call Patterns | None (LLM reasoning on transcripts) | None — feeds into assessment | Automatic |
+| 4. Deal Patterns | None (computation + LLM reasoning) | None — feeds into assessment | Automatic |
+| 5. Skill Assessment | None (LLM reasoning) | None — feeds into report | Automatic |
+| 6. Coaching Report | None (LLM reasoning) | Review report | 10-15 min |
+
+**Total human review time: ~15-20 minutes** for coaching that would normally require an experienced sales manager reviewing weeks of activity.
+
+---
+
+## Adapting to Data Availability
+
+| Available Data | Analysis Depth | Report Quality |
+|---------------|---------------|----------------|
+| Emails + calls + pipeline | Full coaching across all dimensions | Best |
+| Emails + pipeline (no calls) | Email skills + deal patterns. Call section skipped. | Good |
+| Emails only | Email skills assessment. Deal and call sections skipped. | Partial but still useful |
+| Calls + pipeline (no email data) | Call skills + deal patterns. Email section skipped. | Good |
+| Pipeline only | Deal patterns only. Limited coaching but still reveals win/loss patterns. | Minimal |
+
+**Minimum viable:** At least one of: email data, call data, or pipeline data.
+
+---
+
+## Tips
+
+- **Run monthly for continuous improvement.** The coaching plan is designed in 30-day cycles. Re-run and compare grades.
+- **The "surprise finding" is often the most valuable part.** People's self-assessment of their sales weaknesses is wrong ~60% of the time. The data reveals the real bottleneck.
+- **Top-performing email templates from your own data beat any template library.** They've already been tested on your market with your product.
+- **If call data is available, prioritize call coaching.** Calls have more surface area for improvement than emails, and call improvements have a higher ROI per fix.
+- **The personalized playbook should be saved and reused.** It's a living document that evolves as the user's skills evolve.
+- **Share the coaching report with a manager or mentor.** It provides the data for a structured 1:1 coaching conversation.
+- **Focus on ONE weakness at a time.** The coaching plan prioritizes. Don't try to fix everything at once — that's how nothing gets fixed.

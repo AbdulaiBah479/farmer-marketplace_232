@@ -1,217 +1,122 @@
 ---
 name: gtm-strategy
-description: >
-  Go-to-market strategy: ICP × motion × channels × messaging × success
-  metrics × launch plan. Distinct from individual marketing or sales
-  skills by being the integrated cross-functional strategy spanning
-  product, marketing, sales, CS, and finance. Use when launching a
-  new product, entering a new segment, or auditing why an existing
-  GTM isn't working.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: go-to-market
-  updated: 2026-05-27
-  python-tools: gtm_strategy_validator.py
-  tech-stack: gtm, go-to-market, motion, launch, beachhead
+description: Build go-to-market strategy with channel selection, motion matching, and capacity planning for sales teams.
 ---
 
-# GTM Strategy
+# Go-to-Market Strategy
 
-A complete go-to-market strategy is the integrated cross-functional plan:
-ICP, motion, channels, messaging, success metrics, and launch sequence.
+Frameworks for selecting sales channels and building go-to-market motions.
 
-## When to use this skill
+## Channel Selection Matrix
 
-- **New product launch** (full product or major feature)
-- **New segment entry** (SMB → ENT; new geography; new vertical)
-- **GTM refresh** (current motion stalling)
-- **Repositioning** after pivot
-- **Pre-fundraise** GTM narrative for investors
-- **Post-mortem** on why a launch didn't take
+| Channel | Best For | CAC Range | Time to Revenue | Complexity |
+|---------|----------|-----------|-----------------|------------|
+| **Outbound** | High ACV ($10K+), defined ICP | $500-2K | 3-6 months | Medium |
+| **Inbound** | Searchable problem, content fit | $200-800 | 6-12 months | High |
+| **PLG** | Simple product, quick value | $50-200 | 3-9 months | High |
+| **Partners** | Ecosystem play, trust transfer | Varies | 6-18 months | Medium |
+| **Events** | Relationship-driven, enterprise | $1K-5K | 6-12 months | High |
+| **Community** | Developer/prosumer products | $100-500 | 12+ months | Medium |
 
-## The 7 components
+## ACV-Based Motion Selection
 
-1. **ICP (Ideal Customer Profile)** — who specifically, why now
-2. **Beachhead segment** — first concentrated market
-3. **Motion** — PLG / sales-led / hybrid / channel-led
-4. **Channels** — how customers find + buy
-5. **Messaging + positioning** — what we say
-6. **Success metrics** — what we measure
-7. **Launch sequence** — what happens in what order
+| ACV | Recommended Motion | Team Structure |
+|-----|-------------------|----------------|
+| < $5K | PLG or Marketing-led | Growth + self-serve |
+| $5K-$25K | Inside sales + Inbound | SDR → AE |
+| $25K-$100K | Outbound + Account-based | SDR → AE → CSM |
+| > $100K | Enterprise sales + Partners | Named AE → SE → CSM |
 
-## Workflow
+## Sales Motion Archetypes
 
-### Step 1 — Define ICP precisely
-- Industry / vertical
-- Size band (employees / revenue)
-- Geography
-- Buyer persona (role, level)
-- Tech stack signals
-- Job-to-be-done
-- Trigger event (why now)
+### Founder-Led ($0-$1M ARR)
 
-See `project-management/gtm/ideal-customer-profile`.
-
-### Step 2 — Pick the beachhead
-Start narrow:
-- 1 segment, 1 vertical, 1 geography
-- Concentrated enough to develop reference customers
-- Reachable via clear channels
-- Big enough to learn from but small enough to dominate
-
-Reference: Crossing the Chasm. Don't try to sell to everyone Day 1.
-
-### Step 3 — Pick the motion
-
-| Motion | When | Cost structure |
-|--------|------|----------------|
-| **PLG (product-led)** | Self-serve product; low ACV ($0-$5K); strong activation | Low CAC; high product investment |
-| **Sales-led** | High ACV ($25K+); complex buying committees | High CAC; sales team needed |
-| **Marketing-led / inbound** | Mid-ACV ($5K-$25K); content-driven | Medium CAC; content + ops team |
-| **Channel-led** | Wide distribution via partners | Medium CAC; partner program needed |
-| **Community-led** | Strong category with passionate users | Long ramp; high ongoing investment |
-| **Hybrid (PLG + sales)** | PLG to capture; sales to expand | Most modern SaaS; complex to coordinate |
-
-Don't try to run all motions Day 1.
-
-### Step 4 — Channels per motion
-
-| Motion | Primary channels |
-|--------|------------------|
-| PLG | Web direct, SEO, viral, content, app stores |
-| Sales-led | Outbound SDR, AE outbound, events, account-based |
-| Marketing-led | SEO, paid, content syndication, webinar |
-| Channel-led | Partner program, marketplace |
-| Community-led | Open source, community events, integrations |
-
-### Step 5 — Messaging + positioning
-- **Positioning:** "[Product] is [category] for [target] who [JTBD], unlike [alternative]"
-- **Hero message:** outcome customers want (not feature)
-- **Differentiation:** clear "why us vs them"
-- **Talk track per segment:** different ICPs need different framing
-
-### Step 6 — Success metrics
-
-| Motion | KPI focus |
-|--------|-----------|
-| PLG | Signups, activation, free-to-paid conversion, NRR |
-| Sales-led | Pipeline coverage, win rate, ACV, cycle time, NRR |
-| Marketing-led | MQL → SQL conversion, CPA, content engagement |
-| Channel-led | Partner-sourced revenue, partner activity |
-
-Set targets; track weekly; tune.
-
-### Step 7 — Launch sequence
-- **T-90:** ICP locked; positioning v1; channels chosen; team aligned
-- **T-60:** Sales/marketing collateral ready; pilot customers identified
-- **T-30:** Internal training; lighthouse customer commitments
-- **T-7:** Launch comms prepped; press / analyst briefed
-- **T-0:** Launch
-- **T+30:** Iterate based on early signal
-- **T+90:** GTM v2 incorporating learnings
-
-### Step 8 — Run `gtm_strategy_validator.py`
-Audit GTM doc for: ICP specificity, motion fit, channel coherence,
-messaging clarity, metric definition, sequence realism.
-
-```bash
-python3 project-management/gtm/gtm-strategy/scripts/gtm_strategy_validator.py \
-  --input gtm.json --format markdown
+```
+Founder does everything:
+  - Prospecting → Discovery → Demo → Close → Onboard
+Focus: Learning what works, documenting wins
+Goal: Find repeatable motion before hiring
 ```
 
-## Decision frameworks
+### First Sales Hire ($1M-$3M ARR)
 
-### Motion fit by ACV
+```
+Hire: Full-cycle AE or SDR
+Split: Founder handles enterprise, AE handles SMB
+Focus: Can someone else close deals?
+Goal: Prove non-founder can sell
+```
 
-| ACV | Likely motion |
-|-----|---------------|
-| < $1K | PLG; consumer-style |
-| $1K-$10K | PLG-led; light sales-assist |
-| $10K-$50K | Marketing-led + inside sales |
-| $50K-$250K | Sales-led with marketing support |
-| $250K+ | Enterprise sales-led; long cycle |
+### Sales Team ($3M-$10M ARR)
 
-Cross these and economics break.
+```
+Structure: SDR team → AE team → CSM
+Specialization: Hunting vs farming
+Focus: Repeatability and predictability
+Goal: Quota attainment without founder
+```
 
-### Beachhead vs broad
+## Capacity Planning Model
 
-Going broad Day 1:
-- Diluted messaging
-- No reference customers
-- Sales motion thinly stretched
-- No moat in any segment
+```
+Revenue Target ÷ ACV = Deals Needed
+Deals Needed ÷ Win Rate = Opportunities Needed
+Opportunities ÷ SQL→Opp Rate = SQLs Needed
+SQLs ÷ MQL→SQL Rate = MQLs Needed
+MQLs ÷ Marketing Conversion = Traffic Needed
 
-Beachhead first:
-- Win the segment
-- Build reference customers
-- Develop battle-tested motion
-- Then expand adjacent
+For Outbound:
+Deals Needed ÷ Win Rate = Meetings Needed
+Meetings ÷ Meeting Rate = Contacts Needed
+Contacts ÷ Contacts/Rep/Month = Reps Needed
+```
 
-Geoffrey Moore: cross the chasm one bowling pin at a time.
+## Multi-Channel Strategy
 
-### Channel-product fit
+| Channel | Percentage | Purpose |
+|---------|------------|---------|
+| **Primary** | 60-70% | Main revenue driver |
+| **Secondary** | 20-30% | Diversification + experimentation |
+| **Exploratory** | 10% | Future growth bets |
 
-Each channel has product-fit assumptions:
-- SEO: long content; SERP-able problem
-- Paid: clear high-intent keywords; LTV > 2-3x CAC
-- Outbound: defined ICP; AE can articulate value in 30 seconds
-- Channel: partners economically incentivized; product fits their offering
-- Community: passionate users + room to participate
-- Viral: collaboration / sharing built into product
+**Rule:** Don't spread thin. Dominate one channel before adding another.
 
-If channel-product fit is off, channel won't deliver regardless of effort.
+## GTM Launch Phases
 
-## Common engagements
+### Phase 1: Validation (0-3 months)
+- Manual outreach to ICP
+- Founder-led demos
+- Goal: 10 paying customers
 
-### "Help us launch product X in market Y"
-1. Confirm ICP precision (or sharpen).
-2. Pick beachhead segment.
-3. Choose motion based on ACV + product complexity.
-4. Map channels to motion.
-5. Draft positioning + messaging.
-6. Define success metrics + targets.
-7. Build T-90 → T+90 launch sequence.
+### Phase 2: Repeatability (3-6 months)
+- Document winning process
+- First sales hire
+- Goal: Non-founder closes deals
 
-### "Our GTM is stalling — what's wrong?"
-1. Audit each component for clarity + execution.
-2. Common failures:
-   - ICP too broad
-   - Motion mismatch with ACV
-   - Channels not delivering pipeline
-   - Messaging not differentiated
-   - Metrics not tracked
-3. Identify the breakpoint; fix one at a time.
+### Phase 3: Scale (6-12 months)
+- Add SDR/AE capacity
+- Layer in marketing
+- Goal: Predictable pipeline
 
-### "Should we move from PLG to sales-led?"
-1. Look at ACV trend: rising with enterprise = yes
-2. Look at pipeline: enterprise inquiries unanswered = yes
-3. Look at unit economics: PLG CAC payback < sales CAC payback?
-4. Plan hybrid: PLG capture + sales expansion (most common path)
+## Channel-Specific Playbooks
 
-## Anti-patterns to avoid
+### Outbound Playbook
+- ICP list building → Sequence automation → Meeting booking → Demo → Close
+- Key metric: Meetings/SDR/month (target: 15-20)
 
-- **ICP = "everyone."** Diluted strategy.
-- **Motion mismatched with ACV.** Sales motion on $50/mo = unit economics broken.
-- **Channels listed; not invested.** Knowing channels doesn't activate them.
-- **Generic messaging.** "Faster, better, cheaper."
-- **No success metrics.** Can't tune what you can't measure.
-- **Launch sequence = "ship and see."** Predictable underperformance.
-- **All motions at once.** Try one; succeed before adding.
+### Inbound Playbook
+- Content → SEO/Ads → Lead capture → Nurture → MQL → Demo → Close
+- Key metric: MQL→Customer rate (target: 5-15%)
 
-## References
+### PLG Playbook
+- Free trial/freemium → Activation → Engagement → Upgrade trigger → Expansion
+- Key metric: Free→Paid conversion (target: 2-5%)
 
-- `references/gtm-components-deep.md` — ICP, motion, channels, messaging deep
-- `references/launch-sequence-playbook.md` — T-90 → T+90 playbook
-- `references/gtm-anti-patterns.md` — common failures + fixes
+## GTM Health Metrics
 
-## Related skills
-
-- `project-management/gtm/ideal-customer-profile` — ICP definition
-- `project-management/strategy-frameworks/business-model-canvas` — model behind GTM
-- `marketing/launch-strategy` — marketing execution layer
-- `business-growth/customer-success-manager` — post-sale GTM
-- `c-level-advisor/cro-advisor` — sales / revenue strategy
-- `c-level-advisor/cmo-advisor` — marketing strategy
+| Metric | Healthy | Warning | Critical |
+|--------|---------|---------|----------|
+| Pipeline coverage | 3-4x | 2-3x | < 2x |
+| Win rate | 20-30% | 15-20% | < 15% |
+| Sales cycle | On target | +25% | +50% |
+| CAC payback | < 12 mo | 12-18 mo | > 18 mo |

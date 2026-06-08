@@ -1,64 +1,93 @@
 ---
 name: research-report
 user-invocable: true
+description: Summarize deep research results into markdown report, cover all fields, skip uncertain values.
 allowed-tools: Read, Write, Glob, Bash, AskUserQuestion
-description: Summarise a completed deep-research run into a single markdown report — full coverage of every defined field, automatic skipping of uncertain values, and a navigable table of contents with user-chosen summary columns. Generates a fresh `generate_report.py` per run (against a stable spec) and executes it. Use after `/research-deep` finishes when you want a readable artifact for sharing, archiving, or comparing items across the chosen schema.
 ---
 
-# Research Report — Summary Report
-
-Reads the JSON files produced by `/research-deep` and emits a single markdown report at `{topic}/report.md`.
+# Research Report - Summary Report
 
 ## Trigger
-
 `/research-report`
-
-## Pipeline position
-
-```
-/research-outline → /research-add-* → /research-deep → ► /research-report ◄
-```
 
 ## Workflow
 
-### Step 1 — Locate results directory
+### Step 1: Locate Results Directory
+Find `*/outline.yaml` in current working directory, read topic and output_dir config.
 
-`Glob` `*/outline.yaml` in the current working directory. `Read` it to get `topic` and `execution.output_dir`.
+### Step 2: Scan Optional Summary Fields
+Read all JSON results, extract fields suitable for TOC display (numeric, short metrics), e.g.:
+- github_stars
+- google_scholar_cites
+- swe_bench_score
+- user_scale
+- valuation
+- release_date
 
-### Step 2 — Scan optional summary fields
+Use AskUserQuestion to ask user:
+- Which fields to display in TOC besides item name?
+- Provide dynamic options list (based on actual fields in JSON)
 
-`Read` every JSON under `output_dir`. Collect candidate fields suitable for the table-of-contents column — short, numeric, or scalar metrics. Typical candidates:
+### Step 3: Generate Python Conversion Script
+Generate `generate_report.py` in `{topic}/` directory, script requirements:
+- Read all JSON from output_dir
+- Read fields.yaml to get field structure
+- Cover all field values from each JSON
+- Skip fields with values containing [uncertain]
+- Skip fields listed in uncertain array
+- Generate markdown report format: Table of contents (with anchor links + user-selected summary fields) + Detailed content (by field category)
+- Save to `{topic}/report.md`
 
-- `github_stars`
-- `google_scholar_cites`
-- `swe_bench_score`
-- `user_scale`
-- `valuation`
-- `release_date`
+**TOC Format Requirements**:
+- Must include every item
+- Each item displays: number, name (anchor link), user-selected summary fields
+- Example: `1. [GitHub Copilot](#github-copilot) - Stars: 10k | Score: 85%`
 
-`AskUserQuestion`: "Which of these summary fields do you want next to each item in the TOC?" — present the dynamic list of fields you actually found in this run's JSON files.
+#### Script Technical Requirements (Must Follow)
 
-> **AskUserQuestion has a hard cap of four options per question.** If you found more than four candidates, either ask twice (covering different field groups), or pick the four most informative-looking candidates yourself and ask the user to confirm or override.
+**1. JSON Structure Compatibility**
+Support two JSON structures:
+- Flat structure: Fields directly at top level `{"name": "xxx", "release_date": "xxx"}`
+- Nested structure: Fields in category sub-dict `{"basic_info": {"name": "xxx"}, "technical_features": {...}}`
 
-### Step 3 — Generate the report script
+Field lookup order: Top level -> category mapping key -> Traverse all nested dicts
 
-Write `{topic}/generate_report.py`. The script's behaviour is specified in [`references/report-generation-spec.md`](references/report-generation-spec.md) — read that file before writing the script. It covers JSON shape compatibility, category-name multi-language mapping, complex value formatting, extra-fields collection, uncertain-value skipping, and TOC formatting.
+**2. Category Multi-language Mapping**
+fields.yaml category names and JSON keys can be any combination (CN-CN, CN-EN, EN-CN, EN-EN). Must establish bidirectional mapping:
+```python
+CATEGORY_MAPPING = {
+    "Basic Info": ["basic_info", "Basic Info"],
+    "Technical Features": ["technical_features", "technical_characteristics", "Technical Features"],
+    "Performance Metrics": ["performance_metrics", "performance", "Performance Metrics"],
+    "Milestone Significance": ["milestone_significance", "milestones", "Milestone Significance"],
+    "Business Info": ["business_info", "commercial_info", "Business Info"],
+    "Competition & Ecosystem": ["competition_ecosystem", "competition", "Competition & Ecosystem"],
+    "History": ["history", "History"],
+    "Market Positioning": ["market_positioning", "market", "Market Positioning"],
+}
+```
 
-Why the script is regenerated each run instead of bundled as-is: each topic has slightly different field categories and value shapes. Letting the model write the script per run lets it adapt the formatting choices to what the JSON actually contains, while the spec ensures every script meets the same minimum contract.
+**3. Complex Value Formatting**
+- list of dicts (e.g., key_events, funding_history): Format each dict as one line, separate kv with ` | `
+- Normal list: Short lists joined with comma, long lists displayed with line breaks
+- Nested dict: Recursive formatting, display with semicolon or line breaks
+- Long text strings (over 100 chars): Add line breaks `<br>` or use blockquote format for readability
 
-### Step 4 — Execute the script
+**4. Extra Fields Collection**
+Collect fields that exist in JSON but not defined in fields.yaml, put in "Other Info" category. Note to filter:
+- Internal fields: `_source_file`, `uncertain`
+- Nested structure top-level keys: `basic_info`, `technical_features` etc.
+- `uncertain` array: Display each field name on separate line, don't compress into one line
 
-Run `python {topic}/generate_report.py`. Check the resulting `{topic}/report.md` exists and is non-empty; report the path back to the user.
+**5. Uncertain Value Skipping**
+Skip conditions:
+- Field value contains `[uncertain]` string
+- Field name is in `uncertain` array
+- Field value is None or empty string
+
+### Step 4: Execute Script
+Run `python {topic}/generate_report.py`
 
 ## Output
-
-- `{topic}/generate_report.py` — per-run conversion script
-- `{topic}/report.md` — summary report
-
-## Gotchas
-
-- **The `CATEGORY_MAPPING` lives in two places**: in the generated `generate_report.py` and in `~/.claude/skills/research-outline/validate_json.py`. They must agree, or the report will skip categories the validator just accepted. If you add a new category in `fields.yaml`, update both files (see `references/report-generation-spec.md` for the canonical mapping).
-- **`AskUserQuestion` caps at four options**. If Step 2 turns up more than four summary-field candidates, you need to either chunk the question into multiple rounds or pre-filter the list yourself before asking. Don't silently truncate to four — the user needs to know what was left off.
-- **`[uncertain]` in a value and presence in the `uncertain` array are both skip-triggers**, and either alone is enough. Don't AND them.
-- **Anchor slugs are markdown's auto-slug, not your own slugifier.** Make sure your TOC link `#xxx` matches what the markdown renderer derives from your `## Item Name` header — lowercase, spaces → hyphens, most punctuation stripped. If item names have unusual characters, render the section with a known-safe heading text.
-- **Empty `output_dir`** means `/research-deep` either hasn't run or hasn't completed any items. Don't generate an empty report — surface the state to the user.
+- `{topic}/generate_report.py` - Conversion script
+- `{topic}/report.md` - Summary report

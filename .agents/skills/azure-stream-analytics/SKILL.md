@@ -1,9 +1,9 @@
 ---
 name: azure-stream-analytics
-description: Expert knowledge for Azure Stream Analytics development including troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. Use when building ASA jobs with Event Hubs/Kafka, Cosmos DB/SQL outputs, ML/AML scoring, UDFs, or IoT Edge, and other Azure Stream Analytics related development tasks. Not for Azure Synapse Analytics (use azure-synapse-analytics), Azure Data Explorer (use azure-data-explorer), Azure Event Hubs (use azure-event-hubs), Azure Functions (use azure-functions).
+description: Expert knowledge for Azure Stream Analytics development including troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. Use when building Stream Analytics jobs with Event Hubs/Kafka, Cosmos DB/SQL outputs, ML/Functions, or IoT Edge, and other Azure Stream Analytics related development tasks. Not for Azure Data Factory (use azure-data-factory), Azure Synapse Analytics (use azure-synapse-analytics), Azure Event Hubs (use azure-event-hubs), Azure Data Explorer (use azure-data-explorer).
 compatibility: Requires network access. Uses mcp_microsoftdocs:microsoft_docs_fetch or fetch_webpage to retrieve documentation.
 metadata:
-  generated_at: "2026-05-10"
+  generated_at: "2026-03-16"
   generator: "docs2skills/1.0.0"
 ---
 # Azure Stream Analytics Skill
@@ -25,14 +25,14 @@ This skill requires **network access** to fetch documentation content:
 | Category | Lines | Description |
 |----------|-------|-------------|
 | Troubleshooting | L37-L56 | Diagnosing and fixing Stream Analytics job issues: error codes (config/data/external/internal), input/output connection failures, query/UDF bugs, and using diagrams, metrics, and resource logs to debug. |
-| Best Practices | L57-L75 | Best practices for Stream Analytics job design, query patterns, performance tuning, scaling, reliability, time handling, geospatial logic, ML/Cosmos/SQL outputs, and alerting. |
-| Decision Making | L76-L83 | Guidance on choosing tools, migration paths, autoscaling options, and comparing Azure real-time/stream processing services for designing Stream Analytics solutions. |
-| Architecture & Design Patterns | L84-L88 | Architectural patterns and best practices for designing resilient, geo-redundant Azure Stream Analytics solutions, including reference topologies and high-availability job designs. |
+| Best Practices | L57-L75 | Guidance on designing, scaling, optimizing, and troubleshooting Stream Analytics jobs, including queries, partitions, time handling, inputs/outputs, metrics, alerts, and geospatial/ML patterns |
+| Decision Making | L76-L82 | Guidance on choosing Stream Analytics developer tools, migrating projects from Visual Studio to VS Code, and comparing Azure real-time/stream processing services for your scenario. |
+| Architecture & Design Patterns | L83-L88 | Architectural patterns and best practices for designing resilient, geo-redundant Azure Stream Analytics solutions, including reference topologies and high-availability job designs. |
 | Limits & Quotas | L89-L94 | Configuring and tuning Stream Analytics streaming units and clusters, including how to resize, scale performance, and understand capacity limits and resource quotas. |
-| Security | L95-L114 | Securing Stream Analytics with managed identities, private endpoints, VNets, data protection, credential rotation, and Azure Policy for outputs like Event Hubs, SQL, Cosmos DB, Blob, Service Bus, Power BI. |
-| Configuration | L115-L148 | Configuring Stream Analytics jobs: inputs/outputs (SQL, Cosmos DB, Event Hubs, Kafka, Power BI, Delta Lake, etc.), partitioning, autoscale, compatibility, monitoring, and error/late-event policies. |
-| Integrations & Coding Patterns | L149-L168 | Integrating Stream Analytics with Kafka, Event Hubs, ML/AML, schema registry, and implementing UDFs/aggregates, .NET SDK management, JSON/Avro parsing, and ML/anomaly patterns. |
-| Deployment | L169-L182 | Deploying, starting/stopping, scaling, and moving Stream Analytics jobs and clusters, plus CI/CD automation via ARM/Bicep, GitHub Actions, Azure DevOps, npm/NuGet, and IoT Edge/Stack Hub. |
+| Security | L95-L114 | Securing Stream Analytics jobs: managed identities for inputs/outputs, private endpoints/VNet integration, data protection, credential rotation, and Azure Policy compliance controls. |
+| Configuration | L115-L149 | Configuring Stream Analytics jobs: inputs/outputs (SQL, Cosmos DB, Event Hubs, Kafka, Power BI, Delta Lake, etc.), partitioning, autoscale, compatibility, monitoring, alerts, and error policies. |
+| Integrations & Coding Patterns | L150-L169 | Patterns for integrating Stream Analytics with Kafka, Azure ML, Functions, Schema Registry, and for writing UDFs/aggregates, parsing formats, and doing ML/anomaly detection. |
+| Deployment | L170-L185 | Deploying, starting/stopping, scaling, and moving Stream Analytics jobs and clusters, plus CI/CD automation via ARM/Bicep, GitHub Actions, Azure DevOps, npm/NuGet, and IoT Edge/Stack Hub. |
 
 ### Troubleshooting
 | Topic | URL |
@@ -65,26 +65,26 @@ This skill requires **network access** to fetch documentation content:
 | Apply best practices for Stream Analytics to Cosmos DB | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-documentdb-output |
 | Analyze Stream Analytics job performance using metrics and dimensions | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-job-analysis-with-metric-dimensions |
 | Improve Azure Stream Analytics job reliability and upgrades | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-job-reliability |
-| Optimize Azure Stream Analytics with query parallelization | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-parallelization |
+| Use query parallelization to scale Stream Analytics jobs | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-parallelization |
 | Scale Azure Stream Analytics jobs up and out | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-scale-jobs |
 | Scale ML Studio classic functions in Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-scale-with-machine-learning-functions |
 | Optimize Azure SQL Database output performance for Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-sql-output-perf |
 | Apply common query patterns in Azure Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-stream-analytics-query-patterns |
 | Implement configurable threshold-based alerting in Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-threshold-based-rules |
-| Design time handling and lateness in Azure Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-time-handling |
+| Design time handling strategies in Azure Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-time-handling |
 
 ### Decision Making
 | Topic | URL |
 |-------|-----|
 | Select developer tools for Azure Stream Analytics jobs | https://learn.microsoft.com/en-us/azure/stream-analytics/feature-comparison |
 | Migrate Stream Analytics projects from Visual Studio to VS Code | https://learn.microsoft.com/en-us/azure/stream-analytics/migrate-to-vscode |
-| Choose and configure autoscale for Stream Analytics SUs | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-autoscale |
 | Choose Azure real-time and stream processing services | https://learn.microsoft.com/en-us/azure/stream-analytics/streaming-technologies |
 
 ### Architecture & Design Patterns
 | Topic | URL |
 |-------|-----|
 | Design geo-redundant Azure Stream Analytics job architectures | https://learn.microsoft.com/en-us/azure/stream-analytics/geo-redundancy |
+| Apply Azure Stream Analytics solution architecture patterns | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-solution-patterns |
 
 ### Limits & Quotas
 | Topic | URL |
@@ -96,18 +96,18 @@ This skill requires **network access** to fetch documentation content:
 | Topic | URL |
 |-------|-----|
 | Configure managed identity for Azure Data Explorer outputs | https://learn.microsoft.com/en-us/azure/stream-analytics/azure-data-explorer-managed-identity |
-| Configure managed identity auth for Stream Analytics Blob output | https://learn.microsoft.com/en-us/azure/stream-analytics/blob-output-managed-identity |
+| Authenticate Stream Analytics blob outputs with managed identity | https://learn.microsoft.com/en-us/azure/stream-analytics/blob-output-managed-identity |
 | Securely connect Stream Analytics jobs to Azure VNets | https://learn.microsoft.com/en-us/azure/stream-analytics/connect-job-to-vnet |
 | Use managed identities for Cosmos DB outputs in Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/cosmos-db-managed-identity |
 | Configure data protection for Azure Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/data-protection |
 | Access Event Hubs from Stream Analytics with managed identities | https://learn.microsoft.com/en-us/azure/stream-analytics/event-hubs-managed-identity |
 | Apply built-in Azure Policy definitions to Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/policy-reference |
-| Set up managed identity authentication for Stream Analytics Power BI output | https://learn.microsoft.com/en-us/azure/stream-analytics/powerbi-output-managed-identity |
+| Authenticate Stream Analytics Power BI outputs via managed identity | https://learn.microsoft.com/en-us/azure/stream-analytics/powerbi-output-managed-identity |
 | Configure Stream Analytics cluster managed private endpoints | https://learn.microsoft.com/en-us/azure/stream-analytics/private-endpoints |
 | Run Stream Analytics jobs inside Azure virtual networks | https://learn.microsoft.com/en-us/azure/stream-analytics/run-job-in-virtual-network |
 | Apply Azure Policy compliance controls to Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/security-controls-policy |
 | Send Stream Analytics outputs to Service Bus with managed identity | https://learn.microsoft.com/en-us/azure/stream-analytics/service-bus-managed-identity |
-| Use managed identities from Stream Analytics to Azure SQL and Synapse | https://learn.microsoft.com/en-us/azure/stream-analytics/sql-database-output-managed-identity |
+| Use managed identities for SQL Database and Synapse outputs | https://learn.microsoft.com/en-us/azure/stream-analytics/sql-database-output-managed-identity |
 | Rotate input and output credentials for Azure Stream Analytics jobs | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-login-credentials-inputs-outputs |
 | Use managed identities with Azure Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-managed-identities-overview |
 | Configure user-assigned managed identities for Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-user-assigned-managed-identity-overview |
@@ -128,7 +128,7 @@ This skill requires **network access** to fetch documentation content:
 | Configure monitoring for Azure Stream Analytics with Azure Monitor | https://learn.microsoft.com/en-us/azure/stream-analytics/monitor-azure-stream-analytics |
 | Reference for Azure Stream Analytics monitoring metrics and logs | https://learn.microsoft.com/en-us/azure/stream-analytics/monitor-azure-stream-analytics-reference |
 | Configure Azure Database for PostgreSQL as Stream Analytics output | https://learn.microsoft.com/en-us/azure/stream-analytics/postgresql-database-output |
-| Configure Power BI as an Azure Stream Analytics output | https://learn.microsoft.com/en-us/azure/stream-analytics/power-bi-output |
+| Configure Power BI output for Azure Stream Analytics visualizations | https://learn.microsoft.com/en-us/azure/stream-analytics/power-bi-output |
 | Configure Service Bus queues as Stream Analytics output | https://learn.microsoft.com/en-us/azure/stream-analytics/service-bus-queues-output |
 | Configure Service Bus topics as Stream Analytics output | https://learn.microsoft.com/en-us/azure/stream-analytics/service-bus-topics-output |
 | Configure Azure SQL Database as Stream Analytics output | https://learn.microsoft.com/en-us/azure/stream-analytics/sql-database-output |
@@ -143,8 +143,9 @@ This skill requires **network access** to fetch documentation content:
 | Configure output error handling policies in Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-output-error-policy |
 | Configure Protobuf input deserialization in Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-parsing-protobuf |
 | Set up Azure Monitor alerts for Stream Analytics jobs | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-set-up-alerts |
+| Use reference data lookups in Azure Stream Analytics queries | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-use-reference-data |
 | Set up Azure Table storage output for Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/table-storage-output |
-| Configure Azure Stream Analytics output to Delta Lake | https://learn.microsoft.com/en-us/azure/stream-analytics/write-to-delta-lake |
+| Configure Azure Stream Analytics to write to Delta Lake tables | https://learn.microsoft.com/en-us/azure/stream-analytics/write-to-delta-lake |
 
 ### Integrations & Coding Patterns
 | Topic | URL |
@@ -152,7 +153,7 @@ This skill requires **network access** to fetch documentation content:
 | Use Confluent Cloud Kafka as Stream Analytics input | https://learn.microsoft.com/en-us/azure/stream-analytics/confluent-kafka-input |
 | Send Stream Analytics output to Confluent Cloud Kafka | https://learn.microsoft.com/en-us/azure/stream-analytics/confluent-kafka-output |
 | Integrate Azure Machine Learning models as Stream Analytics UDFs | https://learn.microsoft.com/en-us/azure/stream-analytics/machine-learning-udf |
-| Implement SQL UPDATE/UPSERT via Azure Functions from Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/sql-database-upsert |
+| Use Azure Functions to upsert SQL data from Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/sql-database-upsert |
 | Connect Azure Stream Analytics jobs to Kafka streams | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-define-kafka-input |
 | Manage Stream Analytics jobs with .NET Management SDK | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-dotnet-management-sdk |
 | Write C# user-defined functions for Stream Analytics in Visual Studio | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-edge-csharp-udf |
@@ -171,11 +172,13 @@ This skill requires **network access** to fetch documentation content:
 |-------|-----|
 | Generate and deploy Stream Analytics jobs with Bicep | https://learn.microsoft.com/en-us/azure/stream-analytics/cicd-deploy-with-bicep |
 | Deploy Stream Analytics jobs using GitHub Actions workflows | https://learn.microsoft.com/en-us/azure/stream-analytics/cicd-github-actions |
+| Use ASA CI/CD npm package to build and deploy jobs | https://learn.microsoft.com/en-us/azure/stream-analytics/cicd-tools |
 | Move Azure Stream Analytics clusters across regions | https://learn.microsoft.com/en-us/azure/stream-analytics/move-cluster |
 | Deploy Stream Analytics edge jobs to Azure Stack Hub | https://learn.microsoft.com/en-us/azure/stream-analytics/on-azure-stack |
 | Export Stream Analytics jobs as ARM templates | https://learn.microsoft.com/en-us/azure/stream-analytics/resource-manager-export |
 | Set up Azure DevOps CI/CD for Stream Analytics | https://learn.microsoft.com/en-us/azure/stream-analytics/set-up-cicd-pipeline |
 | Start Azure Stream Analytics jobs via portal, PowerShell, and Visual Studio | https://learn.microsoft.com/en-us/azure/stream-analytics/start-job |
+| Configure autoscale streaming units for Stream Analytics jobs | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-autoscale |
 | Implement CI/CD for Stream Analytics on IoT Edge via REST | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-cicd-api |
 | Stop and delete Azure Stream Analytics jobs safely | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-clean-up-your-job |
 | Deploy Azure Stream Analytics jobs to IoT Edge devices | https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-edge |

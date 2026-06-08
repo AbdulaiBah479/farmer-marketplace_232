@@ -21,9 +21,11 @@ npm install
 ```bash
 {baseDir}/browser-start.js              # Fresh profile
 {baseDir}/browser-start.js --profile    # Copy user's profile (cookies, logins)
+{baseDir}/browser-start.js --proxy-server http://127.0.0.1:7897  # Use proxy server
+{baseDir}/browser-start.js --proxy-server http://127.0.0.1:7897 --proxy-bypass-list "localhost,127.0.0.1"  # Proxy with bypass list
 ```
 
-Launch Chrome with remote debugging on `:9222`. Use `--profile` to preserve user's authentication state.
+Launch Chrome with remote debugging on `:9222`. Use `--profile` to preserve user's authentication state. Use `--proxy-server` to route all traffic through a proxy server. Use `--proxy-bypass-list` to specify comma-separated hosts that should bypass the proxy.
 
 ## Navigate
 
@@ -87,110 +89,3 @@ Navigate to a URL and extract readable content as markdown. Uses Mozilla Readabi
 - When user needs to visually see or interact with a page
 - Debugging authentication or session issues
 - Scraping dynamic content that requires JS execution
-
----
-
-## Efficiency Guide
-
-### DOM Inspection Over Screenshots
-
-**Don't** take screenshots to see page state. **Do** parse the DOM directly:
-
-```javascript
-// Get page structure
-document.body.innerHTML.slice(0, 5000)
-
-// Find interactive elements
-Array.from(document.querySelectorAll('button, input, [role="button"]')).map(e => ({
-  id: e.id,
-  text: e.textContent.trim(),
-  class: e.className
-}))
-```
-
-### Complex Scripts in Single Calls
-
-Wrap everything in an IIFE to run multi-statement code:
-
-```javascript
-(function() {
-  // Multiple operations
-  const data = document.querySelector('#target').textContent;
-  const buttons = document.querySelectorAll('button');
-  
-  // Interactions
-  buttons[0].click();
-  
-  // Return results
-  return JSON.stringify({ data, buttonCount: buttons.length });
-})()
-```
-
-### Batch Interactions
-
-**Don't** make separate calls for each click. **Do** batch them:
-
-```javascript
-(function() {
-  const actions = ["btn1", "btn2", "btn3"];
-  actions.forEach(id => document.getElementById(id).click());
-  return "Done";
-})()
-```
-
-### Typing/Input Sequences
-
-```javascript
-(function() {
-  const text = "HELLO";
-  for (const char of text) {
-    document.getElementById("key-" + char).click();
-  }
-  document.getElementById("submit").click();
-  return "Submitted: " + text;
-})()
-```
-
-### Reading App/Game State
-
-Extract structured state in one call:
-
-```javascript
-(function() {
-  const state = {
-    score: document.querySelector('.score')?.textContent,
-    status: document.querySelector('.status')?.className,
-    items: Array.from(document.querySelectorAll('.item')).map(el => ({
-      text: el.textContent,
-      active: el.classList.contains('active')
-    }))
-  };
-  return JSON.stringify(state, null, 2);
-})()
-```
-
-### Waiting for Updates
-
-If DOM updates after actions, add a small delay with bash:
-
-```bash
-sleep 0.5 && {baseDir}/browser-eval.js '...'
-```
-
-### Investigate Before Interacting
-
-Always start by understanding the page structure:
-
-```javascript
-(function() {
-  return {
-    title: document.title,
-    forms: document.forms.length,
-    buttons: document.querySelectorAll('button').length,
-    inputs: document.querySelectorAll('input').length,
-    mainContent: document.body.innerHTML.slice(0, 3000)
-  };
-})()
-```
-
-Then target specific elements based on what you find.

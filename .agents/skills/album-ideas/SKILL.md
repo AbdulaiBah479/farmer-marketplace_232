@@ -2,15 +2,13 @@
 name: album-ideas
 description: Tracks and manages album ideas including brainstorming, planning, and status updates. Use when the user wants to add, review, or organize their album idea backlog.
 argument-hint: <"list" or "add [title]" or "remove [title]" or "status [title] [status]">
-model: sonnet
-effort: medium
+model: claude-sonnet-4-6
 allowed-tools:
   - Read
   - Edit
   - Write
   - Grep
   - Glob
-  - bitwize-music-mcp
 ---
 
 ## Your Task
@@ -84,7 +82,7 @@ Each album idea uses this structure:
 ```markdown
 ### [Album Title]
 - **Genre**: [genre] (primary category: hip-hop, electronic, country, folk, rock)
-- **Type**: [Documentary/Narrative/Thematic/Character Study/Collection/Original Soundtrack (OST)]
+- **Type**: [Documentary/Narrative/Thematic/Character Study/Collection]
 - **Concept**: [1-3 sentence description]
 - **Notes**: [any additional notes, references, inspiration]
 - **Added**: [YYYY-MM-DD]
@@ -148,7 +146,7 @@ Add a new album idea with interactive prompts.
 **Steps:**
 1. Get title from argument (or prompt if not provided)
 2. Prompt for genre (with validation against primary categories)
-3. Prompt for type (Documentary/Narrative/Thematic/Character Study/Collection/Original Soundtrack (OST))
+3. Prompt for type (Documentary/Narrative/Thematic/Character Study/Collection)
 4. Prompt for concept (1-3 sentences)
 5. Prompt for notes (optional)
 6. Add current date
@@ -158,7 +156,7 @@ Add a new album idea with interactive prompts.
 **Prompts:**
 ```
 Genre (hip-hop, electronic, country, folk, rock):
-Type (Documentary/Narrative/Thematic/Character Study/Collection/Original Soundtrack (OST)):
+Type (Documentary/Narrative/Thematic/Character Study/Collection):
 Concept (1-3 sentences):
 Notes (optional, press Enter to skip):
 ```

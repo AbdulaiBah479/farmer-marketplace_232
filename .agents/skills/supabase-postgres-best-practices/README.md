@@ -1,22 +1,23 @@
-# Supabase Postgres Best Practices - Contributor Guide
+# Postgres Best Practices - Contributor Guide
 
-This skill contains Postgres performance optimization references optimized for
-AI agents and LLMs. It follows the [Agent Skills Open Standard](https://agentskills.io/).
+This repository contains Postgres performance optimization rules optimized for
+AI agents and LLMs.
 
 ## Quick Start
 
 ```bash
-# From repository root
+# Install dependencies
+cd packages/postgres-best-practices-build
 npm install
 
-# Validate existing references
+# Validate existing rules
 npm run validate
 
 # Build AGENTS.md
 npm run build
 ```
 
-## Creating a New Reference
+## Creating a New Rule
 
 1. **Choose a section prefix** based on the category:
    - `query-` Query Performance (CRITICAL)
@@ -30,7 +31,7 @@ npm run build
 
 2. **Copy the template**:
    ```bash
-   cp references/_template.md references/query-your-reference-name.md
+   cp rules/_template.md rules/query-your-rule-name.md
    ```
 
 3. **Fill in the content** following the template structure
@@ -43,27 +44,29 @@ npm run build
 
 5. **Review** the generated `AGENTS.md`
 
-## Skill Structure
+## Repository Structure
 
 ```
-skills/supabase-postgres-best-practices/
-├── SKILL.md           # Agent-facing skill manifest (Agent Skills spec)
-├── AGENTS.md          # [GENERATED] Compiled references document
+skills/postgres-best-practices/
+├── SKILL.md           # Agent-facing skill manifest
+├── AGENTS.md          # [GENERATED] Compiled rules document
 ├── README.md          # This file
-└── references/
-    ├── _template.md      # Reference template
+├── metadata.json      # Version and metadata
+└── rules/
+    ├── _template.md      # Rule template
     ├── _sections.md      # Section definitions
     ├── _contributing.md  # Writing guidelines
-    └── *.md              # Individual references
+    └── *.md              # Individual rules
 
-packages/skills-build/
-├── src/               # Generic build system source
-└── package.json       # NPM scripts
+packages/postgres-best-practices-build/
+├── src/               # Build system source
+├── package.json       # NPM scripts
+└── test-cases.json    # [GENERATED] Test artifacts
 ```
 
-## Reference File Structure
+## Rule File Structure
 
-See `references/_template.md` for the complete template. Key elements:
+See `rules/_template.md` for the complete template. Key elements:
 
 ````markdown
 ---
@@ -95,7 +98,7 @@ tags: relevant, keywords
 ```
 ## Writing Guidelines
 
-See `references/_contributing.md` for detailed guidelines. Key principles:
+See `rules/_contributing.md` for detailed guidelines. Key principles:
 
 1. **Show concrete transformations** - "Change X to Y", not abstract advice
 2. **Error-first structure** - Show the problem before the solution

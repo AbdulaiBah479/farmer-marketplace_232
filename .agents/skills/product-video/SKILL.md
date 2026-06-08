@@ -1,107 +1,203 @@
 ---
 name: product-video
-description: >
-  Turn product photos or a store URL into a polished product video with Pexo. Upload your product
-  images (or download from a link, then upload) and Pexo composes the shots, adds motion, music,
-  and transitions, and returns a publish-ready clip for your listing, ads, or socials. Use for
-  e-commerce/product clips: "product video", "video for my product", "ecommerce video", "video
-  from product photos". NOT for explainer or non-product content.
-homepage: https://pexo.ai
-repository: https://github.com/pexoai/pexo-skills
-version: "0.1.0"
-requires:
-  env: [PEXO_API_KEY, PEXO_BASE_URL]
-  runtime: [curl, jq, file]
-metadata:
-  author: pexoai
+description: 产品介绍视频自动化生成。当用户需要创建产品演示视频、公司介绍短片、宣传片时使用。支持录屏演示型、图文展示型、混合型三种视频类型。
+argument-hint: [产品名称或主题]
 ---
 
-# Product Video — Pexo
+# 产品介绍视频生成技能
 
-**Pexo:** https://pexo.ai — get an API key, watch your project render, and buy credits there.
+## 适用场景
 
-Turn a product's photos into a polished, publish-ready video. You upload the user's product
-images and relay the request to the hosted Pexo agent, then deliver the result — Pexo composes
-the shots, motion, and music.
+- 产品功能演示视频（需要录屏）
+- 公司/产品介绍短片（图文展示）
+- 产品宣传片（混合类型）
+- 输出格式：MP4 (1920x1080, 30fps)
 
-## Your role: relay, don't create
+## 视频类型选择
 
-Create a project, send the user's request **verbatim**, poll, deliver. Pexo's backend handles
-all creative work — scriptwriting, model choice, prompts, music. Adding your own direction
-(duration, style, models the user didn't ask for) overrides its judgment and produces worse
-videos.
+在开始制作前，首先确定视频类型：
 
-## Config
+| 类型 | 代号 | 适用场景 | 核心素材 |
+|------|------|----------|----------|
+| **录屏演示型** | `demo` | 软件功能演示、操作教程 | Playwright 录屏 |
+| **图文展示型** | `slideshow` | 公司介绍、产品历程、概念宣传 | 图片 + 文字动画 |
+| **混合型** | `mixed` | 产品宣传片 | 录屏 + 图片 + 动画 |
 
-`~/.pexo/config`:
+### 类型判断流程
+
 ```
-PEXO_BASE_URL="https://pexo.ai"
-PEXO_API_KEY="sk-<your-api-key>"
-```
-**No account / first run →** read `references/SETUP-CHECKLIST.md` and walk the user through it — it carries the signup flow with the **invite code that grants new users bonus credits**, plus how to create the config above. **Config error →** run `scripts/pexo-doctor.sh` and follow its output.
-
-## Workflow
-
-Scripts live in this skill's `scripts/`. Reply to the user in their language.
-
-1. **Create a project:** `pexo-project-create.sh "<short brief>"` → save the `project_id`.
-2. **Upload any files** the user gave: `pexo-upload.sh <project_id> <path>` → save `asset_id`,
-   reference it inline as `<original-image>asset_id</original-image>` (or `<original-video>` /
-   `<original-audio>`). Tags are required — a bare `asset_id` is ignored. Pexo can't crawl URLs —
-   download, then upload.
-3. **Send the request:** `pexo-chat.sh <project_id> "<user's exact words> <asset tags>"`.
-   Copy the user's words exactly; only add asset tags.
-4. **Tell the user** (their language): submitted ✓ · ~15–20 min · `https://pexo.ai/project/<project_id>`.
-5. **Poll:** every ≥60s run `pexo-project-get.sh <project_id>` and act on `nextAction`:
-   - **WAIT** → keep polling; every ~5 polls send a one-line update with the project link.
-   - **RESPOND** → handle each event in `recentMessages`: relay Pexo's text (wait for the
-     user's answer if it asked, then `pexo-chat.sh` their reply); for `preview_video`, run
-     `pexo-asset-get.sh <project_id> <assetId>` per option, show the URLs (A/B/C), let the user
-     pick, then `pexo-chat.sh <project_id> "<choice>" --choice <assetId>`; for a `document`
-     event, mention it to the user.
-   - **DELIVER** → `pexo-asset-get.sh <project_id> <final assetId>`, then send the user the
-     **full** asset URL as plain text — all `?…` query params, never truncated or wrapped in
-     markdown — plus the project link.
-   - **FAILED** → explain `nextActionHint` in plain terms and offer to retry.
-   - **RECONNECT** → `pexo-chat.sh <project_id> "continue"`, tell the user the connection
-     dropped and you're resuming, then keep polling.
-   - Never call `pexo-chat.sh` during WAIT — it triggers duplicate production.
-   - **Taking too long** → if it's been >30 min and still WAIT, tell the user (with the project
-     link + `https://pexo.ai/connect/openclaw`) it's running long; ask whether to keep waiting or
-     stop. Don't poll forever.
-
-## Revisions
-
-After delivery, the user's tweaks ("make it shorter", "new music", "different shot") reuse the
-**same** project: `pexo-chat.sh <project_id> "<their feedback>"`, then poll again (step 5). Never
-create a new project for a revision — it throws away Pexo's server-side context.
-
-## Credits
-
-If a script fails with "Credits balance" / "Insufficient credits": if the error carries a
-purchase link, pass it to the user; otherwise tell them to add credits at `https://pexo.ai/home`
-→ Credits → Buy Credits. Retry after they confirm.
-
-## Example
-
-User: "Make a 20-second product video from these three sneaker photos."
-
-```bash
-pid=$(pexo-project-create.sh "sneaker product video")
-pexo-chat.sh "$pid" "Make a 20-second product video from these three sneaker photos."
-# Tell the user: submitted, ~15–20 min, https://pexo.ai/project/$pid
-# Poll pexo-project-get.sh "$pid" until nextAction is DELIVER, then deliver the asset URL.
+用户需求分析
+    │
+    ├─ 需要展示软件操作？ ──→ demo 或 mixed
+    │
+    ├─ 纯图文概念展示？ ──→ slideshow
+    │
+    └─ 两者都需要？ ──→ mixed
 ```
 
-## Scripts
+## 工作流程
 
-| Script | Usage | Returns |
-|---|---|---|
-| `pexo-project-create.sh` | `"<brief>"` | `project_id` |
-| `pexo-upload.sh` | `<project_id> <file>` | `asset_id` |
-| `pexo-chat.sh` | `<project_id> "<message>" [--choice <id>]` | ack (async) |
-| `pexo-project-get.sh` | `<project_id>` | JSON: `nextAction`, `recentMessages` |
-| `pexo-asset-get.sh` | `<project_id> <asset_id>` | JSON with `url` |
-| `pexo-doctor.sh` | — | setup diagnostic |
+### 通用流程
 
-Error codes and edge cases → `references/TROUBLESHOOTING.md`.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Phase 1: 需求分析与分镜设计                                  │
+│  ├── 确定视频类型 (demo/slideshow/mixed)                      │
+│  ├── 分析目标受众和核心信息                                    │
+│  ├── 设计视频结构和时间线                                      │
+│  ├── 编写分镜脚本和配音文案                                    │
+│  └── 【必须】等待用户确认分镜脚本                               │
+├─────────────────────────────────────────────────────────────┤
+│  Phase 2: 素材准备                                           │
+│  ├── [demo] 执行 Playwright 录屏，记录时间线                   │
+│  ├── [slideshow] 收集图片素材 (见 asset-collection skill)      │
+│  ├── [mixed] 录屏 + 图片收集                                  │
+│  └── 素材格式转换和优化                                        │
+├─────────────────────────────────────────────────────────────┤
+│  Phase 3: 配音生成                                           │
+│  ├── 根据分镜计算配音时间线                                    │
+│  ├── 生成各段配音音频 (edge-tts)                              │
+│  ├── 【新增】验证配音时长和同步性                               │
+│  ├── 合并配音到单个音轨 (FFmpeg adelay)                        │
+│  └── 检测并处理配音空白间隙                                    │
+├─────────────────────────────────────────────────────────────┤
+│  Phase 4: 视频合成                                           │
+│  ├── 创建 Remotion 项目和场景组件                              │
+│  ├── [demo] 使用 Video 组件嵌入录屏                           │
+│  ├── [slideshow] 使用 Img + 动画组件                          │
+│  ├── 渲染最终视频                                             │
+│  └── 音量标准化后期处理                                        │
+├─────────────────────────────────────────────────────────────┤
+│  Phase 5: 验收交付                                           │
+│  ├── 打开视频供用户审查                                        │
+│  ├── 根据反馈调整                                             │
+│  └── 最终交付                                                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 关键原则
+
+### 1. 分镜先行，确认再做
+
+**绝对禁止**直接开始制作！必须：
+1. 先制定详细分镜脚本
+2. 包含：时间线、画面描述、素材需求、配音文字
+3. 用户明确确认后才开始制作
+
+### 2. 素材质量优先
+
+| 素材类型 | 最低要求 | 推荐规格 |
+|----------|----------|----------|
+| 背景图 | 1920×1080 | 2560×1440+ |
+| Logo | 400×400 PNG | SVG 矢量 |
+| 人物照片 | 800×800 | 1200×1200+ |
+| 录屏视频 | 1920×1080 30fps | 同左 |
+
+### 3. 配音验证机制
+
+生成配音后必须验证：
+- 每段配音时长 ≤ 场景时长
+- 相邻配音段不重叠
+- 总配音时长 ≤ 视频时长
+- 空白间隙 < 3 秒
+
+### 4. 视觉效果提升
+
+- 使用 spring 动画增加生动感
+- 添加发光/阴影效果增强层次
+- 背景图使用 0.2-0.4 透明度
+- 文字添加描边或阴影提高可读性
+
+## 视频结构模板
+
+### 标准图文展示型 (60-120秒)
+
+```
+00:00-00:08  片头
+             - Logo 动画 (spring 缩放 + 发光)
+             - 主标题 + 副标题 (淡入)
+             配音: "[主题]简介"
+
+00:08-00:XX  内容场景 (根据需要重复)
+             - 年份/关键词大字
+             - 背景图 (低透明度)
+             - 核心信息文字
+             配音: 对应内容解说
+
+XX:XX-结束   片尾
+             - Logo + 发光脉动
+             - 总结文字
+             - 数据展示 (可选)
+             配音: 总结语
+```
+
+### 标准录屏演示型 (90-180秒)
+
+```
+00:00-00:10  片头
+             - Logo + 产品名
+             - 一句话定位
+             配音: "欢迎使用..."
+
+00:10-00:18  功能亮点
+             - 功能卡片展示
+             配音: 功能概述
+
+00:18-XX:XX  核心演示
+             - 完整录屏
+             - 各功能点配音同步
+             配音: 根据录屏时间线
+
+XX:XX-结束   片尾
+             - Logo + 口号
+             - 行动号召
+             配音: "立即开始使用"
+```
+
+## 技术栈
+
+| 需求 | 推荐方案 | 备选方案 |
+|------|----------|----------|
+| 视频合成 | Remotion | FFmpeg 纯命令行 |
+| 浏览器录屏 | Playwright | Puppeteer |
+| 中文配音 | edge-tts (免费) | Azure TTS (付费) |
+| 音频处理 | FFmpeg | - |
+| 图片素材 | Unsplash/Pexels | Pixabay |
+
+## 文件结构规范
+
+```
+project/
+├── public/
+│   ├── images/           # 图片素材
+│   │   ├── logos/
+│   │   ├── backgrounds/
+│   │   └── photos/
+│   ├── recordings/       # 录屏文件 (demo 类型)
+│   │   ├── full_demo.mp4
+│   │   └── timeline.json
+│   └── audio/
+│       ├── segments/     # 配音片段
+│       ├── synced_voiceover.mp3
+│       └── voiceover_metadata.json
+├── src/
+│   ├── index.ts
+│   ├── Root.tsx
+│   ├── MainVideo.tsx
+│   ├── scenes/           # 场景组件
+│   └── components/       # 可复用组件
+├── scripts/
+│   ├── collect_assets.sh    # 素材收集
+│   ├── record_demo.js       # 录屏脚本
+│   └── generate_voiceover.py
+└── out/
+    └── final.mp4
+```
+
+## 相关技能
+
+- `/storyboard` - 分镜脚本设计
+- `/asset-collection` - 素材收集 (图文视频)
+- `/recording` - 浏览器录屏 (演示视频)
+- `/voiceover` - 配音生成与验证
+- `/compositing` - 视频合成与渲染

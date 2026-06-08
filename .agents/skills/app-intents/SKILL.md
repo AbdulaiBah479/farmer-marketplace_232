@@ -1,582 +1,774 @@
 ---
 name: app-intents
-description: "Implement App Intents for Siri, Shortcuts, Spotlight, widgets, Control Center, and Apple Intelligence on iOS. Covers AppIntent actions, AppEntity and EntityQuery models, AppShortcutsProvider phrases, IndexedEntity Spotlight indexing, WidgetConfigurationIntent, SnippetIntent, and assistant schemas. Use when exposing app actions or entities to system surfaces."
+description: App Intents framework for Siri, Shortcuts, Spotlight, Action Button, and system integration. Use when user asks about Siri, Shortcuts, App Intents, voice commands, Action Button, or system integration.
+allowed-tools: Bash, Read, Write, Edit
 ---
 
-# App Intents (iOS 26+)
+# App Intents Framework
 
-Implement, review, and extend App Intents to expose app functionality to Siri,
-Shortcuts, Spotlight, widgets, Control Center, and Apple Intelligence.
+Comprehensive guide to App Intents for Siri integration, Shortcuts, Spotlight, Action Button, and interactive snippets in iOS 26.
 
-## Contents
+## Prerequisites
 
-- [Triage Workflow](#triage-workflow)
-- [AppIntent Protocol](#appintent-protocol)
-- [`@Parameter`](#parameter)
-- [AppEntity](#appentity)
-- [EntityQuery (4 Variants)](#entityquery-4-variants)
-- [AppEnum](#appenum)
-- [AppShortcutsProvider](#appshortcutsprovider)
-- [Siri Integration](#siri-integration)
-- [Interactive Widget Intents](#interactive-widget-intents)
-- [Control Center Widgets (iOS 18+)](#control-center-widgets-ios-18)
-- [Spotlight and IndexedEntity (iOS 18+)](#spotlight-and-indexedentity-ios-18)
-- [iOS 26 Additions](#ios-26-additions)
-- [Common Mistakes](#common-mistakes)
-- [Review Checklist](#review-checklist)
-- [References](#references)
+- iOS 16+ for App Intents (iOS 26 recommended)
+- Xcode 26+
 
-## Triage Workflow
+---
 
-### Step 1: Identify the integration surface
+## Framework Overview
 
-Determine which system feature the intent targets:
+### Core Concepts
 
-| Surface | Protocol | Since |
-|---|---|---|
-| Siri / Shortcuts | `AppIntent` | iOS 16 |
-| Configurable widget | `WidgetConfigurationIntent` | iOS 17 |
-| Control Center | `ControlConfigurationIntent` | iOS 18 |
-| Spotlight search | `IndexedEntity` | iOS 18 |
-| Apple Intelligence | `@AppIntent(schema:)` | iOS 18 |
-| Interactive snippets | `SnippetIntent` | iOS 26 |
-| Visual Intelligence | `IntentValueQuery` | iOS 26 |
+- **Intents** = Verbs (actions your app can perform)
+- **App Entities** = Dynamic Nouns (content in your app)
+- **App Enums** = Static Nouns (fixed options)
 
-### Step 2: Define the data model
+### Where App Intents Appear
 
-- Prefer `AppEntity` shadow models for app data exposed to the system.
-- Create `AppEnum` types for fixed parameter choices.
-- Choose the right `EntityQuery` variant for resolution.
-- Mark searchable entities with `IndexedEntity` and `indexingKey` metadata.
+- **Siri** - Voice-activated commands
+- **Shortcuts** - User-created automations
+- **Spotlight** - Search suggestions and actions
+- **Action Button** - iPhone 15 Pro hardware button
+- **Apple Pencil** - Squeeze gesture
+- **Focus Filters** - Customize app behavior per focus
 
-### Step 3: Implement the intent
-
-- Conform to `AppIntent` (or a specialized sub-protocol).
-- Declare `@Parameter` properties for all user-facing inputs.
-- Implement `perform() async throws -> some IntentResult`.
-- Add `parameterSummary` for Shortcuts UI.
-- Register phrases via `AppShortcutsProvider`.
-
-### Step 4: Verify
-
-- Build and run in Shortcuts app to confirm parameter resolution.
-- Test Siri phrases with the intent preview in Xcode.
-- Confirm `IndexedEntity` instances are indexed in a named Spotlight index.
-- Check widget configuration for `WidgetConfigurationIntent` intents.
-
-## AppIntent Protocol
-
-The system instantiates the struct via `init()`, sets parameters, then calls
-`perform()`. Declare a `title` and `parameterSummary` for Shortcuts UI.
+### Import
 
 ```swift
-struct OrderSoupIntent: AppIntent {
-    static var title: LocalizedStringResource = "Order Soup"
-    static var description = IntentDescription("Place a soup order.")
+import AppIntents
+```
 
-    @Parameter(title: "Soup") var soup: SoupEntity
-    @Parameter(title: "Quantity", default: 1) var quantity: Int
+---
 
-    static var parameterSummary: some ParameterSummary {
-        Summary("Order \(\.$soup)") { \.$quantity }
-    }
+## Creating App Intents
+
+### Basic Intent
+
+```swift
+import AppIntents
+
+struct OpenNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "Open Note"
+    static var description = IntentDescription("Opens a specific note in the app")
+
+    @Parameter(title: "Note")
+    var note: NoteEntity
 
     func perform() async throws -> some IntentResult {
-        try await OrderService.shared.place(soup: soup.id, quantity: quantity)
-        return .result(dialog: "Ordered \(quantity) \(soup.name).")
+        // Open the note in your app
+        await NoteManager.shared.open(note.id)
+
+        return .result()
     }
 }
 ```
 
-Optional members: `description` (`IntentDescription`), `openAppWhenRun` (`Bool`),
-`isDiscoverable` (`Bool`), `authenticationPolicy` (`IntentAuthenticationPolicy`).
-
-## `@Parameter`
-
-Declare each user-facing input with `@Parameter`. Non-optional parameters are
-required; the system requests values when needed. Defaults pre-fill a useful
-value. Optional parameters are not requested automatically, so ask for them in
-`perform()` when the intent cannot continue without a value.
+### Intent with Parameters
 
 ```swift
-// Required; the system asks for a value when needed
-@Parameter(title: "Count")
-var count: Int
+struct CreateNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "Create Note"
+    static var description = IntentDescription("Creates a new note with the specified content")
 
-// Required and pre-filled
-@Parameter(title: "Count", default: 1)
-var count: Int
+    @Parameter(title: "Title")
+    var title: String
 
-// Optional; request it yourself if it becomes necessary
-@Parameter(title: "Count")
-var count: Int?
+    @Parameter(title: "Content", default: "")
+    var content: String
+
+    @Parameter(title: "Folder", optionsProvider: FolderOptionsProvider())
+    var folder: FolderEntity?
+
+    func perform() async throws -> some IntentResult {
+        let note = await NoteManager.shared.create(
+            title: title,
+            content: content,
+            in: folder?.id
+        )
+
+        return .result(value: NoteEntity(note: note))
+    }
+
+    struct FolderOptionsProvider: DynamicOptionsProvider {
+        func results() async throws -> [FolderEntity] {
+            let folders = await FolderManager.shared.all()
+            return folders.map { FolderEntity(folder: $0) }
+        }
+    }
+}
 ```
 
-### Supported value types
-
-Primitives: `Bool`, `Int`, `Double`, `String`, `Duration`, `Date`, `Decimal`,
-`Measurement`, and `URL`. Collections: `Array` and `Set` of supported element
-types. Framework: `IntentPerson`, `IntentFile`. Custom: any `AppEntity` or
-`AppEnum`.
-
-### Common initializer patterns
+### Intent Results
 
 ```swift
-// Basic
-@Parameter(title: "Name")
-var name: String
+// Simple result
+return .result()
 
-// With default
-@Parameter(title: "Count", default: 5)
-var count: Int
+// Result with value
+return .result(value: noteEntity)
 
-// Numeric slider
-@Parameter(title: "Volume", controlStyle: .slider, inclusiveRange: (0, 100))
-var volume: Int
+// Result with dialog (for Siri)
+return .result(dialog: "Note created successfully")
 
-// Options provider (dynamic list)
-@Parameter(title: "Category", optionsProvider: CategoryOptionsProvider())
-var category: Category
+// Result with view snippet
+return .result(
+    dialog: "Here's your note",
+    view: NoteSnippetView(note: note)
+)
 
-// File with content types
-@Parameter(title: "Document", supportedContentTypes: [.pdf, .plainText])
-var document: IntentFile
-
-// Measurement with unit
-@Parameter(title: "Distance", defaultUnit: .miles, supportsNegativeNumbers: false)
-var distance: Measurement<UnitLength>
+// Result opening app
+return .result(opensIntent: OpenNoteIntent(note: noteEntity))
 ```
 
-See [references/appintents-advanced.md](references/appintents-advanced.md) for all initializer variants.
+---
 
-## AppEntity
+## App Entities
 
-Prefer shadow models that mirror app data and expose only system-facing fields.
-Direct model conformance is allowed when the model is lightweight, stable, and
-appropriate for App Intents lifecycles.
+### Defining an Entity
 
 ```swift
-struct SoupEntity: AppEntity {
-    static let defaultQuery = SoupEntityQuery()
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Soup"
-    var id: String
+import AppIntents
 
-    @Property(title: "Name") var name: String
-    @Property(title: "Price") var price: Double
+struct NoteEntity: AppEntity {
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Note")
+
+    var id: UUID
+    var title: String
+    var content: String
+    var createdAt: Date
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)", subtitle: "$\(String(format: "%.2f", price))")
+        DisplayRepresentation(
+            title: "\(title)",
+            subtitle: "\(content.prefix(50))...",
+            image: .init(systemName: "doc.text")
+        )
     }
 
-    init(from soup: Soup) {
-        self.id = soup.id; self.name = soup.name; self.price = soup.price
-    }
-}
-```
+    static var defaultQuery = NoteEntityQuery()
 
-Required: `id`, `defaultQuery` (static), `displayRepresentation`,
-`typeDisplayRepresentation` (static). Mark properties with `@Property(title:)`
-to expose for filtering/sorting. Properties without `@Property` remain internal.
-
-## EntityQuery (4 Variants)
-
-### 1. EntityQuery (base -- resolve by ID)
-
-```swift
-struct SoupEntityQuery: EntityQuery {
-    func entities(for identifiers: [String]) async throws -> [SoupEntity] {
-        SoupStore.shared.soups.filter { identifiers.contains($0.id) }.map { SoupEntity(from: $0) }
-    }
-    func suggestedEntities() async throws -> [SoupEntity] {
-        SoupStore.shared.featured.map { SoupEntity(from: $0) }
+    init(note: Note) {
+        self.id = note.id
+        self.title = note.title
+        self.content = note.content
+        self.createdAt = note.createdAt
     }
 }
 ```
 
-### 2. EntityStringQuery (free-text search)
+### Entity Query
 
 ```swift
-struct SoupStringQuery: EntityStringQuery {
-    func entities(matching string: String) async throws -> [SoupEntity] {
-        SoupStore.shared.search(string).map { SoupEntity(from: $0) }
+struct NoteEntityQuery: EntityQuery {
+    func entities(for identifiers: [UUID]) async throws -> [NoteEntity] {
+        let notes = await NoteManager.shared.fetch(ids: identifiers)
+        return notes.map { NoteEntity(note: $0) }
     }
-    func entities(for identifiers: [String]) async throws -> [SoupEntity] {
-        SoupStore.shared.soups.filter { identifiers.contains($0.id) }.map { SoupEntity(from: $0) }
+
+    func suggestedEntities() async throws -> [NoteEntity] {
+        let recentNotes = await NoteManager.shared.recentNotes(limit: 5)
+        return recentNotes.map { NoteEntity(note: $0) }
     }
 }
 ```
 
-### 3. EnumerableEntityQuery (finite set)
+### Searchable Entity Query
 
 ```swift
-struct AllSoupsQuery: EnumerableEntityQuery {
-    func allEntities() async throws -> [SoupEntity] {
-        SoupStore.shared.allSoups.map { SoupEntity(from: $0) }
+struct NoteEntityQuery: EntityStringQuery {
+    func entities(for identifiers: [UUID]) async throws -> [NoteEntity] {
+        let notes = await NoteManager.shared.fetch(ids: identifiers)
+        return notes.map { NoteEntity(note: $0) }
     }
-    func entities(for identifiers: [String]) async throws -> [SoupEntity] {
-        SoupStore.shared.soups.filter { identifiers.contains($0.id) }.map { SoupEntity(from: $0) }
+
+    func entities(matching string: String) async throws -> [NoteEntity] {
+        let notes = await NoteManager.shared.search(query: string)
+        return notes.map { NoteEntity(note: $0) }
     }
-}
-```
 
-### 4. UniqueAppEntityQuery (singleton, iOS 18+)
-
-Use for single-instance entities like app settings.
-
-```swift
-struct AppSettingsEntity: UniqueAppEntity {
-    static let defaultQuery = AppSettingsQuery()
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Settings"
-    var displayRepresentation: DisplayRepresentation { "App Settings" }
-
-    var id: String { "app-settings" }
-}
-
-struct AppSettingsQuery: UniqueAppEntityQuery {
-    func uniqueEntity() async throws -> AppSettingsEntity {
-        AppSettingsEntity()
+    func suggestedEntities() async throws -> [NoteEntity] {
+        let recentNotes = await NoteManager.shared.recentNotes(limit: 5)
+        return recentNotes.map { NoteEntity(note: $0) }
     }
 }
 ```
 
-See [references/appintents-advanced.md](references/appintents-advanced.md) for `EntityPropertyQuery` with
-filter/sort support.
-
-## AppEnum
-
-Define fixed sets of selectable values. `RawValue` must conform to
-`LosslessStringConvertible`; prefer `String` raw values for readable, stable
-identifiers.
+### Property Queries (iOS 17+)
 
 ```swift
-enum SoupSize: String, AppEnum {
-    case small, medium, large
+struct NoteEntityQuery: EntityPropertyQuery {
+    static var properties = QueryProperties {
+        Property(\NoteEntity.$title) {
+            EqualToComparator { $0 }
+            ContainsComparator { $0 }
+        }
+        Property(\NoteEntity.$createdAt) {
+            LessThanComparator { $0 }
+            GreaterThanComparator { $0 }
+        }
+    }
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Size"
+    static var sortingOptions = SortingOptions {
+        SortableBy(\NoteEntity.$title)
+        SortableBy(\NoteEntity.$createdAt)
+    }
 
-    static var caseDisplayRepresentations: [SoupSize: DisplayRepresentation] = [
-        .small: "Small",
-        .medium: "Medium",
-        .large: "Large"
+    func entities(
+        matching comparators: [EntityQueryComparator<NoteEntity>],
+        mode: ComparatorMode,
+        sortedBy: [EntityQuerySort<NoteEntity>],
+        limit: Int?
+    ) async throws -> [NoteEntity] {
+        // Apply filters and sorting
+        var notes = await NoteManager.shared.all()
+
+        // Apply comparators
+        for comparator in comparators {
+            notes = notes.filter { comparator.evaluate($0) }
+        }
+
+        // Apply sorting
+        for sort in sortedBy {
+            notes.sort(by: sort.compare)
+        }
+
+        // Apply limit
+        if let limit {
+            notes = Array(notes.prefix(limit))
+        }
+
+        return notes.map { NoteEntity(note: $0) }
+    }
+}
+```
+
+---
+
+## App Enums
+
+### Defining Enums
+
+```swift
+import AppIntents
+
+enum NoteCategory: String, AppEnum {
+    case personal
+    case work
+    case ideas
+    case todo
+
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Category")
+
+    static var caseDisplayRepresentations: [NoteCategory: DisplayRepresentation] = [
+        .personal: DisplayRepresentation(title: "Personal", image: .init(systemName: "person")),
+        .work: DisplayRepresentation(title: "Work", image: .init(systemName: "briefcase")),
+        .ideas: DisplayRepresentation(title: "Ideas", image: .init(systemName: "lightbulb")),
+        .todo: DisplayRepresentation(title: "To-Do", image: .init(systemName: "checklist"))
     ]
 }
 ```
 
-```swift
-// Valid, but less readable in saved shortcuts and URL representations
-enum Priority: Int, AppEnum {
-    case low = 1, medium = 2, high = 3
-}
+### Using Enums in Intents
 
-// Preferred
-enum Priority: String, AppEnum {
-    case low, medium, high
-    // ...
+```swift
+struct FilterNotesIntent: AppIntent {
+    static var title: LocalizedStringResource = "Filter Notes"
+
+    @Parameter(title: "Category")
+    var category: NoteCategory
+
+    func perform() async throws -> some IntentResult {
+        let notes = await NoteManager.shared.filter(by: category)
+        return .result(value: notes.map { NoteEntity(note: $0) })
+    }
 }
 ```
 
-## AppShortcutsProvider
+---
 
-Register pre-built shortcuts that appear in Siri and the Shortcuts app without
-user configuration.
+## App Shortcuts
+
+### AppShortcutsProvider
 
 ```swift
+import AppIntents
+
 struct MyAppShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
-            intent: OrderSoupIntent(),
+            intent: CreateNoteIntent(),
             phrases: [
-                "Order \(\.$soup) in \(.applicationName)",
-                "Get soup from \(.applicationName)"
+                "Create a note in \(.applicationName)",
+                "New note in \(.applicationName)",
+                "Add note to \(.applicationName)"
             ],
-            shortTitle: "Order Soup",
-            systemImageName: "cup.and.saucer"
+            shortTitle: "Create Note",
+            systemImageName: "plus.circle"
+        )
+
+        AppShortcut(
+            intent: OpenRecentNoteIntent(),
+            phrases: [
+                "Open my recent note in \(.applicationName)",
+                "Show last note in \(.applicationName)"
+            ],
+            shortTitle: "Recent Note",
+            systemImageName: "clock"
+        )
+
+        AppShortcut(
+            intent: SearchNotesIntent(),
+            phrases: [
+                "Search notes in \(.applicationName)",
+                "Find \(\.$query) in \(.applicationName)"
+            ],
+            shortTitle: "Search",
+            systemImageName: "magnifyingglass"
         )
     }
-
-    static var shortcutTileColor: ShortcutTileColor = .navy
 }
 ```
 
-### Phrase rules
+### Phrase Rules
 
-- Every phrase MUST include `\(.applicationName)`.
-- Phrases can reference parameters: `\(\.$soup)`.
-- Call `updateAppShortcutParameters()` when dynamic option values change.
-- Use `negativePhrases` to prevent false Siri activations.
+- Must include `\(.applicationName)` placeholder
+- Maximum one parameter reference per phrase
+- Parameter must use `\(\.$parameterName)` syntax
+- Keep phrases natural and varied
 
-## Siri Integration
+### Automatic Registration
 
-### Donating intents
+App Shortcuts are automatically registered when:
+- App is installed
+- App is updated
+- AppShortcutsProvider is modified
 
-Donate intents so the system learns user patterns and suggests them in Spotlight:
+---
 
-```swift
-let intent = OrderSoupIntent()
-intent.soup = favoriteSoupEntity
-try await intent.donate()
-```
+## Interactive Snippets (MicroUI)
 
-### Predictable intents
-
-Conform to `PredictableIntent` for Siri prediction of upcoming actions.
-
-## Interactive Widget Intents
-
-Use `AppIntent` with `Button`/`Toggle` in widgets. Use
-`WidgetConfigurationIntent` for configurable widget parameters.
-Treat configuration intents as parameter contracts; put mutations in a separate
-action intent. For sensitive actions such as smart-home control, payments, or
-deletion, use an appropriate `authenticationPolicy` and/or
-`requestConfirmation(...)` before changing state.
+### Result Snippets
 
 ```swift
-struct ToggleFavoriteIntent: AppIntent {
-    static var title: LocalizedStringResource = "Toggle Favorite"
-    @Parameter(title: "Item ID") var itemID: String
+struct ShowNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "Show Note"
 
-    func perform() async throws -> some IntentResult {
-        FavoriteStore.shared.toggle(itemID)
-        return .result()
+    @Parameter(title: "Note")
+    var note: NoteEntity
+
+    func perform() async throws -> some IntentResult & ShowsSnippetView {
+        return .result(
+            dialog: "Here's your note",
+            view: NoteSnippetView(note: note)
+        )
     }
 }
 
-// In widget view:
-Button(intent: ToggleFavoriteIntent(itemID: entry.id)) {
-    Image(systemName: entry.isFavorite ? "heart.fill" : "heart")
-}
-```
+struct NoteSnippetView: View {
+    let note: NoteEntity
 
-### WidgetConfigurationIntent
-
-```swift
-struct BookWidgetConfig: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Favorite Book"
-    @Parameter(title: "Book", default: "The Swift Programming Language") var bookTitle: String
-}
-
-// Connect to WidgetKit:
-struct MyWidget: Widget {
-    var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "FavoriteBook", intent: BookWidgetConfig.self, provider: MyTimelineProvider()) { entry in
-            BookWidgetView(entry: entry)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(note.title)
+                .font(.headline)
+            Text(note.content)
+                .font(.body)
+                .lineLimit(3)
+            Text(note.createdAt, style: .relative)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
+        .padding()
     }
 }
 ```
 
-## Control Center Widgets (iOS 18+)
-
-Expose controls in Control Center and Lock Screen with `ControlConfigurationIntent`
-and `ControlWidget`. Parameters without defaults must be optional.
-Trigger state changes from a separate `AppIntent` / `SetValueIntent` with
-explicit entity parameters, not from the configuration intent.
+### Confirmation Snippets
 
 ```swift
-struct LightControlConfig: ControlConfigurationIntent {
-    static var title: LocalizedStringResource = "Light Control"
-    @Parameter(title: "Light", default: .livingRoom) var light: LightEntity
-}
+struct DeleteNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "Delete Note"
 
-struct ToggleLightIntent: AppIntent {
-    static var title: LocalizedStringResource = "Toggle Light"
-    static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
-
-    @Parameter(title: "Light") var light: LightEntity
+    @Parameter(title: "Note")
+    var note: NoteEntity
 
     func perform() async throws -> some IntentResult {
         try await requestConfirmation(
-            actionName: .toggle,
-            dialog: "Toggle \(light.name)?"
+            result: .result(
+                dialog: "Are you sure you want to delete this note?",
+                view: DeleteConfirmationView(note: note)
+            )
         )
-        try await LightService.shared.toggle(light.id)
+
+        await NoteManager.shared.delete(note.id)
+        return .result(dialog: "Note deleted")
+    }
+}
+
+struct DeleteConfirmationView: View {
+    let note: NoteEntity
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "trash")
+                .font(.largeTitle)
+                .foregroundStyle(.red)
+
+            Text("Delete '\(note.title)'?")
+                .font(.headline)
+
+            Text("This action cannot be undone.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+    }
+}
+```
+
+### Interactive Snippet Buttons
+
+```swift
+struct NoteActionsSnippetView: View {
+    let note: NoteEntity
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(note.title)
+                .font(.headline)
+
+            HStack(spacing: 16) {
+                Button(intent: EditNoteIntent(note: note)) {
+                    Label("Edit", systemImage: "pencil")
+                }
+
+                Button(intent: ShareNoteIntent(note: note)) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding()
+    }
+}
+```
+
+### Snippet Design Guidelines
+
+- Keep snippets compact (fits in Siri/Spotlight card)
+- Use larger text for readability
+- High contrast colors
+- Clear, tappable buttons
+- Concise content
+
+---
+
+## Foreground vs Background Execution
+
+### Background Execution (Default)
+
+```swift
+struct QuickNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "Quick Note"
+
+    @Parameter(title: "Content")
+    var content: String
+
+    // Runs in background without opening app
+    func perform() async throws -> some IntentResult {
+        await NoteManager.shared.quickCreate(content: content)
+        return .result(dialog: "Note saved!")
+    }
+}
+```
+
+### Foreground Execution
+
+```swift
+struct EditNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "Edit Note"
+
+    // Opens app when intent runs
+    static var openAppWhenRun = true
+
+    @Parameter(title: "Note")
+    var note: NoteEntity
+
+    func perform() async throws -> some IntentResult {
+        // App is now in foreground
+        await NoteManager.shared.openEditor(for: note.id)
         return .result()
     }
 }
+```
 
-struct LightControl: ControlWidget {
-    var body: some ControlWidgetConfiguration {
-        AppIntentControlConfiguration(kind: "LightControl", intent: LightControlConfig.self) { config in
-            ControlWidgetToggle(config.light.name, isOn: config.light.isOn, action: ToggleLightIntent(light: config.light))
+### Conditional Foreground
+
+```swift
+struct ViewNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "View Note"
+
+    @Parameter(title: "Note")
+    var note: NoteEntity
+
+    @Parameter(title: "Open in App")
+    var openInApp: Bool
+
+    static var openAppWhenRun: Bool {
+        // Dynamically determined
+        return false
+    }
+
+    func perform() async throws -> some IntentResult {
+        if openInApp {
+            // Return result that opens app
+            return .result(opensIntent: OpenNoteIntent(note: note))
+        } else {
+            // Return snippet view
+            return .result(view: NoteSnippetView(note: note))
         }
     }
 }
 ```
 
-## Spotlight and IndexedEntity (iOS 18+)
+---
 
-Conform to `IndexedEntity` for Spotlight search. On iOS 26+, use `indexingKey`
-for structured metadata:
+## Dependency Injection
+
+### @Dependency Property Wrapper
 
 ```swift
-struct RecipeEntity: IndexedEntity {
-    static let defaultQuery = RecipeQuery()
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Recipe"
-    var id: String  // Stable recipe UUID or slug; do not use recycled row IDs
+struct CreateNoteIntent: AppIntent {
+    static var title: LocalizedStringResource = "Create Note"
 
-    @Property(title: "Name", indexingKey: \.title) var name: String  // iOS 26+
-    @ComputedProperty(indexingKey: \.contentDescription)              // iOS 26+
-    var summary: String { "\(name) -- a delicious recipe" }
+    @Dependency
+    var noteService: NoteService
+
+    @Parameter(title: "Title")
+    var title: String
+
+    func perform() async throws -> some IntentResult {
+        let note = try await noteService.create(title: title)
+        return .result(value: NoteEntity(note: note))
+    }
+}
+```
+
+### Registering Dependencies
+
+Register dependencies early in app lifecycle:
+
+```swift
+@main
+struct MyApp: App {
+    init() {
+        // Register dependencies for App Intents
+        AppDependencyManager.shared.add(dependency: NoteService.shared)
+        AppDependencyManager.shared.add(dependency: FolderService.shared)
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+---
+
+## Focus Filters
+
+### Defining a Focus Filter
+
+```swift
+import AppIntents
+
+struct NoteFocusFilter: SetFocusFilterIntent {
+    static var title: LocalizedStringResource = "Set Note Filter"
+    static var description = IntentDescription("Filter notes during this Focus")
+
+    @Parameter(title: "Show Categories")
+    var categories: [NoteCategory]?
+
+    @Parameter(title: "Hide Work Notes")
+    var hideWork: Bool?
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)")
+        DisplayRepresentation(title: "Note Filter")
     }
 
-    var attributeSet: CSSearchableItemAttributeSet {
-        let attrs = defaultAttributeSet
-        attrs.keywords = ["recipe"]
-        return attrs
+    func perform() async throws -> some IntentResult {
+        // Apply filter settings
+        if let categories {
+            FocusState.shared.visibleCategories = categories
+        }
+        if let hideWork {
+            FocusState.shared.hideWorkNotes = hideWork
+        }
+        return .result()
     }
 }
+```
 
-struct RecipeQuery: EntityQuery {
-    func entities(for identifiers: [RecipeEntity.ID]) async throws -> [RecipeEntity] {
-        identifiers.compactMap { id in
-            RecipeStore.shared.recipe(id: id).map(RecipeEntity.init)
+---
+
+## Spotlight Integration
+
+### Featured in Spotlight
+
+Intents automatically appear in Spotlight when:
+- User searches for related terms
+- App Shortcuts are defined
+- Entities match search queries
+
+### Donating Activities
+
+```swift
+import Intents
+
+func userViewedNote(_ note: Note) {
+    let activity = NSUserActivity(activityType: "com.app.viewNote")
+    activity.title = note.title
+    activity.userInfo = ["noteId": note.id.uuidString]
+    activity.isEligibleForSearch = true
+    activity.isEligibleForPrediction = true
+
+    // Associate with App Intent
+    activity.shortcutAvailability = .sleepInBed
+
+    UIApplication.shared.currentUserActivity = activity
+}
+```
+
+---
+
+## Action Button & Apple Pencil
+
+### Action Button Intent
+
+```swift
+struct QuickCaptureIntent: AppIntent {
+    static var title: LocalizedStringResource = "Quick Capture"
+    static var description = IntentDescription("Quickly capture a thought")
+
+    // Good for Action Button - fast execution
+    func perform() async throws -> some IntentResult & OpensIntent {
+        // Create new capture and open editor
+        let capture = await CaptureManager.shared.createQuick()
+        return .result(opensIntent: OpenCaptureIntent(capture: capture))
+    }
+}
+```
+
+Users configure Action Button in Settings → Action Button → Shortcut → [Your App Shortcut]
+
+### Apple Pencil Squeeze
+
+Same intents work for Apple Pencil squeeze gesture on supported devices.
+
+---
+
+## Testing Intents
+
+### Testing in Shortcuts App
+
+1. Build and run your app
+2. Open Shortcuts app
+3. Create new shortcut
+4. Search for your app's intents
+5. Configure parameters
+6. Run shortcut
+
+### Testing with Siri
+
+1. Build and run app
+2. Say: "Hey Siri, [your phrase]"
+3. Verify Siri understands and executes
+
+### Programmatic Testing
+
+```swift
+import Testing
+import AppIntents
+
+@Test
+func testCreateNoteIntent() async throws {
+    var intent = CreateNoteIntent()
+    intent.title = "Test Note"
+    intent.content = "Test content"
+
+    let result = try await intent.perform()
+
+    // Verify result
+    #expect(result != nil)
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Natural Phrases
+
+```swift
+// GOOD: Natural language
+"Create a note in \(.applicationName)"
+"Add \(\.$title) to my notes"
+
+// AVOID: Technical language
+"Execute CreateNote command in \(.applicationName)"
+```
+
+### 2. Meaningful Dialogs
+
+```swift
+// GOOD: Contextual confirmation
+return .result(dialog: "Created note '\(title)' in your Ideas folder")
+
+// AVOID: Generic responses
+return .result(dialog: "Done")
+```
+
+### 3. Fast Background Execution
+
+```swift
+// Keep background intents fast
+func perform() async throws -> some IntentResult {
+    // Quick operation
+    await quickSave(data)
+    return .result(dialog: "Saved!")
+}
+```
+
+### 4. Graceful Error Handling
+
+```swift
+func perform() async throws -> some IntentResult {
+    guard let note = await NoteManager.shared.find(id: noteId) else {
+        throw IntentError.noteNotFound
+    }
+    // Continue...
+}
+
+enum IntentError: Error, CustomLocalizedStringResourceConvertible {
+    case noteNotFound
+
+    var localizedStringResource: LocalizedStringResource {
+        switch self {
+        case .noteNotFound:
+            return "Note not found. It may have been deleted."
         }
     }
 }
-
-struct OpenRecipeIntent: OpenIntent {
-    static var title: LocalizedStringResource = "Open Recipe"
-    @Parameter(title: "Recipe") var target: RecipeEntity
-}
 ```
 
-`IndexedEntity` describes metadata; still index instances in a named Spotlight
-index, e.g. `CSSearchableIndex(name: "...").indexAppEntities(entities)`.
-If you customize `attributeSet`, start from `defaultAttributeSet`; returning a
-fresh attribute set replaces display representation and property-derived
-metadata. Prefer `indexingKey` for metadata already exposed on the entity.
-Update and delete changed records in that same named index:
+---
 
-```swift
-let recipeIndex = CSSearchableIndex(name: "Recipes")
-try await recipeIndex.indexAppEntities(changedRecipes)
-try await recipeIndex.deleteAppEntities(
-    identifiedBy: deletedRecipeIDs,
-    ofType: RecipeEntity.self
-)
-```
+## Official Resources
 
-For large syncs, use `beginBatch()`, `endBatch(withClientState:)`, and
-`fetchLastClientState()` so indexing can resume after a crash or jetsam.
-
-## iOS 26 Additions
-
-### SnippetIntent
-
-Display interactive snippets in system UI:
-
-```swift
-struct OrderStatusSnippet: SnippetIntent {
-    static var title: LocalizedStringResource = "Order Status"
-    func perform() async throws -> some IntentResult & ShowsSnippetView {
-        let status = await OrderTracker.currentStatus()
-        return .result(view: OrderStatusSnippetView(status: status))
-    }
-}
-
-struct CheckOrderStatusIntent: AppIntent {
-    static var title: LocalizedStringResource = "Check Order Status"
-    func perform() async throws -> some IntentResult & ShowsSnippetIntent {
-        .result(snippetIntent: OrderStatusSnippet())
-    }
-}
-```
-
-The system may call `perform()` multiple times, including after snippet button
-or toggle actions; keep `SnippetIntent.perform()` side-effect-free and do
-mutations in the calling action intent or a separate button/toggle action. A
-snippet-only intent is not discoverable in Shortcuts or Spotlight unless
-`isDiscoverable` is `true`.
-
-### IntentValueQuery (Visual Intelligence)
-
-```swift
-@available(iOS 26, *)
-@UnionValue
-enum ShoppingVisualResult {
-    case product(ProductEntity)
-    case store(StoreEntity)
-}
-
-@available(iOS 26, *)
-struct ShoppingVisualQuery: IntentValueQuery {
-    func values(for input: SemanticContentDescriptor) async throws -> [ShoppingVisualResult] {
-        try Task.checkCancellation()
-        async let productMatches = ProductStore.shared.matches(
-            labels: input.labels,
-            pixelBuffer: input.pixelBuffer,
-            limit: 5
-        )
-        async let storeMatches = StoreStore.shared.matches(
-            labels: input.labels,
-            pixelBuffer: input.pixelBuffer,
-            limit: 3
-        )
-        let ranked = await rank(productMatches, storeMatches)
-        return Array(ranked.prefix(8))
-    }
-}
-```
-
-Only one `IntentValueQuery` can take `SemanticContentDescriptor`; use
-`@UnionValue` when one query must return multiple app entity types. Treat
-`labels` as high-level English descriptors, not exhaustive synonyms or app
-taxonomy; combine them with `pixelBuffer` when available. Return small, ranked,
-cancellation-friendly results, and provide an `OpenIntent`, URL representation,
-or in-app search handoff for details and more results. Do not implement camera
-capture, Vision `VN*` requests, barcode classification, or Spotlight indexing
-inside the App Intents query; call an existing bounded app search or image-match
-service instead, with explicit result caps and timeouts when work may exceed a
-system UI budget.
-
-## Common Mistakes
-
-1. **Exposing too much app model state through AppEntity.** Prefer dedicated
-   shadow models with stable persistent IDs and only system-facing properties.
-
-2. **Missing `\(.applicationName)` in phrases.** Every `AppShortcut` phrase
-   MUST include the application name token. Siri uses it for disambiguation.
-
-3. **Treating optional `@Parameter` as required.** Optional parameters are not
-   requested automatically; call `requestValue` / `needsValueError` when the
-   intent cannot proceed without one.
-
-   ```swift
-   // Optional, so request it yourself if needed
-   @Parameter(title: "Count")
-   var count: Int?
-   ```
-
-4. **Using unstable AppEnum raw values.** `Int` is valid, but `String` raw values
-   are usually clearer for persistence and URL representations.
-
-5. **Forgetting `suggestedEntities()`.** Without it, the Shortcuts picker shows no defaults.
-6. **Throwing for missing entities in `entities(for:)`.** Omit missing entities instead.
-7. **Stale Spotlight index.** Re-index entities with a named `CSSearchableIndex`.
-8. **Missing `typeDisplayRepresentation`.** Both `AppEntity` and `AppEnum` require it.
-9. **Using deprecated `@Assistant*` schema macros.** Use `@AppIntent(schema:)`, `@AppEntity(schema:)`, and `@AppEnum(schema:)`.
-10. **Blocking or side-effecting perform().** Use `await` for I/O; keep `SnippetIntent.perform()` side-effect-free because the system may rerun it.
-11. **Mutating sensitive state from system surfaces without a guard.** Use confirmation and/or authentication for actions such as door locks, lights, purchases, and deletes.
-
-## Review Checklist
-
-- [ ] Every `AppIntent` has a descriptive `title` (verb + noun, title case)
-- [ ] Required `@Parameter` values are non-optional; optional values are requested when needed
-- [ ] `AppEntity` types expose stable IDs and only system-facing properties
-- [ ] `AppEntity` has `displayRepresentation` and `typeDisplayRepresentation`
-- [ ] `EntityQuery.entities(for:)` omits missing IDs; `suggestedEntities()` implemented
-- [ ] `AppEnum` prefers stable `String` raw values with `caseDisplayRepresentations`
-- [ ] `AppShortcutsProvider` phrases include `\(.applicationName)`; `parameterSummary` defined
-- [ ] `IndexedEntity` properties use key-path `indexingKey` values and entities are indexed
-- [ ] Control Center intents conform to `ControlConfigurationIntent`; widget intents to `WidgetConfigurationIntent`; no-default control parameters are optional
-- [ ] Sensitive App Intents request confirmation and/or authentication before mutating state
-- [ ] Visual Intelligence `IntentValueQuery` uses `SemanticContentDescriptor`, bounded results, opening paths, and iOS 26 availability
-- [ ] No deprecated `@AssistantIntent` / `@AssistantEntity` / `@AssistantEnum` schema macros
-- [ ] `perform()` uses async/await (no blocking); runs in expected isolation context; intent types are `Sendable`
-
-## References
-
-- See [references/appintents-advanced.md](references/appintents-advanced.md) for `@Parameter` variants, EntityPropertyQuery, assistant schemas, focus filters, SiriKit migration, error handling, confirmation flows, authentication, URL-representable types, and Spotlight indexing details.
+- [App Intents Documentation](https://developer.apple.com/documentation/appintents)
+- [App Shortcuts Documentation](https://developer.apple.com/documentation/appintents/app-shortcuts)
+- [WWDC23: Explore enhancements to App Intents](https://developer.apple.com/videos/play/wwdc2023/10103/)
+- [WWDC22: Dive into App Intents](https://developer.apple.com/videos/play/wwdc2022/10032/)
+- [WWDC25: Get to know App Intents](https://developer.apple.com/videos/play/wwdc2025/244/)

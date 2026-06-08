@@ -1,5 +1,4 @@
 ---
-version: 4.1.0-fractal
 name: llm-application-dev-prompt-optimize
 description: "You are an expert prompt engineer specializing in crafting effective prompts for LLMs through advanced techniques including constitutional AI, chain-of-thought reasoning, and model-specific optimizati"
 ---
@@ -36,8 +35,3 @@ $ARGUMENTS
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed patterns and examples.
-
-
-## 🧠 Knowledge Modules (Fractal Skills)
-
-### 1. [implementation-playbook](./sub-skills/implementation-playbook.md)

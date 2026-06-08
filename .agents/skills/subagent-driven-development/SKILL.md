@@ -59,7 +59,7 @@ digraph process {
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use devops-skills:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -78,7 +78,7 @@ digraph process {
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use devops-skills:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -87,36 +87,6 @@ digraph process {
 - `./implementer-prompt.md` - Dispatch implementer subagent
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
-
-## Task Tool Syntax
-
-Use the Task tool with these parameters:
-
-```
-// Implementer subagent
-Task:
-  description: "Implement [task name]"
-  prompt: "[Full task text from plan + context + implementer-prompt.md content]"
-  subagent_type: "general-purpose"
-
-// Spec reviewer subagent
-Task:
-  description: "Spec review [task name]"
-  prompt: "[Spec requirements + code location + spec-reviewer-prompt.md content]"
-  subagent_type: "general-purpose"
-
-// Code quality reviewer subagent
-Task:
-  description: "Code review [task name]"
-  prompt: "[Git SHAs + file paths + code-quality-reviewer-prompt.md content]"
-  subagent_type: "code-reviewer"  // Or general-purpose
-```
-
-**Key parameters:**
-- `description` - Short (3-5 words) summary for tracking
-- `prompt` - Full context and instructions
-- `subagent_type` - Agent type (general-purpose, or custom from agents/)
-- `model` - Optional: "haiku" for quick reviews, "opus" for complex tasks
 
 ## Example Workflow
 
@@ -134,7 +104,7 @@ Task 1: Hook installation script
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/devops-skills/hooks/)"
+You: "User level (~/.config/superpowers/hooks/)"
 
 Implementer: "Got it. Implementing now..."
 [Later] Implementer:
@@ -259,12 +229,12 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **devops-skills:writing-plans** - Creates the plan this skill executes
-- **devops-skills:requesting-code-review** - Code review template for reviewer subagents
-- **devops-skills:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:requesting-code-review** - Code review template for reviewer subagents
+- **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
-- **devops-skills:test-driven-development** - Subagents follow TDD for each task
+- **superpowers:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **devops-skills:executing-plans** - Use for parallel session instead of same-session execution
+- **superpowers:executing-plans** - Use for parallel session instead of same-session execution

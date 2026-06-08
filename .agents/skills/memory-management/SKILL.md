@@ -1,323 +1,332 @@
 ---
 name: memory-management
-description: Two-tier memory system that makes Claude a true workplace collaborator. Decodes shorthand, acronyms, nicknames, and internal language so Claude understands requests like a colleague would. CLAUDE.md for working memory, memory/ directory for the full knowledge base.
-user-invocable: false
+description: Guide for managing Claude Code memory effectively. Use when setting up project memory, optimizing CLAUDE.md files, configuring rules directories, or establishing cross-session knowledge patterns. Covers memory hierarchy, best practices, and context optimization.
+allowed-tools: ["Read", "Write", "Edit", "Glob"]
 ---
 
 # Memory Management
 
-Memory makes Claude your workplace collaborator - someone who speaks your internal language.
+Master Claude Code's memory system for persistent context across sessions, projects, and teams.
 
-## The Goal
+## Quick Reference
 
-Transform shorthand into understanding:
+| Memory Type | Location | Scope | Priority | Use For |
+|-------------|----------|-------|----------|---------|
+| Global | `~/.claude/CLAUDE.md` | All projects | Lowest | Personal preferences, global conventions |
+| Project Root | `./CLAUDE.md` | Project-wide | Medium | Project context, tech stack, conventions |
+| Project Config | `./.claude/CLAUDE.md` | Project-wide | Medium | Same as root (alternative location) |
+| Rules | `./.claude/rules/*.md` | Conditional | Highest | Modular, file-specific instructions |
+
+## Memory Hierarchy
+
+Claude Code reads memory files in this order (later overrides earlier):
 
 ```
-User: "ask todd to do the PSR for oracle"
-              ↓ Claude decodes
-"Ask Todd Martinez (Finance lead) to prepare the Pipeline Status Report
- for the Oracle Systems deal ($2.3M, closing Q2)"
+~/.claude/CLAUDE.md           # Your global preferences
+  |
+  v
+./CLAUDE.md                   # Project root instructions
+  |
+  v
+./.claude/CLAUDE.md           # Project config directory
+  |
+  v
+./.claude/rules/*.md          # Conditional rules (when matched)
 ```
 
-Without memory, that request is meaningless. With memory, Claude knows:
-- **todd** → Todd Martinez, Finance lead, prefers Slack
-- **PSR** → Pipeline Status Report (weekly sales doc)
-- **oracle** → Oracle Systems deal, not the company
+### Priority Rules
+
+1. **Rules always win** - When a rule file matches, its instructions take precedence
+2. **Project overrides global** - Project CLAUDE.md supersedes global settings
+3. **Later loads override earlier** - Last-loaded content has highest priority
+4. **Explicit beats implicit** - Specific rules override general guidelines
+
+## When to Use Each Memory Type
+
+### Use Global Memory (`~/.claude/CLAUDE.md`) For
+
+- Personal coding preferences (tabs vs spaces, quote style)
+- Universal tool preferences (Bun over npm, rg over find)
+- Cross-project conventions you always follow
+- Personal workflow shortcuts
+
+**Example:**
+```markdown
+# Global Preferences
+
+## Code Style
+- Use single quotes for strings
+- Prefer for-loops over forEach
+- Use Bun instead of npm
+
+## Tools
+- Use ripgrep (rg) for searching, not grep
+- Prefer Edit over Write for modifications
+```
+
+### Use Project Memory (`./CLAUDE.md` or `./.claude/CLAUDE.md`) For
+
+- Project-specific tech stack (React, Bun, Drizzle, etc.)
+- Build and test commands
+- Architecture overview
+- Team conventions
+- File structure explanations
+
+**Example:**
+```markdown
+# Project: E-Commerce API
+
+## Tech Stack
+- Runtime: Bun
+- Framework: Hono
+- Database: PostgreSQL with Drizzle ORM
+- Testing: Bun test
+
+## Commands
+- `bun dev` - Start development server
+- `bun test` - Run all tests
+- `bun db:migrate` - Run database migrations
 
 ## Architecture
-
-```
-CLAUDE.md          ← Hot cache (~30 people, common terms)
-memory/
-  glossary.md      ← Full decoder ring (everything)
-  people/          ← Complete profiles
-  projects/        ← Project details
-  context/         ← Company, teams, tools
+- `/src/routes` - API route handlers
+- `/src/services` - Business logic
+- `/src/db` - Database schema and queries
 ```
 
-**CLAUDE.md (Hot Cache):**
-- Top ~30 people you interact with most
-- ~30 most common acronyms/terms
-- Active projects (5-15)
-- Your preferences
-- **Goal: Cover 90% of daily decoding needs**
+### Use Rules (`./.claude/rules/*.md`) For
 
-**memory/glossary.md (Full Glossary):**
-- Complete decoder ring - everyone, every term
-- Searched when something isn't in CLAUDE.md
-- Can grow indefinitely
+- File-type-specific instructions (TypeScript, React, SQL)
+- Conditional guidance based on file paths
+- Modular memory that loads only when relevant
+- Team standards that apply to specific areas
 
-**memory/people/, projects/, context/:**
-- Rich detail when needed for execution
-- Full profiles, history, context
-
-## Lookup Flow
-
+**Example:**
 ```
-User: "ask todd about the PSR for phoenix"
-
-1. Check CLAUDE.md (hot cache)
-   → Todd? ✓ Todd Martinez, Finance
-   → PSR? ✓ Pipeline Status Report
-   → Phoenix? ✓ DB migration project
-
-2. If not found → search memory/glossary.md
-   → Full glossary has everyone/everything
-
-3. If still not found → ask user
-   → "What does X mean? I'll remember it."
+.claude/rules/
+  react-components.md     # Globs: src/components/**/*.tsx
+  api-routes.md           # Globs: src/routes/**/*.ts
+  database.md             # Globs: src/db/**/*.ts, *.sql
+  tests.md                # Globs: **/*.test.ts, **/*.spec.ts
 ```
 
-This tiered approach keeps CLAUDE.md lean (~100 lines) while supporting unlimited scale in memory/.
+## CLAUDE.md Structure
 
-## File Locations
-
-- **Working memory:** `CLAUDE.md` in current working directory
-- **Deep memory:** `memory/` subdirectory
-
-## Working Memory Format (CLAUDE.md)
-
-Use tables for compactness. Target ~50-80 lines total.
+A well-structured CLAUDE.md file includes:
 
 ```markdown
-# Memory
+# Project Name
 
-## Me
-[Name], [Role] on [Team]. [One sentence about what I do.]
+Brief description (1-2 sentences).
 
-## People
-| Who | Role |
-|-----|------|
-| **Todd** | Todd Martinez, Finance lead |
-| **Sarah** | Sarah Chen, Engineering (Platform) |
-| **Greg** | Greg Wilson, Sales |
-→ Full list: memory/glossary.md, profiles: memory/people/
+## Commands
+- `bun install` - Install dependencies
+- `bun dev` - Start development
+- `bun test` - Run tests
+- `bun build` - Build for production
 
-## Terms
-| Term | Meaning |
-|------|---------|
-| PSR | Pipeline Status Report |
-| P0 | Drop everything priority |
-| standup | Daily 9am sync |
-→ Full glossary: memory/glossary.md
+## Tech Stack
+- Runtime/Framework
+- Database
+- Key libraries
 
-## Projects
-| Name | What |
-|------|------|
-| **Phoenix** | DB migration, Q2 launch |
-| **Horizon** | Mobile app redesign |
-→ Details: memory/projects/
+## Architecture
+Brief overview of project structure.
 
-## Preferences
-- 25-min meetings with buffers
-- Async-first, Slack over email
-- No meetings Friday afternoons
+## Code Style
+Project-specific conventions.
+
+## Important Notes
+Critical information Claude should always know.
 ```
 
-## Deep Memory Format (memory/)
+For detailed CLAUDE.md guidance, see [CLAUDE-MD.md](./CLAUDE-MD.md).
 
-**memory/glossary.md** - The decoder ring:
+## Rules Directory
+
+The `.claude/rules/` directory contains modular memory files that load conditionally.
+
+### Rule File Anatomy
+
+```yaml
+---
+globs: ["src/components/**/*.tsx", "src/ui/**/*.tsx"]
+description: React component conventions for this project
+alwaysApply: false
+---
+
+# React Components
+
+Follow these patterns for React components...
+```
+
+### Glob Matching
+
+- **Exact match**: `src/utils.ts`
+- **Directory**: `src/components/**/*`
+- **Extension**: `**/*.tsx`
+- **Multiple**: `["*.ts", "*.tsx"]`
+
+For complete rules documentation, see [RULES.md](./RULES.md).
+
+## Best Practices
+
+### Do Include
+
+- Commands with exact syntax
+- Tech stack overview
+- Key architectural decisions
+- Non-obvious conventions
+- Error-prone areas
+
+### Do NOT Include
+
+- Code that's easily discoverable (read the files instead)
+- Verbose documentation (link instead)
+- Information that changes frequently
+- Full API documentation
+
+### Keep Memory Focused
+
 ```markdown
-# Glossary
+## Good - Actionable and Specific
 
-Workplace shorthand, acronyms, and internal language.
+- Use Drizzle ORM for database queries
+- Run `bun test` before committing
+- Components go in `src/components/{feature}/`
 
-## Acronyms
-| Term | Meaning | Context |
-|------|---------|---------|
-| PSR | Pipeline Status Report | Weekly sales doc |
-| OKR | Objectives & Key Results | Quarterly planning |
-| P0/P1/P2 | Priority levels | P0 = drop everything |
+## Avoid - Vague or Obvious
 
-## Internal Terms
-| Term | Meaning |
-|------|---------|
-| standup | Daily 9am sync in #engineering |
-| the migration | Project Phoenix database work |
-| ship it | Deploy to production |
-| escalate | Loop in leadership |
-
-## Nicknames → Full Names
-| Nickname | Person |
-|----------|--------|
-| Todd | Todd Martinez (Finance) |
-| T | Also Todd Martinez |
-
-## Project Codenames
-| Codename | Project |
-|----------|---------|
-| Phoenix | Database migration |
-| Horizon | New mobile app |
+- Write clean code
+- Test your changes
+- Follow best practices
 ```
 
-**memory/people/{name}.md:**
+### Reference, Don't Duplicate
+
 ```markdown
-# Todd Martinez
+## Good - Reference External Docs
 
-**Also known as:** Todd, T
-**Role:** Finance Lead
-**Team:** Finance
-**Reports to:** CFO (Michael Chen)
+See API documentation at `docs/api.md`.
+Architecture diagrams in `docs/architecture/`.
 
-## Communication
-- Prefers Slack DM
-- Quick responses, very direct
-- Best time: mornings
+## Avoid - Duplicating Content
 
-## Context
-- Handles all PSRs and financial reporting
-- Key contact for deal approvals over $500k
-- Works closely with Sales on forecasting
-
-## Notes
-- Cubs fan, likes talking baseball
+[Pasting entire API documentation here]
 ```
 
-**memory/projects/{name}.md:**
+## Memory Strategies
+
+### Project Onboarding
+
+When starting with a new project:
+
+1. **Create minimal CLAUDE.md** with commands and tech stack
+2. **Add rules** for the main file types you work with
+3. **Expand gradually** as you discover project quirks
+4. **Update regularly** when conventions change
+
+### Team Conventions
+
+For team projects:
+
+1. **Commit CLAUDE.md** and `.claude/rules/` to version control
+2. **Keep personal preferences** in `~/.claude/CLAUDE.md`
+3. **Document decisions** in rules files, not code comments
+4. **Review memory files** during onboarding
+
+### Cross-Session Continuity
+
+To maintain context across sessions:
+
+1. **Session hooks** can inject recent context at start
+2. **Weave framework** captures learnings for future sessions
+3. **Project memory** persists architectural decisions
+4. **Rules files** encode learned patterns
+
+For advanced memory strategies, see [STRATEGIES.md](./STRATEGIES.md).
+
+## Common Patterns
+
+### Monorepo Pattern
+
+```
+project/
+  CLAUDE.md                    # Shared conventions
+  .claude/
+    rules/
+      frontend.md              # Globs: apps/web/**/*
+      backend.md               # Globs: apps/api/**/*
+      packages.md              # Globs: packages/**/*
+  apps/
+    web/
+      CLAUDE.md                # Web-specific context
+    api/
+      CLAUDE.md                # API-specific context
+```
+
+### Feature Flag Pattern
+
 ```markdown
-# Project Phoenix
+# .claude/rules/feature-flags.md
+---
+globs: ["src/**/*.ts", "src/**/*.tsx"]
+---
 
-**Codename:** Phoenix
-**Also called:** "the migration"
-**Status:** Active, launching Q2
+## Feature Flags
 
-## What It Is
-Database migration from legacy Oracle to PostgreSQL.
+Active flags:
+- `ENABLE_NEW_CHECKOUT` - New checkout flow (enabled in staging)
+- `DARK_MODE` - Dark mode support (enabled everywhere)
 
-## Key People
-- Sarah - tech lead
-- Todd - budget owner
-- Greg - stakeholder (sales impact)
-
-## Context
-$1.2M budget, 6-month timeline. Critical path for Horizon project.
+Check flags with: `useFeatureFlag('FLAG_NAME')`
 ```
 
-**memory/context/company.md:**
+### Migration Pattern
+
 ```markdown
-# Company Context
+# .claude/rules/migrations.md
+---
+globs: ["src/db/migrations/**/*.ts"]
+---
 
-## Tools & Systems
-| Tool | Used for | Internal name |
-|------|----------|---------------|
-| Slack | Communication | - |
-| Asana | Engineering tasks | - |
-| Salesforce | CRM | "SF" or "the CRM" |
-| Notion | Docs/wiki | - |
+## Database Migrations
 
-## Teams
-| Team | What they do | Key people |
-|------|--------------|------------|
-| Platform | Infrastructure | Sarah (lead) |
-| Finance | Money stuff | Todd (lead) |
-| Sales | Revenue | Greg |
+1. Generate: `bun db:generate`
+2. Run: `bun db:migrate`
+3. Rollback: `bun db:rollback`
 
-## Processes
-| Process | What it means |
-|---------|---------------|
-| Weekly sync | Monday 10am all-hands |
-| Ship review | Thursday deploy approval |
+Naming: `NNNN_description.ts`
+Always include down migration.
 ```
 
-## How to Interact
+## Reference Files
 
-### Decoding User Input (Tiered Lookup)
+| File | Contents |
+|------|----------|
+| [CLAUDE-MD.md](./CLAUDE-MD.md) | Deep dive on CLAUDE.md structure and content |
+| [RULES.md](./RULES.md) | Complete rules directory documentation |
+| [STRATEGIES.md](./STRATEGIES.md) | Advanced memory strategies |
 
-**Always** decode shorthand before acting on requests:
+## Validation Checklist
 
-```
-1. CLAUDE.md (hot cache)     → Check first, covers 90% of cases
-2. memory/glossary.md        → Full glossary if not in hot cache
-3. memory/people/, projects/ → Rich detail when needed
-4. Ask user                  → Unknown term? Learn it.
-```
+Before finalizing memory setup:
 
-Example:
-```
-User: "ask todd to do the PSR for oracle"
+- [ ] Global preferences in `~/.claude/CLAUDE.md`
+- [ ] Project context in `./CLAUDE.md` or `./.claude/CLAUDE.md`
+- [ ] Modular rules for file-specific guidance
+- [ ] Commands section with exact syntax
+- [ ] Tech stack clearly documented
+- [ ] No duplicated documentation
+- [ ] Rules have appropriate glob patterns
+- [ ] Memory files committed to version control
 
-CLAUDE.md lookup:
-  "todd" → Todd Martinez, Finance ✓
-  "PSR" → Pipeline Status Report ✓
-  "oracle" → (not in hot cache)
+## Common Mistakes
 
-memory/glossary.md lookup:
-  "oracle" → Oracle Systems deal ($2.3M) ✓
-
-Now Claude can act with full context.
-```
-
-### Adding Memory
-
-When user says "remember this" or "X means Y":
-
-1. **Glossary items** (acronyms, terms, shorthand):
-   - Add to memory/glossary.md
-   - If frequently used, add to CLAUDE.md Quick Glossary
-
-2. **People:**
-   - Create/update memory/people/{name}.md
-   - Add to CLAUDE.md Key People if important
-   - **Capture nicknames** - critical for decoding
-
-3. **Projects:**
-   - Create/update memory/projects/{name}.md
-   - Add to CLAUDE.md Active Projects if current
-   - **Capture codenames** - "Phoenix", "the migration", etc.
-
-4. **Preferences:** Add to CLAUDE.md Preferences section
-
-### Recalling Memory
-
-When user asks "who is X" or "what does X mean":
-
-1. Check CLAUDE.md first
-2. Check memory/ for full detail
-3. If not found: "I don't know what X means yet. Can you tell me?"
-
-### Progressive Disclosure
-
-1. Load CLAUDE.md for quick parsing of any request
-2. Dive into memory/ when you need full context for execution
-3. Example: drafting an email to todd about the PSR
-   - CLAUDE.md tells you Todd = Todd Martinez, PSR = Pipeline Status Report
-   - memory/people/todd-martinez.md tells you he prefers Slack, is direct
-
-## Bootstrapping
-
-Use `/productivity:start` to initialize by scanning your chat, calendar, email, and documents. Extracts people, projects, and starts building the glossary.
-
-## Conventions
-
-- **Bold** terms in CLAUDE.md for scannability
-- Keep CLAUDE.md under ~100 lines (the "hot 30" rule)
-- Filenames: lowercase, hyphens (`todd-martinez.md`, `project-phoenix.md`)
-- Always capture nicknames and alternate names
-- Glossary tables for easy lookup
-- When something's used frequently, promote it to CLAUDE.md
-- When something goes stale, demote it to memory/ only
-
-## What Goes Where
-
-| Type | CLAUDE.md (Hot Cache) | memory/ (Full Storage) |
-|------|----------------------|------------------------|
-| Person | Top ~30 frequent contacts | glossary.md + people/{name}.md |
-| Acronym/term | ~30 most common | glossary.md (complete list) |
-| Project | Active projects only | glossary.md + projects/{name}.md |
-| Nickname | In Key People if top 30 | glossary.md (all nicknames) |
-| Company context | Quick reference only | context/company.md |
-| Preferences | All preferences | - |
-| Historical/stale | ✗ Remove | ✓ Keep in memory/ |
-
-## Promotion / Demotion
-
-**Promote to CLAUDE.md when:**
-- You use a term/person frequently
-- It's part of active work
-
-**Demote to memory/ only when:**
-- Project completed
-- Person no longer frequent contact
-- Term rarely used
-
-This keeps CLAUDE.md fresh and relevant.
+| Mistake | Fix |
+|---------|-----|
+| Putting everything in global | Use project memory for project-specific content |
+| Giant CLAUDE.md files | Split into rules files for modular loading |
+| Duplicating docs | Reference external documentation instead |
+| Vague instructions | Be specific and actionable |
+| Stale content | Review and update memory periodically |
+| Missing commands | Always include build/test/run commands |

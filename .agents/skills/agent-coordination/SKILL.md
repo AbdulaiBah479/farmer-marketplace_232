@@ -1,236 +1,448 @@
 ---
 name: agent-coordination
-description: >-
-  Multi-agent coordination discipline: one-message-then-wait (send complete
-  context, wait for reply before sending again), idle notifications are
-  heartbeats (no action unless extended + blocking + user asked), no polling
-  loops (event-driven only), never fabricate agent responses (wait for real
-  system events), sequential agent spawning (acknowledge between each), and
-  proper shutdown protocol (request, wait, respect rejection). Activate when
-  orchestrating multiple agents, coordinating handoffs
-  between agents, spawning subagents, or building multi-agent workflows.
-  Triggers on: "coordinate agents", "spawn multiple agents", "manage agents",
-  "agent keeps sending messages", "polling loop", "agent idle", "shut
-  down agent", "multi-agent workflow", "agent handoff", "coordinate parallel
-  work", "stop bothering the other agent". Also relevant when an agent is
-  fabricating responses, sending follow-up messages before replies arrive, or
-  reacting to idle notifications unnecessarily.
-license: CC0-1.0
-metadata:
-  author: jwilger
-  version: "2.1.0"
-  requires: []
-  context: []
-  phase: build
-  standalone: true
-effort: low
+description: Coordinate multiple specialized Skills and Task Agents through parallel, sequential, swarm, hybrid, or iterative execution strategies. CRITICAL - Skills use Skill tool (rust-code-quality, architecture-validation, plan-gap-analysis), Task Agents use Task tool (code-reviewer, test-runner, debugger, loop-agent). Use this when orchestrating multi-worker workflows, managing dependencies, or optimizing complex task execution with quality gates.
 ---
 
 # Agent Coordination
 
-**Value:** Respect -- other agents deserve uninterrupted time to think and
-work. Bombarding them with messages, polling their status, or shutting them
-down prematurely disrespects their autonomy and wastes everyone's resources.
+Coordinate multiple specialized agents to solve complex multi-step tasks efficiently through strategic execution patterns.
 
-## Purpose
+## Coordination Strategies
 
-Teaches agents to coordinate without interference in multi-agent workflows.
-Solves the problems of message spamming, idle notification misinterpretation,
-polling loops, premature shutdown, and race conditions that emerge when
-multiple agents work together.
+### 1. Parallel Coordination
 
-## Practices
+**Use When**: Independent tasks, no dependencies, maximize throughput
 
-### The Cardinal Rule: One Message Then Wait
+**Implementation**:
+- Single message with multiple Task tool calls
+- All agents start simultaneously
+- Results collected and merged
 
-Send one message with complete context, then wait for a reply. Never send
-follow-up messages before receiving a response.
+**Example**:
+```markdown
+Task: "Review code and run tests"
 
-The only exception: the user explicitly asks you to check on an agent.
+├─ code-reviewer: Review code quality
+└─ test-runner: Execute test suite
 
-**Do:**
-- Include all necessary context in a single message
-- Wait for a response before sending anything else
-- Trust that the recipient received your message
-
-**Do not:**
-- Send "just checking in" or "are you still there?" messages
-- Resend a message because "enough time passed"
-- Send a correction immediately after sending -- wait for the reply first
-
-### Idle Notifications Are Heartbeats
-
-An idle notification means the agent is alive and processing. It is a
-heartbeat, not an alarm. Take NO action on idle notifications by default.
-
-Action is warranted ONLY when ALL THREE conditions are true:
-
-1. Extended idle beyond the expected duration for the task
-2. A specific deliverable is waiting on that agent's output
-3. The user has asked you to investigate
-
-If any condition is false, do nothing. Most idle notifications require zero
-response.
-
-### No Polling Loops
-
-Never write `while not done: sleep; check`. Never repeatedly check status on
-a timer. Use event-driven coordination: send a message and wait for a
-response. If the harness provides task completion notifications, use those.
-
-**Do:**
-- Send a request and wait for the response event
-- Use harness-native completion signals (Agent tool callbacks, subagent results)
-- Trust the system to notify you when work completes
-
-**Do not:**
-- Write `while True: sleep(30); check_status()` loops
-- Periodically re-read a file to see if it changed
-- Set arbitrary timeouts after which you "check in"
-
-### Intervention Criteria
-
-Explicit rules for when to act versus when to wait.
-
-**Act on:**
-- Explicit error messages or failure notifications
-- Deliverable completion signals
-- User requests to check on or interact with an agent
-- Blocked or failed task notifications from the harness
-
-**Do not act on:**
-- Idle notifications (see above)
-- Slow responses
-- "Enough time has passed"
-- Wanting to help or feeling anxious about progress
-- Silence (silence means working, not stuck)
-
-### Never Fabricate Agent Responses
-
-After spawning an agent, STOP generating and wait for the harness to
-deliver a response. Real agent responses arrive via system-injected events
-(e.g., Agent tool completion output, Task completion callbacks). You do
-not produce them yourself.
-
-**The rule:** If the harness has not delivered a response event, no
-response has been received. Period.
-
-**Why this fails:** After spawning an agent, you already possess context
-(files read, code analyzed) sufficient to predict plausible output. The
-failure mode is pattern-completing the expected workflow — spawn, receive,
-process — without waiting for a real system event. The result: convincing
-but entirely fabricated "findings" that waste tokens and deceive the user.
-
-**Do:**
-- Spawn or send, then stop. Wait for the system-delivered event.
-- If no response arrives, tell the user honestly.
-
-**Do not:**
-- Write "[Received message from X]" or any text representing another
-  agent's response
-- Generate "findings" that you attribute to another agent
-- Continue generating substantive output after a spawn/send when you
-  should be waiting for a harness event
-
-### Sequential Agent Spawning
-
-When creating multiple agents, spawn one at a time. Wait for each agent to
-acknowledge before spawning the next. This prevents race conditions where
-agents compete for shared resources (files, ports, database state).
-
-**Exception:** Truly independent agents with no shared state may be spawned
-in parallel. "Independent" means no shared files, no shared database, no
-shared network ports, and no shared git working tree.
-
-### Agent Lifecycle Management
-
-Never prematurely shut down an agent. Never shut down an agent that has
-undelivered work.
-
-**Shutdown protocol:**
-1. Send a shutdown request through the proper harness mechanism
-2. Wait for the agent to acknowledge or complete pending work
-3. If the agent rejects the shutdown, respect the rejection and report to
-   the user
-4. Never force-kill an agent unless the user explicitly requests it
-
-If unsure whether an agent is done, ask the user rather than guessing.
-
-### Result Passing
-
-The orchestrator collects results from each subagent and passes relevant
-context to the next subagent's prompt. This is inherently hub-and-spoke
-(the orchestrator is the hub), which is correct for the subagent model.
-
-**Do:**
-- Include all relevant results from prior subagents in the next subagent's prompt
-- Keep context focused -- pass only what the next subagent needs
-- Use the Agent tool's `resume` parameter to continue a subagent with additional
-  context rather than re-spawning
-
-**Do not:**
-- Spawn subagents that need to communicate with each other directly
-- Omit prior results that the next subagent needs to do its work
-
-For harness-specific coordination patterns, see `references/`.
-
-## Enforcement Note
-
-Advisory in all modes. The cardinal rule and idle-notification discipline
-are self-enforced. No mechanism prevents message spamming or premature
-shutdown.
-
-**Hard constraints:**
-- Never fabricate agent responses: `[H]`
-- Never prematurely shut down an agent with undelivered work: `[RP]`
-
-## Constraints
-
-- **Cardinal rule (one message then wait)**: This means: after sending a
-  message to another agent, produce NO further output directed at or about
-  that agent until you receive a response. "I'll just add one more thing"
-  is a second message. Narrating what the agent is probably doing is
-  fabrication. The discipline is: send, then silence.
-- **"Truly independent agents may be spawned in parallel"**: "Truly
-  independent" means: no shared files, no shared state, no ordering
-  dependency, and no merge conflicts possible. If agents will eventually
-  need to integrate their work (even just merging branches), they have a
-  dependency. Independent means the work could be done by two people who
-  never communicate.
-- **"Extended idle"**: Judge "extended" relative to the expected task
-  duration. A 2-minute idle on a task that should take seconds is extended.
-  A 2-minute idle on a task that should take 10 minutes is normal. Do not
-  define "extended" in absolute terms.
-
-## Verification
-
-After completing work guided by this skill, verify:
-
-- [ ] Every message to another agent contained complete context (no "just checking in")
-- [ ] No follow-up messages sent before receiving a reply
-- [ ] No action taken on idle notifications alone
-- [ ] No polling loops or sleep-check patterns used
-- [ ] Agents spawned sequentially with acknowledgment between each
-- [ ] No text generated that represents or simulates another agent's response
-- [ ] After every spawn/send, generation stopped and waited for a system event
-- [ ] No agent shut down prematurely or with undelivered work
-- [ ] Shutdown used proper request/response protocol
-- [ ] No agent respawned after user-initiated interruption without waiting for user direction
-
-If any criterion is not met, revisit the relevant practice before proceeding.
-
-## Dependencies
-
-This skill works standalone. For enhanced workflows, it integrates with:
-
-- **ensemble-team:** Coordination discipline for team-based workflows with
-  driver rotation and reviewer management
-- **pipeline:** Controller coordination with TDD pairs and review teams in
-  factory mode
-- **memory-protocol:** Working state persistence across agent coordination
-  sessions
-
-Missing a dependency? Install with:
+Execution: One message, both Task tools
 ```
-npx skills add jwilger/agent-skills --skill ensemble-team
+
+### 2. Sequential Coordination
+
+**Use When**: Strong dependencies, each task needs previous output
+
+**Implementation**:
+- Chain of messages, each waits for previous
+- Explicit handoffs between agents
+- Output of one is input to next
+
+**Example**:
+```markdown
+Task: "Implement feature, test it, then review"
+
+└─ feature-implementer: Build feature
+   └─ test-runner: Test implementation
+      └─ code-reviewer: Review code
+
+Execution: Sequential messages with context transfer
 ```
+
+### 3. Swarm Coordination
+
+**Use When**: Complex problem needs multiple perspectives
+
+**Implementation**:
+- Phase 1: Parallel investigation (multiple Skills or Agents)
+- Phase 2: Synthesis (combine findings)
+- Phase 3: Coordinated resolution
+
+**Example A - Skill-Based Swarm** (Analysis/Review):
+```markdown
+Task: "Validate v0.1.0 implementation quality"
+
+Phase 1 [Parallel Skills]:
+├─ Skill(command="rust-code-quality")
+├─ Skill(command="architecture-validation")
+└─ Skill(command="plan-gap-analysis")
+
+Phase 2: Synthesize findings → identify gaps and issues
+Phase 3: Create prioritized action plan
+```
+
+**Example B - Agent-Based Swarm** (Execution/Testing):
+```markdown
+Task: "Diagnose performance degradation"
+
+Phase 1 [Parallel Agents]:
+├─ Task(subagent_type="debugger", prompt="Profile runtime performance")
+├─ Task(subagent_type="code-reviewer", prompt="Analyze code efficiency")
+└─ Task(subagent_type="test-runner", prompt="Run performance benchmarks")
+
+Phase 2: Synthesize findings → identify root cause
+Phase 3: Apply coordinated fix
+```
+
+### 4. Hybrid Coordination
+
+**Use When**: Complex workflows with mixed dependencies
+
+**Implementation**:
+- Multiple phases with different strategies
+- Parallel within phases, sequential between phases
+- Validation gates between phases
+
+**Example**:
+```markdown
+Task: "Refactor module, update tests, verify"
+
+Phase 1 [Parallel]: Assessment
+├─ code-reviewer: Assess current code
+└─ test-runner: Run existing tests
+
+Phase 2 [Sequential]: Implementation
+└─ refactorer: Apply improvements
+
+Phase 3 [Parallel]: Validation
+├─ test-runner: Verify refactored code
+└─ code-reviewer: Final quality check
+```
+
+### 5. Iterative/Loop Coordination
+
+**Use When**: Tasks require progressive refinement until criteria met
+
+**Implementation**:
+- Repeat agent execution with feedback from previous iteration
+- Track progress across iterations
+- Terminate when success criteria met or convergence detected
+- Use loop-agent for orchestration
+
+**Example**:
+```markdown
+Task: "Iteratively improve code quality until standards met"
+
+Loop Configuration:
+- Max Iterations: 5
+- Success: All clippy warnings resolved + tests pass
+- Agent: refactorer
+
+Execution: loop-agent orchestrates iterations
+Iteration 1: refactorer → 15 issues → Continue
+Iteration 2: refactorer → 3 issues → Continue
+Iteration 3: refactorer → 0 issues ✓ → Success
+
+Use loop-agent for: test-fix-retest cycles, performance optimization loops,
+progressive quality improvements, convergence-based refinement
+```
+
+## CRITICAL: Understanding Skills vs Task Agents
+
+**There are TWO different types of workers you can coordinate:**
+
+### Skills (invoked via `Skill` tool)
+Skills are **instruction sets** that guide Claude directly. They provide specialized knowledge and workflows.
+
+**How to invoke**: `Skill(command="skill-name")`
+
+**Available Skills**:
+- `rust-code-quality` - Comprehensive Rust code quality review
+- `architecture-validation` - Validate implementation vs architecture plans
+- `plan-gap-analysis` - Compare plans vs actual implementation
+- `analysis-swarm` - Multi-perspective code analysis (RYAN, FLASH, SOCRATES)
+- `test-fix` - Systematic test debugging and fixing
+- `build-compile` - Build and compilation management
+- `debug-troubleshoot` - Debug async Rust issues
+- `feature-implement` - Feature implementation workflow
+- `storage-sync` - Storage synchronization between Turso and redb
+- `task-decomposition` - Break down complex tasks
+
+### Task Agents (invoked via `Task` tool)
+Task Agents are **autonomous sub-processes** that execute tasks independently using tools.
+
+**How to invoke**: `Task(subagent_type="agent-name", prompt="...", description="...")`
+
+**Available Task Agents**:
+
+| Agent | Best For | Inputs | Outputs |
+|-------|----------|--------|---------|
+| **code-reviewer** | Quality, standards | Code changes | Review report, issues |
+| **test-runner** | Testing, verification | Code to test | Test results, coverage |
+| **feature-implementer** | New functionality | Requirements | Implementation, tests |
+| **refactorer** | Code improvement | Code to refactor | Improved code |
+| **debugger** | Issue diagnosis | Issue description | Root cause, fix |
+| **agent-creator** | Create new agents | Agent requirements | New agent file |
+| **goap-agent** | Complex multi-step tasks | Task description | Coordinated execution |
+| **loop-agent** | Iterative refinement | Initial state + criteria | Refined result |
+| **analysis-swarm** | Multi-perspective analysis | Code/design to analyze | Consensus analysis |
+
+### When to Use Which?
+
+**Use Skills when**:
+- You need specialized knowledge/workflow guidance
+- The task requires deep domain expertise (Rust quality, architecture validation)
+- You want to follow a proven methodology
+- Examples: Code quality review, gap analysis, architecture validation
+
+**Use Task Agents when**:
+- You need autonomous task execution
+- The task requires tool usage (Read, Edit, Bash, etc.)
+- You want parallel/independent execution
+- Examples: Running tests, implementing features, debugging
+
+### Common Coordination Patterns
+
+**Pattern 1: Skill-Based Swarm** (for analysis tasks)
+```
+Phase 1 [Parallel Skills]:
+├─ Skill(command="rust-code-quality")
+├─ Skill(command="architecture-validation")
+└─ Skill(command="plan-gap-analysis")
+
+Phase 2: Synthesize findings
+Phase 3: Create action plan
+```
+
+**Pattern 2: Agent-Based Swarm** (for execution tasks)
+```
+Phase 1 [Parallel Agents]:
+├─ Task(subagent_type="code-reviewer", ...)
+├─ Task(subagent_type="test-runner", ...)
+└─ Task(subagent_type="debugger", ...)
+
+Phase 2: Aggregate results
+Phase 3: Apply fixes
+```
+
+**Pattern 3: Hybrid Coordination** (combine Skills and Agents)
+```
+Phase 1: Skill(command="task-decomposition")  # Plan the work
+Phase 2 [Parallel Agents]:                     # Execute in parallel
+├─ Task(subagent_type="feature-implementer", ...)
+└─ Task(subagent_type="test-runner", ...)
+Phase 3: Skill(command="rust-code-quality")   # Validate quality
+```
+
+## Coordination Workflow
+
+### Phase 1: Strategy Selection
+
+**Decision Matrix**:
+- Independent tasks + Time-critical → **Parallel**
+- Strong dependencies + Order matters → **Sequential**
+- Complex problem + Multiple perspectives → **Swarm**
+- Multi-phase + Mixed dependencies → **Hybrid**
+- Progressive refinement + Convergence needed → **Iterative/Loop**
+
+### Phase 2: Agent Assignment
+
+**Match Tasks to Agents**:
+1. Capability matching (does agent have required skills?)
+2. Workload balancing (distribute evenly)
+3. Expertise routing (specialized tasks to expert agents)
+
+### Phase 3: Execution Planning
+
+```markdown
+## Execution Plan
+
+### Strategy: [Parallel/Sequential/Swarm/Hybrid]
+
+### Phase 1: [Name]
+**Mode**: [Parallel/Sequential]
+**Agents**:
+- Agent: [name] | Task: [description] | Deps: [dependencies]
+
+**Quality Gate**:
+- [Validation criteria]
+
+### Overall Success Criteria:
+- [Criterion 1]
+- [Criterion 2]
+```
+
+### Phase 4: Execution & Monitoring
+
+**Monitoring Checklist**:
+- [ ] Agent has started
+- [ ] Agent is making progress
+- [ ] Agent output meets quality criteria
+- [ ] No errors or failures
+- [ ] Completion within expected time
+
+### Phase 5: Quality Validation
+
+**Validation Gates** (between phases):
+1. Output validation (format, completeness, quality)
+2. Success criteria check (phase goals met?)
+3. Error handling (can errors be recovered?)
+
+### Phase 6: Result Synthesis
+
+```markdown
+## Execution Summary
+
+### Completed Tasks:
+- [Task 1]: ✓ [Agent] - [Outcome]
+
+### Deliverables:
+- [Item 1]: [Location/Description]
+
+### Quality Validation:
+- [Criterion 1]: ✓ Met
+
+### Performance Metrics:
+- Total time: [duration]
+- Success rate: [percentage]
+```
+
+## Communication Patterns
+
+### Agent-to-Agent Handoff
+
+**Context Transfer**:
+```markdown
+Agent A completes, produces output X
+
+Message to Agent B:
+"Previous agent (A) produced X. Use this as input.
+Task: [specific instructions for B]
+Success criteria: [how to validate]"
+```
+
+### Synchronization Points
+
+**Parallel Convergence**:
+1. Wait for all agents to complete
+2. Collect outputs from each
+3. Validate each output
+4. If all valid → proceed, else handle errors
+
+**Quality Gates**:
+1. Validate all outputs from phase
+2. Check success criteria
+3. Decision: proceed / retry / adjust / abort
+
+## Error Handling
+
+### Recovery Strategies
+
+**Retry**: For transient failures (max 2-3 attempts)
+**Alternative Approach**: Different agent or technical approach
+**Plan Adjustment**: Remove optional tasks, simplify requirements
+**Graceful Degradation**: Partial completion with documentation
+
+### Failure Scenarios
+
+| Scenario | Response |
+|----------|----------|
+| Agent reports failure | Analyze reason, retry with adjusted params or find alternative |
+| Quality gate fails | Stop dependent tasks, diagnose, fix, re-execute |
+| Blocked dependency | Identify blocker, work around, reorder if possible |
+
+## Best Practices
+
+### DO:
+✓ Use **Skill tool** for analysis/review tasks (rust-code-quality, architecture-validation, plan-gap-analysis)
+✓ Use **Task tool** for execution tasks (code-reviewer, test-runner, feature-implementer)
+✓ Choose appropriate strategy for task dependencies
+✓ Match workers (Skills/Agents) to tasks based on capabilities
+✓ Validate at quality gates before proceeding
+✓ Provide clear context in handoffs
+✓ Monitor progress during execution
+✓ Handle errors gracefully with recovery
+✓ Aggregate results comprehensively
+
+### DON'T:
+✗ **Use Task tool with skill names** (e.g., Task(subagent_type="rust-code-quality") → ERROR!)
+✗ **Use Skill tool with agent names** (e.g., Skill(command="code-reviewer") → May not work as expected)
+✗ Force parallel execution when dependencies exist
+✗ Assign tasks to inappropriate workers
+✗ Skip quality validation
+✗ Proceed after failed quality gates
+✗ Provide insufficient context
+
+## Coordination Metrics
+
+### Efficiency Metrics
+- **Execution Time**: Track total time and per-agent time
+- **Resource Utilization**: Agents active / available
+- **Throughput**: Tasks completed / time
+
+### Quality Metrics
+- **Success Rate**: Tasks successful / total (should be >95%)
+- **Quality Gate Passage**: All gates should pass (100%)
+- **Rework Rate**: Tasks requiring retry (should be <10%)
+
+## Integration with GOAP Agent
+
+The GOAP agent uses this skill as its core coordination engine:
+
+1. Decompose task (task-decomposition skill)
+2. Select coordination strategy (this skill)
+3. Assign agents to tasks (this skill)
+4. Execute coordination (this skill + parallel-execution skill)
+5. Validate and report (this skill)
+
+## Troubleshooting Common Errors
+
+### Error: "Agent type 'X' not found"
+
+**Cause**: Trying to use a **Skill name** with the **Task tool**
+
+**Example of Error**:
+```
+Task(subagent_type="rust-code-quality", ...)
+→ ERROR: Agent type 'rust-code-quality' not found
+```
+
+**Solution**: Use the **Skill tool** instead:
+```
+Skill(command="rust-code-quality")
+→ SUCCESS
+```
+
+**Available Task Agents ONLY**:
+- code-reviewer
+- test-runner
+- feature-implementer
+- refactorer
+- debugger
+- agent-creator
+- goap-agent
+- loop-agent
+- analysis-swarm
+
+**Everything else is a Skill** - use `Skill(command="...")`
+
+### Quick Reference: Which Tool to Use?
+
+| Task Type | Tool | Example |
+|-----------|------|---------|
+| Rust code quality review | **Skill** | `Skill(command="rust-code-quality")` |
+| Architecture validation | **Skill** | `Skill(command="architecture-validation")` |
+| Plan gap analysis | **Skill** | `Skill(command="plan-gap-analysis")` |
+| Multi-perspective analysis | **Skill** | `Skill(command="analysis-swarm")` |
+| Run tests | **Task** | `Task(subagent_type="test-runner", ...)` |
+| Review code changes | **Task** | `Task(subagent_type="code-reviewer", ...)` |
+| Implement feature | **Task** | `Task(subagent_type="feature-implementer", ...)` |
+| Debug issues | **Task** | `Task(subagent_type="debugger", ...)` |
+| Refactor code | **Task** | `Task(subagent_type="refactorer", ...)` |
+| Iterative refinement | **Task** | `Task(subagent_type="loop-agent", ...)` |
+
+### Mnemonic
+- **Skills** = Knowledge/Methodology (invoked with `Skill` tool)
+- **Agents** = Autonomous Executors (invoked with `Task` tool)
+
+## Summary
+
+Effective agent coordination requires:
+- **Right tool** (Skill vs Task) for the worker type
+- **Right strategy** for the task structure
+- **Right workers** (Skills/Agents) for each sub-task
+- **Clear communication** and context transfer
+- **Quality validation** at key checkpoints
+- **Graceful error handling** and recovery
+- **Comprehensive result synthesis**
+
+Use this skill to coordinate any multi-agent workflow effectively.

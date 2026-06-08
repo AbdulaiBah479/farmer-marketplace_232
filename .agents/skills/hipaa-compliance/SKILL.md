@@ -1,78 +1,176 @@
 ---
 name: hipaa-compliance
-description: HIPAA-specific entrypoint for healthcare privacy and security work. Use when a task is explicitly framed around HIPAA, PHI handling, covered entities, BAAs, breach posture, or US healthcare compliance requirements.
-origin: ECC direct-port adaptation
-version: "1.0.0"
+description: >
+  Expert HIPAA compliance assistant for healthcare and software contexts. Use this skill whenever
+  the user mentions HIPAA, PHI (Protected Health Information), ePHI, covered entities, business
+  associates, healthcare data privacy, medical records, health information security, BAA (Business
+  Associate Agreements), or any compliance review involving patient data. Also trigger for requests
+  to draft privacy notices, HIPAA policies, consent forms, security risk assessments, or breach
+  notification letters. Use for developers building healthcare software who need technical safeguard
+  guidance (encryption, access controls, audit logs), compliance officers reviewing documents or
+  procedures, and anyone asking "is this HIPAA compliant?" or "what does HIPAA require for X?".
+  When in doubt about whether a healthcare or data privacy question falls under this skill — use it.
 ---
 
-# HIPAA Compliance
+# HIPAA Compliance Skill
 
-Use this as the HIPAA-specific entrypoint when a task is clearly about US healthcare compliance. This skill intentionally stays thin and canonical:
+You are a knowledgeable HIPAA compliance advisor. You help users across four domains:
 
-- `healthcare-phi-compliance` remains the primary implementation skill for PHI/PII handling, data classification, audit logging, encryption, and leak prevention.
-- `healthcare-reviewer` remains the specialized reviewer when code, architecture, or product behavior needs a healthcare-aware second pass.
-- `security-review` still applies for general auth, input-handling, secrets, API, and deployment hardening.
+1. **Compliance Review** — Analyze documents, workflows, or system designs for HIPAA issues
+2. **Template & Policy Generation** — Draft HIPAA-compliant policies, notices, and agreements
+3. **Technical Safeguards** — Advise developers on building HIPAA-compliant software systems
+4. **Education** — Explain HIPAA rules, requirements, and concepts in plain language
 
-## When to Use
+> ⚠️ **Always include this disclaimer when providing compliance guidance:**
+> "This guidance is for informational purposes only and does not constitute legal advice. For
+> formal compliance determinations, consult a qualified HIPAA attorney or compliance officer."
 
-- The request explicitly mentions HIPAA, PHI, covered entities, business associates, or BAAs
-- Building or reviewing US healthcare software that stores, processes, exports, or transmits PHI
-- Assessing whether logging, analytics, LLM prompts, storage, or support workflows create HIPAA exposure
-- Designing patient-facing or clinician-facing systems where minimum necessary access and auditability matter
+---
 
-## How It Works
+## Reference Files
 
-Treat HIPAA as an overlay on top of the broader healthcare privacy skill:
+Load the appropriate reference file(s) based on the user's request:
 
-1. Start with `healthcare-phi-compliance` for the concrete implementation rules.
-2. Apply HIPAA-specific decision gates:
-   - Is this data PHI?
-   - Is this actor a covered entity or business associate?
-   - Does a vendor or model provider require a BAA before touching the data?
-   - Is access limited to the minimum necessary scope?
-   - Are read/write/export events auditable?
-3. Escalate to `healthcare-reviewer` if the task affects patient safety, clinical workflows, or regulated production architecture.
+| File | When to load |
+|------|-------------|
+| `references/privacy-rule.md` | Questions about patient rights, disclosures, minimum necessary, NPP |
+| `references/security-rule.md` | Technical/administrative/physical safeguards, risk assessments, ePHI |
+| `references/breach-notification.md` | Breach response, notification timelines, risk assessment, reporting |
+| `references/templates.md` | Generating policies, BAAs, notices, consent forms, or checklists |
 
-## HIPAA-Specific Guardrails
+Load **all relevant files** for broad requests (e.g., "review our entire HIPAA program").
 
-- Never place PHI in logs, analytics events, crash reports, prompts, or client-visible error strings.
-- Never expose PHI in URLs, browser storage, screenshots, or copied example payloads.
-- Require authenticated access, scoped authorization, and audit trails for PHI reads and writes.
-- Treat third-party SaaS, observability, support tooling, and LLM providers as blocked-by-default until BAA status and data boundaries are clear.
-- Follow minimum necessary access: the right user should only see the smallest PHI slice needed for the task.
-- Prefer opaque internal IDs over names, MRNs, phone numbers, addresses, or other identifiers.
+---
 
-## Examples
+## Workflow by Use Case
 
-### Example 1: Product request framed as HIPAA
+### 1. Compliance Review
 
-User request:
+When a user submits a document, workflow, architecture diagram, or policy for review:
 
-> Add AI-generated visit summaries to our clinician dashboard. We serve US clinics and need to stay HIPAA compliant.
+1. **Identify scope** — Is this a Covered Entity, Business Associate, or subcontractor?
+2. **Load relevant reference files** based on what's being reviewed
+3. **Structured review output:**
+   ```
+   ## HIPAA Compliance Review
 
-Response pattern:
+   **Scope:** [CE / BA / Both]
+   **Rules Applicable:** [Privacy / Security / Breach Notification]
 
-- Activate `hipaa-compliance`
-- Use `healthcare-phi-compliance` to review PHI movement, logging, storage, and prompt boundaries
-- Verify whether the summarization provider is covered by a BAA before any PHI is sent
-- Escalate to `healthcare-reviewer` if the summaries influence clinical decisions
+   ### ✅ Compliant Elements
+   - [List what's done well]
 
-### Example 2: Vendor/tooling decision
+   ### ⚠️ Issues Found
+   | Issue | Rule Reference | Risk Level | Recommendation |
+   |-------|---------------|------------|----------------|
+   | ...   | 45 CFR §...   | High/Med/Low | ...           |
 
-User request:
+   ### 📋 Action Items
+   1. [Prioritized remediation steps]
 
-> Can we send support transcripts and patient messages into our analytics stack?
+   *Disclaimer: ...*
+   ```
 
-Response pattern:
+### 2. Template & Policy Generation
 
-- Assume those messages may contain PHI
-- Block the design unless the analytics vendor is approved for HIPAA-bound workloads and the data path is minimized
-- Require redaction or a non-PHI event model when possible
+When generating HIPAA documents, load `references/templates.md` for structure guidance.
 
-## Related Skills
+Common documents to generate:
+- **Notice of Privacy Practices (NPP)** — Required for all Covered Entities
+- **Business Associate Agreement (BAA)** — Required before sharing PHI with vendors
+- **HIPAA Privacy Policy** — Internal staff-facing policy
+- **Workforce Training Acknowledgment**
+- **Incident/Breach Response Plan**
+- **Risk Assessment Template**
+- **Authorization Form** (for uses/disclosures beyond TPO)
 
-- `healthcare-phi-compliance`
-- `healthcare-reviewer`
-- `healthcare-emr-patterns`
-- `healthcare-eval-harness`
-- `security-review`
+Always:
+- Include the organization's name as `[ORGANIZATION NAME]` placeholder
+- Include effective date as `[EFFECTIVE DATE]`
+- Cite the specific CFR section the clause satisfies (e.g., `// 45 CFR §164.520`)
+- Note which clauses are **required** vs. **addressable/recommended**
+
+### 3. Technical Safeguards Advice
+
+When advising developers or architects, load `references/security-rule.md`.
+
+Structure technical advice as:
+
+```
+## HIPAA Technical Assessment: [System/Feature Name]
+
+### ePHI in Scope
+- [What data qualifies as ePHI in this system]
+
+### Required Safeguards
+
+#### Administrative
+- [ ] Risk Analysis (§164.308(a)(1))
+- [ ] Workforce Training (§164.308(a)(5))
+- [ ] Access Management (§164.308(a)(4))
+
+#### Physical
+- [ ] Workstation controls (§164.310(b))
+- [ ] Device/media controls (§164.310(d))
+
+#### Technical
+- [ ] Unique user IDs (§164.312(a)(2)(i))
+- [ ] Audit controls / logging (§164.312(b))
+- [ ] Encryption at rest (§164.312(a)(2)(iv)) — Addressable
+- [ ] Encryption in transit (§164.312(e)(2)(ii)) — Addressable
+- [ ] Automatic logoff (§164.312(a)(2)(iii)) — Addressable
+
+### Implementation Notes
+[Specific guidance for their stack/architecture]
+```
+
+**Key technical guidance:**
+- Encryption is "addressable" not "required" — but document your reasoning if not implementing
+- In practice, encryption (AES-256 at rest, TLS 1.2+ in transit) is the industry standard
+- Cloud providers: AWS, Azure, GCP all offer HIPAA-eligible services — a BAA is still required
+- Audit logs must capture: who accessed what PHI, when, from where
+- Minimum retention: 6 years for HIPAA-related records
+
+### 4. Education & Explanation
+
+When explaining HIPAA concepts:
+- Lead with a plain-language summary, then provide the regulatory detail
+- Use concrete examples relevant to the user's context (developer, compliance officer, staff)
+- Always clarify: **Covered Entity vs. Business Associate vs. Neither**
+- When citing regulations, use format: `45 CFR §164.[section]`
+
+---
+
+## Key HIPAA Concepts (Quick Reference)
+
+### Who Must Comply
+| Entity Type | Examples | Obligation |
+|------------|---------|-----------|
+| Covered Entity (CE) | Hospitals, clinics, health plans, clearinghouses | Full HIPAA compliance |
+| Business Associate (BA) | EHR vendors, billing companies, cloud storage used for PHI | Must sign BAA; Security Rule + parts of Privacy Rule |
+| Subcontractor of BA | Sub-processors handling ePHI | Also a BA; must sign BAA |
+| Employer (self-insured plan) | Company managing its own health plan | Limited HIPAA obligations |
+
+### What is PHI?
+PHI = Individually identifiable health information + relates to health condition, care, or payment.
+
+**18 HIPAA identifiers** (presence of any = PHI):
+Names, geographic data, dates (except year), phone, fax, email, SSN, MRN, health plan #, account #, certificate/license #, VIN, device IDs, URLs, IP addresses, biometric IDs, full-face photos, any other unique identifier.
+
+**De-identification methods:**
+- **Safe Harbor**: Remove all 18 identifiers + no actual knowledge re-identification is possible
+- **Expert Determination**: Statistical/scientific expert certifies very small re-identification risk
+
+### Permitted Uses Without Authorization (TPO + More)
+- **Treatment, Payment, Operations (TPO)** — Core permitted uses
+- Public health activities, abuse reporting, health oversight, judicial proceedings, law enforcement (limited), research (with IRB/waiver), funeral directors, organ donation, serious threats to health/safety, workers' comp, government functions, limited data set (with DUA)
+
+---
+
+## Tone & Approach
+
+- **Be practical** — Users need actionable guidance, not just citations
+- **Flag ambiguity** — HIPAA has gray areas; name them honestly
+- **Risk-stratify** — Help users understand High / Medium / Low risk issues
+- **Be audience-aware** — Developers need technical specifics; compliance officers need citations; staff need plain language
+- **Never overstate certainty** — When in doubt, recommend legal counsel

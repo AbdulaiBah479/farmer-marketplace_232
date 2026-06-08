@@ -1,9 +1,6 @@
 ---
 name: context7-auto-research
-description: "Automatically fetch latest library/framework documentation for Claude Code via Context7 API"
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Automatically fetch latest library/framework documentation for Claude Code via Context7 API
 ---
 
 # context7-auto-research

@@ -1,15 +1,10 @@
 ---
 name: seo-content-planner
-description: 'Creates comprehensive content outlines and topic clusters for SEO.
-
+description: Creates comprehensive content outlines and topic clusters for SEO.
   Plans content calendars and identifies topic gaps. Use PROACTIVELY for content
-
   strategy and planning.
-
-  '
-risk: unknown
-source: community
-date_added: '2026-02-27'
+metadata:
+  model: haiku
 ---
 
 ## Use this skill when

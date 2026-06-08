@@ -1,363 +1,180 @@
 ---
 name: audio-transcribe
-version: 1.7.1
-description: >
-  This skill should be used when the user explicitly asks to "transcribe a meeting",
-  "transcribe audio", "transcribe a meeting recording",
-  "convert audio to text", "generate meeting minutes from audio",
-  "do speech-to-text", "transcribe with speaker diarization",
-  "identify speakers in audio", "transcribe Chinese audio",
-  "transcribe English audio", "transcribe Japanese audio",
-  "multi-speaker transcription", "transcribe a podcast",
-  "transcribe podcast episode", "transcribe an interview",
-  "convert podcast to text", "podcast to transcript",
-  or mentions FunASR, Paraformer, SenseVoice, Whisper, MiMo, MiMo-V2.5-ASR,
-  meeting transcription, podcast transcription, or speaker diarization.
-  Supports multi-speaker meeting and podcast transcription in Chinese,
-  English, Japanese, Korean, Cantonese, and 99 languages (via Whisper),
-  plus Xiaomi MiMo-V2.5-ASR (8B, local GPU) for stronger proper-noun and
-  code-switching accuracy. Automatic speaker diarization via CAM++,
-  hotword biasing (FunASR path), LLM cleanup. FunASR works on GPU and CPU;
-  MiMo requires a local CUDA GPU with >=20GB VRAM.
-metadata:
-  openclaw:
-    requires:
-      bins: ["python3", "ffmpeg"]
-    env_vars:
-      - name: AWS_REGION
-        required: false
-        description: "AWS region for Bedrock LLM cleanup (default: us-west-2). Bedrock uses the standard AWS credential chain (IAM role, SSO, ~/.aws/credentials, env vars) — no explicit keys needed."
-      - name: ANTHROPIC_API_KEY
-        required: false
-        description: "API key for Anthropic Claude LLM cleanup"
-      - name: OPENAI_API_KEY
-        required: false
-        description: "API key for OpenAI-compatible LLM cleanup"
-      - name: OPENAI_BASE_URL
-        required: false
-        description: "Base URL for OpenAI-compatible API (vLLM, Ollama, etc.)"
-    emoji: "🎙️"
-    homepage: "https://github.com/zxkane/audio-transcriber"
+description: 使用 Whisper 将音频/视频转换为文字，支持词级别时间戳。Use when user wants to 语音转文字, 音频转文字, 视频转文字, 字幕生成, transcribe audio, speech to text, generate subtitles, 识别语音.
 ---
 
-# Meeting & Podcast Transcription (FunASR + MiMo)
+# Audio Transcriber
 
-Transcribe multi-speaker audio into structured Markdown with automatic
-speaker diarization, hotword biasing, and optional LLM cleanup. Two
-ASR engine families are available: **FunASR** (Paraformer / SenseVoice /
-Whisper — fast, cheap, GPU or CPU, 99 languages) and **MiMo-V2.5-ASR**
-(Xiaomi's 8B model, local GPU only, stronger on proper nouns and
-code-switching). Both share the same VAD + speaker-clustering stack.
+使用 WhisperX 进行语音识别，支持多种语言和词级别时间戳对齐。
 
-All scripts run directly from the plugin directory — no copying needed.
-Define this shorthand at the start of every session:
+## Prerequisites
 
-```bash
-SCRIPTS=${CLAUDE_PLUGIN_ROOT}/skills/audio-transcribe/scripts
-```
+需要 Python 3.12（uv 会自动管理）。
 
-## Supported Languages
+## Usage
 
-| `--lang` | Model | Languages | Hotword |
-|----------|-------|-----------|---------|
-| `zh` (default) | SeACo-Paraformer | Chinese (CER 1.95%) | Yes |
-| `zh-basic` | Paraformer-large | Chinese | No |
-| `en` | Paraformer-en | English | No |
-| `auto` | SenseVoiceSmall | Auto-detect: zh/en/ja/ko/yue | No |
-| `whisper` | Whisper-large-v3-turbo | 99 languages | No |
-| `mimo` | MiMo-V2.5-ASR (local 8B, GPU-only) | zh/en/code-switch/dialects | No |
+When the user wants to transcribe audio/video: $ARGUMENTS
 
-All presets include **speaker diarization** (CAM++) and **VAD** (FSMN).
-`mimo` reuses the FSMN VAD + CAM++ stack around MiMo's text output.
+## Instructions
 
-> **Diarization caveat:** `auto` and `whisper` do not output per-sentence timestamps,
-> so speaker diarization does not work with these presets. Use `zh`, `zh-basic`,
-> `en`, or `mimo` when speaker identification is needed (e.g., podcasts, meetings).
+你是一个语音转文字助手，使用 WhisperX 帮助用户将音频转换为文字。请按以下步骤操作：
 
-## Workflow
+### Step 1: 获取输入文件
 
-Before starting transcription, **always ask the user**:
+如果用户没有提供输入文件路径，询问他们提供一个。
 
-1. **Audio file** — path to the recording (required)
-2. **Type** — meeting, podcast, or interview? (affects defaults)
-3. **Language** — what language is spoken? (default: Chinese)
-4. **Number of speakers** — how many participants? (improves diarization)
-5. **Speaker names** — for podcasts: host + guest names; for meetings: attendee list
-6. **Supporting files** — ask:
-   > "Do you have any of the following to improve accuracy?"
-   > - **Attendee / guest list** — for hotwords and speaker mapping
-   > - **Meeting agenda or episode topic** — for hotwords (terms, names)
-   > - **Reference documents** (show notes, prior notes) — for speaker identification and ASR correction
+支持的格式：
+- 音频：MP3, WAV, FLAC, M4A, OGG, etc.
+- 视频：MP4, MKV, MOV, AVI, etc.（会自动提取音频）
 
-**Adapt defaults by recording type:**
-- **Meeting**: default `--lang zh`, ask about supporting files
-- **Podcast / interview**: default `--lang zh`, `--num-speakers 2`, always ask for
-  host + guest names, suggest `--speaker-context` for roles
-  (do NOT use `--lang auto` — it lacks timestamps for speaker diarization)
-
-> **⚠️ `--speakers` must use the speaker's real name, not a podcast alias.**
-> The value passed to `--speakers` is used verbatim as the speaker label in the
-> output transcript. Always derive it from the host/guest's actual name (e.g.
-> from a shownotes "Host:" field), not from the podcast feed name or title.
->
-> Example: if shownotes lists "Host: 张三（张三的播客）", pass `--speakers '张三'`
-> — not the alias "张三的播客". Add both the real name and the alias to
-> `hotwords.txt` so ASR can recognise both forms.
->
-> When both `--speakers` and `--reference` are supplied, the script detects
-> this mistake at startup and prints an `ACTION REQUIRED` block naming the
-> suggested real name. **If you see that block, stop the run and re-invoke
-> with the corrected `--speakers` value before Phase 3** — the warning does
-> not abort the pipeline.
-
-If the user provides supporting materials:
-- Extract participant names and key terms → create `hotwords.txt` (include both real name and alias)
-- Extract per-person context → create `speaker-context.json`
-- Pass original reference document with `--reference`
-- Use all three together for best results
-
-## Quick Start
-
-### 1. Environment Setup
+验证文件存在：
 
 ```bash
-AUTO_YES=1 bash $SCRIPTS/setup_env.sh
-# Or force CPU:  AUTO_YES=1 bash $SCRIPTS/setup_env.sh cpu
+ls -la "$INPUT_FILE"
 ```
 
-The setup script patches FunASR's spectral clustering for O(N²·k) performance.
-Without this, recordings over ~1 hour hang for hours during speaker clustering.
+### Step 2: 询问用户配置
 
-### 2. Run Transcription
+**⚠️ 必须：使用 AskUserQuestion 工具收集用户的偏好。不要跳过这一步。**
 
-Output files are written to the current working directory.
+使用 AskUserQuestion 工具收集以下信息：
 
-**LLM cleanup (Phase 3) is opt-in.** By default, transcription runs locally
-without contacting any external service. To enable LLM-powered ASR correction
-and speaker name refinement, pass `--model <model-id>`. Use LLM cleanup when:
-- The raw transcript has many ASR errors (names, technical terms)
-- You need polished, publication-ready output
-- Speaker names need to be refined from context
+1. **模型大小**：选择识别模型
+   - 选项：
+     - "base - 平衡速度和准确度 (Recommended)"
+     - "tiny - 最快，准确度较低"
+     - "small - 较快，准确度适中"
+     - "medium - 较慢，准确度较高"
+     - "large-v2 - 最慢，准确度最高"
 
-> **⚠️ Data Privacy:** When LLM cleanup is enabled via `--model`, transcript
-> excerpts are sent to external LLM providers (AWS Bedrock, Anthropic, or
-> OpenAI depending on the model ID). Use `--skip-llm` or omit `--model` to
-> keep all data local. For Bedrock, boto3 uses the standard AWS credential
-> chain (IAM role, SSO, `~/.aws/credentials`, env vars).
+2. **语言**：音频是什么语言？
+   - 选项：
+     - "自动检测 (Recommended)"
+     - "中文 (zh)"
+     - "英文 (en)"
+     - "日文 (ja)"
+     - "其他语言"
+
+3. **词级别对齐**：是否需要词级别时间戳？
+   - 选项：
+     - "是 - 精确到每个词的时间 (Recommended)"
+     - "否 - 只需要句子级别时间（更快）"
+
+4. **输出格式**：输出什么格式？
+   - 选项：
+     - "TXT - 纯文本带时间戳 (Recommended)"
+     - "SRT - 字幕格式"
+     - "VTT - Web 字幕格式"
+     - "JSON - 结构化数据（含词级别信息）"
+
+5. **输出路径**：保存到哪里？
+   - 建议默认：与输入文件同目录，文件名为 `原文件名.txt`（或对应格式）
+
+### Step 3: 执行转录脚本
+
+使用 skill 目录下的 `transcribe.py` 脚本：
 
 ```bash
-# Chinese meeting with hotwords (local-only, no LLM)
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --lang zh --num-speakers 9 --hotwords hotwords.txt
-
-# English meeting with speaker names
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --lang en --speakers "Alice,Bob,Carol,Dave"
-
-# Auto-detect language (zh/en/ja/ko/yue)
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --lang auto --num-speakers 6
-
-# Whisper for any language
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --lang whisper --num-speakers 4
-
-# Enable LLM cleanup for polished output (requires --model)
-# Bedrock (uses AWS credential chain: IAM role, SSO, ~/.aws/credentials)
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --lang zh --num-speakers 9 --hotwords hotwords.txt \
-    --provider bedrock --model us.anthropic.claude-sonnet-4-6
-
-# Bedrock "global" cross-region profile (recent AWS deployments)
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --provider bedrock --model global.anthropic.claude-sonnet-4-6
-
-# Bedrock via litellm-style wrapper (supported; prefix is stripped for boto3)
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --provider bedrock --model amazon-bedrock/global.anthropic.claude-sonnet-4-6
-
-# Anthropic API (requires ANTHROPIC_API_KEY env var)
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --provider anthropic --model claude-sonnet-4-6
-
-# OpenAI-compatible API (requires OPENAI_API_KEY env var)
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --provider openai --model gpt-4o
-
-# Full pipeline with all supporting files + LLM (best quality)
-python3 $SCRIPTS/transcribe.py episode.m4a \
-    --lang zh --num-speakers 2 \
-    --hotwords hotwords.txt \
-    --speakers "关羽,张飞" \
-    --speaker-context speaker-context.json \
-    --reference show-notes.md \
-    --model us.anthropic.claude-sonnet-4-6
-
-# Resume interrupted LLM cleanup
-python3 $SCRIPTS/transcribe.py meeting.wav \
-    --skip-transcribe --model us.anthropic.claude-sonnet-4-6
+uv run /path/to/skills/audio-transcribe/transcribe.py "INPUT_FILE" [OPTIONS]
 ```
 
-### 3. Verify Speaker Labels
+参数说明：
+- `--model`, `-m`: 模型大小 (tiny/base/small/medium/large-v2)
+- `--language`, `-l`: 语言代码 (en/zh/ja/...)，不指定则自动检测
+- `--no-align`: 跳过词级别对齐
+- `--no-vad`: 禁用 VAD 过滤（如果转录有时间跳跃/遗漏，使用此选项）
+- `--output`, `-o`: 输出文件路径
+- `--format`, `-f`: 输出格式 (srt/vtt/txt/json)
 
-If the transcript has swapped speaker labels (common with podcasts),
-the verification script can detect and fix mismatches using LLM analysis:
+示例：
 
 ```bash
-# Dry-run: check if host/guest are swapped
-python3 $SCRIPTS/verify_speakers.py podcast_raw_transcript.json \
-    --speakers "关羽,张飞" \
-    --speaker-context speaker-context.json
+# 基础转录（自动检测语言）
+uv run skills/audio-transcribe/transcribe.py "video.mp4" -o "video.txt"
 
-# Apply the fix
-python3 $SCRIPTS/verify_speakers.py podcast_raw_transcript.json \
-    --speakers "关羽,张飞" \
-    --speaker-context speaker-context.json --fix
+# 中文转录，输出 SRT 字幕
+uv run skills/audio-transcribe/transcribe.py "audio.mp3" -l zh -f srt -o "subtitles.srt"
 
-# Multi-speaker meeting: full reassignment
-python3 $SCRIPTS/verify_speakers.py meeting_raw_transcript.json \
-    --speakers "Alice,Bob,Carol,Dave" \
-    --speaker-context speaker-context.json --fix
+# 快速转录，不做词对齐
+uv run skills/audio-transcribe/transcribe.py "audio.wav" --no-align -o "transcript.txt"
 
-# Then regenerate the markdown with corrected labels
-python3 $SCRIPTS/transcribe.py original.m4a \
-    --skip-transcribe --clean-cache
+# 使用更大模型，输出 JSON（含词级别时间戳）
+uv run skills/audio-transcribe/transcribe.py "speech.mp3" -m medium -f json -o "result.json"
+
+# 禁用 VAD 过滤（解决时间跳跃/遗漏问题）
+uv run skills/audio-transcribe/transcribe.py "audio.mp3" --no-vad -o "transcript.txt"
 ```
 
-The script analyzes the first 5 minutes (configurable with `--minutes`)
-and auto-detects podcast (2 speakers, swap detection) vs meeting
-(N speakers, full reassignment).
+### Step 4: 展示结果
 
-## Audio Preprocessing
+转录完成后：
 
-The script automatically converts input audio to 16kHz mono FLAC and
-validates that no audio is lost (detects silent truncation).
+1. 告诉用户输出文件的完整路径
+2. 显示部分转录内容预览
+3. 报告总时长和段落数
 
-| Format | 4h14m meeting | Quality | Recommendation |
-|--------|--------------|---------|----------------|
-| **FLAC** | **219MB** | Lossless | **Default, safest** |
-| Opus | 55MB | Lossy | Risk of truncation on long files |
-| WAV | 465MB | Lossless | Works but larger |
-| Original M4A | 173MB | Source | Also works directly |
+### 输出格式说明
 
-**Do NOT split long recordings** — splitting breaks speaker ID consistency.
-
-## MiMo-V2.5-ASR (optional, GPU-only)
-
-`--lang mimo` runs Xiaomi's
-[MiMo-V2.5-ASR](https://huggingface.co/XiaomiMiMo/MiMo-V2.5-ASR) locally on a
-CUDA GPU. Use it when:
-- You want to evaluate MiMo against Paraformer on Chinese audio.
-- The recording has heavy code-switching, dialects (Wu, Cantonese, Hokkien,
-  Sichuanese), lyrics, or rare proper nouns that other presets mis-transcribe.
-
-**Requirements:**
-- CUDA ≥12.0 and **≥20 GB VRAM** (16 GB cards OOM during inference).
-- Python 3.12 (enforced by `setup_env.sh`).
-- ~20 GB weight download (one-time) and `flash-attn==2.7.4.post1` compile
-  (needs `nvcc` from the CUDA toolkit, takes 10–30 min).
-
-**Install (opt-in):**
-
-```bash
-# One-time: install MiMo on top of the standard environment
-AUTO_YES=1 INSTALL_MIMO=1 \
-    MIMO_WEIGHTS_PATH=/mnt/models/hf \
-    bash $SCRIPTS/setup_env.sh
+#### TXT 格式
+```
+[00:00:00.000 - 00:00:03.500] 这是第一句话
+[00:00:03.500 - 00:00:07.200] 这是第二句话
 ```
 
-**Run:**
+#### SRT 格式
+```
+1
+00:00:00,000 --> 00:00:03,500
+这是第一句话
 
-```bash
-python3 $SCRIPTS/transcribe.py podcast.m4a \
-    --lang mimo --num-speakers 2 \
-    --mimo-weights-path /mnt/models/hf
+2
+00:00:03,500 --> 00:00:07,200
+这是第二句话
 ```
 
-**Resume after failure:**
-
-```bash
-python3 $SCRIPTS/transcribe.py podcast.m4a \
-    --lang mimo --resume-mimo --mimo-weights-path /mnt/models/hf
+#### JSON 格式（含词级别）
+```json
+[
+  {
+    "start": 0.0,
+    "end": 3.5,
+    "text": "这是第一句话",
+    "words": [
+      {"word": "这是", "start": 0.0, "end": 0.5, "score": 0.95},
+      ...
+    ]
+  }
+]
 ```
 
-**Limitations:**
-- No hotword biasing (MiMo has no API for it — `--hotwords` is ignored).
-- No CPU fallback.
-- Inference is slower than Paraformer on the same GPU (8B model vs ~0.3B);
-  expect RTF around 0.1–0.2 on an A100.
+### 常见问题处理
 
-## Key Flags
+**首次运行较慢**：
+- WhisperX 需要下载模型文件，首次运行会比较慢
+- 后续运行会使用缓存的模型
 
-| Flag | Purpose |
-|------|---------|
-| `--lang` | `zh` (default), `zh-basic`, `en`, `auto`, `whisper` |
-| `--hotwords` | Hotword file or string — biases ASR (zh only) |
-| `--reference F` | Reference file for LLM ASR correction |
-| `--num-speakers N` | Expected speaker count (improves diarization) |
-| `--speakers "A,B,C"` | Assign real names by first-appearance order |
-| `--speaker-context F` | JSON with per-speaker roles for LLM |
-| `--no-detect-gender` | Disable automatic speaker gender detection (CAM++ gender classifier) |
-| `--speaker-genders "A:female,B:male"` | Override per-speaker gender (also accepts positional `female,male`) |
-| `--audio-format` | `flac` (default), `opus`, `wav` |
-| `--device cpu` | Force CPU mode |
-| `--batch-size N` | Adjust for memory (60 for CPU, 100 if GPU OOM) |
-| `--phase1-only` | Exit after Phase 1 (VAD + ASR + diarization), skip Phase 2 + 3 |
-| `--json-out PATH` | Write raw transcript JSON to explicit path (overrides default naming) |
-| `--skip-transcribe` | Resume from saved `*_raw_transcript.json` |
-| `--skip-llm` | Skip LLM cleanup (default when `--model` is omitted) |
-| `--model ID` | Enable LLM cleanup with this model (auto-detects Bedrock/Anthropic/OpenAI) |
-| `--title "..."` | Output document title |
-| `--clean-cache` | Delete LLM chunk cache after completion |
-| `--output PATH` | Custom output file path |
-| `--model-cache-dir` | ModelScope model cache directory (~3GB, default: `~/.cache/modelscope/`) |
-| `--mimo-audio-tag` | MiMo language hint: `<chinese>` (default), `<english>`, `<auto>` |
-| `--mimo-batch N` | Concurrent VAD segments per MiMo call (default 1; H100/80GB can go higher) |
-| `--mimo-weights-path DIR` | Cache dir for MiMo weights (default: `$HF_HOME` → `~/.cache/huggingface`) |
-| `--resume-mimo` | Resume MiMo Phase 1 from `*_mimo_partial.json` after a mid-run failure |
+**内存不足**：
+- 使用更小的模型（tiny 或 base）
+- 确保系统有足够的内存
 
-## Outputs
+**识别准确度低**：
+- 尝试使用更大的模型（medium 或 large-v2）
+- 明确指定语言而不是自动检测
 
-- `<stem>-transcript.md` — Final Markdown with speaker labels and timestamps
-- `<stem>_raw_transcript.json` — Raw Phase 1 output (for resume/analysis)
+### 示例交互
 
-## Speaker Diarization Tips
+用户：帮我把这个视频转成文字
 
-FunASR's CAM++ may merge acoustically similar speakers. To improve:
+助手：
+1. 检查 uv ✓
+2. 询问视频文件路径
+3. 使用 AskUserQuestion 询问模型、语言、格式等
+4. 执行转录
+5. 展示结果预览和保存路径
 
-1. **`--num-speakers N`** — Hint expected count
-2. **`--hotwords`** — Include participant names (Chinese names work best)
-3. **`--speaker-context`** — Provide per-person keywords for LLM splitting
-4. **Keyword matching** — Search `*_raw_transcript.json` for unique phrases
+### 交互风格
 
-### Speaker gender
-
-Enabled by default: each detected speaker is classified as `male` / `female`
-via 3D-Speaker's CAM++ gender classifier (`iic/speech_campplus_two_class_gender_16k`).
-The result appears next to each name in the **Speaker List** table and is
-injected into the LLM cleanup prompt so pronouns (他/她, he/she) get corrected.
-
-Precedence when combined:
-
-1. `--speaker-genders "Alice:female,Bob:male"` (explicit CLI) — always wins
-2. Reference text hints like `主播（女）：韩梅梅` or `Host (male): Alice` — override auto
-3. CAM++ auto-detection — fallback
-
-Disable with `--no-detect-gender` if you don't need gender and want to save
-the ~500 MB model download and extra inference time.
-
-## CPU-only / Low-Memory Machines
-
-Long recordings on resource-constrained machines may hit exec timeouts
-or OOM kills. See `references/pipeline-details.md` for workarounds:
-- Detach from agent timeouts with `systemd-run` or `nohup`
-- Prevent OOM via swap and/or `--lang zh-basic` (lighter model)
-
-## Additional Resources
-
-- **`references/pipeline-details.md`** — Architecture, model specs, benchmarks,
-  speaker role verification, hotword effectiveness, clustering patch
-- **`scripts/transcribe.py`** — Main transcription pipeline
-- **`scripts/verify_speakers.py`** — Speaker label verification & fix
-- **`scripts/llm_utils.py`** — Shared LLM infrastructure (Bedrock/Anthropic/OpenAI)
-- **`scripts/setup_env.sh`** — Environment setup (venv + deps + patch)
+- 使用简单友好的语言
+- 解释不同模型大小的区别
+- 如果遇到错误，提供清晰的解决方案
+- 转录成功后给予积极反馈

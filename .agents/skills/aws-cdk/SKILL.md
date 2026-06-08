@@ -1,72 +1,161 @@
 ---
 name: aws-cdk
-description: Authors, deploys, and troubleshoots AWS infrastructure using CDK with TypeScript or Python. Covers best practices, stack architecture, and construct patterns. Always use when writing CDK constructs, bootstrapping environments, running cdk deploy/synth/diff, fixing CDK or CloudFormation errors, planning stack structure, importing existing resources, resolving drift, or refactoring stacks without resource replacement.
-version: 1
+description: AWS Cloud Development Kit infrastructure as code patterns and best practices for serverless, containers, and cloud-native applications
 ---
 
-# AWS CDK
+# AWS CDK Skill
 
-## Overview
+Infrastructure as Code (IaC) using AWS Cloud Development Kit with TypeScript/Python for building scalable cloud applications.
 
-Domain expertise for CDK construct authoring, deployment workflows, compliance, drift, importing resources, safe refactoring, and troubleshooting CDK CLI / CloudFormation errors.
+## When to Use This Skill
 
-**When NOT to use:** Raw CloudFormation YAML/JSON. SAM. Terraform/Pulumi. CI/CD beyond CDK Pipelines. Use builtin knowledge or specialized skills for these.
+Activate this skill when the user:
+- Requests AWS infrastructure setup
+- Needs serverless application architecture
+- Wants to define cloud resources as code
+- Mentions "AWS CDK", "infrastructure as code", "CloudFormation", "serverless"
+- Requires best practices for AWS resource management
+- Asks about container orchestration (ECS, EKS)
+- Needs API Gateway, Lambda, DynamoDB patterns
 
-## Critical Warnings
+## Core Capabilities
 
-**Deadly embrace**: Removing a cross-stack reference deadlocks deployment. Two-deploy fix required: (1) remove consumer import + add `this.exportValue()` on producer, deploy; (2) remove `exportValue()`, deploy again. See [troubleshooting-deployment](references/troubleshooting-deployment.md).
+### 1. Common CDK Patterns
+- **Serverless API**: API Gateway + Lambda + DynamoDB
+- **Static Website**: S3 + CloudFront + Route53
+- **Container Service**: ECS Fargate + ALB + RDS
+- **Event-Driven**: EventBridge + Lambda + SQS/SNS
+- **Data Pipeline**: S3 + Lambda + Glue + Athena
+- **CI/CD Pipeline**: CodePipeline + CodeBuild + CodeDeploy
 
-**Construct ID changes cause replacement**: Renaming/moving a construct changes its logical ID → CloudFormation replaces the resource (data loss for stateful resources). Always `cdk diff` before deploy. See [refactor-and-prevent-replacement](references/refactor-and-prevent-replacement.md).
+### 2. CDK Constructs
+- **L1 (CloudFormation)**: Direct CFN resources
+- **L2 (Curated)**: AWS construct library
+- **L3 (Patterns)**: High-level patterns
+- **Custom Constructs**: Reusable components
 
-**UPDATE_ROLLBACK_FAILED**: Stack is stuck. Fix with `cdk rollback $STACK` or `cdk rollback $STACK --orphan <LogicalId>`. See [troubleshooting-deployment](references/troubleshooting-deployment.md).
+### 3. Best Practices
+- Multi-environment deployment (dev, staging, prod)
+- Tagging and cost allocation
+- Security best practices (IAM, VPC, encryption)
+- Monitoring and logging (CloudWatch)
+- Resource cleanup and lifecycle management
 
-**Non-empty S3 buckets persist after destroy**: You MUST set both `removalPolicy: DESTROY` and `autoDeleteObjects: true`. Versioned buckets are worse — delete markers persist even after apparent deletion.
+## Example Patterns
 
-## Common Workflows
+### Serverless API Stack
+```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
-| Task | Quick Command | Details |
-|------|--------------|---------|
-| Bootstrap | `cdk bootstrap aws://$ACCOUNT/$REGION` | [bootstrap-and-project-setup](references/bootstrap-and-project-setup.md) |
-| New TS project | `cdk init app --language typescript` — use `tsx`, `eslint-plugin-awscdk` | [bootstrap-and-project-setup](references/bootstrap-and-project-setup.md) |
-| New Python project | `cdk init app --language python` — pin deps, use virtualenv | [bootstrap-and-project-setup](references/bootstrap-and-project-setup.md) |
-| Deploy | `cdk synth --strict` → `cdk diff` → `cdk deploy` | Always diff before deploy to prod |
-| cdk-nag | `Aspects.of(app).add(new AwsSolutionsChecks())` | [compliance-and-drift](references/compliance-and-drift.md) |
-| Drift | `cdk drift $STACK` (use `--fail` in CI) | [compliance-and-drift](references/compliance-and-drift.md) |
-| Import resource | `cdk import` (interactive or `--resource-mapping` for CI), `cdk deploy --import-existing-resources` | [import-and-migrate](references/import-and-migrate.md) |
-| Refactor safely | `cdk refactor --unstable=refactor` — no property changes in same deploy | [refactor-and-prevent-replacement](references/refactor-and-prevent-replacement.md) |
+export class ServerlessApiStack extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
 
-## Troubleshooting
+    // DynamoDB Table
+    const table = new dynamodb.Table(this, 'ItemsTable', {
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
-| Error | Cause → Fix |
-|-------|------------|
-| **DeployFailed / DeploymentError** | CDK error is not root cause. Check CFN events: `aws cloudformation describe-stack-events --stack-name $STACK --query "StackEvents[?contains(ResourceStatus,'FAILED')]"`. [Details](references/troubleshooting-deployment.md) |
-| **NoCredentials / ExpiredToken / AssumeRoleFailed** | `aws sts get-caller-identity` + `cdk doctor`. Expired SSO, missing `env`, missing `sts:AssumeRole`. [Details](references/troubleshooting-credentials.md) |
-| **Asset errors** (CannotFindAsset, FailedToBundleAsset, AssetBuildFailed, AssetPublishFailed) | Path wrong, Docker not running, or bootstrap bucket perms. Use `path.join(__dirname, ...)`. [Details](references/troubleshooting-synth.md) |
-| **AppRequired** | Add `"app": "npx tsx bin/my-app.ts"` to `cdk.json`. [Details](references/troubleshooting-synth.md) |
-| **AnnotationErrors** | Fix the underlying issue; suppress with `NagSuppressions` only as last resort. [Details](references/troubleshooting-synth.md) |
-| **ConcurrentReadLock / ConcurrentWriteLock** | `rm -rf cdk.out` then re-run. Parallel CI: `--output ./cdk.out.$BUILD_ID`. [Details](references/troubleshooting-synth.md) |
-| **BootstrapVersionValidation** | Re-bootstrap. Match `--qualifier` everywhere. [Details](references/troubleshooting-credentials.md) |
-| **DependencyCycle** | Extract shared resource into third stack or use SSM for late-binding. [Details](references/troubleshooting-synth.md) |
-| **UnresolvedAccount** | Set explicit `env: { account, region }` on stack. Commit `cdk.context.json`. [Details](references/troubleshooting-credentials.md) |
-| **NoStacksMatched** | CDK uses logical ID (2nd constructor arg), not CFN name. `cdk list` to find IDs. [Details](references/troubleshooting-synth.md) |
-| **Cannot find module** (synth time) | Run `npx tsc --noEmit`, check `cdk.json` app path matches `tsconfig.json` `outDir`, delete stale `.js` files. Python: activate venv. [Details](references/troubleshooting-synth.md) |
-| **V1 import paths / duplicate aws-cdk-lib** | V1 `@aws-cdk/*` imports, wrong `Construct` import, duplicate lib copies in monorepos. [Details](references/v1-to-v2-migration.md) |
-| **Lambda Cannot find module** (runtime) | Wrong handler value, missing SDK v3 migration, Python deps not bundled. [Details](references/troubleshooting-deployment.md) |
-| **API Gateway multi-stage conflicts** | Set `deploy: false` on `RestApi`, create `Deployment` and `Stage` explicitly. [Details](references/troubleshooting-deployment.md) |
+    // Lambda Function
+    const handler = new lambda.Function(this, 'ItemsHandler', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      code: lambda.Code.fromAsset('lambda'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: table.tableName,
+      },
+    });
 
-## Construct Patterns
+    table.grantReadWriteData(handler);
 
-Prefer L2. Use L1 with Mixins/Facades when L2 lacks a property. Escape hatches: `node.defaultChild` → `addPropertyOverride`. See [construct-patterns](references/construct-patterns.md).
+    // API Gateway
+    const api = new apigateway.RestApi(this, 'ItemsApi', {
+      restApiName: 'Items Service',
+      description: 'This service manages items.',
+    });
 
-## Additional Resources
+    const items = api.root.addResource('items');
+    items.addMethod('GET', new apigateway.LambdaIntegration(handler));
+    items.addMethod('POST', new apigateway.LambdaIntegration(handler));
 
-- Search AWS documentation for "CDK Developer Guide", "CDK API Reference" and "CDK Pipelines" respectively
+    const item = items.addResource('{id}');
+    item.addMethod('GET', new apigateway.LambdaIntegration(handler));
+    item.addMethod('PUT', new apigateway.LambdaIntegration(handler));
+    item.addMethod('DELETE', new apigateway.LambdaIntegration(handler));
+  }
+}
+```
 
-## Security Considerations
+### Static Website with CloudFront
+```typescript
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
-- OIDC for CI/CD credentials (no static keys)
-- `--custom-permissions-boundary` on bootstrap
-- `grant*()` for inter-resource IAM
-- `cdk-nag` + `--strict` in CI
-- Stateful resources in own stack with `terminationProtection: true`
-- Commit `cdk.context.json`
+export class StaticWebsiteStack extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // S3 Bucket
+    const siteBucket = new s3.Bucket(this, 'SiteBucket', {
+      websiteIndexDocument: 'index.html',
+      websiteErrorDocument: 'error.html',
+      publicReadAccess: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // CloudFront Distribution
+    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'SiteDistribution', {
+      originConfigs: [{
+        s3OriginSource: {
+          s3BucketSource: siteBucket,
+        },
+        behaviors: [{ isDefaultBehavior: true }],
+      }],
+    });
+
+    // Deploy site contents
+    new s3deploy.BucketDeployment(this, 'DeployWebsite', {
+      sources: [s3deploy.Source.asset('./website')],
+      destinationBucket: siteBucket,
+      distribution,
+      distributionPaths: ['/*'],
+    });
+
+    new cdk.CfnOutput(this, 'DistributionDomainName', {
+      value: distribution.distributionDomainName,
+    });
+  }
+}
+```
+
+## Best Practices
+
+### Do's
+- ✅ Use typed constructs (TypeScript recommended)
+- ✅ Separate stacks by lifecycle and team ownership
+- ✅ Tag all resources for cost tracking
+- ✅ Use environment variables for configuration
+- ✅ Implement proper IAM least privilege
+- ✅ Enable CloudWatch logs and metrics
+- ✅ Use CDK context for environment-specific values
+- ✅ Version lock your CDK dependencies
+
+### Don'ts
+- ❌ Don't hardcode sensitive values (use Secrets Manager)
+- ❌ Don't create circular dependencies between stacks
+- ❌ Don't forget to set removal policies
+- ❌ Don't ignore CDK security warnings
+- ❌ Don't deploy to production without testing
+
+## Resources
+
+- AWS CDK Docs: https://docs.aws.amazon.com/cdk/
+- CDK Patterns: https://cdkpatterns.com/
+- AWS Construct Library: https://docs.aws.amazon.com/cdk/api/v2/

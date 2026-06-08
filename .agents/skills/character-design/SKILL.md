@@ -1,79 +1,139 @@
 ---
-name: character-design
-description: Extract character entities from narrative text. Use when analyzing characters, relationships, psychology, development arcs, voice/mocap data, and character variants.
+name: Character Design
+description: |
+  Use this skill for character creation: "character design", "player character", "NPC design", "antagonist", "villain", "boss design", "companion", "character arc".
+
+  **Load references when:**
+  - Full character worksheet → `references/character-worksheet.md`
+  - NPC roles and patterns → `references/npc-roles.md`
+  - Villain/boss design → `references/antagonist-design.md`
+version: 1.1.0
 ---
-# character-design
 
-Domain skill for character extraction.
+# Character Design for Games
 
-## Entity Types
+Frameworks for designing memorable characters. Every character exists to serve a purpose: design function before personality, then add personality that reinforces function.
 
-| Type | Description |
-|------|-------------|
-| `character` | Main character entity with name, role, personality, motivation |
-| `character_evolution` | Character development arc or growth moment |
-| `character_profile_entry` | Backstory detail or profile information |
-| `character_relationship` | Relationship between two characters |
-| `character_variant` | Alternate version, iteration, or form |
-| `voice_actor` | Voice acting information |
-| `motion_capture` | Motion capture performance data |
+## Core Principle: Function First
 
-## Extraction Rules
+| Type | Function |
+|------|----------|
+| **Player characters** | Express player agency and skill |
+| **NPCs** | Provide services, information, emotional connection |
+| **Antagonists** | Create obstacles and motivation |
+| **Companions** | Expand gameplay and relationships |
 
-1. **Identify characters**: Named characters with dialogue/actions, referred-to characters, groups
-2. **Extract details**: Name, role, status, personality traits, motivations, goals
-3. **Track development**: Growth moments, realizations, motivation changes
-4. **Map relationships**: Type (friend, rival, family, romantic), strength, dynamics
-5. **Note variants**: Alternate forms, timelines, disguises
+---
 
-## Domain Constraints
+## Character Quick Design
 
-- `backstory`: minimum 100 characters
-- `ability.power_level`: integer 1–10
-- `combat_stats`: attack, defense, health, speed ≥ 0
-- `status`: "active" or "inactive"
+**Hook formula:** "The [adjective] [archetype] who [unique trait or contradiction]"
 
-## Output Format
+**Three tests:**
+1. **Silhouette test** — Recognizable from outline alone?
+2. **Contradiction test** — More than their archetype?
+3. **Function test** — Clear gameplay purpose?
 
-Write to `entities/narrative.json` (narrative-team file):
+---
 
-```json
-{
-  "characters": [
-    {
-      "id": 1,
-      "world_id": 1,
-      "name": "Kira",
-      "backstory": "... minimum 100 characters ...",
-      "status": "active",
-      "abilities": [
-        { "name": "Flame Mastery", "description": "...", "power_level": 8 }
-      ],
-      "created_at": "2026-02-14T10:00:00+00:00",
-      "updated_at": "2026-02-14T10:00:00+00:00",
-      "version": 1
-    }
-  ],
-  "character_relationships": [
-    {
-      "id": 2,
-      "character_from_id": 1,
-      "character_to_id": 3,
-      "relationship_type": "friend",
-      "description": "Strong friendship forged through shared battles",
-      "relationship_level": 60,
-      "is_mutual": true,
-      "created_at": "2026-02-14T10:00:00+00:00",
-      "updated_at": "2026-02-14T10:00:00+00:00",
-      "version": 1
-    }
-  ],
-  "next_id": 3
-}
+## Player Character (PC)
+
+### Blank Slate vs Defined
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| Blank slate | Player projects themselves | Less narrative depth |
+| Defined character | Stronger story potential | May not identify |
+| Hybrid | Balance of both | Complex to design |
+
+**Key questions:** Does PC speak? How much backstory? What abilities start/unlock?
+
+---
+
+## NPC Roles
+
+| Role | Function | Example |
+|------|----------|---------|
+| **Mentor** | Teaches, guides | Tutorial giver, wise figure |
+| **Merchant** | Trades resources | Shopkeeper |
+| **Quest giver** | Provides objectives | Village elder |
+| **Ally** | Assists gameplay | Combat helper |
+| **Gatekeeper** | Controls access | Guard |
+| **Flavor** | World texture | Townsfolk |
+
+**Key Rule:** Every NPC serves at least one clear function.
+
+See **`references/npc-roles.md`** for detailed patterns.
+
+---
+
+## Antagonist Types
+
+| Type | Relationship | Design Focus |
+|------|-------------|--------------|
+| **Rival** | Equal competitor | Mirror of player |
+| **Tyrant** | Power imbalance | Oppressive presence |
+| **Monster** | Inhuman threat | Primal fear |
+| **Fallen hero** | What player could become | Tragic connection |
+
+### Villain Checklist
+- [ ] Clear motivation (not evil for evil's sake)
+- [ ] Personal connection to player/world
+- [ ] Competent (actual threat)
+- [ ] Understandable (even if not sympathetic)
+- [ ] Memorable presence
+
+See **`references/antagonist-design.md`** for boss design patterns.
+
+---
+
+## Character Arc Template
+
+```
+WANT: What they desire
+NEED: What they actually need (often different)
+LIE: False belief holding them back
+TRUTH: Realization enabling growth
+CHANGE: How they're different at end
 ```
 
-## Key Considerations
+| Arc | Pattern | Payoff |
+|-----|---------|--------|
+| Positive | Flaw → Growth | Hope, satisfaction |
+| Negative | Virtue → Fall | Tragedy, warning |
+| Flat | Tested → Proven | Affirmation |
 
-- **Uniqueness**: Each character has a unique ID; name variations reference the same ID
-- **Implicit relationships**: Track both explicit and implied connections
-- **Cross-references**: If needed, track relationships separately in drafts, but final JSON must be compatible with `LoreData.from_dict`.
+---
+
+## Character Progression
+
+| Model | Description | Best For |
+|-------|-------------|----------|
+| **Unlock** | Gain new abilities | Metroidvanias |
+| **Upgrade** | Improve existing | Roguelikes, RPGs |
+| **Transform** | Fundamentally change | Story-driven |
+| **Equip** | Change via items | Loot games |
+| **Master** | Player skill grows | Skill-based |
+
+---
+
+## Character Economy
+
+**Law of Character Economy:** More characters = less development per character.
+
+| Scope | Character Count |
+|-------|-----------------|
+| Game jam | 3-5 total |
+| Short game | 5-10 |
+| Medium game | 10-20 |
+| Long game | 20-40 |
+
+**Focus resources on:** PC (most screen time), main antagonist (most conflict), key NPCs (most interaction).
+
+---
+
+## Related Skills
+
+- **`narrative-design`** — Character arcs and story
+- **`world-building`** — Characters in context
+- **`game-balance`** — Balancing abilities

@@ -4,10 +4,7 @@ description: Postgres performance optimization and best practices from Supabase.
 license: MIT
 metadata:
   author: supabase
-  version: "1.1.1"
-  organization: Supabase
-  date: January 2026
-  abstract: Comprehensive Postgres performance optimization guide for developers using Supabase and Postgres. Contains performance rules across 8 categories, prioritized by impact from critical (query performance, connection management) to incremental (advanced features). Each rule includes detailed explanations, incorrect vs. correct SQL examples, query plan analysis, and specific performance metrics to guide automated optimization and code generation.
+  version: "1.0.0"
 ---
 
 # Supabase Postgres Best Practices
@@ -23,26 +20,6 @@ Reference these guidelines when:
 - Configuring connection pooling or scaling
 - Optimizing for Postgres-specific features
 - Working with Row-Level Security (RLS)
-
-## Quick Decision Tree
-
-```
-Problem?
-├─ Slow query → query-missing-indexes, query-composite-indexes, monitor-explain-analyze
-├─ Connection errors / timeouts → conn-pooling, conn-limits, conn-idle-timeout
-├─ Deadlocks / long transactions → lock-short-transactions, lock-deadlock-prevention
-├─ Bulk load slow → data-batch-inserts, data-upsert
-├─ Table bloat / VACUUM issues → monitor-vacuum-analyze
-├─ JSONB queries slow → advanced-jsonb-indexing
-├─ FTS / search quality → advanced-full-text-search (pair with /postgres-semantic-search for BM25 + vector)
-└─ Security / multi-tenant → security-* rules, RLS
-```
-
-## Related Skills
-
-- `/postgres-semantic-search` — Vector search (pgvector), hybrid BM25 + semantic, ParadeDB
-- `/nextjs-chatbot` — Chatbot orchestration, session DB, feedback, HITL
-- `/ai-sdk-6` — AI SDK v6 patterns for backend integration
 
 ## Rule Categories by Priority
 
@@ -62,9 +39,9 @@ Problem?
 Read individual rule files for detailed explanations and SQL examples:
 
 ```
-references/query-missing-indexes.md
-references/query-partial-indexes.md
-references/_sections.md
+rules/query-missing-indexes.md
+rules/schema-partial-indexes.md
+rules/_sections.md
 ```
 
 Each rule file contains:
@@ -75,10 +52,6 @@ Each rule file contains:
 - Additional context and references
 - Supabase-specific notes (when applicable)
 
-## References
+## Full Compiled Document
 
-- https://www.postgresql.org/docs/current/
-- https://supabase.com/docs
-- https://wiki.postgresql.org/wiki/Performance_Optimization
-- https://supabase.com/docs/guides/database/overview
-- https://supabase.com/docs/guides/auth/row-level-security
+For the complete guide with all rules expanded: `AGENTS.md`

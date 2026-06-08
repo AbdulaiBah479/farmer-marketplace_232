@@ -1,13 +1,19 @@
 ---
 name: sdd-explore
-description: >
-  Explore and investigate ideas before committing to a change.
-  Trigger: When the orchestrator launches you to think through a feature, investigate the codebase, or clarify requirements.
+description: 'Explore and investigate ideas before committing to a change. Trigger:
+  When the orchestrator launches you to think through a feature, investigate the codebase,
+  or clarify requirements.
+
+  '
 license: MIT
 metadata:
   author: gentleman-programming
-  version: "2.0"
+  version: '2.0'
+risk: safe
+source: community
 ---
+
+
 
 ## Purpose
 
@@ -17,37 +23,32 @@ You are a sub-agent responsible for EXPLORATION. You investigate the codebase, t
 
 The orchestrator will give you:
 - A topic or feature to explore
-- Artifact store mode (`engram | openspec | hybrid | none`)
+- Artifact store mode (`engram | openspec | none`)
 
 ## Execution and Persistence Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Read and follow `skills/_shared/persistence-contract.md` for mode resolution rules.
 
-- **engram**: Optionally read `sdd-init/{project}` for project context. Save artifact as `sdd/{change-name}/explore` (or `sdd/explore/{topic-slug}` if standalone).
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram AND write to filesystem.
-- **none**: Return result only.
+- If mode is `engram`: Read and follow `skills/_shared/engram-convention.md`. Artifact type: `explore`. If no change name (standalone explore), use slug: `sdd/explore/{topic-slug}`.
+- If mode is `openspec`: Read and follow `skills/_shared/openspec-convention.md`.
+- If mode is `none`: Return result only.
 
 ### Retrieving Context
 
-> Follow **Section B** from `skills/_shared/sdd-phase-common.md` for retrieval.
-
-- **engram**: Search for `sdd-init/{project}` (project context) and optionally `sdd/` (existing artifacts).
+Before starting, load any existing project context and specs per the active convention:
+- **engram**: Search for `sdd-init/{project}` (project context) and `sdd/` (existing artifacts).
 - **openspec**: Read `openspec/config.yaml` and `openspec/specs/`.
 - **none**: Use whatever context the orchestrator passed in the prompt.
 
 ## What to Do
 
-### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
-
-### Step 2: Understand the Request
+### Step 1: Understand the Request
 
 Parse what the user wants to explore:
 - Is this a new feature? A bug fix? A refactor?
 - What domain does it touch?
 
-### Step 3: Investigate the Codebase
+### Step 2: Investigate the Codebase
 
 Read relevant code to understand:
 - Current architecture and patterns
@@ -64,7 +65,7 @@ INVESTIGATE:
 └── Identify dependencies and coupling
 ```
 
-### Step 4: Analyze Options
+### Step 3: Analyze Options
 
 If there are multiple approaches, compare them:
 
@@ -73,16 +74,18 @@ If there are multiple approaches, compare them:
 | Option A | ... | ... | Low/Med/High |
 | Option B | ... | ... | Low/Med/High |
 
-### Step 5: Persist Artifact
+### Step 4: Optionally Save Exploration
 
-**This step is MANDATORY when tied to a named change — do NOT skip it.**
+If the orchestrator provided a change name (i.e., this exploration is part of `/sdd-new`), save your analysis to:
 
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
-- artifact: `explore`
-- topic_key: `sdd/{change-name}/explore` (or `sdd/explore/{topic-slug}` if standalone)
-- type: `architecture`
+```
+openspec/changes/{change-name}/
+└── exploration.md          ← You create this
+```
 
-### Step 6: Return Structured Analysis
+If no change name was provided (standalone `/sdd-explore`), skip file creation — just return the analysis.
+
+### Step 5: Return Structured Analysis
 
 Return EXACTLY this format to the orchestrator (and write the same content to `exploration.md` if saving):
 
@@ -126,4 +129,7 @@ Return EXACTLY this format to the orchestrator (and write the same content to `e
 - Keep your analysis CONCISE - the orchestrator needs a summary, not a novel
 - If you can't find enough information, say so clearly
 - If the request is too vague to explore, say what clarification is needed
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+- Return a structured envelope with: `status`, `executive_summary`, `detailed_report` (optional), `artifacts`, `next_recommended`, and `risks`
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.

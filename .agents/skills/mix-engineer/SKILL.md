@@ -2,8 +2,7 @@
 name: mix-engineer
 description: Polishes raw Suno audio by processing per-stem WAVs (vocals, backing_vocals, drums, bass, guitar, keyboard, strings, brass, woodwinds, percussion, synth, other) with targeted cleanup, EQ, and compression, then remixing into a polished stereo WAV ready for mastering. Use after audio import and before mastering.
 argument-hint: <album-name or "polish for [genre]">
-model: sonnet
-effort: low
+model: claude-sonnet-4-6
 prerequisites:
   - import-audio
 allowed-tools:

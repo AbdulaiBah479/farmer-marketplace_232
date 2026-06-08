@@ -1,316 +1,198 @@
 ---
 name: hugging-face-cli
-description: >-
-  Execute Hugging Face Hub operations using the hf CLI. Covers authentication,
-  downloading models and datasets, uploading files, repository management,
-  cache operations, cloud compute jobs, inference endpoints, and Hub browsing.
-  Use when the user needs to interact with the Hugging Face Hub from the terminal.
-allowed-tools:
-  - Bash
-  - Read
-  - Write
-  - Grep
-  - Glob
-metadata:
-  version: "1.0.0"
-  author: "platxa"
-  tags:
-    - builder
-    - ml
-    - huggingface
-    - cli
-    - devops
-  provenance:
-    upstream_source: "hugging-face-cli"
-    upstream_sha: "c0e08fdaa8ed6929110c97d1b867d101fd70218f"
-    regenerated_at: "2026-02-04T15:54:34Z"
-    generator_version: "1.0.0"
-    intent_confidence: 0.68
+description: "Execute Hugging Face Hub operations using the `hf` CLI. Use when the user needs to download models/datasets/spaces, upload files to Hub repositories, create repos, manage local cache, or run compute jobs on HF infrastructure. Covers authentication, file transfers, repository creation, cache operations, and cloud compute."
+source: "https://github.com/huggingface/skills/tree/main/skills/hugging-face-cli"
+risk: safe
 ---
 
 # Hugging Face CLI
 
-Run `hf` commands to download models, upload files, manage repos, control cache, and launch compute jobs on Hugging Face infrastructure.
+The `hf` CLI provides direct terminal access to the Hugging Face Hub for downloading, uploading, and managing repositories, cache, and compute resources.
 
-## Overview
+## When to Use This Skill
 
-The `hf` CLI provides direct terminal access to the Hugging Face Hub. It wraps `huggingface_hub` Python APIs into shell commands for authentication, file transfer, repository lifecycle, cache control, Hub browsing, cloud compute, and inference endpoint management.
+Use this skill when:
+- User needs to download models, datasets, or spaces
+- Uploading files to Hub repositories
+- Creating Hugging Face repositories
+- Managing local cache
+- Running compute jobs on HF infrastructure
+- Working with Hugging Face Hub authentication
 
-**What it builds:**
-- Download commands for models, datasets, and spaces
-- Upload workflows with commit messages, PRs, and sync patterns
-- Repository creation, tagging, branching, and settings updates
-- Cache inspection, cleanup, and verification pipelines
-- Cloud compute job definitions with GPU/TPU flavor selection
-- Inference endpoint deployment configurations
+## Quick Command Reference
 
-## Workflow
+| Task | Command |
+|------|---------|
+| Login | `hf auth login` |
+| Download model | `hf download <repo_id>` |
+| Download to folder | `hf download <repo_id> --local-dir ./path` |
+| Upload folder | `hf upload <repo_id> . .` |
+| Create repo | `hf repo create <name>` |
+| Create tag | `hf repo tag create <repo_id> <tag>` |
+| Delete files | `hf repo-files delete <repo_id> <files>` |
+| List cache | `hf cache ls` |
+| Remove from cache | `hf cache rm <repo_or_revision>` |
+| List models | `hf models ls` |
+| Get model info | `hf models info <model_id>` |
+| List datasets | `hf datasets ls` |
+| Get dataset info | `hf datasets info <dataset_id>` |
+| List spaces | `hf spaces ls` |
+| Get space info | `hf spaces info <space_id>` |
+| List endpoints | `hf endpoints ls` |
+| Run GPU job | `hf jobs run --flavor a10g-small <image> <cmd>` |
+| Environment info | `hf env` |
 
-### Step 1: Authenticate
+## Core Commands
 
+### Authentication
 ```bash
-# Interactive login
-hf auth login
-
-# Non-interactive (CI/CD)
-hf auth login --token $HF_TOKEN --add-to-git-credential
-
-# Verify identity
-hf auth whoami
+hf auth login                    # Interactive login
+hf auth login --token $HF_TOKEN  # Non-interactive
+hf auth whoami                   # Check current user
+hf auth list                     # List stored tokens
+hf auth switch                   # Switch between tokens
+hf auth logout                   # Log out
 ```
 
-Store tokens securely. Use `--add-to-git-credential` for git-lfs operations. The token is saved to `~/.cache/huggingface/token` by default. Override with `HF_TOKEN` environment variable.
-
-### Step 2: Download Content
-
+### Download
 ```bash
-# Full repo to cache
-hf download meta-llama/Llama-3.2-1B-Instruct
-
-# To local directory
-hf download meta-llama/Llama-3.2-1B-Instruct --local-dir ./models
-
-# Specific files with pattern filtering
-hf download stabilityai/sdxl-base --include "*.safetensors" --exclude "*.fp16.*"
-
-# Dataset download
-hf download HuggingFaceH4/ultrachat_200k --repo-type dataset
-
-# Specific revision
-hf download bigcode/starcoder2 --revision refs/pr/42
-
-# Dry-run to check files before downloading
-hf download openai-community/gpt2 --dry-run
-
-# Quiet mode for scripting
-MODEL_PATH=$(hf download gpt2 --quiet)
+hf download <repo_id>                              # Full repo to cache
+hf download <repo_id> file.safetensors             # Specific file
+hf download <repo_id> --local-dir ./models         # To local directory
+hf download <repo_id> --include "*.safetensors"    # Filter by pattern
+hf download <repo_id> --repo-type dataset          # Dataset
+hf download <repo_id> --revision v1.0              # Specific version
 ```
 
-Set `HF_HUB_DOWNLOAD_TIMEOUT=30` for slow connections (default: 10s). Use `--cache-dir` to redirect storage.
-
-### Step 3: Upload Content
-
+### Upload
 ```bash
-# Upload current directory to repo root
-hf upload my-username/my-model . .
-
-# Single file
-hf upload my-username/my-model model.safetensors
-
-# Upload to specific path in repo
-hf upload my-username/my-model ./output /weights
-
-# Create PR instead of direct push
-hf upload my-username/my-model . . --create-pr
-
-# Custom commit message
-hf upload my-username/my-model . . --commit-message="Release v1.0"
-
-# Sync with remote (delete removed files)
-hf upload my-username/my-space . . --repo-type space --exclude="/logs/*" --delete="*"
-
-# Auto-upload during development (every 5 minutes)
-hf upload my-username/my-space . . --repo-type space --every=5
-
-# Very large folders (resumable, chunked)
-hf upload-large-folder my-username/my-model ./large_model_dir
+hf upload <repo_id> . .                            # Current dir to root
+hf upload <repo_id> ./models /weights              # Folder to path
+hf upload <repo_id> model.safetensors              # Single file
+hf upload <repo_id> . . --repo-type dataset        # Dataset
+hf upload <repo_id> . . --create-pr                # Create PR
+hf upload <repo_id> . . --commit-message="msg"     # Custom message
 ```
 
-The repo is auto-created if it does not exist. Use `--quiet` to get only the upload URL.
-
-### Step 4: Manage Repositories
-
+### Repository Management
 ```bash
-# Create repos
-hf repo create my-model
-hf repo create my-dataset --repo-type dataset --private
-hf repo create my-app --repo-type space --space-sdk gradio
-
-# Branching and tagging
-hf repo branch create my-model release-v1
-hf repo tag create my-model v1.0 --revision release-v1
-
-# Update settings
-hf repo settings my-model --gated auto --private true
-
-# Delete files from repo
-hf repo-files delete my-model "*.bin" folder/
-
-# Move or delete repo
-hf repo move old-ns/model new-ns/model
-hf repo delete my-model
+hf repo create <name>                              # Create model repo
+hf repo create <name> --repo-type dataset          # Create dataset
+hf repo create <name> --private                    # Private repo
+hf repo create <name> --repo-type space --space_sdk gradio  # Gradio space
+hf repo delete <repo_id>                           # Delete repo
+hf repo move <from_id> <to_id>                     # Move repo to new namespace
+hf repo settings <repo_id> --private true          # Update repo settings
+hf repo list --repo-type model                     # List repos
+hf repo branch create <repo_id> release-v1         # Create branch
+hf repo branch delete <repo_id> release-v1         # Delete branch
+hf repo tag create <repo_id> v1.0                  # Create tag
+hf repo tag list <repo_id>                         # List tags
+hf repo tag delete <repo_id> v1.0                  # Delete tag
 ```
 
-### Step 5: Manage Cache
-
+### Delete Files from Repo
 ```bash
-# Inspect cache
-hf cache ls
-hf cache ls --revisions --format json
-
-# Filter by size
-hf cache ls --filter "size>30g" --sort size:desc
-
-# Remove specific repos or revisions
-hf cache rm model/gpt2 --dry-run
-hf cache rm model/gpt2 -y
-
-# Remove old unused entries
-hf cache rm $(hf cache ls --filter "accessed>1y" -q) -y
-
-# Prune detached revisions
-hf cache prune
-
-# Verify checksums
-hf cache verify deepseek-ai/DeepSeek-OCR
-hf cache verify my-model --local-dir /path/to/repo --fail-on-missing-files
+hf repo-files delete <repo_id> folder/             # Delete folder
+hf repo-files delete <repo_id> "*.txt"             # Delete with pattern
 ```
 
-Default cache location: `~/.cache/huggingface/hub`. Override with `HF_HUB_CACHE`.
+### Cache Management
+```bash
+hf cache ls                      # List cached repos
+hf cache ls --revisions          # Include individual revisions
+hf cache rm model/gpt2           # Remove cached repo
+hf cache rm <revision_hash>      # Remove cached revision
+hf cache prune                   # Remove detached revisions
+hf cache verify gpt2             # Verify checksums from cache
+```
 
-### Step 6: Browse the Hub
-
+### Browse Hub
 ```bash
 # Models
-hf models ls --search "lora" --sort downloads --limit 10
-hf models info Qwen/Qwen2-72B
+hf models ls                                        # List top trending models
+hf models ls --search "MiniMax" --author MiniMaxAI  # Search models
+hf models ls --filter "text-generation" --limit 20  # Filter by task
+hf models info MiniMaxAI/MiniMax-M2.1               # Get model info
 
 # Datasets
-hf datasets ls --search "code" --sort downloads
-hf datasets info HuggingFaceFW/fineweb
+hf datasets ls                                      # List top trending datasets
+hf datasets ls --search "finepdfs" --sort downloads # Search datasets
+hf datasets info HuggingFaceFW/finepdfs             # Get dataset info
 
 # Spaces
-hf spaces ls --filter "3d" --limit 10
-hf spaces info enzostvs/deepsite
-
-# Papers
-hf papers ls --sort=trending --limit=5
-hf papers ls --date=today
+hf spaces ls                                        # List top trending spaces
+hf spaces ls --filter "3d" --limit 10               # Filter by 3D modeling spaces
+hf spaces info enzostvs/deepsite                    # Get space info
 ```
 
-### Step 7: Run Cloud Compute Jobs
-
+### Jobs (Cloud Compute)
 ```bash
-# CPU job
-hf jobs run python:3.12 python script.py
-
-# GPU job
-hf jobs run --flavor a10g-small pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel python train.py
-
-# With secrets and environment variables
-hf jobs run --secrets HF_TOKEN -e WANDB_KEY=$WANDB_KEY --flavor a100-large my-image python train.py
-
-# Set timeout (default 30min)
-hf jobs run --timeout 2h --flavor a100-large my-image python train.py
-
-# UV script execution
-hf jobs uv run --with transformers --flavor t4-small train.py
-
-# Scheduled jobs
-hf jobs scheduled run @daily --timeout 4h python:3.12 python pipeline.py
-
-# Monitor jobs
-hf jobs ps -a
-hf jobs logs <job_id>
-hf jobs stats <job_id>
-hf jobs cancel <job_id>
+hf jobs run python:3.12 python script.py           # Run on CPU
+hf jobs run --flavor a10g-small <image> <cmd>      # Run on GPU
+hf jobs run --secrets HF_TOKEN <image> <cmd>       # With HF token
+hf jobs ps                                         # List jobs
+hf jobs logs <job_id>                              # View logs
+hf jobs cancel <job_id>                            # Cancel job
 ```
 
-**GPU flavors:** `cpu-basic`, `cpu-upgrade`, `t4-small`, `t4-medium`, `l4x1`, `l4x4`, `a10g-small`, `a10g-large`, `a10g-largex2`, `a10g-largex4`, `a100-large`, `h100`, `h100x8`
-
-**TPU flavors:** `v5e-1x1`, `v5e-2x2`, `v5e-2x4`
-
-### Step 8: Deploy Inference Endpoints
-
+### Inference Endpoints
 ```bash
-# Deploy from catalog
-hf endpoints catalog deploy --repo meta-llama/Llama-3.2-1B-Instruct --name my-endpoint
-
-# Custom deployment
+hf endpoints ls                                     # List endpoints
 hf endpoints deploy my-endpoint \
-  --repo gpt2 \
-  --framework pytorch \
+  --repo openai/gpt-oss-120b \
+  --framework vllm \
   --accelerator gpu \
   --instance-size x4 \
   --instance-type nvidia-a10g \
   --region us-east-1 \
   --vendor aws
-
-# Lifecycle management
-hf endpoints describe my-endpoint
-hf endpoints pause my-endpoint
-hf endpoints resume my-endpoint
-hf endpoints scale-to-zero my-endpoint
-hf endpoints delete my-endpoint --yes
+hf endpoints describe my-endpoint                   # Show endpoint details
+hf endpoints pause my-endpoint                      # Pause endpoint
+hf endpoints resume my-endpoint                     # Resume endpoint
+hf endpoints scale-to-zero my-endpoint              # Scale to zero
+hf endpoints delete my-endpoint --yes               # Delete endpoint
 ```
+**GPU Flavors:** `cpu-basic`, `cpu-upgrade`, `cpu-xl`, `t4-small`, `t4-medium`, `l4x1`, `l4x4`, `l40sx1`, `l40sx4`, `l40sx8`, `a10g-small`, `a10g-large`, `a10g-largex2`, `a10g-largex4`, `a100-large`, `h100`, `h100x8`
 
 ## Common Patterns
 
-### CI/CD Model Publishing
-
+### Download and Use Model Locally
 ```bash
-hf auth login --token $HF_TOKEN --add-to-git-credential
-hf repo create $ORG/$MODEL_NAME --private || true
-hf upload $ORG/$MODEL_NAME ./output . --commit-message="Release v${VERSION}"
-hf repo tag create $ORG/$MODEL_NAME "v${VERSION}"
-```
-
-### Download for Local Inference
-
-```bash
-MODEL_PATH=$(hf download meta-llama/Llama-3.2-1B-Instruct --quiet)
-echo "Model cached at: $MODEL_PATH"
-
-# Or download to a fixed directory
+# Download to local directory for deployment
 hf download meta-llama/Llama-3.2-1B-Instruct --local-dir ./model
+
+# Or use cache and get path
+MODEL_PATH=$(hf download meta-llama/Llama-3.2-1B-Instruct --quiet)
 ```
 
-### GPU Training Job with Monitoring
-
+### Publish Model/Dataset
 ```bash
-JOB_ID=$(hf jobs run --detach --flavor a100-large \
-  --secrets HF_TOKEN -e WANDB_KEY=$WANDB_KEY \
-  --timeout 4h pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel \
-  python train.py)
-hf jobs logs $JOB_ID
-hf jobs stats $JOB_ID
+hf repo create my-username/my-model --private
+hf upload my-username/my-model ./output . --commit-message="Initial release"
+hf repo tag create my-username/my-model v1.0
 ```
 
-## Environment Variables
+### Sync Space with Local
+```bash
+hf upload my-username/my-space . . --repo-type space \
+  --exclude="logs/*" --delete="*" --commit-message="Sync"
+```
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `HF_TOKEN` | Authentication token | - |
-| `HF_HOME` | Root config/cache directory | `~/.cache/huggingface` |
-| `HF_HUB_CACHE` | Repository cache directory | `$HF_HOME/hub` |
-| `HF_HUB_DOWNLOAD_TIMEOUT` | Download timeout in seconds | `10` |
-| `HF_HUB_OFFLINE` | Disable all HTTP calls | `False` |
-| `HF_XET_HIGH_PERFORMANCE` | Maximize network/disk throughput | `False` |
-| `HF_HUB_DISABLE_PROGRESS_BARS` | Suppress progress bars | `False` |
+### Check Cache Usage
+```bash
+hf cache ls                      # See all cached repos and sizes
+hf cache rm model/gpt2           # Remove a repo from cache
+```
 
-## Troubleshooting
+## Key Options
 
-| Issue | Solution |
-|-------|----------|
-| `Read timed out` during download | `export HF_HUB_DOWNLOAD_TIMEOUT=30` |
-| Authentication failures in CI | Use `hf auth login --token $HF_TOKEN` before operations |
-| Disk full from cache | `hf cache ls --sort size:desc` then `hf cache rm <repo_id>` |
-| Slow downloads | Set `HF_XET_HIGH_PERFORMANCE=1` to maximize bandwidth |
-| Interrupted large uploads | Use `hf upload-large-folder` for automatic resume |
-| Need offline access | Download first, then set `HF_HUB_OFFLINE=1` |
-
-## Output Checklist
-
-- [ ] Authentication verified with `hf auth whoami`
-- [ ] Correct `--repo-type` specified (model, dataset, or space)
-- [ ] `--local-dir` used when files need a fixed path (not cache)
-- [ ] `--quiet` mode used in scripts for parseable output
-- [ ] `--dry-run` used before large downloads
-- [ ] Cache periodically cleaned with `hf cache prune`
-- [ ] Commit messages included in uploads with `--commit-message`
-- [ ] Job timeout set appropriately with `--timeout`
+- `--repo-type`: `model` (default), `dataset`, `space`
+- `--revision`: Branch, tag, or commit hash
+- `--token`: Override authentication
+- `--quiet`: Output only essential info (paths/URLs)
 
 ## References
 
 - **Complete command reference**: See [references/commands.md](references/commands.md)
-- **Workflow examples and patterns**: See [references/workflows.md](references/workflows.md)
+- **Workflow examples**: See [references/examples.md](references/examples.md)

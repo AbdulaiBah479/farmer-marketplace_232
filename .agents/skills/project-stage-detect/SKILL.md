@@ -1,11 +1,9 @@
 ---
 name: project-stage-detect
-description: "Automatically analyze project state, detect stage, identify gaps, and recommend next steps based on existing artifacts. Use when user asks 'where are we in development', 'what stage are we in', 'full project audit'."
+description: "Automatically analyze project state, detect stage, identify gaps, and recommend next steps based on existing artifacts."
 argument-hint: "[optional: role filter like 'programmer' or 'designer']"
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash, Write
-model: haiku
-# Read-only diagnostic skill — no specialist agent delegation needed
+allowed-tools: Read, Glob, Grep, Bash
 ---
 
 # Project Stage Detection
@@ -27,8 +25,7 @@ Analyze project structure and content:
 
 **Design Documentation** (`design/`):
 - Count GDD files in `design/gdd/*.md`
-- Check for game-concept.md, game-pillars.md, systems-index.md
-- If systems-index.md exists, count total systems vs. designed systems
+- Check for game-concept.md, game-pillars.md
 - Analyze completeness (Overview, Detailed Design, Edge Cases, etc.)
 - Count narrative docs in `design/narrative/`
 - Count level designs in `design/levels/`
@@ -59,19 +56,14 @@ Analyze project structure and content:
 
 ### 2. Classify Project Stage
 
-Based on scanned artifacts, determine stage. Check `production/stage.txt` first —
-if it exists, use its value (explicit override from `/gate-check`). Otherwise,
-auto-detect using these heuristics (check from most-advanced backward):
+Based on scanned artifacts, determine stage:
 
 | Stage | Indicators |
 |-------|-----------|
-| **Concept** | No game concept doc, brainstorming phase |
-| **Systems Design** | Game concept exists, systems index missing or incomplete |
-| **Technical Setup** | Systems index exists, engine not configured |
-| **Pre-Production** | Engine configured, `src/` has <10 source files |
-| **Production** | `src/` has 10+ source files, active development |
-| **Polish** | Explicit only (set by `/gate-check` Production → Polish gate) |
-| **Release** | Explicit only (set by `/gate-check` Polish → Release gate) |
+| **Concept** | No code or minimal prototype, maybe idea docs |
+| **Pre-production** | Design docs started, prototypes, no main src/ |
+| **Production** | Active src/, sprint plans, growing systems |
+| **Post-Launch** | Released, production/ has release history, maintenance focus |
 
 ### 3. Collaborative Gap Identification
 
@@ -80,20 +72,18 @@ auto-detect using these heuristics (check from most-advanced backward):
 - "I see combat code (`src/gameplay/combat/`) but no `design/gdd/combat-system.md`. Was this prototyped first, or should we reverse-document?"
 - "You have 15 ADRs but no architecture overview. Should I create one to help new contributors?"
 - "No sprint plans in `production/`. Are you tracking work elsewhere (Jira, Trello, etc.)?"
-- "I found a game concept but no systems index. Have you decomposed the concept into individual systems yet, or should we run `/map-systems`?"
 - "Prototypes directory has 3 projects with no READMEs. Were these experiments, or do they need documentation?"
 
 ### 4. Generate Stage Report
 
-Use template: `.claude/docs/templates/project-stage-report.md`
+Use template: `docs/templates/project-stage-report.md`
 
 **Report structure**:
 ```markdown
 # Project Stage Analysis
 
 **Date**: [date]
-**Stage**: [Concept/Systems Design/Technical Setup/Pre-Production/Production/Polish/Release]
-**Stage Confidence**: [PASS — clearly detected / CONCERNS — ambiguous signals / FAIL — critical gaps block progress]
+**Stage**: [Concept/Pre-production/Production/Post-Launch]
 
 ## Completeness Overview
 - Design: [X%] ([N] docs, [gaps])
@@ -147,7 +137,7 @@ Recommended next steps:
 - [Priority 2]
 - [Priority 3]
 
-May I write the full stage analysis to production/project-stage-report.md?
+May I write the full stage analysis to docs/project-stage-report.md?
 ```
 
 Wait for user approval before creating the file.
@@ -173,7 +163,6 @@ Wait for user approval before creating the file.
 
 After generating the report, suggest relevant next steps:
 
-- **Concept exists but no systems index?** → `/map-systems` to decompose into systems
 - **Missing design docs?** → `/reverse-document design src/[system]`
 - **Missing architecture docs?** → `/architecture-decision` or `/reverse-document architecture`
 - **Prototypes need documentation?** → `/reverse-document concept prototypes/[name]`
@@ -190,6 +179,6 @@ This skill follows the collaborative design principle:
 2. **Present Options**: "Should I create X, or is it tracked elsewhere?"
 3. **User Decides**: Wait for direction
 4. **Show Draft**: Display report summary
-5. **Get Approval**: "May I write to production/project-stage-report.md?"
+5. **Get Approval**: "May I write to docs/project-stage-report.md?"
 
 **Never** silently write files. **Always** show findings and ask before creating artifacts.

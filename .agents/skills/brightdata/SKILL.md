@@ -1,55 +1,21 @@
 ---
-name: BrightData
-description: "4-tier progressive scraping with automatic escalation: Tier 1 WebFetch (fast, built-in), Tier 2 curl with Chrome headers (basic bot bypass), Tier 3 agent-browser (headless JavaScript rendering via Rust CLI daemon), Tier 4 Bright Data MCP proxy (CAPTCHA, advanced bot detection, residential proxies). Two workflows: FourTierScrape for single URLs, Crawl for multi-page site mapping (light crawl via scrape_batch loop up to 50 pages, or full crawl via Bright Data Crawl API). Always starts at Tier 1 and escalates only when blocked — Tier 4 has usage costs. Outputs URL content in markdown format. USE WHEN Bright Data, scrape URL, web scraping, bot detection, crawl site, CAPTCHA, can't access, site blocking, extract page content, scrape whole site, spider domain, convert URL to markdown, getting blocked. NOT FOR headless batch automation without scraping need (use Browser). NOT FOR simple public content (use WebFetch directly). NOT FOR real-browser bot bypass where staying logged in and zero CDP fingerprint matter (use Interceptor). Playwright is banned across PAI."
-effort: medium
+name: brightdata
+description: |
+  Progressive four-tier URL content scraping with automatic fallback strategy.
+
+  USE WHEN user says "scrape this URL", "fetch this page", "get content from",
+  "can't access this site", "use Bright Data", "pull content from URL",
+  or needs to retrieve web content that may have bot detection or access restrictions.
 ---
 
-## Customization
+## Workflow Routing (SYSTEM PROMPT)
 
-**Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/BrightData/`
+**CRITICAL: This workflow implements progressive escalation for URL content retrieval.**
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
-
-
-## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
-
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
-
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:31337/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the BrightData skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
-
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **BrightData** skill to ACTION...
-   ```
-
-**This is not optional. Execute this curl command immediately upon skill invocation.**
-
-## Workflow Routing
-
-**When executing a workflow, output this notification directly:**
-
-```
-Running the **WorkflowName** workflow in the **Brightdata** skill to ACTION...
-```
-
-**Route to the appropriate workflow based on the request.**
-
-**When user requests scraping/fetching a single URL:**
+**When user requests scraping/fetching URL content:**
 Examples: "scrape this URL", "fetch this page", "get content from [URL]", "pull content from this site", "retrieve [URL]", "can't access this site", "this site is blocking me", "use Bright Data to fetch"
-→ **READ:** Workflows/FourTierScrape.md
+→ **READ:** ${PAI_DIR}/skills/brightdata/workflows/four-tier-scrape.md
 → **EXECUTE:** Four-tier progressive scraping workflow (WebFetch → Curl → Browser Automation → Bright Data MCP)
-
-**When user requests crawling multiple pages from a site:**
-Examples: "crawl this site", "crawl all pages under /docs", "spider this domain", "map this website", "get all pages from", "crawl [URL]", "scrape the whole site", "extract all pages"
-→ **READ:** Workflows/Crawl.md
-→ **EXECUTE:** Crawl workflow (Light Crawl for <50 pages, Full Crawl via Bright Data Crawl API for larger sites)
 
 ---
 
@@ -78,21 +44,12 @@ Examples: "crawl this site", "crawl all pages under /docs", "spider this domain"
 - "convert [URL] to markdown"
 - "need the HTML from this site"
 
-### Crawling Requests (Categories 9-11)
-- "crawl this site", "crawl [URL]", "spider this domain"
-- "map this website", "get all pages from [URL]", "scrape the whole site"
-- "crawl all pages under /docs", "extract all pages from", "site crawl"
-- "get every page on this site", "full site extraction"
-- "crawl depth 3", "crawl up to 50 pages"
-
 ### Use Case Indicators
 - User needs web content for research or analysis
 - Standard methods (WebFetch) are failing
 - Site has bot detection or rate limiting
 - Need reliable content extraction
 - Converting web pages to structured format (markdown)
-- User needs multiple pages from a site, not just one
-- User wants to map a site's structure or extract a section
 
 ---
 
@@ -101,7 +58,7 @@ Examples: "crawl this site", "crawl all pages under /docs", "spider this domain"
 **Progressive Escalation Strategy:**
 1. **Tier 1: WebFetch** - Fast, simple, built-in Claude Code tool
 2. **Tier 2: Customized Curl** - Chrome-like browser headers to bypass basic bot detection
-3. **Tier 3: agent-browser** - Headless browser automation via agent-browser Rust CLI daemon for JavaScript-heavy sites. Playwright is banned across PAI.
+3. **Tier 3: Browser Automation** - Full browser automation using Playwright for JavaScript-heavy sites
 4. **Tier 4: Bright Data MCP** - Professional scraping service that handles CAPTCHA and advanced bot detection
 
 **Key Features:**
@@ -115,15 +72,10 @@ Examples: "crawl this site", "crawl all pages under /docs", "spider this domain"
 
 ## Workflow Overview
 
-**FourTierScrape.md** - Complete URL content scraping with four-tier fallback strategy
-- **When to use:** Any single URL content retrieval request
+**four-tier-scrape.md** - Complete URL content scraping with four-tier fallback strategy
+- **When to use:** Any URL content retrieval request
 - **Process:** Start with WebFetch → If fails, use curl with Chrome headers → If fails, use Browser Automation → If fails, use Bright Data MCP
 - **Output:** URL content in markdown format
-
-**Crawl.md** - Multi-page crawling with link discovery and site mapping
-- **When to use:** Crawling multiple pages from a site, mapping site structure, extracting a section
-- **Process:** Light Crawl (MCP scrape_batch + link extraction loop, up to 50 pages) or Full Crawl (Bright Data Crawl API for entire sites)
-- **Output:** Site map + page contents in markdown, with crawl stats and cost summary
 
 ---
 
@@ -132,14 +84,13 @@ Examples: "crawl this site", "crawl all pages under /docs", "spider this domain"
 **Integration Points:**
 - **WebFetch Tool** - Built-in Claude Code tool for basic URL fetching
 - **Bash Tool** - For executing curl commands with custom headers
-- **Browser Automation** - agent-browser headless daemon for JavaScript rendering
-- **Bright Data MCP** - `mcp__Brightdata__scrape_as_markdown` and `scrape_batch` for advanced scraping
-- **Bright Data Crawl API** - HTTP POST to `api.brightdata.com/datasets/v3/trigger` for full-site crawls
+- **Browser Automation** - Playwright-based browser automation for JavaScript rendering
+- **Bright Data MCP** - `mcp__Brightdata__scrape_as_markdown` for advanced scraping
 
 **When Each Tier Is Used:**
 - **Tier 1 (WebFetch):** Simple sites, public content, no bot detection
 - **Tier 2 (Curl):** Sites with basic user-agent checking, simple bot detection
-- **Tier 3 (agent-browser):** Sites requiring JavaScript execution, dynamic content loading
+- **Tier 3 (Browser Automation):** Sites requiring JavaScript execution, dynamic content loading
 - **Tier 4 (Bright Data):** Sites with CAPTCHA, advanced bot detection, residential proxy requirements
 
 **Configuration:**
@@ -167,7 +118,7 @@ Skill Response:
 1. Routes to four-tier-scrape.md
 2. Attempts Tier 1 (WebFetch) → Fails (blocked)
 3. Attempts Tier 2 (Curl with Chrome headers) → Fails (JavaScript required)
-4. Attempts Tier 3 (agent-browser) → Success
+4. Attempts Tier 3 (Browser Automation) → Success
 5. Returns content in markdown
 6. Total time: ~15-20 seconds
 
@@ -179,7 +130,7 @@ Skill Response:
 1. Routes to four-tier-scrape.md
 2. Attempts Tier 1 (WebFetch) → Fails (blocked)
 3. Attempts Tier 2 (Curl) → Fails (advanced detection)
-4. Attempts Tier 3 (agent-browser) → Fails (CAPTCHA)
+4. Attempts Tier 3 (Browser Automation) → Fails (CAPTCHA)
 5. Attempts Tier 4 (Bright Data MCP) → Success
 6. Returns content in markdown
 7. Total time: ~30-40 seconds
@@ -198,24 +149,7 @@ Skill Response:
 ---
 
 **Related Documentation:**
-- `~/.claude/PAI/DOCUMENTATION/Skills/SkillSystem.md` - Canonical structure guide
-- `~/.claude/` - Overall PAI philosophy
+- `${PAI_DIR}/skills/CORE/SKILL-STRUCTURE-AND-ROUTING.md` - Canonical structure guide
+- `${PAI_DIR}/skills/CORE/CONSTITUTION.md` - Overall Kai philosophy
 
-**Last Updated:** 2026-02-22
-
-## Gotchas
-
-- **4-tier escalation: WebFetch → curl → agent-browser → Bright Data proxy.** Always start at Tier 1 and escalate only when blocked. Playwright is banned across PAI.
-- **Bright Data proxy has usage costs.** Don't use Tier 4 for sites accessible via Tier 1-3.
-- **CAPTCHA-solving introduces latency.** Allow extra time for Tier 4 responses.
-- **Credentials in `~/.claude/.env`** — BRIGHTDATA_API_KEY.
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"BrightData","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
-
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.
+**Last Updated:** 2025-11-23

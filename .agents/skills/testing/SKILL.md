@@ -1,69 +1,222 @@
 ---
 name: testing
-description: TDD and testing skills for iOS/macOS apps. Covers characterization tests, TDD workflows, test contracts, snapshot tests, and test infrastructure. Use for test-driven development, adding tests to existing code, or building test infrastructure.
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion]
+license: Apache-2.0
+description: >
+  Grafana Cloud testing capabilities — Synthetic Monitoring (probing URLs, DNS, TCP, ping from
+  multiple regions), k6 Cloud (managed load testing with distributed execution), and Frontend
+  Observability (Faro, real user monitoring). Use when setting up uptime checks, external probes,
+  configuring k6 cloud runs, monitoring frontend performance, or testing APIs from multiple locations.
 ---
 
-# Testing & TDD Skills
+# Grafana Cloud Testing
 
-Test-driven development workflows and testing infrastructure for Apple platform apps. Works with both new and existing codebases.
+> **Docs**: https://grafana.com/docs/grafana-cloud/testing/
 
-## When This Skill Activates
+## Synthetic Monitoring
 
-Use this skill when the user:
-- Wants to do TDD (test-driven development) with AI-generated code
-- Needs to add tests before refactoring existing code
-- Wants to fix a bug using the red-green-refactor cycle
-- Needs test infrastructure (factories, mocks, contracts)
-- Asks about snapshot/visual regression testing
-- Wants to ensure AI-generated code is correct via tests
+Monitor uptime and performance from 20+ global locations without deploying your own agents.
 
-## Available Skills
+### Check Types
 
-### For Existing Codebases
+| Check | Use Case |
+|-------|----------|
+| **HTTP** | Website and API availability, response validation |
+| **DNS** | DNS resolution time and record validation |
+| **TCP** | Port/service connectivity |
+| **Ping** | ICMP availability |
+| **Traceroute** | Network path diagnostics |
+| **Multihttp** | Multi-step HTTP flows |
+| **Scripted** (k6 browser) | Full browser-based user flow testing |
 
-**characterization-test-generator/**
-Capture current behavior of existing code before refactoring. Generates tests that document what code actually does (not what it should do), giving you a safety net for AI-assisted refactoring.
+### HTTP Check Configuration (API)
 
-**tdd-bug-fix/**
-Reproduce-first bug fix workflow. Write a failing test that demonstrates the bug, then fix it. Ensures the bug never regresses — critical when AI generates fixes.
+```bash
+curl -X POST https://synthetic-monitoring-api.grafana.net/sm/checks \
+  -H "Authorization: Bearer <sm-access-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "job": "website",
+    "target": "https://example.com",
+    "frequency": 60000,
+    "timeout": 15000,
+    "enabled": true,
+    "probes": [1, 5, 10],
+    "settings": {
+      "http": {
+        "method": "GET",
+        "ipVersion": "V4",
+        "noFollowRedirects": false,
+        "tlsConfig": {},
+        "validStatusCodes": [200, 201],
+        "validHTTPVersions": ["HTTP/1.1", "HTTP/2.0"],
+        "failIfBodyMatchesRegexp": ["error", "exception"],
+        "failIfBodyNotMatchesRegexp": ["OK"],
+        "headers": [{"name": "User-Agent", "value": "Grafana-Synthetic-Monitoring"}]
+      }
+    }
+  }'
+```
 
-**tdd-refactor-guard/**
-Pre-refactor safety checklist. Verifies test coverage exists before allowing AI to touch existing code. Prevents the "refactor without a safety net" problem.
+### Synthetic Monitoring Metrics
 
-### For New Code
+```promql
+# Probe success rate
+sum(rate(probe_success[5m])) by (job, instance, probe)
 
-**tdd-feature/**
-Red-green-refactor scaffold for new features. Generates the failing test first, then guides implementation to make it pass, then refactors. The core TDD workflow.
+# HTTP response time p95
+histogram_quantile(0.95, sum(rate(probe_duration_seconds_bucket[5m])) by (le, job))
 
-**test-contract/**
-Protocol/interface test suites. Define the contract (e.g., "any DataStore must handle empty state, single item, 100 items, and errors"), and it generates a test suite any implementation must pass.
+# DNS lookup time
+avg(probe_dns_lookup_time_seconds) by (job, instance)
 
-### Infrastructure
+# TLS expiry days remaining
+(probe_ssl_earliest_cert_expiry - time()) / 86400
+```
 
-**snapshot-test-setup/**
-SwiftUI visual regression testing using swift-snapshot-testing. Generates snapshot test boilerplate, configuration, and CI integration.
+### Alert on Synthetic Monitoring
 
-**test-data-factory/**
-Test fixture factories for your models. Makes writing tests faster by eliminating boilerplate data setup. Supports Builder pattern and static factory methods.
+```yaml
+groups:
+  - name: synthetic-monitoring
+    rules:
+      - alert: SyntheticCheckFailing
+        expr: avg_over_time(probe_success[5m]) < 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} failing from {{ $labels.probe }}"
 
-**integration-test-scaffold/**
-Cross-module test harness with mock servers, in-memory stores, and test configuration. For testing networking + persistence + business logic together.
+      - alert: TLSCertExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 14
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS cert for {{ $labels.instance }} expires in {{ $value }} days"
+```
 
-## How to Use
+## k6 Cloud (Grafana Cloud k6)
 
-1. Identify whether user is working on **new code** or **existing code**
-2. Read the relevant skill's SKILL.md for detailed workflow
-3. Detect project context (testing framework, architecture, existing tests)
-4. Generate tests following the skill's workflow
-5. Verify tests compile and run
+Run distributed load tests from multiple AWS regions without managing infrastructure.
 
-## Relationship to test-generator
+### k6 Script for Cloud
 
-The `generators/test-generator/` skill generates test boilerplate (unit, integration, UI tests). These testing skills are complementary — they focus on **workflows and methodology** (TDD cycle, characterization testing, contracts) rather than just test file generation.
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
 
-Cross-reference:
-- Use `test-generator` for "add tests to this class"
-- Use `testing/tdd-feature` for "I want to TDD this new feature"
-- Use `testing/characterization-test-generator` for "I need to safely refactor this"
-- Use `testing/tdd-bug-fix` for "fix this bug and make sure it never comes back"
+export const options = {
+  cloud: {
+    projectID: 3456789,
+    name: 'API Load Test - Release v2.0',
+    distribution: {
+      loadZone1: { loadZone: 'amazon:us:ashburn', percent: 50 },
+      loadZone2: { loadZone: 'amazon:eu:dublin', percent: 30 },
+      loadZone3: { loadZone: 'amazon:ap:tokyo', percent: 20 },
+    },
+  },
+  scenarios: {
+    load: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        { duration: '2m', target: 100 },
+        { duration: '10m', target: 100 },
+        { duration: '2m', target: 0 },
+      ],
+    },
+  },
+  thresholds: {
+    http_req_duration: ['p(95)<500'],
+    http_req_failed: ['rate<0.01'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://api.example.com/users');
+  check(res, {
+    'status 200': (r) => r.status === 200,
+    'fast': (r) => r.timings.duration < 500,
+  });
+  sleep(1);
+}
+```
+
+```bash
+# Authenticate
+k6 cloud login --token <your-grafana-cloud-token>
+
+# Run in cloud
+k6 cloud script.js
+
+# Run locally but stream to cloud
+k6 run --out cloud script.js
+```
+
+### k6 Cloud Test Runs API
+
+```bash
+# List test runs
+curl https://api.k6.io/v3/projects/{projectId}/test-runs \
+  -H "Authorization: Token <token>"
+
+# Get test run results
+curl https://api.k6.io/v3/runs/{runId} \
+  -H "Authorization: Token <token>"
+
+# Stop a running test
+curl -X POST https://api.k6.io/v3/runs/{runId}/stop \
+  -H "Authorization: Token <token>"
+```
+
+### CI/CD Integration
+
+```yaml
+# GitHub Actions
+- name: Run k6 Load Test
+  uses: grafana/k6-action@v0.3.1
+  with:
+    filename: tests/load.js
+    cloud: true
+    token: ${{ secrets.K6_CLOUD_TOKEN }}
+    flags: --out cloud
+```
+
+## Frontend Observability (Faro / RUM)
+
+```javascript
+// Initialize Faro in your web app
+import { initializeFaro, getWebInstrumentations } from '@grafana/faro-web-sdk';
+import { TracingInstrumentation } from '@grafana/faro-web-tracing';
+
+const faro = initializeFaro({
+  url: 'https://faro-collector-prod-xx.grafana.net/collect',
+  apiKey: 'your-faro-api-key',
+  app: {
+    name: 'my-frontend',
+    version: '1.0.0',
+    environment: 'production',
+  },
+  instrumentations: [
+    ...getWebInstrumentations({
+      captureConsole: true,
+      captureConsoleDisabledLevels: [],
+    }),
+    new TracingInstrumentation(),
+  ],
+});
+
+// Custom events
+faro.api.pushEvent('checkout_completed', { cart_value: '99.99' });
+
+// Custom measurements
+faro.api.pushMeasurement({ type: 'api_latency', values: { ms: 234 } });
+
+// Error capturing
+faro.api.pushError(new Error('Payment failed'));
+```
+
+```bash
+# Install
+npm install @grafana/faro-web-sdk @grafana/faro-web-tracing
+```

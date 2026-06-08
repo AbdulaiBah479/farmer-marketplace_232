@@ -5,7 +5,7 @@ from pypdf import PdfReader, PdfWriter
 from pypdf.annotations import FreeText
 
 
-# Fills a PDF by adding text annotations defined in `fields.json`. See FORMS.md.
+# Fills a PDF by adding text annotations defined in `fields.json`. See forms.md.
 
 
 def transform_coordinates(bbox, image_width, image_height, pdf_width, pdf_height):
@@ -28,7 +28,7 @@ def transform_coordinates(bbox, image_width, image_height, pdf_width, pdf_height
 def fill_pdf_form(input_pdf_path, fields_json_path, output_pdf_path):
     """Fill the PDF form with data from fields.json"""
     
-    # `fields.json` format described in FORMS.md.
+    # `fields.json` format described in forms.md.
     with open(fields_json_path, "r") as f:
         fields_data = json.load(f)
     

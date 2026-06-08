@@ -44,19 +44,16 @@ export default function RootLayout({
 
 ## Step 2: Default File (Critical!)
 
-**Every parallel route slot MUST have a `default.tsx`.** In Next.js 16 this is
-enforced at build time: a missing `default.js` now **fails the build** (in
-earlier versions it produced a runtime 404 on hard navigation).
+**Every parallel route slot MUST have a `default.tsx`** to prevent 404s on hard navigation.
 
 ```tsx
 // app/@modal/default.tsx
 export default function Default() {
-  return null; // or call notFound() to render the 404 UI
+  return null;
 }
 ```
 
-Without this file, Next.js can't determine what to render in the `@modal` slot
-on hard navigation, so the build errors out.
+Without this file, refreshing any page will 404 because Next.js can't determine what to render in the `@modal` slot.
 
 ## Step 3: Intercepting Route (Modal)
 
@@ -209,10 +206,9 @@ export default async function PhotoPage({ params }) {
 
 ## Common Gotchas
 
-### 1. Missing `default.tsx` → Build Failure (v16)
+### 1. Missing `default.tsx` → 404 on Refresh
 
-Every `@slot` folder needs a `default.tsx` that returns `null` (or calls
-`notFound()`). In Next.js 16 a missing `default.js` fails the build.
+Every `@slot` folder needs a `default.tsx` that returns `null` (or appropriate content).
 
 ### 2. Modal Persists After Navigation
 

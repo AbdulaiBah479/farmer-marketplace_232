@@ -1,202 +1,743 @@
 ---
 name: shopify-app-dev
-description: Build Shopify apps — app types, Remix template, App Bridge, session tokens, OAuth flow, app extensions, embedded admin apps. Use when developing Shopify apps or integrations.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: Custom Shopify app development using Shopify CLI, app architecture, OAuth authentication, app extensions, admin UI, Hydrogen/Remix frameworks, and deployment. Use when creating Shopify apps, setting up Shopify CLI, building app extensions, implementing OAuth flows, creating admin UI components, working with Hydrogen or Remix, deploying to Cloudflare Workers, or integrating third-party services with Shopify stores.
 ---
 
 # Shopify App Development
 
-## Before writing code
+Expert guidance for building custom Shopify apps using Shopify CLI, modern frameworks, and best practices.
 
-**Fetch live docs**:
-1. Fetch `https://shopify.dev/docs/apps/build` for app development overview
-2. Web-search `site:shopify.dev app bridge` for current App Bridge APIs and CDN version
-3. Web-search `site:shopify.dev shopify-app-template-remix` for Remix template patterns
-4. Web-search `site:shopify.dev shopify-app-remix authenticate` for authentication APIs
-5. Web-search `site:github.com shopify shopify-app-template-remix` for latest template source
+## When to Use This Skill
 
-## App Types
+Invoke this skill when:
 
-### Public Apps (App Store)
-- Listed on Shopify App Store
-- Installed by any merchant via OAuth flow
-- Must pass Shopify app review
-- Use session tokens for authentication
+- Creating custom Shopify apps with Shopify CLI
+- Setting up app development environment
+- Implementing OAuth authentication for apps
+- Building app extensions (admin blocks, theme app extensions)
+- Creating admin UI components and pages
+- Working with Hydrogen or Remix for headless storefronts
+- Deploying apps to Cloudflare Workers or other platforms
+- Integrating third-party APIs with Shopify
+- Creating app proxies for custom functionality
+- Implementing app billing and subscription plans
+- Building public or custom apps
 
-### Custom Apps
-- Built for a single store
-- Installed directly from admin (Settings > Apps)
-- Simpler auth: custom app access token (`shpca_` prefix)
+## Core Capabilities
 
-### Private Apps (Legacy)
-- Deprecated — migrate to custom apps
-- Used hardcoded credentials (`shppa_` prefix)
+### 1. Shopify CLI Setup
 
-## Remix App Architecture
+Install and configure Shopify CLI for app development.
 
-The official template (`shopify-app-template-remix`):
-
+**Install Shopify CLI:**
 ```bash
+# Using npm
+npm install -g @shopify/cli @shopify/app
+
+# Using Homebrew (macOS)
+brew tap shopify/shopify
+brew install shopify-cli
+
+# Verify installation
+shopify version
+```
+
+**Create New App:**
+```bash
+# Create app with Node.js/React
 shopify app init
-# Select "Remix" template
-# Provides: auth, session storage, webhook handling, Polaris UI
+
+# Choose template:
+# - Remix (recommended)
+# - Node.js + React
+# - PHP
+# - Ruby
+
+# App structure created:
+my-app/
+├── app/                    # Remix app routes
+├── extensions/             # App extensions
+├── shopify.app.toml       # App configuration
+├── package.json
+└── README.md
 ```
 
-### Key Files
-
-| File | Purpose |
-|------|---------|
-| `app/shopify.server.ts` | Initializes `@shopify/shopify-app-remix` (auth, sessions, webhooks) |
-| `app/routes/auth.$.tsx` | Handles OAuth callback |
-| `app/routes/webhooks.tsx` | Webhook endpoint |
-| `app/routes/app._index.tsx` | Main app UI (embedded in admin) |
-| `app/routes/app.tsx` | App layout with App Bridge provider |
-| `shopify.app.toml` | App configuration (scopes, URLs, extensions) |
-| `prisma/schema.prisma` | Database schema for session storage |
-
-> **Fetch live docs** for the current template file structure — files and patterns evolve with `@shopify/shopify-app-remix` versions.
-
-### Minimal Pattern: Authenticated Loader
-
-```typescript
-// Pattern: authenticate admin request, call GraphQL, return data
-// Fetch live docs for current authenticate.admin() API shape
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
-
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { admin } = await authenticate.admin(request);
-  const response = await admin.graphql(`{ shop { name } }`);
-  const { data } = await response.json();
-  return json({ shopName: data.shop.name });
-};
-```
-
-## OAuth Flow
-
-1. Merchant clicks "Install" → redirected to Shopify consent screen
-2. Shopify shows requested scopes → merchant approves
-3. Shopify redirects to your app with authorization code
-4. Your app exchanges code for access token (`shpua_` prefix)
-5. Token stored in session storage (Prisma, SQLite, Redis, etc.)
-6. Subsequent requests use session tokens (JWT) via App Bridge
-
-The Remix template handles steps 1-5 automatically via `authenticate.admin()`.
-
-> **Fetch live docs**: Web-search `site:shopify.dev oauth flow app installation` for current OAuth endpoints and token exchange details.
-
-## Session Tokens
-
-Modern Shopify apps use JWT session tokens instead of cookies:
-- App Bridge sends token in `Authorization: Bearer` header
-- Token is verified server-side using the app's API secret
-- Contains: `iss` (shop domain), `dest` (shop URL), `sub` (user ID), `aud` (API key)
-- Short-lived (1 minute), auto-refreshed by App Bridge
-- Never use cookies for auth in embedded apps
-
-> **Fetch live docs**: Web-search `site:shopify.dev session tokens jwt` for current token payload structure and verification.
-
-## App Bridge
-
-JavaScript library for embedded apps to communicate with Shopify admin:
-
-| Feature | Description |
-|---------|-------------|
-| Navigation | Redirect to admin pages, products, orders |
-| Toast | Temporary notifications (success/error) |
-| Modal | Dialog overlays |
-| Resource picker | Select products, collections, customers |
-| Title bar | Set title and action buttons |
-| Full-screen | Toggle full-screen mode |
-| Loading indicator | Show/hide loading state |
-
-**Note:** App Bridge v1/v2 are superseded. Use the current CDN-hosted version (automatically included with `@shopify/shopify-app-remix`).
-
-> **Fetch live docs**: The App Bridge API surface changes frequently. Web-search `site:shopify.dev app bridge` for current methods, resource picker options, and modal API.
-
-## App Configuration (shopify.app.toml)
-
+**App Configuration (shopify.app.toml):**
 ```toml
-# Stable structure — fetch live docs for current field names
-name = "My Shopify App"
-client_id = "your-api-key"
+# This file stores app configuration
+
+name = "my-app"
+client_id = "your-client-id"
+application_url = "https://your-app.com"
+embedded = true
 
 [access_scopes]
-scopes = "read_products,write_products,read_orders"
+# API access scopes
+scopes = "write_products,read_orders,read_customers"
 
 [auth]
-redirect_urls = ["https://your-app.com/auth/callback"]
+redirect_urls = [
+  "https://your-app.com/auth/callback",
+  "https://your-app.com/auth/shopify/callback"
+]
 
 [webhooks]
-api_version = "2025-01"  # Update to latest stable version
+api_version = "2025-10"
+
+[[webhooks.subscriptions]]
+topics = ["products/create", "products/update"]
+uri = "/webhooks"
 ```
 
-> **Fetch live docs**: Web-search `site:shopify.dev shopify.app.toml configuration` for current TOML fields — new sections are added for extensions, app proxy, POS, etc.
+### 2. Development Workflow
 
-## App Extensions
+**Start Development Server:**
+```bash
+# Start dev server with tunneling
+shopify app dev
 
-Apps can provide extensions that appear in various Shopify surfaces:
+# Server starts with:
+# - Local development URL: http://localhost:3000
+# - Public tunnel URL: https://random-subdomain.ngrok.io
+# - App installed in development store
+```
 
-| Extension Type | Location | Use Case |
-|---------------|----------|----------|
-| Theme app extension | Storefront (in theme) | Product badges, custom sections |
-| Checkout UI extension | Checkout page | Custom fields, upsells |
-| Post-purchase extension | After payment | Upsell/cross-sell |
-| POS UI extension | Point of Sale | Custom POS actions |
-| Admin action extension | Admin pages | Bulk actions, custom workflows |
-| Admin block extension | Resource pages | Embedded cards in admin |
+**Deploy App:**
+```bash
+# Deploy to production
+shopify app deploy
 
-> **Fetch live docs**: Extension types expand regularly. Web-search `site:shopify.dev app extensions types` for the current list and configuration patterns.
+# Generate app version and deploy extensions
+```
 
-## Scopes
+**Environment Variables (.env):**
+```bash
+SHOPIFY_API_KEY=your_api_key
+SHOPIFY_API_SECRET=your_api_secret
+SCOPES=write_products,read_orders
+HOST=your-app-domain.com
+SHOPIFY_APP_URL=https://your-app.com
+DATABASE_URL=postgresql://...
+```
 
-Request minimum necessary scopes:
+### 3. App Architecture (Remix)
 
-| Scope | Access |
-|-------|--------|
-| `read_products` / `write_products` | Products, variants, collections |
-| `read_orders` / `write_orders` | Orders, transactions |
-| `read_customers` / `write_customers` | Customer records |
-| `read_inventory` / `write_inventory` | Inventory levels |
-| `read_fulfillments` / `write_fulfillments` | Fulfillment orders |
-| `read_shipping` / `write_shipping` | Shipping and carrier services |
-| `read_content` / `write_content` | Pages, blogs, articles |
-| `read_themes` / `write_themes` | Theme files |
+Modern Shopify app using Remix framework.
 
-> **Fetch live docs**: New scopes are added with new API features. Web-search `site:shopify.dev access scopes` for the full current list.
+**app/routes/app._index.jsx (Home Page):**
+```javascript
+import { useLoaderData } from "@remix-run/react";
+import { authenticate } from "../shopify.server";
+import {
+  Page,
+  Layout,
+  Card,
+  DataTable,
+  Button,
+} from "@shopify/polaris";
 
-## Webhook Handler Pattern
+export async function loader({ request }) {
+  const { admin, session } = await authenticate.admin(request);
 
-```typescript
-// Pattern: authenticate webhook, switch on topic, process
-// Fetch live docs for current webhook topic constants
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { topic, shop, payload } = await authenticate.webhook(request);
+  // Fetch products using GraphQL
+  const response = await admin.graphql(`
+    query {
+      products(first: 10) {
+        edges {
+          node {
+            id
+            title
+            handle
+            status
+          }
+        }
+      }
+    }
+  `);
+
+  const { data } = await response.json();
+
+  return {
+    products: data.products.edges.map(e => e.node),
+    shop: session.shop,
+  };
+}
+
+export default function Index() {
+  const { products, shop } = useLoaderData();
+
+  const rows = products.map((product) => [
+    product.title,
+    product.handle,
+    product.status,
+  ]);
+
+  return (
+    <Page title="Products">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <DataTable
+              columnContentTypes={["text", "text", "text"]}
+              headings={["Title", "Handle", "Status"]}
+              rows={rows}
+            />
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+```
+
+**app/routes/app.product.$id.jsx (Product Detail):**
+```javascript
+import { json } from "@remix-run/node";
+import { useLoaderData, useSubmit } from "@remix-run/react";
+import { authenticate } from "../shopify.server";
+import {
+  Page,
+  Layout,
+  Card,
+  Form,
+  FormLayout,
+  TextField,
+  Button,
+} from "@shopify/polaris";
+import { useState } from "react";
+
+export async function loader({ request, params }) {
+  const { admin } = await authenticate.admin(request);
+
+  const response = await admin.graphql(`
+    query GetProduct($id: ID!) {
+      product(id: $id) {
+        id
+        title
+        description
+        status
+        vendor
+      }
+    }
+  `, {
+    variables: { id: `gid://shopify/Product/${params.id}` },
+  });
+
+  const { data } = await response.json();
+
+  return json({ product: data.product });
+}
+
+export async function action({ request, params }) {
+  const { admin } = await authenticate.admin(request);
+
+  const formData = await request.formData();
+  const title = formData.get("title");
+  const description = formData.get("description");
+
+  const response = await admin.graphql(`
+    mutation UpdateProduct($input: ProductInput!) {
+      productUpdate(input: $input) {
+        product {
+          id
+          title
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `, {
+    variables: {
+      input: {
+        id: `gid://shopify/Product/${params.id}`,
+        title,
+        description,
+      },
+    },
+  });
+
+  const { data } = await response.json();
+
+  if (data.productUpdate.userErrors.length > 0) {
+    return json({ errors: data.productUpdate.userErrors }, { status: 400 });
+  }
+
+  return json({ success: true });
+}
+
+export default function ProductDetail() {
+  const { product } = useLoaderData();
+  const submit = useSubmit();
+
+  const [title, setTitle] = useState(product.title);
+  const [description, setDescription] = useState(product.description);
+
+  const handleSubmit = () => {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+
+    submit(formData, { method: "post" });
+  };
+
+  return (
+    <Page title="Edit Product" backAction={{ url: "/app" }}>
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <FormLayout>
+              <TextField
+                label="Title"
+                value={title}
+                onChange={setTitle}
+                autoComplete="off"
+              />
+              <TextField
+                label="Description"
+                value={description}
+                onChange={setDescription}
+                multiline={4}
+                autoComplete="off"
+              />
+              <Button primary onClick={handleSubmit}>
+                Save
+              </Button>
+            </FormLayout>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+```
+
+### 4. App Extensions
+
+Extend Shopify functionality with various extension types.
+
+**Admin Action Extension:**
+
+Create button in admin product page:
+
+```bash
+shopify app generate extension
+
+# Choose: Admin action
+# Name: Export Product
+```
+
+**extensions/export-product/src/index.jsx:**
+```javascript
+import { extend, AdminAction } from "@shopify/admin-ui-extensions";
+
+extend("Admin::Product::SubscriptionAction", (root, { data }) => {
+  const { id, title } = data.selected[0];
+
+  const button = root.createComponent(AdminAction, {
+    title: "Export Product",
+    onPress: async () => {
+      // Call your app API
+      const response = await fetch("/api/export", {
+        method: "POST",
+        body: JSON.stringify({ productId: id }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        root.toast.show("Product exported successfully!");
+      } else {
+        root.toast.show("Export failed", { isError: true });
+      }
+    },
+  });
+
+  root.append(button);
+});
+```
+
+**Theme App Extension:**
+
+Add app block to themes:
+
+```bash
+shopify app generate extension
+
+# Choose: Theme app extension
+# Name: Product Reviews
+```
+
+**extensions/product-reviews/blocks/reviews.liquid:**
+```liquid
+{% schema %}
+{
+  "name": "Product Reviews",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Customer Reviews"
+    },
+    {
+      "type": "range",
+      "id": "reviews_to_show",
+      "label": "Reviews to Show",
+      "min": 1,
+      "max": 10,
+      "default": 5
+    }
+  ]
+}
+{% endschema %}
+
+<div class="product-reviews">
+  <h2>{{ block.settings.heading }}</h2>
+
+  {% comment %}
+    Fetch reviews from your app API
+  {% endcomment %}
+
+  <div id="reviews-container" data-product-id="{{ product.id }}"></div>
+</div>
+
+<script>
+  // Fetch and render reviews
+  fetch(`/apps/reviews/api/reviews?product_id={{ product.id }}&limit={{ block.settings.reviews_to_show }}`)
+    .then(r => r.json())
+    .then(reviews => {
+      const container = document.getElementById('reviews-container');
+      container.innerHTML = reviews.map(review => `
+        <div class="review">
+          <div class="rating">${'⭐'.repeat(review.rating)}</div>
+          <h3>${review.title}</h3>
+          <p>${review.content}</p>
+          <p class="author">- ${review.author}</p>
+        </div>
+      `).join('');
+    });
+</script>
+
+{% stylesheet %}
+  .product-reviews {
+    padding: 2rem;
+  }
+
+  .review {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .rating {
+    color: #ffa500;
+    margin-bottom: 0.5rem;
+  }
+{% endstylesheet %}
+```
+
+### 5. Webhooks in Apps
+
+Handle Shopify events in your app.
+
+**app/routes/webhooks.jsx:**
+```javascript
+import { authenticate } from "../shopify.server";
+import db from "../db.server";
+
+export async function action({ request }) {
+  const { topic, shop, session, admin, payload } = await authenticate.webhook(request);
+
+  console.log(`Webhook received: ${topic} from ${shop}`);
 
   switch (topic) {
     case "APP_UNINSTALLED":
-      // Clean up shop data
+      // Clean up app data
+      await db.session.deleteMany({ where: { shop } });
       break;
-    case "CUSTOMERS_DATA_REQUEST":
-    case "CUSTOMERS_REDACT":
-    case "SHOP_REDACT":
-      // Handle mandatory GDPR webhooks
+
+    case "PRODUCTS_CREATE":
+      // Handle new product
+      console.log("New product created:", payload.id, payload.title);
+      await handleProductCreated(payload);
       break;
+
+    case "PRODUCTS_UPDATE":
+      // Handle product update
+      console.log("Product updated:", payload.id);
+      await handleProductUpdated(payload);
+      break;
+
+    case "ORDERS_CREATE":
+      // Handle new order
+      console.log("New order:", payload.id, payload.email);
+      await handleOrderCreated(payload);
+      break;
+
+    case "CUSTOMERS_CREATE":
+      // Handle new customer
+      await handleCustomerCreated(payload);
+      break;
+
+    default:
+      console.log("Unhandled webhook topic:", topic);
   }
-  return new Response();
-};
+
+  return new Response("OK", { status: 200 });
+}
+
+async function handleProductCreated(product) {
+  // Process new product
+  await db.product.create({
+    data: {
+      shopifyId: product.id,
+      title: product.title,
+      handle: product.handle,
+    },
+  });
+}
+
+async function handleOrderCreated(order) {
+  // Send email notification, update inventory, etc.
+  console.log(`Order ${order.id} received for ${order.email}`);
+}
+```
+
+**Register Webhooks (app/shopify.server.js):**
+```javascript
+import "@shopify/shopify-app-remix/adapters/node";
+import {
+  ApiVersion,
+  AppDistribution,
+  shopifyApp,
+  DeliveryMethod,
+} from "@shopify/shopify-app-remix/server";
+
+const shopify = shopifyApp({
+  apiKey: process.env.SHOPIFY_API_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET,
+  scopes: process.env.SCOPES?.split(","),
+  appUrl: process.env.SHOPIFY_APP_URL,
+  authPathPrefix: "/auth",
+  sessionStorage: new SQLiteSessionStorage(),
+  distribution: AppDistribution.AppStore,
+  apiVersion: ApiVersion.October25,
+
+  webhooks: {
+    APP_UNINSTALLED: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks",
+    },
+    PRODUCTS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks",
+    },
+    PRODUCTS_UPDATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks",
+    },
+    ORDERS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks",
+    },
+  },
+});
+
+export default shopify;
+export const authenticate = shopify.authenticate;
+```
+
+### 6. App Proxy
+
+Create custom storefront routes that access your app.
+
+**Setup in Partner Dashboard:**
+```
+Subpath prefix: apps
+Subpath: reviews
+Proxy URL: https://your-app.com/api/proxy
+```
+
+**Result:**
+```
+https://store.com/apps/reviews → proxies to → https://your-app.com/api/proxy
+```
+
+**Handle Proxy Requests (app/routes/api.proxy.jsx):**
+```javascript
+import { json } from "@remix-run/node";
+
+export async function loader({ request }) {
+  const url = new URL(request.url);
+
+  // Verify proxy request
+  const signature = url.searchParams.get("signature");
+  const shop = url.searchParams.get("shop");
+
+  if (!verifyProxySignature(signature, request)) {
+    return json({ error: "Invalid signature" }, { status: 401 });
+  }
+
+  // Handle different paths
+  const path = url.searchParams.get("path_prefix");
+
+  if (path === "/apps/reviews/product") {
+    const productId = url.searchParams.get("product_id");
+    const reviews = await getProductReviews(productId);
+
+    return json({ reviews });
+  }
+
+  return json({ message: "App Proxy" });
+}
+
+function verifyProxySignature(signature, request) {
+  // Verify HMAC signature
+  // Implementation depends on your setup
+  return true;
+}
+```
+
+### 7. Polaris UI Components
+
+Use Shopify's design system for consistent admin UI.
+
+**Common Components:**
+```javascript
+import {
+  Page,
+  Layout,
+  Card,
+  Button,
+  TextField,
+  Select,
+  Checkbox,
+  Badge,
+  Banner,
+  DataTable,
+  Modal,
+  Toast,
+  Frame,
+} from "@shopify/polaris";
+
+export default function MyPage() {
+  return (
+    <Page
+      title="Settings"
+      primaryAction={{ content: "Save", onAction: handleSave }}
+      secondaryActions={[{ content: "Cancel", onAction: handleCancel }]}
+    >
+      <Layout>
+        <Layout.Section>
+          <Card title="General Settings" sectioned>
+            <TextField
+              label="App Name"
+              value={name}
+              onChange={setName}
+            />
+
+            <Select
+              label="Status"
+              options={[
+                { label: "Active", value: "active" },
+                { label: "Draft", value: "draft" },
+              ]}
+              value={status}
+              onChange={setStatus}
+            />
+
+            <Checkbox
+              label="Enable notifications"
+              checked={notifications}
+              onChange={setNotifications}
+            />
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section secondary>
+          <Card title="Status" sectioned>
+            <Badge status="success">Active</Badge>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+```
+
+### 8. Deployment
+
+Deploy Shopify apps to production.
+
+**Deploy to Cloudflare Workers:**
+
+**wrangler.toml:**
+```toml
+name = "shopify-app"
+compatibility_date = "2025-11-10"
+main = "build/index.js"
+
+[vars]
+SHOPIFY_API_KEY = "your_api_key"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "your_kv_namespace_id"
+```
+
+**Deploy:**
+```bash
+# Build app
+npm run build
+
+# Deploy to Cloudflare
+wrangler deploy
+```
+
+**Environment Secrets:**
+```bash
+# Add secrets
+wrangler secret put SHOPIFY_API_SECRET
+wrangler secret put DATABASE_URL
 ```
 
 ## Best Practices
 
-- Use the Remix template (`shopify app init`) — do not build from scratch
-- Use session tokens over cookies for embedded apps
-- Request minimum OAuth scopes needed
-- Handle webhook deduplication with idempotency keys
-- Implement all mandatory GDPR webhooks (`customers/data_request`, `customers/redact`, `shop/redact`)
-- Use App Bridge for navigation and UI — do not build custom admin chrome
-- Store access tokens encrypted, never in client-side code
-- Test with development stores before submitting for review
-- Use `authenticate.admin()` in every loader/action that needs store data
+1. **Use Shopify CLI** for app scaffolding and development
+2. **Implement proper OAuth** with HMAC verification
+3. **Handle webhook events** for real-time updates
+4. **Use Polaris** for consistent admin UI
+5. **Test in development store** before production
+6. **Implement error handling** for all API calls
+7. **Store session data securely** (encrypted database)
+8. **Follow Shopify app requirements** for listing
+9. **Implement app billing** for monetization
+10. **Use app extensions** to enhance merchant experience
 
-Fetch the Shopify app development guide, App Bridge docs, and Remix template source for exact APIs, session token structure, and extension patterns before implementing.
+## Integration with Other Skills
+
+- **shopify-api** - Use when making API calls from your app
+- **shopify-liquid** - Use when creating theme app extensions
+- **shopify-debugging** - Use when troubleshooting app issues
+- **shopify-performance** - Use when optimizing app performance
+
+## Quick Reference
+
+```bash
+# Create app
+shopify app init
+
+# Start development
+shopify app dev
+
+# Generate extension
+shopify app generate extension
+
+# Deploy app
+shopify app deploy
+
+# Configure webhooks
+# Edit shopify.app.toml
+```

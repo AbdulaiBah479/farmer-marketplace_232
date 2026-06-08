@@ -1,16 +1,12 @@
 ---
 name: next-best-practices
-description: Next.js App Router best practices covering file conventions, RSC boundaries, async APIs, data patterns, hydration errors, metadata, route handlers, image/font optimization, and bundling. Use when writing or reviewing Next.js code to prevent hydration errors, RSC violations, data waterfalls, and configuration mistakes.
-argument-hint: "[question or file]"
+description: Next.js best practices - file conventions, RSC boundaries, data patterns, async APIs, metadata, error handling, route handlers, image/font optimization, bundling
+user-invocable: false
 ---
 
 # Next.js Best Practices
 
 Apply these rules when writing or reviewing Next.js code.
-
-> **Cache Components patterns**: When the project has `cacheComponents: true` in `next.config.ts`,
-> use the separate `cache-components` skill for `'use cache'`, `cacheLife()`, `cacheTag()`,
-> `updateTag()`, and `revalidateTag()` guidance.
 
 ## File Conventions
 
@@ -132,8 +128,8 @@ See [hydration-error.md](./hydration-error.md) for:
 ## Suspense Boundaries
 
 See [suspense-boundaries.md](./suspense-boundaries.md) for:
-- CSR bailout with `useSearchParams` (only this hook requires a boundary)
-- Forcing dynamic rendering with `connection()` instead
+- CSR bailout with `useSearchParams` and `usePathname`
+- Which hooks require Suspense boundaries
 
 ## Parallel & Intercepting Routes
 

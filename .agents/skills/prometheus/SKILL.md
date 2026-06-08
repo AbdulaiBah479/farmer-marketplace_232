@@ -1,143 +1,185 @@
 ---
 name: prometheus
-description: Query and interact with Prometheus HTTP API for monitoring data. Use when Claude needs to query Prometheus metrics, execute PromQL queries, retrieve targets/alerts/rules status, access metadata about series/labels, manage TSDB operations, or troubleshoot monitoring infrastructure. Supports instant queries, range queries, metadata endpoints, admin APIs, and alerting information.
+license: Apache-2.0
+description: >
+  Prometheus and Grafana Cloud Metrics overview including PromQL query language, Metrics Drilldown,
+  alerting, recording rules, and integration patterns. Use when working with Prometheus, writing PromQL
+  queries, configuring alerting, or discussing metrics architecture and best practices.
 ---
 
-# Prometheus API Skill
+# Metrics with Prometheus and Grafana
 
-Query Prometheus monitoring systems via HTTP API at `/api/v1`.
+> **Docs**: https://prometheus.io/docs/ | **Grafana Cloud Metrics**: https://grafana.com/docs/grafana-cloud/send-data/metrics/
 
-## Quick Reference
+## PromQL Quick Reference
 
-### Instant Query
-
-```bash
-curl 'http://<prometheus>:9090/api/v1/query?query=<promql>&time=<timestamp>'
-```
-
-### Range Query
-
-```bash
-curl 'http://<prometheus>:9090/api/v1/query_range?query=<promql>&start=<ts>&end=<ts>&step=<duration>'
-```
-
-## Response Format
-
-All responses return JSON:
-
-```json
-{
-  "status": "success" | "error",
-  "data": <result>,
-  "errorType": "<string>",
-  "error": "<string>",
-  "warnings": ["<string>"]
-}
-```
-
-HTTP codes: `400` (bad params), `422` (expression error), `503` (timeout).
-
-## Query Endpoints
-
-| Endpoint | Purpose | Key Parameters |
-|----------|---------|----------------|
-| `/api/v1/query` | Instant query | `query`, `time`, `timeout`, `limit` |
-| `/api/v1/query_range` | Range query | `query`, `start`, `end`, `step`, `timeout`, `limit` |
-| `/api/v1/format_query` | Format PromQL | `query` |
-| `/api/v1/series` | Find series by labels | `match[]`, `start`, `end`, `limit` |
-| `/api/v1/labels` | List label names | `start`, `end`, `match[]`, `limit` |
-| `/api/v1/label/<name>/values` | Label values | `start`, `end`, `match[]`, `limit` |
-| `/api/v1/query_exemplars` | Query exemplars | `query`, `start`, `end` |
-
-## Metadata & Status Endpoints
-
-| Endpoint | Purpose |
-|----------|---------|
-| `/api/v1/targets` | Target discovery status (`state=active\|dropped\|any`) |
-| `/api/v1/targets/metadata` | Metric metadata from targets |
-| `/api/v1/metadata` | All metric metadata |
-| `/api/v1/rules` | Alerting/recording rules |
-| `/api/v1/alerts` | Active alerts |
-| `/api/v1/alertmanagers` | Alertmanager discovery |
-| `/api/v1/status/config` | Current config YAML |
-| `/api/v1/status/flags` | CLI flags |
-| `/api/v1/status/runtimeinfo` | Runtime info |
-| `/api/v1/status/buildinfo` | Build info |
-| `/api/v1/status/tsdb` | TSDB cardinality stats |
-| `/api/v1/status/walreplay` | WAL replay progress |
-
-## Admin Endpoints (require `--web.enable-admin-api`)
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/admin/tsdb/snapshot` | POST | Create TSDB snapshot |
-| `/api/v1/admin/tsdb/delete_series` | POST | Delete series (`match[]`, `start`, `end`) |
-| `/api/v1/admin/tsdb/clean_tombstones` | POST | Clean deleted data |
-
-## Common PromQL Patterns
+### Instant Vector Selectors
 
 ```promql
-# Rate of counter over 5m
+# By metric name
+http_requests_total
+
+# Label filter
+http_requests_total{job="api-server"}
+
+# Multiple labels (AND)
+http_requests_total{job="api-server", method="GET"}
+
+# Regex
+http_requests_total{job=~"api.*", status=~"5.."}
+
+# Negative
+http_requests_total{status!="200"}
+```
+
+### Range Vectors & Rates
+
+```promql
+# Per-second rate over 5 minutes
 rate(http_requests_total[5m])
 
+# Increase over interval
+increase(http_requests_total[1h])
+
+# Instant rate (last two samples)
+irate(http_requests_total[5m])
+
+# Offset (5 minutes ago)
+rate(http_requests_total[5m] offset 5m)
+```
+
+### Aggregations
+
+```promql
 # Sum by label
 sum by (job) (rate(http_requests_total[5m]))
 
-# Percentile from histogram
-histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+# Average
+avg by (instance) (node_cpu_seconds_total)
 
-# Filter by label
-up{job="prometheus", instance=~".*:9090"}
+# Top-K
+topk(5, rate(http_requests_total[5m]))
 
-# Increase over time
-increase(http_requests_total[1h])
+# Histogram quantiles
+histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
 
-# Average over time range
-avg_over_time(process_cpu_seconds_total[5m])
+# Count distinct
+count(up{job="api"})
 ```
 
-## Result Types
+### Common Patterns
 
-- **vector**: `[{"metric": {...}, "value": [timestamp, "value"]}]`
-- **matrix**: `[{"metric": {...}, "values": [[ts, "val"], ...]}]`
-- **scalar**: `[timestamp, "value"]`
-- **string**: `[timestamp, "string"]`
+```promql
+# Error rate percentage
+sum(rate(http_requests_total{status=~"5.."}[5m]))
+  / sum(rate(http_requests_total[5m])) * 100
 
-## Scripts
+# Saturation (CPU usage %)
+100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
 
-Query script: `scripts/prom_query.py`
+# Memory usage
+node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+
+# Predict disk full (linear extrapolation)
+predict_linear(node_filesystem_free_bytes[6h], 24*3600) < 0
+```
+
+## Alerting Rules
+
+### Prometheus Alerting Rule
+
+```yaml
+groups:
+  - name: api_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High 5xx error rate ({{ $value | humanizePercentage }})"
+```
+
+### Alertmanager Routing
+
+```yaml
+# alertmanager.yml
+route:
+  receiver: default
+  group_by: [alertname, job]
+  group_wait: 30s
+  group_interval: 5m
+  routes:
+    - match:
+        severity: critical
+      receiver: pagerduty
+    - match:
+        severity: warning
+      receiver: slack
+
+receivers:
+  - name: pagerduty
+    pagerduty_configs:
+      - service_key: "<key>"
+  - name: slack
+    slack_configs:
+      - channel: "#alerts"
+        api_url: "<webhook_url>"
+  - name: default
+    email_configs:
+      - to: "oncall@example.com"
+```
+
+### Validate Alerting Configuration
 
 ```bash
-# Instant query
-python scripts/prom_query.py http://localhost:9090 'up'
-
-# Range query
-python scripts/prom_query.py http://localhost:9090 'rate(http_requests_total[5m])' \
-  --start '2024-01-01T00:00:00Z' --end '2024-01-01T01:00:00Z' --step '1m'
-
-# Output: table, json, csv
-python scripts/prom_query.py http://localhost:9090 'up' --format table
+promtool check rules rules.yml
+amtool check-config alertmanager.yml
+amtool config routes test --config.file=alertmanager.yml severity=critical
 ```
 
-Health check: `scripts/prom_health.py`
+## Recording Rules
+
+Pre-compute expensive PromQL for dashboard performance:
+
+```yaml
+groups:
+  - name: api_rules
+    interval: 1m
+    rules:
+      - record: job:http_requests:rate5m
+        expr: sum by (job) (rate(http_requests_total[5m]))
+      - record: job:http_request_duration_seconds:p99
+        expr: histogram_quantile(0.99, sum by (job, le) (rate(http_request_duration_seconds_bucket[5m])))
+```
+
+### Deploy and Verify Recording Rules
 
 ```bash
-python scripts/prom_health.py http://localhost:9090
+# 1. Validate rule syntax
+promtool check rules rules/recording.yml
+
+# 2. Reload Prometheus (after adding to rule_files in prometheus.yml)
+curl -X POST http://localhost:9090/-/reload
+
+# 3. Verify rules are active
+curl -s http://localhost:9090/api/v1/rules | jq '.data.groups[].rules[] | {name, health}'
 ```
 
-## Detailed Reference
+## Metrics Drilldown (Grafana 12+)
 
-For complete API documentation: [references/api_reference.md](references/api_reference.md)
+Queryless Prometheus exploration — browse metrics without writing PromQL. Navigate to
+**Explore > Metrics Drilldown** or use `<grafana-url>/a/grafana-metricsdrilldown-app`.
+Provides metric search with label breakdown, smart segmentation for anomaly detection,
+auto-visualization, and telemetry pivoting from metrics to related logs and traces.
 
-For PromQL functions: [references/promql_functions.md](references/promql_functions.md)
+## Resources
 
----
-
-## Gotchas
-
-- **`rate()` over a counter that resets too often: math is correct but meaningless** — use `increase()` and divide by interval explicitly when counters don't survive scrapes.
-- **`up{}` per-target gauge**: a flaky target shows up=0 but doesn't trigger alerts unless `for` is met. Set short `for` for liveness, long for noise.
-- **Recording rules evaluate at fixed interval**; missed evaluations don't backfill — gaps in the recording series during incidents.
-- **Federation `match[]` parameter requires ALL matchers to match** — an empty matcher returns no series, which looks like a working query with no data.
-- **Stale-marker semantics**: a series stops being scraped → stale marker after 5 min by default → queries see "no data" not "0". Affects alerts on `absent()`.
-- **Service Discovery + relabel_config**: a bad regex in `keep` action silently drops all targets — verify with `/api/v1/targets` after each config change.
+- [PromQL Reference](https://prometheus.io/docs/prometheus/latest/querying/basics/)
+- [Grafana Cloud Metrics](https://grafana.com/docs/grafana-cloud/send-data/metrics/)
+- [Metrics Drilldown App](https://github.com/grafana/metrics-drilldown)
+- [Grafana Alerting](https://grafana.com/docs/grafana/latest/alerting/)
+- [Grafana Mimir](https://grafana.com/docs/mimir/latest/)

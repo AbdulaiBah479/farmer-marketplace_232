@@ -1,446 +1,496 @@
 ---
 name: ci-cd
-description: >
-  Load this skill when configuring or reviewing CI/CD pipelines, GitHub Actions
-  workflows, or automated testing setups. Ensures accessibility regressions are
-  caught before code reaches production by enforcing quality gates, structured
-  reporting, and a zero-debt strategy across all pages and user preferences.
+description: "CI/CD pipeline design, optimization, DevSecOps security scanning, and troubleshooting. Use this skill whenever the user mentions CI/CD, GitHub Actions, GitLab CI, pipelines, workflows, builds, or DevSecOps. Triggers include creating new CI/CD workflows, debugging pipeline failures or flaky tests, implementing SAST/DAST/SCA security scanning, optimizing slow builds with caching or parallelization, setting up deployment workflows, securing pipelines with OIDC or secrets management, implementing matrix builds or test sharding, and troubleshooting Docker, permissions, or timeout issues."
 ---
 
-# CI/CD Accessibility Skill
+# CI/CD Pipelines
 
-> **Canonical source**: `examples/CI_CD_ACCESSIBILITY_BEST_PRACTICES.md` in `mgifford/ACCESSIBILITY.md`
-> This skill is derived from that file. When in doubt, the example is authoritative.
+Comprehensive guide for CI/CD pipeline design, optimization, security, and troubleshooting across GitHub Actions, GitLab CI, and other platforms.
 
-Apply these rules when adding, reviewing, or maintaining CI/CD accessibility checks.
+## Core Workflows
 
----
+### 1. Creating a New Pipeline
 
-## Core Mandate
-
-Every CI/CD pipeline must prevent accessibility regressions from reaching production.
-Automated checks are the baseline, not the ceiling — combine rule-based scanning with
-accessibility tree testing and, where practical, virtual screen reader testing.
-
-**Zero-Debt strategy:** target 100 % Lighthouse Accessibility and Performance scores
-on all pages across all devices and user preferences.
-
----
-
-## Severity Scale (this skill)
-
-| Level | Meaning |
-| --- | --- |
-| **Critical** | Blocks task completion entirely for one or more disability groups |
-| **Serious** | Significantly impairs access; workaround unreasonable to expect |
-| **Moderate** | Creates friction; workaround exists and is not too burdensome |
-| **Minor** | Best-practice gap; marginal impact on access |
-
----
-
-## Critical: Lighthouse CI Quality Gate
-
-Enforce a strict score threshold. A drop to 99 % accessibility or performance **must
-fail the build**.
-
-**`.lighthouserc.js` (strict gate — use once baseline is clean):**
-```javascript
-module.exports = {
-  ci: {
-    collect: {
-      staticDistDir: './_site',
-      numberOfRuns: 1,
-      settings: { emulatedFormFactor: 'mobile' },
-    },
-    assert: {
-      assertions: {
-        'categories:accessibility': ['error', { minScore: 1 }],
-        'categories:performance':   ['error', { minScore: 1 }],
-      },
-    },
-  },
-};
+**Decision tree:**
+```
+What are you building?
+├── Node.js/Frontend → GitHub: templates/github-actions/node-ci.yml | GitLab: templates/gitlab-ci/node-ci.yml
+├── Python → GitHub: templates/github-actions/python-ci.yml | GitLab: templates/gitlab-ci/python-ci.yml
+├── Go → GitHub: templates/github-actions/go-ci.yml | GitLab: templates/gitlab-ci/go-ci.yml
+├── Docker Image → GitHub: templates/github-actions/docker-build.yml | GitLab: templates/gitlab-ci/docker-build.yml
+├── Other → Follow the pipeline design pattern below
 ```
 
-**`.lighthouserc.json` (warn-first — use while resolving existing issues):**
-```json
-{
-  "ci": {
-    "collect": { "staticDistDir": "./_site", "numberOfRuns": 1 },
-    "assert": {
-      "assertions": {
-        "categories:accessibility": ["warn", { "minScore": 0.9 }]
-      }
-    },
-    "upload": { "target": "filesystem", "outputDir": ".lighthouseci" }
-  }
-}
-```
-
-> Start with `"warn"` + `minScore: 0.9`, then tighten to `"error"` + `minScore: 1`
-> once the existing baseline is clean.
-
----
-
-## Critical: axe-core on Every PR
-
-Run axe-core via Playwright on every pull request to catch WCAG violations in
-dynamic content (menus, modals, theme variants).
-
-```typescript
-// tests/a11y.spec.ts
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
-
-const themes = ['light', 'dark'];
-
-for (const theme of themes) {
-  test(`A11y: Desktop & Mobile in ${theme} mode`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: theme as 'light' | 'dark' });
-    await page.goto('/');
-
-    const menuBtn = page.locator('#main-menu-toggle');
-    if (await menuBtn.isVisible()) await menuBtn.click();
-
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-      .analyze();
-
-    expect(results.violations).toEqual([]);
-  });
-}
-```
-
-**Missing axe-core checks on PRs is Critical** — dynamic violations are invisible to
-Lighthouse and reach production silently.
-
----
-
-## Serious: GitHub Actions Workflows
-
-### A. Lighthouse CI on every PR and push to `main`
-
+**Basic pipeline structure:**
 ```yaml
-# .github/workflows/lighthouse.yml
-name: Lighthouse CI
+# 1. Fast feedback (lint, format) - <1 min
+# 2. Unit tests - 1-5 min
+# 3. Integration tests - 5-15 min
+# 4. Build artifacts
+# 5. E2E tests (optional, main branch only) - 15-30 min
+# 6. Deploy (with approval gates)
+```
 
-on:
-  pull_request:
-  push:
-    branches: [main]
-  workflow_dispatch:
+**Key principles** (from `references/best_practices.md`):
+- Fail fast: Run cheap validation first
+- Parallelize: Remove unnecessary job dependencies
+- Cache dependencies: Use `actions/cache` or GitLab cache (`references/optimization.md` for strategies)
+- Use artifacts: Build once, deploy many times
+- Add security scanning early: See `references/devsecops.md` for SAST/DAST/SCA integration
 
+### 2. Optimizing Pipeline Performance
+
+**Quick wins checklist:**
+- [ ] Add dependency caching (50-90% faster builds)
+- [ ] Remove unnecessary `needs` dependencies
+- [ ] Add path filters to skip unnecessary runs
+- [ ] Use `npm ci` instead of `npm install`
+- [ ] Add job timeouts to prevent hung builds
+- [ ] Enable concurrency cancellation for duplicate runs
+
+**Analyze existing pipeline:**
+```bash
+# Use the pipeline analyzer script
+python3 scripts/pipeline_analyzer.py --platform github --workflow .github/workflows/ci.yml
+```
+
+**Common optimizations** (detailed in `references/optimization.md`):
+- **Slow tests:** Shard tests with matrix builds
+- **Repeated dependency installs:** Add caching
+- **Sequential jobs:** Parallelize with proper `needs`
+- **Full test suite on every PR:** Use path filters or test impact analysis
+
+See [optimization.md](references/optimization.md) for detailed caching strategies, parallelization techniques, and performance tuning.
+
+### 3. Securing Your Pipeline
+
+**Essential security checklist:**
+- [ ] Use OIDC instead of static credentials
+- [ ] Pin actions/includes to commit SHAs
+- [ ] Use minimal permissions
+- [ ] Enable secret scanning
+- [ ] Add vulnerability scanning (dependencies, containers)
+- [ ] Implement branch protection
+- [ ] Separate test from deploy workflows
+
+**Quick setup - OIDC authentication:**
+
+**GitHub Actions → AWS:**
+```yaml
 permissions:
+  id-token: write
   contents: read
 
-jobs:
-  lighthouse:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with: { ruby-version: "3.2", bundler-cache: true }
-      - run: bundle exec jekyll build
-      - uses: actions/setup-node@v4
-        with: { node-version: "22" }
-      - run: npm install -g @lhci/cli
-      - run: lhci autorun
+steps:
+  - uses: aws-actions/configure-aws-credentials@v4
+    with:
+      role-to-assume: arn:aws:iam::123456789:role/GitHubActionsRole
+      aws-region: us-east-1
 ```
 
-### B. Scheduled accessibility scan with alert-fatigue guard
+**Secrets management:**
+- Store in platform secret stores (GitHub Secrets, GitLab CI/CD Variables)
+- Mark as "masked" in GitLab
+- Use environment-specific secrets
+- Rotate regularly (every 90 days)
+- Never log secrets
 
-Run monthly; skip the scan when open `accessibility` issues already exist so
-developers are not flooded with duplicate noise.
+See [security.md](references/security.md) for comprehensive security patterns, supply chain security, and secrets management.
 
-```yaml
-# .github/workflows/accessibility-scan.yml
-name: Accessibility Scan (Scheduled)
+### 4. Troubleshooting Pipeline Failures
 
-on:
-  schedule:
-    - cron: "0 0 1 * *"   # first day of every month
-  workflow_dispatch:
+**Systematic approach:**
 
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-
-jobs:
-  accessibility-scanner:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check for existing open accessibility issues
-        id: check_issues
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          COUNT=$(gh issue list --label "accessibility" --state open --json number --jq '. | length')
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
-
-      - name: Run GitHub Accessibility Scanner
-        if: steps.check_issues.outputs.count == '0'
-        uses: github/accessibility-scanner@v3
-        with:
-          urls: ${{ vars.ACCESSIBILITY_SCAN_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
-          repository: ${{ github.repository }}
-          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-          cache_key: accessibility-scan-results
-```
-
-> Set the `ACCESSIBILITY_SCAN_URL` repository variable to override the default
-> GitHub Pages URL. Multiple URLs can be provided as a newline-separated list.
-
-### C. Full deep-crawl for AI-ready audit (manual trigger)
-
-```yaml
-name: Deep Site Audit
-on: workflow_dispatch
-
-jobs:
-  crawl:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npx playwright test --reporter=json > audit-report.json
-      - uses: actions/upload-artifact@v4
-        with:
-          name: a11y-json-report
-          path: audit-report.json
-```
-
----
-
-## Serious: Accessibility Tree Testing
-
-Automated WCAG rule checks verify markup compliance; they cannot verify what a
-screen reader **actually announces**. Add accessibility tree tests for complex
-components: SVG diagrams, custom widgets, live regions, navigation landmarks.
-
-### Playwright aria snapshots (Playwright ≥ v1.46)
-
-Assert the exact accessible name, role, and structure that assistive technologies
-consume — distinct from axe-core rule checks.
-
-```typescript
-// tests/a11y-tree.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('main navigation is correctly announced', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.locator('nav[aria-label="Main navigation"]'))
-    .toMatchAriaSnapshot(`
-      - navigation "Main navigation":
-          - list:
-              - listitem:
-                  - link "Home"
-              - listitem:
-                  - link "About"
-    `);
-});
-
-test('SVG diagram is exposed as a labelled image', async ({ page }) => {
-  await page.goto('/diagrams');
-  await expect(page.locator('svg[role="img"]').first())
-    .toMatchAriaSnapshot(`
-      - img "User Authentication Flowchart":
-    `);
-});
-```
-
-Generate baseline snapshots once with `--update-snapshots`; treat subsequent
-diffs the same as visual regression diffs.
-
-### Semantic role queries (any Playwright version)
-
-```typescript
-test('form controls have meaningful accessible names', async ({ page }) => {
-  await page.goto('/contact');
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
-  await expect(page.getByRole('button',  { name: 'Send message'  })).toBeEnabled();
-});
-```
-
-`getByRole()` fails immediately when accessible names are missing or wrong —
-earlier feedback than a manual screen reader audit.
-
-### Guidepup virtual screen reader (unit-level)
-
-For asserting exact spoken output without a real screen reader installed:
-
-```typescript
-import { virtual } from '@guidepup/virtual-screen-reader';
-
-it('announces the dialog title and action buttons', async () => {
-  document.body.innerHTML = `
-    <dialog open aria-labelledby="dlg-title">
-      <h2 id="dlg-title">Confirm deletion</h2>
-      <button>Delete</button>
-      <button>Cancel</button>
-    </dialog>
-  `;
-  await virtual.start({ container: document.body });
-  const spoken = await virtual.spokenPhraseLog();
-  expect(spoken).toContain('Confirm deletion');
-  expect(spoken).toContain('Delete, button');
-  await virtual.stop();
-});
-```
-
-GitHub Actions setup for Guidepup:
-```yaml
-- uses: guidepup/setup-action@v2
-- run: npx jest tests/sr.test.ts
-```
-
----
-
-## Moderate: Local-First Developer Workflow
-
-Run audits locally before pushing — fastest feedback loop, keeps CI noise low.
-
-**`package.json` scripts:**
-```json
-{
-  "scripts": {
-    "test:a11y":       "lhci autorun && npx playwright test",
-    "test:a11y:local": "lhci collect --url=http://localhost:3000 && lhci assert"
-  }
-}
-```
-
-**Install once:**
+**Step 1: Check pipeline health**
 ```bash
-npm install -g @lhci/cli
-npm install -D @playwright/test @axe-core/playwright
+gh run list --limit 20    # Recent runs with status (success/failure rates)
+gh run view <run-id>      # Detailed run info and failure logs
+gh workflow list           # All configured workflows
 ```
 
----
+**Step 2: Identify the failure type**
 
-## Moderate: Shift-Left Accessibility Strategy
+| Error Pattern | Common Cause | Quick Fix |
+|---------------|--------------|-----------|
+| "Module not found" | Missing dependency or cache issue | Clear cache, run `npm ci` |
+| "Timeout" | Job taking too long | Add caching, increase timeout |
+| "Permission denied" | Missing permissions | Add to `permissions:` block |
+| "Cannot connect to Docker daemon" | Docker not available | Use correct runner or DinD |
+| Intermittent failures | Flaky tests or race conditions | Add retries, fix timing issues |
 
-Prevent issues from entering commits in the first place. Catch problems in order
-from fastest to slowest feedback:
+**Step 3: Enable debug logging**
 
-1. **In-editor / local lint** — framework-specific a11y lint rules run as you type.
-2. **Pre-commit gate** — run checks on changed files only; block commit when checks
-   fail. Use `pre-commit` (Python) or `husky` + `lint-staged` (Node). Keep total
-   runtime ≤ 30–60 seconds.
-3. **PR gate** — re-run in CI for trust and consistency; fail PR on blocking
-   regressions; publish artifact links.
-4. **Scheduled depth scans** — nightly/weekly deeper scans; auto-label findings;
-   trend metrics over time in `ACCESSIBILITY.md`.
+GitHub Actions:
+```yaml
+# Add repository secrets:
+# ACTIONS_RUNNER_DEBUG = true
+# ACTIONS_STEP_DEBUG = true
+```
 
-**Suggested Definition of Done addition:**
-> No UI-impacting commit is accepted unless local/pre-commit accessibility checks
-> pass and PR CI accessibility checks are green.
+GitLab CI:
+```yaml
+variables:
+  CI_DEBUG_TRACE: "true"
+```
 
-**Policy model:**
-* **Fast fail locally** — contributors get immediate feedback before push.
-* **Strict PR enforcement** — no merge with blocking accessibility failures.
-* **Transparent metrics** — show pass rate, open defects, and remediation trend in `ACCESSIBILITY.md`.
-* **Waiver discipline** — only time-bound waivers with explicit owner and expiry.
+**Step 4: Reproduce locally**
+```bash
+# GitHub Actions - use act
+act -j build
 
----
+# Or Docker
+docker run -it ubuntu:latest bash
+# Then manually run the failing steps
+```
 
-## Moderate: AI-Assisted Remediation Loop
+See [troubleshooting.md](references/troubleshooting.md) for comprehensive issue diagnosis, platform-specific problems, and solutions.
 
-Close the detect → fix gap using GitHub's accessibility scanner and the Copilot
-coding agent:
+### 5. Implementing Deployment Workflows
 
-1. The scheduled scan (workflow B above) uses `github/accessibility-scanner@v3`
-   and creates issues labelled `accessibility`.
-2. A companion remediation workflow watches for that label event and passes the
-   issue to a Copilot coding agent.
-3. The agent locates the offending code, applies a minimal fix, and opens a
-   **draft pull request** linked to the original issue.
-4. A human reviews and merges the draft PR.
+**Deployment pattern selection:**
 
-Copy [`examples/AGENT_REMEDIATION_WORKFLOW.yml`](https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/AGENT_REMEDIATION_WORKFLOW.yml)
-to `.github/workflows/accessibility-remediation.yml` to enable this loop.
+| Pattern | Use Case | Complexity | Risk |
+|---------|----------|------------|------|
+| Direct | Simple apps, low traffic | Low | Medium |
+| Blue-Green | Zero downtime required | Medium | Low |
+| Canary | Gradual rollout, monitoring | High | Very Low |
+| Rolling | Kubernetes, containers | Medium | Low |
 
-Covered violation types: `image-alt`, `label`, `link-name`, `heading-order`,
-`color-contrast`, `aria-required-attr`.
+**Basic deployment structure:**
+```yaml
+deploy:
+  needs: [build, test]
+  if: github.ref == 'refs/heads/main'
+  environment:
+    name: production
+    url: https://example.com
+  steps:
+    - name: Download artifacts
+    - name: Deploy
+    - name: Health check
+    - name: Rollback on failure
+```
 
-> Requires a GitHub Copilot subscription with the coding agent feature enabled
-> and **Settings → Copilot → "Allow Copilot to create and approve pull requests"**
-> turned on.
+**Multi-environment setup:**
+- **Development:** Auto-deploy on develop branch
+- **Staging:** Auto-deploy on main, requires passing tests
+- **Production:** Manual approval required, smoke tests mandatory
 
----
+See [best_practices.md](references/best_practices.md#deployment-strategies) for detailed deployment patterns and environment management.
 
-## Tool Comparison
+### 6. Implementing DevSecOps Security Scanning
 
-| Approach | Finds WCAG rule violations | Finds announcement quality issues | Works for SVG / canvas | CI-friendly |
-|:---|:---:|:---:|:---:|:---:|
-| axe-core | ✅ | ❌ | Limited | ✅ |
-| Lighthouse | ✅ | ❌ | ❌ | ✅ |
-| Playwright aria snapshots | Partial | ✅ | ✅ | ✅ |
-| Guidepup virtual screen reader | ❌ | ✅ | ✅ | ✅ |
-| Manual screen reader testing | Partial | ✅ | ✅ | ❌ |
+**Security scanning types:**
 
-No single tool catches everything — use the approaches together.
+| Scan Type | Purpose | When to Run | Speed | Tools |
+|-----------|---------|-------------|-------|-------|
+| Secret Scanning | Find exposed credentials | Every commit | Fast (<1 min) | TruffleHog, Gitleaks |
+| SAST | Find code vulnerabilities | Every commit | Medium (5-15 min) | CodeQL, Semgrep, Bandit, Gosec |
+| SCA | Find dependency vulnerabilities | Every commit | Fast (1-5 min) | npm audit, pip-audit, Snyk |
+| Container Scanning | Find image vulnerabilities | After build | Medium (5-10 min) | Trivy, Grype |
+| DAST | Find runtime vulnerabilities | Scheduled/main only | Slow (15-60 min) | OWASP ZAP |
 
----
+**Quick setup - Add security to existing pipeline:**
 
-## Governance
+**GitHub Actions:**
+```yaml
+jobs:
+  # Add before build job
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: trufflesecurity/trufflehog@main
+      - uses: gitleaks/gitleaks-action@v2
 
-* **Critical failures:** any page below 100 % Lighthouse Accessibility blocks the build.
-* **Performance budget:** any page below 100 % Lighthouse Performance blocks the build.
-* **Triage:** scheduled scan failures must be converted to GitHub Issues.
-  If an issue remains open, subsequent scheduled scans are paused (alert-fatigue guard).
-* **SLA:** triage critical failures within one business day; serious within one sprint.
+  sast:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript  # or python, go
+      - uses: github/codeql-action/analyze@v3
 
----
+  build:
+    needs: [secret-scan, sast]  # Add dependencies
+```
 
-## Definition of Done Checklist
+**GitLab CI:**
+```yaml
+stages:
+  - security  # Add before other stages
+  - build
+  - test
 
-* [ ] Lighthouse CI workflow runs on every PR and push to `main`
-* [ ] axe-core (via Playwright) runs on every PR covering WCAG 2.x AA tags
-* [ ] Both light and dark colour schemes tested
-* [ ] Mobile emulation enabled in Playwright tests
-* [ ] `.lighthouserc` score threshold set to `warn ≥ 0.9` or `error ≥ 1.0`
-* [ ] Scheduled scan workflow present with alert-fatigue guard
-* [ ] Scan failures auto-labelled `accessibility` and converted to issues
-* [ ] Accessibility tree tests in place for SVG, custom widgets, and live regions
-* [ ] Local `test:a11y` script documented in contributing guide
-* [ ] `audit-report.json` artifact uploaded on manual deep-crawl run
-* [ ] Pre-commit / lint-staged accessibility check present and runs on changed files
-* [ ] Shift-left metrics (pass rate, open defects) tracked in `ACCESSIBILITY.md` table
+# Secret scanning
+secret-scan:
+  stage: security
+  image: trufflesecurity/trufflehog:latest
+  script:
+    - trufflehog filesystem . --json --fail
 
----
+# SAST
+sast:semgrep:
+  stage: security
+  image: returntocorp/semgrep
+  script:
+    - semgrep scan --config=auto .
 
-## Key WCAG Criteria (automation coverage)
+# Use GitLab templates
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+```
 
-* 1.1.1 Non-text Content (A) — caught by axe-core / Lighthouse
-* 1.3.1 Info and Relationships (A) — caught by axe-core
-* 1.4.3 Contrast Minimum (AA) — caught by Lighthouse / axe-core
-* 4.1.2 Name, Role, Value (A) — caught by axe-core + aria snapshots
-* 4.1.3 Status Messages (AA) — partially caught by axe-core
+**Comprehensive security pipeline templates:**
+- **GitHub Actions:** `templates/github-actions/security-scan.yml` - Complete DevSecOps pipeline with all scanning stages
+- **GitLab CI:** `templates/gitlab-ci/security-scan.yml` - Complete DevSecOps pipeline with GitLab security templates
 
-> Automation covers ~30–40 % of WCAG issues. Pair with manual and assistive
-> technology testing to achieve full conformance.
+**Security gate pattern:**
 
----
+Add a security gate job that evaluates all security scan results and fails the pipeline if critical issues are found:
 
-## Alternative Tools
+```yaml
+security-gate:
+  needs: [secret-scan, sast, sca, container-scan]
+  script:
+    # Check for critical vulnerabilities
+    # Parse JSON reports and evaluate thresholds
+    # Fail if critical issues found
+```
 
-* **[AccessLint](https://github.com/accesslint):** GitHub App for inline PR comments — useful backup for code-review-time catches.
-* **[Open-Scans](https://github.com/mgifford/open-scans):** External scans using multiple engines against a live URL.
-* **[Lighthouse CI server](https://github.com/GoogleChrome/lighthouse-ci):** Historical tracking and dashboards.
-* **[CivicActions: Scaling Automation](https://accessibility.civicactions.com/posts/how-we-scale-inclusive-website-content-with-automated-testing-and-open-source-tools):** Enterprise-scale a11y philosophy.
+**Language-specific security tools:**
 
----
+- **Node.js:** CodeQL, Semgrep, npm audit, eslint-plugin-security
+- **Python:** CodeQL, Semgrep, Bandit, pip-audit, Safety
+- **Go:** CodeQL, Semgrep, Gosec, govulncheck
 
-## References
+All language-specific templates now include security scanning stages. See:
+- `templates/github-actions/node-ci.yml`
+- `templates/github-actions/python-ci.yml`
+- `templates/github-actions/go-ci.yml`
+- `templates/gitlab-ci/node-ci.yml`
+- `templates/gitlab-ci/python-ci.yml`
+- `templates/gitlab-ci/go-ci.yml`
 
-* [Full best practices guide](https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/CI_CD_ACCESSIBILITY_BEST_PRACTICES.md)
-* [Shift-left automation guide](https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/SHIFT_LEFT_ACCESSIBILITY_AUTOMATION.md)
-* [GitHub Accessibility Scanner integration](https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/GITHUB_ACCESSIBILITY_SCANNER_INTEGRATION.md)
-* [Lighthouse CI documentation](https://github.com/GoogleChrome/lighthouse-ci)
-* [axe-core/playwright](https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright)
-* [Playwright aria snapshots](https://playwright.dev/docs/aria-snapshots)
-* [Guidepup virtual screen reader](https://www.guidepup.dev)
-* [github/accessibility-scanner action](https://github.com/marketplace/actions/accessibility-scanner)
-* [WebDriver BiDi accessibility tree spec](https://github.com/w3c/webdriver-bidi/issues/443)
+See [devsecops.md](references/devsecops.md) for comprehensive DevSecOps guide covering all security scanning types, tool comparisons, and implementation patterns.
+
+## Quick Reference Commands
+
+### GitHub Actions
+
+```bash
+# List workflows
+gh workflow list
+
+# View recent runs
+gh run list --limit 20
+
+# View specific run
+gh run view <run-id>
+
+# Re-run failed jobs
+gh run rerun <run-id> --failed
+
+# Download logs
+gh run view <run-id> --log > logs.txt
+
+# Trigger workflow manually
+gh workflow run ci.yml
+
+# Check workflow status
+gh run watch
+```
+
+### GitLab CI
+
+```bash
+# View pipelines
+gl project-pipelines list
+
+# Pipeline status
+gl project-pipeline get <pipeline-id>
+
+# Retry failed jobs
+gl project-pipeline retry <pipeline-id>
+
+# Cancel pipeline
+gl project-pipeline cancel <pipeline-id>
+
+# Download artifacts
+gl project-job artifacts <job-id>
+```
+
+## Platform-Specific Patterns
+
+### GitHub Actions
+
+**Reusable workflows:**
+```yaml
+# .github/workflows/reusable-test.yml
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+```
+
+**Call from another workflow:**
+```yaml
+jobs:
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      node-version: '20'
+```
+
+### GitLab CI
+
+**Templates with extends:**
+```yaml
+.test_template:
+  image: node:20
+  before_script:
+    - npm ci
+
+unit-test:
+  extends: .test_template
+  script:
+    - npm run test:unit
+
+integration-test:
+  extends: .test_template
+  script:
+    - npm run test:integration
+```
+
+**DAG pipelines with needs:**
+```yaml
+build:
+  stage: build
+
+test:unit:
+  stage: test
+  needs: [build]
+
+test:integration:
+  stage: test
+  needs: [build]
+
+deploy:
+  stage: deploy
+  needs: [test:unit, test:integration]
+```
+
+## Diagnostic Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `pipeline_analyzer.py` | Find optimization opportunities (caching, parallelization, outdated actions) | `python3 scripts/pipeline_analyzer.py --platform github --workflow <path>` |
+
+For pipeline health checks (success/failure rates, failure patterns), use `gh` CLI: `gh run list --limit 20`, `gh run view <run-id>`, `gh workflow list`.
+
+## Reference Documentation
+
+- `references/best_practices.md` — Pipeline design, testing, deployment patterns, artifact handling
+- `references/security.md` — Secrets management, OIDC, supply chain security, secure pipeline patterns
+- `references/devsecops.md` — SAST/DAST/SCA tooling (CodeQL, Semgrep, Trivy, Snyk), security gates
+- `references/optimization.md` — Caching strategies, parallelization, test splitting, build optimization
+- `references/troubleshooting.md` — Common issues, Docker problems, authentication, platform debugging
+
+## Templates
+
+Starter templates in `assets/templates/` for both GitHub Actions and GitLab CI:
+
+| Language/Type | GitHub Actions | GitLab CI |
+|---------------|---------------|-----------|
+| Node.js | `github-actions/node-ci.yml` | `gitlab-ci/node-ci.yml` |
+| Python | `github-actions/python-ci.yml` | `gitlab-ci/python-ci.yml` |
+| Go | `github-actions/go-ci.yml` | `gitlab-ci/go-ci.yml` |
+| Docker | `github-actions/docker-build.yml` | `gitlab-ci/docker-build.yml` |
+| Security | `github-actions/security-scan.yml` | `gitlab-ci/security-scan.yml` |
+
+All templates include security scanning, caching, and multi-environment deployment.
+
+## Common Patterns
+
+### Caching Dependencies
+
+**GitHub Actions:**
+```yaml
+- uses: actions/cache@v4
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      ${{ runner.os }}-node-
+- run: npm ci
+```
+
+**GitLab CI:**
+```yaml
+cache:
+  key:
+    files:
+      - package-lock.json
+  paths:
+    - node_modules/
+```
+
+### Matrix Builds
+
+**GitHub Actions:**
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu-latest, macos-latest]
+    node: [18, 20, 22]
+  fail-fast: false
+```
+
+**GitLab CI:**
+```yaml
+test:
+  parallel:
+    matrix:
+      - NODE_VERSION: ['18', '20', '22']
+```
+
+### Conditional Execution
+
+**GitHub Actions:**
+```yaml
+- name: Deploy
+  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+```
+
+**GitLab CI:**
+```yaml
+deploy:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+```
+
+## Getting Started
+
+1. **New pipeline:** Start with a template from `assets/templates/`
+2. **Add security scanning:** Use DevSecOps templates or add security stages to existing pipelines (see workflow 6 above)
+3. **Optimize existing:** Run `scripts/pipeline_analyzer.py`
+4. **Debug issues:** Check `references/troubleshooting.md`
+5. **Improve security:** Review `references/security.md` and `references/devsecops.md` checklists
+6. **Speed up builds:** See `references/optimization.md`

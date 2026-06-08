@@ -1,178 +1,497 @@
 ---
 name: gitops-workflows
-description: GitOps workflows and patterns using ArgoCD and Flux for declarative Kubernetes deployments. Use when implementing CI/CD for Kubernetes, managing multi-environment deployments, or adopting declarative infrastructure practices.
-keywords:
-  - ArgoCD
-  - Flux
-  - GitOps
-  - GitOps automation
-  - continuous deployment
-  - declarative deployment
-  - deployment workflow
-  - git-based deployment
-  - infrastructure as code
-  - reconciliation
-file_patterns:
-  - '**/*.tf'
-  - '**/*deployment*.yaml'
-  - '**/.gitlab-ci.yml'
-  - '**/cd/**'
-  - '**/charts/**'
-  - '**/ci/**'
-  - '**/helm/**'
-  - '**/k8s/**'
-  - '**/kubernetes/**'
-  - '**/terraform/**'
-  - .github/workflows/*.yml
-confidence: 0.82
+description: "GitOps deployment workflows with ArgoCD and Flux. Use this skill whenever the user mentions GitOps, ArgoCD, Flux, Flagger, Argo Rollouts, or continuous deployment to Kubernetes. Triggers include setting up ArgoCD or Flux from scratch, designing Git repository structures (monorepo vs polyrepo, app-of-apps), deploying to multiple clusters with ApplicationSets, managing secrets in Git (SOPS, Sealed Secrets, External Secrets Operator), implementing canary or blue-green deployments, troubleshooting sync or reconciliation issues, working with OCI artifacts, and comparing ArgoCD vs Flux."
 ---
 
 # GitOps Workflows
 
-Expert guidance for implementing production-grade GitOps workflows using ArgoCD and Flux CD, covering declarative deployment patterns, progressive delivery strategies, multi-environment management, and secure secret handling for Kubernetes infrastructure.
+## Core Workflow: GitOps Implementation
 
-## When to Use This Skill
+Use this decision tree to determine your starting point:
 
-- Implementing GitOps principles for Kubernetes deployments
-- Automating continuous delivery from Git repositories
-- Managing multi-cluster or multi-environment deployments
-- Implementing progressive delivery (canary, blue-green) strategies
-- Configuring automated sync policies and reconciliation
-- Managing secrets securely in GitOps workflows
-- Setting up environment promotion workflows
-- Designing repository structures for GitOps (monorepo vs multi-repo)
-- Implementing rollback strategies and disaster recovery
-- Establishing compliance and audit trails through Git
+```
+Do you have GitOps installed?
+├─ NO → Need to choose a tool
+│   └─ Want UI + easy onboarding? → ArgoCD (Workflow 1)
+│   └─ Want modularity + platform engineering? → Flux (Workflow 2)
+└─ YES → What's your goal?
+    ├─ Sync issues / troubleshooting → Workflow 7
+    ├─ Multi-cluster deployment → Workflow 4
+    ├─ Secrets management → Workflow 5
+    ├─ Progressive delivery → Workflow 6
+    ├─ Repository structure → Workflow 3
+    └─ Tool comparison → Read references/argocd_vs_flux.md
+```
 
-## Core Concepts
+---
 
-### The Four Principles
+## 1. Initial Setup: ArgoCD 3.x
 
-1. **Declarative**: Entire system state expressed in code
-2. **Versioned**: Canonical state stored in Git with full history
-3. **Pulled Automatically**: Agents pull desired state (no push to prod)
-4. **Continuously Reconciled**: Automatic drift detection and correction
+**Latest Version**: v3.1.9 (stable), v3.2.0-rc4 (October 2025)
 
-### Key Benefits
+### Quick Install
 
-- Complete deployment history and audit trail
-- Fast rollback via Git operations
-- Enhanced security (no cluster credentials in CI)
-- Self-healing infrastructure
-- Multi-cluster consistency
-- Familiar Git workflows for infrastructure changes
+```bash
+# Create namespace
+kubectl create namespace argocd
 
-## Quick Reference
+# Install ArgoCD 3.x
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.1.9/manifests/install.yaml
 
-| Task | Load reference |
-| --- | --- |
-| GitOps principles and benefits | `skills/gitops-workflows/references/core-principles.md` |
-| Repository structure patterns (monorepo, multi-repo, branches) | `skills/gitops-workflows/references/repository-structures.md` |
-| ArgoCD setup, Applications, ApplicationSets | `skills/gitops-workflows/references/argocd-implementation.md` |
-| Flux bootstrap, sources, Kustomizations, HelmReleases | `skills/gitops-workflows/references/flux-implementation.md` |
-| Environment promotion strategies | `skills/gitops-workflows/references/environment-promotion.md` |
-| Secret management (Sealed Secrets, ESO, SOPS) | `skills/gitops-workflows/references/secret-management.md` |
-| Progressive delivery (canary, blue-green) | `skills/gitops-workflows/references/progressive-delivery.md` |
-| Rollback strategies and disaster recovery | `skills/gitops-workflows/references/rollback-strategies.md` |
-| Best practices and patterns | `skills/gitops-workflows/references/best-practices.md` |
+# Get admin password
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 
-## Workflow Steps
+# Port forward to access UI
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+# Access: https://localhost:8080
+```
 
-### 1. Choose Repository Structure
+**→ Template**: [assets/argocd/install-argocd-3.x.yaml](assets/argocd/install-argocd-3.x.yaml)
 
-**Decision factors:**
-- Team size and organization structure
-- Application coupling and dependencies
-- Access control requirements
-- Deployment frequency and independence
+### ArgoCD 3.x Key Changes
 
-**Options:**
-- **Monorepo**: Single repo, unified platform teams, shared infrastructure
-- **Multi-repo**: Separate repos per app/team, independent release cycles
-- **Environment branches**: Git flow style, simple mental model
+- **Breaking**: Annotation-based tracking (default, was labels), RBAC logs enforcement enabled, legacy metrics removed
+- **New**: Fine-grained RBAC (per-resource permissions), better defaults (resource exclusions), secrets operators endorsement
 
-### 2. Select GitOps Tool
+### Deploy Your First Application
 
-**ArgoCD:**
-- UI-focused with visual application management
-- App of Apps pattern for hierarchical deployments
-- ApplicationSets for multi-cluster deployments
-- Strong RBAC and project isolation
+```bash
+# CLI method
+argocd app create guestbook \
+  --repo https://github.com/argoproj/argocd-example-apps.git \
+  --path guestbook \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace default
 
-**Flux:**
-- CLI-first, GitOps Toolkit architecture
-- Native Kustomize and Helm support
-- Automated image updates
-- Lighter weight, cloud-native
+# Sync application
+argocd app sync guestbook
+```
 
-### 3. Configure Secret Management
+### Health Check
 
-**Never commit unencrypted secrets to Git**
+```bash
+# List all applications and their sync/health status
+argocd app list
 
-**Options:**
-- **Sealed Secrets**: Client-side encryption, simple workflow
-- **External Secrets Operator**: Sync from external secret stores (AWS, Vault, GCP)
-- **SOPS**: File-based encryption with age or cloud KMS
+# Get detailed status for a specific application
+argocd app get <app-name>
 
-### 4. Implement Sync Policies
+# Check applications via kubectl (no ArgoCD CLI needed)
+kubectl get applications.argoproj.io -A
+```
 
-**Non-production environments:**
-- Automated sync with `prune` and `selfHeal`
-- Frequent reconciliation (1-5 minutes)
-- Fail fast with immediate feedback
+---
 
-**Production environments:**
-- Manual approval or gated automation
-- Health checks and wait conditions
-- Progressive delivery for high-risk changes
-- Sync windows for maintenance periods
+## 2. Initial Setup: Flux 2.7
 
-### 5. Set Up Environment Promotion
+**Latest Version**: v2.7.1 (October 2025)
 
-**Promotion strategies:**
-- **Git-based**: Tag or branch promotion with Git operations
-- **Kustomize overlays**: Update image tags in environment-specific overlays
-- **Automated updates**: Flux ImageUpdateAutomation for semver policies
+### Quick Install
 
-### 6. Configure Progressive Delivery
+```bash
+# Install Flux CLI
+brew install fluxcd/tap/flux  # macOS
+# or: curl -s https://fluxcd.io/install.sh | sudo bash
 
-**For high-risk changes:**
-- **ArgoCD Rollouts**: Canary deployments with automated analysis
-- **Flagger**: Progressive delivery with metric-based promotion
-- Traffic shifting with Istio or other service mesh
-- Automated rollback on failed analysis
+# Check prerequisites
+flux check --pre
 
-### 7. Establish Rollback Procedures
+# Bootstrap Flux (GitHub)
+export GITHUB_TOKEN=<your-token>
+flux bootstrap github \
+  --owner=<org> \
+  --repository=fleet-infra \
+  --branch=main \
+  --path=clusters/production \
+  --personal
 
-**Git rollback:**
-- `git revert` for specific commits
-- Tag-based rollback by updating targetRevision
-- Fast and declarative
+# Enable source-watcher (Flux 2.7+)
+flux install --components-extra=source-watcher
+```
 
-**Tool-specific:**
-- ArgoCD: `argocd app rollback` with revision history
-- Flux: Suspend automation, manual rollback, resume
+**→ Template**: [assets/flux/flux-bootstrap-github.sh](assets/flux/flux-bootstrap-github.sh)
 
-## Common Mistakes
+### Flux 2.7 New Features
 
-1. **Committing unencrypted secrets** - Always use secret management solution
-2. **No automated sync in non-prod** - Slows development feedback
-3. **Automated sync in production without gates** - High risk of breaking changes
-4. **Ignoring drift detection** - Manual changes should be reconciled or alerted
-5. **No health checks** - Sync succeeds but app is unhealthy
-6. **Missing dependency ordering** - Apps deploy before infrastructure ready
-7. **No rollback testing** - Discover issues during actual incidents
-8. **Inconsistent environments** - Staging differs too much from production
-9. **No promotion testing** - Manual errors during environment promotion
-10. **Weak RBAC** - Too many permissions for GitOps service accounts
+- ✅ Image automation GA
+- ✅ ExternalArtifact and ArtifactGenerator APIs
+- ✅ Source-watcher component for better performance
+- ✅ OpenTelemetry tracing support
+- ✅ CEL expressions for readiness evaluation
 
-## Resources
+### Deploy Your First Application
 
-- **OpenGitOps**: https://opengitops.dev/
-- **ArgoCD Documentation**: https://argo-cd.readthedocs.io/
-- **Flux Documentation**: https://fluxcd.io/docs/
-- **ArgoCD Rollouts**: https://argoproj.github.io/argo-rollouts/
-- **Flagger**: https://docs.flagger.app/
-- **External Secrets Operator**: https://external-secrets.io/
-- **Sealed Secrets**: https://github.com/bitnami-labs/sealed-secrets
-- **SOPS**: https://github.com/mozilla/sops
+```yaml
+# gitrepository.yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/stefanprodan/podinfo
+  ref:
+    branch: master
+---
+# kustomization.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: "./kustomize"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+```
+
+### Health Check
+
+```bash
+# Check all Flux resources across namespaces
+flux get all -A
+
+# Check Git sources
+flux get sources git
+
+# Check kustomization status
+flux get kustomizations
+```
+
+---
+
+## 3. Repository Structure Design
+
+**Decision: Monorepo or Polyrepo?**
+
+### Monorepo Pattern
+
+**Best for**: Startups, small teams (< 20 apps), single team
+
+```
+gitops-repo/
+├── apps/
+│   ├── frontend/
+│   ├── backend/
+│   └── database/
+├── infrastructure/
+│   ├── ingress/
+│   ├── monitoring/
+│   └── secrets/
+└── clusters/
+    ├── dev/
+    ├── staging/
+    └── production/
+```
+
+### Polyrepo Pattern
+
+**Best for**: Large orgs, multiple teams, clear boundaries
+
+```
+infrastructure-repo/     (Platform team)
+app-team-1-repo/        (Team 1)
+app-team-2-repo/        (Team 2)
+```
+
+### Environment Structure (Kustomize)
+
+```
+app/
+├── base/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── kustomization.yaml
+└── overlays/
+    ├── dev/
+    │   ├── kustomization.yaml
+    │   └── replica-patch.yaml
+    ├── staging/
+    └── production/
+```
+
+**→ Reference**: [references/repo_patterns.md](references/repo_patterns.md) | **→ Script**: `python3 scripts/validate_gitops_repo.py /path/to/repo`
+
+---
+
+## 4. Multi-Cluster Deployments
+
+### ArgoCD ApplicationSets
+
+**Cluster Generator** (deploy to all clusters):
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-apps
+spec:
+  generators:
+  - cluster:
+      selector:
+        matchLabels:
+          environment: production
+  template:
+    metadata:
+      name: '{{name}}-myapp'
+    spec:
+      source:
+        repoURL: https://github.com/org/apps
+        path: myapp
+      destination:
+        server: '{{server}}'
+```
+
+**→ Template**: [assets/applicationsets/cluster-generator.yaml](assets/applicationsets/cluster-generator.yaml)
+
+**Performance Benefit**: 83% faster deployments (30min → 5min)
+
+### Generate ApplicationSets
+
+```bash
+# Cluster generator
+python3 scripts/applicationset_generator.py cluster \
+  --name my-apps \
+  --repo-url https://github.com/org/repo \
+  --output appset.yaml
+
+# Matrix generator (cluster x apps)
+python3 scripts/applicationset_generator.py matrix \
+  --name my-apps \
+  --cluster-label production \
+  --directories app1,app2,app3 \
+  --output appset.yaml
+```
+
+**→ Script**: [scripts/applicationset_generator.py](scripts/applicationset_generator.py)
+
+### Flux Multi-Cluster
+
+**Hub-and-Spoke**: Management cluster manages all clusters
+
+```bash
+# Bootstrap each cluster
+flux bootstrap github --context prod-cluster --path clusters/production
+flux bootstrap github --context staging-cluster --path clusters/staging
+```
+
+**→ Reference**: [references/multi_cluster.md](references/multi_cluster.md)
+
+---
+
+## 5. Secrets Management
+
+**Never commit plain secrets to Git.** Choose a solution:
+
+### Decision Matrix
+
+| Solution | Complexity | Best For | 2025 Trend |
+|----------|-----------|----------|------------|
+| **SOPS + age** | Medium | Git-centric, flexible | ↗️ Preferred |
+| **External Secrets Operator** | Medium | Cloud-native, dynamic | ↗️ Growing |
+| **Sealed Secrets** | Low | Simple, GitOps-first | → Stable |
+
+### Option 1: SOPS + age (Recommended 2025)
+
+**Setup**:
+```bash
+# Generate age key
+age-keygen -o key.txt
+# Public key: age1...
+
+# Create .sops.yaml
+cat <<EOF > .sops.yaml
+creation_rules:
+  - path_regex: .*.yaml
+    encrypted_regex: ^(data|stringData)$
+    age: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p
+EOF
+
+# Encrypt secret
+kubectl create secret generic my-secret --dry-run=client -o yaml \
+  --from-literal=password=supersecret > secret.yaml
+sops -e secret.yaml > secret.enc.yaml
+
+# Commit encrypted version
+git add secret.enc.yaml .sops.yaml
+```
+
+**→ Template**: [assets/secrets/sops-age-config.yaml](assets/secrets/sops-age-config.yaml)
+
+### Option 2: External Secrets Operator (v0.20+)
+
+**Best for**: Cloud-native apps, dynamic secrets, automatic rotation
+
+### Option 3: Sealed Secrets
+
+**Best for**: Simple setup, static secrets, no external dependencies
+
+**→ Reference**: [references/secret_management.md](references/secret_management.md)
+
+### Audit Secrets
+
+```bash
+python3 scripts/secret_audit.py /path/to/repo
+```
+
+**→ Script**: [scripts/secret_audit.py](scripts/secret_audit.py)
+
+---
+
+## 6. Progressive Delivery
+
+### Argo Rollouts (with ArgoCD)
+
+**Canary Deployment**:
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: my-app
+spec:
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20
+      - pause: {duration: 2m}
+      - setWeight: 50
+      - pause: {duration: 2m}
+      - setWeight: 100
+```
+
+**→ Template**: [assets/progressive-delivery/argo-rollouts-canary.yaml](assets/progressive-delivery/argo-rollouts-canary.yaml)
+
+### Flagger (with Flux)
+
+**Canary with Metrics Analysis**:
+```yaml
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: my-app
+spec:
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    metrics:
+    - name: request-success-rate
+      thresholdRange:
+        min: 99
+```
+
+**→ Reference**: [references/progressive_delivery.md](references/progressive_delivery.md)
+
+---
+
+## 7. Troubleshooting
+
+### Common Issues
+
+**ArgoCD OutOfSync**:
+```bash
+# Check differences
+argocd app diff my-app
+
+# Sync application
+argocd app sync my-app
+
+# Check health
+argocd app list
+argocd app get my-app
+```
+
+**Flux Not Reconciling**:
+```bash
+# Check resources
+flux get all
+
+# Check specific kustomization
+flux get kustomizations
+kubectl describe kustomization my-app -n flux-system
+
+# Force reconcile
+flux reconcile kustomization my-app
+```
+
+**Detect Drift**:
+```bash
+# ArgoCD drift detection
+argocd app diff my-app
+
+# Kubernetes manifest drift detection
+kubectl diff -f <manifest.yaml>
+```
+
+**→ Reference**: [references/troubleshooting.md](references/troubleshooting.md)
+
+---
+
+## 8. OCI Artifacts (Flux 2.6+, GA June 2025)
+
+### Use OCIRepository for Helm Charts
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: podinfo-oci
+spec:
+  interval: 5m
+  url: oci://ghcr.io/stefanprodan/charts/podinfo
+  ref:
+    semver: ">=6.0.0"
+  verify:
+    provider: cosign
+```
+
+**→ Template**: [assets/flux/oci-helmrelease.yaml](assets/flux/oci-helmrelease.yaml)
+
+### Verify OCI Artifacts
+
+```bash
+# Check OCI sources managed by Flux
+flux get sources oci
+
+# Get detailed OCI repository status via kubectl
+kubectl get ocirepository -A -o json
+```
+
+**→ Reference**: [references/oci_artifacts.md](references/oci_artifacts.md)
+
+## Quick Reference Commands
+
+### ArgoCD
+
+```bash
+argocd app list                    # List applications
+argocd app get <app-name>          # Get application details
+argocd app sync <app-name>         # Sync application
+argocd app diff <app-name>         # View diff
+argocd app delete <app-name>       # Delete application
+```
+
+### Flux
+
+```bash
+flux check                                    # Check Flux status
+flux get all                                  # Get all resources
+flux reconcile source git <name>              # Reconcile immediately
+flux reconcile kustomization <name>           # Reconcile kustomization
+flux suspend kustomization <name>             # Suspend
+flux resume kustomization <name>              # Resume
+flux export source git --all > sources.yaml   # Export resources
+```
+
+## Resources Summary
+
+**Scripts**: `applicationset_generator.py` | `secret_audit.py` | `validate_gitops_repo.py`
+
+**References**: `argocd_vs_flux.md` | `repo_patterns.md` | `secret_management.md` | `progressive_delivery.md` | `multi_cluster.md` | `troubleshooting.md` | `best_practices.md` | `oci_artifacts.md`
+
+**Templates**: `argocd/install-argocd-3.x.yaml` | `applicationsets/cluster-generator.yaml` | `flux/flux-bootstrap-github.sh` | `flux/oci-helmrelease.yaml` | `secrets/sops-age-config.yaml` | `progressive-delivery/argo-rollouts-canary.yaml`

@@ -1,110 +1,143 @@
 ---
 name: typescript
-description: >
-  TypeScript strict patterns and best practices.
-  Trigger: When writing TypeScript code - types, interfaces, generics.
-license: Apache-2.0
-metadata:
-  author: gentleman-programming
-  version: "1.0"
+description: This skill should be used when the user asks to "configure TypeScript", "fix type errors", "use dayjs", "add type definitions", "set up React with TypeScript", mentions ".ts" or ".tsx" files, or asks about TypeScript best practices or TypeScript-specific tooling.
 ---
 
-## Const Types Pattern (REQUIRED)
+# TypeScript Skill
+
+## Rules
+
+Note that these are not hard-and-fast rules. If there's a good reason not to apply a rule, don't apply it.
+
+### Alphabetical Order
+
+Maintain alphabetical order for better readability and consistency:
+
+- **Function parameters** - Order by parameter name
+- **Object literal fields** - Sort by key name
+- **Type definitions** - Arrange fields alphabetically
+- **Class properties** - Order by property name
+
+**Example (type definitions):**
 
 ```typescript
-// ✅ ALWAYS: Create const object first, then extract type
-const STATUS = {
-  ACTIVE: "active",
-  INACTIVE: "inactive",
-  PENDING: "pending",
-} as const;
-
-type Status = (typeof STATUS)[keyof typeof STATUS];
-
-// ❌ NEVER: Direct union types
-type Status = "active" | "inactive" | "pending";
-```
-
-**Why?** Single source of truth, runtime values, autocomplete, easier refactoring.
-
-## Flat Interfaces (REQUIRED)
-
-```typescript
-// ✅ ALWAYS: One level depth, nested objects → dedicated interface
-interface UserAddress {
-  street: string;
-  city: string;
-}
-
-interface User {
-  id: string;
+// bad
+type User = {
   name: string;
-  address: UserAddress;  // Reference, not inline
-}
+  age: number;
+  email: string;
+};
 
-interface Admin extends User {
-  permissions: string[];
-}
-
-// ❌ NEVER: Inline nested objects
-interface User {
-  address: { street: string; city: string };  // NO!
-}
+// good
+type User = {
+  age: number;
+  email: string;
+  name: string;
+};
 ```
 
-## Never Use `any`
+### Biome
+
+Use BiomeJS for linting and formatting JavaScript and TypeScript code. Look for a `biome.jsonc` file and, if it's not present, create it.
+
+Exception: project already uses ESLint and Prettier.
+
+### dayjs for date and time calculations
+
+Use the `dayjs` library for date calculations. Avoid using the native JavaScript Date object.
+
+**Example:**
 
 ```typescript
-// ✅ Use unknown for truly unknown types
-function parse(input: unknown): User {
-  if (isUser(input)) return input;
-  throw new Error("Invalid input");
-}
+import dayjs from "dayjs";
 
-// ✅ Use generics for flexible types
-function first<T>(arr: T[]): T | undefined {
-  return arr[0];
-}
-
-// ❌ NEVER
-function parse(input: any): any { }
+const now = dayjs();
+const tomorrow = now.add(1, "day");
 ```
 
-## Utility Types
+### No `any` type
+
+Never use the `any` type.
+
+### Never return a value in `forEach` callbacks
+
+**Example:**
 
 ```typescript
-Pick<User, "id" | "name">     // Select fields
-Omit<User, "id">              // Exclude fields
-Partial<User>                 // All optional
-Required<User>                // All required
-Readonly<User>                // All readonly
-Record<string, User>          // Object type
-Extract<Union, "a" | "b">     // Extract from union
-Exclude<Union, "a">           // Exclude from union
-NonNullable<T | null>         // Remove null/undefined
-ReturnType<typeof fn>         // Function return type
-Parameters<typeof fn>         // Function params tuple
+[].forEach(() => {
+  return 1; // bad
+});
+
+[].forEach(() => {
+  // good
+});
 ```
 
-## Type Guards
+**Another example:**
 
 ```typescript
-function isUser(value: unknown): value is User {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    "name" in value
-  );
-}
+[].forEach((item) => console.log(item)); // bad
+
+[].forEach((item) => {
+  console.log(item); // good
+});
 ```
 
-## Import Types
+### Prefer TypeScript over JavaScript
+
+Use TypeScript for all new code.
+
+### Prefer `type` instead of `interface`
+
+Use `type` instead of `interface` for declaring types.
+
+### Use `Number.isNaN` instead of `isNaN`
+
+**Example:**
 
 ```typescript
-import type { User } from "./types";
-import { createUser, type Config } from "./utils";
+const x = Number.isNaN(y); // good
+const x = isNaN(y); // bad
 ```
 
-## Keywords
-typescript, ts, types, interfaces, generics, strict mode, utility types
+### Comment Dividers
+
+Use centered comment dividers for major section breaks:
+
+**Format (80 chars total):**
+
+```typescript
+// -------------------------------------------------------------------------- //
+//                                   TITLE                                    //
+// -------------------------------------------------------------------------- //
+```
+
+**Rules:**
+
+- Total width: 80 characters
+- Title: UPPERCASE, centered with spaces
+- Border line: dashes `-` filling the space between `// ` and ` //`
+
+**When to use:**
+
+- Major logical sections (imports, types, constants, main logic, exports)
+- Separating distinct feature areas
+- NOT for every function or small grouping
+
+**Example:**
+
+```typescript
+// -------------------------------------------------------------------------- //
+//                                   IMPORTS                                  //
+// -------------------------------------------------------------------------- //
+
+import { Effect } from "effect";
+
+// -------------------------------------------------------------------------- //
+//                                    TYPES                                   //
+// -------------------------------------------------------------------------- //
+
+type Config = {
+  name: string;
+};
+```

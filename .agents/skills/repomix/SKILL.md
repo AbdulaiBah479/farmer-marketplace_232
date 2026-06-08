@@ -1,448 +1,215 @@
 ---
 name: repomix
-description: Pack entire codebases into AI-friendly files for LLM analysis. Use when consolidating code for AI review, generating codebase summaries, or preparing context for ChatGPT, Claude, or other AI tools.
+description: Package entire code repositories into single AI-friendly files using Repomix. Capabilities include pack codebases with customizable include/exclude patterns, generate multiple output formats (XML, Markdown, plain text), preserve file structure and context, optimize for AI consumption with token counting, filter by file types and directories, add custom headers and summaries. Use when packaging codebases for AI analysis, creating repository snapshots for LLM context, analyzing third-party libraries, preparing for security audits, generating documentation context, or evaluating unfamiliar codebases.
 ---
 
-# Repomix - Codebase Packing for AI
+# Repomix Skill
 
-Pack your entire repository into a single, AI-friendly file optimized for LLMs like Claude, ChatGPT, Gemini, and more.
+Repomix packs entire repositories into single, AI-friendly files. Perfect for feeding codebases to LLMs like Claude, ChatGPT, and Gemini.
 
-## When to Use This Skill
+## When to Use
 
-- Feeding codebase to AI for analysis or refactoring
-- Generating comprehensive code reviews
-- Creating documentation from code
-- Preparing context for AI-assisted development
-- Analyzing remote repositories without cloning
-- Token counting for LLM context limits
+Use when:
+- Packaging codebases for AI analysis
+- Creating repository snapshots for LLM context
+- Analyzing third-party libraries
+- Preparing for security audits
+- Generating documentation context
+- Investigating bugs across large codebases
+- Creating AI-friendly code representations
 
 ## Quick Start
 
+### Check Installation
 ```bash
-# Pack current directory (no install required)
-npx repomix@latest
-
-# Pack specific directory
-npx repomix path/to/directory
-
-# Pack with compression (~70% token reduction)
-npx repomix --compress
-
-# Copy output to clipboard
-npx repomix --copy
+repomix --version
 ```
 
-**Default output:** `./repomix-output.xml` in current directory
-
-## Examples
-
-**Example: Prepare codebase for Claude review**
-```
-User: "Pack my src folder for Claude to review the architecture"
-→ npx repomix --include "src/**/*" --style xml --copy
-→ Output copied to clipboard, ready to paste into Claude
-```
-
-**Example: Analyze remote repo without cloning**
-```
-User: "I want to understand how shadcn/ui implements its button"
-→ npx repomix --remote shadcn-ui/ui --include "**/button/**/*" --compress
-→ Generates focused output of button component
-```
-
-**Example: Prepare PR diff for review**
-```
-User: "Pack only the files I changed for a code review"
-→ git diff --name-only main | npx repomix --stdin --compress
-→ Packs only modified files with compression
-```
-
-**Example: Check token usage before sending to AI**
-```
-User: "Is my codebase too large for GPT-4?"
-→ npx repomix --token-count-tree
-→ Shows token breakdown per file/directory
-```
-
-**Example: Generate skills reference from library**
-```
-User: "Create a Claude skill from the zod repository"
-→ npx repomix --remote colinhacks/zod --skill-generate zod-reference
-→ Generates AI-optimized reference documentation
-```
-
-## Output Formats
-
+### Install
 ```bash
-# XML (default) - best for Claude
-npx repomix --style xml
+# npm
+npm install -g repomix
 
-# Markdown - human readable
-npx repomix --style markdown
-
-# JSON - programmatic processing
-npx repomix --style json
-
-# Plain text
-npx repomix --style plain
+# Homebrew (macOS/Linux)
+brew install repomix
 ```
 
-## Token Optimization
-
-### LLM Context Limits Reference
-
-| Model | Context Window | Typical Repo Fit |
-|-------|---------------|------------------|
-| Claude 3.5/Opus | 200K tokens | Large monorepos |
-| GPT-4 Turbo/4o | 128K tokens | Medium projects |
-| Gemini 1.5 Pro | 1M tokens | Very large codebases |
-| Gemini 1.5 Flash | 1M tokens | Very large codebases |
-
-### Token Analysis
-
+### Basic Usage
 ```bash
-# Show token count tree
-npx repomix --token-count-tree
+# Package current directory (generates repomix-output.xml)
+repomix
 
-# Filter by minimum tokens (show files with 1000+ tokens)
-npx repomix --token-count-tree 1000
+# Specify output format
+repomix --style markdown
+repomix --style json
 
-# Split output for large codebases
-npx repomix --split-output 1mb
+# Package remote repository
+npx repomix --remote owner/repo
+
+# Custom output with filters
+repomix --include "src/**/*.ts" --remove-comments -o output.md
 ```
 
-## File Selection
+## Core Capabilities
 
-### Include Patterns
+### Repository Packaging
+- AI-optimized formatting with clear separators
+- Multiple output formats: XML, Markdown, JSON, Plain text
+- Git-aware processing (respects .gitignore)
+- Token counting for LLM context management
+- Security checks for sensitive information
 
+### Remote Repository Support
+Process remote repositories without cloning:
 ```bash
-# Include only TypeScript files
-npx repomix --include "**/*.ts"
+# Shorthand
+npx repomix --remote yamadashy/repomix
 
-# Include multiple patterns
-npx repomix --include "src/**/*.ts,**/*.md"
+# Full URL
+npx repomix --remote https://github.com/owner/repo
 
-# Include specific directories
-npx repomix --include "src/**/*,tests/**/*"
+# Specific commit
+npx repomix --remote https://github.com/owner/repo/commit/hash
 ```
 
-### Ignore Patterns
-
+### Comment Removal
+Strip comments from supported languages (HTML, CSS, JavaScript, TypeScript, Vue, Svelte, Python, PHP, Ruby, C, C#, Java, Go, Rust, Swift, Kotlin, Dart, Shell, YAML):
 ```bash
-# Ignore test files
-npx repomix --ignore "**/*.test.ts"
-
-# Ignore multiple patterns
-npx repomix --ignore "**/*.log,tmp/,dist/"
-
-# Combine include and ignore
-npx repomix --include "src/**/*.ts" --ignore "**/*.test.ts"
+repomix --remove-comments
 ```
 
-### Stdin Input
+## Common Use Cases
 
+### Code Review Preparation
 ```bash
-# From find command
-find src -name "*.ts" -type f | npx repomix --stdin
-
-# From git tracked files
-git ls-files "*.ts" | npx repomix --stdin
-
-# Interactive selection with fzf
-find . -name "*.ts" -type f | fzf -m | npx repomix --stdin
-
-# From ripgrep
-rg --files --type ts | npx repomix --stdin
+# Package feature branch for AI review
+repomix --include "src/**/*.ts" --remove-comments -o review.md --style markdown
 ```
 
-## Common Workflows
-
-### PR Review Preparation
-
+### Security Audit
 ```bash
-# Pack only changed files for review
-git diff --name-only main | npx repomix --stdin --compress
-
-# Pack with diff context included
-npx repomix --include-diffs --compress
-```
-
-### Architecture Analysis
-
-```bash
-# Pack structure without implementation details
-npx repomix --compress --include "src/**/*" --ignore "**/*.test.*"
-
-# Focus on specific layer
-npx repomix --include "src/api/**/*,src/services/**/*" --compress
+# Package third-party library
+npx repomix --remote vendor/library --style xml -o audit.xml
 ```
 
 ### Documentation Generation
-
 ```bash
-# Pack with full context for docs
-npx repomix --include "src/**/*,**/*.md" --style markdown
-
-# Include git history for changelog
-npx repomix --include-logs --include-logs-count 50
+# Package with docs and code
+repomix --include "src/**,docs/**,*.md" --style markdown -o context.md
 ```
 
-### Dependency Analysis
-
+### Bug Investigation
 ```bash
-# Pack only config and dependency files
-npx repomix --include "package.json,tsconfig.json,**/*.config.*"
+# Package specific modules
+repomix --include "src/auth/**,src/api/**" -o debug-context.xml
 ```
 
-## Remote Repositories
-
+### Implementation Planning
 ```bash
-# Pack remote repository
-npx repomix --remote https://github.com/user/repo
-
-# GitHub shorthand
-npx repomix --remote user/repo
-
-# Specific branch
-npx repomix --remote user/repo --remote-branch main
-
-# Specific commit
-npx repomix --remote user/repo --remote-branch 935b695
-
-# Branch URL format
-npx repomix --remote https://github.com/user/repo/tree/feature-branch
+# Full codebase context
+repomix --remove-comments --copy
 ```
 
-## Code Compression
+## Command Line Reference
 
-Tree-sitter powered compression extracts signatures while removing implementation details.
-
-### Supported Languages
-
-Tree-sitter compression works with: JavaScript, TypeScript, Python, Ruby, Go, Rust, Java, C, C++, C#, PHP, Swift, Kotlin, and more.
-
-### Usage
-
+### File Selection
 ```bash
-npx repomix --compress
+# Include specific patterns
+repomix --include "src/**/*.ts,*.md"
 
-# Combine with remote
-npx repomix --remote user/repo --compress
+# Ignore additional patterns
+repomix -i "tests/**,*.test.js"
+
+# Disable .gitignore rules
+repomix --no-gitignore
 ```
 
-**Before compression:**
-```typescript
-const calculateTotal = (items: Item[]) => {
-  let total = 0;
-  for (const item of items) {
-    total += item.price * item.quantity;
-  }
-  return total;
-};
-```
-
-**After compression:**
-```typescript
-const calculateTotal = (items: Item[]) => { /* ... */ };
-```
-
-## Git Integration
-
+### Output Options
 ```bash
-# Include git logs (last 50 commits)
-npx repomix --include-logs
+# Output format
+repomix --style markdown  # or xml, json, plain
 
-# Specify commit count
-npx repomix --include-logs --include-logs-count 20
+# Output file path
+repomix -o output.md
 
-# Include git diffs
-npx repomix --include-diffs
+# Remove comments
+repomix --remove-comments
 
-# Combine logs and diffs
-npx repomix --include-logs --include-diffs
+# Copy to clipboard
+repomix --copy
 ```
 
-## Configuration
-
-### Initialize Config
-
+### Configuration
 ```bash
-# Create repomix.config.json
-npx repomix --init
+# Use custom config file
+repomix -c custom-config.json
 
-# Global config
-npx repomix --init --global
+# Initialize new config
+repomix --init  # creates repomix.config.json
 ```
 
-### Configuration File
+## Token Management
 
-```json
-{
-  "$schema": "https://repomix.com/schemas/latest/schema.json",
-  "output": {
-    "filePath": "repomix-output.xml",
-    "style": "xml",
-    "compress": false,
-    "removeComments": false,
-    "showLineNumbers": false,
-    "copyToClipboard": false
-  },
-  "include": ["src/**/*", "**/*.md"],
-  "ignore": {
-    "useGitignore": true,
-    "useDefaultPatterns": true,
-    "customPatterns": ["**/*.test.ts", "dist/"]
-  },
-  "security": {
-    "enableSecurityCheck": true
-  }
-}
-```
+Repomix automatically counts tokens for individual files, total repository, and per-format output.
 
-## Docker Usage
+Typical LLM context limits:
+- Claude Sonnet 4.5: ~200K tokens
+- GPT-4: ~128K tokens
+- GPT-3.5: ~16K tokens
 
+## Security Considerations
+
+Repomix uses Secretlint to detect sensitive data (API keys, passwords, credentials, private keys, AWS secrets).
+
+Best practices:
+1. Always review output before sharing
+2. Use `.repomixignore` for sensitive files
+3. Enable security checks for unknown codebases
+4. Avoid packaging `.env` files
+5. Check for hardcoded credentials
+
+Disable security checks if needed:
 ```bash
-# Pack current directory
-docker run -v .:/app -it --rm ghcr.io/yamadashy/repomix
-
-# Pack specific directory
-docker run -v .:/app -it --rm ghcr.io/yamadashy/repomix path/to/directory
-
-# Remote repository
-docker run -v ./output:/app -it --rm ghcr.io/yamadashy/repomix --remote user/repo
+repomix --no-security-check
 ```
 
-## MCP Server Integration
+## Implementation Workflow
 
-Run as Model Context Protocol server for AI assistants:
+When user requests repository packaging:
 
-```bash
-npx repomix --mcp
-```
+1. **Assess Requirements**
+   - Identify target repository (local/remote)
+   - Determine output format needed
+   - Check for sensitive data concerns
 
-### Configure for Claude Code
+2. **Configure Filters**
+   - Set include patterns for relevant files
+   - Add ignore patterns for unnecessary files
+   - Enable/disable comment removal
 
-```bash
-claude mcp add repomix -- npx -y repomix --mcp
-```
+3. **Execute Packaging**
+   - Run repomix with appropriate options
+   - Monitor token counts
+   - Verify security checks
 
-### Available MCP Tools
+4. **Validate Output**
+   - Review generated file
+   - Confirm no sensitive data
+   - Check token limits for target LLM
 
-When running as MCP server, provides:
+5. **Deliver Context**
+   - Provide packaged file to user
+   - Include token count summary
+   - Note any warnings or issues
 
-| Tool | Description |
-|------|-------------|
-| `pack_codebase` | Pack local directory into AI-friendly format |
-| `pack_remote_repository` | Pack GitHub repository without cloning |
-| `read_repomix_output` | Read contents of generated output file |
-| `file_system_tree` | Get directory tree structure |
+## Reference Documentation
 
-## Claude Agent Skills Generation
+For detailed information, see:
+- [Configuration Reference](./references/configuration.md) - Config files, include/exclude patterns, output formats, advanced options
+- [Usage Patterns](./references/usage-patterns.md) - AI analysis workflows, security audit preparation, documentation generation, library evaluation
 
-Generate skills format output for Claude:
+## Additional Resources
 
-```bash
-# Generate skills from local directory
-npx repomix --skill-generate
-
-# Generate with custom name
-npx repomix --skill-generate my-project-reference
-
-# From remote repository
-npx repomix --remote user/repo --skill-generate
-```
-
-## CLI Options Reference
-
-| Option | Description |
-|--------|-------------|
-| `-o, --output <file>` | Output file path |
-| `--style <style>` | Output format: xml, markdown, json, plain |
-| `--compress` | Enable Tree-sitter compression |
-| `--include <patterns>` | Include files matching glob patterns |
-| `-i, --ignore <patterns>` | Exclude files matching patterns |
-| `--remote <url>` | Process remote repository |
-| `--remote-branch <name>` | Branch, tag, or commit for remote |
-| `--stdin` | Read file paths from stdin |
-| `--copy` | Copy output to clipboard |
-| `--token-count-tree` | Show token counts per file |
-| `--split-output <size>` | Split output by size (e.g., 1mb) |
-| `--include-logs` | Include git commit history |
-| `--include-diffs` | Include git diffs |
-| `--no-security-check` | Skip sensitive data detection |
-| `--mcp` | Run as MCP server |
-| `--skill-generate` | Generate Claude skills format |
-| `--init` | Create configuration file |
-| `--help` | Show all available options |
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Output too large for LLM | Use `--compress` or filter with `--include` |
-| Missing expected files | Check `.repomixignore`, `.gitignore`, and ignore patterns |
-| Secrets detected (blocking) | Review flagged files; use `--no-security-check` if false positive |
-| Memory issues on large repos | Use `--split-output 1mb` to chunk output |
-| Remote repo access denied | Check URL format; ensure repo is public or use SSH |
-| Compression not working | Verify language is supported by Tree-sitter |
-| Output not in clipboard | Ensure clipboard access; try `--output - \| pbcopy` on macOS |
-
-## Ignore Files
-
-Repomix respects multiple ignore sources (priority order):
-
-1. `ignore.customPatterns` in config
-2. `.repomixignore` (Repomix-specific)
-3. `.ignore` (ripgrep compatible)
-4. `.gitignore`
-5. Default patterns (node_modules, .git, etc.)
-
-## Security
-
-Repomix includes Secretlint for detecting sensitive information:
-
-```bash
-# Security check enabled by default
-npx repomix
-
-# Disable security check (use with caution)
-npx repomix --no-security-check
-```
-
-**Detected secret types:** API keys, tokens, passwords, private keys, AWS credentials, database connection strings, and more.
-
-## Best Practices
-
-1. **Use compression** for large codebases to reduce token count (~70% reduction)
-2. **Filter with --include** to focus on relevant files
-3. **Use --token-count-tree** to identify large files before packing
-4. **Split output** when hitting AI context limits
-5. **Include git logs** for evolution context when needed
-6. **Use XML style** for Claude (optimized for XML tags)
-7. **Use Markdown** for human-readable output or other LLMs
-8. **Check token counts** against your target LLM's context window
-9. **Review security warnings** before sharing packed output
-
-## Requirements
-
-- Node.js 18.0.0 or higher
-- npm or npx available in PATH
-
-## Resources
-
-- Website: https://repomix.com
 - GitHub: https://github.com/yamadashy/repomix
-- Chrome Extension: Repomix - Chrome Web Store
-- VSCode Extension: Repomix Runner
-
----
-
-## Gotchas
-
-- **`--compress` strips function bodies but keeps signatures** — great for architecture review, useless for "why is this function buggy" questions. The LLM literally cannot see the implementation.
-- **Security check blocks output entirely on detected secrets** — even a single false-positive AWS-key-shaped string in a test fixture kills the run. Use `--no-security-check` only after reviewing the flagged files.
-- **`.gitignore` is respected but `.dockerignore` is not** — your `node_modules` is excluded but the giant `dist/` your Dockerfile ignores will be packed. Add a `.repomixignore` to match.
-- **Token counts are tiktoken-based (GPT)** — Claude's tokenizer differs by ~10-20%. A repo reported as "180K tokens" can blow past Claude's 200K window or fit comfortably depending on content.
-- **`--remote user/repo` clones the default branch to a temp dir and runs locally** — no GitHub API magic. Private repos require SSH keys configured; the error message just says "access denied" without explaining auth path.
-- **`--stdin` reads NUL or newline-separated paths** and silently drops paths that don't exist or are outside the cwd. A typo in `git diff --name-only` output produces a smaller pack with no warning.
-- **`--copy` on macOS via `pbcopy` truncates at ~1MB** in some terminal multiplexers (tmux without `set-clipboard on`). Verify the paste size before assuming the full output made it.
+- Documentation: https://repomix.com/guide/
+- MCP Server: Available for AI assistant integration

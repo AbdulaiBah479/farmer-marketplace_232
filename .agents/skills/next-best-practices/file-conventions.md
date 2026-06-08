@@ -133,19 +133,7 @@ export const config = {
 | v14-15 | `middleware.ts` | `middleware()` | `config` |
 | v16+ | `proxy.ts` | `proxy()` | `config` |
 
-**Key v16 differences:**
-- `proxy.ts` runs on the **Node.js runtime only**. The `runtime` config option is
-  **not allowed** in a proxy file — setting it throws an error.
-- `middleware.ts` is **deprecated** but still available for **Edge runtime** use
-  cases. It will be removed in a future version.
-- Without a `matcher`, proxy runs on **every** request (including `_next/static`,
-  `_next/image`, and `public/` assets) — add a negative matcher to exclude them.
-
-**Migration**: Run the dedicated codemod to rename the file and export:
-
-```bash
-npx @next/codemod@canary middleware-to-proxy .
-```
+**Migration**: Run `npx @next/codemod@latest upgrade` to auto-rename.
 
 ## File Conventions Reference
 

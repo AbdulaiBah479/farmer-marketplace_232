@@ -1,151 +1,144 @@
 ---
 name: iterate-pr
-description: "Iterate on a PR until CI passes. Use when you need to fix CI failures, address review feedback, or continuously push fixes until all checks are green. Automates the feedback-fix-push-wait cycle."
-risk: safe
-source: "https://github.com/getsentry/skills/tree/main/plugins/sentry-skills/skills/iterate-pr"
-date_added: "2026-02-27"
+description: Iterate on a PR until actionable CI passes and high/medium review feedback is addressed. Use for PR CI failures, review feedback, or green-check loops; do not wait for human approval, draft status, or merge gates.
 ---
 
 # Iterate on PR Until CI Passes
 
-Continuously iterate on the current branch until all CI checks pass and review feedback is addressed.
+Goal: fix actionable CI failures and high/medium review feedback. Stop and report human approval, draft-readiness, and merge-readiness gates.
 
-## When to Use This Skill
+Requires:
+- authenticated `gh`
+- `uv`
+- target repository root as cwd
+- skill-root-relative script paths, for example `scripts/fetch_pr_checks.py`
 
-Use this skill when:
-- Fixing CI failures
-- Addressing review feedback
-- Continuously pushing fixes until all checks are green
-- Automating the feedback-fix-push-wait cycle
-- Ensuring PR meets all quality gates
+## Bundled Scripts
 
-**Requires**: GitHub CLI (`gh`) authenticated and available.
+| Script | Run | Output |
+|--------|-----|--------|
+| `scripts/fetch_pr_checks.py` | `uv run scripts/fetch_pr_checks.py [--pr NUMBER]` | JSON: `pr`, `summary`, `checks`, failure snippets |
+| `scripts/fetch_pr_feedback.py` | `uv run scripts/fetch_pr_feedback.py [--pr NUMBER]` | JSON buckets: `high`, `medium`, `low`, `bot`, `resolved` |
+| `scripts/monitor_pr_checks.py` | `uv run scripts/monitor_pr_checks.py [--pr NUMBER]` | terminal marker plus tab-separated checks |
+| `scripts/reply_to_thread.py` | `uv run scripts/reply_to_thread.py THREAD_ID BODY [...]` | JSON reply results |
 
-## Process
+Check summary fields include `failed`, `pending`, `actionable_pending`, and `human_gate_pending`.
 
-### Step 1: Identify the PR
+Monitor markers:
+- `ALL_CHECKS_PASSED`
+- `CHECKS_DONE_WITH_FAILURES`
+- `NO_CHECKS_REGISTERED`
+- `DRAFT_PR_WITH_NO_CHECKS`
+- `CHECKS_BLOCKED_BY_REVIEW_GATE`
 
+## Workflow
+
+### 1. Identify PR
+
+Run:
 ```bash
-gh pr view --json number,url,headRefName,baseRefName
+gh pr view --json number,url,headRefName,isDraft,reviewDecision
 ```
 
-If no PR exists for the current branch, stop and inform the user.
+Stop when:
+- no PR exists
+- draft PR has no checks after monitor grace period: report `DRAFT_PR_WITH_NO_CHECKS`
 
-### Step 2: Check CI Status First
+Draft rule: inspect existing checks/feedback only. Do not mark ready for review unless asked.
 
-Always check CI/GitHub Actions status before looking at review feedback:
+### 2. Handle Feedback
 
-```bash
-gh pr checks --json name,state,bucket,link,workflow
+Run `uv run scripts/fetch_pr_feedback.py [--pr NUMBER]`.
+
+| Bucket | Action |
+|--------|--------|
+| `high` | fix |
+| `medium` | fix |
+| `low` | ask user which to address |
+| `bot` | skip informational comments |
+| `resolved` | skip |
+
+Feedback fix checklist:
+- verify root cause
+- search related code
+- fix all instances
+- for `review_bot: true`: fix real issues, explain false positives
+
+Low-priority prompt format:
+```text
+Found 3 low-priority suggestions:
+1. [l] "Consider renaming this variable" - @reviewer in api.py:42
+2. [nit] "Could use a list comprehension" - @reviewer in utils.py:18
+3. [style] "Add a docstring" - @reviewer in models.py:55
+
+Which should I address? ("1,3", "all", or "none")
 ```
 
-The `bucket` field categorizes state into: `pass`, `fail`, `pending`, `skipping`, or `cancel`.
+### 3. Check CI Status
 
-**Important:** If any of these checks are still `pending`, wait before proceeding:
-- `sentry` / `sentry-io`
-- `codecov`
-- `cursor` / `bugbot` / `seer`
-- Any linter or code analysis checks
+Run `uv run scripts/fetch_pr_checks.py [--pr NUMBER]`.
 
-These bots may post additional feedback comments once their checks complete. Waiting avoids duplicate work.
+| State | Action |
+|-------|--------|
+| `failed > 0` and `actionable_pending == 0` | fix failures |
+| `actionable_pending > 0` | wait; poll feedback while waiting |
+| `pending > 0` and `actionable_pending == 0` | report `CHECKS_BLOCKED_BY_REVIEW_GATE` |
+| no checks after grace period | report `NO_CHECKS_REGISTERED` or `DRAFT_PR_WITH_NO_CHECKS` |
+| all actionable checks passed | run post-CI feedback check |
 
-### Step 3: Gather Review Feedback
+Wait for actionable review bots: sentry, warden, cursor, bugbot, seer, codeql.
+Do not wait for approval, `isDraft`, `REVIEW_REQUIRED`, Codecov, or informational bots.
 
-Once CI checks have completed (or at least the bot-related checks), gather human and bot feedback:
+### 4. Fix CI Failures
 
-**Review Comments and Status:**
-```bash
-gh pr view --json reviews,comments,reviewDecision
-```
+For each failure:
+1. read full log: `gh run view <run-id> --log-failed`
+2. trace from assertion/exception/lint rule to source
+3. state the cause before editing: "fails because X, affected by Y"
+4. search related call sites/patterns
+5. fix root cause, not symptom
+6. add focused test coverage when needed
 
-**Inline Code Review Comments:**
-```bash
-gh api repos/{owner}/{repo}/pulls/{pr_number}/comments
-```
+### 5. Verify Locally, Then Commit and Push
 
-**PR Conversation Comments (includes bot comments):**
-```bash
-gh api repos/{owner}/{repo}/issues/{pr_number}/comments
-```
-
-Look for bot comments from: Sentry, Codecov, Cursor, Bugbot, Seer, and other automated tools.
-
-### Step 4: Investigate Failures
-
-For each CI failure, get the actual logs:
+Before commit:
+- test fix: rerun specific test
+- lint/type fix: rerun affected checker
+- code fix: rerun covering tests
+- local failure: fix before pushing
 
 ```bash
-# List recent runs for this branch
-gh run list --branch $(git branch --show-current) --limit 5 --json databaseId,name,status,conclusion
-
-# View failed logs for a specific run
-gh run view <run-id> --log-failed
+git add <files>
+git commit -m "fix: <descriptive message>"
+git push
 ```
 
-Do NOT assume what failed based on the check name alone. Always read the actual logs.
+### 6. Monitor CI and Address Feedback
 
-### Step 5: Validate Feedback
+Loop:
+1. run `uv run scripts/fetch_pr_checks.py`
+2. handle table in step 3
+3. while `actionable_pending > 0`, run `uv run scripts/fetch_pr_feedback.py`
+4. fix new high/medium feedback immediately
+5. if changed, verify, commit, push, restart loop
+6. otherwise sleep 30 seconds and repeat
+7. after checks pass, wait 10 seconds, fetch feedback once more
+8. if new high/medium feedback exists, return to step 4
 
-For each piece of feedback (CI failure or review comment):
-
-1. **Read the relevant code** - Understand the context before making changes
-2. **Verify the issue is real** - Not all feedback is correct; reviewers and bots can be wrong
-3. **Check if already addressed** - The issue may have been fixed in a subsequent commit
-4. **Skip invalid feedback** - If the concern is not legitimate, move on
-
-### Step 6: Address Valid Issues
-
-Make minimal, targeted code changes. Only fix what is actually broken.
-
-### Step 7: Commit and Push
-
-```bash
-git add -A
-git commit -m "fix: <descriptive message of what was fixed>"
-git push origin $(git branch --show-current)
-```
-
-### Step 8: Wait for CI
-
-Use the built-in watch functionality:
-
-```bash
-gh pr checks --watch --interval 30
-```
-
-This waits until all checks complete. Exit code 0 means all passed, exit code 1 means failures.
-
-Alternatively, poll manually if you need more control:
-
-```bash
-gh pr checks --json name,state,bucket | jq '.[] | select(.bucket != "pass")'
-```
-
-### Step 9: Repeat
-
-Return to Step 2 if:
-- Any CI checks failed
-- New review feedback appeared
-
-Continue until all checks pass and no unaddressed feedback remains.
+Claude Code optional: run `uv run scripts/monitor_pr_checks.py` through `MonitorTool` with `persistent: false`; set timeout to normal repo CI duration. Restart the monitor after every push.
 
 ## Exit Conditions
 
-**Success:**
-- All CI checks are green (`bucket: pass`)
-- No unaddressed human review feedback
+| Exit | Conditions |
+|------|------------|
+| Success | actionable CI passed; post-CI feedback clean; low-priority choice handled |
+| Ask user | same failure after 2 attempts; feedback unclear; infrastructure issue |
+| Stop | no PR; branch needs rebase; no checks; draft no-checks; only human gates remain |
 
-**Ask for Help:**
-- Same failure persists after 3 attempts (likely a flaky test or deeper issue)
-- Review feedback requires clarification or decision from the user
-- CI failure is unrelated to branch changes (infrastructure issue)
+## Fallback
 
-**Stop Immediately:**
-- No PR exists for the current branch
-- Branch is out of sync and needs rebase (inform user)
-
-## Tips
-
-- Use `gh pr checks --required` to focus only on required checks
-- Use `gh run view <run-id> --verbose` to see all job steps, not just failures
-- If a check is from an external service, the `link` field in checks JSON provides the URL to investigate
+If scripts fail, use `gh` CLI directly:
+- `gh pr view --json number,url,headRefName,isDraft,reviewDecision`
+- `gh pr checks --json name,state,bucket,description,link`
+- `gh run view <run-id> --log-failed`
+- `gh api repos/{owner}/{repo}/pulls/{number}/comments`

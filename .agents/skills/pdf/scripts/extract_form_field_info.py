@@ -5,7 +5,7 @@ from pypdf import PdfReader
 
 
 # Extracts data for the fillable form fields in a PDF and outputs JSON that
-# Claude uses to fill the fields. See FORMS.md.
+# Claude uses to fill the fields. See forms.md.
 
 
 # This matches the format used by PdfReader `get_fields` and `update_page_form_field_values` methods.
@@ -56,7 +56,7 @@ def make_field_dict(field, field_id):
 #     "field_id": "name",
 #     "page": 1,
 #     "type": ("text", "checkbox", "radio_group", or "choice")
-#     // Per-type additional fields described in FORMS.md
+#     // Per-type additional fields described in forms.md
 #   },
 # ]
 def get_field_info(reader: PdfReader):

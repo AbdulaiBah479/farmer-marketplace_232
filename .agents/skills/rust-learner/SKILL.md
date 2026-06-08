@@ -1,310 +1,340 @@
 ---
 name: rust-learner
-description: "Use when asking about Rust versions or crate info. Keywords: latest version, what's new, changelog, Rust 1.x, Rust release, stable, nightly, crate info, crates.io, lib.rs, docs.rs, API documentation, crate features, dependencies, which crate, what version, Rust edition, edition 2021, edition 2024, cargo add, cargo update, 最新版本, 版本号, 稳定版, 最新, 哪个版本, crate 信息, 文档, 依赖, Rust 版本, 新特性, 有什么特性"
-allowed-tools: ["Task", "Read", "Glob", "mcp__actionbook__*", "Bash"]
+description: Rust learning and ecosystem tracking expert covering version updates, new features, RFC tracking, crate updates, best practice evolution, and learning resources.
+metadata:
+  triggers:
+    - learning
+    - latest version
+    - what's new
+    - version update
+    - new features
+    - RFC
+    - weekly news
+    - tutorial
+    - learning path
 ---
 
-# Rust Learner
 
-> **Version:** 2.1.0 | **Last Updated:** 2025-01-27
+## Version Update Strategy
 
-You are an expert at fetching Rust and crate information. Help users by:
-- **Version queries**: Get latest Rust/crate versions
-- **API documentation**: Fetch docs from docs.rs
-- **Changelog**: Get Rust version features from releases.rs
+### Stable Updates
 
-**Primary skill for fetching Rust/crate information.**
+```bash
+# Check current version
+rustc --version
 
-## Execution Mode Detection
+# Update Rust
+rustup update stable
 
-**CRITICAL: Check agent file availability first to determine execution mode.**
-
-Try to read the agent file for your query type. The execution mode depends on whether the file exists:
-
-| Query Type | Agent File Path |
-|------------|-----------------|
-| Crate info/version | `../../agents/crate-researcher.md` |
-| Rust version features | `../../agents/rust-changelog.md` |
-| Std library docs | `../../agents/std-docs-researcher.md` |
-| Third-party crate docs | `../../agents/docs-researcher.md` |
-| Clippy lints | `../../agents/clippy-researcher.md` |
-
----
-
-## Agent Mode (Plugin Install)
-
-**When agent files exist at `../../agents/`:**
-
-### Workflow
-
-1. Read the appropriate agent file (relative to this skill)
-2. Launch Task with `run_in_background: true`
-3. Continue with other work or wait for completion
-4. Summarize results to user
-
-```
-Task(
-  subagent_type: "general-purpose",
-  run_in_background: true,
-  prompt: <read from ../../agents/*.md file>
-)
+# View changelog
+rustup doc --changelog
 ```
 
-### Agent Routing Table
+### When to Upgrade
 
-| Query Type | Agent File | Source |
-|------------|------------|--------|
-| Rust version features | `../../agents/rust-changelog.md` | releases.rs |
-| Crate info/version | `../../agents/crate-researcher.md` | lib.rs, crates.io |
-| **Std library docs** (Send, Sync, Arc, etc.) | `../../agents/std-docs-researcher.md` | doc.rust-lang.org |
-| Third-party crate docs (tokio, serde, etc.) | `../../agents/docs-researcher.md` | docs.rs |
-| Clippy lints | `../../agents/clippy-researcher.md` | rust-clippy docs |
+| Scenario | Recommendation |
+|----------|---------------|
+| New project | Use latest stable |
+| Production project | Follow 6-week cycle |
+| Library project | Consider MSRV policy |
 
-### Agent Mode Examples
+### MSRV (Minimum Supported Rust Version)
 
-**Crate Version Query:**
-```
-User: "tokio latest version"
+```toml
+[package]
+rust-version = "1.70"  # Declare minimum version
 
-Claude:
-1. Read ../../agents/crate-researcher.md
-2. Task(subagent_type: "general-purpose", run_in_background: true, prompt: <agent content>)
-3. Wait for agent
-4. Summarize results
+[dependencies]
+# MSRV-sensitive dependencies require care
+serde = { version = "1.0", default-features = false }
 ```
 
-**Rust Changelog Query:**
-```
-User: "What's new in Rust 1.85?"
 
-Claude:
-1. Read ../../agents/rust-changelog.md
-2. Task(subagent_type: "general-purpose", run_in_background: true, prompt: <agent content>)
-3. Wait for agent
-4. Summarize features
-```
+## Solution Patterns
 
----
+### Pattern 1: Following Stable Releases
 
-## Inline Mode (Skills-only Install)
+```bash
+# Quarterly update routine
+rustup update stable
+cargo outdated
+cargo audit
+cargo test --all-features
 
-**When agent files are NOT available, execute directly using these steps:**
-
-### Crate Info Query
-
-```
-1. actionbook: mcp__actionbook__search_actions("lib.rs crate info")
-2. Get action details: mcp__actionbook__get_action_by_id(<action_id>)
-3. agent-browser CLI (or WebFetch fallback):
-   - open "https://lib.rs/crates/{crate_name}"
-   - get text using selector from actionbook
-   - close
-4. Parse and format output
+# Read release notes
+rustup doc --changelog
 ```
 
-**Output Format:**
-```markdown
-## {Crate Name}
+### Pattern 2: Tracking Ecosystem Changes
 
-**Version:** {latest}
-**Description:** {description}
+```bash
+# Check for breaking changes
+cargo update --dry-run
 
-**Features:**
-- `feature1`: description
+# Security audit
+cargo audit
 
-**Links:**
-- [docs.rs](https://docs.rs/{crate}) | [crates.io](https://crates.io/crates/{crate}) | [repo]({repo_url})
+# License check
+cargo deny check licenses
+
+# Check dependency tree
+cargo tree
 ```
 
-### Rust Version Query
+### Pattern 3: Learning New Features
 
-```
-1. actionbook: mcp__actionbook__search_actions("releases.rs rust changelog")
-2. Get action details for selectors
-3. agent-browser CLI (or WebFetch fallback):
-   - open "https://releases.rs/docs/1.{version}.0/"
-   - get text using selector from actionbook
-   - close
-4. Parse and format output
-```
-
-**Output Format:**
-```markdown
-## Rust 1.{version}
-
-**Release Date:** {date}
-
-### Language Features
-- Feature 1: description
-- Feature 2: description
-
-### Library Changes
-- std::module: new API
-
-### Stabilized APIs
-- `api_name`: description
-```
-
-### Std Library Docs (std::*, Send, Sync, Arc, etc.)
-
-```
-1. Construct URL: "https://doc.rust-lang.org/std/{path}/"
-   - Traits: std/{module}/trait.{Name}.html
-   - Structs: std/{module}/struct.{Name}.html
-   - Modules: std/{module}/index.html
-2. agent-browser CLI (or WebFetch fallback):
-   - open <url>
-   - get text "main .docblock"
-   - close
-3. Parse and format output
-```
-
-**Common Std Library Paths:**
-| Item | Path |
-|------|------|
-| Send, Sync, Copy, Clone | `std/marker/trait.{Name}.html` |
-| Arc, Mutex, RwLock | `std/sync/struct.{Name}.html` |
-| Rc, Weak | `std/rc/struct.{Name}.html` |
-| RefCell, Cell | `std/cell/struct.{Name}.html` |
-| Box | `std/boxed/struct.Box.html` |
-| Vec | `std/vec/struct.Vec.html` |
-| String | `std/string/struct.String.html` |
-
-**Output Format:**
-```markdown
-## std::{path}::{Name}
-
-**Signature:**
 ```rust
-{signature}
+// Edition 2024 features
+
+// Inline const (1.79+)
+const fn compute() -> [u8; 32] {
+    let mut arr = [0u8; 32];
+    // compute at compile time
+    arr
+}
+
+// Never type improvements (1.82+)
+fn diverge() -> ! {
+    panic!("never returns")
+}
+
+// Async fn in trait (1.75+)
+trait Repository {
+    async fn fetch(&self, id: u64) -> Result<Data, Error>;
+}
 ```
 
-**Description:**
-{description}
 
-**Examples:**
-```rust
-{example_code}
-```
-```
+## Learning Path
 
-### Third-Party Crate Docs (tokio, serde, etc.)
+### Beginner → Advanced
 
 ```
-1. Construct URL: "https://docs.rs/{crate}/latest/{crate}/{path}"
-2. agent-browser CLI (or WebFetch fallback):
-   - open <url>
-   - get text ".docblock"
-   - close
-3. Parse and format output
+Basics → Ownership, lifetimes, borrow checker
+   ↓
+Intermediate → Trait objects, generics, closures
+   ↓
+Concurrency → async/await, threads, channels
+   ↓
+Advanced → unsafe, FFI, performance optimization
+   ↓
+Expert → Macros, type system, design patterns
 ```
 
-**Output Format:**
-```markdown
-## {crate}::{path}
 
-**Signature:**
-```rust
-{signature}
+## Information Sources
+
+### Official Channels
+
+| Source | Content | Frequency |
+|--------|---------|-----------|
+| [This Week in Rust](https://this-week-in-rust.org/) | Weekly digest, RFCs, blogs | Weekly |
+| [Rust Blog](https://blog.rust-lang.org/) | Major releases, deep dives | As released |
+| [Rust RFCs](https://github.com/rust-lang/rfcs) | Design discussions | Ongoing |
+| [Release Notes](https://github.com/rust-lang/rust/blob/master/RELEASES.md) | Version changes | Every 6 weeks |
+
+### Community Resources
+
+| Resource | Content |
+|----------|---------|
+| [docs.rs](https://docs.rs/) | Documentation search |
+| [crates.io](https://crates.io/) | Package search |
+| [lib.rs](https://lib.rs/) | Find alternative crates |
+| [Rust Analyzer](https://rust-analyzer.github.io/) | IDE plugin |
+
+
+## Dependency Management
+
+### Regular Updates
+
+```bash
+# Check outdated dependencies
+cargo outdated
+
+# Update compatible versions
+cargo update
+
+# Update to latest (may break)
+cargo upgrade
 ```
 
-**Description:**
-{description}
+### Security Audit
 
-**Examples:**
-```rust
-{example_code}
-```
-```
+```bash
+# Check for known vulnerabilities
+cargo audit
 
-### Clippy Lints
+# Check dependency licenses
+cargo deny check licenses
 
-```
-1. agent-browser CLI (or WebFetch fallback):
-   - open "https://rust-lang.github.io/rust-clippy/stable/"
-   - search for lint name in page
-   - get text ".lint-doc" for matching lint
-   - close
-2. Parse and format output
+# Analyze dependency tree
+cargo tree -d  # Show duplicates
 ```
 
-**Output Format:**
-```markdown
-## Clippy Lint: {lint_name}
 
-**Level:** {warn|deny|allow}
-**Category:** {category}
+## Workflow
 
-**Description:**
-{what_it_checks}
-
-**Example (Bad):**
-```rust
-{bad_code}
-```
-
-**Example (Good):**
-```rust
-{good_code}
-```
-```
-
----
-
-## Tool Chain Priority
-
-Both modes use the same tool chain order:
-
-1. **actionbook MCP** - Get pre-computed selectors first
-   - `mcp__actionbook__search_actions("site_name")` → get action ID
-   - `mcp__actionbook__get_action_by_id(id)` → get URL + selectors
-
-2. **agent-browser CLI** - Primary execution tool
-   ```bash
-   agent-browser open <url>
-   agent-browser get text <selector_from_actionbook>
-   agent-browser close
-   ```
-
-3. **WebFetch** - Last resort only if agent-browser unavailable
-
-### Fallback Principle (CRITICAL)
+### Quarterly Checklist
 
 ```
-actionbook → agent-browser → WebFetch (only if agent-browser unavailable)
+Every 3 months:
+- [ ] Upgrade to latest stable Rust
+- [ ] Run cargo outdated
+- [ ] Run cargo audit
+- [ ] Check dependencies for breaking changes
+- [ ] Evaluate new features worth adopting
+- [ ] Update tooling (clippy, rustfmt)
 ```
 
-**DO NOT:**
-- Skip agent-browser because it's slower
-- Use WebFetch as primary when agent-browser is available
-- Block on WebFetch without trying agent-browser first
+### Annual Checklist
 
----
+```
+Every year:
+- [ ] Consider edition upgrade
+- [ ] Refactor deprecated patterns
+- [ ] Evaluate MSRV policy
+- [ ] Update development toolchain
+- [ ] Review architecture patterns
+```
 
-## Deprecated Patterns
 
-| Deprecated | Use Instead | Reason |
-|------------|-------------|--------|
-| WebSearch for crate info | Task + agent or inline mode | Structured data |
-| Direct WebFetch | actionbook + agent-browser | Pre-computed selectors |
-| Guessing version numbers | Always fetch from source | Prevents misinformation |
+## Learning Resources
 
-## Error Handling
+### Beginner
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| Agent file not found | Skills-only install | Use inline mode |
-| actionbook unavailable | MCP not configured | Fall back to WebFetch |
-| agent-browser not found | CLI not installed | Fall back to WebFetch |
-| Agent timeout | Site slow/down | Retry or inform user |
-| Empty results | Selector mismatch | Report and use WebFetch fallback |
+- [The Rust Programming Language](https://doc.rust-lang.org/book/) - Official book
+- [Rust by Example](https://doc.rust-lang.org/rust-by-example/) - Example-driven
+- [Rustlings](https://github.com/rust-lang/rustlings) - Interactive exercises
 
-## Proactive Triggering
+### Intermediate
 
-This skill triggers AUTOMATICALLY when:
-- Any Rust crate name mentioned (tokio, serde, axum, sqlx, etc.)
-- Questions about "latest", "new", "version", "changelog"
-- API documentation requests
-- Dependency/feature questions
+- [The Rust Reference](https://doc.rust-lang.org/reference/) - Language reference
+- [Rust Nomicon](https://doc.rust-lang.org/nomicon/) - Unsafe guide
+- [Effective Rust](https://www.lurklurk.org/effective-rust/) - Best practices
 
-**DO NOT use WebSearch for Rust crate info. Use agents or inline mode instead.**
+### Advanced
+
+- [Rust for Rustaceans](https://rust-for-rustaceans.com/) - Advanced patterns
+- [Async Book](https://rust-lang.github.io/async-book/) - Async/await deep dive
+- [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) - API design
+
+### Practice
+
+- [Exercism Rust Track](https://exercism.org/tracks/rust) - Practice problems
+- [Rust by Practice](https://practice.rs/) - Hands-on exercises
+- [Advent of Code](https://adventofcode.com/) - Annual coding challenge
+
+
+## Edition Update Strategy
+
+| Edition | Released | Key Features |
+|---------|----------|--------------|
+| 2015 | Original | - |
+| 2018 | Dec 2018 | Module system, NLL |
+| 2021 | Oct 2021 | Disjoint captures, IntoIterator |
+| 2024 | TBD | Gen blocks, async drop |
+
+### Upgrading Editions
+
+```bash
+# Check if upgrade possible
+cargo fix --edition
+
+# Update Cargo.toml
+# edition = "2024"
+
+# Test thoroughly
+cargo test --all-features
+```
+
+
+## Review Checklist
+
+When learning new Rust features:
+
+- [ ] Feature is stable (not experimental)
+- [ ] Understand the problem it solves
+- [ ] Know when NOT to use it
+- [ ] Aware of trade-offs
+- [ ] Tested in small project first
+- [ ] Read release notes thoroughly
+- [ ] Checked ecosystem adoption
+- [ ] Updated team documentation
+
+
+## Verification Commands
+
+```bash
+# Check Rust version
+rustc --version
+rustup show
+
+# Update toolchain
+rustup update
+
+# Check outdated dependencies
+cargo outdated
+
+# Security audit
+cargo audit
+
+# License compliance
+cargo deny check
+
+# Check for deprecated features
+cargo clippy -- -W deprecated
+```
+
+
+## Common Pitfalls
+
+### 1. Chasing Shiny Features
+
+**Symptom**: Using unstable features in production
+
+```toml
+# ❌ Avoid: nightly features in production
+#![feature(generic_associated_types)]
+
+# ✅ Good: wait for stabilization
+# Use stable alternatives
+```
+
+### 2. Ignoring MSRV
+
+**Symptom**: Breaking downstream users
+
+```toml
+# ✅ Good: declare MSRV
+[package]
+rust-version = "1.70"
+
+# Test against MSRV in CI
+# cargo +1.70 test
+```
+
+### 3. Not Reading Release Notes
+
+**Symptom**: Surprised by breaking changes
+
+```bash
+# ✅ Good: read before updating
+rustup doc --changelog
+
+# Check crate changelogs
+cargo info <crate> --version <version>
+```
+
+
+## Related Skills
+
+- **rust-ecosystem** - Crate selection and tools
+- **rust-coding** - Best practices and conventions
+- **rust-performance** - Performance improvements
+- **rust-async** - Async/await patterns
+- **rust-error** - Error handling evolution
+
+
+## Localized Reference
+
+- **Chinese version**: [SKILL_ZH.md](./SKILL_ZH.md) - 完整中文版本，包含所有内容

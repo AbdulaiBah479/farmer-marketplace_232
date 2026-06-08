@@ -32,30 +32,30 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
-      },
-    },
+        runs: 200
+      }
+    }
   },
   networks: {
     hardhat: {
       forking: {
         url: process.env.MAINNET_RPC_URL,
-        blockNumber: 15000000,
-      },
+        blockNumber: 15000000
+      }
     },
     goerli: {
       url: process.env.GOERLI_RPC_URL,
-      accounts: [process.env.PRIVATE_KEY],
-    },
+      accounts: [process.env.PRIVATE_KEY]
+    }
   },
   gasReporter: {
     enabled: true,
-    currency: "USD",
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+    currency: 'USD',
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
 };
 ```
 
@@ -64,10 +64,7 @@ module.exports = {
 ```javascript
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const {
-  loadFixture,
-  time,
-} = require("@nomicfoundation/hardhat-network-helpers");
+const { loadFixture, time } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("Token Contract", function () {
   // Fixture for test setup
@@ -97,11 +94,8 @@ describe("Token Contract", function () {
     it("Should transfer tokens between accounts", async function () {
       const { token, owner, addr1 } = await loadFixture(deployTokenFixture);
 
-      await expect(token.transfer(addr1.address, 50)).to.changeTokenBalances(
-        token,
-        [owner, addr1],
-        [-50, 50],
-      );
+      await expect(token.transfer(addr1.address, 50))
+        .to.changeTokenBalances(token, [owner, addr1], [-50, 50]);
     });
 
     it("Should fail if sender doesn't have enough tokens", async function () {
@@ -109,7 +103,7 @@ describe("Token Contract", function () {
       const initialBalance = await token.balanceOf(addr1.address);
 
       await expect(
-        token.connect(addr1).transfer(owner.address, 1),
+        token.connect(addr1).transfer(owner.address, 1)
       ).to.be.revertedWith("Insufficient balance");
     });
 
@@ -225,7 +219,6 @@ contract TokenTest is Test {
 ## Advanced Testing Patterns
 
 ### Snapshot and Revert
-
 ```javascript
 describe("Complex State Changes", function () {
   let snapshotId;
@@ -249,7 +242,6 @@ describe("Complex State Changes", function () {
 ```
 
 ### Mainnet Forking
-
 ```javascript
 describe("Mainnet Fork Tests", function () {
   let uniswapRouter, dai, usdc;
@@ -257,25 +249,23 @@ describe("Mainnet Fork Tests", function () {
   before(async function () {
     await network.provider.request({
       method: "hardhat_reset",
-      params: [
-        {
-          forking: {
-            jsonRpcUrl: process.env.MAINNET_RPC_URL,
-            blockNumber: 15000000,
-          },
-        },
-      ],
+      params: [{
+        forking: {
+          jsonRpcUrl: process.env.MAINNET_RPC_URL,
+          blockNumber: 15000000
+        }
+      }]
     });
 
     // Connect to existing mainnet contracts
     uniswapRouter = await ethers.getContractAt(
       "IUniswapV2Router",
-      "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
     );
 
     dai = await ethers.getContractAt(
       "IERC20",
-      "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F"
     );
   });
 
@@ -286,26 +276,124 @@ describe("Mainnet Fork Tests", function () {
 ```
 
 ### Impersonating Accounts
-
 ```javascript
 it("Should impersonate whale account", async function () {
   const whaleAddress = "0x...";
 
   await network.provider.request({
     method: "hardhat_impersonateAccount",
-    params: [whaleAddress],
+    params: [whaleAddress]
   });
 
   const whale = await ethers.getSigner(whaleAddress);
 
   // Use whale's tokens
-  await dai
-    .connect(whale)
-    .transfer(addr1.address, ethers.utils.parseEther("1000"));
+  await dai.connect(whale).transfer(addr1.address, ethers.utils.parseEther("1000"));
 });
 ```
 
-## Additional patterns and templates
+## Gas Optimization Testing
 
-More detailed templates and worked examples live in `references/details.md`. Read that file for the full pattern library.
+```javascript
+const { expect } = require("chai");
 
+describe("Gas Optimization", function () {
+  it("Compare gas usage between implementations", async function () {
+    const Implementation1 = await ethers.getContractFactory("OptimizedContract");
+    const Implementation2 = await ethers.getContractFactory("UnoptimizedContract");
+
+    const contract1 = await Implementation1.deploy();
+    const contract2 = await Implementation2.deploy();
+
+    const tx1 = await contract1.doSomething();
+    const receipt1 = await tx1.wait();
+
+    const tx2 = await contract2.doSomething();
+    const receipt2 = await tx2.wait();
+
+    console.log("Optimized gas:", receipt1.gasUsed.toString());
+    console.log("Unoptimized gas:", receipt2.gasUsed.toString());
+
+    expect(receipt1.gasUsed).to.be.lessThan(receipt2.gasUsed);
+  });
+});
+```
+
+## Coverage Reporting
+
+```bash
+# Generate coverage report
+npx hardhat coverage
+
+# Output shows:
+# File                | % Stmts | % Branch | % Funcs | % Lines |
+# -------------------|---------|----------|---------|---------|
+# contracts/Token.sol |   100   |   90     |   100   |   95    |
+```
+
+## Contract Verification
+
+```javascript
+// Verify on Etherscan
+await hre.run("verify:verify", {
+  address: contractAddress,
+  constructorArguments: [arg1, arg2]
+});
+```
+
+```bash
+# Or via CLI
+npx hardhat verify --network mainnet CONTRACT_ADDRESS "Constructor arg1" "arg2"
+```
+
+## CI/CD Integration
+
+```yaml
+# .github/workflows/test.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - run: npm install
+      - run: npx hardhat compile
+      - run: npx hardhat test
+      - run: npx hardhat coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+```
+
+## Resources
+
+- **references/hardhat-setup.md**: Hardhat configuration guide
+- **references/foundry-setup.md**: Foundry testing framework
+- **references/test-patterns.md**: Testing best practices
+- **references/mainnet-forking.md**: Fork testing strategies
+- **references/contract-verification.md**: Etherscan verification
+- **assets/hardhat-config.js**: Complete Hardhat configuration
+- **assets/test-suite.js**: Comprehensive test examples
+- **assets/foundry.toml**: Foundry configuration
+- **scripts/test-contract.sh**: Automated testing script
+
+## Best Practices
+
+1. **Test Coverage**: Aim for >90% coverage
+2. **Edge Cases**: Test boundary conditions
+3. **Gas Limits**: Verify functions don't hit block gas limit
+4. **Reentrancy**: Test for reentrancy vulnerabilities
+5. **Access Control**: Test unauthorized access attempts
+6. **Events**: Verify event emissions
+7. **Fixtures**: Use fixtures to avoid code duplication
+8. **Mainnet Fork**: Test with real contracts
+9. **Fuzzing**: Use property-based testing
+10. **CI/CD**: Automate testing on every commit

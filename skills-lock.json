@@ -283,6 +283,12 @@
       "skillPath": "skills/agent-governance/SKILL.md",
       "computedHash": "a91eb8ef638422fa4ec457d81e270f79fe5040b41d7f137dba35016bc20529f5"
     },
+    "agent-graphs": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/agent-graphs/SKILL.md",
+      "computedHash": "b140e6f411af477cd0210f955f0122e718aa41f75b181f50a3dffad8377d4fb2"
+    },
     "agent-manager-skill": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -450,6 +456,12 @@
       "sourceType": "github",
       "skillPath": "skills/agentphone/SKILL.md",
       "computedHash": "39b709fb846855e079cf71ce716c221c8d5122c5684ed4c6542393dc8e45f549"
+    },
+    "agents": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "agents/SKILL.md",
+      "computedHash": "dd4f876d0399f8ad626973256e6cbb564a1bdddfd1cb923552d5f3d9f7f13812"
     },
     "agents-build": {
       "source": "aws/agent-toolkit-for-aws",
@@ -745,6 +757,78 @@
       "skillPath": "skills/ai-wrapper-product/SKILL.md",
       "computedHash": "2e7b059b03463152c9aa74e846ac94ba09855db4cb78df1d3fd4339a47517b9b"
     },
+    "aiconfig-agent-graphs": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-agent-graphs/SKILL.md",
+      "computedHash": "ac2c45e8d6c471cd82552e0c745b24a5a34710ad069d703524cd19d356beb820"
+    },
+    "aiconfig-ai-metrics": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-ai-metrics/SKILL.md",
+      "computedHash": "dca1ef96e6591e367270d4e8f9fce9cf8efbf08086333b22fd636fd0ad153592"
+    },
+    "aiconfig-create": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-create/SKILL.md",
+      "computedHash": "e1fc2d113cdbefd0aaf508e86e172cc41cfc2813a2cf83c1999e0e75279e4226"
+    },
+    "aiconfig-custom-metrics": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-custom-metrics/SKILL.md",
+      "computedHash": "cee0dcada269c51e8707c725234cc8dad945479d1a84fb3730c7e879bdf4dd40"
+    },
+    "aiconfig-migrate": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-migrate/SKILL.md",
+      "computedHash": "89ca73573c2a3cfcea86fa55b7954140feb707d9d23b9beb86e4d889e6c94c52"
+    },
+    "aiconfig-online-evals": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-online-evals/SKILL.md",
+      "computedHash": "ac6e78d4ebf4d3bbd6e54c959efb226319af93007aab2d9057b12d75f169ef30"
+    },
+    "aiconfig-projects": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-projects/SKILL.md",
+      "computedHash": "8266e450a752a7a0a76adbc1b9221d6d82feb77c286915012b2741736ddd67f9"
+    },
+    "aiconfig-snippets": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-snippets/SKILL.md",
+      "computedHash": "0a9806c8245a9023c2a888723c0f7ccdd3aeb7ee9f7caa871e2e1029e796f254"
+    },
+    "aiconfig-targeting": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-targeting/SKILL.md",
+      "computedHash": "4871dac0502091dbc4ecf8941631cba68f0b0e9714e9a3a30e187df778277791"
+    },
+    "aiconfig-tools": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-tools/SKILL.md",
+      "computedHash": "b7b421f81d6106c5c45cf91aa88d98b2cb6bdc1549dc24099788656b7796f24e"
+    },
+    "aiconfig-update": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-update/SKILL.md",
+      "computedHash": "4e2e0cf05bae1bbfc2a81da3b2c357dc488ba2a2548d3d78b0d0ca30fb91c598"
+    },
+    "aiconfig-variations": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/aiconfig-variations/SKILL.md",
+      "computedHash": "6e81369acf5d4aae81bb4afe3fc7c316c4b65f741a4de85d17fe9e8cee3882e3"
+    },
     "aiq-deploy": {
       "source": "nvidia/skills",
       "sourceType": "github",
@@ -966,6 +1050,12 @@
       "sourceType": "github",
       "skillPath": "skills/analyzing-ethereum-smart-contract-vulnerabilities/SKILL.md",
       "computedHash": "d504de9bf66a1a739381896be4b1e68cdeb88392c423b7e2f33652f33e8b15cf"
+    },
+    "analyzing-experiment-session-replays": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/analyzing-experiment-session-replays/SKILL.md",
+      "computedHash": "b9382ab54e1325ac3d6cd8f736af1ccb939cf8c295d79347b4ac006a36202875"
     },
     "analyzing-golang-malware-with-ghidra": {
       "source": "mukul975/Anthropic-Cybersecurity-Skills",
@@ -2167,6 +2257,12 @@
       "skillPath": "skills/auditing-cloud-with-cis-benchmarks/SKILL.md",
       "computedHash": "ea4f3e608bc574cd7ce38f53268a6b325f45b9a9047971535b19688e0d0aaf4d"
     },
+    "auditing-experiments-flags": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/auditing-experiments-flags/SKILL.md",
+      "computedHash": "559d54d96f815ac3cd969c0c7714076bbfd068f2d7e33e2234641cc8e5d6b7f7"
+    },
     "auditing-gcp-iam-permissions": {
       "source": "mukul975/Anthropic-Cybersecurity-Skills",
       "sourceType": "github",
@@ -2190,6 +2286,12 @@
       "sourceType": "github",
       "skillPath": "skills/auditing-tls-certificate-transparency-logs/SKILL.md",
       "computedHash": "77ed4118dea01cb6e3cdbcc57c929bdc497c1ffa95c033e9da90a65433e8efde"
+    },
+    "auditing-warehouse-data-health": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/auditing-warehouse-data-health/SKILL.md",
+      "computedHash": "59679ffa0c4da58413e1b73ff533f5e4bd43e1b95e62ac4849e8b562eb10d11e"
     },
     "auri-core": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -2436,6 +2538,12 @@
       "sourceType": "github",
       "skillPath": "plugins/auth0/skills/auth0-wpf/SKILL.md",
       "computedHash": "87f925f3680dc019e955e1ce2b0709c93860124c023e3cbfb4061a467d28811b"
+    },
+    "authoring-log-alerts": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/authoring-log-alerts/SKILL.md",
+      "computedHash": "a6654513058200d317eb011edbc0860d1af52c946aca0f735d3d06562479c92a"
     },
     "autogpt-agents": {
       "source": "Orchestra-Research/AI-Research-SKILLs",
@@ -4903,6 +5011,18 @@
       "skillPath": "skills/bluesky-post/SKILL.md",
       "computedHash": "5cb68e111f603fcd65503a13cbfa5e7b1ca965c19a640c8152151eecb195061a"
     },
+    "boards-my-work": {
+      "source": "microsoft/azure-devops-skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/boards-my-work/SKILL.md",
+      "computedHash": "670dda833e648b7de7c98cc34dbba8c7564eee1b3f3df82ad8bfd89be34d59e8"
+    },
+    "boards-work-item-summary": {
+      "source": "microsoft/azure-devops-skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/boards-work-item-summary/SKILL.md",
+      "computedHash": "d9fd1270dfe11122158885f12bbd5212be5ebdfae727ed577034f766867faaba"
+    },
     "boost-prompt": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -5281,6 +5401,12 @@
       "skillPath": "skills/building-vulnerability-scanning-workflow/SKILL.md",
       "computedHash": "92f2980764ca24c32b0e7c3cef3e1c3d84a13d310720d21eed776b16d815cf67"
     },
+    "built-in-metrics": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/built-in-metrics/SKILL.md",
+      "computedHash": "ff33e70d740e02f4ceecb1e485839064ea250f737f302931d7c9540faff3a9ce"
+    },
     "bulletmind": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -5545,6 +5671,18 @@
       "skillPath": "15-rag/chroma/SKILL.md",
       "computedHash": "a7633ca6102ea5313166a808f5d6e3a54a5f6ca2ee647b3bcf8301ec905e34d7"
     },
+    "chroma-cloud": {
+      "source": "chroma-core/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/chroma-cloud/SKILL.md",
+      "computedHash": "d3ab47a00fc4af052556a0dd375383db1bac47ac55c36326b7a015e88f97afc4"
+    },
+    "chroma-local": {
+      "source": "chroma-core/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/chroma-local/SKILL.md",
+      "computedHash": "4c24b2ea61e377516ef03cb55f6e2cab8be7409342b6327723068463866fd2ae"
+    },
     "chrome-devtools": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -5712,6 +5850,12 @@
       "sourceType": "github",
       "skillPath": "skills/clean-code/SKILL.md",
       "computedHash": "74bf6ded4f61ddcb593e7a29beb96c284f888cbe0639ad6e23710447c36ff19a"
+    },
+    "cleaning-up-stale-feature-flags": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/cleaning-up-stale-feature-flags/SKILL.md",
+      "computedHash": "5f5359cab3ac0d0f3f3713e2746686c309fecdff4d04fae841319468422570cc"
     },
     "clerk-auth": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -6301,6 +6445,30 @@
       "skillPath": "skills/conductor-validator/SKILL.md",
       "computedHash": "698569ee879baf229e7e7011baf51632dbd78754c3d4da210a2f46b32a6d3d37"
     },
+    "configs-create": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/configs-create/SKILL.md",
+      "computedHash": "74737c4ef2ac2b9c7b96d6f68cdffb42d5497f4849e97091ce7151942a0a3192"
+    },
+    "configs-targeting": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/configs-targeting/SKILL.md",
+      "computedHash": "24a213a57188cef6957ff920f65881763501df4316f988524ac701a7fd65cb9e"
+    },
+    "configs-update": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/configs-update/SKILL.md",
+      "computedHash": "5c25acbcfbd5504d3185ee5cc4e097f90c0537752deba8f855804109f7467f6c"
+    },
+    "configs-variations": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/configs-variations/SKILL.md",
+      "computedHash": "742ea46a3d27bfa540c4d139d19ab354acfd4ba58d52a5455ae89b718b5ef214"
+    },
     "configure": {
       "source": "anthropics/claude-plugins-official",
       "sourceType": "github",
@@ -6342,6 +6510,18 @@
       "sourceType": "github",
       "skillPath": "skills/dbt/skills/configuring-dbt-mcp-server/SKILL.md",
       "computedHash": "906621310b13d0094f9cf530abf2b38c36de2f15bcb361c1a073661430a8d6e4"
+    },
+    "configuring-experiment-analytics": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/configuring-experiment-analytics/SKILL.md",
+      "computedHash": "8e884057227ae47ebc6451a1fcabb670ff72ac8eb69ac05feaeff6c6a8f4c12e"
+    },
+    "configuring-experiment-rollout": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/configuring-experiment-rollout/SKILL.md",
+      "computedHash": "094f7678280466e05bf836ba293c5e92ab67b8084f8f30c1be59f29625ba197c"
     },
     "configuring-host-based-intrusion-detection": {
       "source": "mukul975/Anthropic-Cybersecurity-Skills",
@@ -6709,6 +6889,12 @@
       "skillPath": "skills/copy-editing/SKILL.md",
       "computedHash": "77f2eb2413301d095b4a774acfe9b2b7a590514b06ec5b53cee1f306fa01a040"
     },
+    "copying-flags-across-projects": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/copying-flags-across-projects/SKILL.md",
+      "computedHash": "0c50c73513715d2f08761da950d25dae16257d1c7394e6dd2c7098a5d933d384"
+    },
     "copywriting": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -6876,6 +7062,12 @@
       "sourceType": "github",
       "skillPath": "plugins/aws-data-analytics/skills/creating-data-lake-table/SKILL.md",
       "computedHash": "eaab9881b01b12b9a4813c37f3f7f811b8ce47ba3305d8c1c0beac5940acf305"
+    },
+    "creating-experiments": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/creating-experiments/SKILL.md",
+      "computedHash": "ef49de2d4105a94ba9f8d391a6a9e0d7615e271295daf39b8aa5447ad4dc7e8f"
     },
     "creating-mermaid-dbt-dag": {
       "source": "dbt-labs/dbt-agent-skills",
@@ -7086,6 +7278,12 @@
       "sourceType": "github",
       "skillPath": "skills/cursor-webhooks/SKILL.md",
       "computedHash": "99a6bb328e1c3aceb47c0232ebeea60bbc917bfadcec8514ed29fb803095959c"
+    },
+    "custom-metrics": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/custom-metrics/SKILL.md",
+      "computedHash": "3ae74654b27bf6404f9f8f9d0ec9471b480eb6e19bcb2040e102a9e9c55ac2c3"
     },
     "customer-psychographic-profiler": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -7422,6 +7620,12 @@
       "sourceType": "github",
       "skillPath": "skills/debugger/SKILL.md",
       "computedHash": "f5cf98c81f9b4a7c461a2349b80b38226a3a2d47754b57a6260a7695f57173a2"
+    },
+    "debugging-local-replay": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/debugging-local-replay/SKILL.md",
+      "computedHash": "804ca8a03d1e98e9bc0159e2c04cae9782256ba3d16535b50b35b14e7f0d3631"
     },
     "debugging-protocol": {
       "source": "jwilger/agent-skills",
@@ -8263,6 +8467,36 @@
       "skillPath": "skills/diagnose-generation-failure/SKILL.md",
       "computedHash": "bd4572178273104e667b8b3cfa0316b38c658e13340e5b5830bf8802737e6c32"
     },
+    "diagnosing-experiment-results": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/diagnosing-experiment-results/SKILL.md",
+      "computedHash": "19d8e732e7611bdcc542ecdbc388639852799c50598c2883a17dd9a5bf8cf6ce"
+    },
+    "diagnosing-failed-warehouse-syncs": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/diagnosing-failed-warehouse-syncs/SKILL.md",
+      "computedHash": "b0627cd0ab950a21f21b7b198030bc00e14f38459b03011e39cd20e1ddabf9db"
+    },
+    "diagnosing-missing-recordings": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/diagnosing-missing-recordings/SKILL.md",
+      "computedHash": "bb56ce4bd8547beec8462ef871fe8e76e40fd9256faa2567ebfcdb85db4685a5"
+    },
+    "diagnosing-sdk-health": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/diagnosing-sdk-health/SKILL.md",
+      "computedHash": "a33d76206658156d723984ceb9e4469c35f2fb12379a5c6dd03722c6ca960c67"
+    },
+    "diagnosing-stacktrace-symbolication": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/diagnosing-stacktrace-symbolication/SKILL.md",
+      "computedHash": "db7575dae70d5d13ef264d70a518753a4857a1ef9b45624c2c67ff66cf800f6b"
+    },
     "diary": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -8520,6 +8754,12 @@
       "sourceType": "github",
       "skillPath": "skills/doublecheck/SKILL.md",
       "computedHash": "b4767dd00fcdc47e7c7b91efaa56198639719056e1c3e2a7299300c0fb2a4241"
+    },
+    "downloading-batch-export-files": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/downloading-batch-export-files/SKILL.md",
+      "computedHash": "81d311d4d647aa3b373a212cfdf56da2cfd7ed3a8d6cb924a70cb567f8043397"
     },
     "dpm-finder": {
       "source": "grafana/skills",
@@ -9307,11 +9547,53 @@
       "skillPath": "skills/exploiting-zerologon-vulnerability-cve-2020-1472/SKILL.md",
       "computedHash": "1e8064b1473b9761f24b5a1b33d374f9d69ba07a3314d8e390e4ebef9cc40d8c"
     },
+    "exploring-apm-traces": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/exploring-apm-traces/SKILL.md",
+      "computedHash": "161b1a20f7ffbe96e2ea21764b7d7d3548935b06c9e1e4321b130bfadff840ba"
+    },
+    "exploring-autocapture-events": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/exploring-autocapture-events/SKILL.md",
+      "computedHash": "c83083277482c8041181aaab61af8f8efb54a866f628e96650764168bad5486b"
+    },
     "exploring-data-catalog": {
       "source": "aws/agent-toolkit-for-aws",
       "sourceType": "github",
       "skillPath": "plugins/aws-data-analytics/skills/exploring-data-catalog/SKILL.md",
       "computedHash": "2cfb98eb437be9a38d081b32914eea25dbfad13c04c162d5693aea5cc24221f1"
+    },
+    "exploring-live-traffic": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/exploring-live-traffic/SKILL.md",
+      "computedHash": "b91aa9c2a5be9dc53b759302477bfe93f3d8a95c3fb11231930530301eb79df6"
+    },
+    "exploring-llm-clusters": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/exploring-llm-clusters/SKILL.md",
+      "computedHash": "70d04868784adf0734fb529527912455f1dcd409cbb37e93573799a725ab6c12"
+    },
+    "exploring-llm-costs": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/exploring-llm-costs/SKILL.md",
+      "computedHash": "ea0d83f89a432d222f58abc8187b2275589f2a32bc212eb1bd1b9d825e88e078"
+    },
+    "exploring-llm-evaluations": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/exploring-llm-evaluations/SKILL.md",
+      "computedHash": "f9c2a4b5122314ae4759bde319725fcdd93a47f7689ae314fcd6580b5ecd648d"
+    },
+    "exploring-llm-traces": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/exploring-llm-traces/SKILL.md",
+      "computedHash": "34476d72b27438a7647ff1dd5e7bd8c25e9b57875ab6dab4b5eef5202c497659"
     },
     "expo-api-routes": {
       "source": "expo/skills",
@@ -9535,6 +9817,12 @@
       "skillPath": "skills/fda-medtech-compliance-auditor/SKILL.md",
       "computedHash": "9757f9b2895aa594f5b2c093ca2902bc0dd5ff1a15eb7c277467af30ea9a6016"
     },
+    "feature-usage-feed": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/feature-usage-feed/SKILL.md",
+      "computedHash": "1e27e81df7464c043aad4cd120713780c913668956172d6049d741727a980f57"
+    },
     "fedora-linux-triage": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -9690,6 +9978,24 @@
       "sourceType": "github",
       "skillPath": "plugins/aws-data-analytics/skills/finding-data-lake-assets/SKILL.md",
       "computedHash": "a4707faa44de667d41c8a5a4346e853120d4aad58a4649b94e4c15e5c0783b3a"
+    },
+    "finding-deleted-feature-flags": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/finding-deleted-feature-flags/SKILL.md",
+      "computedHash": "8437f22ede3c0dc444534c38a0f94cd96fdc6ed24aa74af468d19495a2a03d3a"
+    },
+    "finding-experiments": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/finding-experiments/SKILL.md",
+      "computedHash": "1199acad63d8673ddcef4714e31218e1083664fa95f57607a7e7c6d6afeec326"
+    },
+    "finding-replay-for-issue": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/finding-replay-for-issue/SKILL.md",
+      "computedHash": "e52761a203fb101c5b1b25b2ab0a3acec3267840ecead11758d68f59b6eed3a0"
     },
     "fine-tuning-openvla-oft": {
       "source": "Orchestra-Research/AI-Research-SKILLs",
@@ -9930,6 +10236,12 @@
       "sourceType": "github",
       "skillPath": "skills/form-cro/SKILL.md",
       "computedHash": "9a27c024aeea9871fb8c648f1d0487e894370a316b9125e1f579c3def4116040"
+    },
+    "formatting-insight-axes": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/formatting-insight-axes/SKILL.md",
+      "computedHash": "c9dfe5d4c7e50ad32822181ea14a5a1f8e56276da9402a7943821342e44ef3c6"
     },
     "foundry-agent-sync": {
       "source": "github/awesome-copilot",
@@ -10513,6 +10825,24 @@
       "skillPath": "skills/gitlab-webhooks/SKILL.md",
       "computedHash": "31a8f67ed753a527a73ae3c7be7d048f68281c87fef705f9272c75287965d287"
     },
+    "gitops-cluster-debug": {
+      "source": "fluxcd/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gitops-cluster-debug/SKILL.md",
+      "computedHash": "db60680108a3fc03c3eeb6c4bb4528123368157e3618d951b06a30594b9fd726"
+    },
+    "gitops-knowledge": {
+      "source": "fluxcd/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gitops-knowledge/SKILL.md",
+      "computedHash": "ae5d5bdabbd5ef334ec203f943f208852ad5528eee4f42ca9b41774f05b45895"
+    },
+    "gitops-repo-audit": {
+      "source": "fluxcd/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gitops-repo-audit/SKILL.md",
+      "computedHash": "14c803efe28b157ffb0508a82eaadfbf34e3398d45af59ebeb69cb02a727768d"
+    },
     "gitops-workflow": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -10740,6 +11070,12 @@
       "sourceType": "github",
       "skillPath": "skills/graphql-architect/SKILL.md",
       "computedHash": "6b37b10b572d7b402c1100ccc3a3548d5e31d7a4a6f2a5badf6d0d2d0bbc920e"
+    },
+    "grouping-noisy-errors": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/grouping-noisy-errors/SKILL.md",
+      "computedHash": "68ef273da3633751705259eba69e5bd0fc9663d0e4b148eede3ec3d1aaab322e"
     },
     "growth-engine": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -12715,6 +13051,12 @@
       "skillPath": "skills/improve-sdk-naming/SKILL.md",
       "computedHash": "c9099d07813d3f6499c49aed3b8c85e93fa26bb131e585d49ee0d5e3fe9c2f5c"
     },
+    "inbox-exploration": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/inbox-exploration/SKILL.md",
+      "computedHash": "5c3a62317c59fde3d3f81a9ad6ca29f3e5974b3bb03e52754c7b5cc8f4278472"
+    },
     "incident-responder": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -12829,6 +13171,42 @@
       "skillPath": "16-prompt-engineering/instructor/SKILL.md",
       "computedHash": "ea8f66a4b956136a9a339ef2b3073ccd5dea20ec10d39afc46ee2d2ac6a49b5a"
     },
+    "instrument-error-tracking": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/instrument-error-tracking/SKILL.md",
+      "computedHash": "dcd0163c891d70ed89380008b10197cf8d483b4e0632d88ba36cfb6f372e54ce"
+    },
+    "instrument-feature-flags": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/instrument-feature-flags/SKILL.md",
+      "computedHash": "ef48b373c596a3832369d4e44efe514688a05d5ecca41125d325295a1dcbcba4"
+    },
+    "instrument-integration": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/instrument-integration/SKILL.md",
+      "computedHash": "d9545aa7435cc6064974a36df49fbafabd8608f238747656106b64a2208b301d"
+    },
+    "instrument-llm-analytics": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/instrument-llm-analytics/SKILL.md",
+      "computedHash": "38fd6aa7ed46acbbf783e8a2c57ec20a4b5d5cc75f4f5a66d235fcd663992b03"
+    },
+    "instrument-logs": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/instrument-logs/SKILL.md",
+      "computedHash": "c4c9390e1a407d310c1064fb232921b554dad238504e63aca76235727b95b3cb"
+    },
+    "instrument-product-analytics": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/instrument-product-analytics/SKILL.md",
+      "computedHash": "e374ad2584a6c7eb1c3be856e655838fabe697d86ab7ceff603ea70051f19253"
+    },
     "integrate-context-matic": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -12907,6 +13285,18 @@
       "skillPath": "skills/inventory-demand-planning/SKILL.md",
       "computedHash": "af4071e457313cc2df46137a025596eb958be55eedf41d1d7a700eb39667af20"
     },
+    "investigate-metric": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/investigate-metric/SKILL.md",
+      "computedHash": "a923a1d33d1380619e6e8882946d0de33fb383d562c2bb39382326f8cc92385e"
+    },
+    "investigating-error-issue": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/investigating-error-issue/SKILL.md",
+      "computedHash": "e9a0f65bd5cff58fd7722778f6a98deea190efb220f98d6e58959ed93fdd84ba"
+    },
     "investigating-insider-threat-indicators": {
       "source": "mukul975/Anthropic-Cybersecurity-Skills",
       "sourceType": "github",
@@ -12924,6 +13314,12 @@
       "sourceType": "github",
       "skillPath": "skills/investigating-ransomware-attack-artifacts/SKILL.md",
       "computedHash": "79334dde60466299e25ac6b8e2952f7b0a63d44e238115241684bcdc8131371a"
+    },
+    "investigating-replay": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/investigating-replay/SKILL.md",
+      "computedHash": "5410940a4935405cd2b29343d1520efb139b4912453b30b79f5c472b0f3ee808"
     },
     "invoice-organizer": {
       "source": "ComposioHQ/awesome-claude-skills",
@@ -13447,6 +13843,66 @@
       "skillPath": "skills/launch-strategy/SKILL.md",
       "computedHash": "b8d92fd36be1b422d92a69a5e664e80fa395e08d0aef5f356d6ec3ad38d1d18d"
     },
+    "launchdarkly-experiment-setup": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/experiments/launchdarkly-experiment-setup/SKILL.md",
+      "computedHash": "04d3e267e2b212424dc3e20dd726f37dbdc93d67bbbf1b9dcf4bf970a5d04f7f"
+    },
+    "launchdarkly-flag-cleanup": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/feature-flags/launchdarkly-flag-cleanup/SKILL.md",
+      "computedHash": "1d9441c14ec7e3c5d39508afcc0bade5d546d8ac6a322636ab3f637005d6f6e5"
+    },
+    "launchdarkly-flag-command": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/feature-flags/launchdarkly-flag-command/SKILL.md",
+      "computedHash": "66bc44d493f1ebb1899e4ae11333f943fa76c0be1e5de45c6e9ad6a85338cf33"
+    },
+    "launchdarkly-flag-create": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/feature-flags/launchdarkly-flag-create/SKILL.md",
+      "computedHash": "ff89aae8c9581f88ce9bf233f107f1f7cb4a6ea6502885b11bfe2e735442bb67"
+    },
+    "launchdarkly-flag-discovery": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/feature-flags/launchdarkly-flag-discovery/SKILL.md",
+      "computedHash": "4a539fa2ab8077ed1a6b0841f7b02e1889641da3b9b278a0a4353d854009728e"
+    },
+    "launchdarkly-flag-targeting": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/feature-flags/launchdarkly-flag-targeting/SKILL.md",
+      "computedHash": "f303b45763c67f2dd907aaba90f5f10bbcb3c33ec1aed00c3b6259d5a4302472"
+    },
+    "launchdarkly-guarded-rollout": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/feature-flags/launchdarkly-guarded-rollout/SKILL.md",
+      "computedHash": "7bfe48f5628f00946dd0483c1ae4c2924479a5211ecc8e891a0ed68c7bd2b299"
+    },
+    "launchdarkly-metric-choose": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metrics/launchdarkly-metric-choose/SKILL.md",
+      "computedHash": "dfce37d210c8de5a72aa15151a71222c04a2b5a8eef952dc8a53a1c019387ee3"
+    },
+    "launchdarkly-metric-create": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metrics/launchdarkly-metric-create/SKILL.md",
+      "computedHash": "4de4532872bbbe41fd93c85e5135d2584540c34ece9906f468a33e5aaee55550"
+    },
+    "launchdarkly-metric-instrument": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metrics/launchdarkly-metric-instrument/SKILL.md",
+      "computedHash": "028526b9a5fbd092a02e778f3fde18cbe11e4e5d5803daadddc8b2eaa03c6ded"
+    },
     "lead-magnets": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
@@ -13638,6 +14094,12 @@
       "sourceType": "github",
       "skillPath": "skills/linux-troubleshooting/SKILL.md",
       "computedHash": "f951abe271b0fee0b1d4e2e5a51063edde5846f6e4f581ecbdf97f73b003dd43"
+    },
+    "livekit-agents": {
+      "source": "livekit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/livekit-agents/SKILL.md",
+      "computedHash": "373669b9a938ced840f301173e838a0046408acd0397c02c03420cc9b6a8cb42"
     },
     "llama-cpp": {
       "source": "Orchestra-Research/AI-Research-SKILLs",
@@ -13987,11 +14449,29 @@
       "skillPath": "skills/managing-cloud-identity-with-okta/SKILL.md",
       "computedHash": "b18ef2e10978ee1474d8866a62687a910b55d41fc504ddcbefbc060a85b2ce9d"
     },
+    "managing-experiment-lifecycle": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/managing-experiment-lifecycle/SKILL.md",
+      "computedHash": "ed39da70a9ffd13b32e4b3dd1a4e0ca68d055fa8d7448075b8422b8c09724a6f"
+    },
     "managing-intelligence-lifecycle": {
       "source": "mukul975/Anthropic-Cybersecurity-Skills",
       "sourceType": "github",
       "skillPath": "skills/managing-intelligence-lifecycle/SKILL.md",
       "computedHash": "8ba90b5223d9eb317812f7fc893417be73a84cc063e07cba3e825fca426ffa9e"
+    },
+    "managing-path-cleaning-rules": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/managing-path-cleaning-rules/SKILL.md",
+      "computedHash": "bb5a83294cf41481cb7387bb266f8e69b224b9264bec294f9f00e37626131ae6"
+    },
+    "managing-subscriptions": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/managing-subscriptions/SKILL.md",
+      "computedHash": "0a9e1d1bcacd0b557eae2490f28de59fbdf65dda3d111982947df6944ba775d9"
     },
     "manifest": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -14257,6 +14737,72 @@
       "skillPath": "src/skills/meta-reviewing-reviewing/SKILL.md",
       "computedHash": "8748f37da5442c9c3e244b3bf27ac97f207f75c09236f5391b0d31ebff6dfc5c"
     },
+    "metabase-cli": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-cli/SKILL.md",
+      "computedHash": "9cf7a79edf096ce34c5208ccd46975d5669fd3b3a04ec4f1383df718c40c6f95"
+    },
+    "metabase-database-metadata": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-database-metadata/SKILL.md",
+      "computedHash": "dee9473dc8a5f9df92753a1f7db208b79ac228cc9653a8324eac73479d119a1d"
+    },
+    "metabase-embedding-sso-implementation": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-embedding-sso-implementation/SKILL.md",
+      "computedHash": "1200f964ef6c401d3024432729e147e1620fa0e79347a0e18506b4200b674d48"
+    },
+    "metabase-full-app-to-modular-embedding-upgrade": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-full-app-to-modular-embedding-upgrade/SKILL.md",
+      "computedHash": "e67bf570cda9f7a797671933770edfb7a2ce39221da677b59ecaecd70cb49df6"
+    },
+    "metabase-learning": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-learning/SKILL.md",
+      "computedHash": "5a7fc1900c9e0c8084c5eb4ab977c2693c0806bd60ac4b171790c8f95f1cdeb6"
+    },
+    "metabase-modular-embedding-to-modular-embedding-sdk-upgrade": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-modular-embedding-to-modular-embedding-sdk-upgrade/SKILL.md",
+      "computedHash": "f994016f7a731f2234c2db2b83b26171e03318c837e9beaa5cdba1936ef5da6d"
+    },
+    "metabase-modular-embedding-version-upgrade": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-modular-embedding-version-upgrade/SKILL.md",
+      "computedHash": "52cd830b7942862701cd40086722335019d0289d9d224fbc53f61e5cab33da7c"
+    },
+    "metabase-react-sdk-setup": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-react-sdk-setup/SKILL.md",
+      "computedHash": "c96558d5ab75558f67fb058d1c1a204364bf42d87de0ecee1a94174a4327de59"
+    },
+    "metabase-representation-format": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-representation-format/SKILL.md",
+      "computedHash": "9e336ac70e72c0b67b2a5b0a5fd78f6cb8b50c9e5054f1d8213e03a403e31f6f"
+    },
+    "metabase-semantic-checker": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-semantic-checker/SKILL.md",
+      "computedHash": "dfcb0900cf00698c1a5f1174d14e14752924771c778f787a6a53c848523ddc1d"
+    },
+    "metabase-static-embedding-to-guest-embedding-upgrade": {
+      "source": "metabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/metabase-static-embedding-to-guest-embedding-upgrade/SKILL.md",
+      "computedHash": "b264af8b10891b2810c663db6b3f811a2839875909ac892695d877f71cad609c"
+    },
     "metasploit-framework": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -14334,6 +14880,12 @@
       "sourceType": "github",
       "skillPath": "skills/microsoft-teams-automation/SKILL.md",
       "computedHash": "4e1bb3ac896720cfd33d2c258be2f151579446ce96d80470e3e3efefa42c0850"
+    },
+    "migrate": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/migrate/SKILL.md",
+      "computedHash": "8814fd967b5360640713050b38ac8a4be724698a6a06fa363afddfc163b5dc8d"
     },
     "migrate-to-codex": {
       "source": "openai/skills",
@@ -14683,6 +15235,12 @@
       "skillPath": "skills/multi-stage-dockerfile/SKILL.md",
       "computedHash": "698bf93a84dae18fd7bd0b1d35c21427307fde78fbdf4624be9726f5f98189ca"
     },
+    "music": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "music/SKILL.md",
+      "computedHash": "707c1666d77772713841a0b0550ad57ab7ced9646a90cf00b890bdce9c229f25"
+    },
     "mutation-testing": {
       "source": "jwilger/agent-skills",
       "sourceType": "github",
@@ -14790,6 +15348,54 @@
       "sourceType": "github",
       "skillPath": "plugins/expo/skills/native-data-fetching/SKILL.md",
       "computedHash": "3cd0ba91f359f9f84cd40f36f356287994a0e952520fac6e03ef7952d0397879"
+    },
+    "near-ai-cloud": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-ai-cloud/SKILL.md",
+      "computedHash": "f43ee4165e0013c4dd9624217597972b265ef99dcf6bb6464a086c79cf0e50de"
+    },
+    "near-api-js": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-api-js/SKILL.md",
+      "computedHash": "1ddc66911f1b8930bf0bc734aa153c517f79f5ab052503ac5f283918a29813b2"
+    },
+    "near-cli-rs": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-cli-rs/SKILL.md",
+      "computedHash": "38d1fd9c08c88a7da3fedf8e3f3002a30fc49496edf284ad2e4e8f79824210f4"
+    },
+    "near-contract-audit": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-contract-audit/SKILL.md",
+      "computedHash": "0981a4f3055fbbe49e720d1281b8cbad8d3f995a84cc24c307ed2deb9066667c"
+    },
+    "near-dapp": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-dapp/SKILL.md",
+      "computedHash": "1ba371b1558db010bc2c6dea343b35388afbceda911dae88d4318754b8b404b5"
+    },
+    "near-intents": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-intents/SKILL.md",
+      "computedHash": "b536c948a50cc4e8a53df80b36fecc2e2449059ff0920b2213dc1be421b0db55"
+    },
+    "near-kit": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-kit/SKILL.md",
+      "computedHash": "cd03f8cbdcce30c051aa46bdcf9b11cb67e1a16498dc5cac3de78a7732f11e5e"
+    },
+    "near-smart-contracts": {
+      "source": "near/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/near-smart-contracts/SKILL.md",
+      "computedHash": "707355ec660ba099263b4a4838cbac1e3887b2f6a066ee12132258de00210e39"
     },
     "neki": {
       "source": "planetscale/database-skills",
@@ -15680,10 +16286,10 @@
       "computedHash": "ef32055c42e70a407d48afc7525b8ae35964a58f90559b0db4400ba5b8307380"
     },
     "onboarding": {
-      "source": "coreyhaines31/marketingskills",
+      "source": "launchdarkly/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/onboarding/SKILL.md",
-      "computedHash": "634b9ba0a4446d9358d3cbc316feefc2e9d618cd88d5a77f0bc6ec895ed5eb5f"
+      "computedHash": "3407d37031c1104f293b1383b5ba446b4348f43ae9cbc8f0b728a4158fa271cf"
     },
     "onboarding-cro": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -15708,6 +16314,12 @@
       "sourceType": "github",
       "skillPath": "skills/one-drive-automation/SKILL.md",
       "computedHash": "7bc79f759c1da233ce79ea66d1c4bf5e32fb6306b36a57e665323ec0a7681e14"
+    },
+    "online-evals": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/online-evals/SKILL.md",
+      "computedHash": "706e3cd265826c6f851890738b2833c3829a36a6fb23c7d360951f5bbca011d5"
     },
     "oo-component-documentation": {
       "source": "github/awesome-copilot",
@@ -15750,6 +16362,12 @@
       "sourceType": "github",
       "skillPath": "skills/openclaw-webhooks/SKILL.md",
       "computedHash": "05c898c175f178669397c9fb60b0d1544bd25b90ef9b355f28383cda4b044566"
+    },
+    "openfga": {
+      "source": "openfga/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/openfga/SKILL.md",
+      "computedHash": "59ddf537464cf2b1ad4202f0ded04aaf3f13906b6b6565882a03fa874c97f755"
     },
     "openrlhf-training": {
       "source": "Orchestra-Research/AI-Research-SKILLs",
@@ -17191,6 +17809,12 @@
       "skillPath": "skills/pipeline/SKILL.md",
       "computedHash": "8968d7262e3c68c1c81465c7056fec35e4e304812b96916b6458889cc0dc6523"
     },
+    "pipelines-build-summary": {
+      "source": "microsoft/azure-devops-skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/pipelines-build-summary/SKILL.md",
+      "computedHash": "2970077057cfefc60fecb8abaa58210aa08320762dcdbfdc623ba723ebbd9622"
+    },
     "pitch-psychologist": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -17214,6 +17838,12 @@
       "sourceType": "github",
       "skillPath": "skills/planning-oracle-to-postgres-migration-integration-testing/SKILL.md",
       "computedHash": "7cbe22a563def5befe98ca265a50852f79478246a188c505d3c6bafde093ce9b"
+    },
+    "planning-user-interviews": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/planning-user-interviews/SKILL.md",
+      "computedHash": "7f14c2c5f3486e6bf63fb8b1d7286544d979f0b4bd45005cc9672f80dc2e569d"
     },
     "planning-with-files": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -17250,6 +17880,18 @@
       "sourceType": "github",
       "skillPath": "skills/playwright-automation-fill-in-form/SKILL.md",
       "computedHash": "05c39652cc1ef6a3066221d77d51e208f88f3ac8cbdd7ffe57a99de93776efe7"
+    },
+    "playwright-dev": {
+      "source": "microsoft/playwright",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/playwright-dev/SKILL.md",
+      "computedHash": "b87ec8cabef862d5da7819f73e1ddb41d622205cbec7cb2b7d339df2727a169e"
+    },
+    "playwright-devops": {
+      "source": "microsoft/playwright",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/playwright-devops/SKILL.md",
+      "computedHash": "5f6899cfc05fcd27045190a7fc733eb299460a49573bbe898f74f800af8b7e77"
     },
     "playwright-explore-website": {
       "source": "github/awesome-copilot",
@@ -17737,6 +18379,12 @@
       "skillPath": "skills/projection-patterns/SKILL.md",
       "computedHash": "2a18c6de60969a8b132dff1f4f93bf00d4970705d520d68ad6b74d86be5c7db5"
     },
+    "projects": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/projects/SKILL.md",
+      "computedHash": "ac3f5541fc2f990bed7977433a794d9cf21b3f96acef3919c854c73e7b56eae1"
+    },
     "prometheus": {
       "source": "grafana/skills",
       "sourceType": "github",
@@ -18090,6 +18738,12 @@
       "sourceType": "github",
       "skillPath": "plugins/aws-data-analytics/skills/querying-data-lake/SKILL.md",
       "computedHash": "e5ed83b5e962d1af57024574cc6e9a0385a6b6f8329048112f0bd43a9b2b2dac"
+    },
+    "querying-posthog-data": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/querying-posthog-data/SKILL.md",
+      "computedHash": "5872ab4ad69ddac1fa3f3691821c8e15d80b66c7ebe7a2fe267d96dd5802d2b8"
     },
     "radix-ui-design-system": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -19111,6 +19765,12 @@
       "skillPath": "skills/securing-serverless-functions/SKILL.md",
       "computedHash": "4bbcb50518030c7b103199dcad5536d0af73400d4007c56169ba3c6bb529f4c7"
     },
+    "security-alert-review": {
+      "source": "microsoft/azure-devops-skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/security-alert-review/SKILL.md",
+      "computedHash": "666ea53d6c641f23982d6d3c445d22c7b8cc34f7a439eee4c2b96521d1af8f22"
+    },
     "security-alert-triage": {
       "source": "elastic/agent-skills",
       "sourceType": "github",
@@ -19585,6 +20245,18 @@
       "skillPath": "plugins/session-report/skills/session-report/SKILL.md",
       "computedHash": "603c0c8109069472a7cddba7c9956141c4345d27dd8f29736009bab9d1361c3d"
     },
+    "setting-up-a-data-warehouse-source": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/setting-up-a-data-warehouse-source/SKILL.md",
+      "computedHash": "3cd4ec9230b88351b5bbd27defa741fbd0d5cfd89f4bf5c876101ca383a56473"
+    },
+    "setup-api-key": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "setup-api-key/SKILL.md",
+      "computedHash": "453984b7bbafc2237fba36cd9f4f48b1d3da0f8a19c9b8b7ab93de69a74f3d72"
+    },
     "setup-sdk-testing": {
       "source": "speakeasy-api/agent-skills",
       "sourceType": "github",
@@ -19813,6 +20485,18 @@
       "skillPath": "skills/shuffle-json-data/SKILL.md",
       "computedHash": "9035306ade3aed0a8898046bfc83fa01dd519f00d9f78ec1a7977288a38be514"
     },
+    "signals": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/signals/SKILL.md",
+      "computedHash": "39109ed483def8994bc3092e275628471a57abc94c4f7163734d4041188c0e19"
+    },
+    "signals-scout-general": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/signals-scout-general/SKILL.md",
+      "computedHash": "05baba2f95a2bf7b804f89dc47fbf54dbd7fb93718ad9045671b9fbff9ff2b78"
+    },
     "signup": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
@@ -19921,6 +20605,12 @@
       "skillPath": ".agents/skills/skill-lifecycle/SKILL.md",
       "computedHash": "54f6c22a70bfcc84a8a983403d4a30b3f3654319f3109dfaf4793d7ba877def9"
     },
+    "skill-name": {
+      "source": "microsoft/azure-devops-skills",
+      "sourceType": "github",
+      "skillPath": "template/SKILL.md",
+      "computedHash": "4a5cbb883a2a260a07d05a0364651a7e0198dcd3408952240620699c6a2da163"
+    },
     "skill-optimizer": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -19980,6 +20670,12 @@
       "sourceType": "github",
       "skillPath": "skills/skill-writer/SKILL.md",
       "computedHash": "f4feba459dc66cc907ab3e6beb1f107db411b49c92bf9f48dbecd9d05f5698c8"
+    },
+    "skills-store": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/skills-store/SKILL.md",
+      "computedHash": "658cbaa95468c7331cd5ed7760cd53e0f66a5877d2477202adb68165fad7fcce"
     },
     "skin-health-analyzer": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -20059,6 +20755,12 @@
       "skillPath": "skills/smtp-penetration-testing/SKILL.md",
       "computedHash": "0938b5ecda29e62c549c97c75450e61ca4112d39e294b6e4a20008efaf64acb9"
     },
+    "snippets": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/snippets/SKILL.md",
+      "computedHash": "de7e4de99ebb04c8a652d78b9043c8b7fb8e6bd8278b772ae199b79bbf21cf45"
+    },
     "snowflake-development": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -20137,6 +20839,12 @@
       "skillPath": "skills/solidity-security/SKILL.md",
       "computedHash": "b0bc3b4b5566d8f2a37145658dab9ba2b2a5ed530a6a831cb1a929f1b2ef9fa7"
     },
+    "sound-effects": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "sound-effects/SKILL.md",
+      "computedHash": "54ec05122413cbc956b28fbd81c676e44eb0fdbbf6459ee3b367b2c7a1350b02"
+    },
     "spark-optimization": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -20178,6 +20886,18 @@
       "sourceType": "github",
       "skillPath": "skills/.curated/speech/SKILL.md",
       "computedHash": "767adf188f0beb4b45f4b60cfe1945f1f104884ff3d1597e09825dadcea5f7fa"
+    },
+    "speech-engine": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "speech-engine/SKILL.md",
+      "computedHash": "b1040287633321df7ebb2d7e86dd61d70cf91d2069f51a279f627cc6653d1171"
+    },
+    "speech-to-text": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "speech-to-text/SKILL.md",
+      "computedHash": "95aa3ab73308e9558d99769fc9f5710e93a1e11878b97e402ba0b6a5cc623fda"
     },
     "speed": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -20515,6 +21235,12 @@
       "skillPath": "skills/suggest-awesome-github-copilot-skills/SKILL.md",
       "computedHash": "326ab63e60c60b2880781cc05e7289c911612e4d74c71b3bbaf8cad2c531ab8e"
     },
+    "suggesting-data-imports": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/suggesting-data-imports/SKILL.md",
+      "computedHash": "1a32e4605eaec997787667bfb9bdd573f1d3a842371a844c50dc38868348eb69"
+    },
     "supabase": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
@@ -20544,6 +21270,12 @@
       "sourceType": "github",
       "skillPath": "skills/supply-chain-risk-auditor/SKILL.md",
       "computedHash": "fa26ac559262aec1e9a31f36df8940a4194cd37daf7a5fb7a8f61a8d9ef07661"
+    },
+    "suppressing-noisy-errors": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/suppressing-noisy-errors/SKILL.md",
+      "computedHash": "abbdc9df2cdb0d799de248bdb12f45eb51c1b89945f3958d6d0cdb34e7ba8eb6"
     },
     "sveltekit": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -21061,6 +21793,12 @@
       "skillPath": "skills/testing-websocket-api-security/SKILL.md",
       "computedHash": "ac658ddd297dc57ffa42f88abe54384d2956448016881e3d4e374ce02dbb67d0"
     },
+    "text-to-speech": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "text-to-speech/SKILL.md",
+      "computedHash": "dccf9155f284345ade4a5af5d3c3db5d5da77856011ff92fff725160b0df8370"
+    },
     "textme": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -21229,6 +21967,12 @@
       "skillPath": "skills/tool-use-guardian/SKILL.md",
       "computedHash": "8b6c5ee74331e09da57398cb7182c733d87e609ecfd8ec8e0a01427f3d08b610"
     },
+    "tools": {
+      "source": "launchdarkly/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agentcontrol/tools/SKILL.md",
+      "computedHash": "25831c5650ecc633886b3346c83d22aff68136944455d9eff79430369b16f988"
+    },
     "top-crashers": {
       "source": "brave/brave-core",
       "sourceType": "github",
@@ -21313,6 +22057,12 @@
       "skillPath": "skills/triage-frontend-issues/SKILL.md",
       "computedHash": "e5909219c41cd10b8707b502ba844663338c384430a668c18fef830bf9e63e91"
     },
+    "triaging-error-issues": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/triaging-error-issues/SKILL.md",
+      "computedHash": "19f89f64d2d10e6fe92a4ba14c8fff5079b1a58cbb12f8e850ef944d637f124e"
+    },
     "triaging-security-alerts-in-splunk": {
       "source": "mukul975/Anthropic-Cybersecurity-Skills",
       "sourceType": "github",
@@ -21330,6 +22080,12 @@
       "sourceType": "github",
       "skillPath": "skills/triaging-security-incident-with-ir-playbook/SKILL.md",
       "computedHash": "738fe3a68cef1768334b030b409c50b4083f13b0c8dca7ccdffe597a3cd100f8"
+    },
+    "triaging-visual-review-runs": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/triaging-visual-review-runs/SKILL.md",
+      "computedHash": "62deb39032da4dd830094e9d745360104f66625b9fb1e0805fc6a31e18ae1b87"
     },
     "triaging-vulnerabilities-with-ssvc-framework": {
       "source": "mukul975/Anthropic-Cybersecurity-Skills",
@@ -21366,6 +22122,12 @@
       "sourceType": "github",
       "skillPath": "skills/trust-calibrator/SKILL.md",
       "computedHash": "b005d5ff5db22c1554e9e464363deff88924998077ad66814f6fc3854fcd3869"
+    },
+    "tuning-incremental-sync-config": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/tuning-incremental-sync-config/SKILL.md",
+      "computedHash": "c0354bd617d5ed88812f461cfd7c43c3fab13d5af766d127b712fcd0fda7823d"
     },
     "turborepo-caching": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -21961,6 +22723,18 @@
       "skillPath": "skills/voice-ai-engine-development/SKILL.md",
       "computedHash": "0762dfa07a60bd340a0616a99b64453d5fd0e18ae314c9c5cd44e45f80557bec"
     },
+    "voice-changer": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "voice-changer/SKILL.md",
+      "computedHash": "913fb7f25204f13e122d4232a021867d5ce400f6e90d5377262c472775c467cf"
+    },
+    "voice-isolator": {
+      "source": "ElevenLabs/skills",
+      "sourceType": "github",
+      "skillPath": "voice-isolator/SKILL.md",
+      "computedHash": "910411b8f1d1bfdf9b0633fd18b24525804391dbaf238913b5e790483813e3f7"
+    },
     "vscode-ext-commands": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -22086,6 +22860,12 @@
       "sourceType": "github",
       "skillPath": "skills/wcag-audit-patterns/SKILL.md",
       "computedHash": "5d1d9c36047f3b072b6dca7a12c93fc33c4828c9fabf5d93d195fc32d7605a96"
+    },
+    "weaviate": {
+      "source": "weaviate/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/weaviate/SKILL.md",
+      "computedHash": "949481a5c8431f1ea425909e58aa1aff8360526e88062339d25f3df1e777f89e"
     },
     "web-accessibility-web-accessibility": {
       "source": "agents-inc/skills",
@@ -22777,6 +23557,12 @@
       "skillPath": "skills/wordpress-woocommerce-development/SKILL.md",
       "computedHash": "551afc339f7ba5646dad69e6b60ae80bb45966ea302caa54a688a04b3200864e"
     },
+    "work-iterations": {
+      "source": "microsoft/azure-devops-skills",
+      "sourceType": "github",
+      "skillPath": ".github/skills/work-iterations/SKILL.md",
+      "computedHash": "26901e21f10c57243fe02fb556b53e5afb0b459feaa5012fc504f8afc283e90f"
+    },
     "workers-best-practices": {
       "source": "cloudflare/skills",
       "sourceType": "github",
@@ -22806,6 +23592,12 @@
       "sourceType": "github",
       "skillPath": "skills/dbt/skills/working-with-dbt-mesh/SKILL.md",
       "computedHash": "a8ed77406ed74e61018440709b3d9254dc638ff18c20f30be1d9fa562f0696dc"
+    },
+    "working-with-skills": {
+      "source": "posthog/skills",
+      "sourceType": "github",
+      "skillPath": "skills/omnibus/working-with-skills/SKILL.md",
+      "computedHash": "44a02c0d28cc1bf0c243fa0177e9e5a6cc584940397fc39cfd95a0676c914a54"
     },
     "workiq-copilot": {
       "source": "github/awesome-copilot",

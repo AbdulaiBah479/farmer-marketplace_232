@@ -1,9 +1,8 @@
 ---
 name: configure
-description: Sets up or edits the plugin configuration file interactively. Use on first-time setup, when config is missing, or when the user wants to change settings.
+description: Set up or edit plugin configuration interactively
 argument-hint: [setup | edit | show | validate | reset]
-model: sonnet
-effort: low
+model: claude-sonnet-4-5-20250929
 allowed-tools:
   - Read
   - Write

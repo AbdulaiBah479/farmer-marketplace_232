@@ -1,6 +1,6 @@
 ---
 name: compliance-architecture
-description: Enterprise-grade compliance architecture for SOC 2, HIPAA, GDPR, PCI-DSS. Provides compliance checklists, security controls, audit guidance, and regulatory requirements for serverless and cloud architectures. Activates for compliance, HIPAA, SOC2, SOC 2, GDPR, PCI-DSS, PCI DSS, regulatory, healthcare data, payment card, data protection, audit, security standards, regulated industry, BAA, business associate agreement, DPIA, data protection impact assessment.
+description: Enterprise compliance architecture for SOC 2, HIPAA, GDPR, and PCI-DSS regulated systems. Use when designing compliant systems, preparing for audits, or implementing regulatory requirements. Covers compliance checklists, data protection controls, audit evidence collection, and security policies.
 ---
 
 # Compliance Architecture Expert
@@ -372,3 +372,15 @@ Request my help when:
 ---
 
 **Remember**: Compliance is not a checkbox exercise - it's about building secure, trustworthy systems that protect user data and meet legal obligations.
+
+## Project-Specific Learnings
+
+**Before starting work, check for project-specific learnings:**
+
+```bash
+# Check if skill memory exists for this skill
+cat .specweave/skill-memories/compliance-architecture.md 2>/dev/null || echo "No project learnings yet"
+```
+
+Project learnings are automatically captured by the reflection system when corrections or patterns are identified during development. These learnings help you understand project-specific conventions and past decisions.
+

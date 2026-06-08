@@ -5,22 +5,9 @@ tool_type: cli
 primary_tool: fastq_screen
 ---
 
-## Version Compatibility
-
-Reference examples tested with: BBTools 39.0+, Bowtie2 2.5.3+, FastQ Screen 0.15+, FastQC 0.12+, MultiQC 1.21+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- CLI: `<tool> --version` then `<tool> --help` to confirm flags
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Contamination Screening
 
 Screen FASTQ files against multiple genomes to identify contamination sources using FastQ Screen.
-
-**"Check for contamination in sequencing data"** → Align a sample of reads against multiple reference genomes to identify cross-species or cross-sample contamination.
-- CLI: `fastq_screen --conf fastq_screen.conf reads.fq`
 
 ## FastQ Screen Overview
 
@@ -249,4 +236,4 @@ bbduk.sh in=sample.fastq.gz out=clean.fastq.gz \
 
 - quality-reports - FastQC shows overrepresented sequences
 - adapter-trimming - Remove adapter contamination
-- metagenomics/kraken-classification - Deeper taxonomic analysis
+- metagenomics - Deeper taxonomic analysis

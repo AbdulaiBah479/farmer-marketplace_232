@@ -1,264 +1,118 @@
 ---
 name: cron
-description: 定时任务管理
-version: 1.0.0
-author: terminal-skills
-tags: [server, cron, crontab, schedule, automation]
+description: Scheduled task management - create, query, delete scheduled tasks to automatically execute operations at specified times.
 ---
 
-# 定时任务管理
+# Scheduled Task Skill
 
-## 概述
-Cron 定时任务配置、日志监控、故障排查等技能。
+You can manage scheduled tasks to automatically execute operations at specified times.
 
-## Crontab 基础
+## IMPORTANT RULES
 
-### 管理命令
-```bash
-# 编辑当前用户的 crontab
-crontab -e
+1. **ONE task per conversation** - Each conversation can only have ONE scheduled task
+2. **Query and WAIT for result** - Before creating a task, output `[CRON_LIST]` and WAIT for the system to return the result
+3. **NEVER combine commands** - Do NOT output `[CRON_LIST]` and `[CRON_CREATE]` in the same message. Query first, wait for result, then decide.
+4. **ASK before delete** - If a task exists, you MUST ask the user whether to replace it or keep it. NEVER delete without user's explicit confirmation.
+5. **ALWAYS include closing tags** - `[CRON_CREATE]` MUST end with `[/CRON_CREATE]`
+6. **Output commands directly** - Do NOT wrap commands in markdown code blocks
 
-# 查看当前用户的 crontab
-crontab -l
+## Workflow for Creating a Task
 
-# 删除当前用户的 crontab
-crontab -r
+**CRITICAL: This is a multi-turn workflow. Do NOT skip steps or combine them.**
 
-# 管理其他用户的 crontab（需要 root）
-crontab -u username -e
-crontab -u username -l
+**Step 1: Query existing tasks (STOP and wait)**
+Output ONLY `[CRON_LIST]` and nothing else. The system will return the current task status.
+DO NOT proceed to Step 2 until you see the system response.
+
+**Step 2: Review the result and ask user (STOP and wait for user response)**
+After receiving the `[CRON_LIST]` result:
+
+- If "No scheduled tasks" → proceed to Step 3
+- If a task already exists → **You MUST ask the user** what they want to do:
+  - Option A: Delete the existing task and create a new one
+  - Option B: Keep the existing task and cancel creating a new one
+  - **NEVER delete the existing task without explicit user confirmation**
+  - Wait for the user's response before proceeding
+
+**Step 3: Execute user's decision**
+
+- If user chose to replace: First delete the old task with `[CRON_DELETE: <job-id>]`, wait for confirmation, then create new task
+- If user chose to keep: Do NOT create a new task, inform user the existing task is retained
+
+**Step 4: Create the new task (only if no task exists or user confirmed deletion)**
+Only after confirming no task exists (or after successfully deleting), output the `[CRON_CREATE]` block.
+
+## Create Scheduled Task
+
+When user requests a timed reminder or periodic task, output this format DIRECTLY (not in code blocks):
+
+[CRON_CREATE]
+name: Task name
+schedule: Cron expression
+schedule_description: Human-readable description of when the task runs
+message: Message content to send when triggered
+[/CRON_CREATE]
+
+**Required fields:**
+
+- `name`: Short descriptive name for the task
+- `schedule`: Valid cron expression
+- `schedule_description`: Human-readable explanation of the schedule (e.g., "Every Monday at 9:00 AM")
+- `message`: The message to send when the task triggers
+
+**Example output** (output EXACTLY like this, without code blocks):
+
+[CRON_CREATE]
+name: Weekly Meeting Reminder
+schedule: 0 9 \* \* MON
+schedule_description: Every Monday at 9:00 AM
+message: Time for the weekly meeting!
+[/CRON_CREATE]
+
+## Query Scheduled Tasks
+
+Output `[CRON_LIST]` directly (not in code blocks) to query scheduled tasks.
+**The system will return the result in a follow-up message.** Wait for the response before taking further action.
+
+## Delete Scheduled Task
+
+Output `[CRON_DELETE: <actual-job-id>]` directly to delete a specific task.
+Replace `<actual-job-id>` with the real job ID (e.g., `cron_abc123`).
+
+## Cron Expression Reference
+
+| Expression        | Meaning                          |
+| ----------------- | -------------------------------- |
+| `0 9 * * *`       | Every day at 9:00 AM             |
+| `0 9 * * MON`     | Every Monday at 9:00 AM          |
+| `0 9 * * MON-FRI` | Weekdays at 9:00 AM              |
+| `*/30 * * * *`    | Every 30 minutes                 |
+| `0 */2 * * *`     | Every 2 hours                    |
+| `0 0 1 * *`       | 1st of every month at midnight   |
+| `0 18 * * FRI`    | Every Friday at 6:00 PM          |
+| `0 9,18 * * *`    | Every day at 9:00 AM and 6:00 PM |
+
+### Cron Expression Format
+
 ```
-
-### 时间格式
-```
-┌───────────── 分钟 (0-59)
-│ ┌───────────── 小时 (0-23)
-│ │ ┌───────────── 日 (1-31)
-│ │ │ ┌───────────── 月 (1-12)
-│ │ │ │ ┌───────────── 星期 (0-7, 0和7都是周日)
+┌───────────── minute (0-59)
+│ ┌───────────── hour (0-23)
+│ │ ┌───────────── day of month (1-31)
+│ │ │ ┌───────────── month (1-12)
+│ │ │ │ ┌───────────── day of week (0-6, SUN-SAT)
 │ │ │ │ │
-* * * * * command
+* * * * *
 ```
 
-### 特殊字符
-```bash
-*       # 任意值
-,       # 列表 (1,3,5)
--       # 范围 (1-5)
-/       # 步长 (*/5 每5分钟)
+### Special Characters
 
-# 示例
-0 * * * *       # 每小时整点
-*/15 * * * *    # 每15分钟
-0 9-17 * * *    # 9点到17点每小时
-0 0 * * 1-5     # 工作日零点
-0 0 1,15 * *    # 每月1号和15号零点
-```
+- `*` - Any value
+- `,` - List separator (e.g., `1,3,5`)
+- `-` - Range (e.g., `MON-FRI`)
+- `/` - Step (e.g., `*/15` for every 15)
 
-### 特殊时间字符串
-```bash
-@reboot         # 系统启动时
-@yearly         # 每年 (0 0 1 1 *)
-@monthly        # 每月 (0 0 1 * *)
-@weekly         # 每周 (0 0 * * 0)
-@daily          # 每天 (0 0 * * *)
-@hourly         # 每小时 (0 * * * *)
-```
+## Notes
 
-## 配置文件
-
-### 用户 crontab
-```bash
-# 位置
-/var/spool/cron/crontabs/username   # Debian/Ubuntu
-/var/spool/cron/username            # CentOS/RHEL
-
-# 格式
-SHELL=/bin/bash
-PATH=/usr/local/bin:/usr/bin:/bin
-MAILTO=admin@example.com
-
-# 任务
-0 2 * * * /usr/local/bin/backup.sh
-```
-
-### 系统 crontab
-```bash
-# /etc/crontab
-SHELL=/bin/bash
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
-MAILTO=root
-
-# 格式：多了用户字段
-# 分 时 日 月 周 用户 命令
-0 2 * * * root /usr/local/bin/backup.sh
-```
-
-### cron.d 目录
-```bash
-# /etc/cron.d/myapp
-SHELL=/bin/bash
-PATH=/usr/local/bin:/usr/bin:/bin
-
-0 * * * * appuser /opt/myapp/hourly-task.sh
-0 2 * * * root /opt/myapp/daily-backup.sh
-```
-
-### 预定义目录
-```bash
-/etc/cron.hourly/       # 每小时执行
-/etc/cron.daily/        # 每天执行
-/etc/cron.weekly/       # 每周执行
-/etc/cron.monthly/      # 每月执行
-
-# 放入可执行脚本即可
-chmod +x /etc/cron.daily/myscript
-```
-
-## 最佳实践
-
-### 脚本模板
-```bash
-#!/bin/bash
-# /usr/local/bin/cron-task.sh
-
-# 日志文件
-LOG_FILE="/var/log/cron-task.log"
-
-# 锁文件（防止重复执行）
-LOCK_FILE="/var/run/cron-task.lock"
-
-# 检查锁
-if [ -f "$LOCK_FILE" ]; then
-    echo "$(date): Task already running" >> "$LOG_FILE"
-    exit 1
-fi
-
-# 创建锁
-trap "rm -f $LOCK_FILE" EXIT
-touch "$LOCK_FILE"
-
-# 记录开始
-echo "$(date): Task started" >> "$LOG_FILE"
-
-# 执行任务
-/path/to/actual/command >> "$LOG_FILE" 2>&1
-EXIT_CODE=$?
-
-# 记录结束
-echo "$(date): Task finished with exit code $EXIT_CODE" >> "$LOG_FILE"
-
-exit $EXIT_CODE
-```
-
-### Crontab 条目
-```bash
-# 推荐写法
-# 1. 使用绝对路径
-# 2. 重定向输出
-# 3. 添加注释
-
-# 每日备份 - 凌晨2点
-0 2 * * * /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1
-
-# 每5分钟健康检查
-*/5 * * * * /usr/local/bin/healthcheck.sh > /dev/null 2>&1
-
-# 每周日志清理 - 周日凌晨3点
-0 3 * * 0 /usr/local/bin/cleanup-logs.sh >> /var/log/cleanup.log 2>&1
-```
-
-### 环境变量
-```bash
-# 在 crontab 中设置
-SHELL=/bin/bash
-PATH=/usr/local/bin:/usr/bin:/bin
-HOME=/home/user
-MAILTO=admin@example.com
-
-# 或在脚本中加载
-#!/bin/bash
-source /etc/profile
-source ~/.bashrc
-```
-
-## 日志与监控
-
-### 查看日志
-```bash
-# 系统日志
-grep CRON /var/log/syslog           # Debian/Ubuntu
-grep CRON /var/log/cron             # CentOS/RHEL
-
-# 实时监控
-tail -f /var/log/syslog | grep CRON
-
-# 查看邮件（如果配置了 MAILTO）
-cat /var/mail/username
-```
-
-### 调试技巧
-```bash
-# 手动测试脚本
-/usr/local/bin/myscript.sh
-
-# 模拟 cron 环境
-env -i /bin/bash --noprofile --norc -c '/usr/local/bin/myscript.sh'
-
-# 检查 cron 服务状态
-systemctl status cron               # Debian/Ubuntu
-systemctl status crond              # CentOS/RHEL
-```
-
-## 常见场景
-
-### 场景 1：数据库备份
-```bash
-# 每天凌晨2点备份 MySQL
-0 2 * * * /usr/bin/mysqldump -u root -p'password' database | gzip > /backup/db_$(date +\%Y\%m\%d).sql.gz
-
-# 注意：% 需要转义为 \%
-```
-
-### 场景 2：日志轮转
-```bash
-# 每天压缩并清理7天前的日志
-0 0 * * * find /var/log/myapp -name "*.log" -mtime +7 -delete
-0 1 * * * gzip /var/log/myapp/*.log.1
-```
-
-### 场景 3：监控告警
-```bash
-# 每5分钟检查服务状态
-*/5 * * * * /usr/local/bin/check-service.sh || /usr/local/bin/send-alert.sh
-```
-
-### 场景 4：使用 flock 防止重复
-```bash
-# 使用 flock 确保单实例运行
-*/5 * * * * /usr/bin/flock -n /var/lock/mytask.lock /usr/local/bin/mytask.sh
-```
-
-## 故障排查
-
-| 问题 | 排查方法 |
-|------|----------|
-| 任务不执行 | 检查 cron 服务状态、日志 |
-| 权限错误 | 检查脚本权限、用户权限 |
-| 环境变量问题 | 在脚本中设置 PATH |
-| 命令找不到 | 使用绝对路径 |
-| 输出丢失 | 重定向到日志文件 |
-
-```bash
-# 检查 cron 服务
-systemctl status cron
-
-# 检查用户是否被禁止
-cat /etc/cron.allow
-cat /etc/cron.deny
-
-# 检查语法
-crontab -l | grep -v '^#' | while read line; do
-    echo "Checking: $line"
-done
-```
+- Scheduled tasks are bound to the current conversation
+- When triggered, the message will be sent to this conversation
+- **CRITICAL**: `[CRON_LIST]` is an async query. You MUST wait for the system response before proceeding with `[CRON_CREATE]` or `[CRON_DELETE]`. Never output multiple commands in one message.

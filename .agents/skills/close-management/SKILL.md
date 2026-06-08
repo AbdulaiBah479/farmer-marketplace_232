@@ -1,7 +1,16 @@
 ---
 name: close-management
-description: Manage the month-end close process with task sequencing, dependencies, and status tracking. Use when planning the close calendar, tracking close progress, identifying blockers, or sequencing close activities by day.
-user-invocable: false
+description: "Manage the month-end close process with task sequencing, dependencies, and status tracking."
+version: 1.0.0
+category: finance
+last_updated: 2026-02-03
+source: https://github.com/anthropics/knowledge-work-plugins
+related_skills:
+  - journal-entry-prep
+  - reconciliation
+  - financial-statements
+  - variance-analysis
+  - audit-support
 ---
 
 # Close Management

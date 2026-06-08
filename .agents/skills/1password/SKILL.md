@@ -2,12 +2,19 @@
 name: 1password
 description: Set up and use 1Password CLI (op). Use when installing the CLI, enabling desktop app integration, signing in (single or multi-account), or reading/injecting/running secrets via op.
 homepage: https://developer.1password.com/docs/cli/get-started/
-metadata: {"espada":{"emoji":"🔐","requires":{"bins":["op"]},"install":[{"id":"brew","kind":"brew","formula":"1password-cli","bins":["op"],"label":"Install 1Password CLI (brew)"}]}}
+
 ---
 
 # 1Password CLI
 
 Follow the official CLI get-started steps. Don't guess install commands.
+
+## Prerequisites
+
+- **tmux** is required for reliable `op` commands (the shell tool uses fresh TTYs per command, causing re-auth issues without tmux)
+  - macOS: `brew install tmux`
+  - Linux (Debian/Ubuntu): `sudo apt install tmux`
+  - Linux (RHEL/Fedora): `sudo dnf install tmux`
 
 ## References
 
@@ -24,16 +31,22 @@ Follow the official CLI get-started steps. Don't guess install commands.
 6. Verify access inside tmux: `op whoami` (must succeed before any secret read).
 7. If multiple accounts: use `--account` or `OP_ACCOUNT`.
 
-## REQUIRED tmux session (T-Max)
+## REQUIRED tmux session
 
-The shell tool uses a fresh TTY per command. To avoid re-prompts and failures, always run `op` inside a dedicated tmux session with a fresh socket/session name.
+The shell tool uses a fresh TTY per command. To avoid re-prompts and failures, always run `op` inside a dedicated tmux session with a fresh socket and session name.
 
-Example (see `tmux` skill for socket conventions, do not reuse old session names):
+Socket conventions:
+
+- Put sockets under `${LETTA_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/letta-tmux-sockets}` so they're isolated and easy to clean up.
+- Use a timestamped session name (e.g. `op-auth-$(date +%Y%m%d-%H%M%S)`) so you never reuse an old session — previous auth state may be stale or broken.
+- Kill the session when you're done (`tmux -S "$SOCKET" kill-session -t "$SESSION"`) to avoid leaking long-running tmux processes.
+
+Full example:
 
 ```bash
-SOCKET_DIR="${ESPADA_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/espada-tmux-sockets}"
+SOCKET_DIR="${LETTA_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/letta-tmux-sockets}"
 mkdir -p "$SOCKET_DIR"
-SOCKET="$SOCKET_DIR/espada-op.sock"
+SOCKET="$SOCKET_DIR/letta-op.sock"
 SESSION="op-auth-$(date +%Y%m%d-%H%M%S)"
 
 tmux -S "$SOCKET" new -d -s "$SESSION" -n shell

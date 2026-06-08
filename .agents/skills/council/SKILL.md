@@ -1,203 +1,107 @@
 ---
-name: council
-description: Convene a four-voice council for ambiguous decisions, tradeoffs, and go/no-go calls. Use when multiple valid paths exist and you need structured disagreement before choosing.
-origin: ECC
+name: Council
+description: Multi-agent debate system. USE WHEN council, debate, perspectives, agents discuss. SkillSearch('council') for docs.
+implements: Science
+science_cycle_time: meso
 ---
 
-# Council
+## Customization
 
-Convene four advisors for ambiguous decisions:
-- the in-context Claude voice
-- a Skeptic subagent
-- a Pragmatist subagent
-- a Critic subagent
+**Before executing, check for user customizations at:**
+`~/.claude/skills/CORE/USER/SKILLCUSTOMIZATIONS/Council/`
 
-This is for **decision-making under ambiguity**, not code review, implementation planning, or architecture design.
+If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
-## When to Use
+# Council Skill
 
-Use council when:
-- a decision has multiple credible paths and no obvious winner
-- you need explicit tradeoff surfacing
-- the user asks for second opinions, dissent, or multiple perspectives
-- conversational anchoring is a real risk
-- a go / no-go call would benefit from adversarial challenge
+Multi-agent debate system where specialized agents discuss topics in rounds, respond to each other's points, and surface insights through intellectual friction.
 
-Examples:
-- monorepo vs polyrepo
-- ship now vs hold for polish
-- feature flag vs full rollout
-- simplify scope vs keep strategic breadth
+**Key Differentiator from RedTeam:** Council is collaborative-adversarial (debate to find best path), while RedTeam is purely adversarial (attack the idea). Council produces visible conversation transcripts; RedTeam produces steelman + counter-argument.
 
-## When NOT to Use
 
-| Instead of council | Use |
-| --- | --- |
-| Verifying whether output is correct | `santa-method` |
-| Breaking a feature into implementation steps | `planner` |
-| Designing system architecture | `architect` |
-| Reviewing code for bugs or security | `code-reviewer` or `santa-method` |
-| Straight factual questions | just answer directly |
-| Obvious execution tasks | just do the task |
+## Voice Notification
 
-## Roles
+**When executing a workflow, do BOTH:**
 
-| Voice | Lens |
-| --- | --- |
-| Architect | correctness, maintainability, long-term implications |
-| Skeptic | premise challenge, simplification, assumption breaking |
-| Pragmatist | shipping speed, user impact, operational reality |
-| Critic | edge cases, downside risk, failure modes |
+1. **Send voice notification**:
+   ```bash
+   curl -s -X POST http://localhost:8888/notify \
+     -H "Content-Type: application/json" \
+     -d '{"message": "Running the WORKFLOWNAME workflow from the Council skill"}' \
+     > /dev/null 2>&1 &
+   ```
 
-The three external voices should be launched as fresh subagents with **only the question and relevant context**, not the full ongoing conversation. That is the anti-anchoring mechanism.
+2. **Output text notification**:
+   ```
+   Running the **WorkflowName** workflow from the **Council** skill...
+   ```
 
-## Workflow
+**Full documentation:** `~/.claude/skills/CORE/SkillNotifications.md`
 
-### 1. Extract the real question
+## Workflow Routing
 
-Reduce the decision to one explicit prompt:
-- what are we deciding?
-- what constraints matter?
-- what counts as success?
+Route to the appropriate workflow based on the request.
 
-If the question is vague, ask one clarifying question before convening the council.
+**When executing a workflow, output this notification directly:**
 
-### 2. Gather only the necessary context
-
-If the decision is codebase-specific:
-- collect the relevant files, snippets, issue text, or metrics
-- keep it compact
-- include only the context needed to make the decision
-
-If the decision is strategic/general:
-- skip repo snippets unless they materially change the answer
-
-### 3. Form the Architect position first
-
-Before reading other voices, write down:
-- your initial position
-- the three strongest reasons for it
-- the main risk in your preferred path
-
-Do this first so the synthesis does not simply mirror the external voices.
-
-### 4. Launch three independent voices in parallel
-
-Each subagent gets:
-- the decision question
-- compact context if needed
-- a strict role
-- no unnecessary conversation history
-
-Prompt shape:
-
-```text
-You are the [ROLE] on a four-voice decision council.
-
-Question:
-[decision question]
-
-Context:
-[only the relevant snippets or constraints]
-
-Respond with:
-1. Position — 1-2 sentences
-2. Reasoning — 3 concise bullets
-3. Risk — biggest risk in your recommendation
-4. Surprise — one thing the other voices may miss
-
-Be direct. No hedging. Keep it under 300 words.
+```
+Running the **WorkflowName** workflow from the **Council** skill...
 ```
 
-Role emphasis:
-- Skeptic: challenge framing, question assumptions, propose the simplest credible alternative
-- Pragmatist: optimize for speed, simplicity, and real-world execution
-- Critic: surface downside risk, edge cases, and reasons the plan could fail
+| Trigger | Workflow |
+|---------|----------|
+| Full structured debate (3 rounds, visible transcript) | `Workflows/Debate.md` |
+| Quick consensus check (1 round, fast) | `Workflows/Quick.md` |
+| Pure adversarial analysis | RedTeam skill |
 
-### 5. Synthesize with bias guardrails
+## Quick Reference
 
-You are both a participant and the synthesizer, so use these rules:
-- do not dismiss an external view without explaining why
-- if an external voice changed your recommendation, say so explicitly
-- always include the strongest dissent, even if you reject it
-- if two voices align against your initial position, treat that as a real signal
-- keep the raw positions visible before the verdict
+| Workflow | Purpose | Rounds | Output |
+|----------|---------|--------|--------|
+| **DEBATE** | Full structured discussion | 3 | Complete transcript + synthesis |
+| **QUICK** | Fast perspective check | 1 | Initial positions only |
 
-### 6. Present a compact verdict
+## Context Files
 
-Use this output shape:
+| File | Content |
+|------|---------|
+| `CouncilMembers.md` | Agent roles, perspectives, voice mapping |
+| `RoundStructure.md` | Three-round debate structure and timing |
+| `OutputFormat.md` | Transcript format templates |
 
-```markdown
-## Council: [short decision title]
+## Core Philosophy
 
-**Architect:** [1-2 sentence position]
-[1 line on why]
+**Origin:** Best decisions emerge from diverse perspectives challenging each other. Not just collecting opinions - genuine intellectual friction where experts respond to each other's actual points.
 
-**Skeptic:** [1-2 sentence position]
-[1 line on why]
+**Speed:** Parallel execution within rounds, sequential between rounds. A 3-round debate of 4 agents = 12 agent calls but only 3 sequential waits. Complete in 30-90 seconds.
 
-**Pragmatist:** [1-2 sentence position]
-[1 line on why]
+## Examples
 
-**Critic:** [1-2 sentence position]
-[1 line on why]
+```
+"Council: Should we use WebSockets or SSE?"
+-> Invokes DEBATE workflow -> 3-round transcript
 
-### Verdict
-- **Consensus:** [where they align]
-- **Strongest dissent:** [most important disagreement]
-- **Premise check:** [did the Skeptic challenge the question itself?]
-- **Recommendation:** [the synthesized path]
+"Quick council check: Is this API design reasonable?"
+-> Invokes QUICK workflow -> Fast perspectives
+
+"Council with security: Evaluate this auth approach"
+-> DEBATE with Security agent added
 ```
 
-Keep it scannable on a phone screen.
+## Integration
 
-## Persistence Rule
+**Works well with:**
+- **RedTeam** - Pure adversarial attack after collaborative discussion
+- **Development** - Before major architectural decisions
+- **Research** - Gather context before convening the council
 
-Do **not** write ad-hoc notes to `~/.claude/notes` or other shadow paths from this skill.
+## Best Practices
 
-If the council materially changes the recommendation:
-- use `knowledge-ops` to store the lesson in the right durable location
-- or use `/save-session` if the outcome belongs in session memory
-- or update the relevant GitHub / Linear issue directly if the decision changes active execution truth
+1. Use QUICK for sanity checks, DEBATE for important decisions
+2. Add domain-specific experts as needed (security for auth, etc.)
+3. Review the transcript - insights are in the responses, not just positions
+4. Trust multi-agent convergence when it occurs
 
-Only persist a decision when it changes something real.
+---
 
-## Multi-Round Follow-up
-
-Default is one round.
-
-If the user wants another round:
-- keep the new question focused
-- include the previous verdict only if it is necessary
-- keep the Skeptic as clean as possible to preserve anti-anchoring value
-
-## Anti-Patterns
-
-- using council for code review
-- using council when the task is just implementation work
-- feeding the subagents the entire conversation transcript
-- hiding disagreement in the final verdict
-- persisting every decision as a note regardless of importance
-
-## Related Skills
-
-- `santa-method` — adversarial verification
-- `knowledge-ops` — persist durable decision deltas correctly
-- `search-first` — gather external reference material before the council if needed
-- `architecture-decision-records` — formalize the outcome when the decision becomes long-lived system policy
-
-## Example
-
-Question:
-
-```text
-Should we ship ECC 2.0 as alpha now, or hold until the control-plane UI is more complete?
-```
-
-Likely council shape:
-- Architect pushes for structural integrity and avoiding a confused surface
-- Skeptic questions whether the UI is actually the gating factor
-- Pragmatist asks what can be shipped now without harming trust
-- Critic focuses on support burden, expectation debt, and rollout confusion
-
-The value is not unanimity. The value is making the disagreement legible before choosing.
+**Last Updated:** 2025-12-20

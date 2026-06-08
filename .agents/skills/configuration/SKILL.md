@@ -1,531 +1,340 @@
 ---
-name: configuration
-description: OpenClaw 配置管理
+name: Configuration
+description: This skill should be used when the user asks about "Effect Config", "environment variables", "configuration management", "Config.string", "Config.number", "ConfigProvider", "Config.nested", "Config.withDefault", "Config.redacted", "sensitive values", "config validation", "loading config from JSON", "config schema", or needs to understand how Effect handles application configuration.
 version: 1.0.0
-author: terminal-skills
-tags: [openclaw, configuration, settings, tuning]
 ---
 
-# OpenClaw 配置管理
+# Configuration in Effect
 
-## 概述
-OpenClaw 的核心配置、环境变量、性能调优和安全配置指南。
+## Overview
 
-## 核心配置文件
+Effect provides type-safe configuration loading with:
 
-### application.yml 结构
-```yaml
-# /opt/openclaw/conf/application.yml
+- Automatic environment variable reading
+- Validation and type conversion
+- Default values and composition
+- Sensitive value handling
+- Multiple config sources (env, JSON, custom)
 
-server:
-  port: 8080
-  grpc:
-    port: 9090
-  servlet:
-    context-path: /
+## Basic Configuration Types
 
-spring:
-  application:
-    name: openclaw-server
-  datasource:
-    url: jdbc:mysql://localhost:3306/openclaw?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: openclaw
-    password: your_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      idle-timeout: 300000
-      connection-timeout: 30000
-      max-lifetime: 1800000
+```typescript
+import { Config, Effect } from "effect"
 
-  redis:
-    host: localhost
-    port: 6379
-    password:
-    database: 0
-    lettuce:
-      pool:
-        max-active: 16
-        max-idle: 8
-        min-idle: 2
+const host = Config.string("HOST")
 
-openclaw:
-  # 集群配置
-  cluster:
-    name: openclaw-cluster
-    node-id: ${HOSTNAME:node-1}
-    heartbeat-interval: 10000
+const port = Config.number("PORT")
 
-  # 调度配置
-  scheduler:
-    thread-pool-size: 20
-    max-retry-times: 3
-    retry-interval: 30000
-    task-timeout: 3600000
+const debug = Config.boolean("DEBUG")
 
-  # 执行器配置
-  executor:
-    max-concurrent-tasks: 100
-    task-queue-size: 10000
-
-  # 日志配置
-  logging:
-    level: INFO
-    retention-days: 30
-    max-file-size: 100MB
+const maxConnections = Config.integer("MAX_CONNECTIONS")
 ```
 
-### Worker 配置
-```yaml
-# /opt/openclaw/conf/worker.yml
+## Using Config in Effects
 
-worker:
-  # 服务端连接
-  server:
-    host: openclaw-server
-    port: 9090
+```typescript
+const program = Effect.gen(function* () {
+  const host = yield* Config.string("DATABASE_HOST")
+  const port = yield* Config.number("DATABASE_PORT")
 
-  # Worker 配置
-  group: default
-  name: ${HOSTNAME:worker-1}
-  threads: 8
-  max-tasks: 50
+  return { host, port }
+})
 
-  # 心跳配置
-  heartbeat:
-    interval: 5000
-    timeout: 30000
-
-  # 任务配置
-  task:
-    temp-dir: /tmp/openclaw
-    log-dir: /opt/openclaw/logs/tasks
-    max-log-size: 10MB
+// Runs and reads from environment
+await Effect.runPromise(program)
 ```
 
-## 环境变量配置
+## Default Values
 
-### Server 环境变量
-```bash
-# 数据库配置
-export OPENCLAW_DB_HOST=localhost
-export OPENCLAW_DB_PORT=3306
-export OPENCLAW_DB_NAME=openclaw
-export OPENCLAW_DB_USER=openclaw
-export OPENCLAW_DB_PASSWORD=your_password
+```typescript
+const port = Config.number("PORT").pipe(
+  Config.withDefault(3000)
+)
 
-# Redis 配置
-export OPENCLAW_REDIS_HOST=localhost
-export OPENCLAW_REDIS_PORT=6379
-export OPENCLAW_REDIS_PASSWORD=
-
-# 服务配置
-export OPENCLAW_PORT=8080
-export OPENCLAW_GRPC_PORT=9090
-
-# JVM 配置
-export JAVA_OPTS="-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
-
-# 日志级别
-export LOG_LEVEL=INFO
+const debug = Config.boolean("DEBUG").pipe(
+  Config.withDefault(false)
+)
 ```
 
-### Worker 环境变量
-```bash
-# Server 连接
-export OPENCLAW_SERVER_HOST=openclaw-server
-export OPENCLAW_SERVER_PORT=9090
+## Optional Configuration
 
-# Worker 配置
-export WORKER_GROUP=default
-export WORKER_NAME=worker-1
-export WORKER_THREADS=8
-
-# 任务配置
-export TASK_TEMP_DIR=/tmp/openclaw
-export TASK_LOG_DIR=/opt/openclaw/logs/tasks
+```typescript
+const apiKey = Config.string("API_KEY").pipe(
+  Config.option
+)
+// Type: Effect<Option<string>>
 ```
 
-### Docker 环境变量传递
-```bash
-# docker-compose.yml 方式
-docker-compose up -d
+## Combining Configurations
 
-# 或直接传递
-docker run -d \
-  -e OPENCLAW_DB_HOST=mysql \
-  -e OPENCLAW_DB_PASSWORD=password \
-  -e JAVA_OPTS="-Xms1g -Xmx2g" \
-  openclaw/openclaw-server:latest
+### Using Config.all
+
+```typescript
+const dbConfig = Config.all({
+  host: Config.string("DB_HOST"),
+  port: Config.number("DB_PORT"),
+  database: Config.string("DB_NAME"),
+  maxConnections: Config.number("DB_MAX_CONN").pipe(
+    Config.withDefault(10)
+  )
+})
+
+const program = Effect.gen(function* () {
+  const config = yield* dbConfig
+  // config: { host: string, port: number, database: string, maxConnections: number }
+})
 ```
 
-## 数据库配置
+### Nested Configurations
 
-### 连接池配置
-```yaml
-spring:
-  datasource:
-    hikari:
-      # 最大连接数
-      maximum-pool-size: 20
-      # 最小空闲连接
-      minimum-idle: 5
-      # 空闲超时 (5分钟)
-      idle-timeout: 300000
-      # 连接超时 (30秒)
-      connection-timeout: 30000
-      # 连接最大生命周期 (30分钟)
-      max-lifetime: 1800000
-      # 连接池名称
-      pool-name: OpenClawHikariPool
-      # 连接测试查询
-      connection-test-query: SELECT 1
+```typescript
+const dbConfig = Config.nested("DB")(
+  Config.all({
+    host: Config.string("HOST"),      // Reads DB_HOST
+    port: Config.number("PORT"),      // Reads DB_PORT
+    name: Config.string("NAME")       // Reads DB_NAME
+  })
+)
 ```
 
-### 多数据源配置
-```yaml
-spring:
-  datasource:
-    primary:
-      url: jdbc:mysql://master:3306/openclaw
-      username: openclaw
-      password: password
-    secondary:
-      url: jdbc:mysql://slave:3306/openclaw
-      username: openclaw
-      password: password
-      read-only: true
+## Config with Schema Validation
+
+Use Effect Schema for complex validation:
+
+```typescript
+import { Config, Schema } from "effect"
+
+const PortSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 65535)
+)
+
+const port = Config.number("PORT").pipe(
+  Config.mapOrFail((n) =>
+    Schema.decodeUnknownEither(PortSchema)(n).pipe(
+      Either.mapLeft((e) => ConfigError.InvalidData([], `Invalid port: ${n}`))
+    )
+  )
+)
 ```
 
-### 数据库优化参数
-```sql
--- MySQL 推荐配置
-SET GLOBAL innodb_buffer_pool_size = 1G;
-SET GLOBAL innodb_log_file_size = 256M;
-SET GLOBAL max_connections = 500;
-SET GLOBAL innodb_flush_log_at_trx_commit = 2;
-SET GLOBAL sync_binlog = 0;
+## Handling Sensitive Values
+
+### Config.redacted
+
+Prevents accidental logging of sensitive values:
+
+```typescript
+const apiKey = Config.redacted("API_KEY")
+// Type: Effect<Redacted<string>>
+
+const program = Effect.gen(function* () {
+  const key = yield* apiKey
+
+  // Safe to log - shows "<redacted>"
+  yield* Effect.log(`Key: ${key}`)
+
+  // Get actual value when needed
+  const actual = Redacted.value(key)
+})
 ```
 
-## Redis 配置
+### Secret Type
 
-### 单机配置
-```yaml
-spring:
-  redis:
-    host: localhost
-    port: 6379
-    password:
-    database: 0
-    timeout: 10000
-    lettuce:
-      pool:
-        max-active: 16
-        max-idle: 8
-        min-idle: 2
-        max-wait: 10000
+```typescript
+const dbPassword = Config.secret("DB_PASSWORD")
+// Type: Effect<Secret.Secret>
+
+const program = Effect.gen(function* () {
+  const password = yield* dbPassword
+  const value = Secret.value(password) // Get actual string
+})
 ```
 
-### 集群配置
-```yaml
-spring:
-  redis:
-    cluster:
-      nodes:
-        - redis-node-1:6379
-        - redis-node-2:6379
-        - redis-node-3:6379
-      max-redirects: 3
-    lettuce:
-      cluster:
-        refresh:
-          adaptive: true
-          period: 30000
+## Config Operators
+
+### Transforming Values
+
+```typescript
+const upperHost = Config.string("HOST").pipe(
+  Config.map((s) => s.toUpperCase())
+)
+
+const port = Config.string("PORT").pipe(
+  Config.mapOrFail((s) => {
+    const n = parseInt(s)
+    return isNaN(n)
+      ? Either.left(ConfigError.InvalidData([], "Not a number"))
+      : Either.right(n)
+  })
+)
 ```
 
-### 哨兵配置
-```yaml
-spring:
-  redis:
-    sentinel:
-      master: mymaster
-      nodes:
-        - sentinel-1:26379
-        - sentinel-2:26379
-        - sentinel-3:26379
-    password: redis_password
+### Fallback Values
+
+```typescript
+const host = Config.string("PRIMARY_HOST").pipe(
+  Config.orElse(() => Config.string("SECONDARY_HOST")),
+  Config.orElse(() => Config.succeed("localhost"))
+)
 ```
 
-## 调度器配置
+## Custom Config Providers
 
-### 基础配置
-```yaml
-openclaw:
-  scheduler:
-    # 调度线程池大小
-    thread-pool-size: 20
+### From Environment (Default)
 
-    # 任务重试配置
-    max-retry-times: 3
-    retry-interval: 30000
-
-    # 任务超时 (1小时)
-    task-timeout: 3600000
-
-    # 任务队列
-    queue-capacity: 10000
-
-    # 调度策略
-    strategy: ROUND_ROBIN  # ROUND_ROBIN, RANDOM, LEAST_LOAD, CONSISTENT_HASH
+```typescript
+const program = Effect.gen(function* () {
+  const host = yield* Config.string("HOST")
+})
 ```
 
-### 高级调度策略
-```yaml
-openclaw:
-  scheduler:
-    # 故障转移
-    failover:
-      enabled: true
-      max-attempts: 3
+### From JSON/Object
 
-    # 负载均衡
-    load-balance:
-      strategy: LEAST_LOAD
-      weight-enabled: true
+```typescript
+import { ConfigProvider, Layer } from "effect"
 
-    # 任务分片
-    sharding:
-      enabled: true
-      default-count: 10
+const config = {
+  host: "localhost",
+  port: "3000",
+  database: {
+    host: "db.example.com",
+    port: "5432"
+  }
+}
+
+const JsonConfigProvider = ConfigProvider.fromJson(config)
+
+const program = Effect.gen(function* () {
+  const host = yield* Config.string("host")
+  const dbHost = yield* Config.nested("database")(Config.string("host"))
+})
+
+const runnable = program.pipe(
+  Effect.provide(Layer.setConfigProvider(JsonConfigProvider))
+)
 ```
 
-## 执行器配置
+### From Map
 
-### Worker 执行器
-```yaml
-openclaw:
-  executor:
-    # 并发任务数
-    max-concurrent-tasks: 100
-
-    # 任务队列大小
-    task-queue-size: 10000
-
-    # 线程池配置
-    core-pool-size: 10
-    max-pool-size: 50
-    keep-alive-time: 60
-
-    # 任务类型执行器
-    handlers:
-      shell:
-        enabled: true
-        timeout: 3600
-      http:
-        enabled: true
-        timeout: 300
-        max-connections: 100
-      python:
-        enabled: true
-        interpreter: /usr/bin/python3
+```typescript
+const MapProvider = ConfigProvider.fromMap(
+  new Map([
+    ["HOST", "localhost"],
+    ["PORT", "3000"]
+  ])
+)
 ```
 
-## 日志配置
+### Combining Providers
 
-### Logback 配置
-```xml
-<!-- /opt/openclaw/conf/logback-spring.xml -->
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <property name="LOG_PATH" value="/opt/openclaw/logs"/>
-    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>
-
-    <!-- 控制台输出 -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
-        </encoder>
-    </appender>
-
-    <!-- 文件输出 -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/openclaw.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/openclaw.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>100MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
-        </encoder>
-    </appender>
-
-    <!-- 错误日志单独记录 -->
-    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/error.log</file>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>ERROR</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/error.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
-        </encoder>
-    </appender>
-
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <appender-ref ref="ERROR_FILE"/>
-    </root>
-
-    <!-- 特定包日志级别 -->
-    <logger name="com.openclaw" level="DEBUG"/>
-    <logger name="org.springframework" level="WARN"/>
-    <logger name="org.hibernate" level="WARN"/>
-</configuration>
+```typescript
+const CombinedProvider = ConfigProvider.orElse(
+  ConfigProvider.fromEnv(),
+  () => ConfigProvider.fromJson(defaultConfig)
+)
 ```
 
-## 安全配置
+## Config in Layers
 
-### 认证配置
-```yaml
-openclaw:
-  security:
-    # JWT 配置
-    jwt:
-      secret: your-secret-key-at-least-256-bits
-      expiration: 86400000  # 24小时
-      refresh-expiration: 604800000  # 7天
+```typescript
+const AppConfigLive = Layer.effect(
+  AppConfig,
+  Effect.gen(function* () {
+    const host = yield* Config.string("HOST")
+    const port = yield* Config.number("PORT")
+    const debug = yield* Config.boolean("DEBUG").pipe(Config.withDefault(false))
 
-    # 密码策略
-    password:
-      min-length: 8
-      require-uppercase: true
-      require-lowercase: true
-      require-digit: true
-      require-special: false
-
-    # 登录限制
-    login:
-      max-attempts: 5
-      lock-duration: 1800000  # 30分钟
+    return { host, port, debug }
+  })
+)
 ```
 
-### HTTPS 配置
-```yaml
-server:
-  ssl:
-    enabled: true
-    key-store: classpath:keystore.p12
-    key-store-password: changeit
-    key-store-type: PKCS12
-    key-alias: openclaw
+## Testing Configuration
+
+### Mock Config Provider
+
+```typescript
+const TestConfigProvider = ConfigProvider.fromMap(
+  new Map([
+    ["HOST", "test-host"],
+    ["PORT", "9999"]
+  ])
+)
+
+const testProgram = program.pipe(
+  Effect.provide(Layer.setConfigProvider(TestConfigProvider))
+)
 ```
 
-### CORS 配置
-```yaml
-openclaw:
-  cors:
-    allowed-origins:
-      - http://localhost:3000
-      - https://openclaw.example.com
-    allowed-methods:
-      - GET
-      - POST
-      - PUT
-      - DELETE
-    allowed-headers: "*"
-    allow-credentials: true
-    max-age: 3600
+### Config.succeed for Hardcoded
+
+```typescript
+const testConfig = Config.succeed({
+  host: "localhost",
+  port: 3000
+})
 ```
 
-## 性能调优
+## Error Handling
 
-### JVM 调优
-```bash
-# 生产环境推荐配置
-JAVA_OPTS="-server \
-  -Xms4g -Xmx4g \
-  -XX:+UseG1GC \
-  -XX:MaxGCPauseMillis=200 \
-  -XX:+ParallelRefProcEnabled \
-  -XX:+UnlockExperimentalVMOptions \
-  -XX:+DisableExplicitGC \
-  -XX:+HeapDumpOnOutOfMemoryError \
-  -XX:HeapDumpPath=/opt/openclaw/logs/heapdump.hprof \
-  -Djava.net.preferIPv4Stack=true"
+Config failures produce `ConfigError`:
+
+```typescript
+const program = Effect.gen(function* () {
+  const host = yield* Config.string("REQUIRED_HOST")
+}).pipe(
+  Effect.catchTag("ConfigError", (error) =>
+    Effect.fail(new StartupError({ cause: error }))
+  )
+)
 ```
 
-### 线程池调优
-```yaml
-openclaw:
-  thread-pool:
-    scheduler:
-      core-size: 20
-      max-size: 50
-      queue-capacity: 1000
-    executor:
-      core-size: 50
-      max-size: 200
-      queue-capacity: 5000
-    async:
-      core-size: 10
-      max-size: 30
-      queue-capacity: 500
+## Complete Example
+
+```typescript
+import { Config, Effect, Layer, Schema } from "effect"
+
+// Define config shape
+const AppConfig = Config.all({
+  server: Config.nested("SERVER")(
+    Config.all({
+      host: Config.string("HOST").pipe(Config.withDefault("0.0.0.0")),
+      port: Config.number("PORT").pipe(Config.withDefault(3000))
+    })
+  ),
+  database: Config.nested("DATABASE")(
+    Config.all({
+      url: Config.redacted("URL"),
+      maxConnections: Config.number("MAX_CONN").pipe(Config.withDefault(10))
+    })
+  ),
+  features: Config.all({
+    debug: Config.boolean("DEBUG").pipe(Config.withDefault(false)),
+    metrics: Config.boolean("METRICS_ENABLED").pipe(Config.withDefault(true))
+  })
+})
+
+// Use in application
+const program = Effect.gen(function* () {
+  const config = yield* AppConfig
+  yield* Effect.log(`Starting server on ${config.server.host}:${config.server.port}`)
+})
 ```
 
-## 配置热更新
+## Best Practices
 
-### 动态配置
-```bash
-# 通过 API 更新配置
-curl -X PUT http://localhost:8080/api/admin/config \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -d '{
-    "key": "scheduler.thread-pool-size",
-    "value": "30"
-  }'
+1. **Use Config.withDefault for optional values** - Avoid runtime errors
+2. **Use Config.redacted for secrets** - Prevents accidental logging
+3. **Use Config.nested for structure** - Organizes related config
+4. **Validate with Schema** - Catch invalid config early
+5. **Test with mock providers** - Deterministic tests
 
-# 查看当前配置
-curl http://localhost:8080/api/admin/config \
-  -H "Authorization: Bearer ${TOKEN}"
+## Additional Resources
 
-# 刷新配置
-curl -X POST http://localhost:8080/api/admin/config/refresh \
-  -H "Authorization: Bearer ${TOKEN}"
-```
+For comprehensive configuration documentation, consult `${CLAUDE_PLUGIN_ROOT}/references/llms-full.txt`.
 
-## 配置验证
-
-### 检查配置
-```bash
-# 验证配置文件语法
-/opt/openclaw/bin/openclaw-server.sh validate
-
-# 测试数据库连接
-/opt/openclaw/bin/openclaw-server.sh test-db
-
-# 测试 Redis 连接
-/opt/openclaw/bin/openclaw-server.sh test-redis
-
-# 查看生效的配置
-curl http://localhost:8080/api/admin/config/effective \
-  -H "Authorization: Bearer ${TOKEN}"
-```
-
-## 常用配置模板
-
-| 场景 | 关键配置 |
-|------|----------|
-| 开发环境 | `LOG_LEVEL=DEBUG`, 小内存配置 |
-| 测试环境 | 中等资源配置，启用详细日志 |
-| 生产环境 | 高可用配置，优化性能参数 |
-| 高并发 | 增大线程池，连接池，队列大小 |
-| 低延迟 | 减小心跳间隔，快速故障检测 |
+Search for these sections:
+- "Configuration" for full API reference
+- "ConfigProvider" for custom providers
+- "Handling Sensitive Values" for security

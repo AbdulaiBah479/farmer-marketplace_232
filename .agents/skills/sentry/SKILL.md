@@ -1,145 +1,123 @@
 ---
-name: sentry
-description: Monitor application errors, performance, and issues on Sentry
-category: analytics
+name: "sentry"
+description: "Use when the user asks to inspect Sentry issues or events, summarize recent production errors, or pull basic Sentry health data via the Sentry API; perform read-only queries with the bundled script and require `SENTRY_AUTH_TOKEN`."
 ---
 
-# Sentry Skill
 
-## Overview
-Enables Claude to access Sentry to view and triage application errors, monitor performance issues, check release health, and analyze error trends across projects.
+# Sentry (Read-only Observability)
 
-## Quick Install
+## Quick start
+
+- If not already authenticated, ask the user to provide a valid `SENTRY_AUTH_TOKEN` (read-only scopes such as `project:read`, `event:read`) or to log in and create one before running commands.
+- Set `SENTRY_AUTH_TOKEN` as an env var.
+- Optional defaults: `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_BASE_URL`.
+- Defaults: org/project `{your-org}`/`{your-project}`, time range `24h`, environment `prod`, limit 20 (max 50).
+- Always call the Sentry API (no heuristics, no caching).
+
+If the token is missing, give the user these steps:
+1. Create a Sentry auth token: https://sentry.io/settings/account/api/auth-tokens/
+2. Create a token with read-only scopes such as `project:read`, `event:read`, and `org:read`.
+3. Set `SENTRY_AUTH_TOKEN` as an environment variable in their system.
+4. Offer to guide them through setting the environment variable for their OS/shell if needed.
+- Never ask the user to paste the full token in chat. Ask them to set it locally and confirm when ready.
+
+## Core tasks (use bundled script)
+
+Use `scripts/sentry_api.py` for deterministic API calls. It handles pagination and retries once on transient errors.
+
+## Skill path (set once)
 
 ```bash
-curl -sSL https://canifi.com/skills/sentry/install.sh | bash
+# Set to the directory containing this SKILL.md
+export SENTRY_API="<path-to-skill>/scripts/sentry_api.py"
 ```
 
-Or manually:
-```bash
-cp -r skills/sentry ~/.canifi/skills/
-```
+Replace `<path-to-skill>` with the actual skill installation directory (e.g. `.skills/sentry` or `~/.letta/skills/sentry`).
 
-## Setup
-
-Configure via [canifi-env](https://canifi.com/setup/scripts):
+### 1) List issues (ordered by most recent)
 
 ```bash
-# First, ensure canifi-env is installed:
-# curl -sSL https://canifi.com/install.sh | bash
-
-canifi-env set SENTRY_EMAIL "your-email@example.com"
+python3 "$SENTRY_API" \
+  list-issues \
+  --org {your-org} \
+  --project {your-project} \
+  --environment prod \
+  --time-range 24h \
+  --limit 20 \
+  --query "is:unresolved"
 ```
 
-## Privacy & Authentication
+### 2) Resolve an issue short ID to issue ID
 
-**Your credentials, your choice.** Canifi LifeOS respects your privacy.
-
-### Option 1: Manual Browser Login (Recommended)
-If you prefer not to share credentials with Claude Code:
-1. Complete the [Browser Automation Setup](/setup/automation) using CDP mode
-2. Login to the service manually in the Playwright-controlled Chrome window
-3. Claude will use your authenticated session without ever seeing your password
-
-### Option 2: Environment Variables
-If you're comfortable sharing credentials, you can store them locally:
 ```bash
-canifi-env set SERVICE_EMAIL "your-email"
-canifi-env set SERVICE_PASSWORD "your-password"
+python3 "$SENTRY_API" \
+  list-issues \
+  --org {your-org} \
+  --project {your-project} \
+  --query "ABC-123" \
+  --limit 1
 ```
 
-**Note**: Credentials stored in canifi-env are only accessible locally on your machine and are never transmitted.
+Use the returned `id` for issue detail or events.
 
-## Capabilities
-- View error issues and trends
-- Check performance metrics
-- Monitor release health
-- View user impact analysis
-- Check alert status
-- Analyze stack traces
+### 3) Issue detail
 
-## Usage Examples
-
-### Example 1: Check Issues
-```
-User: "What errors are happening in production?"
-Claude: I'll check your Sentry dashboard.
-- Opens sentry.io via Playwright MCP
-- Logs into account
-- my-app Issues (last 24h):
-  - TypeError: Cannot read 'id': 234 events, 45 users
-  - NetworkError: fetch failed: 89 events, 23 users
-  - ReferenceError: undefined: 12 events, 5 users
-- Total: 335 events
-- Error rate: 0.3%
-- Most affected: /api/users endpoint
+```bash
+python3 "$SENTRY_API" \
+  issue-detail \
+  1234567890
 ```
 
-### Example 2: Check Performance
-```
-User: "How's my app performance?"
-Claude: I'll check Performance.
-- Views Performance section
-- Web Vitals:
-  - LCP: 1.8s (Good)
-  - FID: 45ms (Good)
-  - CLS: 0.05 (Good)
-- Slowest transactions:
-  - /api/reports: 2.3s avg
-  - /api/search: 1.8s avg
-- Throughput: 45k req/hr
-- Apdex: 0.94
+### 4) Issue events
+
+```bash
+python3 "$SENTRY_API" \
+  issue-events \
+  1234567890 \
+  --limit 20
 ```
 
-### Example 3: Check Release Health
-```
-User: "How's the latest release doing?"
-Claude: I'll check release health.
-- Views Releases section
-- v2.4.0 (deployed 6h ago):
-  - Crash-free rate: 99.2%
-  - Sessions: 12,456
-  - Users affected: 98
-  - New issues: 3
-- Compared to v2.3.9:
-  - Errors: +2% (slight regression)
-  - Performance: -5% (improved)
+### 5) Event detail (no stack traces by default)
+
+```bash
+python3 "$SENTRY_API" \
+  event-detail \
+  --org {your-org} \
+  --project {your-project} \
+  abcdef1234567890
 ```
 
-## Authentication Flow
-1. Navigate to sentry.io via Playwright MCP
-2. Enter email or use SSO/OAuth
-3. Enter password if email login
-4. Handle 2FA if enabled
-5. Select organization if multiple
-6. Maintain session for dashboard access
+## API requirements
 
-## Error Handling
-- Login Failed: Retry credentials
-- 2FA Required: Complete verification
-- Project Access: Check permissions
-- Session Expired: Re-authenticate
-- Rate Limited: Wait and retry
-- Quota Exceeded: Check plan
+Always use these endpoints (GET only):
 
-## Self-Improvement Instructions
-After each interaction:
-- Track error patterns
-- Note performance trends
-- Log release metrics
-- Document UI changes
+- List issues: `/api/0/projects/{org_slug}/{project_slug}/issues/`
+- Issue detail: `/api/0/issues/{issue_id}/`
+- Events for issue: `/api/0/issues/{issue_id}/events/`
+- Event detail: `/api/0/projects/{org_slug}/{project_slug}/events/{event_id}/`
 
-Suggest updates when:
-- Sentry updates dashboard
-- New features added
-- Metrics expand
-- Integrations added
+## Inputs and defaults
 
-## Notes
-- Error monitoring standard
-- Performance tracking
-- Release tracking
-- Source map support
-- Issue assignment
-- Alert integrations
-- Self-hosted option
+- `org_slug`, `project_slug`: default to `{your-org}`/`{your-project}` (avoid non-prod orgs).
+- `time_range`: default `24h` (pass as `statsPeriod`).
+- `environment`: default `prod`.
+- `limit`: default 20, max 50 (paginate until limit reached).
+- `search_query`: optional `query` parameter.
+- `issue_short_id`: resolve via list-issues query first.
+
+## Output formatting rules
+
+- Issue list: show title, short_id, status, first_seen, last_seen, count, environments, top_tags; order by most recent.
+- Event detail: include culprit, timestamp, environment, release, url.
+- If no results, state explicitly.
+- Redact PII in output (emails, IPs). Do not print raw stack traces.
+- Never echo auth tokens.
+
+## Golden test inputs
+
+- Org: `{your-org}`
+- Project: `{your-project}`
+- Issue short ID: `{ABC-123}`
+
+Example prompt: “List the top 10 open issues for prod in the last 24h.”
+Expected: ordered list with titles, short IDs, counts, last seen.

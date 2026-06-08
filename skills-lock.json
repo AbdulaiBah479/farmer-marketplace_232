@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "1password": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/1password/SKILL.md",
+      "computedHash": "10f0db31212348417f765efcf417987c9452f7a435a5dc3869f47c6829e296e1"
+    },
     "3d-web-experience": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -90,6 +96,12 @@
       "sourceType": "github",
       "skillPath": "skills/infinite-gratitude/SKILL.md",
       "computedHash": "9c52a05c87c30d19ce5ff9c9495b336f91e8417b0c36b44a35f29cc7fc0cdc63"
+    },
+    "Letta Conversations API": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/conversations/SKILL.md",
+      "computedHash": "5e59ccd03f75f25c24292011e9c4ec327d7ac35c5806d31a5e15192b3df2ce41"
     },
     "Linux Privilege Escalation": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -331,6 +343,12 @@
       "skillPath": "SKILL.md",
       "computedHash": "88a813404ed24cd96a87610b9716ff2f3bd399ade929a62948767016ef3881d5"
     },
+    "agent-slack": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/slack/SKILL.md",
+      "computedHash": "5f37b971819394761d08d765da5fceac2b918b02ad90c01a07fa6e93bcc184ae"
+    },
     "agent-tool-builder": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -408,6 +426,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/ai-model-privacy-audit/SKILL.md",
       "computedHash": "08938ef6e9054c92004dd5df1e1363ae02c7fd9768c4c9e5d26c5ef4b4245d85"
+    },
+    "ai-news": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/ai-news/SKILL.md",
+      "computedHash": "ede73f7142765df74c46c802183af9bb0e3efb097bc599dc02cb1c046ac98c97"
     },
     "ai-pricing": {
       "source": "chadboyda/agent-gtm-skills",
@@ -649,6 +673,12 @@
       "skillPath": "skills/privacy/apec-cbpr-cert/SKILL.md",
       "computedHash": "3fd2e97098eb580ad381fa9dbc8d3885d297c9e5dd1a331c6a0e1aacf1ed828d"
     },
+    "api-and-namespace-design": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/api-and-namespace-design/SKILL.md",
+      "computedHash": "c9889f7cffb175c8c9adead53a8b8763271962ee759b0a62e3338b143845f92f"
+    },
     "api-design-principles": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -774,6 +804,18 @@
       "sourceType": "github",
       "skillPath": "skills/artifacts-builder/SKILL.md",
       "computedHash": "0cb7340c4e6baf7c4e2fc7f7a7a77b4d3432e3743be09e16b3537198266b3a11"
+    },
+    "assignation-refere-communication-associe-selim-brihi": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/assignation-refere-communication-associe-selim-brihi/SKILL.md",
+      "computedHash": "8299656ca872bb74137609ceed31e21a598f16589384b1a7487cf24325051993"
+    },
+    "assignation-refere-recouvrement-creance-selim-brihi": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/assignation-refere-recouvrement-creance-selim-brihi/SKILL.md",
+      "computedHash": "2dd67502c09bd24fb6e1962af5e0cb4ee2499cdc77ccdb14dc445b119ced08ee"
     },
     "astropy": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -1021,6 +1063,12 @@
       "skillPath": "skills/backend-development-feature-development/SKILL.md",
       "computedHash": "f08e4e56dbdf4ad6d419c889e77c30c4f6428e2dda15a17277840f30ee04fb33"
     },
+    "backend-module-structure": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/backend-module-structure/SKILL.md",
+      "computedHash": "17487027ba2d7bc607a85372f682635592a07d9d585aed3ffd2eaf08c560f585"
+    },
     "backend-patterns": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -1152,6 +1200,24 @@
       "sourceType": "github",
       "skillPath": "skills/billing-automation/SKILL.md",
       "computedHash": "87192ece6f1ecd4ab00b0eb58c9483027506f18a08166e1a370f7599490b7425"
+    },
+    "binance": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance/binance/SKILL.md",
+      "computedHash": "645f597edf23cbe8a5f014e46c35e98e6a00a464cf39b70e60088b406123d72c"
+    },
+    "binance-agentic-wallet": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/binance-agentic-wallet/SKILL.md",
+      "computedHash": "476956fe5bae03202b69b5966b4f717ef5a6d1f8e9b5218a2274ea21ab3cb843"
+    },
+    "binance-tokenized-securities-info": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/binance-tokenized-securities-info/SKILL.md",
+      "computedHash": "a23dc838e5c8aa7841a89cf3531404d98433bf7b57888d7c2238e0eb30d5e743"
     },
     "binary-analysis-patterns": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -1476,6 +1542,12 @@
       "sourceType": "github",
       "skillPath": "skills/scientific-writing/cancer-research-figure-guide/SKILL.md",
       "computedHash": "7a62483dc0443be447e43e372438a7737fde6df976f7c1f94ffba0eaa7c61bda"
+    },
+    "canned-responses-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/canned-responses-anthropic/SKILL.md",
+      "computedHash": "aee7f62e25e929078ab1bbda442d09c28ba16438d8fecebadd8cf9953fad01f4"
     },
     "canvas-design": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -1897,6 +1969,12 @@
       "skillPath": "skills/systems-biology-multiomics/cobrapy-metabolic-modeling/SKILL.md",
       "computedHash": "4af2a41768525945766c3a838cc04ba1eddae49848eefefb193f186e912e7ce8"
     },
+    "code-conventions": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/code-conventions/SKILL.md",
+      "computedHash": "9f49ab253fc36b2d667ec44f8de9aea1615824370a486d39ffe62bf527a2a194"
+    },
     "code-documentation-code-explain": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -2017,6 +2095,12 @@
       "skillPath": "skills/commit/SKILL.md",
       "computedHash": "918a49d28ba667c0fe5fe08ab1858ab935a6d5009c717e156598ba25a9d1b7fa"
     },
+    "compaction-prompts": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/compaction-prompts/SKILL.md",
+      "computedHash": "e856cc0efa3c3a7c31cf97d9577031d42617fa83b6aea0b6684f86a79817383d"
+    },
     "comparing-pia-methodologies": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
       "sourceType": "github",
@@ -2040,6 +2124,12 @@
       "sourceType": "github",
       "skillPath": "skills/competitor-alternatives/SKILL.md",
       "computedHash": "f29cc163c4ac65d4b412529d82459ea5128278043aacd4881e5339ddbe902a99"
+    },
+    "compliance-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/compliance-anthropic/SKILL.md",
+      "computedHash": "b28078264082139c620df5e16d7e7e4984d84eb44c18b94ba3739f25b4c23c3f"
     },
     "compose": {
       "source": "chaterm/terminal-skills",
@@ -2317,6 +2407,12 @@
       "skillPath": "skills/privacy/continuous-compliance/SKILL.md",
       "computedHash": "b85dac1c6771b05b9670548f022473b3d9383c6281b3b489eebbc98f3a771a26"
     },
+    "contract-review-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/contract-review-anthropic/SKILL.md",
+      "computedHash": "d833666d9c060827aae9a90e6731874b934a5b69f3eb7d7ef60076dcf010b4c6"
+    },
     "controller-ropa-creation": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
       "sourceType": "github",
@@ -2352,6 +2448,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/cookie-lifetime-audit/SKILL.md",
       "computedHash": "e7bec801748dc0deaa96f7a67272593b6e91527ca6fd2826297dea7bf94d3260"
+    },
+    "cookie-policy-malik-taiar": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/politique-cookies-malik-taiar/SKILL.md",
+      "computedHash": "59eb33f560bb2fa2b0034f0cbc1e67c782ce6452dd5c1330c41e19ad1ce67b3b"
     },
     "cookieless-alternatives": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
@@ -2455,6 +2557,12 @@
       "skillPath": "skills/omnibus/creating-experiments/SKILL.md",
       "computedHash": "ef49de2d4105a94ba9f8d391a6a9e0d7615e271295daf39b8aa5447ad4dc7e8f"
     },
+    "creating-letta-code-channels": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/creating-letta-code-channels/SKILL.md",
+      "computedHash": "5f87457af6751baeead2b8038514996c507fefcc2a04f6a1448e0dc9616cea19"
+    },
     "crewai": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -2496,6 +2604,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/cross-jurisdiction-cookies/SKILL.md",
       "computedHash": "50f37689287386b779654d1169f792c6cb8ce6acaad39240f2348d9371634b98"
+    },
+    "crypto-market-rank": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/crypto-market-rank/SKILL.md",
+      "computedHash": "23384748997bcebf243f23aef368ba391749cd5bcdffb6fa760a5c8db82e12f7"
     },
     "csharp-pro": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -2688,6 +2802,12 @@
       "sourceType": "github",
       "skillPath": "skills/datacommons-client/SKILL.md",
       "computedHash": "c2361a9815ae8ca6247611249d4137916b70ba4976c3b9e783fa633825dbb66d"
+    },
+    "datadog": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/datadog/SKILL.md",
+      "computedHash": "6371ce0c29284d36f1be761767c6ef6564481981e87868fb568bf1142ee47d89"
     },
     "datamol": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -2899,6 +3019,12 @@
       "skillPath": "skills/privacy/designing-privacy-preserving-analytics/SKILL.md",
       "computedHash": "e41864933c306e99ade9c2c9a76c53c2421770585a496e72d2ead99cb18ae6f5"
     },
+    "dev-workflow": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/dev-workflow/SKILL.md",
+      "computedHash": "d3150d1f1c160cedb0086765e9aae3bc9d929ada0f16a83d87829c0a215ac9da"
+    },
     "developer-growth-analysis": {
       "source": "CommandCodeAI/agent-skills",
       "sourceType": "github",
@@ -2971,6 +3097,12 @@
       "skillPath": "backup/disaster-recovery/SKILL.md",
       "computedHash": "6ed9d96a7f56f2f119156221ed12e2995cb6639aeb8a8bc044f698b749946dcf"
     },
+    "discord": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/discord/SKILL.md",
+      "computedHash": "329c031f43c018b8236441059adb6a5e454161b924d5549238cb77116b6c9d92"
+    },
     "discord-bot-architect": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -3019,6 +3151,12 @@
       "skillPath": "network/dns/SKILL.md",
       "computedHash": "d8c191359039baaa84f7960e306739c6ced893e5b5c1c04bbd4a5134680b94f0"
     },
+    "doc": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/doc/SKILL.md",
+      "computedHash": "7f8bfe9d1cbd6cb9a3617556387f2ac48911058a26d89345673c4565bb11717f"
+    },
     "doc-coauthoring": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -3066,6 +3204,30 @@
       "sourceType": "github",
       "skillPath": "skills/document-skills/docx/SKILL.md",
       "computedHash": "f2368ecdc9b636afc53ad0c6d07bff48cc0a68b974329c1de3830bbc3932ea7a"
+    },
+    "docx-processing-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docx-processing-anthropic/SKILL.md",
+      "computedHash": "a80016425773ef05d77d65f65862b55e06beb9baa342aa590416b73c988b4091"
+    },
+    "docx-processing-lawvable": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docx-processing-lawvable/SKILL.md",
+      "computedHash": "6864dafb577ccb2b9254ac02197c25d682b823dfd82b48fc8846725d97ff8e30"
+    },
+    "docx-processing-openai": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docx-processing-openai/SKILL.md",
+      "computedHash": "67597d5ab9a97971dbdf0080aec3401022088b464a4a2c020d23c27d16fffee5"
+    },
+    "docx-processing-superdoc": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docx-processing-superdoc/SKILL.md",
+      "computedHash": "7f7a5d5aaf63f97c8edf14f2493748643af786d55a0d02cf4352362745799517"
     },
     "domain-name-brainstormer": {
       "source": "CommandCodeAI/agent-skills",
@@ -3150,6 +3312,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/dpia-risk-scoring/SKILL.md",
       "computedHash": "f4614f6eccce7bd6645bdcc513671f79fa403bb19cb68f5da9f6a4fdaeea926e"
+    },
+    "dpia-sentinel-oliver-schmidt-prietz": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/dpia-sentinel-oliver-schmidt-prietz/SKILL.md",
+      "computedHash": "6ca3fd1eb48da933813683209ec5420bd8cd26abc25f8c054537989de3747c8c"
     },
     "dpia-stakeholder-consult": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
@@ -3643,6 +3811,18 @@
       "skillPath": "skills/ffuf-claude-skill/SKILL.md",
       "computedHash": "413965f0c30564f7ce08090299f486a1e1f473b24159ebc671cd4d2a3c3ce010"
     },
+    "fiat": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance/fiat/SKILL.md",
+      "computedHash": "75267c94e99203536837d229799c8041f7da4df27536469220d8c5cac7a137a6"
+    },
+    "figma": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/figma/SKILL.md",
+      "computedHash": "1eac866ca45228bfe6c130025a84f2ac31bbd1f1c5d32d3625d160ad8e67bdb2"
+    },
     "file-operations": {
       "source": "chaterm/terminal-skills",
       "sourceType": "github",
@@ -3835,6 +4015,12 @@
       "skillPath": "skills/free-tool-strategy/SKILL.md",
       "computedHash": "371e1b44d0060bd1780246dd3e8d18811a8d6fcb23d48aa8437017a7bcba614a"
     },
+    "frontend-conventions": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/frontend-conventions/SKILL.md",
+      "computedHash": "4ae7269b0fdfe0d53a5cbf429b5181b35b1af95076b5e8d196ccd303d7217bf7"
+    },
     "frontend-design": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -3877,6 +4063,12 @@
       "skillPath": "skills/frontend-security-coder/SKILL.md",
       "computedHash": "eadb8b5dcfaf20a2477c454702cf15f37b486dfef77ec3a96708ef9f18bdba01"
     },
+    "frontend-skill": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/frontend-skill/SKILL.md",
+      "computedHash": "b19d91430445d184bcc90328a0b1a49d68dbc61a899fe28555bdab8a681ee042"
+    },
     "frontend-slides": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -3918,6 +4110,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/gdpr-accountability/SKILL.md",
       "computedHash": "ff8f9cef595f66595897081061c6fc21581f73c421d49701364a1fa6dd18063a"
+    },
+    "gdpr-breach-sentinel-oliver-schmidt-prietz": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gdpr-breach-sentinel-oliver-schmidt-prietz/SKILL.md",
+      "computedHash": "a9424e4c378df9e4c83a0b2a95d28454a4c0efcbdc8f511064b918d0a44131de"
     },
     "gdpr-certification": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
@@ -4008,6 +4206,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/gdpr-prior-consultation/SKILL.md",
       "computedHash": "e1fb46570cd22824b98375ec5b898e46289bffa243c2e77af21e20abc36480eb"
+    },
+    "gdpr-privacy-notice-eu-oliver-schmidt-prietz": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gdpr-privacy-notice-eu-oliver-schmidt-prietz/SKILL.md",
+      "computedHash": "7c0f118f6e5c2a54753bd77cbe9659d525f7dd0fcec8928bd7dca092a44b20cd"
     },
     "gdpr-remediation-roadmap": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
@@ -4195,6 +4399,12 @@
       "skillPath": "skills/git-pushing/SKILL.md",
       "computedHash": "faeb4ef2e69ef945940215b5dfe73b91ba4fc7d12bdc712efb69f1d9b5739fd6"
     },
+    "github": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/github/SKILL.md",
+      "computedHash": "70ccebcc94a87963ce4559190bf7947bb574a5184e50923016a821c7bb1c2d43"
+    },
     "github-actions-templates": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -4260,6 +4470,12 @@
       "sourceType": "github",
       "skillPath": "skills/godot-gdscript-patterns/SKILL.md",
       "computedHash": "42e4170a1d3e98a957d4e5b220fb5799846ecc8fd3826c8829222442cb3f84d1"
+    },
+    "gog": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/gog/SKILL.md",
+      "computedHash": "ab8ba7f89eaa5cc94a51c3801b47de07b7d5bf5e1bb9f668f1d902afbca65c5b"
     },
     "golang-pro": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -4699,6 +4915,18 @@
       "skillPath": "skills/privacy/implementing-secure-multi-party-computation/SKILL.md",
       "computedHash": "2ba20a8d00e19a7540117555791fe445067134db0974e2f0f6b08842f5cb9289"
     },
+    "importing-chatgpt-memory": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/importing-chatgpt-memory/SKILL.md",
+      "computedHash": "6a26508c7a4f7e16f6bc7f3ce6cb4f51afb806aada4259b4f1fe164c788dc919"
+    },
+    "imsg": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/imsg/SKILL.md",
+      "computedHash": "4f1f8b5a6eb45522db7deaccfcdacbd60bfad5c6f7131aa86a9c48ef3a0d6cc9"
+    },
     "inbox-exploration": {
       "source": "posthog/skills",
       "sourceType": "github",
@@ -5017,6 +5245,12 @@
       "skillPath": "skills/julia-pro/SKILL.md",
       "computedHash": "be2cfb0c1337e9b3e8df0cd153302cbd47f286a1d5c77e8498c886f363f8ea7b"
     },
+    "jupyter-notebook": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/jupyter-notebook/SKILL.md",
+      "computedHash": "5408272ac66581a050a0676f50c61b721fdb1f4e5e69c2a93b2f84e8209809fb"
+    },
     "k8s-manifest-generator": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -5215,6 +5449,24 @@
       "skillPath": "skills/legal-advisor/SKILL.md",
       "computedHash": "34f702fd50f7004b116677bab1d14c9459955bd90a8576ce7945ad33a2c5b3ee"
     },
+    "legal-risk-assessment-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/legal-risk-assessment-anthropic/SKILL.md",
+      "computedHash": "3940b04b694fc3c8097a1811f3033912337a7763c8da99dd333037299d365dbb"
+    },
+    "legal-risk-assessment-zacharie-laik": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/legal-risk-assessment-zacharie-laik/SKILL.md",
+      "computedHash": "d5ee54752cda60df104b9a5439c1ec0770e3f009bb9f6d04fccaf964a1ceec43"
+    },
+    "legal-simulation-patrick-munro": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/legal-simulation-patrick-munro/SKILL.md",
+      "computedHash": "2c789e0b09764fe25297fe0fdb5e5916db9ca00726a1b43d0c5d053a19c626f9"
+    },
     "legit-interest-vs-consent": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
       "sourceType": "github",
@@ -5226,6 +5478,36 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/legitimate-interest-lia/SKILL.md",
       "computedHash": "40ba0f0d6eddd231be809ebc2eb808e6948f993f43c54d6ab68da6c84b99ce9d"
+    },
+    "letta-api-client": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/letta-api-client/SKILL.md",
+      "computedHash": "e9c5ffc2340ca40e91d1388b3fbbb9654bf9a19657eade4451f267b76bf67cc5"
+    },
+    "letta-configuration": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/letta-configuration/SKILL.md",
+      "computedHash": "5278a35d5a11e7ce2edf1bf68cc03f23ad4ede017bea786e982577599e16847a"
+    },
+    "letta-development-guide": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/agent-development/SKILL.md",
+      "computedHash": "d8846cc1534ece8b8bda4bc53e38e1327bd0d346b4d67a027fb950bddeb2cb14"
+    },
+    "letta-filesystem-to-memfs": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/letta-filesystem-to-memfs/SKILL.md",
+      "computedHash": "e87d8ed65728baa6a2f48e01b09612b9827d29e52bc63ef212c77a1b8ead3432"
+    },
+    "letta-fleet-management": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/fleet-management/SKILL.md",
+      "computedHash": "94b02a7072dd8a6099315da5445e7dfbe4dd45639abeac8d664e936ff185ec6e"
     },
     "lgpd": {
       "source": "Sushegaad/Claude-Skills-Governance-Risk-and-Compliance",
@@ -5262,6 +5544,12 @@
       "sourceType": "github",
       "skillPath": "skills/linear-claude-skill/SKILL.md",
       "computedHash": "95e82c201f0b47849cde3d254fac7ebbbd4598c27eea52d2d75b2a952a686994"
+    },
+    "linear-cli": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/linear/SKILL.md",
+      "computedHash": "1e0424f1f5d5ebe5886719fe25bf24066b83def96437169da4fef9cd3d913948"
     },
     "linkerd-patterns": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -5564,10 +5852,10 @@
       "computedHash": "86b37411992923ab60011d9d293ff97b9422c7b5e5c302c8966457db0f0fccfe"
     },
     "mcp-builder": {
-      "source": "agent-skills-hub/agent-skills-hub",
+      "source": "letta-ai/skills",
       "sourceType": "github",
-      "skillPath": "skills/mcp-builder/SKILL.md",
-      "computedHash": "fc68038c900eb801f73ff96130c9f9dba533cc94212ed8435833242f196dedcf"
+      "skillPath": "tools/mcp-builder/SKILL.md",
+      "computedHash": "796e369a513fe27a0eb5461611dec6bf943da7992194ddec1291f4fa34fb28cb"
     },
     "mdanalysis-trajectory": {
       "source": "jaechang-hits/SciAgent-Skills",
@@ -5587,6 +5875,18 @@
       "skillPath": "skills/medchem/SKILL.md",
       "computedHash": "50c77644350b008e1ec601fe483f0cea2ce1190be2a5ae20c757c8d1adaddbd9"
     },
+    "mediation-dispute-analysis": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mediation-dispute-analysis-jinzhe-tan/SKILL.md",
+      "computedHash": "21a07bc43dc3c84dfc8ac40c216a07b9d6d7fd7a8bd692bbe05592b2981b2015"
+    },
+    "meeting-briefing-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/meeting-briefing-anthropic/SKILL.md",
+      "computedHash": "744132b7f4b9afda60eac7e5a2dae073aebab41fb005aedbb4abd362dc4a8faa"
+    },
     "meeting-insights-analyzer": {
       "source": "CommandCodeAI/agent-skills",
       "sourceType": "github",
@@ -5605,11 +5905,23 @@
       "skillPath": "meeting-processor/SKILL.md",
       "computedHash": "dd39d3a6f846fe6c32f203b6588829a6f161cd4a522fa28a5cd061f2074267ae"
     },
+    "meme-rush": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/meme-rush/SKILL.md",
+      "computedHash": "273aa7e5d2b26f77723f2102de13eea87fda9b19a37cfa5ea4d51db43d45093b"
+    },
     "meme-scout": {
       "source": "kukapay/crypto-skills",
       "sourceType": "github",
       "skillPath": "skills/meme-scout/SKILL.md",
       "computedHash": "078800087c0d8a3bae5dbb4589d94201ec91998390e30e4228bfa4071f3d648b"
+    },
+    "memfs-search": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/memfs-search/SKILL.md",
+      "computedHash": "37c83829414e0d1d761e3cf90deb6cede52e6e78ffc73416948d9f788c2bca47"
     },
     "memory-forensics": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -5785,6 +6097,12 @@
       "skillPath": "skills/moodle-external-api-development/SKILL.md",
       "computedHash": "5a0376196854a83f4cfe3afd6c4ae72b08aac7ebfa7036337ddd3d1c9870b8f6"
     },
+    "morph-warpgrep": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/morph-warpgrep/SKILL.md",
+      "computedHash": "ce5ae391b9e069f052b3f8e4cb70cf905f26f9b6dda51ba3ea498581de7d703c"
+    },
     "mtls-configuration": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -5911,11 +6229,29 @@
       "skillPath": "skills/scientific-writing/nature-figure-guide/SKILL.md",
       "computedHash": "9064e3ef1ce6d6c77fb4fb444695e8ed2cbb3a36962740fb2c0fb3ac6a5d7e59"
     },
+    "navigating-chatgpt-history": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "letta/navigating-chatgpt-history/SKILL.md",
+      "computedHash": "514641209268be6a24b3296128eef964d077079a64b20c10a80973cd3acf385a"
+    },
     "ncbi-datasets": {
       "source": "ClawBio/ClawBio",
       "sourceType": "github",
       "skillPath": "skills/ncbi-datasets/SKILL.md",
       "computedHash": "3b6ccc4a109bbfef8aaa57ff3dea49019de8ad302d3c1994901b7e4db94d2a8d"
+    },
+    "nda-review-jamie-tso": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nda-review-jamie-tso/SKILL.md",
+      "computedHash": "69ed0e03a458df37b8ed1af9dbb390563531cab1afbe2d178b330069f084c3b5"
+    },
+    "nda-triage-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nda-triage-anthropic/SKILL.md",
+      "computedHash": "05ca3ec9ab6eacb25fbc584eae1f10de17979222ffd373bc95660861a1e573ae"
     },
     "nejm-figure-guide": {
       "source": "jaechang-hits/SciAgent-Skills",
@@ -6049,6 +6385,12 @@
       "skillPath": "skills/privacy/nigeria-ndpr/SKILL.md",
       "computedHash": "d93bae54c4c71d433e6f80184dd47f7e786b831590cf41bc8b886733c86a1caa"
     },
+    "nil-contract-analysis-samir-patel": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nil-contract-analysis-samir-patel/SKILL.md",
+      "computedHash": "e4e8f3689018a2b80ccc1846eec31433728c7f3d80f5e65a8261363fa517ce8e"
+    },
     "nis2": {
       "source": "Sushegaad/Claude-Skills-Governance-Risk-and-Compliance",
       "sourceType": "github",
@@ -6139,6 +6481,18 @@
       "skillPath": "skills/notebooklm/SKILL.md",
       "computedHash": "2902e68071784c81597644309206b6b127e49b62a145cc9cbbbb73bfaeeeb86c"
     },
+    "notification-licenciement-selim-brihi": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/notification-licenciement-selim-brihi/SKILL.md",
+      "computedHash": "6fc96f70939b5f4a1436210ce11da3a5271e0f8209bf27e624b8e248a8d9f56c"
+    },
+    "notion": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/notion/SKILL.md",
+      "computedHash": "bc05578bc4b007624debf9b741342e502e7bfa6abc8c1ea2694964fefefa55b6"
+    },
     "notion-template-business": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -6193,6 +6547,12 @@
       "skillPath": "skills/observe-whatsapp/SKILL.md",
       "computedHash": "34499ff509a3a69a52a31c94d819a79f89b79426283f8be588f97efb66030c09"
     },
+    "obsidian": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/obsidian/SKILL.md",
+      "computedHash": "83331b512e37f0c9f0c28f3ef3b4a44e9cbb9c0bc0457ac75c058fed7b0d33b1"
+    },
     "obsidian-clipper-template-creator": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -6234,6 +6594,12 @@
       "sourceType": "github",
       "skillPath": "skills/onboarding-cro/SKILL.md",
       "computedHash": "ac591b22280ebc4bf893eddb4655355337b15cf0d38c8940c6449faf55b78602"
+    },
+    "onchain-pay-open-api": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance/onchain-pay/SKILL.md",
+      "computedHash": "81216938a2551cfec7ce9665c7b609d31715f6e2d56c40587a1eb5a36b4ca5d3"
     },
     "open-notebook": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -6289,6 +6655,18 @@
       "skillPath": "skills/privacy/oregon-ocpa-compliance/SKILL.md",
       "computedHash": "636e84c775967e5e64f2a5c13515be382d61c7a099d2b3015566ed196a669e01"
     },
+    "outlook-emails-lawvable": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/outlook-emails-lawvable/SKILL.md",
+      "computedHash": "e2f7cbb4b73b1a8fb564a20d4a8a1004b596853546884350d4fcae5b9f0eb1fb"
+    },
+    "p2p": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance/p2p/SKILL.md",
+      "computedHash": "9eec3205a93629aeb57023e776a7063864167fcd844a9c064e3dd00ebf59b50a"
+    },
     "page-cro": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -6337,6 +6715,12 @@
       "skillPath": "skills/pathway-enricher/SKILL.md",
       "computedHash": "194153162257579863cc6ea39bf72c6e05dd95f421f74cae3f353c41a59bca65"
     },
+    "payment-assistant": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance/payment/SKILL.md",
+      "computedHash": "8863997374d2b1987a1cce47a8a66a229470a74d03d7e37d8ac2f6e61f175471"
+    },
     "payment-integration": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -6368,16 +6752,28 @@
       "computedHash": "1b94f985c49f1497555df42653a1be10ec850c8af4da205d7d417cdd17a7576a"
     },
     "pdf": {
-      "source": "agent-skills-hub/agent-skills-hub",
+      "source": "letta-ai/skills",
       "sourceType": "github",
-      "skillPath": "skills/document-skills/pdf/SKILL.md",
-      "computedHash": "c46f21940859c9b7513f448fb5478481cb3f73431cb55a1d0e783afd0d05f953"
+      "skillPath": "tools/pdf/SKILL.md",
+      "computedHash": "9ae05c94f31c08b24285430037831757d99af2d0c8aa10ab533325a53e0b18d2"
     },
     "pdf-generation": {
       "source": "glebis/claude-skills",
       "sourceType": "github",
       "skillPath": "pdf-generation/SKILL.md",
       "computedHash": "8fc5003130870de80d707e0f2d01e3a10153e6a25c95d441e0f80f6c022c4ae7"
+    },
+    "pdf-processing-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pdf-processing-anthropic/SKILL.md",
+      "computedHash": "4d112a0d50e8408a2d61e0d52a2d0c0ebf7195a07a386f0510d20912449eaa9a"
+    },
+    "pdf-processing-openai": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pdf-processing-openai/SKILL.md",
+      "computedHash": "06b013efe4b339e5a2febec5efcc293e775e4d3157e412fd6431878b5c28a354"
     },
     "peer-agent-collaboration": {
       "source": "glebis/claude-skills",
@@ -6553,6 +6949,12 @@
       "skillPath": "skills/molecular-biology/plannotate-plasmid-annotation/SKILL.md",
       "computedHash": "3c80e718137c7ef6e75e4a833567f935ab1fa3a1449855741e4d7bcb48839603"
     },
+    "playwright": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/playwright/SKILL.md",
+      "computedHash": "a9ab55967cfa590aad9c423ffef1ae4616ff2d7e60914e6082534b1b3cd37772"
+    },
     "playwright-dev": {
       "source": "microsoft/playwright",
       "sourceType": "github",
@@ -6661,11 +7063,23 @@
       "skillPath": "skills/pptx-posters/SKILL.md",
       "computedHash": "b825856f89e9903fecd0f8416b2d12cecd8ca395e4a11edd0d4c092b9f6169c8"
     },
+    "pptx-processing-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pptx-processing-anthropic/SKILL.md",
+      "computedHash": "23127ae5692d7662d8af64bf0ec2783c9bb6c3b3d2b3d76f374ba9675845f966"
+    },
     "pr-create": {
       "source": "posit-dev/skills",
       "sourceType": "github",
       "skillPath": "github/pr-create/SKILL.md",
       "computedHash": "fd3c4cc2bba07f54af4ee0fb59992dad1e1a9d01855bf7cdd573731a7909eec6"
+    },
+    "pr-submission": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/pr-submission/SKILL.md",
+      "computedHash": "8a9354778a0776d7839fc214307133f4682e19de59e63674e45134fe14293795"
     },
     "pr-threads-address": {
       "source": "posit-dev/skills",
@@ -6756,6 +7170,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/privacy-metrics-dashboard/SKILL.md",
       "computedHash": "c9ee37d4a15bdcac04db41175ce94f791bb7bbf423de981ae693e9d8c2c71ae4"
+    },
+    "privacy-policy-malik-taiar": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/politique-confidentialite-malik-taiar/SKILL.md",
+      "computedHash": "e8c168b8334b6f176438bd5ce65ae5fd8b327589ad69a758bf824ba3d08faac2"
     },
     "privacy-program-metrics": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
@@ -7129,6 +7549,24 @@
       "skillPath": "quarto/quarto-authoring/SKILL.md",
       "computedHash": "24ae1cc561222b945dea7b7b6a6be35f19e9238da8699251202c9715efb5d1cc"
     },
+    "query-address-info": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/query-address-info/SKILL.md",
+      "computedHash": "1bc0cf82e28f57f7eadab0ffb3bfc261e347f75ba5745fb0e14c6ac33b4e226b"
+    },
+    "query-token-audit": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/query-token-audit/SKILL.md",
+      "computedHash": "4328d725723b336f0f743359dd4d6fc238c1721bcfe789097ba7201855612ad5"
+    },
+    "query-token-info": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/query-token-info/SKILL.md",
+      "computedHash": "6e5f8a0614836af492e870f692142b3a28852c6b90e62b16bc38561748a87692"
+    },
     "querying-posthog-data": {
       "source": "posthog/skills",
       "sourceType": "github",
@@ -7273,6 +7711,12 @@
       "skillPath": "skills/red-team-tactics/SKILL.md",
       "computedHash": "36b1a8be5830994502d0d92959230a012a598aab2ba36adabcfafe31c4d3177a"
     },
+    "red-team-verifier-patrick-munro": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/red-team-verifier-patrick-munro/SKILL.md",
+      "computedHash": "b54a33d94855009696a91aa243e666770d6d423f84f346cbbfee52adfde3299d"
+    },
     "redis": {
       "source": "chaterm/terminal-skills",
       "sourceType": "github",
@@ -7334,10 +7778,10 @@
       "computedHash": "d495407d3bd1d703cefba0535c788798e0cf81b36d41bf5c561ce2f08f77bc6d"
     },
     "remotion-best-practices": {
-      "source": "agent-skills-hub/agent-skills-hub",
+      "source": "letta-ai/skills",
       "sourceType": "github",
-      "skillPath": "skills/remotion-best-practices/SKILL.md",
-      "computedHash": "0658c7e368dbf933d9921f66b1700c464e0257b58101ecbe6bdd1e05fe11fe45"
+      "skillPath": "tools/remotion/SKILL.md",
+      "computedHash": "23595fe8aa8814811c8c1a97671be757c981dd18f6f7d1afb598b0a47feb6803"
     },
     "repro-enforcer": {
       "source": "ClawBio/ClawBio",
@@ -7350,6 +7794,12 @@
       "sourceType": "github",
       "skillPath": "skills/requesting-code-review/SKILL.md",
       "computedHash": "93a837ba79c3c3f0b3e503fd9d8b54c638337d73d200c1af3bca9607264bf0e0"
+    },
+    "requete-cph-licenciement-faute-grave-selim-brihi": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/requete-cph-licenciement-faute-grave-selim-brihi/SKILL.md",
+      "computedHash": "fac10f0faca5a6d4befdd678d4fd7df74f3d0d028c97334216fe9a0eb5699489"
     },
     "research-engineer": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -7705,6 +8155,12 @@
       "skillPath": "skills/screen-reader-testing/SKILL.md",
       "computedHash": "c081fccfbbeaef61001f96056be919954554c3d9a474f4ae0738be22c81a7da5"
     },
+    "screenshot": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/screenshot/SKILL.md",
+      "computedHash": "e286cb68d624ebff1bc642ccbd45cb2146d501adae5e836cfb0da61a890a9ee4"
+    },
     "screenshots": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -7807,6 +8263,12 @@
       "skillPath": "skills/cc-skill-security-review/SKILL.md",
       "computedHash": "ab242f39ba30fa0af25104615e5897491408b09e4bfa75bed48553124f41bd21"
     },
+    "security-review-openai": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/security-review-openai/SKILL.md",
+      "computedHash": "fc2fea6f67888a18750fbce081cc8300517564ee48711176cfc19316e6254e8a"
+    },
     "security-scanning-security-dependencies": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -7848,6 +8310,12 @@
       "sourceType": "github",
       "skillPath": "skills/senior-fullstack/SKILL.md",
       "computedHash": "ba1e155eb5772e59e4f4ce1805538940d5725c1edf14fbd0eb0e0ec249767194"
+    },
+    "sentry": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/sentry/SKILL.md",
+      "computedHash": "41224a0adf4c17182dcfe2c434692b03726f7b34c0f39879546937afc4861402"
     },
     "seo-audit": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -8119,11 +8587,29 @@
       "skillPath": "skills/skill-creator/SKILL.md",
       "computedHash": "272d984e884ac4eddca9c78730d2bdd60c0c14864ca35e166fed89553d7f9c97"
     },
+    "skill-creator-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator-anthropic/SKILL.md",
+      "computedHash": "93fa7aec779edb289c90f1c1a9c8eeb12dfbb1d13e8d87c3fe9081876e77e453"
+    },
+    "skill-creator-openai": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator-openai/SKILL.md",
+      "computedHash": "977e1fb96cffd332e859070f61b809ce2c75c76789b17ad91c5f9226fc6b37a5"
+    },
     "skill-developer": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
       "skillPath": "skills/skill-developer/SKILL.md",
       "computedHash": "070c00834ba6d65a7b8942b48c6f7a0cb019b4bcd3dba5b883d0c0f2c1b3ad53"
+    },
+    "skill-development": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "meta/skill-development/SKILL.md",
+      "computedHash": "a12c50646f44672091f34e837b9bce2df4f89d9e05fa29c9e2d5b0f69eba6de7"
     },
     "skill-evaluator": {
       "source": "gotalab/skillport",
@@ -8136,6 +8622,18 @@
       "sourceType": "github",
       "skillPath": "skills/skill-index-updater/SKILL.md",
       "computedHash": "a2a2d20824c4e009fa5bd2ca0c4670d885b56df984a470762d4f9f767daacf7f"
+    },
+    "skill-lifecycle": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/skill-lifecycle/SKILL.md",
+      "computedHash": "54f6c22a70bfcc84a8a983403d4a30b3f3654319f3109dfaf4793d7ba877def9"
+    },
+    "skill-optimizer-lawvable": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-optimizer-lawvable/SKILL.md",
+      "computedHash": "199765125719f47fd4b82774012d1365b160604aca01f12f7bd33ee1d9bc8d27"
     },
     "skill-rails-upgrade": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -8191,6 +8689,12 @@
       "skillPath": "skills/slack-gif-creator/SKILL.md",
       "computedHash": "146d0f407e3f04aac0378b74bb238833b24bbd5e6387b932e82cfbf228f219b4"
     },
+    "slides": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/slides/SKILL.md",
+      "computedHash": "1aa418c52c6425757f5cfb29b14cb8bd34e8c153f0ddd4404771889f85d57681"
+    },
     "slidev": {
       "source": "antfu/skills",
       "sourceType": "github",
@@ -8232,6 +8736,12 @@
       "sourceType": "github",
       "skillPath": "skills/privacy/soc2-privacy-audit/SKILL.md",
       "computedHash": "61043e1894c83681928cbc6e2d7e55e7a8e47582b1e74e1d3e7fe35f6113e18a"
+    },
+    "social-cli": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/social-cli/SKILL.md",
+      "computedHash": "8507f4d4a0809bd75887ed7c91cd4c7ac1ae669ff6cdc6e2a35bc970f1684635"
     },
     "social-content": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -8299,11 +8809,29 @@
       "skillPath": "skills/privacy/special-category-data/SKILL.md",
       "computedHash": "687edb250f9dbc0c29d967a73b24bca185dbfc16563894818f3b72648a9b9806"
     },
+    "speech": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/speech/SKILL.md",
+      "computedHash": "87b9e42af12502ff75c3ee579740e135cd47f2c4fac156860500807aeecd2be9"
+    },
     "spikeinterface-electrophysiology": {
       "source": "jaechang-hits/SciAgent-Skills",
       "sourceType": "github",
       "skillPath": "skills/scientific-computing/spikeinterface-electrophysiology/SKILL.md",
       "computedHash": "1b0bd0233f9cef2802d4faa0cfee6898fef6e3d1a51e7feae15c2eeeb4cdd411"
+    },
+    "spotify-player": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/spotify-player/SKILL.md",
+      "computedHash": "8a590b455d9ca5b81caf84947eaea8c107b4e01cf97a2a234cd7bbed87d616f5"
+    },
+    "spreadsheet": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/spreadsheet/SKILL.md",
+      "computedHash": "36df806f035500c8ad5605ea1a81e20586b92ed1f87d44fc8d59fa8e5e9dff0c"
     },
     "sql-optimization": {
       "source": "chaterm/terminal-skills",
@@ -8322,6 +8850,12 @@
       "sourceType": "github",
       "skillPath": "skills/sql-pro/SKILL.md",
       "computedHash": "272272a576011291744f882044bc731b06b29e96cf43cf8e91d024ee920facc4"
+    },
+    "square-post": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance/square-post/SKILL.md",
+      "computedHash": "3732bcdc2b540307148348f46767783d28bacf0526aed22f12c96664183c7c9c"
     },
     "ssh": {
       "source": "chaterm/terminal-skills",
@@ -8418,6 +8952,12 @@
       "sourceType": "github",
       "skillPath": "skills/biostatistics/statsmodels-statistical-modeling/SKILL.md",
       "computedHash": "e5bda655bbc19c2eeb9e7f25fd0c640313ee6c30fe492211dee65aa937352b54"
+    },
+    "statute-analysis-rafal-fryc": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/statute-analysis-rafal-fryc/SKILL.md",
+      "computedHash": "7e98736091314ad22c07524f74f41b99660fa892b6cbc6d6f68525dd03806620"
     },
     "stitch-ui-design": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -8551,6 +9091,12 @@
       "skillPath": "skills/systems-programming-rust-project/SKILL.md",
       "computedHash": "dab74e025ebba090171edc1634d3d26b84729e1b0755f647262aedfc9527c3fa"
     },
+    "tabular-review-lawvable": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/tabular-review-lawvable/SKILL.md",
+      "computedHash": "e304c1e8f44d8da5e6ae129f783bd8dfa125a5cab92045023fb6a87507ba067c"
+    },
     "tailwind-design-system": {
       "source": "agent-skills-hub/agent-skills-hub",
       "sourceType": "github",
@@ -8653,6 +9199,12 @@
       "skillPath": "skills/team-composition-analysis/SKILL.md",
       "computedHash": "524efe8c56f4767d29f43e5b0053cb6f767fe02c900acdcc40038ea1247b52e7"
     },
+    "tech-contract-negotiation-patrick-munro": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/tech-contract-negotiation-patrick-munro/SKILL.md",
+      "computedHash": "aceb307a805d8e0b7683ed3ab05196636c97056120fc8f218c92a2586e72178e"
+    },
     "telegram": {
       "source": "glebis/claude-skills",
       "sourceType": "github",
@@ -8742,6 +9294,12 @@
       "sourceType": "github",
       "skillPath": "skills/test-fixing/SKILL.md",
       "computedHash": "47d148429056b1d3e669326e26d5a8d57a013d824cdd94c9d198d5f50c03a829"
+    },
+    "testing-and-ci": {
+      "source": "iflytek/skillhub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/testing-and-ci/SKILL.md",
+      "computedHash": "2dcefa647698251b35a3cdab6d3968f9e629c593edaec108c86354552b635a19"
     },
     "testing-patterns": {
       "source": "agent-skills-hub/agent-skills-hub",
@@ -8863,6 +9421,12 @@
       "skillPath": "skills/cell-biology/trackpy-particle-tracking/SKILL.md",
       "computedHash": "a18f0cd49db59901dbc0d26d3dbada5626d46d87518fa6145f21b14852b1161f"
     },
+    "trading-signal": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/trading-signal/SKILL.md",
+      "computedHash": "3c68477564ce42bec4e8db6602a96e5ed4b780119f872f7ac74b9ed0f9fe7e05"
+    },
     "trading-strategist": {
       "source": "kukapay/crypto-skills",
       "sourceType": "github",
@@ -8874,6 +9438,12 @@
       "sourceType": "github",
       "skillPath": "network/traffic-analysis/SKILL.md",
       "computedHash": "8e3a8b4ba9f99674ce43b73fa1c6381c389f9dcd49179fbadbb259057ffe05ff"
+    },
+    "transcribe": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/transcribe/SKILL.md",
+      "computedHash": "b7c0467a7fe3a75e79050e2ef6e68f3e0f74c9735f71222d12bff721dc6ec9e0"
     },
     "transcript-analyzer": {
       "source": "glebis/claude-skills",
@@ -9295,6 +9865,12 @@
       "skillPath": "skills/privacy/vendor-cert-acceptance/SKILL.md",
       "computedHash": "44ed726810c3fd4632ec07eceba7cb3476b15007125c5d5cfe56e4d664ec0756"
     },
+    "vendor-due-diligence-patrick-munro": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/vendor-due-diligence-patrick-munro/SKILL.md",
+      "computedHash": "15031acf8daf0b926e68d52c4d0c04fe2db10c16690b7af19cdaeb1038bf6f82"
+    },
     "vendor-monitoring-program": {
       "source": "mukul975/Privacy-Data-Protection-Skills",
       "sourceType": "github",
@@ -9391,6 +9967,12 @@
       "skillPath": "vision-bench/SKILL.md",
       "computedHash": "42a6736e3ad10ccd326798448d72b3746dfd91894f9ae48d0630336825668b32"
     },
+    "visual-identity": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/visual-identity/SKILL.md",
+      "computedHash": "ab3e7ea3e5850c1607c2dc3937c53e39317dabf22e666c7346663b76908f8284"
+    },
     "vite": {
       "source": "antfu/skills",
       "sourceType": "github",
@@ -9438,6 +10020,12 @@
       "sourceType": "github",
       "skillPath": "network/vpn/SKILL.md",
       "computedHash": "3671b8d726c767d9303f62ac72e061aa4944078a288be321e41371dfd7799694"
+    },
+    "vscode-extension-builder-lawvable": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/vscode-extension-builder-lawvable/SKILL.md",
+      "computedHash": "f42ade8c2904cfbc3e0c9ebc57a2692ddc2fc0d92cfdb95221ad430eaef77c48"
     },
     "vue": {
       "source": "antfu/skills",
@@ -9559,6 +10147,12 @@
       "skillPath": "skills/privacy/whistleblower-data/SKILL.md",
       "computedHash": "5d9b0c5bad96b93fd90ff1bc77d60ba0aedbf862e4a8276db94ff55c4effd30d"
     },
+    "whistleblower-policy-malik-taiar": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/politique-lanceur-alerte-malik-taiar/SKILL.md",
+      "computedHash": "f8046afd1fc7e21a3de155906cc097dce693d33542e1e7317416a8020296c7e5"
+    },
     "wispr-analytics": {
       "source": "glebis/claude-skills",
       "sourceType": "github",
@@ -9631,11 +10225,35 @@
       "skillPath": "skills/document-skills/xlsx/SKILL.md",
       "computedHash": "870844f8dd8b7229c238fd0a8664981f137107bfb0a5c4229f8e7858ed86dd44"
     },
+    "xlsx-processing-anthropic": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/xlsx-processing-anthropic/SKILL.md",
+      "computedHash": "e0cb5de454966a839a0307b8655be2085360d4a79e08fb604ce341a0d2d81c73"
+    },
+    "xlsx-processing-manus": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/xlsx-processing-manus/SKILL.md",
+      "computedHash": "2df639f13defdf6552007d8351008e171ba1662f785f9aa9162c34357eb0eff3"
+    },
+    "xlsx-processing-openai": {
+      "source": "lawve-ai/awesome-legal-skills",
+      "sourceType": "github",
+      "skillPath": "skills/xlsx-processing-openai/SKILL.md",
+      "computedHash": "f8b71c17d884f431d96a230be18200098c824dcad6ace4e425742fae0f6a73b7"
+    },
     "xstate-v5": {
       "source": "statelyai/skills",
       "sourceType": "github",
       "skillPath": "skills/xstate-v5/SKILL.md",
       "computedHash": "5395d58e38da39477cfa61d2b388777a88f021d16ec0f8d4ce6653b487d98fb3"
+    },
+    "yelp-search": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "skillPath": "tools/yelp-search/SKILL.md",
+      "computedHash": "684635fe336995460fba97a019dd3fd83eb4822a77bb881aa43458057cc6611a"
     },
     "yield-opportunities": {
       "source": "kukapay/crypto-skills",

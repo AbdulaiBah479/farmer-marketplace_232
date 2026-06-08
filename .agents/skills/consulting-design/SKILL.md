@@ -36,13 +36,3 @@ Options: `changeMode: true` for structured edits, `sandbox: true` for code execu
 ```
 
 Methodologies: `divergent`, `convergent`, `scamper`, `design-thinking`, `lateral`, `auto`
-
----
-
-## Gotchas
-
-- **Gemini brainstorm output is non-deterministic** — same prompt rerun gives different ideas; save outputs you want to reference.
-- **`ask-gemini` doesn't preserve conversation context across calls** — multi-turn questions need explicit history concatenation in each prompt.
-- **API quota is per-project per-day** — bursting on a free tier locks the project out until midnight Pacific.
-- **Output is markdown but can include LaTeX math** — downstream tooling that doesn't render math gets garbled output without warning.
-- **`brainstorm` defaults to 5 ideas** — for divergent ideation, explicitly request more; the default is a hard cap.

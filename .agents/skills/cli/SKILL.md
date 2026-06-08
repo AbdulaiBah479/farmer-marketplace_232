@@ -12,10 +12,6 @@ description: >
   (7) Work with ANSI strings, hyperlinks, or custom containers.
   Also use when migrating from base R message/warning/stop, debugging cli code,
   or improving existing cli usage.
-metadata:
-  author: Garrick Aden-Buie (@gadenbuie)
-  version: "1.0"
-license: MIT
 ---
 
 # CLI for R Packages
@@ -74,7 +70,7 @@ cli_text("Function {.fn mean} calculates averages")
 cli_text("Install package {.pkg dplyr}")
 cli_text("See file {.file ~/.Rprofile}")
 cli_text("{.var x} must be numeric, not {.obj_type_of {x}}")
-cli_text("Got value {.val {x}}")
+cli_text("Got value {.val {x}}"))
 
 # Code formatting
 cli_text("Use {.code sum(x, na.rm = TRUE)}")

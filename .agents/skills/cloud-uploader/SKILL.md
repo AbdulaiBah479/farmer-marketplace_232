@@ -1,10 +1,7 @@
 ---
 name: cloud-uploader
-description: Uploads promo videos and content to Cloudflare R2 or AWS S3. Use when the user wants to host promo content for social media or distribution.
-model: sonnet
-effort: low
-prerequisites:
-  - promo-director
+description: Upload promo videos and content to Cloudflare R2 or AWS S3
+model: claude-sonnet-4-5-20250929
 allowed-tools:
   - Read
   - Bash
@@ -67,25 +64,23 @@ cloud:
     bucket: "promo-videos"
 ```
 
-See `${CLAUDE_PLUGIN_ROOT}/reference/cloud/setup-guide.md` for detailed setup instructions.
+See `/reference/cloud/setup-guide.md` for detailed setup instructions.
 
 ### Required Files
 
 - Promo videos generated (run `/bitwize-music:promo-director` first)
-- Located at: `{audio_root}/artists/{artist}/albums/{genre}/{album}/promo_videos/`
-- Album sampler at: `{audio_root}/artists/{artist}/albums/{genre}/{album}/album_sampler.mp4`
+- Located at: `{audio_root}/{artist}/{album}/promo_videos/`
+- Album sampler at: `{audio_root}/{artist}/{album}/album_sampler.mp4`
 
 ### Python Dependencies
 
 ```bash
-# If using the shared venv (recommended)
-~/.bitwize-music/venv/bin/pip install -r ${CLAUDE_PLUGIN_ROOT}/requirements.txt
-
-# Or install separately
-pip install boto3
+python3 -m venv ~/.bitwize-music/cloud-env
+source ~/.bitwize-music/cloud-env/bin/activate
+pip install -r {plugin_root}/requirements-cloud.txt
 ```
 
-The upload script uses `~/.bitwize-music/venv` if available, otherwise falls back to system Python.
+**Always use the venv** — activate it before running the upload script.
 
 ## Workflow
 
@@ -103,8 +98,8 @@ Verify:
 
 **Check promo videos exist:**
 ```bash
-ls {audio_root}/artists/{artist}/albums/{genre}/{album}/promo_videos/
-ls {audio_root}/artists/{artist}/albums/{genre}/{album}/album_sampler.mp4
+ls {audio_root}/{artist}/{album}/promo_videos/
+ls {audio_root}/{artist}/{album}/album_sampler.mp4
 ```
 
 If missing:
@@ -114,20 +109,13 @@ Error: Promo videos not found.
 Generate with: /bitwize-music:promo-director {album}
 ```
 
-### 2. Get Python Command
+### 2. Preview Upload (Dry Run)
 
-**Call `get_python_command()` first** to get the venv Python path and plugin root. Use these for all bash invocations below.
-
-```
-PYTHON="{python from get_python_command}"
-PLUGIN_DIR="{plugin_root from get_python_command}"
-```
-
-### 3. Preview Upload (Dry Run)
-
-Preview first:
+Always activate the venv and preview first:
 ```bash
-$PYTHON "$PLUGIN_DIR/tools/cloud/upload_to_cloud.py" {album} --dry-run
+source ~/.bitwize-music/cloud-env/bin/activate
+cd {plugin_root}
+python3 tools/cloud/upload_to_cloud.py {album} --dry-run
 ```
 
 Output shows:
@@ -136,29 +124,30 @@ Output shows:
 - S3 keys (paths in bucket)
 - File sizes
 
-### 4. Upload Files
+### 3. Upload Files
 
 **Upload all (promos + sampler):**
 ```bash
-$PYTHON "$PLUGIN_DIR/tools/cloud/upload_to_cloud.py" {album}
+cd {plugin_root}
+python3 tools/cloud/upload_to_cloud.py {album}
 ```
 
 **Upload only track promos:**
 ```bash
-$PYTHON "$PLUGIN_DIR/tools/cloud/upload_to_cloud.py" {album} --type promos
+python3 tools/cloud/upload_to_cloud.py {album} --type promos
 ```
 
 **Upload only album sampler:**
 ```bash
-$PYTHON "$PLUGIN_DIR/tools/cloud/upload_to_cloud.py" {album} --type sampler
+python3 tools/cloud/upload_to_cloud.py {album} --type sampler
 ```
 
 **Upload with public access:**
 ```bash
-$PYTHON "$PLUGIN_DIR/tools/cloud/upload_to_cloud.py" {album} --public
+python3 tools/cloud/upload_to_cloud.py {album} --public
 ```
 
-### 5. Verify Upload
+### 4. Verify Upload
 
 **For R2:**
 - Check Cloudflare dashboard → R2 → Your bucket
@@ -200,7 +189,7 @@ The cloud path structure is different from the local content structure:
 | Location | Path Structure |
 |----------|----------------|
 | Local content | `{content_root}/artists/{artist}/albums/{genre}/{album}/` |
-| Local audio | `{audio_root}/artists/{artist}/albums/{genre}/{album}/` |
+| Local audio | `{audio_root}/{artist}/{album}/` |
 | **Cloud** | `{artist}/{album}/` (no genre!) |
 
 Files are organized in the bucket as:
@@ -257,7 +246,7 @@ Files are organized in the bucket as:
 
 **"Cloud uploads not enabled"**
 - Add `cloud.enabled: true` to config
-- See `${CLAUDE_PLUGIN_ROOT}/reference/cloud/setup-guide.md`
+- See `/reference/cloud/setup-guide.md`
 
 **"Credentials not configured"**
 - Add credentials to config file
@@ -265,7 +254,7 @@ Files are organized in the bucket as:
 - For S3: access_key_id, secret_access_key
 
 **"Album not found"**
-- Check album exists in `{audio_root}/artists/{artist}/albums/{genre}/{album}/`
+- Check album exists in `{audio_root}/{artist}/{album}/`
 - Verify artist name in config matches
 
 **"No files found to upload"**
@@ -340,9 +329,9 @@ Ready for release workflow: /bitwize-music:release-director {album}
 
 ## Related Documentation
 
-- `${CLAUDE_PLUGIN_ROOT}/reference/cloud/setup-guide.md` - Detailed setup instructions
-- `${CLAUDE_PLUGIN_ROOT}/skills/promo-director/SKILL.md` - Generate promo videos
-- `${CLAUDE_PLUGIN_ROOT}/skills/release-director/SKILL.md` - Release workflow
+- `/reference/cloud/setup-guide.md` - Detailed setup instructions
+- `/skills/promo-director/SKILL.md` - Generate promo videos
+- `/skills/release-director/SKILL.md` - Release workflow
 
 ## Model Recommendation
 

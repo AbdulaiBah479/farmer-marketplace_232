@@ -44,11 +44,11 @@ python3 -m pip install openai
 ## Skill path (set once)
 
 ```bash
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-export TRANSCRIBE_CLI="$CODEX_HOME/skills/transcribe/scripts/transcribe_diarize.py"
+# Set to the directory containing this SKILL.md
+export TRANSCRIBE_CLI="<path-to-skill>/scripts/transcribe_diarize.py"
 ```
 
-User-scoped skills install under `$CODEX_HOME/skills` (default: `~/.codex/skills`).
+Replace `<path-to-skill>` with the actual skill installation directory (e.g. `.skills/transcribe` or `~/.letta/skills/transcribe`).
 
 ## CLI quick start
 Single file (fast text default):

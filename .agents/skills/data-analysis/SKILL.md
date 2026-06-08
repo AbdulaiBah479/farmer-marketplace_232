@@ -1,66 +1,67 @@
 ---
-name: data-analysis
-description: AI-powered data analysis for Empathy Ledger - themes, quotes, story suggestions, transcript analysis.
+name: Data Analysis
+description: Turn raw data into decisions with statistical rigor, proper methodology, and awareness of analytical pitfalls.
 ---
 
-# Data Analysis
+## When to Load
 
-Patterns for AI-powered analysis: themes, quotes, summaries, and story suggestions.
+User asks about: analyzing data, finding patterns, understanding metrics, testing hypotheses, cohort analysis, A/B testing, churn analysis, statistical significance.
 
-## When to Use
-- Adding quotes to story cards
-- Implementing story suggestions/related content
-- Building theme-based filtering or search
-- Creating analytics dashboards
-- Integrating AI analysis results
+## Core Principle
 
-## Quick Reference
+Analysis without a decision is just arithmetic. Always clarify: **What would change if this analysis shows X vs Y?**
 
-### Analysis Pipeline
-```
-Transcript → AI Analysis → themes[], key_quotes[], ai_summary
-Story → Connections → Related Stories, Suggested Content
-```
+## Methodology First
 
-### Key Tables
-| Table | Analysis Fields |
-|-------|-----------------|
-| `transcripts` | `themes`, `key_quotes`, `ai_summary`, `ai_processing_status` |
-| `stories` | `themes`, `cultural_tags`, `featured_quote` |
-| `storytellers` | `expertise_themes`, `connection_strength` |
+Before touching data:
+1. **What decision** is this analysis supporting?
+2. **What would change your mind?** (the real question)
+3. **What data do you actually have** vs what you wish you had?
+4. **What timeframe** is relevant?
 
-### Theme Categories
-- **cultural**: identity, heritage, tradition, language, ceremony
-- **family**: kinship, elders, children, ancestors, community
-- **land**: country, connection, seasons, wildlife, sacred-sites
-- **resilience**: survival, adaptation, strength, healing, hope
-- **knowledge**: wisdom, teaching, learning, stories, dreams
+## Statistical Rigor Checklist
 
-### Common Queries
-```sql
--- Stories with matching theme
-SELECT * FROM stories WHERE themes && ARRAY['identity', 'heritage'];
+- [ ] Sample size sufficient? (small N = wide confidence intervals)
+- [ ] Comparison groups fair? (same time period, similar conditions)
+- [ ] Multiple comparisons? (20 tests = 1 "significant" by chance)
+- [ ] Effect size meaningful? (statistically significant ≠ practically important)
+- [ ] Uncertainty quantified? ("12-18% lift" not just "15% lift")
 
--- Theme frequency
-SELECT unnest(themes) as theme, count(*) FROM stories GROUP BY theme ORDER BY count DESC;
-```
+## Analytical Pitfalls to Catch
 
-### API Endpoints
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /api/transcripts/{id}/analyze` | Trigger AI analysis |
-| `GET /api/stories/{id}/suggestions` | Get related stories |
-| `GET /api/themes` | List themes with counts |
+| Pitfall | What it looks like | How to avoid |
+|---------|-------------------|--------------|
+| Simpson's Paradox | Trend reverses when you segment | Always check by key dimensions |
+| Survivorship bias | Only analyzing current users | Include churned/failed in dataset |
+| Comparing unequal periods | Feb (28d) vs March (31d) | Normalize to per-day or same-length windows |
+| p-hacking | Testing until something is "significant" | Pre-register hypotheses or adjust for multiple comparisons |
+| Correlation in time series | Both went up = "related" | Check if controlling for time removes relationship |
+| Aggregating percentages | Averaging percentages directly | Re-calculate from underlying totals |
 
-## Reference Files
-| Topic | File |
-|-------|------|
-| Code patterns | `refs/analysis-patterns.md` |
-| SQL queries | `refs/supabase-queries.md` |
-| Theme hierarchy | `refs/theme-taxonomy.md` |
-| Sync status | `refs/sync-status.md` |
+For detailed examples of each pitfall, see `pitfalls.md`.
 
-## Related Skills
-- `database-navigator` - Database exploration
-- `supabase-connection` - Database clients
-- `design-component` - UI patterns for analysis display
+## Approach Selection
+
+| Question type | Approach | Key output |
+|---------------|----------|------------|
+| "Is X different from Y?" | Hypothesis test | p-value + effect size + CI |
+| "What predicts Z?" | Regression/correlation | Coefficients + R² + residual check |
+| "How do users behave over time?" | Cohort analysis | Retention curves by cohort |
+| "Are these groups different?" | Segmentation | Profiles + statistical comparison |
+| "What's unusual?" | Anomaly detection | Flagged points + context |
+
+For technique details and when to use each, see `techniques.md`.
+
+## Output Standards
+
+1. **Lead with the insight**, not the methodology
+2. **Quantify uncertainty** — ranges, not point estimates
+3. **State limitations** — what this analysis can't tell you
+4. **Recommend next steps** — what would strengthen the conclusion
+
+## Red Flags to Escalate
+
+- User wants to "prove" a predetermined conclusion
+- Sample size too small for reliable inference
+- Data quality issues that invalidate analysis
+- Confounders that can't be controlled for

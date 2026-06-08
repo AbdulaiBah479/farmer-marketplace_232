@@ -1,128 +1,136 @@
 ---
 name: linear-cli
-description: Manages Linear issues via CLI. Use when user wants to view, start, create, or update Linear issues, create PRs from issues, or configure Linear integration.
+description: Manage Linear issues from the command line using the linear cli. This skill allows automating linear management.
 ---
 
 # Linear CLI
 
-## Goal
-Help users manage Linear issues from the terminal—view current work, start issues, create branches, open PRs, and stay in flow.
-
-## When to use
-- User asks about their Linear issues or current issue
-- User wants to start working on a Linear issue
-- User wants to create a PR for a Linear issue
-- User needs to create, update, or comment on issues
-- User wants to configure Linear CLI for a project
-
-## When not to use
-- User is asking about Linear the company or product (not CLI usage)
-- User wants Linear API integration in code (point them to Linear SDK)
-- User needs Jira, GitHub Issues, or other trackers
+A CLI to manage Linear issues from the command line, with git and jj integration.
 
 ## Prerequisites
-- `linear` CLI installed (`brew install schpet/tap/linear`)
-- `LINEAR_API_KEY` environment variable set (from linear.app/settings/account/security)
-- For PR creation: GitHub CLI (`gh`) installed and authenticated
 
-## Default workflow
+The `linear` command must be available on PATH. To check:
 
-### 1) Check current context
 ```bash
-linear issue view        # See current issue (detected from branch)
-linear issue id          # Just the issue ID
+linear --version
 ```
 
-### 2) Start an issue
+If not installed, follow the instructions at:
+https://github.com/schpet/linear-cli?tab=readme-ov-file#install
+
+## Best Practices for Markdown Content
+
+When working with issue descriptions or comment bodies that contain markdown, **always prefer using file-based flags** instead of passing content as command-line arguments:
+
+- Use `--description-file` for `issue create` and `issue update` commands
+- Use `--body-file` for `comment add` and `comment update` commands
+
+**Why use file-based flags:**
+
+- Ensures proper formatting in the Linear web UI
+- Avoids shell escaping issues with newlines and special characters
+- Prevents literal `\n` sequences from appearing in markdown
+- Makes it easier to work with multi-line content
+
+**Example workflow:**
+
 ```bash
-linear issue list        # Show your unstarted issues
-linear issue start       # Interactive: pick issue, creates branch
-linear issue start ABC-123  # Start specific issue directly
+# Write markdown to a temporary file
+cat > /tmp/description.md <<'EOF'
+## Summary
+
+- First item
+- Second item
+
+## Details
+
+This is a detailed description with proper formatting.
+EOF
+
+# Create issue using the file
+linear issue create --title "My Issue" --description-file /tmp/description.md
+
+# Or for comments
+linear issue comment add ENG-123 --body-file /tmp/comment.md
 ```
 
-### 3) Create PR when ready
-```bash
-linear issue pr          # Creates GitHub PR with title/description prefilled
+**Only use inline flags** (`--description`, `--body`) for simple, single-line content.
+
+## Available Commands
+
+```
+linear auth               # Manage Linear authentication
+linear issue              # Manage Linear issues
+linear team               # Manage Linear teams
+linear project            # Manage Linear projects
+linear project-update     # Manage project status updates
+linear cycle              # Manage Linear team cycles
+linear milestone          # Manage Linear project milestones
+linear initiative         # Manage Linear initiatives
+linear initiative-update  # Manage initiative status updates (timeline posts)
+linear label              # Manage Linear issue labels
+linear document           # Manage Linear documents
+linear config             # Interactively generate .linear.toml configuration
+linear schema             # Print the GraphQL schema to stdout
+linear api                # Make a raw GraphQL API request
 ```
 
-## Common commands
+## Discovering Options
 
-| Task | Command |
-|------|---------|
-| View current issue | `linear issue view` |
-| View in browser | `linear issue view -w` |
-| List my issues | `linear issue list` |
-| List all unstarted | `linear issue list -A` |
-| Start issue | `linear issue start` or `linear issue start ABC-123` |
-| Create PR | `linear issue pr` |
-| Create issue | `linear issue create -t "Title" -d "Description"` |
-| Add comment | `linear issue comment add` |
-| List teams | `linear team list` |
-| Configure | `linear config` |
+To see available subcommands and flags, run `--help` on any command:
 
-## Configuration
-
-Run `linear config` to generate `.linear.toml` in your repo. Key settings:
-
-```toml
-api_key = "lin_api_..."      # Or use LINEAR_API_KEY env var
-team_id = "TEAM_abc123"      # Default team for new issues
-workspace = "mycompany"      # Your Linear workspace slug
-issue_sort = "priority"      # Or "manual"
-vcs = "git"                  # Or "jj" for Jujutsu
+```bash
+linear --help
+linear issue --help
+linear issue list --help
+linear issue create --help
 ```
 
-Config file locations (checked in order):
-1. `./.linear.toml` (project root)
-2. `~/.config/linear/linear.toml` (global)
+Each command has detailed help output describing all available flags and options.
 
-## Validation checklist
-- [ ] `linear --version` runs (CLI installed)
-- [ ] `linear issue list` works (API key valid)
-- [ ] `linear team list` shows teams (workspace configured)
-- [ ] Branch naming matches Linear's pattern for auto-detection
+## Using the Linear GraphQL API Directly
 
-## Troubleshooting
+**Prefer the CLI for all supported operations.** The `api` command should only be used as a fallback for queries not covered by the CLI.
 
-**"No issue found for current branch"**
-- Branch name must contain issue ID (e.g., `feat/abc-123-description`)
-- Or specify issue: `linear issue view ABC-123`
+### Check the schema for available types and fields
 
-**"Unauthorized" errors**
-- Check `LINEAR_API_KEY` is set and valid
-- Regenerate key at linear.app/settings/account/security
+Write the schema to a tempfile, then search it:
 
-**PR creation fails**
-- Ensure `gh` CLI is installed and authenticated (`gh auth status`)
-- Must be on a branch with a Linear issue
-
-## Examples
-
-### Example 1: Start morning work
 ```bash
-$ linear issue list
-# Shows unstarted issues assigned to you
-
-$ linear issue start
-# Interactive picker → selects issue → creates branch → switches to it
-
-$ linear issue view
-# Confirms you're on the right issue
+linear schema -o "${TMPDIR:-/tmp}/linear-schema.graphql"
+grep -i "cycle" "${TMPDIR:-/tmp}/linear-schema.graphql"
+grep -A 30 "^type Issue " "${TMPDIR:-/tmp}/linear-schema.graphql"
 ```
 
-### Example 2: Create PR for completed work
-```bash
-$ linear issue view
-# Review issue details
+### Make a GraphQL request
 
-$ linear issue pr
-# Opens GitHub PR with:
-#   - Title: "ABC-123: Issue title"
-#   - Description: Issue description + Linear link
+**Important:** GraphQL queries containing non-null type markers (e.g. `String` followed by an exclamation mark) must be passed via heredoc stdin to avoid escaping issues. Simple queries without those markers can be passed inline.
+
+```bash
+# Simple query (no type markers, so inline is fine)
+linear api '{ viewer { id name email } }'
+
+# Query with variables — use heredoc to avoid escaping issues
+linear api --variable teamId=abc123 <<'GRAPHQL'
+query($teamId: String!) { team(id: $teamId) { name } }
+GRAPHQL
+
+# Search issues by text
+linear api --variable term=onboarding <<'GRAPHQL'
+query($term: String!) { searchIssues(term: $term, first: 20) { nodes { identifier title state { name } } } }
+GRAPHQL
+
+# Pipe to jq for filtering
+linear api '{ issues(first: 5) { nodes { identifier title } } }' | jq '.data.issues.nodes[].title'
 ```
 
-### Example 3: Quick issue creation
+### Advanced: Using curl directly
+
+For cases where you need full HTTP control, use `linear auth token`:
+
 ```bash
-$ linear issue create -t "Fix login timeout" -d "Users report 30s timeout on slow connections"
-# Creates issue, outputs issue ID
+curl -s -X POST https://api.linear.app/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: $(linear auth token)" \
+  -d '{"query": "{ viewer { id } }"}'
 ```

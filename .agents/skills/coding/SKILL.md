@@ -1,117 +1,198 @@
 ---
-name: Coding
-slug: coding
-version: 1.0.3
-homepage: https://clawic.com/skills/coding
-description: Coding style memory that adapts to your preferences, conventions, and patterns for consistent coding.
-changelog: Improve discoverability, add homepage and feedback section
-metadata: {"clawdbot":{"emoji":"💻","requires":{"bins":[]},"os":["linux","darwin","win32"]}}
+name: coding
+description: Coding standards and best practices for implementation work
 ---
 
-## When to Use
+# Coding Standards
 
-User has coding style preferences, stack decisions, or patterns they want remembered. Agent learns ONLY from explicit corrections and confirmations, never from observation.
+## Core Principles
 
-## Architecture
+### Single Responsibility
 
-Memory lives in `~/coding/` with tiered structure. See `memory-template.md` for setup.
+Every function, type, and package has **one reason to change**.
+
+```go
+// ❌ Mixed responsibilities - validates, charges, emails, tracks
+func ProcessOrder(order Order) error { ... }
+
+// ✅ Orchestrates via dependencies, doesn't implement
+func (s *Service) ProcessOrder(ctx context.Context, order Order) error {
+    validated, err := s.validator.Validate(ctx, order)
+    if err != nil { return fmt.Errorf("validation: %w", err) }
+
+    return s.fulfillment.Fulfill(ctx, validated)
+}
+```
+
+**Test:** Can you describe what this code does without using "and"?
+
+### Accept Interfaces, Return Structs
+
+Functions accept interfaces (flexible for callers/testing) and return concrete types (clear for consumers).
+
+### Fail Fast with Clear Errors
+
+Detect errors early. Return them with context.
+
+```go
+// ❌ Silent failure
+func GetUser(userID string) *User {
+    user, _ := db.Find(userID)
+    if user == nil {
+        return &User{}  // Returns fake user, hides problem
+    }
+    return user
+}
+
+// ✅ Fail fast with wrapped error
+func GetUser(ctx context.Context, userID string) (*User, error) {
+    user, err := db.Find(ctx, userID)
+    if err != nil {
+        return nil, fmt.Errorf("find user %s: %w", userID, err)
+    }
+    if user == nil {
+        return nil, fmt.Errorf("user %s: %w", userID, ErrNotFound)
+    }
+    return user, nil
+}
+```
+
+---
+
+## Error Handling
+
+### Handle Errors Immediately
+
+```go
+// ✅ Happy path stays left-aligned
+result, err := s.execute(ctx, req)
+if err != nil {
+    return nil, fmt.Errorf("execute: %w", err)
+}
+return result, nil
+```
+
+### Use Sentinel and Typed Errors
+
+```go
+var ErrNotFound = errors.New("not found")  // Sentinel for expected conditions
+
+// Callers check with errors.Is / errors.As
+if errors.Is(err, ErrNotFound) { /* handle */ }
+```
+
+### Never Ignore Errors
+
+```go
+// ❌ NEVER
+result, _ := doSomething()
+
+// ✅ Handle or log explicitly
+if err := cleanup(); err != nil {
+    log.Printf("cleanup failed: %v", err)
+}
+```
+
+---
+
+## Code Structure
+
+### Function Design
+
+| Guideline | Rationale |
+|-----------|-----------|
+| < 30 lines preferred | Fits in one mental chunk |
+| < 4 parameters | More suggests missing abstraction — use options struct |
+| Context first | `ctx context.Context` is always the first parameter |
+| Error last | Return `error` as the last return value |
+| Return early | Reduces nesting, keeps happy path left-aligned |
+
+### Naming Conventions
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Exported | MixedCaps | `ProcessOrder`, `UserID` |
+| Unexported | mixedCaps | `processOrder`, `userID` |
+| Acronyms | All caps | `HTTPServer`, `userID` (not `userId`) |
+| Interfaces | -er suffix when possible | `Reader`, `Validator` |
+| Packages | Short, lowercase, no underscores | `payment`, `userauth` |
+
+**Name length proportional to scope.** `i` in a 3-line loop is fine; `i` at package scope is not.
+
+---
+
+## Documentation
+
+| Element | Requires Comment |
+|---------|------------------|
+| Exported functions/methods | Yes — starts with function name |
+| Exported types | Yes |
+| Packages | Yes — in `doc.go` or main file |
+| Non-obvious logic | Inline comment |
+| Unexported | Only if complex |
+
+**Document contracts, not implementation.** What it does and what errors it returns, not how.
+
+---
+
+## Package Organization
 
 ```
-~/coding/
-├── memory.md      # Active preferences (≤100 lines)
-└── history.md     # Archived old preferences
+project/
+├── cmd/server/main.go    # Entrypoint only - wiring, no logic
+├── internal/             # Private to this module
+└── pkg/                  # Public API (if any)
 ```
 
-## Quick Reference
+**`internal/` is your friend.** Prevents external packages from depending on implementation details.
 
-| Topic | File |
-|-------|------|
-| Categories of preferences | `dimensions.md` |
-| When to add preferences | `criteria.md` |
-| Memory templates | `memory-template.md` |
+---
 
-## Data Storage
+## Code Changes
 
-All data stored in `~/coding/`. Create on first use:
+### Before Modifying Existing Code
+
+1. **Read** the godoc comments
+2. **Check** existing tests for expected behavior
+3. **Understand** the interface contract before changing implementation
+4. **Run** `go vet` and `staticcheck` after changes
+5. **Ask** if the contract is unclear
+
+### Change Scope Discipline
+
+```markdown
+⚠️ SCOPE BOUNDARY
+
+Original task: Fix discount calculation bug
+Observed: OrderService could use refactoring
+
+**Correct action:** Fix the bug only. Note refactoring opportunity separately.
+**Incorrect action:** Refactor while fixing bug.
+```
+
+One change type per commit. Bug fixes do not include refactoring. Refactoring does not change behavior.
+
+---
+
+## Tooling Requirements
+
+**Run before every commit:**
 ```bash
-mkdir -p ~/coding
+go fmt ./...        # Format
+go vet ./...        # Static analysis
+staticcheck ./...   # Extended checks (if available)
+go test -race ./... # Tests with race detector
 ```
 
-## Scope
+---
 
-This skill ONLY:
-- Learns from explicit user corrections ("I prefer X over Y")
-- Stores preferences in local files (`~/coding/`)
-- Applies stored preferences to code output
+## Anti-Patterns
 
-This skill NEVER:
-- Reads project files to infer preferences
-- Observes coding patterns without consent
-- Makes network requests
-- Reads files outside `~/coding/`
-- Modifies its own SKILL.md
-
-## Core Rules
-
-### 1. Learn from Explicit Feedback Only
-- User corrects output → ask: "Should I remember this preference?"
-- User confirms → add to `~/coding/memory.md`
-- Never infer from silence or observation
-
-### 2. Confirmation Required
-No preference is stored without explicit user confirmation:
-- "Actually, I prefer X" → "Should I remember: prefer X?"
-- User says yes → store
-- User says no → don't store, don't ask again
-
-### 3. Ultra-Compact Format
-Keep each entry 5 words max:
-- `python: prefer 3.11+`
-- `naming: snake_case for files`
-- `tests: colocated, not separate folder`
-
-### 4. Category Organization
-Group by type (see `dimensions.md`):
-- **Stack** — frameworks, databases, tools
-- **Style** — naming, formatting, comments
-- **Structure** — folders, tests, configs
-- **Never** — explicitly rejected patterns
-
-### 5. Memory Limits
-- memory.md ≤100 lines
-- When full → archive old patterns to history.md
-- Merge similar entries: "no Prettier" + "no ESLint" → "minimal tooling"
-
-### 6. On Session Start
-1. Load `~/coding/memory.md` if exists
-2. Apply stored preferences to responses
-3. If no file exists, start with no assumptions
-
-### 7. Query Support
-User can ask:
-- "Show my coding preferences" → display memory.md
-- "Forget X" → remove from memory
-- "What do you know about my Python style?" → show relevant entries
-
-## Common Traps
-
-- Adding preferences without confirmation → user loses trust
-- Inferring from project structure → privacy violation
-- Exceeding 100 lines → context bloat
-- Vague entries ("good code") → useless, be specific
-
-## Security & Privacy
-
-**Data that stays local:**
-- All preferences stored in `~/coding/`
-- No telemetry or analytics
-
-**This skill does NOT:**
-- Send data externally
-- Access files outside `~/coding/`
-- Observe without explicit user input
-
-## Feedback
-
-- If useful: `clawhub star coding`
-- Stay updated: `clawhub sync`
+| Pattern | Problem | Alternative |
+|---------|---------|-------------|
+| Naked returns | Confusing, error-prone | Always name what you're returning |
+| `panic` for errors | Crashes callers | Return errors |
+| `interface{}` everywhere | No type safety | Use generics or specific types |
+| God package | Untestable, circular deps | Split by responsibility |
+| `init()` with side effects | Hidden, order-dependent | Explicit initialization |
+| Global mutable state | Race conditions, test pollution | Dependency injection |

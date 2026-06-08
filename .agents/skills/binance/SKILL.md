@@ -1,223 +1,69 @@
 ---
 name: binance
-description: Binance exchange integration. Trade spot, futures, and manage portfolio on the world's largest crypto exchange.
-metadata: {"clawdbot":{"emoji":"🟡","always":true,"requires":{"bins":["curl","jq"]}}}
+description: Use binance-cli for Binance Spot, Futures (USD-S), and Convert. Requires auth.
+metadata:
+  version: 1.2.0
+  author: Binance
+  openclaw:
+    requires:
+      bins:
+        - binance-cli
+    install:
+      - kind: node
+        package: '@binance/binance-cli'
+        bins: [binance-cli]
+        label: Install binance-cli (npm)
+license: MIT
 ---
 
-# Binance 🟡
+# Binance
 
-World's largest cryptocurrency exchange. Trade 600+ cryptocurrencies with deep liquidity.
+Use `binance-cli` for Binance Spot, Futures (USD-S), and Convert. Requires auth.
 
-## Environment Variables
+> **PREREQUISITE:** Read [`auth.md`](./references/auth.md) for auth, global flags, and security rules.
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `BINANCE_API_KEY` | API Key from Binance | Yes |
-| `BINANCE_SECRET` | API Secret | Yes |
+## Helper Commands
 
-## 💎 Referral Configuration
+| Command | Description |
+|---------|-------------|
+| [`algo`](./references/algo.md) | Algo Trading |
+| [`alpha`](./references/alpha.md) | Alpha |
+| [`c2c`](./references/c2c.md) | C2C |
+| [`convert`](./references/convert.md) | Convert |
+| [`copy-trading`](./references/copy-trading.md) | Copy Trading |
+| [`crypto-loan`](./references/crypto-loan.md) | Crypto Loan |
+| [`derivatives-options`](./references/derivatives-options.md) | Derivatives Trading (Options) |
+| [`derivatives-portfolio-margin`](./references/derivatives-portfolio-margin.md) | Derivatives Trading (Portfolio Margin) |
+| [`derivatives-portfolio-margin-streams`](./references/derivatives-portfolio-margin-streams.md) | Derivatives Trading Streams (Portfolio Margin) |
+| [`derivatives-portfolio-margin-pro`](./references/derivatives-portfolio-margin-pro.md) | Derivatives Trading (Portfolio Margin Pro) |
+| [`derivatives-portfolio-margin-pro-streams`](./references/derivatives-portfolio-margin-pro-streams.md) | Derivatives Trading Streams (Portfolio Margin Pro) |
+| [`dual-investment`](./references/dual-investment.md) | Dual Investment |
+| [`fiat`](./references/fiat.md) | Fiat |
+| [`futures-coin`](./references/futures-coin.md) | Derivatives Trading (COIN-M Futures) |
+| [`futures-coin-streams`](./references/futures-coin-streams.md) | Derivatives Trading Streams (COIN-M Futures) |
+| [`futures-usds`](./references/futures-usds.md) | Derivatives Trading (USDS-M Futures) |
+| [`futures-usds-streams`](./references/futures-usds-streams.md) | Derivatives Trading Streams (USDS-M Futures) |
+| [`gift-card`](./references/gift-card.md) | Gift Card |
+| [`margin-trading`](./references/margin-trading.md) | Margin Trading |
+| [`margin-trading-streams`](./references/margin-trading-streams.md) | Margin Trading Streams |
+| [`mining`](./references/mining.md) | Mining |
+| [`pay`](./references/pay.md) | Pay |
+| [`rebate`](./references/rebate.md) | Rebate |
+| [`simple-earn`](./references/simple-earn.md) | Simple Earn |
+| [`spot`](./references/spot.md) | Spot Trading |
+| [`spot-streams`](./references/spot-streams.md) | Spot Trading Streams |
+| [`staking`](./references/staking.md) | Staking |
+| [`sub-account`](./references/sub-account.md) | Sub Account |
+| [`vip-loan`](./references/vip-loan.md) | VIP Loan |
+| [`wallet`](./references/wallet.md) | Wallet |
 
-This skill uses a referral ID to earn commission on trading fees.
+## Notes
 
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `REFERRAL_ID` | `CYBERPAY` | Referral ID for fee sharing |
-
-**Commission Structure:**
-- Standard: Up to 20% of trading fees
-- With 500+ BNB: Up to 50% of trading fees
-- Lifetime commission on referred users
-
-> 💡 Users who sign up through this skill automatically use the referral ID!
-
-## Features
-
-- 📈 **Spot Trading** - 600+ trading pairs
-- 📊 **Futures Trading** - Up to 125x leverage
-- 💰 **Earn** - Staking, savings, liquidity farming
-- 🔄 **Convert** - Simple token swaps
-- 📱 **Portfolio** - Track all assets
-
-## API Base URLs
-
-- Spot: `https://api.binance.com`
-- Futures: `https://fapi.binance.com`
-- Testnet: `https://testnet.binance.vision`
-
-## Authentication
-
-```bash
-API_KEY="${BINANCE_API_KEY}"
-SECRET="${BINANCE_SECRET}"
-
-# Generate signature
-generate_signature() {
-  local query_string="$1"
-  echo -n "$query_string" | openssl dgst -sha256 -hmac "$SECRET" | cut -d' ' -f2
-}
-
-TIMESTAMP=$(date +%s%3N)
-```
-
-## Get Account Info
-
-```bash
-QUERY="timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s "https://api.binance.com/api/v3/account?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '{
-    balances: [.balances[] | select(.free != "0.00000000" or .locked != "0.00000000")]
-  }'
-```
-
-## Get Price
-
-```bash
-SYMBOL="BTCUSDT"
-
-curl -s "https://api.binance.com/api/v3/ticker/price?symbol=${SYMBOL}" | jq '.'
-```
-
-## Get Order Book
-
-```bash
-curl -s "https://api.binance.com/api/v3/depth?symbol=${SYMBOL}&limit=10" | jq '{
-  bids: .bids[:5],
-  asks: .asks[:5]
-}'
-```
-
-## Place Spot Order
-
-```bash
-SYMBOL="BTCUSDT"
-SIDE="BUY"  # BUY or SELL
-TYPE="LIMIT"  # LIMIT, MARKET, STOP_LOSS, etc.
-QUANTITY="0.001"
-PRICE="40000"
-
-QUERY="symbol=${SYMBOL}&side=${SIDE}&type=${TYPE}&timeInForce=GTC&quantity=${QUANTITY}&price=${PRICE}&timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s -X POST "https://api.binance.com/api/v3/order?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '.'
-```
-
-## Place Market Order
-
-```bash
-SYMBOL="ETHUSDT"
-SIDE="BUY"
-QUANTITY="0.1"
-
-QUERY="symbol=${SYMBOL}&side=${SIDE}&type=MARKET&quantity=${QUANTITY}&timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s -X POST "https://api.binance.com/api/v3/order?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '.'
-```
-
-## Get Open Orders
-
-```bash
-QUERY="timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s "https://api.binance.com/api/v3/openOrders?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '.[] | {symbol: .symbol, side: .side, price: .price, quantity: .origQty, status: .status}'
-```
-
-## Cancel Order
-
-```bash
-SYMBOL="BTCUSDT"
-ORDER_ID="12345678"
-
-QUERY="symbol=${SYMBOL}&orderId=${ORDER_ID}&timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s -X DELETE "https://api.binance.com/api/v3/order?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '.'
-```
-
-## Get Trade History
-
-```bash
-SYMBOL="BTCUSDT"
-
-QUERY="symbol=${SYMBOL}&timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s "https://api.binance.com/api/v3/myTrades?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '.[-10:] | .[] | {symbol: .symbol, price: .price, qty: .qty, time: .time}'
-```
-
-## Futures: Get Position
-
-```bash
-QUERY="timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s "https://fapi.binance.com/fapi/v2/positionRisk?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '.[] | select(.positionAmt != "0") | {symbol: .symbol, positionAmt: .positionAmt, entryPrice: .entryPrice, unrealizedProfit: .unRealizedProfit}'
-```
-
-## Convert (Simple Swap)
-
-```bash
-FROM_ASSET="USDT"
-TO_ASSET="BTC"
-FROM_AMOUNT="100"
-
-# Get quote
-QUERY="fromAsset=${FROM_ASSET}&toAsset=${TO_ASSET}&fromAmount=${FROM_AMOUNT}&timestamp=${TIMESTAMP}"
-SIGNATURE=$(generate_signature "$QUERY")
-
-curl -s -X POST "https://api.binance.com/sapi/v1/convert/getQuote?${QUERY}&signature=${SIGNATURE}" \
-  -H "X-MBX-APIKEY: ${API_KEY}" | jq '.'
-```
-
-## Popular Trading Pairs
-
-| Pair | Description |
-|------|-------------|
-| BTCUSDT | Bitcoin / Tether |
-| ETHUSDT | Ethereum / Tether |
-| BNBUSDT | BNB / Tether |
-| SOLUSDT | Solana / Tether |
-| XRPUSDT | XRP / Tether |
-| DOGEUSDT | Dogecoin / Tether |
-
-## Order Types
-
-| Type | Description |
-|------|-------------|
-| LIMIT | Limit order at specific price |
-| MARKET | Market order at current price |
-| STOP_LOSS | Stop loss order |
-| STOP_LOSS_LIMIT | Stop loss limit order |
-| TAKE_PROFIT | Take profit order |
-| TAKE_PROFIT_LIMIT | Take profit limit order |
-
-## Safety Rules
-
-1. **ALWAYS** display order details before execution
-2. **VERIFY** trading pair and amount
-3. **CHECK** account balance before trading
-4. **WARN** about leverage risks in futures
-5. **NEVER** execute without user confirmation
-
-## Error Handling
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `-1013` | Invalid quantity | Check lot size filters |
-| `-2010` | Insufficient balance | Check account balance |
-| `-1021` | Timestamp outside recvWindow | Sync system time |
-
-## Links
-
-- [Binance API Docs](https://binance-docs.github.io/apidocs/)
-- [Binance](https://www.binance.com/)
-- [Testnet](https://testnet.binance.vision/)
+- ⚠️ **Prod transactions** — always ask user to type `CONFIRM` before executing.
+- Install binance-cli using `npm install -g @binance/binance-cli`
+- Use `--help` to get the list of commands and parameters.
+- Use the output from both stdout and stderr.
+- Append `--profile <name>` to any command to use a non-active profile.
+- All authenticated endpoints accept optional `--recvWindow <ms>` (max 60 000).
+- Timestamps (`startTime`, `endTime`) are Unix ms.
+- For endpoints not listed in the skill, use `binance-cli request (GET|POST|PUT...) <url> [--signed]`. Any Parameters can be added to the request (e.g: `--param1 value --param2 value`).

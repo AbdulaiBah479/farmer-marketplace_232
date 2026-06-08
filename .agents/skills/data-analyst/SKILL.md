@@ -1,96 +1,355 @@
 ---
 name: data-analyst
-description: Act as an interactive data analyst for ClickHouse-backed analytics. Use when the user asks questions about internal data, metrics, dashboards, telemetry, active users, revenue, funnels, trends, distributions, or wants an analyst-style conversation, ad hoc SQL, charts, or a data export against ClickHouse (local or ClickHouse Cloud).
+description: This skill should be used when analyzing business sales and revenue data from CSV files to identify weak areas, generate statistical insights, and provide strategic improvement recommendations. Use when the user requests a business performance report, asks to analyze sales data, wants to identify areas of weakness, or needs recommendations on business improvement strategies.
+description_vi: Dùng khi phân tích dữ liệu kinh doanh từ file CSV để tìm ra các vấn đề yếu kém, tạo thống kê insight, và đưa ra khuyến nghị cải thiện chiến lược. Dùng khi user yêu cầu báo cáo hiệu suất kinh doanh, hỏi phân tích dữ liệu bán hàng, muốn tìm ra vùng yếu, hoặc cần khuyến nghị về chiến lược cải thiện business.
+keywords_vi: [phân tích kinh doanh, báo cáo doanh thu, phân tích dữ liệu, chiến lược kinh doanh, thống kê, csv, business analytics, cải thiện hiệu suất]
 ---
 
-# Data Analyst
+# Business Analytics Reporter
 
-Act as an interactive data analyst over ClickHouse. The job is not to run the first query you can think of; it is to figure out the question the user actually has, answer it with a correct and bounded query, and report the definitions and caveats behind the number.
+## Overview
 
-CRITICAL: this skill never uses ClickHouse MCP tools. All database connections, queries, schema discovery, and data access go through the `clickhousectl` CLI (`skills/clickhouse/`). If ClickHouse MCP tools (`mcp-clickhouse__*`) are available in the environment, ignore them completely. Always run queries via `clickhousectl local client` or `clickhousectl cloud service query`.
+Generate comprehensive business performance reports that analyze sales and revenue data, identify areas where the business is lacking, interpret what the statistics indicate, and provide actionable improvement strategies. The skill uses data-driven analysis to detect weak areas and recommends specific strategies backed by business frameworks.
 
-Sub-skills live in `skills/`. Load only the sub-skill directory needed for the current step, then follow that directory's `SKILL.md`. Referenced paths are relative to this skill directory (`<skill-path>/skills/data-analyst/`), not the user's workspace. For example, read plotting guidance at `<skill-path>/skills/data-analyst/skills/plotting/SKILL.md`.
+## When to Use This Skill
 
-## Sub-skills
+Invoke this skill when users request:
+- "Analyze my business data and tell me where we're lacking"
+- "Generate a report on what areas need improvement"
+- "What do these sales numbers tell us about our business performance?"
+- "Create a business analysis report with improvement strategies"
+- "Identify weak areas in our revenue data"
+- "What strategies should we use to improve our business metrics?"
 
-Authored for this analyst workflow:
+The skill expects CSV files containing business data (sales, revenue, transactions) with columns like dates, amounts, categories, or products.
 
-- `skills/clickhouse/` — connect to ClickHouse (local or ClickHouse Cloud) via the `clickhousectl` CLI and run safe, bounded queries. Load before executing any SQL.
-- `skills/reading-data-dict/` — resolve business and product terms to concrete models, columns, and metric definitions when the project documents its data (dbt repo, data dictionary, model docs).
-- `skills/steering-user-elicitation/` — fill the Intent block well, phrase good pushback, and handle metrics that are missing or commonly misunderstood.
-- `skills/analyzer/` — turn query results into trends, comparisons, distributions, funnels, sanity checks, and report-ready findings.
-- `skills/plotting/` — create chart or visual artifacts from query results.
-- `skills/artifact-management/` — save CSVs, charts, and report assets to a stable location and report their paths.
+## Core Workflow
 
-Bundled official ClickHouse skills (from [ClickHouse/agent-skills](https://github.com/ClickHouse/agent-skills), Apache-2.0, vendored via a git submodule). Load these when the corresponding need arises:
+### Step 1: Data Loading and Exploration
 
-- `skills/clickhouse-best-practices/` — schema, query, and ingestion rules plus an agent schema-discovery and query-safety workflow. Consult when writing or optimizing non-trivial SQL.
-- `skills/chdb-sql/` — run ClickHouse SQL on local files (parquet/csv/json), S3, and remote databases in Python with no server. Use for ad-hoc analysis over files or cross-source data.
-- `skills/chdb-datastore/` — pandas-style API on a ClickHouse engine and cross-source DataFrames. Use when the user has DataFrames/files and wants fast, SQL-grade aggregation that feeds plotting.
-- `skills/clickhousectl-local-dev/` — install ClickHouse and run a local server. Use when the user needs a local instance to load and analyze data.
-- `skills/clickhousectl-cloud-deploy/`, `skills/clickhouse-architecture-advisor/`, `skills/clickhouse-js-node-coding/`, `skills/clickhouse-js-node-troubleshooting/` — also bundled; less central to ad-hoc analysis (deployment, production architecture, and JS client work).
+Start by understanding the data structure and what the user wants to analyze.
 
-See `examples.md` for realistic example prompts that show the elicitation-first style.
+**Ask clarifying questions if needed:**
+- What specific metrics or areas should the analysis focus on?
+- Are there particular time periods or categories of interest?
+- Should the report include visualizations or focus on written analysis?
 
-## Intent block (first output for any data request)
+**Load and explore the data:**
+```python
+import pandas as pd
 
-Assume the first request is underspecified. It almost always is. A one-line data request rarely pins down the metric definition, population, time window, grain, and filters precisely enough to answer the question the user actually has. Your default expectation should be that you need to ask at least one clarifying question before querying.
+# Load the CSV file
+df = pd.read_csv('business_data.csv')
 
-Begin every response to a data request with this block, before querying or exploring the actual data. You may consult the data dictionary first (`skills/reading-data-dict/`) to help fill it in accurately. Fill in each field:
-
-```md
-Intent:
-- Metric:      [Confirmed: ... | Assumed: ... | NEED FROM USER | LOOK UP: <term>]
-- Population:  [...]
-- Time window: [...]
-- Grain:       [...]
-- Filters:     [...]
-- Output:      [...]
+# Display basic information
+print(f"Data shape: {df.shape}")
+print(f"Columns: {df.columns.tolist()}")
+print(f"Date range: {df['date'].min()} to {df['date'].max()}")
+print(df.head())
 ```
 
-Field markers:
+### Step 2: Run Automated Analysis
 
-- Confirmed: the user stated it explicitly, in words, in this conversation.
-- Assumed: a default you are choosing. Use sparingly and only for genuinely low-stakes fields. An assumption is only acceptable when getting it wrong would not change the answer's shape or the user's decision. If a wrong assumption would mislead the user, it is NEED FROM USER, not Assumed.
-- NEED FROM USER: the field materially affects the result and the user did not specify it. This is the normal state of most fields on a first request. Stop and ask before querying data.
-- LOOK UP: `<term>`: the term has a documented definition you should resolve via the data dictionary (e.g. "revenue", a funnel stage). Resolve it before querying; do not assume its meaning.
+Use the bundled analysis script to generate comprehensive insights:
 
-After filling the block, look at it critically. If every field is Confirmed or Assumed and you have nothing to ask, that is a red flag: re-check whether you quietly assumed away a real choice (which metric definition? unique users or events? which window? include the current partial day? which population?). On a typical first request you should end up with at least one NEED FROM USER or a confirm-back question. If you genuinely have none, say so and state every assumption you made so the user can correct you before you query.
-
-Anti-pattern: noting ambiguity and then exploring the data anyway. Noting ambiguity is not a substitute for resolving it. Filling every field as Assumed so you can proceed is the same failure in disguise. If a field is NEED FROM USER, stop and ask. If it is LOOK UP, resolve it from the dictionary before querying.
-
-This is a strong default, not an absolute rule. Skip the question only in the narrow mechanical case described in `skills/steering-user-elicitation/` (fully-qualified table or metric, explicit window, explicit aggregate). Otherwise, ask.
-
-Load `skills/steering-user-elicitation/` for how to fill this block well, phrase good pushback, and handle metrics that are missing or commonly misunderstood.
-
-## Default workflow
-
-1. State the Intent block (pass 1). Restate the request as the Intent block using only the user's words plus obvious defaults. Mark ambiguous-with-no-default fields NEED FROM USER and stop to ask. Mark documented-but-undefined terms LOOK UP. You may consult the data dictionary (step 3) to resolve LOOK UP terms, but do not query or explore the actual data while a NEED FROM USER field remains.
-2. Verify connection. Load `skills/clickhouse/` to confirm you can reach the right ClickHouse (local server or Cloud service). Skip only if already verified this session.
-3. Resolve definitions (targeted). Load `skills/reading-data-dict/` to resolve the specific LOOK UP terms from step 1, not a full data exploration. Then confirm the resolved definitions back to the user (pass 2), surfacing any options the dictionary revealed. Update the Intent block.
-4. Draft and run safe SQL. Load `skills/clickhouse/` before executing queries against a ClickHouse server, or `skills/chdb-sql/` when the data is local files or remote sources you can query without a server. Consult `skills/clickhouse-best-practices/` when the SQL is non-trivial or needs optimizing. Apply the confirmed Intent block.
-5. Analyze results. Load `skills/analyzer/` for trends, comparisons, distributions, summaries, sanity checks, or report-ready findings.
-6. Create and save artifacts. Load `skills/plotting/` when the user asks for charts or when visualization materially improves understanding, and `skills/artifact-management/` to save CSVs, charts, and report assets to a stable location and report their paths.
-
-Elicitation is an invariant, not just step 1. At any step, if a new ambiguity surfaces, or the user draws conclusions, makes decisions, or asks for a report from incomplete or ambiguous data, return to the Intent block and re-confirm before continuing.
-
-## Core rules
-
-- Never use ClickHouse MCP tools. All SQL execution goes through the `clickhousectl` CLI as described in `skills/clickhouse/`. Do not call `mcp-clickhouse__run_query`, `mcp-clickhouse__list_databases`, `mcp-clickhouse__list_tables`, or any other ClickHouse MCP function, even if they are available in the environment.
-- Prefer curated, documented models and metrics over raw event or log tables.
-- State the definitions, filters, time window, and assumptions used.
-- Start with schema discovery, previews, or aggregates before broad result dumps.
-- Ask before running expensive, unbounded, long-running, or high-cardinality queries.
-- Do not imply data is complete without checking caveats such as coverage, rollout dates, freshness, and opt-in.
-- Keep clarification proportional: ask the one or two questions that most change the answer rather than an exhaustive questionnaire. Asking too little is the more common failure than asking too much.
-- Never echo credentials or secrets into the conversation. See `skills/clickhouse/` for auth handling.
-
-## Standard answer shape
-
-```md
-Answer: ...
-How I measured it: metric definition, grain, time window, filters, and model/table.
-SQL/source: the query, table/model, or artifact path.
-Caveats: coverage, ambiguity, sample size, freshness, or assumptions.
-Next checks: 1-3 useful follow-ups when warranted.
+```bash
+python scripts/analyze_business_data.py path/to/business_data.csv output_report.json
 ```
+
+The script will:
+1. Automatically detect data structure (revenue columns, date columns, categories)
+2. Calculate statistical metrics (mean, median, growth rates, volatility)
+3. Identify trends and patterns
+4. Detect weak areas and underperforming segments
+5. Generate improvement strategies based on findings
+6. Output a structured JSON report
+
+**Output structure:**
+```json
+{
+  "metadata": {...},
+  "findings": {
+    "basic_statistics": {...},
+    "trend_analysis": {...},
+    "category_analysis": {...},
+    "variability": {...}
+  },
+  "weak_areas": [...],
+  "improvement_strategies": [...]
+}
+```
+
+### Step 3: Interpret the Analysis Results
+
+Read the generated JSON report and interpret the findings for the user in plain language.
+
+**Focus on:**
+1. **Current State**: What the data shows about business performance
+2. **Weak Areas**: Specific problems identified with severity levels
+3. **Root Causes**: Why these issues exist (use business frameworks from references/)
+4. **Impact**: What these weaknesses mean for the business
+
+**Example interpretation:**
+```
+Based on the analysis of your sales data from January to December 2024:
+
+Current State:
+- Total revenue: $1.2M with average monthly revenue of $100K
+- Average growth rate: -3.5% indicating declining performance
+- Revenue stability: High volatility (CV: 58%) suggesting inconsistent performance
+
+Weak Areas Identified:
+1. Revenue Growth (High Severity): Negative average growth rate of -3.5%
+2. Performance Consistency (Medium Severity): 45% of periods show declining performance
+3. Category Performance (Medium Severity): 4 underperforming categories identified
+```
+
+### Step 4: Generate Detailed Recommendations
+
+Consult the business frameworks reference to provide strategic recommendations:
+
+**Load business frameworks for context:**
+Refer to `references/business_frameworks.md` for:
+- Revenue growth strategies (market penetration, product development, etc.)
+- Operational excellence frameworks
+- Customer-centric strategies
+- Pricing strategy frameworks
+- Common weak area solutions
+
+**Structure recommendations as:**
+
+For each identified weak area, provide:
+1. **Strategic Initiative Name**: Clear, actionable program name
+2. **Objective**: What this strategy aims to achieve
+3. **Key Actions**: 3-5 specific, prioritized steps
+4. **Expected Impact**: High/Medium/Low
+5. **Timeline**: Realistic implementation timeframe
+6. **Success Metrics**: How to measure improvement
+
+**Example recommendation:**
+```
+Strategy: Revenue Acceleration Program
+Area: Revenue Growth
+Objective: Reverse negative growth trend and achieve 10%+ monthly growth
+
+Key Actions:
+1. Implement aggressive customer acquisition campaigns
+2. Review and optimize pricing strategy
+3. Launch upselling and cross-selling initiatives
+4. Expand into new market segments or geographies
+5. Accelerate product development and innovation
+
+Expected Impact: High
+Timeline: 3-6 months
+Success Metrics: Monthly revenue growth rate, new customer acquisition, ARPU increase
+```
+
+### Step 5: Create Visualizations (Optional)
+
+If requested, create interactive visualizations using Plotly to illustrate findings:
+
+**Consult visualization guide:**
+Refer to `references/visualization_guide.md` for:
+- Recommended chart types for different analyses
+- Code examples for creating charts
+- Best practices for business dashboards
+
+**Common visualizations to create:**
+1. **Revenue Trend Chart**: Line chart showing revenue over time with growth rate overlay
+2. **Category Performance**: Bar chart sorted by revenue contribution
+3. **Volatility Analysis**: Box plot or standard deviation visualization
+4. **Weak Areas Heatmap**: Visual representation of severity and impact
+
+**Example code for revenue trend:**
+```python
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+# Add revenue line
+fig.add_trace(
+    go.Scatter(x=df['date'], y=df['revenue'], name="Revenue",
+               line=dict(color='blue', width=3)),
+    secondary_y=False
+)
+
+# Add growth rate line
+fig.add_trace(
+    go.Scatter(x=df['date'], y=df['growth_rate'], name="Growth Rate",
+               line=dict(color='green', dash='dash')),
+    secondary_y=True
+)
+
+fig.update_layout(title_text="Revenue Performance & Growth Rate")
+fig.show()
+```
+
+### Step 6: Generate Final Report
+
+Compile findings into a comprehensive report format.
+
+**Option A: Generate HTML Report**
+
+Use the report template from `assets/report_template.html`:
+
+```python
+# Read the template
+with open('assets/report_template.html', 'r') as f:
+    template = f.read()
+
+# Load analysis results
+with open('output_report.json', 'r') as f:
+    analysis = json.load(f)
+
+# Populate the template with actual data
+# Replace placeholders with real values from analysis
+# Add Plotly charts as JavaScript
+# Save as final HTML report
+
+with open('business_report.html', 'w') as f:
+    f.write(populated_template)
+```
+
+The HTML template includes:
+- Executive summary with key metrics
+- Interactive charts for trends and categories
+- Styled weak area cards with severity indicators
+- Strategic recommendations with action items
+- Professional styling and print-ready format
+
+**Option B: Generate Markdown Report**
+
+Create a structured markdown document:
+
+```markdown
+# Business Performance Analysis Report
+
+**Generated:** [Date]
+**Data Period:** [Period]
+
+## Executive Summary
+
+[Brief overview of findings]
+
+## Key Metrics
+
+- Total Revenue: $X
+- Average Growth Rate: X%
+- Revenue Stability: [Assessment]
+- Weak Areas Identified: X
+
+## Performance Trends
+
+[Insert chart or describe trends]
+
+## Areas of Weakness
+
+### 1. [Weak Area Name] (Severity)
+**Finding:** [Description]
+**Impact:** [Business impact]
+
+### 2. [Next weak area...]
+
+## Strategic Recommendations
+
+### Strategy 1: [Name]
+**Objective:** [Goal]
+**Actions:**
+- [Action 1]
+- [Action 2]
+...
+
+**Expected Impact:** High/Medium/Low
+**Timeline:** X months
+```
+
+## Key Analysis Metrics
+
+The analysis script calculates the following metrics automatically:
+
+### Growth Analysis
+- **Average Growth Rate**: Period-over-period revenue change percentage
+- **Declining Period Count**: Number of periods with negative growth
+- **Trend Direction**: Overall trajectory (growing, declining, stable)
+
+### Stability Analysis
+- **Coefficient of Variation (CV)**: Measures revenue volatility
+  - CV < 25%: Stable performance
+  - CV 25-50%: Moderate volatility
+  - CV > 50%: High volatility (flag as weak area)
+
+### Category Performance
+- **Revenue Contribution**: Percentage breakdown by category
+- **Underperforming Categories**: Bottom 25% by average performance
+- **Top/Bottom Performers**: Best and worst performing categories
+
+### Statistical Indicators
+- Mean, Median, Standard Deviation for all numeric columns
+- Min/Max values and ranges
+- Total aggregates
+
+## Business Frameworks Reference
+
+When generating recommendations, leverage the frameworks documented in `references/business_frameworks.md`:
+
+1. **Revenue Growth Strategies**: Market penetration, product development, market development, diversification
+2. **Operational Excellence**: Process optimization, resource allocation, quality management
+3. **Customer-Centric Strategies**: Retention programs, CLV optimization, segmentation
+4. **Pricing Strategies**: Value-based, dynamic, competitive pricing
+5. **Data-Driven Decision Making**: Analytics maturity model, KPI frameworks
+
+Match identified weak areas with appropriate strategic frameworks to provide contextually relevant recommendations.
+
+## Tips for Effective Reports
+
+1. **Start with the Big Picture**: Lead with overall performance and key findings
+2. **Prioritize by Severity**: Focus on high-severity issues first
+3. **Be Specific**: Provide concrete numbers and percentages, not vague assessments
+4. **Action-Oriented**: Every weak area should have actionable recommendations
+5. **Context Matters**: Consider industry benchmarks and business context
+6. **Visual Communication**: Use charts to make trends immediately clear
+7. **Executive-Friendly**: Structure for quick scanning with clear headers and summaries
+
+## Common Weak Areas and Detection
+
+The analysis automatically detects these common business problems:
+
+| Weak Area | Detection Criteria | Typical Root Causes |
+|-----------|-------------------|---------------------|
+| Revenue Growth | Negative average growth rate | Market saturation, increased competition, poor positioning |
+| Performance Consistency | >40% declining periods | Lack of recurring revenue, seasonal dependency |
+| Revenue Stability | CV > 50% | Customer concentration, volatile demand |
+| Category Performance | Categories in bottom 25% | Poor product-market fit, pricing issues, low awareness |
+
+## Example Usage
+
+**User request:** "Analyze my Q4 sales data and tell me where we're weak and how to improve"
+
+**Workflow:**
+1. Load the CSV: `df = pd.read_csv('q4_sales.csv')`
+2. Run analysis: `python scripts/analyze_business_data.py q4_sales.csv q4_report.json`
+3. Read results: `with open('q4_report.json') as f: report = json.load(f)`
+4. Interpret findings for the user in natural language
+5. Create visualizations using Plotly (refer to `references/visualization_guide.md`)
+6. Generate HTML report using `assets/report_template.html`
+7. Provide strategic recommendations using `references/business_frameworks.md`
+
+**Expected output:**
+- Clear explanation of current business performance
+- 3-5 identified weak areas with severity levels
+- 4-6 strategic initiatives with specific action plans
+- Interactive visualizations (if requested)
+- Professional HTML or markdown report
+
+## Resources
+
+### scripts/
+- `analyze_business_data.py`: Automated analysis engine that detects data structure, calculates metrics, identifies weak areas, and generates improvement strategies
+
+### references/
+- `business_frameworks.md`: Comprehensive guide to business strategy frameworks, common weak areas, and solution templates
+- `visualization_guide.md`: Chart type recommendations, Plotly code examples, and dashboard design best practices
+
+### assets/
+- `report_template.html`: Professional HTML template with interactive visualizations, styled cards for weak areas and strategies, and print-ready formatting

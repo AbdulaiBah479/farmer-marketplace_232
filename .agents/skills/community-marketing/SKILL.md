@@ -1,163 +1,342 @@
 ---
 name: community-marketing
-description: "Build and leverage online communities to drive product growth and brand loyalty. Use when the user wants to create a community strategy, grow a Discord or Slack community, manage a forum or subreddit, build brand advocates, increase word-of-mouth, drive community-led growth, engage users post-signup, or turn customers into evangelists. Trigger phrases: \"build a community,\" \"community strategy,\" \"Discord community,\" \"Slack community,\" \"community-led growth,\" \"brand advocates,\" \"user community,\" \"forum strategy,\" \"community engagement,\" \"grow our community,\" \"ambassador program,\" \"community flywheel.\""
-metadata:
-  version: 2.0.0
+description: Эксперт по community-маркетингу. Используй для построения сообществ, engagement стратегий, community-led growth и модерации.
 ---
 
-# Community Marketing
+# Community Marketing Expert
 
-You are an expert community builder and community-led growth strategist. Your goal is to help the user design, launch, and grow a community that creates genuine value for members while driving measurable business outcomes.
+Стратегическая экспертиза в построении и развитии бренд-сообществ.
 
-## Before You Start
+## Core Competencies
 
-**Check for product marketing context first:**
-If `.agents/product-marketing.md` exists (or `.claude/product-marketing.md`, or the legacy `product-marketing-context.md` filename, in older setups), read it before asking questions. Use that context and only ask for information not already covered.
+### Community Strategy
+- Community purpose definition
+- Platform selection
+- Governance design
+- Launch planning
+- Growth strategy
 
-Understand the situation (ask if not provided):
+### Community Management
+- Content programming
+- Engagement facilitation
+- Moderation
+- Member recognition
+- Conflict resolution
 
-1. **What is the product or brand?** — What problem does it solve, who uses it
-2. **What community platform(s) are in play?** — Discord, Slack, Circle, Reddit, Facebook Groups, forum, etc.
-3. **What stage is the community at?** — Pre-launch, 0–100 members, 100–1k, scaling, or established
-4. **What is the primary community goal?** — Retention, activation, word-of-mouth, support deflection, product feedback, revenue
-5. **Who is the ideal community member?** — Role, motivation, what they hope to get from joining
+### Community Growth
+- Acquisition tactics
+- Activation programs
+- Retention strategies
+- Ambassador programs
+- Advocacy development
 
-Work with whatever context is available. If key details are missing, make reasonable assumptions and flag them.
+## Типы сообществ
 
----
+### Customer Communities
+- Support communities
+- User groups
+- Product feedback
+- Best practice sharing
 
-## Community Strategy Principles
+### Professional Communities
+- Industry discussions
+- Career development
+- Networking
+- Knowledge sharing
 
-### Build around a shared identity, not just a product
+### Brand Communities
+- Fan communities
+- Lifestyle groups
+- Interest-based
+- Mission-driven
 
-The strongest communities are built around who members *are* or aspire to be — not around your product. Members join because of the product but stay because of the people and identity.
+## Выбор платформы
 
-Examples:
-- Indie hackers (identity: bootstrapped founders)
-- r/homelab (identity: tinkerers who self-host)
-- Figma community (identity: designers who care about craft)
+| Платформа | Лучше для | Особенности |
+|-----------|-----------|-------------|
+| Slack | B2B, engaged | Real-time, может быть шумно |
+| Discord | Tech, gaming | Много функций, нужно учиться |
+| Circle | Курсы, membership | Платная, профессиональная |
+| Discourse | Tech, open source | Асинхронная, поисковая |
+| Facebook Groups | B2C, mainstream | Зависит от алгоритма |
+| LinkedIn Groups | B2B professional | Ограниченные функции |
+| Telegram | Быстрая коммуникация | Простота, но мало инструментов |
 
-Always define: **What identity does this community reinforce for its members?**
+## Engagement Programming
 
-### Value must flow to members first
+### Контент-календарь
 
-Every community touchpoint should answer: *What does the member get from this?*
+| День | Активность |
+|------|------------|
+| Пн | Еженедельный вопрос для обсуждения |
+| Вт | Шеринг полезных ресурсов |
+| Ср | Spotlight участника |
+| Чт | AMA с экспертом |
+| Пт | Wins of the week |
 
-- Exclusive knowledge or early access
-- Peer connections they can't get elsewhere
-- Recognition and status within a group they respect
-- Direct influence on the product roadmap
-- Career opportunities, visibility, or credibility
+### Типы событий
 
-### The Community Flywheel
+- AMAs с экспертами
+- Office hours
+- Вебинары
+- Challenges
+- Митапы
+- Годовая конференция
 
-Healthy communities compound over time:
+## Community Metrics
+
+| Метрика | Что измеряет |
+|---------|--------------|
+| Active members | MAU — Monthly Active Users |
+| Engagement rate | (Posts + Comments) / Members |
+| Growth rate | New members / Period |
+| Retention | Members still active |
+| NPS | Member satisfaction |
+| UGC volume | User-generated content |
+
+### Health Score Formula
+
+```javascript
+const communityHealth = {
+  engagement: activeMembers / totalMembers * 100,
+  growth: (newMembers - churnedMembers) / totalMembers * 100,
+  sentiment: positiveInteractions / totalInteractions * 100,
+
+  calculateScore() {
+    return (this.engagement * 0.4) +
+           (this.growth * 0.3) +
+           (this.sentiment * 0.3);
+  }
+};
+```
+
+## Ambassador Program
+
+### Структура программы
+
+```yaml
+Уровни:
+  1. Member:
+    - Активное участие
+    - Помощь новичкам
+
+  2. Contributor:
+    - Создание контента
+    - Ответы на вопросы
+    - 3+ месяца активности
+
+  3. Ambassador:
+    - Ведение событий
+    - Менторство
+    - Представление бренда
+
+  4. Champion:
+    - Стратегический input
+    - Лидерство инициатив
+    - Доступ к roadmap
+
+Награды:
+  - Эксклюзивный контент
+  - Early access к продуктам
+  - Swag и merchandise
+  - Приглашения на события
+  - Networking opportunities
+  - LinkedIn recommendations
+```
+
+### Отбор амбассадоров
+
+```markdown
+**Критерии:**
+- [ ] Минимум 6 месяцев активного участия
+- [ ] 50+ качественных contributions
+- [ ] Положительный фидбек от других участников
+- [ ] Alignment с ценностями бренда
+- [ ] Готовность к публичной активности
+
+**Процесс:**
+1. Self-nomination или номинация
+2. Review engagement history
+3. Interview call
+4. Trial period (1 месяц)
+5. Official onboarding
+```
+
+## Moderation Framework
+
+### Правила сообщества
+
+```markdown
+# Community Guidelines
+
+## Мы приветствуем:
+- Конструктивные обсуждения
+- Взаимопомощь и поддержку
+- Sharing опыта и знаний
+- Вежливое несогласие
+
+## Недопустимо:
+- Спам и самопиар
+- Оскорбления и harassment
+- Off-topic контент
+- Нарушение конфиденциальности
+
+## Последствия:
+1. Предупреждение
+2. Временный mute (24h)
+3. Временный ban (7 дней)
+4. Перманентный ban
+```
+
+### Escalation Matrix
+
+| Нарушение | Действие | Ответственный |
+|-----------|----------|---------------|
+| Minor (off-topic) | Warning | Moderator |
+| Moderate (spam) | Mute 24h | Moderator |
+| Serious (harassment) | Ban 7d | Community Manager |
+| Severe (threats) | Perm ban | Community Lead + Legal |
+
+## Activation Campaigns
+
+### Onboarding Flow
+
+```yaml
+День 1:
+  - Welcome message
+  - Intro prompt: "Расскажи о себе"
+  - Guide по навигации
+
+День 3:
+  - Check-in: "Как дела?"
+  - Приглашение в discussion thread
+
+День 7:
+  - Resource digest
+  - Приглашение на event
+
+День 14:
+  - Feedback survey
+  - Advanced tips
+
+День 30:
+  - Ambassador program info
+  - Recognition for activity
+```
+
+### Re-engagement Campaign
+
+```markdown
+**Для неактивных 30+ дней:**
+
+Subject: Мы скучаем по тебе, {name}! 👋
+
+Привет {name}!
+
+Заметили, что тебя давно не было в сообществе.
+За это время произошло много интересного:
+
+- 🎉 Запустили новую функцию X
+- 📚 Опубликовали гайд по Y
+- 🎙️ Провели AMA с экспертом Z
+
+Возвращайся — у нас для тебя специальный бонус!
+
+[Вернуться в сообщество]
+```
+
+## Community-Led Growth
+
+### Flywheel Model
 
 ```
-Members join → get value → engage → create content/help others
-    ↑                                          ↓
-    ←←←←← new members discover the community ←←
+Content → Engagement → Trust → Advocacy → Growth → Content
 ```
 
-Design for the flywheel from day one. Every decision should ask: *Does this accelerate the loop or slow it down?*
+### Referral Program
 
----
+```javascript
+const referralProgram = {
+  rewards: {
+    referrer: {
+      1: "Exclusive badge",
+      5: "1 month premium",
+      10: "Lifetime premium",
+      25: "Ambassador status"
+    },
+    referee: "7 days premium trial"
+  },
 
-## Playbooks by Goal
+  tracking: {
+    uniqueLink: true,
+    utmParameters: true,
+    attribution: "first-touch"
+  }
+};
+```
 
-### Launching a Community from Zero
+## Content Strategy
 
-1. **Recruit 20–50 founding members manually** — DM your most engaged users, beta testers, or fans. Don't open publicly until there is baseline activity.
-2. **Set the culture explicitly** — Write community guidelines that describe the *vibe*, not just the rules. What does great participation look like here?
-3. **Seed conversations before launch** — Pre-populate channels with 5–10 posts that model the behavior you want. Questions, wins, resources.
-4. **Do things that don't scale at first** — Reply to every post. Welcome every new member by name. Host a weekly call. You are buying social proof.
-5. **Define your core loop** — What action do you want members to take weekly? Make it easy and reward it publicly.
+### User-Generated Content
 
-### Growing an Existing Community
+```yaml
+Форматы UGC:
+  - Case studies от участников
+  - Tutorial videos
+  - Templates и resources
+  - Q&A threads
+  - Success stories
 
-1. **Audit where members drop off** — Are people joining but not posting? Posting once and disappearing? Identify the leaky stage.
-2. **Create a new member journey** — A pinned welcome post, a #introduce-yourself channel, a DM or email from a community manager, a clear "start here" path.
-3. **Surface member wins publicly** — Showcase user projects, testimonials, milestones. This reinforces identity and signals that participation has rewards.
-4. **Run recurring community rituals** — Weekly threads (e.g., "What are you working on?"), monthly AMAs, seasonal challenges. Rituals create habit.
-5. **Identify and invest in power users** — 1% of members generate 90% of value. Give them recognition, early access, moderator roles, or direct product input.
+Incentives:
+  - Featured placement
+  - Social amplification
+  - Rewards points
+  - Expert badges
+```
 
-### Building a Brand Ambassador / Advocate Program
+### Curation Framework
 
-1. **Identify candidates** — Look for people who already recommend you unprompted. Check reviews, social mentions, community posts.
-2. **Make the ask personal** — Don't send a generic form. Reach out 1:1 and explain why you chose them specifically.
-3. **Offer meaningful benefits** — Exclusive access, swag, revenue share, or public recognition — not just "early access to features."
-4. **Give them tools and content** — Referral links, shareable assets, key talking points, a private Slack channel.
-5. **Measure and iterate** — Track referral traffic, signups, and engagement driven by advocates. Double down on what works.
+```markdown
+**Weekly Digest структура:**
 
-### Community-Led Support (Deflection + Retention)
+1. **Top Discussion** — самый engaging тред
+2. **Member Spotlight** — интересный участник
+3. **Resource Pick** — полезный материал
+4. **Upcoming Events** — что планируется
+5. **Quick Wins** — успехи участников
+```
 
-1. **Create a searchable knowledge base** from top community questions
-2. **Recognize members who help others** — "Community Expert" badges, leaderboards, shoutouts
-3. **Close the loop with product** — When community feedback drives a change, announce it publicly and credit the members who raised it
-4. **Monitor sentiment weekly** — Look for patterns in complaints or confusion before they become churn signals
+## Measurement Dashboard
 
----
+```yaml
+Metrics to track:
+  Growth:
+    - New members (daily/weekly/monthly)
+    - Churn rate
+    - Referral signups
 
-## Platform Selection Guide
+  Engagement:
+    - DAU/MAU ratio
+    - Posts per member
+    - Response rate
+    - Time to first response
 
-| Platform | Best For | Watch Out For |
-|----------|----------|---------------|
-| Discord | Developer, gaming, creator communities; real-time chat | High noise, hard to search, onboarding friction |
-| Slack | B2B / professional communities; familiar to SaaS buyers | Free tier limits history; feels like work |
-| Circle | Creator or course-based communities; clean UX | Less organic discovery; requires driving traffic |
-| Reddit | High-volume public communities; SEO benefit | You don't own it; moderation is hard |
-| Facebook Groups | Consumer brands; older demographics | Declining organic reach; algorithm dependent |
-| Forum (Discourse) | Long-form technical communities; SEO-rich | Slower velocity; higher effort to post |
+  Quality:
+    - NPS score
+    - Sentiment analysis
+    - Support deflection rate
 
----
+  Business Impact:
+    - Community-influenced revenue
+    - Product feedback implemented
+    - Support cost savings
+```
 
-## Community Health Metrics
+## Лучшие практики
 
-Track these signals weekly:
-
-- **DAU/MAU ratio** — Stickiness. Above 20% is healthy for most communities.
-- **New member post rate** — % of new members who post within 7 days of joining
-- **Thread reply rate** — % of posts that receive at least one reply
-- **Churn / lurker ratio** — Members who joined but haven't posted in 30+ days
-- **Content created by non-staff** — % of posts not written by the company team
-
-**Warning signs:**
-- Most posts are from the company team, not members
-- Questions go unanswered for >24 hours
-- The same 5 people account for 80%+ of engagement
-- New members stop posting after their intro message
-
----
-
-## Output Formats
-
-Depending on what the user needs, produce one of:
-
-- **Community Strategy Doc** — Platform choice, identity definition, core loop, 90-day launch plan
-- **Channel Architecture** — Recommended channels/categories with purpose and posting guidelines for each
-- **New Member Journey** — Welcome sequence: pinned post, DM template, first-week prompts
-- **Community Ritual Calendar** — Weekly/monthly recurring events and threads
-- **Ambassador Program Brief** — Criteria, benefits, outreach template, tracking plan
-- **Health Audit Report** — Current metrics, diagnosis, top 3 priorities to fix
-
-Always be specific. Generic advice ("be consistent," "provide value") is not useful. Give the user something they can act on today.
-
----
-
-## Task-Specific Questions
-
-1. What platform are you building on (or considering)?
-2. What stage is the community at? (Pre-launch, early, growing, established)
-3. What's the primary business goal? (Retention, activation, word-of-mouth, support deflection)
-4. Who is the ideal community member and what motivates them?
-5. Do you have existing users or customers to seed from?
-6. How much time can you dedicate to community management weekly?
-
----
-
-## Related Skills
-
-- **referrals**: For structured referral and ambassador incentive programs
-- **churn-prevention**: For retention strategies that complement community engagement
-- **social**: For content creation across social platforms
-- **customer-research**: For understanding your community members' needs and language
+1. **Start small** — лучше engaged 100, чем passive 1000
+2. **Lead by example** — team должна быть активна
+3. **Celebrate wins** — признавайте contributions
+4. **Listen actively** — community = source of truth
+5. **Iterate constantly** — тестируйте и адаптируйте
+6. **Document everything** — playbooks для масштабирования

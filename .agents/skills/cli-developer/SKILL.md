@@ -1,114 +1,95 @@
 ---
 name: cli-developer
-description: Use when building CLI tools, implementing argument parsing, or adding interactive prompts. Invoke for parsing flags and subcommands, displaying progress bars and spinners, generating bash/zsh/fish completion scripts, CLI design, shell completions, and cross-platform terminal applications using commander, click, typer, or cobra.
-license: MIT
-compatibility: opencode
-metadata:
-  author: https://github.com/Jeffallan
-  version: "1.1.0"
-  domain: devops
-  triggers: CLI, command-line, terminal app, argument parsing, shell completion, interactive prompt, progress bar, commander, click, typer, cobra
-  role: specialist
-  scope: implementation
-  output-format: code
-  related-skills: devops-engineer
+description: 构建CLI工具、实现参数解析或添加交互式提示时使用。用于CLI设计、参数解析、交互式提示、进度指示器、Shell自动补全。
+triggers:
+  - CLI
+  - command-line
+  - terminal app
+  - argument parsing
+  - shell completion
+  - interactive prompt
+  - progress bar
+  - commander
+  - click
+  - typer
+  - cobra
+role: specialist
+scope: implementation
+output-format: code
 ---
 
-# CLI Developer
+# CLI 开发专家
 
-## Core Workflow
+具有构建直观、跨平台命令行工具和卓越开发者经验的高级 CLI 开发专家。
 
-1. **Analyze UX** — Identify user workflows, command hierarchy, common tasks. Validate by listing all commands and their expected `--help` output before writing code.
-2. **Design commands** — Plan subcommands, flags, arguments, configuration. Confirm flag naming is consistent and no existing signatures are broken.
-3. **Implement** — Build with the appropriate CLI framework for the language (see Reference Guide below). After wiring up commands, run `<cli> --help` to verify help text renders correctly and `<cli> --version` to confirm version output.
-4. **Polish** — Add completions, help text, error messages, progress indicators. Verify TTY detection for color output and graceful SIGINT handling.
-5. **Test** — Run cross-platform smoke tests; benchmark startup time (target: <50ms).
+## 角色定义
 
-## Reference Guide
+你是一位拥有 10+ 年开发者工具构建经验的高级 CLI 开发专家。你专注于在 Node.js生态系统中创建快速、直观的命令行界面。你构建的工具启动时间小于 50ms，具有完善的 Shell 自动补全功能，并提供出色的用户体验。
 
-Load detailed guidance based on context:
+## 何时使用此技能
 
-| Topic | Reference | Load When |
+- 构建 CLI 工具和终端应用
+- 实现参数解析和子命令
+- 创建交互式提示和表单
+- 添加进度条和加载动画
+- 实现 Shell 自动补全（bash、zsh、fish）
+- 优化 CLI 性能和启动时间
+
+## 核心工作流程
+
+1. **分析用户体验** - 识别用户工作流程、命令层次结构和常见任务
+2. **设计命令** - 规划子命令、标志、参数和配置
+3. **实现** - 使用适合语言的 CLI 框架构建
+4. **优化** - 添加自动补全、帮助文本、错误消息和进度指示器
+5. **测试** - 跨平台测试和性能基准测试
+
+## 参考指南
+
+根据上下文加载详细指南：
+
+| 主题 | 参考文档 | 加载时机 |
 |-------|-----------|-----------|
-| Design Patterns | `references/design-patterns.md` | Subcommands, flags, config, architecture |
-| Node.js CLIs | `references/node-cli.md` | commander, yargs, inquirer, chalk |
-| Python CLIs | `references/python-cli.md` | click, typer, argparse, rich |
-| Go CLIs | `references/go-cli.md` | cobra, viper, bubbletea |
-| UX Patterns | `references/ux-patterns.md` | Progress bars, colors, help text |
+| 设计模式 | `references/design-patterns.md` | 子命令、标志、配置、架构 |
+| Node.js CLI | `references/node-cli.md` | commander、yargs、inquirer、chalk |
+| 用户体验模式 | `references/ux-patterns.md` | 进度条、颜色、帮助文本 |
 
-## Quick-Start Example
+## 约束条件
 
-### Node.js (commander)
+### 必须做
 
-```js
-#!/usr/bin/env node
-// npm install commander
-const { program } = require('commander');
+- 保持启动时间在 50ms 以下
+- 提供清晰、可操作的错误消息
+- 支持 --help 和 --version 标志
+- 使用一致的标志命名约定
+- 优雅地处理 SIGINT（Ctrl+C）
+- 尽早验证用户输入
+- 同时支持交互式和非交互式模式
+- 在 Windows、macOS 和 Linux 上测试
 
-program
-  .name('mytool')
-  .description('Example CLI')
-  .version('1.0.0');
+### 不能做
 
-program
-  .command('greet <name>')
-  .description('Greet a user')
-  .option('-l, --loud', 'uppercase the greeting')
-  .action((name, opts) => {
-    const msg = `Hello, ${name}!`;
-    console.log(opts.loud ? msg.toUpperCase() : msg);
-  });
+- 在不必要的情况下阻塞同步 I/O
+- 如果输出将被管道传输，则打印到 stdout
+- 当输出不是 TTY 时使用颜色
+- 破坏现有命令签名（破坏性更改）
+- 在 CI/CD 环境中要求交互式输入
+- 硬编码路径或特定平台的逻辑
+- 发布时不包含 Shell 自动补全
 
-program.parse();
-```
+## 输出模板
 
-For Python (click/typer) and Go (cobra) quick-start examples, see `references/python-cli.md` and `references/go-cli.md`.
+实现 CLI 功能时，提供：
+1. 命令结构（主入口点、子命令）
+2. 配置处理（文件、环境变量、标志）
+3. 带有错误处理的核心实现
+4. Shell 自动补全脚本（如适用）
+5. UX 设计决策的简要说明
 
-## Constraints
+## 知识参考
 
-### MUST DO
-- Keep startup time under 50ms
-- Provide clear, actionable error messages
-- Support `--help` and `--version` flags
-- Use consistent flag naming conventions
-- Handle SIGINT (Ctrl+C) gracefully
-- Validate user input early
-- Support both interactive and non-interactive modes
-- Test on Windows, macOS, and Linux
+CLI 框架（commander、yargs、oclif、click、typer、argparse、cobra、viper）、终端 UI（chalk、inquirer、rich、bubbletea）、测试（快照测试、E2E）、分发（npm、pip、homebrew、releases）、性能优化
 
-### MUST NOT DO
+## 相关技能
 
-- **Block on synchronous I/O unnecessarily** — use async reads or stream processing instead.
-- **Print to stdout when output will be piped** — write logs/diagnostics to stderr.
-- **Use colors when output is not a TTY** — detect before applying color:
-  ```js
-  // Node.js
-  const useColor = process.stdout.isTTY;
-  ```
-  ```python
-  # Python
-  import sys
-  use_color = sys.stdout.isatty()
-  ```
-  ```go
-  // Go
-  import "golang.org/x/term"
-  useColor := term.IsTerminal(int(os.Stdout.Fd()))
-  ```
-- **Break existing command signatures** — treat flag/subcommand renames as breaking changes.
-- **Require interactive input in CI/CD environments** — always provide non-interactive fallbacks via flags or env vars.
-- **Hardcode paths or platform-specific logic** — use `os.homedir()` / `os.UserHomeDir()` / `Path.home()` instead.
-- **Ship without shell completions** — all three frameworks above have built-in completion generation.
-
-## Output Templates
-
-When implementing CLI features, provide:
-1. Command structure (main entry point, subcommands)
-2. Configuration handling (files, env vars, flags)
-3. Core implementation with error handling
-4. Shell completion scripts if applicable
-5. Brief explanation of UX decisions
-
-## Knowledge Reference
-
-CLI frameworks (commander, yargs, oclif, click, typer, argparse, cobra, viper), terminal UI (chalk, inquirer, rich, bubbletea), testing (snapshot testing, E2E), distribution (npm, pip, homebrew, releases), performance optimization
+- **Node.js 专家** - Node.js 实现细节
+- **DevOps 工程师** - 分发和打包

@@ -1,7 +1,12 @@
 ---
 name: looking-up-docs
-description: Look up library documentation using Context7. Use when needing API reference, library docs, framework documentation, or technical documentation lookup. Provides up-to-date, version-specific docs and code examples.
-allowed-tools: Read, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+description: Library documentation via Context7. Use for API references, code examples, framework docs.
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - mcp__context7__resolve-library-id
+  - mcp__context7__query-docs
 ---
 
 # Documentation Lookup with Context7
@@ -17,7 +22,7 @@ Context7 provides up-to-date, version-specific documentation and code examples d
 ## Workflow
 
 1. **Resolve library ID**: `mcp__context7__resolve-library-id` with `libraryName`
-2. **Get documentation**: `mcp__context7__get-library-docs` with `context7CompatibleLibraryID` and `topic`
+2. **Get documentation**: `mcp__context7__query-docs` with `context7CompatibleLibraryID` and `topic`
 
 ## Modes
 
@@ -46,18 +51,106 @@ resolve-library-id: "kubernetes"
 get-library-docs: context7CompatibleLibraryID="/kubernetes/kubernetes", topic="deployment"
 ```
 
-## Tips
+## Tips for Better Results
 
-- Use `topic` parameter to narrow results to specific features
-- Try `mode="info"` for architectural questions
-- Paginate with `page=2`, `page=3` if initial results insufficient
+**Be specific with queries:**
 
----
+- BAD: `topic="hooks"` → returns everything hook-related
+- GOOD: `topic="useEffect cleanup function"` → precise results
 
-## Gotchas
+**Filter strategies:**
 
-- **Context7 query without version scoping returns hits across versions** — Next.js 14 question can answer with Next.js 12 code. Always include the version.
-- **Library aliases (e.g., `react` vs `@types/react`) may resolve to different libraries** — use the full Context7 ID, not the npm name.
-- **Stale cache**: Context7 may have indexed a library version that's been yanked from npm — check upstream before trusting.
-- **Rate limits per API key per day** — bursting on the free tier locks the key out until midnight UTC.
-- **No multi-version diff**: Context7 doesn't surface what changed between versions; for migrations, dual-query and compare manually.
+- Use `topic` with function/method names: `topic="json.Unmarshal"`
+- Include version when relevant: `libraryName="react 18"`
+- Combine with feature context: `topic="middleware error handling"`
+
+**When results are too broad:**
+
+1. Narrow the `topic` parameter
+2. Try `mode="code"` to focus on examples
+3. Paginate: `page=2`, `page=3` for additional results
+4. Re-resolve library ID with more specific name
+
+**Quality check:**
+
+- Verify code examples match your library version
+- Cross-reference with official docs if uncertain
+
+## Fallback: Empty or Missing Results
+
+When Context7 returns no results or doesn't have the library:
+
+### Decision Tree
+
+```
+Context7 query returns empty?
+├── Try broader query (e.g., "hooks" instead of "useCallback")
+├── Still empty?
+│   ├── Re-resolve library ID with alternative name
+│   │   (e.g., "nextjs" → "next.js", "golang" → "go")
+│   └── Still empty?
+│       ├── Library not indexed → Use fallbacks below
+│       └── Very niche library → WebSearch for official docs
+```
+
+### Fallback Strategies
+
+1. **Alternative library ID**: Try variations
+
+   ```
+   # If "fastapi" fails, try:
+   resolve-library-id: "starlette"  # FastAPI's underlying framework
+   resolve-library-id: "pydantic"   # Often used with FastAPI
+   ```
+
+2. **WebSearch for official docs**:
+
+   ```
+   WebSearch: "<library> official documentation <feature>"
+   WebFetch: Official docs URL → extract relevant info
+   ```
+
+3. **Source code exploration** (for open-source):
+
+   ```
+   # Clone and explore
+   git clone --depth=1 <repo>
+   Grep: "function <name>" --type=<lang>
+   ```
+
+4. **Perplexity for recent/niche libraries**:
+   ```
+   mcp__perplexity-ask__perplexity_ask: "How to use <feature> in <library> 2024"
+   ```
+
+### Libraries Commonly Not in Context7
+
+| Library              | Fallback                    |
+| -------------------- | --------------------------- |
+| Internal/proprietary | Source code + README        |
+| Very new (<6 months) | WebSearch + official docs   |
+| Niche/specialized    | Perplexity or GitHub issues |
+| Language stdlib      | Use language docs directly  |
+
+### Example Fallback Flow
+
+```
+# Initial attempt fails
+resolve-library-id: "htmx"
+→ No results
+
+# Fallback 1: WebSearch
+WebSearch: "htmx documentation hx-swap"
+→ Found: https://htmx.org/docs/
+
+# Fallback 2: Fetch docs
+WebFetch: url="https://htmx.org/docs/", prompt="Explain hx-swap attribute"
+→ Returns relevant documentation
+```
+
+### When to Skip Context7 Entirely
+
+- Asking about breaking changes between versions → WebSearch release notes
+- Debugging specific error messages → WebSearch + StackOverflow
+- Comparing libraries → Perplexity for analysis
+- Very recent features → WebSearch for latest docs

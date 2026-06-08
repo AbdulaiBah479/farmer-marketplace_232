@@ -1,141 +1,190 @@
 ---
-name: prompt-engineering
-description: Prompt engineering patterns including structured prompts, chain-of-thought, few-shot learning, and system prompt design
+id: SKL-prompt-PROMPTENGINEERING
+name: Prompt Engineering
+description: Comprehensive guide for LLM prompt engineering techniques and best practices.
+  Prompt engineering is the art and science of crafting effective prompts to elicit
+  desired outputs from language models.
+version: 1.0.0
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
 # Prompt Engineering
 
-## Structured System Prompt
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
-```
-You are a senior code reviewer. Your role is to analyze pull requests for:
-1. Correctness - logic errors, edge cases, off-by-one errors
-2. Security - injection, authentication, data exposure
-3. Performance - N+1 queries, unnecessary allocations, missing indexes
-4. Maintainability - naming, complexity, test coverage
+## Overview
+Comprehensive guide for LLM prompt engineering techniques and best practices. Prompt engineering is the art and science of crafting effective prompts to elicit desired outputs from language models.
 
-For each issue found, respond with:
-- Severity: critical | warning | suggestion
-- File and line reference
-- What is wrong
-- How to fix it (with code snippet)
+## Why This Matters
+Prompt engineering is critical for:
+- **Performance**: Well-crafted prompts reduce inference time and cost
+- **Accuracy**: Clear instructions improve output quality
+- **Consistency**: Standardized prompts ensure predictable behavior
+- **Cost Optimization**: Efficient prompts reduce token usage
+- **Maintainability**: Reusable templates are easier to maintain
+- **Model Flexibility**: Good prompts work across different models
 
-If the code is well-written, say so briefly. Do not invent problems.
-```
+---
 
-Structure system prompts with role, scope, output format, and constraints. Be explicit about what the model should NOT do.
+## Core Concepts & Rules
 
-## Chain-of-Thought
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-```
-Analyze this database query for performance issues.
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-Think step by step:
-1. Identify the tables and joins involved
-2. Check if appropriate indexes exist for the WHERE and JOIN conditions
-3. Look for full table scans or cartesian products
-4. Estimate the row count at each step
-5. Suggest specific index creation or query restructuring
 
-Query:
-SELECT o.*, u.name, p.title
-FROM orders o
-JOIN users u ON o.user_id = u.id
-JOIN products p ON o.product_id = p.id
-WHERE o.created_at > '2024-01-01'
-AND u.country = 'US'
-ORDER BY o.created_at DESC
-LIMIT 50;
-```
+## Inputs / Outputs / Contracts
+#
 
-Chain-of-thought prompting improves accuracy on reasoning tasks by forcing the model to show intermediate steps.
+## Skill Composition
+* **Depends on**: llm
+* **Compatible with**: llm, rag
+* **Conflicts with**: None
+* **Related Skills**: llm, rag, agents
 
-## Few-Shot Examples
+## Quick Start / Implementation Example
 
-```
-Convert natural language to SQL. Follow these examples:
-
-Input: "How many orders were placed last month?"
-Output: SELECT COUNT(*) FROM orders WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND created_at < DATE_TRUNC('month', CURRENT_DATE);
-
-Input: "Top 5 customers by total spending"
-Output: SELECT customer_id, SUM(total_amount) AS total_spent FROM orders GROUP BY customer_id ORDER BY total_spent DESC LIMIT 5;
-
-Input: "Products that have never been ordered"
-Output: SELECT p.* FROM products p LEFT JOIN order_items oi ON p.id = oi.product_id WHERE oi.id IS NULL;
-
-Now convert:
-Input: "Average order value per country for the last quarter"
-```
-
-Provide 3-5 diverse examples that demonstrate the expected format and edge cases.
-
-## Tool Use / Function Calling
-
-```json
-{
-  "tools": [
-    {
-      "name": "search_codebase",
-      "description": "Search for code patterns across the repository. Use when you need to find implementations, usages, or definitions.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Regex pattern or keyword to search for"
-          },
-          "file_type": {
-            "type": "string",
-            "description": "File extension filter (e.g., 'ts', 'py')"
-          }
-        },
-        "required": ["query"]
-      }
-    }
-  ]
-}
-```
-
-Write tool descriptions that explain WHEN to use the tool, not just what it does.
-
-## Prompt Template Pattern
+1. Review requirements and constraints
+2. Set up development environment
+3. Implement core functionality following patterns
+4. Write tests for critical paths
+5. Run tests and fix issues
+6. Document any deviations or decisions
 
 ```python
-def build_review_prompt(diff: str, context: str, rules: list[str]) -> str:
-    rules_text = "\n".join(f"- {rule}" for rule in rules)
-
-    return f"""Review this code diff against the following rules:
-{rules_text}
-
-Context about the codebase:
-{context}
-
-Diff to review:
-```
-{diff}
+# Example implementation following best practices
+def example_function():
+    # Your implementation here
+    pass
 ```
 
-Respond with a JSON array of findings. If no issues, return an empty array.
-Each finding: {{"severity": "critical|warning|info", "line": number, "message": "string", "suggestion": "string"}}"""
-```
 
-## Anti-Patterns
+## Assumptions
+- Basic understanding of Large Language Models (LLMs)
+- Familiarity with AI/ML concepts
+- Experience with using AI assistants or chatbots
+- Understanding of natural language communication
+- Knowledge of programming concepts (for code generation tasks)
 
-- Vague instructions like "be helpful" or "do your best"
-- Asking the model to "be creative" when you need deterministic output
-- Not specifying output format (JSON, markdown, plain text)
-- Stuffing too many unrelated tasks into a single prompt
-- Using negations ("don't do X") without saying what to do instead
-- Not testing prompts with adversarial or edge-case inputs
+## Compatibility & Prerequisites
 
-## Checklist
+* **Supported Versions**:
+  - Python 3.8+
+  - Node.js 16+
+  - Modern browsers (Chrome, Firefox, Safari, Edge)
+* **Required AI Tools**:
+  - Code editor (VS Code recommended)
+  - Testing framework appropriate for language
+  - Version control (Git)
+* **Dependencies**:
+  - Language-specific package manager
+  - Build tools
+  - Testing libraries
+* **Environment Setup**:
+  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
 
-- [ ] System prompt defines role, scope, format, and constraints
-- [ ] Chain-of-thought used for multi-step reasoning tasks
-- [ ] Few-shot examples cover typical and edge cases
-- [ ] Output format explicitly specified (JSON schema, markdown, etc.)
-- [ ] Tool descriptions explain when and why to use each tool
-- [ ] Prompts tested with adversarial inputs
-- [ ] Temperature and top_p set appropriately for the task
-- [ ] Prompt templates are parameterized, not hardcoded strings
+
+## Test Scenario Matrix (QA Strategy)
+
+| Type | Focus Area | Required Scenarios / Mocks |
+| :--- | :--- | :--- |
+| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
+| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
+| **E2E** | User Journey | Critical user flows to test |
+| **Performance** | Latency / Load | Benchmark requirements |
+| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
+| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
+
+
+## Technical Guardrails & Security Threat Model
+
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
+
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
+
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
+
+
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+
+
+## Definition of Done (DoD) Checklist
+
+- [ ] Tests passed + coverage met
+- [ ] Lint/Typecheck passed
+- [ ] Logging/Metrics/Trace implemented
+- [ ] Security checks passed
+- [ ] Documentation/Changelog updated
+- [ ] Accessibility/Performance requirements met (if frontend)
+
+
+## Anti-patterns / Pitfalls
+
+* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
+* ⚠️ **Watch out for**: Common symptoms and quick fixes
+* 💡 **Instead**: Use proper error handling, pagination, and logging
+
+
+## Reference Links & Examples
+
+* Internal documentation and examples
+* Official documentation and best practices
+* Community resources and discussions
+
+
+## Versioning & Changelog
+
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
+

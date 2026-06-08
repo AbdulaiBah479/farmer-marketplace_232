@@ -1,186 +1,387 @@
 ---
 name: agent-output-formats
-description: "Convert the canonical markdown+JSON deliverable of any SfSkills runtime agent into Excel, PDF, CSV, Notion card, ServiceNow ticket, or similar downstream format WITHOUT polluting the consumer's project with new dependencies or regenerating from the agent's source logic. NOT for authoring new agent output formats (use DELIVERABLE_CONTRACT.md). NOT for data-export SOQL (use bulk-api-2-patterns)."
-category: admin
-salesforce-version: "Spring '25+"
-well-architected-pillars:
-  - Operational Excellence
-  - Reliability
-tags:
-  - agent-output
-  - conversion
-  - excel
-  - pdf
-  - csv
-  - notion
-  - servicenow
-  - deliverable-contract
-triggers:
-  - "agent output to excel"
-  - "convert agent report to pdf"
-  - "export user-access-diff as spreadsheet"
-  - "agent deliverable to notion"
-  - "agent deliverable format conversion"
-inputs:
-  - The canonical deliverable pair (markdown + JSON envelope) from the agent run
-  - The target format (excel, pdf, csv, notion, servicenow, jira, confluence)
-  - The consumer's existing tooling (which conversion tools they already have installed)
-outputs:
-  - A recommended conversion path that does not require new dependencies
-  - If no dependency-free path exists, a documented approach with the smallest possible dep footprint
-  - Guidance on preserving auditability — the converted artifact references the canonical run_id
-dependencies: []
 version: 1.0.0
-author: Pranav Nagrecha
-updated: 2026-04-28
+type: knowledge
+description: Standardized output formats for research, planning, implementation, and review agents. Use when generating agent outputs or parsing agent responses.
+keywords: output, format, research, planning, implementation, review, agent response, findings, recommendations, architecture, changes
+auto_activate: true
+allowed-tools: [Read]
 ---
 
-# Agent Output Formats
+# Agent Output Formats Skill
 
-## Core principle — convert, don't regenerate
+Standardized output formats for all agent types to ensure consistent communication and parsing across the autonomous development workflow.
 
-Every runtime agent produces a **canonical pair**: markdown + JSON envelope. That pair IS the source of truth. When a consumer asks for Excel/PDF/etc., the correct answer is to convert from that pair, not to re-run the agent with different instructions.
+## When This Skill Activates
 
-Reasons:
+- Generating agent outputs
+- Parsing agent responses
+- Formatting research findings
+- Creating planning documents
+- Reporting implementation results
+- Writing code reviews
+- Keywords: "output", "format", "research", "planning", "implementation", "review"
 
-1. **Reproducibility** — the canonical deliverable is checked into `docs/reports/`. Six months later, anyone can regenerate the Excel from it. If the consuming AI regenerates by re-asking the agent, the output may differ due to LLM stochasticity.
-2. **Auditability** — the `run_id` in the envelope is the tracking key. The Excel/PDF should reference it in its header, so "which run produced this?" is always answerable.
-3. **Minimal dependencies** — reinstalling `exceljs`, `xlsxwriter`, `weasyprint`, etc. into a consumer's project every time someone wants a different format bloats their project's dependency tree.
+---
 
-## Conversion decision tree
+## Research Agent Output Format
 
-```
-START: Consumer wants deliverable in format X.
+Research agents (e.g., researcher, issue-creator, brownfield-analyzer) should structure outputs with these sections:
 
-Q1. Is X markdown or JSON?
-    → Already the canonical form. No conversion needed; hand them the file path.
+### Template
 
-Q2. Is X a format the consumer's existing tooling handles natively?
-    ├── Slack message / email body → paste the TL;DR + envelope-link from the markdown
-    ├── Confluence / Notion / Obsidian → import the markdown directly (all support markdown import)
-    ├── Jira / ServiceNow ticket → paste TL;DR in description + link the report file
-    └── GitHub issue → embed markdown inline; link the report path
-    → Prefer this path. Zero new dependencies.
+```markdown
+## Patterns Found
 
-Q3. Does the consumer want a "table" from the markdown?
-    ├── CSV: extract markdown tables using `pandoc` (most dev machines have it)
-    ├── Excel from the JSON envelope: use `jq` + `csv2xlsx` CLI tools (lighter than a full SDK)
-    └── If neither pandoc nor jq: recommend installing pandoc (1 tool, system-level, widely used)
+[List of discovered patterns with examples]
 
-Q4. Does the consumer want PDF?
-    → `pandoc <report>.md -o <report>.pdf` — single command, no new project deps
-    → If pandoc isn't available: recommend a system-wide install, NOT a project-level dep
+- **Pattern Name**: Description
+  - Example: Code snippet or reference
+  - Use case: When to apply this pattern
 
-Q5. Does the consumer want something format-specific (e.g. ServiceNow change ticket)?
-    → Extract the fields from the JSON envelope (it's keyed for exactly this)
-    → Template into the target system via its normal integration path
-    → Do NOT ask the agent to regenerate in the target format
-```
+## Best Practices
 
-## Recommended Workflow
+[Industry best practices and recommendations]
 
-1. **Confirm the canonical deliverable exists** — `docs/reports/<agent-id>/<run_id>.{md,json}`. If not, run the agent first.
-2. **Check the consumer's tooling** — do they already have `pandoc`, `jq`, `csv2xlsx`? The answer is almost always yes for #2 and often for #1.
-3. **Walk the decision tree above.**
-4. **Produce the conversion command** — a one-liner the user runs in their shell, not code added to their project.
-5. **Include the canonical `run_id`** in the converted artifact's header — so auditors can trace it back.
-6. **Record the conversion path** in the team's docs — next person who asks has a precedent.
+- **Practice Name**: Description
+  - Benefit: Why this matters
+  - Implementation: How to apply
 
-## Key patterns
+## Security Considerations
 
-### Pattern 1 — Markdown → PDF via pandoc
+[Security implications and requirements]
 
-```bash
-pandoc docs/reports/user-access-diff/2026-04-17T21-14-05Z.md \
-    -o ~/Desktop/user-access-diff.pdf \
-    --metadata title="User Access Diff — Christina vs Carrie" \
-    --metadata date="2026-04-17"
+- **Security Concern**: Description
+  - Risk: Potential vulnerabilities
+  - Mitigation: How to address
+
+## Recommendations
+
+[Actionable recommendations for implementation]
+
+1. **Recommendation**: Detailed guidance
+   - Priority: High/Medium/Low
+   - Effort: Time estimate
+   - Impact: Expected benefit
 ```
 
-Zero project dependencies added. Works because pandoc is a widely-available system tool.
+### Example Output
 
-### Pattern 2 — JSON envelope → Excel via jq + csv2xlsx
+See `examples/research-output-example.md` for a complete example.
 
-```bash
-# Extract the findings array from the envelope as CSV.
-jq -r '.findings | (map(keys) | add | unique) as $keys |
-       ($keys | @csv), (.[] | [.[$keys[]]] | @csv)' \
-    docs/reports/user-access-diff/2026-04-17T21-14-05Z.json \
-    > /tmp/findings.csv
+---
 
-# Convert to xlsx.
-csv2xlsx /tmp/findings.csv /tmp/findings.xlsx
+## Planning Agent Output Format
+
+Planning agents (e.g., planner, migration-planner, setup-wizard) should structure outputs with these sections:
+
+### Template
+
+```markdown
+## Feature Summary
+
+[Brief description of what will be built]
+
+**Goal**: What this achieves
+**Scope**: What's included/excluded
+**Success Criteria**: How to measure success
+
+## Architecture
+
+[High-level design and component relationships]
+
+**Components**: List of major components
+**Data Flow**: How data moves through system
+**Integration Points**: External dependencies
+
+## Components
+
+[Detailed component specifications]
+
+### Component 1: [Name]
+- **Purpose**: What it does
+- **Responsibilities**: Core functions
+- **Dependencies**: What it needs
+- **Files**: Where it lives
+
+## Implementation Plan
+
+[Step-by-step implementation guide]
+
+**Phase 1**: [Description]
+1. Step one
+2. Step two
+
+**Phase 2**: [Description]
+1. Step one
+2. Step two
+
+## Risks and Mitigations
+
+[Potential issues and how to address them]
+
+- **Risk**: Description
+  - **Impact**: Severity and consequences
+  - **Mitigation**: How to prevent or handle
 ```
 
-Or, if the user has Excel open:
-```bash
-open /tmp/findings.csv          # macOS; Excel imports CSV natively
+### Example Output
+
+See `examples/planning-output-example.md` for a complete example.
+
+---
+
+## Implementation Agent Output Format
+
+Implementation agents (e.g., implementer, retrofit-executor) should structure outputs with these sections:
+
+### Template
+
+```markdown
+## Changes Made
+
+[Summary of what was implemented]
+
+**Feature**: What was built
+**Approach**: How it was implemented
+**Design Decisions**: Key choices made
+
+## Files Modified
+
+[List of changed files with descriptions]
+
+### Created Files
+- `path/to/file.py`: Description of new file
+- `path/to/test.py`: Test coverage
+
+### Modified Files
+- `path/to/existing.py`: Changes made
+  - Added: New functionality
+  - Modified: Updated behavior
+  - Removed: Deprecated code
+
+## Tests Updated
+
+[Test coverage changes]
+
+**New Tests**:
+- Test file: What it covers
+- Coverage: Percentage or lines
+
+**Updated Tests**:
+- Test file: What changed
+- Reason: Why it was needed
+
+## Next Steps
+
+[Follow-up actions and recommendations]
+
+1. **Action**: What needs to happen next
+   - Owner: Who should do it
+   - Priority: Urgency level
+   - Blockers: Any dependencies
 ```
 
-### Pattern 3 — Envelope → ServiceNow change request
+### Example Output
 
-Extract the fields ServiceNow needs from the envelope:
+See `examples/implementation-output-example.md` for a complete example.
 
-```bash
-jq '{
-    short_description: .summary,
-    description: .summary + "\n\nRun ID: " + .run_id +
-                 "\nConfidence: " + .confidence +
-                 "\nFull report: " + .report_path,
-    priority: (if .findings | map(.severity) | any(. == "P0") then "1"
-               elif .findings | map(.severity) | any(. == "P1") then "2"
-               else "3" end)
-}' docs/reports/<agent-id>/<run_id>.json
+---
+
+## Review Agent Output Format
+
+Review agents (e.g., reviewer, security-auditor, quality-validator) should structure outputs with these sections:
+
+### Template
+
+```markdown
+## Findings
+
+[Overview of review results]
+
+**Reviewed**: What was examined
+**Scope**: What was checked
+**Summary**: High-level results
+
+## Code Quality
+
+[Code quality assessment]
+
+### Strengths
+- **Aspect**: What's done well
+  - Evidence: Specific examples
+
+### Areas for Improvement
+- **Issue**: What needs work
+  - Severity: Critical/Major/Minor
+  - Recommendation: How to fix
+  - Location: Where the issue is
+
+## Security
+
+[Security analysis]
+
+### Security Strengths
+- **Protection**: What's secure
+  - Implementation: How it's done
+
+### Security Concerns
+- **Vulnerability**: Potential issue
+  - CWE Reference: Standard classification
+  - Risk Level: High/Medium/Low
+  - Remediation: How to fix
+
+## Documentation
+
+[Documentation assessment]
+
+### Documentation Completeness
+- **Aspect**: What's documented
+  - Quality: How well it's done
+
+### Documentation Gaps
+- **Missing**: What needs docs
+  - Priority: How important
+  - Suggestion: What to add
+
+## Verdict
+
+[Final recommendation]
+
+**Status**: ✅ APPROVED / ⚠️ APPROVED WITH CHANGES / ❌ NEEDS REVISION
+
+**Rationale**: Why this verdict
+**Blockers**: Must-fix issues (if any)
+**Suggestions**: Nice-to-have improvements
 ```
 
-Paste the JSON into the ServiceNow integration payload. No project deps.
+### Example Output
 
-### Pattern 4 — Notion / Obsidian / Confluence import
+See `examples/review-output-example.md` for a complete example.
 
-All three accept markdown imports directly. The user uploads the `.md` file via the platform's UI.
+---
 
-Preservation tip: include the `run_id` as a frontmatter field at the top of the markdown report, so when the page is imported, the run_id survives as a property.
+## Commit Message Format
 
-### Pattern 5 — When conversion requires a heavy dependency
+Commit message generator agents should follow conventional commits:
 
-Scenario: user wants interactive Excel with embedded formulas referencing cells.
+### Template
 
-- Don't install `exceljs` / `openpyxl` into their project.
-- Recommend they open the CSV in Excel and author the formulas there — the CSV round-trips fine.
-- If they insist on scripted generation, recommend a one-off Python script in `~/bin/` or a dedicated report-tool project — NOT the project where the agent was invoked.
+```
+<type>(<scope>): <subject>
 
-## Bulk safety
+<body>
 
-When converting reports for multiple runs in a batch:
+<footer>
+```
 
-- Use `find docs/reports/<agent-id>/ -name '*.md' -exec pandoc ...` to iterate, not one-by-one invocations.
-- If converting to a centralized destination (e.g. uploading 50 reports to Notion), respect API rate limits.
-- Never batch-convert and delete the canonical markdown — always retain the source.
+### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only
+- `style`: Formatting, no code change
+- `refactor`: Code restructuring
+- `test`: Adding tests
+- `chore`: Maintenance tasks
 
-## Error handling
+### Example
 
-- Canonical deliverable missing → refuse to convert. Run the agent first.
-- Conversion tool missing → recommend system-wide install, not project-local.
-- Target format can't represent a field from the envelope (e.g. nested arrays in Excel) → flatten in the CSV step, not by regenerating.
+```
+feat(skills): add agent-output-formats skill for standardized outputs
 
-## Well-Architected mapping
+Extracts duplicated output format specifications from 15 agent prompts
+into a reusable skill package following progressive disclosure architecture.
 
-- **Operational Excellence** — standardized conversion paths reduce "how do I turn this into Excel?" support tickets.
-- **Reliability** — conversion-not-regeneration preserves the canonical `run_id` as the auditable thread.
+Token savings: ~3,000 tokens (200 tokens per agent × 15 agents)
 
-## Anti-patterns
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-1. **Re-asking the agent to regenerate in the new format.** The agent is an expensive LLM call. Conversion is a cheap shell command. Always convert from the canonical.
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
 
-2. **Installing format-specific libraries into the user's project.** `exceljs`, `xlsxwriter`, `weasyprint` — these are conversion tools, not project dependencies. Install system-wide or run from a dedicated CLI project.
+---
 
-3. **Stripping the `run_id`.** The converted artifact must reference it somewhere (header, filename, metadata). Without it, nobody can trace which run the Excel came from.
+## Pull Request Format
 
-4. **Opening up new output-format surfaces on the agent itself.** If someone asks for "JIRA native format" as an agent output, refuse. The agent outputs canonical markdown+JSON. JIRA conversion is downstream.
+PR description generator agents should follow this structure:
 
-## Official Sources Used
+### Template
 
-- Salesforce Architects — Reporting & Analytics Patterns: https://architect.salesforce.com/
-- Pandoc Documentation (third-party CLI): https://pandoc.org/MANUAL.html
-- Salesforce Developer — REST API: https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_what_is_rest_api.htm
-- Salesforce Help — External Services: https://help.salesforce.com/s/articleView?id=sf.external_services.htm
+```markdown
+## Summary
+
+[Brief description of changes]
+
+- Key change 1
+- Key change 2
+- Key change 3
+
+## Test Plan
+
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+- [ ] Documentation updated
+
+## Related Issues
+
+Closes #XXX
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+---
+
+## Usage Guidelines
+
+### For Agent Authors
+
+When creating or updating agent prompts:
+
+1. **Reference this skill** in the "Relevant Skills" section
+2. **Remove duplicate format specifications** from agent prompts
+3. **Trust progressive disclosure** - full content loads when needed
+4. **Use consistent terminology** from this skill
+
+### For Claude
+
+When executing agents:
+
+1. **Load this skill** when keywords match ("output", "format", etc.)
+2. **Follow format templates** for structured outputs
+3. **Include all required sections** for agent type
+4. **Maintain consistency** across similar agents
+
+### Token Savings
+
+By centralizing output formats in this skill:
+
+- **Before**: ~250 tokens per agent for format specification
+- **After**: ~50 tokens for skill reference
+- **Savings**: ~200 tokens per agent
+- **Total**: ~3,000 tokens across 15 agents (8-12% reduction)
+
+---
+
+## Progressive Disclosure
+
+This skill uses Claude Code 2.0+ progressive disclosure architecture:
+
+- **Metadata** (frontmatter): Always loaded (~150 tokens)
+- **Full content**: Loaded only when keywords match
+- **Result**: Efficient context usage, scales to 100+ skills
+
+When you use terms like "output format", "research findings", "planning document", or "code review", Claude Code automatically loads the full skill content to provide detailed guidance.
+
+---
+
+## Examples
+
+Complete example outputs are available in the `examples/` directory:
+
+- `research-output-example.md`: Sample research agent output
+- `planning-output-example.md`: Sample planning agent output
+- `implementation-output-example.md`: Sample implementation agent output
+- `review-output-example.md`: Sample review agent output
+
+Refer to these examples when generating agent outputs to ensure consistency and completeness.

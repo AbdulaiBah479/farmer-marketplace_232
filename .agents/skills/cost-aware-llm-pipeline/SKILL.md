@@ -1,49 +1,62 @@
 ---
 name: cost-aware-llm-pipeline
-description: Cost optimization patterns for LLM API usage — model routing by task complexity, budget tracking, retry logic, and prompt caching.
-origin: ECC
+description: "Use when building an LLM-powered app that needs cost control via model routing, budget tracking, retry, and prompt caching."
+license: MIT
+metadata:
+  author: shimo4228
+  version: "1.0"
+  extracted: "2026-02-08"
 ---
 
 # Cost-Aware LLM Pipeline
+# コスト最適化LLMパイプライン
 
-Patterns for controlling LLM API costs while maintaining quality. Combines model routing, budget tracking, retry logic, and prompt caching into a composable pipeline.
+**Extracted / 抽出日:** 2026-02-08
+**Context / コンテキスト:** LLMを使うアプリで、コスト制御しながら品質を維持するパターン
 
-## When to Activate
+---
 
-- Building applications that call LLM APIs (Claude, GPT, etc.)
-- Processing batches of items with varying complexity
-- Need to stay within a budget for API spend
-- Optimizing cost without sacrificing quality on complex tasks
+## Problem / 課題
 
-## Core Concepts
+LLM APIは高コスト。全リクエストに最高性能モデルを使うと予算超過する。
+リトライやキャッシュの仕組みがないと無駄なコストが発生する。
 
-### 1. Model Routing by Task Complexity
+- 単純なタスクにも高価なモデルを使ってしまう
+- 一時的なエラーでリトライせず失敗する
+- 同じシステムプロンプトを毎回送信しトークンを浪費する
+- 予算超過に気づかない
 
-Automatically select cheaper models for simple tasks, reserving expensive models for complex ones.
+---
+
+## Solution / 解決策
+
+4つの要素を組み合わせる：
+
+### 1. Model Routing（モデル自動選択）
+
+タスクの複雑度に基づいてモデルを自動選択する。
 
 ```python
-MODEL_SONNET = "claude-sonnet-4-6"
+MODEL_SONNET = "claude-sonnet-4-5-20250929"
 MODEL_HAIKU = "claude-haiku-4-5-20251001"
 
 _SONNET_TEXT_THRESHOLD = 10_000  # chars
-_SONNET_ITEM_THRESHOLD = 30     # items
+_SONNET_CARD_THRESHOLD = 30     # items
 
 def select_model(
     text_length: int,
     item_count: int,
     force_model: str | None = None,
 ) -> str:
-    """Select model based on task complexity."""
+    """Automatically select model based on task complexity."""
     if force_model is not None:
         return force_model
-    if text_length >= _SONNET_TEXT_THRESHOLD or item_count >= _SONNET_ITEM_THRESHOLD:
+    if text_length >= _SONNET_TEXT_THRESHOLD or item_count >= _SONNET_CARD_THRESHOLD:
         return MODEL_SONNET  # Complex task
     return MODEL_HAIKU  # Simple task (3-4x cheaper)
 ```
 
-### 2. Immutable Cost Tracking
-
-Track cumulative spend with frozen dataclasses. Each API call returns a new tracker — never mutates state.
+### 2. Immutable Cost Tracking（不変コスト追跡）
 
 ```python
 from dataclasses import dataclass
@@ -76,9 +89,7 @@ class CostTracker:
         return self.total_cost > self.budget_limit
 ```
 
-### 3. Narrow Retry Logic
-
-Retry only on transient errors. Fail fast on authentication or bad request errors.
+### 3. Narrow Retry Logic（限定的リトライ）
 
 ```python
 from anthropic import (
@@ -90,7 +101,7 @@ from anthropic import (
 _RETRYABLE_ERRORS = (APIConnectionError, RateLimitError, InternalServerError)
 _MAX_RETRIES = 3
 
-def call_with_retry(func, *, max_retries: int = _MAX_RETRIES):
+def _call_with_retry(func, *, max_retries: int = _MAX_RETRIES):
     """Retry only on transient errors, fail fast on others."""
     for attempt in range(max_retries):
         try:
@@ -102,9 +113,7 @@ def call_with_retry(func, *, max_retries: int = _MAX_RETRIES):
     # AuthenticationError, BadRequestError etc. → raise immediately
 ```
 
-### 4. Prompt Caching
-
-Cache long system prompts to avoid resending them on every request.
+### 4. Prompt Caching（プロンプトキャッシュ）
 
 ```python
 messages = [
@@ -125,9 +134,9 @@ messages = [
 ]
 ```
 
-## Composition
+---
 
-Combine all four techniques in a single pipeline function:
+## Composition / 組み合わせ方
 
 ```python
 def process(text: str, config: Config, tracker: CostTracker) -> tuple[Result, CostTracker]:
@@ -139,7 +148,7 @@ def process(text: str, config: Config, tracker: CostTracker) -> tuple[Result, Co
         raise BudgetExceededError(tracker.total_cost, tracker.budget_limit)
 
     # 3. Call with retry + caching
-    response = call_with_retry(lambda: client.messages.create(
+    response = _call_with_retry(lambda: client.messages.create(
         model=model,
         messages=build_cached_messages(system_prompt, text),
     ))
@@ -151,33 +160,28 @@ def process(text: str, config: Config, tracker: CostTracker) -> tuple[Result, Co
     return parse_result(response), tracker
 ```
 
-## Pricing Reference (2025-2026)
+---
 
-| Model | Input ($/1M tokens) | Output ($/1M tokens) | Relative Cost |
-|-------|---------------------|----------------------|---------------|
-| Haiku 4.5 | $0.80 | $4.00 | 1x |
-| Sonnet 4.6 | $3.00 | $15.00 | ~4x |
-| Opus 4.5 | $15.00 | $75.00 | ~19x |
+## Pricing Reference (2025-2026) / 価格参考
 
-## Best Practices
+| Model | Input ($/1M tokens) | Output ($/1M tokens) |
+|-------|---------------------|----------------------|
+| Haiku 4.5 | $0.80 | $4.00 |
+| Sonnet 4.5 | $3.00 | $15.00 |
+| Opus 4.5 | $15.00 | $75.00 |
 
-- **Start with the cheapest model** and only route to expensive models when complexity thresholds are met
-- **Set explicit budget limits** before processing batches — fail early rather than overspend
-- **Log model selection decisions** so you can tune thresholds based on real data
-- **Use prompt caching** for system prompts over 1024 tokens — saves both cost and latency
-- **Never retry on authentication or validation errors** — only transient failures (network, rate limit, server error)
+---
 
-## Anti-Patterns to Avoid
+## When to Use / 使用すべき場面
 
-- Using the most expensive model for all requests regardless of complexity
-- Retrying on all errors (wastes budget on permanent failures)
-- Mutating cost tracking state (makes debugging and auditing difficult)
-- Hardcoding model names throughout the codebase (use constants or config)
-- Ignoring prompt caching for repetitive system prompts
+- Claude/OpenAI APIを使うアプリケーション全般
+- バッチ処理でコスト管理が必要な場合
+- 複数モデルを使い分けたい場合
+- 長いシステムプロンプトを繰り返し送信する場合
 
-## When to Use
+---
 
-- Any application calling Claude, OpenAI, or similar LLM APIs
-- Batch processing pipelines where cost adds up quickly
-- Multi-model architectures that need intelligent routing
-- Production systems that need budget guardrails
+## Related Patterns / 関連パターン
+
+- `python-immutable-accumulator.md` — CostTrackerの不変蓄積パターン
+- `immutable-model-updates.md` — Swift版の不変更新パターン

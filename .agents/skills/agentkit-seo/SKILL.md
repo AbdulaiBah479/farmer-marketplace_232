@@ -1,8 +1,6 @@
 ---
 name: agentkit-seo
 description: Route broad or ambiguous AgentKit SEO work to the right module while keeping context scoped. Use when a request spans multiple surfaces, asks for overall digital-presence strategy, involves provider or install architecture, needs agent-context planning, or the correct platform skill is unclear.
-user-invocable: true
-argument: The specific SEO optimization task or platform to focus on (e.g., GitHub, LinkedIn, CV, etc.)
 ---
 
 # AgentKit SEO
@@ -16,7 +14,7 @@ Use this skill as the orchestrator for the whole repository. Its main job is to 
 1. Identify the target surface from the request.
 2. Load only the matching module skill unless the user explicitly asks for a cross-platform pass.
 3. If the request spans multiple surfaces, start with `agentkit-seo-agent-context-optimization` so the factual source of truth is stable before editing platform outputs.
-4. If the request involves technical issues with the skill system, consult the main repository documentation.
+4. If the request is only about the skill system itself, read the references in this skill before changing provider adapters or install instructions.
 
 For broad requests with no clear surface:
 
@@ -52,8 +50,26 @@ For broad requests with no clear surface:
 - X or Twitter work: `agentkit-seo-x-twitter`
 - Personal source-of-truth context work: `agentkit-seo-agent-context-optimization`
 
-## More Information
+## Boundaries
 
-- **Main Repository**: [https://github.com/agentkit-seo/agentkit-seo](https://github.com/agentkit-seo/agentkit-seo)
-- **Documentation**: [https://agentkit-seo.github.io/](https://agentkit-seo.github.io/)
-- **Modules**: Includes specialized logic for GitHub, LinkedIn, CV/ATS, Portfolios, and X/Twitter.
+- Do not load every module by default.
+- Do not invent platform behavior that the hub has explicitly marked as uncertain or disputed.
+- Do not rewrite the shared methodology in provider adapter folders. Keep the portable source of truth in `.skills/agent-skill/`.
+- When advice depends on current platform capabilities, paid tiers, ranking behavior, product limits, or provider support, verify with current official sources when tools allow it or label the claim as historical, disputed, or inferred.
+- For cross-platform outputs, label major claims as `Verified`, `From context`, `From supplied source`, `Official/current source`, `Inference`, `Needs evidence`, or `Inaccessible` when the source status could affect the recommendation.
+
+## Response shape
+
+For broad requests, return:
+
+1. the selected workflow or module
+2. inputs used and missing inputs
+3. concrete edits or recommendations
+4. unresolved risks or assumptions
+5. next action, preferably creating or updating the context file when that would reduce drift
+
+## References
+
+- Read [references/module-routing.md](references/module-routing.md) when the user request is broad or ambiguous.
+- Read [references/provider-matrix.md](references/provider-matrix.md) when changing adapter behavior.
+- Read [references/installation-strategy.md](references/installation-strategy.md) when changing packaging or install guidance.

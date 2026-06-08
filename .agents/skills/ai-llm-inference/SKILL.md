@@ -1,9 +1,9 @@
 ---
 name: ai-llm-inference
-description: "LLM inference patterns — latency budgeting, caching, batching, quantization, and parallelism. Use when optimizing serving cost or tail latency."
+description: "Operational patterns for LLM inference: latency budgeting, tail-latency control, caching, batching/scheduling, quantization/compression, parallelism, and reliable serving at scale. Emphasizes production-grade performance, cost control, and observability."
 ---
 
-# LLMOps - Inference & Optimization - Production Skill Hub
+# LLMOps – Inference & Optimization – Production Skill Hub
 
 **Modern Best Practices (January 2026)**:
 
@@ -15,13 +15,13 @@ description: "LLM inference patterns — latency budgeting, caching, batching, q
 
 This skill provides **production-ready operational patterns** for optimizing LLM inference performance, cost, and reliability. It centralizes **decision rules**, **optimization strategies**, **configuration templates**, and **operational checklists** for inference workloads.
 
-No theory. No narrative. Only what Codex can execute.
+No theory. No narrative. Only what Claude can execute.
 
 ---
 
 ## When to Use This Skill
 
-Codex should activate this skill whenever the user asks for:
+Claude should activate this skill whenever the user asks for:
 
 - Optimizing LLM inference latency or throughput
 - Choosing quantization strategies (FP8/FP4/INT8/INT4)
@@ -38,12 +38,10 @@ Codex should activate this skill whenever the user asks for:
 
 ## Scope Boundaries (Use These Skills for Depth)
 
-- **Prompting, tuning, datasets** -> [ai-llm](../ai-llm/SKILL.md)
-- **RAG pipeline construction** -> [ai-rag](../ai-rag/SKILL.md)
-- **Deployment, APIs, monitoring** -> [ai-mlops](../ai-mlops/SKILL.md)
-- **Safety, governance** -> [ai-mlops](../ai-mlops/SKILL.md)
-- **Performance monitoring** -> [qa-observability](../qa-observability/SKILL.md)
-- **Infrastructure operations** -> [ops-devops-platform](../ops-devops-platform/SKILL.md)
+- **Prompting, tuning, datasets** → [ai-llm](../ai-llm/SKILL.md)
+- **RAG pipeline construction** → [ai-rag](../ai-rag/SKILL.md)
+- **Deployment, APIs, monitoring** → [ai-mlops](../ai-mlops/SKILL.md)
+- **Safety, governance** → [ai-mlops](../ai-mlops/SKILL.md)
 
 ---
 
@@ -65,52 +63,27 @@ Codex should activate this skill whenever the user asks for:
 
 ```text
 Need to optimize LLM inference: [Optimization Path]
-    │
-    ├─ High throughput (>10k tok/s) OR P99 variance > 3x P50?
-    │   └─ YES -> Disaggregated inference (prefill/decode separation)
-    │            See references/disaggregated-inference.md
-    │
     ├─ Primary constraint: Throughput?
-    │   ├─ Many concurrent users? -> batching + KV-cache aware serving + admission control
-    │   ├─ Chat/agents with KV reuse? -> SGLang (RadixAttention)
-    │   └─ Mostly batch/offline? -> batch inference jobs + large batches + spot capacity
+    │   ├─ Many concurrent users? → batching + KV-cache aware serving + admission control
+    │   └─ Mostly batch/offline? → batch inference jobs + large batches + spot capacity
     │
     ├─ Primary constraint: Cost?
-    │   ├─ Can accept lower quality tier? -> model tiering (small/medium/large router)
-    │   └─ Must keep quality? -> caching + prompt/context reduction before quantization
+    │   ├─ Can accept lower quality tier? → model tiering (small/medium/large router)
+    │   └─ Must keep quality? → caching + prompt/context reduction before quantization
     │
     ├─ Primary constraint: Latency?
-    │   ├─ Draft model acceptable? -> speculative decoding
-    │   └─ Long context? -> prefill optimizations + FlashAttention-3 + context budgets
+    │   ├─ Draft model acceptable? → speculative decoding
+    │   └─ Long context? → prefill optimizations + attention kernels + context budgets
     │
     ├─ Large model (>70B)?
-    │   ├─ Multiple GPUs? -> Tensor parallelism (NVLink required)
-    │   └─ Deep model? -> Pipeline parallelism (minimize bubbles)
-    │
-    ├─ Hardware selection?
-    │   ├─ Memory-bound? -> more HBM, higher bandwidth
-    │   ├─ Latency-bound? -> faster clocks + kernel support
-    │   └─ Multi-node? -> prioritize interconnect (NVLink/RDMA) and topology
-    │
-    │   Notes: treat GPU/SKU advice as time-sensitive; verify with vendor docs and your own benchmarks.
-    │   See references/gpu-optimization-checklists.md and references/infrastructure-tuning.md
+    │   ├─ Multiple GPUs? → Tensor parallelism (NVLink required)
+    │   └─ Deep model? → Pipeline parallelism (minimize bubbles)
     │
     └─ Edge deployment?
-        └─ CPU + quantization -> llama.cpp/GGUF for constrained resources
+        └─ CPU + quantization → Optimized for constrained resources
 ```
 
 ---
-
-## Intake Checklist (REQUIRED)
-
-Before recommending changes, collect (or infer) these inputs:
-
-- Model + variant (size, context length, precision/quantization, tokenizer)
-- Traffic shape (prompt/output length distributions, concurrency, QPS, streaming vs non-streaming)
-- SLOs and budgets (TTFT/ITL/total latency targets, error budget, cost per request)
-- Serving stack (engine/version, batching/scheduling settings, caching, parallelism, autoscaling)
-- Hardware and topology (GPU type/count, VRAM, NVLink/RDMA, CPU/RAM, storage, cluster/runtime)
-- Constraints (quality floor, safety requirements, rollout/rollback constraints)
 
 ## Core Concepts & Practices
 
@@ -142,45 +115,30 @@ Before recommending changes, collect (or infer) these inputs:
 
 ---
 
-## Accuracy Protocol (REQUIRED)
-
-- Treat performance ratios (for example, "2x faster") as hypotheses unless a source is cited and the workload is comparable.
-- Do not recommend hardware/SKU changes without stating assumptions (model size, context length, concurrency, interconnect).
-- Prefer a measured baseline + checklist-driven rollout over "best practice" claims.
-
----
-
 ## Resources (Detailed Operational Guides)
 
 For comprehensive guides on specific topics, see:
 
 ### Infrastructure & Serving
 
-- [Disaggregated Inference](references/disaggregated-inference.md) - Prefill/decode separation (2025+ standard)
-- [Infrastructure Tuning](references/infrastructure-tuning.md) - OS, container, Kubernetes optimization for GPU workloads
-- [Serving Architectures](references/serving-architectures.md) - Production serving stack patterns (vLLM, SGLang, TensorRT-LLM, NVIDIA Dynamo)
-- [Resilience & HA Patterns](references/resilience-ha-patterns.md) - Multi-region, failover, traffic management
+- [Infrastructure Tuning](resources/infrastructure-tuning.md) - OS, container, Kubernetes optimization for GPU workloads
+- [Serving Architectures](resources/serving-architectures.md) - Production serving stack patterns
+- [Resilience & HA Patterns](resources/resilience-ha-patterns.md) - Multi-region, failover, traffic management
 
 ### Performance Optimization
 
-- [Quantization Patterns](references/quantization-patterns.md) - FP8/FP4/INT8/INT4 decision trees (FP8 first, INT8 not on Blackwell)
-- [KV Cache Optimization](references/kv-cache-optimization.md) - PagedAttention, FlashAttention-3, FlashInfer, RadixAttention
-- [Parallelism Patterns](references/parallelism-patterns.md) - Tensor/pipeline/expert parallelism strategies
-- [Optimization Strategies](references/optimization-strategies.md) - Throughput, cost, memory optimization
-- [Batching & Scheduling](references/batching-and-scheduling.md) - Continuous batching and throughput patterns
+- [Quantization Patterns](resources/quantization-patterns.md) - FP8/FP4/INT8/INT4 decision trees and validation
+- [KV Cache Optimization](resources/kv-cache-optimization.md) - PagedAttention, FlashAttention, prefix caching
+- [Parallelism Patterns](resources/parallelism-patterns.md) - Tensor/pipeline/expert parallelism strategies
+- [Optimization Strategies](resources/optimization-strategies.md) - Throughput, cost, memory optimization
+- [Batching & Scheduling](resources/batching-and-scheduling.md) - Continuous batching and throughput patterns
 
 ### Deployment & Operations
 
-- [Edge & CPU Optimization](references/edge-cpu-optimization.md) - llama.cpp, GGUF, mobile/browser deployment
-- [GPU Optimization Checklists](references/gpu-optimization-checklists.md) - Hardware-specific tuning
-- [Speculative Decoding Guide](references/speculative-decoding-guide.md) - Advanced generation acceleration
-- [Profiling & Capacity Planning](references/profiling-and-capacity-planning.md) - Benchmarking, SLOs, replica sizing
-
-### Cost & Routing
-
-- [Cost Optimization Patterns](references/cost-optimization-patterns.md) - Token budgets, caching economics, model tiering, cost-per-outcome tracking
-- [Multi-Model Routing](references/multi-model-routing.md) - Router architectures, quality-cost tradeoffs, cascading strategies, A/B routing
-- [Streaming Patterns](references/streaming-patterns.md) - SSE/WebSocket serving, token-by-token delivery, backpressure, client integration
+- [Edge & CPU Optimization](resources/edge-cpu-optimization.md) - llama.cpp, GGUF, mobile/browser deployment
+- [GPU Optimization Checklists](resources/gpu-optimization-checklists.md) - Hardware-specific tuning
+- [Speculative Decoding Guide](resources/speculative-decoding-guide.md) - Advanced generation acceleration
+- [Profiling & Capacity Planning](resources/profiling-and-capacity-planning.md) - Benchmarking, SLOs, replica sizing
 
 ---
 
@@ -190,121 +148,74 @@ For comprehensive guides on specific topics, see:
 
 Production-ready configuration templates for leading inference engines:
 
-- [vLLM Configuration](assets/inference/template-vllm-config.md) - Continuous batching, PagedAttention setup
-- [TensorRT-LLM Configuration](assets/inference/template-tensorrtllm-config.md) - NVIDIA kernel optimizations
-- [DeepSpeed Inference](assets/inference/template-deepspeed-inference.md) - PyTorch-friendly inference
+- [vLLM Configuration](templates/inference/template-vllm-config.md) - Continuous batching, PagedAttention setup
+- [TensorRT-LLM Configuration](templates/inference/template-tensorrtllm-config.md) - NVIDIA kernel optimizations
+- [DeepSpeed Inference](templates/inference/template-deepspeed-inference.md) - PyTorch-friendly inference
 
 ### Quantization & Compression
 
 Model compression templates for reducing memory and cost:
 
-- [GPTQ Quantization](assets/quantization/template-gptq.md) - GPU post-training quantization
-- [AWQ Quantization](assets/quantization/template-awq.md) - Activation-aware weight quantization
-- [GGUF Format](assets/quantization/template-gguf.md) - CPU/edge optimized formats
+- [GPTQ Quantization](templates/quantization/template-gptq.md) - GPU post-training quantization
+- [AWQ Quantization](templates/quantization/template-awq.md) - Activation-aware weight quantization
+- [GGUF Format](templates/quantization/template-gguf.md) - CPU/edge optimized formats
 
 ### Serving Pipelines
 
 High-throughput serving architectures:
 
-- [LLM API Server](assets/serving/template-llm-api.md) - FastAPI + vLLM production setup
-- [High-Throughput Setup](assets/serving/template-high-throughput-setup.md) - Multi-replica scaling patterns
+- [LLM API Server](templates/serving/template-llm-api.md) - FastAPI + vLLM production setup
+- [High-Throughput Setup](templates/serving/template-high-throughput-setup.md) - Multi-replica scaling patterns
 
 ### Caching & Batching
 
 Performance optimization templates:
 
-- [Prefix Caching](assets/caching/template-prefix-caching.md) - KV cache reuse strategies
-- [Batching Configuration](assets/batching/template-batching-config.md) - Continuous batching tuning
+- [Prefix Caching](templates/caching/template-prefix-caching.md) - KV cache reuse strategies
+- [Batching Configuration](templates/batching/template-batching-config.md) - Continuous batching tuning
 
 ### Benchmarking
 
 Performance measurement and validation:
 
-- [Latency & Throughput Testing](assets/benchmarking/template-latency-throughput-test.md) - Load testing framework
+- [Latency & Throughput Testing](templates/benchmarking/template-latency-throughput-test.md) - Load testing framework
 
 ### Checklists
 
-- [Inference Performance Review Checklist](assets/checklists/inference-review-checklist.md) - Baseline, bottlenecks, rollout readiness
+- [Inference Performance Review Checklist](templates/checklists/inference-review-checklist.md) - Baseline, bottlenecks, rollout readiness
 
 ## Navigation
 
 **Resources**
-
-- [references/disaggregated-inference.md](references/disaggregated-inference.md)
-- [references/serving-architectures.md](references/serving-architectures.md)
-- [references/profiling-and-capacity-planning.md](references/profiling-and-capacity-planning.md)
-- [references/gpu-optimization-checklists.md](references/gpu-optimization-checklists.md)
-- [references/speculative-decoding-guide.md](references/speculative-decoding-guide.md)
-- [references/resilience-ha-patterns.md](references/resilience-ha-patterns.md)
-- [references/optimization-strategies.md](references/optimization-strategies.md)
-- [references/kv-cache-optimization.md](references/kv-cache-optimization.md)
-- [references/batching-and-scheduling.md](references/batching-and-scheduling.md)
-- [references/quantization-patterns.md](references/quantization-patterns.md)
-- [references/parallelism-patterns.md](references/parallelism-patterns.md)
-- [references/edge-cpu-optimization.md](references/edge-cpu-optimization.md)
-- [references/infrastructure-tuning.md](references/infrastructure-tuning.md)
-- [references/cost-optimization-patterns.md](references/cost-optimization-patterns.md)
-- [references/multi-model-routing.md](references/multi-model-routing.md)
-- [references/streaming-patterns.md](references/streaming-patterns.md)
+- [resources/serving-architectures.md](resources/serving-architectures.md)
+- [resources/profiling-and-capacity-planning.md](resources/profiling-and-capacity-planning.md)
+- [resources/gpu-optimization-checklists.md](resources/gpu-optimization-checklists.md)
+- [resources/speculative-decoding-guide.md](resources/speculative-decoding-guide.md)
+- [resources/resilience-ha-patterns.md](resources/resilience-ha-patterns.md)
+- [resources/optimization-strategies.md](resources/optimization-strategies.md)
+- [resources/kv-cache-optimization.md](resources/kv-cache-optimization.md)
+- [resources/batching-and-scheduling.md](resources/batching-and-scheduling.md)
+- [resources/quantization-patterns.md](resources/quantization-patterns.md)
+- [resources/parallelism-patterns.md](resources/parallelism-patterns.md)
+- [resources/edge-cpu-optimization.md](resources/edge-cpu-optimization.md)
+- [resources/infrastructure-tuning.md](resources/infrastructure-tuning.md)
 
 **Templates**
-- [assets/serving/template-llm-api.md](assets/serving/template-llm-api.md)
-- [assets/serving/template-high-throughput-setup.md](assets/serving/template-high-throughput-setup.md)
-- [assets/inference/template-vllm-config.md](assets/inference/template-vllm-config.md)
-- [assets/inference/template-tensorrtllm-config.md](assets/inference/template-tensorrtllm-config.md)
-- [assets/inference/template-deepspeed-inference.md](assets/inference/template-deepspeed-inference.md)
-- [assets/quantization/template-awq.md](assets/quantization/template-awq.md)
-- [assets/quantization/template-gptq.md](assets/quantization/template-gptq.md)
-- [assets/quantization/template-gguf.md](assets/quantization/template-gguf.md)
-- [assets/batching/template-batching-config.md](assets/batching/template-batching-config.md)
-- [assets/caching/template-prefix-caching.md](assets/caching/template-prefix-caching.md)
-- [assets/benchmarking/template-latency-throughput-test.md](assets/benchmarking/template-latency-throughput-test.md)
-- [assets/checklists/inference-review-checklist.md](assets/checklists/inference-review-checklist.md)
+- [templates/serving/template-llm-api.md](templates/serving/template-llm-api.md)
+- [templates/serving/template-high-throughput-setup.md](templates/serving/template-high-throughput-setup.md)
+- [templates/inference/template-vllm-config.md](templates/inference/template-vllm-config.md)
+- [templates/inference/template-tensorrtllm-config.md](templates/inference/template-tensorrtllm-config.md)
+- [templates/inference/template-deepspeed-inference.md](templates/inference/template-deepspeed-inference.md)
+- [templates/quantization/template-awq.md](templates/quantization/template-awq.md)
+- [templates/quantization/template-gptq.md](templates/quantization/template-gptq.md)
+- [templates/quantization/template-gguf.md](templates/quantization/template-gguf.md)
+- [templates/batching/template-batching-config.md](templates/batching/template-batching-config.md)
+- [templates/caching/template-prefix-caching.md](templates/caching/template-prefix-caching.md)
+- [templates/benchmarking/template-latency-throughput-test.md](templates/benchmarking/template-latency-throughput-test.md)
+- [templates/checklists/inference-review-checklist.md](templates/checklists/inference-review-checklist.md)
 
 **Data**
-- [data/sources.json](data/sources.json) - Curated external references
-
----
-
-## Trend Awareness Protocol
-
-**IMPORTANT**: When users ask recommendation questions about LLM inference, you MUST use WebSearch to check current trends before answering.
-
-### Trigger Conditions
-
-- "What's the best inference engine for [use case]?"
-- "What should I use for [serving/quantization/batching]?"
-- "What's the latest in LLM inference optimization?"
-- "Current best practices for [vLLM/TensorRT/quantization]?"
-- "Is [inference tool] still relevant in 2026?"
-- "[vLLM] vs [TensorRT-LLM] vs [SGLang]?"
-- "Best quantization method for [model size]?"
-- "What GPU should I use for inference?"
-
-### Required Searches
-
-1. Search: `"LLM inference optimization best practices 2026"`
-2. Search: `"[vLLM/TensorRT-LLM/SGLang] comparison 2026"`
-3. Search: `"LLM quantization trends January 2026"`
-4. Search: `"LLM serving new releases 2026"`
-
-### What to Report
-
-After searching, provide:
-
-- **Current landscape**: What serving engines are popular NOW (not 6 months ago)
-- **Emerging trends**: New inference optimizations gaining traction
-- **Deprecated/declining**: Techniques or tools losing relevance
-- **Recommendation**: Based on fresh data, not just static knowledge
-
-### Example Topics (verify with fresh search)
-
-- Inference engines (vLLM 0.7+, TensorRT-LLM, SGLang, llama.cpp)
-- Quantization methods (FP8, AWQ, GPTQ, GGUF, bitsandbytes)
-- Attention kernels (FlashAttention-3, FlashInfer, xFormers)
-- Speculative decoding advances
-- KV cache optimization techniques
-- New GPU architectures (H200, Blackwell) and their optimizations
+- [data/sources.json](data/sources.json) — Curated external references
 
 ---
 
@@ -312,7 +223,11 @@ After searching, provide:
 
 This skill focuses on **inference-time performance**. For related workflows:
 
-- See "Scope Boundaries" above.
+- **[ai-llm](../ai-llm/SKILL.md)** - Prompting, fine-tuning, application architecture
+- **[ai-rag](../ai-rag/SKILL.md)** - RAG pipeline construction and optimization
+- **[ai-mlops](../ai-mlops/SKILL.md)** - Deployment, monitoring, safety, and governance
+- **[qa-observability](../qa-observability/SKILL.md)** - Performance monitoring and optimization
+- **[ops-devops-platform](../ops-devops-platform/SKILL.md)** - Infrastructure and platform operations
 
 ---
 
@@ -329,9 +244,3 @@ See [data/sources.json](data/sources.json) for:
 ---
 
 Use this skill whenever the user needs **LLM inference performance, cost reduction, or serving architecture** guidance.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

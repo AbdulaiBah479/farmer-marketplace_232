@@ -1,95 +1,67 @@
 ---
 name: agents-md
-description: Creates and maintains concise AGENTS.md and CLAUDE.md project instruction files. Use when asked to create AGENTS.md, update AGENTS.md, maintain agent docs, set up CLAUDE.md, document repository agent conventions, or keep coding-agent instructions minimal and reference-backed.
+description: Create or update root and nested AGENTS.md files that document scoped conventions, monorepo module maps, cross-domain workflows, and (optionally) per-module feature maps (feature -> paths, entrypoints, tests, docs). Use when the user asks for AGENTS.md, nested agent instructions, or a module/feature map.
 ---
 
-# Maintaining AGENTS.md
+# AGENTS.md builder
 
-Goal: concise, actionable agent instructions. Target under 60 lines; never exceed 100.
+## Goal
+Add lightweight, scoped guidance for an AI agent (and humans) by placing AGENTS.md files at key directory boundaries:
+- root: cross-domain guidance + a module map (for monorepos)
+- nested: tech-specific instructions for each component/module
+- optional: feature maps at the module level
 
-## Workflow
+Optimize for concise and precise instructions (short bullets, minimal prose). Link to docs for depth.
 
-1. Inspect before writing:
-   - package manager: lock files and manifests
-   - commands: `package.json`, `Makefile`, task runners, CI workflows
-   - docs/specs/policies: `README.md`, `CONTRIBUTING.md`, `docs/`, `specs/`, `policies/`, `SECURITY.md`, `.github/`
-   - conventions: current code patterns, test layout, generated files, legacy areas to avoid
-2. Choose scope:
-   - root `AGENTS.md`: repo-wide defaults
-   - nested `AGENTS.md`: only when a subtree has different commands or rules
-   - closest instruction file wins; keep narrower files shorter than root files
-3. Write the smallest useful file.
-4. Verify exact paths and commands exist.
+## Inputs to ask for (if missing)
+- Is this a monorepo (multiple independently-built modules) or a single project?
+- Repo layout: where backend, frontend, docs, infra live; list the major modules/subprojects.
+- Cross-domain workflows to document (e.g., frontend calling backend API, auth flow, shared types, local dev).
+- If you want feature maps: top 5-15 user-facing features (names) and which module owns them.
+- Any rules about MCP usage to capture in root AGENTS.md (allowed servers/tools, safety constraints).
+- Any hard rules (do not touch X, required commands, style rules).
 
-## File Setup
+## Where to put AGENTS.md (heuristics)
+Create AGENTS.md at:
+- repo root (global rules + module map + cross-domain workflows)
+- each major component/module root (e.g., `backend/`, `frontend/`, `docs/`, `infra/`)
+- any subdirectory that has different conventions, ownership, or high risk (payments, auth, data migrations)
 
-- Create `AGENTS.md` at the repository root.
-- If a Claude-compatible entrypoint is required, symlink `CLAUDE.md` to `AGENTS.md`.
-- Do not maintain divergent `AGENTS.md` and `CLAUDE.md` copies.
+Avoid placing AGENTS.md too deep unless there is a real boundary; too many files become noise.
 
-## Default Sections
+## Workflow (checklist)
+1) Inventory the repo
+   - List top-level directories and build files (Gradle/Maven, Node/Next, docs site).
+   - Identify the natural "component roots" and any critical submodules.
+2) Draft root `AGENTS.md`
+   - State global rules only (things that apply everywhere).
+   - If monorepo: add a module/subproject map (not a feature map) and links to each nested AGENTS.md.
+   - Keep tech-specific instructions out of root; push them into the owning module's AGENTS.md.
+   - Docs: do not open/read `docs/` by default; consult only when asked or required.
+   - Add cross-domain workflows (how modules connect): frontend <-> backend API, auth/session, contract location (OpenAPI/GraphQL), "run together" local dev.
+   - Add cross-repo verification guidance: where to run per module + prereqs; quiet first run; re-run narrowed failures with verbose logs when debugging.
+3) Draft nested AGENTS.md per component
+   - Put tech-specific instructions in the module that owns them:
+     - Backend: how to run, test, migrate DB; key modules and entrypoints.
+     - Frontend: how to run, build, test; env vars; key routes/areas.
+     - Docs: docs structure, where to add ADRs/runbooks, how to preview/build docs.
+4) Build maps (as needed)
+   - If monorepo: module map goes in root (use `references/module-map-format.md`).
+   - Feature maps should live in the owning module AGENTS.md (use `references/feature-map-format.md`).
+5) Verify consistency
+   - Ensure guidance does not conflict between parent/child scopes.
+   - Keep each AGENTS.md short and actionable; move long detail into docs under `docs/`.
 
-Use only sections that add non-obvious value.
+## Templates
+Use these templates:
+- Root + module AGENTS.md: `references/agents-template.md`
+- Module map format: `references/module-map-format.md`
+- Feature map table format (per module): `references/feature-map-format.md`
+- Suggested `docs/` layout (Spring + Next): `references/docs-structure.md`
 
-````markdown
-# Agent Instructions
-
-## Package Manager
-- Use **pnpm**: `pnpm install`
-
-## Commands
-| Task | Command |
-|------|---------|
-| Test file | `pnpm vitest run path/to/file.test.ts` |
-| Lint file | `pnpm eslint path/to/file.ts` |
-
-## External References
-| Need | File |
-|------|------|
-| Setup | `CONTRIBUTING.md` |
-| Architecture | `docs/architecture.md` |
-| Security policy | `SECURITY.md` |
-
-## Key Conventions
-- Generated files: update with `pnpm generate`; do not edit by hand.
-
-## Commit Attribution
-AI commits MUST include:
-```
-Co-Authored-By: (the agent's name and attribution byline)
-```
-````
-
-## Writing Rules
-
-- Use headings, bullets, and tables; avoid paragraphs.
-- Use repo-relative paths; avoid vague references like "see docs".
-- Reference existing docs/specs/policies instead of copying them.
-- List exact external files for setup, architecture, API specs, security, release, and policy docs when they exist.
-- Prefer file-scoped test/lint/typecheck commands; include full builds only when no narrower command exists.
-- Put commands in tables when there is more than one.
-- Keep one rule per bullet.
-- Keep rationale out unless it prevents a likely mistake.
-- Do not restate linter, formatter, or typechecker config.
-- Do not list installed skills or plugins.
-- Do not include generic quality slogans.
-
-## External Reference Rules
-
-Good:
-
-```markdown
-## External References
-| Need | File |
-|------|------|
-| API contract | `docs/api.md` |
-| Release process | `docs/releasing.md` |
-```
-
-## Anti-Patterns
-
-- welcome text, intros, conclusions, or pleasantries
-- long prose explaining why instructions matter
-- duplicated content from `README.md`, `CONTRIBUTING.md`, or policy docs
-- project-wide commands when file-scoped commands are available
-- nested `AGENTS.md` files that repeat root instructions
+## Deliverable
+Provide:
+- Root `AGENTS.md` (if requested) with module map and cross-domain workflows.
+- Nested `AGENTS.md` per component/module with tech-specific guidance.
+- Optional feature map tables per module (if requested).
+- A list of files created/updated and any open questions.

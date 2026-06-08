@@ -1,6 +1,6 @@
 ---
 name: ai-llm
-description: Full LLM lifecycle skill — strategy selection, PEFT/LoRA, evaluation, and deployment. Use when building, fine-tuning, or operating LLM systems.
+description: Production LLM engineering skill. Covers strategy selection (prompting vs RAG vs fine-tuning), dataset design, PEFT/LoRA, evaluation workflows, deployment handoff to inference serving, and lifecycle operations with cost/safety controls.
 ---
 
 # LLM Development & Engineering — Complete Reference
@@ -15,13 +15,11 @@ This skill covers the full LLM lifecycle:
 - **Operations**: Quality monitoring, change management, incident response (see `ai-mlops`)
 - **Safety**: Threat modeling, data governance, layered mitigations (NIST AI RMF: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf)
 
-**Modern Best Practices (2026)**:
+**Modern Best Practices (January 2026)**:
 
-- Treat the model as a **component** with contracts, budgets, and rollback plans (not "magic").
+- Treat the model as a **component** with contracts, budgets, and rollback plans (not “magic”).
 - Separate **core concepts** (tokenization, context, training vs adaptation) from **implementation choices** (providers, SDKs).
 - Gate upgrades with repeatable evals and staged rollout; avoid blind model swaps.
-- **Cost-aware engineering**: Measure cost per successful outcome, not just cost per token; design tiering/caching early.
-- **Security-by-design**: Threat model prompt injection, data leakage, and tool abuse; treat guardrails as production code.
 
 **For detailed patterns:** See [Resources](#resources-best-practices--operational-patterns) and [Templates](#templates-copy-paste-ready) sections below.
 
@@ -33,8 +31,6 @@ This skill covers the full LLM lifecycle:
 |------|----------------|-----------------|-------------|
 | Choose architecture | Prompt vs RAG vs fine-tune | Start simple; add retrieval/adaptation only if needed | New products and migrations |
 | Model selection | Scoring matrix | Quality/latency/cost/privacy/license weighting | Provider changes and procurement |
-| **Cost optimization** | Tiered models + caching | Cascade routing, prompt caching, budget guardrails | Cost-sensitive production |
-| **Fine-tuning ROI** | ROI calculator | Break-even analysis, TCO comparison | Investment decisions |
 | Prompt contracts | Structured output + constraints | JSON schema, max tokens, refusal rules | Reliability and integration |
 | RAG integration | Hybrid retrieval + grounding | Retrieve → rerank → pack → cite → verify | Fresh/large corpora, traceability |
 | Fine-tuning | PEFT/LoRA (when justified) | Small targeted datasets + regression suite | Stable domains, repeated tasks |
@@ -62,38 +58,7 @@ Building LLM application: [Architecture Selection]
         └─ Hybrid (RAG + Fine-tuning + Agents) → Comprehensive solution
 ```
 
-**See [Decision Matrices](references/decision-matrices.md) for detailed selection criteria.**
-
----
-
-## Cost-Quality Decision Framework
-
-LLM spend is driven by usage-based inference (tokens/requests) plus supporting infra and engineering. Model selection is a **cost-quality-latency-risk tradeoff**.
-
-### Model Tier Strategy
-
-| Tier | Typical profile | Use For |
-|------|--------|------|---------|
-| **Value** | Small/fast models | High-volume, simple tasks |
-| **Balanced** | General-purpose models | Most production workloads |
-| **Premium** | Frontier/large models | Hardest tasks, low volume |
-
-### Cost Optimization Levers
-
-1. **Model tiering**: Route simple requests to cheaper models (often large savings at scale)
-2. **Prompt caching**: Reuse stable prefixes/context (provider-specific discounts and constraints)
-3. **Prompt optimization**: Compress examples and instructions (typically meaningful token reduction)
-4. **Output limits**: Set appropriate max_tokens (prevents runaway costs)
-
-### When to Fine-Tune (ROI-Based)
-
-Fine-tuning pays off when:
-- **Volume justifies it**: >10k requests/month provides meaningful cost savings
-- **Domain is stable**: Requirements unchanged for >6 months
-- **Data exists**: >1,000 quality training examples available
-- **Break-even achievable**: <12 months to recover investment
-
-**See [Cost Economics](references/cost-economics.md) for TCO modeling and [Fine-Tuning ROI Calculator](assets/selection/fine-tuning-roi-calculator.md) for investment analysis.**
+**See [Decision Matrices](resources/decision-matrices.md) for detailed selection criteria.**
 
 ---
 
@@ -156,42 +121,34 @@ Comprehensive operational guides with checklists, patterns, and decision framewo
 
 ### Core Operational Patterns
 
-- **[Cost Economics & Decision Frameworks](references/cost-economics.md)** - Cost modeling, unit economics, TCO analysis
-  - Pricing/discount assumptions (verify against current provider docs)
-  - Cost-quality tradeoff framework and decision matrix
-  - Total Cost of Ownership (TCO) calculation
-  - Fine-tuning ROI framework and break-even analysis
-  - Prompt caching economics
-  - Cost monitoring and budget guardrails
-
-- **[Project Planning Patterns](references/project-planning-patterns.md)** - Stack selection, FTI pipeline, performance budgeting
+- **[Project Planning Patterns](resources/project-planning-patterns.md)** - Stack selection, FTI pipeline, performance budgeting
   - AI engineering stack selection matrix
   - Feature/Training/Inference (FTI) pipeline blueprint
   - Performance budgeting and goodput gates
   - Progressive complexity (prompt → RAG → fine-tune → hybrid)
 
-- **[Production Checklists](references/production-checklists.md)** - Pre-deployment validation and operational checklists
+- **[Production Checklists](resources/production-checklists.md)** - Pre-deployment validation and operational checklists
   - LLM lifecycle checklist (modern production standards)
   - Data & training, RAG pipeline, deployment & serving
   - Safety/guardrails, evaluation, agentic systems
   - Reliability & data infrastructure (DDIA-grade)
   - Weekly production tasks
 
-- **[Common Design Patterns](references/common-design-patterns.md)** - Copy-paste ready implementation examples
+- **[Common Design Patterns](resources/common-design-patterns.md)** - Copy-paste ready implementation examples
   - Chain-of-Thought (CoT) prompting
   - ReAct (Reason + Act) pattern
   - RAG pipeline (minimal to advanced)
   - Agentic planning loop
   - Self-reflection and multi-agent collaboration
 
-- **[Decision Matrices](references/decision-matrices.md)** - Quick reference tables for selection
+- **[Decision Matrices](resources/decision-matrices.md)** - Quick reference tables for selection
   - RAG type decision matrix (naive → advanced → modular)
   - Production evaluation table with targets and actions
-  - Model selection matrix (tier-based, vendor-agnostic)
+  - Model selection matrix (GPT-4, Claude, Gemini, self-hosted)
   - Vector database, embedding model, framework selection
   - Deployment strategy matrix
 
-- **[Anti-Patterns](references/anti-patterns.md)** - Common mistakes and prevention strategies
+- **[Anti-Patterns](resources/anti-patterns.md)** - Common mistakes and prevention strategies
   - Data leakage, prompt dilution, RAG context overload
   - Agentic runaway, over-engineering, ignoring evaluation
   - Hard-coded prompts, missing observability
@@ -199,17 +156,11 @@ Comprehensive operational guides with checklists, patterns, and decision framewo
 
 ### Domain-Specific Patterns
 
-- **[LLMOps Best Practices](references/llmops-best-practices.md)** - Operational lifecycle and deployment patterns
-- **[Evaluation Patterns](references/eval-patterns.md)** - Testing, metrics, and quality validation
-- **[Prompt Engineering Patterns](references/prompt-engineering-patterns.md)** - Quick reference (canonical skill: [ai-prompt-engineering](../ai-prompt-engineering/SKILL.md))
-- **[Agentic Patterns](references/agentic-patterns.md)** - Quick reference (canonical skill: [ai-agents](../ai-agents/SKILL.md))
-- **[RAG Best Practices](references/rag-best-practices.md)** - Quick reference (canonical skill: [ai-rag](../ai-rag/SKILL.md))
-
-### Emerging Patterns
-
-- **[Structured Output Patterns](references/structured-output-patterns.md)** - JSON mode, constrained decoding, schema enforcement, validation pipelines
-- **[Multimodal Patterns](references/multimodal-patterns.md)** - Vision-language models, audio/image inputs, cross-modal pipelines, cost management
-- **[Model Migration Guide](references/model-migration-guide.md)** - Provider migration playbook, eval-gated rollout, prompt adaptation, fallback strategies
+- **[LLMOps Best Practices](resources/llmops-best-practices.md)** - Operational lifecycle and deployment patterns
+- **[Evaluation Patterns](resources/eval-patterns.md)** - Testing, metrics, and quality validation
+- **[Prompt Engineering Patterns](resources/prompt-engineering-patterns.md)** - Quick reference (canonical skill: [ai-prompt-engineering](../ai-prompt-engineering/SKILL.md))
+- **[Agentic Patterns](resources/agentic-patterns.md)** - Quick reference (canonical skill: [ai-agents](../ai-agents/SKILL.md))
+- **[RAG Best Practices](resources/rag-best-practices.md)** - Quick reference (canonical skill: [ai-rag](../ai-rag/SKILL.md))
 
 **Note:** Each resource file includes preflight/validation checklists, copy-paste reference tables, inline templates, anti-patterns, and decision matrices.
 
@@ -221,35 +172,34 @@ Production templates by use case and technology:
 
 ### Selection & Governance
 
-- **[Model Selection Matrix](assets/selection/model-selection-matrix.md)** - Documented selection, scoring, licensing, and governance
-- **[Fine-Tuning ROI Calculator](assets/selection/fine-tuning-roi-calculator.md)** - Investment analysis, break-even, go/no-go decisions
+- **[Model Selection Matrix](templates/selection/model-selection-matrix.md)** - Documented selection, scoring, licensing, and governance
 
 ### RAG Pipelines
 
-- **[Basic RAG](assets/rag-pipelines/template-basic-rag.md)** - Simple retrieval-augmented generation
-- **[Advanced RAG](assets/rag-pipelines/template-advanced-rag.md)** - Hybrid retrieval, reranking, contextual embeddings
+- **[Basic RAG](templates/rag-pipelines/template-basic-rag.md)** - Simple retrieval-augmented generation
+- **[Advanced RAG](templates/rag-pipelines/template-advanced-rag.md)** - Hybrid retrieval, reranking, contextual embeddings
 
 ### Prompt Engineering
 
-- **[Chain-of-Thought](assets/prompt-engineering/template-cot.md)** - Step-by-step reasoning pattern
-- **[ReAct](assets/prompt-engineering/template-react.md)** - Reason + Act for tool use
+- **[Chain-of-Thought](templates/prompt-engineering/template-cot.md)** - Step-by-step reasoning pattern
+- **[ReAct](templates/prompt-engineering/template-react.md)** - Reason + Act for tool use
 
 ### Agentic Workflows
 
-- **[Reflection Agent](assets/agentic-workflows/template-reflection.md)** - Self-critique and improvement
-- **[Multi-Agent](assets/agentic-workflows/template-multi-agent.md)** - Manager-worker orchestration
+- **[Reflection Agent](templates/agentic-workflows/template-reflection.md)** - Self-critique and improvement
+- **[Multi-Agent](templates/agentic-workflows/template-multi-agent.md)** - Manager-worker orchestration
 
 ### Data Pipelines
 
-- **[Data Quality](assets/data-pipelines/template-data-quality.md)** - Validation, deduplication, PII detection
+- **[Data Quality](templates/data-pipelines/template-data-quality.md)** - Validation, deduplication, PII detection
 
 ### Deployment
 
-- **[LLM Deployment](assets/deployment/template-llm-deployment.md)** - Production deployment with monitoring
+- **[LLM Deployment](templates/deployment/template-llm-deployment.md)** - Production deployment with monitoring
 
 ### Evaluation
 
-- **[Multi-Metric Evaluation](assets/evaluation/template-multi-metric.md)** - Comprehensive testing suite
+- **[Multi-Metric Evaluation](templates/evaluation/template-multi-metric.md)** - Comprehensive testing suite
 
 ---
 
@@ -262,48 +212,7 @@ Production templates by use case and technology:
 - [../software-clean-code-standard/utilities/observability-utilities.md](../software-clean-code-standard/utilities/observability-utilities.md) — OpenTelemetry SDK, tracing, metrics
 - [../software-clean-code-standard/utilities/config-validation.md](../software-clean-code-standard/utilities/config-validation.md) — Zod 3.24+, secrets management for API keys
 - [../software-clean-code-standard/utilities/testing-utilities.md](../software-clean-code-standard/utilities/testing-utilities.md) — Test factories, fixtures, mocks
-- [../software-clean-code-standard/references/clean-code-standard.md](../software-clean-code-standard/references/clean-code-standard.md) — Canonical clean code rules (`CC-*`) for citation
-
----
-
-## Trend Awareness Protocol
-
-**IMPORTANT**: For “best/latest” recommendations, verify recency using current sources (official docs/release notes/benchmarks). If you can’t browse, state assumptions and ask for timeframe + constraints.
-
-### Trigger Conditions
-
-- "What's the best LLM model for [use case]?"
-- "What should I use for [RAG/fine-tuning/agents]?"
-- "What's the latest in LLM development?"
-- "Current best practices for [prompting/evaluation/deployment]?"
-- "Is [model/framework] still relevant in 2026?"
-- "[Model A] vs [Model B]?" or "[Framework A] vs [Framework B]?"
-- "Best vector database for [use case]?"
-- "What agent framework should I use?"
-
-### Minimal Verification Checklist
-
-1. Confirm user constraints: latency, cost, privacy/compliance, deployment target, and toolchain.
-2. Check at least 2 authoritative sources from `data/sources.json` (provider docs, release notes, pricing/quotas, deprecations).
-3. Prefer stable guidance (tradeoffs + decision criteria) over “one best model/framework”.
-
-### What to Report
-
-After searching, provide:
-
-- **Current landscape**: What models/frameworks are popular NOW (not 6 months ago)
-- **Emerging trends**: New models, frameworks, or techniques gaining traction
-- **Deprecated/declining**: Models/frameworks losing relevance or support
-- **Recommendation**: Based on fresh data, not just static knowledge
-
-### Example Topics (verify with fresh sources)
-
-- Latest frontier models (GPT-4.5, Claude 4, Gemini 2.x, Llama 4)
-- Agent frameworks (LangGraph, CrewAI, AutoGen, Semantic Kernel)
-- Vector databases (Pinecone, Qdrant, Weaviate, pgvector)
-- RAG techniques (contextual retrieval, agentic RAG, graph RAG)
-- Inference engines (vLLM, TensorRT-LLM, SGLang)
-- Evaluation frameworks (RAGAS, DeepEval, Braintrust)
+- [../software-clean-code-standard/resources/clean-code-standard.md](../software-clean-code-standard/resources/clean-code-standard.md) — Canonical clean code rules (`CC-*`) for citation
 
 ---
 
@@ -343,44 +252,38 @@ See **[data/sources.json](data/sources.json)** for 50+ curated authoritative sou
 
 ### For New Projects
 
-1. Start with **[Production Checklists](references/production-checklists.md)** - Validate all pre-deployment requirements
-2. Use **[Decision Matrices](references/decision-matrices.md)** - Select technology stack
-3. Reference **[Project Planning Patterns](references/project-planning-patterns.md)** - Design FTI pipeline
-4. Implement with **[Common Design Patterns](references/common-design-patterns.md)** - Copy-paste code examples
-5. Avoid **[Anti-Patterns](references/anti-patterns.md)** - Learn from common mistakes
+1. Start with **[Production Checklists](resources/production-checklists.md)** - Validate all pre-deployment requirements
+2. Use **[Decision Matrices](resources/decision-matrices.md)** - Select technology stack
+3. Reference **[Project Planning Patterns](resources/project-planning-patterns.md)** - Design FTI pipeline
+4. Implement with **[Common Design Patterns](resources/common-design-patterns.md)** - Copy-paste code examples
+5. Avoid **[Anti-Patterns](resources/anti-patterns.md)** - Learn from common mistakes
 
 ### For Troubleshooting
 
-1. Check **[Anti-Patterns](references/anti-patterns.md)** - Identify failure modes and mitigations
-2. Use **[Decision Matrices](references/decision-matrices.md)** - Evaluate if architecture fits use case
-3. Reference **[Common Design Patterns](references/common-design-patterns.md)** - Verify implementation correctness
+1. Check **[Anti-Patterns](resources/anti-patterns.md)** - Identify failure modes and mitigations
+2. Use **[Decision Matrices](resources/decision-matrices.md)** - Evaluate if architecture fits use case
+3. Reference **[Common Design Patterns](resources/common-design-patterns.md)** - Verify implementation correctness
 
 ### For Ongoing Operations
 
-1. Follow **[Production Checklists](references/production-checklists.md)** - Weekly operational tasks
-2. Integrate **[Evaluation Patterns](references/eval-patterns.md)** - Continuous quality monitoring
-3. Apply **[LLMOps Best Practices](references/llmops-best-practices.md)** - Deployment and rollback procedures
+1. Follow **[Production Checklists](resources/production-checklists.md)** - Weekly operational tasks
+2. Integrate **[Evaluation Patterns](resources/eval-patterns.md)** - Continuous quality monitoring
+3. Apply **[LLMOps Best Practices](resources/llmops-best-practices.md)** - Deployment and rollback procedures
 
 ---
 
 ## Navigation Summary
 
-**Quick Decisions:** [Decision Matrices](references/decision-matrices.md)
-**Pre-Deployment:** [Production Checklists](references/production-checklists.md)
-**Planning:** [Project Planning Patterns](references/project-planning-patterns.md)
-**Implementation:** [Common Design Patterns](references/common-design-patterns.md)
-**Troubleshooting:** [Anti-Patterns](references/anti-patterns.md)
+**Quick Decisions:** [Decision Matrices](resources/decision-matrices.md)
+**Pre-Deployment:** [Production Checklists](resources/production-checklists.md)
+**Planning:** [Project Planning Patterns](resources/project-planning-patterns.md)
+**Implementation:** [Common Design Patterns](resources/common-design-patterns.md)
+**Troubleshooting:** [Anti-Patterns](resources/anti-patterns.md)
 
-**Domain Depth:** [LLMOps](references/llmops-best-practices.md) | [Evaluation](references/eval-patterns.md) | [Prompts](references/prompt-engineering-patterns.md) | [Agents](references/agentic-patterns.md) | [RAG](references/rag-best-practices.md)
+**Domain Depth:** [LLMOps](resources/llmops-best-practices.md) | [Evaluation](resources/eval-patterns.md) | [Prompts](resources/prompt-engineering-patterns.md) | [Agents](resources/agentic-patterns.md) | [RAG](resources/rag-best-practices.md)
 
-**Templates:** [assets/](assets/) - Copy-paste ready production code
+**Templates:** [templates/](templates/) - Copy-paste ready production code
 
 **Sources:** [data/sources.json](data/sources.json) - Authoritative documentation links
 
 ---
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

@@ -31,7 +31,7 @@ uv add "denario[app]"
 Or using pip:
 
 ```bash
-uv pip install "denario[app]"
+pip install "denario[app]"
 ```
 
 For Docker deployment or building from source, see `references/installation.md`.

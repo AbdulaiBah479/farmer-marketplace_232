@@ -1,155 +1,95 @@
 ---
 name: deep-research
-description: Multi-source deep research using firecrawl and exa MCPs. Searches the web, synthesizes findings, and delivers cited reports with source attribution. Use when the user wants thorough research on any topic with evidence and citations.
-origin: ECC
+description: Conducts a structured metric investigation in Mixpanel. Use when the user asks why a metric changed, what's driving a trend, requests a "deep dive" or "root cause," or wants to understand a phenomenon in their data. Walks through project / event / property scoping, plan confirmation, and an iterative query → interpret → hypothesise loop.
+license: Apache-2.0
 ---
 
-# Deep Research
+# Deep Research / Metric Investigation
 
-Produce thorough, cited research reports from multiple web sources using firecrawl and exa MCP tools.
+This skill is a structured investigation, not a one-shot answer.
 
-## When to Activate
+## Requirements
 
-- User asks to research any topic in depth
-- Competitive analysis, technology evaluation, or market sizing
-- Due diligence on companies, investors, or technologies
-- Any question requiring synthesis from multiple sources
-- User says "research", "deep dive", "investigate", or "what's the current state of"
+- Access to Mixpanel (query schemas, run queries, manage dashboards).
 
-## MCP Requirements
+---
 
-At least one of:
-- **firecrawl** — `firecrawl_search`, `firecrawl_scrape`, `firecrawl_crawl`
-- **exa** — `web_search_exa`, `web_search_advanced_exa`, `crawling_exa`
+## When to use this skill
 
-Both together give the best coverage. Configure in `~/.claude.json` or `~/.codex/config.toml`.
+Trigger when the user wants to understand *why* something happened in their data. Common phrasings:
+
+- "Why did [metric] drop / spike / change?"
+- "Can you do a deep dive on [X]?"
+- "What's driving [trend]?"
+- "Root cause this for me."
+- "Help me understand what happened with [feature / cohort / segment]."
+
+Do **not** trigger for one-off lookups ("what was DAU yesterday?"). Those are direct queries, not investigations.
+
+---
 
 ## Workflow
 
-### Step 1: Understand the Goal
+### Phase 1 — Scope
 
-Ask 1-2 quick clarifying questions:
-- "What's your goal — learning, making a decision, or writing something?"
-- "Any specific angle or depth you want?"
+Do not run analysis queries until scope is confirmed.
 
-If the user says "just research it" — skip ahead with reasonable defaults.
+Do your best to find the following information from the user's question and context. If anything is missing or ambiguous, ask clarifying questions before proceeding.
 
-### Step 2: Plan the Research
+1. **Project.** Which Mixpanel project? If the user has access to several, ask.
+2. **Events.** Which events relate to the question?
+3. **Properties.** Which properties are relevant to break down by? (e.g. platform, utm_source, plan_tier)
 
-Break the topic into 3-5 research sub-questions. Example:
-- Topic: "Impact of AI on healthcare"
-  - What are the main AI applications in healthcare today?
-  - What clinical outcomes have been measured?
-  - What are the regulatory challenges?
-  - What companies are leading this space?
-  - What's the market size and growth trajectory?
+State your assumptions and ask the user to confirm before continuing. The final answer depends on this being right.
 
-### Step 3: Execute Multi-Source Search
+### Phase 2 — Validate and plan
 
-For EACH sub-question, search using available MCP tools:
+Run small exploratory queries to confirm data exists in the analysis window. Be resilient — try different approaches if your first attempts don't work.
+If volume is zero, partial, or anomalously low, surface that to the user before going further.
 
-**With firecrawl:**
-```
-firecrawl_search(query: "<sub-question keywords>", limit: 8)
-```
-
-**With exa:**
-```
-web_search_exa(query: "<sub-question keywords>", numResults: 8)
-web_search_advanced_exa(query: "<keywords>", numResults: 5, startPublishedDate: "2025-01-01")
-```
-
-**Search strategy:**
-- Use 2-3 different keyword variations per sub-question
-- Mix general and news-focused queries
-- Aim for 15-30 unique sources total
-- Prioritize: academic, official, reputable news > blogs > forums
-
-### Step 4: Deep-Read Key Sources
-
-For the most promising URLs, fetch full content:
-
-**With firecrawl:**
-```
-firecrawl_scrape(url: "<url>")
-```
-
-**With exa:**
-```
-crawling_exa(url: "<url>", tokensNum: 5000)
-```
-
-Read 3-5 key sources in full for depth. Do not rely only on search snippets.
-
-### Step 5: Synthesize and Write Report
-
-Structure the report:
-
-```markdown
-# [Topic]: Research Report
-*Generated: [date] | Sources: [N] | Confidence: [High/Medium/Low]*
-
-## Executive Summary
-[3-5 sentence overview of key findings]
-
-## 1. [First Major Theme]
-[Findings with inline citations]
-- Key point ([Source Name](url))
-- Supporting data ([Source Name](url))
-
-## 2. [Second Major Theme]
-...
-
-## 3. [Third Major Theme]
-...
-
-## Key Takeaways
-- [Actionable insight 1]
-- [Actionable insight 2]
-- [Actionable insight 3]
-
-## Sources
-1. [Title](url) — [one-line summary]
-2. ...
-
-## Methodology
-Searched [N] queries across web and news. Analyzed [M] sources.
-Sub-questions investigated: [list]
-```
-
-### Step 6: Deliver
-
-- **Short topics**: Post the full report in chat
-- **Long reports**: Post the executive summary + key takeaways, save full report to a file
-
-## Parallel Research with Subagents
-
-For broad topics, use Claude Code's Task tool to parallelize:
+Then present a compact plan:
 
 ```
-Launch 3 research agents in parallel:
-1. Agent 1: Research sub-questions 1-2
-2. Agent 2: Research sub-questions 3-4
-3. Agent 3: Research sub-question 5 + cross-cutting themes
+*Investigation Plan*
+
+• *Project:* `project name`
+• *Events:* `event_a`, `event_b`, `event_c`
+• *Properties:* `platform`, `utm_source`, `plan_tier`
+
+*Initial Queries:*
+• Trend of event_a over 30 days to establish baseline
+• Breakdown by platform to isolate where the change happened
+• ...
+
+Say *yes* to continue the analysis.
 ```
 
-Each agent searches, reads sources, and returns findings. The main session synthesizes into the final report.
+Wait for explicit confirmation before running the full investigation. If the user revises the plan, restate it and re-confirm before continuing.
 
-## Quality Rules
+### Phase 3 — Investigate
 
-1. **Every claim needs a source.** No unsourced assertions.
-2. **Cross-reference.** If only one source says it, flag it as unverified.
-3. **Recency matters.** Prefer sources from the last 12 months.
-4. **Acknowledge gaps.** If you couldn't find good info on a sub-question, say so.
-5. **No hallucination.** If you don't know, say "insufficient data found."
-6. **Separate fact from inference.** Label estimates, projections, and opinions clearly.
+Enter the research loop:
 
-## Examples
+1. **Run** one or more queries from the plan.
+2. **Read and interpret** the results — what stands out, what doesn't?
+3. **Form a hypothesis.** If the data clearly answers the question, prepare to summarise. If not, return to step 1 with a sharper query.
 
-```
-"Research the current state of nuclear fusion energy"
-"Deep dive into Rust vs Go for backend services in 2026"
-"Research the best strategies for bootstrapping a SaaS business"
-"What's happening with the US housing market right now?"
-"Investigate the competitive landscape for AI code editors"
-```
+Continue until you can answer the original question with evidence, or you can clearly articulate what data is missing. Stay creative — every dataset is different, so let the data shape the next query rather than following a fixed sequence.
+
+---
+
+## Guidelines
+
+- **Start broad, then narrow.** Establish the overall trend first; each subsequent query should be informed by the previous one.
+- **Break down by dimensions where you'd expect variation given the question.** Don't slice by every property — pick the ones most likely to show a delta.
+- **Correlate timing.** If a metric shifted on a specific date, ask what else changed: a deploy, a campaign, a policy, an outage.
+
+---
+
+## Output
+
+When the investigation concludes, present:
+
+1. The **answer** to the original question, in one or two sentences.
+2. The **evidence** — create a dashboard using the `create-dashboard` skill to back your findings with live data.
+3. **Caveats** — anything the data doesn't tell you, alternative explanations you can't rule out, and follow-up queries the user might want to run.

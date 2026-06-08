@@ -1,228 +1,358 @@
 ---
 name: help
-description: "Analyzes what is done and the users query and offers advice on what to do next. Use if user says what should I do next or what do I do now or I'm stuck or I don't know what to do"
-argument-hint: "[optional: what you just finished, e.g. 'finished design-review' or 'stuck on ADRs']"
-user-invocable: true
-allowed-tools: Read, Glob, Grep
-context: |
-  !echo "=== Live Project State ===" && echo "Stage: $(cat production/stage.txt 2>/dev/null | tr -d '[:space:]' || echo 'not set')" && echo "Latest sprint: $(ls -t production/sprints/*.md 2>/dev/null | head -1 || echo 'none')" && echo "Session state: $(head -5 production/session-state/active.md 2>/dev/null || echo 'none')"
-model: haiku
+description: Interactive workspace discovery - learn what tools, workflows, agents, and hooks are available
+allowed-tools: [AskUserQuestion, Bash, Read, Glob, Grep]
 ---
 
-# Studio Help — What Do I Do Next?
+# /help - Workspace Discovery
 
-This skill is read-only — it reports findings but writes no files.
+Guide users through the capabilities of this workspace setup.
 
-This skill figures out exactly where you are in the game development pipeline and
-tells you what comes next. It is **lightweight** — not a full audit. For a full
-gap analysis, use `/project-stage-detect`.
-
----
-
-## Step 1: Read the Catalog
-
-Read `.claude/docs/workflow-catalog.yaml`. This is the authoritative list of all
-phases, their steps (in order), whether each step is required or optional, and
-the artifact globs that indicate completion.
-
----
-
-## Step 1b: Find Skills Not in the Catalog
-
-After reading the catalog, Glob `.claude/skills/*/SKILL.md` to get the full list
-of installed skills. For each file, extract the `name:` field from its frontmatter.
-
-Compare against the `command:` values in the catalog. Any skill whose name does
-not appear as a catalog command is an **uncataloged skill** — still usable but not
-part of the phase-gated workflow.
-
-Collect these for the output in Step 7 — show them as a footer block:
+## Usage
 
 ```
-### Also installed (not in workflow)
-- `/skill-name` — [description from SKILL.md frontmatter]
-- `/skill-name` — [description]
+/help                    # Interactive guided discovery
+/help workflows          # Workflow orchestration skills
+/help agents             # Specialist agents catalog
+/help tools              # CLI tools (tldr, prove, recall)
+/help hooks              # Active hooks and what they do
+/help advanced           # MCP, frontmatter, customization
+/help <name>             # Deep dive on specific skill/agent
 ```
 
-Only show this block if at least one uncataloged skill exists. Limit to the 10
-most relevant based on the user's current phase (QA skills in production, team
-skills in production/polish, etc.).
+## Behavior Based on Arguments
 
----
+### No Arguments: Interactive Discovery
 
-## Step 2: Determine Current Phase
-
-Check in this order:
-
-1. **Read `production/stage.txt`** — if it exists and has content, this is the
-   authoritative phase name. Map it to a catalog phase key:
-   - "Concept" → `concept`
-   - "Systems Design" → `systems-design`
-   - "Technical Setup" → `technical-setup`
-   - "Pre-Production" → `pre-production`
-   - "Production" → `production`
-   - "Polish" → `polish`
-   - "Release" → `release`
-
-2. **If stage.txt is missing**, infer phase from artifacts (most-advanced match wins):
-   - `src/` has 10+ source files → `production`
-   - `production/stories/*.md` exists → `pre-production`
-   - `docs/architecture/adr-*.md` exists → `technical-setup`
-   - `design/gdd/systems-index.md` exists → `systems-design`
-   - `design/gdd/game-concept.md` exists → `concept`
-   - Nothing → `concept` (fresh project)
-
----
-
-## Step 3: Read Session Context
-
-Read `production/session-state/active.md` if it exists. Extract:
-- What was most recently worked on
-- Any in-progress tasks or open questions
-- Current epic/feature/task from STATUS block (if present)
-
-This tells you what the user just finished or is stuck on — use it to personalize
-the output.
-
----
-
-## Step 4: Check Step Completion for the Current Phase
-
-For each step in the current phase (from the catalog):
-
-### Artifact-based checks
-
-If the step has `artifact.glob`:
-- Use Glob to check if files matching the pattern exist
-- If `min_count` is specified, verify at least that many files match
-- If `artifact.pattern` is specified, use Grep to verify the pattern exists in the matched file
-- **Complete** = artifact condition is met
-- **Incomplete** = artifact is missing or pattern not found
-
-If the step has `artifact.note` (no glob):
-- Mark as **MANUAL** — cannot auto-detect, will ask user
-
-If the step has no `artifact` field:
-- Mark as **UNKNOWN** — completion not trackable (e.g. repeatable implementation work)
-
-### Special case: production phase — read `sprint-status.yaml`
-
-When the current phase is `production`, check for `production/sprint-status.yaml`
-before doing any glob-based story checks. If it exists, read it directly:
-
-- Stories with `status: in-progress` → surface as "currently active"
-- Stories with `status: ready-for-dev` → surface as "next up"
-- Stories with `status: done` → count as complete
-- Stories with `status: blocked` → surface as blocker with the `blocker` field
-
-This gives precise per-story status without markdown scanning. Skip the glob
-artifact check for the `implement` and `story-done` steps — the YAML is authoritative.
-
-### Special case: `repeatable: true` (non-production)
-
-For repeatable steps outside production (e.g. "System GDDs"), the artifact
-check tells you whether *any* work has been done, not whether it's finished.
-Label these differently — show what's been detected, then note it may be ongoing.
-
----
-
-## Step 5: Find Position and Identify Next Steps
-
-From the completion data, determine:
-
-1. **Last confirmed complete step** — the furthest completed required step
-2. **Current blocker** — the first incomplete *required* step (this is what the
-   user must do next)
-3. **Optional opportunities** — incomplete *optional* steps that can be done
-   before or alongside the blocker
-4. **Upcoming required steps** — required steps after the current blocker
-   (show as "coming up" so user can plan ahead)
-
-If the user provided an argument (e.g. "just finished design-review"), use that
-to advance past the step they named even if the artifact check is ambiguous.
-
----
-
-## Step 6: Check for In-Progress Work
-
-If `active.md` shows an active task or epic:
-- Surface it prominently at the top: "It looks like you were working on [X]"
-- Suggest continuing it or confirm if it's done
-
----
-
-## Step 7: Present Output
-
-Keep it **short and direct**. This is a quick orientation, not a report.
+Use AskUserQuestion to guide the user:
 
 ```
-## Where You Are: [Phase Label]
-
-**In progress:** [from active.md, if any]
-
-### ✓ Done
-- [completed step name]
-- [completed step name]
-
-### → Next up (REQUIRED)
-**[Step name]** — [description]
-Command: `[/command]`
-
-### ~ Also available (OPTIONAL)
-- **[Step name]** — [description] → `/command`
-- **[Step name]** — [description] → `/command`
-
-### Coming up after that
-- [Next required step name] (`/command`)
-- [Next required step name] (`/command`)
-
----
-Approaching **[next phase]** gate → run `/gate-check` when ready.
+question: "What are you trying to do?"
+header: "Goal"
+options:
+  - label: "Explore/understand a codebase"
+    description: "Find patterns, architecture, conventions"
+  - label: "Fix a bug"
+    description: "Investigate, diagnose, implement fix"
+  - label: "Build a feature"
+    description: "Plan, implement, test new functionality"
+  - label: "Prove something mathematically"
+    description: "Formal verification with Lean 4"
 ```
 
-**Formatting rules:**
-- `✓` for confirmed complete
-- `→` for the current required next step (only one — the first blocker)
-- `~` for optional steps available now
-- Show commands inline as backtick code
-- If a step has no command (e.g. "Implement Stories"), explain what to do instead of showing a slash command
-- For MANUAL steps, ask the user: "I can't tell if [step] is done — has it been completed?"
+Based on response, show relevant tools:
 
-Verdict: **COMPLETE** — next steps identified.
+| Goal | Show |
+|------|------|
+| Explore codebase | scout agent, tldr CLI, /explore workflow |
+| Fix a bug | /fix workflow, sleuth agent, debug-agent |
+| Build feature | /build workflow, architect agent, kraken agent |
+| Prove math | /prove skill, lean4 skill, Godel-Prover |
+| Research docs | oracle agent, nia-docs, perplexity |
+| Configure workspace | hooks, rules, settings, frontmatter |
 
----
+### /help workflows
 
-## Step 8: Gate Warning (if close)
+Display workflow meta-skills:
 
-After the current phase's steps, check if the user is likely approaching a gate:
-- If all required steps in the current phase are complete (or nearly complete),
-  add: "You're close to the **[Current] → [Next]** gate. Run `/gate-check` when ready."
-- If multiple required steps remain, skip the gate warning — it's not relevant yet.
+```markdown
+## Workflow Skills
 
----
+Orchestrate multi-agent pipelines for complex tasks.
 
-## Step 9: Escalation Paths
+| Workflow | Purpose | Agents Used |
+|----------|---------|-------------|
+| /fix | Bug investigation → diagnosis → implementation | sleuth → kraken → arbiter |
+| /build | Feature planning → implementation → testing | architect → kraken → arbiter |
+| /debug | Deep investigation of issues | debug-agent, sleuth |
+| /tdd | Test-driven development cycle | arbiter → kraken → arbiter |
+| /refactor | Code transformation with safety | phoenix → kraken → judge |
+| /review | Code review and feedback | critic, judge |
+| /security | Vulnerability analysis | aegis |
+| /explore | Codebase discovery | scout |
+| /test | Test execution and validation | arbiter, atlas |
+| /release | Version bumps, changelog | herald |
+| /migrate | Framework/infrastructure changes | pioneer, phoenix |
 
-After the recommendations, if the user seems stuck or confused, add:
+**Usage**: Just describe your goal. Claude routes to the right workflow.
+```
+
+### /help agents
+
+Display agent catalog:
+
+```markdown
+## Specialist Agents
+
+Spawn via Task tool with subagent_type.
+
+### Exploration & Research
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| scout | Codebase exploration, pattern finding | sonnet |
+| oracle | External research (web, docs, APIs) | sonnet |
+| pathfinder | External repository analysis | sonnet |
+
+### Planning & Architecture
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| architect | Feature planning, design docs | sonnet |
+| plan-agent | Create implementation plans | sonnet |
+| phoenix | Refactoring & migration planning | sonnet |
+
+### Implementation
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| kraken | TDD implementation, refactoring | sonnet |
+| spark | Quick fixes, lightweight changes | haiku |
+
+### Review & Validation
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| arbiter | Test execution, validation | sonnet |
+| critic | Code review | sonnet |
+| judge | Refactoring review | sonnet |
+
+### Investigation
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| sleuth | Bug investigation, root cause | sonnet |
+| debug-agent | Issue investigation with logs | sonnet |
+| profiler | Performance, race conditions | sonnet |
+
+### Documentation & Handoff
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| scribe | Documentation, session summaries | sonnet |
+| chronicler | Session analysis, learning extraction | sonnet |
+```
+
+### /help tools
+
+Display CLI tools and capabilities:
+
+```markdown
+## Built-in Tools
+
+### TLDR Code Analysis
+Token-efficient code exploration (95% savings vs reading raw files).
+
+```bash
+tldr tree src/              # File tree
+tldr structure src/ --lang python  # Code structure (codemaps)
+tldr search "pattern" src/  # Search files
+tldr cfg file.py func       # Control flow graph
+tldr dfg file.py func       # Data flow graph
+tldr impact func src/       # Reverse call graph (who calls this?)
+tldr dead src/              # Find dead code
+tldr arch src/              # Detect architectural layers
+```
+
+### /prove - Formal Verification
+Machine-verified proofs without learning Lean syntax.
 
 ```
----
-Need more detail?
-- `/project-stage-detect` — full gap analysis with all missing artifacts listed
-- `/gate-check` — formal readiness check for your next phase
-- `/start` — re-orient from scratch
+/prove every group homomorphism preserves identity
+/prove continuous functions on compact sets are uniformly continuous
 ```
 
-Only show this if the user's input suggested confusion (e.g. "I don't know", "stuck",
-"lost", "not sure"). Don't show it for simple "what's next?" queries.
+Requires: LM Studio running Godel-Prover model locally.
 
+### Memory System
+Store and recall learnings across sessions.
+
+```bash
+# Recall past learnings
+(cd opc && uv run python scripts/recall_learnings.py --query "hook patterns")
+
+# Store new learning (via /remember skill)
+/remember "Hook X works by..."
+```
+
+### Premortem Risk Analysis
+Identify failure modes before they occur.
+
+```
+/premortem [plan-file]     # Analyze implementation plan for risks
+```
+```
+
+### /help hooks
+
+Display active hooks:
+
+```markdown
+## Active Hooks
+
+Hooks extend Claude's behavior at key lifecycle points.
+
+### Session Lifecycle
+| Hook | Event | Purpose |
+|------|-------|---------|
+| session-register | SessionStart | Register session in coordination DB |
+| session-start-recall | SessionStart | Auto-inject relevant learnings |
+| session-end-cleanup | SessionEnd | Cleanup temp files |
+| session-outcome | SessionEnd | Prompt for session outcome |
+
+### User Prompt Processing
+| Hook | Event | Purpose |
+|------|-------|---------|
+| skill-activation-prompt | UserPromptSubmit | Suggest relevant skills |
+| premortem-suggest | UserPromptSubmit | Suggest risk analysis for implementations |
+
+### Tool Interception
+| Hook | Event | Purpose |
+|------|-------|---------|
+| tldr-read-enforcer | PreToolUse:Read | Suggest tldr for large files |
+| smart-search-router | PreToolUse:Grep | Route to ast-grep for structural search |
+| file-claims | PreToolUse:Edit | Track which sessions edit which files |
+| signature-helper | PreToolUse:Edit | Inject function signatures |
+| import-validator | PostToolUse:Edit | Validate imports after edits |
+
+### Validation
+| Hook | Event | Purpose |
+|------|-------|---------|
+| typescript-preflight | PreToolUse:Bash | Type-check before running |
+| compiler-in-the-loop | Stop | Run Lean compiler for /prove |
+
+### Subagent Coordination
+| Hook | Event | Purpose |
+|------|-------|---------|
+| subagent-start | SubagentStart | Initialize agent context |
+| subagent-stop | SubagentStop | Extract learnings from agents |
+```
+
+### /help advanced
+
+Display advanced customization:
+
+```markdown
+## Advanced: Customization & Extension
+
+### Skill Frontmatter
+Skills use YAML frontmatter for metadata and tool restrictions:
+
+```yaml
 ---
+name: my-skill
+description: What it does
+allowed-tools: [Bash, Read, Edit]
+skills: [other-skill]  # Auto-load dependencies
+---
+```
 
-## Collaborative Protocol
+### Agent Frontmatter
+Agents declare their capabilities:
 
-- **Never auto-run the next skill.** Recommend it, let the user invoke it.
-- **Ask about MANUAL steps** rather than assuming complete or incomplete.
-- **Match the user's tone** — if they sound stressed ("I'm totally lost"), be
-  reassuring and give one action, not a list of six.
-- **One primary recommendation** — the user should leave knowing exactly one thing
-  to do next. Optional steps and "coming up" are secondary context.
+```yaml
+---
+name: my-agent
+description: Specialist for X
+tools: [Read, Grep, Glob, Bash]
+---
+```
+
+### MCP Servers
+External tool integrations:
+
+| Server | Purpose |
+|--------|---------|
+| ast-grep | Structural code search/refactoring |
+| firecrawl | Web scraping |
+| github-search | Search GitHub code/issues |
+| morph | Fast file editing (10k tokens/sec) |
+| nia | Documentation search |
+| perplexity | AI-powered web research |
+
+### Rules (.claude/rules/*.md)
+Always-on instructions injected into context:
+
+- `claim-verification.md` - Verify before asserting
+- `dynamic-recall.md` - How to use memory system
+- `tldr-cli.md` - TLDR usage reference
+
+### Creating Custom Skills
+```bash
+mkdir -p .claude/skills/my-skill
+# Create .claude/skills/my-skill/SKILL.md with frontmatter
+```
+
+### Creating Custom Agents
+```bash
+# Create .claude/agents/my-agent.md with frontmatter
+```
+```
+
+### /help <specific-name>
+
+For specific skill/agent lookup:
+
+1. Search for matching skill: `.claude/skills/<name>/SKILL.md`
+2. Search for matching agent: `.claude/agents/<name>.md`
+3. Read the file and display:
+   - Description
+   - Usage examples
+   - When to use
+   - Related skills/agents
+
+## Dynamic Discovery
+
+To keep help current, dynamically read frontmatter:
+
+```bash
+# List all skills with descriptions
+for f in .claude/skills/*/SKILL.md; do
+  head -10 "$f" | grep -E "^(name|description):"
+done
+
+# List all agents
+for f in .claude/agents/*.md; do
+  head -10 "$f" | grep -E "^(name|description):"
+done
+```
+
+## Example Interaction
+
+**User**: `/help`
+
+**Claude**:
+```
+What are you trying to do?
+
+[ ] Explore/understand a codebase
+    Find patterns, architecture, conventions
+
+[ ] Fix a bug
+    Investigate, diagnose, implement fix
+
+[ ] Build a feature
+    Plan, implement, test new functionality
+
+[ ] Prove something mathematically
+    Formal verification with Lean 4
+
+[Other: describe your goal]
+```
+
+**User selects**: "Fix a bug"
+
+**Claude**:
+```
+## Bug Fixing Tools
+
+### Quick Path
+Just describe the bug. I'll use the /fix workflow automatically.
+
+### Manual Control
+- **sleuth** agent: Deep investigation, root cause analysis
+- **debug-agent**: Log analysis, state inspection
+- **kraken** agent: TDD implementation of fix
+
+### Commands
+- `/fix` - Full workflow (investigate → diagnose → implement → test)
+- `/debug` - Investigation only
+
+### Tips
+- Provide error messages, logs, reproduction steps
+- The premortem hook will suggest risk analysis before implementation
+```

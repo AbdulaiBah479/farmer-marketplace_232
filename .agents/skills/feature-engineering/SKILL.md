@@ -1,299 +1,280 @@
 ---
-name: feature-engineering
-description: Feature construction from market data for ML trading models including price, volume, on-chain, and microstructure features
+name: Feature Engineering
+description: Create and transform features using encoding, scaling, polynomial features, and domain-specific transformations for improved model performance and interpretability
 ---
 
-# Feature Engineering for Trading ML
+# Feature Engineering
 
-Feature engineering is the single highest-leverage activity in building ML trading
-models. Model selection (XGBoost vs. neural net vs. logistic regression) matters far
-less than the quality and diversity of input features. A simple model on great
-features will outperform a complex model on raw prices every time.
+## Overview
 
-This skill covers constructing, validating, and selecting features from market data
-for use in classification (signal-classification) and regression models targeting
-crypto/Solana token trading.
+Feature engineering creates and transforms features to improve model performance, interpretability, and generalization through domain knowledge and mathematical transformations.
 
-## Why Features Beat Models
+## When to Use
 
-Raw OHLCV data is non-stationary, noisy, and high-dimensional. Models trained
-directly on price series will overfit. Feature engineering transforms raw data into
-stationary, informative signals that capture distinct aspects of market behavior:
+- When you need to improve model performance beyond using raw features
+- When dealing with categorical variables that need encoding for ML algorithms
+- When features have different scales and require normalization
+- When creating domain-specific features based on business knowledge
+- When handling skewed distributions or non-linear relationships
+- When preparing data for different types of ML algorithms with specific requirements
 
-- **Compression**: Reduce thousands of price bars to dozens of descriptive statistics
-- **Stationarity**: Convert non-stationary prices into stationary returns and ratios
-- **Domain knowledge**: Encode trader intuition (support/resistance, volume climax)
-  as computable quantities
-- **Regime awareness**: Features that behave differently in trending vs. ranging
-  markets help models adapt
+## Engineering Techniques
 
-## Feature Categories
+- **Encoding**: Converting categorical to numerical
+- **Scaling**: Normalizing feature ranges
+- **Polynomial Features**: Higher-order terms
+- **Interactions**: Combining features
+- **Domain-specific**: Business-relevant transformations
+- **Temporal**: Time-based features
 
-### 1. Price Features
+## Key Principles
 
-Derived purely from OHLCV price columns. These capture trend, momentum, and
-volatility from the price series itself.
+- Create features based on domain knowledge
+- Remove redundant features
+- Scale features appropriately
+- Handle categorical variables
+- Create meaningful interactions
 
-| Feature | Formula | Lookback |
-|---------|---------|----------|
-| `log_return` | `ln(close_t / close_{t-1})` | 1 bar |
-| `abs_return` | `abs(log_return)` | 1 bar |
-| `return_volatility` | `std(log_return, N)` | 20 bars |
-| `momentum_N` | `close_t / close_{t-N} - 1` | 5, 10, 20 |
-| `acceleration` | `momentum_5 - momentum_5[5]` | 10 bars |
-| `high_low_range` | `(high - low) / close` | 1 bar |
-| `close_position` | `(close - low) / (high - low)` | 1 bar |
-| `gap` | `open_t / close_{t-1} - 1` | 1 bar |
-| `rolling_skew` | `skew(log_return, N)` | 20 bars |
-| `rolling_kurtosis` | `kurtosis(log_return, N)` | 20 bars |
-
-### 2. Volume Features
-
-Volume confirms or contradicts price movements. Divergences between price and
-volume are among the most reliable signals in short-term trading.
-
-| Feature | Formula | Lookback |
-|---------|---------|----------|
-| `volume_ratio` | `volume_t / mean(volume, N)` | 20 bars |
-| `volume_ma_ratio` | `sma(volume, 5) / sma(volume, 20)` | 20 bars |
-| `obv_slope` | `slope(OBV, N)` | 10 bars |
-| `vwap_deviation` | `(close - VWAP) / VWAP` | intraday |
-| `volume_acceleration` | `volume_ratio_t - volume_ratio_{t-1}` | 21 bars |
-| `buy_volume_ratio` | `buy_volume / total_volume` | 1 bar |
-| `dollar_volume` | `close * volume` | 1 bar |
-| `volume_cv` | `std(volume, N) / mean(volume, N)` | 20 bars |
-
-### 3. Technical Features
-
-Standard technical indicators computed via `pandas-ta`. Use the `pandas-ta` skill
-for full parameter documentation.
-
-| Feature | Source | Lookback |
-|---------|--------|----------|
-| `rsi` | RSI(14) | 14 bars |
-| `macd_histogram` | MACD(12,26,9) histogram | 33 bars |
-| `bb_position` | `(close - BB_lower) / (BB_upper - BB_lower)` | 20 bars |
-| `bb_width` | `(BB_upper - BB_lower) / BB_mid` | 20 bars |
-| `atr_ratio` | `ATR(14) / close` | 14 bars |
-| `adx` | ADX(14) | 14 bars |
-| `stoch_k` | Stochastic %K(14,3) | 14 bars |
-| `cci` | CCI(20) | 20 bars |
-| `mfi` | MFI(14) | 14 bars |
-| `supertrend_direction` | Supertrend direction (+1/-1) | 10 bars |
-
-### 4. Microstructure Features
-
-Derived from trade-level data (individual swaps/transactions). Require on-chain
-or DEX API data.
-
-| Feature | Description |
-|---------|-------------|
-| `trade_count_ratio` | Trades this bar / avg trades per bar |
-| `avg_trade_size` | Mean trade size in USD |
-| `large_trade_pct` | % of volume from trades > $10k |
-| `unique_traders` | Count of distinct wallet addresses |
-| `buy_count_ratio` | Buy trades / total trades |
-| `trade_size_entropy` | Shannon entropy of trade size distribution |
-
-### 5. On-Chain Features
-
-Derived from blockchain state changes. Require Helius or Solana RPC data.
-
-| Feature | Description |
-|---------|-------------|
-| `holder_count_change` | Change in unique holders over N periods |
-| `whale_net_flow` | Net tokens moved by top-10 holders |
-| `token_velocity` | Transfer volume / circulating supply |
-| `liquidity_change` | Change in DEX liquidity pool TVL |
-
-### 6. Cross-Asset Features
-
-Capture relationships between the target token and broader market.
-
-| Feature | Description |
-|---------|-------------|
-| `sol_correlation` | Rolling correlation with SOL price |
-| `btc_beta` | Rolling beta to BTC returns |
-| `sector_momentum` | Average return of tokens in same sector |
-
-### 7. Time Features
-
-Cyclical encoding of calendar time. Use sin/cos encoding to preserve cyclical
-continuity (hour 23 is close to hour 0).
+## Implementation with Python
 
 ```python
+import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import (
+    StandardScaler, MinMaxScaler, RobustScaler, PolynomialFeatures,
+    OneHotEncoder, OrdinalEncoder, LabelEncoder
+)
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+import seaborn as sns
 
-hour_sin = np.sin(2 * np.pi * hour / 24)
-hour_cos = np.cos(2 * np.pi * hour / 24)
-day_of_week = np.sin(2 * np.pi * day / 7)
+# Create sample dataset
+np.random.seed(42)
+df = pd.DataFrame({
+    'age': np.random.uniform(18, 80, 1000),
+    'income': np.random.uniform(20000, 150000, 1000),
+    'experience_years': np.random.uniform(0, 50, 1000),
+    'category': np.random.choice(['A', 'B', 'C'], 1000),
+    'city': np.random.choice(['NYC', 'LA', 'Chicago'], 1000),
+    'purchased': np.random.choice([0, 1], 1000),
+})
+
+print("Original Data:")
+print(df.head())
+print(df.info())
+
+# 1. Categorical Encoding
+# One-Hot Encoding
+print("\n1. One-Hot Encoding:")
+df_ohe = pd.get_dummies(df, columns=['category', 'city'], drop_first=True)
+print(df_ohe.head())
+
+# Ordinal Encoding
+print("\n2. Ordinal Encoding:")
+ordinal_encoder = OrdinalEncoder()
+df['category_ordinal'] = ordinal_encoder.fit_transform(df[['category']])
+print(df[['category', 'category_ordinal']].head())
+
+# Label Encoding
+print("\n3. Label Encoding:")
+le = LabelEncoder()
+df['city_encoded'] = le.fit_transform(df['city'])
+print(df[['city', 'city_encoded']].head())
+
+# 2. Feature Scaling
+print("\n4. Feature Scaling:")
+X = df[['age', 'income', 'experience_years']].copy()
+
+# StandardScaler (mean=0, std=1)
+scaler = StandardScaler()
+X_standard = scaler.fit_transform(X)
+
+# MinMaxScaler [0, 1]
+minmax_scaler = MinMaxScaler()
+X_minmax = minmax_scaler.fit_transform(X)
+
+# RobustScaler (resistant to outliers)
+robust_scaler = RobustScaler()
+X_robust = robust_scaler.fit_transform(X)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+
+axes[0, 0].hist(X['age'], bins=30, edgecolor='black')
+axes[0, 0].set_title('Original Age')
+
+axes[0, 1].hist(X_standard[:, 0], bins=30, edgecolor='black')
+axes[0, 1].set_title('StandardScaler Age')
+
+axes[1, 0].hist(X_minmax[:, 0], bins=30, edgecolor='black')
+axes[1, 0].set_title('MinMaxScaler Age')
+
+axes[1, 1].hist(X_robust[:, 0], bins=30, edgecolor='black')
+axes[1, 1].set_title('RobustScaler Age')
+
+plt.tight_layout()
+plt.show()
+
+# 3. Polynomial Features
+print("\n5. Polynomial Features:")
+X_simple = df[['age']].copy()
+poly = PolynomialFeatures(degree=2, include_bias=False)
+X_poly = poly.fit_transform(X_simple)
+X_poly_df = pd.DataFrame(X_poly, columns=['age', 'age^2'])
+print(X_poly_df.head())
+
+# Visualization
+plt.figure(figsize=(12, 5))
+plt.scatter(df['age'], df['income'], alpha=0.5)
+plt.xlabel('Age')
+plt.ylabel('Income')
+plt.title('Age vs Income')
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# 4. Feature Interactions
+print("\n6. Feature Interactions:")
+df['age_income_interaction'] = df['age'] * df['income'] / 10000
+df['age_experience_ratio'] = df['age'] / (df['experience_years'] + 1)
+print(df[['age', 'income', 'age_income_interaction', 'age_experience_ratio']].head())
+
+# 5. Domain-specific Transformations
+print("\n7. Domain-specific Features:")
+df['age_group'] = pd.cut(df['age'], bins=[0, 30, 45, 60, 100],
+                          labels=['Young', 'Middle', 'Senior', 'Retired'])
+df['income_level'] = pd.qcut(df['income'], q=3, labels=['Low', 'Medium', 'High'])
+df['log_income'] = np.log1p(df['income'])
+df['sqrt_experience'] = np.sqrt(df['experience_years'])
+
+print(df[['age', 'age_group', 'income', 'income_level', 'log_income']].head())
+
+# 6. Temporal Features (if date data available)
+print("\n8. Temporal Features:")
+dates = pd.date_range('2023-01-01', periods=len(df))
+df['date'] = dates
+df['year'] = df['date'].dt.year
+df['month'] = df['date'].dt.month
+df['day_of_week'] = df['date'].dt.dayofweek
+df['quarter'] = df['date'].dt.quarter
+df['is_weekend'] = df['date'].dt.dayofweek >= 5
+
+print(df[['date', 'year', 'month', 'day_of_week', 'is_weekend']].head())
+
+# 7. Feature Standardization Pipeline
+print("\n9. Feature Engineering Pipeline:")
+
+# Separate numerical and categorical features
+numerical_features = ['age', 'income', 'experience_years']
+categorical_features = ['category', 'city']
+
+# Create preprocessing pipeline
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', StandardScaler(), numerical_features),
+        ('cat', OneHotEncoder(drop='first'), categorical_features),
+    ]
+)
+
+X_processed = preprocessor.fit_transform(df[numerical_features + categorical_features])
+print(f"Processed shape: {X_processed.shape}")
+
+# 8. Feature Statistics
+print("\n10. Feature Statistics:")
+X_for_stats = df[numerical_features].copy()
+X_for_stats['category_A'] = (df['category'] == 'A').astype(int)
+X_for_stats['city_NYC'] = (df['city'] == 'NYC').astype(int)
+
+feature_stats = pd.DataFrame({
+    'Feature': X_for_stats.columns,
+    'Mean': X_for_stats.mean(),
+    'Std': X_for_stats.std(),
+    'Min': X_for_stats.min(),
+    'Max': X_for_stats.max(),
+    'Skewness': X_for_stats.skew(),
+    'Kurtosis': X_for_stats.kurtosis(),
+})
+
+print(feature_stats)
+
+# 9. Feature Correlations
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+X_numeric = df[numerical_features].copy()
+X_numeric['purchased'] = df['purchased']
+corr_matrix = X_numeric.corr()
+
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', center=0, ax=axes[0])
+axes[0].set_title('Feature Correlation Matrix')
+
+# Distribution of engineered features
+axes[1].hist(df['age_income_interaction'], bins=30, edgecolor='black', alpha=0.7)
+axes[1].set_title('Age-Income Interaction Distribution')
+axes[1].set_xlabel('Value')
+axes[1].set_ylabel('Frequency')
+
+plt.tight_layout()
+plt.show()
+
+# 10. Feature Binning / Discretization
+print("\n11. Feature Binning:")
+df['age_bin_equal'] = pd.cut(df['age'], bins=5)
+df['age_bin_quantile'] = pd.qcut(df['age'], q=5)
+df['income_bins'] = pd.cut(df['income'], bins=[0, 50000, 100000, 150000])
+
+print("Equal Width Binning:")
+print(df['age_bin_equal'].value_counts().sort_index())
+
+print("\nEqual Frequency Binning:")
+print(df['age_bin_quantile'].value_counts().sort_index())
+
+# 11. Missing Value Creation and Handling
+print("\n12. Missing Value Imputation:")
+df_with_missing = df.copy()
+missing_indices = np.random.choice(len(df), 50, replace=False)
+df_with_missing.loc[missing_indices, 'age'] = np.nan
+
+# Mean imputation
+age_mean = df_with_missing['age'].mean()
+df_with_missing['age_imputed_mean'] = df_with_missing['age'].fillna(age_mean)
+
+# Median imputation
+age_median = df_with_missing['age'].median()
+df_with_missing['age_imputed_median'] = df_with_missing['age'].fillna(age_median)
+
+# Forward fill
+df_with_missing['age_imputed_ffill'] = df_with_missing['age'].fillna(method='ffill')
+
+print(df_with_missing[['age', 'age_imputed_mean', 'age_imputed_median']].head(10))
+
+print("\nFeature Engineering Complete!")
+print(f"Original features: {len(df.columns) - 5}")
+print(f"Final features available: {len(df.columns)}")
 ```
 
-## Stationarity
+## Best Practices
 
-**Non-stationary features will cause your model to fail on new data.** A feature
-is stationary if its statistical properties (mean, variance) don't change over time.
+- Understand your domain before engineering features
+- Create features that are interpretable
+- Avoid data leakage (using future information)
+- Test feature importance after engineering
+- Document all transformations
+- Use appropriate scaling for different algorithms
 
-### Testing for Stationarity
+## Common Transformations
 
-Use the Augmented Dickey-Fuller (ADF) test:
+- **Log Transform**: For skewed distributions
+- **Polynomial Features**: For non-linear relationships
+- **Interaction Terms**: For combined effects
+- **Binning**: For categorical approximation
+- **Normalization**: For comparison across scales
 
-```python
-from scipy.stats import adfuller
+## Deliverables
 
-result = adfuller(feature_series.dropna())
-p_value = result[1]
-is_stationary = p_value < 0.05
-```
-
-### Making Features Stationary
-
-| Non-Stationary | Stationary Transform |
-|----------------|---------------------|
-| Price | Log return |
-| Volume | Volume ratio (vol / avg vol) |
-| OBV | OBV slope (regression coefficient) |
-| Holder count | Holder count change |
-| RSI | Already stationary (bounded 0-100) |
-| Dollar volume | Dollar volume / rolling mean |
-
-**Rule**: If a feature trends upward or downward over time, it is non-stationary.
-Transform it into a ratio, difference, or rate of change.
-
-## Normalization
-
-After computing features, normalize them so that all features have comparable
-scales. This is critical for distance-based models (KNN, SVM) and helpful for
-tree models.
-
-| Method | Formula | When to Use |
-|--------|---------|-------------|
-| Z-score | `(x - mean) / std` | Gaussian-like distributions |
-| Min-max | `(x - min) / (max - min)` | Bounded features (RSI, BB position) |
-| Rank | `rank(x) / len(x)` | Heavy-tailed distributions |
-
-**Critical**: Use **rolling** statistics for normalization. Never use full-sample
-mean/std — that introduces lookahead bias.
-
-```python
-# CORRECT: rolling z-score
-z = (feature - feature.rolling(60).mean()) / feature.rolling(60).std()
-
-# WRONG: full-sample z-score (lookahead bias!)
-z = (feature - feature.mean()) / feature.std()
-```
-
-## No-Lookahead Guarantee
-
-The most dangerous bug in trading ML is lookahead bias — using future information
-to compute features or targets. Follow these rules absolutely:
-
-1. **Rolling calculations only**: Never use `.mean()` or `.std()` on the full
-   series. Always use `.rolling(N).mean()`.
-2. **Shift targets forward, not features backward**: The target is
-   `close.shift(-N) / close - 1` (future return), not `close / close.shift(N) - 1`
-   (past return used as target).
-3. **No future index alignment**: When joining feature and target DataFrames,
-   verify that feature row `t` is paired with target row `t` (where target already
-   contains the forward shift).
-4. **Train/test split by time**: Never random split. Always
-   `train = data[:split_idx]`, `test = data[split_idx:]`.
-
-## Feature Selection
-
-After computing many features, select the most predictive and least redundant:
-
-### Step 1: Remove Low-Variance Features
-
-```python
-from sklearn.feature_selection import VarianceThreshold
-selector = VarianceThreshold(threshold=0.01)
-X_filtered = selector.fit_transform(X)
-```
-
-### Step 2: Correlation Filter
-
-Remove features with > 0.9 correlation to another feature (keep the one with
-higher target correlation):
-
-```python
-corr_matrix = X.corr().abs()
-upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-to_drop = [col for col in upper.columns if any(upper[col] > 0.9)]
-```
-
-### Step 3: Feature Importance
-
-Train a random forest and rank by importance:
-
-```python
-from sklearn.ensemble import RandomForestClassifier
-rf = RandomForestClassifier(n_estimators=100, random_state=42)
-rf.fit(X_train, y_train)
-importances = pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False)
-```
-
-### Step 4: Mutual Information
-
-Non-linear alternative to correlation:
-
-```python
-from sklearn.feature_selection import mutual_info_classif
-mi = mutual_info_classif(X_train, y_train, random_state=42)
-mi_scores = pd.Series(mi, index=X.columns).sort_values(ascending=False)
-```
-
-## Label Creation
-
-Labels (targets) define what the model learns to predict.
-
-### Binary Classification
-
-```python
-forward_return = close.shift(-N) / close - 1
-label = (forward_return > threshold).astype(int)  # 1 = up, 0 = not up
-```
-
-Typical thresholds: 1% for 1h bars, 3% for 4h bars, 5% for daily bars.
-
-### Multi-Class Classification
-
-```python
-label = pd.cut(forward_return,
-               bins=[-np.inf, -threshold, threshold, np.inf],
-               labels=[0, 1, 2])  # 0=down, 1=flat, 2=up
-```
-
-### Regression
-
-```python
-target = forward_return  # Predict exact return magnitude
-```
-
-Binary classification is recommended for initial models — it's simpler and
-more robust to noise.
-
-## Integration with Other Skills
-
-- **`pandas-ta`**: Compute technical indicators that become features
-- **`birdeye-api`**: Fetch OHLCV and trade data for feature computation
-- **`helius-api`**: Fetch on-chain data for holder/whale features
-- **`signal-classification`**: Use engineered features as model inputs
-- **`regime-detection`**: Regime labels as features or for regime-conditional models
-- **`ohlcv-processing`**: Clean and resample raw data before feature computation
-
-## Files
-
-### References
-- `references/feature_catalog.md` — Complete catalog of ~40 features with formulas,
-  lookbacks, stationarity status, and interpretation notes
-- `references/pitfalls.md` — Common mistakes in trading feature engineering:
-  lookahead bias, overfitting, survivorship bias, data snooping, non-stationarity
-
-### Scripts
-- `scripts/build_features.py` — Compute 25+ features from OHLCV data with
-  stationarity testing and quality reporting. Supports demo mode with synthetic data
-  or live data via Birdeye API.
-- `scripts/feature_importance.py` — Rank features by predictive power using
-  tree-based importance and permutation importance. Identifies redundant features
-  via correlation analysis.
+- Engineered feature dataset
+- Feature transformation documentation
+- Correlation analysis of new features
+- Distribution comparisons (before/after)
+- Feature importance rankings
+- Preprocessing pipeline code
+- Data dictionary with feature descriptions

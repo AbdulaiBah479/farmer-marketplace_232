@@ -1,21 +1,18 @@
 ---
 name: ai-sdk-6
-description: Vercel AI SDK v6 development. Use when building AI agents, chatbots, tool integrations, streaming apps, or structured output with the ai package. Covers ToolLoopAgent, useChat, generateText, streamText, tool approval, smoothStream, provider tools, MCP integration, and Output patterns.
-argument-hint: "[question or feature]"
+description: Vercel AI SDK v6 development. Use when building AI agents, chatbots, tool integrations, or streaming applications with the ai package.
 ---
 
 # Vercel AI SDK v6 Development Guide
 
 Use this skill when developing AI-powered features using Vercel AI SDK v6 (`ai` package).
 
-> **Docs location**: bundled in `node_modules/ai/docs/`. In Bun/pnpm/Yarn workspace monorepos deps aren't hoisted — use `apps/*/node_modules/ai/docs/` or `packages/*/node_modules/ai/docs/` instead.
-
 ## Quick Reference
 
 ### Installation
 
 ```bash
-bun add ai @ai-sdk/openai zod    # or @ai-sdk/anthropic, @ai-sdk/google, etc.
+bun add ai @ai-sdk/anthropic zod
 ```
 
 ### Core Functions
@@ -35,7 +32,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 
 const { output } = await generateText({
-  model: anthropic("claude-sonnet-4-6"),
+  model: anthropic("claude-sonnet-4-5-20250929"),
   output: Output.object({
     schema: z.object({
       sentiment: z.enum(["positive", "neutral", "negative"]),
@@ -56,7 +53,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 
 const myAgent = new ToolLoopAgent({
-  model: anthropic("claude-sonnet-4-6"),
+  model: anthropic("claude-sonnet-4-5-20250929"),
   instructions: "You are a helpful assistant.",
   tools: {
     getData: tool({
@@ -94,70 +91,28 @@ export async function POST(request: Request) {
 }
 ```
 
-### Smooth Streaming
-
-```typescript
-import { createAgentUIStreamResponse, smoothStream } from "ai";
-
-return createAgentUIStreamResponse({
-  agent: myAgent,
-  uiMessages: messages,
-  experimental_transform: smoothStream({
-    delayInMs: 15,
-    chunking: "word", // "word" | "line" | "none"
-  }),
-});
-```
-
 ### useChat Hook (Client)
 
 ```typescript
 "use client";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { useState } from "react";
 
 export function Chat() {
-  const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-    }),
-  });
+  const { messages, sendMessage, status } = useChat();
 
   return (
-    <>
+    <div>
       {messages.map((msg) => (
         <div key={msg.id}>
-          {msg.parts.map((part, i) =>
-            part.type === "text" ? <span key={i}>{part.text}</span> : null
+          {msg.parts.map((part) =>
+            part.type === "text" ? part.text : null
           )}
         </div>
       ))}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (input.trim()) {
-            sendMessage({ text: input });
-            setInput("");
-          }
-        }}
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          disabled={status !== "ready"}
-        />
-        <button type="submit" disabled={status !== "ready"}>
-          Send
-        </button>
-      </form>
-    </>
+    </div>
   );
 }
 ```
-
-> **v6 Note**: `useChat` no longer manages input state internally. Use `useState` for controlled inputs.
 
 ## Reference Documentation
 
@@ -169,7 +124,6 @@ For detailed information, see:
 - [ui-hooks.md](references/ui-hooks.md) - useChat, UIMessage, streaming
 - [middleware.md](references/middleware.md) - Custom middleware patterns
 - [mcp.md](references/mcp.md) - MCP server integration
-- [examples.md](references/examples.md) - Canonical provider × feature examples from vercel/ai repo
 
 ## Official Documentation
 

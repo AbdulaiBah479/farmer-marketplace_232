@@ -1,349 +1,81 @@
 ---
 name: learn
-description: "Research any topic online and create learning guides. Use when user asks to 'learn about', 'research topic', 'create learning guide', 'build knowledge base', or 'study subject'."
-version: 5.1.0
-argument-hint: "[topic] [--depth=brief|medium|deep]"
+description: Runs the learning cycle on all LearningAgent sessions with pending transcripts. Identifies issues, investigates root causes, and incorporates learnings into agent definitions.
 ---
 
-# learn
+# Learning Cycle
 
-Research any topic by gathering online resources and creating a comprehensive learning guide with RAG-optimized indexes.
+Process unreviewed LearningAgent session transcripts to identify issues, investigate root causes, and incorporate learnings into agent definitions.
 
-## Parse Arguments
+## Arguments
 
-```javascript
-const args = '$ARGUMENTS'.split(' ').filter(Boolean);
-const depth = args.find(a => a.startsWith('--depth='))?.split('=')[1] || 'medium';
-const topic = args.filter(a => !a.startsWith('--')).join(' ');
-```
+This skill takes no arguments. It automatically discovers all pending sessions.
 
-## Input
+## Session Log Folders needing Processing
 
-Arguments: `<topic> [--depth=brief|medium|deep]`
+!`learning_agents/scripts/list_pending_sessions.sh`
 
-- **topic**: Subject to research (required)
-- **--depth**: Source gathering depth
-  - `brief`: 10 sources (quick overview)
-  - `medium`: 20 sources (default, balanced)
-  - `deep`: 40 sources (comprehensive)
+## Procedure
 
-## Research Methodology
+If the list above is empty (or the `.deepwork/tmp/agent_sessions` directory does not exist), inform the user that there are no pending sessions to learn from and stop.
 
-Based on best practices from:
-- Anthropic's Context Engineering
-- DeepLearning.AI Tool Use Patterns
-- Anara's AI Literature Reviews
+### Step 1: Process Each Session
 
-### 1. Progressive Query Architecture
+For each session log folder, run the learning cycle in sequence.
 
-Use funnel approach to avoid noise from long query lists:
+#### 1a: Identify Issues
 
-**Broad Phase** (landscape mapping):
-```
-"{topic} overview introduction"
-"{topic} documentation official"
-```
-
-**Focused Phase** (core content):
-```
-"{topic} best practices"
-"{topic} examples tutorial"
-"{topic} site:stackoverflow.com"
-```
-
-**Deep Phase** (advanced, if depth=deep):
-```
-"{topic} advanced techniques"
-"{topic} pitfalls mistakes avoid"
-"{topic} 2025 2026 latest"
-```
-
-### 2. Source Quality Scoring
-
-Multi-dimensional evaluation (max score: 100):
-
-| Factor | Weight | Max | Criteria |
-|--------|--------|-----|----------|
-| Authority | 3x | 30 | Official docs (10), recognized expert (8), established site (6), blog (4), random (2) |
-| Recency | 2x | 20 | <6mo (10), <1yr (8), <2yr (6), <3yr (4), older (2) |
-| Depth | 2x | 20 | Comprehensive (10), detailed (8), overview (6), superficial (4), fragment (2) |
-| Examples | 2x | 20 | Multiple code examples (10), one example (6), no examples (2) |
-| Uniqueness | 1x | 10 | Unique perspective (10), some overlap (6), duplicate content (2) |
-
-**Selection threshold**: Top N sources by score (N = depth target)
-
-### 3. Just-In-Time Retrieval
-
-Don't pre-load all content (causes context rot):
-
-1. **Collect URLs first** via WebSearch
-2. **Score based on metadata** (title, description, URL)
-3. **Fetch only selected sources** via WebFetch
-4. **Extract summaries** (not full content)
-
-### 4. Content Extraction Guidelines
-
-For each source, extract:
-
-```json
-{
-  "url": "https://...",
-  "title": "Article Title",
-  "qualityScore": 85,
-  "scores": {
-    "authority": 9,
-    "recency": 8,
-    "depth": 7,
-    "examples": 9,
-    "uniqueness": 6
-  },
-  "keyInsights": [
-    "Concise insight 1",
-    "Concise insight 2"
-  ],
-  "codeExamples": [
-    {
-      "language": "javascript",
-      "description": "Basic usage pattern"
-    }
-  ],
-  "extractedAt": "2026-02-05T12:00:00Z"
-}
-```
-
-**Copyright compliance**: Summaries and insights only, never verbatim paragraphs.
-
-## Output Structure
-
-### Topic Guide Template
-
-Create `agent-knowledge/{slug}.md`:
-
-```markdown
-# Learning Guide: {Topic}
-
-**Generated**: {date}
-**Sources**: {count} resources analyzed
-**Depth**: {brief|medium|deep}
-
-## Prerequisites
-
-What you should know before diving in:
-- Prerequisite 1
-- Prerequisite 2
-
-## TL;DR
-
-Essential points in 3-5 bullets:
-- Key point 1
-- Key point 2
-- Key point 3
-
-## Core Concepts
-
-### {Concept 1}
-
-{Synthesized explanation from multiple sources}
-
-**Key insight**: {Most important takeaway}
-
-### {Concept 2}
-
-{Synthesized explanation}
-
-## Code Examples
-
-### Basic Example
-
-```{language}
-// Description of what this demonstrates
-{code}
-```
-
-### Advanced Pattern
-
-```{language}
-{code}
-```
-
-## Common Pitfalls
-
-| Pitfall | Why It Happens | How to Avoid |
-|---------|---------------|--------------|
-| Issue 1 | Root cause | Prevention strategy |
-
-## Best Practices
-
-Synthesized from {n} sources:
-
-1. **Practice 1**: Explanation
-2. **Practice 2**: Explanation
-
-## Further Reading
-
-| Resource | Type | Why Recommended |
-|----------|------|-----------------|
-| [Title]({url}) | Official Docs | Authoritative reference |
-| [Title]({url}) | Tutorial | Step-by-step guide |
-
----
-
-*Generated by /learn from {count} sources.*
-*See `resources/{slug}-sources.json` for full source metadata.*
-```
-
-### Master Index Template
-
-Create/update `agent-knowledge/CLAUDE.md`:
-
-```markdown
-# Agent Knowledge Base
-
-> Learning guides created by /learn. Reference these when answering questions about listed topics.
-
-## Available Topics
-
-| Topic | File | Sources | Depth | Created |
-|-------|------|---------|-------|---------|
-| {Topic 1} | {slug1}.md | {n} | medium | 2026-02-05 |
-| {Topic 2} | {slug2}.md | {n} | deep | 2026-02-04 |
-
-## Trigger Phrases
-
-Use this knowledge when user asks about:
-- "How does {topic1} work?" → {slug1}.md
-- "Explain {topic1}" → {slug1}.md
-- "{Topic2} best practices" → {slug2}.md
-
-## Quick Lookup
-
-| Keyword | Guide |
-|---------|-------|
-| recursion | recursion.md |
-| hooks, react | react-hooks.md |
-
-## How to Use
-
-1. Check if user question matches a topic
-2. Read the relevant guide file
-3. Answer based on synthesized knowledge
-4. Cite the guide if user asks for sources
-```
-
-Copy to `agent-knowledge/AGENTS.md` for OpenCode/Codex.
-
-### Sources Metadata
-
-Create `agent-knowledge/resources/{slug}-sources.json`:
-
-```json
-{
-  "topic": "{original topic}",
-  "slug": "{slug}",
-  "generated": "2026-02-05T12:00:00Z",
-  "depth": "medium",
-  "totalSources": 20,
-  "sources": [
-    {
-      "url": "https://...",
-      "title": "...",
-      "qualityScore": 85,
-      "scores": {
-        "authority": 9,
-        "recency": 8,
-        "depth": 7,
-        "examples": 9,
-        "uniqueness": 6
-      },
-      "keyInsights": ["..."]
-    }
-  ]
-}
-```
-
-## Self-Evaluation Checklist
-
-Before finalizing, rate output (1-10):
-
-| Metric | Question | Target |
-|--------|----------|--------|
-| Coverage | Does guide cover main aspects? | ≥7 |
-| Diversity | Are sources from diverse types? | ≥6 |
-| Examples | Are code examples practical? | ≥7 |
-| Accuracy | Confidence in content accuracy? | ≥8 |
-
-**Flag gaps**: Note any important subtopics not covered.
-
-## Enhancement Integration
-
-If enhance=true, invoke after guide creation:
-
-```javascript
-// Enhance the topic guide for RAG
-Skill({ name: 'enhance-docs', args: `agent-knowledge/${slug}.md --ai` });
-
-// Enhance the master index
-Skill({ name: 'enhance-prompts', args: 'agent-knowledge/CLAUDE.md' });
-```
-
-## Output Format
-
-Return structured JSON between markers:
+Spawn a Task to run the identify skill:
 
 ```
-=== LEARN_RESULT ===
-{
-  "topic": "recursion",
-  "slug": "recursion",
-  "depth": "medium",
-  "guideFile": "agent-knowledge/recursion.md",
-  "sourcesFile": "agent-knowledge/resources/recursion-sources.json",
-  "sourceCount": 20,
-  "sourceBreakdown": {
-    "officialDocs": 4,
-    "tutorials": 5,
-    "stackOverflow": 3,
-    "blogPosts": 5,
-    "github": 3
-  },
-  "selfEvaluation": {
-    "coverage": 8,
-    "diversity": 7,
-    "examples": 9,
-    "accuracy": 8,
-    "gaps": ["tail recursion optimization not covered"]
-  },
-  "enhanced": true,
-  "indexUpdated": true
-}
-=== END_RESULT ===
+Task tool call:
+  name: "identify-issues"
+  subagent_type: learning-agents:learning-agent-expert
+  model: sonnet
+  prompt: "Run: Skill learning-agents:identify <session_log_folder>"
 ```
 
-## Error Handling
+**Run those in parallel**
 
-| Error | Action |
-|-------|--------|
-| WebSearch fails | Retry with simpler query |
-| WebFetch timeout | Skip source, note in metadata |
-| <minSources found | Warn user, proceed with available |
-| Enhancement fails | Skip, note in output |
-| Index doesn't exist | Create new index |
+#### 1b: Investigate and Incorporate
 
-## Token Budget
+After identification completes, **skip** any session where the identify step reported zero issues. Only proceed with sessions that had issues identified.
 
-Estimated token usage by phase:
+For remaining sessions, start a new Task to run investigation and incorporation in sequence for each session_log_folder:
 
-| Phase | Tokens | Notes |
-|-------|--------|-------|
-| WebSearch queries | ~2,000 | 5-8 queries |
-| Source scoring | ~1,000 | Metadata only |
-| WebFetch extraction | ~40,000 | 20 sources × 2,000 avg |
-| Synthesis | ~10,000 | Guide generation |
-| Enhancement | ~5,000 | Two skill calls |
-| **Total** | ~60,000 | Within opus budget |
+```
+Task tool call:
+  name: "investigate-and-incorporate"
+  subagent_type: learning-agents:learning-agent-expert
+  model: sonnet
+  prompt: "Run these two skills in sequence:
+           1. Skill learning-agents:investigate-issues <session_log_folder>
+           2. Skill learning-agents:incorporate-learnings <session_log_folder>"
+```
 
-## Integration
+**Run session log folders from the same agent serially, but different agents in parallel.** I.e. if Agent A has 7 sessions and Agent B has 3 sessions, you should have 3 "batches" of Tasks where you do one session for Agent A and one for Agent B, then you would have 4 more Tasks run serially for the remaining Agent A sessions.
 
-This skill is invoked by:
-- `learn-agent` for `/learn` command
-- Potentially other research-oriented agents
+#### Handling failures
+
+If a sub-skill Task fails for a session, log the failure, skip that session, and continue processing remaining sessions. Do not mark `needs_learning_as_of_timestamp` as resolved for failed sessions.
+
+### Step 2: Summary
+
+Output in this format:
+
+```
+## Learning Cycle Summary
+
+- **Sessions processed**: <count>
+- **Total issues identified**: <count>
+- **Agents updated**: <comma-separated list of agent names>
+- **Key learnings**:
+  - <agent-name>: <brief learning description>
+- **Skipped sessions** (if any): <session path> — <reason>
+```
+
+## Guardrails
+
+- Do NOT modify agent files directly — always delegate to the learning cycle skills in Tasks
+- Use Sonnet model for Task spawns to balance cost and quality
+- Use the `learning-agents:learning-agent-expert` agent for Task spawns

@@ -1,585 +1,282 @@
 ---
 name: langgraph-persistence
-description: "INVOKE THIS SKILL when your LangGraph needs to persist state, remember conversations, travel through history, or configure subgraph checkpointer scoping. Covers checkpointers, thread_id, time travel, Store, and subgraph persistence modes."
+description: 在 LangGraph 中实现持久化和检查点：保存状态、恢复执行、线程 ID 和检查点器库
+language: js
 ---
 
-<overview>
-LangGraph's persistence layer enables durable execution by checkpointing graph state:
-
-- **Checkpointer**: Saves/loads graph state at every super-step
-- **Thread ID**: Identifies separate checkpoint sequences (conversations)
-- **Store**: Cross-thread memory for user preferences, facts
-
-**Two memory types:**
-- **Short-term** (checkpointer): Thread-scoped conversation history
-- **Long-term** (store): Cross-thread user preferences, facts
-</overview>
-
-<checkpointer-selection>
-
-| Checkpointer | Use Case | Production Ready |
-|--------------|----------|------------------|
-| `InMemorySaver` | Testing, development | No |
-| `SqliteSaver` | Local development | Partial |
-| `PostgresSaver` | Production | Yes |
-
-</checkpointer-selection>
+# langgraph-persistence (JavaScript/TypeScript)
 
 ---
+name: langgraph-persistence
+description: 在 LangGraph 中实现持久化和检查点 - 保存状态、恢复执行、线程 ID 和检查点器库
+---
 
-## Checkpointer Setup
+## 概述
 
-<ex-basic-persistence>
-<python>
-Set up a basic graph with in-memory checkpointing and thread-based state persistence.
+LangGraph 的持久化层通过在每个超级步检查点图状态来实现持久执行。这解锁了人机交互、内存、时间旅行和容错能力。
 
-```python
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.graph import StateGraph, START, END
-from typing_extensions import TypedDict, Annotated
-import operator
+**核心组件：**
+- **检查点器（Checkpointer）**：保存/加载图状态
+- **线程 ID（Thread ID）**：检查点序列的标识符
+- **检查点（Checkpoints）**：每步的状态快照
 
-class State(TypedDict):
-    messages: Annotated[list, operator.add]
+## 决策表：检查点器选择
 
-def add_message(state: State) -> dict:
-    return {"messages": ["Bot response"]}
+| 检查点器 | 使用场景 | 持久化 | 生产就绪 |
+|--------------|----------|-------------|------------------|
+| `MemorySaver` | 测试、开发 | 仅内存 | ❌ 否 |
+| `SqliteSaver` | 本地开发 | SQLite 文件 | ⚠️ 单用户 |
+| `PostgresSaver` | 生产环境 | PostgreSQL | ✅ 是 |
 
-checkpointer = InMemorySaver()
+## 代码示例
 
-graph = (
-    StateGraph(State)
-    .add_node("respond", add_message)
-    .add_edge(START, "respond")
-    .add_edge("respond", END)
-    .compile(checkpointer=checkpointer)  # Pass at compile time
-)
-
-# ALWAYS provide thread_id
-config = {"configurable": {"thread_id": "conversation-1"}}
-
-result1 = graph.invoke({"messages": ["Hello"]}, config)
-print(len(result1["messages"]))  # 2
-
-result2 = graph.invoke({"messages": ["How are you?"]}, config)
-print(len(result2["messages"]))  # 4 (previous + new)
-```
-</python>
-<typescript>
-Set up a basic graph with in-memory checkpointing and thread-based state persistence.
+### 使用 MemorySaver 的基本持久化
 
 ```typescript
-import { MemorySaver, StateGraph, StateSchema, MessagesValue, START, END } from "@langchain/langgraph";
-import { HumanMessage } from "@langchain/core/messages";
+import { MemorySaver, StateGraph, StateSchema, START, END } from "@langchain/langgraph";
+import { z } from "zod";
 
-const State = new StateSchema({ messages: MessagesValue });
+const State = new StateSchema({
+  messages: z.array(z.string()),
+});
 
 const addMessage = async (state: typeof State.State) => {
-  return { messages: [{ role: "assistant", content: "Bot response" }] };
+  return { messages: [...state.messages, "Bot response"] };
 };
 
+// 创建检查点器
 const checkpointer = new MemorySaver();
 
+// 使用检查点器编译
 const graph = new StateGraph(State)
   .addNode("respond", addMessage)
   .addEdge(START, "respond")
   .addEdge("respond", END)
-  .compile({ checkpointer });
+  .compile({ checkpointer });  // 启用持久化
 
-// ALWAYS provide thread_id
+// 第一次使用 thread_id 调用
 const config = { configurable: { thread_id: "conversation-1" } };
-
-const result1 = await graph.invoke({ messages: [new HumanMessage("Hello")] }, config);
+const result1 = await graph.invoke({ messages: ["Hello"] }, config);
 console.log(result1.messages.length);  // 2
 
-const result2 = await graph.invoke({ messages: [new HumanMessage("How are you?")] }, config);
-console.log(result2.messages.length);  // 4 (previous + new)
+// 第二次调用 - 状态已持久化
+const result2 = await graph.invoke({ messages: ["How are you?"] }, config);
+console.log(result2.messages.length);  // 4 (之前的 + 新的)
 ```
-</typescript>
-</ex-basic-persistence>
 
-<ex-production-postgres>
-<python>
-Configure PostgreSQL-backed checkpointing for production deployments.
+### SQLite 持久化
 
-```python
-import os
-from langgraph.checkpoint.postgres import PostgresSaver
+```typescript
+import { SqliteSaver } from "@langchain/langgraph-checkpoint-sqlite";
 
-# Run once during deployment (not at application startup):
-#   PostgresSaver.from_conn_string(os.environ["DATABASE_URL"]).setup()
+// 创建 SQLite 检查点器
+const checkpointer = SqliteSaver.fromConnString("checkpoints.db");
 
-with PostgresSaver.from_conn_string(os.environ["DATABASE_URL"]) as checkpointer:
-    graph = builder.compile(checkpointer=checkpointer)
+const graph = new StateGraph(State)
+  .addNode("process", processNode)
+  .addEdge(START, "process")
+  .addEdge("process", END)
+  .compile({ checkpointer });
+
+// 使用 thread_id
+const config = { configurable: { thread_id: "user-123" } };
+const result = await graph.invoke({ data: "test" }, config);
 ```
-</python>
-<typescript>
-Configure PostgreSQL-backed checkpointing for production deployments.
+
+### PostgreSQL 持久化
 
 ```typescript
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 
-// Run once during deployment (not at application startup):
-//   await PostgresSaver.fromConnString(process.env.DATABASE_URL!).setup();
+// 创建 Postgres 检查点器
+const checkpointer = await PostgresSaver.fromConnString(
+  "postgresql://user:pass@localhost/db"
+);
 
-const checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL!);
-const graph = builder.compile({ checkpointer });
+const graph = new StateGraph(State)
+  .addNode("process", processNode)
+  .addEdge(START, "process")
+  .addEdge("process", END)
+  .compile({ checkpointer });
+
+const config = { configurable: { thread_id: "thread-1" } };
+const result = await graph.invoke({ data: "test" }, config);
 ```
-</typescript>
-</ex-production-postgres>
 
----
-
-## Thread Management
-
-<ex-separate-threads>
-<python>
-Demonstrate isolated state between different thread IDs.
-
-```python
-# Different threads maintain separate state
-alice_config = {"configurable": {"thread_id": "user-alice"}}
-bob_config = {"configurable": {"thread_id": "user-bob"}}
-
-graph.invoke({"messages": ["Hi from Alice"]}, alice_config)
-graph.invoke({"messages": ["Hi from Bob"]}, bob_config)
-
-# Alice's state is isolated from Bob's
-```
-</python>
-<typescript>
-Demonstrate isolated state between different thread IDs.
+### 检索状态
 
 ```typescript
-// Different threads maintain separate state
-const aliceConfig = { configurable: { thread_id: "user-alice" } };
-const bobConfig = { configurable: { thread_id: "user-bob" } };
+// 获取当前状态
+const config = { configurable: { thread_id: "conversation-1" } };
+const currentState = await graph.getState(config);
+console.log(currentState.values);  // 当前状态
+console.log(currentState.next);    // 下一个要执行的节点
 
-await graph.invoke({ messages: [new HumanMessage("Hi from Alice")] }, aliceConfig);
-await graph.invoke({ messages: [new HumanMessage("Hi from Bob")] }, bobConfig);
-
-// Alice's state is isolated from Bob's
-```
-</typescript>
-</ex-separate-threads>
-
----
-
-## State History & Time Travel
-
-<ex-resume-from-checkpoint>
-<python>
-Time travel: browse checkpoint history and replay or fork from a past state.
-
-```python
-config = {"configurable": {"thread_id": "session-1"}}
-
-result = graph.invoke({"messages": ["start"]}, config)
-
-# Browse checkpoint history
-states = list(graph.get_state_history(config))
-
-# Replay from a past checkpoint
-past = states[-2]
-result = graph.invoke(None, past.config)  # None = resume from checkpoint
-
-# Or fork: update state at a past checkpoint, then resume
-fork_config = graph.update_state(past.config, {"messages": ["edited"]})
-result = graph.invoke(None, fork_config)
-```
-</python>
-<typescript>
-Time travel: browse checkpoint history and replay or fork from a past state.
-
-```typescript
-const config = { configurable: { thread_id: "session-1" } };
-
-const result = await graph.invoke({ messages: ["start"] }, config);
-
-// Browse checkpoint history (async iterable, collect to array)
-const states: Awaited<ReturnType<typeof graph.getState>>[] = [];
-for await (const state of graph.getStateHistory(config)) {
-  states.push(state);
+// 获取状态历史
+const history = await graph.getStateHistory(config);
+for await (const state of history) {
+  console.log("Step:", state.values);
 }
-
-// Replay from a past checkpoint
-const past = states[states.length - 2];
-const replayed = await graph.invoke(null, past.config);  // null = resume from checkpoint
-
-// Or fork: update state at a past checkpoint, then resume
-const forkConfig = await graph.updateState(past.config, { messages: ["edited"] });
-const forked = await graph.invoke(null, forkConfig);
 ```
-</typescript>
-</ex-resume-from-checkpoint>
 
-<ex-update-state>
-<python>
-Manually update graph state before resuming execution.
-
-```python
-config = {"configurable": {"thread_id": "session-1"}}
-
-# Modify state before resuming
-graph.update_state(config, {"data": "manually_updated"})
-
-# Resume with updated state
-result = graph.invoke(None, config)
-```
-</python>
-<typescript>
-Manually update graph state before resuming execution.
+### 从检查点恢复
 
 ```typescript
-const config = { configurable: { thread_id: "session-1" } };
+import { MemorySaver, StateGraph, START, END } from "@langchain/langgraph";
 
-// Modify state before resuming
+const checkpointer = new MemorySaver();
+
+const step1 = async (state) => ({ data: "step1" });
+const step2 = async (state) => ({ data: state.data + "_step2" });
+
+const graph = new StateGraph(State)
+  .addNode("step1", step1)
+  .addNode("step2", step2)
+  .addEdge(START, "step1")
+  .addEdge("step1", "step2")
+  .addEdge("step2", END)
+  .compile({
+    checkpointer,
+    interruptBefore: ["step2"],  // 在 step2 之前暂停
+  });
+
+const config = { configurable: { thread_id: "1" } };
+
+// 运行到断点
+await graph.invoke({ data: "start" }, config);
+
+// 恢复执行
+await graph.invoke(null, config);  // null 从检查点继续
+```
+
+### 更新状态
+
+```typescript
+// 在恢复之前修改状态
+const config = { configurable: { thread_id: "1" } };
+
+// 更新状态
 await graph.updateState(config, { data: "manually_updated" });
 
-// Resume with updated state
-const result = await graph.invoke(null, config);
+// 使用更新后的状态恢复
+await graph.invoke(null, config);
 ```
-</typescript>
-</ex-update-state>
 
----
-
-## Subgraph Checkpointer Scoping
-
-When compiling a subgraph, the `checkpointer` parameter controls persistence behavior. This is critical for subgraphs that use interrupts, need multi-turn memory, or run in parallel.
-
-<subgraph-checkpointer-scoping-table>
-
-| Feature | `checkpointer=False` | `None` (default) | `True` |
-|---|---|---|---|
-| Interrupts (HITL) | No | Yes | Yes |
-| Multi-turn memory | No | No | Yes |
-| Multiple calls (different subgraphs) | Yes | Yes | Warning (namespace conflicts possible) |
-| Multiple calls (same subgraph) | Yes | Yes | No |
-| State inspection | No | Warning (current invocation only) | Yes |
-
-</subgraph-checkpointer-scoping-table>
-
-<subgraph-checkpointer-when-to-use>
-
-### When to use each mode
-
-- **`checkpointer=False`** — Subgraph doesn't need interrupts or persistence. Simplest option, no checkpoint overhead.
-- **`None` (default / omit `checkpointer`)** — Subgraph needs `interrupt()` but not multi-turn memory. Each invocation starts fresh but can pause/resume. Parallel execution works because each invocation gets a unique namespace.
-- **`checkpointer=True`** — Subgraph needs to remember state across invocations (multi-turn conversations). Each call picks up where the last left off.
-
-</subgraph-checkpointer-when-to-use>
-
-<warning-stateful-subgraphs-parallel>
-
-**Warning**: Stateful subgraphs (`checkpointer=True`) do NOT support calling the same subgraph instance multiple times within a single node — the calls write to the same checkpoint namespace and conflict.
-
-</warning-stateful-subgraphs-parallel>
-
-<ex-subgraph-checkpointer-modes>
-<python>
-Choose the right checkpointer mode for your subgraph.
-
-```python
-# No interrupts needed — opt out of checkpointing
-subgraph = subgraph_builder.compile(checkpointer=False)
-
-# Need interrupts but not cross-invocation persistence (default)
-subgraph = subgraph_builder.compile()
-
-# Need cross-invocation persistence (stateful)
-subgraph = subgraph_builder.compile(checkpointer=True)
-```
-</python>
-<typescript>
-Choose the right checkpointer mode for your subgraph.
+### 线程管理
 
 ```typescript
-// No interrupts needed — opt out of checkpointing
-const subgraph = subgraphBuilder.compile({ checkpointer: false });
+// 不同的线程维护独立的状态
+const thread1Config = { configurable: { thread_id: "user-alice" } };
+const thread2Config = { configurable: { thread_id: "user-bob" } };
 
-// Need interrupts but not cross-invocation persistence (default)
-const subgraph = subgraphBuilder.compile();
+// Alice 的对话
+await graph.invoke({ messages: ["Hi from Alice"] }, thread1Config);
 
-// Need cross-invocation persistence (stateful)
-const subgraph = subgraphBuilder.compile({ checkpointer: true });
+// Bob 的对话（独立状态）
+await graph.invoke({ messages: ["Hi from Bob"] }, thread2Config);
+
+// Alice 的状态与 Bob 的隔离
 ```
-</typescript>
-</ex-subgraph-checkpointer-modes>
 
-<parallel-subgraph-namespacing>
-
-### Parallel subgraph namespacing
-
-When multiple **different** stateful subgraphs run in parallel, wrap each in its own `StateGraph` with a unique node name for stable namespace isolation:
-
-<python>
-
-```python
-from langgraph.graph import MessagesState, StateGraph
-
-def create_sub_agent(model, *, name, **kwargs):
-    """Wrap an agent with a unique node name for namespace isolation."""
-    agent = create_agent(model=model, name=name, **kwargs)
-    return (
-        StateGraph(MessagesState)
-        .add_node(name, agent)  # unique name -> stable namespace
-        .add_edge("__start__", name)
-        .compile()
-    )
-
-fruit_agent = create_sub_agent(
-    "gpt-4.1-mini", name="fruit_agent",
-    tools=[fruit_info], prompt="...", checkpointer=True,
-)
-veggie_agent = create_sub_agent(
-    "gpt-4.1-mini", name="veggie_agent",
-    tools=[veggie_info], prompt="...", checkpointer=True,
-)
-```
-</python>
-<typescript>
+### 子图中的检查点器
 
 ```typescript
-import { StateGraph, StateSchema, MessagesValue, START } from "@langchain/langgraph";
+import { MemorySaver, StateGraph, START } from "@langchain/langgraph";
 
-function createSubAgent(model: string, { name, ...kwargs }: { name: string; [key: string]: any }) {
-  const agent = createAgent({ model, name, ...kwargs });
-  return new StateGraph(new StateSchema({ messages: MessagesValue }))
-    .addNode(name, agent)  // unique name -> stable namespace
-    .addEdge(START, name)
-    .compile();
-}
+// 只有父图需要检查点器
+const subgraphNode = async (state) => ({ data: "subgraph" });
 
-const fruitAgent = createSubAgent("gpt-4.1-mini", {
-  name: "fruit_agent", tools: [fruitInfo], prompt: "...", checkpointer: true,
-});
-const veggieAgent = createSubAgent("gpt-4.1-mini", {
-  name: "veggie_agent", tools: [veggieInfo], prompt: "...", checkpointer: true,
-});
+const subgraph = new StateGraph(State)
+  .addNode("process", subgraphNode)
+  .addEdge(START, "process")
+  .compile();  // 不需要检查点器
+
+// 带检查点器的父图
+const checkpointer = new MemorySaver();
+
+const parent = new StateGraph(State)
+  .addNode("subgraph", subgraph)
+  .addEdge(START, "subgraph")
+  .compile({ checkpointer });  // 传播到子图
 ```
-</typescript>
 
-Note: Subgraphs added as nodes (via `add_node`) already get name-based namespaces automatically and don't need this wrapper.
+## 边界
 
-</parallel-subgraph-namespacing>
+### 您能够配置的
 
----
+✅ 选择检查点器实现
+✅ 指定线程 ID
+✅ 在任何检查点检索状态
+✅ 在调用之间更新状态
+✅ 设置暂停断点
+✅ 访问状态历史
+✅ 从任何检查点恢复
 
-## Long-Term Memory (Store)
+### 您不能配置的
 
-<ex-long-term-memory-store>
-<python>
-Use a Store for cross-thread memory to share user preferences across conversations.
+❌ 检查点格式/模式（内部）
+❌ 检查点时机（每个超级步）
+❌ 线程 ID 结构（仅限任意字符串）
 
-```python
-from langgraph.store.memory import InMemoryStore
+## 注意事项
 
-store = InMemoryStore()
-
-# Save user preference (available across ALL threads)
-store.put(("alice", "preferences"), "language", {"preference": "short responses"})
-
-# Node with store — access via runtime
-from langgraph.runtime import Runtime
-
-def respond(state, runtime: Runtime):
-    prefs = runtime.store.get((state["user_id"], "preferences"), "language")
-    return {"response": f"Using preference: {prefs.value}"}
-
-# Compile with BOTH checkpointer and store
-graph = builder.compile(checkpointer=checkpointer, store=store)
-
-# Both threads access same long-term memory
-graph.invoke({"user_id": "alice"}, {"configurable": {"thread_id": "thread-1"}})
-graph.invoke({"user_id": "alice"}, {"configurable": {"thread_id": "thread-2"}})  # Same preferences!
-```
-</python>
-<typescript>
-Use a Store for cross-thread memory to share user preferences across conversations.
+### 1. 持久化需要 Thread ID
 
 ```typescript
-import { MemoryStore } from "@langchain/langgraph";
+// ❌ 错误 - 没有 thread_id，状态未保存
+await graph.invoke({ data: "test" });  // 执行后丢失!
 
-const store = new MemoryStore();
-
-// Save user preference (available across ALL threads)
-await store.put(["alice", "preferences"], "language", { preference: "short responses" });
-
-// Node with store — access via runtime
-const respond = async (state: typeof State.State, runtime: any) => {
-  const item = await runtime.store?.get(["alice", "preferences"], "language");
-  return { response: `Using preference: ${item?.value?.preference}` };
-};
-
-// Compile with BOTH checkpointer and store
-const graph = builder.compile({ checkpointer, store });
-
-// Both threads access same long-term memory
-await graph.invoke({ userId: "alice" }, { configurable: { thread_id: "thread-1" } });
-await graph.invoke({ userId: "alice" }, { configurable: { thread_id: "thread-2" } });  // Same preferences!
-```
-</typescript>
-</ex-long-term-memory-store>
-
-<ex-store-operations>
-<python>
-Basic store operations: put, get, search, and delete.
-
-```python
-from langgraph.store.memory import InMemoryStore
-
-store = InMemoryStore()
-
-store.put(("user-123", "facts"), "location", {"city": "San Francisco"})  # Put
-item = store.get(("user-123", "facts"), "location")  # Get
-results = store.search(("user-123", "facts"), filter={"city": "San Francisco"})  # Search
-store.delete(("user-123", "facts"), "location")  # Delete
-```
-</python>
-</ex-store-operations>
-
----
-
-## Fixes
-
-<fix-thread-id-required>
-<python>
-Always provide thread_id in config to enable state persistence.
-
-```python
-# WRONG: No thread_id - state NOT persisted!
-graph.invoke({"messages": ["Hello"]})
-graph.invoke({"messages": ["What did I say?"]})  # Doesn't remember!
-
-# CORRECT: Always provide thread_id
-config = {"configurable": {"thread_id": "session-1"}}
-graph.invoke({"messages": ["Hello"]}, config)
-graph.invoke({"messages": ["What did I say?"]}, config)  # Remembers!
-```
-</python>
-<typescript>
-Always provide thread_id in config to enable state persistence.
-
-```typescript
-// WRONG: No thread_id - state NOT persisted!
-await graph.invoke({ messages: [new HumanMessage("Hello")] });
-await graph.invoke({ messages: [new HumanMessage("What did I say?")] });  // Doesn't remember!
-
-// CORRECT: Always provide thread_id
+// ✅ 正确 - 始终提供 thread_id
 const config = { configurable: { thread_id: "session-1" } };
-await graph.invoke({ messages: [new HumanMessage("Hello")] }, config);
-await graph.invoke({ messages: [new HumanMessage("What did I say?")] }, config);  // Remembers!
+await graph.invoke({ data: "test" }, config);
 ```
-</typescript>
-</fix-thread-id-required>
 
-
-<fix-inmemory-not-for-production>
-<python>
-Use PostgresSaver instead of InMemorySaver for production persistence.
-
-```python
-# WRONG: Data lost on process restart
-checkpointer = InMemorySaver()  # In-memory only!
-
-# CORRECT: Use persistent storage for production
-from langgraph.checkpoint.postgres import PostgresSaver
-with PostgresSaver.from_conn_string("postgresql://...") as checkpointer:
-    checkpointer.setup()  # only needed on first use to create tables
-    graph = builder.compile(checkpointer=checkpointer)
-```
-</python>
-<typescript>
-Use PostgresSaver instead of MemorySaver for production persistence.
+### 2. MemorySaver 不用于生产环境
 
 ```typescript
-// WRONG: Data lost on process restart
-const checkpointer = new MemorySaver();  // In-memory only!
+// ❌ 错误 - 重启时数据丢失
+const checkpointer = new MemorySaver();  // 仅内存!
 
-// CORRECT: Use persistent storage for production
+// ✅ 正确 - 使用持久化存储
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
-const checkpointer = PostgresSaver.fromConnString("postgresql://...");
-await checkpointer.setup(); // only needed on first use to create tables
+const checkpointer = await PostgresSaver.fromConnString("postgresql://...");
 ```
-</typescript>
-</fix-inmemory-not-for-production>
 
-
-<fix-update-state-with-reducers>
-<python>
-Use Overwrite to replace state values instead of passing through reducers.
-
-```python
-from langgraph.types import Overwrite
-
-# State with reducer: items: Annotated[list, operator.add]
-# Current state: {"items": ["A", "B"]}
-
-# update_state PASSES THROUGH reducers
-graph.update_state(config, {"items": ["C"]})  # Result: ["A", "B", "C"] - Appended!
-
-# To REPLACE instead, use Overwrite
-graph.update_state(config, {"items": Overwrite(["C"])})  # Result: ["C"] - Replaced
-```
-</python>
-<typescript>
-Use Overwrite to replace state values instead of passing through reducers.
+### 3. 恢复需要 null 输入
 
 ```typescript
-import { Overwrite } from "@langchain/langgraph";
+// ❌ 错误 - 提供输入会重新开始
+await graph.invoke({ new: "data" }, config);  // 从头重新开始
 
-// State with reducer: items uses concat reducer
-// Current state: { items: ["A", "B"] }
-
-// updateState PASSES THROUGH reducers
-await graph.updateState(config, { items: ["C"] });  // Result: ["A", "B", "C"] - Appended!
-
-// To REPLACE instead, use Overwrite
-await graph.updateState(config, { items: new Overwrite(["C"]) });  // Result: ["C"] - Replaced
+// ✅ 正确 - 使用 null 恢复
+await graph.invoke(null, config);  // 从检查点恢复
 ```
-</typescript>
-</fix-update-state-with-reducers>
 
-<fix-store-injection>
-<python>
-Access store via the Runtime object in graph nodes.
-
-```python
-# WRONG: Store not available in node
-def my_node(state):
-    store.put(...)  # NameError! store not defined
-
-# CORRECT: Access store via runtime
-from langgraph.runtime import Runtime
-
-def my_node(state, runtime: Runtime):
-    runtime.store.put(...)  # Correct store instance
-```
-</python>
-<typescript>
-Access store via runtime parameter in graph nodes.
+### 4. 始终 Await 异步操作
 
 ```typescript
-// WRONG: Store not available in node
-const myNode = async (state) => {
-  store.put(...);  // ReferenceError!
-};
+// ❌ 错误 - 忘记 await
+const result = graph.invoke({ data: "test" }, config);
+console.log(result.values);  // undefined!
 
-// CORRECT: Access store via runtime
-const myNode = async (state, runtime) => {
-  await runtime.store?.put(...);  // Correct store instance
-};
+// ✅ 正确
+const result = await graph.invoke({ data: "test" }, config);
+console.log(result.values);  // 可以工作!
 ```
-</typescript>
-</fix-store-injection>
 
-<boundaries>
-### What You Should NOT Do
+### 5. 检查点器必须在编译时传递
 
-- Use `InMemorySaver` in production — data lost on restart; use `PostgresSaver`
-- Forget `thread_id` — state won't persist without it
-- Expect `update_state` to bypass reducers — it passes through them; use `Overwrite` to replace
-- Run the same stateful subgraph (`checkpointer=True`) in parallel within one node — namespace conflict
-- Access store directly in a node — use `runtime.store` via the `Runtime` param
-</boundaries>
+```typescript
+// ❌ 错误 - 检查点器在编译后
+const graph = builder.compile();
+graph.checkpointer = checkpointer;  // 太晚了!
+
+// ✅ 正确 - 在编译时传递
+const graph = builder.compile({ checkpointer });
+```
+
+## 相关链接
+
+- [持久化指南](https://docs.langchain.com/oss/javascript/langgraph/persistence)
+- [检查点器库](https://docs.langchain.com/oss/javascript/langgraph/persistence#checkpointer-libraries)
+- [线程管理](https://docs.langchain.com/oss/javascript/langgraph/persistence#threads)

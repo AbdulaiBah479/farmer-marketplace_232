@@ -1,103 +1,96 @@
 ---
 name: exa-search
-description: Neural search via Exa MCP for web, code, and company research. Use when the user needs web search, code examples, company intel, people lookup, or AI-powered deep research with Exa's neural search engine.
-origin: ECC
+description: "Web toolkit powered by Exa, tuned for scientific and technical content. Use this skill when the user needs to search the web or fetch/extract URL content. Covers: web search (semantic lookups, research, current info — with optional research-paper category and academic domain filtering) and URL extraction (fetching pages, articles, academic PDFs in batch). Use this skill for web-related tasks when the user wants high-quality search or scholarly filtering via category=research paper. Triggers on requests to search, look up, fetch a page, or extract an article."
+compatibility: Requires exa-py Python SDK, an EXA_API_KEY, and internet access.
+license: MIT
+metadata:
+  version: "1.0"
+  skill-author: Exa
+  website: https://exa.ai
+  docs: https://exa.ai/docs
 ---
 
-# Exa Search
+# Exa Web Toolkit
 
-Neural search for web content, code, companies, and people via the Exa MCP server.
+A skill for web-powered research tasks backed by [Exa](https://exa.ai): web search and URL extraction. Exa's index combines high-quality keyword and semantic retrieval, which makes it well-suited to scientific, technical, and conceptual queries.
 
-## When to Activate
+## Routing — pick the right capability
 
-- User needs current web information or news
-- Searching for code examples, API docs, or technical references
-- Researching companies, competitors, or market players
-- Finding professional profiles or people in a domain
-- Running background research for any development task
-- User says "search for", "look up", "find", or "what's the latest on"
+Read the user's request and match it to one of the capabilities below. Read the corresponding reference file for detailed instructions before running commands.
 
-## MCP Requirement
+| User wants to... | Capability | Where |
+|---|---|---|
+| Look something up, research a topic, find current info | **Web Search** | `references/web-search.md` |
+| Fetch content from a specific URL (webpage, article, PDF) | **Web Extract** | `references/web-extract.md` |
+| Install or authenticate | **Setup** | Below |
 
-Exa MCP server must be configured. Add to `~/.claude.json`:
+### Decision guide
 
-```json
-"exa-web-search": {
-  "command": "npx",
-  "args": ["-y", "exa-mcp-server"],
-  "env": { "EXA_API_KEY": "YOUR_EXA_API_KEY_HERE" }
-}
+- **Default to Web Search** for topic lookups, research questions, or "what is X?" queries. When the topic is scientific or technical, pass `--category "research paper"` to bias toward scholarly sources, and/or an academic `--include-domains` allowlist. See `references/web-search.md` for the two-pass academic strategy.
+- **Use Web Extract** when the user provides a URL or asks you to read/fetch a specific page. Prefer this over the built-in WebFetch for batch extraction (multiple URLs in one call) and for academic PDFs.
+
+### Academic source priority
+
+For technical or scientific queries, prefer academic and scientific sources:
+- Peer-reviewed journal articles and conference proceedings over blog posts or news
+- Preprints (arXiv, bioRxiv, medRxiv) when peer-reviewed versions aren't available
+- Institutional and government sources (NIH, WHO, NASA, NIST) over commercial sites
+- Primary research over secondary summaries
+
+Two levers to steer Exa toward scholarly content:
+1. `--category "research paper"` biases retrieval toward scholarly sources.
+2. `--include-domains` with a scholarly allowlist (arxiv.org, nature.com, pubmed.ncbi.nlm.nih.gov, etc.) restricts the domain pool.
+
+Combine both for strictly academic results. See `references/web-search.md` for the full pattern.
+
+When citing academic sources, include author names and publication year where available (e.g., [Smith et al., 2025](url)) in addition to the standard citation format. If a DOI is present, prefer the DOI link.
+
+---
+
+## Setup
+
+This skill uses the [`exa-py`](https://github.com/exa-labs/exa-py) Python SDK. The scripts in `scripts/` declare their dependencies via PEP 723 inline metadata, so you can run them directly with `uv run` without a separate install step:
+
+```bash
+uv run --with exa-py python "$SKILL_PATH/scripts/exa_search.py" --help
 ```
 
-Get an API key at [exa.ai](https://exa.ai).
-This repo's current Exa setup documents the tool surface exposed here: `web_search_exa` and `get_code_context_exa`.
-If your Exa server exposes additional tools, verify their exact names before depending on them in docs or prompts.
+If you prefer a persistent install:
 
-## Core Tools
-
-### web_search_exa
-General web search for current information, news, or facts.
-
-```
-web_search_exa(query: "latest AI developments 2026", numResults: 5)
+```bash
+uv pip install "exa-py>=1.14.0"
 ```
 
-**Parameters:**
+### Authentication
 
-| Param | Type | Default | Notes |
-|-------|------|---------|-------|
-| `query` | string | required | Search query |
-| `numResults` | number | 8 | Number of results |
-| `type` | string | `auto` | Search mode |
-| `livecrawl` | string | `fallback` | Prefer live crawling when needed |
-| `category` | string | none | Optional focus such as `company` or `research paper` |
+All commands read the API key from the `EXA_API_KEY` environment variable. Get your Exa API key at [dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys).
 
-### get_code_context_exa
-Find code examples and documentation from GitHub, Stack Overflow, and docs sites.
+First, check if a `.env` file exists in the project root and contains `EXA_API_KEY`. If so, load it:
 
-```
-get_code_context_exa(query: "Python asyncio patterns", tokensNum: 3000)
+```bash
+dotenv -f .env run -- uv run --with exa-py python "$SKILL_PATH/scripts/exa_search.py" "your query"
 ```
 
-**Parameters:**
+If `dotenv` isn't available, install it: `pip install python-dotenv[cli]` or `uv pip install python-dotenv[cli]`.
 
-| Param | Type | Default | Notes |
-|-------|------|---------|-------|
-| `query` | string | required | Code or API search query |
-| `tokensNum` | number | 5000 | Content tokens (1000-50000) |
+If there's no `.env`, export the key for the session:
 
-## Usage Patterns
-
-### Quick Lookup
-```
-web_search_exa(query: "Node.js 22 new features", numResults: 3)
+```bash
+export EXA_API_KEY="your-key"
 ```
 
-### Code Research
-```
-get_code_context_exa(query: "Rust error handling patterns Result type", tokensNum: 3000)
-```
+Verify by running any script with `--help` — it will exit cleanly if the key is set and auth-check runs only when a real query is made.
 
-### Company or People Research
-```
-web_search_exa(query: "Vercel funding valuation 2026", numResults: 3, category: "company")
-web_search_exa(query: "site:linkedin.com/in AI safety researchers Anthropic", numResults: 5)
-```
+### Tracking header
 
-### Technical Deep Dive
-```
-web_search_exa(query: "WebAssembly component model status and adoption", numResults: 5)
-get_code_context_exa(query: "WebAssembly component model examples", tokensNum: 4000)
-```
+Every script in this skill sets the `x-exa-integration` request header to `k-dense-ai--scientific-agent-skills` so Exa can attribute usage from the K-Dense AI scientific-agent-skills repo to this integration. Do not remove or rename this header when adapting the scripts.
 
-## Tips
+---
 
-- Use `web_search_exa` for current information, company lookups, and broad discovery
-- Use search operators like `site:`, quoted phrases, and `intitle:` to narrow results
-- Lower `tokensNum` (1000-2000) for focused code snippets, higher (5000+) for comprehensive context
-- Use `get_code_context_exa` when you need API usage or code examples rather than general web pages
+## Files in this skill
 
-## Related Skills
-
-- `deep-research` — Full research workflow using firecrawl + exa together
-- `market-research` — Business-oriented research with decision frameworks
+- `SKILL.md` — this file (routing and setup)
+- `references/web-search.md` — detailed web search reference with academic strategy
+- `references/web-extract.md` — URL content extraction reference
+- `scripts/exa_search.py` — CLI wrapper around `client.search_and_contents`
+- `scripts/exa_extract.py` — CLI wrapper around `client.get_contents`

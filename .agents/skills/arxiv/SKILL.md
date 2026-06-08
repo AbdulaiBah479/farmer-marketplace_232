@@ -1,282 +1,313 @@
 ---
 name: arxiv
-description: "Search arXiv papers by keyword, author, category, or ID."
-version: 1.0.0
-author: Hermes Agent
-license: MIT
-platforms: [linux, macos, windows]
+description: >
+  Search arXiv for papers and extract knowledge into memory.
+  Use `search` to find papers, `learn` to extract knowledge.
+allowed-tools: Bash, Read
+triggers:
+  - learn from arxiv
+  - learn from this paper
+  - extract knowledge from paper
+  - find papers on
+  - search arxiv
+  - arxiv
 metadata:
-  hermes:
-    tags: [Research, Arxiv, Papers, Academic, Science, API]
-    related_skills: [ocr-and-documents]
+  short-description: arXiv paper search and knowledge extraction
 ---
 
-# arXiv Research
+# arXiv Skill
 
-Search and retrieve academic papers from arXiv via their free REST API. No API key, no dependencies — just curl.
+Search arXiv and extract knowledge into memory.
 
-## Quick Reference
+## Commands
 
-| Action | Command |
-|--------|---------|
-| Search papers | `curl "https://export.arxiv.org/api/query?search_query=all:QUERY&max_results=5"` |
-| Get specific paper | `curl "https://export.arxiv.org/api/query?id_list=2402.03300"` |
-| Read abstract (web) | `web_extract(urls=["https://arxiv.org/abs/2402.03300"])` |
-| Read full paper (PDF) | `web_extract(urls=["https://arxiv.org/pdf/2402.03300"])` |
-
-## Searching Papers
-
-The API returns Atom XML. Parse with `grep`/`sed` or pipe through `python3` for clean output.
-
-### Basic search
-
-```bash
-curl -s "https://export.arxiv.org/api/query?search_query=all:GRPO+reinforcement+learning&max_results=5"
-```
-
-### Clean output (parse XML to readable format)
-
-```bash
-curl -s "https://export.arxiv.org/api/query?search_query=all:GRPO+reinforcement+learning&max_results=5&sortBy=submittedDate&sortOrder=descending" | python3 -c "
-import sys, xml.etree.ElementTree as ET
-ns = {'a': 'http://www.w3.org/2005/Atom'}
-root = ET.parse(sys.stdin).getroot()
-for i, entry in enumerate(root.findall('a:entry', ns)):
-    title = entry.find('a:title', ns).text.strip().replace('\n', ' ')
-    arxiv_id = entry.find('a:id', ns).text.strip().split('/abs/')[-1]
-    published = entry.find('a:published', ns).text[:10]
-    authors = ', '.join(a.find('a:name', ns).text for a in entry.findall('a:author', ns))
-    summary = entry.find('a:summary', ns).text.strip()[:200]
-    cats = ', '.join(c.get('term') for c in entry.findall('a:category', ns))
-    print(f'{i+1}. [{arxiv_id}] {title}')
-    print(f'   Authors: {authors}')
-    print(f'   Published: {published} | Categories: {cats}')
-    print(f'   Abstract: {summary}...')
-    print(f'   PDF: https://arxiv.org/pdf/{arxiv_id}')
-    print()
-"
-```
-
-## Search Query Syntax
-
-| Prefix | Searches | Example |
-|--------|----------|---------|
-| `all:` | All fields | `all:transformer+attention` |
-| `ti:` | Title | `ti:large+language+models` |
-| `au:` | Author | `au:vaswani` |
-| `abs:` | Abstract | `abs:reinforcement+learning` |
-| `cat:` | Category | `cat:cs.AI` |
-| `co:` | Comment | `co:accepted+NeurIPS` |
-
-### Boolean operators
-
-```
-# AND (default when using +)
-search_query=all:transformer+attention
-
-# OR
-search_query=all:GPT+OR+all:BERT
-
-# AND NOT
-search_query=all:language+model+ANDNOT+all:vision
-
-# Exact phrase
-search_query=ti:"chain+of+thought"
-
-# Combined
-search_query=au:hinton+AND+cat:cs.LG
-```
-
-## Sort and Pagination
-
-| Parameter | Options |
-|-----------|---------|
-| `sortBy` | `relevance`, `lastUpdatedDate`, `submittedDate` |
-| `sortOrder` | `ascending`, `descending` |
-| `start` | Result offset (0-based) |
-| `max_results` | Number of results (default 10, max 30000) |
-
-```bash
-# Latest 10 papers in cs.AI
-curl -s "https://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=10"
-```
-
-## Fetching Specific Papers
-
-```bash
-# By arXiv ID
-curl -s "https://export.arxiv.org/api/query?id_list=2402.03300"
-
-# Multiple papers
-curl -s "https://export.arxiv.org/api/query?id_list=2402.03300,2401.12345,2403.00001"
-```
-
-## BibTeX Generation
-
-After fetching metadata for a paper, generate a BibTeX entry:
-
-{% raw %}
-```bash
-curl -s "https://export.arxiv.org/api/query?id_list=1706.03762" | python3 -c "
-import sys, xml.etree.ElementTree as ET
-ns = {'a': 'http://www.w3.org/2005/Atom', 'arxiv': 'http://arxiv.org/schemas/atom'}
-root = ET.parse(sys.stdin).getroot()
-entry = root.find('a:entry', ns)
-if entry is None: sys.exit('Paper not found')
-title = entry.find('a:title', ns).text.strip().replace('\n', ' ')
-authors = ' and '.join(a.find('a:name', ns).text for a in entry.findall('a:author', ns))
-year = entry.find('a:published', ns).text[:4]
-raw_id = entry.find('a:id', ns).text.strip().split('/abs/')[-1]
-cat = entry.find('arxiv:primary_category', ns)
-primary = cat.get('term') if cat is not None else 'cs.LG'
-last_name = entry.find('a:author', ns).find('a:name', ns).text.split()[-1]
-print(f'@article{{{last_name}{year}_{raw_id.replace(\".\", \"\")},')
-print(f'  title     = {{{title}}},')
-print(f'  author    = {{{authors}}},')
-print(f'  year      = {{{year}}},')
-print(f'  eprint    = {{{raw_id}}},')
-print(f'  archivePrefix = {{arXiv}},')
-print(f'  primaryClass  = {{{primary}}},')
-print(f'  url       = {{https://arxiv.org/abs/{raw_id}}}')
-print('}')
-"
-```
-{% endraw %}
-
-## Reading Paper Content
-
-After finding a paper, read it:
-
-```
-# Abstract page (fast, metadata + abstract)
-web_extract(urls=["https://arxiv.org/abs/2402.03300"])
-
-# Full paper (PDF → markdown via Firecrawl)
-web_extract(urls=["https://arxiv.org/pdf/2402.03300"])
-```
-
-For local PDF processing, see the `ocr-and-documents` skill.
-
-## Common Categories
-
-| Category | Field |
-|----------|-------|
-| `cs.AI` | Artificial Intelligence |
-| `cs.CL` | Computation and Language (NLP) |
-| `cs.CV` | Computer Vision |
-| `cs.LG` | Machine Learning |
-| `cs.CR` | Cryptography and Security |
-| `stat.ML` | Machine Learning (Statistics) |
-| `math.OC` | Optimization and Control |
-| `physics.comp-ph` | Computational Physics |
-
-Full list: https://arxiv.org/category_taxonomy
-
-## Helper Script
-
-The `scripts/search_arxiv.py` script handles XML parsing and provides clean output:
-
-```bash
-python scripts/search_arxiv.py "GRPO reinforcement learning"
-python scripts/search_arxiv.py "transformer attention" --max 10 --sort date
-python scripts/search_arxiv.py --author "Yann LeCun" --max 5
-python scripts/search_arxiv.py --category cs.AI --sort date
-python scripts/search_arxiv.py --id 2402.03300
-python scripts/search_arxiv.py --id 2402.03300,2401.12345
-```
-
-No dependencies — uses only Python stdlib.
+| Command | Description |
+|---------|-------------|
+| `search` | Find papers (returns abstracts for triage) |
+| `learn` | Extract knowledge into memory |
 
 ---
 
-## Semantic Scholar (Citations, Related Papers, Author Profiles)
+## MANDATORY: Dynamic Context Generation
 
-arXiv doesn't provide citation data or recommendations. Use the **Semantic Scholar API** for that — free, no key needed for basic use (1 req/sec), returns JSON.
+**NON-NEGOTIABLE:** Before ANY arxiv operation, the agent MUST generate a dynamic context file that captures the current collaboration goals.
 
-### Get paper details + citations
+### Why This Is Required
 
-```bash
-# By arXiv ID
-curl -s "https://api.semanticscholar.org/graph/v1/paper/arXiv:2402.03300?fields=title,authors,citationCount,referenceCount,influentialCitationCount,year,abstract" | python3 -m json.tool
+Without dynamic context:
+- Search returns tangentially related papers
+- Abstract triage lacks clear relevance criteria
+- Extracted knowledge is generic ("What does paper say about X?")
 
-# By Semantic Scholar paper ID or DOI
-curl -s "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1234/example?fields=title,citationCount"
-```
-
-### Get citations OF a paper (who cited it)
-
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/arXiv:2402.03300/citations?fields=title,authors,year,citationCount&limit=10" | python3 -m json.tool
-```
-
-### Get references FROM a paper (what it cites)
-
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/arXiv:2402.03300/references?fields=title,authors,year,citationCount&limit=10" | python3 -m json.tool
-```
-
-### Search papers (alternative to arXiv search, returns JSON)
-
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/paper/search?query=GRPO+reinforcement+learning&limit=5&fields=title,authors,year,citationCount,externalIds" | python3 -m json.tool
-```
-
-### Get paper recommendations
-
-```bash
-curl -s -X POST "https://api.semanticscholar.org/recommendations/v1/papers/" \
-  -H "Content-Type: application/json" \
-  -d '{"positivePaperIds": ["arXiv:2402.03300"], "negativePaperIds": []}' | python3 -m json.tool
-```
-
-### Author profile
-
-```bash
-curl -s "https://api.semanticscholar.org/graph/v1/author/search?query=Yann+LeCun&fields=name,hIndex,citationCount,paperCount" | python3 -m json.tool
-```
-
-### Useful Semantic Scholar fields
-
-`title`, `authors`, `year`, `abstract`, `citationCount`, `referenceCount`, `influentialCitationCount`, `isOpenAccess`, `openAccessPdf`, `fieldsOfStudy`, `publicationVenue`, `externalIds` (contains arXiv ID, DOI, etc.)
+With dynamic context:
+- Search is targeted to specific implementation needs
+- Abstract evaluation has clear accept/reject criteria
+- Extracted knowledge is actionable ("How to implement X as code")
 
 ---
 
-## Complete Research Workflow
+## Workflow: Context-First Paper Discovery
 
-1. **Discover**: `python scripts/search_arxiv.py "your topic" --sort date --max 10`
-2. **Assess impact**: `curl -s "https://api.semanticscholar.org/graph/v1/paper/arXiv:ID?fields=citationCount,influentialCitationCount"`
-3. **Read abstract**: `web_extract(urls=["https://arxiv.org/abs/ID"])`
-4. **Read full paper**: `web_extract(urls=["https://arxiv.org/pdf/ID"])`
-5. **Find related work**: `curl -s "https://api.semanticscholar.org/graph/v1/paper/arXiv:ID/references?fields=title,citationCount&limit=20"`
-6. **Get recommendations**: POST to Semantic Scholar recommendations endpoint
-7. **Track authors**: `curl -s "https://api.semanticscholar.org/graph/v1/author/search?query=NAME"`
+```
+0. CONTEXT  → Generate dynamic context from conversation (REQUIRED)
+1. SEARCH   → Use context to find relevant papers
+2. TRIAGE   → Evaluate abstracts against context goals
+3. DECIDE   → User picks which papers to extract
+4. LEARN    → Extract with context for focused knowledge chunks
+```
 
-## Rate Limits
+### Step 0: Generate Dynamic Context (REQUIRED)
 
-| API | Rate | Auth |
-|-----|------|------|
-| arXiv | ~1 req / 3 seconds | None needed |
-| Semantic Scholar | 1 req / second | None (100/sec with API key) |
+Before searching, the agent MUST create `/tmp/arxiv_context.md` with:
 
-## Notes
+```markdown
+# Research Context: [Your Specific Goal]
 
-- arXiv returns Atom XML — use the helper script or parsing snippet for clean output
-- Semantic Scholar returns JSON — pipe through `python3 -m json.tool` for readability
-- arXiv IDs: old format (`hep-th/0601001`) vs new (`2402.03300`)
-- PDF: `https://arxiv.org/pdf/{id}` — Abstract: `https://arxiv.org/abs/{id}`
-- HTML (when available): `https://arxiv.org/html/{id}`
-- For local PDF processing, see the `ocr-and-documents` skill
+## What We're Building
+[Describe the specific feature/system, e.g., "Theory of Mind for Horus agent"]
 
-## ID Versioning
+## Current State
+[What already exists, what's implemented, what we have]
 
-- `arxiv.org/abs/1706.03762` always resolves to the **latest** version
-- `arxiv.org/abs/1706.03762v1` points to a **specific** immutable version
-- When generating citations, preserve the version suffix you actually read to prevent citation drift (a later version may substantially change content)
-- The API `<id>` field returns the versioned URL (e.g., `http://arxiv.org/abs/1706.03762v7`)
+## What We Need From Papers
+1. [Specific question 1, e.g., "How to represent belief confidence as data structure"]
+2. [Specific question 2, e.g., "When to trigger counterfactual reflection"]
+3. [Specific question 3, e.g., "Algorithm for updating beliefs on contradiction"]
 
-## Withdrawn Papers
+## Search Terms to Try
+- [term 1]
+- [term 2]
 
-Papers can be withdrawn after submission. When this happens:
-- The `<summary>` field contains a withdrawal notice (look for "withdrawn" or "retracted")
-- Metadata fields may be incomplete
-- Always check the summary before treating a result as a valid paper
+## Relevance Criteria for Abstract Triage
+- HIGH: Papers that directly address [specific need]
+- MEDIUM: Papers with related techniques that could adapt
+- LOW: Tangentially related, skip unless nothing better
+
+## Knowledge Extraction Focus
+- Extract: [what kind of knowledge, e.g., "algorithms, data structures, update rules"]
+- Skip: [what to ignore, e.g., "evaluation metrics, dataset descriptions, future work"]
+
+## Output Format Preference
+Phrase as implementation problems, not summaries:
+- BAD: "What does the paper say about X?"
+- GOOD: "How should we implement X? What code pattern?"
+```
+
+### Step 1: Search With Context
+
+After creating context, use it to guide search:
+
+```bash
+# Search guided by context goals
+./run.sh search -q "theory of mind BDI agent belief tracking" -n 10
+```
+
+### Step 2: Triage Against Context
+
+Evaluate each abstract against the context's relevance criteria:
+
+```markdown
+## Papers Found - Evaluating Against Context Goals
+
+### 1. **Paper Title** (arXiv:XXXX.XXXXX)
+> [Abstract]
+
+**Against context:**
+- Addresses goal 1 (belief representation): YES - describes BDI dict structure
+- Addresses goal 2 (counterfactual reflection): NO
+- **Verdict: HIGH** - directly answers our data structure question
+
+### 2. **Paper Title** (arXiv:XXXX.XXXXX)
+> [Abstract]
+
+**Against context:**
+- Addresses goal 1: NO
+- Addresses goal 2: YES - describes reflection trigger conditions
+- **Verdict: HIGH** - directly answers our algorithm question
+
+---
+Which papers should I extract?
+```
+
+### Step 3: Extract With Context File
+
+Pass the context file to `learn` for focused extraction:
+
+```bash
+./run.sh learn 2501.15355 --scope persona-research --context-file /tmp/arxiv_context.md
+```
+
+**Do NOT proceed without user confirmation on paper selection.**
+
+---
+
+## `search` - Find Papers
+
+```bash
+./run.sh search -q "agent memory" -n 5
+```
+
+Returns papers with **full abstracts** for quick triage.
+
+| Option | Description |
+|--------|-------------|
+| `-q` | Search query (required) |
+| `-n` | Max results (default: 10) |
+| `-c` | Category filter (e.g., cs.LG) |
+| `-m` | Papers from last N months |
+| `--smart` | LLM translates natural language query |
+
+---
+
+## `learn` - Extract Knowledge
+
+```bash
+./run.sh learn 2601.08058 --scope memory
+```
+
+Full pipeline: download → profile → extract → Q&A → interview → store → verify edges.
+
+| Option | Description |
+|--------|-------------|
+| `--scope` | Memory scope (required) |
+| `--context` | Domain focus for relevance |
+| `--dry-run` | Preview without storing |
+| `--skip-interview` | Auto-accept recommendations |
+| `--accurate` | Force PDF + VLM extraction |
+| `--mode` | Interview mode: `auto`, `html`, `tui` (default: auto) |
+
+
+---
+
+## Extraction Mode (HTML-First)
+
+**NEW:** The `learn` command now uses **HTML-first extraction** by default:
+
+1. Downloads HTML from [ar5iv.org](https://ar5iv.org) (arxiv papers converted to clean HTML)
+2. Runs quick profile check (counts figures/tables)
+3. Routes to appropriate extraction mode
+
+```
+arxiv learn <id>
+       │
+       ├── fast mode (default) ──► ar5iv HTML ──► extractor HTML
+       │   - Most research papers       (100% extraction parity)
+       │   - Text-heavy content         (no PDF column issues)
+       │
+       └── accurate mode ──► arxiv PDF ──► extractor PDF + VLM
+           - Papers where figures are critical
+           - Complex tables with precise values
+           - Use: --accurate flag
+```
+
+### Why HTML-First?
+
+| Aspect | HTML (ar5iv) | PDF |
+|--------|--------------|-----|
+| Extraction quality | 100% parity | ~87% (column detection issues) |
+| Speed | Fast (~5s) | Slower (~30s-2min) |
+| Figure captions | Included | Requires VLM |
+| Math rendering | MathML preserved | Text approximation |
+| Layout issues | None | 2-column detection problems |
+
+**ar5iv.org** converts arxiv LaTeX source to semantic HTML with MathML equations and proper structure. This eliminates PDF extraction issues.
+
+### When to Use `--accurate`
+
+| Content Type | Recommended Mode | Why |
+|--------------|------------------|-----|
+| **Most research papers** | default (HTML) | Text + captions are sufficient |
+| **Survey papers** | default (HTML) | Broad coverage, exact figures not critical |
+| **Papers with critical diagrams** | `--accurate` | When visual content IS the point |
+| **Papers with complex data tables** | `--accurate` | When precise numbers matter |
+
+```bash
+# Default: HTML extraction (fast, reliable)
+./run.sh learn 2601.10025 --scope persona-research
+
+# Force accurate mode for figure-heavy papers
+./run.sh learn 2501.15355 --scope tom-research --accurate
+```
+
+### Profile-Based Routing
+
+The skill automatically profiles downloaded HTML to suggest extraction mode:
+
+- **< 20 figures AND < 10 tables**: Uses HTML (fast mode)
+- **> 20 figures OR > 10 tables**: Suggests accurate mode (or use `--accurate`)
+
+Profile output shows in logs:
+```
+Profile: 12 figures, 4 tables → Using HTML extraction (fast mode)
+```
+
+---
+
+## Happy Path
+
+```bash
+# 1. Search - get abstracts
+./run.sh search -q "agent memory systems" -n 5
+
+# 2. STOP - discuss abstracts with user, assess relevance
+
+# 3. Learn - extract user-selected papers (HTML extraction by default)
+./run.sh learn 2601.10702 --scope memory --context "agent systems"
+```
+
+---
+
+## Examples
+
+### Research Survey (HTML extraction - default)
+```bash
+./run.sh learn 2601.10025 --scope persona-research --context "LLM personality"
+```
+
+### Paper with Critical Figures (accurate mode)
+```bash
+./run.sh learn 2501.15355 --scope tom-research --context "BDI architecture" --accurate
+```
+
+### Dry Run First
+```bash
+# Preview what would be extracted
+./run.sh learn 2601.10025 --scope test --dry-run
+```
+
+### Download HTML Only
+```bash
+# Download ar5iv HTML for manual inspection
+./run.sh download -i 2501.15355 --format html
+```
+
+### Batch Processing (Parallel)
+```bash
+# Process multiple papers in parallel (default: 2 concurrent)
+./run.sh batch 2501.15355 2502.14171 2310.10701 --scope tom-research --context-file /tmp/context.md
+
+# Increase parallelism for faster processing
+./run.sh batch 2501.15355 2502.14171 2310.10701 --scope research --parallel 3
+
+# Dry run to preview
+./run.sh batch 2501.15355 2502.14171 --scope test --dry-run
+```
+
+| Option | Description |
+|--------|-------------|
+| `--parallel N` | Max papers to process concurrently (default: 2) |
+| `--context-file` | Rich context file for focused extraction |
+| `--skip-interview` | Auto-accept (default for batch) |
+| `--dry-run` | Preview without storing |
+
+**Note:** Recommended parallelism is 2-3 papers. Higher values may hit API rate limits.
+
+---
+
+## Dependencies
+
+| Component | URL | Purpose |
+|-----------|-----|---------|
+| ar5iv.org | https://ar5iv.org | LaTeX to HTML conversion for arxiv papers |
+| extractor skill | (sibling skill) | HTML/PDF content extraction |
+| qra skill | (sibling skill) | Q&A pair generation from text |

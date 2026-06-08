@@ -1,6 +1,5 @@
 ---
 name: skyvern
-category: automation
 description: "AI-powered browser automation — navigate sites, fill forms, extract structured data, log in with stored credentials, and build reusable multi-step workflows using natural language. Install: pip install skyvern && skyvern setup"
 ---
 

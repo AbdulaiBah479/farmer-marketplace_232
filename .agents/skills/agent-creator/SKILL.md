@@ -1,123 +1,199 @@
 ---
 name: agent-creator
-description: Guide for creating custom Claude Code subagents. Use when user wants to create a new agent (or update an existing agent) that handles specific types of tasks with custom prompts, tool restrictions, and permissions. Triggers on requests to create agents, subagents, custom agents, or when user wants specialized AI assistants for specific workflows.
+description: >
+  This skill should be used when the user asks to "create an agent", "write a subagent", "generate
+  agent definition", "add agent to plugin", "write agent frontmatter", "create autonomous agent",
+  "build subagent", needs agent structure guidance, YAML frontmatter configuration, invocation
+  criteria with examples, or wants to add specialized subagents to Claude Code plugins with proper
+  capabilities lists and tool access definitions.
 ---
 
 # Agent Creator
 
-Create subagents as Markdown files with YAML frontmatter. Store in:
-- `~/.claude/agents/` - User-level (all projects)
-- `.claude/agents/` - Project-level (current project only)
+## Overview
 
-## Subagent File Structure
+Creates subagent definitions for Claude Code. Subagents are specialized assistants
+that Claude can invoke for specific tasks.
 
+**When to use:** User requests an agent, wants to add specialized subagent to plugin, or needs agent structure guidance.
+
+**References:** Consult
+`plugins/meta/claude-docs/skills/official-docs/reference/plugins-reference.md` and
+`plugins/meta/claude-docs/skills/official-docs/reference/sub-agents.md` for specifications.
+
+## CRITICAL: Two Types of Agents
+
+Claude Code has **two distinct agent types** with **different requirements**:
+
+### Plugin Agents (plugins/*/agents/)
+
+**Purpose:** Agents distributed via plugins for team/community use
+
+**Required frontmatter fields:**
+- `description` (required) - What this agent specializes in
+- `capabilities` (required) - Array of specific capabilities
+
+**Location:** `plugins/<category>/<plugin-name>/agents/agent-name.md`
+
+**Example:**
 ```markdown
 ---
-name: agent-name
-description: When Claude should delegate to this agent
-tools: Read, Grep, Glob
-model: sonnet
+description: Expert code reviewer validating security and quality
+capabilities: ["vulnerability detection", "code quality review", "best practices"]
 ---
-
-System prompt instructions for the agent go here.
-The agent receives only this prompt, not the full Claude Code system prompt.
 ```
 
-## Required Fields
+### User/Project Agents (.claude/agents/)
 
-| Field | Description |
-|-------|-------------|
-| `name` | Unique identifier (lowercase, hyphens only) |
-| `description` | When to delegate - Claude uses this to decide. Include "use proactively" for automatic delegation |
+**Purpose:** Personal agents for individual workflows
 
-## Optional Fields
+**Required frontmatter fields:**
+- `name` (required) - Agent identifier
+- `description` (required) - When to invoke this agent
+- `tools` (optional) - Comma-separated tool list
+- `model` (optional) - Model alias (sonnet, opus, haiku)
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `tools` | All | Comma-separated tool names. See [configuration.md](references/configuration.md) for full list |
-| `disallowedTools` | None | Tools to deny from inherited set |
-| `model` | sonnet | `sonnet`, `opus`, `haiku`, or `inherit` |
-| `permissionMode` | default | `default`, `acceptEdits`, `dontAsk`, `bypassPermissions`, `plan` |
-| `skills` | None | Skills to load into agent context at startup |
-| `hooks` | None | Lifecycle hooks (`PreToolUse`, `PostToolUse`, `Stop`) |
+**Location:** `.claude/agents/agent-name.md` or `~/.claude/agents/agent-name.md`
 
-For detailed options and all available tools, see [references/configuration.md](references/configuration.md).
-
-## System Prompt Guidelines
-
-- Be specific about what the agent should do when invoked
-- Include a clear workflow (numbered steps)
-- Define output format expectations
-- Keep focused on one domain/task
-
-## Examples
-
-### Read-Only Reviewer
-
+**Example:**
 ```markdown
 ---
 name: code-reviewer
-description: Reviews code for quality and security. Use proactively after code changes.
+description: Expert code review. Use after code changes.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: sonnet
 ---
-
-Review code and provide actionable feedback.
-
-When invoked:
-1. Run git diff to see recent changes
-2. Focus on modified files
-3. Check for: clarity, duplication, error handling, security, tests
-
-Format feedback by priority:
-- Critical (must fix)
-- Warnings (should fix)
-- Suggestions (consider)
 ```
 
-### Read-Write Fixer
+**Key difference:** User agents have `name` field and system prompt. Plugin agents have `capabilities` array and documentation.
+
+## Agent Structure Requirements (Plugin Agents)
+
+Every **plugin agent** MUST include:
+
+1. **Frontmatter** with `description` and `capabilities` array
+2. **Agent title** as h1
+3. **Capabilities** section explaining what agent does
+4. **When to Use** section with invocation criteria
+5. **Context and Examples** with concrete scenarios
+6. Located in `agents/agent-name.md` within plugin
+
+## Creation Process
+
+### Step 0: Determine Agent Type
+
+**Ask the user:**
+- Is this for a plugin (team/community distribution)?
+- Or for personal use (.claude/agents/)?
+
+**If personal use:** Use user agent format with `name`, `description`, system prompt. See `plugins/meta/claude-docs/skills/official-docs/reference/sub-agents.md` for examples.
+
+**If plugin:** Continue with plugin agent format below.
+
+### Step 1: Define Agent Purpose
+
+Ask the user:
+
+- What specialized task does this agent handle?
+- What capabilities distinguish it from other agents?
+- When should Claude invoke this vs doing work directly?
+
+### Step 2: Determine Agent Name
+
+Create descriptive kebab-case name:
+
+- "security review" → `security-reviewer`
+- "performance testing" → `performance-tester`
+- "API documentation" → `api-documenter`
+
+### Step 3: List Capabilities
+
+Identify 3-5 specific capabilities:
+
+- Concrete actions the agent performs
+- Specialized knowledge it applies
+- Outputs it generates
+
+### Step 4: Structure the Agent
+
+Use this template:
 
 ```markdown
 ---
-name: debugger
-description: Debug and fix errors, test failures, unexpected behavior. Use proactively for issues.
-tools: Read, Edit, Bash, Grep, Glob
+description: One-line agent description
+capabilities: ["capability-1", "capability-2", "capability-3"]
 ---
 
-Debug issues with systematic root cause analysis.
+# Agent Name
 
-When invoked:
-1. Capture error message and stack trace
-2. Identify reproduction steps
-3. Isolate failure location
-4. Implement minimal fix
-5. Verify solution
+Detailed description of agent's role and expertise.
 
-Provide: root cause, evidence, code fix, prevention.
+## Capabilities
+
+- **Capability 1**: What this enables
+- **Capability 2**: What this enables
+- **Capability 3**: What this enables
+
+## When to Use This Agent
+
+Claude should invoke when:
+- Specific condition 1
+- Specific condition 2
+- Specific condition 3
+
+## Context and Examples
+
+**Example 1: Scenario Name**
+
+User requests: "Help with X"
+Agent provides: Specific assistance using capabilities
+
+**Example 2: Another Scenario**
+
+When Y happens, agent does Z.
 ```
 
-### Hook-Validated Agent
+### Step 5: Verify Against Official Docs
 
-```markdown
----
-name: db-reader
-description: Execute read-only database queries for analysis and reports.
-tools: Bash
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "./scripts/validate-readonly.sh"
----
+**For plugin agents:**
+Check `plugins/meta/claude-docs/skills/official-docs/reference/plugins-reference.md` (requires `capabilities` array).
 
-Execute SELECT queries only. Explain that write access is unavailable if requested.
-```
+**For user agents:**
+Check `plugins/meta/claude-docs/skills/official-docs/reference/sub-agents.md` (requires `name` field).
 
-## Best Practices
+## Key Principles
 
-1. **Focus agents narrowly** - One agent per domain/task
-2. **Write clear descriptions** - Claude uses these for delegation decisions
-3. **Limit tools appropriately** - Grant only what's needed
-4. **Use hooks for validation** - When you need finer control than tool restrictions
-5. **Test with real tasks** - Verify the agent behaves as expected
+- **Specialization**: Agents should have focused expertise
+- **Clear Invocation**: Claude must know when to use this agent
+- **Concrete Capabilities**: List specific things agent can do
+- **Examples**: Show real scenarios where agent helps
+
+## Examples
+
+### Example 1: Security Reviewer Agent
+
+User: "Create an agent for security reviews"
+
+Process:
+
+1. Purpose: Reviews code for security vulnerabilities
+2. Name: `security-reviewer`
+3. Capabilities: ["vulnerability detection", "security best practices", "threat modeling"]
+4. Structure: Include when to invoke, examples of security issues
+5. Create: `agents/security-reviewer.md`
+
+Output: Agent that Claude invokes for security-related code review
+
+### Example 2: Performance Tester Agent
+
+User: "I need an agent for performance testing"
+
+Process:
+
+1. Purpose: Designs and analyzes performance tests
+2. Name: `performance-tester`
+3. Capabilities: ["load testing", "benchmark design", "performance analysis"]
+4. Structure: When to use for optimization vs testing
+5. Create: `agents/performance-tester.md`
+
+Output: Agent that Claude invokes for performance concerns

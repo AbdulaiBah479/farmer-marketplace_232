@@ -1,237 +1,197 @@
 ---
 name: gemini-api
-description: Use when the user asks about using Gemini in an enterprise environment or explicitly mentions Vertex AI, Google Cloud, or Agent Platform. Guides the usage of the Gemini API on Agent Platform with the Google Gen AI SDK. Covers SDK usage (Python, JS/TS, Go, Java, C#), capabilities like multimodal inputs, tools, media generation, caching, batch prediction, and Live API.
-compatibility: Requires active Google Cloud credentials and Agent Platform API enabled.
+description: Patterns for using Google Gemini API with structured output, JSON mode, and proper configuration. Apply when implementing AI features, text generation, or working with Gemini models.
+allowed-tools: Read, Edit, Write, Grep, Glob
 ---
 
-IMPORTANT: Agent Platform (full name Gemini Enterprise Agent Platform) was previously named "Vertex AI" and many web resources use the legacy branding.
+# Gemini API Patterns
 
-# Gemini API in Agent Platform
+## SDK Setup
 
-Access Google's most advanced AI models built for enterprise use cases using the Gemini API in Agent Platform.
+Use the `@google/genai` package with Expo Constants for API key management:
 
-Provide these key capabilities:
-
-- **Text generation** - Chat, completion, summarization
-- **Multimodal understanding** - Process images, audio, video, and documents
-- **Function calling** - Let the model invoke your functions
-- **Structured output** - Generate valid JSON matching your schema
-- **Context caching** - Cache large contexts for efficiency
-- **Embeddings** - Generate text embeddings for semantic search
-- **Live Realtime API** - Bidirectional streaming for low latency Voice and Video interactions
-- **Batch Prediction** - Handle massive async dataset prediction workloads
-
-## Core Directives
-
-- **Unified SDK**: ALWAYS use the Gen AI SDK (`google-genai` for Python, `@google/genai` for JS/TS, `google.golang.org/genai` for Go, `com.google.genai:google-genai` for Java, `Google.GenAI` for C#).
-- **Legacy SDKs**: DO NOT use `google-cloud-aiplatform`, `@google-cloud/vertexai`, or `google-generativeai`.
-
-## SDKs
-
-- **Python**: Install `google-genai` with `pip install google-genai`
-- **JavaScript/TypeScript**: Install `@google/genai` with `npm install @google/genai`
-- **Go**: Install `google.golang.org/genai` with `go get google.golang.org/genai`
-- **C#/.NET**: Install `Google.GenAI` with `dotnet add package Google.GenAI`
-- **Java**:
-  - groupId: `com.google.genai`, artifactId: `google-genai`
-  - Latest version can be found here: https://central.sonatype.com/artifact/com.google.genai/google-genai/versions (let's call it `LAST_VERSION`)
-  - Install in `build.gradle`:
-
-    ```
-    implementation("com.google.genai:google-genai:${LAST_VERSION}")
-    ```
-
-  - Install Maven dependency in `pom.xml`:
-
-    ```xml
-    <dependency>
-	    <groupId>com.google.genai</groupId>
-	    <artifactId>google-genai</artifactId>
-	    <version>${LAST_VERSION}</version>
-	</dependency>
-    ```
-
-> [!WARNING]
-> Legacy SDKs like `google-cloud-aiplatform`, `@google-cloud/vertexai`, and `google-generativeai` are deprecated. Migrate to the new SDKs above urgently by following the [Migration Guide](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/deprecations/genai-vertexai-sdk).
-
-## Authentication & Configuration
-
-Prefer environment variables over hard-coding parameters when creating the client. Initialize the client without parameters to automatically pick up these values.
-
-### Application Default Credentials (ADC)
-Set these variables for standard [Google Cloud authentication](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/start/gcp-auth):
-```bash
-export GOOGLE_CLOUD_PROJECT='your-project-id'
-export GOOGLE_CLOUD_LOCATION='global'
-export GOOGLE_GENAI_USE_ENTERPRISE=true
-```
-
-- By default, use `location="global"` to access the global endpoint, which provides automatic routing to regions with available capacity.
-- If a user explicitly asks to use a specific region (e.g., `us-central1`, `europe-west4`), specify that region in the `GOOGLE_CLOUD_LOCATION` parameter instead. Reference the [supported regions documentation](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/locations#google-models) if needed.
-
-### Agent Platform in Express Mode
-Set these variables when using [Express Mode](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/api-keys?usertype=expressmode) with an API key:
-```bash
-export GOOGLE_API_KEY='your-api-key'
-export GOOGLE_GENAI_USE_ENTERPRISE=true
-```
-
-### Initialization
-Initialize the client without arguments to pick up environment variables:
-```python
-from google import genai
-
-client = genai.Client()
-```
-
-Alternatively, you can hard-code in parameters when creating the client.
-
-```python
-from google import genai
-
-client = genai.Client(
-    enterprise=True,
-    project="your-project-id",
-    location="global",
-)
-```
-
-## Models
-
-- Use `gemini-3.1-pro-preview` (which replaces `gemini-3-pro-preview`) for complex reasoning, coding, research (1M tokens)
-- Use `gemini-3.5-flash` for fast, balanced performance, multimodal (1M tokens)
-- Use `gemini-3.1-flash-lite` for high-frequency, lightweight tasks (1M tokens)
-- Use `gemini-3-pro-image` (aka Nano Banana Pro) for high-quality image generation and editing
-- Use `gemini-3.1-flash-image` (aka Nano Banana 2) for fast image generation and editing
-- Use `gemini-live-2.5-flash-native-audio` for Live Realtime API including native audio
-
-Use the following models only if explicitly requested:
-
-- `gemini-2.5-flash-image`
-- `gemini-2.5-flash`
-- `gemini-2.5-flash-lite`
-- `gemini-2.5-pro`
-
-> [!IMPORTANT]
-> Models like `gemini-2.0-*`, `gemini-1.5-*`, `gemini-1.0-*`, `gemini-pro` are legacy and deprecated. Use the new models above. Your knowledge is outdated.
-> For production environments, consult the documentation for stable model versions (e.g. `gemini-3.5-flash`).
-
-## Quick Start
-
-### Python
-```python
-from google import genai
-
-client = genai.Client()
-response = client.models.generate_content(
-    model="gemini-3.5-flash",
-    contents="Explain quantum computing",
-)
-print(response.text)
-```
-
-### TypeScript/JavaScript
 ```typescript
-import { GoogleGenAI } from "@google/genai";
-const ai = new GoogleGenAI({ enterprise: { project: "your-project-id", location: "global" } });
-const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
-    contents: "Explain quantum computing"
+import { GoogleGenAI } from '@google/genai';
+import Constants from 'expo-constants';
+
+const genAI = new GoogleGenAI({
+  apiKey: Constants.expoConfig?.extra?.geminiApiKey as string
 });
-console.log(response.text);
 ```
 
-### Go
-```go
-package main
+## Available Models
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"google.golang.org/genai"
-)
+| Model | ID | Best For |
+|-------|-----|----------|
+| Gemini 3 Pro | `gemini-3-pro-preview` | Advanced reasoning, complex tasks |
+| Gemini 3 Flash | `gemini-3-flash-preview` | Balanced speed/intelligence |
+| Gemini 2.5 Flash | `gemini-2.5-flash` | Price-performance, scale |
+| Gemini 2.5 Flash-Lite | `gemini-2.5-flash-lite` | High-throughput, cost-efficient |
+| Gemini 2.5 Pro | `gemini-2.5-pro` | Complex reasoning, code, math |
 
-func main() {
-	ctx := context.Background()
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		Backend:  genai.BackendVertexAI,
-		Project:  "your-project-id",
-		Location: "global",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+All models support 1M input tokens and 65K output tokens.
 
-	resp, err := client.Models.GenerateContent(ctx, "gemini-3.5-flash", genai.Text("Explain quantum computing"), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+## Basic Text Generation
 
-	fmt.Println(resp.Text)
+```typescript
+const response = await genAI.models.generateContent({
+  model: 'gemini-3-flash-preview',
+  contents: 'Your prompt here',
+});
+const text = response.text ?? '';
+```
+
+## Structured Content Format
+
+For multi-turn or complex inputs, use the full contents structure:
+
+```typescript
+const response = await genAI.models.generateContent({
+  model: 'gemini-3-flash-preview',
+  contents: [
+    { role: 'user', parts: [{ text: 'First message' }] },
+    { role: 'model', parts: [{ text: 'Assistant response' }] },
+    { role: 'user', parts: [{ text: 'Follow-up question' }] },
+  ],
+});
+```
+
+## System Instructions
+
+Guide model behavior with system instructions in the config:
+
+```typescript
+const response = await genAI.models.generateContent({
+  model: 'gemini-3-flash-preview',
+  contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+  config: {
+    systemInstruction: 'You are a helpful language tutor. Respond in a friendly, encouraging tone.',
+  },
+});
+```
+
+## JSON Mode (Structured Output)
+
+Request JSON responses for type-safe parsing:
+
+```typescript
+async function generateJSON<T>(prompt: string, model: string): Promise<T> {
+  const result = await genAI.models.generateContent({
+    model,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      responseMimeType: 'application/json',
+    },
+  });
+  return JSON.parse(result.text ?? '') as T;
 }
 ```
 
-### Java
-```java
-import com.google.genai.Client;
-import com.google.genai.types.GenerateContentResponse;
+### With JSON Schema (Zod)
 
-public class GenerateTextFromTextInput {
-  public static void main(String[] args) {
-    Client client = Client.builder().enterprise(true).project("your-project-id").location("global").build();
-    GenerateContentResponse response =
-        client.models.generateContent(
-            "gemini-3.5-flash",
-            "Explain quantum computing",
-            null);
+For strict schema validation:
 
-    System.out.println(response.text());
+```typescript
+import { z } from 'zod';
+
+const CorrectionSchema = z.object({
+  correction: z.string(),
+  feedback: z.string(),
+});
+
+const result = await genAI.models.generateContent({
+  model: 'gemini-3-flash-preview',
+  contents: prompt,
+  config: {
+    responseMimeType: 'application/json',
+    responseSchema: CorrectionSchema,
+  },
+});
+```
+
+## Configuration Options
+
+```typescript
+const response = await genAI.models.generateContent({
+  model: 'gemini-3-flash-preview',
+  contents: prompt,
+  config: {
+    temperature: 1.0,              // Randomness (keep at 1.0 for Gemini 3)
+    topP: 0.95,                    // Nucleus sampling
+    topK: 40,                      // Top-k sampling
+    maxOutputTokens: 8192,         // Limit response length
+    stopSequences: ['END'],        // Stop generation triggers
+    systemInstruction: '...',      // System prompt
+    responseMimeType: 'application/json',  // Force JSON output
+  },
+});
+```
+
+## Temperature Warning
+
+For Gemini 3 models, **keep temperature at 1.0** (the default). Lowering it can cause:
+- Response looping
+- Degraded performance on complex tasks
+- Unexpected behavior in reasoning
+
+## Error Handling Pattern
+
+```typescript
+async function generateText(prompt: string, model: string): Promise<string> {
+  try {
+    const response = await genAI.models.generateContent({
+      model,
+      contents: prompt,
+    });
+    if (!response) {
+      throw new Error('No response from Gemini');
+    }
+    return response.text ?? '';
+  } catch (error) {
+    console.error('Error generating text:', error);
+    return '';
   }
 }
 ```
 
-### C#/.NET
-```csharp
-using Google.GenAI;
+## Multi-Turn Chat
 
-var client = new Client(
-    project: "your-project-id",
-    location: "global",
-    enterprise: true
-);
+Maintain conversation history:
 
-var response = await client.Models.GenerateContent(
-    "gemini-3.5-flash",
-    "Explain quantum computing"
-);
+```typescript
+async function chat(
+  systemPrompt: string,
+  messages: Array<{ role: 'user' | 'model'; text: string }>,
+  model: string
+): Promise<string> {
+  const contents = messages.map((msg) => ({
+    role: msg.role,
+    parts: [{ text: msg.text }],
+  }));
 
-Console.WriteLine(response.Text);
+  const result = await genAI.models.generateContent({
+    model,
+    contents,
+    config: {
+      systemInstruction: systemPrompt,
+    },
+  });
+  return result.text ?? '';
+}
 ```
 
-## API spec & Documentation (source of truth)
+## Best Practices
 
-When implementing or debugging API integration for Agent Platform, refer to the official Agent Platform documentation:
-- **Agent Platform Documentation**: https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview.md.txt
-- **REST API Reference**: https://docs.cloud.google.com/gemini-enterprise-agent-platform/reference/rest
+1. **Always handle null/undefined**: Use `response.text ?? ''` for safe access
+2. **Type your JSON responses**: Use generics with `JSON.parse()` result
+3. **Use system instructions**: Define persona and behavior expectations
+4. **Keep Gemini 3 temperature at 1.0**: Avoid performance degradation
+5. **Validate JSON output**: Structured format doesn't guarantee semantic correctness
+6. **Choose appropriate model**: Use Flash for speed, Pro for complex reasoning
 
-The Gen AI SDK on Agent Platform uses the `v1beta1` or `v1` REST API endpoints (e.g., `https://{LOCATION}-aiplatform.googleapis.com/v1beta1/projects/{PROJECT}/locations/{LOCATION}/publishers/google/models/{MODEL}:generateContent`).
+## Common Mistakes to Avoid
 
-> [!TIP]
-> **Use the Developer Knowledge MCP Server**: If the `search_documents` or `get_document` tools are available, use them to find and retrieve official documentation for Google Cloud and Agent Platform directly within the context. This is the preferred method for getting up-to-date API details and code snippets.
-
-## Workflows and Code Samples
-
-Reference the [Python Docs Samples repository](https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/genai) for additional code samples and specific usage scenarios.
-
-Depending on the specific user request, refer to the following reference files for detailed code samples and usage patterns (Python examples):
-
-- **Text & Multimodal**: Chat, Multimodal inputs (Image, Video, Audio), and Streaming. See [references/text_and_multimodal.md](references/text_and_multimodal.md)
-- **Embeddings**: Generate text embeddings for semantic search. See [references/embeddings.md](references/embeddings.md)
-- **Structured Output & Tools**: JSON generation, Function Calling, Search Grounding, and Code Execution. See [references/structured_and_tools.md](references/structured_and_tools.md)
-- **Media Generation**: Image generation, Image editing, and Video generation. See [references/media_generation.md](references/media_generation.md)
-- **Bounding Box Detection**: Object detection and localization within images and video. See [references/bounding_box.md](references/bounding_box.md)
-- **Live API**: Real-time bidirectional streaming for voice, vision, and text. See [references/live_api.md](references/live_api.md)
-- **Advanced Features**: Content Caching, Batch Prediction, and Thinking/Reasoning. See [references/advanced_features.md](references/advanced_features.md)
-- **Safety**: Adjusting Responsible AI filters and thresholds. See [references/safety.md](references/safety.md)
-- **Model Tuning**: Supervised Fine-Tuning and Preference Tuning. See [references/model_tuning.md](references/model_tuning.md)
+- Don't lower temperature below 1.0 for Gemini 3 models
+- Don't assume JSON responses are semantically valid - always validate
+- Don't forget to handle the case where `response.text` is undefined
+- Don't use raw string concatenation for multi-turn - use proper contents array

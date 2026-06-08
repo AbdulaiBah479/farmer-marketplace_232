@@ -1,141 +1,294 @@
 ---
 name: continuous-learning
-description: Auto-extract patterns from coding sessions, track corrections, and build reusable knowledge with confidence scoring
+description: Voyager-inspired continuous learning system with Critic Agent, Reflection Agent, and Discord-based approval workflow for skill proposals.
 ---
 
-# Continuous Learning
+# Continuous Learning System
 
-## Pattern Extraction Framework
+The continuous learning system enables agents to improve over time through automated analysis, pattern recognition, and skill synthesis.
 
-After every significant coding session, extract and categorize learnings into three buckets:
+## Architecture
 
-1. **Corrections** - Mistakes caught during review or by the user
-2. **Successful Approaches** - Patterns that worked well and should be repeated
-3. **Anti-Patterns** - Approaches that caused problems and should be avoided
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Learning System                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
+│  │   Critic    │───▶│ Reflection  │───▶│ Synthesizer │         │
+│  │   Agent     │    │   Agent     │    │             │         │
+│  └─────────────┘    └─────────────┘    └─────────────┘         │
+│        │                  │                   │                 │
+│        ▼                  ▼                   ▼                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Shared Memory System                        │   │
+│  │  (Qdrant + Neo4j + Redis via Memory MCP)                │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Discord Approval Workflow                   │   │
+│  │  (Skill proposals → Team review → Auto-deploy)          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-## Learning Entry Format
+## Components
+
+### Critic Agent
+
+Evaluates agent executions and provides structured feedback:
+
+```python
+from kubani.agents.critic import CriticAgent
+
+critic = CriticAgent()
+
+# Evaluate recent executions (used by syndicate)
+evaluations = await critic.evaluate_recent_executions(
+    hours=24,
+    agent_id="k8s-monitor",  # Optional filter
+)
+
+# Each evaluation contains:
+# - overall_score: 0.0-1.0
+# - success: bool
+# - feedback: Detailed analysis
+# - patterns_identified: Reusable patterns
+```
+
+### Reflection Agent
+
+Synthesizes learnings across agents and identifies cross-cutting patterns:
+
+```python
+from kubani.agents.reflection import ReflectionAgent
+from kubani.agents.reflection.models import ReflectionResult, InsightType
+
+reflection = ReflectionAgent()
+result: ReflectionResult = await reflection.reflect(
+    time_window_hours=168,  # Look back 1 week
+    min_evaluations=10,
+)
+
+# Returns ReflectionResult with:
+# - patterns: List[ReflectionInsight] - Recurring patterns
+# - anti_patterns: List[ReflectionInsight] - Things to avoid
+# - best_practices: List[ReflectionInsight] - Recommended approaches
+# - knowledge: List[ReflectionInsight] - Learned facts
+# - skill_opportunities: List[ReflectionInsight] - Potential new skills
+# - evaluations_analyzed: int
+# - agents_analyzed: List[str]
+```
+
+### Skill Synthesizer Agent
+
+Proposes new skills based on successful patterns:
+
+```python
+from kubani.agents.skill_synthesizer import SkillSynthesizerAgent
+
+synthesizer = SkillSynthesizerAgent()
+result = await synthesizer.synthesize_skills()
+
+# Returns SynthesisResult with:
+# - proposals_created: int
+# - proposals_posted: int (sent to Discord for approval)
+# - proposals: List[SkillProposal]
+#   Each proposal has:
+#   - skill_name: str
+#   - skill_content: str (full SKILL.md content)
+#   - confidence: float (0.0-1.0)
+#   - supporting_evidence: List[str]
+```
+
+## Discord Approval Workflow
+
+### Skill Proposals
+
+When a skill is proposed, it's posted to Discord for review:
+
+```
+🆕 New Skill Proposal: k8s/oom-remediation
+
+📋 Description:
+Automated remediation for OOM killed pods including
+memory analysis and scaling recommendations.
+
+📊 Confidence: 0.87
+📈 Based on: 12 successful executions
+
+React to approve:
+✅ Approve and deploy
+❌ Reject
+🔄 Request modifications
+```
+
+### Approval Flow
+
+1. **Proposal Posted**: Skill proposal appears in `#learning-proposals`
+2. **Team Review**: Team members review and react
+3. **Threshold Met**: If ✅ reactions >= threshold, skill is approved
+4. **Auto-Deploy**: Approved skills are automatically:
+   - Added to the skills library
+   - Synced to the registry
+   - Available to all agents
+
+### Configuration
 
 ```yaml
-pattern:
-  id: "LEARN-2025-0042"
-  category: "error-handling"
-  type: "correction"         # correction | success | anti-pattern
-  confidence: 0.85           # 0.0 to 1.0
-  language: "typescript"
-  context: "API error responses"
-  observation: "Returning raw error messages from database exceptions exposes internals"
-  lesson: "Always map database errors to application-level error codes before returning"
-  example:
-    before: "catch (e) { res.status(500).json({ error: e.message }) }"
-    after: "catch (e) { logger.error(e); res.status(500).json({ error: 'INTERNAL_ERROR' }) }"
-  frequency: 3               # times this pattern has been observed
-  last_seen: "2025-06-15"
+# config.yaml
+learning:
+  enabled: true
+  critic_enabled: true
+  reflection_enabled: true
+  auto_approve_threshold: 0.95  # Auto-approve if confidence >= 0.95
+  require_discord_approval: true
+  min_examples_for_skill: 3
+  approval_timeout_hours: 72
+
+discord:
+  learning_channel: "learning-proposals"
+  approval_reactions:
+    approve: "✅"
+    reject: "❌"
+    modify: "🔄"
+  approval_threshold: 2  # Number of approvals needed
 ```
 
-## Confidence Scoring
+## Learning System Syndicate
 
-| Score | Meaning | Action |
-|-------|---------|--------|
-| 0.95+ | Verified across multiple projects | Apply automatically |
-| 0.80-0.94 | Confirmed in this codebase | Apply and mention |
-| 0.60-0.79 | Observed but not fully validated | Suggest with caveat |
-| 0.40-0.59 | Hypothesis based on limited data | Ask before applying |
-| <0.40 | Speculative, needs validation | Document but do not apply |
+The learning system runs as a syndicate that orchestrates the three agents:
 
-Update confidence based on:
-- +0.10 when pattern is confirmed correct by user
-- +0.05 when pattern is observed again in a different context
-- -0.15 when pattern leads to a correction
-- -0.20 when pattern is explicitly rejected by user
+```python
+from kubani.syndicates.learning_system import LearningSystemSyndicate
 
-## Session Wrap-Up Protocol
+# Run the full learning system
+syndicate = LearningSystemSyndicate()
+await syndicate.start()
 
-At the end of each session or before context compaction:
+# The syndicate runs three concurrent loops:
+# - Critic evaluation (configurable interval, default hourly)
+# - Reflection synthesis (configurable interval, default daily)
+# - Skill synthesis (configurable interval, default weekly)
 
-1. **Review changes made** - Scan diffs for patterns
-2. **Identify corrections** - What was changed after initial implementation?
-3. **Note successful first-attempts** - What worked without revision?
-4. **Record environment details** - Framework versions, config specifics
-5. **Update confidence scores** - Adjust based on session outcomes
-6. **Write to knowledge base** - Append new entries to CLAUDE.md or LEARNED.md
-
-```markdown
-## Session Learnings (2025-06-15)
-
-### Corrections Applied
-- [0.85] TypeScript: Use `satisfies` instead of `as` for type narrowing with object literals
-- [0.90] Next.js: Server Actions must be async functions, even for synchronous operations
-
-### Successful Patterns
-- [0.80] PostgreSQL: Partial indexes on status columns reduced query time by 60%
-- [0.75] React: Extracting data fetching into Server Components eliminated 3 useEffect hooks
-
-### Anti-Patterns Identified
-- [0.70] Avoid: Nesting more than 2 levels of Suspense boundaries (causes waterfall)
-- [0.65] Avoid: Using `any` to suppress TypeScript errors in catch blocks (use `unknown`)
+# Manual triggers are also available:
+await syndicate.trigger_evaluation(agent_id="k8s-monitor")
+await syndicate.trigger_reflection()
+await syndicate.trigger_synthesis()
 ```
 
-## Knowledge Base Organization
+### Event Architecture
 
-Structure the knowledge base by domain:
+The learning system uses hybrid events:
 
-```
-knowledge/
-  error-handling.md      # Error patterns across languages
-  testing.md             # Test patterns and anti-patterns
-  performance.md         # Optimization learnings
-  api-design.md          # API design decisions
-  deployment.md          # Infrastructure learnings
-  project-specific.md    # Current project conventions
-```
+```python
+# Framework events (kubani/framework/events/types.py)
+from kubani.framework.events import EventType
+# EventType.AGENT_EXECUTION_COMPLETE - triggers learning
 
-Each file follows the same entry format. Deduplicate entries with matching `observation` fields by incrementing `frequency` and updating `confidence`.
-
-## Correction Tracking
-
-When a user corrects code or approach:
-
-1. Record what was originally produced
-2. Record what the correction was
-3. Identify the root cause (wrong assumption, missing context, outdated pattern)
-4. Create or update a learning entry
-5. Search for similar patterns that might need the same correction
-
-```markdown
-### Correction Log
-- **Original**: Used `useEffect` to fetch data on mount
-- **Correction**: Moved data fetching to Server Component
-- **Root cause**: Applied client-side SPA pattern in Server Component context
-- **Generalization**: In Next.js App Router, prefer server-side data fetching for initial page data
-- **Confidence**: 0.90 (confirmed across 4 components)
+# Domain events (kubani/syndicates/learning_system/events.py)
+EVALUATION_COMPLETE = "learning:evaluation_complete"
+REFLECTION_COMPLETE = "learning:reflection_complete"
+SKILL_PROPOSED = "learning:skill_proposed"
+SKILL_APPROVED = "learning:skill_approved"
+SKILL_REJECTED = "learning:skill_rejected"
 ```
 
-## Pattern Reinforcement
+## Memory Integration
 
-Track how often patterns are applied and whether they hold:
+### Storing Learnings via MCP
 
+```python
+from kubani.framework.mcp import get_mcp_client
+
+client = get_mcp_client()
+
+# Store a learning
+await client.memory.store_learning(
+    agent_id="k8s-monitor",
+    learning_type="pattern",  # pattern, anti_pattern, insight, fact
+    content="OOM kills in production often indicate need for VPA",
+    confidence=0.85,
+    context={"namespace": "production", "pod": "api-server"},
+)
 ```
-Pattern: "Use zod for API input validation"
-  Applied: 12 times
-  Confirmed: 11 times
-  Corrected: 1 time (edge case with file uploads)
-  Confidence: 0.92
-  Status: ESTABLISHED
+
+### Querying Learnings
+
+```python
+# Semantic search via MCP
+results = await client.memory.search_learnings(
+    query="kubernetes memory issues",
+    agent_id="k8s-monitor",  # Optional filter
+    limit=10,
+)
 ```
 
-Statuses:
-- **EMERGING** (frequency < 3) - New pattern, needs validation
-- **GROWING** (frequency 3-7) - Building evidence, apply with mention
-- **ESTABLISHED** (frequency 8+, confidence > 0.85) - Apply automatically
-- **DEPRECATED** - Once valid, now superseded by a better approach
+## Commands
 
-## Integration with Memory Files
+### View Learning Status
 
-Store learnings in the project's memory file (CLAUDE.md or equivalent):
+```bash
+# View learning system status
+kubani learning status
 
-- High-confidence learnings (>0.85) go in the main instructions section
-- Medium-confidence (0.60-0.84) go in a dedicated "Learnings" section
-- Low-confidence (<0.60) stay in session notes until validated
-- Deprecated patterns move to an archive section with reason for deprecation
+# View recent learnings
+kubani learning list --agent k8s-monitor --last 24h
 
-Review and prune the knowledge base monthly. Remove entries that have not been referenced in 90 days and have confidence below 0.70.
+# View pending proposals
+kubani learning proposals
+```
+
+### Trigger Learning Cycle
+
+```bash
+# Run critic evaluation manually
+kubani learning evaluate --agent k8s-monitor
+
+# Run reflection cycle
+kubani learning reflect
+
+# Propose skill from pattern
+kubani learning propose --pattern pattern-123
+```
+
+### Manage Approvals
+
+```bash
+# List pending approvals
+kubani learning approvals
+
+# Approve a proposal (CLI fallback)
+kubani learning approve --proposal proposal-456
+
+# Reject a proposal
+kubani learning reject --proposal proposal-456 --reason "Needs more examples"
+```
+
+## Best Practices
+
+1. **Start with critic enabled** to collect execution data
+2. **Review proposals carefully** before approving
+3. **Set appropriate thresholds** for auto-approval
+4. **Monitor the learning channel** for new proposals
+5. **Provide feedback** on rejected proposals
+6. **Track skill effectiveness** after deployment
+7. **Periodically review** the knowledge graph
+
+## Monitoring
+
+View learning metrics in the dashboard:
+
+```bash
+kubani dashboard
+# Navigate to: http://localhost:8080/learning
+```
+
+Dashboard shows:
+- Learning rate over time
+- Skill proposal success rate
+- Pattern identification trends
+- Knowledge graph visualization
+- Agent improvement metrics

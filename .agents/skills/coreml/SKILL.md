@@ -1,499 +1,467 @@
 ---
 name: coreml
-description: "Integrate Core ML models in iOS apps for on-device machine learning inference. Covers model loading (.mlmodel, .mlpackage, .mlmodelc), predictions with auto-generated classes and MLFeatureProvider, compute unit configuration (CPU, GPU, Neural Engine), MLTensor, VNCoreMLRequest, MLComputePlan, multi-model pipelines, and deployment strategies. Use when loading Core ML models, making predictions, configuring compute units, or profiling model performance."
+description: Use when deploying custom ML models on-device, converting PyTorch models, compressing models, implementing LLM inference, or optimizing CoreML performance. Covers model conversion, compression, stateful models, KV-cache, multi-function models, MLTensor.
+version: 1.0.0
 ---
 
-# Core ML Swift Integration
+# CoreML On-Device Machine Learning
 
-Load, configure, and run Core ML models in iOS apps. This skill covers the
-Swift side: model loading, prediction, MLTensor, profiling, and deployment.
-Target iOS 26+ with Swift 6.3, backward-compatible to iOS 14 unless noted.
+## Overview
 
-> **Scope boundary:** Python-side model conversion, optimization (quantization,
-> palettization, pruning), and framework selection live in the `apple-on-device-ai`
-> skill. This skill owns Swift integration only.
+CoreML enables on-device machine learning inference across all Apple platforms. It abstracts hardware details while leveraging Apple Silicon's CPU, GPU, and Neural Engine for high-performance, private, and efficient execution.
 
-See [references/coreml-swift-integration.md](references/coreml-swift-integration.md) for complete code patterns including
-actor-based caching, batch inference, image preprocessing, and testing.
+**Key principle**: Start with the simplest approach, then optimize based on profiling. Don't over-engineer compression or caching until you have real performance data.
 
-## Contents
+## Decision Tree - CoreML vs Foundation Models
 
-- [Loading Models](#loading-models)
-- [Model Configuration](#model-configuration)
-- [Making Predictions](#making-predictions)
-- [MLTensor (iOS 18+)](#mltensor-ios-18)
-- [Working with MLMultiArray](#working-with-mlmultiarray)
-- [Image Preprocessing](#image-preprocessing)
-- [Multi-Model Pipelines](#multi-model-pipelines)
-- [Vision Integration](#vision-integration)
-- [Performance Profiling](#performance-profiling)
-- [Model Deployment](#model-deployment)
-- [Memory Management](#memory-management)
-- [Common Mistakes](#common-mistakes)
-- [Review Checklist](#review-checklist)
-- [References](#references)
-
-## Loading Models
-
-### Auto-Generated Classes
-
-When you add a `.mlmodel` or `.mlpackage` to an app target, Xcode generates a Swift
-class with typed input/output. Use this whenever possible.
-
-```swift
-import CoreML
-
-let config = MLModelConfiguration()
-config.computeUnits = .all
-
-let model = try MyImageClassifier(configuration: config)
+```
+Need on-device ML?
+  ├─ Text generation (LLM)?
+  │   ├─ Simple prompts, structured output? → Foundation Models (ios-ai skill)
+  │   └─ Custom model, fine-tuned, specific architecture? → CoreML
+  ├─ Custom trained model?
+  │   └─ Yes → CoreML
+  ├─ Image/audio/sensor processing?
+  │   └─ Yes → CoreML
+  └─ Apple's built-in intelligence?
+      └─ Yes → Foundation Models (ios-ai skill)
 ```
 
-### Manual Loading
+## Red Flags
 
-Load from a URL when the model is downloaded at runtime or stored outside the
-bundle.
+Use this skill when you see:
+- "Convert PyTorch model to CoreML"
+- "Model too large for device"
+- "Slow inference performance"
+- "LLM on-device"
+- "KV-cache" or "stateful model"
+- "Model compression" or "quantization"
+- MLModel, MLTensor, or coremltools in context
 
-```swift
-let modelURL = Bundle.main.url(
-    forResource: "MyModel", withExtension: "mlmodelc"
-)!
-let model = try MLModel(contentsOf: modelURL, configuration: config)
+## Pattern 1 - Basic Model Conversion
+
+The standard PyTorch → CoreML workflow.
+
+```python
+import coremltools as ct
+import torch
+
+# Trace the model
+model.eval()
+traced_model = torch.jit.trace(model, example_input)
+
+# Convert to CoreML
+mlmodel = ct.convert(
+    traced_model,
+    inputs=[ct.TensorType(shape=example_input.shape)],
+    minimum_deployment_target=ct.target.iOS18
+)
+
+# Save
+mlmodel.save("MyModel.mlpackage")
 ```
 
-### Async Loading (iOS 15+)
+**Critical**: Always set `minimum_deployment_target` to enable latest optimizations.
 
-Load models without blocking the main thread. Prefer this for large models.
+## Pattern 2 - Model Compression (Post-Training)
 
-```swift
-let model = try await MLModel.load(
-    contentsOf: modelURL,
-    configuration: config
+Three techniques, each with different tradeoffs:
+
+### Palettization (Best for Neural Engine)
+
+Clusters weights into lookup tables. Use per-grouped-channel for better accuracy.
+
+```python
+from coremltools.optimize.coreml import (
+    OpPalettizerConfig,
+    OptimizationConfig,
+    palettize_weights
+)
+
+# 4-bit with grouped channels (iOS 18+)
+op_config = OpPalettizerConfig(
+    mode="kmeans",
+    nbits=4,
+    granularity="per_grouped_channel",
+    group_size=16
+)
+
+config = OptimizationConfig(global_config=op_config)
+compressed_model = palettize_weights(model, config)
+```
+
+| Bits | Compression | Accuracy Impact |
+|------|-------------|-----------------|
+| 8-bit | 2x | Minimal |
+| 6-bit | 2.7x | Low |
+| 4-bit | 4x | Moderate (use grouped channels) |
+| 2-bit | 8x | High (requires training-time) |
+
+### Quantization (Best for GPU on Mac)
+
+Linear mapping to INT8/INT4. Use per-block for better accuracy.
+
+```python
+from coremltools.optimize.coreml import (
+    OpLinearQuantizerConfig,
+    OptimizationConfig,
+    linear_quantize_weights
+)
+
+# INT4 per-block quantization (iOS 18+)
+op_config = OpLinearQuantizerConfig(
+    mode="linear",
+    dtype="int4",
+    granularity="per_block",
+    block_size=32
+)
+
+config = OptimizationConfig(global_config=op_config)
+compressed_model = linear_quantize_weights(model, config)
+```
+
+### Pruning (Combine with other techniques)
+
+Sets weights to zero for sparse representation. Can combine with palettization.
+
+```python
+from coremltools.optimize.coreml import (
+    OpMagnitudePrunerConfig,
+    OptimizationConfig,
+    prune_weights
+)
+
+op_config = OpMagnitudePrunerConfig(
+    target_sparsity=0.4  # 40% zeros
+)
+
+config = OptimizationConfig(global_config=op_config)
+sparse_model = prune_weights(model, config)
+```
+
+## Pattern 3 - Training-Time Compression
+
+When post-training compression loses too much accuracy, fine-tune with compression.
+
+```python
+from coremltools.optimize.torch.palettization import (
+    DKMPalettizerConfig,
+    DKMPalettizer
+)
+
+# Configure 4-bit palettization
+config = DKMPalettizerConfig(global_config={"n_bits": 4})
+
+# Prepare model
+palettizer = DKMPalettizer(model, config)
+prepared_model = palettizer.prepare()
+
+# Fine-tune (your training loop)
+for epoch in range(num_epochs):
+    train_epoch(prepared_model, data_loader)
+    palettizer.step()
+
+# Finalize
+final_model = palettizer.finalize()
+```
+
+**Tradeoff**: Better accuracy than post-training, but requires training data and time.
+
+## Pattern 4 - Calibration-Based Compression (iOS 18+)
+
+Middle ground: uses calibration data without full training.
+
+```python
+from coremltools.optimize.torch.pruning import (
+    MagnitudePrunerConfig,
+    LayerwiseCompressor
+)
+
+# Configure
+config = MagnitudePrunerConfig(
+    target_sparsity=0.4,
+    n_samples=128  # Calibration samples
+)
+
+# Create pruner
+pruner = LayerwiseCompressor(model, config)
+
+# Calibrate
+sparse_model = pruner.compress(calibration_data_loader)
+```
+
+## Pattern 5 - Stateful Models (KV-Cache for LLMs)
+
+For transformer models, use state to avoid recomputing key/value vectors.
+
+### PyTorch Model with State
+
+```python
+class StatefulLLM(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # Register state buffers
+        self.register_buffer("keyCache", torch.zeros(batch, heads, seq_len, dim))
+        self.register_buffer("valueCache", torch.zeros(batch, heads, seq_len, dim))
+
+    def forward(self, input_ids, causal_mask):
+        # Update caches in-place during forward
+        # ... attention with KV-cache ...
+        return logits
+```
+
+### Conversion with State
+
+```python
+import coremltools as ct
+
+mlmodel = ct.convert(
+    traced_model,
+    inputs=[
+        ct.TensorType(name="input_ids", shape=(1, ct.RangeDim(1, 2048))),
+        ct.TensorType(name="causal_mask", shape=(1, 1, ct.RangeDim(1, 2048), ct.RangeDim(1, 2048)))
+    ],
+    states=[
+        ct.StateType(name="keyCache", ...),
+        ct.StateType(name="valueCache", ...)
+    ],
+    minimum_deployment_target=ct.target.iOS18
 )
 ```
 
-### Compile at Runtime (iOS 16+)
-
-Compile a `.mlpackage` or `.mlmodel` to `.mlmodelc` on device. Useful for
-models downloaded from a server. Do this once per model version, not on every
-launch.
+### Using State at Runtime
 
 ```swift
-let compiledURL = try await MLModel.compileModel(at: packageURL)
-let model = try await MLModel.load(contentsOf: compiledURL, configuration: config)
-```
-
-Cache the compiled URL -- recompiling on every launch is a bug. Copy
-`compiledURL` to a persistent location (e.g., Application Support). When
-reviewing runtime-loaded models, call out both facts together: async
-`MLModel.compileModel(at:)` is iOS 16+, and compiled models must be cached so the
-app does not recompile on every launch.
-
-## Model Configuration
-
-`MLModelConfiguration` controls compute units, GPU access, and model parameters.
-
-### Compute Units Decision Table
-
-| Value | Uses | When to Choose |
-|---|---|---|
-| `.all` | CPU + GPU + Neural Engine | Default. Let the system decide. |
-| `.cpuOnly` | CPU | Deterministic tests, CPU-only fallbacks, or constrained work after profiling shows accelerator policy, contention, thermal state, or energy budget is the limiting factor. |
-| `.cpuAndGPU` | CPU + GPU | Need GPU but model has ops unsupported by ANE. |
-| `.cpuAndNeuralEngine` (iOS 16+) | CPU + Neural Engine | Best energy efficiency for compatible models. |
-
-```swift
-let config = MLModelConfiguration()
-config.computeUnits = .cpuAndNeuralEngine
-
-// Optional fallback for constrained work after profiling and policy review
-config.computeUnits = .cpuOnly
-```
-
-### Configuration Properties
-
-```swift
-let config = MLModelConfiguration()
-config.computeUnits = .all
-config.allowLowPrecisionAccumulationOnGPU = true // faster, slight precision loss
-```
-
-## Making Predictions
-
-### With Auto-Generated Classes
-
-The generated class provides typed input/output structs.
-
-```swift
-let model = try MyImageClassifier(configuration: config)
-let input = MyImageClassifierInput(image: pixelBuffer)
-let output = try model.prediction(input: input)
-print(output.classLabel)        // "golden_retriever"
-print(output.classLabelProbs)   // ["golden_retriever": 0.95, ...]
-```
-
-### With MLDictionaryFeatureProvider
-
-Use when inputs are dynamic or not known at compile time.
-
-```swift
-let inputFeatures = try MLDictionaryFeatureProvider(dictionary: [
-    "image": MLFeatureValue(pixelBuffer: pixelBuffer),
-    "confidence_threshold": MLFeatureValue(double: 0.5),
-])
-let output = try model.prediction(from: inputFeatures)
-let label = output.featureValue(for: "classLabel")?.stringValue
-```
-
-### Prediction Inside Async Workflows
-
-`MLModel.prediction(...)` is synchronous. In async pipelines, keep model loading
-async, then run prediction from an actor or non-main task without adding `await`
-to the prediction call.
-
-```swift
-let output = try model.prediction(from: inputFeatures)
-```
-
-### Batch Prediction
-
-Process multiple inputs in one call for better throughput.
-
-```swift
-let batchInputs = try MLArrayBatchProvider(array: inputs.map { input in
-    try MLDictionaryFeatureProvider(dictionary: ["image": MLFeatureValue(pixelBuffer: input)])
-})
-let batchOutput = try model.predictions(fromBatch: batchInputs)
-for i in 0..<batchOutput.count {
-    let result = batchOutput.features(at: i)
-    print(result.featureValue(for: "classLabel")?.stringValue ?? "unknown")
-}
-```
-
-Use `predictions(fromBatch:)` when batching without explicit
-`MLPredictionOptions`. Use `predictions(from:options:)` only when passing both an
-`MLBatchProvider` and `MLPredictionOptions`; `predictions(from:)` by itself is
-not the no-options batch API.
-
-### Stateful Prediction (iOS 18+)
-
-Use `MLState` for models that maintain state across predictions (sequence models,
-LLMs, audio accumulators). Create state once and pass it to each prediction call.
-
-```swift
+// Create state from model
 let state = model.makeState()
 
-// Each synchronous prediction carries forward the internal model state
-for frame in audioFrames {
-    let input = try MLDictionaryFeatureProvider(dictionary: [
-        "audio_features": MLFeatureValue(multiArray: frame)
-    ])
-    let output = try model.prediction(from: input, using: state)
-    let classification = output.featureValue(for: "label")?.stringValue
-}
+// Run prediction with state (updated in-place)
+let output = try model.prediction(from: input, using: state)
 ```
 
-`MLState` is `Sendable`, but `Sendable` does not make one state safe for
-concurrent inference. Predictions using the same state must be serialized; do
-not read or write state buffers while a prediction is in flight. Call
-`model.makeState()` for each independent concurrent stream. If you need
-`MLPredictionOptions`, iOS 18+ also provides the async
-`prediction(from:using:options:)` overload; the same one-in-flight-per-state rule
-still applies.
+**Performance**: 1.6x speedup on Mistral-7B (M3 Max) compared to manual KV-cache I/O.
 
-## MLTensor (iOS 18+)
+## Pattern 6 - Multi-Function Models (Adapters/LoRA)
 
-`MLTensor` is a Swift-native multidimensional array for pre/post-processing.
-Operations run lazily -- call `await tensor.shapedArray(of:)` to materialize results.
+Deploy multiple adapters in a single model, sharing base weights.
 
-```swift
-import CoreML
+```python
+from coremltools.models import MultiFunctionDescriptor
+from coremltools.models.utils import save_multifunction
 
-// Creation
-let tensor = MLTensor([1.0, 2.0, 3.0, 4.0])
-let zeros = MLTensor(zeros: [3, 224, 224], scalarType: Float.self)
+# Convert individual models
+sticker_model = ct.convert(sticker_adapter_model, ...)
+storybook_model = ct.convert(storybook_adapter_model, ...)
 
-// Reshaping
-let reshaped = tensor.reshaped(to: [2, 2])
+# Save individually
+sticker_model.save("sticker.mlpackage")
+storybook_model.save("storybook.mlpackage")
 
-// Math operations
-let softmaxed = tensor.softmax(alongAxis: -1)
-let centered = tensor - tensor.mean()
+# Merge with shared weights
+desc = MultiFunctionDescriptor()
+desc.add_function("sticker", "sticker.mlpackage")
+desc.add_function("storybook", "storybook.mlpackage")
 
-// Interop with MLShapedArray / MLMultiArray
-let shaped = await tensor.shapedArray(of: Float.self)
-let multiArray = try MLMultiArray(shaped)
-let shapedAgain = MLShapedArray<Float>(multiArray)
+save_multifunction(desc, "MultiAdapter.mlpackage")
 ```
 
-Do not invent `MLTensor` APIs for statistics or bridging. Avoid examples such as
-`MLTensor(multiArray)`, `tensor.std()`, `tensor.standardDeviation()`, direct
-lazy-buffer access, or synchronous extraction; perform unsupported DSP/statistics
-outside the tensor pipeline or with source-confirmed tensor operations.
-
-## Working with MLMultiArray
-
-`MLMultiArray` is the primary data exchange type for non-image model inputs and
-outputs. Use it when the auto-generated class expects array-type features.
+### Loading Specific Function
 
 ```swift
-// Create a 3D array: [batch, sequence, features]
-let array = try MLMultiArray(shape: [1, 128, 768], dataType: .float32)
-
-// Write values
-for i in 0..<128 {
-    array[[0, i, 0] as [NSNumber]] = NSNumber(value: Float(i))
-}
-
-// Read values
-let value = array[[0, 0, 0] as [NSNumber]].floatValue
-
-let data: [Float] = [1.0, 2.0, 3.0]
-let shaped = MLShapedArray(scalars: data, shape: [3])
-let fromShaped = try MLMultiArray(shaped)
-```
-
-See [references/coreml-swift-integration.md](references/coreml-swift-integration.md) for advanced MLMultiArray patterns
-including NLP tokenization and audio feature extraction.
-
-## Image Preprocessing
-
-Image models expect `CVPixelBuffer` input. Use `CGImage` conversion for photos
-from the camera or photo library. Vision's `VNCoreMLRequest` handles this
-automatically; manual conversion is needed only for direct `MLModel` prediction.
-
-```swift
-import CoreVideo
-
-func createPixelBuffer(from cgImage: CGImage, width: Int, height: Int) -> CVPixelBuffer? {
-    var pixelBuffer: CVPixelBuffer?
-    let attrs: [CFString: Any] = [
-        kCVPixelBufferCGImageCompatibilityKey: true,
-        kCVPixelBufferCGBitmapContextCompatibilityKey: true,
-    ]
-    CVPixelBufferCreate(kCFAllocatorDefault, width, height,
-                        kCVPixelFormatType_32ARGB, attrs as CFDictionary, &pixelBuffer)
-
-    guard let buffer = pixelBuffer else { return nil }
-    CVPixelBufferLockBaseAddress(buffer, [])
-    let context = CGContext(
-        data: CVPixelBufferGetBaseAddress(buffer),
-        width: width, height: height,
-        bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
-        space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
-    )
-    context?.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-    CVPixelBufferUnlockBaseAddress(buffer, [])
-    return buffer
-}
-```
-
-For additional preprocessing patterns (normalization, center-cropping), see
-[references/coreml-swift-integration.md](references/coreml-swift-integration.md).
-
-## Multi-Model Pipelines
-
-Chain models when preprocessing or postprocessing requires a separate model.
-
-```swift
-// Sequential inference: preprocessor -> main model -> postprocessor
-let preprocessed = try preprocessor.prediction(from: rawInput)
-let mainOutput = try mainModel.prediction(from: preprocessed)
-let finalOutput = try postprocessor.prediction(from: mainOutput)
-```
-
-For Xcode-managed pipelines, use the pipeline model type in the `.mlpackage`.
-Each sub-model runs on its optimal compute unit.
-
-## Vision Integration
-
-Use Vision to run Core ML image models with automatic image preprocessing
-(resizing, normalization, color space, orientation).
-
-### Modern: CoreMLRequest (iOS 18+)
-
-```swift
-import Vision
-import CoreML
+let config = MLModelConfiguration()
+config.functionName = "sticker"  // or "storybook"
 
 let model = try MLModel(contentsOf: modelURL, configuration: config)
-let request = CoreMLRequest(model: .init(model))
-let results = try await request.perform(on: cgImage)
-
-if let classification = results.first as? ClassificationObservation {
-    print("\(classification.identifier): \(classification.confidence)")
-}
 ```
 
-### Legacy: VNCoreMLRequest
+## Pattern 7 - MLTensor for Pipeline Stitching (iOS 18+)
+
+Simplifies computation between models (decoding, post-processing).
 
 ```swift
-let vnModel = try VNCoreMLModel(for: model)
-let request = VNCoreMLRequest(model: vnModel) { request, error in
-    guard let results = request.results as? [VNRecognizedObjectObservation] else { return }
-    for observation in results {
-        let label = observation.labels.first?.identifier ?? "unknown"
-        let confidence = observation.labels.first?.confidence ?? 0
-        let boundingBox = observation.boundingBox // normalized coordinates
-        print("\(label): \(confidence) at \(boundingBox)")
+import CoreML
+
+// Create tensors
+let scores = MLTensor(shape: [1, vocab_size], scalars: logits)
+
+// Operations (executed asynchronously on Apple Silicon)
+let topK = scores.topK(k: 10)
+let probs = (topK.values / temperature).softmax()
+
+// Sample from distribution
+let sampled = probs.multinomial(numSamples: 1)
+
+// Materialize to access data (blocks until complete)
+let shapedArray = await sampled.shapedArray(of: Int32.self)
+```
+
+**Key insight**: MLTensor operations are async. Call `shapedArray()` to materialize results.
+
+## Pattern 8 - Async Prediction for Concurrency
+
+Thread-safe concurrent predictions for throughput.
+
+```swift
+class ImageProcessor {
+    let model: MLModel
+
+    func processImages(_ images: [CGImage]) async throws -> [Output] {
+        try await withThrowingTaskGroup(of: Output.self) { group in
+            for image in images {
+                group.addTask {
+                    // Check cancellation before expensive work
+                    try Task.checkCancellation()
+
+                    let input = try self.prepareInput(image)
+                    // Async prediction - thread safe!
+                    return try await self.model.prediction(from: input)
+                }
+            }
+
+            return try await group.reduce(into: []) { $0.append($1) }
+        }
     }
 }
-request.imageCropAndScaleOption = .scaleFill
-
-let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer)
-try handler.perform([request])
 ```
 
-> For complete Vision framework patterns (text recognition, barcode detection,
-> document scanning), see the `vision-framework` skill.
-
-## Performance Profiling
-
-### MLComputePlan (iOS 17.4+)
-
-Inspect which compute device each operation will use before running predictions.
+**Warning**: Limit concurrent predictions to avoid memory pressure from multiple input/output buffers.
 
 ```swift
-let computePlan = try await MLComputePlan.load(
-    contentsOf: modelURL, configuration: config
-)
-guard case let .program(program) = computePlan.modelStructure else { return }
-guard let mainFunction = program.functions["main"] else { return }
+// Limit concurrency
+let semaphore = AsyncSemaphore(value: 2)
 
-for operation in mainFunction.block.operations {
-    let deviceUsage = computePlan.deviceUsage(for: operation)
-    let estimatedCost = computePlan.estimatedCost(of: operation)
-    print("\(operation.operatorName): \(String(describing: deviceUsage?.preferred))")
+for image in images {
+    group.addTask {
+        await semaphore.wait()
+        defer { semaphore.signal() }
+        return try await process(image)
+    }
 }
 ```
 
-### Instruments
+## Anti-Patterns
 
-Use the **Core ML** instrument template in Instruments to profile:
-- Model load time
-- Prediction latency (per-operation breakdown)
-- Compute device dispatch (CPU/GPU/ANE per operation)
-- Memory allocation
-
-Run outside the debugger for accurate results (Xcode: Product > Profile).
-
-## Model Deployment
-
-### Bundle vs Downloaded Assets
-
-| Strategy | Pros | Cons |
-|---|---|---|
-| Bundle in app | Instant availability, works offline | Increases app download size |
-| Background Assets | Preferred for large or updateable model assets | Requires asset-pack setup |
-| On-demand resources | Smaller initial download for existing ODR apps | Legacy technology; prefer Background Assets for new work |
-| CloudKit / server | Maximum flexibility | Requires network, longer setup |
-
-### Size Considerations
-
-- For iOS/iPadOS 18+, App Store Connect lists a 4 GB thinned app bundle limit
-  and 8 GB thinned ODR asset-pack limit.
-- Prefer Background Assets for new large or updateable model assets; keep ODR
-  guidance for existing projects that already use it.
-- Pre-compile to `.mlmodelc` to skip on-device compilation
-- For downloaded `.mlmodel` or `.mlpackage` files, compile once with
-  `MLModel.compileModel(at:)`, move the resulting `.mlmodelc` out of Core ML's
-  temporary location, and cache it by model version.
-- Validate memory and performance on physical target devices, especially the
-  lowest-memory supported device. Check model load, first prediction, repeated
-  predictions, background/foreground transitions, and low-memory behavior.
-
-For Background Assets, make the asset pack locally available, resolve the model
-URL, then load the compiled model with `MLModel.load(contentsOf:configuration:)`.
+### Don't - Load models on main thread at launch
 
 ```swift
-// Existing On-Demand Resources project
-let request = NSBundleResourceRequest(tags: ["ml-model-v2"])
-try await request.beginAccessingResources()
-let modelURL = Bundle.main.url(forResource: "LargeModel", withExtension: "mlmodelc")!
-let model = try await MLModel.load(contentsOf: modelURL, configuration: config)
-// Call request.endAccessingResources() when done
+// BAD - blocks UI
+class AppDelegate {
+    let model = try! MLModel(contentsOf: url)  // Blocks!
+}
+
+// GOOD - lazy async loading
+class ModelManager {
+    private var model: MLModel?
+
+    func getModel() async throws -> MLModel {
+        if let model { return model }
+        model = try await Task.detached {
+            try MLModel(contentsOf: url)
+        }.value
+        return model!
+    }
+}
 ```
 
-## Memory Management
+### Don't - Reload model for each prediction
 
-- **Unload on background:** Release model references when the app enters background
-  to free GPU/ANE memory. Reload on foreground return.
-- **Choose compute units by context:** use `.all` by default. Consider `.cpuOnly`
-  only when profiling or app policy shows accelerator contention, thermal state,
-  energy budget, deterministic testing, or a legitimate background execution
-  constraint makes CPU the right tradeoff.
-- **Share model instances:** Never create multiple `MLModel` instances from the same
-  compiled model. Use an actor to provide shared access.
-- **Monitor memory pressure:** Large models (>100 MB) can trigger memory warnings.
-  Register for `UIApplication.didReceiveMemoryWarningNotification` and release
-  cached models when under pressure.
+```swift
+// BAD - reloads every time
+func predict(_ input: Input) throws -> Output {
+    let model = try MLModel(contentsOf: url)  // Expensive!
+    return try model.prediction(from: input)
+}
 
-See [references/coreml-swift-integration.md](references/coreml-swift-integration.md) for an actor-based model manager with
-lifecycle-aware loading and cache eviction.
+// GOOD - keep model loaded
+class Predictor {
+    private let model: MLModel
 
-## Common Mistakes
+    func predict(_ input: Input) throws -> Output {
+        try model.prediction(from: input)
+    }
+}
+```
 
-**DON'T:** Load models on the main thread.
-**DO:** Use `MLModel.load(contentsOf:configuration:)` async API or load on a background actor.
-**Why:** Large models can take seconds to load, freezing the UI.
+### Don't - Compress without profiling first
 
-**DON'T:** Recompile `.mlpackage` to `.mlmodelc` on every app launch.
-**DO:** Compile once with `MLModel.compileModel(at:)` and cache the compiled URL persistently.
-**Why:** Compilation is expensive. Cache the `.mlmodelc` in Application Support.
+```swift
+// BAD - blind compression
+let compressed = palettize_weights(model, 2bit_config)  // May break accuracy!
 
-**DON'T:** Hardcode `.cpuOnly` unless you have a specific reason.
-**DO:** Use `.all` and let the system choose the optimal compute unit.
-**Why:** `.all` enables Neural Engine and GPU, which are faster and more energy-efficient.
+// GOOD - profile, then compress iteratively
+// 1. Profile Float16 baseline
+// 2. Try 8-bit → check accuracy
+// 3. Try 6-bit → check accuracy
+// 4. Try 4-bit with grouped channels → check accuracy
+// 5. Only use 2-bit with training-time compression
+```
 
-**DON'T:** Claim GPU or Neural Engine are categorically unavailable for all
-background-adjacent work.
-**DO:** Treat background execution as policy-, mode-, contention-, thermal-, and
-energy-dependent, and profile the actual workload on device.
-**Why:** Apps may be suspended, throttled, or limited by their background mode;
-`.cpuOnly` is a tradeoff, not a universal requirement.
+### Don't - Ignore deployment target
 
-**DON'T:** Ignore `MLFeatureValue` type mismatches between input and model expectations.
-**DO:** Match types exactly -- use `MLFeatureValue(pixelBuffer:)` for images, not raw data.
-**Why:** Type mismatches cause cryptic runtime crashes or silent incorrect results.
+```python
+# BAD - misses optimizations
+mlmodel = ct.convert(traced_model, inputs=[...])
 
-**DON'T:** Create a new `MLModel` instance for every prediction.
-**DO:** Load once and reuse. Use an actor to manage the model lifecycle.
-**Why:** Model loading allocates significant memory and compute resources.
+# GOOD - enables SDPA fusion, per-block quantization, etc.
+mlmodel = ct.convert(
+    traced_model,
+    inputs=[...],
+    minimum_deployment_target=ct.target.iOS18
+)
+```
 
-**DON'T:** Skip error handling for model loading and prediction.
-**DO:** Catch errors and provide fallback behavior when the model fails.
-**Why:** Models can fail to load on older devices or when resources are constrained.
+## Pressure Scenarios
 
-**DON'T:** Assume all operations run on the Neural Engine.
-**DO:** Use `MLComputePlan` (iOS 17.4+) to verify device dispatch per operation.
-**Why:** Unsupported operations fall back to CPU, which may bottleneck the pipeline.
+### Scenario 1 - "Model is 5GB, need it under 2GB for iPhone"
 
-**DON'T:** Process images manually before passing to Vision + Core ML.
-**DO:** Use `CoreMLRequest` (iOS 18+) or `VNCoreMLRequest` (legacy) to let Vision handle preprocessing.
-**Why:** Vision handles orientation, scaling, and pixel format conversion correctly.
+**Wrong approach**: Jump straight to 2-bit palettization.
 
-## Review Checklist
+**Right approach**:
+1. Start with 8-bit palettization → check accuracy
+2. Try 6-bit → check accuracy
+3. Try 4-bit with `per_grouped_channel` → check accuracy
+4. If still too large, use calibration-based compression
+5. If still losing accuracy, use training-time compression
 
-- [ ] Model loaded asynchronously (not blocking main thread)
-- [ ] `MLModelConfiguration.computeUnits` set appropriately for use case
-- [ ] Model instance reused across predictions (not recreated each time)
-- [ ] Auto-generated class used when available (typed inputs/outputs)
-- [ ] Error handling for model loading and prediction failures
-- [ ] Compiled model cached persistently if compiled at runtime
-- [ ] Image inputs use Vision pipeline (`CoreMLRequest` iOS 18+ or `VNCoreMLRequest`) for correct preprocessing
-- [ ] `MLComputePlan` checked to verify compute device dispatch (iOS 17.4+)
-- [ ] Batch predictions used when processing multiple inputs
-- [ ] Model size appropriate for deployment strategy (bundle, Background Assets, ODR)
-- [ ] Memory tested on target devices (especially older devices with less RAM)
-- [ ] Predictions run outside debugger for accurate performance measurement
+### Scenario 2 - "LLM inference is too slow"
 
-## References
+**Wrong approach**: Try different compute units randomly.
 
-- Patterns and code: [references/coreml-swift-integration.md](references/coreml-swift-integration.md)
-- Model conversion and optimization (Python-side): covered in the `apple-on-device-ai` skill
-- Apple docs: [Core ML](https://sosumi.ai/documentation/coreml) |
-  [MLModel](https://sosumi.ai/documentation/coreml/mlmodel) |
-  [MLTensor](https://sosumi.ai/documentation/coreml/mltensor) |
-  [MLComputePlan](https://sosumi.ai/documentation/coreml/mlcomputeplan-1w21n) |
-  [Background Assets](https://sosumi.ai/documentation/backgroundassets)
+**Right approach**:
+1. Profile with Core ML Instrument
+2. Check if load is cached (look for "cached" vs "prepare and cache")
+3. Enable stateful KV-cache
+4. Check SDPA optimization is enabled (iOS 18+ deployment target)
+5. Consider INT4 quantization for GPU on Mac
+
+### Scenario 3 - "Need multiple LoRA adapters in one app"
+
+**Wrong approach**: Ship separate models for each adapter.
+
+**Right approach**:
+1. Convert each adapter model separately
+2. Use `MultiFunctionDescriptor` to merge with shared base
+3. Load specific function via `config.functionName`
+4. Weights are deduplicated automatically
+
+## Checklist
+
+Before deploying a CoreML model:
+
+- [ ] Set `minimum_deployment_target` to latest supported iOS
+- [ ] Profile baseline Float16 performance
+- [ ] Check if model load is cached
+- [ ] Consider compression only if size/performance requires it
+- [ ] Test accuracy after each compression step
+- [ ] Use async prediction for concurrent workloads
+- [ ] Limit concurrent predictions to manage memory
+- [ ] Use state for transformer KV-cache
+- [ ] Use multi-function for adapter variants
+
+## Resources
+
+**WWDC**: 2023-10047, 2023-10049, 2024-10159, 2024-10161
+
+**Docs**: /coreml, /coreml/mlmodel, /coreml/mltensor
+
+**Skills**: coreml-ref, coreml-diag, axiom-ios-ai (Foundation Models)

@@ -1,602 +1,311 @@
 ---
-name: gwas-database
-description: "Query NHGRI-EBI GWAS Catalog for SNP-trait associations. Search variants by rs ID, disease/trait, gene, retrieve p-values and summary statistics, for genetic epidemiology and polygenic risk scores."
+category: Research
+id: gwas-database
+name: GWAS Database
+description: Autonomous biomedical AI agent framework for executing complex research tasks across genomics, drug discovery, molecular biology, and clinical analysis. Use this skill when conducting multi-step biomedical research including CRISPR screening design, single-cell RNA-seq analysis, ADMET prediction, GWAS interpretation, rare disease diagnosis, or lab protocol optimization. Leverages LLM reasoning with code execution and integrated biomedical databases.
 ---
 
-# GWAS Catalog Database
+# Biomni
 
 ## Overview
 
-The GWAS Catalog is a comprehensive repository of published genome-wide association studies maintained by the National Human Genome Research Institute (NHGRI) and the European Bioinformatics Institute (EBI). The catalog contains curated SNP-trait associations from thousands of GWAS publications, including genetic variants, associated traits and diseases, p-values, effect sizes, and full summary statistics for many studies.
-
-## When to Use This Skill
-
-This skill should be used when queries involve:
-
-- **Genetic variant associations**: Finding SNPs associated with diseases or traits
-- **SNP lookups**: Retrieving information about specific genetic variants (rs IDs)
-- **Trait/disease searches**: Discovering genetic associations for phenotypes
-- **Gene associations**: Finding variants in or near specific genes
-- **GWAS summary statistics**: Accessing complete genome-wide association data
-- **Study metadata**: Retrieving publication and cohort information
-- **Population genetics**: Exploring ancestry-specific associations
-- **Polygenic risk scores**: Identifying variants for risk prediction models
-- **Functional genomics**: Understanding variant effects and genomic context
-- **Systematic reviews**: Comprehensive literature synthesis of genetic associations
+Biomni is an open-source biomedical AI agent framework from Stanford's SNAP lab that autonomously executes complex research tasks across biomedical domains. Use this skill when working on multi-step biological reasoning tasks, analyzing biomedical data, or conducting research spanning genomics, drug discovery, molecular biology, and clinical analysis.
 
 ## Core Capabilities
 
-### 1. Understanding GWAS Catalog Data Structure
+Biomni excels at:
 
-The GWAS Catalog is organized around four core entities:
+1. **Multi-step biological reasoning** - Autonomous task decomposition and planning for complex biomedical queries
+2. **Code generation and execution** - Dynamic analysis pipeline creation for data processing
+3. **Knowledge retrieval** - Access to ~11GB of integrated biomedical databases and literature
+4. **Cross-domain problem solving** - Unified interface for genomics, proteomics, drug discovery, and clinical tasks
 
-- **Studies**: GWAS publications with metadata (PMID, author, cohort details)
-- **Associations**: SNP-trait associations with statistical evidence (p ≤ 5×10⁻⁸)
-- **Variants**: Genetic markers (SNPs) with genomic coordinates and alleles
-- **Traits**: Phenotypes and diseases (mapped to EFO ontology terms)
+## When to Use This Skill
 
-**Key Identifiers:**
-- Study accessions: `GCST` IDs (e.g., GCST001234)
-- Variant IDs: `rs` numbers (e.g., rs7903146) or `variant_id` format
-- Trait IDs: EFO terms (e.g., EFO_0001360 for type 2 diabetes)
-- Gene symbols: HGNC approved names (e.g., TCF7L2)
+Use biomni for:
+- **CRISPR screening** - Design screens, prioritize genes, analyze knockout effects
+- **Single-cell RNA-seq** - Cell type annotation, differential expression, trajectory analysis
+- **Drug discovery** - ADMET prediction, target identification, compound optimization
+- **GWAS analysis** - Variant interpretation, causal gene identification, pathway enrichment
+- **Clinical genomics** - Rare disease diagnosis, variant pathogenicity, phenotype-genotype mapping
+- **Lab protocols** - Protocol optimization, literature synthesis, experimental design
 
-### 2. Web Interface Searches
+## Quick Start
 
-The web interface at https://www.ebi.ac.uk/gwas/ supports multiple search modes:
+### Installation and Setup
 
-**By Variant (rs ID):**
+Install Biomni and configure API keys for LLM providers:
+
+```bash
+uv pip install biomni --upgrade
 ```
-rs7903146
+
+Configure API keys (store in `.env` file or environment variables):
+```bash
+export ANTHROPIC_API_KEY="your-key-here"
+# Optional: OpenAI, Azure, Google, Groq, AWS Bedrock keys
 ```
-Returns all trait associations for this SNP.
 
-**By Disease/Trait:**
-```
-type 2 diabetes
-Parkinson disease
-body mass index
-```
-Returns all associated genetic variants.
+Use `scripts/setup_environment.py` for interactive setup assistance.
 
-**By Gene:**
-```
-APOE
-TCF7L2
-```
-Returns variants in or near the gene region.
+### Basic Usage Pattern
 
-**By Chromosomal Region:**
-```
-10:114000000-115000000
-```
-Returns variants in the specified genomic interval.
-
-**By Publication:**
-```
-PMID:20581827
-Author: McCarthy MI
-GCST001234
-```
-Returns study details and all reported associations.
-
-### 3. REST API Access
-
-The GWAS Catalog provides two REST APIs for programmatic access:
-
-**Base URLs:**
-- GWAS Catalog API: `https://www.ebi.ac.uk/gwas/rest/api`
-- Summary Statistics API: `https://www.ebi.ac.uk/gwas/summary-statistics/api`
-
-**API Documentation:**
-- Main API docs: https://www.ebi.ac.uk/gwas/rest/docs/api
-- Summary stats docs: https://www.ebi.ac.uk/gwas/summary-statistics/docs/
-
-**Core Endpoints:**
-
-1. **Studies endpoint** - `/studies/{accessionID}`
-   ```python
-   import requests
-
-   # Get a specific study
-   url = "https://www.ebi.ac.uk/gwas/rest/api/studies/GCST001795"
-   response = requests.get(url, headers={"Content-Type": "application/json"})
-   study = response.json()
-   ```
-
-2. **Associations endpoint** - `/associations`
-   ```python
-   # Find associations for a variant
-   variant = "rs7903146"
-   url = f"https://www.ebi.ac.uk/gwas/rest/api/singleNucleotidePolymorphisms/{variant}/associations"
-   params = {"projection": "associationBySnp"}
-   response = requests.get(url, params=params, headers={"Content-Type": "application/json"})
-   associations = response.json()
-   ```
-
-3. **Variants endpoint** - `/singleNucleotidePolymorphisms/{rsID}`
-   ```python
-   # Get variant details
-   url = "https://www.ebi.ac.uk/gwas/rest/api/singleNucleotidePolymorphisms/rs7903146"
-   response = requests.get(url, headers={"Content-Type": "application/json"})
-   variant_info = response.json()
-   ```
-
-4. **Traits endpoint** - `/efoTraits/{efoID}`
-   ```python
-   # Get trait information
-   url = "https://www.ebi.ac.uk/gwas/rest/api/efoTraits/EFO_0001360"
-   response = requests.get(url, headers={"Content-Type": "application/json"})
-   trait_info = response.json()
-   ```
-
-### 4. Query Examples and Patterns
-
-**Example 1: Find all associations for a disease**
 ```python
-import requests
+from biomni.agent import A1
 
-trait = "EFO_0001360"  # Type 2 diabetes
-base_url = "https://www.ebi.ac.uk/gwas/rest/api"
+# Initialize agent with data path and LLM choice
+agent = A1(path='./data', llm='claude-sonnet-4-20250514')
 
-# Query associations for this trait
-url = f"{base_url}/efoTraits/{trait}/associations"
-response = requests.get(url, headers={"Content-Type": "application/json"})
-associations = response.json()
+# Execute biomedical task autonomously
+agent.go("Your biomedical research question or task")
 
-# Process results
-for assoc in associations.get('_embedded', {}).get('associations', []):
-    variant = assoc.get('rsId')
-    pvalue = assoc.get('pvalue')
-    risk_allele = assoc.get('strongestAllele')
-    print(f"{variant}: p={pvalue}, risk allele={risk_allele}")
+# Save conversation history and results
+agent.save_conversation_history("report.pdf")
 ```
 
-**Example 2: Get variant information and all trait associations**
+## Working with Biomni
+
+### 1. Agent Initialization
+
+The A1 class is the primary interface for biomni:
+
 ```python
-import requests
+from biomni.agent import A1
+from biomni.config import default_config
 
-variant = "rs7903146"
-base_url = "https://www.ebi.ac.uk/gwas/rest/api"
+# Basic initialization
+agent = A1(
+    path='./data',  # Path to data lake (~11GB downloaded on first use)
+    llm='claude-sonnet-4-20250514'  # LLM model selection
+)
 
-# Get variant details
-url = f"{base_url}/singleNucleotidePolymorphisms/{variant}"
-response = requests.get(url, headers={"Content-Type": "application/json"})
-variant_data = response.json()
-
-# Get all associations for this variant
-url = f"{base_url}/singleNucleotidePolymorphisms/{variant}/associations"
-params = {"projection": "associationBySnp"}
-response = requests.get(url, params=params, headers={"Content-Type": "application/json"})
-associations = response.json()
-
-# Extract trait names and p-values
-for assoc in associations.get('_embedded', {}).get('associations', []):
-    trait = assoc.get('efoTrait')
-    pvalue = assoc.get('pvalue')
-    print(f"Trait: {trait}, p-value: {pvalue}")
+# Advanced configuration
+default_config.llm = "gpt-4"
+default_config.timeout_seconds = 1200
+default_config.max_iterations = 50
 ```
 
-**Example 3: Access summary statistics**
+**Supported LLM Providers:**
+- Anthropic Claude (recommended): `claude-sonnet-4-20250514`, `claude-opus-4-20250514`
+- OpenAI: `gpt-4`, `gpt-4-turbo`
+- Azure OpenAI: via Azure configuration
+- Google Gemini: `gemini-2.0-flash-exp`
+- Groq: `llama-3.3-70b-versatile`
+- AWS Bedrock: Various models via Bedrock API
+
+See `references/llm_providers.md` for detailed LLM configuration instructions.
+
+### 2. Task Execution Workflow
+
+Biomni follows an autonomous agent workflow:
+
 ```python
-import requests
+# Step 1: Initialize agent
+agent = A1(path='./data', llm='claude-sonnet-4-20250514')
 
-# Query summary statistics API
-base_url = "https://www.ebi.ac.uk/gwas/summary-statistics/api"
+# Step 2: Execute task with natural language query
+result = agent.go("""
+Design a CRISPR screen to identify genes regulating autophagy in
+HEK293 cells. Prioritize genes based on essentiality and pathway
+relevance.
+""")
 
-# Find associations by trait with p-value threshold
-trait = "EFO_0001360"  # Type 2 diabetes
-p_upper = "0.000000001"  # p < 1e-9
-url = f"{base_url}/traits/{trait}/associations"
-params = {
-    "p_upper": p_upper,
-    "size": 100  # Number of results
-}
-response = requests.get(url, params=params)
-results = response.json()
+# Step 3: Review generated code and analysis
+# Agent autonomously:
+# - Decomposes task into sub-steps
+# - Retrieves relevant biological knowledge
+# - Generates and executes analysis code
+# - Interprets results and provides insights
 
-# Process genome-wide significant hits
-for hit in results.get('_embedded', {}).get('associations', []):
-    variant_id = hit.get('variant_id')
-    chromosome = hit.get('chromosome')
-    position = hit.get('base_pair_location')
-    pvalue = hit.get('p_value')
-    print(f"{chromosome}:{position} ({variant_id}): p={pvalue}")
+# Step 4: Save results
+agent.save_conversation_history("autophagy_screen_report.pdf")
 ```
 
-**Example 4: Query by chromosomal region**
+### 3. Common Task Patterns
+
+#### CRISPR Screening Design
 ```python
-import requests
-
-# Find variants in a specific genomic region
-chromosome = "10"
-start_pos = 114000000
-end_pos = 115000000
-
-base_url = "https://www.ebi.ac.uk/gwas/rest/api"
-url = f"{base_url}/singleNucleotidePolymorphisms/search/findByChromBpLocationRange"
-params = {
-    "chrom": chromosome,
-    "bpStart": start_pos,
-    "bpEnd": end_pos
-}
-response = requests.get(url, params=params, headers={"Content-Type": "application/json"})
-variants_in_region = response.json()
+agent.go("""
+Design a genome-wide CRISPR knockout screen for identifying genes
+affecting [phenotype] in [cell type]. Include:
+1. sgRNA library design
+2. Gene prioritization criteria
+3. Expected hit genes based on pathway analysis
+""")
 ```
 
-### 5. Working with Summary Statistics
-
-The GWAS Catalog hosts full summary statistics for many studies, providing access to all tested variants (not just genome-wide significant hits).
-
-**Access Methods:**
-1. **FTP download**: http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/
-2. **REST API**: Query-based access to summary statistics
-3. **Web interface**: Browse and download via the website
-
-**Summary Statistics API Features:**
-- Filter by chromosome, position, p-value
-- Query specific variants across studies
-- Retrieve effect sizes and allele frequencies
-- Access harmonized and standardized data
-
-**Example: Download summary statistics for a study**
+#### Single-Cell RNA-seq Analysis
 ```python
-import requests
-import gzip
-
-# Get available summary statistics
-base_url = "https://www.ebi.ac.uk/gwas/summary-statistics/api"
-url = f"{base_url}/studies/GCST001234"
-response = requests.get(url)
-study_info = response.json()
-
-# Download link is provided in the response
-# Alternatively, use FTP:
-# ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCSTXXXXXX/
+agent.go("""
+Analyze this single-cell RNA-seq dataset:
+- Perform quality control and filtering
+- Identify cell populations via clustering
+- Annotate cell types using marker genes
+- Conduct differential expression between conditions
+File path: [path/to/data.h5ad]
+""")
 ```
 
-### 6. Data Integration and Cross-referencing
-
-The GWAS Catalog provides links to external resources:
-
-**Genomic Databases:**
-- Ensembl: Gene annotations and variant consequences
-- dbSNP: Variant identifiers and population frequencies
-- gnomAD: Population allele frequencies
-
-**Functional Resources:**
-- Open Targets: Target-disease associations
-- PGS Catalog: Polygenic risk scores
-- UCSC Genome Browser: Genomic context
-
-**Phenotype Resources:**
-- EFO (Experimental Factor Ontology): Standardized trait terms
-- OMIM: Disease gene relationships
-- Disease Ontology: Disease hierarchies
-
-**Following Links in API Responses:**
+#### Drug ADMET Prediction
 ```python
-import requests
-
-# API responses include _links for related resources
-response = requests.get("https://www.ebi.ac.uk/gwas/rest/api/studies/GCST001234")
-study = response.json()
-
-# Follow link to associations
-associations_url = study['_links']['associations']['href']
-associations_response = requests.get(associations_url)
+agent.go("""
+Predict ADMET properties for these drug candidates:
+[SMILES strings or compound IDs]
+Focus on:
+- Absorption (Caco-2 permeability, HIA)
+- Distribution (plasma protein binding, BBB penetration)
+- Metabolism (CYP450 interaction)
+- Excretion (clearance)
+- Toxicity (hERG liability, hepatotoxicity)
+""")
 ```
 
-## Query Workflows
+#### GWAS Variant Interpretation
+```python
+agent.go("""
+Interpret GWAS results for [trait/disease]:
+- Identify genome-wide significant variants
+- Map variants to causal genes
+- Perform pathway enrichment analysis
+- Predict functional consequences
+Summary statistics file: [path/to/gwas_summary.txt]
+""")
+```
 
-### Workflow 1: Exploring Genetic Associations for a Disease
+See `references/use_cases.md` for comprehensive task examples across all biomedical domains.
 
-1. **Identify the trait** using EFO terms or free text:
-   - Search web interface for disease name
-   - Note the EFO ID (e.g., EFO_0001360 for type 2 diabetes)
+### 4. Data Integration
 
-2. **Query associations via API:**
-   ```python
-   url = f"https://www.ebi.ac.uk/gwas/rest/api/efoTraits/{efo_id}/associations"
-   ```
+Biomni integrates ~11GB of biomedical knowledge sources:
+- **Gene databases** - Ensembl, NCBI Gene, UniProt
+- **Protein structures** - PDB, AlphaFold
+- **Clinical datasets** - ClinVar, OMIM, HPO
+- **Literature indices** - PubMed abstracts, biomedical ontologies
+- **Pathway databases** - KEGG, Reactome, GO
 
-3. **Filter by significance and population:**
-   - Check p-values (genome-wide significant: p ≤ 5×10⁻⁸)
-   - Review ancestry information in study metadata
-   - Filter by sample size or discovery/replication status
+Data is automatically downloaded to the specified `path` on first use.
 
-4. **Extract variant details:**
-   - rs IDs for each association
-   - Effect alleles and directions
-   - Effect sizes (odds ratios, beta coefficients)
-   - Population allele frequencies
+### 5. MCP Server Integration
 
-5. **Cross-reference with other databases:**
-   - Look up variant consequences in Ensembl
-   - Check population frequencies in gnomAD
-   - Explore gene function and pathways
+Extend biomni with external tools via Model Context Protocol:
 
-### Workflow 2: Investigating a Specific Genetic Variant
+```python
+# MCP servers can provide:
+# - FDA drug databases
+# - Web search for literature
+# - Custom biomedical APIs
+# - Laboratory equipment interfaces
 
-1. **Query the variant:**
-   ```python
-   url = f"https://www.ebi.ac.uk/gwas/rest/api/singleNucleotidePolymorphisms/{rs_id}"
-   ```
+# Configure MCP servers in .biomni/mcp_config.json
+```
 
-2. **Retrieve all trait associations:**
-   ```python
-   url = f"https://www.ebi.ac.uk/gwas/rest/api/singleNucleotidePolymorphisms/{rs_id}/associations"
-   ```
+### 6. Evaluation Framework
 
-3. **Analyze pleiotropy:**
-   - Identify all traits associated with this variant
-   - Review effect directions across traits
-   - Look for shared biological pathways
+Benchmark agent performance on biomedical tasks:
 
-4. **Check genomic context:**
-   - Determine nearby genes
-   - Identify if variant is in coding/regulatory regions
-   - Review linkage disequilibrium with other variants
+```python
+from biomni.eval import BiomniEval1
 
-### Workflow 3: Gene-Centric Association Analysis
+evaluator = BiomniEval1()
 
-1. **Search by gene symbol** in web interface or:
-   ```python
-   url = f"https://www.ebi.ac.uk/gwas/rest/api/singleNucleotidePolymorphisms/search/findByGene"
-   params = {"geneName": gene_symbol}
-   ```
+# Evaluate on specific task types
+score = evaluator.evaluate(
+    task_type='crispr_design',
+    instance_id='test_001',
+    answer=agent_output
+)
 
-2. **Retrieve variants in gene region:**
-   - Get chromosomal coordinates for gene
-   - Query variants in region
-   - Include promoter and regulatory regions (extend boundaries)
-
-3. **Analyze association patterns:**
-   - Identify traits associated with variants in this gene
-   - Look for consistent associations across studies
-   - Review effect sizes and directions
-
-4. **Functional interpretation:**
-   - Determine variant consequences (missense, regulatory, etc.)
-   - Check expression QTL (eQTL) data
-   - Review pathway and network context
-
-### Workflow 4: Systematic Review of Genetic Evidence
-
-1. **Define research question:**
-   - Specific trait or disease of interest
-   - Population considerations
-   - Study design requirements
-
-2. **Comprehensive variant extraction:**
-   - Query all associations for trait
-   - Set significance threshold
-   - Note discovery and replication studies
-
-3. **Quality assessment:**
-   - Review study sample sizes
-   - Check for population diversity
-   - Assess heterogeneity across studies
-   - Identify potential biases
-
-4. **Data synthesis:**
-   - Aggregate associations across studies
-   - Perform meta-analysis if applicable
-   - Create summary tables
-   - Generate Manhattan or forest plots
-
-5. **Export and documentation:**
-   - Download full association data
-   - Export summary statistics if needed
-   - Document search strategy and date
-   - Create reproducible analysis scripts
-
-### Workflow 5: Accessing and Analyzing Summary Statistics
-
-1. **Identify studies with summary statistics:**
-   - Browse summary statistics portal
-   - Check FTP directory listings
-   - Query API for available studies
-
-2. **Download summary statistics:**
-   ```bash
-   # Via FTP
-   wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCSTXXXXXX/harmonised/GCSTXXXXXX-harmonised.tsv.gz
-   ```
-
-3. **Query via API for specific variants:**
-   ```python
-   url = f"https://www.ebi.ac.uk/gwas/summary-statistics/api/chromosomes/{chrom}/associations"
-   params = {"start": start_pos, "end": end_pos}
-   ```
-
-4. **Process and analyze:**
-   - Filter by p-value thresholds
-   - Extract effect sizes and confidence intervals
-   - Perform downstream analyses (fine-mapping, colocalization, etc.)
-
-## Response Formats and Data Fields
-
-**Key Fields in Association Records:**
-- `rsId`: Variant identifier (rs number)
-- `strongestAllele`: Risk allele for the association
-- `pvalue`: Association p-value
-- `pvalueText`: P-value as text (may include inequality)
-- `orPerCopyNum`: Odds ratio or beta coefficient
-- `betaNum`: Effect size (for quantitative traits)
-- `betaUnit`: Unit of measurement for beta
-- `range`: Confidence interval
-- `efoTrait`: Associated trait name
-- `mappedLabel`: EFO-mapped trait term
-
-**Study Metadata Fields:**
-- `accessionId`: GCST study identifier
-- `pubmedId`: PubMed ID
-- `author`: First author
-- `publicationDate`: Publication date
-- `ancestryInitial`: Discovery population ancestry
-- `ancestryReplication`: Replication population ancestry
-- `sampleSize`: Total sample size
-
-**Pagination:**
-Results are paginated (default 20 items per page). Navigate using:
-- `size` parameter: Number of results per page
-- `page` parameter: Page number (0-indexed)
-- `_links` in response: URLs for next/previous pages
+# Access evaluation dataset
+dataset = evaluator.load_dataset()
+```
 
 ## Best Practices
 
-### Query Strategy
-- Start with web interface to identify relevant EFO terms and study accessions
-- Use API for bulk data extraction and automated analyses
-- Implement pagination handling for large result sets
-- Cache API responses to minimize redundant requests
+### Task Formulation
+- **Be specific** - Include biological context, organism, cell type, conditions
+- **Specify outputs** - Clearly state desired analysis outputs and formats
+- **Provide data paths** - Include file paths for datasets to analyze
+- **Set constraints** - Mention time/computational limits if relevant
 
-### Data Interpretation
-- Always check p-value thresholds (genome-wide: 5×10⁻⁸)
-- Review ancestry information for population applicability
-- Consider sample size when assessing evidence strength
-- Check for replication across independent studies
-- Be aware of winner's curse in effect size estimates
+### Security Considerations
+⚠️ **Important**: Biomni executes LLM-generated code with full system privileges. For production use:
+- Run in isolated environments (Docker, VMs)
+- Avoid exposing sensitive credentials
+- Review generated code before execution in sensitive contexts
+- Use sandboxed execution environments when possible
 
-### Rate Limiting and Ethics
-- Respect API usage guidelines (no excessive requests)
-- Use summary statistics downloads for genome-wide analyses
-- Implement appropriate delays between API calls
-- Cache results locally when performing iterative analyses
-- Cite the GWAS Catalog in publications
+### Performance Optimization
+- **Choose appropriate LLMs** - Claude Sonnet 4 recommended for balance of speed/quality
+- **Set reasonable timeouts** - Adjust `default_config.timeout_seconds` for complex tasks
+- **Monitor iterations** - Track `max_iterations` to prevent runaway loops
+- **Cache data** - Reuse downloaded data lake across sessions
 
-### Data Quality Considerations
-- GWAS Catalog curates published associations (may contain inconsistencies)
-- Effect sizes reported as published (may need harmonization)
-- Some studies report conditional or joint associations
-- Check for study overlap when combining results
-- Be aware of ascertainment and selection biases
-
-## Python Integration Example
-
-Complete workflow for querying and analyzing GWAS data:
-
+### Result Documentation
 ```python
-import requests
-import pandas as pd
-from time import sleep
+# Always save conversation history for reproducibility
+agent.save_conversation_history("results/project_name_YYYYMMDD.pdf")
 
-def query_gwas_catalog(trait_id, p_threshold=5e-8):
-    """
-    Query GWAS Catalog for trait associations
-
-    Args:
-        trait_id: EFO trait identifier (e.g., 'EFO_0001360')
-        p_threshold: P-value threshold for filtering
-
-    Returns:
-        pandas DataFrame with association results
-    """
-    base_url = "https://www.ebi.ac.uk/gwas/rest/api"
-    url = f"{base_url}/efoTraits/{trait_id}/associations"
-
-    headers = {"Content-Type": "application/json"}
-    results = []
-    page = 0
-
-    while True:
-        params = {"page": page, "size": 100}
-        response = requests.get(url, params=params, headers=headers)
-
-        if response.status_code != 200:
-            break
-
-        data = response.json()
-        associations = data.get('_embedded', {}).get('associations', [])
-
-        if not associations:
-            break
-
-        for assoc in associations:
-            pvalue = assoc.get('pvalue')
-            if pvalue and float(pvalue) <= p_threshold:
-                results.append({
-                    'variant': assoc.get('rsId'),
-                    'pvalue': pvalue,
-                    'risk_allele': assoc.get('strongestAllele'),
-                    'or_beta': assoc.get('orPerCopyNum') or assoc.get('betaNum'),
-                    'trait': assoc.get('efoTrait'),
-                    'pubmed_id': assoc.get('pubmedId')
-                })
-
-        page += 1
-        sleep(0.1)  # Rate limiting
-
-    return pd.DataFrame(results)
-
-# Example usage
-df = query_gwas_catalog('EFO_0001360')  # Type 2 diabetes
-print(df.head())
-print(f"\nTotal associations: {len(df)}")
-print(f"Unique variants: {df['variant'].nunique()}")
+# Include in reports:
+# - Original task description
+# - Generated analysis code
+# - Results and interpretations
+# - Data sources used
 ```
 
 ## Resources
 
-### references/api_reference.md
+### References
+Detailed documentation available in the `references/` directory:
 
-Comprehensive API documentation including:
-- Detailed endpoint specifications for both APIs
-- Complete list of query parameters and filters
-- Response format specifications and field descriptions
-- Advanced query examples and patterns
-- Error handling and troubleshooting
-- Integration with external databases
+- **`api_reference.md`** - Complete API documentation for A1 class, configuration, and evaluation
+- **`llm_providers.md`** - LLM provider setup (Anthropic, OpenAI, Azure, Google, Groq, AWS)
+- **`use_cases.md`** - Comprehensive task examples for all biomedical domains
 
-Consult this reference when:
-- Constructing complex API queries
-- Understanding response structures
-- Implementing pagination or batch operations
-- Troubleshooting API errors
-- Exploring advanced filtering options
+### Scripts
+Helper scripts in the `scripts/` directory:
 
-### Training Materials
+- **`setup_environment.py`** - Interactive environment and API key configuration
+- **`generate_report.py`** - Enhanced PDF report generation with custom formatting
 
-The GWAS Catalog team provides workshop materials:
-- GitHub repository: https://github.com/EBISPOT/GWAS_Catalog-workshop
-- Jupyter notebooks with example queries
-- Google Colab integration for cloud execution
+### External Resources
+- **GitHub**: https://github.com/snap-stanford/biomni
+- **Web Platform**: https://biomni.stanford.edu
+- **Paper**: https://www.biorxiv.org/content/10.1101/2025.05.30.656746v1
+- **Model**: https://huggingface.co/biomni/Biomni-R0-32B-Preview
+- **Evaluation Dataset**: https://huggingface.co/datasets/biomni/Eval1
 
-## Important Notes
+## Troubleshooting
 
-### Data Updates
-- The GWAS Catalog is updated regularly with new publications
-- Re-run queries periodically for comprehensive coverage
-- Summary statistics are added as studies release data
-- EFO mappings may be updated over time
+### Common Issues
 
-### Citation Requirements
-When using GWAS Catalog data, cite:
-- Sollis E, et al. (2023) The NHGRI-EBI GWAS Catalog: knowledgebase and deposition resource. Nucleic Acids Research. PMID: 37953337
-- Include access date and version when available
-- Cite original studies when discussing specific findings
+**Data download fails**
+```python
+# Manually trigger data lake download
+agent = A1(path='./data', llm='your-llm')
+# First .go() call will download data
+```
 
-### Limitations
-- Not all GWAS publications are included (curation criteria apply)
-- Full summary statistics available for subset of studies
-- Effect sizes may require harmonization across studies
-- Population diversity is growing but historically limited
-- Some associations represent conditional or joint effects
+**API key errors**
+```bash
+# Verify environment variables
+echo $ANTHROPIC_API_KEY
+# Or check .env file in working directory
+```
 
-### Data Access
-- Web interface: Free, no registration required
-- REST APIs: Free, no API key needed
-- FTP downloads: Open access
-- Rate limiting applies to API (be respectful)
+**Timeout on complex tasks**
+```python
+from biomni.config import default_config
+default_config.timeout_seconds = 3600  # 1 hour
+```
 
-## Additional Resources
+**Memory issues with large datasets**
+- Use streaming for large files
+- Process data in chunks
+- Increase system memory allocation
 
-- **GWAS Catalog website**: https://www.ebi.ac.uk/gwas/
-- **Documentation**: https://www.ebi.ac.uk/gwas/docs
-- **API documentation**: https://www.ebi.ac.uk/gwas/rest/docs/api
-- **Summary Statistics API**: https://www.ebi.ac.uk/gwas/summary-statistics/docs/
-- **FTP site**: http://ftp.ebi.ac.uk/pub/databases/gwas/
-- **Training materials**: https://github.com/EBISPOT/GWAS_Catalog-workshop
-- **PGS Catalog** (polygenic scores): https://www.pgscatalog.org/
-- **Help and support**: gwas-info@ebi.ac.uk
+### Getting Help
+
+For issues or questions:
+- GitHub Issues: https://github.com/snap-stanford/biomni/issues
+- Documentation: Check `references/` files for detailed guidance
+- Community: Stanford SNAP lab and biomni contributors

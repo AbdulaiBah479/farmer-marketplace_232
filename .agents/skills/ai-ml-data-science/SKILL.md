@@ -1,9 +1,9 @@
 ---
 name: ai-ml-data-science
-description: "ML and data science workflows — EDA, feature engineering, modelling, evaluation, and production handoff. Use when exploring data or building models."
+description: "End-to-end data science patterns (modern best practices): problem framing -> data -> EDA -> feature engineering (with feature stores) -> modelling -> evaluation -> reporting, plus SQL transformation (SQLMesh). Emphasizes MLOps integration, drift monitoring, and production-ready workflows."
 ---
 
-# Data Science Engineering Suite - Quick Reference
+# Data Science Engineering Suite – Quick Reference
 
 This skill turns **raw data and questions** into **validated, documented models** ready for production:
 
@@ -15,7 +15,7 @@ This skill turns **raw data and questions** into **validated, documented models*
 - **MLOps**: CI/CD, CT (continuous training), CM (continuous monitoring)
 - **Production patterns**: Data contracts, lineage, feedback loops, streaming features
 
-**Modern emphasis (2026):** Feature stores, automated retraining, drift monitoring (Evidently), train-serve parity, and agentic ML loops (plan -> execute -> evaluate -> improve). Tools: LightGBM, CatBoost, scikit-learn, PyTorch, Polars (lazy eval for larger-than-RAM datasets), lakeFS for data versioning.
+**Modern emphasis (December 2025):** Feature stores, automated retraining, drift monitoring, and train-serve parity. Tools: LightGBM 4.6, scikit-learn 1.7, PyTorch 2.9.1, Polars 1.x.
 
 ---
 
@@ -32,6 +32,20 @@ This skill turns **raw data and questions** into **validated, documented models*
 | Model Evaluation | scikit-learn, custom metrics | `metrics.roc_auc_score()`, slice analysis | Validating model performance |
 
 ---
+
+## When to Use This Skill
+
+Claude should invoke this skill when the user asks for **hands-on DS/ML workflow help**, e.g.:
+
+- "Help me explore this dataset / find issues."
+- "Design features for this problem."
+- "Choose metrics and evaluate this model."
+- "Write a model evaluation report or model card."
+- "Structure an end-to-end DS project."
+- "Set up SQL transformations with SQLMesh."
+- "Build incremental feature pipelines in SQL."
+- "Create staging/intermediate/marts layers."
+- "Set up MLOps: CI/CD, continuous training, monitoring."
 
 ## Data Lake & Lakehouse
 
@@ -67,20 +81,20 @@ For adjacent topics, reference:
 
 ```text
 User needs ML for: [Problem Type]
-  - Tabular data?
-    - Small-medium (<1M rows)? -> LightGBM (fast, efficient)
-    - Large and complex (>1M rows)? -> LightGBM first, then NN if needed
-    - High-dim sparse (text, counts)? -> Linear models, then shallow NN
-
-  - Time series?
-    - Seasonality? -> LightGBM, then see ai-ml-timeseries
-    - Long-term dependencies? -> Transformers (see ai-ml-timeseries)
-
-  - Text or mixed modalities?
-    - LLMs/Transformers -> See ai-llm
-
-  - SQL transformations?
-    - SQLMesh (staging/intermediate/marts layers)
+    ├─ Tabular Data?
+    │   ├─ Small-Medium (<1M rows)? → **LightGBM** (fast, efficient)
+    │   ├─ Large & Complex (>1M rows)? → **LightGBM** first, then NN if needed
+    │   └─ High-dim sparse (text, counts)? → Linear models, then shallow NN
+    │
+    ├─ Time Series?
+    │   ├─ Seasonality? → LightGBM, then see ai-ml-timeseries skill
+    │   └─ Long-term dependencies? → Transformers (ai-ml-timeseries)
+    │
+    ├─ Text or Mixed Modalities?
+    │   └─ LLMs/Transformers → See ai-llm
+    │
+    └─ SQL Transformations?
+        └─ SQLMesh (staging/intermediate/marts layers)
 ```
 
 **Rule of thumb:** For tabular data, tree-based gradient boosting is a strong baseline, but must be validated against alternatives and constraints.
@@ -111,7 +125,7 @@ User needs ML for: [Problem Type]
 
 **Avoid**
 - Avoid random splits for temporal or user-correlated data.
-- Avoid "metric gaming" (optimizing the number without validating business impact).
+- Avoid “metric gaming” (optimizing the number without validating business impact).
 - Avoid training on labels created after the prediction timestamp (silent future leakage).
 
 # Core Patterns (Overview)
@@ -131,7 +145,7 @@ User needs ML for: [Problem Type]
 7. **Reporting** - Model evaluation report + model card
 8. **MLOps** - CI/CD, CT (continuous training), CM (continuous monitoring)
 
-**Detailed guide:** [EDA Best Practices](references/eda-best-practices.md)
+**Detailed guide:** [EDA Best Practices](resources/eda-best-practices.md)
 
 ---
 
@@ -149,7 +163,7 @@ User needs ML for: [Problem Type]
 
 **Key Modern Practice:** Use feature stores (Feast, Tecton, Databricks) for versioning, sharing, and train-serve parity.
 
-**Detailed guide:** [Feature Engineering Patterns](references/feature-engineering-patterns.md)
+**Detailed guide:** [Feature Engineering Patterns](resources/feature-engineering-patterns.md)
 
 ---
 
@@ -160,11 +174,11 @@ User needs ML for: [Problem Type]
 **Components:**
 
 - **Contracts:** Schema + ranges/nullability + freshness SLAs
-- **Lineage:** Track source -> feature store -> train -> serve
+- **Lineage:** Track source → feature store → train → serve
 - **Feature store hygiene:** Materialization cadence, backfill/replay, encoder versioning
 - **Schema evolution:** Backward/forward-compatible migrations with shadow runs
 
-**Detailed guide:** [Data Contracts & Lineage](references/data-contracts-lineage.md)
+**Detailed guide:** [Data Contracts & Lineage](resources/data-contracts-lineage.md)
 
 ---
 
@@ -180,7 +194,7 @@ User needs ML for: [Problem Type]
 - **Hyperparameter tuning:** Start manual, then Bayesian optimization (Optuna, Ray Tune)
 - **Overfitting control:** Regularization, early stopping, cross-validation
 
-**Detailed guide:** [Modelling Patterns](references/modelling-patterns.md)
+**Detailed guide:** [Modelling Patterns](resources/modelling-patterns.md)
 
 ---
 
@@ -198,7 +212,7 @@ User needs ML for: [Problem Type]
 - **Evaluation report:** 8-section report (objective, data, features, models, metrics, slices, risks, recommendation)
 - **Model card:** Documentation for stakeholders (intended use, data, performance, ethics, operations)
 
-**Detailed guide:** [Evaluation Patterns](references/evaluation-patterns.md)
+**Detailed guide:** [Evaluation Patterns](resources/evaluation-patterns.md)
 
 ---
 
@@ -209,7 +223,7 @@ User needs ML for: [Problem Type]
 **Modern MLOps (CI/CD/CT/CM):**
 
 - **CI (Continuous Integration):** Automated testing, data validation, code quality
-- **CD (Continuous Delivery):** Environment-specific promotion (dev -> staging -> prod), canary deployment
+- **CD (Continuous Delivery):** Environment-specific promotion (dev → staging → prod), canary deployment
 - **CT (Continuous Training):** Drift-triggered and scheduled retraining
 - **CM (Continuous Monitoring):** Real-time data drift, performance, system health
 
@@ -217,7 +231,7 @@ User needs ML for: [Problem Type]
 - Code (git commit), data (DVC, LakeFS), features (feature store), models (MLflow Registry)
 - Seeds (reproducibility), hyperparameters (experiment tracker)
 
-**Detailed guide:** [Reproducibility Checklist](references/reproducibility-checklist.md)
+**Detailed guide:** [Reproducibility Checklist](resources/reproducibility-checklist.md)
 
 ---
 
@@ -232,7 +246,7 @@ User needs ML for: [Problem Type]
 - **Schema evolution:** Version schemas, add forward/backward-compatible parsers, backfill with rollback
 - **Data quality gates:** PII/format checks, range checks, distribution drift (KL, KS, PSI)
 
-**Detailed guide:** [Feature Freshness & Streaming](references/feature-freshness-streaming.md)
+**Detailed guide:** [Feature Freshness & Streaming](resources/feature-freshness-streaming.md)
 
 ---
 
@@ -247,7 +261,7 @@ User needs ML for: [Problem Type]
 - **Dataset refresh:** Periodic refresh (weekly/monthly) with lineage, protect eval set
 - **Online eval:** Shadow/canary new models, track solve rate, calibration, cost, latency
 
-**Detailed guide:** [Production Feedback Loops](references/production-feedback-loops.md)
+**Detailed guide:** [Production Feedback Loops](resources/production-feedback-loops.md)
 
 ---
 
@@ -255,17 +269,14 @@ User needs ML for: [Problem Type]
 
 For comprehensive operational patterns and checklists, see:
 
-- [EDA Best Practices](references/eda-best-practices.md) - Structured workflow for exploratory data analysis
-- [Feature Engineering Patterns](references/feature-engineering-patterns.md) - Operational patterns by data type
-- [Data Contracts & Lineage](references/data-contracts-lineage.md) - Data quality, versioning, feature store ops
-- [Modelling Patterns](references/modelling-patterns.md) - Model selection, hyperparameter tuning, train/test splits
-- [Evaluation Patterns](references/evaluation-patterns.md) - Metrics, slice analysis, evaluation reports, model cards
-- [Reproducibility Checklist](references/reproducibility-checklist.md) - Experiment tracking, MLOps (CI/CD/CT/CM)
-- [Feature Freshness & Streaming](references/feature-freshness-streaming.md) - Real-time features, schema evolution
-- [Production Feedback Loops](references/production-feedback-loops.md) - Online learning, labeling, canary deployment
-- [Class Imbalance Patterns](references/class-imbalance-patterns.md) - Resampling, cost-sensitive learning, threshold tuning, evaluation for skewed datasets
-- [Hyperparameter Optimization](references/hyperparameter-optimization.md) - Bayesian optimization, early stopping, search strategies, budget allocation
-- [Interpretability & Explainability](references/interpretability-explainability.md) - SHAP, LIME, feature importance, model cards for regulated domains
+- [EDA Best Practices](resources/eda-best-practices.md) - Structured workflow for exploratory data analysis
+- [Feature Engineering Patterns](resources/feature-engineering-patterns.md) - Operational patterns by data type
+- [Data Contracts & Lineage](resources/data-contracts-lineage.md) - Data quality, versioning, feature store ops
+- [Modelling Patterns](resources/modelling-patterns.md) - Model selection, hyperparameter tuning, train/test splits
+- [Evaluation Patterns](resources/evaluation-patterns.md) - Metrics, slice analysis, evaluation reports, model cards
+- [Reproducibility Checklist](resources/reproducibility-checklist.md) - Experiment tracking, MLOps (CI/CD/CT/CM)
+- [Feature Freshness & Streaming](resources/feature-freshness-streaming.md) - Real-time features, schema evolution
+- [Production Feedback Loops](resources/production-feedback-loops.md) - Online learning, labeling, canary deployment
 
 ---
 
@@ -275,29 +286,29 @@ Use these as copy-paste starting points:
 
 ### Project & Workflow Templates
 
-- **Standard DS project template:** `assets/project/template-standard.md`
-- **Quick DS experiment template:** `assets/project/template-quick.md`
+- **Standard DS project template:** `templates/project/template-standard.md`
+- **Quick DS experiment template:** `templates/project/template-quick.md`
 
 ### Feature Engineering & EDA
 
-- **Feature engineering template:** `assets/features/template-feature-engineering.md`
-- **EDA checklist & notebook template:** `assets/eda/template-eda.md`
+- **Feature engineering template:** `templates/features/template-feature-engineering.md`
+- **EDA checklist & notebook template:** `templates/eda/template-eda.md`
 
 ### Evaluation & Reporting
 
-- **Model evaluation report:** `assets/evaluation/template-evaluation-report.md`
-- **Model card:** `assets/evaluation/template-model-card.md`
-- **ML experiment review:** `assets/review/experiment-review-template.md`
+- **Model evaluation report:** `templates/evaluation/template-evaluation-report.md`
+- **Model card:** `templates/evaluation/template-model-card.md`
+- **ML experiment review:** `templates/review/experiment-review-template.md`
 
 ### SQL Transformation (SQLMesh)
 
 For SQL-based data transformation and feature engineering:
 
-- **SQLMesh project setup:** `../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-project.md`
-- **SQLMesh model types:** `../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-model.md` (FULL, INCREMENTAL, VIEW)
-- **Incremental models:** `../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-incremental.md`
-- **DAG and dependencies:** `../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-dag.md`
-- **Testing and data quality:** `../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-testing.md`
+- **SQLMesh project setup:** `templates/transformation/template-sqlmesh-project.md`
+- **SQLMesh model types:** `templates/transformation/template-sqlmesh-model.md` (FULL, INCREMENTAL, VIEW)
+- **Incremental models:** `templates/transformation/template-sqlmesh-incremental.md`
+- **DAG and dependencies:** `templates/transformation/template-sqlmesh-dag.md`
+- **Testing and data quality:** `templates/transformation/template-sqlmesh-testing.md`
 
 **Use SQLMesh when:**
 - Building SQL-based feature pipelines
@@ -311,34 +322,31 @@ For SQL-based data transformation and feature engineering:
 ## Navigation
 
 **Resources**
-- [references/reproducibility-checklist.md](references/reproducibility-checklist.md)
-- [references/evaluation-patterns.md](references/evaluation-patterns.md)
-- [references/feature-engineering-patterns.md](references/feature-engineering-patterns.md)
-- [references/modelling-patterns.md](references/modelling-patterns.md)
-- [references/feature-freshness-streaming.md](references/feature-freshness-streaming.md)
-- [references/eda-best-practices.md](references/eda-best-practices.md)
-- [references/data-contracts-lineage.md](references/data-contracts-lineage.md)
-- [references/production-feedback-loops.md](references/production-feedback-loops.md)
-- [references/class-imbalance-patterns.md](references/class-imbalance-patterns.md)
-- [references/hyperparameter-optimization.md](references/hyperparameter-optimization.md)
-- [references/interpretability-explainability.md](references/interpretability-explainability.md)
+- [resources/reproducibility-checklist.md](resources/reproducibility-checklist.md)
+- [resources/evaluation-patterns.md](resources/evaluation-patterns.md)
+- [resources/feature-engineering-patterns.md](resources/feature-engineering-patterns.md)
+- [resources/modelling-patterns.md](resources/modelling-patterns.md)
+- [resources/feature-freshness-streaming.md](resources/feature-freshness-streaming.md)
+- [resources/eda-best-practices.md](resources/eda-best-practices.md)
+- [resources/data-contracts-lineage.md](resources/data-contracts-lineage.md)
+- [resources/production-feedback-loops.md](resources/production-feedback-loops.md)
 
 **Templates**
-- [assets/project/template-standard.md](assets/project/template-standard.md)
-- [assets/project/template-quick.md](assets/project/template-quick.md)
-- [assets/features/template-feature-engineering.md](assets/features/template-feature-engineering.md)
-- [assets/eda/template-eda.md](assets/eda/template-eda.md)
-- [assets/evaluation/template-evaluation-report.md](assets/evaluation/template-evaluation-report.md)
-- [assets/evaluation/template-model-card.md](assets/evaluation/template-model-card.md)
-- [assets/review/experiment-review-template.md](assets/review/experiment-review-template.md)
-- [template-sqlmesh-project.md](../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-project.md)
-- [template-sqlmesh-model.md](../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-model.md)
-- [template-sqlmesh-incremental.md](../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-incremental.md)
-- [template-sqlmesh-dag.md](../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-dag.md)
-- [template-sqlmesh-testing.md](../data-lake-platform/assets/transformation/sqlmesh/template-sqlmesh-testing.md)
+- [templates/project/template-standard.md](templates/project/template-standard.md)
+- [templates/project/template-quick.md](templates/project/template-quick.md)
+- [templates/features/template-feature-engineering.md](templates/features/template-feature-engineering.md)
+- [templates/eda/template-eda.md](templates/eda/template-eda.md)
+- [templates/evaluation/template-evaluation-report.md](templates/evaluation/template-evaluation-report.md)
+- [templates/evaluation/template-model-card.md](templates/evaluation/template-model-card.md)
+- [templates/review/experiment-review-template.md](templates/review/experiment-review-template.md)
+- [template-sqlmesh-project.md](../data-lake-platform/templates/transformation/sqlmesh/template-sqlmesh-project.md)
+- [template-sqlmesh-model.md](../data-lake-platform/templates/transformation/sqlmesh/template-sqlmesh-model.md)
+- [template-sqlmesh-incremental.md](../data-lake-platform/templates/transformation/sqlmesh/template-sqlmesh-incremental.md)
+- [template-sqlmesh-dag.md](../data-lake-platform/templates/transformation/sqlmesh/template-sqlmesh-dag.md)
+- [template-sqlmesh-testing.md](../data-lake-platform/templates/transformation/sqlmesh/template-sqlmesh-testing.md)
 
 **Data**
-- [data/sources.json](data/sources.json) - Curated external references
+- [data/sources.json](data/sources.json) — Curated external references
 
 ---
 
@@ -359,9 +367,3 @@ See [data/sources.json](data/sources.json) for curated foundational and implemen
 - **Cloud platforms**: AWS SageMaker, Google Vertex AI, Azure ML, Databricks, Snowflake
 
 Use this skill to **execute data science projects end-to-end**: concrete checklists, patterns, and templates, not theory.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

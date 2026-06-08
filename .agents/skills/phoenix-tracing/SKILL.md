@@ -2,16 +2,15 @@
 name: phoenix-tracing
 description: OpenInference semantic conventions and instrumentation for Phoenix AI observability. Use when implementing LLM tracing, creating custom spans, or deploying to production.
 license: Apache-2.0
-compatibility: Requires Phoenix server. Python skills need arize-phoenix-otel; TypeScript skills need @arizeai/phoenix-otel.
 metadata:
   author: oss@arize.com
   version: "1.0.0"
-  languages: "Python, TypeScript"
+  languages: Python, TypeScript
 ---
 
 # Phoenix Tracing
 
-Comprehensive guide for instrumenting LLM applications with OpenInference tracing in Phoenix. Contains reference files covering setup, instrumentation, span types, and production deployment.
+Comprehensive guide for instrumenting LLM applications with OpenInference tracing in Phoenix. Contains rule files covering setup, instrumentation, span types, and production deployment.
 
 ## When to Apply
 
@@ -23,7 +22,7 @@ Reference these guidelines when:
 - Deploying tracing to production
 - Querying and analyzing trace data
 
-## Reference Categories
+## Rule Categories
 
 | Priority | Category        | Description                    | Prefix                     |
 | -------- | --------------- | ------------------------------ | -------------------------- |
@@ -39,88 +38,103 @@ Reference these guidelines when:
 
 ### 1. Setup (START HERE)
 
-- [setup-python](references/setup-python.md) - Install arize-phoenix-otel, configure endpoint
-- [setup-typescript](references/setup-typescript.md) - Install @arizeai/phoenix-otel, configure endpoint
+- `setup-python` - Install arize-phoenix-otel, configure endpoint
+- `setup-typescript` - Install @arizeai/phoenix-otel, configure endpoint
 
 ### 2. Instrumentation
 
-- [instrumentation-auto-python](references/instrumentation-auto-python.md) - Auto-instrument OpenAI, LangChain, etc.
-- [instrumentation-auto-typescript](references/instrumentation-auto-typescript.md) - Auto-instrument supported frameworks
-- [instrumentation-manual-python](references/instrumentation-manual-python.md) - Custom spans with decorators
-- [instrumentation-manual-typescript](references/instrumentation-manual-typescript.md) - Custom spans with wrappers
+- `instrumentation-auto-python` - Auto-instrument OpenAI, LangChain, etc.
+- `instrumentation-auto-typescript` - Auto-instrument supported frameworks
+- `instrumentation-manual-python` - Custom spans with decorators
+- `instrumentation-manual-typescript` - Custom spans with wrappers
 
 ### 3. Span Types (with full attribute schemas)
 
-- [span-llm](references/span-llm.md) - LLM API calls (model, tokens, messages, cost)
-- [span-chain](references/span-chain.md) - Multi-step workflows and pipelines
-- [span-retriever](references/span-retriever.md) - Document retrieval (documents, scores)
-- [span-tool](references/span-tool.md) - Function/API calls (name, parameters)
-- [span-agent](references/span-agent.md) - Multi-step reasoning agents
-- [span-embedding](references/span-embedding.md) - Vector generation
-- [span-reranker](references/span-reranker.md) - Document re-ranking
-- [span-guardrail](references/span-guardrail.md) - Safety checks
-- [span-evaluator](references/span-evaluator.md) - LLM evaluation
+- `span-llm` - LLM API calls (model, tokens, messages, cost)
+- `span-chain` - Multi-step workflows and pipelines
+- `span-retriever` - Document retrieval (documents, scores)
+- `span-tool` - Function/API calls (name, parameters)
+- `span-agent` - Multi-step reasoning agents
+- `span-embedding` - Vector generation
+- `span-reranker` - Document re-ranking
+- `span-guardrail` - Safety checks
+- `span-evaluator` - LLM evaluation
 
 ### 4. Organization
 
-- [projects-python](references/projects-python.md) / [projects-typescript](references/projects-typescript.md) - Group traces by application
-- [sessions-python](references/sessions-python.md) / [sessions-typescript](references/sessions-typescript.md) - Track conversations
+- `projects-python` / `projects-typescript` - Group traces by application
+- `sessions-python` / `sessions-typescript` - Track conversations
 
 ### 5. Enrichment
 
-- [metadata-python](references/metadata-python.md) / [metadata-typescript](references/metadata-typescript.md) - Custom attributes
+- `metadata-python` / `metadata-typescript` - Custom attributes
 
 ### 6. Production (CRITICAL)
 
-- [production-python](references/production-python.md) / [production-typescript](references/production-typescript.md) - Batch processing, PII masking
+- `production-python` / `production-typescript` - Batch processing, PII masking
 
 ### 7. Feedback
 
-- [annotations-overview](references/annotations-overview.md) - Feedback concepts
-- [annotations-python](references/annotations-python.md) / [annotations-typescript](references/annotations-typescript.md) - Add feedback to spans
+- `annotations-overview` - Feedback concepts
+- `annotations-python` / `annotations-typescript` - Add feedback to spans
 
 ### Reference Files
 
-- [fundamentals-overview](references/fundamentals-overview.md) - Traces, spans, attributes basics
-- [fundamentals-required-attributes](references/fundamentals-required-attributes.md) - Required fields per span type
-- [fundamentals-universal-attributes](references/fundamentals-universal-attributes.md) - Common attributes (user.id, session.id)
-- [fundamentals-flattening](references/fundamentals-flattening.md) - JSON flattening rules
-- [attributes-messages](references/attributes-messages.md) - Chat message format
-- [attributes-metadata](references/attributes-metadata.md) - Custom metadata schema
-- [attributes-graph](references/attributes-graph.md) - Agent workflow attributes
-- [attributes-exceptions](references/attributes-exceptions.md) - Error tracking
+- `fundamentals-overview` - Traces, spans, attributes basics
+- `fundamentals-required-attributes` - Required fields per span type
+- `fundamentals-universal-attributes` - Common attributes (user.id, session.id)
+- `fundamentals-flattening` - JSON flattening rules
+- `attributes-messages` - Chat message format
+- `attributes-metadata` - Custom metadata schema
+- `attributes-graph` - Agent workflow attributes
+- `attributes-exceptions` - Error tracking
+
+## Common Attributes
+
+| Attribute                 | Purpose              | Example                |
+| ------------------------- | -------------------- | ---------------------- |
+| `openinference.span.kind` | Span type (required) | `"LLM"`, `"RETRIEVER"` |
+| `input.value`             | Operation input      | JSON or text           |
+| `output.value`            | Operation output     | JSON or text           |
+| `user.id`                 | User identifier      | `"user_123"`           |
+| `session.id`              | Conversation ID      | `"session_abc"`        |
+| `llm.model_name`          | Model identifier     | `"gpt-4"`              |
+| `llm.token_count.total`   | Token usage          | `1500`                 |
+| `tool.name`               | Tool/function name   | `"get_weather"`        |
 
 ## Common Workflows
 
-- **Quick Start**: setup-{lang} → instrumentation-auto-{lang} → Check Phoenix
-- **Custom Spans**: setup-{lang} → instrumentation-manual-{lang} → span-{type}
-- **Session Tracking**: sessions-{lang} for conversation grouping patterns
-- **Production**: production-{lang} for batching, masking, and deployment
+**Quick Start:**
 
-## How to Use This Skill
+1. `setup-{lang}` → Install and configure
+2. `instrumentation-auto-{lang}` → Enable auto-instrumentation
+3. Check Phoenix for traces
 
-**Navigation Patterns:**
+**Custom Spans:**
 
-```bash
-# By category prefix
-references/setup-*              # Installation and configuration
-references/instrumentation-*    # Auto and manual tracing
-references/span-*               # Span type specifications
-references/sessions-*           # Session tracking
-references/production-*         # Production deployment
-references/fundamentals-*       # Core concepts
-references/attributes-*         # Attribute specifications
+1. `setup-{lang}` → Install
+2. `instrumentation-manual-{lang}` → Add decorators/wrappers
+3. `span-{type}` → Reference attributes
 
-# By language
-references/*-python.md          # Python implementations
-references/*-typescript.md      # TypeScript implementations
+**Production:** `production-{lang}` → Configure batching and masking
+
+## How to Use
+
+Read individual rule files in `rules/` for detailed explanations and examples:
+
+```
+rules/setup-python.md
+rules/instrumentation-manual-typescript.md
+rules/span-llm.md
 ```
 
-**Reading Order:**
-1. Start with setup-{lang} for your language
-2. Choose instrumentation-auto-{lang} OR instrumentation-manual-{lang}
-3. Reference span-{type} files as needed for specific operations
-4. See fundamentals-* files for attribute specifications
+Use file prefixes to find what you need:
+
+```bash
+ls rules/span-*           # Span type specifications
+ls rules/*-python.md      # Python guides
+ls rules/*-typescript.md  # TypeScript guides
+```
 
 ## References
 

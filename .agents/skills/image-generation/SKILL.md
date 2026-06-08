@@ -1,233 +1,187 @@
 ---
 name: image-generation
-description: "Generate images from text descriptions using each::sense AI. Create photorealistic photos, illustrations, concept art, digital paintings, logos, and any visual from a text prompt. Supports all styles from hyperrealism to anime, abstract to architectural. 7 specialized models including flux-2-max, gemini-imagen-4, and seedream-v4-5. Use for: concept art, illustrations, marketing visuals, social media images, product shots, storyboarding, creative exploration. Triggers: generate image, create image, text to image, ai image, image generation, txt2img, ai art, generate picture, create visual, image from text, ai illustration, make image, draw, render"
-allowed-tools: Bash(curl *), WebFetch
+description: Use this skill when the user requests to generate, create, imagine, or visualize images including characters, scenes, products, or any visual content. Supports structured prompts and reference images for guided generation.
 ---
 
-# Image Generation
+# Image Generation Skill
 
-Generate images from text descriptions using [each::sense](https://docs.eachlabs.ai/sense/overview) — the intelligent AI agent that automatically selects the best model for your request.
+## Overview
 
-## Quick Start
+This skill generates high-quality images using structured prompts and a Python script. The workflow includes creating JSON-formatted prompts and executing image generation with optional reference images.
 
-> Requires an each::labs API key. Get one at [eachlabs.ai](https://eachlabs.ai).
+## Core Capabilities
 
-### Using curl
+- Create structured JSON prompts for AIGC image generation
+- Support multiple reference images for style/composition guidance
+- Generate images through automated Python script execution
+- Handle various image generation scenarios (character design, scenes, products, etc.)
 
+## Workflow
+
+### Step 1: Understand Requirements
+
+When a user requests image generation, identify:
+
+- Subject/content: What should be in the image
+- Style preferences: Art style, mood, color palette
+- Technical specs: Aspect ratio, composition, lighting
+- Reference images: Any images to guide generation
+- You don't need to check the folder under `/mnt/user-data`
+
+### Step 2: Create Structured Prompt
+
+Generate a structured JSON file in `/mnt/user-data/workspace/` with naming pattern: `{descriptive-name}.json`
+
+### Step 3: Execute Generation
+
+Call the Python script:
 ```bash
-curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $EACHLABS_API_KEY" \
-  -d '{
-    "messages": [{"role": "user", "content": "A lone astronaut standing on a red desert planet, looking up at a sky filled with three massive moons, cinematic lighting, photorealistic, wide shot"}],
-    "stream": false
-  }'
+python /mnt/skills/public/image-generation/scripts/generate.py \
+  --prompt-file /mnt/user-data/workspace/prompt-file.json \
+  --reference-images /path/to/ref1.jpg /path/to/ref2.png \
+  --output-file /mnt/user-data/outputs/generated-image.jpg
+  --aspect-ratio 16:9
 ```
 
-### Using Python (OpenAI SDK)
+Parameters:
 
-```python
-from openai import OpenAI
+- `--prompt-file`: Absolute path to JSON prompt file (required)
+- `--reference-images`: Absolute paths to reference images (optional, space-separated)
+- `--output-file`: Absolute path to output image file (required)
+- `--aspect-ratio`: Aspect ratio of the generated image (optional, default: 16:9)
 
-client = OpenAI(
-    api_key="YOUR_EACHLABS_API_KEY",
-    base_url="https://eachsense-agent.core.eachlabs.run/v1"
-)
+[!NOTE]
+Do NOT read the python file, just call it with the parameters.
 
-response = client.chat.completions.create(
-    model="eachsense/beta",
-    messages=[{"role": "user", "content": "A lone astronaut standing on a red desert planet, looking up at a sky filled with three massive moons, cinematic lighting, photorealistic, wide shot"}]
-)
+## Character Generation Example
 
-print(response.choices[0].message.content)
+User request: "Create a Tokyo street style woman character in 1990s"
+
+Create prompt file: `/mnt/user-data/workspace/asian-woman.json`
+```json
+{
+  "characters": [{
+    "gender": "female",
+    "age": "mid-20s",
+    "ethnicity": "Japanese",
+    "body_type": "slender, elegant",
+    "facial_features": "delicate features, expressive eyes, subtle makeup with emphasis on lips, long dark hair partially wet from rain",
+    "clothing": "stylish trench coat, designer handbag, high heels, contemporary Tokyo street fashion",
+    "accessories": "minimal jewelry, statement earrings, leather handbag",
+    "era": "1990s"
+  }],
+  "negative_prompt": "blurry face, deformed, low quality, overly sharp digital look, oversaturated colors, artificial lighting, studio setting, posed, selfie angle",
+  "style": "Leica M11 street photography aesthetic, film-like rendering, natural color palette with slight warmth, bokeh background blur, analog photography feel",
+  "composition": "medium shot, rule of thirds, subject slightly off-center, environmental context of Tokyo street visible, shallow depth of field isolating subject",
+  "lighting": "neon lights from signs and storefronts, wet pavement reflections, soft ambient city glow, natural street lighting, rim lighting from background neons",
+  "color_palette": "muted naturalistic tones, warm skin tones, cool blue and magenta neon accents, desaturated compared to digital photography, film grain texture"
+}
 ```
 
-### With Reference Image
-
+Execute generation:
 ```bash
-curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $EACHLABS_API_KEY" \
-  -d '{
-    "messages": [{"role": "user", "content": [
-              {"type": "text", "text": "Generate an image in the same style as this reference, but change the setting to a futuristic Tokyo street at night"},
-              {"type": "image_url", "image_url": {"url": "https://example.com/reference-style.jpg"}}
-            ]
-          }
-    ],
-    "stream": false
-  }'
+python /mnt/skills/public/image-generation/scripts/generate.py \
+  --prompt-file /mnt/user-data/workspace/cyberpunk-hacker.json \
+  --output-file /mnt/user-data/outputs/cyberpunk-hacker-01.jpg \
+  --aspect-ratio 2:3
 ```
 
-> Images are sent inside messages using the OpenAI multimodal content format. Maximum 4 images per request.
-
-### Streaming
-
-Set `"stream": true` for real-time SSE responses, or `"stream": false` for complete result in a single response. Streaming is useful for showing progress in UIs; non-streaming is simpler for scripts and automation.
-
-## Available Models
-
-| Model | Strengths | Best For |
-|-------|-----------|----------|
-| **flux-2-max** | Highest quality, exceptional detail | Hero images, print-ready visuals, portfolio work |
-| **flux-2-pro** | Fast with balanced quality | Rapid iteration, production workflows |
-| **flux-kontext-pro** | Accurate text rendering in images | Posters, signs, logos with readable text |
-| **nano-banana-pro** | Fastest generation speed | Prototyping, bulk generation, real-time previews |
-| **gemini-imagen-4** | Outstanding photorealism | Product photography, lifestyle shots, realistic scenes |
-| **seedream-v4-5** | Artistic and stylized outputs | Illustrations, fantasy art, painterly styles |
-| **kling-text-to-image** | Versatile across styles | General-purpose generation, mixed media |
-
-> each::sense automatically picks the optimal model based on your prompt. You do not need to specify a model unless you want to override the selection.
-
-## Prompt Engineering Guide
-
-### Prompt Structure
-
+With reference images:
+```json
+{
+  "characters": [{
+    "gender": "based on [Image 1]",
+    "age": "based on [Image 1]",
+    "ethnicity": "human from [Image 1] adapted to Star Wars universe",
+    "body_type": "based on [Image 1]",
+    "facial_features": "matching [Image 1] with slight weathered look from space travel",
+    "clothing": "Star Wars style outfit - worn leather jacket with utility vest, cargo pants with tactical pouches, scuffed boots, belt with holster",
+    "accessories": "blaster pistol on hip, comlink device on wrist, goggles pushed up on forehead, satchel with supplies, personal vehicle based on [Image 2]",
+    "era": "Star Wars universe, post-Empire era"
+  }],
+  "prompt": "Character inspired by [Image 1] standing next to a vehicle inspired by [Image 2] on a bustling alien planet street in Star Wars universe aesthetic. Character wearing worn leather jacket with utility vest, cargo pants with tactical pouches, scuffed boots, belt with blaster holster. The vehicle adapted to Star Wars aesthetic with weathered metal panels, repulsor engines, desert dust covering, parked on the street. Exotic alien marketplace street with multi-level architecture, weathered metal structures, hanging market stalls with colorful awnings, alien species walking by as background characters. Twin suns casting warm golden light, atmospheric dust particles in air, moisture vaporators visible in distance. Gritty lived-in Star Wars aesthetic, practical effects look, film grain texture, cinematic composition.",
+  "negative_prompt": "clean futuristic look, sterile environment, overly CGI appearance, fantasy medieval elements, Earth architecture, modern city",
+  "style": "Star Wars original trilogy aesthetic, lived-in universe, practical effects inspired, cinematic film look, slightly desaturated with warm tones",
+  "composition": "medium wide shot, character in foreground with alien street extending into background, environmental storytelling, rule of thirds",
+  "lighting": "warm golden hour lighting from twin suns, rim lighting on character, atmospheric haze, practical light sources from market stalls",
+  "color_palette": "warm sandy tones, ochre and sienna, dusty blues, weathered metals, muted earth colors with pops of alien market colors",
+  "technical": {
+    "aspect_ratio": "9:16",
+    "quality": "high",
+    "detail_level": "highly detailed with film-like texture"
+  }
+}
 ```
-[subject] + [action/pose] + [environment] + [style] + [lighting] + [camera/composition]
-```
-
-### Style Keywords
-
-| Style | Keywords |
-|-------|----------|
-| **Photorealistic** | photorealistic, ultra-realistic, DSLR photo, 8K, raw photo, unedited |
-| **Illustration** | digital illustration, vector art, hand-drawn, watercolor, ink drawing |
-| **Cinematic** | cinematic, film still, movie scene, dramatic lighting, anamorphic lens |
-| **Anime** | anime style, manga, cel shading, Studio Ghibli, Makoto Shinkai |
-| **3D Render** | 3D render, octane render, unreal engine, isometric, blender render |
-| **Oil Painting** | oil painting, impasto, classical art, Renaissance, Baroque |
-| **Pixel Art** | pixel art, 16-bit, retro game, 8-bit, sprite art |
-| **Minimalist** | minimalist, flat design, simple, clean lines, geometric |
-
-### Aspect Ratios
-
-Specify aspect ratio in your prompt to control image dimensions:
-
-```
-"... landscape format, 16:9 aspect ratio"
-"... square format, 1:1"
-"... portrait format, 9:16, vertical"
-"... ultrawide, 21:9 cinematic"
-```
-
-### Quality Boosters
-
-```
-masterpiece, highly detailed, sharp focus, professional,
-studio quality, award-winning, 8K resolution, HDR
-```
-
-### Negative Guidance
-
-Describe what you do not want to improve results:
-
-```
-"... avoid blurry, no watermarks, no text overlays, avoid distorted faces"
-```
-
-## Examples
-
-### Photorealistic Landscape
-
 ```bash
-curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $EACHLABS_API_KEY" \
-  -d '{
-    "messages": [{"role": "user", "content": "A misty fjord in Norway at sunrise, mirror-like water reflecting snow-capped mountains, a small red fishing cabin on the shore, photorealistic, 8K, golden hour lighting, shot on Hasselblad"}],
-    "stream": false
-  }'
+python /mnt/skills/public/image-generation/scripts/generate.py \
+  --prompt-file /mnt/user-data/workspace/star-wars-scene.json \
+  --reference-images /mnt/user-data/uploads/character-ref.jpg /mnt/user-data/uploads/vehicle-ref.jpg \
+  --output-file /mnt/user-data/outputs/star-wars-scene-01.jpg \
+  --aspect-ratio 16:9
 ```
 
-### Digital Illustration
+## Common Scenarios
 
-```bash
-curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $EACHLABS_API_KEY" \
-  -d '{
-    "messages": [{"role": "user", "content": "A cozy bookstore interior with a cat sleeping on a stack of old books, warm lamp light, plants hanging from the ceiling, digital illustration, Studio Ghibli style, soft colors, whimsical atmosphere"}],
-    "stream": false
-  }'
-```
+Use different JSON schemas for different scenarios.
 
-### Product Photography
+**Character Design**:
+- Physical attributes (gender, age, ethnicity, body type)
+- Facial features and expressions
+- Clothing and accessories
+- Historical era or setting
+- Pose and context
 
-```bash
-curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $EACHLABS_API_KEY" \
-  -d '{
-    "messages": [{"role": "user", "content": "A sleek wireless earbud case on a marble surface, soft studio lighting, product photography, shallow depth of field, clean minimalist background, commercial quality, 1:1 square format"}],
-    "stream": false
-  }'
-```
+**Scene Generation**:
+- Environment description
+- Time of day, weather
+- Mood and atmosphere
+- Focal points and composition
 
-### Concept Art
+**Product Visualization**:
+- Product details and materials
+- Lighting setup
+- Background and context
+- Presentation angle
 
-```bash
-curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $EACHLABS_API_KEY" \
-  -d '{
-    "messages": [{"role": "user", "content": "A floating cyberpunk city above the clouds, neon lights reflecting off chrome towers, flying vehicles streaming between buildings, concept art, matte painting, epic scale, dramatic perspective, 16:9 cinematic"}],
-    "stream": false
-  }'
-```
+## Specific Templates
 
-### Text-in-Image (Poster)
+Read the following template file only when matching the user request.
 
-```bash
-curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $EACHLABS_API_KEY" \
-  -d '{
-    "messages": [{"role": "user", "content": "A vintage concert poster for a band called SOLAR DRIFT, playing at The Echo Lounge, June 15th. Retro psychedelic style with swirling colors, 60s typography, orange and purple palette, portrait format"}],
-    "stream": false
-  }'
-```
+- [Doraemon Comic](templates/doraemon.md)
 
-## Batch Generation Workflow
+## Output Handling
 
-```bash
-# Generate multiple style variations of the same subject
-PROMPTS=(
-  "A medieval castle on a cliff at sunset, oil painting style"
-  "A medieval castle on a cliff at sunset, photorealistic, drone shot"
-  "A medieval castle on a cliff at sunset, anime style, Makoto Shinkai"
-  "A medieval castle on a cliff at sunset, pixel art, 16-bit"
-)
+After generation:
 
-for PROMPT in "${PROMPTS[@]}"; do
-  curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -H "X-API-Key: $EACHLABS_API_KEY" \
-    -d "{
-      \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}],
-      \"stream\": false
-    }"
-  echo "---"
-done
-```
+- Images are typically saved in `/mnt/user-data/outputs/`
+- Share generated images with user using present_files tool
+- Provide brief description of the generation result
+- Offer to iterate if adjustments needed
 
-## Common Pitfalls
+## Tips: Enhancing Generation with Reference Images
 
-- **Vague prompts** produce generic results. Be specific about subject, style, and mood.
-- **Too many subjects** in one prompt cause confusion. Focus on one main subject per image.
-- **Text rendering** can be unreliable in most models. Use flux-kontext-pro for text-heavy images.
-- **Hands and fingers** can be distorted. Crop or pose hands carefully if they are the focus.
-- **Contradictory styles** (e.g., "photorealistic watercolor") confuse the model. Pick one.
-- **Overloaded prompts** with 50+ words often degrade quality. Aim for 15-40 words of focused description.
+For scenarios where visual accuracy is critical, **use the `image_search` tool first** to find reference images before generation.
 
-## Related Skills
+**Recommended scenarios for using image_search tool:**
+- **Character/Portrait Generation**: Search for similar poses, expressions, or styles to guide facial features and body proportions
+- **Specific Objects or Products**: Find reference images of real objects to ensure accurate representation
+- **Architectural or Environmental Scenes**: Search for location references to capture authentic details
+- **Fashion and Clothing**: Find style references to ensure accurate garment details and styling
 
-- [Image Editing](../image-editing/SKILL.md) — Edit and modify generated images with natural language
-- [Image Upscaling](../image-upscaling/SKILL.md) — Enhance resolution of generated images
-- [Background Removal](../background-removal/SKILL.md) — Remove backgrounds from generated images
-- [Video Generation](../video-generation/SKILL.md) — Animate your images into video
+**Example workflow:**
+1. Call the `image_search` tool to find suitable reference images:
+   ```
+   image_search(query="Japanese woman street photography 1990s", size="Large")
+   ```
+2. Download the returned image URLs to local files
+3. Use the downloaded images as `--reference-images` parameter in the generation script
 
-## Documentation
+This approach significantly improves generation quality by providing the model with concrete visual guidance rather than relying solely on text descriptions.
 
-- [each::sense Overview](https://docs.eachlabs.ai/sense/overview)
-- [each::labs API](https://docs.eachlabs.ai)
+## Notes
+
+- Always use English for prompts regardless of user's language
+- JSON format ensures structured, parsable prompts
+- Reference images enhance generation quality significantly
+- Iterative refinement is normal for optimal results
+- For character generation, include the detailed character object plus a consolidated prompt field

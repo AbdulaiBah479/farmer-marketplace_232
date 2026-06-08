@@ -1,96 +1,94 @@
 ---
 name: onboard
-description: "Generates a contextual onboarding document for a new contributor or agent joining the project. Summarizes project state, architecture, conventions, and current priorities relevant to the specified role or area."
-argument-hint: "[role|area]"
-user-invocable: true
-allowed-tools: Read, Glob, Grep, Write
-model: haiku
+description: Use at session start to detect available skills, load active context, and enforce skill usage discipline for the current session.
+effort: medium
+argument-hint: 
 ---
 
-## Phase 1: Load Project Context
 
-Read CLAUDE.md for project overview and standards.
 
-Read the relevant agent definition from `.claude/agents/` if a specific role is specified.
+# Onboard
 
----
+## Purpose
 
-## Phase 2: Scan Relevant Area
+Framework bootstrap and enforcement. Detects available skills, loads active context (spec, tasks, decisions), presents quick status, and enforces skill usage discipline. Prevents agents from bypassing skills with rationalizations.
 
-- For programmers: scan `src/` for architecture, patterns, key files
-- For designers: scan `design/` for existing design documents
-- For narrative: scan `design/narrative/` for world-building and story docs
-- For QA: scan `tests/` for existing test coverage
-- For production: scan `production/` for current sprint and milestone
+## Trigger
 
-Read recent changes (git log if available) to understand current momentum.
+- Auto-triggered via SessionStart hook
+- Manual: `/ai-onboard`
+- Context: beginning of any non-trivial session.
 
----
+## Procedure
 
-## Phase 3: Generate Onboarding Document
+1. **Detect skills** -- scan `.agents/skills/` for available SKILL.md files. Build a capability map.
 
-```markdown
-# Onboarding: [Role/Area]
+2. **Load active context**:
+   - Read `.ai-engineering/specs/spec.md` -- current spec
+   - Read `.ai-engineering/specs/plan.md` -- current tasks
+   - Read `.ai-engineering/state/decision-store.json` -- active decisions and risk acceptances
+   - Read `.ai-engineering/contexts/team/lessons.md` -- accumulated rules and patterns
 
-## Project Summary
-[2-3 sentence summary of what this game is and its current state]
+3. **Present status** -- concise summary to user:
+   ```
+   Active spec: spec-054 (Hooks, Security, Observability)
+   Tasks: 12/18 complete, 2 blocked
+   Decisions: 3 active, 1 expiring in 5 days
+   Skills: 29 loaded
+   ```
 
-## Your Role
-[What this role does on this project, key responsibilities, who you report to]
+4. **Enforce skill discipline** -- install the following rule for the session:
 
-## Project Architecture
-[Relevant architectural overview for this role]
+   > **If a skill applies to the current task, you MUST use it.** No exceptions. No "this is too simple" shortcuts.
 
-### Key Directories
-| Directory | Contents | Your Interaction |
-|-----------|----------|-----------------|
+## Red Flags Table
 
-### Key Files
-| File | Purpose | Read Priority |
-|------|---------|--------------|
+Rationalization patterns agents use to skip skills. Every one of these is wrong.
 
-## Current Standards and Conventions
-[Summary of conventions relevant to this role from CLAUDE.md and agent definition]
+| # | Rationalization | Why it is wrong | Correct action |
+|---|----------------|-----------------|----------------|
+| 1 | "This is too simple for planning" | Simple tasks still need scope definition | Use `/ai-plan` (trivial pipeline) |
+| 2 | "I'll just make a quick fix" | Quick fixes skip root cause analysis | Use `/ai-debug` |
+| 3 | "Tests aren't needed for this change" | Every behavioral change needs verification | Use `/ai-test` |
+| 4 | "I already know the answer" | Confidence without verification is the #1 source of bugs | Use `/ai-explore` first |
+| 5 | "The user is in a hurry" | Skipping process creates more delay from rework | Follow the process faster, do not skip steps |
+| 6 | "This is just a config change" | Config changes affect runtime behavior | Use `/ai-test` to verify |
+| 7 | "I'll add tests later" | Later never comes; RED before GREEN | TDD protocol: tests first |
+| 8 | "The existing tests cover this" | Assumption without verification | Run tests, check coverage |
+| 9 | "This doesn't need a spec" | Every pipeline requires a spec, even trivial | Use `/ai-brainstorm` |
+| 10 | "I'll clean up the commit message later" | Commit messages are permanent documentation | Use `/ai-commit` |
+| 11 | "Security scanning would slow us down" | A leaked secret takes hours to rotate | Gitleaks runs in seconds |
+| 12 | "This refactor is obvious" | Obvious refactors still need test verification | Use `/ai-simplify` |
 
-## Current State of Your Area
-[What has been built, what is in progress, what is planned next]
+## Detection Rules
 
-## Current Sprint Context
-[What the team is working on now and what is expected of this role]
+When the user's request matches these patterns, enforce the corresponding skill:
 
-## Key Dependencies
-[What other roles/systems this role interacts with most]
+| User intent pattern | Required skill |
+|-------------------|----------------|
+| "implement", "build", "add feature" | `/ai-plan` then `/ai-dispatch` |
+| "fix", "bug", "broken", "not working" | `/ai-debug` |
+| "test", "coverage", "verify" | `/ai-test` |
+| "refactor", "restructure", "move" | `/ai-simplify` |
+| "explain", "how does", "what is" | `/ai-explain` |
+| "commit", "push", "save" | `/ai-commit` |
+| "PR", "pull request", "review" | `/ai-pr` |
+| "deploy", "release", "publish" | `/ai-release` |
+| "conflict", "merge conflict" | `/ai-resolve-conflicts` |
+| "incident", "outage", "postmortem" | `/ai-postmortem` |
 
-## Common Pitfalls
-[Things that trip up new contributors in this area]
+## Quick Reference
 
-## First Tasks
-[Suggested first tasks to get oriented and productive]
-
-1. [Read these documents first]
-2. [Review this code/content]
-3. [Start with this small task]
-
-## Questions to Ask
-[Questions the new contributor should ask to get fully oriented]
+```
+/ai-onboard     # manual bootstrap (usually auto-triggered)
 ```
 
----
+No arguments. Reads project state and configures the session.
 
-## Phase 4: Save Document
+## Boundaries
 
-Present the onboarding document to the user.
+- Onboard is read-only -- it does not modify project files
+- It does not execute tasks -- it configures the session for correct execution
+- If no active spec exists, report it but do not block the session
 
-Ask: "May I write this to `production/onboarding/onboard-[role]-[date].md`?"
-
-If yes, write the file, creating the directory if needed.
-
----
-
-## Phase 5: Next Steps
-
-Verdict: **COMPLETE** — onboarding document generated.
-
-- Share the onboarding doc with the new contributor before their first session.
-- Run `/sprint-status` to show the new contributor current progress.
-- Run `/help` if the contributor needs guidance on what to work on next.
+$ARGUMENTS

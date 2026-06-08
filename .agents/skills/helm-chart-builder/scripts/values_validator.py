@@ -1,441 +1,457 @@
 #!/usr/bin/env python3
 """
-helm-chart-builder: Values Validator
+Helm Values Validator - Validate values.yaml against chart requirements.
 
-Validate values.yaml files against Helm best practices — documentation coverage,
-type consistency, naming conventions, default quality, and security.
+Checks for missing resource limits, security contexts, image tag best practices,
+and other Kubernetes configuration requirements.
 
-Usage:
-    python scripts/values_validator.py values.yaml
-    python scripts/values_validator.py values.yaml --output json
-    python scripts/values_validator.py values.yaml --strict
+Author: Claude Skills Engineering Team
+License: MIT
 """
 
 import argparse
 import json
 import re
 import sys
+from dataclasses import dataclass, asdict
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 
-# --- Demo values.yaml ---
-
-DEMO_VALUES = """# Default values for demo-app
-replicaCount: 1
-
-image:
-  repository: nginx
-  tag: latest
-  pullPolicy: Always
-
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: false
-
-resources: {}
-
-PASSWORD: supersecret123
-db_password: changeme
-api-key: sk-12345
-
-deeply:
-  nested:
-    structure:
-      that:
-        goes:
-          too:
-            deep: true
-
-undocumented_value: something
-AnotherValue: 42
-snake_case_key: bad
-"""
+@dataclass
+class Finding:
+    """A validation finding."""
+    severity: str
+    category: str
+    path: str  # YAML path like "resources.limits.memory"
+    message: str
+    recommendation: str
 
 
-# --- Validation Rules ---
+class ValuesParser:
+    """Parse values.yaml with stdlib only."""
 
-NAMING_PATTERN = re.compile(r"^[a-z][a-zA-Z0-9]*$")  # camelCase
-SNAKE_CASE_PATTERN = re.compile(r"^[a-z][a-z0-9]*(_[a-z0-9]+)+$")  # snake_case
-UPPER_CASE_PATTERN = re.compile(r"^[A-Z]")  # Starts with uppercase
+    def parse(self, content: str) -> Dict[str, Any]:
+        """Parse YAML-like content into nested dict."""
+        result: Dict[str, Any] = {}
+        stack: List[tuple] = []  # (indent, dict_ref)
+        current = result
 
-SECRET_KEY_PATTERNS = [
-    re.compile(r"(?:password|secret|token|apiKey|api_key|api-key|private_key|credentials)", re.IGNORECASE),
-]
+        for line in content.split("\n"):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
 
-KNOWN_STRUCTURES = {
-    "image": ["repository", "tag", "pullPolicy"],
-    "service": ["type", "port"],
-    "ingress": ["enabled"],
-    "resources": [],
-    "serviceAccount": ["create", "name"],
-    "autoscaling": ["enabled", "minReplicas", "maxReplicas"],
-}
+            indent = len(line) - len(line.lstrip())
 
-
-def parse_values(content):
-    """Parse values.yaml into structured data with metadata.
-
-    Returns a list of entries with key paths, values, depth, and comment info.
-    """
-    entries = []
-    key_stack = []
-    indent_stack = [0]
-    prev_comment = None
-
-    for line_num, line in enumerate(content.splitlines(), 1):
-        stripped = line.strip()
-
-        # Track comments for documentation coverage
-        if stripped.startswith("#"):
-            prev_comment = stripped
-            continue
-
-        if not stripped:
-            prev_comment = None
-            continue
-
-        indent = len(line) - len(line.lstrip())
-
-        # Pop stack for dedented lines
-        while len(indent_stack) > 1 and indent <= indent_stack[-1]:
-            indent_stack.pop()
-            if key_stack:
-                key_stack.pop()
-
-        # Parse key: value
-        match = re.match(r"^(\S+)\s*:\s*(.*)", stripped)
-        if match and not stripped.startswith("-"):
-            key = match.group(1)
-            raw_value = match.group(2).strip()
-
-            # Check for inline comment
-            inline_comment = None
-            if "#" in raw_value:
-                val_part, _, comment_part = raw_value.partition("#")
-                raw_value = val_part.strip()
-                inline_comment = comment_part.strip()
-
-            # Build full key path
-            full_path = ".".join(key_stack + [key])
-            depth = len(key_stack) + 1
-
-            # Determine value type
-            value_type = "unknown"
-            if not raw_value or raw_value == "":
-                value_type = "map"
-                key_stack.append(key)
-                indent_stack.append(indent)
-            elif raw_value in ("true", "false"):
-                value_type = "boolean"
-            elif raw_value == "null" or raw_value == "~":
-                value_type = "null"
-            elif raw_value == "{}":
-                value_type = "empty_map"
-            elif raw_value == "[]":
-                value_type = "empty_list"
-            elif re.match(r"^-?\d+$", raw_value):
-                value_type = "integer"
-            elif re.match(r"^-?\d+\.\d+$", raw_value):
-                value_type = "float"
-            elif raw_value.startswith('"') or raw_value.startswith("'"):
-                value_type = "string"
+            # Pop stack to find parent at this indent level
+            while stack and stack[-1][0] >= indent:
+                stack.pop()
+            if stack:
+                current = stack[-1][1]
             else:
-                value_type = "string"
+                current = result
 
-            has_doc = prev_comment is not None or inline_comment is not None
+            # Handle list items
+            if stripped.startswith("- "):
+                continue  # Skip list items for this validation
 
-            entries.append({
-                "key": key,
-                "full_path": full_path,
-                "value": raw_value,
-                "value_type": value_type,
-                "depth": depth,
-                "line": line_num,
-                "has_documentation": has_doc,
-                "comment": prev_comment or inline_comment,
-            })
+            if ":" in stripped:
+                key, _, value = stripped.partition(":")
+                key = key.strip()
+                value = value.strip()
 
-            prev_comment = None
-        else:
-            prev_comment = None
+                if value:
+                    # Strip quotes
+                    value = value.strip('"').strip("'")
+                    # Try to parse booleans and numbers
+                    if value.lower() == "true":
+                        current[key] = True
+                    elif value.lower() == "false":
+                        current[key] = False
+                    elif value.lower() in ("null", "~"):
+                        current[key] = None
+                    else:
+                        try:
+                            current[key] = int(value)
+                        except ValueError:
+                            try:
+                                current[key] = float(value)
+                            except ValueError:
+                                current[key] = value
+                else:
+                    # Nested dict
+                    current[key] = {}
+                    stack.append((indent, current))
+                    current = current[key]
+                    stack.append((indent + 2, current))
 
-    return entries
-
-
-def validate_naming(entries):
-    """Check key naming conventions."""
-    findings = []
-
-    for entry in entries:
-        key = entry["key"]
-
-        # Skip map entries (they're parent keys)
-        if entry["value_type"] == "map":
-            # Parent keys should still be camelCase
-            pass
-
-        if SNAKE_CASE_PATTERN.match(key):
-            findings.append({
-                "severity": "medium",
-                "category": "naming",
-                "message": f"Key '{entry['full_path']}' uses snake_case — Helm convention is camelCase",
-                "fix": f"Rename to camelCase: {to_camel_case(key)}",
-                "line": entry["line"],
-            })
-        elif UPPER_CASE_PATTERN.match(key) and not key.isupper():
-            findings.append({
-                "severity": "medium",
-                "category": "naming",
-                "message": f"Key '{entry['full_path']}' starts with uppercase — use camelCase",
-                "fix": f"Rename: {key[0].lower() + key[1:]}",
-                "line": entry["line"],
-            })
-        elif "-" in key:
-            findings.append({
-                "severity": "medium",
-                "category": "naming",
-                "message": f"Key '{entry['full_path']}' uses kebab-case — Helm convention is camelCase",
-                "fix": f"Rename to camelCase: {to_camel_case(key)}",
-                "line": entry["line"],
-            })
-
-    return findings
-
-
-def validate_documentation(entries):
-    """Check documentation coverage."""
-    findings = []
-    total = len(entries)
-    documented = sum(1 for e in entries if e["has_documentation"])
-
-    if total > 0:
-        coverage = (documented / total) * 100
-        if coverage < 50:
-            findings.append({
-                "severity": "high",
-                "category": "documentation",
-                "message": f"Only {coverage:.0f}% of values have comments ({documented}/{total})",
-                "fix": "Add inline YAML comments explaining purpose, type, and valid options for each value",
-                "line": 0,
-            })
-        elif coverage < 80:
-            findings.append({
-                "severity": "medium",
-                "category": "documentation",
-                "message": f"{coverage:.0f}% documentation coverage ({documented}/{total}) — aim for 80%+",
-                "fix": "Add comments for undocumented values",
-                "line": 0,
-            })
-
-    # Flag specific undocumented top-level keys
-    for entry in entries:
-        if entry["depth"] == 1 and not entry["has_documentation"]:
-            findings.append({
-                "severity": "low",
-                "category": "documentation",
-                "message": f"Top-level key '{entry['key']}' has no comment",
-                "fix": f"Add a comment above '{entry['key']}' explaining its purpose",
-                "line": entry["line"],
-            })
-
-    return findings
-
-
-def validate_defaults(entries):
-    """Check default value quality."""
-    findings = []
-
-    for entry in entries:
-        # Check for :latest tag
-        if entry["key"] == "tag" and entry["value"] in ("latest", '"latest"', "'latest'"):
-            findings.append({
-                "severity": "high",
-                "category": "defaults",
-                "message": f"image.tag defaults to 'latest' — not reproducible",
-                "fix": "Use a specific version tag or reference .Chart.AppVersion in template",
-                "line": entry["line"],
-            })
-
-        # Check pullPolicy
-        if entry["key"] == "pullPolicy" and entry["value"] in ("Always", '"Always"', "'Always'"):
-            findings.append({
-                "severity": "low",
-                "category": "defaults",
-                "message": "imagePullPolicy defaults to 'Always' — 'IfNotPresent' is better for production",
-                "fix": "Change default to IfNotPresent (Always is appropriate for :latest only)",
-                "line": entry["line"],
-            })
-
-        # Check empty resources
-        if entry["key"] == "resources" and entry["value_type"] == "empty_map":
-            findings.append({
-                "severity": "medium",
-                "category": "defaults",
-                "message": "resources defaults to {} — no requests or limits set",
-                "fix": "Provide default resource requests (e.g., cpu: 100m, memory: 128Mi)",
-                "line": entry["line"],
-            })
-
-    return findings
-
-
-def validate_secrets(entries):
-    """Check for secrets in default values."""
-    findings = []
-
-    for entry in entries:
-        for pattern in SECRET_KEY_PATTERNS:
-            if pattern.search(entry["full_path"]):
-                val = entry["value"].strip("'\"")
-                if val and val not in ("", "null", "~", "{}", "[]", "changeme", "CHANGEME", "TODO", '""', "''"):
-                    findings.append({
-                        "severity": "critical",
-                        "category": "security",
-                        "message": f"Potential secret with default value: {entry['full_path']} = {val[:30]}...",
-                        "fix": "Remove default. Use empty string, null, or 'changeme' placeholder with comment",
-                        "line": entry["line"],
-                    })
-                break
-
-    return findings
-
-
-def validate_depth(entries):
-    """Check nesting depth."""
-    findings = []
-    max_depth = max((e["depth"] for e in entries), default=0)
-
-    if max_depth > 4:
-        deep_entries = [e for e in entries if e["depth"] > 4]
-        for entry in deep_entries[:3]:  # Report first 3
-            findings.append({
-                "severity": "medium",
-                "category": "structure",
-                "message": f"Deeply nested key ({entry['depth']} levels): {entry['full_path']}",
-                "fix": "Flatten structure — max 3-4 levels deep for usability",
-                "line": entry["line"],
-            })
-
-    return findings
-
-
-def to_camel_case(name):
-    """Convert snake_case or kebab-case to camelCase."""
-    parts = re.split(r"[-_]", name)
-    return parts[0].lower() + "".join(p.capitalize() for p in parts[1:])
-
-
-def generate_report(content, output_format="text", strict=False):
-    """Generate full validation report."""
-    entries = parse_values(content)
-    findings = []
-
-    findings.extend(validate_naming(entries))
-    findings.extend(validate_documentation(entries))
-    findings.extend(validate_defaults(entries))
-    findings.extend(validate_secrets(entries))
-    findings.extend(validate_depth(entries))
-
-    if strict:
-        # Elevate medium to high, low to medium
-        for f in findings:
-            if f["severity"] == "medium":
-                f["severity"] = "high"
-            elif f["severity"] == "low":
-                f["severity"] = "medium"
-
-    # Sort by severity
-    severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    findings.sort(key=lambda f: severity_order.get(f["severity"], 4))
-
-    # Score
-    deductions = {"critical": 25, "high": 15, "medium": 5, "low": 2}
-    score = max(0, 100 - sum(deductions.get(f["severity"], 0) for f in findings))
-
-    counts = {
-        "critical": sum(1 for f in findings if f["severity"] == "critical"),
-        "high": sum(1 for f in findings if f["severity"] == "high"),
-        "medium": sum(1 for f in findings if f["severity"] == "medium"),
-        "low": sum(1 for f in findings if f["severity"] == "low"),
-    }
-
-    # Stats
-    total_keys = len(entries)
-    documented = sum(1 for e in entries if e["has_documentation"])
-    max_depth = max((e["depth"] for e in entries), default=0)
-
-    result = {
-        "score": score,
-        "total_keys": total_keys,
-        "documented_keys": documented,
-        "documentation_coverage": f"{(documented / total_keys * 100):.0f}%" if total_keys > 0 else "N/A",
-        "max_depth": max_depth,
-        "findings": findings,
-        "finding_counts": counts,
-    }
-
-    if output_format == "json":
-        print(json.dumps(result, indent=2))
         return result
 
-    # Text output
-    print(f"\n{'=' * 60}")
-    print(f"  Values.yaml Validation Report")
-    print(f"{'=' * 60}")
-    print(f"  Score: {score}/100")
-    print(f"  Keys: {total_keys} | Documented: {documented} ({result['documentation_coverage']})")
-    print(f"  Max Depth: {max_depth}")
-    print()
-    print(f"  Findings: {counts['critical']} critical | {counts['high']} high | {counts['medium']} medium | {counts['low']} low")
-    print(f"{'─' * 60}")
+    def get_nested(self, data: Dict, path: str, default=None):
+        """Get a nested value by dot-separated path."""
+        keys = path.split(".")
+        current = data
+        for key in keys:
+            if isinstance(current, dict) and key in current:
+                current = current[key]
+            else:
+                return default
+        return current
 
-    for f in findings:
-        icon = {"critical": "!!!", "high": "!!", "medium": "!", "low": "~"}.get(f["severity"], "?")
-        print(f"\n  {icon} {f['severity'].upper()} [{f['category']}]")
-        print(f"  {f['message']}")
-        if f.get("line", 0) > 0:
-            print(f"  Line: {f['line']}")
-        print(f"  Fix:  {f['fix']}")
+
+class ValuesValidator:
+    """Validates Helm chart values files."""
+
+    def __init__(self, values: Dict[str, Any], values_file: str):
+        self.values = values
+        self.values_file = values_file
+        self.findings: List[Finding] = []
+        self.parser = ValuesParser()
+
+    def validate(self) -> List[Finding]:
+        """Run all validation checks."""
+        self._check_resources()
+        self._check_security_context()
+        self._check_image()
+        self._check_replicas()
+        self._check_service()
+        self._check_ingress()
+        self._check_probes()
+        self._check_autoscaling()
+        return self.findings
+
+    def _get(self, path: str, default=None):
+        """Helper to get nested values."""
+        return self.parser.get_nested(self.values, path, default)
+
+    def _check_resources(self):
+        """Check for resource limits and requests."""
+        resources = self._get("resources", {})
+
+        if not resources or not isinstance(resources, dict):
+            self.findings.append(Finding(
+                severity="warning",
+                category="resources",
+                path="resources",
+                message="No resource limits or requests defined.",
+                recommendation="Add resources.limits and resources.requests for CPU and memory.",
+            ))
+            return
+
+        limits = resources.get("limits", {})
+        requests = resources.get("requests", {})
+
+        if not limits or not isinstance(limits, dict):
+            self.findings.append(Finding(
+                severity="warning",
+                category="resources",
+                path="resources.limits",
+                message="No resource limits defined.",
+                recommendation="Add resources.limits.cpu and resources.limits.memory.",
+            ))
+        else:
+            if "cpu" not in limits:
+                self.findings.append(Finding(
+                    severity="warning",
+                    category="resources",
+                    path="resources.limits.cpu",
+                    message="CPU limit not set.",
+                    recommendation="Set resources.limits.cpu (e.g., '500m').",
+                ))
+            if "memory" not in limits:
+                self.findings.append(Finding(
+                    severity="warning",
+                    category="resources",
+                    path="resources.limits.memory",
+                    message="Memory limit not set.",
+                    recommendation="Set resources.limits.memory (e.g., '256Mi').",
+                ))
+
+        if not requests or not isinstance(requests, dict):
+            self.findings.append(Finding(
+                severity="info",
+                category="resources",
+                path="resources.requests",
+                message="No resource requests defined.",
+                recommendation="Add resources.requests for proper scheduling.",
+            ))
+
+    def _check_security_context(self):
+        """Check security context settings."""
+        sec_ctx = self._get("securityContext", {})
+        pod_sec = self._get("podSecurityContext", {})
+
+        if not sec_ctx and not pod_sec:
+            self.findings.append(Finding(
+                severity="warning",
+                category="security",
+                path="securityContext",
+                message="No security context defined.",
+                recommendation="Add securityContext with runAsNonRoot, readOnlyRootFilesystem, allowPrivilegeEscalation.",
+            ))
+            return
+
+        if isinstance(sec_ctx, dict):
+            if sec_ctx.get("runAsNonRoot") is not True:
+                self.findings.append(Finding(
+                    severity="warning",
+                    category="security",
+                    path="securityContext.runAsNonRoot",
+                    message="runAsNonRoot is not set to true.",
+                    recommendation="Set securityContext.runAsNonRoot: true.",
+                ))
+
+            if sec_ctx.get("readOnlyRootFilesystem") is not True:
+                self.findings.append(Finding(
+                    severity="info",
+                    category="security",
+                    path="securityContext.readOnlyRootFilesystem",
+                    message="readOnlyRootFilesystem is not enabled.",
+                    recommendation="Set securityContext.readOnlyRootFilesystem: true where possible.",
+                ))
+
+            if sec_ctx.get("allowPrivilegeEscalation") is not False:
+                self.findings.append(Finding(
+                    severity="warning",
+                    category="security",
+                    path="securityContext.allowPrivilegeEscalation",
+                    message="allowPrivilegeEscalation is not explicitly set to false.",
+                    recommendation="Set securityContext.allowPrivilegeEscalation: false.",
+                ))
+
+    def _check_image(self):
+        """Check image configuration."""
+        image = self._get("image", {})
+        if not image or not isinstance(image, dict):
+            return
+
+        tag = image.get("tag", "")
+        if not tag:
+            self.findings.append(Finding(
+                severity="warning",
+                category="image",
+                path="image.tag",
+                message="Image tag is empty or not set.",
+                recommendation="Set image.tag to a specific version (not 'latest').",
+            ))
+        elif str(tag).lower() == "latest":
+            self.findings.append(Finding(
+                severity="warning",
+                category="image",
+                path="image.tag",
+                message="Image tag is 'latest', which is non-deterministic.",
+                recommendation="Pin image.tag to a specific version for reproducible deployments.",
+            ))
+
+        pull_policy = image.get("pullPolicy", "")
+        if pull_policy == "Always" and tag and str(tag).lower() != "latest":
+            self.findings.append(Finding(
+                severity="info",
+                category="image",
+                path="image.pullPolicy",
+                message="pullPolicy is 'Always' with a pinned tag.",
+                recommendation="Consider 'IfNotPresent' for pinned tags to reduce pull overhead.",
+            ))
+
+    def _check_replicas(self):
+        """Check replica count."""
+        replicas = self._get("replicaCount")
+        autoscaling = self._get("autoscaling", {})
+
+        if isinstance(autoscaling, dict) and autoscaling.get("enabled") is True:
+            return  # Autoscaling handles replicas
+
+        if replicas is not None and isinstance(replicas, (int, float)):
+            if replicas < 2:
+                self.findings.append(Finding(
+                    severity="info",
+                    category="availability",
+                    path="replicaCount",
+                    message=f"replicaCount is {replicas}. Single replica has no redundancy.",
+                    recommendation="Set replicaCount >= 2 for production environments.",
+                ))
+
+    def _check_service(self):
+        """Check service configuration."""
+        service = self._get("service", {})
+        if not service or not isinstance(service, dict):
+            return
+
+        svc_type = service.get("type", "ClusterIP")
+        if svc_type == "NodePort":
+            self.findings.append(Finding(
+                severity="info",
+                category="networking",
+                path="service.type",
+                message="Service type is NodePort.",
+                recommendation="Consider ClusterIP with Ingress for production. NodePort exposes ports on all nodes.",
+            ))
+        elif svc_type == "LoadBalancer":
+            self.findings.append(Finding(
+                severity="info",
+                category="networking",
+                path="service.type",
+                message="Service type is LoadBalancer (creates cloud LB per service).",
+                recommendation="Consider using Ingress to consolidate multiple services behind one LB.",
+            ))
+
+    def _check_ingress(self):
+        """Check ingress configuration."""
+        ingress = self._get("ingress", {})
+        if not ingress or not isinstance(ingress, dict):
+            return
+
+        if ingress.get("enabled") is not True:
+            return
+
+        if not ingress.get("tls"):
+            self.findings.append(Finding(
+                severity="warning",
+                category="networking",
+                path="ingress.tls",
+                message="Ingress is enabled but TLS is not configured.",
+                recommendation="Configure ingress.tls for encrypted traffic.",
+            ))
+
+        if not ingress.get("className") and not ingress.get("ingressClassName"):
+            self.findings.append(Finding(
+                severity="info",
+                category="networking",
+                path="ingress.className",
+                message="No ingress class specified.",
+                recommendation="Set ingress.className to specify the ingress controller.",
+            ))
+
+    def _check_probes(self):
+        """Check liveness and readiness probes."""
+        liveness = self._get("livenessProbe", {})
+        readiness = self._get("readinessProbe", {})
+
+        if not liveness:
+            self.findings.append(Finding(
+                severity="info",
+                category="reliability",
+                path="livenessProbe",
+                message="No liveness probe configured.",
+                recommendation="Add livenessProbe to enable automatic restart on failure.",
+            ))
+
+        if not readiness:
+            self.findings.append(Finding(
+                severity="info",
+                category="reliability",
+                path="readinessProbe",
+                message="No readiness probe configured.",
+                recommendation="Add readinessProbe to prevent traffic to unready pods.",
+            ))
+
+    def _check_autoscaling(self):
+        """Check autoscaling configuration."""
+        autoscaling = self._get("autoscaling", {})
+        if not isinstance(autoscaling, dict) or autoscaling.get("enabled") is not True:
+            return
+
+        if not autoscaling.get("minReplicas"):
+            self.findings.append(Finding(
+                severity="info",
+                category="scaling",
+                path="autoscaling.minReplicas",
+                message="Autoscaling minReplicas not set.",
+                recommendation="Set minReplicas >= 2 for production availability.",
+            ))
+
+
+def format_text(findings: List[Finding], values_file: str) -> str:
+    """Format as human-readable text."""
+    lines = []
+    lines.append("=" * 60)
+    lines.append("HELM VALUES VALIDATION REPORT")
+    lines.append("=" * 60)
+    lines.append(f"\nValues file: {values_file}")
+
+    critical = [f for f in findings if f.severity == "critical"]
+    warnings = [f for f in findings if f.severity == "warning"]
+    info = [f for f in findings if f.severity == "info"]
+
+    lines.append(f"Findings: {len(critical)} critical, {len(warnings)} warnings, {len(info)} info")
+    lines.append("-" * 60)
+
+    for severity, group in [("CRITICAL", critical), ("WARNING", warnings), ("INFO", info)]:
+        if not group:
+            continue
+        lines.append(f"\n[{severity}]")
+        for f in group:
+            lines.append(f"  [{f.category}] {f.path}: {f.message}")
+            lines.append(f"    Fix: {f.recommendation}")
+            lines.append("")
 
     if not findings:
-        print("\n  No issues found. Values file looks good.")
+        lines.append("\nNo issues found. Values follow best practices.")
 
-    print(f"\n{'=' * 60}\n")
-    return result
+    lines.append("=" * 60)
+    return "\n".join(lines)
+
+
+def format_json(findings: List[Finding], values_file: str) -> str:
+    """Format as JSON."""
+    return json.dumps({
+        "values_file": values_file,
+        "findings": [asdict(f) for f in findings],
+        "summary": {
+            "total": len(findings),
+            "critical": sum(1 for f in findings if f.severity == "critical"),
+            "warnings": sum(1 for f in findings if f.severity == "warning"),
+            "info": sum(1 for f in findings if f.severity == "info"),
+        }
+    }, indent=2)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="helm-chart-builder: values.yaml best-practice validator"
+        description="Validate Helm values files against best practices."
     )
-    parser.add_argument("valuesfile", nargs="?", help="Path to values.yaml (omit for demo)")
-    parser.add_argument(
-        "--output", "-o",
-        choices=["text", "json"],
-        default="text",
-        help="Output format (default: text)",
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Strict mode — elevate warnings to higher severity",
-    )
+    parser.add_argument("--chart", "-c", help="Path to Helm chart directory (for context)")
+    parser.add_argument("--values", "-v", nargs="+", required=True, help="Path(s) to values file(s)")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     args = parser.parse_args()
 
-    if args.valuesfile:
-        path = Path(args.valuesfile)
-        if not path.exists():
-            print(f"Error: File not found: {args.valuesfile}", file=sys.stderr)
-            sys.exit(1)
-        content = path.read_text(encoding="utf-8")
-    else:
-        print("No values file provided. Running demo validation...\n")
-        content = DEMO_VALUES
+    exit_code = 0
+    all_results = []
 
-    generate_report(content, args.output, args.strict)
+    for values_file in args.values:
+        path = Path(values_file)
+        if not path.exists():
+            # Try relative to chart directory
+            if args.chart:
+                path = Path(args.chart) / values_file
+            if not path.exists():
+                print(f"Error: Values file not found: {values_file}", file=sys.stderr)
+                exit_code = 2
+                continue
+
+        content = path.read_text()
+        vp = ValuesParser()
+        values = vp.parse(content)
+
+        validator = ValuesValidator(values, str(path))
+        findings = validator.validate()
+
+        if args.format == "json":
+            all_results.append({
+                "file": str(path),
+                "findings": [asdict(f) for f in findings],
+            })
+        else:
+            print(format_text(findings, str(path)))
+
+        if any(f.severity == "critical" for f in findings):
+            exit_code = 1
+
+    if args.format == "json":
+        print(json.dumps({"results": all_results}, indent=2))
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

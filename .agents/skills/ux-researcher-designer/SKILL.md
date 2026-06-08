@@ -1,8 +1,19 @@
 ---
-name: "ux-researcher-designer"
-description: UX research and design toolkit for Senior UX Designer/Researcher including data-driven persona generation, journey mapping, usability testing frameworks, and research synthesis. Use for user research, persona creation, journey mapping, and design validation.
+name: ux-researcher-designer
+description: >
+  UX research and design toolkit for Senior UX Designer/Researcher including
+  data-driven persona generation, journey mapping, usability testing frameworks,
+  and research synthesis. Use for user research, persona creation, journey
+  mapping, and design validation.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: product
+  domain: ux-research
+  updated: 2026-03-31
+  tags: [ux-research, usability-testing, user-interviews, personas]
 ---
-
 # UX Researcher & Designer
 
 Generate user personas from research data, create journey maps, plan usability tests, and synthesize research findings into actionable design recommendations.
@@ -96,6 +107,53 @@ Use this skill when you need to:
 
 5. **Reference:** See `references/persona-methodology.md` for validity criteria
 
+### Proto-Persona Canvas (Lightweight Alternative)
+
+When you lack research data but need a hypothesis-driven persona to align the team, use a proto-persona canvas. Proto-personas are assumption tools -- not validated truth -- meant to be tested and refined.
+
+**Use when:** Starting a new initiative with no research budget, aligning a cross-functional team quickly, or creating a testable hypothesis about your user.
+
+**Proto-Persona Canvas Template:**
+
+```markdown
+### [Alliterative Name] (e.g., "Careful Carlos")
+
+**Bio & Demographics:**
+- Age, geography, social status, career stage
+- Online presence, leisure activities, partner status
+
+**Quotes** (what they say, feel, think):
+- "[Direct quote capturing their perspective]"
+- "[Quote revealing frustration or aspiration]"
+
+**Pains:**
+- [Pain related to the problem space]
+- [Pain related to current workarounds]
+
+**What They're Trying to Accomplish:**
+- [Observable behavior 1]
+- [Observable behavior 2]
+
+**Goals** (wants, needs, dreams):
+- [Short-term goal]
+- [Long-term aspiration]
+
+**Attitudes & Influences:**
+- Decision Making Authority: [Can they buy/adopt your solution?]
+- Decision Influencers: [Who influences their decisions?]
+- Beliefs & Attitudes: [What beliefs impact their choices?]
+
+**Assumptions to Validate:**
+- [Top assumption that must be true for this persona to be viable]
+- [Second assumption]
+- [Third assumption]
+```
+
+**Next steps after proto-persona:**
+1. Generate interview questions to validate assumptions (Recommended)
+2. Generate an anti-persona to define scope boundaries
+3. Convert into a one-page stakeholder brief
+
 ---
 
 ### Workflow 2: Create Journey Map
@@ -140,11 +198,41 @@ Use this skill when you need to:
    └── Opportunities: Where can we improve?
    ```
 
-5. **Identify opportunities**
+5. **Map three experience paths** (not just the happy path)
 
-   Priority Score = Frequency × Severity × Solvability
+   | Stage | Happy Path | Fail Path | Difficult Path |
+   |---|---|---|---|
+   | Awareness | Finds product via search | Never discovers product | Finds competitor first |
+   | Consideration | Clear value proposition | Confused by pricing | Needs manager approval |
+   | Decision | Easy signup flow | Form errors, abandons | Legal review delays |
+   | Delivery & Use | Smooth onboarding | Can't import data | Workaround needed |
+   | Loyalty | Becomes advocate | Churns silently | Stays but complains |
 
-6. **Reference:** See `references/journey-mapping-guide.md` for templates
+   - **Happy Path:** Everything works as designed.
+   - **Fail Path:** User cannot complete their goal and drops off.
+   - **Difficult Path:** User completes the goal but with friction, workarounds, or frustration.
+
+6. **Add KPIs and ownership per stage**
+
+   | Stage | Leading KPI | Lagging KPI | Team Owner |
+   |---|---|---|---|
+   | Awareness | Site visits, ad impressions | Brand recall | Marketing |
+   | Consideration | Demo requests, pricing page views | MQL conversion | Marketing/Sales |
+   | Decision | Trial starts, contract sent | Close rate | Sales |
+   | Use | Feature adoption, DAU | Retention rate | Product |
+   | Loyalty | NPS, referral count | LTV, expansion revenue | Customer Success |
+
+7. **Identify top friction points and interventions**
+
+   For each friction point, document:
+
+   | Friction Point | Why It Matters | Intervention | Expected Impact | Effort | Confidence |
+   |---|---|---|---|---|---|
+   | [Description] | [User/business impact] | [Proposed fix] | High/Med/Low | S/M/L | High/Med/Low |
+
+   Priority Score = Frequency x Severity x Solvability
+
+8. **Reference:** See `references/journey-mapping-guide.md` for templates
 
 ---
 
@@ -413,7 +501,100 @@ Detailed reference guides in `references/`:
 - [ ] Recommendations are actionable
 - [ ] Priorities justified
 
-## Related Skills
+---
 
-- **UI Design System** (`product-team/ui-design-system/`) — Research findings inform design system decisions
-- **Product Manager Toolkit** (`product-team/product-manager-toolkit/`) — Customer interview analysis complements persona research
+## Tool Reference
+
+### persona_generator.py
+
+Generates data-driven personas from user research data, classifying users into archetypes with demographics, psychographics, behaviors, goals, frustrations, and design implications.
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `format` | positional | (none) | Add `json` for JSON output; omit for human-readable |
+
+**Archetypes supported:** power_user, casual_user, business_user, mobile_first
+
+**Output components:** name, archetype, tagline, quote, demographics, psychographics, behaviors, needs_and_goals, frustrations, scenarios, data_points, design_implications
+
+```bash
+python scripts/persona_generator.py           # Human-readable formatted output
+python scripts/persona_generator.py json      # JSON for programmatic use
+```
+
+**Data input format (customize in script):**
+```json
+[{
+  "user_id": "user_1",
+  "age": 32,
+  "usage_frequency": "daily",
+  "features_used": ["dashboard", "reports", "export"],
+  "primary_device": "desktop",
+  "usage_context": "work",
+  "tech_proficiency": 7,
+  "pain_points": ["slow loading", "confusing UI"]
+}]
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Persona confidence level is "Low" | Fewer than 20 users in sample data | Collect more data points; combine quantitative analytics with qualitative interviews |
+| All users classified as same archetype | Insufficient variation in input data | Ensure data includes diverse usage frequencies, devices, and contexts |
+| Frustrations are generic (fallback defaults) | Not enough pain_points in user data | Enrich user data with pain_points from interviews and support tickets |
+| Design implications too vague | Patterns don't strongly differentiate | Add more behavioral signals (features_used, session duration, task completion) |
+| Journey map has flat emotion curve | All stages scored similarly | Re-evaluate with actual user data; conduct contextual interviews per stage |
+| Usability test sample too small | Fewer than 5 participants | 5 participants find ~85% of usability issues; recruit to minimum 5 |
+| Research synthesis has no clear patterns | Data not coded consistently | Use consistent tagging scheme (GOAL, PAIN, BEHAVIOR, CONTEXT, QUOTE) |
+
+---
+
+## Success Criteria
+
+| Criterion | Target | How to Measure |
+|-----------|--------|----------------|
+| Persona validity | Validated by 3+ real users ("sounds like me") | Post-creation validation interviews |
+| Persona coverage | All key segments represented | Count of personas vs identified user segments |
+| Data confidence level | "High" (31+ users) | persona_generator data_points.confidence_level |
+| Research cadence | 5-8 interviews per segment per quarter | Count of completed research sessions |
+| Insight-to-action rate | >70% of findings result in design changes | Track findings through to implementation |
+| Usability issue resolution | All critical/major issues fixed before release | Issue severity tracking |
+| Journey map freshness | Updated at least quarterly | Last-updated date on each journey map |
+
+---
+
+## Scope & Limitations
+
+**In scope:**
+- Data-driven persona generation from user research
+- Archetype classification (power, casual, business, mobile-first)
+- User journey mapping frameworks
+- Usability test planning and scoring
+- Research synthesis and coding methodology
+- Interview question frameworks
+- Empathy map and opportunity identification
+
+**Out of scope:**
+- Automated user interview recording/transcription
+- Real-time analytics integration (use analytics platforms)
+- Quantitative survey design and distribution (use Typeform/SurveyMonkey)
+- Eye tracking or biometric data analysis
+- AI-powered sentiment analysis (tool uses heuristic classification)
+- Persona illustration or visual asset generation
+- Accessibility auditing (see product-designer or design-system-lead skills)
+
+---
+
+## Integration Points
+
+| Tool / Platform | Integration Method | Use Case |
+|-----------------|-------------------|----------|
+| Dovetail / Condens | Export research data, import persona JSON | Centralize research insights |
+| Figma / Miro | Paste persona output as design artifact | Reference personas during design work |
+| Notion / Confluence | Human-readable output | Document and share personas with team |
+| product-manager-toolkit | Persona pain points inform RICE scoring | Connect user needs to feature prioritization |
+| agile-product-owner | Persona data informs user story personas | Write stories grounded in research |
+| product-designer | Persona feeds into journey mapping and usability test recruitment | End-to-end design research workflow |

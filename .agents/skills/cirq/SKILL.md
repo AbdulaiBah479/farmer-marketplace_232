@@ -1,45 +1,54 @@
 ---
 name: cirq
-description: "Cirq is Google Quantum AI's open-source framework for designing, simulating, and running quantum circuits on quantum computers and simulators."
+description: Google quantum computing framework. Use when targeting Google Quantum AI hardware, designing noise-aware circuits, or running quantum characterization experiments. Best for Google hardware, noise modeling, and low-level circuit design. For IBM hardware use qiskit; for quantum ML with autodiff use pennylane; for physics simulations use qutip.
 license: Apache-2.0 license
+allowed-tools: Read Write Edit Bash
 metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: community
+  version: "1.0"
+  skill-author: K-Dense Inc.
 ---
 
 # Cirq - Quantum Computing with Python
 
 Cirq is Google Quantum AI's open-source framework for designing, simulating, and running quantum circuits on quantum computers and simulators.
 
-## When to Use
-- You are designing, simulating, or executing quantum circuits with the Cirq ecosystem.
-- You need Google Quantum AI-style primitives, parameterized circuits, or integrations like `cirq-google` and `cirq-ionq`.
-- You are prototyping or teaching quantum workflows in Python and want concrete circuit examples.
+## When to Use This Skill
+
+Use this skill when:
+- Building, simulating, or optimizing NISQ circuits in Python
+- Running jobs on Google Quantum AI processors (via `cirq-google`) or partner backends (IonQ, Azure Quantum, AQT, Pasqal)
+- Modeling noise, compiling to hardware gatesets, or designing characterization experiments
+- Using parameter sweeps, transformers, or the ReCirq experiment patterns
+
+For IBM hardware use **qiskit**; for quantum ML with autodiff use **pennylane**; for physics simulations use **qutip**.
 
 ## Installation
 
+Requires Python 3.11+. Current stable release: **1.6.1** (August 2025). Vendor packages share the same version number.
+
 ```bash
-uv pip install cirq
+uv pip install "cirq==1.6.1"
 ```
 
-For hardware integration:
+For hardware integration (pin matching versions for reproducibility):
 ```bash
-# Google Quantum Engine
-uv pip install cirq-google
+# Google Quantum Engine (requires approved GCP project access)
+uv pip install "cirq-google==1.6.1"
 
 # IonQ
-uv pip install cirq-ionq
+uv pip install "cirq-ionq==1.6.1"
 
 # AQT (Alpine Quantum Technologies)
-uv pip install cirq-aqt
+uv pip install "cirq-aqt==1.6.1"
 
 # Pasqal
-uv pip install cirq-pasqal
+uv pip install "cirq-pasqal==1.6.1"
 
-# Azure Quantum
-uv pip install azure-quantum cirq
+# Azure Quantum (IonQ, Honeywell/Quantinuum backends)
+uv pip install "azure-quantum[cirq]"
 ```
+
+For latest features during development, omit version pins; for production or hardware runs, pin all packages to the same Cirq release.
 
 ## Quick Start
 
@@ -98,7 +107,7 @@ for params, result in zip(sweep, results):
 
 ### Circuit Building
 For comprehensive information about building quantum circuits, including qubits, gates, operations, custom gates, and circuit patterns, see:
-- **references/building.md** - Complete guide to circuit construction
+- **[references/building.md](references/building.md)** - Complete guide to circuit construction
 
 Common topics:
 - Qubit types (GridQubit, LineQubit, NamedQubit)
@@ -112,7 +121,7 @@ Common topics:
 
 ### Simulation
 For detailed information about simulating quantum circuits, including exact simulation, noisy simulation, parameter sweeps, and the Quantum Virtual Machine, see:
-- **references/simulation.md** - Complete guide to quantum simulation
+- **[references/simulation.md](references/simulation.md)** - Complete guide to quantum simulation
 
 Common topics:
 - Exact simulation (state vector, density matrix)
@@ -126,7 +135,7 @@ Common topics:
 
 ### Circuit Transformation
 For information about optimizing, compiling, and manipulating quantum circuits, see:
-- **references/transformation.md** - Complete guide to circuit transformations
+- **[references/transformation.md](references/transformation.md)** - Complete guide to circuit transformations
 
 Common topics:
 - Transformer framework
@@ -139,20 +148,20 @@ Common topics:
 
 ### Hardware Integration
 For information about running circuits on real quantum hardware from various providers, see:
-- **references/hardware.md** - Complete guide to hardware integration
+- **[references/hardware.md](references/hardware.md)** - Complete guide to hardware integration
 
 Supported providers:
-- **Google Quantum AI** (cirq-google) - Sycamore, Weber processors
-- **IonQ** (cirq-ionq) - Trapped ion quantum computers
-- **Azure Quantum** (azure-quantum) - IonQ and Honeywell backends
-- **AQT** (cirq-aqt) - Alpine Quantum Technologies
-- **Pasqal** (cirq-pasqal) - Neutral atom quantum computers
+- **Google Quantum AI** (`cirq-google`) — Sycamore, Weber, Willow processors via Quantum Engine (restricted access; requires approved GCP project)
+- **IonQ** (`cirq-ionq`) — trapped-ion QPUs and simulators
+- **Azure Quantum** (`azure-quantum[cirq]`) — IonQ and Honeywell/Quantinuum backends
+- **AQT** (`cirq-aqt`) — Alpine Quantum Technologies
+- **Pasqal** (`cirq-pasqal`) — neutral-atom devices
 
-Topics include device representation, qubit selection, authentication, job management, and circuit optimization for hardware.
+Topics include device representation, qubit selection, authentication, job management, and circuit optimization for hardware. See [Access and authentication](https://quantumai.google/cirq/google/access) for Google Cloud setup.
 
 ### Noise Modeling
 For information about modeling noise, noisy simulation, characterization, and error mitigation, see:
-- **references/noise.md** - Complete guide to noise modeling
+- **[references/noise.md](references/noise.md)** - Complete guide to noise modeling
 
 Common topics:
 - Noise channels (depolarizing, amplitude damping, phase damping)
@@ -165,7 +174,7 @@ Common topics:
 
 ### Quantum Experiments
 For information about designing experiments, parameter sweeps, data collection, and using the ReCirq framework, see:
-- **references/experiments.md** - Complete guide to quantum experiments
+- **[references/experiments.md](references/experiments.md)** - Complete guide to quantum experiments
 
 Common topics:
 - Experiment design patterns
@@ -222,28 +231,37 @@ result = variational_algorithm(my_ansatz, my_cost, [0.0, 0.0])
 ### Hardware Execution Template
 
 ```python
-def run_on_hardware(circuit, provider='google', device_name='weber', repetitions=1000):
+import os
+
+def run_on_hardware(circuit, provider='google', processor_id=None, repetitions=1000):
     """Template for running on quantum hardware."""
 
     if provider == 'google':
-        import cirq_google
-        engine = cirq_google.get_engine()
-        processor = engine.get_processor(device_name)
-        job = processor.run(circuit, repetitions=repetitions)
-        return job.results()[0]
+        import cirq_google as cg
+
+        project_id = os.environ['GOOGLE_CLOUD_PROJECT']
+        engine = cg.Engine(project_id=project_id)
+
+        # List available processors: engine.list_processors()
+        processor_id = processor_id or 'weber'  # use your assigned processor_id
+        sampler = engine.get_sampler(processor_id=processor_id)
+        return sampler.run(circuit, repetitions=repetitions)
 
     elif provider == 'ionq':
-        import cirq_ionq
-        service = cirq_ionq.Service()
-        result = service.run(circuit, repetitions=repetitions, target='qpu')
-        return result
+        import cirq_ionq as ionq
+
+        # Requires IONQ_API_KEY in environment
+        service = ionq.Service()
+        return service.run(circuit, repetitions=repetitions, target='qpu')
 
     elif provider == 'azure':
         from azure.quantum.cirq import AzureQuantumService
-        # Setup workspace...
-        service = AzureQuantumService(workspace)
-        result = service.run(circuit, repetitions=repetitions, target='ionq.qpu')
-        return result
+
+        service = AzureQuantumService(
+            resource_id=os.environ['AZURE_QUANTUM_RESOURCE_ID'],
+            location=os.environ['AZURE_QUANTUM_LOCATION'],
+        )
+        return service.run(circuit, repetitions=repetitions, target='ionq.qpu')
 
     else:
         raise ValueError(f"Unknown provider: {provider}")
@@ -326,7 +344,8 @@ results = noise_comparison_study(circuit, noise_levels)
 - **Official Documentation**: https://quantumai.google/cirq
 - **API Reference**: https://quantumai.google/reference/python/cirq
 - **Tutorials**: https://quantumai.google/cirq/tutorials
-- **Examples**: https://github.com/quantumlib/Cirq/tree/master/examples
+- **Examples**: https://github.com/quantumlib/Cirq/tree/main/examples
+- **Version policy**: https://quantumai.google/cirq/dev/versions
 - **ReCirq**: https://github.com/quantumlib/ReCirq
 
 ## Common Issues
@@ -349,7 +368,3 @@ results = noise_comparison_study(circuit, noise_levels)
 - Use noise models selectively on critical operations only
 - See `simulation.md` for performance optimization
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

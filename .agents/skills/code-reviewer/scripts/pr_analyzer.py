@@ -60,9 +60,9 @@ FILE_CATEGORIES = {
 RISK_PATTERNS = [
     {
         "name": "hardcoded_secrets",
-        "pattern": r"(password|secret|api_key|token|connection_?string)\s*[=:]\s*['\"][^'\"]+['\"]",
+        "pattern": r"(password|secret|api_key|token)\s*[=:]\s*['\"][^'\"]+['\"]",
         "severity": "critical",
-        "message": "Potential hardcoded secret or connection string detected"
+        "message": "Potential hardcoded secret detected"
     },
     {
         "name": "todo_fixme",
@@ -72,15 +72,9 @@ RISK_PATTERNS = [
     },
     {
         "name": "console_log",
-        "pattern": (
-            r"console\.(log|debug|info|warn|error)\(|\bDebug\.WriteLine\(|"
-            r"\bSystem\.out\.print(?:ln)?\(|\.printStackTrace\("
-        ),
+        "pattern": r"console\.(log|debug|info|warn|error)\(",
         "severity": "medium",
-        "message": (
-            "Debug output statement found "
-            "(console.* / Debug.WriteLine / System.out / printStackTrace)"
-        )
+        "message": "Console statement found (remove for production)"
     },
     {
         "name": "debugger",
@@ -89,56 +83,22 @@ RISK_PATTERNS = [
         "message": "Debugger statement found"
     },
     {
-        "name": "analyzer_disable",
-        "pattern": (
-            r"eslint-disable|#pragma\s+warning\s+disable|\[SuppressMessage|"
-            r"@SuppressWarnings"
-        ),
+        "name": "disable_eslint",
+        "pattern": r"eslint-disable",
         "severity": "medium",
-        "message": (
-            "Static-analyzer rule disabled "
-            "(ESLint / Roslyn / SuppressMessage / @SuppressWarnings)"
-        )
+        "message": "ESLint rule disabled"
     },
     {
-        "name": "loose_type",
-        "pattern": r":\s*any\b|\bdynamic\s+\w+\s*[=;]",
+        "name": "any_type",
+        "pattern": r":\s*any\b",
         "severity": "medium",
-        "message": "Loose type used (TypeScript 'any' or C# 'dynamic')"
+        "message": "TypeScript 'any' type used"
     },
     {
         "name": "sql_concatenation",
-        "pattern": r"(SELECT|INSERT|UPDATE|DELETE).*\+.*['\"]|(?:FromSql|ExecuteSql)\w*\([^)]*\$\"",
+        "pattern": r"(SELECT|INSERT|UPDATE|DELETE).*\+.*['\"]",
         "severity": "critical",
-        "message": "Potential SQL injection (string concatenation or interpolation in query)"
-    },
-    {
-        "name": "csharp_unsafe_block",
-        "pattern": (
-            r"\bunsafe\s+(?:\{|public|private|protected|internal|static|sealed|"
-            r"partial|class|struct|void|int|string|long|short|byte|double|float|"
-            r"bool|char|ref|out|fixed)\b"
-        ),
-        "severity": "high",
-        "message": "C# 'unsafe' code — requires memory-safety review"
-    },
-    {
-        "name": "csharp_null_forgiving",
-        "pattern": r"(?:\)\s*!\.|\w+!\.\w+)",
-        "severity": "medium",
-        "message": "Null-forgiving operator (!) used — verify the value is truly non-null"
-    },
-    {
-        "name": "csharp_async_void",
-        "pattern": r"\basync\s+void\s+\w+\s*\(",
-        "severity": "high",
-        "message": "'async void' method — use only for event handlers"
-    },
-    {
-        "name": "csharp_blocking_async",
-        "pattern": r"\.(?:Result\b|Wait\(\)|GetAwaiter\(\)\.GetResult\(\))",
-        "severity": "high",
-        "message": "Blocking call on async operation — can deadlock in ASP.NET contexts"
+        "message": "Potential SQL injection (string concatenation in query)"
     }
 ]
 
@@ -495,7 +455,7 @@ def main():
         help="Base branch for comparison (default: main)"
     )
     parser.add_argument(
-        "--head",
+        "--head", "-h",
         default="HEAD",
         help="Head branch/commit for comparison (default: HEAD)"
     )

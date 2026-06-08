@@ -1,258 +1,362 @@
 #!/usr/bin/env python3
 """
-X/Twitter Growth Tracker — Track and analyze account growth over time.
+Twitter/X Growth Tracker
 
-Stores periodic snapshots of account metrics and calculates growth trends,
-engagement patterns, and milestone projections.
+Tracks follower growth, engagement rates, and identifies best posting times
+from analytics data. Supports daily, weekly, and monthly period analysis.
+
+Expected CSV columns: date, followers, impressions, engagements, likes,
+  retweets, replies, tweets_posted, profile_visits
 
 Usage:
-    python3 growth_tracker.py --record --handle @user --followers 5200 --eng-rate 2.1
-    python3 growth_tracker.py --report --handle @user
-    python3 growth_tracker.py --report --handle @user --period 30d --json
-    python3 growth_tracker.py --milestone --handle @user --target 10000
+    python growth_tracker.py analytics.csv
+    python growth_tracker.py analytics.csv --period monthly
+    python growth_tracker.py analytics.csv --format json
+    python growth_tracker.py analytics.csv --compare-periods
 """
 
 import argparse
+import csv
 import json
-import os
+import statistics
 import sys
+from collections import defaultdict
 from datetime import datetime, timedelta
-from pathlib import Path
-
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".growth-data")
+from typing import Any, Dict, List, Optional, Tuple
 
 
-def get_data_file(handle: str) -> str:
-    clean = handle.lstrip("@").lower()
-    os.makedirs(DATA_DIR, exist_ok=True)
-    return os.path.join(DATA_DIR, f"{clean}.jsonl")
+def parse_date(date_str: str) -> Optional[datetime]:
+    """Parse date from common formats."""
+    if not date_str or date_str.strip() == "":
+        return None
+    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(date_str.strip(), fmt)
+        except ValueError:
+            continue
+    return None
 
 
-def record_snapshot(handle: str, followers: int, following: int = 0,
-                    eng_rate: float = 0, posts_week: float = 0, notes: str = ""):
-    entry = {
-        "timestamp": datetime.now().isoformat(),
-        "handle": handle,
-        "followers": followers,
-        "following": following,
-        "engagement_rate": eng_rate,
-        "posts_per_week": posts_week,
-        "notes": notes,
-    }
-
-    filepath = get_data_file(handle)
-    with open(filepath, "a") as f:
-        f.write(json.dumps(entry) + "\n")
-
-    return entry
+def safe_int(val: str, default: int = 0) -> int:
+    try:
+        return int(float(val))
+    except (ValueError, TypeError):
+        return default
 
 
-def load_snapshots(handle: str, period_days: int = 0) -> list:
-    filepath = get_data_file(handle)
-    if not os.path.exists(filepath):
-        return []
-
-    entries = []
-    cutoff = None
-    if period_days > 0:
-        cutoff = datetime.now() - timedelta(days=period_days)
-
-    with open(filepath) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
+def load_analytics(filepath: str) -> List[Dict[str, Any]]:
+    """Load analytics data from CSV."""
+    data = []
+    with open(filepath, "r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            dt = parse_date(row.get("date", ""))
+            if not dt:
                 continue
-            entry = json.loads(line)
-            if cutoff:
-                ts = datetime.fromisoformat(entry["timestamp"])
-                if ts < cutoff:
-                    continue
-            entries.append(entry)
+            entry = {
+                "date": dt,
+                "followers": safe_int(row.get("followers", "0")),
+                "impressions": safe_int(row.get("impressions", "0")),
+                "engagements": safe_int(row.get("engagements", "0")),
+                "likes": safe_int(row.get("likes", "0")),
+                "retweets": safe_int(row.get("retweets", "0")),
+                "replies": safe_int(row.get("replies", "0")),
+                "tweets_posted": safe_int(row.get("tweets_posted", "0")),
+                "profile_visits": safe_int(row.get("profile_visits", "0")),
+            }
+            data.append(entry)
+    return sorted(data, key=lambda x: x["date"])
 
-    return entries
+
+def group_by_period(data: List[Dict], period: str) -> Dict[str, List[Dict]]:
+    """Group data entries by period."""
+    groups = defaultdict(list)
+    for entry in data:
+        dt = entry["date"]
+        if period == "daily":
+            key = dt.strftime("%Y-%m-%d")
+        elif period == "weekly":
+            # Start of week (Monday)
+            start = dt - timedelta(days=dt.weekday())
+            key = f"{start.strftime('%Y-%m-%d')} to {(start + timedelta(days=6)).strftime('%Y-%m-%d')}"
+        elif period == "monthly":
+            key = dt.strftime("%Y-%m")
+        else:
+            key = dt.strftime("%Y-%m-%d")
+        groups[key].append(entry)
+    return dict(sorted(groups.items()))
 
 
-def generate_report(handle: str, entries: list) -> dict:
+def calculate_period_metrics(entries: List[Dict]) -> Dict[str, Any]:
+    """Calculate aggregate metrics for a period."""
     if not entries:
-        return {"handle": handle, "error": "No data found"}
+        return {}
 
-    report = {
-        "handle": handle,
-        "data_points": len(entries),
-        "first_record": entries[0]["timestamp"],
-        "last_record": entries[-1]["timestamp"],
-        "current_followers": entries[-1]["followers"],
-    }
+    followers_start = entries[0]["followers"]
+    followers_end = entries[-1]["followers"]
+    follower_growth = followers_end - followers_start
 
-    if len(entries) >= 2:
-        first = entries[0]
-        last = entries[-1]
+    total_impressions = sum(e["impressions"] for e in entries)
+    total_engagements = sum(e["engagements"] for e in entries)
+    total_likes = sum(e["likes"] for e in entries)
+    total_retweets = sum(e["retweets"] for e in entries)
+    total_replies = sum(e["replies"] for e in entries)
+    total_tweets = sum(e["tweets_posted"] for e in entries)
+    total_profile_visits = sum(e["profile_visits"] for e in entries)
 
-        follower_change = last["followers"] - first["followers"]
-        days_span = (datetime.fromisoformat(last["timestamp"]) -
-                     datetime.fromisoformat(first["timestamp"])).days
-        days_span = max(days_span, 1)
+    eng_rate = (total_engagements / total_impressions * 100) if total_impressions > 0 else 0
 
-        report["follower_change"] = follower_change
-        report["days_tracked"] = days_span
-        report["daily_growth"] = round(follower_change / days_span, 1)
-        report["weekly_growth"] = round((follower_change / days_span) * 7, 1)
-        report["monthly_projection"] = round((follower_change / days_span) * 30)
+    # Per-tweet metrics
+    per_tweet_impressions = total_impressions / total_tweets if total_tweets > 0 else 0
+    per_tweet_engagements = total_engagements / total_tweets if total_tweets > 0 else 0
 
-        if first["followers"] > 0:
-            pct_change = ((last["followers"] - first["followers"]) / first["followers"]) * 100
-            report["growth_percent"] = round(pct_change, 1)
-
-        # Engagement trend
-        eng_rates = [e["engagement_rate"] for e in entries if e.get("engagement_rate", 0) > 0]
-        if len(eng_rates) >= 2:
-            mid = len(eng_rates) // 2
-            first_half_avg = sum(eng_rates[:mid]) / mid
-            second_half_avg = sum(eng_rates[mid:]) / (len(eng_rates) - mid)
-            report["engagement_trend"] = "improving" if second_half_avg > first_half_avg else "declining"
-            report["avg_engagement_rate"] = round(sum(eng_rates) / len(eng_rates), 2)
-
-    return report
-
-
-def project_milestone(handle: str, entries: list, target: int) -> dict:
-    if len(entries) < 2:
-        return {"error": "Need at least 2 data points for projection"}
-
-    current = entries[-1]["followers"]
-    if current >= target:
-        return {"handle": handle, "target": target, "status": "Already reached!"}
-
-    first = entries[0]
-    last = entries[-1]
-    days_span = (datetime.fromisoformat(last["timestamp"]) -
-                 datetime.fromisoformat(first["timestamp"])).days
-    days_span = max(days_span, 1)
-
-    daily_growth = (last["followers"] - first["followers"]) / days_span
-
-    if daily_growth <= 0:
-        return {"handle": handle, "target": target, "status": "Not growing — can't project",
-                "daily_growth": round(daily_growth, 1)}
-
-    remaining = target - current
-    days_needed = remaining / daily_growth
-    target_date = datetime.now() + timedelta(days=days_needed)
+    # Follower conversion rate (profile visits to followers)
+    conversion_rate = (follower_growth / total_profile_visits * 100) if total_profile_visits > 0 and follower_growth > 0 else 0
 
     return {
-        "handle": handle,
-        "current": current,
-        "target": target,
-        "remaining": remaining,
-        "daily_growth": round(daily_growth, 1),
-        "days_needed": round(days_needed),
-        "projected_date": target_date.strftime("%Y-%m-%d"),
+        "days": len(entries),
+        "followers_start": followers_start,
+        "followers_end": followers_end,
+        "follower_growth": follower_growth,
+        "follower_growth_pct": round(follower_growth / followers_start * 100, 2) if followers_start > 0 else 0,
+        "total_impressions": total_impressions,
+        "total_engagements": total_engagements,
+        "engagement_rate": round(eng_rate, 2),
+        "total_likes": total_likes,
+        "total_retweets": total_retweets,
+        "total_replies": total_replies,
+        "total_tweets_posted": total_tweets,
+        "total_profile_visits": total_profile_visits,
+        "per_tweet_impressions": round(per_tweet_impressions, 0),
+        "per_tweet_engagements": round(per_tweet_engagements, 1),
+        "profile_conversion_rate": round(conversion_rate, 2),
     }
 
 
-def print_report(report: dict):
-    print(f"\n{'='*60}")
-    print(f"  GROWTH REPORT — {report['handle']}")
-    print(f"{'='*60}")
+def calculate_growth_trajectory(data: List[Dict]) -> Dict[str, Any]:
+    """Calculate growth trends and projections."""
+    if len(data) < 2:
+        return {"trend": "insufficient_data"}
 
-    if "error" in report:
-        print(f"\n  ⚠️  {report['error']}")
-        print(f"  Record data first: python3 growth_tracker.py --record --handle {report['handle']} --followers N")
-        print()
-        return
+    followers = [(e["date"], e["followers"]) for e in data if e["followers"] > 0]
+    if len(followers) < 2:
+        return {"trend": "insufficient_data"}
 
-    print(f"\n  Current followers:    {report['current_followers']:,}")
-    print(f"  Data points:         {report['data_points']}")
-    print(f"  Tracking since:      {report['first_record'][:10]}")
+    # Daily growth rates
+    daily_growth = []
+    for i in range(1, len(followers)):
+        days_diff = (followers[i][0] - followers[i-1][0]).days
+        if days_diff > 0 and followers[i-1][1] > 0:
+            growth = (followers[i][1] - followers[i-1][1]) / days_diff
+            daily_growth.append(growth)
 
-    if "follower_change" in report:
-        change_icon = "📈" if report["follower_change"] > 0 else "📉" if report["follower_change"] < 0 else "➡️"
-        print(f"\n  {change_icon} Change:  {report['follower_change']:+,} followers over {report['days_tracked']} days")
-        print(f"  Daily avg:           {report.get('daily_growth', 0):+.1f}/day")
-        print(f"  Weekly avg:          {report.get('weekly_growth', 0):+.1f}/week")
-        print(f"  30-day projection:   {report.get('monthly_projection', 0):+,}")
+    if not daily_growth:
+        return {"trend": "flat"}
 
-        if "growth_percent" in report:
-            print(f"  Growth rate:         {report['growth_percent']:+.1f}%")
+    avg_daily = statistics.mean(daily_growth)
+    recent_daily = statistics.mean(daily_growth[-7:]) if len(daily_growth) >= 7 else avg_daily
 
-        if "engagement_trend" in report:
-            trend_icon = "📈" if report["engagement_trend"] == "improving" else "📉"
-            print(f"  Engagement:          {trend_icon} {report['engagement_trend']} (avg {report['avg_engagement_rate']}%)")
+    current = followers[-1][1]
+    # Projections
+    days_to_next_milestone = None
+    milestones = [100, 500, 1000, 5000, 10000, 25000, 50000, 100000]
+    next_milestone = None
+    for m in milestones:
+        if current < m:
+            next_milestone = m
+            if recent_daily > 0:
+                days_to_next_milestone = int((m - current) / recent_daily)
+            break
 
-    print(f"\n{'='*60}\n")
+    # Trend direction
+    if len(daily_growth) >= 14:
+        first_half = statistics.mean(daily_growth[:len(daily_growth)//2])
+        second_half = statistics.mean(daily_growth[len(daily_growth)//2:])
+        if second_half > first_half * 1.1:
+            trend = "accelerating"
+        elif second_half < first_half * 0.9:
+            trend = "decelerating"
+        else:
+            trend = "steady"
+    else:
+        trend = "steady"
+
+    return {
+        "trend": trend,
+        "avg_daily_growth": round(avg_daily, 1),
+        "recent_daily_growth": round(recent_daily, 1),
+        "current_followers": current,
+        "next_milestone": next_milestone,
+        "days_to_milestone": days_to_next_milestone,
+        "projected_30d": int(current + recent_daily * 30),
+        "projected_90d": int(current + recent_daily * 90),
+    }
+
+
+def find_best_posting_patterns(data: List[Dict]) -> Dict[str, Any]:
+    """Identify best posting frequency and patterns."""
+    if not data:
+        return {}
+
+    # Correlation between tweets posted and engagement
+    daily_data = [(e["tweets_posted"], e["engagements"], e["impressions"]) for e in data if e["tweets_posted"] > 0]
+
+    frequency_buckets = defaultdict(list)
+    for tweets, eng, imp in daily_data:
+        eng_rate = (eng / imp * 100) if imp > 0 else 0
+        if tweets <= 1:
+            frequency_buckets["1 tweet/day"].append(eng_rate)
+        elif tweets <= 3:
+            frequency_buckets["2-3 tweets/day"].append(eng_rate)
+        elif tweets <= 5:
+            frequency_buckets["4-5 tweets/day"].append(eng_rate)
+        else:
+            frequency_buckets["6+ tweets/day"].append(eng_rate)
+
+    freq_analysis = {}
+    for bucket, rates in frequency_buckets.items():
+        if rates:
+            freq_analysis[bucket] = {
+                "days": len(rates),
+                "avg_engagement_rate": round(statistics.mean(rates), 2),
+            }
+
+    # Best day of week
+    dow_data = defaultdict(list)
+    for e in data:
+        day = e["date"].strftime("%A")
+        if e["impressions"] > 0:
+            eng_rate = e["engagements"] / e["impressions"] * 100
+            dow_data[day].append(eng_rate)
+
+    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    dow_analysis = {}
+    for day in day_order:
+        if day in dow_data:
+            dow_analysis[day] = {
+                "avg_engagement_rate": round(statistics.mean(dow_data[day]), 2),
+                "days_sampled": len(dow_data[day]),
+            }
+
+    return {
+        "posting_frequency": freq_analysis,
+        "day_of_week": dow_analysis,
+    }
+
+
+def format_number(n: int) -> str:
+    if n >= 1_000_000:
+        return f"{n/1_000_000:.1f}M"
+    elif n >= 1_000:
+        return f"{n/1_000:.1f}K"
+    return str(n)
+
+
+def print_human(period_data: Dict[str, Dict], trajectory: Dict,
+                patterns: Dict, period_type: str) -> None:
+    """Print growth report in human-readable format."""
+    print("=" * 65)
+    print(f"  X/Twitter Growth Report ({period_type})")
+    print("=" * 65)
+
+    # Trajectory
+    t = trajectory
+    if t.get("trend") != "insufficient_data":
+        print(f"\n  --- Growth Trajectory ---")
+        print(f"  Current Followers:   {format_number(t['current_followers'])}")
+        print(f"  Trend:               {t['trend']}")
+        print(f"  Avg Daily Growth:    {t['avg_daily_growth']:+.1f} followers/day")
+        print(f"  Recent Daily Growth: {t['recent_daily_growth']:+.1f} followers/day")
+        print(f"  30-Day Projection:   {format_number(t['projected_30d'])}")
+        print(f"  90-Day Projection:   {format_number(t['projected_90d'])}")
+        if t.get("next_milestone"):
+            days = t["days_to_milestone"]
+            if days and days > 0:
+                print(f"  Next Milestone:      {format_number(t['next_milestone'])} (est. {days} days)")
+
+    # Period breakdown
+    print(f"\n  --- Period Breakdown ---")
+    print(f"  {'Period':<22} {'Followers':>10} {'Growth':>8} {'Eng Rate':>9} {'Tweets':>7} {'Impressions':>12}")
+    print(f"  {'-'*22} {'-'*10} {'-'*8} {'-'*9} {'-'*7} {'-'*12}")
+
+    for period_key, metrics in period_data.items():
+        growth_str = f"{metrics['follower_growth']:+,}"
+        print(f"  {period_key:<22} {metrics['followers_end']:>10,} {growth_str:>8} "
+              f"{metrics['engagement_rate']:>8.2f}% {metrics['total_tweets_posted']:>7} "
+              f"{format_number(metrics['total_impressions']):>12}")
+
+    # Posting patterns
+    freq = patterns.get("posting_frequency", {})
+    if freq:
+        print(f"\n  --- Posting Frequency Impact ---")
+        for bucket, stats in sorted(freq.items()):
+            bar = "#" * max(1, int(stats["avg_engagement_rate"] * 3))
+            print(f"  {bucket:<20} {stats['avg_engagement_rate']:.2f}% eng (n={stats['days']})  {bar}")
+
+    dow = patterns.get("day_of_week", {})
+    if dow:
+        print(f"\n  --- Day of Week Performance ---")
+        for day, stats in dow.items():
+            bar = "#" * max(1, int(stats["avg_engagement_rate"] * 3))
+            print(f"  {day:<12} {stats['avg_engagement_rate']:.2f}% eng  {bar}")
+
+    # Health assessment
+    print(f"\n  --- Assessment ---")
+    last_period = list(period_data.values())[-1] if period_data else {}
+    if last_period:
+        eng = last_period.get("engagement_rate", 0)
+        if eng >= 6:
+            print(f"  Engagement rate is excellent ({eng:.2f}%)")
+        elif eng >= 3:
+            print(f"  Engagement rate is good ({eng:.2f}%)")
+        elif eng >= 1:
+            print(f"  Engagement rate is average ({eng:.2f}%) - focus on content quality")
+        else:
+            print(f"  Engagement rate is low ({eng:.2f}%) - review content strategy")
+
+        growth_pct = last_period.get("follower_growth_pct", 0)
+        if growth_pct > 10:
+            print(f"  Strong follower growth ({growth_pct:.1f}%)")
+        elif growth_pct > 0:
+            print(f"  Positive follower growth ({growth_pct:.1f}%)")
+        elif growth_pct == 0:
+            print(f"  Flat follower growth - increase content volume or try new formats")
+        else:
+            print(f"  Follower decline ({growth_pct:.1f}%) - investigate content and engagement strategy")
+
+    print()
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Track X/Twitter account growth over time",
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    parser.add_argument("--record", action="store_true", help="Record a new snapshot")
-    parser.add_argument("--report", action="store_true", help="Generate growth report")
-    parser.add_argument("--milestone", action="store_true", help="Project when target will be reached")
-
-    parser.add_argument("--handle", required=True, help="X handle")
-    parser.add_argument("--followers", type=int, default=0, help="Current follower count")
-    parser.add_argument("--following", type=int, default=0, help="Current following count")
-    parser.add_argument("--eng-rate", type=float, default=0, help="Current engagement rate (pct)")
-    parser.add_argument("--posts-week", type=float, default=0, help="Posts per week")
-    parser.add_argument("--notes", default="", help="Notes for this snapshot")
-    parser.add_argument("--period", default="all", help="Report period: 7d, 30d, 90d, all")
-    parser.add_argument("--target", type=int, default=0, help="Follower milestone target")
-    parser.add_argument("--json", action="store_true", help="Output JSON")
-
+        description="Track follower growth, engagement rates, and best posting times"
+    )
+    parser.add_argument("file", help="CSV file with analytics data")
+    parser.add_argument("--format", choices=["human", "json"], default="human", help="Output format")
+    parser.add_argument("--period", choices=["daily", "weekly", "monthly"], default="weekly",
+                        help="Aggregation period (default: weekly)")
     args = parser.parse_args()
 
-    if not args.handle.startswith("@"):
-        args.handle = f"@{args.handle}"
+    data = load_analytics(args.file)
+    if not data:
+        print("Error: No valid analytics data found", file=sys.stderr)
+        sys.exit(1)
 
-    if args.record:
-        if args.followers <= 0:
-            print("Error: --followers required for recording", file=sys.stderr)
-            sys.exit(1)
-        entry = record_snapshot(args.handle, args.followers, args.following,
-                                args.eng_rate, args.posts_week, args.notes)
-        if args.json:
-            print(json.dumps(entry, indent=2))
-        else:
-            print(f"  ✅ Recorded: {args.handle} — {args.followers:,} followers")
-            print(f"     File: {get_data_file(args.handle)}")
+    grouped = group_by_period(data, args.period)
+    period_metrics = {k: calculate_period_metrics(v) for k, v in grouped.items()}
+    trajectory = calculate_growth_trajectory(data)
+    patterns = find_best_posting_patterns(data)
 
-    elif args.report:
-        period_days = 0
-        if args.period != "all":
-            period_days = int(args.period.rstrip("d"))
-        entries = load_snapshots(args.handle, period_days)
-        report = generate_report(args.handle, entries)
-        if args.json:
-            print(json.dumps(report, indent=2))
-        else:
-            print_report(report)
-
-    elif args.milestone:
-        if args.target <= 0:
-            print("Error: --target required for milestone projection", file=sys.stderr)
-            sys.exit(1)
-        entries = load_snapshots(args.handle)
-        result = project_milestone(args.handle, entries, args.target)
-        if args.json:
-            print(json.dumps(result, indent=2))
-        else:
-            if "error" in result:
-                print(f"  ⚠️  {result['error']}")
-            elif "status" in result and "days_needed" not in result:
-                print(f"  🎉 {result['status']}")
-            else:
-                print(f"\n  🎯 Milestone Projection: {result['handle']}")
-                print(f"  Current:  {result['current']:,}")
-                print(f"  Target:   {result['target']:,}")
-                print(f"  Gap:      {result['remaining']:,}")
-                print(f"  Growth:   {result['daily_growth']:+.1f}/day")
-                print(f"  ETA:      {result['projected_date']} (~{result['days_needed']} days)")
-                print()
-
+    if args.format == "json":
+        output = {
+            "period_type": args.period,
+            "periods": period_metrics,
+            "trajectory": trajectory,
+            "posting_patterns": patterns,
+        }
+        print(json.dumps(output, indent=2, default=str))
     else:
-        parser.print_help()
+        print_human(period_metrics, trajectory, patterns, args.period)
 
 
 if __name__ == "__main__":

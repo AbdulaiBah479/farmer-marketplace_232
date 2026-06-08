@@ -1,125 +1,134 @@
 ---
 name: shopify-setup
-description: Set up a Shopify development environment — Shopify CLI installation, Partner account, development stores, environment variables, project structures for themes, apps, and Hydrogen. Use when starting a new Shopify project.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: "Set up Shopify CLI auth and Admin API access for a store. Install CLI, authenticate, create custom app, store access token, verify. Use whenever the user wants to connect to a Shopify store, set up Shopify API access, install Shopify CLI, or troubleshoot Shopify auth / Admin API token issues."
+compatibility: claude-code-only
 ---
 
-# Shopify Development Setup
+# Shopify Setup
 
-## Before writing code
+Set up working Shopify CLI authentication and Admin API access for a store. Produces a verified API connection ready for product and content management.
 
-**Fetch live docs**:
-1. Fetch `https://shopify.dev/docs/api/shopify-cli` for CLI installation and commands
-2. Web-search `site:shopify.dev getting started app development` for app setup
-3. Web-search `site:shopify.dev theme development getting started` for theme setup
+## Workflow
 
-## Prerequisites
+### Step 1: Check Prerequisites
 
-### Shopify Partner Account
+Verify the Shopify CLI is installed:
 
-All Shopify development starts with a Partner account:
-- Free at https://partners.shopify.com/
-- Provides access to development stores (unlimited), app management, and theme development
-- Development stores have full Shopify features without charges
-
-### Development Stores
-
-Two types:
-- **Development store** — full-featured test store, cannot process real payments
-- **Shopify Plus sandbox** — for testing Plus-specific features
-
-### Shopify CLI
-
-The primary development tool:
-- Install: `npm install -g @shopify/cli` or `brew install shopify-cli`
-- Authenticate: `shopify auth login`
-- Key commands: `shopify app init`, `shopify theme init`, `shopify hydrogen init`
-
-## Project Structures
-
-### App Project (Remix)
-
-```
-shopify-app/
-├── app/
-│   ├── routes/
-│   │   ├── app._index.tsx        # App dashboard
-│   │   ├── app.products.tsx      # Products page
-│   │   └── webhooks.tsx          # Webhook handler
-│   ├── shopify.server.ts         # Shopify API client
-│   └── root.tsx
-├── extensions/
-│   ├── my-function/              # Shopify Function
-│   └── my-checkout-ui/           # Checkout UI extension
-├── shopify.app.toml              # App configuration
-├── package.json
-└── .env
+```bash
+shopify version
 ```
 
-### Theme Project
+If not installed:
 
-```
-my-theme/
-├── assets/                       # CSS, JS, images
-├── config/
-│   ├── settings_schema.json      # Theme settings
-│   └── settings_data.json        # Default settings values
-├── layout/
-│   └── theme.liquid              # Main layout
-├── locales/                      # Translations
-├── sections/                     # Reusable sections
-├── snippets/                     # Reusable Liquid snippets
-├── templates/
-│   ├── index.json                # Homepage template
-│   └── product.json              # Product page template
-└── .shopify/                     # CLI metadata
+```bash
+npm install -g @shopify/cli
 ```
 
-### Hydrogen Project
+### Step 2: Authenticate with the Store
 
-```
-hydrogen-storefront/
-├── app/
-│   ├── routes/
-│   │   ├── ($locale)._index.tsx
-│   │   ├── ($locale).products.$handle.tsx
-│   │   └── ($locale).collections.$handle.tsx
-│   ├── components/
-│   ├── lib/
-│   │   └── context.ts
-│   └── root.tsx
-├── server.ts
-├── hydrogen.config.ts
-├── remix.config.js
-└── .env
+```bash
+shopify auth login --store mystore.myshopify.com
 ```
 
-## Environment Variables
+This opens a browser for OAuth. The user must be a store owner or staff member with appropriate permissions.
 
-```
-SHOPIFY_API_KEY=your-api-key
-SHOPIFY_API_SECRET=your-api-secret
-SHOPIFY_APP_URL=https://your-app.example.com
-SCOPES=read_products,write_products,read_orders
-SHOPIFY_STORE=your-dev-store.myshopify.com
+After login, verify:
+
+```bash
+shopify store info
 ```
 
-Never hardcode secrets — always use `.env` files (excluded from version control) or your platform's secret manager.
+### Step 3: Create a Custom App for API Access
 
-## Deprecated Technologies Warning
+Custom apps provide stable Admin API access tokens (unlike CLI session tokens which expire).
 
-Do NOT use these deprecated tools:
-- **Slate** — deprecated theme build tool, replaced by Shopify CLI
-- **Theme Kit** — legacy theme deployment, replaced by `shopify theme` CLI commands
-- **Timber** — deprecated starter theme, replaced by Dawn
+**Check if an app already exists**: Ask the user if they have a custom app set up. If yes, skip to Step 4.
 
-## Best Practices
+**If no custom app exists**, guide the user through creation via browser:
 
-- Use `shopify app init` or `shopify theme init` to scaffold projects — do not set up manually
-- Always start with a development store — never develop against a production store
-- Use the latest stable API version (check `https://shopify.dev/docs/api/usage/versioning`)
-- Keep `.env` in `.gitignore`
-- Use `shopify app dev` for local development with hot reload and tunnel
-- Run `shopify theme check` before deploying themes
+1. Navigate to `https://{store}.myshopify.com/admin/settings/apps/development`
+2. Click **Create an app**
+3. Name it (e.g. "Claude Code Integration")
+4. Click **Configure Admin API scopes**
+5. Enable these scopes (see `references/api-scopes.md` for details):
+   - `read_products`, `write_products`
+   - `read_content`, `write_content`
+   - `read_product_listings`
+   - `read_inventory`, `write_inventory`
+   - `read_files`, `write_files`
+6. Click **Save** then **Install app**
+7. Copy the **Admin API access token** (shown only once)
 
-Fetch the Shopify CLI docs and getting-started guides for exact commands and latest project structures before setting up.
+Use browser automation (Chrome MCP or playwright-cli) if the user prefers assistance navigating the admin.
+
+### Step 4: Store the Access Token
+
+Store the token securely. Never commit it to git.
+
+**For project use** — create `.dev.vars`:
+
+```
+SHOPIFY_STORE=mystore.myshopify.com
+SHOPIFY_ACCESS_TOKEN=shpat_xxxxxxxxxxxxxxxxxxxxx
+```
+
+Ensure `.dev.vars` is in `.gitignore`.
+
+**For cross-project use** — store in your preferred secrets manager (environment variable, 1Password CLI, etc.).
+
+### Step 5: Verify API Access
+
+Test the connection with a simple GraphQL query:
+
+```bash
+curl -s https://{store}.myshopify.com/admin/api/2025-01/graphql.json \
+  -H "Content-Type: application/json" \
+  -H "X-Shopify-Access-Token: {token}" \
+  -d '{"query": "{ shop { name primaryDomain { url } } }"}' | jq .
+```
+
+Expected response includes the shop name and domain. If you get a 401, the token is invalid or expired — recreate the app.
+
+### Step 6: Save Store Config
+
+Create a `shopify.config.json` in the project root for other skills to reference:
+
+```json
+{
+  "store": "mystore.myshopify.com",
+  "apiVersion": "2025-01",
+  "tokenSource": ".dev.vars"
+}
+```
+
+---
+
+## Critical Patterns
+
+### API Version
+
+Always specify an explicit API version (e.g. `2025-01`). Using `unstable` in production will break without warning. Shopify retires API versions quarterly.
+
+### Token Types
+
+| Token | Format | Use |
+|-------|--------|-----|
+| Admin API access token | `shpat_*` | Custom apps — stable, long-lived |
+| CLI session token | Short-lived | Shopify CLI commands only |
+| Storefront API token | `shpca_*` | Public storefront queries |
+
+This skill sets up **Admin API access tokens** — the right choice for product and content management.
+
+### Rate Limits
+
+Shopify uses a leaky bucket rate limiter:
+- **REST**: 40 requests/second burst, 2/second sustained
+- **GraphQL**: 1,000 cost points per second, max 2,000 points per query
+
+For bulk operations, use the `bulkOperationRunQuery` mutation instead of looping.
+
+---
+
+## Reference Files
+
+- `references/api-scopes.md` — Admin API scopes needed for product and content management

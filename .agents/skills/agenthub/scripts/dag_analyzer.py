@@ -1,274 +1,393 @@
 #!/usr/bin/env python3
-"""Analyze the AgentHub git DAG.
+"""Analyze multi-agent DAG workflow definitions for structural issues.
 
-Detects frontier branches (leaves with no children), displays DAG graphs,
-and shows per-agent branch status for a session.
+Validates workflow definitions by checking for cycles, unreachable nodes,
+missing input/output references, and bottlenecks. Also computes critical
+path length and parallelization potential.
 
 Usage:
-    python dag_analyzer.py --frontier --session 20260317-143022
-    python dag_analyzer.py --graph
-    python dag_analyzer.py --status --session 20260317-143022
-    python dag_analyzer.py --demo
+    python dag_analyzer.py --workflow workflow.json --validate
+    python dag_analyzer.py --workflow workflow.json --critical-path
+    python dag_analyzer.py --workflow workflow.json --visualize
+    python dag_analyzer.py --workflow workflow.json --json
 """
 
 import argparse
 import json
-import os
-import re
-import subprocess
 import sys
-from datetime import datetime
+from collections import defaultdict, deque
+from pathlib import Path
 
 
-def run_git(*args):
-    """Run a git command and return stdout."""
+def load_workflow(path):
+    """Load workflow definition from JSON file."""
     try:
-        result = subprocess.run(
-            ["git"] + list(args),
-            capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        print(f"Git error: {e.stderr.strip()}", file=sys.stderr)
-        return ""
+        with open(path, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"Error loading workflow: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
-def get_hub_branches(session_id=None):
-    """Get all hub/* branches, optionally filtered by session."""
-    output = run_git("branch", "--list", "hub/*", "--format=%(refname:short)")
-    if not output:
+def build_graph(workflow):
+    """Build adjacency list and reverse graph from workflow agents."""
+    agents = workflow.get("agents", {})
+    graph = defaultdict(list)      # agent -> list of dependents
+    reverse = defaultdict(list)    # agent -> list of dependencies
+    all_nodes = set(agents.keys())
+
+    for agent_id, agent_def in agents.items():
+        deps = agent_def.get("dependencies", [])
+        for dep in deps:
+            graph[dep].append(agent_id)
+            reverse[agent_id].append(dep)
+
+    return graph, reverse, all_nodes
+
+
+def detect_cycles(graph, all_nodes):
+    """Detect cycles using DFS coloring (white/gray/black)."""
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {n: WHITE for n in all_nodes}
+    cycles = []
+
+    def dfs(node, path):
+        color[node] = GRAY
+        path.append(node)
+        for neighbor in graph.get(node, []):
+            if color[neighbor] == GRAY:
+                # Found a cycle
+                cycle_start = path.index(neighbor)
+                cycles.append(path[cycle_start:] + [neighbor])
+            elif color[neighbor] == WHITE:
+                dfs(neighbor, path)
+        path.pop()
+        color[node] = BLACK
+
+    for node in all_nodes:
+        if color[node] == WHITE:
+            dfs(node, [])
+
+    return cycles
+
+
+def topological_sort(graph, reverse, all_nodes):
+    """Kahn's algorithm for topological sort."""
+    in_degree = {n: 0 for n in all_nodes}
+    for node in all_nodes:
+        for dep in reverse.get(node, []):
+            in_degree[node] = in_degree.get(node, 0)
+        in_degree[node] = len(reverse.get(node, []))
+
+    queue = deque([n for n in all_nodes if in_degree[n] == 0])
+    order = []
+
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+        for dependent in graph.get(node, []):
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                queue.append(dependent)
+
+    if len(order) != len(all_nodes):
+        return None  # Cycle exists
+    return order
+
+
+def find_roots_and_terminals(graph, reverse, all_nodes):
+    """Identify root nodes (no deps) and terminal nodes (no dependents)."""
+    roots = [n for n in all_nodes if not reverse.get(n)]
+    terminals = [n for n in all_nodes if not graph.get(n)]
+    return sorted(roots), sorted(terminals)
+
+
+def compute_critical_path(workflow, graph, reverse, all_nodes):
+    """Compute the critical path (longest path through the DAG)."""
+    agents = workflow.get("agents", {})
+    config = workflow.get("config", {})
+    default_timeout = config.get("timeout_per_agent", 300)
+
+    # Estimate duration per agent (use timeout as upper bound)
+    durations = {}
+    for agent_id in all_nodes:
+        agent_config = agents.get(agent_id, {}).get("config", {})
+        durations[agent_id] = agent_config.get("timeout", default_timeout)
+
+    # Compute longest path from each node
+    longest_to = {n: 0 for n in all_nodes}
+    predecessor = {n: None for n in all_nodes}
+
+    topo = topological_sort(graph, reverse, all_nodes)
+    if topo is None:
+        return None, 0  # Cycle
+
+    for node in topo:
+        for dependent in graph.get(node, []):
+            new_dist = longest_to[node] + durations[node]
+            if new_dist > longest_to[dependent]:
+                longest_to[dependent] = new_dist
+                predecessor[dependent] = node
+
+    # Find the terminal with the longest path
+    terminals = [n for n in all_nodes if not graph.get(n)]
+    if not terminals:
+        return [], 0
+
+    end_node = max(terminals, key=lambda n: longest_to[n] + durations[n])
+    total_time = longest_to[end_node] + durations[end_node]
+
+    # Reconstruct path
+    path = [end_node]
+    current = end_node
+    while predecessor[current] is not None:
+        current = predecessor[current]
+        path.append(current)
+    path.reverse()
+
+    return path, total_time
+
+
+def check_io_references(workflow):
+    """Verify all input references resolve to upstream outputs."""
+    agents = workflow.get("agents", {})
+    issues = []
+
+    # Map each agent to its outputs
+    output_map = {}
+    for agent_id, agent_def in agents.items():
+        for output in agent_def.get("outputs", []):
+            output_map[output] = agent_id
+
+    # Check inputs
+    for agent_id, agent_def in agents.items():
+        deps = set(agent_def.get("dependencies", []))
+        for inp in agent_def.get("inputs", []):
+            if inp in output_map:
+                producer = output_map[inp]
+                # Check that the producer is an upstream dependency
+                if producer not in deps and producer != agent_id:
+                    issues.append({
+                        "type": "missing_dependency",
+                        "agent": agent_id,
+                        "input": inp,
+                        "producer": producer,
+                        "message": f"Agent '{agent_id}' uses input '{inp}' from '{producer}' but doesn't list it as a dependency",
+                    })
+            # Inputs might be workflow-level inputs (not produced by agents)
+
+    # Check for unused outputs
+    all_inputs = set()
+    for agent_def in agents.values():
+        all_inputs.update(agent_def.get("inputs", []))
+
+    for output_name, producer in output_map.items():
+        if output_name not in all_inputs:
+            # Terminal output -- expected
+            if not any(
+                producer in agents[a].get("dependencies", [])
+                for a in agents
+            ):
+                pass  # Terminal agent output, this is fine
+
+    return issues
+
+
+def compute_parallel_groups(graph, reverse, all_nodes):
+    """Compute which agents can run in parallel at each level."""
+    topo = topological_sort(graph, reverse, all_nodes)
+    if topo is None:
         return []
-    branches = output.strip().split("\n")
-    if session_id:
-        prefix = f"hub/{session_id}/"
-        branches = [b for b in branches if b.startswith(prefix)]
-    return branches
+
+    # Compute level (longest path from any root to this node)
+    level = {n: 0 for n in all_nodes}
+    for node in topo:
+        for dependent in graph.get(node, []):
+            level[dependent] = max(level[dependent], level[node] + 1)
+
+    # Group by level
+    groups = defaultdict(list)
+    for node in all_nodes:
+        groups[level[node]].append(node)
+
+    return [{"level": lvl, "agents": sorted(agents)} for lvl, agents in sorted(groups.items())]
 
 
-def get_branch_commit(branch):
-    """Get the commit hash for a branch."""
-    return run_git("rev-parse", "--short", branch)
+def validate_workflow(workflow):
+    """Run all validation checks on a workflow definition."""
+    agents = workflow.get("agents", {})
+    if not agents:
+        return {"valid": False, "errors": ["No agents defined in workflow"]}
 
+    graph, reverse, all_nodes = build_graph(workflow)
+    errors = []
+    warnings = []
 
-def get_branch_commit_count(branch, base_branch="main"):
-    """Count commits ahead of base branch."""
-    output = run_git("rev-list", "--count", f"{base_branch}..{branch}")
-    try:
-        return int(output)
-    except ValueError:
-        return 0
+    # Check for unknown dependencies
+    for agent_id, agent_def in agents.items():
+        for dep in agent_def.get("dependencies", []):
+            if dep not in all_nodes:
+                errors.append(f"Agent '{agent_id}' depends on unknown agent '{dep}'")
 
+    # Cycle detection
+    cycles = detect_cycles(graph, all_nodes)
+    for cycle in cycles:
+        errors.append(f"Cycle detected: {' -> '.join(cycle)}")
 
-def get_branch_last_commit_date(branch):
-    """Get the last commit date for a branch."""
-    output = run_git("log", "-1", "--format=%ci", branch)
-    if output:
-        return output[:19]
-    return "unknown"
+    # IO reference check
+    io_issues = check_io_references(workflow)
+    for issue in io_issues:
+        warnings.append(issue["message"])
 
+    # Root/terminal check
+    roots, terminals = find_roots_and_terminals(graph, reverse, all_nodes)
+    if not roots:
+        errors.append("No root agents found (all agents have dependencies)")
+    if not terminals:
+        warnings.append("No terminal agents found (all agents have dependents)")
 
-def get_branch_last_commit_msg(branch):
-    """Get the last commit message for a branch."""
-    return run_git("log", "-1", "--format=%s", branch)
-
-
-def detect_frontier(session_id=None):
-    """Find frontier branches (tips with no child branches).
-
-    A branch is on the frontier if no other hub branch contains its tip commit
-    as an ancestor (i.e., it has no children in the DAG).
-    """
-    branches = get_hub_branches(session_id)
-    if not branches:
-        return []
-
-    # Get commit hashes for all branches
-    branch_commits = {}
-    for b in branches:
-        commit = run_git("rev-parse", b)
-        if commit:
-            branch_commits[b] = commit
-
-    # A branch is frontier if its commit is not an ancestor of any other branch
-    frontier = []
-    for branch, commit in branch_commits.items():
-        is_ancestor = False
-        for other_branch, other_commit in branch_commits.items():
-            if other_branch == branch:
+    # Unreachable check
+    if roots and not cycles:
+        reachable = set()
+        queue = deque(roots)
+        while queue:
+            node = queue.popleft()
+            if node in reachable:
                 continue
-            # Check if commit is ancestor of other_commit
-            result = subprocess.run(
-                ["git", "merge-base", "--is-ancestor", commit, other_commit],
-                capture_output=True
-            )
-            if result.returncode == 0:
-                is_ancestor = True
-                break
-        if not is_ancestor:
-            frontier.append(branch)
+            reachable.add(node)
+            queue.extend(graph.get(node, []))
+        unreachable = all_nodes - reachable
+        for node in unreachable:
+            warnings.append(f"Agent '{node}' is unreachable from root agents")
 
-    return frontier
+    # Critical path
+    crit_path, crit_time = compute_critical_path(workflow, graph, reverse, all_nodes)
+    parallel_groups = compute_parallel_groups(graph, reverse, all_nodes)
+
+    return {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "warnings": warnings,
+        "stats": {
+            "total_agents": len(all_nodes),
+            "root_agents": roots,
+            "terminal_agents": terminals,
+            "max_parallel": max(len(g["agents"]) for g in parallel_groups) if parallel_groups else 0,
+            "depth": len(parallel_groups),
+            "critical_path": crit_path if crit_path else [],
+            "critical_path_time_s": crit_time,
+        },
+        "parallel_groups": parallel_groups,
+    }
 
 
-def show_graph():
-    """Display the git DAG graph for hub branches."""
-    branches = get_hub_branches()
-    if not branches:
-        print("No hub/* branches found.")
-        return
+def visualize_dag(workflow):
+    """Generate a text-based DAG visualization."""
+    graph, reverse, all_nodes = build_graph(workflow)
+    groups = compute_parallel_groups(graph, reverse, all_nodes)
+    lines = []
 
-    # Use git log with graph for hub branches
-    branch_args = [b for b in branches]
-    output = run_git(
-        "log", "--all", "--oneline", "--graph", "--decorate",
-        "--simplify-by-decoration",
-        *[f"--branches=hub/*"]
-    )
-    if output:
-        print(output)
+    for group in groups:
+        level_agents = group["agents"]
+        level_line = "  |  ".join(f"[{a}]" for a in level_agents)
+        lines.append(f"Level {group['level']}: {level_line}")
+
+        # Show edges
+        for agent in level_agents:
+            dependents = graph.get(agent, [])
+            for dep in dependents:
+                lines.append(f"  {agent} --> {dep}")
+
+    return "\n".join(lines)
+
+
+def format_human(result, visualization=None):
+    """Format validation result for human output."""
+    output = []
+    output.append("=" * 60)
+    output.append("DAG WORKFLOW ANALYZER")
+    output.append("=" * 60)
+
+    if not result["valid"]:
+        output.append("")
+        output.append("VALIDATION: FAILED")
+        output.append("-" * 60)
+        for err in result["errors"]:
+            output.append(f"  [ERROR] {err}")
     else:
-        print("No hub commits found.")
+        output.append("")
+        output.append("VALIDATION: PASSED")
 
+    if result["warnings"]:
+        output.append("")
+        output.append("WARNINGS")
+        output.append("-" * 60)
+        for warn in result["warnings"]:
+            output.append(f"  [WARN] {warn}")
 
-def show_status(session_id, output_format="table"):
-    """Show per-agent branch status for a session."""
-    branches = get_hub_branches(session_id)
-    if not branches:
-        print(f"No branches found for session {session_id}")
-        return
+    stats = result["stats"]
+    output.append("")
+    output.append("STATISTICS")
+    output.append("-" * 60)
+    output.append(f"  Total agents:     {stats['total_agents']}")
+    output.append(f"  Root agents:      {', '.join(stats['root_agents'])}")
+    output.append(f"  Terminal agents:  {', '.join(stats['terminal_agents'])}")
+    output.append(f"  Max parallelism:  {stats['max_parallel']}")
+    output.append(f"  DAG depth:        {stats['depth']} levels")
+    if stats["critical_path"]:
+        output.append(f"  Critical path:    {' -> '.join(stats['critical_path'])}")
+        output.append(f"  Est. time:        {stats['critical_path_time_s']}s")
 
-    frontier = detect_frontier(session_id)
+    if result["parallel_groups"]:
+        output.append("")
+        output.append("EXECUTION GROUPS")
+        output.append("-" * 60)
+        for group in result["parallel_groups"]:
+            agents_str = ", ".join(group["agents"])
+            output.append(f"  Level {group['level']}: [{agents_str}]  ({len(group['agents'])} parallel)")
 
-    # Parse agent info from branch names
-    agents = []
-    for branch in sorted(branches):
-        # Pattern: hub/{session}/agent-{N}/attempt-{M}
-        match = re.match(r"hub/[^/]+/agent-(\d+)/attempt-(\d+)", branch)
-        if match:
-            agent_num = int(match.group(1))
-            attempt = int(match.group(2))
-        else:
-            agent_num = 0
-            attempt = 1
+    if visualization:
+        output.append("")
+        output.append("DAG VISUALIZATION")
+        output.append("-" * 60)
+        output.append(visualization)
 
-        commit = get_branch_commit(branch)
-        commits = get_branch_commit_count(branch)
-        last_date = get_branch_last_commit_date(branch)
-        last_msg = get_branch_last_commit_msg(branch)
-        is_frontier = branch in frontier
-
-        agents.append({
-            "agent": agent_num,
-            "attempt": attempt,
-            "branch": branch,
-            "commit": commit,
-            "commits_ahead": commits,
-            "last_update": last_date,
-            "last_message": last_msg,
-            "frontier": is_frontier,
-        })
-
-    if output_format == "json":
-        print(json.dumps({"session": session_id, "agents": agents}, indent=2))
-        return
-
-    # Table output
-    print(f"Session: {session_id}")
-    print(f"Branches: {len(branches)} | Frontier: {len(frontier)}")
-    print()
-    header = f"{'AGENT':<8} {'BRANCH':<45} {'COMMITS':<8} {'STATUS':<10} {'LAST UPDATE':<20}"
-    print(header)
-    print("-" * len(header))
-    for a in agents:
-        status = "frontier" if a["frontier"] else "merged"
-        print(f"agent-{a['agent']:<4} {a['branch']:<45} {a['commits_ahead']:<8} {status:<10} {a['last_update']:<20}")
-
-
-def run_demo():
-    """Show demo output."""
-    print("=" * 60)
-    print("AgentHub DAG Analyzer — Demo Mode")
-    print("=" * 60)
-    print()
-
-    print("--- Frontier Detection ---")
-    print("Frontier branches (leaves with no children):")
-    print("  hub/20260317-143022/agent-1/attempt-1  (3 commits ahead)")
-    print("  hub/20260317-143022/agent-2/attempt-1  (5 commits ahead)")
-    print("  hub/20260317-143022/agent-3/attempt-1  (2 commits ahead)")
-    print()
-
-    print("--- Session Status ---")
-    print("Session: 20260317-143022")
-    print("Branches: 3 | Frontier: 3")
-    print()
-    header = f"{'AGENT':<8} {'BRANCH':<45} {'COMMITS':<8} {'STATUS':<10} {'LAST UPDATE':<20}"
-    print(header)
-    print("-" * len(header))
-    print(f"{'agent-1':<8} {'hub/20260317-143022/agent-1/attempt-1':<45} {'3':<8} {'frontier':<10} {'2026-03-17 14:35:10':<20}")
-    print(f"{'agent-2':<8} {'hub/20260317-143022/agent-2/attempt-1':<45} {'5':<8} {'frontier':<10} {'2026-03-17 14:36:45':<20}")
-    print(f"{'agent-3':<8} {'hub/20260317-143022/agent-3/attempt-1':<45} {'2':<8} {'frontier':<10} {'2026-03-17 14:34:22':<20}")
-    print()
-
-    print("--- DAG Graph ---")
-    print("* abc1234 (hub/20260317-143022/agent-2/attempt-1) Replaced O(n²) with hash map")
-    print("* def5678 Added benchmark tests")
-    print("| * ghi9012 (hub/20260317-143022/agent-1/attempt-1) Added caching layer")
-    print("| * jkl3456 Refactored data access")
-    print("|/")
-    print("| * mno7890 (hub/20260317-143022/agent-3/attempt-1) Minor optimizations")
-    print("|/")
-    print("* pqr1234 (dev) Base commit")
+    return "\n".join(output)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze the AgentHub git DAG"
+        description="Analyze multi-agent DAG workflow definitions.",
+        epilog="Example: python dag_analyzer.py --workflow workflow.json --validate",
     )
-    parser.add_argument("--frontier", action="store_true",
-                        help="List frontier branches (leaves with no children)")
-    parser.add_argument("--graph", action="store_true",
-                        help="Show ASCII DAG graph for hub branches")
-    parser.add_argument("--status", action="store_true",
-                        help="Show per-agent branch status")
-    parser.add_argument("--session", type=str,
-                        help="Filter by session ID")
-    parser.add_argument("--format", choices=["table", "json"], default="table",
-                        help="Output format (default: table)")
-    parser.add_argument("--demo", action="store_true",
-                        help="Show demo output")
+    parser.add_argument("--workflow", required=True, help="Path to workflow JSON file")
+    parser.add_argument("--validate", action="store_true", help="Run full validation")
+    parser.add_argument("--critical-path", action="store_true", help="Show critical path only")
+    parser.add_argument("--visualize", action="store_true", help="Show DAG visualization")
+    parser.add_argument("--json", action="store_true", dest="json_output", help="Output as JSON")
+
     args = parser.parse_args()
 
-    if args.demo:
-        run_demo()
-        return
+    wf_path = Path(args.workflow)
+    if not wf_path.exists():
+        print(f"Error: Workflow file '{args.workflow}' not found.", file=sys.stderr)
+        sys.exit(1)
 
-    if not any([args.frontier, args.graph, args.status]):
-        parser.print_help()
-        return
+    workflow = load_workflow(wf_path)
+    result = validate_workflow(workflow)
+    visualization = visualize_dag(workflow) if args.visualize else None
 
-    if args.frontier:
-        frontier = detect_frontier(args.session)
-        if args.format == "json":
-            print(json.dumps({"frontier": frontier}, indent=2))
-        else:
-            if frontier:
-                print("Frontier branches:")
-                for b in frontier:
-                    print(f"  {b}")
-            else:
-                print("No frontier branches found.")
-        print()
+    if args.json_output:
+        output = result
+        if visualization:
+            output["visualization"] = visualization
+        print(json.dumps(output, indent=2))
+    else:
+        print(format_human(result, visualization))
 
-    if args.graph:
-        show_graph()
-        print()
-
-    if args.status:
-        if not args.session:
-            print("Error: --session required with --status", file=sys.stderr)
-            sys.exit(1)
-        show_status(args.session, args.format)
+    # Exit with error code if invalid
+    if not result["valid"]:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

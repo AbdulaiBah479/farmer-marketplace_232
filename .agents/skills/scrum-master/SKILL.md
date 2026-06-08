@@ -1,94 +1,142 @@
 ---
-name: "scrum-master"
-description: "Advanced Scrum Master skill for data-driven agile team analysis and coaching. Use when the user asks about sprint planning, velocity tracking, retrospectives, standup facilitation, backlog grooming, story points, burndown charts, blocker resolution, or agile team health. Runs Python scripts to analyse sprint JSON exports from Jira or similar tools: velocity_analyzer.py for Monte Carlo sprint forecasting, sprint_health_scorer.py for multi-dimension health scoring, and retrospective_analyzer.py for action-item and theme tracking. Produces confidence-interval forecasts, health grade reports, and improvement-velocity trends for high-performing Scrum teams."
-license: MIT
+name: scrum-master
+description: >
+  Data-driven Scrum Master with sprint health scoring, Monte Carlo velocity
+  forecasting, retrospective pattern analysis, and psychological safety
+  frameworks. Use when facilitating sprint planning, diagnosing velocity trends,
+  running retrospectives, calculating team capacity, or coaching teams through
+  Tuckman development stages.
+license: MIT + Commons Clause
 metadata:
   version: 2.0.0
-  author: Alireza Rezvani
+  author: borghei
   category: project-management
   domain: agile-development
   updated: 2026-02-15
-  python-tools: velocity_analyzer.py, sprint_health_scorer.py, retrospective_analyzer.py
+  tags: [scrum, agile, sprint, retrospective, impediments]
+  python-tools: velocity_analyzer.py, sprint_health_scorer.py, retrospective_analyzer.py, sprint_capacity_calculator.py
   tech-stack: scrum, agile-coaching, team-dynamics, data-analysis
 ---
-
 # Scrum Master Expert
 
-Data-driven Scrum Master skill combining sprint analytics, probabilistic forecasting, and team development coaching. The unique value is in the three Python analysis scripts and their workflows — refer to `references/` and `assets/` for deeper framework detail.
+The agent acts as a data-driven Scrum Master combining sprint analytics, behavioral science, and continuous improvement methodologies. It analyzes velocity trends, scores sprint health across 6 dimensions, identifies retrospective patterns, and recommends stage-specific coaching interventions.
 
----
+## Workflow
 
-## Table of Contents
+### 1. Assess Current State
 
-- [Analysis Tools & Usage](#analysis-tools-usage)
-- [Input Requirements](#input-requirements)
-- [Sprint Execution Workflows](#sprint-execution-workflows)
-- [Team Development Workflow](#team-development-workflow)
-- [Key Metrics & Targets](#key-metrics-targets)
-- [Limitations](#limitations)
-
----
-
-## Analysis Tools & Usage
-
-### 1. Velocity Analyzer (`scripts/velocity_analyzer.py`)
-
-Runs rolling averages, linear-regression trend detection, and Monte Carlo simulation over sprint history.
+The agent collects sprint data and establishes baselines:
 
 ```bash
-# Text report
-python velocity_analyzer.py sprint_data.json --format text
-
-# JSON output for downstream processing
-python velocity_analyzer.py sprint_data.json --format json > analysis.json
+python scripts/velocity_analyzer.py sprint_data.json --format json > velocity_baseline.json
+python scripts/sprint_health_scorer.py sprint_data.json --format text
+python scripts/retrospective_analyzer.py sprint_data.json --format text
 ```
 
-**Outputs**: velocity trend (improving/stable/declining), coefficient of variation, 6-sprint Monte Carlo forecast at 50 / 70 / 85 / 95% confidence intervals, anomaly flags with root-cause suggestions.
+**Validation checkpoint:** Confirm at least 3 sprints of data exist (6+ recommended for statistical significance).
 
-**Validation**: If fewer than 3 sprints are present in the input, stop and prompt the user: *"Velocity analysis needs at least 3 sprints. Please provide additional sprint data."* 6+ sprints are recommended for statistically significant Monte Carlo results.
+### 2. Analyze Sprint Health
 
----
+The agent scores the team across 6 weighted dimensions:
 
-### 2. Sprint Health Scorer (`scripts/sprint_health_scorer.py`)
+| Dimension | Weight | What It Measures |
+|-----------|--------|-----------------|
+| Commitment Reliability | 25% | Sprint goal achievement consistency |
+| Scope Stability | 20% | Mid-sprint scope change frequency |
+| Blocker Resolution | 15% | Average time to resolve impediments |
+| Ceremony Engagement | 15% | Participation and effectiveness |
+| Story Completion Distribution | 15% | Completed vs. partial stories ratio |
+| Velocity Predictability | 10% | Delivery consistency (CV target: <20%) |
 
-Scores team health across 6 weighted dimensions, producing an overall 0–100 grade.
+Output: Overall health score (0-100) with grade, dimension breakdowns, trend analysis, and intervention priority matrix.
 
-| Dimension | Weight | Target |
-|---|---|---|
-| Commitment Reliability | 25% | >85% sprint goals met |
-| Scope Stability | 20% | <15% mid-sprint changes |
-| Blocker Resolution | 15% | <3 days average |
-| Ceremony Engagement | 15% | >90% participation |
-| Story Completion Distribution | 15% | High ratio of fully done stories |
-| Velocity Predictability | 10% | CV <20% |
+### 3. Forecast Velocity
+
+The agent runs Monte Carlo simulation on historical velocity data:
 
 ```bash
-python sprint_health_scorer.py sprint_data.json --format text
+python scripts/velocity_analyzer.py sprint_data.json --format text
 ```
 
-**Outputs**: overall health score + grade, per-dimension scores with recommendations, sprint-over-sprint trend, intervention priority matrix.
+Output includes:
+- Rolling averages (3, 5, 8 sprint windows)
+- Trend detection via linear regression
+- Volatility classification (coefficient of variation)
+- Anomaly detection (outliers beyond 2 sigma)
+- 6-sprint forecast with 50%, 70%, 85%, 95% confidence intervals
 
-**Validation**: Requires 2+ sprints with ceremony and story-completion data. If data is missing, report which dimensions cannot be scored and ask the user to supply the gaps.
+**Validation checkpoint:** If CV > 30%, flag team as "high volatility" and recommend root-cause investigation before using forecasts for planning.
 
----
-
-### 3. Retrospective Analyzer (`scripts/retrospective_analyzer.py`)
-
-Tracks action-item completion, recurring themes, sentiment trends, and team maturity progression.
+### 4. Plan Sprint Capacity
 
 ```bash
-python retrospective_analyzer.py sprint_data.json --format text
+python scripts/sprint_capacity_calculator.py team_data.json --format text
 ```
 
-**Outputs**: action-item completion rate by priority/owner, recurring-theme persistence scores, team maturity level (forming/storming/norming/performing), improvement-velocity trend.
+The calculator accounts for:
+- Per-member availability (PTO, allocation percentage)
+- Ceremony overhead: planning (2h) + daily standup (15min/day) + review (1h) + retro (1h) + refinement (1h)
+- Focus factor (80% realistic, 85% optimistic)
+- Story point estimates (conservative, realistic, optimistic) from historical velocity
 
-**Validation**: Requires 3+ retrospectives with action-item tracking. With fewer, note the limitation and offer partial theme analysis only.
+**Validation checkpoint:** If any team member has >40% PTO or <50% allocation, the tool raises a warning.
 
----
+### 5. Facilitate Retrospective
 
-## Input Requirements
+The agent uses retrospective analyzer insights to guide discussion:
 
-All scripts accept JSON following the schema in `assets/sample_sprint_data.json`:
+```bash
+python scripts/retrospective_analyzer.py sprint_data.json --format text
+```
+
+Analysis includes:
+- Action item completion rates by priority and owner
+- Recurring theme identification with persistence scoring
+- Sentiment trend tracking (positive/negative)
+- Team maturity assessment (forming/storming/norming/performing)
+
+**Validation checkpoint:** Limit new action items to the team's historical completion rate. If the team completes 50% of action items, cap at 2-3 new items per retro.
+
+### 6. Coach Team Development
+
+The agent maps team behaviors to Tuckman's stages and recommends interventions:
+
+| Stage | Behavioral Indicators | Coaching Approach |
+|-------|----------------------|-------------------|
+| Forming | Polite, tentative, dependent on SM | Provide structure, educate on process, build relationships |
+| Storming | Conflict, resistance, frustration | Facilitate conflict, maintain safety, flex process |
+| Norming | Collaboration emerging, shared norms | Build autonomy, transfer ownership, develop skills |
+| Performing | High productivity, self-organizing | Introduce challenges, support innovation, expand impact |
+
+Psychological safety assessment uses Edmondson's 7-point scale. Track speaking-up frequency, mistake discussion openness, and help-seeking behavior.
+
+## Example: Sprint Planning with Forecast
+
+Given 6 sprints of velocity data [18, 22, 20, 19, 23, 21]:
+
+```bash
+$ python scripts/velocity_analyzer.py sprint_data.json --format text
+
+Velocity Analysis
+=================
+Average: 20.5 points
+Trend: Stable (slope: +0.3/sprint)
+Volatility: Low (CV: 8.7%)
+
+Monte Carlo Forecast (next sprint):
+  50% confidence: 19-22 points
+  85% confidence: 17-24 points
+  95% confidence: 16-25 points
+
+Recommendation: Commit to 19-20 points for reliable delivery.
+Use 22 points only if team has no PTO and no known blockers.
+```
+
+The agent then cross-references this with capacity calculator output and health scores to recommend a sustainable commitment level.
+
+## Input Schema
+
+All tools accept JSON following `assets/sample_sprint_data.json`:
 
 ```json
 {
@@ -98,9 +146,9 @@ All scripts accept JSON following the schema in `assets/sample_sprint_data.json`
       "sprint_number": "number",
       "planned_points": "number",
       "completed_points": "number",
-      "stories": [...],
-      "blockers": [...],
-      "ceremonies": {...}
+      "stories": [],
+      "blockers": [],
+      "ceremonies": {}
     }
   ],
   "retrospectives": [
@@ -108,115 +156,138 @@ All scripts accept JSON following the schema in `assets/sample_sprint_data.json`
       "sprint_number": "number",
       "went_well": ["string"],
       "to_improve": ["string"],
-      "action_items": [...]
+      "action_items": []
     }
   ]
 }
 ```
 
-Jira and similar tools can export sprint data; map exported fields to this schema before running the scripts. See `assets/sample_sprint_data.json` for a complete 6-sprint example and `assets/expected_output.json` for corresponding expected results (velocity avg 20.2 pts, CV 12.7%, health score 78.3/100, action-item completion 46.7%).
+## Tools
 
----
+| Tool | Purpose | Command |
+|------|---------|---------|
+| `velocity_analyzer.py` | Velocity trends, Monte Carlo forecasting | `python scripts/velocity_analyzer.py sprint_data.json --format text` |
+| `sprint_health_scorer.py` | 6-dimension health scoring | `python scripts/sprint_health_scorer.py sprint_data.json --format text` |
+| `retrospective_analyzer.py` | Retro pattern analysis, action tracking | `python scripts/retrospective_analyzer.py sprint_data.json --format text` |
+| `sprint_capacity_calculator.py` | Capacity planning with ceremony overhead | `python scripts/sprint_capacity_calculator.py team_data.json --format text` |
 
-## Sprint Execution Workflows
+## Templates & Assets
 
-### Sprint Planning
+- `assets/sprint_report_template.md` -- Sprint report with health grade, velocity trends, quality metrics
+- `assets/team_health_check_template.md` -- Spotify Squad Health Check adaptation (9 dimensions)
+- `assets/sample_sprint_data.json` -- 6-sprint dataset for testing tools
+- `assets/expected_output.json` -- Reference outputs (velocity avg 20.2, health 78.3/100)
+- `assets/user_story_template.md` -- Classic and Job Story formats with INVEST criteria
+- `assets/sprint_plan_template.md` -- Sprint plan with capacity, commitments, risks
 
-1. Run velocity analysis: `python velocity_analyzer.py sprint_data.json --format text`
-2. Use the 70% confidence interval as the recommended commitment ceiling for the sprint backlog.
-3. Review the health scorer's Commitment Reliability and Scope Stability scores to calibrate negotiation with the Product Owner.
-4. If Monte Carlo output shows high volatility (CV >20%), surface this to stakeholders with range estimates rather than single-point forecasts.
-5. Document capacity assumptions (leave, dependencies) for retrospective comparison.
+## References
 
-### Daily Standup
-
-1. Track participation and help-seeking patterns — feed ceremony data into `sprint_health_scorer.py` at sprint end.
-2. Log each blocker with date opened; resolution time feeds the Blocker Resolution dimension.
-3. If a blocker is unresolved after 2 days, escalate proactively and note in sprint data.
-
-### Sprint Review
-
-1. Present velocity trend and health score alongside the demo to give stakeholders delivery context.
-2. Capture scope-change requests raised during review; record as scope-change events in sprint data for next scoring cycle.
-
-### Sprint Retrospective
-
-1. Run all three scripts before the session:
-   ```bash
-   python sprint_health_scorer.py sprint_data.json --format text > health.txt
-   python retrospective_analyzer.py sprint_data.json --format text > retro.txt
-   ```
-2. Open with the health score and top-flagged dimensions to focus discussion.
-3. Use the retrospective analyzer's action-item completion rate to determine how many new action items the team can realistically absorb (target: ≤3 if completion rate <60%).
-4. Assign each action item an owner and measurable success criterion before closing the session.
-5. Record new action items in `sprint_data.json` for tracking in the next cycle.
-
----
-
-## Team Development Workflow
-
-### Assessment
-
-```bash
-python sprint_health_scorer.py team_data.json > health_assessment.txt
-python retrospective_analyzer.py team_data.json > retro_insights.txt
-```
-
-- Map retrospective analyzer maturity output to the appropriate development stage.
-- Supplement with an anonymous psychological safety pulse survey (Edmondson 7-point scale) and individual 1:1 observations.
-- If maturity output is `forming` or `storming`, prioritise safety and conflict-facilitation interventions before process optimisation.
-
-### Intervention
-
-Apply stage-specific facilitation (details in `references/team-dynamics-framework.md`):
-
-| Stage | Focus |
-|---|---|
-| Forming | Structure, process education, trust building |
-| Storming | Conflict facilitation, psychological safety maintenance |
-| Norming | Autonomy building, process ownership transfer |
-| Performing | Challenge introduction, innovation support |
-
-### Progress Measurement
-
-- **Sprint cadence**: re-run health scorer; target overall score improvement of ≥5 points per quarter.
-- **Monthly**: psychological safety pulse survey; target >4.0/5.0.
-- **Quarterly**: full maturity re-assessment via retrospective analyzer.
-- If scores plateau or regress for 2 consecutive sprints, escalate intervention strategy (see `references/team-dynamics-framework.md`).
-
----
+- `references/velocity-forecasting-guide.md` -- Monte Carlo implementation, confidence intervals, seasonality adjustment
+- `references/team-dynamics-framework.md` -- Tuckman's stages, psychological safety building, conflict resolution
+- `references/sprint-planning-guide.md` -- Pre-planning checklist, SMART goals, capacity methodology
 
 ## Key Metrics & Targets
 
-| Metric | Target |
-|---|---|
-| Overall Health Score | >80/100 |
-| Psychological Safety Index | >4.0/5.0 |
-| Velocity CV (predictability) | <20% |
-| Commitment Reliability | >85% |
-| Scope Stability | <15% mid-sprint changes |
-| Blocker Resolution Time | <3 days |
-| Ceremony Engagement | >90% |
-| Retrospective Action Completion | >70% |
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Health Score | >80/100 | Sprint-level, 6 dimensions |
+| Velocity Predictability (CV) | <20% | Rolling 6-sprint window |
+| Commitment Reliability | >85% | Sprint goals achieved / attempted |
+| Scope Stability | <15% change | Mid-sprint scope changes |
+| Blocker Resolution | <3 days avg | Time from raised to resolved |
+| Action Item Completion | >70% | Retro items done by next retro |
+| Ceremony Engagement | >90% | Attendance + participation quality |
+| Psychological Safety | >4.0/5.0 | Monthly pulse survey |
 
----
+## Troubleshooting
 
-## Limitations
+| Symptom | Likely Cause | Resolution |
+|---------|-------------|------------|
+| Velocity drops for 2+ sprints without team change | Hidden scope creep, unclear definition of done, or tech debt accumulation | Run `sprint_health_scorer.py` to check scope stability score; tighten DoD and refinement process |
+| CV exceeds 30% despite stable team | Inconsistent story sizing, mid-sprint scope injection, or unplanned absences | Analyze anomalies via `velocity_analyzer.py`; introduce reference stories for estimation calibration |
+| Action item completion rate below 50% | Too many action items per retro, no owners assigned, or unrealistic scope | Cap new items at 2-3 per retro based on `retrospective_analyzer.py` historical completion data |
+| Health score below 60 but team feels productive | Dimension weights may not match team context, or ceremony data is incomplete | Review dimension weights in HEALTH_DIMENSIONS config; ensure ceremony attendance data is populated |
+| Monte Carlo forecast has wide confidence intervals | Insufficient historical data or high velocity volatility | Accumulate 6+ sprints of data; address root causes of volatility before relying on forecasts |
+| Sprint capacity calculator overestimates | Focus factor set too high or ceremony overhead not calibrated | Adjust focus factor from 0.85 to 0.80; verify ceremony durations match actual team practices |
+| Retrospective themes keep recurring across sprints | Systemic issues not addressed at root cause, or action items too superficial | Use `retrospective_analyzer.py` persistent issue detection; escalate recurring themes to management |
 
-- **Sample size**: fewer than 6 sprints reduces Monte Carlo confidence; always state confidence intervals, not point estimates.
-- **Data completeness**: missing ceremony or story-completion fields suppress affected scoring dimensions — report gaps explicitly.
-- **Context sensitivity**: script recommendations must be interpreted alongside organisational and team context not captured in JSON data.
-- **Quantitative bias**: metrics do not replace qualitative observation; combine scores with direct team interaction.
-- **Team size**: techniques are optimised for 5–9 member teams; larger groups may require adaptation.
-- **External factors**: cross-team dependencies and organisational constraints are not fully modelled by single-team metrics.
+## Success Criteria
 
----
+- Sprint health score consistently above 80/100 across 6-dimension assessment
+- Velocity coefficient of variation (CV) maintained below 20% over rolling 6-sprint window
+- Sprint commitment reliability exceeds 85% (completed vs. planned points)
+- Action item completion rate from retrospectives exceeds 70% by next retro
+- Blocker average resolution time under 3 working days
+- Team maturity advances at least one Tuckman stage within 3-6 months of coaching
+- Psychological safety score on Edmondson scale exceeds 4.0/5.0
 
-## Related Skills
+## Scope & Limitations
 
-- **Agile Product Owner** (`product-team/agile-product-owner/`) — User stories and backlog feed sprint planning
-- **Senior PM** (`project-management/senior-pm/`) — Portfolio health context informs sprint priorities
+**In Scope:**
+- Sprint-level data analysis (velocity, health, capacity, retrospectives)
+- Statistical forecasting using Monte Carlo simulation on historical velocity
+- Team dynamics coaching based on Tuckman model and Edmondson psychological safety
+- Ceremony facilitation guidance and retrospective pattern analysis
 
----
+**Out of Scope:**
+- Portfolio-level project management (see `senior-pm/` skill)
+- Product backlog prioritization and roadmap decisions (see `execution/prioritization-frameworks/`)
+- Individual performance evaluation -- this skill measures team-level metrics only
+- Real-time Jira/Confluence integration (see `jira-expert/` and `confluence-expert/` skills)
+- SAFe-specific PI planning or cross-team dependency management (see `program-manager/`)
 
-*For deep framework references see `references/velocity-forecasting-guide.md` and `references/team-dynamics-framework.md`. For template assets see `assets/sprint_report_template.md` and `assets/team_health_check_template.md`.*
+**Important Caveats:**
+- The Scrum Guide 2020 removed the term "velocity" as a required artifact; this skill treats velocity as a diagnostic tool, not a performance measure. Flow metrics (cycle time, throughput, WIP) complement velocity for delivery forecasting. Use both -- velocity for sprint planning, flow metrics for process improvement.
+- Monte Carlo forecasts require minimum 3 sprints of data (6+ recommended); forecasts with fewer data points carry high uncertainty.
+- Health scores are heuristics, not absolute measures. Calibrate dimension weights to your team context.
+
+## Integration Points
+
+| Integration | Direction | Description |
+|------------|-----------|-------------|
+| `senior-pm/` | Feeds into | Sprint velocity and health data informs portfolio-level health dashboards and executive reporting |
+| `sprint-retrospective/` | Complements | Git-based velocity analysis complements this skill's JSON-based sprint data analysis |
+| `execution/brainstorm-okrs/` | Feeds into | Sprint capacity data helps set realistic OKR targets for the quarter |
+| `execution/prioritization-frameworks/` | Receives from | Prioritized backlog items feed into sprint planning commitment decisions |
+| `discovery/pre-mortem/` | Receives from | Launch-blocking tigers may surface as sprint blockers requiring SM intervention |
+| Jira via Atlassian MCP | Bidirectional | Pull sprint data for analysis; push health reports to Confluence dashboards |
+| CI/CD Pipelines | Receives from | Deployment frequency and lead time data supplement velocity metrics |
+
+## Tool Reference
+
+### velocity_analyzer.py
+
+Analyzes sprint velocity data with trend detection, Monte Carlo forecasting, and anomaly identification.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (required) | Path to JSON file containing sprint data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+
+### sprint_health_scorer.py
+
+Scores sprint health across 6 weighted dimensions with composite grading and recommendations.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (required) | Path to JSON file containing sprint health data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+
+### retrospective_analyzer.py
+
+Processes retrospective data to track action item completion, identify recurring themes, and assess team maturity.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (required) | Path to JSON file containing retrospective data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+
+### sprint_capacity_calculator.py
+
+Calculates sprint capacity accounting for ceremony overhead, PTO, allocation percentages, and focus factor.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (optional) | Path to JSON file containing team capacity data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+| `--demo` | flag | off | Run with built-in sample data |

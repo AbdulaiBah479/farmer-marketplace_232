@@ -1,226 +1,250 @@
 ---
 name: text-to-speech
-description: Convert text to speech using ElevenLabs voice AI. Use when generating audio from text, creating voiceovers, building voice apps, or synthesizing speech in 70+ languages.
-license: MIT
-compatibility: Requires internet access and an ElevenLabs API key (ELEVENLABS_API_KEY).
-metadata: {"openclaw": {"requires": {"env": ["ELEVENLABS_API_KEY"]}, "primaryEnv": "ELEVENLABS_API_KEY"}}
+description: "Convert text to natural-sounding speech using each::sense AI. Generate realistic voice audio from any text in 32 languages with control over voice, speed, emotion, and style. Powered by elevenlabs-tts for studio-quality output. Use for: narration, audiobooks, accessibility, announcements, IVR systems, e-learning, localization. Triggers: text to speech, tts, read aloud, convert to speech, speak text, voice output, ai speech, synthesize speech, read text, audio from text, narrate text"
+allowed-tools: Bash(curl *), WebFetch
 ---
 
-# ElevenLabs Text-to-Speech
+# Text to Speech
 
-Generate natural speech from text - supports 70+ languages, multiple models for quality vs latency tradeoffs.
-
-> **Setup:** See [Installation Guide](references/installation.md). For JavaScript, use `@elevenlabs/*` packages only.
+Convert any text to natural-sounding speech in 32 languages using [each::sense](https://docs.eachlabs.ai/sense/overview) — the intelligent AI agent that automatically selects the best model for your request.
 
 ## Quick Start
 
-### Python
+> Requires an each::labs API key. Get one at [eachlabs.ai](https://eachlabs.ai).
 
-```python
-from elevenlabs import ElevenLabs
-
-client = ElevenLabs()
-
-audio = client.text_to_speech.convert(
-    text="Hello, welcome to ElevenLabs!",
-    voice_id="JBFqnCBsd6RMkjVDRZzb",  # George
-    model_id="eleven_multilingual_v2"
-)
-
-with open("output.mp3", "wb") as f:
-    for chunk in audio:
-        f.write(chunk)
-```
-
-### JavaScript
-
-```javascript
-import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-import { createWriteStream } from "fs";
-
-const client = new ElevenLabsClient();
-const audio = await client.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
-  text: "Hello, welcome to ElevenLabs!",
-  modelId: "eleven_multilingual_v2",
-});
-audio.pipe(createWriteStream("output.mp3"));
-```
-
-### cURL
+### Using curl
 
 ```bash
-curl -X POST "https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb" \
-  -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" \
-  -d '{"text": "Hello!", "model_id": "eleven_multilingual_v2"}' --output output.mp3
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": "Convert this text to speech with a clear, professional female voice: Artificial intelligence is reshaping how we create, communicate, and connect. What was once science fiction is now everyday reality."}],
+    "stream": false
+  }'
 ```
 
-## Models
-
-| Model ID | Languages | Latency | Best For |
-|----------|-----------|---------|----------|
-| `eleven_v3` | 70+ | Standard | Highest quality, emotional range |
-| `eleven_multilingual_v2` | 29 | Standard | High quality, long-form content |
-| `eleven_flash_v2_5` | 32 | ~75ms | Ultra-low latency, real-time |
-| `eleven_flash_v2` | English | ~75ms | English-only, fastest |
-| `eleven_turbo_v2_5` | 32 | ~250-300ms | Balanced quality/speed |
-| `eleven_turbo_v2` | English | ~250-300ms | English-only, balanced |
-
-## Voice IDs
-
-Use pre-made voices or create custom voices in the dashboard.
-
-**Popular voices:**
-- `JBFqnCBsd6RMkjVDRZzb` - George (male, narrative)
-- `EXAVITQu4vr4xnSDxMaL` - Sarah (female, soft)
-- `onwK4e9ZLuTAKqWW03F9` - Daniel (male, authoritative)
-- `XB0fDUnXU5powFXDhCwa` - Charlotte (female, conversational)
+### Using Python (OpenAI SDK)
 
 ```python
-voices = client.voices.get_all()
-for voice in voices.voices:
-    print(f"{voice.voice_id}: {voice.name}")
-```
+from openai import OpenAI
 
-## Voice Settings
-
-Fine-tune how the voice sounds:
-
-- **Stability**: How consistent the voice stays. Lower values = more emotional range and variation, but can sound unstable. Higher = steady, predictable delivery.
-- **Similarity boost**: How closely to match the original voice sample. Higher values sound more like the original but may amplify audio artifacts.
-- **Style**: Exaggerates the voice's unique style characteristics (only works with v2+ models).
-- **Speaker boost**: Post-processing that enhances clarity and voice similarity.
-
-```python
-from elevenlabs import VoiceSettings
-
-audio = client.text_to_speech.convert(
-    text="Customize my voice settings.",
-    voice_id="JBFqnCBsd6RMkjVDRZzb",
-    voice_settings=VoiceSettings(
-        stability=0.5,
-        similarity_boost=0.75,
-        style=0.5,
-        speed=1.0,             # 0.25 to 4.0 (default 1.0)
-        use_speaker_boost=True
-    )
-)
-```
-
-## Language Enforcement
-
-Force specific language for pronunciation:
-
-```python
-audio = client.text_to_speech.convert(
-    text="Bonjour, comment allez-vous?",
-    voice_id="JBFqnCBsd6RMkjVDRZzb",
-    model_id="eleven_multilingual_v2",
-    language_code="fr"  # ISO 639-1 code
-)
-```
-
-## Text Normalization
-
-Controls how numbers, dates, and abbreviations are converted to spoken words. For example, "01/15/2026" becomes "January fifteenth, twenty twenty-six":
-
-- `"auto"` (default): Model decides based on context
-- `"on"`: Always normalize (use when you want natural speech)
-- `"off"`: Speak literally (use when you want "zero one slash one five...")
-
-```python
-audio = client.text_to_speech.convert(
-    text="Call 1-800-555-0123 on 01/15/2026",
-    voice_id="JBFqnCBsd6RMkjVDRZzb",
-    apply_text_normalization="on"
-)
-```
-
-## Request Stitching
-
-When generating long audio in multiple requests, the audio can have pops, unnatural pauses, or tone shifts at the boundaries. Request stitching solves this by letting each request know what comes before/after it:
-
-```python
-# First request
-audio1 = client.text_to_speech.convert(
-    text="This is the first part.",
-    voice_id="JBFqnCBsd6RMkjVDRZzb",
-    next_text="And this continues the story."
+client = OpenAI(
+    api_key="YOUR_EACHLABS_API_KEY",
+    base_url="https://eachsense-agent.core.eachlabs.run/v1"
 )
 
-# Second request using previous context
-audio2 = client.text_to_speech.convert(
-    text="And this continues the story.",
-    voice_id="JBFqnCBsd6RMkjVDRZzb",
-    previous_text="This is the first part."
-)
-```
-
-## Output Formats
-
-| Format | Description |
-|--------|-------------|
-| `mp3_44100_128` | MP3 44.1kHz 128kbps (default) - compressed, good for web/apps |
-| `mp3_44100_192` | MP3 44.1kHz 192kbps (Creator+) - higher quality compressed |
-| `mp3_44100_64` | MP3 44.1kHz 64kbps - lower quality, smaller files |
-| `mp3_22050_32` | MP3 22.05kHz 32kbps - smallest MP3 files |
-| `pcm_16000` | Raw PCM 16kHz - use for real-time processing |
-| `pcm_22050` | Raw PCM 22.05kHz |
-| `pcm_24000` | Raw PCM 24kHz - good balance for streaming |
-| `pcm_44100` | Raw PCM 44.1kHz (Pro+) - CD quality |
-| `pcm_48000` | Raw PCM 48kHz (Pro+) - highest quality |
-| `ulaw_8000` | μ-law 8kHz - standard for phone systems (Twilio, telephony) |
-| `alaw_8000` | A-law 8kHz - telephony (alternative to μ-law) |
-| `opus_48000_64` | Opus 48kHz 64kbps - efficient streaming codec |
-| `wav_44100` | WAV 44.1kHz - uncompressed with headers |
-
-## Streaming
-
-For real-time applications, use the `stream` method (returns audio chunks as they're generated):
-
-```python
-audio_stream = client.text_to_speech.stream(
-    text="This text will be streamed as audio.",
-    voice_id="JBFqnCBsd6RMkjVDRZzb",
-    model_id="eleven_flash_v2_5"  # Ultra-low latency
+response = client.chat.completions.create(
+    model="eachsense/beta",
+    messages=[{"role": "user", "content": "Convert this text to speech with a clear, professional female voice: Artificial intelligence is reshaping how we create, communicate, and connect. What was once science fiction is now everyday reality."}]
 )
 
-for chunk in audio_stream:
-    play_audio(chunk)
+print(response.choices[0].message.content)
 ```
 
-See [references/streaming.md](references/streaming.md) for WebSocket streaming.
+### With Reference Image
 
-## Error Handling
-
-```python
-try:
-    audio = client.text_to_speech.convert(
-        text="Generate speech",
-        voice_id="invalid-voice-id"
-    )
-except Exception as e:
-    print(f"API error: {e}")
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "Describe this image aloud using text-to-speech. Use a warm, conversational voice as if explaining the scene to a friend."},
+              {"type": "image_url", "image_url": {"url": "https://example.com/photo.jpg"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
 ```
 
-Common errors:
-- **401**: Invalid API key
-- **422**: Invalid parameters (check voice_id, model_id)
-- **429**: Rate limit exceeded
+> Images are sent inside messages using the OpenAI multimodal content format. Maximum 4 images per request.
 
-## Tracking Costs
+### Streaming
 
-Monitor character usage via response headers (`x-character-count`, `request-id`):
+Set `"stream": true` for real-time SSE responses, or `"stream": false` for complete result in a single response. Streaming is useful for showing progress in UIs; non-streaming is simpler for scripts and automation.
 
-```python
-response = client.text_to_speech.convert.with_raw_response(
-    text="Hello!", voice_id="JBFqnCBsd6RMkjVDRZzb", model_id="eleven_multilingual_v2"
+## Available Models
+
+| Model | Strengths | Best For |
+|-------|-----------|----------|
+| **elevenlabs-tts** | Ultra-realistic voices, 32 languages, emotional control, multiple voice styles | All text-to-speech use cases |
+
+## Supported Languages
+
+elevenlabs-tts supports 32 languages with native-quality pronunciation:
+
+| | | | |
+|---|---|---|---|
+| English | Spanish | French | German |
+| Italian | Portuguese | Dutch | Polish |
+| Russian | Swedish | Norwegian | Danish |
+| Finnish | Turkish | Arabic | Hindi |
+| Japanese | Korean | Chinese (Mandarin) | Chinese (Cantonese) |
+| Indonesian | Filipino | Malay | Thai |
+| Vietnamese | Romanian | Czech | Hungarian |
+| Greek | Hebrew | Ukrainian | Bulgarian |
+
+## Voice Styles
+
+| Style | When to Use | Prompt Phrase |
+|-------|-------------|--------------|
+| **Professional** | Corporate, presentations, news | "professional, clear, measured tone" |
+| **Conversational** | Podcasts, vlogs, casual content | "conversational, friendly, natural pace" |
+| **Dramatic** | Audiobooks, trailers, storytelling | "dramatic, expressive, varied pacing" |
+| **Calm** | Meditation, wellness, bedtime | "calm, soothing, slow and gentle" |
+| **Energetic** | Ads, promos, sports | "energetic, upbeat, enthusiastic" |
+| **Authoritative** | Documentaries, lectures, news | "authoritative, deep, commanding" |
+| **Warm** | E-learning, tutorials, guides | "warm, patient, encouraging" |
+| **Whisper** | ASMR, intimate content | "soft whisper, gentle, close-mic feel" |
+
+## Prompt Tips
+
+### Basic Text-to-Speech Formula
+
+```
+Convert to speech with a [voice style] [gender] voice: [Your text here]
+```
+
+### Controlling Speed
+
+```
+"Read slowly and deliberately: ..."
+"Speak at a fast, excited pace: ..."
+"Normal conversational speed: ..."
+```
+
+### Adding Emotion
+
+```
+"Read with genuine excitement and wonder: ..."
+"Deliver with a somber, reflective tone: ..."
+"Say this with playful sarcasm: ..."
+```
+
+### Pronunciation Hints
+
+For unusual words, names, or acronyms:
+
+```
+"Pronounce 'GIF' with a hard G. Read: ..."
+"Pronounce 'Nguyen' as 'Win'. Read: ..."
+"Read 'API' as individual letters A-P-I, not as a word: ..."
+```
+
+### Pauses and Emphasis
+
+Use natural punctuation and formatting:
+
+```
+"The answer is... (long pause) ...forty-two."
+"This is CRITICAL. Do NOT skip this step."
+"First — and this is important — check your settings."
+```
+
+## Examples
+
+### E-Learning Narration
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": "Convert to speech with a warm, patient female voice suitable for an e-learning course. Moderate pace with clear enunciation: In this module, you will learn the fundamentals of machine learning. We will start with supervised learning, where the model learns from labeled examples. Think of it like a teacher showing a student flash cards — each card has a question and an answer. Over time, the student learns to predict answers on their own."}],
+    "stream": false
+  }'
+```
+
+### Audiobook Chapter
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": "Convert to speech with a rich, deep male voice for an audiobook. Dramatic pacing with variation: Chapter One. The Last Signal. The radio crackled to life at three seventeen in the morning. Commander Hayes sat upright in her bunk, instantly awake. She had been waiting for this — dreading it, really — for six hundred and forty-two days. The signal was faint. Barely there. But it was unmistakably human."}],
+    "stream": false
+  }'
+```
+
+### Multilingual Announcement
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": "Convert to speech in French with a professional female voice. Clear and elegant pronunciation: Mesdames et messieurs, bienvenue a bord du vol Air France sept-deux-quatre a destination de Paris Charles de Gaulle. La duree estimee du vol est de huit heures et trente minutes. Nous vous souhaitons un agreable voyage."}],
+    "stream": false
+  }'
+```
+
+### Product Commercial
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": "Convert to speech with an energetic, confident male voice for a product ad. Punchy delivery with building excitement: Introducing the all-new Galaxy Pro Max. Thinner. Faster. Smarter. With a battery that lasts two full days and a camera system that sees in the dark. This is not just a phone — this is your entire studio, office, and entertainment center, right in your pocket. Galaxy Pro Max. Available now."}],
+    "stream": false
+  }'
+```
+
+### Accessibility / Screen Reader
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": "Convert to speech with a clear, neutral voice at moderate speed. Optimized for accessibility and easy comprehension: Your order number four-seven-three-nine has been confirmed. Estimated delivery is Thursday, March twenty-sixth. You will receive a tracking link by email within two hours. If you need to make changes, please contact support before midnight tonight."}],
+    "stream": false
+  }'
+```
+
+## Batch Text-to-Speech
+
+```bash
+# Convert multiple text segments to speech
+SEGMENTS=(
+  "Welcome to our app. Let me show you around."
+  "First, tap the plus button to create a new project."
+  "Next, choose a template or start from scratch."
+  "That is it! You are ready to create something amazing."
 )
-audio = response.parse()
-print(f"Characters used: {response.headers.get('x-character-count')}")
+
+for TEXT in "${SEGMENTS[@]}"; do
+  curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "X-API-Key: $EACHLABS_API_KEY" \
+    -d "{
+      \"messages\": [{\"role\": \"user\", \"content\": \"Convert to speech with a friendly female voice: $TEXT\"}],
+      \"stream\": false
+    }"
+  echo "---"
+done
 ```
 
-## References
+## Common Pitfalls
 
-- [Installation Guide](references/installation.md)
-- [Streaming Audio](references/streaming.md)
-- [Voice Settings](references/voice-settings.md)
+- **No voice description** produces a default voice. Always specify gender, style, and mood.
+- **All caps text** may be read letter-by-letter. Use normal casing with emphasis described in the prompt.
+- **Numbers and abbreviations** can be misread. Write out "twenty-five" instead of "25" for reliability.
+- **Very long texts** without paragraph breaks sound monotone. Break into logical sections.
+- **Missing language specification** for non-English text may produce incorrect pronunciation.
+- **Special characters** and code snippets may produce unexpected audio. Describe technical content in natural language.
+
+## Related Skills
+
+- [Speech to Text](../speech-to-text/SKILL.md) — Reverse: transcribe audio back to text
+- [Voice Generation](../voice-generation/SKILL.md) — Extended voice generation with character control
+- [Song Generation](../song-generation/SKILL.md) — Generate singing voices, not just speech
+- [Sound Effects](../sound-effects/SKILL.md) — Layer ambient sounds behind speech
+
+## Documentation
+
+- [each::sense Overview](https://docs.eachlabs.ai/sense/overview)
+- [each::labs API](https://docs.eachlabs.ai)

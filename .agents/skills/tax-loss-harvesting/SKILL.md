@@ -1,183 +1,294 @@
 ---
 name: tax-loss-harvesting
-description: "Execute a complete tax-loss harvesting workflow from candidate identification through post-harvest monitoring. Use when the user asks about finding TLH candidates, gain/loss budgeting, replacement security selection, wash-sale compliance, or harvest execution planning. Also trigger when users mention 'unrealized losses in my portfolio', 'swap ETFs for tax purposes', 'harvest losses before year-end', 'substantially identical security', 'wash-sale window', 'NIIT offset', 'loss carryforward', or ask how much tax they can save by harvesting."
+description: Tax-loss harvesting opportunity identification, scoring, and planning with wash sale compliance and annual carryforward tracking
+license: MIT
+metadata:
+  author: agipro
+  version: "0.1.0"
+  category: trading
 ---
 
 # Tax-Loss Harvesting
 
-## Purpose
-Execute a complete tax-loss harvesting (TLH) workflow from candidate identification through post-harvest monitoring. Provides decision criteria, quantitative thresholds, replacement security selection logic, wash-sale compliance tracking across accounts, and household-level coordination that go beyond the overview in the tax-efficiency skill.
+Identify, score, and plan tax-loss harvesting (TLH) opportunities across a crypto portfolio. This skill covers unrealized-loss ranking, net-benefit calculation, wash sale compliance, annual loss carryforward tracking, and year-end "use it or lose it" strategies.
 
-## Layer
-5 — Policy and Planning
+> **Disclaimer:** This skill provides informational analysis only. It is NOT tax advice. Tax rules vary by jurisdiction and change frequently. Consult a qualified tax professional before making any tax-related trading decisions.
 
-## Direction
-both
+## How Tax-Loss Harvesting Works
 
-## When to Use
-- Scanning a portfolio for unrealized losses that exceed a materiality threshold
-- Building a gain/loss budget for the current tax year to determine target harvest amount
-- Selecting replacement securities that maintain factor exposure without triggering wash-sale rules
-- Tracking the 61-day wash-sale window across taxable, IRA, and spouse accounts
-- Generating a TLH trade list coordinated with rebalancing
-- Calculating the after-tax value of a proposed harvest including state taxes and NIIT
-- Monitoring replacement positions and planning swap-back timing after the wash-sale window closes
-- Preparing TLH opportunity summaries for client reviews
+Tax-loss harvesting is the practice of intentionally realizing investment losses to offset realized capital gains, thereby reducing your current-year tax liability.
 
-## Core Concepts
+### Core Mechanism
 
-### Candidate Identification
-Scan the portfolio for positions with unrealized losses that meet all three filters:
+1. **Identify** positions with unrealized losses in your portfolio.
+2. **Sell** those positions to realize the loss.
+3. **Offset** realized gains with the harvested loss, reducing taxable income.
+4. **Optionally re-enter** a similar (but not "substantially identical") position to maintain market exposure.
 
-- **Materiality threshold:** Minimum absolute loss (e.g., $2,000) or minimum loss-to-value ratio (e.g., loss exceeds 5% of position market value). Harvesting a $200 loss on a $50,000 portfolio is not worth the operational cost.
-- **Holding period filter:** Positions held less than 31 days may not have meaningful losses and create short-term wash-sale complexity. Positions approaching the one-year mark (days 335-365) may benefit from waiting to convert a short-term loss into a long-term loss only if the position is expected to continue declining.
-- **Loss magnitude ranking:** Rank candidates by Tax Benefit = Unrealized Loss * Applicable Tax Rate. Prioritize short-term losses (taxed at ordinary rates up to 37%) over long-term losses (taxed at capital gains rates of 15-20%) when gain/loss budget allows.
+### Short-Term vs Long-Term
 
-### Gain/Loss Budgeting
-Before harvesting, build the year-to-date tax budget:
+| Holding Period | Classification | Typical Tax Rate |
+|---------------|---------------|-----------------|
+| < 1 year | Short-term capital gain/loss | Ordinary income rate |
+| >= 1 year | Long-term capital gain/loss | Preferential rate (0-20%) |
 
-1. **Realized gains YTD:** Sum all short-term and long-term capital gains already realized (including fund distributions).
-2. **Planned gain exposure:** Estimate gains from pending rebalancing trades, planned liquidations, or expected fund capital gain distributions.
-3. **Loss carryforward balance:** Check prior-year unused capital loss carryforwards (these offset gains before new harvests do).
-4. **Target harvest amount:** Target Harvest = (Realized Gains YTD + Planned Gains) - Loss Carryforward - $3,000 ordinary income offset. Harvest at least this amount to zero out the current-year tax bill; harvest more to build carryforward for future years.
+Short-term losses first offset short-term gains; long-term losses first offset long-term gains. Remaining net losses cross over to offset the other category.
 
-### Replacement Security Selection
-The replacement must maintain market exposure without being "substantially identical":
+### Annual Loss Deduction Limit
 
-- **ETF-to-ETF swaps:** Switch between funds tracking different indices (e.g., Vanguard Total Stock Market to Schwab Broad Market, or S&P 500 to Russell 1000). Different index methodology is generally sufficient.
-- **Individual stock replacement:** Replace a single stock with a sector ETF or a peer company. Example: sell Apple, buy Technology Select Sector SPDR (XLK).
-- **Tracking error budget:** The replacement should have a correlation of 0.95+ and tracking error under 2% annualized relative to the original holding. Wider tracking error is acceptable for larger tax benefits.
-- **Expense ratio delta:** Ensure the replacement does not have meaningfully higher expenses. A 10 bps cost increase on a $100K position held for 30 days costs roughly $8 — negligible against a $2,000+ tax benefit.
+If total net losses exceed total gains, the excess is deductible against ordinary income up to **$3,000 per year** ($1,500 if married filing separately). Any remaining loss carries forward indefinitely to future tax years.
 
-### Wash-Sale Compliance
-The wash-sale rule (IRC Section 1091) disallows a loss if a substantially identical security is acquired within the 61-day window (30 days before + sale date + 30 days after):
+## Ranking Unrealized Losses
 
-- **Cross-account scope:** The rule applies across ALL accounts owned by the taxpayer: taxable brokerage, Traditional IRA, Roth IRA, 401(k), HSA, and spouse's accounts. A purchase in any of these accounts triggers wash-sale disallowance.
-- **IRA wash-sale trap:** If a wash sale is triggered by a purchase in an IRA, the disallowed loss is permanently lost — it cannot be added to the IRA cost basis. This is the most dangerous wash-sale scenario.
-- **DRIP suspension:** Automatic dividend reinvestment (DRIP) in the sold security or a substantially identical fund must be suspended during the 61-day window. Reinvesting even a small dividend triggers a partial wash sale.
-- **Spouse coordination:** Purchases in a spouse's accounts (including retirement accounts) trigger wash-sale rules. Both spouses' automatic investments, 401(k) contributions, and DRIP settings must be reviewed.
+Not all unrealized losses are equally valuable to harvest. This skill scores each opportunity on four dimensions:
 
-### Execution Planning
-Translate candidates into an actionable trade list:
+### 1. Loss Magnitude
 
-- **Lot selection method:** Use Specific Identification (Spec ID) to select the highest-cost-basis lots first (HIFO). This maximizes the realized loss per share sold. If only partial harvesting is needed, sell only the lots with cost basis above current market price.
-- **Coordination with rebalancing:** If the portfolio also needs rebalancing, combine TLH sells with rebalance sells to reduce total trade count. A position that is both overweight and at a loss is the ideal candidate — the harvest and rebalance are the same trade.
-- **Timing strategy:** Year-end harvesting (October-December) captures the full year's losses but faces market timing risk. Opportunistic harvesting throughout the year during drawdowns of 5%+ captures losses that may recover by year-end.
-- **Trade list fields:** Security, account, action (sell/buy), shares, lot IDs, estimated loss, replacement security, wash-sale window start/end dates.
+Larger dollar losses provide more tax savings. The raw loss is the difference between current market value and cost basis.
 
-### Tax Savings Calculation
-Quantify the dollar value of each proposed harvest:
+```
+unrealized_loss = current_value - cost_basis  # negative when loss
+tax_savings = abs(unrealized_loss) * marginal_tax_rate
+```
 
-- **Federal rate selection:** Short-term losses offset short-term gains first (up to 37% ordinary rate). Long-term losses offset long-term gains (15-20% rate). Net losses of either type can cross over to offset the other, then up to $3,000 offsets ordinary income.
-- **State tax impact:** Most states tax capital gains as ordinary income (rates 0-13.3%). Include state tax savings in the calculation; for a California resident at the 13.3% bracket, state tax roughly doubles the benefit of each harvest.
-- **NIIT interaction:** The 3.8% Net Investment Income Tax (IRC Section 1411) applies to the lesser of net investment income or MAGI exceeding $250,000 (MFJ). Harvested losses reduce net investment income, potentially eliminating NIIT exposure.
+### 2. Days Until Long-Term Threshold
 
-### Post-Harvest Monitoring
-After executing the harvest:
+A position approaching the 1-year holding mark deserves special consideration:
+- If close to crossing into long-term territory, harvesting now locks in a **short-term loss** (offsets higher-taxed short-term gains).
+- If already long-term, the loss offsets long-term gains (lower tax rate benefit).
 
-- **Wash-sale window tracking:** Maintain a calendar of open wash-sale windows with security identifiers and expiration dates. Flag any pending purchases (including automated ones) that would violate the window.
-- **Replacement performance:** Monitor tracking error between the replacement and original security. If the replacement significantly underperforms (>3% divergence), evaluate whether the tax benefit justified the swap.
-- **Cost basis updates:** Verify that broker statements reflect the new (lower) cost basis on replacement securities. The replacement's basis equals purchase price, not the original security's basis.
-- **Swap-back timing:** After the 31st day, the investor may sell the replacement and repurchase the original security if desired. Evaluate whether the swap-back itself triggers a taxable gain on the replacement position.
+```
+days_held = (today - acquisition_date).days
+days_to_long_term = max(0, 365 - days_held)
+```
 
-### Household-Level Coordination
-TLH across a household with multiple accounts requires centralized tracking:
+Positions with fewer days remaining until long-term are **more urgent** to evaluate because once they cross 365 days, a short-term loss becomes a less-valuable long-term loss.
 
-- **Account type matrix:** Taxable accounts are the only accounts where TLH generates direct tax benefits. Retirement accounts have no realized gains/losses for tax purposes, but they can trigger wash sales in taxable accounts.
-- **Advisor-managed vs held-away:** If the client has accounts at other institutions (401(k) plan, outside brokerage), the advisor cannot control purchases. Document held-away holdings and instruct the client to avoid purchasing substantially identical securities during open wash-sale windows.
-- **Spousal coordination checklist:** (1) Review spouse's 401(k) fund lineup for overlap, (2) suspend DRIP in spouse's accounts for harvested securities, (3) coordinate any year-end tax trades across both spouses.
+### 3. Wash Sale Risk (Correlation Score)
 
-## Key Formulas
+The IRS wash sale rule prohibits claiming a loss if you buy a "substantially identical" security within 30 days before or after the sale. In crypto, the exact application is evolving, but prudent planning avoids re-entering the same token within the 61-day wash sale window (30 days before + sale day + 30 days after).
 
-| Formula | Expression | Use Case |
-|---------|-----------|----------|
-| Tax Benefit | Benefit = Realized_Loss * Applicable_Tax_Rate | Dollar value of a single harvest |
-| Net Tax Alpha | Alpha = Tax_Savings - Tracking_Error_Cost - Transaction_Costs | True value after implementation costs |
-| Break-Even Holding Period | T_be = Tax_Savings / (Annual_Tracking_Error_Cost + Annual_Expense_Delta) | How long replacement can be held before costs exceed benefit |
-| Wash-Sale Adjusted Basis | New_Basis = Replacement_Purchase_Price + Disallowed_Loss | Cost basis when wash sale is triggered |
-| Annual TLH Capacity | Capacity = Portfolio_Value * Expected_Volatility * Loss_Capture_Rate | Estimate of harvestable losses per year |
-| Target Harvest Amount | Target = Realized_Gains_YTD + Planned_Gains - Loss_Carryforward - 3000 | Minimum harvest to zero out current-year tax |
+**Correlation scoring**: If you hold (or plan to re-enter) a position that is highly correlated with the harvested asset, wash sale risk increases. Score this as:
 
-## Worked Examples
+```
+wash_sale_risk = 1.0  # if same token re-entry planned within 30 days
+wash_sale_risk = correlation_coefficient  # if correlated substitute held
+wash_sale_risk = 0.0  # if no re-entry or uncorrelated substitute
+```
 
-### Example 1: Single Position Harvest with Replacement Selection
-**Given:**
-- Client holds 500 shares of XYZ Corp purchased at $80/share ($40,000 cost basis), current price $62/share ($31,000 market value), held 8 months (short-term)
-- Client has $12,000 in short-term realized gains YTD, marginal federal rate 35%, state rate 9.3%, NIIT applies (3.8%)
-- Replacement candidate: Sector ETF (correlation 0.97, tracking error 1.4% annualized, expense ratio 0.10% vs 0% for individual stock)
+Higher wash sale risk reduces the effective score of the opportunity.
 
-**Calculate:** Tax benefit, net tax alpha, and break-even holding period for the replacement.
+### 4. Available Gains to Offset
 
-**Solution:**
-1. **Unrealized loss:** $31,000 - $40,000 = -$9,000 (short-term)
-2. **Applicable rate:** 35% federal + 9.3% state + 3.8% NIIT = 48.1% combined
-3. **Tax benefit:** $9,000 * 48.1% = **$4,329**
-4. **Transaction costs:** Commission $0 (zero-commission broker) + estimated spread cost 0.05% * $31,000 * 2 trades = $31
-5. **Tracking error cost:** 1.4% annualized * $31,000 * (30/365) = **$36** (for the 30-day minimum hold)
-6. **Net tax alpha:** $4,329 - $31 - $36 = **$4,262**
-7. **Annual cost of replacement:** $31,000 * (0.10% expense + 1.4% tracking error drag estimate of 0.05%) = $46.50/year
-8. **Break-even holding period:** $4,262 / $46.50 = **91.7 years** — the tax benefit overwhelmingly justifies the swap
-9. **Action:** Sell XYZ Corp (Spec ID, all lots), buy Sector ETF. Set wash-sale window reminder for 31 calendar days. Suspend any XYZ DRIP in all household accounts.
+A harvested loss is only immediately useful if there are realized gains to offset. Score opportunities higher when:
+- There are matching-type gains (short-term loss vs short-term gain).
+- The loss amount does not greatly exceed available gains (diminishing marginal benefit beyond the $3K deduction cap).
 
-### Example 2: Portfolio-Wide TLH Scan with Gain/Loss Budget
-**Given:**
-- $2M taxable portfolio, 15 equity positions, year is mid-October
-- Realized gains YTD: $18,000 long-term, $5,000 short-term
-- Loss carryforward from prior years: $0
-- Planned rebalancing trades will realize approximately $4,000 in additional long-term gains
-- Three positions show unrealized losses: Position A (-$14,000 LT), Position B (-$6,500 ST), Position C (-$2,100 LT)
-- Federal LTCG rate 20%, ordinary rate 37%, state 5%, NIIT 3.8%
+```
+offset_efficiency = min(1.0, available_matching_gains / abs(unrealized_loss))
+```
 
-**Calculate:** Target harvest amount, prioritized trade list, and total tax savings.
+### Composite Score
 
-**Solution:**
-1. **Gain/loss budget:**
-   - Total expected gains: $18,000 LT + $5,000 ST + $4,000 LT (planned) = $22,000 LT + $5,000 ST
-   - Loss carryforward: $0
-   - Target harvest: ($22,000 + $5,000) - $0 - $3,000 = **$24,000** to fully offset gains and capture the $3,000 ordinary income deduction
-2. **Candidate ranking by tax benefit:**
-   - Position B: $6,500 ST * (37% + 5% + 3.8%) = $6,500 * 45.8% = **$2,977** (highest rate — harvest first)
-   - Position A: $14,000 LT * (20% + 5% + 3.8%) = $14,000 * 28.8% = **$4,032** (largest absolute benefit)
-   - Position C: $2,100 LT * 28.8% = **$605**
-3. **Harvest plan:** Harvest all three: $14,000 + $6,500 + $2,100 = $22,600 in total losses
-   - $5,000 ST losses offset $5,000 ST gains at 45.8% = $2,290 saved
-   - $1,500 remaining ST losses cross over to offset LT gains at 28.8% = $432 saved
-   - $16,100 LT losses offset $16,100 of $22,000 LT gains at 28.8% = $4,637 saved
-   - Remaining $5,900 LT gains still taxable; $3,000 ordinary income offset not reached (all losses consumed by gains)
-   - **Total tax savings: $7,359**
-4. **Coordinate with rebalancing:** Position A is also 2% overweight — its TLH sell doubles as a rebalance sell, saving one round-trip trade.
+```python
+def tlh_score(
+    unrealized_loss: float,
+    days_to_long_term: int,
+    wash_sale_risk: float,
+    offset_efficiency: float,
+    weights: dict | None = None,
+) -> float:
+    w = weights or {
+        "magnitude": 0.35,
+        "urgency": 0.25,
+        "wash_safety": 0.20,
+        "offset_match": 0.20,
+    }
+    magnitude_score = min(abs(unrealized_loss) / 10_000, 1.0)
+    urgency_score = max(0, 1.0 - days_to_long_term / 365)
+    wash_safety_score = 1.0 - wash_sale_risk
+    return (
+        w["magnitude"] * magnitude_score
+        + w["urgency"] * urgency_score
+        + w["wash_safety"] * wash_safety_score
+        + w["offset_match"] * offset_efficiency
+    )
+```
 
-### Example 3: Wash-Sale Violation Across Accounts
-**Given:**
-- On November 5, client sells VTI (Vanguard Total Stock Market ETF) in taxable account for a $8,000 long-term loss
-- On November 20 (15 days later), client's 401(k) makes its regular bi-weekly contribution, which includes an allocation to a Vanguard Total Stock Market Index Fund (institutional share class of the same fund)
-- 401(k) contribution to the total stock market fund: $750
+## Net Benefit Calculation
 
-**Calculate:** Wash-sale impact and corrected cost basis.
+Harvesting a loss is not free. Transaction costs (swap fees, slippage, gas) reduce the benefit.
 
-**Solution:**
-1. **Wash-sale triggered:** The 401(k) fund is substantially identical to VTI (same underlying index, same fund family). The purchase on November 20 falls within the 30-day post-sale window (November 5 + 30 = December 5).
-2. **Disallowed loss:** The wash-sale disallowance is proportional to the replacement shares acquired. If 500 VTI shares were sold and the $750 401(k) purchase acquired the equivalent of approximately 3 shares at $250/share, then 3/500 = 0.6% of the loss is disallowed.
-3. **Disallowed amount:** $8,000 * (3/500) = **$48 disallowed**
-4. **Remaining allowable loss:** $8,000 - $48 = **$7,952** — still deductible
-5. **Basis adjustment — 401(k) trap:** The $48 disallowed loss would normally be added to the replacement security's cost basis. However, because the replacement was purchased inside a 401(k), the cost basis adjustment provides NO future tax benefit (401(k) distributions are taxed as ordinary income regardless of basis). The $48 is permanently lost.
-6. **Prevention:** Before executing TLH, review the client's 401(k) fund lineup and contribution schedule. If the 401(k) holds a substantially identical fund, either (a) temporarily redirect that 401(k) allocation to a non-identical fund during the wash-sale window, or (b) delay the TLH sale until after the next 401(k) contribution and ensure no contribution occurs for 30 days after.
+```python
+def net_benefit(
+    unrealized_loss: float,
+    marginal_tax_rate: float,
+    transaction_cost: float,
+    re_entry_cost: float = 0.0,
+) -> float:
+    """Compute net dollar benefit of harvesting a loss.
 
-## Common Pitfalls
-- Harvesting losses without checking for substantially identical holdings in retirement accounts, triggering permanent loss disallowance in IRAs/401(k)s
-- Forgetting to suspend DRIP on the sold security and related funds across all household accounts during the 61-day window
-- Harvesting small losses (under $1,000) where transaction costs and operational complexity exceed the tax benefit
-- Over-harvesting in early years, depressing cost basis so severely that future sales generate outsized gains (basis step-down compounding)
-- Failing to coordinate with spouse's automated investments (401(k) payroll contributions, robo-advisor purchases)
-- Selecting a replacement security that is substantially identical (same index, same fund family, different share class) — this does not avoid wash-sale rules
-- Not tracking the holding period of replacement securities, leading to unintended short-term gains when the replacement is later sold
-- Ignoring state tax differences when calculating harvest value — states with no income tax (FL, TX, NV) reduce the benefit by 5-13 percentage points versus high-tax states
+    Args:
+        unrealized_loss: Negative number representing the loss.
+        marginal_tax_rate: Applicable tax rate (0.0 to 1.0).
+        transaction_cost: Cost to execute the sell (fees + slippage).
+        re_entry_cost: Cost to re-enter a substitute position.
 
-## Cross-References
-- **tax-efficiency** (wealth-management plugin, Layer 5): broader tax-aware investing context; TLH is one strategy within the overall tax-efficiency framework
-- **rebalancing** (wealth-management plugin, Layer 4): TLH trades should be coordinated with rebalancing to minimize total transaction count
-- **investment-suitability** (compliance plugin, Layer 9): replacement securities must still satisfy suitability requirements
-- **investment-policy** (wealth-management plugin, Layer 5): IPS may specify TLH policy parameters (minimum loss threshold, approved replacement pairs)
-- **performance-attribution** (wealth-management plugin, Layer 5): tax alpha from TLH should be tracked and attributed separately
-- **client-review-prep** (advisory-practice plugin, Layer 10): TLH opportunities are flagged during periodic client review preparation
-- **financial-planning-workflow** (advisory-practice plugin, Layer 10): TLH is a specific tax recommendation that may emerge from the financial plan
+    Returns:
+        Net benefit in dollars. Positive means harvesting is worthwhile.
+    """
+    tax_savings = abs(unrealized_loss) * marginal_tax_rate
+    total_costs = transaction_cost + re_entry_cost
+    return tax_savings - total_costs
+```
+
+**Rule of thumb**: Only harvest when `net_benefit > 0` by a meaningful margin. Very small losses are not worth the transaction costs and operational complexity.
+
+## Year-End "Use It or Lose It"
+
+Near December 31, evaluate whether to accelerate harvesting:
+
+1. **Tally year-to-date realized gains** (both short-term and long-term).
+2. **Identify unrealized losses** that can offset those gains.
+3. **Prioritize** losses that offset same-type gains (short-term loss vs short-term gain yields the highest tax rate differential).
+4. **Check the $3K excess limit**: If net losses already exceed gains by $3K, additional harvesting this year has no immediate tax benefit (though the carryforward still has value).
+5. **Consider settlement timing**: Ensure trades settle before year-end.
+
+## Wash Sale Compliance
+
+### The 61-Day Window
+
+The wash sale rule applies to purchases of substantially identical securities within:
+- **30 days before** the sale (retroactive wash sale)
+- **The day of** the sale
+- **30 days after** the sale
+
+If triggered, the disallowed loss is added to the cost basis of the replacement shares, deferring (not eliminating) the tax benefit.
+
+### Compliance Strategies
+
+| Strategy | Description | Trade-off |
+|----------|------------|-----------|
+| **Wait 31 days** | Sell, wait 31 days, re-buy | Market exposure gap |
+| **Substitute asset** | Sell, immediately buy a non-identical but correlated asset | Tracking error |
+| **No re-entry** | Sell and stay out | Lost upside |
+| **Double-up** | Buy additional shares, wait 31 days, sell original lot | Capital intensive |
+
+### Crypto-Specific Considerations
+
+- The IRS has not explicitly ruled that the wash sale rule applies to cryptocurrency (as of 2025). However, proposed legislation may extend it.
+- Prudent practitioners treat crypto as subject to wash sale rules for conservative planning.
+- Different tokens (e.g., SOL vs ETH) are generally considered non-identical.
+- Wrapped versions of the same token (e.g., SOL vs wSOL) may be considered substantially identical.
+
+## Annual Loss Carryforward Tracking
+
+```python
+def compute_carryforward(
+    realized_gains_st: float,
+    realized_gains_lt: float,
+    realized_losses_st: float,
+    realized_losses_lt: float,
+    prior_carryforward: float = 0.0,
+    annual_deduction_limit: float = 3_000.0,
+) -> dict:
+    """Compute net tax position and carryforward.
+
+    Returns dict with keys:
+        net_st, net_lt, total_net,
+        deduction_used, carryforward
+    """
+    net_st = realized_gains_st + realized_losses_st  # losses are negative
+    net_lt = realized_gains_lt + realized_losses_lt
+    total_net = net_st + net_lt - prior_carryforward
+
+    if total_net >= 0:
+        return {
+            "net_st": net_st, "net_lt": net_lt,
+            "total_net": total_net, "deduction_used": 0.0,
+            "carryforward": 0.0,
+        }
+
+    excess_loss = abs(total_net)
+    deduction_used = min(excess_loss, annual_deduction_limit)
+    carryforward = max(0, excess_loss - annual_deduction_limit)
+    return {
+        "net_st": net_st, "net_lt": net_lt,
+        "total_net": total_net,
+        "deduction_used": deduction_used,
+        "carryforward": carryforward,
+    }
+```
+
+## Prerequisites
+
+- Python 3.10+
+- No external dependencies for core calculations
+- Portfolio data: cost basis, acquisition date, current market value per lot
+- Tax parameters: marginal tax rate, filing status, prior carryforward
+
+## Capabilities
+
+| Capability | Description |
+|-----------|-------------|
+| Opportunity scanning | Identify all positions with unrealized losses |
+| Multi-factor scoring | Rank by magnitude, urgency, wash safety, offset match |
+| Net benefit analysis | Compare tax savings against transaction costs |
+| Wash sale tracking | Flag positions within the 61-day window |
+| Carryforward calculator | Track annual $3K limit and loss carryforward |
+| Year-end planning | Prioritize harvesting before December 31 |
+| Harvesting plan output | Generate actionable plan with sell orders and re-entry dates |
+
+## Quick Start
+
+```python
+from datetime import date
+
+# Define a portfolio position
+position = {
+    "symbol": "TOKEN-A",
+    "cost_basis": 10_000.0,
+    "current_value": 6_500.0,
+    "acquisition_date": date(2025, 8, 15),
+    "quantity": 500.0,
+}
+
+unrealized_loss = position["current_value"] - position["cost_basis"]  # -3500
+days_held = (date.today() - position["acquisition_date"]).days
+days_to_lt = max(0, 365 - days_held)
+
+# Score the opportunity
+score = tlh_score(
+    unrealized_loss=unrealized_loss,
+    days_to_long_term=days_to_lt,
+    wash_sale_risk=0.0,
+    offset_efficiency=0.8,
+)
+print(f"TLH score: {score:.3f}")
+
+# Calculate net benefit
+benefit = net_benefit(
+    unrealized_loss=unrealized_loss,
+    marginal_tax_rate=0.35,
+    transaction_cost=15.0,
+    re_entry_cost=15.0,
+)
+print(f"Net benefit: ${benefit:.2f}")
+```
+
+## Use Cases
+
+1. **Quarterly portfolio review**: Scan all positions for harvesting opportunities ranked by composite score.
+2. **Year-end tax planning**: Identify optimal set of positions to harvest before December 31 given year-to-date gain/loss totals.
+3. **Ongoing monitoring**: Flag positions that are approaching the long-term threshold where harvesting a short-term loss becomes urgent.
+4. **Carryforward management**: Track multi-year loss carryforward balances and project when they will be fully utilized.
+5. **Transaction cost analysis**: Determine minimum loss threshold worth harvesting given current fee environment.
+
+## Files
+
+| File | Description |
+|------|-------------|
+| `references/planned_features.md` | TLH mechanics, scoring formula, wash sale interaction, carryforward rules, year-end strategies |
+| `scripts/harvest_scanner.py` | Demo scanner: score opportunities, generate harvesting plan, compute net benefit |
+
+> **Important:** This skill provides analytical tools for informational purposes only. All tax-related decisions should be reviewed by a qualified tax professional. Tax laws vary by jurisdiction and are subject to change.

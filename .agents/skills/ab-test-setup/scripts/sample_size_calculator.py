@@ -1,336 +1,275 @@
 #!/usr/bin/env python3
 """
-sample_size_calculator.py — A/B Test Sample Size Calculator
-100% stdlib, no pip installs required.
+A/B Test Sample Size Calculator
+
+Calculates required sample sizes for statistical significance in A/B tests.
+Supports conversion rate (proportion) tests with configurable significance
+level, power, and minimum detectable effect.
 
 Usage:
-    python3 sample_size_calculator.py                          # demo mode
-    python3 sample_size_calculator.py --baseline 0.05 --mde 0.20
-    python3 sample_size_calculator.py --baseline 0.05 --mde 0.20 --daily-traffic 500
-    python3 sample_size_calculator.py --baseline 0.05 --mde 0.20 --json
+    python sample_size_calculator.py --baseline 0.05 --mde 0.10
+    python sample_size_calculator.py --baseline 0.05 --mde 0.10 --power 0.90
+    python sample_size_calculator.py --baseline 0.05 --mde 0.10 --daily-traffic 5000
+    python sample_size_calculator.py --baseline 0.05 --mde 0.10 --format json
 """
 
 import argparse
 import json
 import math
 import sys
+from typing import Any, Dict, List, Optional, Tuple
 
 
-# ---------------------------------------------------------------------------
-# Z-score approximation (scipy-free, Beasley-Springer-Moro algorithm)
-# ---------------------------------------------------------------------------
-
-def _norm_ppf(p: float) -> float:
-    """Percent-point function (inverse CDF) of the standard normal.
-    Uses rational approximation — accurate to ~1e-9.
-    Reference: Abramowitz & Stegun 26.2.17 / Peter Acklam's algorithm.
-    """
+# Standard normal distribution quantiles (using rational approximation)
+def norm_ppf(p: float) -> float:
+    """Inverse normal CDF (percent point function) using rational approximation.
+    Abramowitz and Stegun approximation 26.2.23. Accurate to ~4.5e-4."""
     if p <= 0 or p >= 1:
-        raise ValueError(f"p must be in (0, 1), got {p}")
+        raise ValueError("p must be between 0 and 1 exclusive")
+    if p < 0.5:
+        return -norm_ppf(1 - p)
 
+    t = math.sqrt(-2 * math.log(1 - p))
     # Coefficients for rational approximation
-    a = [-3.969683028665376e+01,  2.209460984245205e+02,
-         -2.759285104469687e+02,  1.383577518672690e+02,
-         -3.066479806614716e+01,  2.506628277459239e+00]
-    b = [-5.447609879822406e+01,  1.615858368580409e+02,
-         -1.556989798598866e+02,  6.680131188771972e+01,
-         -1.328068155288572e+01]
-    c = [-7.784894002430293e-03, -3.223964580411365e-01,
-         -2.400758277161838e+00, -2.549732539343734e+00,
-          4.374664141464968e+00,  2.938163982698783e+00]
-    d = [7.784695709041462e-03,  3.224671290700398e-01,
-         2.445134137142996e+00,  3.754408661907416e+00]
-
-    p_low  = 0.02425
-    p_high = 1 - p_low
-
-    if p < p_low:
-        q = math.sqrt(-2 * math.log(p))
-        return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / \
-               ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)
-    elif p <= p_high:
-        q = p - 0.5
-        r = q * q
-        return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / \
-               (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)
-    else:
-        q = math.sqrt(-2 * math.log(1 - p))
-        return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / \
-                ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)
+    c0, c1, c2 = 2.515517, 0.802853, 0.010328
+    d1, d2, d3 = 1.432788, 0.189269, 0.001308
+    return t - (c0 + c1 * t + c2 * t**2) / (1 + d1 * t + d2 * t**2 + d3 * t**3)
 
 
-# ---------------------------------------------------------------------------
-# Core calculation
-# ---------------------------------------------------------------------------
+def norm_cdf(x: float) -> float:
+    """Standard normal CDF using error function approximation."""
+    return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
 
 def calculate_sample_size(
     baseline: float,
-    mde: float,
+    mde_relative: float,
     alpha: float = 0.05,
     power: float = 0.80,
-) -> dict:
+    two_sided: bool = True,
+    variants: int = 2,
+) -> Dict[str, Any]:
     """
-    Two-proportion z-test sample size formula (two-tailed).
-
-    n = (Z_alpha/2 + Z_beta)^2 * (p1*(1-p1) + p2*(1-p2)) / (p2 - p1)^2
+    Calculate required sample size per variant for a proportion test.
 
     Args:
-        baseline  : baseline conversion rate (e.g. 0.05 for 5%)
-        mde       : minimum detectable effect as relative lift (e.g. 0.20 for +20%)
-        alpha     : significance level (Type I error rate), default 0.05
-        power     : statistical power (1 - Type II error rate), default 0.80
-
-    Returns dict with all intermediate values and results.
+        baseline: Baseline conversion rate (e.g., 0.05 for 5%)
+        mde_relative: Minimum detectable effect as relative change (e.g., 0.10 for 10% lift)
+        alpha: Significance level (default 0.05)
+        power: Statistical power (default 0.80)
+        two_sided: Whether to use two-sided test (default True)
+        variants: Number of variants including control (default 2)
     """
+    # Calculate treatment rate
+    absolute_effect = baseline * mde_relative
+    treatment_rate = baseline + absolute_effect
+
+    if treatment_rate <= 0 or treatment_rate >= 1:
+        return {"error": f"Treatment rate ({treatment_rate}) must be between 0 and 1"}
+
+    # Z-scores
+    if two_sided:
+        z_alpha = norm_ppf(1 - alpha / 2)
+    else:
+        z_alpha = norm_ppf(1 - alpha)
+    z_beta = norm_ppf(power)
+
+    # Sample size formula for two-proportion z-test
     p1 = baseline
-    p2 = baseline * (1 + mde)          # expected conversion with treatment
+    p2 = treatment_rate
+    p_bar = (p1 + p2) / 2
 
-    if not (0 < p1 < 1):
-        raise ValueError(f"baseline must be in (0,1), got {p1}")
-    if not (0 < p2 < 1):
-        raise ValueError(
-            f"baseline * (1 + mde) = {p2:.4f} is outside (0,1). "
-            "Reduce mde or increase baseline."
-        )
+    numerator = (z_alpha * math.sqrt(2 * p_bar * (1 - p_bar)) +
+                 z_beta * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2
+    denominator = (p1 - p2) ** 2
 
-    z_alpha = _norm_ppf(1 - alpha / 2)   # two-tailed
-    z_beta  = _norm_ppf(power)
-
-    pooled_var = p1 * (1 - p1) + p2 * (1 - p2)
-    effect_sq  = (p2 - p1) ** 2
-
-    n_raw = ((z_alpha + z_beta) ** 2 * pooled_var) / effect_sq
-    n     = math.ceil(n_raw)
+    n_per_variant = math.ceil(numerator / denominator)
+    n_total = n_per_variant * variants
 
     return {
-        "inputs": {
-            "baseline_conversion_rate": p1,
-            "minimum_detectable_effect_relative": mde,
-            "expected_variant_conversion_rate": round(p2, 6),
-            "significance_level_alpha": alpha,
-            "statistical_power": power,
-        },
-        "z_scores": {
-            "z_alpha_2": round(z_alpha, 4),
-            "z_beta":    round(z_beta,  4),
-        },
-        "results": {
-            "sample_size_per_variation": n,
-            "total_sample_size":         n * 2,
-            "absolute_lift":             round(p2 - p1, 6),
-            "relative_lift_pct":         round(mde * 100, 2),
-        },
-        "formula": (
-            "n = (Z_α/2 + Z_β)² × (p1(1−p1) + p2(1−p2)) / (p2−p1)²  "
-            "[two-proportion z-test, two-tailed]"
-        ),
-        "assumptions": [
-            "Two-tailed test (detecting lift in either direction)",
-            "Independent samples (no within-subject correlation)",
-            "Fixed horizon (not sequential / always-valid)",
-            "Binomial outcome (conversion yes/no)",
-            "No novelty effect correction applied",
-        ],
+        "baseline_rate": baseline,
+        "treatment_rate": round(treatment_rate, 6),
+        "absolute_effect": round(absolute_effect, 6),
+        "relative_effect_pct": round(mde_relative * 100, 2),
+        "significance_level": alpha,
+        "power": power,
+        "two_sided": two_sided,
+        "variants": variants,
+        "sample_per_variant": n_per_variant,
+        "total_sample": n_total,
+        "z_alpha": round(z_alpha, 4),
+        "z_beta": round(z_beta, 4),
     }
 
 
-def add_duration(result: dict, daily_traffic: int) -> dict:
-    """Append estimated test duration given total daily traffic (both variants)."""
-    n_total = result["results"]["total_sample_size"]
-    days    = math.ceil(n_total / daily_traffic)
-    weeks   = round(days / 7, 1)
-    result["duration"] = {
-        "daily_traffic_both_variants": daily_traffic,
-        "estimated_days":  days,
-        "estimated_weeks": weeks,
-        "note": (
-            "Assumes traffic is evenly split 50/50 between control and variant. "
-            "Add ~10–20% buffer for weekday/weekend variance."
-        ),
-    }
-    return result
+def calculate_duration(total_sample: int, daily_traffic: int,
+                       allocation_pct: float = 1.0) -> Dict[str, Any]:
+    """Calculate test duration from sample size and traffic."""
+    effective_daily = daily_traffic * allocation_pct
+    if effective_daily <= 0:
+        return {"error": "Effective daily traffic must be positive"}
 
+    days_needed = math.ceil(total_sample / effective_daily)
+    weeks_needed = math.ceil(days_needed / 7)
 
-# ---------------------------------------------------------------------------
-# Scoring helper (0-100)
-# ---------------------------------------------------------------------------
+    # Minimum recommended duration (2 full weeks for day-of-week effects)
+    min_days = 14
+    recommended_days = max(days_needed, min_days)
 
-def score_test_design(result: dict) -> dict:
-    """Heuristic quality score for the A/B test design."""
-    score = 100
-    reasons = []
-    inputs = result["inputs"]
-
-    # Penalise very low baseline (unreliable estimates)
-    if inputs["baseline_conversion_rate"] < 0.01:
-        score -= 15
-        reasons.append("Baseline <1%: high variance, consider aggregating more data first.")
-
-    # Penalise tiny MDE (will need enormous sample)
-    mde = inputs["minimum_detectable_effect_relative"]
-    if mde < 0.05:
-        score -= 20
-        reasons.append("MDE <5%: very small effect, experiment may take months.")
-    elif mde < 0.10:
-        score -= 10
-        reasons.append("MDE <10%: moderately small effect size.")
-
-    # Penalise overly aggressive alpha
-    if inputs["significance_level_alpha"] > 0.10:
-        score -= 15
-        reasons.append("α >10%: high false-positive risk.")
-
-    # Penalise low power
-    if inputs["statistical_power"] < 0.80:
-        score -= 20
-        reasons.append("Power <80%: elevated risk of missing real effects (Type II error).")
-
-    # Duration penalty (if available)
-    dur = result.get("duration")
-    if dur:
-        days = dur["estimated_days"]
-        if days > 90:
-            score -= 20
-            reasons.append(f"Test duration {days}d >90 days: novelty/seasonal effects likely.")
-        elif days > 30:
-            score -= 10
-            reasons.append(f"Test duration {days}d >30 days: monitor for external confounders.")
-
-    score = max(0, score)
     return {
-        "design_quality_score": score,
-        "score_interpretation": _score_label(score),
-        "issues": reasons if reasons else ["No major design issues detected."],
+        "daily_traffic": daily_traffic,
+        "allocation_pct": allocation_pct,
+        "effective_daily_traffic": int(effective_daily),
+        "days_needed": days_needed,
+        "weeks_needed": weeks_needed,
+        "recommended_days": recommended_days,
+        "recommended_weeks": math.ceil(recommended_days / 7),
     }
 
 
-def _score_label(s: int) -> str:
-    if s >= 90: return "Excellent"
-    if s >= 75: return "Good"
-    if s >= 60: return "Fair"
-    if s >= 40: return "Poor"
-    return "Critical"
+def sensitivity_table(baseline: float, alpha: float, power: float,
+                      mde_values: Optional[List[float]] = None) -> List[Dict[str, Any]]:
+    """Generate sensitivity table across different MDE values."""
+    if mde_values is None:
+        mde_values = [0.05, 0.08, 0.10, 0.15, 0.20, 0.25, 0.30]
+
+    rows = []
+    for mde in mde_values:
+        result = calculate_sample_size(baseline, mde, alpha, power)
+        if "error" not in result:
+            rows.append({
+                "mde_pct": round(mde * 100, 1),
+                "absolute_effect": round(baseline * mde, 6),
+                "treatment_rate": round(baseline * (1 + mde), 6),
+                "sample_per_variant": result["sample_per_variant"],
+                "total_sample": result["total_sample"],
+            })
+    return rows
 
 
-# ---------------------------------------------------------------------------
-# Pretty-print
-# ---------------------------------------------------------------------------
+def power_table(baseline: float, mde_relative: float, alpha: float,
+                power_values: Optional[List[float]] = None) -> List[Dict[str, Any]]:
+    """Generate table across different power levels."""
+    if power_values is None:
+        power_values = [0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
 
-def pretty_print(result: dict, score: dict) -> None:
-    inp = result["inputs"]
-    res = result["results"]
-    zs  = result["z_scores"]
+    rows = []
+    for pwr in power_values:
+        result = calculate_sample_size(baseline, mde_relative, alpha, pwr)
+        if "error" not in result:
+            rows.append({
+                "power_pct": round(pwr * 100, 0),
+                "sample_per_variant": result["sample_per_variant"],
+                "total_sample": result["total_sample"],
+            })
+    return rows
 
-    print("\n" + "=" * 60)
-    print("  A/B TEST SAMPLE SIZE CALCULATOR")
+
+def print_human(result: Dict, duration: Optional[Dict], sens_table: List[Dict],
+                pwr_table: List[Dict]) -> None:
+    """Print results in human-readable format."""
+    print("=" * 60)
+    print("  A/B Test Sample Size Calculator")
     print("=" * 60)
 
-    print("\n📥  INPUTS")
-    print(f"  Baseline conversion rate : {inp['baseline_conversion_rate']*100:.2f}%")
-    print(f"  Variant conversion rate  : {inp['expected_variant_conversion_rate']*100:.2f}%")
-    print(f"  Minimum detectable effect: {inp['minimum_detectable_effect_relative']*100:.1f}% relative "
-          f"(+{res['absolute_lift']*100:.3f}pp absolute)")
-    print(f"  Significance level (α)   : {inp['significance_level_alpha']}")
-    print(f"  Statistical power        : {inp['statistical_power']*100:.0f}%")
+    if "error" in result:
+        print(f"\n  Error: {result['error']}")
+        return
 
-    print("\n📐  FORMULA")
-    print(f"  {result['formula']}")
-    print(f"  Z_α/2 = {zs['z_alpha_2']}   Z_β = {zs['z_beta']}")
+    print(f"\n  --- Test Parameters ---")
+    print(f"  Baseline Rate:       {result['baseline_rate']*100:.2f}%")
+    print(f"  Treatment Rate:      {result['treatment_rate']*100:.2f}%")
+    print(f"  Relative MDE:        {result['relative_effect_pct']:.1f}%")
+    print(f"  Absolute Effect:     {result['absolute_effect']*100:.3f}pp")
+    print(f"  Significance Level:  {result['significance_level']*100:.0f}% (alpha)")
+    print(f"  Statistical Power:   {result['power']*100:.0f}%")
+    print(f"  Test Type:           {'Two-sided' if result['two_sided'] else 'One-sided'}")
+    print(f"  Variants:            {result['variants']}")
 
-    print("\n📊  RESULTS")
-    print(f"  ✅ Sample size per variation : {res['sample_size_per_variation']:,}")
-    print(f"  ✅ Total sample size (both)  : {res['total_sample_size']:,}")
+    print(f"\n  --- Required Sample Size ---")
+    print(f"  Per Variant:         {result['sample_per_variant']:,}")
+    print(f"  Total:               {result['total_sample']:,}")
 
-    if "duration" in result:
-        d = result["duration"]
-        print(f"\n⏱️   DURATION ESTIMATE  (traffic: {d['daily_traffic_both_variants']:,}/day)")
-        print(f"  Estimated test duration : {d['estimated_days']} days  (~{d['estimated_weeks']} weeks)")
-        print(f"  Note: {d['note']}")
+    if duration and "error" not in duration:
+        print(f"\n  --- Duration Estimate ---")
+        print(f"  Daily Traffic:       {duration['daily_traffic']:,}")
+        if duration["allocation_pct"] < 1:
+            print(f"  Traffic Allocation:  {duration['allocation_pct']*100:.0f}%")
+            print(f"  Effective Daily:     {duration['effective_daily_traffic']:,}")
+        print(f"  Days Needed:         {duration['days_needed']}")
+        print(f"  Recommended:         {duration['recommended_days']} days ({duration['recommended_weeks']} weeks)")
+        if duration['recommended_days'] > duration['days_needed']:
+            print(f"  (Extended to {duration['recommended_days']} days minimum for day-of-week coverage)")
 
-    print("\n💡  ASSUMPTIONS")
-    for a in result["assumptions"]:
-        print(f"  • {a}")
+    # Sensitivity table
+    if sens_table:
+        print(f"\n  --- Sensitivity: Sample Size by MDE ---")
+        print(f"  {'MDE':>6} {'Abs Effect':>11} {'Treatment':>10} {'Per Variant':>12} {'Total':>10}")
+        print(f"  {'-'*6} {'-'*11} {'-'*10} {'-'*12} {'-'*10}")
+        for row in sens_table:
+            current = " <--" if abs(row["mde_pct"] - result["relative_effect_pct"]) < 0.01 else ""
+            print(f"  {row['mde_pct']:>5.1f}% {row['absolute_effect']*100:>10.3f}pp "
+                  f"{row['treatment_rate']*100:>9.2f}% {row['sample_per_variant']:>11,} "
+                  f"{row['total_sample']:>9,}{current}")
 
-    print(f"\n🎯  DESIGN QUALITY SCORE: {score['design_quality_score']}/100  ({score['score_interpretation']})")
-    for issue in score["issues"]:
-        print(f"  ⚠  {issue}")
+    # Power table
+    if pwr_table:
+        print(f"\n  --- Sensitivity: Sample Size by Power ---")
+        print(f"  {'Power':>6} {'Per Variant':>12} {'Total':>10}")
+        print(f"  {'-'*6} {'-'*12} {'-'*10}")
+        for row in pwr_table:
+            current = " <--" if abs(row["power_pct"] - result["power"] * 100) < 0.01 else ""
+            print(f"  {row['power_pct']:>5.0f}% {row['sample_per_variant']:>11,} "
+                  f"{row['total_sample']:>9,}{current}")
 
     print()
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Calculate required sample size for an A/B test (stdlib only).",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
-    )
-    parser.add_argument("--baseline",       type=float, default=None,
-                        help="Baseline conversion rate (e.g. 0.05 for 5%%)")
-    parser.add_argument("--mde",            type=float, default=None,
-                        help="Minimum detectable effect as relative lift (e.g. 0.20 for +20%%)")
-    parser.add_argument("--alpha",          type=float, default=0.05,
-                        help="Significance level α (default: 0.05)")
-    parser.add_argument("--power",          type=float, default=0.80,
-                        help="Statistical power 1-β (default: 0.80)")
-    parser.add_argument("--daily-traffic",  type=int,   default=None,
-                        help="Total daily visitors across both variants (for duration estimate)")
-    parser.add_argument("--json",           action="store_true",
-                        help="Output results as JSON")
-    return parser.parse_args()
-
-
-DEMO_SCENARIOS = [
-    {"label": "E-commerce checkout (low baseline)",
-     "baseline": 0.03, "mde": 0.20, "alpha": 0.05, "power": 0.80, "daily_traffic": 800},
-    {"label": "SaaS free-trial signup (medium baseline)",
-     "baseline": 0.08, "mde": 0.15, "alpha": 0.05, "power": 0.80, "daily_traffic": 2000},
-    {"label": "Button CTA (high baseline)",
-     "baseline": 0.25, "mde": 0.10, "alpha": 0.05, "power": 0.80, "daily_traffic": 5000},
-]
-
-
 def main():
-    args = parse_args()
-    demo_mode = (args.baseline is None and args.mde is None)
+    parser = argparse.ArgumentParser(
+        description="Calculate required sample sizes for A/B test statistical significance"
+    )
+    parser.add_argument("--baseline", type=float, required=True,
+                        help="Baseline conversion rate (e.g., 0.05 for 5%%)")
+    parser.add_argument("--mde", type=float, required=True,
+                        help="Minimum detectable effect as relative change (e.g., 0.10 for 10%% lift)")
+    parser.add_argument("--alpha", type=float, default=0.05,
+                        help="Significance level (default: 0.05)")
+    parser.add_argument("--power", type=float, default=0.80,
+                        help="Statistical power (default: 0.80)")
+    parser.add_argument("--daily-traffic", type=int, help="Daily traffic for duration estimation")
+    parser.add_argument("--allocation", type=float, default=1.0,
+                        help="Fraction of traffic allocated to test (default: 1.0)")
+    parser.add_argument("--one-sided", action="store_true", help="Use one-sided test")
+    parser.add_argument("--variants", type=int, default=2, help="Number of variants (default: 2)")
+    parser.add_argument("--format", choices=["human", "json"], default="human", help="Output format")
+    args = parser.parse_args()
 
-    if demo_mode:
-        print("🔬  DEMO MODE — running 3 sample scenarios\n")
-        all_results = []
-        for sc in DEMO_SCENARIOS:
-            res = calculate_sample_size(sc["baseline"], sc["mde"], sc["alpha"], sc["power"])
-            res = add_duration(res, sc["daily_traffic"])
-            sc_score = score_test_design(res)
-            res["scenario"] = sc["label"]
-            res["score"] = sc_score
-            all_results.append(res)
-            if not args.json:
-                print(f"\n{'─'*60}")
-                print(f"SCENARIO: {sc['label']}")
-                pretty_print(res, sc_score)
+    result = calculate_sample_size(
+        baseline=args.baseline,
+        mde_relative=args.mde,
+        alpha=args.alpha,
+        power=args.power,
+        two_sided=not args.one_sided,
+        variants=args.variants,
+    )
 
-        if args.json:
-            print(json.dumps(all_results, indent=2))
-        return
-
-    # Single calculation mode
-    if args.baseline is None or args.mde is None:
-        print("Error: --baseline and --mde are required (or omit both for demo mode).", file=sys.stderr)
-        sys.exit(1)
-
-    result = calculate_sample_size(args.baseline, args.mde, args.alpha, args.power)
+    duration = None
     if args.daily_traffic:
-        result = add_duration(result, args.daily_traffic)
-    sc_score = score_test_design(result)
-    result["score"] = sc_score
+        duration = calculate_duration(result["total_sample"], args.daily_traffic, args.allocation)
 
-    if args.json:
-        print(json.dumps(result, indent=2))
+    sens = sensitivity_table(args.baseline, args.alpha, args.power)
+    pwr = power_table(args.baseline, args.mde, args.alpha)
+
+    if args.format == "json":
+        output = {"sample_size": result}
+        if duration:
+            output["duration"] = duration
+        output["sensitivity_by_mde"] = sens
+        output["sensitivity_by_power"] = pwr
+        print(json.dumps(output, indent=2))
     else:
-        pretty_print(result, sc_score)
+        print_human(result, duration, sens, pwr)
 
 
 if __name__ == "__main__":

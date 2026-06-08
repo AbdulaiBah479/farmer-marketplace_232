@@ -1,171 +1,492 @@
 ---
-name: "competitive-teardown"
-description: "Analyzes competitor products and companies by synthesizing data from pricing pages, app store reviews, job postings, SEO signals, and social media into structured competitive intelligence. Produces feature comparison matrices scored across 12 dimensions, SWOT analyses, positioning maps, UX audits, pricing model breakdowns, action item roadmaps, and stakeholder presentation templates. Use when conducting competitor analysis, comparing products against competitors, researching the competitive landscape, building battle cards for sales, preparing for a product strategy or roadmap session, responding to a competitor's new feature or pricing change, or performing a quarterly competitive review."
+name: competitive-teardown
+description: >
+  Systematic competitor analysis covering product teardowns, 12-dimension
+  scoring rubric, feature comparison matrices, SWOT analysis, pricing model
+  deconstruction, UX audits, and strategic action plans with stakeholder
+  presentation templates.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: business-growth
+  updated: 2026-03-31
+  tags:
+    - competitive-intelligence
+    - competitor-analysis
+    - product-strategy
+    - battle-cards
+    - market-analysis
 ---
-
 # Competitive Teardown
 
-**Tier:** POWERFUL  
-**Category:** Product Team  
-**Domain:** Competitive Intelligence, Product Strategy, Market Analysis
+Production-grade competitor analysis framework covering systematic data collection across 6 intelligence sources, a 12-dimension scoring rubric, feature comparison matrices, SWOT analysis, pricing model deconstruction, UX audit methodology, and strategic action plans. Produces battle-card-ready output and stakeholder presentation templates.
+
+---
+
+## Table of Contents
+
+- [When to Use](#when-to-use)
+- [Teardown Workflow](#teardown-workflow)
+- [Data Collection Framework](#data-collection-framework)
+- [12-Dimension Scoring Rubric](#12-dimension-scoring-rubric)
+- [Feature Comparison Matrix](#feature-comparison-matrix)
+- [Pricing Analysis Framework](#pricing-analysis-framework)
+- [SWOT Analysis Template](#swot-analysis-template)
+- [UX Audit Methodology](#ux-audit-methodology)
+- [Positioning Map](#positioning-map)
+- [Action Plan Framework](#action-plan-framework)
+- [Battle Card Template](#battle-card-template)
+- [Stakeholder Presentation](#stakeholder-presentation)
+- [Output Artifacts](#output-artifacts)
+- [Related Skills](#related-skills)
 
 ---
 
 ## When to Use
 
-- Before a product strategy or roadmap session
-- When a competitor launches a major feature or pricing change
-- Quarterly competitive review
-- Before a sales pitch where you need battle card data
-- When entering a new market segment
+| Trigger | Teardown Scope |
+|---------|---------------|
+| Before product strategy or roadmap session | Full teardown (2-4 competitors) |
+| Competitor launches major feature or pricing change | Focused teardown (1 competitor, updated dimensions only) |
+| Quarterly competitive review | Update existing teardowns + trend analysis |
+| Before a sales pitch (battle card needed) | Single-competitor battle card |
+| Entering a new market segment | Full teardown of segment incumbents |
 
 ---
 
 ## Teardown Workflow
 
-Follow these steps in sequence to produce a complete teardown:
+### Step-by-Step Process
 
-1. **Define competitors** — List 2–4 competitors to analyze. Confirm which is the primary focus.
-2. **Collect data** — Use `references/data-collection-guide.md` to gather raw signals from at least 3 sources per competitor (website, reviews, job postings, SEO, social).  
-   _Validation checkpoint: Before proceeding, confirm you have pricing data, at least 20 reviews, and job posting counts for each competitor._
-3. **Score using rubric** — Apply the 12-dimension rubric below to produce a numeric scorecard for each competitor and your own product.  
-   _Validation checkpoint: Every dimension should have a score and at least one supporting evidence note._
-4. **Generate outputs** — Populate the templates in `references/analysis-templates.md` (Feature Matrix, Pricing Analysis, SWOT, Positioning Map, UX Audit).
-5. **Build action plan** — Translate findings into the Action Items template (quick wins / medium-term / strategic).
-6. **Package for stakeholders** — Assemble the Stakeholder Presentation using outputs from steps 3–5.
+1. **Define competitors** -- List 2-4 competitors. Confirm which is the primary focus.
+2. **Collect data** -- Gather intelligence from at least 3 of the 6 sources per competitor.
+3. **Score using rubric** -- Apply the 12-dimension rubric to produce a numeric scorecard.
+4. **Generate comparison outputs** -- Feature matrix, pricing analysis, SWOT, positioning map.
+5. **Build action plan** -- Translate findings into quick wins, medium-term, and strategic priorities.
+6. **Package for stakeholders** -- Assemble the presentation or battle card.
 
----
+### Validation Checkpoints
 
-## Data Collection Guide
-
-> Full executable scripts for each source are in `references/data-collection-guide.md`. Summaries of what to capture are below.
-
-### 1. Website Analysis
-
-Key things to capture:
-- Pricing tiers and price points
-- Feature lists per tier
-- Primary CTA and messaging
-- Case studies / customer logos (signals ICP)
-- Integration logos
-- Trust signals (certifications, compliance badges)
-
-### 2. App Store Reviews
-
-Review sentiment categories:
-- **Praise** → what users love (defend / strengthen these)
-- **Feature requests** → unmet needs (opportunity gaps)
-- **Bugs** → quality signals
-- **UX complaints** → friction points you can beat them on
-
-**Sample App Store query (iTunes Search API):**
-```
-GET https://itunes.apple.com/search?term=<competitor_name>&entity=software&limit=1
-# Extract trackId, then:
-GET https://itunes.apple.com/rss/customerreviews/id=<trackId>/sortBy=mostRecent/json?l=en&limit=50
-```
-Parse `entry[].content.label` for review text and `entry[].im:rating.label` for star rating.
-
-### 3. Job Postings (Team Size & Tech Stack Signals)
-
-Signals from job postings:
-- **Engineering volume** → scaling vs. consolidating
-- **Specific tech mentions** → stack (React/Vue, Postgres/Mongo, AWS/GCP)
-- **Sales/CS ratio** → product-led vs. sales-led motion
-- **Data/ML roles** → upcoming AI features
-- **Compliance roles** → regulatory expansion
-
-### 4. SEO Analysis
-
-SEO signals to capture:
-- Top 20 organic keywords (intent: informational / navigational / commercial)
-- Domain Authority / backlink count
-- Blog publishing cadence and topics
-- Which pages rank (product pages vs. blog vs. docs)
-
-### 5. Social Media Sentiment
-
-Capture recent mentions via Twitter/X API v2, Reddit, or LinkedIn. Look for recurring praise, complaints, and feature requests. See `references/data-collection-guide.md` for API query examples.
+- Before scoring: Confirm you have pricing data, 20+ user reviews, and recent product data
+- Before action plan: Every dimension should have a score and supporting evidence
+- Before presentation: Every recommendation should tie back to a data point
 
 ---
 
-## Scoring Rubric (12 Dimensions, 1-5)
+## Data Collection Framework
+
+### Source 1: Website and Product Analysis
+
+| Data Point | Where to Find | What It Signals |
+|-----------|--------------|-----------------|
+| Pricing tiers and price points | Pricing page | Market positioning, target segment |
+| Feature lists per tier | Pricing + feature pages | Packaging strategy |
+| Primary CTA and messaging | Homepage hero | Positioning and ICP |
+| Case studies and customer logos | Case study page, homepage | Target segments, social proof |
+| Integration partnerships | Integrations page | Ecosystem strategy |
+| Trust signals | Footer, security page | Enterprise readiness |
+| Job postings | Careers page, LinkedIn | Growth direction, tech stack |
+
+### Source 2: User Reviews
+
+**Platforms:** G2, Capterra, TrustRadius, App Store, Product Hunt
+
+| Category | What to Track | Strategic Value |
+|----------|-------------|-----------------|
+| Praise themes | What users love (top 5 themes) | Their defensible strengths |
+| Complaint themes | What users hate (top 5 themes) | Your opportunities |
+| Feature requests | What users want but do not have | Product roadmap gaps |
+| Switching mentions | Why users left competitors | Competitive migration paths |
+| Rating trends | Quarter-over-quarter rating change | Improving or declining |
+
+**Sample size target:** 50+ reviews per competitor for reliable themes.
+
+### Source 3: Job Postings
+
+| Signal | What It Means |
+|--------|--------------|
+| High engineering hiring | Product investment, scaling |
+| AI/ML roles | AI features coming |
+| Sales team expansion | Moving upmarket or expanding geographically |
+| Customer success roles | Retention focus, enterprise motion |
+| Compliance/legal roles | Regulatory expansion |
+| Reduced postings | Cost cutting, potential contraction |
+
+### Source 4: SEO and Content Analysis
+
+| Metric | Tool | Strategic Value |
+|--------|------|-----------------|
+| Top 20 organic keywords | Ahrefs, SEMrush, GSC | Content strategy and targeting |
+| Domain authority | Ahrefs, Moz | Brand strength |
+| Blog publishing cadence | Manual check | Content investment level |
+| Ranking pages (product vs blog vs docs) | Ahrefs | Traffic composition |
+
+### Source 5: Social Media and Community
+
+| Platform | What to Track |
+|----------|-------------|
+| Twitter/X | Product announcements, customer praise, complaints |
+| Reddit | Honest reviews, comparison threads |
+| LinkedIn | Thought leadership, hiring signals, employee count |
+| Community forums | Feature requests, workarounds, power user patterns |
+| Discord/Slack | Community size, engagement level |
+
+### Source 6: Financial and Market Data
+
+| Source | Data Available |
+|-------|---------------|
+| Crunchbase | Funding, valuation, investors, employee count |
+| LinkedIn | Employee count trend (growth proxy) |
+| Public filings (if public) | Revenue, growth rate, churn |
+| Industry reports | Market share estimates |
+
+---
+
+## 12-Dimension Scoring Rubric
+
+Score each competitor (and your own product) on a 1-5 scale with evidence notes.
 
 | # | Dimension | 1 (Weak) | 3 (Average) | 5 (Best-in-class) |
 |---|-----------|----------|-------------|-------------------|
-| 1 | **Features** | Core only, many gaps | Solid coverage | Comprehensive + unique |
-| 2 | **Pricing** | Confusing / overpriced | Market-rate, clear | Transparent, flexible, fair |
-| 3 | **UX** | Confusing, high friction | Functional | Delightful, minimal friction |
-| 4 | **Performance** | Slow, unreliable | Acceptable | Fast, high uptime |
-| 5 | **Docs** | Sparse, outdated | Decent coverage | Comprehensive, searchable |
-| 6 | **Support** | Email only, slow | Chat + email | 24/7, great response |
-| 7 | **Integrations** | 0-5 integrations | 6-25 | 26+ or deep ecosystem |
-| 8 | **Security** | No mentions | SOC2 claimed | SOC2 Type II, ISO 27001 |
-| 9 | **Scalability** | No enterprise tier | Mid-market ready | Enterprise-grade |
-| 10 | **Brand** | Generic, unmemorable | Decent positioning | Strong, differentiated |
-| 11 | **Community** | None | Forum / Slack | Active, vibrant community |
-| 12 | **Innovation** | No recent releases | Quarterly | Frequent, meaningful |
+| 1 | Features | Core only, many gaps | Solid coverage | Comprehensive + unique capabilities |
+| 2 | Pricing | Confusing or overpriced | Market-rate, clear | Transparent, flexible, fair |
+| 3 | UX / Design | Confusing, high friction | Functional, adequate | Delightful, minimal friction |
+| 4 | Performance | Slow, unreliable | Acceptable | Fast, high uptime, responsive |
+| 5 | Documentation | Sparse, outdated | Decent coverage | Comprehensive, searchable, with examples |
+| 6 | Support | Email only, slow response | Chat + email, reasonable SLA | 24/7, multiple channels, fast |
+| 7 | Integrations | 0-5 native integrations | 6-25 integrations | 26+ or deep ecosystem (API + marketplace) |
+| 8 | Security | No mentions | SOC2 claimed | SOC2 Type II + ISO 27001 + GDPR |
+| 9 | Scalability | No enterprise tier | Mid-market ready | Enterprise-grade (SSO, SCIM, SLA) |
+| 10 | Brand | Generic, unmemorable | Decent positioning | Strong, differentiated, recognized |
+| 11 | Community | None | Forum or Slack exists | Active, vibrant, user-generated content |
+| 12 | Innovation | No releases in 6+ months | Quarterly releases | Frequent, meaningful, well-communicated |
 
-**Example completed row** (Competitor: Acme Corp, Dimension 3 – UX):
+### Scoring Output Format
 
-| Dimension | Acme Corp Score | Evidence |
-|-----------|----------------|---------|
-| UX | 2 | App Store reviews cite "confusing navigation" (38 mentions); onboarding requires 7 steps before TTFV; no onboarding wizard; CC required at signup. |
-
-Apply this pattern to all 12 dimensions for each competitor.
+| Dimension | Your Product | Competitor A | Competitor B | Competitor C |
+|-----------|-------------|-------------|-------------|-------------|
+| Features | 4 | 3 | 5 | 3 |
+| Pricing | 3 | 4 | 3 | 4 |
+| ... | ... | ... | ... | ... |
+| **Total (/60)** | **38** | **35** | **42** | **33** |
 
 ---
 
-## Templates
+## Feature Comparison Matrix
 
-> Full template markdown is in `references/analysis-templates.md`. Abbreviated reference below.
+### Matrix Structure
 
-### Feature Comparison Matrix
+| Feature Category | Your Product | Competitor A | Competitor B | Notes |
+|-----------------|-------------|-------------|-------------|-------|
+| **Core Features** | | | | |
+| Feature 1 | Full | Full | Partial | Comp B lacks [specific capability] |
+| Feature 2 | Full | Missing | Full | Our differentiator |
+| Feature 3 | Partial | Full | Full | Gap to close |
+| **Platform** | | | | |
+| Web app | Yes | Yes | Yes | |
+| iOS app | Yes | No | Yes | Comp A gap |
+| API access | Full | Limited | Full | |
+| **Enterprise** | | | | |
+| SSO | Yes | No | Yes | |
+| Audit logs | Yes | Yes | No | |
+| Custom SLA | Yes | Yes | Yes | |
 
-Rows: core features, pricing tiers, platform capabilities (web, iOS, Android, API).  
-Columns: your product + up to 3 competitors.  
-Score each cell 1–5. Sum to get total out of 60.  
-**Score legend:** 5=Best-in-class, 4=Strong, 3=Average, 2=Below average, 1=Weak/Missing
+**Score per cell:** Full = 5, Partial = 3, Basic = 2, Missing = 0
 
-### Pricing Analysis
+---
 
-Capture per competitor: model type (per-seat / usage-based / flat rate / freemium), entry/mid/enterprise price points, free trial length.  
-Summarize: price leader, value leader, premium positioning, your position, and 2–3 pricing opportunity bullets.
+## Pricing Analysis Framework
 
-### SWOT Analysis
+### Pricing Model Comparison
 
-For each competitor: 3–5 bullets per quadrant (Strengths, Weaknesses, Opportunities for us, Threats to us). Anchor every bullet to a data signal (review quote, job posting count, pricing page, etc.).
+| Attribute | Your Product | Competitor A | Competitor B |
+|-----------|-------------|-------------|-------------|
+| Model type | Per seat | Usage-based | Flat rate |
+| Free tier | Yes (3 users) | Yes (limited) | No |
+| Entry price | $15/user/mo | $29/mo (up to 1K events) | $49/mo |
+| Mid-tier price | $35/user/mo | $99/mo | $99/mo |
+| Enterprise | Custom | Custom | $249/mo |
+| Annual discount | 20% | 15% | 2 months free |
+| Trial | 14-day free | 7-day free | 30-day money-back |
 
-### Positioning Map
+### Pricing Position Map
 
-2x2 axes (e.g., Simple ↔ Complex / Low Value ↔ High Value). Place each competitor and your product. Bubble size = market share or funding. See `references/analysis-templates.md` for ASCII and editable versions.
+| Position | Characteristic | Your Strategy |
+|----------|---------------|---------------|
+| Price leader | Lowest price, may signal lower quality | Win on value, not features |
+| Value leader | Best features-per-dollar ratio | Win on differentiation |
+| Premium | Highest price, justified by brand/features | Win on exclusivity and support |
+| Disruptor | Radically different model (free, usage-based) | Win on accessibility |
 
-### UX Audit Checklist
+---
 
-Onboarding: TTFV (minutes), steps to activation, CC-required, onboarding wizard quality.  
-Key workflows: steps, friction points, comparative score (yours vs. theirs).  
-Mobile: iOS/Android ratings, feature parity, top complaint and praise.  
-Navigation: global search, keyboard shortcuts, in-app help.
+## SWOT Analysis Template
 
-### Action Items
+For each competitor, produce:
 
-| Horizon | Effort | Examples |
-|---------|--------|---------|
-| Quick wins (0–4 wks) | Low | Add review badges, publish comparison landing page |
-| Medium-term (1–3 mo) | Moderate | Launch free tier, improve onboarding TTFV, add top-requested integration |
-| Strategic (3–12 mo) | High | Enter new market, build API v2, achieve SOC2 Type II |
+### Competitor SWOT
 
-### Stakeholder Presentation (7 slides)
+| Quadrant | Points |
+|----------|--------|
+| **Strengths** (Their advantages) | 3-5 bullets, each anchored to a data signal |
+| **Weaknesses** (Their vulnerabilities) | 3-5 bullets, each tied to reviews, missing features, or complaints |
+| **Opportunities for Us** | What their weaknesses create for us |
+| **Threats to Us** | What their strengths mean for our position |
 
-1. **Executive Summary** — Threat level (LOW/MEDIUM/HIGH/CRITICAL), top strength, top opportunity, recommended action
-2. **Market Position** — 2x2 positioning map
-3. **Feature Scorecard** — 12-dimension radar or table, total scores
-4. **Pricing Analysis** — Comparison table + key insight
-5. **UX Highlights** — What they do better (3 bullets) vs. where we win (3 bullets)
-6. **Voice of Customer** — Top 3 review complaints (quoted or paraphrased)
-7. **Our Action Plan** — Quick wins, medium-term, strategic priorities; Appendix with raw data
+**Evidence rule:** Every bullet must cite the data source (review quote, pricing page, job posting count, feature comparison, etc.).
+
+---
+
+## UX Audit Methodology
+
+### First-Run Experience Audit
+
+| Dimension | What to Measure | How to Score |
+|-----------|----------------|--------------|
+| Time to first value (TTFV) | Minutes from signup to first meaningful output | < 5 min = 5, 5-15 min = 3, > 15 min = 1 |
+| Steps to activation | Number of screens/actions before core value | < 3 = 5, 3-7 = 3, > 7 = 1 |
+| Credit card required | Required at signup? | No = 5, Optional = 3, Required = 1 |
+| Onboarding quality | Wizard, tooltips, empty states | Comprehensive = 5, Basic = 3, None = 1 |
+| SSO available | Google, Microsoft, etc. | Yes = 5, No = 1 |
+
+### Core Workflow Audit
+
+For the 3 most common workflows, compare:
+
+| Workflow | Steps (Yours) | Steps (Competitor) | Friction Points |
+|----------|-------------|-------------------|-----------------|
+| [Primary workflow] | N | N | Specific UX issues |
+| [Secondary workflow] | N | N | Specific UX issues |
+| [Tertiary workflow] | N | N | Specific UX issues |
+
+---
+
+## Positioning Map
+
+### 2x2 Positioning Map
+
+Choose the two axes most relevant to your market:
+
+| Common Axis Pairs | When to Use |
+|-------------------|-------------|
+| Simple / Complex x Low Price / High Price | General product comparison |
+| SMB / Enterprise x Narrow / Broad Features | Market segment analysis |
+| Self-Serve / Sales-Led x Point Solution / Platform | Go-to-market comparison |
+| Technical / Non-Technical x Niche / Horizontal | Audience analysis |
+
+### Map Template
+
+```
+                    High Price / Enterprise
+                          │
+                          │
+          [Competitor B]  │  [Competitor C]
+                          │
+  Simple ─────────────────┼─────────────────── Complex
+                          │
+          [YOUR PRODUCT]  │  [Competitor A]
+                          │
+                          │
+                    Low Price / SMB
+```
+
+---
+
+## Action Plan Framework
+
+### Three Horizons
+
+| Horizon | Timeframe | Effort | Examples |
+|---------|-----------|--------|---------|
+| Quick wins | 0-4 weeks | Low | Publish comparison pages, update pricing page, add missing trust badges |
+| Medium-term | 1-3 months | Moderate | Build top-requested integration, improve onboarding TTFV, launch free tier |
+| Strategic | 3-12 months | High | Enter new market segment, build API v2, achieve SOC2 Type II |
+
+### Priority Scoring
+
+For each action item, score:
+
+| Factor | Weight | Scale |
+|--------|--------|-------|
+| Competitive impact | 40% | How much does this close or widen a gap? |
+| Customer demand | 30% | How many customers/prospects request this? |
+| Implementation effort | 20% | How hard is this to build/execute? |
+| Revenue impact | 10% | Direct revenue contribution? |
+
+---
+
+## Battle Card Template
+
+### One-Page Battle Card
+
+```
+COMPETITOR: [Name]
+LAST UPDATED: [Date]
+THREAT LEVEL: [LOW / MEDIUM / HIGH / CRITICAL]
+
+THEIR POSITIONING: [1 sentence]
+OUR POSITIONING AGAINST THEM: [1 sentence]
+
+WHERE THEY WIN:
+- [Strength 1 with evidence]
+- [Strength 2 with evidence]
+- [Strength 3 with evidence]
+
+WHERE WE WIN:
+- [Advantage 1 with evidence]
+- [Advantage 2 with evidence]
+- [Advantage 3 with evidence]
+
+LANDMINES (questions that expose their weaknesses):
+- "How does [competitor] handle [weakness area]?"
+- "Can you show me [feature they lack]?"
+- "What do their customers say about [common complaint]?"
+
+OBJECTION HANDLING:
+- "They're cheaper" → [Response with value framing]
+- "They have [feature]" → [Response with alternative/roadmap]
+- "Everyone uses them" → [Response with differentiation]
+
+PRICING COMPARISON:
+[Quick comparison table]
+
+CUSTOMER QUOTE:
+"[Quote from a customer who switched from this competitor to you]"
+```
+
+---
+
+## Stakeholder Presentation
+
+### 7-Slide Structure
+
+| Slide | Content |
+|-------|---------|
+| 1. Executive Summary | Threat level, top strength, top opportunity, recommended action |
+| 2. Market Position | 2x2 positioning map with all players |
+| 3. Feature Scorecard | 12-dimension scores, total comparison |
+| 4. Pricing Analysis | Pricing comparison table + key pricing insight |
+| 5. UX Comparison | Where they win (3 bullets) vs where we win (3 bullets) |
+| 6. Voice of Customer | Top 3 competitor complaints from reviews (quoted) |
+| 7. Action Plan | Quick wins, medium-term, strategic priorities |
+
+---
+
+## Output Artifacts
+
+| Artifact | Format | Description |
+|----------|--------|-------------|
+| Data Collection Report | Structured notes per source | Raw intelligence organized by source type |
+| 12-Dimension Scorecard | Scored table with evidence | Numeric comparison across all dimensions |
+| Feature Comparison Matrix | Grid table | Feature-by-feature comparison with scoring |
+| Pricing Analysis | Comparison table + position map | Model comparison, tier mapping, positioning |
+| SWOT Analysis | Per-competitor 4-quadrant | Anchored to data signals |
+| UX Audit | Scored checklist | TTFV, steps, friction analysis |
+| Positioning Map | 2x2 diagram | Visual market position |
+| Action Plan | Three-horizon table | Prioritized competitive responses |
+| Battle Card | One-page template | Sales-ready competitive reference |
+| Stakeholder Presentation | 7-slide outline | Executive-ready competitive briefing |
+
+---
 
 ## Related Skills
 
-- **Product Strategist** (`product-team/product-strategist/`) — Competitive insights feed OKR and strategy planning
-- **Landing Page Generator** (`product-team/landing-page-generator/`) — Competitive positioning informs landing page messaging
+- **competitor-alternatives** -- Use for creating comparison and alternative pages for SEO/marketing. Competitive-teardown provides the intelligence; competitor-alternatives produces the marketing content.
+- **pricing-strategy** -- Use when competitive analysis reveals pricing misalignment. Feed teardown pricing data into pricing-strategy.
+- **page-cro** -- Use for optimizing your comparison or competitor landing pages for conversion.
+- **content-creator** -- Use for writing competitive content (blog posts, comparison guides) based on teardown findings.
+
+---
+
+## Tool Reference
+
+### 1. competitor_scorer.py
+
+**Purpose:** Score competitors across the 12-dimension rubric and generate a numeric comparison scorecard.
+
+```bash
+python scripts/competitor_scorer.py competitor_data.json
+python scripts/competitor_scorer.py competitor_data.json --json
+```
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `competitor_data.json` | Yes | JSON file with competitor dimension scores and evidence |
+| `--json` | No | Output results as JSON |
+| `--weights` | No | Custom dimension weights as JSON string (default: equal weights) |
+
+### 2. feature_matrix_builder.py
+
+**Purpose:** Build a feature comparison matrix from structured feature data and calculate coverage scores.
+
+```bash
+python scripts/feature_matrix_builder.py features.json
+python scripts/feature_matrix_builder.py features.json --json
+```
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `features.json` | Yes | JSON file with feature comparison data |
+| `--json` | No | Output results as JSON |
+
+### 3. battle_card_generator.py
+
+**Purpose:** Generate a one-page battle card from competitor data for sales team use.
+
+```bash
+python scripts/battle_card_generator.py competitor_profile.json
+python scripts/battle_card_generator.py competitor_profile.json --json
+```
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `competitor_profile.json` | Yes | JSON file with competitor profile data |
+| `--json` | No | Output results as JSON |
+| `--format` | No | Output format: text (default) or markdown |
+
+---
+
+## Troubleshooting
+
+| Problem | Likely Cause | Solution |
+|---------|-------------|----------|
+| Scoring feels subjective across analysts | No shared rubric calibration | Use the 12-dimension rubric with explicit 1/3/5 definitions; have two analysts score independently and reconcile |
+| Data is stale within weeks of teardown | Fast-moving competitors | Set calendar reminders for monthly pricing checks and quarterly full refreshes; use competitor_scorer.py to track score changes over time |
+| Feature matrix has too many rows to be useful | Trying to capture every micro-feature | Group features into 8-12 categories; detail only the top differentiators |
+| Battle cards are not used by sales | Too long, too academic, or not actionable | Keep to one page; lead with "Where We Win" and "Landmines"; validate with 3 sales reps before distributing |
+| Review data is contradictory | Small sample size or selection bias | Target 50+ reviews per competitor across G2, Capterra, and TrustRadius; weight recent reviews more heavily |
+| Cannot get pricing data for enterprise tiers | Custom pricing not published | Use sales intel (request a demo), G2 pricing data, or customer interviews for directional estimates |
+| SWOT analysis has no actionable output | Analysis lacks connection to action plan | Every SWOT bullet must map to a specific quick-win, medium-term, or strategic action |
+
+---
+
+## Success Criteria
+
+- 12-dimension scorecard completed with evidence notes for every score
+- Feature matrix covers at least 80% of features that prospects evaluate
+- Battle cards reviewed and approved by 3+ sales representatives
+- Pricing data verified within the last 30 days
+- Teardown produces at least 3 actionable quick wins and 2 strategic priorities
+- Stakeholder presentation reviewed and feedback incorporated within 1 week
+- Teardown data refreshed quarterly with score trend tracking
+
+---
+
+## Scope & Limitations
+
+- **In scope:** Product analysis, feature comparison, pricing deconstruction, UX audit, SWOT analysis, battle card creation, action plan generation
+- **Out of scope:** Primary market research (customer interviews, surveys), financial modeling, legal competitive analysis, intellectual property assessment
+- **Data dependency:** Quality depends on publicly available data, user reviews, and product access; some competitors may have limited public information
+- **Bias risk:** Teardowns conducted by internal teams may have confirmation bias; consider external validation for high-stakes decisions
+- **Point-in-time:** Teardowns are snapshots; competitors evolve continuously -- schedule regular refreshes
+
+---
+
+## Integration Points
+
+- **competitor-alternatives** -- Teardown provides the data; competitor-alternatives produces the marketing content (comparison and alternative pages)
+- **pricing-strategy** -- When teardown reveals pricing misalignment, feed pricing data into pricing-strategy for repositioning analysis
+- **page-cro** -- Use for optimizing your comparison or competitor landing pages for conversion after teardown produces the content
+- **sales-engineer** -- Battle cards feed directly into sales engineering competitive positioning and RFP responses
+- **customer-success-manager** -- When exit surveys reveal COMPETITOR as a top churn reason, use teardown data to understand what competitors offer that you do not

@@ -1,289 +1,242 @@
 ---
-name: "database-designer"
-description: "Use when the user asks to design database schemas, plan data migrations, optimize queries, choose between SQL and NoSQL, or model data relationships."
+name: database-designer
+description: >
+  Provides expert-level database design with schema analysis, index
+  optimization, and migration generation. Supports PostgreSQL, MySQL, MongoDB,
+  and DynamoDB. Use when designing schemas, optimizing queries, planning
+  migrations, or analyzing database performance.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: engineering
+  domain: databases
+  tier: POWERFUL
+  updated: 2026-03-31
 ---
+# Database Designer
 
-# Database Designer - POWERFUL Tier Skill
+The agent analyzes SQL schemas for normalization compliance, recommends optimal indexes based on query patterns, and generates safe migration scripts with rollback procedures. It produces Mermaid ERDs, detects redundant indexes, and implements zero-downtime expand-contract migration patterns for PostgreSQL and MySQL.
 
-## Overview
+## Quick Start
 
-A comprehensive database design skill that provides expert-level analysis, optimization, and migration capabilities for modern database systems. This skill combines theoretical principles with practical tools to help architects and developers create scalable, performant, and maintainable database schemas.
+```bash
+# Analyze a schema for normalization issues and generate ERD
+python schema_analyzer.py --input schema.sql --generate-erd --output-format json
 
-## Core Competencies
+# Recommend indexes based on query patterns
+python index_optimizer.py --schema schema.json --queries queries.json --analyze-existing
 
-### Schema Design & Analysis
-- **Normalization Analysis**: Automated detection of normalization levels (1NF through BCNF)
-- **Denormalization Strategy**: Smart recommendations for performance optimization
-- **Data Type Optimization**: Identification of inappropriate types and size issues
-- **Constraint Analysis**: Missing foreign keys, unique constraints, and null checks
-- **Naming Convention Validation**: Consistent table and column naming patterns
-- **ERD Generation**: Automatic Mermaid diagram creation from DDL
-
-### Index Optimization
-- **Index Gap Analysis**: Identification of missing indexes on foreign keys and query patterns
-- **Composite Index Strategy**: Optimal column ordering for multi-column indexes
-- **Index Redundancy Detection**: Elimination of overlapping and unused indexes
-- **Performance Impact Modeling**: Selectivity estimation and query cost analysis
-- **Index Type Selection**: B-tree, hash, partial, covering, and specialized indexes
-
-### Migration Management
-- **Zero-Downtime Migrations**: Expand-contract pattern implementation
-- **Schema Evolution**: Safe column additions, deletions, and type changes
-- **Data Migration Scripts**: Automated data transformation and validation
-- **Rollback Strategy**: Complete reversal capabilities with validation
-- **Execution Planning**: Ordered migration steps with dependency resolution
-
-## Database Design Principles
-→ See references/database-design-reference.md for details
-
-## Best Practices
-
-### Schema Design
-1. **Use meaningful names**: Clear, consistent naming conventions
-2. **Choose appropriate data types**: Right-sized columns for storage efficiency
-3. **Define proper constraints**: Foreign keys, check constraints, unique indexes
-4. **Consider future growth**: Plan for scale from the beginning
-5. **Document relationships**: Clear foreign key relationships and business rules
-
-### Performance Optimization
-1. **Index strategically**: Cover common query patterns without over-indexing
-2. **Monitor query performance**: Regular analysis of slow queries
-3. **Partition large tables**: Improve query performance and maintenance
-4. **Use appropriate isolation levels**: Balance consistency with performance
-5. **Implement connection pooling**: Efficient resource utilization
-
-### Security Considerations
-1. **Principle of least privilege**: Grant minimal necessary permissions
-2. **Encrypt sensitive data**: At rest and in transit
-3. **Audit access patterns**: Monitor and log database access
-4. **Validate inputs**: Prevent SQL injection attacks
-5. **Regular security updates**: Keep database software current
-
-## Query Generation Patterns
-
-### SELECT with JOINs
-
-```sql
--- INNER JOIN: only matching rows
-SELECT o.id, c.name, o.total
-FROM orders o
-INNER JOIN customers c ON c.id = o.customer_id;
-
--- LEFT JOIN: all left rows, NULLs for non-matches
-SELECT c.name, COUNT(o.id) AS order_count
-FROM customers c
-LEFT JOIN orders o ON o.customer_id = c.id
-GROUP BY c.name;
-
--- Self-join: hierarchical data (employees/managers)
-SELECT e.name AS employee, m.name AS manager
-FROM employees e
-LEFT JOIN employees m ON m.id = e.manager_id;
-```
-
-### Common Table Expressions (CTEs)
-
-```sql
--- Recursive CTE for org chart
-WITH RECURSIVE org AS (
-  SELECT id, name, manager_id, 1 AS depth
-  FROM employees WHERE manager_id IS NULL
-  UNION ALL
-  SELECT e.id, e.name, e.manager_id, o.depth + 1
-  FROM employees e INNER JOIN org o ON o.id = e.manager_id
-)
-SELECT * FROM org ORDER BY depth, name;
-```
-
-### Window Functions
-
-```sql
--- ROW_NUMBER for pagination / dedup
-SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC) AS rn
-FROM orders;
-
--- RANK with gaps, DENSE_RANK without gaps
-SELECT name, score, RANK() OVER (ORDER BY score DESC) AS rank FROM leaderboard;
-
--- LAG/LEAD for comparing adjacent rows
-SELECT date, revenue,
-  revenue - LAG(revenue) OVER (ORDER BY date) AS daily_change
-FROM daily_sales;
-```
-
-### Aggregation Patterns
-
-```sql
--- FILTER clause (PostgreSQL) for conditional aggregation
-SELECT
-  COUNT(*) AS total,
-  COUNT(*) FILTER (WHERE status = 'active') AS active,
-  AVG(amount) FILTER (WHERE amount > 0) AS avg_positive
-FROM accounts;
-
--- GROUPING SETS for multi-level rollups
-SELECT region, product, SUM(revenue)
-FROM sales
-GROUP BY GROUPING SETS ((region, product), (region), ());
+# Generate migration scripts between schema versions
+python migration_generator.py --current current.json --target target.json --zero-downtime
 ```
 
 ---
 
-## Migration Patterns
+## Core Workflows
 
-### Up/Down Migration Scripts
+### Workflow 1: Analyze and Optimize a Schema
 
-Every migration must have a reversible counterpart. Name files with a timestamp prefix for ordering:
+1. Provide DDL (SQL) or JSON schema definition
+2. Run `schema_analyzer.py` to detect normalization violations (1NF-BCNF), missing constraints, and naming issues
+3. Review generated Mermaid ERD for relationship visualization
+4. Run `index_optimizer.py` with query patterns to get index recommendations
+5. **Validation checkpoint:** All 1NF-3NF violations addressed; foreign keys declared; no redundant indexes
 
-```
-migrations/
-├── 20260101_000001_create_users.up.sql
-├── 20260101_000001_create_users.down.sql
-├── 20260115_000002_add_users_email_index.up.sql
-└── 20260115_000002_add_users_email_index.down.sql
-```
-
-### Zero-Downtime Migrations (Expand/Contract)
-
-Use the expand-contract pattern to avoid locking or breaking running code:
-
-1. **Expand** — add the new column/table (nullable, with default)
-2. **Migrate data** — backfill in batches; dual-write from application
-3. **Transition** — application reads from new column; stop writing to old
-4. **Contract** — drop old column in a follow-up migration
-
-### Data Backfill Strategies
-
-```sql
--- Batch update to avoid long-running locks
-UPDATE users SET email_normalized = LOWER(email)
-WHERE id IN (SELECT id FROM users WHERE email_normalized IS NULL LIMIT 5000);
--- Repeat in a loop until 0 rows affected
+```bash
+python schema_analyzer.py -i schema.sql -f json -e -o report.json
+python index_optimizer.py -s schema.json -q queries.json -e -p 2 -o index_report.json
 ```
 
-### Rollback Procedures
+### Workflow 2: Generate a Safe Migration
 
-- Always test the `down.sql` in staging before deploying `up.sql` to production
-- Keep rollback window short — if the contract step has run, rollback requires a new forward migration
-- For irreversible changes (dropping columns with data), take a logical backup first
+1. Export current and target schemas as JSON
+2. Run `migration_generator.py` to produce forward and rollback SQL
+3. For large tables (10M+ rows), add `--zero-downtime` for expand-contract pattern
+4. Review validation queries that confirm migration success
+5. **Validation checkpoint:** Every forward step has a rollback counterpart; validation queries pass on test data
+
+```bash
+python migration_generator.py -c current.json -t target.json -z --include-validations -f json -o plan.json
+```
+
+### Workflow 3: Index Optimization for Query Patterns
+
+1. Document top 10 query patterns as JSON (WHERE clauses, JOINs, ORDER BY)
+2. Run `index_optimizer.py` with `--analyze-existing` to find redundancies
+3. Review composite index column ordering (most selective first)
+4. Check for covering index opportunities
+5. **Validation checkpoint:** Query patterns covered; no overlapping indexes; estimated 40%+ query time reduction
 
 ---
 
-## Performance Optimization
+## Index Type Selection
 
-### Indexing Strategies
-
-| Index Type | Use Case | Example |
+| Index Type | Best For | Example |
 |------------|----------|---------|
-| **B-tree** (default) | Equality, range, ORDER BY | `CREATE INDEX idx_users_email ON users(email);` |
-| **GIN** | Full-text search, JSONB, arrays | `CREATE INDEX idx_docs_body ON docs USING gin(to_tsvector('english', body));` |
-| **GiST** | Geometry, range types, nearest-neighbor | `CREATE INDEX idx_locations ON places USING gist(coords);` |
-| **Partial** | Subset of rows (reduce size) | `CREATE INDEX idx_active ON users(email) WHERE active = true;` |
-| **Covering** | Index-only scans | `CREATE INDEX idx_cov ON orders(customer_id) INCLUDE (total, created_at);` |
+| B-tree | Range queries, sorting, equality | `CREATE INDEX idx ON tasks (status, created_date)` |
+| Partial | Subset queries on hot data | `CREATE INDEX idx ON users (email) WHERE status = 'active'` |
+| Covering | Avoiding table lookups | `CREATE INDEX idx ON users (email) INCLUDE (name, status)` |
+| Hash | Exact match only | Primary keys, cache keys |
+| GIN | JSONB, array, full-text | `CREATE INDEX idx ON docs USING GIN (data)` |
 
-### EXPLAIN Plan Reading
+---
 
-```sql
-EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT ...;
+## Anti-Patterns
+
+- **Over-indexing** -- every column indexed wastes write performance and storage; index only columns appearing in WHERE, JOIN, and ORDER BY
+- **Missing foreign keys** -- relying on application-layer referential integrity leads to orphaned records; always declare FK constraints
+- **VARCHAR(255) everywhere** -- oversized columns waste memory in indexes; right-size columns based on actual data
+- **Premature denormalization** -- denormalize only when EXPLAIN ANALYZE shows join-related bottlenecks, not preemptively
+- **Direct ALTER on large tables** -- `ALTER TABLE ... SET NOT NULL` on a 100M-row table locks the table; use expand-contract pattern
+- **No validation queries in migrations** -- migrations without post-step validation risk silent data corruption
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Schema analyzer reports false 1NF violations | JSON or array columns detected as multi-valued fields | Review flagged columns; intentional JSONB/array usage is valid for document-style storage patterns |
+| Index optimizer recommends indexes on low-selectivity columns | Boolean or status columns appear in frequent WHERE clauses | Use partial indexes (`WHERE status = 'active'`) instead of full-column indexes to reduce overhead |
+| Migration generator produces high-risk steps for column type changes | Direct `ALTER COLUMN ... TYPE` can lock tables and fail on incompatible data | Use the `--zero-downtime` flag to generate expand-contract migration patterns with safe backfill steps |
+| ERD output missing relationships | Foreign key constraints not declared in DDL or JSON input | Ensure all FK relationships are explicitly defined; the analyzer only detects declared constraints |
+| Composite index column order seems wrong | Optimizer orders by estimated selectivity, not query clause order | Verify cardinality estimates in the schema JSON; provide `cardinality_estimate` per column for accurate ordering |
+| Redundancy analysis flags covering indexes as overlapping | Overlap ratio calculation uses Jaccard similarity on column sets | Review flagged pairs manually; covering indexes with INCLUDE columns serve a different purpose than their subsets |
+| Validation queries fail after migration | Target schema JSON does not match actual post-migration state | Run `--validate-only` before and after migration; ensure the target JSON reflects all intended changes precisely |
+
+## Success Criteria
+
+- Schema analysis detects 90%+ of normalization violations (1NF through BCNF) when provided complete DDL input
+- Index recommendations reduce query execution time by 40%+ for analyzed query patterns (measured via EXPLAIN ANALYZE before/after)
+- Migration scripts execute with zero data loss and include verified rollback for every forward step
+- ERD generation produces valid Mermaid diagrams that render correctly for schemas with up to 50 tables
+- Redundant index detection identifies 95%+ of duplicate and overlapping indexes with less than 5% false positive rate
+- Zero-downtime migrations maintain full application availability during schema changes on tables with 10M+ rows
+- Generated SQL statements are syntactically valid and compatible with PostgreSQL 14+ and MySQL 8.0+
+
+## Scope & Limitations
+
+**Covers:**
+- Schema design analysis for SQL databases (PostgreSQL, MySQL) including normalization, constraints, naming, and data types
+- Index optimization with selectivity estimation, composite index ordering, covering indexes, and redundancy detection
+- Migration generation with forward/rollback scripts, zero-downtime patterns, and validation queries
+- ERD generation in Mermaid format from DDL or JSON schema definitions
+
+**Does NOT cover:**
+- Runtime query performance monitoring or live database profiling (see `performance-profiler` skill)
+- NoSQL-specific schema design for MongoDB, DynamoDB, or Cassandra (conceptual guidance only in the reference sections)
+- Database administration tasks such as backup/restore, replication setup, or user/role management
+- Application-level ORM configuration, connection pool tuning, or driver-specific optimizations (see `database-schema-designer` for ORM-adjacent patterns)
+
+## Integration Points
+
+| Skill | Integration | Data Flow |
+|-------|-------------|-----------|
+| `migration-architect` | Migration strategy and execution planning for large-scale schema changes | Database Designer generates migration SQL; Migration Architect orchestrates multi-service deployment order and rollback coordination |
+| `database-schema-designer` | Complementary schema design with focus on application-layer patterns | Database Designer provides normalization analysis; Schema Designer applies ORM mapping and application modeling conventions |
+| `performance-profiler` | Runtime validation of index and schema optimization recommendations | Database Designer outputs recommended indexes; Performance Profiler measures actual query plan improvements via EXPLAIN ANALYZE |
+| `api-design-reviewer` | Alignment between database schema and API resource contracts | Database Designer defines table structures; API Design Reviewer validates that endpoint schemas match underlying data models |
+| `ci-cd-pipeline-builder` | Automated migration execution in deployment pipelines | Database Designer generates migration scripts; CI/CD Pipeline Builder integrates them into deployment stages with validation gates |
+| `observability-designer` | Database performance monitoring and alerting post-optimization | Database Designer identifies query patterns; Observability Designer configures slow query alerts and index usage dashboards |
+
+## Tool Reference
+
+### schema_analyzer.py
+
+**Purpose:** Analyzes SQL DDL statements and JSON schema definitions for normalization compliance, missing constraints, data type issues, naming convention violations, and relationship mapping. Generates Mermaid ERD diagrams.
+
+**Usage:**
+```bash
+python schema_analyzer.py --input schema.sql --output-format json
+python schema_analyzer.py --input schema.json --output-format text
+python schema_analyzer.py --input schema.sql --generate-erd --output analysis.json
+python schema_analyzer.py --input schema.sql --erd-only
 ```
 
-Key signals to watch:
-- **Seq Scan** on large tables — missing index
-- **Nested Loop** with high row estimates — consider hash/merge join or add index
-- **Buffers shared read** much higher than **hit** — working set exceeds memory
+**Flags/Parameters:**
 
-### N+1 Query Detection
+| Flag | Short | Required | Description |
+|------|-------|----------|-------------|
+| `--input` | `-i` | Yes | Input file path (SQL DDL or JSON schema) |
+| `--output` | `-o` | No | Output file path (default: stdout) |
+| `--output-format` | `-f` | No | Output format: `json` or `text` (default: `text`) |
+| `--generate-erd` | `-e` | No | Include Mermaid ERD diagram in output |
+| `--erd-only` | | No | Output only the Mermaid ERD diagram |
 
-Symptoms: application issues one query per row (e.g., fetching related records in a loop).
+**Example:**
+```bash
+python schema_analyzer.py -i my_schema.sql -f json -e -o report.json
+```
 
-Fixes:
-- Use `JOIN` or subquery to fetch in one round-trip
-- ORM eager loading (`select_related` / `includes` / `with`)
-- DataLoader pattern for GraphQL resolvers
-
-### Connection Pooling
-
-| Tool | Protocol | Best For |
-|------|----------|----------|
-| **PgBouncer** | PostgreSQL | Transaction/statement pooling, low overhead |
-| **ProxySQL** | MySQL | Query routing, read/write splitting |
-| **Built-in pool** (HikariCP, SQLAlchemy pool) | Any | Application-level pooling |
-
-**Rule of thumb:** Set pool size to `(2 * CPU cores) + disk spindles`. For cloud SSDs, start with `2 * vCPUs` and tune.
-
-### Read Replicas and Query Routing
-
-- Route all `SELECT` queries to replicas; writes to primary
-- Account for replication lag (typically <1s for async, 0 for sync)
-- Use `pg_last_wal_replay_lsn()` to detect lag before reading critical data
+**Output Formats:**
+- `text` -- Human-readable report with normalization findings, constraint issues, data type recommendations, and naming violations
+- `json` -- Structured JSON with `normalization_issues`, `constraint_issues`, `data_type_issues`, `naming_issues`, `relationships`, and optional `erd_diagram` fields
 
 ---
 
-## Multi-Database Decision Matrix
+### index_optimizer.py
 
-| Criteria | PostgreSQL | MySQL | SQLite | SQL Server |
-|----------|-----------|-------|--------|------------|
-| **Best for** | Complex queries, JSONB, extensions | Web apps, read-heavy workloads | Embedded, dev/test, edge | Enterprise .NET stacks |
-| **JSON support** | Excellent (JSONB + GIN) | Good (JSON type) | Minimal | Good (OPENJSON) |
-| **Replication** | Streaming, logical | Group replication, InnoDB cluster | N/A | Always On AG |
-| **Licensing** | Open source (PostgreSQL License) | Open source (GPL) / commercial | Public domain | Commercial |
-| **Max practical size** | Multi-TB | Multi-TB | ~1 TB (single-writer) | Multi-TB |
+**Purpose:** Analyzes schema definitions and query patterns to recommend optimal indexes. Identifies missing indexes, detects redundant and overlapping indexes, suggests composite index column ordering, estimates selectivity, and generates CREATE INDEX statements.
 
-**When to choose:**
-- **PostgreSQL** — default choice for new projects; best extensibility and standards compliance
-- **MySQL** — existing MySQL ecosystem; simple read-heavy web applications
-- **SQLite** — mobile apps, CLI tools, unit test databases, IoT/edge
-- **SQL Server** — mandated by enterprise policy; deep .NET/Azure integration
+**Usage:**
+```bash
+python index_optimizer.py --schema schema.json --queries queries.json --format text
+python index_optimizer.py --schema schema.json --queries queries.json --output recommendations.json --format json
+python index_optimizer.py --schema schema.json --queries queries.json --analyze-existing
+python index_optimizer.py --schema schema.json --queries queries.json --min-priority 2
+```
 
-### NoSQL Considerations
+**Flags/Parameters:**
 
-| Database | Model | Use When |
-|----------|-------|----------|
-| **MongoDB** | Document | Schema flexibility, rapid prototyping, content management |
-| **Redis** | Key-value / cache | Session store, rate limiting, leaderboards, pub/sub |
-| **DynamoDB** | Wide-column | Serverless AWS apps, single-digit-ms latency at any scale |
+| Flag | Short | Required | Description |
+|------|-------|----------|-------------|
+| `--schema` | `-s` | Yes | Schema definition JSON file |
+| `--queries` | `-q` | Yes | Query patterns JSON file |
+| `--output` | `-o` | No | Output file path (default: stdout) |
+| `--format` | `-f` | No | Output format: `json` or `text` (default: `text`) |
+| `--analyze-existing` | `-e` | No | Include analysis of existing indexes for redundancy |
+| `--min-priority` | `-p` | No | Minimum priority level to include: 1=highest, 4=lowest (default: `4`) |
 
-> Use SQL as default. Reach for NoSQL only when the access pattern clearly benefits from it.
+**Example:**
+```bash
+python index_optimizer.py -s schema.json -q queries.json -f json -e -p 2 -o index_report.json
+```
 
----
-
-## Sharding & Replication
-
-### Horizontal vs Vertical Partitioning
-
-- **Vertical partitioning**: Split columns across tables (e.g., separate BLOB columns). Reduces I/O for narrow queries.
-- **Horizontal partitioning (sharding)**: Split rows across databases/servers. Required when a single node cannot hold the dataset or handle the throughput.
-
-### Sharding Strategies
-
-| Strategy | How It Works | Pros | Cons |
-|----------|-------------|------|------|
-| **Hash** | `shard = hash(key) % N` | Even distribution | Resharding is expensive |
-| **Range** | Shard by date or ID range | Simple, good for time-series | Hot spots on latest shard |
-| **Geographic** | Shard by user region | Data locality, compliance | Cross-region queries are hard |
-
-### Replication Patterns
-
-| Pattern | Consistency | Latency | Use Case |
-|---------|------------|---------|----------|
-| **Synchronous** | Strong | Higher write latency | Financial transactions |
-| **Asynchronous** | Eventual | Low write latency | Read-heavy web apps |
-| **Semi-synchronous** | At-least-one replica confirmed | Moderate | Balance of safety and speed |
+**Output Formats:**
+- `text` -- Human-readable report with analysis summary, high-priority recommendations, redundancy issues, performance impact analysis, and CREATE INDEX statements
+- `json` -- Structured JSON with `analysis_summary`, `index_recommendations` (by priority), `redundancy_analysis`, `size_estimates`, `sql_statements`, and `performance_impact` fields
 
 ---
 
-## Cross-References
+### migration_generator.py
 
-- **sql-database-assistant** — query writing, optimization, and debugging for day-to-day SQL work
-- **database-schema-designer** — ERD modeling, normalization analysis, and schema generation
-- **migration-architect** — large-scale migration planning across database engines or major schema overhauls
-- **senior-backend** — application-layer patterns (connection pooling, ORM best practices)
-- **senior-devops** — infrastructure provisioning for database clusters and replicas
+**Purpose:** Generates safe migration scripts between schema versions. Compares current and target schemas, produces ALTER TABLE statements, implements zero-downtime expand-contract patterns, creates rollback scripts, and generates validation queries.
 
----
+**Usage:**
+```bash
+python migration_generator.py --current current.json --target target.json --format text
+python migration_generator.py --current current.json --target target.json --output migration.sql --format sql
+python migration_generator.py --current current.json --target target.json --zero-downtime --format json
+python migration_generator.py --current current.json --target target.json --validate-only
+```
 
-## Conclusion
+**Flags/Parameters:**
 
-Effective database design requires balancing multiple competing concerns: performance, scalability, maintainability, and business requirements. This skill provides the tools and knowledge to make informed decisions throughout the database lifecycle, from initial schema design through production optimization and evolution.
+| Flag | Short | Required | Description |
+|------|-------|----------|-------------|
+| `--current` | `-c` | Yes | Current schema JSON file |
+| `--target` | `-t` | Yes | Target schema JSON file |
+| `--output` | `-o` | No | Output file path (default: stdout) |
+| `--format` | `-f` | No | Output format: `json`, `text`, or `sql` (default: `text`) |
+| `--zero-downtime` | `-z` | No | Generate zero-downtime migration using expand-contract pattern |
+| `--validate-only` | `-v` | No | Only generate validation queries, skip migration steps |
+| `--include-validations` | | No | Include validation queries in migration output |
 
-The included tools automate common analysis and optimization tasks, while the comprehensive guides provide the theoretical foundation for making sound architectural decisions. Whether building a new system or optimizing an existing one, these resources provide expert-level guidance for creating robust, scalable database solutions.
+**Example:**
+```bash
+python migration_generator.py -c current.json -t target.json -z --include-validations -f json -o migration_plan.json
+```
+
+**Output Formats:**
+- `text` -- Human-readable migration plan with ordered steps, forward SQL, rollback SQL, risk levels, and execution timeline
+- `json` -- Structured JSON with `migration_id`, `steps` (each with `sql_forward`, `sql_rollback`, `validation_sql`, `risk_level`, `zero_downtime_phase`), `summary`, `execution_order`, and `rollback_order`
+- `sql` -- Raw SQL output with forward migration statements, suitable for direct execution or piping into a database client

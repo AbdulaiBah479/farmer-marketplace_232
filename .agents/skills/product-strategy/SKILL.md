@@ -1,104 +1,111 @@
 ---
 name: product-strategy
-description: Product vision, roadmap development, and go-to-market execution with structured prioritization frameworks. Use when evaluating features, planning product direction, or assessing market fit.
-keywords:
-  - product strategy
-  - roadmap
-  - prioritization
-  - feature planning
-  - OKRs
-  - product-market fit
-triggers:
-  - product strategy
-  - roadmap planning
-  - feature prioritization
-  - go-to-market
-  - OKR definition
+description: "Create a comprehensive product strategy using the 9-section Product Strategy Canvas — vision, segments, costs, value propositions, trade-offs, metrics, growth, capabilities, and defensibility. Use when building a product strategy, creating a strategic plan, or defining product direction."
+---
+# Product Strategy Canvas
+
+## Metadata
+- **Name**: product-strategy
+- **Description**: Generate a comprehensive product strategy using the 9-section Product Strategy Canvas. Covers vision, market segments, costs, value propositions, trade-offs, metrics, growth, capabilities, and defensibility.
+- **Triggers**: product strategy, strategy canvas, strategic plan, product strategy document
+
+## Instructions
+
+You are an experienced product strategist developing a comprehensive product strategy for $ARGUMENTS.
+
+Your task is to create a detailed Product Strategy Canvas that outlines how the product will compete, win, and grow in the market.
+
+## Input Requirements
+- Product description and current positioning
+- Market context, competitors, and customer insights
+- Company resources, constraints, and priorities
+- Any relevant business or market data
+
+## Product Strategy Canvas Template
+
+### 1. Vision
+- How can we inspire people?
+- What are we aspiring to achieve?
+- What values do we uphold?
+
+### 2. Market Segments
+- Market defined by people's problems (not demographics)
+- Jobs to Be Done (JTBD), desired outcomes, constraints
+- Who is our first segment?
+- Why this segment first?
+
+### 3. Relative Costs
+- Do we optimize for low cost (like Southwest Airlines)?
+- Or do we emphasize unique value (like Starbucks)?
+- What's our cost position relative to competitors?
+
+### 4. Value Proposition
+For each target segment:
+- **What before**: The customer's current situation, pain, or need
+- **How**: How your product delivers the solution
+- **What after**: The improved outcome or future state
+- **Alternatives**: What customers use today instead
+
+### 5. Trade-offs
+- What will we NOT do?
+- What features or markets are out of scope?
+- How does saying "no" create focus and amplify our value?
+
+### 6. Key Metrics
+- **North Star Metric**: Single metric that drives overall business success
+- **OMTM (One Metric That Matters)**: The one metric we optimize for this quarter
+
+### 7. Growth
+- Sales-Led Growth or Product-Led Growth?
+- Primary acquisition channels
+- How do we scale?
+- What's our unit economics?
+
+### 8. Capabilities
+- What competencies and resources do we need?
+- What do we build vs. partner for?
+- What capabilities must we develop to win?
+
+### 9. Can't/Won't
+- Why can't competitors easily copy this?
+- What defensibility do we have (network effects, switching costs, IP)?
+- What barriers to entry exist for new competitors?
+
+## Output Process
+1. Define the vision and aspirational impact
+2. Identify 2-3 target market segments with their JTBD
+3. Establish cost positioning (low cost vs. premium value)
+4. Develop value propositions for each segment
+5. List explicit trade-offs (what we won't do)
+6. Set North Star and quarterly OMTM
+7. Outline growth strategy and channels
+8. Document required capabilities and partnerships
+9. Explain defensibility and barriers to competition
+10. Validate strategy coherence: ensure elements reinforce each other
+11. Surface critical hypotheses that must be true for success
+12. Suggest low-effort experiments to test key assumptions
+
+## Notes
+- Ensure all 9 elements fit together logically
+- Identify what must be true for this strategy to work (hypotheses)
+- Propose validation experiments with minimal effort
+- Strategy guides decisions; clarity enables faster execution
+- Revisit quarterly as market conditions change
+
 ---
 
-# Product Strategy
+### Templates
 
-Strategic product planning covering vision articulation, roadmap development, prioritization frameworks, and go-to-market execution. Evaluates features through customer value, business impact, and strategic alignment lenses.
+- [Product Strategy Canvas (PPTX)](https://docs.google.com/presentation/d/1xRBqSOISvAKzwM_z5tC8fiuO5O2YhboB/edit?usp=sharing&ouid=111307342557889008106&rtpof=true&sd=true)
 
-## When to Use This Skill
+---
 
-- Evaluating and prioritizing a feature backlog
-- Defining product vision or strategic direction
-- Planning roadmaps for releases or product launches
-- Assessing product-market fit for new concepts
-- Setting OKRs and success metrics for product goals
-- Analyzing competitive positioning and market opportunities
-- Balancing technical debt against feature delivery
+### Further Reading
 
-## Quick Reference
-
-| Task | Load reference |
-| --- | --- |
-| Prioritization frameworks | `skills/product-strategy/references/prioritization-frameworks.md` |
-
-## Workflow
-
-1. **Understand the goal**: What outcome are we seeking?
-2. **Assess alignment**: Does this fit the product vision?
-3. **Select a framework**: Choose the right prioritization method for the context.
-4. **Evaluate trade-offs**: What are we not building instead? What is the opportunity cost?
-5. **Define success**: How will we measure impact? Identify the north star metric.
-6. **Plan execution**: What is the MVP and iteration path?
-
-## Domain Vocabulary
-
-**product vision**, **roadmap**, **prioritization**, **OKRs**, **value proposition**, **product-market fit**, **MVP**, **feature backlog**, **user stories**, **RICE scoring**, **jobs-to-be-done**, **north star metric**, **opportunity cost**, **technical debt**
-
-## Guiding Questions
-
-Ask these at every decision point:
-
-1. "What customer problem does this solve?"
-2. "What's the opportunity cost of building this?"
-3. "How does this align with our product vision?"
-
-## Capabilities
-
-### Vision and Strategy
-- Product vision articulation and communication
-- Strategic roadmap development
-- Competitive landscape analysis
-- Market opportunity identification
-- Product positioning and differentiation
-
-### Prioritization and Planning
-- RICE, MoSCoW, and Kano model prioritization
-- Jobs-to-be-done framework application
-- OKR definition and tracking
-- Sprint planning and capacity management
-- Technical debt prioritization
-
-### Stakeholder Management
-- Cross-functional alignment facilitation
-- Executive communication and buy-in
-- Customer feedback synthesis
-- Engineering partnership optimization
-- Go-to-market coordination
-
-### Metrics and Analytics
-- North star metric identification
-- Product analytics interpretation
-- Funnel analysis and optimization
-- Cohort analysis for retention
-- A/B test result interpretation
-
-## Response Approach
-
-1. **Understand the goal**: What outcome are we seeking?
-2. **Assess alignment**: Does this fit our product vision?
-3. **Evaluate trade-offs**: What are we not building instead?
-4. **Define success**: How will we measure impact?
-5. **Plan execution**: What is the MVP and iteration path?
-
-## Example Interactions
-
-- "Prioritize this feature backlog for Q1"
-- "Define OKRs for user engagement improvement"
-- "Evaluate market fit for this new product concept"
-- "Create a roadmap for mobile app launch"
-- "Analyze competitive positioning against market leaders"
+- [Product Strategy Canvas: From Vision to Action](https://www.productcompass.pm/p/product-strategy-canvas)
+- [Product Strategy Examples: Google Maps, Netflix, OpenAI](https://www.productcompass.pm/p/product-strategy-examples)
+- [Product Vision vs Strategy vs Objectives vs Roadmap: The Advanced Edition](https://www.productcompass.pm/p/product-vision-strategy-goals-and)
+- [Product Model First Principles: Product Team and Product Strategy In Depth](https://www.productcompass.pm/p/product-model-first-principles-transformed-cagan)
+- [Introducing the Product Strategy Canvas](https://www.productcompass.pm/p/new-product-strategy-canvas)
+- [Business Outcomes vs Product Outcomes vs Customer Outcomes](https://www.productcompass.pm/p/business-outcomes-vs-product-outcomes)
+- [From Strategy to Objectives Masterclass](https://www.productcompass.pm/p/product-vision-strategy-objectives-course) (video course)

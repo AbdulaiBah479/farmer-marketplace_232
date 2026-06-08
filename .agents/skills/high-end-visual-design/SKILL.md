@@ -1,30 +1,34 @@
 ---
 name: high-end-visual-design
-description: "Use when designing expensive agency-grade interfaces with premium fonts, spatial rhythm, soft depth, and fluid microinteractions."
-category: frontend
-risk: safe
-source: community
-source_repo: Leonxlnx/taste-skill
-source_type: community
-date_added: "2026-04-17"
-author: Leonxlnx
-tags: [frontend, visual-design, motion, ui]
-tools: [claude, cursor, codex, antigravity]
+description: |
+  Teaches the AI to design like a high-end agency. Defines the exact fonts, spacing, shadows, card structures, and animations that make a website feel expensive. Blocks all the common defaults that make AI designs look cheap or generic.
+triggers:
+  - "high end visual design"
+  - "soft premium UI"
+  - "luxury landing page"
+  - "expensive website"
+od:
+  mode: prototype
+  surface: web
+  platform: desktop
+  scenario: marketing
+  category: creative-direction
+  upstream: "https://github.com/Leonxlnx/taste-skill"
+  preview:
+    type: html
+  design_system:
+    requires: true
+  craft:
+    requires:
+      - typography
+      - color
+      - anti-ai-slop
+  example_prompt: |
+    Create a calm high-end landing page with refined typography, soft contrast, premium spacing, subtle depth, and restrained motion.
 ---
+
+
 # Agent Skill: Principal UI/UX Architect & Motion Choreographer (Awwwards-Tier)
-
-## When to Use
-
-- Use when the user wants a high-end agency, Awwwards-tier, Apple-like, Linear-like, luxury, or polished visual design.
-- Use when building a landing page, portfolio, SaaS UI, consumer product page, or app surface that needs premium depth and motion.
-- Use when the design must avoid generic fonts, harsh shadows, static layouts, default navbars, and ordinary Bootstrap-style grids.
-
-## Limitations
-
-- This skill is visual-design focused; it does not replace brand strategy, conversion research, accessibility validation, or production QA.
-- Premium fonts, icon sets, images, and motion libraries must exist in the target project or be added intentionally before generated code is used.
-- Avoid applying luxury motion and heavy visual treatments to constrained dashboards, regulated products, or low-performance environments.
-
 
 ## 1. Meta Information & Core Directive
 - **Persona:** `Vanguard_UI_Architect`

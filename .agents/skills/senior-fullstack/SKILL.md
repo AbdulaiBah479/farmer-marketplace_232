@@ -1,8 +1,19 @@
 ---
-name: "senior-fullstack"
-description: Fullstack development toolkit with project scaffolding for Next.js, FastAPI, MERN, and Django stacks, code quality analysis with security and complexity scoring, and stack selection guidance. Use when the user asks to "scaffold a new project", "create a Next.js app", "set up FastAPI with React", "analyze code quality", "audit my codebase", "what stack should I use", "generate project boilerplate", or mentions fullstack development, project setup, or tech stack comparison.
+name: senior-fullstack
+description: >
+  Fullstack development toolkit with project scaffolding for
+  Next.js/FastAPI/MERN/Django stacks and code quality analysis. Use when
+  scaffolding new projects, analyzing codebase quality, or implementing
+  fullstack architecture patterns.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: engineering
+  domain: fullstack
+  updated: 2026-03-31
+  tags: [react, nodejs, databases, api-design, system-architecture]
 ---
-
 # Senior Fullstack
 
 Fullstack development skill with project scaffolding and code quality analysis tools.
@@ -33,34 +44,6 @@ Use this skill when you hear:
 ---
 
 ## Tools
-
-### Decision Engine
-
-Deterministic profile picker. Given four assumptions (team-size, cadence, user-facing, budget) plus optional traffic/sensitivity inputs, ranks the four built-in profiles and returns the matched profile with SLO floor and named approver chain. Refuses to recommend a profile without the four required inputs.
-
-**Usage:**
-
-```bash
-# See all options
-python scripts/fullstack_decision_engine.py --help
-
-# Run against a sample input
-python scripts/fullstack_decision_engine.py --sample
-
-# Pick a profile from real inputs
-python scripts/fullstack_decision_engine.py \
-    --team-size-12mo 8 --cadence daily --user-facing true --budget 5000 \
-    --traffic-p99-rps 50 --data-sensitivity pii-only
-
-# JSON output for downstream tools
-python scripts/fullstack_decision_engine.py --sample --output json
-```
-
-Returns: matched profile name, score, matched/violated constraints, stack recommendation, anti-recommendations, SLO floor, named-approver chain, and canon references.
-
-The engine encodes the same matrix the conversational grill walks through — use it directly when inputs are already known, or via the `cs-fullstack-engineer` agent for the question-by-question grill.
-
----
 
 ### Project Scaffolder
 
@@ -197,39 +180,35 @@ Total Lines: 12,500
 
 ### Workflow 1: Start New Project
 
-1. Choose appropriate stack based on requirements (see Stack Decision Matrix)
+1. Choose appropriate stack based on requirements
 2. Scaffold project structure
-3. Verify scaffold: confirm `package.json` (or `requirements.txt`) exists
-4. Run initial quality check — address any P0 issues before proceeding
-5. Set up development environment
+3. Run initial quality check
+4. Set up development environment
 
 ```bash
 # 1. Scaffold project
 python scripts/project_scaffolder.py nextjs my-saas-app
 
-# 2. Verify scaffold succeeded
-ls my-saas-app/package.json
-
-# 3. Navigate and install
+# 2. Navigate and install
 cd my-saas-app
 npm install
 
-# 4. Configure environment
+# 3. Configure environment
 cp .env.example .env.local
 
-# 5. Run quality check
+# 4. Run quality check
 python ../scripts/code_quality_analyzer.py .
 
-# 6. Start development
+# 5. Start development
 npm run dev
 ```
 
 ### Workflow 2: Audit Existing Codebase
 
 1. Run code quality analysis
-2. Review security findings — fix all P0 (critical) issues immediately
-3. Re-run analyzer to confirm P0 issues are resolved
-4. Create tickets for P1/P2 issues
+2. Review security findings
+3. Address critical issues first
+4. Plan improvements
 
 ```bash
 # 1. Full analysis
@@ -238,8 +217,8 @@ python scripts/code_quality_analyzer.py /path/to/project --verbose
 # 2. Generate detailed report
 python scripts/code_quality_analyzer.py /path/to/project --json --output audit.json
 
-# 3. After fixing P0 issues, re-run to verify
-python scripts/code_quality_analyzer.py /path/to/project --verbose
+# 3. Address P0 issues immediately
+# 4. Create tickets for P1/P2 issues
 ```
 
 ### Workflow 3: Stack Selection
@@ -314,99 +293,125 @@ See `references/tech_stack_guide.md` for detailed comparison.
 
 ---
 
-## Assumptions and Verifiable Success Criteria (Karpathy discipline)
+## Troubleshooting
 
-Before this skill scaffolds, recommends, or modifies any code, the following four assumptions MUST be surfaced. If any are unknown, the skill stops and walks the [Forcing-question library](#forcing-question-library-matt-pocock-grill) instead.
-
-1. **Team size today + 12-month headcount** — drives architecture (monolith / modular / services). Sam Newman: "MonolithFirst."
-2. **Deployment cadence target** — drives CI/CD spend and feature-flag investment. *Accelerate* (Forsgren et al. 2018).
-3. **User-facing vs. internal vs. marketing-site** — drives stack pick and a11y/perf budget.
-4. **Monthly cloud + SaaS budget ceiling** — drives the build-vs-managed-service split.
-
-**Verifiable success criteria** (Karpathy #4) — every recommendation this skill emits must include three machine-checkable numbers:
-
-- An API latency target (p50, p95, p99 in ms)
-- A frontend perf target (LCP, INP, CLS on mobile-4G)
-- An uptime / SLO target
-
-If any of those three is not stated, the recommendation is incomplete — go back to Q7 of the forcing-question library.
-
-The `scripts/fullstack_decision_engine.py` tool encodes these checks: it refuses to recommend a profile without all four assumption inputs and prints the verifiable thresholds for the matched profile.
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Scaffolder creates empty files | Template name misspelled or unsupported | Run `python project_scaffolder.py --list-templates` to verify available templates |
+| Quality analyzer reports 0 files analyzed | Project path points to wrong directory or contains only non-code files | Confirm the path contains `.ts`, `.tsx`, `.js`, `.jsx`, `.py`, `.go`, `.java`, `.rb`, `.php`, or `.cs` files outside `node_modules/`, `.git/`, `dist/`, and other skip directories |
+| False-positive hardcoded secret warnings | Regex matches long strings assigned to variables named `password`, `secret`, `token`, etc. | Review flagged lines manually; suppress by renaming variables or extracting values to `.env` files |
+| Cyclomatic complexity score seems inflated | Analyzer counts all decision points (`if`, `else`, `for`, `while`, `&&`, `\|\|`) across the entire file, not per function | Use the score as a relative indicator; pair with `--verbose` to identify specific high-complexity files for refactoring |
+| Dependency vulnerability check misses packages | Only a built-in subset of known CVEs is checked (lodash, axios, minimist, jsonwebtoken) | Supplement with `npm audit` or `pip-audit` for comprehensive CVE coverage |
+| Docker Compose fails after scaffolding | Port 5432 already in use by a local PostgreSQL instance | Stop the local instance or remap the port in `docker-compose.yml` |
+| Scaffolded Next.js project fails `npm install` | Node.js version below 18 or conflicting global packages | Use Node.js 18+ and run `npm install` in a clean shell without global `next` conflicts |
 
 ---
 
-## Customization profiles
+## Success Criteria
 
-Four built-in profiles in `profiles/` calibrate every recommendation:
+- **Quality score >= 80/100 (Grade B or higher)** on the code quality analyzer for all production codebases
+- **Zero P0 (critical) security findings** before merging to main branch
+- **Test file ratio >= 70%** of source files (estimated coverage target reported by the analyzer)
+- **Average cyclomatic complexity < 15** across all analyzed files
+- **No high-complexity files with nesting depth > 4** without documented justification
+- **Scaffolded projects build and start successfully** on first run after `npm install` / `pip install`
+- **Documentation score >= 75/100** (README, LICENSE, and either CONTRIBUTING or API docs present)
 
-| Profile | When to pick | Cloud ceiling | Pattern |
-|---|---|---|---|
-| `saas-startup` | < 10 eng, customer-facing, daily+ cadence | $8K/mo | Modular monolith on Next.js + Postgres |
-| `enterprise-scale` | 50+ eng, regulated, per-PR with gates | $250K/mo | Domain-bounded services + platform team |
-| `internal-tool` | ≤ 5 eng, auth-walled, < 100 DAU | $500/mo | Retool-first; thin custom stack if forced |
-| `marketing-site` | SEO-dependent, near-zero write | $200/mo | Static-first (Astro / 11ty / Next-static) |
+---
 
-Pick a profile via:
+## Scope & Limitations
+
+**What this skill covers:**
+- Project scaffolding for Next.js, FastAPI+React, MERN, and Django+React stacks with Docker, TypeScript, and environment configuration
+- Static code quality analysis including complexity metrics, security pattern detection, dependency vulnerability checks, test coverage estimation, and documentation scoring
+- Stack selection guidance via the tech stack decision matrix and reference guides
+- Fullstack architecture patterns (frontend component design, backend clean architecture, API design, caching, auth)
+
+**What this skill does NOT cover:**
+- Runtime performance profiling, load testing, or APM instrumentation -- see `senior-devops` for observability tooling
+- Infrastructure provisioning, Terraform/Pulumi, or cloud deployment automation -- see `aws-solution-architect` and `senior-devops`
+- Comprehensive CVE scanning against live vulnerability databases -- use `npm audit`, `pip-audit`, or `senior-secops` for deep security analysis
+- Mobile or native desktop application scaffolding -- this skill targets web-based fullstack architectures only
+
+---
+
+## Integration Points
+
+| Skill | Integration | Data Flow |
+|-------|-------------|-----------|
+| `senior-devops` | CI/CD pipeline setup for scaffolded projects | Scaffolder output directory feeds into DevOps pipeline configuration and Docker deployment workflows |
+| `senior-secops` | Deep security audit after initial quality scan | Code quality analyzer P0/P1 security findings hand off to SecOps for remediation tracking and penetration testing |
+| `senior-qa` | Test strategy for scaffolded projects | Test coverage estimation from the analyzer informs QA test plan gaps; scaffolded test infrastructure provides the harness |
+| `code-reviewer` | Automated review of generated and existing code | Quality analyzer JSON report provides structured input for code review checklists and PR approval criteria |
+| `senior-architect` | Architecture validation of stack choices | Tech stack guide recommendations feed into architecture decision records; complexity metrics validate design compliance |
+| `aws-solution-architect` | Cloud deployment of scaffolded applications | Docker Compose configurations from the scaffolder translate into ECS/EKS task definitions and infrastructure blueprints |
+
+---
+
+## Tool Reference
+
+### project_scaffolder.py
+
+**Purpose:** Generates complete fullstack project structures with boilerplate code, configuration files, Docker setup, and environment templates for four supported stack templates.
+
+**Usage:**
 
 ```bash
-python scripts/fullstack_decision_engine.py \
-  --team-size 6 --team-size-12mo 12 \
-  --cadence daily --user-facing true --budget 5000 \
-  --traffic-p99-rps 45 --data-sensitivity pii-only
+python scripts/project_scaffolder.py <template> <project_name> [options]
+python scripts/project_scaffolder.py --list-templates
 ```
 
-The tool returns the best-fit profile, the tradeoff against the runner-up (if within 15%), the stack recommendation, the anti-patterns to avoid on that profile, and the named-approver chain. **This tool never auto-approves.**
+**Flags:**
 
-To add a custom profile: copy `profiles/saas-startup.json` to `profiles/<your-org>.json`, adjust the `constraints` and `stack_recommendations` blocks, and rerun. The JSON is the customization surface — no code changes needed.
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `template` | -- | positional | (required) | Template name: `nextjs`, `fastapi-react`, `mern`, or `django-react` |
+| `project_name` | -- | positional | (required) | Name for the new project directory |
+| `--output` | `-o` | string | `.` (current directory) | Output directory where the project folder is created |
+| `--list-templates` | `-l` | flag | false | List all available templates and exit |
+| `--json` | -- | flag | false | Output result in JSON format |
 
----
+**Example:**
 
-## Composition map
+```bash
+# Scaffold a FastAPI + React project in a custom directory
+python scripts/project_scaffolder.py fastapi-react my-api --output ./projects --json
+```
 
-This skill does NOT reimplement scope owned by the POWERFUL-tier specialists. It forks into them. See `references/composition_map.md` for the full routing table. Key forks:
+**Output Formats:**
 
-| Concern | Fork into |
-|---|---|
-| API contract review | `engineering/skills/api-design-reviewer/` |
-| Database schema design | `engineering/skills/database-designer/` |
-| Reliability / SLO design | `engineering/slo-architect/` |
-| CI/CD pipeline | `engineering/skills/ci-cd-pipeline-builder/` |
-| Performance profiling | `engineering/skills/performance-profiler/` |
-| Pre-commit Karpathy review | `engineering/karpathy-coder/` |
-| Pre-flight architecture grill | `engineering/grill-me/` |
-
-The `cs-fullstack-engineer` agent (in `agents/engineering/cs-fullstack-engineer.md`) orchestrates these forks via `context: fork`. Invoke it from another agent with `Agent({subagent_type: "cs-fullstack-engineer", prompt: "..."})` or via the slash command `/cs:fullstack-review <your problem>`.
-
----
-
-## Forcing-question library (Matt Pocock grill)
-
-Before locking any architecture or stack decision, walk the seven forcing questions in `references/forcing_questions.md`. Each has a recommended answer, canon citation, and kill criterion. The discipline:
-
-1. One question per turn. No bundling.
-2. Always recommend the answer with cited canon.
-3. Track answers in a working file (e.g., `/tmp/fullstack-grill-<date>.md`).
-4. If a kill criterion trips, stop. Do not scaffold around an unresolved gap.
-5. After Q7, run `fullstack_decision_engine.py` with the seven answers as inputs.
-
-Summary of the seven questions (full content in the reference):
-
-1. Team size today + 12-month headcount?
-2. Deployment cadence — per-PR, daily, weekly, quarterly?
-3. Customer-facing, internal tool, or marketing site?
-4. One-year p50 / p99 traffic forecast?
-5. Hiring against the stack or training the team?
-6. Year-one monthly cloud + SaaS ceiling?
-7. Three verifiable success criteria with numeric targets?
+- **Human-readable (default):** Prints project name, template used, location on disk, file count, and numbered next steps for getting started.
+- **JSON (`--json`):** Returns a structured object with keys: `success`, `project_name`, `template`, `description`, `location`, `files_created`, `directories_created`, `next_steps`. On failure, returns `success: false` with an `error` message and `available` templates list.
 
 ---
 
-## Invocation from other agents and skills
+### code_quality_analyzer.py
 
-This skill is invokable by any other agent or skill via three surfaces:
+**Purpose:** Performs comprehensive static analysis of fullstack codebases, reporting on security vulnerabilities, cyclomatic complexity, dependency health, test coverage estimation, documentation quality, and an overall quality score with prioritized recommendations.
 
-1. **Slash command:** `/cs:fullstack-review <prompt>` — runs the full grill + decision engine + composition routing.
-2. **Agent subagent:** `Agent({subagent_type: "cs-fullstack-engineer", prompt: "..."})` — forks context, returns ≤ 200-word digest.
-3. **Direct tool call:** `python scripts/fullstack_decision_engine.py ...` — deterministic profile match without the conversational grill (use when inputs are already known).
+**Usage:**
 
-See `agents/engineering/cs-fullstack-engineer.md` for the full invocation contract.
+```bash
+python scripts/code_quality_analyzer.py [project_path] [options]
+```
+
+**Flags:**
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `project_path` | -- | positional | `.` (current directory) | Path to the project directory to analyze |
+| `--verbose` | `-v` | flag | false | Show detailed findings including individual security issue locations |
+| `--json` | -- | flag | false | Output full analysis in JSON format |
+| `--output` | `-o` | string | (none) | Write the report to a file (writes JSON regardless of `--json` flag when used with human-readable mode) |
+
+**Example:**
+
+```bash
+# Full verbose analysis with JSON report saved to disk
+python scripts/code_quality_analyzer.py /path/to/project --verbose --json --output audit.json
+```
+
+**Output Formats:**
+
+- **Human-readable (default):** Prints a formatted report with sections for overall score/grade, language breakdown, security issue counts by severity, complexity metrics, dependency status, test coverage estimate, documentation checklist, and up to 10 prioritized recommendations. Use `--verbose` to expand individual security findings with file paths and line numbers.
+- **JSON (`--json`):** Returns a structured object with keys: `summary`, `languages`, `security` (categorized by severity), `complexity`, `code_smells`, `dependencies`, `tests`, `documentation`, `overall_score`, `grade`, `recommendations`. Each recommendation includes `priority` (P0/P1/P2), `category`, `issue`, and `action`.

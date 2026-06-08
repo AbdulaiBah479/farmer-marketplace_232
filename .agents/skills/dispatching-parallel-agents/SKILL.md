@@ -1,21 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 3+ independent failures that can be investigated without shared state or dependencies - dispatches multiple Claude agents to investigate and fix independent problems concurrently
-keywords:
-  - concurrent tasks
-  - dispatch
-  - multi-agent
-  - orchestration
-  - parallel agents
-file_patterns:
-  - '**/agents/**'
-  - '**/bugs/**'
-  - '**/debug/**'
-  - '**/issues/**'
-  - '**/modes/**'
-  - '**/rules/**'
-  - '**/workflows/**'
-confidence: 0.8
+description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
 ---
 
 # Dispatching Parallel Agents

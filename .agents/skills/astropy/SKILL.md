@@ -1,11 +1,10 @@
 ---
 name: astropy
-description: "Astropy is the core Python package for astronomy, providing essential functionality for astronomical research and data analysis."
+description: Core Python library for astronomy and astrophysics workflows that need Astropy APIs, including units/quantities, coordinates, FITS I/O, tables, time systems, WCS, and cosmology. Use when implementing or debugging astronomical data analysis code with Astropy.
 license: BSD-3-Clause license
 metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: "https://github.com/astropy/astropy"
+  version: "1.1"
+  skill-author: K-Dense Inc.
 ---
 
 # Astropy
@@ -189,12 +188,17 @@ Robust statistical functions including sigma clipping and outlier rejection.
 ## Installation
 
 ```bash
-# Install astropy
-uv pip install astropy
+# Reproducible install against the current stable release
+uv pip install "astropy==7.2.0"
 
-# With optional dependencies for full functionality
-uv pip install astropy[all]
+# Recommended optional dependencies for plotting and common workflows
+uv pip install "astropy[recommended]==7.2.0"
+
+# Full optional dependency set for broad astronomy workflows
+uv pip install "astropy[all]==7.2.0"
 ```
+
+Astropy 7.2.0 requires Python 3.11+ and depends on NumPy, PyERFA, PyYAML, and packaging. Use an isolated virtual environment; do not install Astropy with elevated privileges.
 
 ## Common Workflows
 
@@ -311,6 +315,15 @@ print(f"Found {len(cat1_matched)} matches")
 8. **Use QTable for unit-aware tables**: When table columns have units
 9. **Check WCS validity**: Verify WCS before using transformations
 10. **Cache frequently used values**: Expensive calculations (e.g., cosmological distances) can be cached
+11. **Be explicit about network access**: `SkyCoord.from_name()`, `EarthLocation.of_site(refresh_cache=True)`, `EarthLocation.of_address()`, `download_file()`, remote FITS reads, and some IERS time/coordinate transforms can contact external services or update local caches. Avoid sending sensitive target names, addresses, URLs, or proprietary file locations to third-party services.
+12. **Pin for reproducibility**: Use pinned versions such as `astropy==7.2.0` for shared environments; update pins intentionally after reviewing release notes.
+
+## Current-Version Notes
+
+- Current stable release researched: Astropy 7.2.0 (released 2025-11-25)
+- Python requirement: 3.11+
+- Recent 7.x changes to watch for: Astropy 7.0 removed older deprecated FITS APIs such as `(Bin)Table.update`, `_ExtensionHDU`, `_NonstandardExtHDU`, and the `tile_size` argument for `CompImageHDU`; `CompImageHeader` is deprecated. Avoid those legacy patterns in new examples.
+- The recommended optional extras are `recommended` for common plotting/scientific dependencies and `all` only when a broad optional feature set is needed.
 
 ## Documentation and Resources
 
@@ -329,7 +342,3 @@ For detailed information on specific modules:
 - `references/time.md` - Time formats, scales, and calculations
 - `references/wcs_and_other_modules.md` - WCS, NDData, modeling, visualization, constants, and utilities
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

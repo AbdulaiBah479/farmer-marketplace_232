@@ -1,11 +1,6 @@
 ---
 name: biopython
-description: "Biopython is a comprehensive set of freely available Python tools for biological computation. It provides functionality for sequence manipulation, file I/O, database access, structural bioinformatics, phylogenetics, and many other bioinformatics tasks."
-license: Unknown
-metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: "https://github.com/biopython/biopython"
+description: "Primary Python toolkit for molecular biology. Preferred for Python-based PubMed/NCBI queries (Bio.Entrez), sequence manipulation, file parsing (FASTA, GenBank, FASTQ, PDB), advanced BLAST workflows, structures, phylogenetics. For quick BLAST, use gget. For direct REST API, use pubmed-database."
 ---
 
 # Biopython: Computational Molecular Biology in Python
@@ -440,8 +435,3 @@ Biopython provides comprehensive tools for computational molecular biology. When
 5. **Follow best practices** for file handling, error checking, and data management
 
 The modular reference documentation ensures detailed, searchable information for every major Biopython capability.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

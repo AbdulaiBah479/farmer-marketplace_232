@@ -1,181 +1,202 @@
 ---
-name: "pricing-strategy"
-description: "Design, optimize, and communicate SaaS pricing — tier structure, value metrics, pricing pages, and price increase strategy. Use when building a pricing model from scratch, redesigning existing pricing, planning a price increase, or improving a pricing page. Trigger keywords: pricing tiers, pricing page, price increase, packaging, value metric, per seat pricing, usage-based pricing, freemium, good-better-best, pricing strategy, monetization, pricing page conversion, Van Westendorp. NOT for broader product strategy — use product-strategist for that. NOT for customer success or renewals — use customer-success-manager for expansion revenue."
-license: MIT
+name: pricing-strategy
+description: >
+  SaaS pricing design and optimization covering value metric selection, tier
+  architecture, price point research, pricing page design, price increase
+  execution, and competitive pricing analysis.
+license: MIT + Commons Clause
 metadata:
   version: 1.0.0
-  author: Alireza Rezvani
-  category: marketing
-  updated: 2026-03-06
+  author: borghei
+  category: business-growth
+  updated: 2026-03-31
+  tags: [pricing, monetization, packaging, saas, value-based-pricing, revenue]
 ---
-
 # Pricing Strategy
 
-You are an expert in SaaS pricing and monetization. Your goal is to design pricing that captures the value you deliver, converts at a healthy rate, and scales with your customers.
+Production-grade SaaS pricing framework covering the three pricing axes (value metric, packaging, price point), value-based pricing methodology, tier architecture, pricing research methods, pricing page design, price increase execution, and competitive pricing positioning. Pricing is positioning -- the right price communicates as much about your product as your marketing does.
 
-Pricing is not math — it's positioning. The right price isn't the one that covers costs + margin. It's the one that sits between what your next-best alternative costs and what your customers believe they get in return. Most SaaS products are underpriced. This skill is about fixing that, clearly and defensibly.
+## Use when
 
-## Before Starting
+- The user asks to "design pricing", "set prices", or "choose a value metric"
+- Pricing tiers need to be restructured (Good-Better-Best, add/remove tiers, repackage features)
+- A price increase is planned and needs execution design (strategy, timing, communication, grandfathering)
+- Conversion on the pricing page is flat or declining
+- Freemium vs free trial decision needs to be made, or the freemium tier is cannibalizing paid
+- Competitor pricing shifts require a positioning response
+- The user says "our pricing feels off" or asks for a pricing audit
 
-**Check for context first:**
-If `marketing-context.md` exists, read it before asking questions. Use that context and only ask for what's missing.
+---
 
-Gather this context:
+## Table of Contents
 
-### 1. Current State
-- Do you have pricing today? If so: what plans, what price points, what's the billing model?
-- What's your conversion rate from trial/free to paid? (If known)
-- What's your average revenue per customer?
-- What's your monthly churn rate?
+- [Operating Modes](#operating-modes)
+- [The Three Pricing Axes](#the-three-pricing-axes)
+- [Value Metric Selection](#value-metric-selection)
+- [Tier Architecture](#tier-architecture)
+- [Value-Based Pricing](#value-based-pricing)
+- [Pricing Research Methods](#pricing-research-methods)
+- [Pricing Page Design](#pricing-page-design)
+- [Price Increase Playbook](#price-increase-playbook)
+- [Freemium vs Free Trial Decision](#freemium-vs-free-trial-decision)
+- [Competitive Pricing Analysis](#competitive-pricing-analysis)
+- [Pricing Signals and Diagnostics](#pricing-signals-and-diagnostics)
+- [Output Artifacts](#output-artifacts)
+- [Related Skills](#related-skills)
 
-### 2. Business Context
-- Product type: B2B or B2C? Self-serve or sales-assisted?
-- Customer segments: who are your best customers vs. casual users?
-- Competitors: who do customers compare you to, and what do those cost?
-- Cost structure: what does serving one customer cost you per month?
+---
 
-### 3. Goals
-- Are you designing, optimizing, or planning a price increase?
-- Any constraints? (e.g., grandfathered customers, contractual limits, channel partner margins)
+## Operating Modes
 
-## How This Skill Works
-
-### Mode 1: Design Pricing From Scratch
-Starting without a pricing model, or rebuilding entirely. We'll work through value metric selection, tier structure, price point research, and pricing page design.
+### Mode 1: Design From Scratch
+No pricing exists or full rebuild needed. Work through value metric, tier structure, price points, and page design.
+- *Validate:* value metric chosen before tier design; tier design locked before price points; price points tested against the corridor before page design.
 
 ### Mode 2: Optimize Existing Pricing
-Pricing exists but conversion is low, expansion is flat, or customers feel mispriced. We'll audit what's there, benchmark, and identify specific improvements.
+Pricing exists but conversion is low, expansion is flat, or customers feel mispriced. Audit, benchmark, and identify specific improvements.
+- *Validate:* the diagnosis names a specific failure mode (e.g., "middle tier too narrow", "value metric doesn't scale") before any change is proposed.
 
-### Mode 3: Plan a Price Increase
-Prices need to go up — because of inflation, value improvements, or market repositioning. We'll design a strategy that increases revenue without burning customers.
+### Mode 3: Price Increase
+Prices need to go up. Design a strategy that increases revenue without burning customer relationships.
+- *Validate:* grandfather policy defined, communication window set (90+ days for annual customers), and expected churn modeled before sending the first notice.
 
 ---
 
 ## The Three Pricing Axes
 
-Every pricing decision lives across three axes. Get all three right.
+Every pricing decision lives across three axes. Most teams skip to price point. That is backwards.
 
 ```
-         ┌─────────────────┐
-         │   PACKAGING     │  What's in each tier?
-         │  (what you get) │
-         └────────┬────────┘
-                  │
-         ┌────────┴────────┐
-         │  VALUE METRIC   │  What do you charge for?
-         │ (how it scales) │
-         └────────┬────────┘
-                  │
-         ┌────────┴────────┐
-         │  PRICE POINT    │  How much?
-         │    (the number) │
-         └─────────────────┘
+     ┌──────────────────┐
+     │   VALUE METRIC    │  What do you charge for?
+     │  (how it scales)  │  (per seat, per usage, per feature)
+     └────────┬─────────┘
+              │
+     ┌────────┴─────────┐
+     │   PACKAGING       │  What is in each tier?
+     │  (what you get)   │  (feature bundles, limits, support levels)
+     └────────┬─────────┘
+              │
+     ┌────────┴─────────┐
+     │   PRICE POINT     │  How much?
+     │  (the number)     │  (actual dollar amount)
+     └──────────────────┘
 ```
 
-Most teams skip straight to price point. That's backwards. Lock in the metric first, then packaging, then test the number.
+Lock in the value metric first, then packaging, then test the price point.
 
 ---
 
 ## Value Metric Selection
 
-Your value metric determines how pricing scales with customer value. Choose wrong and you either leave money on the table or create friction that kills growth.
+### Common Value Metrics
 
-### Common Value Metrics for SaaS
+| Metric | Best For | Examples | Scales With Value? |
+|--------|---------|---------|-------------------|
+| Per seat / user | Collaboration tools, CRMs | Salesforce, Notion, Linear | Yes if all users are active |
+| Per usage | APIs, infrastructure, AI | Stripe, Twilio, OpenAI | Yes |
+| Per feature | Platform plays, modular products | HubSpot, Intercom | Somewhat |
+| Flat fee | Simple products, SMB market | Basecamp, Calendly | No (subsidizes heavy users) |
+| Per outcome | Measurable ROI products | Commission-based tools | Perfectly |
+| Hybrid | Most mature SaaS | Base fee + usage, seat + features | Yes |
 
-| Metric | Best For | Example |
-|--------|---------|---------|
-| **Per seat / user** | Collaboration tools, CRMs | Salesforce, Notion, Linear |
-| **Per usage** | API tools, infrastructure, AI | Stripe, Twilio, OpenAI |
-| **Per feature** | Platform plays, add-ons | Intercom, HubSpot |
-| **Flat fee** | Unlimited-feel, SMB tools | Basecamp, Calendly Basic |
-| **Per outcome** | High-value, measurable ROI | Commission-based tools |
-| **Hybrid** | Mix of above | Most mature SaaS |
+### Selection Criteria
 
-### How to Choose
+Answer these 4 questions:
 
-Answer these questions:
+| Question | Answer Points To |
+|----------|-----------------|
+| What makes a customer willing to pay MORE? | That is your value metric |
+| Does the metric scale with their success? | If they grow, you should grow |
+| Is it easy to understand? | Complexity kills conversion |
+| Is it hard to game? | Customers should not be able to work around it |
 
-1. **What makes a customer willing to pay more?** → That's your value metric
-2. **Does the metric scale with their success?** → If they grow, you grow
-3. **Is it easy to understand?** → Complexity kills conversion
-4. **Is it hard to game?** → Customers shouldn't be able to work around it
+### Value Metric Red Flags
 
-**Red flags:**
-- "Per seat" in a tool where one power user does all the work → seats don't scale with value
-- "Flat fee" when some customers derive 10x the value of others → you're subsidizing heavy users
-- "Per API call" when call count varies wildly week to week → unpredictable bills = churn
+| Red Flag | Problem | Fix |
+|---------|---------|-----|
+| Per-seat in a tool where 1 power user does all the work | Seats do not scale with value | Switch to usage or feature-based |
+| Flat fee when some customers get 10x the value of others | Subsidizing heavy users | Add usage tiers or hybrid model |
+| Per-API-call when volume varies wildly week to week | Unpredictable bills cause churn | Add usage bands or committed minimums |
+| Per-feature when core value requires multiple features | Nickel-and-diming perception | Bundle core features, gate advanced only |
 
 ---
 
-## Good-Better-Best Tier Structure
+## Tier Architecture
 
-Three tiers is the standard. Not because of tradition — because it anchors perception.
+### Good-Better-Best (3 Tiers)
 
-### Tier Design Principles
+Three tiers is the standard because it anchors perception.
 
-**Entry tier (Good):**
-- Captures the segment that will churn if priced higher
-- Limited — either by features, usage, or support
-- NOT free. Free is a separate strategy (freemium), not a tier.
-- Should cover your costs at minimum
+| Tier | Role | Pricing Rule | Feature Rule |
+|------|------|-------------|-------------|
+| Entry (Good) | Captures price-sensitive segment | Covers your costs minimum | Core product, limited usage |
+| Middle (Better) | Where you push most customers | 2-3x entry tier | Everything a growing company needs |
+| Top (Best) | High-value enterprise customers | 3-5x entry or custom | SSO, audit logs, SLA, dedicated support |
 
-**Middle tier (Better) — your default:**
-- This is where you push most customers
-- Price: 2-3x the entry tier
-- Features: everything a growing company needs
-- Call it out visually as recommended
+### Feature Allocation Framework
 
-**Top tier (Best):**
-- For high-value customers with enterprise needs
-- May be "Contact us" or custom pricing
-- Unlocks: SSO, audit logs, SLA, dedicated support, custom contracts
-- If you have enterprise deals >$1k MRR, this tier exists to capture them
-
-### What Goes in Each Tier
-
-| Feature Category | Entry | Better | Best |
-|----------------|-------|--------|------|
-| Core product | ✅ (limited) | ✅ (full) | ✅ (full) |
-| Usage limits | Low | Medium | High / unlimited |
-| Users/seats | 1-3 | 5-unlimited | Unlimited |
-| Integrations | Basic | Full | Full + custom |
+| Feature Category | Entry Tier | Middle Tier | Top Tier |
+|-----------------|-----------|------------|---------|
+| Core product | Limited | Full | Full |
+| Usage limits | Low | Medium | High/Unlimited |
+| Users/seats | 1-3 | 5-25 or unlimited | Unlimited |
+| Integrations | Basic (3-5) | Full | Full + custom |
 | Reporting | Basic | Advanced | Custom |
-| Support | Email | Priority | Dedicated CSM |
-| Admin features | — | — | SSO, audit log, SCIM |
-| SLA | — | — | ✅ |
+| Support | Email (48h) | Priority (24h) | Dedicated CSM |
+| Admin features | -- | -- | SSO, SCIM, audit logs |
+| SLA | -- | -- | 99.9% uptime |
+| Data retention | 90 days | 1 year | Unlimited |
+| API access | -- | Rate-limited | Full |
 
-See [references/pricing-models.md](references/pricing-models.md) for model deep dives and SaaS examples.
+### Tier Naming
+
+| Approach | Examples | Best For |
+|----------|---------|---------|
+| Size-based | Starter, Growth, Enterprise | Universal SaaS |
+| Capability-based | Basic, Pro, Enterprise | Feature-differentiated products |
+| Audience-based | Individual, Team, Organization | Collaboration tools |
+| Persona-based | Freelancer, Agency, Enterprise | Audience-segmented products |
+
+**Naming rules:**
+- Names should be instantly understandable
+- Avoid jargon or made-up words
+- The default/recommended plan should be visually highlighted
 
 ---
 
 ## Value-Based Pricing
 
-Price between the next-best alternative and your perceived value.
+### The Pricing Corridor
 
 ```
-[Cost of doing nothing] ... [Next-best alternative] ... [YOUR PRICE] ... [Perceived value delivered]
+[Cost floor] ... [Next-best alternative] ... [YOUR PRICE] ... [Perceived value]
 ```
+
+### Step-by-Step
 
 **Step 1: Define the next-best alternative**
-- What would the customer do if your product didn't exist?
-- A competitor? A spreadsheet? Manual process? Hiring someone?
-- What does that cost them?
+- What would the customer do without your product?
+- What does that cost them? (competitor, manual process, hiring)
 
 **Step 2: Estimate value delivered**
-- Time saved × hourly rate of the person using it
+- Time saved x hourly rate of the person using it
 - Revenue generated or protected
-- Cost of error/risk avoided
-- Ask your best customers: "What would you lose if you stopped using us tomorrow?"
+- Cost of errors/risk avoided
+- Ask customers: "What would you lose if you stopped using us?"
 
-**Step 3: Price in the middle**
-- A rough heuristic: price at 10-20% of documented value delivered
-- Don't price at 50% of value — customers feel they're overpaying
-- Don't price below the next-best alternative — signals you don't believe in your own product
+**Step 3: Price in the corridor**
+- Price at 10-20% of documented value delivered
+- Above the next-best alternative (signals confidence)
+- Below the perceived value ceiling (customer feels good ROI)
 
-**Conversion rate as a signal:**
-- >40% trial-to-paid: likely underpriced — test a price increase
-- 15-30%: healthy for most SaaS
-- <10%: pricing may be high, or trial-to-paid funnel has friction
+### Conversion Rate as a Pricing Signal
+
+| Trial-to-Paid Rate | Signal | Action |
+|-------------------|--------|--------|
+| > 40% | Likely underpriced | Test a 20-30% price increase |
+| 15-30% | Healthy for most SaaS | Optimize packaging, not price |
+| < 10% | Possibly overpriced OR trial experience is broken | Investigate whether the issue is price or activation |
 
 ---
 
@@ -183,141 +204,320 @@ Price between the next-best alternative and your perceived value.
 
 ### Van Westendorp Price Sensitivity Meter
 
-Four questions, asked to current customers or target segment:
+Four questions asked to 30+ current customers or qualified prospects:
 
-1. At what price would this product be so cheap you'd question its quality?
-2. At what price would this product be a bargain — great deal?
-3. At what price would this product start to feel expensive — still acceptable?
-4. At what price would this product be too expensive to consider?
+1. At what price would this be so cheap you would question its quality?
+2. At what price would this be a great deal?
+3. At what price would this start to feel expensive but still acceptable?
+4. At what price would this be too expensive to consider?
 
-**Interpret the results:** Plot the four curves. The intersection of "too cheap" and "too expensive" gives your acceptable price range. The intersection of "bargain" and "expensive" gives the optimal price point.
-
-**When to use:** B2B SaaS, n≥30 respondents, existing customers or qualified prospects.
+**Interpretation:** Plot four curves. The intersection of "too cheap" and "too expensive" gives the acceptable range. The intersection of "bargain" and "expensive" gives the optimal price point.
 
 ### MaxDiff Analysis
 
-Show respondents sets of features/prices and ask which they value most and least. Statistical analysis reveals relative value of each feature — informs packaging more than price point.
+Show respondents sets of features and ask which they value most and least. Reveals relative value of each feature for tier allocation decisions.
 
-**When to use:** When deciding which features to put in which tier.
+**When to use:** Deciding which features go in which tier.
 
 ### Competitor Benchmarking
 
-| Step | What to Do |
-|------|-----------|
-| 1 | List direct competitors and alternatives customers consider |
-| 2 | Record their published pricing (plan names, prices, value metrics) |
-| 3 | Note what's included at each price point |
-| 4 | Identify where your product over- and under-delivers vs. each |
-| 5 | Price relative to positioning: premium = 20-40% above market, value = at or below |
+| Step | Action |
+|------|--------|
+| 1 | List direct competitors and alternatives customers compare you to |
+| 2 | Record published pricing (plans, prices, value metrics) |
+| 3 | Note what is included at each tier |
+| 4 | Identify where you over-deliver and under-deliver vs each |
+| 5 | Position relative to market: premium (+20-40%), parity, value (-10-20%) |
 
-**Don't just copy competitor prices** — their pricing reflects their cost structure and positioning, not yours.
+**Do not copy competitor prices.** Their pricing reflects their cost structure and positioning, not yours.
 
----
+### Customer Willingness-to-Pay Interview
 
-## Price Increase Strategies
-
-Raising prices is one of the highest-ROI moves available to SaaS companies. Most wait too long.
-
-### Strategy Selection
-
-| Strategy | Use When | Risk |
-|---------|---------|------|
-| **New customers only** | Significant pushback expected | Low — doesn't touch existing base |
-| **Grandfather + delayed** | Loyal customer base, contract risk | Medium — existing customers feel respected |
-| **Tied to value delivery** | Clear new features/improvement | Low — justifiable |
-| **Plan restructure** | Significant packaging change | Medium — complexity for customers |
-| **Uniform increase** | Confident in value, price is clearly below market | Medium-High |
-
-### Execution Checklist
-
-1. **Quantify the move:** Calculate new MRR at 100%, 80%, 70% retention of existing customers
-2. **Segment by risk:** Annual contracts, champions vs. detractors, usage-based at-risk accounts
-3. **Set the date:** 60-90 days notice for existing customers. 30 days minimum.
-4. **Communicate the reason:** New features, rising costs, investment in [X] — be specific
-5. **Offer a path:** Lock in current price for annual commitment, or give a 3-month window
-6. **Arm your CS team:** FAQ, talking points, approved offer authority
-7. **Monitor for 60 days:** Churn rate, downgrade rate, support ticket volume
-
-**Expected churn from a 20-30% price increase:** 5-15%. If your net revenue impact is positive, proceed.
+Ask existing customers (especially champions):
+- "How would you describe the ROI of [product] to your CFO?"
+- "What would you do if the price doubled? Tripled?"
+- "What is the most you would pay before you would switch?"
+- "If you had to cut 50% of your budget, would this survive?"
 
 ---
 
 ## Pricing Page Design
 
-The pricing page converts intent to purchase. Design it with that job in mind.
-
 ### Above the Fold
 
-Must have:
-- Plan names (simple: Starter / Pro / Enterprise, or named after customer segment)
-- Price with billing toggle (monthly/annual — annual should show savings)
+**Required elements:**
+- Plan names with clear positioning
+- Prices with monthly/annual toggle (annual shows savings: "Save 20%" or "2 months free")
 - 3-5 bullet differentiators per plan
 - CTA button per plan
-- "Most popular" badge on recommended tier
+- "Most Popular" or "Recommended" badge on the middle tier
+- "Most Popular" plan should be the default tab/column
 
 ### Below the Fold
 
-- **Full feature comparison table** — comprehensive, scannable, uses ✅ and ❌ not walls of text
-- **FAQ section** — address the 5 objections that stop people from buying:
-  - "Can I cancel anytime?"
-  - "What happens when I hit limits?"
-  - "Do you offer refunds?"
-  - "Is my data secure?"
-  - "What if I need to upgrade/downgrade?"
-- **Social proof** — logos, quotes, or case studies relevant to each tier
-- **Security badges** if B2B enterprise (SOC2, ISO 27001, GDPR)
+- **Full feature comparison table** -- Comprehensive, scannable, uses checkmarks and X marks
+- **FAQ section** -- The 5 objections that stop purchases:
+  1. "Can I cancel anytime?"
+  2. "What happens when I hit limits?"
+  3. "Do you offer refunds?"
+  4. "Is my data secure?"
+  5. "Can I switch plans later?"
+- **Social proof** -- Logos, testimonials, case studies relevant to each tier
+- **Security badges** -- SOC2, ISO 27001, GDPR (if applicable)
 
-### Annual vs. Monthly Toggle
+### Annual vs Monthly Toggle
 
-- Show annual pricing by default (or highlight it) — it improves LTV
-- Show savings explicitly: "Save 20%" or "2 months free"
-- Don't hide the monthly price — hiding it builds distrust
+- Default to showing annual pricing (it improves LTV)
+- Show savings explicitly: "Save 20%" or "$X/year (saves $Y)"
+- Do NOT hide monthly pricing -- hiding it creates distrust
+- Monthly/annual toggle should be above the plan cards
 
-See [references/pricing-page-playbook.md](references/pricing-page-playbook.md) for design specs and copy templates.
+### Enterprise Tier Design
+
+| Approach | When to Use |
+|----------|-------------|
+| Published price | When enterprise pricing is standardized |
+| "Contact Sales" | When pricing requires custom scoping |
+| "Starting at $X" | Balance transparency with flexibility |
 
 ---
 
-## Proactive Triggers
+## Price Increase Playbook
 
-Surface these without being asked:
+### Strategy Selection
 
-- **Conversion rate >40% trial-to-paid** → Strong signal of underpricing. Flag: test 20-30% price increase.
-- **All customers on the middle tier** → No upsell path. Flag: enterprise tier needed or feature lock-in missing.
-- **Customer asked for features that aren't in their tier** → Expansion revenue being left on the table. Flag: feature gatekeeping review.
-- **Churn rate >5% monthly** → Before raising prices, fix churn. Price increases accelerate churners.
-- **Price hasn't changed in 2+ years** → Inflation alone justifies 10-15% increase. Flag for strategic review.
-- **Only one pricing option** → No anchoring, no upsell. Flag: add a third tier even if rarely purchased.
+| Strategy | Risk Level | Use When |
+|---------|-----------|---------|
+| New customers only | Low | Testing market response, significant uncertainty |
+| Grandfather + scheduled increase | Medium | Loyal customer base, want to preserve relationships |
+| Tied to new value | Low | Clear product improvements justify the increase |
+| Plan restructure | Medium | Packaging changes alongside price changes |
+| Uniform increase | Medium-High | Price is clearly below market, confident in value |
+
+### Execution Timeline
+
+| Week | Action |
+|------|--------|
+| Week -12 | Decide strategy, model revenue impact at 80%, 90%, 100% retention |
+| Week -8 | Segment customers by risk (annual contracts, champions vs detractors, usage level) |
+| Week -6 | Prepare communication (email, in-app, FAQ, CS talking points) |
+| Week -4 | Announce to existing customers (60+ day notice for annual contracts) |
+| Week -4 | Offer lock-in: "Keep current price for 12 months with annual commitment" |
+| Week 0 | New pricing goes live for new customers |
+| Week +4 | Existing customer pricing changes (if not grandfathered) |
+| Week +12 | Review: churn rate, downgrade rate, support ticket volume, revenue impact |
+
+### Communication Template
+
+Subject: "Changes to your [Product] plan"
+
+- Paragraph 1: What is changing and when
+- Paragraph 2: Why (new features, investment in X, market alignment)
+- Paragraph 3: What this means for them specifically (old price -> new price)
+- Paragraph 4: Options (lock in current price with annual, downgrade, contact support)
+- CTA: "View your options" or "Talk to your account manager"
+
+### Expected Impact
+
+For a 20-30% price increase:
+- Expected churn: 5-15% of affected customers
+- Revenue impact: Net positive if churn < (increase % / (100% + increase %))
+- Example: 25% increase is net positive if churn < 20%
+
+---
+
+## Freemium vs Free Trial Decision
+
+| Factor | Freemium | Free Trial |
+|--------|---------|------------|
+| Product complexity | Simple, quick time-to-value | Complex, needs exploration |
+| Network effects | Strong (value increases with users) | Weak |
+| Market size | Very large TAM, need top-of-funnel | Focused market |
+| Sales motion | Self-serve, product-led | Sales-assisted |
+| Conversion rate target | 2-5% free-to-paid | 15-30% trial-to-paid |
+| Revenue urgency | Can afford long payback | Need revenue sooner |
+
+### Freemium Tier Design Rules
+
+- Free tier must deliver real, ongoing value (not a crippled experience)
+- The limit that triggers upgrade should be a natural success indicator
+- Free users should be able to see what paid features look like (soft gates, previews)
+- Do not remove value from free tier once established (erodes trust)
+
+---
+
+## Competitive Pricing Analysis
+
+### Pricing Position Map
+
+```
+                    Premium ($$$)
+                         │
+                         │
+     [Competitor B]      │    [Your Product?]
+                         │
+ Narrow ─────────────────┼──────────────────── Broad
+ Feature Set             │                Feature Set
+                         │
+     [Competitor C]      │    [Competitor A]
+                         │
+                         │
+                    Value ($)
+```
+
+### Positioning Strategy
+
+| Your Position | Pricing Approach | Messaging |
+|--------------|-----------------|-----------|
+| Premium | 20-40% above market average | "The [category] built for teams that demand the best" |
+| Value leader | At or slightly below market | "Enterprise features at [segment] prices" |
+| Disruptor | Radically different model | "Why pay per seat? [Product] is [price] for unlimited users" |
+| Challenger | Slightly below the leader | "Everything [Leader] does, at half the price" |
+
+---
+
+## Pricing Signals and Diagnostics
+
+### Pricing Health Check
+
+| Signal | Diagnosis | Action |
+|--------|-----------|--------|
+| Trial-to-paid > 40% | Underpriced | Test 20-30% increase |
+| All customers on middle tier | No upsell path | Add enterprise features or higher tier |
+| Customers never ask about price | Too cheap | Increase price |
+| Churn rate > 5% monthly | Fix churn before pricing changes | Use churn-prevention first |
+| Price unchanged for 2+ years | Inflation alone justifies 10-15% increase | Plan an increase |
+| Only one pricing option | No anchoring, no upsell | Add tiers |
+| Frequent discount requests | Possible overpricing or poor value communication | Audit value proposition |
 
 ---
 
 ## Output Artifacts
 
-| When you ask for... | You get... |
-|--------------------|-----------|
-| "Design pricing" | Three-tier structure with value metric, feature grid, price points, and rationale |
-| "Audit my pricing" | Pricing scorecard (0-100), conversion rate benchmarks, gap analysis, quick wins |
-| "Plan a price increase" | Increase strategy selection, communication templates, risk model, 90-day rollout plan |
-| "Design a pricing page" | Above-fold layout spec, feature comparison table structure, CTA copy, FAQ copy |
-| "Research pricing" | Van Westendorp survey questions + MaxDiff framework for your specific product |
-| "Model pricing scenarios" | Run `scripts/pricing_modeler.py` with your inputs |
+| Artifact | Format | Description |
+|----------|--------|-------------|
+| Pricing Strategy Document | Structured analysis | Value metric, packaging, price points with rationale |
+| Tier Architecture | Feature allocation table | What goes in each tier with justification |
+| Pricing Page Specification | Layout + copy | Above-fold design, feature table, FAQ, toggle behavior |
+| Price Increase Plan | Timeline + communications | Strategy selection, rollout schedule, email templates |
+| Competitive Pricing Analysis | Comparison table + position map | Market pricing landscape with positioning recommendation |
+| Van Westendorp Survey | Question set + interpretation guide | Ready-to-deploy pricing research |
+| Pricing Health Scorecard | Signal + diagnosis table | Current pricing health assessment with action items |
 
 ---
 
-## Communication
+## Tool Reference
 
-All output follows the structured communication standard:
-- **Bottom line first** — recommendation before justification
-- **What + Why + How** — every recommendation has all three
-- **Actions have owners and deadlines** — no vague "consider"
-- **Confidence tagging** — 🟢 verified benchmark / 🟡 estimated / 🔴 assumed
+### 1. pricing_model_analyzer.py
+
+Analyzes a SaaS pricing model against best practices. Evaluates value metric alignment, tier architecture, feature allocation, and identifies pricing anti-patterns. Outputs a health scorecard with prioritized recommendations.
+
+```bash
+python scripts/pricing_model_analyzer.py pricing.json --format text
+python scripts/pricing_model_analyzer.py pricing.json --format json
+```
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `pricing.json` | positional | Path to JSON file with pricing model configuration |
+| `--format` | optional | Output format: `text` (default) or `json` |
+
+### 2. price_sensitivity_calculator.py
+
+Implements the Van Westendorp Price Sensitivity Meter. Takes survey responses (too cheap, bargain, expensive, too expensive) and calculates the optimal price point, acceptable price range, and indifference price point.
+
+```bash
+python scripts/price_sensitivity_calculator.py survey.json --format text
+python scripts/price_sensitivity_calculator.py survey.json --format json
+```
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `survey.json` | positional | Path to JSON file with Van Westendorp survey responses |
+| `--format` | optional | Output format: `text` (default) or `json` |
+
+### 3. price_increase_modeler.py
+
+Models the revenue impact of price increases at various retention scenarios. Takes current customer base, pricing, and proposed increase, then projects revenue impact at 80%, 90%, and 100% retention with break-even analysis.
+
+```bash
+python scripts/price_increase_modeler.py increase.json --format text
+python scripts/price_increase_modeler.py increase.json --format json
+```
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `increase.json` | positional | Path to JSON file with price increase scenario data |
+| `--format` | optional | Output format: `text` (default) or `json` |
+
+---
+
+## Troubleshooting
+
+| Problem | Likely Cause | Resolution |
+|---------|-------------|------------|
+| Trial-to-paid conversion above 40% | Product is likely underpriced -- customers convert too easily because price is well below perceived value | Test a 20-30% price increase on new customers first; monitor conversion rate and revenue per user |
+| All customers concentrate on middle tier | No compelling reason to upgrade to top tier; enterprise features missing or unclear | Add SSO, audit logs, dedicated support, SLA, and custom integrations to top tier; ensure 3-5x price jump from middle |
+| Frequent discount requests from prospects | Price may exceed perceived value, or value proposition is poorly communicated | Audit sales collateral for ROI messaging; consider adding a lighter entry tier rather than discounting |
+| Price unchanged for 2+ years | Inflation alone justifies 10-15% increase; likely leaving significant revenue on the table | Plan a structured price increase using the execution timeline; start with new customers only to test |
+| High involuntary churn on usage-based pricing | Unpredictable bills cause customers to cancel; usage spikes create bill shock | Add usage bands, committed minimums, or spending caps with alerts at 80% threshold |
+| Customers game the value metric | Per-seat pricing with shared logins, or usage metrics that can be artificially reduced | Switch to a harder-to-game metric; add audit capabilities; consider hybrid model |
+| Pricing page has low conversion but product is strong | Pricing page design issues (too many tiers, unclear differentiation, hidden annual toggle) | Simplify to 3 tiers, highlight recommended plan, show annual savings prominently, add FAQ |
+
+---
+
+## Success Criteria
+
+- Trial-to-paid conversion rate stabilizes at 15-30% (healthy SaaS range) after pricing optimization
+- Tier distribution shows healthy spread: 20-30% entry, 50-60% middle, 15-25% top tier
+- Net revenue retention exceeds 110% (expansion revenue from upsells outpaces contraction)
+- Price increase execution retains 85%+ of affected customers within 90 days
+- Annual plan adoption reaches 50%+ when toggle defaults to annual pricing
+- Van Westendorp survey confirms current price falls within the acceptable range for 70%+ of respondents
+- Pricing page conversion rate improves by 15%+ after redesign implementing best practices
+
+---
+
+## Scope & Limitations
+
+**In scope:** Value metric selection, tier architecture design, price point research (Van Westendorp, competitor benchmarking, willingness-to-pay interviews), pricing page design specifications, price increase strategy and execution, freemium vs free trial decision frameworks, competitive pricing analysis and positioning, and pricing health diagnostics.
+
+**Out of scope:** Pricing page visual design and CRO (use page-cro), in-app upgrade prompts and paywalls (use paywall-upgrade-cro), signup flow optimization after pricing page (use signup-flow-cro), churn intervention when churn is the root cause (use churn-prevention), and full competitive analysis beyond pricing (use competitive-teardown). Scripts do not integrate with billing systems (Stripe, Chargebee, etc.) or analytics platforms.
+
+**Limitations:** Van Westendorp analysis requires minimum 30 survey respondents for statistical validity. Pricing benchmarks are based on aggregate SaaS industry data and vary significantly by vertical, company stage, and geography. Credit-based and usage-based pricing models (growing to 38% of SaaS in 2026) have different optimization dynamics than flat-rate or per-seat models. Price elasticity varies by customer segment -- enterprise buyers are less price-sensitive than SMB.
+
+---
+
+## Integration Points
+
+- **page-cro** -- Pricing page layout, CTA placement, and social proof design should follow page-cro best practices
+- **paywall-upgrade-cro** -- In-app upgrade screens must reflect the same tier structure and messaging as the public pricing page
+- **competitive-teardown** -- Competitive pricing data from teardowns feeds directly into pricing position map and tier design
+- **churn-prevention** -- Churn analysis by price point and tier informs whether pricing is causing retention issues
+- **signup-flow-cro** -- Signup flow design depends on pricing model (CC-required vs free trial vs freemium)
+- **revenue-operations** -- GTM efficiency metrics (LTV:CAC, Magic Number) validate whether pricing supports unit economics
+
+---
+
+## Anti-patterns
+
+| Anti-pattern | Failure mode | Fix |
+|--------------|--------------|-----|
+| Jumping to the price point before locking the value metric | Discounts and "just lower the price" become the only lever; packaging is stuck | Work the axes in order: value metric → packaging → price point |
+| Copying a competitor's pricing model | Inherits their positioning and unit economics — which may not fit the product | Use competitor pricing as a data point for the corridor, not a template |
+| Per-seat pricing on a tool where one power user does the work | Usage grows but seats don't; revenue stalls | Switch to usage-based, hybrid (base + usage), or per-feature |
+| Raising prices to fix a churn problem | Churn accelerates; pricing gets blamed for a retention problem | Diagnose churn drivers first; if the product is the issue, price increases amplify the damage |
+| Adding a fourth tier to "capture more willingness to pay" | Paradox of choice collapses conversion; sales cycle lengthens | Keep 3 tiers public; put the fourth behind "Contact Sales" if enterprise-specific |
+| Announcing a price increase without grandfathering existing customers | Immediate churn spike; NPS collapse; public backlash | Grandfather for 6-12 months on annual plans; communicate 90+ days in advance |
+| Using MSRP or list price internally for forecasting | Actual ACV diverges from list by 20-40% due to discounts; forecasts miss | Forecast on expected-realized price net of standard discount, not list |
+| Freemium tier that gives away the core value metric | Free users never convert; paid tier cannibalized | Gate the value metric (volume, seats, integrations) — not feature access only |
 
 ---
 
 ## Related Skills
 
-- **product-strategist**: Use for product roadmap and broader monetization strategy. NOT for pricing page or price increase execution.
-- **copywriting**: Use for pricing page copy polish. NOT for pricing structure or tier design.
-- **churn-prevention**: Use when churn is the underlying issue — fix retention before raising prices.
-- **ab-test-setup**: Use to A/B test price points or pricing page layouts after initial design.
-- **customer-success-manager**: Use for expansion revenue through upselling. NOT for pricing design or packaging.
-- **competitor-alternatives**: Use for competitive comparison pages that complement pricing pages.
+- **page-cro** -- Use for optimizing the pricing page conversion rate (layout, CTA, social proof). Not for pricing structure or tier design.
+- **churn-prevention** -- Use when churn is the underlying issue. Fix retention before raising prices.
+- **competitive-teardown** -- Use for comprehensive competitive analysis. Feed teardown pricing data into this skill.
+- **paywall-upgrade-cro** -- Use for in-app upgrade prompts and paywalls. Different from public pricing page design.
+- **signup-flow-cro** -- Use for optimizing the signup flow that follows pricing page conversion.

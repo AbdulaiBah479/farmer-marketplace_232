@@ -1,619 +1,315 @@
 #!/usr/bin/env python3
 """
-decision_tracker.py — Board Meeting Decision Parser & Reporter
-Part of the C-Level Advisor / Decision Logger skill.
+Decision Tracker - Track executive decisions with lifecycle management.
 
-Parses memory/board-meetings/decisions.md and produces actionable reports.
-Stdlib only. No dependencies.
+Manages decisions through states (Proposed > Approved > Active > Completed/Superseded/Expired).
+Scans for overdue action items, stale decisions, and generates status summaries.
 
 Usage:
-    python decision_tracker.py --summary
-    python decision_tracker.py --overdue
-    python decision_tracker.py --conflicts
-    python decision_tracker.py --owner "CMO"
-    python decision_tracker.py --search "pricing"
-    python decision_tracker.py --due-within 7
-    python decision_tracker.py --demo          # Run with sample data
+    python decision_tracker.py --input decisions.json
+    python decision_tracker.py --input decisions.json --json
 """
 
 import argparse
-import os
-import re
+import json
 import sys
-from datetime import date, datetime, timedelta
-from pathlib import Path
-from typing import Optional
+from datetime import datetime, timedelta
 
 
-# ─────────────────────────────────────────────
-# Data structures
-# ─────────────────────────────────────────────
-
-class ActionItem:
-    def __init__(self, text: str, owner: str, due: Optional[date],
-                 review: Optional[date], completed: bool, completed_date: Optional[date],
-                 result: str):
-        self.text = text
-        self.owner = owner
-        self.due = due
-        self.review = review
-        self.completed = completed
-        self.completed_date = completed_date
-        self.result = result
-
-    def is_overdue(self) -> bool:
-        if self.completed:
-            return False
-        if self.due and self.due < date.today():
-            return True
-        return False
-
-    def is_due_within(self, days: int) -> bool:
-        if self.completed:
-            return False
-        if self.due:
-            return date.today() <= self.due <= date.today() + timedelta(days=days)
-        return False
+def load_data(path):
+    with open(path, "r") as f:
+        return json.load(f)
 
 
-class Decision:
-    def __init__(self):
-        self.date: Optional[date] = None
-        self.title: str = ""
-        self.decision: str = ""
-        self.owner: str = ""
-        self.deadline: Optional[date] = None
-        self.review: Optional[date] = None
-        self.rationale: str = ""
-        self.user_override: str = ""
-        self.rejected: list[str] = []
-        self.action_items: list[ActionItem] = []
-        self.supersedes: str = ""
-        self.superseded_by: str = ""
-        self.raw_transcript: str = ""
-
-    def is_active(self) -> bool:
-        return not bool(self.superseded_by.strip())
-
-    def has_override(self) -> bool:
-        return bool(self.user_override.strip())
-
-
-# ─────────────────────────────────────────────
-# Parser
-# ─────────────────────────────────────────────
-
-def parse_date(s: str) -> Optional[date]:
-    """Parse YYYY-MM-DD or return None."""
-    if not s:
+def parse_date(date_str):
+    """Parse date string to datetime."""
+    if not date_str:
         return None
-    s = s.strip()
-    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"):
+    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
         try:
-            return datetime.strptime(s, fmt).date()
+            return datetime.strptime(date_str, fmt)
         except ValueError:
             continue
     return None
 
 
-def parse_action_item(line: str) -> Optional[ActionItem]:
-    """
-    Parse a line like:
-      - [ ] Action text — Owner: CMO — Due: 2026-03-15 — Review: 2026-03-29
-      - [x] Action text — Owner: CEO — Completed: 2026-03-10 — Result: Done
-    """
-    line = line.strip()
-    if not line.startswith("- ["):
+def check_overdue_actions(decision, today):
+    """Check for overdue action items in a decision."""
+    overdue = []
+    for action in decision.get("action_items", []):
+        if action.get("completed", False):
+            continue
+        due_date = parse_date(action.get("due_date"))
+        if due_date and due_date < today:
+            days_overdue = (today - due_date).days
+            overdue.append({
+                "action": action.get("description", "Unknown"),
+                "owner": action.get("owner", "Unassigned"),
+                "due_date": action.get("due_date"),
+                "days_overdue": days_overdue,
+                "decision_title": decision.get("title", "Unknown"),
+                "decision_date": decision.get("date", "Unknown"),
+            })
+    return overdue
+
+
+def check_stale_decisions(decision, today, stale_days=90):
+    """Check if a decision is stale (no update in stale_days)."""
+    status = decision.get("status", "active")
+    if status in ("completed", "superseded", "expired"):
         return None
 
-    completed = line.startswith("- [x]") or line.startswith("- [X]")
-    text_start = line.find("]") + 1
-    raw = line[text_start:].strip()
+    last_update = parse_date(decision.get("last_updated", decision.get("date")))
+    if not last_update:
+        return None
 
-    # Split on " — " (em dash with spaces) or " - " fallback
-    parts_raw = re.split(r"\s+[—\-]{1,2}\s+", raw)
-    text = parts_raw[0].strip() if parts_raw else raw
-
-    def extract(label: str, parts: list[str]) -> str:
-        for p in parts:
-            if p.lower().startswith(label.lower() + ":"):
-                return p[len(label) + 1:].strip()
-        return ""
-
-    owner = extract("Owner", parts_raw[1:])
-    due_str = extract("Due", parts_raw[1:])
-    review_str = extract("Review", parts_raw[1:])
-    completed_str = extract("Completed", parts_raw[1:])
-    result = extract("Result", parts_raw[1:])
-
-    return ActionItem(
-        text=text,
-        owner=owner,
-        due=parse_date(due_str),
-        review=parse_date(review_str),
-        completed=completed,
-        completed_date=parse_date(completed_str),
-        result=result,
-    )
+    age = (today - last_update).days
+    if age > stale_days:
+        return {
+            "title": decision.get("title", "Unknown"),
+            "date": decision.get("date", "Unknown"),
+            "days_since_update": age,
+            "status": status,
+        }
+    return None
 
 
-def parse_decisions(content: str) -> list[Decision]:
-    """Parse the full decisions.md content into Decision objects."""
-    decisions = []
-    current: Optional[Decision] = None
-    in_rejected = False
-    in_actions = False
-
-    for line in content.splitlines():
-        # New decision entry
-        header_match = re.match(r"^## (\d{4}-\d{2}-\d{2}) — (.+)$", line)
-        if header_match:
-            if current:
-                decisions.append(current)
-            current = Decision()
-            current.date = parse_date(header_match.group(1))
-            current.title = header_match.group(2).strip()
-            in_rejected = False
-            in_actions = False
-            continue
-
-        if current is None:
-            continue
-
-        # Field parsing
-        def extract_field(label: str) -> Optional[str]:
-            pattern = rf"^\*\*{re.escape(label)}:\*\*\s*(.*)$"
-            m = re.match(pattern, line)
-            return m.group(1).strip() if m else None
-
-        val = extract_field("Decision")
-        if val is not None:
-            current.decision = val
-            in_rejected = False
-            in_actions = False
-            continue
-
-        val = extract_field("Owner")
-        if val is not None:
-            current.owner = val
-            continue
-
-        val = extract_field("Deadline")
-        if val is not None:
-            current.deadline = parse_date(val)
-            continue
-
-        val = extract_field("Review")
-        if val is not None:
-            current.review = parse_date(val)
-            continue
-
-        val = extract_field("Rationale")
-        if val is not None:
-            current.rationale = val
-            continue
-
-        val = extract_field("User Override")
-        if val is not None:
-            current.user_override = val
-            in_rejected = False
-            in_actions = False
-            continue
-
-        val = extract_field("Supersedes")
-        if val is not None:
-            current.supersedes = val
-            continue
-
-        val = extract_field("Superseded by")
-        if val is not None:
-            current.superseded_by = val
-            continue
-
-        val = extract_field("Raw transcript")
-        if val is not None:
-            current.raw_transcript = val
-            continue
-
-        # Section headers
-        if re.match(r"^\*\*Rejected:\*\*", line):
-            in_rejected = True
-            in_actions = False
-            continue
-
-        if re.match(r"^\*\*Action Items:\*\*", line):
-            in_actions = True
-            in_rejected = False
-            continue
-
-        if line.startswith("**"):
-            in_rejected = False
-            in_actions = False
-
-        # List items
-        if in_rejected and line.strip().startswith("-"):
-            item = line.strip().lstrip("- ").strip()
-            if item and not item.startswith("<!--"):
-                current.rejected.append(item)
-            continue
-
-        if in_actions and line.strip().startswith("- ["):
-            action = parse_action_item(line)
-            if action:
-                current.action_items.append(action)
-            continue
-
-    if current:
-        decisions.append(current)
-
-    return decisions
+def check_review_overdue(decision, today):
+    """Check if review date has passed."""
+    review_date = parse_date(decision.get("review_date"))
+    if not review_date:
+        return None
+    if review_date < today and decision.get("status") not in ("completed", "superseded", "expired"):
+        return {
+            "title": decision.get("title", "Unknown"),
+            "review_date": decision.get("review_date"),
+            "days_overdue": (today - review_date).days,
+        }
+    return None
 
 
-# ─────────────────────────────────────────────
-# Reports
-# ─────────────────────────────────────────────
+def detect_conflicts(decisions):
+    """Detect potential conflicts between active decisions."""
+    conflicts = []
+    active = [d for d in decisions if d.get("status") in ("approved", "active")]
 
-def fmt_date(d: Optional[date]) -> str:
-    return d.strftime("%Y-%m-%d") if d else "—"
-
-
-def fmt_delta(d: Optional[date]) -> str:
-    if not d:
-        return ""
-    delta = (d - date.today()).days
-    if delta < 0:
-        return f"  ⚠️  {abs(delta)}d overdue"
-    if delta == 0:
-        return "  🔴 DUE TODAY"
-    if delta <= 3:
-        return f"  🟡 {delta}d left"
-    return f"  ({delta}d)"
-
-
-def print_section(title: str):
-    print(f"\n{'═' * 60}")
-    print(f"  {title}")
-    print(f"{'═' * 60}")
-
-
-def report_summary(decisions: list[Decision]):
-    active = [d for d in decisions if d.is_active()]
-    all_actions = [a for d in decisions for a in d.action_items]
-    open_actions = [a for a in all_actions if not a.completed]
-    overdue = [a for a in all_actions if a.is_overdue()]
-    overrides = [d for d in decisions if d.has_override()]
-    dnr_count = sum(len(d.rejected) for d in decisions)
-
-    print_section("DECISION LOG SUMMARY")
-    print(f"  Total decisions:      {len(decisions)}")
-    print(f"  Active (not super.):  {len(active)}")
-    print(f"  Superseded:           {len(decisions) - len(active)}")
-    print(f"  Founder overrides:    {len(overrides)}")
-    print(f"  DO_NOT_RESURFACE:     {dnr_count}")
-    print(f"  Total action items:   {len(all_actions)}")
-    print(f"  Open action items:    {len(open_actions)}")
-    print(f"  Overdue:              {len(overdue)}")
-
-    if overdue:
-        print(f"\n  {'─' * 40}")
-        print(f"  ⚠️  OVERDUE ITEMS ({len(overdue)})")
-        print(f"  {'─' * 40}")
-        for a in overdue:
-            print(f"  • [{a.owner}] {a.text}")
-            print(f"    Due: {fmt_date(a.due)}{fmt_delta(a.due)}")
-
-    print(f"\n  {'─' * 40}")
-    print(f"  RECENT DECISIONS")
-    print(f"  {'─' * 40}")
-    for d in sorted(active, key=lambda x: x.date or date.min, reverse=True)[:5]:
-        print(f"  [{fmt_date(d.date)}] {d.title}")
-        print(f"    Owner: {d.owner or '—'}  |  Deadline: {fmt_date(d.deadline)}")
-        open_count = sum(1 for a in d.action_items if not a.completed)
-        if open_count:
-            print(f"    Open actions: {open_count}")
-
-
-def report_overdue(decisions: list[Decision]):
-    print_section("OVERDUE ACTION ITEMS")
-    found = False
-    for d in sorted(decisions, key=lambda x: x.date or date.min, reverse=True):
-        overdue = [a for a in d.action_items if a.is_overdue()]
-        if not overdue:
-            continue
-        found = True
-        print(f"\n  📋 {d.title}  [{fmt_date(d.date)}]")
-        for a in overdue:
-            print(f"    ⚠️  {a.text}")
-            print(f"       Owner: {a.owner or '—'}  |  Due: {fmt_date(a.due)}{fmt_delta(a.due)}")
-    if not found:
-        print("\n  ✅ No overdue items.")
-
-
-def report_due_within(decisions: list[Decision], days: int):
-    print_section(f"ACTION ITEMS DUE WITHIN {days} DAYS")
-    found = False
-    for d in sorted(decisions, key=lambda x: x.date or date.min, reverse=True):
-        upcoming = [a for a in d.action_items if a.is_due_within(days)]
-        if not upcoming:
-            continue
-        found = True
-        print(f"\n  📋 {d.title}  [{fmt_date(d.date)}]")
-        for a in upcoming:
-            print(f"    • {a.text}")
-            print(f"      Owner: {a.owner or '—'}  |  Due: {fmt_date(a.due)}{fmt_delta(a.due)}")
-    if not found:
-        print(f"\n  ✅ Nothing due in the next {days} days.")
-
-
-def report_by_owner(decisions: list[Decision], owner: str):
-    print_section(f"ACTION ITEMS — OWNER: {owner.upper()}")
-    found = False
-    for d in sorted(decisions, key=lambda x: x.date or date.min, reverse=True):
-        items = [a for a in d.action_items
-                 if a.owner.lower() == owner.lower() and not a.completed]
-        if not items:
-            continue
-        found = True
-        print(f"\n  📋 {d.title}  [{fmt_date(d.date)}]")
-        for a in items:
-            flag = "⚠️ OVERDUE" if a.is_overdue() else ""
-            print(f"    {'[ ]'} {a.text}  {flag}")
-            print(f"      Due: {fmt_date(a.due)}{fmt_delta(a.due)}")
-    if not found:
-        print(f"\n  No open action items for '{owner}'.")
-
-
-def report_search(decisions: list[Decision], query: str):
-    print_section(f"SEARCH: \"{query}\"")
-    q = query.lower()
-    found = False
-    for d in decisions:
-        hit_fields = []
-        if q in d.title.lower():
-            hit_fields.append("title")
-        if q in d.decision.lower():
-            hit_fields.append("decision")
-        if q in d.rationale.lower():
-            hit_fields.append("rationale")
-        if any(q in r.lower() for r in d.rejected):
-            hit_fields.append("rejected")
-        if hit_fields:
-            found = True
-            print(f"\n  [{fmt_date(d.date)}] {d.title}  (match: {', '.join(hit_fields)})")
-            if "decision" in hit_fields:
-                print(f"    → {d.decision}")
-            if "rejected" in hit_fields:
-                matches = [r for r in d.rejected if q in r.lower()]
-                for r in matches:
-                    print(f"    ✗ [REJECTED] {r}")
-    if not found:
-        print(f"\n  No results for '{query}'.")
-
-
-def report_conflicts(decisions: list[Decision]):
-    """
-    Simple conflict detection: look for decisions on the same topic
-    (matching title words) that are both active and have different decisions.
-    Also flag if a rejected item appears as a new decision.
-    """
-    print_section("CONFLICT DETECTION")
-    conflicts_found = False
-
-    # Check for DO_NOT_RESURFACE violations
-    all_rejected_texts = []
-    for d in decisions:
-        for r in d.rejected:
-            clean = re.sub(r"\[DO_NOT_RESURFACE\]", "", r).strip().lower()
-            all_rejected_texts.append((clean, d.date, d.title))
-
-    active = [d for d in decisions if d.is_active()]
-    for d in active:
-        decision_lower = d.decision.lower()
-        for rejected_text, rejected_date, rejected_title in all_rejected_texts:
-            if rejected_text and rejected_text in decision_lower:
-                conflicts_found = True
-                print(f"\n  🚫 POTENTIAL DO_NOT_RESURFACE VIOLATION")
-                print(f"    Decision [{fmt_date(d.date)}]: {d.decision}")
-                print(f"    Matches rejected item from [{fmt_date(rejected_date)}] ({rejected_title}):")
-                print(f"    \"{rejected_text}\"")
-
-    # Check for same-topic contradictions (shared keywords in title)
-    stop_words = {"the", "a", "an", "and", "or", "to", "for", "of", "in", "on", "with", "vs"}
     for i, d1 in enumerate(active):
-        words1 = set(w.lower() for w in d1.title.split() if w.lower() not in stop_words)
-        for d2 in active[i+1:]:
-            words2 = set(w.lower() for w in d2.title.split() if w.lower() not in stop_words)
-            overlap = words1 & words2
-            if len(overlap) >= 2 and d1.decision and d2.decision:
-                # Different decisions on similar topic
-                if d1.decision.lower() != d2.decision.lower():
-                    conflicts_found = True
-                    print(f"\n  ⚠️  POTENTIAL CONFLICT (shared topic: {overlap})")
-                    print(f"    [{fmt_date(d1.date)}] {d1.title}")
-                    print(f"    Decision: {d1.decision}")
-                    print(f"    [{fmt_date(d2.date)}] {d2.title}")
-                    print(f"    Decision: {d2.decision}")
-                    if d1.superseded_by or d2.superseded_by:
-                        print(f"    ℹ️  One may supersede the other — check Superseded by fields.")
+        tags1 = set(d1.get("tags", []))
+        for d2 in active[i + 1:]:
+            tags2 = set(d2.get("tags", []))
+            overlap = tags1 & tags2
+            if overlap and len(overlap) >= 2:
+                conflicts.append({
+                    "decision_1": {"title": d1.get("title"), "date": d1.get("date")},
+                    "decision_2": {"title": d2.get("title"), "date": d2.get("date")},
+                    "overlapping_tags": list(overlap),
+                    "type": "potential_topic_conflict",
+                })
 
-    if not conflicts_found:
-        print("\n  ✅ No conflicts detected.")
+    return conflicts
 
 
-# ─────────────────────────────────────────────
-# Sample data for --demo mode
-# ─────────────────────────────────────────────
+def analyze_decisions(data):
+    """Run full decision tracking analysis."""
+    decisions = data.get("decisions", [])
+    today = datetime.now()
+    analysis_date = data.get("analysis_date")
+    if analysis_date:
+        today = parse_date(analysis_date) or today
 
-SAMPLE_DECISIONS_MD = f"""# Board Meeting Decisions — Layer 2
+    results = {
+        "timestamp": datetime.now().isoformat(),
+        "analysis_date": today.strftime("%Y-%m-%d"),
+        "total_decisions": len(decisions),
+        "status_distribution": {},
+        "overdue_actions": [],
+        "stale_decisions": [],
+        "review_overdue": [],
+        "conflicts": [],
+        "owner_distribution": {},
+        "recent_decisions": [],
+        "summary": {},
+        "recommendations": [],
+    }
 
-This file contains ONLY founder-approved decisions.
+    # Status distribution
+    status_counts = {}
+    owner_counts = {}
+    total_actions = 0
+    completed_actions = 0
+    all_overdue = []
 
----
+    for decision in decisions:
+        status = decision.get("status", "unknown")
+        status_counts[status] = status_counts.get(status, 0) + 1
 
-## 2026-02-15 — Spain Market Expansion
+        owner = decision.get("owner", "Unassigned")
+        owner_counts[owner] = owner_counts.get(owner, 0) + 1
 
-**Decision:** Expand to Spain in Q3 2026 with a pilot in Madrid and Barcelona.
-**Owner:** CMO
-**Deadline:** 2026-03-01
-**Review:** 2026-04-01
-**Rationale:** Market research shows 40% lower CAC than Germany. Two pilot customers already committed.
+        # Check overdue actions
+        overdue = check_overdue_actions(decision, today)
+        all_overdue.extend(overdue)
 
-**User Override:** Founder reduced pilot scope from 5 cities to 2. Reason: reduce operational risk during expansion.
+        # Count actions
+        for action in decision.get("action_items", []):
+            total_actions += 1
+            if action.get("completed", False):
+                completed_actions += 1
 
-**Rejected:**
-- Launch in all of Spain simultaneously — too resource-intensive at current headcount [DO_NOT_RESURFACE]
-- Partner with a local distributor instead of direct sales — margins too low [DO_NOT_RESURFACE]
+        # Check stale
+        stale = check_stale_decisions(decision, today)
+        if stale:
+            results["stale_decisions"].append(stale)
 
-**Action Items:**
-- [x] Hire Spanish-speaking CSM — Owner: CHRO — Completed: 2026-02-28 — Result: Hired Maria G., starts March 10
-- [ ] Finalize Madrid pilot customer contracts — Owner: CRO — Due: {(date.today() - timedelta(days=3)).strftime('%Y-%m-%d')} — Review: 2026-04-01
-- [ ] Translate app to Spanish (ES-ES) — Owner: CTO — Due: {(date.today() + timedelta(days=5)).strftime('%Y-%m-%d')} — Review: 2026-04-15
+        # Check review
+        review = check_review_overdue(decision, today)
+        if review:
+            results["review_overdue"].append(review)
 
-**Supersedes:** 
-**Superseded by:** 
-**Raw transcript:** memory/board-meetings/2026-02-15-raw.md
+    results["status_distribution"] = status_counts
+    results["owner_distribution"] = owner_counts
+    results["overdue_actions"] = sorted(all_overdue, key=lambda x: x["days_overdue"], reverse=True)
 
----
+    # Conflicts
+    results["conflicts"] = detect_conflicts(decisions)
 
-## 2026-02-28 — Pricing Strategy Revision
+    # Recent decisions (last 10)
+    sorted_decisions = sorted(decisions, key=lambda x: x.get("date", ""), reverse=True)
+    results["recent_decisions"] = [
+        {
+            "title": d.get("title", "Unknown"),
+            "date": d.get("date", "Unknown"),
+            "status": d.get("status", "unknown"),
+            "owner": d.get("owner", "Unassigned"),
+            "confidence": d.get("confidence", "unknown"),
+        }
+        for d in sorted_decisions[:10]
+    ]
 
-**Decision:** Move from per-seat to usage-based pricing effective Q2 2026.
-**Owner:** CFO
-**Deadline:** 2026-03-20
-**Review:** 2026-05-01
-**Rationale:** Usage-based aligns with customer value. Three enterprise customers requested it explicitly.
+    # Summary
+    action_completion_rate = round((completed_actions / max(total_actions, 1)) * 100, 1)
+    active_decisions = status_counts.get("active", 0) + status_counts.get("approved", 0)
 
-**User Override:** 
+    results["summary"] = {
+        "active_decisions": active_decisions,
+        "completed_decisions": status_counts.get("completed", 0),
+        "total_action_items": total_actions,
+        "completed_action_items": completed_actions,
+        "action_completion_rate": action_completion_rate,
+        "overdue_action_count": len(all_overdue),
+        "stale_decision_count": len(results["stale_decisions"]),
+        "review_overdue_count": len(results["review_overdue"]),
+        "conflict_count": len(results["conflicts"]),
+    }
 
-**Rejected:**
-- Freemium tier — not appropriate for enterprise healthcare segment [DO_NOT_RESURFACE]
-- Raise prices 30% across the board — too aggressive without usage data [DO_NOT_RESURFACE]
+    # Recommendations
+    recs = results["recommendations"]
+    if all_overdue:
+        critical_overdue = [a for a in all_overdue if a["days_overdue"] > 14]
+        if critical_overdue:
+            recs.append(f"CRITICAL: {len(critical_overdue)} action items overdue by 14+ days -- escalate to founder")
+        else:
+            recs.append(f"{len(all_overdue)} action items overdue -- review in next session")
 
-**Action Items:**
-- [ ] Model 3 pricing scenarios (conservative/base/aggressive) — Owner: CFO — Due: {(date.today() - timedelta(days=1)).strftime('%Y-%m-%d')} — Review: 2026-03-25
-- [ ] Customer interviews on usage patterns (n=10) — Owner: CMO — Due: {(date.today() + timedelta(days=10)).strftime('%Y-%m-%d')} — Review: 2026-04-01
-- [ ] Update billing infrastructure for usage tracking — Owner: CTO — Due: 2026-04-01 — Review: 2026-04-15
+    if results["stale_decisions"]:
+        recs.append(f"{len(results['stale_decisions'])} decisions stale (>90 days without update) -- schedule review")
 
-**Supersedes:** 
-**Superseded by:** 
-**Raw transcript:** memory/board-meetings/2026-02-28-raw.md
+    if results["review_overdue"]:
+        recs.append(f"{len(results['review_overdue'])} decisions past review date -- prompt founder for check-in")
 
----
+    if results["conflicts"]:
+        recs.append(f"{len(results['conflicts'])} potential decision conflicts detected -- resolve before logging new decisions")
 
-## 2026-03-04 — Engineering Hiring Plan Q2
+    # Owner concentration
+    if owner_counts:
+        max_owner = max(owner_counts, key=owner_counts.get)
+        max_count = owner_counts[max_owner]
+        if max_count > len(decisions) * 0.5 and len(decisions) > 5:
+            recs.append(f"Owner concentration: {max_owner} owns {max_count}/{len(decisions)} decisions -- consider distributing")
 
-**Decision:** Hire 2 senior engineers in Q2: one ML/AI, one backend. No contractors.
-**Owner:** CTO
-**Deadline:** 2026-04-15
-**Review:** 2026-05-01
-**Rationale:** ML roadmap blocked. Backend capacity at 85%. Contractors rejected due to IP risk in regulated domain.
+    if action_completion_rate < 60:
+        recs.append(f"Action completion rate at {action_completion_rate}% -- accountability or capacity issue")
 
-**User Override:** Founder added: "ML hire must have healthcare AI experience. Non-negotiable."
-
-**Rejected:**
-- Contract team of 5 for 3 months — IP risk in regulated domain [DO_NOT_RESURFACE]
-- Hire junior engineers to save budget — wrong tradeoff at this stage [DO_NOT_RESURFACE]
-
-**Action Items:**
-- [ ] Post ML engineer JD — Owner: CHRO — Due: {(date.today() + timedelta(days=2)).strftime('%Y-%m-%d')} — Review: 2026-03-20
-- [ ] Post backend engineer JD — Owner: CHRO — Due: {(date.today() + timedelta(days=2)).strftime('%Y-%m-%d')} — Review: 2026-03-20
-- [ ] Define ML role requirements with healthcare AI spec — Owner: CTO — Due: {(date.today() + timedelta(days=1)).strftime('%Y-%m-%d')} — Review: 2026-03-15
-
-**Supersedes:** 
-**Superseded by:** 
-**Raw transcript:** memory/board-meetings/2026-03-04-raw.md
-"""
+    return results
 
 
-# ─────────────────────────────────────────────
-# Main
-# ─────────────────────────────────────────────
+def format_text(results):
+    lines = [
+        "=" * 60,
+        "DECISION TRACKING REPORT",
+        "=" * 60,
+        f"Analysis Date: {results['analysis_date']}",
+        f"Total Decisions: {results['total_decisions']}",
+        "",
+        "SUMMARY",
+        f"  Active Decisions: {results['summary']['active_decisions']}",
+        f"  Completed: {results['summary']['completed_decisions']}",
+        f"  Action Items: {results['summary']['completed_action_items']}/{results['summary']['total_action_items']} "
+        f"({results['summary']['action_completion_rate']}% complete)",
+        f"  Overdue Actions: {results['summary']['overdue_action_count']}",
+        f"  Stale Decisions: {results['summary']['stale_decision_count']}",
+        f"  Reviews Overdue: {results['summary']['review_overdue_count']}",
+        f"  Conflicts: {results['summary']['conflict_count']}",
+    ]
 
-def load_decisions(decisions_path: Path, demo: bool) -> list[Decision]:
-    if demo:
-        content = SAMPLE_DECISIONS_MD
-    elif decisions_path.exists():
-        content = decisions_path.read_text(encoding="utf-8")
-    else:
-        print(f"  ⚠️  decisions.md not found at: {decisions_path}")
-        print(f"  Run with --demo to see sample output.")
-        print(f"  To initialize: mkdir -p memory/board-meetings && touch memory/board-meetings/decisions.md")
-        sys.exit(1)
-    return parse_decisions(content)
+    if results["overdue_actions"]:
+        lines.append("")
+        lines.append("OVERDUE ACTION ITEMS")
+        for a in results["overdue_actions"][:10]:
+            lines.append(f"  [{a['days_overdue']}d overdue] {a['action']}")
+            lines.append(f"    Owner: {a['owner']} | Due: {a['due_date']} | Decision: {a['decision_title']}")
+
+    if results["stale_decisions"]:
+        lines.append("")
+        lines.append("STALE DECISIONS (>90 days)")
+        for s in results["stale_decisions"]:
+            lines.append(f"  {s['title']} -- {s['days_since_update']} days since update (status: {s['status']})")
+
+    if results["review_overdue"]:
+        lines.append("")
+        lines.append("REVIEWS OVERDUE")
+        for r in results["review_overdue"]:
+            lines.append(f"  {r['title']} -- review was due {r['review_date']} ({r['days_overdue']} days ago)")
+
+    if results["conflicts"]:
+        lines.append("")
+        lines.append("POTENTIAL CONFLICTS")
+        for c in results["conflicts"]:
+            lines.append(f"  {c['decision_1']['title']} vs {c['decision_2']['title']}")
+            lines.append(f"    Overlapping tags: {', '.join(c['overlapping_tags'])}")
+
+    lines.append("")
+    lines.append("RECENT DECISIONS")
+    for d in results["recent_decisions"]:
+        lines.append(f"  {d['date']}: {d['title']} ({d['status']}) -- Owner: {d['owner']}")
+
+    if results["recommendations"]:
+        lines.append("")
+        lines.append("RECOMMENDATIONS")
+        for rec in results["recommendations"]:
+            lines.append(f"  * {rec}")
+
+    return "\n".join(lines)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Board Meeting Decision Tracker",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
-    )
-    parser.add_argument("--file", default="memory/board-meetings/decisions.md",
-                        help="Path to decisions.md (default: memory/board-meetings/decisions.md)")
-    parser.add_argument("--demo", action="store_true",
-                        help="Run with built-in sample data (no file needed)")
-    parser.add_argument("--summary", action="store_true",
-                        help="Show overview: counts, overdue, recent decisions")
-    parser.add_argument("--overdue", action="store_true",
-                        help="List all overdue action items")
-    parser.add_argument("--due-within", type=int, metavar="DAYS",
-                        help="List items due within N days")
-    parser.add_argument("--owner", metavar="ROLE",
-                        help="Filter action items by owner")
-    parser.add_argument("--search", metavar="QUERY",
-                        help="Search decisions and rejected proposals")
-    parser.add_argument("--conflicts", action="store_true",
-                        help="Check for contradictory decisions or DO_NOT_RESURFACE violations")
-    parser.add_argument("--all", action="store_true",
-                        help="Show all decisions (summary format)")
-
+    parser = argparse.ArgumentParser(description="Track executive decisions with lifecycle management")
+    parser.add_argument("--input", required=True, help="Path to JSON decisions file")
+    parser.add_argument("--json", action="store_true", help="Output in JSON format")
     args = parser.parse_args()
 
-    if not any([args.summary, args.overdue, args.due_within, args.owner,
-                args.search, args.conflicts, getattr(args, "all")]):
-        args.summary = True  # Default action
+    try:
+        data = load_data(args.input)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading input file: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    decisions_path = Path(args.file)
-    decisions = load_decisions(decisions_path, args.demo)
+    results = analyze_decisions(data)
 
-    if not decisions:
-        print("  No decisions found in decisions.md.")
-        sys.exit(0)
-
-    if args.demo:
-        print(f"\n  🎯 DEMO MODE — using built-in sample data ({len(decisions)} decisions)")
-
-    if args.summary:
-        report_summary(decisions)
-
-    if args.overdue:
-        report_overdue(decisions)
-
-    if args.due_within:
-        report_due_within(decisions, args.due_within)
-
-    if args.owner:
-        report_by_owner(decisions, args.owner)
-
-    if args.search:
-        report_search(decisions, args.search)
-
-    if args.conflicts:
-        report_conflicts(decisions)
-
-    if getattr(args, "all"):
-        print_section(f"ALL DECISIONS ({len(decisions)} total)")
-        for d in sorted(decisions, key=lambda x: x.date or date.min, reverse=True):
-            status = "📦 SUPERSEDED" if not d.is_active() else ""
-            override = "  [OVERRIDE]" if d.has_override() else ""
-            print(f"\n  [{fmt_date(d.date)}] {d.title} {status}{override}")
-            print(f"    Decision: {d.decision}")
-            print(f"    Owner: {d.owner or '—'}  |  Deadline: {fmt_date(d.deadline)}")
-            open_actions = [a for a in d.action_items if not a.completed]
-            if open_actions:
-                print(f"    Open actions: {len(open_actions)}")
-
-    print()
+    if args.json:
+        print(json.dumps(results, indent=2))
+    else:
+        print(format_text(results))
 
 
 if __name__ == "__main__":

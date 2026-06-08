@@ -1,212 +1,296 @@
 ---
 name: fact-checker
-description: 'Use this skill when verifying factual claims, checking accuracy of statements, or assessing the credibility of information. Trigger phrases: ''fact-check this'', ''is this true'', ''verify this claim'', ''check if this is accurate''. Do NOT use for subjective opinions, legal or medical advice, or claims requiring real-time data or breaking news.'
-version: 1.0.0
-author: community
-tags:
-  - research
-  - fact-checking
-  - verification
-  - credibility
-license: MIT
-keywords:
-  - fact-check
-  - verify claim
-  - check accuracy
-  - fact
-  - checker
-  - fact checker
+description: Verifies factual claims in documents using web search and official sources, then proposes corrections with user confirmation. Use when the user asks to fact-check, verify information, validate claims, check accuracy, or update outdated information in documents. Supports AI model specs, technical documentation, statistics, and general factual statements.
 ---
 
 # Fact Checker
 
-## Overview
-This skill provides a structured approach to evaluating factual claims—assessing whether a statement is accurate, partially accurate, misleading, or false, and explaining *why* with evidence and reasoning. Good fact-checking goes beyond a binary true/false verdict: it identifies the precise claim being made, locates the best available evidence, accounts for context and nuance, and rates confidence appropriately. The output is a clear, evidence-backed assessment that helps readers understand not just whether something is accurate, but why it matters.
+Verify factual claims in documents and propose corrections backed by authoritative sources.
 
-## When to Use
-- Verifying statistics, quotes, or factual assertions in articles or documents
-- Checking whether a viral social media claim holds up to scrutiny
-- Assessing whether historical facts cited in writing are accurate
-- Auditing factual claims in a draft before publication
-- Evaluating whether scientific findings are being accurately reported
-- Confirming whether attributed quotes are real and in context
-- Vetting claims in speeches, presentations, or marketing copy
+## When to use
 
-## When NOT to Use
-- Evaluating subjective opinions or value judgments ("X policy is better than Y")
-- Providing legal advice or legal interpretations of statutes
-- Providing medical diagnoses or treatment recommendations
-- Verifying real-time data such as live stock prices, current weather, or breaking news
-- Assessing internal business claims that require proprietary data access
-- Deciding which of two contested scientific theories is definitively correct (use `literature-reviewer` skill for contested scientific debates)
+Trigger when users request:
+- "Fact-check this document"
+- "Verify these AI model specifications"
+- "Check if this information is still accurate"
+- "Update outdated data in this file"
+- "Validate the claims in this section"
 
-## Quick Reference
-| Task | Approach |
-|------|----------|
-| Identify the claim | Isolate the precise factual assertion—strip out opinion and framing |
-| Primary sources | Seek original studies, official records, or direct quotes over secondary reports |
-| Verdict labels | True / Mostly True / Mixed / Mostly False / False / Unverifiable |
-| Context matters | Accurate statistics can still mislead if context is stripped away |
-| Quotes | Check original source; confirm attribution, date, and surrounding context |
-| Statistics | Verify source, date, sample size, and whether the stat is being applied correctly |
-| Confidence level | State confidence (High / Medium / Low) based on source quality and evidence volume |
+## Workflow
 
-## Instructions
+Copy this checklist to track progress:
 
-1. **Isolate the precise claim.** Restate the claim in neutral, specific terms before evaluating it. Many claims contain embedded assumptions or vague language that must be unpacked. "Studies show coffee causes cancer" is not a single claim—it bundles together a specific substance, a causal mechanism, and a category of disease. Break compound claims into individual checkable assertions.
+```
+Fact-checking Progress:
+- [ ] Step 1: Identify factual claims
+- [ ] Step 2: Search authoritative sources
+- [ ] Step 3: Compare claims against sources
+- [ ] Step 4: Generate correction report
+- [ ] Step 5: Apply corrections with user approval
+```
 
-2. **Assess the claim type.** Determine whether this is:
-   - A **factual assertion** (a specific, verifiable statement about the world)
-   - A **statistical claim** (requires checking source, date, methodology, and applicability)
-   - A **quote attribution** (requires locating the original source and verifying wording and context)
-   - A **causal claim** (requires evaluating whether evidence supports causation or only correlation)
-   - A **historical claim** (requires consulting authoritative historical records)
+### Step 1: Identify factual claims
 
-3. **Identify the best sources.** Rank sources by reliability:
-   - **Tier 1:** Peer-reviewed research, official government data, primary documents
-   - **Tier 2:** Established news organizations with editorial standards, expert consensus statements
-   - **Tier 3:** Reputable secondary sources, encyclopedias, expert interviews
-   - **Avoid:** Anonymous posts, sites with known bias and no editorial accountability, single-source claims without corroboration
+Scan the document for verifiable statements:
 
-4. **Evaluate the evidence.** Apply these checks:
-   - Does the original source actually say what the claim implies?
-   - Is the data current and applicable to the specific context?
-   - Are there important caveats or limitations the claim omits?
-   - Do other independent sources corroborate or contradict this?
+**Target claim types:**
+- Technical specifications (context windows, pricing, features)
+- Version numbers and release dates
+- Statistical data and metrics
+- API capabilities and limitations
+- Benchmark scores and performance data
 
-5. **Assess context and framing.** A claim can be technically true but deeply misleading. Check: Is the statistic cherry-picked from a broader dataset? Is the quote taken out of context? Does the claim imply causation from a correlation? Does it generalize from a narrow study to a broad population?
+**Skip subjective content:**
+- Opinions and recommendations
+- Explanatory prose
+- Tutorial instructions
+- Architectural discussions
 
-6. **Assign a verdict with confidence level.** Use a clear rating:
-   - **True:** Accurate and properly contextualized
-   - **Mostly True:** Accurate in substance but missing important nuance or context
-   - **Mixed:** Contains both accurate and inaccurate elements
-   - **Mostly False:** Misleading framing or significant inaccuracies, though a kernel may be accurate
-   - **False:** Contradicted by the best available evidence
-   - **Unverifiable:** Cannot be confirmed or denied with available sources
-   Also note your **confidence level** (High / Medium / Low) based on the quality and quantity of evidence.
+### Step 2: Search authoritative sources
 
-7. **Write the fact-check clearly.** Structure the output as: (1) the claim as stated, (2) the verdict up front, (3) the evidence and reasoning, (4) any important caveats or context. Attribute every piece of evidence to a named source. Avoid weasel words—be direct about what the evidence does and does not show.
+For each claim, search official sources:
+
+**AI models:**
+- Official announcement pages (anthropic.com/news, openai.com/index, blog.google)
+- API documentation (platform.claude.com/docs, platform.openai.com/docs)
+- Developer guides and release notes
+
+**Technical libraries:**
+- Official documentation sites
+- GitHub repositories (releases, README)
+- Package registries (npm, PyPI, crates.io)
+
+**General claims:**
+- Academic papers and research
+- Government statistics
+- Industry standards bodies
+
+**Search strategy:**
+- Use model names + specification (e.g., "Claude Opus 4.5 context window")
+- Include current year for recent information
+- Verify from multiple sources when possible
+
+### Step 3: Compare claims against sources
+
+Create a comparison table:
+
+| Claim in Document | Source Information | Status | Authoritative Source |
+|-------------------|-------------------|--------|---------------------|
+| Claude 3.5 Sonnet: 200K tokens | Claude Sonnet 4.5: 200K tokens | ❌ Outdated model name | platform.claude.com/docs |
+| GPT-4o: 128K tokens | GPT-5.2: 400K tokens | ❌ Incorrect version & spec | openai.com/index/gpt-5-2 |
+
+**Status codes:**
+- ✅ Accurate - claim matches sources
+- ❌ Incorrect - claim contradicts sources
+- ⚠️ Outdated - claim was true but superseded
+- ❓ Unverifiable - no authoritative source found
+
+### Step 4: Generate correction report
+
+Present findings in structured format:
+
+```markdown
+## Fact-Check Report
+
+### Summary
+- Total claims checked: X
+- Accurate: Y
+- Issues found: Z
+
+### Issues Requiring Correction
+
+#### Issue 1: Outdated AI Model Reference
+**Location:** Line 77-80 in docs/file.md
+**Current claim:** "Claude 3.5 Sonnet: 200K tokens"
+**Correction:** "Claude Sonnet 4.5: 200K tokens"
+**Source:** https://platform.claude.com/docs/en/build-with-claude/context-windows
+**Rationale:** Claude 3.5 Sonnet has been superseded by Claude Sonnet 4.5 (released Sept 2025)
+
+#### Issue 2: Incorrect Context Window
+**Location:** Line 79 in docs/file.md
+**Current claim:** "GPT-4o: 128K tokens"
+**Correction:** "GPT-5.2: 400K tokens"
+**Source:** https://openai.com/index/introducing-gpt-5-2/
+**Rationale:** 128K was output limit; context window is 400K. Model also updated to GPT-5.2
+```
+
+### Step 5: Apply corrections with user approval
+
+**Before making changes:**
+
+1. Show the correction report to the user
+2. Wait for explicit approval: "Should I apply these corrections?"
+3. Only proceed after confirmation
+
+**When applying corrections:**
+
+```python
+# Use Edit tool to update document
+# Example:
+Edit(
+    file_path="docs/03-写作规范/AI辅助写书方法论.md",
+    old_string="- Claude 3.5 Sonnet: 200K tokens（约 15 万汉字）",
+    new_string="- Claude Sonnet 4.5: 200K tokens（约 15 万汉字）"
+)
+```
+
+**After corrections:**
+
+1. Verify all edits were applied successfully
+2. Note the correction summary (e.g., "Updated 4 claims in section 2.1")
+3. Remind user to commit changes
+
+## Search best practices
+
+### Query construction
+
+**Good queries** (specific, current):
+- "Claude Opus 4.5 context window 2026"
+- "GPT-5.2 official release announcement"
+- "Gemini 3 Pro token limit specifications"
+
+**Poor queries** (vague, generic):
+- "Claude context"
+- "AI models"
+- "Latest version"
+
+### Source evaluation
+
+**Prefer official sources:**
+1. Product official pages (highest authority)
+2. API documentation
+3. Official blog announcements
+4. GitHub releases (for open source)
+
+**Use with caution:**
+- Third-party aggregators (llm-stats.com, etc.) - verify against official sources
+- Blog posts and articles - cross-reference claims
+- Social media - only for announcements, verify elsewhere
+
+**Avoid:**
+- Outdated documentation
+- Unofficial wikis without citations
+- Speculation and rumors
+
+### Handling ambiguity
+
+When sources conflict:
+
+1. Prioritize most recent official documentation
+2. Note the discrepancy in the report
+3. Present both sources to the user
+4. Recommend contacting vendor if critical
+
+When no source found:
+
+1. Mark as ❓ Unverifiable
+2. Suggest alternative phrasing: "According to [Source] as of [Date]..."
+3. Recommend adding qualification: "approximately", "reported as"
+
+## Special considerations
+
+### Time-sensitive information
+
+Always include temporal context:
+
+**Good corrections:**
+- "截至 2026 年 1 月" (As of January 2026)
+- "Claude Sonnet 4.5 (released September 2025)"
+
+**Poor corrections:**
+- "Latest version" (becomes outdated)
+- "Current model" (ambiguous timeframe)
+
+### Numerical precision
+
+Match precision to source:
+
+**Source says:** "approximately 1 million tokens"
+**Write:** "1M tokens (approximately)"
+
+**Source says:** "200,000 token context window"
+**Write:** "200K tokens" (exact)
+
+### Citation format
+
+Include citations in corrections:
+
+```markdown
+> **注**：具体上下文窗口以模型官方文档为准，本书写作时使用 Claude Sonnet 4.5 为主要工具。
+```
+
+Link to sources when possible.
 
 ## Examples
 
-### Example 1: Statistical Claim Fact-Check
+### Example 1: Technical specification update
 
-**Input:** "Fact-check this claim: 'The Great Wall of China is the only man-made structure visible from space.'"
+**User request:** "Fact-check the AI model context windows in section 2.1"
 
-**Output:**
+**Process:**
+1. Identify claims: Claude 3.5 Sonnet (200K), GPT-4o (128K), Gemini 1.5 Pro (2M)
+2. Search official docs for current models
+3. Find: Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro
+4. Generate report showing discrepancies
+5. Apply corrections after approval
 
----
+### Example 2: Statistical data verification
 
-**Claim:** "The Great Wall of China is the only man-made structure visible from space."
+**User request:** "Verify the benchmark scores in chapter 5"
 
-**Verdict:** FALSE
-**Confidence:** High
+**Process:**
+1. Extract numerical claims
+2. Search for official benchmark publications
+3. Compare reported vs. source values
+4. Flag any discrepancies with source links
+5. Update with verified figures
 
-**Evidence and Reasoning:**
+### Example 3: Version number validation
 
-This is one of the most persistent myths in popular culture, but it is contradicted by direct observation, physics, and astronaut testimony.
+**User request:** "Check if these library versions are still current"
 
-**What astronauts actually report:** Multiple astronauts have specifically addressed this claim. Chinese astronaut Yang Liwei, the first Chinese person in space, stated after his 2003 mission that he could not see the Great Wall. NASA astronaut Ed Lu confirmed this in 2004. Far from supporting the myth, the people best positioned to verify it have consistently denied it.
+**Process:**
+1. List all version numbers mentioned
+2. Check package registries (npm, PyPI, etc.)
+3. Identify outdated versions
+4. Suggest updates with changelog references
+5. Update after user confirms
 
-**The physics:** The Great Wall is, on average, 5–8 meters wide—narrower than a human hair as seen from the International Space Station (roughly 400 km altitude). Visibility at that scale would require impossibly acute vision. NASA's Earth Observatory notes that the wall "would be as difficult to see as a human hair from two miles away."
+## Quality checklist
 
-**What IS visible:** Many man-made features are visible from low Earth orbit under good conditions, including highways, airports, cities, reservoirs, and agricultural fields—all of which are wider than the Wall. From the Moon (385,000 km away), no man-made structure of any kind is visible.
+Before completing fact-check:
 
-**Origin of the myth:** The claim appears as early as 1932 in Ripley's Believe It Or Not and was repeated in reference books for decades before being widely debunked.
+- [ ] All factual claims identified and categorized
+- [ ] Each claim verified against official sources
+- [ ] Sources are authoritative and current
+- [ ] Correction report is clear and actionable
+- [ ] Temporal context included where relevant
+- [ ] User approval obtained before changes
+- [ ] All edits verified successful
+- [ ] Summary provided to user
 
-**Sources:** NASA Earth Observatory; Chinese National Space Administration statements; Liu Yang and Yang Liwei mission reports (2003, 2012).
+## Limitations
 
----
+**This skill cannot:**
+- Verify subjective opinions or judgments
+- Access paywalled or restricted sources
+- Determine "truth" in disputed claims
+- Predict future specifications or features
 
-### Example 2: Quoted Statistic Fact-Check
+**For such cases:**
+- Note the limitation in the report
+- Suggest qualification language
+- Recommend user research or expert consultation
 
-**Input:** "Someone cited this statistic in a presentation: 'We only use 10% of our brains.' Is this true?"
+## Next Step: Export Verified Content
 
-**Output:**
+After fact-checking, suggest exporting the verified document:
 
----
+```
+Fact-check complete: [N] claims verified, [M] corrections proposed.
 
-**Claim:** "Humans only use 10% of their brains."
-
-**Verdict:** FALSE
-**Confidence:** High
-
-**Evidence and Reasoning:**
-
-This claim has no basis in neuroscience and is contradicted by multiple independent lines of evidence.
-
-**Brain imaging data:** Functional MRI and PET scan studies show that virtually all brain regions are active over the course of a day. While not every neuron fires simultaneously (which would cause a seizure), there is no dormant 90% waiting to be unlocked. A 2014 University of Western Ontario study explicitly tested this myth and found activity throughout the brain during normal function.
-
-**Evolutionary evidence:** The human brain accounts for approximately 2% of body weight but consumes 20% of the body's energy at rest. Evolution would not sustain such a metabolically expensive organ if 90% were unused.
-
-**Clinical neurology:** Brain damage from strokes, tumors, or injury to virtually any region produces measurable deficits. If 90% were unused, damage to most areas should have no effect—which is not observed.
-
-**The myth's origin:** No credible scientific source has been identified as the origin. It has been falsely attributed to Albert Einstein (no record of him saying it exists), and may derive from misunderstandings of early neuroscience research distinguishing glial cells from neurons, or from self-help literature of the early 20th century.
-
-**The accurate picture:** Different regions are specialized for different functions, and humans use all of them—though not all simultaneously. Expertise and learning strengthen specific neural pathways, but this is optimization, not "unlocking" unused capacity.
-
-**Sources:** Barry Beyerstein, "Whence Cometh the Myth that We Only Use 10% of our Brains?" (1999); Neuroimaging research, University of Western Ontario (2014); Scientific American (multiple articles).
-
----
-
-### Example 3: Nuanced/Mixed Verdict
-
-**Input:** "Fact-check: 'Violent crime in the US has been increasing every year for the past decade.'"
-
-**Output:**
-
----
-
-**Claim:** "Violent crime in the US has been increasing every year for the past decade."
-
-**Verdict:** MOSTLY FALSE
-**Confidence:** Medium
-
-**Evidence and Reasoning:**
-
-The claim is contradicted by the overall trend but contains a kernel of truth related to recent years.
-
-**The long-term trend:** FBI Uniform Crime Report data and Bureau of Justice Statistics victimization surveys both show that violent crime in the US peaked around 1991 and declined dramatically through the 2010s. In 2019, violent crime rates were near 30-year lows. The claim that crime has been *increasing every year for the past decade* is flatly wrong as a description of the 2013–2023 period.
-
-**Where it gets complicated:** There were notable increases in homicide specifically in 2020 and 2021—likely related to COVID-19 pandemic disruptions—that drew significant media attention. Some cities also saw increases in certain crime categories. However, these were not "every year" and did not represent a consistent decade-long trend. Preliminary 2022–2023 data suggest homicides declined again in many cities.
-
-**Measurement caveats:** Crime statistics are imperfect. The FBI's transition to a new reporting system (NIBRS) in 2021 created a gap in data from non-reporting agencies that complicates year-over-year comparisons. Reported crime and experienced crime (per victimization surveys) sometimes diverge based on reporting rates.
-
-**Verdict summary:** The claim exaggerates recent increases and ignores the 30-year decline. Saying violent crime "has been increasing every year for the past decade" is not supported by the data. More accurate: violent crime fell steadily through the mid-2010s, spiked in 2020–2021 (particularly homicide), and has since partially reversed.
-
-**Sources:** FBI Uniform Crime Report 2022; Bureau of Justice Statistics National Crime Victimization Survey 2022; Brennan Center for Justice crime data analysis.
-
----
-
-## Best Practices
-- Always restate the claim in precise, neutral terms before evaluating—many claims are vague or bundled
-- Lead with the verdict, then provide the reasoning—don't make readers wade through evidence to find your conclusion
-- Distinguish correlation from causation explicitly when the claim implies causation
-- Use the most direct, primary source available—don't cite a news article if you can cite the study it covers
-- Quantify your confidence—saying "High confidence" vs "Low confidence" signals important uncertainty to readers
-- When a claim is partially true, explain exactly which part is true and which is not
-- Be direct: avoid hedging so much that the verdict is unclear
-
-## Common Mistakes
-- **Fact-checking the wrong claim:** Evaluating a related but different claim than the one actually made
-- **Stopping at "technically true":** A claim can be technically accurate but still deeply misleading—evaluate framing too
-- **Single-source verification:** Confirming a claim from only one source, especially when that source is the same one cited in the original claim
-- **False balance:** Treating fringe views as equivalent to scientific consensus in the name of "both sides"
-- **Scope mismatch:** A study from a specific population or country doesn't verify a universal claim
-- **Ignoring the date:** An accurate statistic from 10 years ago may be outdated and no longer accurate
-- **Verdict without reasoning:** Stating a verdict without showing the evidence and logic behind it
-
-## Tips & Tricks
-- For quote attributions, search the exact phrase in quotation marks and look for the primary source, not secondary reports
-- When checking statistics, always ask: who collected this data, when, from what population, using what methodology?
-- The original study abstract (and especially limitations section) often reveals important caveats that secondary reports omit
-- Use reverse image search for photos and videos being presented as evidence of recent events
-- High-confidence verdicts require at least two independent, high-quality sources
-- If a claim seems too perfectly suited to confirm someone's beliefs, apply extra scrutiny—motivated reasoning produces motivated evidence-seeking
-- Document your sources as you go; reconstructing a citation trail after the fact is tedious and error-prone
-
-## Related Skills
-- [web-researcher](../../research/web-researcher/SKILL.md)
-- [literature-reviewer](../../research/literature-reviewer/SKILL.md)
-- [summarizer](../../research/summarizer/SKILL.md)
-- [proofreader](../../writing/proofreader/SKILL.md)
+Options:
+A) Export as PDF — run /daymade-docs:pdf-creator (Recommended for formal documents)
+B) Create slides — run /daymade-docs:ppt-creator from verified content
+C) No thanks — I'll use the corrected document directly
+```

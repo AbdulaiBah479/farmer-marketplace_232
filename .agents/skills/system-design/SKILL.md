@@ -1,56 +1,42 @@
 ---
 name: system-design
-description: Use when designing system architecture, APIs, components, or data models - provides a structured design workflow with validation and documentation outputs.
-keywords:
-  - API specification
-  - architecture design
-  - architecture diagram
-  - component design
-  - data model
-  - design doc
-  - interface design
-  - schema design
-  - system architecture
-  - system design
-file_patterns:
-  - '**/architecture/**'
-  - '**/canvas/**'
-  - '**/design/**'
-  - '**/design/system/**'
-  - '**/figma/**'
-confidence: 0.8
+description: Design systems, services, and architectures. Trigger with "design a system for", "how should we architect", "system design for", "what's the right architecture for", or when the user needs help with API design, data modeling, or service boundaries.
 ---
 
 # System Design
 
-## Overview
-Create clear system, API, component, or data model designs with explicit requirements, constraints, and validation steps.
+Help design systems and evaluate architectural decisions.
 
-## When to Use
-- Designing system architecture or components
-- Specifying APIs or data models
-- Producing design docs or diagrams
+## Framework
 
-Avoid when:
-- You only need implementation tasks (use implementation-workflow)
+### 1. Requirements Gathering
+- Functional requirements (what it does)
+- Non-functional requirements (scale, latency, availability, cost)
+- Constraints (team size, timeline, existing tech stack)
 
-## Quick Reference
+### 2. High-Level Design
+- Component diagram
+- Data flow
+- API contracts
+- Storage choices
 
-| Task | Load reference |
-| --- | --- |
-| System design workflow | `skills/system-design/references/system.md` |
+### 3. Deep Dive
+- Data model design
+- API endpoint design (REST, GraphQL, gRPC)
+- Caching strategy
+- Queue/event design
+- Error handling and retry logic
 
-## Workflow
-1. Gather requirements and constraints.
-2. Load the system design reference.
-3. Define structure, interfaces, and data flows.
-4. Validate against constraints and best practices.
-5. Deliver spec/diagram/code artifacts.
+### 4. Scale and Reliability
+- Load estimation
+- Horizontal vs. vertical scaling
+- Failover and redundancy
+- Monitoring and alerting
+
+### 5. Trade-off Analysis
+- Every decision has trade-offs. Make them explicit.
+- Consider: complexity, cost, team familiarity, time to market, maintainability
 
 ## Output
-- Design spec or diagram
-- Validation notes and follow-ups
 
-## Common Mistakes
-- Designing without constraints
-- Mixing implementation details with spec scope
+Produce clear, structured design documents with diagrams (ASCII or described), explicit assumptions, and trade-off analysis. Always identify what you'd revisit as the system grows.

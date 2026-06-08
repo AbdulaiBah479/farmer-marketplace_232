@@ -1,147 +1,202 @@
 ---
 name: product-analytics
-description: Use when defining product KPIs, building metric dashboards, running cohort or retention analysis, or interpreting feature adoption trends across product stages.
+description: >
+  Product analytics framework for PMs and analytics engineers on instrumenting
+  products, defining metrics, building activation/retention funnels, running
+  cohort analyses, and translating product data into decisions. Use when
+  designing a product metric tree, instrumenting a new feature, auditing
+  existing instrumentation, defining North Star + counter-metrics, or
+  building an analytics roadmap.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: product-team
+  domain: product-analytics
+  updated: 2026-05-27
+  tags: [analytics, metrics, north-star, retention, activation, funnel, cohort, instrumentation]
 ---
 
 # Product Analytics
 
-Define, track, and interpret product metrics across discovery, growth, and mature product stages.
+A product analytics skill focused on **decisions from data**, not dashboards.
+Covers the metric tree, instrumentation patterns, funnel + retention +
+cohort analysis, and the operational rituals that turn measurement into
+product changes.
 
-## When To Use
+## When to use this skill
 
-Use this skill for:
-- Metric framework selection (AARRR, North Star, HEART)
-- KPI definition by product stage (pre-PMF, growth, mature)
-- Dashboard design and metric hierarchy
-- Cohort and retention analysis
-- Feature adoption and funnel interpretation
+- Designing the **North Star metric** and its tree of input metrics
+- Auditing **product instrumentation** (events, properties, gaps)
+- Building or refreshing an **activation funnel** for a new product or feature
+- Designing or analyzing **retention cohorts** (D1/D7/D30/W1/W4/M1/M3)
+- Building or refining the **PM analytics dashboard**
+- Translating product data into **decisions and roadmap inputs**
+- Auditing **dashboards for actionability** (kill the vanity)
 
-## Workflow
+## Inputs the advisor expects
 
-1. Select metric framework
-- AARRR for growth loops and funnel visibility
-- North Star for cross-functional strategic alignment
-- HEART for UX quality and user experience measurement
+- Product type (B2B SaaS, consumer, marketplace, etc.)
+- Current analytics stack (Amplitude / Mixpanel / GA4 / Segment / Snowflake + dbt + Looker)
+- Existing North Star + input metrics
+- Current event taxonomy + instrumentation gaps
+- Top product questions you can't answer today
+- Org expectations: who consumes analytics, at what cadence
 
-2. Define stage-appropriate KPIs
-- Pre-PMF: activation, early retention, qualitative success
-- Growth: acquisition efficiency, expansion, conversion velocity
-- Mature: retention depth, revenue quality, operational efficiency
+## Workflows
 
-3. Design dashboard layers
-- Executive layer: 5-7 directional metrics
-- Product health layer: acquisition, activation, retention, engagement
-- Feature layer: adoption, depth, repeat usage, outcome correlation
+### Workflow 1 — Design the metric tree
 
-4. Run cohort + retention analysis
-- Segment by signup cohort or feature exposure cohort
-- Compare retention curves, not single-point snapshots
-- Identify inflection points around onboarding and first value moment
-
-5. Interpret and act
-- Connect metric movement to product changes and release timeline
-- Distinguish signal from noise using period-over-period context
-- Propose one clear product action per major metric risk/opportunity
-
-## KPI Guidance By Stage
-
-### Pre-PMF
-- Activation rate
-- Week-1 retention
-- Time-to-first-value
-- Problem-solution fit interview score
-
-### Growth
-- Funnel conversion by stage
-- Monthly retained users
-- Feature adoption among new cohorts
-- Expansion / upsell proxy metrics
-
-### Mature
-- Net revenue retention aligned product metrics
-- Power-user share and depth of use
-- Churn risk indicators by segment
-- Reliability and support-deflection product metrics
-
-## Dashboard Design Principles
-
-- Show trends, not isolated point estimates.
-- Keep one owner per KPI.
-- Pair each KPI with target, threshold, and decision rule.
-- Use cohort and segment filters by default.
-- Prefer comparable time windows (weekly vs weekly, monthly vs monthly).
-
-See:
-- `references/metrics-frameworks.md`
-- `references/dashboard-templates.md`
-
-## Cohort Analysis Method
-
-1. Define cohort anchor event (signup, activation, first purchase).
-2. Define retained behavior (active day, key action, repeat session).
-3. Build retention matrix by cohort week/month and age period.
-4. Compare curve shape across cohorts.
-5. Flag early drop points and investigate journey friction.
-
-## Retention Curve Interpretation
-
-- Sharp early drop, low plateau: onboarding mismatch or weak initial value.
-- Moderate drop, stable plateau: healthy core audience with predictable churn.
-- Flattening at low level: product used occasionally, revisit value metric.
-- Improving newer cohorts: onboarding or positioning improvements are working.
-
-## Anti-Patterns
-
-| Anti-pattern | Fix |
-|---|---|
-| **Vanity metrics** — tracking pageviews or total signups without activation context | Always pair acquisition metrics with activation rate and retention |
-| **Single-point retention** — reporting "30-day retention is 20%" | Compare retention curves across cohorts, not isolated snapshots |
-| **Dashboard overload** — 30+ metrics on one screen | Executive layer: 5-7 metrics. Feature layer: per-feature only |
-| **No decision rule** — tracking a KPI with no threshold or action plan | Every KPI needs: target, threshold, owner, and "if below X, then Y" |
-| **Averaging across segments** — reporting blended metrics that hide segment differences | Always segment by cohort, plan tier, channel, or geography |
-| **Ignoring seasonality** — comparing this week to last week without adjusting | Use period-over-period with same-period-last-year context |
-
-## Tooling
-
-### `scripts/metrics_calculator.py`
-
-CLI utility for retention, cohort, and funnel analysis from CSV data. Supports text and JSON output.
+1. Define the **North Star** (one number that summarizes value delivered).
+2. Decompose into **inputs** (drivers of the NS).
+3. Add **guardrails / counter-metrics** that catch unintended consequences.
+4. Run `metric_tree_designer.py` against your candidate tree to surface
+   imbalance, missing layers, anti-patterns.
 
 ```bash
-# Retention analysis
-python3 scripts/metrics_calculator.py retention events.csv
-python3 scripts/metrics_calculator.py retention events.csv --format json
-
-# Cohort matrix
-python3 scripts/metrics_calculator.py cohort events.csv --cohort-grain month
-python3 scripts/metrics_calculator.py cohort events.csv --cohort-grain week --format json
-
-# Funnel conversion
-python3 scripts/metrics_calculator.py funnel funnel.csv --stages visit,signup,activate,pay
-python3 scripts/metrics_calculator.py funnel funnel.csv --stages visit,signup,activate,pay --format json
+python3 product-analytics/scripts/metric_tree_designer.py \
+  --input metric_tree.json --format markdown
 ```
 
-**CSV format for retention/cohort:**
-```csv
-user_id,cohort_date,activity_date
-u001,2026-01-01,2026-01-01
-u001,2026-01-01,2026-01-03
-u002,2026-01-02,2026-01-02
+### Workflow 2 — Audit instrumentation
+
+1. Pull the current event taxonomy + properties.
+2. Run `event_taxonomy_auditor.py` to flag PII risk, schema drift,
+   naming inconsistency, duplication, undocumented events, and gaps.
+3. Generate the remediation backlog and assign owners.
+
+```bash
+python3 product-analytics/scripts/event_taxonomy_auditor.py \
+  --input event_inventory.json --format markdown
 ```
 
-**CSV format for funnel:**
-```csv
-user_id,stage
-u001,visit
-u001,signup
-u001,activate
-u002,visit
-u002,signup
+### Workflow 3 — Analyze retention cohorts
+
+1. Pull cohort retention data (raw counts by cohort week and offset).
+2. Run `retention_cohort_analyzer.py` to compute retention rates, identify
+   patterns (smile curve, leaky bucket), and surface cohort-level alerts.
+
+```bash
+python3 product-analytics/scripts/retention_cohort_analyzer.py \
+  --input retention.json --format markdown
 ```
 
-## Cross-References
+## Decision frameworks
 
-- Related: `product-team/experiment-designer` — for A/B test planning after identifying metric opportunities
-- Related: `product-team/product-manager-toolkit` — for RICE prioritization of metric-driven features
-- Related: `product-team/product-discovery` — for assumption mapping when metrics reveal unknowns
-- Related: `finance/saas-metrics-coach` — for SaaS-specific metrics (ARR, MRR, churn, LTV)
+### North Star metric — what makes one good
+
+A good North Star metric:
+- **Measures value delivered to the user** (not just usage)
+- **Aligns to business outcome** indirectly via clear chain
+- **Is a leading indicator** of long-term success
+- **Can move week-over-week** (so it can be acted on)
+- **Is hard to game** without delivering real value
+
+Common patterns by product type:
+
+| Product type | Common North Star |
+|--------------|-------------------|
+| Communication / messaging | Messages sent per WAU |
+| Marketplace | Successful transactions per MAU |
+| Content | Hours of meaningful content consumed |
+| Productivity SaaS | Activated workspaces × engagement depth |
+| Consumer payments | Active payment senders per week |
+| Developer tool | Weekly active developers performing core action |
+
+Don't pick "DAU" or "Revenue" as North Star — they're outputs, not value drivers.
+
+### Metric tree structure
+
+A clean metric tree has three layers:
+
+1. **North Star** (1 metric)
+2. **Input metrics** (3–5 that combine to produce the NS)
+3. **Driver metrics** (per input, 3–5 that move the input)
+
+Plus a **guardrails / counter-metrics** sidebar (3–5 that catch
+unintended consequences).
+
+If you have 30 KPIs at the top level, you have no top level.
+
+### The activation question
+
+For any new product or feature, ask: "What does it look like when a user
+realizes value from this?"
+
+That's the **activation event**. A clear definition makes:
+- Onboarding design — clearer
+- Funnel analysis — possible
+- Eval of marketing channels — sharper
+- Customer success interventions — better-timed
+
+Common mistake: defining activation as "completed signup." Signup is
+table stakes; activation is the moment of value.
+
+### Retention curve shapes
+
+| Shape | Diagnosis | Action |
+|-------|-----------|--------|
+| Power-law smile | Healthy product-market fit | Invest in scale |
+| Slow decay then flat | Product-market fit | Investigate the flatline cohort segment |
+| Steep then zero | Novelty product | Re-evaluate the value proposition |
+| Linear decline | Leaky bucket | Improve retention features |
+| Inverted (rising) | Network effects kicking in | Acquire harder |
+
+Read shape before reading numbers.
+
+### Vanity vs actionable metrics
+
+| Metric | Vanity if | Actionable if |
+|--------|-----------|---------------|
+| DAU / MAU | Tracked alone | Decomposed by segment, action |
+| Pageviews | Tracked alone | Tied to conversion funnel |
+| Total revenue | Tracked alone | Decomposed by cohort, channel, segment |
+| App downloads | Tracked alone | Paired with activation rate |
+| Total accounts | Tracked alone | Paired with active accounts |
+
+The test: "If this metric goes up 10% next week, what do we change?"
+If you don't have an answer, it's vanity.
+
+## Common engagements
+
+### "Help me design our analytics for the launch"
+1. Define activation event and 3–5 input metrics.
+2. Spec event taxonomy (event names, properties, user/account context).
+3. Pilot dashboards (one for the team, one for execs).
+4. Set the review cadence; don't let dashboards rot.
+
+### "Our funnel rate is dropping. What's wrong?"
+1. Decompose: which step's conversion dropped?
+2. Segment: which user segment is driving it?
+3. Cross-check: is the dropping segment newly acquired?
+4. Test hypotheses against the data; don't guess.
+
+### "Help me audit our instrumentation"
+1. Pull the event inventory (last 30 days, all events fired ≥10x).
+2. Tag PII risk, naming inconsistency, gaps.
+3. Identify the events that should be fired but aren't.
+4. Build the remediation backlog with owners.
+
+## Anti-patterns to avoid
+
+- **More dashboards = more insight.** Usually inverse. Cull aggressively.
+- **Confusing event volume for insight.** Tracking everything badly is worse than tracking a few things well.
+- **PII in event properties.** Privacy + compliance nightmare.
+- **Custom event names per developer.** Naming convention or chaos.
+- **No event documentation.** Future you and the next analyst will hate present you.
+- **One metric for the whole product.** Different surfaces need different metrics.
+- **Vanity North Star.** "Total signups" tells you nothing about value.
+
+## References
+
+- `references/metric-tree-and-north-star.md` — patterns by product type, tree structure, anti-patterns
+- `references/instrumentation-and-event-design.md` — event taxonomy, naming, PII, schema discipline
+- `references/cohort-retention-and-funnel-analysis.md` — analysis techniques, segmentation, anti-patterns
+
+## Related skills
+
+- `product-team/ab-test-setup` — experimentation (paired with metrics)
+- `product-team/product-strategist` — strategy upstream of metrics
+- `data-analytics/` skills — for the data engineering side
+- `engineering/data-quality-auditor` — for instrumentation data quality
+- `c-level-advisor/chief-data-officer-advisor` — for platform decisions

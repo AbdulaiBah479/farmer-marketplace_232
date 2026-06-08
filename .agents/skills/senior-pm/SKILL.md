@@ -1,13 +1,37 @@
 ---
-name: "senior-pm"
-description: Senior Project Manager for enterprise software, SaaS, and digital transformation projects. Specializes in portfolio management, quantitative risk analysis, resource optimization, stakeholder alignment, and executive reporting. Uses advanced methodologies including EMV analysis, Monte Carlo simulation, WSJF prioritization, and multi-dimensional health scoring. Use when a user needs help with project plans, project status reports, risk assessments, resource allocation, project roadmaps, milestone tracking, team capacity planning, portfolio health reviews, program management, or executive-level project reporting — especially for enterprise-scale initiatives with multiple workstreams, complex dependencies, or multi-million dollar budgets.
+name: senior-pm
+description: >
+  Senior Project Manager for enterprise software, SaaS, and digital
+  transformation projects. Specializes in portfolio management, quantitative
+  risk analysis, resource optimization, stakeholder alignment, and executive
+  reporting. Uses advanced methodologies including EMV analysis, Monte Carlo
+  simulation, WSJF prioritization, and multi-dimensional health scoring.
+license: MIT + Commons Clause
+metadata:
+  version: 2.0.0
+  author: borghei
+  category: project-management
+  domain: enterprise-pm
+  updated: 2026-03-04
+  tags: [project-management, stakeholder-management, risk, planning]
+  python-tools: project_health_dashboard.py, risk_matrix_analyzer.py, resource_capacity_planner.py, stakeholder_mapper.py
+  tech-stack: portfolio-management, risk-analysis, stakeholder-mapping, executive-reporting
 ---
-
 # Senior Project Management Expert
 
 ## Overview
 
-Strategic project management for enterprise software, SaaS, and digital transformation initiatives. Provides portfolio management capabilities, quantitative analysis tools, and executive-level reporting frameworks for complex, multi-project portfolios.
+Strategic project management for enterprise software, SaaS, and digital transformation initiatives. This skill provides sophisticated portfolio management capabilities, quantitative analysis tools, and executive-level reporting frameworks for managing complex, multi-million dollar project portfolios.
+
+## Use when
+
+- The user asks to "run a portfolio health review", "build an executive status report", or "do a stakeholder map"
+- Multiple projects need prioritization across WSJF / RICE / ICE / MoSCoW with strategic alignment
+- A board-ready or executive-ready RAG report needs to be produced
+- Risk analysis needs EMV, Monte Carlo, or portfolio risk correlation — beyond a basic probability/impact matrix
+- Resource capacity planning is needed across multiple concurrent projects
+- A quarterly portfolio rebalancing or three-horizons review is being planned
+- The user says "our portfolio is misaligned", "executives don't trust the reports", or "we can't tell which projects are actually healthy"
 
 ### Core Expertise Areas
 
@@ -63,30 +87,13 @@ python3 scripts/risk_matrix_analyzer.py assets/sample_project_data.json
 1. **Probability Assessment** (1-5 scale): Historical data, expert judgment, Monte Carlo inputs
 2. **Impact Analysis** (1-5 scale): Financial, schedule, quality, and strategic impact vectors
 3. **Category Weighting**: Technical (1.2x), Resource (1.1x), Financial (1.4x), Schedule (1.0x)
-4. **EMV Calculation**:
+4. **EMV Calculation**: Risk Score = (Probability × Impact × Category Weight)
 
-```python
-# EMV and risk-adjusted budget calculation
-def calculate_emv(risks):
-    category_weights = {"Technical": 1.2, "Resource": 1.1, "Financial": 1.4, "Schedule": 1.0}
-    total_emv = 0
-    for risk in risks:
-        score = risk["probability"] * risk["impact"] * category_weights[risk["category"]]
-        emv = risk["probability"] * risk["financial_impact"]
-        total_emv += emv
-        risk["score"] = score
-    return total_emv
-
-def risk_adjusted_budget(base_budget, portfolio_risk_score, risk_tolerance_factor):
-    risk_premium = portfolio_risk_score * risk_tolerance_factor
-    return base_budget * (1 + risk_premium)
-```
-
-**Risk Response Strategies (by score threshold):**
-- **Avoid** (>18): Eliminate through scope/approach changes
-- **Mitigate** (12-18): Reduce probability or impact through active intervention
-- **Transfer** (8-12): Insurance, contracts, partnerships
-- **Accept** (<8): Monitor with contingency planning
+**Risk Response Strategies:**
+- **Avoid** (>18 score): Eliminate through scope/approach changes
+- **Mitigate** (12-18 score): Reduce probability or impact through active intervention
+- **Transfer** (8-12 score): Insurance, contracts, partnerships
+- **Accept** (<8 score): Monitor with contingency planning
 
 **Tier 3: Resource Capacity Optimization**
 Employs `resource_capacity_planner.py` for portfolio resource analysis:
@@ -103,78 +110,110 @@ python3 scripts/resource_capacity_planner.py assets/sample_project_data.json
 
 ### Advanced Prioritization Models
 
-Apply each model in the specific context where it provides the most signal:
+**Weighted Shortest Job First (WSJF) - For Agile Portfolios**
+```
+WSJF Score = (User Value + Time Criticality + Risk Reduction) ÷ Job Size
 
-**Weighted Shortest Job First (WSJF)** — Resource-constrained agile portfolios with quantifiable cost-of-delay
-```python
-def wsjf(user_value, time_criticality, risk_reduction, job_size):
-    return (user_value + time_criticality + risk_reduction) / job_size
+Application Context:
+- Resource-constrained environments
+- Fast-moving competitive landscapes  
+- Agile/SAFe methodology adoption
+- Clear cost-of-delay quantification available
 ```
 
-**RICE** — Customer-facing initiatives where reach metrics are quantifiable
-```python
-def rice(reach, impact, confidence_pct, effort_person_months):
-    return (reach * impact * (confidence_pct / 100)) / effort_person_months
+**RICE Framework - For Product Development**
+```
+RICE Score = (Reach × Impact × Confidence) ÷ Effort
+
+Best for:
+- Customer-facing initiatives
+- Marketing and growth projects
+- When reach metrics are quantifiable
+- Data-driven product decisions
 ```
 
-**ICE** — Rapid prioritization during brainstorming or when analysis time is limited
-```python
-def ice(impact, confidence, ease):
-    return (impact + confidence + ease) / 3
+**ICE Scoring - For Rapid Decision Making**
+```  
+ICE Score = (Impact + Confidence + Ease) ÷ 3
+
+Optimal when:
+- Quick prioritization needed
+- Brainstorming and ideation phases
+- Limited analysis time available
+- Cross-functional team alignment required
 ```
 
-**Model Selection — Use this decision logic:**
-```
-if resource_constrained and agile_methodology and cost_of_delay_quantifiable:
-    → WSJF
-elif customer_facing and reach_metrics_available:
-    → RICE
-elif quick_prioritization_needed or ideation_phase:
-    → ICE
-elif multiple_stakeholder_groups_with_differing_priorities:
-    → MoSCoW
-elif complex_tradeoffs_across_incommensurable_criteria:
-    → Multi-Criteria Decision Analysis (MCDA)
-```
-
+**Decision Tree for Model Selection:**
 Reference: `references/portfolio-prioritization-models.md`
+
+- **Resource Constrained?** → WSJF
+- **Customer Impact Focus?** → RICE
+- **Need Speed?** → ICE
+- **Multiple Stakeholder Groups?** → MoSCoW
+- **Complex Trade-offs?** → Multi-Criteria Decision Analysis (MCDA)
 
 ### Risk Management Framework
 
+**Quantitative Risk Analysis Process:**
 Reference: `references/risk-management-framework.md`
 
-**Step 1: Risk Classification by Category**
-- Technical: Architecture, integration, performance
-- Resource: Availability, skills, retention
-- Schedule: Dependencies, critical path, external factors
-- Financial: Budget overruns, currency, economic factors
-- Business: Market changes, competitive pressure, strategic shifts
+**Step 1: Risk Identification & Classification**
+- Technical risks: Architecture, integration, performance
+- Resource risks: Availability, skills, retention
+- Schedule risks: Dependencies, critical path, external factors
+- Financial risks: Budget overruns, currency, economic factors
+- Business risks: Market changes, competitive pressure, strategic shifts
 
-**Step 2: Three-Point Estimation for Monte Carlo Inputs**
-```python
-def three_point_estimate(optimistic, most_likely, pessimistic):
-    expected = (optimistic + 4 * most_likely + pessimistic) / 6
-    std_dev = (pessimistic - optimistic) / 6
-    return expected, std_dev
+**Step 2: Probability/Impact Assessment**
+Uses three-point estimation for Monte Carlo simulation:
+```
+Expected Value = (Optimistic + 4×Most Likely + Pessimistic) ÷ 6
+Standard Deviation = (Pessimistic - Optimistic) ÷ 6
 ```
 
-**Step 3: Portfolio Risk Correlation**
-```python
-import math
+**Step 3: Expected Monetary Value (EMV) Calculation**
+```
+EMV = Σ(Probability × Financial Impact) for all risk scenarios
 
-def portfolio_risk(individual_risks, correlations):
-    # individual_risks: list of risk EMV values
-    # correlations: list of (i, j, corr_coefficient) tuples
-    sum_sq = sum(r**2 for r in individual_risks)
-    sum_corr = sum(2 * c * individual_risks[i] * individual_risks[j]
-                   for i, j, c in correlations)
-    return math.sqrt(sum_sq + sum_corr)
+Risk-Adjusted Budget = Base Budget × (1 + Risk Premium)
+Risk Premium = Portfolio Risk Score × Risk Tolerance Factor
+```
+
+**Step 4: Portfolio Risk Correlation Analysis**
+```
+Portfolio Risk = √(Σ Individual Risks² + 2Σ Correlation×Risk1×Risk2)
 ```
 
 **Risk Appetite Framework:**
 - **Conservative**: Risk scores 0-8, 25-30% contingency reserves
-- **Moderate**: Risk scores 8-15, 15-20% contingency reserves
+- **Moderate**: Risk scores 8-15, 15-20% contingency reserves  
 - **Aggressive**: Risk scores 15+, 10-15% contingency reserves
+
+## Stakeholder Mapping & Engagement
+
+### Power/Interest Grid (Mendelow's Matrix)
+
+Uses `stakeholder_mapper.py` to classify stakeholders and generate communication plans:
+
+```bash
+python3 scripts/stakeholder_mapper.py stakeholders.json
+python3 scripts/stakeholder_mapper.py --demo --format json
+```
+
+**Classification Quadrants (threshold at 5/10):**
+- **Manage Closely** (High Power, High Interest): Weekly 1:1s, steering committee, proactive escalation
+- **Keep Satisfied** (High Power, Low Interest): Monthly executive summary, milestone invites
+- **Keep Informed** (Low Power, High Interest): Bi-weekly newsletter, demo invites, dashboards
+- **Monitor** (Low Power, Low Interest): Quarterly updates, organizational newsletter
+
+**Blocker Engagement Strategy:**
+The tool identifies stakeholders with `attitude: blocker` and generates targeted engagement strategies based on their power level — high-power blockers require urgent 1:1 engagement and potential executive sponsor escalation; low-power blockers need transparency and involvement.
+
+**Integration with OKR Brainstorming:**
+Stakeholder mapping feeds directly into OKR alignment — high-power/high-interest stakeholders shape strategic objectives, while their feedback validates Key Results. Cross-reference with `execution/brainstorm-okrs/` for OKR development workflows.
+
+Reference: `references/stakeholder-engagement-guide.md`
+Template: `assets/stakeholder_map_template.md`
 
 ## Assets & Templates
 
@@ -189,7 +228,13 @@ Reference: `assets/project_charter_template.md`
 - Budget breakdown with contingency analysis
 - Timeline with critical path dependencies
 
-### Executive Report Template
+**Key Features:**
+- Production-ready for board presentation
+- Integrated stakeholder management framework
+- Risk-adjusted financial projections
+- Change control and governance processes
+
+### Executive Report Template  
 Reference: `assets/executive_report_template.md`
 
 **Board-level portfolio reporting with:**
@@ -198,6 +243,12 @@ Reference: `assets/executive_report_template.md`
 - Risk heat map with mitigation status
 - Resource utilization and capacity analysis
 - Forward-looking recommendations with ROI projections
+
+**Executive Decision Support:**
+- Critical issues requiring immediate action
+- Investment recommendations with business cases
+- Portfolio optimization opportunities
+- Market/competitive intelligence integration
 
 ### RACI Matrix Template
 Reference: `assets/raci_matrix_template.md`
@@ -209,6 +260,12 @@ Reference: `assets/raci_matrix_template.md`
 - Communication protocols and meeting frameworks
 - Conflict resolution processes with governance integration
 
+**Advanced Features:**
+- Decision-making RACI for strategic vs. operational choices
+- Risk and issue management responsibility assignment
+- Performance metrics for RACI effectiveness
+- Template validation checklist and maintenance procedures
+
 ### Sample Portfolio Data
 Reference: `assets/sample_project_data.json`
 
@@ -219,6 +276,12 @@ Reference: `assets/sample_project_data.json`
 - Risk register with probability/impact scoring
 - Quality metrics and stakeholder satisfaction data
 - Dependencies and milestone tracking
+
+**Data Completeness:**
+- Works with all three analysis scripts
+- Demonstrates portfolio balance across strategic priorities
+- Includes both successful and at-risk project examples
+- Provides historical trend data for analysis
 
 ### Expected Output Examples
 Reference: `assets/expected_output.json`
@@ -235,26 +298,27 @@ Reference: `assets/expected_output.json`
 
 1. **Data Collection & Validation**
    ```bash
+   # Update project data from JIRA, financial systems, team surveys
    python3 scripts/project_health_dashboard.py current_portfolio.json
    ```
-   ⚠️ If any project composite score <60 or a critical data field is missing, STOP and resolve data integrity issues before proceeding.
-
+   - *Validate:* all 5 health dimensions have current-period data; no project missing more than one dimension
 2. **Risk Assessment Update**
    ```bash
+   # Refresh risk probabilities and impact assessments
    python3 scripts/risk_matrix_analyzer.py current_portfolio.json
    ```
-   ⚠️ If any risk score >18 (Avoid threshold), STOP and initiate escalation to project sponsor before proceeding.
-
+   - *Validate:* every critical/high risk has an active mitigation owner; no risks aged >30 days without update
 3. **Capacity Analysis**
-   ```bash
+   ```bash  
+   # Review resource utilization and bottlenecks
    python3 scripts/resource_capacity_planner.py current_portfolio.json
    ```
-   ⚠️ If any team utilization >90% or <60%, flag for immediate reallocation discussion before step 4.
-
+   - *Validate:* utilization sits in the 70-85% optimal band; hotspots flagged with a named resolution action
 4. **Executive Summary Generation**
    - Synthesize outputs into executive report format
    - Highlight critical issues and recommendations
    - Prepare stakeholder communications
+   - *Validate:* one-page RAG summary fits the audience; every red status has a documented intervention plan inside 48 hours
 
 ### Monthly Strategic Review
 
@@ -360,27 +424,25 @@ Reference: `assets/expected_output.json`
 
 ## Success Metrics & KPIs
 
-Reference: `references/portfolio-kpis.md` for full definitions and measurement guidance.
+### Portfolio Performance Indicators
+- **On-time Delivery Rate**: >80% projects delivered within 10% of planned timeline
+- **Budget Variance**: <5% average variance across portfolio
+- **Quality Score**: >85 composite quality rating across all projects
+- **Risk Mitigation Effectiveness**: >90% risks with active mitigation plans
+- **Resource Utilization**: 75-85% average utilization across teams
 
-### Portfolio Performance
-- On-time Delivery Rate: >80% within 10% of planned timeline
-- Budget Variance: <5% average across portfolio
-- Quality Score: >85 composite rating
-- Risk Mitigation Coverage: >90% risks with active plans
-- Resource Utilization: 75-85% average
+### Strategic Value Indicators  
+- **ROI Achievement**: >90% projects meeting ROI projections within 12 months
+- **Strategic Alignment**: >95% portfolio investment aligned with business priorities
+- **Innovation Balance**: 70% operational, 20% growth, 10% transformational projects
+- **Stakeholder Satisfaction**: >8.5/10 average satisfaction across executive stakeholders
+- **Value Acceleration**: <6 months average time from completion to value realization
 
-### Strategic Value
-- ROI Achievement: >90% projects meeting projections within 12 months
-- Strategic Alignment: >95% investment aligned with business priorities
-- Innovation Balance: 70% operational / 20% growth / 10% transformational
-- Stakeholder Satisfaction: >8.5/10 executive average
-- Time-to-Value: <6 months average post-completion
-
-### Risk Management
-- Risk Exposure: Maintain within approved appetite ranges
-- Resolution Time: <30 days (medium), <7 days (high)
-- Mitigation Cost Efficiency: <20% of total portfolio risk EMV
-- Risk Prediction Accuracy: >70% probability assessment accuracy
+### Risk Management Indicators
+- **Risk Exposure Level**: Maintain within approved risk appetite ranges
+- **Risk Resolution Time**: <30 days average for medium risks, <7 days for high risks
+- **Mitigation Cost Efficiency**: Mitigation spend <20% of total portfolio risk EMV
+- **Risk Prediction Accuracy**: >70% accuracy in risk probability assessments
 
 ## Continuous Improvement Framework
 
@@ -402,7 +464,113 @@ Reference: `references/portfolio-kpis.md` for full definitions and measurement g
 - Team feedback on process efficiency and effectiveness
 - Customer impact assessment of portfolio decisions
 
-## Related Skills
+This skill represents the pinnacle of enterprise project management capability, providing both strategic oversight and tactical execution support for complex digital transformation initiatives. The combination of quantitative analysis, sophisticated prioritization, and executive-level communication enables senior project managers to drive significant business value while managing enterprise-level risks and complexities.
 
-- **Product Strategist** (`product-team/product-strategist/`) — Product OKRs align with portfolio objectives
-- **Scrum Master** (`project-management/scrum-master/`) — Sprint velocity data feeds project health dashboards
+## Anti-patterns
+
+| Anti-pattern | Failure mode | Fix |
+|--------------|--------------|-----|
+| RAG status assigned by gut feel, not by dimension scoring | Optimism bias; reds surface too late; executives lose trust in the reports | Use `project_health_dashboard.py` thresholds and calibrate dimension weights with sponsors — don't override without documenting why |
+| Risk register full of "medium" risks | Team avoiding extreme ratings; no actionable signal | Run a calibration workshop with reference incidents; force a distribution across low/medium/high/critical |
+| Portfolio-level decisions made from project-level dashboards | Local optimization; strategic misalignment; hidden dependencies | Aggregate via portfolio view; apply WSJF/RICE across the portfolio, not per project |
+| Capacity planner shows zero gaps while teams complain of overload | Utilization excludes meeting overhead, context-switching, unplanned work | Include 15% meeting overhead and 5% context-switching; validate against team self-reports |
+| Stakeholder map classifies everyone as "Manage Closely" | Thresholds too low or scores inflated; dilutes engagement plan | Use relative ranking within the group; enforce the 4-quadrant split |
+| Executive reports written for the PM, not the executive | Attention drops; decisions delayed; report becomes an artifact not a tool | Lead with RAG + top 3 decisions needed; push dimension detail to an appendix |
+| Treating EMV as a point estimate | Planning against a single number; surprise when variance arrives | Present EMV with a confidence range; layer Monte Carlo for schedule-critical projects |
+| Ignoring risk correlation across projects | Shared dependency fails and multiple projects go red simultaneously | Run portfolio-level correlation analysis quarterly; flag shared vendors, shared teams, shared infra |
+| Rebalancing the portfolio reactively (project-by-project) instead of on a cadence | Whiplash for teams; rebalancing becomes political | Quarterly rebalancing on a fixed cadence using three horizons and efficient-frontier view |
+
+## Troubleshooting
+
+| Symptom | Likely Cause | Resolution |
+|---------|-------------|------------|
+| Portfolio health score does not match stakeholder perception | Dimension weights misaligned with organizational priorities, or data inputs incomplete | Recalibrate HEALTH_DIMENSIONS weights with executive sponsors; ensure all 5 dimensions have data |
+| Risk matrix shows all risks clustered in medium zone | Probability/impact scoring lacks granularity or team avoids extreme ratings | Facilitate risk calibration workshop; use three-point estimation and reference past incidents |
+| Resource capacity planner shows zero gaps despite team complaints | Utilization data does not account for meeting overhead, context-switching, or unplanned work | Verify CAPACITY_FACTORS config; include 15% meeting overhead and 5% context-switching penalty |
+| Stakeholder mapper classifies everyone as "Manage Closely" | Power/interest thresholds too low for your organization, or scores inflated | Adjust POWER_THRESHOLD and INTEREST_THRESHOLD (default: 5); use relative ranking within group |
+| RAG status oscillates between green and amber weekly | Thresholds set too tight, or data updates cause noise | Widen amber band (e.g., 55-80 instead of 60-80); use rolling 2-week average instead of point-in-time |
+| EMV calculations produce unrealistically high risk exposure | Category weights compounding with high probability/impact scores | Review RISK_CATEGORIES weights; cap financial risk weight at 1.4x; validate probability estimates against historical data |
+| Executive reports are too long for stakeholder attention span | Report template includes too many detail sections for the audience | Tailor output to audience using the tone guide; executives need 1-page RAG summary, not full dimension breakdown |
+
+## Success Criteria
+
+- Portfolio average health score maintained above 75/100 across all active projects
+- On-time delivery rate exceeds 80% (within 10% of planned timeline)
+- Budget variance maintained below 5% average across the portfolio
+- Risk mitigation effectiveness above 90% (all critical/high risks have active mitigation plans)
+- Resource utilization consistently in the 70-85% optimal range
+- Stakeholder satisfaction above 8.5/10 as measured by quarterly surveys
+- All projects in red RAG status have documented intervention plans within 48 hours
+
+## Scope & Limitations
+
+**In Scope:**
+- Multi-project portfolio health assessment with weighted composite scoring
+- Quantitative risk analysis using EMV, probability/impact matrices, and category weighting
+- Resource capacity planning with utilization optimization and skill-matching
+- Stakeholder mapping with Mendelow's Matrix and targeted communication plans
+- Executive-level reporting with RAG status dashboards and strategic recommendations
+
+**Out of Scope:**
+- Sprint-level team management (see `scrum-master/` skill)
+- Product backlog management and feature prioritization (see `execution/prioritization-frameworks/`)
+- Agile coaching and team maturity assessment (see `agile-coach/` skill)
+- Financial modeling beyond project-level ROI (see `finance/` domain skills)
+- Contract negotiation and procurement management
+
+**Important Caveats:**
+- Health scores use deterministic formulas, not ML predictions. Calibrate thresholds to your portfolio context.
+- Risk EMV calculations assume independent risks. Portfolio risk correlation analysis (Step 4) provides a more accurate combined view but requires cross-project dependency data.
+- Resource capacity planning models are weekly snapshots; they do not account for intra-week variability or unplanned work spikes.
+
+## Integration Points
+
+| Integration | Direction | Description |
+|------------|-----------|-------------|
+| `scrum-master/` | Receives from | Sprint velocity and health metrics feed portfolio-level health dashboards |
+| `sprint-retrospective/` | Receives from | Retro insights inform stakeholder reports and process improvement tracking |
+| `execution/brainstorm-okrs/` | Feeds into | Portfolio priorities and strategic context shape quarterly OKR themes |
+| `execution/outcome-roadmap/` | Feeds into | Portfolio health data influences roadmap commitment levels (Now/Next/Later) |
+| `discovery/pre-mortem/` | Receives from | Launch-blocking tigers escalate into portfolio risk register |
+| `execution/release-notes/` | Complements | Release notes incorporate stakeholder communication plans from mapper |
+| Jira via Atlassian MCP | Bidirectional | Pull project data for health analysis; push status reports to Confluence |
+| Financial Systems | Receives from | Real-time budget and spend data for variance analysis |
+
+## Tool Reference
+
+### project_health_dashboard.py
+
+Aggregates project metrics across timeline, budget, scope, quality, and risk dimensions. Produces composite health scores and RAG status.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (required) | Path to JSON file containing project portfolio data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+
+### risk_matrix_analyzer.py
+
+Builds probability/impact matrices, calculates weighted risk scores by category, and suggests mitigation strategies.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (required) | Path to JSON file containing risk register data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+
+### resource_capacity_planner.py
+
+Models team capacity across projects, identifies utilization imbalances, and provides optimization recommendations.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (required) | Path to JSON file containing resource and project capacity data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+
+### stakeholder_mapper.py
+
+Classifies stakeholders into Mendelow's Matrix quadrants and generates tailored communication plans with blocker engagement strategies.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `data_file` | positional | (optional) | Path to JSON file with stakeholder data |
+| `--format` | choice | `text` | Output format: `text` or `json` |
+| `--demo` | flag | off | Run with built-in sample data (10 stakeholders) |

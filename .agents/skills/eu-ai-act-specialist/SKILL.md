@@ -1,204 +1,514 @@
 ---
-name: "eu-ai-act-specialist"
-description: "EU AI Act (Regulation (EU) 2024/1689) operational compliance for compliance teams. Three Article-level decisions: (1) What's the risk tier of this AI system — prohibited (Art. 5), high-risk (Art. 6 + Annex III), limited-risk (Art. 50), or minimal-risk? (2) For high-risk systems, what's the Article 43 conformity assessment route (Module A internal control vs Module H full QMS + notified body) and what goes in the Annex IV technical documentation? (3) Per organizational role (provider / deployer / importer / distributor / authorized representative), what are the active obligations and deadlines? Use during AI system intake review, when planning conformity assessment, or when scoping deployer obligations. Cites Articles + Annexes for every output. NOT executive AI strategy (see chief-ai-officer-advisor). NOT a legal substitute."
-license: MIT
+name: eu-ai-act-specialist
+description: >
+  EU AI Act (Regulation EU 2024/1689) compliance specialist. Use when
+  classifying AI systems by risk tier, assessing provider or deployer
+  obligations, evaluating GPAI model compliance, running conformity assessments,
+  performing bias detection and fairness testing, building AI governance
+  programs, or preparing for EU AI Act enforcement deadlines. Covers the full
+  regulatory lifecycle from system inventory through post-market monitoring.
+license: MIT + Commons Clause
 metadata:
   version: 1.0.0
-  author: Alireza Rezvani
-  category: ra-qm-team
-  domain: eu-ai-act-compliance
-  updated: 2026-05-13
-  python-tools: ai_system_risk_classifier.py, conformity_assessment_planner.py, ai_act_obligation_tracker.py
-  frameworks: eu-ai-act, gdpr-overlap, iso-42001-mapping, nist-ai-rmf-mapping
+  author: borghei
+  category: compliance
+  domain: ai-governance
+  updated: 2026-03-31
+  tags: [eu-ai-act, ai-governance, risk-classification, gpai, conformity]
 ---
-
 # EU AI Act Compliance Specialist
 
-Article-cited operational skill for Regulation (EU) 2024/1689. **Three decisions, no executive AI strategy:**
-
-1. **What tier is this AI system?** — prohibited (Article 5) / high-risk (Article 6 + Annex III) / limited-risk transparency (Article 50) / minimal-risk
-2. **For high-risk systems, what's the conformity assessment route + documentation pack?** — Article 43 Module A vs Module H + Annex IV technical documentation
-3. **Per organizational role, what are the obligations?** — provider / deployer / importer / distributor / authorized representative matrix per Article 16, 22, 25, 26
-
-This skill is **NOT chief-ai-officer-advisor**. CAIO decides whether to ship the AI feature at all and accepts business risk. This skill operates the conformity work that turns "we'll ship it" into Article-compliant artefacts.
-
-This skill is **NOT a legal substitute**. The Act is binding regulation. For novel cases (Is this a GPAI model? Does Article 6(2) carve-out apply? Is fine-tuning a foundation model "substantial modification"?), engage qualified outside counsel. The skill cites Articles + Annexes and uses Commission/EDPB published interpretation but does not provide binding legal opinion.
-
-This skill is **NOT GDPR**. Many AI systems also trigger GDPR (training data, output processing). See `ra-qm-team/skills/gdpr-dsgvo-expert/` for DPIA + lawful basis work. The Acts interact (Recital 10, Article 10 for high-risk training data).
-
-## Keywords
-
-EU AI Act, EU AI Regulation, Regulation 2024/1689, AI Act, AI regulation Europe, high-risk AI, prohibited AI, Article 5 AI Act, Article 6 AI Act, Article 9 AI Act, Article 50 AI Act, Annex III, Annex IV, conformity assessment, CE marking AI, notified body AI, Module A, Module H, technical documentation AI, post-market monitoring AI, fundamental rights impact assessment, FRIA, GPAI, general-purpose AI model, systemic risk GPAI, AI Office, ENISA AI, EDPB AI, AI Act timeline, AI Act penalties, EU AI Act provider, EU AI Act deployer, EU AI Act importer, EU AI Act distributor, EU AI Act fines, AI literacy
-
-## Quick Start
-
-```bash
-# Decision A: Classify an AI system per the Act
-python scripts/ai_system_risk_classifier.py                       # embedded 5-system sample
-python scripts/ai_system_risk_classifier.py path/to/systems.json
-
-# Decision B: Conformity assessment plan for a high-risk system
-python scripts/conformity_assessment_planner.py                   # embedded high-risk sample
-python scripts/conformity_assessment_planner.py path/to/system.json
-
-# Decision C: Obligation tracker per organizational role
-python scripts/ai_act_obligation_tracker.py                       # embedded sample (provider + deployer)
-python scripts/ai_act_obligation_tracker.py path/to/roles.json
-```
-
-## Key Questions (ask these first)
-
-- **Does this AI system fall under Article 5 (prohibited practices)?** Social scoring, emotion recognition in workplace/education, manipulative subliminal techniques, real-time remote biometric identification in public — any of these are flat-out prohibited.
-- **Does it fall under Annex III (high-risk categories)?** 8 categories: biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, justice. Triggering Annex III triggers Article 6(2) — unless the Article 6(3) carve-outs apply.
-- **What organizational role does the company play?** Provider (placed on market), deployer (uses under own authority), importer (places third-country system on EU market), distributor (makes available in supply chain). Many companies are BOTH provider AND deployer simultaneously.
-- **Is this a general-purpose AI model?** GPAI has its own track (Articles 51–55) with stricter rules above 10²⁵ FLOPs training compute (Article 51 systemic risk).
-- **For high-risk: have we run Article 9 risk management AND Article 27 FRIA?** Article 9 is the lifecycle risk management; Article 27 is the Fundamental Rights Impact Assessment for public-sector deployers + essential services.
-- **What's the conformity assessment Module per Article 43?** Module A (internal control, possible for most Annex III systems) vs Module H (full QMS + notified body, required for biometrics + sometimes others).
-
-## Core Responsibilities
-
-### 1. AI System Risk Classification
-
-**The framework:** The Act takes a risk-based approach (Recital 26). Each AI system falls into exactly one of four tiers:
-
-| Tier | Source | Examples | Obligations |
-|---|---|---|---|
-| **Prohibited** | Article 5 | Social scoring; emotion recognition in workplace/education; subliminal manipulation; real-time public biometrics by law enforcement (with narrow exceptions) | Cannot be placed on market or used (penalties up to EUR 35M / 7% turnover) |
-| **High-risk** | Article 6 + Annex III; Article 6(1) + Annex I | CV-screening, credit scoring, biometric categorisation, safety components of regulated products | Articles 8–17 (provider) + Article 26 (deployer); conformity assessment; CE marking |
-| **Limited-risk (transparency)** | Article 50 | Chatbots, deepfakes, emotion recognition outside Article 5 contexts | Transparency disclosures to natural persons |
-| **Minimal-risk** | Default | Spam filters, video-game AI, inventory forecasters | None under the Act (voluntary codes of conduct, Article 95) |
-
-**Critical carve-outs (Article 6(3)):** an Annex III system is NOT high-risk if it (a) performs a narrow procedural task, (b) improves the result of previously completed human activity, (c) detects decision-making patterns without replacing human assessment, (d) performs a preparatory task. Caveat: profiling of natural persons is always Annex III high-risk regardless of carve-outs.
-
-**Run** `ai_system_risk_classifier.py` with system characteristics. The tool checks Article 5 prohibitions first, then Annex III categories, then Article 6(3) carve-outs, then Article 50 transparency, then minimal-risk default.
-
-See `references/eu_ai_act_titles.md` for the full Article-by-Article walkthrough.
-
-### 2. Conformity Assessment + Annex IV Technical Documentation
-
-**The framework (Article 43 + Annex VI/VII):** for high-risk AI systems, the provider must demonstrate conformity before placing on market. Two routes:
-
-- **Module A — Internal control** (Annex VI): provider self-assesses against the requirements. Applies to most Annex III systems where the provider has implemented harmonised standards.
-- **Module H — Full quality management system + technical documentation** (Annex VII): notified body involvement. Required for biometrics systems (Article 43(1)).
-
-**Required artifacts per Annex IV — Technical Documentation:**
-
-1. General description of the AI system (intended purpose, identification, version)
-2. Detailed description of system elements (architecture, training data, validation procedures)
-3. Information about monitoring, functioning and control
-4. Description of risk management system (Article 9)
-5. Description of changes after placing on market
-6. List of harmonised standards applied (or alternative)
-7. EU declaration of conformity (Article 47)
-8. Description of the post-market monitoring system (Article 72)
-
-**Run** `conformity_assessment_planner.py` to select the Module and produce the Annex IV checklist for a given high-risk system.
-
-See `references/high_risk_systems_annex_iii.md` for which systems require which conformity route.
-
-### 3. Per-Role Obligation Tracker
-
-**The framework (Articles 16, 22, 23, 24, 25, 26):** the Act distinguishes provider obligations (most) from downstream-actor obligations (deployer, importer, distributor, authorized representative). A single company can play multiple roles simultaneously.
-
-| Role | Primary Articles | Key obligations |
-|---|---|---|
-| **Provider** (Article 3(3)) | 8–17, 47, 49, 72 | Conformity assessment; CE marking; risk management; data governance; technical documentation; post-market monitoring; serious incident reporting (Article 73) |
-| **Deployer** (Article 3(4)) | 26 | Use according to instructions; human oversight; input data quality; record-keeping (Article 19); inform workers (Article 26(7)); FRIA if public-sector/essential-services (Article 27) |
-| **Importer** (Article 3(6)) | 23 | Verify conformity; affixed CE marking; technical documentation availability |
-| **Distributor** (Article 3(7)) | 24 | Verify CE marking + documentation before making available |
-| **Authorized representative** (Article 22) | 22 | Non-EU providers must appoint one; representative liable for provider obligations |
-
-**Important:** under Article 25, a deployer who substantially modifies a high-risk AI system, or places it on the market under their own name, becomes a **provider** and inherits provider obligations.
-
-**Run** `ai_act_obligation_tracker.py` with the roles JSON to produce a deadline-sorted obligation matrix.
-
-See `references/gpai_obligations.md` for the separate GPAI Articles 51–55 track.
-
-## Workflows
-
-### Workflow 1: AI System Intake Review (per system, ~2 hours)
-**Goal:** classify, identify obligations, scope the conformity work.
-
-```bash
-# 1. Document system characteristics: purpose, users, data, autonomy, deployment context
-# 2. Run classifier
-python scripts/ai_system_risk_classifier.py systems.json
-# 3. If high-risk: run planner
-python scripts/conformity_assessment_planner.py system.json
-# 4. Identify org roles played (provider / deployer / both)
-python scripts/ai_act_obligation_tracker.py roles.json
-# 5. Cross-check with GDPR DPIA (gdpr-dsgvo-expert) if personal data
-# 6. Cross-check with ISO 42001 AIMS evidence (compliance-team-iso42001)
-# 7. Output: classification memo + conformity plan + obligation list
-```
-
-### Workflow 2: Annex IV Technical Documentation Build (per high-risk system, 2–4 weeks)
-**Goal:** assemble the Annex IV pack before conformity assessment.
-
-```bash
-# 1. Run conformity assessment planner to get the checklist
-python scripts/conformity_assessment_planner.py system.json
-# 2. Assemble: system description, architecture, training data, validation, risk management
-# 3. Reference ISO 42001 evidence where it satisfies Annex IV items
-# 4. Reference ISO 27001 evidence for security controls
-# 5. Run Article 9 risk management lifecycle
-# 6. Sign EU declaration of conformity (Article 47) AFTER assessment passes
-# 7. Affix CE marking (Article 48)
-# 8. Register in EU database (Article 71) — high-risk Annex III systems
-```
-
-### Workflow 3: Pre-Deployment Obligation Audit (per system, before launch)
-**Goal:** confirm all active obligations are in place before EU placement.
-
-```bash
-# 1. Confirm classification still correct (re-run classifier if system changed)
-# 2. Confirm conformity assessment completed (if high-risk)
-# 3. Confirm transparency requirements (Article 50) — for chatbots, deepfakes, emotion detection
-# 4. Confirm post-market monitoring system (Article 72) is live
-# 5. Confirm serious-incident reporting procedure (Article 73) is documented
-# 6. For deployers: FRIA done (Article 27, if applicable); workers informed (Article 26(7))
-# 7. For GPAI: Articles 51-55 obligations met if applicable
-```
-
-### Workflow 4: Annual Compliance Refresh (per organization, yearly)
-**Goal:** re-verify classifications + obligations as the Act phases in.
-
-1. List all AI systems on or planned for EU market
-2. Run classifier for each — Article 5 prohibited list may expand via delegated acts
-3. Run obligation tracker — deadlines shift as Title III phases in (2025 → 2026 → 2027)
-4. For each high-risk system: verify post-market monitoring data flow + serious incident reporting capacity
-5. Update Annex IV technical documentation per Article 11 ongoing requirement
-6. Pair with ISO 42001 management review (Clause 9.3) if both operate
-
-## Output Standards
-
-```
-**Bottom Line:** [one sentence — classification + most-significant obligation]
-**Article Citation:** [Article + paragraph number; do not paraphrase without cite]
-**The Decision:** [one of: classify | conformity-route | obligation-scope]
-**The Evidence:** [Article + Annex references; classification confidence]
-**How to Act:** [3 concrete next steps with owner + deadline aligned to phasing]
-**Your Decision:** [the call for compliance officer or legal counsel — risk-class disputes, novel cases, GPAI threshold determinations]
-```
-
-## Adjacent Skills
-
-- `../../skills/gdpr-dsgvo-expert/` — GDPR DPIA + lawful basis (most AI systems also trigger GDPR)
-- `../../../compliance-team-iso42001/` — ISO 42001 AIMS (voluntary management system that satisfies parts of Article 17 QMS for providers)
-- `../../skills/information-security-manager-iso27001/` — ISO 27001 for cybersecurity requirements (Article 15)
-- `../../skills/risk-management-specialist/` — ISO 14971 risk management (referenced for safety-component AI under Article 6(1))
-- `../../skills/mdr-745-specialist/` — MDR 2017/745 (medical-device AI overlap)
-- `../../../../compliance-os/` — Meta-orchestrator for multi-framework programs
-- `../../../../c-level-advisor/chief-ai-officer-advisor/` — Executive AI strategy
-
-## References
-
-- [eu_ai_act_titles.md](references/eu_ai_act_titles.md) — Titles I–XII Article-by-Article walkthrough with deployer/provider/importer/distributor obligation breakdown
-- [high_risk_systems_annex_iii.md](references/high_risk_systems_annex_iii.md) — Annex III 8 categories detailed + Article 6(2)–(3) interaction + carve-out test
-- [gpai_obligations.md](references/gpai_obligations.md) — Articles 51–55 GPAI track + systemic-risk threshold + transparency rules + Code of Practice status
-- [cross_framework_mapping_ai_act.md](references/cross_framework_mapping_ai_act.md) — AI Act ↔ ISO 42001 ↔ NIST AI RMF ↔ GDPR control-level mapping
+Production-ready compliance patterns for Regulation (EU) 2024/1689 -- the EU Artificial Intelligence Act. Covers risk classification, provider/deployer obligations, GPAI model requirements, conformity assessment, and AI governance.
 
 ---
 
+## AI System Inventory and Classification Workflow
+
+The agent classifies AI systems under the EU AI Act's risk-based framework and maps applicable obligations.
+
+### Workflow: Classify and Map Obligations
+
+1. **Inventory all AI systems** -- for each system, document: name, provider/developer, description, intended purpose, deployment status, affected persons, geographic scope, data processed, and decision impact level.
+2. **Apply classification decision tree** to each system:
+   - Does it meet the Art. 3(1) definition of an AI system? If no, document exclusion.
+   - Does it fall under a prohibited practice (Art. 5)? If yes, flag as UNACCEPTABLE RISK -- must be discontinued.
+   - Is it a safety component of an Annex I product? If yes, HIGH-RISK (product legislation path).
+   - Does it fall under an Annex III category? If yes, apply Art. 6(3) exception analysis. If exception does not apply, HIGH-RISK.
+   - Does Art. 50 transparency obligation apply? If yes, LIMITED RISK. Otherwise, MINIMAL RISK.
+3. **Map obligations** based on classification -- assign compliance owners for each obligation.
+4. **Run gap analysis** using `scripts/ai_compliance_checker.py` to identify compliance gaps.
+5. **Prioritize remediation** by deadline urgency, penalty severity, and number of affected persons.
+6. **Validation checkpoint:** Every AI system classified; prohibited practices flagged for immediate action; high-risk systems have assigned compliance owners and remediation timelines.
+
+### Example: AI System Classification Output
+
+```json
+{
+  "system_name": "Resume Screener v2.1",
+  "provider": "Internal ML Team",
+  "intended_purpose": "Screen job applications and rank candidates for recruiter review",
+  "ai_act_classification": "HIGH-RISK",
+  "classification_rationale": "Annex III Category 4 - Employment: AI for recruitment and screening of job applicants",
+  "art_6_3_exception": false,
+  "exception_rationale": "System directly influences which candidates proceed to interview stage - not a narrow procedural task",
+  "applicable_obligations": [
+    "Risk management system (Art. 9)",
+    "Data governance (Art. 10)",
+    "Technical documentation (Art. 11)",
+    "Record-keeping / automatic logging (Art. 12)",
+    "Transparency and information to deployers (Art. 13)",
+    "Human oversight (Art. 14)",
+    "Accuracy, robustness, cybersecurity (Art. 15)",
+    "Quality management system (Art. 17)",
+    "Conformity assessment (Art. 43)",
+    "CE marking (Art. 48)",
+    "EU database registration (Art. 49)",
+    "Post-market monitoring (Art. 72)"
+  ],
+  "compliance_deadline": "2026-08-02",
+  "assigned_owner": "Head of AI Governance"
+}
+```
+
+---
+
+## Risk Classification System
+
+The AI Act uses a risk-based approach with four tiers.
+
+### Tier 1: Prohibited Practices (Art. 5) -- Banned from 2 February 2025
+
+| Prohibited Practice | Article |
+|---------------------|---------|
+| Social scoring by public authorities | Art. 5(1)(c) |
+| Real-time remote biometric identification in public spaces (with narrow exceptions) | Art. 5(1)(h) |
+| Emotion recognition in workplace and education (except medical/safety) | Art. 5(1)(f) |
+| Individual predictive policing based solely on profiling | Art. 5(1)(d) |
+| Exploitation of vulnerabilities (age, disability, social/economic situation) | Art. 5(1)(b) |
+| Subliminal manipulation causing significant harm | Art. 5(1)(a) |
+| Untargeted facial image scraping for recognition databases | Art. 5(1)(e) |
+| Biometric categorization by sensitive attributes (race, religion, etc.) | Art. 5(1)(g) |
+
+### Tier 2: High-Risk AI Systems (Art. 6, Annex III)
+
+An AI system is high-risk if it falls under Annex III categories OR is a safety component of a product covered by Annex I harmonization legislation.
+
+**Annex III Categories:**
+
+| # | Category | Examples |
+|---|----------|----------|
+| 1 | Biometric identification and categorization | Remote biometric ID, emotion recognition |
+| 2 | Critical infrastructure management | Road traffic, water/gas/electricity supply, digital infrastructure |
+| 3 | Education and vocational training | Admissions, learning outcome evaluation, test monitoring |
+| 4 | Employment and workers management | Recruitment/screening, promotion/termination, performance monitoring |
+| 5 | Essential private and public services | Creditworthiness, insurance risk, public assistance eligibility |
+| 6 | Law enforcement | Polygraph, deepfake detection, crime analytics |
+| 7 | Migration, asylum, border control | Asylum risk assessment, visa/permit examination |
+| 8 | Administration of justice | Judicial fact-finding, election influence |
+
+### Tier 3: Limited Risk -- Transparency Obligations (Art. 50)
+
+| System Type | Transparency Requirement |
+|-------------|------------------------|
+| Chatbots / AI interacting with persons | Inform person they are interacting with AI |
+| Emotion recognition / biometric categorization | Inform exposed persons of system operation |
+| Deepfakes / AI-generated content | Disclose AI generation; machine-readable labelling |
+| AI-generated text on public interest matters | Disclose AI generation unless editorially reviewed |
+
+### Tier 4: Minimal Risk
+
+No mandatory requirements. Voluntary codes of conduct encouraged (Art. 95).
+
+---
+
+## Provider Obligations for High-Risk AI
+
+Providers of high-risk AI systems must comply with all of the following:
+
+| # | Obligation | Article | Key Requirement |
+|---|-----------|---------|-----------------|
+| 1 | Risk Management System | Art. 9 | Continuous iterative process throughout lifecycle; test against defined metrics |
+| 2 | Data Governance | Art. 10 | Training/validation/testing datasets meet quality, representativeness, and bias criteria |
+| 3 | Technical Documentation | Art. 11 | Drawn up before market placement; kept up to date throughout lifecycle |
+| 4 | Record-Keeping / Logging | Art. 12 | Automatic recording of events enabling traceability |
+| 5 | Transparency | Art. 13 | Instructions for use with capabilities, limitations, and oversight measures |
+| 6 | Human Oversight | Art. 14 | Human-in-the-loop, on-the-loop, or in-command depending on risk |
+| 7 | Accuracy, Robustness, Cybersecurity | Art. 15 | Appropriate levels declared and maintained; adversarial resilience |
+| 8 | Quality Management System | Art. 17 | Documented QMS covering design, development, testing, data management, post-market |
+| 9 | Conformity Assessment | Art. 43 | Internal control (Annex VI) or third-party assessment (Annex VII) |
+| 10 | CE Marking | Art. 48 | Affix CE marking before market placement |
+| 11 | EU Database Registration | Art. 49 | Register in EU database before market placement |
+| 12 | Post-Market Monitoring | Art. 72 | Active systematic data collection; serious incident reporting within 15 days |
+
+---
+
+## Deployer Obligations (Art. 26)
+
+| Obligation | Detail |
+|-----------|--------|
+| Use per instructions | Operate per provider's instructions for use |
+| Human oversight | Assign competent, trained, authorized oversight personnel |
+| Input data relevance | Ensure input data is relevant and representative |
+| Monitoring | Monitor operation; inform provider of risks/incidents |
+| Record-keeping | Keep auto-generated logs (minimum 6 months) |
+| Inform workers | Notify workers/representatives before deployment of high-risk AI |
+| DPIA | Carry out GDPR Art. 35 data protection impact assessment when required |
+| Fundamental Rights Impact Assessment | Required for public bodies / private entities providing public services (Art. 27) |
+
+---
+
+## General-Purpose AI Models (GPAI)
+
+### GPAI Provider Obligations (Art. 53) -- Effective 2 August 2025
+
+| Obligation | Detail |
+|-----------|--------|
+| Technical documentation | Maintain documentation of model training/testing process |
+| Information for downstream | Provide sufficient info for downstream AI system providers |
+| Copyright compliance | Comply with EU copyright law; honor opt-out mechanisms |
+| Training data summary | Publish detailed summary of training content per AI Office template |
+| EU representative | Non-EU providers must appoint EU-based representative |
+
+### Systemic Risk GPAI Models (Art. 51, 55)
+
+Classified as systemic risk if: high impact capabilities, AI Office designation, or trained with >10^25 FLOPs (rebuttable presumption).
+
+**Additional obligations:** Model evaluation with adversarial testing, red-teaming proportionate to risk, systemic risk assessment and mitigation, incident tracking and reporting, cybersecurity protection, energy consumption reporting.
+
+---
+
+## Conformity Assessment Workflow
+
+The agent guides organizations through conformity assessment for high-risk AI systems.
+
+### Workflow: Internal Control (Annex VI)
+
+1. **Establish QMS** per Art. 17 -- document design, development, testing, data management, and post-market monitoring processes.
+2. **Compile technical documentation** per Art. 11 -- system description, development process, risk management, data governance, performance metrics.
+3. **Implement all Chapter III Section 2 requirements** -- verify each obligation is addressed.
+4. **Conduct internal assessment:**
+   - Verify risk management system addresses all identified risks (Art. 9)
+   - Verify data governance meets Art. 10 requirements
+   - Verify technical documentation is complete and current (Art. 11)
+   - Verify logging capability (Art. 12)
+   - Verify transparency and instructions for use (Art. 13)
+   - Verify human oversight design (Art. 14)
+   - Verify accuracy, robustness, cybersecurity (Art. 15)
+   - Confirm QMS covers all required elements (Art. 17)
+5. **Sign EU Declaration of Conformity** (Art. 47), affix CE marking (Art. 48), register in EU database (Art. 49).
+6. **Implement post-market monitoring** (Art. 72) and maintain documentation updates.
+7. **Validation checkpoint:** All 12 provider obligations verified; declaration signed; CE marking affixed; EU database registration complete; post-market monitoring operational.
+
+### Workflow: Third-Party Assessment (Annex VII)
+
+Required for biometric identification systems (Annex III point 1) and cases where harmonized standards are insufficient.
+
+1. **Complete all internal control steps** above.
+2. **Select and engage notified body** with relevant AI system expertise.
+3. **QMS assessment** -- notified body reviews and assesses QMS; issues certificate or requires corrective action; annual surveillance.
+4. **Technical documentation assessment** -- notified body reviews documentation, tests system, issues type-examination certificate.
+5. **Sign EU Declaration of Conformity** with notified body identification number on CE marking.
+6. **Maintain ongoing compliance** -- notified body surveillance, notify of significant changes, maintain all documentation.
+7. **Validation checkpoint:** Notified body certificates issued; CE marking with NB number affixed; ongoing surveillance scheduled.
+
+---
+
+## Bias Detection and Fairness Testing
+
+The agent performs bias detection per Art. 10 data governance requirements.
+
+### Workflow: Bias Testing
+
+1. **Define protected attributes** -- age, gender, ethnicity, disability, religion, and other relevant characteristics for the system's context.
+2. **Analyze data distribution** -- check representation ratios (target: 0.8-1.25 vs. population), class imbalance ratios (>0.5), and coverage of all known groups.
+3. **Evaluate outcome fairness** using these metrics:
+   - Demographic parity: P(positive outcome) equal across groups (within 80% / four-fifths rule)
+   - Equalized odds: TPR and FPR equal across groups (within 80%)
+   - Predictive parity: PPV equal across groups (within 80%)
+   - Calibration: Predicted probabilities accurate for all groups (within 5pp)
+4. **Identify proxy variables** -- check for features correlated with protected attributes.
+5. **Implement mitigation** -- data augmentation, re-sampling, re-weighting, adversarial debiasing, threshold adjustment, or reject option classification as appropriate.
+6. **Validate** -- re-run analysis to confirm improvement.
+7. **Document** -- record all findings, measures taken, and residual bias levels in technical documentation.
+8. **Validation checkpoint:** All protected attributes tested; fairness metrics within thresholds or residual bias documented with justification; mitigation measures recorded.
+
+### Example: Bias Detection Command
+
+```bash
+# Analyze dataset statistics for bias indicators
+python scripts/ai_bias_detector.py --input dataset_stats.json \
+  --protected-attributes gender,age_group,ethnicity
+
+# Output as JSON for integration with compliance documentation
+python scripts/ai_bias_detector.py --input dataset_stats.json --json
+```
+
+---
+
+## Implementation Timeline
+
+| Date | Milestone | Key Requirements |
+|------|-----------|-----------------|
+| 1 Aug 2024 | Entry into force | Regulation published |
+| 2 Feb 2025 | Prohibited practices + AI literacy | Art. 5 prohibitions; Art. 4 AI literacy |
+| 2 Aug 2025 | GPAI obligations + governance | Art. 53, 55 GPAI obligations; AI Office operational |
+| 2 Aug 2026 | **Full application** | All remaining: high-risk, deployer, transparency, conformity, CE marking |
+| 2 Aug 2027 | Extended deadline | Certain Annex I Section B high-risk safety components |
+
+### Penalties (Art. 99)
+
+| Violation Type | Maximum Fine | % Global Turnover |
+|---------------|-------------|-------------------|
+| Prohibited AI practices | EUR 35 million | 7% (whichever higher) |
+| High-risk non-compliance | EUR 15 million | 3% (whichever higher) |
+| Misleading information to authorities | EUR 7.5 million | 1% (whichever higher) |
+
+SMEs and startups receive proportionate treatment (lower of absolute or percentage).
+
+---
+
+## AI Model Documentation Templates
+
+### Template: AI System Description
+
+```
+AI SYSTEM DESCRIPTION
+=====================
+System Name:
+Version:
+Provider:
+Date:
+
+1. GENERAL INFORMATION
+   - Intended purpose:
+   - Target users (deployers):
+   - Affected persons:
+   - Geographic scope:
+   - AI Act classification:
+   - Annex III category (if applicable):
+
+2. TECHNICAL ARCHITECTURE
+   - Model type:
+   - Input data modalities:
+   - Output description:
+   - Key design choices and rationale:
+
+3. TRAINING AND DATA
+   - Training data sources:
+   - Data volume and characteristics:
+   - Data preparation methods:
+   - Bias examination results:
+
+4. PERFORMANCE
+   - Accuracy metrics:
+   - Robustness testing results:
+   - Known limitations:
+   - Performance across demographic groups:
+
+5. HUMAN OVERSIGHT
+   - Oversight level: [human-in-the-loop / on-the-loop / in-command]
+   - Override mechanism:
+   - Automation bias safeguards:
+```
+
+### Template: Risk Management Documentation
+
+```
+RISK MANAGEMENT SYSTEM -- AI SYSTEM
+====================================
+System Name:
+Version:
+Risk Management Lead:
+Date:
+
+1. RISK IDENTIFICATION
+   | Risk ID | Description | Likelihood | Severity | Risk Level |
+   |---------|-------------|------------|----------|------------|
+   | R-001   |             |            |          |            |
+
+2. RISK CONTROL MEASURES
+   | Risk ID | Measure | Type | Verification | Status |
+   |---------|---------|------|-------------|--------|
+   | R-001   |         |      |             |        |
+
+3. RESIDUAL RISK ASSESSMENT
+   - Acceptability determination:
+   - Overall risk-benefit analysis:
+
+4. POST-MARKET DATA INTEGRATION
+   - Review frequency:
+   - Trigger conditions for update:
+```
+
+---
+
+## Tools
+
+### AI Risk Classifier
+
+```bash
+# Classify AI system from JSON description
+python scripts/ai_risk_classifier.py --input system_description.json
+
+# Classify from inline JSON
+python scripts/ai_risk_classifier.py --inline '{
+  "name": "Resume Screener",
+  "description": "AI system that screens job applications and ranks candidates",
+  "domain": "employment",
+  "uses_biometrics": false,
+  "decision_type": "automated_with_review",
+  "affected_persons": "job applicants",
+  "eu_deployment": true
+}'
+
+# JSON output for programmatic use
+python scripts/ai_risk_classifier.py --input system.json --json
+```
+
+### AI Compliance Checker
+
+```bash
+# Full compliance check with gap analysis
+python scripts/ai_compliance_checker.py --input compliance_status.json
+
+# Check deployer obligations only
+python scripts/ai_compliance_checker.py --input compliance_status.json --role deployer
+
+# JSON output with remediation steps
+python scripts/ai_compliance_checker.py --input compliance_status.json --json
+```
+
+### AI Bias Detector
+
+```bash
+# Analyze dataset for bias indicators mapped to Art. 10
+python scripts/ai_bias_detector.py --input dataset_stats.json
+
+# Specify protected attributes explicitly
+python scripts/ai_bias_detector.py --input dataset_stats.json \
+  --protected-attributes gender,age_group,ethnicity --json
+```
+
+---
+
+## Reference Documentation
+
+| Document | Path | Description |
+|----------|------|-------------|
+| Classification Guide | `references/ai-act-classification-guide.md` | Complete Annex III categories, decision trees, prohibited practices, GPAI classification |
+| Governance Framework | `references/ai-governance-framework.md` | Organizational structure, ethics board, model lifecycle, conformity assessment procedures |
+| Documentation Templates | `references/ai-technical-documentation-templates.md` | Full templates for system description, risk management, data governance, testing, oversight, post-market monitoring, incident reporting, FRIA |
+
+---
+
+---
+
+## Troubleshooting
+
+| Problem | Possible Cause | Resolution |
+|---------|---------------|------------|
+| AI system classified as HIGH-RISK but organization believes it qualifies for Art. 6(3) exception | Exception analysis incomplete or domain mapping incorrect | Re-evaluate against all Art. 6(3) exception criteria; the system must perform a narrow procedural task, improve the result of a previously completed human activity, or be purely preparatory; document rationale with legal review |
+| Bias detector reports disparate impact but model performs well overall | Aggregated metrics mask subgroup disparities; four-fifths rule violation on specific protected attributes | Analyze per-group positive outcome rates using `--protected-attributes` flag; implement targeted mitigation (re-sampling, threshold adjustment) for affected groups; document residual bias with justification |
+| Compliance checker returns low score despite extensive documentation | Documentation exists but key compliance fields marked as incomplete or not up to date | Verify each obligation field in the input JSON reflects current state; ensure `kept_up_to_date` and `lifecycle_coverage` flags are set; update technical documentation per Art. 11 before reassessment |
+| System falls under multiple Annex III categories simultaneously | AI system serves multiple domains (e.g., employment + education) | Classify under the highest-risk applicable category; apply the most stringent obligations; document classification rationale for each category |
+| GPAI model obligations unclear for downstream provider | Upstream GPAI provider has not supplied sufficient documentation per Art. 53 | Request technical documentation, training data summary, and copyright compliance information from the GPAI provider; if unavailable, document the gap and assess independent obligations |
+| Conformity assessment route uncertain (internal vs. third-party) | Biometric identification system or insufficient harmonized standards | Biometric ID systems (Annex III point 1) require third-party assessment (Annex VII); all others may use internal control (Annex VI) unless harmonized standards are unavailable; consult notified body |
+| Post-market monitoring shows model performance degradation | Data drift, concept drift, or deployment context changed since initial assessment | Trigger Art. 72 post-market monitoring procedures; report serious incidents within 15 days; update risk management system and technical documentation; consider re-running conformity assessment |
+
+---
+
+## Success Criteria
+
+- **All AI systems inventoried and classified** -- every system assessed against the risk-based framework with documented classification rationale, including Art. 6(3) exception analysis where applicable
+- **Prohibited practices identified and discontinued** -- all Art. 5 prohibited practices flagged by February 2, 2025, with documented evidence of discontinuation or lawful exception application
+- **High-risk systems fully compliant by August 2, 2026** -- all 12 provider obligations verified, EU Declaration of Conformity signed, CE marking affixed, and EU database registration complete
+- **Bias testing completed for all high-risk systems** -- demographic parity, equalized odds, and predictive parity metrics within four-fifths threshold for all protected attributes, or residual bias documented with justification
+- **GPAI model obligations met by August 2, 2025** -- technical documentation maintained, downstream provider information supplied, copyright compliance verified, and training data summary published
+- **Conformity assessment completed per correct route** -- internal control (Annex VI) or third-party assessment (Annex VII) selected based on system classification, with all certificates issued and filed
+
+---
+
+## Scope & Limitations
+
+**In Scope:**
+- AI system risk classification across all four tiers (Prohibited, High-Risk, Limited Risk, Minimal Risk)
+- Annex III category analysis and Art. 6(3) exception evaluation
+- Provider and deployer obligation mapping with compliance gap analysis
+- GPAI model classification including systemic risk determination (10^25 FLOPs threshold)
+- Bias detection and fairness testing mapped to Art. 10 data governance requirements
+- Conformity assessment workflow guidance (Annex VI internal control and Annex VII third-party)
+- Implementation timeline tracking with penalty exposure assessment
+
+**Out of Scope:**
+- Actual ML model training, retraining, or adversarial testing -- this skill provides compliance frameworks, not ML engineering tools
+- Notified body selection, engagement, or audit execution
+- National regulatory sandbox applications or experimental AI system exemptions
+- Detailed GPAI Code of Practice implementation beyond obligation mapping
+- CE marking physical affixation or EU database registration system interaction
+- Legal advice on liability, insurance, or contractual allocation of AI Act obligations
+
+**Important Notes:**
+- The EU AI Act compliance deadline of August 2, 2026 for high-risk systems is firm -- organizations should begin classification and gap analysis immediately
+- Penalties are severe: up to EUR 35 million or 7% of global turnover for prohibited practices, EUR 15 million or 3% for high-risk non-compliance
+- SMEs and startups receive proportionate penalty treatment (lower of absolute or percentage)
+
+---
+
+## Integration Points
+
+| Skill | Integration | When to Use |
+|-------|-------------|-------------|
+| `iso42001-ai-management` | ISO 42001 AIMS provides organizational framework for EU AI Act compliance; certification demonstrates Art. 17 QMS | When building AI governance program that satisfies both ISO 42001 and EU AI Act |
+| `gdpr-dsgvo-expert` | Art. 10 data governance overlaps with GDPR; high-risk AI systems processing personal data require DPIA per GDPR Art. 35 | When AI system processes personal data and requires combined DPIA + conformity assessment |
+| `mdr-745-specialist` | AI medical devices fall under both EU AI Act and MDR; MDR conformity assessment may satisfy AI Act per Art. 120 | When AI-enabled medical device requires dual MDR and AI Act compliance |
+| `fda-consultant-specialist` | Cross-jurisdictional AI/ML SaMD compliance mapping between FDA PCCP and EU AI Act | When AI medical device is marketed in both US and EU |
+| `infrastructure-compliance-auditor` | Technical security controls supporting Art. 15 accuracy, robustness, and cybersecurity requirements | When validating infrastructure security for deployed high-risk AI systems |
+
+---
+
+## Tool Reference
+
+### ai_risk_classifier.py
+
+Classifies AI systems into EU AI Act risk categories based on a JSON system description.
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--input <file>` | Yes (unless `--inline`) | Path to JSON file containing AI system description |
+| `--inline '<json>'` | No | Inline JSON system description for quick classification |
+| `--json` | No | Output results in JSON format for programmatic use |
+| `--output <file>` | No | Export classification report to specified file path |
+
+**Input Fields:** `name`, `description`, `domain`, `sub_domain`, `uses_biometrics`, `biometric_type`, `biometric_context`, `interacts_with_persons`, `generates_content`, `content_type`, `decision_type`, `affected_persons`, `is_safety_component`, `product_legislation`, `eu_deployment`, `social_scoring`, `manipulates_behavior`, `targets_vulnerable_groups`, `predictive_policing_individual`, `untargeted_scraping`, `is_gpai`, `training_compute_flops`, `critical_infrastructure`, `infrastructure_type`.
+
+### ai_compliance_checker.py
+
+Validates AI system compliance against all provider and deployer obligations with gap analysis.
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--input <file>` | Yes | Path to JSON compliance status file |
+| `--role <role>` | No | Check obligations for specific role: `provider` (default) or `deployer` |
+| `--json` | No | Output results in JSON format with remediation steps |
+| `--output <file>` | No | Export compliance report to specified file path |
+
+**Output:** Overall compliance score (0-100), per-obligation status, gap analysis with Art. references, and prioritized remediation recommendations.
+
+### ai_bias_detector.py
+
+Analyzes dataset statistics for bias indicators mapped to Art. 10 data governance requirements.
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--input <file>` | Yes | Path to JSON file with dataset statistics (demographics, outcomes, correlations) |
+| `--protected-attributes <attrs>` | No | Comma-separated list of protected attributes to analyze (e.g., `gender,age_group,ethnicity`) |
+| `--json` | No | Output results in JSON format |
+| `--output <file>` | No | Export bias assessment report to specified file path |
+
+**Thresholds:** Representation ratio 0.8-1.25 (within 20% of population), class imbalance >0.5, four-fifths rule (0.8) for disparate impact, proxy correlation >0.5 for proxy variable detection.
+
+---
+
+**Regulation Reference:** Regulation (EU) 2024/1689 of the European Parliament and of the Council of 13 June 2024
+**Last Updated:** March 2026
 **Version:** 1.0.0
-**Status:** Production Ready

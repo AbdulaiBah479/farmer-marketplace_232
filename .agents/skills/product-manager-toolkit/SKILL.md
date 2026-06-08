@@ -1,8 +1,19 @@
 ---
-name: "product-manager-toolkit"
-description: Comprehensive toolkit for product managers including RICE prioritization, customer interview analysis, PRD templates, discovery frameworks, and go-to-market strategies. Use for feature prioritization, user research synthesis, requirement documentation, and product strategy development.
+name: product-manager-toolkit
+description: >
+  Comprehensive toolkit for product managers including RICE prioritization,
+  customer interview analysis, PRD templates, discovery frameworks, and
+  go-to-market strategies. Use for feature prioritization, user research
+  synthesis, requirement documentation, and product strategy development.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: product
+  domain: product-management
+  updated: 2026-03-31
+  tags: [product-management, rice, okr, roadmap, prioritization]
 ---
-
 # Product Manager Toolkit
 
 Essential tools and frameworks for modern product management, from discovery to delivery.
@@ -196,6 +207,121 @@ Select from `references/prd_templates.md`:
 
 ---
 
+### Positioning Statement Framework
+
+Create a Geoffrey Moore-style positioning statement to clarify product differentiation and value. Use this before writing PRDs, go-to-market plans, or pitch decks.
+
+#### Core Positioning Template
+
+```
+For [target user/persona]
+who [underserved need or painful moment],
+[product name] is a [product category]
+that [primary outcome delivered].
+Unlike [main alternative: competitor, workaround, or status quo],
+[product name] [unique differentiation in outcome terms].
+```
+
+#### One-Sentence Value Proposition
+
+Write a single sentence a PM can reuse in docs and slides.
+
+#### Differentiation Proof Points
+
+List 3 concrete proof points that support the "unlike" claim. Focus on outcomes and evidence, not adjectives.
+
+#### Writing Rules
+
+- Use persona-first language.
+- Focus on outcomes, not feature lists.
+- Keep wording specific and testable.
+- "Unlike X" should name the real alternative, including status quo.
+- Strong differentiation is about outcomes and evidence, not adjectives.
+
+#### Optional Variants
+
+- **Executive variant:** Shorter strategic wording for board decks.
+- **Customer-facing variant:** Clear plain-language wording for marketing.
+
+#### Next Steps
+
+1. Generate 3 alternate positioning directions (Recommended)
+2. Create a competitor comparison message matrix
+3. Convert into homepage headline + subheadline options
+
+---
+
+### Recommendation Canvas
+
+Evaluate product opportunities holistically using a structured canvas that connects problem framing to solution evidence. Useful for investment decisions, portfolio reviews, and stakeholder alignment.
+
+#### Canvas Sections
+
+```markdown
+## Product Name
+[Name of the product or service]
+
+## Business Outcome
+[Direction] [Metric] [Outcome] [Context] [Acceptance criteria]
+
+## Product Outcome
+[Direction] [Metric] [Outcome] [Context] [Acceptance criteria]
+
+## Problem Statement Narrative
+[2-3 sentences telling the persona's story from their point-of-view]
+
+## Solution Hypothesis
+If we [action/solution] for [target persona],
+then we will [desirable outcome].
+
+### Tiny Acts of Discovery
+- [Small experiment focused on viability]
+- [Small experiment focused on customer value]
+
+### Proof-of-Life
+Within [timeframe], we observe:
+- [Quantitative measurable outcome]
+- [Qualitative measurable outcome]
+
+## Positioning Statement
+For [target persona] that need [underserved need],
+[product] is a [category] that [benefit].
+Unlike [competitor], [product] provides [differentiation].
+
+## Assumptions & Unknowns
+- [Assumption 1]
+- [Assumption 2]
+
+## Issues/Risks (PESTEL lens)
+- Political: [Risk]
+- Economic: [Risk]
+- Social: [Risk]
+- Technological: [Risk]
+- Environmental: [Risk]
+- Legal: [Risk]
+
+## Value Justification
+[Yes/Yes with caveats/No with alternatives/No]
+Justification: [Why this is or isn't valuable]
+
+## Success Metrics
+1. [SMART metric 1]
+2. [SMART metric 2]
+3. [SMART metric 3]
+
+## What's Next
+1. [Next step with owner]
+2. [Next step with owner]
+```
+
+#### When to Use
+
+- Evaluating whether to invest in a new product or feature.
+- Preparing for portfolio review or investment committee.
+- Aligning stakeholders on go/no-go decisions.
+
+---
+
 ## Tools Reference
 
 ### RICE Prioritizer
@@ -260,7 +386,159 @@ python scripts/customer_interview_analyzer.py interview.txt json
 ---
 
 ## Input/Output Examples
-→ See references/input-output-examples.md for details
+
+### RICE Prioritizer Example
+
+**Input (features.csv):**
+```csv
+name,reach,impact,confidence,effort
+Onboarding Flow,20000,massive,high,s
+Search Improvements,15000,high,high,m
+Social Login,12000,high,medium,m
+Push Notifications,10000,massive,medium,m
+Dark Mode,8000,medium,high,s
+```
+
+**Command:**
+```bash
+python scripts/rice_prioritizer.py features.csv --capacity 15
+```
+
+**Output:**
+```
+============================================================
+RICE PRIORITIZATION RESULTS
+============================================================
+
+📊 TOP PRIORITIZED FEATURES
+
+1. Onboarding Flow
+   RICE Score: 16000.0
+   Reach: 20000 | Impact: massive | Confidence: high | Effort: s
+
+2. Search Improvements
+   RICE Score: 4800.0
+   Reach: 15000 | Impact: high | Confidence: high | Effort: m
+
+3. Social Login
+   RICE Score: 3072.0
+   Reach: 12000 | Impact: high | Confidence: medium | Effort: m
+
+4. Push Notifications
+   RICE Score: 3840.0
+   Reach: 10000 | Impact: massive | Confidence: medium | Effort: m
+
+5. Dark Mode
+   RICE Score: 2133.33
+   Reach: 8000 | Impact: medium | Confidence: high | Effort: s
+
+📈 PORTFOLIO ANALYSIS
+
+Total Features: 5
+Total Effort: 19 person-months
+Total Reach: 65,000 users
+Average RICE Score: 5969.07
+
+🎯 Quick Wins: 2 features
+   • Onboarding Flow (RICE: 16000.0)
+   • Dark Mode (RICE: 2133.33)
+
+🚀 Big Bets: 0 features
+
+📅 SUGGESTED ROADMAP
+
+Q1 - Capacity: 11/15 person-months
+   • Onboarding Flow (RICE: 16000.0)
+   • Search Improvements (RICE: 4800.0)
+   • Dark Mode (RICE: 2133.33)
+
+Q2 - Capacity: 10/15 person-months
+   • Push Notifications (RICE: 3840.0)
+   • Social Login (RICE: 3072.0)
+```
+
+---
+
+### Customer Interview Analyzer Example
+
+**Input (interview.txt):**
+```
+Customer: Jane, Enterprise PM at TechCorp
+Date: 2024-01-15
+
+Interviewer: What's the hardest part of your current workflow?
+
+Jane: The biggest frustration is the lack of real-time collaboration.
+When I'm working on a PRD, I have to constantly ping my team on Slack
+to get updates. It's really frustrating to wait for responses,
+especially when we're on a tight deadline.
+
+I've tried using Google Docs for collaboration, but it doesn't
+integrate with our roadmap tools. I'd pay extra for something that
+just worked seamlessly.
+
+Interviewer: How often does this happen?
+
+Jane: Literally every day. I probably waste 30 minutes just on
+back-and-forth messages. It's my biggest pain point right now.
+```
+
+**Command:**
+```bash
+python scripts/customer_interview_analyzer.py interview.txt
+```
+
+**Output:**
+```
+============================================================
+CUSTOMER INTERVIEW ANALYSIS
+============================================================
+
+📋 INTERVIEW METADATA
+Segments found: 1
+Lines analyzed: 15
+
+😟 PAIN POINTS (3 found)
+
+1. [HIGH] Lack of real-time collaboration
+   "I have to constantly ping my team on Slack to get updates"
+
+2. [MEDIUM] Tool integration gaps
+   "Google Docs...doesn't integrate with our roadmap tools"
+
+3. [HIGH] Time wasted on communication
+   "waste 30 minutes just on back-and-forth messages"
+
+💡 FEATURE REQUESTS (2 found)
+
+1. Real-time collaboration - Priority: High
+2. Seamless tool integration - Priority: Medium
+
+🎯 JOBS TO BE DONE
+
+When working on PRDs with tight deadlines
+I want real-time visibility into team updates
+So I can avoid wasted time on status checks
+
+📊 SENTIMENT ANALYSIS
+
+Overall: Negative (pain-focused interview)
+Key emotions: Frustration, Time pressure
+
+💬 KEY QUOTES
+
+• "It's really frustrating to wait for responses"
+• "I'd pay extra for something that just worked seamlessly"
+• "It's my biggest pain point right now"
+
+🏷️ THEMES
+
+- Collaboration friction
+- Tool fragmentation
+- Time efficiency
+```
+
+---
 
 ## Integration Points
 
@@ -350,3 +628,109 @@ python scripts/customer_interview_analyzer.py interview.txt json
 
 - `references/prd_templates.md` - PRD templates for different contexts
 - `references/frameworks.md` - Detailed framework documentation (RICE, MoSCoW, Kano, JTBD, etc.)
+
+---
+
+## Tool Reference
+
+### rice_prioritizer.py
+
+RICE framework implementation with portfolio analysis and quarterly roadmap generation.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `input` | positional | (optional) | CSV file with features or "sample" to create sample |
+| `--capacity` | int | 10 | Team capacity per quarter in person-months |
+| `--output` | choice | text | Output format: `text`, `json`, `csv` |
+
+**CSV columns:** `name, reach, impact, confidence, effort, description`
+
+**Impact values:** massive, high, medium, low, minimal
+**Confidence values:** high (100%), medium (80%), low (50%)
+**Effort values:** xl (13mo), l (8mo), m (5mo), s (3mo), xs (1mo)
+
+```bash
+python scripts/rice_prioritizer.py sample                          # Create sample CSV
+python scripts/rice_prioritizer.py features.csv                    # Default capacity (10)
+python scripts/rice_prioritizer.py features.csv --capacity 20      # Custom capacity
+python scripts/rice_prioritizer.py features.csv --output json      # JSON for integration
+python scripts/rice_prioritizer.py features.csv --output csv       # CSV for spreadsheets
+```
+
+### customer_interview_analyzer.py
+
+Keyword-based interview transcript analysis for extracting actionable insights.
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `interview_file` | positional | (required) | Path to interview transcript text file |
+| `json` | positional | (optional) | Add "json" as second arg for JSON output |
+
+**Extraction capabilities:** pain points (with severity), feature requests (with type and priority), jobs-to-be-done patterns, sentiment analysis, key themes, notable quotes, metrics mentioned, competitor mentions.
+
+```bash
+python scripts/customer_interview_analyzer.py interview.txt        # Human-readable
+python scripts/customer_interview_analyzer.py interview.txt json   # JSON output
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| RICE scores cluster together | Impact/confidence not differentiated enough | Calibrate scoring rubric with team; use specific examples for each level |
+| Roadmap overcommits capacity | Effort estimates too optimistic | Add 20% buffer; validate estimates with engineering before finalizing |
+| Interview analysis misses key insights | Transcript is too short or uses unexpected phrasing | Supplement with manual review; ensure transcripts capture full context |
+| Stakeholders disagree with priorities | Different value perceptions | Share raw RICE inputs transparently; allow stakeholders to adjust weights |
+| Quick wins dominate roadmap | Bias toward low-effort items | Reserve 30-40% of capacity for strategic big bets |
+| PRD scope creeps after approval | Insufficient out-of-scope definition | Explicitly list excluded items; require change request for additions |
+| Feature factory behavior | Shipping without measuring impact | Define success metrics in PRD before development starts |
+
+---
+
+## Success Criteria
+
+| Criterion | Target | How to Measure |
+|-----------|--------|----------------|
+| Prioritization velocity | <2 hours from data to ranked backlog | Time from CSV input to roadmap output |
+| Interview analysis coverage | >80% of pain points captured | Compare tool output to manual expert review |
+| Estimation accuracy | Actual effort within 1.5x of RICE estimate | Track actual vs estimated effort post-delivery |
+| Roadmap confidence | >70% of Q1 roadmap items shipped in quarter | Shipped items / Planned items |
+| Discovery cadence | 5-8 interviews per segment per quarter | Count completed interviews |
+| PRD quality | 0 scope change requests after approval | Track change requests per PRD |
+| Feature impact rate | >60% of shipped features hit success metrics | Post-launch metric comparison |
+
+---
+
+## Scope & Limitations
+
+**In scope:**
+- RICE prioritization with portfolio analysis
+- Quarterly roadmap generation with capacity planning
+- Customer interview transcript analysis
+- Pain point, feature request, and JTBD extraction
+- Sentiment analysis using keyword heuristics
+- PRD development process and templates
+- CSV/JSON import and export
+
+**Out of scope:**
+- Real-time analytics integration (use Amplitude/Mixpanel APIs)
+- NLP model-based analysis (tool uses keyword heuristics, not ML)
+- Multi-language transcript analysis (English only)
+- Visual wireframe or prototype generation
+- Competitive intelligence gathering (see business-growth skills)
+- Revenue impact modeling (see finance skills)
+
+---
+
+## Integration Points
+
+| Tool / Platform | Integration Method | Use Case |
+|-----------------|-------------------|----------|
+| Jira / Linear | `--output json` from rice_prioritizer | Import prioritized features as tickets |
+| Google Sheets | `--output csv` from rice_prioritizer | Share roadmap with stakeholders |
+| Dovetail / Notion | JSON output from interview analyzer | Aggregate interview insights in research repo |
+| agile-product-owner | RICE priorities feed sprint backlog | Connect strategy to execution |
+| product-strategist | OKR cascade informs RICE reach/impact | Align features with strategic objectives |
+| Slack / Email | Human-readable output from both tools | Async stakeholder communication |

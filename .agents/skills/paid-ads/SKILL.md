@@ -1,74 +1,120 @@
 ---
-name: "paid-ads"
-description: "When the user wants help with paid advertising campaigns on Google Ads, Meta (Facebook/Instagram), LinkedIn, Twitter/X, or other ad platforms. Also use when the user mentions 'PPC,' 'paid media,' 'ad copy,' 'ad creative,' 'ROAS,' 'CPA,' 'ad campaign,' 'retargeting,' or 'audience targeting.' This skill covers campaign strategy, ad creation, audience targeting, and optimization."
+name: paid-ads
+description: >
+  Plan, execute, and optimize paid advertising campaigns across Google Ads, Meta
+  Ads, LinkedIn Ads, Twitter/X, and TikTok. Covers campaign structure, audience
+  targeting, budget allocation, bid strategies, retargeting, attribution, and
+  performance optimization. Use when running PPC campaigns, setting up ad
+  accounts, optimizing ROAS/CPA, or when user mentions paid ads, PPC, Google
+  Ads, Meta Ads, LinkedIn Ads, ad campaigns, retargeting, audience targeting,
+  budget optimization, ROAS, CPA, or ad performance.
 license: MIT
 metadata:
   version: 1.0.0
-  author: Alireza Rezvani
+  author: borghei
   category: marketing
-  updated: 2026-03-06
+  domain: advertising
+  updated: 2026-03-09
 ---
-
 # Paid Ads
 
-You are an expert performance marketer with direct access to ad platform accounts. Your goal is to help create, optimize, and scale paid advertising campaigns that drive efficient customer acquisition.
+Campaign strategy, audience targeting, budget optimization, and performance management across all major advertising platforms.
 
-## Before Starting
+---
 
-**Check for product marketing context first:**
-If `.claude/product-marketing-context.md` exists, read it before asking questions. Use that context and only ask for information not already covered or specific to this task.
+## Table of Contents
 
-Gather this context (ask if not provided):
+- [Keywords](#keywords)
+- [Quick Start](#quick-start)
+- [Platform Selection Guide](#platform-selection-guide)
+- [Campaign Structure Framework](#campaign-structure-framework)
+- [Audience Targeting by Platform](#audience-targeting-by-platform)
+- [Budget Allocation Strategy](#budget-allocation-strategy)
+- [Bid Strategy Progression](#bid-strategy-progression)
+- [Retargeting Playbook](#retargeting-playbook)
+- [Performance Optimization](#performance-optimization)
+- [Attribution and Measurement](#attribution-and-measurement)
+- [Pre-Launch Checklist](#pre-launch-checklist)
+- [Best Practices](#best-practices)
+- [Integration Points](#integration-points)
 
-### 1. Campaign Goals
-- What's the primary objective? (Awareness, traffic, leads, sales, app installs)
-- What's the target CPA or ROAS?
-- What's the monthly/weekly budget?
-- Any constraints? (Brand guidelines, compliance, geographic)
+---
 
-### 2. Product & Offer
-- What are you promoting? (Product, free trial, lead magnet, demo)
-- What's the landing page URL?
-- What makes this offer compelling?
+## Keywords
 
-### 3. Audience
-- Who is the ideal customer?
-- What problem does your product solve for them?
-- What are they searching for or interested in?
-- Do you have existing customer data for lookalikes?
+paid ads, PPC, pay-per-click, Google Ads, Meta Ads, Facebook Ads, Instagram Ads, LinkedIn Ads, Twitter Ads, TikTok Ads, paid media, ROAS, CPA, CPC, CPM, audience targeting, retargeting, remarketing, budget optimization, bid strategy, ad campaigns, conversion tracking, lookalike audiences, campaign structure, ad performance, paid search, paid social
 
-### 4. Current State
-- Have you run ads before? What worked/didn't?
-- Do you have existing pixel/conversion data?
-- What's your current funnel conversion rate?
+---
+
+## Quick Start
+
+### Launch a Campaign
+
+1. Define campaign goal (leads, sales, traffic, awareness)
+2. Select platform based on audience and intent
+3. Set up conversion tracking and verify with test conversion
+4. Build campaign structure with proper naming conventions
+5. Define audience targeting
+6. Set budget and bid strategy
+7. Create ad creative (use Ad Creative skill)
+8. Launch and monitor for 7 days before making changes
+
+### Optimize an Existing Campaign
+
+1. Pull performance data for last 14-30 days
+2. Identify primary issue (high CPA, low CTR, low ROAS)
+3. Use the optimization levers in the Performance Optimization section
+4. Make one change at a time, wait 3-5 days between changes
+5. Document every change and its impact
 
 ---
 
 ## Platform Selection Guide
 
-| Platform | Best For | Use When |
-|----------|----------|----------|
-| **Google Ads** | High-intent search traffic | People actively search for your solution |
-| **Meta** | Demand generation, visual products | Creating demand, strong creative assets |
-| **LinkedIn** | B2B, decision-makers | Job title/company targeting matters, higher price points |
-| **Twitter/X** | Tech audiences, thought leadership | Audience is active on X, timely content |
-| **TikTok** | Younger demographics, viral creative | Audience skews 18-34, video capacity |
+### Platform Comparison
+
+| Platform | Best For | Audience Signal | Typical CPC | Minimum Budget |
+|----------|----------|----------------|-------------|----------------|
+| **Google Search** | High-intent demand capture | Search keywords (what they want now) | $1-8 (B2B: $5-20) | $1,500/mo |
+| **Google Display** | Awareness, retargeting | Browsing behavior, interests | $0.30-1.50 | $1,000/mo |
+| **Google Performance Max** | Multi-format automation | Mixed signals, Google's ML | Varies | $2,000/mo |
+| **Meta (FB/IG)** | Demand generation, B2C, visual products | Interests, behaviors, lookalikes | $0.50-3.00 | $1,000/mo |
+| **LinkedIn** | B2B, decision-maker targeting | Job title, company, industry, seniority | $5-15 | $2,000/mo |
+| **Twitter/X** | Tech audiences, thought leadership | Followers, interests, keywords | $0.50-3.00 | $500/mo |
+| **TikTok** | 18-34 demographics, brand awareness | Interests, behaviors, creator affinity | $0.30-1.50 | $1,000/mo |
+| **Reddit** | Niche communities, tech/gaming | Subreddit targeting | $0.50-2.00 | $500/mo |
+
+### Platform Selection Decision Tree
+
+```
+Is the audience actively searching for your solution?
+├── Yes → Google Search Ads
+└── No → Do you know their job title or company?
+    ├── Yes → LinkedIn Ads (B2B) or Meta Ads (B2C)
+    └── No → Is your product visual or lifestyle?
+        ├── Yes → Meta Ads (Instagram) or TikTok
+        └── No → Is your audience technical?
+            ├── Yes → Reddit Ads or Twitter/X
+            └── No → Meta Ads (Facebook) or Google Display
+```
 
 ---
 
-## Campaign Structure Best Practices
+## Campaign Structure Framework
 
-### Account Organization
+### Account Hierarchy
 
 ```
 Account
-├── Campaign 1: [Objective] - [Audience/Product]
-│   ├── Ad Set 1: [Targeting variation]
-│   │   ├── Ad 1: [Creative variation A]
-│   │   ├── Ad 2: [Creative variation B]
-│   │   └── Ad 3: [Creative variation C]
-│   └── Ad Set 2: [Targeting variation]
-└── Campaign 2...
+├── Campaign 1: [Objective] - [Product/Offer]
+│   ├── Ad Group/Set 1: [Audience Segment A]
+│   │   ├── Ad 1: [Creative Variant 1]
+│   │   ├── Ad 2: [Creative Variant 2]
+│   │   └── Ad 3: [Creative Variant 3]
+│   └── Ad Group/Set 2: [Audience Segment B]
+│       ├── Ad 1: [Creative Variant 1]
+│       └── Ad 2: [Creative Variant 2]
+└── Campaign 2: [Objective] - [Product/Offer]
 ```
 
 ### Naming Conventions
@@ -77,271 +123,393 @@ Account
 [Platform]_[Objective]_[Audience]_[Offer]_[Date]
 
 Examples:
-META_Conv_Lookalike-Customers_FreeTrial_2024Q1
-GOOG_Search_Brand_Demo_Ongoing
-LI_LeadGen_CMOs-SaaS_Whitepaper_Mar24
+GOOG_Search_Brand_FreeTrial_2026Q1
+META_Conv_Lookalike-Customers_Demo_Mar26
+LI_LeadGen_CMOs-SaaS-500_Whitepaper_2026Q1
+TIKTOK_Aware_18-34-Tech_BrandVideo_Mar26
 ```
 
-### Budget Allocation
+### Campaign Types by Objective
 
-**Testing phase (first 2-4 weeks):**
-- 70% to proven/safe campaigns
-- 30% to testing new audiences/creative
+| Objective | Google | Meta | LinkedIn |
+|-----------|--------|------|----------|
+| Awareness | Display, YouTube, PMax | Reach, Video Views | Brand Awareness |
+| Consideration | Search, Display | Traffic, Engagement | Website Visits |
+| Conversion | Search, PMax | Conversions, Leads | Lead Gen Forms |
+| Retargeting | Display, Search (RLSA) | Custom Audiences | Matched Audiences |
 
-**Scaling phase:**
-- Consolidate budget into winning combinations
-- Increase budgets 20-30% at a time
+---
+
+## Audience Targeting by Platform
+
+### Google Ads Targeting
+
+| Targeting Type | Use When | How |
+|---------------|----------|-----|
+| Keyword targeting | Capturing search intent | Exact, phrase, and broad match keywords |
+| Audience targeting | Layering intent signals | In-market, affinity, custom intent |
+| RLSA | Retargeting in search | Website visitor lists on search campaigns |
+| Customer Match | Targeting known contacts | Upload email lists for matched targeting |
+| Similar audiences | Expanding from known customers | Google's lookalike from customer lists |
+
+**Keyword match type strategy:**
+- **Exact match** [keyword]: Highest intent, lowest volume, highest CPC
+- **Phrase match** "keyword": Medium intent, medium volume
+- **Broad match** keyword: Lowest intent, highest volume, lowest CPC (use with smart bidding)
+
+### Meta Ads Targeting
+
+| Targeting Type | Use When | How |
+|---------------|----------|-----|
+| Interest targeting | Cold prospecting | Layer 2-3 related interests |
+| Lookalike audiences | Expanding from customers | 1-3% lookalike from best customers (by LTV) |
+| Custom audiences | Retargeting | Website visitors, email lists, video viewers |
+| Broad targeting | Trusting Meta's ML | No targeting restrictions, let the algorithm find converters |
+| Detailed targeting | Narrow audience needed | Combine demographics + interests + behaviors |
+
+**Lookalike best practices:**
+- Seed with best customers (by LTV), not all customers
+- Start with 1% lookalike (most similar), expand to 3-5% once proven
+- Create separate lookalikes from different seeds (customers, trial users, email subscribers)
+
+### LinkedIn Ads Targeting
+
+| Targeting Type | Use When | How |
+|---------------|----------|-----|
+| Job title | Targeting decision-makers | Specific titles (CMO, VP Marketing, Head of Growth) |
+| Job function | Broader role targeting | Marketing, Engineering, Finance |
+| Company size | Enterprise vs. SMB | Employee count ranges |
+| Industry | Vertical-specific campaigns | LinkedIn's industry categories |
+| Seniority | C-suite vs. individual contributor | Manager, Director, VP, CXO |
+| Skills | Technical targeting | Listed skills on profiles |
+| Company list | ABM targeting | Upload target account lists |
+
+**LinkedIn targeting rules:**
+- Minimum audience size: 50,000 for awareness, 20,000 for conversion
+- Layer 2-3 targeting dimensions maximum (more layers = too narrow)
+- Exclude competitors, agencies, and job seekers if not relevant
+
+---
+
+## Budget Allocation Strategy
+
+### Budget by Campaign Phase
+
+**Phase 1: Testing (Weeks 1-4)**
+
+| Allocation | Purpose |
+|-----------|---------|
+| 40% | Proven/safe campaigns (brand search, retargeting) |
+| 40% | Testing new audiences and creative |
+| 20% | Experimental channels or formats |
+
+**Phase 2: Optimization (Weeks 5-8)**
+
+| Allocation | Purpose |
+|-----------|---------|
+| 60% | Winning combinations from testing |
+| 25% | Iterating on promising but unproven |
+| 15% | New tests |
+
+**Phase 3: Scaling (Weeks 9+)**
+
+| Allocation | Purpose |
+|-----------|---------|
+| 70% | Proven performers |
+| 20% | Expansion (new audiences, lookalikes, broader targeting) |
+| 10% | Ongoing testing |
+
+### Budget Scaling Rules
+
+- Increase budget by 20-30% at a time, never more
 - Wait 3-5 days between increases for algorithm learning
+- Monitor CPA for 48 hours after increase — if CPA spikes, hold
+- Never double a budget overnight (disrupts algorithm learning)
+- If CPA increases > 30% after scaling, revert and investigate
+
+### Budget Minimums by Platform
+
+| Platform | Minimum Viable Monthly Budget | Optimal Monthly Budget |
+|----------|------------------------------|----------------------|
+| Google Search | $1,500 | $5,000+ |
+| Google Display | $1,000 | $3,000+ |
+| Meta Ads | $1,000 | $3,000+ |
+| LinkedIn Ads | $2,000 | $5,000+ |
+| TikTok Ads | $1,000 | $3,000+ |
+| Reddit Ads | $500 | $2,000+ |
 
 ---
 
-## Ad Copy Frameworks
+## Bid Strategy Progression
 
-### Key Formulas
+### Strategy Ladder
 
-**Problem-Agitate-Solve (PAS):**
-> [Problem] → [Agitate the pain] → [Introduce solution] → [CTA]
+| Stage | Strategy | When to Use | Requirements |
+|-------|----------|-------------|-------------|
+| 1 | Manual CPC | Starting out, need control | None |
+| 2 | Max Clicks | Building traffic data | Budget cap set |
+| 3 | Target CPA | Optimizing for conversions | 30+ conversions/month |
+| 4 | Target ROAS | Optimizing for revenue | 50+ conversions/month + revenue data |
+| 5 | Value-based | Maximizing revenue | Conversion value tracking, 100+ conversions/month |
 
-**Before-After-Bridge (BAB):**
-> [Current painful state] → [Desired future state] → [Your product as bridge]
+### Bid Strategy Rules
 
-**Social Proof Lead:**
-> [Impressive stat or testimonial] → [What you do] → [CTA]
-
-**For detailed templates and headline formulas**: See [references/ad-copy-templates.md](references/ad-copy-templates.md)
-
----
-
-## Audience Targeting Overview
-
-### Platform Strengths
-
-| Platform | Key Targeting | Best Signals |
-|----------|---------------|--------------|
-| Google | Keywords, search intent | What they're searching |
-| Meta | Interests, behaviors, lookalikes | Engagement patterns |
-| LinkedIn | Job titles, companies, industries | Professional identity |
-
-### Key Concepts
-
-- **Lookalikes**: Base on best customers (by LTV), not all customers
-- **Retargeting**: Segment by funnel stage (visitors vs. cart abandoners)
-- **Exclusions**: Always exclude existing customers and recent converters
-
-**For detailed targeting strategies by platform**: See [references/audience-targeting.md](references/audience-targeting.md)
+- Start with Manual CPC or Max Clicks until you have conversion data
+- Switch to automated bidding after 30+ conversions in 30 days
+- Set CPA targets 10-20% above your actual target (give the algorithm room)
+- Never change bid strategy and creative at the same time
+- Allow 14 days of learning phase after switching strategies
 
 ---
 
-## Creative Best Practices
+## Retargeting Playbook
 
-### Image Ads
-- Clear product screenshots showing UI
-- Before/after comparisons
-- Stats and numbers as focal point
-- Human faces (real, not stock)
-- Bold, readable text overlay (keep under 20%)
+### Funnel-Based Retargeting
 
-### Video Ads Structure (15-30 sec)
-1. Hook (0-3 sec): Pattern interrupt, question, or bold statement
-2. Problem (3-8 sec): Relatable pain point
-3. Solution (8-20 sec): Show product/benefit
-4. CTA (20-30 sec): Clear next step
+| Funnel Stage | Audience | Message | Window | Frequency |
+|-------------|----------|---------|--------|-----------|
+| Top | Blog readers, video viewers | Educational, social proof | 30-90 days | 1-2x/week |
+| Middle | Pricing/feature page visitors | Case studies, demos, comparisons | 7-30 days | 3-5x/week |
+| Bottom | Cart/trial abandoners | Urgency, objection handling, offer | 1-7 days | Daily OK |
 
-**Production tips:**
-- Captions always (85% watch without sound)
-- Vertical for Stories/Reels, square for feed
-- Native feel outperforms polished
-- First 3 seconds determine if they watch
+### Retargeting Audience Setup
 
-### Creative Testing Hierarchy
-1. Concept/angle (biggest impact)
-2. Hook/headline
-3. Visual style
-4. Body copy
-5. CTA
+| Audience | Source | Platform | Priority |
+|----------|--------|----------|----------|
+| All website visitors (30 days) | Pixel | All platforms | Medium |
+| Pricing page visitors (14 days) | Pixel | All platforms | High |
+| Cart/trial abandoners (7 days) | Pixel + Events | All platforms | Highest |
+| Email subscribers (non-customers) | Email list | Meta, LinkedIn | Medium |
+| Video viewers (50%+ watched) | Platform event | Meta, YouTube | Medium |
+| Blog readers (engaged, 60s+) | Pixel + Events | All platforms | Low-Medium |
+
+### Exclusions (Critical)
+
+Always exclude:
+- Existing paying customers (unless running upsell campaigns)
+- Recent converters (7-14 day exclusion window)
+- Bounced visitors (under 10 seconds on site)
+- Irrelevant page visitors (careers, support, legal)
+- Competitor employees (LinkedIn)
 
 ---
 
-## Campaign Optimization
+## Performance Optimization
+
+### Optimization Decision Tree
+
+```
+Is CPA above target?
+├── CTR is low (< 1% search, < 0.5% social)
+│   ├── Creative fatigue? → Refresh creative
+│   ├── Audience mismatch? → Refine targeting
+│   └── Ad relevance low? → Improve message match
+├── CTR is good, conversion rate low
+│   ├── Landing page issue? → Audit page (speed, copy, CTA)
+│   ├── Offer mismatch? → Align ad promise with page offer
+│   └── Audience too broad? → Narrow targeting
+└── CTR and CVR are good, CPA still high
+    ├── CPM too high? → Try different placements/platforms
+    ├── Competition driving up bids? → Adjust bid strategy
+    └── Attribution issue? → Check conversion tracking
+```
 
 ### Key Metrics by Objective
 
-| Objective | Primary Metrics |
-|-----------|-----------------|
-| Awareness | CPM, Reach, Video view rate |
-| Consideration | CTR, CPC, Time on site |
-| Conversion | CPA, ROAS, Conversion rate |
+| Objective | Primary Metrics | Benchmarks (B2B SaaS) |
+|-----------|----------------|----------------------|
+| Awareness | CPM, Reach, Video View Rate | CPM: $5-15, VVR: 15-25% |
+| Consideration | CTR, CPC, Time on Site | CTR: 1-3%, CPC: $2-8 |
+| Conversion | CPA, ROAS, Conversion Rate | CPA: $50-200, CR: 2-5% |
+| Retargeting | CPA, ROAS, Frequency | CPA: 30-50% lower than prospecting |
 
-### Optimization Levers
+### Creative Fatigue Detection
 
-**If CPA is too high:**
-1. Check landing page (is the problem post-click?)
-2. Tighten audience targeting
-3. Test new creative angles
-4. Improve ad relevance/quality score
-5. Adjust bid strategy
+| Signal | Threshold | Action |
+|--------|-----------|--------|
+| CTR declining week over week | 20%+ decline over 2 weeks | Refresh creative |
+| Frequency above threshold | > 3 (display), > 5 (retargeting) | Expand audience or refresh |
+| CPA increasing with stable CTR | 15%+ increase over 2 weeks | Test new creative angles |
+| Engagement rate dropping | 30%+ decline | Full creative overhaul |
 
-**If CTR is low:**
-- Creative isn't resonating → test new hooks/angles
-- Audience mismatch → refine targeting
-- Ad fatigue → refresh creative
+### Weekly Optimization Routine
 
-**If CPM is high:**
-- Audience too narrow → expand targeting
-- High competition → try different placements
-- Low relevance score → improve creative fit
-
-### Bid Strategy Progression
-1. Start with manual or cost caps
-2. Gather conversion data (50+ conversions)
-3. Switch to automated with targets based on historical data
-4. Monitor and adjust targets based on results
+| Task | Time | What to Check |
+|------|------|---------------|
+| Budget pacing | 5 min | Spend vs. plan, daily/weekly trends |
+| CPA/ROAS check | 10 min | Performance vs. targets, by campaign |
+| Top/bottom performers | 10 min | Pause worst, scale best |
+| Audience analysis | 10 min | Which segments are converting? |
+| Creative performance | 10 min | CTR by creative, fatigue signals |
+| Frequency check | 5 min | Any audiences over-exposed? |
+| Landing page CVR | 5 min | Post-click conversion rate |
+| Competitor check | 5 min | New competitors in auction? |
 
 ---
 
-## Retargeting Strategies
+## Attribution and Measurement
 
-### Funnel-Based Approach
+### Attribution Reality Check
 
-| Funnel Stage | Audience | Message | Goal |
-|--------------|----------|---------|------|
-| Top | Blog readers, video viewers | Educational, social proof | Move to consideration |
-| Middle | Pricing/feature page visitors | Case studies, demos | Move to decision |
-| Bottom | Cart abandoners, trial users | Urgency, objection handling | Convert |
+| What Platforms Report | Reality |
+|---------------------|---------|
+| "This campaign drove 100 conversions" | Platform attribution is inflated by 20-50% |
+| "ROAS is 5x" | Likely includes assisted conversions that would have converted anyway |
+| Last-click attribution | Ignores all touchpoints before the final click |
+| View-through conversions | Often just people who would have converted regardless |
 
-### Retargeting Windows
+### Practical Attribution Approach
 
-| Stage | Window | Frequency Cap |
-|-------|--------|---------------|
-| Hot (cart/trial) | 1-7 days | Higher OK |
-| Warm (key pages) | 7-30 days | 3-5x/week |
-| Cold (any visit) | 30-90 days | 1-2x/week |
+1. **Use UTM parameters consistently** — Tag every campaign, ad, and link
+2. **Track in GA4 as source of truth** — Compare platform data to GA4
+3. **Calculate blended CAC** — Total marketing spend / Total new customers
+4. **Use incrementality testing** — Hold-out tests to measure true lift
+5. **Compare platform data vs. CRM data** — The gap is your attribution inflation
 
-### Exclusions to Set Up
-- Existing customers (unless upsell)
-- Recent converters (7-14 day window)
-- Bounced visitors (<10 sec)
-- Irrelevant pages (careers, support)
+### UTM Standards
 
----
-
-## Reporting & Analysis
-
-### Weekly Review
-- Spend vs. budget pacing
-- CPA/ROAS vs. targets
-- Top and bottom performing ads
-- Audience performance breakdown
-- Frequency check (fatigue risk)
-- Landing page conversion rate
-
-### Attribution Considerations
-- Platform attribution is inflated
-- Use UTM parameters consistently
-- Compare platform data to GA4
-- Look at blended CAC, not just platform CPA
+```
+utm_source: google | meta | linkedin | twitter | tiktok | reddit
+utm_medium: cpc | paid-social | display | video | sponsored
+utm_campaign: [campaign-name-lowercase-hyphenated]
+utm_content: [ad-variant-identifier]
+utm_term: [keyword] (search only)
+```
 
 ---
 
-## Platform Setup
+## Pre-Launch Checklist
 
-Before launching campaigns, ensure proper tracking and account setup.
+### Tracking
 
-**For complete setup checklists by platform**: See [references/platform-setup-checklists.md](references/platform-setup-checklists.md)
+- [ ] Pixel/tag installed and firing correctly
+- [ ] Conversion events defined and tested with real test conversion
+- [ ] UTM parameters added to all ad destination URLs
+- [ ] GA4 goals/events configured to match conversion events
+- [ ] Attribution window set appropriately (7 or 28 day)
 
-### Universal Pre-Launch Checklist
-- [ ] Conversion tracking tested with real conversion
-- [ ] Landing page loads fast (<3 sec)
-- [ ] Landing page mobile-friendly
-- [ ] UTM parameters working
-- [ ] Budget set correctly
-- [ ] Targeting matches intended audience
+### Landing Page
 
----
+- [ ] Page loads under 3 seconds on mobile
+- [ ] Page is mobile-responsive
+- [ ] Headline matches the ad message
+- [ ] CTA is above the fold on mobile
+- [ ] Form works and submits to CRM/email system
+- [ ] Thank you page/event fires conversion tracking
 
-## Common Mistakes to Avoid
+### Campaign Setup
 
-### Strategy
-- Launching without conversion tracking
-- Too many campaigns (fragmenting budget)
-- Not giving algorithms enough learning time
-- Optimizing for wrong metric
-
-### Targeting
-- Audiences too narrow or too broad
-- Not excluding existing customers
-- Overlapping audiences competing
+- [ ] Budget set correctly (daily or lifetime)
+- [ ] Bid strategy selected and configured
+- [ ] Audience targeting reviewed (not too broad or narrow)
+- [ ] Negative keywords added (Google Search)
+- [ ] Exclusions configured (existing customers, competitors)
+- [ ] Ad schedule set (if time-specific targeting needed)
+- [ ] Geographic targeting verified
+- [ ] Device targeting reviewed
 
 ### Creative
-- Only one ad per ad set
-- Not refreshing creative (fatigue)
-- Mismatch between ad and landing page
 
-### Budget
-- Spreading too thin across campaigns
-- Making big budget changes (disrupts learning)
-- Stopping campaigns during learning phase
+- [ ] 3+ creative variants per ad group/set
+- [ ] All creative meets platform specifications
+- [ ] Copy validated against platform policies
+- [ ] Landing page URL correct for each ad
 
 ---
 
-## Task-Specific Questions
+## Best Practices
 
-1. What platform(s) are you currently running or want to start with?
-2. What's your monthly ad budget?
-3. What does a successful conversion look like (and what's it worth)?
-4. Do you have existing creative assets or need to create them?
-5. What landing page will ads point to?
-6. Do you have pixel/conversion tracking set up?
+1. **Tracking first, creative second** — Never launch without verified conversion tracking. A campaign without attribution is guesswork.
 
----
+2. **Start narrow, expand gradually** — Begin with your highest-intent, most-defined audience. Expand after proving the funnel works.
 
-## Tool Integrations
+3. **One change at a time** — Changing audience, creative, and bid strategy simultaneously makes it impossible to know what worked.
 
-For implementation, see the [tools registry](../../tools/REGISTRY.md). Key advertising platforms:
+4. **Give algorithms time** — Do not judge campaign performance before the learning phase completes (typically 50 conversions or 7 days).
 
-| Platform | Best For | MCP | Guide |
-|----------|----------|:---:|-------|
-| **Google Ads** | Search intent, high-intent traffic | ✓ | [google-ads.md](../../tools/integrations/google-ads.md) |
-| **Meta Ads** | Demand gen, visual products, B2C | - | [meta-ads.md](../../tools/integrations/meta-ads.md) |
-| **LinkedIn Ads** | B2B, job title targeting | - | [linkedin-ads.md](../../tools/integrations/linkedin-ads.md) |
-| **TikTok Ads** | Younger demographics, video | - | [tiktok-ads.md](../../tools/integrations/tiktok-ads.md) |
+5. **Creative is the biggest lever** — On most platforms, creative quality matters more than targeting precision. Test creative aggressively.
 
-For tracking, see also: [ga4.md](../../tools/integrations/ga4.md), [segment.md](../../tools/integrations/segment.md)
+6. **Match ad to landing page** — The #1 conversion killer is mismatched expectations between ad and landing page.
+
+7. **Budget concentration beats distribution** — $3,000 on one proven platform outperforms $500 spread across six platforms.
+
+8. **Build retargeting from day one** — Install pixels and build audiences even before you spend on retargeting.
+
+9. **Compare platform data to reality** — Platform-reported conversions are always higher than actual. Use CRM and GA4 as the source of truth.
+
+10. **Document everything** — Every campaign change, test result, and learning should be recorded. Institutional knowledge prevents repeating mistakes.
 
 ---
 
-## Related Skills
+## Integration Points
 
-- **ad-creative** — WHEN you need deep creative direction for ad visuals, video scripts, or creative concepting beyond basic image/copy guidelines. NOT for campaign strategy, targeting, or bidding decisions.
-- **analytics-tracking** — WHEN setting up conversion tracking pixels, UTM parameters, and attribution models before or during campaign launch. NOT for campaign creation or creative work.
-- **campaign-analytics** — WHEN analyzing campaign performance data, diagnosing underperforming campaigns, or building reporting dashboards. NOT for initial campaign setup or creative production.
-- **copywriting** — WHEN landing pages linked from ads need copy optimization to match ad messaging and improve post-click conversion. NOT for the ad copy itself.
-- **marketing-context** — Foundation skill for ICP, positioning, and messaging alignment. ALWAYS load before writing ad copy or selecting targeting to ensure message-market fit.
-
----
-
-## Communication
-
-Always confirm conversion tracking is in place before recommending creative or targeting changes — a campaign without proper attribution is guesswork. When recommending budget allocation, state the rationale (testing vs. scaling phase). Deliver ad copy as complete, ready-to-launch sets: headline variants, body copy, and CTA. Proactively flag when a landing page mismatch (ad promise ≠ page promise) is the likely conversion bottleneck. Load `marketing-context` for ICP and positioning before writing any copy.
+- **Ad Creative** — Use for writing ad copy, generating headlines, and creating creative variations. Paid Ads handles the campaign strategy; Ad Creative handles the copy.
+- **Landing Page Generator** — Use for building the landing pages ads drive traffic to.
+- **Campaign Analytics** — Use for measuring campaign performance, attribution analysis, and ROI calculation.
+- **Marketing Context** — Use as foundation for audience targeting and messaging alignment.
+- **Marketing Psychology** — Apply psychological principles to improve ad creative and landing page conversion.
+- **Copywriting** — Use for optimizing landing page copy to improve post-click conversion rates.
 
 ---
 
-## Proactive Triggers
+## Troubleshooting
 
-- User asks why ROAS is dropping → check creative fatigue and ad frequency before adjusting targeting or bids.
-- User wants to launch their first paid campaign → run through the pre-launch checklist (conversion tracking, landing page speed, UTMs) before touching creative.
-- User mentions high CTR but low conversions → diagnose landing page, not the ad; redirect to `page-cro` or `copywriting` skill.
-- User is scaling budget aggressively → warn about algorithm learning phase disruption; recommend 20-30% incremental increases with 3-5 day stabilization windows.
-- User asks about B2B lead generation via ads → recommend LinkedIn for job-title targeting and flag that CPL will be higher but lead quality better than Meta for high-ACV products.
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| CPA above target with low CTR | Creative fatigue or audience mismatch | Refresh creative. Use `ad_copy_scorer.py` to validate new copy. |
+| CPA above target with good CTR | Landing page conversion issue | Audit post-click experience: message match, page speed, form friction. |
+| CTR dropping week over week | Creative fatigue (>3 frequency) | Refresh creative every 2-4 weeks. Expand audience to reduce frequency. |
+| Budget not spending | Audience too narrow or bid too low | Check audience size with `audience_sizer.py`. Increase bid 10-20%. |
+| Platform reports inflated conversions | Attribution window too wide | Compare platform data to GA4/CRM. Use incrementality testing for true lift. |
+| Performance Max underperforming | Insufficient conversion data | Need 30+ conversions in 30 days for PMax to optimize. Start with Search campaigns. |
+| CPA spikes after budget increase | Algorithm learning disrupted | Never increase budget more than 20-30% at a time. Wait 3-5 days between changes. |
 
 ---
 
-## Output Artifacts
+## Success Criteria
 
-| Artifact | Description |
-|----------|-------------|
-| Campaign Architecture | Full account structure with campaign names, ad set targeting, naming conventions, and budget allocation |
-| Ad Copy Set | 3 headline variants, body copy, and CTA for each ad format and platform, ready to launch |
-| Audience Targeting Brief | Primary audiences, lookalike seeds, retargeting segments, and exclusion lists per platform |
-| Pre-Launch Checklist | Platform-specific tracking verification, landing page audit, and UTM parameter setup |
-| Weekly Optimization Report Template | Metrics dashboard structure with CPA/ROAS targets, fatigue signals, and decision triggers |
+- CPA within target range for campaign objective (B2B SaaS: $50-200 for qualified leads)
+- ROAS above 3x for revenue-focused campaigns
+- CTR above platform benchmarks: 2-5% search, 0.5-2% social
+- Conversion tracking verified with test conversion before launch
+- Budget allocation: 70% proven / 20% expansion / 10% testing (at scale)
+- All campaigns have proper UTM tagging and GA4 attribution configured
+- Weekly optimization routine completed with documented changes
+
+---
+
+## Scope & Limitations
+
+**In Scope:** Campaign strategy, platform selection, audience targeting, budget allocation, bid strategies, retargeting, performance optimization, attribution, pre-launch checklists.
+
+**Out of Scope:** Ad copy writing (use ad-creative), landing page design (use landing-page-generator), creative design/production, marketing automation, CRM configuration.
+
+**Limitations:** Budget minimums and CPC benchmarks are directional estimates. Actual costs vary by industry, geography, and competition. Platform-reported metrics are typically 20-50% inflated versus CRM truth.
+
+---
+
+## Python Automation Tools
+
+### 1. Ad Copy Scorer (`scripts/ad_copy_scorer.py`)
+Scores ad copy against platform specs, compliance rules, and conversion best practices.
+
+```bash
+python scripts/ad_copy_scorer.py --headline "Cut churn by 30%" --description "See how 1200 SaaS teams reduced churn" --platform google
+python scripts/ad_copy_scorer.py --file ads.json --json
+```
+
+### 2. CPC / CPA / ROAS Calculator (`scripts/cpc_calculator.py`)
+Calculates key advertising metrics from campaign data with industry benchmarks.
+
+```bash
+python scripts/cpc_calculator.py --spend 5000 --clicks 1200 --conversions 45 --revenue 12000 --platform meta
+python scripts/cpc_calculator.py --file campaign.json --json
+```
+
+### 3. Audience Sizer (`scripts/audience_sizer.py`)
+Estimates target audience size and recommends budget based on platform and targeting criteria.
+
+```bash
+python scripts/audience_sizer.py --platform linkedin --targeting "CMOs at SaaS companies 50-500 employees"
+python scripts/audience_sizer.py --file targeting.json --json
+```

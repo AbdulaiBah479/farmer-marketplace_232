@@ -1,293 +1,273 @@
 ---
 name: speech-to-text
-description: Transcribe audio to text using ElevenLabs Scribe v2. Use when converting audio/video to text, generating subtitles, transcribing meetings, or processing spoken content.
-license: MIT
-compatibility: Requires internet access and an ElevenLabs API key (ELEVENLABS_API_KEY).
-metadata: {"openclaw": {"requires": {"env": ["ELEVENLABS_API_KEY"]}, "primaryEnv": "ELEVENLABS_API_KEY"}}
+description: "Transcribe audio to text using each::sense AI. Convert speech from audio and video files into accurate text with punctuation, speaker detection, and timestamp support. Handles multiple languages, accents, and noisy environments. Use for: transcription, subtitles, meeting notes, interview transcripts, podcast show notes, accessibility, captioning. Triggers: speech to text, transcribe, transcription, audio to text, stt, voice to text, convert speech, dictation, subtitles, captions, whisper, transcribe audio"
+allowed-tools: Bash(curl *), WebFetch
 ---
 
-# ElevenLabs Speech-to-Text
+# Speech to Text
 
-Transcribe audio to text with Scribe v2 - supports 90+ languages, speaker diarization, and word-level timestamps.
-
-> **Setup:** See [Installation Guide](references/installation.md). For JavaScript, use `@elevenlabs/*` packages only.
+Transcribe audio and video into accurate text using [each::sense](https://docs.eachlabs.ai/sense/overview) — the intelligent AI agent that automatically selects the best model for your request.
 
 ## Quick Start
 
-### Python
+> Requires an each::labs API key. Get one at [eachlabs.ai](https://eachlabs.ai).
 
-```python
-from elevenlabs import ElevenLabs
-
-client = ElevenLabs()
-
-with open("audio.mp3", "rb") as audio_file:
-    result = client.speech_to_text.convert(file=audio_file, model_id="scribe_v2")
-
-print(result.text)
-```
-
-### JavaScript
-
-```javascript
-import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-import { createReadStream } from "fs";
-
-const client = new ElevenLabsClient();
-const result = await client.speechToText.convert({
-  file: createReadStream("audio.mp3"),
-  modelId: "scribe_v2",
-});
-console.log(result.text);
-```
-
-### cURL
+### Using curl
 
 ```bash
-curl -X POST "https://api.elevenlabs.io/v1/speech-to-text" \
-  -H "xi-api-key: $ELEVENLABS_API_KEY" -F "file=@audio.mp3" -F "model_id=scribe_v2"
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "Transcribe this audio recording into text. Include punctuation and paragraph breaks."},
+              {"type": "image_url", "image_url": {"url": "https://example.com/meeting-recording.mp3"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
 ```
 
-## Models
-
-| Model ID | Description | Best For |
-|----------|-------------|----------|
-| `scribe_v2` | State-of-the-art accuracy, 90+ languages | Batch transcription, subtitles, long-form audio |
-| `scribe_v2_realtime` | Low latency (~150ms) | Live transcription, voice agents |
-
-## Transcription with Timestamps
-
-Word-level timestamps include type classification and speaker identification:
+### Using Python (OpenAI SDK)
 
 ```python
-result = client.speech_to_text.convert(
-    file=audio_file, model_id="scribe_v2", timestamps_granularity="word"
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_EACHLABS_API_KEY",
+    base_url="https://eachsense-agent.core.eachlabs.run/v1"
 )
 
-for word in result.words:
-    print(f"{word.text}: {word.start}s - {word.end}s (type: {word.type})")
-
-```
-
-## Speaker Diarization
-
-Identify WHO said WHAT - the model labels each word with a speaker ID, useful for meetings, interviews, or any multi-speaker audio:
-
-```python
-result = client.speech_to_text.convert(
-    file=audio_file,
-    model_id="scribe_v2",
-    diarize=True
+response = client.chat.completions.create(
+    model="eachsense/beta",
+    messages=[{"role": "user", "content": "Transcribe this audio recording into text. Include punctuation and paragraph breaks."}],
+    # Images are included in the message content array above
 )
 
-for word in result.words:
-    print(f"[{word.speaker_id}] {word.text}")
+print(response.choices[0].message.content)
 ```
 
-For call recordings, the batch API can label diarized speakers as `agent` and `customer` by setting `detect_speaker_roles=true` alongside `diarize=true`. This option is not compatible with `use_multi_channel=true`.
+### With Reference Image
 
 ```bash
-curl -X POST "https://api.elevenlabs.io/v1/speech-to-text" \
-  -H "xi-api-key: $ELEVENLABS_API_KEY" \
-  -F "file=@call.mp3" \
-  -F "model_id=scribe_v2" \
-  -F "diarize=true" \
-  -F "detect_speaker_roles=true"
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "Transcribe the speech in this video clip. Include timestamps for each sentence."},
+              {"type": "image_url", "image_url": {"url": "https://example.com/presentation-video.mp4"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
 ```
 
-## Keyterm Prompting
+> Images are sent inside messages using the OpenAI multimodal content format. Maximum 4 images per request.
 
-Help the model recognize specific words it might otherwise mishear - product names, technical jargon, or unusual spellings (up to 100 terms):
+### Streaming
 
-```python
-result = client.speech_to_text.convert(
-    file=audio_file,
-    model_id="scribe_v2",
-    keyterms=["ElevenLabs", "Scribe", "API"]
+Set `"stream": true` for real-time SSE responses, or `"stream": false` for complete result in a single response. Streaming is useful for showing progress in UIs; non-streaming is simpler for scripts and automation.
+
+## Transcription Capabilities
+
+| Feature | Description | How to Request |
+|---------|-------------|----------------|
+| **Basic Transcription** | Plain text output with punctuation | "Transcribe this audio" |
+| **Timestamps** | Time codes for each segment | "Transcribe with timestamps" |
+| **Speaker Labels** | Identify different speakers | "Transcribe and label each speaker" |
+| **Paragraph Breaks** | Logical text segmentation | "Transcribe with paragraph breaks" |
+| **Language Detection** | Auto-detect spoken language | "Detect the language and transcribe" |
+| **Translation** | Transcribe and translate | "Transcribe and translate to English" |
+| **Summary** | Transcribe and summarize | "Transcribe and provide a summary" |
+| **SRT Format** | Subtitle file format | "Transcribe in SRT subtitle format" |
+
+## Supported Input Formats
+
+| Type | Formats |
+|------|---------|
+| **Audio** | MP3, WAV, M4A, FLAC, OGG, AAC, WMA, WEBM |
+| **Video** | MP4, MOV, AVI, MKV, WEBM |
+
+## Prompt Tips
+
+### Specify Output Format
+
+Be explicit about how you want the transcription structured:
+
+```
+"Transcribe this audio verbatim, including filler words like
+um and uh. Add timestamps every 30 seconds. Format as:
+[00:00] Text here
+[00:30] More text here"
+```
+
+### Request Speaker Identification
+
+For multi-speaker audio:
+
+```
+"Transcribe this conversation and label each speaker as
+Speaker 1, Speaker 2, etc. Start a new line when the
+speaker changes."
+```
+
+### Clean Transcription vs. Verbatim
+
+```
+# Verbatim (includes everything)
+"Transcribe exactly as spoken, including filler words, false starts, and repetitions"
+
+# Clean (polished)
+"Transcribe cleanly, removing filler words and false starts. Fix grammar for readability."
+```
+
+### Specify Language
+
+For non-English audio or to guide recognition:
+
+```
+"This audio is in German. Transcribe it in German."
+"This audio is in Japanese. Transcribe in Japanese and provide an English translation."
+```
+
+## Examples
+
+### Meeting Transcription
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "Transcribe this meeting recording. Label each speaker (Speaker 1, Speaker 2, etc.). Add timestamps at the start of each speaker turn. Include a brief summary of key decisions and action items at the end."},
+              {"type": "image_url", "image_url": {"url": "https://example.com/team-meeting.mp3"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
+```
+
+### Subtitle Generation (SRT Format)
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "Transcribe this video into SRT subtitle format. Each subtitle should be 1-2 lines, maximum 42 characters per line. Format:\n\n1\n00:00:01,000 --> 00:00:04,000\nSubtitle text here\n\n2\n00:00:04,500 --> 00:00:08,000\nNext subtitle here"},
+              {"type": "image_url", "image_url": {"url": "https://example.com/tutorial-video.mp4"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
+```
+
+### Interview Transcript
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "Transcribe this interview recording. Format as a clean Q&A transcript with the interviewer questions in bold and interviewee answers in regular text. Remove filler words and false starts. Add paragraph breaks for readability."},
+              {"type": "image_url", "image_url": {"url": "https://example.com/interview.mp3"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
+```
+
+### Multilingual Transcription with Translation
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "This audio is a Spanish-language podcast episode. Transcribe it in the original Spanish, then provide a complete English translation below. Maintain paragraph structure in both versions."},
+              {"type": "image_url", "image_url": {"url": "https://example.com/spanish-podcast.mp3"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
+```
+
+### Podcast Show Notes
+
+```bash
+curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $EACHLABS_API_KEY" \
+  -d '{
+    "messages": [{"role": "user", "content": [
+              {"type": "text", "text": "Transcribe this podcast episode and generate structured show notes. Include: 1) Episode summary (2-3 sentences), 2) Key topics discussed with timestamps, 3) Notable quotes, 4) Any resources or links mentioned, 5) Full transcript with speaker labels and timestamps."},
+              {"type": "image_url", "image_url": {"url": "https://example.com/podcast-episode.mp3"}}
+            ]
+          }
+    ],
+    "stream": false
+  }'
+```
+
+## Batch Transcription
+
+```bash
+# Transcribe multiple audio files
+AUDIO_FILES=(
+  "https://example.com/recording-1.mp3"
+  "https://example.com/recording-2.mp3"
+  "https://example.com/recording-3.mp3"
 )
+
+for AUDIO in "${AUDIO_FILES[@]}"; do
+  curl -X POST https://eachsense-agent.core.eachlabs.run/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "X-API-Key: $EACHLABS_API_KEY" \
+    -d "{
+      \"messages\": [{\"role\": \"user\", \"content\": \"Transcribe this audio with timestamps and speaker labels. Clean transcription, no filler words.\"}],
+      \"image_urls\": [\"$AUDIO\"],
+      \"stream\": false
+    }"
+  echo "---"
+done
 ```
 
-## Language Detection
+## Transcription Quality Tips
 
-Automatic detection with optional language hint:
+- **Clean audio** produces far better results. Remove background noise when possible before transcribing.
+- **Specify the language** if it is not English to improve accuracy.
+- **Shorter segments** (under 30 minutes) transcribe more reliably than very long recordings.
+- **Single speaker** audio is easiest; multi-speaker requires explicit labeling instructions.
+- **Technical jargon** can be specified: "This is a medical lecture; expect terminology like..." to improve accuracy.
+- **Accented speech** is handled well, but mentioning the accent helps: "The speaker has a Scottish accent."
 
-```python
-result = client.speech_to_text.convert(
-    file=audio_file,
-    model_id="scribe_v2",
-    language_code="eng"  # ISO 639-1 or ISO 639-3 code
-)
+## Common Pitfalls
 
-print(f"Detected: {result.language_code} ({result.language_probability:.0%})")
-```
+- **No format instructions** produces a wall of text. Specify paragraphs, timestamps, or speakers.
+- **Expecting perfect verbatim** from noisy audio is unrealistic. Clean audio gives clean transcripts.
+- **Very long audio** without chunking may hit limits. For hour-long recordings, consider splitting into segments.
+- **Overlapping speakers** are hard for any system. Minimize crosstalk in source recordings.
+- **Background music** competing with speech reduces accuracy. Voice-isolated audio works best.
 
-## Supported Formats
+## Related Skills
 
-**Audio:** MP3, WAV, M4A, FLAC, OGG, WebM, AAC, AIFF, Opus
-**Video:** MP4, AVI, MKV, MOV, WMV, FLV, WebM, MPEG, 3GPP
+- [Text to Speech](../text-to-speech/SKILL.md) — Convert transcripts back to speech
+- [Voice Generation](../voice-generation/SKILL.md) — Generate new voice audio from text
+- [Video Generation](../video-generation/SKILL.md) — Create videos to pair with transcripts
+- [Lyrics Generation](../lyrics-generation/SKILL.md) — Transcribe song lyrics from audio
 
-**Limits:** Up to 5.0GB file size, 10 hours duration
+## Documentation
 
-## Response Format
-
-```json
-{
-  "text": "The full transcription text",
-  "language_code": "eng",
-  "language_probability": 0.98,
-  "words": [
-    {"text": "The", "start": 0.0, "end": 0.15, "type": "word", "speaker_id": "speaker_0"},
-    {"text": " ", "start": 0.15, "end": 0.16, "type": "spacing", "speaker_id": "speaker_0"}
-  ]
-}
-```
-
-**Word types:**
-- `word` - An actual spoken word
-- `spacing` - Whitespace between words (useful for precise timing)
-- `audio_event` - Non-speech sounds the model detected (laughter, applause, music, etc.)
-
-## Error Handling
-
-```python
-try:
-    result = client.speech_to_text.convert(file=audio_file, model_id="scribe_v2")
-except Exception as e:
-    print(f"Transcription failed: {e}")
-```
-
-Common errors:
-- **401**: Invalid API key
-- **422**: Invalid parameters
-- **429**: Rate limit exceeded
-
-## Tracking Costs
-
-Monitor usage via `request-id` response header:
-
-```python
-response = client.speech_to_text.convert.with_raw_response(file=audio_file, model_id="scribe_v2")
-result = response.parse()
-print(f"Request ID: {response.headers.get('request-id')}")
-```
-
-## Real-Time Streaming
-
-For live transcription with ultra-low latency (~150ms), use the real-time API. The real-time API produces two types of transcripts:
-
-- **Partial transcripts**: Interim results that update frequently as audio is processed - use these for live feedback (e.g., showing text as the user speaks)
-- **Committed transcripts**: Final, stable results after you "commit" - use these as the source of truth for your application
-
-A "commit" tells the model to finalize the current segment. You can commit manually (e.g., when the user pauses) or use Voice Activity Detection (VAD) to auto-commit on silence.
-
-### Python (Server-Side)
-
-```python
-import asyncio
-from elevenlabs import ElevenLabs
-
-client = ElevenLabs()
-
-async def transcribe_realtime():
-    async with client.speech_to_text.realtime.connect(
-        model_id="scribe_v2_realtime",
-        include_timestamps=True,
-        keyterms=["ElevenLabs", "Scribe"],
-        no_verbatim=True,
-    ) as connection:
-        await connection.stream_url("https://example.com/audio.mp3")
-
-        async for event in connection:
-            if event.type == "partial_transcript":
-                print(f"Partial: {event.text}")
-            elif event.type == "committed_transcript":
-                print(f"Final: {event.text}")
-
-asyncio.run(transcribe_realtime())
-```
-
-### JavaScript (Client-Side with React)
-
-```typescript
-import { useScribe, CommitStrategy } from "@elevenlabs/react";
-
-function TranscriptionComponent() {
-  const [transcript, setTranscript] = useState("");
-
-  const scribe = useScribe({
-    modelId: "scribe_v2_realtime",
-    commitStrategy: CommitStrategy.VAD, // Auto-commit on silence for mic input
-    keyterms: ["ElevenLabs", "Scribe"],
-    noVerbatim: true,
-    onPartialTranscript: (data) => console.log("Partial:", data.text),
-    onCommittedTranscript: (data) => setTranscript((prev) => prev + data.text),
-  });
-
-  const start = async () => {
-    // Get token from your backend (never expose API key to client)
-    const { token } = await fetch("/scribe-token").then((r) => r.json());
-
-    await scribe.connect({
-      token,
-      microphone: { echoCancellation: true, noiseSuppression: true },
-    });
-  };
-
-  return <button onClick={start}>Start Recording</button>;
-}
-```
-
-### Commit Strategies
-
-| Strategy | Description |
-|----------|-------------|
-| **Manual** | You call `commit()` when ready - use for file processing or when you control the audio segments |
-| **VAD** | Voice Activity Detection auto-commits when silence is detected - use for live microphone input |
-
-```typescript
-// React: set commitStrategy on the hook (recommended for mic input)
-import { useScribe, CommitStrategy } from "@elevenlabs/react";
-
-const scribe = useScribe({
-  modelId: "scribe_v2_realtime",
-  commitStrategy: CommitStrategy.VAD,
-  keyterms: ["ElevenLabs", "Scribe"],
-  noVerbatim: true,
-  // Optional VAD tuning:
-  vadSilenceThresholdSecs: 1.5,
-  vadThreshold: 0.4,
-});
-```
-
-```javascript
-// JavaScript client: pass vad config on connect
-const connection = await client.speechToText.realtime.connect({
-  modelId: "scribe_v2_realtime",
-  keyterms: ["ElevenLabs", "Scribe"],
-  noVerbatim: true,
-  vad: {
-    silenceThresholdSecs: 1.5,
-    threshold: 0.4,
-  },
-});
-```
-
-### Event Types
-
-| Event | Description |
-|-------|-------------|
-| `partial_transcript` | Live interim results |
-| `committed_transcript` | Final results after commit |
-| `committed_transcript_with_timestamps` | Final with word timing |
-| `error` | Error occurred |
-
-See real-time references for complete documentation.
-
-## References
-
-- [Installation Guide](references/installation.md)
-- [Transcription Options](references/transcription-options.md)
-- [Real-Time Client-Side Streaming](references/realtime-client-side.md)
-- [Real-Time Server-Side Streaming](references/realtime-server-side.md)
-- [Commit Strategies](references/realtime-commit-strategies.md)
-- [Real-Time Event Reference](references/realtime-events.md)
+- [each::sense Overview](https://docs.eachlabs.ai/sense/overview)
+- [each::labs API](https://docs.eachlabs.ai)

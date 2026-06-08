@@ -1,27 +1,48 @@
 ---
-name: "jira-expert"
-description: Atlassian Jira expert for creating and managing projects, planning, product discovery, JQL queries, workflows, custom fields, automation, reporting, and all Jira features. Use for Jira project setup, configuration, advanced search, dashboard creation, workflow design, and technical Jira operations.
+name: jira-expert
+description: >
+  Atlassian Jira expert for creating and managing projects, planning, product
+  discovery, JQL queries, workflows, custom fields, automation, reporting, and
+  all Jira features. Use for Jira project setup, configuration, advanced search,
+  dashboard creation, workflow design, and technical Jira operations.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: project-management
+  domain: atlassian
+  updated: 2026-03-31
+  tags: [jira, jql, workflows, automation, dashboards]
 ---
-
 # Atlassian Jira Expert
 
 Master-level expertise in Jira configuration, project management, JQL, workflows, automation, and reporting. Handles all technical and operational aspects of Jira.
 
-## Quick Start — Most Common Operations
+## Core Competencies
 
-**Create a project**:
-```
-mcp jira create_project --name "My Project" --key "MYPROJ" --type scrum --lead "user@example.com"
-```
+**Project Configuration**
+- Create and configure Jira projects (Scrum, Kanban, custom)
+- Design and implement custom workflows
+- Configure issue types, fields, and screens
+- Set up project permissions and security schemes
 
-**Run a JQL query**:
-```
-mcp jira search_issues --jql "project = MYPROJ AND status != Done AND dueDate < now()" --maxResults 50
-```
+**JQL Mastery**
+- Write advanced JQL queries for any use case
+- Create complex filters with multiple conditions
+- Optimize query performance
+- Build saved filters for team use
 
-For full command reference, see [Atlassian MCP Integration](#atlassian-mcp-integration). For JQL functions, see [JQL Functions Reference](#jql-functions-reference). For report templates, see [Reporting Templates](#reporting-templates).
+**Automation & Integration**
+- Design Jira automation rules
+- Configure webhooks and integrations
+- Set up email notifications
+- Integrate with external tools (Confluence, Slack, etc.)
 
----
+**Reporting & Dashboards**
+- Create custom dashboards with gadgets
+- Build reports for sprint metrics, velocity, burndown
+- Configure portfolio-level reporting
+- Export data for executive reporting
 
 ## Workflows
 
@@ -43,9 +64,9 @@ For full command reference, see [Atlassian MCP Integration](#atlassian-mcp-integ
 2. Define transitions and conditions
 3. Add validators, post-functions, and conditions
 4. Configure workflow scheme
-5. **Validate**: Deploy to a test project first; verify all transitions, conditions, and post-functions behave as expected before associating with production projects
-6. Associate workflow with project
-7. Test workflow with sample issues
+5. Associate workflow with project
+6. Test workflow with sample issues
+7. **USE**: References for complex workflow patterns
 
 ### JQL Query Building
 **Basic Structure**: `field operator value`
@@ -115,6 +136,7 @@ assignee in (user1, user2) AND sprint in openSprints()
    - Post comment
 4. Test automation with sample data
 5. Enable and monitor
+6. **USE**: References for complex automation patterns
 
 ## Advanced Features
 
@@ -124,7 +146,12 @@ assignee in (user1, user2) AND sprint in openSprints()
 - Capture process-specific information
 - Enable advanced reporting
 
-**Field Types**: Text, Numeric, Date, Select (single/multi/cascading), User picker
+**Field Types**:
+- Text: Short text, paragraph
+- Numeric: Number, decimal
+- Date: Date picker, date-time
+- Select: Single select, multi-select, cascading
+- User: User picker, multi-user picker
 
 **Configuration**:
 1. Create custom field
@@ -163,7 +190,7 @@ assignee in (user1, user2) AND sprint in openSprints()
 1. Use JQL to find target issues
 2. Select bulk change operation
 3. Choose fields to update
-4. **Validate**: Preview all changes before executing; confirm the JQL filter matches only intended issues — bulk edits are difficult to reverse
+4. Preview changes
 5. Execute and confirm
 6. Monitor background task
 
@@ -171,30 +198,50 @@ assignee in (user1, user2) AND sprint in openSprints()
 - Move multiple issues through workflow
 - Useful for sprint cleanup
 - Requires appropriate permissions
-- **Validate**: Run the JQL filter and review results in small batches before applying at scale
 
 ## JQL Functions Reference
 
-> **Tip**: Save frequently used queries as named filters instead of re-running complex JQL ad hoc. See [Best Practices](#best-practices) for performance guidance.
+**Date Functions**:
+- `startOfDay()`, `endOfDay()`
+- `startOfWeek()`, `endOfWeek()`
+- `startOfMonth()`, `endOfMonth()`
+- `startOfYear()`, `endOfYear()`
 
-**Date**: `startOfDay()`, `endOfDay()`, `startOfWeek()`, `endOfWeek()`, `startOfMonth()`, `endOfMonth()`, `startOfYear()`, `endOfYear()`
+**Sprint Functions**:
+- `openSprints()`
+- `closedSprints()`
+- `futureSprints()`
 
-**Sprint**: `openSprints()`, `closedSprints()`, `futureSprints()`
+**User Functions**:
+- `currentUser()`
+- `membersOf("group")`
 
-**User**: `currentUser()`, `membersOf("group")`
-
-**Advanced**: `issueHistory()`, `linkedIssues()`, `issuesWithFixVersions()`
+**Advanced Functions**:
+- `issueHistory()`
+- `linkedIssues()`
+- `issuesWithFixVersions()`
 
 ## Reporting Templates
 
-> **Tip**: These JQL snippets can be saved as shared filters or wired directly into Dashboard gadgets (see [Dashboard Creation](#dashboard-creation)).
+**Sprint Report**:
+```jql
+project = PROJ AND sprint = 23
+```
 
-| Report | JQL |
-|---|---|
-| Sprint Report | `project = PROJ AND sprint = 23` |
-| Team Velocity | `assignee in (team) AND sprint in closedSprints() AND resolution = Done` |
-| Bug Trend | `type = Bug AND created >= -30d` |
-| Blocker Analysis | `priority = Blocker AND status != Done` |
+**Team Velocity**:
+```jql
+assignee in (team) AND sprint in closedSprints() AND resolution = Done
+```
+
+**Bug Trend**:
+```jql
+type = Bug AND created >= -30d
+```
+
+**Blocker Analysis**:
+```jql
+priority = Blocker AND status != Done
+```
 
 ## Decision Framework
 
@@ -246,52 +293,35 @@ assignee in (user1, user2) AND sprint in openSprints()
 ## Best Practices
 
 **Data Quality**:
-- Enforce required fields with field validation rules
-- Use consistent issue key naming conventions per project type
-- Schedule regular cleanup of stale/orphaned issues
+- Enforce required fields
+- Use field validation
+- Regular cleanup of stale issues
+- Consistent naming conventions
 
 **Performance**:
-- Avoid leading wildcards in JQL (`~` on large text fields is expensive)
-- Use saved filters instead of re-running complex JQL ad hoc
-- Limit dashboard gadgets to reduce page load time
-- Archive completed projects rather than deleting to preserve history
+- Optimize JQL queries
+- Limit dashboard gadgets
+- Use saved filters
+- Archive old projects
 
 **Governance**:
-- Document rationale for custom workflow states and transitions
-- Version-control permission/workflow schemes before making changes
-- Require change management review for org-wide scheme updates
-- Run permission audits after user role changes
+- Document workflow rationale
+- Version control for schemes
+- Change management for major updates
+- Regular permission audits
 
 ## Atlassian MCP Integration
 
 **Primary Tool**: Jira MCP Server
 
-**Key Operations with Example Commands**:
-
-Create a project:
-```
-mcp jira create_project --name "My Project" --key "MYPROJ" --type scrum --lead "user@example.com"
-```
-
-Execute a JQL query:
-```
-mcp jira search_issues --jql "project = MYPROJ AND status != Done AND dueDate < now()" --maxResults 50
-```
-
-Update an issue field:
-```
-mcp jira update_issue --issue "MYPROJ-42" --field "status" --value "In Progress"
-```
-
-Create a sprint:
-```
-mcp jira create_sprint --board 10 --name "Sprint 5" --startDate "2024-06-01" --endDate "2024-06-14"
-```
-
-Create a board filter:
-```
-mcp jira create_filter --name "Open Blockers" --jql "priority = Blocker AND status != Done" --shareWith "project-team"
-```
+**Key Operations**:
+- Create and configure projects
+- Execute JQL queries for data extraction
+- Update issue fields and statuses
+- Create and manage sprints
+- Generate reports and dashboards
+- Configure workflows and automation
+- Manage boards and filters
 
 **Integration Points**:
 - Pull metrics for Senior PM reporting
@@ -299,7 +329,43 @@ mcp jira create_filter --name "Open Blockers" --jql "priority = Blocker AND stat
 - Create documentation pages for Confluence Expert
 - Support template creation for Template Creator
 
-## Related Skills
+## Troubleshooting
 
-- **Confluence Expert** (`project-management/confluence-expert/`) — Documentation complements Jira workflows
-- **Atlassian Admin** (`project-management/atlassian-admin/`) — Permission and user management for Jira projects
+| Problem | Likely Cause | Resolution |
+|---------|-------------|------------|
+| JQL queries return unexpected results or time out | Overly broad filters, missing indexes, or incorrect field references | Add specificity with project/date constraints; use `ORDER BY` sparingly on large datasets; verify field names with autocomplete |
+| Automation rules fire multiple times for a single event | Cascading triggers where one rule's action triggers another rule | Add conditions to prevent loops (e.g., check `initiator is automation`); use the audit log to trace execution chains |
+| Board shows wrong issues or missing cards | Filter behind the board is misconfigured or sprint assignment is incorrect | Verify the board's saved filter JQL; check that issues have the correct sprint field value; review board settings > general |
+| Workflow transitions fail with validator errors | Required fields not populated, or post-function order is incorrect | Check validator configuration; ensure required fields have values before transition; reorder post-functions so field-setting happens before validation |
+| Custom fields not appearing on screens | Field added to wrong screen scheme or issue type context is too narrow | Verify field context includes the target project and issue type; confirm the correct screen scheme is associated with the project |
+| Bulk operations fail or time out | Too many issues selected (>1000) or complex post-functions on transitions | Reduce batch size to 100-200 issues; disable non-essential automation rules temporarily during bulk operations |
+| Dashboard gadgets show "No data" | Underlying filter returns no results for the current user due to permissions | Verify the filter is shared with the dashboard viewers; check project permission schemes |
+
+## Success Criteria
+
+- All active projects use standardized workflow schemes (no more than 5 unique workflows org-wide)
+- JQL saved filters cover 90%+ of recurring reporting needs without ad-hoc queries
+- Automation rules reduce manual status updates by 60%+ across managed projects
+- Data quality score (required fields populated, consistent labeling) exceeds 85% for active issues
+- Average dashboard load time stays under 3 seconds with all gadgets rendering
+- New project setup (from request to team-ready board) completes within 2 business days
+- Zero critical permission escalations caused by misconfigured schemes per quarter
+
+## Scope & Limitations
+
+**In Scope:** Jira project creation and configuration, workflow design and implementation, JQL query authoring and optimization, automation rule design, dashboard and reporting setup, custom field management, board configuration, bulk operations, issue linking strategies.
+
+**Out of Scope:** Org-wide Atlassian administration (hand off to `atlassian-admin/`), Confluence space management (hand off to `confluence-expert/`), sprint execution and team coaching (hand off to `scrum-master/`), strategic project prioritization (hand off to `senior-pm/`).
+
+**Limitations:** Jira Cloud automation has monthly execution limits per plan tier. Complex JQL on large instances (>100K issues) may hit performance ceilings. Workflow changes to active projects require careful migration planning -- retroactive changes do not apply to in-flight issues.
+
+## Integration Points
+
+| Integration | Direction | What Flows |
+|-------------|-----------|------------|
+| `atlassian-admin/` | Admin -> Jira | Global schemes, permission templates, user provisioning |
+| `scrum-master/` | SM -> Jira | Sprint board configuration requests, velocity report needs |
+| `senior-pm/` | PM -> Jira | Portfolio-level reporting requirements, cross-project dashboards |
+| `confluence-expert/` | Bidirectional | Jira macros embedded in Confluence pages; documentation links in issue descriptions |
+| `atlassian-templates/` | Templates -> Jira | Issue description templates, workflow documentation |
+| `delivery-manager/` | DM -> Jira | Release version management, deployment tracking fields |

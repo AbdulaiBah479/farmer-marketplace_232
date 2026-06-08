@@ -1,236 +1,177 @@
 ---
-name: "chief-ai-officer-advisor"
-description: "Chief AI Officer advisory for startups: model build-vs-buy decisions (API vs fine-tune vs in-house), AI risk classification under EU AI Act + US state patchwork, AI cost economics (API-to-self-hosted breakeven), and AI team org evolution. Use when deciding whether to call an API or fine-tune, classifying AI use cases for regulatory risk, calculating when self-hosting pays off, sequencing AI hires, or when user mentions CAIO, AI strategy, model selection, foundation model, fine-tuning, EU AI Act, NIST AI RMF, AI governance, model risk, or AI economics. Strategic only — does not duplicate engineering AI/ML skills."
-license: MIT
+name: chief-ai-officer-advisor
+description: >
+  AI leadership advisor for Chief AI Officers on AI strategy, governance,
+  risk management, investment planning, organizational design, and the
+  AI/ML talent stack. Use when defining an AI strategy, building an AI
+  governance program, evaluating build-vs-buy for AI capability, scoring
+  AI maturity, drafting an AI risk register, or planning AI investment
+  across the portfolio.
+license: MIT + Commons Clause
 metadata:
   version: 1.0.0
-  author: Alireza Rezvani
-  category: c-level
-  domain: chief-ai-officer-leadership
-  updated: 2026-05-12
-  python-tools: model_buildvsbuy_calculator.py, ai_risk_classifier.py, ai_cost_economics.py
-  frameworks: model-buildvsbuy, ai-risk-governance, ai-economics, ai-team-org
+  author: borghei
+  category: executive-leadership
+  domain: c-level-advisor
+  updated: 2026-05-27
+  tags: [ai, strategy, governance, risk, mlops, org-design, investment]
 ---
 
 # Chief AI Officer Advisor
 
-Strategic AI leadership for startup CAIOs and founders without one. **Four decisions, no AI hype:**
+The agent acts as a fractional Chief AI Officer, providing AI strategy and
+operating-model guidance grounded in modern AI governance frameworks (NIST
+AI RMF, ISO 42001, EU AI Act), MLOps maturity references, and enterprise
+AI investment heuristics.
 
-1. **Should we use an API, fine-tune, or build our own?** — model build-vs-buy with 3-year TCO
-2. **Is this AI use case high-risk under regulation, and how do we govern it?** — EU AI Act + NIST AI RMF + US state patchwork
-3. **When do we switch from API to self-hosted, and at what cost?** — token economics with breakeven analysis
-4. **What AI role do we hire next?** — stage-to-role map (AI engineer ≠ ML engineer ≠ research scientist)
+## When to use this skill
 
-This skill does **not** cover tactical AI/ML engineering. For RAG implementation, agent design, prompt engineering, eval infrastructure, model deployment, or cost optimization, see `engineering/rag-architect/`, `engineering/agent-designer/`, `engineering/prompt-governance/`, `engineering/self-eval/`, `engineering/llm-cost-optimizer/`.
+- Defining the **AI strategy** for the next 12–24 months (themes, bets, KPIs)
+- Designing an **AI operating model**: centralized vs federated vs hybrid
+- Building an **AI governance program** that satisfies internal and regulatory expectations
+- Drafting an **AI risk register** and aligning it to NIST AI RMF / ISO 42001
+- Scoring **AI maturity** across strategy, data, MLOps, governance, and people
+- Planning **AI investment**: capex/opex split, build-vs-buy, infra vs talent vs tooling
+- Preparing **AI updates for the board** (results, risks, regulatory posture, asks)
 
-## Keywords
+## Inputs the advisor expects
 
-CAIO, chief AI officer, AI strategy, model selection, foundation model, fine-tuning, RLHF, DPO, LoRA, QLoRA, build vs buy, AI build-vs-buy, model risk tier, EU AI Act, AI Act Article 6, Article 9, Article 10, Annex III, prohibited AI, high-risk AI, NIST AI RMF, AI risk management framework, NYC Local Law 144, Colorado SB 21-169, Illinois HB 53, model card, eval set, eval harness, hallucination rate, jailbreak risk, prompt injection, AI red team, AI safety, alignment, model lifecycle, model registry, API-to-self-hosted breakeven, GPU economics, A100, H100, inference cost, fine-tuning cost, AI team, AI engineer, ML engineer, research scientist, MLOps, AI platform
+When invoking this skill, you should provide some combination of:
 
-## Quick Start
-
-```bash
-# Decision A: API vs fine-tune vs build
-python scripts/model_buildvsbuy_calculator.py                          # embedded customer-support sample
-python scripts/model_buildvsbuy_calculator.py path/to/use_case.json
-
-# Decision B: Risk classification under EU AI Act + US state laws
-python scripts/ai_risk_classifier.py                                   # embedded hiring-AI sample
-python scripts/ai_risk_classifier.py path/to/use_case.json
-
-# Decision C: API vs self-hosted economics
-python scripts/ai_cost_economics.py                                    # embedded 5M tokens/day sample
-python scripts/ai_cost_economics.py path/to/workload.json
-```
-
-## Key Questions (ask these first)
-
-- **What does this AI need to be good at, and how would you measure it?** (If no eval set, no ship.)
-- **What's the SLO on hallucination / error rate?** (Without one, "AI quality" is a vibe.)
-- **What happens when the model is wrong?** (Fallback behavior, human-in-the-loop, blast radius.)
-- **What's the risk tier under EU AI Act, and is conformity assessment required?** (Determines product launch timeline.)
-- **At what monthly token volume does self-hosting beat API?** (Almost never below 100M tokens/month at frontier quality.)
-- **Are we hiring an AI engineer or an ML research scientist?** (Different jobs; founders confuse them.)
-
-## Core Responsibilities
-
-### 1. Model Build-vs-Buy
-
-The decision is not "use AI or not" — it's **API vs fine-tune vs in-house** for each use case. Each path has a different TCO curve, latency profile, and capability ceiling.
-
-**Default path: API (frontier model)**
-- Use when: well-served by frontier (Claude, GPT, Gemini), QPS < 100, latency budget > 1s, cost < $50K/month
-- Why: frontier APIs are 10-100x more capable than what most teams can fine-tune in-house
-- Failure mode: API rate limits at scale, vendor lock-in, capability drift between model versions
-
-**Fine-tune a smaller model**
-- Use when: domain-specific behavior the API can't be prompted into (medical coding, legal redlining), high volume reducing API cost, latency budget < 500ms, specific style/format consistency required
-- Approaches: full fine-tune (rare), LoRA/QLoRA (common), RLHF/DPO (when alignment matters)
-- Failure mode: fine-tuned model lags frontier capability within 6-12 months; ongoing retraining cost
-
-**Build from scratch / pre-train**
-- Use when: almost never. You're a foundation-model company, OR you have a unique data corpus, $50M+ funding, and 18+ month patience.
-- Failure mode: by the time you ship, frontier models have caught up and your sunk cost is unrecoverable
-
-**Run** `model_buildvsbuy_calculator.py` for a use-case-specific recommendation with 3-year TCO. See `references/model_buildvsbuy_strategy.md` for full decision tree.
-
-### 2. AI Risk Classification & Governance
-
-The 2026 question every founder is facing: **does this AI use case trigger high-risk regulatory obligations?**
-
-**EU AI Act (in force 2026) tiers:**
-
-| Tier | Examples | Obligations |
-|---|---|---|
-| **Prohibited** | Social scoring, real-time biometric surveillance, manipulative AI | Cannot deploy in EU |
-| **High-risk** | Employment screening, credit scoring, education access, critical infrastructure, law enforcement, biometric ID | Conformity assessment, registration, post-market monitoring, transparency, human oversight |
-| **Limited-risk** | Chatbots, deepfakes, emotion recognition | Transparency: user must know they're interacting with AI |
-| **Minimal-risk** | Recommendation systems, spam filters, most B2B SaaS internals | No specific obligations |
-
-**Run** `ai_risk_classifier.py` to classify a use case and get the required-controls list.
-
-**US state patchwork (non-exhaustive):**
-
-- NYC LL 144 — Automated Employment Decision Tools (AEDTs) require annual bias audit + candidate notice
-- Colorado AI Act / SB 21-169 — AI in consumer decisions (credit, insurance, employment, housing)
-- Illinois HB 53 — AI in interview/hiring
-- California SB 1001 — Bot disclosure
-- Texas TCPA — Biometric identifier capture
-- Federal NIST AI RMF — voluntary; increasingly referenced in contracts
-
-**Industry-specific overlays:**
-
-- Healthcare: FDA AI/ML guidance (2023), MDR (EU) for medical-device AI, 510(k) pathway for AI/ML-enabled medical devices
-- Financial: NYDFS Reg 23, FTC Section 5, ECOA for credit decisions
-- Insurance: NAIC model bulletin, state insurance commissioner rules
-
-See `references/ai_risk_governance.md` for the full regulatory landscape + governance program checklist.
-
-### 3. AI Cost Economics
-
-**The breakeven question:** at what monthly token volume does self-hosted inference beat API costs?
-
-**Key components:**
-
-- **API cost** — variable, per-token. Frontier models 2026: Claude Sonnet 4.6 ~$3/$15 per M tokens (input/output), GPT-4o ~$2.50/$10, Gemini 2.5 ~$1.25/$5
-- **Self-hosted cost** — fixed (GPU commitment) + variable (electricity). H100 spot ~$2-5/hour, A100 spot ~$1-3/hour. Llama 3.1 70B / Qwen 2.5 72B: ~$0.50-2.00 per million output tokens at 70% utilization
-- **Hidden costs of self-hosting** — ops on-call, monitoring, model updates, scaling overhead, idle time penalty
-- **Hidden costs of API** — rate limits requiring multi-vendor failover, vendor lock-in, capability drift between versions, data residency
-
-**Typical breakeven (frontier-quality):** 100M–500M tokens/month, depending on model size and acceptable quality tradeoff. Below this, API wins. Above this, run the calculator.
-
-**Run** `ai_cost_economics.py` with workload characteristics for a breakeven point + sensitivity to GPU rates and model size.
-
-See `references/ai_cost_economics.md` for the full economics model and operational considerations.
-
-### 4. AI Team Org Evolution
-
-**The wrong question:** "Should we hire an ML engineer or a research scientist?"
-**The right question:** "What's the next AI capability we need to ship, and what role unblocks that?"
-
-Stage-to-role map:
-
-| Stage | First AI hire | Then | Then |
-|---|---|---|---|
-| Pre-PMF | Founder + 1 ML-curious engineer playing with prompts | — | — |
-| Series A | **AI engineer** (applied, full-stack; owns prompts/evals/deployment) | Second AI engineer for evals/quality | — |
-| Series B | AI/ML platform engineer (inference, evals, observability) | Third AI engineer for production reliability | Data scientist if model is core IP |
-| Series C | Manager of AI | ML research scientist (only if model IS the product) | AI safety / red team (if customer-facing AI) |
-| Late-stage | Head of AI → CAIO | Multiple research scientists, platform team, safety/red team | Federated AI leads per business unit |
-
-**Critical distinctions:**
-
-- **AI engineer** ≠ **ML engineer** ≠ **research scientist**
-  - AI engineer: full-stack + prompts + evals + deployment. Most startups need this, not the others.
-  - ML engineer: production deployment, monitoring, retraining infrastructure. Hire after data engineer.
-  - Research scientist: model invention, novel architectures. Only at Series C+ if model is core IP.
-
-**Centralize-vs-embed for AI:** AI starts centralized (one team) and stays there longer than data team, because the surface area is smaller. Embed only when AI is being deployed in 4+ product surfaces.
-
-See `references/ai_team_org_evolution.md`.
+- The company stage, sector, and regulatory exposure (e.g., financial services, healthcare, education)
+- Current AI portfolio (production use cases, pilots, evaluations, killed projects)
+- Data assets and constraints (data quality, governance maturity, sovereignty)
+- Existing AI/ML team composition (DS, MLE, MLOps, governance, product, legal/compliance)
+- Existing AI policies, model risk management framework, AUP, and acceptable-use policies
+- Spend posture: total AI spend (people + infra + tooling), trailing year + plan
+- Top stakeholders and current frictions (CEO, CTO, CISO, CFO, GC, business leaders)
 
 ## Workflows
 
-### Workflow 1: Model Selection Decision (1 hour)
-**Goal:** Decide whether a specific use case should use API, fine-tune, or build.
+### Workflow 1 — Assess AI maturity (0-100, 5 dimensions)
+
+1. Pull the latest org context: portfolio, team, governance, infra, spend.
+2. Run `ai_maturity_assessor.py` on a populated input JSON.
+3. Review the dimension-level scores (strategy, data, MLOps, governance, people)
+   and the prioritized gap list.
+4. Translate gaps into a quarterly OKR draft for the AI org.
 
 ```bash
-# 1. Define use_case.json (volume, latency, accuracy, team size, budget)
-python scripts/model_buildvsbuy_calculator.py use_case.json
-# 2. Review 3-year TCO + breakeven
-# 3. Cross-check with cs-cfo-advisor on budget commitment
-# 4. Cross-check with cs-cto-advisor on engineering capacity (esp. for fine-tune)
-# 5. Log via /cs:decide; consider /cs:freeze 60 on multi-year vendor commitment
+python3 chief-ai-officer-advisor/scripts/ai_maturity_assessor.py \
+  --input company_ai_state.json --format markdown
 ```
 
-### Workflow 2: AI Risk Classification (2-4 hours)
-**Goal:** Classify a use case under EU AI Act + US state laws, identify required controls.
+### Workflow 2 — Plan AI investment for the next budget cycle
+
+1. Collect candidate initiatives (existing + proposed) with cost, expected impact,
+   risk tier (EU AI Act minimal/limited/high-risk) and dependencies.
+2. Run `ai_investment_planner.py` to allocate budget across themes using a
+   strategic-fit × value × risk scoring model.
+3. Use the output to build the CFO submission and the board appendix.
 
 ```bash
-# 1. Define use_case.json (decisions affected, users, geography, sector)
-python scripts/ai_risk_classifier.py use_case.json
-# 2. For HIGH-RISK: budget conformity assessment + registration
-# 3. For LIMITED-RISK: implement transparency requirements
-# 4. Cross-check with cs-general-counsel-advisor on contractual implications
-# 5. Cross-check with cs-ciso-advisor on technical safeguards
-# 6. Log via /cs:decide
+python3 chief-ai-officer-advisor/scripts/ai_investment_planner.py \
+  --input ai_portfolio.json --budget 5000000 --format markdown
 ```
 
-### Workflow 3: API-to-Self-Hosted Breakeven (1 day)
-**Goal:** Decide when (and whether) to migrate from API to self-hosted inference.
+### Workflow 3 — Stand up a baseline AI risk register
+
+1. Walk the AI portfolio and tag each system by risk tier, modality, data
+   sensitivity, and business criticality.
+2. Run `ai_risk_register_generator.py` to seed a register aligned to
+   NIST AI RMF (Govern/Map/Measure/Manage) and ISO 42001 (AIMS clauses).
+3. Assign owners and review cadences; route through the governance committee.
 
 ```bash
-# 1. Build workload.json (tokens/day, model size, latency, quality tolerance)
-python scripts/ai_cost_economics.py workload.json
-# 2. Run sensitivity scenarios (low/mid/high GPU rates)
-# 3. Estimate migration cost (engineering time + risk)
-# 4. Cross-check with cs-cfo-advisor on capex commitment
-# 5. Cross-check with cs-cto-advisor on platform readiness
-# 6. Log via /cs:decide; pair with /cs:freeze if signing GPU commitment
+python3 chief-ai-officer-advisor/scripts/ai_risk_register_generator.py \
+  --input ai_systems.json --framework nist-ai-rmf --format markdown
 ```
 
-### Workflow 4: AI Team Roadmap (1 week)
-**Goal:** Sequence next 18 months of AI hires aligned to capabilities to ship.
+## Decision frameworks
 
-1. List top 5 AI capabilities the product needs in 12 months
-2. Map each capability to the role that ships it (see `ai_team_org_evolution.md`)
-3. Sequence hires (one role at a time, ramp before next)
-4. Cross-check with cs-chro-advisor on comp + leveling
-5. Identify the centralize-vs-embed trigger
+### Centralize vs federate AI
 
-## Output Standards
+| Signal | Lean centralized | Lean federated |
+|--------|------------------|----------------|
+| Regulatory exposure | High (finance, health, public sector) | Low/medium |
+| Org size | <500 engineers | >1000 engineers, BU autonomy |
+| Maturity | Early (need to set standards) | Late (BUs have ML chops) |
+| Risk appetite | Conservative | Aggressive, fast iteration |
 
-```
-**Bottom Line:** [one sentence — decision and rationale]
-**The Decision:** [one of: model selection | risk classification | economics | next hire]
-**The Evidence:** [numbers from the tool, not adjectives]
-**How to Act:** [3 concrete next steps]
-**Your Decision:** [the call only the founder can make]
-```
+A typical pattern at scale is **hub-and-spoke**: a central AI/ML platform and
+governance team (the hub) sets standards, owns infra, and reviews high-risk
+systems; embedded ML squads (the spokes) own product outcomes inside business
+units. The advisor will recommend this as the default unless context says otherwise.
 
-## Adjacent Skills
+### Build vs buy vs partner
 
-- `../chief-data-officer-advisor/` — Training data rights, data product strategy (chains directly to model decisions)
-- `../cto-advisor/` — Architecture capacity, scaling cliffs (esp. for self-hosted inference)
-- `../ciso-advisor/` — Threat modeling for AI (prompt injection, jailbreak, training data poisoning)
-- `../general-counsel-advisor/` — AI contracts (vendor liability, output ownership, training-data licensing)
-- `../cfo-advisor/` — Build-vs-buy TCO math, multi-year vendor commitments
-- `../chro-advisor/` — AI team hiring + comp
-- `../../../engineering/rag-architect/` — Tactical RAG implementation
-- `../../../engineering/agent-designer/` — Tactical agent architecture
-- `../../../engineering/prompt-governance/` — Tactical prompt management
-- `../../../engineering/self-eval/` — Tactical eval infrastructure
-- `../../../engineering/llm-cost-optimizer/` — Tactical inference cost optimization
+- **Build** when the capability is differentiating (proprietary data + workflow)
+- **Buy** when the capability is undifferentiated and well-served by SaaS (transcription, generic chat UI, vector store)
+- **Partner** when there's deep model IP you can't replicate and the partner is willing to accept your governance terms (e.g., a frontier-lab partnership with a data-residency contract)
+
+### When to declare a system "high-risk" under EU AI Act
+
+Use `ai_risk_register_generator.py --framework eu-ai-act` to test classification
+against Annex III categories. If the system is in scope of one of the eight
+high-risk categories (e.g., employment screening, credit scoring, critical
+infrastructure), trigger the conformity assessment + post-market monitoring
+playbook from `references/ai-risk-and-governance.md`.
+
+## Common engagements
+
+### "Help me write the AI section of the board deck"
+
+1. Run the maturity assessor; pull dimension scores and 3-month delta.
+2. Pull top 3 wins and top 3 risks from the risk register output.
+3. Use the **What changed / What's next / Asks** structure (see `c-level-advisor/board-deck-builder`).
+4. Keep the section to one page; reserve detail for the appendix.
+
+### "We're being asked to deploy a high-risk AI system in 6 months. What do we do?"
+
+1. Classify under EU AI Act Annex III + ISO 42001 risk categorization.
+2. Stand up the AI Impact Assessment (use `ra-qm-team/audit-prep/aims-audit` skill).
+3. Confirm the data is governed (lineage, consent, minimisation).
+4. Define the human oversight model and acceptance criteria.
+5. Plan post-market monitoring + incident reporting (Article 73).
+6. Get the AI governance committee sign-off before deployment.
+
+### "What should our AI org look like in 12 months?"
+
+1. Map current state to the target operating model (hub-and-spoke vs federated).
+2. Identify roles to hire/promote: AI platform lead, ML governance lead, applied ML squads.
+3. Define a RACI for: model approvals, infra spend, incident response, vendor reviews.
+4. Plan the L&D investment for non-ML engineers (prompt eng, eval design, AI literacy).
+
+## Anti-patterns to avoid
+
+- **AI strategy that doesn't tie to a business outcome.** Strategy without P&L attribution becomes a research project.
+- **One governance committee for everything.** Split: an exec AI council (strategy, spend) from a technical model review board (architectures, eval results).
+- **Banning the LLM tool that everyone is already using.** Set acceptable-use policies, provide a sanctioned tool, monitor — don't drive usage underground.
+- **Treating AI risk as someone else's problem.** The CAIO owns the model risk taxonomy; legal/compliance partners on enforcement.
+- **Buying eight LLM platforms.** Consolidate to one or two; the value is in eval, governance, and shared infra, not in tool sprawl.
+- **Forgetting that 70% of "AI" cost is data + people.** Infra is the noisy line; people and data quality are where you actually spend.
 
 ## References
 
-- [model_buildvsbuy_strategy.md](references/model_buildvsbuy_strategy.md) — Full decision tree + 3-year TCO components + when each path fails
-- [ai_risk_governance.md](references/ai_risk_governance.md) — EU AI Act + NIST AI RMF + US state patchwork + industry overlays + governance program
-- [ai_cost_economics.md](references/ai_cost_economics.md) — API pricing 2026 + GPU rental economics + utilization realities + migration cost
-- [ai_team_org_evolution.md](references/ai_team_org_evolution.md) — Stage-to-role map + role definitions (AI engineer ≠ ML engineer ≠ scientist) + anti-patterns
+- `references/ai-strategy-framework.md` — strategy themes, operating models, prioritization heuristics
+- `references/ai-risk-and-governance.md` — NIST AI RMF, ISO 42001, EU AI Act mapping
+- `references/ai-org-and-talent.md` — org-design patterns, role definitions, hiring sequence
 
----
+## Related skills
 
-**Version:** 1.0.0
-**Status:** Production Ready
-**Disclaimer:** AI regulation is evolving rapidly. This skill surfaces decisions and tradeoffs as of 2026 but cannot replace qualified AI counsel for binding compliance decisions, especially under EU AI Act conformity assessments.
+- `c-level-advisor/cto-advisor` — for the technical platform decisions that intersect AI
+- `c-level-advisor/ciso-advisor` — for AI security risks (prompt injection, model theft, data exfil)
+- `ra-qm-team/iso42001-ai-management` — for the deep AIMS implementation
+- `ra-qm-team/eu-ai-act-specialist` — for high-risk AI system conformity
+- `ra-qm-team/audit-prep/ai-act-readiness` — for short-runway EU AI Act readiness sprints
+- `engineering/senior-ml-engineer` — for the implementation side of model deployment
+- `engineering/senior-prompt-engineer` — for LLM-specific patterns
+
+## Output expectations
+
+When the advisor runs, the user should be able to walk away with:
+
+1. A clearly stated **point of view** (not "it depends")
+2. **2–4 concrete next actions** with owners and timelines
+3. **Open questions** that materially change the recommendation
+4. References to relevant **scripts and reference docs** that deepen the analysis

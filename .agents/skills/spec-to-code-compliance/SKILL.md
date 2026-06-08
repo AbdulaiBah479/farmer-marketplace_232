@@ -1,11 +1,10 @@
 ---
 name: spec-to-code-compliance
 description: Verifies code implements exactly what documentation specifies for blockchain audits. Use when comparing code against whitepapers, finding gaps between specs and implementation, or performing compliance checks for protocol implementations.
-risk: unknown
-source: community
 ---
 
 ## When to Use
+
 Use this skill when you need to:
 - Verify code implements exactly what documentation specifies
 - Audit smart contracts against whitepapers or design documents
@@ -156,7 +155,7 @@ Extract:
 
 This forms **Spec-IR**.
 
-See IR_EXAMPLES.md for detailed examples.
+See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-1-spec-ir-record) for detailed examples.
 
 ---
 
@@ -202,7 +201,7 @@ Also capture:
 
 Output: **Code-IR**, a granular semantic map with full traceability.
 
-See IR_EXAMPLES.md for detailed examples.
+See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-2-code-ir-record) for detailed examples.
 
 ---
 
@@ -243,7 +242,7 @@ Also detect:
 
 Output: **Alignment-IR**
 
-See IR_EXAMPLES.md for detailed examples.
+See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-3-alignment-record-positive-case) for detailed examples.
 
 ---
 
@@ -277,7 +276,7 @@ Each finding MUST include:
 - exploitability reasoning
 - recommended remediation
 
-See IR_EXAMPLES.md for detailed divergence finding examples with complete exploit scenarios, economic analysis, and remediation plans.
+See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-4-divergence-finding-critical-issue) for detailed divergence finding examples with complete exploit scenarios, economic analysis, and remediation plans.
 
 ---
 
@@ -306,7 +305,7 @@ Produce a structured compliance report:
 
 ## Output Requirements & Quality Standards
 
-See OUTPUT_REQUIREMENTS.md for:
+See [OUTPUT_REQUIREMENTS.md](resources/OUTPUT_REQUIREMENTS.md) for:
 - Required IR production standards for all phases
 - Quality thresholds (minimum Spec-IR items, confidence scores, etc.)
 - Format consistency requirements (YAML formatting, line number citations)
@@ -316,7 +315,7 @@ See OUTPUT_REQUIREMENTS.md for:
 
 ## Completeness Verification
 
-Before finalizing analysis, review the COMPLETENESS_CHECKLIST.md to verify:
+Before finalizing analysis, review the [COMPLETENESS_CHECKLIST.md](resources/COMPLETENESS_CHECKLIST.md) to verify:
 - Spec-IR completeness (all invariants, formulas, security requirements extracted)
 - Code-IR completeness (all functions analyzed, state changes tracked)
 - Alignment-IR completeness (every spec item has alignment record)
@@ -339,11 +338,11 @@ Before finalizing analysis, review the COMPLETENESS_CHECKLIST.md to verify:
 # Resources
 
 **Detailed Examples:**
-- IR_EXAMPLES.md - Complete IR workflow examples with DEX swap patterns
+- [IR_EXAMPLES.md](resources/IR_EXAMPLES.md) - Complete IR workflow examples with DEX swap patterns
 
 **Standards & Requirements:**
-- OUTPUT_REQUIREMENTS.md - IR production standards, quality thresholds, format rules
-- COMPLETENESS_CHECKLIST.md - Verification checklist for all phases
+- [OUTPUT_REQUIREMENTS.md](resources/OUTPUT_REQUIREMENTS.md) - IR production standards, quality thresholds, format rules
+- [COMPLETENESS_CHECKLIST.md](resources/COMPLETENESS_CHECKLIST.md) - Verification checklist for all phases
 
 ---
 
@@ -356,8 +355,3 @@ Invoke directly: "Use the spec-compliance-checker agent to verify this codebase 
 ---
 
 # END OF SKILL
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,403 +1,540 @@
 ---
-name: "tdd-guide"
-description: "Test-driven development skill for writing unit tests, generating test fixtures and mocks, analyzing coverage gaps, and guiding red-green-refactor workflows across Jest, Pytest, JUnit, Vitest, and Mocha. Use when the user asks to write tests, improve test coverage, practice TDD, generate mocks or stubs, or mentions testing frameworks like Jest, pytest, or JUnit."
+name: tdd-guide
+description: >
+  Guides red-green-refactor TDD workflows with test generation, coverage gap
+  analysis, and multi-framework support. Use when writing tests first,
+  analyzing coverage reports, generating test stubs, or converting tests
+  between Jest, Pytest, JUnit, and Vitest.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: engineering
+  domain: testing
+  updated: 2026-03-31
+  tags: [tdd, test-driven-development, testing, red-green-refactor]
 ---
-
 # TDD Guide
 
-Test-driven development skill for generating tests, analyzing coverage, and guiding red-green-refactor workflows across Jest, Pytest, JUnit, and Vitest.
+The agent guides red-green-refactor TDD workflows, generates framework-specific test stubs from requirements, parses coverage reports to identify prioritized gaps, and calculates test quality metrics including smell detection and assertion density. Supports Jest, Pytest, JUnit, Vitest, and Mocha.
 
----
+## Quick Start
 
-## Workflows
-
-### Generate Tests from Code
-
-1. Provide source code (TypeScript, JavaScript, Python, Java)
-2. Specify target framework (Jest, Pytest, JUnit, Vitest)
-3. Run `test_generator.py` with requirements
-4. Review generated test stubs
-5. **Validation:** Tests compile and cover happy path, error cases, edge cases
-
-### Analyze Coverage Gaps
-
-1. Generate coverage report from test runner (`npm test -- --coverage`)
-2. Run `coverage_analyzer.py` on LCOV/JSON/XML report
-3. Review prioritized gaps (P0/P1/P2)
-4. Generate missing tests for uncovered paths
-5. **Validation:** Coverage meets target threshold (typically 80%+)
-
-### TDD New Feature
-
-1. Write failing test first (RED)
-2. Run `tdd_workflow.py --phase red` to validate
-3. Implement minimal code to pass (GREEN)
-4. Run `tdd_workflow.py --phase green` to validate
-5. Refactor while keeping tests green (REFACTOR)
-6. **Validation:** All tests pass after each cycle
-
----
-
-## Examples
-
-### Test Generation — Input → Output (Pytest)
-
-**Input source function (`math_utils.py`):**
-```python
-def divide(a: float, b: float) -> float:
-    if b == 0:
-        raise ValueError("Cannot divide by zero")
-    return a / b
-```
-
-**Command:**
 ```bash
-python scripts/test_generator.py --input math_utils.py --framework pytest
+# Generate test cases from requirements (Python API)
+from test_generator import TestGenerator, TestFramework
+gen = TestGenerator(framework=TestFramework.PYTEST, language="python")
+cases = gen.generate_from_requirements(requirements)
+
+# Analyze coverage gaps from LCOV report
+from coverage_analyzer import CoverageAnalyzer
+analyzer = CoverageAnalyzer()
+analyzer.parse_coverage_report(content, "lcov")
+gaps = analyzer.identify_gaps(threshold=80.0)
+
+# Guide TDD cycle
+from tdd_workflow import TDDWorkflow
+wf = TDDWorkflow()
+wf.start_cycle("User can reset password via email")
 ```
 
-**Generated test output (`test_math_utils.py`):**
+---
+
+## Core Workflows
+
+### Workflow 1: TDD a New Feature
+
+1. Write a failing test for the feature requirement (RED phase)
+2. Call `validate_red_phase()` -- confirms test exists and fails
+3. Write minimal code to make the test pass (GREEN phase)
+4. Call `validate_green_phase()` -- confirms all tests pass
+5. Refactor while keeping tests green (REFACTOR phase)
+6. Call `validate_refactor_phase()` -- confirms tests still pass after cleanup
+7. **Validation checkpoint:** Each cycle completes in under 10 minutes; zero test smells introduced
+
+### Workflow 2: Analyze Coverage Gaps
+
+1. Generate coverage report: `npm test -- --coverage` or `pytest --cov`
+2. Detect format with `detect_format()` and parse with `parse_coverage_report()`
+3. Run `identify_gaps(threshold=80.0)` to get prioritized file list (P0/P1/P2)
+4. Generate test stubs for P0 files (business-critical, lowest coverage)
+5. **Validation checkpoint:** Line coverage >= 80%; branch coverage >= 70%; zero P0 gaps in critical paths
+
+### Workflow 3: Generate Tests from Requirements
+
+1. Structure requirements as user stories with acceptance criteria
+2. Call `generate_from_requirements()` with target framework
+3. Review generated test cases for completeness (happy path, error, edge cases)
+4. Generate test file with `generate_test_file()`
+5. **Validation checkpoint:** Each acceptance criterion has at least one test; all tests compile
+
+---
+
+## Tools
+
+| Tool | Purpose |
+|------|---------|
+| `test_generator.py` | Generate test cases from requirements/specs |
+| `coverage_analyzer.py` | Parse LCOV/JSON/XML reports, find gaps |
+| `tdd_workflow.py` | Guide red-green-refactor cycles |
+| `framework_adapter.py` | Convert tests between frameworks |
+| `fixture_generator.py` | Generate test data and mocks with seeds |
+| `metrics_calculator.py` | Calculate complexity and test quality |
+| `format_detector.py` | Auto-detect language and framework |
+| `output_formatter.py` | Format output for CLI/desktop/CI |
+
+---
+
+## Anti-Patterns
+
+- **Tests that pass immediately** -- a test with no real assertion or `assert True` skips the RED phase; every test must fail before implementation
+- **Testing implementation details** -- coupling tests to internal method names makes refactoring break tests; test behavior and outputs, not internals
+- **Non-deterministic fixtures** -- random data without a seed produces different failures across CI runs; always pass `seed=<int>` to `FixtureGenerator`
+- **Skipping the refactor phase** -- GREEN code that works but is messy accumulates; refactoring is not optional in TDD
+- **Coverage theater** -- writing tests that hit lines without meaningful assertions; use `metrics_calculator.py` to detect low assertion density
+- **Conditional test logic** -- `if/else` inside tests masks failures; each test should have a single clear path
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Generated tests pass immediately (no RED phase) | Test has no real assertion or asserts a trivially true value | Ensure every test contains an assertion against the actual unit under test; remove placeholder `assert True` stubs before running |
+| Coverage report fails to parse | Report format does not match the expected LCOV, JSON, or XML structure | Run `format_detector.py` first to verify the detected format; convert non-standard reports (e.g., Clover) to Cobertura XML |
+| Framework adapter produces wrong import style | Source and target framework were swapped, or language/framework mismatch | Verify the `framework` and `language` arguments match your project; use `detect_framework()` on existing test code to auto-detect |
+| Fixture generator produces non-deterministic data | No random seed was supplied, so each run yields different values | Pass `seed=<int>` to `FixtureGenerator()` for reproducible fixtures across CI runs |
+| Metrics calculator reports 0 test functions | Test code uses an unsupported naming convention (e.g., `spec_` prefix) | Rename tests to follow `test_*` / `it()` / `@Test` conventions, or extend the regex patterns in `_count_test_functions()` |
+| TDD workflow validates GREEN phase but tests still fail locally | Test result dict passed to `validate_green_phase()` has `status` not set to `"passed"` | Ensure your test runner output is normalized to `{"status": "passed"}` or `{"status": "failed"}` before passing it in |
+| Coverage gaps list is empty despite low overall coverage | All individual files meet the threshold even though the aggregate does not | Lower the `threshold` argument in `identify_gaps()` or inspect per-file coverage with `get_file_coverage()` |
+
+---
+
+## Success Criteria
+
+- **Test-first ratio above 80%** -- at least 4 out of every 5 features begin with a failing test before any implementation code is written.
+- **Red-green-refactor cycle under 10 minutes** -- each TDD micro-cycle (write failing test, make it pass, refactor) completes within a single focused interval.
+- **Line coverage at or above 80%** -- measured by `coverage_analyzer.py` against LCOV/JSON/XML reports, with branch coverage at or above 70%.
+- **Test quality score at or above 75/100** -- as reported by `metrics_calculator.py`, combining assertion density, isolation, naming quality, and absence of test smells.
+- **Zero P0 coverage gaps in critical paths** -- business-critical modules (auth, payments, data persistence) have no files flagged P0 by `identify_gaps()`.
+- **Test smell count of zero for high-severity items** -- no `missing_assertions`, `sleepy_test`, or `conditional_test_logic` smells detected at high severity.
+- **Fixture reproducibility across CI** -- all generated fixtures use a fixed seed and produce identical output on every pipeline run.
+
+---
+
+## Scope & Limitations
+
+**This skill covers:**
+- Unit test generation, scaffolding, and stub creation for Jest, Pytest, JUnit, Vitest, and Mocha
+- Static coverage report parsing (LCOV, JSON/Istanbul, XML/Cobertura) with gap identification and prioritized recommendations
+- Red-green-refactor workflow guidance with phase validation and cycle tracking
+- Test quality assessment including complexity analysis, isolation scoring, naming quality, and test smell detection
+
+**This skill does NOT cover:**
+- Integration, end-to-end, or performance test generation -- see `senior-qa` for E2E patterns and `senior-devops` for load testing
+- Runtime test execution or live coverage measurement -- scripts perform static analysis only; you must run your test suite externally
+- Visual/snapshot testing or browser-based test workflows -- use Playwright, Cypress, or Storybook for UI-level testing
+- Security-focused test generation (fuzz testing, penetration testing) -- see `senior-security` and `senior-secops` skills
+
+---
+
+## Integration Points
+
+| Skill | Integration | Data Flow |
+|-------|-------------|-----------|
+| `senior-qa` | Generated test stubs feed into QA review workflows; QA coverage standards inform threshold settings | `test_generator.py` output → QA review → approved test suite |
+| `code-reviewer` | Metrics calculator output provides quantitative data for code review checklists | `metrics_calculator.py` quality report → code review scoring |
+| `senior-fullstack` | Scaffolded projects include test infrastructure; TDD guide generates tests for scaffolded modules | `project_scaffolder.py` output → `test_generator.py` input |
+| `senior-devops` | Coverage reports from CI pipelines are parsed by coverage analyzer; recommendations feed back into pipeline gates | CI coverage artifact → `coverage_analyzer.py` → pass/fail gate |
+| `senior-security` | Edge-case fixtures for auth and API scenarios complement security-focused test plans | `fixture_generator.py` auth/API edge cases → security test plan |
+| `tech-stack-evaluator` | Framework detection informs stack evaluation; test quality metrics feed into technology assessment | `format_detector.py` analysis → stack evaluation input |
+
+---
+
+## Tool Reference
+
+### 1. `test_generator.py`
+
+**Purpose:** Generate test cases from requirements, user stories, and API specs, then produce framework-specific test stubs and complete test files.
+
+**Module:** `TestGenerator` class
+
+**Usage:**
 ```python
-import pytest
-from math_utils import divide
+from test_generator import TestGenerator, TestFramework, TestType
 
-class TestDivide:
-    def test_divide_positive_numbers(self):
-        assert divide(10, 2) == 5.0
-
-    def test_divide_negative_numerator(self):
-        assert divide(-10, 2) == -5.0
-
-    def test_divide_float_result(self):
-        assert divide(1, 3) == pytest.approx(0.333, rel=1e-3)
-
-    def test_divide_by_zero_raises_value_error(self):
-        with pytest.raises(ValueError, match="Cannot divide by zero"):
-            divide(10, 0)
-
-    def test_divide_zero_numerator(self):
-        assert divide(0, 5) == 0.0
+gen = TestGenerator(framework=TestFramework.PYTEST, language="python")
+cases = gen.generate_from_requirements(requirements, test_type=TestType.UNIT)
+stub = gen.generate_test_stub(cases[0])
+file_content = gen.generate_test_file("my_module", cases)
+suggestions = gen.suggest_missing_scenarios(existing_tests, code_analysis)
 ```
 
----
+**Constructor Parameters:**
 
-### Coverage Analysis — Sample P0/P1/P2 Output
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `framework` | `TestFramework` | Yes | Target framework: `JEST`, `VITEST`, `PYTEST`, `JUNIT`, `MOCHA` |
+| `language` | `str` | Yes | Programming language: `typescript`, `javascript`, `python`, `java` |
 
-**Command:**
-```bash
-python scripts/coverage_analyzer.py --report lcov.info --threshold 80
-```
+**Key Methods:**
 
-**Sample output:**
-```
-Coverage Report — Overall: 63% (threshold: 80%)
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `generate_from_requirements(requirements, test_type)` | `requirements`: dict with `user_stories`, `acceptance_criteria`, `api_specs`; `test_type`: `TestType` enum (default `UNIT`) | `List[Dict]` of test case specs |
+| `generate_test_stub(test_case)` | `test_case`: single test case dict | `str` -- framework-specific test stub code |
+| `generate_test_file(module_name, test_cases)` | `module_name`: str; `test_cases`: optional list (uses stored cases if omitted) | `str` -- complete test file with imports |
+| `suggest_missing_scenarios(existing_tests, code_analysis)` | `existing_tests`: list of test name strings; `code_analysis`: dict with `error_handlers`, `conditional_branches`, `input_validation` | `List[Dict]` of suggested test scenarios |
 
-P0 — Critical gaps (uncovered error paths):
-  auth/login.py:42-58   handle_expired_token()       0% covered
-  payments/process.py:91-110  handle_payment_failure()   0% covered
+**Output Formats:** Python dict/list (test case specifications), string (generated code).
 
-P1 — High-value gaps (core logic branches):
-  users/service.py:77   update_profile() — else branch  0% covered
-  orders/cart.py:134    apply_discount() — zero-qty guard  0% covered
-
-P2 — Low-risk gaps (utility / helper functions):
-  utils/formatting.py:12  format_currency()            0% covered
-
-Recommended: Generate tests for P0 items first to reach 80% threshold.
-```
-
----
-
-## Key Tools
-
-| Tool | Purpose | Usage |
-|------|---------|-------|
-| `test_generator.py` | Generate test cases from code/requirements | `python scripts/test_generator.py --input source.py --framework pytest` |
-| `coverage_analyzer.py` | Parse and analyze coverage reports | `python scripts/coverage_analyzer.py --report lcov.info --threshold 80` |
-| `tdd_workflow.py` | Guide red-green-refactor cycles | `python scripts/tdd_workflow.py --phase red --test test_auth.py` |
-| `fixture_generator.py` | Generate test data and mocks | `python scripts/fixture_generator.py --entity User --count 5` |
-
-Additional scripts: `framework_adapter.py` (convert between frameworks), `metrics_calculator.py` (quality metrics), `format_detector.py` (detect language/framework), `output_formatter.py` (CLI/desktop/CI output).
-
----
-
-## Input Requirements
-
-**For Test Generation:**
-- Source code (file path or pasted content)
-- Target framework (Jest, Pytest, JUnit, Vitest)
-- Coverage scope (unit, integration, edge cases)
-
-**For Coverage Analysis:**
-- Coverage report file (LCOV, JSON, or XML format)
-- Optional: Source code for context
-- Optional: Target threshold percentage
-
-**For TDD Workflow:**
-- Feature requirements or user story
-- Current phase (RED, GREEN, REFACTOR)
-- Test code and implementation status
-
----
-
-## Spec-First Workflow
-
-TDD is most effective when driven by a written spec. The flow:
-
-1. **Write or receive a spec** — stored in `specs/<feature>.md`
-2. **Extract acceptance criteria** — each criterion becomes one or more test cases
-3. **Write failing tests (RED)** — one test per acceptance criterion
-4. **Implement minimal code (GREEN)** — satisfy each test in order
-5. **Refactor** — clean up while all tests stay green
-
-### Spec Directory Convention
-
-```
-project/
-├── specs/
-│   ├── user-auth.md          # Feature spec with acceptance criteria
-│   ├── payment-processing.md
-│   └── notification-system.md
-├── tests/
-│   ├── test_user_auth.py     # Tests derived from specs/user-auth.md
-│   ├── test_payments.py
-│   └── test_notifications.py
-└── src/
-```
-
-### Extracting Tests from Specs
-
-Each acceptance criterion in a spec maps to at least one test:
-
-| Spec Criterion | Test Case |
-|---------------|-----------|
-| "User can log in with valid credentials" | `test_login_valid_credentials_returns_token` |
-| "Invalid password returns 401" | `test_login_invalid_password_returns_401` |
-| "Account locks after 5 failed attempts" | `test_login_locks_after_five_failures` |
-
-**Tip:** Number your acceptance criteria in the spec. Reference the number in the test docstring for traceability (`# AC-3: Account locks after 5 failed attempts`).
-
-> **Cross-reference:** See `engineering/spec-driven-workflow` for the full spec methodology, including spec templates and review checklists.
-
----
-
-## Red-Green-Refactor Examples Per Language
-
-### TypeScript / Jest
-
-```typescript
-// test/cart.test.ts
-describe("Cart", () => {
-  describe("addItem", () => {
-    it("should add a new item to an empty cart", () => {
-      const cart = new Cart();
-      cart.addItem({ id: "sku-1", name: "Widget", price: 9.99, qty: 1 });
-
-      expect(cart.items).toHaveLength(1);
-      expect(cart.items[0].id).toBe("sku-1");
-    });
-
-    it("should increment quantity when adding an existing item", () => {
-      const cart = new Cart();
-      cart.addItem({ id: "sku-1", name: "Widget", price: 9.99, qty: 1 });
-      cart.addItem({ id: "sku-1", name: "Widget", price: 9.99, qty: 2 });
-
-      expect(cart.items).toHaveLength(1);
-      expect(cart.items[0].qty).toBe(3);
-    });
-
-    it("should throw when quantity is zero or negative", () => {
-      const cart = new Cart();
-      expect(() =>
-        cart.addItem({ id: "sku-1", name: "Widget", price: 9.99, qty: 0 })
-      ).toThrow("Quantity must be positive");
-    });
-  });
-});
-```
-
-### Python / Pytest (Advanced Patterns)
-
+**Example:**
 ```python
-# tests/conftest.py — shared fixtures
-import pytest
-from app.db import create_engine, Session
-
-@pytest.fixture(scope="session")
-def db_engine():
-    engine = create_engine("sqlite:///:memory:")
-    yield engine
-    engine.dispose()
-
-@pytest.fixture
-def db_session(db_engine):
-    session = Session(bind=db_engine)
-    yield session
-    session.rollback()
-    session.close()
-
-# tests/test_pricing.py — parametrize for multiple cases
-import pytest
-from app.pricing import calculate_discount
-
-@pytest.mark.parametrize("subtotal, expected_discount", [
-    (50.0, 0.0),       # Below threshold — no discount
-    (100.0, 5.0),      # 5% tier
-    (250.0, 25.0),     # 10% tier
-    (500.0, 75.0),     # 15% tier
-])
-def test_calculate_discount(subtotal, expected_discount):
-    assert calculate_discount(subtotal) == pytest.approx(expected_discount)
-```
-
-### Go — Table-Driven Tests
-
-```go
-// cart_test.go
-package cart
-
-import "testing"
-
-func TestApplyDiscount(t *testing.T) {
-    tests := []struct {
-        name     string
-        subtotal float64
-        want     float64
-    }{
-        {"no discount below threshold", 50.0, 0.0},
-        {"5 percent tier", 100.0, 5.0},
-        {"10 percent tier", 250.0, 25.0},
-        {"15 percent tier", 500.0, 75.0},
-        {"zero subtotal", 0.0, 0.0},
-    }
-
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got := ApplyDiscount(tt.subtotal)
-            if got != tt.want {
-                t.Errorf("ApplyDiscount(%v) = %v, want %v", tt.subtotal, got, tt.want)
-            }
-        })
-    }
+requirements = {
+    "user_stories": [{"action": "login", "given": ["valid credentials"], "when": "submit form", "then": "redirect to dashboard"}],
+    "api_specs": [{"method": "POST", "path": "/auth/login", "requires_auth": False, "required_params": ["email", "password"]}]
 }
+gen = TestGenerator(framework=TestFramework.JEST, language="typescript")
+cases = gen.generate_from_requirements(requirements)
+print(gen.generate_test_file("auth_service", cases))
 ```
 
 ---
 
-## Bounded Autonomy Rules
+### 2. `coverage_analyzer.py`
 
-When generating tests autonomously, follow these rules to decide when to stop and ask the user:
+**Purpose:** Parse coverage reports in LCOV, JSON (Istanbul/nyc), and XML (Cobertura) formats. Calculate summary metrics, identify files below threshold, and generate prioritized recommendations.
 
-### Stop and Ask When
+**Module:** `CoverageAnalyzer` class
 
-- **Ambiguous requirements** — the spec or user story has conflicting or unclear acceptance criteria
-- **Missing edge cases** — you cannot determine boundary values without domain knowledge (e.g., max allowed transaction amount)
-- **Test count exceeds 50** — large test suites need human review before committing; present a summary and ask which areas to prioritize
-- **External dependencies unclear** — the feature relies on third-party APIs or services with undocumented behavior
-- **Security-sensitive logic** — authentication, authorization, encryption, or payment flows require human sign-off on test scenarios
-
-### Continue Autonomously When
-
-- **Clear spec with numbered acceptance criteria** — each criterion maps directly to tests
-- **Straightforward CRUD operations** — create, read, update, delete with well-defined models
-- **Well-defined API contracts** — OpenAPI spec or typed interfaces available
-- **Pure functions** — deterministic input/output with no side effects
-- **Existing test patterns** — the codebase already has similar tests to follow
-
----
-
-## Property-Based Testing
-
-Property-based testing generates random inputs to verify invariants instead of relying on hand-picked examples. Use it when the input space is large and the expected behavior can be described as a property.
-
-### Python — Hypothesis
-
+**Usage:**
 ```python
-from hypothesis import given, strategies as st
-from app.serializers import serialize, deserialize
+from coverage_analyzer import CoverageAnalyzer
 
-@given(st.text())
-def test_roundtrip_serialization(data):
-    """Serialization followed by deserialization returns the original."""
-    assert deserialize(serialize(data)) == data
-
-@given(st.integers(), st.integers())
-def test_addition_is_commutative(a, b):
-    assert a + b == b + a
+analyzer = CoverageAnalyzer()
+data = analyzer.parse_coverage_report(report_content, format_type="lcov")
+summary = analyzer.calculate_summary()
+gaps = analyzer.identify_gaps(threshold=80.0)
+recs = analyzer.generate_recommendations()
+file_detail = analyzer.get_file_coverage("src/auth.ts")
+detected = analyzer.detect_format(raw_content)
 ```
 
-### TypeScript — fast-check
+**Constructor Parameters:** None.
 
-```typescript
-import fc from "fast-check";
-import { encode, decode } from "./codec";
+**Key Methods:**
 
-test("encode/decode roundtrip", () => {
-  fc.assert(
-    fc.property(fc.string(), (input) => {
-      expect(decode(encode(input))).toBe(input);
-    })
-  );
-});
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `parse_coverage_report(report_content, format_type)` | `report_content`: str; `format_type`: `"lcov"`, `"json"`, `"xml"`, `"cobertura"` | `Dict` of per-file coverage data |
+| `calculate_summary()` | None | `Dict` with `line_coverage`, `branch_coverage`, `function_coverage`, totals |
+| `identify_gaps(threshold)` | `threshold`: float (default `80.0`) | `List[Dict]` of files below threshold with priority P0/P1/P2 |
+| `generate_recommendations()` | None | `List[Dict]` of prioritized recommendations |
+| `get_file_coverage(file_path)` | `file_path`: str | `Dict` with per-file line/branch/function coverage |
+| `detect_format(content)` | `content`: str | `str` -- `"lcov"`, `"json"`, or `"xml"` |
+
+**Output Formats:** Python dict/list. Use `output_formatter.py` for terminal/markdown/JSON rendering.
+
+**Example:**
+```python
+with open("coverage/lcov.info") as f:
+    content = f.read()
+analyzer = CoverageAnalyzer()
+fmt = analyzer.detect_format(content)
+analyzer.parse_coverage_report(content, fmt)
+summary = analyzer.calculate_summary()
+# {'line_coverage': 76.5, 'branch_coverage': 62.3, ...}
+gaps = analyzer.identify_gaps(threshold=80.0)
+# [{'file': 'src/auth.ts', 'line_coverage': 45.0, 'priority': 'P0', ...}]
 ```
 
-### When to Use Property-Based Over Example-Based
+---
 
-| Use Property-Based | Example |
-|-------------------|---------|
-| Data transformations | Serialize/deserialize roundtrips |
-| Mathematical properties | Commutativity, associativity, idempotency |
-| Encoding/decoding | Base64, URL encoding, compression |
-| Sorting and filtering | Output is sorted, length preserved |
-| Parser correctness | Valid input always parses without error |
+### 3. `tdd_workflow.py`
+
+**Purpose:** Guide users through red-green-refactor TDD cycles with phase validation, workflow state tracking, and refactoring suggestions.
+
+**Module:** `TDDWorkflow` class
+
+**Usage:**
+```python
+from tdd_workflow import TDDWorkflow
+
+wf = TDDWorkflow()
+guidance = wf.start_cycle("User can reset password via email")
+red_result = wf.validate_red_phase(test_code, test_result={"status": "failed"})
+green_result = wf.validate_green_phase(impl_code, {"status": "passed"})
+refactor_result = wf.validate_refactor_phase(original, refactored, {"status": "passed"})
+phase_guide = wf.get_phase_guidance()
+summary = wf.generate_workflow_summary()
+```
+
+**Constructor Parameters:** None.
+
+**Key Methods:**
+
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `start_cycle(requirement)` | `requirement`: str -- user story or feature description | `Dict` with phase, instruction, checklist, tips |
+| `validate_red_phase(test_code, test_result)` | `test_code`: str; `test_result`: optional dict with `status` key | `Dict` with `phase_complete`, validations, next instruction |
+| `validate_green_phase(implementation_code, test_result)` | `implementation_code`: str; `test_result`: dict with `status` key | `Dict` with `phase_complete`, validations, `refactoring_suggestions` |
+| `validate_refactor_phase(original_code, refactored_code, test_result)` | `original_code`: str; `refactored_code`: str; `test_result`: dict with `status` key | `Dict` with `phase_complete`, `cycle_complete`, next steps |
+| `get_phase_guidance(phase)` | `phase`: optional `TDDPhase` enum (uses current phase if omitted) | `Dict` with goal, steps, common mistakes, tips |
+| `generate_workflow_summary()` | None | `str` -- markdown summary of current state and completed cycles |
+
+**Output Formats:** Python dict (validation results), string (summary).
+
+**Example:**
+```python
+wf = TDDWorkflow()
+wf.start_cycle("Add email validation to signup form")
+result = wf.validate_red_phase("def test_invalid_email():\n    assert validate('bad') == False", {"status": "failed"})
+# {'phase_complete': True, 'next_phase': 'GREEN', ...}
+```
 
 ---
 
-## Mutation Testing
+### 4. `framework_adapter.py`
 
-Mutation testing modifies your production code (creates "mutants") and checks whether your tests catch the changes. If a mutant survives (tests still pass), your tests have a gap that coverage alone cannot reveal.
+**Purpose:** Provide multi-framework support with adapters for Jest, Vitest, Pytest, unittest, JUnit, TestNG, Mocha, and Jasmine. Generate framework-specific imports, test suites, test functions, assertions, and setup/teardown hooks.
 
-### Tools
+**Module:** `FrameworkAdapter` class
 
-| Language | Tool | Command |
-|----------|------|---------|
-| TypeScript/JavaScript | **Stryker** | `npx stryker run` |
-| Python | **mutmut** | `mutmut run --paths-to-mutate=src/` |
-| Java | **PIT** | `mvn org.pitest:pitest-maven:mutationCoverage` |
+**Usage:**
+```python
+from framework_adapter import FrameworkAdapter, Framework, Language
 
-### Why Mutation Testing Matters
+adapter = FrameworkAdapter(framework=Framework.JEST, language=Language.TYPESCRIPT)
+imports = adapter.generate_imports()
+suite = adapter.generate_test_suite_wrapper("AuthService", test_content)
+test_fn = adapter.generate_test_function("should reject invalid email", body, "Validates email format")
+assertion = adapter.generate_assertion("result", "true", "true")
+hooks = adapter.generate_setup_teardown(setup_code="db = create_test_db()", teardown_code="db.close()")
+detected = adapter.detect_framework(existing_code)
+```
 
-- **100% line coverage != good tests** — coverage tells you code was executed, not that it was verified
-- **Catches weak assertions** — tests that run code but assert nothing meaningful
-- **Finds missing boundary tests** — mutants that change `<` to `<=` expose off-by-one gaps
-- **Quantifiable quality metric** — mutation score (% mutants killed) is a stronger signal than coverage %
+**Constructor Parameters:**
 
-**Recommendation:** Run mutation testing on critical paths (auth, payments, data processing) even if overall coverage is high. Target 85%+ mutation score on P0 modules.
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `framework` | `Framework` | Yes | `JEST`, `VITEST`, `PYTEST`, `UNITTEST`, `JUNIT`, `TESTNG`, `MOCHA`, `JASMINE` |
+| `language` | `Language` | Yes | `TYPESCRIPT`, `JAVASCRIPT`, `PYTHON`, `JAVA` |
+
+**Key Methods:**
+
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `generate_imports()` | None | `str` -- framework-specific import statements |
+| `generate_test_suite_wrapper(suite_name, test_content)` | `suite_name`: str; `test_content`: str | `str` -- complete test suite wrapping content |
+| `generate_test_function(test_name, test_body, description)` | `test_name`: str; `test_body`: str; `description`: str (default `""`) | `str` -- complete test function |
+| `generate_assertion(actual, expected, assertion_type)` | `actual`: str; `expected`: str; `assertion_type`: `"equals"`, `"not_equals"`, `"true"`, `"false"`, `"throws"` (default `"equals"`) | `str` -- assertion statement |
+| `generate_setup_teardown(setup_code, teardown_code)` | `setup_code`: str (default `""`); `teardown_code`: str (default `""`) | `str` -- setup/teardown hooks |
+| `detect_framework(code)` | `code`: str | `Framework` enum or `None` |
+
+**Output Formats:** String (generated code).
+
+**Example:**
+```python
+adapter = FrameworkAdapter(Framework.PYTEST, Language.PYTHON)
+print(adapter.generate_imports())
+# import pytest
+print(adapter.generate_assertion("calculate_total(items)", "150.0", "equals"))
+# assert calculate_total(items) == 150.0
+```
 
 ---
 
-## Cross-References
+### 5. `fixture_generator.py`
 
-| Skill | Relationship |
-|-------|-------------|
-| `engineering/spec-driven-workflow` | Spec → acceptance criteria → test extraction pipeline |
-| `engineering-team/focused-fix` | Phase 5 (Verify) uses TDD to confirm the fix with a regression test |
-| `engineering-team/senior-qa` | Broader QA strategy; TDD is one layer in the test pyramid |
-| `engineering-team/code-reviewer` | Review generated tests for assertion quality and coverage completeness |
-| `engineering-team/senior-fullstack` | Project scaffolders include testing infrastructure compatible with TDD workflows |
+**Purpose:** Generate realistic test data, boundary values, edge-case scenarios, and mock objects for various domains (auth, payment, form, API, file upload).
+
+**Module:** `FixtureGenerator` class
+
+**Usage:**
+```python
+from fixture_generator import FixtureGenerator
+
+gen = FixtureGenerator(seed=42)
+boundaries = gen.generate_boundary_values("int", {"min": 0, "max": 255})
+edge_cases = gen.generate_edge_cases("auth")
+mocks = gen.generate_mock_data(schema, count=5)
+fixture_content = gen.generate_fixture_file("users", mocks, format="json")
+```
+
+**Constructor Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `seed` | `int` or `None` | No | Random seed for reproducible output (default `None`) |
+
+**Key Methods:**
+
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `generate_boundary_values(data_type, constraints)` | `data_type`: `"int"`, `"string"`, `"array"`, `"date"`, `"email"`, `"url"`; `constraints`: optional dict (`min`, `max`, `min_length`, `max_length`, `min_size`, `max_size`) | `List` of boundary values |
+| `generate_edge_cases(scenario, context)` | `scenario`: `"auth"`, `"payment"`, `"form"`, `"api"`, `"file_upload"`; `context`: optional dict (required for `"form"` with `fields` key) | `List[Dict]` of edge case scenarios |
+| `generate_mock_data(schema, count)` | `schema`: dict mapping field names to `{"type": ...}` defs; `count`: int (default `1`) | `List[Dict]` of mock objects |
+| `generate_fixture_file(fixture_name, data, format)` | `fixture_name`: str; `data`: any; `format`: `"json"`, `"python"`, `"yaml"` (default `"json"`) | `str` -- fixture file content |
+
+**Supported Schema Field Types:** `string`, `int`, `float`, `bool`, `email`, `date`, `array`.
+
+**Output Formats:** Python list/dict (data), string (file content in JSON/Python/YAML).
+
+**Example:**
+```python
+gen = FixtureGenerator(seed=123)
+schema = {
+    "id": {"type": "int", "min": 1, "max": 9999},
+    "email": {"type": "email"},
+    "active": {"type": "bool"}
+}
+users = gen.generate_mock_data(schema, count=3)
+print(gen.generate_fixture_file("test_users", users, format="json"))
+```
 
 ---
 
-## Limitations
+### 6. `metrics_calculator.py`
 
-| Scope | Details |
-|-------|---------|
-| Unit test focus | Integration and E2E tests require different patterns |
-| Static analysis | Cannot execute tests or measure runtime behavior |
-| Language support | Best for TypeScript, JavaScript, Python, Java |
-| Report formats | LCOV, JSON, XML only; other formats need conversion |
-| Generated tests | Provide scaffolding; require human review for complex logic |
+**Purpose:** Calculate comprehensive test and code quality metrics including cyclomatic/cognitive complexity, testability scoring, test quality assessment (assertions, isolation, naming, smells), and execution analysis.
 
-**When to use other tools:**
-- E2E testing: Playwright, Cypress, Selenium
-- Performance testing: k6, JMeter, Locust
-- Security testing: OWASP ZAP, Burp Suite
+**Module:** `MetricsCalculator` class
+
+**Usage:**
+```python
+from metrics_calculator import MetricsCalculator
+
+calc = MetricsCalculator()
+all_metrics = calc.calculate_all_metrics(source_code, test_code, coverage_data, execution_data)
+complexity = calc.calculate_complexity(source_code)
+test_quality = calc.calculate_test_quality(test_code)
+execution = calc.analyze_execution_metrics(execution_data)
+summary = calc.generate_metrics_summary()
+```
+
+**Constructor Parameters:** None.
+
+**Key Methods:**
+
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `calculate_all_metrics(source_code, test_code, coverage_data, execution_data)` | `source_code`: str; `test_code`: str; `coverage_data`: optional dict; `execution_data`: optional dict | `Dict` with `complexity`, `test_quality`, `coverage`, `execution` |
+| `calculate_complexity(code)` | `code`: str | `Dict` with `cyclomatic_complexity`, `cognitive_complexity`, `testability_score`, `assessment` |
+| `calculate_test_quality(test_code)` | `test_code`: str | `Dict` with `total_tests`, `total_assertions`, `avg_assertions_per_test`, `isolation_score`, `naming_quality`, `test_smells`, `quality_score` |
+| `analyze_execution_metrics(execution_data)` | `execution_data`: dict with `tests` list (each having `duration`, `status`, optional `failure_rate`) | `Dict` with `total_tests`, timing stats, `slow_tests`, `flaky_tests`, `pass_rate` |
+| `generate_metrics_summary()` | None | `str` -- human-readable markdown summary |
+
+**Output Formats:** Python dict (metrics data), string (markdown summary).
+
+**Example:**
+```python
+calc = MetricsCalculator()
+complexity = calc.calculate_complexity(open("src/auth.py").read())
+# {'cyclomatic_complexity': 8, 'cognitive_complexity': 12, 'testability_score': 82.0, 'assessment': 'Medium complexity - moderately testable'}
+quality = calc.calculate_test_quality(open("tests/test_auth.py").read())
+# {'quality_score': 78.5, 'test_smells': [], ...}
+```
+
+---
+
+### 7. `format_detector.py`
+
+**Purpose:** Automatically detect programming language, testing framework, coverage report format, and project structure from code content or file paths.
+
+**Module:** `FormatDetector` class
+
+**Usage:**
+```python
+from format_detector import FormatDetector
+
+detector = FormatDetector()
+language = detector.detect_language(code)
+framework = detector.detect_test_framework(test_code)
+cov_format = detector.detect_coverage_format(report_content)
+input_info = detector.detect_input_format(raw_input)
+file_info = detector.extract_file_info("/src/auth.service.ts")
+test_name = detector.suggest_test_file_name("auth.service.ts", "jest")
+patterns = detector.identify_test_patterns(test_code)
+project = detector.analyze_project_structure(file_path_list)
+env = detector.detect_environment()
+```
+
+**Constructor Parameters:** None.
+
+**Key Methods:**
+
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `detect_language(code)` | `code`: str | `str` -- `"typescript"`, `"javascript"`, `"python"`, `"java"`, `"unknown"` |
+| `detect_test_framework(code)` | `code`: str | `str` -- `"jest"`, `"vitest"`, `"pytest"`, `"unittest"`, `"junit"`, `"mocha"`, `"unknown"` |
+| `detect_coverage_format(content)` | `content`: str | `str` -- `"lcov"`, `"json"`, `"xml"`, `"unknown"` |
+| `detect_input_format(input_data)` | `input_data`: str | `Dict` with `format`, `language`, `framework`, `content_type` |
+| `extract_file_info(file_path)` | `file_path`: str | `Dict` with `file_name`, `extension`, `language`, `is_test`, `purpose` |
+| `suggest_test_file_name(source_file, framework)` | `source_file`: str; `framework`: str | `str` -- suggested test file name |
+| `identify_test_patterns(code)` | `code`: str | `List[str]` of detected patterns (AAA, Given-When-Then, etc.) |
+| `analyze_project_structure(file_paths)` | `file_paths`: list of str | `Dict` with `primary_language`, `test_ratio`, `suggested_framework` |
+| `detect_environment()` | None | `Dict` with `environment`, `output_preference` |
+
+**Output Formats:** String (detection result), Python dict (detailed analysis).
+
+**Example:**
+```python
+detector = FormatDetector()
+print(detector.detect_language("const add = (a: number, b: number): number => a + b;"))
+# "typescript"
+print(detector.suggest_test_file_name("UserService.java", "junit"))
+# "UserserviceTest.java"
+print(detector.identify_test_patterns("// Arrange\nsetup()\n// Act\nresult = run()\n// Assert\nassert result"))
+# ['AAA (Arrange-Act-Assert)']
+```
+
+---
+
+### 8. `output_formatter.py`
+
+**Purpose:** Context-aware output formatting for different environments (Desktop/markdown, CLI/terminal, API/JSON). Supports progressive disclosure, token-efficient summary reports, and output truncation.
+
+**Module:** `OutputFormatter` class
+
+**Usage:**
+```python
+from output_formatter import OutputFormatter
+
+fmt = OutputFormatter(environment="cli", verbose=False)
+cov_output = fmt.format_coverage_summary(summary, detailed=True)
+rec_output = fmt.format_recommendations(recommendations, max_items=5)
+test_output = fmt.format_test_results(results, show_details=True)
+report = fmt.create_summary_report(coverage, metrics, recommendations)
+should_detail = fmt.should_show_detailed(data_size=50)
+truncated = fmt.truncate_output(long_text, max_lines=30)
+```
+
+**Constructor Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `environment` | `str` | No | Target environment: `"desktop"`, `"cli"`, `"api"` (default `"cli"`) |
+| `verbose` | `bool` | No | Include detailed output (default `False`) |
+
+**Key Methods:**
+
+| Method | Parameters | Returns |
+|--------|-----------|---------|
+| `format_coverage_summary(summary, detailed)` | `summary`: dict; `detailed`: bool (default `False`) | `str` -- formatted coverage (markdown/terminal/JSON based on environment) |
+| `format_recommendations(recommendations, max_items)` | `recommendations`: list of dicts; `max_items`: optional int | `str` -- formatted recommendations grouped by priority |
+| `format_test_results(results, show_details)` | `results`: dict with `total_tests`, `passed`, `failed`, `skipped`, `failed_tests`; `show_details`: bool (default `False`) | `str` -- formatted test results |
+| `create_summary_report(coverage, metrics, recommendations)` | `coverage`: dict; `metrics`: dict; `recommendations`: list | `str` -- token-efficient summary (<200 tokens) |
+| `should_show_detailed(data_size)` | `data_size`: int | `bool` -- whether to show detailed output |
+| `truncate_output(text, max_lines)` | `text`: str; `max_lines`: int (default `50`) | `str` -- truncated text with remaining-lines indicator |
+
+**Output Formats:** String in markdown (desktop), plain text (CLI), or JSON (API) depending on `environment` setting.
+
+**Example:**
+```python
+fmt = OutputFormatter(environment="desktop", verbose=True)
+print(fmt.format_coverage_summary({"line_coverage": 82.5, "branch_coverage": 71.0, "function_coverage": 90.0}))
+# ## Test Coverage Summary
+# ### Overall Metrics
+# - **Line Coverage**: 82.5%
+# ...
+```

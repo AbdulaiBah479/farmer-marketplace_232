@@ -1,11 +1,9 @@
 ---
 name: networkx
-description: "NetworkX is a Python package for creating, manipulating, and analyzing complex networks and graphs."
+description: Comprehensive toolkit for creating, analyzing, and visualizing complex networks and graphs in Python. Use when working with network/graph data structures, analyzing relationships between entities, computing graph algorithms (shortest paths, centrality, clustering), detecting communities, generating synthetic networks, or visualizing network topologies. Applicable to social networks, biological networks, transportation systems, citation networks, and any domain involving pairwise relationships.
 license: 3-clause BSD license
 metadata:
     skill-author: K-Dense Inc.
-risk: unknown
-source: "https://github.com/networkx/networkx"
 ---
 
 # NetworkX
@@ -435,7 +433,3 @@ Extensive documentation on visualization techniques including layout algorithms,
 - **Gallery**: https://networkx.org/documentation/latest/auto_examples/index.html
 - **GitHub**: https://github.com/networkx/networkx
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

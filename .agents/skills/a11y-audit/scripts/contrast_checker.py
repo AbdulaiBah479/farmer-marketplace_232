@@ -1,499 +1,327 @@
 #!/usr/bin/env python3
-"""WCAG 2.2 Color Contrast Checker.
+"""
+Contrast Checker - Check color contrast ratios against WCAG AA/AAA standards.
 
-Checks foreground/background color pairs against WCAG 2.2 contrast ratio
-thresholds for normal text, large text, and UI components. Supports hex,
-rgb(), and named CSS colors.
+Calculates relative luminance contrast ratios between foreground and background
+colors and validates against WCAG 2.1 thresholds for normal and large text.
 
-Usage:
-    python contrast_checker.py "#ffffff" "#000000"
-    python contrast_checker.py --suggest "#336699"
-    python contrast_checker.py --batch styles.css
-    python contrast_checker.py --demo
+Author: Claude Skills Engineering Team
+License: MIT
 """
 
 import argparse
 import json
+import math
 import re
 import sys
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import List, Tuple, Optional, Dict
 
-# ---------------------------------------------------------------------------
-# Named CSS colors (25 common ones)
-# ---------------------------------------------------------------------------
-NAMED_COLORS = {
-    "black": (0, 0, 0),
-    "white": (255, 255, 255),
-    "red": (255, 0, 0),
-    "green": (0, 128, 0),
-    "blue": (0, 0, 255),
-    "yellow": (255, 255, 0),
-    "cyan": (0, 255, 255),
-    "magenta": (255, 0, 255),
-    "gray": (128, 128, 128),
-    "grey": (128, 128, 128),
-    "orange": (255, 165, 0),
-    "purple": (128, 0, 128),
-    "pink": (255, 192, 203),
-    "brown": (165, 42, 42),
-    "navy": (0, 0, 128),
-    "teal": (0, 128, 128),
-    "olive": (128, 128, 0),
-    "maroon": (128, 0, 0),
-    "lime": (0, 255, 0),
-    "aqua": (0, 255, 255),
-    "silver": (192, 192, 192),
-    "gold": (255, 215, 0),
-    "coral": (255, 127, 80),
-    "salmon": (250, 128, 114),
-    "tomato": (255, 99, 71),
+
+@dataclass
+class ContrastResult:
+    """Result of a contrast check."""
+    foreground: str
+    background: str
+    ratio: float
+    aa_normal: bool  # 4.5:1
+    aa_large: bool   # 3:1
+    aaa_normal: bool  # 7:1
+    aaa_large: bool   # 4.5:1
+    suggestion: Optional[str] = None
+
+
+# Named CSS colors (common subset)
+CSS_COLORS = {
+    "black": "#000000", "white": "#ffffff", "red": "#ff0000",
+    "green": "#008000", "blue": "#0000ff", "yellow": "#ffff00",
+    "cyan": "#00ffff", "magenta": "#ff00ff", "gray": "#808080",
+    "grey": "#808080", "silver": "#c0c0c0", "maroon": "#800000",
+    "olive": "#808000", "navy": "#000080", "purple": "#800080",
+    "teal": "#008080", "aqua": "#00ffff", "orange": "#ffa500",
+    "pink": "#ffc0cb", "brown": "#a52a2a", "coral": "#ff7f50",
+    "crimson": "#dc143c", "darkblue": "#00008b", "darkgreen": "#006400",
+    "darkred": "#8b0000", "gold": "#ffd700", "indigo": "#4b0082",
+    "ivory": "#fffff0", "khaki": "#f0e68c", "lavender": "#e6e6fa",
+    "lime": "#00ff00", "linen": "#faf0e6", "mintcream": "#f5fffa",
+    "salmon": "#fa8072", "tomato": "#ff6347", "turquoise": "#40e0d0",
+    "violet": "#ee82ee", "wheat": "#f5deb3",
 }
 
-# WCAG thresholds: (label, required_ratio)
-WCAG_THRESHOLDS = [
-    ("AA Normal Text", 4.5),
-    ("AA Large Text", 3.0),
-    ("AA UI Components", 3.0),
-    ("AAA Normal Text", 7.0),
-    ("AAA Large Text", 4.5),
-]
 
+def parse_color(color_str: str) -> Optional[Tuple[int, int, int]]:
+    """Parse a color string into RGB tuple."""
+    color_str = color_str.strip().lower()
 
-# ---------------------------------------------------------------------------
-# Color parsing
-# ---------------------------------------------------------------------------
-def parse_color(color_str: str) -> tuple:
-    """Parse a color string into an (R, G, B) tuple.
+    # Named colors
+    if color_str in CSS_COLORS:
+        color_str = CSS_COLORS[color_str]
 
-    Accepts:
-      - #RRGGBB or #RGB hex
-      - rgb(r, g, b)  with values 0-255
-      - Named CSS colors
-    """
-    s = color_str.strip().lower()
+    # Hex: #rgb or #rrggbb
+    if color_str.startswith("#"):
+        hex_val = color_str[1:]
+        if len(hex_val) == 3:
+            hex_val = "".join(c * 2 for c in hex_val)
+        if len(hex_val) == 6:
+            try:
+                r = int(hex_val[0:2], 16)
+                g = int(hex_val[2:4], 16)
+                b = int(hex_val[4:6], 16)
+                return (r, g, b)
+            except ValueError:
+                return None
 
-    # Named color
-    if s in NAMED_COLORS:
-        return NAMED_COLORS[s]
-
-    # Hex: #RGB or #RRGGBB
-    hex_match = re.match(r"^#([0-9a-f]{3}|[0-9a-f]{6})$", s)
-    if hex_match:
-        h = hex_match.group(1)
-        if len(h) == 3:
-            r, g, b = int(h[0] * 2, 16), int(h[1] * 2, 16), int(h[2] * 2, 16)
-        else:
-            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-        return (r, g, b)
-
-    # rgb(r, g, b)
-    rgb_match = re.match(r"^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$", s)
+    # rgb(r, g, b) or rgba(r, g, b, a)
+    rgb_match = re.match(r'rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', color_str)
     if rgb_match:
-        r, g, b = int(rgb_match.group(1)), int(rgb_match.group(2)), int(rgb_match.group(3))
-        if not all(0 <= c <= 255 for c in (r, g, b)):
-            raise ValueError(f"RGB values must be 0-255, got rgb({r},{g},{b})")
-        return (r, g, b)
+        return (int(rgb_match.group(1)), int(rgb_match.group(2)), int(rgb_match.group(3)))
 
-    raise ValueError(
-        f"Invalid color format: '{color_str}'. "
-        "Use #RRGGBB, #RGB, rgb(r,g,b), or a named color."
-    )
+    return None
 
 
-def color_to_hex(rgb: tuple) -> str:
-    """Convert an (R, G, B) tuple to #RRGGBB."""
-    return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+def relative_luminance(r: int, g: int, b: int) -> float:
+    """Calculate relative luminance per WCAG 2.1 definition."""
+    def linearize(val: int) -> float:
+        srgb = val / 255.0
+        if srgb <= 0.04045:
+            return srgb / 12.92
+        return ((srgb + 0.055) / 1.055) ** 2.4
+
+    r_lin = linearize(r)
+    g_lin = linearize(g)
+    b_lin = linearize(b)
+    return 0.2126 * r_lin + 0.7152 * g_lin + 0.0722 * b_lin
 
 
-# ---------------------------------------------------------------------------
-# WCAG luminance and contrast
-# ---------------------------------------------------------------------------
-def relative_luminance(rgb: tuple) -> float:
-    """Calculate relative luminance per WCAG 2.2 (sRGB).
-
-    https://www.w3.org/TR/WCAG22/#dfn-relative-luminance
-    """
-    channels = []
-    for c in rgb:
-        s = c / 255.0
-        channels.append(s / 12.92 if s <= 0.04045 else ((s + 0.055) / 1.055) ** 2.4)
-    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
-
-
-def contrast_ratio(rgb1: tuple, rgb2: tuple) -> float:
-    """Return the WCAG contrast ratio between two colors (>= 1.0)."""
-    l1 = relative_luminance(rgb1)
-    l2 = relative_luminance(rgb2)
+def contrast_ratio(fg: Tuple[int, int, int], bg: Tuple[int, int, int]) -> float:
+    """Calculate contrast ratio between two colors."""
+    l1 = relative_luminance(*fg)
+    l2 = relative_luminance(*bg)
     lighter = max(l1, l2)
     darker = min(l1, l2)
     return (lighter + 0.05) / (darker + 0.05)
 
 
-def evaluate_contrast(ratio: float) -> list:
-    """Return pass/fail results for each WCAG threshold."""
-    results = []
-    for label, threshold in WCAG_THRESHOLDS:
-        results.append({
-            "level": label,
-            "required": threshold,
-            "ratio": round(ratio, 2),
-            "pass": ratio >= threshold,
-        })
-    return results
+def suggest_compliant_color(fg: Tuple[int, int, int], bg: Tuple[int, int, int],
+                            target_ratio: float = 4.5) -> Optional[str]:
+    """Suggest a modified foreground color that meets the target ratio."""
+    bg_lum = relative_luminance(*bg)
+    current_ratio = contrast_ratio(fg, bg)
+
+    if current_ratio >= target_ratio:
+        return None
+
+    # Try darkening or lightening the foreground
+    best_color = None
+    best_diff = float("inf")
+
+    for step in range(256):
+        # Try darker
+        factor = 1.0 - (step / 255.0)
+        dr = max(0, min(255, int(fg[0] * factor)))
+        dg = max(0, min(255, int(fg[1] * factor)))
+        db = max(0, min(255, int(fg[2] * factor)))
+        dark_ratio = contrast_ratio((dr, dg, db), bg)
+        if dark_ratio >= target_ratio:
+            diff = sum(abs(a - b) for a, b in zip(fg, (dr, dg, db)))
+            if diff < best_diff:
+                best_diff = diff
+                best_color = f"#{dr:02x}{dg:02x}{db:02x}"
+            break
+
+    for step in range(256):
+        # Try lighter
+        factor = step / 255.0
+        lr = max(0, min(255, fg[0] + int((255 - fg[0]) * factor)))
+        lg = max(0, min(255, fg[1] + int((255 - fg[1]) * factor)))
+        lb = max(0, min(255, fg[2] + int((255 - fg[2]) * factor)))
+        light_ratio = contrast_ratio((lr, lg, lb), bg)
+        if light_ratio >= target_ratio:
+            diff = sum(abs(a - b) for a, b in zip(fg, (lr, lg, lb)))
+            if diff < best_diff:
+                best_diff = diff
+                best_color = f"#{lr:02x}{lg:02x}{lb:02x}"
+            break
+
+    return best_color
 
 
-# ---------------------------------------------------------------------------
-# Suggest accessible backgrounds
-# ---------------------------------------------------------------------------
-def suggest_backgrounds(fg_rgb: tuple, target_ratio: float = 4.5, count: int = 8) -> list:
-    """Given a foreground color, suggest background colors passing AA normal text.
+def check_contrast(fg_str: str, bg_str: str) -> Optional[ContrastResult]:
+    """Check contrast between two colors."""
+    fg = parse_color(fg_str)
+    bg = parse_color(bg_str)
 
-    Strategy: walk luminance in both directions (lighter / darker) from the
-    foreground and collect the first colors that meet the target ratio.
-    """
-    suggestions = []
+    if fg is None or bg is None:
+        return None
 
-    # Try a spread of grays and tinted variants
-    candidates = []
-    for v in range(0, 256, 1):
-        candidates.append((v, v, v))  # grays
+    ratio = contrast_ratio(fg, bg)
+    ratio_rounded = round(ratio, 2)
 
-    # Also try tinted versions toward the complement
-    fr, fg, fb = fg_rgb
-    for v in range(0, 256, 2):
-        candidates.append((v, min(255, v + 20), min(255, v + 40)))
-        candidates.append((min(255, v + 40), v, min(255, v + 20)))
-        candidates.append((min(255, v + 20), min(255, v + 40), v))
+    suggestion = None
+    if ratio < 4.5:
+        suggestion = suggest_compliant_color(fg, bg, 4.5)
 
-    seen = set()
-    scored = []
-    for c in candidates:
-        cr = contrast_ratio(fg_rgb, c)
-        if cr >= target_ratio and c not in seen:
-            seen.add(c)
-            scored.append((cr, c))
-
-    # Sort by ratio closest to target (prefer minimal-change backgrounds)
-    scored.sort(key=lambda x: x[0])
-    for cr, c in scored[:count]:
-        suggestions.append({"hex": color_to_hex(c), "rgb": list(c), "ratio": round(cr, 2)})
-    return suggestions
+    return ContrastResult(
+        foreground=fg_str,
+        background=bg_str,
+        ratio=ratio_rounded,
+        aa_normal=ratio >= 4.5,
+        aa_large=ratio >= 3.0,
+        aaa_normal=ratio >= 7.0,
+        aaa_large=ratio >= 4.5,
+        suggestion=suggestion,
+    )
 
 
-# ---------------------------------------------------------------------------
-# Batch CSS parsing
-# ---------------------------------------------------------------------------
-_COLOR_RE = re.compile(
-    r"(#[0-9a-fA-F]{3,6}|rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\))"
-)
-
-
-def extract_css_pairs(css_text: str) -> list:
-    """Extract color / background-color pairs from CSS declarations.
-
-    Returns a list of dicts with selector, foreground, and background strings.
-    """
+def extract_css_colors(css_content: str) -> List[Tuple[str, str, str]]:
+    """Extract color/background-color pairs from CSS."""
     pairs = []
-    # Split into rule blocks
-    block_re = re.compile(r"([^{}]+)\{([^}]+)\}", re.DOTALL)
-    for m in block_re.finditer(css_text):
-        selector = m.group(1).strip()
-        body = m.group(2)
+    # Parse CSS rules (simplified)
+    rule_pattern = re.compile(r'([^{]+)\{([^}]+)\}')
 
-        fg = bg = None
-        # Match color: ... (but not background-color)
-        fg_match = re.search(
-            r"(?<![-])color\s*:\s*([^;]+);", body, re.IGNORECASE
-        )
-        bg_match = re.search(
-            r"background(?:-color)?\s*:\s*([^;]+);", body, re.IGNORECASE
-        )
+    for match in rule_pattern.finditer(css_content):
+        selector = match.group(1).strip()
+        body = match.group(2)
 
-        if fg_match:
-            val = fg_match.group(1).strip()
-            c = _COLOR_RE.search(val)
-            if c:
-                fg = c.group(1)
-            elif val.lower() in NAMED_COLORS:
-                fg = val.lower()
+        color = None
+        bg_color = None
 
+        # Extract color property
+        color_match = re.search(r'(?<![a-z-])color\s*:\s*([^;]+)', body)
+        if color_match:
+            color = color_match.group(1).strip()
+
+        # Extract background-color
+        bg_match = re.search(r'background-color\s*:\s*([^;]+)', body)
         if bg_match:
-            val = bg_match.group(1).strip()
-            c = _COLOR_RE.search(val)
-            if c:
-                bg = c.group(1)
-            elif val.lower() in NAMED_COLORS:
-                bg = val.lower()
+            bg_color = bg_match.group(1).strip()
 
-        if fg and bg:
-            pairs.append({"selector": selector, "foreground": fg, "background": bg})
+        # Also check shorthand background
+        if not bg_color:
+            bg_short = re.search(r'background\s*:\s*([^;]+)', body)
+            if bg_short:
+                val = bg_short.group(1).strip()
+                # Try to extract a color from shorthand
+                if parse_color(val.split()[0]) is not None:
+                    bg_color = val.split()[0]
+
+        if color and bg_color:
+            pairs.append((selector, color, bg_color))
 
     return pairs
 
 
-# ---------------------------------------------------------------------------
-# Output formatting
-# ---------------------------------------------------------------------------
-def format_result_human(fg_str: str, bg_str: str, ratio: float, results: list) -> str:
-    """Format a contrast check result for the terminal."""
-    lines = [
-        f"Foreground : {fg_str}",
-        f"Background : {bg_str}",
-        f"Contrast   : {ratio:.2f}:1",
-        "",
-    ]
-    for r in results:
-        status = "PASS" if r["pass"] else "FAIL"
-        lines.append(f"  [{status}] {r['level']:20s}  (requires {r['required']}:1)")
+def format_text_single(result: ContrastResult) -> str:
+    """Format a single contrast result as text."""
+    lines = []
+    lines.append("=" * 50)
+    lines.append("COLOR CONTRAST CHECK")
+    lines.append("=" * 50)
+    lines.append(f"Foreground: {result.foreground}")
+    lines.append(f"Background: {result.background}")
+    lines.append(f"Contrast Ratio: {result.ratio}:1")
+    lines.append("")
+    lines.append("WCAG Compliance:")
+    lines.append(f"  AA Normal Text (4.5:1): {'PASS' if result.aa_normal else 'FAIL'}")
+    lines.append(f"  AA Large Text  (3.0:1): {'PASS' if result.aa_large else 'FAIL'}")
+    lines.append(f"  AAA Normal Text (7.0:1): {'PASS' if result.aaa_normal else 'FAIL'}")
+    lines.append(f"  AAA Large Text  (4.5:1): {'PASS' if result.aaa_large else 'FAIL'}")
+
+    if result.suggestion:
+        lines.append(f"\nSuggested foreground for AA compliance: {result.suggestion}")
+
+    lines.append("=" * 50)
     return "\n".join(lines)
 
 
-def format_suggestions_human(fg_str: str, suggestions: list) -> str:
-    """Format suggested backgrounds for the terminal."""
-    lines = [f"Foreground: {fg_str}", "Suggested accessible backgrounds (AA Normal Text):"]
-    if not suggestions:
-        lines.append("  No suggestions found.")
-    for s in suggestions:
-        lines.append(f"  {s['hex']}  ratio={s['ratio']}:1")
+def format_text_css(results: List[Tuple[str, ContrastResult]]) -> str:
+    """Format CSS contrast results as text."""
+    lines = []
+    lines.append("=" * 60)
+    lines.append("CSS COLOR CONTRAST REPORT")
+    lines.append("=" * 60)
+
+    failures = [(s, r) for s, r in results if not r.aa_normal]
+    passes = [(s, r) for s, r in results if r.aa_normal]
+
+    lines.append(f"\nColor pairs found: {len(results)}")
+    lines.append(f"AA failures: {len(failures)}")
+    lines.append(f"AA passes: {len(passes)}")
+
+    if failures:
+        lines.append("\n[FAILURES]")
+        for selector, r in failures:
+            lines.append(f"  {selector}")
+            lines.append(f"    {r.foreground} on {r.background} = {r.ratio}:1")
+            if r.suggestion:
+                lines.append(f"    Suggested fix: {r.suggestion}")
+            lines.append("")
+
+    if passes:
+        lines.append("\n[PASSES]")
+        for selector, r in passes:
+            lines.append(f"  {selector}: {r.ratio}:1")
+
+    lines.append("=" * 60)
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# Demo
-# ---------------------------------------------------------------------------
-DEMO_PAIRS = [
-    ("#ffffff", "#000000"),
-    ("#336699", "#ffffff"),
-    ("#ff6600", "#ffffff"),
-    ("navy", "white"),
-    ("rgb(100,100,100)", "#eeeeee"),
-]
-
-
-def run_demo(as_json: bool) -> None:
-    """Run demo checks and print results."""
-    all_results = []
-    for fg_str, bg_str in DEMO_PAIRS:
-        fg_rgb = parse_color(fg_str)
-        bg_rgb = parse_color(bg_str)
-        ratio = contrast_ratio(fg_rgb, bg_rgb)
-        results = evaluate_contrast(ratio)
-        entry = {
-            "foreground": fg_str,
-            "background": bg_str,
-            "foreground_hex": color_to_hex(fg_rgb),
-            "background_hex": color_to_hex(bg_rgb),
-            "ratio": round(ratio, 2),
-            "results": results,
-        }
-        all_results.append(entry)
-
-    if as_json:
-        print(json.dumps({"demo": True, "checks": all_results}, indent=2))
-    else:
-        print("=" * 60)
-        print("WCAG 2.2 Contrast Checker - Demo")
-        print("=" * 60)
-        for entry in all_results:
-            print()
-            print(
-                format_result_human(
-                    entry["foreground"], entry["background"],
-                    entry["ratio"], entry["results"],
-                )
-            )
-        print()
-        print("-" * 60)
-        print("Suggestion demo for foreground #336699:")
-        suggestions = suggest_backgrounds(parse_color("#336699"))
-        print(format_suggestions_human("#336699", suggestions))
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-def build_parser() -> argparse.ArgumentParser:
+def main():
     parser = argparse.ArgumentParser(
-        description="WCAG 2.2 Color Contrast Checker. "
-        "Checks foreground/background pairs against AA and AAA thresholds.",
-        epilog="Examples:\n"
-        "  %(prog)s '#ffffff' '#000000'\n"
-        "  %(prog)s --suggest '#336699'\n"
-        "  %(prog)s --batch styles.css\n"
-        "  %(prog)s --demo\n",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Check color contrast ratios against WCAG AA/AAA standards."
     )
-    parser.add_argument(
-        "foreground",
-        nargs="?",
-        help="Foreground (text) color: #RRGGBB, #RGB, rgb(r,g,b), or named color",
-    )
-    parser.add_argument(
-        "background",
-        nargs="?",
-        help="Background color: #RRGGBB, #RGB, rgb(r,g,b), or named color",
-    )
-    parser.add_argument(
-        "--suggest",
-        metavar="COLOR",
-        help="Suggest accessible background colors for the given foreground color",
-    )
-    parser.add_argument(
-        "--batch",
-        metavar="CSS_FILE",
-        help="Extract color pairs from a CSS file and check each",
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        dest="json_output",
-        help="Output results as JSON",
-    )
-    parser.add_argument(
-        "--demo",
-        action="store_true",
-        help="Show example output with sample color pairs",
-    )
-    return parser
-
-
-def main() -> int:
-    parser = build_parser()
+    parser.add_argument("--foreground", "--fg", help="Foreground color (hex, rgb, or name)")
+    parser.add_argument("--background", "--bg", help="Background color (hex, rgb, or name)")
+    parser.add_argument("--css", help="Path to CSS file to analyze")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     args = parser.parse_args()
 
-    # --demo mode
-    if args.demo:
-        run_demo(args.json_output)
-        return 0
+    if args.css:
+        path = Path(args.css)
+        if not path.exists():
+            print(f"Error: File not found: {args.css}", file=sys.stderr)
+            sys.exit(2)
 
-    # --suggest mode
-    if args.suggest:
-        try:
-            fg_rgb = parse_color(args.suggest)
-        except ValueError as exc:
-            print(f"Error: {exc}", file=sys.stderr)
-            return 1
+        content = path.read_text()
+        pairs = extract_css_colors(content)
 
-        suggestions = suggest_backgrounds(fg_rgb)
-        if args.json_output:
-            print(json.dumps({
-                "foreground": args.suggest,
-                "foreground_hex": color_to_hex(fg_rgb),
-                "suggestions": suggestions,
-            }, indent=2))
+        results = []
+        for selector, fg, bg in pairs:
+            result = check_contrast(fg, bg)
+            if result:
+                results.append((selector, result))
+
+        if args.format == "json":
+            data = []
+            for selector, r in results:
+                entry = asdict(r)
+                entry["selector"] = selector
+                data.append(entry)
+            print(json.dumps({"pairs": data, "total": len(data),
+                             "failures": sum(1 for _, r in results if not r.aa_normal)}, indent=2))
         else:
-            print(format_suggestions_human(args.suggest, suggestions))
-        return 0
+            print(format_text_css(results))
 
-    # --batch mode
-    if args.batch:
-        try:
-            with open(args.batch, "r", encoding="utf-8") as fh:
-                css_text = fh.read()
-        except FileNotFoundError:
-            print(f"Error: file not found: {args.batch}", file=sys.stderr)
-            return 1
-        except OSError as exc:
-            print(f"Error reading file: {exc}", file=sys.stderr)
-            return 1
+        if any(not r.aa_normal for _, r in results):
+            sys.exit(1)
 
-        pairs = extract_css_pairs(css_text)
-        if not pairs:
-            msg = "No color/background-color pairs found in the CSS file."
-            if args.json_output:
-                print(json.dumps({"batch": args.batch, "pairs": [], "message": msg}, indent=2))
-            else:
-                print(msg)
-            return 0
+    elif args.foreground and args.background:
+        result = check_contrast(args.foreground, args.background)
+        if result is None:
+            print("Error: Could not parse one or both colors.", file=sys.stderr)
+            sys.exit(2)
 
-        all_results = []
-        has_failure = False
-        for pair in pairs:
-            try:
-                fg_rgb = parse_color(pair["foreground"])
-                bg_rgb = parse_color(pair["background"])
-            except ValueError as exc:
-                entry = {
-                    "selector": pair["selector"],
-                    "foreground": pair["foreground"],
-                    "background": pair["background"],
-                    "error": str(exc),
-                }
-                all_results.append(entry)
-                continue
-
-            ratio = contrast_ratio(fg_rgb, bg_rgb)
-            results = evaluate_contrast(ratio)
-            if not results[0]["pass"]:  # AA Normal Text
-                has_failure = True
-            entry = {
-                "selector": pair["selector"],
-                "foreground": pair["foreground"],
-                "background": pair["background"],
-                "foreground_hex": color_to_hex(fg_rgb),
-                "background_hex": color_to_hex(bg_rgb),
-                "ratio": round(ratio, 2),
-                "results": results,
-            }
-            all_results.append(entry)
-
-        if args.json_output:
-            print(json.dumps({"batch": args.batch, "pairs": all_results}, indent=2))
+        if args.format == "json":
+            print(json.dumps(asdict(result), indent=2))
         else:
-            print(f"Batch check: {args.batch}")
-            print("=" * 60)
-            for entry in all_results:
-                print(f"\nSelector: {entry['selector']}")
-                if "error" in entry:
-                    print(f"  Error: {entry['error']}")
-                else:
-                    print(
-                        format_result_human(
-                            entry["foreground"], entry["background"],
-                            entry["ratio"], entry["results"],
-                        )
-                    )
-            print()
-            summary_pass = sum(1 for e in all_results if "ratio" in e and e["results"][0]["pass"])
-            summary_total = sum(1 for e in all_results if "ratio" in e)
-            print(f"Summary: {summary_pass}/{summary_total} pairs pass AA Normal Text")
+            print(format_text_single(result))
 
-        return 1 if has_failure else 0
-
-    # Default: check a single pair
-    if not args.foreground or not args.background:
-        parser.error(
-            "Provide foreground and background colors, or use --suggest, --batch, or --demo."
-        )
-
-    try:
-        fg_rgb = parse_color(args.foreground)
-    except ValueError as exc:
-        print(f"Error (foreground): {exc}", file=sys.stderr)
-        return 1
-
-    try:
-        bg_rgb = parse_color(args.background)
-    except ValueError as exc:
-        print(f"Error (background): {exc}", file=sys.stderr)
-        return 1
-
-    ratio = contrast_ratio(fg_rgb, bg_rgb)
-    results = evaluate_contrast(ratio)
-
-    if args.json_output:
-        print(json.dumps({
-            "foreground": args.foreground,
-            "background": args.background,
-            "foreground_hex": color_to_hex(fg_rgb),
-            "background_hex": color_to_hex(bg_rgb),
-            "ratio": round(ratio, 2),
-            "results": results,
-        }, indent=2))
+        if not result.aa_normal:
+            sys.exit(1)
     else:
-        print(format_result_human(args.foreground, args.background, ratio, results))
-
-    return 0 if results[0]["pass"] else 1
+        parser.error("Provide either --foreground and --background, or --css")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

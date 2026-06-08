@@ -1,314 +1,305 @@
 #!/usr/bin/env python3
-"""Rank AgentHub agent results by metric or diff quality.
+"""Rank and merge outputs from multiple agents in a workflow.
 
-Runs an evaluation command in each agent's worktree, parses a metric,
-and produces a ranked table.
+Scores agent outputs on completeness, length, structure, and relevance.
+Supports different merge strategies: synthesize (combine complementary),
+rank-select (pick best), and chain (use final).
 
 Usage:
-    python result_ranker.py --session 20260317-143022 \\
-        --eval-cmd "pytest bench.py --json" --metric p50_ms --direction lower
-
-    python result_ranker.py --session 20260317-143022 --diff-summary
-
-    python result_ranker.py --demo
+    python result_ranker.py --session session.json --list-outputs
+    python result_ranker.py --session session.json --rank
+    python result_ranker.py --session session.json --merge synthesize
+    python result_ranker.py --session session.json --merge rank-select --json
 """
 
 import argparse
 import json
-import os
 import re
-import subprocess
 import sys
+from collections import defaultdict
+from pathlib import Path
 
 
-def run_git(*args):
-    """Run a git command and return stdout."""
+def load_session(path):
+    """Load session with agent outputs."""
     try:
-        result = subprocess.run(
-            ["git"] + list(args),
-            capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        return ""
-
-
-def get_session_config(session_id):
-    """Load session config."""
-    config_path = os.path.join(".agenthub", "sessions", session_id, "config.yaml")
-    if not os.path.exists(config_path):
-        print(f"Error: Session {session_id} not found", file=sys.stderr)
+        with open(path, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"Error loading session: {e}", file=sys.stderr)
         sys.exit(1)
 
-    config = {}
-    with open(config_path) as f:
-        for line in f:
-            line = line.strip()
-            if ":" in line and not line.startswith("#"):
-                key, val = line.split(":", 1)
-                val = val.strip().strip('"')
-                config[key.strip()] = val
-    return config
+
+def extract_outputs(session):
+    """Extract completed agent outputs from session."""
+    agents = session.get("agents", {})
+    outputs = []
+    for agent_id, agent_data in agents.items():
+        if agent_data.get("state") == "COMPLETED" and agent_data.get("outputs"):
+            outputs.append({
+                "agent_id": agent_id,
+                "state": agent_data["state"],
+                "outputs": agent_data["outputs"],
+                "duration_s": agent_data.get("duration_s", 0),
+                "eval_score": agent_data.get("eval_score"),
+                "task": agent_data.get("task", ""),
+            })
+    return outputs
 
 
-def get_hub_branches(session_id):
-    """Get all hub branches for a session."""
-    output = run_git("branch", "--list", f"hub/{session_id}/*",
-                     "--format=%(refname:short)")
-    if not output:
-        return []
-    return [b.strip() for b in output.split("\n") if b.strip()]
+def score_output(output):
+    """Score an individual agent output on quality dimensions."""
+    scores = {}
+    output_data = output.get("outputs", {})
+
+    # Completeness: fraction of output fields that are non-empty
+    total_fields = len(output_data)
+    non_empty = sum(1 for v in output_data.values() if v)
+    scores["completeness"] = non_empty / total_fields if total_fields > 0 else 0
+
+    # Depth: total content length across all output fields
+    total_length = 0
+    for value in output_data.values():
+        if isinstance(value, str):
+            total_length += len(value)
+        elif isinstance(value, (list, dict)):
+            total_length += len(json.dumps(value))
+    # Normalize: 500 chars is minimal, 5000 is good, cap at 1.0
+    scores["depth"] = min(1.0, total_length / 5000) if total_length > 0 else 0
+
+    # Structure: presence of structured data (lists, dicts, headers)
+    has_structure = 0
+    for value in output_data.values():
+        if isinstance(value, (list, dict)):
+            has_structure += 1
+        elif isinstance(value, str):
+            if re.search(r"^#+\s|\n-\s|\n\d+\.\s", value):
+                has_structure += 1
+    scores["structure"] = has_structure / total_fields if total_fields > 0 else 0
+
+    # Use existing eval score if available
+    if output.get("eval_score") is not None:
+        scores["eval"] = output["eval_score"]
+    else:
+        scores["eval"] = None
+
+    # Composite score
+    weights = {"completeness": 0.3, "depth": 0.3, "structure": 0.2}
+    weighted_sum = sum(scores[k] * w for k, w in weights.items())
+    total_weight = sum(weights.values())
+
+    if scores["eval"] is not None:
+        weighted_sum += scores["eval"] * 0.2
+        total_weight += 0.2
+
+    scores["composite"] = round(weighted_sum / total_weight, 3) if total_weight > 0 else 0
+
+    return scores
 
 
-def get_worktree_path(branch):
-    """Get the worktree path for a branch, if it exists."""
-    output = run_git("worktree", "list", "--porcelain")
-    if not output:
-        return None
-    current_path = None
-    for line in output.split("\n"):
-        if line.startswith("worktree "):
-            current_path = line[len("worktree "):]
-        elif line.startswith("branch ") and current_path:
-            ref = line[len("branch "):]
-            short = ref.replace("refs/heads/", "")
-            if short == branch:
-                return current_path
-            current_path = None
-    return None
+def rank_outputs(outputs):
+    """Rank outputs by quality score."""
+    ranked = []
+    for output in outputs:
+        scores = score_output(output)
+        ranked.append({
+            **output,
+            "scores": scores,
+        })
+    ranked.sort(key=lambda x: -x["scores"]["composite"])
+    return ranked
 
 
-def run_eval_in_worktree(worktree_path, eval_cmd):
-    """Run evaluation command in a worktree and return stdout."""
-    try:
-        result = subprocess.run(
-            eval_cmd, shell=True, capture_output=True, text=True,
-            cwd=worktree_path, timeout=120
-        )
-        return result.stdout.strip(), result.returncode
-    except subprocess.TimeoutExpired:
-        return "TIMEOUT", 1
-    except Exception as e:
-        return str(e), 1
+def merge_synthesize(ranked_outputs):
+    """Synthesize complementary outputs into a unified result."""
+    sections = {}
+    for output in ranked_outputs:
+        agent_id = output["agent_id"]
+        task = output.get("task", agent_id)
+        output_data = output.get("outputs", {})
 
+        for key, value in output_data.items():
+            section_key = key
+            if section_key not in sections:
+                sections[section_key] = {
+                    "content": value,
+                    "source": agent_id,
+                    "score": output["scores"]["composite"],
+                }
+            else:
+                # If existing has lower score, prefer new
+                if output["scores"]["composite"] > sections[section_key]["score"]:
+                    sections[section_key] = {
+                        "content": value,
+                        "source": agent_id,
+                        "score": output["scores"]["composite"],
+                    }
 
-def extract_metric(output, metric_name):
-    """Extract a numeric metric from command output.
-
-    Looks for patterns like:
-    - metric_name: 42.5
-    - metric_name=42.5
-    - "metric_name": 42.5
-    """
-    patterns = [
-        rf'{metric_name}\s*[:=]\s*([\d.]+)',
-        rf'"{metric_name}"\s*[:=]\s*([\d.]+)',
-        rf"'{metric_name}'\s*[:=]\s*([\d.]+)",
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, output, re.IGNORECASE)
-        if match:
-            try:
-                return float(match.group(1))
-            except ValueError:
-                continue
-    return None
-
-
-def get_diff_stats(branch, base_branch="main"):
-    """Get diff statistics for a branch vs base."""
-    output = run_git("diff", "--stat", f"{base_branch}...{branch}")
-    lines_output = run_git("diff", "--shortstat", f"{base_branch}...{branch}")
-
-    files_changed = 0
-    insertions = 0
-    deletions = 0
-
-    if lines_output:
-        files_match = re.search(r"(\d+) files? changed", lines_output)
-        ins_match = re.search(r"(\d+) insertions?", lines_output)
-        del_match = re.search(r"(\d+) deletions?", lines_output)
-        if files_match:
-            files_changed = int(files_match.group(1))
-        if ins_match:
-            insertions = int(ins_match.group(1))
-        if del_match:
-            deletions = int(del_match.group(1))
+    merged = {}
+    attribution = {}
+    for key, section in sections.items():
+        merged[key] = section["content"]
+        attribution[key] = section["source"]
 
     return {
-        "files_changed": files_changed,
-        "insertions": insertions,
-        "deletions": deletions,
-        "net_lines": insertions - deletions,
+        "strategy": "synthesize",
+        "merged_output": merged,
+        "attribution": attribution,
+        "sections_count": len(merged),
+        "sources_count": len(set(attribution.values())),
     }
 
 
-def rank_by_metric(results, direction="lower"):
-    """Sort results by metric value."""
-    valid = [r for r in results if r.get("metric_value") is not None]
-    invalid = [r for r in results if r.get("metric_value") is None]
+def merge_rank_select(ranked_outputs):
+    """Select the best output from competing agents."""
+    if not ranked_outputs:
+        return {"strategy": "rank-select", "selected": None, "reason": "No outputs available"}
 
-    reverse = direction == "higher"
-    valid.sort(key=lambda r: r["metric_value"], reverse=reverse)
+    best = ranked_outputs[0]
+    return {
+        "strategy": "rank-select",
+        "selected_agent": best["agent_id"],
+        "selected_output": best["outputs"],
+        "score": best["scores"]["composite"],
+        "runner_up": ranked_outputs[1]["agent_id"] if len(ranked_outputs) > 1 else None,
+        "runner_up_score": ranked_outputs[1]["scores"]["composite"] if len(ranked_outputs) > 1 else None,
+        "total_candidates": len(ranked_outputs),
+    }
 
-    for i, r in enumerate(valid):
-        r["rank"] = i + 1
 
-    for r in invalid:
-        r["rank"] = len(valid) + 1
+def merge_chain(session):
+    """Use the output of the last agent in the pipeline."""
+    agents = session.get("agents", {})
+    # Find terminal agent (no dependents)
+    all_deps = set()
+    for agent_data in agents.values():
+        all_deps.update(agent_data.get("dependencies", []))
 
-    return valid + invalid
+    terminal_agents = [
+        aid for aid in agents
+        if aid not in all_deps and agents[aid].get("state") == "COMPLETED"
+    ]
+
+    if not terminal_agents:
+        return {"strategy": "chain", "error": "No completed terminal agent found"}
+
+    # If multiple terminals, pick the one with highest eval score
+    best_terminal = None
+    best_score = -1
+    for aid in terminal_agents:
+        score = agents[aid].get("eval_score", 0) or 0
+        if score > best_score:
+            best_score = score
+            best_terminal = aid
+
+    return {
+        "strategy": "chain",
+        "terminal_agent": best_terminal,
+        "output": agents[best_terminal].get("outputs", {}),
+        "eval_score": best_score,
+    }
 
 
-def run_demo():
-    """Show demo ranking output."""
-    print("=" * 60)
-    print("AgentHub Result Ranker — Demo Mode")
-    print("=" * 60)
-    print()
-    print("Session: 20260317-143022")
-    print("Eval: pytest bench.py --json")
-    print("Metric: p50_ms (lower is better)")
-    print("Baseline: 180ms")
-    print()
+def format_human(result, action):
+    """Format result for human output."""
+    output = []
+    output.append("=" * 60)
+    output.append("RESULT RANKER")
+    output.append("=" * 60)
 
-    header = f"{'RANK':<6} {'AGENT':<10} {'METRIC':<10} {'DELTA':<10} {'FILES':<7} {'SUMMARY'}"
-    print(header)
-    print("-" * 75)
-    print(f"{'1':<6} {'agent-2':<10} {'142ms':<10} {'-38ms':<10} {'2':<7} Replaced O(n²) with hash map lookup")
-    print(f"{'2':<6} {'agent-1':<10} {'165ms':<10} {'-15ms':<10} {'3':<7} Added caching layer")
-    print(f"{'3':<6} {'agent-3':<10} {'190ms':<10} {'+10ms':<10} {'1':<7} Minor loop optimizations")
-    print()
-    print("Winner: agent-2 (142ms, -21% from baseline)")
-    print()
-    print("Next step: Run /hub:merge to merge agent-2's branch")
+    if action == "list":
+        output.append(f"\nAgent Outputs ({len(result['outputs'])} completed)")
+        output.append("-" * 60)
+        for o in result["outputs"]:
+            output_keys = list(o.get("outputs", {}).keys())
+            output.append(f"  {o['agent_id']}")
+            output.append(f"    State: {o['state']} | Duration: {o.get('duration_s', 0)}s")
+            output.append(f"    Outputs: {', '.join(output_keys[:5])}")
+            if o.get("eval_score") is not None:
+                output.append(f"    Eval: {o['eval_score']}")
+
+    elif action == "rank":
+        output.append(f"\nRanked Outputs ({len(result['ranked'])} agents)")
+        output.append("-" * 60)
+        output.append(f"  {'Rank':<6} {'Agent':<20} {'Score':>8} {'Comp':>6} {'Depth':>6} {'Struct':>6}")
+        output.append(f"  {'─' * 6} {'─' * 20} {'─' * 8} {'─' * 6} {'─' * 6} {'─' * 6}")
+        for i, r in enumerate(result["ranked"], 1):
+            s = r["scores"]
+            output.append(
+                f"  {i:<6} {r['agent_id']:<20} {s['composite']:>8.3f} "
+                f"{s['completeness']:>5.2f} {s['depth']:>5.2f} {s['structure']:>5.2f}"
+            )
+
+    elif action == "merge":
+        merge_result = result["merge_result"]
+        strategy = merge_result.get("strategy", "?")
+        output.append(f"\nMerge Strategy: {strategy}")
+        output.append("-" * 60)
+
+        if strategy == "synthesize":
+            output.append(f"  Sections: {merge_result['sections_count']}")
+            output.append(f"  Sources:  {merge_result['sources_count']} agents")
+            output.append("\n  Attribution:")
+            for key, source in merge_result.get("attribution", {}).items():
+                output.append(f"    {key} <- {source}")
+
+        elif strategy == "rank-select":
+            output.append(f"  Selected: {merge_result.get('selected_agent', '?')} (score: {merge_result.get('score', 0):.3f})")
+            if merge_result.get("runner_up"):
+                output.append(f"  Runner-up: {merge_result['runner_up']} (score: {merge_result['runner_up_score']:.3f})")
+
+        elif strategy == "chain":
+            output.append(f"  Terminal agent: {merge_result.get('terminal_agent', '?')}")
+
+    return "\n".join(output)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Rank AgentHub agent results"
+        description="Rank and merge outputs from multiple agents.",
+        epilog="Example: python result_ranker.py --session session.json --rank",
     )
-    parser.add_argument("--session", type=str,
-                        help="Session ID to evaluate")
-    parser.add_argument("--eval-cmd", type=str,
-                        help="Evaluation command to run in each worktree")
-    parser.add_argument("--metric", type=str,
-                        help="Metric name to extract from eval output")
-    parser.add_argument("--direction", choices=["lower", "higher"],
-                        default="lower",
-                        help="Whether lower or higher metric is better")
-    parser.add_argument("--baseline", type=float,
-                        help="Baseline metric value for delta calculation")
-    parser.add_argument("--diff-summary", action="store_true",
-                        help="Show diff statistics per agent (no eval cmd needed)")
-    parser.add_argument("--format", choices=["table", "json"], default="table",
-                        help="Output format (default: table)")
-    parser.add_argument("--demo", action="store_true",
-                        help="Show demo output")
+    parser.add_argument("--session", required=True, help="Path to session JSON file")
+    parser.add_argument("--list-outputs", action="store_true", help="List all agent outputs")
+    parser.add_argument("--rank", action="store_true", help="Rank outputs by quality")
+    parser.add_argument("--merge", choices=["synthesize", "rank-select", "chain"], help="Merge strategy")
+    parser.add_argument("--json", action="store_true", dest="json_output", help="Output as JSON")
+
     args = parser.parse_args()
 
-    if args.demo:
-        run_demo()
-        return
-
-    if not args.session:
-        print("Error: --session is required", file=sys.stderr)
+    session_path = Path(args.session)
+    if not session_path.exists():
+        print(f"Error: Session file '{args.session}' not found.", file=sys.stderr)
         sys.exit(1)
 
-    config = get_session_config(args.session)
-    branches = get_hub_branches(args.session)
+    session = load_session(session_path)
+    outputs = extract_outputs(session)
 
-    if not branches:
-        print(f"No branches found for session {args.session}")
-        return
-
-    eval_cmd = args.eval_cmd or config.get("eval_cmd")
-    metric = args.metric or config.get("metric")
-    direction = args.direction or config.get("direction", "lower")
-    base_branch = config.get("base_branch", "main")
-
-    results = []
-    for branch in branches:
-        # Extract agent number
-        match = re.match(r"hub/[^/]+/agent-(\d+)/", branch)
-        agent_id = f"agent-{match.group(1)}" if match else branch.split("/")[-2]
-
-        result = {
-            "agent": agent_id,
-            "branch": branch,
-            "metric_value": None,
-            "metric_raw": None,
-            "diff": get_diff_stats(branch, base_branch),
-        }
-
-        if eval_cmd and metric:
-            worktree = get_worktree_path(branch)
-            if worktree:
-                output, returncode = run_eval_in_worktree(worktree, eval_cmd)
-                result["metric_raw"] = output
-                result["eval_returncode"] = returncode
-                if returncode == 0:
-                    result["metric_value"] = extract_metric(output, metric)
-
-        results.append(result)
-
-    # Rank
-    ranked = rank_by_metric(results, direction)
-
-    # Calculate deltas
-    baseline = args.baseline
-    if baseline is None and ranked and ranked[0].get("metric_value") is not None:
-        # Use worst as baseline if not specified
-        values = [r["metric_value"] for r in ranked if r["metric_value"] is not None]
-        if values:
-            baseline = max(values) if direction == "lower" else min(values)
-
-    for r in ranked:
-        if r.get("metric_value") is not None and baseline is not None:
-            r["delta"] = r["metric_value"] - baseline
-        else:
-            r["delta"] = None
-
-    if args.format == "json":
-        print(json.dumps({"session": args.session, "results": ranked}, indent=2))
-        return
-
-    # Table output
-    print(f"Session: {args.session}")
-    if eval_cmd:
-        print(f"Eval: {eval_cmd}")
-    if metric:
-        dir_str = "lower is better" if direction == "lower" else "higher is better"
-        print(f"Metric: {metric} ({dir_str})")
-    if baseline:
-        print(f"Baseline: {baseline}")
-    print()
-
-    if args.diff_summary or not eval_cmd:
-        header = f"{'RANK':<6} {'AGENT':<12} {'FILES':<7} {'ADDED':<8} {'REMOVED':<8} {'NET':<6}"
-        print(header)
-        print("-" * 50)
-        for i, r in enumerate(ranked):
-            d = r["diff"]
-            print(f"{i+1:<6} {r['agent']:<12} {d['files_changed']:<7} "
-                  f"+{d['insertions']:<7} -{d['deletions']:<7} {d['net_lines']:<6}")
+    if args.list_outputs:
+        result = {"outputs": outputs}
+        action = "list"
+    elif args.rank:
+        ranked = rank_outputs(outputs)
+        result = {"ranked": ranked}
+        action = "rank"
+    elif args.merge:
+        ranked = rank_outputs(outputs)
+        if args.merge == "synthesize":
+            merge_result = merge_synthesize(ranked)
+        elif args.merge == "rank-select":
+            merge_result = merge_rank_select(ranked)
+        elif args.merge == "chain":
+            merge_result = merge_chain(session)
+        result = {"merge_result": merge_result}
+        action = "merge"
     else:
-        header = f"{'RANK':<6} {'AGENT':<12} {'METRIC':<12} {'DELTA':<10} {'FILES':<7}"
-        print(header)
-        print("-" * 50)
-        for r in ranked:
-            mv = str(r["metric_value"]) if r["metric_value"] is not None else "N/A"
-            delta = ""
-            if r["delta"] is not None:
-                sign = "+" if r["delta"] >= 0 else ""
-                delta = f"{sign}{r['delta']:.1f}"
-            print(f"{r['rank']:<6} {r['agent']:<12} {mv:<12} {delta:<10} {r['diff']['files_changed']:<7}")
+        parser.print_help()
+        sys.exit(1)
 
-    # Winner
-    if ranked and ranked[0].get("metric_value") is not None:
-        winner = ranked[0]
-        print()
-        print(f"Winner: {winner['agent']} ({winner['metric_value']})")
+    if args.json_output:
+        print(json.dumps(result, indent=2, default=str))
+    else:
+        print(format_human(result, action))
 
 
 if __name__ == "__main__":

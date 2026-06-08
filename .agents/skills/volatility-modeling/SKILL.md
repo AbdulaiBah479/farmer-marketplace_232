@@ -1,250 +1,265 @@
 ---
 name: volatility-modeling
-description: "Model, forecast, and interpret volatility using time-series models and options-implied measures. Use when the user asks about EWMA, GARCH models, implied volatility, volatility surfaces, volatility term structure, or the VIX. Also trigger when users mention 'volatility smile', 'volatility skew', 'realized vs implied vol', 'volatility risk premium', 'vol clustering', 'mean-reverting volatility', 'options pricing inputs', 'RiskMetrics', 'decay factor', or ask how to forecast future volatility for risk management."
+description: Volatility estimation, forecasting, and regime classification using GARCH, EWMA, realized volatility, and volatility cones
 ---
 
 # Volatility Modeling
 
-## Purpose
-Model, forecast, and interpret volatility using time-series models and options-implied measures. This skill covers EWMA and GARCH(1,1) for volatility forecasting, implied volatility extraction, volatility smile/skew/surface construction, the volatility term structure, the realized-vs-implied volatility gap (volatility risk premium), and the VIX index. These tools are foundational for options pricing, risk management, and trading strategy development.
+Volatility — the magnitude of price fluctuations — is arguably the single most
+important quantity in trading.  It drives position sizing, stop placement, option
+pricing, and regime detection.  This skill covers estimation, forecasting, and
+practical application of volatility in crypto markets.
 
-## Layer
-1b — Forward-Looking Risk
+## Why Volatility Matters
 
-## Direction
-Prospective
+| Use Case | How Volatility Is Used |
+|---|---|
+| **Position sizing** | Scale position inversely with vol so each trade risks a consistent dollar amount |
+| **Stop placement** | ATR-based stops widen in high-vol regimes, tighten in low-vol |
+| **Strategy selection** | Mean-reversion works in low vol; momentum works in high vol |
+| **Risk budgeting** | Vol-target portfolios maintain constant portfolio-level risk |
+| **Regime detection** | Vol regime shifts signal changing market dynamics |
+| **Option pricing** | Implied vs realized vol gap creates trading opportunities |
 
-## When to Use
-- Forecasting future volatility for risk management or position sizing
-- Building EWMA or GARCH models to capture volatility clustering and mean reversion
-- Extracting implied volatility from option prices using Black-Scholes or other models
-- Constructing or interpreting volatility smiles, skews, and surfaces
-- Analyzing the volatility term structure across different maturities
-- Comparing realized (historical) volatility to implied volatility to assess the volatility risk premium
-- Understanding VIX and its relationship to market sentiment and expected risk
+## Types of Volatility
 
-## Core Concepts
-
-### EWMA (Exponentially Weighted Moving Average)
-A simple volatility model that gives more weight to recent observations. RiskMetrics popularized this approach with a standard decay factor.
-
-```
-sigma^2_t = lambda * sigma^2_{t-1} + (1 - lambda) * r^2_{t-1}
-```
-
-where:
-- lambda = decay factor (RiskMetrics standard: 0.94 for daily, 0.97 for monthly)
-- r_{t-1} = return in period t-1 (typically demeaned, but for daily returns the mean is often assumed to be zero)
-- sigma^2_{t-1} = previous period's variance estimate
-
-**Properties:**
-- Assigns exponentially decaying weights to past squared returns.
-- Effective window is approximately 1/(1 - lambda) observations. For lambda = 0.94, effective window is approximately 17 days.
-- No mean reversion: the model is equivalent to IGARCH (integrated GARCH) where alpha + beta = 1. Volatility shocks persist indefinitely.
-- Simple to implement and requires only one parameter.
-
-### GARCH(1,1)
-The Generalized Autoregressive Conditional Heteroskedasticity model adds a constant term that induces mean reversion in volatility.
-
-```
-sigma^2_t = omega + alpha * r^2_{t-1} + beta * sigma^2_{t-1}
-```
-
-where:
-- omega > 0: constant term (determines long-run variance level)
-- alpha >= 0: reaction coefficient (sensitivity to recent shocks)
-- beta >= 0: persistence coefficient (memory of past variance)
-
-**Stationarity condition:** alpha + beta < 1. This ensures the process is covariance-stationary and mean-reverting.
-
-**Long-run (unconditional) variance:**
-
-```
-V_L = omega / (1 - alpha - beta)
-```
-
-Long-run annualized volatility: sigma_L = sqrt(V_L * 252).
-
-**Persistence:** The quantity alpha + beta measures how quickly volatility reverts to its long-run level. Higher persistence means slower mean reversion.
-
-**Half-life of volatility shocks:** The number of periods for a volatility shock to decay by half:
-
-```
-h = -ln(2) / ln(alpha + beta)
-```
-
-Since alpha + beta < 1, ln(alpha + beta) < 0, and h is positive.
-
-**Multi-step forecasts:** The h-step-ahead GARCH(1,1) forecast:
-
-```
-E[sigma^2_{t+h}] = V_L + (alpha + beta)^h * (sigma^2_t - V_L)
-```
-
-The forecast converges to V_L as h approaches infinity.
+### Historical (Realized) Volatility
+Computed from observed past returns.  The most common and directly measurable
+form.  Multiple estimators exist with different statistical efficiency.
 
 ### Implied Volatility
-The volatility value that, when plugged into an option pricing model (typically Black-Scholes), produces a theoretical price equal to the observed market price.
+Derived from option prices via Black-Scholes or similar models.  Limited in
+crypto DeFi where liquid options markets are sparse, but available on Deribit
+for BTC/ETH.
 
-For a European call under Black-Scholes:
+### Forecast Volatility
+Predicted future volatility from models like EWMA or GARCH.  Used for
+forward-looking position sizing and risk budgets.
 
-```
-C = S * N(d1) - K * exp(-rT) * N(d2)
+---
 
-d1 = [ln(S/K) + (r + sigma^2/2) * T] / (sigma * sqrt(T))
-d2 = d1 - sigma * sqrt(T)
-```
+## Estimation Methods
 
-Implied volatility is the sigma that solves C_model(sigma) = C_market. There is no closed-form solution; it must be found numerically (e.g., Newton-Raphson, bisection).
+### 1. Close-to-Close (Standard Deviation of Log Returns)
 
-### Volatility Smile and Skew
-In practice, implied volatility varies by strike price, contradicting the constant-volatility assumption of Black-Scholes.
+The simplest estimator.  Compute the standard deviation of log returns and
+annualize.
 
-- **Volatility smile:** IV is higher for both deep in-the-money and deep out-of-the-money options, forming a U-shape. Common in FX markets.
-- **Volatility skew (smirk):** IV increases for lower strikes (OTM puts have higher IV than OTM calls). This is the dominant pattern in equity markets and reflects demand for downside protection and the reality of fat left tails.
-- **Skew is often quantified** as the difference in IV between a 25-delta put and a 25-delta call, or between 90% moneyness and 110% moneyness strikes.
+```python
+import numpy as np
 
-### Volatility Term Structure
-Implied volatility varies across option expiration dates.
-
-- **Normal (upward-sloping):** Longer-dated options have higher IV. Reflects uncertainty increasing over time.
-- **Inverted (downward-sloping):** Near-term IV exceeds long-term IV. Common during market stress when short-term uncertainty spikes (e.g., around earnings, elections, crises).
-- **Humped:** IV peaks at an intermediate maturity. May occur around a specific anticipated event.
-
-### Volatility Surface
-The two-dimensional surface of implied volatility across both strike (or delta/moneyness) and maturity. The volatility surface is the most complete representation of the options market's view of future uncertainty.
-
-Practitioners interpolate the surface to price options at arbitrary strike/maturity combinations. Surface dynamics (how the surface shifts, tilts, and bends) are critical for options portfolio risk management.
-
-### Realized vs Implied Volatility: The Volatility Risk Premium
-Implied volatility systematically exceeds subsequent realized volatility on average. This gap is the **volatility risk premium (VRP)**.
-
-```
-VRP = IV - RV_subsequent
+log_returns = np.log(closes[1:] / closes[:-1])
+vol_daily = np.std(log_returns, ddof=1)
+vol_annual = vol_daily * np.sqrt(365)  # crypto trades 365 days
 ```
 
-The VRP exists because investors are willing to pay a premium for options (insurance), and option sellers demand compensation for bearing tail risk. The VRP is typically positive and has been a persistent source of return for volatility sellers.
+- **Pros**: Simple, widely understood.
+- **Cons**: Uses only close prices — ignores intraday range.
 
-Key considerations:
-- The VRP varies over time and is larger during periods of market stress.
-- Selling volatility (harvesting VRP) earns a steady premium but is exposed to large, infrequent losses.
-- The VRP can turn negative during extreme events.
+### 2. Parkinson (High-Low Range)
 
-### VIX Index
-The CBOE Volatility Index measures the market's expectation of 30-day forward volatility, derived from S&P 500 option prices.
+Uses the daily high-low range, which is ~5x more statistically efficient than
+close-to-close.
 
-- VIX is quoted in annualized percentage points (e.g., VIX = 20 means approximately 20% expected annualized vol).
-- VIX is computed from a wide strip of OTM put and call options, not from the Black-Scholes model.
-- VIX levels: 12-15 = low/complacent, 15-20 = normal, 20-30 = elevated, 30+ = high stress, 40+ = crisis.
-- VIX has strong mean-reverting properties and tends to spike during market selloffs ("fear gauge").
-
-## Key Formulas
-
-| Formula | Expression | Use Case |
-|---------|-----------|----------|
-| EWMA Variance | sigma^2_t = lambda * sigma^2_{t-1} + (1-lambda) * r^2_{t-1} | Simple volatility forecast |
-| GARCH(1,1) Variance | sigma^2_t = omega + alpha * r^2_{t-1} + beta * sigma^2_{t-1} | Mean-reverting vol forecast |
-| GARCH Long-Run Variance | V_L = omega / (1 - alpha - beta) | Unconditional variance level |
-| GARCH Half-Life | h = -ln(2) / ln(alpha + beta) | Speed of mean reversion |
-| GARCH h-Step Forecast | V_L + (alpha+beta)^h * (sigma^2_t - V_L) | Multi-period vol forecast |
-| Black-Scholes Call | S * N(d1) - K * exp(-rT) * N(d2) | Option pricing (IV extraction) |
-| Volatility Risk Premium | IV - RV_subsequent | Premium earned by vol sellers |
-| EWMA Effective Window | approximately 1 / (1 - lambda) | Implicit lookback period |
-
-## Worked Examples
-
-### Example 1: EWMA Variance Update
-**Given:** Yesterday's variance estimate sigma^2_{t-1} = 0.0004 (daily vol = 2%), yesterday's return r_{t-1} = -3% (i.e., r = -0.03), and lambda = 0.94.
-
-**Calculate:** Today's EWMA variance estimate and daily volatility.
-
-**Solution:**
-
-```
-sigma^2_t = 0.94 * 0.0004 + (1 - 0.94) * (-0.03)^2
-          = 0.94 * 0.0004 + 0.06 * 0.0009
-          = 0.000376 + 0.000054
-          = 0.000430
+```python
+hl_ratio = np.log(highs / lows)
+vol_parkinson = np.sqrt(np.mean(hl_ratio**2) / (4 * np.log(2))) * np.sqrt(365)
 ```
 
-Daily volatility:
+- **Pros**: More efficient, captures intraday moves.
+- **Cons**: Downward bias with discrete sampling; ignores close-to-close jumps.
 
-```
-sigma_t = sqrt(0.000430) = 0.02074 = 2.074%
-```
+### 3. Garman-Klass (OHLC)
 
-The large negative return (-3%) caused the volatility estimate to increase from 2.0% to 2.074%. The EWMA responded to the shock, but the high lambda (0.94) dampened the reaction.
+The most efficient single-day OHLC estimator.
 
-### Example 2: GARCH(1,1) Long-Run Volatility and Half-Life
-**Given:** GARCH(1,1) parameters estimated from daily S&P 500 returns: omega = 0.000002, alpha = 0.08, beta = 0.91.
-
-**Calculate:** Long-run daily variance, long-run annualized volatility, and half-life of volatility shocks.
-
-**Solution:**
-
-**Stationarity check:** alpha + beta = 0.08 + 0.91 = 0.99 < 1 (stationary, but highly persistent).
-
-**Long-run variance:**
-
-```
-V_L = 0.000002 / (1 - 0.99) = 0.000002 / 0.01 = 0.0002
+```python
+hl = np.log(highs / lows)
+co = np.log(closes / opens)
+gk = np.mean(0.5 * hl**2 - (2 * np.log(2) - 1) * co**2)
+vol_gk = np.sqrt(gk) * np.sqrt(365)
 ```
 
-**Long-run daily volatility:**
+- **Pros**: Best efficiency among OHLC estimators.
+- **Cons**: Assumes no drift; sensitive to opening gaps.
 
-```
-sigma_L = sqrt(0.0002) = 0.01414 = 1.414%
-```
+### 4. Yang-Zhang
 
-**Annualized:**
+Combines overnight (close-to-open) and open-to-close components.  Handles
+gaps properly.  Less relevant for 24/7 crypto but useful for tokens with
+sporadic trading.
 
-```
-sigma_annual = 0.01414 * sqrt(252) = 22.45%
-```
+### 5. EWMA (Exponentially Weighted Moving Average)
 
-**Half-life:**
+RiskMetrics approach — no parameters to estimate beyond λ.
 
-```
-h = -ln(2) / ln(0.99) = -0.6931 / (-0.01005) = 68.97 ~ 69 trading days
-```
-
-Interpretation: After a volatility shock, it takes approximately 69 trading days (about 3 months) for the excess volatility to decay by half. This high persistence (alpha + beta = 0.99) is typical for equity index returns.
-
-### Example 3: Implied Volatility Interpretation
-**Given:** A stock trades at $100. A 3-month ATM call (K = $100) trades at $6.50. The risk-free rate is 5%. Using Black-Scholes, the implied volatility is determined (via numerical solver) to be 30%.
-
-**Calculate:** What does this tell us, and how does it compare to realized vol of 22%?
-
-**Solution:**
-
-The implied volatility of 30% represents the market's consensus forecast of annualized volatility over the next 3 months, as embedded in option prices.
-
-Comparing to realized (historical) volatility of 22%:
-
-```
-VRP = IV - RV = 30% - 22% = 8%
+```python
+lam = 0.94  # RiskMetrics default for daily
+ewma_var = np.zeros(len(returns))
+ewma_var[0] = returns[0] ** 2
+for t in range(1, len(returns)):
+    ewma_var[t] = lam * ewma_var[t - 1] + (1 - lam) * returns[t - 1] ** 2
+vol_ewma = np.sqrt(ewma_var) * np.sqrt(365)
 ```
 
-The positive 8-percentage-point gap is the volatility risk premium. Possible interpretations:
-- The market expects volatility to rise above recent realized levels.
-- Option sellers are demanding a premium for bearing tail risk.
-- There may be an upcoming event (earnings, regulatory decision) that could cause a volatility spike.
+- λ = 0.94 for daily data (RiskMetrics).
+- λ = 0.97 for weekly data.
+- Higher λ → smoother, slower reaction to new information.
 
-A systematic vol-selling strategy would sell this option, expecting to profit from the VRP if realized vol remains near 22%. However, the seller bears the risk that realized vol could exceed 30%.
+### 6. GARCH(1,1)
 
-## Common Pitfalls
-- **GARCH stationarity:** alpha + beta must be strictly less than 1 for the GARCH(1,1) process to be covariance-stationary. If alpha + beta >= 1, the long-run variance is undefined and the model is IGARCH (or explosive). Always check this condition after estimation.
-- **EWMA has no mean reversion:** EWMA is equivalent to IGARCH (alpha + beta = 1), so volatility shocks never decay. This makes EWMA unsuitable for long-horizon volatility forecasts where mean reversion is expected.
-- **Implied volatility is model-dependent:** IV extracted using Black-Scholes assumes log-normal returns, constant volatility, continuous trading, and no jumps. The "smile" and "skew" exist precisely because these assumptions are violated. IV is a quoting convention, not a true forecast.
-- **Conflating historical vol with forward-looking vol:** Historical (realized) volatility measures what has happened. Implied volatility reflects market expectations about the future. They address different questions and can diverge substantially.
-- **Using daily GARCH for long-horizon forecasts without term structure adjustment:** Daily GARCH forecasts converge to the unconditional variance at long horizons. Use the multi-step forecast formula E[sigma^2_{t+h}] = V_L + (alpha+beta)^h * (sigma^2_t - V_L) and aggregate appropriately.
-- **Overfitting GARCH models:** Higher-order GARCH(p,q) models or extensions (EGARCH, TGARCH, GJR-GARCH) can overfit in-sample. GARCH(1,1) is remarkably hard to beat out-of-sample for most financial return series. Start with GARCH(1,1) and justify added complexity.
-- **Lambda selection for EWMA:** The choice of lambda significantly affects responsiveness. lambda = 0.94 responds quickly to shocks (effective window approximately 17 days); lambda = 0.97 is smoother (effective window approximately 33 days). The choice should match the application's horizon.
+The workhorse autoregressive volatility model.  Captures volatility clustering.
 
-## Cross-References
-- **historical-risk** (wealth-management plugin, Layer 1a): Close-to-close, Parkinson, and Yang-Zhang volatility estimators provide the realized volatility benchmarks against which GARCH forecasts and implied volatility are compared.
-- **forward-risk** (wealth-management plugin, Layer 1b): Volatility forecasts from EWMA and GARCH are direct inputs to parametric and Monte Carlo VaR calculations.
-- **performance-metrics** (wealth-management plugin, Layer 1a): Volatility estimates affect the denominators of Sharpe, Sortino, and other risk-adjusted ratios. Using forward-looking (GARCH) volatility can produce conditional performance ratios.
+```
+σ²_t = ω + α · r²_{t-1} + β · σ²_{t-1}
+```
 
-## Reference Implementation
-See `scripts/volatility_modeling.py` for computational helpers.
+- **ω**: long-run variance weight.
+- **α**: reaction to recent shock (typically 0.05–0.15 for crypto).
+- **β**: persistence (typically 0.80–0.90 for crypto).
+- **α + β < 1**: stationarity constraint.
+- **Long-run variance**: ω / (1 − α − β).
+
+Estimated via maximum likelihood.  See `references/estimators.md` for details.
+
+---
+
+## Volatility Cones
+
+Volatility cones show the percentile distribution of realized volatility at
+different lookback windows, revealing whether current vol is historically
+high or low.
+
+### Construction
+1. Get 1+ years of daily data.
+2. For each lookback window (5, 10, 20, 60, 120 days):
+   - Compute rolling realized volatility.
+   - Extract percentiles: 5th, 25th, 50th, 75th, 95th.
+3. Plot percentiles vs window length — the "cone" shape.
+4. Overlay current realized vol at each window.
+
+### Interpretation
+- **Current vol > 75th percentile**: historically elevated — expect mean reversion.
+- **Current vol < 25th percentile**: historically compressed — expect expansion.
+- **Cone narrowing at longer windows**: vol mean-reverts over longer horizons.
+
+See `references/volatility_cones.md` for full methodology and worked examples.
+
+---
+
+## Crypto Volatility Characteristics
+
+Crypto vol differs from traditional assets in important ways:
+
+| Characteristic | Detail |
+|---|---|
+| **Level** | 50–150% annualized is typical; TradFi equities are 15–25% |
+| **Clustering** | Strong — high-vol days cluster together |
+| **Weekday patterns** | Weekend vol often lower but weekend gaps can be large |
+| **Volume correlation** | Vol and volume are positively correlated |
+| **Regime dependence** | Bull market vol ≠ bear market vol; ranges are different |
+| **Mean reversion** | Vol mean-reverts more reliably than price |
+| **Tail risk** | Fat tails — more extreme moves than normal distribution predicts |
+
+### Regime Classification by Volatility
+
+| Regime | Annualized Vol Range | Characteristics |
+|---|---|---|
+| Low vol | < 40% | Range-bound, mean reversion works |
+| Normal vol | 40–80% | Trending possible, balanced strategies |
+| High vol | 80–120% | Strong trends or sharp reversals |
+| Crisis vol | > 120% | Liquidation cascades, reduced position size |
+
+---
+
+## Volatility Forecasting
+
+### EWMA Forecast
+Simple and effective.  The current EWMA variance estimate *is* the 1-step
+forecast.  Multi-step forecasts are flat (same as 1-step).
+
+### GARCH Forecast
+GARCH produces a term structure of variance forecasts:
+
+```
+σ²_{t+h} = V_L + (α + β)^h · (σ²_t − V_L)
+```
+
+Where V_L = ω / (1 − α − β) is the long-run variance.
+
+- Short-horizon forecasts reflect current conditions.
+- Long-horizon forecasts converge to long-run variance.
+- The speed of convergence depends on α + β (persistence).
+
+See `scripts/vol_forecast.py` for a working implementation.
+
+---
+
+## Practical Applications
+
+### Position Sizing with Volatility
+```python
+# Vol-target position sizing
+target_vol = 0.02  # 2% daily portfolio vol target
+current_vol = 0.05  # 5% daily asset vol (annualized ~95%)
+weight = target_vol / current_vol  # = 0.40 → 40% allocation
+```
+
+See the `position-sizing` skill for complete integration.
+
+### ATR-Based Stop Placement
+```python
+atr_14 = talib.ATR(highs, lows, closes, timeperiod=14)
+stop_distance = 2.0 * atr_14[-1]  # 2x ATR stop
+stop_price = entry_price - stop_distance  # for longs
+```
+
+### Vol-Regime Strategy Selection
+```python
+vol_percentile = current_vol_percentile(token, window=30)
+if vol_percentile < 25:
+    strategy = "mean_reversion"
+elif vol_percentile > 75:
+    strategy = "momentum_breakout"
+else:
+    strategy = "balanced"
+```
+
+---
+
+## Files
+
+### References
+| File | Description |
+|---|---|
+| `references/estimators.md` | Full derivations and details for all volatility estimators |
+| `references/volatility_cones.md` | Cone construction methodology and interpretation guide |
+
+### Scripts
+| File | Description |
+|---|---|
+| `scripts/estimate_volatility.py` | Multi-estimator volatility computation with cone analysis |
+| `scripts/vol_forecast.py` | EWMA and GARCH forecasting with term structure output |
+
+---
+
+## Related Skills
+
+- **`regime-detection`** — Classify market regimes using volatility as a key input.
+- **`position-sizing`** — Scale positions inversely with volatility.
+- **`risk-management`** — Portfolio-level vol targeting and risk budgets.
+- **`pandas-ta`** — ATR and Bollinger Bands are volatility-based indicators.
+- **`custom-indicators`** — Build crypto-specific volatility indicators.
+
+---
+
+## Dependencies
+
+```bash
+uv pip install pandas numpy scipy
+```
+
+Optional for live data:
+```bash
+uv pip install httpx
+```

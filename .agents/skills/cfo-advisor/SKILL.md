@@ -1,140 +1,340 @@
 ---
-name: "cfo-advisor"
-description: "Financial leadership for startups and scaling companies. Financial modeling, unit economics, fundraising strategy, cash management, and board financial packages. Use when building financial models, analyzing unit economics, planning fundraising, managing cash runway, preparing board materials, or when user mentions CFO, burn rate, runway, fundraising, unit economics, LTV, CAC, term sheets, or financial strategy."
-license: MIT
+name: cfo-advisor
+description: >
+  Financial leadership advisor for CFOs on financial planning, fundraising,
+  investor reporting, unit economics, cash management, and financial operations.
+  Use when building a financial model, preparing for fundraising due diligence,
+  designing investor reporting packages, calculating unit economics, managing
+  cash runway, or planning month-end close processes.
+license: MIT + Commons Clause
 metadata:
   version: 1.0.0
-  author: Alireza Rezvani
-  category: c-level
-  domain: cfo-leadership
-  updated: 2026-03-05
-  python-tools: burn_rate_calculator.py, unit_economics_analyzer.py, fundraising_model.py
-  frameworks: financial-planning, fundraising-playbook, cash-management
+  author: borghei
+  category: executive-leadership
+  updated: 2026-03-31
+  tags: [finance, fundraising, accounting, reporting, treasury]
 ---
-
 # CFO Advisor
 
-Strategic financial frameworks for startup CFOs and finance leaders. Numbers-driven, decisions-focused.
+The agent acts as a fractional CFO, providing financial strategy and operational finance guidance grounded in SaaS benchmarks, GAAP standards, and investor expectations.
 
-This is **not** a financial analyst skill. This is strategic: models that drive decisions, fundraises that don't kill the company, board packages that earn trust.
+## Workflow
 
-## Keywords
-CFO, chief financial officer, burn rate, runway, unit economics, LTV, CAC, fundraising, Series A, Series B, term sheet, cap table, dilution, financial model, cash flow, board financials, FP&A, SaaS metrics, ARR, MRR, net dollar retention, gross margin, scenario planning, cash management, treasury, working capital, burn multiple, rule of 40
+1. **Establish financial baseline** -- Collect current ARR, burn rate, cash balance, and headcount. Calculate runway in months. Validate that the data is recent (within 30 days).
+2. **Build unit economics** -- Calculate CAC, LTV, CAC Payback, LTV:CAC ratio, NRR, and Burn Multiple using the formulas below. Flag any metric outside benchmark ranges.
+3. **Construct financial model** -- Build a 3-year model following the Revenue Build and Expense Build structures. Document all key assumptions explicitly.
+4. **Design investor reporting** -- Configure the Monthly Metrics Package template. Set up the Board Financial Presentation slide structure for quarterly use.
+5. **Set up cash management** -- Build the 13-week cash flow forecast. Establish the monthly rolling forecast. Verify minimum 6-month runway is maintained.
+6. **Establish close cadence** -- Implement the Month-End Timeline (Day 1-12). Assign owners to each quality checklist item.
+7. **Assess risk posture** -- Review market, credit, and operational risk categories. Confirm insurance coverage is adequate for company stage.
 
-## Quick Start
+## SaaS Unit Economics
 
-```bash
-# Burn rate & runway scenarios (base/bull/bear)
-python scripts/burn_rate_calculator.py
+```
+CAC = (Sales + Marketing Spend) / New Customers
+CAC Payback = CAC / (ARPU x Gross Margin)
 
-# Per-cohort LTV, per-channel CAC, payback periods
-python scripts/unit_economics_analyzer.py
+LTV = ARPU x Gross Margin x Customer Lifetime
+LTV:CAC Ratio = LTV / CAC                        Target: > 3:1
 
-# Dilution modeling, cap table projections, round scenarios
-python scripts/fundraising_model.py
+Logo Retention = (Customers End - New) / Customers Start
+Net Revenue Retention = (MRR End - Churn + Expansion) / MRR Start
 ```
 
-## Key Questions (ask these first)
+## Burn Multiple
 
-- **What's your burn multiple?** (Net burn ÷ Net new ARR. > 2x is a problem.)
-- **If fundraising takes 6 months instead of 3, do you survive?** (If not, you're already behind.)
-- **Show me unit economics per cohort, not blended.** (Blended hides deterioration.)
-- **What's your NDR?** (> 100% means you grow without signing a single new customer.)
-- **What are your decision triggers?** (At what runway do you start cutting? Define now, not in a crisis.)
+```
+Burn Multiple = Net Burn / Net New ARR
 
-## Core Responsibilities
+< 1.0x   Excellent efficiency
+1.0-1.5x Good efficiency
+1.5-2.0x Average
+> 2.0x   Needs improvement
+```
 
-| Area | What It Covers | Reference |
-|------|---------------|-----------|
-| **Financial Modeling** | Bottoms-up P&L, three-statement model, headcount cost model | `references/financial_planning.md` |
-| **Unit Economics** | LTV by cohort, CAC by channel, payback periods | `references/financial_planning.md` |
-| **Burn & Runway** | Gross/net burn, burn multiple, scenario planning, decision triggers | `references/cash_management.md` |
-| **Fundraising** | Timing, valuation, dilution, term sheets, data room | `references/fundraising_playbook.md` |
-| **Board Financials** | What boards want, board pack structure, BvA | `references/financial_planning.md` |
-| **Cash Management** | Treasury, AR/AP optimization, runway extension tactics | `references/cash_management.md` |
-| **Budget Process** | Driver-based budgeting, allocation frameworks | `references/financial_planning.md` |
+## Rule of 40
 
-## CFO Metrics Dashboard
+```
+Rule of 40 = Revenue Growth % + Profit Margin %
 
-| Category | Metric | Target | Frequency |
-|----------|--------|--------|-----------|
-| **Efficiency** | Burn Multiple | < 1.5x | Monthly |
-| **Efficiency** | Rule of 40 | > 40 | Quarterly |
-| **Efficiency** | Revenue per FTE | Track trend | Quarterly |
-| **Revenue** | ARR growth (YoY) | > 2x at Series A/B | Monthly |
-| **Revenue** | Net Dollar Retention | > 110% | Monthly |
-| **Revenue** | Gross Margin | > 65% | Monthly |
-| **Economics** | LTV:CAC | > 3x | Monthly |
-| **Economics** | CAC Payback | < 18 mo | Monthly |
-| **Cash** | Runway | > 12 mo | Monthly |
-| **Cash** | AR > 60 days | < 5% of AR | Monthly |
+> 40%   Strong performance
+20-40%  Acceptable
+< 20%   Needs attention
+```
 
-## Red Flags
+## Monthly Metrics Package
 
-- Burn multiple rising while growth slows (worst combination)
-- Gross margin declining month-over-month
-- Net Dollar Retention < 100% (revenue shrinks even without new churn)
-- Cash runway < 9 months with no fundraise in process
-- LTV:CAC declining across successive cohorts
-- Any single customer > 20% of ARR (concentration risk)
-- CFO doesn't know cash balance on any given day
+```
+FINANCIAL HIGHLIGHTS
+- Revenue: $X.XM (vs Plan: +/-Y%)
+- Gross Margin: XX% (vs Plan: +/-Y%)
+- Operating Loss: $X.XM (vs Plan: +/-Y%)
+- Cash Balance: $X.XM
+- Runway: XX months
 
-## Integration with Other C-Suite Roles
+REVENUE METRICS
+- ARR: $X.XM (+Y% QoQ)
+- Net New ARR: $XXK
+- NRR: XXX%
+- Logo Churn: X.X%
 
-| When... | CFO works with... | To... |
-|---------|-------------------|-------|
-| Headcount plan changes | CEO + COO | Model full loaded cost impact of every new hire |
-| Revenue targets shift | CRO | Recalibrate budget, CAC targets, quota capacity |
-| Roadmap scope changes | CTO + CPO | Assess R&D spend vs. revenue impact |
-| Fundraising | CEO | Lead financial narrative, model, data room |
-| Board prep | CEO | Own financial section of board pack |
-| Compensation design | CHRO | Model total comp cost, equity grants, burn impact |
-| Pricing changes | CPO + CRO | Model ARR impact, LTV change, margin impact |
+EFFICIENCY METRICS
+- CAC: $X,XXX
+- CAC Payback: XX months
+- Burn Multiple: X.Xx
+```
 
-## Resources
+## Board Financial Presentation
 
-- `references/financial_planning.md` — Modeling, SaaS metrics, FP&A, BvA frameworks
-- `references/fundraising_playbook.md` — Valuation, term sheets, cap table, data room
-- `references/cash_management.md` — Treasury, AR/AP, runway extension, cut vs invest decisions
-- `scripts/burn_rate_calculator.py` — Runway modeling with hiring plan + scenarios
-- `scripts/unit_economics_analyzer.py` — Per-cohort LTV, per-channel CAC
-- `scripts/fundraising_model.py` — Dilution, cap table, multi-round projections
+1. Financial summary (1 slide)
+2. Revenue performance (1-2 slides)
+3. Expense breakdown (1 slide)
+4. Cash flow and runway (1 slide)
+5. Key metrics trends (1 slide)
+6. Forecast outlook (1 slide)
 
+## Revenue Build (Financial Model)
 
-## Proactive Triggers
+1. Starting ARR / customers
+2. New logo assumptions (by segment)
+3. Expansion rate
+4. Churn rate
+5. Pricing changes
+6. Segment mix
 
-Surface these without being asked when you detect them in company context:
-- Runway < 18 months with no fundraising plan → raise the alarm early
-- Burn multiple > 2x for 2+ consecutive months → spending outpacing growth
-- Unit economics deteriorating by cohort → acquisition strategy needs review
-- No scenario planning done → build base/bull/bear before you need them
-- Budget vs actual variance > 20% in any category → investigate immediately
+## Expense Build (Financial Model)
 
-## Output Artifacts
+1. Headcount plan (by department)
+2. Comp and benefits
+3. Contractors
+4. Software / tools
+5. Facilities
+6. Marketing programs
+7. Travel and events
 
-| Request | You Produce |
-|---------|-------------|
-| "How much runway do we have?" | Runway model with base/bull/bear scenarios |
-| "Prep for fundraising" | Fundraising readiness package (metrics, deck financials, cap table) |
-| "Analyze our unit economics" | Per-cohort LTV, per-channel CAC, payback, with trends |
-| "Build the budget" | Zero-based or incremental budget with allocation framework |
-| "Board financial section" | P&L summary, cash position, burn, forecast, asks |
+## Budget Categories
 
-## Reasoning Technique: Chain of Thought
+| Category | Line Items |
+|----------|-----------|
+| Revenue | New business (by segment), expansion, renewals, professional services |
+| Cost of Revenue | Hosting/infrastructure, support, PS delivery, payment processing |
+| OpEx | Sales & Marketing, R&D, G&A |
 
-Work through financial logic step by step. Show all math. Be conservative in projections — model the downside first, then the upside. Never round in your favor.
+## Month-End Close Timeline
 
-## Communication
+| Days | Activity |
+|------|----------|
+| 1-3 | Transaction cutoff |
+| 3-5 | Reconciliations |
+| 5-7 | Accruals and adjustments |
+| 7-10 | Management review |
+| 10-12 | Final close |
 
-All output passes the Internal Quality Loop before reaching the founder (see `agent-protocol/SKILL.md`).
-- Self-verify: source attribution, assumption audit, confidence scoring
-- Peer-verify: cross-functional claims validated by the owning role
-- Critic pre-screen: high-stakes decisions reviewed by Executive Mentor
-- Output format: Bottom Line → What (with confidence) → Why → How to Act → Your Decision
-- Results only. Every finding tagged: 🟢 verified, 🟡 medium, 🔴 assumed.
+**Quality Checklist**: Bank reconciliation, revenue recognition, expense accruals, prepaid amortization, deferred revenue, intercompany elimination, flux analysis.
 
-## Context Integration
+## Revenue Recognition (ASC 606)
 
-- **Always** read `company-context.md` before responding (if it exists)
-- **During board meetings:** Use only your own analysis in Phase 2 (no cross-pollination)
-- **Invocation:** You can request input from other roles: `[INVOKE:role|question]`
+1. Identify the contract
+2. Identify performance obligations
+3. Determine transaction price
+4. Allocate price to obligations
+5. Recognize revenue when satisfied
+
+**SaaS considerations**: Subscription vs usage revenue, implementation services, professional services, multi-year contracts, discounts and credits.
+
+## Cash Management
+
+**13-Week Cash Flow**: Week-by-week projections of all known inflows/outflows. Review weekly. Maintain minimum cash buffer.
+
+**Monthly Rolling Forecast**: 12-month forward view covering revenue collection timing, payroll, vendor payments, debt service, and CapEx.
+
+**Treasury Principles**: Maintain 6+ months runway, preserve capital, optimize yield on idle cash, follow investment policy.
+
+**Cash Preservation Levers** (when extending runway):
+1. Hiring freeze
+2. Vendor renegotiation
+3. Discretionary spend cuts
+4. Payment term extension
+5. Revenue acceleration
+6. Bridge financing
+
+## Due Diligence Data Room Checklist
+
+**Financial data**:
+- [ ] 3 years historical financials
+- [ ] Monthly P&L by segment
+- [ ] Balance sheet and cash flow
+- [ ] ARR/MRR cohort analysis
+- [ ] Customer unit economics
+- [ ] Revenue recognition policy
+- [ ] AR aging
+- [ ] AP summary
+
+**Projections**:
+- [ ] 3-5 year financial model
+- [ ] Key assumptions documented
+- [ ] Sensitivity analysis
+- [ ] Use of funds breakdown
+- [ ] Path to profitability
+
+## Financial Risk Categories
+
+| Risk Type | Key Concerns |
+|-----------|-------------|
+| Market | Interest rate exposure, FX exposure, customer concentration |
+| Credit | Customer creditworthiness, AR aging, bad debt reserves |
+| Operational | Internal controls, fraud prevention, systems reliability |
+
+## Example: Series-A SaaS Financial Snapshot
+
+A Series-A company ($3M ARR, 35 employees, $12M raised) preparing for Series B:
+
+```
+Unit Economics:
+  CAC: $22K  |  LTV: $88K  |  LTV:CAC: 4.0x  |  CAC Payback: 16 months
+  NRR: 115%  |  Logo Retention: 90%  |  Gross Margin: 78%
+
+Burn:
+  Monthly burn: $350K  |  Net new ARR/month: $180K
+  Burn Multiple: 1.9x (average -- needs improvement for Series B)
+  Cash: $5.2M  |  Runway: 15 months
+
+Rule of 40:
+  Revenue growth: 95% YoY  |  Profit margin: -40%
+  Score: 55% (strong)
+
+Board recommendation: Raise in 6 months at current trajectory.
+  Target metrics for raise: Burn Multiple < 1.5x, NRR > 120%.
+```
+
+## Essential Insurance Policies
+
+D&O, E&O, Cyber liability, General liability, Workers compensation, Key person insurance.
+
+## Scripts
+
+```bash
+# Unit economics calculator
+python scripts/unit_economics.py --metrics data.csv
+
+# Cash flow projector
+python scripts/cash_forecast.py --actuals Q1.csv --assumptions model.yaml
+
+# Financial model builder
+python scripts/fin_model.py --template saas --output model.xlsx
+
+# Investor metrics dashboard
+python scripts/investor_metrics.py --period monthly
+```
+
+## References
+
+- `references/financial_modeling.md` -- Model building guide
+- `references/saas_metrics.md` -- SaaS metrics deep dive
+- `references/accounting_policies.md` -- Policy documentation
+- `references/audit_prep.md` -- Audit readiness guide
+
+---
+
+## Tool Reference
+
+### financial_health_scorer.py
+
+Comprehensive SaaS financial health assessment: Rule of 40, burn multiple, LTV:CAC, CAC payback, NRR, magic number, and composite score with investor-readiness verdict.
+
+```bash
+# Run with demo data (Series A SaaS)
+python scripts/financial_health_scorer.py
+
+# Quick assessment with key metrics
+python scripts/financial_health_scorer.py --arr 3000000 --revenue-growth 95 --profit-margin -40 --burn 350000 --cash 5200000 --nrr 115 --gross-margin 78 --headcount 35
+
+# From JSON file
+python scripts/financial_health_scorer.py --input financials.json
+
+# JSON output
+python scripts/financial_health_scorer.py --input financials.json --json
+```
+
+### burn_rate_calculator.py
+
+Models burn rate, runway under 5 scenarios (current, hiring freeze, 10% cut, 20% cut, revenue acceleration), generates 13-week cash flow forecast, and identifies action triggers.
+
+```bash
+# Run with demo data
+python scripts/burn_rate_calculator.py
+
+# Quick calculation
+python scripts/burn_rate_calculator.py --cash 5200000 --revenue 250000 --expenses 600000 --headcount 35
+
+# JSON output
+python scripts/burn_rate_calculator.py --json
+```
+
+### scenario_modeler.py
+
+Three-scenario financial projection engine with probability weighting, sensitivity analysis, and decision triggers. Projects base, upside, and downside cases over 8 quarters.
+
+```bash
+# Run with demo data
+python scripts/scenario_modeler.py
+
+# Quick model from key inputs
+python scripts/scenario_modeler.py --arr 3000000 --expenses 900000 --cash 5200000 --quarters 8
+
+# From JSON with custom scenarios
+python scripts/scenario_modeler.py --input scenarios.json
+
+# JSON output
+python scripts/scenario_modeler.py --json
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Likely Cause | Fix |
+|---------|-------------|-----|
+| Burn multiple shows > 3.0x | Spending significantly outpaces net new ARR | Audit S&M efficiency; consider hiring freeze; validate pipeline conversion rates |
+| Rule of 40 score below 20% | Growth has slowed without corresponding margin improvement | Either re-accelerate growth or cut costs to improve margins -- cannot stay in the middle |
+| CAC payback exceeds 24 months | Sales cycle too long, ACV too low, or S&M spend too high | Segment CAC by channel; cut underperforming channels; raise ACV through pricing |
+| LTV:CAC ratio below 2.0x | Customer lifetime too short (churn) or acquisition too expensive | Address churn first (higher ROI); then optimize CAC by channel |
+| NRR below 100% | Contraction and churn exceed expansion revenue | Build expansion playbook; segment churning customers; invest in customer success |
+| Financial model assumptions questioned by board | Assumptions not documented or unrealistic | Document every assumption explicitly; show sensitivity analysis for key variables |
+| Month-end close takes 15+ days | Manual processes, missing reconciliations, or unclear ownership | Implement the Day 1-12 close timeline; assign owners to each checklist item |
+
+---
+
+## Success Criteria
+
+- Financial health composite score above 65/100 (measured quarterly via financial_health_scorer.py)
+- Rule of 40 score maintained above 40% for Series B+ companies
+- Burn multiple below 2.0x (below 1.5x for Series B readiness)
+- CAC payback under 18 months (under 12 months for top-quartile performance)
+- Month-end close completed within 12 business days with zero material adjustments
+- Board financial presentation completed 48+ hours before every board meeting
+- Cash runway maintained above 12 months at all times (above 18 months preferred)
+
+---
+
+## Scope & Limitations
+
+**In Scope**: SaaS unit economics, burn rate analysis, financial modeling, cash management, investor reporting, month-end close, revenue recognition (ASC 606), due diligence preparation, scenario modeling.
+
+**Out of Scope**: Tax planning, legal entity structuring, audit execution, payroll processing, accounts payable/receivable operations, insurance procurement, equity cap table management.
+
+**Limitations**: Financial health scorer uses industry benchmarks that may not apply to non-SaaS business models. Burn rate calculator uses linear/exponential approximations -- actual cash flows vary with billing cycles and payment timing. Scenario modeler provides directional guidance, not auditable financial projections.
+
+---
+
+## Integration Points
+
+| Skill | Integration |
+|-------|-------------|
+| `ceo-advisor` | Financial scenarios feed board strategy discussions |
+| `board-deck-builder` | Financial update section; all deck numbers validated through CFO tools |
+| `cro-advisor` | Revenue forecasting; pipeline-to-revenue conversion assumptions |
+| `chro-advisor` | Headcount budget modeling; fully-loaded cost calculations |
+| `ciso-advisor` | Compliance budget sizing against quantified risk exposure |
+| `company-os` | Financial metrics in the weekly scorecard |
+| `chief-of-staff` | Routes financial questions; synthesizes CFO + CEO perspectives |

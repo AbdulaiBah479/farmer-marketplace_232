@@ -1,22 +1,27 @@
 ---
-name: "senior-secops"
-description: Senior SecOps engineer skill for application security, vulnerability management, compliance verification, and secure development practices. Runs SAST/DAST scans, generates CVE remediation plans, checks dependency vulnerabilities, creates security policies, enforces secure coding patterns, and automates compliance checks against SOC2, PCI-DSS, HIPAA, and GDPR. Use when conducting a security review or audit, responding to a CVE or security incident, hardening infrastructure, implementing authentication or secrets management, running penetration test prep, checking OWASP Top 10 exposure, or enforcing security controls in CI/CD pipelines.
+name: senior-secops
+description: >
+  Comprehensive SecOps skill for application security, vulnerability management,
+  compliance, and secure development practices. Includes security scanning,
+  vulnerability assessment, compliance checking, and security automation. Use
+  when implementing security controls, conducting security audits, responding to
+  vulnerabilities, or ensuring compliance requirements.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: engineering
+  domain: security-operations
+  updated: 2026-03-31
+  tags:
+    - security-operations
+    - vulnerability-management
+    - incident-response
+    - siem
 ---
-
 # Senior SecOps Engineer
 
-Complete toolkit for Security Operations including vulnerability management, compliance verification, secure coding practices, and security automation.
-
----
-
-## Table of Contents
-
-- [Core Capabilities](#core-capabilities)
-- [Workflows](#workflows)
-- [Tool Reference](#tool-reference)
-- [Security Standards](#security-standards)
-- [Compliance Frameworks](#compliance-frameworks)
-- [Best Practices](#best-practices)
+The agent scans source code for security vulnerabilities (hardcoded secrets, SQL injection, XSS, command injection), assesses dependency CVEs across npm/Python/Go ecosystems, and verifies compliance against SOC 2, PCI-DSS, HIPAA, and GDPR frameworks.
 
 ---
 
@@ -107,23 +112,14 @@ Complete security assessment of a codebase.
 ```bash
 # Step 1: Scan for code vulnerabilities
 python scripts/security_scanner.py . --severity medium
-# STOP if exit code 2 — resolve critical findings before continuing
-```
 
-```bash
 # Step 2: Check dependency vulnerabilities
 python scripts/vulnerability_assessor.py . --severity high
-# STOP if exit code 2 — patch critical CVEs before continuing
-```
 
-```bash
 # Step 3: Verify compliance controls
 python scripts/compliance_checker.py . --framework all
-# STOP if exit code 2 — address critical gaps before proceeding
-```
 
-```bash
-# Step 4: Generate combined reports
+# Step 4: Generate combined report
 python scripts/security_scanner.py . --json --output security.json
 python scripts/vulnerability_assessor.py . --json --output vulns.json
 python scripts/compliance_checker.py . --json --output compliance.json
@@ -135,7 +131,7 @@ Integrate security checks into deployment pipeline.
 
 ```yaml
 # .github/workflows/security.yml
-name: "security-scan"
+name: Security Scan
 
 on:
   pull_request:
@@ -147,22 +143,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: "set-up-python"
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: "security-scanner"
+      - name: Security Scanner
         run: python scripts/security_scanner.py . --severity high
 
-      - name: "vulnerability-assessment"
+      - name: Vulnerability Assessment
         run: python scripts/vulnerability_assessor.py . --severity critical
 
-      - name: "compliance-check"
+      - name: Compliance Check
         run: python scripts/compliance_checker.py . --framework soc2
 ```
-
-Each step fails the pipeline on its respective exit code — no deployment proceeds past a critical finding.
 
 ### Workflow 3: CVE Triage
 
@@ -173,7 +167,6 @@ Respond to a new CVE affecting your application.
    - Identify affected systems using vulnerability_assessor.py
    - Check if CVE is being actively exploited
    - Determine CVSS environmental score for your context
-   - STOP if CVSS 9.0+ on internet-facing system — escalate immediately
 
 2. PRIORITIZE
    - Critical (CVSS 9.0+, internet-facing): 24 hours
@@ -183,8 +176,7 @@ Respond to a new CVE affecting your application.
 
 3. REMEDIATE
    - Update affected dependency to fixed version
-   - Run security_scanner.py to verify fix (must return exit code 0)
-   - STOP if scanner still flags the CVE — do not deploy
+   - Run security_scanner.py to verify fix
    - Test for regressions
    - Deploy with enhanced monitoring
 
@@ -214,7 +206,7 @@ PHASE 2: CONTAIN (15-60 min)
 PHASE 3: ERADICATE (1-4 hours)
 - Root cause identified
 - Malware/backdoors removed
-- Vulnerabilities patched (run security_scanner.py; must return exit code 0)
+- Vulnerabilities patched (run security_scanner.py)
 - Systems hardened
 
 PHASE 4: RECOVER (4-24 hours)
@@ -245,7 +237,10 @@ PHASE 5: POST-INCIDENT (24-72 hours)
 | `--json` | Output results as JSON |
 | `--output, -o` | Write results to file |
 
-**Exit Codes:** `0` = no critical/high findings · `1` = high severity findings · `2` = critical severity findings
+**Exit Codes:**
+- `0`: No critical/high findings
+- `1`: High severity findings
+- `2`: Critical severity findings
 
 ### vulnerability_assessor.py
 
@@ -257,7 +252,10 @@ PHASE 5: POST-INCIDENT (24-72 hours)
 | `--json` | Output results as JSON |
 | `--output, -o` | Write results to file |
 
-**Exit Codes:** `0` = no critical/high vulnerabilities · `1` = high severity vulnerabilities · `2` = critical severity vulnerabilities
+**Exit Codes:**
+- `0`: No critical/high vulnerabilities
+- `1`: High severity vulnerabilities
+- `2`: Critical severity vulnerabilities
 
 ### compliance_checker.py
 
@@ -269,13 +267,29 @@ PHASE 5: POST-INCIDENT (24-72 hours)
 | `--json` | Output results as JSON |
 | `--output, -o` | Write results to file |
 
-**Exit Codes:** `0` = compliant (90%+ score) · `1` = non-compliant (50-69% score) · `2` = critical gaps (<50% score)
+**Exit Codes:**
+- `0`: Compliant (90%+ score)
+- `1`: Non-compliant (50-69% score)
+- `2`: Critical gaps (<50% score)
 
 ---
 
 ## Security Standards
 
-See `references/security_standards.md` for OWASP Top 10 full guidance, secure coding standards, authentication requirements, and API security controls.
+### OWASP Top 10 Prevention
+
+| Vulnerability | Prevention |
+|--------------|------------|
+| **A01: Broken Access Control** | Implement RBAC, deny by default, validate permissions server-side |
+| **A02: Cryptographic Failures** | Use TLS 1.2+, AES-256 encryption, secure key management |
+| **A03: Injection** | Parameterized queries, input validation, escape output |
+| **A04: Insecure Design** | Threat modeling, secure design patterns, defense in depth |
+| **A05: Security Misconfiguration** | Hardening guides, remove defaults, disable unused features |
+| **A06: Vulnerable Components** | Dependency scanning, automated updates, SBOM |
+| **A07: Authentication Failures** | MFA, rate limiting, secure password storage |
+| **A08: Data Integrity Failures** | Code signing, integrity checks, secure CI/CD |
+| **A09: Security Logging Failures** | Comprehensive audit logs, SIEM integration, alerting |
+| **A10: SSRF** | URL validation, allowlist destinations, network segmentation |
 
 ### Secure Coding Checklist
 
@@ -315,28 +329,47 @@ See `references/security_standards.md` for OWASP Top 10 full guidance, secure co
 
 ## Compliance Frameworks
 
-See `references/compliance_requirements.md` for full control mappings. Run `compliance_checker.py` to verify the controls below:
+### SOC 2 Type II Controls
 
-### SOC 2 Type II
-- **CC6** Logical Access: authentication, authorization, MFA
-- **CC7** System Operations: monitoring, logging, incident response
-- **CC8** Change Management: CI/CD, code review, deployment controls
+| Control | Category | Description |
+|---------|----------|-------------|
+| CC1 | Control Environment | Security policies, org structure |
+| CC2 | Communication | Security awareness, documentation |
+| CC3 | Risk Assessment | Vulnerability scanning, threat modeling |
+| CC6 | Logical Access | Authentication, authorization, MFA |
+| CC7 | System Operations | Monitoring, logging, incident response |
+| CC8 | Change Management | CI/CD, code review, deployment controls |
 
-### PCI-DSS v4.0
-- **Req 3/4**: Encryption at rest and in transit (TLS 1.2+)
-- **Req 6**: Secure development (input validation, secure coding)
-- **Req 8**: Strong authentication (MFA, password policy)
-- **Req 10/11**: Audit logging, SAST/DAST/penetration testing
+### PCI-DSS v4.0 Requirements
+
+| Requirement | Description |
+|-------------|-------------|
+| Req 3 | Protect stored cardholder data (encryption at rest) |
+| Req 4 | Encrypt transmission (TLS 1.2+) |
+| Req 6 | Secure development (input validation, secure coding) |
+| Req 8 | Strong authentication (MFA, password policy) |
+| Req 10 | Audit logging (all access to cardholder data) |
+| Req 11 | Security testing (SAST, DAST, penetration testing) |
 
 ### HIPAA Security Rule
-- Unique user IDs and audit trails for PHI access (164.312(a)(1), 164.312(b))
-- MFA for person/entity authentication (164.312(d))
-- Transmission encryption via TLS (164.312(e)(1))
 
-### GDPR
-- **Art 25/32**: Privacy by design, encryption, pseudonymization
-- **Art 33**: Breach notification within 72 hours
-- **Art 17/20**: Right to erasure and data portability
+| Safeguard | Requirement |
+|-----------|-------------|
+| 164.312(a)(1) | Unique user identification for PHI access |
+| 164.312(b) | Audit trails for PHI access |
+| 164.312(c)(1) | Data integrity controls |
+| 164.312(d) | Person/entity authentication (MFA) |
+| 164.312(e)(1) | Transmission encryption (TLS) |
+
+### GDPR Requirements
+
+| Article | Requirement |
+|---------|-------------|
+| Art 25 | Privacy by design, data minimization |
+| Art 32 | Security measures, encryption, pseudonymization |
+| Art 33 | Breach notification (72 hours) |
+| Art 17 | Right to erasure (data deletion) |
+| Art 20 | Data portability (export capability) |
 
 ---
 
@@ -413,93 +446,221 @@ app.use((req, res, next) => {
 
 ---
 
-## OWASP Top 10 Quick-Check
-
-Rapid 15-minute assessment — run through each category and note pass/fail. For deep-dive testing, hand off to the **security-pen-testing** skill.
-
-| # | Category | One-Line Check |
-|---|----------|----------------|
-| A01 | Broken Access Control | Verify role checks on every endpoint; test horizontal privilege escalation |
-| A02 | Cryptographic Failures | Confirm TLS 1.2+ everywhere; no secrets in logs or source |
-| A03 | Injection | Run parameterized query audit; check ORM raw-query usage |
-| A04 | Insecure Design | Review threat model exists for critical flows |
-| A05 | Security Misconfiguration | Check default credentials removed; error pages generic |
-| A06 | Vulnerable Components | Run `vulnerability_assessor.py`; zero critical/high CVEs |
-| A07 | Auth Failures | Verify MFA on admin; brute-force protection active |
-| A08 | Software & Data Integrity | Confirm CI/CD pipeline signs artifacts; no unsigned deps |
-| A09 | Logging & Monitoring | Validate audit logs capture auth events; alerts configured |
-| A10 | SSRF | Test internal URL filters; block metadata endpoints (169.254.169.254) |
-
-> **Deep dive needed?** Hand off to `security-pen-testing` for full OWASP Testing Guide coverage.
-
----
-
-## Secret Scanning Tools
-
-Choose the right scanner for each stage of your workflow:
-
-| Tool | Best For | Language | Pre-commit | CI/CD | Custom Rules |
-|------|----------|----------|:----------:|:-----:|:------------:|
-| **gitleaks** | CI pipelines, full-repo scans | Go | Yes | Yes | TOML regexes |
-| **detect-secrets** | Pre-commit hooks, incremental | Python | Yes | Partial | Plugin-based |
-| **truffleHog** | Deep history scans, entropy | Go | No | Yes | Regex + entropy |
-
-**Recommended setup:** Use `detect-secrets` as a pre-commit hook (catches secrets before they enter history) and `gitleaks` in CI (catches anything that slips through).
-
-```bash
-# detect-secrets pre-commit hook (.pre-commit-config.yaml)
-- repo: https://github.com/Yelp/detect-secrets
-  rev: v1.4.0
-  hooks:
-    - id: detect-secrets
-      args: ['--baseline', '.secrets.baseline']
-
-# gitleaks in GitHub Actions
-- name: gitleaks
-  uses: gitleaks/gitleaks-action@v2
-  env:
-    GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-```
-
----
-
-## Supply Chain Security
-
-Protect against dependency and artifact tampering with SBOM generation, artifact signing, and SLSA compliance.
-
-**SBOM Generation:**
-- **syft** — generates SBOMs from container images or source dirs (SPDX, CycloneDX formats)
-- **cyclonedx-cli** — CycloneDX-native tooling; merge multiple SBOMs for mono-repos
-
-```bash
-# Generate SBOM from container image
-syft packages ghcr.io/org/app:latest -o cyclonedx-json > sbom.json
-```
-
-**Artifact Signing (Sigstore/cosign):**
-```bash
-# Sign a container image (keyless via OIDC)
-cosign sign ghcr.io/org/app:latest
-# Verify signature
-cosign verify ghcr.io/org/app:latest --certificate-identity=ci@org.com --certificate-oidc-issuer=https://token.actions.githubusercontent.com
-```
-
-**SLSA Levels Overview:**
-| Level | Requirement | What It Proves |
-|-------|-------------|----------------|
-| 1 | Build process documented | Provenance exists |
-| 2 | Hosted build service, signed provenance | Tamper-resistant provenance |
-| 3 | Hardened build platform, non-falsifiable provenance | Tamper-proof build |
-| 4 | Two-party review, hermetic builds | Maximum supply-chain assurance |
-
-> **Cross-references:** `security-pen-testing` (vulnerability exploitation testing), `dependency-auditor` (license and CVE audit for dependencies).
-
----
-
 ## Reference Documentation
 
 | Document | Description |
 |----------|-------------|
 | `references/security_standards.md` | OWASP Top 10, secure coding, authentication, API security |
 | `references/vulnerability_management_guide.md` | CVE triage, CVSS scoring, remediation workflows |
-| `references/compliance_requirements.md` | SOC 2, PCI-DSS, HIPAA, GDPR full control mappings |
+| `references/compliance_requirements.md` | SOC 2, PCI-DSS, HIPAA, GDPR requirements |
+
+---
+
+## Tech Stack
+
+**Security Scanning:**
+- Snyk (dependency scanning)
+- Semgrep (SAST)
+- CodeQL (code analysis)
+- Trivy (container scanning)
+- OWASP ZAP (DAST)
+
+**Secrets Management:**
+- HashiCorp Vault
+- AWS Secrets Manager
+- Azure Key Vault
+- 1Password Secrets Automation
+
+**Authentication:**
+- bcrypt, argon2 (password hashing)
+- jsonwebtoken (JWT)
+- passport.js (authentication middleware)
+- speakeasy (TOTP/MFA)
+
+**Logging & Monitoring:**
+- Winston, Pino (Node.js logging)
+- Datadog, Splunk (SIEM)
+- PagerDuty (alerting)
+
+**Compliance:**
+- Vanta (SOC 2 automation)
+- Drata (compliance management)
+- AWS Config (configuration compliance)
+
+---
+
+## Anti-Patterns
+
+- **Relying solely on automated scanning** -- SAST tools miss business logic flaws and authorization issues; combine with manual code review for auth-sensitive code
+- **Ignoring medium-severity findings** -- exit code 0 on medium findings does not mean safe; parse JSON output for comprehensive CI gating
+- **Hardcoding secrets in test fixtures** -- test files with example tokens trigger false positives; use environment variables or mock values even in tests
+- **Compliance score as a goal** -- a 90% compliance score with failed encryption controls is worse than 80% with all critical controls passing; prioritize by severity
+- **One-time security audits** -- running the scanner once per quarter misses regressions; integrate into every PR via CI/CD
+- **Treating warnings as passed** -- compliance checker scores warnings at 0.5 (partial credit); any control below `passed` needs remediation
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Security scanner reports zero findings on a known-vulnerable project | Test and spec files are excluded by the false-positive filter | Rename the file to remove `test`/`spec` from the path, or review the `_is_false_positive` method |
+| Vulnerability assessor misses a CVE for a listed dependency | The package or CVE is not in the built-in `KNOWN_CVES` database | Supplement with an external feed (Snyk, OSV, `npm audit`) and use the assessor for triage prioritization |
+| Compliance checker shows `CRITICAL_GAPS` despite controls being present | Pattern-based file search did not match the specific naming convention used in your codebase | Run with `--verbose` to see which checks fail, then verify the matching code patterns or filenames |
+| `--json` output is printed to stdout even when `--output` is specified | Both flags are set correctly; this is expected behavior (summary prints to stderr-style console, JSON to file) | Redirect stdout if you need a clean pipe: `python script.py . --json --output report.json > /dev/null` |
+| Exit code is 0 despite medium-severity findings | Exit codes only trigger on critical (exit 2) or high (exit 1) severity findings | Use `--severity medium` to surface medium findings in the report, and parse the JSON output for CI/CD gating |
+| Scanner is slow on large monorepos | All files matching `SCAN_EXTENSIONS` are read in full | Narrow the target to a subdirectory, or exclude heavy vendor directories by placing them in `SKIP_DIRS` |
+| Compliance score appears inflated because many controls show `warning` | Warnings score 0.5 (partial credit) in the weighted calculation | Treat any control below `passed` as requiring remediation; filter the JSON output for `status != "passed"` |
+
+---
+
+## Success Criteria
+
+- **Zero critical CVEs in production** -- all critical-severity vulnerabilities are patched or mitigated before deployment.
+- **Mean time to patch under 48 hours** -- critical and high-severity findings are remediated within two business days of detection.
+- **Compliance score at or above 90%** -- the compliance checker returns `COMPLIANT` status for every applicable framework before each release.
+- **100% of secrets externalized** -- the security scanner reports zero hardcoded secrets (API keys, passwords, private keys) across the entire codebase.
+- **CI/CD security gate pass rate above 95%** -- fewer than 5% of pull requests are blocked by security scans, indicating proactive secure coding practices.
+- **Incident response time under 15 minutes** -- security incidents are acknowledged and an incident commander assigned within the Phase 1 detection window.
+- **Quarterly dependency audit cadence** -- the vulnerability assessor is executed against all ecosystems (npm, Python, Go) at least once per quarter with results documented.
+
+---
+
+## Scope & Limitations
+
+**This skill covers:**
+
+- Static analysis of source code for common vulnerability classes (secrets, injection, XSS, command injection, path traversal).
+- Dependency vulnerability assessment against a built-in CVE database for npm, Python, and Go ecosystems.
+- Compliance verification for SOC 2 Type II, PCI-DSS v4.0, HIPAA Security Rule, and GDPR.
+- Security workflow orchestration including CI/CD gating, CVE triage, and incident response procedures.
+
+**This skill does NOT cover:**
+
+- Dynamic application security testing (DAST) or runtime analysis -- use OWASP ZAP or Burp Suite for live scanning.
+- Infrastructure-as-code security (Terraform, CloudFormation misconfigurations) -- see the `senior-devops` skill for IaC hardening.
+- Container image scanning or Kubernetes admission control -- see the `senior-devops` skill or use Trivy directly.
+- Penetration testing execution or red-team operations -- these require specialized tooling and authorized human operators.
+
+---
+
+## Integration Points
+
+| Skill | Integration | Data Flow |
+|-------|-------------|-----------|
+| `senior-devops` | Infrastructure hardening and CI/CD pipeline configuration | Security scan results feed into deployment gates; DevOps provides container and IaC scanning |
+| `senior-backend` | Secure coding patterns and input validation in server-side code | SecOps scanner findings drive backend remediation; backend applies parameterized queries and output encoding |
+| `senior-qa` | Security test cases and regression verification after patches | Vulnerability reports generate QA test cases; QA confirms fixes do not introduce regressions |
+| `senior-architect` | Threat modeling, defense-in-depth design, and zero-trust architecture | Compliance gaps inform architecture decisions; architect provides security design patterns |
+| `code-reviewer` | Security-focused code review and pre-merge analysis | Scanner findings prioritize review focus areas; reviewer enforces secure coding standards |
+| `senior-fullstack` | End-to-end security across frontend and API layers (XSS, CSRF, auth) | SecOps identifies frontend and API vulnerabilities; fullstack applies framework-level mitigations |
+
+---
+
+## Tool Reference
+
+### security_scanner.py
+
+**Purpose:** Scan source code for security vulnerabilities including hardcoded secrets, SQL injection, XSS, command injection, and path traversal patterns.
+
+**Usage:**
+
+```bash
+python scripts/security_scanner.py <target> [options]
+```
+
+**Flags:**
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `target` | -- | positional | *(required)* | Directory or file to scan |
+| `--severity` | `-s` | choice | `low` | Minimum severity to report: `critical`, `high`, `medium`, `low`, `info` |
+| `--verbose` | `-v` | flag | off | Print each file path as it is scanned |
+| `--json` | -- | flag | off | Output results as JSON (to stdout or combined with `--output`) |
+| `--output` | `-o` | string | -- | Write results to the specified file path |
+
+**Example:**
+
+```bash
+# Scan current directory for high and critical findings, export JSON
+python scripts/security_scanner.py . --severity high --json --output security-report.json
+```
+
+**Output Formats:**
+
+- **Human-readable (default):** Prints a summary table with severity counts and the top 5 findings including file path, line number, and description.
+- **JSON (`--json`):** Full structured report with `status`, `files_scanned`, `scan_duration_seconds`, `total_findings`, `severity_counts`, and a `findings` array. Each finding includes `rule_id`, `severity`, `category`, `title`, `description`, `file_path`, `line_number`, `code_snippet`, and `recommendation`.
+
+**Exit Codes:** `0` = no critical/high findings, `1` = high-severity findings present, `2` = critical-severity findings present.
+
+---
+
+### vulnerability_assessor.py
+
+**Purpose:** Scan project dependency manifests (package.json, requirements.txt, pyproject.toml, package-lock.json, go.mod) for known CVEs and calculate an overall risk score.
+
+**Usage:**
+
+```bash
+python scripts/vulnerability_assessor.py <target> [options]
+```
+
+**Flags:**
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `target` | -- | positional | *(required)* | Directory containing dependency files |
+| `--severity` | `-s` | choice | `low` | Minimum severity to report: `critical`, `high`, `medium`, `low` |
+| `--verbose` | `-v` | flag | off | Print each dependency file path as it is scanned |
+| `--json` | -- | flag | off | Output results as JSON (to stdout or combined with `--output`) |
+| `--output` | `-o` | string | -- | Write results to the specified file path |
+
+**Example:**
+
+```bash
+# Assess dependencies, show only critical vulnerabilities
+python scripts/vulnerability_assessor.py /path/to/project --severity critical --verbose
+```
+
+**Output Formats:**
+
+- **Human-readable (default):** Prints a summary with files scanned, packages scanned, risk score (0-100), risk level (NONE/LOW/MEDIUM/HIGH/CRITICAL), severity counts, and the top 5 vulnerabilities sorted by CVSS score.
+- **JSON (`--json`):** Full structured report with `status`, `target`, `files_scanned`, `packages_scanned`, `scan_duration_seconds`, `total_vulnerabilities`, `risk_score`, `risk_level`, `severity_counts`, and a `vulnerabilities` array. Each vulnerability includes `cve_id`, `package`, `installed_version`, `fixed_version`, `severity`, `cvss_score`, `description`, `ecosystem`, and `recommendation`.
+
+**Exit Codes:** `0` = no critical/high vulnerabilities, `1` = high-severity vulnerabilities present, `2` = critical-severity vulnerabilities present.
+
+---
+
+### compliance_checker.py
+
+**Purpose:** Verify security compliance against SOC 2 Type II, PCI-DSS v4.0, HIPAA Security Rule, and GDPR by scanning project files for evidence of required controls.
+
+**Usage:**
+
+```bash
+python scripts/compliance_checker.py <target> [options]
+```
+
+**Flags:**
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `target` | -- | positional | *(required)* | Directory to check for compliance |
+| `--framework` | `-f` | choice | `all` | Compliance framework: `soc2`, `pci-dss`, `hipaa`, `gdpr`, `all` |
+| `--verbose` | `-v` | flag | off | Print each framework check as it runs |
+| `--json` | -- | flag | off | Output results as JSON (to stdout or combined with `--output`) |
+| `--output` | `-o` | string | -- | Write results to the specified file path |
+
+**Example:**
+
+```bash
+# Check SOC 2 compliance and export report
+python scripts/compliance_checker.py . --framework soc2 --json --output soc2-report.json
+```
+
+**Output Formats:**
+
+- **Human-readable (default):** Prints compliance score as a percentage with level (COMPLIANT/PARTIALLY_COMPLIANT/NON_COMPLIANT/CRITICAL_GAPS), a passed/failed/warning/N/A breakdown, and the top 5 failed controls with severity and remediation recommendations.
+- **JSON (`--json`):** Full structured report with `status`, `target`, `framework`, `scan_duration_seconds`, `compliance_score`, `compliance_level`, `summary` (passed/failed/warnings/not_applicable/total), and a `controls` array. Each control includes `control_id`, `framework`, `category`, `title`, `description`, `status`, `evidence`, `recommendation`, and `severity`.
+
+**Exit Codes:** `0` = compliant (90%+ score), `1` = non-compliant (50-69% score), `2` = critical gaps (<50% score).

@@ -1,123 +1,283 @@
 ---
 name: contract-review
 description: >
-  Lightweight NDA, MSA, and vendor contract review for SMBs without legal on
-  staff. Reads contracts from local files, Gmail attachments, or DocuSign
-  envelopes; flags non-standard terms; explains risks in plain English; and
-  outputs a marked-up redline as a separate DOCX. Use when the user says
-  "review this contract," "what am I signing," "red flags," "flag any concerns,"
-  "check the payment terms," or uploads/forwards a contract or legal agreement.
+  Contract review assistant analyzing agreements against playbooks.
+  GREEN/YELLOW/RED severity. Use when reviewing vendor contracts,
+  SaaS agreements, service agreements, or generating redline suggestions.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: The Glass Room
+  category: legal
+  domain: contract-analysis
+  updated: 2026-04-10
+  tags: [contract-review, redline, negotiation, risk-assessment, legal]
 ---
+> **⚠️ EXPERIMENTAL** — This skill is provided for educational and informational purposes only. It does NOT constitute legal advice. All responsibility for usage rests with the user. Consult qualified legal professionals before acting on any output.
 
 # Contract Review
 
-## Quick start
+Automated contract review tools that analyze agreements against organizational playbooks, classify clause risk with GREEN/YELLOW/RED severity, and generate prioritized redline suggestions with fallback positions.
 
-Attach a contract file, forward the email containing it, or paste the text directly.
+---
+
+## Table of Contents
+
+- [Tools](#tools)
+  - [Contract Analyzer](#contract-analyzer)
+  - [Redline Generator](#redline-generator)
+- [Reference Guides](#reference-guides)
+- [Workflows](#workflows)
+  - [Standard Contract Review](#standard-contract-review)
+  - [Rapid Risk Triage](#rapid-risk-triage)
+- [Troubleshooting](#troubleshooting)
+- [Success Criteria](#success-criteria)
+- [Scope & Limitations](#scope--limitations)
+- [Anti-Patterns](#anti-patterns)
+- [Tool Reference](#tool-reference)
+
+---
+
+## Tools
+
+### Contract Analyzer
+
+Analyzes contract text files for clause types, missing standard clauses, and risk indicators.
+
+```bash
+# Analyze a contract file
+python scripts/contract_analyzer.py contract.txt
+
+# JSON output for pipeline integration
+python scripts/contract_analyzer.py agreement.md --json
+
+# Save analysis to file
+python scripts/contract_analyzer.py contract.txt --output analysis.json --json
+```
+
+**What it detects:**
+- Clause types: Limitation of Liability, Indemnification, IP, Data Protection, Term & Termination, Governing Law, Reps & Warranties, Force Majeure, Confidentiality, Payment Terms
+- Missing standard clauses against a baseline checklist
+- Risk indicators: uncapped liability, perpetual terms, unilateral indemnification, automatic renewal without opt-out, broad IP assignment, unlimited audit rights
+
+**Risk Classification:**
+
+| Level | Meaning | Action |
+|-------|---------|--------|
+| RED | Deal-breaker risk | Must negotiate before signing |
+| YELLOW | Material concern | Should negotiate, may accept with mitigation |
+| GREEN | Standard or favorable | Acceptable as-is |
+
+---
+
+### Redline Generator
+
+Takes contract analysis JSON and generates formatted redline suggestions with priority tiers.
+
+```bash
+# Generate redlines from analysis
+python scripts/contract_analyzer.py contract.txt --json --output analysis.json
+python scripts/redline_generator.py analysis.json
+
+# JSON output
+python scripts/redline_generator.py analysis.json --json
+
+# Save redlines to file
+python scripts/redline_generator.py analysis.json --output redlines.md
+```
+
+**Output includes:**
+- Priority tier (Must-Have / Should-Have / Nice-to-Have)
+- Preferred redline language
+- Rationale for each change
+- Fallback position if counterparty rejects
+- Negotiation notes
+
+**Priority Tiers:**
+
+| Tier | Label | Description |
+|------|-------|-------------|
+| 1 | Must-Have | Deal-breakers; walk away if rejected |
+| 2 | Should-Have | Strong preferences; push hard but negotiable |
+| 3 | Nice-to-Have | Concession candidates; trade for Tier 1-2 wins |
+
+---
+
+## Reference Guides
+
+### Clause Analysis Guide
+`references/clause_analysis_guide.md`
+
+Deep reference covering 8+ clause types:
+- Limitation of Liability (cap types, carveouts, consequential damages)
+- Indemnification (mutuality, scope, procedure)
+- IP (ownership, licenses, work-for-hire, feedback)
+- Data Protection (DPA, sub-processors, breach notification, transfers)
+- Term & Termination (auto-renewal, cure periods, transition)
+- Governing Law (jurisdiction, arbitration, jury waiver)
+- Representations & Warranties
+- Force Majeure
+
+### Negotiation Playbook
+`references/negotiation_playbook.md`
+
+Negotiation priority framework with:
+- Tier 1 deal-breakers and walkaway criteria
+- Tier 2 strong preferences with trading strategies
+- Tier 3 concession candidates for strategic give-backs
+- Redline format template
+- Common negotiation pitfalls
+
+---
+
+## Workflows
+
+### Standard Contract Review
+
+1. **Ingest** -- Save contract as `.txt` or `.md` file
+2. **Analyze** -- Run `contract_analyzer.py` with `--json` flag
+3. **Review findings** -- Check RED items first, then YELLOW
+4. **Generate redlines** -- Run `redline_generator.py` on analysis output
+5. **Prioritize** -- Focus on Must-Have redlines, prepare fallbacks for Should-Have
+6. **Send to counsel** -- Attach analysis and redlines for final review
+
+### Rapid Risk Triage
+
+1. Run `contract_analyzer.py` in text mode for quick scan
+2. If any RED findings: escalate immediately to legal counsel
+3. If YELLOW only: schedule review within 48 hours
+4. If all GREEN: proceed with standard approval workflow
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| `Error: File not found` | Contract file path is incorrect or file does not exist | Verify the file path; use absolute paths if relative paths fail |
+| No clauses detected | Contract uses unusual formatting or non-standard clause headers | Ensure contract is plain text; strip PDF artifacts before analysis |
+| All clauses marked GREEN | Contract is genuinely favorable, or text extraction missed key sections | Manually verify critical clauses (liability, indemnification, IP) are present in the input file |
+| Redline generator produces empty output | Analysis JSON has no YELLOW or RED findings | Confirm analysis JSON is valid; re-run analyzer if contract was updated |
+| False positive on uncapped liability | Liability section references a cap elsewhere in the document | Review the full Limitation of Liability section; the tool scans for cap keywords within each clause boundary |
+| Missing clause false positive | Clause exists but uses non-standard heading (e.g., "Damages Cap" instead of "Limitation of Liability") | The analyzer checks multiple heading variants; add custom aliases if your organization uses unique terminology |
+
+---
+
+## Success Criteria
+
+- **Contract review time reduced by 50%:** Automated clause identification and risk classification eliminates manual scanning.
+- **Zero missed RED-severity clauses:** Every uncapped liability, unilateral indemnification, and broad IP assignment is flagged before human review.
+- **Redline generation under 2 minutes:** From analysis JSON to prioritized redline document.
+- **Consistent risk classification across reviewers:** GREEN/YELLOW/RED framework eliminates subjective assessments.
+- **100% of contracts reviewed with structured output:** Every agreement gets a clause inventory and risk report before negotiation begins.
+- **Negotiation success rate above 80% on Must-Have items:** Tier 1 redlines with prepared fallbacks improve negotiation outcomes.
+
+---
+
+## Scope & Limitations
+
+**Covers:**
+- Static text analysis of contract clauses using keyword and pattern matching
+- Clause type identification across 10+ standard commercial contract categories
+- Risk indicator detection: uncapped liability, perpetual terms, unilateral obligations, auto-renewal traps
+- Missing clause detection against a standard commercial contract baseline
+- Prioritized redline generation with fallback positions
+
+**Does NOT cover:**
+- **Legal advice** -- this tool supports review, it does not replace qualified legal counsel
+- **Jurisdiction-specific compliance** -- use `ra-qm-team` skills for regulatory compliance (GDPR, SOC 2, etc.)
+- **Contract execution or e-signature workflows** -- out of scope
+- **Multi-document cross-reference** (e.g., checking SOW against MSA) -- analyze each document separately
+- **Non-English contracts** -- pattern matching is English-language only
+
+---
+
+## Anti-Patterns
+
+| Anti-Pattern | Why It Fails | Better Approach |
+|-------------|-------------|-----------------|
+| Signing contracts with only GREEN findings and no human review | Automated analysis cannot catch context-dependent risks, ambiguous language, or business-specific concerns | Always have qualified counsel review before execution, even on all-GREEN contracts |
+| Treating all RED findings as equal | Some RED items are structural deal-breakers while others may be resolvable with a single word change | Use the redline generator to assess effort and fallback positions for each RED finding |
+| Skipping the redline fallback positions | Entering negotiation with only preferred positions leaves no room for strategic concession | Always prepare Must-Have fallbacks and identify Nice-to-Have items to trade away |
+| Running analysis on poorly extracted text | PDF-to-text conversion artifacts break clause detection patterns | Clean the text file before analysis: remove headers, footers, page numbers, and formatting artifacts |
+
+---
+
+## Tool Reference
+
+### contract_analyzer.py
+
+**Purpose:** Analyzes contract text files for clause types, identifies missing standard clauses, and flags risk indicators with GREEN/YELLOW/RED severity classification.
+
+**Usage:**
+
+```bash
+python scripts/contract_analyzer.py <contract_file> [--json] [--output FILE]
+```
+
+**Flags:**
+
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `contract_file` | *(positional)* | | Path to contract text file (.txt or .md) |
+| `--json` | | off | Output in JSON format |
+| `--output` | `-o` | *(stdout)* | Write output to file |
+
+**Example Output (JSON):**
+
+```json
+{
+  "file": "vendor_agreement.txt",
+  "clauses_found": [
+    {
+      "type": "limitation_of_liability",
+      "severity": "RED",
+      "text_snippet": "...liability shall not be limited...",
+      "risk_flags": ["uncapped_liability"],
+      "notes": "No liability cap found; uncapped exposure"
+    }
+  ],
+  "missing_clauses": ["force_majeure", "data_protection"],
+  "risk_summary": {"RED": 2, "YELLOW": 3, "GREEN": 5},
+  "overall_risk": "RED"
+}
+```
+
+---
+
+### redline_generator.py
+
+**Purpose:** Takes contract analysis JSON and generates formatted redline suggestions with priority tiers, rationale, and fallback positions.
+
+**Usage:**
+
+```bash
+python scripts/redline_generator.py <analysis_json> [--json] [--output FILE]
+```
+
+**Flags:**
+
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `analysis_json` | *(positional)* | | Path to contract analysis JSON file |
+| `--json` | | off | Output in JSON format |
+| `--output` | `-o` | *(stdout)* | Write output to file |
+
+**Example Output:**
 
 ```
-User: "Review this MSA and flag anything I should push back on."
-→ Skill reads the document, identifies parties and contract type,
-  analyzes 8 risk categories, returns a severity-tiered summary
-  with a negotiation playbook, and exports a redlined DOCX.
+REDLINE SUGGESTIONS
+===================
+
+[MUST-HAVE] Limitation of Liability — Uncapped Liability
+  Severity: RED
+  Preferred: "Aggregate liability shall not exceed 12 months of fees paid."
+  Rationale: Uncapped liability creates unlimited financial exposure.
+  Fallback: "Aggregate liability shall not exceed 24 months of fees paid."
+
+[SHOULD-HAVE] Indemnification — Unilateral Indemnification
+  Severity: YELLOW
+  Preferred: "Each party shall indemnify the other for breaches of this Agreement."
+  Rationale: Mutual indemnification balances risk between parties.
+  Fallback: "Indemnification obligations shall be subject to the liability cap."
 ```
-
-## Workflow
-
-1. **Get the contract** — Pull from one of three sources, in order of preference:
-   - **Gmail**: Search for recent emails with contract attachments (see `reference/gmail-fetch.md`)
-   - **DocuSign**: Fetch the envelope by ID or search recent drafts awaiting signature (see `reference/docusign-fetch.md`)
-   - **Local file or paste**: Read the PDF (chunked via `pages` parameter for 10+ page files) or DOCX via Read tool. If the user pastes text directly, work with what's provided.
-
-   Read the full document before analyzing. Dangerous clauses are frequently in exhibits and schedules at the back.
-
-2. **Identify contract type and parties** — Determine agreement type (NDA, MSA, SOW, SaaS subscription, consulting, subcontractor, vendor) and which party is the user's company vs. the counterparty. Note if it looks like a counterparty template — these are typically one-sided and the counterparty expects pushback.
-
-3. **Analyze across 8 risk categories** — Work through the contract from the ops/finance perspective of a small business owner without in-house legal. Categories are ordered by typical risk severity; use judgment for context.
-
-   **Category 1: Payment terms and cash flow**
-   - Payment timing: Net-30 is standard; Net-60+ is flaggable; Net-90/120 is a hard negotiation point
-   - Payment triggers: acceptance periods that let the client slow-walk approvals indefinitely
-   - Late payment penalties: absence is a gap worth noting
-   - Invoicing requirements: rigid formats or PO numbers that can delay payment on technicalities
-   - Expense reimbursement: pre-approval requirements and caps
-   - Rate adjustments: annual increase mechanism for multi-year engagements
-
-   **Category 2: Liability and indemnification**
-   - Liability caps: uncapped liability is always a red flag
-   - Mutual vs. one-sided indemnification
-   - Indemnification scope: "any and all claims arising from the services" is not standard
-   - Insurance requirements: E&O, cyber, general liability — achievability at the required limits
-   - Consequential damages waiver: missing = flag prominently
-
-   **Category 3: Termination and exit**
-   - Termination for convenience: is it mutual? 30-day notice is typical
-   - Termination for cause: cure period; vague "material breach" without definition
-   - Wind-down: payment for in-progress work at termination
-   - Transition assistance: paid vs. unpaid, time-limited vs. open-ended
-   - Survival clauses: indefinite indemnification survival = flag
-
-   **Category 4: Intellectual property**
-   - IP assignment vs. license
-   - Pre-existing IP and background tools carve-out — absence means inadvertent assignment
-   - Work product definition breadth: drafts, notes, internal tools
-
-   **Category 5: Scope and change management**
-   - Scope definition clarity
-   - Change order process: absence = scope creep without compensation
-   - Acceptance criteria: subjective ("to client's satisfaction") vs. defined
-   - Timeline asymmetry: user penalized for delays but client is not for slow feedback
-
-   **Category 6: Non-compete and exclusivity**
-   - Non-compete scope, definition of "competitor," duration
-   - Exclusivity requirements on the user's company
-   - Non-solicitation: employee poaching is normal; industry-broad restrictions are not
-
-   **Category 7: Confidentiality and data**
-   - Confidentiality scope: "all information shared" with no exceptions is overly broad
-   - Duration: 2–3 years is typical; perpetual is aggressive
-   - Data handling security requirements vs. company size and data sensitivity
-   - Return/destruction requirements post-termination
-
-   **Category 8: Operational concerns**
-   - Governing law and dispute resolution; mandatory arbitration
-   - Auto-renewal: opt-out window and notice period (missing a 60-day window is a common SMB mistake)
-   - Assignment rights, especially if the client gets acquired
-   - Most favored nation: constrains pricing across the entire client book
-   - Audit rights: scope and frequency
-
-4. **Present flagged summary** — Organize by severity:
-
-   **🔴 Red flags (push back before signing)** — For each: quote the exact clause, explain the problem in plain language, suggest specific alternative language.
-
-   **🟡 Yellow flags (negotiate, not deal-breakers)** — For each: quote the clause, explain the concern, describe what "better" looks like.
-
-   **🟢 Key terms to note (awareness only)** — Payment schedules, notice periods, renewal dates, insurance requirements, key contacts.
-
-   **📋 Contract summary** — Plain-language summary: who does what, for how much, over what timeframe, under what conditions.
-
-   **💡 Negotiation playbook** — For each red and yellow flag: what to ask for, how to frame the ask, and what a reasonable compromise looks like.
-
-5. **Export redline DOCX** — After presenting the summary, offer to export a redlined DOCX with the suggested changes marked up. Use the `docx` skill to generate a Word document that:
-   - Preserves the original contract structure
-   - Marks suggested deletions in strikethrough and additions in underline
-   - Adds a cover page summarizing the changes
-
-   Ask: "Want me to export a redlined DOCX you can send back to the counterparty?"
-
-## Approval gates
-
-- Never characterize the output as legal advice. Always recommend attorney review for red flags or binding decisions.
-- Quote actual clause language, not paraphrases. The user needs the exact text for negotiation calls.
-- Flag what's missing, not just what's there. A contract silent on liability caps or change orders is often more dangerous than one with unfavorable terms.
-- Do not flag standard boilerplate. If a clause is fair and market-standard, skip it. The user wants signal, not a clause-by-clause restatement.
-- Compare to market norms when flagging: "Net-90 is uncommon in professional services — Net-30 is standard."
-- Adjust recommendations to the power dynamic. A Fortune 500 procurement MSA is a different negotiation than a small startup agreement.
-- Never send the redlined DOCX to the counterparty without explicit user confirmation.
-
-## Reference
-
-- `reference/gotchas.md` — edge cases in contract analysis
-- `reference/docusign-fetch.md` — pulling envelopes from DocuSign
-- `reference/gmail-fetch.md` — finding contract attachments in Gmail
-- `reference/examples/flagged-summary-saas.md` — worked example: SaaS agreement review output

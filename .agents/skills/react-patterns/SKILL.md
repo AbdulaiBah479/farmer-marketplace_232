@@ -1,263 +1,140 @@
 ---
 name: react-patterns
-description: Build React applications with Remix — loaders, actions, hooks, Server/Client Components, nested routes, error boundaries, form handling, and streaming SSR. Use when building Shopify Hydrogen storefronts or Remix-based apps.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: "React 19 performance patterns and composition architecture for Vite + Cloudflare projects. 50+ rules ranked by impact — eliminating waterfalls, bundle optimisation, re-render prevention, composition over boolean props, server/client boundaries, and React 19 APIs. Use when writing, reviewing, or refactoring React components. Triggers: 'react patterns', 'react review', 'react performance', 'optimise components', 'react best practices', 'composition patterns', 'why is it slow', 'reduce re-renders', 'fix waterfall'."
+compatibility: claude-code-only
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
 ---
 
-# React + Remix Patterns
+# React Patterns
 
-## Before writing code
+Performance and composition patterns for React 19 + Vite + Cloudflare Workers projects. Use as a checklist when writing new components, a review guide when auditing existing code, or a refactoring playbook when something feels slow or tangled.
 
-**Fetch live docs**:
-1. Fetch `https://remix.run/docs/en/main` for Remix documentation
-2. Fetch `https://react.dev/reference/react` for React API reference
-3. Web-search `site:shopify.dev hydrogen remix patterns` for Hydrogen-specific patterns
+Rules are ranked by impact. Fix CRITICAL issues before touching MEDIUM ones.
 
-## Why Remix (Not Next.js)
+## When to Apply
 
-Shopify's Hydrogen is built on Remix:
-- Server-first rendering with progressive enhancement
-- Loaders and actions for server-side data fetching and mutations
-- Nested routes for layout composition
-- Built-in form handling without client-side state management
-- Streaming SSR for fast perceived performance
+- Writing new React components or pages
+- Reviewing code for performance issues
+- Refactoring components with too many props or re-renders
+- Debugging "why is this slow?" or "why does this re-render?"
+- Building reusable component libraries
+- Code review before merging
 
-## Core Remix Concepts
+## 1. Eliminating Waterfalls (CRITICAL)
 
-### Loaders (Data Fetching)
+Sequential async calls where they could be parallel. The #1 performance killer.
 
-Server-side function that runs on every GET request:
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| **Await in sequence** | `const a = await getA(); const b = await getB();` | `const [a, b] = await Promise.all([getA(), getB()]);` |
+| **Fetch in child** | Parent renders, then child fetches, then grandchild fetches | Hoist fetches to the highest common ancestor, pass data down |
+| **Suspense cascade** | Multiple Suspense boundaries that resolve sequentially | One Suspense boundary wrapping all async siblings |
+| **Await before branch** | `const data = await fetch(); if (condition) { use(data); }` | Move await inside the branch — don't fetch what you might not use |
+| **Import then render** | `const Component = await import('./Heavy'); return <Component />` | Use `React.lazy()` + `<Suspense>` — renders fallback instantly |
 
-```typescript
-import { json, type LoaderFunctionArgs } from '@remix-run/node';
+**How to find them**: Search for `await` in components. Each `await` is a potential waterfall. If two awaits are independent, they should be parallel.
 
-export async function loader({ context, params }: LoaderFunctionArgs) {
-  const { storefront } = context;
-  const { products } = await storefront.query(PRODUCTS_QUERY);
-  return json({ products });
-}
+## 2. Bundle Size (CRITICAL)
 
-export default function ProductsPage() {
-  const { products } = useLoaderData<typeof loader>();
-  return <ProductGrid products={products} />;
-}
+Every KB the user downloads is a KB they wait for.
+
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| **Barrel imports** | `import { Button } from '@/components'` pulls the entire barrel file | `import { Button } from '@/components/ui/button'` — direct import |
+| **No code splitting** | Heavy component loaded on every page | `React.lazy(() => import('./HeavyComponent'))` + `<Suspense>` |
+| **Third-party at load** | Analytics/tracking loaded before the app renders | Load after hydration: `useEffect(() => { import('./analytics') }, [])` |
+| **Full library import** | `import _ from 'lodash'` (70KB) | `import debounce from 'lodash/debounce'` (1KB) |
+| **Lucide tree-shaking** | `import * as Icons from 'lucide-react'` (all icons) | Explicit map: `import { Home, Settings } from 'lucide-react'` |
+| **Duplicate React** | Library bundles its own React → "Cannot read properties of null" | `resolve.dedupe: ['react', 'react-dom']` in vite.config.ts |
+
+**How to find them**: `npx vite-bundle-visualizer` — shows what's in your bundle.
+
+## 3. Composition Architecture (HIGH)
+
+How you structure components matters more than how you optimise them.
+
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| **Boolean prop explosion** | `<Card isCompact isClickable showBorder hasIcon isLoading>` | Explicit variants: `<CompactCard>`, `<ClickableCard>` |
+| **Compound components** | Complex component with 15 props | Split into `<Dialog>`, `<Dialog.Trigger>`, `<Dialog.Content>` with shared context |
+| **renderX props** | `<Layout renderSidebar={...} renderHeader={...} renderFooter={...}>` | Use children + named slots: `<Layout><Sidebar /><Header /></Layout>` |
+| **Lift state** | Sibling components can't share state | Move state to parent or context provider |
+| **Provider implementation** | Consumer code knows about state management internals | Provider exposes interface `{ state, actions, meta }` — implementation hidden |
+| **Inline components** | `function Parent() { function Child() { ... } return <Child /> }` | Define Child outside Parent — inline components remount on every render |
+
+**The test**: If a component has more than 5 boolean props, it needs composition, not more props.
+
+## 4. Re-render Prevention (MEDIUM)
+
+Not all re-renders are bad. Only fix re-renders that cause visible jank or wasted computation.
+
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| **Default object/array props** | `function Foo({ items = [] })` → new array ref every render | Hoist: `const DEFAULT = []; function Foo({ items = DEFAULT })` |
+| **Derived state in effect** | `useEffect(() => setFiltered(items.filter(...)), [items])` | Derive during render: `const filtered = useMemo(() => items.filter(...), [items])` |
+| **Object dependency** | `useEffect(() => {...}, [config])` fires every render if config is `{}` | Use primitive deps: `useEffect(() => {...}, [config.id, config.type])` |
+| **Subscribe to unused state** | Component reads `{ user, theme, settings }` but only uses `user` | Split context or use selector: `useSyncExternalStore` |
+| **State for transient values** | `const [mouseX, setMouseX] = useState(0)` on mousemove | Use `useRef` for values that change frequently but don't need re-render |
+| **Inline callback props** | `<Button onClick={() => doThing(id)} />` — new function every render | `useCallback` or functional setState: `<Button onClick={handleClick} />` |
+
+**How to find them**: React DevTools Profiler → "Why did this render?" or `<React.StrictMode>` double-renders in dev.
+
+## 5. React 19 Specifics (MEDIUM)
+
+Patterns that changed or are new in React 19.
+
+| Pattern | Old (React 18) | New (React 19) |
+|---------|---------------|----------------|
+| **Form state** | `useFormState` | `useActionState` — renamed |
+| **Ref forwarding** | `forwardRef((props, ref) => ...)` | `function Component({ ref, ...props })` — ref is a regular prop |
+| **Context** | `useContext(MyContext)` | `use(MyContext)` — works in conditionals and loops |
+| **Pending UI** | Manual loading state | `useTransition` + `startTransition` for non-urgent updates |
+| **Route-level lazy** | Works with `createBrowserRouter` only | Still true — `<Route lazy={...}>` is silently ignored with `<BrowserRouter>` |
+| **Optimistic updates** | Manual state management | `useOptimistic` hook |
+| **Metadata** | Helmet or manual `<head>` management | `<title>`, `<meta>`, `<link>` in component JSX — hoisted to `<head>` automatically |
+
+## 6. Rendering Performance (MEDIUM)
+
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| **Layout shift on load** | Content jumps when async data arrives | Skeleton screens matching final layout dimensions |
+| **Animate SVG directly** | Janky SVG animation | Wrap in `<div>`, animate the div instead |
+| **Large list rendering** | 1000+ items in a table/list | `@tanstack/react-virtual` for virtualised rendering |
+| **content-visibility** | Long scrollable content renders everything upfront | `content-visibility: auto` on off-screen sections |
+| **Conditional render with &&** | `{count && <Items />}` renders `0` when count is 0 | Use ternary: `{count > 0 ? <Items /> : null}` |
+
+## 7. Data Fetching (MEDIUM)
+
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| **No deduplication** | Same data fetched by 3 components | TanStack Query or SWR — automatic dedup + caching |
+| **Fetch on mount** | `useEffect(() => { fetch(...) }, [])` — waterfalls, no caching, no dedup | TanStack Query: `useQuery({ queryKey: ['users'], queryFn: fetchUsers })` |
+| **No optimistic update** | User clicks save, waits 2 seconds, then sees change | `useMutation` with `onMutate` for instant visual feedback |
+| **Stale closure in interval** | `setInterval` captures stale state | `useRef` for the interval ID and current values |
+| **Polling without cleanup** | `setInterval` in useEffect without `clearInterval` | Return cleanup: `useEffect(() => { const id = setInterval(...); return () => clearInterval(id); })` |
+
+## 8. Vite + Cloudflare Specifics (MEDIUM)
+
+| Pattern | Problem | Fix |
+|---------|---------|-----|
+| **`import.meta.env` in Node scripts** | Undefined — only works in Vite-processed files | Use `loadEnv()` from vite |
+| **React duplicate instance** | Library bundles its own React | `resolve.dedupe` + `optimizeDeps.include` in vite.config.ts |
+| **Radix Select empty string** | `<SelectItem value="">` throws | Use sentinel: `<SelectItem value="__any__">` |
+| **React Hook Form null** | `{...field}` passes null to Input | Spread manually: `value={field.value ?? ''}` |
+| **Env vars at edge** | `process.env` doesn't exist in Workers | Use `c.env` (Hono context) or `import.meta.env` (Vite build-time) |
+
+## Using as a Review Checklist
+
+When reviewing code, go through categories 1-3 (CRITICAL + HIGH) for every PR. Categories 4-8 only when performance is a concern.
+
+```
+/react-patterns [file or component path]
 ```
 
-### Actions (Mutations)
-
-Server-side function for form submissions (POST/PUT/DELETE):
-
-```typescript
-import { redirect, type ActionFunctionArgs } from '@remix-run/node';
-
-export async function action({ request, context }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const variantId = formData.get('variantId') as string;
-
-  const { cart } = context;
-  await cart.addLines([{ merchandiseId: variantId, quantity: 1 }]);
-
-  return redirect('/cart');
-}
+Read the file, check against rules in priority order, report findings as:
 ```
-
-### Nested Routes
-
-Routes compose via `<Outlet>`:
-
+file:line — [rule] description of issue
 ```
-app/routes/
-├── ($locale)._index.tsx                    # Homepage
-├── ($locale).products._index.tsx           # Product listing
-├── ($locale).products.$handle.tsx          # Product detail
-├── ($locale).collections.$handle.tsx       # Collection page
-├── ($locale).cart.tsx                       # Cart page
-└── ($locale).account.tsx                   # Account layout
-    ├── ($locale).account._index.tsx        # Account dashboard
-    └── ($locale).account.orders.tsx        # Order history
-```
-
-### Error Boundaries
-
-Per-route error handling:
-
-```typescript
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    return (
-      <div>
-        <h1>{error.status}</h1>
-        <p>{error.statusText}</p>
-      </div>
-    );
-  }
-
-  return <div>Something went wrong</div>;
-}
-```
-
-## React Hooks
-
-### Core Hooks
-
-| Hook | Purpose |
-|------|---------|
-| `useState` | Local component state |
-| `useEffect` | Side effects (client only) |
-| `useRef` | Mutable ref / DOM access |
-| `useMemo` | Memoized computation |
-| `useCallback` | Memoized callback |
-| `useContext` | Context consumption |
-| `useReducer` | Complex state logic |
-
-### Remix Hooks
-
-| Hook | Purpose |
-|------|---------|
-| `useLoaderData` | Access loader data |
-| `useActionData` | Access action response |
-| `useFetcher` | Non-navigation data fetching |
-| `useNavigation` | Navigation state (loading, submitting) |
-| `useRouteError` | Error boundary data |
-| `useSearchParams` | URL search parameters |
-| `useParams` | Route parameters |
-| `useMatches` | All matched routes data |
-
-## Server vs Client Components
-
-### Server Components
-
-- Run only on the server
-- Can use `async/await` directly
-- Access databases, APIs, secrets
-- No event handlers, no `useState`, no `useEffect`
-- Default in Remix loaders
-
-### Client Components
-
-- Run in the browser
-- Use `"use client"` directive (in React 19+)
-- Handle interactivity: clicks, inputs, animations
-- Use `useState`, `useEffect`, `useRef`
-
-## Form Handling
-
-Remix enhances HTML forms:
-
-```typescript
-import { Form, useNavigation } from '@remix-run/react';
-
-function AddToCartForm({ variantId }: { variantId: string }) {
-  const navigation = useNavigation();
-  const isAdding = navigation.state === 'submitting';
-
-  return (
-    <Form method="post" action="/cart">
-      <input type="hidden" name="variantId" value={variantId} />
-      <button type="submit" disabled={isAdding}>
-        {isAdding ? 'Adding...' : 'Add to Cart'}
-      </button>
-    </Form>
-  );
-}
-```
-
-### Fetcher (Non-Navigation)
-
-For mutations that shouldn't navigate:
-
-```typescript
-function AddToCartButton({ variantId }: { variantId: string }) {
-  const fetcher = useFetcher();
-  const isAdding = fetcher.state === 'submitting';
-
-  return (
-    <fetcher.Form method="post" action="/cart">
-      <input type="hidden" name="variantId" value={variantId} />
-      <button disabled={isAdding}>
-        {isAdding ? 'Adding...' : 'Add to Cart'}
-      </button>
-    </fetcher.Form>
-  );
-}
-```
-
-## Streaming SSR
-
-Defer non-critical data for faster initial render:
-
-```typescript
-import { defer } from '@remix-run/node';
-import { Await, useLoaderData } from '@remix-run/react';
-import { Suspense } from 'react';
-
-export async function loader({ context }: LoaderFunctionArgs) {
-  const criticalData = await context.storefront.query(PRODUCT_QUERY);
-  const recommendedProducts = context.storefront.query(RECOMMENDATIONS_QUERY);
-
-  return defer({
-    product: criticalData.product,
-    recommended: recommendedProducts, // not awaited — streams later
-  });
-}
-
-export default function ProductPage() {
-  const { product, recommended } = useLoaderData<typeof loader>();
-
-  return (
-    <div>
-      <ProductDetail product={product} />
-      <Suspense fallback={<Spinner />}>
-        <Await resolve={recommended}>
-          {(data) => <RecommendedProducts products={data.products} />}
-        </Await>
-      </Suspense>
-    </div>
-  );
-}
-```
-
-## Component Patterns
-
-### Composition
-
-```typescript
-function ProductCard({ product, children }: { product: Product; children?: ReactNode }) {
-  return (
-    <article>
-      <ProductImage image={product.featuredImage} />
-      <ProductTitle title={product.title} />
-      <ProductPrice price={product.priceRange} />
-      {children}
-    </article>
-  );
-}
-```
-
-### Custom Hooks
-
-```typescript
-function useCart() {
-  const fetcher = useFetcher();
-  const addToCart = (variantId: string) => {
-    fetcher.submit({ variantId }, { method: 'post', action: '/cart' });
-  };
-  return { addToCart, isAdding: fetcher.state === 'submitting' };
-}
-```
-
-## Best Practices
-
-- Use loaders for data fetching — never fetch in components with `useEffect`
-- Use actions for mutations — use Remix `<Form>` over manual `fetch`
-- Use `useFetcher` for mutations that should not cause navigation
-- Use `defer()` + `<Suspense>` for non-critical data (recommendations, reviews)
-- Implement error boundaries at route level for graceful degradation
-- Keep components small and focused — extract custom hooks for reusable logic
-- Prefer server rendering — only use client-side state when interactivity requires it
-- Avoid `useEffect` for data fetching — Remix loaders handle this
-- Use TypeScript for type safety across loader → component data flow
-
-Fetch the Remix and React documentation for exact API signatures, hook behavior, and streaming patterns before implementing.

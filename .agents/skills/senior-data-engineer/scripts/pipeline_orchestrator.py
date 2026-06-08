@@ -15,11 +15,7 @@ Usage:
 import os
 import sys
 import json
-try:
-    import yaml
-    HAS_YAML = True
-except ImportError:
-    HAS_YAML = False
+import yaml
 import logging
 import argparse
 from pathlib import Path
@@ -778,10 +774,7 @@ Examples:
             # Load config if provided
             if args.config:
                 with open(args.config) as f:
-                    if HAS_YAML:
-                        config_data = yaml.safe_load(f)
-                    else:
-                        config_data = json.load(f)
+                    config_data = yaml.safe_load(f)
                 config = PipelineConfig(**config_data)
             else:
                 # Build config from arguments

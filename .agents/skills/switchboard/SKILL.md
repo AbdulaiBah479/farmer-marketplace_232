@@ -1,154 +1,437 @@
 ---
 name: switchboard
-description: |
-  Switchboard integration. Manage Organizations, Users. Use when the user wants to interact with Switchboard data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+creator: raunit-dev
+description: Complete Switchboard Oracle Protocol SDK for Solana - the permissionless oracle solution for price feeds, on-demand data, VRF randomness, and real-time streaming via Surge. Covers TypeScript SDK, Rust integration, Oracle Quotes, and all Switchboard tools.
 ---
 
-# Switchboard
+# Switchboard Oracle Protocol - Complete Integration Guide
 
-Switchboard is a modern business phone system delivered as a cloud-based service. It's used by companies of all sizes to manage inbound and outbound calls, route calls to the right people, and provide a better customer experience.
+The definitive guide for integrating Switchboard - the fastest, most customizable, and only permissionless oracle protocol on Solana.
 
-Official docs: https://developers.switchboard.xyz/
+## What is Switchboard?
 
-## Switchboard Overview
+Switchboard is a permissionless oracle protocol enabling developers to bring custom data on-chain with industry-leading performance:
 
-- **Call**
-  - **Participant**
-- **Switchboard Settings**
-- **Call History**
+- **Price Feeds** - Real-time asset pricing with pull-based efficiency
+- **Oracle Quotes** - Sub-second latency without on-chain storage (90% cost reduction)
+- **Surge** - WebSocket streaming with sub-100ms latency
+- **VRF Randomness** - Cryptographically secure verifiable random functions
+- **Prediction Markets** - Market-based forecasting data
 
-Use action names and parameters as needed.
+### Key Statistics
+- Secures **$1B+** in on-chain volume
+- Used by Kamino, Jito, MarginFi, Drift Protocol
+- **2-5ms latency** with Surge pricing
+- **90% cost reduction** vs traditional oracles
 
-## Working with Switchboard
+## Core Principles
 
-This skill uses the Membrane CLI to interact with Switchboard. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+| Principle | Description |
+|-----------|-------------|
+| **Speed** | 2-5ms with Surge, 400ms standard - industry-leading for DeFi |
+| **Cost Efficiency** | Pull-based feeds eliminate constant streaming costs |
+| **Permissionless** | Deploy feeds instantly without approvals |
+| **Security** | TEE (Trusted Execution Environments) prevent data manipulation |
 
-### Install the CLI
+## Integration Approaches
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+### 1. Oracle Quotes (Recommended)
+Direct oracle-to-program data flow without on-chain storage:
+- Sub-second latency
+- 90% cost reduction
+- No write locks (parallel reads)
+- Stateless design
 
-```bash
-npm install -g @membranehq/cli@latest
-```
+### 2. Traditional Feeds
+Classic pull-based feed updates:
+- Feed account maintenance
+- Cranking operations
+- Good for simple use cases
 
-### Authentication
+### 3. Surge (Real-Time)
+WebSocket streaming for high-frequency applications:
+- Sub-100ms latency
+- Persistent connections
+- Ideal for trading interfaces
 
-```bash
-membrane login --tenant --clientName=<agentType>
-```
+## Program IDs
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+| Program | Mainnet | Devnet |
+|---------|---------|--------|
+| Oracle Program | `SW1TCH7qEPTdLsDHRgPuMQjbQxKdH2aBStViMFnt64f` | `Aio4gaXjXzJNVLtzwtNVmSqGKpANtXhybbkhtAC94ji2` |
+| Quote Program | `orac1eFjzWL5R3RbbdMV68K9H6TaCVVcL6LjvQQWAbz` | - |
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+### Default Queues
 
-```bash
-membrane login complete <code>
-```
+| Network | Queue Address |
+|---------|---------------|
+| Mainnet | `A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w` |
+| Devnet | `EYiAmGSdsQTuCw413V5BzaruWuCCSDgTPtBGvLkXHbe7` |
 
-Add `--json` to any command for machine-readable JSON output.
+## Quick Start
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Switchboard
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://www.switchboard.ai/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
+### Installation
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+# TypeScript SDK
+npm install @switchboard-xyz/on-demand @switchboard-xyz/common
+
+# Rust (Cargo.toml)
+# switchboard-on-demand = "0.8.0"
 ```
 
-You should always search for actions in the context of a specific connection.
+### Basic Setup
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+```typescript
+import { web3, AnchorProvider, Program } from "@coral-xyz/anchor";
+import {
+  PullFeed,
+  CrossbarClient,
+  ON_DEMAND_MAINNET_PID,
+  ON_DEMAND_DEVNET_PID
+} from "@switchboard-xyz/on-demand";
 
-## Popular actions
+// Setup connection and provider
+const connection = new web3.Connection("https://api.mainnet-beta.solana.com");
+const wallet = useWallet(); // or Keypair
+const provider = new AnchorProvider(connection, wallet);
 
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
+// Load Switchboard program
+const sbProgram = await Program.at(ON_DEMAND_MAINNET_PID, provider);
 
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+// Initialize Crossbar client for oracle communication
+const crossbar = new CrossbarClient("https://crossbar.switchboard.xyz");
 ```
 
-To pass JSON parameters:
+## Price Feeds
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+### Fetch and Update Feed
+
+```typescript
+import { PullFeed, asV0Tx } from "@switchboard-xyz/on-demand";
+
+// Create feed account reference
+const feedPubkey = new web3.PublicKey("YOUR_FEED_PUBKEY");
+const feedAccount = new PullFeed(sbProgram, feedPubkey);
+
+// Fetch update instruction with oracle signatures
+const { pullIx, responses, numSuccess, luts } = await feedAccount.fetchUpdateIx({
+  crossbarClient: crossbar,
+  chain: "solana",
+  network: "mainnet", // or "devnet"
+});
+
+// Build and send transaction
+const tx = await asV0Tx({
+  connection,
+  ixs: [pullIx],
+  signers: [payer],
+  computeUnitPrice: 200_000,
+  computeUnitLimitMultiple: 1.3,
+  lookupTables: luts,
+});
+
+const signature = await connection.sendTransaction(tx);
+console.log("Feed updated:", signature);
 ```
 
-The result is in the `output` field of the response.
+### Read Feed Value
 
+```typescript
+// Get current feed value
+const feedData = await feedAccount.loadData();
+const value = feedData.value.toNumber();
+const lastUpdated = feedData.lastUpdatedSlot;
 
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Switchboard API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+console.log(`Price: ${value}, Last Updated: ${lastUpdated}`);
 ```
 
-Common options:
+## Oracle Quotes (Recommended)
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+Oracle Quotes provide the most efficient way to consume oracle data:
 
+```typescript
+import { OracleQuote } from "@switchboard-xyz/on-demand";
 
-## Best practices
+// Feed hashes (64-char hex strings)
+const feedHashes = [
+  "0x...", // SOL/USD
+  "0x...", // BTC/USD
+];
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+// Derive canonical quote account
+const queueKey = new web3.PublicKey("A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w");
+const quotePubkey = OracleQuote.getCanonicalPubkey(queueKey, feedHashes);
+
+// Fetch quote instruction
+const sigVerifyIx = await queue.fetchQuoteIx(crossbar, feedHashes, {
+  numSignatures: 1,
+  variableOverrides: {},
+});
+```
+
+### Rust Integration (Oracle Quotes)
+
+```rust
+use anchor_lang::prelude::*;
+use switchboard_on_demand::{default_queue, SwitchboardQuoteExt, SwitchboardQuote};
+
+#[program]
+pub mod my_program {
+    use super::*;
+
+    pub fn read_oracle_data(ctx: Context<ReadOracleData>) -> Result<()> {
+        let feeds = &ctx.accounts.quote_account.feeds;
+        let current_slot = ctx.accounts.sysvars.clock.slot;
+        let quote_slot = ctx.accounts.quote_account.slot;
+
+        // Check staleness
+        let staleness = current_slot.saturating_sub(quote_slot);
+        require!(staleness < 100, ErrorCode::StaleFeed);
+
+        for feed in feeds.iter() {
+            msg!("Feed {}: Value = {}", feed.hex_id(), feed.value());
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct ReadOracleData<'info> {
+    #[account(address = quote_account.canonical_key(&default_queue()))]
+    pub quote_account: Box<Account<'info, SwitchboardQuote>>,
+    pub sysvars: Sysvars<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Sysvars<'info> {
+    pub clock: Sysvar<'info, Clock>,
+}
+```
+
+## Surge (Real-Time Streaming)
+
+For applications requiring real-time price updates:
+
+```typescript
+import { SwitchboardSurge } from "@switchboard-xyz/on-demand";
+
+// Initialize Surge client
+const surge = new SwitchboardSurge({
+  apiKey: "YOUR_API_KEY", // Optional
+  gatewayUrl: "wss://surge.switchboard.xyz",
+  autoReconnect: true,
+  maxReconnectAttempts: 5,
+  reconnectDelay: 1000,
+});
+
+// Subscribe to feeds
+surge.subscribe(["SOL/USD", "BTC/USD"]);
+
+// Handle events
+surge.on("connected", () => {
+  console.log("Connected to Surge");
+});
+
+surge.on("data", (data) => {
+  console.log(`${data.symbol}: ${data.price}`);
+});
+
+surge.on("error", (error) => {
+  console.error("Surge error:", error);
+});
+
+surge.on("disconnected", () => {
+  console.log("Disconnected from Surge");
+});
+```
+
+## VRF Randomness
+
+Cryptographically secure on-chain randomness:
+
+### TypeScript Client
+
+```typescript
+import { RandomnessService } from "@switchboard-xyz/on-demand";
+
+// Request randomness
+const randomnessAccount = await RandomnessService.create(sbProgram, {
+  queue: queuePubkey,
+  callback: {
+    programId: myProgramId,
+    accounts: [...],
+    ixData: Buffer.from([...]),
+  },
+});
+
+// Reveal randomness (after oracle fulfillment)
+const randomValue = await randomnessAccount.reveal();
+console.log("Random value:", randomValue);
+```
+
+### Rust Integration
+
+```rust
+use switchboard_on_demand::RandomnessAccountData;
+
+pub fn consume_randomness(ctx: Context<ConsumeRandomness>) -> Result<()> {
+    let randomness_data = RandomnessAccountData::parse(
+        ctx.accounts.randomness_account.to_account_info()
+    )?;
+
+    // Use the random value
+    let random_value = randomness_data.get_value(&ctx.accounts.clock)?;
+
+    // Example: coin flip
+    let is_heads = random_value[0] % 2 == 0;
+
+    Ok(())
+}
+```
+
+## Creating Custom Feeds
+
+### Using Feed Builder UI
+
+1. Visit [ondemand.switchboard.xyz](https://ondemand.switchboard.xyz)
+2. Click "Create Feed"
+3. Configure data sources and aggregation
+4. Deploy to mainnet/devnet
+5. Copy feed hash for integration
+
+### Using TypeScript SDK
+
+```typescript
+import { FeedBuilder } from "@switchboard-xyz/on-demand";
+
+const feedConfig = new FeedBuilder()
+  .addJob({
+    tasks: [
+      {
+        httpTask: {
+          url: "https://api.example.com/price",
+        },
+      },
+      {
+        jsonParseTask: {
+          path: "$.price",
+        },
+      },
+    ],
+  })
+  .setMinResponses(3)
+  .setMaxVariance(0.1);
+
+const feedHash = await feedConfig.build();
+```
+
+## Framework Comparison
+
+| Aspect | Anchor (Basic) | Pinocchio (Advanced) |
+|--------|----------------|----------------------|
+| Learning Curve | Beginner-friendly | Advanced only |
+| Compute Units | ~2,000 CU | ~190 CU |
+| Safety Model | Full validation | Trusted cranker |
+| Use Cases | Standard DeFi | Oracle AMMs, HFT |
+
+## Best Practices
+
+### 1. Staleness Checks
+
+Always verify feed freshness:
+
+```rust
+let staleness = current_slot.saturating_sub(feed_slot);
+require!(staleness < MAX_STALENESS_SLOTS, ErrorCode::StaleFeed);
+```
+
+### 2. Multiple Signatures
+
+Request multiple oracle signatures for critical operations:
+
+```typescript
+const { pullIx } = await feedAccount.fetchUpdateIx({
+  numSignatures: 3, // Increase for higher security
+});
+```
+
+### 3. Error Handling
+
+```typescript
+try {
+  const { pullIx, numSuccess } = await feedAccount.fetchUpdateIx({...});
+
+  if (numSuccess < minRequired) {
+    throw new Error(`Insufficient oracle responses: ${numSuccess}`);
+  }
+} catch (error) {
+  if (error.message.includes("timeout")) {
+    // Retry with different oracles
+  }
+  throw error;
+}
+```
+
+### 4. Compute Budget
+
+For complex operations, increase compute budget:
+
+```typescript
+import { ComputeBudgetProgram } from "@solana/web3.js";
+
+const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+  units: 400_000,
+});
+
+const tx = new Transaction()
+  .add(modifyComputeUnits)
+  .add(pullIx)
+  .add(yourInstruction);
+```
+
+## Resources
+
+### Official Links
+- **Documentation**: https://docs.switchboard.xyz
+-- **Feed Builder**: https://ondemand.switchboard.xyz
+
+### GitHub Repositories
+| Repository | Description |
+|------------|-------------|
+| [switchboard-sdk](https://github.com/switchboard-xyz/switchboard-sdk) | Public mirror of Switchboard SDKs |
+| [sb-on-demand-examples](https://github.com/switchboard-xyz/sb-on-demand-examples) | Integration examples |
+| [solana-sdk](https://github.com/switchboard-xyz/solana-sdk) | Rust SDK |
+| [on-demand](https://github.com/switchboard-xyz/on-demand) | TypeScript SDK |
+
+### Community
+- **Discord**: https://discord.gg/TJAv6ZYvPC
+- **Twitter**: @switchboardxyz
+
+## Skill Structure
+
+```
+switchboard/
+├── SKILL.md                    # This file
+├── resources/
+│   ├── program-ids.md          # All program addresses and queues
+│   ├── sdk-reference.md        # TypeScript SDK API reference
+│   ├── rust-reference.md       # Rust SDK reference
+│   └── github-repos.md         # Repository links
+├── examples/
+│   ├── setup/
+│   │   └── example.ts          # Basic setup
+│   ├── feeds/
+│   │   ├── pull-feed.ts        # Pull feed updates
+│   │   ├── oracle-quote.ts     # Oracle quote integration
+│   │   └── read-feed.ts        # Read feed values
+│   ├── randomness/
+│   │   └── vrf-example.ts      # VRF randomness
+│   └── surge/
+│       └── streaming.ts        # Real-time streaming
+├── templates/
+│   └── setup.ts                # Complete starter template
+└── docs/
+    └── troubleshooting.md      # Common issues
+```

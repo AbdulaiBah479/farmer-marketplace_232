@@ -1,190 +1,229 @@
 ---
 name: design-system
-description: Audit, document, or extend your design system. Use when checking for naming inconsistencies or hardcoded values across components, writing documentation for a component's variants, states, and accessibility notes, or designing a new pattern that fits the existing system.
-argument-hint: "[audit | document | extend] <component or system>"
+description: "Extract a complete design system from an existing website or screenshot into a DESIGN.md file. Analyses colours, typography, component styles, spacing, and atmosphere through browser automation and HTML inspection. Produces a semantic design system document optimised for consistent page generation. Triggers: 'extract design system', 'design system', 'create DESIGN.md', 'analyse the design', 'what design does this site use', 'extract styles from', 'reverse engineer the design'."
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
+compatibility: claude-code-only
 ---
 
-# /design-system
+# Design System Extractor
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+Analyse an existing website, HTML file, or screenshot and synthesise a semantic design system into a `DESIGN.md` file. The output is optimised for use with the `design-loop` skill and general page generation.
 
-Manage your design system — audit for consistency, document components, or design new patterns.
+## When to Use
 
-## Usage
+- Starting a new project based on an existing site's visual language
+- Documenting a site's design system that was never formally written down
+- Preparing `.design/DESIGN.md` before running the design loop
+- Extracting brand guidelines from a client's existing website
+- Creating consistency documentation for a multi-page project
+- Extracting design tokens from a Google Stitch project
 
-```
-/design-system audit                    # Full system audit
-/design-system document [component]     # Document a component
-/design-system extend [pattern]         # Design a new component or pattern
-```
+## Workflow
 
-## Components of a Design System
+### Step 1: Identify the Source
 
-### Design Tokens
-Atomic values that define the visual language:
-- Colors (brand, semantic, neutral)
-- Typography (scale, weights, line heights)
-- Spacing (scale, component padding)
-- Borders (radius, width)
-- Shadows (elevation levels)
-- Motion (durations, easings)
+Ask the user for one of:
 
-### Components
-Reusable UI elements with defined:
-- Variants (primary, secondary, ghost)
-- States (default, hover, active, disabled, loading, error)
-- Sizes (sm, md, lg)
-- Behavior (interactions, animations)
-- Accessibility (ARIA, keyboard)
+| Source | Method |
+|--------|--------|
+| **Live URL** | Browse via Playwright CLI or scraper, screenshot + extract HTML |
+| **Local HTML file** | Read the file directly |
+| **Screenshot image** | Analyse visually (limited — no exact hex extraction) |
+| **Existing project** | Scan `site/public/` for HTML files to analyse |
+| **Stitch project** | Use `@google/stitch-sdk` to fetch screen HTML + design theme |
 
-### Patterns
-Common UI solutions combining components:
-- Forms (input groups, validation, submission)
-- Navigation (sidebar, tabs, breadcrumbs)
-- Data display (tables, cards, lists)
-- Feedback (toasts, modals, inline messages)
+### Step 2: Extract Raw Design Data
 
-## Principles
+#### From a Live URL
 
-1. **Consistency over creativity** — The system exists so teams don't reinvent the wheel
-2. **Flexibility within constraints** — Components should be composable, not rigid
-3. **Document everything** — If it's not documented, it doesn't exist
-4. **Version and migrate** — Breaking changes need migration paths
+1. **Browse the site** using Playwright CLI:
+   ```
+   playwright-cli -s=design open {url}
+   playwright-cli -s=design screenshot --filename=.design/screenshots/source-desktop.png
+   ```
 
-## Output — Audit
+2. **Extract the full HTML** — either via scraper MCP or by reading the page source
 
-```markdown
-## Design System Audit
+3. **Resize and screenshot mobile** (375px):
+   ```
+   playwright-cli -s=design resize 375 812
+   playwright-cli -s=design screenshot --filename=.design/screenshots/source-mobile.png
+   ```
 
-### Summary
-**Components reviewed:** [X] | **Issues found:** [X] | **Score:** [X/100]
+4. Close the session: `playwright-cli -s=design close`
 
-### Naming Consistency
-| Issue | Components | Recommendation |
-|-------|------------|----------------|
-| [Inconsistent naming] | [List] | [Standard to adopt] |
+#### From a Local HTML File
 
-### Token Coverage
-| Category | Defined | Hardcoded Values Found |
-|----------|---------|----------------------|
-| Colors | [X] | [X] instances of hardcoded hex |
-| Spacing | [X] | [X] instances of arbitrary values |
-| Typography | [X] | [X] instances of custom fonts/sizes |
+Read the file directly and extract design tokens from the source.
 
-### Component Completeness
-| Component | States | Variants | Docs | Score |
-|-----------|--------|----------|------|-------|
-| Button | ✅ | ✅ | ⚠️ | 8/10 |
-| Input | ✅ | ⚠️ | ❌ | 5/10 |
+#### From a Screenshot Only
 
-### Priority Actions
-1. [Most impactful improvement]
-2. [Second priority]
-3. [Third priority]
+Analyse the image visually. Note: colour extraction will be approximate without HTML source. Flag this limitation in the output.
+
+#### From a Google Stitch Project
+
+If `@google/stitch-sdk` is installed and `STITCH_API_KEY` is set:
+
+```typescript
+import { stitch } from "@google/stitch-sdk";
+
+// List projects to find the target
+const projects = await stitch.projects();
+
+// Get project details (includes designTheme)
+const project = stitch.project(projectId);
+const screens = await project.screens();
+
+// Get HTML from the main screen
+const screen = screens[0]; // or find by title
+const htmlUrl = await screen.getHtml();
+const imageUrl = await screen.getImage();
 ```
 
-## Output — Document
+The Stitch `designTheme` object provides structured tokens directly:
 
-```markdown
-## Component: [Name]
-
-### Description
-[What this component is and when to use it]
-
-### Variants
-| Variant | Use When |
-|---------|----------|
-| [Primary] | [Main actions] |
-| [Secondary] | [Supporting actions] |
-
-### Props / Properties
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| [prop] | [type] | [default] | [description] |
-
-### States
-| State | Visual | Behavior |
-|-------|--------|----------|
-| Default | [description] | — |
-| Hover | [description] | [interaction] |
-| Active | [description] | [interaction] |
-| Disabled | [description] | Non-interactive |
-| Loading | [description] | [animation] |
-
-### Accessibility
-- **Role**: [ARIA role]
-- **Keyboard**: [Tab, Enter, Escape behavior]
-- **Screen reader**: [Announced as...]
-
-### Do's and Don'ts
-| ✅ Do | ❌ Don't |
-|------|---------|
-| [Best practice] | [Anti-pattern] |
-
-### Code Example
-[Framework-appropriate code snippet]
+```json
+{
+  "colorMode": "DARK",
+  "font": "INTER",
+  "roundness": "ROUND_EIGHT",
+  "customColor": "#40baf7",
+  "saturation": 3
+}
 ```
 
-## Output — Extend
+Map these to DESIGN.md sections:
+- `colorMode` → Theme (Light/Dark)
+- `font` → Typography font family
+- `roundness` → Component border-radius (`ROUND_EIGHT` = 8px, `ROUND_SIXTEEN` = 16px, etc.)
+- `customColor` → Primary brand colour
+- `saturation` → Colour vibrancy (1-5 scale)
 
-```markdown
-## New Component: [Name]
+Then also download and analyse the HTML for the full palette (Stitch's theme object only has the primary colour — the full palette is in the generated CSS).
 
-### Problem
-[What user need or gap this component addresses]
+### Step 3: Analyse Design Tokens
 
-### Existing Patterns
-| Related Component | Similarity | Why It's Not Enough |
-|-------------------|-----------|---------------------|
-| [Component] | [What's shared] | [What's missing] |
+Extract these from the HTML/CSS source:
 
-### Proposed Design
+#### Colours
 
-#### API / Props
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| [prop] | [type] | [default] | [description] |
+Look in these locations (priority order):
 
-#### Variants
-| Variant | Use When | Visual |
-|---------|----------|--------|
-| [Variant] | [Scenario] | [Description] |
+1. **CSS custom properties** — `:root { --primary: #hex; }` or `@theme` blocks
+2. **Tailwind config** — `<script>` block with `tailwind.config` or `@theme` in `<style>`
+3. **Inline styles** — `style="color: #hex"` or `style="background: #hex"`
+4. **Tailwind classes** — `bg-blue-600`, `text-gray-900` (map to palette)
+5. **Computed from screenshot** — last resort, approximate
 
-#### States
-| State | Behavior | Notes |
-|-------|----------|-------|
-| Default | [Description] | — |
-| Hover | [Description] | [Interaction] |
-| Disabled | [Description] | Non-interactive |
-| Loading | [Description] | [Animation] |
+For each colour found, determine its **role**:
 
-#### Tokens Used
-- Colors: [Which tokens]
-- Spacing: [Which tokens]
-- Typography: [Which tokens]
+| Role | How to identify |
+|------|-----------------|
+| Primary | Buttons, links, active states, brand elements |
+| Background | `<body>` or `<html>` background |
+| Surface | Cards, containers, elevated elements |
+| Text Primary | `<h1>`, `<h2>`, main body text |
+| Text Secondary | Captions, metadata, muted text |
+| Border | Dividers, input borders, card borders |
+| Accent | Badges, notifications, highlights |
 
-### Accessibility
-- **Role**: [ARIA role]
-- **Keyboard**: [Expected interactions]
-- **Screen reader**: [Announced as...]
+#### Typography
 
-### Open Questions
-- [Decision that needs design review]
-- [Edge case to resolve]
-```
+Extract:
 
-## If Connectors Available
+| Token | Where to find |
+|-------|---------------|
+| Font families | Google Fonts `<link>`, `@import`, `font-family` in CSS |
+| Heading weights | `font-bold`, `font-semibold`, or explicit `font-weight` |
+| Body size | Base `font-size` on `<body>` or root |
+| Line height | `leading-*` classes or `line-height` CSS |
+| Letter spacing | `tracking-*` classes or `letter-spacing` CSS |
 
-If **~~design tool** is connected:
-- Audit components directly in Figma — check naming, variants, and token usage
-- Pull component properties and layer structure for documentation
+#### Components
 
-If **~~knowledge base** is connected:
-- Search for existing component documentation and usage guidelines
-- Publish updated documentation to your wiki
+Identify patterns for:
+
+- **Buttons** — shape (rounded-full, rounded-lg), colours, padding, hover states
+- **Cards** — background, border, shadow, border-radius, padding
+- **Navigation** — sticky/static, background treatment, active indicator
+- **Forms** — input style, focus ring, label positioning
+- **Hero sections** — layout pattern, overlay treatment, CTA placement
+
+#### Spacing & Layout
+
+- **Max content width** — look for `max-w-*` or explicit `max-width`
+- **Section padding** — typical vertical padding between sections
+- **Grid system** — column count, gap values
+- **Whitespace philosophy** — tight, balanced, generous, or dramatic
+
+### Step 4: Synthesise into Natural Language
+
+**Critical**: The DESIGN.md should describe the design in **semantic, natural language** supported by exact values. This is not a CSS dump — it's a document a designer or AI can read to understand and reproduce the visual language.
+
+| Don't write | Write instead |
+|-------------|---------------|
+| `rounded-xl` | "Softly rounded corners (12px)" |
+| `shadow-md` | "Subtle elevation with diffused shadow" |
+| `#1E40AF` | "Deep Ocean Blue (#1E40AF) for primary actions" |
+| `py-16` | "Generous section spacing with breathing room" |
+
+### Step 5: Write DESIGN.md
+
+Output the file to `.design/DESIGN.md` (or user-specified path).
+
+Follow the structure from the `design-loop` skill's `references/site-template.md` — specifically the DESIGN.md Template section. The key sections are:
+
+1. **Visual Theme & Atmosphere** — mood, vibe, philosophy
+2. **Colour Palette & Roles** — table with role, name, hex, usage
+3. **Typography** — font families, weights, sizes, line heights
+4. **Component Styles** — buttons, cards, nav, forms
+5. **Layout Principles** — max width, spacing, grid, whitespace
+6. **Design System Notes for Generation** — the copy-paste block for baton prompts
+
+### Step 6: Verify Accuracy
+
+If browser automation is available:
+
+1. Generate a small test section (e.g. a card + button + heading) using the extracted design system
+2. Screenshot it alongside the original
+3. Compare visually — adjust any values that don't match
+
+### Step 7: Report to User
+
+Present:
+- Summary of extracted tokens (colour count, fonts, component patterns)
+- The generated DESIGN.md location
+- Any tokens that were approximate (flagged with ⚠️)
+- Suggestions for manual review (colours from screenshots, ambiguous typography)
+
+## Handling Multiple Pages
+
+If the site has multiple pages with different styles:
+
+1. Analyse the **homepage first** — it usually has the most complete design language
+2. Spot-check 2-3 inner pages for consistency
+3. Note any **page-specific overrides** in the Component Styles section
+4. If pages are wildly different, ask the user which page to use as the canonical source
 
 ## Tips
 
-1. **Start with an audit** — Know where you are before deciding where to go.
-2. **Document as you build** — It's easier to document a component while designing it.
-3. **Prioritize coverage over perfection** — 80% of components documented beats 100% of 10 components.
+- **Tailwind sites are easiest** — the config block has everything
+- **Google Fonts links are gold** — they specify exact families and weights
+- **CSS custom properties are reliable** — they represent intentional design tokens
+- **Inline Tailwind classes need interpretation** — `bg-slate-900` needs mapping to a role
+- **Screenshots are last resort** — accurate hex extraction from images is unreliable
+- **Dark mode**: Check for `.dark` class overrides or `prefers-color-scheme` media queries
+
+## Common Pitfalls
+
+- ❌ Listing raw CSS values without semantic description
+- ❌ Missing the dark mode palette (check for `.dark` class or media query)
+- ❌ Ignoring component patterns (just listing colours isn't enough)
+- ❌ Not including Section 6 (the copy-paste generation block)
+- ❌ Approximate colours from screenshots without flagging the uncertainty

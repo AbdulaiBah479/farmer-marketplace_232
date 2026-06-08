@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 """
-terraform-patterns: Terraform Security Scanner
+Terraform Security Scanner - Scan Terraform configs for security misconfigurations.
 
-Scan .tf files for common security issues including hardcoded secrets,
-overly permissive IAM policies, open security groups, missing encryption,
-and sensitive variable misuse.
+Detects open ports, public buckets, missing encryption, overly broad IAM,
+and other common security anti-patterns in Terraform code.
 
-Usage:
-    python scripts/tf_security_scanner.py ./terraform
-    python scripts/tf_security_scanner.py ./terraform --output json
-    python scripts/tf_security_scanner.py ./terraform --strict
+Author: Claude Skills Engineering Team
+License: MIT
 """
 
 import argparse
@@ -17,560 +14,419 @@ import json
 import os
 import re
 import sys
+from dataclasses import dataclass, asdict
 from pathlib import Path
+from typing import List, Dict, Optional
 
 
-# --- Demo Terraform File ---
-
-DEMO_TF = """
-provider "aws" {
-  region     = "us-east-1"
-  access_key = "AKIAIOSFODNN7EXAMPLE"
-  secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-}
-
-variable "db_password" {
-  type    = string
-  default = "supersecret123"
-}
-
-resource "aws_instance" "web" {
-  ami           = "ami-12345678"
-  instance_type = "t3.micro"
-
-  tags = {
-    Name = "web-server"
-  }
-}
-
-resource "aws_security_group" "web" {
-  name = "web-sg"
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_iam_policy" "admin" {
-  name = "admin-policy"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = "*"
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_s3_bucket" "data" {
-  bucket = "my-data-bucket"
-}
-
-resource "aws_db_instance" "main" {
-  engine               = "mysql"
-  instance_class       = "db.t3.micro"
-  password             = "hardcoded-password"
-  publicly_accessible  = true
-  skip_final_snapshot  = true
-}
-"""
-
-# --- Security Rules ---
-
-SECRET_PATTERNS = [
-    {
-        "id": "SEC001",
-        "name": "aws_access_key",
-        "severity": "critical",
-        "pattern": r'(?:access_key|aws_access_key_id)\s*=\s*"(AKIA[A-Z0-9]{16})"',
-        "message": "AWS access key hardcoded in configuration",
-        "fix": "Use environment variables, AWS profiles, or IAM roles instead",
-    },
-    {
-        "id": "SEC002",
-        "name": "aws_secret_key",
-        "severity": "critical",
-        "pattern": r'(?:secret_key|aws_secret_access_key)\s*=\s*"[A-Za-z0-9/+=]{40}"',
-        "message": "AWS secret key hardcoded in configuration",
-        "fix": "Use environment variables, AWS profiles, or IAM roles instead",
-    },
-    {
-        "id": "SEC003",
-        "name": "generic_password",
-        "severity": "critical",
-        "pattern": r'(?:password|passwd)\s*=\s*"[^"]{4,}"',
-        "message": "Password hardcoded in resource or provider configuration",
-        "fix": "Use a variable with sensitive = true, or fetch from Vault/SSM/Secrets Manager",
-    },
-    {
-        "id": "SEC004",
-        "name": "generic_secret",
-        "severity": "critical",
-        "pattern": r'(?:secret|token|api_key)\s*=\s*"[^"]{8,}"',
-        "message": "Secret or token hardcoded in configuration",
-        "fix": "Use a sensitive variable or secrets manager",
-    },
-    {
-        "id": "SEC005",
-        "name": "private_key",
-        "severity": "critical",
-        "pattern": r'-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----',
-        "message": "Private key embedded in Terraform configuration",
-        "fix": "Reference key file with file() function or use secrets manager",
-    },
-]
-
-IAM_PATTERNS = [
-    {
-        "id": "SEC010",
-        "name": "iam_wildcard_action",
-        "severity": "critical",
-        "pattern": r'Action\s*=\s*"\*"',
-        "message": "IAM policy with wildcard Action = \"*\" — grants all permissions",
-        "fix": "Scope Action to specific services and operations",
-    },
-    {
-        "id": "SEC011",
-        "name": "iam_wildcard_resource",
-        "severity": "high",
-        "pattern": r'Resource\s*=\s*"\*"',
-        "message": "IAM policy with wildcard Resource = \"*\" — applies to all resources",
-        "fix": "Scope Resource to specific ARN patterns",
-    },
-    {
-        "id": "SEC012",
-        "name": "iam_star_star",
-        "severity": "critical",
-        "pattern": r'Action\s*=\s*"\*"[^}]*Resource\s*=\s*"\*"',
-        "message": "IAM policy with Action=* AND Resource=* — effectively admin access",
-        "fix": "Follow least-privilege: grant only the specific actions and resources needed",
-    },
-]
-
-NETWORK_PATTERNS = [
-    {
-        "id": "SEC020",
-        "name": "sg_ssh_open",
-        "severity": "critical",
-        "pattern": None,  # Custom check
-        "message": "Security group allows SSH (port 22) from 0.0.0.0/0",
-        "fix": "Restrict to known CIDR blocks, or use SSM Session Manager instead",
-    },
-    {
-        "id": "SEC021",
-        "name": "sg_rdp_open",
-        "severity": "critical",
-        "pattern": None,  # Custom check
-        "message": "Security group allows RDP (port 3389) from 0.0.0.0/0",
-        "fix": "Restrict to known CIDR blocks, or use a bastion host",
-    },
-    {
-        "id": "SEC022",
-        "name": "sg_all_ports",
-        "severity": "critical",
-        "pattern": None,  # Custom check
-        "message": "Security group allows all ports (0-65535) from 0.0.0.0/0",
-        "fix": "Open only the specific ports your application needs",
-    },
-]
-
-ENCRYPTION_PATTERNS = [
-    {
-        "id": "SEC030",
-        "name": "s3_no_encryption",
-        "severity": "high",
-        "pattern": None,  # Custom check
-        "message": "S3 bucket without server-side encryption configuration",
-        "fix": "Add aws_s3_bucket_server_side_encryption_configuration resource",
-    },
-    {
-        "id": "SEC031",
-        "name": "rds_no_encryption",
-        "severity": "high",
-        "pattern": None,  # Custom check
-        "message": "RDS instance without storage encryption",
-        "fix": "Set storage_encrypted = true on aws_db_instance",
-    },
-    {
-        "id": "SEC032",
-        "name": "ebs_no_encryption",
-        "severity": "medium",
-        "pattern": None,  # Custom check
-        "message": "EBS volume without encryption",
-        "fix": "Set encrypted = true on aws_ebs_volume or enable account-level default encryption",
-    },
-]
-
-ACCESS_PATTERNS = [
-    {
-        "id": "SEC040",
-        "name": "rds_public",
-        "severity": "high",
-        "pattern": r'publicly_accessible\s*=\s*true',
-        "message": "RDS instance is publicly accessible",
-        "fix": "Set publicly_accessible = false and access via VPC/bastion",
-    },
-    {
-        "id": "SEC041",
-        "name": "s3_public_acl",
-        "severity": "high",
-        "pattern": r'acl\s*=\s*"public-read(?:-write)?"',
-        "message": "S3 bucket with public ACL",
-        "fix": "Remove public ACL and add aws_s3_bucket_public_access_block",
-    },
-]
+@dataclass
+class SecurityFinding:
+    """A security finding."""
+    severity: str  # critical, high, medium, low
+    category: str
+    file: str
+    line: int
+    resource: str
+    message: str
+    recommendation: str
 
 
-def find_tf_files(directory):
-    """Find all .tf files in a directory (non-recursive)."""
-    tf_files = {}
-    for entry in sorted(os.listdir(directory)):
-        if entry.endswith(".tf"):
-            filepath = os.path.join(directory, entry)
-            with open(filepath, encoding="utf-8") as f:
-                tf_files[entry] = f.read()
-    return tf_files
+SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
 
-def check_regex_rules(content, rules):
-    """Run regex-based security rules against content."""
-    findings = []
-    for rule in rules:
-        if rule["pattern"] is None:
+class TerraformSecurityScanner:
+    """Scans Terraform files for security misconfigurations."""
+
+    # Patterns for insecure configurations
+    OPEN_CIDR_PATTERN = re.compile(r'cidr_blocks\s*=\s*\[\s*"0\.0\.0\.0/0"\s*\]')
+    OPEN_IPV6_PATTERN = re.compile(r'ipv6_cidr_blocks\s*=\s*\[\s*"::/0"\s*\]')
+    PUBLIC_ACL_PATTERN = re.compile(r'acl\s*=\s*"(public-read|public-read-write|authenticated-read)"')
+    PUBLIC_ACCESS_PATTERN = re.compile(r'publicly_accessible\s*=\s*true')
+    WILDCARD_ACTION_PATTERN = re.compile(r'"Action"\s*:\s*"\*"')
+    WILDCARD_RESOURCE_PATTERN = re.compile(r'"Resource"\s*:\s*"\*"')
+    NO_ENCRYPTION_S3 = re.compile(r'resource\s+"aws_s3_bucket"\s+"(\w+)"')
+    RESOURCE_PATTERN = re.compile(r'resource\s+"(\w+)"\s+"(\w+)"')
+    INGRESS_PATTERN = re.compile(r'ingress\s*\{')
+
+    def __init__(self, min_severity: str = "low"):
+        self.findings: List[SecurityFinding] = []
+        self.min_severity = min_severity
+
+    def scan_directory(self, path: Path) -> List[SecurityFinding]:
+        """Scan all .tf files in a directory."""
+        for dirpath, _, filenames in os.walk(path):
+            for fname in filenames:
+                if fname.endswith(".tf"):
+                    filepath = Path(dirpath) / fname
+                    self._scan_file(filepath)
+        return self._filter_by_severity()
+
+    def _filter_by_severity(self) -> List[SecurityFinding]:
+        """Filter findings by minimum severity."""
+        min_order = SEVERITY_ORDER.get(self.min_severity, 3)
+        return [f for f in self.findings if SEVERITY_ORDER.get(f.severity, 3) <= min_order]
+
+    def _scan_file(self, filepath: Path):
+        """Scan a single Terraform file."""
+        try:
+            content = filepath.read_text()
+        except Exception:
+            return
+
+        lines = content.split("\n")
+        rel_path = str(filepath)
+
+        self._check_open_cidrs(lines, rel_path)
+        self._check_public_access(lines, rel_path)
+        self._check_iam_policies(lines, rel_path)
+        self._check_encryption(lines, rel_path, content)
+        self._check_logging(lines, rel_path, content)
+        self._check_security_groups(lines, rel_path)
+        self._check_sensitive_outputs(lines, rel_path)
+
+    def _check_open_cidrs(self, lines: List[str], filepath: str):
+        """Check for open CIDR blocks in security groups."""
+        current_resource = ""
+        in_ingress = False
+
+        for i, line in enumerate(lines, 1):
+            rm = self.RESOURCE_PATTERN.search(line)
+            if rm:
+                current_resource = f"{rm.group(1)}.{rm.group(2)}"
+
+            if self.INGRESS_PATTERN.search(line):
+                in_ingress = True
+
+            if self.OPEN_CIDR_PATTERN.search(line):
+                sev = "critical" if in_ingress else "high"
+                self.findings.append(SecurityFinding(
+                    severity=sev,
+                    category="network",
+                    file=filepath,
+                    line=i,
+                    resource=current_resource,
+                    message="Open CIDR block 0.0.0.0/0 allows access from any IP.",
+                    recommendation="Restrict to specific CIDR ranges for the required source IPs.",
+                ))
+
+            if self.OPEN_IPV6_PATTERN.search(line):
+                self.findings.append(SecurityFinding(
+                    severity="critical",
+                    category="network",
+                    file=filepath,
+                    line=i,
+                    resource=current_resource,
+                    message="Open IPv6 CIDR ::/0 allows access from any IPv6 address.",
+                    recommendation="Restrict to specific IPv6 CIDR ranges.",
+                ))
+
+            if "}" in line and in_ingress:
+                in_ingress = False
+
+    def _check_public_access(self, lines: List[str], filepath: str):
+        """Check for publicly accessible resources."""
+        current_resource = ""
+
+        for i, line in enumerate(lines, 1):
+            rm = self.RESOURCE_PATTERN.search(line)
+            if rm:
+                current_resource = f"{rm.group(1)}.{rm.group(2)}"
+
+            if self.PUBLIC_ACL_PATTERN.search(line):
+                self.findings.append(SecurityFinding(
+                    severity="critical",
+                    category="access",
+                    file=filepath,
+                    line=i,
+                    resource=current_resource,
+                    message=f"Public ACL detected on S3 bucket.",
+                    recommendation="Remove public ACL. Use bucket policies with specific principal access.",
+                ))
+
+            if self.PUBLIC_ACCESS_PATTERN.search(line):
+                self.findings.append(SecurityFinding(
+                    severity="high",
+                    category="access",
+                    file=filepath,
+                    line=i,
+                    resource=current_resource,
+                    message="Resource is publicly accessible.",
+                    recommendation="Set publicly_accessible = false unless explicitly required.",
+                ))
+
+    def _check_iam_policies(self, lines: List[str], filepath: str):
+        """Check for overly broad IAM policies."""
+        current_resource = ""
+
+        for i, line in enumerate(lines, 1):
+            rm = self.RESOURCE_PATTERN.search(line)
+            if rm:
+                current_resource = f"{rm.group(1)}.{rm.group(2)}"
+
+            if self.WILDCARD_ACTION_PATTERN.search(line):
+                self.findings.append(SecurityFinding(
+                    severity="critical",
+                    category="iam",
+                    file=filepath,
+                    line=i,
+                    resource=current_resource,
+                    message="IAM policy uses wildcard Action (*), granting all permissions.",
+                    recommendation="Apply least-privilege: specify only the required actions.",
+                ))
+
+            if self.WILDCARD_RESOURCE_PATTERN.search(line):
+                self.findings.append(SecurityFinding(
+                    severity="high",
+                    category="iam",
+                    file=filepath,
+                    line=i,
+                    resource=current_resource,
+                    message="IAM policy uses wildcard Resource (*), applying to all resources.",
+                    recommendation="Scope to specific resource ARNs.",
+                ))
+
+            # Check for AssumeRole with broad principal
+            if re.search(r'"Principal"\s*:\s*"\*"', line):
+                self.findings.append(SecurityFinding(
+                    severity="critical",
+                    category="iam",
+                    file=filepath,
+                    line=i,
+                    resource=current_resource,
+                    message="IAM trust policy allows any principal to assume role.",
+                    recommendation="Restrict Principal to specific AWS accounts or services.",
+                ))
+
+    def _check_encryption(self, lines: List[str], filepath: str, content: str):
+        """Check for missing encryption configurations."""
+        current_resource = ""
+        current_type = ""
+        block_start = 0
+
+        for i, line in enumerate(lines, 1):
+            rm = self.RESOURCE_PATTERN.search(line)
+            if rm:
+                # Check previous resource for missing encryption
+                if current_type and block_start:
+                    self._check_resource_encryption(current_type, current_resource, filepath, block_start, lines)
+                current_type = rm.group(1)
+                current_resource = f"{rm.group(1)}.{rm.group(2)}"
+                block_start = i
+
+        # Check last resource
+        if current_type and block_start:
+            self._check_resource_encryption(current_type, current_resource, filepath, block_start, lines)
+
+    def _check_resource_encryption(self, res_type: str, resource: str, filepath: str,
+                                    start: int, lines: List[str]):
+        """Check a specific resource for encryption."""
+        encryption_resources = {
+            "aws_s3_bucket": "server_side_encryption_configuration",
+            "aws_ebs_volume": "encrypted",
+            "aws_rds_instance": "storage_encrypted",
+            "aws_rds_cluster": "storage_encrypted",
+            "aws_redshift_cluster": "encrypted",
+            "aws_efs_file_system": "encrypted",
+            "aws_kinesis_firehose_delivery_stream": "server_side_encryption",
+        }
+
+        expected = encryption_resources.get(res_type)
+        if not expected:
+            return
+
+        # Look within the resource block (up to 50 lines)
+        block_content = "\n".join(lines[start - 1:min(start + 50, len(lines))])
+        if expected not in block_content:
+            self.findings.append(SecurityFinding(
+                severity="high",
+                category="encryption",
+                file=filepath,
+                line=start,
+                resource=resource,
+                message=f"Resource {res_type} may be missing encryption ({expected}).",
+                recommendation=f"Add {expected} = true or configure encryption block.",
+            ))
+
+    def _check_logging(self, lines: List[str], filepath: str, content: str):
+        """Check for missing logging configurations."""
+        current_resource = ""
+
+        # Check for S3 bucket without logging
+        s3_buckets = re.finditer(r'resource\s+"aws_s3_bucket"\s+"(\w+)"', content)
+        for match in s3_buckets:
+            bucket_name = match.group(1)
+            # Simple check: look for logging block after this resource
+            start_pos = match.end()
+            next_resource = re.search(r'\nresource\s+', content[start_pos:])
+            block = content[start_pos:start_pos + (next_resource.start() if next_resource else 500)]
+            if "logging" not in block and "aws_s3_bucket_logging" not in content:
+                line_num = content[:match.start()].count("\n") + 1
+                self.findings.append(SecurityFinding(
+                    severity="medium",
+                    category="logging",
+                    file=filepath,
+                    line=line_num,
+                    resource=f"aws_s3_bucket.{bucket_name}",
+                    message="S3 bucket may not have access logging enabled.",
+                    recommendation="Enable S3 access logging with aws_s3_bucket_logging resource.",
+                ))
+
+    def _check_security_groups(self, lines: List[str], filepath: str):
+        """Check security group configurations."""
+        current_resource = ""
+
+        for i, line in enumerate(lines, 1):
+            rm = self.RESOURCE_PATTERN.search(line)
+            if rm:
+                current_resource = f"{rm.group(1)}.{rm.group(2)}"
+
+            # Check for unrestricted egress
+            if re.search(r'from_port\s*=\s*0', line):
+                # Look ahead for to_port = 0 (all ports)
+                if i < len(lines) and re.search(r'to_port\s*=\s*0', lines[i]):
+                    if i + 1 < len(lines) and re.search(r'protocol\s*=\s*"-1"', lines[i + 1]):
+                        pass  # Egress all is often intentional, skip
+
+            # Check for SSH from anywhere
+            if re.search(r'from_port\s*=\s*22', line):
+                nearby = "\n".join(lines[max(0, i - 3):min(len(lines), i + 5)])
+                if "0.0.0.0/0" in nearby:
+                    self.findings.append(SecurityFinding(
+                        severity="critical",
+                        category="network",
+                        file=filepath,
+                        line=i,
+                        resource=current_resource,
+                        message="SSH (port 22) open to the internet (0.0.0.0/0).",
+                        recommendation="Restrict SSH access to specific IPs or use a bastion host.",
+                    ))
+
+            # Check for RDP from anywhere
+            if re.search(r'from_port\s*=\s*3389', line):
+                nearby = "\n".join(lines[max(0, i - 3):min(len(lines), i + 5)])
+                if "0.0.0.0/0" in nearby:
+                    self.findings.append(SecurityFinding(
+                        severity="critical",
+                        category="network",
+                        file=filepath,
+                        line=i,
+                        resource=current_resource,
+                        message="RDP (port 3389) open to the internet (0.0.0.0/0).",
+                        recommendation="Restrict RDP access to specific IPs or use a VPN.",
+                    ))
+
+    def _check_sensitive_outputs(self, lines: List[str], filepath: str):
+        """Check for sensitive values in outputs without sensitive flag."""
+        in_output = False
+        output_name = ""
+        has_sensitive = False
+        output_start = 0
+
+        sensitive_keywords = ["password", "secret", "key", "token", "credential"]
+
+        for i, line in enumerate(lines, 1):
+            m = re.search(r'output\s+"(\w+)"', line)
+            if m:
+                if in_output and not has_sensitive:
+                    for kw in sensitive_keywords:
+                        if kw in output_name.lower():
+                            self.findings.append(SecurityFinding(
+                                severity="medium",
+                                category="secrets",
+                                file=filepath,
+                                line=output_start,
+                                resource=f"output.{output_name}",
+                                message=f"Output '{output_name}' may contain sensitive data but is not marked sensitive.",
+                                recommendation="Add 'sensitive = true' to this output.",
+                            ))
+                            break
+                in_output = True
+                output_name = m.group(1)
+                has_sensitive = False
+                output_start = i
+
+            if in_output and "sensitive" in line and "true" in line:
+                has_sensitive = True
+
+
+def format_text(findings: List[SecurityFinding]) -> str:
+    """Format as human-readable text."""
+    lines = []
+    lines.append("=" * 60)
+    lines.append("TERRAFORM SECURITY SCAN REPORT")
+    lines.append("=" * 60)
+
+    by_severity = {}
+    for f in findings:
+        by_severity.setdefault(f.severity, []).append(f)
+
+    total = len(findings)
+    lines.append(f"\nTotal findings: {total}")
+    for sev in ["critical", "high", "medium", "low"]:
+        count = len(by_severity.get(sev, []))
+        if count:
+            lines.append(f"  {sev.upper()}: {count}")
+
+    lines.append("-" * 60)
+
+    for sev in ["critical", "high", "medium", "low"]:
+        group = by_severity.get(sev, [])
+        if not group:
             continue
-        for match in re.finditer(rule["pattern"], content, re.MULTILINE | re.IGNORECASE):
-            findings.append({
-                "id": rule["id"],
-                "severity": rule["severity"],
-                "message": rule["message"],
-                "fix": rule["fix"],
-                "line": match.group(0).strip()[:80],
-            })
-    return findings
-
-
-def check_security_groups(content):
-    """Custom check for open security groups."""
-    findings = []
-
-    # Parse ingress blocks within security group resources
-    sg_blocks = re.finditer(
-        r'resource\s+"aws_security_group"[^{]*\{(.*?)\n\}',
-        content,
-        re.DOTALL,
-    )
-
-    for sg_match in sg_blocks:
-        sg_body = sg_match.group(1)
-        ingress_blocks = re.finditer(
-            r'ingress\s*\{(.*?)\}', sg_body, re.DOTALL
-        )
-
-        for ingress in ingress_blocks:
-            block = ingress.group(1)
-            has_open_cidr = '0.0.0.0/0' in block or '::/0' in block
-
-            if not has_open_cidr:
-                continue
-
-            from_port_match = re.search(r'from_port\s*=\s*(\d+)', block)
-            to_port_match = re.search(r'to_port\s*=\s*(\d+)', block)
-
-            if from_port_match and to_port_match:
-                from_port = int(from_port_match.group(1))
-                to_port = int(to_port_match.group(1))
-
-                # SSH open
-                if from_port <= 22 <= to_port:
-                    rule = next(r for r in NETWORK_PATTERNS if r["id"] == "SEC020")
-                    findings.append({
-                        "id": rule["id"],
-                        "severity": rule["severity"],
-                        "message": rule["message"],
-                        "fix": rule["fix"],
-                        "line": f"ingress port 22, cidr 0.0.0.0/0",
-                    })
-
-                # RDP open
-                if from_port <= 3389 <= to_port:
-                    rule = next(r for r in NETWORK_PATTERNS if r["id"] == "SEC021")
-                    findings.append({
-                        "id": rule["id"],
-                        "severity": rule["severity"],
-                        "message": rule["message"],
-                        "fix": rule["fix"],
-                        "line": f"ingress port 3389, cidr 0.0.0.0/0",
-                    })
-
-                # All ports open
-                if from_port == 0 and to_port >= 65535:
-                    rule = next(r for r in NETWORK_PATTERNS if r["id"] == "SEC022")
-                    findings.append({
-                        "id": rule["id"],
-                        "severity": rule["severity"],
-                        "message": rule["message"],
-                        "fix": rule["fix"],
-                        "line": f"ingress ports 0-65535, cidr 0.0.0.0/0",
-                    })
-
-    return findings
-
-
-def check_encryption(content):
-    """Custom check for missing encryption on storage resources."""
-    findings = []
-
-    # S3 buckets without encryption
-    s3_buckets = re.findall(
-        r'resource\s+"aws_s3_bucket"\s+"([^"]+)"', content
-    )
-    s3_encryption = re.findall(
-        r'resource\s+"aws_s3_bucket_server_side_encryption_configuration"', content
-    )
-    # Also check inline encryption (older format)
-    inline_encryption = re.findall(
-        r'server_side_encryption_configuration', content
-    )
-    if s3_buckets and not s3_encryption and not inline_encryption:
-        rule = next(r for r in ENCRYPTION_PATTERNS if r["id"] == "SEC030")
-        for bucket in s3_buckets:
-            findings.append({
-                "id": rule["id"],
-                "severity": rule["severity"],
-                "message": f"{rule['message']} (bucket: {bucket})",
-                "fix": rule["fix"],
-                "line": f'aws_s3_bucket.{bucket}',
-            })
-
-    # RDS without encryption
-    rds_blocks = re.finditer(
-        r'resource\s+"aws_db_instance"\s+"([^"]+)"\s*\{(.*?)\n\}',
-        content,
-        re.DOTALL,
-    )
-    for rds_match in rds_blocks:
-        name = rds_match.group(1)
-        body = rds_match.group(2)
-        if 'storage_encrypted' not in body or re.search(
-            r'storage_encrypted\s*=\s*false', body
-        ):
-            rule = next(r for r in ENCRYPTION_PATTERNS if r["id"] == "SEC031")
-            findings.append({
-                "id": rule["id"],
-                "severity": rule["severity"],
-                "message": f"{rule['message']} (instance: {name})",
-                "fix": rule["fix"],
-                "line": f'aws_db_instance.{name}',
-            })
-
-    # EBS volumes without encryption
-    ebs_blocks = re.finditer(
-        r'resource\s+"aws_ebs_volume"\s+"([^"]+)"\s*\{(.*?)\n\}',
-        content,
-        re.DOTALL,
-    )
-    for ebs_match in ebs_blocks:
-        name = ebs_match.group(1)
-        body = ebs_match.group(2)
-        if 'encrypted' not in body or re.search(
-            r'encrypted\s*=\s*false', body
-        ):
-            rule = next(r for r in ENCRYPTION_PATTERNS if r["id"] == "SEC032")
-            findings.append({
-                "id": rule["id"],
-                "severity": rule["severity"],
-                "message": f"{rule['message']} (volume: {name})",
-                "fix": rule["fix"],
-                "line": f'aws_ebs_volume.{name}',
-            })
-
-    return findings
-
-
-def check_sensitive_variables(content):
-    """Check if variables that look like secrets are marked sensitive."""
-    findings = []
-    var_blocks = re.finditer(
-        r'variable\s+"([^"]+)"\s*\{(.*?)\n\}',
-        content,
-        re.DOTALL,
-    )
-    secret_names = ["password", "secret", "token", "api_key", "private_key", "credentials"]
-
-    for var_match in var_blocks:
-        name = var_match.group(1)
-        body = var_match.group(2)
-        name_lower = name.lower()
-
-        if any(s in name_lower for s in secret_names):
-            if not re.search(r'sensitive\s*=\s*true', body):
-                findings.append({
-                    "id": "SEC050",
-                    "severity": "medium",
-                    "message": f"Variable '{name}' appears to be a secret but is not marked sensitive = true",
-                    "fix": "Add sensitive = true to prevent the value from appearing in logs and plan output",
-                    "line": f'variable "{name}"',
-                })
-
-            # Check for hardcoded default
-            default_match = re.search(r'default\s*=\s*"([^"]+)"', body)
-            if default_match and len(default_match.group(1)) > 0:
-                findings.append({
-                    "id": "SEC051",
-                    "severity": "critical",
-                    "message": f"Variable '{name}' has a hardcoded default value for a secret",
-                    "fix": "Remove the default value — require it to be passed at runtime via tfvars or env",
-                    "line": f'variable "{name}" default = "{default_match.group(1)[:20]}..."',
-                })
-
-    return findings
-
-
-def scan_content(content, strict=False):
-    """Run all security checks on content."""
-    findings = []
-
-    findings.extend(check_regex_rules(content, SECRET_PATTERNS))
-    findings.extend(check_regex_rules(content, IAM_PATTERNS))
-    findings.extend(check_regex_rules(content, ACCESS_PATTERNS))
-    findings.extend(check_security_groups(content))
-    findings.extend(check_encryption(content))
-    findings.extend(check_sensitive_variables(content))
-
-    if strict:
-        for f in findings:
-            if f["severity"] == "medium":
-                f["severity"] = "high"
-            elif f["severity"] == "low":
-                f["severity"] = "medium"
-
-    # Deduplicate by (id, line)
-    seen = set()
-    unique = []
-    for f in findings:
-        key = (f["id"], f.get("line", ""))
-        if key not in seen:
-            seen.add(key)
-            unique.append(f)
-    findings = unique
-
-    # Sort by severity
-    severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    findings.sort(key=lambda f: severity_order.get(f["severity"], 4))
-
-    return findings
-
-
-def generate_report(content, output_format="text", strict=False):
-    """Generate security scan report."""
-    findings = scan_content(content, strict)
-
-    # Score
-    deductions = {"critical": 25, "high": 15, "medium": 5, "low": 2}
-    score = max(0, 100 - sum(deductions.get(f["severity"], 0) for f in findings))
-
-    counts = {
-        "critical": sum(1 for f in findings if f["severity"] == "critical"),
-        "high": sum(1 for f in findings if f["severity"] == "high"),
-        "medium": sum(1 for f in findings if f["severity"] == "medium"),
-        "low": sum(1 for f in findings if f["severity"] == "low"),
-    }
-
-    result = {
-        "score": score,
-        "findings": findings,
-        "finding_counts": counts,
-        "total_findings": len(findings),
-    }
-
-    if output_format == "json":
-        print(json.dumps(result, indent=2))
-        return result
-
-    # Text output
-    print(f"\n{'=' * 60}")
-    print(f"  Terraform Security Scan Report")
-    print(f"{'=' * 60}")
-    print(f"  Score: {score}/100")
-    print()
-    print(f"  Findings: {counts['critical']} critical | {counts['high']} high | {counts['medium']} medium | {counts['low']} low")
-    print(f"{'─' * 60}")
-
-    for f in findings:
-        icon = {"critical": "!!!", "high": "!!", "medium": "!", "low": "~"}.get(f["severity"], "?")
-        print(f"\n  [{f['id']}] {icon} {f['severity'].upper()}")
-        print(f"  {f['message']}")
-        if f.get("line"):
-            print(f"  Match: {f['line']}")
-        print(f"  Fix:   {f['fix']}")
+        lines.append(f"\n[{sev.upper()}]")
+        for f in group:
+            lines.append(f"  [{f.category}] {f.file}:{f.line}")
+            lines.append(f"    Resource: {f.resource}")
+            lines.append(f"    Issue: {f.message}")
+            lines.append(f"    Fix: {f.recommendation}")
+            lines.append("")
 
     if not findings:
-        print("\n  No security issues found. Configuration looks clean.")
+        lines.append("\nNo security issues found.")
 
-    print(f"\n{'=' * 60}\n")
-    return result
+    lines.append("=" * 60)
+    return "\n".join(lines)
+
+
+def format_json(findings: List[SecurityFinding]) -> str:
+    """Format as JSON."""
+    return json.dumps({
+        "findings": [asdict(f) for f in findings],
+        "summary": {
+            "total": len(findings),
+            "critical": sum(1 for f in findings if f.severity == "critical"),
+            "high": sum(1 for f in findings if f.severity == "high"),
+            "medium": sum(1 for f in findings if f.severity == "medium"),
+            "low": sum(1 for f in findings if f.severity == "low"),
+        }
+    }, indent=2)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="terraform-patterns: Terraform security scanner"
+        description="Scan Terraform configurations for security misconfigurations."
     )
-    parser.add_argument(
-        "target", nargs="?",
-        help="Path to Terraform directory or .tf file (omit for demo)",
-    )
-    parser.add_argument(
-        "--output", "-o",
-        choices=["text", "json"],
-        default="text",
-        help="Output format (default: text)",
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Strict mode — elevate warnings to higher severity",
-    )
+    parser.add_argument("--path", "-p", required=True, help="Path to scan")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    parser.add_argument("--min-severity", choices=["critical", "high", "medium", "low"],
+                       default="low", help="Minimum severity to report")
     args = parser.parse_args()
 
-    if args.target:
-        target = Path(args.target)
-        if target.is_dir():
-            tf_files = find_tf_files(str(target))
-            if not tf_files:
-                print(f"Error: No .tf files found in {args.target}", file=sys.stderr)
-                sys.exit(1)
-            content = "\n".join(tf_files.values())
-        elif target.is_file() and target.suffix == ".tf":
-            content = target.read_text(encoding="utf-8")
-        else:
-            print(f"Error: {args.target} is not a directory or .tf file", file=sys.stderr)
-            sys.exit(1)
-    else:
-        print("No target provided. Running demo scan...\n")
-        content = DEMO_TF
+    path = Path(args.path)
+    if not path.exists():
+        print(f"Error: Path not found: {args.path}", file=sys.stderr)
+        sys.exit(2)
 
-    generate_report(content, args.output, args.strict)
+    scanner = TerraformSecurityScanner(min_severity=args.min_severity)
+    findings = scanner.scan_directory(path)
+
+    if args.format == "json":
+        print(format_json(findings))
+    else:
+        print(format_text(findings))
+
+    if any(f.severity == "critical" for f in findings):
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -1,230 +1,213 @@
 ---
-name: "vpe-advisor"
-description: "VP of Engineering advisory for startups: delivery throughput (DORA 4 metrics + bottleneck identification), engineering hiring funnel (sourcing → screen → onsite → offer conversion + time-to-fill + pipeline gap), engineering team structure (squad/tribe/chapter design + tech-lead manager-trigger thresholds), and production discipline (on-call, deployment cadence, postmortem culture). Use when sprint velocity is dropping, eng hiring is broken, team structure is unclear, or deciding when to add a tech-lead manager. NOT a CTO skill (which owns architecture) — VPE owns delivery operations and how the team ships."
-license: MIT
+name: vpe-advisor
+description: >
+  VP of Engineering advisor for engineering leaders on organizational
+  design, productivity, quality, delivery, capacity planning, and culture.
+  Complements cto-advisor (technical strategy) with the people-process-delivery
+  half of the engineering leadership mandate. Use when scoring engineering
+  org health, designing the engineering org, planning capacity, building
+  the productivity dashboard, or preparing the eng section of the board update.
+license: MIT + Commons Clause
 metadata:
   version: 1.0.0
-  author: Alireza Rezvani
-  category: c-level
-  domain: vp-engineering-leadership
-  updated: 2026-05-13
-  python-tools: delivery_throughput_analyzer.py, eng_hiring_funnel_calculator.py, eng_team_structure_designer.py
-  frameworks: delivery-throughput, hiring-funnel, team-structure, production-discipline
+  author: borghei
+  category: executive-leadership
+  domain: c-level-advisor
+  updated: 2026-05-27
+  tags: [engineering, vpe, leadership, productivity, dora, space, capacity, hiring, retention]
 ---
 
 # VP of Engineering Advisor
 
-Strategic engineering operations leadership for startup VPEs and founders without one. **Four decisions, no generic engineering survey:**
+The agent acts as a fractional VP of Engineering, focused on the people /
+process / delivery half of engineering leadership. Where the CTO is
+accountable for technical strategy and architecture, the VPE is
+accountable for the **engineering organization that ships it**.
 
-1. **Are we delivering at the right throughput?** — DORA 4 metrics + bottleneck identification (where work waits)
-2. **How do we scale the eng hiring funnel?** — funnel math + pipeline gap + time-to-fill discipline
-3. **What's our team structure — and when do we add a tech-lead manager?** — squad/tribe/chapter design + manager-trigger
-4. **What's our production discipline?** — on-call rotation, deployment cadence, postmortem culture (reference-only)
+Grounded in modern productivity frameworks (DORA + SPACE + DevEx),
+engineering management research (Camille Fournier, Will Larson, modern
+staff-eng tracks), and the operational realities of scaling engineering
+teams.
 
-This skill is **NOT a CTO skill**. CTO owns *what to build* (architecture, scaling cliffs, build-vs-buy). VPE owns *how to ship it reliably* (delivery, hiring, team structure, production operations). At early stage these are often the same person; at scale they're distinct roles.
+## When to use this skill
 
-This skill is **NOT a cs-engineering-lead replacement**. Engineering-lead owns day-to-day incident and on-call coordination. VPE owns the operating model that engineering-lead executes.
+- Scoring **engineering organization health** across structure, productivity, quality, delivery, culture, talent
+- Designing or restructuring the **engineering org**: squads, platform, embedded, matrixed
+- Planning **engineering capacity** for the next 2–4 quarters
+- Building or refreshing the **engineering productivity dashboard** (DORA / SPACE / DevEx)
+- Defining the **delivery model**: agile, kanban, scrum, shape-up, hybrid
+- Planning the **hiring pipeline** and the **performance management** approach
+- Preparing the **engineering section of the board deck** (delivery, quality, talent, asks)
 
-## Keywords
+## Inputs the advisor expects
 
-VPE, VP of Engineering, VP Engineering, engineering operations, delivery throughput, DORA, deployment frequency, lead time for changes, mean time to recovery, MTTR, change failure rate, cycle time, lead time, throughput, engineering hiring, eng hiring funnel, technical interview, take-home, pair programming, hiring pipeline, time-to-fill, cost-per-hire, ramp time, engineering team structure, squad, tribe, chapter, Spotify model, conway's law, tech lead, engineering manager, EM, span of control, hiring funnel conversion, eng comp, leveling, IC track, manager track, deployment cadence, on-call rotation, postmortem culture, blameless retro
-
-## Quick Start
-
-```bash
-# Decision A: DORA 4 metrics + bottleneck identification
-python scripts/delivery_throughput_analyzer.py                          # embedded sprint sample
-python scripts/delivery_throughput_analyzer.py path/to/sprint_metrics.json
-
-# Decision B: Hiring funnel health + pipeline gap
-python scripts/eng_hiring_funnel_calculator.py                          # embedded 3-quarter sample
-python scripts/eng_hiring_funnel_calculator.py path/to/funnel.json
-
-# Decision C: Team structure recommendation + manager-trigger
-python scripts/eng_team_structure_designer.py                           # embedded 25-engineer sample
-python scripts/eng_team_structure_designer.py path/to/team.json
-```
-
-## Key Questions (ask these first)
-
-- **What's your cycle time, and where does the work spend most of its time waiting?** (If you don't know, you can't improve it.)
-- **How long from commit to production?** (DORA "lead time for changes" — best predictor of overall team health.)
-- **What's the escape rate?** (Bugs found in production vs caught in CI/staging. > 15% = quality discipline broken.)
-- **When did the eng manager last write code?** (Manager-IC ratio is wrong if managers can't review code at all.)
-- **What's the hiring funnel conversion at each stage?** (Source → screen → onsite → offer → accept. The leakage is the answer.)
-- **What's the on-call rotation, and who's on it?** (If the same 3 people are always paged, the operating model is broken.)
-
-## Core Responsibilities
-
-### 1. Delivery Throughput (DORA Metrics)
-
-**The framework:** Google DORA's 4 key metrics (from "Accelerate", Forsgren/Humble/Kim 2018).
-
-| Metric | What it measures | Elite | High | Medium | Low |
-|---|---|---|---|---|---|
-| **Deployment Frequency** | How often code reaches prod | Multiple/day | Daily-weekly | Weekly-monthly | < monthly |
-| **Lead Time for Changes** | Commit → production | < 1 hour | 1 day-1 week | 1 week-1 month | > 1 month |
-| **Mean Time to Recovery (MTTR)** | Incident detection → resolved | < 1 hour | < 1 day | 1-7 days | > 7 days |
-| **Change Failure Rate** | % of deploys causing incidents | 0-15% | 16-30% | 16-45% | 46-60% |
-
-**Bottleneck identification — where does work wait?**
-
-Cycle time = (PR creation → first review) + (review → approval) + (approval → merge) + (merge → deploy). The longest segment is the bottleneck.
-
-Common bottlenecks:
-- **PR review queue** (waiting for human reviewers) — fix: reviewer rotation + SLA
-- **Test flakiness** (CI fails intermittently, re-runs needed) — fix: flaky-test budget + quarantine
-- **Deploy gates** (manual approval, change-control board) — fix: progressive delivery + feature flags
-- **Database migrations** (locking, scheduled windows) — fix: zero-downtime migration patterns
-
-**Run** `delivery_throughput_analyzer.py` with sprint data to get DORA verdict + top bottleneck.
-
-See `references/delivery_throughput.md` for the full DORA framework, anti-patterns, and what to fix first.
-
-### 2. Engineering Hiring Funnel
-
-**The trap:** "We can't find good engineers."
-
-The reality: the funnel has 4-6 stages, each with a conversion rate. Find which stage is leakiest; fix that one. "Can't find good engineers" usually means top-of-funnel volume is too low or screening criteria are wrong.
-
-**Standard funnel stages:**
-
-| Stage | Healthy conversion | What it measures |
-|---|---|---|
-| Applied → Sourcer screen | 30-50% | Resume quality |
-| Sourcer → Recruiter screen | 50-70% | Basic fit |
-| Recruiter → Hiring manager | 60-80% | Team fit |
-| Hiring manager → Technical interview | 70-85% | Technical baseline |
-| Technical → Onsite (full loop) | 30-50% | Technical depth |
-| Onsite → Offer | 25-40% | Final go/no-go |
-| Offer → Accept | 70-90% | Comp + close discipline |
-
-**Funnel math:** to hire N engineers, you need N / (product of all conversion rates) candidates at top of funnel.
-
-Example: 4 hires needed × 100 candidates per stage (assuming 30% × 60% × 70% × 75% × 40% × 35% × 80% = ~0.7% end-to-end) = ~570 candidates at top of funnel.
-
-**Run** `eng_hiring_funnel_calculator.py` with funnel data to compute conversion per stage, time-to-fill, and pipeline gap.
-
-See `references/engineering_hiring_funnel.md` for the full funnel framework, common leakage points, and sourcing channel diversification.
-
-### 3. Engineering Team Structure
-
-**The right question:** "How do we organize people so they can ship without coordination overhead?"
-
-**Three-axis model (adapted from Spotify, refined by reality):**
-
-- **Squad:** small autonomous team (5-9 engineers) owning a service or product area end-to-end
-- **Chapter:** functional discipline cutting across squads (backend chapter, frontend chapter, etc.) — for skill development, NOT for ownership
-- **Tribe:** group of related squads working toward a shared goal (e.g., "platform tribe" = 3 squads on infra)
-
-**When to evolve:**
-
-| Stage | Structure |
-|---|---|
-| 1-5 engineers | One team. No structure. |
-| 6-15 engineers | 2-3 informal pods around major work streams. Founder-CTO can still know everyone. |
-| 16-40 engineers | 4-6 squads. First eng manager hires. Chapter structure emerges for cross-squad skill alignment. |
-| 41-100 engineers | 2-3 tribes (clusters of squads). Director of engineering layer. Chapters are formal. |
-| 100+ engineers | Multiple tribes + group EM/director per tribe. VPE + director(s) + EMs + tech leads. |
-
-**Manager-trigger thresholds:**
-- 5-7 ICs without a manager = first EM hire (or internal promote)
-- 3+ EMs without a director = director hire
-- 8+ teams in one tribe = split the tribe
-
-**Run** `eng_team_structure_designer.py` with team profile for structure recommendation + manager-trigger.
-
-See `references/eng_team_structure.md` for the full framework, Conway's Law implications, and EM-vs-tech-lead split.
-
-### 4. Production Discipline
-
-Production discipline is the operating model that lets the team sleep. Four pillars:
-
-- **On-call rotation:** broad enough to avoid burnout (≥ 6 people per rotation; primary + secondary)
-- **Incident response:** runbooks, severity definitions, blameless postmortems
-- **Deployment cadence:** continuous deployment OR scheduled releases; both work; surprise releases don't
-- **SLO discipline:** every customer-facing service has documented SLOs + error budgets (pair with `engineering/slo-architect/`)
-
-See `references/production_discipline.md` for the full operating model.
+- Company stage, sector, headcount in engineering
+- Current org structure (squads, platform teams, embedded model)
+- Delivery metrics (DORA: deploy frequency, lead time, MTTR, change-fail rate)
+- Quality / reliability metrics (uptime, error rates, incident count)
+- Talent metrics (open req count, time-to-hire, regrettable attrition)
+- Spend posture (eng comp budget, tooling, cloud)
+- Top frictions (CEO, CPO, CTO, customers)
 
 ## Workflows
 
-### Workflow 1: Quarterly Delivery Health Review (4 hours)
-**Goal:** Diagnose throughput + identify top bottleneck.
+### Workflow 1 — Score engineering org health
+
+1. Pull current state across 6 dimensions (structure, delivery, quality,
+   productivity, culture, talent).
+2. Run `eng_org_health_scorer.py` against the populated JSON.
+3. Translate prioritized gaps into a quarterly OKR for engineering.
 
 ```bash
-# 1. Pull sprint metrics: deployment frequency, lead time, MTTR, change failure rate
-python ../../skills/vpe-advisor/scripts/delivery_throughput_analyzer.py sprint_metrics.json
-# 2. Review DORA verdict per metric
-# 3. Identify top bottleneck (longest wait stage)
-# 4. Cross-check with cs-cto-advisor on architectural causes
-# 5. Output: 90-day fix plan with one bottleneck owned by one engineer
-# 6. Log via /cs:decide
+python3 vpe-advisor/scripts/eng_org_health_scorer.py \
+  --input eng_state.json --format markdown
 ```
 
-### Workflow 2: Hiring Funnel Diagnosis (1 day)
-**Goal:** Identify funnel leakage + compute pipeline gap for hiring target.
+### Workflow 2 — Build the productivity dashboard (DORA + DevEx)
+
+1. Capture latest delivery + experience metrics per team.
+2. Run `eng_productivity_dashboard.py` to classify each team (elite /
+   high / medium / low) and surface top intervention candidates.
+3. Use output for the weekly engineering review and the board section.
 
 ```bash
-# 1. Pull funnel data from ATS for last 90 days
-python ../../skills/vpe-advisor/scripts/eng_hiring_funnel_calculator.py funnel.json
-# 2. Identify weakest conversion stage
-# 3. Compute pipeline volume needed for next quarter's hiring target
-# 4. Cross-check with cs-chro-advisor on comp/leveling competitiveness
-# 5. Cross-check with cs-cfo-advisor on cost-per-hire envelope
-# 6. Output: top-3 fixes + sourcing channel diversification plan
+python3 vpe-advisor/scripts/eng_productivity_dashboard.py \
+  --input team_metrics.json --format markdown
 ```
 
-### Workflow 3: Team Structure Audit (1 day)
-**Goal:** Confirm team structure matches headcount + work streams.
+### Workflow 3 — Plan capacity for the next 2–4 quarters
+
+1. Inventory teams, current headcount, attrition assumption, hiring
+   plan, planned investment splits (run-the-business vs grow vs
+   transform).
+2. Run `eng_capacity_planner.py` to project usable capacity and
+   highlight bottleneck teams.
+3. Reconcile against product roadmap commitments.
 
 ```bash
-# 1. Build team.json: headcount, work streams, manager count, IC distribution
-python ../../skills/vpe-advisor/scripts/eng_team_structure_designer.py team.json
-# 2. Check manager-trigger thresholds (5-7 IC rule)
-# 3. Identify squad sizes outside 5-9 range
-# 4. Cross-check with cs-cto-advisor on Conway's Law alignment
-# 5. Output: structure recommendations + manager hire plan
+python3 vpe-advisor/scripts/eng_capacity_planner.py \
+  --input capacity_inputs.json --format markdown
 ```
 
-### Workflow 4: Production Discipline Audit (1 week)
-**Goal:** Confirm operating model can scale through current growth.
+## Decision frameworks
 
-1. Inventory: on-call coverage, incident frequency by severity, MTTR trend
-2. Confirm every customer-facing service has SLOs (pair with `engineering/slo-architect/`)
-3. Review last 5 postmortems — are they blameless? Are action items closed?
-4. Cross-check deployment cadence against DORA verdict
-5. Output: production-discipline maturity score + 90-day improvement plan
+### CTO vs VPE — where the line is
 
-## Output Standards
+A common pattern at Series B+:
 
-```
-**Bottom Line:** [one sentence — decision and rationale]
-**The Decision:** [one of: throughput | hiring | structure | production]
-**The Evidence:** [numbers from the tool, not adjectives]
-**How to Act:** [3 concrete next steps]
-**Your Decision:** [the call only the founder/CTO can make]
-```
+| Function | CTO | VPE |
+|----------|-----|-----|
+| Architecture | Owns | Consults |
+| Build-vs-buy | Owns | Consults |
+| Tech stack decisions | Owns | Consults |
+| Infra strategy | Owns | Consults |
+| Org structure | Consults | Owns |
+| Hiring + retention | Consults | Owns |
+| Delivery (how) | Consults | Owns |
+| Productivity metrics | Consults | Owns |
+| Engineering culture | Joint | Joint |
+| Roadmap delivery | Joint with CPO | Joint with CPO |
 
-## Adjacent Skills
+If you don't have both roles, the founder/CEO usually plays one of them
+implicitly. Make the split explicit before adding the second role.
 
-- `../cto-advisor/` — Architecture, scaling cliffs, tech debt strategy (CTO decides what to build; VPE decides how to ship)
-- `../chro-advisor/` — Hiring systems (ladders, bands, leveling rubrics company-wide); VPE owns eng-specific funnel execution
-- `../coo-advisor/` — Operating cadence company-wide; VPE owns eng-specific cadence
-- `../../../engineering/slo-architect/` — SLO design (tactical; VPE owns the policy that SLOs are required)
-- `../../../engineering/chaos-engineering/` — Chaos experiment design (tactical resilience)
-- `../../../engineering/feature-flags-architect/` — Progressive delivery (tactical deployment)
-- `../../../engineering/kubernetes-operator/` — K8s operator pattern (tactical infra)
-- `cs-engineering-lead` agent — Day-to-day incident + on-call coordination (VPE owns the operating model that engineering-lead executes)
+### Org shapes
+
+| Shape | Fits when | Breaks when |
+|-------|-----------|-------------|
+| Functional (FE, BE, infra) | < 30 engineers, single product | Cross-team feature work; bottlenecks |
+| Squad-based | 30–300 engineers, multi-product | Squads too small (<5) or too rigid |
+| Platform + product squads | 50+ engineers | Platform team becomes blocker |
+| Matrix (capability + product) | Large org with shared specialists | Reporting confusion |
+| Embedded in product | Strong product-led culture | Standards drift across teams |
+
+The advisor will default to **platform + product squads** for ≥ 50
+engineers. Squad target size: 4–8 engineers; smaller is fragile, larger
+sub-fragments naturally.
+
+### Delivery model — which one
+
+- **Scrum** — when work is stable, externally committed, deploy cycles are larger
+- **Kanban** — when work is reactive, unpredictable (platform, infra, support)
+- **Shape-up / Basecamp-style** — when product team is small, opinionated, and shippable cycles work
+- **Hybrid** — most production engineering teams default here
+
+Don't enforce one model across all teams. Different teams need different shapes.
+
+### When to invest in platform engineering
+
+Indicator: developer experience drag (slow CI, fragile dev env, weeks-long
+service onboarding) consumes >20% of engineering time on tax work.
+
+Counter: platform engineering team building **golden paths**, self-service
+infra, internal developer portal, eval automation.
+
+Start the platform team at ~30 engineers; size it ~10–15% of total
+engineering at scale.
+
+## Common engagements
+
+### "We're shipping less than we used to. Why?"
+1. Pull DORA metrics — is it deploy frequency, lead time, or change-fail rate?
+2. Look at team-level numbers; "engineering is slow" usually means 2–3 specific teams.
+3. Check WIP — too much in-flight is the most common cause.
+4. Check on-call burden and incident frequency.
+5. Triangulate with DevEx survey (developer-reported friction).
+
+### "Help me plan engineering hiring for next year"
+1. Pull product roadmap commitments and translate to capacity (use `eng_capacity_planner.py`).
+2. Subtract current capacity (headcount × utilization × attrition).
+3. Identify the bottleneck capabilities (full-stack, ML, platform, security).
+4. Build the hire plan with stage gates.
+
+### "Our top engineers are leaving"
+1. Tag attrition: regrettable vs not.
+2. Pull exit interview themes for the last 6 months.
+3. Look at: comp band relative to market, manager quality, scope, autonomy.
+4. Prioritize the 2–3 root causes; design interventions and measure.
+
+### "Help me build the engineering section of the board deck"
+1. **Delivery:** DORA metric trends; top wins; top misses.
+2. **Quality / reliability:** uptime, incidents (count + severity), SLO posture.
+3. **Talent:** headcount, hires, regrettable attrition, key hires planned.
+4. **Investment posture:** run/grow/transform mix vs target.
+5. **Asks:** usually one budget, one organizational, one product-priority.
+
+## Anti-patterns to avoid
+
+- **VPE without budget authority.** Becomes a glorified scrum master.
+- **DORA metrics as a stick.** Use them as compass; never as employee performance.
+- **Hiring without retention focus.** Attrition is more expensive than slow hiring.
+- **One delivery model across all teams.** Platform and product teams have different shapes.
+- **Promoting the strongest engineer to manager.** Career ladder needs both IC and EM tracks.
+- **Org redesign every 6 months.** Stability wins; resist the urge.
+- **Squad-of-three model at scale.** Below 4 engineers, bus risk + on-call burden are unsustainable.
+- **Engineering culture defined by perks.** Real culture is in promotion criteria, hiring bar, incident response, code review norms.
 
 ## References
 
-- [delivery_throughput.md](references/delivery_throughput.md) — Full DORA framework + 4 common bottlenecks + what to fix first + anti-patterns
-- [engineering_hiring_funnel.md](references/engineering_hiring_funnel.md) — 7-stage funnel + conversion benchmarks + common leakage + sourcing channel diversification + technical interview design
-- [eng_team_structure.md](references/eng_team_structure.md) — Squad/chapter/tribe model + headcount-to-structure map + Conway's Law + EM-vs-tech-lead split + span-of-control
-- [production_discipline.md](references/production_discipline.md) — On-call rotation design + incident response + blameless postmortem culture + deployment cadence + SLO discipline integration
+- `references/engineering-org-design.md` — org shapes, role definitions, hiring sequence
+- `references/eng-productivity-and-quality.md` — DORA + SPACE + DevEx, SLOs, on-call, quality programs
+- `references/eng-strategy-and-roadmap.md` — capacity planning, investment buckets, roadmap alignment
 
----
+## Related skills
 
-**Version:** 1.0.0
-**Status:** Production Ready
+- `c-level-advisor/cto-advisor` — technical strategy + architecture (peer to VPE)
+- `c-level-advisor/cpo-advisor` — product partnership
+- `c-level-advisor/chro-advisor` — talent / comp / hiring partnership
+- `c-level-advisor/chief-data-officer-advisor` — data team interface
+- `c-level-advisor/chief-ai-officer-advisor` — AI / ML team interface
+- `engineering/observability-designer` — SLO / SLI / error budgets
+- `engineering/incident-commander` — incident response practice
+- `engineering/feature-flags-architect` — safe deployment practice
+- `engineering/chaos-engineering` — reliability practice
+- `engineering/senior-architect` — technical decision making
+
+## Output expectations
+
+When the advisor runs, you should walk away with:
+
+1. A clear **point of view**
+2. **2–4 concrete next actions** with owners and timelines
+3. **Open questions** that materially change the recommendation
+4. References to scripts and reference docs that deepen the analysis

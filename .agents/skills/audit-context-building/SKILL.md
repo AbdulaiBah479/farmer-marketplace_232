@@ -1,8 +1,6 @@
 ---
 name: audit-context-building
 description: Enables ultra-granular, line-by-line code analysis to build deep architectural context before vulnerability or bug finding.
-risk: unknown
-source: community
 ---
 
 # Deep Context Builder Skill (Ultra-Granular Pure Context Mode)
@@ -22,7 +20,8 @@ This skill defines a structured analysis format (see Example: Function Micro-Ana
 
 ---
 
-## When to Use
+## 2. When to Use This Skill
+
 Use when:
 - Deep comprehension is needed before bug or vulnerability discovery.
 - You want bottom-up understanding instead of high-level guessing.
@@ -37,7 +36,7 @@ Do **not** use for:
 
 ---
 
-## 2. How This Skill Behaves
+## 3. How This Skill Behaves
 
 When active, Claude will:
 - Default to **ultra-granular analysis** of each block and line.
@@ -64,7 +63,7 @@ Goal: **deep, accurate understanding**, not conclusions.
 
 ---
 
-## 3. Phase 1 — Initial Orientation (Bottom-Up Scan)
+## 4. Phase 1 — Initial Orientation (Bottom-Up Scan)
 
 Before deep analysis, Claude performs a minimal mapping:
 
@@ -78,7 +77,7 @@ This establishes anchors for detailed analysis.
 
 ---
 
-## 4. Phase 2 — Ultra-Granular Function Analysis (Default Mode)
+## 5. Phase 2 — Ultra-Granular Function Analysis (Default Mode)
 
 Every non-trivial function receives full micro analysis.
 
@@ -155,7 +154,7 @@ All invariants, assumptions, and data dependencies must propagate across calls.
 
 ### 5.3 Complete Analysis Example
 
-See FUNCTION_MICRO_ANALYSIS_EXAMPLE.md for a complete walkthrough demonstrating:
+See [FUNCTION_MICRO_ANALYSIS_EXAMPLE.md](resources/FUNCTION_MICRO_ANALYSIS_EXAMPLE.md) for a complete walkthrough demonstrating:
 - Full micro-analysis of a DEX swap function
 - Application of First Principles, 5 Whys, and 5 Hows
 - Block-by-block analysis with invariants and assumptions
@@ -168,7 +167,7 @@ This example demonstrates the level of depth and structure required for all anal
 
 ### 5.4 Output Requirements
 
-When performing ultra-granular analysis, Claude MUST structure output following the format defined in OUTPUT_REQUIREMENTS.md.
+When performing ultra-granular analysis, Claude MUST structure output following the format defined in [OUTPUT_REQUIREMENTS.md](resources/OUTPUT_REQUIREMENTS.md).
 
 Key requirements:
 - **Purpose** (2-3 sentences minimum)
@@ -188,7 +187,7 @@ Quality thresholds:
 
 ### 5.5 Completeness Checklist
 
-Before concluding micro-analysis of a function, verify against the COMPLETENESS_CHECKLIST.md:
+Before concluding micro-analysis of a function, verify against the [COMPLETENESS_CHECKLIST.md](resources/COMPLETENESS_CHECKLIST.md):
 
 - **Structural Completeness**: All required sections present (Purpose, Inputs, Outputs, Block-by-Block, Dependencies)
 - **Content Depth**: Minimum thresholds met (invariants, assumptions, risk analysis, First Principles)
@@ -199,7 +198,7 @@ Analysis is complete when all checklist items are satisfied and no unresolved "u
 
 ---
 
-## 5. Phase 3 — Global System Understanding
+## 6. Phase 3 — Global System Understanding
 
 After sufficient micro-analysis:
 
@@ -227,7 +226,7 @@ These clusters help guide the vulnerability-hunting phase.
 
 ---
 
-## 6. Stability & Consistency Rules
+## 7. Stability & Consistency Rules
 *(Anti-Hallucination, Anti-Contradiction)*
 
 Claude must:
@@ -255,7 +254,7 @@ Claude must:
 
 ---
 
-## 7. Subagent Usage
+## 8. Subagent Usage
 
 Claude may spawn subagents for:
 - Dense or complex functions.
@@ -275,7 +274,7 @@ Subagents must:
 
 ---
 
-## 8. Relationship to Other Phases
+## 9. Relationship to Other Phases
 
 This skill runs **before**:
 - Vulnerability discovery
@@ -291,7 +290,7 @@ It exists solely to build:
 
 ---
 
-## 9. Non-Goals
+## 10. Non-Goals
 
 While active, Claude should NOT:
 - Identify vulnerabilities
@@ -301,8 +300,3 @@ While active, Claude should NOT:
 - Assign severity or impact
 
 This is **pure context building** only.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

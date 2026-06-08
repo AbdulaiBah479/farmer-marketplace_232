@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 """
-terraform-patterns: Terraform Module Analyzer
+Terraform Module Analyzer - Analyze Terraform modules for complexity and quality.
 
-Analyze a Terraform directory structure for module quality, resource counts,
-naming conventions, and structural best practices. Reports variable/output
-coverage, file organization, and actionable recommendations.
+Examines module structure, variable documentation, output coverage,
+resource complexity, and dependency patterns.
 
-Usage:
-    python scripts/tf_module_analyzer.py ./terraform
-    python scripts/tf_module_analyzer.py ./terraform --output json
-    python scripts/tf_module_analyzer.py ./modules/vpc
+Author: Claude Skills Engineering Team
+License: MIT
 """
 
 import argparse
@@ -17,444 +14,439 @@ import json
 import os
 import re
 import sys
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
+from typing import List, Dict, Any, Optional, Set
 
 
-# --- Demo Terraform Files ---
-
-DEMO_FILES = {
-    "main.tf": """
-resource "aws_instance" "web_server" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-
-  tags = {
-    Name = "web-server"
-  }
-}
-
-resource "aws_s3_bucket" "data" {
-  bucket = "my-data-bucket-12345"
-}
-
-resource "aws_security_group" "web" {
-  name = "web-sg"
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"]
-}
-
-module "vpc" {
-  source = "./modules/vpc"
-  cidr   = var.vpc_cidr
-}
-""",
-    "variables.tf": """
-variable "ami_id" {
-  type = string
-}
-
-variable "instance_type" {
-  default = "t3.micro"
-}
-
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "environment" {
-  description = "Deployment environment"
-  type        = string
-  validation {
-    condition     = contains(["dev", "staging", "prod"], var.environment)
-    error_message = "Environment must be dev, staging, or prod."
-  }
-}
-""",
-    "outputs.tf": """
-output "instance_id" {
-  value = aws_instance.web_server.id
-}
-
-output "bucket_arn" {
-  value       = aws_s3_bucket.data.arn
-  description = "ARN of the data S3 bucket"
-}
-""",
-}
-
-# --- Naming convention patterns ---
-
-# Terraform resource naming: lowercase, underscores, alphanumeric
-VALID_RESOURCE_NAME = re.compile(r'^[a-z][a-z0-9_]*$')
-
-# Expected files in a well-structured module
-EXPECTED_FILES = {
-    "main.tf": "Primary resources",
-    "variables.tf": "Input variables",
-    "outputs.tf": "Output values",
-    "versions.tf": "Provider and Terraform version requirements",
-}
-
-OPTIONAL_FILES = {
-    "locals.tf": "Computed local values",
-    "data.tf": "Data sources",
-    "backend.tf": "Remote state backend configuration",
-    "providers.tf": "Provider configuration",
-    "README.md": "Module documentation",
-}
+@dataclass
+class Variable:
+    """A Terraform variable."""
+    name: str
+    type_defined: bool
+    has_default: bool
+    has_description: bool
+    description: str = ""
 
 
-def find_tf_files(directory):
-    """Find all .tf files in a directory (non-recursive)."""
-    tf_files = {}
-    for entry in sorted(os.listdir(directory)):
-        if entry.endswith(".tf"):
-            filepath = os.path.join(directory, entry)
-            with open(filepath, encoding="utf-8") as f:
-                tf_files[entry] = f.read()
-    return tf_files
+@dataclass
+class Output:
+    """A Terraform output."""
+    name: str
+    has_description: bool
+    has_value: bool
 
 
-def parse_resources(content):
-    """Extract resource declarations from HCL content."""
-    resources = []
-    for match in re.finditer(
-        r'^resource\s+"([^"]+)"\s+"([^"]+)"', content, re.MULTILINE
-    ):
-        resources.append({
-            "type": match.group(1),
-            "name": match.group(2),
-            "provider": match.group(1).split("_")[0],
-        })
-    return resources
+@dataclass
+class Resource:
+    """A Terraform resource."""
+    type: str
+    name: str
+    provider: str
 
 
-def parse_data_sources(content):
-    """Extract data source declarations."""
-    sources = []
-    for match in re.finditer(
-        r'^data\s+"([^"]+)"\s+"([^"]+)"', content, re.MULTILINE
-    ):
-        sources.append({"type": match.group(1), "name": match.group(2)})
-    return sources
+@dataclass
+class ModuleCall:
+    """A module call."""
+    name: str
+    source: str
 
 
-def parse_variables(content):
-    """Extract variable declarations with metadata."""
-    variables = []
-    # Match variable blocks
-    for match in re.finditer(
-        r'^variable\s+"([^"]+)"\s*\{(.*?)\n\}',
-        content,
-        re.MULTILINE | re.DOTALL,
-    ):
-        name = match.group(1)
-        body = match.group(2)
-        var = {
-            "name": name,
-            "has_description": "description" in body,
-            "has_type": bool(re.search(r'\btype\s*=', body)),
-            "has_default": bool(re.search(r'\bdefault\s*=', body)),
-            "has_validation": "validation" in body,
-            "is_sensitive": "sensitive" in body and bool(
-                re.search(r'\bsensitive\s*=\s*true', body)
-            ),
+@dataclass
+class ModuleAnalysis:
+    """Complete module analysis result."""
+    path: str
+    files: List[str]
+    resources: List[Resource]
+    variables: List[Variable]
+    outputs: List[Output]
+    module_calls: List[ModuleCall]
+    data_sources: List[str]
+    complexity_score: int
+    findings: List[Dict[str, str]]
+
+
+class TerraformParser:
+    """Parse Terraform HCL files for structure analysis."""
+
+    RESOURCE_PATTERN = re.compile(r'resource\s+"(\w+)"\s+"(\w+)"')
+    DATA_PATTERN = re.compile(r'data\s+"(\w+)"\s+"(\w+)"')
+    VARIABLE_PATTERN = re.compile(r'variable\s+"(\w+)"')
+    OUTPUT_PATTERN = re.compile(r'output\s+"(\w+)"')
+    MODULE_PATTERN = re.compile(r'module\s+"(\w+)"')
+    TYPE_PATTERN = re.compile(r'^\s+type\s*=')
+    DEFAULT_PATTERN = re.compile(r'^\s+default\s*=')
+    DESCRIPTION_PATTERN = re.compile(r'^\s+description\s*=\s*"([^"]*)"')
+    VALUE_PATTERN = re.compile(r'^\s+value\s*=')
+    SOURCE_PATTERN = re.compile(r'^\s+source\s*=\s*"([^"]*)"')
+
+    def parse_file(self, filepath: Path) -> Dict[str, Any]:
+        """Parse a single .tf file."""
+        content = filepath.read_text()
+        lines = content.split("\n")
+
+        resources = []
+        data_sources = []
+        variables = []
+        outputs = []
+        module_calls = []
+
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+
+            # Resources
+            m = self.RESOURCE_PATTERN.search(line)
+            if m:
+                provider = m.group(1).split("_")[0]
+                resources.append(Resource(type=m.group(1), name=m.group(2), provider=provider))
+
+            # Data sources
+            m = self.DATA_PATTERN.search(line)
+            if m:
+                data_sources.append(f"{m.group(1)}.{m.group(2)}")
+
+            # Variables
+            m = self.VARIABLE_PATTERN.search(line)
+            if m:
+                var = self._parse_variable_block(lines, i, m.group(1))
+                variables.append(var)
+
+            # Outputs
+            m = self.OUTPUT_PATTERN.search(line)
+            if m:
+                out = self._parse_output_block(lines, i, m.group(1))
+                outputs.append(out)
+
+            # Module calls
+            m = self.MODULE_PATTERN.search(line)
+            if m:
+                mod = self._parse_module_block(lines, i, m.group(1))
+                module_calls.append(mod)
+
+            i += 1
+
+        return {
+            "resources": resources,
+            "data_sources": data_sources,
+            "variables": variables,
+            "outputs": outputs,
+            "module_calls": module_calls,
         }
-        variables.append(var)
-    return variables
+
+    def _parse_variable_block(self, lines: List[str], start: int, name: str) -> Variable:
+        """Parse a variable block for type, default, description."""
+        has_type = False
+        has_default = False
+        has_description = False
+        description = ""
+        brace_depth = 0
+        started = False
+
+        for i in range(start, min(start + 30, len(lines))):
+            line = lines[i]
+            if "{" in line:
+                brace_depth += line.count("{")
+                started = True
+            if "}" in line:
+                brace_depth -= line.count("}")
+            if started and brace_depth <= 0:
+                break
+
+            if self.TYPE_PATTERN.search(line):
+                has_type = True
+            if self.DEFAULT_PATTERN.search(line):
+                has_default = True
+            m = self.DESCRIPTION_PATTERN.search(line)
+            if m:
+                has_description = True
+                description = m.group(1)
+
+        return Variable(name=name, type_defined=has_type, has_default=has_default,
+                       has_description=has_description, description=description)
+
+    def _parse_output_block(self, lines: List[str], start: int, name: str) -> Output:
+        """Parse an output block."""
+        has_description = False
+        has_value = False
+        brace_depth = 0
+        started = False
+
+        for i in range(start, min(start + 15, len(lines))):
+            line = lines[i]
+            if "{" in line:
+                brace_depth += line.count("{")
+                started = True
+            if "}" in line:
+                brace_depth -= line.count("}")
+            if started and brace_depth <= 0:
+                break
+            if self.DESCRIPTION_PATTERN.search(line):
+                has_description = True
+            if self.VALUE_PATTERN.search(line):
+                has_value = True
+
+        return Output(name=name, has_description=has_description, has_value=has_value)
+
+    def _parse_module_block(self, lines: List[str], start: int, name: str) -> ModuleCall:
+        """Parse a module call block."""
+        source = ""
+        brace_depth = 0
+        started = False
+
+        for i in range(start, min(start + 30, len(lines))):
+            line = lines[i]
+            if "{" in line:
+                brace_depth += line.count("{")
+                started = True
+            if "}" in line:
+                brace_depth -= line.count("}")
+            if started and brace_depth <= 0:
+                break
+            m = self.SOURCE_PATTERN.search(line)
+            if m:
+                source = m.group(1)
+
+        return ModuleCall(name=name, source=source)
 
 
-def parse_outputs(content):
-    """Extract output declarations with metadata."""
-    outputs = []
-    for match in re.finditer(
-        r'^output\s+"([^"]+)"\s*\{(.*?)\n\}',
-        content,
-        re.MULTILINE | re.DOTALL,
-    ):
-        name = match.group(1)
-        body = match.group(2)
-        out = {
-            "name": name,
-            "has_description": "description" in body,
-            "is_sensitive": "sensitive" in body and bool(
-                re.search(r'\bsensitive\s*=\s*true', body)
-            ),
-        }
-        outputs.append(out)
-    return outputs
+def calculate_complexity(analysis: Dict[str, Any]) -> int:
+    """Calculate complexity score 0-100."""
+    score = 0
+    num_resources = len(analysis["resources"])
+    num_variables = len(analysis["variables"])
+    num_outputs = len(analysis["outputs"])
+    num_modules = len(analysis["module_calls"])
+    num_data = len(analysis["data_sources"])
+
+    # Resource count contribution (0-30)
+    if num_resources > 25:
+        score += 30
+    elif num_resources > 15:
+        score += 20
+    elif num_resources > 8:
+        score += 10
+    else:
+        score += min(num_resources, 5)
+
+    # Variable sprawl (0-25)
+    if num_variables > 30:
+        score += 25
+    elif num_variables > 20:
+        score += 15
+    elif num_variables > 10:
+        score += 8
+    else:
+        score += min(num_variables, 4)
+
+    # Module dependencies (0-20)
+    score += min(num_modules * 4, 20)
+
+    # Data source complexity (0-15)
+    score += min(num_data * 3, 15)
+
+    # Output count (0-10)
+    score += min(num_outputs, 10)
+
+    return min(score, 100)
 
 
-def parse_modules(content):
-    """Extract module calls."""
-    modules = []
-    for match in re.finditer(
-        r'^module\s+"([^"]+)"\s*\{(.*?)\n\}',
-        content,
-        re.MULTILINE | re.DOTALL,
-    ):
-        name = match.group(1)
-        body = match.group(2)
-        source_match = re.search(r'source\s*=\s*"([^"]+)"', body)
-        source = source_match.group(1) if source_match else "unknown"
-        modules.append({"name": name, "source": source})
-    return modules
-
-
-def check_naming(resources, data_sources):
-    """Check naming conventions."""
-    issues = []
-    for r in resources:
-        if not VALID_RESOURCE_NAME.match(r["name"]):
-            issues.append({
-                "severity": "medium",
-                "message": f"Resource '{r['type']}.{r['name']}' uses non-standard naming — use lowercase with underscores",
-            })
-        if r["name"].startswith(r["provider"] + "_"):
-            issues.append({
-                "severity": "low",
-                "message": f"Resource '{r['type']}.{r['name']}' name repeats the provider prefix — redundant",
-            })
-    for d in data_sources:
-        if not VALID_RESOURCE_NAME.match(d["name"]):
-            issues.append({
-                "severity": "medium",
-                "message": f"Data source '{d['type']}.{d['name']}' uses non-standard naming",
-            })
-    return issues
-
-
-def check_variables(variables):
-    """Check variable quality."""
-    issues = []
-    for v in variables:
-        if not v["has_description"]:
-            issues.append({
-                "severity": "medium",
-                "message": f"Variable '{v['name']}' missing description — consumers won't know what to provide",
-            })
-        if not v["has_type"]:
-            issues.append({
-                "severity": "high",
-                "message": f"Variable '{v['name']}' missing type constraint — accepts any value",
-            })
-        # Check if name suggests a secret
-        secret_patterns = ["password", "secret", "token", "key", "api_key", "credentials"]
-        name_lower = v["name"].lower()
-        if any(p in name_lower for p in secret_patterns) and not v["is_sensitive"]:
-            issues.append({
-                "severity": "high",
-                "message": f"Variable '{v['name']}' looks like a secret but is not marked sensitive = true",
-            })
-    return issues
-
-
-def check_outputs(outputs):
-    """Check output quality."""
-    issues = []
-    for o in outputs:
-        if not o["has_description"]:
-            issues.append({
-                "severity": "low",
-                "message": f"Output '{o['name']}' missing description",
-            })
-    return issues
-
-
-def check_file_structure(tf_files):
-    """Check if expected files are present."""
-    issues = []
-    filenames = set(tf_files.keys())
-    for expected, purpose in EXPECTED_FILES.items():
-        if expected not in filenames:
-            issues.append({
-                "severity": "medium" if expected != "versions.tf" else "high",
-                "message": f"Missing '{expected}' — {purpose}",
-            })
-    return issues
-
-
-def analyze_directory(tf_files):
-    """Run full analysis on a set of .tf files."""
-    all_content = "\n".join(tf_files.values())
-
-    resources = parse_resources(all_content)
-    data_sources = parse_data_sources(all_content)
-    variables = parse_variables(all_content)
-    outputs = parse_outputs(all_content)
-    modules = parse_modules(all_content)
-
-    # Collect findings
+def generate_findings(analysis: Dict[str, Any], complexity: int) -> List[Dict[str, str]]:
+    """Generate findings from analysis."""
     findings = []
-    findings.extend(check_file_structure(tf_files))
-    findings.extend(check_naming(resources, data_sources))
-    findings.extend(check_variables(variables))
-    findings.extend(check_outputs(outputs))
 
-    # Check for backend configuration
-    has_backend = any(
-        re.search(r'\bbackend\s+"', content)
-        for content in tf_files.values()
-    )
-    if not has_backend:
+    # Undocumented variables
+    undoc_vars = [v for v in analysis["variables"] if not v.has_description]
+    if undoc_vars:
         findings.append({
-            "severity": "high",
-            "message": "No remote backend configured — state is stored locally",
+            "severity": "warning",
+            "category": "documentation",
+            "message": f"{len(undoc_vars)} variable(s) missing description: {', '.join(v.name for v in undoc_vars[:5])}",
+            "recommendation": "Add description to all variables for maintainability.",
         })
 
-    # Check for terraform required_version
-    has_tf_version = any(
-        re.search(r'required_version\s*=', content)
-        for content in tf_files.values()
-    )
-    if not has_tf_version:
+    # Untyped variables
+    untyped = [v for v in analysis["variables"] if not v.type_defined]
+    if untyped:
         findings.append({
-            "severity": "medium",
-            "message": "No required_version constraint — any Terraform version can be used",
+            "severity": "warning",
+            "category": "quality",
+            "message": f"{len(untyped)} variable(s) missing type constraint: {', '.join(v.name for v in untyped[:5])}",
+            "recommendation": "Add type constraints to prevent misconfiguration.",
         })
 
-    # Providers in child modules check
-    for filename, content in tf_files.items():
-        if filename not in ("providers.tf", "versions.tf", "backend.tf"):
-            if re.search(r'^provider\s+"', content, re.MULTILINE):
-                findings.append({
-                    "severity": "medium",
-                    "message": f"Provider configuration found in '{filename}' — keep providers in root module only",
-                })
+    # Undocumented outputs
+    undoc_out = [o for o in analysis["outputs"] if not o.has_description]
+    if undoc_out:
+        findings.append({
+            "severity": "info",
+            "category": "documentation",
+            "message": f"{len(undoc_out)} output(s) missing description.",
+            "recommendation": "Add descriptions to outputs for downstream consumers.",
+        })
 
-    # Sort findings
-    severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    findings.sort(key=lambda f: severity_order.get(f["severity"], 4))
+    # High complexity
+    if complexity > 80:
+        findings.append({
+            "severity": "critical",
+            "category": "complexity",
+            "message": f"Module complexity score is {complexity}/100 (critical).",
+            "recommendation": "Break this module into smaller, focused sub-modules.",
+        })
+    elif complexity > 60:
+        findings.append({
+            "severity": "warning",
+            "category": "complexity",
+            "message": f"Module complexity score is {complexity}/100 (high).",
+            "recommendation": "Consider splitting this module to reduce complexity.",
+        })
 
-    # Unique providers
-    providers = sorted(set(r["provider"] for r in resources))
+    # Multiple providers
+    providers = set(r.provider for r in analysis["resources"])
+    if len(providers) > 2:
+        findings.append({
+            "severity": "info",
+            "category": "structure",
+            "message": f"Module uses {len(providers)} different providers: {', '.join(providers)}.",
+            "recommendation": "Consider separating resources by provider into distinct modules.",
+        })
 
-    return {
-        "files": sorted(tf_files.keys()),
-        "file_count": len(tf_files),
-        "resources": resources,
-        "resource_count": len(resources),
-        "data_sources": data_sources,
-        "data_source_count": len(data_sources),
-        "variables": variables,
-        "variable_count": len(variables),
-        "outputs": outputs,
-        "output_count": len(outputs),
-        "modules": modules,
-        "module_count": len(modules),
-        "providers": providers,
-        "findings": findings,
+    return findings
+
+
+def analyze_module(path: Path) -> Optional[ModuleAnalysis]:
+    """Analyze a single Terraform module directory."""
+    tf_files = list(path.glob("*.tf"))
+    if not tf_files:
+        return None
+
+    parser = TerraformParser()
+    all_resources = []
+    all_variables = []
+    all_outputs = []
+    all_modules = []
+    all_data = []
+
+    for tf_file in tf_files:
+        try:
+            parsed = parser.parse_file(tf_file)
+            all_resources.extend(parsed["resources"])
+            all_variables.extend(parsed["variables"])
+            all_outputs.extend(parsed["outputs"])
+            all_modules.extend(parsed["module_calls"])
+            all_data.extend(parsed["data_sources"])
+        except Exception as e:
+            pass
+
+    combined = {
+        "resources": all_resources,
+        "variables": all_variables,
+        "outputs": all_outputs,
+        "module_calls": all_modules,
+        "data_sources": all_data,
     }
 
+    complexity = calculate_complexity(combined)
+    findings = generate_findings(combined, complexity)
 
-def generate_report(analysis, output_format="text"):
-    """Generate analysis report."""
-    findings = analysis["findings"]
+    return ModuleAnalysis(
+        path=str(path),
+        files=[f.name for f in tf_files],
+        resources=all_resources,
+        variables=all_variables,
+        outputs=all_outputs,
+        module_calls=all_modules,
+        data_sources=all_data,
+        complexity_score=complexity,
+        findings=findings,
+    )
 
-    # Score
-    deductions = {"critical": 25, "high": 15, "medium": 5, "low": 2}
-    score = max(0, 100 - sum(deductions.get(f["severity"], 0) for f in findings))
 
-    counts = {
-        "critical": sum(1 for f in findings if f["severity"] == "critical"),
-        "high": sum(1 for f in findings if f["severity"] == "high"),
-        "medium": sum(1 for f in findings if f["severity"] == "medium"),
-        "low": sum(1 for f in findings if f["severity"] == "low"),
-    }
+def format_text(results: List[ModuleAnalysis]) -> str:
+    """Format as human-readable text."""
+    lines = []
+    lines.append("=" * 60)
+    lines.append("TERRAFORM MODULE ANALYSIS REPORT")
+    lines.append("=" * 60)
 
-    result = {
-        "score": score,
-        "files": analysis["files"],
-        "resource_count": analysis["resource_count"],
-        "data_source_count": analysis["data_source_count"],
-        "variable_count": analysis["variable_count"],
-        "output_count": analysis["output_count"],
-        "module_count": analysis["module_count"],
-        "providers": analysis["providers"],
-        "findings": findings,
-        "finding_counts": counts,
-    }
+    for mod in results:
+        lines.append(f"\nModule: {mod.path}")
+        lines.append(f"  Files: {', '.join(mod.files)}")
+        lines.append(f"  Resources: {len(mod.resources)}")
+        lines.append(f"  Variables: {len(mod.variables)}")
+        lines.append(f"  Outputs: {len(mod.outputs)}")
+        lines.append(f"  Module calls: {len(mod.module_calls)}")
+        lines.append(f"  Data sources: {len(mod.data_sources)}")
+        lines.append(f"  Complexity: {mod.complexity_score}/100")
+        lines.append("-" * 40)
 
-    if output_format == "json":
-        print(json.dumps(result, indent=2))
-        return result
+        if mod.findings:
+            for f in mod.findings:
+                lines.append(f"  [{f['severity'].upper()}] {f['message']}")
+                lines.append(f"    Fix: {f['recommendation']}")
+        else:
+            lines.append("  No issues found.")
+        lines.append("")
 
-    # Text output
-    print(f"\n{'=' * 60}")
-    print(f"  Terraform Module Analysis Report")
-    print(f"{'=' * 60}")
-    print(f"  Score: {score}/100")
-    print(f"  Files: {', '.join(analysis['files'])}")
-    print(f"  Providers: {', '.join(analysis['providers']) if analysis['providers'] else 'none detected'}")
-    print()
-    print(f"  Resources: {analysis['resource_count']} | Data Sources: {analysis['data_source_count']}")
-    print(f"  Variables: {analysis['variable_count']} | Outputs: {analysis['output_count']} | Modules: {analysis['module_count']}")
-    print()
-    print(f"  Findings: {counts['critical']} critical | {counts['high']} high | {counts['medium']} medium | {counts['low']} low")
-    print(f"{'─' * 60}")
+    lines.append("=" * 60)
+    return "\n".join(lines)
 
-    for f in findings:
-        icon = {"critical": "!!!", "high": "!!", "medium": "!", "low": "~"}.get(f["severity"], "?")
-        print(f"\n  {icon} {f['severity'].upper()}")
-        print(f"  {f['message']}")
 
-    if not findings:
-        print("\n  No issues found. Module structure looks good.")
-
-    print(f"\n{'=' * 60}\n")
-    return result
+def format_json(results: List[ModuleAnalysis]) -> str:
+    """Format as JSON."""
+    data = []
+    for mod in results:
+        data.append({
+            "path": mod.path,
+            "files": mod.files,
+            "resources": [asdict(r) for r in mod.resources],
+            "variables": [asdict(v) for v in mod.variables],
+            "outputs": [asdict(o) for o in mod.outputs],
+            "module_calls": [asdict(m) for m in mod.module_calls],
+            "data_sources": mod.data_sources,
+            "complexity_score": mod.complexity_score,
+            "findings": mod.findings,
+        })
+    return json.dumps({"modules": data}, indent=2)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="terraform-patterns: Terraform module analyzer"
+        description="Analyze Terraform modules for complexity and quality."
     )
-    parser.add_argument(
-        "directory", nargs="?",
-        help="Path to Terraform directory (omit for demo)",
-    )
-    parser.add_argument(
-        "--output", "-o",
-        choices=["text", "json"],
-        default="text",
-        help="Output format (default: text)",
-    )
+    parser.add_argument("--path", "-p", required=True, help="Path to Terraform module or directory")
+    parser.add_argument("--recursive", "-r", action="store_true", help="Recursively scan subdirectories")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     args = parser.parse_args()
 
-    if args.directory:
-        dirpath = Path(args.directory)
-        if not dirpath.is_dir():
-            print(f"Error: Not a directory: {args.directory}", file=sys.stderr)
-            sys.exit(1)
-        tf_files = find_tf_files(str(dirpath))
-        if not tf_files:
-            print(f"Error: No .tf files found in {args.directory}", file=sys.stderr)
-            sys.exit(1)
-    else:
-        print("No directory provided. Running demo analysis...\n")
-        tf_files = DEMO_FILES
+    root = Path(args.path)
+    if not root.exists():
+        print(f"Error: Path not found: {args.path}", file=sys.stderr)
+        sys.exit(2)
 
-    analysis = analyze_directory(tf_files)
-    generate_report(analysis, args.output)
+    results = []
+    if args.recursive:
+        for dirpath, dirnames, filenames in os.walk(root):
+            if any(f.endswith(".tf") for f in filenames):
+                result = analyze_module(Path(dirpath))
+                if result:
+                    results.append(result)
+    else:
+        result = analyze_module(root)
+        if result:
+            results.append(result)
+
+    if not results:
+        print("No Terraform files found.", file=sys.stderr)
+        sys.exit(2)
+
+    if args.format == "json":
+        print(format_json(results))
+    else:
+        print(format_text(results))
+
+    if any(f["severity"] == "critical" for r in results for f in r.findings):
+        sys.exit(1)
 
 
 if __name__ == "__main__":

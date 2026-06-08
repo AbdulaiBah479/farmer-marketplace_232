@@ -1,68 +1,41 @@
 ---
 name: figma-create-new-file
-description: Create a new blank Figma file. Use when the user wants to create a new Figma design or FigJam file, or when you need a new file before calling use_figma. Handles plan resolution via whoami if needed. Usage — /figma-create-new-file [editorType] [fileName] (e.g. /figma-create-new-file figjam My Whiteboard)
+description: |
+  Create a new blank Figma Design or FigJam file. Useful as the first step in scripted design-system or workshop workflows.
+triggers:
+  - "figma new file"
+  - "figjam new"
+  - "create figma file"
+od:
+  mode: design-system
+  category: figma
+  upstream: "https://github.com/figma/skills"
 ---
 
-# create_new_file — Create a New Figma File
+# figma-create-new-file
 
-Use the `create_new_file` MCP tool to create a new blank Figma file in the user's drafts folder. This is typically used before `use_figma` when you need a fresh file to work with.
+> Curated from Figma's MCP server guide.
 
-## Skill Arguments
+## What it does
 
-This skill accepts optional arguments: `/figma-create-new-file [editorType] [fileName]`
+Create a new blank Figma Design or FigJam file. Useful as the first step in scripted design-system or workshop workflows.
 
-- **editorType**: `design` (default) or `figjam`
-- **fileName**: Name for the new file (defaults to "Untitled")
+## Source
 
-Examples:
-- `/figma-create-new-file` — creates a design file named "Untitled"
-- `/figma-create-new-file figjam My Whiteboard` — creates a FigJam file named "My Whiteboard"
-- `/figma-create-new-file design My New Design` — creates a design file named "My New Design"
+- Upstream: https://github.com/figma/skills
+- Category: `figma`
 
-Parse the arguments from the skill invocation. If editorType is not provided, default to `"design"`. If fileName is not provided, default to `"Untitled"`.
+## How to use
 
-## Workflow
+This catalogue entry advertises the skill in Open Design so the agent
+discovers it during planning. To run the full upstream workflow with
+its original assets, scripts, and references, install the upstream
+bundle into your active agent's skills directory:
 
-### Step 1: Resolve the planKey
-
-The `create_new_file` tool requires a `planKey` parameter. Follow this decision tree:
-
-1. **User already provided a planKey** (e.g. from a previous `whoami` call or in their prompt) → use it directly, skip to Step 2.
-
-2. **No planKey available** → call the `whoami` tool. The response contains a `plans` array. Each plan has a `key`, `name`, `seat`, and `tier`.
-
-   - **Single plan**: use its `key` field automatically.
-   - **Multiple plans**: ask the user which team or organization they want to create the file in, then use the corresponding plan's `key`.
-
-### Step 2: Call create_new_file
-
-Call the `create_new_file` tool with:
-
-| Parameter    | Required | Description |
-|-------------|----------|-------------|
-| `planKey`   | Yes      | The plan key from Step 1 |
-| `fileName`  | Yes      | Name for the new file |
-| `editorType`| Yes      | `"design"` or `"figjam"` |
-
-Example:
-```json
-{
-  "planKey": "team:123456",
-  "fileName": "My New Design",
-  "editorType": "design"
-}
+```bash
+# Inspect the upstream README for exact paths
+open https://github.com/figma/skills
 ```
 
-### Step 3: Use the result
-
-The tool returns:
-- `file_key` — the key of the newly created file
-- `file_url` — a direct URL to open the file in Figma
-
-Use the `file_key` for subsequent tool calls like `use_figma`.
-
-## Important Notes
-
-- The file is created in the user's **drafts folder** for the selected plan.
-- Only `"design"` and `"figjam"` editor types are supported.
-- If `use_figma` is your next step, load the `figma-use` skill before calling it.
+Then ask the agent to invoke this skill by name (`figma-create-new-file`) or with
+one of the trigger phrases listed in this skill's frontmatter.

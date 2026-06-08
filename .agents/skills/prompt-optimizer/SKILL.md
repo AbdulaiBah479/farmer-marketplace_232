@@ -1,122 +1,195 @@
 ---
 name: prompt-optimizer
-description: Creates, optimizes, and iteratively refines agent prompts, system prompts, developer prompts, and reusable prompt templates. Use when asked to improve a prompt, optimize a system prompt, rewrite an agent prompt, tune prompt wording, make a prompt more reliable, port prompts between OpenAI, Claude, or Gemini, or build prompt evals.
+description: Transform vague prompts into precise, well-structured specifications using EARS (Easy Approach to Requirements Syntax) methodology. This skill should be used when users provide loose requirements, ambiguous feature descriptions, or need to enhance prompts for AI-generated code, products, or documents. Triggers include requests to "optimize my prompt", "improve this requirement", "make this more specific", or when raw requirements lack detail and structure.
 ---
 
 # Prompt Optimizer
 
-Optimize prompts with evals. Keep every instruction, example, and external context reference causal.
+## Overview
 
-## Load Only What You Need
+Optimize vague prompts into precise, actionable specifications using EARS (Easy Approach to Requirements Syntax) - a Rolls-Royce methodology for transforming natural language into structured, testable requirements.
 
-| Need | Read |
-|------|------|
-| New prompt | `references/core-patterns.md`, `references/model-family-notes.md`, `references/transformed-examples.md` |
-| Existing prompt | `references/meta-optimization-loop.md`, `references/core-patterns.md`, `references/model-family-notes.md` |
-| Model-family port | `references/model-family-notes.md`, `references/core-patterns.md` |
-| Repeated failures | `references/meta-optimization-loop.md`, `references/core-patterns.md` |
-| Weak or ambiguous draft | `references/transformed-examples.md` |
-| Provenance | `SOURCES.md` |
+**Methodology inspired by:** This skill's approach to combining EARS with domain theory grounding was inspired by [阿星AI工作室 (A-Xing AI Studio)](https://mp.weixin.qq.com/s/yUVX-9FovSq7ZGChkHpuXQ), which demonstrated practical EARS application for prompt enhancement.
 
-## Step 1: Capture Contract
+**Four-layer enhancement process:**
 
-Record before editing:
+1. **EARS syntax transformation** - Convert descriptive language to normative specifications
+2. **Domain theory grounding** - Apply relevant industry frameworks (GTD, BJ Fogg, Gestalt, etc.)
+3. **Example extraction** - Surface concrete use cases with real data
+4. **Structured prompt generation** - Format using Role/Skills/Workflows/Examples/Formats framework
 
-- task type: new, refine, port, or debug
-- target model family and snapshot, if known
-- prompt surface: `system`, `developer`, `user`, tool descriptions, examples, schemas
-- layer owners: platform, deployer/persona, retrieved context, user payload
-- objective and non-goals
-- inputs, tools, and external files available
-- required output shape
-- success criteria and failure cases
-- hard constraints: latency, verbosity, safety, budget, tool use, style
+## When to Use
 
-If success criteria or examples are missing, create a small eval set first.
-If the bottleneck is model choice, retrieval, tool schema, or missing evals, say so before rewriting.
+Apply when:
+- User provides vague feature requests ("build a dashboard", "create a reminder app")
+- Requirements lack specific conditions, triggers, or measurable outcomes
+- Natural language descriptions need conversion to testable specifications
+- User explicitly requests prompt optimization or requirement refinement
 
-## Step 2: Inventory External Context
+## Six-Step Optimization Workflow
 
-For repo or agent prompts, list stable context by exact path:
+### Step 1: Analyze Original Requirement
 
-| Context type | Examples |
-|--------------|----------|
-| Agent rules | `AGENTS.md`, `CLAUDE.md` |
-| Specs | `specs/*.md`, `docs/api.md` |
-| Policies | `SECURITY.md`, `docs/releasing.md` |
-| Examples | `examples/`, `tests/fixtures/` |
+Identify weaknesses:
+- **Overly broad** - "Add user authentication" → Missing password requirements, session management
+- **Missing triggers** - "Send notifications" → Missing when/why notifications trigger
+- **Ambiguous actions** - "Make it user-friendly" → No measurable usability criteria
+- **No constraints** - "Process payments" → Missing security, compliance requirements
 
-Rules:
+### Step 2: Apply EARS Transformation
 
-- Reference stable files by repo-relative path instead of copying them.
-- Paste only excerpts needed for the prompt or eval case.
-- Mark whether a file is `loaded`, `referenced`, or `out of scope`.
-- Avoid vague context pointers such as "read the docs".
+Convert requirements to EARS patterns. See `references/ears_syntax.md` for complete syntax rules.
 
-## Step 3: Choose Model Strategy
+**Five core patterns:**
+1. **Ubiquitous**: `The system shall <action>`
+2. **Event-driven**: `When <trigger>, the system shall <action>`
+3. **State-driven**: `While <state>, the system shall <action>`
+4. **Conditional**: `If <condition>, the system shall <action>`
+5. **Unwanted behavior**: `If <condition>, the system shall prevent <unwanted action>`
 
-Read `references/model-family-notes.md`.
+**Quick example:**
+```
+Before: "Create a reminder app with task management"
 
-- Known family: optimize for that family.
-- Unknown family: write a portable base plus short adapter notes.
-- Snapshot changes: rerun evals.
-- Cross-family divergence: specialize only the failing layer.
+After (EARS):
+1. When user creates a task, the system shall guide decomposition into executable sub-tasks
+2. When task deadline is within 30 minutes AND user has not started, the system shall send notification with sound alert
+3. When user completes a sub-task, the system shall update progress and provide positive feedback
+```
 
-## Step 4: Shape Prompt
+**Transformation checklist:**
+- [ ] Identify implicit conditions and make explicit
+- [ ] Specify triggering events or states
+- [ ] Use precise action verbs (shall, must, should)
+- [ ] Add measurable criteria ("within 30 minutes", "at least 8 characters")
+- [ ] Break compound requirements into atomic statements
+- [ ] Remove ambiguous language ("user-friendly", "fast")
 
-Read `references/core-patterns.md`.
+### Step 3: Identify Domain Theories
 
-- Put stable policy in `system` or `developer`.
-- Put task-local facts, retrieved context, and variables in user-facing sections.
-- Keep one owner per behavior rule.
-- Use headings or tags only to separate content types.
-- Put tool policy in prompt text; keep schemas in provider-native tools.
-- Keep persona light unless it changes behavior.
-- Use the shortest wording that preserves the constraint.
-- Cut filler, repeated reminders, dead examples, and rationale that does not affect evals.
+Match requirements to established frameworks. See `references/domain_theories.md` for full catalog.
 
-## Step 5: Optimize
+**Common domain mappings:**
+- **Productivity** → GTD, Pomodoro, Eisenhower Matrix
+- **Behavior Change** → BJ Fogg Model (B=MAT), Atomic Habits
+- **UX Design** → Hick's Law, Fitts's Law, Gestalt Principles
+- **Security** → Zero Trust, Defense in Depth, Privacy by Design
 
-Read `references/meta-optimization-loop.md` for refinements.
+**Selection process:**
+1. Identify primary domain from requirement keywords
+2. Match to 2-4 complementary theories
+3. Apply theory principles to specific features
+4. Cite theories in enhanced prompt for credibility
 
-1. Baseline the current prompt on the same eval slice.
-2. Cluster failures by root cause.
-3. Write concrete edit criticisms.
-4. Generate two to four candidates:
-   - minimal-diff repair
-   - structure-first rewrite
-   - examples-first or tool-rule variant
-   - provider adapter when needed
-5. Compare candidates on the same cases.
-6. Keep a short optimization log.
-7. Validate the winner on holdout cases.
-8. Stop on plateau, oscillation, overfit, excessive cost, or non-prompt bottleneck.
+### Step 4: Extract Concrete Examples
 
-## Step 6: Return Package
+Generate specific examples with real data:
+- User scenarios: "When user logs in on mobile device..."
+- Data examples: "Product: 'Laptop', Price: $999, Stock: 15"
+- Workflow examples: "Task: Write report → Sub-tasks: Research (2h), Draft (3h), Edit (1h)"
 
-Return:
+Examples must be **realistic**, **specific**, **varied** (success/error/edge cases), and **testable**.
 
-1. `Target`
-2. `Success Criteria`
-3. `External Context`
-4. `Optimized Prompt`
-5. `Adapter Notes`
-6. `Eval Set`
-7. `Optimization Log`
-8. `Residual Risks`
+### Step 5: Generate Enhanced Prompt
 
-For existing prompts, include a concise diff-style note of the main behavioral changes.
+Structure using the standard framework:
 
-## Failure Modes
+```markdown
+# Role
+[Specific expert role with domain expertise]
 
-- editing before defining the eval target
-- mixing policy, examples, and raw context without boundaries
-- duplicating rules across layers
-- putting durable policy in user payloads
-- asking for chain-of-thought
-- keeping contradictory legacy instructions
-- overfitting to one or two examples
-- retaining examples that no longer improve evals
-- fixing tool-use failures only in prompt text when tool descriptions or schemas are weak
-- adding markup that does not reduce ambiguity
-- using persona as a substitute for behavior rules
+## Skills
+- [Core capability 1]
+- [Core capability 2]
+[List 5-8 skills aligned with domain theories]
+
+## Workflows
+1. [Phase 1] - [Key activities]
+2. [Phase 2] - [Key activities]
+[Complete step-by-step process]
+
+## Examples
+[Concrete examples with real data, not placeholders]
+
+## Formats
+[Precise output specifications:
+- File types, structure requirements
+- Design/styling expectations
+- Technical constraints
+- Deliverable checklist]
+```
+
+**Quality criteria:**
+- **Role specificity**: "Product designer specializing in time management apps" > "Designer"
+- **Theory grounding**: Reference frameworks explicitly
+- **Actionable workflows**: Clear inputs/outputs and decision points
+- **Concrete examples**: Real data, not "Example 1", "Example 2"
+- **Measurable formats**: Specific requirements, not "good design"
+
+### Step 6: Present Optimization Results
+
+Output in structured format:
+
+```markdown
+## Original Requirement
+[User's vague requirement]
+
+**Identified Issues:**
+- [Issue 1: e.g., "Lacks specific trigger conditions"]
+- [Issue 2: e.g., "No measurable success criteria"]
+
+## EARS Transformation
+[Numbered list of EARS-formatted requirements]
+
+## Domain & Theories
+**Primary Domain:** [e.g., Authentication Security]
+
+**Applicable Theories:**
+- **[Theory 1]** - [Brief relevance]
+- **[Theory 2]** - [Brief relevance]
+
+## Enhanced Prompt
+[Complete Role/Skills/Workflows/Examples/Formats prompt]
+
+---
+
+**How to use:**
+[Brief guidance on applying the prompt]
+```
+
+## Advanced Techniques
+
+For complex scenarios, see `references/advanced_techniques.md`:
+- **Multi-stakeholder requirements** - EARS statements for each user type
+- **Non-functional requirements** - Performance, security, scalability with quantified thresholds
+- **Complex conditional logic** - Nested conditions with boolean operators
+
+## Quick Reference
+
+**Do's:**
+✅ Break down compound requirements (one EARS statement per requirement)
+✅ Specify measurable criteria (numbers, timeframes, percentages)
+✅ Include error/edge cases
+✅ Ground in established theories
+✅ Use concrete examples with real data
+
+**Don'ts:**
+❌ Avoid vague language ("fast", "user-friendly")
+❌ Don't assume implicit knowledge
+❌ Don't mix multiple actions in one statement
+❌ Don't use placeholders in examples
+
+## Resources
+
+Load these reference files as needed:
+
+- **`references/ears_syntax.md`** - Complete EARS syntax rules, all 5 patterns, transformation guidelines, benefits
+- **`references/domain_theories.md`** - 40+ theories mapped to 10 domains (productivity, UX, gamification, learning, e-commerce, security, etc.)
+- **`references/examples.md`** - Four complete transformation examples (procrastination app, e-commerce product page, learning dashboard, password reset security) with before/after comparisons and reusable template
+- **`references/advanced_techniques.md`** - Multi-stakeholder requirements, non-functional specs, complex conditional logic patterns
+
+**When to load references:**
+- EARS syntax clarification needed → `ears_syntax.md`
+- Domain theory selection requires extensive options → `domain_theories.md`
+- User requests multiple optimization examples → `examples.md`
+- Complex requirements with multiple stakeholders or non-functional specs → `advanced_techniques.md`

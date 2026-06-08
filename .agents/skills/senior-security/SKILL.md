@@ -1,24 +1,22 @@
 ---
-name: "senior-security"
-description: Security engineering toolkit for threat modeling, vulnerability analysis, secure architecture, and penetration testing. Includes STRIDE analysis, OWASP guidance, cryptography patterns, and security scanning tools. Use when the user asks about security reviews, threat analysis, vulnerability assessments, secure coding practices, security audits, attack surface analysis, CVE remediation, or security best practices.
-triggers:
-  - security architecture
-  - threat modeling
-  - STRIDE analysis
-  - penetration testing
-  - vulnerability assessment
-  - secure coding
-  - OWASP
-  - application security
-  - cryptography implementation
-  - secret scanning
-  - security audit
-  - zero trust
+name: senior-security
+description: >
+  Performs STRIDE threat modeling, DREAD risk scoring, secret detection, and
+  secure architecture design. Use when conducting threat models, reviewing code
+  for security vulnerabilities, designing defense-in-depth architectures, or
+  scanning for hardcoded secrets and credentials.
+license: MIT + Commons Clause
+metadata:
+  version: 1.0.0
+  author: borghei
+  category: engineering
+  domain: application-security
+  updated: 2026-03-31
+  tags: [owasp, threat-modeling, penetration-testing, application-security]
 ---
-
 # Senior Security Engineer
 
-Security engineering tools for threat modeling, vulnerability analysis, secure architecture design, and penetration testing.
+The agent performs STRIDE threat analysis with DREAD risk scoring, designs defense-in-depth security architectures with Zero Trust principles, conducts secure code reviews against OWASP Top 10, and scans codebases for hardcoded secrets across 20+ credential patterns.
 
 ---
 
@@ -49,7 +47,13 @@ Identify and analyze security threats using STRIDE methodology.
    - Processes (application components)
    - Data stores (databases, caches)
    - Data flows (APIs, network connections)
-3. Apply STRIDE to each DFD element (see [STRIDE per Element Matrix](#stride-per-element-matrix) below)
+3. Apply STRIDE to each DFD element:
+   - Spoofing: Can identity be faked?
+   - Tampering: Can data be modified?
+   - Repudiation: Can actions be denied?
+   - Information Disclosure: Can data leak?
+   - Denial of Service: Can availability be affected?
+   - Elevation of Privilege: Can access be escalated?
 4. Score risks using DREAD:
    - Damage potential (1-10)
    - Reproducibility (1-10)
@@ -63,14 +67,14 @@ Identify and analyze security threats using STRIDE methodology.
 
 ### STRIDE Threat Categories
 
-| Category | Security Property | Mitigation Focus |
-|----------|-------------------|------------------|
-| Spoofing | Authentication | MFA, certificates, strong auth |
-| Tampering | Integrity | Signing, checksums, validation |
-| Repudiation | Non-repudiation | Audit logs, digital signatures |
-| Information Disclosure | Confidentiality | Encryption, access controls |
-| Denial of Service | Availability | Rate limiting, redundancy |
-| Elevation of Privilege | Authorization | RBAC, least privilege |
+| Category | Description | Security Property | Mitigation Focus |
+|----------|-------------|-------------------|------------------|
+| Spoofing | Impersonating users or systems | Authentication | MFA, certificates, strong auth |
+| Tampering | Modifying data or code | Integrity | Signing, checksums, validation |
+| Repudiation | Denying actions | Non-repudiation | Audit logs, digital signatures |
+| Information Disclosure | Exposing data | Confidentiality | Encryption, access controls |
+| Denial of Service | Disrupting availability | Availability | Rate limiting, redundancy |
+| Elevation of Privilege | Gaining unauthorized access | Authorization | RBAC, least privilege |
 
 ### STRIDE per Element Matrix
 
@@ -189,11 +193,24 @@ Identify and remediate security vulnerabilities in applications.
 7. Verify fixes and document
 8. **Validation:** Scope defined; automated and manual testing complete; findings classified; remediation tracked
 
-For OWASP Top 10 vulnerability descriptions and testing guidance, refer to [owasp.org/Top10](https://owasp.org/Top10).
+### OWASP Top 10 Mapping
+
+| Rank | Vulnerability | Testing Approach |
+|------|---------------|------------------|
+| A01 | Broken Access Control | Manual IDOR testing, authorization checks |
+| A02 | Cryptographic Failures | Algorithm review, key management audit |
+| A03 | Injection | SAST + manual payload testing |
+| A04 | Insecure Design | Threat modeling, architecture review |
+| A05 | Security Misconfiguration | Configuration audit, CIS benchmarks |
+| A06 | Vulnerable Components | Dependency scanning, CVE monitoring |
+| A07 | Authentication Failures | Password policy, session management review |
+| A08 | Software/Data Integrity | CI/CD security, code signing verification |
+| A09 | Logging Failures | Log review, SIEM configuration check |
+| A10 | SSRF | Manual URL manipulation testing |
 
 ### Vulnerability Severity Matrix
 
-| Impact \ Exploitability | Easy | Moderate | Difficult |
+| Impact / Exploitability | Easy | Moderate | Difficult |
 |-------------------------|------|----------|-----------|
 | Critical | Critical | Critical | High |
 | High | Critical | High | Medium |
@@ -261,55 +278,6 @@ Review code for security vulnerabilities before deployment.
 | MD5/SHA1 for passwords | Weak hashing | Use Argon2id or bcrypt |
 | Math.random for tokens | Predictable values | Use crypto.getRandomValues |
 
-### Inline Code Examples
-
-**SQL Injection — insecure vs. secure (Python):**
-
-```python
-# ❌ Insecure: string formatting allows SQL injection
-query = f"SELECT * FROM users WHERE username = '{username}'"
-cursor.execute(query)
-
-# ✅ Secure: parameterized query — user input never interpreted as SQL
-query = "SELECT * FROM users WHERE username = %s"
-cursor.execute(query, (username,))
-```
-
-**Password Hashing with Argon2id (Python):**
-
-```python
-from argon2 import PasswordHasher
-
-ph = PasswordHasher()          # uses secure defaults (time_cost, memory_cost)
-
-# On registration
-hashed = ph.hash(plain_password)
-
-# On login — raises argon2.exceptions.VerifyMismatchError on failure
-ph.verify(hashed, plain_password)
-```
-
-**Secret Scanning — core pattern matching (Python):**
-
-```python
-import re, pathlib
-
-SECRET_PATTERNS = {
-    "aws_access_key":  re.compile(r"AKIA[0-9A-Z]{16}"),
-    "github_token":    re.compile(r"ghp_[A-Za-z0-9]{36}"),
-    "private_key":     re.compile(r"-----BEGIN (RSA |EC )?PRIVATE KEY-----"),
-    "generic_secret":  re.compile(r'(?i)(password|secret|api_key)\s*=\s*["\']?\S{8,}'),
-}
-
-def scan_file(path: pathlib.Path) -> list[dict]:
-    findings = []
-    for lineno, line in enumerate(path.read_text(errors="replace").splitlines(), 1):
-        for name, pattern in SECRET_PATTERNS.items():
-            if pattern.search(line):
-                findings.append({"file": str(path), "line": lineno, "type": name})
-    return findings
-```
-
 ---
 
 ## Incident Response Workflow
@@ -347,12 +315,12 @@ Respond to and contain security incidents.
 
 ### Incident Severity Levels
 
-| Level | Response Time | Escalation |
-|-------|---------------|------------|
-| P1 - Critical (active breach/exfiltration) | Immediate | CISO, Legal, Executive |
-| P2 - High (confirmed, contained) | 1 hour | Security Lead, IT Director |
-| P3 - Medium (potential, under investigation) | 4 hours | Security Team |
-| P4 - Low (suspicious, low impact) | 24 hours | On-call engineer |
+| Level | Description | Response Time | Escalation |
+|-------|-------------|---------------|------------|
+| P1 - Critical | Active breach, data exfiltration | Immediate | CISO, Legal, Executive |
+| P2 - High | Confirmed compromise, contained | 1 hour | Security Lead, IT Director |
+| P3 - Medium | Potential compromise, under investigation | 4 hours | Security Team |
+| P4 - Low | Suspicious activity, low impact | 24 hours | On-call engineer |
 
 ### Incident Response Checklist
 
@@ -400,12 +368,24 @@ See: [references/cryptography-implementation.md](references/cryptography-impleme
 
 ### Scripts
 
-| Script | Purpose |
-|--------|---------|
-| [threat_modeler.py](scripts/threat_modeler.py) | STRIDE threat analysis with DREAD risk scoring; JSON and text output; interactive guided mode |
-| [secret_scanner.py](scripts/secret_scanner.py) | Detect hardcoded secrets and credentials across 20+ patterns; CI/CD integration ready |
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| [threat_modeler.py](scripts/threat_modeler.py) | STRIDE threat analysis with risk scoring | `python threat_modeler.py --component "Authentication"` |
+| [secret_scanner.py](scripts/secret_scanner.py) | Detect hardcoded secrets and credentials | `python secret_scanner.py /path/to/project` |
 
-For usage, see the inline code examples in [Secure Code Review Workflow](#inline-code-examples) and the script source files directly.
+**Threat Modeler Features:**
+- STRIDE analysis for any system component
+- DREAD risk scoring
+- Mitigation recommendations
+- JSON and text output formats
+- Interactive mode for guided analysis
+
+**Secret Scanner Features:**
+- Detects AWS, GCP, Azure credentials
+- Finds API keys and tokens (GitHub, Slack, Stripe)
+- Identifies private keys and passwords
+- Supports 20+ secret patterns
+- CI/CD integration ready
 
 ### References
 
@@ -419,6 +399,17 @@ For usage, see the inline code examples in [Secure Code Review Workflow](#inline
 
 ## Security Standards Reference
 
+### Compliance Frameworks
+
+| Framework | Focus | Applicable To |
+|-----------|-------|---------------|
+| OWASP ASVS | Application security | Web applications |
+| CIS Benchmarks | System hardening | Servers, containers, cloud |
+| NIST CSF | Risk management | Enterprise security programs |
+| PCI-DSS | Payment card data | Payment processing |
+| HIPAA | Healthcare data | Healthcare applications |
+| SOC 2 | Service organization controls | SaaS providers |
+
 ### Security Headers Checklist
 
 | Header | Recommended Value |
@@ -430,8 +421,6 @@ For usage, see the inline code examples in [Secure Code Review Workflow](#inline
 | Referrer-Policy | strict-origin-when-cross-origin |
 | Permissions-Policy | geolocation=(), microphone=(), camera=() |
 
-For compliance framework requirements (OWASP ASVS, CIS Benchmarks, NIST CSF, PCI-DSS, HIPAA, SOC 2), refer to the respective official documentation.
-
 ---
 
 ## Related Skills
@@ -442,3 +431,151 @@ For compliance framework requirements (OWASP ASVS, CIS Benchmarks, NIST CSF, PCI
 | [senior-secops](../senior-secops/) | Security monitoring, incident response |
 | [senior-backend](../senior-backend/) | Secure API development |
 | [senior-architect](../senior-architect/) | Security architecture decisions |
+
+---
+
+## Anti-Patterns
+
+- **Security by obscurity** -- hiding endpoints or using non-standard ports is not a control; implement authentication, authorization, and encryption
+- **MD5/SHA1 for password hashing** -- both are broken for this purpose; use Argon2id or bcrypt with cost factor >= 12
+- **Math.random for tokens** -- predictable values allow session hijacking; use `crypto.getRandomValues()` or `secrets.token_hex()`
+- **Shell=True in subprocess** -- enables command injection; use argument lists with `subprocess.run(["cmd", "arg"])`
+- **Threat model without data flow diagram** -- STRIDE analysis requires DFD elements to be systematic; skip the DFD and you miss entire attack surfaces
+- **Accepted risks without review cadence** -- DREAD scores drift as systems evolve; re-validate accepted risks every 90 days
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Secret scanner reports false positives on test fixtures | Test files contain example tokens that match secret patterns | Add test directories to the exclude list or filter by `--severity critical` to focus on confirmed secrets |
+| Threat model returns all threats instead of component-specific ones | Component name does not match any entry in the component mapping | Use a recognized component keyword (e.g., "authentication", "api", "database", "network", "storage") or a composite like "web application" |
+| DREAD scores seem inflated for low-likelihood threats | DREAD factors are derived from likelihood and severity with fixed multipliers | Interpret DREAD as a relative ranking within the report, not an absolute metric; adjust risk acceptance thresholds accordingly |
+| Secret scanner misses secrets in non-standard file extensions | Only files whose extensions appear in the pattern's `file_extensions` list are scanned | Rename config files to use a recognized extension (e.g., `.conf`, `.env`, `.yml`) or extend the pattern database |
+| Threat model does not cover custom component types | The `COMPONENT_MAPPING` dictionary has a fixed set of keywords | Add new entries to `COMPONENT_MAPPING` in `threat_modeler.py` for project-specific components |
+| Secret scanner exits with code 1 even after fixing secrets | Previous scan results are cached or the fix introduced a new match | Re-run the scanner after every fix; exit code 1 triggers whenever any critical or high finding remains |
+| Security headers audit produces incomplete results | Application is behind a reverse proxy that strips or overrides headers | Test headers at the edge (CDN/load balancer) rather than at the application origin |
+
+---
+
+## Success Criteria
+
+- Zero critical- or high-severity secrets detected by `secret_scanner.py` across the entire codebase before every release.
+- Threat model coverage above 90%: every component in the data flow diagram has a completed STRIDE analysis with documented mitigations.
+- All OWASP Top 10 vulnerability categories addressed in the security architecture with at least one compensating control per category.
+- Mean time to remediate critical vulnerabilities under 48 hours from discovery to verified fix.
+- 100% of authentication and authorization code paths reviewed with the Secure Code Review Checklist before merge.
+- Incident response exercises (tabletop or simulated) conducted at least quarterly with post-mortem documentation.
+- DREAD risk scores for all remaining accepted risks reviewed and re-validated every 90 days.
+
+---
+
+## Scope & Limitations
+
+**This skill covers:**
+- Application-level security: threat modeling, secure code review, secret detection, and vulnerability assessment for web applications and APIs.
+- Security architecture design: defense-in-depth layering, Zero Trust patterns, authentication/authorization model selection, and encryption strategy.
+- Incident response planning: severity classification, containment procedures, post-mortem frameworks, and runbook creation.
+- Compliance mapping: OWASP ASVS, CIS Benchmarks, NIST CSF, PCI-DSS, HIPAA, and SOC 2 alignment at the application layer.
+
+**This skill does NOT cover:**
+- Infrastructure and cloud security hardening (see [senior-devops](../senior-devops/) and [aws-solution-architect](../aws-solution-architect/)).
+- Runtime security monitoring, SIEM rule authoring, and SOC operations (see [senior-secops](../senior-secops/)).
+- Full regulatory compliance programs, audit evidence collection, and certification processes (see [ra-qm-team](../../ra-qm-team/)).
+- Network penetration testing tooling, red team operations, and physical security assessments.
+
+---
+
+## Integration Points
+
+| Skill | Integration | Data Flow |
+|-------|-------------|-----------|
+| [senior-devops](../senior-devops/) | CI/CD pipeline security gates | Threat model mitigations feed into pipeline hardening requirements; secret scanner runs as a pre-commit or CI step |
+| [senior-secops](../senior-secops/) | Security monitoring and incident response | Threat model outputs define detection rules; incident severity levels align with SecOps alerting tiers |
+| [senior-backend](../senior-backend/) | Secure API development | Secure code review checklist applied to backend PRs; authentication pattern selection guides API auth implementation |
+| [senior-architect](../senior-architect/) | Security architecture decisions | Defense-in-depth layers and Zero Trust principles inform architecture design reviews; STRIDE results feed architecture risk register |
+| [senior-qa](../senior-qa/) | Security testing integration | Vulnerability assessment findings become QA regression test cases; OWASP Top 10 mapping drives security test coverage |
+| [ra-qm-team](../../ra-qm-team/) | Compliance framework alignment | Security controls mapped to SOC 2, PCI-DSS, and HIPAA requirements; threat model documentation satisfies audit evidence needs |
+
+---
+
+## Tool Reference
+
+### threat_modeler.py
+
+**Purpose:** Performs STRIDE threat analysis on system components with DREAD risk scoring, mitigation recommendations, and structured reporting.
+
+**Usage:**
+
+```bash
+python threat_modeler.py --component "User Authentication"
+python threat_modeler.py --component "API Gateway" --assets "user_data,tokens" --json
+python threat_modeler.py --component "Database" --output report.txt
+python threat_modeler.py --interactive
+python threat_modeler.py --list-threats
+```
+
+**Flags:**
+
+| Flag | Short | Type | Required | Description |
+|------|-------|------|----------|-------------|
+| `--component` | `-c` | string | Yes (unless `--interactive` or `--list-threats`) | Component to analyze (e.g., "User Authentication", "API Gateway", "Database") |
+| `--assets` | `-a` | string | No | Comma-separated list of assets to protect |
+| `--json` | | flag | No | Output report as JSON instead of text |
+| `--interactive` | `-i` | flag | No | Run guided interactive threat modeling session |
+| `--list-threats` | `-l` | flag | No | List all threats in the built-in database |
+| `--output` | `-o` | string | No | Write report to file path instead of stdout |
+
+**Example:**
+
+```bash
+$ python threat_modeler.py --component "API Gateway" --json --output api-threats.json
+Report written to api-threats.json
+```
+
+**Output Formats:**
+- **Text (default):** Structured report grouped by STRIDE category with risk scores, DREAD ratings, attack vectors, and mitigations.
+- **JSON (`--json`):** Machine-readable object containing `component`, `analysis_date`, `summary` (counts by risk level), and `threats` array with full DREAD breakdown per threat.
+
+---
+
+### secret_scanner.py
+
+**Purpose:** Detects hardcoded secrets, API keys, credentials, and private keys in source code. Supports 20+ secret patterns across cloud providers (AWS, GCP, Azure), authentication tokens (GitHub, GitLab, Slack, Stripe, Twilio, SendGrid), cryptographic keys, and generic credential patterns. Exits with code 1 when critical or high findings are present, making it CI/CD-ready.
+
+**Usage:**
+
+```bash
+python secret_scanner.py /path/to/project
+python secret_scanner.py /path/to/file.py
+python secret_scanner.py /path/to/project --format json --output report.json
+python secret_scanner.py /path/to/project --severity critical
+python secret_scanner.py --list-patterns
+```
+
+**Flags:**
+
+| Flag | Short | Type | Required | Description |
+|------|-------|------|----------|-------------|
+| `path` | | positional | Yes (unless `--list-patterns`) | File or directory path to scan |
+| `--format` | `-f` | choice: `text`, `json` | No | Output format (default: `text`) |
+| `--output` | `-o` | string | No | Write report to file path instead of stdout |
+| `--list-patterns` | `-l` | flag | No | List all detection patterns with IDs and severity |
+| `--severity` | `-s` | choice: `critical`, `high`, `medium`, `low` | No | Minimum severity threshold to report (includes all levels from critical down to the specified level) |
+
+**Example:**
+
+```bash
+$ python secret_scanner.py ./src --severity high --format json
+{
+  "target": "./src",
+  "scan_date": "2026-03-21T10:30:00",
+  "summary": { "total": 2, "by_severity": { "critical": 1, "high": 1, "medium": 0, "low": 0 } },
+  "findings": [ ... ]
+}
+```
+
+**Output Formats:**
+- **Text (default):** Severity-grouped report showing pattern ID, file path with line number, masked match text, and remediation recommendation.
+- **JSON (`--format json`):** Machine-readable object with `target`, `scan_date`, `summary` (counts by severity), and `findings` array. Each finding includes `pattern_id`, `name`, `severity`, `file_path`, `line_number`, `matched_text` (masked), and `recommendation`.

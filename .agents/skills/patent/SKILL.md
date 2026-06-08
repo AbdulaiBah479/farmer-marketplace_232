@@ -1,287 +1,160 @@
 ---
 name: patent
-description: "Patent prior-art and landscape intelligence skill — not generic patent help. Commits to one of five sub-use-cases via forcing intake (novelty search / freedom-to-operate / competitive landscape / acquisition diligence / litigation prior-art) before any search runs. Searches Google Patents, Espacenet, USPTO, and optionally Lens.org for citation-graph signals. Output is an editable Word document (.docx) with verdict, ranked closest art (claim-text extracted), CPC-class-aware landscape, family-resolved hits, geographic coverage, FTO flags where applicable, strategy recommendations, and full audit log. Triggers: 'prior art search for [invention]', 'patent search on [topic]', 'freedom to operate analysis', 'FTO for [product]', 'patent landscape for [field]', 'is [invention] novel', 'patents on [topic]', 'competitive patent analysis', 'prior art for litigation', 'patent diligence on [company]'. Produces search signal, not legal advice — always recommends consulting a patent attorney before filing or licensing decisions. Trademark, copyright, and trade-secret questions are out of scope."
-license: MIT
+description: >
+  Patent research and IP landscape skill. Covers prior-art search
+  strategy, claim mapping, landscape analysis, freedom-to-operate
+  assessment, and patentability scoring. Use when conducting a prior-art
+  search, mapping the IP landscape of a technology area, evaluating
+  patentability of an invention, or running an FTO analysis before
+  product launch.
+license: MIT + Commons Clause
 metadata:
-  source_spec: "megaprompts/11-patent-megaprompt.md"
-  build_pattern: "Path B (direct conversion)"
-  research_pack_convention: "Agent Integrity Rules verbatim per PR #657 audit; sub-use-case routing variant"
   version: 1.0.0
+  author: borghei
+  category: research
+  domain: research
+  updated: 2026-05-27
+  tags: [patent, ip, prior-art, freedom-to-operate, patentability, claims, landscape]
 ---
 
-# Patent — Prior-Art + Landscape Intelligence
+# Patent Research
 
-> **Portability:** Requires `web_fetch` (Google Patents, Espacenet, USPTO), `WebSearch` (adjacent academic art), Node.js with `docx` package, and optionally Lens.org API key for citation-graph signals. Works in Claude Code CLI natively. In Claude.ai with web tools + Code Execution + BYOK Lens.org, the workflow is supported.
+A research-focused patent skill (not legal filing). Covers prior-art
+search, IP landscape mapping, claim analysis, freedom-to-operate, and
+patentability. For formal patent prosecution, work with a licensed
+patent attorney.
 
-> **Out of scope:** trademark, copyright, trade-secret. These are flagged at intake. Use a different skill or qualified counsel.
+## When to use this skill
 
-> **Legal disclaimer:** This skill produces search signal, not legal advice. Verdicts are technical assessments. **Always consult a patent attorney before filing or licensing decisions.**
+- Conducting a **prior-art search** before filing a provisional patent
+- Mapping the **IP landscape** in a technology area
+- Evaluating the **patentability** of an invention
+- Assessing **freedom-to-operate** before launching a product
+- Tracking **competitive patent activity** in a market
+- Preparing a **patent strategy** for a startup or R&D group
 
-## Non-Generic Framing — The Differentiator
+## Inputs the advisor expects
 
-This skill is **prior-art + landscape intelligence**. It **refuses to be a bucket**. Every invocation commits to one of five sub-use-cases via the grill-me intake before any search runs. The chosen sub-use-case dictates the entire search strategy, ranking heuristics, and DOCX emphasis.
+- Invention description (problem, solution, novelty)
+- Technology area + relevant CPC/IPC classifications
+- Target jurisdictions (US, EU, JP, CN — IP is jurisdictional)
+- Existing prior art known (key references)
+- Competitor list
+- Timeline pressure (filing deadline, product launch)
 
-| Sub-use-case | Search strategy | DOCX emphasis |
-|---|---|---|
-| **Novelty search** | Narrow + claims-text focused; pre-filing date irrelevant | Closest art + claim-differentiation |
-| **Freedom-to-operate** | Broad + active patents only; jurisdiction-filtered | FTO flags + claim-by-claim risk |
-| **Competitive landscape** | Breadth + filer tally + CPC trends | Filer map + investment hotspots |
-| **Acquisition diligence** | Specific assignee + portfolio scope + assignment chain | Portfolio table + ownership verification |
-| **Litigation prior-art** | Specific target patent + adjacent art before priority date | Knock-out candidates ranked by relevance |
+## Workflows
 
-See [`references/sub_use_case_routing.md`](references/sub_use_case_routing.md) for the canon.
+### Workflow 1 — Plan a prior-art search
 
-## Agent Integrity Rules (Research-Pack Convention)
-
-Locked verbatim per PR #657 audit.
-
-- **Execution discipline.** Sequential search calls only. **1 query/sec rate limit.** Confirm response received before next call.
-- **Source discipline.** Cite only patents returned by THIS session's tool calls. Training knowledge labeled `[Not from search — reference information]` and excluded from counts.
-- **Three-count tracking.** Queries sent / patents received (shown) / patents cited. Surfaced in audit log.
-- **Retry policy.** On failure → wait 3s → retry once → log. After 3 consecutive failures across tools: stop, alert user, explain what's missing.
-- **Plan-tier detection.** Lens.org free tier = 1000 queries/month. Google Patents has no auth but rate-limits per IP. Detect and surface caps.
-
-## Phase 1: Grill-Me Intake (6 forcing questions, one at a time)
-
-### Q1 (root) — Invention description
-
-> **Describe the invention in 2–3 sentences. What does it do, and what's new about it?**
->
-> *Why I'm asking:* Concept and keyword extraction depends entirely on a precise description. Vague descriptions ("AI for healthcare", "a better widget") will be rejected — push back and ask the user to specify what the invention does and what differentiates it from existing approaches.
-
-**Refuse mush.** If answer is generic, ask once more: "What does it do that existing systems don't?" Then commit (with caveat in DOCX).
-
-### Q2 (depends on Q1) — Sub-use-case commitment
-
-> **What's the purpose of this search? Pick one:**
->
-> 1. Novelty search (am I novel enough to file)
-> 2. Freedom-to-operate (will I get sued if I ship)
-> 3. Competitive landscape (who else plays here)
-> 4. Acquisition diligence (does target really own X)
-> 5. Litigation prior-art hunting (kill a specific patent)
->
-> *Why I'm asking:* Each path uses a fundamentally different search strategy. I'll **refuse to start without you picking one**.
-
-Forcing format. If user says "all of them", push for the primary purpose — secondary purposes can run as follow-up searches.
-
-### Q3 (asked only if Q2 ∈ {FTO, landscape, diligence}) — Jurisdictions
-
-> **Which jurisdictions matter? Pick all that apply: US / EP / CN / JP / KR / PCT / worldwide.**
->
-> *Why I'm asking:* FTO only matters where you'll sell. Landscape changes radically by region. Diligence requires checking all jurisdictions where the target operates.
-
-Skip for novelty (priority date is jurisdictionally portable) and litigation (jurisdiction is set by the target patent).
-
-### Q4 (depends on Q1) — Known prior art
-
-> **Have you already seen prior art close to this? Cite a patent number or paper.**
->
-> *Why I'm asking:* If you know one piece of art, I can search adjacent to it — much more precise than starting cold. If you don't, that's fine — just confirm.
-
-Anchoring. Accept "none" but ask if the user has seen *any* related work even informally.
-
-### Q5 (depends on Q2) — Risk tolerance
-
-> **Risk tolerance for this search: strict (one close hit means abandon the path) or signal-gathering (you want the lay of the land regardless)?**
->
-> *Why I'm asking:* Strict mode ranks aggressively and surfaces verdict-grade hits; signal mode prioritizes breadth and visualizations.
-
-Asked for novelty and FTO; skipped for pure landscape (always signal-gathering by definition).
-
-### Q6 (asked only if Q2 ∈ {novelty, FTO}) — Attorney status
-
-> **Have you spoken to a patent attorney? This skill produces search signal, not legal advice. Confirm you understand this is for technical assessment only.**
->
-> *Why I'm asking:* Novelty and FTO have legal consequences. The skill's verdict is signal-grade; legal positions require qualified counsel.
-
-**Triggers the legal-disclaimer footer in the DOCX.** Skipped for landscape and diligence (lower legal exposure).
-
-**Stop condition:** After Q6 (or earlier if dependency skips applied), commit and start Phase 2. Never re-open intake after Phase 2 begins.
-
-## Phase 2: Search Strategy Selection
-
-Deterministic from intake answers. Use `scripts/sub_use_case_router.py`:
+1. Define invention claims (key novel features).
+2. Identify search classifications (CPC / IPC) + keywords.
+3. Run `prior_art_search_planner.py` to produce a search plan.
+4. Execute on USPTO / EPO / Espacenet / Google Patents / WIPO.
 
 ```bash
-python ../scripts/sub_use_case_router.py \
-  --sub-use-case novelty \
-  --jurisdictions "" \
-  --risk strict \
-  --known-art "US10000000B2"
+python3 patent/scripts/prior_art_search_planner.py \
+  --input invention.json --format markdown
 ```
 
-Returns: query plan (5-8 queries) + ranking heuristic + DOCX emphasis flags.
+### Workflow 2 — Map the IP landscape
 
-## Phase 3: Multi-Source Search (Sequential)
-
-### Source priority
-
-1. **Google Patents** (https://patents.google.com) — workhorse, no auth required, broad coverage
-2. **Espacenet** (https://worldwide.espacenet.com) — global coverage, good for non-US art
-3. **USPTO PPS** (https://ppubs.uspto.gov) — US deep dive
-4. **Lens.org** (https://www.lens.org) — citation graph, BYOK API key required
-
-### Per-sub-use-case query patterns
-
-**Novelty:**
-- 3 narrow queries on invention-specific terminology (Google Patents)
-- 2 broad concept queries with synonyms (Google Patents + Espacenet)
-- 1 CPC-class-restricted query if class identified from initial hits
-
-**FTO:**
-- Jurisdiction-filtered: only active patents (not expired, not abandoned)
-- Date filter: priority < today
-- Active-claim text extraction for each hit
-
-**Competitive landscape:**
-- Broader queries on the technology space
-- CPC class identification → tally top filers in that class
-- 10-year filing trend by year per top-5 filer
-
-**Acquisition diligence:**
-- Specific assignee searches (target company + subsidiaries + named inventors)
-- Assignment chain check (USPTO assignment recordation)
-- Family resolution for deduplication
-
-**Litigation prior-art:**
-- Target patent input required (number)
-- Priority date extraction
-- Search for art before priority date in same CPC classes
-- Adjacent-claim-language search
-
-### Sequential discipline
-
-1 q/sec across ALL sources combined. Tracked via `scripts/citation_tracker.py` with timestamp-enforced gap.
-
-## Phase 4: Claim Extraction + Relevance Scoring
-
-For each closest-art hit:
-- Pull **independent claim 1** (the broadest claim — primary anticipation/obviousness vehicle)
-- Pull **key dependent claims** (claims that add the inventive step)
-- Score relevance against invention description (overlap of claim language with Q1 terminology)
-
-Rank by score. Verdict per sub-use-case (NOVEL / POTENTIALLY NOVEL / NOT NOVEL for novelty; CLEAR / FLAGGED / HIGH RISK per jurisdiction for FTO).
-
-## Phase 5: Citation Graph + Family Resolution
-
-### Citation graph (Lens.org BYOK)
-
-If user provides Lens.org API key:
-- Foundational-patent identification (cited-by count > threshold, typically 50+)
-- Recent high-cite signals (citations in last 24 months as proxy for current activity)
-- Forward citations from target patent (litigation prior-art) or from closest art (novelty)
-
-If no Lens.org key: skip; note in audit log; recommend manual citation review on Google Patents.
-
-### Family resolution
-
-Same invention often filed in multiple jurisdictions (US + EP + JP + CN). Group by family ID or priority number to avoid double-counting. Use `scripts/family_resolver.py`:
+1. Capture identified patents (yours, competitors', adjacent).
+2. Run `claim_landscape_mapper.py` to cluster by claim type, owner,
+   technology subarea, recency; surface white space + crowded areas.
 
 ```bash
-python ../scripts/family_resolver.py --hits-file hits.json
-# Returns: deduplicated family list + family-member jurisdictions
+python3 patent/scripts/claim_landscape_mapper.py \
+  --input patents.json --format markdown
 ```
 
-## CPC/IPC Classification Awareness
+### Workflow 3 — Score patentability of an invention
 
-**Critical:** keyword search alone misses adjacent art. After initial search, extract the CPC/IPC classes from top 5 hits and run **one class-restricted query**. This consistently surfaces art that keyword search misses.
+1. Capture invention + closest prior art.
+2. Run `patentability_scorer.py` to rate novelty, non-obviousness,
+   utility, subject matter eligibility.
 
-See [`references/cpc_classification_canon.md`](references/cpc_classification_canon.md) for the canon.
+```bash
+python3 patent/scripts/patentability_scorer.py \
+  --input patentability.json --format markdown
+```
 
-## Phase 6: DOCX Generation (8 Sections)
+## Decision frameworks
 
-Sub-use-case-dependent emphasis. Via Node.js + `docx` library.
+### The three patentability criteria (US baseline)
+1. **Novelty** (35 USC §102): not previously disclosed
+2. **Non-obviousness** (35 USC §103): not obvious to person skilled in the art
+3. **Utility** (35 USC §101): useful, with practical application
 
-1. **Executive Summary + Verdict** — Sub-use-case banner + one-line verdict (NOVEL / FLAGGED / etc.) + 3-4 key findings + legal disclaimer footer
-2. **Closest Prior Art** — 5-10 patents in ranked order. Per hit: hyperlinked title + assignee + filing/priority dates + independent claim 1 text (italicized) + relevance score + relevance rationale (1-2 sentences)
-3. **Patent Landscape** — Top filers table (top 10 by count) + 10-year filing trend description + CPC class distribution table. Only for landscape and diligence; abbreviated otherwise.
-4. **Citation Graph Signals** — Foundational patents (if Lens-enabled) + recent high-cite activity. If Lens unavailable, note "manual review recommended" and skip table.
-5. **Geographic Coverage** — Filings by jurisdiction for top 10 hits. Only for FTO, landscape, diligence; skipped for novelty and litigation.
-6. **FTO Flags** (FTO only) — Active patents posing infringement risk. Per flag: hyperlinked patent + jurisdiction + relevant claims + risk level (HIGH/MEDIUM/LOW) + mitigation note.
-7. **Strategy + Recommendations** — Sub-use-case-specific:
-   - Novelty → claim differentiation suggestions
-   - FTO → design-around hints + jurisdiction strategy
-   - Landscape → who-to-watch list
-   - Diligence → red flags in portfolio
-   - Litigation → ranked knock-out candidates
-   - **Mandatory disclaimer to consult patent attorney** for any filing/licensing decision.
-8. **Audit Log** — Searches table (#, query, source, results, status), counts (sent/shown/cited), tool constraints (plan-tier notes), failed steps, attorney-consultation reminder
+Plus:
+- **Subject matter eligibility** (§101): not abstract idea, not law of nature
+- **Enablement** (§112): described well enough to be made by skilled artisan
+- **Definiteness** (§112): claims clearly distinguish
 
-### Styling
+### Prior-art categories
+- **Patents** (issued + published applications)
+- **Non-patent literature** (papers, conference, dissertations, technical reports)
+- **Commercial products** (sold publicly before filing)
+- **Public disclosures** (talks, demos, blog posts — yes, including your own > 1 year prior)
+- **Sales activity** (offers for sale, even pre-launch)
 
-Arial 12pt body, navy headings (#1a3a5c), light blue table headers (#e8f0f8), red FTO-flag callout. `ExternalHyperlink` patterns:
-- Google Patents: `https://patents.google.com/patent/[number]`
-- Espacenet: `https://worldwide.espacenet.com/patent/...`
-- USPTO: `https://patents.uspto.gov/patent/...`
+Inventors often miss non-patent prior art; this is where searches break.
 
-## Date Discipline
+### Freedom-to-operate (FTO)
+Different from patentability. FTO asks: can I commercialize without
+infringing someone else's patent?
 
-Distinguish at every hit:
-- **Filing date** — when the application was first submitted
-- **Priority date** — earliest claim of priority (often earlier than filing)
-- **Publication date** — when the application became public (typically 18 months after priority)
-- **Grant date** — when the patent was granted (later than publication)
+- Patentability ≠ FTO (your patent could still infringe another)
+- FTO is jurisdiction-specific
+- Active patents only (not expired); typically 20 years from filing
+- Patent attorney involvement essential for formal opinion
 
-Surface the **legally-relevant date** per sub-use-case:
-- Novelty → priority date (vs invention's anticipated filing date)
-- FTO → grant date + status (active vs expired)
-- Landscape → publication date (when public knowledge began)
-- Diligence → grant date + assignment date
-- Litigation → priority date of target patent (sets the prior-art cutoff)
+### IP strategy by stage
+- **Pre-seed:** capture inventions; consider provisional filings; don't over-file
+- **Seed/Series A:** strategic provisionals; key utility filings
+- **Series B+:** PCT international; continuations to maintain pendency
+- **Mature:** portfolio management; licensing; enforcement
 
-## Phase 7: Deliver
+## Common engagements
 
-- Save: `<output-dir>/patent_<invention-slug>_<sub-use-case>_<YYYY-MM-DD>.docx`
-- Chat summary: file path + sub-use-case + verdict + audit counts + plan-tier
-- Validate: `python scripts/office/validate.py <docx>`
-- Reminder: "Consult patent attorney before filing/licensing"
+### "We have a new algorithm. Should we patent?"
+1. Subject matter eligibility check (§101 — algorithms are tricky)
+2. Prior art search (someone has probably published)
+3. Strategic value (does patent enable / defend a business position?)
+4. Cost-benefit ($5-25K provisional; $30-100K full prosecution)
+5. Often answer: keep as trade secret, not patent
 
-## Tooling
+### "Run an FTO before our launch"
+1. Identify candidate blocking patents (search + competitor review)
+2. For each: review claims; assess infringement risk
+3. Identify mitigations: design-around, license, abandon, challenge
+4. Get formal opinion from patent counsel (insurance against willful infringement)
 
-| Script | Role |
-|---|---|
-| `scripts/citation_tracker.py` | Multi-source three-count audit (Google Patents + Espacenet + USPTO + Lens.org) at `~/.patent_sessions/<session>.json` |
-| `scripts/family_resolver.py` | Group same-invention filings across jurisdictions by family ID / priority number |
-| `scripts/sub_use_case_router.py` | Deterministic search-strategy selection from intake answers |
+### "Map the patent landscape in our space"
+1. Identify key players (companies + universities)
+2. Search by classification + keyword
+3. Cluster: by company, by sub-technology, by year
+4. Surface white space (uncovered areas) + crowded zones
+5. Strategy implications (where to play, where to design-around)
+
+## Anti-patterns to avoid
+
+- **Searching only keywords (no classification).** Misses translations + synonyms.
+- **Searching only USPTO.** EPO + WIPO + JP have unique art.
+- **Searching only patents.** Non-patent prior art is huge.
+- **Public disclosure before filing.** Loses patentability outside US (1-year grace in US only).
+- **Filing without prior-art search.** Reviewer finds it; patent invalid.
+- **No FTO before product launch.** Surprise injunctions.
+- **Patenting everything.** $30K per patent adds up; portfolio bloat distracts.
+- **Filing without commercial strategy.** Patents are means, not ends.
 
 ## References
 
-- [`references/sub_use_case_routing.md`](references/sub_use_case_routing.md) — 5-sub-use-case canon (7+ sources)
-- [`references/cpc_classification_canon.md`](references/cpc_classification_canon.md) — CPC/IPC class follow-up rationale (7+ sources)
-- [`references/legal_disclaimer_discipline.md`](references/legal_disclaimer_discipline.md) — when + why disclaimer mandatory (7+ sources)
+- `references/prior-art-search-strategy.md` — search databases, classifications, query patterns
+- `references/claim-mapping-and-landscape.md` — claim analysis, landscape visualization
+- `references/freedom-to-operate-and-patentability.md` — FTO process, patentability criteria
 
-## Error Handling
+## Related skills
 
-| Failure | Behavior |
-|---|---|
-| User refuses to commit to sub-use-case | Refuse to proceed. Re-ask Q2 with examples. |
-| Invention description is generic | Reject answer. Re-ask Q1 with "what does it do that existing systems don't?" |
-| Google Patents rate-limits | Wait 3s, retry once. Fall back to Espacenet for that query. Log in audit. |
-| Lens.org key missing | Skip citation graph section, note "manual review recommended" in DOCX. |
-| Claim text extraction fails | Fall back to abstract; flag as "abstract-only" in relevance rationale. |
-| Family resolution incomplete | Note in audit; same-invention duplicates may appear; suggest manual deduplication. |
-| All searches return <3 hits | Surface explicitly as "either niche art or genuine gap"; never fabricate. |
-| 3 consecutive tool failures | Stop, alert user, explain what's missing. |
-| DOCX generation fails | Save raw data as JSON fallback so user doesn't lose work. |
-| Target patent number invalid (litigation) | Validate format before search; ask user to confirm. |
-
-## Anti-Patterns To Reject
-
-- Starting any search before user commits to a sub-use-case (refuses generic "patent help")
-- Batching all intake questions instead of one at a time
-- Accepting vague invention descriptions ("AI for healthcare")
-- Keyword-only search without CPC/IPC class follow-up
-- Treating family members as separate hits (must be deduplicated)
-- Confusing filing date with priority date with publication date
-- Skipping the legal disclaimer when sub-use-case has legal consequences
-- Reporting a verdict without claim-text evidence
-- Fabricating Lens.org citation data when key is absent
-- Suggesting design-arounds without acknowledging attorney review is required
-- Skipping the audit log
-
----
-
-**Version:** 1.0.0
-**Source spec:** [`megaprompts/11-patent-megaprompt.md`](../../../../megaprompts/11-patent-megaprompt.md)
-**Build pattern:** Path B (direct conversion). Research-pack sibling, sub-use-case routing variant.
+- `legal/contract-review` — IP licensing contracts
+- `c-level-advisor/general-counsel-advisor` — strategic IP counsel
+- `research/litreview` — non-patent literature search overlap

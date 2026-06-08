@@ -1,12 +1,8 @@
 ---
-name: "competitor-alternatives"
-description: "When the user wants to create competitor comparison or alternative pages for SEO and sales enablement. Also use when the user mentions 'alternative page,' 'vs page,' 'competitor comparison,' 'comparison page,' '[Product] vs [Product],' '[Product] alternative,' 'competitive landing pages,' 'switch from competitor,' or 'comparison content.' Covers four formats: singular alternative, plural alternatives, you vs competitor, and competitor vs competitor. Emphasizes deep research, modular content architecture, and varied section types beyond feature tables."
-license: MIT
+name: competitor-alternatives
+description: "When the user wants to create competitor comparison or alternative pages for SEO and sales enablement. Also use when the user mentions 'alternative page,' 'vs page,' 'competitor comparison,' 'comparison page,' '[Product] vs [Product],' '[Product] alternative,' or 'competitive landing pages.' Covers four formats: singular alternative, plural alternatives, you vs competitor, and competitor vs competitor. Emphasizes deep research, modular content architecture, and varied section types beyond feature tables."
 metadata:
   version: 1.0.0
-  author: Alireza Rezvani
-  category: marketing
-  updated: 2026-03-06
 ---
 
 # Competitor & Alternative Pages
@@ -251,40 +247,9 @@ Recommended pages to create with priority order based on search volume.
 
 ---
 
-## Proactive Triggers
-
-Proactively offer competitor page creation when:
-
-1. **Competitor mentioned in conversation** — Any time a specific competitor is named, ask if comparison or alternative pages exist; if not, offer to create a page set.
-2. **Sales team friction** — User mentions prospects comparing them to a specific tool; immediately offer a vs-page for sales enablement.
-3. **SEO gap identified** — Keyword research shows competitor-branded terms with no coverage; propose a full alternative page set with prioritized build order.
-4. **Switcher testimonial available** — When a customer quote about switching surfaces, offer to build a migration-focused alternative page around it.
-5. **Pricing page review** — When reviewing pricing, note that pricing comparison tables belong on dedicated competitor pages, not the pricing page itself.
-
----
-
-## Output Artifacts
-
-| Artifact | Format | Description |
-|----------|--------|-------------|
-| Competitor Intelligence File | YAML data file | Centralized competitor profile: pricing, features, weaknesses, review themes |
-| Page Set Plan | Prioritized list | Ranked list of pages to build with target keywords and search volume estimates |
-| Alternative Page (Singular) | Full page copy | Complete `/[competitor]-alternative` page with all sections |
-| Vs Page | Full page copy | Complete `/vs/[competitor]` page with comparison table and CTA |
-| Migration Guide Section | Markdown block | Reusable migration copy for inclusion across multiple pages |
-
----
-
-## Communication
-
-All competitor page outputs should be factually accurate, legally safe (no false claims), and fair to competitors. Acknowledge genuine competitor strengths — pages that only disparage competitors lose credibility with evaluators. Reference `marketing-context` for ICP and positioning before writing any comparison copy. Quality bar: every claim must be verifiable from public sources or customer quotes.
-
----
-
 ## Related Skills
 
-- **seo-audit** — USE to validate that competitor pages meet on-page SEO requirements before publishing; NOT as a replacement for the keyword strategy built here.
-- **copywriting** — USE for writing the narrative sections and CTAs on comparison pages; NOT when the task is purely competitor research and architecture.
-- **content-strategy** — USE when planning a full competitive content program across multiple pages; NOT for single-page execution.
-- **competitive-intel** — USE when C-level strategic competitive analysis is needed beyond page creation; NOT for tactical page writing.
-- **marketing-context** — USE as foundation before any competitor page work to align positioning; always load first.
+- **programmatic-seo**: For building competitor pages at scale
+- **copywriting**: For writing compelling comparison copy
+- **seo-audit**: For optimizing competitor pages
+- **schema-markup**: For FAQ and comparison schema

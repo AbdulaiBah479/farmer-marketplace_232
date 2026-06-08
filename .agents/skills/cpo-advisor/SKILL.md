@@ -1,200 +1,416 @@
 ---
-name: "cpo-advisor"
-description: "Product leadership for scaling companies. Product vision, portfolio strategy, product-market fit, and product org design. Use when setting product vision, managing a product portfolio, measuring PMF, designing product teams, prioritizing at the portfolio level, reporting to the board on product, or when user mentions CPO, product strategy, product-market fit, product organization, portfolio prioritization, or roadmap strategy."
-license: MIT
+name: cpo-advisor
+description: >
+  Strategic product leadership for scaling companies. Covers product vision,
+  portfolio strategy, product-market fit measurement, product org design, north
+  star metrics, investment postures, and board-level product reporting. Not for
+  feature-level work -- for the decisions that determine what gets built, why,
+  and by whom. Use when setting product vision, managing a product portfolio,
+  measuring PMF, designing product teams, prioritizing at portfolio level, or
+  when user mentions CPO, product strategy, PMF, product organization, portfolio
+  prioritization, roadmap strategy, north star metric, or product-led growth.
+license: MIT + Commons Clause
 metadata:
-  version: 1.0.0
-  author: Alireza Rezvani
+  version: 2.0.0
+  author: borghei
   category: c-level
   domain: cpo-leadership
-  updated: 2026-03-05
-  python-tools: pmf_scorer.py, portfolio_analyzer.py
-  frameworks: pmf-playbook, product-strategy, product-org-design
+  updated: 2026-03-09
+  frameworks:
+    - pmf-playbook
+    - product-strategy
+    - product-org-design
+    - portfolio-management
+    - north-star-framework
+    - investment-posture
+  triggers:
+    - CPO
+    - chief product officer
+    - product strategy
+    - product vision
+    - product-market fit
+    - PMF
+    - portfolio management
+    - product organization
+    - roadmap strategy
+    - product metrics
+    - north star metric
+    - retention curve
+    - product trio
+    - team topologies
+    - JTBD
+    - jobs to be done
+    - product-led growth
+    - PLG
+    - product board reporting
+    - invest maintain kill
+    - feature prioritization
+    - product portfolio
 ---
-
 # CPO Advisor
 
-Strategic product leadership. Vision, portfolio, PMF, org design. Not for feature-level work — for the decisions that determine what gets built, why, and by whom.
+Strategic product leadership. Vision, portfolio, PMF, org design, and metrics. Not for feature-level work -- for the decisions that determine what gets built, why, and by whom.
 
 ## Keywords
-CPO, chief product officer, product strategy, product vision, product-market fit, PMF, portfolio management, product org, roadmap strategy, product metrics, north star metric, retention curve, product trio, team topologies, Jobs to be Done, category design, product positioning, board product reporting, invest-maintain-kill, BCG matrix, switching costs, network effects
 
-## Quick Start
+CPO, chief product officer, product strategy, product vision, product-market fit, PMF, portfolio management, product org, roadmap strategy, product metrics, north star metric, retention curve, product trio, team topologies, jobs to be done, JTBD, category design, product positioning, board product reporting, invest-maintain-kill, BCG matrix, switching costs, network effects, product-led growth, PLG, feature adoption, time to value, activation rate
 
-### Score Your Product-Market Fit
-```bash
-python scripts/pmf_scorer.py
+---
+
+## The CPO Owns Three Things
+
+Everything else is delegation.
+
+| Ownership | What It Means | Key Question |
+|-----------|--------------|--------------|
+| Portfolio | Which products exist, which get investment, which get killed | "If we could only fund 2 of our 4 products, which 2?" |
+| Vision | Where the product goes in 3-5 years and why customers care | "What does the world look like if we succeed?" |
+| Organization | The team structure that can execute the vision | "Can this org ship the next 12 months of strategy?" |
+
+---
+
+## Product-Market Fit Assessment
+
+### PMF Scoring Matrix
+
+| Dimension | Weight | Score 1-3 (Weak) | Score 4-6 (Emerging) | Score 7-10 (Strong) |
+|-----------|--------|-----------------|---------------------|---------------------|
+| Retention | 30% | D30 < 15% (consumer) or < 40% (B2B) | D30 15-30% / 40-60% | D30 > 30% / > 60% |
+| Engagement | 25% | DAU/MAU < 15% | DAU/MAU 15-35% | DAU/MAU > 35% |
+| Satisfaction | 25% | Sean Ellis < 25% "very disappointed" | 25-40% | > 40% |
+| Growth | 20% | No organic growth | Some organic, mostly paid | > 50% organic |
+
+### PMF Decision Tree
+
 ```
-Multi-dimensional PMF score across retention, engagement, satisfaction, and growth.
-
-### Analyze Your Product Portfolio
-```bash
-python scripts/portfolio_analyzer.py
+START: "Do we have PMF?"
+  |
+  v
+[Check retention curve shape]
+  |
+  +-- Declining to zero --> NO PMF. Stop building. Talk to users.
+  |
+  +-- Declining but flattening --> EMERGING. Find the segment where it's flat.
+  |
+  +-- Flat or smiling --> [Check Sean Ellis score]
+                          |
+                          +-- < 25% "very disappointed" --> Weak PMF. Product is nice, not essential.
+                          |
+                          +-- 25-40% --> Moderate PMF. Find and double down on power users.
+                          |
+                          +-- > 40% --> [Check organic growth]
+                                        |
+                                        +-- < 30% organic --> PMF exists but distribution is weak.
+                                        +-- > 30% organic --> STRONG PMF. Scale.
 ```
-BCG matrix classification, investment recommendations, portfolio health score.
 
-## The CPO's Core Responsibilities
+### Post-PMF Traps
 
-The CPO owns three things. Everything else is delegation.
+| Trap | Description | Prevention |
+|------|-------------|------------|
+| Feature creep | Adding features for new segments dilutes core value | Maintain a "jobs" focus, not feature focus |
+| Premature scaling | Scaling sales/marketing before retention proves sustainable | Prove 3+ cohorts retain before scaling spend |
+| Metric vanity | Celebrating signups while ignoring retention | North star must be a retention/engagement metric |
+| Founder departure from product | CEO stops talking to customers post-PMF | Monthly customer conversations are permanent |
+| Platform too early | Building platform capabilities before core is solid | Platform only after 3+ products need shared infra |
 
-| Responsibility | What It Means | Reference |
-|---------------|--------------|-----------|
-| **Portfolio** | Which products exist, which get investment, which get killed | `references/product_strategy.md` |
-| **Vision** | Where the product is going in 3-5 years and why customers care | `references/product_strategy.md` |
-| **Org** | The team structure that can actually execute the vision | `references/product_org_design.md` |
-| **PMF** | Measuring, achieving, and not losing product-market fit | `references/pmf_playbook.md` |
-| **Metrics** | North star → leading → lagging hierarchy, board reporting | This file |
+---
 
-## Diagnostic Questions
+## Portfolio Management
 
-These questions expose whether you have a strategy or a list.
+### Investment Posture Framework
 
-**Portfolio:**
-- Which product is the dog? Are you killing it or lying to yourself?
-- If you had to cut 30% of your portfolio tomorrow, what stays?
-- What's your portfolio's combined D30 retention? Is it trending up?
+Every product gets exactly one posture. "Wait and see" is a decision to lose share.
 
-**PMF:**
-- What's your retention curve for your best cohort?
-- What % of users would be "very disappointed" if your product disappeared?
-- Is organic growth happening without you pushing it?
+| Posture | Signal | Resource Allocation | Review Cadence |
+|---------|--------|-------------------|----------------|
+| **Invest** | High growth, strong/improving retention, clear PMF | Full team, aggressive roadmap, dedicated marketing | Monthly |
+| **Maintain** | Stable revenue, slow growth, good margins | Bug fixes, incremental improvement, minimal new features | Quarterly |
+| **Harvest** | Declining growth, still profitable, no recovery path | Minimal investment, maximize cash extraction | Quarterly |
+| **Kill** | Declining, negative margins, no recovery evidence | Set sunset date, migration plan, team reallocation | Immediate |
 
-**Org:**
-- Can every PM articulate your north star and how their work connects to it?
-- When did your last product trio do user interviews together?
-- What's blocking your slowest team — the people or the structure?
+### Portfolio Health Scorecard
 
-**Strategy:**
-- If you could only ship one thing this quarter, what is it and why?
-- What's your moat in 12 months? In 3 years?
-- What's the riskiest assumption in your current product strategy?
+| Metric | Healthy | Unhealthy |
+|--------|---------|-----------|
+| % revenue from "Invest" products | > 60% | < 40% |
+| % engineering on "Kill" candidates | < 10% | > 20% |
+| Number of products without clear posture | 0 | > 1 |
+| Portfolio D30 retention (weighted) | Improving QoQ | Declining QoQ |
+| # of "question marks" > 2 quarters | 0 | > 2 |
 
-## Product Metrics Hierarchy
+### Portfolio Review Process
+
+```
+Quarterly Portfolio Review (Half-day workshop)
+
+Step 1: Data Preparation (pre-meeting)
+  - Revenue, growth rate, retention, margin per product
+  - Engineering investment % per product
+  - Customer satisfaction per product
+
+Step 2: BCG Classification
+  - Plot each product on Growth Rate (Y) vs Market Share (X)
+  - Stars: high growth, high share --> Invest
+  - Cash Cows: low growth, high share --> Maintain/Harvest
+  - Question Marks: high growth, low share --> Invest or Kill (decide now)
+  - Dogs: low growth, low share --> Kill
+
+Step 3: Investment Allocation
+  - Align engineering capacity to posture
+  - Reallocate from Kill/Harvest to Invest
+  - Set clear milestones for Question Marks (90-day decision point)
+
+Step 4: Communication
+  - Share portfolio decisions with all product teams
+  - Update roadmaps to reflect postures
+  - Communicate sunset plans for Kill products
+```
+
+---
+
+## North Star Metric Framework
+
+### Selection Criteria
+
+The north star metric must satisfy ALL of these:
+
+| Criterion | Test |
+|-----------|------|
+| Measures customer value | Does improvement mean customers got more value? |
+| Leading indicator | Does it predict future revenue? |
+| Actionable | Can product teams influence it? |
+| Single number | Can you state it as one metric? |
+| Non-gameable | Is it hard to improve without genuinely helping customers? |
+
+### North Star by Business Model
+
+| Model | North Star | Why It Works |
+|-------|-----------|-------------|
+| B2B SaaS | Weekly active accounts using core feature | Combines adoption + engagement + stickiness |
+| Consumer social | Daily content creators | Creators drive consumer engagement |
+| Marketplace | Successful transactions per week | Both sides active = healthy marketplace |
+| PLG | Accounts reaching activation within 14 days | Activation predicts retention |
+| Data/Analytics | Queries per active user per week | Usage intensity = value received |
+| Fintech | Monthly active transactors | Transaction activity = core value |
+| E-commerce | Repeat purchase rate (90-day) | Retention is everything in commerce |
+
+### Metrics Hierarchy
 
 ```
 North Star Metric (1, owned by CPO)
-  ↓ explains changes in
-Leading Indicators (3-5, owned by PMs)
-  ↓ eventually become
-Lagging Indicators (revenue, churn, NPS)
+  |
+  +-- Leading Indicator 1 (owned by PM Team A)
+  |     e.g., Activation rate within 7 days
+  |
+  +-- Leading Indicator 2 (owned by PM Team B)
+  |     e.g., Feature X adoption rate
+  |
+  +-- Leading Indicator 3 (owned by PM Team C)
+  |     e.g., D7 retention rate
+  |
+  +-- Guard Rail Metrics (owned by CPO)
+        e.g., NPS, support ticket volume, revenue per user
 ```
 
-**North Star rules:** One number. Measures customer value delivered, not revenue. Every team can influence it.
+---
 
-**Good North Stars by business model:**
+## Product Organization Design
 
-| Model | North Star Example |
-|-------|------------------|
-| B2B SaaS | Weekly active accounts using core feature |
-| Consumer | D30 retained users |
-| Marketplace | Successful transactions per week |
-| PLG | Accounts reaching "aha moment" within 14 days |
-| Data product | Queries run per active user per week |
+### Team Topology Selection
 
-### The CPO Dashboard
+| Topology | When to Use | Optimal Size | Communication |
+|----------|------------|-------------|---------------|
+| Stream-aligned | Default. Teams own end-to-end customer journey. | 5-9 people | Low cross-team dependency |
+| Platform | Shared infrastructure multiple streams need | 4-8 people | API-first, self-service |
+| Enabling | Temporary teams to upskill stream teams | 2-4 people | Coaching mode, time-limited |
+| Complicated subsystem | Deep specialist domain (ML, payments) | 3-6 people | Provides service to streams |
 
-| Category | Metric | Frequency |
-|----------|--------|-----------|
-| Growth | North star metric | Weekly |
-| Growth | D30 / D90 retention by cohort | Weekly |
-| Acquisition | New activations | Weekly |
-| Activation | Time to "aha moment" | Weekly |
-| Engagement | DAU/MAU ratio | Weekly |
-| Satisfaction | NPS trend | Monthly |
-| Portfolio | Revenue per product | Monthly |
-| Portfolio | Engineering investment % per product | Monthly |
-| Moat | Feature adoption depth | Monthly |
+### Product Team Ratios
 
-## Investment Postures
+| Company Size | PM : Engineers | PM : Designer | Total Product Team |
+|-------------|---------------|---------------|-------------------|
+| 10-30 | 1:4-6 | 1:1 | 1 PM, 1 Designer, 4-6 Eng |
+| 30-80 | 1:5-8 | 1:1-2 | 2-4 PMs, 2-3 Designers |
+| 80-200 | 1:6-10 | 1:1-2 | 5-10 PMs, 4-6 Designers |
+| 200+ | 1:8-12 | 1:2 | 10+ PMs, 8+ Designers |
 
-Every product gets one: **Invest / Maintain / Kill**. "Wait and see" is not a posture — it's a decision to lose share.
+### The Product Trio
 
-| Posture | Signal | Action |
-|---------|--------|--------|
-| **Invest** | High growth, strong or growing retention | Full team. Aggressive roadmap. |
-| **Maintain** | Stable revenue, slow growth, good margins | Bug fixes only. Milk it. |
-| **Kill** | Declining, negative or flat margins, no recovery path | Set a sunset date. Write a migration plan. |
+Every product team should operate as a trio: PM + Designer + Tech Lead.
+
+| Role | Owns | Decides |
+|------|------|---------|
+| PM | What to build and why | Prioritization, scope |
+| Designer | User experience and usability | Interaction patterns, research |
+| Tech Lead | How to build and technical feasibility | Architecture, implementation |
+
+**Anti-pattern**: PM writes spec, hands to design, design hands to engineering. This is waterfall with agile labels.
+
+---
+
+## CPO Dashboard
+
+| Category | Metric | Frequency | Target |
+|----------|--------|-----------|--------|
+| Growth | North star metric | Weekly | Improving MoM |
+| Retention | D30 / D90 retention by cohort | Weekly | Flattening or improving |
+| Acquisition | New activations | Weekly | Per plan |
+| Activation | Time to first value | Weekly | Decreasing |
+| Engagement | DAU/MAU ratio | Weekly | > 30% (B2B) / > 20% (consumer) |
+| Satisfaction | NPS trend | Monthly | > 40 |
+| Portfolio | Revenue per product | Monthly | Aligned to posture |
+| Portfolio | Engineering investment % per product | Monthly | Aligned to posture |
+| Quality | Support tickets per 1K users | Monthly | Decreasing |
+| Moat | Feature adoption depth | Monthly | Increasing |
+
+---
 
 ## Red Flags
 
-**Portfolio:**
-- Products that have been "question marks" for 2+ quarters without a decision
-- Engineering capacity allocated to your highest-revenue product but your highest-growth product is understaffed
-- More than 30% of team time on products with declining revenue
+- Products stuck as "question marks" for 2+ quarters without a decision -- make the call
+- Engineering allocated to highest-revenue product while highest-growth product is understaffed -- misallocation
+- > 30% of team time on products with declining revenue -- sunk cost fallacy
+- Retention curve never flattens -- no PMF, stop building features and start talking to users
+- PMs writing specs without talking to users -- product theater
+- Platform team has 6-week queue -- platform should be self-service, not a bottleneck
+- CPO has not talked to a customer in 30+ days -- disconnected from reality
+- North star trending up while retention trends down -- wrong metric
+- Roadmap built from sales requests instead of user data -- sales-driven product is a trap
+- No user research conducted in 90+ days -- team is guessing, not learning
 
-**PMF:**
-- You have to convince users to keep using the product
-- Support requests are mostly "how do I do X" rather than "I want X to also do Y"
-- D30 retention is below 20% (consumer) or 40% (B2B) and not improving
+---
 
-**Org:**
-- PMs writing specs and handing to design, who hands to engineering (waterfall in agile clothing)
-- Platform team has a 6-week queue for stream-aligned team requests
-- CPO has not talked to a real customer in 30+ days
+## Integration with C-Suite
 
-**Metrics:**
-- North star going up while retention is going down (metric is wrong)
-- Teams optimizing their own metrics at the expense of company metrics
-- Roadmap built from sales requests, not user behavior data
-
-## Integration with Other C-Suite Roles
-
-| When... | CPO works with... | To... |
+| When... | CPO Works With... | To... |
 |---------|-------------------|-------|
-| Setting company direction | CEO | Translate vision into product bets |
-| Roadmap funding | CFO | Justify investment allocation per product |
-| Scaling product org | COO | Align hiring and process with product growth |
-| Technical feasibility | CTO | Co-own the features vs. platform trade-off |
-| Launch timing | CMO | Align releases with demand gen capacity |
-| Sales-requested features | CRO | Distinguish revenue-critical from noise |
-| Data and ML product strategy | CTO + CDO | Where data is a product feature vs. infrastructure |
-| Compliance deadlines | CISO / RA | Tier-0 roadmap items that are non-negotiable |
+| Company direction | CEO (`ceo-advisor`) | Translate vision into product bets |
+| Roadmap funding | CFO (`cfo-advisor`) | Justify investment allocation per product |
+| Scaling product org | COO + CHRO | Align hiring with product growth needs |
+| Technical feasibility | CTO (`cto-advisor`) | Co-own features vs. platform trade-off |
+| Launch timing | CMO (`cmo-advisor`) | Align releases with demand gen capacity |
+| Sales-requested features | CRO (`cro-advisor`) | Separate revenue-critical from noise |
+| Compliance deadlines | CISO (`ciso-advisor`) | Identify non-negotiable security items |
+| Product strategy | Product Team (`product-team/`) | Execute strategy through product managers |
+| User research | UX Research (`product-team/ux-researcher`) | Validate assumptions with data |
 
-## Resources
-
-| Resource | When to load |
-|----------|-------------|
-| `references/product_strategy.md` | Vision, JTBD, moats, positioning, BCG, board reporting |
-| `references/product_org_design.md` | Team topologies, PM ratios, hiring, product trio, remote |
-| `references/pmf_playbook.md` | Finding PMF, retention analysis, Sean Ellis, post-PMF traps |
-| `scripts/pmf_scorer.py` | Score PMF across 4 dimensions with real data |
-| `scripts/portfolio_analyzer.py` | BCG classify and score your product portfolio |
-
+---
 
 ## Proactive Triggers
 
-Surface these without being asked when you detect them in company context:
-- Retention curve not flattening → PMF at risk, raise before building more
-- Feature requests piling up without prioritization framework → propose RICE/ICE
-- No user research in 90+ days → product team is guessing
-- NPS declining quarter over quarter → dig into detractor feedback
-- Portfolio has a "dog" everyone avoids discussing → force the kill/invest decision
+- Retention curve not flattening -- PMF at risk, stop feature work and investigate
+- Feature requests piling up without prioritization framework -- propose RICE scoring
+- No user research in 90+ days -- product team is building on assumptions
+- NPS declining QoQ -- dig into detractor feedback, find the pattern
+- Portfolio has a "dog" everyone avoids discussing -- force the kill/invest decision
+- Engineering spending > 20% on a product with < 5% of revenue -- investment misalignment
+- New competitor launched with similar positioning -- competitive response needed
+
+---
 
 ## Output Artifacts
 
-| Request | You Produce |
+| Request | Deliverable |
 |---------|-------------|
-| "Do we have PMF?" | PMF scorecard (retention, engagement, satisfaction, growth) |
-| "Prioritize our roadmap" | Prioritized backlog with scoring framework |
-| "Evaluate our product portfolio" | Portfolio map with invest/maintain/kill recommendations |
-| "Design our product org" | Org proposal with team topology and PM ratios |
-| "Prep product for the board" | Product board section with metrics + roadmap + risks |
+| "Do we have PMF?" | PMF scorecard across 4 dimensions with cohort data |
+| "Prioritize our roadmap" | Scored backlog with framework (RICE/ICE), stack-ranked |
+| "Evaluate our portfolio" | BCG map with invest/maintain/kill recommendations per product |
+| "Design our product org" | Org proposal with topology, ratios, reporting, and transition plan |
+| "Product board section" | Board slide: north star, retention, roadmap highlights, risks |
+| "Set our north star" | North star proposal with hierarchy, leading indicators, and guard rails |
+| "Kill a product" | Sunset plan: timeline, migration, communication, team reallocation |
 
-## Reasoning Technique: First Principles
+---
 
-Decompose to fundamental user needs. Question every assumption about what customers want. Rebuild from validated evidence, not inherited roadmaps.
+## Tool Reference
 
-## Communication
+### 1. product_portfolio_analyzer.py
 
-All output passes the Internal Quality Loop before reaching the founder (see `agent-protocol/SKILL.md`).
-- Self-verify: source attribution, assumption audit, confidence scoring
-- Peer-verify: cross-functional claims validated by the owning role
-- Critic pre-screen: high-stakes decisions reviewed by Executive Mentor
-- Output format: Bottom Line → What (with confidence) → Why → How to Act → Your Decision
-- Results only. Every finding tagged: 🟢 verified, 🟡 medium, 🔴 assumed.
+Analyzes a product portfolio using BCG matrix classification (Star/Cash Cow/Question Mark/Dog), calculates portfolio health scores, identifies investment misalignment, and generates rebalancing recommendations.
 
-## Context Integration
+```bash
+python scripts/product_portfolio_analyzer.py --input portfolio.json --json
+python scripts/product_portfolio_analyzer.py --input portfolio.json
+```
 
-- **Always** read `company-context.md` before responding (if it exists)
-- **During board meetings:** Use only your own analysis in Phase 2 (no cross-pollination)
-- **Invocation:** You can request input from other roles: `[INVOKE:role|question]`
+| Flag | Type | Description |
+|------|------|-------------|
+| `--input` | required | Path to JSON file with products (revenue, growth rate, market share, engineering investment %, retention) |
+| `--json` | optional | Output in JSON format instead of human-readable text |
+
+### 2. feature_prioritizer.py
+
+Prioritizes features using RICE scoring (Reach x Impact x Confidence / Effort). Supports custom weights, generates stack-ranked backlogs, and flags scoring anomalies.
+
+```bash
+python scripts/feature_prioritizer.py --input features.json --json
+python scripts/feature_prioritizer.py --input features.json --method rice
+```
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `--input` | required | Path to JSON file with features (reach, impact, confidence, effort, optional category) |
+| `--method` | optional | Scoring method: `rice` (default), `ice`, or `weighted` |
+| `--json` | optional | Output in JSON format instead of human-readable text |
+
+### 3. product_health_scorer.py
+
+Scores product health across 5 dimensions: retention (D30/D90), engagement (DAU/MAU), satisfaction (NPS/Sean Ellis), growth (organic %), and activation (time to value). Generates PMF assessment and trend analysis.
+
+```bash
+python scripts/product_health_scorer.py --input product_data.json --json
+python scripts/product_health_scorer.py --input product_data.json
+```
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `--input` | required | Path to JSON file with product metrics across retention, engagement, satisfaction, growth, and activation |
+| `--json` | optional | Output in JSON format instead of human-readable text |
+
+---
+
+## Troubleshooting
+
+| Problem | Likely Cause | Resolution |
+|---------|-------------|------------|
+| Products stuck as "question marks" for 2+ quarters | No decision framework or leadership avoidance | Force invest-or-kill decision at next portfolio review; set 90-day milestones with automatic kill trigger |
+| Engineering allocated to highest-revenue product while highest-growth product starves | Investment posture not aligned to growth potential | Run portfolio analyzer to quantify misalignment; reallocate using BCG classification |
+| RICE scores gamed by PMs inflating reach or impact | No calibration process or shared scoring standards | Require evidence for each score dimension; run quarterly calibration sessions across PM teams |
+| North star metric trending up while retention trends down | Wrong north star metric selected or metric is gameable | Re-evaluate north star against the 5 selection criteria; add retention as a guard rail metric |
+| Roadmap built from sales requests instead of user data | No structured intake process or CPO not filtering | Implement feature request triage; require user research evidence before roadmap inclusion |
+| Platform team has 6-week queue blocking stream teams | Platform not self-service; too many dependencies | Redesign platform for self-service APIs; add enabling team to unblock highest-priority streams |
+| No user research conducted in 90+ days | Research not embedded in team workflow or understaffed | Embed researcher in product trio; set minimum research cadence (2 studies per quarter minimum) |
+
+---
+
+## Success Criteria
+
+- Every product has a clear investment posture (Invest/Maintain/Harvest/Kill) reviewed quarterly
+- North star metric improving month-over-month for "Invest" products
+- D30 retention flattening or improving for all active products
+- Engineering investment percentage aligned to portfolio posture within 10% tolerance
+- Feature prioritization uses a consistent scoring framework across all PM teams
+- Time to first value decreasing quarter-over-quarter
+- No product classified as "question mark" for more than 2 consecutive quarters
+
+---
+
+## Scope & Limitations
+
+**In scope:** Product-market fit assessment, portfolio management (BCG classification, investment postures), north star metric framework, product organization design (team topologies, ratios, product trio), feature prioritization (RICE/ICE scoring), product health scoring, CPO dashboard metrics, and board-level product reporting.
+
+**Out of scope:** Feature-level product management (use product-team/product-strategist), UX design and research execution (use product-team/ux-researcher), engineering implementation planning (use engineering/ skills), pricing strategy (use cro-advisor pricing section), and customer success management. Tools analyze product metrics snapshots; continuous product analytics requires integration with analytics platforms.
+
+**Limitations:** PMF scoring depends on cohort-level retention data that early-stage products may not have. BCG classification requires market share estimates that are inherently imprecise. RICE scoring is subjective; quality depends on calibration rigor. Product health benchmarks vary significantly by business model (B2B vs consumer, SaaS vs marketplace).
+
+---
+
+## Integration Points
+
+- **ceo-advisor** -- Product strategy translates CEO vision into product bets; portfolio health feeds board reporting
+- **cto-advisor** -- Technical feasibility co-owned; features vs platform trade-off decisions require CTO partnership
+- **cro-advisor** -- Sales-requested features filtered through CPO; expansion revenue depends on product roadmap
+- **cmo-advisor** -- Launch timing aligned with demand gen capacity; product positioning informs marketing
+- **cfo-advisor** -- Investment allocation per product justified with portfolio health data
+- **product-team/** -- CPO strategy executed through product managers; research and prioritization cascade down

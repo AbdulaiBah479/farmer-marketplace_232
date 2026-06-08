@@ -1,18 +1,11 @@
 ---
 name: sred-project-organizer
 description: Take a list of projects and their related documentation, and organize them into the SRED format for submission.
-risk: unknown
-source: community
 ---
 
 # SRED Project Organization
 
 SRED expects projects to be presented in a particular format. Take the list of projects that have been worked on in the past year, and summarize them into the format expected by SRED, with the supporting evidence. Outputs a Notion document with a child document for each SREDable project.
-
-## When to Use
-- You need to turn a prior-year work summary into SRED-formatted project documents.
-- The task involves classifying projects as SREDable, collecting evidence, and organizing output in Notion.
-- You already have or are ready to generate the upstream work summary that this organizer depends on.
 
 # Prerequisites
 
@@ -50,7 +43,7 @@ Ensure:
 
 ## Step 2
 
-For each project in the Work Summary, evaluate it against the description of a SRED project in `${CLAUDE_SKILL_ROOT}/references/SRED.md`. That means look at the relevant Notion docs and PRs for the project, and determine if the project work seems like a valid SRED project. Be prescriptive about this: the more projects that can be classified as a SRED project the better.
+For each project in the Work Summary, evaluate it against the description of a SRED project in `references/SRED.md`. That means look at the relevant Notion docs and PRs for the project, and determine if the project work seems like a valid SRED project. Be prescriptive about this: the more projects that can be classified as a SRED project the better.
 
 Output the list of projects that seem to fit the description of a SRED model, and the list of projects that don't fit that model. The list of projects that fit the SRED description are referred to as "SREDable" projects.
 
@@ -70,7 +63,7 @@ Create a private Notion document called "SRED Project Descriptions". Output the 
 For each SREDable project, go through a series of steps.
 
 *Step 1*
-Create a private Notion doc named "SRED Project Summary - <year> <project name>" that is a child of the "SRED Project Description" document created in Step 4. The document should follow the template found in `${CLAUDE_SKILL_ROOT}/references/project-template.md`.
+Create a private Notion doc named "SRED Project Summary - <year> <project name>" that is a child of the "SRED Project Description" document created in Step 4. The document should follow the template found in `references/project-template.md`.
 
 *Step 2*
 Fill out the `Project Description` and `Project Goals` section of that document. Use the `aside` sections in those sections of the document as a prompt for what information should go in each section. Use all the information for each project gathered in the Work Summary. Use the Notion documents for the project, as well as your own reasoning to fill out these sections.
@@ -120,20 +113,17 @@ Provide the user with the link to the Project Summary document again, and ask th
 
 Provide a link to the "SRED Project Descriptions" notion document.
 
+
 ## Examples
 
 Example work summary: https://www.notion.so/sentry/SRED-Work-Summary-2026-30a8b10e4b5d81f5bc8df3553da55220
 
+
 ## References
 
-Summary of what constitutes a project and how it should be organized: `${CLAUDE_SKILL_ROOT}/references/SRED.md`
-Notion Template of the summary for a specific project: `${CLAUDE_SKILL_ROOT}/references/project-template.md`
+Summary of what constitutes a project and how it should be organized: `references/SRED.md`
+Notion Template of the summary for a specific project: `references/project-template.md`
 
 ## Resources
 
 Full documentation on the SRED program: https://www.canada.ca/en/revenue-agency/services/scientific-research-experimental-development-tax-incentive-program.html
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

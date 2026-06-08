@@ -1,4 +1,4 @@
 interface:
-  display_name: "GitHub"
-  short_description: "Use gh for GitHub workflows"
-  default_prompt: "Use $github to inspect this repository's pull requests, issues, runs, or API data."
+  display_name: "GitHub Workflows"
+  short_description: "GitHub PR and code review workflow patterns"
+  default_prompt: "Use $github to apply GitHub PR and review workflows."

@@ -1,17 +1,14 @@
 ---
 name: vercel-cli-with-tokens
-description: "Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. \"deploy to vercel\", \"set up vercel\", \"add environment variables to vercel\"."
-risk: safe
-source: "https://github.com/vercel-labs/agent-skills"
-date_added: "2026-06-02"
+description: Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. "deploy to vercel", "set up vercel", "add environment variables to vercel".
+metadata:
+  author: vercel
+  version: "1.0.0"
 ---
 
 # Vercel CLI with Tokens
 
 Deploy and manage projects on Vercel using the CLI with token-based authentication, without relying on `vercel login`.
-
-## When to Use
-- Use this skill when the task matches this description: Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. "deploy to vercel", "set up vercel", "add environment variables to vercel".
 
 ## Step 1: Locate the Vercel Token
 
@@ -354,8 +351,3 @@ Common causes:
 ```bash
 npm install -g vercel
 ```
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

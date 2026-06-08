@@ -2,8 +2,6 @@
 name: gh-review-requests
 description: Fetch unread GitHub notifications for open PRs where review is requested from a specified team or opened by a team member. Use when asked to "find PRs I need to review", "show my review requests", "what needs my review", "fetch GitHub review requests", or "check team review queue".
 allowed-tools: Bash
-risk: safe
-source: community
 ---
 
 # GitHub Review Requests
@@ -12,10 +10,7 @@ Fetch unread `review_requested` notifications for open (unmerged) PRs, filtered 
 
 **Requires**: GitHub CLI (`gh`) authenticated.
 
-## When to Use
-- You need to find unread GitHub PR review requests for a specific team.
-- You want to check which open PRs currently need your review or a teammate's review.
-- You need a filtered review queue instead of manually browsing GitHub notifications.
+**Requires**: The `uv` CLI for python package management, install guide at https://docs.astral.sh/uv/getting-started/installation/
 
 ## Step 1: Identify the Team
 
@@ -28,13 +23,13 @@ Accept either a team slug (`streaming-platform`) or a display name ("Streaming P
 ## Step 2: Run the Script
 
 ```bash
-uv run ${CLAUDE_SKILL_ROOT}/scripts/fetch_review_requests.py --org getsentry --teams <team-slug>
+uv run scripts/fetch_review_requests.py --org getsentry --teams <team-slug>
 ```
 
 To filter by multiple teams, pass a comma-separated list:
 
 ```bash
-uv run ${CLAUDE_SKILL_ROOT}/scripts/fetch_review_requests.py --org getsentry --teams <team slugs>
+uv run scripts/fetch_review_requests.py --org getsentry --teams <team slugs>
 ```
 
 ### Script output
@@ -82,8 +77,3 @@ Then for each `review_requested` notification, check:
 - `gh api repos/{repo}/pulls/{number}` — skip if `state == "closed"` or `merged_at` is set
 - `gh api repos/{repo}/pulls/{number}/requested_reviewers` — check `teams[].name`
 - `gh api orgs/{org}/teams/{slug}/members` — check if author is a member
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

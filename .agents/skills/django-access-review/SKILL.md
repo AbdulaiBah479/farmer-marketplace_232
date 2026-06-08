@@ -1,14 +1,8 @@
 ---
 name: django-access-review
-description: django-access-review
-risk: unknown
-source: community
----
-
----
-name: django-access-review
-description: Django access control and IDOR security review. Use when reviewing Django views, DRF viewsets, ORM queries, or any Python/Django code handling user authorization. Trigger keywords: "IDOR", "access control", "authorization", "Django permissions", "object permissions", "tenant...
---- LICENSE
+description: 'Django access control and IDOR security review. Use when reviewing Django views, DRF viewsets, ORM queries, or any Python/Django code handling user authorization. Trigger keywords: "IDOR", "access control", "authorization", "Django permissions", "object permissions", "tenant isolation", "broken access".'
+allowed-tools: Read, Grep, Glob, Bash, Task
+license: LICENSE
 ---
 
 <!--
@@ -21,11 +15,6 @@ https://cheatsheetseries.owasp.org/
 Find access control vulnerabilities by investigating how the codebase answers one question:
 
 **Can User A access, modify, or delete User B's data?**
-
-## When to Use
-- You need to review Django or DRF code for access control gaps, IDOR risk, or object-level authorization failures.
-- The task involves confirming whether one user can access, modify, or delete another user's data.
-- You want an investigation-driven authorization review instead of generic pattern matching.
 
 ## Philosophy: Investigation Over Pattern Matching
 
@@ -349,8 +338,3 @@ Use this to guide your review, not as a pass/fail checklist:
 □ I've verified my findings by checking parent classes and middleware
 □ I've only reported issues I've confirmed through investigation
 ```
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

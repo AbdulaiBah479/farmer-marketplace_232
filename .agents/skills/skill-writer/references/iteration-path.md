@@ -1,28 +1,40 @@
 # Iteration Path
 
-Use this path when improving a skill from outcomes, traces, examples, or user feedback.
+Use this path when improving a skill based on outcomes and examples.
 
-## Gather examples
+## Example intake
 
-Collect:
+Read `references/iteration-evidence.md` when examples should be persisted across future skill revisions.
 
-- Positive examples where the skill helped.
-- Negative examples where it misfired.
-- Fix examples showing the desired behavior.
-- Any validation output or user correction.
+Capture example records with:
 
-Remove secrets and unrelated personal data before storing examples.
+- label (`positive` or `negative`)
+- example kind (`true-positive`, `false-positive`, `fix`, `regression`, `edge-case`)
+- evidence origin (`human-verified`, `mixed`, `synthetic`)
+- anonymized content
+- source provenance pointer (where the example came from)
 
-## Diagnose
+## Replay and Review
 
-For each example, identify whether the problem is:
+1. Review behavior against working set.
+2. Review behavior against holdout set.
+3. Record improved/unchanged/regressed outcomes.
+4. Confirm both positive and negative behavior changed in the expected direction.
 
-- Triggering: skill loaded too often or not often enough.
-- Routing: wrong reference or workflow branch.
-- Instruction gap: missing step, safety rule, or output requirement.
-- Validation gap: no check caught the failure.
-- Overload: too much context or too many steps.
+## Improvement rules
 
-## Patch
+1. Prioritize fixes for repeated negative patterns.
+2. Preserve behavior that consistently succeeds on positives.
+3. Update transformed examples when guidance changes.
+4. Record deltas in `SOURCES.md` changelog.
+5. Expand input collection when failures indicate coverage gaps.
+6. Store durable positive/negative examples in `references/evidence/` instead of overloading `SKILL.md`, `SOURCES.md`, or a generic reference file.
+7. Keep holdout examples separate from working examples until validation is complete.
+8. Update `SPEC.md` when iteration changes the skill's intended scope, evidence model, validation expectations, or known limitations.
 
-Make the smallest instruction change that would have changed the outcome. Retest against at least one positive and one negative example when feasible.
+## Required output
+
+- Example intake summary
+- Behavior deltas
+- Updated artifacts
+- Replay summary

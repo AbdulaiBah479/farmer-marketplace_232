@@ -1,146 +1,111 @@
 ---
 name: iterate-pr
-description: Iterate on a PR until CI passes. Use when you need to fix CI failures, address review feedback, or continuously push fixes until all checks are green. Automates the feedback-fix-push-wait cycle.
-risk: critical
-source: community
+description: Iterate on a PR until actionable CI passes and high/medium review feedback is addressed. Use for PR CI failures, review feedback, or green-check loops; do not wait for human approval, draft status, or merge gates.
 ---
 
 # Iterate on PR Until CI Passes
 
-Continuously iterate on the current branch until all CI checks pass and review feedback is addressed.
+Goal: fix actionable CI failures and high/medium review feedback. Stop and report human approval, draft-readiness, and merge-readiness gates.
 
-**Requires**: GitHub CLI (`gh`) authenticated.
-
-**Important**: All scripts must be run from the repository root directory (where `.git` is located), not from the skill directory. Use the full path to the script via `${CLAUDE_SKILL_ROOT}`.
+Requires:
+- authenticated `gh`
+- `uv`
+- target repository root as cwd
+- skill-root-relative script paths, for example `scripts/fetch_pr_checks.py`
 
 ## Bundled Scripts
 
-### `scripts/fetch_pr_checks.py`
+| Script | Run | Output |
+|--------|-----|--------|
+| `scripts/fetch_pr_checks.py` | `uv run scripts/fetch_pr_checks.py [--pr NUMBER]` | JSON: `pr`, `summary`, `checks`, failure snippets |
+| `scripts/fetch_pr_feedback.py` | `uv run scripts/fetch_pr_feedback.py [--pr NUMBER]` | JSON buckets: `high`, `medium`, `low`, `bot`, `resolved` |
+| `scripts/monitor_pr_checks.py` | `uv run scripts/monitor_pr_checks.py [--pr NUMBER]` | terminal marker plus tab-separated checks |
+| `scripts/reply_to_thread.py` | `uv run scripts/reply_to_thread.py THREAD_ID BODY [...]` | JSON reply results |
 
-Fetches CI check status and extracts failure snippets from logs.
+Check summary fields include `failed`, `pending`, `actionable_pending`, and `human_gate_pending`.
 
-```bash
-uv run ${CLAUDE_SKILL_ROOT}/scripts/fetch_pr_checks.py [--pr NUMBER]
-```
-
-Returns JSON:
-```json
-{
-  "pr": {"number": 123, "branch": "feat/foo"},
-  "summary": {"total": 5, "passed": 3, "failed": 2, "pending": 0},
-  "checks": [
-    {"name": "tests", "status": "fail", "log_snippet": "...", "run_id": 123},
-    {"name": "lint", "status": "pass"}
-  ]
-}
-```
-
-### `scripts/fetch_pr_feedback.py`
-
-Fetches and categorizes PR review feedback using the [LOGAF scale](https://develop.sentry.dev/engineering-practices/code-review/#logaf-scale).
-
-```bash
-uv run ${CLAUDE_SKILL_ROOT}/scripts/fetch_pr_feedback.py [--pr NUMBER]
-```
-
-Returns JSON with feedback categorized as:
-- `high` - Must address before merge (`h:`, blocker, changes requested)
-- `medium` - Should address (`m:`, standard feedback)
-- `low` - Optional (`l:`, nit, style, suggestion)
-- `bot` - Informational automated comments (Codecov, Dependabot, etc.)
-- `resolved` - Already resolved threads
-
-Review bot feedback (from Sentry, Warden, Cursor, Bugbot, CodeQL, etc.) appears in `high`/`medium`/`low` with `review_bot: true` — it is NOT placed in the `bot` bucket.
-
-Each feedback item may also include:
-- `thread_id` - GraphQL node ID for inline review comments (used for replies)
+Monitor markers:
+- `ALL_CHECKS_PASSED`
+- `CHECKS_DONE_WITH_FAILURES`
+- `NO_CHECKS_REGISTERED`
+- `DRAFT_PR_WITH_NO_CHECKS`
+- `CHECKS_BLOCKED_BY_REVIEW_GATE`
 
 ## Workflow
 
 ### 1. Identify PR
 
+Run:
 ```bash
-gh pr view --json number,url,headRefName
+gh pr view --json number,url,headRefName,isDraft,reviewDecision
 ```
 
-Stop if no PR exists for the current branch.
+Stop when:
+- no PR exists
+- draft PR has no checks after monitor grace period: report `DRAFT_PR_WITH_NO_CHECKS`
 
-### 2. Gather Review Feedback
+Draft rule: inspect existing checks/feedback only. Do not mark ready for review unless asked.
 
-Run `${CLAUDE_SKILL_ROOT}/scripts/fetch_pr_feedback.py` to get categorized feedback already posted on the PR.
+### 2. Handle Feedback
 
-### 3. Handle Feedback by LOGAF Priority
+Run `uv run scripts/fetch_pr_feedback.py [--pr NUMBER]`.
 
-**Auto-fix (no prompt):**
-- `high` - must address (blockers, security, changes requested)
-- `medium` - should address (standard feedback)
+| Bucket | Action |
+|--------|--------|
+| `high` | fix |
+| `medium` | fix |
+| `low` | ask user which to address |
+| `bot` | skip informational comments |
+| `resolved` | skip |
 
-When fixing feedback:
-- Understand the root cause, not just the surface symptom
-- Check for similar issues in nearby code or related files
-- Fix all instances, not just the one mentioned
+Feedback fix checklist:
+- verify root cause
+- search related code
+- fix all instances
+- for `review_bot: true`: fix real issues, explain false positives
 
-This includes review bot feedback (items with `review_bot: true`). Treat it the same as human feedback:
-- Real issue found → fix it
-- False positive → skip, but explain why in a brief comment
-- Never silently ignore review bot feedback — always verify the finding
-
-**Prompt user for selection:**
-- `low` - present numbered list and ask which to address:
-
-```
+Low-priority prompt format:
+```text
 Found 3 low-priority suggestions:
 1. [l] "Consider renaming this variable" - @reviewer in api.py:42
 2. [nit] "Could use a list comprehension" - @reviewer in utils.py:18
 3. [style] "Add a docstring" - @reviewer in models.py:55
 
-Which would you like to address? (e.g., "1,3" or "all" or "none")
+Which should I address? ("1,3", "all", or "none")
 ```
 
-**Skip silently:**
-- `resolved` threads
-- `bot` comments (informational only — Codecov, Dependabot, etc.)
+### 3. Check CI Status
 
-#### Replying to Comments
+Run `uv run scripts/fetch_pr_checks.py [--pr NUMBER]`.
 
-After processing each inline review comment, reply on the PR thread to acknowledge the action taken. Only reply to items with a `thread_id` (inline review comments).
+| State | Action |
+|-------|--------|
+| `failed > 0` and `actionable_pending == 0` | fix failures |
+| `actionable_pending > 0` | wait; poll feedback while waiting |
+| `pending > 0` and `actionable_pending == 0` | report `CHECKS_BLOCKED_BY_REVIEW_GATE` |
+| no checks after grace period | report `NO_CHECKS_REGISTERED` or `DRAFT_PR_WITH_NO_CHECKS` |
+| all actionable checks passed | run post-CI feedback check |
 
-**When to reply:**
-- `high` and `medium` items — whether fixed or determined to be false positives
-- `low` items — whether fixed or declined by the user
+Wait for actionable review bots: sentry, warden, cursor, bugbot, seer, codeql.
+Do not wait for approval, `isDraft`, `REVIEW_REQUIRED`, Codecov, or informational bots.
 
-**How to reply:** Use the `addPullRequestReviewThreadReply` GraphQL mutation with `pullRequestReviewThreadId` and `body` inputs.
+### 4. Fix CI Failures
 
-**Reply format:**
-- 1-2 sentences: what was changed, why it's not an issue, or acknowledgment of declined items
-- End every reply with `\n\n*— Claude Code*`
-- Before replying, check if the thread already has a reply ending with `*- Claude Code*` or `*— Claude Code*` to avoid duplicates on re-loops
-- If the `gh api` call fails, log and continue — do not block the workflow
+For each failure:
+1. read full log: `gh run view <run-id> --log-failed`
+2. trace from assertion/exception/lint rule to source
+3. state the cause before editing: "fails because X, affected by Y"
+4. search related call sites/patterns
+5. fix root cause, not symptom
+6. add focused test coverage when needed
 
-### 4. Check CI Status
+### 5. Verify Locally, Then Commit and Push
 
-Run `${CLAUDE_SKILL_ROOT}/scripts/fetch_pr_checks.py` to get structured failure data.
-
-**Wait if pending:** If review bot checks (sentry, warden, cursor, bugbot, seer, codeql) are still running, wait before proceeding—they post actionable feedback that must be evaluated. Informational bots (codecov) are not worth waiting for.
-
-### 5. Fix CI Failures
-
-For each failure in the script output:
-1. Read the `log_snippet` and trace backwards from the error to understand WHY it failed — not just what failed
-2. Read the relevant code and check for related issues (e.g., if a type error in one call site, check other call sites)
-3. Fix the root cause with minimal, targeted changes
-4. Find existing tests for the affected code and run them. If the fix introduces behavior not covered by existing tests, extend them to cover it (add a test case, not a whole new test file)
-
-Do NOT assume what failed based on check name alone—always read the logs. Do NOT "quick fix and hope" — understand the failure thoroughly before changing code.
-
-### 6. Verify Locally, Then Commit and Push
-
-Before committing, verify your fixes locally:
-- If you fixed a test failure: re-run that specific test locally
-- If you fixed a lint/type error: re-run the linter or type checker on affected files
-- For any code fix: run existing tests covering the changed code
-
-If local verification fails, fix before proceeding — do not push known-broken code.
+Before commit:
+- test fix: rerun specific test
+- lint/type fix: rerun affected checker
+- code fix: rerun covering tests
+- local failure: fix before pushing
 
 ```bash
 git add <files>
@@ -148,44 +113,32 @@ git commit -m "fix: <descriptive message>"
 git push
 ```
 
-### 7. Monitor CI and Address Feedback
+### 6. Monitor CI and Address Feedback
 
-Poll CI status and review feedback in a loop instead of blocking:
+Loop:
+1. run `uv run scripts/fetch_pr_checks.py`
+2. handle table in step 3
+3. while `actionable_pending > 0`, run `uv run scripts/fetch_pr_feedback.py`
+4. fix new high/medium feedback immediately
+5. if changed, verify, commit, push, restart loop
+6. otherwise sleep 30 seconds and repeat
+7. after checks pass, wait 10 seconds, fetch feedback once more
+8. if new high/medium feedback exists, return to step 4
 
-1. Run `uv run ${CLAUDE_SKILL_ROOT}/scripts/fetch_pr_checks.py` to get current CI status
-2. If all checks passed → proceed to exit conditions
-3. If any checks failed (none pending) → return to step 5
-4. If checks are still pending:
-   a. Run `uv run ${CLAUDE_SKILL_ROOT}/scripts/fetch_pr_feedback.py` for new review feedback
-   b. Address any new high/medium feedback immediately (same as step 3)
-   c. If changes were needed, commit and push (this restarts CI), then continue polling
-   d. Sleep 30 seconds, then repeat from sub-step 1
-5. After all checks pass, do a final feedback check: `sleep 10`, then run `uv run ${CLAUDE_SKILL_ROOT}/scripts/fetch_pr_feedback.py`. Address any new high/medium feedback — if changes are needed, return to step 6.
-
-### 8. Repeat
-
-If step 7 required code changes (from new feedback after CI passed), return to step 2 for a fresh cycle. CI failures during monitoring are already handled within step 7's polling loop.
+Claude Code optional: run `uv run scripts/monitor_pr_checks.py` through `MonitorTool` with `persistent: false`; set timeout to normal repo CI duration. Restart the monitor after every push.
 
 ## Exit Conditions
 
-**Success:** All checks pass, post-CI feedback re-check is clean (no new unaddressed high/medium feedback including review bot findings), user has decided on low-priority items.
-
-**Ask for help:** Same failure after 2 attempts, feedback needs clarification, infrastructure issues.
-
-**Stop:** No PR exists, branch needs rebase.
+| Exit | Conditions |
+|------|------------|
+| Success | actionable CI passed; post-CI feedback clean; low-priority choice handled |
+| Ask user | same failure after 2 attempts; feedback unclear; infrastructure issue |
+| Stop | no PR; branch needs rebase; no checks; draft no-checks; only human gates remain |
 
 ## Fallback
 
 If scripts fail, use `gh` CLI directly:
-- `gh pr checks name,state,bucket,link`
+- `gh pr view --json number,url,headRefName,isDraft,reviewDecision`
+- `gh pr checks --json name,state,bucket,description,link`
 - `gh run view <run-id> --log-failed`
 - `gh api repos/{owner}/{repo}/pulls/{number}/comments`
-
-
-## When to Use
-Use this skill when tackling tasks related to its primary domain or functionality as described above.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

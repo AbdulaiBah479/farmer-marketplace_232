@@ -5,10 +5,9 @@ description: "Audit and improve SwiftUI runtime performance. Use when diagnosing
 
 # SwiftUI Performance
 
-Audit SwiftUI view performance end-to-end, from instrumentation and baselining to root-cause analysis and concrete remediation steps.
-
 ## Contents
 
+- [Overview](#overview)
 - [Workflow Decision Tree](#workflow-decision-tree)
 - [1. Code-First Review](#1-code-first-review)
 - [2. Guide the User to Profile](#2-guide-the-user-to-profile)
@@ -24,6 +23,10 @@ Audit SwiftUI view performance end-to-end, from instrumentation and baselining t
 - [Common Mistakes](#common-mistakes)
 - [Review Checklist](#review-checklist)
 - [References](#references)
+
+## Overview
+
+Audit SwiftUI view performance end-to-end, from instrumentation and baselining to root-cause analysis and concrete remediation steps.
 
 ## Workflow Decision Tree
 
@@ -197,20 +200,53 @@ Provide:
 
 ## Instruments Profiling
 
-Use the **SwiftUI instrument template** in Xcode (Cmd+I to profile). Key instruments: SwiftUI View Body (body evaluation counts), SwiftUI View Properties (state change tracking), Time Profiler, and Hangs.
+### SwiftUI Instrument Template
 
-Add `Self._printChanges()` in debug builds to log which property triggered a view update:
+Instruments ships with a dedicated **SwiftUI** template (available in Xcode 15+ / Instruments 15+). This template provides:
+
+- **SwiftUI View Body** instrument -- counts how many times each view's `body` is evaluated.
+- **SwiftUI View Properties** instrument -- tracks `@State`, `@Binding`, and `@Observable` property changes that trigger view updates.
+- **Time Profiler** -- standard CPU profiler for identifying expensive `body` computations.
+- **Hangs** instrument -- flags main-thread hangs > 250ms.
+
+### Profiling Workflow
+
+1. **Build for Profiling.** Product > Profile (Cmd+I) in Xcode. This creates a Release build with profiling symbols.
+2. **Select the SwiftUI template.** Or create a custom template with SwiftUI + Time Profiler + Hangs.
+3. **Record the interaction.** Reproduce the exact scroll, navigation, or animation that is slow.
+4. **Inspect the SwiftUI lane.** Look for views with high body evaluation counts. A view evaluated hundreds of times during a single scroll is likely the bottleneck.
+5. **Cross-reference with Time Profiler.** If a view body is called often AND takes significant time per call, that is the priority fix.
+
+### View Body Evaluation Count
+
+In the SwiftUI instrument lane, each row represents a view type. Key signals:
+
+- **High count, low time per call:** Identity or state-invalidation problem (too many re-evaluations).
+- **Low count, high time per call:** Expensive computation inside `body` (formatting, sorting, image work).
+- **High count AND high time:** Both problems -- fix the expensive work first, then fix the invalidation.
+
+### Identifying Unnecessary Redraws
+
+Add `Self._printChanges()` in Debug builds to log exactly which property triggered a view update:
 
 ```swift
 var body: some View {
     #if DEBUG
-    let _ = Self._printChanges()  // "MyView: @self, _count changed."
+    let _ = Self._printChanges()  // prints: "MyView: @self, _count changed."
     #endif
     Text("Count: \(count)")
 }
 ```
 
-See [references/optimizing-swiftui-performance-instruments.md](references/optimizing-swiftui-performance-instruments.md) for the full profiling workflow.
+Remove `_printChanges()` before submitting to the App Store -- it is a debug-only API.
+
+### Time Profiler for Body Hotspots
+
+When Time Profiler shows significant time in a view's `body`:
+
+1. Filter the call tree by the view type name.
+2. Look for allocations (`NumberFormatter()`, `DateFormatter()`), collection operations (`.sorted()`, `.filter()`), or image decoding.
+3. Move expensive operations to `onChange`, `task`, or precomputed `@State`.
 
 ## Identity and Lifetime
 
@@ -267,29 +303,6 @@ func makeView(for item: Item) -> some View {
 
 `AnyView` also prevents SwiftUI from detecting which branch changed, causing full subtree replacement instead of targeted updates.
 
-### Ternary Modifiers Preserve Structural Identity
-
-`if`/`else` in a view builder creates `_ConditionalContent` — two separate view branches with distinct identities. When the condition changes, SwiftUI destroys one branch and creates the other, resetting all `@State`.
-
-For toggling **modifiers** on the same view, use a ternary expression instead:
-
-```swift
-// DON'T: if/else creates two separate Text views with different identities
-if isHighlighted {
-    Text(title).foregroundStyle(.yellow)
-} else {
-    Text(title).foregroundStyle(.primary)
-}
-
-// DO: ternary keeps one Text view, just changes the modifier value
-Text(title)
-    .foregroundStyle(isHighlighted ? .yellow : .primary)
-```
-
-This preserves the view's identity (and its state) across the condition change, and SwiftUI can animate the transition smoothly.
-
-Use `if`/`else` when the **view type itself** differs between branches. Use ternary when only a **property or modifier** changes.
-
 ### id() Modifier Impacts
 
 The `.id()` modifier assigns explicit identity. Changing the value **destroys and recreates** the view:
@@ -322,7 +335,7 @@ Lazy stacks only create views for items currently visible on screen. Off-screen 
 
 ```swift
 ScrollView {
-    LazyVStack {
+    LazyVStack(spacing: 12) {
         ForEach(items) { item in
             ItemRow(item: item)
         }
@@ -344,7 +357,7 @@ Use lazy grids for multi-column layouts:
 let columns = [GridItem(.adaptive(minimum: 150))]
 
 ScrollView {
-    LazyVGrid(columns: columns) {
+    LazyVGrid(columns: columns, spacing: 16) {
         ForEach(photos) { photo in
             PhotoThumbnail(photo: photo)
         }
@@ -369,11 +382,11 @@ let fixedColumns = [
 | Always-visible content | `VStack` (no benefit to lazy) |
 | Scrollable lists | `LazyVStack` inside `ScrollView`, or `List` |
 
-**Important:** Do not nest `GeometryReader` inside lazy containers. It forces eager measurement and defeats lazy loading. Use `.onGeometryChange` (iOS 16+) instead.
+**Important:** Do not nest `GeometryReader` inside lazy containers. It forces eager measurement and defeats lazy loading. Use `.onGeometryChange` (iOS 18+) instead.
 
 ## State and Observation Optimization
 
-### `@Observable` Granular Tracking
+### @Observable Granular Tracking
 
 `@Observable` (Observation framework, iOS 17+) tracks property access at the **per-property level**. A view only re-evaluates when properties it actually read in `body` change:
 
@@ -447,7 +460,7 @@ Use computed properties on `@Observable` models to derive state without introduc
 
 1. **Profiling Debug builds.** Debug builds include extra runtime checks and disable optimizations, producing misleading perf data. Profile Release builds on a real device.
 2. **Observing an entire model when only one property is needed.** Break large `@Observable` models into focused ones, or use computed properties/closures to narrow observation scope.
-3. **Using `GeometryReader` inside ScrollView items.** GeometryReader forces eager sizing and defeats lazy loading. Prefer `.onGeometryChange` (iOS 16+) or measure outside the lazy container.
+3. **Using `GeometryReader` inside ScrollView items.** GeometryReader forces eager sizing and defeats lazy loading. Prefer `.onGeometryChange` (iOS 18+) or measure outside the lazy container.
 4. **Calling `DateFormatter()` or `NumberFormatter()` inside `body`.** These are expensive to create. Make them static or move them outside the view.
 5. **Animating non-equatable state.** If SwiftUI cannot determine equality, it redraws every frame. Conform state to `Equatable`, then use `.animation(_:value:)` for simple value-bound changes or `.animation(_:body:)` for narrower modifier-scoped implicit animation.
 6. **Large flat `List` without identifiers.** Use `id:` or make items `Identifiable` so SwiftUI can diff efficiently instead of rebuilding the entire list.
@@ -468,8 +481,7 @@ Use computed properties on `@Observable` models to derive state without introduc
 
 ## References
 
-- Demystify SwiftUI performance (WWDC23): [references/demystify-swiftui-performance-wwdc23.md](references/demystify-swiftui-performance-wwdc23.md)
-- Optimizing SwiftUI performance with Instruments: [references/optimizing-swiftui-performance-instruments.md](references/optimizing-swiftui-performance-instruments.md)
-- Understanding hangs in your app: [references/understanding-hangs-in-your-app.md](references/understanding-hangs-in-your-app.md)
-- Understanding and improving SwiftUI performance: [references/understanding-improving-swiftui-performance.md](references/understanding-improving-swiftui-performance.md)
-- WWDC transcript sources: [references/wwdc-session-sources.md](references/wwdc-session-sources.md)
+- Demystify SwiftUI performance (WWDC23): `references/demystify-swiftui-performance-wwdc23.md`
+- Optimizing SwiftUI performance with Instruments: `references/optimizing-swiftui-performance-instruments.md`
+- Understanding hangs in your app: `references/understanding-hangs-in-your-app.md`
+- Understanding and improving SwiftUI performance: `references/understanding-improving-swiftui-performance.md`

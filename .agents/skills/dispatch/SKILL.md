@@ -1,175 +1,286 @@
 ---
 name: dispatch
-description: |
-  Dispatch integration. Manage Persons, Organizations, Deals, Leads, Projects, Activities and more. Use when the user wants to interact with Dispatch data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Multi-model CLI orchestrator. Routes tasks to locally-installed AI CLIs (claude, codex, gemini, qwen). Zero Claude tokens for executed work.
+homepage: https://github.com/Khamel83/oneshot
+allowed-tools: Read, Write, Edit, Bash
+metadata: {"oneshot":{"emoji":"\ud83d\udce5","requires":{"bins":["claude","codex","gemini"]}}}
 ---
 
-# Dispatch
+# /dispatch - Multi-Model CLI Orchestrator
 
-Dispatch is a platform for managing and automating field service operations. It's used by businesses with mobile workforces, such as HVAC, plumbing, or electrical services, to schedule jobs, track technicians, and communicate with customers.
+**Route tasks to the best CLI tool.** Minimize Claude Code tokens by leveraging pre-authenticated local CLIs.
 
-Official docs: https://developers.dispatch.me/
+## When To Use
 
-## Dispatch Overview
+User says:
+- `/dispatch [task]` - Auto-select best CLI
+- `/dispatch gemini [task]` - Explicit CLI selection
+- `/dispatch codex "Write a function"` - Code generation
+- "Use gemini for research"
+- "Route to codex for this"
 
-- **Dispatch Company**
-  - **Driver**
-  - **Vehicle**
-- **Trip**
+---
 
-Use action names and parameters as needed.
+## Available CLIs
 
-## Working with Dispatch
+| CLI | Version | Auth | Best For | Cost |
+|-----|---------|------|----------|------|
+| `claude` | 2.1.25 | Max plan | Complex reasoning, planning | $$$ |
+| `codex` | 0.92.0 | OpenAI | Code generation, refactoring | $$ |
+| `gemini` | 0.26.0 | Google | Research, Q&A, free tier | FREE |
+| `qwen` | TBD | Qwen | General tasks (2K free/day) | FREE |
+| `zai` | TBD | ZAI | High-token execution (GLM 4.7, 128K context) | FREE/TBD |
 
-This skill uses the Membrane CLI to interact with Dispatch. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+---
 
-### Install the CLI
+## How It Works
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+**Three modes:**
 
-```bash
-npm install -g @membranehq/cli@latest
-```
+### Mode 1: Explicit Dispatch
 
-### Authentication
-
-```bash
-membrane login --tenant --clientName=<agentType>
-```
-
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
-
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+User specifies target CLI:
 
 ```bash
-membrane login complete <code>
+# Dispatch to codex
+codex "Write a Python function that validates email addresses"
+
+# Dispatch to gemini (0 tokens)
+gemini --yolo "Research: best practices for API rate limiting"
+
+# Dispatch to claude
+claude -p "Design a microservices architecture for..." --output-format json
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+### Mode 2: Auto-Select (Smart Routing)
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+Based on task keywords:
 
-### Connecting to Dispatch
+| Task Pattern | Routes To | Reason |
+|--------------|-----------|--------|
+| "research", "find out", "what is", "explain" | `gemini` | Free tier, web search |
+| "write code", "implement", "refactor", "fix bug" | `codex` | Optimized for code |
+| "plan", "design", "architect", "complex" | `claude` | Best reasoning |
+| Ambiguous (no match) | Ask user OR default to `gemini` | Cheapest option |
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+### Mode 3: Multi-Step Plan Execution
+
+Execute a plan with different tools per step:
 
 ```bash
-membrane connection ensure "https://www.dispatchit.com/" --json
+/dispatch plan TODO.md  # Execute each step with appropriate CLI
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+---
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+## CLI Invocation Patterns
 
-#### 1b. Wait for the connection to be ready
+### Claude Code CLI
+```bash
+# Simple prompt
+claude -p "prompt" --output-format json
 
-If the connection is in `BUILDING` state, poll until it's ready:
+# With working directory context
+claude -p "prompt" --cwd /path/to/project
+
+# Non-interactive (for automation)
+claude -p "prompt" --dangerously-skip-permissions --output-format json
+```
+
+### OpenAI Codex CLI
+```bash
+# Simple code generation (non-interactive)
+codex exec "Write a Python function that..."
+
+# With file context
+codex exec --file src/main.py "Refactor this to use async"
+
+# Interactive (for terminal use)
+codex "Write a Python function that..."
+```
+
+### Gemini CLI
+```bash
+# Simple query (interactive)
+gemini "What are best practices for..."
+
+# Non-interactive with auto-approve
+gemini --yolo "Comprehensive research on..."
+
+# With model override
+gemini --model gemini-2.5-pro "Complex analysis..."
+```
+
+### Qwen Code CLI (after installation)
+```bash
+# Non-interactive (one-shot)
+qwen "Implement this feature"
+
+# Interactive (for terminal use)
+qwen -i "Implement this feature"
+
+# With file context
+qwen --file main.ts "Add error handling"
+```
+
+### ZAI CLI (after installation)
+```bash
+# Install ZAI CLI
+npm install -g @zai/cli
+
+# Authenticate
+zai auth login
+
+# High-context execution (GLM 4.7, 128K tokens)
+zai exec "Implement this large feature with full context"
+
+# With model specification
+zai --model glm-4.7 "Complex multi-file implementation"
+
+# Check quota
+zai quota
+```
+
+---
+
+## Output Location
+
+All CLI outputs saved to:
+```
+~/github/oneshot/dispatch/<timestamp>-<cli>/
+├── prompt.txt     # Original prompt sent
+├── output.txt     # Raw CLI output
+└── summary.md     # Key findings (if applicable)
+```
+
+---
+
+## Model Selection Logic
+
+```yaml
+# Keyword-based routing
+cli_router:
+  codex:
+    keywords: ["generate code", "write function", "implement", "refactor", "fix bug", "code review"]
+
+  gemini:
+    keywords: ["research", "explain", "summarize", "what is", "find out", "search for"]
+
+  claude:
+    keywords: ["plan", "design", "architect", "complex", "analyze trade-offs", "multi-step"]
+
+  zai:
+    keywords: ["execute", "implement", "high context", "large task", "multi-file"]
+    model: "glm-4.7"
+    context: "128K tokens - best for large implementation tasks"
+
+  qwen:
+    keywords: ["general task", "quick question", "simple"]
+    fallback: true  # Use when others fail
+```
+
+---
+
+## Fallback Chain
+
+If primary CLI fails:
+1. Try fallback CLI from matrix
+2. If all fail, return error with diagnostics
+3. Never silently swallow errors
+
+---
+
+## Integration with Beads
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+# Track multi-step dispatch as beads tasks
+bd create "Dispatch: Research auth patterns" -l dispatch -d "gemini"
+bd update <id> --status in_progress
+# ... execute ...
+bd close <id> --reason "Output: research.md"
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+---
 
-The resulting state tells you what to do next:
+## Setup (One-Time)
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
+### Claude (already installed)
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+# Verify
+claude --version
 ```
 
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-| Name | Key | Description |
-|---|---|---|
-| List Users | list-users | Retrieve all users in the organization |
-| List Vehicles | list-vehicles | Retrieve all vehicles in the organization |
-| List Drivers | list-drivers | Retrieve all drivers in the organization |
-| List Orders | list-orders | Retrieve a list of orders with optional filtering |
-| List Invoices | list-invoices | List invoices from the user's organization |
-| List Manifests | list-manifests | Retrieve all manifests for a specific date |
-| List Organizations | list-organizations | Retrieve a list of organizations |
-| Get Order | get-order | Retrieve details of a specific order by ID |
-| Get Delivery | get-delivery | Retrieve details of a specific delivery by ID |
-| Get Vehicle | get-vehicle | Retrieve details of a specific vehicle by ID |
-| Get Invoice | get-invoice | Get details of a specific invoice by ID |
-| Create Order | create-order | Create a new delivery order with pickup and drop-off information |
-| Create Vehicle | create-vehicle | Create a new vehicle in the organization |
-| Update Order | update-order | Edit an existing order |
-| Delete Vehicle | delete-vehicle | Delete a vehicle from the organization |
-| Get Delivery Events | get-delivery-events | Retrieve events/history for a specific delivery |
-| Get Order Events | get-order-events | Retrieve events/history for a specific order |
-| Create Estimate | create-estimate | Get a delivery cost estimate before creating an order |
-| Cancel Order | cancel-order | Cancel an existing order |
-| Assign Driver to Vehicle | assign-driver-to-vehicle | Assign a driver to a specific vehicle |
-
-### Running actions
-
+### Codex (already installed)
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+# Verify
+codex --version
+
+# Authenticate if needed
+codex auth login
 ```
 
-To pass JSON parameters:
-
+### Gemini (already installed)
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+# Verify
+gemini --version
+
+# Authenticate if needed
+gemini auth login
 ```
 
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Dispatch API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
+### Qwen Code (to be installed)
 ```bash
-membrane request CONNECTION_ID /path/to/endpoint
+# Install via npm
+npm install -g @qwen-code/qwen-code
+
+# Verify (binary is named 'qwen')
+qwen --version
+# Output: 0.8.2
+
+# Test
+qwen "test"
 ```
 
-Common options:
+---
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+## Example Usage
 
+**User says:** `/dispatch "Research WebSocket best practices"`
 
-## Best practices
+**You do:**
+1. Detect "research" keyword → route to gemini
+2. Run:
+   ```bash
+   mkdir -p ~/github/oneshot/dispatch/$(date +%s)-gemini
+   gemini --yolo "Research WebSocket best practices for real-time applications.
+   Focus on: connection handling, reconnection strategies, scalability, and security.
+   Output format: Markdown with code examples." > output.txt
+   ```
+3. Read output.txt and summarize key findings
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+---
+
+## Why This Exists
+
+- ✅ Minimize Claude Code token usage
+- ✅ Leverage specialized CLIs (codex for code, gemini for research)
+- ✅ Zero API keys needed (all pre-authenticated)
+- ✅ Fallback options if one CLI fails
+
+**Trade-off:** Less context awareness than Claude Code sub-agents, but significantly cheaper.
+
+---
+
+## Anti-Patterns
+
+- Dispatching trivial tasks (just answer directly)
+- Using `claude` for simple research (use `gemini`, it's free)
+- Using `gemini` for complex code (use `codex`)
+- Not capturing output (always save to file)
+- Ignoring CLI errors (always check exit codes)
+
+---
+
+## Keywords
+
+dispatch, route, delegate, multi-model, codex, gemini, qwen, cli, orchestrate

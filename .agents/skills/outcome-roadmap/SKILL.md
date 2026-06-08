@@ -1,238 +1,130 @@
 ---
 name: outcome-roadmap
-description: >
-  Transforms output-based feature lists into outcome-driven roadmaps with
-  measurable impact using Now/Next/Later framing and the "so what?" technique.
-  Use when converting a feature-list roadmap into outcome-driven format,
-  communicating product strategy to executives or customers, running quarterly
-  planning, or aligning teams around impact rather than deliverables.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: pm-execution
-  updated: 2026-03-04
-  python-tools: roadmap_transformer.py
-  tech-stack: outcome-roadmap, product-strategy, now-next-later
+description: "Transform an output-focused roadmap (feature list) into an outcome-focused one. Rewrites initiatives as outcome statements reflecting user and business impact. Use when a roadmap lists features instead of results, when making a roadmap more strategic, or when communicating what success looks like vs what will be built."
+when_to_use: |
+  Apply when:
+  - CTO provides a feature list and asks "what should we do next quarter"
+  - pm agent receives a roadmap full of features, not outcomes
+  - stakeholders need to understand why we're building things, not just what
+  - a roadmap review reveals it lists outputs (features) but not outcomes (results)
+  Guards — do NOT apply when:
+  - The input already states outcomes with metrics
+  - This is a single-feature PRD (use /prd instead)
+effort: low
+allowed-tools: Read, Write
+paths:
+  - "docs/plans/**"
+  - "docs/requirements/**"
 ---
-# Outcome Roadmap Expert
 
-The agent transforms output-based roadmaps ("build feature X") into outcome-driven roadmaps ("enable customers to achieve Y") using the "so what?" technique and Now/Next/Later framing. It produces roadmaps that communicate strategy and measurable impact, not just feature lists and dates.
+# Outcome Roadmap — from features to results
 
-## Workflow
+Converts a feature-focused roadmap into an outcome-focused one.
 
-### 1. Gather Current Roadmap Items
+**Core principle:** Teams build features, but customers and businesses care about outcomes. An outcome roadmap communicates WHAT CHANGES, not what gets built.
 
-The agent collects the existing roadmap -- features, projects, or initiatives -- in any format (list, spreadsheet, JSON, or prose).
+---
 
-**Validation checkpoint:** Each item must have at least a name and a brief description. If items are just feature names with no context, the agent asks for the problem each feature is meant to solve.
+## The transformation formula
 
-### 2. Transform Each Item
-
-The agent applies the transformation formula:
+For every initiative on the roadmap, apply:
 
 ```
-"Enable [customer segment] to [desired customer outcome] so that [business impact]"
+Enable [customer segment] to [desired customer outcome] so that [business impact]
 ```
 
-For each feature, the agent uses the "so what?" chain to find the real outcome:
+Examples:
 
-```
-"Build advanced search"
-  -> So what? "Users can find products faster"
-  -> So what? "They spend less time browsing and more time buying"
-  -> So what? "Conversion rate increases, reducing acquisition cost per sale"
-```
+| Output (old) | Outcome (new) |
+|---|---|
+| Q2: Build advanced search filters | Q2: Enable customers to find products 50% faster through intuitive discovery |
+| Q2: AI recommendations | Q2: Increase average order value 20% through personalised recommendations |
+| Q3: Dashboard redesign | Q3: Help operators monitor all systems with 80% less time spent on dashboards |
+| Q3: SSO integration | Q3: Remove auth friction for enterprise admins so we can close 3+ enterprise deals |
+| Q4: Mobile app | Q4: Enable users to complete core workflows on mobile so 7-day retention increases from 20% to 35% |
 
-The last answer is the outcome. The agent works backward to write the outcome statement:
+---
 
-**Output:** "Enable power users to find relevant products in under 5 seconds so that conversion rates increase by 20%"
+## How to apply
 
-**Validation checkpoint:** Every transformed item must answer Who benefits, What changes for them, and Why it matters to the business.
+### Step 1 — Read the existing roadmap
 
-### 3. Categorize into Now / Next / Later
+If the user provides a roadmap file, read it. If they describe it verbally, extract the initiative list.
 
-| Horizon | Meaning | Commitment | Detail Level |
-|---------|---------|-----------|--------------|
-| **Now** | In progress or starting within 2 weeks | High -- team assigned, scope defined | Full outcome statements, success metrics, dependencies |
-| **Next** | Planned for 1-3 months | Medium -- direction set, scope flexible | Outcome statements with draft metrics |
-| **Later** | On the radar, 3-6 months | Low -- strategic intent only | Problem statements or opportunity areas |
+For each initiative, ask internally:
+- What feature / project is planned?
+- **Why** are we building it? What changes for customers or the business?
+- What metric will improve, and by how much?
+- Is there a better, different way to achieve the same outcome?
 
-**Validation checkpoint:** "Later" items should NOT have detailed metrics or specific solutions. Forcing detail on uncertain items creates false precision.
+### Step 2 — Rewrite each initiative as an outcome
 
-### 4. Add Success Metrics
+For each item in the roadmap:
 
-For each Now and Next item, the agent defines 2-3 measurable indicators:
+1. **Identify the output**: What feature or project is planned?
+2. **Uncover the outcome**: Why are we building it? Keep asking "So what?" until you reach real customer or business value.
+3. **Rewrite**: Use the formula above. Include a metric if possible.
 
-- **Primary metric:** Directly measures the desired outcome
-- **Secondary metric:** Captures a different dimension of success
-- **Counter-metric:** Prevents perverse optimization (optional for Next items)
+**"So what?" chain example:**
+- "We're adding search filters" → So what?
+- "Users can narrow results" → So what?
+- "Users find what they're looking for faster" → So what?
+- "Users convert at higher rates because they find products before abandoning" ✅ That's the outcome.
 
-### 5. Identify Dependencies
+### Step 3 — Group by strategic theme (optional)
 
-For each item, the agent documents:
-- Technical prerequisites (APIs, infrastructure, data)
-- Organizational prerequisites (team capacity, stakeholder buy-in)
-- Market prerequisites (customer demand signal, competitive timing)
+If the roadmap has 5+ items, group related outcomes into themes:
+- **Retention** (outcomes that reduce churn)
+- **Acquisition** (outcomes that improve conversion)
+- **Monetisation** (outcomes that increase revenue per user)
+- **Ops efficiency** (outcomes that reduce internal cost/time)
 
-### 6. Review with Stakeholders
+### Step 4 — Output format
 
-The agent produces a stakeholder-ready roadmap document for alignment review.
+```markdown
+## Outcome Roadmap — <Product> <Quarter/Year>
 
-**Validation checkpoint:** Walk stakeholders through the outcome roadmap. If anyone asks "but when exactly will this ship?", redirect to commitment levels -- Now items have dates, Later items do not.
+### Strategic context
+<1–2 sentences on what the team is optimising for this period>
 
-## Example: Roadmap Transformation
+### Q<N> Outcomes
 
-**Input (output-based roadmap):**
-```json
-{
-  "initiatives": [
-    {"name": "Build advanced search", "quarter": "Q2"},
-    {"name": "Launch mobile app", "quarter": "Q3"},
-    {"name": "Add Slack integration", "quarter": "Q3"},
-    {"name": "Redesign dashboard", "quarter": "Q4"}
-  ]
-}
-```
+| Initiative | Outcome Statement | Primary Metric | Target |
+|------------|------------------|----------------|--------|
+| <original feature name> | Enable [segment] to [outcome] so that [business impact] | <metric> | <target> |
 
-```bash
-$ python scripts/roadmap_transformer.py --input roadmap.json
+### What we're NOT doing this quarter (and why)
+- <deprioritised initiative>: <reason — not enough signal / too early / wrong priority>
 
-Outcome Roadmap Transformation
-==============================
-
-NOW (In Progress):
-  Original: "Build advanced search"
-  Outcome: "Enable power users to find relevant products in under 5 seconds
-            so that conversion rates increase by 20%"
-  Metrics:
-    - Search-to-purchase conversion: 12% -> 15%
-    - Avg search time: 18s -> 5s
-    - Counter: Maintain search result relevance score above 0.8
-  Dependencies: Elasticsearch cluster upgrade, product taxonomy cleanup
-
-NEXT (1-3 Months):
-  Original: "Launch mobile app"
-  Outcome: "Enable field sales reps to close deals on-site so that
-            average deal cycle shortens by 30%"
-  Metrics:
-    - Mobile-originated deals: 0% -> 15% of total
-    - Avg deal close time: 14 days -> 10 days
-  Dependencies: API v2 completion, mobile auth infrastructure
-
-  Original: "Add Slack integration"
-  Outcome: "Enable teams to act on alerts without context-switching
-            so that mean response time drops by 40%"
-  Metrics:
-    - Alert-to-action time: 25min -> 15min
-    - Alerts resolved in Slack: 0% -> 60%
-  Dependencies: Webhook infrastructure, Slack app approval
-
-LATER (3-6 Months):
-  Original: "Redesign dashboard"
-  Problem area: Users report dashboard is overwhelming and they
-                can't find the metrics that matter to their role.
-  Strategic intent: Role-based views that surface relevant data,
-                    reducing time-to-insight.
-  Dependencies: User research (not yet started)
+### Key assumptions
+- <assumption this roadmap depends on — if it's wrong, the outcomes change>
 ```
 
-## Why Output Roadmaps Fail
+### Step 5 — Validate
 
-Output roadmaps create three problems:
+Before presenting, check:
+- Every outcome has a measurable component (%, number, ratio, frequency)
+- "So what?" has been applied to every item — no pure feature descriptions remain
+- At least one "Not doing" item is stated — otherwise scope is unbounded
+- Outcomes align with stated OKRs or strategic goals in PROJECT.md
 
-1. **False precision** -- Dates promise certainty that does not exist. When dates slip, trust erodes.
-2. **Misaligned teams** -- Engineers optimize for shipping features. Product optimizes for impact. An output roadmap makes these goals invisible to each other.
-3. **Lost context** -- Six months later, nobody remembers why "advanced search" was important. The feature ships, but the problem it solved may have changed.
+---
 
-The outcome roadmap solves these by anchoring every item to customer value and business impact, with commitment levels that match certainty.
+## Anti-patterns
 
-## Output Structure
+❌ **"We will build X"** — that's an output, not an outcome.
 
-For each initiative, the transformed roadmap includes:
+❌ **"Improve UX"** — unmeasurable. Rewrite as: "Reduce time to complete checkout from 4min to 90sec".
 
-1. **Original Initiative** -- What was on the old roadmap
-2. **Outcome Statement** -- "Enable [segment] to [outcome] so that [impact]"
-3. **Success Metrics** -- 2-3 measurable indicators
-4. **Dependencies** -- Technical, organizational, or market prerequisites
-5. **Strategic Context** -- Connection to company objectives or OKRs
+❌ **Outcome without a metric** — if you can't measure it, you can't know if you achieved it.
 
-## Tools
+❌ **Outcomes that require building a specific solution** — "Enable users to access features via mobile app" locks the solution. Better: "Enable users to complete core workflows on any device".
 
-| Tool | Purpose | Command |
-|------|---------|---------|
-| `roadmap_transformer.py` | Transform output initiatives to outcomes | `python scripts/roadmap_transformer.py --input roadmap.json` |
-| `roadmap_transformer.py` | Run demo transformation | `python scripts/roadmap_transformer.py --demo` |
+---
 
-## Troubleshooting
+## Integration with pm agent
 
-| Symptom | Likely Cause | Resolution |
-|---------|-------------|------------|
-| All initiatives classified as "Later" | Quarter strings do not match expected format (e.g., "Q2 2026") or dates are far future | Verify `quarter` field uses "Q[1-4] YYYY" format; the tool uses current date to compute Now/Next/Later horizons |
-| "So what?" chain produces vague outcomes | Team stopped the chain too early or did not reach business impact | Push through at least 3 "So what?" levels; the last answer should reference a business metric (revenue, retention, cost) |
-| Stakeholders keep asking "when exactly will this ship?" | Commitment levels not communicated clearly, or stakeholders trained to expect dates | Redirect to Now/Next/Later commitment framework; Now items have dates, Next has direction, Later has intent only |
-| Outcome statements all sound the same | Using the template formula mechanically without domain-specific context | Customize the "[customer segment]", "[desired outcome]", and "[business impact]" placeholders with real data |
-| Roadmap has too many "Now" items | Team not making hard prioritization choices, or everything feels urgent | Enforce a cap: maximum 2-3 Now items at any time; use `prioritization-frameworks/` to rank competing priorities |
-| Demo mode works but custom input fails | JSON schema mismatch: missing `initiatives` key or missing required fields per item | Each initiative needs `title`, `description`, `quarter`, and `type` (feature/improvement/infrastructure) |
-
-## Success Criteria
-
-- Every roadmap initiative has an outcome statement answering Who benefits, What changes, and Why it matters
-- Now items have full outcome statements with 2-3 measurable success metrics and dependencies documented
-- Next items have outcome statements with draft metrics (no counter-metrics required)
-- Later items have problem statements and strategic intent only (no false-precision metrics or solutions)
-- Stakeholders understand and accept the commitment level framework (Now = high, Next = medium, Later = low)
-- Roadmap is reviewed quarterly with stakeholders to validate horizon placement
-- Output-to-outcome transformation reduces "when will it ship?" questions by 50%+
-
-## Scope & Limitations
-
-**In Scope:**
-- Transforming output-based feature lists into outcome-driven roadmap items
-- Now/Next/Later horizon classification based on quarter-to-current-date distance
-- "So what?" chain generation for each initiative
-- Strategic question prompts and metric suggestions by initiative type (feature, improvement, infrastructure)
-- Markdown and text report output with grouped-by-horizon formatting
-
-**Out of Scope:**
-- Feature prioritization or scoring (see `execution/prioritization-frameworks/`)
-- Detailed sprint-level planning or capacity allocation (see `scrum-master/`)
-- Product strategy or vision definition (outcome roadmaps communicate strategy, they do not create it)
-- Dependency management across teams (see `program-manager/`)
-
-**Important Caveats:**
-- Outcome roadmaps require a cultural shift. Teams accustomed to date-driven feature lists need coaching on commitment levels.
-- The tool generates outcome statement templates, not finished outcomes. The templates must be filled in with real customer and business data.
-- Later items intentionally lack detailed metrics. Adding false precision to uncertain items undermines the roadmap's credibility.
-
-## Integration Points
-
-| Integration | Direction | Description |
-|------------|-----------|-------------|
-| `execution/brainstorm-okrs/` | Receives from | OKR key results become success metrics for Now/Next roadmap items |
-| `execution/prioritization-frameworks/` | Receives from | RICE/ICE scores inform which initiatives move to Now vs. Next vs. Later |
-| `execution/create-prd/` | Feeds into | Now items with validated outcomes become PRD candidates |
-| `discovery/brainstorm-experiments/` | Receives from | Experiment results validate demand for Next/Later items, promoting them to Now |
-| `senior-pm/` | Receives from | Portfolio strategic priorities influence roadmap horizon placement |
-| `scrum-master/` | Receives from | Sprint capacity data determines how many Now items the team can support |
-
-## Tool Reference
-
-### roadmap_transformer.py
-
-Transforms output-based roadmap initiatives into outcome-driven format with horizon classification, strategic questions, and metric suggestions.
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--input` | string | (required, mutually exclusive with --demo) | Path to JSON file containing roadmap initiatives |
-| `--demo` | flag | off | Run transformation on built-in demo data (5 initiatives) |
-| `--format` | choice | `text` | Output format: `text`, `json`, or `markdown` |
-| `--output` | string | stdout | Output file path; if omitted, prints to stdout |
-
-**Supported initiative types:** `feature`, `improvement`, `infrastructure`
-
-## References
-
-- `references/outcome-roadmap-guide.md` -- Detailed guide with comparison, formulas, and stakeholder strategies
-- `assets/outcome_roadmap_template.md` -- Roadmap document template with Now/Next/Later sections
+When the pm agent receives a feature list without a PRD:
+1. Check if the list looks like outputs (feature names) or outcomes (result statements)
+2. If outputs → apply this skill to transform before decomposing into tasks
+3. Pass the outcome statements into the PLAN doc as the "Why" for each task group

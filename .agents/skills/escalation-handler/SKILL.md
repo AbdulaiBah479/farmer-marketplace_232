@@ -1,427 +1,313 @@
 ---
-name: Escalation Handler
-slug: escalation-handler
-description: Handle escalated support issues with structured triage, communication, and resolution processes
-category: customer-support
-complexity: complex
-version: "1.0.0"
-author: "ID8Labs"
-triggers:
-  - "escalation"
-  - "escalated ticket"
-  - "customer escalation"
-  - "support escalation"
-  - "urgent issue"
-  - "executive complaint"
-tags:
-  - escalation
-  - support
-  - crisis-management
-  - customer-recovery
-  - communication
+name: escalation-handler
+description: Handles escalations and determines appropriate escalation paths. Use when issues arise that need escalation or when determining whether to escalate to user vs. handle internally. Analyzes issues, determines severity, and routes to appropriate resolution path.
 ---
 
-# Escalation Handler
+# Escalation Handler Skill
 
-Expert escalation management system that transforms high-stakes support situations into opportunities for customer recovery and relationship strengthening. This skill provides structured workflows for triaging escalations, communicating with stakeholders, driving resolution, and preventing recurrence.
+## Instructions
 
-Escalations are defining moments in customer relationships. Handled poorly, they accelerate churn. Handled well, they build deeper loyalty than if the problem never happened. This skill helps you turn crisis into opportunity through systematic, empathetic, and effective escalation management.
+1. Analyze the issue or situation
+2. Determine issue type and severity
+3. Assess if issue can be handled internally
+4. Determine appropriate escalation path
+5. Prepare escalation information
+6. Route to appropriate handler
+7. Track escalation resolution
 
-Built on crisis management and customer recovery best practices, this skill combines triage protocols, communication frameworks, and resolution tracking to handle any escalation with confidence.
+## Escalation Decision Process
 
-## Core Workflows
+### Step 1: Analyze Issue
+- Understand the issue
+- Identify issue type
+- Assess severity
+- Note impact
 
-### Workflow 1: Escalation Triage
-**Quickly assess severity and route appropriately**
+### Step 2: Check Internal Resolution
+- Can issue be resolved internally?
+- Do we have authority to resolve?
+- Are resources available?
+- Is it a technical or strategic decision?
 
-1. **Severity Classification**
-   | Level | Criteria | Response Time |
-   |-------|----------|---------------|
-   | SEV-1 | Production down, data loss, security breach | 15 minutes |
-   | SEV-2 | Major feature broken, significant impact | 1 hour |
-   | SEV-3 | Feature degraded, workaround exists | 4 hours |
-   | SEV-4 | Minor issue, low impact | 24 hours |
+### Step 3: Determine Escalation Path
+- **Internal**: Handle with manager authority
+- **User**: Escalate to user for decision
+- **Other Agent**: Route to specialized agent
 
-2. **Impact Assessment**
-   - Customer tier (Enterprise = higher priority)
-   - Revenue at risk
-   - Number of users affected
-   - Business criticality to customer
-   - Public exposure risk
-   - Regulatory implications
+### Step 4: Prepare Escalation
+- Gather context
+- Prepare clear explanation
+- Suggest options if applicable
+- Document issue
 
-3. **Escalation Type**
-   - **Technical**: Product/service not working
-   - **Service**: Support experience failure
-   - **Business**: Commercial or relationship issue
-   - **Security**: Data or access concerns
-   - **Compliance**: Legal or regulatory
+### Step 5: Execute Escalation
+- Route to appropriate path
+- Communicate clearly
+- Track resolution
 
-4. **Initial Triage Questions**
-   - What exactly is happening?
-   - When did it start?
-   - Who is affected?
-   - What's the business impact?
-   - What has been tried?
-   - Is there a workaround?
+## Escalation Criteria
 
-### Workflow 2: Stakeholder Communication
-**Keep all parties informed throughout resolution**
+### Escalate to User When
 
-1. **Internal Communication**
-   - **Immediate**: Alert relevant teams (engineering, CSM, management)
-   - **Ongoing**: Regular status updates (hourly for SEV-1/2)
-   - **Resolution**: Post-incident summary
-   - **Follow-up**: Root cause and prevention
+**Strategic Decisions**
+- Business priorities conflict
+- Resource allocation decisions
+- Project direction changes
+- Budget or timeline decisions
 
-2. **Customer Communication**
-   - **Acknowledgment**: Within 15 minutes of escalation
-   - **Update Cadence**: Per severity level
-   - **Format**: Match customer preference (email, call, portal)
-   - **Tone**: Empathetic, ownership, action-focused
+**Ambiguous Requirements**
+- Requirements unclear
+- Conflicting requirements
+- Missing critical information
+- Need clarification
 
-3. **Update Frequency**
-   | Severity | Update Frequency | Stakeholders |
-   |----------|------------------|--------------|
-   | SEV-1 | Every 30 minutes | Customer, Exec, All hands |
-   | SEV-2 | Every 2 hours | Customer, Manager, CSM |
-   | SEV-3 | Daily | Customer, CSM |
-   | SEV-4 | On progress | Customer |
+**High-Impact Decisions**
+- Decisions affecting project success
+- Decisions with significant consequences
+- Decisions requiring business input
+- Decisions outside technical scope
 
-4. **Communication Principles**
-   - Lead with what you know, not what you don't
-   - Give specific next steps and timelines
-   - Acknowledge impact and frustration
-   - Avoid blame or excuses
-   - Provide single point of contact
+**Resource Constraints**
+- Insufficient resources
+- Need additional resources
+- Resource conflicts
+- Budget constraints
 
-### Workflow 3: Resolution Management
-**Drive systematic resolution**
+**Quality Concerns**
+- Quality issues requiring user attention
+- Standards not being met
+- Significant quality problems
 
-1. **War Room Protocol** (SEV-1/2)
-   - Designate incident commander
-   - Assemble cross-functional team
-   - Establish communication channel (Slack, Teams)
-   - Set update cadence
-   - Document all actions in real-time
+### Handle Internally When
 
-2. **Resolution Tracking**
-   ```
-   Escalation Record:
-   - ID: [Unique ID]
-   - Customer: [Name]
-   - Severity: [Level]
-   - Start Time: [Timestamp]
-   - Current Status: [Status]
-   - Owner: [Name]
-   - Next Action: [Action]
-   - ETA: [Time]
-   - Updates: [Log]
-   ```
+**Technical Decisions**
+- Purely technical choices
+- Implementation approaches
+- Technology selections (within scope)
+- Code structure decisions
 
-3. **Resolution Steps**
-   - Confirm exact problem
-   - Identify root cause (or best hypothesis)
-   - Develop solution options
-   - Implement fix (or workaround)
-   - Verify resolution with customer
-   - Confirm customer satisfaction
-   - Document and close
+**Process Issues**
+- Workflow problems
+- Agent coordination issues
+- Process improvements
+- Internal optimizations
 
-4. **Workaround Protocol**
-   - Always pursue workaround parallel to root fix
-   - Communicate workaround clearly
-   - Document workaround steps
-   - Set expectations for permanent fix
-   - Follow up when permanent fix available
+**Agent Conflicts**
+- Disagreements between agents
+- Approach conflicts
+- Can be resolved with manager authority
 
-### Workflow 4: Customer Recovery
-**Rebuild relationship after resolution**
+**Resource Reallocation**
+- Can reallocate existing resources
+- Workload balancing
+- Agent assignment changes
 
-1. **Recovery Actions**
-   | Impact Level | Recovery Actions |
-   |--------------|------------------|
-   | Minor | Apology + thank you |
-   | Moderate | Apology + service credit |
-   | Significant | Exec call + credit + roadmap |
-   | Severe | In-person meeting + significant gesture |
+## Escalation Types
 
-2. **Recovery Conversation Structure**
-   - Acknowledge what happened
-   - Take responsibility (no excuses)
-   - Explain what you've done to fix it
-   - Explain what you're doing to prevent recurrence
-   - Ask what else they need
-   - Commit to follow-up
+### Type 1: Strategic Escalation
+**When**: Business or strategic decisions needed
+**Path**: User
+**Example**: "Should we prioritize feature A or feature B?"
 
-3. **Goodwill Gestures**
-   - Service credits (1-3 months typical)
-   - Premium support upgrade
-   - Extended contract terms
-   - Free training/consulting
-   - Early access to new features
-   - Executive relationship investment
+### Type 2: Clarification Escalation
+**When**: Requirements unclear
+**Path**: User
+**Example**: "The specification doesn't specify authentication method. Should we use OAuth or JWT?"
 
-4. **Relationship Rebuilding**
-   - Increased check-in frequency
-   - Proactive status updates
-   - Invite to customer advisory board
-   - Prioritize their feedback
-   - Celebrate wins together
+### Type 3: Resource Escalation
+**When**: Resource constraints
+**Path**: User (if needs approval) or Internal (if can reallocate)
+**Example**: "We need 3 more agents for this project. Should we hire them?"
 
-### Workflow 5: Post-Incident Review
-**Learn and prevent recurrence**
+### Type 4: Conflict Escalation
+**When**: Agent conflicts
+**Path**: Internal (manager resolves) or User (if strategic)
+**Example**: "Two agents recommend different approaches. Which should we use?"
 
-1. **Root Cause Analysis**
-   - What happened (factual timeline)
-   - Why it happened (5 whys analysis)
-   - Why we didn't prevent it
-   - Why we didn't detect it earlier
-   - What made resolution difficult
+### Type 5: Quality Escalation
+**When**: Quality issues
+**Path**: User (if significant) or Internal (if can fix)
+**Example**: "Code quality is below standards. Should we refactor or proceed?"
 
-2. **Process Review**
-   - Did triage work correctly?
-   - Was communication effective?
-   - Were the right people involved?
-   - Did tools and processes help or hinder?
-   - What would we do differently?
+## Escalation Output Format
 
-3. **Prevention Actions**
-   - Technical fixes (monitoring, testing, architecture)
-   - Process improvements (escalation path, playbooks)
-   - Training needs (team skills, knowledge)
-   - Documentation updates
-   - Customer communication improvements
+```markdown
+## Escalation Decision
 
-4. **Documentation**
-   - Post-incident report
-   - Knowledge base article
-   - Playbook updates
-   - Training materials
-   - Customer-facing incident summary
+### Issue
+[Description of issue]
 
-## Quick Reference
+### Issue Type
+[Strategic / Clarification / Resource / Conflict / Quality / Other]
 
-| Action | Command/Trigger |
-|--------|-----------------|
-| Triage escalation | "Triage escalation from [Customer]" |
-| Create war room | "Set up war room for [Issue]" |
-| Draft update | "Write customer update for [Issue]" |
-| Escalation summary | "Summarize escalation [ID]" |
-| Recovery plan | "Create recovery plan for [Customer]" |
-| Root cause analysis | "Run RCA for [Incident]" |
-| Draft apology | "Write apology for [Situation]" |
-| Status report | "Create escalation status report" |
-| Escalation metrics | "Show escalation metrics" |
-| Prevention plan | "Create prevention plan for [Issue type]" |
+### Severity
+[Critical / High / Medium / Low]
+
+### Impact
+[What is impacted by this issue]
+
+### Analysis
+[Analysis of issue and options]
+
+### Recommendation
+**Escalate to**: [User / Internal / Other Agent]
+**Reason**: [Why this escalation path]
+
+### Escalation Information
+[Information to include in escalation]
+
+### Suggested Options
+[Options for user to consider, if applicable]
+```
+
+## Examples
+
+### Example 1: Strategic Escalation
+
+**Input**: Two high-priority features conflict for resources
+
+**Output**:
+```markdown
+## Escalation Decision
+
+### Issue
+Two high-priority features (User Authentication and Payment Integration) both require implementation-engineer resources, but we only have capacity for one at a time. Both are marked as P0 (Critical).
+
+### Issue Type
+Strategic
+
+### Severity
+High
+
+### Impact
+- One feature will be delayed
+- May impact project timeline
+- Affects product launch readiness
+
+### Analysis
+- User Authentication: Required for user access, blocks other user features
+- Payment Integration: Required for revenue, blocks monetization
+- Both are critical but serve different purposes
+- Need business decision on which to prioritize
+
+### Recommendation
+**Escalate to**: User
+**Reason**: This is a strategic business decision about feature priorities that requires business input.
+
+### Escalation Information
+Two critical features conflict for resources:
+1. User Authentication - Required for user access
+2. Payment Integration - Required for revenue
+
+We can only implement one at a time with current resources. Which should be prioritized?
+
+### Suggested Options
+1. Prioritize User Authentication first (enables user features)
+2. Prioritize Payment Integration first (enables revenue)
+3. Hire additional implementation-engineer to work in parallel
+4. Delay one feature to next phase
+```
+
+### Example 2: Internal Handling
+
+**Input**: Two agents recommend different API design approaches
+
+**Output**:
+```markdown
+## Escalation Decision
+
+### Issue
+implementation-engineer recommends REST API design, while infrastructure-engineer recommends GraphQL. Both approaches are valid, but we need to choose one.
+
+### Issue Type
+Conflict
+
+### Severity
+Medium
+
+### Impact
+- Affects API implementation approach
+- May impact development timeline
+- Affects future API evolution
+
+### Analysis
+- REST: Simpler, more standard, easier to implement
+- GraphQL: More flexible, better for complex queries
+- Both are technical decisions within scope
+- Can be resolved with manager authority based on project needs
+
+### Recommendation
+**Escalate to**: Internal (Manager resolves)
+**Reason**: This is a technical decision that can be resolved internally. Manager can evaluate project needs and make decision.
+
+### Escalation Information
+[For internal resolution]
+Two agents recommend different API approaches:
+- REST (implementation-engineer): Simpler, standard
+- GraphQL (infrastructure-engineer): More flexible
+
+**Decision**: Choose REST for simplicity and faster implementation, as project doesn't require complex querying yet. Can migrate to GraphQL later if needed.
+
+### Suggested Options
+N/A - Resolved internally
+```
+
+### Example 3: Clarification Escalation
+
+**Input**: Specification doesn't specify authentication method
+
+**Output**:
+```markdown
+## Escalation Decision
+
+### Issue
+The specification requires user authentication but doesn't specify the authentication method (OAuth, JWT, Session-based, etc.). This affects implementation approach.
+
+### Issue Type
+Clarification
+
+### Severity
+High
+
+### Impact
+- Blocks authentication implementation
+- Affects security architecture
+- May require different infrastructure
+
+### Analysis
+- Multiple valid authentication approaches exist
+- Choice affects implementation complexity
+- May have security or integration implications
+- Need clarification to proceed
+
+### Recommendation
+**Escalate to**: User
+**Reason**: This is a requirement clarification needed to proceed with implementation.
+
+### Escalation Information
+The specification requires user authentication but doesn't specify the method. Which authentication method should we use?
+
+### Suggested Options
+1. OAuth 2.0 (Google, GitHub, etc.) - Easy for users, requires OAuth providers
+2. JWT tokens - Standard, stateless, good for APIs
+3. Session-based - Traditional, requires session storage
+4. Other: [specify]
+```
+
+## Escalation Tracking
+
+Track escalations:
+- Issue description
+- Escalation path
+- Status (Pending, Resolved, Blocked)
+- Resolution
+- Follow-up actions
 
 ## Best Practices
 
-### Triage
-- Act fast - speed demonstrates care
-- Don't underestimate severity
-- Involve senior resources early
-- Assign clear ownership
-- Document from minute one
-
-### Communication
-- Acknowledge before you diagnose
-- Give timelines even if estimates
-- Update even when no update
-- Match customer's urgency level
-- Use their preferred channel
-
-### Resolution
-- Workaround first, root cause second
-- Test fixes before declaring resolved
-- Confirm with customer directly
-- Document everything
-- Don't close until customer confirms
-
-### Recovery
-- Take ownership, not blame
-- Gesture proportional to impact
-- Follow through on commitments
-- Increase touch points post-recovery
-- Measure relationship health
-
-### Prevention
-- Every escalation teaches something
-- Share learnings across team
-- Update playbooks regularly
-- Celebrate prevented escalations
-- Track pattern recurrence
-
-## Communication Templates
-
-### Initial Acknowledgment
-```
-Subject: [URGENT] We're on it - [Brief Issue Description]
-
-Hi [Name],
-
-I'm [Your Name], [Your Role], and I'm personally handling your escalation.
-
-I understand you're experiencing [brief issue description] and I know how disruptive this is to your business.
-
-Here's where we are:
-- We've engaged our [engineering/support] team
-- We're actively investigating the root cause
-- I'll update you within [timeframe]
-
-Your dedicated contact for this issue: [Name, email, phone]
-
-We won't rest until this is resolved.
-
-[Your Name]
-```
-
-### Progress Update
-```
-Subject: Update on [Issue] - [Status]
-
-Hi [Name],
-
-Here's your [X-hour] update:
-
-**Current Status**: [Where we are]
-
-**What We've Done**:
-- [Action 1]
-- [Action 2]
-
-**Next Steps**:
-- [What we're doing now]
-- [Expected outcome/timeline]
-
-**Next Update**: [When]
-
-Questions? Call me directly at [number].
-
-[Your Name]
-```
-
-### Resolution Notification
-```
-Subject: Resolved - [Issue Description]
-
-Hi [Name],
-
-I'm pleased to confirm that [issue] has been fully resolved.
-
-**What Happened**: [Brief explanation]
-
-**What We Did**: [Resolution actions]
-
-**Preventing Recurrence**: [What we're doing so this doesn't happen again]
-
-I know this caused significant disruption to your team, and I'm truly sorry. I'd like to discuss how we can make this right - would you have 15 minutes this week?
-
-Thank you for your patience throughout this.
-
-[Your Name]
-```
-
-### Executive Apology
-```
-Subject: Personal Apology from [Executive Name]
-
-[Name],
-
-I'm [Executive Name], [Title] at [Company], and I wanted to reach out personally regarding the issues you've experienced.
-
-First, I'm sorry. [Brief acknowledgment of specific impact] is not acceptable, and I take full responsibility.
-
-I've reviewed the situation with our team, and here's what we're doing:
-1. [Immediate fix]
-2. [Process change]
-3. [Prevention measure]
-
-I'd welcome the opportunity to discuss this with you directly. Would you be open to a call this week?
-
-Your success is our priority, and we're committed to earning back your trust.
-
-Sincerely,
-[Executive Name]
-[Direct contact info]
-```
-
-## Escalation Metrics
-
-| Metric | What It Measures | Target |
-|--------|------------------|--------|
-| First Response Time | Time to acknowledgment | Per severity SLA |
-| Time to Resolution | End-to-end resolution time | Per severity SLA |
-| Customer Satisfaction | Post-escalation CSAT | 4.0/5.0+ |
-| Escalation Rate | Escalations / Total tickets | < 5% |
-| Repeat Escalation | Same issue escalated again | < 10% |
-| SLA Compliance | % resolved within SLA | 95%+ |
-| Recovery Success | Relationship maintained | 90%+ |
-| Prevention Implementation | RCA actions completed | 100% |
-
-## Severity Level SLAs
-
-| Severity | First Response | Update Frequency | Resolution Target |
-|----------|----------------|------------------|-------------------|
-| SEV-1 | 15 min | 30 min | 4 hours |
-| SEV-2 | 1 hour | 2 hours | 8 hours |
-| SEV-3 | 4 hours | Daily | 48 hours |
-| SEV-4 | 24 hours | On change | 1 week |
-
-## Red Flags
-
-- **Delayed acknowledgment**: Customer waiting without response
-- **Under-severity**: Classifying lower to avoid effort
-- **Communication gaps**: Long silences during active escalation
-- **Blame language**: Pointing fingers at customer or other teams
-- **Premature closure**: Marking resolved before customer confirms
-- **No follow-through**: Recovery promises not kept
-- **Missing RCA**: Closing without understanding cause
-- **Pattern blindness**: Same issues escalating repeatedly
-
-## Post-Incident Report Template
-
-```markdown
-# Post-Incident Report: [Incident ID]
-
-## Summary
-- **Customer**: [Name]
-- **Issue**: [Brief description]
-- **Severity**: [Level]
-- **Duration**: [Start to Resolution]
-- **Impact**: [Customer impact description]
-
-## Timeline
-| Time | Event |
-|------|-------|
-| [Time] | Issue first reported |
-| [Time] | Escalation triggered |
-| [Time] | Root cause identified |
-| [Time] | Resolution implemented |
-| [Time] | Customer confirmed resolution |
-
-## Root Cause
-[Detailed explanation of why this happened]
-
-## Resolution
-[What was done to fix the issue]
-
-## Customer Impact
-- [Specific business impact]
-- [Duration of impact]
-- [Users/systems affected]
-
-## Prevention Actions
-| Action | Owner | Due Date | Status |
-|--------|-------|----------|--------|
-| [Action 1] | [Name] | [Date] | [Status] |
-
-## Lessons Learned
-- [What we learned]
-- [What we'll do differently]
-
-## Recovery Actions Taken
-- [Apology delivered]
-- [Goodwill gesture]
-- [Follow-up scheduled]
-```
+- **Be Clear**: Clearly explain issue and why escalation is needed
+- **Provide Context**: Include relevant background information
+- **Suggest Options**: Offer options when possible
+- **Be Timely**: Escalate promptly when needed
+- **Track Resolution**: Follow up on escalations
+- **Learn**: Use escalations to improve processes

@@ -1,5 +1,5 @@
 ---
-name: grafana-loki-logcli
+name: Grafana Loki LogCLI
 description: Query and explore logs in Grafana Loki via the logcli command-line tool. Use when a user asks to pull logs for analysis.
 allowed-tools: Bash(logcli:*)
 ---

@@ -1,209 +1,285 @@
 ---
 name: copy-trading
-description: Wallet evaluation, monitoring, and copy-trade strategy design for Solana DEX trading
+description: "Automatically copy trades from successful wallets on Polymarket and crypto"
+emoji: "📋"
+gates:
+  envs:
+    anyOf:
+      - POLY_API_KEY
+      - SOLANA_PRIVATE_KEY
+      - EVM_PRIVATE_KEY
 ---
 
-# Copy Trading
+# Copy Trading - Complete API Reference
 
-Wallet evaluation, monitoring, and copy-trade strategy design for Solana DEX trading. Identify profitable wallets on-chain, evaluate whether their edge is real and replicable, monitor their activity in real time, and execute proportionally-sized trades with independent risk controls.
+Automatically mirror trades from successful wallets with configurable sizing, delays, and risk controls.
 
-## What Copy Trading Means on Solana
+## Features
 
-Copy trading is the practice of monitoring one or more wallets that have demonstrated consistent profitability and replicating their trades in your own wallet. On Solana, every DEX swap is publicly visible on-chain within seconds, making it technically feasible to detect and follow any wallet's activity.
+- **Follow whale wallets** on Polymarket and crypto chains
+- **Configurable sizing**: Fixed, proportional, or % of portfolio
+- **Trade delay** to avoid detection and front-running
+- **Risk limits**: Max position, daily loss limits
+- **Stop-loss / Take-profit** monitoring with auto-exit
 
-### How It Differs from TradFi Copy Trading
+---
 
-| Dimension | TradFi (eToro, etc.) | Solana On-Chain |
-|-----------|---------------------|-----------------|
-| Data source | Platform-reported P&L | Verifiable on-chain transactions |
-| Latency | Minutes to hours | Seconds (websocket) to sub-second (gRPC) |
-| Front-running risk | Low | High (MEV bots, sandwich attacks) |
-| Trade cost | Commissions + spread | Gas + slippage + priority fees |
-| Capacity | High (large-cap equities) | Low (micro-cap tokens have thin liquidity) |
-| Signal decay | Slow | Fast (PumpFun tokens move in minutes) |
-| Transparency | Partial (delayed reporting) | Full (every transaction is public) |
+## Chat Commands
 
-The core tradeoff: Solana provides perfect transparency but introduces execution risk. The wallet you copy got a price that no longer exists by the time you trade.
-
-## The Copy-Trade Pipeline
-
-### Stage 1 — Discovery
-
-Find wallets with strong track records. Sources include:
-
-- **SolanaTracker Top Traders**: `GET /top-traders/{token}` returns the highest-PnL wallets for any token
-- **Birdeye Trader Rankings**: wallet-level P&L leaderboards by token or globally
-- **On-chain leaderboards**: community-built dashboards (GMGN, Cielo, Arkham)
-- **Social signals**: wallets shared on Twitter/X or Telegram alpha groups
-- **Your own analysis**: run `token-holder-analysis` on a token that performed well, then profile the top holders
-
-See `references/wallet_discovery.md` for detailed source documentation and scoring methodology.
-
-### Stage 2 — Evaluation
-
-Every discovered wallet must pass quantitative evaluation before it enters a copy list. Use the `wallet-profiling` skill for deep behavioral analysis, then apply copy-trade-specific criteria.
-
-**Minimum thresholds:**
-
-| Metric | Minimum | Why |
-|--------|---------|-----|
-| Trade count (30d) | >= 50 | Statistical significance |
-| Win rate | >= 55% | Edge above random |
-| Profit factor | >= 1.5 | Wins meaningfully exceed losses |
-| Last active | Within 7 days | Still trading, not abandoned |
-| Distinct tokens traded | >= 10 | Not a one-token wonder |
-| Max single-trade % of total PnL | < 40% | Not reliant on one lucky hit |
-| Bot probability | < 30% | Human-like timing patterns |
-
-Run `scripts/evaluate_wallet.py` for a comprehensive copy-trade suitability assessment.
-
-### Stage 3 — Filtering
-
-After evaluation, apply additional filters:
-
-- **Consistency check**: rolling 7-day win rate should not swing below 40% in any period
-- **Style compatibility**: understand whether the wallet is a sniper, scalper, or swing trader — your infrastructure must match their speed
-- **Size compatibility**: if they trade 500 SOL per position and you have 10 SOL total, proportional sizing may be too small to cover fees
-- **Sybil check**: use the `sybil-detection` skill to verify the wallet is not part of a wash-trading cluster
-
-### Stage 4 — Monitoring
-
-Once a wallet passes evaluation and filtering, set up real-time monitoring.
-
-**Monitoring approaches (fastest to simplest):**
-
-1. **Yellowstone gRPC**: sub-second latency, streams all transactions for subscribed wallets
-2. **Helius Enhanced WebSocket**: near-real-time with parsed transaction data
-3. **Polling via RPC**: `getSignaturesForAddress` every 5-10 seconds — simple but slower
-
-See `references/execution_strategy.md` for implementation details on each approach.
-
-### Stage 5 — Execution
-
-When a monitored wallet executes a swap:
-
-1. **Detect** the transaction (via monitoring infrastructure)
-2. **Parse** the trade: token address, direction (buy/sell), size
-3. **Validate** the token: check liquidity, holder distribution, honeypot risk
-4. **Size** the position: proportional to your portfolio, not theirs
-5. **Execute** via Jupiter aggregator with appropriate slippage tolerance
-6. **Record** the copy trade with attribution to the source wallet
-
-### Stage 6 — Risk Management
-
-Copy trades require independent risk controls that do not depend on the copied wallet's behavior.
-
-See `references/risk_framework.md` for the complete framework.
-
-**Key limits:**
-
-| Control | Recommended Value | Purpose |
-|---------|------------------|---------|
-| Max allocation per wallet | 10-20% of portfolio | Diversification across signal sources |
-| Max concurrent copy positions | 3-5 | Prevent overexposure |
-| Per-trade stop loss | -15% to -25% | Independent downside protection |
-| Daily copy-trade loss limit | -5% of portfolio | Circuit breaker |
-| Weekly copy-trade loss limit | -10% of portfolio | Longer-term circuit breaker |
-
-## Wallet Scoring for Copy Suitability
-
-Composite score from 0-100 based on weighted criteria:
+### Following Wallets
 
 ```
-copy_score = (
-    trade_count_score * 0.15 +
-    win_rate_score * 0.20 +
-    profit_factor_score * 0.25 +
-    consistency_score * 0.20 +
-    recency_score * 0.10 +
-    human_probability_score * 0.10
-)
+/copy follow <address>                      # Start following a wallet
+/copy follow 0x1234... --size 100           # Follow with $100 fixed size
+/copy follow 0x1234... --size 50%           # Follow with 50% of their size
+/copy follow 0x1234... --delay 30           # 30 second delay before copying
+
+/copy unfollow <address>                    # Stop following
+/copy list                                  # List followed wallets
+/copy status                                # Show copy trading status
 ```
 
-**Component calculations:**
+### Sizing Modes
 
-- **Trade count score**: `min(trade_count / 200, 1.0) * 100` — maxes out at 200 trades
-- **Win rate score**: `max((win_rate - 0.40) / 0.30, 0) * 100` — scaled from 40% to 70%
-- **Profit factor score**: `min((pf - 1.0) / 3.0, 1.0) * 100` — scaled from 1.0 to 4.0
-- **Consistency score**: `(1.0 - std_dev_of_rolling_win_rate) * 100` — lower variance = higher score
-- **Recency score**: `max(1.0 - days_since_last_trade / 14, 0) * 100` — decays over 14 days
-- **Human probability score**: `(1.0 - bot_probability) * 100`
-
-**Interpretation:**
-
-| Score | Rating | Action |
-|-------|--------|--------|
-| 80-100 | Excellent | Strong copy-trade candidate |
-| 60-79 | Good | Suitable with monitoring |
-| 40-59 | Marginal | Proceed with caution, reduce allocation |
-| 0-39 | Poor | Do not copy |
-
-## Position Sizing for Copy Trades
-
-Three approaches, from simplest to most nuanced:
-
-### Fixed Amount
-Use a constant SOL amount per copy trade (e.g., 0.5 SOL). Simple but ignores the wallet's conviction level.
-
-### Proportional
-Match the copied wallet's allocation as a percentage of their estimated portfolio:
-
-```python
-your_size = (their_trade_size / their_estimated_portfolio) * your_portfolio
+```
+/copy size <address> fixed 100              # Always trade $100
+/copy size <address> proportional 0.5       # 50% of their size
+/copy size <address> portfolio 5%           # 5% of your portfolio
 ```
 
-Requires estimating their total portfolio, which can be imprecise.
+### Risk Controls
 
-### Confidence-Scaled
-Base amount multiplied by your confidence in the wallet:
+```
+/copy limits --max-position 1000            # Max $1000 per position
+/copy limits --daily-loss 500               # Stop after $500 daily loss
+/copy limits --max-trades 20                # Max 20 trades per day
 
-```python
-your_size = base_amount * (copy_score / 100) * conviction_multiplier
+/copy sl <address> 10%                      # 10% stop-loss on copies
+/copy tp <address> 20%                      # 20% take-profit on copies
 ```
 
-Where `conviction_multiplier` is higher for wallets with longer track records.
+### Discovery
 
-## Anti-Patterns to Avoid
+```
+/copy top 10                                # Top 10 traders to copy
+/copy top 10 --min-winrate 60               # Min 60% win rate
+/copy top 10 --min-volume 100000            # Min $100k volume
+/copy analyze <address>                     # Analyze a trader's performance
+```
 
-### Copying Bots
-Bots have sub-second execution and often use MEV strategies. You cannot match their latency. By the time you detect their trade, the opportunity is gone or you become the exit liquidity. Use the bot probability score to filter these out.
+---
 
-### Survivorship Bias
-A wallet with 1000% returns from one PumpFun token is not necessarily skilled. Look for wallets with consistent performance across many tokens, not outlier wins. The max-single-trade-PnL filter catches this.
+## TypeScript API Reference
 
-### Blind Following
-Never copy a trade without understanding what the token is. At minimum, run basic safety checks: liquidity depth, holder concentration, contract verification. A 2-second check can prevent buying a honeypot.
+### Create Copy Trading Service
 
-### No Independent Exits
-The copied wallet may have information you do not have. They may exit for reasons unrelated to the trade. Always maintain your own stop loss. Never rely solely on mirroring their exit.
+```typescript
+import { createCopyTradingService } from 'clodds/trading/copy-trading';
 
-### Correlation Risk
-If you copy 5 wallets and they all buy the same token, you have 5x the intended exposure. Track aggregate position across all copy sources and enforce portfolio-level limits.
+const copyTrader = createCopyTradingService({
+  // Polymarket credentials
+  polymarket: {
+    apiKey: process.env.POLY_API_KEY,
+    apiSecret: process.env.POLY_API_SECRET,
+    passphrase: process.env.POLY_API_PASSPHRASE,
+    privateKey: process.env.PRIVATE_KEY,
+  },
 
-### Ignoring Capacity
-A wallet profiting on tokens with $50K daily volume cannot be copied at scale. If your trade is 10% of daily volume, you will move the price against yourself.
+  // Default settings
+  defaults: {
+    sizingMode: 'proportional',
+    sizingValue: 0.5,           // 50% of their size
+    delaySeconds: 15,           // 15s delay
+    maxPositionSize: 1000,      // $1000 max
+    stopLossPct: 10,            // 10% stop-loss
+    takeProfitPct: 25,          // 25% take-profit
+  },
 
-## Integration with Other Skills
+  // Risk limits
+  limits: {
+    maxDailyLoss: 500,
+    maxDailyTrades: 20,
+    maxTotalExposure: 5000,
+  },
+});
+```
 
-| Skill | How It Integrates |
-|-------|-------------------|
-| `wallet-profiling` | Deep behavioral analysis of candidate wallets |
-| `sybil-detection` | Verify wallet is not part of a wash-trading ring |
-| `token-holder-analysis` | Safety check tokens before copying a buy |
-| `liquidity-analysis` | Verify sufficient liquidity to enter/exit |
-| `helius-api` | WebSocket monitoring and transaction parsing |
-| `jupiter-api` / `jupiter-swap` | Trade execution via aggregator |
-| `slippage-modeling` | Estimate execution cost of the copy trade |
-| `position-sizing` | Portfolio-aware sizing for copy positions |
-| `risk-management` | Portfolio-level risk controls |
+### Follow Wallets
 
-## Files
+```typescript
+// Follow a wallet with default settings
+await copyTrader.follow('0x1234...');
 
-### References
-- `references/wallet_discovery.md` — Sources and methods for finding copy-trade candidates
-- `references/execution_strategy.md` — Monitoring infrastructure and execution approaches
-- `references/risk_framework.md` — Portfolio-level risk controls for copy trading
+// Follow with custom settings
+await copyTrader.follow('0x1234...', {
+  sizingMode: 'fixed',
+  sizingValue: 100,            // $100 per trade
+  delaySeconds: 30,            // 30s delay
+  stopLossPct: 15,             // 15% stop-loss
+  takeProfitPct: 30,           // 30% take-profit
 
-### Scripts
-- `scripts/evaluate_wallet.py` — Comprehensive copy-trade suitability scoring for a wallet
-- `scripts/monitor_wallet.py` — Real-time wallet transaction monitoring with trade alerts
+  // Filters
+  minTradeSize: 50,            // Only copy trades > $50
+  maxTradeSize: 5000,          // Skip trades > $5000
+  markets: ['politics'],       // Only copy politics markets
+});
+
+// Unfollow
+await copyTrader.unfollow('0x1234...');
+
+// List followed
+const followed = await copyTrader.listFollowed();
+```
+
+### Sizing Modes
+
+```typescript
+// Fixed: Always trade same dollar amount
+await copyTrader.follow(address, {
+  sizingMode: 'fixed',
+  sizingValue: 100,  // Always $100
+});
+
+// Proportional: Percentage of their trade size
+await copyTrader.follow(address, {
+  sizingMode: 'proportional',
+  sizingValue: 0.5,  // 50% of their size
+});
+
+// Portfolio: Percentage of your portfolio
+await copyTrader.follow(address, {
+  sizingMode: 'portfolio',
+  sizingValue: 0.05,  // 5% of portfolio per trade
+});
+```
+
+### Event Handling
+
+```typescript
+copyTrader.on('trade_copied', (event) => {
+  console.log(`Copied ${event.side} on ${event.market}`);
+  console.log(`Original: $${event.originalSize}, Copied: $${event.copiedSize}`);
+});
+
+copyTrader.on('stop_loss_triggered', (event) => {
+  console.log(`Stop-loss hit on ${event.market}`);
+  console.log(`Loss: $${event.loss}`);
+});
+
+copyTrader.on('take_profit_triggered', (event) => {
+  console.log(`Take-profit hit on ${event.market}`);
+  console.log(`Profit: $${event.profit}`);
+});
+
+copyTrader.on('limit_reached', (event) => {
+  console.log(`Limit reached: ${event.type}`);
+});
+```
+
+### Start/Stop
+
+```typescript
+// Start copy trading (monitors followed wallets)
+await copyTrader.start();
+
+// Stop copy trading
+await copyTrader.stop();
+
+// Get status
+const status = copyTrader.getStatus();
+console.log(`Following: ${status.followedCount} wallets`);
+console.log(`Today's P&L: $${status.dailyPnl}`);
+console.log(`Active positions: ${status.activePositions}`);
+```
+
+### Find Best Traders
+
+```typescript
+import { findBestAddressesToCopy } from 'clodds/trading/copy-trading';
+
+// Find top traders
+const topTraders = await findBestAddressesToCopy({
+  minWinRate: 0.6,           // 60%+ win rate
+  minVolume: 100000,         // $100k+ volume
+  minTrades: 50,             // 50+ trades
+  timeframeDays: 30,         // Last 30 days
+  limit: 10,                 // Top 10
+});
+
+for (const trader of topTraders) {
+  console.log(`${trader.address}`);
+  console.log(`  Win rate: ${(trader.winRate * 100).toFixed(1)}%`);
+  console.log(`  Volume: $${trader.totalVolume.toLocaleString()}`);
+  console.log(`  P&L: $${trader.pnl.toLocaleString()}`);
+  console.log(`  Trades: ${trader.tradeCount}`);
+}
+```
+
+### Analyze Trader
+
+```typescript
+const analysis = await copyTrader.analyzeTrader('0x1234...');
+
+console.log(`Win rate: ${analysis.winRate}%`);
+console.log(`Avg trade size: $${analysis.avgTradeSize}`);
+console.log(`Best market: ${analysis.bestMarket}`);
+console.log(`Worst market: ${analysis.worstMarket}`);
+console.log(`Avg hold time: ${analysis.avgHoldTime} hours`);
+console.log(`Sharpe ratio: ${analysis.sharpeRatio}`);
+```
+
+---
+
+## Risk Management
+
+### Stop-Loss Monitoring
+
+Copy trading includes automatic stop-loss monitoring with 5-second price polling:
+
+```typescript
+// Configure stop-loss per followed wallet
+await copyTrader.follow(address, {
+  stopLossPct: 10,  // Exit at 10% loss
+});
+
+// Or set global stop-loss
+copyTrader.setGlobalStopLoss(15);  // 15% for all positions
+```
+
+### Take-Profit Monitoring
+
+```typescript
+// Configure take-profit per followed wallet
+await copyTrader.follow(address, {
+  takeProfitPct: 25,  // Exit at 25% profit
+});
+
+// Trailing take-profit
+await copyTrader.follow(address, {
+  trailingTakeProfit: true,
+  trailingPct: 5,  // Trail by 5%
+});
+```
+
+### Daily Limits
+
+```typescript
+const copyTrader = createCopyTradingService({
+  limits: {
+    maxDailyLoss: 500,      // Stop after $500 loss
+    maxDailyTrades: 20,     // Max 20 trades
+    maxTotalExposure: 5000, // Max $5k total exposure
+  },
+});
+```
+
+---
+
+## Best Practices
+
+1. **Start with small sizes** - Test with 10-25% proportional sizing
+2. **Use delays** - 15-30 second delays reduce front-running risk
+3. **Set stop-losses** - Always use 10-15% stop-loss
+4. **Diversify** - Follow 3-5 wallets, not just one
+5. **Monitor regularly** - Check performance daily
+6. **Filter markets** - Focus on categories you understand

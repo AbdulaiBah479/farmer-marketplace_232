@@ -1,32 +1,44 @@
 ---
-name: gitlab
-description: Interact with GitLab repositories, merge requests, and APIs using the GITLAB_TOKEN environment variable. Use when working with code hosted on GitLab or managing GitLab resources.
-triggers:
-- gitlab
-- git
+name: GitLab
+description: GitLab workflow best practices and glab CLI usage. Use when working with GitLab repositories, merge requests, issues, pipelines, or GitLab API interactions.
 ---
+# GitLab
 
-You have access to an environment variable, `GITLAB_TOKEN`, which allows you to interact with
-the GitLab API.
+GitLab workflows use `glab`, the official GitLab CLI. This skill helps adapt GitHub (`gh`) patterns to GitLab (`glab`).
 
-<IMPORTANT>
-You can use `curl` with the `GITLAB_TOKEN` to interact with GitLab's API.
-ALWAYS use the GitLab API for operations instead of a web browser.
-ALWAYS use the `create_mr` tool to open a merge request
-</IMPORTANT>
+## Terminology
 
-If you encounter authentication issues when pushing to GitLab (such as password prompts or permission errors), the old token may have expired. In such case, update the remote URL to include the current token: `git remote set-url origin https://oauth2:${GITLAB_TOKEN}@gitlab.com/username/repo.git`
+- **Pull Request → Merge Request (MR)**: Use `glab mr` instead of `gh pr`
+- **Repository → Project**: GitLab calls repositories "projects"
+- **Actions → CI/CD**: Use `glab ci` for pipelines and jobs
 
-Here are some instructions for pushing, but ONLY do this if the user asks you to:
-* NEVER push directly to the `main` or `master` branch
-* Git config (username and email) is pre-set. Do not modify.
-* You may already be on a branch starting with `openhands-workspace`. Create a new branch with a better name before pushing.
-* Use the `create_mr` tool to create a merge request, if you haven't already
-* Once you've created your own branch or a merge request, continue to update it. Do NOT create a new one unless you are explicitly asked to. Update the PR title and description as necessary, but don't change the branch name.
-* Use the main branch as the base branch, unless the user requests otherwise
-* After opening or updating a merge request, send the user a short message with a link to the merge request.
-* Do all of the above in as few steps as possible. E.g. you could push changes with one step by running the following bash commands:
+## Quick Start
+
 ```bash
-git remote -v && git branch # to find the current org, repo and branch
-git checkout -b create-widget && git add . && git commit -m "Create widget" && git push -u origin create-widget
+# Authenticate
+glab auth login
+
+# Create merge request (push branch first!)
+git push -u origin feature-branch
+glab mr create --fill
+
+# List merge requests
+glab mr list
 ```
+
+## Reference Files
+
+- **merge-requests.md**: Working with merge requests (`glab mr`)
+- **ci.md**: CI/CD pipelines and jobs (`glab ci`)
+- **api.md**: REST and GraphQL API access (`glab api`)
+
+## Key Rules
+
+- **Always** use `glab` for GitLab (never `gh`)
+- **Always** push branch before creating MR
+- **Always** use `--fill` to auto-populate from commits
+- Use `glab ci lint` to validate `.gitlab-ci.yml`
+
+## Common Mistakes
+
+Don't use `gh` commands, call MRs "pull requests", or forget to push before creating MRs.

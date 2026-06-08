@@ -1,9 +1,7 @@
 ---
 name: ucp-payment-handlers
-description: >
-  Implement UCP payment handlers — configure Google Pay, Shop Pay, or custom
-  payment methods with tokenization, credential flow, and instrument schemas.
-  Use when integrating payment processing into a UCP checkout.
+description: Implement UCP payment handlers — configure Google Pay, Shop Pay, or custom payment methods with tokenization, credential flow, and instrument schemas. Use when integrating payment processing into a UCP checkout.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # UCP Payment Handlers

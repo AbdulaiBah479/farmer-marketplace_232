@@ -1,37 +1,20 @@
 ---
-name: codex-review
-description: Professional code review with auto CHANGELOG generation, integrated with Codex AI
+id: codex-review
+name: Codex Review
+description: Step-by-step guidance for codex review.
+category: Tools
 ---
 
-# codex-review
+# Codex Review
 
-## Overview
-Professional code review with auto CHANGELOG generation, integrated with Codex AI
+Support codex review workflows with clear steps and best practices.
 
 ## When to Use
-- When you want professional code review before commits
-- When you need automatic CHANGELOG generation
-- When reviewing large-scale refactoring
 
-## Installation
-```bash
-npx skills add -g BenedictKing/codex-review
-```
+- You need help with codex review.
+- You want a clear, actionable next step.
 
-## Step-by-Step Guide
-1. Install the skill using the command above
-2. Ensure Codex CLI is installed
-3. Use `/codex-review` or natural language triggers
+## Output
 
-## Examples
-See [GitHub Repository](https://github.com/BenedictKing/codex-review) for examples.
-
-## Best Practices
-- Keep CHANGELOG.md in your project root
-- Use conventional commit messages
-
-## Troubleshooting
-See the GitHub repository for troubleshooting guides.
-
-## Related Skills
-- context7-auto-research, tavily-web, exa-search, firecrawl-scraper
+- Brief plan or checklist
+- Key recommendations and caveats

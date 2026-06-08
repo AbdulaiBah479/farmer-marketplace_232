@@ -1,110 +1,191 @@
 ---
-name: standup
-description: Write a client update — identify what was done, what's next, and surface risks before they become surprises. End of day, start of day, or end of week.
-argument-hint: "[optional context, e.g. 'end of week update']"
-disable-model-invocation: true
+name: Standup
+description: Multi-agent collaborative decision-making for complex problems. USE WHEN you need multiple specialist perspectives on high-stakes decisions (architecture, prioritization, security, compliance). Orchestrates conversation between custom agent rosters, synthesizes perspectives into actionable decisions. Finds 2-3x more issues than solo agent mode.
 ---
 
-## Behavior
+# Standup
 
-This is a guided conversation that ends with a polished, ready-to-send update. Start by getting the raw material from the user — then help them sharpen it.
+Multi-agent orchestration: Better decisions through collaborative specialist perspectives.
 
-### Step 1: Gather
+## Workflow Routing
 
-Start by checking git for context:
+| Workflow | When to Use | Output |
+|----------|-------------|--------|
+| RunStandup | Complex decision needing multiple perspectives | Synthesized decision from agent discussion |
+| ManageContext | Creating or updating project-context.md | Updated project "bible" with decisions |
+| SynthesizeDecision | Combining agent perspectives into consensus | Actionable decision with rationale and action items |
 
-- `git log --since="yesterday" --author=$(git config user.email)` (or last few days if no recent commits)
-- Check for open branches, uncommitted work, open PRs
+## Examples
 
-Then open with:
+### Example 1: Architecture design review
+```
+User: "Review this microservices architecture design"
+Skill loads: Standup → RunStandup workflow
+Process:
+  1. Load project context
+  2. Present architecture to agents (Product, Security, QA)
+  3. Each agent provides perspective
+  4. Synthesize recommendations
+Output: Design feedback with security, testability, and business concerns identified
+```
 
-**"Here's what I can see from git. Before I help you write this — what did you actually spend your time on? Git doesn't always tell the full story."**
+### Example 2: Feature prioritization
+```
+User: "Should we add OAuth2 to MVP or defer to v1.1?"
+Skill loads: Standup → RunStandup workflow
+Process:
+  1. Load project context
+  2. Present decision to agents
+  3. Product: User value perspective
+  4. Security: Security/compliance perspective
+  5. QA: Testing complexity perspective
+  6. Synthesize: Balanced recommendation
+Output: Prioritization decision (Must Have / Should Have / Could Have / Won't Have)
+```
 
-Wait for their answer. Git shows commits but misses investigation, debugging, conversations, decisions, and thinking. Their answer fills the gaps.
+### Example 3: Smart roster selection (auto-suggest)
+```
+User: "Review this authentication feature design"
+Skill loads: Standup → RunStandup workflow
+Smart roster: Daniel, Mary, Clay, Hefley, Amy (full team - critical feature)
+Process:
+  1. Load project context
+  2. Auto-detect: authentication = critical feature → suggest full team
+  3. Daniel: Security threats (credential storage, session management)
+  4. Mary: User experience (signup friction, password reset flow)
+  5. Clay: Timeline estimates (6h for email/password, 9h for OAuth2)
+  6. Hefley: Business priority (MVP vs v1.1)
+  7. Amy: Test requirements (60 tests - 25 unit + 12 integration + 8 E2E + 15 security)
+  8. Synthesize: Team consensus with conflict resolution
+Output: Multi-perspective design review with actionable recommendations
+```
 
-Then ask:
+### Example 4: Custom roster - Code review
+```typescript
+// Specify exact roster for focused code review
+const result = await runStandup({
+  feature: 'Database migration script',
+  roster: ['Daniel', 'Clay'],  // Only security + tech lead
+  codeSnippet: migrationScript
+})
+// Output: Daniel finds SQL injection risks, Clay estimates timeline
+```
 
-**"What's the most important thing the client should know from today — if they read one sentence and nothing else?"**
+### Example 5: Custom roster - Full team override
+```typescript
+// Force full team review (override smart defaults)
+const result = await runStandup({
+  feature: 'Minor UI tweak',
+  roster: ['Mary', 'Clay', 'Hefley', 'Daniel', 'Amy'],  // All 5 agents
+  description: 'Change button color from blue to green'
+})
+// Output: Full team perspective on what seems like a simple change
+//         (may uncover accessibility, brand, or UX issues)
+```
 
-Wait. This forces them to prioritise. Most updates bury the lead.
+### Example 6: Custom roster - Domain-specific experts
+```
+User: "Run standup with Investment Advisory Team to review portfolio allocation strategy"
+Skill loads: Standup → RunStandup workflow with custom roster
+Agents: Financial Analyst, Compliance Officer, Client Advisor
+Output: Investment strategy with risk, compliance, and client perspective
+```
 
-Then:
+### Example 7: Custom roster - Two agents only
+```typescript
+// Minimal roster for quick checks
+const result = await runStandup({
+  feature: 'Performance optimization',
+  roster: ['Clay', 'Amy'],  // Only tech lead + QA
+  question: 'Is this optimization worth the complexity?'
+})
+// Output: Clay's capacity estimate + Amy's testing complexity
+```
 
-**"Is there anything the client needs to decide, unblock, or be aware of before your next working session?"**
+### Example 8: Record decision
+```
+User: "Update project context with our decision on auth approach"
+Skill loads: Standup → ManageContext workflow
+Output: project-context.md updated with decision, rationale, and action items
+```
 
-Wait. This surfaces blockers and risks before they become surprises.
+## Agent Rosters
 
-### Step 2: Sharpen — Socratically
+### Smart Roster Selection (Auto-Suggest)
+FORGE automatically suggests the right experts based on your feature context:
 
-Before writing the update, push on what they've said:
+| Feature Type | Suggested Roster | Why |
+|--------------|------------------|-----|
+| Authentication | Daniel, Mary, Clay, Hefley, Amy | Critical feature - full team review |
+| Security/Vulnerabilities | Daniel, Clay, Amy | Security-focused: threat + implementation + security tests |
+| UX/User Experience | Mary, Daniel, Clay, Amy | UX-focused: user research + security review + implementation |
+| Database/SQL | Daniel, Clay, Amy | Database-focused: SQL injection + implementation + testing |
+| Architecture/Design | Clay, Mary, Hefley, Amy | Architecture-focused: tech lead + business impact + priority |
+| Testing/QA | Amy, Daniel, Clay | QA-focused: test strategy + security tests + implementation |
+| Timeline/Estimates | Clay, Hefley, Amy | Planning-focused: tech lead + priority + test time |
+| Prioritization | Hefley, Mary, Clay | Prioritization-focused: product + UX + tech feasibility |
 
-**On completeness:**
+**Question Context Override**: Questions override feature patterns
+- "How long?" → Clay, Hefley, Amy (timeline focus)
+- "How many tests?" → Amy, Daniel, Clay (testing focus)
+- "Should we build this?" → Hefley, Mary, Clay (prioritization focus)
 
-- "You mentioned [X] — is that done-done, or is there a loose end the client should know about?"
-- "Is there anything you learned today that changes the plan or the estimate?"
-- "Are you waiting on anything from the client's side? Now's the time to ask — don't let it sit."
+**Manual Override**: Explicitly specify roster to override smart defaults
+```typescript
+runStandup({ feature: 'Auth', roster: ['Daniel', 'Clay'] }) // Override: only Daniel + Clay
+```
 
-**On risks — push hard here:**
+### Software Development Roster
+- **Daniel** (Security Engineer): Security threats, CMMC compliance, secure design
+- **Mary** (Business Analyst): User value, UX design, user research, stakeholder communication
+- **Clay** (Tech Lead): Technical feasibility, timeline estimates (Claude-time), capacity planning
+- **Hefley** (Product Manager): User value, business priorities, MVP scoping, MoSCoW prioritization
+- **Amy** (QA Lead): Test strategy, testability, quality gates, ATDD
 
-- "Is there a risk here you're not mentioning because you think you can handle it? Those are the ones worth flagging early."
-- "If the client asked 'are we on track?' right now — what's your honest answer?"
-- "Are you going to hit the next deadline? If there's any doubt, say it now — not the day before."
-- "Is there anything that took longer than expected today? If so, does that change the timeline for what comes next?"
-- "Are there areas you shipped without full test coverage? What's the QA gap — and does the client know?"
-- "Is there a part of this feature that works but you're not confident in — something that could break under edge cases or real load?"
-- "Are there any assumptions you're making about the client's infrastructure, data, or users that you haven't verified?"
-- "If you got hit by a bus tomorrow, what would fall through the cracks?"
+### Custom Rosters (Your Domain)
+Define your own agent rosters for different domains:
+- **Investment Advisory**: Financial Analyst, Compliance Officer, Client Advisor
+- **Legal Review**: Contract Specialist, Risk Manager, Business Counsel
+- **Healthcare**: Clinical Specialist, Regulatory Affairs, Patient Advocate
+- **Product Design**: UX Designer, Brand Manager, Accessibility Expert
 
-Don't ask all of these — pick the 2–3 that are most relevant based on what they've said. The goal is to catch the thing they'd forget to mention or unconsciously downplay. Consultants instinctively soften risks in updates — push against that.
+**How to Create Custom Agents**:
+Use `templates/custom-agent-template.md` to define new agents with:
+- Role, expertise, personality
+- Standup participation style
+- Integration with other agents
 
-**On team communication — push here before writing:**
+## Integration
 
-- "Is there something here you need to raise with your team before this goes to the client?"
-- "Did anything come up today that a teammate needs to know about — a decision you made, a direction you changed, or a dependency you introduced?"
-- "Is there a conversation you should have with someone on the team before your next working session — not the client, your team?"
+- Works with AgilePm skill (standup reviews PRDs, prioritizes epics)
+- Works with Security skill (Daniel uses threat modeling in standup)
+- Works with TestArchitect skill (Amy defines test strategy in standup)
+- Generates project-context.md (project "bible" for all agents)
+- Records decisions with rationale (audit trail for compliance)
 
-This matters because client updates aren't the only communication that gets neglected. Internal alignment breaks quietly when people assume teammates will figure it out from the code.
+## Methodology
 
-### Step 3: Write the Update
+This skill follows multi-agent orchestration principles:
+- **Diverse perspectives**: Multiple specialists find more issues than solo agent
+- **Smart roster selection**: Auto-suggest experts based on feature context (authentication → full team, security → Daniel/Clay/Amy)
+- **Structured discussion**: Each agent speaks in turn, providing their unique expertise
+- **Synthesis over voting**: Find consensus that's better than any single perspective
+- **Decision documentation**: Record rationale in project-context.md
 
-Produce a clean, ready-to-send update. Keep it short — clients don't read long updates. Format:
+**Core Innovation**: Standup finds **2-3x more issues** than solo agent mode (validated Week 8)
 
----
+**Key Features**:
+- **Context-aware roster suggestion**: Automatically suggests the right experts (implemented)
+- **Question context override**: Questions override feature patterns ("How long?" → planning team)
+- **Manual override**: Explicitly specify roster to override smart defaults
+- **Synthesis with conflict detection**: Identifies disagreements and finds middle ground
 
-**Update: [Date]**
+Based on: Multi-agent systems, Ensemble learning, Scrum standup ceremonies (adapted for AI)
 
-**Done:**
+## Customization (Release 0.3)
 
-- [Completed items — written in terms of outcomes, not tasks. "Users can now reset their password" not "Implemented password reset controller"]
-
-**In progress:**
-
-- [What's actively being worked on, with brief status. "Billing integration — Stripe webhooks working, proration logic next"]
-
-**Up next:**
-
-- [What's planned for the next working session]
-
-**Heads up:**
-
-- [Risks, blockers, decisions needed, or anything the client should be aware of. Omit this section entirely if there's nothing — don't manufacture concern]
-
----
-
-### Writing Principles
-
-- **Outcomes over tasks** — "Users can now do X" beats "Implemented Y controller"
-- **Honest over optimistic** — a small concern flagged early builds trust; a surprise later erodes it
-- **Short over thorough** — respect the client's time. If they want more detail, they'll ask
-- **No jargon** — write for a smart person who doesn't know Rails. "Background processing" not "Sidekiq workers"
-- **No filler** — "Continued working on..." is not an update. Name what changed
-
-After producing the update, close with:
-
-**"Read it back — does it honestly reflect where things stand? Is there anything you softened that should be said more directly?"**
-
-Wait for their answer. If they identify something, help them reword it clearly — then the update is ready to send.
-
-## Tone
-
-Efficient and honest. This isn't a ceremony — it's a communication tool. Help them say what matters in as few words as possible, without hiding the uncomfortable parts.
+Future enhancements:
+- **Configurable rosters**: Define agent teams per project type
+- **Agent voting**: Tie-breaking when consensus fails
+- **Historical decision search**: "Why did we decide X?" answered from project-context.md
+- **Domain-specific roster templates**: Pre-defined rosters for finance, healthcare, legal, etc.

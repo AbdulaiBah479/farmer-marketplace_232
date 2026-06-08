@@ -2,8 +2,7 @@
 name: promo-reviewer
 description: Reviews and iterates on social media copy in album promo/ files. Use after populating promo templates and before release to polish platform-specific posts.
 argument-hint: <album-name> [platform]
-model: sonnet
-effort: medium
+model: claude-sonnet-4-6
 allowed-tools:
   - Read
   - Edit

@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: seo-content-refresher
 description: Identifies outdated elements in provided content and suggests
   updates to maintain freshness. Finds statistics, dates, and examples that need

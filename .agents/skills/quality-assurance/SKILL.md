@@ -1,462 +1,723 @@
 ---
-name: quality-assurance
-description: Use when deciding test strategy, struggling with code reviews, shipping without tests, or conflating verification with validation
+name: Quality Assurance
+description: Comprehensive quality assurance combining testing strategy, code quality enforcement, and validation gates. Consolidated from testing-strategist, code-quality-enforcer, and validation-gate-checker.
+version: 1.0.0
+category: quality
+triggers:
+  - 'quality-assurance'
+  - 'quality assurance'
+  - 'qa strategy'
+  - 'testing strategy'
+  - 'code quality'
+  - 'validation gates'
+dependencies:
+  required_mcps: []
+  required_tools: []
+  required_integrations: []
 ---
 
 # Quality Assurance
 
 ## Overview
 
-This skill implements the **Verification (VER)** and **Validation (VAL)** process areas from the CMMI-based SDLC prescription.
+Quality Assurance is a consolidated skill that combines three critical quality dimensions: comprehensive testing strategy, code quality enforcement, and phase-gate validation. It ensures your code is tested, maintainable, and ready for production at every stage.
 
-**Core principle**: Verification ≠ Validation. Tests prove you built it correctly (VER). Users prove you built the right thing (VAL). Both required at Level 3.
+**Consolidated from:**
 
-**Critical distinction**:
-- **Verification**: "Did we build the product right?" (tests, reviews, inspections)
-- **Validation**: "Did we build the right product?" (user acceptance, stakeholder approval)
+- **testing-strategist** - Test pyramid and comprehensive testing
+- **code-quality-enforcer** - Code standards and best practices
+- **validation-gate-checker** - Phase transition validation
 
-**Reference**: See `docs/sdlc-prescription-cmmi-levels-2-4.md` Section 3.3 for complete VER/VAL policy.
+## When to Use This Skill
 
----
+Use Quality Assurance when:
 
-## When to Use
+- Setting up testing infrastructure for a project
+- Conducting code reviews
+- Validating readiness to move between project phases
+- Establishing quality standards for a team
+- Debugging quality issues in production
+- Improving code maintainability
+- Ensuring production readiness
 
-Use this skill when:
-- Deciding test strategy or coverage requirements
-- Code reviews ineffective ("LGTM" rubber stamps)
-- Pressure to skip tests ("we'll add them later")
-- Tests pass but customers report bugs (VER without VAL)
-- Same defects recurring (no root cause analysis)
-- Manual testing taking days (ice cream cone anti-pattern)
-- Unclear what "quality" means for your project level
+## Key Capabilities
 
-**Do NOT use for**:
-- Specific test framework details → Use domain skills (python-engineering, web-backend)
-- E2E/performance/chaos engineering → Use ordis-quality-engineering
-- Production monitoring → Use platform-integration
+### Testing Strategy (from testing-strategist)
 
----
+- Design test pyramid with optimal coverage
+- Define unit, integration, and E2E test strategies
+- Set coverage targets and quality metrics
+- Choose testing frameworks and tools
+- Plan test automation and CI/CD integration
 
-## Quick Reference
+### Code Quality (from code-quality-enforcer)
 
-| Situation | Primary Reference Sheet | Key Decision |
-|-----------|------------------------|--------------|
-| "Skip tests to ship faster?" | Testing Practices | Level 3: Tests required before merge. Exception protocol for emergencies only. |
-| "Reviews catching nothing" | Peer Reviews | Social dynamics issue, not technical. Psychological safety + reviewer accountability. |
-| "Tests pass, customers unhappy" | Validation with Stakeholders | VER without VAL. Both required at Level 3. UAT process needed. |
-| "Same bugs recurring" | Defect Management | Requires RCA (5 Whys, fishbone). Pattern = systemic issue needing process fix. |
-| "Manual tests take 2 days" | Testing Practices | Ice cream cone anti-pattern. Migrate to test pyramid with economics. |
+- Enforce coding standards and best practices
+- Review code for readability and maintainability
+- Identify security vulnerabilities and anti-patterns
+- Ensure type safety and error handling
+- Refactor code to improve quality scores
 
----
+### Validation Gates (from validation-gate-checker)
 
-## Verification vs Validation: The Critical Distinction
+- Define phase transition criteria
+- Validate readiness for next phase
+- Ensure deliverables are complete
+- Check compliance with standards
+- Prevent premature phase transitions
 
-### Verification (VER) - "Built Correctly"
+## Workflow
 
-**What**: Ensuring product meets specifications and requirements
+### Part 1: Testing Strategy
 
-**How**: Testing, code review, static analysis, inspections
+#### The Test Pyramid
 
-**Who**: Development team (internal)
+**Structure:**
 
-**When**: Throughout development, before release
+```
+        /\
+       /E2E\      10% - End-to-End (Critical user flows)
+      /------\
+     /Integr-\   20% - Integration (Components, APIs, DB)
+    /----------\
+   /   Unit     \ 70% - Unit (Functions, classes, logic)
+  /--------------\
+```
 
-**Level 3 Requirements**:
-- Test coverage >70% for critical paths
-- Peer review required for all changes
-- Automated tests in CI pipeline
+**Rationale:**
 
-**Example**: Unit tests pass, integration tests pass, code reviewed
-
-### Validation (VAL) - "Right Thing Built"
-
-**What**: Ensuring product meets user needs and solves actual problems
-
-**How**: User acceptance testing (UAT), stakeholder demos, beta testing
-
-**Who**: End users, stakeholders (external to dev team)
-
-**When**: End of iteration, before production release
-
-**Level 3 Requirements**:
-- Stakeholder sign-off on acceptance criteria
-- UAT with representative users
-- Demo to product owner for approval
-
-**Example**: Users confirm feature solves their problem, stakeholders approve for release
-
-### Why Both Matter
-
-| Scenario | VER | VAL | Outcome |
-|----------|-----|-----|---------|
-| Tests pass, users happy | ✅ | ✅ | **SUCCESS** - Built correctly AND right thing |
-| Tests pass, users unhappy | ✅ | ❌ | **FAILURE** - Wrong feature, wrong UX, wrong problem solved |
-| Tests fail, users would have been happy | ❌ | ✅ | **FAILURE** - Right idea, poor execution, bugs prevent use |
-| Tests fail, users would be unhappy | ❌ | ❌ | **DISASTER** - Wrong thing built poorly |
-
-**Level 3 mandate**: Both VER and VAL required before production release.
+- **Unit tests** are fast, isolated, cheap to maintain
+- **Integration tests** catch component interaction issues
+- **E2E tests** validate critical user workflows, but are slow and brittle
 
 ---
 
-## Level-Based QA Requirements
+#### Unit Tests (70% of tests)
 
-### Level 2: Managed
+**Coverage Targets:**
 
-**VER Requirements**:
-- Basic test coverage (>50% for critical paths)
-- Peer review recommended (not enforced)
-- Manual testing acceptable
+- Critical code (auth, payments, security): 100%
+- Business logic: >90%
+- Overall codebase: >85%
 
-**VAL Requirements**:
-- Product owner approval
-- Informal stakeholder feedback
+**What to Test:**
 
-**Work Products**:
-- Test results (pass/fail)
-- Review notes (PR comments)
+- Pure functions and business logic
+- Edge cases and error conditions
+- Input validation
+- State management
+- Utility functions
 
-**Quality Criteria**:
-- Critical functionality tested
-- Stakeholder aware of release
+**Best Practices:**
 
-**Audit Trail**:
-- Test runs logged
-- Approval emails/messages
+- One test file per source file
+- Fast execution (<1ms per test)
+- No external dependencies (mock/stub)
+- Descriptive test names
+- AAA pattern (Arrange, Act, Assert)
 
-### Level 3: Defined
+**Example:**
 
-**VER Requirements**:
-- **Required test coverage >70% for critical paths**
-- **Mandatory peer review (2+ reviewers, platform-enforced)**
-- Automated testing in CI
-- Code review checklist used
-- Test strategy documented
+```javascript
+// Good: Fast, isolated, clear
+describe('calculateDiscount', () => {
+  it('applies 10% discount for orders over $100', () => {
+    const result = calculateDiscount(150)
+    expect(result).toBe(15)
+  })
 
-**VAL Requirements**:
-- **UAT with representative users required**
-- Formal stakeholder acceptance criteria
-- Demo to product owner mandatory
-- Validation documented (sign-off)
+  it('returns 0 for orders under $100', () => {
+    const result = calculateDiscount(50)
+    expect(result).toBe(0)
+  })
 
-**Work Products**:
-- Test strategy document
-- Test coverage reports
-- Review effectiveness metrics
-- UAT plan and results
-- Stakeholder acceptance sign-off
-
-**Quality Criteria**:
-- Coverage targets met (>70%)
-- Review finding rate 20-40% (detects real issues)
-- Stakeholder approval documented
-- Defect escape rate tracked
-
-**Audit Trail**:
-- All tests tracked in CI
-- Review approvals in platform
-- UAT sign-off with dates
-- Defect metrics dashboard
-
-### Level 4: Quantitatively Managed
-
-**Statistical Practices**:
-- Defect prediction models (based on complexity, churn)
-- Review effectiveness statistical control (control charts)
-- Test coverage trends with baselines
-- Defect escape rate within statistical limits
-
-**Quantitative Work Products**:
-- Statistical process control charts (defect injection, escape rates)
-- Predictive models for quality
-- Cp/Cpk analysis for test processes
-
-**Quality Criteria**:
-- Defect density <0.5 per KLOC (baseline established)
-- Review finding rate within control limits (20-40%)
-- Test coverage stable >80% with minimal variation
-
-**Audit Trail**:
-- Historical quality data with statistical analysis
-- Prediction vs actual defect counts
-- Process capability indices
+  it('throws error for negative amounts', () => {
+    expect(() => calculateDiscount(-10)).toThrow()
+  })
+})
+```
 
 ---
 
-## Exception Protocol: Shipping Without Tests
+#### Integration Tests (20% of tests)
 
-**CRITICAL**: "Tests later" = tests never (documented historical pattern)
+**What to Test:**
 
-### When Shipping Without Tests is NEVER Acceptable
+- API endpoints with real database
+- Multiple components working together
+- Third-party service integrations (with mocks)
+- Database queries and transactions
+- File system operations
 
-**Level 3 projects - Absolute requirements**:
-- Critical user-facing features
-- Security-sensitive code (auth, payments, PII)
-- Regulatory/compliance features
-- Data migration or modification
-- Core business logic
+**Best Practices:**
 
-**Rationale**: Risk too high, rework too expensive, reputation damage too severe
+- Test database setup/teardown
+- Use test database or transactions
+- Mock external services
+- Test happy path + key error scenarios
+- <5 seconds per test
 
-### Emergency Exception Process (TEST-HOTFIX)
+**Example:**
 
-**When**: Production outage, immediate fix needed, no time for full test suite
+```javascript
+// Good: Real database, tests integration
+describe('POST /api/users', () => {
+  beforeEach(async () => {
+    await db.users.deleteMany({})
+  })
 
-**Level 3 Requirements**:
-1. Fix the emergency (restore service)
-2. Document in issue tracker with "TEST-HOTFIX" label
-3. **Write tests within 48 hours** (retrospective testing mandatory)
-4. Create ticket for proper fix if hotfix is hack
-5. RCA for why hotfix needed (prevent future)
+  it('creates user and returns 201', async () => {
+    const response = await request(app)
+      .post('/api/users')
+      .send({ email: 'test@example.com', name: 'Test' })
 
-**Frequency Limit**: >5 TEST-HOTFIXes per month = systemic problem requiring process audit
+    expect(response.status).toBe(201)
+    expect(response.body.email).toBe('test@example.com')
 
-**Violation**: Skipping retrospective tests = QA failure, escalate to engineering manager
+    const user = await db.users.findOne({ email: 'test@example.com' })
+    expect(user).toBeDefined()
+  })
 
-### Risk-Based Minimal Testing (When Must Ship)
+  it('returns 400 for duplicate email', async () => {
+    await db.users.create({ email: 'test@example.com' })
 
-If absolutely must ship without full coverage:
+    const response = await request(app)
+      .post('/api/users')
+      .send({ email: 'test@example.com', name: 'Test' })
 
-1. **Critical path only**: Test happy path + 1-2 critical error cases
-2. **Feature flag**: Deploy disabled, enable after testing
-   - **Maximum duration flagged**: 7 days before full test suite required
-   - Flagged features count toward TEST-HOTFIX frequency limit
-   - Must have validation plan with timeline before deploying flagged
-3. **Beta rollout**: Ship to 5-10% users, monitor, expand
-4. **Demo ≠ Production**: Demo to stakeholders, don't enable for all users
-   - **Maximum demo-only duration**: 2 sprints
-   - After demo: either release to production (with UAT) or cancel feature
-   - "Perpetual demo" is validation theater anti-pattern
-5. **Manual acceptance test**: At minimum, stakeholder uses feature live
-
-**Retrospective required**: Within 7 days, answer "Why no tests?" and address root cause
-
-**Enforcement**: Violations escalate to engineering manager, process audit if patterns emerge
-
----
-
-## Anti-Patterns and Red Flags
-
-### Test Last
-
-**Detection**: Tests written after code (or not at all), "We'll add tests later"
-
-**Red Flags**:
-- PR without tests for new functionality
-- Test coverage declining sprint-over-sprint
-- "Too busy to write tests"
-- Tests added only when bugs found
-
-**Why it fails**: "Later" never comes, test debt accumulates, bugs reach production, rework costs 10-100x more
-
-**Counter**: TDD requirement (Level 3 can waive, but must justify). Tests = part of "done", not optional.
-
-### Rubber Stamp Reviews
-
-**Detection**: Code reviews <5 minutes, "LGTM" without specific feedback, defects escaping to production
-
-**Red Flags**:
-- Review approved within minutes of PR creation
-- No comments or only style nitpicks
-- Reviewer didn't pull code or run it
-- Same bugs recurring that reviews should have caught
-
-**Why it fails**: Social pressure not to block > quality, reviewers fear being "difficult", no accountability
-
-**Counter**: Review metrics (finding rate should be 20-40%), reviewer accountability, psychological safety
-
-### Ice Cream Cone (Inverted Test Pyramid)
-
-**Detection**: Mostly manual E2E tests, few unit tests, regression testing takes days
-
-**Red Flags**:
-- >50% of testing time is manual
-- Regression suite takes >4 hours
-- Most tests are UI/E2E (slow, brittle)
-- "Can't automate, need manual QA"
-
-**Why it fails**: Doesn't scale, slow feedback, expensive to maintain, brittle tests
-
-**Counter**: Test pyramid economics, migration to unit-heavy strategy, ROI calculation
-
-### Defect Whack-a-Mole
-
-**Detection**: Same bugs recurring in different places, no pattern analysis, firefighting constantly
-
-**Red Flags**:
-- Similar bugs in different modules (copy-paste errors)
-- Defects closed without RCA
-- "Fix it quick, no time to investigate"
-- Bug fixes create new bugs (ripple effects)
-
-**Why it fails**: Treats symptoms not causes, waste effort on recurring issues, no learning
-
-**Counter**: RCA requirement (Level 3 mandatory for recurring defects), defect pattern analysis
-
-### Validation Theater
-
-**Detection**: Stakeholders "approve" without actually using system, checkbox exercise
-
-**Red Flags**:
-- UAT sign-off in <1 hour (didn't actually test)
-- Stakeholders approve without touching the system
-- Demo only (no hands-on validation)
-- Rubber stamp "looks good" without criteria
-- Product owner used as "representative user" instead of actual end users
-- Feature in perpetual demo mode (>2 sprints without production release or cancellation)
-
-**Why it fails**: False confidence, issues found in production, customer dissatisfaction
-
-**Counter**:
-- Hands-on UAT requirement
-- **Level 3 requires at least 2 actual end users for UAT** (not proxies)
-- Product owner is NOT a representative user (unless they use the product daily)
-- Exception: Internal tools where team members are actual users
-- Acceptance criteria verification
-- Time requirement (min 1 day for meaningful validation)
-- Demo-only maximum: 2 sprints before release or cancel decision
+    expect(response.status).toBe(400)
+  })
+})
+```
 
 ---
 
-## Reference Sheets
+#### E2E Tests (10% of tests)
 
-The following reference sheets provide detailed guidance for specific QA domains. Load them on-demand when needed.
+**What to Test:**
 
-### 1. Testing Practices
+- Critical user workflows (signup, checkout, etc.)
+- Multi-page user journeys
+- UI interactions with backend
+- Cross-browser compatibility (if needed)
 
-**When to use**: Deciding test strategy, coverage requirements, test pyramid, TDD
+**Best Practices:**
 
-→ See [testing-practices.md](./testing-practices.md)
+- Only test critical paths
+- Use page object pattern
+- Run in CI/CD before deployment
+- Accept slower execution (30s-2min per test)
+- Use headless browsers in CI
 
-**Covers**:
-- Test pyramid (unit, integration, E2E) with economics
-- Coverage criteria by project level
-- Test-driven development (TDD) process
-- Test types (smoke, regression, acceptance)
-- Migration from manual to automated (ice cream cone → pyramid)
-- Anti-patterns: Test Last, Over-Mocking, Flaky Tests
+**Example:**
 
-### 2. Peer Reviews
+```javascript
+// Good: Tests complete user flow
+describe('User Signup Flow', () => {
+  it('allows new user to signup and access dashboard', async () => {
+    await page.goto('/signup')
 
-**When to use**: Code reviews ineffective, rubber-stamp approvals, unclear reviewer responsibilities
+    await page.fill('input[name="email"]', 'newuser@example.com')
+    await page.fill('input[name="password"]', 'SecurePass123!')
+    await page.click('button[type="submit"]')
 
-→ See [peer-reviews.md](./peer-reviews.md)
-
-**Covers**:
-- Review checklist (functionality, tests, design, security)
-- Social dynamics playbook (giving critical feedback safely)
-- Reviewer accountability and responsibilities
-- Review metrics (effectiveness, turnaround time, finding rate)
-- Review taxonomy (depth varies by change type: hotfix vs feature)
-- Anti-patterns: Rubber Stamp, Bikeshedding, Review Backlog
-
-### 3. Validation with Stakeholders
-
-**When to use**: Planning UAT, stakeholder acceptance, beta testing, demo preparation
-
-→ See [validation-with-stakeholders.md](./validation-with-stakeholders.md)
-
-**Covers**:
-- UAT process and planning
-- Acceptance criteria definition (INVEST)
-- Stakeholder identification and management
-- Demo vs hands-on validation
-- Beta rollout strategies
-- Anti-patterns: Validation Theater, Demo-Only, Proxy Users
-
-### 4. Defect Management
-
-**When to use**: Bugs recurring, defect triage, root cause analysis, prevention
-
-→ See [defect-management.md](./defect-management.md)
-
-**Covers**:
-- Defect classification (severity, recurrence, root cause)
-- Root cause analysis (5 Whys, fishbone diagram, fault tree)
-- Defect prevention over detection
-- Level 3 requirement: RCA for recurring defects
-- Defect metrics (escape rate, density, resolution time)
-- Anti-patterns: Whack-a-Mole, Symptom Fixes, No RCA
-
-### 5. QA Metrics
-
-**When to use**: Measuring quality effectiveness, tracking improvement, justifying QA investment
-
-→ See [qa-metrics.md](./qa-metrics.md)
-
-**Covers**:
-- Defect escape rate (bugs found post-release / total bugs)
-- Review effectiveness (finding rate: bugs in review / total bugs)
-- Test automation ROI
-- Coverage trends and targets
-- Level 4 statistical process control
-
-### 6. Level 2→3→4 Scaling
-
-**When to use**: Understanding appropriate QA rigor for project tier
-
-→ See [level-scaling.md](./level-scaling.md)
-
-**Covers**:
-- Level 2 baseline QA practices
-- Level 3 organizational QA standards
-- Level 4 statistical quality control
-- Escalation criteria (when to increase rigor)
-- De-escalation criteria (when rigor is overkill)
+    await page.waitForURL('/dashboard')
+    expect(await page.textContent('h1')).toContain('Welcome')
+  })
+})
+```
 
 ---
 
-## Common Mistakes
+#### Testing Tools Recommendations
 
-| Mistake | Why It Fails | Better Approach |
-|---------|--------------|-----------------|
-| "Tests later" | Later never comes, debt accumulates | Tests = part of "done". Level 3: required before merge. |
-| "Tests pass = done" | Conflates VER with VAL, skips user acceptance | Both required at Level 3. Tests AND stakeholder approval. |
-| "LGTM rubber stamps" | Social pressure > quality, reviewers fear blocking | Reviewer accountability, metrics (20-40% finding rate), psychological safety. |
-| "Automate everything" | Automation has costs (setup, maintenance), not always ROI-positive | Test pyramid economics. Unit tests cheap, E2E expensive. Choose wisely. |
-| "Manual testing is bad" | Some testing should be manual (exploratory, one-time, usability) | Strategic automation. Critical paths automated, exploratory manual. |
-| "Skip RCA, fix it quick" | Same bugs recur, waste effort whack-a-mole | Level 3: RCA required for recurring defects. Fix root cause, not symptom. |
-| "Stakeholder approved" (without using system) | Validation theater, issues found in production | Hands-on UAT required. Stakeholder must actually use feature, not just demo. |
+**JavaScript/TypeScript:**
 
----
+- Unit: Jest or Vitest
+- Integration: Supertest (API) + Jest
+- E2E: Playwright or Cypress
 
-## Integration with Other Skills
+**Python:**
 
-| When You're Doing | Also Use | For |
-|-------------------|----------|-----|
-| Writing tests for Python code | `axiom-python-engineering` | pytest-specific patterns and idioms |
-| E2E/performance/chaos testing | `ordis-quality-engineering` | Specialized test strategies |
-| Implementing code review process | `design-and-build` | Code review checklist, CI integration |
-| Designing acceptance criteria | `requirements-lifecycle` | INVEST criteria, user story format |
-| Setting up CI for testing | `design-and-build` | CI/CD pipeline configuration |
+- Unit: pytest
+- Integration: pytest with fixtures
+- E2E: Selenium or Playwright
+
+**General:**
+
+- Coverage: Istanbul (JS), Coverage.py (Python)
+- CI/CD: GitHub Actions, CircleCI, GitLab CI
+- Mocking: Jest (JS), unittest.mock (Python)
 
 ---
 
-## Real-World Impact
+### Part 2: Code Quality Enforcement
 
-**Without this skill**: Teams experience:
-- VER without VAL (tests pass, customers unhappy)
-- Test debt accumulating ("later" never comes)
-- Rubber stamp reviews (LGTM without reading)
-- Same defects recurring (no RCA)
-- Ice cream cone (slow manual E2E tests)
+#### Code Quality Principles
 
-**With this skill**: Teams achieve:
-- Both VER and VAL (quality gate before production)
-- Tests written alongside code (TDD culture)
-- Effective reviews (20-40% finding rate)
-- Defect prevention through RCA
-- Test pyramid (fast feedback, low maintenance)
+**1. Readability**
+
+- Descriptive variable and function names
+- Single Responsibility Principle
+- Clear, consistent formatting
+- Comments for "why", not "what"
+
+**2. Maintainability**
+
+- DRY (Don't Repeat Yourself)
+- SOLID principles
+- Type safety (TypeScript, type hints)
+- Error handling everywhere
+
+**3. Testing**
+
+- Unit tests for all functions
+- Edge cases covered
+- Test names describe behavior
+
+**4. Security**
+
+- No hardcoded secrets
+- Input validation
+- SQL injection prevention
+- XSS protection
 
 ---
 
-## Next Steps
+#### Code Quality Checklist
 
-1. **Determine project level**: Check CLAUDE.md or ask user for CMMI target level (default: Level 3)
-2. **Identify situation**: Use Quick Reference table to find relevant reference sheet
-3. **Load reference sheet**: Read detailed guidance for specific domain
-4. **Enforce VER+VAL**: Level 3 requires both verification and validation - no exceptions
-5. **Apply frameworks**: Use systematic evaluation (test pyramid economics, review metrics, RCA methods)
-6. **Counter anti-patterns**: Watch for test-last, rubber stamps, ice cream cone, whack-a-mole
-7. **Measure effectiveness**: Establish baselines, track defect escape rate and review finding rate
+**Before Code Review:**
 
-**Remember**: Verification proves you built it correctly. Validation proves you built the right thing. You need BOTH.
+- [ ] No hardcoded secrets or API keys
+- [ ] Functions <50 lines (split if longer)
+- [ ] Error handling present (try/catch, null checks)
+- [ ] All tests passing
+- [ ] Type safety (TypeScript strict mode, Python type hints)
+- [ ] No console.log or debugging code
+- [ ] Descriptive variable names (no x, tmp, data)
+- [ ] Comments explain "why", not "what"
+- [ ] DRY - no copy-paste code
+- [ ] Security best practices (input validation, sanitization)
+
+---
+
+#### Code Review Guidelines
+
+**What to Look For:**
+
+**Critical Issues (Must Fix):**
+
+- Security vulnerabilities (SQL injection, XSS, secrets)
+- Breaking changes without migration
+- Missing error handling
+- Incorrect logic or algorithm
+- Performance bottlenecks
+
+**Important Issues (Should Fix):**
+
+- Code duplication (DRY violations)
+- Poor naming or structure
+- Missing tests for new code
+- Type safety violations
+- Inconsistent formatting
+
+**Minor Issues (Nice to Fix):**
+
+- Style inconsistencies
+- Over-commenting
+- Optimization opportunities
+- Documentation improvements
+
+---
+
+#### Code Quality Score
+
+**Scoring System (0-100):**
+
+**Security (30 points):**
+
+- No secrets in code (10 pts)
+- Input validation (10 pts)
+- Error handling (10 pts)
+
+**Readability (25 points):**
+
+- Descriptive names (10 pts)
+- Clear structure (10 pts)
+- Appropriate comments (5 pts)
+
+**Testing (25 points):**
+
+- Unit test coverage >85% (15 pts)
+- Tests for edge cases (10 pts)
+
+**Maintainability (20 points):**
+
+- DRY compliance (10 pts)
+- Function size <50 lines (5 pts)
+- Type safety (5 pts)
+
+**Grading:**
+
+- 90-100: Excellent
+- 80-89: Good
+- 70-79: Acceptable
+- <70: Needs improvement
+
+---
+
+### Part 3: Validation Gates
+
+Validation gates ensure each phase is complete before moving to the next.
+
+#### Phase 1 → Phase 2 (Discovery → Design)
+
+**Gate Criteria:**
+
+- [ ] PRP document complete and reviewed
+- [ ] Problem statement validated with users
+- [ ] Success criteria defined and measurable
+- [ ] User stories documented (Jobs-to-be-Done)
+- [ ] Stakeholder alignment on scope
+- [ ] Open questions documented with owners
+
+**Deliverables:**
+
+- Product Requirements Prompt (PRP)
+- User research summary
+- Success metrics dashboard
+
+**Review Questions:**
+
+- Do we understand the user problem?
+- Can we measure success?
+- Is scope clear and agreed upon?
+
+---
+
+#### Phase 2 → Phase 3 (Design → Development)
+
+**Gate Criteria:**
+
+- [ ] Architecture documented (system diagram)
+- [ ] Data model designed (ERD or schema)
+- [ ] API contracts defined (if applicable)
+- [ ] Security threats identified (threat model)
+- [ ] Mitigations planned for critical threats
+- [ ] Technology stack approved
+- [ ] Infrastructure plan documented
+
+**Deliverables:**
+
+- Architecture document
+- Data model / ERD
+- API specification (OpenAPI/Swagger)
+- Threat model with mitigations
+- Infrastructure diagram
+
+**Review Questions:**
+
+- Is architecture sound and scalable?
+- Are security threats mitigated?
+- Do we have required infrastructure access?
+
+---
+
+#### Phase 3 → Phase 4 (Development → Testing)
+
+**Gate Criteria:**
+
+- [ ] All P0 features complete
+- [ ] Unit test coverage >80%
+- [ ] Code review completed
+- [ ] Static analysis (SAST) passed
+- [ ] No critical or high severity issues
+- [ ] Error handling implemented
+- [ ] Logging and monitoring in place
+
+**Deliverables:**
+
+- Working software (all P0 features)
+- Test coverage report
+- Code review sign-off
+- SAST scan results
+
+**Review Questions:**
+
+- Are all MVP features complete?
+- Is code quality acceptable?
+- Are critical bugs resolved?
+
+---
+
+#### Phase 4 → Phase 5 (Testing → Deployment)
+
+**Gate Criteria:**
+
+- [ ] All tests passing (unit, integration, E2E)
+- [ ] Test coverage >90%
+- [ ] User acceptance testing (UAT) completed
+- [ ] Security testing passed (DAST, penetration test)
+- [ ] Performance testing passed (load, stress)
+- [ ] Documentation complete (user + dev docs)
+- [ ] Rollback plan documented
+- [ ] Deployment runbook ready
+
+**Deliverables:**
+
+- Test results (all green)
+- UAT sign-off
+- Security test report
+- Performance test results
+- Deployment runbook
+
+**Review Questions:**
+
+- Are we confident in quality?
+- Can we roll back if needed?
+- Is production infrastructure ready?
+
+---
+
+## Examples
+
+### Example 1: API Testing Strategy
+
+**Project:** REST API for user management
+
+**Test Plan:**
+
+**Unit Tests (70%):**
+
+- Business logic (validation, permissions)
+- Data transformations
+- Utility functions
+- Error handling logic
+
+**Integration Tests (20%):**
+
+- POST /users (creates user in DB)
+- GET /users/:id (retrieves from DB)
+- PUT /users/:id (updates in DB)
+- DELETE /users/:id (removes from DB)
+- Authentication middleware
+- Error responses (400, 401, 404, 500)
+
+**E2E Tests (10%):**
+
+- Full signup flow (create user → verify email → login)
+- Password reset flow
+- Profile update flow
+
+**Tools:**
+
+- Jest (unit)
+- Supertest (integration)
+- Playwright (E2E)
+
+**Coverage Target:** 90% overall
+
+---
+
+### Example 2: Code Quality Review
+
+**Before (Poor Quality - Score: 55/100):**
+
+```javascript
+// Bad: Hardcoded secret, no error handling, poor naming
+function getData(x) {
+  const result = fetch('https://api.example.com/data', {
+    headers: { Authorization: 'Bearer sk_live_abc123' }
+  })
+  return result.json()
+}
+```
+
+**Issues:**
+
+- Security: Hardcoded API key (-10 pts)
+- Error handling: None (-10 pts)
+- Naming: Poor variable names (-10 pts)
+- Testing: No tests (-15 pts)
+
+**After (Good Quality - Score: 95/100):**
+
+```javascript
+// Good: Secure, robust, clear
+async function fetchUserData(userId: string): Promise<UserData> {
+  try {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error('API_KEY environment variable not set');
+    }
+
+    const response = await fetch(`https://api.example.com/users/${userId}`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    logger.error('Failed to fetch user data', { userId, error });
+    throw new Error(`Failed to fetch user ${userId}`);
+  }
+}
+
+// Tests
+describe('fetchUserData', () => {
+  it('fetches user successfully', async () => {
+    // Test implementation
+  });
+
+  it('throws error if API_KEY not set', async () => {
+    // Test implementation
+  });
+});
+```
+
+---
+
+### Example 3: Phase Gate Validation
+
+**Project:** Customer Support Chatbot (Phase 3 → Phase 4)
+
+**Validation Check:**
+
+**Requirements:**
+
+- ✅ All P0 features complete (chat UI, AI responses, escalation)
+- ✅ Unit test coverage: 87%
+- ✅ Code review: Approved (2 reviewers)
+- ❌ SAST scan: 3 medium severity issues (FAIL)
+- ✅ Error handling: Implemented
+- ✅ Logging: Datadog integration complete
+
+**Decision:** GATE FAILED - Must fix SAST issues before proceeding
+
+**Action Items:**
+
+1. Fix 3 medium severity issues (input validation)
+2. Re-run SAST scan
+3. Re-review gate criteria
+
+**Estimated Time to Pass:** 2 days
+
+---
+
+## Best Practices
+
+### Testing
+
+1. **Write tests first (TDD)** - Clarifies requirements
+2. **Keep tests independent** - No shared state
+3. **Test behavior, not implementation** - Refactor-safe tests
+4. **Use descriptive test names** - Tests are documentation
+5. **Fail fast** - Run fast tests first
+
+### Code Quality
+
+1. **Automate quality checks** - ESLint, Prettier, type checking
+2. **Review your own code first** - Catch obvious issues
+3. **Small, focused PRs** - Easier to review thoroughly
+4. **Fix root causes** - Don't just patch symptoms
+5. **Refactor continuously** - Don't accumulate tech debt
+
+### Validation Gates
+
+1. **Document criteria upfront** - No surprises
+2. **Be strict on critical gates** - Security, production readiness
+3. **Flexible on nice-to-haves** - Don't block progress
+4. **Track gate passage** - Identify bottlenecks
+5. **Automate checks** - CI/CD enforcement
+
+---
+
+## Common Pitfalls
+
+### 1. Testing the Wrong Things
+
+**Antipattern:** Test implementation details (private methods)
+**Better:** Test public API and behavior
+
+### 2. Insufficient Coverage of Edge Cases
+
+**Antipattern:** Only test happy path
+**Better:** Test nulls, empty arrays, errors, boundaries
+
+### 3. Skipping Phase Gates
+
+**Antipattern:** "We'll fix it after shipping"
+**Result:** Production bugs, security issues
+
+**Better:** Enforce gates, delay if needed
+
+### 4. Over-Engineering Quality
+
+**Antipattern:** 100% coverage on everything, perfection paralysis
+**Better:** Pragmatic quality aligned with risk
+
+### 5. Manual Quality Checks
+
+**Antipattern:** Remember to run linter before commit
+**Better:** Automate in pre-commit hooks + CI/CD
+
+---
+
+## Related Skills
+
+- **testing-strategist** - Original testing skill (now consolidated)
+- **security-architect** - Security testing and threat validation
+- **deployment-advisor** - Production readiness validation
+- **performance-optimizer** - Performance testing and optimization
+- **framework-orchestrator** - Uses validation gates for phase transitions
+
+---
+
+## Deliverables
+
+When using Quality Assurance, produce:
+
+1. **Test Strategy Document**
+   - Test pyramid breakdown
+   - Coverage targets
+   - Tools and frameworks
+   - CI/CD integration plan
+
+2. **Code Quality Standards**
+   - Style guide
+   - Linting rules
+   - Review checklist
+   - Quality score rubric
+
+3. **Phase Gate Criteria**
+   - Entry/exit criteria for each phase
+   - Required deliverables
+   - Review process
+   - Sign-off authority
+
+4. **Quality Dashboard**
+   - Test coverage metrics
+   - Code quality scores
+   - Gate passage tracking
+   - Trend analysis
+
+---
+
+## Success Metrics
+
+Quality Assurance is working when:
+
+- Test coverage consistently >85%
+- Production bugs <1% of releases
+- Code reviews catch issues before merge
+- Phase gates prevent premature transitions
+- Quality improves over time (not degrades)
+- Team follows standards without enforcement
+- CI/CD pipeline enforces quality automatically
+
+---
+
+**Remember:** Quality is not optional. It's the difference between sustainable software and technical bankruptcy.

@@ -1,98 +1,20 @@
 ---
-name: compliance
-description: Ensure regulatory compliance. Use when implementing GDPR, HIPAA, PCI-DSS, or SOC2 requirements. Covers compliance frameworks and controls.
-allowed-tools: Read, Write, Glob, Grep
+category: Business
+id: compliance
+name: Compliance
+description: Verify technical accuracy of JavaScript concept pages by checking code examples, MDN/ECMAScript compliance, and external resources to prevent misinformation.
 ---
 
 # Compliance
 
-## Common Frameworks
+Verify technical accuracy of JavaScript concept pages by checking code examples, MDN/ECMAScript compliance, and external resources to prevent misinformation.
 
-### GDPR (General Data Protection Regulation)
-EU data protection regulation.
+## When to Use
 
-**Key Requirements**:
-- Lawful basis for processing
-- Data minimization
-- Right to erasure
-- Data portability
-- Breach notification (72 hours)
-- Privacy by design
+- You need help with compliance.
+- You want a clear, actionable next step.
 
-### HIPAA (Health Insurance Portability and Accountability Act)
-US healthcare data protection.
+## Output
 
-**Key Requirements**:
-- Access controls
-- Audit controls
-- Integrity controls
-- Transmission security
-- Business Associate Agreements
-
-### PCI-DSS (Payment Card Industry Data Security Standard)
-Payment card data protection.
-
-**Key Requirements**:
-- Network segmentation
-- Encryption of cardholder data
-- Access restrictions
-- Regular testing
-- Security policies
-
-### SOC 2 (Service Organization Control 2)
-Trust service criteria.
-
-**Principles**:
-- Security
-- Availability
-- Processing Integrity
-- Confidentiality
-- Privacy
-
-## Common Controls
-
-### Access Control
-```markdown
-- [ ] Unique user IDs
-- [ ] Strong authentication
-- [ ] Role-based access
-- [ ] Regular access reviews
-- [ ] Termination procedures
-```
-
-### Data Protection
-```markdown
-- [ ] Encryption at rest
-- [ ] Encryption in transit
-- [ ] Key management
-- [ ] Data classification
-- [ ] Retention policies
-```
-
-### Audit & Monitoring
-```markdown
-- [ ] Audit logging enabled
-- [ ] Log retention (1+ year)
-- [ ] Regular log review
-- [ ] Alerting on anomalies
-- [ ] Incident response plan
-```
-
-### Documentation
-```markdown
-- [ ] Security policies
-- [ ] Procedures documented
-- [ ] Evidence collection
-- [ ] Regular reviews
-- [ ] Training records
-```
-
-## Compliance Checklist
-
-| Control | GDPR | HIPAA | PCI | SOC2 |
-|---------|------|-------|-----|------|
-| Encryption | Yes | Yes | Yes | Yes |
-| Access Control | Yes | Yes | Yes | Yes |
-| Audit Logging | Yes | Yes | Yes | Yes |
-| Breach Notification | Yes | Yes | Yes | Yes |
-| Risk Assessment | Yes | Yes | Yes | Yes |
+- Summary of goals and plan
+- Key tips and precautions

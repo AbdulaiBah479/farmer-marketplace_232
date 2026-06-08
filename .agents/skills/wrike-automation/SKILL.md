@@ -1,14 +1,15 @@
 ---
 name: wrike-automation
 description: "Automate Wrike project management via Rube MCP (Composio): create tasks/folders, manage projects, assign work, and track progress. Always search tools first for current schemas."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+requires:
+  mcp: [rube]
 ---
 
 # Wrike Automation via Rube MCP
 
 Automate Wrike project management operations through Composio's Wrike toolkit via Rube MCP.
+
+**Toolkit docs**: [composio.dev/toolkits/wrike](https://composio.dev/toolkits/wrike)
 
 ## Prerequisites
 
@@ -233,5 +234,5 @@ Automate Wrike project management operations through Composio's Wrike toolkit vi
 | Get contacts | WRIKE_GET_CONTACTS | (none) |
 | Invite user | WRIKE_CREATE_INVITATION | email, role |
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+---
+*Powered by [Composio](https://composio.dev)*

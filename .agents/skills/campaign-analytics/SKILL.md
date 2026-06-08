@@ -1,228 +1,500 @@
 ---
-name: "campaign-analytics"
-description: Analyzes campaign performance with multi-touch attribution, funnel conversion analysis, and ROI calculation for marketing optimization. Use when analyzing marketing campaigns, ad performance, attribution models, conversion rates, or calculating marketing ROI, ROAS, CPA, and campaign metrics across channels.
-license: MIT
-metadata:
-  version: 1.0.0
-  author: Alireza Rezvani
-  category: marketing
-  domain: campaign-analytics
-  updated: 2026-02-06
-  python-tools: attribution_analyzer.py, funnel_analyzer.py, campaign_roi_calculator.py
-  tech-stack: marketing-analytics, attribution-modeling
+name: campaign-analytics
+description: Generic marketing campaign performance analysis patterns. Use when tracking ad spend, calculating ROI, optimizing budgets, or analyzing multi-channel performance. Framework for project-specific implementations.
 ---
 
-# Campaign Analytics
+# Campaign Analytics Framework
 
-Production-grade campaign performance analysis with multi-touch attribution modeling, funnel conversion analysis, and ROI calculation. Three Python CLI tools provide deterministic, repeatable analytics using standard library only -- no external dependencies, no API calls, no ML models.
+Generic patterns for marketing campaign analysis and optimization across any platform.
 
----
+## When to Use
 
-## Input Requirements
+- Tracking advertising spend and performance
+- Calculating ROI, ROAS, CAC metrics
+- Multi-channel attribution analysis
+- Budget allocation optimization
+- Campaign performance reporting
 
-All scripts accept a JSON file as positional input argument. See `assets/sample_campaign_data.json` for complete examples.
+## NOT Project-Specific
 
-### Attribution Analyzer
+This is a **framework skill** providing generic patterns. For project-specific implementations:
+- Create implementation skill in your project
+- Reference this framework with `extends: "marketing-intelligence-framework/campaign-analytics"`
+- Add platform-specific credentials via skill.config.json
 
-```json
-{
-  "journeys": [
-    {
-      "journey_id": "j1",
-      "touchpoints": [
-        {"channel": "organic_search", "timestamp": "2025-10-01T10:00:00", "interaction": "click"},
-        {"channel": "email", "timestamp": "2025-10-05T14:30:00", "interaction": "open"},
-        {"channel": "paid_search", "timestamp": "2025-10-08T09:15:00", "interaction": "click"}
-      ],
-      "converted": true,
-      "revenue": 500.00
-    }
-  ]
+## Core Concepts
+
+### Key Metrics
+
+| Metric | Formula | Good Target |
+|--------|---------|-------------|
+| **ROAS** | Revenue ÷ Ad Spend | >3.0 |
+| **CAC** | Ad Spend ÷ New Customers | < LTV/3 |
+| **CPC** | Ad Spend ÷ Clicks | Varies by industry |
+| **CTR** | Clicks ÷ Impressions | >2% |
+| **Conversion Rate** | Conversions ÷ Clicks | >3% |
+| **LTV** | Avg Order Value × Repeat Rate × Lifespan | 3× CAC |
+
+### Multi-Channel Attribution
+
+```
+Customer Journey:
+Google Ads → Website Visit → Remarketing (Facebook) → WhatsApp Contact → Sale
+
+Attribution Models:
+- Last Click: Facebook gets 100% credit
+- First Click: Google Ads gets 100% credit
+- Linear: Each touchpoint gets 25% credit
+- Time Decay: Recent touchpoints weighted higher
+- Position-Based: First and last get 40% each, middle gets 20%
+```
+
+## Implementation Patterns
+
+### 1. Data Collection Structure
+
+```typescript
+// Generic campaign data structure
+export interface CampaignData {
+  platform: 'google_ads' | 'facebook_ads' | 'instagram_ads' | 'linkedin_ads' | string;
+  campaign_id: string;
+  campaign_name: string;
+  date: string; // YYYY-MM-DD
+  metrics: {
+    impressions: number;
+    clicks: number;
+    spend: number; // in your currency
+    conversions: number;
+    revenue: number;
+  };
+  metadata?: {
+    campaign_type?: string;
+    targeting?: any;
+    creative_id?: string;
+  };
+}
+
+// Aggregated metrics
+export interface AggregatedMetrics extends CampaignData {
+  calculated: {
+    ctr: number;          // clicks / impressions
+    cpc: number;          // spend / clicks
+    cpa: number;          // spend / conversions
+    roas: number;         // revenue / spend
+    conversion_rate: number; // conversions / clicks
+  };
 }
 ```
 
-### Funnel Analyzer
+### 2. Google Ads Integration
 
-```json
-{
-  "funnel": {
-    "stages": ["Awareness", "Interest", "Consideration", "Intent", "Purchase"],
-    "counts": [10000, 5200, 2800, 1400, 420]
+```typescript
+import { GoogleAdsApi } from 'google-ads-api';
+
+export class GoogleAdsAnalytics {
+  private client: GoogleAdsApi;
+
+  constructor(
+    customerId: string,
+    developerToken: string,
+    keyFile: string
+  ) {
+    this.client = new GoogleAdsApi({
+      client_id: process.env.GOOGLE_ADS_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_ADS_CLIENT_SECRET!,
+      developer_token: developerToken
+    });
+  }
+
+  async getCampaignPerformance(
+    startDate: string,
+    endDate: string
+  ): Promise<CampaignData[]> {
+    const customer = this.client.Customer({
+      customer_id: this.customerId,
+      refresh_token: process.env.GOOGLE_ADS_REFRESH_TOKEN!
+    });
+
+    const campaigns = await customer.query(`
+      SELECT
+        campaign.id,
+        campaign.name,
+        segments.date,
+        metrics.impressions,
+        metrics.clicks,
+        metrics.cost_micros,
+        metrics.conversions,
+        metrics.conversions_value
+      FROM campaign
+      WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'
+        AND campaign.status = 'ENABLED'
+      ORDER BY segments.date DESC
+    `);
+
+    return campaigns.map(c => ({
+      platform: 'google_ads',
+      campaign_id: c.campaign.id,
+      campaign_name: c.campaign.name,
+      date: c.segments.date,
+      metrics: {
+        impressions: c.metrics.impressions,
+        clicks: c.metrics.clicks,
+        spend: c.metrics.cost_micros / 1_000_000, // Convert micros to currency
+        conversions: c.metrics.conversions,
+        revenue: c.metrics.conversions_value || 0
+      }
+    }));
+  }
+
+  async pauseLowPerformingCampaigns(roasThreshold: number = 1.0): Promise<void> {
+    // Get recent performance
+    const campaigns = await this.getCampaignPerformance(
+      getDateDaysAgo(30),
+      getDateToday()
+    );
+
+    // Calculate ROAS per campaign
+    const aggregated = aggregateByCampaign(campaigns);
+
+    for (const [campaignId, data] of Object.entries(aggregated)) {
+      const roas = data.revenue / data.spend;
+
+      if (roas < roasThreshold && data.spend > 100) {
+        console.log(`Pausing campaign ${campaignId} (ROAS: ${roas.toFixed(2)})`);
+        await this.pauseCampaign(campaignId);
+      }
+    }
   }
 }
 ```
 
-### Campaign ROI Calculator
+### 3. Facebook/Meta Ads Integration
 
-```json
-{
-  "campaigns": [
-    {
-      "name": "Spring Email Campaign",
-      "channel": "email",
-      "spend": 5000.00,
-      "revenue": 25000.00,
-      "impressions": 50000,
-      "clicks": 2500,
-      "leads": 300,
-      "customers": 45
-    }
-  ]
+```typescript
+import { FacebookAdsApi } from 'facebook-nodejs-business-sdk';
+
+export class MetaAdsAnalytics {
+  private api: FacebookAdsApi;
+
+  constructor(accessToken: string) {
+    this.api = FacebookAdsApi.init(accessToken);
+  }
+
+  async getCampaignPerformance(
+    adAccountId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<CampaignData[]> {
+    const account = new AdAccount(`act_${adAccountId}`);
+
+    const campaigns = await account.getCampaigns([
+      'id',
+      'name',
+      'insights.time_range({"since":"' + startDate + '","until":"' + endDate + '"}).fields(impressions,clicks,spend,actions,action_values)'
+    ]);
+
+    return campaigns.map(campaign => {
+      const insights = campaign.insights?.data?.[0];
+      const conversions = this.extractConversions(insights?.actions);
+      const revenue = this.extractRevenue(insights?.action_values);
+
+      return {
+        platform: 'facebook_ads',
+        campaign_id: campaign.id,
+        campaign_name: campaign.name,
+        date: startDate, // Aggregate date range
+        metrics: {
+          impressions: parseInt(insights?.impressions || '0'),
+          clicks: parseInt(insights?.clicks || '0'),
+          spend: parseFloat(insights?.spend || '0'),
+          conversions,
+          revenue
+        }
+      };
+    });
+  }
+
+  private extractConversions(actions: any[]): number {
+    const leadActions = actions?.find(a =>
+      a.action_type === 'lead' ||
+      a.action_type === 'purchase' ||
+      a.action_type === 'complete_registration'
+    );
+    return parseInt(leadActions?.value || '0');
+  }
+
+  private extractRevenue(actionValues: any[]): number {
+    const purchaseValue = actionValues?.find(a =>
+      a.action_type === 'purchase' ||
+      a.action_type === 'omni_purchase'
+    );
+    return parseFloat(purchaseValue?.value || '0');
+  }
 }
 ```
 
-### Input Validation
+### 4. Multi-Channel Aggregation
 
-Before running scripts, verify your JSON is valid and matches the expected schema. Common errors:
+```typescript
+export class MultiChannelAnalytics {
+  constructor(
+    private googleAds: GoogleAdsAnalytics,
+    private metaAds: MetaAdsAnalytics
+  ) {}
 
-- **Missing required keys** (e.g., `journeys`, `funnel.stages`, `campaigns`) → script exits with a descriptive `KeyError`
-- **Mismatched array lengths** in funnel data (`stages` and `counts` must be the same length) → raises `ValueError`
-- **Non-numeric monetary values** in ROI data → raises `TypeError`
+  async getConsolidatedPerformance(
+    startDate: string,
+    endDate: string
+  ): Promise<Record<string, AggregatedMetrics>> {
+    // Fetch from all platforms
+    const [googleData, metaData] = await Promise.all([
+      this.googleAds.getCampaignPerformance(startDate, endDate),
+      this.metaAds.getCampaignPerformance(metaAccountId, startDate, endDate)
+    ]);
 
-Use `python -m json.tool your_file.json` to validate JSON syntax before passing it to any script.
+    // Combine all data
+    const allData = [...googleData, ...metaData];
 
----
+    // Aggregate by platform
+    const byPlatform: Record<string, AggregatedMetrics> = {};
 
-## Output Formats
+    allData.forEach(campaign => {
+      if (!byPlatform[campaign.platform]) {
+        byPlatform[campaign.platform] = {
+          platform: campaign.platform,
+          campaign_id: 'all',
+          campaign_name: 'All Campaigns',
+          date: `${startDate}_${endDate}`,
+          metrics: {
+            impressions: 0,
+            clicks: 0,
+            spend: 0,
+            conversions: 0,
+            revenue: 0
+          },
+          calculated: {
+            ctr: 0,
+            cpc: 0,
+            cpa: 0,
+            roas: 0,
+            conversion_rate: 0
+          }
+        };
+      }
 
-All scripts support two output formats via the `--format` flag:
+      const platform = byPlatform[campaign.platform];
+      platform.metrics.impressions += campaign.metrics.impressions;
+      platform.metrics.clicks += campaign.metrics.clicks;
+      platform.metrics.spend += campaign.metrics.spend;
+      platform.metrics.conversions += campaign.metrics.conversions;
+      platform.metrics.revenue += campaign.metrics.revenue;
+    });
 
-- `--format text` (default): Human-readable tables and summaries for review
-- `--format json`: Machine-readable JSON for integrations and pipelines
+    // Calculate derived metrics
+    Object.values(byPlatform).forEach(platform => {
+      const m = platform.metrics;
+      platform.calculated = {
+        ctr: (m.clicks / m.impressions) * 100,
+        cpc: m.spend / m.clicks,
+        cpa: m.spend / m.conversions,
+        roas: m.revenue / m.spend,
+        conversion_rate: (m.conversions / m.clicks) * 100
+      };
+    });
 
----
+    return byPlatform;
+  }
 
-## Typical Analysis Workflow
+  async generateReport(startDate: string, endDate: string): Promise<string> {
+    const data = await this.getConsolidatedPerformance(startDate, endDate);
 
-For a complete campaign review, run the three scripts in sequence:
+    let report = `# Marketing Performance Report\n`;
+    report += `Period: ${startDate} to ${endDate}\n\n`;
 
-```bash
-# Step 1 — Attribution: understand which channels drive conversions
-python scripts/attribution_analyzer.py campaign_data.json --model time-decay
+    Object.entries(data).forEach(([platform, metrics]) => {
+      report += `## ${platform.toUpperCase()}\n`;
+      report += `- Spend: $${metrics.metrics.spend.toFixed(2)}\n`;
+      report += `- Revenue: $${metrics.metrics.revenue.toFixed(2)}\n`;
+      report += `- ROAS: ${metrics.calculated.roas.toFixed(2)}x\n`;
+      report += `- Conversions: ${metrics.metrics.conversions}\n`;
+      report += `- CPA: $${metrics.calculated.cpa.toFixed(2)}\n`;
+      report += `- CTR: ${metrics.calculated.ctr.toFixed(2)}%\n\n`;
+    });
 
-# Step 2 — Funnel: identify where prospects drop off on the path to conversion
-python scripts/funnel_analyzer.py funnel_data.json
+    // Overall summary
+    const totalSpend = Object.values(data).reduce((sum, m) => sum + m.metrics.spend, 0);
+    const totalRevenue = Object.values(data).reduce((sum, m) => sum + m.metrics.revenue, 0);
+    const overallROAS = totalRevenue / totalSpend;
 
-# Step 3 — ROI: calculate profitability and benchmark against industry standards
-python scripts/campaign_roi_calculator.py campaign_data.json
+    report += `## OVERALL\n`;
+    report += `- Total Spend: $${totalSpend.toFixed(2)}\n`;
+    report += `- Total Revenue: $${totalRevenue.toFixed(2)}\n`;
+    report += `- Overall ROAS: ${overallROAS.toFixed(2)}x\n`;
+
+    return report;
+  }
+}
 ```
 
-Use attribution results to identify top-performing channels, then focus funnel analysis on those channels' segments, and finally validate ROI metrics to prioritize budget reallocation.
+## Budget Optimization Patterns
 
----
+### Dynamic Budget Allocation
 
-## How to Use
+```typescript
+interface BudgetAllocation {
+  platform: string;
+  current_budget: number;
+  recommended_budget: number;
+  reason: string;
+}
 
-### Attribution Analysis
+export async function optimizeBudgetAllocation(
+  totalBudget: number,
+  historicalData: AggregatedMetrics[]
+): Promise<BudgetAllocation[]> {
+  // Calculate ROAS efficiency by platform
+  const platformROAS = historicalData.map(p => ({
+    platform: p.platform,
+    roas: p.calculated.roas,
+    spend: p.metrics.spend
+  }));
 
-```bash
-# Run all 5 attribution models
-python scripts/attribution_analyzer.py campaign_data.json
+  // Sort by ROAS
+  platformROAS.sort((a, b) => b.roas - a.roas);
 
-# Run a specific model
-python scripts/attribution_analyzer.py campaign_data.json --model time-decay
+  // Allocate budget proportionally to ROAS
+  const totalROAS = platformROAS.reduce((sum, p) => sum + p.roas, 0);
 
-# JSON output for pipeline integration
-python scripts/attribution_analyzer.py campaign_data.json --format json
+  return platformROAS.map(p => ({
+    platform: p.platform,
+    current_budget: p.spend,
+    recommended_budget: (p.roas / totalROAS) * totalBudget,
+    reason: `ROAS: ${p.roas.toFixed(2)}x - ${p.roas > 3 ? 'High performer' : 'Underperformer'}`
+  }));
+}
 
-# Custom time-decay half-life (default: 7 days)
-python scripts/attribution_analyzer.py campaign_data.json --model time-decay --half-life 14
+// Example usage
+const allocations = await optimizeBudgetAllocation(10000, historicalData);
+/*
+[
+  {
+    platform: 'google_ads',
+    current_budget: 6000,
+    recommended_budget: 7500, // Increase (high ROAS)
+    reason: 'ROAS: 4.2x - High performer'
+  },
+  {
+    platform: 'facebook_ads',
+    current_budget: 4000,
+    recommended_budget: 2500, // Decrease (low ROAS)
+    reason: 'ROAS: 1.8x - Underperformer'
+  }
+]
+*/
 ```
 
-### Funnel Analysis
+### Automated Campaign Scaling
 
-```bash
-# Basic funnel analysis
-python scripts/funnel_analyzer.py funnel_data.json
+```typescript
+export async function autoScaleCampaigns(
+  analytics: MultiChannelAnalytics,
+  scalingRules: {
+    highPerformer: { roasThreshold: number; increasePercent: number };
+    lowPerformer: { roasThreshold: number; decreasePercent: number };
+  }
+): Promise<void> {
+  const data = await analytics.getConsolidatedPerformance(
+    getDateDaysAgo(7),
+    getDateToday()
+  );
 
-# JSON output
-python scripts/funnel_analyzer.py funnel_data.json --format json
+  for (const [platform, metrics] of Object.entries(data)) {
+    const roas = metrics.calculated.roas;
+    const currentBudget = metrics.metrics.spend / 7; // Daily budget
+
+    if (roas >= scalingRules.highPerformer.roasThreshold) {
+      // Scale up
+      const newBudget = currentBudget * (1 + scalingRules.highPerformer.increasePercent / 100);
+      console.log(`Scaling up ${platform}: $${currentBudget} → $${newBudget} (ROAS: ${roas.toFixed(2)})`);
+      await updateCampaignBudget(platform, newBudget);
+    } else if (roas <= scalingRules.lowPerformer.roasThreshold) {
+      // Scale down
+      const newBudget = currentBudget * (1 - scalingRules.lowPerformer.decreasePercent / 100);
+      console.log(`Scaling down ${platform}: $${currentBudget} → $${newBudget} (ROAS: ${roas.toFixed(2)})`);
+      await updateCampaignBudget(platform, newBudget);
+    }
+  }
+}
 ```
 
-### Campaign ROI Calculation
+## Configuration Requirements
 
-```bash
-# Calculate ROI metrics for all campaigns
-python scripts/campaign_roi_calculator.py campaign_data.json
+**Environment Variables:**
+- `GOOGLE_ADS_CUSTOMER_ID` - Google Ads account ID
+- `GOOGLE_ADS_DEVELOPER_TOKEN` - Developer token
+- `GOOGLE_ADS_CLIENT_ID` - OAuth client ID
+- `GOOGLE_ADS_CLIENT_SECRET` - OAuth client secret
+- `GOOGLE_ADS_REFRESH_TOKEN` - OAuth refresh token
+- `META_ADS_ACCESS_TOKEN` - Facebook/Meta access token
+- `META_ADS_ACCOUNT_ID` - Ad account ID
 
-# JSON output
-python scripts/campaign_roi_calculator.py campaign_data.json --format json
+**API Access:**
+- Google Ads API enabled
+- Meta Marketing API enabled
+- Service accounts configured
+
+**Configuration** (skill.config.json):
+```json
+{
+  "configuration": {
+    "platforms": {
+      "google_ads": {
+        "customer_id": "${GOOGLE_ADS_CUSTOMER_ID}",
+        "conversion_labels": {
+          "lead": "${GOOGLE_ADS_CONVERSION_LABEL_LEAD}",
+          "purchase": "${GOOGLE_ADS_CONVERSION_LABEL_PURCHASE}"
+        }
+      },
+      "meta_ads": {
+        "account_id": "${META_ADS_ACCOUNT_ID}",
+        "pixel_id": "${META_PIXEL_ID}"
+      }
+    },
+    "targets": {
+      "min_roas": 2.0,
+      "max_cac": 100,
+      "target_conversion_rate": 3.0
+    }
+  }
+}
 ```
 
----
+## Key Rules
 
-## Scripts
+### DO:
+- Track all ad spend centrally
+- Calculate ROAS at campaign and platform level
+- Monitor trends weekly minimum
+- Test budget reallocations gradually
+- Document significant changes
+- Use 30-day windows for performance evaluation
 
-### 1. attribution_analyzer.py
+### DON'T:
+- Make budget decisions on <7 days data
+- Ignore seasonal patterns
+- Scale campaigns >50% at once
+- Forget to track offline conversions
+- Mix currency conversions incorrectly
+- Skip attribution analysis
 
-Implements five industry-standard attribution models to allocate conversion credit across marketing channels:
+## Resources
 
-| Model | Description | Best For |
-|-------|-------------|----------|
-| First-Touch | 100% credit to first interaction | Brand awareness campaigns |
-| Last-Touch | 100% credit to last interaction | Direct response campaigns |
-| Linear | Equal credit to all touchpoints | Balanced multi-channel evaluation |
-| Time-Decay | More credit to recent touchpoints | Short sales cycles |
-| Position-Based | 40/20/40 split (first/middle/last) | Full-funnel marketing |
+- **Google Ads API**: https://developers.google.com/google-ads/api
+- **Meta Marketing API**: https://developers.facebook.com/docs/marketing-apis
+- **@akson/cortex-analytics**: Unified analytics CLI
 
-### 2. funnel_analyzer.py
+## Example Implementations
 
-Analyzes conversion funnels to identify bottlenecks and optimization opportunities:
-
-- Stage-to-stage conversion rates and drop-off percentages
-- Automatic bottleneck identification (largest absolute and relative drops)
-- Overall funnel conversion rate
-- Segment comparison when multiple segments are provided
-
-### 3. campaign_roi_calculator.py
-
-Calculates comprehensive ROI metrics with industry benchmarking:
-
-- **ROI**: Return on investment percentage
-- **ROAS**: Return on ad spend ratio
-- **CPA**: Cost per acquisition
-- **CPL**: Cost per lead
-- **CAC**: Customer acquisition cost
-- **CTR**: Click-through rate
-- **CVR**: Conversion rate (leads to customers)
-- Flags underperforming campaigns against industry benchmarks
-
----
-
-## Reference Guides
-
-| Guide | Location | Purpose |
-|-------|----------|---------|
-| Attribution Models Guide | `references/attribution-models-guide.md` | Deep dive into 5 models with formulas, pros/cons, selection criteria |
-| Campaign Metrics Benchmarks | `references/campaign-metrics-benchmarks.md` | Industry benchmarks by channel and vertical for CTR, CPC, CPM, CPA, ROAS |
-| Funnel Optimization Framework | `references/funnel-optimization-framework.md` | Stage-by-stage optimization strategies, common bottlenecks, best practices |
-
----
-
-## Best Practices
-
-1. **Use multiple attribution models** -- Compare at least 3 models to triangulate channel value; no single model tells the full story.
-2. **Set appropriate lookback windows** -- Match your time-decay half-life to your average sales cycle length.
-3. **Segment your funnels** -- Compare segments (channel, cohort, geography) to identify performance drivers.
-4. **Benchmark against your own history first** -- Industry benchmarks provide context, but historical data is the most relevant comparison.
-5. **Run ROI analysis at regular intervals** -- Weekly for active campaigns, monthly for strategic review.
-6. **Include all costs** -- Factor in creative, tooling, and labor costs alongside media spend for accurate ROI.
-7. **Document A/B tests rigorously** -- Use the provided template to ensure statistical validity and clear decision criteria.
-
----
-
-## Limitations
-
-- **No statistical significance testing** -- Scripts provide descriptive metrics only; p-value calculations require external tools.
-- **Standard library only** -- No advanced statistical libraries. Suitable for most campaign sizes but not optimized for datasets exceeding 100K journeys.
-- **Offline analysis** -- Scripts analyze static JSON snapshots; no real-time data connections or API integrations.
-- **Single-currency** -- All monetary values assumed to be in the same currency; no currency conversion support.
-- **Simplified time-decay** -- Exponential decay based on configurable half-life; does not account for weekday/weekend or seasonal patterns.
-- **No cross-device tracking** -- Attribution operates on provided journey data as-is; cross-device identity resolution must be handled upstream.
-
-## Related Skills
-
-- **analytics-tracking**: For setting up tracking. NOT for analyzing data (that's this skill).
-- **ab-test-setup**: For designing experiments to test what analytics reveals.
-- **marketing-ops**: For routing insights to the right execution skill.
-- **paid-ads**: For optimizing ad spend based on analytics findings.
+See project-specific skills that extend this framework:
+- `myarmy-skills/campaign-analytics-myarmy` - Swiss market ad performance
+- Your implementation here!

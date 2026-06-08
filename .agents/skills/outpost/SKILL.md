@@ -1,74 +1,138 @@
 ---
 name: outpost
-description: >
-  Hookdeck Outpost — open-source infrastructure for sending webhooks and
-  events to user-preferred destinations (HTTP, SQS, RabbitMQ, Pub/Sub,
-  EventBridge, Kafka). Use when building a SaaS platform that needs to
-  deliver events to customers.
-license: MIT
-metadata:
-  author: hookdeck
-  version: "0.1.0"
-  repository: https://github.com/hookdeck/webhook-skills
+description: "Sets up and configures Hookdeck Outpost for outbound event delivery to customer endpoints. Use when sending webhooks to customers, building webhook delivery infrastructure, configuring destinations (HTTP, SQS, RabbitMQ, Pub/Sub, EventBridge, Kafka), or managing tenants and subscriptions in Outpost."
+allowed-tools: WebFetch
 ---
 
 # Hookdeck Outpost
 
-Outpost is open-source infrastructure for delivering events to user-preferred destinations: Webhooks (HTTP), SQS, RabbitMQ, Pub/Sub, EventBridge, Kafka, and more. Apache 2.0 licensed, available as managed by Hookdeck or self-hosted.
+Open-source outbound event delivery infrastructure by Hookdeck. Delivers your platform events directly to your users' preferred event destinations (webhooks, message queues, streaming platforms).
 
-## When to Use Outpost
+- [Outpost docs](https://outpost.hookdeck.com/docs/)
+- [GitHub](https://github.com/hookdeck/outpost)
+- [API reference](https://outpost.hookdeck.com/docs/api)
 
-- You're building a SaaS or API platform and need to send webhooks to your users
-- You need multi-destination support beyond HTTP webhooks (SQS, RabbitMQ, Pub/Sub, EventBridge, Kafka)
-- You want self-hostable webhook delivery infrastructure
-- You need multi-tenant support with per-user observability
-- You want to offer your customers reliable, retryable event delivery
+## Deployment Options
 
-## Quick Start
+| Option | Description | Best for |
+|---|---|---|
+| **Self-hosted** | Run via Docker, Kubernetes, or Railway. Full control. Apache-2.0 license. | Production with custom infra requirements |
+| **Managed** | Hookdeck Cloud. No infrastructure to operate. | Teams wanting zero-ops setup |
 
-### Managed (Hookdeck)
+For managed, sign up at [hookdeck.com](https://hookdeck.com). For self-hosted, see the quickstart below.
 
-The fastest way to get started — Hookdeck hosts and operates Outpost for you:
+## Supported Destination Types
 
-1. Sign up at [hookdeck.com](https://hookdeck.com)
-2. See the [Send Webhooks quickstart](https://hookdeck.com/docs/use-cases/send-webhooks/quickstart)
+**Available:** Webhooks (HTTP), Hookdeck Event Gateway, AWS SQS, AWS Kinesis, AWS S3, Azure Service Bus, GCP Pub/Sub, RabbitMQ (AMQP)
 
-### Self-Hosted
+**Planned:** [AWS EventBridge](https://github.com/hookdeck/outpost/issues/201), [Apache Kafka](https://github.com/hookdeck/outpost/issues/141)
 
-Run Outpost on your own infrastructure:
+## [Core Concepts](https://outpost.hookdeck.com/docs/concepts)
 
-1. See the [Outpost documentation](https://outpost.hookdeck.com/docs)
-2. Clone from [GitHub](https://github.com/hookdeck/outpost)
+**Tenants** -- Represent a user, team, or organization in your product. Each tenant manages their own Destinations.
 
-## Supported Destinations
+**Destinations** -- A specific instance of a [destination type](https://outpost.hookdeck.com/docs/concepts#tenant-destination-types) belonging to a tenant. For example, a webhook destination with a particular URL, or an SQS queue.
 
-| Destination | Protocol |
-|-------------|----------|
-| Webhooks | HTTP/HTTPS |
-| Amazon SQS | AWS SQS |
-| RabbitMQ | AMQP |
-| Google Pub/Sub | gRPC |
-| Amazon EventBridge | AWS EventBridge |
-| Apache Kafka | Kafka protocol |
+**Topics** -- Categorize events using a Pub/Sub pattern (e.g., `user.created`, `payment.completed`). Destinations subscribe to one or more topics, or `*` for all.
 
-## Full Product Skills
+**Events** -- Data representing an action in your system. Published to a topic and delivered to all matching destinations.
 
-For detailed Outpost skills:
+**Delivery Attempts** -- Records of each attempt to deliver an event to a destination, including request/response data.
 
-```bash
-npx skills add hookdeck/agent-skills --skill outpost
+## Self-Hosted Quick Start (Docker)
+
+Requires [Docker](https://docs.docker.com/engine/install/). Uses RabbitMQ for message queuing.
+
+```sh
+git clone https://github.com/hookdeck/outpost.git
+cd outpost/examples/docker-compose/
+cp .env.example .env
+# Edit .env and set your API_KEY value
+docker-compose -f compose.yml -f compose-rabbitmq.yml -f compose-postgres.yml up
 ```
 
-See [hookdeck/agent-skills](https://github.com/hookdeck/agent-skills) for the complete Outpost skill, the [Outpost documentation](https://outpost.hookdeck.com/docs), and the [GitHub repo](https://github.com/hookdeck/outpost).
+Verify the services are running:
 
-## Resources
+```sh
+curl localhost:3333/api/v1/healthz
+```
 
-- [Outpost Documentation](https://outpost.hookdeck.com/docs)
-- [GitHub Repository](https://github.com/hookdeck/outpost)
-- [Hookdeck Send Webhooks Guide](https://hookdeck.com/docs/use-cases/send-webhooks)
+## API Access
+
+The Outpost API is a REST-based JSON API. The base URL and authentication differ by deployment:
+
+| Deployment | Base URL | Authentication |
+|---|---|---|
+| **Self-hosted** | `http://localhost:3333/api/v1` (or your configured host) | `Authorization: Bearer $API_KEY` (the `API_KEY` env var you configured) |
+| **Managed** | Provided in your Hookdeck project | `Authorization: Bearer $HOOKDECK_API_KEY` (from [Dashboard > Settings > Secrets](https://dashboard.hookdeck.com/settings/project/secrets)) |
+
+The OpenAPI spec for the self-hosted API is at: https://github.com/hookdeck/outpost/blob/main/docs/apis/openapi.yaml
+
+All curl examples below use the self-hosted base URL. Replace `localhost:3333/api/v1` with the managed URL and use your Hookdeck API key when using the managed version.
+
+## Publish Your First Event
+
+Set shell variables for convenience:
+
+```sh
+BASE_URL=localhost:3333/api/v1
+API_KEY=your_api_key
+TENANT_ID=your_org_name
+URL=https://your-webhook-endpoint.example.com
+```
+
+Create a tenant, add a webhook destination, and publish an event:
+
+```sh
+# Create tenant
+curl -X PUT "$BASE_URL/$TENANT_ID" \
+  -H "Authorization: Bearer $API_KEY"
+
+# Create webhook destination subscribing to all topics
+curl -X POST "$BASE_URL/$TENANT_ID/destinations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{
+    "type": "webhook",
+    "topics": ["*"],
+    "config": { "url": "'"$URL"'" }
+  }'
+
+# Publish an event
+curl -X POST "$BASE_URL/publish" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{
+    "tenant_id": "'"$TENANT_ID"'",
+    "topic": "user.created",
+    "eligible_for_retry": true,
+    "data": { "user_id": "usr_123" }
+  }'
+```
+
+## Tenant Portal
+
+Outpost includes a built-in portal UI where tenants manage their destinations and inspect events:
+
+```sh
+curl "$BASE_URL/$TENANT_ID/portal" \
+  -H "Authorization: Bearer $API_KEY"
+# Returns { "redirect_url": "...?token=<jwt>" }
+```
+
+## Architecture
+
+Outpost consists of three services (deployable together as a single binary or separately for horizontal scaling): **API Service** (captures events, configuration APIs), **Delivery Service** (delivers to destinations via message queues), and **Log Service** (stores events, status, responses). Requires Redis 6.0+, PostgreSQL, and one supported message queue. See [concepts](https://outpost.hookdeck.com/docs/concepts) for details.
+
+## Future Skills
+
+Destination-specific skills (`outpost-webhooks`, `outpost-sqs`, `outpost-rabbitmq`, etc.) will be added as Outpost documentation matures.
+
+## Deployment Quickstarts
+
+- [Docker](https://outpost.hookdeck.com/docs/quickstarts/docker) | [Kubernetes](https://outpost.hookdeck.com/docs/quickstarts/kubernetes) | [Railway](https://outpost.hookdeck.com/docs/quickstarts/railway) | [Configuration reference](https://outpost.hookdeck.com/docs/references/configuration)
 
 ## Related Skills
 
-- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - For receiving and ingesting webhooks (the inbound counterpart)
-- [hookdeck-event-gateway-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway-webhooks) - Verify Hookdeck signatures on forwarded webhooks
-- [webhook-handler-patterns](https://github.com/hookdeck/webhook-skills/tree/main/skills/webhook-handler-patterns) - Handler sequence, idempotency, error handling, retry logic
+- [hookdeck](https://github.com/hookdeck/agent-skills/blob/main/skills/hookdeck/SKILL.md) -- skill router for all Hookdeck skills
+- [event-gateway](https://github.com/hookdeck/agent-skills/blob/main/skills/event-gateway/SKILL.md) -- Hookdeck Event Gateway (inbound webhooks)

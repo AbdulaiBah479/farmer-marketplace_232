@@ -1,15 +1,8 @@
 ---
 name: yt
-description: "Use when YouTube is relevant: pasted video links or IDs, @handles, quick video lookups, summaries, channel latest uploads, topic search, or any request involving YouTube content — even if YouTube is not mentioned explicitly. Covers transcripts, search, and channel latest. Not for uploads or account management."
-version: "1.5.1"
+description: Quick YouTube utility — fetch transcripts, search videos, get latest from channels. Use when someone shares a YouTube link, asks about a video, or says "yt", "youtube", "check this video", "what's this video about", "find videos about", "latest from".
+homepage: https://transcriptapi.com
 user-invocable: true
-compatibility: Requires internet access to reach transcriptapi.com. No additional runtimes or dependencies needed.
-required_environment_variables:
-  - name: TRANSCRIPT_API_KEY
-    prompt: Your TranscriptAPI key (starts with sk_)
-    help: Free account at https://transcriptapi.com — 100 credits, no card required. Or let the agent create one for you.
-    required_for: all API requests
-metadata: {"openclaw":{"emoji":"▶️","requires":{"env":["TRANSCRIPT_API_KEY"]},"primaryEnv":"TRANSCRIPT_API_KEY","homepage":"https://transcriptapi.com"},"hermes":{"tags":["youtube","transcripts","video","search","channels","utility"],"category":"media"}}
 ---
 
 # yt
@@ -18,14 +11,25 @@ Quick YouTube lookup via [TranscriptAPI.com](https://transcriptapi.com).
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, read [references/auth-setup.md](references/auth-setup.md) and follow the instructions there to get and store the key.
+If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
 
-## Required Headers
+**Step 1 — Register:** Ask user for their email.
 
-Every request needs two headers:
+```bash
+node ./scripts/tapi-auth.js register --email USER_EMAIL
+```
 
-- **Authorization:** `Bearer $TRANSCRIPT_API_KEY`
-- **User-Agent:** your agent's name and version if known (e.g. `HermesAgent/0.11.0`, `ClaudeCode/1.0`). Version is optional — agent name alone is fine. Do not omit this header or send a bare default — Cloudflare will return a 403 (error code 1010) and block the request.
+→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
+
+**Step 2 — Verify:** Once user provides the OTP:
+
+```bash
+node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
+```
+
+> API key saved to your shell profile and agent config. Ready to use.
+
+Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
 ## API Reference
 
@@ -36,16 +40,14 @@ Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/op
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
 ?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 ## Search — 1 credit
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=10" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 | Param   | Default | Values                 |
@@ -58,8 +60,7 @@ curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limi
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 Returns last 15 videos with exact view counts and publish dates. Accepts `@handle`, channel URL, or `UC...` ID.
@@ -68,20 +69,17 @@ Returns last 15 videos with exact view counts and publish dates. Accepts `@handl
 
 ```bash
 curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY" \
-  -H "User-Agent: YourAgent/1.0"
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
 ```
 
 Use to convert @handle to UC... channel ID.
 
 ## Errors
 
-| Code     | Meaning          | Action                                         |
-| -------- | ---------------- | ---------------------------------------------- |
-| 401      | Bad API key      | Check key                                      |
-| 402      | No credits       | transcriptapi.com/billing                      |
-| 403/1010 | Cloudflare block | Add or fix User-Agent header                   |
-| 404      | Not found        | No captions or resource doesn't exist          |
-| 408      | Timeout          | Retry once                                     |
+| Code | Action                                 |
+| ---- | -------------------------------------- |
+| 402  | No credits — transcriptapi.com/billing |
+| 404  | Not found / no captions                |
+| 408  | Timeout — retry once                   |
 
 Free tier: 100 credits. Search and transcript cost 1 credit. Channel latest and resolve are free.

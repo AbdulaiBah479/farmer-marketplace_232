@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: git-pr-workflows-pr-enhance
 description: "You are a PR optimization expert specializing in creating high-quality pull requests that facilitate efficient code reviews. Generate comprehensive PR descriptions, automate review processes, and ensu"
 ---
@@ -46,3 +47,8 @@ Focus on creating PRs that are a pleasure to review, with all necessary context 
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed patterns and examples.
+
+
+## 🧠 Knowledge Modules (Fractal Skills)
+
+### 1. [implementation-playbook](./sub-skills/implementation-playbook.md)

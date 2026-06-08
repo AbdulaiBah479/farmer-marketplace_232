@@ -1,212 +1,426 @@
 ---
-name: docusign-automation
-description: "Automate DocuSign tasks via Rube MCP (Composio): templates, envelopes, signatures, document management. Always search tools first for current schemas."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+name: DocuSign Automation
+description: Automate document signing workflows, envelope management, and e-signature processes
+version: 1.0.0
+author: Claude Office Skills
+category: documents
+tags:
+  - docusign
+  - esignature
+  - contracts
+  - documents
+  - legal
+department: legal
+models:
+  - claude-3-opus
+  - claude-3-sonnet
+  - gpt-4
+mcp:
+  server: document-mcp
+  tools:
+    - docusign_envelope
+    - docusign_template
+    - docusign_signing
+    - docusign_webhook
+capabilities:
+  - Envelope creation
+  - Template management
+  - Signing workflows
+  - Status tracking
+input:
+  - Documents
+  - Signer information
+  - Template configurations
+  - Workflow rules
+output:
+  - Signed documents
+  - Envelope status
+  - Audit trails
+  - Completion reports
+languages:
+  - en
+related_skills:
+  - contract-review
+  - pdf-tools
+  - invoice-automation
 ---
 
-# DocuSign Automation via Rube MCP
+# DocuSign Automation
 
-Automate DocuSign e-signature workflows through Composio's DocuSign toolkit via Rube MCP.
-
-## Prerequisites
-
-- Rube MCP must be connected (RUBE_SEARCH_TOOLS available)
-- Active DocuSign connection via `RUBE_MANAGE_CONNECTIONS` with toolkit `docusign`
-- Always call `RUBE_SEARCH_TOOLS` first to get current tool schemas
-
-## Setup
-
-**Get Rube MCP**: Add `https://rube.app/mcp` as an MCP server in your client configuration. No API keys needed — just add the endpoint and it works.
-
-
-1. Verify Rube MCP is available by confirming `RUBE_SEARCH_TOOLS` responds
-2. Call `RUBE_MANAGE_CONNECTIONS` with toolkit `docusign`
-3. If connection is not ACTIVE, follow the returned auth link to complete DocuSign OAuth
-4. Confirm connection status shows ACTIVE before running any workflows
+Comprehensive skill for automating e-signature and document signing workflows.
 
 ## Core Workflows
 
-### 1. Browse and Select Templates
-
-**When to use**: User wants to find available document templates for sending
-
-**Tool sequence**:
-1. `DOCUSIGN_LIST_ALL_TEMPLATES` - List all available templates [Required]
-2. `DOCUSIGN_GET_TEMPLATE` - Get detailed template information [Optional]
-
-**Key parameters**:
-- For listing: Optional search/filter parameters
-- For details: `templateId` (from list results)
-- Response includes template `templateId`, `name`, `description`, roles, and fields
-
-**Pitfalls**:
-- Template IDs are GUIDs (e.g., '12345678-abcd-1234-efgh-123456789012')
-- Templates define recipient roles with signing tabs; understand roles before creating envelopes
-- Large template libraries require pagination; check for continuation tokens
-- Template access depends on account permissions
-
-### 2. Create and Send Envelopes from Templates
-
-**When to use**: User wants to send documents for signature using a pre-built template
-
-**Tool sequence**:
-1. `DOCUSIGN_LIST_ALL_TEMPLATES` - Find the template to use [Prerequisite]
-2. `DOCUSIGN_GET_TEMPLATE` - Review template roles and fields [Optional]
-3. `DOCUSIGN_CREATE_ENVELOPE_FROM_TEMPLATE` - Create the envelope [Required]
-4. `DOCUSIGN_SEND_ENVELOPE` - Send the envelope for signing [Required]
-
-**Key parameters**:
-- For CREATE_ENVELOPE_FROM_TEMPLATE:
-  - `templateId`: Template to use
-  - `templateRoles`: Array of role assignments with `roleName`, `name`, `email`
-  - `status`: 'created' (draft) or 'sent' (send immediately)
-  - `emailSubject`: Custom subject line for the signing email
-  - `emailBlurb`: Custom message in the signing email
-- For SEND_ENVELOPE:
-  - `envelopeId`: Envelope ID from creation response
-
-**Pitfalls**:
-- `templateRoles` must match the role names defined in the template exactly (case-sensitive)
-- Setting `status` to 'sent' during creation sends immediately; use 'created' for drafts
-- If status is 'sent' at creation, no need to call SEND_ENVELOPE separately
-- Each role requires at minimum `roleName`, `name`, and `email`
-- `emailSubject` overrides the template's default email subject
-
-### 3. Monitor Envelope Status
-
-**When to use**: User wants to check the status of sent envelopes or track signing progress
-
-**Tool sequence**:
-1. `DOCUSIGN_GET_ENVELOPE` - Get envelope details and status [Required]
-
-**Key parameters**:
-- `envelopeId`: Envelope identifier (GUID)
-- Response includes `status`, `recipients`, `sentDateTime`, `completedDateTime`
-
-**Pitfalls**:
-- Envelope statuses: 'created', 'sent', 'delivered', 'signed', 'completed', 'declined', 'voided'
-- 'delivered' means the email was opened, not that the document was signed
-- 'completed' means all recipients have signed
-- Recipients array shows individual signing status per recipient
-- Envelope IDs are GUIDs; always resolve from creation or search results
-
-### 4. Add Templates to Existing Envelopes
-
-**When to use**: User wants to add additional documents or templates to an existing envelope
-
-**Tool sequence**:
-1. `DOCUSIGN_GET_ENVELOPE` - Verify envelope exists and is in draft state [Prerequisite]
-2. `DOCUSIGN_ADD_TEMPLATES_TO_DOCUMENT_IN_ENVELOPE` - Add template to envelope [Required]
-
-**Key parameters**:
-- `envelopeId`: Target envelope ID
-- `documentId`: Document ID within the envelope
-- `templateId`: Template to add
-
-**Pitfalls**:
-- Envelope must be in 'created' (draft) status to add templates
-- Cannot add templates to already-sent envelopes
-- Document IDs are sequential within an envelope (starting from '1')
-- Adding a template merges its fields and roles into the existing envelope
-
-### 5. Manage Envelope Lifecycle
-
-**When to use**: User wants to send, void, or manage draft envelopes
-
-**Tool sequence**:
-1. `DOCUSIGN_GET_ENVELOPE` - Check current envelope status [Prerequisite]
-2. `DOCUSIGN_SEND_ENVELOPE` - Send a draft envelope [Optional]
-
-**Key parameters**:
-- `envelopeId`: Envelope to manage
-- For sending: envelope must be in 'created' status with all required recipients
-
-**Pitfalls**:
-- Only 'created' (draft) envelopes can be sent
-- Sent envelopes cannot be unsent; they can only be voided
-- Voiding an envelope notifies all recipients
-- All required recipients must have valid email addresses before sending
-
-## Common Patterns
-
-### ID Resolution
-
-**Template name -> Template ID**:
-```
-1. Call DOCUSIGN_LIST_ALL_TEMPLATES
-2. Find template by name in results
-3. Extract templateId (GUID format)
-```
-
-**Envelope tracking**:
-```
-1. Store envelopeId from CREATE_ENVELOPE_FROM_TEMPLATE response
-2. Call DOCUSIGN_GET_ENVELOPE periodically to check status
-3. Check recipient-level status for individual signing progress
-```
-
-### Template Role Mapping
-
-When creating an envelope from a template:
-```
-1. Call DOCUSIGN_GET_TEMPLATE to see defined roles
-2. Map each role to actual recipients:
-   {
-     "roleName": "Signer 1",     // Must match template role name exactly
-     "name": "John Smith",
-     "email": "john@example.com"
-   }
-3. Include ALL required roles in templateRoles array
-```
-
-### Envelope Status Flow
+### 1. Signing Flow
 
 ```
-created (draft) -> sent -> delivered -> signed -> completed
-                       \-> declined
-                       \-> voided (by sender)
+DOCUSIGN SIGNING FLOW:
+┌─────────────────┐
+│  Create Envelope│
+│  - Document     │
+│  - Recipients   │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  Add Fields     │
+│  - Signatures   │
+│  - Initials     │
+│  - Dates        │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  Send for       │
+│  Signature      │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  Signer 1 Signs │
+│  (In order)     │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  Signer 2 Signs │
+│  (If multiple)  │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│   Completed     │
+│  - Archive      │
+│  - Distribute   │
+└─────────────────┘
 ```
 
-## Known Pitfalls
+### 2. Envelope Configuration
 
-**Template Roles**:
-- Role names are case-sensitive; must match template definition exactly
-- All required roles must be assigned when creating an envelope
-- Missing role assignments cause envelope creation to fail
+```yaml
+envelope_config:
+  email_subject: "{{document_type}} - Please Sign"
+  email_blurb: |
+    Please review and sign the attached {{document_type}}.
+    This document requires your signature by {{due_date}}.
+    
+  documents:
+    - name: "{{contract_name}}.pdf"
+      document_id: 1
+      
+  recipients:
+    signers:
+      - email: "{{signer_1_email}}"
+        name: "{{signer_1_name}}"
+        routing_order: 1
+        tabs:
+          sign_here:
+            - anchor: "/sig1/"
+              offset_x: 0
+              offset_y: 0
+          date_signed:
+            - anchor: "/date1/"
+              
+      - email: "{{signer_2_email}}"
+        name: "{{signer_2_name}}"
+        routing_order: 2
+        tabs:
+          sign_here:
+            - anchor: "/sig2/"
+            
+    carbon_copies:
+      - email: "legal@company.com"
+        name: "Legal Team"
+        routing_order: 3
+        
+  settings:
+    reminder_enabled: true
+    reminder_delay: 2  # days
+    reminder_frequency: 2  # days
+    expiration_days: 30
+```
 
-**Envelope Status**:
-- 'delivered' means email opened, NOT document signed
-- 'completed' is the final successful state (all parties signed)
-- Status transitions are one-way; cannot revert to previous states
+## Template Management
 
-**GUIDs**:
-- All DocuSign IDs (templates, envelopes) are GUID format
-- Always resolve names to GUIDs via list/search endpoints
-- Do not hardcode GUIDs; they are unique per account
+### Template Creation
 
-**Rate Limits**:
-- DocuSign API has per-account rate limits
-- Bulk envelope creation should be throttled
-- Polling envelope status should use reasonable intervals (30-60 seconds)
+```yaml
+template_config:
+  name: "Standard NDA Template"
+  description: "Non-disclosure agreement for vendors"
+  
+  documents:
+    - name: "NDA_Template.pdf"
+      
+  roles:
+    - role_name: "Company Representative"
+      routing_order: 1
+      
+    - role_name: "Counterparty"
+      routing_order: 2
+      
+  tabs:
+    company_rep:
+      - type: sign_here
+        anchor: "/company_signature/"
+      - type: date_signed
+        anchor: "/company_date/"
+      - type: text
+        anchor: "/company_name/"
+        label: "Name"
+      - type: text
+        anchor: "/company_title/"
+        label: "Title"
+        
+    counterparty:
+      - type: sign_here
+        anchor: "/counterparty_signature/"
+      - type: date_signed
+        anchor: "/counterparty_date/"
+      - type: text
+        anchor: "/counterparty_name/"
+        label: "Name"
+```
 
-**Response Parsing**:
-- Response data may be nested under `data` key
-- Recipient information is nested within envelope response
-- Date fields use ISO 8601 format
-- Parse defensively with fallbacks for optional fields
+### Template Library
 
-## Quick Reference
+```yaml
+template_library:
+  contracts:
+    - name: "Employment Agreement"
+      id: "template_emp_001"
+      category: "HR"
+      
+    - name: "Vendor Agreement"
+      id: "template_vendor_001"
+      category: "Procurement"
+      
+    - name: "NDA (Mutual)"
+      id: "template_nda_001"
+      category: "Legal"
+      
+  sales:
+    - name: "Sales Order"
+      id: "template_so_001"
+      
+    - name: "Statement of Work"
+      id: "template_sow_001"
+      
+    - name: "Master Services Agreement"
+      id: "template_msa_001"
+```
 
-| Task | Tool Slug | Key Params |
-|------|-----------|------------|
-| List templates | DOCUSIGN_LIST_ALL_TEMPLATES | (optional filters) |
-| Get template | DOCUSIGN_GET_TEMPLATE | templateId |
-| Create envelope | DOCUSIGN_CREATE_ENVELOPE_FROM_TEMPLATE | templateId, templateRoles, status |
-| Send envelope | DOCUSIGN_SEND_ENVELOPE | envelopeId |
-| Get envelope status | DOCUSIGN_GET_ENVELOPE | envelopeId |
-| Add template to envelope | DOCUSIGN_ADD_TEMPLATES_TO_DOCUMENT_IN_ENVELOPE | envelopeId, documentId, templateId |
+## Workflow Automation
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+### Conditional Routing
+
+```yaml
+conditional_workflow:
+  name: "Contract Approval Flow"
+  
+  conditions:
+    - field: "contract_value"
+      operator: "greater_than"
+      value: 100000
+      then:
+        add_recipient:
+          role: "VP Approval"
+          routing_order: 1
+          
+    - field: "contract_type"
+      operator: "equals"
+      value: "international"
+      then:
+        add_recipient:
+          role: "Legal Review"
+          routing_order: 1
+          
+  default_flow:
+    - role: "Sales Manager"
+      routing_order: 1
+    - role: "Customer"
+      routing_order: 2
+```
+
+### Bulk Send
+
+```yaml
+bulk_send:
+  template_id: "template_nda_001"
+  
+  recipients:
+    - email: "vendor1@example.com"
+      name: "Vendor One"
+      custom_fields:
+        company_name: "Vendor One Inc"
+        effective_date: "2024-02-01"
+        
+    - email: "vendor2@example.com"
+      name: "Vendor Two"
+      custom_fields:
+        company_name: "Vendor Two LLC"
+        effective_date: "2024-02-01"
+        
+  settings:
+    batch_name: "Q1 Vendor NDAs"
+    send_immediately: true
+```
+
+## Integration Workflows
+
+### Salesforce Integration
+
+```yaml
+salesforce_integration:
+  triggers:
+    opportunity_closed_won:
+      template: "msa_template"
+      recipients:
+        - from_field: "Contact.Email"
+          role: "Customer"
+      custom_fields:
+        account_name: "Account.Name"
+        contract_value: "Opportunity.Amount"
+        
+  callbacks:
+    on_completed:
+      - update_opportunity:
+          stage: "Contract Signed"
+      - attach_document:
+          to: "Opportunity"
+      - create_task:
+          subject: "Contract signed - begin onboarding"
+```
+
+### CRM Webhook
+
+```yaml
+webhook_config:
+  events:
+    - envelope-sent
+    - envelope-delivered
+    - envelope-completed
+    - envelope-declined
+    - envelope-voided
+    
+  callback_url: "https://api.example.com/docusign/webhook"
+  
+  payload_handling:
+    envelope_completed:
+      actions:
+        - download_documents
+        - update_crm_record
+        - notify_team
+        - archive_to_storage
+```
+
+## Status Tracking
+
+### Envelope Dashboard
+
+```
+ENVELOPE STATUS - THIS MONTH
+═══════════════════════════════════════
+
+TOTAL: 156 envelopes
+
+BY STATUS:
+Completed    ████████████████ 89 (57%)
+Sent         ████████░░░░░░░░ 34 (22%)
+Delivered    ████░░░░░░░░░░░░ 18 (12%)
+Declined     █░░░░░░░░░░░░░░░ 5 (3%)
+Voided       █░░░░░░░░░░░░░░░ 10 (6%)
+
+AVERAGE COMPLETION TIME: 2.3 days
+
+PENDING SIGNATURES:
+┌────────────────────┬──────────────┬─────────┐
+│ Document           │ Awaiting     │ Sent    │
+├────────────────────┼──────────────┼─────────┤
+│ Acme Corp NDA      │ John Smith   │ 3 days  │
+│ TechStart SOW      │ Jane Doe     │ 1 day   │
+│ Vendor Agreement   │ Bob Wilson   │ 5 days  │
+└────────────────────┴──────────────┴─────────┘
+
+REMINDERS SENT: 23
+```
+
+### Audit Trail
+
+```yaml
+audit_trail:
+  events:
+    - timestamp: "2024-01-15T10:30:00Z"
+      action: "Envelope Created"
+      user: "sender@company.com"
+      ip: "192.168.1.1"
+      
+    - timestamp: "2024-01-15T10:31:00Z"
+      action: "Envelope Sent"
+      recipients: ["signer@example.com"]
+      
+    - timestamp: "2024-01-15T14:22:00Z"
+      action: "Document Viewed"
+      user: "signer@example.com"
+      ip: "10.0.0.1"
+      
+    - timestamp: "2024-01-15T14:25:00Z"
+      action: "Signature Applied"
+      user: "signer@example.com"
+      signature_type: "Electronic"
+      
+    - timestamp: "2024-01-15T14:25:30Z"
+      action: "Envelope Completed"
+```
+
+## API Examples
+
+### Create and Send Envelope
+
+```javascript
+// Create Envelope from Template
+const envelope = await docusign.envelopes.create(accountId, {
+  templateId: "template_123",
+  templateRoles: [
+    {
+      roleName: "Customer",
+      email: "customer@example.com",
+      name: "John Customer",
+      tabs: {
+        textTabs: [
+          {
+            tabLabel: "CompanyName",
+            value: "Customer Corp"
+          }
+        ]
+      }
+    }
+  ],
+  status: "sent"
+});
+
+// Get Envelope Status
+const status = await docusign.envelopes.get(
+  accountId, 
+  envelopeId
+);
+
+// Download Completed Documents
+const documents = await docusign.envelopes.getDocuments(
+  accountId,
+  envelopeId,
+  { certificate: true }
+);
+
+// Void Envelope
+await docusign.envelopes.update(accountId, envelopeId, {
+  status: "voided",
+  voidedReason: "Contract terms changed"
+});
+```
+
+## Best Practices
+
+1. **Use Templates**: Standardize common documents
+2. **Set Reminders**: Automated follow-ups
+3. **Expiration Dates**: Ensure timely completion
+4. **Audit Trails**: Maintain for compliance
+5. **Bulk Send**: Efficient for multiple recipients
+6. **Webhooks**: Real-time status updates
+7. **Brand Signing**: Custom signing experience
+8. **Archive**: Store completed documents securely

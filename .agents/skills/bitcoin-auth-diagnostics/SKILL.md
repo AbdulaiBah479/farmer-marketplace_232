@@ -264,6 +264,8 @@ fetch(url + requestPath, {
 
 When working with Sigma Auth (auth.sigmaidentity.com), common patterns:
 
+**Better Auth / Sigma Plugin issues** (403 on token exchange, CSRF/trustedOrigins, callback URL mismatches) are covered in `references/common-issues.md` under "Better Auth / Sigma Plugin Issues".
+
 **Token verification endpoint:**
 ```typescript
 // POST /api/auth/token-for-endpoint
@@ -294,6 +296,7 @@ const token = getAuthToken({
 For detailed API documentation and implementation examples, see:
 - `references/bitcoin-auth-api.md` - Complete API reference
 - `references/common-issues.md` - Detailed troubleshooting guide
+- `references/identity-terminology.md` - BAP ID vs BRC-31 identity key terminology matrix
 - Bitcoin Auth GitHub: https://github.com/b-open-io/bitcoin-auth
 - BRC-77 Specification: https://github.com/bitcoin-sv/BRCs/blob/master/peer-to-peer/0077.md
 

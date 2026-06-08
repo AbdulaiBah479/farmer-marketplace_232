@@ -170,12 +170,17 @@ WooCommerce webhooks include these headers:
 For local webhook testing, install Hookdeck CLI:
 
 ```bash
+# Install via npm
+npm install -g hookdeck-cli
+
+# Or via Homebrew
+brew install hookdeck/hookdeck/hookdeck
 ```
 
 Then start the tunnel:
 
 ```bash
-npx hookdeck-cli listen 3000 woocommerce --path /webhooks/woocommerce
+hookdeck listen 3000 --path /webhooks/woocommerce
 ```
 
 No account required. Provides local tunnel + web UI for inspecting requests.

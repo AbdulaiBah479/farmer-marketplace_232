@@ -1,18 +1,11 @@
 ---
 name: rebase-downstream
-description:
-  'Rebase a tree of dependent branches (including siblings) after upstream
-  changes. Auto-detects downstream branches and rebases each in order. Triggers
-  on: rebase downstream, rebase chain, propagate changes downstream.'
-disable-model-invocation: true
+description: "Rebase a tree of dependent branches (including siblings) after upstream changes. Auto-detects downstream branches and rebases each in order. Triggers on: rebase downstream, rebase chain, propagate changes downstream."
 ---
 
 # Rebase Downstream Tree
 
-Rebase a tree of dependent branches after upstream changes have been made.
-Auto-detects the downstream branch tree (including sibling branches), rebases
-each branch in order, resolves conflicts when possible, and runs preflight
-checks on each branch.
+Rebase a tree of dependent branches after upstream changes have been made. Auto-detects the downstream branch tree (including sibling branches), rebases each branch in order, resolves conflicts when possible, and runs preflight checks on each branch.
 
 ## Current State
 
@@ -23,8 +16,7 @@ checks on each branch.
 
 ### 1. Detect current branch
 
-Get the current branch name. This is the branch that was just modified and whose
-changes need to propagate downstream.
+Get the current branch name. This is the branch that was just modified and whose changes need to propagate downstream.
 
 ```bash
 git branch --show-current
@@ -32,19 +24,17 @@ git branch --show-current
 
 ### 2. Auto-detect downstream chain
 
-Run the `detect-chain.sh` helper script to find all downstream branches:
+Run the `detect_chain.sh` helper script to find all downstream branches:
 
 ```bash
-bash .claude/skills/rebase-downstream/detect-chain.sh <current-branch>
+bash .claude/skills/rebase-downstream/detect_chain.sh <current-branch>
 ```
 
-The script outputs `branch:parent` per line in rebase order (depth-first
-pre-order). This handles both linear chains and trees with sibling branches.
+The script outputs `branch:parent` per line in rebase order (depth-first pre-order). This handles both linear chains and trees with sibling branches.
 
 ### 3. Confirm the chain
 
-Display the detected chain to the user and ask for confirmation before
-proceeding.
+Display the detected chain to the user and ask for confirmation before proceeding.
 
 **If no downstream branches are detected**, report this to the user and stop.
 
@@ -64,27 +54,19 @@ Ask the user to confirm before rebasing. If the user declines, stop.
 For each downstream branch (closest to the current branch first):
 
 1. **Checkout the branch**:
-
    ```bash
    git checkout <downstream-branch>
    ```
 
 2. **Rebase onto its parent** (from the `branch:parent` output):
-
    ```bash
    git rebase --fork-point <parent-branch>
    ```
+   `--fork-point` uses the parent branch's reflog to find the actual fork point, so only the branch's own commits are replayed. Without it, if the parent was rebased/amended, git replays already-applied parent commits with different SHAs, causing duplicate commits and false conflicts.
 
-   `--fork-point` uses the parent branch's reflog to find the actual fork point,
-   so only the branch's own commits are replayed. Without it, if the parent was
-   rebased/amended, git replays already-applied parent commits with different
-   SHAs, causing duplicate commits and false conflicts.
-
-   The parent for each branch is provided by the detect script. For sibling
-   branches, both share the same parent.
+   The parent for each branch is provided by the detect script. For sibling branches, both share the same parent.
 
 3. **Handle conflicts** (if any):
-
    - Inspect each conflicted file to understand both sides
    - Attempt to resolve the conflict intelligently
    - After resolving, stage the files and continue:
@@ -96,19 +78,15 @@ For each downstream branch (closest to the current branch first):
      ```bash
      git rebase --abort
      ```
-     Report which branch and files had unresolvable conflicts, then stop
-     entirely. Do NOT continue to the next branch.
+     Report which branch and files had unresolvable conflicts, then stop entirely. Do NOT continue to the next branch.
 
-4. **Run full preflight checks** using `/preflight` on this branch. This
-   includes format, gn_check, presubmit, build, and tests. If preflight fails,
-   stop and report. Do NOT continue to the next branch.
+4. **Run full preflight checks** using `/preflight` on this branch. This includes format, gn_check, presubmit, build, and tests. If preflight fails, stop and report. Do NOT continue to the next branch.
 
 5. **Move to the next branch** only after successful rebase and preflight.
 
 ### 5. Return to the original branch
 
-After all branches are rebased successfully, checkout the original starting
-branch:
+After all branches are rebased successfully, checkout the original starting branch:
 
 ```bash
 git checkout <original-branch>

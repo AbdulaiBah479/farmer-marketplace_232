@@ -1,28 +1,20 @@
 ---
-name: conventions
-description: Load coding conventions and style guidelines when writing or reviewing code. Ensures consistency with project standards.
-allowed-tools: Read
+id: conventions
+name: Conventions
+description: Step-by-step guidance for conventions.
+category: Tools
 ---
-# Coding Conventions
 
-This skill provides project coding conventions.
+# Conventions
+
+Support conventions workflows with clear steps and best practices.
 
 ## When to Use
 
-Load when:
-- Writing new code
-- Reviewing code
-- Refactoring existing code
-- Making style decisions
+- You need help with conventions.
+- You want a clear, actionable next step.
 
-## Convention Files
+## Output
 
-@memory/knowledge/codebase/conventions.json
-
-## Key Areas
-
-- Naming conventions
-- File organization
-- Error handling patterns
-- Testing conventions
-- Documentation standards
+- Brief plan or checklist
+- Key recommendations and caveats

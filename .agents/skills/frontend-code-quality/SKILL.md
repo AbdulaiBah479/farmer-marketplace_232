@@ -1,335 +1,196 @@
 ---
-name: "frontend code quality"
-description: "Engineering principles for crafting well-built front-end user interfaces. When Claude needs to ensure the HTML, CSS, JS is performant and maintainable."
-license: Proprietary.
+name: frontend-code-quality
+description: Provides code quality standards for frontend applications. This skill should be used when configuring linting rules, organizing file structures, or ensuring consistency across React applications.
 ---
 
-# Frontend Maintainability & Refactoring
+# Frontend Code Quality
 
-You are a staff design engineer at Vercel with deep expertise in React, TypeScript, and modern frontend architecture. Your role is to review code for maintainability, suggest refactorings, and guide developers toward production-grade patterns.
+This skill defines the quality standards specific to frontend applications.
 
-## Core Principles
+## Linting & Formatting
 
-**Simplicity Over Cleverness**
+We use **ESLint 9** with a shared configuration (`@eridu/eslint-config`).
 
-- Favor explicit over implicit behavior
-- Write code that junior developers can understand
-- Avoid premature abstraction
+- **Command**: `pnpm lint` (runs `eslint . --fix`)
+- **Rules**:
+    - No `any` types.
+    - React Hooks rules enforced (`react-hooks/rules-of-hooks`, `react-hooks/exhaustive-deps`).
+    - Standard imports sorting.
 
-**Composition First**
+## Testing
 
-- Break complex components into focused, single-responsibility pieces
-- Prefer composition over inheritance or complex prop drilling
-- Think in terms of component systems, not isolated widgets
+We use **Vitest** for unit and component testing.
 
-**Performance by Default**
+- **Command**: `pnpm test`
+- **Environment**: `happy-dom`
+- **Testing Library**: `@testing-library/react` for component interactions.
 
-- Minimize unnecessary re-renders
-- Keep components stateless when possible
-- Use proper memoization strategies (but don’t over-optimize)
-
-## Code Review Focus Areas
-
-### Component Structure
-
-**Prefer stateless components**
-
-- Use pure functional components when no state is needed
-- Extract stateful logic into custom hooks
-- Keep components focused on presentation when possible
-
-**Clear side effect boundaries**
-
-- useEffect dependencies should be explicit and minimal
-- Side effects should be obvious and well-documented
-- Consider using libraries like TanStack Query for data fetching
-
-**Proper component boundaries**
-
-- Components should do one thing well
-- Separate business logic from presentation
-- Extract reusable logic into custom hooks
-
-### State Management
-
-**Context over prop drilling**
-
-- Use Context API for deeply nested shared state
-- Consider composition patterns (render props, children) before Context
-- Don’t use Context for everything—props are fine for shallow trees
-
-**State colocation**
-
-- Keep state as close to where it’s used as possible
-- Lift state only when necessary
-- Consider server state vs. client state carefully
-
-**Complex state management**
-
-- Use `useReducer` when state has interdependent values or complex transitions
-- Consider state machines (XState, Zag.js) for multi-step flows with clear states
-- Document state transitions—what triggers changes and what’s valid/invalid
-- Avoid boolean soup (multiple interdependent booleans)
-- Use discriminated unions to represent mutually exclusive states
-
-**State machine indicators**
-
-- Multi-step forms or wizards
-- Complex modal flows (idle → loading → success → error)
-- Features with explicit states (draft, pending, approved, rejected)
-- When you find yourself writing conditions like `if (isLoading && !hasError && isValidated)`
-
-### Code Readability
-
-**TypeScript patterns**
-
-- Use discriminated unions for complex state
-- Prefer `type` over `interface` for consistency (unless extending)
-- Extract complex types into dedicated files
-- Use generics sparingly—only when they add real value
-
-**Naming conventions**
-
-- Boolean props: `isOpen`, `hasError`, `shouldShow`
-- Event handlers: `handleClick`, `onSubmit`
-- Custom hooks: `useWindowSize`, `useDebounce`
-- Components: PascalCase, descriptive names
-
-**File organization**
-
-- Collocate related files (component, styles, tests, types)
-- Use barrel exports (`index.ts`) thoughtfully
-- Keep files under 300 lines when possible
-
-### Modern React Patterns
-
-**Favor modern APIs**
-
-- Use `useId()` for SSR-safe IDs
-- Leverage `useTransition()` and `useDeferredValue()` for performance
-- Consider React Server Components for data-heavy UIs
-- Use `useOptimistic()` for instant UI feedback
-
-**Avoid legacy patterns**
-
-- No class components in new code
-- Avoid `forwardRef` when possible (use callback refs)
-- Don’t overuse `memo()` without measuring
-
-### Error Handling
-
-**Defensive programming**
-
-- Use Error Boundaries for component errors
-- Handle async errors explicitly
-- Provide fallback UI states
-- Log errors properly for debugging
-
-**Loading states**
-
-- Always handle loading, error, and success states
-- Use Suspense boundaries appropriately
-- Provide skeleton screens, not just spinners
-
-## Refactoring Strategies
-
-### When to Refactor
-
-**Red flags**
-
-- Component files over 300 lines
-- Functions with more than 3-4 parameters
-- Deep prop drilling (>3 levels)
-- Duplicated logic across components
-- Unclear data flow
-- Tests that are hard to write
-- Multiple interdependent booleans (isLoading && !isError && isValidated && …)
-- Complex conditional rendering with nested ternaries
-- State updates that require multiple setState calls to stay consistent
-
-**Refactoring priorities**
-
-1. Improve readability first
-1. Extract reusable logic
-1. Optimize performance only when measured
-1. Simplify state management
-
-### Common Refactorings
-
-**Extract custom hooks**
+### Component Test Example
 
 ```typescript
-// Before: Logic mixed with UI
-function Component() {
-  const [data, setData] = useState(null);
-  useEffect(() => { /* fetch logic */ }, []);
-  // ... more logic
-}
+import { render, screen } from '@testing-library/react';
+import { Button } from '@eridu/ui/components/button';
 
-// After: Logic extracted
-function Component() {
-  const { data, isLoading } = useData();
-  // ... only UI concerns
-}
-```
-
-**useReducer for complex state**
-
-```typescript
-// Before: Boolean soup
-const [isLoading, setIsLoading] = useState(false);
-const [hasError, setHasError] = useState(false);
-const [isSuccess, setIsSuccess] = useState(false);
-const [data, setData] = useState(null);
-
-// After: Clear state machine
-type State =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'success'; data: Data }
-  | { status: 'error'; error: string };
-
-const [state, dispatch] = useReducer(reducer, { status: 'idle' });
-```
-
-**State machines for flows**
-
-```typescript
-// Before: Implicit state management
-function Wizard() {
-  const [step, setStep] = useState(1);
-  const [canGoBack, setCanGoBack] = useState(false);
-  const [canGoForward, setCanGoForward] = useState(true);
-  // ... complex logic to keep these in sync
-}
-
-// After: Explicit state machine (using XState or similar)
-const machine = createMachine({
-  initial: 'personal',
-  states: {
-    personal: { on: { NEXT: 'address' } },
-    address: { on: { NEXT: 'review', BACK: 'personal' } },
-    review: { on: { SUBMIT: 'submitting', BACK: 'address' } },
-    submitting: { on: { SUCCESS: 'complete', ERROR: 'review' } },
-    complete: { type: 'final' }
-  }
+test('renders button', () => {
+  render(<Button>Click me</Button>);
+  expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
 });
 ```
 
-**Composition over prop drilling**
+## Absolute Imports
 
-```typescript
-// Before: Props everywhere
-<Parent>
-  <Child theme={theme} user={user} />
-</Parent>
+Always configure and use absolute imports to avoid messy relative paths like `../../../component`. This makes it easier to move files around without breaking imports.
 
-// After: Context or composition
-<ThemeProvider theme={theme}>
-  <UserProvider user={user}>
-    <Child />
-  </UserProvider>
-</ThemeProvider>
+**Configuration** (`tsconfig.json`):
+
+```json
+"compilerOptions": {
+  "baseUrl": ".",
+  "paths": {
+    "@/*": ["./src/*"]
+  }
+}
 ```
 
-**Split complex components**
+**Usage**:
 
 ```typescript
-// Before: One large component
-function Dashboard() {
-  // 300 lines of mixed concerns
+// ✅ GOOD: Absolute import
+import { Button } from '@/components/Button';
+import { useAuth } from '@/hooks/useAuth';
+
+// ❌ BAD: Relative import
+import { Button } from '../../../components/Button';
+```
+
+**Benefits**:
+- Files can be moved without updating imports
+- Clear distinction between workspace packages (`@eridu/ui`) and source code (`@/*`)
+- More readable and maintainable
+
+## File Structure & Naming
+
+### Naming Conventions
+
+- **Components**: PascalCase (e.g., `UserProfile.tsx`)
+- **Hooks**: camelCase with use prefix (e.g., `useAuth.ts`)
+- **Utilities**: camelCase (e.g., `formatDate.ts`)
+- **Routes**: File-based routing conventions of TanStack Router (e.g., `posts/$postId.tsx`)
+- **Folders**: kebab-case (e.g., `user-profile/`, `auth-forms/`)
+
+### Enforcing Naming Conventions
+
+Use ESLint to enforce consistent file naming:
+
+```javascript
+// .eslintrc.cjs
+'check-file/filename-naming-convention': [
+  'error',
+  {
+    '**/*.{ts,tsx}': 'KEBAB_CASE',
+  },
+  {
+    ignoreMiddleExtensions: true,
+  },
+],
+'check-file/folder-naming-convention': [
+  'error',
+  {
+    'src/**/': 'KEBAB_CASE',
+  },
+],
+```
+
+## Component Best Practices
+
+### Colocation
+
+Keep components, functions, styles, and state as close as possible to where they are used. This improves:
+- Code readability and maintainability
+- Performance (reduces unnecessary re-renders)
+- Developer experience (easier to find related code)
+
+```typescript
+// ✅ GOOD: Component-specific hook colocated
+// src/features/dashboard/components/UserStats.tsx
+import { useUserStats } from './useUserStats';
+
+export function UserStats() {
+  const stats = useUserStats();
+  return <div>{/* ... */}</div>;
 }
 
-// After: Composed system
+// ❌ BAD: Hook in global hooks folder when only used here
+import { useUserStats } from '@/hooks/useUserStats';
+```
+
+### Avoid Large Components with Nested Render Functions
+
+Extract UI units into separate components instead of using nested render functions.
+
+```typescript
+// ❌ BAD: Nested render function
+function Dashboard() {
+  function renderUserList() {
+    return <ul>{/* ... */}</ul>;
+  }
+  
+  return <div>{renderUserList()}</div>;
+}
+
+// ✅ GOOD: Separate component
+function UserList() {
+  return <ul>{/* ... */}</ul>;
+}
+
 function Dashboard() {
   return (
-    <>
-      <DashboardHeader />
-      <DashboardMetrics />
-      <DashboardCharts />
-    </>
+    <div>
+      <UserList />
+    </div>
   );
 }
 ```
 
-## Review Process
+### Limit Props
 
-When reviewing code:
-
-1. **Assess overall structure** - Does the component hierarchy make sense?
-1. **Check state management** - Is state properly colocated? Any unnecessary complexity?
-1. **Verify side effects** - Are effects clean and dependencies correct?
-1. **Evaluate readability** - Can a new developer understand this quickly?
-1. **Consider performance** - Any obvious performance issues?
-1. **Review types** - Are types helping or adding noise?
-1. **Suggest improvements** - Prioritize high-impact, low-effort changes
-
-## Communication Style
-
-- Be specific with examples and code snippets
-- Explain the “why” behind suggestions
-- Acknowledge tradeoffs in different approaches
-- Provide both quick wins and long-term improvements
-- Reference Next.js/Vercel patterns when relevant
-- Link to relevant documentation when helpful
-
-## Questions to Ask
-
-- What’s the intended data flow here?
-- Could this be a server component instead?
-- Is this state needed at all?
-- What happens when this errors?
-- How would you test this?
-- What’s the performance characteristic at scale?
-- Are these states mutually exclusive? (Consider discriminated unions)
-- What are all the possible states this component can be in?
-- Can this state transition happen? Is it valid?
-
-## State Complexity Guidelines
-
-**When to use different approaches:**
-
-**useState** - Simple, independent values
-
-- Single primitives (string, number, boolean)
-- Values that don’t depend on each other
-- Example: form field values, toggle states
-
-**useReducer** - Complex, interdependent state
-
-- Multiple related values that change together
-- Complex update logic
-- State transitions that need to be atomic
-- Example: form with validation, data fetch with metadata
-
-**State machines (XState, Zag.js)** - Explicit state flows
-
-- Multi-step processes with clear states
-- When you need to prevent impossible states
-- Complex user flows (onboarding, checkout, wizards)
-- When state diagrams would help document behavior
-- Example: authentication flow, multi-step form, upload process
-
-**Don’t use state machines for:**
-
-- Simple toggle states
-- Independent form fields
-- One-off components without complex flows
-- When the overhead doesn’t justify the benefit
-
-**Red flags for “boolean soup”:**
+If a component accepts too many props, consider:
+- Splitting into multiple components
+- Using composition (children/slots)
+- Grouping related props into objects
 
 ```typescript
-// This suggests you need useReducer or a state machine
-const [isLoading, setIsLoading] = useState(false);
-const [isError, setIsError] = useState(false);
-const [isSuccess, setIsSuccess] = useState(false);
-const [isEmpty, setIsEmpty] = useState(false);
+// ❌ BAD: Too many props
+function UserCard({ name, email, avatar, role, department, location, phone }) {
+  // ...
+}
 
-// Better: Discriminated union
-type Status =
-  | { type: 'loading' }
-  | { type: 'error'; message: string }
-  | { type: 'success'; data: Data }
-  | { type: 'empty' };
+// ✅ GOOD: Grouped props
+interface User {
+  name: string;
+  email: string;
+  avatar: string;
+  role: string;
+  department: string;
+  location: string;
+  phone: string;
+}
+
+function UserCard({ user }: { user: User }) {
+  // ...
+}
 ```
+
+## General Best Practices
+
+1.  **Strict Props**: Define specific interfaces for props, avoid `any` or broad `object` types.
+2.  **Server State separation**: Use TanStack Query for server data; use `React.useState`/`useReducer` only for local UI state.
+3.  **Composition over Inheritance**: Build complex UIs by composing small, focused components.
+4.  **Consistent Code Style**: Use ESLint and Prettier to enforce consistency across the codebase.
+
+## Checklist
+
+- [ ] `pnpm lint` passes without errors.
+- [ ] `pnpm test` passes.
+- [ ] Component names match their filenames.
+- [ ] Complex logic extracted to custom hooks.

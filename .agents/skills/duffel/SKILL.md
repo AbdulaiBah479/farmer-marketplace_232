@@ -1,243 +1,82 @@
 ---
 name: duffel
-description: Real-time GDS flight search via Duffel API. Accurate per-fare-class pricing, cabin selection, multi-city, time preferences. Primary cash price source. Does not include Southwest.
-category: flights
-summary: Primary cash prices. Real GDS per-fare-class data.
-api_key: Duffel
-allowed-tools: Bash(curl *)
+description: "Search, book, and manage flights via the Duffel Flights API. Covers 300+ airlines (NDC, GDS, LCC). Use when: (1) searching for flights between cities, (2) comparing prices and fare classes, (3) booking flights, (4) checking booking status, (5) cancelling bookings, (6) viewing seat maps, (7) looking up airport/city IATA codes. Supports one-way, round-trip, multi-passenger, cabin class filtering, and nonstop preferences."
 ---
 
 # Duffel Flights
 
-Search for real-time flight offers across airlines via the [Duffel API](https://duffel.com/docs/api). Returns live pricing, cabin details, baggage info, and booking links. Supports one-way, round-trip, and multi-city searches.
+Search, book, and manage flights across 300+ airlines via the Duffel API.
 
-**Source:** [duffel.com](https://duffel.com)
+## Setup
 
-## Prerequisites
+Set `DUFFEL_TOKEN` env var with your Duffel API access token.
+Get one at https://app.duffel.com → Developers → Access Tokens.
+Test tokens (prefix `duffel_test_`) use sandbox data with unlimited balance.
 
-- `DUFFEL_API_KEY_LIVE` environment variable set with a live API token
-- Token needs `air.offer_requests.create` permission
+## Commands
 
-## API Basics
-
-- **Base URL:** `https://api.duffel.com`
-- **Version header:** `Duffel-Version: v2` (REQUIRED, v1 is deprecated)
-- **Auth:** `Authorization: Bearer $DUFFEL_API_KEY_LIVE`
-- **Content-Type:** `application/json`
-- **Rate limit:** 60 requests per 60 seconds
-
-## Search Flights (One-Way)
-
+### Search flights
 ```bash
-curl -s -X POST "https://api.duffel.com/air/offer_requests?return_offers=true&supplier_timeout=15000" \
-  -H "Accept: application/json" \
-  -H "Duffel-Version: v2" \
-  -H "Authorization: Bearer $DUFFEL_API_KEY_LIVE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "data": {
-      "slices": [{
-        "origin": "SFO",
-        "destination": "NRT",
-        "departure_date": "2026-08-15"
-      }],
-      "passengers": [{"type": "adult"}],
-      "cabin_class": "economy"
-    }
-  }'
+python scripts/duffel.py search --from MIA --to LHR --date 2026-04-15
+python scripts/duffel.py search --from MIA --to CDG --date 2026-03-15 --return-date 2026-03-22 --cabin business
+python scripts/duffel.py search --from JFK --to LAX --date 2026-05-01 --nonstop --adults 2
 ```
 
-## Search Flights (Round-Trip)
+Options: `--cabin economy|premium_economy|business|first`, `--nonstop`, `--adults N`, `--children N`, `--infants N`, `--sort price|duration`, `--max-results N`, `--json`
 
-Add a second slice with origin/destination reversed:
+Results are numbered. Use the number with other commands.
 
+### View offer details
 ```bash
-curl -s -X POST "https://api.duffel.com/air/offer_requests?return_offers=true&supplier_timeout=15000" \
-  -H "Accept: application/json" \
-  -H "Duffel-Version: v2" \
-  -H "Authorization: Bearer $DUFFEL_API_KEY_LIVE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "data": {
-      "slices": [
-        {
-          "origin": "SFO",
-          "destination": "NRT",
-          "departure_date": "2026-08-15"
-        },
-        {
-          "origin": "NRT",
-          "destination": "SFO",
-          "departure_date": "2026-08-22"
-        }
-      ],
-      "passengers": [{"type": "adult"}],
-      "cabin_class": "business"
-    }
-  }'
+python scripts/duffel.py offer 3
 ```
+Shows segments, baggage, fare conditions (refund/change), available extras.
 
-## Search Flights (Multi-City)
-
-Add as many slices as needed:
-
+### Book a flight
 ```bash
-curl -s -X POST "https://api.duffel.com/air/offer_requests?return_offers=true&supplier_timeout=15000" \
-  -H "Accept: application/json" \
-  -H "Duffel-Version: v2" \
-  -H "Authorization: Bearer $DUFFEL_API_KEY_LIVE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "data": {
-      "slices": [
-        {"origin": "SFO", "destination": "NRT", "departure_date": "2026-08-15"},
-        {"origin": "NRT", "destination": "ICN", "departure_date": "2026-08-20"},
-        {"origin": "ICN", "destination": "SFO", "departure_date": "2026-08-25"}
-      ],
-      "passengers": [{"type": "adult"}],
-      "cabin_class": "economy"
-    }
-  }'
+python scripts/duffel.py book 3 --pax "RIBEIRO/FABIO MR 1977-01-31 fabio@ribei.ro +13059159687 BR m"
 ```
+Pax format: `LAST/FIRST TITLE DOB EMAIL PHONE NATIONALITY GENDER`
+- TITLE: MR, MRS, MS, MISS, DR
+- GENDER: m or f
+- Multiple passengers: repeat `--pax "..."` for each
 
-## Nonstop Only
+Payment uses Duffel account balance. Top up at https://app.duffel.com.
 
-Set `max_connections` to 0:
-
+### Check order status
 ```bash
-curl -s -X POST "https://api.duffel.com/air/offer_requests?return_offers=true&supplier_timeout=15000" \
-  -H "Accept: application/json" \
-  -H "Duffel-Version: v2" \
-  -H "Authorization: Bearer $DUFFEL_API_KEY_LIVE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "data": {
-      "slices": [{
-        "origin": "SFO",
-        "destination": "NRT",
-        "departure_date": "2026-08-15"
-      }],
-      "passengers": [{"type": "adult"}],
-      "cabin_class": "business",
-      "max_connections": 0
-    }
-  }'
+python scripts/duffel.py order ord_0000XXXXX
 ```
 
-## Multiple Passengers
-
-```json
-"passengers": [
-  {"type": "adult"},
-  {"type": "adult"},
-  {"age": 10},
-  {"type": "infant_without_seat"}
-]
-```
-
-Use `age` instead of `type` for children to avoid passenger type mismatches between search and booking.
-
-## Time Preferences
-
-Constrain departure or arrival times:
-
-```json
-"slices": [{
-  "origin": "SFO",
-  "destination": "NRT",
-  "departure_date": "2026-08-15",
-  "departure_time": {"from": "08:00", "to": "14:00"},
-  "arrival_time": {"from": "06:00", "to": "18:00"}
-}]
-```
-
-## Query Parameters
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `return_offers` | `true` | Set to `false` to get just the request ID, then fetch offers separately |
-| `supplier_timeout` | `20000` | Max ms to wait for airline responses (2000 to 60000) |
-
-## Reading the Response
-
-The response is nested under `data`. Key fields:
-
-```
-data.id                              -> offer request ID
-data.offers[]                        -> array of flight offers
-  .id                                -> offer ID (use to get details or book)
-  .total_amount / .total_currency    -> total price
-  .base_amount / .base_currency      -> base fare (before tax)
-  .tax_amount / .tax_currency        -> taxes
-  .owner.name                        -> airline selling this
-  .expires_at                        -> when offer expires
-  .slices[]                          -> journey legs
-    .origin.iata_code                -> departure airport
-    .destination.iata_code           -> arrival airport
-    .duration                        -> e.g. "PT11H30M"
-    .segments[]                      -> individual flights
-      .marketing_carrier.name        -> airline name
-      .marketing_carrier_flight_number
-      .operating_carrier.name        -> actual operating airline
-      .departing_at / .arriving_at   -> datetime
-      .duration                      -> segment duration
-      .origin.iata_code / .destination.iata_code
-      .passengers[].cabin_class      -> economy/business/first
-      .passengers[].cabin.amenities  -> wifi, power, seat info
-      .passengers[].baggages[]       -> checked/carry_on allowances
-  .conditions                        -> refund/change policies
-    .refund_before_departure.allowed
-    .change_before_departure.allowed
-    .change_before_departure.penalty_amount
-```
-
-## Get Offer Details
-
-Retrieve full details for a specific offer:
-
+### Cancel order
 ```bash
-curl -s "https://api.duffel.com/air/offers/$OFFER_ID" \
-  -H "Accept: application/json" \
-  -H "Duffel-Version: v2" \
-  -H "Authorization: Bearer $DUFFEL_API_KEY_LIVE"
+python scripts/duffel.py cancel ord_0000XXXXX           # Quote (shows refund amount)
+python scripts/duffel.py cancel ord_0000XXXXX --confirm  # Execute cancellation
 ```
 
-## Parsing Tips
-
-Extract the 5 cheapest offers with jq:
-
+### Seat map
 ```bash
-| jq '[.data.offers | sort_by(.total_amount | tonumber) | .[:5][] | {
-  price: (.total_amount + " " + .total_currency),
-  airline: .owner.name,
-  route: [.slices[] | (.origin.iata_code + " -> " + .destination.iata_code)],
-  segments: [.slices[].segments[] | {
-    flight: (.marketing_carrier.iata_code + .marketing_carrier_flight_number),
-    carrier: .operating_carrier.name,
-    depart: .departing_at,
-    arrive: .arriving_at,
-    cabin: .passengers[0].cabin_class,
-    duration: .duration
-  }],
-  stops: ([.slices[].segments | length] | map(. - 1)),
-  expires: .expires_at
-}]'
+python scripts/duffel.py seatmap 3
 ```
 
-## Cabin Classes
+### Airport/city lookup
+```bash
+python scripts/duffel.py places "new york"
+```
 
-| Value | Description |
-|-------|-------------|
-| `economy` | Standard economy |
-| `premium_economy` | Premium economy |
-| `business` | Business class |
-| `first` | First class |
+## Typical workflow
 
-## Important Notes
+1. `search` → browse numbered results
+2. `offer N` → check details, baggage, conditions
+3. `book N --pax "..."` → get PNR
+4. `order <id>` → verify booking
+5. `cancel <id>` → if needed
 
-- Offers expire quickly (usually 15 to 30 minutes). Check `expires_at`.
-- Always show the operating carrier name (US DOT regulation).
-- Set `supplier_timeout` lower than your HTTP client timeout.
-- Use `age` for child passengers instead of `type` to avoid airline mismatch errors.
-- The API returns real GDS prices. These are bookable, not estimates.
-- Duffel aggregates across multiple airlines in a single search.
+## Notes
+
+- Offers expire (usually ~20 min). Re-search if expired.
+- Test mode: unlimited balance, bookings on "Duffel Airways" (fake airline).
+- Production: real airlines, real tickets. Balance must be funded.
+- All commands support `--json` for raw API output.
+- Last search saved to `/tmp/duffel-last-search.json` for index reference.
+- For API details, see `references/api-guide.md` and `references/booking-flow.md`.

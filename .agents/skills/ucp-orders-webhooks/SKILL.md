@@ -1,10 +1,7 @@
 ---
 name: ucp-orders-webhooks
-description: >
-  Implement UCP Order capability and webhook delivery — post-purchase order
-  management with fulfillment tracking, adjustments (refunds/returns), and
-  cryptographically signed webhook notifications. Use when building order
-  management or webhook infrastructure.
+description: Implement UCP Order capability and webhook delivery — post-purchase order management with fulfillment tracking, adjustments (refunds/returns), and cryptographically signed webhook notifications. Use when building order management or webhook infrastructure.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # UCP Orders & Webhooks

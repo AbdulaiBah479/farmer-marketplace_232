@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: Infinite Gratitude
 description: Multi-agent research skill for parallel research execution (10 agents, battle-tested with real case studies).
 risk: safe

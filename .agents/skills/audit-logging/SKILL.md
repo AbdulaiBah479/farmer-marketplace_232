@@ -1,368 +1,188 @@
 ---
-name: audit-logging
-description: Comprehensive audit logging for compliance and security. Track user actions, data changes, and system events with tamper-proof storage.
-license: MIT
-compatibility: TypeScript/JavaScript, Python
-metadata:
-  category: security
-  time: 4h
-  source: drift-masterguide
+id: SKL-audit-AUDITLOGGING
+name: Audit Logging
+description: Audit logging is a critical security and compliance practice that records
+  system events, user actions, and data access patterns. This skill provides comprehensive
+  patterns for implementing audit loggi
+version: 1.0.0
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
 # Audit Logging
 
-Track every important action for compliance and debugging.
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
-## When to Use This Skill
+## Overview
+Audit logging is a critical security and compliance practice that records system events, user actions, and data access patterns. This skill provides comprehensive patterns for implementing audit logging systems that meet various compliance frameworks including GDPR, HIPAA, PCI DSS, SOX, and ISO 27001.
 
-- SOC 2 / HIPAA compliance
-- Financial transaction tracking
-- User action history
-- Security incident investigation
-- Data change tracking
+## Why This Matters
+Audit logging is essential for:
+- **Compliance**: Meeting regulatory requirements for data protection and security
+- **Security**: Detecting and investigating security incidents
+- **Accountability**: Tracking who did what, when, and how
+- **Forensics**: Providing evidence for investigations
+- **Risk Management**: Identifying patterns of suspicious activity
 
-## Architecture
+---
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  Application                         │
-│                                                     │
-│  auditLog.record({                                  │
-│    action: "user.login",                            │
-│    actor: userId,                                   │
-│    resource: "session",                             │
-│    details: { ip, userAgent }                       │
-│  })                                                 │
-└─────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────┐
-│              Audit Log Service                       │
-│                                                     │
-│  - Enrich with context                              │
-│  - Validate schema                                  │
-│  - Queue for async write                            │
-└─────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────┐
-│              Storage (Append-Only)                   │
-│                                                     │
-│  - PostgreSQL (with triggers)                       │
-│  - S3 (immutable objects)                           │
-│  - CloudWatch Logs                                  │
-└─────────────────────────────────────────────────────┘
-```
+## Core Concepts & Rules
 
-## TypeScript Implementation
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-### Audit Log Service
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-```typescript
-// audit-log.ts
-import { v4 as uuid } from 'uuid';
 
-interface AuditEvent {
-  action: string;           // e.g., "user.login", "order.create"
-  actor: {
-    id: string;
-    type: 'user' | 'system' | 'api_key';
-    email?: string;
-  };
-  resource: {
-    type: string;           // e.g., "user", "order", "payment"
-    id?: string;
-  };
-  details?: Record<string, unknown>;
-  outcome: 'success' | 'failure';
-  reason?: string;          // For failures
-}
+## Inputs / Outputs / Contracts
+* **Inputs**:
+  - <e.g., env vars, request payload, file paths, schema>
+* **Entry Conditions**:
+  - <Pre-requisites: e.g., Repo initialized, DB running, specific branch checked out>
+* **Outputs**:
+  - <e.g., artifacts (PR diff, docs, tests, dashboard JSON)>
+* **Artifacts Required (Deliverables)**:
+  - <e.g., Code Diff, Unit Tests, Migration Script, API Docs>
+* **Acceptance Evidence**:
+  - <e.g., Test Report (screenshot/log), Benchmark Result, Security Scan Report>
+* **Success Criteria**:
+  - <e.g., p95 < 300ms, coverage ≥ 80%>
 
-interface AuditRecord extends AuditEvent {
-  id: string;
-  timestamp: Date;
-  requestId?: string;
-  ip?: string;
-  userAgent?: string;
-  organizationId?: string;
-}
+## Skill Composition
+* **Depends on**: None
+* **Compatible with**: None
+* **Conflicts with**: None
+* **Related Skills**: None
 
-class AuditLogService {
-  private context: AsyncLocalStorage<{ requestId?: string; ip?: string; userAgent?: string }>;
+## Quick Start / Implementation Example
 
-  constructor() {
-    this.context = new AsyncLocalStorage();
-  }
-
-  // Set request context (call from middleware)
-  setContext(ctx: { requestId?: string; ip?: string; userAgent?: string }) {
-    return this.context.run(ctx, () => {});
-  }
-
-  async record(event: AuditEvent): Promise<void> {
-    const ctx = this.context.getStore() || {};
-
-    const record: AuditRecord = {
-      id: uuid(),
-      timestamp: new Date(),
-      ...event,
-      requestId: ctx.requestId,
-      ip: ctx.ip,
-      userAgent: ctx.userAgent,
-    };
-
-    // Write to database (append-only table)
-    await db.auditLogs.create({ data: record });
-
-    // Also send to external logging (CloudWatch, DataDog, etc.)
-    if (process.env.AUDIT_LOG_STREAM) {
-      await this.sendToCloudWatch(record);
-    }
-  }
-
-  // Convenience methods
-  async logLogin(userId: string, success: boolean, details?: Record<string, unknown>) {
-    await this.record({
-      action: 'user.login',
-      actor: { id: userId, type: 'user' },
-      resource: { type: 'session' },
-      outcome: success ? 'success' : 'failure',
-      details,
-    });
-  }
-
-  async logDataAccess(actorId: string, resourceType: string, resourceId: string) {
-    await this.record({
-      action: `${resourceType}.read`,
-      actor: { id: actorId, type: 'user' },
-      resource: { type: resourceType, id: resourceId },
-      outcome: 'success',
-    });
-  }
-
-  async logDataChange(
-    actorId: string,
-    resourceType: string,
-    resourceId: string,
-    action: 'create' | 'update' | 'delete',
-    changes?: { before?: unknown; after?: unknown }
-  ) {
-    await this.record({
-      action: `${resourceType}.${action}`,
-      actor: { id: actorId, type: 'user' },
-      resource: { type: resourceType, id: resourceId },
-      outcome: 'success',
-      details: changes,
-    });
-  }
-
-  private async sendToCloudWatch(record: AuditRecord) {
-    const cloudwatch = new CloudWatchLogsClient({});
-    await cloudwatch.send(new PutLogEventsCommand({
-      logGroupName: process.env.AUDIT_LOG_GROUP!,
-      logStreamName: process.env.AUDIT_LOG_STREAM!,
-      logEvents: [{
-        timestamp: record.timestamp.getTime(),
-        message: JSON.stringify(record),
-      }],
-    }));
-  }
-}
-
-export const auditLog = new AuditLogService();
-```
-
-### Express Middleware
-
-```typescript
-// audit-middleware.ts
-import { Request, Response, NextFunction } from 'express';
-import { auditLog } from './audit-log';
-import { v4 as uuid } from 'uuid';
-
-export function auditMiddleware(req: Request, res: Response, next: NextFunction) {
-  const requestId = req.headers['x-request-id'] as string || uuid();
-  const ip = req.ip || req.headers['x-forwarded-for'] as string;
-  const userAgent = req.headers['user-agent'];
-
-  // Set context for all audit logs in this request
-  auditLog.setContext({ requestId, ip, userAgent });
-
-  // Add request ID to response headers
-  res.setHeader('x-request-id', requestId);
-
-  next();
-}
-```
-
-### Database Schema
-
-```sql
--- Append-only audit log table
-CREATE TABLE audit_logs (
-  id UUID PRIMARY KEY,
-  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  action VARCHAR(100) NOT NULL,
-  actor_id VARCHAR(255) NOT NULL,
-  actor_type VARCHAR(50) NOT NULL,
-  actor_email VARCHAR(255),
-  resource_type VARCHAR(100) NOT NULL,
-  resource_id VARCHAR(255),
-  outcome VARCHAR(20) NOT NULL,
-  reason TEXT,
-  details JSONB,
-  request_id VARCHAR(255),
-  ip INET,
-  user_agent TEXT,
-  organization_id UUID
-);
-
--- Indexes for common queries
-CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp DESC);
-CREATE INDEX idx_audit_actor ON audit_logs(actor_id, timestamp DESC);
-CREATE INDEX idx_audit_resource ON audit_logs(resource_type, resource_id, timestamp DESC);
-CREATE INDEX idx_audit_action ON audit_logs(action, timestamp DESC);
-CREATE INDEX idx_audit_org ON audit_logs(organization_id, timestamp DESC);
-
--- Prevent updates/deletes (append-only)
-CREATE OR REPLACE FUNCTION prevent_audit_modification()
-RETURNS TRIGGER AS $$
-BEGIN
-  RAISE EXCEPTION 'Audit logs cannot be modified or deleted';
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER audit_immutable
-BEFORE UPDATE OR DELETE ON audit_logs
-FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();
-```
-
-## Python Implementation
+1. Review requirements and constraints
+2. Set up development environment
+3. Implement core functionality following patterns
+4. Write tests for critical paths
+5. Run tests and fix issues
+6. Document any deviations or decisions
 
 ```python
-# audit_log.py
-from dataclasses import dataclass, asdict
-from datetime import datetime
-from typing import Optional, Literal
-from contextvars import ContextVar
-import uuid
-import json
-
-request_context: ContextVar[dict] = ContextVar("request_context", default={})
-
-@dataclass
-class AuditEvent:
-    action: str
-    actor_id: str
-    actor_type: Literal["user", "system", "api_key"]
-    resource_type: str
-    outcome: Literal["success", "failure"]
-    resource_id: Optional[str] = None
-    details: Optional[dict] = None
-    reason: Optional[str] = None
-
-class AuditLogService:
-    async def record(self, event: AuditEvent) -> None:
-        ctx = request_context.get()
-        
-        record = {
-            "id": str(uuid.uuid4()),
-            "timestamp": datetime.utcnow().isoformat(),
-            **asdict(event),
-            "request_id": ctx.get("request_id"),
-            "ip": ctx.get("ip"),
-            "user_agent": ctx.get("user_agent"),
-        }
-        
-        # Write to database
-        await db.execute(
-            """INSERT INTO audit_logs 
-               (id, timestamp, action, actor_id, actor_type, resource_type, 
-                resource_id, outcome, details, request_id, ip, user_agent)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)""",
-            record["id"], record["timestamp"], record["action"],
-            record["actor_id"], record["actor_type"], record["resource_type"],
-            record["resource_id"], record["outcome"], json.dumps(record["details"]),
-            record["request_id"], record["ip"], record["user_agent"]
-        )
-
-    async def log_login(self, user_id: str, success: bool, details: dict = None):
-        await self.record(AuditEvent(
-            action="user.login",
-            actor_id=user_id,
-            actor_type="user",
-            resource_type="session",
-            outcome="success" if success else "failure",
-            details=details,
-        ))
-
-audit_log = AuditLogService()
+# Example implementation following best practices
+def example_function():
+    # Your implementation here
+    pass
 ```
 
-### FastAPI Middleware
 
-```python
-# audit_middleware.py
-from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware
-import uuid
+## Assumptions
+- System has access to persistent storage for logs
+- Time synchronization is available across services
+- User identification is available for logged events
 
-class AuditMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
-        ip = request.client.host if request.client else None
-        user_agent = request.headers.get("user-agent")
+## Compatibility
+- PostgreSQL 12+
+- Node.js 14+
+- Elasticsearch 7+ (for log aggregation)
+- Any web framework (Express, Fastify, etc.)
 
-        token = request_context.set({
-            "request_id": request_id,
-            "ip": ip,
-            "user_agent": user_agent,
-        })
+---
 
-        response = await call_next(request)
-        response.headers["x-request-id"] = request_id
+## Test Scenario Matrix
+| Scenario | Input | Expected Output | Priority |
+|----------|-------|-----------------|----------|
+| Log authentication event | User login data | Audit log entry created | P0 |
+| Query audit trail | User ID, date range | All events for user | P0 |
+| Export logs | Query, format | JSON/CSV export | P1 |
+| Check compliance | Framework name | Compliance report | P0 |
+| Apply retention | Days threshold | Old logs archived | P1 |
+| Verify immutability | Log chain | Integrity verified | P0 |
 
-        request_context.reset(token)
-        return response
-```
+---
 
-## Query Examples
+## Technical Guardrails & Security Threat Model
 
-```sql
--- User's recent activity
-SELECT * FROM audit_logs 
-WHERE actor_id = 'user-123' 
-ORDER BY timestamp DESC 
-LIMIT 50;
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
 
--- All changes to a specific resource
-SELECT * FROM audit_logs 
-WHERE resource_type = 'order' AND resource_id = 'order-456'
-ORDER BY timestamp;
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
 
--- Failed login attempts in last hour
-SELECT * FROM audit_logs 
-WHERE action = 'user.login' 
-  AND outcome = 'failure'
-  AND timestamp > NOW() - INTERVAL '1 hour';
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
 
--- Data exports (for compliance)
-SELECT * FROM audit_logs 
-WHERE action LIKE '%.export%'
-  AND timestamp BETWEEN '2024-01-01' AND '2024-12-31';
-```
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
 
-## Best Practices
 
-1. **Never delete audit logs** - Use append-only tables
-2. **Include enough context** - IP, user agent, request ID
-3. **Log both success and failure** - Failures are often more important
-4. **Use structured actions** - `resource.verb` format
-5. **Separate from application logs** - Different retention, access
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
 
-## Compliance Notes
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
 
-- **SOC 2**: Requires logging of access to sensitive data
-- **HIPAA**: Must log all PHI access
-- **GDPR**: Log data exports and deletions
-- **PCI DSS**: Log all access to cardholder data
+
+## Definition of Done (DoD) Checklist
+
+- [ ] Tests passed + coverage met
+- [ ] Lint/Typecheck passed
+- [ ] Logging/Metrics/Trace implemented
+- [ ] Security checks passed
+- [ ] Documentation/Changelog updated
+- [ ] Accessibility/Performance requirements met (if frontend)
+
+
+## Anti-patterns
+- **Logging Everything**: Only log what's required for compliance
+- **Synchronous Logging**: Use async logging to avoid performance impact
+- **Storing PII in Logs**: Mask or hash sensitive data
+- **No Retention Policy**: Implement automated retention
+- **Ignoring Failed Logs**: Monitor and alert on failures
+
+## Reference Links & Examples
+
+* Internal documentation and examples
+* Official documentation and best practices
+* Community resources and discussions
+
+
+## Versioning & Changelog
+
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
+

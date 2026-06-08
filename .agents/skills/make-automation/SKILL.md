@@ -1,14 +1,16 @@
 ---
 name: make-automation
 description: "Automate Make (Integromat) tasks via Rube MCP (Composio): operations, enums, language and timezone lookups. Always search tools first for current schemas."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+requires:
+  mcp: [rube]
+category: automation
 ---
 
 # Make Automation via Rube MCP
 
 Automate Make (formerly Integromat) operations through Composio's Make toolkit via Rube MCP.
+
+**Toolkit docs**: [composio.dev/toolkits/make](https://composio.dev/toolkits/make)
 
 ## Prerequisites
 
@@ -201,5 +203,5 @@ Instead of relying solely on Make's toolkit, build equivalent automation directl
 4. Build the workflow step-by-step using individual app tools
 5. Save as a recipe via RUBE_CREATE_UPDATE_RECIPE for reuse
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+---
+*Powered by [Composio](https://composio.dev)*

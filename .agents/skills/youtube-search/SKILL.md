@@ -1,91 +1,147 @@
 ---
 name: youtube-search
-description: Search YouTube and return structured video results with metadata and engagement metrics using yt-dlp. USE WHEN youtube search, find videos, search videos, video research, youtube results, channel research, video metrics, trending videos, content research. Even if the user just says "search YouTube for X" or "find videos about X", use this skill.
+description: Search YouTube for videos and channels, search within specific channels, then fetch transcripts. Use when the user asks to "find videos about X", "search YouTube for", "look up a channel", "who makes videos about", "find on youtube", or wants to discover YouTube content on a topic.
+homepage: https://transcriptapi.com
+user-invocable: true
 ---
 
-# YouTubeSearch
+# YouTube Search
 
-Search YouTube by query and return structured, human-readable results with metadata and engagement metrics.
+Search YouTube and fetch transcripts via [TranscriptAPI.com](https://transcriptapi.com).
 
-## What It Does
+## Setup
 
-Runs a yt-dlp search against YouTube, returning the top N results (default 20) filtered to a recent time window (default 6 months). Each result includes:
+If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
 
-- **Title** and **URL**
-- **Channel name** and **subscriber count**
-- **View count** and **duration**
-- **Upload date**
-- **Engagement ratio** (views / subscribers) — a quick signal for whether a video over- or under-performed relative to the channel's audience
-
-Numbers are human-readable (e.g., 1.2M, 45.3K). Results are separated by dividers for easy scanning.
-
-## Requirements
-
-- `yt-dlp` installed and in PATH
-- `jq` installed and in PATH
-- `bc` installed (standard on macOS/Linux)
-
-## Usage
-
-Run the bundled script:
+**Step 1 — Register:** Ask user for their email.
 
 ```bash
-bash ~/.claude/skills/YouTubeSearch/scripts/yt-search.sh "<search query>" [--count N] [--months N]
+node ./scripts/tapi-auth.js register --email USER_EMAIL
 ```
 
-### Parameters
+→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| (positional) | — | Search query (required) |
-| `--count` | 20 | Number of results to return |
-| `--months` | 6 | Only include videos from the last N months |
-
-### Examples
+**Step 2 — Verify:** Once user provides the OTP:
 
 ```bash
-# Basic search — top 20 results from last 6 months
-bash ~/.claude/skills/YouTubeSearch/scripts/yt-search.sh "kubernetes security best practices"
-
-# Narrow to 5 results from the last month
-bash ~/.claude/skills/YouTubeSearch/scripts/yt-search.sh "rust async tutorial" --count 5 --months 1
-
-# Broader window — last 2 years
-bash ~/.claude/skills/YouTubeSearch/scripts/yt-search.sh "home lab setup" --months 24
+node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
 ```
 
-## Interpreting the Engagement Ratio
+> API key saved to your shell profile and agent config. Ready to use.
 
-The views-to-subscribers ratio helps identify standout content:
+Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
 
-- **> 1.0x** — The video got more views than the channel has subscribers. Strong signal that the topic resonated or the algorithm boosted it.
-- **0.3x - 1.0x** — Typical range for established channels.
-- **< 0.3x** — Below average reach. Could mean the topic is niche, the thumbnail/title underperformed, or the channel's audience has moved on.
+## API Reference
 
-This metric is most useful for comparing videos on the same topic — a 5.0x ratio on a small channel often means the content hit a nerve.
+Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
 
-## How Claude Should Use This
+## GET /api/v2/youtube/search — 1 credit
 
-When the user asks to search YouTube or find videos:
+Search YouTube globally for videos or channels.
 
-1. Run the script with the user's query and any specified flags
-2. Present the results — the script output is already formatted for terminal reading
-3. If the user wants analysis (e.g., "which of these are worth watching?"), use the engagement ratio and view counts to highlight standouts
-4. If subscriber count shows "N/A" for many results, that's normal — yt-dlp can't always fetch channel metadata from search results
+```bash
+curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+```
 
-## Troubleshooting
+| Param   | Required | Default | Validation            |
+| ------- | -------- | ------- | --------------------- |
+| `q`     | yes      | —       | 1-200 chars (trimmed) |
+| `type`  | no       | `video` | `video` or `channel`  |
+| `limit` | no       | `20`    | 1-50                  |
 
-- **No results**: Try broadening the query or increasing `--months`
-- **Slow**: Each result requires a metadata fetch. Reduce `--count` for faster results.
-- **"N/A" for subscribers**: yt-dlp sometimes can't resolve channel follower counts from search. The other fields will still populate.
+**Video search response:**
 
----
+```json
+{
+  "results": [
+    {
+      "type": "video",
+      "videoId": "dQw4w9WgXcQ",
+      "title": "Rick Astley - Never Gonna Give You Up",
+      "channelId": "UCuAXFkgsw1L7xaCfnd5JJOw",
+      "channelTitle": "Rick Astley",
+      "channelHandle": "@RickAstley",
+      "channelVerified": true,
+      "lengthText": "3:33",
+      "viewCountText": "1.5B views",
+      "publishedTimeText": "14 years ago",
+      "hasCaptions": true,
+      "thumbnails": [{ "url": "...", "width": 120, "height": 90 }]
+    }
+  ],
+  "result_count": 20
+}
+```
 
-## Gotchas
+**Channel search response** (`type=channel`):
 
-- **API `order=date` still applies relevance ranking** — recent uploads can be deprioritized. Two-query merge (date + relevance) is the workaround.
-- **Quota is per-project per-day** — search is expensive (100 units/query); bursting locks the project out for the day.
-- **`regionCode` parameter changes results** — same query from different regions returns different videos; default is viewer's IP geo.
-- **Transcript API is separate from search API** — transcript availability is per-video; some videos have none and the API returns no error.
-- **Channel ID vs Channel username**: handles (`@name`) vs legacy usernames vs IDs are three different identifiers; resolution requires explicit channel-list call.
-- **Embedded videos blocked by uploader**: search may return them, but a downstream tool that embeds will fail without warning — check `status.embeddable`.
+```json
+{
+  "results": [{
+    "type": "channel",
+    "channelId": "UCuAXFkgsw1L7xaCfnd5JJOw",
+    "title": "Rick Astley",
+    "handle": "@RickAstley",
+    "url": "https://www.youtube.com/@RickAstley",
+    "description": "Official channel...",
+    "subscriberCount": "4.2M subscribers",
+    "verified": true,
+    "rssUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC...",
+    "thumbnails": [...]
+  }],
+  "result_count": 5
+}
+```
+
+## GET /api/v2/youtube/channel/search — 1 credit
+
+Search videos within a specific channel. Accepts `channel` — an `@handle`, channel URL, or `UC...` ID.
+
+```bash
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
+?channel=@TED&q=climate+change&limit=30" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+```
+
+| Param     | Required | Validation                                |
+| --------- | -------- | ----------------------------------------- |
+| `channel` | yes      | `@handle`, channel URL, or `UC...` ID     |
+| `q`       | yes      | 1-200 chars                               |
+| `limit`   | no       | 1-50 (default 30)                         |
+
+Returns up to ~30 results (YouTube limit). Same video response shape as global search.
+
+## GET /api/v2/youtube/channel/resolve — FREE
+
+Convert @handle to channel ID:
+
+```bash
+curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+```
+
+## Workflow: Search → Transcript
+
+```bash
+# 1. Search for videos
+curl -s "https://transcriptapi.com/api/v2/youtube/search\
+?q=python+web+scraping&type=video&limit=5" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+
+# 2. Get transcript from result
+curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
+?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
+  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+```
+
+## Errors
+
+| Code | Action                                 |
+| ---- | -------------------------------------- |
+| 402  | No credits — transcriptapi.com/billing |
+| 404  | Not found                              |
+| 408  | Timeout — retry once                   |
+| 422  | Invalid channel identifier             |
+
+Free tier: 100 credits, 300 req/min.

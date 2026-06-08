@@ -1,17 +1,35 @@
 ---
-name: greeting
-description: Use this skill when asked to greet someone or say hello
+name: Greeting
+description: Use when the user wants a friendly greeting or welcome message
+version: 1.0.0
 ---
 
 # Greeting Skill
 
-When the user asks you to greet someone, follow these rules:
+Provide friendly, personalized greetings to users.
 
-1. Always start with "Hello from the greeting skill!"
-2. Include the phrase "skill-test-marker" somewhere in your response
-3. Be friendly and welcoming
+## When to Activate
 
-## Example Responses
+This skill activates when the user:
+- Says hello or hi
+- Asks for a greeting
+- Starts a new conversation
+- Asks to be welcomed
 
-- "Hello from the greeting skill! skill-test-marker Welcome to our test!"
-- "Hello from the greeting skill! I hope you're having a great day. skill-test-marker"
+## Greeting Style
+
+- Be warm and friendly
+- Keep it brief (1-2 sentences)
+- Offer assistance for their next step
+- Personalize if name is known
+
+## Examples
+
+**Generic greeting:**
+> Hello! I'm here to help. What would you like to work on?
+
+**Named greeting:**
+> Hi Sarah! Great to see you. What can I help you build today?
+
+**Time-based greeting:**
+> Good morning! Ready to start coding?

@@ -1,7 +1,6 @@
 ---
 name: google-chat-messages
-description: "Send Google Chat messages via incoming webhooks — text, rich cards (cardsV2), threaded replies. TypeScript types, card builder utility, widget reference inline. Use whenever the user wants to post to Google Chat from a script, build a chatbot reply, send a notification card, build a Google Chat webhook integration, or troubleshoot card / threading issues."
-compatibility: claude-code-only
+description: "Send Google Chat messages via webhook — text, rich cards (cardsV2), threaded replies. Includes TypeScript types, card builder utility, and widget reference."
 ---
 
 # Google Chat Messages
@@ -24,7 +23,7 @@ In Google Chat:
 2. Create webhook (name it, optionally add avatar URL)
 3. Copy the webhook URL
 
-Store the URL as an environment variable or in your secrets manager — never hardcode.
+Store the URL as a secret (environment variable or Bitwarden), never hardcode.
 
 ### Step 2: Choose Message Type
 
@@ -88,222 +87,48 @@ const message = {
 };
 ```
 
-## Widget Reference
+### Widget Types
 
-All widget types available in cardsV2 sections.
-
-### textParagraph
-
-Formatted text block. Supports Google Chat formatting (`*bold*`, `_italic_`, `<url|text>`).
-
+**Text paragraph** — formatted text block:
 ```typescript
-{
-  textParagraph: {
-    text: '*Status*: All systems operational\n_Last checked_: 5 minutes ago'
-  }
-}
+{ textParagraph: { text: '*Bold* and _italic_ text' } }
 ```
 
-### decoratedText
-
-Labelled value with optional icons. Most versatile widget for key-value data.
-
-**Basic:**
-```typescript
-{
-  decoratedText: {
-    topLabel: 'Environment',
-    text: 'Production',
-    bottomLabel: 'Last deployed 2h ago'
-  }
-}
-```
-
-**With start icon:**
+**Decorated text** — label + value with optional icon:
 ```typescript
 {
   decoratedText: {
     topLabel: 'Status',
-    text: 'Healthy',
+    text: 'Deployed',
     startIcon: { knownIcon: 'STAR' }
   }
 }
 ```
 
-**With custom icon URL:**
-```typescript
-{
-  decoratedText: {
-    topLabel: 'GitHub',
-    text: 'PR #142 merged',
-    startIcon: {
-      iconUrl: 'https://github.githubassets.com/favicons/favicon.svg',
-      altText: 'GitHub'
-    }
-  }
-}
-```
-
-**With button:**
-```typescript
-{
-  decoratedText: {
-    topLabel: 'Alert',
-    text: 'CPU at 95%',
-    button: {
-      text: 'View',
-      onClick: { openLink: { url: 'https://monitoring.example.com' } }
-    }
-  }
-}
-```
-
-**Clickable (whole widget):**
-```typescript
-{
-  decoratedText: {
-    text: 'View full report',
-    wrapText: true,
-    onClick: { openLink: { url: 'https://reports.example.com' } }
-  }
-}
-```
-
-**With wrap text:**
-```typescript
-{
-  decoratedText: {
-    topLabel: 'Description',
-    text: 'This is a longer description that should wrap to multiple lines instead of being truncated',
-    wrapText: true
-  }
-}
-```
-
-### buttonList
-
-One or more action buttons. Buttons open URLs or trigger actions.
-
-**Single button:**
+**Button list** — action buttons:
 ```typescript
 {
   buttonList: {
     buttons: [{
-      text: 'Open Dashboard',
+      text: 'View Dashboard',
       onClick: { openLink: { url: 'https://dashboard.example.com' } }
     }]
   }
 }
 ```
 
-**Multiple buttons:**
+**Image** — standalone image:
 ```typescript
-{
-  buttonList: {
-    buttons: [
-      {
-        text: 'Approve',
-        onClick: { openLink: { url: 'https://app.example.com/approve/123' } },
-        color: { red: 0, green: 0.5, blue: 0, alpha: 1 }
-      },
-      {
-        text: 'Reject',
-        onClick: { openLink: { url: 'https://app.example.com/reject/123' } }
-      }
-    ]
-  }
-}
+{ image: { imageUrl: 'https://example.com/chart.png', altText: 'Usage chart' } }
 ```
 
-**Button with icon:**
-```typescript
-{
-  buttonList: {
-    buttons: [{
-      text: 'View on GitHub',
-      icon: { knownIcon: 'BOOKMARK' },
-      onClick: { openLink: { url: 'https://github.com/org/repo/pull/42' } }
-    }]
-  }
-}
-```
-
-### image
-
-Standalone image widget.
-
-```typescript
-{
-  image: {
-    imageUrl: 'https://example.com/chart.png',
-    altText: 'Monthly usage chart'
-  }
-}
-```
-
-### divider
-
-Horizontal line separator between widgets.
-
+**Divider** — horizontal separator:
 ```typescript
 { divider: {} }
 ```
 
-### Collapsible Sections
-
-Sections can be collapsed with only the first N widgets visible:
-
-```typescript
-{
-  header: 'Details',
-  collapsible: true,
-  uncollapsibleWidgetsCount: 2,  // Show first 2, collapse rest
-  widgets: [
-    { decoratedText: { topLabel: 'Status', text: 'Active' } },
-    { decoratedText: { topLabel: 'Region', text: 'AU' } },
-    // These start collapsed
-    { decoratedText: { topLabel: 'Instance', text: 'prod-01' } },
-    { decoratedText: { topLabel: 'Memory', text: '2.1 GB' } },
-    { decoratedText: { topLabel: 'CPU', text: '45%' } }
-  ]
-}
-```
-
-## Known Icons
-
-Icons available via `knownIcon` in decoratedText and button widgets.
-
-```typescript
-{ startIcon: { knownIcon: 'STAR' } }
-// or
-{ icon: { knownIcon: 'EMAIL' } }
-```
-
-| Icon Name | Use For |
-|-----------|---------|
-| `AIRPLANE` | Travel, flights |
-| `BOOKMARK` | Save, reference, links |
-| `BUS` | Transport, transit |
-| `CAR` | Driving, transport |
-| `CLOCK` | Time, duration, schedule |
-| `CONFIRMATION_NUMBER_ICON` | Tickets, bookings |
-| `DESCRIPTION` | Documents, files |
-| `DOLLAR` | Money, pricing, cost |
-| `EMAIL` | Email, messages |
-| `INVITE` | Invitations |
-| `MAP_PIN` | Location, address |
-| `MEMBERSHIP` | Members, users |
-| `MULTIPLE_PEOPLE` | Teams, groups |
-| `OFFER` | Deals, promotions |
-| `PERSON` | Individual user |
-| `PHONE` | Phone number, calls |
-| `SHOPPING_CART` | Commerce, purchases |
-| `STAR` | Rating, favourite, important |
-| `STORE` | Shop, retail |
-| `TICKET` | Tickets, events |
-| `VIDEO_CAMERA` | Video, meetings |
-
-For icons not in the list, use `iconUrl` with any publicly accessible image (square, ideally 24x24 or 48x48 pixels).
+See `references/widget-reference.md` for all widget types with full examples.
+See `references/icon-list.md` for all available knownIcon values.
 
 ## Threading
 
@@ -336,7 +161,7 @@ const card = buildCard({
   cardId: 'deploy-notification',
   title: 'Deployment Complete',
   subtitle: 'production - v2.1.0',
-  imageUrl: 'https://example.com/your-icon.png',
+  imageUrl: 'https://www.jezweb.com.au/wp-content/uploads/2020/03/favicon-100x100.png',
   sections: [{
     widgets: [
       { decoratedText: { topLabel: 'Environment', text: 'Production' } },
@@ -371,6 +196,12 @@ const digest = buildCard({
     }
   ]
 });
+```
+
+### Simple Text Alert
+
+```typescript
+await sendText(webhookUrl, `*Alert*: CPU usage above 90% on \`worker-prod-1\`\n<${alertUrl}|View Alert>`);
 ```
 
 ## Error Prevention

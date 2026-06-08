@@ -1,221 +1,159 @@
 ---
-name: Article Illustrator
-model: reasoning
-description: >
-  When the user wants to add illustrations to an article or blog post. Triggers
-  on: "illustrate article", "add images to article", "generate illustrations",
-  "article images", or requests to visually enhance written content. Analyzes
-  article structure, identifies positions for visual aids, and generates
-  illustrations using a Type x Style two-dimension approach.
-version: 1.0.0
-tags: [writing, illustration, images, articles, content]
+name: article-illustrator
+description: 分析文章内容，在需要视觉辅助理解的位置生成插画。配图可以是信息补充、概念具象化，或引导读者想象。当用户要求"给文章配图"、"为文章生成插图"、"添加配图"时使用此技能。
 ---
 
-# Article Illustrator
+# 文章智能配图
 
-Analyze articles, identify optimal illustration positions, and generate images using a Type x Style consistency system.
+分析文章结构与内容，识别需要视觉辅助的位置，生成风格灵活的配图。
 
+## 任务目标
 
-## Installation
+- 分析文章结构和内容，逐段识别需要配图的位置
+- 为每个配图位置生成详细的配图计划和提示词
+- 使用图像生成能力创建符合风格规范的插画
+- 将图片插入到文章对应位置
 
-### OpenClaw / Moltbot / Clawbot
+## 触发条件
 
-```bash
-npx clawhub@latest install article-illustrator
-```
+用户明确要求：
+- "给文章配图"
+- "为文章生成插图"
+- "添加配图"
+- "为这篇文章生成一些图片"
 
+## 工作流程
 
-## NEVER Do
+### 步骤一：获取文章内容
 
-- Illustrate metaphors literally (e.g., if article says "chainsaw cutting watermelon," visualize the underlying concept instead)
-- Generate generic decorative images that don't connect to content
-- Skip the settings confirmation step (Step 3)
-- Begin generating before confirming type, density, and style with the user
-- Create illustrations without justifying each position by content needs
+根据用户提供的信息获取文章：
+- 本地路径：读取指定 Markdown 文件
+- URL：自动下载 Markdown 内容到临时位置
 
-## Two Dimensions
+### 步骤二：分析配图需求
 
-| Dimension | Controls | Examples |
-|-----------|----------|----------|
-| **Type** | Information structure, layout | infographic, scene, flowchart, comparison, framework, timeline |
-| **Style** | Visual aesthetics, mood | notion, warm, minimal, blueprint, watercolor, elegant, editorial, scientific |
+逐段分析文章，识别需要配图的位置。
 
-Types and styles combine freely: `--type infographic --style blueprint`
+**配图的三种作用**：
+1. **信息补充**：帮助理解抽象概念（如"小步迭代"用滑板→自行车→汽车演进图）
+2. **概念具象化**：将抽象观点转化为具体画面，让读者一眼就懂
+3. **引导想象**：营造氛围、激发联想，增强阅读体验
 
-### Type Selection Guide
+**适合配图的内容**：
+- 抽象概念需要视觉化
+- 流程/步骤需要图示
+- 对比关系需要可视化
+- 核心观点需要强化
+- 场景描述需要引导想象
+- 情绪/氛围需要烘托
 
-| Type | Best For |
-|------|----------|
-| `infographic` | Data, metrics, technical articles |
-| `scene` | Narratives, personal stories, emotional content |
-| `flowchart` | Tutorials, workflows, processes |
-| `comparison` | Side-by-side, before/after, options |
-| `framework` | Methodologies, models, architecture |
-| `timeline` | History, progress, evolution |
+**不需要配图的内容**：
+- 已经很直观的描述（如代码示例、具体数字）
+- 简单的列表枚举
+- 引用的原话
 
-### Style Selection Guide
+**配图数量**（按文章长度）：
+- 每个主要章节至少考虑 1 张，优先选择核心观点和抽象概念
+- 开头/结尾可酌情增加 1 张（如需要氛围烘托）
+- **原则：宁多勿少**，视觉内容能显著提升阅读体验
 
-| Style | Best For |
-|-------|----------|
-| `notion` (Default) | Knowledge sharing, SaaS, productivity |
-| `elegant` | Business, thought leadership |
-| `warm` | Personal growth, lifestyle, education |
-| `minimal` | Philosophy, core concepts |
-| `blueprint` | Architecture, system design |
-| `watercolor` | Lifestyle, travel, creative |
-| `editorial` | Tech explainers, journalism |
-| `scientific` | Academic, technical research |
+### 步骤三：生成配图计划
 
-Full style specs and compatibility matrix: [references/styles.md](references/styles.md)
-
-### Auto Selection by Content
-
-| Content Signals | Type | Style |
-|-----------------|------|-------|
-| API, metrics, data, numbers | infographic | blueprint, notion |
-| Story, emotion, journey | scene | warm, watercolor |
-| How-to, steps, workflow | flowchart | notion, minimal |
-| vs, pros/cons, before/after | comparison | notion, elegant |
-| Framework, model, architecture | framework | blueprint, notion |
-| History, timeline, progress | timeline | elegant, warm |
-
-## Workflow
-
-### Step 1: Pre-check
-
-1. **Determine input type** — file path or pasted content
-2. **Determine output directory** — check preferences or ask user:
-   - `{article-dir}/` — same directory
-   - `{article-dir}/illustrations/` — illustrations subdirectory (recommended)
-   - `illustrations/{topic-slug}/` — independent directory
-3. **Check existing images** — if images exist, ask: supplement / overwrite / regenerate
-4. **Confirm article update method** (file input only) — update original or create `{name}-illustrated.md` copy
-5. **Load preferences** — check for EXTEND.md in project or user home
-
-### Step 2: Analyze Content
-
-| Analysis | Description |
-|----------|-------------|
-| Content type | Technical / Tutorial / Methodology / Narrative |
-| Core arguments | 2-5 main points to visualize |
-| Visual opportunities | Positions where illustrations add value |
-| Recommended type | Based on content signals |
-| Recommended density | Based on length and complexity |
-
-**Illustrate:** core arguments (required), abstract concepts, data comparisons, processes/workflows.
-
-**Skip:** literal metaphors, decorative scenes, generic illustrations.
-
-### Step 3: Confirm Settings (Required)
-
-Use a structured question with 3-4 questions in ONE call:
-
-- **Q1 — Type**: recommended option + alternatives
-- **Q2 — Density**: minimal (1-2), balanced (3-5, recommended), rich (6+)
-- **Q3 — Style**: recommended based on type/content compatibility matrix
-- **Q4 — Language** (only if source language differs from user language)
-
-### Step 4: Generate Outline
-
-Save as `outline.md` with YAML frontmatter (type, density, style, count) and per-illustration details: position, purpose, visual content, filename.
-
-### Step 5: Generate Images
-
-1. Create prompts following [references/prompt-construction.md](references/prompt-construction.md)
-2. Save prompts to `prompts/illustration-{slug}.md`
-3. Generate sequentially, reporting progress after each
-4. On failure: retry once, then log and continue
-
-### Step 6: Finalize
-
-Insert image references after corresponding paragraphs:
+为每个配图位置创建结构化计划：
 
 ```markdown
-![description](illustrations/{slug}/NN-{type}-{slug}.png)
+**配图 1**
+
+**插入位置**：[章节名称] / [段落描述]
+**配图目的**：[为什么这里需要配图]
+**视觉内容**：[图片应该展示什么]
+**文件名**：illustration-[slug].png
 ```
 
-Output a summary with article path, settings, image count, and positions.
+**文件命名规则**：
+- 格式：`illustration-[slug].png`
+- slug 使用有意义的英文描述，符合规范（小写字母、数字、连字符）
+- 示例：`illustration-product-evolution.png`、`illustration-ai-vs-human.png`
 
-## Output Structure
+### 步骤四：生成配图
+
+根据配图计划，为每张图片生成详细的视觉描述并创建图片。
+
+**生成要求**：
+- 按顺序生成每张图片，输出进度："已生成 X/N 张"
+- 根据内容选择合适的风格（参考 `references/style-guide.md`）
+- 每张图片包含：画面主体、布局、配色、文字（如有）
+
+**图片属性**：
+- 比例：16:9 横向
+- 风格：根据内容选择极简扁平矢量、科幻未来感、手绘涂鸦风等
+- 配色：遵循默认色彩方案或风格变体方案
+
+### 步骤五：更新文章
+
+将生成的图片插入到文章对应位置。
+
+**插入规则**：
+- 图片插入到对应段落之后
+- 图片前后各留一个空行
+- 使用 Markdown 语法：`![配图描述](imgs/illustration-[slug].png)`
+- alt 文本使用简洁的中文描述（5-10 字）
+
+**图片保存位置**：
+- 在文章所在目录创建 `imgs/` 子目录
+- 所有图片保存在该目录中
+
+### 步骤六：输出汇总
+
+完成所有配图后，输出汇总信息：
 
 ```
-illustrations/{topic-slug}/
-├── source-{slug}.{ext}
-├── outline.md
-├── prompts/
-│   └── illustration-{slug}.md
-└── NN-{type}-{slug}.png
+配图完成！
+
+文章：[文章路径]
+生成数量：X/N 张成功
+
+配图位置：
+- illustration-[slug].png → [章节/段落位置]
+
+[如有失败]
+失败项：
+- illustration-[slug].png：[失败原因]
 ```
 
-## Prompt Construction Principles
+## 配图策略
 
-Good illustration prompts must include:
+**识别关键位置**：
+- 文章开头：是否有需要氛围烘托的引言
+- 每个章节：核心概念是否抽象
+- 流程步骤：是否需要可视化
+- 对比内容：是否需要图示
+- 总结部分：是否需要强化记忆
 
-1. **Layout structure first** — describe composition, zones, flow direction
-2. **Specific data/labels** — use actual numbers, terms from the article
-3. **Visual relationships** — how elements connect to each other
-4. **Semantic colors** — meaning-based choices (red=warning, green=efficient)
-5. **Style characteristics** — line treatment, texture, mood
-6. **Aspect ratio** — end with ratio and complexity level
+**优先级排序**：
+1. 抽象概念（优先级最高）
+2. 核心观点
+3. 流程/步骤
+4. 对比关系
+5. 氛围烘托
 
-Avoid: vague descriptions, literal metaphor illustrations, missing labels, generic decorative elements.
+**风格选择原则**：
+- AI、前沿技术 → 科幻未来感
+- 轻松、思考类 → 手绘涂鸦风
+- 流程、对比、数据 → 信息图表风
+- 叙事、想象类 → 场景插画风
+- 其他 → 极简扁平矢量（默认）
 
-Full templates by type: [references/prompt-construction.md](references/prompt-construction.md)
+## 资源索引
 
-## Type x Style Compatibility
+- 视觉风格规范：见 [references/style-guide.md](references/style-guide.md)
+- 术语对照表：见 [references/terminology.md](references/terminology.md)
 
-| | notion | warm | minimal | blueprint | watercolor | elegant | editorial | scientific |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| infographic | ++ | + | ++ | ++ | + | ++ | ++ | ++ |
-| scene | + | ++ | + | - | ++ | + | + | - |
-| flowchart | ++ | + | + | ++ | - | + | ++ | + |
-| comparison | ++ | + | ++ | + | + | ++ | ++ | + |
-| framework | ++ | + | ++ | ++ | - | ++ | + | ++ |
-| timeline | ++ | + | + | + | ++ | ++ | ++ | + |
+## 注意事项
 
-`++` highly recommended | `+` compatible | `-` not recommended
-
-## Usage Examples
-
-```bash
-# Auto-select type and style
-illustrate path/to/article.md
-
-# Specify type
-illustrate path/to/article.md --type infographic
-
-# Specify type and style
-illustrate path/to/article.md --type flowchart --style notion
-
-# Specify density
-illustrate path/to/article.md --density rich
-```
-
-## Extension Support
-
-Custom configurations via EXTEND.md files:
-
-- **Project level**: `.article-illustrator/EXTEND.md`
-- **User level**: `$HOME/.config/article-illustrator/EXTEND.md`
-
-Supports: watermark, preferred type/style, custom styles, language, output directory.
-
-## Modification
-
-| Action | Steps |
-|--------|-------|
-| **Edit** | Update prompt, regenerate, update reference |
-| **Add** | Identify position, create prompt, generate, update outline, insert |
-| **Delete** | Delete files, remove reference, update outline |
-
-## References
-
-| File | Content |
-|------|---------|
-| [references/usage.md](references/usage.md) | Command syntax, options, input modes |
-| [references/styles.md](references/styles.md) | Style gallery, compatibility matrix, auto-selection |
-| [references/prompt-construction.md](references/prompt-construction.md) | Prompt templates for each illustration type |
-| `references/styles/<style>.md` | Full specifications for each visual style |
-| `references/config/preferences-schema.md` | EXTEND.md configuration schema |
-| `references/config/first-time-setup.md` | First-time preference setup flow |
-| [prompts/system.md](prompts/system.md) | System prompt reference |
+- 配图服务于内容：补充信息、具象概念、引导想象
+- 避免重复文章中已经很直观的信息
+- 同一篇文章内保持风格一致性
+- 敏感人物使用卡通替代形象，不使用写实形象
+- 根据内容选择最合适的风格变体
+- 确保图片清晰可读，信息简洁突出

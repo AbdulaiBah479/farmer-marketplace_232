@@ -1,80 +1,85 @@
 ---
-name: optimization-techniques
-description: Performance optimization strategies. Use ONLY after profiling identifies bottlenecks.
+name: Optimization Techniques
+description: |
+  This skill provides optimization methods for Nethercore ZX games. Use when the user asks about "optimize", "compress", "reduce size", "wasm-opt", "BC7", "LTO", "asset compression", "mesh optimization", "texture compression", or "state size".
+
+  **Load references when:**
+  - Detailed code examples → `references/code-examples.md`
+version: 1.0.0
 ---
 
-# Optimization Techniques Skill
+# Optimization Techniques for Nethercore ZX
 
-Performance optimization strategies for Go. **ONLY use after profiling!**
+## WASM Optimization
 
-## When to Use
+### Cargo.toml Settings
 
-Use ONLY after profiling identifies actual bottlenecks. **NEVER optimize prematurely (KISS principle).**
-
-## Pre-allocate Slices
-
-```go
-// Good - pre-allocate when size known
-items := make([]Item, 0, expectedSize)
-
-// Bad - repeated allocations
-var items []Item
+```toml
+[profile.release]
+lto = true           # Link-time optimization
+opt-level = "z"      # Optimize for size
+codegen-units = 1    # Better optimization
+panic = "abort"      # Smaller than unwind
+strip = true         # Strip symbols
 ```
 
-## Use strings.Builder
+### Post-Build
 
-```go
-// Good
-var b strings.Builder
-for _, s := range strings {
-    b.WriteString(s)
-}
-result := b.String()
-
-// Bad - repeated allocations
-result := ""
-for _, s := range strings {
-    result += s
-}
+```bash
+wasm-opt -Oz game.wasm -o game.wasm
 ```
 
-## sync.Pool for Reusable Objects
+**Typical savings:** 20-40%
 
-```go
-var bufferPool = sync.Pool{
-    New: func() interface{} {
-        return new(bytes.Buffer)
-    },
-}
+## Texture Optimization
 
-buf := bufferPool.Get().(*bytes.Buffer)
-defer bufferPool.Put(buf)
-buf.Reset()
-// use buf
+All textures use BC7 compression (4:1 ratio):
+
+| Original | Compressed |
+|----------|------------|
+| 256×256 RGBA (256 KB) | 64 KB |
+| 512×512 RGBA (1 MB) | 256 KB |
+
+**Resolution targets:**
+- UI elements: 256×256
+- Characters: 256-512
+- Environment: 128-256
+
+## Mesh Optimization
+
+| Format | Size/Vertex |
+|--------|-------------|
+| Position only | 12 bytes |
+| Pos + UV | 20 bytes |
+| Pos + UV + Normal | 32 bytes |
+| Full | 40 bytes |
+
+**Poly targets:**
+- Background props: 50-200
+- Interactive props: 100-500
+- Characters: 500-2000
+
+## Audio Optimization
+
+- Sample rate: 22050 Hz (engine limit)
+- Channels: Mono only
+- Use XM modules for music (95% savings vs WAV)
+
+## State Size Reduction
+
+```rust
+// Use compact types
+struct Position { x: f32, y: f32 }  // 8 bytes
+struct Position { x: i16, y: i16 }  // 4 bytes (fixed-point)
+
+// Fixed arrays, not Vec
+entities: [Entity; 64],  // Known size
 ```
 
-## Minimize Allocations
+## Quick Wins Checklist
 
-```go
-// Good - reuse buffer
-buf := make([]byte, 1024)
-for {
-    n, _ := r.Read(buf)
-    process(buf[:n])
-}
-
-// Bad - allocate each time
-for {
-    buf := make([]byte, 1024)
-    n, _ := r.Read(buf)
-    process(buf[:n])
-}
-```
-
-## Golden Rules
-
-1. **Profile first** - Don't guess
-2. **Measure impact** - Benchmark before/after
-3. **KISS principle** - Simple first, optimize later
-4. **Maintain readability** - Don't sacrifice clarity
-5. **Focus on hot paths** - 80/20 rule
+- [ ] LTO and opt-level = "z" in Cargo.toml
+- [ ] wasm-opt -Oz on final binary
+- [ ] Texture resolutions at 256×256 default
+- [ ] Music as XM format
+- [ ] Fixed arrays instead of Vec

@@ -1,80 +1,129 @@
 ---
 name: prompt-injection-defense
-description: "Red-team an Agentforce agent against prompt-injection and jailbreak attacks; codify test cases and guardrails. NOT for general application-security reviews outside the agent boundary."
-category: agentforce
-salesforce-version: "Spring '25+"
-well-architected-pillars:
-  - Security
-  - Reliability
-triggers:
-  - "red-team my Agentforce agent"
-  - "can my agent be jailbroken"
-  - "how do I prevent prompt injection"
-  - "agent revealed data from another case"
-tags:
-  - agentforce
-  - security
-  - prompt-injection
-  - red-team
-inputs:
-  - "Agent topic + actions list"
-  - "threat model (who, what data)"
-outputs:
-  - "Adversarial test set"
-  - "Trust Layer policy updates"
-  - "topic instruction hardening"
-dependencies: []
-version: 1.0.0
-author: Pranav Nagrecha
-updated: 2026-04-28
+description: |
+  AIシステムへのプロンプトインジェクション攻撃を防ぎ、入力検証とコンテキスト分離の設計指針を提供するスキル。
+
+  Anchors:
+  • OWASP LLM Top 10 / 適用: LLMセキュリティ脅威モデリング / 目的: インジェクション攻撃の分類と防御パターン理解
+  • Simon Willison's Prompt Injection Research / 適用: 実攻撃パターン分析 / 目的: 実世界の攻撃事例から防御戦略を導出
+  • Defense in Depth principle / 適用: 多層防御設計 / 目的: 単一障害点の排除
+
+  Trigger:
+  Use when designing prompt injection defenses, implementing AI security measures, sanitizing user inputs for LLM systems, separating trusted and untrusted contexts, conducting security reviews for LLM applications, mitigating indirect prompt injection risks.
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 ---
 
-# Prompt Injection Defense
+# プロンプトインジェクション対策
 
-Agentforce uses the Einstein Trust Layer for dynamic grounding, masking, and toxicity filtering — but topic instructions and Invocable action scopes still need explicit hardening. Injection attempts include: instruction override, role-reversal, system-prompt leaks, tool-use coercion, and data exfiltration via crafted record content. This skill builds a reusable adversarial test suite and maps findings to concrete guardrails.
+## 概要
 
-## Adoption Signals
+AIシステムへのプロンプトインジェクション攻撃を防ぎ、入力検証とコンテキスト分離の設計指針を提供する。攻撃パターンの識別、防御メカニズムの選択、安全なプロンプト設計の実装をサポート。
 
-Pre-production review for any Agentforce agent that (a) ingests user-controlled text, (b) has write access via Invocables, or (c) is exposed to external/Experience Cloud users. Required for Service agents, Sales agents with Data Cloud grounding, and any custom channel.
+## ワークフロー
 
-- Required when stakeholders ask whether the agent can be jailbroken — produce a documented adversarial-test pass before exposure.
-- Required for any agent that exposes Invocable actions with side effects (DML, callouts, record sharing).
+### Phase 1: 脅威モデリング
 
-## Recommended Workflow
+**目的**: システムの攻撃面と脅威を特定
 
-1. Enumerate the attack surface: every Invocable action, every grounded DMO/sObject, and every conversational input channel.
-2. Build the adversarial test set covering the five OWASP LLM-01 families: instruction override, context leakage, tool-use coercion, exfil via output, and role impersonation.
-3. Run each test through Agentforce Testing Center; capture verbatim responses and tool invocations into a results matrix.
-4. For each failed test, apply one of four mitigations: (a) narrow the action scope via `with sharing` + field-level checks, (b) add an explicit topic instruction, (c) raise Trust Layer toxicity/PII thresholds, (d) remove the dangerous capability.
-5. Re-run the suite until all tests pass; commit the suite to `tests/agentforce/<agent>_adversarial.md` so regressions are caught on every agent change.
+**アクション**:
 
-## Key Considerations
+1. システムアーキテクチャの信頼境界を特定
+2. プロンプトインジェクション攻撃パターンを分類
+3. 攻撃の実現可能性と影響度を評価
+4. 優先度の高い脅威シナリオを文書化
 
-- Topic instructions are concatenated into the system prompt — a long instruction list dilutes priority. Keep hard constraints in the first 200 tokens.
-- Trust Layer masking happens pre-LLM; it doesn't prevent tool-use coercion if the action runs as a privileged user.
-- Always test with the least-privileged channel user, not an admin clone.
-- Data Cloud grounding returns raw DMO content; a malicious record can contain injection payloads. Sanitize DMO text fields at ingestion when feasible.
+**Task**: `agents/threat-modeling.md` を参照
 
-## Worked Examples (see `references/examples.md`)
+### Phase 2: 防御設計
 
-- *Instruction-override test case* — A Service agent has an Invocable `RefundOrder` with guardrail 'only refund orders where Status=Delivered'.
-- *Data exfiltration via crafted Case.Description* — Agent reads Case.Description via Data Cloud grounding to answer customer questions.
+**目的**: 多層防御戦略の設計と実装パターン選択
 
-## Common Gotchas (see `references/gotchas.md`)
+**アクション**:
 
-- **Testing only with English** — Injection passes the English suite but succeeds in Spanish/French.
-- **Trust Layer toxicity threshold too low** — Jailbreaks phrased politely pass filters; toxic but benign content is blocked.
-- **Over-indexing on topic instructions** — 100-line topic instructions dilute priority and slow every turn.
+1. 脅威ごとの防御メカニズムを選択
+2. 入力検証・出力エスケープ・プロンプト構造化を設計
+3. コンテキスト分離と最小権限原則を適用
+4. 実装ガイドラインを文書化
 
-## Top LLM Anti-Patterns (full list in `references/llm-anti-patterns.md`)
+**Task**: `agents/defense-design.md` を参照
 
-- Relying on Trust Layer alone — it handles toxicity/PII, not business-policy bypass via tool coercion.
-- Adding ad-hoc instructions after incidents instead of maintaining a test suite.
-- Using a privileged user for agent execution — scope creep becomes a data-exposure vector.
+### Phase 3: 検証・評価
 
-## Official Sources Used
+**目的**: セキュリティ設計の検証と改善
 
-- Agentforce Developer Guide — https://developer.salesforce.com/docs/einstein/genai/guide/agentforce.html
-- Einstein Trust Layer — https://help.salesforce.com/s/articleView?id=sf.generative_ai_trust_layer.htm
-- Invocable Actions (Apex) — https://developer.salesforce.com/docs/atlas.en-us.apexref.meta/apexref/apex_classes_invocable_action.htm
-- Agentforce Testing Center — https://help.salesforce.com/s/articleView?id=sf.agentforce_testing_center.htm
+**アクション**:
+
+1. `assets/defense-checklist.md` で設計を評価
+2. `scripts/validate-defense.mjs` でコード検証
+3. セキュリティレビューを実施
+4. 改善推奨事項を文書化
+
+**Task**: `agents/validate-defense.md` を参照
+
+## Task仕様（ナビゲーション）
+
+| Task             | 起動タイミング | 入力                             | 出力                       |
+| ---------------- | -------------- | -------------------------------- | -------------------------- |
+| threat-modeling  | Phase 1開始時  | システムアーキテクチャ、入力仕様 | 脅威モデル、攻撃パターン   |
+| defense-design   | Phase 2開始時  | 脅威モデル                       | 防御設計書、実装ガイド     |
+| validate-defense | Phase 3開始時  | 防御設計書                       | 検証レポート、改善推奨事項 |
+
+**詳細仕様**: 各Taskの詳細は `agents/` ディレクトリを参照
+
+## ベストプラクティス
+
+### すべきこと
+
+| 推奨事項                           | 理由                     |
+| ---------------------------------- | ------------------------ |
+| システム全体の信頼境界を明確化     | 攻撃面を正確に把握       |
+| 多層防御（defense-in-depth）を実装 | 単一障害点を排除         |
+| 既知攻撃パターンへの対策を明示     | 見落としを防止           |
+| セキュリティレビューを共有         | チーム全体で脆弱性を発見 |
+| 最新の攻撃トレンドを定期確認       | 新種の攻撃に対応         |
+
+### 避けるべきこと
+
+| 禁止事項                                 | 問題点                 |
+| ---------------------------------------- | ---------------------- |
+| 単一の対策方法への依存                   | 防御層が薄くなる       |
+| 信頼境界が曖昧なまま実装                 | 攻撃ベクトルを見落とす |
+| 攻撃パターンと対策の対応関係が不明確     | セキュリティ検証困難   |
+| 最新情報確認をスキップして古い前提で設計 | 新しい攻撃手法に脆弱   |
+
+## リソース参照
+
+### references/（詳細知識）
+
+| リソース           | パス                                             | 読込条件               |
+| ------------------ | ------------------------------------------------ | ---------------------- |
+| 基本概念           | [references/basics.md](references/basics.md)     | 初回使用時・概念理解時 |
+| 実践的防御パターン | [references/patterns.md](references/patterns.md) | 設計・実装時           |
+
+### scripts/（決定論的処理）
+
+| スクリプト             | 用途           | 使用例                                      |
+| ---------------------- | -------------- | ------------------------------------------- |
+| `validate-defense.mjs` | 防御実装の検証 | `node scripts/validate-defense.mjs <path>`  |
+| `log_usage.mjs`        | 使用記録       | `node scripts/log_usage.mjs --result <...>` |
+
+### assets/（テンプレート）
+
+| アセット                   | 用途                       |
+| -------------------------- | -------------------------- |
+| `defense-checklist.md`     | セキュリティ評価項目       |
+| `threat-model-template.md` | 脅威モデル文書テンプレート |
+
+## 変更履歴
+
+| Version | Date       | Changes                                        |
+| ------- | ---------- | ---------------------------------------------- |
+| 2.0.0   | 2026-01-02 | 18-skills.md仕様完全準拠版に再構築             |
+| 1.2.0   | 2025-12-31 | Task仕様ナビテーブル追加、frontmatter統一      |
+| 1.0.0   | 2025-12-24 | 初版：基本ワークフロー、ベストプラクティス定義 |

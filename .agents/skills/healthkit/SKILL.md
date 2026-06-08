@@ -5,7 +5,7 @@ description: "Read, write, and query Apple Health data using HealthKit. Covers H
 
 # HealthKit
 
-Read and write health and fitness data from the Apple Health store. Covers authorization, queries, writing samples, background delivery, and workout sessions. Targets Swift 6.3 / iOS 26+.
+Read and write health and fitness data from the Apple Health store. Covers authorization, queries, writing samples, background delivery, and workout sessions. Targets Swift 6.2 / iOS 26+.
 
 ## Contents
 
@@ -33,26 +33,20 @@ Read and write health and fitness data from the Apple Health store. Covers autho
 
 ### Availability Check
 
-Always check availability before calling other HealthKit APIs. Health data is
-available on iOS, watchOS, visionOS, iPadOS 17+, and iOS apps running on
-Vision Pro. It is unavailable on iPadOS 16 or earlier and may be restricted by
-managed device policy.
+Always check availability before accessing HealthKit. iPad and some devices do not support it.
 
 ```swift
 import HealthKit
 
+let healthStore = HKHealthStore()
+
 guard HKHealthStore.isHealthDataAvailable() else {
-    // Health data is unavailable or restricted on this device.
+    // HealthKit not available on this device (e.g., iPad)
     return
 }
-
-let healthStore = HKHealthStore()
 ```
 
-Create a single `HKHealthStore` instance and reuse it throughout your app. It
-is thread-safe. If HealthKit is optional, review Xcode's generated
-`UIRequiredDeviceCapabilities` `healthkit` entry so unsupported devices are not
-excluded unintentionally.
+Create a single `HKHealthStore` instance and reuse it throughout your app. It is thread-safe.
 
 ## Authorization
 
@@ -81,10 +75,7 @@ func requestAuthorization() async throws {
 
 ### Checking Authorization Status
 
-`authorizationStatus(for:)` reports write/share authorization. HealthKit does
-not reveal whether read permission was granted or denied. If the user denies
-read access, queries return only samples your app successfully saved, which may
-look like empty or partial data.
+The app can only determine if it has **not yet requested** authorization. If the user denied access, HealthKit returns empty results rather than an error -- this is a privacy design.
 
 ```swift
 let status = healthStore.authorizationStatus(
@@ -275,23 +266,11 @@ healthStore.execute(observerQuery)
 
 **Frequencies:** `.immediate`, `.hourly`, `.daily`, `.weekly`
 
-Set up observer queries as soon as the app launches, then call
-`enableBackgroundDelivery` once for the same sample type. The system persists
-the registration, wakes the app at most once per requested frequency, and
-enforces tighter caps for some types such as hourly step-count delivery on iOS.
-Background delivery is not supported on Simulator; test it on device.
+Call `enableBackgroundDelivery` once (e.g., at app launch). The system persists the registration.
 
 ## Workout Sessions
 
-Use `HKWorkoutSession` and `HKLiveWorkoutBuilder` to track live workouts.
-`HKWorkoutSession` is available on iOS/iPadOS 17+, visionOS 1+, and watchOS 2+.
-`HKLiveWorkoutBuilder` is available on iOS/iPadOS 26+ and watchOS 5+, so gate
-live-builder code if supporting older iOS/iPadOS releases.
-
-On iPhone and iPad, live heart-rate collection requires a paired external heart
-rate sensor. Apple Watch sessions can collect high-frequency heart-rate data.
-For locked iPhone workouts, plan for the system's workout-data access flow
-before showing health metrics on the Lock Screen.
+Use `HKWorkoutSession` and `HKLiveWorkoutBuilder` to track live workouts. Available on watchOS 2+ and iOS 17+.
 
 ```swift
 func startWorkout() async throws {
@@ -325,7 +304,7 @@ func endWorkout(
 }
 ```
 
-For full workout lifecycle management including pause/resume, delegate handling, and multi-device mirroring, see [references/healthkit-patterns.md](references/healthkit-patterns.md).
+For full workout lifecycle management including pause/resume, delegate handling, and multi-device mirroring, see `references/healthkit-patterns.md`.
 
 ## Common Data Types
 
@@ -352,8 +331,7 @@ Common category types: `.sleepAnalysis`, `.mindfulSession`, `.appleStandHour`
 
 ### HKCharacteristicType
 
-Read-only user characteristics include `.dateOfBirth`, `.biologicalSex`,
-`.bloodType`, `.fitzpatrickSkinType`, `.wheelchairUse`, and `.activityMoveMode`.
+Read-only user characteristics: `.dateOfBirth`, `.biologicalSex`, `.bloodType`, `.fitzpatrickSkinType`
 
 ## HKUnit Reference
 
@@ -379,22 +357,116 @@ HKUnit.literUnit(with: .deci)               // Deciliters
 
 ## Common Mistakes
 
-1. **Over-requesting data types.** Request only the read/write types the feature
-   actually uses; broad HealthKit permission sheets are an App Review risk.
-2. **Treating read authorization like write authorization.** You can check
-   `.sharingAuthorized` before saving, but read denial is privacy-protected and
-   looks like app-owned-only, empty, or partial results.
-3. **Skipping `isHealthDataAvailable()`.** Check before HealthKit access and
-   handle unavailable or restricted stores without crashing.
-4. **Using callback queries for new async code.** Prefer async descriptors for
-   one-shot reads and statistics, and keep broad queries off the main actor.
-5. **Forgetting observer completion handlers.** Always call the handler; missed
-   completions can delay or stop future background deliveries.
-6. **Assuming `.immediate` means immediate.** Background delivery is capped by
-   the system and must be tested on device.
-7. **Using cumulative stats for discrete values.** Match statistics options to
-   the data type: cumulative sums for steps/energy, discrete average/min/max for
-   heart rate, weight, and similar samples.
+### 1. Over-requesting data types
+
+DON'T -- request everything:
+```swift
+// App Review will reject this
+let allTypes: Set<HKObjectType> = [
+    HKQuantityType(.stepCount),
+    HKQuantityType(.heartRate),
+    HKQuantityType(.bloodGlucose),
+    HKQuantityType(.bodyMass),
+    HKQuantityType(.oxygenSaturation),
+    // ...20 more types the app never uses
+]
+```
+
+DO -- request only what you use:
+```swift
+let neededTypes: Set<HKObjectType> = [
+    HKQuantityType(.stepCount),
+    HKQuantityType(.activeEnergyBurned)
+]
+```
+
+### 2. Not handling authorization denial
+
+DON'T -- assume data will be returned:
+```swift
+func getSteps() async throws -> Double {
+    let result = try await query.result(for: healthStore)
+    return result!.sumQuantity()!.doubleValue(for: .count()) // Crashes if denied
+}
+```
+
+DO -- handle nil gracefully:
+```swift
+func getSteps() async throws -> Double {
+    let result = try await query.result(for: healthStore)
+    return result?.sumQuantity()?.doubleValue(for: .count()) ?? 0
+}
+```
+
+### 3. Assuming HealthKit is always available
+
+DON'T -- skip the check:
+```swift
+let store = HKHealthStore() // Crashes on iPad
+try await store.requestAuthorization(toShare: types, read: types)
+```
+
+DO -- guard availability:
+```swift
+guard HKHealthStore.isHealthDataAvailable() else {
+    showUnsupportedDeviceMessage()
+    return
+}
+```
+
+### 4. Running heavy queries on the main thread
+
+DON'T -- use old callback-based queries on main thread. DO -- use async descriptors:
+```swift
+// Bad: HKSampleQuery with callback on main thread
+// Good: async descriptor
+func loadAllData() async throws -> [HKQuantitySample] {
+    let descriptor = HKSampleQueryDescriptor(
+        predicates: [.quantitySample(type: stepType)],
+        sortDescriptors: [SortDescriptor(\.endDate, order: .reverse)],
+        limit: 100
+    )
+    return try await descriptor.result(for: healthStore)
+}
+```
+
+### 5. Forgetting to call completionHandler in observer queries
+
+DON'T -- skip the completion handler:
+```swift
+let query = HKObserverQuery(sampleType: type, predicate: nil) { _, handler, _ in
+    processNewData()
+    // Forgot to call handler() -- system won't schedule next delivery
+}
+```
+
+DO -- always call it:
+```swift
+let query = HKObserverQuery(sampleType: type, predicate: nil) { _, handler, _ in
+    defer { handler() }
+    processNewData()
+}
+```
+
+### 6. Using wrong statistics options for the data type
+
+DON'T -- use cumulative sum on discrete types:
+```swift
+// Heart rate is discrete, not cumulative -- this returns nil
+let query = HKStatisticsQueryDescriptor(
+    predicate: heartRatePredicate,
+    options: .cumulativeSum
+)
+```
+
+DO -- match options to data type:
+```swift
+// Use discrete options for discrete types
+let query = HKStatisticsQueryDescriptor(
+    predicate: heartRatePredicate,
+    options: .discreteAverage
+)
+```
 
 ## Review Checklist
 
@@ -402,23 +474,19 @@ HKUnit.literUnit(with: .deci)               // Deciliters
 - [ ] Only necessary data types requested in authorization
 - [ ] `Info.plist` includes `NSHealthShareUsageDescription` and/or `NSHealthUpdateUsageDescription`
 - [ ] HealthKit capability enabled in Xcode project
-- [ ] Write authorization checked before saving; read denial handled as partial
-      or empty query results
+- [ ] Authorization denial handled gracefully (nil results, not crashes)
 - [ ] Single `HKHealthStore` instance reused (not created per query)
 - [ ] Async query descriptors used instead of callback-based queries
 - [ ] Heavy queries not blocking main thread
 - [ ] Statistics options match data type (cumulative vs. discrete)
-- [ ] Background delivery paired with app-launch `HKObserverQuery` setup and
-      `completionHandler` called
+- [ ] Background delivery paired with `HKObserverQuery` and `completionHandler` called
 - [ ] Background delivery entitlement enabled if using `enableBackgroundDelivery`
-- [ ] Background delivery tested on device and frequency caps considered
 - [ ] Workout sessions properly ended and builder finalized
-- [ ] Workout API availability and live heart-rate sensor requirements handled
 - [ ] Write operations only for sample types the app created
 
 ## References
 
-- Extended patterns (workouts, anchored queries, SwiftUI integration): [references/healthkit-patterns.md](references/healthkit-patterns.md)
+- Extended patterns (workouts, anchored queries, SwiftUI integration): `references/healthkit-patterns.md`
 - [HealthKit framework](https://sosumi.ai/documentation/healthkit)
 - [HKHealthStore](https://sosumi.ai/documentation/healthkit/hkhealthstore)
 - [HKSampleQueryDescriptor](https://sosumi.ai/documentation/healthkit/hksamplequerydescriptor)
@@ -428,4 +496,3 @@ HKUnit.literUnit(with: .deci)               // Deciliters
 - [HKLiveWorkoutBuilder](https://sosumi.ai/documentation/healthkit/hkliveworkoutbuilder)
 - [Setting up HealthKit](https://sosumi.ai/documentation/healthkit/setting-up-healthkit)
 - [Authorizing access to health data](https://sosumi.ai/documentation/healthkit/authorizing-access-to-health-data)
-- [Configuring HealthKit access](https://sosumi.ai/documentation/xcode/configuring-healthkit-access)

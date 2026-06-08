@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: seo-authority-builder
 description: Analyzes content for E-E-A-T signals and suggests improvements to
   build authority and trust. Identifies missing credibility elements. Use

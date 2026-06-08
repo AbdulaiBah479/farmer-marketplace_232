@@ -1,13 +1,12 @@
 ---
 name: gws-meet
+version: 1.0.0
 description: "Manage Google Meet conferences."
 metadata:
-  version: 0.22.5
   openclaw:
     category: "productivity"
     requires:
-      bins:
-        - gws
+      bins: ["gws"]
     cliHelp: "gws meet --help"
 ---
 

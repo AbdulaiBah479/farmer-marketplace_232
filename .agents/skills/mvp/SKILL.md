@@ -1,76 +1,62 @@
 ---
-name: mvp
-description: Guides the founder through designing and optionally building the simplest MVP or prototype that validates their current hypotheses. Use when the founder wants to build something to test assumptions, discusses what to build next, wants to interpret results from a live MVP, or is deciding whether the current approach is still right. Also use when a founder proposes something to build — the skill will check whether the proposed form is the simplest thing that generates honest signal.
+name: MVP
+description: "Build, validate, and launch minimum viable products with scope discipline, user signals, and iteration speed."
 ---
 
-# MVP / Prototype
+## First: Identify the User's Role
 
-Help the founder figure out the simplest thing worth building to validate their remaining assumptions — and optionally scaffold and deploy it.
+Before guidance, determine their context:
 
-The central job of this skill is to be a principled counterweight to over-engineering. Most founders want to build more than they need to test what they don't yet know. This skill reads what's been validated, identifies the riskiest untested assumptions, and argues for the form of MVP that generates honest signal with the least build effort.
-
-Two modes:
-
-1. **Design conversation** — structured dialogue that produces `startup/mvp-plan.md`: what to build, why this form, which hypotheses it tests, and what success looks like
-2. **Scaffold and deploy** — optional Layer 2 reference that writes code to the project root and deploys using Vercel MCP, Supabase MCP, and the v0 Platform API
-
----
-
-## Before you start
-
-Read `startup/core.md` and scan `startup/hypotheses/` to understand what's been established and what's still untested. Check `startup/interviews/` and `startup/surveys/` for evidence gathered so far. No directory scaffolding is needed — `startup/` is created during project initialization.
+| Role | Key Focus | Load File |
+|------|-----------|-----------|
+| Technical Founder | Scope control, stop over-engineering | `roles/technical.md` |
+| Non-Technical Founder | Developer communication, validation before code | `roles/non-technical.md` |
+| Product Manager | Stakeholder alignment, scope defense | `roles/pm.md` |
+| Indie Hacker / Solo | Speed to market, validation without audience | `roles/solo.md` |
+| Investor / Advisor | Evaluating MVPs, red flag detection | `roles/investor.md` |
 
 ---
 
-## When no `startup/mvp-plan.md` exists
+## Universal MVP Principles
 
-Load the reference file that runs the design conversation:
+**The One-Sentence Test:** Can you state in one sentence what assumption you're testing? If not, scope is unclear.
 
-```
-.claude/skills/mvp/references/initial-mvp-design.md
-```
+**Minimum = Fastest Path to Learning**
+- Not the smallest product. The fastest way to validate or invalidate your hypothesis.
+- "What's the cheapest thing I can build to learn if anyone wants this?"
 
-The reference file's instructions take over from this point.
+**Viable = Someone Would Pay/Use It**
+- Not a demo. Not a prototype. Something that delivers enough value that a user would come back.
+- If nobody would use it twice, it's not viable.
 
----
-
-## When `startup/mvp-plan.md` exists
-
-Read it for context. Infer intent from the conversation — don't ask "what do you want to do?"
-
-**If the founder is discussing results or what they're seeing:**
-Handle inline. Read the plan to understand what was built, what hypotheses were being tested, and what the success criteria were. Also check `startup/interviews/` and `startup/surveys/` for any evidence collected since the MVP launched — this context informs the assessment. Ask what they're seeing — numbers, anecdotes, surprises. Compare against the success criteria and give a frank read:
-
-- **Confirmed** — signal clearly supports the hypothesis; route updates through the `hypotheses` skill
-- **Contradicted** — signal clearly runs against it; route updates through the `hypotheses` skill
-- **Inconclusive** — make the distinction explicit: "the hypothesis is probably wrong" is different from "the experiment didn't reach the right audience or ran too short." The first warrants invalidating the hypothesis; the second warrants redesigning the experiment, not changing hypothesis state.
-
-Update the `## Experiments Log` in `mvp-plan.md` with what was learned (dated entry). If the plan needs to evolve, propose changes and get confirmation before writing back.
-
-**If the founder wants to iterate or pivot the experiment:**
-Discuss what's changed. Propose what the next experiment should look like. Before overwriting the plan, move the current success criteria and outcome into the `## Experiments Log` as a completed entry. Then update `## What We're Building`, `## Why This Form`, `## Hypotheses Being Tested`, `## Success Criteria`, and `## Distribution Plan` with the new experiment. Propose the full updated content before writing. Get confirmation.
-
-**If the founder wants to scaffold and deploy:**
-- `status: ready` and a deployable form (landing page, demo, simple app) → load:
-  ```
-  .claude/skills/mvp/references/scaffold-and-deploy.md
-  ```
-- `status: designing` → suggest finishing the design conversation first; offer to continue it
-- `status: live` → ask whether they want to redeploy or add something new; if yes, load the scaffold reference
-
-**If a founder proposes building something without a prior design conversation:**
-Read the existing hypotheses. Brief honest check (2–3 sentences): is the proposed form the simplest thing that would test the riskiest untested assumptions? Share the assessment before proceeding — not a gate, just an informed nudge.
-
-**If the founder wants to archive:**
-Archiving marks this MVP track as closed — the plan remains for reference but is no longer the active experiment. Read the file. Set `status: archived`, `last_updated: today`. Add a final log entry summarising the experiment outcome. Propose changes, get confirmation, write back.
+**Done Criteria:**
+1. Core hypothesis is testable
+2. One user flow works end-to-end
+3. You can measure success/failure
+4. Ship date is set and non-negotiable
 
 ---
 
-## After saving `startup/mvp-plan.md`
+## Scope Discipline
 
-Briefly confirm: "Saved to `startup/mvp-plan.md`."
+See `scope.md` for:
+- Feature prioritization matrix (must/should/could/won't)
+- "If we add X, we cut Y" template
+- Common scope traps by role
+- Decision log template
 
-Mention natural next steps without pushing:
-- `status: ready` and deployable form → "Ready to scaffold and deploy — just say the word"
-- `status: live` → "When you have results, come back and we'll assess them against the success criteria"
-- Running interviews or surveys in parallel often produces richer validation than the MVP alone
+## Validation Techniques
+
+See `validation.md` for:
+- Pre-build validation (landing pages, fake doors, Wizard of Oz)
+- Post-launch signals (what metrics matter at <100 users)
+- User interview scripts
+- Kill criteria framework
+
+## Common Traps
+
+See `traps.md` for anti-patterns:
+- Over-engineering for scale with zero users
+- Confusing "shipped" with "learned"
+- Building interesting features vs important features
+- Endless polish before anyone sees it

@@ -1,6 +1,13 @@
 ---
-name: Sapecc
-description: SAP ECC expert for automotive manufacturing operations. Covers Materials Management (MM), Production Planning (PP), Sales & Distribution (SD), Quality Management (QM), Plant Maintenance (PM), and Finance/Controlling (FI/CO).  USE WHEN user says 'SAP', 'ECC', 'transaction code', 't-code', 'MRP', 'purchase order', 'production order', 'goods receipt', 'goods issue', 'material master', 'BOM', 'routing', 'work center', or needs help with SAP processes.  Integrates with AutomotiveManufacturing and SupplyChain skills.
+name: SapEcc
+description: |
+  SAP ECC expert for automotive manufacturing operations. Covers Materials Management (MM), Production Planning (PP),
+  Sales & Distribution (SD), Quality Management (QM), Plant Maintenance (PM), and Finance/Controlling (FI/CO).
+
+  USE WHEN user says 'SAP', 'ECC', 'transaction code', 't-code', 'MRP', 'purchase order', 'production order',
+  'goods receipt', 'goods issue', 'material master', 'BOM', 'routing', 'work center', or needs help with SAP processes.
+
+  Integrates with AutomotiveManufacturing and SupplyChain skills.
 ---
 
 # SAP ECC Expert - Automotive Manufacturing

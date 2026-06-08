@@ -188,10 +188,12 @@ Hookdeck also preserves all original headers from the provider (e.g., `stripe-si
 ## Local Development
 
 ```bash
+# Install Hookdeck CLI
+brew install hookdeck/hookdeck/hookdeck
 # Or: npm install -g hookdeck-cli
 
 # Start tunnel to your local server (no account needed)
-npx hookdeck-cli listen 3000 gateway --path /webhooks
+hookdeck listen 3000 --path /webhooks
 ```
 
 ## Reference Materials

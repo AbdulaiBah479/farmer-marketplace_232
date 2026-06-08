@@ -1,166 +1,104 @@
 ---
 name: sdd-tasks
-description: >
-  Break down a change into an implementation task checklist.
-  Trigger: When the orchestrator launches you to create or update the task breakdown for a change.
-license: MIT
-metadata:
-  author: gentleman-programming
-  version: "2.0"
+description: Kiro形式の実行計画(tasks.md)を生成。要件からフェーズ分割・タスク依存関係・マイルストーンを定義し、Ganttチャートを含む。
+argument-hint: "[spec-slug] [target-dir(optional)]"
+disable-model-invocation: true
+allowed-tools: Read, Write, Edit, Glob, Grep
+model: opus
 ---
 
-## Purpose
+# sdd-tasks — Kiro-format Task Breakdown Generator
 
-You are a sub-agent responsible for creating the TASK BREAKDOWN. You take the proposal, specs, and design, then produce a `tasks.md` with concrete, actionable implementation steps organized by phase.
+## 0. 目的
+- 要件定義から実装可能なタスクに分解
+- フェーズ構造（準備→基盤→コア→拡張→検証→運用）で整理
+- 依存関係を明確化し、並列実行可能なタスクを特定
+- Mermaid Ganttチャートで可視化
 
-## What You Receive
+## 1. 入力と出力
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
+### 入力
+- /sdd-tasks $ARGUMENTS
+  - $0 = spec-slug（例: google-ad-report）
+  - $1 = target-dir（任意。未指定なら `.kiro/specs/<spec-slug>/` を使う）
+- 前提: requirements.md と design.md が存在すること
 
-## Execution and Persistence Contract
+### 出力（必須）
+- <target-dir>/tasks.md
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+### 参照
+- templates/tasks.template.md : タスクテンプレート
+- <target-dir>/requirements.md : 要件定義
+- <target-dir>/design.md : 設計書
 
-- **engram**: Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), `sdd/{change-name}/design` (required). Save as `sdd/{change-name}/tasks`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram AND write `tasks.md` to filesystem. Retrieve dependencies from Engram (primary) with filesystem fallback.
-- **none**: Return result only. Never create or modify project files.
+## 2. 重要ルール
 
-## What to Do
+1. **Kiro形式厳守**: 各タスクにID、タイトル、説明、依存関係を明記
+2. **フェーズ分割**: 6フェーズ構造（Phase 0-5）
+3. **依存関係**: 循環依存禁止、クリティカルパスを特定
+4. **要件トレーサビリティ**: 各タスクがどのREQを実現するか明記
 
-### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+## 3. フェーズ構造
 
-### Step 2: Analyze the Design
+| Phase | 名称 | 内容 |
+|-------|------|------|
+| 0 | Preparation | 環境構築、依存関係インストール |
+| 1 | Foundation | データモデル、基本API構造 |
+| 2 | Core | 主要機能の実装 |
+| 3 | Extension | 追加機能、最適化 |
+| 4 | Validation | テスト、セキュリティレビュー |
+| 5 | Operations | デプロイ、監視、ドキュメント |
 
-From the design document, identify:
-- All files that need to be created/modified/deleted
-- The dependency order (what must come first)
-- Testing requirements per component
+## 4. 手順
 
-### Step 3: Write tasks.md
+### Step A: 入力読み込み
+1. requirements.md から機能要件を抽出
+2. design.md からコンポーネント構造を抽出
+3. 既存タスクがあれば差分更新
 
-**IF mode is `openspec` or `hybrid`:** Create the task file:
+### Step B: タスク分解
+1. 各REQを実装タスクに分解
+2. 1タスク = 1-4時間で完了可能なサイズ
+3. 曖昧なタスクは分割（「〜を実装」→具体的なサブタスク）
 
-```
-openspec/changes/{change-name}/
-├── proposal.md
-├── specs/
-├── design.md
-└── tasks.md               ← You create this
-```
+### Step C: 依存関係定義
+1. 前提タスクを特定（blockedBy）
+2. 後続タスクを特定（blocks）
+3. 循環依存がないことを確認
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the tasks content in memory — you will persist it in Step 4.
+### Step D: フェーズ割り当て
+1. 各タスクを適切なフェーズに配置
+2. 同一フェーズ内で並列実行可能なタスクを特定
+3. クリティカルパスを算出
 
-#### Task File Format
+### Step E: Ganttチャート生成
+1. Mermaid Gantt形式で可視化
+2. マイルストーンを配置
+3. 依存関係を反映
 
-```markdown
-# Tasks: {Change Title}
-
-## Phase 1: {Phase Name} (e.g., Infrastructure / Foundation)
-
-- [ ] 1.1 {Concrete action — what file, what change}
-- [ ] 1.2 {Concrete action}
-- [ ] 1.3 {Concrete action}
-
-## Phase 2: {Phase Name} (e.g., Core Implementation)
-
-- [ ] 2.1 {Concrete action}
-- [ ] 2.2 {Concrete action}
-- [ ] 2.3 {Concrete action}
-- [ ] 2.4 {Concrete action}
-
-## Phase 3: {Phase Name} (e.g., Testing / Verification)
-
-- [ ] 3.1 {Write tests for ...}
-- [ ] 3.2 {Write tests for ...}
-- [ ] 3.3 {Verify integration between ...}
-
-## Phase 4: {Phase Name} (e.g., Cleanup / Documentation)
-
-- [ ] 4.1 {Update docs/comments}
-- [ ] 4.2 {Remove temporary code}
-```
-
-### Task Writing Rules
-
-Each task MUST be:
-
-| Criteria | Example ✅ | Anti-example ❌ |
-|----------|-----------|----------------|
-| **Specific** | "Create `internal/auth/middleware.go` with JWT validation" | "Add auth" |
-| **Actionable** | "Add `ValidateToken()` method to `AuthService`" | "Handle tokens" |
-| **Verifiable** | "Test: `POST /login` returns 401 without token" | "Make sure it works" |
-| **Small** | One file or one logical unit of work | "Implement the feature" |
-
-### Phase Organization Guidelines
-
-```
-Phase 1: Foundation / Infrastructure
-  └─ New types, interfaces, database changes, config
-  └─ Things other tasks depend on
-
-Phase 2: Core Implementation
-  └─ Main logic, business rules, core behavior
-  └─ The meat of the change
-
-Phase 3: Integration / Wiring
-  └─ Connect components, routes, UI wiring
-  └─ Make everything work together
-
-Phase 4: Testing
-  └─ Unit tests, integration tests, e2e tests
-  └─ Verify against spec scenarios
-
-Phase 5: Cleanup (if needed)
-  └─ Documentation, remove dead code, polish
-```
-
-### Step 4: Persist Artifact
-
-**This step is MANDATORY — do NOT skip it.**
-
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
-- artifact: `tasks`
-- topic_key: `sdd/{change-name}/tasks`
-- type: `architecture`
-
-### Step 5: Return Summary
-
-Return to the orchestrator:
+## 5. タスクフォーマット
 
 ```markdown
-## Tasks Created
-
-**Change**: {change-name}
-**Location**: `openspec/changes/{change-name}/tasks.md` (openspec/hybrid) | Engram `sdd/{change-name}/tasks` (engram) | inline (none)
-
-### Breakdown
-| Phase | Tasks | Focus |
-|-------|-------|-------|
-| Phase 1 | {N} | {Phase name} |
-| Phase 2 | {N} | {Phase name} |
-| Phase 3 | {N} | {Phase name} |
-| Total | {N} | |
-
-### Implementation Order
-{Brief description of the recommended order and why}
-
-### Next Step
-Ready for implementation (sdd-apply).
+### TASK-001: <タイトル>
+- **Phase**: 1 - Foundation
+- **Implements**: REQ-001, REQ-002
+- **blockedBy**: (none)
+- **blocks**: TASK-002, TASK-003
+- **Description**: <具体的な実装内容>
+- **Acceptance Criteria**:
+  - [ ] <完了条件1>
+  - [ ] <完了条件2>
 ```
 
-## Rules
+## 6. 実行例
 
-- ALWAYS reference concrete file paths in tasks
-- Tasks MUST be ordered by dependency — Phase 1 tasks shouldn't depend on Phase 2
-- Testing tasks should reference specific scenarios from the specs
-- Each task should be completable in ONE session (if a task feels too big, split it)
-- Use hierarchical numbering: 1.1, 1.2, 2.1, 2.2, etc.
-- NEVER include vague tasks like "implement feature" or "add tests"
-- Apply any `rules.tasks` from `openspec/config.yaml`
-- If the project uses TDD, integrate test-first tasks: RED task (write failing test) → GREEN task (make it pass) → REFACTOR task (clean up)
-- **Size budget**: Tasks artifact MUST be under 530 words. Each task: 1-2 lines max. Use checklist format, not paragraphs.
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+```bash
+/sdd-tasks google-ad-report
+```
+
+前提:
+- .kiro/specs/google-ad-report/requirements.md
+- .kiro/specs/google-ad-report/design.md
+
+出力:
+- .kiro/specs/google-ad-report/tasks.md

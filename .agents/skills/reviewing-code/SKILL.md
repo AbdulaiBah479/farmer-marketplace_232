@@ -1,141 +1,197 @@
 ---
-name: reviewing-code
-description: ベースブランチに対する変更差分をもとにコードレビューを実施します。ベースブランチを指示として含めることができます。含めない場合は main をベースブランチとしてレビューを行います。
+name: Reviewing Code
+description: Systematically evaluate code changes for security, correctness, performance, and spec alignment. Use when reviewing PRs, assessing code quality, or verifying implementation against requirements.
 ---
 
-# コードレビュースキル
+# Reviewing Code
 
-## ワークフロー
+Evaluate code changes across security, correctness, spec alignment, performance, and maintainability. Apply sequential or parallel review based on scope.
 
-進捗に合わせてチェックを入れてください：
+## Quick Start
 
+**Sequential (small PRs, <5 files):**
+1. Gather context from feature specs and acceptance criteria
+2. Review sequentially through focus areas
+3. Report findings by priority
+4. Recommend approval/revision/rework
+
+**Parallel (large PRs, >5 files):**
+1. Identify independent review aspects (security, API, UI, data)
+2. Spawn specialist agents for each dimension
+3. Consolidate findings
+4. Report aggregate assessment
+
+## Context Gathering
+
+**Read documentation:**
+- `docs/feature-spec/F-##-*.md` — Technical design and requirements
+- `docs/user-stories/US-###-*.md` — Acceptance criteria
+- `docs/api-contracts.yaml` — Expected API signatures
+- `docs/data-plan.md` — Event tracking requirements (if applicable)
+- `docs/design-spec.md` — UI/UX requirements (if applicable)
+- `docs/system-design.md` — Architecture patterns (if available)
+- `docs/plans/<slug>/plan.md` — Original implementation plan (if available)
+
+**Determine scope:**
+- Files changed and features affected (F-## IDs)
+- Stories implemented (US-### IDs)
+- API, database, or schema changes
+
+## Quality Dimensions
+
+**Security (/25)**
+- Input validation and sanitization
+- Authentication/authorization checks
+- Sensitive data handling
+- Injection vulnerabilities (SQL, XSS, etc.)
+
+**Correctness (/25)**
+- Logic matches acceptance criteria
+- Edge cases handled properly
+- Error handling complete
+- Null/undefined checks present
+
+**Spec Alignment (/20)**
+- APIs match `docs/api-contracts.yaml`
+- Data events match `docs/data-plan.md`
+- UI matches `docs/design-spec.md`
+- Implementation follows feature spec
+
+**Performance (/15)**
+- Algorithm efficiency
+- Database query optimization
+- Resource usage (memory, network)
+
+**Maintainability (/15)**
+- Code clarity and readability
+- Consistent with codebase patterns
+- Appropriate abstraction levels
+- Comments where needed
+
+**Total: /100**
+
+## Finding Priority
+
+### 🔴 CRITICAL (Must fix before merge)
+- Security vulnerabilities
+- Broken functionality
+- Spec violations (API contract breaks)
+- Data corruption risks
+
+**Format:**
 ```
-進捗:
-- [ ] ステップ1: 派生元のコミットハッシュを取得
-- [ ] ステップ2: 最終的な変更差分を取得
-- [ ] ステップ3: コミット履歴を取得
-- [ ] ステップ4: 外部ライブラリの情報を取得
-- [ ] ステップ5: コードレビューを開始する
-- [ ] ステップ6: コードレビュー結果のセルフレビュー
-```
-
-### ステップ 1: 派生元のコミットハッシュを取得
-
-以下のコマンドを実行する。
-BASE_BRANCH：ユーザーが指示したベースブランチ。指示がない場合は main を対象とする。
-
-
-```sh
-git merge-base <BASE_BRANCH> HEAD
-```
-
-### ステップ 2: 最終的な変更差分を取得
-
-以下のコマンドを実行する
-
-```sh
-git diff 派生元のコミットハッシュ
-```
-
-### ステップ 3: コミット履歴を取得
-
-以下のコマンドを実行する
-
-```sh
-git log -p 派生元のコミットハッシュ..HEAD
-```
-
-### ステップ 4: 外部ライブラリの情報を取得
-
-ステップ 2 に外部ライブラリの API や設定ファイルが含まれていた場合、外部ライブラリの情報を取得する。
-
-- 変更差分に含まれているライブラリと APIや設定ファイルの一覧を作成する
-例:
-> - nextjs
->   - Link
->   - next.config.ts
-> - valibot
->   - string
->   - object
-- それぞれのライブラリの対象 API の情報を取得する
-
-### ステップ 5: コードレビューを開始する
-
-ステップ 2、ステップ 3 で取得した情報をもとにレビューを開始する。
-
-- 最終的な変更差分がどのような意図や経緯で作成されたのかコミット履歴をもとに把握する
-- 下記のレビュー観点・フォーマットに従ってレビューを行う
-
-### ステップ 6: コードレビュー結果のセルフレビュー
-
-コードレビュー結果のセルフレビューと修正を３セット行い、レビューを完璧なものに仕上げる。
-ただし、フォーマットの変更は行わないこと
-
-## レビューフォーマット
-
-レビュー結果は以下のフォーマットに従って出力する。
-
-```md
-# コードレビュー結果
-
-## <重要度(eg: 🟥 高, 🟨 中, 🟩 低)>：️【<指摘のタイトル>】*繰り返し*
-
-### 🎯 対象箇所
-
-#### <ファイルパス(eg:apps/web/app/page.tsx)> - <行番号範囲(eg:L1-L30)>*繰り返し*
-
-> <対象コード>
-
-### 💬 指摘内容
-
-<指摘内容>
-
-### 🧠 指摘の判断理由
-
-<ベストプラクティスや出典があればそれも記載>
-
-### 📝 修正案
-
-#### <修正案の名前>*繰り返し*
-
-<修正案の内容>
-
-##### ⤴️ メリット
-
-<修正案のメリット>
-
-##### ⤵️ デメリット
-
-<修正案のデメリット>
-
-##### ⚖️ トレードオフ
-
-<修正案のトレードオフ>
+Location: file.ts:123
+Problem: [Description]
+Impact: [Risk/consequence]
+Fix: [Specific change needed]
+Spec reference: [docs/api-contracts.yaml line X]
 ```
 
-## レビュー観点
+### 🟡 IMPORTANT (Should fix)
+- Logic bugs in edge cases
+- Missing error handling
+- Performance issues
+- Missing analytics events
+- Accessibility violations
 
-- 要件・仕様
-- セキュリティ
-- 保守性・可読性
-- パフォーマンス
-- テスタビリティ
-- UX・a11y
-- ベストプラクティス
-- コードベースの統一性
-- プロジェクトのコーディング規約
-  - CLAUDE.md
-  - ../../../.serena/memories フォルダ内の各ファイル
+### 🟢 NICE-TO-HAVE (Optional)
+- Code style improvements
+- Better abstractions
+- Enhanced documentation
 
-## 重要度基準
+### ✅ GOOD PRACTICES
+Highlight what was done well for learning
 
-- 🟩 低: 見送り可能
-- 🟨 中: 対応望ましいが議論余地あり
-- 🟥 高: マージブロック対象
+## Review Strategies
 
-## 注意事項
+### Single-Agent Review
+Best for <5 files, single concern:
+1. Review sequentially through focus areas
+2. Concentrate on 1-2 most impacted areas
+3. Generate unified report
 
-- 代替案とトレードオフを常に含める
-- 意図不明な場合は明示し考察を記載
-- 関連コードを適時読み込む
-- 重要度順に並び替える
+### Parallel Multi-Agent Review
+Best for >5 files, multiple concerns:
+1. Spawn specialized agents:
+   - **Security:** `senior-engineer` for vulnerability assessment
+   - **Architecture:** `Explore` for pattern compliance
+   - **API Contracts:** `programmer` for endpoint validation
+   - **Frontend:** `programmer` for UI/UX and accessibility
+   - **Documentation:** `documentor` for comment quality and docs
+
+2. Each agent reviews specific quality dimension
+3. Consolidate findings into single report
+
+## Report Structure
+
+```
+# Code Review: [Feature/PR]
+
+## Summary
+**Quality Score:** [X/100]
+**Issues:** Critical: [N], Important: [N], Nice-to-have: [N]
+**Assessment:** [APPROVE / NEEDS REVISION / MAJOR REWORK]
+
+## Spec Compliance
+- [ ] APIs match `docs/api-contracts.yaml`
+- [ ] Events match `docs/data-plan.md`
+- [ ] UI matches `docs/design-spec.md`
+- [ ] Logic satisfies story AC
+
+## Findings
+
+### Critical Issues
+[Issues with fix recommendations]
+
+### Important Issues
+[Issues that should be addressed]
+
+### Nice-to-Have Suggestions
+[Optional improvements]
+
+### Good Practices
+[What worked well]
+
+## Recommendations
+[Next steps: approval, revision needed, etc.]
+```
+
+## Fix Implementation
+
+**Offer options:**
+1. Fix critical + important issues
+2. Fix only critical (minimum for safety)
+3. Provide detailed explanation for learning
+4. Review only (no changes)
+
+**Parallel fixes for large revisions:**
+- Spawn agents for independent fix areas
+- Coordinate on shared dependencies
+- Document each fix with location, change, and verification method
+
+**Document format:**
+```
+✅ FIXED: [Issue name]
+File: [path:line]
+Change: [what changed]
+Verification: [how to test]
+```
+
+## Documentation Updates
+
+**Check if specs need updates:**
+- Feature spec "Decisions" or "Deviations" if implementation differs
+- Design spec if UI changed
+- API contracts if endpoints modified (requires approval)
+- Data plan if events changed
+
+**Always flag for user approval before modifying specs.**
+
+## Key Points
+
+- Read all context documents before starting
+- Focus on most impacted areas first
+- Be thorough with security-sensitive code, API changes, and critical user flows
+- Use scoring framework for comprehensive reviews
+- Parallel review scales to large PRs
+- Flag spec deviations for user decision

@@ -1,301 +1,305 @@
 ---
-name: add-feature
-description: Scaffold complete feature with types, repository, API routes, components, store actions, and tests. Use when adding major new functionality like water tracking, sleep tracking, etc.
-allowed-tools: Read, Write, Glob, Grep, Edit
+name: Add Feature
+description: Add a new feature to the Next.js app following best practices
 ---
 
-# Add Feature
+# Add Feature Skill
 
-Scaffold a complete feature including types, database layer, API routes, UI components, state management, and tests.
+You are helping add a new feature to a Next.js 15 application with TypeScript, Tailwind CSS, BetterAuth, and Drizzle ORM.
 
-## Usage
+## Context
 
-When user requests to add a new major feature, ask for:
+This is a Next.js 15 App Router project with:
+- Server Components by default
+- Drizzle ORM for database (PostgreSQL)
+- BetterAuth for authentication
+- TypeScript strict mode
+- Tailwind CSS v4 + shadcn/ui
 
-1. **Feature name** (e.g., "Water Tracking", "Sleep Logging", "Weight Management")
-2. **Feature description** (what data it tracks, why it matters)
-3. **Data fields** needed (with types and validation rules)
-4. **Dashboard components** needed (card, chart, statistics)
-5. **Forms needed** (input forms, edit forms)
-6. **Daily summary impact** (whether it affects health score, true/false)
+## Your Task
 
-## Implementation Process
+When the user asks to add a feature, follow this workflow:
 
-This skill orchestrates the following steps:
+### 1. Understand Requirements
 
-### Step 1: Create TypeScript Types
+Ask clarifying questions:
+- What routes are needed?
+- Is authentication required?
+- Does it need database tables?
+- What data needs to be displayed?
+- What user interactions are needed?
 
-Create file: `src/lib/types/{featureName}.ts`
+### 2. Plan Architecture
 
-```typescript
-export interface FeatureEntity {
-  id: string;
-  date: string;
-  field1: string;
-  field2: number;
-  createdAt: string;
-}
+Before coding, outline:
+```
+Route Structure:
+- app/[feature-name]/page.tsx (main page)
+- app/[feature-name]/layout.tsx (if needed)
+- app/[feature-name]/loading.tsx (loading state)
+- app/[feature-name]/error.tsx (error boundary)
 
-// Validation schema types (for API)
-export type FeatureInput = Omit<FeatureEntity, 'id' | 'createdAt'>;
+Database Schema:
+- lib/server/db/schema/[feature].ts (if new tables needed)
+
+Server Actions:
+- lib/actions/[feature].ts (for mutations)
+
+Components:
+- components/[feature]/ (feature-specific components)
 ```
 
-### Step 2: Create Repository
+### 3. Implementation Order
 
-Use `/generate-repository` skill to create:
+Always implement in this order:
 
-- `src/lib/database/repositories/featureRepository.ts`
-- CRUD methods
-- Date-based queries
+#### Step 1: Database Schema (if needed)
 
-### Step 3: Create API Routes
-
-Use `/generate-api-route` skill to create:
-
-- `src/app/api/feature/route.ts`
-- POST handler (create)
-- DELETE handler (delete)
-- Daily summary recalculation (if applicable)
-
-### Step 4: Create Store Actions
-
-Use `/generate-store-action` skill to add to `src/lib/store/healthStore.ts`:
-
-- State property for feature data
-- fetchFeature() action
-- addFeature() action
-- deleteFeature() action
-
-### Step 5: Create Dashboard Card
-
-Use `/generate-card` skill to create:
-
-- `src/components/dashboard/{FeatureName}Card.tsx`
-- Display key metrics
-- Show trends or statistics
-- Optional: Recharts integration
-
-### Step 6: Create Input Form
-
-Use `/generate-form` skill to create:
-
-- `src/components/forms/{FeatureName}Form.tsx`
-- Form fields for data entry
-- Validation logic
-- Store action integration
-
-### Step 7: Create Tests
-
-Use `/generate-test` skill to create:
-
-- `src/__tests__/lib/database/repositories/{FeatureName}.test.ts`
-- `src/__tests__/components/forms/{FeatureName}Form.test.tsx`
-- `src/__tests__/app/api/feature/route.test.ts`
-
-### Step 8: Update Dashboard Layout
-
-Edit: `src/app/page.tsx` or `src/components/layout/MainLayout.tsx`
-
-- Import new card component
-- Add to dashboard grid
-- Position appropriately
-
-### Step 9: Update Navigation (if needed)
-
-If feature has dedicated page:
-
-- Create `src/app/feature/page.tsx`
-- Create full page component
-- Update navigation in Sidebar
-
-### Step 10: Database Schema Update
-
-Add to: `src/lib/database/schema.sql`
-
-- Create new table
-- Define columns with types
-- Add indexes for common queries
-
-## Full Feature Example: Water Tracking
-
-### 1. Types (`src/lib/types/water.ts`)
-
+Create schema file:
 ```typescript
-export interface WaterLog {
-  id: string;
-  date: string;
-  amount: number; // in ml
-  time: string; // HH:MM format
-  source: 'water' | 'beverage' | 'food';
-  createdAt: string;
-}
+// lib/server/db/schema/[feature].ts
+import { pgTable, text, timestamp, uuid, boolean } from "drizzle-orm/pg-core"
+import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 
-export type WaterInput = Omit<WaterLog, 'id' | 'createdAt'>;
+export const [tableName] = pgTable("[table_name]", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  // Add fields here
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+})
+
+export const insert[TableName]Schema = createInsertSchema([tableName])
+export const select[TableName]Schema = createSelectSchema([tableName])
+
+export type [TableName] = typeof [tableName].$inferSelect
+export type New[TableName] = typeof [tableName].$inferInsert
 ```
 
-### 2. Repository → `/generate-repository`
-
-- Entity: WaterLog
-- Table: water_logs
-- Methods: addWaterLog, getWaterLogsByDate, deleteWaterLog
-
-### 3. API Routes → `/generate-api-route`
-
-- POST /api/water → create water log
-- DELETE /api/water?id=X → delete water log
-- Daily summary recalculation: YES
-
-### 4. Store Actions → `/generate-store-action`
-
+Export from schema/index.ts:
 ```typescript
-interface HealthState {
-  waterLogs: WaterLog[];
-  fetchDailyWaterLogs: (date: string) => Promise<void>;
-  addWaterLog: (log: WaterInput) => Promise<void>;
-  deleteWaterLog: (id: string) => Promise<void>;
+export * from "./[feature]"
+```
+
+Run migration:
+```bash
+npm run db:push
+```
+
+#### Step 2: Server Actions (if mutations needed)
+
+Create server actions:
+```typescript
+// lib/actions/[feature].ts
+"use server"
+
+import { db } from "@/lib/server/db"
+import { [tableName], insert[TableName]Schema } from "@/lib/server/db/schema"
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+export async function create[Resource](data: z.infer<typeof insert[TableName]Schema>) {
+  try {
+    const validated = insert[TableName]Schema.parse(data)
+    const [created] = await db.insert([tableName]).values(validated).returning()
+    revalidatePath("/[feature-path]")
+    return { success: true, data: created }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error"
+    }
+  }
 }
 ```
 
-### 5. Dashboard Card → `/generate-card`
+#### Step 3: Page Components
 
-- Card name: WaterIntakeCard
-- Displays: Total ml today, Target vs actual, Timeline of entries
-- Icon: Droplets
-- Optional chart: Hourly water intake
+Create the main page (Server Component):
+```typescript
+// app/[feature]/page.tsx
+import { db } from "@/lib/server/db"
+import { [tableName] } from "@/lib/server/db/schema"
 
-### 6. Input Form → `/generate-form`
+export const metadata = {
+  title: "[Feature Title]",
+  description: "[Feature description]",
+}
 
-- Form name: WaterLogForm
-- Fields: Amount (number), Time (time picker), Source (select)
-- List: Shows today's water entries with ability to remove
+export default async function [Feature]Page() {
+  // Fetch data in Server Component
+  const data = await db.query.[tableName].findMany()
 
-### 7. Tests → `/generate-test`
-
-- Repository tests: CRUD operations
-- Form tests: Validation, submission
-- API tests: POST, DELETE handlers
-
-### 8. Update Dashboard
-
-Add WaterIntakeCard to dashboard grid
-
-## Key Considerations
-
-### Database Schema
-
-```sql
-CREATE TABLE IF NOT EXISTS water_logs (
-  id TEXT PRIMARY KEY,
-  date TEXT NOT NULL,
-  amount INTEGER NOT NULL,
-  time TEXT NOT NULL,
-  source TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  UNIQUE(date, time, source)
-);
-
-CREATE INDEX idx_water_logs_date ON water_logs(date);
+  return (
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold">[Feature Title]</h1>
+      {/* Render data */}
+    </div>
+  )
+}
 ```
 
-### Health Score Integration
+#### Step 4: Interactive Components (Client Components)
 
-If feature impacts health score:
+Only create Client Components when needed:
+```typescript
+// components/[feature]/[component-name].tsx
+"use client"
 
-- Update `calculateHealthScore()` in `src/lib/utils/healthScoring.ts`
-- Update daily summary calculation in `DailySummaryRepository`
-- Document scoring formula
+import { useState } from "react"
+import { create[Resource] } from "@/lib/actions/[feature]"
+import { Button } from "@/components/ui/button"
 
-### Migrations
+export function [ComponentName]() {
+  const [isLoading, setIsLoading] = useState(false)
 
-Document any schema changes needed:
+  async function handleAction() {
+    setIsLoading(true)
+    const result = await create[Resource](data)
+    setIsLoading(false)
+  }
 
-- Create migration file or script
-- Add instructions to DEVELOPMENT.md
-
-## Checklist
-
-Complete feature should have:
-
-- [ ] TypeScript types defined
-- [ ] Database repository with CRUD
-- [ ] API routes (POST, DELETE, GET)
-- [ ] Zustand store actions
-- [ ] Dashboard card component
-- [ ] Input/edit forms
-- [ ] Comprehensive tests
-- [ ] Dashboard integration
-- [ ] Database schema
-- [ ] Optional: dedicated page
-- [ ] Documentation updated (if major feature)
-
-## Coordination with Other Skills
-
-This skill uses:
-
-1. `/generate-repository` - for data access
-2. `/generate-api-route` - for API endpoints
-3. `/generate-store-action` - for state management
-4. `/generate-card` - for dashboard widgets
-5. `/generate-form` - for data entry
-6. `/generate-test` - for test coverage
-
-Each sub-skill handles a specific layer of the feature.
-
-## Best Practices
-
-1. **Start with types** - Define data structure first
-2. **Database first** - Create repository before using in API
-3. **API routes next** - Implement endpoints before UI
-4. **Store actions** - Wire up state management before components
-5. **UI components** - Build forms and cards
-6. **Tests throughout** - Write tests for each layer
-7. **Integration** - Add to dashboard and navigation
-8. **Documentation** - Update relevant docs
-
-## Output Structure
-
-After using this skill, project structure should look like:
-
-```
-src/
-├── lib/
-│   ├── types/
-│   │   └── waterTracking.ts
-│   └── database/repositories/
-│       └── waterTrackingRepository.ts
-├── app/
-│   └── api/
-│       └── water/
-│           └── route.ts
-├── components/
-│   ├── dashboard/
-│   │   └── WaterIntakeCard.tsx
-│   └── forms/
-│       └── WaterLogForm.tsx
-└── __tests__/
-    ├── lib/
-    │   └── database/repositories/
-    │       └── WaterTracking.test.ts
-    ├── components/
-    │   └── forms/
-    │       └── WaterLogForm.test.tsx
-    └── app/
-        └── api/water/
-            └── route.test.ts
+  return (
+    <div>
+      <Button onClick={handleAction} disabled={isLoading}>
+        {isLoading ? "Loading..." : "Action"}
+      </Button>
+    </div>
+  )
+}
 ```
 
-## Implementation Checklist
+#### Step 5: Loading & Error States
 
-- [ ] Request feature details from user
-- [ ] Create TypeScript types
-- [ ] Generate repository
-- [ ] Generate API routes
-- [ ] Generate store actions
-- [ ] Generate dashboard card
-- [ ] Generate form component
-- [ ] Generate tests
-- [ ] Update dashboard integration
-- [ ] Update navigation (if page)
-- [ ] Verify TypeScript compilation
-- [ ] Run tests
-- [ ] Commit changes with proper messages
+Create loading.tsx:
+```typescript
+// app/[feature]/loading.tsx
+export default function Loading() {
+  return (
+    <div className="container mx-auto p-8">
+      <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+    </div>
+  )
+}
+```
+
+Create error.tsx:
+```typescript
+// app/[feature]/error.tsx
+"use client"
+
+export default function Error({ error, reset }: {
+  error: Error
+  reset: () => void
+}) {
+  return (
+    <div className="container mx-auto p-8">
+      <h2>Something went wrong!</h2>
+      <button onClick={() => reset()}>Try again</button>
+    </div>
+  )
+}
+```
+
+#### Step 6: Authentication (if needed)
+
+**⚠️ Always use server layouts for auth, NOT middleware.**
+
+Add auth layout with forced dynamic rendering:
+```typescript
+// app/[feature]/layout.tsx
+import { redirect } from "next/navigation"
+import { auth } from "@/lib/server/auth"
+import { headers } from "next/headers"
+
+// ⚠️ CRITICAL: Force dynamic rendering for fresh auth checks
+export const dynamic = "force-dynamic"
+
+export default async function [Feature]Layout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session) {
+    redirect("/auth/signin")
+  }
+
+  return <>{children}</>
+}
+```
+
+**Why server layouts for auth:**
+- ✅ Execute on the same request (no extra hops)
+- ✅ Full TypeScript support and type inference
+- ✅ Can render UI and compose with data fetching
+- ✅ Co-located with protected routes
+
+**Do NOT use middleware for auth gates** - middleware should only be used for session refresh and cross-cutting concerns like i18n.
+
+### 4. Best Practices Checklist
+
+Before completing, verify:
+
+- [ ] Server Components by default
+- [ ] Client Components only when needed
+- [ ] Type safety (TypeScript + Zod validation)
+- [ ] Error handling in server actions
+- [ ] Loading states (loading.tsx)
+- [ ] Error boundaries (error.tsx)
+- [ ] Metadata for SEO
+- [ ] Revalidation after mutations
+- [ ] Mobile-responsive design
+- [ ] Accessibility (ARIA attributes, semantic HTML)
+
+### 5. Testing
+
+After implementation:
+
+1. Test the feature manually
+2. Verify TypeScript compilation: `npm run type-check`
+3. Check for lint errors: `npm run lint`
+4. Test all user flows
+5. Verify error states
+6. Test loading states
+
+## Key Principles
+
+1. **Server-First**: Always start with Server Components
+2. **Type Safety**: Use TypeScript and Zod everywhere
+3. **Co-location**: Keep related code together
+4. **Performance**: Minimize client-side JavaScript
+5. **User Experience**: Always show loading and error states
+6. **Security**: Validate all inputs, check permissions
+
+## Common Patterns
+
+### Data Fetching Pattern
+```typescript
+// In Server Component
+const data = await db.query.table.findMany()
+```
+
+### Mutation Pattern
+```typescript
+// In Server Action
+"use server"
+const validated = schema.parse(data)
+await db.insert(table).values(validated)
+revalidatePath("/path")
+```
+
+### Form Pattern
+```typescript
+// Client Component
+const result = await serverAction(formData)
+if (result.success) {
+  router.push("/success")
+}
+```
+
+---
+
+Now, help the user implement their feature following these guidelines!

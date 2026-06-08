@@ -1,204 +1,195 @@
 ---
-name: better-auth
-description: "TypeScript authentication framework (framework-agnostic). Features: email/password, OAuth (Google, GitHub, Discord), 2FA (TOTP, SMS), passkeys/WebAuthn, session management, RBAC, rate limiting, database adapters. Actions: implement, configure, secure authentication systems. Keywords: Better Auth, authentication, authorization, OAuth, email/password, 2FA, MFA, TOTP, passkeys, WebAuthn, session management, RBAC, rate limiting, database adapter, TypeScript auth, social login, Google auth, GitHub auth, Discord auth, email verification, password reset. Use when: implementing TypeScript auth, adding OAuth providers, setting up 2FA/MFA, managing sessions, configuring RBAC, building secure auth systems."
-license: MIT
-version: 2.0.0
+name: Better Auth
+description: Authentication and session management with Better Auth in LivestockAI
 ---
 
-# Better Auth Skill
+# Better Auth
 
-Better Auth is comprehensive, framework-agnostic authentication/authorization framework for TypeScript with built-in email/password, social OAuth, and powerful plugin ecosystem for advanced features.
+LivestockAI uses [Better Auth](https://better-auth.com) for authentication. It provides secure session management with email/password authentication.
 
-## When to Use
+## Table Structure
 
-- Implementing auth in TypeScript/JavaScript applications
-- Adding email/password or social OAuth authentication
-- Setting up 2FA, passkeys, magic links, advanced auth features
-- Building multi-tenant apps with organization support
-- Managing sessions and user lifecycle
-- Working with any framework (Next.js, Nuxt, SvelteKit, Remix, Astro, Hono, Express, etc.)
+Better Auth uses two tables:
 
-## Quick Start
+| Table     | Purpose                                             |
+| --------- | --------------------------------------------------- |
+| `users`   | User profile data (name, email, role) - NO password |
+| `account` | Authentication credentials (password, providerId)   |
 
-### Installation
+**Important**: Passwords are stored in `account`, not `users`.
 
-```bash
-npm install better-auth
-# or pnpm/yarn/bun add better-auth
+## Creating Users Programmatically
+
+**ALWAYS use the `createUserWithAuth` helper**:
+
+```typescript
+import { createUserWithAuth } from '~/lib/db/seeds/helpers'
+
+const result = await createUserWithAuth(db, {
+  email: 'user@example.com',
+  password: 'securepassword',
+  name: 'John Doe',
+  role: 'user', // or 'admin'
+})
 ```
 
-### Environment Setup
+This helper:
 
-Create `.env`:
-```env
-BETTER_AUTH_SECRET=<generated-secret-32-chars-min>
-BETTER_AUTH_URL=http://localhost:3000
+1. Hashes the password using PBKDF2 (100,000 iterations, SHA-256)
+2. Creates entry in `users` table
+3. Creates entry in `account` table with `providerId: 'credential'`
+
+### Wrong Way
+
+```typescript
+// ❌ WRONG - users table has no password field!
+await db
+  .insertInto('users')
+  .values({
+    email: 'user@example.com',
+    password: 'hashedpassword', // This field doesn't exist!
+  })
+  .execute()
 ```
 
-### Basic Server Setup
+## Auth Configuration
 
-Create `auth.ts` (root, lib/, utils/, or under src/app/server/):
+The auth config is in `app/features/auth/config.ts`:
 
-```ts
-import { betterAuth } from "better-auth";
+```typescript
+import { betterAuth } from 'better-auth'
 
 export const auth = betterAuth({
   database: {
-    // See references/database-integration.md
+    type: 'postgres',
+    url: process.env.DATABASE_URL,
   },
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true
   },
-  socialProviders: {
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
+})
+```
+
+## Server Middleware
+
+Use `requireAuth()` in server functions:
+
+```typescript
+export const myServerFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const { requireAuth } = await import('../auth/server-middleware')
+    const session = await requireAuth()
+
+    // session.user contains:
+    // - id: string
+    // - email: string
+    // - name: string
+    // - role: 'user' | 'admin'
+
+    return { userId: session.user.id }
+  },
+)
+```
+
+## Auth Utilities
+
+```typescript
+// app/features/auth/utils.ts
+
+// Check if user has access to a farm
+export async function checkFarmAccess(
+  userId: string,
+  farmId: string,
+): Promise<boolean>
+
+// Get all farms a user has access to
+export async function getUserFarms(userId: string): Promise<string[]>
+```
+
+## Client-Side Auth
+
+```typescript
+import { useSession, signIn, signOut } from '~/features/auth/client'
+
+function LoginButton() {
+  const { data: session, isLoading } = useSession()
+
+  if (isLoading) return <Spinner />
+
+  if (session) {
+    return (
+      <Button onClick={() => signOut()}>
+        Sign Out ({session.user.email})
+      </Button>
+    )
   }
-});
+
+  return (
+    <Button onClick={() => signIn('credential', { email, password })}>
+      Sign In
+    </Button>
+  )
+}
 ```
 
-### Database Schema
+## Protected Routes
 
-```bash
-npx @better-auth/cli generate  # Generate schema/migrations
-npx @better-auth/cli migrate   # Apply migrations (Kysely only)
+The `_auth.tsx` layout protects routes:
+
+```typescript
+// app/routes/_auth.tsx
+export const Route = createFileRoute('/_auth')({
+  beforeLoad: async () => {
+    const session = await getSession()
+    if (!session) {
+      throw redirect({ to: '/login' })
+    }
+    return { session }
+  },
+})
 ```
 
-### Mount API Handler
+## User Roles
 
-**Next.js App Router:**
-```ts
-// app/api/auth/[...all]/route.ts
-import { auth } from "@/lib/auth";
-import { toNextJsHandler } from "better-auth/next-js";
+LivestockAI supports roles:
 
-export const { POST, GET } = toNextJsHandler(auth);
+| Role              | Access               |
+| ----------------- | -------------------- |
+| `user`            | Standard farm access |
+| `admin`           | Full system access   |
+| `extension_agent` | District-level view  |
+
+```typescript
+// Check role in server function
+const session = await requireAuth()
+if (session.user.role !== 'admin') {
+  throw new AppError('ACCESS_DENIED')
+}
 ```
 
-**Other frameworks:** See references/email-password-auth.md#framework-setup
+## Session Data
 
-### Client Setup
+The session object contains:
 
-Create `auth-client.ts`:
-
-```ts
-import { createAuthClient } from "better-auth/client";
-
-export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000"
-});
+```typescript
+interface Session {
+  user: {
+    id: string
+    email: string
+    name: string
+    role: 'user' | 'admin' | 'extension_agent'
+    image?: string
+  }
+  expires: Date
+}
 ```
 
-### Basic Usage
+## Related Skills
 
-```ts
-// Sign up
-await authClient.signUp.email({
-  email: "user@example.com",
-  password: "secure123",
-  name: "John Doe"
-});
-
-// Sign in
-await authClient.signIn.email({
-  email: "user@example.com",
-  password: "secure123"
-});
-
-// OAuth
-await authClient.signIn.social({ provider: "github" });
-
-// Session
-const { data: session } = authClient.useSession(); // React/Vue/Svelte
-const { data: session } = await authClient.getSession(); // Vanilla JS
-```
-
-## Feature Selection Matrix
-
-| Feature | Plugin Required | Use Case | Reference |
-|---------|----------------|----------|-----------|
-| Email/Password | No (built-in) | Basic auth | [email-password-auth.md](./references/email-password-auth.md) |
-| OAuth (GitHub, Google, etc.) | No (built-in) | Social login | [oauth-providers.md](./references/oauth-providers.md) |
-| Email Verification | No (built-in) | Verify email addresses | [email-password-auth.md](./references/email-password-auth.md#email-verification) |
-| Password Reset | No (built-in) | Forgot password flow | [email-password-auth.md](./references/email-password-auth.md#password-reset) |
-| Two-Factor Auth (2FA/TOTP) | Yes (`twoFactor`) | Enhanced security | [advanced-features.md](./references/advanced-features.md#two-factor-authentication) |
-| Passkeys/WebAuthn | Yes (`passkey`) | Passwordless auth | [advanced-features.md](./references/advanced-features.md#passkeys-webauthn) |
-| Magic Link | Yes (`magicLink`) | Email-based login | [advanced-features.md](./references/advanced-features.md#magic-link) |
-| Username Auth | Yes (`username`) | Username login | [email-password-auth.md](./references/email-password-auth.md#username-authentication) |
-| Organizations/Multi-tenant | Yes (`organization`) | Team/org features | [advanced-features.md](./references/advanced-features.md#organizations) |
-| Rate Limiting | No (built-in) | Prevent abuse | [advanced-features.md](./references/advanced-features.md#rate-limiting) |
-| Session Management | No (built-in) | User sessions | [advanced-features.md](./references/advanced-features.md#session-management) |
-
-## Auth Method Selection Guide
-
-**Choose Email/Password when:**
-- Building standard web app with traditional auth
-- Need full control over user credentials
-- Targeting users who prefer email-based accounts
-
-**Choose OAuth when:**
-- Want quick signup with minimal friction
-- Users already have social accounts
-- Need access to social profile data
-
-**Choose Passkeys when:**
-- Want passwordless experience
-- Targeting modern browsers/devices
-- Security is top priority
-
-**Choose Magic Link when:**
-- Want passwordless without WebAuthn complexity
-- Targeting email-first users
-- Need temporary access links
-
-**Combine Multiple Methods when:**
-- Want flexibility for different user preferences
-- Building enterprise apps with various auth requirements
-- Need progressive enhancement (start simple, add more options)
-
-## Core Architecture
-
-Better Auth uses client-server architecture:
-1. **Server** (`better-auth`): Handles auth logic, database ops, API routes
-2. **Client** (`better-auth/client`): Provides hooks/methods for frontend
-3. **Plugins**: Extend both server/client functionality
-
-## Implementation Checklist
-
-- [ ] Install `better-auth` package
-- [ ] Set environment variables (SECRET, URL)
-- [ ] Create auth server instance with database config
-- [ ] Run schema migration (`npx @better-auth/cli generate`)
-- [ ] Mount API handler in framework
-- [ ] Create client instance
-- [ ] Implement sign-up/sign-in UI
-- [ ] Add session management to components
-- [ ] Set up protected routes/middleware
-- [ ] Add plugins as needed (regenerate schema after)
-- [ ] Test complete auth flow
-- [ ] Configure email sending (verification/reset)
-- [ ] Enable rate limiting for production
-- [ ] Set up error handling
-
-## Reference Documentation
-
-### Core Authentication
-- [Email/Password Authentication](./references/email-password-auth.md) - Email/password setup, verification, password reset, username auth
-- [OAuth Providers](./references/oauth-providers.md) - Social login setup, provider configuration, token management
-- [Database Integration](./references/database-integration.md) - Database adapters, schema setup, migrations
-
-### Advanced Features
-- [Advanced Features](./references/advanced-features.md) - 2FA/MFA, passkeys, magic links, organizations, rate limiting, session management
-
-## Scripts
-
-- `scripts/better_auth_init.py` - Initialize Better Auth configuration with interactive setup
-
-## Resources
-
-- Docs: https://www.better-auth.com/docs
-- GitHub: https://github.com/better-auth/better-auth
-- Plugins: https://www.better-auth.com/docs/plugins
-- Examples: https://www.better-auth.com/docs/examples
+- `three-layer-architecture` - Auth in server layer
+- `error-handling` - Auth error handling
+- `tanstack-start` - Server function patterns

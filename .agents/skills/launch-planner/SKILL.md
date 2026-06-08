@@ -1,127 +1,136 @@
 ---
-name: Launch Planner
-slug: launch-planner
-description: Plan and orchestrate successful product and company launches with timeline and tasks
-category: business
-complexity: simple
-version: "1.0.0"
-author: "ID8Labs"
-triggers:
-  - "launch planning"
-  - "product launch"
-  - "launch strategy"
-  - "launch coordination"
-  - "release planning"
-tags:
-  - launch
-  - planning
-  - product
-  - coordination
-  - timeline
+name: launch-planner
+description: Converts app ideas into shippable MVPs by providing structured product planning, technical guidance, and decision-making support focused on rapid validation. Use when the user shares an app idea, needs help scoping an MVP, wants to generate PRDs or starter prompts for Claude Code, needs product decisions during a build, or when they need to be kept focused on shipping rather than over-engineering. Also use for questions about tech stack choices (Next.js/Supabase/Vercel), feature prioritization, or avoiding common early-stage mistakes.
 ---
 
 # Launch Planner
 
-Plan and orchestrate successful product and company launches with timeline and tasks
+## Product Philosophy
+- Ship fast, validate with real users, no feature creep
+- 1 week maximum build time for MVPs
+- Core user loop only - defer everything else
 
-## When to Use This Skill
+## Tech Stack Defaults
+- Next.js (App Router)
+- Supabase (database + auth when needed)
+- Vercel deployment
 
-Use this skill when you need to:
-- Improve business operations and strategy
-- Make data-driven business decisions
-- Optimize processes and outcomes
+## Pre-Build Validation (ALWAYS ASK FIRST)
 
-**Not recommended for:**
-- Tasks requiring creative design work
-- technical coding
+Before any planning or building, ask these 3 questions:
 
-## Quick Reference
+1. **Who is this for?** (Specific user persona + their current painful alternative)
+2. **What's the ONE problem it solves?** (Single value proposition, not feature list)
+3. **How will I know if it works?** (Specific success metric/behavior)
 
-| Action | Command/Trigger |
-|--------|-----------------|
-| Create launch planner | `launch planning` |
-| Review and optimize | `review launch planner` |
-| Get best practices | `launch planner best practices` |
+## MVP Scoping Rules
 
-## Core Workflows
+- **1 week maximum** - If longer, scope is too big
+- **Core loop only** - Features must directly serve the primary user action
+- **No nice-to-haves** - Save for post-validation
+- **Manual first** - Use manual processes initially where possible
 
-### Workflow 1: Initial Launch Planner Creation
+## Common Mistakes to Avoid
 
-**Goal:** Create a high-quality launch planner from scratch
+❌ DON'T:
+- Build features nobody asked for
+- Add auth before validating core value
+- Over-engineer architecture
+- Perfect UI before testing concept
+- Add multiple features at once
+- Build admin dashboards before having users
+- Implement payments before confirming willingness to pay
 
-**Steps:**
-1. **Discovery** - Understand requirements and objectives
-2. **Planning** - Develop strategy and approach
-3. **Execution** - Implement the plan
-4. **Review** - Evaluate results and iterate
-5. **Optimization** - Refine based on feedback
+✅ DO:
+- Talk to 5 potential users before building
+- Launch with hardcoded data or manual processes
+- Use simple, functional UI (shadcn/ui)
+- Test core loop with minimal features
+- Add auth only after confirming demand
+- Collect interest before building billing
 
-### Workflow 2: Advanced Launch Planner Optimization
+## Decision Framework
 
-**Goal:** Refine and optimize existing launch planner for better results
+When user asks "should I add [feature]?":
 
-**Steps:**
-1. **Research** - Gather relevant information
-2. **Analysis** - Evaluate options and approaches
-3. **Decision** - Choose the best path forward
-4. **Implementation** - Execute with precision
-5. **Measurement** - Track success metrics
+1. **Core Loop Test**: Does it directly enable the core user loop?
+2. **One Week Test**: Can it be built in remaining time?
+3. **Validation Test**: Needed to test if users want core value?
+4. **Manual Alternative**: Can this be done manually for first 10 users?
 
-## Best Practices
+If any answer is "no" → Defer it
 
-1. **Start with Clear Objectives**
-   Define what success looks like before beginning work.
+## Output: PRD Format
 
-2. **Follow Industry Standards**
-   Leverage proven frameworks and best practices in business.
+```markdown
+# [App Name] MVP
 
-3. **Iterate Based on Feedback**
-   Continuously improve based on results and user input.
+## Core Problem
+[One sentence]
 
-4. **Document Your Process**
-   Keep track of decisions and outcomes for future reference.
+## Target User
+[Specific persona + current painful alternative]
 
-5. **Focus on Quality**
-   Prioritize excellence over speed, especially in early iterations.
+## Success Metric
+[Specific, measurable behavior]
 
-## Checklist
+## Core User Loop
+1. [Step 1]
+2. [Step 2]
+3. [Value delivered]
 
-Before considering your work complete:
+## MVP Features (3-5 max)
+- [ ] [Feature serving core loop]
+- [ ] [Feature serving core loop]
 
-- [ ] Objectives clearly defined and understood
-- [ ] Research and discovery phase completed
-- [ ] Strategy or plan documented
-- [ ] Implementation matches requirements
-- [ ] Quality standards met
-- [ ] Stakeholders informed and aligned
-- [ ] Results measured against goals
-- [ ] Documentation updated
-- [ ] Feedback collected
-- [ ] Next steps identified
+## NOT Building Yet
+- [Deferred features]
 
-## Common Mistakes
+## Tech Stack
+- Next.js + Supabase + Vercel
 
-| Mistake | Why It's Bad | Better Approach |
-|---------|--------------|-----------------|
-| Skipping research | Leads to misaligned solutions | Invest time in understanding context |
-| Ignoring best practices | Reinventing the wheel | Study successful examples first |
-| No clear metrics | Can't measure success | Define KPIs upfront |
+## One-Week Plan
+- Day 1-2: [Setup + data model]
+- Day 3-4: [Core loop implementation]
+- Day 5: [Basic UI]
+- Day 6-7: [Deploy + test]
+```
 
-## Integration Points
+## Output: Claude Code Starter Prompt
 
-- **Tools**: Integration with common business platforms and tools
-- **Workflows**: Fits into existing business operations workflows
-- **Team**: Collaborates with leadership and operations stakeholders
+```
+Build [app name] - MVP to validate [problem] for [user].
 
-## Success Metrics
+Core loop:
+1. [Step]
+2. [Step]
+3. [Value]
 
-Track these metrics to measure effectiveness:
-- Quality of output
-- Time to completion
-- Stakeholder satisfaction
-- Impact on business goals
-- Reusability of approach
+MVP features only:
+- [Feature 1]
+- [Feature 2]
 
----
+Stack: Next.js + Supabase + Vercel
 
-*This skill is part of the ID8Labs Skills Marketplace. Last updated: 2026-01-07*
+Help me:
+1. Set up project structure
+2. Design minimal database schema
+3. Implement [first feature]
+
+Keep simple - ship this week. No auth yet.
+```
+
+## Key Phrases
+
+**Use these:**
+- "What's the absolute minimum to test this?"
+- "Can we do this manually for first 10 users?"
+- "Great feature for v2, but let's validate v1 first"
+- "How does this serve the core loop?"
+- "Let's ship this week and iterate"
+
+**Avoid these:**
+- "We should probably add..."
+- "To make this production-ready..."
+- "Users will expect..."
+- "This would be more complete if..."

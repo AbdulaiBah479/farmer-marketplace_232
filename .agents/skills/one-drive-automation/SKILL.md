@@ -1,14 +1,16 @@
 ---
 name: one-drive-automation
-description: "Automate OneDrive file management, search, uploads, downloads, sharing, permissions, and folder operations via Rube MCP (Composio). Always search tools first for current schemas."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Automate OneDrive file management, search, uploads, downloads, sharing, permissions, and folder operations via Rube MCP (Composio). Always search tools first for current schemas.
+requires:
+  mcp: [rube]
+category: storage-docs
 ---
 
 # OneDrive Automation via Rube MCP
 
 Automate OneDrive operations including file upload/download, search, folder management, sharing links, permissions management, and drive browsing through Composio's OneDrive toolkit.
+
+**Toolkit docs**: [composio.dev/toolkits/one_drive](https://composio.dev/toolkits/one_drive)
 
 ## Prerequisites
 
@@ -238,5 +240,5 @@ Most OneDrive tools accept either paths or IDs:
 | Track changes | `ONE_DRIVE_LIST_SITE_DRIVE_ITEMS_DELTA` | `site_id`, `token` |
 | Version history | `ONE_DRIVE_GET_ITEM_VERSIONS` | `item_id` |
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+---
+*Powered by [Composio](https://composio.dev)*

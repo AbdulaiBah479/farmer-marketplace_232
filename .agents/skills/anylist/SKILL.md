@@ -1,6 +1,8 @@
 ---
-name: anylist
-description: Manage grocery and shopping lists via AnyList. Use when user asks about shopping lists, groceries, or adding/checking off items to buy.
+category: Business
+id: anylist
+name: Anylist
+description: Manage grocery and shopping lists via AnyList.
 homepage: https://www.anylist.com
 metadata:
   clawdbot:

@@ -1,6 +1,6 @@
 ---
 name: pressreleasesonline
-category: social-media
+category: marketing
 description: Draft and publish AI-powered press releases — submit a URL + notes, get a live release page instantly. Free, no API key required.
 ---
 

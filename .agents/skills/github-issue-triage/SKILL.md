@@ -1,163 +1,226 @@
 ---
-name: github-issue-triage
-description: Analyze GitHub issues for the Nx repository and provide assignment recommendations based on technology stack, team expertise, and priority classification rules.
-allowed-tools: Bash, Read, Grep, Glob
+id: SKL-github-GITHUBISSUETRIAGE
+name: Github Issue Triage
+description: GitHub issue triage is systematic process of organizing, prioritizing,
+  and routing incoming issues to ensure they are addressed efficiently. This skill
+  covers triage workflows, labeling strategies, au
+version: 1.0.0
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
-# GitHub Issue Triage Skill
+# Github Issue Triage
 
-This skill provides comprehensive logic for triaging GitHub issues in the Nx repository.
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
-## Team Expertise Mapping
+## Overview
+GitHub issue triage is systematic process of organizing, prioritizing, and routing incoming issues to ensure they are addressed efficiently. This skill covers triage workflows, labeling strategies, automation, and best practices for managing issue backlogs using GitHub's features and integrations.
 
-### Primary Team Members
-- **@barbados-clemens** - Documentation, lifecycle hooks, developer experience, API docs
-- **@lourw** - Java/Gradle
-- **@leosvelperez** - Angular (primary), TypeScript, testing tools (Jest/Cypress/Playwright), ESLint issues
-- **@Coly010** - Webpack/Rollup/Rspack configs, Module Federation, Storybook, Vue, bundler optimization, React Native, Nx Release, Publishing, migration utilities, React, Node/NestJS/Express, NextJS, Remix, create-nx-workspace, preset issues
-- **@AgentEnder** - Nx Core (caching/daemon/graph), installation issues, plugin system, devkit, affected calculation
+## Why This Matters
+- **Efficiency**: Ensure issues reach the right maintainers quickly
+- **Prioritization**: Focus on high-impact issues first
+- **Organization**: Maintain clean, searchable issue backlog
+- **Communication**: Keep users informed about issue status
 
-## Assignment Logic (Check in Order)
+---
 
-### 1. Technology Keywords in Title/Body
+## Core Concepts & Rules
 
-Look for these keywords and match to assignees:
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-| Keywords | Assignee | Reason |
-|----------|----------|--------|
-| "Angular", "ng serve", "@angular" | @leosvelperez | Angular specialist |
-| "Nest", "NestJS", "@nx/nest" | @Coly010 | Backend framework support |
-| "Next", "NextJS", "@nx/next" | @Coly010 | Framework support |
-| "React", "@nx/react" | @Coly010 | Framework support |
-| "webpack", "rollup", "rspack", "bundler" | @Coly010 | Bundler expertise |
-| "Module Federation", "MF" | @Coly010 | Advanced bundling feature |
-| "create-nx-workspace", "preset" | @Coly010 | Workspace setup |
-| "cache", "daemon", "affected", "nx reset" | @AgentEnder | Nx core functionality |
-| "plugin", "generator", "executor" | @AgentEnder | Plugin system & devkit |
-| "docs", "documentation", "lifecycle" | @barbados-clemens | Documentation focus |
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-### 2. Error Pattern Analysis
 
-Examine error messages and stack traces to identify:
+## Inputs / Outputs / Contracts
+* **Inputs**:
+  - New issue with title and description
+  - Issue type (bug, enhancement, question, etc.)
+  - Labels and assignees
+  - Related issues and milestones
+* **Entry Conditions**:
+  - Issue created with sufficient details
+  - Issue template used (if available)
+  - Automated labels applied
+  - Duplicate search performed
+* **Outputs**:
+  - Categorized and labeled issue
+  - Assigned to appropriate team or person
+  - Priority level set
+  - Added to appropriate milestone
+* **Artifacts Required (Deliverables)**:
+  - Triaged issue with appropriate labels
+  - Assignee or team identified
+  - Priority level set
+  - Welcome comment added (if needed)
+* **Acceptance Evidence**:
+  - Issue has appropriate labels
+  - Assignee or team identified
+  - Priority level set
+  - No duplicate issues
+* **Success Criteria**:
+  - Time to triage < 24 hours
+  - Time to assign < 48 hours
+  - Time to response < 72 hours
+  - Stale issues < 5%
 
-- **Compilation/build failures with Angular** → @leosvelperez
-- **Webpack configuration errors** → @Coly010
-- **Installation/dependency issues** → @AgentEnder
-- **Preset/generator failures** → Check technology first, fallback to @AgentEnder
+## Skill Composition
+* **Depends on**: [skill-github-code-review](./github-code-review/), [skill-github-workflow-ops](./github-workflow-ops/)
+* **Compatible with**: [skill-github-pr-lifecycle](./github-pr-lifecycle/), [skill-github-security-triage](./github-security-triage/)
+* **Conflicts with**: Ignoring issues without triage
+* **Related Skills**: [skill-github-repo-governance](./github-repo-governance/), [skill-github-release-management](./github-release-management/)
 
-### 3. Scope Assignment
+---
 
-Match scope labels to technology:
+## Quick Start / Implementation Example
 
-- Use `scope: angular` for Angular-specific issues
-- Use `scope: react` for React-specific issues
-- Use `scope: node` for Node/NestJS/Express issues
-- Use `scope: bundlers` for webpack/rollup/rspack issues
-- Use `scope: core` only for caching/daemon/graph issues
-- Use `scope: misc` for installation/setup issues
-- Use `scope: dx` for documentation/developer experience issues
+1. Review requirements and constraints
+2. Set up development environment
+3. Implement core functionality following patterns
+4. Write tests for critical paths
+5. Run tests and fix issues
+6. Document any deviations or decisions
 
-## Priority Classification Rules
-
-Apply priorities conservatively:
-
-| Priority | Criteria |
-|----------|----------|
-| **High** | Blocks many users (workspace creation failures, compilation blockers, security CVEs) |
-| **Medium** | Standard bugs, configuration issues, generator problems |
-| **Low** | Documentation improvements, UI enhancements, edge cases |
-
-## Validation Steps
-
-Before finalizing assignments:
-
-1. **Check issue body** for actual error messages and stack traces
-2. **Review reproduction steps** to identify the root problem area
-3. **Consider scope** - does this affect a specific framework or Nx core?
-4. **Verify priority** - how many users would be blocked?
-5. **Cross-check** - does the technology keyword match the actual problem?
-
-## Bulk Operations
-
-### Assignment Command Template
-
-```bash
-# Assign single issue
-gh issue edit 12345 --repo nrwl/nx --add-assignee username
-
-# Batch assign to same person
-gh issue edit 12345 12346 12347 --repo nrwl/nx --add-assignee username
-
-# Batch assign to different people (sequential)
-gh issue edit 12345 12346 --repo nrwl/nx --add-assignee user1
-gh issue edit 12347 12348 --repo nrwl/nx --add-assignee user2
+```python
+# Example implementation following best practices
+def example_function():
+    # Your implementation here
+    pass
 ```
 
-### Label Command Template
 
-```bash
-# Apply scope labels
-gh issue edit 12345 12346 --repo nrwl/nx --add-label "scope: angular"
+## Assumptions / Constraints / Non-goals
 
-# Apply priority labels
-gh issue edit 12345 --repo nrwl/nx --add-label "priority: high"
-gh issue edit 12346 12347 --repo nrwl/nx --add-label "priority: medium"
-```
+* **Assumptions**:
+  - Development environment is properly configured
+  - Required dependencies are available
+  - Team has basic understanding of domain
+* **Constraints**:
+  - Must follow existing codebase conventions
+  - Time and resource limitations
+  - Compatibility requirements
+* **Non-goals**:
+  - This skill does not cover edge cases outside scope
+  - Not a replacement for formal training
 
-## Browser Verification (MANDATORY)
 
-After all assignments are complete, open every assigned issue in the browser for manual review.
+## Compatibility & Prerequisites
 
-### Command by OS
+* **Supported Versions**:
+  - Python 3.8+
+  - Node.js 16+
+  - Modern browsers (Chrome, Firefox, Safari, Edge)
+* **Required AI Tools**:
+  - Code editor (VS Code recommended)
+  - Testing framework appropriate for language
+  - Version control (Git)
+* **Dependencies**:
+  - Language-specific package manager
+  - Build tools
+  - Testing libraries
+* **Environment Setup**:
+  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
 
-**macOS:**
-```bash
-for issue in ISSUE_NUMBERS; do open "https://github.com/nrwl/nx/issues/$issue"; done
-```
 
-**Linux:**
-```bash
-for issue in ISSUE_NUMBERS; do xdg-open "https://github.com/nrwl/nx/issues/$issue"; done
-```
+## Test Scenario Matrix (QA Strategy)
 
-**Windows:**
-```bash
-for issue in ISSUE_NUMBERS; do start "https://github.com/nrwl/nx/issues/$issue"; done
-```
+| Type | Focus Area | Required Scenarios / Mocks |
+| :--- | :--- | :--- |
+| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
+| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
+| **E2E** | User Journey | Critical user flows to test |
+| **Performance** | Latency / Load | Benchmark requirements |
+| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
+| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
 
-**Alternative (CLI-based, one at a time):**
-```bash
-gh issue view ISSUE_NUMBER --repo nrwl/nx --web
-```
 
-## Workflow Best Practices
+## Technical Guardrails & Security Threat Model
 
-1. **Always inspect the full issue** - Don't assign based on title alone
-2. **Check comments** - Users often provide context in discussions
-3. **Look for duplicate markers** - Sometimes issues reference others
-4. **Consider workload** - Don't overload one assignee
-5. **Validate assignments** - Browser verification is non-negotiable
-6. **Document reasoning** - Leave a comment explaining the assignment if complex
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
 
-## Assignment Examples
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
 
-**Example 1: Angular + Build Issue**
-- Title: "Angular build fails with Module Federation setup"
-- Keywords: "Angular", "Module Federation", "build fails"
-- Recommendation: @Coly010 (bundler + framework specialist)
-- Scope: `scope: bundlers`
-- Priority: `priority: high` (blocks users from building)
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
 
-**Example 2: Installation Problem**
-- Title: "npm install fails with peer dependency conflict"
-- Keywords: "install", "dependency"
-- Recommendation: @AgentEnder (installation issues)
-- Scope: `scope: misc`
-- Priority: `priority: high` (blocks workspace setup)
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
 
-**Example 3: Documentation Request**
-- Title: "Add lifecycle hooks documentation"
-- Keywords: "docs", "documentation", "lifecycle"
-- Recommendation: @barbados-clemens (documentation specialist)
-- Scope: `scope: dx`
-- Priority: `priority: low` (enhancement, not blocking)
+
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+
+
+## Definition of Done (DoD) Checklist
+
+- [ ] Tests passed + coverage met
+- [ ] Lint/Typecheck passed
+- [ ] Logging/Metrics/Trace implemented
+- [ ] Security checks passed
+- [ ] Documentation/Changelog updated
+- [ ] Accessibility/Performance requirements met (if frontend)
+
+
+## Anti-patterns / Pitfalls
+
+* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
+* ⚠️ **Watch out for**: Common symptoms and quick fixes
+* 💡 **Instead**: Use proper error handling, pagination, and logging
+
+
+## Reference Links & Examples
+
+* Internal documentation and examples
+* Official documentation and best practices
+* Community resources and discussions
+
+
+## Versioning & Changelog
+
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
+

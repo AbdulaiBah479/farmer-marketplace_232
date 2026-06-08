@@ -1,199 +1,276 @@
 ---
-name: lead-research-assistant
-description: Identifies high-quality leads for your product or service by analyzing your business, searching for target companies, and providing actionable contact strategies. Perfect for sales, business development, and marketing professionals.
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLAUDE OFFICE SKILL - Enhanced Metadata v2.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Basic Information
+name: Lead Research Assistant
+description: "Research company and contact information for sales outreach"
+version: "1.0"
+author: claude-office-skills
+license: MIT
+
+# Categorization
+category: sales
+tags:
+  - lead
+  - research
+  - sales
+  - prospecting
+department: Sales
+
+# AI Model Compatibility
+models:
+  recommended:
+    - claude-sonnet-4
+    - claude-opus-4
+  compatible:
+    - claude-3-5-sonnet
+    - gpt-4
+    - gpt-4o
+
+# MCP Tools Integration
+mcp:
+  server: office-mcp
+  tools:
+    - create_docx
+    - xlsx_to_json
+
+# Skill Capabilities
+capabilities:
+  - lead_research
+  - company_analysis
+  - contact_discovery
+
+# Language Support
+languages:
+  - en
+  - zh
 ---
 
 # Lead Research Assistant
 
-This skill helps you identify and qualify potential leads for your business by analyzing your product/service, understanding your ideal customer profile, and providing actionable outreach strategies.
+Research and compile information about companies and contacts for effective sales outreach.
 
-## When to Use This Skill
+## Overview
 
-- Finding potential customers or clients for your product/service
-- Building a list of companies to reach out to for partnerships
-- Identifying target accounts for sales outreach
-- Researching companies that match your ideal customer profile
-- Preparing for business development activities
-
-## What This Skill Does
-
-1. **Understands Your Business**: Analyzes your product/service, value proposition, and target market
-2. **Identifies Target Companies**: Finds companies that match your ideal customer profile based on:
-   - Industry and sector
-   - Company size and location
-   - Technology stack and tools they use
-   - Growth stage and funding
-   - Pain points your product solves
-3. **Prioritizes Leads**: Ranks companies based on fit score and relevance
-4. **Provides Contact Strategies**: Suggests how to approach each lead with personalized messaging
-5. **Enriches Data**: Gathers relevant information about decision-makers and company context
+This skill helps you:
+- Research company backgrounds and key metrics
+- Find decision-maker information
+- Identify pain points and opportunities
+- Prepare personalized outreach
+- Prioritize leads by fit
 
 ## How to Use
 
-### Basic Usage
-
-Simply describe your product/service and what you're looking for:
-
+### Company Research
 ```
-I'm building [product description]. Find me 10 companies in [location/industry] 
-that would be good leads for this.
+"Research [Company Name] for a sales call"
+"Give me a briefing on [Company]'s recent news and challenges"
+"What should I know before contacting [Company]?"
 ```
 
-### With Your Codebase
-
-For even better results, run this from your product's source code directory:
-
+### Contact Research
 ```
-Look at what I'm building in this repository and identify the top 10 companies 
-in [location/industry] that would benefit from this product.
+"Find information about [Name] at [Company]"
+"Who are the key decision makers at [Company] for [Product Type]?"
+"Create a contact profile for [Name, Title, Company]"
 ```
 
-### Advanced Usage
-
-For more targeted research:
-
+### Batch Research
 ```
-My product: [description]
-Ideal customer profile:
-- Industry: [industry]
-- Company size: [size range]
-- Location: [location]
-- Current pain points: [pain points]
-- Technologies they use: [tech stack]
-
-Find me 20 qualified leads with contact strategies for each.
+"Research these 5 companies for our outreach campaign"
+"Prioritize these leads based on our ICP"
 ```
 
-## Instructions
+## Output Formats
 
-When a user requests lead research:
+### Company Brief
+```markdown
+# Company Research: [Company Name]
 
-1. **Understand the Product/Service**
-   - If in a code directory, analyze the codebase to understand the product
-   - Ask clarifying questions about the value proposition
-   - Identify key features and benefits
-   - Understand what problems it solves
+## Quick Facts
+| Attribute | Value |
+|-----------|-------|
+| **Industry** | [Industry] |
+| **Founded** | [Year] |
+| **Headquarters** | [Location] |
+| **Employees** | [Range] |
+| **Revenue** | [Estimate] |
+| **Funding** | [Stage/Amount] |
+| **Website** | [URL] |
 
-2. **Define Ideal Customer Profile**
-   - Determine target industries and sectors
-   - Identify company size ranges
-   - Consider geographic preferences
-   - Understand relevant pain points
-   - Note any technology requirements
+## Business Overview
+[2-3 sentence description of what the company does]
 
-3. **Research and Identify Leads**
-   - Search for companies matching the criteria
-   - Look for signals of need (job postings, tech stack, recent news)
-   - Consider growth indicators (funding, expansion, hiring)
-   - Identify companies with complementary products/services
-   - Check for budget indicators
+## Products/Services
+- [Product 1]: [Brief description]
+- [Product 2]: [Brief description]
 
-4. **Prioritize and Score**
-   - Create a fit score (1-10) for each lead
-   - Consider factors like:
-     - Alignment with ICP
-     - Signals of immediate need
-     - Budget availability
-     - Competitive landscape
-     - Timing indicators
+## Target Market
+- **Customers**: [Who they sell to]
+- **Industries**: [Industries served]
+- **Geography**: [Markets]
 
-5. **Provide Actionable Output**
-   
-   For each lead, provide:
-   - **Company Name** and website
-   - **Why They're a Good Fit**: Specific reasons based on their business
-   - **Priority Score**: 1-10 with explanation
-   - **Decision Maker**: Role/title to target (e.g., "VP of Engineering")
-   - **Contact Strategy**: Personalized approach suggestions
-   - **Value Proposition**: How your product solves their specific problem
-   - **Conversation Starters**: Specific points to mention in outreach
-   - **LinkedIn URL**: If available, for easy connection
+## Key People
+| Name | Title | LinkedIn |
+|------|-------|----------|
+| [Name] | CEO | [Link] |
+| [Name] | [Relevant Title] | [Link] |
 
-6. **Format the Output**
+## Recent News & Developments
+- [Date]: [Headline - brief summary]
+- [Date]: [Headline - brief summary]
 
-   Present results in a clear, scannable format:
+## Potential Pain Points
+1. **[Pain Point]**: [Why this matters to them]
+2. **[Pain Point]**: [Why this matters to them]
 
-   ```markdown
-   # Lead Research Results
-   
-   ## Summary
-   - Total leads found: [X]
-   - High priority (8-10): [X]
-   - Medium priority (5-7): [X]
-   - Average fit score: [X]
-   
-   ---
-   
-   ## Lead 1: [Company Name]
-   
-   **Website**: [URL]
-   **Priority Score**: [X/10]
-   **Industry**: [Industry]
-   **Size**: [Employee count/revenue range]
-   
-   **Why They're a Good Fit**:
-   [2-3 specific reasons based on their business]
-   
-   **Target Decision Maker**: [Role/Title]
-   **LinkedIn**: [URL if available]
-   
-   **Value Proposition for Them**:
-   [Specific benefit for this company]
-   
-   **Outreach Strategy**:
-   [Personalized approach - mention specific pain points, recent company news, or relevant context]
-   
-   **Conversation Starters**:
-   - [Specific point 1]
-   - [Specific point 2]
-   
-   ---
-   
-   [Repeat for each lead]
-   ```
+## Technology Stack
+[Known technologies they use - relevant to your product]
 
-7. **Offer Next Steps**
-   - Suggest saving results to a CSV for CRM import
-   - Offer to draft personalized outreach messages
-   - Recommend prioritization based on timing
-   - Suggest follow-up research for top leads
+## Competitive Landscape
+- Current solutions: [What they use today]
+- Competitors: [Their competitors]
 
-## Examples
+## Outreach Angle
+**Recommended approach**: [Specific angle based on research]
 
-### Example 1: From Lenny's Newsletter
+**Talking points**:
+1. [Specific point relevant to them]
+2. [Specific point relevant to them]
 
-**User**: "I'm building a tool that masks sensitive data in AI coding assistant queries. Find potential leads."
+## Fit Score: [1-10]
+**Reasoning**: [Why they are/aren't a good fit]
+```
 
-**Output**: Creates a prioritized list of companies that:
-- Use AI coding assistants (Copilot, Cursor, etc.)
-- Handle sensitive data (fintech, healthcare, legal)
-- Have evidence in their GitHub repos of using coding agents
-- May have accidentally exposed sensitive data in code
-- Includes LinkedIn URLs of relevant decision-makers
+### Contact Profile
+```markdown
+# Contact Profile: [Name]
 
-### Example 2: Local Business
+## Overview
+| Attribute | Value |
+|-----------|-------|
+| **Name** | [Full Name] |
+| **Title** | [Current Title] |
+| **Company** | [Company] |
+| **Location** | [City, Country] |
+| **LinkedIn** | [URL] |
+| **Email** | [If available] |
 
-**User**: "I run a consulting practice for remote team productivity. Find me 10 companies in the Bay Area that recently went remote."
+## Professional Background
+- **Current Role**: [Title] at [Company] since [Date]
+- **Previous**: [Previous role] at [Company]
+- **Education**: [Degree, School]
+- **Experience**: [X] years in [industry/function]
 
-**Output**: Identifies companies that:
-- Recently posted remote job listings
-- Announced remote-first policies
-- Are hiring distributed teams
-- Show signs of remote work challenges
-- Provides personalized outreach strategies for each
+## Responsibilities
+[What they likely own/decide based on title]
 
-## Tips for Best Results
+## Recent Activity
+- [LinkedIn post/article summary]
+- [Speaking engagement/podcast]
+- [News mention]
 
-- **Be specific** about your product and its unique value
-- **Run from your codebase** if applicable for automatic context
-- **Provide context** about your ideal customer profile
-- **Specify constraints** like industry, location, or company size
-- **Request follow-up** research on promising leads for deeper insights
+## Interests & Topics
+[Topics they engage with professionally]
 
-## Related Use Cases
+## Connection Points
+1. **Shared**: [Mutual connections, schools, interests]
+2. **Relevant**: [Content they've engaged with]
 
-- Drafting personalized outreach emails after identifying leads
-- Building a CRM-ready CSV of qualified prospects
-- Researching specific companies in detail
-- Analyzing competitor customer bases
-- Identifying partnership opportunities
+## Outreach Strategy
+**Best channel**: [Email/LinkedIn/Phone]
+**Best time**: [Based on timezone/activity patterns]
+
+**Personalization hooks**:
+- [Specific thing to mention]
+- [Recent activity to reference]
+
+## Sample Opener
+"Hi [Name], I noticed [personalized observation]. [Relevant question/value prop]..."
+```
+
+### Lead Prioritization
+```markdown
+# Lead Scoring: [Campaign Name]
+
+## Scoring Criteria
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| Company Size | 25% | [X-Y employees = 10pts] |
+| Industry Fit | 20% | [Target industries = 10pts] |
+| Tech Stack | 20% | [Using X = 10pts] |
+| Timing Signals | 20% | [Funding, hiring = 10pts] |
+| Contact Level | 15% | [Decision maker = 10pts] |
+
+## Ranked Leads
+
+### 🔥 Hot (Score: 80-100)
+| Company | Score | Key Signal |
+|---------|-------|------------|
+| [Company A] | 95 | Recent funding, hiring |
+| [Company B] | 88 | Expansion announced |
+
+### 🟡 Warm (Score: 60-79)
+| Company | Score | Key Signal |
+|---------|-------|------------|
+| [Company C] | 72 | Good fit, no timing signal |
+
+### 🔵 Nurture (Score: 40-59)
+| Company | Score | Next Step |
+|---------|-------|-----------|
+| [Company D] | 55 | Monitor for triggers |
+```
+
+## Research Areas
+
+### Company Information
+- Business model and revenue streams
+- Company size and growth trajectory
+- Recent news and announcements
+- Funding history and investors
+- Key partnerships and customers
+- Technology stack
+- Hiring trends
+- Competitive positioning
+
+### Contact Information
+- Professional background
+- Decision-making authority
+- Communication style (from content)
+- Network and connections
+- Recent professional activity
+- Interests and topics
+
+### Timing Signals
+- Recent funding rounds
+- Leadership changes
+- Expansion announcements
+- Product launches
+- Hiring surges
+- Contract renewals (industry timing)
+
+## Best Practices
+
+### Research Ethics
+- Use publicly available information only
+- Respect privacy boundaries
+- Don't misrepresent sources
+- Verify information accuracy
+
+### Effective Research
+1. Start with company website and LinkedIn
+2. Check recent news (last 6 months)
+3. Review press releases and blog
+4. Look at job postings for insights
+5. Check review sites (G2, Glassdoor)
+6. Analyze social media presence
+
+## Limitations
+
+- Cannot access paid databases (ZoomInfo, etc.)
+- Contact details may not be publicly available
+- Information accuracy depends on sources
+- Private companies have limited data
+- Real-time data may be outdated

@@ -1,4 +1,5 @@
 ---
+version: 4.1.0-fractal
 name: seo-structure-architect
 description: Analyzes and optimizes content structure including header
   hierarchy, suggests schema markup, and internal linking opportunities. Creates

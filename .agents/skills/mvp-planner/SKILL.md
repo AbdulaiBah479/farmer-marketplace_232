@@ -1,127 +1,146 @@
 ---
-name: MVP Planner
-slug: mvp-planner
-description: Scope and plan minimum viable products with feature prioritization
-category: business
-complexity: simple
-version: "1.0.0"
-author: "ID8Labs"
-triggers:
-  - "mvp planning"
-  - "minimum viable product"
-  - "scope mvp"
-  - "mvp features"
-  - "mvp strategy"
-tags:
-  - mvp
-  - planning
-  - product
-  - scope
-  - features
+name: mvp-planner
+description: Define and prioritize MVP features. Triggers on "Define MVP features", "Help me plan the MVP", "What features for MVP", "Let's define the features".
+globs: ["docs/project.md", "docs/features/**"]
 ---
 
-# MVP Planner
+# MVP Planner (Fase 0)
 
-Scope and plan minimum viable products with feature prioritization
+Transform project vision into concrete, prioritized features ready for implementation.
 
-## When to Use This Skill
+## Triggers
 
-Use this skill when you need to:
-- Improve business operations and strategy
-- Make data-driven business decisions
-- Optimize processes and outcomes
+- "Define MVP features"
+- "Help me plan the MVP"
+- "What features should we build?"
+- "Let's define the features"
+- "Plan the MVP"
+- `/mvp`
 
-**Not recommended for:**
-- Tasks requiring creative design work
-- technical coding
+## Prerequisites
 
-## Quick Reference
+- `docs/project.md` should exist
+- `docs/architecture/_index.md` ideally exists
+- If not: "Let's first define the project and architecture"
 
-| Action | Command/Trigger |
-|--------|-----------------|
-| Create mvp planner | `mvp planning` |
-| Review and optimize | `review mvp planner` |
-| Get best practices | `mvp planner best practices` |
+## Purpose
 
-## Core Workflows
+Create:
+1. **Prioritized feature list** in `docs/features/_index.md`
+2. **Feature folders** for top 3-5 MVP features
+3. **Clear scope** of what's in/out of MVP
 
-### Workflow 1: Initial MVP Planner Creation
+## Process
 
-**Goal:** Create a high-quality mvp planner from scratch
+### 1. Read Context
 
-**Steps:**
-1. **Discovery** - Understand requirements and objectives
-2. **Planning** - Develop strategy and approach
-3. **Execution** - Implement the plan
-4. **Review** - Evaluate results and iterate
-5. **Optimization** - Refine based on feedback
+```bash
+# Read project definition
+cat docs/project.md
 
-### Workflow 2: Advanced MVP Planner Optimization
+# Read architecture (if exists)
+cat docs/architecture/_index.md 2>/dev/null
 
-**Goal:** Refine and optimize existing mvp planner for better results
+# Check existing features
+ls -la docs/features/ 2>/dev/null
+```
 
-**Steps:**
-1. **Research** - Gather relevant information
-2. **Analysis** - Evaluate options and approaches
-3. **Decision** - Choose the best path forward
-4. **Implementation** - Execute with precision
-5. **Measurement** - Track success metrics
+### 2. Extract Core Value
 
-## Best Practices
+From project.md, identify:
+- What's the ONE thing that makes this valuable?
+- What's the minimum a user needs to get value?
+- What can wait until v1.1?
 
-1. **Start with Clear Objectives**
-   Define what success looks like before beginning work.
+### 3. Feature Brainstorm Interview
 
-2. **Follow Industry Standards**
-   Leverage proven frameworks and best practices in business.
+```
+"Based on your project, I see these potential features:
 
-3. **Iterate Based on Feedback**
-   Continuously improve based on results and user input.
+CORE (likely MVP):
+1. [Feature] - [Why it's core]
+2. [Feature] - [Why it's core]
+3. [Feature] - [Why it's core]
 
-4. **Document Your Process**
-   Keep track of decisions and outcomes for future reference.
+IMPORTANT (maybe MVP):
+4. [Feature] - [Value add]
+5. [Feature] - [Value add]
 
-5. **Focus on Quality**
-   Prioritize excellence over speed, especially in early iterations.
+NICE TO HAVE (post-MVP):
+6. [Feature] - [Can wait because...]
+7. [Feature] - [Can wait because...]
 
-## Checklist
+Questions:
+1. Did I miss any critical features?
+2. Which of the 'important' ones are must-have for launch?
+3. Anything in 'core' that could actually wait?"
+```
 
-Before considering your work complete:
+### 4. Prioritization Framework
 
-- [ ] Objectives clearly defined and understood
-- [ ] Research and discovery phase completed
-- [ ] Strategy or plan documented
-- [ ] Implementation matches requirements
-- [ ] Quality standards met
-- [ ] Stakeholders informed and aligned
-- [ ] Results measured against goals
-- [ ] Documentation updated
-- [ ] Feedback collected
-- [ ] Next steps identified
+Use MoSCoW or similar:
 
-## Common Mistakes
+| Priority | Meaning | MVP? |
+|----------|---------|------|
+| **Must** | Won't work without it | Yes |
+| **Should** | Important but workaround exists | Maybe |
+| **Could** | Nice to have | No |
+| **Won't** | Explicitly out of scope | No |
 
-| Mistake | Why It's Bad | Better Approach |
-|---------|--------------|-----------------|
-| Skipping research | Leads to misaligned solutions | Invest time in understanding context |
-| Ignoring best practices | Reinventing the wheel | Study successful examples first |
-| No clear metrics | Can't measure success | Define KPIs upfront |
+### 5. Interview Rules
 
-## Integration Points
+```
+MVP PLANNING RULES
 
-- **Tools**: Integration with common business platforms and tools
-- **Workflows**: Fits into existing business operations workflows
-- **Team**: Collaborates with leadership and operations stakeholders
+1. Ruthlessly cut scope
+   "Can you launch without this? Yes? -> Post-MVP"
 
-## Success Metrics
+2. Maximum 5 features for MVP
+   More than 5 = you're not building an MVP
 
-Track these metrics to measure effectiveness:
-- Quality of output
-- Time to completion
-- Stakeholder satisfaction
-- Impact on business goals
-- Reusability of approach
+3. Each feature must have clear "done" criteria
+   "User can X" not "Implement X"
 
----
+4. Identify dependencies early
+   Which features block others?
 
-*This skill is part of the ID8Labs Skills Marketplace. Last updated: 2026-01-07*
+5. Time-box the MVP
+   "If it takes more than X weeks, we're doing too much"
+
+6. The first feature should prove the core value
+   Start with what makes this product unique
+```
+
+### 6. Create Feature Folders
+
+After prioritization, create each MVP feature:
+
+```
+For each MVP feature:
+1. Create folder: docs/features/FEAT-00X-name/
+2. Copy templates from docs/features/_template/
+3. Pre-fill spec.md with scope from this discussion
+4. Update status.md to "Pending - Spec needed"
+```
+
+### 7. Handoff
+
+When complete:
+
+```
+MVP planned. Created:
+- docs/features/_index.md (dashboard)
+- docs/features/FEAT-001-[name]/ (folder + templates)
+- docs/features/FEAT-002-[name]/ (folder + templates)
+- docs/features/FEAT-003-[name]/ (folder + templates)
+
+Recommended order:
+1. FEAT-001 - [name] (no dependencies)
+2. FEAT-002 - [name] (depends on FEAT-001)
+3. FEAT-003 - [name] (depends on FEAT-001, FEAT-002)
+
+Next step:
+"Interview me about FEAT-001-[name]" -> Deep dive into first feature spec
+
+Or: /interview FEAT-001-[name]
+```

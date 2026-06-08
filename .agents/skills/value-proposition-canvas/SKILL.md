@@ -1,332 +1,599 @@
 ---
 name: value-proposition-canvas
-description: >
-  Strategyzer Value Proposition Canvas (Customer Profile + Value Map) with fit
-  validation across problem-solution and product-market dimensions.
-license: MIT + Commons Clause
+description: "Use Osterwalder's Value Proposition Canvas to systematically achieve product-market fit by matching your products and services to customer jobs, pains, and gains Use when: **Launching a new product or service** and need to validate the value proposition; **Struggling with product-market fit** and need to diagnose why customers aren't buying; **Repositioning an existing offering** to better meet customer needs; **Entering a new market segment** with different customer requirements; **Developin..."
+license: MIT
 metadata:
+  author: ClawFu
   version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: pm-discovery
-  updated: 2026-05-22
-  tech-stack: value-proposition, jobs-to-be-done, strategyzer, product-market-fit
+  mcp-server: "@clawfu/mcp-skills"
 ---
-# Value Proposition Canvas Expert
 
-## Overview
+# Value Proposition Canvas - Design Offerings Customers Actually Want
 
-The Value Proposition Canvas (VPC) is the canonical Strategyzer tool for designing and testing the fit between what customers care about and what your product offers. It is the "zoom-in" companion to the Business Model Canvas, focused on the two most failure-prone blocks: Customer Segments and Value Propositions. Where the Business Model Canvas asks "is this a viable business?", the VPC asks "are we building something customers actually want?"
+> Use Osterwalder's Value Proposition Canvas to systematically achieve product-market fit by matching your products and services to customer jobs, pains, and gains
 
-The canvas has two sides. The **Customer Profile** describes the customer's world in their language -- jobs they are trying to do, pains they experience, and gains they aspire to. The **Value Map** describes the product's response -- the products and services offered, the pain relievers they include, and the gain creators they enable. Fit is achieved when the Value Map mirrors the Customer Profile element-by-element.
+## When to Use This Skill
 
-This skill walks through both sides of the canvas, defines the three levels of fit (problem-solution, product-market, business model), and provides validation checklists drawn directly from Alexander Osterwalder and Yves Pigneur's *Value Proposition Design* (2014).
+- **Launching a new product or service** and need to validate the value proposition
+- **Struggling with product-market fit** and need to diagnose why customers aren't buying
+- **Repositioning an existing offering** to better meet customer needs
+- **Entering a new market segment** with different customer requirements
+- **Developing pricing strategy** based on value delivered
+- **Aligning teams** around a shared understanding of customer value
+- **Preparing for investor pitches** with clear value proposition articulation
+- **Innovating on business models** by deeply understanding customer context
 
-### When to Use
+## Methodology Foundation
 
-- **Pre-PRD framing** -- Before writing requirements, validate that the value proposition is real and the customer profile is well-understood.
-- **Solution refinement** -- You have a working product but unclear traction; use the VPC to diagnose whether the issue is the Customer Profile (wrong segment) or the Value Map (right segment, wrong response).
-- **New segment expansion** -- Entering a new customer segment with an existing product; build a separate VPC for each segment to test fit.
-- **Pricing and packaging decisions** -- Pains and gains rank-ordering informs which features go in which tier.
-- **Sales enablement** -- Pain relievers and gain creators become the talking points and proof points for the sales team.
+| Aspect | Details |
+|--------|---------|
+| **Source** | Value Proposition Design (2014) |
+| **Experts** | Alexander Osterwalder, Yves Pigneur, Greg Bernarda, Alan Smith - Strategyzer |
+| **Core Principle** | "80% of new products fail not because they lack functionality, but because they miss the mark on what customers actually want. The VPC helps you design value propositions that match customers' jobs, pains, and gains." |
 
-## The Two Sides of the Canvas
 
-### Side 1: Customer Profile (the circle)
+## What Claude Does vs What You Decide
 
-The Customer Profile describes the customer's world. It has three sections.
+| Claude Does | You Decide |
+|-------------|------------|
+| Structures video workflow | Final creative vision |
+| Suggests shot compositions | Equipment selection |
+| Creates storyboard templates | Brand aesthetics |
+| Generates script frameworks | Final approval |
+| Identifies technical requirements | Budget allocation |
 
-#### Jobs (Customer Jobs)
+## What This Skill Does
 
-What is the customer trying to get done? Three flavors:
+This skill helps you systematically design value propositions that customers actually want—reducing the risk of building something nobody needs.
 
-- **Functional jobs** -- A task to be completed. "Reconcile Stripe payments to QuickBooks invoices."
-- **Social jobs** -- How the customer wants to be perceived. "Look competent in front of the finance director."
-- **Emotional jobs** -- How the customer wants to feel. "Avoid the dread of month-end close."
+You'll learn to:
 
-Jobs are written from the customer's perspective, in their language. They are not features ("automated reconciliation tool") -- they are outcomes ("close the books in 2 days without errors").
+1. **Map the Customer Profile** - Understand jobs, pains, and gains deeply
+2. **Design the Value Map** - Create products, pain relievers, and gain creators
+3. **Achieve FIT** - Match your offering to what customers truly value
+4. **Prioritize ruthlessly** - Focus on what matters most to customers
+5. **Test and validate** - Move from assumptions to evidence
+6. **Iterate systematically** - Evolve your value proposition based on learning
 
-**Job ranking:** Order jobs by *importance* to the customer. An unimportant job that is perfectly done has zero traction.
+The result: Products and services that solve real problems customers will pay for.
 
-#### Pains
+## How to Use
 
-Bad outcomes, risks, and obstacles related to the jobs. Three flavors:
+### Prompt Examples
 
-- **Undesired outcomes** -- "The reconciliation report has wrong numbers"
-- **Obstacles** -- "I can't get the data out of the source system"
-- **Risks** -- "If I close the books wrong, the auditor will catch it"
-
-Pains are described concretely. "Reconciliation is hard" is weak. "Reconciliation takes 11 hours per close because I have to manually match 2,400 rows" is strong.
-
-**Pain ranking:** Order pains by *severity* (how bad it is when it happens) and *frequency* (how often it happens). High-severity high-frequency pains are the priority.
-
-#### Gains
-
-Outcomes and benefits the customer wants. Four flavors:
-
-- **Required gains** -- Without these, the solution does not work ("the report has to be accurate")
-- **Expected gains** -- Customers assume these exist ("the data is encrypted in transit")
-- **Desired gains** -- Customers explicitly want these ("the report exports to PDF for the auditor")
-- **Unexpected gains** -- Things customers do not yet know to ask for, but love when delivered ("a Slack alert when reconciliation completes")
-
-**Gain ranking:** Order gains by *desirability* and *relevance to the job*. Unexpected gains drive delight; required gains drive table stakes.
-
-### Side 2: Value Map (the square)
-
-The Value Map describes the product's response to the Customer Profile.
-
-#### Products & Services
-
-The bundle of things you offer. This is the *what*. Concrete listing -- a feature, a service, a subscription tier, an integration.
-
-#### Pain Relievers
-
-How your products and services *eliminate or reduce* the customer's pains. Each pain reliever should reference a specific pain from the Customer Profile.
-
-Example pain: "Reconciliation takes 11 hours per close."
-Pain reliever: "Automated rule-based matching that processes 2,400 rows in under 60 seconds."
-
-#### Gain Creators
-
-How your products and services *create* the customer's gains. Each gain creator should reference a specific gain.
-
-Example gain: "Slack alert when reconciliation completes."
-Gain creator: "Real-time Slack notifications via webhook integration; one alert per completed run."
-
-## The Three Levels of Fit
-
-Osterwalder defines fit as a three-stage validation process. Each stage requires evidence; do not skip.
-
-### Level 1: Problem-Solution Fit
-
-**Question:** Have we designed value-creating products and services that customers want?
-
-**Test:** For each top-ranked job, pain, and gain in the Customer Profile, can you point to a specific pain reliever or gain creator that addresses it?
-
-**Evidence required:** Customer interviews (`discovery/customer-interview-script/` + `discovery/interview-synthesis/`) confirming the jobs, pains, and gains are real. Concept tests confirming the value proposition resonates.
-
-**Anti-pattern:** Designing pain relievers for pains that customers do not actually have. The Value Map mirrors the team's assumptions, not the Customer Profile's reality.
-
-### Level 2: Product-Market Fit
-
-**Question:** Have we found evidence that customers want our products and services and will pay for them?
-
-**Test:** Are customers using the product? Are they retaining? Are they referring? Is the cost of acquisition lower than the lifetime value?
-
-**Evidence required:** Behavioral data -- activation, retention, expansion, willingness-to-pay. The Sean Ellis test (40%+ would be "very disappointed" without the product) is one signal.
-
-**Anti-pattern:** Confusing problem-solution fit with product-market fit. Interviews can validate problem-solution; only behavior can validate product-market.
-
-### Level 3: Business Model Fit
-
-**Question:** Have we found a business model that is scalable and profitable?
-
-**Test:** Does the unit economics work? Can the channels scale? Are the costs structurally aligned with the revenue?
-
-**Evidence required:** Cohort LTV/CAC analysis, channel economics, gross margin trends. This level lives mostly in `finance/` skills -- the VPC informs it but does not validate it alone.
-
-## Canvas Template (Markdown Table Form)
-
-```markdown
-## Value Proposition Canvas: [Segment Name]
-
-### Customer Profile
-
-**Customer Jobs** (ranked by importance, 1 = most important)
-
-| # | Job | Type | Notes |
-|---|-----|------|-------|
-| 1 | [Job statement in customer language] | Functional/Social/Emotional | [context] |
-| 2 | [Job statement] | ... | ... |
-
-**Pains** (ranked by severity x frequency)
-
-| # | Pain | Severity (1-5) | Frequency (1-5) | Notes |
-|---|------|----------------|------------------|-------|
-| 1 | [Pain statement] | 5 | 5 | [evidence] |
-| 2 | [Pain statement] | 4 | 3 | ... |
-
-**Gains** (ranked by desirability)
-
-| # | Gain | Type | Notes |
-|---|------|------|-------|
-| 1 | [Gain statement] | Required/Expected/Desired/Unexpected | [...] |
-| 2 | [Gain statement] | ... | ... |
-
-### Value Map
-
-**Products & Services**
-
-| # | Item | Type |
-|---|------|------|
-| 1 | [Feature, service, or offering] | Feature/Service/Tier |
-| 2 | [...] | ... |
-
-**Pain Relievers** (each maps to a Pain above)
-
-| # | Pain Reliever | Addresses Pain # | How |
-|---|---------------|-------------------|-----|
-| 1 | [How the product reduces or eliminates a pain] | 1 | [mechanism] |
-| 2 | [...] | 2 | ... |
-
-**Gain Creators** (each maps to a Gain above)
-
-| # | Gain Creator | Addresses Gain # | How |
-|---|--------------|-------------------|-----|
-| 1 | [How the product creates a gain] | 1 | [mechanism] |
-| 2 | [...] | 2 | ... |
-
-### Fit Validation
-
-| Top Job/Pain/Gain | Value Map Response | Evidence | Fit Status |
-|--------------------|---------------------|----------|------------|
-| Job #1 | [Pain reliever / gain creator] | [interview, behavior, sale] | Strong / Partial / None |
-| Pain #1 | [Pain reliever] | [evidence] | Strong / Partial / None |
-| Gain #1 | [Gain creator] | [evidence] | Strong / Partial / None |
+```
+Help me create a Value Proposition Canvas for my [product/service]. My target customer
+is [description]. Walk me through the customer profile first, then the value map.
 ```
 
-## Worked Example: Finance Reconciliation SaaS
+```
+My product isn't selling. Use the VPC framework to diagnose why. Here's what we offer:
+[product]. Here's who we're targeting: [customer]. Help me find the fit gaps.
+```
 
-### Customer Profile (Finance Lead at 100-500 person B2B SaaS)
+```
+I'm pivoting to a new customer segment. Use the Value Proposition Canvas to help me
+understand [new segment] and design a value proposition that fits their needs.
+```
 
-**Customer Jobs:**
+```
+Review my value proposition using Osterwalder's framework. Customer: [description].
+Our offering: [product/service]. Does it achieve fit? What's missing?
+```
 
-1. **Functional:** Close the books accurately within 5 days of month-end
-2. **Functional:** Reconcile payment processor (Stripe) to accounting (QuickBooks)
-3. **Social:** Look prepared in front of the CFO during month-end review
-4. **Emotional:** Avoid the dread of month-end close week
+```
+Help me prioritize features for my MVP using the VPC. I have these potential features:
+[list]. My target customer's main jobs/pains/gains are: [describe].
+```
 
-**Pains:**
+## Instructions
 
-1. Manual reconciliation takes 11 hours per close (severity 5, frequency 5)
-2. Mismatched rows produce audit findings the following quarter (severity 5, frequency 2)
-3. The current spreadsheet workaround breaks when transaction volume crosses 5,000/month (severity 4, frequency 3)
-4. Finance lead has no audit trail for matches made manually (severity 3, frequency 5)
+### The Value Proposition Canvas Overview
 
-**Gains:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                VALUE PROPOSITION CANVAS                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   VALUE MAP (Square)          CUSTOMER PROFILE (Circle)     │
+│   ┌─────────────────┐         ┌─────────────────┐          │
+│   │ Products &      │         │ Customer Jobs   │          │
+│   │ Services        │         │ (functional,    │          │
+│   │                 │   FIT   │  social,        │          │
+│   │ Pain Relievers  │ ←─────→ │  emotional)     │          │
+│   │                 │         │                 │          │
+│   │ Gain Creators   │         │ Pains    Gains  │          │
+│   └─────────────────┘         └─────────────────┘          │
+│                                                             │
+│   "How you create value"      "What customers need"         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
-1. Close the books in <2 days (Required)
-2. Audit trail for every match (Required)
-3. Automated re-run when source data updates (Desired)
-4. Slack alert when reconciliation completes (Unexpected -- delight)
+**Golden Rule**: Always start with the Customer Profile (right side) before the Value Map (left side). Understand the customer before designing the solution.
 
-### Value Map
+---
 
-**Products & Services:**
+### Step 1: Map Customer Jobs
 
-1. Rule-based matching engine
-2. Audit log
-3. QuickBooks + Stripe + Xero integrations
-4. Slack + email notifications
-5. Monthly "Close Health" report
+Customer jobs are the tasks customers are trying to accomplish, problems they're trying to solve, or needs they wish to satisfy.
+
+**Three Types of Jobs:**
+
+| Type | Description | Question to Ask |
+|------|-------------|-----------------|
+| **Functional Jobs** | Practical tasks with tangible outcomes | "What task are they trying to complete?" |
+| **Social Jobs** | How they want to be perceived by others | "How do they want others to see them?" |
+| **Emotional Jobs** | Feelings or states they want to achieve | "How do they want to feel?" |
+
+**Job Context Matters:**
+
+The same job in different contexts may require different solutions:
+- "Eat lunch" at desk vs. client meeting vs. with family = different needs
+- "Manage finances" as student vs. retiree vs. business owner = different needs
+
+**Uncovering Jobs - Questions:**
+
+1. What is the one thing your customer couldn't live without accomplishing?
+2. What tasks are they trying to complete in their work/life?
+3. What problems are they trying to solve?
+4. What needs are they trying to satisfy?
+5. What are they ultimately trying to achieve?
+
+**Rank jobs by importance** to the customer (most important → least important).
+
+---
+
+### Step 2: Identify Customer Pains
+
+Pains are anything that annoys customers before, during, and after trying to get a job done.
+
+**Types of Pains:**
+
+| Pain Type | Examples |
+|-----------|----------|
+| **Undesired outcomes** | "This doesn't work", "Produces poor results" |
+| **Obstacles** | "I don't have time", "I can't afford it" |
+| **Risks** | "I could lose money", "I might look foolish" |
+| **Frustrations** | "This is too complicated", "I hate waiting" |
+
+**Pain-Finding Questions:**
+
+1. What do your customers find too costly? (time, money, effort)
+2. What makes them feel bad? (frustrations, annoyances)
+3. What current solutions underperform for them?
+4. What are the main difficulties and challenges they encounter?
+5. What negative social consequences do they fear?
+6. What risks do they fear? (financial, social, technical)
+7. What mistakes do they commonly make?
+8. What barriers prevent them from adopting a solution?
+
+**Rank pains by severity** (extreme → moderate).
+
+---
+
+### Step 3: Define Customer Gains
+
+Gains are the outcomes and benefits your customers want. They are NOT simply the opposite of pains.
+
+**Types of Gains:**
+
+| Gain Type | Definition | Example |
+|-----------|------------|---------|
+| **Required** | Must-have for solution to work | "Phone makes calls" |
+| **Expected** | Basic expectations | "Hotel room is clean" |
+| **Desired** | Would love but don't expect | "Personalized recommendations" |
+| **Unexpected** | Beyond imagination, delighters | "Surprise free upgrade" |
+
+**Gain-Finding Questions:**
+
+1. What savings would make your customers happy? (time, money, effort)
+2. What quality levels do they expect?
+3. What would make their jobs or lives easier?
+4. What positive social consequences do they desire?
+5. What do they dream about?
+6. How do they measure success and failure?
+7. What would increase their likelihood of adopting a solution?
+
+**Rank gains by relevance** (essential → nice-to-have).
+
+---
+
+### Step 4: List Products and Services
+
+Now move to the Value Map. List all the products and services your value proposition is built around.
+
+**Categories:**
+
+| Type | Examples |
+|------|----------|
+| **Physical/tangible** | Products, devices, equipment |
+| **Intangible** | Services, consulting, support |
+| **Digital** | Software, apps, platforms |
+| **Financial** | Insurance, financing, subscriptions |
+
+**Important**: Products and services don't create value alone—they only create value in relationship to a specific customer segment and their jobs, pains, and gains.
+
+**Rank by importance** to your value proposition.
+
+---
+
+### Step 5: Design Pain Relievers
+
+Pain relievers describe exactly how your products and services alleviate specific customer pains.
+
+**Pain Reliever Questions:**
+
+| Customer Pain | How Do You Relieve It? |
+|---------------|------------------------|
+| "Takes too long" | → How do you save time? |
+| "Too expensive" | → How do you reduce costs? |
+| "Too risky" | → How do you eliminate risk? |
+| "Too complicated" | → How do you simplify? |
+| "Makes me look bad" | → How do you help them look good? |
+| "Produces poor results" | → How do you improve outcomes? |
+
+**Creating Effective Pain Relievers:**
+
+1. Produce savings (time, money, effort)
+2. Make customers feel better (reduce frustrations, annoyances)
+3. Fix underperforming solutions
+4. End difficulties and challenges
+5. Eliminate risks customers fear
+
+**Focus on extreme pains** that matter most to customers.
+
+---
+
+### Step 6: Create Gain Creators
+
+Gain creators describe how your products and services create customer gains.
+
+**Gain Creator Questions:**
+
+| Desired Gain | How Do You Create It? |
+|--------------|----------------------|
+| "Save money" | → Reduce costs by X% |
+| "Better results" | → Deliver X outcome |
+| "Feel confident" | → Provide X support |
+| "Look successful" | → Create X impression |
+| "Make life easier" | → Automate X task |
+
+**Creating Effective Gain Creators:**
+
+1. Create savings customers value
+2. Produce outcomes customers expect or exceed them
+3. Outperform current solutions
+4. Make customers' jobs or lives easier
+5. Create positive social consequences
+6. Deliver something customers dream about
+
+**Focus on gains that matter most** and create real difference.
+
+---
+
+### Step 7: Assess FIT
+
+FIT is achieved when your pain relievers and gain creators match important customer pains and gains.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ASSESSING FIT                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Customer's Most Important:     Your Strongest:             │
+│  ┌─────────────────────┐       ┌─────────────────────┐     │
+│  │ Jobs: _____________│       │ Products: _________ │     │
+│  │ Pains: ____________│  FIT? │ Pain relievers: ___ │     │
+│  │ Gains: ____________│ ←────→│ Gain creators: ____ │     │
+│  └─────────────────────┘       └─────────────────────┘     │
+│                                                             │
+│  Good fit = You address 50-70% of top pains and gains       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**FIT Assessment Checklist:**
+
+- [ ] Do your products help customers get important jobs done?
+- [ ] Do pain relievers address severe customer pains?
+- [ ] Do gain creators create essential customer gains?
+- [ ] Is there evidence customers want this? (not just your assumption)
+- [ ] Would customers switch from alternatives for your value proposition?
+
+**Three Levels of FIT:**
+
+| Level | Definition | Evidence |
+|-------|------------|----------|
+| **Problem-Solution Fit** | Customers care about these jobs/pains/gains | Interviews, surveys confirm need |
+| **Product-Market Fit** | Products/services actually create value | Traction, sales, retention |
+| **Business Model Fit** | It's profitable and scalable | Unit economics work |
+
+---
+
+## Examples
+
+### Example 1: B2B SaaS - Project Management Tool
+
+**Situation**: A startup building project management software for marketing agencies. They've built features but aren't getting traction.
+
+**Customer Profile (Marketing Agency Owners):**
+
+**Jobs:**
+1. Deliver client projects on time (functional) - *Most important*
+2. Keep clients happy and renewing (functional)
+3. Appear professional and organized to clients (social)
+4. Feel in control of the agency chaos (emotional)
+5. Scale the agency without burning out (functional)
+
+**Pains (ranked by severity):**
+1. Projects go over budget/timeline, killing margins - *Extreme*
+2. No visibility into what team is working on - *Extreme*
+3. Client requests fall through the cracks - *Severe*
+4. Switching tools is painful, team won't adopt - *Moderate*
+5. Existing tools are expensive per seat - *Moderate*
+
+**Gains (ranked by relevance):**
+1. Know project profitability in real-time - *Essential*
+2. One place for all client communication - *Essential*
+3. Clients can see progress without constant updates - *Desired*
+4. Easy onboarding, team actually uses it - *Desired*
+5. Automations that save admin time - *Nice-to-have*
+
+**Original Value Map (Pre-diagnosis):**
+
+- Products: Project management software with Gantt charts, time tracking
+- Pain Relievers: "Organize projects better"
+- Gain Creators: "Comprehensive feature set"
+
+**Diagnosis**: No clear connection to the TOP pains (profitability, visibility) or TOP gains (real-time profitability). Features exist but don't address what matters most.
+
+**Redesigned Value Map:**
+
+**Products:**
+1. Project profitability dashboard (real-time margins)
+2. Team capacity planner with utilization view
+3. Client portal with automatic updates
+4. Agency-specific templates (pre-built workflows)
 
 **Pain Relievers:**
-
-1. Matching engine processes 10K rows in 60 seconds -> addresses Pain #1 (manual hours)
-2. Audit log captures every match with rule reference and timestamp -> addresses Pain #2 (audit findings)
-3. Engine scales to 100K rows -> addresses Pain #3 (spreadsheet break)
-4. Audit log is exportable to CSV/PDF -> addresses Pain #4 (no audit trail)
+- Real-time budget tracking shows burn rate before it's too late → Addresses "projects go over budget"
+- Single dashboard shows every project and who's working on what → Addresses "no visibility"
+- Automatic client notifications on milestones → Addresses "requests fall through cracks"
+- 15-minute setup with agency templates → Addresses "team won't adopt"
 
 **Gain Creators:**
+- Profit tracking per project, per client, per team member → Creates "know profitability in real-time"
+- Unified inbox for all client communications → Creates "one place for communication"
+- Client can self-serve status updates → Creates "clients see progress"
+- Guided onboarding with success checklist → Creates "team actually uses it"
 
-1. End-to-end pipeline closes books in <2 days -> creates Gain #1
-2. Per-row audit log -> creates Gain #2
-3. Webhook re-runs on source updates -> creates Gain #3
-4. Slack integration with completion alerts -> creates Gain #4 (delight)
+**FIT Assessment:**
+- Top 2 pains addressed? ✓ Yes (profitability, visibility)
+- Top 2 gains created? ✓ Yes (real-time profitability, unified communication)
+- Would they switch from Monday/Asana? Needs testing, but strong differentiation on agency-specific needs
 
-### Fit Validation
+---
 
-| Customer Profile Item | Value Map Response | Evidence | Fit |
-|------------------------|---------------------|----------|-----|
-| Job: Close books in 5 days | <2 day close pipeline | 12 interviews + 4 paying customers | Strong |
-| Pain: 11hr manual reconciliation | 60sec engine | 4 customers retained for 6+ months | Strong |
-| Pain: Audit findings | Audit log | 1 customer cited in renewal | Partial (need more cases) |
-| Gain: Slack alert | Slack integration | 2/4 customers use; 1 cited at renewal | Strong (delighter) |
+### Example 2: E-commerce - Sustainable Fashion Brand
 
-## Common Mistakes
+**Situation**: A new sustainable clothing brand struggling to differentiate in a crowded market.
 
-| Mistake | Why It Happens | Fix |
-|---------|---------------|-----|
-| Customer Profile written in the team's language, not the customer's | Internal jargon leaks in during workshops | Copy quotes verbatim from interview transcripts |
-| Pains and gains are restated job descriptions | Conflation of the three sections | Pains = what's bad now; Gains = what would be good; Jobs = what they're trying to do |
-| Value Map listed before Customer Profile | Solution-mode bias | Always finish the Customer Profile (and validate it) before writing the Value Map |
-| Every pain has a "pain reliever" -- forced 1:1 mapping | Team forces fit | Acknowledge that some pains are unaddressed; that is honest, not a failure |
-| Confusing problem-solution fit with product-market fit | Interview success treated as product success | Require behavioral evidence (usage, retention, payment) for product-market fit |
-| One canvas for "all customers" | Segment dilution | Build a separate canvas for each distinct segment; jobs and pains differ |
-| Gains list is aspirational, not customer-validated | Marketing language creeps in | Each gain must trace to a specific customer quote or behavior |
+**Customer Profile (Eco-Conscious Professional Women, 28-40):**
 
-## Workflow
+**Jobs:**
+1. Look stylish and professional for work (functional/social) - *Most important*
+2. Make purchasing decisions aligned with values (emotional)
+3. Build a versatile wardrobe without excess (functional)
+4. Feel good about environmental impact (emotional)
+5. Find quality clothes that last (functional)
 
-1. **Pick the segment.** Define one segment per canvas. If you have three segments, build three canvases.
-2. **Run interviews.** Use `discovery/customer-interview-script/` to collect 5-7 interviews per segment.
-3. **Fill the Customer Profile.** Use `discovery/interview-synthesis/` themes to populate jobs, pains, gains. Rank by importance/severity/desirability.
-4. **Draft the Value Map.** List products/services. For each top job, pain, gain in the Customer Profile, write the pain reliever or gain creator.
-5. **Run the fit-validation checklist.** Use `assets/fit_validation_checklist.md` to mark which fit signals are strong, partial, or absent.
-6. **Identify gaps.** Where pains or gains have no Value Map response, decide: add to roadmap, defer, or accept as out-of-scope.
-7. **Feed into PRD.** Use the canvas to populate `execution/create-prd/` Sections 5 (Market Segments) and 6 (Value Propositions).
-8. **Revisit quarterly.** Customer Profile shifts as the market matures; Value Map shifts as the product evolves.
+**Pains (ranked by severity):**
+1. Sustainable brands look "earthy"/frumpy, not professional - *Extreme*
+2. Hard to verify which brands are actually sustainable - *Extreme*
+3. Sustainable fashion is expensive - *Severe*
+4. Don't know how to style sustainable pieces - *Moderate*
+5. Sizing is inconsistent online - *Moderate*
 
-## Troubleshooting
+**Gains (ranked by relevance):**
+1. Stylish clothes I can wear to the office - *Essential*
+2. Clear proof of sustainability claims - *Essential*
+3. Pieces that work together (capsule wardrobe) - *Desired*
+4. Feel proud telling others where I shop - *Desired*
+5. Easy returns if sizing doesn't work - *Nice-to-have*
 
-| Symptom | Likely Cause | Resolution |
-|---------|-------------|------------|
-| Canvas feels generic and could describe any product | Insufficient interview evidence; team wrote it from imagination | Run 5+ customer interviews per segment; populate the Customer Profile from `discovery/interview-synthesis/` themes |
-| Pain relievers and gain creators are aspirational, not built | Team conflated roadmap with current state | Mark each Value Map item as "Built / In progress / Roadmap"; the canvas reflects current state by default |
-| One canvas tries to cover multiple segments and feels muddled | Segment definition too broad | Split into one canvas per distinct segment (by job, not demographics) |
-| Customer retention low despite strong canvas | Confused problem-solution fit with product-market fit | Require behavioral evidence (cohort retention) for product-market fit, not just interview validation |
-| Sales team cannot remember the value proposition | Canvas not translated into sales-ready language | Use the canvas to write a 2-sentence elevator pitch and a 5-bullet talk track |
-| Pains and gains are restated job descriptions | Sections collapsed during workshop | Re-do as three separate exercises: jobs first, then pains, then gains -- with a 5-minute break between |
-| Canvas reviewed once and never updated | Treated as a one-shot artifact | Schedule quarterly canvas review; flag drift as input changes (new segment, new competitor, new product line) |
+**Value Map:**
 
-## Success Criteria
+**Products:**
+1. Minimalist professional capsule collection (blazers, blouses, trousers)
+2. Sustainability passport (QR code linking to supply chain transparency)
+3. Virtual styling consultations
+4. "Cost per wear" calculator
 
-- Each canvas covers exactly one segment (no "all customers" canvases)
-- Customer Profile populated from >=5 customer interviews per segment
-- Jobs, pains, and gains use verbatim customer language (not internal jargon)
-- Every pain reliever and gain creator references a specific pain/gain by number
-- Fit validation checklist completed with evidence column filled
-- Top 3 unaddressed pains/gains explicitly listed (either accepted as out-of-scope or added to roadmap)
-- Canvas reviewed quarterly with diffs documented
+**Pain Relievers:**
+- Designs by former luxury brand designers → "Doesn't look earthy/frumpy"
+- Blockchain-verified supply chain, factory visit videos → "Hard to verify sustainability"
+- Cost-per-wear framing + quality guarantees → "Too expensive" (reframes value)
+- Style guides showing how to combine pieces → "Don't know how to style"
+- Detailed size guides + free returns → "Sizing inconsistent"
 
-## Scope & Limitations
+**Gain Creators:**
+- Office-ready designs featured in business publications → "Stylish for work"
+- Impact report: "Your wardrobe has saved X liters of water" → "Proof of sustainability"
+- Curated capsule collections designed to mix/match → "Pieces work together"
+- Beautiful packaging + shareable unboxing → "Proud to tell others"
 
-**In Scope:**
-- Customer Profile (jobs, pains, gains) construction and ranking
-- Value Map (products/services, pain relievers, gain creators) construction
-- Problem-solution fit validation
-- Mapping the canvas into PRD inputs (Sections 5 and 6 of `execution/create-prd/`)
-- Sales enablement translation (talk tracks from pain relievers and gain creators)
+**FIT Assessment:**
+- Addresses top pain (frumpy look) with design-forward positioning ✓
+- Creates top gain (office-ready) with professional-focused collection ✓
+- Differentiation clear: "Sustainable fashion that looks like it belongs in a boardroom"
 
-**Out of Scope:**
-- Business Model Canvas (sister tool; covers 9 blocks vs. VPC's 2)
-- Unit economics and business model fit (see `finance/` skills)
-- Detailed financial modeling, LTV/CAC analysis
-- Persona generation -- the VPC is segment-level, not persona-level
-- Competitive positioning (see `marketing/` or `c-level-advisor/competitive-strategy/`)
+---
 
-**Important Caveats:**
-- The VPC is a thinking aid, not a roadmap. Solutions still need experimentation (`discovery/brainstorm-experiments/`).
-- Problem-solution fit is the *minimum* bar -- it is necessary but not sufficient for product-market fit.
-- The Strategyzer methodology is licensed under Creative Commons (CC-BY-SA). Attribution to Strategyzer / Osterwalder is appropriate when sharing externally.
-- A canvas is only as good as the evidence behind it. A beautifully filled canvas with no customer interviews is fiction.
+## Checklists & Templates
 
-## Integration Points
+### Value Proposition Canvas Worksheet
 
-| Integration | Direction | What Flows |
-|-------------|-----------|------------|
-| `discovery/customer-interview-script/` | Receives from | Verbatim customer quotes populate the Customer Profile |
-| `discovery/interview-synthesis/` | Receives from | Themed insights become jobs, pains, and gains |
-| `discovery/jtbd-workshop/` | Complementary | JTBD workshop produces the job hierarchy; VPC adds pains and gains |
-| `discovery/identify-assumptions/` | Bidirectional | Unaddressed pains become risk assumptions; assumptions inform validation focus |
-| `execution/create-prd/` | Feeds into | Canvas populates PRD Section 5 (Market Segments) and Section 6 (Value Propositions) |
-| `execution/product-vision/` | Bidirectional | Product Vision defines the long-term promise; VPC validates the current-day delivery |
-| `execution/prioritization-frameworks/` | Feeds into | Unaddressed top pains and gains become candidate features for prioritization |
-| `marketing/` | Feeds into | Pain relievers and gain creators become marketing talking points and proof points |
+```markdown
+## Value Proposition Canvas: [Product/Service Name]
+
+### CUSTOMER PROFILE
+
+**Target Customer Segment**: _____________
+
+#### Customer Jobs (rank by importance)
+1. [Most important]:
+2.
+3.
+4.
+5.
+
+#### Customer Pains (rank by severity)
+1. [Most severe]:
+2.
+3.
+4.
+5.
+
+#### Customer Gains (rank by relevance)
+1. [Most essential]:
+2.
+3.
+4.
+5.
+
+---
+
+### VALUE MAP
+
+#### Products and Services
+1.
+2.
+3.
+4.
+
+#### Pain Relievers
+| Pain | How We Relieve It |
+|------|-------------------|
+| | |
+| | |
+| | |
+
+#### Gain Creators
+| Gain | How We Create It |
+|------|------------------|
+| | |
+| | |
+| | |
+
+---
+
+### FIT ASSESSMENT
+
+**Top 3 Pains Addressed?**
+1. [ ] Pain: ___ | Reliever: ___
+2. [ ] Pain: ___ | Reliever: ___
+3. [ ] Pain: ___ | Reliever: ___
+
+**Top 3 Gains Created?**
+1. [ ] Gain: ___ | Creator: ___
+2. [ ] Gain: ___ | Creator: ___
+3. [ ] Gain: ___ | Creator: ___
+
+**Overall FIT Score**: ___/10
+
+**Gaps to Address**:
+```
+
+### FIT Diagnosis Checklist
+
+```markdown
+## FIT Diagnosis: [Product Name]
+
+### Is there a problem worth solving?
+- [ ] Customers mention these jobs unprompted
+- [ ] Pains are severe (not just minor annoyances)
+- [ ] Customers are actively looking for solutions
+- [ ] They're willing to pay to solve this problem
+
+### Does our solution actually fit?
+- [ ] Pain relievers address TOP 3 pains
+- [ ] Gain creators produce TOP 3 gains
+- [ ] Products help with most important jobs
+- [ ] Customers prefer our solution to alternatives
+
+### Evidence check
+- [ ] We've talked to 10+ target customers
+- [ ] Customers have validated pains/gains (not assumed)
+- [ ] We've tested willingness to pay
+- [ ] Early users show retention/engagement
+
+### Red flags
+- [ ] Building features customers haven't asked for
+- [ ] Addressing low-priority pains
+- [ ] Creating gains customers don't value
+- [ ] No clear differentiation from alternatives
+```
+
+### Customer Interview Guide (for VPC)
+
+```markdown
+## VPC Customer Interview Guide
+
+### Jobs Questions
+1. Walk me through your typical day/week related to [context].
+2. What are you ultimately trying to achieve?
+3. What tasks take up most of your time in this area?
+4. What would you need to accomplish to consider this successful?
+
+### Pains Questions
+1. What's the hardest part about [job/context]?
+2. What frustrates you most about current solutions?
+3. What do you wish you could stop doing?
+4. What keeps you up at night regarding [context]?
+5. What could go wrong that you worry about?
+
+### Gains Questions
+1. What would an ideal solution look like?
+2. What would make your life significantly easier?
+3. How do you measure success in this area?
+4. What would make you look good to [boss/clients/peers]?
+
+### Validation Questions
+1. How important is solving this on a scale of 1-10?
+2. How are you currently handling this?
+3. What have you tried that didn't work?
+4. Would you pay for a solution? How much?
+```
+
+---
+
+## Skill Boundaries
+
+### What This Skill Does Well
+- Structuring video production workflows
+- Creating storyboard frameworks
+- Suggesting technical approaches
+- Providing creative direction templates
+
+### What This Skill Cannot Do
+- Replace professional videography
+- Edit video files directly
+- Make final creative judgments
+- Guarantee audience engagement
 
 ## References
 
-- `references/value-proposition-design-guide.md` -- Full Strategyzer methodology with worked examples
-- `assets/vpc_template.md` -- Markdown canvas template
-- `assets/customer_profile_worksheet.md` -- Jobs/Pains/Gains capture worksheet
-- `assets/value_map_worksheet.md` -- Products/Pain-Relievers/Gain-Creators capture worksheet
-- `assets/fit_validation_checklist.md` -- Three-level fit validation checklist
+- **Book**: Value Proposition Design by Alexander Osterwalder, Yves Pigneur, Greg Bernarda, Alan Smith (2014)
+- **Related**: Business Model Generation (2010)
+- **Tools**: Strategyzer.com official canvas templates
+- **Source**: `sources/books/osterwalder-value-proposition-design.md`
+
+## Related Skills
+
+- **jobs-to-be-done** - Deep dive into understanding customer jobs
+- **positioning-dunford** - Position your value proposition in the market
+- **product-led-growth** - Build products that sell themselves
+- **landing-page-copy** - Communicate your value proposition effectively
+- **conversion-copywriting** - Write copy that converts based on pains/gains
+- **grand-slam-offers** - Create irresistible offers from your value map

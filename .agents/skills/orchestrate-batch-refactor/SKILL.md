@@ -1,6 +1,9 @@
 ---
 name: "orchestrate-batch-refactor"
-description: "Plan and execute large refactor or rewrite efforts efficiently with parallel multi-agent analysis and implementation. Use when a user asks to refactor many files, split workstreams, analyze a target code area, and coordinate sub-agents with clear ownership and dependency-aware execution."
+description: "Plan and execute large refactors with dependency-aware work packets and parallel analysis."
+risk: safe
+source: "Dimillian/Skills (MIT)"
+date_added: "2026-03-25"
 ---
 
 # Orchestrate Batch Refactor
@@ -9,6 +12,10 @@ description: "Plan and execute large refactor or rewrite efforts efficiently wit
 
 Use this skill to run high-throughput refactors safely.
 Analyze scope in parallel, synthesize a single plan, then execute independent work packets with sub-agents.
+
+## When to Use
+- When a refactor spans many files or subsystems and needs clear work partitioning.
+- When you need dependency-aware planning before parallel implementation.
 
 ## Inputs
 
@@ -87,3 +94,8 @@ Run in this order:
 3. Full project safety checks when scope is broad.
 
 Prefer fast feedback loops, but never skip required behavior checks.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

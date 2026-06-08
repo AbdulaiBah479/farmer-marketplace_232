@@ -1,821 +1,129 @@
 ---
-name: Backlog.md
-description: Expert guidance for Backlog.md CLI project management tool including task creation, editing, status management, acceptance criteria, search, and board visualization. Use this when managing project tasks, creating task lists, updating task status, or organizing project work.
+name: backlog.md
+description: Manage backlog tasks using the Backlog.md CLI. Use for creating, editing, viewing, and searching tasks in your backlog.
 ---
 
-# Backlog.md
+# Backlog.md CLI Skill
 
-Expert assistance with Backlog.md CLI project management tool.
+You are a Backlog.md CLI expert assistant.
 
-## Overview
+## Task Management Commands
 
-Backlog.md is a CLI-based project management tool that uses markdown files to track tasks, documentation, and decisions. All operations go through the `backlog` CLI command.
-
-**Key Principle**: NEVER edit task files directly. Always use CLI commands.
-
-## Quick Start
+### Create Task
 
 ```bash
-# List tasks
-backlog task list --plain
+backlog task create "Title" -d "Description" --ac "Criterion 1" --ac "Criterion 2"
+```
 
-# View task details
+- Multiple `--ac` flags for acceptance criteria
+- Use `--draft` for draft tasks
+- Use `-p <parent-id>` for subtasks
+- Include JIRA ticket in title: `"[PROJ-123] Task description"`
+
+### View Task
+
+```bash
 backlog task 42 --plain
+```
 
-# Create task
-backlog task create "Task title" -d "Description" --ac "Acceptance criterion"
+- Always use `--plain` flag for AI-friendly output
+- Shows all task details, ACs, plan, notes
 
-# Edit task
-backlog task edit 42 -s "In Progress" -a @me
+### Edit Task Metadata
 
-# Search
+```bash
+backlog task edit 42 -s "In Progress" -a @myself
+backlog task edit 42 -t "New Title" -l backend,api --priority high
+```
+
+- `-s, --status` - Change status ("To Do", "In Progress", "Done")
+- `-a, --assignee` - Assign to user
+- `-t, --title` - Update title
+- `-l, --labels` - Set labels (comma-separated)
+- `--priority` - Set priority (low/medium/high)
+
+### Manage Acceptance Criteria
+
+```bash
+# Add multiple ACs
+backlog task edit 42 --ac "New criterion" --ac "Another one"
+
+# Check ACs (mark complete)
+backlog task edit 42 --check-ac 1 --check-ac 2
+
+# Uncheck AC
+backlog task edit 42 --uncheck-ac 3
+
+# Remove AC
+backlog task edit 42 --remove-ac 4
+```
+
+### Add Implementation Content
+
+```bash
+# Add plan (use ANSI-C quoting for newlines)
+backlog task edit 42 --plan $'1. Research\n2. Implement\n3. Test'
+
+# Add notes (PR description)
+backlog task edit 42 --notes $'Implemented X\nUpdated tests'
+
+# Append to notes
+backlog task edit 42 --append-notes $'- Fixed bug\n- Added validation'
+```
+
+## Searching & Listing
+
+### Search Tasks
+
+```bash
 backlog search "keyword" --plain
+backlog search "auth" --type task --status "To Do" --plain
 ```
-
-## Task Creation
-
-### Basic Task Creation
-
-```bash
-# Simple task
-backlog task create "Implement user login"
-
-# With description
-backlog task create "Implement user login" -d "Add authentication flow"
-
-# With acceptance criteria
-backlog task create "Implement user login" \
-  --ac "User can login with email and password" \
-  --ac "Invalid credentials show error message"
-
-# Complete task creation
-backlog task create "Implement user login" \
-  -d "Add authentication flow with session management" \
-  --ac "User can login with valid credentials" \
-  --ac "Session persists across page refreshes" \
-  -s "To Do" \
-  -a @developer \
-  -l backend,auth \
-  --priority high
-```
-
-### Advanced Creation
-
-```bash
-# Create draft task
-backlog task create "Research options" --draft
-
-# Create subtask
-backlog task create "Implement feature component" -p 42
-
-# With dependencies
-backlog task create "Deploy to production" --dep task-40 --dep task-41
-
-# With multiple labels
-backlog task create "Fix bug" -l bug,urgent,frontend
-```
-
-## Task Modification
-
-### Status Management
-
-```bash
-# Change status
-backlog task edit 42 -s "In Progress"
-backlog task edit 42 -s "Done"
-backlog task edit 42 -s "Blocked"
-
-# Common workflow: start work on task
-backlog task edit 42 -s "In Progress" -a @me
-```
-
-### Basic Fields
-
-```bash
-# Update title
-backlog task edit 42 -t "New title"
-
-# Update description (with newlines)
-backlog task edit 42 -d $'Multi-line\ndescription\nhere'
-
-# Assign task
-backlog task edit 42 -a @username
-
-# Add/update labels
-backlog task edit 42 -l backend,api,v2
-
-# Set priority
-backlog task edit 42 --priority high
-backlog task edit 42 --priority medium
-backlog task edit 42 --priority low
-```
-
-### Acceptance Criteria Management
-
-**IMPORTANT**: Each flag accepts multiple values
-
-```bash
-# Add new criteria (multiple flags supported)
-backlog task edit 42 --ac "User can login" --ac "Session persists"
-
-# Check criteria by index (multiple flags supported)
-backlog task edit 42 --check-ac 1 --check-ac 2 --check-ac 3
-
-# Uncheck criteria
-backlog task edit 42 --uncheck-ac 2
-
-# Remove criteria (processed high-to-low)
-backlog task edit 42 --remove-ac 3 --remove-ac 2
-
-# Mixed operations in one command
-backlog task edit 42 \
-  --check-ac 1 \
-  --uncheck-ac 2 \
-  --remove-ac 4 \
-  --ac "New criterion"
-```
-
-**Note**:
-
-- ✅ Use multiple flags: `--check-ac 1 --check-ac 2`
-- ❌ Don't use commas: `--check-ac 1,2,3`
-- ❌ Don't use ranges: `--check-ac 1-3`
-
-### Implementation Plan & Notes
-
-```bash
-# Add implementation plan (with newlines using ANSI-C quoting)
-backlog task edit 42 --plan $'1. Research codebase\n2. Implement solution\n3. Write tests\n4. Update docs'
-
-# POSIX portable (using printf)
-backlog task edit 42 --plan "$(printf '1. Step one\n2. Step two')"
-
-# Add implementation notes (replaces existing)
-backlog task edit 42 --notes $'Implemented using strategy pattern\nUpdated all tests\nReady for review'
-
-# Append to existing notes
-backlog task edit 42 --append-notes $'- Fixed edge case\n- Added validation'
-
-# Format notes as PR description (best practice)
-backlog task edit 42 --notes $'## Changes\n- Implemented X\n- Fixed Y\n\n## Testing\n- Added unit tests\n- Manual testing complete'
-```
-
-### Dependencies
-
-```bash
-# Add dependencies
-backlog task edit 42 --dep task-1 --dep task-2
-
-# Remove dependencies (edit task file or recreate without)
-```
-
-## Viewing Tasks
 
 ### List Tasks
 
 ```bash
-# List all tasks (always use --plain for AI-readable output)
 backlog task list --plain
+backlog task list -s "In Progress" -a @myself --plain
+backlog task list --priority high --plain
+```
 
-# Filter by status
+## Typical Implementation Workflow
+
+```bash
+# 1. Find work
 backlog task list -s "To Do" --plain
-backlog task list -s "In Progress" --plain
-backlog task list -s "Done" --plain
 
-# Filter by assignee
-backlog task list -a @username --plain
-backlog task list -a @me --plain
+# 2. Start work
+backlog task edit 42 -s "In Progress" -a @myself
 
-# Filter by tag
-backlog task list --tag backend --plain
-backlog task list --tag bug --plain
-
-# Combined filters
-backlog task list -s "In Progress" -a @me --plain
-```
-
-### View Task Details
-
-```bash
-# View single task (always use --plain)
-backlog task 42 --plain
-
-# View in browser (if supported)
-backlog task 42 --web
-```
-
-### Search
-
-```bash
-# Search across all content (uses fuzzy matching)
-backlog search "authentication" --plain
-
-# Search only tasks
-backlog search "login" --type task --plain
-
-# Search with filters
-backlog search "api" --status "To Do" --plain
-backlog search "bug" --priority high --plain
-
-# Search in specific fields
-backlog search "database" --in title --plain
-```
-
-## Sub-Agent Task Execution
-
-### 원칙
-**모든 태스크 실행은 서브 에이전트를 통해 수행한다.**
-
-메인 컨텍스트는 태스크 조율자(orchestrator) 역할만 수행:
-- 태스크 목록 조회
-- 다음 태스크 결정
-- 사용자와 커뮤니케이션
-- 서브 에이전트 결과 요약 전달
-
-### 서브 에이전트 호출 패턴
-
-태스크 시작 시 Task tool을 사용:
-
-```
-Task tool 호출:
-- subagent_type: "general-purpose"
-- description: "Execute backlog task [ID]"
-- prompt: |
-    Execute backlog task [ID]: [제목]
-
-    ## Task Details
-    [backlog task <ID> --plain 결과]
-
-    ## Instructions
-    1. AC 분석 및 구현 계획 수립
-    2. 코드 구현/수정
-    3. 테스트 실행 및 검증
-    4. AC 체크: backlog task edit <ID> --check-ac <완료된 번호>
-    5. 노트 추가: backlog task edit <ID> --append-notes "진행 내용"
-
-    ## Return Format
-    작업 완료 후 다음 형식으로 반환:
-    - 완료된 AC 목록
-    - 수정된 파일 목록
-    - 테스트 결과
-    - 미해결 이슈 (있는 경우)
-```
-
-### 메인 컨텍스트 워크플로우
-
-```
-1. backlog task list -a @me -s "In Progress" --plain  # 현재 태스크 확인
-2. backlog task <ID> --plain                           # 태스크 상세 조회
-3. Task tool로 서브 에이전트 생성 (태스크 전체 위임)
-4. 서브 에이전트 결과 수신
-5. 사용자에게 완료 리뷰 요청
-6. 사용자 응답에 따라 다음 태스크 또는 종료
-```
-
-### 효과
-- 메인 컨텍스트: 태스크 조회, 결과 요약만 유지
-- 서브 에이전트: 구현, 테스트, AC 체크 등 상세 작업 수행
-- 여러 태스크 연속 처리 시에도 메인 컨텍스트 크기 일정 유지
-
-## Task Workflow
-
-### Complete Task Lifecycle
-
-```bash
-# 1. Create task
-backlog task create "Implement feature X" \
-  -d "Add new feature to handle Y" \
-  --ac "Feature works as expected" \
-  --ac "Tests are passing" \
-  --ac "Documentation is updated"
-
-# 2. Start work: assign and change status
-backlog task edit 42 -s "In Progress" -a @me
-
-# 3. Add implementation plan
-backlog task edit 42 --plan $'1. Research existing code\n2. Implement core logic\n3. Add tests\n4. Update docs'
-
-# 4. Work on task (write code, test, etc.)
-
-# 5. Mark acceptance criteria as complete
-backlog task edit 42 --check-ac 1 --check-ac 2 --check-ac 3
-
-# 6. Add implementation notes (PR description)
-backlog task edit 42 --notes $'## Changes\n- Implemented feature X using approach Y\n- Added comprehensive tests\n\n## Testing\n- Unit tests pass\n- Integration tests pass\n- Manual testing complete'
-
-# 7. Mark task as done
-backlog task edit 42 -s Done
-```
-
-### Starting a Task (Critical Steps)
-
-```bash
-# ALWAYS do these steps when starting a task:
-# 1. Set status to In Progress
-# 2. Assign to yourself
-backlog task edit 42 -s "In Progress" -a @me
-
-# 3. Review the task requirements
-backlog task 42 --plain
-
-# 4. Create implementation plan
-backlog task edit 42 --plan $'1. Analyze requirements\n2. Design solution\n3. Implement\n4. Test\n5. Document'
-```
-
-## Board & Visualization
-
-```bash
-# View Kanban board in terminal
-backlog board
-
-# Open web UI
-backlog browser
-
-# Export board snapshot
-backlog board --export board-snapshot.md
-
-# Generate report
-backlog report --output report.md
-```
-
-## Task Operations
-
-### Archive & Promote
-
-```bash
-# Archive completed task
-backlog task archive 42
-
-# Demote task to draft
-backlog task demote 42
-
-# Promote draft to task (gets new ID)
-backlog task promote draft-5
-```
-
-### Task History
-
-```bash
-# View task history (if supported)
-backlog task history 42
-
-# View changes
-backlog task diff 42
-```
-
-## Documentation & Decisions
-
-### Documents
-
-```bash
-# Create document
-backlog doc create "API Documentation"
-
-# List documents
-backlog doc list --plain
-
-# Edit document
-backlog doc edit 1 --content "Updated content"
-```
-
-### Architectural Decisions
-
-```bash
-# Create decision record
-backlog decision create "Use PostgreSQL for data storage"
-
-# List decisions
-backlog decision list --plain
-
-# View decision
-backlog decision 1 --plain
-```
-
-## Best Practices
-
-### Writing Good Tasks
-
-**Title**: Clear, concise, action-oriented
-
-```bash
-# ✅ Good
-backlog task create "Implement user authentication"
-backlog task create "Fix memory leak in image processor"
-
-# ❌ Bad
-backlog task create "Users"
-backlog task create "There's a problem with the app"
-```
-
-**Description**: Explain the "why" and context
-
-```bash
-backlog task create "Add rate limiting to API" \
-  -d "Current API has no rate limiting, causing server overload during peak hours. Need to implement per-user rate limiting to prevent abuse."
-```
-
-**Acceptance Criteria**: Focus on outcomes, not implementation
-
-```bash
-# ✅ Good - Testable outcomes
---ac "API rejects requests after 100 requests per minute per user"
---ac "User receives clear error message when rate limited"
---ac "Rate limit resets after 60 seconds"
-
-# ❌ Bad - Implementation details
---ac "Add a rate limiter middleware"
---ac "Use Redis for tracking"
-```
-
-### Task Organization
-
-**Use Labels Effectively**
-
-```bash
-# Organize by type, area, and priority
-backlog task create "Fix login bug" -l bug,urgent,auth
-backlog task create "Optimize queries" -l enhancement,backend,performance
-backlog task create "Update docs" -l documentation,frontend
-```
-
-**Use Tags for Metadata**
-
-```bash
-# Tags for filtering and organization
---tag "sprint:23"
---tag "epic:user-management"
---tag "team:backend"
-```
-
-### Task Breakdown
-
-**Atomic Tasks**: Each task should be independently deliverable
-
-```bash
-# ✅ Good - One PR per task
-backlog task create "Add login endpoint"
-backlog task create "Add logout endpoint"
-backlog task create "Add session refresh endpoint"
-
-# ❌ Bad - Too large for one PR
-backlog task create "Implement entire authentication system"
-```
-
-**Avoid Future Dependencies**: Never reference tasks that don't exist yet
-
-```bash
-# ✅ Good - Reference existing tasks
-backlog task create "Deploy auth API" --dep task-40 --dep task-41
-
-# ❌ Bad - Reference future tasks
-backlog task create "Add feature A" -d "This will be used by future tasks"
-```
-
-### Implementation Notes
-
-**Format as PR Description**: Make notes ready for GitHub
-
-```bash
-backlog task edit 42 --notes $'## Summary
-- Implemented user authentication with JWT
-- Added password hashing with bcrypt
-- Created login/logout endpoints
-
-## Changes
-- Added auth middleware
-- Updated user model
-- Added auth routes
-
-## Testing
-- Unit tests for auth functions
-- Integration tests for endpoints
-- Manual testing with Postman
-
-## Breaking Changes
-None
-
-## Follow-up
-- Add refresh token rotation
-- Implement rate limiting'
-```
-
-**Progressive Notes**: Append as you work
-
-```bash
-# As you make progress
-backlog task edit 42 --append-notes "- Implemented core auth logic"
-backlog task edit 42 --append-notes "- Added tests"
-backlog task edit 42 --append-notes "- Updated documentation"
-```
-
-## Definition of Done
-
-**A task is Done only when ALL of these are complete:**
-
-Via CLI:
-
-1. ✅ All acceptance criteria checked: `--check-ac 1 --check-ac 2 ...`
-2. ✅ Implementation notes added: `--notes "..."`
-3. ✅ Status set to Done: `-s Done`
-
-Via Code/Testing: 4. ✅ Tests pass 5. ✅ Documentation updated 6. ✅ Code reviewed 7. ✅ No regressions 8. ✅ 사용자 리뷰 완료
-
-**Never mark task as Done without completing ALL items**
-
-## Common Patterns
-
-### Daily Workflow
-
-```bash
-# Morning: Check your tasks
-backlog task list -a @me -s "In Progress" --plain
-
-# Start working on next task
-backlog task edit 42 -s "In Progress" -a @me
-backlog task 42 --plain  # Read requirements
-
-# Add plan
+# 3. Add plan
 backlog task edit 42 --plan $'1. Analyze\n2. Implement\n3. Test'
 
-# As you work, check off AC
-backlog task edit 42 --check-ac 1
-# ... continue working ...
-backlog task edit 42 --check-ac 2
-
-# End of day: Add notes
-backlog task edit 42 --append-notes "- Completed X, Y pending"
-```
-
-### Sprint Planning
-
-```bash
-# Review backlog
-backlog task list -s "To Do" --plain
-
-# Tag tasks for sprint
-backlog task edit 42 --tag "sprint:23"
-backlog task edit 43 --tag "sprint:23"
-
-# Assign tasks
-backlog task edit 42 -a @developer1
-backlog task edit 43 -a @developer2
-
-# View sprint board
-backlog board
-```
-
-### Bug Fix Workflow
-
-```bash
-# Create bug task
-backlog task create "Fix login timeout issue" \
-  -d "Users report login times out after 30 seconds on slow connections" \
-  --ac "Login works on slow connections (tested with throttling)" \
-  --ac "Timeout increased to 60 seconds" \
-  --ac "User sees loading indicator during login" \
-  -l bug,urgent,auth \
-  --priority high
-
-# Start work
-backlog task edit 42 -s "In Progress" -a @me
-
-# Implement fix and add notes
-backlog task edit 42 --notes $'## Root Cause
-Login timeout was set to 30s, causing issues on slow connections.
-
-## Fix
-- Increased timeout to 60s
-- Added exponential backoff for retries
-- Improved loading indicator visibility
-
-## Testing
-- Tested with Chrome network throttling (Slow 3G)
-- Verified timeout works correctly
-- All existing auth tests pass'
-
-# Complete
-backlog task edit 42 --check-ac 1 --check-ac 2 --check-ac 3
-backlog task edit 42 -s Done
-```
-
-## Troubleshooting
-
-### Task Not Found
-
-```bash
-# List all tasks to find ID
-backlog task list --plain
-
-# Search for task
-backlog search "keyword" --type task --plain
-```
-
-### Acceptance Criteria Issues
-
-```bash
-# View task to see AC numbers
-backlog task 42 --plain
-
-# AC numbering starts at 1
-backlog task edit 42 --check-ac 1  # First AC
-
-# Check multiple at once
-backlog task edit 42 --check-ac 1 --check-ac 2 --check-ac 3
-```
-
-### Metadata Out of Sync
-
-```bash
-# Re-edit via CLI to fix
-backlog task edit 42 -s "In Progress"
-
-# If persistent, check file permissions
-ls -la backlog/tasks/
-```
-
-### Multiline Input
-
-```bash
-# Use ANSI-C quoting (bash/zsh)
-backlog task edit 42 --notes $'Line 1\nLine 2'
-
-# Use printf (POSIX portable)
-backlog task edit 42 --notes "$(printf 'Line 1\nLine 2')"
-
-# PowerShell
-backlog task edit 42 --notes "Line 1`nLine 2"
-
-# Don't use literal \n - it won't work
-# ❌ backlog task edit 42 --notes "Line 1\nLine 2"
-```
-
-## Command Reference
-
-### Core Commands
-
-```bash
-# Tasks
-backlog task create <title> [options]
-backlog task list [filters] --plain
-backlog task <id> --plain
-backlog task edit <id> [options]
-backlog task archive <id>
-backlog task demote <id>
-
-# Search
-backlog search <query> [filters] --plain
-
-# Board & Reports
-backlog board
-backlog browser
-backlog report --output <file>
-
-# Documents
-backlog doc create <title>
-backlog doc list --plain
-backlog doc edit <id>
-
-# Decisions
-backlog decision create <title>
-backlog decision list --plain
-backlog decision <id> --plain
-```
-
-### Common Options
-
-```bash
-# Task creation/editing
--t, --title           Task title
--d, --description     Task description
--s, --status          Status (To Do, In Progress, Done, Blocked)
--a, --assignee        Assignee (@username)
--l, --labels          Comma-separated labels
---priority            Priority (low, medium, high)
---ac                  Add acceptance criterion
---check-ac            Check AC by index
---uncheck-ac          Uncheck AC by index
---remove-ac           Remove AC by index
---plan                Implementation plan
---notes               Implementation notes
---append-notes        Append to notes
---dep                 Add dependency (task-id)
---draft               Create as draft
--p, --parent          Parent task ID
-
-# Filters
---plain               Plain text output (AI-friendly)
---status              Filter by status
---assignee            Filter by assignee
---tag                 Filter by tag
---priority            Filter by priority
---type                Filter by type (task, doc, decision)
-```
-
-## Tips
-
-1. **Always use `--plain`** when listing or viewing for AI processing
-2. **Start tasks properly**: Set In Progress and assign to yourself
-3. **Check AC as you go**: Don't wait until end to mark them complete
-4. **Use multiline properly**: Use `$'...\n...'` syntax for newlines
-5. **Multiple flags work**: `--check-ac 1 --check-ac 2 --check-ac 3`
-6. **Organize with labels**: Use consistent labeling scheme
-7. **Atomic tasks**: One PR = One task
-8. **PR-ready notes**: Format notes as GitHub PR description
-9. **Never edit files directly**: Always use CLI commands
-10. **Search is fuzzy**: "auth" finds "authentication"
-11. **서브 에이전트 사용**: 태스크 실행은 항상 Task tool로 위임하여 메인 컨텍스트 경량화
-
-## Integration with Git
-
-```bash
-# Workflow
-git checkout -b task-42-implement-feature
-# ... implement task 42 ...
+# 4. Mark ACs complete as you work
 backlog task edit 42 --check-ac 1 --check-ac 2
-backlog task edit 42 --notes "Implementation complete"
+
+# 5. Add implementation notes
+backlog task edit 42 --notes $'Implemented using pattern X\nUpdated files Y and Z'
+
+# 6. Mark done
 backlog task edit 42 -s Done
-git add .
-git commit -m "Implement feature X
-
-Refs: task-42"
-git push
 ```
 
-## Remember
+## Usage Guidelines
 
-**🎯 Golden Rule**: Always use CLI commands. Never edit markdown files directly.
-**🎯 Silver Rule**: Always use CLI commands. Never edit markdown files directly.
+1. **Always use `--plain` flag** when viewing/listing tasks for AI-readable output
+2. **Never edit task files directly** - Always use CLI commands
+3. **Use ANSI-C quoting** (`$'...\n...'`) for multi-line content (plan, notes, description)
+4. **Include JIRA ticket** in title when applicable: `[TICKET-123] Description`
+5. **Mark ACs complete** as you work through them
+6. **Start work properly**: Set status "In Progress" and assign to yourself first
 
-**📋 Task Quality**: Good AC = Testable outcomes, not implementation steps.
+## Error Handling
 
-**✅ Definition of Done**: All AC checked + notes + tests passing + status Done.
+- Check task exists: `backlog task 42 --plain`
+- List all tasks if ID unknown: `backlog task list --plain`
+- Use search for keywords: `backlog search "topic" --plain`
+- For AC operations, verify AC index with `backlog task 42 --plain`
 
-## Session Continuity & Review Workflow
-
-### Task Completion Checkpoint
-
-타스크 1개가 완료될 때마다 **반드시** 다음을 수행:
-
-#### 0. 서브 에이전트 결과 처리
-
-서브 에이전트가 반환한 결과를 바탕으로:
-1. 완료 상태 확인 (AC 체크 여부, 테스트 통과 여부)
-2. 사용자에게 요약 전달
-
-#### 1. Backlog Task 업데이트
-
-```bash
-# 구현 노트에 진행 내용 기록
-backlog task edit <ID> --append-notes $'## Session Progress\n- 완료된 항목\n- 남은 이슈\n- 다음 단계'
-
-# AC 체크 (완료된 것만)
-backlog task edit <ID> --check-ac <완료된 AC 번호들>
-```
-
-#### 2. Plan 파일 업데이트 (있는 경우)
-
-- `~/.claude/plans/` 아래 plan 파일에 진행 상황 반영
-- 완료된 단계 체크, 다음 단계 명시
-
-#### 3. 사용자 리뷰 요청
-
-타스크가 완료되면 **반드시** 사용자에게 리뷰를 요청한다:
-
-```
----
-## 타스크 완료 리뷰 요청
-
-**타스크**: [제목] (ID: [ID])
-
-### 완료 내용
-- [완료된 작업 요약]
-
-### 다음 선택:
-1. ✅ 다음 타스크 진행 - "다음"
-2. 🔄 수정 요청 - 수정 내용 설명
-3. ⏸️ 세션 종료 - "종료"
----
-```
-
-### User Response Handling
-
-| 응답 | 액션 |
-|-----|------|
-| "다음", "진행" | 다음 backlog 타스크로 이동 |
-| 수정 요청 | 현재 타스크 수정 후 재리뷰 |
-| "종료", "stop" | 세션 종료 절차 실행 |
-
-### Session End Procedure
-
-세션 종료 시:
-
-```bash
-# 1. 진행 상황 저장
-backlog task edit <ID> --append-notes $'## Session End\n- 마지막 작업: [내용]\n- 다음 시작점: [내용]'
-
-# 2. 상태를 In Progress로 유지 (미완료 시)
-backlog task edit <ID> -s "In Progress"
-```
-
-- plan 파일에도 동일하게 현재 상태와 다음 시작점 기록
-- 다음 세션에서 바로 이어갈 수 있는 정보 포함
+Full help: `backlog --help`

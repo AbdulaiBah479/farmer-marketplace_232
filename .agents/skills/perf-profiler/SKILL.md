@@ -1,8 +1,8 @@
 ---
 name: perf-profiler
 description: "Use when profiling CPU/memory hot paths, generating flame graphs, or capturing JFR/perf evidence."
-version: 5.1.0
-argument-hint: "[tool] [command]"
+version: 1.0.0
+argument-hint: "<tool> <command>"
 ---
 
 # perf-profiler
@@ -10,14 +10,6 @@ argument-hint: "[tool] [command]"
 Run profiling tools and capture hotspots with evidence.
 
 Follow `docs/perf-requirements.md` as the canonical contract.
-
-## Parse Arguments
-
-```javascript
-const args = '$ARGUMENTS'.split(' ').filter(Boolean);
-const tool = args[0] || '';
-const command = args.slice(1).join(' ');
-```
 
 ## Required Rules
 

@@ -1,122 +1,172 @@
 ---
-name: gtm-strategy
-description: Build go-to-market strategy with channel selection, motion matching, and capacity planning for sales teams.
+name: GTM Strategy
+description: Go-to-market planning and execution capabilities for product launches
+allowed-tools:
+  - Read
+  - Write
+  - Glob
+  - Grep
+  - Bash
+  - WebSearch
 ---
 
-# Go-to-Market Strategy
+# GTM Strategy Skill
 
-Frameworks for selecting sales channels and building go-to-market motions.
+## Overview
 
-## Channel Selection Matrix
+Specialized skill for go-to-market planning and execution capabilities. Enables product teams to plan effective launches, develop messaging, and coordinate cross-functional GTM activities.
 
-| Channel | Best For | CAC Range | Time to Revenue | Complexity |
-|---------|----------|-----------|-----------------|------------|
-| **Outbound** | High ACV ($10K+), defined ICP | $500-2K | 3-6 months | Medium |
-| **Inbound** | Searchable problem, content fit | $200-800 | 6-12 months | High |
-| **PLG** | Simple product, quick value | $50-200 | 3-9 months | High |
-| **Partners** | Ecosystem play, trust transfer | Varies | 6-18 months | Medium |
-| **Events** | Relationship-driven, enterprise | $1K-5K | 6-12 months | High |
-| **Community** | Developer/prosumer products | $100-500 | 12+ months | Medium |
+## Capabilities
 
-## ACV-Based Motion Selection
+### Launch Planning
+- Generate launch tier recommendations (T1/T2/T3)
+- Create launch timeline milestones
+- Build launch checklist templates
+- Define launch success metrics
+- Plan phased rollout strategies
 
-| ACV | Recommended Motion | Team Structure |
-|-----|-------------------|----------------|
-| < $5K | PLG or Marketing-led | Growth + self-serve |
-| $5K-$25K | Inside sales + Inbound | SDR → AE |
-| $25K-$100K | Outbound + Account-based | SDR → AE → CSM |
-| > $100K | Enterprise sales + Partners | Named AE → SE → CSM |
+### Messaging and Positioning
+- Create messaging frameworks and positioning
+- Develop value proposition statements
+- Generate competitive differentiation points
+- Create audience-specific messaging variants
+- Build elevator pitch templates
 
-## Sales Motion Archetypes
+### Channel Strategy
+- Build channel strategy recommendations
+- Identify optimal launch channels
+- Create channel-specific content plans
+- Define channel success metrics
 
-### Founder-Led ($0-$1M ARR)
+### Sales Enablement
+- Generate sales enablement materials structure
+- Create competitive battlecard frameworks
+- Build objection handling guides
+- Develop pricing talk tracks
+- Create demo flow recommendations
 
+## Target Processes
+
+This skill integrates with the following processes:
+- `product-launch-gtm.js` - Primary GTM planning and execution
+- `competitive-analysis.js` - Competitive positioning for launches
+- `beta-program.js` - Beta-to-GA transition planning
+- `stakeholder-alignment.js` - Launch communication coordination
+
+## Input Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "product": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "targetAudience": { "type": "array", "items": { "type": "string" } },
+        "valueProposition": { "type": "string" },
+        "keyFeatures": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "launchType": {
+      "type": "string",
+      "enum": ["new-product", "major-release", "feature-launch", "market-expansion"],
+      "description": "Type of launch"
+    },
+    "launchTier": {
+      "type": "string",
+      "enum": ["T1", "T2", "T3"],
+      "description": "Launch tier (T1=major, T2=medium, T3=minor)"
+    },
+    "targetDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Target launch date"
+    },
+    "competitiveContext": {
+      "type": "object",
+      "description": "Competitive landscape information"
+    }
+  },
+  "required": ["product", "launchType"]
+}
 ```
-Founder does everything:
-  - Prospecting → Discovery → Demo → Close → Onboard
-Focus: Learning what works, documenting wins
-Goal: Find repeatable motion before hiring
+
+## Output Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "launchPlan": {
+      "type": "object",
+      "properties": {
+        "tier": { "type": "string" },
+        "timeline": { "type": "array", "items": { "type": "object" } },
+        "milestones": { "type": "array", "items": { "type": "object" } },
+        "checklist": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "messaging": {
+      "type": "object",
+      "properties": {
+        "positioning": { "type": "string" },
+        "valueProposition": { "type": "string" },
+        "keyMessages": { "type": "array", "items": { "type": "string" } },
+        "audienceVariants": { "type": "object" }
+      }
+    },
+    "channelStrategy": {
+      "type": "object",
+      "properties": {
+        "primaryChannels": { "type": "array", "items": { "type": "string" } },
+        "contentPlan": { "type": "object" },
+        "metrics": { "type": "object" }
+      }
+    },
+    "salesEnablement": {
+      "type": "object",
+      "properties": {
+        "battlecard": { "type": "object" },
+        "objectionHandling": { "type": "array", "items": { "type": "object" } },
+        "talkTracks": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "successMetrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "metric": { "type": "string" },
+          "target": { "type": "string" },
+          "timeframe": { "type": "string" }
+        }
+      }
+    }
+  }
+}
 ```
 
-### First Sales Hire ($1M-$3M ARR)
+## Usage Example
 
-```
-Hire: Full-cycle AE or SDR
-Split: Founder handles enterprise, AE handles SMB
-Focus: Can someone else close deals?
-Goal: Prove non-founder can sell
-```
-
-### Sales Team ($3M-$10M ARR)
-
-```
-Structure: SDR team → AE team → CSM
-Specialization: Hunting vs farming
-Focus: Repeatability and predictability
-Goal: Quota attainment without founder
-```
-
-## Capacity Planning Model
-
-```
-Revenue Target ÷ ACV = Deals Needed
-Deals Needed ÷ Win Rate = Opportunities Needed
-Opportunities ÷ SQL→Opp Rate = SQLs Needed
-SQLs ÷ MQL→SQL Rate = MQLs Needed
-MQLs ÷ Marketing Conversion = Traffic Needed
-
-For Outbound:
-Deals Needed ÷ Win Rate = Meetings Needed
-Meetings ÷ Meeting Rate = Contacts Needed
-Contacts ÷ Contacts/Rep/Month = Reps Needed
+```javascript
+const gtmPlan = await executeSkill('gtm-strategy', {
+  product: {
+    name: 'Advanced Analytics Suite',
+    description: 'Enterprise analytics platform with AI-powered insights',
+    targetAudience: ['Data Analysts', 'Business Intelligence Teams', 'C-Suite'],
+    valueProposition: 'Get actionable insights 10x faster with AI-powered analytics',
+    keyFeatures: ['Natural language queries', 'Automated insights', 'Real-time dashboards']
+  },
+  launchType: 'major-release',
+  launchTier: 'T1',
+  targetDate: '2026-03-15'
+});
 ```
 
-## Multi-Channel Strategy
+## Dependencies
 
-| Channel | Percentage | Purpose |
-|---------|------------|---------|
-| **Primary** | 60-70% | Main revenue driver |
-| **Secondary** | 20-30% | Diversification + experimentation |
-| **Exploratory** | 10% | Future growth bets |
-
-**Rule:** Don't spread thin. Dominate one channel before adding another.
-
-## GTM Launch Phases
-
-### Phase 1: Validation (0-3 months)
-- Manual outreach to ICP
-- Founder-led demos
-- Goal: 10 paying customers
-
-### Phase 2: Repeatability (3-6 months)
-- Document winning process
-- First sales hire
-- Goal: Non-founder closes deals
-
-### Phase 3: Scale (6-12 months)
-- Add SDR/AE capacity
-- Layer in marketing
-- Goal: Predictable pipeline
-
-## Channel-Specific Playbooks
-
-### Outbound Playbook
-- ICP list building → Sequence automation → Meeting booking → Demo → Close
-- Key metric: Meetings/SDR/month (target: 15-20)
-
-### Inbound Playbook
-- Content → SEO/Ads → Lead capture → Nurture → MQL → Demo → Close
-- Key metric: MQL→Customer rate (target: 5-15%)
-
-### PLG Playbook
-- Free trial/freemium → Activation → Engagement → Upgrade trigger → Expansion
-- Key metric: Free→Paid conversion (target: 2-5%)
-
-## GTM Health Metrics
-
-| Metric | Healthy | Warning | Critical |
-|--------|---------|---------|----------|
-| Pipeline coverage | 3-4x | 2-3x | < 2x |
-| Win rate | 20-30% | 15-20% | < 15% |
-| Sales cycle | On target | +25% | +50% |
-| CAC payback | < 12 mo | 12-18 mo | > 18 mo |
+- Marketing frameworks
+- Channel templates
+- Sales enablement templates

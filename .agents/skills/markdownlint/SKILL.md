@@ -1,143 +1,141 @@
 ---
-name: markdownlint
-description: This skill should be used when users need to format, clean, lint, or validate Markdown files using the markdownlint-cli2 command-line tool. Use this skill for tasks involving Markdown (including Quarto Markdown `.qmd`) file quality checks, automatic formatting fixes, enforcing Markdown style rules, or identifying Markdown syntax issues.
+name: MarkdownLint
+description: Format and lint a markdown document — backtick code references, fix bare URLs, check list formatting and heading hierarchy. USE WHEN a document needs formatting cleanup, code references are not backticked, markdown quality needs improvement, or lint markdown.
+argument-hint: "[path to markdown file]"
 ---
 
-# Markdownlint Skill
+# MarkdownLint
 
-## Contents
+Format and lint a markdown document for consistent code formatting, proper list structure, heading hierarchy, and link hygiene. Reads a file, applies all rules, writes the corrected version after confirmation.
 
-- [Markdownlint Skill](#markdownlint-skill)
-    - [Contents](#contents)
-    - [Project Configuration](#project-configuration)
-    - [Basic Usage](#basic-usage)
-    - [Common Operations](#common-operations)
-        - [Lint Specific Paths](#lint-specific-paths)
-        - [Auto-Fix](#auto-fix)
-        - [Process stdin](#process-stdin)
-    - [Workflow](#workflow)
-        - [Standard Lint-Fix-Verify Cycle](#standard-lint-fix-verify-cycle)
-        - [Safe Fix with Backup](#safe-fix-with-backup)
-    - [Cross-Platform Usage](#cross-platform-usage)
-    - [Troubleshooting](#troubleshooting)
-        - [No Files Matched](#no-files-matched)
-        - [Too Many Issues](#too-many-issues)
-        - [Configuration Not Loading](#configuration-not-loading)
-    - [References](#references)
-    - [Installation](#installation)
+## Instructions
 
-## Project Configuration
+### Step 1: Read the target file
 
-**IMPORTANT**: This project uses `.markdownlint.yaml`. Always follow these rules:
+If an argument was provided, use it as the file path. Otherwise, ask which file to lint.
 
-| Rule | Setting | Notes |
-| ------ | --------- |------- |
-| **MD040** | Enabled | Always specify language for code fences |
-| **MD007** | 2 spaces | List indentation |
-| **MD024** | Siblings only | Duplicate headings allowed under different parents |
-| **MD013** | Disabled | No line length restrictions |
-| **MD033** | Disabled | Inline HTML allowed |
-| **MD041** | Disabled | Files don't need to start with H1 |
-| **MD038** | Disabled | Spaces in code spans allowed |
-| **MD036** | Disabled | Emphasis as heading allowed |
+Check TLP before reading:
+- GREEN/CLEAR: Read directly
+- AMBER: Use `safe-read` via Bash
+- RED: Refuse
 
-## Basic Usage
+### Step 2: Schema validation
+
+If `mdschema` is installed, look for a `.mdschema` in the file's parent directory (for skills: `skills/.mdschema`, for agents: `agents/.mdschema`). If found, run:
 
 ```bash
-# Lint files
-markdownlint-cli2 "**/*.md"
-markdownlint-cli2 README.md
-
-# Auto-fix issues
-markdownlint-cli2 --fix "**/*.md"
-
-# Exclude directories
-markdownlint-cli2 "**/*.md" "#node_modules" "#vendor"
+mdschema check "<file>" --schema "<schema>"
 ```
 
-## Common Operations
+Report any violations (missing frontmatter fields, heading level skips, depth exceeded). These are structural issues that formatting rules cannot auto-fix — present them to the user as findings.
 
-### Lint Specific Paths
+If `mdschema` is not installed or no schema exists, skip this step silently.
 
-```bash
-markdownlint-cli2 README.md                    # Single file
-markdownlint-cli2 "docs/**/*.md"               # Directory
-markdownlint-cli2 "*.md" "docs/**/*.md"        # Multiple patterns
-markdownlint-cli2 .                            # Current directory
-```
+### Step 3: Identify protected zones
 
-### Auto-Fix
+Before applying any rules, identify zones that MUST NOT be modified:
 
-```bash
-markdownlint-cli2 --fix "**/*.md"              # Fix all files
-markdownlint-cli2 --fix README.md              # Fix single file
-```
+| Zone | Detection | Action |
+|------|-----------|--------|
+| YAML frontmatter | Lines between opening `---` and closing `---` at file start | Skip entirely |
+| Fenced code blocks | Lines between `` ``` `` or `~~~` fences | Skip entirely |
+| Inline code | Text between single backticks | Skip entirely |
+| Wikilinks | Text matching `[[...]]` | Preserve as-is — never backtick |
+| Obsidian embeds | Lines starting with `![[` or `![` | Preserve |
+| HTML blocks | `<tag>...</tag>` blocks | Skip entirely |
+| Obsidian comments | `%% ... %%` blocks | Skip entirely |
 
-### Process stdin
+Process only unprotected text spans.
 
-```bash
-cat README.md | markdownlint-cli2 -
-```
+### Step 4: Apply formatting rules
 
-## Workflow
+#### 3a: Backtick filenames
 
-### Standard Lint-Fix-Verify Cycle
+Any word ending in a code-associated extension:
 
-1. Run lint check: `markdownlint-cli2 "**/*.md"`
-2. Review reported issues
-3. Apply auto-fix: `markdownlint-cli2 --fix "**/*.md"`
-4. Re-run lint to verify: `markdownlint-cli2 "**/*.md"`
-5. Review changes: `git diff`
-6. Commit when satisfied
+`.md`, `.yaml`, `.yml`, `.json`, `.rs`, `.sh`, `.ts`, `.js`, `.toml`, `.base`, `.css`, `.html`, `.py`, `.go`, `.lua`, `.sql`, `.env`, `.tlp`, `.gitignore`, `.claudeignore`
 
-### Safe Fix with Backup
+Examples: CLAUDE.md becomes `CLAUDE.md`, config.yaml becomes `config.yaml`.
 
-1. Stage current state: `git add .`
-2. Create backup commit: `git commit -m "Backup before markdownlint fix"`
-3. Apply fixes: `markdownlint-cli2 --fix "**/*.md"`
-4. Review changes: `git diff`
-5. Commit fixes or reset: `git add . && git commit -m "Apply markdownlint fixes"`
+Skip if already backticked, inside a wikilink, or part of a URL path.
 
-## Cross-Platform Usage
+#### 3b: Backtick CLI commands and tool names
 
-For maximum compatibility:
+Recognized patterns:
+- Known tools: `safe-read`, `safe-write`, `blind-metadata`, `obsidian-base`, `build-templates`, `surface`, `insight`, `reflect`, `ekctl`, `cargo`, `make`, `git`, `npm`, `shellcheck`, `jq`
+- Command invocations with flags: words followed by `--flag` or `-f`
+- Make targets: `make install`, `make test`, `make clean`
+- Compound commands: `cargo build`, `cargo test`, `git commit`
 
-- **Quote glob patterns**: `markdownlint-cli2 "**/*.md"`
-- **Use `#` for negation**: `markdownlint-cli2 "**/*.md" "#vendor"` (not `!`)
-- **Use forward slashes**: `docs/**/*.md` (works on all platforms)
-- **Stop option processing**: `markdownlint-cli2 -- "special-file.md"`
+Backtick the full command phrase, not individual words.
 
-## Troubleshooting
+#### 3c: Backtick technical identifiers
 
-### No Files Matched
+| Pattern | Example | Rule |
+|---------|---------|------|
+| Effort/log tags | #log/effort/short | Backtick the full tag |
+| TLP tags as references | #tlp/red | Backtick when discussed as a value (not when used as actual inline tag) |
+| Environment variables | FORGE_MODULE_ROOT | Backtick ALL_CAPS_UNDERSCORE identifiers |
+| Config keys in prose | user.root, shared.journal.daily | Backtick dot-separated paths |
+| YAML keys referenced in prose | source_module:, description: | Backtick when referenced as field names |
 
-- Verify glob patterns are quoted
-- Check file extensions (`.md` vs `.markdown`)
-- Ensure negated patterns don't exclude everything
+Exceptions: Tags used as actual functional Obsidian tags — leave as-is. Env vars inside code blocks — skip.
 
-### Too Many Issues
+#### 3d: Convert bare URLs
 
-1. Start with auto-fix: `markdownlint-cli2 --fix "**/*.md"`
-2. Disable problematic rules temporarily
-3. Address remaining issues incrementally
+Bare URLs (`<https://...>` or plain `https://...` in text):
 
-### Configuration Not Loading
+1. GitHub repo URL: use repo name — `[forge-tlp](https://github.com/user/forge-tlp)`
+2. Well-known service: use service name — `[Obsidian](https://obsidian.md/)`
+3. Other: infer title from URL path or use domain name
+4. If WebFetch available and URL is public, fetch the page title
 
-- Verify configuration file name matches expected patterns
-- Validate JSON/YAML syntax
-- Use `--config` to explicitly specify the file
+Never convert URLs already inside markdown links `[text](url)` or code blocks.
 
-## References
+#### 3e: Fix list formatting
 
-- [Rules Reference](references/rules.md) - Complete rule descriptions
-- [Configuration Examples](references/config-examples.md) - Config templates and patterns
-- [Official Documentation](https://github.com/DavidAnson/markdownlint-cli2)
-- [All Rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
+- Use `-` for unordered lists (Obsidian convention)
+- Proper indentation for child items
+- Blank line before and after list blocks (unless inside a callout)
 
-## Installation
+#### 3f: Check heading hierarchy
 
-```bash
-npm install -g markdownlint-cli2    # npm
-brew install markdownlint-cli2      # Homebrew
-markdownlint-cli2 --help            # Verify installation
-```
+- No skipped levels (e.g., `##` followed by `####`)
+- Single `#` H1 at document start (after frontmatter)
+- Flag but do not auto-fix if structure is ambiguous
+
+### Step 5: Special syntax recognition
+
+Do NOT lint these as errors:
+- `#tlp/red`, `#tlp/amber`, `#tlp/green`, `#tlp/clear` — valid TLP structural markers
+- `%% @todo ... %%`, `%% @fixme ... %%` — valid Obsidian annotation markers
+- `![[embed]]` — valid Obsidian embed syntax
+- `> [!callout]` — valid Obsidian callout syntax
+- Dataview blocks (`dataview`, `dataviewjs`)
+
+### Step 6: Confirm changes
+
+Present a summary:
+- Count of backticked items by category (filenames, commands, tags, env vars)
+- Count of URLs converted
+- List/heading fixes
+- 2-3 representative before/after examples
+
+Ask the user to confirm before writing.
+
+### Step 7: Write the corrected file
+
+- AMBER: use `safe-write write` via Bash
+- GREEN/CLEAR: use Write tool directly
+- Preserve all protected zones exactly
+
+## Constraints
+
+- Never modify YAML frontmatter content
+- Never modify content inside fenced code blocks or inline code
+- Never backtick text inside wikilinks
+- Never convert wikilinks to markdown links or vice versa
+- Never change semantic meaning — only formatting
+- Never add backticks to regular English words (e.g., "base" as a noun, "draft" as a verb)
+- Preserve all Obsidian-specific syntax
+- After linting, suggest the WikiLink skill if the document could benefit from knowledge graph links

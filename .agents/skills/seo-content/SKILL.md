@@ -1,190 +1,462 @@
 ---
 name: seo-content
-description: >
-  Content quality and E-E-A-T analysis with AI citation readiness assessment.
-  Use when user says "content quality", "E-E-A-T", "content analysis",
-  "readability check", "thin content", or "content audit".
-risk: unknown
-source: "https://github.com/AgriciDaniel/claude-seo"
-date_added: "2026-03-21"
-user-invokable: true
-argument-hint: "[url]"
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
-  - WebFetch
+description: Create articles that rank in search engines and engage readers. Use when building organic traffic, establishing authority, or creating content that attracts your ideal customers through search.
 ---
 
-# Content Quality & E-E-A-T Analysis
+# SEO Content Skill
 
-## When to Use
-- Use when auditing content quality, readability, thin content risk, or E-E-A-T signals.
-- Use when the user wants a content-focused SEO review rather than a full technical audit.
-- Use when checking whether content is structured and trustworthy enough for search and AI citation.
+## Overview
 
-## E-E-A-T Framework (updated Sept 2025 QRG)
+SEO Content is content optimized for search engines that also engages and converts readers. This skill teaches you to write content that ranks and resonates, following modern E-E-A-T principles and topical authority strategies.
 
-Read `seo/references/eeat-framework.md` for full criteria.
+**Keywords**: SEO content, search engine optimization, content marketing, ranking content, organic traffic, search intent, content strategy, E-E-A-T, topical authority
 
-### Experience (first-hand signals)
-- Original research, case studies, before/after results
-- Personal anecdotes, process documentation
-- Unique data, proprietary insights
-- Photos/videos from direct experience
+**Related**: See `./seo-strategy` for the complete strategic framework and keyword research methodology.
 
-### Expertise
-- Author credentials, certifications, bio
-- Professional background relevant to topic
-- Technical depth appropriate for audience
-- Accurate, well-sourced claims
+---
 
-### Authoritativeness
-- External citations, backlinks from authoritative sources
-- Brand mentions, industry recognition
-- Published in recognized outlets
-- Cited by other experts
+## The Modern SEO Content Framework
 
-### Trustworthiness
-- Contact information, physical address
-- Privacy policy, terms of service
-- Customer testimonials, reviews
-- Date stamps, transparent corrections
-- Secure site (HTTPS)
+### Two Layers of Optimization
 
-## Content Metrics
+1. **For Search Engines** — Technical optimization for ranking
+2. **For People** — Engaging, valuable content that converts
 
-### Word Count Analysis
-Compare against page type minimums:
-| Page Type | Minimum |
-|-----------|---------|
-| Homepage | 500 |
-| Service page | 800 |
-| Blog post | 1,500 |
-| Product page | 300+ (400+ for complex products) |
-| Location page | 500-600 |
+The best SEO content serves both equally.
 
-> **Important:** These are **topical coverage floors**, not targets. Google has confirmed word count is NOT a direct ranking factor. The goal is comprehensive topical coverage; a 500-word page that thoroughly answers the query will outrank a 2,000-word page that doesn't. Use these as guidelines for adequate coverage depth, not rigid requirements.
+### The E-E-A-T Imperative
 
-### Readability
-- Flesch Reading Ease: target 60-70 for general audience
+Google now evaluates all content against E-E-A-T:
 
-> **Note:** Flesch Reading Ease is a useful proxy for content accessibility but is NOT a direct Google ranking factor. John Mueller has confirmed Google does not use basic readability scores for ranking. Yoast deprioritized Flesch scores in v19.3. Use readability analysis as a content quality indicator, not as an SEO metric to optimize directly.
-- Grade level: match target audience
-- Sentence length: average 15-20 words
-- Paragraph length: 2-4 sentences
+| Factor | How to Demonstrate |
+|--------|-------------------|
+| **Experience** | First-hand examples, real case studies, personal insights |
+| **Expertise** | Deep knowledge, accurate information, comprehensive coverage |
+| **Authoritativeness** | Credentials, citations, external recognition |
+| **Trustworthiness** | Accuracy, sources, transparency, no misleading claims |
+
+**Action**: Every article should include at least one personal example, cite 2-3 authoritative sources, and demonstrate depth beyond surface-level coverage.
+
+---
+
+## Layer 1: Search Engine Optimization
 
 ### Keyword Optimization
-- Primary keyword in title, H1, first 100 words
-- Natural density (1-3%)
-- Semantic variations present
-- No keyword stuffing
 
-### Content Structure
-- Logical heading hierarchy (H1 -> H2 -> H3)
-- Scannable sections with descriptive headings
-- Bullet/numbered lists where appropriate
-- Table of contents for long-form content
+**Primary Keyword**: Your main target keyword
 
-### Multimedia
-- Relevant images with proper alt text
-- Videos where appropriate
-- Infographics for complex data
-- Charts/graphs for statistics
+**Placement Strategy**:
+| Location | Requirement |
+|----------|-------------|
+| Title tag | First 60 characters |
+| H1 heading | Include naturally |
+| First 100 words | Early placement |
+| Body content | 2-3 times naturally |
+| Subheadings | Where relevant |
+| URL slug | Short, keyword-included |
 
-### Internal Linking
-- 3-5 relevant internal links per 1000 words
-- Descriptive anchor text
-- Links to related content
-- No orphan pages
+**Secondary Keywords**: Related terms that support the primary keyword
+- Use naturally throughout content
+- Include in H2/H3 headings where relevant
+- Support topical completeness
 
-### External Linking
-- Cite authoritative sources
-- Open in new tab for user experience
-- Reasonable count (not excessive)
+### Title Tag Formula
 
-## AI Content Assessment (Sept 2025 QRG addition)
+**Requirements**: 50-60 characters, keyword early, compelling
 
-Google's raters now formally assess whether content appears AI-generated.
+**Formulas**:
+```
+[Keyword]: [Number] [Benefit/Strategies/Ways] for [Outcome]
+How to [Keyword] in [Year]: [Specific Benefit]
+[Keyword]: The Complete Guide to [Outcome]
+[Number] [Keyword] Tips That [Specific Result]
+```
 
-### Acceptable AI Content
-- Demonstrates genuine E-E-A-T
-- Provides unique value
-- Has human oversight and editing
-- Contains original insights
+**Examples**:
+- "Remote Team Management: 7 Strategies That Actually Work"
+- "How to Improve Core Web Vitals in 2025: Complete Guide"
 
-### Low-Quality AI Content Markers
-- Generic phrasing, lack of specificity
-- No original insight
-- Repetitive structure across pages
-- No author attribution
-- Factual inaccuracies
+### Meta Description
 
-> **Helpful Content System (March 2024):** The Helpful Content System was merged into Google's core ranking algorithm during the March 2024 core update. It no longer operates as a standalone classifier. Helpfulness signals are now weighted within every core update. The same principles apply (people-first content, demonstrating E-E-A-T, satisfying user intent), but enforcement is continuous rather than through separate HCU updates.
+**Requirements**: 150-160 characters, keyword included, compelling CTA
 
-## AI Citation Readiness (GEO signals)
+**Formula**: "[Benefit statement]. Learn [specific outcome] with [unique angle]. [Soft CTA]."
 
-Optimize for AI search engines (ChatGPT, Perplexity, Google AI Overviews):
+**Example**: "Master remote team management with 7 proven strategies. Learn how top companies boost productivity by 40%. Complete guide inside."
 
-- Clear, quotable statements with statistics/facts
-- Structured data (especially for data points)
-- Strong heading hierarchy (H1->H2->H3 flow)
-- Answer-first formatting for key questions
-- Tables and lists for comparative data
-- Clear attribution and source citations
+### Heading Structure
 
-### AI Search Visibility & GEO (2025-2026)
+Use proper hierarchy to signal content structure:
 
-**Google AI Mode** launched publicly in May 2025 as a separate tab in Google Search, available in 180+ countries. Unlike AI Overviews (which appear above organic results), AI Mode provides a fully conversational search experience with **zero organic blue links**, making AI citation the only visibility mechanism.
+```
+H1: [Main Topic with Primary Keyword]
+  H2: [Major Section 1]
+    H3: [Subsection]
+    H3: [Subsection]
+  H2: [Major Section 2]
+    H3: [Subsection]
+  H2: FAQ (for featured snippets)
+```
 
-**Key optimization strategies for AI citation:**
-- **Structured answers:** Clear question-answer formats, definition patterns, and step-by-step instructions that AI systems can extract and cite
-- **First-party data:** Original research, statistics, case studies, and unique datasets are highly cited by AI systems
-- **Schema markup:** Article, FAQ (for non-Google AI platforms), and structured content schemas help AI systems parse and attribute content
-- **Topical authority:** AI systems preferentially cite sources that demonstrate deep expertise. Build content clusters, not isolated pages
-- **Entity clarity:** Ensure brand, authors, and key concepts are clearly defined with structured data (Organization, Person schema)
-- **Multi-platform tracking:** Monitor visibility across Google AI Overviews, AI Mode, ChatGPT, Perplexity, and Bing Copilot, not just traditional rankings. Treat AI citation as a standalone KPI alongside organic rankings and traffic.
+**Rules**:
+- One H1 per page
+- H2s for main sections (5-8 for comprehensive articles)
+- H3s for subsections within H2s
+- Include keywords naturally in headings
 
-**Generative Engine Optimization (GEO):**
-GEO is the emerging discipline of optimizing content specifically for AI-generated answers. Key GEO signals include: quotability (clear, concise extractable facts), attribution (source citations within your content), structure (well-organized heading hierarchy), and freshness (regularly updated data). Cross-reference the `seo-geo` skill for detailed GEO workflows.
+### Content Length Guidelines
 
-## Content Freshness
+| Keyword Competition | Target Length |
+|--------------------|---------------|
+| Low competition | 1,500-2,000 words |
+| Medium competition | 2,000-3,000 words |
+| High competition | 3,000-5,000+ words |
 
-- Publication date visible
-- Last updated date if content has been revised
-- Flag content older than 12 months without update for fast-changing topics
+**Key insight**: Longer content ranks better IF it's comprehensive and valuable. Padding for length hurts rankings.
 
-## Output
+---
 
-### Content Quality Score: XX/100
+## Layer 2: Human Optimization
 
-### E-E-A-T Breakdown
-| Factor | Score | Key Signals |
-|--------|-------|-------------|
-| Experience | XX/25 | ... |
-| Expertise | XX/25 | ... |
-| Authoritativeness | XX/25 | ... |
-| Trustworthiness | XX/25 | ... |
+### Content Structure Template
 
-### AI Citation Readiness: XX/100
+**1. Opening Hook (First 2-3 sentences)**
+- Answer search intent immediately
+- Create curiosity or promise value
+- Make them want to continue
 
-### Issues Found
-### Recommendations
+**Example**:
+> "Most remote teams fail because of one fixable problem: unclear communication protocols. In this guide, you'll learn the exact 7 strategies that helped 500+ companies boost remote productivity by 40%."
 
-## DataForSEO Integration (Optional)
+**2. Table of Contents**
+- For articles 1,500+ words
+- Improves navigation
+- Helps search engines understand structure
+- Enables jump links in search results
 
-If DataForSEO MCP tools are available, use `kw_data_google_ads_search_volume` for real keyword volume data, `dataforseo_labs_bulk_keyword_difficulty` for difficulty scores, `dataforseo_labs_search_intent` for intent classification, and `content_analysis_summary` for content quality analysis.
+**3. Main Content Sections**
+Each section should:
+- Address one specific subtopic
+- Include practical examples
+- Provide actionable takeaways
+- Use formatting for scannability
 
-## Error Handling
+**4. FAQ Section**
+- Target featured snippets
+- Answer related questions
+- Use exact question format
+- Keep answers concise (40-60 words)
 
-| Scenario | Action |
-|----------|--------|
-| URL unreachable (DNS failure, connection refused) | Report the error clearly. Do not guess page content. Suggest the user verify the URL and try again. |
-| Content behind paywall (402/403, login wall) | Report that the content is not publicly accessible. Analyze only the visible portion (meta tags, headers) and note the limitation. |
-| Thin content (fewer than 100 words retrievable) | Report the findings as-is rather than guessing. Flag the page as potentially JavaScript-rendered or gated, and suggest the user provide the full text directly. |
+**5. Conclusion**
+- Summarize key takeaways (3-5 bullets)
+- Include clear call-to-action
+- Link to related content
+- Reinforce main value proposition
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+### Search Intent Alignment
+
+**Critical**: Match your content format to searcher intent.
+
+| Intent Type | What They Want | Content Format |
+|-------------|----------------|----------------|
+| Informational | "How to manage remote teams" | Comprehensive tutorial/guide |
+| Commercial | "Best remote team tools" | Comparison, reviews, rankings |
+| Transactional | "Asana pricing" | Pricing page, product page |
+| Navigational | "Slack login" | Direct page, comparison to alternatives |
+
+**Wrong format = no ranking**, regardless of content quality.
+
+### Readability Standards
+
+- **Paragraphs**: 2-3 sentences max
+- **Sentences**: Under 20 words preferred
+- **Subheadings**: Every 200-300 words
+- **Bullet points**: For lists of 3+ items
+- **Bold text**: Key phrases and takeaways
+- **White space**: Generous margins and padding
+
+### Engagement Elements
+
+Include these to increase dwell time and reduce bounce:
+
+| Element | Purpose | Frequency |
+|---------|---------|-----------|
+| Real examples | Demonstrate expertise | Every major section |
+| Data/statistics | Build credibility | 3-5 per article |
+| Images/visuals | Break up text, illustrate points | Every 300-500 words |
+| Actionable tips | Provide immediate value | Throughout |
+| Case studies | Show proof of concepts | 1-2 per article |
+| Pull quotes | Highlight key insights | 2-3 per article |
+
+---
+
+## The Complete SEO Content Process
+
+### Step 1: Keyword Research & Validation
+
+Before writing, confirm:
+- [ ] Search volume: 100-10,000/month for long-tails
+- [ ] Search intent: What format does Google reward?
+- [ ] Competition: Can you realistically rank?
+- [ ] SERP analysis: What's missing from current results?
+
+### Step 2: Competitor Analysis
+
+Analyze top 5 ranking pages:
+- Content length and depth
+- Headings and structure
+- Topics covered (and gaps)
+- Media and visuals used
+- E-E-A-T signals present
+
+**Find the gap**: What can you cover that they don't?
+
+### Step 3: Create Content Brief
+
+**Brief Template**:
+```
+Primary Keyword: [keyword]
+Secondary Keywords: [list]
+Search Intent: [informational/commercial/etc.]
+Target Length: [word count]
+Target Audience: [who]
+Content Angle: [unique perspective]
+Key Sections: [H2 outline]
+Competitor Gaps: [what to add]
+E-E-A-T Elements: [how to demonstrate]
+Internal Links: [pages to link]
+CTA: [desired action]
+```
+
+### Step 4: Write with AI Assistance
+
+**The 80/20 Approach**:
+- AI handles: Outlines, first drafts, research summaries, metadata
+- You handle: Unique insights, examples, fact-checking, voice refinement
+
+**Process**:
+1. Generate outline from brief
+2. Expand each section
+3. Add your unique examples and insights
+4. Refine voice and tone
+5. Fact-check all claims
+
+### Step 5: On-Page SEO Checklist
+
+- [ ] Title tag: 50-60 chars, keyword, compelling
+- [ ] Meta description: 150-160 chars, keyword, CTA
+- [ ] H1: Includes primary keyword
+- [ ] H2s: 5-8 main sections with keywords
+- [ ] First 100 words: Primary keyword included
+- [ ] Images: Compressed, descriptive alt text
+- [ ] Internal links: 3-5 to relevant pages
+- [ ] External links: 2-3 to authoritative sources
+- [ ] URL: Short, descriptive, keyword-included
+- [ ] Schema markup: FAQ, Article, or appropriate type
+
+### Step 6: Quality Review Checklist
+
+- [ ] E-E-A-T signals present (experience, expertise, authority, trust)
+- [ ] Search intent fully satisfied
+- [ ] Unique value vs. competitors
+- [ ] Formatting clean and scannable
+- [ ] All facts verified and sourced
+- [ ] Brand voice consistent
+- [ ] CTA clear and relevant
+- [ ] No keyword stuffing
+- [ ] Mobile-friendly layout
+
+---
+
+## Content Templates
+
+### Template 1: How-To Guide
+
+```
+H1: How to [Achieve Outcome] in [Year]: [Benefit]
+
+[Hook: State the problem and promise the solution]
+
+Table of Contents
+
+H2: Why [Topic] Matters
+[Context and stakes]
+
+H2: Step 1: [First Action]
+[Instructions + example]
+
+H2: Step 2: [Second Action]
+[Instructions + example]
+
+[Continue for all steps]
+
+H2: Common Mistakes to Avoid
+[3-5 pitfalls with solutions]
+
+H2: FAQ
+[4-6 questions in Q&A format]
+
+H2: Conclusion
+[Summary + CTA]
+```
+
+### Template 2: Listicle/Roundup
+
+```
+H1: [Number] Best [Category] for [Outcome] in [Year]
+
+[Hook: Why this matters + selection criteria]
+
+Table of Contents
+
+H2: Quick Comparison
+[Summary table of all items]
+
+H2: 1. [Item Name] - Best for [Use Case]
+[Overview, features, pros/cons, who it's for]
+
+[Continue for all items]
+
+H2: How to Choose the Right [Category]
+[Decision framework]
+
+H2: FAQ
+[4-6 questions]
+
+H2: Conclusion
+[Top picks summary + CTA]
+```
+
+### Template 3: Ultimate Guide
+
+```
+H1: The Complete Guide to [Topic]: Everything You Need to Know
+
+[Hook: Scope of guide + who it's for]
+
+Table of Contents
+
+H2: What is [Topic]?
+[Definition + context]
+
+H2: Why [Topic] Matters
+[Benefits + stakes]
+
+H2: How [Topic] Works
+[Detailed explanation]
+
+H2: [Major Subtopic 1]
+H3: [Aspect 1]
+H3: [Aspect 2]
+
+[Continue for all subtopics]
+
+H2: Best Practices
+[5-10 actionable tips]
+
+H2: Common Mistakes
+[Pitfalls to avoid]
+
+H2: Tools and Resources
+[Recommended tools]
+
+H2: FAQ
+[6-10 questions]
+
+H2: Conclusion
+[Key takeaways + next steps]
+```
+
+---
+
+## Schema Markup Implementation
+
+### FAQ Schema (for featured snippets)
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Your question here?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Your answer here (40-60 words)."
+    }
+  }]
+}
+```
+
+### Article Schema
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Your Title",
+  "author": {
+    "@type": "Person",
+    "name": "Author Name"
+  },
+  "datePublished": "2025-01-15",
+  "dateModified": "2025-01-15",
+  "image": "https://yoursite.com/image.jpg"
+}
+```
+
+---
+
+## Integration with Other Skills
+
+| Skill | Integration |
+|-------|-------------|
+| **seo-strategy** | Provides keyword research and overall strategy |
+| **keyword-research** | Feeds target keywords for content |
+| **brand-voice** | Ensures consistent tone and personality |
+| **direct-response-copy** | Makes content convert better |
+| **content-atomizer** | Repurposes content across platforms |
+| **newsletter** | Drives subscriber growth from SEO traffic |
+
+---
+
+## Common Pitfalls
+
+| Pitfall | Problem | Solution |
+|---------|---------|----------|
+| Keyword stuffing | Unreadable, hurts rankings | Use keywords naturally, 2-3x max |
+| Thin content | Not comprehensive enough | Match/exceed competitor depth |
+| Wrong format | Misaligned with search intent | Analyze SERP before writing |
+| No examples | Theoretical, not practical | Include real examples in each section |
+| Missing E-E-A-T | Generic, no expertise shown | Add credentials, sources, experience |
+| Poor structure | Hard to navigate | Use clear heading hierarchy |
+| No internal links | Missed ranking opportunity | Link 3-5 relevant internal pages |
+
+---
+
+## Metrics to Track
+
+After publishing, monitor via Google Search Console:
+
+| Metric | What It Tells You | Target |
+|--------|-------------------|--------|
+| Impressions | Visibility in search | Increasing trend |
+| Clicks | Traffic from search | Growing |
+| CTR | Title/description effectiveness | >3% |
+| Average position | Ranking progress | Top 10 |
+| Dwell time (GA) | Content engagement | >2 minutes |
+
+---
+
+## How to Use This Skill
+
+1. **Get keyword from user** — What are they targeting?
+2. **Validate with seo-strategy** — Is it winnable?
+3. **Analyze SERP** — What's the intent? What's missing?
+4. **Create content brief** — Structure the article
+5. **Write with templates** — Use appropriate format
+6. **Apply checklists** — On-page SEO + quality review
+7. **Add schema markup** — FAQ or Article
+8. **Recommend tracking** — GSC metrics to monitor
+
+For complete keyword research methodology and 90-day SEO plans, use the `/seo-strategy` skill.

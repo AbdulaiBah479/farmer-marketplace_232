@@ -1,13 +1,13 @@
 ---
 name: software-ui-ux-design
-description: Designs and audits UI/UX with WCAG 2.2 accessibility. Use when designing flows, running heuristic reviews, or defining design systems.
+description: Use when designing or auditing UI/UX (wireframes to UI specs), running heuristic and accessibility reviews (WCAG 2.2 AA, ARIA), defining design systems and tokens, improving flows/forms/states and conversion (CRO), or tailoring inclusive experiences (age, neurodiversity) across web/iOS/Android/desktop, including AI/automation UX patterns.
 ---
 
 # Software UI/UX Design
 
 Design intuitive, accessible, user-centered interfaces.
 
-**Baselines (Mar 2026)**:
+**Baselines (Jan 2026)**:
 - **Accessibility**: WCAG 2.2 Level AA — [W3C](https://www.w3.org/TR/WCAG22/)
 - **Performance**: Core Web Vitals (LCP ≤2.5s, INP ≤200ms, CLS ≤0.1) — [web.dev](https://web.dev/vitals/)
 - **Platforms**: [Apple HIG](https://developer.apple.com/design/human-interface-guidelines/), [Material 3](https://m3.material.io/)
@@ -34,8 +34,6 @@ Design challenge:
     │   └─ Conversion issues → CRO audit
     ├─ Building new UI?
     │   └─ references/ui-generation-workflows.md
-    ├─ Non-technical users / simplification?
-    │   └─ references/simplification-patterns.md
     ├─ Specific demographics?
     │   └─ references/demographic-inclusive-design.md
     └─ Platform constraints?
@@ -162,18 +160,6 @@ Design challenge:
 | [references/ui-generation-workflows.md](references/ui-generation-workflows.md) | UI from scratch |
 | [references/ai-design-tools-2025.md](references/ai-design-tools-2025.md) | Figma AI, v0 |
 | [references/cro-framework.md](references/cro-framework.md) | Conversion optimization |
-| [references/mobile-ux-patterns.md](references/mobile-ux-patterns.md) | Mobile UX: thumb zone, navigation, gestures, platform patterns |
-| [references/form-design-patterns.md](references/form-design-patterns.md) | Form UX: layout, validation, multi-step, accessibility |
-| [references/dark-mode-theming.md](references/dark-mode-theming.md) | Dark mode & multi-theme: tokens, CSS, platform implementation |
-| [references/ai-automation-ux.md](references/ai-automation-ux.md) | AI/automation UX: chatbots, agents, progressive disclosure |
-| [references/cultural-design-patterns.md](references/cultural-design-patterns.md) | Cross-cultural design: RTL, CJK, color semiotics, locale UX |
-| [references/frontend-aesthetics-2025.md](references/frontend-aesthetics-2025.md) | Visual design trends 2025: glassmorphism, variable fonts, 3D |
-| [references/simplification-patterns.md](references/simplification-patterns.md) | Interface simplification for non-technical users, digital literacy spectrum |
-| [references/modern-ux-patterns-2025.md](references/modern-ux-patterns-2025.md) | Modern UX patterns: command palettes, skeleton states, dark mode, 2026 trends |
-| [references/data-visualization-ux.md](references/data-visualization-ux.md) | Data viz: chart selection, dashboards, accessible charts |
-| [references/typography-systems.md](references/typography-systems.md) | Type scales, font pairing, variable fonts, design tokens |
-| [references/performance-ux-vitals.md](references/performance-ux-vitals.md) | Core Web Vitals UX, perceived performance, loading patterns |
-| [references/prototype-to-production.md](references/prototype-to-production.md) | Prototype-to-production alignment, dashboard QA, design-to-ship checks |
 | [references/operational-playbook.md](references/operational-playbook.md) | Decision frameworks |
 
 ## Templates
@@ -184,12 +170,6 @@ Design challenge:
 | [assets/ux-review-checklist.md](assets/ux-review-checklist.md) | UX review |
 | [assets/ui-generation/full-ui-spec.md](assets/ui-generation/full-ui-spec.md) | UI spec |
 | [assets/audits/cro-audit-template.md](assets/audits/cro-audit-template.md) | CRO audit |
-| [assets/accessibility/template-wcag-testing.md](assets/accessibility/template-wcag-testing.md) | WCAG testing |
-| [assets/audits/simplification-audit-template.md](assets/audits/simplification-audit-template.md) | Simplification audit |
-| [assets/design-systems/template-design-system.md](assets/design-systems/template-design-system.md) | Design system setup |
-| [assets/component-libraries/template-shadcn-ui.md](assets/component-libraries/template-shadcn-ui.md) | shadcn/ui integration |
-| [assets/component-libraries/template-mui-material-ui.md](assets/component-libraries/template-mui-material-ui.md) | MUI / Material UI |
-| [assets/interaction-patterns/template-micro-interactions.md](assets/interaction-patterns/template-micro-interactions.md) | Micro-interactions |
 
 ## Pattern Inspiration
 
@@ -205,12 +185,3 @@ Design challenge:
 | [software-frontend](../software-frontend/SKILL.md) | Implementation |
 | [software-mobile](../software-mobile/SKILL.md) | Mobile patterns |
 | [product-management](../product-management/SKILL.md) | Product strategy |
-
----
-
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

@@ -1,281 +1,346 @@
 ---
 name: sprint-plan
-description: "Generates a new sprint plan or updates an existing one based on the current milestone, completed work, and available capacity. Pulls context from production documents and design backlogs."
-argument-hint: "[new|update|status] [--review full|lean|solo]"
-user-invocable: true
-allowed-tools: Read, Glob, Grep, Write, Edit, Task, AskUserQuestion
-model: sonnet
-context: |
-  !ls production/sprints/ 2>/dev/null
+description: Create comprehensive sprint plans by intelligently grouping estimated user stories based on velocity, dependencies, priorities, and risk. This skill should be used during sprint planning ceremonies to transform backlog into actionable sprint commitments.
+acceptance:
+  - velocity_respected: "Total story points ≤ team velocity with 15% buffer"
+  - dependencies_satisfied: "All story dependencies respected in sprint ordering"
+  - priorities_honored: "P0 stories prioritized over P1/P2/P3"
+  - sprint_plan_generated: "Sprint plan file created with goals, stories, risks, and metrics"
+inputs:
+  sprint_name:
+    type: string
+    required: true
+    description: "Name of sprint (e.g., 'Sprint 1', 'Q1 Sprint 3')"
+  velocity:
+    type: number
+    required: true
+    description: "Team velocity in story points (historical or estimated)"
+  plan_ahead:
+    type: number
+    default: 1
+    description: "Number of sprints to plan (1-4)"
+  stories:
+    type: array
+    required: false
+    description: "Specific story IDs to include (default: auto-select from backlog)"
+  buffer:
+    type: number
+    default: 0.15
+    description: "Reserve buffer percentage (default: 15% of velocity)"
+outputs:
+  sprint_plan:
+    type: object
+    description: "Sprint plan with goals, stories, capacity, risks"
+  commitment:
+    type: number
+    description: "Total story points committed"
+  utilization:
+    type: number
+    description: "Percentage of velocity utilized"
+  sprint_plan_file:
+    type: string
+    description: "Path to generated sprint plan file"
+telemetry:
+  emit: "skill.sprint-plan.completed"
+  track:
+    - sprint_name
+    - velocity
+    - duration_ms
+    - stories_count
+    - commitment_points
+    - utilization_percent
+    - p0_stories_count
+    - dependencies_count
 ---
 
-## Phase 0: Parse Arguments
+# Sprint Planning
 
-Extract the mode argument (`new`, `update`, or `status`) and resolve the review mode (once, store for all gate spawns this run):
-1. If `--review [full|lean|solo]` was passed → use that
-2. Else read `production/review-mode.txt` → use that value
-3. Else → default to `lean`
+Create comprehensive sprint plans by intelligently grouping estimated user stories based on team velocity, dependencies, priorities, and risk mitigation.
 
-See `.claude/docs/director-gates.md` for the full check pattern.
+## Purpose
 
-**Review mode check** (before gates run):
-- Read `production/review-mode.txt` if it exists. Use that mode.
-- If the file doesn't exist and this is a `new` sprint: use `AskUserQuestion`:
-  - Prompt: "No review mode is set. Which review depth would you like for this sprint?"
-  - Options:
-    - `[A] full — spawn all director and lead gates`
-    - `[B] lean — skip non-phase-gate director reviews (recommended for most sprints)`
-    - `[C] solo — skip all gate spawning`
-  - After selection: write `production/review-mode.txt` with the chosen mode. Say: "Review mode set to [mode] and saved to production/review-mode.txt."
-- If the file doesn't exist and this is NOT a `new` sprint (e.g., updating an existing sprint): default to `lean` silently.
+Transform backlog of estimated stories into actionable sprint commitments:
+- Calculate effective capacity (velocity - buffer)
+- Select stories respecting dependencies and priorities
+- Balance workload and minimize risk
+- Generate sprint plan with goals, metrics, and risk mitigation
+- Support multi-sprint planning (roadmap view)
+
+## When to Use This Skill
+
+This skill should be used when:
+- Starting a new sprint (during Sprint Planning ceremony)
+- Re-planning mid-sprint due to significant changes
+- Creating multi-sprint roadmap (2-4 sprints ahead)
+- Evaluating sprint capacity and feasibility
+- Balancing team workload across multiple teams
+
+This skill should NOT be used when:
+- Stories are not yet estimated (use estimate-stories first)
+- Stories lack acceptance criteria (use refine-story first)
+- No historical velocity data (establish velocity first with 1-2 sprints)
+
+## Prerequisites
+
+- Stories created (via breakdown-epic skill)
+- Stories estimated (via estimate-stories skill)
+- Clear team velocity (historical average or initial estimate)
+- Dependencies identified (in story files or epic summaries)
+
+## Sequential Sprint Planning Process
+
+Execute steps in order - each builds on previous analysis:
+
+### Step 0: Load Configuration and Sprint Context
+
+**Purpose:** Gather all inputs needed for sprint planning.
+
+**Actions:**
+
+1. Validate sprint parameters:
+   - Sprint name (must be unique)
+   - Velocity (must be > 0)
+   - Plan ahead (1-4 sprints)
+   - Buffer percentage (default 15%)
+
+2. Load all eligible stories from `.claude/stories/`:
+   - Filter: Status = "Ready" or "Backlog"
+   - Filter: Has story points estimated
+   - Filter: Has acceptance criteria
+
+3. Load dependencies:
+   - From story files (Dependencies section)
+   - From epic summaries (dependency graphs)
+   - Build dependency map
+
+4. Calculate effective capacity:
+   ```
+   Effective Capacity = Velocity × (1 - Buffer)
+   Example: 20 points × (1 - 0.15) = 17 points available
+   ```
+
+**Output:** Sprint context loaded with velocity, buffer, effective capacity, eligible stories, dependencies identified
+
+**See:** `references/templates.md#step-0-output` for complete format and `sprint-planning-mechanics.md` for capacity calculations
 
 ---
 
-## Phase 1: Gather Context
+### Step 1: Prioritize and Sort Stories
 
-1. **Read the current milestone** from `production/milestones/`.
+**Purpose:** Create prioritized list respecting business value and dependencies.
 
-2. **Read the previous sprint** (if any) from `production/sprints/` to
-   understand velocity and carryover.
+**Sorting Criteria (in order):**
 
-3. **Scan design documents** in `design/gdd/` for features tagged as ready
-   for implementation.
+1. **Priority Level** (P0 > P1 > P2 > P3)
+2. **Dependency Order** (blockers before blocked)
+3. **Risk Score** (high-risk early for discovery)
+4. **Story Points** (smaller stories for momentum)
 
-4. **Check the risk register** at `production/risk-register/`.
+**Output:** Stories prioritized and sorted by priority level, dependency order, risk score, story points
+
+**See:** `references/templates.md#step-1-output` for complete sorted backlog example and `story-selection-algorithm.md` for sorting logic
 
 ---
 
-## Phase 2: Generate Output
+### Step 2: Select Stories for Sprint
 
-For `new`:
+**Purpose:** Fill sprint capacity with highest-value stories respecting constraints.
 
-**Generate a sprint plan** following this format and present it to the user. Do NOT ask to write yet — the producer feasibility gate (Phase 4) runs first and may require revisions before the file is written.
+**Selection Algorithm:**
 
-```markdown
-# Sprint [N] — [Start Date] to [End Date]
+1. Start with P0 stories in dependency order
+2. Add story if:
+   - All dependencies already in sprint OR completed
+   - Points fit within remaining capacity
+   - Doesn't create incomplete feature (orphaned dependencies)
+3. Continue with P1, then P2 stories
+4. Stop when capacity reached or no more valid stories
 
-## Sprint Goal
-[One sentence describing what this sprint achieves toward the milestone]
+**Output:** Stories selected for sprint respecting capacity, dependencies, feature completeness | Total points, utilization percentage, remaining capacity
 
-## Capacity
-- Total days: [X]
-- Buffer (20%): [Y days reserved for unplanned work]
-- Available: [Z days]
+**See:** `references/templates.md#step-2-output` for complete selection example and `story-selection-algorithm.md` for selection rules
 
-## Tasks
+---
 
-### Must Have (Critical Path)
-| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
-|----|------|-------------|-----------|-------------|-------------------|
+### Step 3: Validate Dependencies
 
-### Should Have
-| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
-|----|------|-------------|-----------|-------------|-------------------|
+**Purpose:** Ensure no broken dependencies in sprint plan.
 
-### Nice to Have
-| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
-|----|------|-------------|-----------|-------------|-------------------|
+**Validation Checks:**
 
-## Carryover from Previous Sprint
-| Task | Reason | New Estimate |
-|------|--------|-------------|
+1. **Blocker Check:** All blocking stories either:
+   - Included in current sprint (before blocked story)
+   - Already completed (status = Done)
 
-## Risks
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
+2. **Feature Completeness:** Avoid partial features:
+   - If story A blocks B and C, either include all or none
+   - Don't leave dependent stories orphaned
 
-## Dependencies on External Factors
-- [List any external dependencies]
+3. **Cross-Sprint Dependencies:** For multi-sprint plans:
+   - Dependencies can span sprints (A in Sprint 1, B in Sprint 2)
+   - But must be in correct order
 
-## Definition of Done for this Sprint
-- [ ] All Must Have tasks completed
-- [ ] All tasks pass acceptance criteria
-- [ ] QA plan exists (`production/qa/qa-plan-sprint-[N].md`)
-- [ ] All Logic/Integration stories have passing unit/integration tests
-- [ ] Smoke check passed (`/smoke-check sprint`)
-- [ ] QA sign-off report: APPROVED or APPROVED WITH CONDITIONS (`/team-qa sprint`)
-- [ ] No S1 or S2 bugs in delivered features
-- [ ] Design documents updated for any deviations
-- [ ] Code reviewed and merged
+**Output:** Dependencies validated, all blocking relationships satisfied, no orphaned dependencies, feature completeness maintained
+
+**See:** `references/templates.md#step-3-output` for complete validation examples including edge cases
+
+---
+
+### Step 4: Identify Risks and Mitigation
+
+**Purpose:** Surface sprint risks and plan mitigation.
+
+**Risk Categories:**
+
+1. **Capacity Risk:** Sprint over/under-committed
+   - Over: >95% utilization (no buffer for unknowns)
+   - Under: <75% utilization (team under-utilized)
+
+2. **Dependency Risk:** Critical path dependencies
+   - Long chains (A → B → C → D)
+   - Single blocker affecting many stories
+
+3. **Technical Risk:** High-risk stories in sprint
+   - Stories with risk score > 6 (from estimation)
+   - Unproven technology or approach
+
+4. **Scope Risk:** Too many P0 stories
+   - Sprint becomes "all or nothing"
+   - No flexibility for adjustments
+
+**Output:** Sprint risks assessed by category (capacity/dependency/technical/scope), overall risk level, mitigation strategies identified
+
+**See:** `references/templates.md#step-4-output` for detailed risk assessment example and `sprint-risk-assessment.md` for scoring methodology
+
+---
+
+### Step 5: Define Sprint Goal
+
+**Purpose:** Articulate clear, measurable sprint goal.
+
+**Sprint Goal Formula:**
+```
+[Action Verb] [Feature/Outcome] so that [Business Value]
 ```
 
-For `update`:
+**Examples:**
+- "Implement core authentication so that users can securely access the platform"
+- "Enable user profile management so that users can personalize their experience"
+- "Complete payment integration so that customers can purchase products"
 
-**Update an existing sprint plan**:
+**Good Sprint Goals:**
+- **Specific:** Clear what will be delivered
+- **Measurable:** Can verify if goal achieved
+- **Valuable:** Business value is clear
+- **Achievable:** Realistic given velocity
+- **Focused:** 1-2 main themes, not scattered
 
-1. Read the most recent sprint plan from `production/sprints/`.
-2. Present the current story list with their current statuses from `production/sprint-status.yaml`.
-3. Ask the user what to change: stories to add, remove, reprioritize, or re-estimate. Use `AskUserQuestion` to gather changes.
-4. Apply the changes and re-present the full revised plan for review.
-5. Re-run the producer feasibility gate (Phase 4) on the revised plan.
-6. Write the updated markdown plan and yaml together (same approval as `new` mode).
+**Poor Sprint Goals:**
+- ❌ "Complete as many stories as possible"
+- ❌ "Work on authentication and profiles and settings and..."
+- ❌ "Make progress on the backlog"
 
-Note: `update` mode does not reset story statuses. Stories already marked `in-progress` or `done` keep their status. Only `backlog` and `ready-for-dev` stories can be removed or reprioritized freely.
+**Output:** Sprint goal defined following formula ([Action] [Feature] so that [Business Value]), success criteria specified, goal validated (specific/measurable/valuable/achievable/focused)
 
-For `status`:
-
-**Generate a status report**:
-
-```markdown
-# Sprint [N] Status -- [Date]
-
-## Progress: [X/Y tasks complete] ([Z%])
-
-### Completed
-| Task | Completed By | Notes |
-|------|-------------|-------|
-
-### In Progress
-| Task | Owner | % Done | Blockers |
-|------|-------|--------|----------|
-
-### Not Started
-| Task | Owner | At Risk? | Notes |
-|------|-------|----------|-------|
-
-### Blocked
-| Task | Blocker | Owner of Blocker | ETA |
-|------|---------|-----------------|-----|
-
-## Burndown Assessment
-[On track / Behind / Ahead]
-[If behind: What is being cut or deferred]
-
-## Emerging Risks
-- [Any new risks identified this sprint]
-```
+**See:** `references/templates.md#step-5-output` for complete goal examples and `sprint-goals-and-metrics.md` for goal patterns
 
 ---
 
-## Phase 3: Prepare Sprint Status File
+### Step 6: Calculate Sprint Metrics
 
-After generating a new sprint plan, also prepare the `production/sprint-status.yaml` content.
-This is the machine-readable source of truth for story status — read by
-`/sprint-status`, `/story-done`, and `/help` without markdown parsing.
+**Purpose:** Provide quantitative sprint health indicators.
 
-**Do not write the yaml yet** — hold it in context. The producer feasibility gate (Phase 4) may revise the story list. Both files will be written together after Phase 4 in a single write approval.
+**Key Metrics:**
 
-Format:
+1. **Commitment:** Total story points committed
+2. **Utilization:** Percentage of velocity used
+3. **P0 Coverage:** Percentage of P0 stories included
+4. **Dependency Depth:** Longest dependency chain
+5. **Risk Score:** Weighted average of story risks
 
-```yaml
-# Auto-generated by /sprint-plan. Updated by /story-done and /dev-story.
-# DO NOT edit manually — use /story-done to update story status.
-#
-# Status value mapping (yaml ↔ story file Status field):
-#   backlog        ↔  Not Started
-#   ready-for-dev  ↔  Ready
-#   in-progress    ↔  In Progress
-#   review         ↔  In Review
-#   done           ↔  Complete
-#   blocked        ↔  Blocked
+**Output:** Sprint metrics calculated including capacity (velocity/buffer/commitment/utilization), stories (total/priority breakdown), dependencies (relationships/longest chain), risk (average score/high-risk count/overall level)
 
-sprint: [N]
-goal: "[sprint goal]"
-start: "[YYYY-MM-DD]"
-end: "[YYYY-MM-DD]"
-generated: "[YYYY-MM-DD]"
-updated: "[YYYY-MM-DD]"
-
-stories:
-  - id: "[epic-story, e.g. 1-1]"
-    name: "[story name]"
-    file: "[production/stories/path.md]"
-    priority: must-have        # must-have | should-have | nice-to-have
-    status: ready-for-dev      # backlog | ready-for-dev | in-progress | review | done | blocked
-    owner: ""
-    estimate_days: 0
-    blocker: ""
-    completed: ""
-```
-
-Initialize each story from the sprint plan's task tables:
-- Must Have tasks → `priority: must-have`, `status: ready-for-dev`
-- Should Have tasks → `priority: should-have`, `status: backlog`
-- Nice to Have tasks → `priority: nice-to-have`, `status: backlog`
-
-For `update`: read the existing `sprint-status.yaml`, carry over statuses for
-stories that haven't changed, add new stories, remove dropped ones.
+**See:** `references/templates.md#step-6-output` for complete metrics example with all fields
 
 ---
 
-## Phase 4: Producer Feasibility Gate
+### Step 7: Generate Sprint Plan Document
 
-**Review mode check** — apply before spawning PR-SPRINT:
-- `solo` → skip. Note: "PR-SPRINT skipped — Solo mode." Proceed to Phase 5 (QA plan gate).
-- `lean` → skip (not a PHASE-GATE). Note: "PR-SPRINT skipped — Lean mode." Proceed to Phase 5 (QA plan gate).
-- `full` → spawn as normal.
+**Purpose:** Create comprehensive sprint plan file.
 
-Before finalising the sprint plan, spawn `producer` via Task using gate **PR-SPRINT** (`.claude/docs/director-gates.md`).
+**File:** `.claude/sprints/sprint-{sprint-name}-{date}.md`
 
-Pass: proposed story list (titles, estimates, dependencies), total team capacity in hours/days, any carryover from the previous sprint, milestone constraints and deadline.
+**Output:** Sprint plan document generated with sections: Sprint Goal, Committed Stories table, Sprint Metrics, Risks and Mitigation, Sprint Schedule, Definition of Done
 
-Present the producer's assessment.
+**File:** `.claude/sprints/sprint-{name}-{date}.md`
 
-If UNREALISTIC: revise the story selection (defer stories to Should Have or Nice to Have) and re-present the updated plan before asking for write approval.
-
-If CONCERNS, use `AskUserQuestion`:
-- Prompt: "Producer flagged concerns with this sprint plan. How do you want to proceed?"
-- Options:
-  - `[A] Proceed as planned — I accept the risk`
-  - `[B] Adjust scope — defer some Should Have stories`
-  - `[C] Extend the sprint timeline`
-
-If [A]: proceed to write approval.
-If [B]: revise the story list, re-present the updated plan, then proceed to write approval.
-If [C]: adjust sprint dates and capacity, re-present the updated plan, then proceed to write approval.
-
-After handling the producer's verdict, ask: "May I write the sprint plan to `production/sprints/sprint-[N].md` and `production/sprint-status.yaml`?" If yes, write both files (creating directories as needed). Verdict: **COMPLETE** — sprint plan and status file created. If no: Verdict: **BLOCKED** — user declined write.
-
-After writing, add:
-
-> **Scope check:** If this sprint includes stories added beyond the original epic scope, run `/scope-check [epic]` to detect scope creep before implementation begins.
+**See:** `references/templates.md#step-7-output` for complete sprint plan document template with all sections
 
 ---
 
-## Phase 5: QA Plan Gate
+### Step 8: Multi-Sprint Planning (Optional)
 
-Before closing the sprint plan, check whether a QA plan exists for this sprint.
+**Purpose:** Plan 2-4 sprints ahead for roadmap visibility.
 
-Use `Glob` to look for `production/qa/qa-plan-sprint-[N].md` or any file in `production/qa/` referencing this sprint number.
+**When to Use:**
+- plan_ahead parameter > 1
+- Creating quarterly roadmap
+- Long-range feature planning
 
-**If a QA plan is found**: note it in the sprint plan output — "QA Plan: `[path]`" — and proceed.
+**Process:**
+1. Plan Sprint 1 (as above)
+2. Mark Sprint 1 stories as "allocated"
+3. Repeat Steps 1-7 for Sprint 2 with remaining stories
+4. Continue for Sprint 3, 4 as needed
 
-**If no QA plan exists**: do not silently proceed. Surface this explicitly:
+**Output:** Multiple sprint plans generated, total roadmap points, stories distributed across sprints, files created for each sprint
 
-> "This sprint has no QA plan. A sprint plan without a QA plan means test requirements are undefined — developers won't know what 'done' looks like from a QA perspective, and the sprint cannot pass the Production → Polish gate without one.
->
-> Run `/qa-plan sprint` now, before starting any implementation. It takes one session and produces the test case requirements each story needs."
-
-Use `AskUserQuestion`:
-- Prompt: "No QA plan found for this sprint. How do you want to proceed?"
-- Options:
-  - `[A] Run /qa-plan sprint now — I'll do that before starting implementation (Recommended)`
-  - `[B] Skip for now — I understand QA sign-off will be blocked at the Production → Polish gate`
-
-If [A]: close with "Sprint plan written. Run `/qa-plan sprint` next — then begin implementation."
-If [B]: add a warning block to the sprint plan document:
-
-```markdown
-> ⚠️ **No QA Plan**: This sprint was started without a QA plan. Run `/qa-plan sprint`
-> before the last story is implemented. The Production → Polish gate requires a QA
-> sign-off report, which requires a QA plan.
-```
+**See:** `references/templates.md#step-8-output` for multi-sprint roadmap example and `sprint-planning-mechanics.md` for algorithm
 
 ---
 
-## Phase 6: Next Steps
+### Step 9: Present Sprint Plan Summary
 
-After the sprint plan is written and QA plan status is resolved:
+**Purpose:** Communicate sprint plan clearly to team.
 
-- `/qa-plan sprint` — **required before implementation begins** — defines test cases per story so developers implement against QA specs, not a blank slate
-- `/story-readiness [story-file]` — validate a story is ready before starting it
-- `/dev-story [story-file]` — begin implementing the first story
-- `/sprint-status` — check progress mid-sprint
-- `/scope-check [epic]` — verify no scope creep before implementation begins
+**Output:** Sprint plan summary with sprint name/dates, commitment details (stories/points/utilization), sprint goal, top stories list, risk summary, sprint plan file path, next steps
 
-**Review mode configuration:** All director gates (producer feasibility, QA review, code review) respect the project review mode. The review mode is set in Phase 0 when the file does not exist (for `new` sprints), or can be overridden per-run with `--review full|lean|solo` as an argument. The file `production/review-mode.txt` contains one of:
-- `lean` — skip automated director gates (default if file is absent — fastest for solo dev)
-- `full` — run all director gates as spawned sub-agents
-- `solo` — skip all gates unconditionally (single-developer, no review)
+**See:** `references/templates.md#step-9-output` for complete summary format
 
-This file is read by `/sprint-plan`, `/story-readiness`, `/story-done`, and other skills at startup.
+---
+
+## Integration with Other Skills
+
+**Before Sprint Planning:**
+- `breakdown-epic` → Create stories from epics
+- `refine-story` → Ensure stories are sprint-ready
+- `estimate-stories` → Estimate story points
+
+**After Sprint Planning:**
+- `implement-feature` → Implement stories from sprint
+- `review-task` → Quality check completed stories
+- (Next sprint) → `sprint-plan` again with updated velocity
+
+---
+
+## Best Practices
+
+Respect velocity (10-15% buffer) | Honor dependencies (never break chains) | Focus on value (P0/P1 first) | Balance risk (mix high/low risk stories) | Complete features (avoid half-done work) | Review and adapt (update velocity based on actuals)
+
+**See:** `sprint-goals-and-metrics.md` for detailed planning best practices
+
+---
+
+## Reference Files
+
+Detailed documentation in `references/`:
+
+- **templates.md**: All output formats (Steps 0-9), complete sprint plan document template, multi-sprint roadmap examples, risk assessment examples, sprint goal examples, JSON output format
+
+- **sprint-planning-mechanics.md**: Capacity calculation, multi-sprint algorithm, velocity tracking
+
+- **story-selection-algorithm.md**: Sorting criteria, selection rules, edge cases
+
+- **sprint-risk-assessment.md**: Risk categories, scoring methodology, mitigation strategies
+
+- **sprint-goals-and-metrics.md**: Goal-setting patterns, metrics definitions, best practices

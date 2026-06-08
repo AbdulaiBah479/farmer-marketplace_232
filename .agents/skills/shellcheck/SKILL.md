@@ -1,141 +1,158 @@
 ---
 name: shellcheck
-description: Shell script static analysis and linting. USE WHEN shellcheck, lint shell, bash lint, sh lint, script analysis, shell errors, SC codes, shell best practices. Comprehensive shell script validation with CI/CD integration.
+description: Lint and fix shell script issues using ShellCheck. Use when the user says "check this script", "lint shell", "shellcheck", "fix script warnings", "validate bash", or asks to review a shell script for issues.
+allowed-tools: Bash, Read, Edit
 ---
 
-# ShellCheck - Shell Script Static Analysis
+# ShellCheck
 
-**Auto-routes when user mentions shellcheck, shell linting, bash script analysis, or SC error codes.**
+Lint shell scripts and fix common issues using ShellCheck.
 
-## Overview
+## Instructions
 
-ShellCheck is a GPLv3-licensed static analysis tool that identifies bugs in bash/sh shell scripts. It detects:
-- Syntax errors and parsing issues
-- Semantic problems causing unexpected behavior
-- Quoting issues and word splitting bugs
-- POSIX compatibility warnings
-- Style and best practice violations
+1. Run ShellCheck on the script
+2. Analyze findings by severity
+3. Explain each issue clearly
+4. Provide fixes for each issue
 
-## Voice Notification
-
-**When executing a workflow, do BOTH:**
-
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:8888/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow from the ShellCheck skill"}' \
-     > /dev/null 2>&1 &
-   ```
-
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow from the **ShellCheck** skill...
-   ```
-
-## Workflow Routing
-
-| Workflow | Trigger | File |
-|----------|---------|------|
-| **Analyze** | "shellcheck this", "lint script", "check shell" | `Workflows/Analyze.md` |
-| **Fix** | "fix shell errors", "apply shellcheck fixes" | `Workflows/Fix.md` |
-| **Setup** | "setup shellcheck", "configure shellcheck" | `Workflows/Setup.md` |
-| **Explain** | "explain SC2086", "what is SC code" | `Workflows/Explain.md` |
-
-## Quick Reference
-
-### Basic Usage
+## Run ShellCheck
 
 ```bash
-# Check a script
-shellcheck myscript.sh
+# Basic check
+shellcheck script.sh
 
-# Specify shell dialect
-shellcheck -s bash myscript.sh
+# With severity filter
+shellcheck --severity=warning script.sh
 
-# Exclude specific codes
-shellcheck -e SC2086,SC2046 myscript.sh
+# Specific shell dialect
+shellcheck --shell=bash script.sh
 
 # Output formats
-shellcheck -f gcc myscript.sh      # Editor integration
-shellcheck -f json myscript.sh     # Machine readable
-shellcheck -f diff myscript.sh     # Auto-fix patches
+shellcheck --format=json script.sh
+shellcheck --format=gcc script.sh
+
+# Check multiple files
+shellcheck *.sh
 ```
 
-### Common SC Codes
+## Common issues and fixes
 
-| Code | Issue | Fix |
-|------|-------|-----|
-| SC2086 | Unquoted variable | `"$var"` |
-| SC2046 | Unquoted command substitution | `"$(cmd)"` |
-| SC2034 | Unused variable | Remove or export |
-| SC2154 | Unassigned variable | Assign or disable |
-| SC2155 | Declare and assign separately | Split declaration |
-
-### Inline Directives
+### SC2086: Double quote to prevent globbing
 
 ```bash
-# Disable for next command
-# shellcheck disable=SC2086
+# Bad
+rm $file
 echo $var
 
-# Disable for entire file (after shebang)
-#!/bin/bash
-# shellcheck disable=SC2086,SC2046
+# Good
+rm "$file"
+echo "$var"
 ```
 
-## Full Documentation
+### SC2046: Quote command substitution
 
-- Error Codes: `SkillSearch('shellcheck error codes')` -> loads ErrorCodes.md
-- Configuration: `SkillSearch('shellcheck config')` -> loads Configuration.md
-- CI/CD Integration: `SkillSearch('shellcheck ci')` -> loads Integration.md
-- Best Practices: `SkillSearch('shellcheck practices')` -> loads BestPractices.md
+```bash
+# Bad
+rm $(find . -name "*.tmp")
 
-## Examples
-
-**Example 1: Analyze a script**
-```
-User: "shellcheck my deploy script"
--> Invokes Analyze workflow
--> Runs shellcheck with JSON output
--> Presents findings grouped by severity
--> Suggests fixes with wiki links
+# Good
+rm "$(find . -name "*.tmp")"
+# Or for multiple results:
+find . -name "*.tmp" -delete
 ```
 
-**Example 2: Fix common issues**
-```
-User: "fix the shellcheck errors in scripts/"
--> Invokes Fix workflow
--> Generates diff output
--> Applies fixes interactively
--> Re-runs validation
+### SC2006: Use $() instead of backticks
+
+```bash
+# Bad
+date=`date`
+
+# Good
+date=$(date)
 ```
 
-**Example 3: Setup for project**
-```
-User: "setup shellcheck for this repo"
--> Invokes Setup workflow
--> Creates .shellcheckrc
--> Adds pre-commit hook
--> Configures CI workflow
-```
+### SC2164: Use cd ... || exit
 
-**Example 4: Explain an error code**
-```
-User: "what does SC2086 mean?"
--> Invokes Explain workflow
--> Fetches wiki documentation
--> Shows examples and fixes
--> Provides context-specific guidance
+```bash
+# Bad
+cd /some/dir
+do_something
+
+# Good
+cd /some/dir || exit 1
+do_something
 ```
 
----
+### SC2155: Declare and assign separately
 
-## Gotchas
+```bash
+# Bad
+local var=$(command)
 
-- **SC2086 is wrong inside `[[ ]]`:** Bash's `[[ ]]` does not word-split, so `[[ -n $var ]]` is safe unquoted. Disabling SC2086 on `[[ ]]` blocks is a sign you're applying the lint to the wrong construct, not a sign the rule is broken.
-- **SC2034 fires on indirectly-used variables:** Variables consumed via `${!prefix*}` indirection, `declare -p` introspection, or sourced into another script trigger "unused" false positives. Use `# shellcheck disable=SC2034` with a comment explaining the indirection — don't silence globally.
-- **Shebang determines the dialect, not the filename:** `script.sh` with `#!/bin/sh` is checked as POSIX sh and rejects bashisms like `[[ ]]` or arrays. Either set the correct shebang or pass `-s bash` explicitly; never rely on the `.sh` extension.
-- **`shellcheck -e SC2086,SC2046` in `.shellcheckrc` hides real bugs:** Project-wide disables compound — a year later nobody remembers why and unquoted expansions ship to prod. Prefer inline disables with a justification comment over global suppression.
-- **Source-following requires `-x` flag:** `source ./lib.sh` is not analyzed by default. Run with `shellcheck -x script.sh` for full coverage, or add `# shellcheck source=./lib.sh` directives. CI configs frequently miss this and ship un-linted sourced files.
-- **`-f diff` patches assume the script parses cleanly:** Syntax errors prevent the auto-fix output entirely, with no clear message. If `-f diff` produces nothing, run without `-f` first and fix parse errors before re-running for patches.
+# Good
+local var
+var=$(command)
+```
+
+### SC2162: Read without -r mangles backslashes
+
+```bash
+# Bad
+read line
+
+# Good
+read -r line
+```
+
+### SC2034: Variable appears unused
+
+```bash
+# Check if it's exported or used in eval/source
+# Or prefix with _ to indicate intentionally unused
+_unused_var="value"
+```
+
+## Disable warnings
+
+```bash
+# Disable for next line
+# shellcheck disable=SC2086
+echo $unquoted_var
+
+# Disable for entire file (at top)
+# shellcheck disable=SC2034,SC2086
+
+# Disable for block
+# shellcheck disable=SC2086
+{
+    echo $var1
+    echo $var2
+}
+```
+
+## Output format
+
+```
+## Issues Found
+
+### Errors (must fix)
+- Line 10, SC2086: Double quote to prevent globbing and word splitting
+
+### Warnings (should fix)
+- Line 15, SC2155: Declare and assign separately to avoid masking return values
+
+### Suggestions
+- Line 20, SC2034: UNUSED_VAR appears unused (verify or prefix with _)
+
+## Fixed Code
+[Show corrected version]
+```
+
+## Rules
+
+- MUST run shellcheck before reviewing manually
+- MUST explain why each issue matters
+- MUST provide specific fix for each issue
+- Never ignore errors (SC level error)
+- Always explain when disabling is appropriate
+- Offer to auto-fix simple issues with Edit tool

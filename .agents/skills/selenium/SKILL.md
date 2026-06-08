@@ -1,158 +1,653 @@
 ---
 name: selenium
-description: |
-  Selenium integration. Manage data, records, and automate workflows. Use when the user wants to interact with Selenium data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: "Selenium WebDriver for cross-browser web automation and testing. Automate Chrome, Firefox, Safari, and Edge browsers. Use for browser testing, cross-browser automation, or web application testing."
 ---
 
-# Selenium
+# Selenium Skill
 
-Selenium is a popular open-source framework for automating web browsers. Developers and QA engineers use it to write tests that simulate user interactions on websites, ensuring applications function correctly across different browsers and environments.
+Complete guide for Selenium - cross-browser automation.
 
-Official docs: https://www.selenium.dev/documentation/
+## Quick Reference
 
-## Selenium Overview
+### Supported Browsers
+| Browser | Driver |
+|---------|--------|
+| **Chrome** | ChromeDriver |
+| **Firefox** | GeckoDriver |
+| **Safari** | SafariDriver |
+| **Edge** | EdgeDriver |
 
-- **Browser**
-  - **Tab**
-- **Element**
-  - **Attribute**
-  - **CSS Property**
-- **Cookie**
-- **Screenshot**
-- **Log**
-
-Use action names and parameters as needed.
-
-## Working with Selenium
-
-This skill uses the Membrane CLI to interact with Selenium. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
-
-```bash
-npm install -g @membranehq/cli@latest
+### Key Components
+```
+- WebDriver: Browser control
+- WebElement: Page elements
+- Wait: Synchronization
+- Actions: Complex interactions
 ```
 
-### Authentication
+---
 
+## 1. Installation
+
+### Python
 ```bash
-membrane login --tenant --clientName=<agentType>
+pip install selenium webdriver-manager
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
-
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
-
-```bash
-membrane login complete <code>
+### Java (Maven)
+```xml
+<dependency>
+    <groupId>org.seleniumhq.selenium</groupId>
+    <artifactId>selenium-java</artifactId>
+    <version>4.18.1</version>
+</dependency>
 ```
 
-Add `--json` to any command for machine-readable JSON output.
-
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Selenium
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
+### JavaScript
 ```bash
-membrane connection ensure "https://www.seleniumhq.org/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+npm install selenium-webdriver
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+---
 
-The resulting state tells you what to do next:
+## 2. Basic Setup (Python)
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+### Chrome
+```python
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+# Auto-install driver
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
+# Navigate
+driver.get("https://example.com")
 
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+# Close
+driver.quit()
 ```
 
-You should always search for actions in the context of a specific connection.
+### Firefox
+```python
+from selenium.webdriver.firefox.service import Service
+from webdriver_manager.firefox import GeckoDriverManager
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
 ```
 
-To pass JSON parameters:
+### Options
+```python
+from selenium.webdriver.chrome.options import Options
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--window-size=1920,1080")
+options.add_argument("--disable-gpu")
+options.add_argument("user-agent=Custom User Agent")
+
+driver = webdriver.Chrome(options=options)
 ```
 
-The result is in the `output` field of the response.
+---
 
+## 3. Finding Elements
 
-### Proxy requests
+### Locator Strategies
+```python
+from selenium.webdriver.common.by import By
 
-When the available actions don't cover your use case, you can send requests directly to the Selenium API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+# By ID
+element = driver.find_element(By.ID, "my-id")
 
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+# By class name
+element = driver.find_element(By.CLASS_NAME, "my-class")
+
+# By name
+element = driver.find_element(By.NAME, "username")
+
+# By tag name
+element = driver.find_element(By.TAG_NAME, "input")
+
+# By link text
+element = driver.find_element(By.LINK_TEXT, "Click here")
+element = driver.find_element(By.PARTIAL_LINK_TEXT, "Click")
+
+# By CSS selector
+element = driver.find_element(By.CSS_SELECTOR, "div.container > p")
+
+# By XPath
+element = driver.find_element(By.XPATH, "//button[@type='submit']")
+
+# Find multiple elements
+elements = driver.find_elements(By.CSS_SELECTOR, ".item")
 ```
 
-Common options:
+### XPath Examples
+```python
+# By text content
+driver.find_element(By.XPATH, "//button[text()='Submit']")
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+# Contains text
+driver.find_element(By.XPATH, "//div[contains(text(), 'Hello')]")
 
+# By attribute
+driver.find_element(By.XPATH, "//input[@placeholder='Search']")
 
-## Best practices
+# Parent/child
+driver.find_element(By.XPATH, "//div[@class='parent']//span")
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+# Following sibling
+driver.find_element(By.XPATH, "//label[text()='Email']/following-sibling::input")
+
+# Index
+driver.find_element(By.XPATH, "(//div[@class='item'])[1]")
+```
+
+---
+
+## 4. Interactions
+
+### Basic Actions
+```python
+# Click
+element.click()
+
+# Type text
+element.send_keys("Hello World")
+
+# Clear input
+element.clear()
+
+# Submit form
+element.submit()
+
+# Get text
+text = element.text
+
+# Get attribute
+value = element.get_attribute("href")
+class_name = element.get_attribute("class")
+
+# Check state
+is_displayed = element.is_displayed()
+is_enabled = element.is_enabled()
+is_selected = element.is_selected()
+```
+
+### Keyboard Actions
+```python
+from selenium.webdriver.common.keys import Keys
+
+# Special keys
+element.send_keys(Keys.ENTER)
+element.send_keys(Keys.TAB)
+element.send_keys(Keys.ESCAPE)
+
+# Key combinations
+element.send_keys(Keys.CONTROL + "a")
+element.send_keys(Keys.CONTROL + "c")
+
+# Clear and type
+element.send_keys(Keys.CONTROL + "a")
+element.send_keys("new text")
+```
+
+### Select Dropdowns
+```python
+from selenium.webdriver.support.ui import Select
+
+select = Select(driver.find_element(By.ID, "dropdown"))
+
+# By visible text
+select.select_by_visible_text("Option 1")
+
+# By value attribute
+select.select_by_value("opt1")
+
+# By index
+select.select_by_index(0)
+
+# Get selected option
+selected = select.first_selected_option.text
+
+# Get all options
+options = select.options
+for option in options:
+    print(option.text)
+```
+
+---
+
+## 5. Waits
+
+### Implicit Wait
+```python
+# Apply to all find_element calls
+driver.implicitly_wait(10)  # seconds
+```
+
+### Explicit Wait
+```python
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+wait = WebDriverWait(driver, 10)
+
+# Wait for element present
+element = wait.until(
+    EC.presence_of_element_located((By.ID, "my-id"))
+)
+
+# Wait for element visible
+element = wait.until(
+    EC.visibility_of_element_located((By.CSS_SELECTOR, ".visible"))
+)
+
+# Wait for element clickable
+element = wait.until(
+    EC.element_to_be_clickable((By.XPATH, "//button"))
+)
+
+# Wait for text
+wait.until(
+    EC.text_to_be_present_in_element((By.ID, "status"), "Complete")
+)
+
+# Wait for URL
+wait.until(EC.url_contains("dashboard"))
+wait.until(EC.url_to_be("https://example.com/dashboard"))
+
+# Wait for title
+wait.until(EC.title_contains("Dashboard"))
+```
+
+### Common Expected Conditions
+```python
+EC.presence_of_element_located()
+EC.visibility_of_element_located()
+EC.element_to_be_clickable()
+EC.invisibility_of_element_located()
+EC.staleness_of()
+EC.frame_to_be_available_and_switch_to_it()
+EC.alert_is_present()
+EC.number_of_windows_to_be()
+```
+
+### Custom Wait
+```python
+def custom_condition(driver):
+    element = driver.find_element(By.ID, "status")
+    return element.text == "Ready"
+
+wait.until(custom_condition)
+```
+
+---
+
+## 6. Advanced Actions
+
+### Action Chains
+```python
+from selenium.webdriver.common.action_chains import ActionChains
+
+actions = ActionChains(driver)
+
+# Hover
+actions.move_to_element(element).perform()
+
+# Double click
+actions.double_click(element).perform()
+
+# Right click
+actions.context_click(element).perform()
+
+# Drag and drop
+actions.drag_and_drop(source, target).perform()
+
+# Click and hold
+actions.click_and_hold(element).perform()
+actions.release().perform()
+
+# Chain multiple actions
+actions.move_to_element(menu).click().perform()
+actions.move_to_element(submenu).click().perform()
+```
+
+### Scroll
+```python
+# Scroll to element
+driver.execute_script("arguments[0].scrollIntoView();", element)
+
+# Scroll by amount
+driver.execute_script("window.scrollBy(0, 500);")
+
+# Scroll to bottom
+driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+# Scroll to top
+driver.execute_script("window.scrollTo(0, 0);")
+```
+
+### JavaScript Execution
+```python
+# Execute script
+driver.execute_script("alert('Hello');")
+
+# Return value
+title = driver.execute_script("return document.title;")
+
+# With arguments
+driver.execute_script("arguments[0].click();", element)
+
+# Modify element
+driver.execute_script(
+    "arguments[0].setAttribute('style', 'background: red');",
+    element
+)
+```
+
+---
+
+## 7. Frames and Windows
+
+### Frames/iFrames
+```python
+# Switch to frame by element
+frame = driver.find_element(By.TAG_NAME, "iframe")
+driver.switch_to.frame(frame)
+
+# Switch by name or ID
+driver.switch_to.frame("frame-name")
+
+# Switch by index
+driver.switch_to.frame(0)
+
+# Switch back to main content
+driver.switch_to.default_content()
+
+# Switch to parent frame
+driver.switch_to.parent_frame()
+```
+
+### Windows/Tabs
+```python
+# Get current window
+main_window = driver.current_window_handle
+
+# Get all windows
+windows = driver.window_handles
+
+# Open new tab
+driver.execute_script("window.open('');")
+
+# Switch to new window
+driver.switch_to.window(windows[-1])
+
+# Switch back
+driver.switch_to.window(main_window)
+
+# Close current window
+driver.close()
+
+# Quit all windows
+driver.quit()
+```
+
+### Alerts
+```python
+# Switch to alert
+alert = driver.switch_to.alert
+
+# Get text
+text = alert.text
+
+# Accept (OK)
+alert.accept()
+
+# Dismiss (Cancel)
+alert.dismiss()
+
+# Send text to prompt
+alert.send_keys("input text")
+alert.accept()
+```
+
+---
+
+## 8. Screenshots and Files
+
+### Screenshots
+```python
+# Full page
+driver.save_screenshot("page.png")
+
+# Element screenshot
+element.screenshot("element.png")
+
+# As base64
+screenshot = driver.get_screenshot_as_base64()
+
+# As PNG bytes
+screenshot = driver.get_screenshot_as_png()
+```
+
+### File Upload
+```python
+upload = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
+upload.send_keys("/path/to/file.pdf")
+```
+
+### File Download
+```python
+options = Options()
+prefs = {
+    "download.default_directory": "/path/to/download",
+    "download.prompt_for_download": False,
+    "download.directory_upgrade": True
+}
+options.add_experimental_option("prefs", prefs)
+
+driver = webdriver.Chrome(options=options)
+```
+
+---
+
+## 9. Cookies and Storage
+
+### Cookies
+```python
+# Get all cookies
+cookies = driver.get_cookies()
+
+# Get specific cookie
+cookie = driver.get_cookie("session_id")
+
+# Add cookie
+driver.add_cookie({
+    "name": "auth",
+    "value": "token123",
+    "domain": "example.com"
+})
+
+# Delete cookie
+driver.delete_cookie("auth")
+
+# Delete all cookies
+driver.delete_all_cookies()
+```
+
+### Local Storage
+```python
+# Set item
+driver.execute_script("localStorage.setItem('key', 'value');")
+
+# Get item
+value = driver.execute_script("return localStorage.getItem('key');")
+
+# Remove item
+driver.execute_script("localStorage.removeItem('key');")
+
+# Clear all
+driver.execute_script("localStorage.clear();")
+```
+
+---
+
+## 10. Page Object Model
+
+### Base Page
+```python
+class BasePage:
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 10)
+
+    def find(self, locator):
+        return self.wait.until(
+            EC.presence_of_element_located(locator)
+        )
+
+    def click(self, locator):
+        self.wait.until(
+            EC.element_to_be_clickable(locator)
+        ).click()
+
+    def type(self, locator, text):
+        element = self.find(locator)
+        element.clear()
+        element.send_keys(text)
+```
+
+### Page Class
+```python
+class LoginPage(BasePage):
+    # Locators
+    USERNAME = (By.ID, "username")
+    PASSWORD = (By.ID, "password")
+    SUBMIT = (By.CSS_SELECTOR, "button[type='submit']")
+    ERROR = (By.CLASS_NAME, "error-message")
+
+    def __init__(self, driver):
+        super().__init__(driver)
+        self.url = "https://example.com/login"
+
+    def open(self):
+        self.driver.get(self.url)
+        return self
+
+    def login(self, username, password):
+        self.type(self.USERNAME, username)
+        self.type(self.PASSWORD, password)
+        self.click(self.SUBMIT)
+        return DashboardPage(self.driver)
+
+    def get_error(self):
+        return self.find(self.ERROR).text
+```
+
+### Usage
+```python
+# In tests
+login_page = LoginPage(driver).open()
+dashboard = login_page.login("user", "pass")
+assert dashboard.is_loaded()
+```
+
+---
+
+## 11. Testing Integration
+
+### pytest
+```python
+import pytest
+from selenium import webdriver
+
+@pytest.fixture
+def driver():
+    driver = webdriver.Chrome()
+    driver.implicitly_wait(10)
+    yield driver
+    driver.quit()
+
+def test_login(driver):
+    driver.get("https://example.com/login")
+    driver.find_element(By.ID, "username").send_keys("user")
+    driver.find_element(By.ID, "password").send_keys("pass")
+    driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
+    assert "dashboard" in driver.current_url
+```
+
+### unittest
+```python
+import unittest
+from selenium import webdriver
+
+class TestLogin(unittest.TestCase):
+    def setUp(self):
+        self.driver = webdriver.Chrome()
+
+    def tearDown(self):
+        self.driver.quit()
+
+    def test_valid_login(self):
+        self.driver.get("https://example.com/login")
+        # Test logic
+        self.assertIn("dashboard", self.driver.current_url)
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+---
+
+## 12. Troubleshooting
+
+### Common Issues
+
+**StaleElementReferenceException:**
+```python
+# Re-find element after page changes
+try:
+    element.click()
+except StaleElementReferenceException:
+    element = driver.find_element(By.ID, "my-id")
+    element.click()
+```
+
+**TimeoutException:**
+```python
+from selenium.common.exceptions import TimeoutException
+
+try:
+    wait.until(EC.presence_of_element_located((By.ID, "slow")))
+except TimeoutException:
+    print("Element not found in time")
+```
+
+**ElementNotInteractableException:**
+```python
+# Wait for clickable
+wait.until(EC.element_to_be_clickable((By.ID, "button")))
+
+# Or scroll into view
+driver.execute_script("arguments[0].scrollIntoView();", element)
+```
+
+---
+
+## Best Practices
+
+1. **Use explicit waits** - More reliable than implicit
+2. **Page Object Model** - Maintainable test code
+3. **Unique locators** - Prefer ID over XPath
+4. **Handle exceptions** - Graceful error handling
+5. **Close browsers** - Use quit() in finally/teardown
+6. **Headless for CI** - Faster test execution
+7. **Screenshots on failure** - Debug easier
+8. **Avoid hardcoded waits** - Use conditions
+9. **Parallel execution** - Faster test suites
+10. **Clean test data** - Isolated tests

@@ -1,195 +1,180 @@
 ---
 name: spec-writer
-description: CSI outline specification writer — takes a materials or products list and generates structured specs with MasterFormat divisions, performance criteria, and acceptable manufacturers.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Glob
-  - Grep
+description: Guide structured specification writing for AI coding agents using a 4-stage gated workflow (Specify, Plan, Tasks, Implement) and a 6-domain framework (Commands, Testing, Project Structure, Code Style, Git Workflow, Boundaries). Produces a SPEC.md file that serves as a living reference for the project. Use when user mentions writing a spec, creating a SPEC.md, setting up project guidelines, onboarding an AI agent to a codebase, or asks for structured project specification. Trigger phrases include "write a spec", "create a SPEC.md", "set up project guidelines", "spec out this project", "define project standards".
 ---
 
-# /spec-writer — CSI Outline Specification Writer
+# Spec Writer
 
-Takes a materials list, product schedule, or project description and produces outline specifications organized by CSI MasterFormat 2020 divisions. Output is a structured `.md` file ready for review by a senior specifier.
+## Overview
 
-## Input
+Guide users through writing a structured SPEC.md for AI coding agents using a 4-stage gated workflow. The spec covers six core domains drawn from analysis of effective agent configurations: Commands, Testing, Project Structure, Code Style, Git Workflow, and Boundaries.
 
-The user provides materials/products in one of these ways:
+**Core rule:** Mirror the user's language. If they write in Chinese, respond in Chinese. If in English, respond in English. Never hardcode a language.
 
-1. **Pasted text** — a materials list, product schedule, or finish legend copied into the conversation
-2. **File path** — path to a CSV, Excel export, schedule PDF, or markdown file containing materials/products
-3. **Verbal description** — project type and general materials ("ground-up office with curtain wall, porcelain tile, ACT ceilings, painted gypsum board")
+**Key principle:** Concrete over abstract. A real code snippet beats a paragraph of description. A runnable command beats a tool name. A specific file path beats "see the docs."
 
-If the user invokes the skill without input, ask:
+## When to Offer
 
-1. **What is the project type?** (e.g., commercial office, multifamily residential, retail, healthcare, education)
-2. **What materials or products should be specified?** (paste a list, provide a file path, or describe them)
+Offer this workflow when:
+- User says "write a spec", "create a SPEC.md", "spec out this project"
+- User wants to set up project guidelines or standards for an AI agent
+- User asks how to onboard an AI coding agent to their codebase
+- User mentions spec-driven development or structured project documentation
+- User wants to define boundaries/rules for an AI coding agent
 
-## CSI MasterFormat Divisions Covered
+**Initial offer:** Explain the 4-stage workflow and ask if they want to proceed or work freeform. If they decline, work freeform. If they accept, proceed to Stage 1.
 
-Map every material/product to the correct division and section number using MasterFormat 2020:
+## Stage 1: Specify (Vision Gathering)
 
-| Division | Title | Common Sections |
-|----------|-------|-----------------|
-| 03 | Concrete | 03 30 00 Cast-in-Place Concrete, 03 45 00 Precast Architectural Concrete |
-| 04 | Masonry | 04 20 00 Unit Masonry, 04 40 00 Stone Assemblies |
-| 05 | Metals | 05 12 00 Structural Steel Framing, 05 50 00 Metal Fabrications, 05 51 00 Metal Stairs |
-| 06 | Wood, Plastics, and Composites | 06 10 00 Rough Carpentry, 06 20 00 Finish Carpentry, 06 40 00 Architectural Woodwork |
-| 07 | Thermal and Moisture Protection | 07 21 00 Thermal Insulation, 07 27 00 Air Barriers, 07 46 00 Siding, 07 54 00 Thermoplastic Membrane Roofing, 07 84 00 Firestopping, 07 92 00 Joint Sealants |
-| 08 | Openings | 08 11 00 Metal Doors and Frames, 08 14 00 Wood Doors, 08 44 00 Curtain Wall, 08 80 00 Glazing |
-| 09 | Finishes | 09 21 00 Plaster and Gypsum Board, 09 30 00 Tiling, 09 51 00 Acoustical Ceilings, 09 65 00 Resilient Flooring, 09 68 00 Carpeting, 09 91 00 Painting |
-| 10 | Specialties | 10 14 00 Signage, 10 21 00 Compartments and Cubicles, 10 28 00 Toilet Accessories |
-| 12 | Furnishings | 12 24 00 Window Shading, 12 36 00 Countertops, 12 48 00 Rugs and Mats |
-| 22 | Plumbing (fixtures only) | 22 40 00 Plumbing Fixtures |
-| 26 | Electrical (fixtures only) | 26 50 00 Lighting |
+**Goal:** Understand what is being built, for whom, and why. No technical details yet.
 
-If a material does not fit these divisions, assign the closest match and note the limitation.
+### Branching: Greenfield vs Existing
 
-## Spec Generation Workflow
+Determine which path applies:
 
-### Step 1: Parse and classify materials
+**Greenfield project (building from scratch):**
+1. Ask: What are you building? Who is it for? What problem does it solve?
+2. Ask: What does success look like? How will you know the project works?
+3. Ask: Any constraints or non-negotiables? (timeline, technology mandates, etc.)
+4. Draft a 2-3 sentence Vision statement and Success Criteria checklist
+5. Present for approval
 
-Read the user's input and build an inventory:
+**Existing project (adding a spec to existing code):**
+1. Ask: What is this project? Point me to the codebase.
+2. Explore the codebase: read `package.json`/`pyproject.toml`/`Cargo.toml`, scan directory structure, read README if present
+3. Draft a Vision statement based on what exists
+4. Ask: Is this accurate? What's missing or wrong?
+5. Present for approval
 
-- **Material/product name** — as provided
-- **CSI division and section number** — mapped from the material type
-- **Section title** — per MasterFormat conventions
+### Stage 1 Gate
 
-Sort by division number, then section number. Group related items under the same section where appropriate (e.g., two paint types both go under 09 91 00).
+Present the Vision and Success Criteria. User must approve before advancing.
 
-Report the mapping to the user:
+If user wants changes, iterate. Only proceed to Stage 2 when user explicitly approves.
 
-```
-Identified X materials across Y divisions:
-- 07 92 00 Joint Sealants: silicone sealant, urethane sealant
-- 09 30 00 Tiling: porcelain floor tile, ceramic wall tile
-- 09 91 00 Painting: latex paint, epoxy coating
-```
+**Output so far:** Vision section + Success Criteria checklist.
 
-Ask: **"Does this mapping look correct? Any items to add or reassign?"**
+## Stage 2: Plan (Six Domain Framework)
 
-### Step 2: Generate outline specifications
+**Goal:** Systematically collect information for all six domains.
 
-For each section, write a three-part outline spec following CSI SectionFormat:
+Read [references/six-domains-checklist.md](references/six-domains-checklist.md) for the detailed checklist of what to collect, output formats, mistakes to avoid, and questions to ask for each domain.
 
-#### Part 1 — General
+### Workflow
 
-- **1.01 Section Includes**: Scope of work covered by this section.
-- **1.02 Related Sections**: Cross-references to other specification sections (e.g., "Section 07 92 00 — Joint Sealants" from a tiling section).
-- **1.03 References**: Applicable standards — ASTM, ANSI, ADA, NFPA, UL, or other testing/certification standards relevant to the product. Cite specific standard numbers where known (e.g., ASTM C150 for portland cement, ASTM E84 for surface burning characteristics).
-- **1.04 Submittals**: Product data sheets, samples, shop drawings, certifications, LEED/sustainability documentation as applicable.
-- **1.05 Quality Assurance**: Installer qualifications, mock-up requirements (where relevant — typically for exposed finishes, masonry, curtain wall, architectural woodwork).
-- **1.06 Delivery, Storage, and Handling**: Standard requirements for the product type.
-- **1.07 Warranty**: Manufacturer warranty period. Use industry-standard minimums if not specified.
+1. **For each domain** (Commands, Testing, Project Structure, Code Style, Git Workflow, Boundaries), follow this loop:
+   - Ask the domain-specific questions from the checklist
+   - For existing projects: also probe the codebase (read configs, scan files, check for linters/formatters)
+   - Draft the domain section in the checklist's output format
+   - Present for user review
 
-#### Part 2 — Products
+2. **Boundaries get special treatment:**
+   - Read [references/boundary-patterns.md](references/boundary-patterns.md) for project-type-specific examples
+   - Always produce all three tiers: Always, Ask First, Never
+   - The "Never commit secrets" rule is mandatory in every spec
+   - Adapt patterns to the specific project rather than copying generic lists
 
-- **2.01 Manufacturers**: List a minimum of three acceptable manufacturers with "or approved equal" language. Select manufacturers appropriate to the project type and product category. Use well-known, nationally available manufacturers.
-- **2.02 Materials/Products**: Material composition, grade, class, or type. Reference applicable ASTM or industry standards.
-- **2.03 Performance Criteria**: Fire rating, slip resistance (DCOF for tile), sound transmission (STC/NRC for acoustical products), thermal resistance (R-value for insulation), load capacity, or other measurable criteria relevant to the product.
-- **2.04 Finishes**: Color, texture, pattern, sheen level, or surface treatment. Use "as selected by Architect from manufacturer's full range" for color selections unless the user specifies.
-- **2.05 Accessories**: Ancillary items required for a complete installation (trim, adhesives, grout, fasteners, sealants).
+3. **Tech Stack:** Also collect the full tech stack during this stage (language, framework, database, testing framework, package manager, versions).
 
-#### Part 3 — Execution
+### Stage 2 Gate
 
-- **3.01 Examination**: Substrate conditions to verify before installation. Moisture testing, levelness tolerances, etc.
-- **3.02 Preparation**: Surface preparation, priming, layout requirements.
-- **3.03 Installation**: Method of installation per manufacturer's written instructions and referenced standards. Include key installation requirements specific to the product.
-- **3.04 Quality Assurance**: Field quality control — inspection, testing, tolerances.
-- **3.05 Cleaning and Protection**: Post-installation cleaning, temporary protection during construction.
+Present a summary of all six domains plus the tech stack. User must approve before advancing.
 
-### Step 3: Add spec notes
+If any domain is incomplete or wrong, iterate on that domain. Only proceed to Stage 3 when all six domains are approved.
 
-Include these where relevant:
+**Output so far:** Vision + Success Criteria + Tech Stack + all six domains in draft form.
 
-- **Substitution Procedures**: "Substitution requests shall be submitted in writing to the Architect a minimum of 10 days prior to bid date. Include product data, samples, and a point-by-point comparison with the specified product."
-- **Mock-Up Requirements**: For exposed finishes (masonry, architectural woodwork, tile, curtain wall), require a mock-up panel of specified size for Architect approval before proceeding with production work.
-- **Generic Spec Flags**: If a section is generic and lacks project-specific detail, append a note:
+## Stage 3: Tasks (Decomposition and Scaffolding)
 
-  > **[REVIEW REQUIRED]** This section contains generic outline specifications. A senior specifier shall review and supplement with project-specific requirements, local code references, and coordination with the design intent.
+**Goal:** Assemble the approved content into a SPEC.md file using the template scaffold.
 
-Apply the `[REVIEW REQUIRED]` flag when:
-- No specific product or manufacturer was provided by the user
-- The material is in a life-safety-related section (firestopping, fire-rated assemblies, glazing)
-- Performance criteria are assumed rather than confirmed
+Read [references/spec-template.md](references/spec-template.md) for the output template.
 
-### Step 4: Write output
+### Workflow
 
-Compile all sections into a single `.md` file organized by division number.
+1. Create a new file `SPEC.md` (or the user's preferred filename/location) using the template scaffold
+2. Fill in each template section with the content approved in Stages 1-2
+3. For any optional sections (Architecture Notes, Version History), ask if the user wants them included
+4. Set Version History to `1.0 | [today's date] | Initial specification`
 
-**Default output path**: `./outline-specs-[project-slug].md`
+### Stage 3 Gate
 
-- Derive `[project-slug]` from the project name or type provided by the user (lowercase, hyphenated — e.g., `outline-specs-brannan-office.md`)
-- If no project name is given, use `outline-specs-draft.md`
-- Ask the user if they want a different path
+Present the complete SPEC.md draft. User must approve the assembled document.
 
-**File structure:**
+Key review points to highlight:
+- Does the assembled document flow well as a whole?
+- Are there contradictions between sections?
+- Is anything missing that became obvious when seeing everything together?
 
-```markdown
-# Outline Specifications — [Project Name]
+Iterate until user approves.
 
-Generated: [date]
-Project Type: [type]
-Divisions: [count]
-Sections: [count]
+## Stage 4: Implement (Validation and Finalization)
 
----
+**Goal:** Validate completeness, finalize the spec, and establish it as the project's living reference.
 
-## Division 07 — Thermal and Moisture Protection
+### Workflow
 
-### Section 07 92 00 — Joint Sealants
+1. **Self-check:** Re-read the complete SPEC.md and verify:
+   - All six domains have substantive content (not placeholders)
+   - Boundaries has all three tiers
+   - Commands section has actual runnable commands with flags
+   - Code Style section has at least one real code snippet
+   - Success Criteria are measurable
 
-#### Part 1 — General
+2. **Script validation:** Run the validation script:
+   ```bash
+   uv run python [skill-path]/scripts/validate_spec.py [spec-path]
+   ```
+   Replace `[skill-path]` with the path to this skill's directory and `[spec-path]` with the SPEC.md file path.
 
-**1.01 Section Includes**
-...
+3. **Fix any failures:** If validation finds gaps, go back to the relevant section and fix it. Re-run until all checks pass.
 
-#### Part 2 — Products
+4. **Final presentation:** Show the user the validation results and the complete SPEC.md. Ask for final approval.
 
-**2.01 Manufacturers**
-...
+### Stage 4 Gate
 
-#### Part 3 — Execution
+User gives final approval. The spec is done.
 
-**3.01 Examination**
-...
+## Post-Completion
 
----
+After the spec is approved:
 
-## Division 09 — Finishes
+1. **Living document guidance:** Remind the user that SPEC.md is a living document:
+   - Update it when requirements change
+   - Update it when technical decisions are made
+   - Track changes in Version History
+   - Commit it to version control alongside code
 
-### Section 09 30 00 — Tiling
-...
-```
+2. **Integration suggestions:**
+   - Place SPEC.md at the project root or in a `specs/` directory
+   - Reference it from CLAUDE.md or agents.md if applicable
+   - Consider adding the validation script to CI
 
-### Step 5: Summary
+3. **Next steps:** Ask if the user wants to:
+   - Start implementing based on the spec
+   - Create task breakdowns from the spec
+   - Review an existing spec against this framework
 
-After writing the file, report:
+## Handling Deviations
 
-```
-Specifications written: X sections across Y divisions
-Output: [file path]
-Sections flagged for review: [count]
-- [list flagged sections]
-```
+**User wants to skip stages:** Allow it, but warn that skipping Stage 2 (Plan) risks an incomplete spec. If they skip, note which domains weren't covered.
 
-## Writing Style
+**User wants a partial spec:** Support single-domain mode — e.g., "just help me define boundaries." Follow the Stage 2 workflow for that domain only, then validate just that section.
 
-- Use specification language throughout: "shall", "provide", "verify", "submit", "conform to"
-- Write in imperative mood, third person
-- Do not use contractions
-- Do not use first person ("we", "our")
-- Capitalize "Architect", "Owner", "Contractor", "Installer" when referring to project roles
-- Reference standards by full designation on first use (e.g., "ASTM C150/C150M, Standard Specification for Portland Cement"), abbreviated thereafter
-- Use "approved equal" rather than "or equal"
-- Measurements in imperial units unless the user specifies metric
+**User has an existing SPEC.md to audit:** Run `validate_spec.py` on it first, then walk through any FAIL items using the six-domains checklist.
 
-## Edge Cases
+**User is updating, not creating:** Read the existing SPEC.md, identify what changed, update the relevant sections, bump the version in Version History.
 
-- **Single material input**: Generate one section. Still include the full three-part structure.
-- **Ambiguous materials**: Ask the user to clarify. Example: "tile" could be ceramic wall tile (09 30 00), quarry tile (09 30 00), or ceiling tile (09 51 00).
-- **Materials outside covered divisions**: Note the limitation and provide the best-fit section. Example: "Elevator cab finishes are typically specified under Division 14 — Conveying Equipment, which is outside the scope of this skill. Consider coordinating with the elevator vendor."
-- **Duplicate materials**: Consolidate under one section. Do not create separate sections for "latex paint — walls" and "latex paint — ceilings" — combine under 09 91 00 with both applications noted.
-- **Very long lists (20+ materials)**: Process all of them. Give a progress update after every 5 sections written.
+## Quality Principles
+
+1. **Concrete over abstract:** A runnable command beats a tool name. A code snippet beats a style description. A file path beats "see the docs."
+
+2. **Boundaries are non-negotiable:** Every spec must have all three tiers. "Never commit secrets" is always included. Generic boundaries ("don't break things") are rejected — push for specifics.
+
+3. **Six domains are mandatory:** No spec is complete without all six. If the user insists on skipping one, note the gap explicitly in the spec.
+
+4. **The spec is for an AI agent, not a human:** Write for parsability. Use headers, lists, and code blocks. Avoid prose paragraphs where structured formats work better.
+
+5. **Medium freedom template:** The six domains are fixed scaffolding. Content within each domain is flexible and adapts to the project. Don't force patterns that don't fit.
+
+6. **Validate deterministically:** Always run the validation script. Human judgment catches semantic issues; the script catches structural ones. Both matter.

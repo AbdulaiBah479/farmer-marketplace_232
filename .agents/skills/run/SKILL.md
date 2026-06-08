@@ -1,84 +1,38 @@
 ---
-name: "run"
-description: "Run a single experiment iteration. Edit the target file, evaluate, keep or discard."
-command: /ar:run
+name: run
+description: Build and launch GridRacer in the iOS Simulator
+model: haiku
+allowed-tools:
+  - Bash
+  - Read
 ---
 
-# /ar:run — Single Experiment Iteration
+# Build and Run GridRacer
 
-Run exactly ONE experiment iteration: review history, decide a change, edit, commit, evaluate.
+Quick iteration: build the app and launch in simulator.
 
-## Usage
+## Steps
 
-```
-/ar:run engineering/api-speed              # Run one iteration
-/ar:run                                     # List experiments, let user pick
-```
+1. **Detect simulator**:
+   ```bash
+   SIMULATOR=$(xcrun simctl list devices available | grep -E "iPhone (16|15|14)" | grep -v unavailable | head -1 | sed -E 's/.*iPhone ([0-9]+).*/iPhone \1/')
+   echo "Using: $SIMULATOR"
+   ```
 
-## What It Does
+2. **Build** (stop on failure):
+   ```bash
+   xcodebuild -scheme GridRacer -configuration Debug -destination 'generic/platform=iOS Simulator' build 2>&1 | grep -E "(error:|warning:|BUILD|FAILED|SUCCEEDED)" | tail -20
+   ```
 
-### Step 1: Resolve experiment
+3. **Find built app**:
+   ```bash
+   APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "GridRacer.app" -path "*/Build/Products/Debug-iphonesimulator/*" -not -path "*Index.noindex*" -type d 2>/dev/null | head -1)
+   ```
 
-If no experiment specified, run `python {skill_path}/scripts/setup_experiment.py --list` and ask the user to pick.
-
-### Step 2: Load context
-
-```bash
-# Read experiment config
-cat .autoresearch/{domain}/{name}/config.cfg
-
-# Read strategy and constraints
-cat .autoresearch/{domain}/{name}/program.md
-
-# Read experiment history
-cat .autoresearch/{domain}/{name}/results.tsv
-
-# Checkout the experiment branch
-git checkout autoresearch/{domain}/{name}
-```
-
-### Step 3: Decide what to try
-
-Review results.tsv:
-- What changes were kept? What pattern do they share?
-- What was discarded? Avoid repeating those approaches.
-- What crashed? Understand why.
-- How many runs so far? (Escalate strategy accordingly)
-
-**Strategy escalation:**
-- Runs 1-5: Low-hanging fruit (obvious improvements)
-- Runs 6-15: Systematic exploration (vary one parameter)
-- Runs 16-30: Structural changes (algorithm swaps)
-- Runs 30+: Radical experiments (completely different approaches)
-
-### Step 4: Make ONE change
-
-Edit only the target file specified in config.cfg. Change one thing. Keep it simple.
-
-### Step 5: Commit and evaluate
-
-```bash
-git add {target}
-git commit -m "experiment: {short description of what changed}"
-
-python {skill_path}/scripts/run_experiment.py \
-  --experiment {domain}/{name} --single
-```
-
-### Step 6: Report result
-
-Read the script output. Tell the user:
-- **KEEP**: "Improvement! {metric}: {value} ({delta} from previous best)"
-- **DISCARD**: "No improvement. {metric}: {value} vs best {best}. Reverted."
-- **CRASH**: "Evaluation failed: {reason}. Reverted."
-
-### Step 7: Self-improvement check
-
-After every 10th experiment (check results.tsv line count), update the Strategy section of program.md with patterns learned.
-
-## Rules
-
-- ONE change per iteration. Don't change 5 things at once.
-- NEVER modify the evaluator (evaluate.py). It's ground truth.
-- Simplicity wins. Equal performance with simpler code is an improvement.
-- No new dependencies.
+4. **Boot, install, launch**:
+   ```bash
+   xcrun simctl boot "$SIMULATOR" 2>/dev/null || true
+   xcrun simctl install booted "$APP_PATH"
+   xcrun simctl launch booted trouarat.GridRacer
+   open -a Simulator
+   ```

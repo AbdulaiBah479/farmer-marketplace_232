@@ -1,151 +1,152 @@
 ---
 name: skill-lifecycle
-description: The authoritative skill lifecycle state model including container states, version states, review workflow states, visibility overlay, and governance actions. Ensures agents don't introduce invalid states or transitions.
-license: Apache-2.0
+description: Skill 生命周期管理的 Workflow。当需要创建新 Skill 并持续优化时触发。触发词：创建并优化 skill、skill 生命周期、从零开始创建 skill、新建一个完整的 skill。
 ---
 
-# Skill Lifecycle Skill
+# Skill 生命周期
 
-## Trigger
+创建和持续优化 Skill 的完整流程。
 
-Use this skill when:
-- Modifying skill publish, review, or unpublish flows
-- Adding or changing skill/version status fields
-- Working on search, detail pages, or listing pages that show skill state
-- Implementing governance actions (hide, yank, archive)
-- Adding new state transitions or permission checks
+## 流程概览
 
-## State Model
+```
+clarify → research → create → evaluate → iterate(循环) → version
+```
 
-### Skill Container States
+## 详细步骤
 
-Enum `SkillStatus` (`domain/skill/SkillStatus.java`):
+### 1. clarify（澄清）
 
-| Value | Meaning |
-|-------|---------|
-| `ACTIVE` | Skill is operational and can have versions published |
-| `HIDDEN` | Skill hidden by platform governance (design doc says prefer boolean `hidden` flag instead) |
-| `ARCHIVED` | Skill archived by owner/namespace admin, cannot publish new versions |
+**目的**：理解用户想要什么
 
-**Design-vs-code note**: `docs/14-skill-lifecycle.md` specifies `hidden` should be a governance
-overlay (boolean flag) rather than a lifecycle enum state. The current code still defines
-`SkillStatus.HIDDEN`. New code should use the `skill.hidden` boolean field, not the enum value.
+**执行**：调用 clarify-skill
 
-### SkillVersion States
+**输出**：`workspace/goal.md`
 
-Enum `SkillVersionStatus` (`domain/skill/SkillVersionStatus.java`):
+**完成标志**：用户确认目标
 
-| Value | Meaning |
-|-------|---------|
-| `DRAFT` | Non-public draft, can resubmit or delete |
-| `SCANNING` | Undergoing security scan |
-| `SCAN_FAILED` | Security scan failed |
-| `UPLOADED` | Uploaded but not yet submitted for review (or withdrawn from review) |
-| `PENDING_REVIEW` | Frozen pending reviewer action |
-| `PUBLISHED` | Currently distributable |
-| `REJECTED` | Review denied, retained |
-| `YANKED` | Was published, withdrawn from distribution |
+### 2. research（调研）
 
-### ReviewTask States
+**目的**：了解最佳实践
 
-Enum `ReviewTaskStatus` (`domain/review/ReviewTaskStatus.java`):
+**执行**：调用 research-skill
 
-| Value | Meaning |
-|-------|---------|
-| `PENDING` | Awaiting reviewer |
-| `APPROVED` | Reviewer approved |
-| `REJECTED` | Reviewer rejected |
+**输入**：`workspace/goal.md`
 
-### Visibility Model
+**输出**：`workspace/research.md`
 
-Enum `SkillVisibility` (used in `SkillPublishService`):
+**完成标志**：调研报告完成
 
-| Value | Publish Path |
-|-------|-------------|
-| `PUBLIC` | Creates `PENDING_REVIEW` version, review task, security scan |
-| `NAMESPACE_ONLY` | Same as PUBLIC but limited visibility scope |
-| `PRIVATE` | Goes directly to `UPLOADED` status, no review task |
+**可选**：如果领域简单或已有经验，可跳过
 
-`SUPER_ADMIN` role bypasses review — versions go directly to `PUBLISHED`.
+### 3. create（创建）
 
-### Latest Version Pointer
+**目的**：生成 Skill 文件
 
-`Skill.latestVersionId` is **only** the latest published pointer:
-- Can only point to a `PUBLISHED` version
-- May be `null` if no published version exists
-- `latest` tag auto-follows this pointer (read-only)
-- When yanking: recalculates to newest remaining `PUBLISHED` version, or `null`
+**执行**：调用 create-skill
 
-### Key Transitions
+**输入**：`workspace/goal.md`、`workspace/research.md`
 
-| Action | From | To | Notes | Source |
-|--------|------|-----|-------|--------|
-| First upload (PUBLIC/NAMESPACE_ONLY) | — | `PENDING_REVIEW` | Review task created | `SkillPublishService` |
-| First upload (SUPER_ADMIN) | — | `PUBLISHED` | Direct publish, `SkillPublishedEvent` emitted | `SkillPublishService` |
-| First upload (PRIVATE) | — | `UPLOADED` | No review task, `latestVersionId` updated | `SkillPublishService` |
-| Review approve | `PENDING_REVIEW` | `PUBLISHED` | Updates `latestVersionId` | Review workflow |
-| Review reject | `PENDING_REVIEW` | `REJECTED` | Version retained | Review workflow |
-| Withdraw review | `PENDING_REVIEW` | `UPLOADED` | Deletes pending `ReviewTask` | `SkillGovernanceService.withdrawPendingVersion` |
-| Yank | `PUBLISHED` | `YANKED` | Recalculates `latestVersionId` | `SkillGovernanceService.yankVersion` |
-| Hide | — | `hidden=true` | Independent overlay | `SkillGovernanceService.hideSkill` |
-| Restore | — | `hidden=false` | Independent overlay | `SkillGovernanceService.unhideSkill` |
-| Archive | `ACTIVE` | `ARCHIVED` | `SkillStatusChangedEvent` emitted | `SkillGovernanceService.archiveSkill` |
-| Unarchive | `ARCHIVED` | `ACTIVE` | `SkillStatusChangedEvent` emitted | `SkillGovernanceService.unarchiveSkill` |
-| New publish (existing pending) | `PENDING_REVIEW` | `UPLOADED` | Auto-withdraw + delete review task | `SkillPublishService` |
-| Delete version | `DRAFT`/`REJECTED`/`SCAN_FAILED`/`UPLOADED` | — | Last version protected | `SkillGovernanceService.deleteVersion` |
+**输出**：
+- `SKILL.md`
+- `criteria.md`
 
-### Yank Pointer Recalculation
+**完成标志**：两个文件都存在且格式正确
 
-When yanking the current `latestVersionId` (`SkillGovernanceService`):
-1. Query all remaining `PUBLISHED` versions for the skill
-2. Sort by `publishedAt` DESC, then `createdAt` DESC, then `id` DESC
-3. Point `latestVersionId` to the top result, or `null` if none remain
+### 4. evaluate（评价）
 
-### Lifecycle Projection
+**目的**：评价 Skill 执行效果
 
-Read models (detail, my-skills, favorites, search) use `*QueryRepository` patterns:
-- `headlineVersion` — Main display version for the page
-- `publishedVersion` — Latest published version
-- `ownerPreviewVersion` — Pending review version (visible to owner/namespace admin)
-- `resolutionMode` — `PUBLISHED`, `OWNER_PREVIEW`, or `NONE`
+**前置**：先执行一次 Skill，获得产出
 
-**Public browsing, install, download, search only use `publishedVersion`.**
+**执行**：调用 evaluate-skill
 
-### Permission Boundaries
+**输入**：`criteria.md`、执行产出
 
-| Action | Who |
-|--------|-----|
-| Withdraw review | Submitter only |
-| Delete version | Owner or namespace admin, only `DRAFT`/`REJECTED`/`SCAN_FAILED`/`UPLOADED` |
-| Archive/unarchive | Owner or namespace admin (`ADMIN` or `OWNER` role) |
-| Hide/restore | Platform governance (no permission check in code) |
-| Yank | Platform governance (no permission check in code) |
-| Publish PUBLIC skill | Namespace member (or `SUPER_ADMIN`) |
-| Publish PRIVATE skill | Namespace member (or `SUPER_ADMIN`) |
+**输出**：
+- `.meta/evaluation.json`
+- `workspace/evaluation.md`
 
-### Delete Version Constraints
+**完成标志**：评价结果存在
 
-`SkillGovernanceService.deleteVersion` enforces:
-- Only `DRAFT`, `REJECTED`, `SCAN_FAILED`, or `UPLOADED` versions can be deleted
-- Cannot delete the last remaining version of a skill
-- Deletes associated storage keys (individual files + `bundle.zip`)
-- Deletes associated security scan records
-- Updates `latestVersionId` if the deleted version was the pointer
-- Storage deletion happens after transaction commit with compensation recording
+### 5. iterate（迭代）- 循环
 
-### Domain Events
+**目的**：根据评价改进 Skill
 
-| Event | When Emitted |
-|-------|-------------|
-| `SkillStatusChangedEvent` | Archive or unarchive |
-| `SkillPublishedEvent` | SUPER_ADMIN direct publish |
-| `SkillVersionYankedEvent` | Yank action |
-| `ReviewSubmittedEvent` | Create review task for PUBLIC/NAMESPACE_ONLY |
+**触发条件**：`evaluation.json.pass == false` 或 `needs_iteration == true`
 
-### Common Pitfalls
+**执行**：调用 iterate-skill
 
-- Setting `SkillStatus.HIDDEN` directly — use `skill.setHidden(true)` via `SkillGovernanceService` instead
-- Forgetting to recalculate `latestVersionId` after yank or version deletion
-- Not auto-withdrawing pending versions when publishing a new version
-- Missing the `confirmWarnings` two-step publish flow (warnings require explicit confirmation)
-- Assuming all publish flows create review tasks — `PRIVATE` visibility skips review
+**输入**：`evaluation.json`、`evaluation.md`、`SKILL.md`
+
+**输出**：
+- 更新的 `SKILL.md`
+- `versions/SKILL.v{n}.md`（旧版本备份）
+
+**循环**：回到 step 4（evaluate）
+
+**退出条件**：
+- `evaluation.json.pass == true` 且 `needs_iteration == false`
+- 或达到 `max_iterations`
+
+### 6. version（版本管理）- 可选
+
+**目的**：A/B test 或版本切换
+
+**执行**：调用 version-skill
+
+**场景**：
+- 有多个版本需要对比
+- 需要回滚到之前版本
+- 确认某个版本为正式版
+
+## 状态管理
+
+### status.json
+
+```json
+{
+  "current_step": "evaluate",
+  "completed_steps": ["clarify", "research", "create"],
+  "iteration": 2,
+  "max_iterations": 5,
+  "skill_name": "weekly-report"
+}
+```
+
+### 状态流转
+
+```
+clarify → research → create → evaluate
+                                 ↓
+                         pass? ──→ done
+                           ↓ no
+                        iterate
+                           ↓
+                    (back to evaluate)
+```
+
+## 目录结构
+
+```
+.sop-engine/skills/<skill-name>/
+├── SKILL.md              # Skill 本身
+├── criteria.md           # 评价标准
+├── versions/             # 历史版本
+│   ├── SKILL.v1.md
+│   └── SKILL.v2.md
+├── .meta/                # 元数据（Hook 读取）
+│   ├── status.json
+│   └── evaluation.json
+└── workspace/            # 工作空间（自由）
+    ├── goal.md
+    ├── research.md
+    └── evaluation.md
+```
+
+## 原则
+
+- 每个步骤完成后更新 status.json
+- 循环有上限，防止无限迭代
+- 保留历史版本，支持回滚
+- workspace 内容自由，.meta 格式严格

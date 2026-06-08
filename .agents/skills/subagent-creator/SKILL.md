@@ -1,304 +1,129 @@
 ---
 name: subagent-creator
-description: Guide for creating AI subagents with isolated context for complex multi-step workflows. Use when users want to create a subagent, specialized agent, verifier, debugger, or orchestrator that requires isolated context and deep specialization. Works with any agent that supports subagent delegation. Triggers on "create subagent", "new agent", "specialized assistant", "create verifier". Do NOT use for Cursor-specific subagents (use cursor-subagent-creator instead).
+description: 创建具有自定义系统提示和工具配置的专业化 Claude Code 子代理。当用户要求创建新的子代理、自定义代理、专业助手，或为 Claude Code 配置特定任务的 AI 工作流时使用。
 ---
 
-# Subagent Creator
+# 子代理创建器
 
-This skill provides guidance for creating effective, agent-agnostic subagents.
+为 Claude Code 创建专业化的 AI 子代理，以处理特定任务和自定义的提示访问权限。
 
-## What are Subagents?
+## 子代理文件格式
 
-Subagents are specialized assistants that an AI agent can delegate tasks to. Characteristics:
+子代理是存储在以下位置的带 YAML 前置内容的 Markdown 文件：
 
-- **Isolated context**: Each subagent has its own context window
-- **Parallel execution**: Multiple subagents can run simultaneously
-- **Specialization**: Configured with specific prompts and expertise
-- **Reusable**: Defined once, used in multiple contexts
+- **项目**: `.claude/agents/` (较高优先级)
+- **用户**: `~/.claude/agents/` (较低优先级)
 
-### When to Use Subagents vs Skills
-
-```
-Is the task complex with multiple steps?
-├─ YES → Does it require isolated context?
-│         ├─ YES → Use SUBAGENT
-│         └─ NO → Use SKILL
-│
-└─ NO → Use SKILL
-```
-
-**Use Subagents for:**
-
-- Complex workflows requiring isolated context
-- Long-running tasks that benefit from specialization
-- Verification and auditing (independent perspective)
-- Parallel workstreams
-
-**Use Skills for:**
-
-- Quick, one-off actions
-- Domain knowledge without context isolation
-- Reusable procedures that don't need isolation
-
-## Subagent Structure
-
-A subagent is typically a markdown file with frontmatter metadata:
+### 结构
 
 ```markdown
 ---
-name: agent-name
-description: Description of when to use this subagent.
-model: inherit # or fast, or specific model ID
-readonly: false # true to restrict write permissions
+name: 子代理名称
+description: 使用此子代理的时机 (包含"use proactively"以实现自动委派)
+tools: 工具1, 工具2, 工具3  # 可选 - 如果省略则继承所有工具
+model: sonnet               # 可选 - sonnet/opus/haiku/inherit
+permissionMode: default     # 可选 - default/acceptEdits/bypassPermissions/plan
+skills: 技能1, 技能2        # 可选 - 自动加载技能
 ---
 
-You are an [expert in X].
-
-When invoked:
-
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-
-[Detailed instructions about expected behavior]
-
-Report [type of expected result]:
-
-- [Output format]
-- [Metrics or specific information]
+系统提示放在这里。定义角色、职责和行为。
 ```
 
-## Subagent Creation Process
+### 配置字段
 
-### 1. Define the Purpose
+| 字段 | 必需 | 描述 |
+|-------|----------|-------------|
+| `name` | 是 | 小写字母加连字符 |
+| `description` | 是 | 用途和使用时机（自动委派的关键） |
+| `tools` | 否 | 逗号分隔的工具列表（省略以继承所有） |
+| `model` | 否 | `sonnet`、`opus`、`haiku` 或 `inherit` |
+| `permissionMode` | 否 | `default`、`acceptEdits`、`bypassPermissions`、`plan` |
+| `skills` | 否 | 要自动加载的技能 |
 
-- What specific responsibility does the subagent have?
-- Why does it need isolated context?
-- Does it involve multiple complex steps?
-- Does it require deep specialization?
+## 创建工作流程
 
-### 2. Configure the Metadata
+1. **收集需求**：询问子代理的用途、使用时机和所需能力
+2. **选择范围**：项目 (`.claude/agents/`) 或用户 (`~/.claude/agents/`)
+3. **定义配置**：名称、描述、工具、模型
+4. **编写系统提示**：明确的角色、职责和输出格式
+5. **创建文件**：将 `.md` 文件写入适当位置
 
-#### name (required)
+## 编写有效的子代理
 
-Unique identifier. Use kebab-case.
+### 描述最佳实践
+
+`description` 字段对于自动委派至关重要：
 
 ```yaml
-name: security-auditor
+# 良好 - 具体的触发条件
+description: 代码审查专家。在编写或修改代码后主动使用。
+
+# 良好 - 清晰的用例
+description: 专门处理错误、测试失败和异常行为的调试专家。
+
+# 不佳 - 过于模糊
+description: 帮助处理代码
 ```
 
-#### description (critical)
+### 系统提示指南
 
-CRITICAL for automatic delegation. Explains when to use this subagent.
+1. **明确定义角色**："你是[特定专家角色]"
+2. **列出调用时的操作**：首先做什么
+3. **指定职责**：子代理处理什么
+4. **包含指导原则**：约束和最佳实践
+5. **定义输出格式**：如何组织响应
 
-**Good descriptions:**
+### 工具选择
 
-- "Security specialist. Use when implementing auth, payments, or handling sensitive data."
-- "Debugging specialist for errors and test failures. Use when encountering issues."
-- "Validates completed work. Use after tasks are marked done."
+- **只读任务**：`Read、Grep、Glob、Bash`
+- **代码修改**：`Read、Write、Edit、Grep、Glob、Bash`
+- **完全访问**：省略 `tools` 字段
 
-**Phrases that encourage automatic delegation:**
+完整工具列表请参见 [references/available-tools.md](references/available-tools.md)。
 
-- "Use proactively when..."
-- "Always use for..."
-- "Automatically delegate when..."
+## 子代理示例
 
-#### model (optional)
+完整示例请参见 [references/examples.md](references/examples.md)：
 
-```yaml
-model: inherit  # Uses same model as parent (default)
-model: fast     # Uses fast model for quick tasks
+- 代码审查员
+- 调试专家
+- 数据科学家
+- 测试运行器
+- 文档编写者
+- 安全审计员
+
+## 模板
+
+从 [assets/subagent-template.md](assets/subagent-template.md) 复制以开始新的子代理。
+
+## 快速开始示例
+
+创建一个代码审查子代理：
+
+```bash
+mkdir -p .claude/agents
 ```
 
-#### readonly (optional)
-
-```yaml
-readonly: true # Restricts write permissions
-```
-
-### 3. Write the Subagent Prompt
-
-Define:
-
-1. **Identity**: "You are an [expert]..."
-2. **When invoked**: Context of use
-3. **Process**: Specific steps to follow
-4. **Expected output**: Format and content
-
-**Template:**
-
-```markdown
-You are an [expert in X] specialized in [Y].
-
-When invoked:
-
-1. [First action]
-2. [Second action]
-3. [Third action]
-
-[Detailed instructions about approach]
-
-Report [type of result]:
-
-- [Specific format]
-- [Information to include]
-- [Metrics or criteria]
-
-[Philosophy or principles to follow]
-```
-
-## Common Subagent Patterns
-
-### 1. Verification Agent
-
-**Purpose**: Independently validates that completed work actually works.
-
-```markdown
----
-name: verifier
-description: Validates completed work. Use after tasks are marked done.
-model: fast
----
-
-You are a skeptical validator.
-
-When invoked:
-
-1. Identify what was declared as complete
-2. Verify the implementation exists and is functional
-3. Execute tests or relevant verification steps
-4. Look for edge cases that may have been missed
-
-Be thorough. Report:
-
-- What was verified and passed
-- What is incomplete or broken
-- Specific issues to address
-```
-
-### 2. Debugger
-
-**Purpose**: Expert in root cause analysis.
-
-```markdown
----
-name: debugger
-description: Debugging specialist. Use when encountering errors or test failures.
----
-
-You are a debugging expert.
-
-When invoked:
-
-1. Capture the error message and stack trace
-2. Identify reproduction steps
-3. Isolate the failure location
-4. Implement minimal fix
-5. Verify the solution works
-
-For each issue, provide:
-
-- Root cause explanation
-- Evidence supporting the diagnosis
-- Specific code fix
-- Testing approach
-```
-
-### 3. Security Auditor
-
-**Purpose**: Security expert auditing code.
-
-```markdown
----
-name: security-auditor
-description: Security specialist. Use for auth, payments, or sensitive data.
----
-
-You are a security expert.
-
-When invoked:
-
-1. Identify security-sensitive code paths
-2. Check for common vulnerabilities
-3. Confirm secrets are not hardcoded
-4. Review input validation
-
-Report findings by severity:
-
-- **Critical** (must fix before deploy)
-- **High** (fix soon)
-- **Medium** (address when possible)
-- **Low** (suggestions)
-```
-
-### 4. Code Reviewer
-
-**Purpose**: Code review with focus on quality.
+写入 `.claude/agents/code-reviewer.md`：
 
 ```markdown
 ---
 name: code-reviewer
-description: Code review specialist. Use when changes are ready for review.
+description: 审查代码质量和安全性。在代码更改后主动使用。
+tools: Read, Grep, Glob, Bash
+model: inherit
 ---
 
-You are a code review expert.
+你是一位资深代码审查员。
 
-When invoked:
+被调用时：
+1. 运行 git diff 查看更改
+2. 审查修改的文件
+3. 按优先级报告问题
 
-1. Analyze the code changes
-2. Check readability, performance, patterns, error handling
-3. Identify code smells and potential bugs
-4. Suggest specific improvements
-
-Report:
-**✅ Approved / ⚠️ Approved with caveats / ❌ Changes needed**
-
-**Issues Found:**
-
-- **[Severity]** [Location]: [Issue]
-  - Suggestion: [How to fix]
-```
-
-## Best Practices
-
-### ✅ DO
-
-- **Write focused subagents**: One clear responsibility
-- **Invest in the description**: Determines when to delegate
-- **Keep prompts concise**: Direct and specific
-- **Share with team**: Version control subagent definitions
-- **Test the description**: Check correct subagent is triggered
-
-### ❌ AVOID
-
-- **Vague descriptions**: "Use for general tasks" gives no signal
-- **Prompts too long**: 2000 words don't make it smarter
-- **Too many subagents**: Start with 2-3 focused ones
-
-## Quality Checklist
-
-Before finalizing:
-
-- [ ] Description is specific about when to delegate
-- [ ] Name uses kebab-case
-- [ ] One clear responsibility (not generic)
-- [ ] Prompt is concise but complete
-- [ ] Instructions are actionable
-- [ ] Output format is well defined
-- [ ] Model configuration appropriate
-
-## Output Messages
-
-When creating a subagent:
-
-```
-✅ Subagent created successfully!
-
-📁 Location: .agent/subagents/[name].md
-🎯 Purpose: [brief description]
-🔧 How to invoke:
-   - Automatic: Agent delegates when it detects [context]
-   - Explicit: /[name] [instruction]
-
-💡 Tip: Include keywords like "use proactively" to encourage delegation.
+重点关注：
+- 代码可读性
+- 安全漏洞
+- 错误处理
+- 最佳实践
 ```

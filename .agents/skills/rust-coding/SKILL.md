@@ -1,204 +1,134 @@
 ---
 name: rust-coding
-description: Rust coding conventions expert covering naming, formatting, comments, clippy, rustfmt, lints, code style, best practices, and idiomatic patterns.
-metadata:
-  triggers:
-    - coding convention
-    - naming
-    - formatting
-    - clippy
-    - rustfmt
-    - lint
-    - code style
-    - best practice
-    - idiomatic
-    - code review
+description: "Rust 编码规范专家。处理命名, 格式化, 注释, clippy, rustfmt, lint, 代码风格, 最佳实践, naming convention, 代码审查, P.NAM, G.FMT, 怎么命名, 代码规范"
+globs: ["**/*.rs"]
 ---
 
+# Rust 编码规范
 
-## Naming Conventions (Rust-Specific)
+## 核心问题
 
-| Rule | Correct | Incorrect |
-|------|---------|-----------|
-| No `get_` prefix for methods | `fn name(&self)` | `fn get_name(&self)` |
-| Iterator methods | `iter()` / `iter_mut()` / `into_iter()` | `get_iter()` |
-| Conversion naming | `as_` (cheap), `to_` (expensive), `into_` (ownership) | Mixed usage |
-| `static` variables uppercase | `static CONFIG: Config` | `static config: Config` |
-| `const` variables | `const BUFFER_SIZE: usize = 1024` | No restriction |
+**什么样的 Rust 代码才是"惯用的"？**
 
-### General Naming
+遵循社区约定，让代码可读、可维护。
+
+---
+
+## 命名规范 (Rust 特有)
+
+| 规则 | 正确 | 错误 |
+|-----|------|------|
+| 方法不用 `get_` 前缀 | `fn name(&self)` | `fn get_name(&self)` |
+| 迭代器方法 | `iter()` / `iter_mut()` / `into_iter()` | `get_iter()` |
+| 转换命名 | `as_` (廉价), `to_` (昂贵), `into_` (所有权) | 混用 |
+| `static` 变量大写 | `static CONFIG: Config` | `static config: Config` |
+| `const` 变量 | `const BUFFER_SIZE: usize = 1024` | 无限制 |
+
+### 通用命名
 
 ```rust
-// Variables and functions: snake_case
+// 变量和函数：snake_case
 let max_connections = 100;
 fn process_data() { ... }
 
-// Types and traits: CamelCase
+// 类型和 trait：CamelCase
 struct UserSession;
 trait Cacheable {}
 
-// Constants: SCREAMING_SNAKE_CASE
+// 常量：SCREAMING_SAME_CASE
 const MAX_CONNECTIONS: usize = 100;
-static CONFIG: once_cell::sync::Lazy<Config> = ...
+static CONFIG:once_cell::sync::Lazy<Config> = ...
 ```
 
+---
 
-## Solution Patterns
+## 数据类型规范
 
-### Pattern 1: Conversion Methods
+| 规则 | 说明 | 示例 |
+|-----|------|------|
+| 用 newtype | 领域语义 | `struct Email(String)` |
+| 用 slice 模式 | 模式匹配 | `if let [first, .., last] = slice` |
+| 预分配 | 避免重新分配 | `Vec::with_capacity()`, `String::with_capacity()` |
+| 避免 Vec 滥用 | 固定大小用数组 | `let arr: [u8; 256]` |
 
-```rust
-impl Buffer {
-    // as_ - cheap, view conversion
-    pub fn as_slice(&self) -> &[u8] {
-        &self.data
-    }
+### 字符串
 
-    // to_ - expensive, allocating conversion
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.data.clone()
-    }
+| 规则 | 说明 |
+|-----|------|
+| ASCII 数据用 `bytes()` | `s.bytes()` 优于 `s.chars()` |
+| 可能修改时用 `Cow<str>` | 借用或拥有 |
+| 用 `format!` 拼接 | 优于 `+` 操作符 |
+| 避免嵌套 `contains()` | O(n*m) 复杂度 |
 
-    // into_ - consuming, ownership transfer
-    pub fn into_vec(self) -> Vec<u8> {
-        self.data
-    }
-}
-```
+---
 
-### Pattern 2: Newtype Pattern
+## 错误处理规范
 
-```rust
-// ✅ Domain semantics with newtypes
-struct Email(String);
-struct UserId(u64);
-struct Meters(f64);
-
-impl Email {
-    pub fn new(s: impl Into<String>) -> Result<Self, EmailError> {
-        let email = s.into();
-        if email.contains('@') {
-            Ok(Self(email))
-        } else {
-            Err(EmailError::Invalid)
-        }
-    }
-}
-```
-
-### Pattern 3: Error Handling
+| 规则 | 说明 |
+|-----|------|
+| 用 `?` 传播 | 不用 `try!()` 宏 |
+| `expect()` 优于 `unwrap()` | 值确定时 |
+| 用 `assert!` 检查不变量 | 函数入口处 |
 
 ```rust
-// ✅ Good: propagate errors
+// ✅ 好的错误处理
 fn read_config() -> Result<Config, ConfigError> {
     let content = std::fs::read_to_string("config.toml")
         .map_err(ConfigError::from)?;
     toml::from_str(&content)
-        .map_err(ConfigError::Parse)
+        .map_err(ConfigError::parse)
 }
 
-// ❌ Avoid: panic in library code
+// ❌ 避免
 fn read_config() -> Config {
     std::fs::read_to_string("config.toml").unwrap()  // panic!
 }
-
-// ✅ Use expect when invariant guaranteed
-fn get_user(&self) -> &User {
-    self.user.as_ref()
-        .expect("user always initialized in constructor")
-}
 ```
 
-### Pattern 4: String Handling
+---
 
-```rust
-// ✅ Accept &str in APIs
-fn greet(name: &str) {
-    println!("Hello, {}", name);
-}
+## 内存与生命周期
 
-// ✅ Use Cow when might need owned
-use std::borrow::Cow;
+| 规则 | 说明 |
+|-----|------|
+| 生命周期命名有意义 | `'src`, `'ctx` 而非 `'a` |
+| `RefCell` 用 `try_borrow` | 避免 panic |
+| 用 shadowing 转换 | `let x = x.parse()?` |
 
-fn process(input: &str) -> Cow<str> {
-    if input.contains("special") {
-        Cow::Owned(input.replace("special", "normal"))
-    } else {
-        Cow::Borrowed(input)
-    }
-}
+---
 
-// ✅ Pre-allocate when size known
-let mut s = String::with_capacity(100);
-```
+## 并发规范
 
+| 规则 | 说明 |
+|-----|------|
+| 确定锁顺序 | 防止死锁 |
+| 原子类型用于原语 | 不用 `Mutex<bool>` |
+| 谨慎选择内存序 | Relaxed/Acquire/Release/SeqCst |
 
-## Data Type Guidelines
+---
 
-| Rule | Description | Example |
-|------|-------------|---------|
-| Use newtype | Domain semantics | `struct Email(String)` |
-| Use slice patterns | Pattern matching | `if let [first, .., last] = slice` |
-| Pre-allocate | Avoid reallocations | `Vec::with_capacity()` |
-| Avoid Vec abuse | Fixed size → array | `let arr: [u8; 256]` |
+## Async 规范
 
-### String Guidelines
+| 规则 | 说明 |
+|-----|------|
+| CPU-bound 用同步 | Async 适用于 I/O |
+| 不要跨 await 持有锁 | 使用 scoped guard |
 
-| Rule | Description |
-|------|-------------|
-| ASCII data use `bytes()` | `s.bytes()` faster than `s.chars()` |
-| Might modify → `Cow<str>` | Borrow or owned |
-| Use `format!` for concat | Better than `+` operator |
-| Avoid nested `contains()` | O(n*m) complexity |
+---
 
+## 宏规范
 
-## Error Handling Guidelines
+| 规则 | 说明 |
+|-----|------|
+| 避免宏（除非必要） | 优先用函数/泛型 |
+| 宏输入像 Rust | 可读性优先 |
 
-| Rule | Description |
-|------|-------------|
-| Use `?` to propagate | Don't use `try!()` macro |
-| `expect()` over `unwrap()` | When value guaranteed |
-| Use `assert!` for invariants | At function entry |
+---
 
+## 废弃模式 → 推荐
 
-## Memory and Lifetimes
-
-| Rule | Description |
-|------|-------------|
-| Meaningful lifetime names | `'src`, `'ctx` not just `'a` |
-| `RefCell` use `try_borrow` | Avoid panics |
-| Use shadowing for conversions | `let x = x.parse()?` |
-
-
-## Concurrency Guidelines
-
-| Rule | Description |
-|------|-------------|
-| Define lock ordering | Prevent deadlocks |
-| Atomics for primitives | Not `Mutex<bool>` |
-| Choose memory ordering carefully | Relaxed/Acquire/Release/SeqCst |
-
-
-## Async Guidelines
-
-| Rule | Description |
-|------|-------------|
-| CPU-bound → sync | Async for I/O |
-| Don't hold locks across await | Use scoped guards |
-
-
-## Macro Guidelines
-
-| Rule | Description |
-|------|-------------|
-| Avoid macros (unless necessary) | Prefer functions/generics |
-| Macro input like Rust | Readability first |
-
-
-## Deprecated Patterns → Modern
-
-| Deprecated | Modern | Version |
-|-----------|---------|---------|
+| 废弃 | 推荐 | 版本 |
+|-----|------|------|
 | `lazy_static!` | `std::sync::OnceLock` | 1.70 |
 | `once_cell::Lazy` | `std::sync::LazyLock` | 1.80 |
 | `std::sync::mpsc` | `crossbeam::channel` | - |
@@ -206,8 +136,9 @@ let mut s = String::with_capacity(100);
 | `failure`/`error-chain` | `thiserror`/`anyhow` | - |
 | `try!()` | `?` operator | 2018 |
 
+---
 
-## Clippy Configuration
+## Clippy 规范
 
 ```toml
 [package]
@@ -222,219 +153,84 @@ all = "warn"
 pedantic = "warn"
 ```
 
-### Common Clippy Lints
+### 常用 Clippy 规则
 
-| Lint | Description |
-|------|-------------|
-| `clippy::all` | Enable all warnings |
-| `clippy::pedantic` | Stricter checks |
-| `clippy::unwrap_used` | Avoid unwrap |
-| `clippy::expect_used` | Prefer expect |
-| `clippy::clone_on_ref_ptr` | Avoid cloning Arc |
+| Lint | 说明 |
+|-----|------|
+| `clippy::all` | 启用所有警告 |
+| `clippy::pedantic` | 更严格的检查 |
+| `clippy::unwrap_used` | 避免 unwrap |
+| `clippy::expect_used` | 优先 expect |
+| `clippy::clone_on_ref_ptr` | 避免 clone Arc |
 
+---
 
-## Formatting (rustfmt)
+## 格式化 (rustfmt)
 
 ```bash
-# Use default config
+# 使用默认配置即可
 rustfmt src/lib.rs
 
-# Check formatting
+# 检查格式
 rustfmt --check src/lib.rs
 
-# Config file: .rustfmt.toml
-max_width = 100
+# 配置文件 .rustfmt.toml
+max_line_width = 100
 tab_spaces = 4
 edition = "2024"
 ```
 
+---
 
-## Documentation Guidelines
+## 文档规范
 
 ```rust
-/// Module documentation
-//! This module handles user authentication...
+/// 模块文档
+//! 本模块处理用户认证...
 
-/// Struct documentation
-///
+/// 结构体文档
+/// 
 /// # Examples
 /// ```
 /// let user = User::new("name");
 /// ```
 pub struct User { ... }
 
-/// Method documentation
-///
+/// 方法文档
+/// 
 /// # Arguments
-///
-/// * `name` - User name
-///
+/// 
+/// * `name` - 用户名
+/// 
 /// # Returns
-///
-/// Initialized user instance
-///
+/// 
+/// 初始化后的用户实例
+/// 
 /// # Panics
-///
-/// Panics when name is empty
+/// 
+/// 当用户名为空时 panic
 pub fn new(name: &str) -> Self { ... }
 ```
 
+---
 
-## Workflow
-
-### Step 1: Name Things Properly
-
-```
-Choosing a name?
-  → Function/variable? snake_case
-  → Type/trait? CamelCase
-  → Constant? SCREAMING_SNAKE_CASE
-  → Conversion method?
-    - Cheap view? as_foo()
-    - Expensive? to_foo()
-    - Consuming? into_foo()
-```
-
-### Step 2: Format Code
-
-```bash
-# Run rustfmt
-cargo fmt
-
-# Check formatting in CI
-cargo fmt --check
-
-# Fix clippy warnings
-cargo clippy --fix
-```
-
-### Step 3: Review Idioms
+## 快速参考
 
 ```
-Check:
-  → No unnecessary clone()
-  → Use ? not unwrap()
-  → &str in function parameters
-  → Iterator methods not index loops
-  → Meaningful error types
-```
-
-
-## Quick Reference
-
-```
-Naming: snake_case (fn/var), CamelCase (type), SCREAMING_SNAKE_CASE (const)
-Format: rustfmt (just use it)
-Docs: /// for public items, //! for module docs
+命名: snake_case (fn/var), CamelCase (type), SCREAMING_CASE (const)
+格式: rustfmt (just use it)
+文档: /// for public items, //! for module docs
 Lint: #![warn(clippy::all)]
 ```
 
+---
 
-## Review Checklist
+## 代码审查清单
 
-When reviewing code:
-
-- [ ] Naming follows Rust conventions
-- [ ] Using `?` instead of `unwrap()`
-- [ ] Avoiding unnecessary `clone()`
-- [ ] `unsafe` blocks have SAFETY comments
-- [ ] Public APIs have doc comments
-- [ ] Ran `cargo clippy`
-- [ ] Ran `cargo fmt`
-- [ ] No `get_` prefix on accessor methods
-- [ ] Conversion methods named correctly (as/to/into)
-- [ ] String parameters use `&str` when possible
-
-
-## Verification Commands
-
-```bash
-# Format check
-cargo fmt --check
-
-# Lint check
-cargo clippy -- -D warnings
-
-# Documentation check
-cargo doc --no-deps --open
-
-# Run tests
-cargo test
-
-# Check naming conventions
-cargo clippy -- -W clippy::wrong_self_convention
-```
-
-
-## Common Pitfalls
-
-### 1. Wrong Method Naming
-
-**Symptom**: Clippy warning `wrong_self_convention`
-
-```rust
-// ❌ Bad: unnecessary get_ prefix
-impl User {
-    fn get_name(&self) -> &str { &self.name }
-}
-
-// ✅ Good: direct accessor
-impl User {
-    fn name(&self) -> &str { &self.name }
-}
-```
-
-### 2. String Type Misuse
-
-**Symptom**: Unnecessary allocations
-
-```rust
-// ❌ Bad: forces allocation
-fn greet(name: String) {
-    println!("Hello, {}", name);
-}
-
-// ✅ Good: accepts borrowed or owned
-fn greet(name: &str) {
-    println!("Hello, {}", name);
-}
-
-// Both work now:
-greet("Alice");  // &str
-greet(&owned_string);  // &String → &str
-```
-
-### 3. Index Loops
-
-**Symptom**: Less idiomatic, error-prone
-
-```rust
-// ❌ Bad: manual indexing
-for i in 0..items.len() {
-    println!("{}: {}", i, items[i]);
-}
-
-// ✅ Good: iterator
-for item in &items {
-    println!("{}", item);
-}
-
-// ✅ Good: with index
-for (i, item) in items.iter().enumerate() {
-    println!("{}: {}", i, item);
-}
-```
-
-
-## Related Skills
-
-- **rust-anti-pattern** - What not to do
-- **rust-error** - Error handling patterns
-- **rust-performance** - Performance idioms
-- **rust-async** - Async conventions
-- **rust-unsafe** - SAFETY comment style
-
-
-## Localized Reference
-
-- **Chinese version**: [SKILL_ZH.md](./SKILL_ZH.md) - 完整中文版本，包含所有内容
+- [ ] 命名符合 Rust 惯例
+- [ ] 使用 `?` 而非 `unwrap()`
+- [ ] 避免不必要的 `clone()`
+- [ ] `unsafe` 块有 SAFETY 注释
+- [ ] 公共 API 有文档注释
+- [ ] 运行 `cargo clippy`
+- [ ] 运行 `cargo fmt`

@@ -1,97 +1,205 @@
 ---
 name: slack-search
-description: Guidance for effectively searching Slack to find messages, files, channels, and people
+description: Search and retrieve information from Slack workspace using the slack-cli tool. Use this skill to find messages, get channel history, or search for user posts in Slack.
 ---
 
-# Slack Search
+# Slack Search Skill
 
-This skill provides guidance for effectively searching Slack to find messages, files, and information.
+This skill enables you to search and retrieve information from Slack workspace using the `slack-cli` command-line tool.
 
-## When to Use
+## Prerequisites
 
-Apply this skill whenever you need to find information in Slack — including when a user asks you to locate messages, conversations, files, or people, or when you need to gather context before answering a question about what's happening in Slack.
+Before using this skill, ensure:
+1. `SLACK_TOKEN` environment variable is set with a valid User OAuth Token (starting with `xoxp-`)
+2. The `slack-cli` binary is built and available in PATH
 
-## Search Tools Overview
+## Available Commands
 
-| Tool | Use When |
-|------|----------|
-| `slack_search_public` | Searching public channels only. Does not require user consent. |
-| `slack_search_public_and_private` | Searching all channels including private, DMs, and group DMs. Requires user consent. |
-| `slack_search_channels` | Finding channels by name or description. |
-| `slack_search_users` | Finding people by name, email, or role. |
+### 1. Search Messages Across All Channels
 
-## Search Strategy
+Search for messages containing specific keywords across all accessible channels:
 
-### Start Broad, Then Narrow
+```bash
+slack-cli search "<query>"
+```
 
-1. Begin with a simple keyword or natural language question.
-2. If too many results, add filters (`in:`, `from:`, date ranges).
-3. If too few results, remove filters and try synonyms or related terms.
+**Options:**
+- `--sort=timestamp` or `--sort=score`: Sort by timestamp (default) or relevance score
+- `--sort-dir=desc` or `--sort-dir=asc`: Sort direction (desc = newest first, default)
+- `--count=N`: Number of results to retrieve (default: 20)
 
-### Choose the Right Search Mode
+**Date Filters (in query):**
+- `after:YYYY-MM-DD`: Messages after specified date
+- `before:YYYY-MM-DD`: Messages before specified date
+- `on:YYYY-MM-DD`: Messages on specific date
 
-- **Natural language questions** (e.g., "What is the deadline for project X?") — Best for fuzzy, conceptual searches where you don't know exact keywords.
-- **Keyword search** (e.g., `project X deadline`) — Best for finding specific, exact content.
+**Examples:**
+```bash
+# Search for error messages
+slack-cli search "error"
 
-### Use Multiple Searches
+# Search with date filter
+slack-cli search "deployment after:2025-11-01"
 
-Don't rely on a single search. Break complex questions into smaller searches:
-- Search for the topic first
-- Then search for specific people's contributions
-- Then search in specific channels
+# Search with custom sorting and count
+slack-cli search "bug" --sort=score --count=50
 
-## Search Modifiers Reference
+# Search for multiple terms
+slack-cli search "database connection error"
+```
 
-### Location Filters
-- `in:channel-name` — Search within a specific channel
-- `in:<#C123456>` — Search in channel by ID
-- `-in:channel-name` — Exclude a channel
-- `in:<@U123456>` — Search in DMs with a user
+### 2. Get Channel Messages
 
-### User Filters
-- `from:<@U123456>` — Messages from a specific user (by ID)
-- `from:username` — Messages from a user (by Slack username)
-- `to:me` — Messages sent directly to you
+Retrieve the latest messages from a specific channel:
 
-### Content Filters
-- `is:thread` — Only threaded messages
-- `has:pin` — Pinned messages
-- `has:link` — Messages containing links
-- `has:file` — Messages with file attachments
-- `has::emoji:` — Messages with a specific reaction
+```bash
+slack-cli channel <channel-name>
+```
 
-### Date Filters
-- `before:YYYY-MM-DD` — Messages before a date
-- `after:YYYY-MM-DD` — Messages after a date
-- `on:YYYY-MM-DD` — Messages on a specific date
-- `during:month` — Messages during a specific month (e.g., `during:january`)
+**Example:**
+```bash
+# Get messages from #general channel
+slack-cli channel general
 
-### Text Matching
-- `"exact phrase"` — Match an exact phrase
-- `-word` — Exclude messages containing a word
-- `wild*` — Wildcard matching (minimum 3 characters before `*`)
+# Get messages from #engineering channel
+slack-cli channel engineering
+```
 
-## File Search
+**Note:** Use the channel name without the `#` symbol.
 
-To search for files, use the `content_types="files"` parameter with type filters:
-- `type:images` — Image files
-- `type:documents` — Document files
-- `type:pdfs` — PDF files
-- `type:spreadsheets` — Spreadsheet files
-- `type:canvases` — Slack Canvases
+### 3. Search User Posts
 
-Example: `content_types="files" type:pdfs budget after:2025-01-01`
+Find all messages posted by a specific user:
 
-## Following Up on Results
+```bash
+slack-cli user <username>
+```
 
-After finding relevant messages:
-- Use `slack_read_thread` to get the full thread context for any threaded message.
-- Use `slack_read_channel` with `oldest`/`latest` timestamps to read surrounding messages for context.
-- Use `slack_read_user_profile` to identify who a user is when their ID appears in results.
+**Example:**
+```bash
+# Get messages from user "john.doe"
+slack-cli user john.doe
+```
 
-## Common Pitfalls
+**Note:** Use the Slack username (not display name).
 
-- **Boolean operators don't work.** `AND`, `OR`, `NOT` are not supported. Use spaces (implicit AND) and `-` for exclusion.
-- **Parentheses don't work.** Don't try to group search terms with `()`.
-- **Search is not real-time.** Very recent messages (last few seconds) may not appear in search results. Use `slack_read_channel` for the most recent messages.
-- **Private channel access.** Use `slack_search_public_and_private` when you need to include private channels, but note this requires user consent.
+## Output Format
+
+All commands output results in the following format:
+
+```
+Found N messages:
+================================================================================
+
+[1] username:
+Message text content here
+Posted: YYYY-MM-DD HH:MM:SS UTC
+Channel: #channel-name
+
+[2] username:
+Another message text
+Posted: YYYY-MM-DD HH:MM:SS UTC
+Channel: #another-channel
+
+================================================================================
+```
+
+## Usage Guidelines
+
+### When to Use This Skill
+
+Use this skill when you need to:
+- Find specific information mentioned in Slack conversations
+- Track discussions about particular topics or issues
+- Retrieve historical messages from channels
+- Search for messages from specific team members
+- Investigate when something was discussed or decided
+
+### Best Practices
+
+1. **Be Specific with Search Terms**: Use precise keywords to get relevant results
+2. **Use Date Filters**: When looking for recent or historical information, add date filters
+3. **Adjust Result Count**: If you need more context, increase `--count` parameter
+4. **Check Multiple Sources**: Try searching by keyword, then verify in specific channels
+5. **Handle Token Issues**: If you get "not_allowed_token_type" error, verify you're using a User Token (xoxp-) not a Bot Token (xoxb-)
+
+### Common Use Cases
+
+**Finding Error Reports:**
+```bash
+slack-cli search "error" --sort=timestamp --sort-dir=desc --count=30
+```
+
+**Checking Recent Deployments:**
+```bash
+slack-cli search "deployed after:2025-11-15"
+```
+
+**Getting Team Updates:**
+```bash
+slack-cli channel team-updates
+```
+
+**Finding Specific User's Contributions:**
+```bash
+slack-cli user jane.smith
+```
+
+**Investigating Issues:**
+```bash
+# First search broadly
+slack-cli search "database timeout"
+
+# Then check specific channels
+slack-cli channel infrastructure
+
+# Then check who reported it
+slack-cli user devops-bot
+```
+
+## Error Handling
+
+### Common Errors and Solutions
+
+1. **"SLACK_TOKEN environment variable is not set"**
+   - Set the environment variable: `export SLACK_TOKEN=xoxp-your-token`
+
+2. **"not_allowed_token_type"**
+   - You're using a Bot Token instead of User Token
+   - Create a new User Token with `search:read` scope
+
+3. **"Channel not found"**
+   - Verify the channel name is correct (without `#`)
+   - Ensure the bot is invited to private channels
+
+4. **"User not found"**
+   - Use the Slack username, not display name
+   - Check spelling of username
+
+5. **No results returned**
+   - Try broader search terms
+   - Check if you have access to the channels containing the messages
+   - Verify date filters are correct
+
+## Limitations
+
+- **Enterprise Grid**: Results are limited to the connected workspace, not all workspaces in the organization
+- **Permissions**: Only searches in channels/conversations the User Token has access to
+- **Rate Limits**: Slack API has rate limits; avoid rapid consecutive requests
+- **Result Limit**: Maximum results per query is constrained by the `--count` parameter
+
+## Tips for Effective Searching
+
+1. **Use Quotes for Phrases**: `slack-cli search '"exact phrase"'`
+2. **Combine Keywords**: Search for multiple relevant terms together
+3. **Filter by Date Range**: Narrow down results with `after:` and `before:`
+4. **Sort by Relevance**: Use `--sort=score` when keyword matching is more important than recency
+5. **Iterate Searches**: Start broad, then refine based on initial results
+
+## Integration with Workflows
+
+This skill works well in combination with other tasks:
+- Search Slack → Summarize findings → Create report
+- Find error messages → Investigate logs → Propose fixes
+- Track feature discussions → Compile requirements → Document decisions
+- Monitor team communications → Identify blockers → Suggest actions

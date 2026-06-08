@@ -1,205 +1,119 @@
 ---
 name: shopify-testing
-description: Test Shopify applications — app testing with Vitest and Playwright, theme testing with Theme Check, Function testing, webhook testing, extension testing, and CI/CD pipelines. Use when writing tests for Shopify projects.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: Guide for testing Shopify Apps, including Unit Testing with Remix, Mocking Shopify Context, and E2E Testing.
 ---
 
-# Shopify Testing
+# Shopify App Testing
 
-## Before writing code
+Reliable testing is crucial for ensuring your app handles Shopify's authentication and API quirks correctly.
 
-**Fetch live docs**:
-1. Web-search `site:shopify.dev testing apps` for app testing patterns
-2. Web-search `site:shopify.dev theme check` for theme linting
-3. Web-search `site:shopify.dev shopify functions testing` for function testing
+## 1. Unit & Integration Testing (Vitest + Remix)
 
-## App Testing
+Use **Vitest** for running unit and integration tests in the Remix environment.
 
-### Unit Tests (Vitest)
+### Setup
+Install dependencies:
+```bash
+npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
+```
 
-The Remix template uses Vitest:
+### Mocking `shopify.server.ts`
+Creating a mock for the `authenticate` object is critical for testing loaders and actions without hitting real Shopify APIs.
 
 ```typescript
-// tests/routes/app._index.test.tsx
-import { describe, it, expect, vi } from 'vitest';
-import { loader } from '~/routes/app._index';
+// test/mocks/shopify.ts
+import { vi } from 'vitest';
 
-describe('App index loader', () => {
-  it('returns products', async () => {
-    const context = {
-      admin: {
-        graphql: vi.fn().mockResolvedValue({
-          json: () => ({ data: { products: { edges: [] } } }),
-        }),
-      },
-    };
+export const mockShopify = {
+  authenticate: {
+    admin: vi.fn(),
+    public: vi.fn(),
+    webhook: vi.fn(),
+  },
+};
 
-    const response = await loader({ context, request: new Request('http://test'), params: {} });
-    const data = await response.json();
-    expect(data.products).toBeDefined();
-  });
+// Usage in test file:
+vi.mock('../app/shopify.server', () => mockShopify);
+
+test('loader returns data for authenticated shop', async () => {
+    mockShopify.authenticate.admin.mockResolvedValue({
+        currentShop: 'test-shop.myshopify.com',
+        session: { shop: 'test-shop.myshopify.com', accessToken: 'fake_token' },
+        admin: {
+             graphql: vi.fn().mockResolvedValue({ /* mock response */ })
+        }
+    });
+
+    const response = await loader({ request: new Request('http://localhost/') });
+    // Assertions...
 });
 ```
 
-### Integration Tests (Playwright)
+## 2. Testing Loaders & Actions
 
-End-to-end testing with a development store:
+Using Remix's `createRemixStub` or calling loaders/actions directly is the best way to test backend logic.
 
+### Direct Function Call (Preferred for logic)
+You can import the `loader` or `action` and call it directly with a mock Request.
+
+```typescript
+import { loader } from '../app/routes/app.dashboard';
+
+test('dashboard loader returns stats', async () => {
+   // Setup mocks...
+   const response = await loader({ 
+       request: new Request('http://localhost/app/dashboard'), 
+       params: {} 
+   });
+   const data = await response.json();
+   expect(data.stats).toBeDefined();
+});
+```
+
+## 3. End-to-End (E2E) Testing (Playwright)
+
+For E2E tests, you need to handle the OAuth flow or bypass it using session tokens.
+
+### Bypassing Auth (Session Token)
+The most stable way to E2E test embedded apps is to generate a valid session token (or mock the validation) so you don't have to automate the Login screen interaction which often triggers captchas.
+
+### Basic Playwright Test
 ```typescript
 import { test, expect } from '@playwright/test';
 
-test('app loads in admin', async ({ page }) => {
-  await page.goto('https://dev-store.myshopify.com/admin/apps/my-app');
-  await expect(page.locator('[data-testid="app-page"]')).toBeVisible();
+test('load dashboard', async ({ page }) => {
+  await page.goto('http://localhost:3000/app');
+  // Expect to see the Polaris Page title
+  await expect(page.locator('.Polaris-Page-Header__Title')).toHaveText('Dashboard');
 });
+
 ```
 
-### Mocking Shopify APIs
+## 4. Testing Webhooks
+
+To test webhooks locally:
+
+1.  **Trigger via Shopify CLI**: `shopify app webhook trigger --topic ORDERS_CREATE`
+2.  **Unit Test**: Import the webhook action and pass a mock Request with the correct HMAC header.
 
 ```typescript
-// Mock the admin GraphQL client
-const mockAdmin = {
-  graphql: vi.fn().mockImplementation((query) => {
-    if (query.includes('products')) {
-      return Promise.resolve({
-        json: () => ({ data: { products: { edges: [] } } }),
-      });
-    }
-  }),
-};
-```
-
-## Theme Testing
-
-### Theme Check
-
-Static analysis for Liquid themes:
-- `shopify theme check` — run all checks
-- `shopify theme check --auto-correct` — fix auto-fixable issues
-- Categories: errors, suggestions, style
-- Checks: deprecated tags, missing templates, accessibility, performance
-
-### Manual Theme Testing
-
-- Test with `shopify theme dev` — live preview
-- Test all page types: home, product, collection, cart, checkout
-- Test responsive: mobile, tablet, desktop
-- Test accessibility: keyboard, screen reader, color contrast
-
-## Function Testing
-
-### Local Testing
-
-```bash
-shopify app function run --input input.json
-```
-
-Create test input JSON files:
-
-```json
-{
-  "cart": {
-    "lines": [
-      {
-        "id": "gid://shopify/CartLine/1",
-        "quantity": 2,
-        "merchandise": {
-          "__typename": "ProductVariant",
-          "id": "gid://shopify/ProductVariant/123"
-        }
-      }
-    ]
-  }
-}
-```
-
-### Unit Tests for Functions
-
-```javascript
-import { describe, it, expect } from 'vitest';
-import { run } from '../src/run';
-
-describe('discount function', () => {
-  it('applies discount for VIP customers', () => {
-    const input = {
-      cart: { lines: [{ /* ... */ }] },
-      discountNode: { metafield: { value: '{"percentage": 10}' } },
-    };
-
-    const result = run(input);
-    expect(result.discounts).toHaveLength(1);
-    expect(result.discounts[0].value.percentage.value).toBe('10.0');
-  });
-
-  it('returns empty discounts for non-VIP', () => {
-    const input = { cart: { lines: [] }, discountNode: { metafield: null } };
-    const result = run(input);
-    expect(result.discounts).toHaveLength(0);
-  });
-});
-```
-
-## Webhook Testing
-
-### Local Development
-
-- Use `shopify app dev` — sets up a tunnel and registers webhooks locally
-- Trigger events manually in development store admin
-- Check webhook delivery logs in Partner dashboard
-
-### Testing HMAC Verification
-
-```typescript
-import { describe, it, expect } from 'vitest';
+import { action } from '../app/routes/webhooks';
 import crypto from 'crypto';
 
-function createTestWebhook(body: object, secret: string) {
-  const bodyStr = JSON.stringify(body);
-  const hmac = crypto.createHmac('sha256', secret).update(bodyStr).digest('base64');
-  return { body: bodyStr, hmac };
-}
+test('webhook verifies hmac', async () => {
+    const payload = JSON.stringify({ id: 123 });
+    const hmac = crypto.createHmac('sha256', 'FULL_SECRET').update(payload).digest('base64');
+    
+    const request = new Request('http://localhost/webhooks', {
+        method: 'POST',
+        body: payload,
+        headers: { 'X-Shopify-Hmac-Sha256': hmac }
+    });
 
-describe('webhook verification', () => {
-  it('verifies valid HMAC', () => {
-    const { body, hmac } = createTestWebhook({ order: { id: 1 } }, 'test-secret');
-    expect(verifyWebhook(body, hmac, 'test-secret')).toBe(true);
-  });
-
-  it('rejects invalid HMAC', () => {
-    expect(verifyWebhook('{}', 'invalid', 'test-secret')).toBe(false);
-  });
+    // Mock authenticate.webhook to succeed
+    // ...
+    
+    const response = await action({ request });
+    expect(response.status).toBe(200);
 });
 ```
-
-## CI/CD
-
-### GitHub Actions Example
-
-```yaml
-name: Test Shopify App
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run test
-      - run: shopify theme check (if theme)
-```
-
-## Best Practices
-
-- Write unit tests for all Shopify Functions (they are pure functions — easy to test)
-- Mock Shopify API responses in app unit tests
-- Use Theme Check in CI to catch Liquid issues early
-- Test webhook HMAC verification with both valid and invalid signatures
-- Use development stores for integration testing — never test against production
-- Test checkout extensions with actual checkout flows in development stores
-- Include type checking (`tsc --noEmit`) in CI pipeline
-
-Fetch the Shopify testing documentation for exact test patterns, Theme Check configuration, and CI/CD examples before implementing.

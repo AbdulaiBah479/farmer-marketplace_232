@@ -1,76 +1,75 @@
 ---
-name: "runbook-generator"
-description: "Generate operational runbooks from a service name — deployment, incident response, maintenance, and rollback workflows. Templated structure customizable per environment. Use when documenting on-call procedures for a new service, standardizing incident response across teams, or producing runbooks before launching to production."
+name: runbook-generator
+category: documentation-knowledge
+description: Document operational procedures and troubleshooting.
 ---
 
 # Runbook Generator
 
-**Tier:** POWERFUL  
-**Category:** Engineering  
-**Domain:** DevOps / Site Reliability Engineering
+## Purpose
+- Document operational procedures and troubleshooting.
 
----
+## Preconditions
+- Access to system context (repos, infra, environments)
+- Confirmed requirements and constraints
+- Required approvals for security, compliance, or governance
 
-## Overview
+## Inputs
+- Problem statement and scope
+- Current architecture or system constraints
+- Non-functional requirements (performance, security, compliance)
+- Target stack and environment
 
-Generate operational runbooks quickly from a service name, then customize for deployment, incident response, maintenance, and rollback workflows.
+## Outputs
+- Design or implementation plan
+- Required artifacts (diagrams, configs, specs, checklists)
+- Validation steps and acceptance criteria
 
-## Core Capabilities
+## Detailed Step-by-Step Procedures
+1. Clarify scope, constraints, and success metrics.
+2. Review current system state, dependencies, and integration points.
+3. Select patterns, tools, and architecture options that match constraints.
+4. Produce primary artifacts (docs/specs/configs/code stubs).
+5. Validate against requirements and known risks.
+6. Provide rollout and rollback guidance.
 
-- Runbook skeleton generation from a CLI
-- Standard sections for start/stop/health/rollback
-- Structured escalation and incident handling placeholders
-- Reference templates for deployment and incident playbooks
+## Decision Trees and Conditional Logic
+- If compliance or regulatory scope applies -> add required controls and audit steps.
+- If latency budget is strict -> choose low-latency storage and caching.
+- Else -> prefer cost-optimized storage and tiering.
+- If data consistency is critical -> prefer transactional boundaries and strong consistency.
+- Else -> evaluate eventual consistency or async processing.
 
----
+## Error Handling and Edge Cases
+- Partial failures across dependencies -> isolate blast radius and retry with backoff.
+- Data corruption or loss risk -> enable backups and verify restore path.
+- Limited access to systems -> document gaps and request access early.
+- Legacy dependencies with limited change tolerance -> use adapters and phased rollout.
 
-## When to Use
+## Tool Requirements and Dependencies
+- CLI and SDK tooling for the target stack
+- Credentials or access tokens for required environments
+- Diagramming or spec tooling when producing docs
 
-- A service has no runbook and needs a baseline immediately
-- Existing runbooks are inconsistent across teams
-- On-call onboarding requires standardized operations docs
-- You need repeatable runbook scaffolding for new services
+## Stack Profiles
+- Use Profile A, B, or C from `skills/STACK_PROFILES.md`.
+- Note selected profile in outputs for traceability.
 
----
+## Validation
+- Requirements coverage check
+- Security and compliance review
+- Performance and reliability review
+- Peer or stakeholder sign-off
 
-## Quick Start
+## Rollback Procedures
+- Revert config or deployment to last known good state.
+- Roll back database migrations if applicable.
+- Verify service health, data integrity, and error rates after rollback.
 
-```bash
-# Print runbook to stdout
-python3 scripts/runbook_generator.py payments-api
+## Success Metrics
+- Measurable outcomes (latency, error rate, uptime, cost)
+- Acceptance thresholds defined with stakeholders
 
-# Write runbook file
-python3 scripts/runbook_generator.py payments-api --owner platform --output docs/runbooks/payments-api.md
-```
-
----
-
-## Recommended Workflow
-
-1. Generate the initial skeleton with `scripts/runbook_generator.py`.
-2. Fill in service-specific commands and URLs.
-3. Add verification checks and rollback triggers.
-4. Dry-run in staging.
-5. Store runbook in version control near service code.
-
----
-
-## Reference Docs
-
-- `references/runbook-templates.md`
-
----
-
-## Common Pitfalls
-
-- Missing rollback triggers or rollback commands
-- Steps without expected output checks
-- Stale ownership/escalation contacts
-- Runbooks never tested outside of incidents
-
-## Best Practices
-
-1. Keep every command copy-pasteable.
-2. Include health checks after every critical step.
-3. Validate runbooks on a fixed review cadence.
-4. Update runbook content after incidents and postmortems.
+## Example Workflows and Use Cases
+- Minimal: apply the skill to a small service or single module.
+- Production: apply the skill to a multi-service or multi-tenant system.

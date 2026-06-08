@@ -6,11 +6,11 @@ description: |
   or Object Page, working with annotations and Service Modeler, setting up deployment to ABAP or Cloud Foundry,
   creating adaptation projects, using Guided Development, previewing with mock data or live data, configuring
   SAP Fiori launchpad, or using AI-powered generation with Project Accelerator/Joule.
-  Technologies: SAP Fiori Elements, SAPUI5, OData V2/V4, CAP, SAP BTP, ABAP, Cloud Foundry, fiori-mcp-server (MCP tools for AI-assisted generation).
+  Technologies: SAP Fiori Elements, SAPUI5, OData V2/V4, CAP, SAP BTP, ABAP, Cloud Foundry.
 license: GPL-3.0
 metadata:
-  version: "1.0.1"
-  last_verified: "2026-02-26"
+  version: "1.0.0"
+  last_verified: "2025-11-25"
 ---
 
 # SAP Fiori Tools Development Skill
@@ -22,7 +22,6 @@ metadata:
 - **sap-abap-cds**: Use when consuming ABAP CDS views as OData services or working with ABAP backends
 - **sap-btp-cloud-platform**: Use for deployment targets, BTP destination configuration, and Cloud Foundry deployment
 - **sap-api-style**: Use when documenting OData APIs or following API documentation standards for Fiori apps
-- **dependency-upgrade**: Use when tightening npm/JavaScript supply-chain controls for UI tooling and dependency updates
 
 Comprehensive guidance for developing SAP Fiori applications using SAP Fiori tools extensions.
 
@@ -33,7 +32,6 @@ Comprehensive guidance for developing SAP Fiori applications using SAP Fiori too
 - [Application Generation](#application-generation)
 - [Page Editor Configuration](#page-editor-configuration)
 - [Annotations Development](#annotations-development)
-- [MCP Tools (AI-Assisted Development)](#mcp-tools-ai-assisted-development)
 - [Bundled Resources](#bundled-resources)
 
 ## Overview
@@ -400,40 +398,6 @@ Fiori: Open Guided Development
 ## Reference Documentation
 
 For detailed information on specific topics:
-
----
-
-## MCP Tools (AI-Assisted Development)
-
-The `fiori-tools` MCP server (`@sap-ux/fiori-mcp-server`) integrates AI coding assistants
-directly with Fiori development, providing semantic documentation search and programmatic
-app generation.
-
-**Prerequisite**: Node.js 20+. No authentication required.
-
-### Available Tools
-
-| Tool | Description |
-|------|-------------|
-| `search_docs` | Semantic search across Fiori Elements, Annotations, UI5, and Fiori tools docs |
-| `list_fiori_apps` | Scan a directory to identify existing Fiori apps available for modification |
-| `list_functionalities` | Return supported operations for creating or modifying applications |
-| `get_functionality_details` | Retrieve required parameters for a specific operation |
-| `execute_functionality` | Execute the creation or modification with provided parameters |
-
-### Typical Workflow
-
-1. Use `search_docs` to find annotation patterns or Fiori Elements configuration options
-2. Use `list_fiori_apps` to discover apps in the current workspace
-3. Use `list_functionalities` to see what modifications are supported
-4. Use `get_functionality_details` to understand required parameters
-5. Use `execute_functionality` to apply the change
-
-### Complementary MCP Servers
-
-SAP recommends using alongside:
-- **sapui5** skill: includes `@ui5/mcp-server` for UI5 framework tooling
-- **sap-cap-capire** skill: includes `@cap-js/mcp-server` for CAP backend
 
 ---
 

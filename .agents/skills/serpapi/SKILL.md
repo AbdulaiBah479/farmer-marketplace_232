@@ -1,159 +1,198 @@
 ---
 name: serpapi
-description: Google Flights cash prices, Google Hotels, and Google Travel Explore via SerpAPI. Use for award-vs-cash comparison, hotel search, and destination discovery.
-category: hotels
-summary: Google Hotels search and destination discovery.
-api_key: SerpAPI
-license: MIT
+description: SerpApi search engine results API via curl. Use this skill to scrape Google, Bing, YouTube, and other search engines.
+vm0_secrets:
+  - SERPAPI_API_KEY
 ---
 
-# SerpAPI Skill
+# SerpApi
 
-Scrape Google Flights, Google Hotels, and Google Travel Explore via SerpAPI. Provides cash flight prices (for Chase/Amex portal comparison), hotel pricing, and destination discovery.
+Use SerpApi via direct `curl` calls to **scrape search engine results** from Google, Bing, YouTube, and more.
 
-**Source:** [serpapi.com](https://serpapi.com) — Free tier available, paid plans for higher volume.
+> Official docs: `https://serpapi.com/search-api`
 
-## Authentication
+---
 
-`SERPAPI_API_KEY` is set in `.env`. All requests use `api_key` query parameter.
+## When to Use
 
-## API Base
+Use this skill when you need to:
 
-```
-https://serpapi.com/search
-```
+- **Scrape Google search results** (organic, ads, knowledge graph)
+- **Search Google Images, News, Videos, Shopping**
+- **Get local business results** from Google Maps
+- **Scrape other search engines** (Bing, YouTube, DuckDuckGo, etc.)
+- **Monitor SERP rankings** for SEO analysis
 
-## Google Flights (Cash Prices)
+---
 
-Search for flight prices and schedules. Essential for comparing: "Is 88,000 United miles better than paying $900 cash through the Chase portal?" (Chase portal pricing is now dynamic via Points Boost, ~1.5-2.0 cpp on select bookings; verify the actual quote.)
+## Prerequisites
 
-### One-Way Search
-
-```bash
-curl -s "https://serpapi.com/search?engine=google_flights&departure_id=SFO&arrival_id=NRT&outbound_date=2026-08-10&type=2&adults=2&travel_class=1&currency=USD&stops=2&sort_by=2&api_key=$SERPAPI_API_KEY" | jq '{best: [.best_flights[]? | {price: .price, duration: .total_duration, stops: (.layovers | length), flights: [.flights[] | {from: .departure_airport.id, to: .arrival_airport.id, airline: .airline, flight: .flight_number, depart: .departure_airport.time, arrive: .arrival_airport.time}]}], price_insights: .price_insights}'
-```
-
-### Parameters
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `engine` | Yes | `google_flights` |
-| `departure_id` | Yes | Airport code(s), comma-separated: `SFO,PDX` |
-| `arrival_id` | Yes | Airport code(s), comma-separated: `NRT,HND` |
-| `outbound_date` | Yes | `YYYY-MM-DD` |
-| `return_date` | Round trip | `YYYY-MM-DD` (required if type=1) |
-| `type` | No | `1` = round trip (default), `2` = one way, `3` = multi-city |
-| `adults` | No | Default 1 |
-| `children` | No | Default 0 |
-| `travel_class` | No | `1` = economy, `2` = premium economy, `3` = business, `4` = first |
-| `stops` | No | `0` = any, `1` = nonstop, `2` = 1 stop or fewer, `3` = 2 stops or fewer |
-| `sort_by` | No | `1` = top flights, `2` = price, `3` = departure, `4` = arrival, `5` = duration |
-| `include_airlines` | No | IATA codes: `SK,KL,UA` or alliances: `STAR_ALLIANCE,SKYTEAM,ONEWORLD` |
-| `max_price` | No | Maximum ticket price in USD |
-| `max_duration` | No | Maximum flight duration in minutes |
-| `bags` | No | Number of carry-on bags |
-| `deep_search` | No | `true` for browser-identical results (slower) |
-| `currency` | No | Default `USD` |
-
-### Multi-City (Open Jaw)
-
-Use `type=3` with `multi_city_json`:
+1. Sign up at [SerpApi](https://serpapi.com/)
+2. Go to Dashboard and copy your API key
+3. Store it in the environment variable `SERPAPI_API_KEY`
 
 ```bash
-curl -s "https://serpapi.com/search?engine=google_flights&type=3&multi_city_json=%5B%7B%22departure_id%22%3A%22SFO%22%2C%22arrival_id%22%3A%22NRT%22%2C%22date%22%3A%222026-08-05%22%7D%2C%7B%22departure_id%22%3A%22ICN%22%2C%22arrival_id%22%3A%22SFO%22%2C%22date%22%3A%222026-08-26%22%7D%5D&adults=2&travel_class=1&currency=USD&api_key=$SERPAPI_API_KEY" | jq '.'
+export SERPAPI_API_KEY="your-api-key"
 ```
 
-The JSON value for multi_city_json is URL-encoded. Decoded:
-```json
-[{"departure_id":"SFO","arrival_id":"NRT","date":"2026-08-05"},{"departure_id":"ICN","arrival_id":"SFO","date":"2026-08-26"}]
-```
+### Pricing
 
-### Response Fields
+- Free tier: 100 searches/month
+- API key is passed as a query parameter `api_key`
 
-Each flight in `best_flights[]` and `other_flights[]`:
+---
 
-| Field | Description |
-|-------|-------------|
-| `price` | Cash price in USD |
-| `total_duration` | Total minutes |
-| `flights[]` | Array of legs with airline, flight number, times, airplane, legroom |
-| `layovers[]` | Array with duration and airport for each connection |
-| `departure_token` | Token to get return flight options (round trip) |
-| `booking_token` | Token to get booking options |
 
-`price_insights` includes `lowest_price`, `price_level` (low/typical/high), and `typical_price_range`.
+> **Important:** When using `$VAR` in a command that pipes to another command, wrap the command containing `$VAR` in `bash -c '...'`. Due to a Claude Code bug, environment variables are silently cleared when pipes are used directly.
+> ```bash
+> bash -c 'curl -s "https://api.example.com" -H "Authorization: Bearer $API_KEY"'
+> ```
 
-### Portal Comparison Math
+## How to Use
 
-Chase Sapphire Reserve: dynamic Points Boost pricing, typically 1.5-2.0 cpp on select bookings (not a fixed floor). Verify actual portal price for the specific booking.
-If cash price is $900, portal cost = 60,000 UR points.
-If award price is 88,000 United miles, cash via portal is better value.
+All examples below assume you have `SERPAPI_API_KEY` set.
 
-Amex: typically 1 cpp via portal (worse value, use transfers instead).
+Base URL: `https://serpapi.com/search`
 
-Capital One Venture X: 1 cpp via portal, but transfer partners can be better.
+---
 
-## Google Hotels
+### 1. Basic Google Search
 
-Search hotels and vacation rentals with pricing from multiple OTAs.
+Search Google and get structured JSON results:
 
 ```bash
-curl -s "https://serpapi.com/search?engine=google_hotels&q=hotels+Tokyo+Japan&check_in_date=2026-08-10&check_out_date=2026-08-13&adults=2&currency=USD&sort_by=3&api_key=$SERPAPI_API_KEY" | jq '[.properties[]? | {name: .name, type: .type, rating: .overall_rating, reviews: .reviews, price: .rate_per_night.extracted_lowest, class: .extracted_hotel_class, amenities: .amenities}] | .[0:10]'
+bash -c 'curl -s "https://serpapi.com/search?engine=google&q=artificial+intelligence&api_key=${SERPAPI_API_KEY}"' | jq '.organic_results[:3] | .[] | {title, link, snippet}
 ```
 
-### Parameters
+---
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `engine` | Yes | `google_hotels` |
-| `q` | Yes | Search query: `hotels Tokyo Japan` |
-| `check_in_date` | Yes | `YYYY-MM-DD` |
-| `check_out_date` | Yes | `YYYY-MM-DD` |
-| `adults` | No | Default 2 |
-| `children` | No | Default 0 |
-| `sort_by` | No | `3` = lowest price, `8` = highest rating, `13` = most reviewed |
-| `min_price` / `max_price` | No | Price range filter |
-| `hotel_class` | No | `2,3,4,5` (comma-separated) |
-| `rating` | No | `7` = 3.5+, `8` = 4.0+, `9` = 4.5+ |
-| `vacation_rentals` | No | Set to `true` for Airbnb-style results |
-| `property_token` | No | Get details for a specific property |
+### 2. Search with Location
 
-## Google Travel Explore
-
-Discover destinations and cheapest flights from an origin. Great for "where can I fly cheaply in August?"
+Search from a specific location:
 
 ```bash
-curl -s "https://serpapi.com/search?engine=google_travel_explore&departure_id=SFO&outbound_date=2026-08-05&return_date=2026-08-26&adults=2&travel_class=1&currency=USD&api_key=$SERPAPI_API_KEY" | jq '[.destinations[]? | {name: .name, country: .country, airport: .destination_airport.code, price: .flight_price, duration: .flight_duration, stops: .number_of_stops, airline: .airline}] | .[0:15]'
+bash -c 'curl -s "https://serpapi.com/search?engine=google&q=best+coffee+shops&location=San+Francisco,+California&gl=us&hl=en&api_key=${SERPAPI_API_KEY}"' | jq '.organic_results[:3]'
 ```
 
-### Parameters
+**Parameters:**
+- `location`: City, state, or address
+- `gl`: Country code (us, uk, de, etc.)
+- `hl`: Language code (en, de, fr, etc.)
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `engine` | Yes | `google_travel_explore` |
-| `departure_id` | Yes | Airport code or kgmid |
-| `arrival_id` | No | Specific destination |
-| `arrival_area_id` | No | Region kgmid (e.g., `/m/02j9z` for Europe) |
-| `outbound_date` | No | `YYYY-MM-DD` |
-| `return_date` | No | `YYYY-MM-DD` |
-| `month` | No | `1`-`12` for flexible dates |
-| `travel_duration` | No | `1` = weekend, `2` = 1 week, `3` = 2 weeks |
-| `interest` | No | `/g/11bc58l13w` = Outdoors, `/m/0b3yr` = Beaches |
-| `include_airlines` | No | Filter by airline or alliance |
-| `max_price` | No | Maximum price |
-| `stops` | No | Same as Google Flights |
+---
 
-## Workflow: Compare Award vs Cash
+### 3. Google Image Search
 
-1. Search cash prices on Google Flights via SerpAPI
-2. Estimate portal cost. Chase uses dynamic "Points Boost" pricing (~1.5-2.0cpp on select bookings, not a flat rate). Amex/Capital One ~1.0cpp. For rough math, run the actual portal quote against the cash price; do not assume a flat cpp on Chase.
-3. Compare with award price from Seats.aero
-4. Lower number wins (accounting for the value you place on each currency)
+Search for images:
 
-## Notes
+```bash
+bash -c 'curl -s "https://serpapi.com/search?engine=google_images&q=sunset+beach&api_key=${SERPAPI_API_KEY}"' | jq '.images_results[:3] | .[] | {title, original, thumbnail}
+```
 
-- Cached results are free (1hr cache). Set `no_cache=true` to force fresh.
-- `deep_search=true` gives browser-identical results but is slower.
-- Results include `price_insights` with historical price data and trend.
-- Multi-city supports open jaw itineraries natively.
-- Hotels support vacation rentals mode for Airbnb-style results.
+---
+
+### 4. Google News Search
+
+Search news articles:
+
+```bash
+bash -c 'curl -s "https://serpapi.com/search?engine=google_news&q=technology&api_key=${SERPAPI_API_KEY}"' | jq '.news_results[:3] | .[] | {title, link, source, date}
+```
+
+---
+
+### 5. Google Shopping Search
+
+Search products:
+
+```bash
+bash -c 'curl -s "https://serpapi.com/search?engine=google_shopping&q=wireless+headphones&api_key=${SERPAPI_API_KEY}"' | jq '.shopping_results[:3] | .[] | {title, price, source}
+```
+
+---
+
+### 6. YouTube Search
+
+Search YouTube videos:
+
+```bash
+bash -c 'curl -s "https://serpapi.com/search?engine=youtube&search_query=python+tutorial&api_key=${SERPAPI_API_KEY}"' | jq '.video_results[:3] | .[] | {title, link, channel, views}
+```
+
+---
+
+### 7. Google Maps / Local Results
+
+Search local businesses:
+
+```bash
+bash -c 'curl -s "https://serpapi.com/search?engine=google_maps&q=restaurants&ll=@40.7128,-74.0060,15z&api_key=${SERPAPI_API_KEY}"' | jq '.local_results[:3] | .[] | {title, rating, address}
+```
+
+**Parameters:**
+- `ll`: Latitude, longitude, and zoom level (e.g., `@40.7128,-74.0060,15z`)
+
+---
+
+### 8. Pagination
+
+Get more results using the `start` parameter:
+
+```bash
+# First page (results 1-10)
+bash -c 'curl -s "https://serpapi.com/search?engine=google&q=machine+learning&start=0&api_key=${SERPAPI_API_KEY}"' | jq '.organic_results | length'
+
+# Second page (results 11-20)
+bash -c 'curl -s "https://serpapi.com/search?engine=google&q=machine+learning&start=10&api_key=${SERPAPI_API_KEY}"' | jq '.organic_results | length'
+```
+
+---
+
+### 9. Check Account Info
+
+Check your API usage and credits:
+
+```bash
+bash -c 'curl -s "https://serpapi.com/account?api_key=${SERPAPI_API_KEY}"' | jq '{plan_name, searches_per_month, this_month_usage}
+```
+
+---
+
+## Supported Engines
+
+| Engine | Parameter | Description |
+|--------|-----------|-------------|
+| Google Search | `engine=google` | Web search results |
+| Google Images | `engine=google_images` | Image search |
+| Google News | `engine=google_news` | News articles |
+| Google Shopping | `engine=google_shopping` | Product search |
+| Google Maps | `engine=google_maps` | Local businesses |
+| YouTube | `engine=youtube` | Video search |
+| Bing | `engine=bing` | Bing web search |
+| DuckDuckGo | `engine=duckduckgo` | Privacy-focused search |
+
+---
+
+## Common Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `q` | Search query (required) |
+| `engine` | Search engine to use |
+| `location` | Geographic location for search |
+| `gl` | Country code (e.g., us, uk) |
+| `hl` | Language code (e.g., en, de) |
+| `start` | Pagination offset (0, 10, 20...) |
+| `num` | Number of results (max 100) |
+| `safe` | Safe search (`active` or `off`) |
+| `device` | Device type (`desktop`, `mobile`, `tablet`) |
+
+---
+
+## Guidelines
+
+1. **Use specific engines**: Use `google_images`, `google_news` etc. instead of `tbm` parameter for cleaner results
+2. **Add location for local searches**: Use `location` and `gl` for geo-targeted results
+3. **Cache results**: SerpApi caches results by default; use `no_cache=true` for fresh data
+4. **Monitor usage**: Check `/account` endpoint to track API credits
+5. **Use jq filters**: Filter large JSON responses to extract only needed data

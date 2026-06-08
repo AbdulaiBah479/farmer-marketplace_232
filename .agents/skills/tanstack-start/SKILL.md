@@ -1,525 +1,781 @@
 ---
-name: tanstack-start
-description: "Build a full-stack TanStack Start app on Cloudflare Workers from scratch — SSR, file-based routing, server functions, D1+Drizzle, better-auth, Tailwind v4+shadcn/ui. Use whenever the user mentions TanStack Start, asks to scaffold a full-stack Cloudflare app with SSR, wants an SSR dashboard, or asks for a React 19 + Cloudflare Workers app with file-based routing and server functions — even if they don't name TanStack Start specifically. No template repo — Claude generates every file fresh per project."
-compatibility: claude-code-only
+name: TanStack Start
+description: |
+  Build full-stack React apps with TanStack Start on Cloudflare Workers. Type-safe routing, server functions, SSR/streaming, D1/KV/R2 integration.
+
+  Use when building full-stack React apps with SSR, migrating from Next.js, or from Vinxi to Vite (v1.121.0+). Prevents 9 documented errors including middleware bugs, file upload limitations, and deployment config issues.
+user-invocable: true
+allowed-tools: [Bash, Read, Write, Edit]
+metadata:
+  package: "@tanstack/react-start"
+  version: "1.154.0"
+  last_verified: "2026-01-21"
+  repository: "https://github.com/TanStack/router"
+  documentation: "https://tanstack.com/start/latest"
+  error_count: 9
 ---
 
-# TanStack Start on Cloudflare
+# TanStack Start Skill
 
-Build a complete full-stack app from nothing. Claude generates every file — no template clone, no scaffold command.
+⚠️ **Status: Production Ready (RC v1.154.0)**
 
-Stack: TanStack Start v1 (SSR, file-based routing, server functions via Nitro) on Cloudflare Workers; React 19 + Tailwind v4 + shadcn/ui; D1 + Drizzle; better-auth (Google OAuth + email/password).
+TanStack Start is a full-stack React framework built on TanStack Router. It provides type-safe routing, server functions, SSR/streaming, and first-class Cloudflare Workers support.
 
-## Project File Tree
+**Current Package:** `@tanstack/react-start@1.154.0` (Jan 21, 2026)
 
-```
-PROJECT_NAME/
-├── src/
-│   ├── routes/
-│   │   ├── __root.tsx              # Root layout (HTML shell, theme, CSS import)
-│   │   ├── index.tsx               # Landing / auth redirect
-│   │   ├── login.tsx               # Login page
-│   │   ├── register.tsx            # Register page
-│   │   ├── _authed.tsx             # Auth guard layout route
-│   │   ├── _authed/
-│   │   │   ├── dashboard.tsx       # Dashboard with stat cards
-│   │   │   ├── items.tsx           # Items list table
-│   │   │   ├── items.$id.tsx       # Edit item
-│   │   │   └── items.new.tsx       # Create item
-│   │   └── api/
-│   │       └── auth/
-│   │           └── $.ts            # better-auth API catch-all
-│   ├── components/
-│   │   ├── ui/                     # shadcn/ui components (auto-installed)
-│   │   ├── app-sidebar.tsx         # Navigation sidebar
-│   │   ├── theme-toggle.tsx        # Light/dark/system toggle
-│   │   ├── user-nav.tsx            # User dropdown menu
-│   │   └── stat-card.tsx           # Dashboard stat card
-│   ├── db/
-│   │   ├── schema.ts               # Drizzle schema (all tables)
-│   │   └── index.ts                # Drizzle client factory
-│   ├── lib/
-│   │   ├── auth.server.ts          # better-auth server config
-│   │   ├── auth.client.ts          # better-auth React hooks
-│   │   └── utils.ts                # cn() helper for shadcn/ui
-│   ├── server/
-│   │   └── functions.ts            # Server functions (CRUD, auth checks)
-│   ├── styles/
-│   │   └── app.css                 # Tailwind v4 + shadcn/ui CSS variables
-│   ├── router.tsx                  # TanStack Router configuration
-│   ├── client.tsx                  # Client entry (hydrateRoot)
-│   ├── ssr.tsx                     # SSR entry
-│   └── routeTree.gen.ts            # Auto-generated route tree (do not edit)
-├── drizzle/                        # Generated migrations
-├── public/                         # Static assets (favicon, etc.)
-├── vite.config.ts
-├── wrangler.jsonc
-├── drizzle.config.ts
-├── tsconfig.json
-├── package.json
-├── .dev.vars                       # Local env vars (NOT committed)
-└── .gitignore
+**Production Readiness:**
+- ✅ RC v1.154.0 stable (v1.0 expected soon)
+- ✅ Memory leak issue (#5734) resolved Jan 5, 2026
+- ✅ Migrated to Vite from Vinxi (v1.121.0, June 2025)
+- ✅ Production deployments on Cloudflare Workers validated
+
+This skill prevents **9 documented errors** and provides comprehensive guidance for Cloudflare Workers deployment, migrations, and server function patterns.
+
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Migration from Vinxi to Vite](#migration-from-vinxi-to-vite-v1210)
+- [Cloudflare Workers Deployment](#cloudflare-workers-deployment)
+- [Server Functions](#server-functions)
+- [Authentication Patterns](#authentication-patterns)
+- [Database Integration](#database-integration)
+- [Known Issues Prevention](#known-issues-prevention)
+- [Performance Optimization](#performance-optimization)
+
+---
+
+## Quick Start
+
+### Installation
+
+```bash
+# Create new project (uses Vite)
+npm create cloudflare@latest my-app -- --framework=tanstack-start
+cd my-app
+
+# Install dependencies
+npm install
+
+# Development
+npm run dev
+
+# Build and deploy
+npm run build
+wrangler deploy
 ```
 
-## Dependencies
+### Dependencies
 
-**Runtime:**
 ```json
 {
-  "react": "^19.0.0",
-  "react-dom": "^19.0.0",
-  "@tanstack/react-router": "^1.120.0",
-  "@tanstack/react-start": "^1.120.0",
-  "drizzle-orm": "^0.38.0",
-  "better-auth": "^1.2.0",
-  "zod": "^3.24.0",
-  "class-variance-authority": "^0.7.0",
-  "clsx": "^2.1.0",
-  "tailwind-merge": "^3.0.0",
-  "lucide-react": "^0.480.0"
+  "dependencies": {
+    "@tanstack/react-start": "^1.154.0",
+    "@tanstack/react-router": "latest",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "vite": "latest",
+    "@cloudflare/vite-plugin": "latest",
+    "wrangler": "latest"
+  }
 }
 ```
 
-**Dev:**
-```json
-{
-  "@cloudflare/vite-plugin": "^1.0.0",
-  "@tailwindcss/vite": "^4.0.0",
-  "@vitejs/plugin-react": "^4.4.0",
-  "tailwindcss": "^4.0.0",
-  "typescript": "^5.7.0",
-  "drizzle-kit": "^0.30.0",
-  "wrangler": "^4.0.0",
-  "tw-animate-css": "^1.2.0"
-}
+---
+
+## Migration from Vinxi to Vite (v1.121.0+)
+
+**Timeline**: TanStack Start migrated from Vinxi to Vite in v1.121.0 (released June 10, 2025).
+
+### Breaking Changes
+
+| Change | Old (Vinxi) | New (Vite) |
+|--------|-------------|------------|
+| Package name | `@tanstack/start` | `@tanstack/react-start` |
+| Config file | `app.config.ts` | `vite.config.ts` |
+| API routes | `createAPIFileRoute()` | `createServerFileRoute().methods()` |
+| Entry files | `ssr.tsx`, `client.tsx` | `server.tsx` (optional) |
+| Source folder | `app/` | `src/` |
+| Dev command | `vinxi dev` | `vite dev` |
+
+### Migration Steps
+
+```bash
+# 1. Remove Vinxi
+npm uninstall vinxi @tanstack/start
+
+# 2. Install Vite and framework-specific adapter
+npm install vite @tanstack/react-start @cloudflare/vite-plugin
+
+# 3. Delete old config
+rm app.config.ts
+
+# 4. Delete default entry files (unless customized)
+rm app/ssr.tsx app/client.tsx
+
+# 5. Rename customized entries
+mv app/ssr.tsx app/server.tsx  # If you customized SSR entry
+
+# 6. Move source files (optional, for consistency)
+mv app/ src/
 ```
 
-**Scripts:**
-```json
-{
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "deploy": "wrangler deploy",
-  "db:generate": "drizzle-kit generate",
-  "db:migrate:local": "wrangler d1 migrations apply PROJECT_NAME-db --local",
-  "db:migrate:remote": "wrangler d1 migrations apply PROJECT_NAME-db --remote"
-}
-```
-
-## Workflow
-
-### Step 1: Gather Project Info
-
-| Required | Optional |
-|----------|----------|
-| Project name (kebab-case) | Google OAuth credentials |
-| One-line description | Custom domain |
-| Cloudflare account | R2 storage needed? |
-| Auth method: Google OAuth, email/password, or both | Admin email |
-
-### Step 2: Initialise Project
-
-Create the project directory and all config files from scratch.
-
-**`vite.config.ts`** — Plugin order matters. Cloudflare MUST be first:
+### Create vite.config.ts
 
 ```typescript
-import { defineConfig } from "vite";
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import tailwindcss from "@tailwindcss/vite";
-import viteReact from "@vitejs/plugin-react";
+import { defineConfig } from 'vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import { cloudflare } from '@cloudflare/vite-plugin'
 
 export default defineConfig({
   plugins: [
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
-    tailwindcss(),
     tanstackStart(),
-    viteReact(),
-  ],
-});
-```
-
-**`wrangler.jsonc`**:
-
-```jsonc
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "PROJECT_NAME",
-  "compatibility_date": "2025-04-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
-  "account_id": "ACCOUNT_ID",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "PROJECT_NAME-db",
-      "database_id": "DATABASE_ID",
-      "migrations_dir": "drizzle"
-    }
+    cloudflare({
+      viteEnvironment: { name: 'ssr' } // Required for Workers
+    })
   ]
-}
+})
 ```
 
-Key points: `main` MUST be `"@tanstack/react-start/server-entry"` (Nitro server entry). Use `nodejs_compat` (NOT `node_compat`). Add `account_id` to avoid interactive prompts.
-
-**`tsconfig.json`**:
+### Update package.json Scripts
 
 ```json
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "strict": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "paths": { "@/*": ["./src/*"] },
-    "types": ["@cloudflare/workers-types/2023-07-01"]
-  },
-  "include": ["src/**/*", "vite.config.ts"]
+  "scripts": {
+    "dev": "vite dev --port 3000",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs"
+  }
 }
 ```
 
-**`.dev.vars`** — generate `BETTER_AUTH_SECRET` with `openssl rand -hex 32`:
-
-```
-BETTER_AUTH_SECRET=<generated-hex-32>
-BETTER_AUTH_URL=http://localhost:3000
-TRUSTED_ORIGINS=http://localhost:3000
-# GOOGLE_CLIENT_ID=
-# GOOGLE_CLIENT_SECRET=
-```
-
-**`.gitignore`** — node_modules, .wrangler, dist, .output, .dev.vars, .vinxi, .DS_Store
-
-Then install and create the D1 database:
-
-```bash
-cd PROJECT_NAME && pnpm install
-npx wrangler d1 create PROJECT_NAME-db
-# Copy the database_id into wrangler.jsonc d1_databases binding
-```
-
-### Step 3: Database Schema
-
-**`src/db/schema.ts`** — All tables. better-auth requires: `users`, `sessions`, `accounts`, `verifications`. Add application tables (e.g. `items`) for CRUD demo.
-
-D1-specific rules:
-- Use `integer` for timestamps (Unix epoch), NOT Date objects
-- Use `text` for primary keys (nanoid/cuid2), NOT autoincrement
-- Keep bound parameters under 100 per query (batch large inserts)
-- Foreign keys are always ON in D1
-
-**`src/db/index.ts`** — Drizzle client factory:
+### Update API Routes
 
 ```typescript
-import { drizzle } from "drizzle-orm/d1";
-import { env } from "cloudflare:workers";
-import * as schema from "./schema";
+// Old (Vinxi)
+import { createAPIFileRoute } from '@tanstack/start/api'
 
-export function getDb() {
-  return drizzle(env.DB, { schema });
-}
+export const Route = createAPIFileRoute('/api/users')({
+  GET: async () => {
+    return { users: [] }
+  }
+})
+
+// New (Vite)
+import { createServerFileRoute } from '@tanstack/react-start/api'
+
+export const Route = createServerFileRoute('/api/users').methods({
+  GET: async () => {
+    return { users: [] }
+  }
+})
 ```
 
-**CRITICAL**: Use `import { env } from "cloudflare:workers"` — NOT `process.env`. Create the Drizzle client inside each server function (per-request), not at module level.
+### Common Migration Errors
 
-**`drizzle.config.ts`**:
+**Error**: "invariant failed: could not find the nearest match"
+**Cause**: Old Vinxi route definitions mixed with Vite config
+**Fix**: Update all `createAPIFileRoute()` → `createServerFileRoute().methods()`
+
+**Error**: "SyntaxError: The requested module '@tanstack/router-generator' does not provide an export named 'CONSTANTS'"
+**Cause**: Conflicting Vinxi/Vite dependencies
+**Fix**: Delete `node_modules/`, `package-lock.json`, reinstall
+
+**Issue**: Auto-generated `app.config.timestamp_*` files duplicating
+**Cause**: Old Vinxi config interfering
+**Fix**: Delete all `app.config.*` files, restart dev server
+
+**Reference**: [Official Migration Guide](https://github.com/TanStack/router/discussions/2863#discussioncomment-13104960) | [LogRocket Migration Article](https://blog.logrocket.com/migrating-tanstack-start-vinxi-vite/)
+
+---
+
+## Cloudflare Workers Deployment
+
+### Required Configuration
+
+#### wrangler.toml (or wrangler.jsonc)
+
+```toml
+name = "my-app"
+compatibility_date = "2026-01-21"
+compatibility_flags = ["nodejs_compat"] # REQUIRED
+
+# REQUIRED: Point to TanStack Start's server entry
+main = "@tanstack/react-start/server-entry"
+
+[observability]
+enabled = true # Optional: Enable monitoring
+```
+
+#### vite.config.ts
 
 ```typescript
-import { defineConfig } from "drizzle-kit";
+import { defineConfig } from 'vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import { cloudflare } from '@cloudflare/vite-plugin'
 
 export default defineConfig({
-  schema: "./src/db/schema.ts",
-  out: "./drizzle",
-  dialect: "sqlite",
-});
-```
-
-Generate and apply the initial migration:
-
-```bash
-pnpm db:generate
-pnpm db:migrate:local
-```
-
-### Step 4: Configure Auth
-
-**`src/lib/auth.server.ts`** — Server-side better-auth:
-
-```typescript
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { drizzle } from "drizzle-orm/d1";
-import { env } from "cloudflare:workers";
-import * as schema from "../db/schema";
-
-export function getAuth() {
-  const db = drizzle(env.DB, { schema });
-  return betterAuth({
-    database: drizzleAdapter(db, { provider: "sqlite" }),
-    secret: env.BETTER_AUTH_SECRET,
-    baseURL: env.BETTER_AUTH_URL,
-    trustedOrigins: env.TRUSTED_ORIGINS?.split(",") ?? [],
-    emailAndPassword: { enabled: true },
-    socialProviders: {
-      // Add Google OAuth if credentials provided
-    },
-  });
-}
-```
-
-**CRITICAL**: `getAuth()` must be called per-request (inside handler/loader), NOT at module level.
-
-**`src/lib/auth.client.ts`** — Client-side auth hooks:
-
-```typescript
-import { createAuthClient } from "better-auth/react";
-
-export const { useSession, signIn, signOut, signUp } = createAuthClient();
-```
-
-**`src/routes/api/auth/$.ts`** — API catch-all for better-auth:
-
-```typescript
-import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { getAuth } from "../../../lib/auth.server";
-
-export const APIRoute = createAPIFileRoute("/api/auth/$")({
-  GET: ({ request }) => getAuth().handler(request),
-  POST: ({ request }) => getAuth().handler(request),
-});
-```
-
-**CRITICAL**: Auth MUST use an API route (`createAPIFileRoute`), NOT a server function (`createServerFn`). better-auth needs direct request/response access.
-
-### Step 5: Server Functions
-
-**Core pattern** — always create DB client inside the handler:
-
-```typescript
-import { createServerFn } from "@tanstack/react-start";
-import { getDb } from "../db";
-
-export const getItems = createServerFn({ method: "GET" }).handler(async () => {
-  const db = getDb();
-  return db.select().from(items).all();
-});
-```
-
-**Input validation** with Zod:
-
-```typescript
-export const createItem = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      name: z.string().min(1),
-      description: z.string().optional(),
+  plugins: [
+    tanstackStart(),
+    cloudflare({
+      viteEnvironment: { name: 'ssr' } // REQUIRED
     })
-  )
-  .handler(async ({ data }) => {
-    const db = getDb();
-    const id = crypto.randomUUID();
-    await db.insert(items).values({ id, ...data, createdAt: Date.now() });
-    return { id };
-  });
+  ]
+})
 ```
 
-**Protected server functions** — check auth, throw redirect if unauthenticated:
+### Bindings (D1, KV, R2)
 
-```typescript
-import { redirect } from "@tanstack/react-router";
-import { getAuth } from "../lib/auth.server";
+```toml
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "my-database"
+database_id = "your-database-id"
 
-async function requireSession(request?: Request) {
-  const auth = getAuth();
-  const session = await auth.api.getSession({
-    headers: request?.headers ?? new Headers(),
-  });
-  if (!session) {
-    throw redirect({ to: "/login" });
-  }
-  return session;
-}
+# KV Namespace
+[[kv_namespaces]]
+binding = "KV"
+id = "your-kv-id"
 
-export const getSessionFn = createServerFn({ method: "GET" }).handler(
-  async ({ request }) => {
-    const auth = getAuth();
-    return auth.api.getSession({ headers: request.headers });
-  }
-);
-
-export const getItems = createServerFn({ method: "GET" }).handler(
-  async ({ request }) => {
-    const session = await requireSession(request);
-    const db = getDb();
-    return db.select().from(items).where(eq(items.userId, session.user.id)).all();
-  }
-);
+# R2 Bucket
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "my-bucket"
 ```
 
-**Route loader pattern** — server functions in route `loader`:
+Access bindings in server functions:
 
 ```typescript
-export const Route = createFileRoute("/_authed/items")({
-  loader: () => getItems(),
-  component: ItemsPage,
-});
+import { createServerFn } from '@tanstack/react-start/server'
 
-function ItemsPage() {
-  const items = Route.useLoaderData();
-  return <div>{items.map((item) => <div key={item.id}>{item.name}</div>)}</div>;
-}
+export const getUser = createServerFn()
+  .handler(async ({ request }) => {
+    const env = request.context.cloudflare.env
+
+    // D1
+    const result = await env.DB.prepare('SELECT * FROM users').all()
+
+    // KV
+    const value = await env.KV.get('key')
+
+    // R2
+    const object = await env.BUCKET.get('file.txt')
+
+    return result.results
+  })
 ```
 
-**Auth guard** (`_authed.tsx`) — use `beforeLoad`:
+### Prerendering Gotchas
+
+**Critical**: Prerendering runs during build step using LOCAL environment variables, not Cloudflare bindings.
+
+**Problem**: If routes use `loaders` that query D1/KV/R2, prerendering will fail because bindings aren't available at build time.
+
+**Solutions**:
+
+1. **Disable prerendering for routes with bindings**:
 
 ```typescript
-export const Route = createFileRoute("/_authed")({
-  beforeLoad: async () => {
-    const session = await getSessionFn();
-    if (!session) {
-      throw redirect({ to: "/login" });
-    }
-    return { session };
+export const Route = createFileRoute('/users')({
+  loader: async () => {
+    // This route queries D1
   },
-});
+  // Disable prerendering
+  prerender: false
+})
 ```
 
-Child routes access session via `Route.useRouteContext()`.
+2. **Use remote bindings during builds** (requires `wrangler dev` running):
 
-**Mutation + invalidation** — after mutations, invalidate router to refetch loaders:
+```bash
+# In CI environment
+export CLOUDFLARE_INCLUDE_PROCESS_ENV=true
 
-```typescript
-function CreateItemForm() {
-  const router = useRouter();
-  const handleSubmit = async (data: NewItem) => {
-    await createItem({ data });
-    router.invalidate();
-    router.navigate({ to: "/items" });
-  };
-  return <form onSubmit={...}>...</form>;
-}
+# Use .env file (NOT .env.local) for CI
+# .env.local is gitignored and won't be in CI
 ```
 
-**Type safety** — use Drizzle's `InferSelectModel` / `InferInsertModel` for server function input/output types. For auth failures, always use `throw redirect()` — not error responses.
-
-### Step 6: App Shell + Theme
-
-**`src/routes/__root.tsx`** — Full HTML document with `<HeadContent />` + `<Scripts />` from `@tanstack/react-router`, `suppressHydrationWarning` on `<html>` (SSR + theme), inline theme init script to prevent flash, global CSS import.
-
-**`src/styles/app.css`** — `@import "tailwindcss"` (v4 syntax) + shadcn/ui CSS variables in `:root` and `.dark`. Semantic tokens only.
-
-**`src/router.tsx`**:
+3. **Conditional logic in loaders**:
 
 ```typescript
-import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-
-export function createRouter() {
-  return createTanStackRouter({ routeTree });
-}
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: ReturnType<typeof createRouter>;
+loader: async ({ context }) => {
+  // Skip DB queries during prerender
+  if (typeof context.cloudflare === 'undefined') {
+    return { users: [] }
   }
+
+  const result = await context.cloudflare.env.DB.prepare('SELECT * FROM users').all()
+  return { users: result.results }
 }
 ```
 
-**`src/client.tsx`** + **`src/ssr.tsx`** — standard TanStack Start entry boilerplate.
+**Version Requirements**:
+- Static prerendering requires `@tanstack/react-start@1.138.0+`
 
-Install shadcn/ui:
+**Reference**: [Cloudflare Workers Guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/)
 
-```bash
-pnpm dlx shadcn@latest init --defaults
-pnpm dlx shadcn@latest add button card input label sidebar table dropdown-menu form separator sheet
+---
+
+## Server Functions
+
+Server functions run on the server and can access Cloudflare bindings, databases, and secrets.
+
+### Basic Server Function
+
+```typescript
+import { createServerFn } from '@tanstack/react-start/server'
+
+export const getUsers = createServerFn()
+  .handler(async ({ request }) => {
+    const env = request.context.cloudflare.env
+    const result = await env.DB.prepare('SELECT * FROM users').all()
+    return result.results
+  })
 ```
 
-**Theme toggle** — three-state (light → dark → system → light), localStorage-persisted, `.dark` class on `<html>`. **JS-only** system preference detection; NO CSS `@media (prefers-color-scheme)` queries.
+### Use in Components
 
-**Components** in `src/components/`: `app-sidebar.tsx`, `theme-toggle.tsx`, `user-nav.tsx`, `stat-card.tsx`.
+```typescript
+import { getUsers } from './server-functions'
 
-### Step 7: CRUD Server Functions
+function UserList() {
+  const users = await getUsers()
 
-| Function | Method | Purpose |
-|----------|--------|---------|
-| `getItems` | GET | List all items for current user |
-| `getItem` | GET | Get single item by ID |
-| `createItem` | POST | Create new item |
-| `updateItem` | POST | Update existing item |
-| `deleteItem` | POST | Delete item by ID |
-
-Each server function: (1) gets auth session, (2) creates per-request Drizzle client via `getDb()`, (3) performs DB operation, (4) returns typed data. Route loaders call GET functions. Mutations call POST functions then `router.invalidate()`.
-
-### Step 8: Verify Locally
-
-```bash
-pnpm dev
+  return (
+    <ul>
+      {users.map(user => <li key={user.id}>{user.name}</li>)}
+    </ul>
+  )
+}
 ```
 
-- [ ] App loads at http://localhost:3000
-- [ ] Register a new account (email/password)
-- [ ] Login and logout work
-- [ ] Dashboard loads with stat cards
-- [ ] Create, list, edit, delete items
-- [ ] Theme toggle cycles: light -> dark -> system
-- [ ] Sidebar collapses on mobile
-- [ ] No console errors
+### File Upload Limitation
 
-### Step 9: Deploy to Production
+⚠️ **Known Issue**: TanStack Start automatically calls `await request.formData()` for multipart/form-data requests, loading entire files into memory BEFORE the handler runs.
 
-**Pre-deploy checklist** — verify before running deploy:
-- [ ] `wrangler.jsonc` has correct `account_id`; `main` is `"@tanstack/react-start/server-entry"`; `nodejs_compat` in `compatibility_flags`
-- [ ] D1 database created and `database_id` set
-- [ ] `.dev.vars` is gitignored; no hardcoded secrets in source
+**Impact**:
+- Cannot enforce upload size limits before loading
+- Cannot implement streaming uploads
+- Large file uploads consume excessive memory
 
-**Set production secrets:**
+**Example of the Problem**:
 
-```bash
-openssl rand -hex 32 | npx wrangler secret put BETTER_AUTH_SECRET
-echo "https://PROJECT.SUBDOMAIN.workers.dev" | npx wrangler secret put BETTER_AUTH_URL
-echo "http://localhost:3000,https://PROJECT.SUBDOMAIN.workers.dev" | npx wrangler secret put TRUSTED_ORIGINS
+```typescript
+export const uploadFile = createServerFn()
+  .handler(async ({ request }) => {
+    // By the time this runs, the entire file is already in memory
+    const formData = await request.formData()
+    const file = formData.get('file') as File
 
-# Google OAuth (optional)
-echo "your-client-id" | npx wrangler secret put GOOGLE_CLIENT_ID
-echo "your-client-secret" | npx wrangler secret put GOOGLE_CLIENT_SECRET
+    // Too late to check size - file already loaded!
+    if (file.size > 10_000_000) {
+      throw new Error("File too large")
+    }
+  })
 ```
 
-If using Google OAuth, add the production redirect URI in Google Cloud Console: `https://PROJECT.SUBDOMAIN.workers.dev/api/auth/callback/google`.
+**Workarounds**:
 
-**Migrate and deploy:**
+1. **Client-side validation** (not foolproof, can be bypassed):
 
-```bash
-pnpm db:migrate:remote
-pnpm build && npx wrangler deploy
+```typescript
+function FileUpload() {
+  const handleSubmit = async (e: FormEvent) => {
+    const file = e.currentTarget.querySelector('input[type="file"]').files[0]
+
+    if (file.size > 10_000_000) {
+      alert("File too large")
+      return
+    }
+
+    await uploadFile({ file })
+  }
+
+  return <form onSubmit={handleSubmit}>...</form>
+}
 ```
 
-After first deploy, update `BETTER_AUTH_URL` to the actual Worker URL and redeploy.
+2. **Use Cloudflare R2 multipart upload API directly** for large files (bypasses Start's form handling).
 
-**Verify:** app loads at production URL, auth works, CRUD works, theme persists.
+**Status**: [Open issue #5704](https://github.com/TanStack/router/issues/5704), no fix planned yet.
 
-**Custom domain** (optional): Cloudflare Dashboard → Workers → Triggers → Custom Domains. Update `BETTER_AUTH_URL` + `TRUSTED_ORIGINS` secrets + Google OAuth redirect URI to the new domain. Redeploy.
+### Server Function Redirects Return Undefined
 
-## Common Issues
+When a server function performs a redirect, the promise resolves to `undefined` instead of the declared return type.
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `env` is undefined | Accessed at module level | Use `import { env } from "cloudflare:workers"` inside request handler only |
-| D1 database not found | Binding mismatch | Check `d1_databases` binding name in wrangler.jsonc matches code |
-| Auth redirect loop | URL mismatch | `BETTER_AUTH_URL` must match actual URL exactly (protocol + domain, no trailing slash) |
-| Auth silently fails | Missing origins | Set `TRUSTED_ORIGINS` secret with all valid URLs (comma-separated) |
-| Styles not loading | Missing plugin | Ensure `@tailwindcss/vite` plugin is in vite.config.ts |
-| SSR hydration mismatch | Theme flash | Add `suppressHydrationWarning` to `<html>` element |
-| Build fails on Cloudflare | Bad config | Check `nodejs_compat` flag and `main` field in wrangler.jsonc |
-| Secrets not taking effect | No redeploy | `wrangler secret put` does NOT redeploy — run `npx wrangler deploy` after |
-| Auth endpoints return 404 | Wrong route type | Use `createAPIFileRoute` (API route), not `createServerFn` for better-auth |
-| "redirect_uri_mismatch" | Missing URI | Add production URL to Google Cloud Console OAuth redirect URIs |
-| Cryptic Vite errors | Plugin order | Must be: `cloudflare()` -> `tailwindcss()` -> `tanstackStart()` -> `viteReact()` |
-| "Table not found" 500s | Missing migration | Run `pnpm db:migrate:remote` before deploying |
+```typescript
+const login = createServerFn<{ username: string, password: string }, User>()
+  .handler(async ({ data, request }) => {
+    const user = await authenticateUser(data)
+
+    if (!user) {
+      // Redirect returns void, but type says it returns User
+      throw redirect({ to: '/login', status: 401 })
+    }
+
+    return user
+  })
+
+// In component
+const result = await login({ username, password })
+// result is undefined if redirected, User object otherwise
+// Check before using!
+if (result) {
+  console.log(result.name)
+}
+```
+
+**Prevention**: Always check return value before use if server function can redirect.
+
+**Status**: [Open PR #6295](https://github.com/TanStack/router/pull/6295) to fix return type.
+
+---
+
+## Authentication Patterns
+
+### Stateful Backend Integration (Laravel Sanctum, etc.)
+
+**Problem**: When using stateful backends, server functions lose auth context because requests originate from the Start server, not the browser. Cookies, CSRF tokens, and origin headers are missing.
+
+```typescript
+// This FAILS - cookies not forwarded
+const getData = createServerFn()
+  .handler(async () => {
+    const response = await fetch('https://api.example.com/user')
+    // 401 Unauthorized - no cookies!
+  })
+```
+
+**Solution 1: Use createIsomorphicFn** (runs on client when possible)
+
+```typescript
+import { createIsomorphicFn } from '@tanstack/react-start/server'
+
+const getData = createIsomorphicFn()
+  .handler(async () => {
+    // Runs on client when possible, preserving cookies
+    const response = await fetch('https://api.example.com/user')
+    return response.json()
+  })
+```
+
+**Solution 2: Manual Header Forwarding**
+
+```typescript
+import { createServerFn } from '@tanstack/react-start/server'
+import { getRequestHeaders } from '@tanstack/react-start/server'
+
+const getData = createServerFn()
+  .handler(async () => {
+    const headers = getRequestHeaders() // Get browser's original headers
+
+    const response = await fetch('https://api.example.com/user', {
+      headers: {
+        'Cookie': headers.get('cookie') || '',
+        'X-XSRF-TOKEN': headers.get('x-xsrf-token') || '',
+        'Origin': headers.get('origin') || '',
+      }
+    })
+
+    return response.json()
+  })
+```
+
+**When to Use Each**:
+- `createIsomorphicFn`: Best for read operations, maintains full browser context
+- Manual forwarding: Required for operations that must run server-side (secrets, DB access)
+
+**Reference**: [GitHub Discussion #6289](https://github.com/TanStack/router/discussions/6289)
+
+### Better Auth Integration
+
+**Issue**: Better Auth cookie caching has edge cases with TanStack Start:
+1. Session cookie not re-set after expiry
+2. Session token cookie issues with certain plugins (`multiSession`, `lastLoginMethod`, `oneTap`)
+3. Hard reload/direct URL doesn't read cookies (works with client navigation only)
+
+**Solution**: Use Better Auth's official TanStack Start plugin
+
+```typescript
+import { betterAuth } from 'better-auth'
+import { reactStartCookies } from 'better-auth/plugins'
+
+export const auth = betterAuth({
+  plugins: [
+    reactStartCookies(), // Handles cookie setting for TanStack Start
+  ],
+  // ... other config
+})
+```
+
+**Known Limitations**:
+- Some edge cases remain with hard reloads
+- Session cookie re-setting after expiry may not work consistently
+
+**References**: [Issue #4389](https://github.com/better-auth/better-auth/issues/4389), [Issue #5639](https://github.com/better-auth/better-auth/issues/5639)
+
+---
+
+## Database Integration
+
+### Prisma with Cloudflare Workers
+
+**Issue**: Deploying with Prisma Edge fails with "No such module 'assets/.prisma/client/edge'" error.
+
+**Solution**: Configure Prisma for Cloudflare runtime
+
+```prisma
+// prisma/schema.prisma
+generator client {
+  provider   = "prisma-client"
+  output     = "../src/generated/prisma"
+  engineType = "library"
+  runtime    = "cloudflare" // or "workerd"
+}
+```
+
+**Alternative Configuration**:
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+**Then use with Cloudflare Hyperdrive**:
+
+```typescript
+import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
+
+export const getUser = createServerFn()
+  .handler(async ({ request }) => {
+    const env = request.context.cloudflare.env
+
+    const pool = new Pool({ connectionString: env.HYPERDRIVE.connectionString })
+    const adapter = new PrismaPg(pool)
+    const prisma = new PrismaClient({ adapter })
+
+    return prisma.user.findMany()
+  })
+```
+
+**Reference**: [Cloudflare Workers SDK Issue #10969](https://github.com/cloudflare/workers-sdk/issues/10969)
+
+### D1 Database
+
+```typescript
+export const getUsers = createServerFn()
+  .handler(async ({ request }) => {
+    const env = request.context.cloudflare.env
+    const result = await env.DB.prepare('SELECT * FROM users').all()
+    return result.results
+  })
+```
+
+Use with `drizzle-orm-d1` skill for type-safe ORM.
+
+---
+
+## Known Issues Prevention
+
+This skill prevents **9** documented issues:
+
+### Issue #1: Middleware Does Not Catch Server Function Errors
+
+**Error**: Errors thrown by server functions bypass middleware try-catch blocks
+**Source**: [GitHub Issue #6381](https://github.com/TanStack/router/issues/6381)
+**Status**: Fixed in v1.155+ (expected release)
+
+**Why It Happens**: Server function errors are returned as error objects in the response, not thrown directly.
+
+**Prevention** (workaround for v1.154 and earlier):
+
+```typescript
+import { createMiddleware } from '@tanstack/react-start/server'
+
+const middleware = createMiddleware().server(async (ctx) => {
+  try {
+    const r = await ctx.next()
+
+    // Check for error in response object
+    if ('error' in r && r.error) {
+      throw r.error
+    }
+
+    return r
+  } catch (error: any) {
+    console.error("Middleware caught an error:", error)
+    return new Response("An error occurred", { status: 500 })
+  }
+})
+```
+
+### Issue #2: File Upload Streaming Not Supported
+
+**Error**: Large file uploads consume excessive memory
+**Source**: [GitHub Issue #5704](https://github.com/TanStack/router/issues/5704)
+**Status**: Open, no fix planned
+
+**Why It Happens**: Framework automatically calls `await request.formData()` before handler runs, loading entire file into memory.
+
+**Prevention**:
+1. Implement client-side file size validation
+2. Use Cloudflare R2 multipart upload API directly for large files
+3. Set reasonable file size limits in upload UI
+
+See [File Upload Limitation](#file-upload-limitation) section for details.
+
+### Issue #3: Server Function Redirects Return Undefined
+
+**Error**: Type errors when using server function result after redirect
+**Source**: [GitHub PR #6295](https://github.com/TanStack/router/pull/6295)
+**Status**: Open PR
+
+**Why It Happens**: Redirects return void, but return type doesn't reflect this.
+
+**Prevention**: Always check server function return value before use
+
+```typescript
+const result = await login({ username, password })
+
+if (result) {
+  // Safe to use result
+  console.log(result.name)
+}
+```
+
+### Issue #4: Stateful Auth Cookies Not Forwarded
+
+**Error**: 401 Unauthorized when calling stateful backend APIs from server functions
+**Source**: [GitHub Discussion #6289](https://github.com/TanStack/router/discussions/6289)
+
+**Why It Happens**: Server functions originate from Start server, not browser, so cookies aren't forwarded.
+
+**Prevention**: Use `createIsomorphicFn` or manual header forwarding
+
+See [Stateful Backend Integration](#stateful-backend-integration-laravel-sanctum-etc) section.
+
+### Issue #5: Prisma Edge Module Not Found
+
+**Error**: "No such module 'assets/.prisma/client/edge'"
+**Source**: [Cloudflare Workers SDK Issue #10969](https://github.com/cloudflare/workers-sdk/issues/10969)
+**Status**: Resolved with runtime config
+
+**Why It Happens**: Prisma Edge client not properly bundled for Workers environment.
+
+**Prevention**: Configure Prisma with `runtime = "cloudflare"` in schema.prisma
+
+See [Prisma with Cloudflare Workers](#prisma-with-cloudflare-workers) section.
+
+### Issue #6: Better Auth Cookie Caching Issues
+
+**Error**: Session cookies not set/refreshed properly
+**Source**: [Better Auth Issues #4389, #5639](https://github.com/better-auth/better-auth/issues/4389)
+
+**Why It Happens**: Better Auth's default cookie handling doesn't account for Start's execution model.
+
+**Prevention**: Use `reactStartCookies()` plugin
+
+See [Better Auth Integration](#better-auth-integration) section.
+
+### Issue #7: Missing nodejs_compat Flag
+
+**Error**: Runtime errors when using Node.js APIs on Cloudflare Workers
+**Source**: [Cloudflare Workers Guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/)
+
+**Why It Happens**: TanStack Start uses Node.js APIs that require compatibility flag.
+
+**Prevention**: Add `compatibility_flags = ["nodejs_compat"]` to wrangler.toml
+
+### Issue #8: Prerendering Fails with Cloudflare Bindings
+
+**Error**: Build fails when routes with loaders use D1/KV/R2
+**Source**: [Cloudflare Workers Guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/)
+
+**Why It Happens**: Prerendering runs at build time without access to Cloudflare bindings.
+
+**Prevention**: Disable prerendering for routes with bindings, or use conditional logic
+
+See [Prerendering Gotchas](#prerendering-gotchas) section.
+
+### Issue #9: Vinxi Migration Errors
+
+**Error**: "invariant failed: could not find the nearest match" after upgrading to v1.121.0+
+**Source**: [Release v1.121.0](https://github.com/TanStack/router/releases/tag/v1.121.0)
+
+**Why It Happens**: v1.121.0 migrated from Vinxi to Vite with breaking changes.
+
+**Prevention**: Follow complete migration guide
+
+See [Migration from Vinxi to Vite](#migration-from-vinxi-to-vite-v1210) section.
+
+---
+
+## Performance Optimization
+
+### Static Process.env Replacement
+
+**Feature**: Build-time replacement of `process.env.NODE_ENV` for better optimization (v1.154.0+)
+
+```typescript
+// This condition is statically evaluated and dead code eliminated
+if (process.env.NODE_ENV === 'production') {
+  // Production-only code
+} else {
+  // Development-only code (removed in prod build)
+}
+```
+
+**Automatic**: No configuration needed, works out of the box.
+
+### Development Performance with Many Routes
+
+**Issue**: Apps with 100+ routes generate 700+ HTTP requests in Vite dev mode.
+
+**Why**: `routeTree.gen.ts` statically imports every route for type generation, even though `autoCodeSplitting` is enabled by default.
+
+**Impact**: Slow dev server, hits proxy rate limits (ngrok 360 req/min)
+
+**Status**: Expected behavior until Router v2. Not a bug, architectural limitation.
+
+**Workarounds**:
+- Use production builds for testing with many routes
+- Reduce route count during development
+- Use local tunneling without rate limits (Cloudflare Tunnel instead of ngrok)
+
+**Reference**: [GitHub Discussion #6353](https://github.com/TanStack/router/discussions/6353)
+
+---
+
+## Additional Resources
+
+**Official Documentation**:
+- [TanStack Start Docs](https://tanstack.com/start/latest)
+- [Cloudflare Workers Guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/)
+- [TanStack Router Docs](https://tanstack.com/router/latest)
+
+**Migration Guides**:
+- [Official Vinxi→Vite Migration](https://github.com/TanStack/router/discussions/2863#discussioncomment-13104960)
+- [LogRocket Migration Article](https://blog.logrocket.com/migrating-tanstack-start-vinxi-vite/)
+
+**Related Skills**:
+- `cloudflare-worker-base` - Cloudflare Workers deployment patterns
+- `drizzle-orm-d1` - Type-safe D1 database access
+- `ai-sdk-core` - AI integration with server functions
+- `react-hook-form-zod` - Form handling with validation
+
+---
+
+**Last verified**: 2026-01-21 | **Skill version**: 2.0.0 | **Changes**: Expanded from draft with 9 documented issues, migration guide, Cloudflare deployment, auth patterns, and database integration

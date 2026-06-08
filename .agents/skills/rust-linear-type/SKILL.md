@@ -1,8 +1,18 @@
 ---
 name: rust-linear-type
-description: 线性类型与资源管理专家。处理 Destructible, 资源清理, RAII, unique object, linear semantics, 线性语义, 资源所有权, 独占语义--- # 线性类型 ## 核心问题 **如何保证资源不被泄漏或被重复释放？** 线性类型语义保证每个资源被精确使用一次。
+description: "线性类型与资源管理专家。处理 Destructible, 资源清理, RAII, unique object, linear semantics, 线性语义, 资源所有权, 独占语义"
+globs: ["**/*.rs"]
 ---
 
+# 线性类型
+
+## 核心问题
+
+**如何保证资源不被泄漏或被重复释放？**
+
+线性类型语义保证每个资源被精确使用一次。
+
+---
 
 ## 线性类型 vs Rust 所有权
 
@@ -16,6 +26,7 @@ description: 线性类型与资源管理专家。处理 Destructible, 资源清�
 
 Rust 默认不是线性类型，但可以通过模式实现线性语义。
 
+---
 
 ## Destructible Trait
 
@@ -51,6 +62,7 @@ impl Drop for SafeLinearBuffer {
 }
 ```
 
+---
 
 ## 独占对象模式
 
@@ -86,6 +98,7 @@ impl LinearFile {
 }
 ```
 
+---
 
 ## 资源令牌模式
 
@@ -124,6 +137,7 @@ fn process_resource(token: ResourceToken<Vec<u8>>) -> Vec<u8> {
 }
 ```
 
+---
 
 ## 交易式资源管理
 
@@ -165,6 +179,7 @@ fn example() -> Result<i32, ()> {
 }
 ```
 
+---
 
 ## Unique 指针模式
 
@@ -213,6 +228,7 @@ impl<T> Drop for UniquePtr<T> {
 }
 ```
 
+---
 
 ## Rust 中的线性语义场景
 
@@ -225,6 +241,7 @@ impl<T> Drop for UniquePtr<T> {
 | 事务 | commit 或 rollback | 交易式资源管理 |
 | FFI 资源 | release 恰好一次 | 资源令牌 |
 
+---
 
 ## 避免的模式
 
@@ -235,6 +252,7 @@ impl<T> Drop for UniquePtr<T> {
 | 手动管理生命周期 | 容易出错 | RAII + Drop |
 | 跳过 Drop | 资源泄漏 | 使用 scope API |
 
+---
 
 ## 与其他技能关联
 

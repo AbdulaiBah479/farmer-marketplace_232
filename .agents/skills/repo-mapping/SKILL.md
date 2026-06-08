@@ -1,20 +1,11 @@
 ---
 name: repo-mapping
 description: "Use when user asks to \"create repo map\", \"generate repo map\", \"update repo map\", \"repo map status\", or \"map symbols/imports\". Builds and validates an AST-based repo map using ast-grep."
-argument-hint: "[action] [--force]"
 ---
 
 # Repo Mapping Skill
 
 Build and maintain a cached AST-based map of repository symbols and imports using ast-grep.
-
-## Parse Arguments
-
-```javascript
-const args = '$ARGUMENTS'.split(' ').filter(Boolean);
-const action = args.find(a => !a.startsWith('--')) || 'status';
-const force = args.includes('--force');
-```
 
 ## Primary Responsibilities
 

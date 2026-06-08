@@ -1,50 +1,88 @@
 ---
 name: rust-cache
-description: Caching and distributed storage expert covering Redis, connection pools, TTL strategies, cache patterns (Cache-Aside, Write-Through), invalidation, and performance optimization.
-metadata:
-  triggers:
-    - cache
-    - caching
-    - Redis
-    - TTL
-    - cache invalidation
-    - connection pool
-    - distributed cache
-    - cache-aside
-    - write-through
+description: "Redis 缓存管理、连接池、TTL策略、模式匹配删除、性能优化"
+category: infrastructure
+triggers: ["cache", "redis", "ttl", "connection", "性能优化", "缓存"]
+related_skills:
+  - rust-concurrency
+  - rust-async
+  - rust-performance
+  - rust-error
 ---
 
+# Rust Cache - 缓存管理技能
 
-## Solution Patterns
+> 本技能提供 Redis 缓存的系统化解决方案，包括连接管理、缓存策略、性能优化等。
 
-### Pattern 1: Cache Manager with Connection Pool
+## 核心概念
+
+### 1. 缓存架构设计
+
+```
+缓存层设计模式
+├── 缓存管理器 (CacheManager)
+│   ├── 连接管理 (ConnectionManager)
+│   ├── 序列化/反序列化
+│   ├── TTL 控制
+│   └── 统计信息
+├── 缓存键生成器 (CacheKeyBuilder)
+│   ├── 命名空间前缀
+│   └── 业务标识
+└── 缓存策略
+    ├── Cache-Aside (旁路缓存)
+    ├── Write-Through (写穿透)
+    └── Write-Behind (写回)
+```
+
+### 2. 性能提升数据
+
+| 场景 | 无缓存 | 有缓存 | 提升 |
+|-----|-------|-------|------|
+| 复杂查询 | ~100ms | <5ms | **95%+** |
+| 频繁访问 | ~50ms | <2ms | **96%** |
+
+---
+
+## 核心模式
+
+### 1. 缓存管理器实现
 
 ```rust
+//! 缓存管理器实现
+//!
+//! 提供分布式 Redis 缓存的通用模式
+
 use redis::{aio::ConnectionManager, AsyncCommands};
 use serde::{de::DeserializeOwned, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 
+/// 缓存管理器
 pub struct CacheManager {
+    /// 配置
     config: CacheConfig,
+    /// Redis 连接管理器
     redis: Option<ConnectionManager>,
+    /// 统计信息
     stats: Arc<RwLock<CacheStats>>,
 }
 
 impl CacheManager {
+    /// 创建新的缓存管理器（带超时控制）
     pub async fn new(config: CacheConfig) -> Result<Self, CacheError> {
         let redis = if config.enabled && config.redis.enabled {
+            // 创建 Redis 客户端
             let client = redis::Client::open(config.redis.url.as_str())
-                .map_err(|e| CacheError::Connection(format!("Redis connection failed: {}", e)))?;
+                .map_err(|e| CacheError::Connection(format!("Redis 连接失败: {}", e)))?;
 
-            // Timeout control for remote Redis
+            // 超时控制（适应远程 Redis）
             let timeout = Duration::from_secs(30);
-
+            
             match tokio::time::timeout(timeout, ConnectionManager::new(client)).await {
                 Ok(Ok(conn)) => Some(conn),
-                Ok(Err(e)) => return Err(CacheError::Connection(format!("Redis failed: {}", e))),
-                Err(_) => return Err(CacheError::Timeout(format!("Redis timeout ({}s)", timeout.as_secs()))),
+                Ok(Err(e)) => return Err(CacheError::Connection(format!("Redis 连接失败: {}", e))),
+                Err(_) => return Err(CacheError::Timeout(format!("Redis 连接超时（{}秒）", timeout.as_secs()))),
             }
         } else {
             None
@@ -57,12 +95,13 @@ impl CacheManager {
         })
     }
 
+    /// 获取缓存
     pub async fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, CacheError> {
         if !self.config.enabled {
             return Ok(None);
         }
 
-        // Update stats
+        // 增加请求计数
         {
             let mut stats = self.stats.write().await;
             stats.total_requests += 1;
@@ -71,6 +110,7 @@ impl CacheManager {
         if let Some(mut redis) = self.redis.clone() {
             match redis.get::<&str, Vec<u8>>(key).await {
                 Ok(bytes) if !bytes.is_empty() => {
+                    // 更新统计
                     {
                         let mut stats = self.stats.write().await;
                         stats.redis_hits += 1;
@@ -83,10 +123,10 @@ impl CacheManager {
                     Ok(None)
                 }
                 Err(e) => {
-                    log::warn!("Redis read failed: key={}, error={}", key, e);
+                    log::warn!("Redis 读取失败: key={}, error={}", key, e);
                     let mut stats = self.stats.write().await;
                     stats.redis_misses += 1;
-                    Ok(None)  // Cache failures shouldn't block business logic
+                    Ok(None)  // 缓存失败不应影响业务
                 }
             }
         } else {
@@ -94,6 +134,7 @@ impl CacheManager {
         }
     }
 
+    /// 设置缓存（带 TTL）
     pub async fn set<T: Serialize>(
         &self,
         key: &str,
@@ -109,35 +150,49 @@ impl CacheManager {
         if let Some(mut redis) = self.redis.clone() {
             let ttl_seconds = ttl.unwrap_or(self.config.default_ttl);
             match redis.set_ex::<&str, Vec<u8>, ()>(key, bytes, ttl_seconds).await {
-                Ok(_) => log::debug!("Redis write: key={}, ttl={}s", key, ttl_seconds),
-                Err(e) => log::warn!("Redis write failed: key={}, error={}", key, e),
+                Ok(_) => log::debug!("Redis 写入: key={}, ttl={}s", key, ttl_seconds),
+                Err(e) => log::warn!("Redis 写入失败: key={}, error={}", key, e),
             }
         }
 
         Ok(())
     }
 
+    /// 删除缓存
+    pub async fn delete(&self, key: &str) -> Result<(), CacheError> {
+        if let Some(mut redis) = self.redis.clone() {
+            match redis.del::<&str, ()>(key).await {
+                Ok(_) => log::debug!("Redis 删除: {}", key),
+                Err(e) => log::warn!("Redis 删除失败: key={}, error={}", key, e),
+            }
+        }
+        Ok(())
+    }
+
+    /// 序列化
     fn serialize<T: Serialize>(&self, value: &T) -> Result<Vec<u8>, CacheError> {
         serde_json::to_vec(value).map_err(|e| {
-            CacheError::Serialization(format!("Serialization failed: {}", e))
+            CacheError::Serialization(format!("序列化失败: {}", e))
         })
     }
 
+    /// 反序列化
     fn deserialize<T: DeserializeOwned>(&self, bytes: &[u8]) -> Result<Option<T>, CacheError> {
         if bytes.is_empty() {
             return Ok(None);
         }
-
+        
         match serde_json::from_slice(bytes) {
             Ok(value) => Ok(Some(value)),
             Err(e) => {
-                log::warn!("Deserialization failed: {}", e);
-                Ok(None)  // Corrupted data should be skipped, not error
+                log::warn!("反序列化失败: {}", e);
+                Ok(None)  // 损坏数据应跳过，不返回错误
             }
         }
     }
 }
 
+/// 缓存统计信息
 #[derive(Debug, Clone, Default)]
 pub struct CacheStats {
     pub total_requests: u64,
@@ -146,6 +201,11 @@ pub struct CacheStats {
 }
 
 impl CacheStats {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// 命中率
     pub fn hit_rate(&self) -> f64 {
         if self.total_requests == 0 {
             0.0
@@ -154,63 +214,202 @@ impl CacheStats {
         }
     }
 }
+
+/// 缓存错误类型
+#[derive(Debug, thiserror::Error)]
+pub enum CacheError {
+    #[error("连接错误: {0}")]
+    Connection(String),
+    #[error("超时错误: {0}")]
+    Timeout(String),
+    #[error("序列化错误: {0}")]
+    Serialization(String),
+    #[error("Redis 错误: {0}")]
+    Redis(#[from] redis::RedisError),
+}
 ```
 
-### Pattern 2: Cache Key Design
+### 2. 缓存键设计模式
 
 ```rust
-use sha2::{Digest, Sha256};
-
+/// 缓存键生成器
+///
+/// 设计原则：
+/// 1. 使用命名空间前缀避免 key 冲突
+/// 2. 包含业务标识便于问题排查
+/// 3. 支持版本控制便于缓存更新
 pub struct CacheKeyBuilder;
 
 impl CacheKeyBuilder {
-    /// Build namespaced key
-    /// Format: {namespace}:{entity}:{id}
+    /// 构建带命名空间的键
+    /// 格式: {namespace}:{entity}:{id}
     pub fn build(namespace: &str, entity: &str, id: impl std::fmt::Display) -> String {
         format!("{}:{}:{}", namespace, entity, id)
     }
 
-    /// Build list cache key with query hash
-    /// Format: {namespace}:{entity}:list:{query_hash}
+    /// 构建列表缓存键
+    /// 格式: {namespace}:{entity}:list:{query_hash}
     pub fn list_key(namespace: &str, entity: &str, query: &str) -> String {
+        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(query.as_bytes());
         let hash = format!("{:x}", hasher.finalize());
         format!("{}:{}:list:{}", namespace, entity, &hash[..8])
     }
 
-    /// Build pattern matching key
-    /// Format: {namespace}:{entity}:*
+    /// 构建模式匹配键
+    /// 格式: {namespace}:{entity}:*
     pub fn pattern(namespace: &str, entity: &str) -> String {
         format!("{}:{}:*", namespace, entity)
     }
 
-    /// Build versioned key
-    /// Format: {namespace}:{entity}:{id}:v{version}
+    /// 构建版本化键
+    /// 格式: {namespace}:{entity}:{id}:v{version}
     pub fn versioned(namespace: &str, entity: &str, id: impl std::fmt::Display, version: u64) -> String {
         format!("{}:{}:{}:v{}", namespace, entity, id, version)
     }
 }
+```
 
-// Usage examples
-fn example_key_usage() {
-    // Single entity
-    let key = CacheKeyBuilder::build("myapp", "user", 123);
-    // myapp:user:123
+### 3. 批量缓存删除模式
 
-    // List query
-    let key = CacheKeyBuilder::list_key("myapp", "posts", "tag=rust&sort=date");
-    // myapp:posts:list:a3f2d8e1
+```rust
+impl CacheManager {
+    /// 批量删除缓存（支持模式匹配）
+    ///
+    /// 使用 SCAN 命令遍历删除，避免 DEL 阻塞
+    pub async fn delete_pattern(&self, pattern: &str) -> Result<usize, CacheError> {
+        let mut deleted_count = 0;
+        
+        if let Some(redis) = &self.redis {
+            let mut cursor: u64 = 0;
+            
+            loop {
+                let result: std::result::Result<(u64, Vec<String>), redis::RedisError> = 
+                    redis::cmd("SCAN")
+                        .arg(cursor)
+                        .arg("MATCH")
+                        .arg(pattern)
+                        .arg("COUNT")
+                        .arg(100)
+                        .query_async(&mut redis.clone())
+                        .await;
+                
+                match result {
+                    Ok((new_cursor, keys)) => {
+                        if !keys.is_empty() {
+                            let del_result: std::result::Result<(), redis::RedisError> = 
+                                redis::cmd("DEL").arg(&keys).query_async(&mut redis.clone()).await;
+                            
+                            if del_result.is_ok() {
+                                deleted_count += keys.len();
+                            }
+                        }
+                        cursor = new_cursor;
+                        if cursor == 0 {
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        log::warn!("Redis SCAN 失败: {}", e);
+                        break;
+                    }
+                }
+            }
+            
+            log::info!("批量删除完成: pattern={}, deleted={}", pattern, deleted_count);
+        }
 
-    // Pattern for deletion
-    let pattern = CacheKeyBuilder::pattern("myapp", "user");
-    // myapp:user:*
+        Ok(deleted_count)
+    }
 }
 ```
 
-### Pattern 3: Cache-Aside Pattern (Lazy Loading)
+---
+
+## 配置管理
+
+### 1. 缓存配置
 
 ```rust
+/// 缓存配置
+#[derive(Debug, Clone)]
+pub struct CacheConfig {
+    pub enabled: bool,
+    pub redis: RedisConfig,
+    pub default_ttl: u64,  // 默认 TTL（秒）
+}
+
+#[derive(Debug, Clone)]
+pub struct RedisConfig {
+    pub enabled: bool,
+    pub url: String,
+    pub pool_size: u32,
+    pub max_retries: u32,
+}
+
+impl Default for CacheConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            redis: RedisConfig {
+                enabled: true,
+                url: "redis://localhost:6379".to_string(),
+                pool_size: 10,
+                max_retries: 3,
+            },
+            default_ttl: 3600,  // 默认 1 小时
+        }
+    }
+}
+```
+
+---
+
+## 最佳实践
+
+### 1. 缓存策略选择
+
+| 策略 | 适用场景 | 优点 | 缺点 |
+|-----|---------|------|------|
+| **Cache-Aside** | 读多写少 | 简单、可靠 | 缓存不一致风险 |
+| **Write-Through** | 数据一致性要求高 | 强一致性 | 写入延迟增加 |
+| **Write-Behind** | 高写入吞吐量 | 写入性能高 | 数据丢失风险 |
+
+### 2. TTL 分层设计
+
+```rust
+/// TTL 分层设计
+pub struct CacheTTL {
+    pub short: u64 = 300,     // 5 分钟 - 热数据
+    pub medium: u64 = 3600,   // 1 小时 - 中频数据
+    pub long: u64 = 86400,    // 24 小时 - 低频数据
+    pub static_data: u64 = 604800,  // 7 天 - 静态数据
+}
+
+/// 使用示例
+impl CacheManager {
+    /// 存储高频访问数据 - 5 分钟
+    pub async fn set_hot_data<T: Serialize>(&self, key: &str, data: &T) -> Result<()> {
+        self.set(key, data, Some(300)).await
+    }
+
+    /// 存储中频数据 - 1 小时
+    pub async fn set_medium_data<T: Serialize>(&self, key: &str, data: &T) -> Result<()> {
+        self.set(key, data, Some(3600)).await
+    }
+
+    /// 存储低频数据 - 24 小时
+    pub async fn set_cold_data<T: Serialize>(&self, key: &str, data: &T) -> Result<()> {
+        self.set(key, data, Some(86400)).await
+    }
+}
+```
+
+### 3. 缓存穿透防护
+
+```rust
+/// 缓存穿透防护
 pub struct CacheBreaker<K, T> {
     manager: Arc<CacheManager>,
     _phantom: std::marker::PhantomData<(K, T)>,
@@ -222,27 +421,24 @@ where
     T: DeserializeOwned + Serialize + Clone,
 {
     pub fn new(manager: Arc<CacheManager>) -> Self {
-        Self {
-            manager,
-            _phantom: std::marker::PhantomData
-        }
+        Self { manager, _phantom: std::marker::PhantomData }
     }
 
-    /// Get data with cache protection
-    pub async fn get_or_load<F, Fut>(&self, key: &str, loader: F) -> Result<Option<T>, CacheError>
+    /// 获取数据（带缓存保护）
+    pub async fn get_or_load<F, Fut>(&self, key: &str, loader: F) -> Result<Option<T>>
     where
         F: FnOnce() -> Fut,
-        Fut: std::future::Future<Output = Result<Option<T>, CacheError>>,
+        Fut: std::future::Future<Output = Result<Option<T>>>,
     {
-        // 1. Try cache first
+        // 1. 尝试从缓存获取
         if let Some(cached) = self.manager.get::<T>(key).await? {
             return Ok(Some(cached));
         }
 
-        // 2. Cache miss, load from data source
+        // 2. 缓存未命中，从数据源加载
         let result = loader().await?;
 
-        // 3. Write back to cache
+        // 3. 将结果写入缓存
         if let Some(ref value) = result {
             self.manager.set(key, value, None).await?;
         }
@@ -250,290 +446,99 @@ where
         Ok(result)
     }
 }
-
-// Usage
-async fn get_user(cache: &CacheBreaker<UserId, User>, id: UserId) -> Result<Option<User>> {
-    let key = format!("user:{}", id);
-
-    cache.get_or_load(&key, || async move {
-        database.fetch_user(id).await
-    }).await
-}
 ```
 
-### Pattern 4: Pattern-Based Batch Deletion
+### 4. 缓存雪崩防护
 
 ```rust
-impl CacheManager {
-    /// Batch delete with pattern matching using SCAN
-    /// Avoids blocking with DEL command
-    pub async fn delete_pattern(&self, pattern: &str) -> Result<usize, CacheError> {
-        let mut deleted_count = 0;
-
-        if let Some(redis) = &self.redis {
-            let mut cursor: u64 = 0;
-
-            loop {
-                let result: std::result::Result<(u64, Vec<String>), redis::RedisError> =
-                    redis::cmd("SCAN")
-                        .arg(cursor)
-                        .arg("MATCH")
-                        .arg(pattern)
-                        .arg("COUNT")
-                        .arg(100)
-                        .query_async(&mut redis.clone())
-                        .await;
-
-                match result {
-                    Ok((new_cursor, keys)) => {
-                        if !keys.is_empty() {
-                            let del_result: std::result::Result<(), redis::RedisError> =
-                                redis::cmd("DEL")
-                                    .arg(&keys)
-                                    .query_async(&mut redis.clone())
-                                    .await;
-
-                            if del_result.is_ok() {
-                                deleted_count += keys.len();
-                            }
-                        }
-                        cursor = new_cursor;
-                        if cursor == 0 {
-                            break;
-                        }
-                    }
-                    Err(e) => {
-                        log::warn!("Redis SCAN failed: {}", e);
-                        break;
-                    }
-                }
-            }
-
-            log::info!("Batch delete completed: pattern={}, deleted={}", pattern, deleted_count);
-        }
-
-        Ok(deleted_count)
-    }
-}
-
-// Usage
-async fn invalidate_user_cache(cache: &CacheManager, user_id: u64) -> Result<()> {
-    // Delete all user-related cache entries
-    let pattern = format!("myapp:user:{}:*", user_id);
-    cache.delete_pattern(&pattern).await?;
-    Ok(())
-}
-```
-
-### Pattern 5: Cache Avalanche Protection with TTL Jitter
-
-```rust
-use rand::Rng;
-
-/// Add random jitter to TTL to prevent cache avalanche
+/// 缓存雪崩防护：随机 TTL 抖动
 fn calculate_jitter_ttl(base_ttl: u64) -> u64 {
-    let jitter_range = (base_ttl as f64 * 0.1)..(base_ttl as f64 * 0.2);
-    let jitter_seconds = rand::thread_rng().gen_range(jitter_range);
+    let jitter = (base_ttl as f64 * 0.1)..(base_ttl as f64 * 0.2);
+    let jitter_seconds = rand::thread_rng().gen_range(jitter);
     (base_ttl as f64 + jitter_seconds) as u64
 }
 
+/// 使用示例
 pub async fn set_with_jitter(
     cache: &CacheManager,
     key: &str,
     value: &impl Serialize,
     base_ttl: u64,
-) -> Result<(), CacheError> {
+) -> Result<()> {
     let ttl = calculate_jitter_ttl(base_ttl);
     cache.set(key, value, Some(ttl)).await
 }
-
-// Usage
-async fn cache_with_protection(cache: &CacheManager) -> Result<()> {
-    // Cache 1000 items with 1 hour base TTL
-    // Actual TTLs will range from 3600s to 4320s (10-20% jitter)
-    for i in 0..1000 {
-        let key = format!("item:{}", i);
-        set_with_jitter(&cache, &key, &i, 3600).await?;
-    }
-    Ok(())
-}
 ```
 
+---
 
-## Cache Strategy Selection
-
-| Strategy | Use Case | Pros | Cons |
-|----------|----------|------|------|
-| **Cache-Aside** | Read-heavy, eventual consistency OK | Simple, reliable | Potential stale data |
-| **Write-Through** | Strong consistency required | Data always fresh | Write latency increases |
-| **Write-Behind** | High write throughput | Fast writes | Data loss risk |
-| **Refresh-Ahead** | Predictable access patterns | No cache misses | Complex, may waste resources |
-
-
-## Workflow
-
-### Step 1: Choose Cache Strategy
-
-```
-Consider:
-  → Read/write ratio? Read-heavy = Cache-Aside
-  → Consistency requirements? Strong = Write-Through
-  → Write performance critical? High throughput = Write-Behind
-  → Predictable access? Refresh-Ahead
-```
-
-### Step 2: Design TTL Strategy
-
-```
-TTL tiers:
-  → Hot data (high frequency): 5-15 minutes
-  → Medium data (moderate frequency): 1 hour
-  → Cold data (low frequency): 24 hours
-  → Static data (rarely changes): 7 days
-  → Always add jitter (10-20%) to prevent avalanche
-```
-
-### Step 3: Implement Invalidation
-
-```
-Options:
-  → Time-based: Let TTL expire (simplest)
-  → Event-based: Invalidate on writes (accurate)
-  → Pattern-based: Delete by pattern (bulk invalidation)
-  → Version-based: Include version in key (no deletion needed)
-```
-
-
-## Review Checklist
-
-When implementing caching:
-
-- [ ] Cache failures don't block business logic (graceful degradation)
-- [ ] Connection pool properly configured (avoid exhaustion)
-- [ ] TTL set on all cache entries (prevent unbounded growth)
-- [ ] TTL jitter applied to prevent avalanche
-- [ ] Cache keys use namespaces to avoid conflicts
-- [ ] Invalidation strategy covers all write paths
-- [ ] Monitoring tracks hit rate, latency, and errors
-- [ ] Serialization handles schema evolution
-- [ ] Pattern-based deletion uses SCAN (not blocking DEL)
-- [ ] Cache size limits configured (memory protection)
-
-
-## Verification Commands
-
-```bash
-# Check Redis connection
-redis-cli ping
-
-# Monitor cache hit rate
-redis-cli INFO stats | grep keyspace
-
-# Check memory usage
-redis-cli INFO memory
-
-# Monitor cache operations in real-time
-redis-cli MONITOR
-
-# Check TTL distribution
-redis-cli --scan --pattern "myapp:*" | xargs -L1 redis-cli TTL
-
-# Test connection pool under load
-wrk -t4 -c100 -d30s http://localhost:3000/api/cached-endpoint
-```
-
-
-## Common Pitfalls
-
-### 1. Cache Stampede
-
-**Symptom**: Many requests hit database simultaneously when cache expires
+## 监控与指标
 
 ```rust
-// ❌ Bad: no protection
-async fn get_data(cache: &Cache, key: &str) -> Result<Data> {
-    if let Some(data) = cache.get(key).await? {
-        return Ok(data);
-    }
+use prometheus::{Counter, Histogram, Gauge};
 
-    // All requests execute this simultaneously!
-    let data = expensive_db_query().await?;
-    cache.set(key, &data, 3600).await?;
-    Ok(data)
+/// 缓存指标
+#[derive(Debug)]
+pub struct CacheMetrics {
+    pub hits: Counter,
+    pub misses: Counter,
+    pub operations: Histogram,
+    pub latency: Histogram,
+    pub size: Gauge,
 }
 
-// ✅ Good: use distributed lock
-use redis::AsyncCommands;
-
-async fn get_data_protected(cache: &Cache, key: &str) -> Result<Data> {
-    if let Some(data) = cache.get(key).await? {
-        return Ok(data);
+impl CacheMetrics {
+    pub fn new() -> Self {
+        Self {
+            hits: Counter::new("cache_hits_total", "Cache hits total"),
+            misses: Counter::new("cache_misses_total", "Cache misses total"),
+            operations: Histogram::new(
+                "cache_operation_duration_seconds",
+                "Cache operation duration",
+                vec![0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0],
+            ),
+            latency: Histogram::new(
+                "cache_latency_seconds",
+                "Cache latency",
+                vec![0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05],
+            ),
+            size: Gauge::new("cache_size", "Cache size"),
+        }
     }
 
-    let lock_key = format!("lock:{}", key);
-    let lock_acquired = cache.redis.set_nx(&lock_key, "1").await?;
+    pub fn record_hit(&self) {
+        self.hits.inc();
+    }
 
-    if lock_acquired {
-        cache.redis.expire(&lock_key, 10).await?;  // 10s lock
+    pub fn record_miss(&self) {
+        self.misses.inc();
+    }
 
-        let data = expensive_db_query().await?;
-        cache.set(key, &data, 3600).await?;
-        cache.redis.del(&lock_key).await?;
-
-        Ok(data)
-    } else {
-        // Wait and retry
-        tokio::time::sleep(Duration::from_millis(100)).await;
-        get_data_protected(cache, key).await
+    pub fn hit_rate(&self) -> f64 {
+        let hits = self.hits.get() as f64;
+        let total = hits + self.misses.get() as f64;
+        if total > 0.0 { hits / total * 100.0 } else { 0.0 }
     }
 }
 ```
 
-### 2. Missing TTL
+---
 
-**Symptom**: Redis memory grows unbounded
+## 常见问题排查
 
-```rust
-// ❌ Bad: no TTL
-cache.redis.set("user:123", &user_data).await?;
+| 问题 | 可能原因 | 解决方案 |
+|-----|---------|---------|
+| 缓存命中率低 | TTL 设置不当 | 调整 TTL，区分热冷数据 |
+| Redis 连接超时 | 网络延迟或连接池耗尽 | 增加超时，扩大连接池 |
+| 缓存与数据库不一致 | 并发写入未加锁 | 使用分布式锁 |
+| 内存使用过高 | 缓存数据过大 | 启用压缩，设置容量上限 |
+| 批量删除阻塞 | 使用 DEL 而非 SCAN | 改用 SCAN 模式删除 |
 
-// ✅ Good: always set TTL
-cache.redis.set_ex("user:123", &user_data, 3600).await?;
-```
+---
 
-### 3. Cache Inconsistency
+## 关联技能
 
-**Symptom**: Stale data in cache after database update
-
-```rust
-// ❌ Bad: update DB but forget cache
-async fn update_user(db: &Database, user: &User) -> Result<()> {
-    db.update_user(user).await?;
-    // Cache still has old data!
-    Ok(())
-}
-
-// ✅ Good: invalidate cache after write
-async fn update_user(db: &Database, cache: &Cache, user: &User) -> Result<()> {
-    db.update_user(user).await?;
-
-    let key = format!("user:{}", user.id);
-    cache.delete(&key).await?;
-
-    Ok(())
-}
-```
-
-
-## Related Skills
-
-- **rust-async** - Async Redis operations
-- **rust-concurrency** - Connection pool management
-- **rust-performance** - Performance optimization with caching
-- **rust-error** - Error handling for cache failures
-- **rust-observability** - Cache metrics and monitoring
-
-
-## Localized Reference
-
-- **Chinese version**: [SKILL_ZH.md](./SKILL_ZH.md) - 完整中文版本，包含所有内容
+- `rust-concurrency` - 并发访问控制
+- `rust-async` - 异步操作模式
+- `rust-performance` - 性能优化
+- `rust-error` - 错误处理

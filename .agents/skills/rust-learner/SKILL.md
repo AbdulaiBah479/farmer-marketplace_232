@@ -1,340 +1,165 @@
 ---
 name: rust-learner
-description: Rust learning and ecosystem tracking expert covering version updates, new features, RFC tracking, crate updates, best practice evolution, and learning resources.
-metadata:
-  triggers:
-    - learning
-    - latest version
-    - what's new
-    - version update
-    - new features
-    - RFC
-    - weekly news
-    - tutorial
-    - learning path
+description: "Rust 学习与生态追踪专家。处理新版本特性、crate 更新、最佳实践演进、RFC、每周新闻等问题。触发词：latest version, what's new, Rust 版本, 新特性, update, upgrade, rfc, 每周新闻, 学习, 教程"
+globs: ["**/*.toml", "**/Cargo.lock"]
 ---
 
+# Rust 学习与生态追踪
 
-## Version Update Strategy
+## 核心问题
 
-### Stable Updates
+**如何跟上 Rust 的发展节奏？**
+
+Rust 每 6 周发布一个新版本，生态系统活跃。保持更新但不盲目追新。
+
+---
+
+## 版本更新策略
+
+### 稳定版更新
 
 ```bash
-# Check current version
+# 检查当前版本
 rustc --version
 
-# Update Rust
+# 更新 Rust
 rustup update stable
 
-# View changelog
-rustup doc --changelog
+# 查看更新内容
+rustup changelog stable
 ```
 
-### When to Upgrade
+### 何时升级
 
-| Scenario | Recommendation |
-|----------|---------------|
-| New project | Use latest stable |
-| Production project | Follow 6-week cycle |
-| Library project | Consider MSRV policy |
+| 场景 | 建议 |
+|-----|------|
+| 新项目 | 用最新稳定版 |
+| 生产项目 | 跟随 6 周周期更新 |
+| 库项目 | 考虑 MSRV 策略 |
 
 ### MSRV (Minimum Supported Rust Version)
 
 ```toml
 [package]
-rust-version = "1.70"  # Declare minimum version
+rust-version = "1.70"  # 声明最低支持版本
 
 [dependencies]
-# MSRV-sensitive dependencies require care
+# 对 MSRV 敏感的依赖要谨慎
 serde = { version = "1.0", default-features = false }
 ```
 
+---
 
-## Solution Patterns
+## 新特性学习路径
 
-### Pattern 1: Following Stable Releases
+### 2024 Edition 重要特性
+
+| 特性 | 稳定版本 | 实用度 |
+|-----|---------|-------|
+| `gen blocks` | nightly | ⭐ 实验性 |
+| `async drop` | nightly | ⭐ 实验性 |
+| `inline const` | 1.79+ | ⭐⭐ 生产可用 |
+| `never type` 改进 | 1.82+ | ⭐⭐⭐ 常用 |
+
+### 新手到进阶路线
+
+```
+基础 → 所有权、生命周期、借用检查
+    ↓
+中级 → 特征对象、泛型、闭包
+    ↓
+并发 → async/await、线程、通道
+    ↓
+高级 → unsafe、FFI、性能优化
+    ↓
+专家 → 宏、类型系统、设计模式
+```
+
+---
+
+## 追踪信息源
+
+### 官方渠道
+
+| 渠道 | 内容 | 频率 |
+|-----|------|-----|
+| [This Week in Rust](https://this-week-in-rust.org/) | 周报、RFC、博客 | 每周 |
+| [Rust Blog](https://blog.rust-lang.org/) | 重大发布、深度文章 | 不定期 |
+| [Rust RFCs](https://github.com/rust-lang/rfcs) | 设计讨论 | 持续 |
+| [Release Notes](https://github.com/rust-lang/rust/blob/master/RELEASES.md) | 版本变更 | 每 6 周 |
+
+### 社区资源
+
+| 资源 | 内容 |
+|-----|------|
+| [docs.rs](https://docs.rs/) | 文档搜索 |
+| [crates.io](https://crates.io/) | 包搜索 |
+| [lib.rs](https://lib.rs/) | 找替代 crate |
+| [Rust Analyzer](https://rust-analyzer.github.io/) | IDE 插件 |
+
+---
+
+## 依赖更新管理
+
+### 常规更新
 
 ```bash
-# Quarterly update routine
-rustup update stable
-cargo outdated
-cargo audit
-cargo test --all-features
-
-# Read release notes
-rustup doc --changelog
-```
-
-### Pattern 2: Tracking Ecosystem Changes
-
-```bash
-# Check for breaking changes
-cargo update --dry-run
-
-# Security audit
-cargo audit
-
-# License check
-cargo deny check licenses
-
-# Check dependency tree
-cargo tree
-```
-
-### Pattern 3: Learning New Features
-
-```rust
-// Edition 2024 features
-
-// Inline const (1.79+)
-const fn compute() -> [u8; 32] {
-    let mut arr = [0u8; 32];
-    // compute at compile time
-    arr
-}
-
-// Never type improvements (1.82+)
-fn diverge() -> ! {
-    panic!("never returns")
-}
-
-// Async fn in trait (1.75+)
-trait Repository {
-    async fn fetch(&self, id: u64) -> Result<Data, Error>;
-}
-```
-
-
-## Learning Path
-
-### Beginner → Advanced
-
-```
-Basics → Ownership, lifetimes, borrow checker
-   ↓
-Intermediate → Trait objects, generics, closures
-   ↓
-Concurrency → async/await, threads, channels
-   ↓
-Advanced → unsafe, FFI, performance optimization
-   ↓
-Expert → Macros, type system, design patterns
-```
-
-
-## Information Sources
-
-### Official Channels
-
-| Source | Content | Frequency |
-|--------|---------|-----------|
-| [This Week in Rust](https://this-week-in-rust.org/) | Weekly digest, RFCs, blogs | Weekly |
-| [Rust Blog](https://blog.rust-lang.org/) | Major releases, deep dives | As released |
-| [Rust RFCs](https://github.com/rust-lang/rfcs) | Design discussions | Ongoing |
-| [Release Notes](https://github.com/rust-lang/rust/blob/master/RELEASES.md) | Version changes | Every 6 weeks |
-
-### Community Resources
-
-| Resource | Content |
-|----------|---------|
-| [docs.rs](https://docs.rs/) | Documentation search |
-| [crates.io](https://crates.io/) | Package search |
-| [lib.rs](https://lib.rs/) | Find alternative crates |
-| [Rust Analyzer](https://rust-analyzer.github.io/) | IDE plugin |
-
-
-## Dependency Management
-
-### Regular Updates
-
-```bash
-# Check outdated dependencies
+# 检查可更新依赖
 cargo outdated
 
-# Update compatible versions
+# 更新次要版本
 cargo update
 
-# Update to latest (may break)
-cargo upgrade
+# 强制更新所有
+cargo update -Z direct-minimal-versions
 ```
 
-### Security Audit
+### 安全审计
 
 ```bash
-# Check for known vulnerabilities
+# 检查已知漏洞
 cargo audit
 
-# Check dependency licenses
+# 检查依赖许可证
 cargo deny check licenses
-
-# Analyze dependency tree
-cargo tree -d  # Show duplicates
 ```
 
+---
 
-## Workflow
+## 我的更新策略
 
-### Quarterly Checklist
+### 每季度一次
 
-```
-Every 3 months:
-- [ ] Upgrade to latest stable Rust
-- [ ] Run cargo outdated
-- [ ] Run cargo audit
-- [ ] Check dependencies for breaking changes
-- [ ] Evaluate new features worth adopting
-- [ ] Update tooling (clippy, rustfmt)
-```
+- [ ] 升级到最新 stable
+- [ ] 运行 `cargo outdated`
+- [ ] 运行 `cargo audit`
+- [ ] 检查依赖的 breaking changes
+- [ ] 评估新特性是否值得采用
 
-### Annual Checklist
+### 每年一次
 
-```
-Every year:
-- [ ] Consider edition upgrade
-- [ ] Refactor deprecated patterns
-- [ ] Evaluate MSRV policy
-- [ ] Update development toolchain
-- [ ] Review architecture patterns
-```
+- [ ] 考虑 edition 升级
+- [ ] 重构使用旧模式代码
+- [ ] 评估 MSRV 策略
+- [ ] 更新开发工具链
 
+---
 
-## Learning Resources
+## 学习资源推荐
 
-### Beginner
+### 入门
 
-- [The Rust Programming Language](https://doc.rust-lang.org/book/) - Official book
-- [Rust by Example](https://doc.rust-lang.org/rust-by-example/) - Example-driven
-- [Rustlings](https://github.com/rust-lang/rustlings) - Interactive exercises
+- [The Rust Programming Language](https://doc.rust-lang.org/book/) - 官方书
+- [Rust by Example](https://doc.rust-lang.org/rust-by-example/) - 示例驱动
 
-### Intermediate
+### 进阶
 
-- [The Rust Reference](https://doc.rust-lang.org/reference/) - Language reference
-- [Rust Nomicon](https://doc.rust-lang.org/nomicon/) - Unsafe guide
-- [Effective Rust](https://www.lurklurk.org/effective-rust/) - Best practices
+- [The Rust Reference](https://doc.rust-lang.org/reference/) - 语言参考
+- [Rust Nomicon](https://doc.rust-lang.org/nomicon/) - unsafe 指南
+- [Effective Rust](https://www.lurklurk.org/effective-rust/) - 最佳实践
 
-### Advanced
+### 实战
 
-- [Rust for Rustaceans](https://rust-for-rustaceans.com/) - Advanced patterns
-- [Async Book](https://rust-lang.github.io/async-book/) - Async/await deep dive
-- [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) - API design
+- [Exercism Rust Track](https://exercism.org/tracks/rust) - 练习题
+- [Rust by Practice](https://practice.rs/) - 实践题目
 
-### Practice
-
-- [Exercism Rust Track](https://exercism.org/tracks/rust) - Practice problems
-- [Rust by Practice](https://practice.rs/) - Hands-on exercises
-- [Advent of Code](https://adventofcode.com/) - Annual coding challenge
-
-
-## Edition Update Strategy
-
-| Edition | Released | Key Features |
-|---------|----------|--------------|
-| 2015 | Original | - |
-| 2018 | Dec 2018 | Module system, NLL |
-| 2021 | Oct 2021 | Disjoint captures, IntoIterator |
-| 2024 | TBD | Gen blocks, async drop |
-
-### Upgrading Editions
-
-```bash
-# Check if upgrade possible
-cargo fix --edition
-
-# Update Cargo.toml
-# edition = "2024"
-
-# Test thoroughly
-cargo test --all-features
-```
-
-
-## Review Checklist
-
-When learning new Rust features:
-
-- [ ] Feature is stable (not experimental)
-- [ ] Understand the problem it solves
-- [ ] Know when NOT to use it
-- [ ] Aware of trade-offs
-- [ ] Tested in small project first
-- [ ] Read release notes thoroughly
-- [ ] Checked ecosystem adoption
-- [ ] Updated team documentation
-
-
-## Verification Commands
-
-```bash
-# Check Rust version
-rustc --version
-rustup show
-
-# Update toolchain
-rustup update
-
-# Check outdated dependencies
-cargo outdated
-
-# Security audit
-cargo audit
-
-# License compliance
-cargo deny check
-
-# Check for deprecated features
-cargo clippy -- -W deprecated
-```
-
-
-## Common Pitfalls
-
-### 1. Chasing Shiny Features
-
-**Symptom**: Using unstable features in production
-
-```toml
-# ❌ Avoid: nightly features in production
-#![feature(generic_associated_types)]
-
-# ✅ Good: wait for stabilization
-# Use stable alternatives
-```
-
-### 2. Ignoring MSRV
-
-**Symptom**: Breaking downstream users
-
-```toml
-# ✅ Good: declare MSRV
-[package]
-rust-version = "1.70"
-
-# Test against MSRV in CI
-# cargo +1.70 test
-```
-
-### 3. Not Reading Release Notes
-
-**Symptom**: Surprised by breaking changes
-
-```bash
-# ✅ Good: read before updating
-rustup doc --changelog
-
-# Check crate changelogs
-cargo info <crate> --version <version>
-```
-
-
-## Related Skills
-
-- **rust-ecosystem** - Crate selection and tools
-- **rust-coding** - Best practices and conventions
-- **rust-performance** - Performance improvements
-- **rust-async** - Async/await patterns
-- **rust-error** - Error handling evolution
-
-
-## Localized Reference
-
-- **Chinese version**: [SKILL_ZH.md](./SKILL_ZH.md) - 完整中文版本，包含所有内容

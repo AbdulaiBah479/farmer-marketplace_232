@@ -1,92 +1,233 @@
 ---
 name: research-synthesis
-description: Synthesize user research into themes, insights, and recommendations. Use when you have interview transcripts, survey results, usability test notes, support tickets, or NPS responses that need to be distilled into patterns, user segments, and prioritized next steps.
-argument-hint: "<research data, transcripts, or survey results>"
+description: Synthesizes research findings into coherent narratives with uncertainty quantification. Use when integrating findings from multiple sources, creating research summaries, drawing conclusions from evidence, or communicating research results. Triggers on phrases like "synthesize", "integrate findings", "what's the conclusion", "summarize research", "overall picture", "bring together".
+tools:
+  - WebSearch
+  - WebFetch
+  - Read
+  - Grep
+  - Glob
 ---
 
-# /research-synthesis
+# Research Synthesis
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+This skill guides the integration of diverse research findings into coherent, actionable conclusions.
 
-Synthesize user research data into actionable insights. See the **user-research** skill for research methods, interview guides, and analysis frameworks.
+## Phase 1: Synthesis Preparation
 
-## Usage
+### Input Assessment
+- What sources/findings need synthesis?
+- What is the overarching research question?
+- Who is the audience for this synthesis?
+- What decisions will this inform?
 
+### Source Inventory
+| Source | Type | Quality | Key Contribution |
+|--------|------|---------|------------------|
+| [Source] | [Type] | [Rating] | [Main finding] |
+
+### Compatibility Check
+- Do sources address the same question?
+- Are methodologies compatible?
+- Can findings be meaningfully compared?
+- Are there definitional inconsistencies?
+
+**CHECKPOINT**: Confirm synthesis scope and purpose with user.
+
+## Phase 2: Pattern Recognition
+
+### Finding Categorization
+Group findings by:
+
+**By Conclusion**:
+- Consistent findings (agree)
+- Inconsistent findings (disagree)
+- Complementary findings (different aspects)
+- Unique findings (only one source)
+
+**By Evidence Strength**:
+- Strong evidence (multiple high-quality sources)
+- Moderate evidence (some quality sources)
+- Weak evidence (limited or low-quality sources)
+- Contested (conflicting strong sources)
+
+### Convergence Analysis
+For each major finding:
+1. How many sources support it?
+2. What is their combined quality?
+3. Are there methodological differences?
+4. Do any sources contradict?
+
+## Phase 3: Weight Assignment
+
+### Evidence Weighting Factors
+| Factor | Weight Modifier |
+|--------|-----------------|
+| Sample size | Larger = higher weight |
+| Study design | RCT > observational |
+| Peer review | Reviewed > not reviewed |
+| Replication | Replicated > single study |
+| Recency | More recent = higher (usually) |
+| Relevance | Direct > indirect evidence |
+
+### Confidence Levels
+- **High confidence**: Multiple high-quality sources agree, no major contradictions
+- **Moderate confidence**: Good evidence but some limitations or gaps
+- **Low confidence**: Limited evidence, quality concerns, or contradictions
+- **Very low confidence**: Minimal evidence, major limitations
+- **Insufficient**: Cannot draw conclusions
+
+## Phase 4: Contradiction Resolution
+
+### When Sources Disagree
+
+**Step 1**: Verify actual disagreement
+- Are they measuring the same thing?
+- Are conditions comparable?
+- Could both be true in different contexts?
+
+**Step 2**: Assess relative quality
+- Which has stronger methodology?
+- Which has larger sample?
+- Which is more recent?
+
+**Step 3**: Identify explanatory factors
+- Population differences
+- Methodological differences
+- Context differences
+- Time period differences
+
+**Step 4**: Synthesis approach
+| Situation | Approach |
+|-----------|----------|
+| Quality difference | Favor higher quality |
+| Context difference | Specify conditions |
+| Genuine debate | Present both positions |
+| Unexplained | Acknowledge uncertainty |
+
+**CHECKPOINT**: Present contradictions and proposed resolution for user input.
+
+## Phase 5: Narrative Construction
+
+### Synthesis Structure Options
+
+**Conceptual Framework**:
+Organize around theoretical concepts
 ```
-/research-synthesis $ARGUMENTS
+Concept 1 → Concept 2 → Concept 3
+    ↓           ↓           ↓
+[Findings]  [Findings]  [Findings]
 ```
 
-## What I Accept
-
-- Interview transcripts or notes
-- Survey results (CSV, pasted data)
-- Usability test recordings or notes
-- Support tickets or feedback
-- NPS/CSAT responses
-- App store reviews
-
-## Output
-
-```markdown
-## Research Synthesis: [Study Name]
-**Method:** [Interviews / Survey / Usability Test] | **Participants:** [X]
-**Date:** [Date range] | **Researcher:** [Name]
-
-### Executive Summary
-[3-4 sentence overview of key findings]
-
-### Key Themes
-
-#### Theme 1: [Name]
-**Prevalence:** [X of Y participants]
-**Summary:** [What this theme is about]
-**Supporting Evidence:**
-- "[Quote]" — P[X]
-- "[Quote]" — P[X]
-**Implication:** [What this means for the product]
-
-#### Theme 2: [Name]
-[Same format]
-
-### Insights → Opportunities
-
-| Insight | Opportunity | Impact | Effort |
-|---------|-------------|--------|--------|
-| [What we learned] | [What we could do] | High/Med/Low | High/Med/Low |
-
-### User Segments Identified
-| Segment | Characteristics | Needs | Size |
-|---------|----------------|-------|------|
-| [Name] | [Description] | [Key needs] | [Rough %] |
-
-### Recommendations
-1. **[High priority]** — [Why, based on which findings]
-2. **[Medium priority]** — [Why]
-3. **[Lower priority]** — [Why]
-
-### Questions for Further Research
-- [What we still don't know]
-
-### Methodology Notes
-[How the research was conducted, any limitations or biases to note]
+**Chronological**:
+Trace evolution of understanding
+```
+Early understanding → Key developments → Current state
 ```
 
-## If Connectors Available
+**Problem-Solution**:
+Frame around practical questions
+```
+Problem → Evidence → Solutions → Remaining gaps
+```
 
-If **~~user feedback** is connected:
-- Pull support tickets, feature requests, and NPS responses to supplement research data
-- Cross-reference themes with real user complaints and requests
+**Argument-Based**:
+Build toward conclusions
+```
+Claim → Evidence → Counterclaim → Resolution → Conclusion
+```
 
-If **~~product analytics** is connected:
-- Validate qualitative findings with usage data and behavioral metrics
-- Quantify the impact of identified pain points
+### Narrative Elements
+1. **Opening**: Context and importance
+2. **Body**: Organized evidence presentation
+3. **Integration**: How pieces connect
+4. **Limitations**: What we don't know
+5. **Conclusion**: Key takeaways
 
-If **~~knowledge base** is connected:
-- Search for prior research studies and findings to compare against
-- Publish the synthesis to your research repository
+## Phase 6: Uncertainty Quantification
 
-## Tips
+### Uncertainty Sources
+| Source | Description | Handling |
+|--------|-------------|----------|
+| Measurement | Data collection errors | Acknowledge precision limits |
+| Sampling | Non-representative samples | Note generalizability limits |
+| Model | Theoretical assumptions | Test sensitivity |
+| Conflict | Disagreeing sources | Present range of views |
+| Gap | Missing information | Explicitly note unknowns |
 
-1. **Include raw quotes** — Direct participant quotes make insights credible and memorable.
-2. **Separate observations from interpretations** — "5 of 8 users clicked the wrong button" is an observation. "The button placement is confusing" is an interpretation.
-3. **Quantify where possible** — "Most users" is vague. "7 of 10 users" is specific.
+### Uncertainty Communication
+Use calibrated language:
+
+| Confidence | Language |
+|------------|----------|
+| Very high (>95%) | "The evidence clearly shows..." |
+| High (80-95%) | "The evidence strongly suggests..." |
+| Moderate (60-80%) | "The evidence suggests..." |
+| Low (40-60%) | "Some evidence indicates..." |
+| Very low (<40%) | "Limited evidence hints at..." |
+
+## Phase 7: Actionable Conclusions
+
+### Conclusion Formulation
+For each key conclusion:
+- State the finding clearly
+- Specify confidence level
+- Note key supporting evidence
+- Acknowledge limitations
+- Identify implications
+
+### Recommendation Framework
+| Evidence Strength | Recommendation Type |
+|-------------------|---------------------|
+| Strong | Direct recommendation |
+| Moderate | Conditional recommendation |
+| Weak | Suggestion for consideration |
+| Insufficient | No recommendation (need more research) |
+
+## Phase 8: Documentation
+
+### Output Structure
+```
+# Research Synthesis: [Topic]
+
+## Executive Summary
+[2-3 paragraph overview of key findings]
+
+## Purpose
+[Research question and synthesis goals]
+
+## Sources Synthesized
+[Brief description of evidence base]
+
+## Key Findings
+
+### Finding 1: [Statement]
+**Confidence**: [Level]
+**Evidence**: [Summary of supporting sources]
+**Caveats**: [Limitations or conditions]
+
+### Finding 2: [Statement]
+[Same structure]
+
+## Areas of Uncertainty
+- [Uncertainty 1]: [Description and implications]
+- [Uncertainty 2]: [Description and implications]
+
+## Contradictions and Debates
+- [Topic]: [Summary of disagreement and interpretation]
+
+## Conclusions
+[Integrated conclusions with confidence levels]
+
+## Implications
+- For [audience 1]: [Implications]
+- For [audience 2]: [Implications]
+
+## Research Gaps
+[What remains unknown and needs investigation]
+
+## References
+[Formatted citations]
+```
+
+**CHECKPOINT**: Review synthesis for accuracy and completeness with user.

@@ -1,289 +1,926 @@
 ---
-name: "site-architecture"
-description: "When the user wants to audit, redesign, or plan their website's structure, URL hierarchy, navigation design, or internal linking strategy. Use when the user mentions 'site architecture,' 'URL structure,' 'internal links,' 'site navigation,' 'breadcrumbs,' 'topic clusters,' 'hub pages,' 'orphan pages,' 'silo structure,' 'information architecture,' or 'website reorganization.' Also use when someone has SEO problems and the root cause is structural (not content or schema). NOT for content strategy decisions about what to write (use content-strategy) or for schema markup (use schema-markup)."
-license: MIT
-metadata:
-  version: 1.0.0
-  author: Alireza Rezvani
-  category: marketing
-  updated: 2026-03-06
+name: site-architecture
+description: Technical SEO - robots.txt, sitemap, meta tags, Core Web Vitals
 ---
 
-# Site Architecture & Internal Linking
+# Site Architecture Skill
 
-You are an expert in website information architecture and technical SEO structure. Your goal is to design website architecture that makes it easy for users to navigate, easy for search engines to crawl, and builds topical authority through intelligent internal linking.
+*Load with: base.md + web-content.md*
 
-## Before Starting
-
-**Check for context first:**
-If `marketing-context.md` exists, read it before asking questions.
-
-Gather this context:
-
-### 1. Current State
-- Do they have an existing site? (URL, CMS, sitemap.xml available?)
-- How many pages exist? Rough estimate by section.
-- What are the top-performing pages (if they know)?
-- Any known problems: orphan pages, duplicate content, poor rankings?
-
-### 2. Goals
-- Primary business goal (lead gen, e-commerce, content authority, local search)
-- Target audience and their mental model of navigation
-- Specific SEO targets — topics or keyword clusters they want to rank for
-
-### 3. Constraints
-- CMS capabilities (can they change URLs? Does it auto-generate certain structures?)
-- Redirect capacity (if restructuring, can they manage bulk 301s?)
-- Development resources (minor tweaks vs full migration)
+For technical website structure that enables discovery by search engines AND AI crawlers (GPTBot, ClaudeBot, PerplexityBot).
 
 ---
 
-## How This Skill Works
+## Philosophy
 
-### Mode 1: Audit Current Architecture
-When a site exists and they need a structural assessment.
+**Content is king. Architecture is the kingdom.**
 
-1. Run `scripts/sitemap_analyzer.py` on their sitemap.xml (or paste sitemap content)
-2. Review: depth distribution, URL patterns, potential orphans, duplicate paths
-3. Evaluate navigation by reviewing the site manually or from their description
-4. Identify the top structural problems by SEO impact
-5. Deliver a prioritized audit with quick wins and structural recommendations
-
-### Mode 2: Plan New Structure
-When building a new site or doing a full redesign/restructure.
-
-1. Map business goals to site sections
-2. Design URL hierarchy (flat vs layered by content type)
-3. Define content silos for topical authority
-4. Plan navigation zones: primary nav, breadcrumbs, footer nav, contextual
-5. Deliver site map diagram (text-based tree) + URL structure spec
-
-### Mode 3: Internal Linking Strategy
-When the structure is fine but they need to improve link equity flow and topical signals.
-
-1. Identify hub pages (the pillar content that should rank highest)
-2. Map spoke pages (supporting content that links to hubs)
-3. Find orphan pages (indexed pages with no inbound internal links)
-4. Identify anchor text patterns and over-optimized phrases
-5. Deliver an internal linking plan: which pages link to which, with anchor text guidance
+Great content buried in poor architecture won't be discovered. This skill covers the technical foundation that makes your content findable by:
+- Google, Bing (traditional search)
+- GPTBot (ChatGPT), ClaudeBot, PerplexityBot (AI assistants)
+- Social platforms (Open Graph, Twitter Cards)
 
 ---
 
-## URL Structure Principles
+## robots.txt
 
-### The Core Rule: URLs are for Humans First
+### Basic Template
 
-A URL should tell a user exactly where they are before they click. It also tells search engines about content hierarchy. Get this right once — URL changes later require redirects and lose equity.
+```txt
+# robots.txt
 
-### Flat vs Layered: Pick the Right Depth
+# Allow all crawlers by default
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /_next/
+Disallow: /cdn-cgi/
 
-| Depth | Example | Use When |
-|-------|---------|----------|
-| Flat (1 level) | `/blog/cold-email-tips` | Blog posts, articles, standalone pages |
-| Two levels | `/blog/email-marketing/cold-email-tips` | When category is a ranking page itself |
-| Three levels | `/solutions/marketing/email-automation` | Product families, nested services |
-| 4+ levels | `/a/b/c/d/page` | ❌ Avoid — dilutes crawl equity, confusing |
+# Sitemap location
+Sitemap: https://yoursite.com/sitemap.xml
 
-**Rule of thumb:** If the category URL (`/blog/email-marketing/`) is not a real page you want to rank, don't create the directory. Flat is usually better for SEO.
+# Crawl delay (optional - be careful, not all bots respect this)
+# Crawl-delay: 1
+```
 
-### URL Construction Rules
+### AI Bot Configuration
 
-| Do | Don't |
-|----|-------|
-| `/how-to-write-cold-emails` | `/how_to_write_cold_emails` (underscores) |
-| `/pricing` | `/pricing-page` (redundant suffixes) |
-| `/blog/seo-tips-2024` | `/blog/article?id=4827` (dynamic, non-descriptive) |
-| `/services/web-design` | `/services/web-design/` (trailing slash — pick one and be consistent) |
-| `/about` | `/about-us-company-info` (keyword stuffing the URL) |
-| Short, human-readable | Long, generated, token-filled |
+```txt
+# robots.txt with AI bot rules
 
-### Keywords in URLs
+# === SEARCH ENGINES ===
+User-agent: Googlebot
+Allow: /
 
-Yes — include the primary keyword. No — don't stuff 4 keywords in.
+User-agent: Bingbot
+Allow: /
 
-`/guides/technical-seo-audit` ✅
-`/guides/technical-seo-audit-checklist-how-to-complete-step-by-step` ❌
+# === AI ASSISTANTS (Allow for discovery) ===
+User-agent: GPTBot
+Allow: /
 
-The keyword in the URL is a minor signal, not a major one. Don't sacrifice readability for it.
+User-agent: ChatGPT-User
+Allow: /
 
-### Reference docs
-See `references/url-design-guide.md` for patterns by site type (blog, SaaS, e-commerce, local).
+User-agent: Claude-Web
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# === BLOCK AI TRAINING (Optional - block training, allow chat) ===
+# Uncomment these if you want to be cited but not used for training
+# User-agent: CCBot
+# Disallow: /
+
+# User-agent: GPTBot
+# Disallow: /  # Blocks both chat and training
+
+# === BLOCK SCRAPERS ===
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+# === DEFAULT ===
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /private/
+Disallow: /*.json$
+Disallow: /*?*
+
+Sitemap: https://yoursite.com/sitemap.xml
+```
+
+### Next.js robots.txt
+
+```typescript
+// app/robots.ts
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://yoursite.com';
+
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/private/', '/_next/'],
+      },
+      {
+        userAgent: 'GPTBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'ClaudeBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'PerplexityBot',
+        allow: '/',
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+  };
+}
+```
 
 ---
 
-## Navigation Design
+## Sitemap
 
-Navigation serves two masters: user experience and link equity flow. Most sites optimize for neither.
+### XML Sitemap Template
 
-### Navigation Zones
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://yoursite.com/</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://yoursite.com/pricing</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://yoursite.com/blog/article-slug</loc>
+    <lastmod>2025-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://yoursite.com/images/article-image.jpg</image:loc>
+    </image:image>
+  </url>
+</urlset>
+```
 
-| Zone | Purpose | SEO Role |
-|------|---------|----------|
-| Primary nav | Core site sections, 5-8 items max | Passes equity to top-level pages |
-| Secondary nav | Sub-sections within a section | Passes equity within a silo |
-| Breadcrumbs | Current location in hierarchy | Equity from deep pages upward |
-| Footer nav | Secondary utility links, key service pages | Sitewide links — use carefully |
-| Contextual nav | In-content links, related posts, "next step" links | Most powerful equity signal |
-| Sidebar | Related content, category listing | Medium equity if above fold |
+### Next.js Dynamic Sitemap
 
-### Primary Navigation Rules
+```typescript
+// app/sitemap.ts
+import { MetadataRoute } from 'next';
 
-- 5-8 items maximum. Cognitive load increases with every item.
-- Each nav item should link to a page you want to rank.
-- Never use nav labels like "Resources" with no landing page — it should be a real, rankable resources page.
-- Dropdown menus are fine but crawlers may not engage them deeply — critical pages need a clickable parent link.
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://yoursite.com';
+
+  // Static pages
+  const staticPages = [
+    { url: '/', priority: 1.0, changeFrequency: 'weekly' as const },
+    { url: '/pricing', priority: 0.9, changeFrequency: 'monthly' as const },
+    { url: '/about', priority: 0.8, changeFrequency: 'monthly' as const },
+    { url: '/contact', priority: 0.7, changeFrequency: 'yearly' as const },
+  ];
+
+  // Dynamic pages (e.g., blog posts)
+  const posts = await getBlogPosts(); // Your data fetching function
+  const blogPages = posts.map((post) => ({
+    url: `/blog/${post.slug}`,
+    lastModified: new Date(post.updatedAt),
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }));
+
+  return [
+    ...staticPages.map((page) => ({
+      url: `${baseUrl}${page.url}`,
+      lastModified: new Date(),
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
+    })),
+    ...blogPages.map((page) => ({
+      url: `${baseUrl}${page.url}`,
+      lastModified: page.lastModified,
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
+    })),
+  ];
+}
+```
+
+### Sitemap Index (Large Sites)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://yoursite.com/sitemap-pages.xml</loc>
+    <lastmod>2025-01-15</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://yoursite.com/sitemap-blog.xml</loc>
+    <lastmod>2025-01-14</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://yoursite.com/sitemap-products.xml</loc>
+    <lastmod>2025-01-13</lastmod>
+  </sitemap>
+</sitemapindex>
+```
+
+---
+
+## Meta Tags
+
+### Essential Meta Tags
+
+```html
+<head>
+  <!-- Basic -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Title | Brand Name</title>
+  <meta name="description" content="Compelling 150-160 character description with keywords and CTA.">
+
+  <!-- Canonical (prevent duplicate content) -->
+  <link rel="canonical" href="https://yoursite.com/current-page">
+
+  <!-- Language -->
+  <html lang="en">
+  <meta name="language" content="English">
+
+  <!-- Robots -->
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow">
+
+  <!-- Author -->
+  <meta name="author" content="Author Name">
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+</head>
+```
+
+### Open Graph (Social Sharing)
+
+```html
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yoursite.com/page">
+<meta property="og:title" content="Page Title - Brand">
+<meta property="og:description" content="Description for social sharing (can be longer).">
+<meta property="og:image" content="https://yoursite.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Brand Name">
+<meta property="og:locale" content="en_US">
+
+<!-- Article-specific (for blog posts) -->
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-01-15T08:00:00Z">
+<meta property="article:modified_time" content="2025-01-20T10:00:00Z">
+<meta property="article:author" content="https://yoursite.com/team/author">
+<meta property="article:section" content="Technology">
+<meta property="article:tag" content="AI, SEO, Content">
+```
+
+### Twitter Cards
+
+```html
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@yourbrand">
+<meta name="twitter:creator" content="@authorhandle">
+<meta name="twitter:title" content="Page Title">
+<meta name="twitter:description" content="Description for Twitter (max 200 chars).">
+<meta name="twitter:image" content="https://yoursite.com/twitter-image.jpg">
+```
+
+### Next.js Metadata
+
+```typescript
+// app/layout.tsx
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://yoursite.com'),
+  title: {
+    default: 'Brand Name',
+    template: '%s | Brand Name',
+  },
+  description: 'Your default site description.',
+  keywords: ['keyword1', 'keyword2', 'keyword3'],
+  authors: [{ name: 'Brand Name', url: 'https://yoursite.com' }],
+  creator: 'Brand Name',
+  publisher: 'Brand Name',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://yoursite.com',
+    siteName: 'Brand Name',
+    title: 'Brand Name',
+    description: 'Your site description.',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Brand Name',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@yourbrand',
+    creator: '@yourbrand',
+  },
+  verification: {
+    google: 'google-verification-code',
+    yandex: 'yandex-verification-code',
+  },
+};
+
+// app/blog/[slug]/page.tsx
+export async function generateMetadata({ params }): Promise<Metadata> {
+  const post = await getPost(params.slug);
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      publishedTime: post.publishedAt,
+      modifiedTime: post.updatedAt,
+      authors: [post.author.name],
+      images: [post.coverImage],
+    },
+  };
+}
+```
+
+---
+
+## URL Structure
+
+### Best Practices
+
+```markdown
+✅ GOOD URLs:
+/blog/ai-seo-best-practices
+/products/pro-plan
+/pricing
+/about/team
+
+❌ BAD URLs:
+/blog?id=123
+/p/12345
+/index.php?page=about
+/Products/Pro_Plan (inconsistent casing)
+```
+
+### URL Guidelines
+
+| Rule | Example |
+|------|---------|
+| Lowercase only | `/blog/my-post` not `/Blog/My-Post` |
+| Hyphens not underscores | `/my-page` not `/my_page` |
+| No trailing slashes | `/about` not `/about/` |
+| Descriptive slugs | `/pricing` not `/p` |
+| No query params for content | `/blog/post-title` not `/blog?id=123` |
+| Max 3-4 levels deep | `/blog/category/post` |
+
+### Redirect Configuration
+
+```typescript
+// next.config.js
+module.exports = {
+  async redirects() {
+    return [
+      // Redirect old URLs to new
+      {
+        source: '/old-page',
+        destination: '/new-page',
+        permanent: true, // 301 redirect
+      },
+      // Redirect with wildcard
+      {
+        source: '/blog/old/:slug',
+        destination: '/articles/:slug',
+        permanent: true,
+      },
+      // Trailing slash redirect
+      {
+        source: '/:path+/',
+        destination: '/:path+',
+        permanent: true,
+      },
+    ];
+  },
+};
+```
+
+---
+
+## Canonical URLs
+
+### Implementation
+
+```html
+<!-- Always include canonical, even for primary URL -->
+<link rel="canonical" href="https://yoursite.com/current-page">
+```
+
+### When to Use
+
+```markdown
+✅ USE CANONICAL:
+- Every page (even if only version exists)
+- Paginated content (point to page 1 or use rel=prev/next)
+- URL parameters that don't change content (?utm_source=...)
+- HTTP vs HTTPS (canonical to HTTPS)
+- www vs non-www (pick one, canonical to it)
+
+Example: /products?sort=price should canonical to /products
+```
+
+### Next.js Canonical
+
+```typescript
+// Automatic in metadata
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/current-page',
+  },
+};
+```
+
+---
+
+## Security Headers
+
+### Essential Headers
+
+```typescript
+// next.config.js
+const securityHeaders = [
+  {
+    key: 'X-DNS-Prefetch-Control',
+    value: 'on',
+  },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'SAMEORIGIN',
+  },
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff',
+  },
+  {
+    key: 'Referrer-Policy',
+    value: 'strict-origin-when-cross-origin',
+  },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=()',
+  },
+];
+
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ];
+  },
+};
+```
+
+---
+
+## Core Web Vitals
+
+### Target Metrics
+
+| Metric | Good | Needs Improvement | Poor |
+|--------|------|-------------------|------|
+| LCP (Largest Contentful Paint) | ≤2.5s | ≤4.0s | >4.0s |
+| INP (Interaction to Next Paint) | ≤200ms | ≤500ms | >500ms |
+| CLS (Cumulative Layout Shift) | ≤0.1 | ≤0.25 | >0.25 |
+
+### Optimization Checklist
+
+```markdown
+## LCP (Loading)
+- [ ] Optimize largest image (WebP, proper sizing)
+- [ ] Preload critical assets
+- [ ] Use CDN for static assets
+- [ ] Enable compression (gzip/brotli)
+- [ ] Minimize render-blocking resources
+
+## INP (Interactivity)
+- [ ] Minimize JavaScript execution time
+- [ ] Break up long tasks
+- [ ] Use web workers for heavy computation
+- [ ] Optimize event handlers
+- [ ] Lazy load non-critical JS
+
+## CLS (Visual Stability)
+- [ ] Set dimensions on images/videos
+- [ ] Reserve space for dynamic content
+- [ ] Avoid inserting content above existing
+- [ ] Use transform for animations
+- [ ] Preload fonts
+```
+
+### Next.js Performance
+
+```typescript
+// Image optimization
+import Image from 'next/image';
+
+<Image
+  src="/hero.jpg"
+  alt="Hero image"
+  width={1200}
+  height={630}
+  priority // Preload for LCP
+  placeholder="blur"
+  blurDataURL={blurDataUrl}
+/>
+
+// Font optimization
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap', // Prevent FOIT
+});
+
+// Dynamic imports
+import dynamic from 'next/dynamic';
+
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <Skeleton />,
+  ssr: false, // Client-only if needed
+});
+```
+
+---
+
+## Internal Linking
+
+### Structure
+
+```markdown
+## Link Architecture
+
+Homepage
+├── /pricing (1 click)
+├── /features (1 click)
+├── /blog (1 click)
+│   ├── /blog/category-1 (2 clicks)
+│   │   └── /blog/category-1/post (3 clicks)
+│   └── /blog/category-2 (2 clicks)
+└── /about (1 click)
+
+Rule: Every page within 3 clicks of homepage
+```
+
+### Best Practices
+
+```markdown
+✅ DO:
+- Use descriptive anchor text
+- Link contextually within content
+- Create hub pages for topics
+- Link to related content at end of posts
+- Use breadcrumbs for navigation
+
+❌ AVOID:
+- "Click here" as anchor text
+- Orphan pages (no internal links)
+- Too many links per page (>100)
+- Broken internal links
+- Redirect chains
+```
 
 ### Breadcrumbs
 
-Add breadcrumbs to every non-homepage page. They do three things:
-1. Show users where they are
-2. Create site-wide upward internal links to category/hub pages
-3. Enable BreadcrumbList schema for rich results in Google
+```typescript
+// components/Breadcrumbs.tsx
+import Link from 'next/link';
 
-Format: `Home > Category > Subcategory > Current Page`
+interface BreadcrumbItem {
+  name: string;
+  href: string;
+}
 
-Every breadcrumb segment should be a real, crawlable link — not just styled text.
+export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: `https://yoursite.com${item.href}`,
+    })),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <nav aria-label="Breadcrumb">
+        <ol className="flex gap-2">
+          {items.map((item, index) => (
+            <li key={item.href}>
+              {index > 0 && <span>/</span>}
+              <Link href={item.href}>{item.name}</Link>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </>
+  );
+}
+```
 
 ---
 
-## Silo Structure & Topical Authority
+## AI Crawler Handling
 
-A silo is a self-contained cluster of content about one topic, where all pages link to each other and to a central hub page. Google uses this to determine topical authority.
+### Known AI Crawlers
 
-### Hub-and-Spoke Model
+| Bot | User Agent | Purpose |
+|-----|------------|---------|
+| GPTBot | `GPTBot` | ChatGPT web browsing |
+| ChatGPT-User | `ChatGPT-User` | ChatGPT user browsing |
+| ClaudeBot | `ClaudeBot` | Claude web access |
+| Claude-Web | `Claude-Web` | Claude web features |
+| PerplexityBot | `PerplexityBot` | Perplexity search |
+| Google-Extended | `Google-Extended` | Gemini/Bard training |
+| Amazonbot | `Amazonbot` | Alexa/Amazon AI |
+| CCBot | `CCBot` | Common Crawl (AI training) |
+
+### Allow AI Discovery, Block Training (Optional)
+
+```txt
+# robots.txt
+
+# Allow GPTBot for ChatGPT browsing
+User-agent: GPTBot
+Allow: /
+
+# Block CCBot (used for training datasets)
+User-agent: CCBot
+Disallow: /
+
+# Block Google AI training, allow search
+User-agent: Google-Extended
+Disallow: /
+```
+
+### AI-Specific Meta Tags
+
+```html
+<!-- Block AI training but allow indexing -->
+<meta name="robots" content="index, follow, max-image-preview:large">
+
+<!-- Opt out of AI training (proposed standard) -->
+<meta name="ai-training" content="disallow">
+```
+
+---
+
+## Structured Data Placement
+
+### Where to Add Schema
+
+```html
+<!-- Option 1: In <head> with JSON-LD (recommended) -->
+<head>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Your Company"
+    }
+  </script>
+</head>
+
+<!-- Option 2: Before closing </body> -->
+<body>
+  <!-- Page content -->
+  <script type="application/ld+json">
+    { "@context": "https://schema.org", ... }
+  </script>
+</body>
+```
+
+### Multiple Schema Per Page
+
+```html
+<head>
+  <!-- Organization (site-wide) -->
+  <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "Organization", ... }
+  </script>
+
+  <!-- BreadcrumbList (navigation) -->
+  <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", ... }
+  </script>
+
+  <!-- Article (page-specific) -->
+  <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "Article", ... }
+  </script>
+
+  <!-- FAQPage (if FAQ section exists) -->
+  <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "FAQPage", ... }
+  </script>
+</head>
+```
+
+---
+
+## Project Structure
 
 ```
-HUB: /seo/                          ← Pillar page, broad topic
-  SPOKE: /seo/technical-seo/        ← Sub-topic
-  SPOKE: /seo/on-page-seo/          ← Sub-topic
-  SPOKE: /seo/link-building/        ← Sub-topic
-  SPOKE: /seo/keyword-research/     ← Sub-topic
-    └─ DEEP: /seo/keyword-research/long-tail-keywords/   ← Specific guide
+project/
+├── public/
+│   ├── robots.txt              # Or generate dynamically
+│   ├── sitemap.xml             # Or generate dynamically
+│   ├── favicon.ico
+│   ├── icon.svg
+│   ├── apple-touch-icon.png
+│   ├── og-image.jpg            # Default OG image (1200x630)
+│   └── manifest.webmanifest
+├── app/
+│   ├── layout.tsx              # Global metadata
+│   ├── robots.ts               # Dynamic robots.txt
+│   ├── sitemap.ts              # Dynamic sitemap
+│   └── [page]/
+│       └── page.tsx            # Page-specific metadata
+├── components/
+│   ├── SchemaMarkup.tsx
+│   ├── Breadcrumbs.tsx
+│   └── MetaTags.tsx
+└── lib/
+    ├── schema.ts               # Schema generators
+    └── seo.ts                  # SEO utilities
 ```
 
-**Linking rules within a silo:**
-- Hub links to all spokes
-- Each spoke links back to hub
-- Spokes can link to adjacent spokes (contextually relevant)
-- Deep pages link up to their spoke + the hub
-- Cross-silo links are fine when genuinely relevant — just don't build a link for its own sake
+---
 
-### Building Topic Clusters
+## Verification & Submission
 
-1. Identify your core topics (usually 3-7 for a focused site)
-2. For each topic: one pillar page (the hub) that covers it broadly
-3. Create spoke content for each major sub-question within the topic
-4. Every spoke links to the pillar with relevant anchor text
-5. The pillar links down to all spokes
-6. Build the cluster before you build the links — if you don't have the content, the links don't help
+### Search Console Setup
+
+```bash
+# Verify ownership methods
+1. HTML file upload (google*.html to public/)
+2. Meta tag (add to <head>)
+3. DNS TXT record
+4. Google Analytics (if already installed)
+```
+
+### Submit Sitemap
+
+```markdown
+1. Google Search Console
+   - Sitemaps → Add new sitemap → yoursite.com/sitemap.xml
+
+2. Bing Webmaster Tools
+   - Sitemaps → Submit sitemap
+
+3. Yandex Webmaster (if relevant)
+   - Indexing → Sitemap files
+```
 
 ---
 
-## Internal Linking Strategy
+## Checklist
 
-Internal links are the most underused SEO lever. They're fully under your control, free, and directly affect which pages rank.
+```markdown
+## Technical SEO Checklist
 
-### Link Equity Principles
+### robots.txt
+- [ ] Allow search engines
+- [ ] Allow AI bots (GPTBot, ClaudeBot, PerplexityBot)
+- [ ] Block admin/private areas
+- [ ] Include sitemap reference
+- [ ] Test with Google's robots.txt tester
 
-- Google crawls your site from the homepage outward
-- Pages closer to the homepage (fewer clicks away) get more equity
-- A page with no internal links is an orphan — Google won't prioritize it
-- Anchor text matters: generic ("click here") signals nothing; descriptive ("cold email templates") signals topic relevance
+### Sitemap
+- [ ] Include all indexable pages
+- [ ] Exclude noindex pages
+- [ ] Include lastmod dates
+- [ ] Submit to Search Console
+- [ ] Auto-update on content changes
 
-### Anchor Text Rules
+### Meta Tags
+- [ ] Unique title per page (50-60 chars)
+- [ ] Unique description per page (150-160 chars)
+- [ ] Canonical URL on every page
+- [ ] Open Graph tags
+- [ ] Twitter Card tags
 
-| Type | Example | Use |
-|------|---------|-----|
-| Exact match | "cold email templates" | Use sparingly — 1-2x per page, looks natural |
-| Partial match | "writing effective cold emails" | Primary approach — most internal links |
-| Branded | "our email guide" | Fine, not the most powerful |
-| Generic | "click here", "learn more" | Avoid — wastes the signal |
-| Naked URL | `https://example.com/guide` | Never use for internal links |
+### URL Structure
+- [ ] Lowercase, hyphenated
+- [ ] Descriptive slugs
+- [ ] No query params for content
+- [ ] 301 redirects for moved content
+- [ ] No broken links
 
-### Finding and Fixing Orphan Pages
+### Performance
+- [ ] LCP < 2.5s
+- [ ] INP < 200ms
+- [ ] CLS < 0.1
+- [ ] HTTPS enabled
+- [ ] Security headers configured
 
-An orphan page is indexed but has no inbound internal links. It's invisible to the site's link graph.
-
-How to find them:
-1. Export all indexed URLs (from GSC, Screaming Frog, or `sitemap_analyzer.py`)
-2. Export all internal links on the site
-3. Pages that appear in set A but not set B are orphans
-4. Or: run `scripts/sitemap_analyzer.py` which flags potential orphan candidates
-
-How to fix them:
-- Add contextual links from relevant existing pages
-- Add them to relevant hub pages
-- If they truly have no home, consider whether they should exist at all
-
-### The Linking Priority Stack
-
-Not all internal links are equal. From most to least powerful:
-
-1. **In-content links** — within the body copy of a relevant page. Most natural, most powerful.
-2. **Hub page links** — the pillar page linking to all its spokes. High equity because pillar pages are linked from everywhere.
-3. **Navigation links** — sitewide, consistent, but diluted by their ubiquity.
-4. **Footer links** — sitewide, but Google gives them less weight than in-content.
-5. **Sidebar links** — OK but often not in the main content flow.
-
-See `references/internal-linking-playbook.md` for patterns and scripts.
-
----
-
-## Common Architecture Mistakes
-
-| Mistake | Why It Hurts | Fix |
-|---------|-------------|-----|
-| Orphan pages | No equity flows in, Google deprioritizes | Add contextual internal links from related content |
-| URL changes without redirects | Inbound links become broken, equity lost | Always 301 redirect old URLs to new ones |
-| Duplicate paths | `/blog/seo` and `/resources/seo` covering same topic | Consolidate with canonical or merge content |
-| Deep nesting (4+ levels) | Crawl equity diluted, users confused | Flatten structure, remove unnecessary directories |
-| Sitewide footer links to every post | Footer equity is diluted across 500 links | Footer should link to high-value pages only |
-| Navigation that doesn't match user intent | Users leave, rankings drop | Run card-sort tests — let users show you their mental model |
-| Homepage linking nowhere | Home is highest-equity page — use it | Link from home to key hub pages |
-| Category pages with no content | Thin pages rank poorly | Add content to all hub/category pages |
-| Dynamic URLs with parameters | `?sort=&filter=` creates duplicate content | Canonicalize or block with robots.txt |
+### Structured Data
+- [ ] Organization schema (homepage)
+- [ ] BreadcrumbList (all pages)
+- [ ] Article schema (blog posts)
+- [ ] FAQ schema (FAQ sections)
+- [ ] Validate with Rich Results Test
+```
 
 ---
 
-## Proactive Triggers
+## Quick Reference
 
-Surface these without being asked:
+### File Checklist
 
-- **Pages more than 3 clicks from homepage** → flag as crawl equity risk. Any page a user has to click 4+ times to reach needs a structural shortcut.
-- **Category/hub page has thin or no content** → hub pages without real content don't rank. Flag and recommend adding a proper pillar page.
-- **Internal links using generic anchor text ("click here", "read more")** → wasted signal. Offer to rewrite anchor text patterns.
-- **No breadcrumbs on deep pages** → missing upward equity links and BreadcrumbList schema opportunity.
-- **Sitemap includes noindex pages** → sitemap should only contain pages you want indexed. Flag and offer to filter.
-- **Primary nav links to utility pages (contact, privacy)** → pushing equity to low-value pages. Nav should prioritize money/content pages.
+```
+public/
+├── robots.txt          ✓ Required
+├── sitemap.xml         ✓ Required
+├── favicon.ico         ✓ Required
+├── og-image.jpg        ✓ Required (1200x630)
+└── manifest.json       ○ Recommended
+```
 
----
+### Meta Tag Lengths
 
-## Output Artifacts
+| Tag | Length |
+|-----|--------|
+| Title | 50-60 characters |
+| Description | 150-160 characters |
+| OG Title | 60-90 characters |
+| OG Description | 200 characters |
+| Twitter Description | 200 characters |
 
-| When you ask for... | You get... |
-|---------------------|------------|
-| Architecture audit | Structural scorecard: depth distribution, orphan count, URL pattern issues, navigation gaps + prioritized fix list |
-| New site structure | Text-based site tree (hierarchy diagram) + URL spec table with notes per section |
-| Internal linking plan | Hub-and-spoke map per topic cluster + anchor text guidelines + orphan fix list |
-| URL redesign | Before/after URL table + 301 redirect mapping + implementation checklist |
-| Silo strategy | Topic cluster map per business goal + content gap analysis + pillar page brief |
+### Image Sizes
 
----
-
-## Communication
-
-All output follows the structured communication standard:
-- **Bottom line first** — answer before explanation
-- **What + Why + How** — every finding has all three
-- **Actions have owners and deadlines** — no "we should consider"
-- **Confidence tagging** — 🟢 verified / 🟡 medium / 🔴 assumed
-
----
-
-## Related Skills
-
-- **seo-audit**: For comprehensive SEO audit covering technical, on-page, and off-page. Use seo-audit when architecture is one of several problem areas. NOT for deep structural redesign — use site-architecture.
-- **schema-markup**: For structured data implementation. Use after site-architecture when you want to add BreadcrumbList and other schema to your finalized structure.
-- **content-strategy**: For deciding what content to create. Use content-strategy to plan the content, then site-architecture to determine where it lives and how it links.
-- **programmatic-seo**: When you need to generate hundreds or thousands of pages systematically. Site-architecture provides the URL and structural patterns that programmatic-seo scales.
-- **seo-audit**: For identifying technical issues. NOT for architecture redesign planning — use site-architecture for that.
+| Image | Dimensions |
+|-------|------------|
+| OG Image | 1200 x 630 |
+| Twitter Image | 1200 x 628 |
+| Favicon | 32 x 32 |
+| Apple Touch Icon | 180 x 180 |

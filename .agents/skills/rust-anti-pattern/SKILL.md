@@ -1,405 +1,172 @@
 ---
 name: rust-anti-pattern
-description: Rust anti-patterns and common mistakes expert. Handles code review issues with clone abuse, unwrap in production, String misuse, index loops, and refactoring guidance.
-metadata:
-  triggers:
-    - anti-pattern
-    - common mistake
-    - clone abuse
-    - unwrap
-    - code review
-    - code smell
-    - refactor
-    - bad pattern
+description: "Rust 反模式与常见错误。处理代码审查、clone、unwrap、String 用法、迭代器等问题。触发词：anti-pattern, common mistake, clone, unwrap, code review, 代码异味, 常见错误, 代码审查, refactor, 重构"
+globs: ["**/*.rs"]
 ---
 
+# Rust 反模式与常见错误
 
-## Top 5 Beginner Mistakes
+## 核心问题
 
-| Rank | Mistake | Correct Approach |
-|------|---------|------------------|
-| 1 | Using `.clone()` to escape borrow checker | Use references |
-| 2 | Using `.unwrap()` in production code | Use `?` or `with_context()` |
-| 3 | Everything is `String` | Use `&str`, `Cow<str>` when needed |
-| 4 | Index-based loops | Use iterators `.iter()`, `.enumerate()` |
-| 5 | Fighting lifetimes | Redesign data structure |
+**这个模式是否掩盖了设计问题？**
 
+代码能跑不代表代码好。反模式是"能用但不该用"的模式。
 
-## Common Anti-Patterns
+---
 
-### Anti-Pattern 1: Clone Everywhere
+## Top 5 新手常犯错误
+
+| 排名 | 错误 | 正确做法 |
+|-----|------|---------|
+| 1 | 用 `.clone()` 躲避借用检查 | 使用引用 |
+| 2 | 生产代码用 `.unwrap()` | 用 `?` 或 `with_context()` |
+| 3 | 什么都是 `String` | 用 `&str`，必要时用 `Cow<str>` |
+| 4 | 索引循环 | 用迭代器 `.iter()`, `.enumerate()` |
+| 5 | 与生命周期对抗 | 重新设计数据结构 |
+
+---
+
+## 常见反模式
+
+### 反模式 1：到处 clone
 
 ```rust
-// ❌ Bad: escaping borrow checker
+// ❌ 不好：躲避借用检查
 fn process(user: User) {
-    let name = user.name.clone();  // Why clone?
+    let name = user.name.clone();  // 为什么需要 clone？
     // ...
 }
 
-// ✅ Good: use references
+// ✅ 好：直接使用引用
 fn process(user: &User) {
-    let name = &user.name;  // Just borrow
+    let name = &user.name;  // 借用即可
 }
 ```
 
-**When clone is actually needed:**
-- Truly need independent copy
-- API design requires owned value
-- Data flow requirements
+**什么时候真的需要 clone：**
+- 确实需要独立副本
+- API 设计需要 owned 值
+- 数据流向需要
 
-### Anti-Pattern 2: Unwrap in Production
+### 反模式 2：生产代码用 unwrap
 
 ```rust
-// ❌ Bad: may panic
+// ❌ 不好：可能 panic
 let config = File::open("config.json").unwrap();
 
-// ✅ Good: propagate error
+// ✅ 好：传播错误
 let config = File::open("config.json")?;
 
-// ✅ Good: with context
+// ✅ 好：带上下文
 let config = File::open("config.json")
     .context("failed to open config")?;
 ```
 
-### Anti-Pattern 3: String Everywhere
+### 反模式 3：String  everywhere
 
 ```rust
-// ❌ Bad: unnecessary allocation
+// ❌ 不好：不必要的分配
 fn greet(name: String) {
     println!("Hello, {}", name);
 }
 
-// ✅ Good: borrow is enough
+// ✅ 好：借用即可
 fn greet(name: &str) {
     println!("Hello, {}", name);
 }
 
-// When String is actually needed: ownership or mutation required
+// 确实需要 String 的场景：需要持有或修改
 ```
 
-### Anti-Pattern 4: Index Loops
+### 反模式 4：索引循环
 
 ```rust
-// ❌ Bad: error-prone, inefficient
+// ❌ 不好：容易出错，效率低
 for i in 0..items.len() {
     println!("{}: {}", i, items[i]);
 }
 
-// ✅ Good: direct iteration
+// ✅ 好：直接迭代
 for item in &items {
     println!("{}", item);
 }
 
-// ✅ Good: with index
+// ✅ 好：需要索引
 for (i, item) in items.iter().enumerate() {
     println!("{}: {}", i, item);
 }
 ```
 
-### Anti-Pattern 5: Excessive Unsafe
+### 反模式 5：过度 unsafe
 
 ```rust
-// ❌ Bad: unsafe for convenience
+// ❌ 不好：为了省事用 unsafe
 unsafe {
     let ptr = data.as_mut_ptr();
-    // ... complex memory operations
+    // ... 复杂的内存操作
 }
 
-// ✅ Good: find safe abstractions
+// ✅ 好：寻找安全的抽象
 let mut data: Vec<u8> = vec![0; size];
-// Vec handles memory management
+// Vec 已经处理了内存管理
 ```
 
+---
 
-## Solution Patterns
+## 代码异味速查
 
-### Pattern 1: Avoiding Clone
+| 现象 | 暗示问题 | 重构方向 |
+|-----|---------|---------|
+| 很多 `.clone()` | 所有权不清晰 | 明确数据流 |
+| 很多 `.unwrap()` | 错误处理缺失 | 添加 Result 处理 |
+| 很多 `pub` 字段 | 封装被破坏 | 私有 + 访问器 |
+| 深度嵌套 | 逻辑复杂 | 提取方法 |
+| 函数过长 (>50行) | 职责过多 | 拆分职责 |
+| 巨大的枚举 | 缺少抽象 | Trait + 类型 |
 
-```rust
-// ❌ Anti-pattern: clone to satisfy borrow checker
-fn process_data(data: &Data) -> String {
-    let cloned = data.items.clone();
-    cloned.into_iter().map(|x| x.to_string()).collect()
-}
+---
 
-// ✅ Solution: use references properly
-fn process_data(data: &Data) -> String {
-    data.items.iter().map(|x| x.to_string()).collect()
-}
-```
+## 过时写法 → 现代写法
 
-### Pattern 2: Proper Error Handling
-
-```rust
-// ❌ Anti-pattern: unwrap chain
-fn load_config() -> Config {
-    let content = std::fs::read_to_string("config.toml").unwrap();
-    toml::from_str(&content).unwrap()
-}
-
-// ✅ Solution: Result propagation
-fn load_config() -> Result<Config, Box<dyn Error>> {
-    let content = std::fs::read_to_string("config.toml")?;
-    Ok(toml::from_str(&content)?)
-}
-
-// ✅ Solution: with context (anyhow)
-fn load_config() -> anyhow::Result<Config> {
-    let content = std::fs::read_to_string("config.toml")
-        .context("failed to read config file")?;
-    toml::from_str(&content)
-        .context("failed to parse config")
-}
-```
-
-### Pattern 3: String vs &str
-
-```rust
-// ❌ Anti-pattern: String parameters everywhere
-struct Config {
-    host: String,
-    port: String,
-    path: String,
-}
-
-impl Config {
-    fn new(host: String, port: String, path: String) -> Self {
-        Self { host, port, path }
-    }
-}
-
-// ✅ Solution: accept &str, store String
-impl Config {
-    fn new(host: impl Into<String>, port: u16, path: impl Into<String>) -> Self {
-        Self {
-            host: host.into(),
-            port: port.to_string(),
-            path: path.into(),
-        }
-    }
-}
-```
-
-### Pattern 4: Iterator-Based Processing
-
-```rust
-// ❌ Anti-pattern: manual indexing
-fn sum_even(nums: &[i32]) -> i32 {
-    let mut sum = 0;
-    for i in 0..nums.len() {
-        if nums[i] % 2 == 0 {
-            sum += nums[i];
-        }
-    }
-    sum
-}
-
-// ✅ Solution: iterator chain
-fn sum_even(nums: &[i32]) -> i32 {
-    nums.iter()
-        .filter(|&&n| n % 2 == 0)
-        .sum()
-}
-```
-
-
-## Code Smell Quick Reference
-
-| Symptom | Indicates | Refactoring Direction |
-|---------|-----------|----------------------|
-| Many `.clone()` | Unclear ownership | Clarify data flow |
-| Many `.unwrap()` | Missing error handling | Add Result handling |
-| Many `pub` fields | Broken encapsulation | Private + accessors |
-| Deep nesting | Complex logic | Extract methods |
-| Long functions (>50 lines) | Too many responsibilities | Split responsibilities |
-| Huge enums | Missing abstraction | Trait + types |
-
-
-## Outdated → Modern Patterns
-
-| Outdated | Modern |
-|----------|--------|
-| Index loop `.items[i]` | `.iter().enumerate()` |
-| `collect::<Vec<_>>()` then iterate | Chain iterators |
+| 过时 | 现代 |
+|-----|------|
+| 索引循环 `.items[i]` | `.iter().enumerate()` |
+| `collect::<Vec<_>>()` 然后再遍历 | 链式迭代器 |
 | `lazy_static!` | `std::sync::OnceLock` |
-| `mem::transmute` conversion | `as` or `TryFrom` |
-| Custom linked list | `Vec` or `VecDeque` |
-| Manual unsafe cell | `Cell`, `RefCell` |
+| `mem::transmute` 转换 | `as` 或 `TryFrom` |
+| 自定义链表 | `Vec` 或 `VecDeque` |
+| 手动 unsafe cell | `Cell`, `RefCell` |
 
+---
 
-## Workflow
+## 代码审查清单
 
-### Step 1: Identify Anti-Patterns
+- [ ] 没有无理由的 `.clone()`
+- [ ] 库代码没有 `.unwrap()`
+- [ ] 没有带不变式的 `pub` 字段
+- [ ] 迭代器可用时不使用索引循环
+- [ ] `&str` 够用时不使用 `String`
+- [ ] 没有忽略 `#[must_use]` 警告
+- [ ] `unsafe` 有 SAFETY 注释
+- [ ] 没有巨型函数 (>50 行)
 
-```
-Code review checklist:
-  → Lots of .clone()? Check ownership design
-  → .unwrap() in lib code? Need error handling
-  → Index loops? Should use iterators
-  → pub fields with invariants? Need encapsulation
-  → >50 line functions? Should split
-```
+---
 
-### Step 2: Ask Key Questions
+## 问自己这些问题
 
-```
-1. Is this fighting Rust or working with Rust?
-   Fighting → Redesign
-   Working with → Continue
+1. **这段代码在对抗 Rust 还是在配合 Rust？**
+   - 对抗 → 重新设计
+   - 配合 → 继续
 
-2. Is this clone necessary?
-   Escaping borrow checker → Warning sign
-   Actually need copy → Keep
+2. **这个 clone 是必要的吗？**
+   - 为了躲避借用 → 错误信号
+   - 确实需要 → 保留
 
-3. Will this unwrap panic?
-   Might panic → Use ?
-   Never panics → expect("reason")
+3. **这个 unwrap 会导致 panic 吗？**
+   - 可能 → 用 `?`
+   - 绝不会 → `expect("reason")`
 
-4. Is there a more idiomatic way?
-   Check std library patterns
-   Review other Rust code
-```
+4. **有更 idiomatic 的方式吗？**
+   - 参考其他 Rust 代码
+   - 查阅 std 库 API
 
-### Step 3: Refactor
-
-```
-Identified anti-pattern?
-  ↓
-Understand the root cause
-  ↓
-Find idiomatic alternative
-  ↓
-Refactor incrementally
-  ↓
-Test thoroughly
-```
-
-
-## Review Checklist
-
-When reviewing code:
-
-- [ ] No unreasonable `.clone()`
-- [ ] Library code has no `.unwrap()`
-- [ ] No `pub` fields with invariants
-- [ ] No index loops when iterators available
-- [ ] Using `&str` instead of `String` when sufficient
-- [ ] Not ignoring `#[must_use]` warnings
-- [ ] `unsafe` has SAFETY comments
-- [ ] No giant functions (>50 lines)
-- [ ] Error handling uses Result not panic
-- [ ] No premature optimization
-
-
-## Verification Commands
-
-```bash
-# Check for common issues
-cargo clippy
-
-# Specific anti-pattern lints
-cargo clippy -- -W clippy::clone_on_copy \
-                -W clippy::unwrap_used \
-                -W clippy::expect_used
-
-# Check for complexity
-cargo clippy -- -W clippy::cognitive_complexity
-
-# Find todos and fixmes
-rg "TODO|FIXME|XXX|HACK" --type rust
-```
-
-
-## Common Pitfalls
-
-### 1. Clone to Compile
-
-**Symptom**: Lots of `.clone()` calls
-
-```rust
-// ❌ Bad: cloning to satisfy compiler
-fn process(items: &Vec<Item>) -> Vec<String> {
-    let items_clone = items.clone();
-    items_clone.into_iter().map(|i| i.name).collect()
-}
-
-// ✅ Good: proper borrowing
-fn process(items: &[Item]) -> Vec<String> {
-    items.iter().map(|i| i.name.clone()).collect()
-}
-
-// ✅ Better: no clone at all
-fn process(items: &[Item]) -> Vec<&str> {
-    items.iter().map(|i| i.name.as_str()).collect()
-}
-```
-
-### 2. Error Handling Shortcuts
-
-**Symptom**: Unwrap/expect in production code
-
-```rust
-// ❌ Bad: panic on error
-let data = fetch_data().unwrap();
-let parsed: Config = serde_json::from_str(&data).expect("bad JSON");
-
-// ✅ Good: proper error propagation
-fn load_data() -> Result<Config, Box<dyn Error>> {
-    let data = fetch_data()?;
-    let parsed = serde_json::from_str(&data)?;
-    Ok(parsed)
-}
-```
-
-### 3. String Allocation Waste
-
-**Symptom**: Unnecessary String allocations
-
-```rust
-// ❌ Bad: allocating for no reason
-fn log_message(level: String, msg: String) {
-    println!("[{}] {}", level, msg);
-}
-
-// ✅ Good: borrow when possible
-fn log_message(level: &str, msg: &str) {
-    println!("[{}] {}", level, msg);
-}
-```
-
-
-## Self-Check Questions
-
-### 1. Is this code fighting Rust?
-
-- Fighting → Redesign approach
-- Working with → Continue
-
-### 2. Is this clone necessary?
-
-- To escape borrow checker → Warning sign
-- Actually need independent copy → OK
-
-### 3. Will this unwrap panic?
-
-- Might panic → Use `?`
-- Never panics → `expect("reason")`
-
-### 4. Is there a more idiomatic way?
-
-- Reference other Rust codebases
-- Check std library APIs
-
-
-## Related Skills
-
-- **rust-coding** - Idiomatic patterns to follow
-- **rust-ownership** - Understanding borrowing to avoid clones
-- **rust-error** - Proper error handling patterns
-- **rust-performance** - When optimization matters
-- **rust-refactoring** - Systematic code improvement
-
-
-## Localized Reference
-
-- **Chinese version**: [SKILL_ZH.md](./SKILL_ZH.md) - 完整中文版本，包含所有内容

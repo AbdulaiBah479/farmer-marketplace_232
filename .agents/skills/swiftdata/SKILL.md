@@ -6,19 +6,18 @@ description: "Implement, review, or improve data persistence using SwiftData. Us
 # SwiftData
 
 Persist, query, and manage structured data in iOS 26+ apps using SwiftData
-with Swift 6.3.
+with Swift 6.2.
 
 ## Contents
 
 - [Model Definition](#model-definition)
 - [ModelContainer Setup](#modelcontainer-setup)
-- [CloudKit Sync](#cloudkit-sync)
 - [CRUD Operations](#crud-operations)
-- [`@Query in SwiftUI`](#query-in-swiftui)
+- [@Query in SwiftUI](#query-in-swiftui)
 - [#Predicate](#predicate)
 - [FetchDescriptor](#fetchdescriptor)
 - [Schema Versioning and Migration](#schema-versioning-and-migration)
-- [Concurrency (`@ModelActor`)](#concurrency-modelactor)
+- [Concurrency (@ModelActor)](#concurrency-modelactor)
 - [SwiftUI Integration](#swiftui-integration)
 - [Common Mistakes](#common-mistakes)
 - [Review Checklist](#review-checklist)
@@ -48,15 +47,15 @@ class Trip {
 }
 ```
 
-**`@Attribute` options**: `.externalStorage`, `.unique`, `.spotlight`, `.allowsCloudEncryption`, `.preserveValueOnDeletion` (iOS 18+), `.ephemeral`, `.transformable(by:)`. Rename: `@Attribute(originalName: "old_name")`.
+**@Attribute options**: `.externalStorage`, `.unique`, `.spotlight`, `.allowsCloudEncryption`, `.preserveValueOnDeletion` (iOS 18+), `.ephemeral`, `.transformable(by:)`. Rename: `@Attribute(originalName: "old_name")`.
 
-**`@Relationship`**: `deleteRule:` `.cascade`/`.nullify`(default)/`.deny`/`.noAction`. Specify `inverse:` for reliable behavior. Unidirectional (iOS 18+): `inverse: nil`.
+**@Relationship**: `deleteRule:` `.cascade`/`.nullify`(default)/`.deny`/`.noAction`. Specify `inverse:` for reliable behavior. Unidirectional (iOS 18+): `inverse: nil`.
 
 **#Unique (iOS 18+)**: `#Unique<Person>([\.firstName, \.lastName])` -- compound uniqueness.
 
 **Inheritance (iOS 26+)**: `@Model class BusinessTrip: Trip { var company: String }`.
 
-Supported types: `Bool`, `Int`/`UInt` variants, `Float`, `Double`, `String`, `Date`, `Data`, `URL`, `UUID`, `Decimal`, `Array`, `Dictionary`, `Set`, `Codable` enums, `Codable` structs and other compatible `Codable` value types, and relationships to `@Model` classes.
+Supported types: `Bool`, `Int`/`UInt` variants, `Float`, `Double`, `String`, `Date`, `Data`, `URL`, `UUID`, `Decimal`, `Array`, `Dictionary`, `Set`, `Codable` enums, `Codable` structs (composite, iOS 18+), relationships to `@Model` classes.
 
 ## ModelContainer Setup
 
@@ -78,28 +77,6 @@ let container = try ModelContainer(for: SchemaV2.Trip.self,
 let container = try ModelContainer(for: Trip.self,
     configurations: ModelConfiguration(isStoredInMemoryOnly: true))
 ```
-
-## CloudKit Sync
-
-`ModelConfiguration(..., cloudKitDatabase:)` opts a SwiftData store into
-automatic CloudKit sync, but app entitlements still gate sync.
-
-For any SwiftData CloudKit setup or schema-review task, include a separate
-**Capabilities** verdict before schema findings:
-
-- **Capabilities**: Xcode target has the iCloud capability with CloudKit enabled
-  and the intended container selected, plus Background Modes > Remote
-  notifications. Without these entitlements, automatic sync is not fully
-  configured even if `cloudKitDatabase` is set.
-- **Schema compatibility**: no `@Attribute(.unique)` or `#Unique`;
-  relationships are optional, have explicit inverses where needed, and avoid
-  `.deny`; large `Data` uses `@Attribute(.externalStorage)`.
-- **Scalar attributes**: do not make every scalar optional just for CloudKit.
-  Keep required scalars nonoptional when initializers, defaults, or migrations
-  provide valid values.
-- **Schema rollout**: initialize the development schema only in nonproduction
-  builds, verify it in CloudKit Dashboard, promote before release, and treat
-  production changes as additive only.
 
 ## CRUD Operations
 
@@ -127,7 +104,7 @@ try modelContext.transaction {
 }
 ```
 
-## `@Query` in SwiftUI
+## @Query in SwiftUI
 
 ```swift
 struct TripListView: View {
@@ -170,7 +147,7 @@ struct RecentView: View {
 #Predicate<Trip> { $0.tags.contains { $0.name == "adventure" } }        // Collection
 ```
 
-Supported: `==`, `!=`, `<`, `<=`, `>`, `>=`, `&&`, `||`, `!`, `contains()`, `allSatisfy()`, `filter()`, `starts(with:)`, `localizedStandardContains()`, `caseInsensitiveCompare()`, arithmetic, conditional expressions, optional chaining and binding, nil coalescing, type casting. **Avoid**: loops, nested declarations, mutations, and arbitrary unsupported method calls.
+Supported: `==`, `!=`, `<`, `<=`, `>`, `>=`, `&&`, `||`, `!`, `contains()`, `allSatisfy()`, `filter()`, `starts(with:)`, `localizedStandardContains()`, `caseInsensitiveCompare()`, arithmetic, ternary, optional chaining, nil coalescing, type casting. **Not supported**: flow control, nested declarations, arbitrary method calls.
 
 ## FetchDescriptor
 
@@ -224,7 +201,7 @@ static let migrateV2toV3 = MigrationStage.custom(
 
 Lightweight handles: adding optional/defaulted properties, renaming (`originalName`), removing properties, adding model types.
 
-## Concurrency (`@ModelActor`)
+## Concurrency (@ModelActor)
 
 ```swift
 @ModelActor
@@ -280,11 +257,11 @@ struct DetailView: View {
 
 ## Common Mistakes
 
-**1. `@Model` on struct** -- Use class. `@Model` requires reference semantics.
+**1. @Model on struct** -- Use class. `@Model` requires reference semantics.
 
-**2. `@Transient` without default** -- Always provide default: `@Transient var x: Bool = false`.
+**2. @Transient without default** -- Always provide default: `@Transient var x: Bool = false`.
 
-**3. Missing .modelContainer** -- `@Query` returns empty without a container on the view hierarchy.
+**3. Missing .modelContainer** -- @Query returns empty without a container on the view hierarchy.
 
 **4. Passing model objects across actors:**
 ```swift
@@ -310,9 +287,9 @@ struct DetailView: View {
 // CORRECT: #Predicate<Trip> { $0.tags.contains { $0.name == "x" } }
 ```
 
-**8. No save in `@ModelActor`** -- Always call `try modelContext.save()` explicitly.
+**8. No save in @ModelActor** -- Always call `try modelContext.save()` explicitly.
 
-**9. ObservableObject with `@Model`** -- Never use `ObservableObject`/`@Published`. `@Model` generates `Observable`. Use `@Query` in views.
+**9. ObservableObject with @Model** -- Never use `ObservableObject`/`@Published`. `@Model` generates `Observable`. Use `@Query` in views.
 
 **10. Non-optional relationship without default:**
 ```swift
@@ -340,16 +317,18 @@ struct DetailView: View {
 - [ ] `PersistentIdentifier` used across actor boundaries
 - [ ] Schema changes have `VersionedSchema` + `SchemaMigrationPlan`
 - [ ] Large data uses `@Attribute(.externalStorage)`
-- [ ] CloudKit models avoid uniqueness, use optional relationships, avoid `.deny`, and do not blanket-optionalize scalars
-- [ ] CloudKit sync has iCloud + CloudKit, Remote notifications, and production schema rollout checked
+- [ ] CloudKit models use optionals and avoid unique constraints
 - [ ] Explicit `save()` in `@ModelActor` methods
 - [ ] Previews use `ModelConfiguration(isStoredInMemoryOnly: true)`
 - [ ] `@Model` classes accessed from SwiftUI views are on `@MainActor` via `@ModelActor` or MainActor isolation
 
 ## References
 
-- [references/swiftdata-advanced.md](references/swiftdata-advanced.md) — custom data stores, history tracking, CloudKit, composite attributes, model inheritance, undo/redo, performance
-- [references/swiftdata-queries.md](references/swiftdata-queries.md) — `@Query` variants, FetchDescriptor deep dive, sectioned queries, dynamic queries, background fetch
-- [references/core-data-coexistence.md](references/core-data-coexistence.md) — standalone Core Data patterns and Core Data to SwiftData migration
-- [references/predicate-pitfalls.md](references/predicate-pitfalls.md) — #Predicate runtime crashes, unsupported expressions, safe patterns
-- [references/indexing.md](references/indexing.md) — #Index macro, compound indexes, when to index, migration
+- See `references/swiftdata-advanced.md` for custom data stores, history
+  tracking, CloudKit, Core Data coexistence, composite attributes,
+  model inheritance, undo/redo, and performance patterns.
+- See `references/swiftdata-queries.md` for @Query variants, FetchDescriptor
+  deep dive, sectioned queries, dynamic queries, and background fetch patterns.
+- See `references/core-data-coexistence.md` for standalone Core Data patterns
+  and Core Data to SwiftData migration strategies.
+

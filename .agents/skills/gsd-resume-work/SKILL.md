@@ -1,36 +1,26 @@
 ---
-name: gsd-resume-work
-description: Resume work from previous session with full context restoration
-allowed-tools: Read, Bash, Edit
+name: gsd:resume-work
+description: Resume paused work
+version: 1.0.0
+triggers: [resume work, continue work]
+tools: [Bash, Glob, Grep, Write]
 ---
 
+# GSD Resume Work
 
-<objective>
-Restore complete project context and resume work seamlessly from previous session.
+Resumes paused work session.
 
-Routes to the resume-project workflow which handles:
+## When to Use
 
-- STATE.md loading (or reconstruction if missing)
-- Checkpoint detection (.continue-here files)
-- Incomplete work detection (PLAN without SUMMARY)
-- Status presentation
-- Context-aware next action routing
-  </objective>
+- Continuing after pause
+- Restoring work state
 
-<execution_context>
-@.github/get-shit-done/workflows/resume-project.md
-</execution_context>
+## Process
 
-<process>
-**Follow the resume-project workflow** from `@.github/get-shit-done/workflows/resume-project.md`.
+1. Load saved state
+2. Restore progress
+3. Continue work
 
-The workflow handles all resumption logic including:
+## Success Criteria
 
-1. Project existence verification
-2. STATE.md loading or reconstruction
-3. Checkpoint and incomplete work detection
-4. Visual status presentation
-5. Context-aware option offering (checks CONTEXT.md before suggesting plan vs discuss)
-6. Routing to appropriate next command
-7. Session continuity updates
-   </process>
+Work resumed from saved state.

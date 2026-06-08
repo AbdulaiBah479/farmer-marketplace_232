@@ -1,42 +1,38 @@
 ---
 name: system-design
-description: Design systems, services, and architectures. Trigger with "design a system for", "how should we architect", "system design for", "what's the right architecture for", or when the user needs help with API design, data modeling, or service boundaries.
+description: Use when designing system architecture, APIs, components, or data models - provides a structured design workflow with validation and documentation outputs.
 ---
 
 # System Design
 
-Help design systems and evaluate architectural decisions.
+## Overview
+Create clear system, API, component, or data model designs with explicit requirements, constraints, and validation steps.
 
-## Framework
+## When to Use
+- Designing system architecture or components
+- Specifying APIs or data models
+- Producing design docs or diagrams
 
-### 1. Requirements Gathering
-- Functional requirements (what it does)
-- Non-functional requirements (scale, latency, availability, cost)
-- Constraints (team size, timeline, existing tech stack)
+Avoid when:
+- You only need implementation tasks (use implementation-workflow)
 
-### 2. High-Level Design
-- Component diagram
-- Data flow
-- API contracts
-- Storage choices
+## Quick Reference
 
-### 3. Deep Dive
-- Data model design
-- API endpoint design (REST, GraphQL, gRPC)
-- Caching strategy
-- Queue/event design
-- Error handling and retry logic
+| Task | Load reference |
+| --- | --- |
+| System design workflow | `skills/system-design/references/system.md` |
 
-### 4. Scale and Reliability
-- Load estimation
-- Horizontal vs. vertical scaling
-- Failover and redundancy
-- Monitoring and alerting
-
-### 5. Trade-off Analysis
-- Every decision has trade-offs. Make them explicit.
-- Consider: complexity, cost, team familiarity, time to market, maintainability
+## Workflow
+1. Gather requirements and constraints.
+2. Load the system design reference.
+3. Define structure, interfaces, and data flows.
+4. Validate against constraints and best practices.
+5. Deliver spec/diagram/code artifacts.
 
 ## Output
+- Design spec or diagram
+- Validation notes and follow-ups
 
-Produce clear, structured design documents with diagrams (ASCII or described), explicit assumptions, and trade-off analysis. Always identify what you'd revisit as the system grows.
+## Common Mistakes
+- Designing without constraints
+- Mixing implementation details with spec scope

@@ -1,8 +1,13 @@
 ---
 name: rust-skill-index
-description: Rust 技能索引。提供所有技能的快速导航和查询入口。触发词：skill, index, 技能, 索引, 目录--- # Rust 技能索引 > **当前共 38 个技能**，完整内容请参见根目录 `SKILL.md`
+description: "Rust 技能索引。提供所有技能的快速导航和查询入口。触发词：skill, index, 技能, 索引, 目录"
 ---
 
+# Rust 技能索引
+
+> **当前共 35 个技能**，完整内容请参见根目录 `SKILL.md`
+
+---
 
 ## 快速导航
 
@@ -11,8 +16,9 @@ description: Rust 技能索引。提供所有技能的快速导航和查询入�
 | 核心技能 | 7 | 日常开发必备 |
 | 进阶技能 | 10 | 深入理解 Rust |
 | 专家技能 | 18 | 疑难杂症专项 |
-| **总计** | **38** | |
+| **总计** | **35** | |
 
+---
 
 ## 核心技能（必学）
 
@@ -26,6 +32,7 @@ description: Rust 技能索引。提供所有技能的快速导航和查询入�
 | **rust-error-advanced** | `rust-error-advanced/SKILL.md` | 深入错误处理 |
 | **rust-coding** | `rust-coding/SKILL.md` | 编码规范与最佳实践 |
 
+---
 
 ## 进阶技能
 
@@ -42,6 +49,7 @@ description: Rust 技能索引。提供所有技能的快速导航和查询入�
 | **rust-middleware** | `rust-middleware/SKILL.md` | 中间件模式 |
 | **rust-xacml** | `rust-xacml/SKILL.md` | 策略引擎与 RBAC |
 
+---
 
 ## 专家技能
 
@@ -61,6 +69,7 @@ description: Rust 技能索引。提供所有技能的快速导航和查询入�
 | **rust-gpu** | `rust-gpu/SKILL.md` | GPU 内存与计算 |
 | **rust-skill-index** | `rust-skill-index/SKILL.md` | 技能索引（本文件） |
 
+---
 
 ## 技能分类
 
@@ -85,6 +94,7 @@ Web 开发：rust-web, rust-async, rust-middleware, rust-auth, rust-xacml
 基础设施：rust-cache, rust-auth, rust-middleware, rust-xacml
 ```
 
+---
 
 ## 问题速查
 
@@ -111,11 +121,3 @@ Web 开发：rust-web, rust-async, rust-middleware, rust-auth, rust-xacml
 | 认证授权 | rust-auth |
 | Web 中间件 | rust-middleware |
 | 策略引擎 | rust-xacml |
-
-
-
-## Newly Added Skills
-
-- `rust-testing` - unit/integration/property/concurrency testing
-- `rust-database` - sqlx/diesel/sea-orm, transaction, migration
-- `rust-observability` - tracing, metrics, OpenTelemetry

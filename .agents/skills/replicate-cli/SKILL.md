@@ -58,24 +58,6 @@ replicate run meta/llama-2-70b-chat --stream prompt="Tell me a joke"
 - `--save` - Save outputs to local directory
 - `--output-directory <dir>` - Specify output directory (default: `./{prediction-id}`)
 
-### Seedance / Seedream Notes (Video Loops)
-
-- **Seedream is image-only on Replicate** (`bytedance/seedream-3`). It does not generate video.
-- **Video models:**
-  - `bytedance/seedance-1-lite` → good for short loops; use `duration=3`, `fps=24`, `camera_fixed=true`.
-  - `bytedance/seedance-1.5-pro` → **3s duration fails**; use `duration=5` minimum. Output is a URL.
-- **Looping basics:** set `last_frame_image` to the same image as `image`, and use `camera_fixed=true` to reduce camera motion.
-
-**CLI output quirks & fixes**
-- `replicate run ... --json` can return `[]` even when the prediction succeeds.
-  - Fix: poll predictions and fetch output URL:
-    ```bash
-    replicate prediction list --json
-    replicate prediction show <id> --json
-    ```
-- **Seedance-1-lite** often returns a data URI (`data:video/mp4;base64,...`) → base64‑decode to MP4.
-- **Seedance-1.5-pro** returns a direct URL in `output` → download with `curl -L`.
-
 ### Input Handling
 
 **File uploads:** Prefix local file paths with `@`:

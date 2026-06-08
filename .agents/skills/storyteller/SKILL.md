@@ -1,212 +1,240 @@
 ---
 name: storyteller
-description: 'Use this skill when writing fiction, narrative nonfiction, brand stories, or any content where emotional engagement and narrative arc matter more than pure information delivery. Trigger phrases: ''write a short story'', ''tell my brand''s origin story'', ''write a narrative about'', ''create a character''. Do NOT use for purely informational content, technical writing, or persuasive copy without a narrative component.'
-version: 1.0.0
-author: community
-tags:
-  - writing
-  - storytelling
-  - narrative
-  - creative
-license: MIT
-keywords:
-  - write story
-  - brand story
-  - narrative
-  - storyteller
+description: >
+  Transform abstract/metaphorical narrative into concrete visual story structure.
+  
+  USE WHEN: Converting poetic/theatrical narrative from diverse-content-gen into 
+  scene-by-scene visual breakdowns ready for screenwriter formatting.
+  
+  PIPELINE POSITION: diverse-content-gen → **storyteller** → screenwriter → production-validator → imagine → arch-v
+  
+  PRIMARY FUNCTION: Bridge the gap between "altar pribadi" (abstract metaphor) and 
+  "woman returns daily to same beach spot" (filmable scene).
+  
+  OUTPUT: Scene breakdown with concrete visual actions, preserved emotional core, 
+  and story logic documentation.
 ---
 
-# Storyteller
+# Storyteller Skill
 
 ## Overview
-This skill crafts compelling narratives using proven story structures—from the Hero's Journey and three-act structure to the single-scene vignette and brand origin format. It covers character development, scene-setting, dialogue, pacing, and the specific techniques that create emotional resonance: show don't tell, sensory detail, tension and release. Whether you're writing a short story opening, a founder's origin narrative for a pitch deck, or a bedtime story, this skill produces writing that keeps readers turning pages.
 
-## When to Use
-- Writing short fiction (stories, flash fiction, vignettes)
-- Crafting a brand or founder origin story
-- Developing character profiles or backstories
-- Writing narrative-driven marketing content (case studies with story structure)
-- Creating opening scenes, chapter hooks, or story pitches
-- Writing speeches or presentations with a narrative arc
-- Developing scripts or story outlines
+This skill transforms metaphorical/theatrical narrative content into concrete, filmable visual stories. It serves as the critical translation layer between poetic writing and production-ready screenplay format.
 
-## When NOT to Use
-- Purely informational articles or documentation (use `technical-writer` or `blog-post` skills)
-- Conversion-focused marketing copy without narrative (use `copywriter` skill)
-- Academic essays where narrative would be inappropriate (use `academic-essay` skill)
-- Factual reporting or news content
+**The Problem It Solves:**
+```
+INPUT:  "Aku menjadi laut yang membeku, menunggu pelaut yang tidak kembali"
+PROBLEM: What does this LOOK LIKE on screen?
+OUTPUT: Woman stands at frozen beach at dawn, staring at horizon where ship 
+        disappeared. She places his jacket on the ice. Days pass (montage). 
+        She returns. Always returns.
+```
 
-## Quick Reference
-| Task | Approach |
-|------|----------|
-| Three-act structure | Setup → Confrontation → Resolution |
-| Hero's Journey | Ordinary world → Call → Trials → Transformation → Return |
-| In medias res | Open in the middle of action, fill context in later |
-| Show don't tell | "She clenched her jaw" not "She was angry" |
-| Scene-setting | 2–3 precise sensory details, not a catalog of the room |
-| Dialogue | Each character has a distinct voice; dialogue reveals character and moves plot |
-| Pacing | Short sentences = fast/tense; long sentences = slow/reflective |
-| Conflict types | Person vs. person, person vs. self, person vs. nature, person vs. society |
-
-## Instructions
-
-1. **Define the story's core emotional question.** Every great story asks a question that keeps readers engaged: Will she escape? Can he forgive himself? Will they make it in time? Identify this before writing.
-
-2. **Choose a story structure.**
-
-   **Three-Act Structure** (universal, flexible):
-   - Act 1 (25%): Establish the world and protagonist; introduce the inciting incident
-   - Act 2 (50%): Rising conflict, complications, darkest moment
-   - Act 3 (25%): Climax and resolution
-
-   **Hero's Journey** (character transformation stories):
-   1. Ordinary World: Show who the hero is before the story starts
-   2. Call to Adventure: Something disrupts the status quo
-   3. Refusal/Acceptance: Internal conflict before committing
-   4. Trials and Allies: Tests that reveal character
-   5. Ordeal: The central crisis
-   6. Transformation: The hero is fundamentally changed
-   7. Return: Back to the ordinary world, but different
-
-   **In Medias Res** (short fiction, openings):
-   - Drop directly into action; establish context through what characters say and do, not exposition
-
-   **Kishōtenketsu** (Japanese 4-act structure, no conflict required):
-   - Ki: Introduce characters/setting
-   - Shō: Develop the situation
-   - Ten: Twist or unexpected turn
-   - Ketsu: Reconcile and resolve
-
-   **Brand Origin Structure** (for companies and founders):
-   - The world before the founder saw the problem
-   - The specific moment they felt the pain
-   - The failed attempts to solve it with existing solutions
-   - The breakthrough or insight
-   - The mission going forward
-
-3. **Build the character.** For any protagonist, establish:
-   - **Want:** What they consciously pursue
-   - **Need:** What they actually require (often different from want)
-   - **Wound:** The backstory that shaped them
-   - **Flaw:** The thing that makes them human and relatable
-   - **Voice:** How they speak—vocabulary, rhythm, what they avoid saying
-
-4. **Write scenes, not summaries.** Scenes happen in real time, in a specific place, with characters doing and saying things. Summaries skip time. Use scenes for what matters; use summary for transitions.
-
-5. **Apply "show don't tell."** Tell: "He was nervous." Show: "He refreshed the email three times in a minute." Convert internal states to external, observable behavior.
-
-6. **Use sensory detail selectively.** Don't describe everything—choose 2–3 specific, surprising details that do double work: establish setting AND reveal character or theme. "The apartment smelled like cigarettes and fresh paint" tells you more than a paragraph of description.
-
-7. **Write dialogue that earns its place.** Every line of dialogue should do at least two things: reveal character, move plot, establish conflict, or provide information. Cut dialogue that only conveys information. Give each character a distinct speech pattern.
-
-8. **Control pacing deliberately.**
-   - Fast pace: Short sentences. Fragment. White space. Action verbs.
-   - Slow pace: Longer, winding sentences that linger on sensation, creating a meditative quality that allows the reader to breathe.
-   - Vary rhythm intentionally to control emotional effect.
-
-9. **For brand/founder stories:** Stay specific and personal. Vague mission statements are forgettable. The moment the founder spilled coffee on her laptop and realized every portable stand was designed for left-handers is unforgettable.
-
-## Examples
-
-### Example 1: Short Story Opening
-
-**Input:** "Write the opening scene of a short story about a lighthouse keeper who discovers the light has gone out on the night of the worst storm in decades. Tone: tense, literary. Third-person limited POV."
-
-**Output:**
+**Core Principle:** Preserve emotional truth while making content filmable.
 
 ---
 
-The bulb had never died before. Not once in nineteen years.
+## Core Transformation Workflow
 
-Maren stood in the lamp room with a dead flashlight in one hand and the emergency manual in the other, listening to the storm disassemble the world outside. Forty-foot swells, the radio had said at six. That was two hours ago. By now the swells were whatever they were and the ships were wherever they were and the light—the one thing between them—was dark.
+### Step 1: Extract Emotional Core
+**What does the metaphor FEEL like?**
 
-She found the replacement bulb by feel, wedged behind the maintenance log in a bracket she'd installed herself the winter after her father died. Her hands knew where it was before her mind did. That was what nineteen years felt like: the body remembering what the mind forgot to.
+Read the metaphorical content and identify:
+- **Primary Emotion:** The dominant feeling (longing, grief, obsession, hope)
+- **Emotional Intensity:** Scale 1-10, how extreme is this feeling?
+- **Relationship Dynamic:** Who feels what toward whom?
+- **Temporal Context:** Is this present pain, past memory, future fear?
 
-The replacement slotted in with a click that felt too small for how much was riding on it.
+**Example:**
+```
+Metaphor: "Aku menjadikanmu altar pribadi"
+Primary Emotion: Worship/devotion bordering on obsession
+Intensity: 9/10 (extreme, unhealthy level)
+Dynamic: Speaker → Beloved (one-directional adoration)
+Temporal: Present state, ongoing condition
+```
 
-She pressed the switch.
+### Step 2: Find Visual Equivalent
+**What ACTIONS show this emotion?**
 
-Nothing.
+Translate abstract emotion into visible behavior using this framework:
 
-She counted to three, the way her father had taught her. *Don't panic until you've waited. The mind invents failures the hands can fix.*
+| Emotion Type | Visual Translation Strategy |
+|--------------|----------------------------|
+| **Longing/Waiting** | Character returns to same location repeatedly; keeps object belonging to absent person; checks phone/window/door obsessively |
+| **Worship/Devotion** | Ritualistic behaviors (daily routines, shrine-like arrangements); serving without being asked; positioning self lower than object of worship |
+| **Loss/Grief** | Empty spaces where person used to be; untouched belongings; inability to change/move on from environment |
+| **Obsession** | Collection of items; repetitive actions; deteriorating self-care while maintaining focus on other |
+| **Fear of Abandonment** | Checking behaviors; keeping lights on; sleeping in wrong positions; startling at sounds |
 
-She pressed it again.
+**Visual Vocabulary Reference:** [references/visual-vocabulary.md](references/visual-vocabulary.md)
 
-The light bloomed into the dark and swept the wall in one slow revolution, and somewhere below, through two panes of glass and forty feet of screaming wind, she thought she heard the ocean give something back.
+### Step 3: Generate Scene Breakdown
+**Build filmable scenes around visual actions**
+
+For each emotional beat in the source material:
+
+1. **Identify Location:** Where would this emotion naturally occur?
+2. **Define Action:** What does the character DO to show this emotion?
+3. **Select Props/Objects:** What physical items carry symbolic weight?
+4. **Establish Time:** When does this happen? (time progression matters)
+5. **Document Story Logic:** Why does this visual choice work?
+
+**Scene Template:**
+```
+SCENE [NUMBER]: [Brief Description]
+Location: [Specific place]
+Time: [Time of day/progression]
+Action: [What character physically does]
+Key Visuals: [Important visual elements]
+Emotional Beat: [What audience should feel]
+Story Logic: [Why this visual choice represents the metaphor]
+```
+
+### Step 4: Create Story Logic Map
+**Document the metaphor→visual transformation**
+
+For transparency and creative consistency, document:
+
+```
+STORY LOGIC MAP
+===============
+Original Metaphor: "..."
+Emotional Core: [extracted emotion]
+Visual Translation: [chosen visual representation]
+Why It Works: [explanation of connection]
+Alternative Considered: [what else could work]
+```
 
 ---
 
-**Craft notes:**
-- Opens with the core problem in the first line
-- "The storm disassemble the world" — metaphor that establishes tone without over-description
-- Character's backstory (19 years, her father) woven into action, not stated as exposition
-- "Three panes of glass and forty feet of screaming wind" — precise sensory detail does more than a paragraph of storm description
-- Ending: ambiguous resolution that opens rather than closes
+## Output Format
+
+### Scene Breakdown Structure
+
+```markdown
+# Visual Story Breakdown: [Title]
+
+## Source Material Summary
+- **Original Concept:** [From diverse-content-gen]
+- **Emotional Core:** [Primary emotion identified]
+- **Tone:** [Preserved from source]
+- **Target Duration:** [5-10 minutes]
+
+## Character(s)
+- **[Name]:** [Brief visual description, emotional state]
+
+## Scene-by-Scene Breakdown
+
+### Scene 1: [Title]
+**Location:** [Specific, filmable location]
+**Time:** [Time of day]
+**Duration:** [30-60 seconds estimate]
+
+**Visual Action:**
+[Detailed description of what character does - FILMABLE actions only]
+
+**Key Visuals:**
+- [Visual element 1]
+- [Visual element 2]
+- [Visual element 3]
+
+**Emotional Beat:** [What audience feels]
+
+**Story Logic:** [How this scene translates the original metaphor]
 
 ---
 
-### Example 2: Brand Origin Story
-
-**Input:** "Write a founder origin story for a company called Rootwork that makes tools for genealogy researchers. Founder: Diane, a Black American woman who started researching her family history after her grandmother died and hit walls with traditional genealogy tools designed around European surname conventions. Keep it under 300 words."
-
-**Output:**
+### Scene 2: [Title]
+[Continue same format...]
 
 ---
 
-**How Rootwork Started**
+## Story Logic Map
+| Original Metaphor | Emotional Core | Visual Translation | Why It Works |
+|-------------------|----------------|-------------------|--------------|
+| "..." | ... | ... | ... |
 
-After her grandmother Lottie died, Diane wanted to know who came before her.
-
-Not just names and dates. Names and dates she could get. She wanted to know what Lottie's mother's hands looked like when they worked, where exactly in Georgia her great-great-grandmother had been born, and whether anyone had written down what she liked to cook.
-
-She tried the big genealogy platforms. She learned quickly that these tools had been built for a particular kind of family history—the kind traced through last names that stayed stable across generations. Her family's history didn't work that way. Enslaved ancestors were listed by first name only, if at all. Counties had changed. Records had burned. The search fields assumed a paper trail that slavery had deliberately destroyed.
-
-The tools weren't wrong, exactly. They just weren't built for her.
-
-So she started building something that was.
-
-Rootwork is designed around the research patterns that oral histories, freedmen's bureau records, DNA matches, and community documentation actually require. It treats the absence of a document not as a dead end but as a data point. It connects researchers to archives that most platforms don't index, and to a community of genealogists doing the same painstaking, necessary work.
-
-Lottie lived to ninety-one and never knew her grandmother's full name. Diane thinks about that every day.
-
-Rootwork is for everyone who hits a wall in their family history—and especially for those whose walls were built by design.
+## Technical Notes for Screenwriter
+- [Any specific notes about pacing, transitions, or visual consistency]
+```
 
 ---
 
-**Craft notes:**
-- Opens with a specific, human moment (grandmother's death) not a mission statement
-- "What Lottie's mother's hands looked like when they worked" — specific detail that makes the desire feel real
-- The problem is explained through lived experience, not product positioning
-- The product introduction comes after the reader is emotionally invested
-- Closes with the theme: walls "built by design"—gives purpose without a slogan
+## Transformation Guidelines
+
+### What Makes a Scene "Filmable"
+
+✅ **FILMABLE:**
+- Physical actions (walking, touching, looking, moving objects)
+- Observable emotions (tears, shaking, stillness, posture)
+- Environmental details (weather, lighting, objects in space)
+- Time progression (morning→night, seasons changing)
+
+❌ **NOT FILMABLE:**
+- Internal thoughts ("She thinks about him")
+- Abstract concepts ("Love fills the room")
+- Unvisualizable metaphors ("Her heart is a frozen sea")
+- Telling instead of showing ("She is sad")
+
+### Converting Common Metaphorical Patterns
+
+| Metaphor Type | Visual Approach |
+|---------------|-----------------|
+| **"I am [element]"** (sea, fire, ice) | Show character interacting with that element; use element as setting backdrop; character's behavior mirrors element properties |
+| **"You are my [sacred thing]"** (altar, god, sun) | Show ritualistic worship-like behaviors; lighting/composition that elevates the beloved; character positioning that shows devotion |
+| **"I am waiting for..."** | Show passage of time; same location revisited; objects accumulated or deteriorating; physical signs of waiting |
+| **"When you left..."** | Empty spaces; untouched belongings; paused activities; contrast with "before" flashbacks |
+
+### Detailed Methodology
+For step-by-step transformation process with worked examples:
+- [references/transformation-methodology.md](references/transformation-methodology.md)
 
 ---
 
-## Best Practices
-- Start in the middle of something happening—readers don't need backstory before they have a reason to care
-- Give your protagonist something to lose; stakes are what create tension
-- Earn your ending: the resolution should feel inevitable in hindsight but surprising in the moment
-- Use white space strategically—a short paragraph after a long one creates emphasis and pause
-- Read dialogue aloud; if it sounds like writing, it needs to sound more like talking
-- The best details do double work: establish setting AND character or theme simultaneously
+## Integration with Pipeline
 
-## Common Mistakes
-- **Opening with backstory:** Readers don't care about a character's history until they care about the character
-- **Telling emotions:** "She felt sad" is a summary. Show the behavior that sadness produces.
-- **Dialogue tags:** "Said" is invisible; "exclaimed," "hissed," "chuckled" pull readers out of the scene
-- **Adjective overload:** Two precise adjectives beat six vague ones. "The rusted, nail-studded door" beats "the old, worn, deteriorating, damaged door"
-- **Resolved tension too fast:** The moment a problem appears is not the moment to solve it—let it breathe
-- **Passive protagonist:** If the character isn't making choices, they aren't a protagonist
+### Input: diverse-content-gen Output
+Expect structured narrative ideas with:
+- POV, Setting, Tone, Structure already defined
+- "Why This Wins" analysis (emotional hooks identified)
+- Metaphorical/theatrical language
+- NOT scene-by-scene yet
 
-## Tips & Tricks
-- The "iceberg" principle: know ten times more about your character than appears on the page—it shows in the writing
-- If your scene could be cut without affecting what comes after, cut it
-- Use the last line of a scene or chapter as a hook to the next—end on tension, question, or revelation
-- Try writing the climactic scene first to understand what you're building toward
-- "What's the worst thing that could happen right now?"—then do that, and your story has momentum
-- Read your opening line cold the next day; if it doesn't make you want to know what comes next, rewrite it
+### Output: Ready for Screenwriter
+Provide scene breakdowns with:
+- Concrete locations and times
+- Physical, filmable actions
+- Key visuals for each scene
+- Emotional progression documented
+- Story logic preserved
 
-## Related Skills
-- [blog-post](../../writing/blog-post/SKILL.md)
-- [social-media](../../writing/social-media/SKILL.md)
-- [proofreader](../../writing/proofreader/SKILL.md)
+**Screenwriter will then:**
+- Add proper screenplay formatting (sluglines, etc.)
+- Wrap in XML tags for pipeline
+- Add technical metadata (duration, characters list)
+
+---
+
+## Quality Checklist
+
+Before outputting scene breakdown, verify:
+
+- [ ] Every scene describes VISIBLE action (not internal thought)
+- [ ] Emotional core from source material is preserved
+- [ ] Story logic map explains all metaphor→visual translations
+- [ ] Scenes follow logical time/space progression
+- [ ] Total scene count appropriate for target duration (8-15 for 5-10 min)
+- [ ] Key visuals are specific enough for image generation
+- [ ] No unexplained jumps in emotion or location
+- [ ] Tone consistency maintained throughout
+
+---
+
+## Additional Resources
+
+### Detailed Transformation Process
+[references/transformation-methodology.md](references/transformation-methodology.md)
+
+### Visual Vocabulary Reference
+[references/visual-vocabulary.md](references/visual-vocabulary.md)

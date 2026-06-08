@@ -1,18 +1,14 @@
 ---
 name: sap-cloud-sdk-ai
 description: |
-  Integrates SAP Cloud SDK for AI into JavaScript/TypeScript and Java applications. Use when building applications with SAP AI Core, Generative AI Hub, or Orchestration Service. Covers chat completion, embedding, streaming, function calling, content filtering, data masking, document grounding, prompt registry, and LangChain/Spring AI integration. Supports OpenAI GPT-4o, Llama, Gemini, Amazon Nova, and other foundation models via SAP BTP.
+  Integrates SAP Cloud SDK for AI into JavaScript/TypeScript and Java applications. Use when building applications with SAP AI Core, Generative AI Hub, or Orchestration Service. Covers chat completion, embedding, streaming, function calling, content filtering, data masking, document grounding, prompt registry, and LangChain/Spring AI integration. Supports OpenAI GPT-4o, Claude, Gemini, Amazon Nova, and other foundation models via SAP BTP.
 license: GPL-3.0
 metadata:
-  version: 2.0.1
-  last_verified: 2026-05-31
+  version: 2.0.0
+  last_verified: 2025-11-27
 ---
 
 # SAP Cloud SDK for AI
-
-## Related Skills
-
-- **dependency-upgrade**: Hardening guidance for npm package upgrades, lockfile policies, and secure dependency workflows
 
 The official SDK for SAP AI Core, SAP Generative AI Hub, and Orchestration Service.
 
@@ -38,7 +34,7 @@ Use this skill when:
 
 ## Quick Start
 
-> **Note**: This skill uses SAP Cloud SDK for AI JavaScript v2.11.0+ and Java v1.19.0+. If you're migrating from v1.x, see [V1 to V2 Migration Guide](references/v1-to-v2-migration.md) for breaking changes.
+> **Note**: This skill uses SAP Cloud SDK for AI v2.2.0+. If you're migrating from v1.x, see [V1 to V2 Migration Guide](references/v1-to-v2-migration.md) for breaking changes.
 
 ### JavaScript/TypeScript
 
@@ -291,8 +287,8 @@ For detailed guidance:
 
 | SDK | Current Version | Node/Java Requirement |
 |-----|-----------------|----------------------|
-| JavaScript | 2.11.0+ | Node.js 20+ |
-| Java | 1.19.0+ | Java 17+ (21 LTS recommended) |
+| JavaScript | 2.2.0+ | Node.js 20+ |
+| Java | 1.13.0 (Core) / 1.12.0 (Latest orchestration) | Java 17+ (21 LTS recommended) |
 
 **Note**: Generated model classes (in `...model` packages) may change in minor releases but are safe to use.
 

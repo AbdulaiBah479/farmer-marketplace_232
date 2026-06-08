@@ -1,390 +1,455 @@
 ---
-name: "skill-tester"
-description: "Validate, test, and score the quality of skills within the claude-skills ecosystem. Comprehensive meta-skill: structure validation, Python script testing (syntax + imports + runtime + output format), multi-dimensional quality scoring with letter grades and tier classification (BASIC/STANDARD/POWERFUL). Use when authoring a new skill, auditing existing skills for tier promotion, setting up pre-commit hooks for skill quality, or integrating skill QA into CI."
+name: skill-tester
+description: Test and validate agent skills against the Agent Skills Specification v1.0. Use before deploying skills to ensure spec compliance and catch structural issues.
+license: MIT
+allowed-tools:
+  - Bash
+  - Read
 ---
 
 # Skill Tester
 
----
+Validate agent skills against the Agent Skills Specification v1.0 with comprehensive testing and reporting.
 
-**Name**: skill-tester
-**Tier**: POWERFUL
-**Category**: Engineering Quality Assurance
-**Dependencies**: None (Python Standard Library Only)
-**Author**: Claude Skills Engineering Team
-**Version**: 1.0.0
-**Last Updated**: 2026-02-16
+## When to Use This Skill
 
----
+Use skill-tester when you need to:
 
-## Description
+- Validate a new skill before deployment
+- Test an existing skill after modifications
+- Ensure spec compliance
+- Catch structural issues early
+- Generate validation reports
 
-The Skill Tester is a comprehensive meta-skill designed to validate, test, and score the quality of skills within the claude-skills ecosystem. This powerful quality assurance tool ensures that all skills meet the rigorous standards required for BASIC, STANDARD, and POWERFUL tier classifications through automated validation, testing, and scoring mechanisms.
+## Testing Process
 
-As the gatekeeping system for skill quality, this meta-skill provides three core capabilities:
-1. **Structure Validation** - Ensures skills conform to required directory structures, file formats, and documentation standards
-2. **Script Testing** - Validates Python scripts for syntax, imports, functionality, and output format compliance  
-3. **Quality Scoring** - Provides comprehensive quality assessment across multiple dimensions with letter grades and improvement recommendations
+### Phase 1: Initial Checks
 
-This skill is essential for maintaining ecosystem consistency, enabling automated CI/CD integration, and supporting both manual and automated quality assurance workflows. It serves as the foundation for pre-commit hooks, pull request validation, and continuous integration processes that maintain the high-quality standards of the claude-skills repository.
+#### Locate the Skill
 
-## Core Features
+1. Identify the skill directory path
+2. Verify the directory exists
+3. Confirm SKILL.md file is present (case-sensitive)
 
-### Comprehensive Skill Validation
-- **Structure Compliance**: Validates directory structure, required files (SKILL.md, README.md, scripts/, references/, assets/, expected_outputs/)
-- **Documentation Standards**: Checks SKILL.md frontmatter, section completeness, minimum line counts per tier
-- **File Format Validation**: Ensures proper Markdown formatting, YAML frontmatter syntax, and file naming conventions
+### Phase 2: Run Validation
 
-### Advanced Script Testing
-- **Syntax Validation**: Compiles Python scripts to detect syntax errors before execution
-- **Import Analysis**: Enforces standard library only policy, identifies external dependencies
-- **Runtime Testing**: Executes scripts with sample data, validates argparse implementation, tests --help functionality
-- **Output Format Compliance**: Verifies dual output support (JSON + human-readable), proper error handling
+#### Use the Validation Script
 
-### Multi-Dimensional Quality Scoring
-- **Documentation Quality (25%)**: SKILL.md depth and completeness, README clarity, reference documentation quality
-- **Code Quality (25%)**: Script complexity, error handling robustness, output format consistency, maintainability
-- **Completeness (25%)**: Required directory presence, sample data adequacy, expected output verification
-- **Usability (25%)**: Example clarity, argparse help text quality, installation simplicity, user experience
+Check available options:
 
-### Tier Classification System
-Automatically classifies skills based on complexity and functionality:
-
-#### BASIC Tier Requirements
-- Minimum 100 lines in SKILL.md
-- At least 1 Python script (100-300 LOC)
-- Basic argparse implementation
-- Simple input/output handling
-- Essential documentation coverage
-
-#### STANDARD Tier Requirements  
-- Minimum 200 lines in SKILL.md
-- 1-2 Python scripts (300-500 LOC each)
-- Advanced argparse with subcommands
-- JSON + text output formats
-- Comprehensive examples and references
-- Error handling and edge case management
-
-#### POWERFUL Tier Requirements
-- Minimum 300 lines in SKILL.md
-- 2-3 Python scripts (500-800 LOC each)
-- Complex argparse with multiple modes
-- Sophisticated output formatting and validation
-- Extensive documentation and reference materials
-- Advanced error handling and recovery mechanisms
-- CI/CD integration capabilities
-
-## Architecture & Design
-
-### Modular Design Philosophy
-The skill-tester follows a modular architecture where each component serves a specific validation purpose:
-
-- **skill_validator.py**: Core structural and documentation validation engine
-- **script_tester.py**: Runtime testing and execution validation framework  
-- **quality_scorer.py**: Multi-dimensional quality assessment and scoring system
-
-### Standards Enforcement
-All validation is performed against well-defined standards documented in the references/ directory:
-- **Skill Structure Specification**: Defines mandatory and optional components
-- **Tier Requirements Matrix**: Detailed requirements for each skill tier
-- **Quality Scoring Rubric**: Comprehensive scoring methodology and weightings
-
-### Integration Capabilities
-Designed for seamless integration into existing development workflows:
-- **Pre-commit Hooks**: Prevents substandard skills from being committed
-- **CI/CD Pipelines**: Automated quality gates in pull request workflows
-- **Manual Validation**: Interactive command-line tools for development-time validation
-- **Batch Processing**: Bulk validation and scoring of existing skill repositories
-
-## Implementation Details
-
-### skill_validator.py Core Functions
-```python
-# Primary validation workflow
-validate_skill_structure() -> ValidationReport
-check_skill_md_compliance() -> DocumentationReport  
-validate_python_scripts() -> ScriptReport
-generate_compliance_score() -> float
-```
-
-Key validation checks include:
-- SKILL.md frontmatter parsing and validation
-- Required section presence (Description, Features, Usage, etc.)
-- Minimum line count enforcement per tier
-- Python script argparse implementation verification
-- Standard library import enforcement
-- Directory structure compliance
-- README.md quality assessment
-
-### script_tester.py Testing Framework
-```python
-# Core testing functions
-syntax_validation() -> SyntaxReport
-import_validation() -> ImportReport
-runtime_testing() -> RuntimeReport
-output_format_validation() -> OutputReport
-```
-
-Testing capabilities encompass:
-- Python AST-based syntax validation
-- Import statement analysis and external dependency detection
-- Controlled script execution with timeout protection
-- Argparse --help functionality verification
-- Sample data processing and output validation
-- Expected output comparison and difference reporting
-
-### quality_scorer.py Scoring System
-```python
-# Multi-dimensional scoring
-score_documentation() -> float  # 25% weight
-score_code_quality() -> float   # 25% weight
-score_completeness() -> float   # 25% weight
-score_usability() -> float      # 25% weight
-calculate_overall_grade() -> str # A-F grade
-```
-
-Scoring dimensions include:
-- **Documentation**: Completeness, clarity, examples, reference quality
-- **Code Quality**: Complexity, maintainability, error handling, output consistency
-- **Completeness**: Required files, sample data, expected outputs, test coverage  
-- **Usability**: Help text quality, example clarity, installation simplicity
-
-## Usage Scenarios
-
-### Development Workflow Integration
 ```bash
-# Pre-commit hook validation
-skill_validator.py path/to/skill --tier POWERFUL --json
-
-# Comprehensive skill testing
-script_tester.py path/to/skill --timeout 30 --sample-data
-
-# Quality assessment and scoring
-quality_scorer.py path/to/skill --detailed --recommendations
+python scripts/test_skill.py --help
 ```
 
-### CI/CD Pipeline Integration
+Run full validation:
+
+```bash
+python scripts/test_skill.py /path/to/skill-directory
+```
+
+### Phase 3: Interpret Results
+
+#### Validation Report Structure
+
+The validator checks:
+
+✓ **PASSED** - Requirement met
+
+```text
+✓ Directory exists: skill-name
+✓ SKILL.md file exists
+✓ YAML frontmatter is valid
+✓ Required field present: 'name'
+✓ Required field present: 'description'
+✓ Skill name format is valid: 'skill-name'
+✓ Directory name matches YAML name: 'skill-name'
+✓ Description explains when to use the skill
+✓ SKILL.md body has 1234 words (<5,000)
+```
+
+⚠ **WARNINGS** - Should be addressed
+
+```text
+⚠ Description is 250 chars (recommended ~200)
+⚠ SKILL.md body has 5,200 words (recommended <5,000)
+⚠ Description should explain WHEN to use the skill
+⚠ Possible hardcoded credential detected
+```
+
+✗ **FAILED** - Must be fixed
+
+```text
+✗ SKILL.md file not found (case-sensitive)
+✗ Invalid YAML frontmatter: mapping values are not allowed here
+✗ Missing required field in YAML: 'description'
+✗ Skill name exceeds 64 characters: 72
+✗ Skill name must be hyphen-case: 'Skill_Name'
+✗ Directory name 'skill-name' does not match YAML name 'skillname'
+✗ Description exceeds 1024 characters (1500 chars)
+✗ Referenced file does not exist: scripts/missing.py
+```
+
+### Phase 4: Fix Issues
+
+#### Priority 1: Fix All Errors
+
+Errors prevent the skill from working correctly:
+
+- Missing or invalid SKILL.md
+- Invalid YAML syntax
+- Missing required fields
+- Name format violations
+- Directory/YAML name mismatches
+- Missing referenced files
+
+#### Priority 2: Address Warnings
+
+Warnings indicate quality issues:
+
+- Description too long or vague
+- SKILL.md too verbose
+- Missing "when to use" guidance
+- Potential security issues
+
+### Phase 5: Re-test
+
+After fixes:
+
+```bash
+python scripts/test_skill.py /path/to/skill-directory
+```
+
+Verify:
+
+- All errors resolved
+- Warnings addressed
+- Clean validation report
+
+## Validation Checks
+
+### 1. Directory Structure
+
+**Checks**:
+
+- Directory exists and is a directory
+- SKILL.md file exists (case-sensitive)
+
+**Common Issues**:
+
+- Using `skill.md` instead of `SKILL.md`
+- Missing SKILL.md file
+- Incorrect directory path
+
+### 2. YAML Frontmatter
+
+**Checks**:
+
+- YAML syntax is valid
+- Starts and ends with `---`
+- Required fields present: `name`, `description`
+- Field types correct (strings, arrays, objects)
+
+**Common Issues**:
+
+- Missing opening or closing `---`
+- Invalid YAML syntax (indentation, special characters)
+- Typos in field names
+- Missing required fields
+
+### 3. Skill Name
+
+**Checks**:
+
+- Hyphen-case format (lowercase, hyphens only)
+- Maximum 64 characters
+- Only Unicode alphanumeric and hyphens
+- Directory name matches YAML `name` field exactly
+
+**Valid Examples**:
+
+- `code-analyzer`
+- `api-doc-generator`
+- `test-runner`
+
+**Invalid Examples**:
+
+- `Code_Analyzer` (underscores, capitals)
+- `codeAnalyzer` (camelCase)
+- `code analyzer` (spaces)
+
+### 4. Description Field
+
+**Checks**:
+
+- String type
+- Maximum 1024 characters (API limit)
+- Recommended ~200 characters
+- Explains WHAT and WHEN
+
+**Good Description**:
+
 ```yaml
-# GitHub Actions workflow example
-- name: "validate-skill-quality"
-  run: |
-    python skill_validator.py engineering/${{ matrix.skill }} --json | tee validation.json
-    python script_tester.py engineering/${{ matrix.skill }} | tee testing.json
-    python quality_scorer.py engineering/${{ matrix.skill }} --json | tee scoring.json
+description: Analyze code complexity using cyclomatic complexity metrics. Use when assessing code maintainability or identifying refactoring candidates.
 ```
 
-### Batch Repository Analysis
-```bash
-# Validate all skills in repository
-find engineering/ -type d -maxdepth 1 | xargs -I {} skill_validator.py {}
+**Poor Description**:
 
-# Generate repository quality report
-quality_scorer.py engineering/ --batch --output-format json > repo_quality.json
-```
-
-## Output Formats & Reporting
-
-### Dual Output Support
-All tools provide both human-readable and machine-parseable output:
-
-#### Human-Readable Format
-```
-=== SKILL VALIDATION REPORT ===
-Skill: engineering/example-skill
-Tier: STANDARD
-Overall Score: 85/100 (B)
-
-Structure Validation: ✓ PASS
-├─ SKILL.md: ✓ EXISTS (247 lines)
-├─ README.md: ✓ EXISTS  
-├─ scripts/: ✓ EXISTS (2 files)
-└─ references/: ⚠ MISSING (recommended)
-
-Documentation Quality: 22/25 (88%)
-Code Quality: 20/25 (80%)
-Completeness: 18/25 (72%)
-Usability: 21/25 (84%)
-
-Recommendations:
-• Add references/ directory with documentation
-• Improve error handling in main.py
-• Include more comprehensive examples
-```
-
-#### JSON Format
-```json
-{
-  "skill_path": "engineering/example-skill",
-  "timestamp": "2026-02-16T16:41:00Z",
-  "validation_results": {
-    "structure_compliance": {
-      "score": 0.95,
-      "checks": {
-        "skill_md_exists": true,
-        "readme_exists": true,
-        "scripts_directory": true,
-        "references_directory": false
-      }
-    },
-    "overall_score": 85,
-    "letter_grade": "B",
-    "tier_recommendation": "STANDARD",
-    "improvement_suggestions": [
-      "Add references/ directory",
-      "Improve error handling",
-      "Include comprehensive examples"
-    ]
-  }
-}
-```
-
-## Quality Assurance Standards
-
-### Code Quality Requirements
-- **Standard Library Only**: No external dependencies (pip packages)
-- **Error Handling**: Comprehensive exception handling with meaningful error messages
-- **Output Consistency**: Standardized JSON schema and human-readable formatting
-- **Performance**: Efficient validation algorithms with reasonable execution time
-- **Maintainability**: Clear code structure, comprehensive docstrings, type hints where appropriate
-
-### Testing Standards  
-- **Self-Testing**: The skill-tester validates itself (meta-validation)
-- **Sample Data Coverage**: Comprehensive test cases covering edge cases and error conditions
-- **Expected Output Verification**: All sample runs produce verifiable, reproducible outputs
-- **Timeout Protection**: Safe execution of potentially problematic scripts with timeout limits
-
-### Documentation Standards
-- **Comprehensive Coverage**: All functions, classes, and modules documented
-- **Usage Examples**: Clear, practical examples for all use cases
-- **Integration Guides**: Step-by-step CI/CD and workflow integration instructions
-- **Reference Materials**: Complete specification documents for standards and requirements
-
-## Integration Examples
-
-### Pre-Commit Hook Setup
-```bash
-#!/bin/bash
-# .git/hooks/pre-commit
-echo "Running skill validation..."
-python engineering/skill-tester/scripts/skill_validator.py engineering/new-skill --tier STANDARD
-if [ $? -ne 0 ]; then
-    echo "Skill validation failed. Commit blocked."
-    exit 1
-fi
-echo "Validation passed. Proceeding with commit."
-```
-
-### GitHub Actions Workflow
 ```yaml
-name: "skill-quality-gate"
-on:
-  pull_request:
-    paths: ['engineering/**']
-
-jobs:
-  validate-skills:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: "setup-python"
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - name: "validate-changed-skills"
-        run: |
-          changed_skills=$(git diff --name-only ${{ github.event.before }} | grep -E '^engineering/[^/]+/' | cut -d'/' -f1-2 | sort -u)
-          for skill in $changed_skills; do
-            echo "Validating $skill..."
-            python engineering/skill-tester/scripts/skill_validator.py $skill --json
-            python engineering/skill-tester/scripts/script_tester.py $skill
-            python engineering/skill-tester/scripts/quality_scorer.py $skill --minimum-score 75
-          done
+description: This skill helps with code.
 ```
 
-### Continuous Quality Monitoring
+### 5. File References
+
+**Checks**:
+
+- All referenced files exist
+- Paths are correct relative to skill root
+- Checks markdown links and inline code that reference local files
+
+**Common Issues**:
+
+- Typos in file paths
+- Case sensitivity mismatches
+- Absolute paths instead of relative
+- References to non-existent files
+
+### 6. Content Quality
+
+**Checks**:
+
+- Word count under 5,000 (warning at 5,000+)
+- No hardcoded credentials (simple pattern check)
+- Description includes "when" indicators
+
+**Security Patterns Checked**:
+
+- `password: "..."`
+- `api_key: "..."`
+- `secret: "..."`
+- `token: "..."`
+
+## Testing Scripts
+
+### test_skill.py
+
+**Purpose**: Main validation script for skill testing
+
+**Usage**:
+
 ```bash
-#!/bin/bash
-# Daily quality report generation
-echo "Generating daily skill quality report..."
-timestamp=$(date +"%Y-%m-%d")
-python engineering/skill-tester/scripts/quality_scorer.py engineering/ \
-  --batch --json > "reports/quality_report_${timestamp}.json"
-
-echo "Quality trends analysis..."
-python engineering/skill-tester/scripts/trend_analyzer.py reports/ \
-  --days 30 > "reports/quality_trends_${timestamp}.md"
+python scripts/test_skill.py <skill-directory>
 ```
 
-## Performance & Scalability
+**Exit Codes**:
 
-### Execution Performance
-- **Fast Validation**: Structure validation completes in <1 second per skill
-- **Efficient Testing**: Script testing with timeout protection (configurable, default 30s)
-- **Batch Processing**: Optimized for repository-wide analysis with parallel processing support
-- **Memory Efficiency**: Minimal memory footprint for large-scale repository analysis
+- `0`: All checks passed
+- `1`: One or more checks failed
 
-### Scalability Considerations
-- **Repository Size**: Designed to handle repositories with 100+ skills
-- **Concurrent Execution**: Thread-safe implementation supports parallel validation
-- **Resource Management**: Automatic cleanup of temporary files and subprocess resources
-- **Configuration Flexibility**: Configurable timeouts, memory limits, and validation strictness
+**Output**: Formatted validation report with passed, warnings, and failed checks
 
-## Security & Safety
+### validate_yaml.py
 
-### Safe Execution Environment
-- **Sandboxed Testing**: Scripts execute in controlled environment with timeout protection
-- **Resource Limits**: Memory and CPU usage monitoring to prevent resource exhaustion
-- **Input Validation**: All inputs sanitized and validated before processing
-- **No Network Access**: Offline operation ensures no external dependencies or network calls
+**Purpose**: Validate YAML frontmatter only
 
-### Security Best Practices
-- **No Code Injection**: Static analysis only, no dynamic code generation
-- **Path Traversal Protection**: Secure file system access with path validation
-- **Minimal Privileges**: Operates with minimal required file system permissions
-- **Audit Logging**: Comprehensive logging for security monitoring and troubleshooting
+**Usage**:
 
-## Troubleshooting & Support
+```bash
+python scripts/validate_yaml.py <skill-directory>
+```
 
-### Common Issues & Solutions
+**Checks**:
 
-#### Validation Failures
-- **Missing Files**: Check directory structure against tier requirements
-- **Import Errors**: Ensure only standard library imports are used
-- **Documentation Issues**: Verify SKILL.md frontmatter and section completeness
+- YAML syntax
+- Required fields
+- Field types and constraints
 
-#### Script Testing Problems  
-- **Timeout Errors**: Increase timeout limit or optimize script performance
-- **Execution Failures**: Check script syntax and import statement validity
-- **Output Format Issues**: Ensure proper JSON formatting and dual output support
+## Examples
 
-#### Quality Scoring Discrepancies
-- **Low Scores**: Review scoring rubric and improvement recommendations
-- **Tier Misclassification**: Verify skill complexity against tier requirements
-- **Inconsistent Results**: Check for recent changes in quality standards or scoring weights
+### Example 1: Valid Skill
 
-### Debugging Support
-- **Verbose Mode**: Detailed logging and execution tracing available
-- **Dry Run Mode**: Validation without execution for debugging purposes
-- **Debug Output**: Comprehensive error reporting with file locations and suggestions
+**Skill Structure**:
 
-## Future Enhancements
+```text
+brand-guidelines/
+└── SKILL.md
+```
 
-### Planned Features
-- **Machine Learning Quality Prediction**: AI-powered quality assessment using historical data
-- **Performance Benchmarking**: Execution time and resource usage tracking across skills
-- **Dependency Analysis**: Automated detection and validation of skill interdependencies
-- **Quality Trend Analysis**: Historical quality tracking and regression detection
+**SKILL.md**:
 
-### Integration Roadmap
-- **IDE Plugins**: Real-time validation in popular development environments
-- **Web Dashboard**: Centralized quality monitoring and reporting interface
-- **API Endpoints**: RESTful API for external integration and automation
-- **Notification Systems**: Automated alerts for quality degradation or validation failures
+```yaml
+---
+name: brand-guidelines
+description: Apply brand visual identity guidelines including colors, typography, and spacing. Use when creating branded materials or reviewing designs.
+license: MIT
+---
+# Brand Guidelines
 
-## Conclusion
+[Content follows...]
+```
 
-The Skill Tester represents a critical infrastructure component for maintaining the high-quality standards of the claude-skills ecosystem. By providing comprehensive validation, testing, and scoring capabilities, it ensures that all skills meet or exceed the rigorous requirements for their respective tiers.
+**Validation Result**:
 
-This meta-skill not only serves as a quality gate but also as a development tool that guides skill authors toward best practices and helps maintain consistency across the entire repository. Through its integration capabilities and comprehensive reporting, it enables both manual and automated quality assurance workflows that scale with the growing claude-skills ecosystem.
+```text
+✓ PASSED (9)
+  ✓ Directory exists: brand-guidelines
+  ✓ SKILL.md file exists
+  ✓ YAML frontmatter is valid
+  ✓ Required field present: 'name'
+  ✓ Required field present: 'description'
+  ✓ Skill name format is valid: 'brand-guidelines'
+  ✓ Directory name matches YAML name: 'brand-guidelines'
+  ✓ Description explains when to use the skill
+  ✓ SKILL.md body has 245 words (<5,000)
 
-The combination of structural validation, runtime testing, and multi-dimensional quality scoring provides unparalleled visibility into skill quality while maintaining the flexibility needed for diverse skill types and complexity levels. As the claude-skills repository continues to grow, the Skill Tester will remain the cornerstone of quality assurance and ecosystem integrity.
+RESULT: PASSED - Skill is valid
+```
+
+### Example 2: Skill with Errors
+
+**Skill Structure**:
+
+```text
+Code_Analyzer/
+└── SKILL.md
+```
+
+**SKILL.md**:
+
+```yaml
+---
+name: code-analyzer
+description: Analyzes code.
+---
+# Code Analyzer
+
+Run the analysis script from the scripts directory.
+```
+
+**Validation Result**:
+
+```text
+✗ FAILED (2)
+  ✗ Directory name 'Code_Analyzer' does not match YAML name 'code-analyzer'
+
+⚠ WARNINGS (1)
+  ⚠ Description should explain WHEN to use the skill
+
+RESULT: FAILED - Fix errors before using this skill
+```
+
+**Fixes Required**:
+
+1. Rename directory to `code-analyzer`
+2. Improve description to explain when to use
+
+### Example 3: Skill with Warnings
+
+**SKILL.md**:
+
+```yaml
+---
+name: data-processor
+description: This skill provides comprehensive data processing capabilities including cleaning, transformation, validation, analysis, and reporting across multiple data formats and sources with support for batch and streaming operations.
+---
+```
+
+**Validation Result**:
+
+```text
+✓ PASSED (7)
+  [... passed checks ...]
+
+⚠ WARNINGS (2)
+  ⚠ Description is 210 chars (recommended ~200)
+  ⚠ Description should explain WHEN to use the skill
+
+RESULT: PASSED with warnings - Consider addressing warnings
+```
+
+**Improvements**:
+
+```yaml
+description: Process, clean, and transform data across multiple formats. Use when preparing datasets for analysis or integrating data from different sources.
+```
+
+## Common Pitfalls
+
+### Name Mismatches
+
+❌ **Wrong**:
+
+```text
+Directory: data-analyzer
+YAML: data_analyzer
+```
+
+✓ **Correct**:
+
+```text
+Directory: data-analyzer
+YAML: data-analyzer
+```
+
+### Case Sensitivity
+
+❌ **Wrong**:
+
+```text
+skill.md
+Skill.md
+SKILL.MD
+```
+
+✓ **Correct**:
+
+```text
+SKILL.md
+```
+
+### Vague Descriptions
+
+❌ **Wrong**:
+
+```yaml
+description: Helps with testing
+```
+
+✓ **Correct**:
+
+```yaml
+description: Run Playwright-based web application tests. Use when validating UI functionality or running end-to-end test suites.
+```
+
+### Missing File References
+
+❌ **Wrong**:
+Reference a script file that doesn't exist in the skill directory.
+
+✓ **Correct**:
+Only reference files that are actually bundled with the skill.
+
+## Best Practices
+
+1. **Test Early**: Validate during development, not just before deployment
+2. **Fix Errors First**: Address all failures before warnings
+3. **Iterate**: Test after each change
+4. **Read Reports**: Don't just check pass/fail, read the details
+5. **Automate**: Integrate into CI/CD pipelines
+
+## Validation Checklist
+
+Use this before deploying skills:
+
+- [ ] Run `python scripts/test_skill.py /path/to/skill`
+- [ ] Zero errors in validation report
+- [ ] Warnings addressed or documented
+- [ ] All file references valid
+- [ ] Description clear and actionable
+- [ ] Skill name matches directory
+- [ ] YAML frontmatter valid
+
+## Resources
+
+- Validation script: `scripts/test_skill.py`
+- YAML validator: `scripts/validate_yaml.py`
+- Agent Skills Specification: <https://github.com/anthropics/skills/blob/main/agent_skills_spec.md>

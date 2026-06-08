@@ -1,283 +1,195 @@
 ---
 name: sdd-verify
-description: >
-  Validate that implementation matches specs, design, and tasks.
-  Trigger: When the orchestrator launches you to verify a completed (or partially completed) change.
-license: MIT
-metadata:
-  author: gentleman-programming
-  version: "2.0"
+description: |
+  Verify SDD integrity: traceability links AND test coverage.
+  Use when: checking document integrity, validating tests, finding gaps.
+  Triggers: "verify sdd", "check integrity", "verify links", "verify tests", "@verifies"
 ---
 
-## Purpose
+# SDD Verification
 
-You are a sub-agent responsible for VERIFICATION. You are the quality gate. Your job is to prove — with real execution evidence — that the implementation is complete, correct, and behaviorally compliant with the specs.
+> `docs/sdd-guidelines.md` §3: "Integrity = Traceability + Testing"
 
-Static analysis alone is NOT enough. You must execute the code.
+## Two Dimensions
 
-## What You Receive
+| Dimension | Question | Method | Reference |
+|-----------|----------|--------|-----------|
+| **Traceability** | Why does this exist? | Link verification | [traceability.md](reference/traceability.md) |
+| **Testing** | Does this work? | Execution verification | [testing.md](reference/testing.md) |
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
+Both required. Traceability alone confirms links exist; Testing confirms code works.
 
-## Execution and Persistence Contract
+## Quick Reference
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+### Link Types
 
-- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec` (required for compliance matrix), `sdd/{change-name}/design`, `sdd/{change-name}/tasks` (all required). Save as `sdd/{change-name}/verify-report`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Save to `openspec/changes/{change-name}/verify-report.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram AND write `verify-report.md` to filesystem.
-- **none**: Return the verification report inline only. Never write files.
+| Link | From → To | Required |
+|------|-----------|----------|
+| `@aligns-to` | REQ → Foundation anchor | **Yes** |
+| `@derives` | Design → REQ | **Yes** |
+| `@verifies` | Behavioral Test → REQ | **Yes** |
+| `@rationale` | Any → Decision/reasoning | If non-obvious |
+| `@assumes` | Any → Assumption | When applicable |
+| `@invalidated-by` | Assumption → Condition | When applicable |
+| `@supersedes` | Decision → Prior Decision | When replacing |
 
-## What to Do
+### Test Types
 
-### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+| Type | Links To | Level | Directory |
+|------|----------|-------|-----------|
+| Behavioral | REQ (`@verifies`) | E2E/Integration | `tests/requirements/` |
+| Structural | Design (convention) | Unit | `tests/unit/` |
 
-### Step 2: Check Completeness
+## Instructions
 
-Verify ALL tasks are done:
+### Full Verification
 
-```
-Read tasks.md
-├── Count total tasks
-├── Count completed tasks [x]
-├── List incomplete tasks [ ]
-└── Flag: CRITICAL if core tasks incomplete, WARNING if cleanup tasks incomplete
-```
-
-### Step 3: Check Correctness (Static Specs Match)
-
-For EACH spec requirement and scenario, search the codebase for structural evidence:
+Run both dimensions:
 
 ```
-FOR EACH REQUIREMENT in specs/:
-├── Search codebase for implementation evidence
-├── For each SCENARIO:
-│   ├── Is the GIVEN precondition handled in code?
-│   ├── Is the WHEN action implemented?
-│   ├── Is the THEN outcome produced?
-│   └── Are edge cases covered?
-└── Flag: CRITICAL if requirement missing, WARNING if scenario partially covered
+1. Traceability Check
+   └── Alignment (Foundation ↔ Requirements)
+   └── Derivation (Requirements ↔ Design)
+   └── Consistency
+
+2. Test Check
+   └── @verifies coverage
+   └── Abstraction matching
+   └── Test execution status
 ```
 
-Note: This is static analysis only. Behavioral validation with real execution happens in Step 6.
+### Partial Verification
 
-### Step 4: Check Coherence (Design Match)
+| Trigger | Run |
+|---------|-----|
+| "verify links" | Traceability only |
+| "verify tests" | Testing only |
+| "verify REQ-001" | Both, scoped to item |
 
-Verify design decisions were followed:
+### Verification Triggers
 
-```
-FOR EACH DECISION in design.md:
-├── Was the chosen approach actually used?
-├── Were rejected alternatives accidentally implemented?
-├── Do file changes match the "File Changes" table?
-└── Flag: WARNING if deviation found (may be valid improvement)
-```
+| Point | What to Verify |
+|-------|----------------|
+| Foundation complete | Human judgment (identity) |
+| Requirements complete | Alignment |
+| Design complete | Derivation |
+| Pre-implementation | Full traceability + behavioral test coverage |
+| Post-change | Affected items + downstream |
 
-### Step 5: Check Testing (Static)
+## Results Handling
 
-Verify test files exist and cover the right scenarios:
+### Pass
 
-```
-Search for test files related to the change
-├── Do tests exist for each spec scenario?
-├── Do tests cover happy paths?
-├── Do tests cover edge cases?
-├── Do tests cover error states?
-└── Flag: WARNING if scenarios lack tests, SUGGESTION if coverage could improve
-```
-
-### Step 5b: Run Tests (Real Execution)
-
-Detect the project's test runner and execute the tests:
-
-```
-Detect test runner from:
-├── openspec/config.yaml → rules.verify.test_command (highest priority)
-├── package.json → scripts.test
-├── pyproject.toml / pytest.ini → pytest
-├── Makefile → make test
-└── Fallback: ask orchestrator
-
-Execute: {test_command}
-Capture:
-├── Total tests run
-├── Passed
-├── Failed (list each with name and error)
-├── Skipped
-└── Exit code
-
-Flag: CRITICAL if exit code != 0 (any test failed)
-Flag: WARNING if skipped tests relate to changed areas
+```yaml
+# Update item status
+items:
+  REQ-001:
+    status: verified
+    verified_at: 2025-01-17T10:00:00Z
 ```
 
-### Step 5c: Build & Type Check (Real Execution)
+### Fail — Self-Resolvable
 
-Detect and run the build/type-check command:
+| Failure | Action |
+|---------|--------|
+| Missing `@derives` | Add link |
+| Missing `@aligns-to` | Add link |
+| Missing `@verifies` | Create test |
+| Terminology mismatch | Standardize |
 
-```
-Detect build command from:
-├── openspec/config.yaml → rules.verify.build_command (highest priority)
-├── package.json → scripts.build → also run tsc --noEmit if tsconfig.json exists
-├── pyproject.toml → python -m build or equivalent
-├── Makefile → make build
-└── Fallback: skip and report as WARNING (not CRITICAL)
+After fix: re-verify → mark `verified`.
 
-Execute: {build_command}
-Capture:
-├── Exit code
-├── Errors (if any)
-└── Warnings (if significant)
+### Fail — Escalate
 
-Flag: CRITICAL if build fails (exit code != 0)
-Flag: WARNING if there are type errors even with passing build
-```
+| Situation | Why |
+|-----------|-----|
+| Foundation-level conflict | Identity-defining |
+| Conflicting interpretations | Authority needed |
+| Security/compliance/legal | Risk implications |
+| Resource or cost commitments | Authority required |
+| User intent ambiguity | Guessing is dangerous |
+| Missing artifact (not link) | Scope decision |
+| Test reveals requirement gap | REQ may need update |
 
-### Step 5d: Coverage Validation (Real Execution — if threshold configured)
-
-Run with coverage only if `rules.verify.coverage_threshold` is set in `openspec/config.yaml`:
-
-```
-IF coverage_threshold is configured:
-├── Run: {test_command} --coverage (or equivalent for the test runner)
-├── Parse coverage report
-├── Compare total coverage % against threshold
-├── Flag: WARNING if below threshold (not CRITICAL — coverage alone doesn't block)
-└── Report per-file coverage for changed files only
-
-IF coverage_threshold is NOT configured:
-└── Skip this step, report as "Not configured"
+```yaml
+escalations:
+  - id: ESC-001
+    type: interpretation
+    description: "REQ-003 and REQ-005 conflict"
+    items_affected: [REQ-003, REQ-005]
+    status: pending
 ```
 
-### Step 6: Spec Compliance Matrix (Behavioral Validation)
+## Gap Documentation
 
-This is the most important step. Cross-reference EVERY spec scenario against the actual test run results from Step 5b to build behavioral evidence.
-
-For each scenario from the specs, find which test(s) cover it and what the result was:
-
-```
-FOR EACH REQUIREMENT in specs/:
-  FOR EACH SCENARIO:
-  ├── Find tests that cover this scenario (by name, description, or file path)
-  ├── Look up that test's result from Step 5b output
-  ├── Assign compliance status:
-  │   ├── ✅ COMPLIANT   → test exists AND passed
-  │   ├── ❌ FAILING     → test exists BUT failed (CRITICAL)
-  │   ├── ❌ UNTESTED    → no test found for this scenario (CRITICAL)
-  │   └── ⚠️ PARTIAL    → test exists, passes, but covers only part of the scenario (WARNING)
-  └── Record: requirement, scenario, test file, test name, result
+```yaml
+gaps:
+  - id: GAP-001
+    severity: critical | major | minor
+    type: missing_requirement | missing_design | missing_rationale | missing_test | broken_link | contradiction
+    location: spec/requirements.md#REQ-003
+    description: "No behavioral test for REQ-003"
+    blocking: [implementation]
+    owner: unassigned
 ```
 
-A spec scenario is only considered COMPLIANT when there is a test that passed proving the behavior at runtime. Code existing in the codebase is NOT sufficient evidence.
+| Severity | Definition | Response |
+|----------|------------|----------|
+| critical | Blocks implementation | Stop, resolve now |
+| major | Blocks verification | Resolve before checkpoint |
+| minor | Cosmetic | Track, defer |
 
-### Step 7: Persist Verification Report
+## Scope Direction
 
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
-- artifact: `verify-report`
-- topic_key: `sdd/{change-name}/verify-report`
-- type: `architecture`
-
-### Step 8: Return Summary
-
-Return to the orchestrator the same content you wrote to `verify-report.md`:
-
-```markdown
-## Verification Report
-
-**Change**: {change-name}
-**Version**: {spec version or N/A}
-
----
-
-### Completeness
-| Metric | Value |
-|--------|-------|
-| Tasks total | {N} |
-| Tasks complete | {N} |
-| Tasks incomplete | {N} |
-
-{List incomplete tasks if any}
-
----
-
-### Build & Tests Execution
-
-**Build**: ✅ Passed / ❌ Failed
 ```
-{build command output or error if failed}
+Foundation → Requirements → Design → Implementation
+   (Why)        (What)       (How)     (Code)
 ```
 
-**Tests**: ✅ {N} passed / ❌ {N} failed / ⚠️ {N} skipped
-```
-{failed test names and errors if any}
-```
+| Change Location | Verify |
+|-----------------|--------|
+| Upstream (Foundation, REQ) | All downstream |
+| Downstream (Design, Impl) | Upstream unaffected if behavioral tests pass |
 
-**Coverage**: {N}% / threshold: {N}% → ✅ Above threshold / ⚠️ Below threshold / ➖ Not configured
+## State Update
 
----
+After verification:
 
-### Spec Compliance Matrix
+```yaml
+# .sdd/state.yaml
+documents:
+  requirements:
+    status: verified
+    items:
+      REQ-001: { status: verified, test: passing }
+      REQ-002: { status: verified, test: passing }
+      REQ-003: { status: draft, test: missing }
 
-| Requirement | Scenario | Test | Result |
-|-------------|----------|------|--------|
-| {REQ-01: name} | {Scenario name} | `{test file} > {test name}` | ✅ COMPLIANT |
-| {REQ-01: name} | {Scenario name} | `{test file} > {test name}` | ❌ FAILING |
-| {REQ-02: name} | {Scenario name} | (none found) | ❌ UNTESTED |
-| {REQ-02: name} | {Scenario name} | `{test file} > {test name}` | ⚠️ PARTIAL |
-
-**Compliance summary**: {N}/{total} scenarios compliant
-
----
-
-### Correctness (Static — Structural Evidence)
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| {Req name} | ✅ Implemented | {brief note} |
-| {Req name} | ⚠️ Partial | {what's missing} |
-| {Req name} | ❌ Missing | {not implemented} |
-
----
-
-### Coherence (Design)
-| Decision | Followed? | Notes |
-|----------|-----------|-------|
-| {Decision name} | ✅ Yes | |
-| {Decision name} | ⚠️ Deviated | {how and why} |
-
----
-
-### Issues Found
-
-**CRITICAL** (must fix before archive):
-{List or "None"}
-
-**WARNING** (should fix):
-{List or "None"}
-
-**SUGGESTION** (nice to have):
-{List or "None"}
-
----
-
-### Verdict
-{PASS / PASS WITH WARNINGS / FAIL}
-
-{One-line summary of overall status}
+verification:
+  traceability:
+    alignment: passed
+    derivation: passed
+  tests:
+    requirements:
+      REQ-001: passing
+      REQ-002: passing
+      REQ-003: missing
+    design:
+      data_model: passing
 ```
 
-## Rules
+## Checklist
 
-- ALWAYS read the actual source code — don't trust summaries
-- ALWAYS execute tests — static analysis alone is not verification
-- A spec scenario is only COMPLIANT when a test that covers it has PASSED
-- Compare against SPECS first (behavioral correctness), DESIGN second (structural correctness)
-- Be objective — report what IS, not what should be
-- CRITICAL issues = must fix before archive
-- WARNINGS = should fix but won't block
-- SUGGESTIONS = improvements, not blockers
-- DO NOT fix any issues — only report them. The orchestrator decides what to do.
-- In `openspec` mode, ALWAYS save the report to `openspec/changes/{change-name}/verify-report.md` — this persists the verification for sdd-archive and the audit trail
-- Apply any `rules.verify` from `openspec/config.yaml`
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+- [ ] All anchors have ≥1 REQ (`@aligns-to` coverage)
+- [ ] All design items have `@derives`
+- [ ] All REQs have behavioral tests (`@verifies`)
+- [ ] Non-obvious choices have `@rationale`
+- [ ] Tests match abstraction level
+- [ ] Gaps documented with severity/owner
+- [ ] State file updated
+
+## References
+
+- [reference/traceability.md](reference/traceability.md) — Link verification details
+- [reference/testing.md](reference/testing.md) — Test verification details
+- `docs/sdd-guidelines.md` §3 for full specification

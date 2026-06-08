@@ -1,488 +1,297 @@
 ---
-name: roadmap-builder
-description: "Build product roadmaps with quarterly planning, feature prioritization, dependency mapping, and stakeholder alignment. Create actionable roadmaps that communicate strategy and guide execution."
+name: Roadmap Builder
+slug: roadmap-builder
+description: Create strategic product roadmaps with theme-based planning, OKRs, and stakeholder alignment
+category: project
+complexity: complex
+version: "1.0.0"
+author: "ID8Labs"
+triggers:
+  - "build roadmap"
+  - "create roadmap"
+  - "product roadmap"
+  - "roadmap planning"
+  - "quarterly planning"
+tags:
+  - roadmap
+  - strategy
+  - product
+  - okrs
+  - themes
+  - planning
 ---
 
 # Roadmap Builder
 
-## Overview
-The Roadmap Builder skill enables product managers to create clear, actionable product roadmaps that communicate strategy, align stakeholders, and guide execution. It combines prioritization frameworks, timeline planning, and dependency mapping.
+The Roadmap Builder skill helps product teams create strategic roadmaps that align tactical execution with business objectives. It emphasizes theme-based planning over feature lists, outcome-focused goals using OKRs, and flexible planning that adapts to market feedback and changing priorities.
 
-## When to Use This Skill
-- Planning quarterly or annual product strategy
-- Communicating product vision to stakeholders
-- Prioritizing features and initiatives
-- Managing dependencies across teams
-- Aligning engineering, design, marketing resources
-- Creating investor/executive presentations
-- Managing stakeholder expectations
+This skill excels at translating business strategy into quarterly themes, breaking themes into initiatives and epics, aligning stakeholders around shared goals, and maintaining roadmap clarity while preserving execution flexibility.
 
-## Roadmap Planning Framework
+Roadmap Builder follows modern product management principles: outcomes over outputs, themes over features, and quarterly planning with monthly reviews.
 
-### Roadmap Horizon Definitions
+## Core Workflows
 
-**Immediate (Current Quarter - 0-12 weeks)**
-- Confirmed features with clear specifications
-- Active development or about to start
-- High confidence in timeline and scope
-- Team committed to delivery
-- Detail level: Very high (stories, tasks, owners)
+### Workflow 1: Create Product Roadmap
 
-**Near-term (Quarters 2-3 - 3-6 months)**
-- Features with strong business case and customer demand
-- Good understanding of requirements
-- Medium confidence in timeline
-- Provisional team allocation
-- Detail level: High (features, rough effort estimates)
+**Steps:**
+1. **Define Strategic Context**
+   - Review company vision and business goals
+   - Analyze market position and competitive landscape
+   - Gather customer insights and pain points
+   - Identify key metrics to move (North Star, etc.)
+   - Understand resource constraints (team, budget, time)
 
-**Medium-term (Quarters 4-5 - 6-9 months)**
-- Strategic initiatives aligned with roadmap
-- Directional roadmap visibility
-- Lower confidence due to market changes
-- Broad theme-based planning
-- Detail level: Medium (themes, business outcomes)
+2. **Set Quarterly Themes**
+   - Define 2-4 themes for next quarter
+   - Each theme represents a strategic bet or focus area
+   - Themes should be outcome-oriented, not feature lists
+   - Examples: "Reduce churn", "Enterprise-ready", "10x performance"
+   - Align themes with OKRs or company goals
 
-**Long-term (6-12+ months)**
-- Vision and strategic directions
-- Subject to significant change
-- Focus on outcomes not features
-- Annual planning context
-- Detail level: Low (goals and themes)
+3. **Create OKRs for Each Theme**
+   - **Objective**: Qualitative, inspiring goal
+   - **Key Results**: 3-5 measurable outcomes
+   - Ensure Key Results are ambitious but achievable
+   - Define baseline and target metrics
+   - Assign ownership to product/engineering leads
 
-### Roadmap Themes Framework
+4. **Identify Initiatives**
+   - For each theme, brainstorm potential initiatives
+   - Initiative = significant effort to move a Key Result
+   - Prioritize initiatives by impact vs. effort
+   - Select top 2-4 initiatives per theme
+   - Estimate rough timeline (weeks or months)
 
-**Theme 1: Platform Performance**
-- Objective: Improve system speed and reliability
-- Outcomes: Reduce page load by 40%, achieve 99.99% uptime
-- Key features: Caching layer, database optimization, CDN expansion
-- Estimated effort: 16 person-weeks
+5. **Break Down into Epics**
+   - Decompose initiatives into epics
+   - Epic = large user story spanning multiple sprints
+   - Write epic descriptions with user value and success criteria
+   - Sequence epics based on dependencies and learning goals
+   - Assign to teams or squads
 
-**Theme 2: AI/ML Integration**
-- Objective: Enable intelligent automation of workflows
-- Outcomes: 50% reduction in manual data entry, 35% productivity gain
-- Key features: Automated categorization, smart recommendations, predictive analysis
-- Estimated effort: 24 person-weeks
+6. **Create Timeline View**
+   - Plot themes, initiatives, and epics on timeline
+   - Use swim lanes for different teams or product areas
+   - Show dependencies and sequencing
+   - Highlight milestones and release dates
+   - Add confidence levels (high/medium/low)
 
-**Theme 3: Enterprise Compliance**
-- Objective: Meet security and regulatory requirements
-- Outcomes: SOC2 certification, ISO 27001 compliance
-- Key features: SSO integration, audit logs, data residency options
-- Estimated effort: 12 person-weeks
+7. **Stakeholder Alignment**
+   - Present roadmap to leadership and stakeholders
+   - Gather feedback and adjust priorities
+   - Communicate trade-offs and decisions
+   - Set expectations on what's NOT on roadmap
+   - Establish review cadence (monthly or quarterly)
 
-**Theme 4: Developer Experience**
-- Objective: Make product more accessible to developers
-- Outcomes: 500 API integrations, 100 third-party apps
-- Key features: Comprehensive API docs, webhooks, SDK libraries
-- Estimated effort: 20 person-weeks
+**Output:** Strategic roadmap with themes, OKRs, initiatives, epics, and timeline.
 
-## Quarterly Roadmap Template
+### Workflow 2: Quarterly Roadmap Review
 
-### Q2 2024 Roadmap
+**Steps:**
+1. Review previous quarter's OKRs and achievement
+2. Analyze what worked, what didn't, and why
+3. Gather updated customer and market insights
+4. Assess team capacity and velocity trends
+5. Set next quarter's themes and OKRs
+6. Adjust long-term roadmap based on learnings
+7. Communicate changes to all stakeholders
 
-**Themes:** [3-4 primary themes]
-**Team Capacity:** [X person-weeks available]
-**Business Goals:** [2-3 key outcomes]
+### Workflow 3: Monthly Roadmap Health Check
 
-**Theme 1: Collaboration Features** (8 person-weeks)
-- Real-time co-editing
-  - Status: In Progress
-  - Owner: [Engineering lead]
-  - Target completion: Week 6
-  - Success metric: 60% of new projects use feature
+**Steps:**
+1. Review progress on current initiatives
+2. Check if Key Results are trending toward targets
+3. Identify risks, blockers, or scope issues
+4. Adjust timeline or scope if needed
+5. Communicate status to stakeholders
+6. Reprioritize if market or business conditions change
 
-- Activity feeds
-  - Status: Planned
-  - Owner: [Engineering lead]
-  - Target completion: Week 10
-  - Success metric: 40% of users weekly active
+### Workflow 4: Feature Request Evaluation
 
-- Notification system
-  - Status: Planned
-  - Owner: [Engineering lead]
-  - Target completion: Week 12
-  - Success metric: 35% of delivered notifications opened
+**When new feature requests arrive:**
+1. Understand the underlying customer problem
+2. Evaluate against current themes and OKRs
+3. Assess impact (how many users, revenue potential)
+4. Estimate effort and opportunity cost
+5. Decide: Add to roadmap, defer to backlog, or decline
+6. Communicate decision with clear rationale
 
-**Theme 2: Mobile Expansion** (6 person-weeks)
-- iOS app redesign
-  - Status: Planned
-  - Owner: [Mobile lead]
-  - Target completion: Week 8
-  - Success metric: 4.5+ star rating
+## Quick Reference
 
-- Android feature parity
-  - Status: Planned
-  - Owner: [Mobile lead]
-  - Target completion: Week 10
-  - Success metric: 2K weekly active users
+| Action | Command/Trigger |
+|--------|-----------------|
+| Create roadmap | "build product roadmap" |
+| Set quarterly themes | "define Q[n] themes" |
+| Create OKRs | "create OKRs for [theme]" |
+| Add initiative | "add initiative: [description]" |
+| Review roadmap | "roadmap health check" |
+| Quarterly planning | "plan Q[n] roadmap" |
+| Evaluate feature | "evaluate feature: [idea]" |
+| Show timeline | "show roadmap timeline" |
+| Stakeholder view | "create stakeholder roadmap view" |
+| Prioritize initiatives | "prioritize roadmap items" |
 
-**Theme 3: Data & Analytics** (4 person-weeks)
-- Advanced reporting
-  - Status: Planned
-  - Owner: [Data lead]
-  - Target completion: Week 9
-  - Success metric: 20% of projects using reports
+## Best Practices
 
-- Usage analytics dashboard
-  - Status: Planned
-  - Owner: [Data lead]
-  - Target completion: Week 11
-  - Success metric: 30% of teams accessing analytics weekly
+- **Themes over features**: Organize by strategic themes, not lists of features; themes provide context and flexibility
+- **Outcomes over outputs**: Focus on business outcomes (reduce churn, increase revenue) not outputs (ship feature X)
+- **Use OKRs properly**: Objectives inspire, Key Results measure; aim for 70% achievement (not 100%)
+- **Plan quarterly, review monthly**: Quarter is sweet spot for strategic planning; review monthly to adapt
+- **Communicate the "why"**: Every roadmap item should clearly connect to business strategy
+- **Show confidence levels**: Be transparent about uncertainty; high/medium/low confidence
+- **Timelines are estimates**: Use "Q2" or "H2" not specific dates; preserve flexibility
+- **Visualize simply**: Avoid cluttered roadmaps; focus on themes and key milestones
+- **Say no strategically**: Roadmap power comes from what you DON'T do; protect focus
+- **Align, don't dictate**: Roadmap should align teams, not micromanage execution
+- **Balance innovation and maintenance**: Reserve capacity for tech debt, bugs, and platform improvements
+- **Update regularly**: Stale roadmaps kill trust; keep it current and communicate changes
 
-**Unscheduled Capacity:** 2 person-weeks (bug fixes, tech debt)
+## Roadmap Formats
 
----
-
-## Feature Prioritization
-
-### Prioritization Matrix: Impact vs. Effort
-
+### Theme-Based Roadmap
 ```
-         High Impact
-              ↑
-              │    [Quick Wins]    [Major Projects]
-              │    Do first!       Plan carefully
-              │
-Effort ←──────●────────→
-              │
-              │   [Fill-ins]       [Avoid]
-              │   Low priority     Deprioritize
-              ↓
-         Low Impact
+Q1 2026: Enterprise-Ready
+  Initiative: SSO & Advanced Security
+  Initiative: Audit Logs & Compliance
+
+Q2 2026: 10x Performance
+  Initiative: Database Optimization
+  Initiative: Caching Layer
+
+Q3 2026: Mobile-First Experience
+  Initiative: Native Mobile Apps
+  Initiative: Offline Support
 ```
 
-**Quadrant Placement:**
-
-**Quick Wins** (High impact, Low effort)
-- Notification settings customization
-- Dark mode support
-- Search improvements
-- Example: Real-time notifications (4 weeks, high user demand)
-
-**Major Projects** (High impact, High effort)
-- AI-powered recommendations
-- Mobile app redesign
-- Enterprise SSO integration
-- Example: Real-time co-editing (12 weeks, strategic differentiator)
-
-**Fill-Ins** (Low impact, Low effort)
-- UI polish improvements
-- Minor feature enhancements
-- Bug fixes and technical debt
-- Example: Additional export formats (2 weeks, low demand)
-
-**Avoid** (Low impact, High effort)
-- Requested but rarely used features
-- Technical solutions to minor problems
-- Complex integrations with low user count
-- Example: Exotic compliance requirement with 2 users (10 weeks, rare need)
-
-### RICE Prioritization Application
-
-**Feature 1: Real-time Co-editing**
-- Reach: 5,000 users (potential monthly)
-- Impact: 3x (massive workflow improvement)
-- Confidence: 90% (strong customer data)
-- Effort: 12 weeks
-- **RICE Score = (5000 × 3 × 0.9) / 12 = 1,125**
-
-**Feature 2: Mobile App Redesign**
-- Reach: 3,000 users (monthly mobile users)
-- Impact: 2x (improved experience)
-- Confidence: 80% (user feedback + analytics)
-- Effort: 10 weeks
-- **RICE Score = (3000 × 2 × 0.8) / 10 = 480**
-
-**Feature 3: Dark Mode**
-- Reach: 6,000 users (many would use)
-- Impact: 1x (nice to have)
-- Confidence: 75% (requested feature)
-- Effort: 3 weeks
-- **RICE Score = (6000 × 1 × 0.75) / 3 = 1,500**
-
-**Prioritized Ranking:** Dark Mode (1,500) > Real-time Co-editing (1,125) > Mobile Redesign (480)
-
----
-
-## Dependency Mapping
-
-### Dependency Types
-
-**Technical Dependencies** (Feature A requires Feature B)
-- Example: Real-time co-editing requires WebSocket infrastructure
-- Impact: Cannot ship feature until dependency complete
-- Planning: Build in sequence, allocate effort for both
-
-**Data Dependencies** (Feature requires data or infrastructure)
-- Example: Analytics dashboard requires data warehouse implementation
-- Impact: Delays feature if data work behind schedule
-- Planning: Start data work early, plan parallel streams
-
-**Organizational Dependencies** (Cross-team coordination)
-- Example: Mobile redesign requires design system alignment
-- Impact: Requires coordination, possible schedule conflicts
-- Planning: Plan kick-off together, regular syncs
-
-**External Dependencies** (Third-party or customer)
-- Example: Enterprise SSO requires customer IT approval
-- Impact: Out of control, high risk
-- Planning: Start early, have backup plans
-
-### Dependency Map Example
-
+### Now-Next-Later Roadmap
 ```
-┌─────────────────────────────────────────────────┐
-│         WebSocket Infrastructure (4w)           │
-│              [Q2, Weeks 1-4]                    │
-└──────────────────┬──────────────────────────────┘
-                   │ Required by
-    ┌──────────────┴──────────────┐
-    │                             │
-    v                             v
-Real-time Updates (3w)    Co-editing Engine (6w)
-[Q2, Weeks 5-7]           [Q2, Weeks 5-10]
-    │                             │
-    └──────────┬───────────────────┘
-               v
-        Activity Feed (2w)
-       [Q2, Weeks 11-12]
+NOW (this quarter)
+  - Theme 1: [Active work]
+  - Theme 2: [Active work]
+
+NEXT (next quarter)
+  - Theme 3: [Planned]
+  - Theme 4: [Planned]
+
+LATER (future)
+  - Theme 5: [Exploring]
+  - Theme 6: [Researching]
 ```
 
-### Critical Path Analysis
-
-**Critical Path:** Longest sequence of dependent activities
-
+### Outcome-Based Roadmap
 ```
-WebSocket (4w) → Co-editing Engine (6w) → Activity Feed (2w) = 12 weeks
+Goal: Reduce Customer Churn by 30%
+  → Improve onboarding (Q1)
+  → Better customer support (Q2)
+  → Product stability (Q2-Q3)
 
-Non-critical path:
-WebSocket (4w) → Real-time Updates (3w) = 7 weeks (5-week float)
-
-Project completion: 12 weeks minimum
-```
-
-**Implications:**
-- Cannot parallelize co-editing and activity feed
-- Real-time updates can slip 5 weeks without impacting overall timeline
-- Delays to WebSocket infrastructure delay entire project
-- Resource freed from real-time updates after week 7 can join other work
-
----
-
-## Resource Planning and Capacity
-
-### Team Capacity Calculation
-
-**Q2 (13 weeks)**
-- Team size: 8 engineers
-- Person-weeks available: 8 × 13 = 104 person-weeks
-- Buffer for overhead (meetings, 1-on-1s, onboarding): 20%
-- Available capacity: 104 × 0.8 = 83 person-weeks
-
-**Work Allocation:**
-- Feature development: 75 person-weeks (70 × 83)
-- Bug fixes and maintenance: 15 person-weeks (18% × 83)
-- Tech debt / infrastructure: 8 person-weeks (10% × 83)
-- Unplanned work / buffer: 2 person-weeks (2% × 83)
-
-**Feature Fit:**
-- Theme 1 (Collaboration): 8 person-weeks ✓
-- Theme 2 (Mobile): 6 person-weeks ✓
-- Theme 3 (Analytics): 4 person-weeks ✓
-- **Total: 18 person-weeks (within 75 available)** ✓
-
-### Resource Timeline
-
-**W1-4: Foundation Work**
-- WebSocket infrastructure (4 engineers)
-- Design system updates (2 designers)
-- Data warehouse setup (2 data engineers)
-
-**W5-8: Feature Development**
-- Real-time updates (2 engineers)
-- Co-editing engine (4 engineers)
-- iOS redesign (2 mobile engineers)
-
-**W9-12: Integration & Polish**
-- Activity feed (2 engineers)
-- Analytics implementation (2 data engineers)
-- Testing and optimization (3 engineers)
-- Android feature parity (2 mobile engineers)
-
----
-
-## Roadmap Communication Strategies
-
-### Executive Summary Version (1 page)
-
-**Q2 2024 Product Roadmap**
-
-**Themes:**
-1. **Collaboration** - Enable real-time teamwork
-   - Key features: Co-editing, activity feeds, notifications
-   - Business impact: Increase retention by 10%
-
-2. **Mobile** - Mobile-first experience
-   - Key features: iOS redesign, Android parity
-   - Business impact: 2K weekly mobile users
-
-3. **Data** - Insights and analytics
-   - Key features: Advanced reporting, usage analytics
-   - Business impact: Support enterprise customers
-
-**Capacity:** 75 person-weeks available, 18 committed to roadmap
-
----
-
-### Quarterly Detailed Version (2-3 pages)
-
-**[Include full quarterly roadmap template from above]**
-
----
-
-### Strategic Vision Document (5-10 pages)
-
-**FY 2024 Product Vision**
-
-**Market Opportunity:** [Context]
-**Strategic Pillars:** [3-5 key directions]
-**Year-long themes:** [Major initiatives]
-**Success metrics:** [Overall goals]
-**Quarterly focus areas:** [Progression of themes]
-
----
-
-## Roadmap Governance
-
-### Approval and Change Process
-
-**Change Request Intake:**
-1. Request submitted with business justification
-2. PM evaluates against current roadmap
-3. If adding feature: Which quadrant in prioritization matrix?
-4. If adding to current quarter: What gets bumped?
-5. Approval criteria: RICE score, alignment with strategy
-
-**Change Categories:**
-
-**Critical Bugs or Compliance** (Expedited)
-- Approve with minimal process
-- Allocate from buffer/maintenance capacity
-- Communicate impact to stakeholders
-
-**Customer or Competitive Pressure** (Standard)
-- Evaluate with prioritization framework
-- Present trade-off (what gets delayed)
-- Stakeholder review and approval
-
-**Nice-to-have Requests** (Queue for consideration)
-- Add to backlog for future prioritization
-- Review quarterly for potential inclusion
-- Track demand signals
-
-**Rejected** (Document reasoning)
-- Explain why outside current priorities
-- Leave open for future reconsideration
-- Provide alternative solutions if possible
-
-### Stakeholder Review Cadence
-
-**Weekly:** Product team sync (15 min check-in on progress)
-**Monthly:** Stakeholder review (30 min status on completion, blockers)
-**Quarterly:** Planning session (2-hour roadmap setting and approval)
-**Annually:** Strategy review (full-day off-site on vision and direction)
-
----
-
-## Roadmap Contingency Planning
-
-### Risk Categories and Responses
-
-**Technical Risk:**
-- Risk: WebSocket scalability issues with 10K concurrent users
-- Response: Load test early (W2-3), have fallback architecture
-- Impact if realized: 3-week delay
-
-**Resource Risk:**
-- Risk: Key engineer leaves mid-quarter
-- Response: Cross-training, knowledge documentation
-- Contingency: Reduce feature scope or extend timeline
-
-**Market Risk:**
-- Risk: Competitor launches similar feature
-- Response: Monitor landscape, acceleration plan ready
-- Decision point: If competitor ships, accelerate timeline
-
-**Execution Risk:**
-- Risk: Requirements unclear, rework needed
-- Response: Robust design review, customer validation
-- Contingency: Time-box discovery, decide to pivot or proceed
-
----
-
-## Roadmap Visualization Options
-
-### Timeline/Gantt Format
-```
-                Q2 2024         Q3 2024
-Feature       |═══════════════|═══════════════|
-              W1  W5  W10  W13 W18  W23  W26
-
-Co-editing    |──────────────────|
-Notifications |─────────────|
-Activity Feed |──────────────────────|
-Mobile v2     |────────────────|
-Analytics     |──────────────────────|
+Goal: 2x Enterprise Revenue
+  → SSO & Advanced Auth (Q1)
+  → Compliance Features (Q2)
+  → Enterprise Admin Tools (Q3)
 ```
 
-### Theme-based Format
-```
-Collaboration      ████ 8w
-├─ Co-editing      ██████ 6w
-├─ Notifications   ███ 3w
-├─ Activity feed   ██ 2w
+## OKR Template
 
-Mobile            ██████ 6w
-├─ iOS redesign   ███ 4w
-├─ Android parity ███ 3w
-
-Analytics         ████ 4w
-├─ Reporting      ██ 2w
-└─ Dashboard      ██ 2w
 ```
+Theme: [Strategic Focus Area]
 
-### Feature Status Board
-```
-On Track (75%)    ✓ Co-editing, Mobile v2, Reporting
-At Risk (15%)     ⚠ Notifications (blocked on infrastructure)
-Not Started (10%) ◯ Activity feed (starts week 10)
+Objective: [Inspiring, qualitative goal]
+
+Key Results:
+  KR1: [Metric] from [baseline] to [target]
+  KR2: [Metric] from [baseline] to [target]
+  KR3: [Metric] from [baseline] to [target]
+
+Initiatives:
+  1. [Initiative name] - [Timeline]
+  2. [Initiative name] - [Timeline]
+  3. [Initiative name] - [Timeline]
 ```
 
----
+**Example:**
+```
+Theme: Enterprise-Ready
 
-## Roadmap Checklist
+Objective: Make our product the default choice for enterprise customers
 
-- [ ] Strategic themes defined and aligned with company goals
-- [ ] Features prioritized using RICE or MoSCoW framework
-- [ ] Team capacity assessed and realistic
-- [ ] Interdependencies mapped and critical path identified
-- [ ] Timeline realistic with buffer for unknowns
-- [ ] Resource allocation across themes and initiatives
-- [ ] Success metrics defined for each initiative
-- [ ] Risks identified with mitigation strategies
-- [ ] Stakeholder alignment and approvals obtained
-- [ ] Communication plan for sharing roadmap
-- [ ] Change management process established
-- [ ] Contingency plans for key risks
-- [ ] Roadmap shared with team and stakeholders
+Key Results:
+  KR1: Increase enterprise deals from 5/quarter to 15/quarter
+  KR2: Achieve SOC 2 Type II certification
+  KR3: Reduce enterprise sales cycle from 6 months to 3 months
 
-## Output Deliverables
+Initiatives:
+  1. SSO & Advanced Auth - Q1
+  2. Audit Logs & Compliance - Q1-Q2
+  3. Enterprise Admin Console - Q2
+```
 
-1. **Quarterly Roadmap** - Detailed features, owners, timeline
-2. **Strategic Vision** - Annual themes and directions
-3. **Dependency Map** - Visual representation of dependencies
-4. **Resource Plan** - Capacity allocation and timeline
-5. **Prioritization Analysis** - RICE scores and rationale
-6. **Risk Register** - Risks and mitigation strategies
-7. **Executive Summary** - 1-page overview for stakeholders
-8. **Change Management Process** - How changes will be evaluated
-9. **Success Metrics Dashboard** - KPIs to track delivery
+## Prioritization Framework
+
+### RICE Scoring
+For each initiative:
+- **Reach**: How many customers will benefit?
+- **Impact**: How much will it help them? (0.25, 0.5, 1, 2, 3)
+- **Confidence**: How sure are we? (%, as decimal)
+- **Effort**: Person-months required
+
+Score = (Reach × Impact × Confidence) / Effort
+
+### Value vs. Complexity Matrix
+```
+       HIGH VALUE
+           |
+   DO NEXT | DO FIRST
+           |
+  -------- + --------  COMPLEXITY
+           |
+   SKIP    | DO LATER
+           |
+      LOW VALUE
+```
+
+### Strategic Alignment Score
+Rate each initiative (1-5):
+- Aligns with company vision
+- Moves key business metrics
+- Requested by strategic customers
+- Competitive necessity
+- Technical foundation for future work
+
+Total score guides prioritization.
+
+## Timeline Planning
+
+**Rough Sizing:**
+- **Small Initiative**: 1-2 months
+- **Medium Initiative**: 3-4 months
+- **Large Initiative**: 5-6 months
+
+**If longer than 6 months**: Break into smaller initiatives.
+
+**Buffer Rules:**
+- Add 20% time buffer for unknowns
+- Reserve 20% capacity for bugs and support
+- Plan for 70% of team's theoretical capacity
+
+## Stakeholder Communication
+
+**Executive Roadmap**: High-level themes and business outcomes
+**Team Roadmap**: Detailed initiatives, epics, and dependencies
+**Customer Roadmap**: Public-facing features and timelines (broad)
+**Board Roadmap**: Strategic bets and expected business impact
+
+**Update Cadence:**
+- Executives: Quarterly with monthly check-ins
+- Teams: Bi-weekly or sprint planning
+- Customers: Major releases or quarterly updates
+- Board: Quarterly or as needed
+
+## Integration Points
+
+- **Project Planner**: Converts roadmap initiatives into project plans
+- **Sprint Planner**: Breaks epics into sprint work
+- **OKR Tracker**: Monitors Key Results progress
+- **Analytics**: Tracks metrics and validates outcomes
+- **User Research**: Informs roadmap priorities with customer insights
+- **GitHub Projects**: Links initiatives to code and releases

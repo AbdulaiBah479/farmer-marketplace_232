@@ -1,45 +1,55 @@
 ---
-name: Security Specialist
-description: 专注于应用安全、认证授权与合规性。
+description: 提供安全审计、风险评估和合规检查能力。当需要进行安全审查、风险评估或合规验证时使用。
+name: security-specialist
 ---
 
-# Security Specialist Skills
+# Security Specialist
 
-## 🤖 智能体与 MCP 增强 (Agent & MCP Enhancements)
 
-本 Skill 支持并推荐配合特定的智能体角色和 MCP 工具使用，以获得最佳效果。
+提供安全审计、风险评估和合规检查能力。当需要进行安全审查、风险评估或合规验证时使用。
 
-### 推荐智能体角色
-*   **Security Auditor**: 详见 [AGENTS.md](AGENTS.md)。
-    *   该角色具备“零信任”和“攻击者视角”，能够主动发现潜在风险。
-    *   启用后，AI 将强制执行 OWASP 安全检查清单。
+## When to Use This Skill
 
-### 推荐 MCP 工具
-*   **Git MCP**: 用于扫描历史提交中的敏感信息泄露。
-*   **Filesystem MCP**: 用于检查文件权限和 `.gitignore` 配置。
+提供安全审计、风险评估和合规检查能力。当需要进行安全审查、风险评估或合规验证时使用。
 
----
+## Capabilities
 
-提供全方位的安全保障，确保应用符合安全标准与法规。
+This specialist skill combines the following capabilities:
 
-## 包含的技能模块
 
-### 1. [安全需求提取 (Security Requirements)](./安全需求提取.md)
-- **核心价值**: 在设计阶段识别安全风险。
-- **关键技术**: 威胁建模, STRIDE 分析, 安全用户故事.
-- **使用场景**: 新功能安全评审、架构设计。
+### Auth0
 
-### 2. [认证实现模式 (Authentication)](./认证实现模式.md)
-- **核心价值**: 实现安全可靠的用户身份验证。
-- **关键技术**: JWT, OAuth2, OIDC, Session 管理.
-- **使用场景**: 登录注册系统开发、第三方登录集成。
+📖 [详细文档](./references/cursor_rules_auth0.md)
 
-### 3. [GDPR 数据处理 (GDPR Compliance)](./GDPR数据处理.md)
-- **核心价值**: 确保数据处理符合 GDPR 等隐私法规。
-- **关键技术**: 数据最小化, 被遗忘权实现, 数据加密.
-- **使用场景**: 出海应用开发、隐私合规审计。
 
-## 如何使用
+### Clerk
 
-- **登录设计**: "请参考认证实现模式，帮我设计一个安全的 JWT 登录流程。"
-- **合规检查**: "请检查我的数据库字段设计是否符合 GDPR 要求。"
+📖 [详细文档](./references/cursor_rules_clerk.md)
+
+
+### Security Auditor
+
+审查代码漏洞，实施安全认证，并确保符合OWASP标准。处理JWT、OAuth2、CORS、CSP和加密。主动用于安全审查、认证流程或漏洞修复。
+
+
+📖 [详细文档](./references/deployment_security-auditor.md)
+
+
+
+### Risk Manager
+
+监控投资组合风险、R倍数和头寸限制。创建对冲策略、计算预期收益并实施止损。主动用于风险评估、交易跟踪或投资组合保护。
+
+
+📖 [详细文档](./references/deployment_risk-manager.md)
+
+
+
+### Legal Compliance Checker
+
+Use this agent when reviewing terms of service, privacy policies, ensuring regulatory compliance, or handling legal requirements. This agent excels at navigating the complex legal landscape of app dev
+
+
+📖 [详细文档](./references/studio-operations_legal-compliance-checker.md)
+
+

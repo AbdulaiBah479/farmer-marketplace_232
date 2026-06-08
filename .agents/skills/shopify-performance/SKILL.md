@@ -1,190 +1,655 @@
 ---
 name: shopify-performance
-description: Optimize Shopify performance — Liquid rendering, asset optimization, CDN strategies, Core Web Vitals, Hydrogen caching, image optimization, preloading, and lazy loading. Use when improving Shopify store speed.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: Performance optimization for Shopify stores including theme speed optimization, image optimization, JavaScript and CSS minification, lazy loading, CDN usage, caching strategies, Liquid template performance, and Core Web Vitals improvement. Use when optimizing store speed, reducing load times, improving Lighthouse scores, optimizing images, implementing lazy loading, reducing JavaScript bloat, or improving Core Web Vitals metrics (LCP, FID, CLS).
 ---
 
 # Shopify Performance Optimization
 
-## Before writing code
+Expert guidance for optimizing Shopify store performance including theme speed, asset optimization, and Core Web Vitals.
 
-**Fetch live docs**:
-1. Web-search `site:shopify.dev theme performance` for theme optimization
-2. Web-search `site:shopify.dev hydrogen caching` for Hydrogen caching strategies
-3. Web-search `site:web.dev core web vitals` for current CWV guidelines and thresholds
-4. Web-search `site:shopify.dev image optimization cdn` for image URL transforms
-5. Web-search `site:shopify.dev theme speed report` for Shopify's built-in speed metrics
+## When to Use This Skill
 
-## Liquid Rendering Performance
+Invoke this skill when:
 
-### Template Optimization
+- Optimizing Shopify theme performance and load times
+- Improving Lighthouse or PageSpeed Insights scores
+- Reducing Time to Interactive (TTI) or Largest Contentful Paint (LCP)
+- Optimizing images for faster loading
+- Implementing lazy loading for images and videos
+- Minifying and optimizing JavaScript and CSS
+- Reducing JavaScript bundle sizes
+- Improving Core Web Vitals metrics (LCP, FID, CLS)
+- Implementing caching strategies
+- Optimizing Liquid template rendering
+- Reducing server response times
+- Improving mobile performance
 
-- Minimize Liquid logic — complex loops and conditionals slow server-side rendering
-- Use `{% render %}` (not `{% include %}`) — isolated scope prevents variable conflicts
-- Avoid nested loops — `O(n²)` in Liquid is expensive
-- Limit `forloop` iterations with `limit:` parameter
-- Pre-compute values with `{% assign %}` instead of repeating expressions
+## Core Capabilities
 
-### Object Access
+### 1. Image Optimization
 
-- Access specific properties: `{{ product.title }}` not `{{ product | json }}`
-- Avoid `all_products[handle]` in loops — each is a separate data lookup
-- Use section settings to pass data instead of global lookups
-- Minimize use of `{{ content_for_header }}` scripts (managed by Shopify — cannot remove, but minimize additional scripts)
+Images are typically the largest assets - optimize aggressively.
 
-### Liquid Anti-Patterns
-
-| Anti-Pattern | Why It's Slow | Better Approach |
-|-------------|--------------|-----------------|
-| Nested `for` loops | O(n²) rendering | Flatten data, use single loop |
-| `all_products[handle]` in loop | Data fetch per iteration | Pass products via section settings |
-| `{% include %}` with variables | Shared scope causes conflicts | Use `{% render %}` (isolated) |
-| Complex `{% if %}` chains | Evaluated every render | Simplify conditions, use `{% case %}` |
-| Unused sections in templates | Rendered even if hidden | Remove from JSON template |
-
-## Asset Optimization
-
-### CSS
-
-- Minimize CSS — remove unused styles
-- Use `{{ 'style.css' | asset_url | stylesheet_tag }}` for proper caching
-- Critical CSS: inline above-the-fold styles in `<head>`
-- Defer non-critical CSS: `media="print" onload="this.media='all'"`
-
-### JavaScript
-
-- Defer non-critical JS: `<script defer>` or dynamic `import()`
-- Minimize JS bundles — Shopify themes don't need frameworks for most UI
-- Use native browser APIs over jQuery
-- Load third-party scripts asynchronously (`async` attribute)
-- Avoid render-blocking scripts in `<head>`
-
-### Images
-
-Shopify CDN image optimization:
-
+**Use Shopify CDN Image Sizing:**
 ```liquid
-# Responsive images with srcset
-{{ image | image_url: width: 800 }}
-{{ image | image_url: width: 400 }}
+{# ❌ Don't load full-size images #}
+<img src="{{ product.featured_image.src }}" alt="{{ product.title }}">
 
-# Srcset pattern
+{# ✅ Use img_url filter with appropriate size #}
 <img
-  srcset="{{ image | image_url: width: 400 }} 400w,
-         {{ image | image_url: width: 800 }} 800w,
-         {{ image | image_url: width: 1200 }} 1200w"
-  sizes="(max-width: 600px) 400px, (max-width: 1000px) 800px, 1200px"
-  src="{{ image | image_url: width: 800 }}"
-  alt="{{ image.alt }}"
+  src="{{ product.featured_image | img_url: '800x800' }}"
+  alt="{{ product.featured_image.alt | escape }}"
   loading="lazy"
-  width="{{ image.width }}"
-  height="{{ image.height }}"
+  width="800"
+  height="800"
 >
 ```
 
-Key image practices:
-- Use `loading="lazy"` for below-the-fold images
-- Use `fetchpriority="high"` for LCP image
-- Set explicit `width` and `height` to prevent layout shift
-- Shopify CDN automatically serves WebP/AVIF when supported
-- URL parameters: `?width=`, `?height=`, `?crop=`, `?format=`
+**Responsive Images:**
+```liquid
+<img
+  src="{{ image | img_url: '800x' }}"
+  srcset="
+    {{ image | img_url: '400x' }} 400w,
+    {{ image | img_url: '800x' }} 800w,
+    {{ image | img_url: '1200x' }} 1200w,
+    {{ image | img_url: '1600x' }} 1600w
+  "
+  sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
+  alt="{{ image.alt | escape }}"
+  loading="lazy"
+  width="800"
+  height="800"
+>
+```
 
-> **Fetch live docs**: Web-search `site:shopify.dev image_url filter parameters` for current CDN transform options — new parameters are added over time.
+**Modern Image Formats:**
+```liquid
+<picture>
+  {# WebP for modern browsers #}
+  <source
+    type="image/webp"
+    srcset="
+      {{ image | img_url: '400x', format: 'pjpg' }} 400w,
+      {{ image | img_url: '800x', format: 'pjpg' }} 800w
+    "
+  >
 
-## Core Web Vitals
+  {# Fallback to JPEG #}
+  <img
+    src="{{ image | img_url: '800x' }}"
+    srcset="
+      {{ image | img_url: '400x' }} 400w,
+      {{ image | img_url: '800x' }} 800w
+    "
+    alt="{{ image.alt | escape }}"
+    loading="lazy"
+  >
+</picture>
+```
 
-### LCP (Largest Contentful Paint)
+**Lazy Loading:**
+```liquid
+{# Native lazy loading #}
+<img
+  src="{{ image | img_url: '800x' }}"
+  alt="{{ image.alt | escape }}"
+  loading="lazy"
+  decoding="async"
+>
 
-Target: < 2.5 seconds
+{# Eager load above-the-fold images #}
+{% if forloop.index <= 3 %}
+  <img src="{{ image | img_url: '800x' }}" loading="eager">
+{% else %}
+  <img src="{{ image | img_url: '800x' }}" loading="lazy">
+{% endif %}
+```
 
-- Preload hero/LCP image: `<link rel="preload" as="image" href="{{ image | image_url: width: 1200 }}">`
-- Use `fetchpriority="high"` on LCP image
-- Avoid lazy-loading above-the-fold images
-- Minimize render-blocking CSS and JS
-- Use server-side rendering (Liquid or Hydrogen SSR)
+**Preload Critical Images:**
+```liquid
+{# In <head> for hero images #}
+<link
+  rel="preload"
+  as="image"
+  href="{{ section.settings.hero_image | img_url: '1920x' }}"
+  imagesrcset="
+    {{ section.settings.hero_image | img_url: '800x' }} 800w,
+    {{ section.settings.hero_image | img_url: '1920x' }} 1920w
+  "
+  imagesizes="100vw"
+>
+```
 
-### CLS (Cumulative Layout Shift)
+### 2. JavaScript Optimization
 
-Target: < 0.1
+Reduce JS payload and execution time.
 
-- Set explicit `width` and `height` on all images and media
-- Reserve space for dynamic content (ads, embeds, lazy-loaded images)
-- Avoid inserting content above existing content after page load
-- Use `aspect-ratio` CSS property for responsive media containers
-- Avoid dynamically injected banners or pop-ups that shift content
+**Defer Non-Critical JavaScript:**
+```html
+{# ❌ Blocking JavaScript #}
+<script src="{{ 'theme.js' | asset_url }}"></script>
 
-### INP (Interaction to Next Paint)
+{# ✅ Deferred JavaScript #}
+<script src="{{ 'theme.js' | asset_url }}" defer></script>
 
-Target: < 200ms
+{# ✅ Async for independent scripts #}
+<script src="{{ 'analytics.js' | asset_url }}" async></script>
+```
 
-- Minimize main-thread blocking JavaScript
-- Break up long tasks with `requestIdleCallback` or `setTimeout(fn, 0)`
-- Use CSS for animations and transitions (not JS)
-- Debounce event handlers (scroll, resize, input)
-- Avoid synchronous layout thrashing (read-then-write DOM patterns)
+**Inline Critical JavaScript:**
+```liquid
+{# Inline small, critical scripts #}
+<script>
+  // Critical initialization code
+  document.documentElement.classList.remove('no-js');
+  document.documentElement.classList.add('js');
+</script>
+```
 
-> **Fetch live docs**: CWV thresholds and measurement methodology evolve. Web-search `site:web.dev core web vitals thresholds` for current targets.
+**Code Splitting:**
+```javascript
+// Load features only when needed
+async function loadCart() {
+  const { Cart } = await import('./cart.js');
+  return new Cart();
+}
 
-## Hydrogen Caching
+// Load on interaction
+document.querySelector('.cart-icon').addEventListener('click', async () => {
+  const cart = await loadCart();
+  cart.open();
+}, { once: true });
+```
 
-### Cache Strategies
+**Remove Unused JavaScript:**
+```javascript
+// ❌ Don't load libraries you don't use
+// Example: Don't include entire jQuery if you only need a few functions
 
-```typescript
-// Pattern: apply cache strategy to storefront query
-const data = await storefront.query(QUERY, {
-  cache: CacheLong(),  // products, collections
+// ✅ Use native alternatives
+// Instead of: $('.selector').hide()
+// Use: document.querySelector('.selector').style.display = 'none';
+
+// Instead of: $.ajax()
+// Use: fetch()
+```
+
+**Minify JavaScript:**
+```bash
+# Use build tools to minify
+npm install terser --save-dev
+
+# Minify
+terser theme.js -o theme.min.js -c -m
+```
+
+### 3. CSS Optimization
+
+Optimize stylesheets for faster rendering.
+
+**Critical CSS:**
+```liquid
+{# Inline critical above-the-fold CSS in <head> #}
+<style>
+  /* Critical CSS only (header, hero) */
+  .header { /* ... */ }
+  .hero { /* ... */ }
+  .button { /* ... */ }
+</style>
+
+{# Load full CSS deferred #}
+<link
+  rel="preload"
+  href="{{ 'theme.css' | asset_url }}"
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+>
+<noscript>
+  <link rel="stylesheet" href="{{ 'theme.css' | asset_url }}">
+</noscript>
+```
+
+**Remove Unused CSS:**
+```bash
+# Use PurgeCSS to remove unused styles
+npm install @fullhuman/postcss-purgecss --save-dev
+
+# Configure in postcss.config.js
+module.exports = {
+  plugins: [
+    require('@fullhuman/postcss-purgecss')({
+      content: ['./**/*.liquid'],
+      defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
+    }),
+  ],
+};
+```
+
+**Minify CSS:**
+```bash
+# Use cssnano
+npm install cssnano --save-dev
+
+# Minify
+npx cssnano style.css style.min.css
+```
+
+**Avoid @import:**
+```css
+/* ❌ Don't use @import (blocks rendering) */
+@import url('fonts.css');
+
+/* ✅ Use multiple <link> tags instead */
+```
+
+```liquid
+<link rel="stylesheet" href="{{ 'main.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'fonts.css' | asset_url }}">
+```
+
+### 4. Font Optimization
+
+Optimize web fonts for faster text rendering.
+
+**Font Loading:**
+```liquid
+{# Preload fonts #}
+<link
+  rel="preload"
+  href="{{ 'font.woff2' | asset_url }}"
+  as="font"
+  type="font/woff2"
+  crossorigin
+>
+
+{# Font face with font-display #}
+<style>
+  @font-face {
+    font-family: 'CustomFont';
+    src: url('{{ 'font.woff2' | asset_url }}') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap; /* Show fallback font immediately */
+  }
+</style>
+```
+
+**System Font Stack:**
+```css
+/* Use system fonts for instant rendering */
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+```
+
+**Subset Fonts:**
+```css
+/* Load only required characters */
+@font-face {
+  font-family: 'CustomFont';
+  src: url('font-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153;
+}
+```
+
+### 5. Liquid Template Optimization
+
+Optimize Liquid rendering for faster server response.
+
+**Cache Expensive Operations:**
+```liquid
+{# ❌ Repeated calculations #}
+{% for i in (1..10) %}
+  {{ collection.products.size }}  {# Calculated 10 times #}
+{% endfor %}
+
+{# ✅ Cache result #}
+{% assign product_count = collection.products.size %}
+{% for i in (1..10) %}
+  {{ product_count }}
+{% endfor %}
+```
+
+**Use limit and offset:**
+```liquid
+{# ❌ Iterate full array and break #}
+{% for product in collection.products %}
+  {% if forloop.index > 5 %}{% break %}{% endif %}
+  {{ product.title }}
+{% endfor %}
+
+{# ✅ Use limit #}
+{% for product in collection.products limit: 5 %}
+  {{ product.title }}
+{% endfor %}
+```
+
+**Avoid Nested Loops:**
+```liquid
+{# ❌ O(n²) complexity #}
+{% for product in collection.products %}
+  {% for variant in product.variants %}
+    {# Expensive nested loop #}
+  {% endfor %}
+{% endfor %}
+
+{# ✅ Flatten or preprocess #}
+{% assign all_variants = collection.products | map: 'variants' | flatten %}
+{% for variant in all_variants limit: 50 %}
+  {{ variant.title }}
+{% endfor %}
+```
+
+**Prefer render over include:**
+```liquid
+{# ❌ include (slower, shared scope) #}
+{% include 'product-card' %}
+
+{# ✅ render (faster, isolated scope) #}
+{% render 'product-card', product: product %}
+```
+
+**Use section-specific stylesheets:**
+```liquid
+{# Scope CSS to section for better caching #}
+{% stylesheet %}
+  .my-section { /* ... */ }
+{% endstylesheet %}
+
+{# Scope JavaScript to section #}
+{% javascript %}
+  class MySection { /* ... */ }
+{% endjavascript %}
+```
+
+### 6. Third-Party Script Optimization
+
+Minimize impact of external scripts.
+
+**Defer Third-Party Scripts:**
+```liquid
+{# ❌ Blocking third-party script #}
+<script src="https://external.com/script.js"></script>
+
+{# ✅ Async or defer #}
+<script src="https://external.com/script.js" async></script>
+
+{# ✅ Load on user interaction #}
+<script>
+  let gaLoaded = false;
+  function loadGA() {
+    if (gaLoaded) return;
+    const script = document.createElement('script');
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=GA_ID';
+    script.async = true;
+    document.head.appendChild(script);
+    gaLoaded = true;
+  }
+
+  // Load on scroll or after delay
+  window.addEventListener('scroll', loadGA, { once: true });
+  setTimeout(loadGA, 3000);
+</script>
+```
+
+**Use Facade Pattern:**
+```html
+{# Show placeholder instead of embedding heavy iframe #}
+<div class="video-facade" data-video-id="abc123">
+  <img src="thumbnail.jpg" alt="Video">
+  <button onclick="loadVideo(this)">Play Video</button>
+</div>
+
+<script>
+  function loadVideo(btn) {
+    const facade = btn.parentElement;
+    const videoId = facade.dataset.videoId;
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    facade.replaceWith(iframe);
+  }
+</script>
+```
+
+### 7. Caching Strategies
+
+Leverage browser and CDN caching.
+
+**Asset Versioning:**
+```liquid
+{# Shopify auto-versions assets #}
+<link rel="stylesheet" href="{{ 'theme.css' | asset_url }}">
+{# Outputs: /cdn/.../theme.css?v=12345678 #}
+```
+
+**Long Cache Headers:**
+```liquid
+{# Shopify CDN sets appropriate cache headers #}
+{# CSS/JS: 1 year #}
+{# Images: 1 year #}
+```
+
+**Service Worker (Advanced):**
+```javascript
+// sw.js - Cache static assets
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open('v1').then(cache => {
+      return cache.addAll([
+        '/cdn/.../theme.css',
+        '/cdn/.../theme.js',
+        '/cdn/.../logo.png',
+      ]);
+    })
+  );
 });
 
-const cart = await storefront.query(CART_QUERY, {
-  cache: CacheShort(), // dynamic data
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
+  );
 });
 ```
 
-| Strategy | Use For |
-|----------|---------|
-| `CacheLong()` | Products, collections, pages |
-| `CacheShort()` | Cart, personalized content |
-| `CacheNone()` | Customer-specific data |
-| `CacheCustom({...})` | Fine-tuned scenarios |
+### 8. Core Web Vitals Optimization
 
-> **Fetch live docs** for exact TTL values — Hydrogen caching defaults may change across versions.
+Improve Google's Core Web Vitals metrics.
 
-### Streaming SSR
+**Largest Contentful Paint (LCP):**
+```liquid
+{# Optimize largest element load time #}
 
-- Use `defer()` in loaders for non-critical data
-- Critical data renders immediately, deferred data streams in
-- Show loading states with `<Suspense>` + `<Await>`
-- Preload routes with `<Link prefetch="intent">`
+{# 1. Preload hero image #}
+<link rel="preload" as="image" href="{{ hero_image | img_url: '1920x' }}">
 
-## Shopify CDN
+{# 2. Use priority hint #}
+<img src="{{ hero_image | img_url: '1920x' }}" fetchpriority="high">
 
-Shopify's global CDN:
-- Automatic for all theme assets and images
-- Cache-Control headers managed by Shopify
-- Image transformations via URL parameters
-- No manual CDN configuration needed for themes
-- Asset fingerprinting for cache busting
+{# 3. Optimize server response time (use Shopify CDN) #}
 
-## Measurement Tools
+{# 4. Remove render-blocking resources #}
+<script src="theme.js" defer></script>
+```
 
-| Tool | What It Measures |
-|------|-----------------|
-| Shopify Theme Speed Report | Overall theme score in admin |
-| Google Lighthouse | CWV + performance audit |
-| WebPageTest | Real-world loading waterfall |
-| Chrome DevTools Performance | JS profiling, layout shifts |
-| Search Console CWV Report | Field data from real users |
+**First Input Delay (FID) / Interaction to Next Paint (INP):**
+```javascript
+// 1. Reduce JavaScript execution time
+// 2. Break up long tasks
+function processItems(items) {
+  // ❌ Long task
+  items.forEach(item => processItem(item));
+
+  // ✅ Break into smaller chunks
+  async function processInChunks() {
+    for (let i = 0; i < items.length; i++) {
+      processItem(items[i]);
+
+      // Yield to main thread every 50 items
+      if (i % 50 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+  }
+  processInChunks();
+}
+
+// 3. Use requestIdleCallback
+requestIdleCallback(() => {
+  // Non-critical work
+});
+```
+
+**Cumulative Layout Shift (CLS):**
+```liquid
+{# 1. Always set width and height on images #}
+<img
+  src="{{ image | img_url: '800x' }}"
+  width="800"
+  height="600"
+  alt="Product"
+>
+
+{# 2. Reserve space for dynamic content #}
+<div style="min-height: 400px;">
+  {# Content loads here #}
+</div>
+
+{# 3. Use aspect-ratio for responsive images #}
+<style>
+  .image-container {
+    aspect-ratio: 16 / 9;
+  }
+</style>
+```
+
+### 9. Performance Monitoring
+
+Track performance metrics.
+
+**Measure Core Web Vitals:**
+```javascript
+// Load web-vitals library
+import { getCLS, getFID, getLCP } from 'web-vitals';
+
+function sendToAnalytics({ name, value, id }) {
+  // Send to analytics
+  gtag('event', name, {
+    event_category: 'Web Vitals',
+    event_label: id,
+    value: Math.round(name === 'CLS' ? value * 1000 : value),
+  });
+}
+
+getCLS(sendToAnalytics);
+getFID(sendToAnalytics);
+getLCP(sendToAnalytics);
+```
+
+**Performance Observer:**
+```javascript
+// Monitor long tasks
+const observer = new PerformanceObserver(list => {
+  for (const entry of list.getEntries()) {
+    console.warn('Long task detected:', entry.duration, 'ms');
+  }
+});
+
+observer.observe({ entryTypes: ['longtask'] });
+```
+
+## Performance Checklist
+
+**Images:**
+- [ ] Use `img_url` filter with appropriate sizes
+- [ ] Implement responsive images with `srcset`
+- [ ] Add `loading="lazy"` to below-fold images
+- [ ] Set explicit `width` and `height` attributes
+- [ ] Preload critical hero images
+- [ ] Use modern formats (WebP)
+
+**JavaScript:**
+- [ ] Defer or async all non-critical scripts
+- [ ] Minify and bundle JavaScript
+- [ ] Code-split large bundles
+- [ ] Remove unused code
+- [ ] Lazy load features on interaction
+
+**CSS:**
+- [ ] Inline critical CSS
+- [ ] Defer non-critical CSS
+- [ ] Remove unused styles
+- [ ] Minify stylesheets
+- [ ] Avoid `@import`
+
+**Fonts:**
+- [ ] Preload critical fonts
+- [ ] Use `font-display: swap`
+- [ ] Consider system font stack
+- [ ] Subset fonts when possible
+
+**Third-Party:**
+- [ ] Audit all third-party scripts
+- [ ] Load scripts async or on interaction
+- [ ] Use facade pattern for heavy embeds
+- [ ] Monitor third-party impact
+
+**Liquid:**
+- [ ] Cache expensive calculations
+- [ ] Use `limit` instead of manual breaks
+- [ ] Prefer `render` over `include`
+- [ ] Avoid nested loops
+
+**Core Web Vitals:**
+- [ ] LCP < 2.5s
+- [ ] FID < 100ms (INP < 200ms)
+- [ ] CLS < 0.1
 
 ## Best Practices
 
-- Measure before optimizing — use Lighthouse, WebPageTest, Shopify's theme speed report
-- Focus on LCP image optimization first (biggest impact for most stores)
-- Lazy-load everything below the fold
-- Minimize third-party scripts (analytics, chat widgets, social embeds)
-- Use Shopify's built-in analytics over custom tracking scripts where possible
-- For Hydrogen: cache aggressively, stream non-critical data, preload routes
-- Test on real devices and slow connections (3G throttling)
-- Set explicit dimensions on all media to prevent CLS
-- Use `font-display: swap` for custom fonts
+1. **Test on real devices** - Mobile 3G performance matters
+2. **Use Lighthouse** for performance audits
+3. **Monitor Core Web Vitals** in production
+4. **Optimize above-the-fold** content first
+5. **Lazy load everything else** below the fold
+6. **Minimize main thread work** for better interactivity
+7. **Use Shopify CDN** for all assets
+8. **Version assets** for effective caching
+9. **Compress images** before uploading
+10. **Regular performance audits** to catch regressions
 
-Fetch the Shopify performance documentation, Core Web Vitals guides, and Hydrogen caching docs for exact optimization techniques and current best practices before implementing.
+## Integration with Other Skills
+
+- **shopify-liquid** - Use when optimizing Liquid template code
+- **shopify-theme-dev** - Use when organizing theme assets
+- **shopify-debugging** - Use when troubleshooting performance issues
+- **shopify-api** - Use when optimizing API request patterns
+
+## Quick Reference
+
+```liquid
+{# Images #}
+<img src="{{ image | img_url: '800x' }}" loading="lazy" width="800" height="800">
+
+{# Scripts #}
+<script src="{{ 'theme.js' | asset_url }}" defer></script>
+
+{# Fonts #}
+<link rel="preload" href="{{ 'font.woff2' | asset_url }}" as="font" crossorigin>
+
+{# Critical CSS #}
+<style>/* Critical CSS */</style>
+<link rel="preload" href="{{ 'theme.css' | asset_url }}" as="style" onload="this.rel='stylesheet'">
+
+{# Responsive images #}
+<img srcset="{{ image | img_url: '400x' }} 400w, {{ image | img_url: '800x' }} 800w">
+```

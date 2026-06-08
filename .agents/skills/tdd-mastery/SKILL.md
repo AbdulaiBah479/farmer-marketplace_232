@@ -1,147 +1,353 @@
 ---
 name: tdd-mastery
-description: Test-driven development workflow with Red-Green-Refactor cycle across languages
+description: Test-Driven Development Iron Law. Write the test first. Watch it fail. Write minimal code to pass. No exceptions.
 ---
 
-# TDD Mastery
+<domain_overview>
+# 🧪 TDD MASTERY: THE IRON LAW
 
-## Core Cycle: Red-Green-Refactor
+> **Philosophy:** If you didn't watch the test fail, you don't know if it tests the right thing. TDD is not optional—it's the foundation of trustworthy code.
+**TEST-FIRST INTEGRITY MANDATE (CRITICAL):** Never write production code before a test exists and has been seen failing. AI-generated code often attempts to write implementation and tests simultaneously or implementation first. You MUST strictly adhere to the Red-Green-Refactor cycle. Any code submitted without a preceding failing test or that generates tests after the implementation must be rejected as "Legacy Code on Arrival".
 
-1. **Red** - Write a failing test that defines the desired behavior
-2. **Green** - Write the minimum code to make the test pass
-3. **Refactor** - Clean up while keeping tests green
+---
 
-Never write production code without a failing test first. Each cycle should take 2-10 minutes.
-
-## Test Structure
-
-Use the Arrange-Act-Assert pattern consistently:
+## 🚨 THE IRON LAW
 
 ```
-Arrange: Set up test data and dependencies
-Act:     Execute the behavior under test
-Assert:  Verify the expected outcome
+NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```
 
-Name tests as `test_<unit>_<scenario>_<expected_result>` or `it("should <behavior> when <condition>")`.
+Write code before the test? **Delete it. Start over.**
 
-## Jest / Vitest Patterns
+**No exceptions:**
+- Don't keep it as "reference"
+- Don't "adapt" it while writing tests
+- Don't look at it
+- Delete means delete
 
+Implement fresh from tests. Period.
+</domain_overview>
+<core_workflow>
+## 🔴 RED-GREEN-REFACTOR CYCLE
+
+### Phase 1: RED - Write Failing Test
+
+Write one minimal test showing what should happen.
+
+**Good Example:**
 ```typescript
-describe("OrderService", () => {
-  it("should apply discount when order exceeds threshold", () => {
-    const order = createOrder({ items: [{ price: 150, qty: 1 }] });
-    const result = applyDiscount(order, { threshold: 100, percent: 10 });
-    expect(result.total).toBe(135);
-  });
+test('retries failed operations 3 times', async () => {
+  let attempts = 0;
+  const operation = () => {
+    attempts++;
+    if (attempts < 3) throw new Error('fail');
+    return 'success';
+  };
 
-  it("should throw when applying discount to empty order", () => {
-    const order = createOrder({ items: [] });
-    expect(() => applyDiscount(order, defaultDiscount)).toThrow(EmptyOrderError);
-  });
+  const result = await retryOperation(operation);
+
+  expect(result).toBe('success');
+  expect(attempts).toBe(3);
 });
 ```
+*Clear name, tests real behavior, one thing*
 
-Use `vi.fn()` / `jest.fn()` for mocks. Prefer dependency injection over module mocking. Use `beforeEach` for shared setup, never share mutable state between tests.
-
-## pytest Patterns
-
-```python
-@pytest.fixture
-def db_session():
-    session = create_test_session()
-    yield session
-    session.rollback()
-
-def test_create_user_stores_hashed_password(db_session):
-    user = UserService(db_session).create(email="a@b.com", password="secret")
-    assert user.password_hash != "secret"
-    assert verify_password("secret", user.password_hash)
-
-@pytest.mark.parametrize("input,expected", [
-    ("", False),
-    ("short", False),
-    ("ValidPass1!", True),
-])
-def test_password_validation(input, expected):
-    assert validate_password(input) == expected
+**Bad Example:**
+```typescript
+test('retry works', async () => {
+  const mock = jest.fn()
+    .mockRejectedValueOnce(new Error())
+    .mockResolvedValueOnce('success');
+  await retryOperation(mock);
+  expect(mock).toHaveBeenCalledTimes(2);
+});
 ```
+*Vague name, tests mock not code*
 
-Use `pytest.raises` for exceptions. Use `conftest.py` for shared fixtures. Mark slow tests with `@pytest.mark.slow`.
+**Requirements:**
+- One behavior per test
+- Clear, descriptive name
+- Real code (mocks only if unavoidable)
 
-## Go Testing Patterns
+### Phase 2: VERIFY RED - Watch It Fail
 
-```go
-func TestParseConfig(t *testing.T) {
-    tests := []struct {
-        name    string
-        input   string
-        want    Config
-        wantErr bool
-    }{
-        {"valid yaml", "port: 8080", Config{Port: 8080}, false},
-        {"empty input", "", Config{}, true},
-        {"invalid port", "port: -1", Config{}, true},
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := ParseConfig([]byte(tt.input))
-            if (err != nil) != tt.wantErr {
-                t.Errorf("ParseConfig() error = %v, wantErr %v", err, tt.wantErr)
-                return
-            }
-            if !tt.wantErr && got != tt.want {
-                t.Errorf("ParseConfig() = %v, want %v", got, tt.want)
-            }
-        })
-    }
-}
-```
-
-Use table-driven tests by default. Use `t.Helper()` in test utility functions. Use `testify/assert` only if the team already uses it.
-
-## Test Levels
-
-| Level | Scope | Speed | Dependencies |
-|-------|-------|-------|-------------|
-| Unit | Single function/class | <100ms | None (mock all) |
-| Integration | Module boundaries | <5s | Real DB, real FS |
-| E2E | Full user flow | <30s | Full stack |
-
-Ratio target: 70% unit, 20% integration, 10% e2e.
-
-## Coverage Rules
-
-- Enforce **80% line coverage minimum** in CI
-- Track branch coverage, not just line coverage
-- Exclude generated code, type definitions, and config files
-- Never write tests just to hit coverage numbers; test behavior
+**MANDATORY. Never skip.**
 
 ```bash
-# Jest/Vitest
-vitest run --coverage --coverage.thresholds.lines=80 --coverage.thresholds.branches=75
-
-# pytest
-pytest --cov=src --cov-fail-under=80 --cov-branch
-
-# Go
-go test -coverprofile=cover.out -coverpkg=./... ./...
-go tool cover -func=cover.out
+npm test path/to/test.test.ts
+# or
+pytest tests/path/test.py::test_name -v
 ```
 
-## Mocking Guidelines
+Confirm:
+- Test fails (not errors)
+- Failure message is expected
+- Fails because feature missing (not typos)
 
-- Mock at boundaries: HTTP clients, databases, file systems, clocks
-- Never mock the unit under test
-- Prefer fakes (in-memory implementations) over mocks for repositories
-- Assert on behavior, not on mock call counts
-- Use `t.Cleanup` / `afterEach` to reset shared mocks
+**Test passes?** You're testing existing behavior. Fix test.
 
-## Anti-Patterns to Avoid
+**Test errors?** Fix error, re-run until it fails correctly.
 
-- Testing implementation details instead of behavior
-- Tests that pass when code is deleted (tautological tests)
-- Shared mutable state between test cases
-- Ignoring flaky tests instead of fixing them
-- Testing private methods directly
-- Giant test setup that obscures intent
+### Phase 3: GREEN - Minimal Code
+
+Write **simplest code** to pass the test.
+
+**Good:**
+```typescript
+async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
+  for (let i = 0; i < 3; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i === 2) throw e;
+    }
+  }
+  throw new Error('unreachable');
+}
+```
+*Just enough to pass*
+
+**Bad:**
+```typescript
+async function retryOperation<T>(
+  fn: () => Promise<T>,
+  options?: {
+    maxRetries?: number;
+    backoff?: 'linear' | 'exponential';
+    onRetry?: (attempt: number) => void;
+  }
+): Promise<T> {
+  // YAGNI - You Aren't Gonna Need It
+}
+```
+*Over-engineered*
+
+Don't add features, refactor other code, or "improve" beyond the test.
+
+### Phase 4: VERIFY GREEN - Watch It Pass
+
+**MANDATORY.**
+
+```bash
+npm test path/to/test.test.ts
+```
+
+Confirm:
+- Test passes
+- Other tests still pass
+- Output pristine (no errors, warnings)
+
+**Test fails?** Fix code, not test.
+
+**Other tests fail?** Fix now.
+
+### Phase 5: REFACTOR - Clean Up
+
+After green only:
+- Remove duplication
+- Improve names
+- Extract helpers
+
+Keep tests green. Don't add behavior.
+
+### Phase 6: COMMIT
+
+```bash
+git add tests/path/test.ts src/path/file.ts
+git commit -m "feat: add specific feature with tests"
+```
+
+**Repeat** for next behavior.
+
+---
+</core_workflow>
+
+<quality_standards>
+## 📋 GOOD TEST QUALITIES
+
+| Quality | Good | Bad |
+|---------|------|-----|
+| **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
+| **Clear** | Name describes behavior | `test('test1')` |
+| **Shows intent** | Demonstrates desired API | Obscures what code should do |
+| **Real behavior** | Tests actual code | Tests mock behavior |
+
+---
+
+## 🚫 COMMON RATIONALIZATIONS (ALL INVALID)
+
+| Excuse | Reality |
+|--------|---------|
+| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
+| "I'll test after" | Tests passing immediately prove nothing. |
+| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
+| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is debt. |
+| "Keep as reference" | You'll adapt it. That's testing after. Delete means delete. |
+| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
+| "Test hard = skip test" | Hard to test = hard to use. Simplify design. |
+| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
+| "Existing code has no tests" | You're improving it. Add tests for existing code. |
+
+---
+
+## 🚨 RED FLAGS - STOP AND START OVER
+
+If you catch yourself:
+- Writing code before test
+- Test passes immediately
+- Can't explain why test failed
+- Tests added "later"
+- "Just this once"
+- "I already manually tested it"
+- "Keep as reference"
+- "TDD is dogmatic, I'm being pragmatic"
+
+**ALL of these mean: Delete code. Start over with TDD.**
+
+---
+</quality_standards>
+
+<bug_fix_protocol>
+## 🐛 BUG FIX WORKFLOW
+
+Bug found? Write failing test reproducing it. Follow TDD cycle.
+
+**Example:**
+```
+Bug: Empty email accepted
+
+RED:
+test('rejects empty email', async () => {
+  const result = await submitForm({ email: '' });
+  expect(result.error).toBe('Email required');
+});
+
+VERIFY RED:
+$ npm test
+FAIL: expected 'Email required', got undefined
+
+GREEN:
+function submitForm(data: FormData) {
+  if (!data.email?.trim()) {
+    return { error: 'Email required' };
+  }
+  // ...
+}
+
+VERIFY GREEN:
+$ npm test
+PASS
+```
+
+**Never fix bugs without a test.**
+
+---
+</bug_fix_protocol>
+
+<integration_and_tooling>
+## 🔗 RALPH WIGGUM INTEGRATION
+
+When Ralph Wiggum is active:
+
+1. **Before ANY implementation:** Write failing test first
+2. **Proactive Gate:** Check edge cases BEFORE coding (use TDD to cover them)
+3. **Reflection Loop:** After implementation, verify RED-GREEN was followed
+4. **Verification Matrix:** Track test coverage for each feature
+
+**Ralph Wiggum will REJECT:**
+- Code without corresponding tests
+- Tests that were written after code
+- Tests that pass without implementation
+
+---
+
+## ✅ VERIFICATION CHECKLIST
+
+Before marking work complete:
+
+- [ ] Every new function/method has a test
+- [ ] Watched each test fail before implementing
+- [ ] Each test failed for expected reason (feature missing, not typo)
+- [ ] Wrote minimal code to pass each test
+- [ ] All tests pass
+- [ ] Output pristine (no errors, warnings)
+- [ ] Tests use real code (mocks only if unavoidable)
+- [ ] Edge cases and errors covered
+
+Can't check all boxes? You skipped TDD. Start over.
+
+---
+
+## 🛠️ TESTING INFRASTRUCTURE
+
+### Stack Detection & Tool Setup
+
+Auto-detect project type and setup appropriate tools:
+
+| Project Type | Required Tools |
+|--------------|----------------|
+| **Frontend (Vite/React)** | `vitest` + `playwright` |
+| **Fullstack (Next.js)** | `vitest` + `playwright` |
+| **Backend (Node)** | `vitest` or `jest` |
+| **Python** | `pytest` + `pytest-cov` |
+| **Microservices** | `MSW` (Mock Service Worker) |
+
+### Test Coverage Rules
+
+For every new function/component, generate:
+- **1 Happy Path** - Expected successful behavior
+- **2 Edge Cases** - Boundary conditions, invalid inputs
+- **1 Error Case** - Expected failure handling
+
+### Contract-First (MSW)
+
+**Rule:** Every frontend-backend interaction MUST have an MSW handler.
+
+```typescript
+// Example MSW handler
+import { http, HttpResponse } from 'msw'
+
+export const handlers = [
+  http.get('/api/users/:id', ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      name: 'Test User'
+    })
+  })
+]
+```
+
+**Benefit:** Decouples frontend development from backend availability.
+
+### Ghost Inspector Protocol
+
+AI must scan for "Untested Logic Slabs" (>20 lines without coverage) and flag them:
+
+```bash
+# Check coverage gaps
+npm run test -- --coverage
+# Look for files with <80% coverage
+```
+
+---
+</integration_and_tooling>
+
+<reference_and_audit>
+## 📖 RELATED SKILLS
+
+- **@testing-anti-patterns.md** - Common mock/test mistakes to avoid
+- **@clean-code** - Code quality standards
+- **@verification-mastery** - Evidence before completion claims
+- **@debug-mastery** - When tests reveal bugs
+
+---
+
+## 🏁 FINAL RULE
+
+```
+Production code → test exists and failed first
+Otherwise → not TDD
+```
+
+No exceptions without explicit user permission.
+</reference_and_audit>

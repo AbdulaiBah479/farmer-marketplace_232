@@ -1,188 +1,106 @@
 ---
 name: rust-systems
-description: Rust systems programming patterns including ownership, traits, async runtime, error handling, and unsafe guidelines
+description: Rust systems programming patterns and style guide for building reliable systems software. This skill should be used when writing Rust code, especially for systems programming, CLI tools, or performance-critical applications. Covers project organization with Cargo workspaces, module structure, naming conventions (RFC 430), type/trait patterns (Option, builders, associated types), and error handling with thiserror/anyhow.
 ---
 
-# Rust Systems
+# Rust Systems Programming Best Practices
 
-## Ownership and Borrowing
+Comprehensive Rust patterns and style conventions for systems programming, containing 52 rules across 5 categories. Designed for systems programming, CLI tools, and performance-critical applications.
 
-```rust
-fn process_data(data: &[u8]) -> Vec<u8> {
-    data.iter().map(|b| b.wrapping_add(1)).collect()
-}
+## When to Apply
 
-fn modify_in_place(data: &mut Vec<u8>) {
-    data.retain(|b| *b != 0);
-    data.sort_unstable();
-}
+Reference these guidelines when:
+- Writing new Rust code or modules
+- Organizing Rust project structure
+- Defining custom types, traits, or error handling
+- Reviewing Rust code for style consistency
+- Building systems tools, CLIs, or daemon processes
 
-fn take_ownership(data: Vec<u8>) -> Vec<u8> {
-    let mut result = data;
-    result.push(0xFF);
-    result
-}
+## Rule Categories by Priority
 
-fn main() {
-    let data = vec![1, 2, 3, 0, 4];
-    let processed = process_data(&data);     // borrow: data still usable
-    let mut owned = take_ownership(data);     // move: data no longer usable
-    modify_in_place(&mut owned);              // mutable borrow
-}
-```
+| Priority | Category | Impact | Prefix |
+|----------|----------|--------|--------|
+| 1 | Project Organization | HIGH | `org-` |
+| 2 | Module Structure | HIGH | `mod-` |
+| 3 | Naming Conventions | HIGH | `name-` |
+| 4 | Type & Trait Patterns | HIGH | `type-` |
+| 5 | Error Handling | HIGH | `err-` |
 
-Prefer borrowing (`&T`, `&mut T`) over ownership transfer. Use `Clone` only when necessary.
+## Quick Reference
 
-## Error Handling
+### 1. Project Organization (HIGH)
 
-```rust
-use thiserror::Error;
+- `org-cargo-workspace` - Use Cargo Workspace for Multi-Crate Projects
+- `org-directory-naming` - Use snake_case for All Directory Names
+- `org-binary-library-separation` - Separate Binary and Library Crates
+- `org-feature-domain-grouping` - Group Crates by Feature Domain
+- `org-common-crate` - Use Dedicated Common Crate for Shared Utilities
+- `org-flat-crate-structure` - Keep Crate Structure Flat
 
-#[derive(Error, Debug)]
-pub enum AppError {
-    #[error("database error: {0}")]
-    Database(#[from] sqlx::Error),
+### 2. Module Structure (HIGH)
 
-    #[error("not found: {resource} with id {id}")]
-    NotFound { resource: &'static str, id: String },
+- `mod-explicit-declarations` - Use Explicit Module Declarations in lib.rs
+- `mod-colocated-tests` - Co-locate Tests as test.rs Files
+- `mod-submodule-organization` - Use mod.rs for Multi-File Modules
+- `mod-types-errors-files` - Separate Types and Errors into Dedicated Files
+- `mod-reexport-pattern` - Use pub use for Clean API Re-exports
+- `mod-conditional-compilation` - Use cfg Attributes for Conditional Modules
 
-    #[error("validation failed: {0}")]
-    Validation(String),
-}
+### 3. Naming Conventions (HIGH)
 
-type Result<T> = std::result::Result<T, AppError>;
+- `name-function-snake-case` - Use snake_case for Functions and Methods
+- `name-type-pascal-case` - Use PascalCase for Types
+- `name-constant-screaming` - Use SCREAMING_SNAKE_CASE for Constants
+- `name-getter-prefix` - Prefix Getter Functions with get_
+- `name-boolean-predicates` - Use is_, has_, should_ for Boolean Predicates
+- `name-constructor-new` - Use new for Constructors
+- `name-conversion-to-from` - Use to_ and from_ for Conversions
+- `name-type-suffixes` - Use Descriptive Suffixes for Type Specialization
+- `name-field-unit-suffixes` - Include Unit Suffixes in Field Names
+- `name-module-snake-case` - Use snake_case for Module Names
+- `name-generic-parameters` - Use Descriptive or Single-Letter Generic Parameters
+- `name-lifetime-parameters` - Use Single Lowercase Letters for Lifetimes
+- `name-test-files` - Name Test Files as test.rs
 
-async fn get_user(pool: &PgPool, id: &str) -> Result<User> {
-    sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
-        .bind(id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound {
-            resource: "User",
-            id: id.to_string(),
-        })
-}
-```
+### 4. Type & Trait Patterns (HIGH)
 
-Use `thiserror` for library errors, `anyhow` for application-level errors. Avoid `.unwrap()` in production code.
+- `type-option-nullable-fields` - Use Option<T> for Nullable Fields
+- `type-standard-derives` - Use Consistent Derive Order for Data Structs
+- `type-builder-pattern` - Use Builder Pattern with Method Chaining
+- `type-associated-types` - Use Associated Types for Related Type Relationships
+- `type-phantom-data` - Use PhantomData for Unused Generic Parameters
+- `type-newtype-pattern` - Use Newtype Pattern for Type Safety
+- `type-enum-copy-simple` - Derive Copy for Simple Enums
+- `type-enum-variants` - Use Enums for Type-Safe Variants
+- `type-trait-impl-grouping` - Group Related Trait Implementations Together
+- `type-bitflags` - Use bitflags! for Type-Safe Bit Flags
+- `type-operator-overload` - Implement Operator Traits for Domain Types
+- `type-public-fields` - Use Public Fields for Data Structs
+- `type-async-trait` - Use async_trait for Async Trait Methods
+- `type-boxed-trait-objects` - Use Box<dyn Trait> for Runtime Polymorphism
+- `type-type-aliases` - Use Type Aliases for Complex Generics
 
-## Traits and Generics
+### 5. Error Handling (HIGH)
 
-```rust
-trait Repository {
-    type Item;
-    type Error;
+- `err-thiserror-enum` - Use thiserror for Custom Error Types
+- `err-result-alias` - Define Module-Local Result Type Alias
+- `err-path-context` - Include Path Context in IO Errors
+- `err-anyhow-context` - Use context() and with_context() for Error Messages
+- `err-bail-validation` - Use bail! for Validation Failures
+- `err-graceful-degradation` - Use Graceful Degradation for Non-Critical Operations
+- `err-panic-unrecoverable` - Reserve panic! for Unrecoverable Situations
+- `err-expect-message` - Use expect() with Descriptive Messages
+- `err-source-attribute` - Use #[source] for Error Chaining
+- `err-ok-or-else` - Use ok_or_else for Expensive Error Construction
+- `err-two-tier-strategy` - Use Two-Tier Error Strategy
 
-    async fn find_by_id(&self, id: &str) -> std::result::Result<Option<Self::Item>, Self::Error>;
-    async fn save(&self, item: &Self::Item) -> std::result::Result<(), Self::Error>;
-}
+## How to Use
 
-struct PgUserRepo {
-    pool: PgPool,
-}
+Read individual reference files for detailed explanations and code examples:
 
-impl Repository for PgUserRepo {
-    type Item = User;
-    type Error = AppError;
+- [Section definitions](references/_sections.md) - Category structure and impact levels
+- [Rule template](assets/templates/_template.md) - Template for adding new rules
 
-    async fn find_by_id(&self, id: &str) -> Result<Option<User>> {
-        let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
-            .bind(id)
-            .fetch_optional(&self.pool)
-            .await?;
-        Ok(user)
-    }
+## Full Compiled Document
 
-    async fn save(&self, user: &User) -> Result<()> {
-        sqlx::query("INSERT INTO users (id, name, email) VALUES ($1, $2, $3)")
-            .bind(&user.id)
-            .bind(&user.name)
-            .bind(&user.email)
-            .execute(&self.pool)
-            .await?;
-        Ok(())
-    }
-}
-```
-
-## Async Patterns
-
-```rust
-use tokio::sync::Semaphore;
-use futures::stream::{self, StreamExt};
-
-async fn fetch_all(urls: Vec<String>, max_concurrent: usize) -> Vec<Result<String>> {
-    let semaphore = Arc::new(Semaphore::new(max_concurrent));
-
-    stream::iter(urls)
-        .map(|url| {
-            let sem = semaphore.clone();
-            async move {
-                let _permit = sem.acquire().await.unwrap();
-                reqwest::get(&url).await?.text().await.map_err(Into::into)
-            }
-        })
-        .buffer_unordered(max_concurrent)
-        .collect()
-        .await
-}
-
-async fn graceful_shutdown(handle: tokio::runtime::Handle) {
-    let ctrl_c = tokio::signal::ctrl_c();
-    ctrl_c.await.expect("Failed to listen for Ctrl+C");
-    handle.shutdown_timeout(std::time::Duration::from_secs(30));
-}
-```
-
-## Builder Pattern
-
-```rust
-pub struct ServerConfig {
-    host: String,
-    port: u16,
-    workers: usize,
-    tls: bool,
-}
-
-pub struct ServerConfigBuilder {
-    host: String,
-    port: u16,
-    workers: usize,
-    tls: bool,
-}
-
-impl ServerConfigBuilder {
-    pub fn new() -> Self {
-        Self { host: "0.0.0.0".into(), port: 8080, workers: 4, tls: false }
-    }
-
-    pub fn host(mut self, host: impl Into<String>) -> Self { self.host = host.into(); self }
-    pub fn port(mut self, port: u16) -> Self { self.port = port; self }
-    pub fn workers(mut self, n: usize) -> Self { self.workers = n; self }
-    pub fn tls(mut self, enabled: bool) -> Self { self.tls = enabled; self }
-
-    pub fn build(self) -> ServerConfig {
-        ServerConfig { host: self.host, port: self.port, workers: self.workers, tls: self.tls }
-    }
-}
-```
-
-## Anti-Patterns
-
-- Using `.unwrap()` or `.expect()` in library code
-- Cloning data unnecessarily instead of borrowing
-- Holding a `MutexGuard` across `.await` points (causes deadlocks)
-- Using `Arc<Mutex<Vec<T>>>` when a channel would be more appropriate
-- Writing `unsafe` without documenting invariants
-- Not using `#[must_use]` on Result-returning functions
-
-## Checklist
-
-- [ ] Error types defined with `thiserror` and `?` operator used for propagation
-- [ ] No `.unwrap()` in production paths
-- [ ] Ownership model minimizes cloning
-- [ ] Async code uses bounded concurrency (semaphores or `buffer_unordered`)
-- [ ] Traits used for abstraction and testability
-- [ ] `unsafe` blocks have documented safety invariants
-- [ ] Builder pattern used for complex configuration structs
-- [ ] Clippy lints enabled and warnings addressed
+For the complete guide with all rules expanded: [AGENTS.md](AGENTS.md)

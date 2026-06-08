@@ -1,223 +1,266 @@
 ---
-name: state-management
-description: STATE.md reading, writing, and field-level updates. Provides cross-session state persistence via .planning/STATE.md with structured fields for current task, completed phases, blockers, decisions, and quick tasks.
-allowed-tools: Read Write Edit Glob
-metadata:
-  author: babysitter-sdk
-  version: "1.0.0"
-  category: gsd-core
-  backlog-id: SK-GSD-002
+name: State Management
+description: This skill should be used when the user asks about "Effect Ref", "mutable state", "Ref.make", "Ref.get", "Ref.set", "Ref.update", "SubscriptionRef", "SynchronizedRef", "reactive state", "state updates", "concurrent state", "shared mutable state", or needs to understand how Effect handles mutable state in a functional way.
+version: 1.0.0
 ---
 
-# state-management
-
-You are **state-management** - the skill responsible for all STATE.md CRUD operations within the GSD methodology. STATE.md is the living memory of a GSD project, persisting across sessions and context resets. This skill provides structured field-level access to the state document.
+# State Management in Effect
 
 ## Overview
 
-STATE.md is the single source of truth for project progress within GSD. It tracks:
-- What is currently being worked on (`current_task`, `current_phase`)
-- What has been completed (`completed_phases`)
-- What is blocking progress (`blockers`)
-- What decisions have been made (`decisions`)
-- Quick task status (`quick_tasks` table)
-- Session metadata (`last_updated`, `session_count`)
+Effect provides functional mutable state primitives:
 
-This skill corresponds to the original `lib/state.cjs` module in the GSD system. Every GSD process reads STATE.md at startup and writes updates at completion.
+- **Ref** - Basic mutable reference
+- **SynchronizedRef** - Ref with effectful updates
+- **SubscriptionRef** - Ref with change notifications
 
-## Capabilities
+All are fiber-safe and work correctly with concurrent access.
 
-### 1. Read Full State
+## Ref - Basic Mutable Reference
 
-Parse STATE.md into structured fields:
+### Creating and Using Refs
 
-```markdown
----
-last_updated: 2026-03-02T14:30:00Z
-session_count: 12
-current_milestone: v1.0
----
+```typescript
+import { Effect, Ref } from "effect"
 
-# Project State
+const program = Effect.gen(function* () {
+  const counter = yield* Ref.make(0)
 
-## Current Work
-- **Phase**: 72
-- **Task**: Implement OAuth2 login flow
-- **Status**: executing
-- **Plan**: PLAN-1.md (task 3 of 5)
+  const current = yield* Ref.get(counter)
 
-## Completed Phases
-- [x] Phase 70: Project setup and scaffolding
-- [x] Phase 71: Database schema and migrations
+  yield* Ref.set(counter, 10)
 
-## Blockers
-- [ ] [HIGH] API key for OAuth provider not configured (@user, 2026-03-01)
+  yield* Ref.update(counter, (n) => n + 1)
 
-## Decisions
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2026-02-28 | Use PostgreSQL over SQLite | Need concurrent writes for API |
-| 2026-03-01 | Skip Phase 71.1 (Redis cache) | Not needed for v1.0 |
+  const old = yield* Ref.getAndSet(counter, 0)
 
-## Quick Tasks
-| # | Task | Status | Date |
-|---|------|--------|------|
-| 001 | Fix login redirect | done | 2026-02-28 |
-| 002 | Add rate limiting | in-progress | 2026-03-02 |
+  const newValue = yield* Ref.updateAndGet(counter, (n) => n + 5)
+
+  const [oldVal, result] = yield* Ref.modify(counter, (n) => [
+    n,
+    n * 2
+  ])
+})
 ```
 
-### 2. Update Individual Fields
+### Atomic Operations
 
-Update a single field without affecting the rest of the document:
+```typescript
+const atomicIncrement = Effect.gen(function* () {
+  const counter = yield* Ref.make(0)
 
-```
-update current_phase -> 73
-update current_task -> "Build API endpoints for user management"
-update status -> "planning"
-```
+  yield* Effect.all([
+    Ref.update(counter, (n) => n + 1),
+    Ref.update(counter, (n) => n + 1),
+    Ref.update(counter, (n) => n + 1)
+  ], { concurrency: "unbounded" })
 
-Use `Edit` tool to perform surgical updates on specific lines.
-
-### 3. Append to List Fields
-
-Add items to list-type fields:
-
-```
-append completed_phases -> "Phase 72: OAuth2 authentication"
-append decisions -> { date: "2026-03-02", decision: "Use JWT tokens", rationale: "Stateless auth for API" }
-append blockers -> { severity: "MEDIUM", description: "Need design mockups", owner: "@designer" }
+  return yield* Ref.get(counter)
+})
 ```
 
-### 4. Remove from List Fields
+### Ref in Services
 
-Remove items when resolved:
+```typescript
+const CounterService = Effect.gen(function* () {
+  const ref = yield* Ref.make(0)
 
-```
-remove blocker -> "API key for OAuth provider not configured"
-```
-
-Mark blockers as resolved rather than deleting (change `[ ]` to `[x]`).
-
-### 5. Quick Tasks Table Management
-
-Add, update, and query quick tasks:
-
-```
-add_quick_task -> { number: 3, task: "Update README", status: "pending" }
-update_quick_task -> { number: 2, status: "done" }
-query_quick_tasks -> { status: "in-progress" }
-```
-
-### 6. Cross-Session Memory
-
-STATE.md persists across context resets. On session start:
-1. Read STATE.md to restore project context
-2. Increment `session_count` in frontmatter
-3. Update `last_updated` timestamp
-4. Report state summary to orchestrator
-
-### 7. Decision Log
-
-Structured decision tracking with timestamps and rationale:
-
-```markdown
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2026-03-02 | Use JWT tokens | Stateless auth for API |
-```
-
-### 8. Blocker Tracking
-
-Track blockers with severity and ownership:
-
-```markdown
-- [ ] [HIGH] API key not configured (@user, 2026-03-01)
-- [x] [MEDIUM] Design mockups needed (@designer, 2026-02-28) - resolved 2026-03-01
-```
-
-Severity levels: `HIGH` (blocks current work), `MEDIUM` (blocks future work), `LOW` (inconvenience).
-
-## Tool Use Instructions
-
-### Reading State
-1. Use `Read` to load `.planning/STATE.md`
-2. Parse frontmatter for metadata (last_updated, session_count, current_milestone)
-3. Parse markdown sections into structured fields
-4. Return parsed state object
-
-### Updating a Field
-1. Use `Read` to load current STATE.md
-2. Locate the target field/section
-3. Use `Edit` with precise old_string/new_string to update only the target
-4. Verify edit succeeded by reading the section back
-
-### Appending to Lists
-1. Use `Read` to find the end of the target list section
-2. Use `Edit` to insert new item at the correct position
-3. For tables, append new row before the section break
-
-### Resolving Blockers
-1. Use `Read` to find the blocker text
-2. Use `Edit` to change `- [ ]` to `- [x]` and append resolution date
-
-## Process Integration
-
-This skill is used by most GSD processes:
-
-- `execute-phase.js` - Update current_task as each task completes, track position
-- `verify-work.js` - Add/resolve blockers based on verification results
-- `audit-milestone.js` - Read completed_phases for coverage analysis
-- `progress.js` - Read full state for progress display and routing
-- `quick.js` - Add/update quick tasks table
-- `debug.js` - Track debug sessions, add blockers for unresolved issues
-- `complete-milestone.js` - Clear completed_phases, reset current_task
-- `add-tests.js` - Update state with test coverage info
-
-## Output Format
-
-```json
-{
-  "operation": "read|update|append|remove",
-  "field": "current_phase|completed_phases|blockers|decisions|quick_tasks",
-  "status": "success|error",
-  "previousValue": "...",
-  "newValue": "...",
-  "stateSnapshot": {
-    "currentPhase": 72,
-    "currentTask": "Implement OAuth2",
-    "completedPhases": [70, 71],
-    "activeBlockers": 1,
-    "quickTasksTotal": 3,
-    "quickTasksPending": 1
+  return {
+    increment: Ref.update(ref, (n) => n + 1),
+    decrement: Ref.update(ref, (n) => n - 1),
+    get: Ref.get(ref),
+    reset: Ref.set(ref, 0)
   }
-}
+})
+
+const CounterLive = Layer.effect(Counter, CounterService)
 ```
 
-## Configuration
+## SynchronizedRef - Effectful Updates
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `stateFile` | `.planning/STATE.md` | Path to STATE.md |
-| `autoTimestamp` | `true` | Auto-update last_updated on write |
-| `autoSessionCount` | `true` | Auto-increment session_count on read |
-| `blockerSeverityLevels` | `HIGH,MEDIUM,LOW` | Valid blocker severities |
+For updates that require running effects:
 
-## Error Handling
+```typescript
+import { Effect, SynchronizedRef } from "effect"
 
-| Error | Cause | Resolution |
-|-------|-------|------------|
-| `STATE.md not found` | Planning directory not initialized | Run gsd-tools init first |
-| `Section not found` | Unexpected STATE.md format | Rebuild STATE.md from template |
-| `Edit collision` | Non-unique text match for edit | Provide more context in old_string |
-| `Frontmatter parse error` | Malformed YAML frontmatter | Fix YAML syntax or regenerate |
-| `Concurrent modification` | Multiple processes editing state | STATE.md is not lock-protected; serialize access |
+const program = Effect.gen(function* () {
+  const ref = yield* SynchronizedRef.make({ count: 0, lastUpdated: Date.now() })
 
-## Constraints
+  yield* SynchronizedRef.updateEffect(ref, (state) =>
+    Effect.gen(function* () {
+      yield* Effect.log("Updating state")
+      return {
+        count: state.count + 1,
+        lastUpdated: Date.now()
+      }
+    })
+  )
 
-- STATE.md must remain human-readable markdown at all times
-- Never delete historical entries (blockers, decisions); mark as resolved instead
-- Frontmatter must be valid YAML
-- Quick task numbers must be sequential
-- All timestamps must be ISO 8601 format
-- Decision log must be append-only (no editing past decisions)
-- Blocker resolution must preserve the original blocker text
+  const result = yield* SynchronizedRef.modifyEffect(ref, (state) =>
+    Effect.gen(function* () {
+      const newCount = state.count + 1
+      yield* sendMetric("counter", newCount)
+      return [
+        newCount,
+        { ...state, count: newCount }
+      ]
+    })
+  )
+})
+```
+
+### When to Use SynchronizedRef
+
+- Updates require API calls
+- Updates require logging/metrics
+- Updates depend on external state
+- Updates need error handling
+
+```typescript
+// Cache with async refresh
+const cache = yield* SynchronizedRef.make<Data | null>(null)
+
+const refreshCache = SynchronizedRef.updateEffect(cache, () =>
+  Effect.tryPromise(() => fetchLatestData())
+)
+```
+
+## SubscriptionRef - Reactive State
+
+For state that needs to notify subscribers:
+
+```typescript
+import { Effect, SubscriptionRef, Stream } from "effect"
+
+const program = Effect.gen(function* () {
+  const ref = yield* SubscriptionRef.make(0)
+
+  const changes = yield* SubscriptionRef.changes(ref)
+
+  yield* Effect.fork(
+    Stream.runForEach(changes, (value) =>
+      Effect.log(`Value changed to: ${value}`)
+    )
+  )
+
+  yield* SubscriptionRef.set(ref, 1)
+  yield* SubscriptionRef.update(ref, (n) => n + 1)
+  yield* SubscriptionRef.set(ref, 10)
+})
+```
+
+### Reactive Patterns
+
+```typescript
+const configRef = yield* SubscriptionRef.make(initialConfig)
+
+const subscriber1 = Effect.fork(
+  Stream.runForEach(
+    SubscriptionRef.changes(configRef),
+    (config) => updateService1(config)
+  )
+)
+
+const subscriber2 = Effect.fork(
+  Stream.runForEach(
+    SubscriptionRef.changes(configRef),
+    (config) => updateService2(config)
+  )
+)
+
+yield* SubscriptionRef.set(configRef, newConfig)
+```
+
+## Comparison
+
+| Feature | Ref | SynchronizedRef | SubscriptionRef |
+|---------|-----|-----------------|-----------------|
+| Basic get/set | ✅ | ✅ | ✅ |
+| Atomic updates | ✅ | ✅ | ✅ |
+| Effectful updates | ❌ | ✅ | ❌ |
+| Change notifications | ❌ | ❌ | ✅ |
+| Use case | Simple state | Async updates | Reactive state |
+
+## Common Patterns
+
+### Counter Service
+
+```typescript
+class Counter extends Context.Tag("Counter")<
+  Counter,
+  {
+    readonly increment: Effect.Effect<number>
+    readonly decrement: Effect.Effect<number>
+    readonly get: Effect.Effect<number>
+  }
+>() {}
+
+const CounterLive = Layer.effect(
+  Counter,
+  Effect.gen(function* () {
+    const ref = yield* Ref.make(0)
+    return {
+      increment: Ref.updateAndGet(ref, (n) => n + 1),
+      decrement: Ref.updateAndGet(ref, (n) => n - 1),
+      get: Ref.get(ref)
+    }
+  })
+)
+```
+
+### State Machine
+
+```typescript
+type State = "idle" | "loading" | "success" | "error"
+
+const stateMachine = Effect.gen(function* () {
+  const state = yield* Ref.make<State>("idle")
+
+  const transition = (from: State, to: State) =>
+    Ref.modify(state, (current) =>
+      current === from
+        ? [true, to]
+        : [false, current]
+    )
+
+  return {
+    state: Ref.get(state),
+    startLoading: transition("idle", "loading"),
+    succeed: transition("loading", "success"),
+    fail: transition("loading", "error"),
+    reset: Ref.set(state, "idle")
+  }
+})
+```
+
+### Accumulator
+
+```typescript
+const accumulator = Effect.gen(function* () {
+  const items = yield* Ref.make<Array<Item>>([])
+
+  return {
+    add: (item: Item) => Ref.update(items, (arr) => [...arr, item]),
+    getAll: Ref.get(items),
+    clear: Ref.set(items, []),
+    count: Effect.map(Ref.get(items), (arr) => arr.length)
+  }
+})
+```
+
+## Best Practices
+
+1. **Use Ref for simple state** - Basic counters, flags, accumulators
+2. **Use SynchronizedRef for async updates** - When updates need effects
+3. **Use SubscriptionRef for reactive patterns** - When others need notifications
+4. **Keep state minimal** - Don't store derived data
+5. **Prefer immutable updates** - Return new objects, don't mutate
+
+## Additional Resources
+
+For comprehensive state management documentation, consult `${CLAUDE_PLUGIN_ROOT}/references/llms-full.txt`.
+
+Search for these sections:
+- "Ref" for basic mutable references
+- "SynchronizedRef" for effectful updates
+- "SubscriptionRef" for reactive state

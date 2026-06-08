@@ -1,245 +1,127 @@
 ---
 name: security-audit
-description: "Audit the game for security vulnerabilities: save tampering, cheat vectors, network exploits, data exposure, and input validation gaps. Produces a prioritised security report with remediation guidance. Run before any public release or multiplayer launch."
-argument-hint: "[full | network | save | input | quick]"
-user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash, Write, Task
-model: sonnet
-agent: security-engineer
+description: "Comprehensive security audit of codebase using multiple security-auditor agents. Use before production deployments or after major features."
+model: claude-sonnet-4-20250514
+allowed-tools: Read, Write, Glob, Grep, Task
 ---
 
-# Security Audit
+# /security-audit
 
-Security is not optional for any shipped game. Even single-player games have
-save tampering vectors. Multiplayer games have cheat surfaces, data exposure
-risks, and denial-of-service potential. This skill systematically audits the
-codebase for the most common game security failures and produces a prioritised
-remediation plan.
+Multi-agent security audit with findings saved to timestamped report.
 
-**Run this skill:**
-- Before any public release (required for the Polish → Release gate)
-- Before enabling any online/multiplayer feature
-- After implementing any system that reads from disk or network
-- When a security-related bug is reported
+## Usage
 
-**Output:** `production/security/security-audit-[date].md`
-
----
-
-## Phase 1: Parse Arguments and Scope
-
-**Modes:**
-- `full` — all categories (recommended before release)
-- `network` — network/multiplayer only
-- `save` — save file and serialization only
-- `input` — input validation and injection only
-- `quick` — high-severity checks only (fastest, for iterative use)
-- No argument — run `full`
-
-Read `.claude/docs/technical-preferences.md` to determine:
-- Engine and language (affects which patterns to search for)
-- Target platforms (affects which attack surfaces apply)
-- Whether multiplayer/networking is in scope
-
----
-
-## Phase 2: Spawn Security Engineer
-
-Spawn `security-engineer` via Task. Pass:
-- The audit scope/mode
-- Engine and language from technical preferences
-- A manifest of all source directories: `src/`, `assets/data/`, any config files
-
-The security-engineer runs the audit across 6 categories (see Phase 3). Collect their full findings before proceeding.
-
----
-
-## Phase 3: Audit Categories
-
-The security-engineer evaluates each of the following. Skip categories not applicable to the project scope.
-
-### Category 1: Save File and Serialization Security
-- Are save files validated before loading? (no blind deserialization)
-- Are save file paths constructed from user input? (path traversal risk)
-- Are save files checksummed or signed? (tamper detection)
-- Does the game trust numeric values from save files without bounds checking?
-- Are there any eval() or dynamic code execution calls near save loading?
-
-Grep patterns: `File.open`, `load`, `deserialize`, `JSON.parse`, `from_json`, `read_file` — check each for validation.
-
-### Category 2: Network and Multiplayer Security (skip if single-player only)
-- Is game state authoritative on the server, or does the client dictate outcomes?
-- Are incoming network packets validated for size, type, and value range?
-- Are player positions and state changes validated server-side?
-- Is there rate limiting on any network calls?
-- Are authentication tokens handled correctly (never sent in plaintext)?
-- Does the game expose any debug endpoints in release builds?
-
-Grep for: `recv`, `receive`, `PacketPeer`, `socket`, `NetworkedMultiplayerPeer`, `rpc`, `rpc_id` — check each call site for validation.
-
-### Category 3: Input Validation
-- Are any player-supplied strings used in file paths? (path traversal)
-- Are any player-supplied strings logged without sanitization? (log injection)
-- Are numeric inputs (e.g., item quantities, character stats) bounds-checked before use?
-- Are achievement/stat values checked before being written to any backend?
-
-Grep for: `get_input`, `Input.get_`, `input_map`, user-facing text fields — check validation.
-
-### Category 4: Data Exposure
-- Are any API keys, credentials, or secrets hardcoded in `src/` or `assets/`?
-- Are debug symbols or verbose error messages included in release builds?
-- Does the game log sensitive player data to disk or console?
-- Are any internal file paths or system information exposed to players?
-
-Grep for: `api_key`, `secret`, `password`, `token`, `private_key`, `DEBUG`, `print(` in release-facing code.
-
-### Category 5: Cheat and Anti-Tamper Vectors
-- Are gameplay-critical values stored only in memory, not in easily-editable files?
-- Are any critical game progression flags (e.g., "has paid for DLC") validated server-side?
-- Is there any protection against memory editing tools (Cheat Engine, etc.) for multiplayer?
-- Are leaderboard/score submissions validated before acceptance?
-
-Note: Client-side anti-cheat is largely unenforceable. Focus on server-side validation for anything competitive or monetised.
-
-### Category 6: Dependency and Supply Chain
-- Are any third-party plugins or libraries used? List them.
-- Do any plugins have known CVEs in the version being used?
-- Are plugin sources verified (official marketplace, reviewed repository)?
-
-Glob for: `addons/`, `plugins/`, `third_party/`, `vendor/` — list all external dependencies.
-
----
-
-## Phase 4: Classify Findings
-
-For each finding, assign:
-
-**Severity:**
-| Level | Definition |
-|-------|-----------|
-| **CRITICAL** | Remote code execution, data breach, or trivially-exploitable cheat that breaks multiplayer integrity |
-| **HIGH** | Save tampering that bypasses progression, credential exposure, or server-side authority bypass |
-| **MEDIUM** | Client-side cheat enablement, information disclosure, or input validation gap with limited impact |
-| **LOW** | Defence-in-depth improvement — hardening that reduces attack surface but no direct exploit exists |
-
-**Status:** Open / Accepted Risk / Out of Scope
-
----
-
-## Phase 5: Generate Report
-
-```markdown
-# Security Audit Report
-
-**Date**: [date]
-**Scope**: [full | network | save | input | quick]
-**Engine**: [engine + version]
-**Audited by**: security-engineer via /security-audit
-**Files scanned**: [N source files, N config files]
-
----
-
-## Executive Summary
-
-| Severity | Count | Must Fix Before Release |
-|----------|-------|------------------------|
-| CRITICAL | [N] | Yes — all |
-| HIGH | [N] | Yes — all |
-| MEDIUM | [N] | Recommended |
-| LOW | [N] | Optional |
-
-**Release recommendation**: [CLEAR TO SHIP / FIX CRITICALS FIRST / DO NOT SHIP]
-
----
-
-## CRITICAL Findings
-
-### SEC-001: [Title]
-**Category**: [Save / Network / Input / Data / Cheat / Dependency]
-**File**: `[path]` line [N]
-**Description**: [What the vulnerability is]
-**Attack scenario**: [How a malicious user would exploit it]
-**Remediation**: [Specific code change or pattern to apply]
-**Effort**: [Low / Medium / High]
-
-[repeat per finding]
-
----
-
-## HIGH Findings
-
-[same format]
-
----
-
-## MEDIUM Findings
-
-[same format]
-
----
-
-## LOW Findings
-
-[same format]
-
----
-
-## Accepted Risk
-
-[Any findings explicitly accepted by the team with rationale]
-
----
-
-## Dependency Inventory
-
-| Plugin / Library | Version | Source | Known CVEs |
-|-----------------|---------|--------|------------|
-| [name] | [version] | [source] | [none / CVE-XXXX-NNNN] |
-
----
-
-## Remediation Priority Order
-
-1. [SEC-NNN] — [1-line description] — Est. effort: [Low/Medium/High]
-2. ...
-
----
-
-## Re-Audit Trigger
-
-Run `/security-audit` again after remediating any CRITICAL or HIGH findings.
-The Polish → Release gate requires this report with no open CRITICAL or HIGH items.
+```bash
+/security-audit yourbench           # Full security review
+/security-audit coordinatr          # Audit specific project
 ```
 
----
+## Audit Dimensions
 
-## Phase 6: Write Report
+Five security-auditor agents run in parallel:
 
-Present the report summary (executive summary + CRITICAL/HIGH findings only) in conversation.
+| Agent | Focus Area | Checks |
+|-------|------------|--------|
+| **Agent 1: Auth & Access** | Authentication, Authorization | JWT handling, session management, RBAC, privilege escalation |
+| **Agent 2: Input & Data** | Injection, Validation | SQL injection, XSS, command injection, input sanitization |
+| **Agent 3: Crypto & Secrets** | Cryptography, Secrets | Hardcoded credentials, weak crypto, key management, PII |
+| **Agent 4: Config & Deploy** | Configuration, Infrastructure | CORS, CSRF, security headers, exposed endpoints, debug mode |
+| **Agent 5: Dependencies** | Supply Chain, Libraries | Vulnerable packages, outdated deps, license issues |
 
-Ask: "May I write the full security audit report to `production/security/security-audit-[date].md`?"
+## OWASP Top 10 Coverage
 
-Write only after approval.
+| OWASP Risk | Coverage |
+|------------|----------|
+| A01 Broken Access Control | Agent 1 |
+| A02 Cryptographic Failures | Agent 3 |
+| A03 Injection | Agent 2 |
+| A04 Insecure Design | Agents 1, 4 |
+| A05 Security Misconfiguration | Agent 4 |
+| A06 Vulnerable Components | Agent 5 |
+| A07 Auth Failures | Agent 1 |
+| A08 Data Integrity Failures | Agents 2, 3 |
+| A09 Logging Failures | Agent 4 |
+| A10 SSRF | Agent 2 |
 
----
+## Execution Flow
 
-## Phase 7: Gate Integration
+### 1. Validate Project
+```bash
+ls spaces/[project]/
+```
 
-This report is a required artifact for the **Polish → Release gate**.
+### 2. Launch Parallel Audits
+5 security-auditor agents run concurrently with focused prompts.
 
-After remediating findings, re-run: `/security-audit quick` to confirm CRITICAL/HIGH items are resolved before running `/gate-check release`.
+### 3. Consolidate Findings
+Aggregate by:
+- **Severity**: Critical, High, Medium, Low, Info
+- **Category**: OWASP classification
+- **Location**: File path + line number
+- **Remediation**: Specific fix guidance
 
-If CRITICAL findings exist:
-> "⛔ CRITICAL security findings must be resolved before any public release. Do not proceed to `/launch-checklist` until these are addressed."
+### 4. Generate Report
+```bash
+Write: .claude/temp/security-audit-[project]-[timestamp].md
+```
 
-If no CRITICAL/HIGH findings:
-> "✅ No blocking security findings. Report written to `production/security/`. Include this path when running `/gate-check release`."
+## Report Structure
 
----
+```markdown
+# Security Audit: [Project Name]
+**Date**: YYYY-MM-DD HH:MM:SS
 
-## Collaborative Protocol
+## Executive Summary
+- Critical issues: X
+- High severity: Y
+- Total findings: Z
 
-- **Never assume a pattern is safe** — flag it and let the user decide
-- **Accepted risk is a valid outcome** — some LOW findings are acceptable trade-offs for a solo team; document the decision
-- **Multiplayer games have a higher bar** — any HIGH finding in a multiplayer context should be treated as CRITICAL
-- **This is not a penetration test** — this audit covers common patterns; a real pentest by a human security professional is recommended before any competitive or monetised multiplayer launch
+## Critical Issues
+### [Issue Title]
+- **Severity**: Critical
+- **Category**: SQL Injection (CWE-89)
+- **Location**: src/api/users.py:42
+- **Description**: [What's wrong]
+- **Impact**: [What could happen]
+- **Remediation**: [How to fix]
+
+## High Severity Issues
+[...]
+
+## Recommendations
+- Priority actions
+- Long-term improvements
+
+## Scan Coverage
+- Files scanned: X
+- Technologies: Z
+```
+
+## When to Use
+
+- Before production deployments
+- After major feature additions
+- Monthly security reviews
+- Before external security audits
+- After dependency updates
+
+## Output Location
+
+```
+.claude/temp/security-audit-yourbench-2026-01-08-143022.md
+```
+
+Reports saved to `.claude/temp/` (gitignored) for review.
+
+## Notes
+
+- **Read-only**: No code changes made
+- **Non-blocking**: Doesn't prevent commits
+- **Parallel execution**: Agents run concurrently
+- **False positives possible**: Manual review recommended
+
+## Integration
+
+```
+Implement security feature → /security-audit → Fix issues → /commit
+```

@@ -1,8 +1,18 @@
 ---
 name: rust-dpdk
-description: 用户态网络专家。处理 DPDK, 用户态驱动, 高性能网络, packet processing, 零拷贝, RSS 负载均衡--- # 用户态网络 (DPDK) ## 核心问题 **如何实现百万级 PPS 的高性能网络数据包处理？** 传统内核网络栈有太多上下文切换和内存拷贝开销。
+description: "用户态网络专家。处理 DPDK, 用户态驱动, 高性能网络, packet processing, 零拷贝, RSS 负载均衡"
+globs: ["**/*.rs"]
 ---
 
+# 用户态网络 (DPDK)
+
+## 核心问题
+
+**如何实现百万级 PPS 的高性能网络数据包处理？**
+
+传统内核网络栈有太多上下文切换和内存拷贝开销。
+
+---
 
 ## DPDK vs 内核网络栈
 
@@ -15,6 +25,7 @@ description: 用户态网络专家。处理 DPDK, 用户态驱动, 高性能网�
 | 吞吐量 | 万级 PPS | 百万级 PPS |
 | CPU 利用率 | 较低但有开销 | 高但高效 |
 
+---
 
 ## 核心组件
 
@@ -43,6 +54,7 @@ struct Mempool {
 }
 ```
 
+---
 
 ## 内存池管理
 
@@ -85,6 +97,7 @@ fn alloc_mbuf(mempool: &Mempool) -> Option<*mut rte_mbuf> {
 }
 ```
 
+---
 
 ## 零拷贝接收
 
@@ -129,6 +142,7 @@ fn process_packets(
 }
 ```
 
+---
 
 ## 批量发送
 
@@ -164,6 +178,7 @@ fn transmit_packets(
 }
 ```
 
+---
 
 ## RSS 负载均衡
 
@@ -200,6 +215,7 @@ fn get_queue_by_hash(hash: u32, num_queues: u16) -> u16 {
 }
 ```
 
+---
 
 ## 多队列配置
 
@@ -257,6 +273,7 @@ fn configure_multi_queue(port_id: u16, num_queues: u16) -> Result<(), DpdkError>
 }
 ```
 
+---
 
 ## CPU 亲和性
 
@@ -295,6 +312,7 @@ fn allocate_cores_for_queues(num_queues: u16) {
 }
 ```
 
+---
 
 ## 性能优化
 
@@ -306,6 +324,7 @@ fn allocate_cores_for_queues(num_queues: u16) {
 | CPU 亲和性 | 核心绑定减少上下文切换 |
 | Hugepages | 2MB/1GB 大页减少 TLB miss |
 
+---
 
 ## 与其他技能关联
 

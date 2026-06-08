@@ -8,8 +8,6 @@ agent: general-purpose
 
 # Rust Skill Creator
 
-> **Version:** 2.1.0 | **Last Updated:** 2025-01-27
->
 > Create dynamic skills for Rust crates and std library documentation.
 
 ## When to Use
@@ -19,23 +17,9 @@ This skill handles requests to create skills for:
 - Rust standard library (std::sync, std::marker, etc.)
 - Any Rust documentation URL
 
-## Execution Mode Detection
+## Workflow
 
-**CRITICAL: Check if related commands/skills are available.**
-
-This skill relies on:
-- `/create-llms-for-skills` command
-- `/create-skills-via-llms` command
-
----
-
-## Agent Mode (Plugin Install)
-
-**When the commands above are available (full plugin installation):**
-
-### Workflow
-
-#### 1. Identify the Target
+### 1. Identify the Target
 
 | User Request | Target Type | URL Pattern |
 |--------------|-------------|-------------|
@@ -43,7 +27,7 @@ This skill relies on:
 | "create Send trait skill" | Std library | `doc.rust-lang.org/std/marker/trait.Send.html` |
 | "create skill from URL" + URL | Custom URL | User-provided URL |
 
-#### 2. Execute the Command
+### 2. Execute the Command
 
 Use the `/create-llms-for-skills` command:
 
@@ -64,118 +48,13 @@ Use the `/create-llms-for-skills` command:
 /create-llms-for-skills https://docs.rs/axum/latest/axum/ "Focus on routing and extractors"
 ```
 
-#### 3. Follow-up with Skill Creation
+### 3. Follow-up with Skill Creation
 
 After llms.txt is generated, use:
 
 ```
 /create-skills-via-llms <crate_name> <llms_path> [version]
 ```
-
----
-
-## Inline Mode (Skills-only Install)
-
-**When the commands above are NOT available, create skills manually:**
-
-### Step 1: Identify Target and Construct URL
-
-| Target | URL Template |
-|--------|--------------|
-| Crate overview | `https://docs.rs/{crate}/latest/{crate}/` |
-| Crate module | `https://docs.rs/{crate}/latest/{crate}/{module}/` |
-| Std trait | `https://doc.rust-lang.org/std/{module}/trait.{Name}.html` |
-| Std struct | `https://doc.rust-lang.org/std/{module}/struct.{Name}.html` |
-| Std module | `https://doc.rust-lang.org/std/{module}/index.html` |
-
-### Step 2: Fetch Documentation
-
-```bash
-# Using agent-browser CLI
-agent-browser open "<documentation_url>"
-agent-browser get text ".docblock"
-agent-browser close
-```
-
-**Or with WebFetch fallback:**
-```
-WebFetch("<documentation_url>", "Extract API documentation including types, functions, and examples")
-```
-
-### Step 3: Create Skill Directory
-
-```bash
-mkdir -p ~/.claude/skills/{crate_name}
-mkdir -p ~/.claude/skills/{crate_name}/references
-```
-
-### Step 4: Generate SKILL.md
-
-Create `~/.claude/skills/{crate_name}/SKILL.md` with this template:
-
-```markdown
----
-name: {crate_name}
-description: "Documentation for {crate_name} crate. Keywords: {keywords}"
----
-
-# {Crate Name}
-
-> **Version:** {version} | **Source:** docs.rs
-
-## Overview
-
-{Brief description from documentation}
-
-## Key Types
-
-### {Type1}
-{Description and usage}
-
-### {Type2}
-{Description and usage}
-
-## Common Patterns
-
-{Usage patterns extracted from documentation}
-
-## Examples
-
-```rust
-{Example code from documentation}
-```
-
-## Documentation
-
-- `./references/overview.md` - Main overview
-- `./references/{module}.md` - Module documentation
-
-## Links
-
-- [docs.rs](https://docs.rs/{crate})
-- [crates.io](https://crates.io/crates/{crate})
-```
-
-### Step 5: Generate Reference Files
-
-For each major module or type, create a reference file:
-
-```bash
-# Fetch and save module documentation
-agent-browser open "https://docs.rs/{crate}/latest/{crate}/{module}/"
-agent-browser get text ".docblock" > ~/.claude/skills/{crate_name}/references/{module}.md
-agent-browser close
-```
-
-### Step 6: Verify Skill
-
-```bash
-# Check skill structure
-ls -la ~/.claude/skills/{crate_name}/
-cat ~/.claude/skills/{crate_name}/SKILL.md
-```
-
----
 
 ## URL Construction Helper
 
@@ -201,11 +80,9 @@ cat ~/.claude/skills/{crate_name}/SKILL.md
 | Option | `std/option/enum.Option.html` |
 | Result | `std/result/enum.Result.html` |
 
----
-
 ## Example Interactions
 
-### Example 1: Create Crate Skill (Agent Mode)
+### Example 1: Create Crate Skill
 
 ```
 User: "Create a dynamic skill for tokio"
@@ -217,49 +94,35 @@ Claude:
 4. Execute: /create-skills-via-llms tokio ~/tmp/{timestamp}-tokio-llms.txt
 ```
 
-### Example 2: Create Crate Skill (Inline Mode)
-
-```
-User: "Create a dynamic skill for tokio"
-
-Claude:
-1. Identify: Third-party crate "tokio"
-2. Fetch: agent-browser open "https://docs.rs/tokio/latest/tokio/"
-3. Extract documentation
-4. Create: ~/.claude/skills/tokio/SKILL.md
-5. Create: ~/.claude/skills/tokio/references/
-6. Save reference files for key modules (sync, task, runtime, etc.)
-```
-
-### Example 3: Create Std Library Skill
+### Example 2: Create Std Library Skill
 
 ```
 User: "Create a skill for Send and Sync traits"
 
 Claude:
 1. Identify: Std library traits
-2. (Agent Mode) Execute: /create-llms-for-skills https://doc.rust-lang.org/std/marker/trait.Send.html https://doc.rust-lang.org/std/marker/trait.Sync.html
-   (Inline Mode) Fetch each URL, create skill manually
-3. Complete skill creation
+2. Execute: /create-llms-for-skills https://doc.rust-lang.org/std/marker/trait.Send.html https://doc.rust-lang.org/std/marker/trait.Sync.html
+3. Wait for llms.txt generation
+4. Execute: /create-skills-via-llms std-marker ~/tmp/{timestamp}-std-marker-llms.txt
 ```
 
----
+### Example 3: Custom URL
+
+```
+User: "Create skill from https://docs.rs/sqlx/latest/sqlx/"
+
+Claude:
+1. Identify: User-provided URL
+2. Execute: /create-llms-for-skills https://docs.rs/sqlx/latest/sqlx/
+3. Follow standard workflow
+```
 
 ## DO NOT
 
 - Use `best-skill-creator` for Rust-related skill creation
+- Skip the `/create-llms-for-skills` step
 - Guess documentation URLs without verification
-- Skip documentation fetching step
 
 ## Output Location
 
 All generated skills are saved to: `~/.claude/skills/`
-
-## Error Handling
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| Commands not found | Skills-only install | Use inline mode |
-| URL not found | Invalid crate/module | Verify crate exists on crates.io |
-| Empty documentation | API changed | Use alternative selectors |
-| Permission denied | Directory issue | Check ~/.claude/skills/ permissions |

@@ -8,11 +8,10 @@ description: |
   Node.js and Java runtimes, event handlers, OData services, and CAP plugins.
 license: GPL-3.0
 metadata:
-  version: "2.1.2"
-  last_verified: "2026-02-22"
-  cap_version: "@sap/cds 9.7.x"
+  version: "2.1.0"
+  last_verified: "2025-12-28"
+  cap_version: "@sap/cds 9.4.x"
   mcp_version: "@cap-js/mcp-server 0.0.3+"
-  lsp_version: "@sap/cds-lsp 9.7.x"
 ---
 
 # SAP CAP-Capire Development Skill
@@ -27,7 +26,6 @@ metadata:
 - **sap-btp-best-practices**: Use for production deployment patterns and architectural guidance
 - **sap-ai-core**: Use when adding AI capabilities to CAP applications or integrating with SAP AI services
 - **sap-api-style**: Use when documenting CAP OData services or following API documentation standards
-- **dependency-upgrade**: Use for secure dependency, lockfile, and supply-chain upgrade controls in CAP service repos
 
 ## Table of Contents
 - [Quick Start](#quick-start)
@@ -42,7 +40,7 @@ metadata:
 ### Project Initialization
 ```sh
 # Install CAP development kit
-npm i -g @sap/cds-dk @sap/cds-lsp
+npm i -g @sap/cds-dk
 
 # Create new project
 cds init <project-name>
@@ -336,9 +334,8 @@ cds version               # Show version info
 - Don't write custom OData providers
 
 ## Version Information
-- **Skill Version**: 2.1.2
-- **CAP Version**: @sap/cds 9.7.x
+- **Skill Version**: 2.1.0
+- **CAP Version**: @sap/cds 9.4.x
 - **MCP Version**: @cap-js/mcp-server 0.0.3+
-- **LSP Version**: @sap/cds-lsp 9.7.x
-- **Last Verified**: 2026-02-22
+- **Last Verified**: 2025-12-28
 - **License**: GPL-3.0

@@ -1,158 +1,113 @@
 ---
 name: signalwire
-description: |
-  SignalWire integration. Manage Persons, Organizations, Leads, Deals, Projects, Activities and more. Use when the user wants to interact with SignalWire data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Use when building telephony, messaging, or video applications; implementing voice AI agents; working with SWML call flows; debugging webhook callbacks or call state issues; setting up real-time WebSocket communication; encountering authentication 401/403 errors; or troubleshooting SWAIG function errors - provides REST API patterns, SDK examples, and production-tested workflows for modern SignalWire communication systems
 ---
 
 # SignalWire
 
-SignalWire is a cloud communications platform that provides APIs for voice, video, and messaging. Developers use it to build communication features into their applications. Businesses of all sizes use SignalWire to improve customer engagement and internal communication.
+## ⚠️ AVOID Deprecated APIs
 
-Official docs: https://developer.signalwire.com/
+SignalWire maintains compatibility APIs (LAML/CXML) that should NOT be used for new development:
+- **LAML** endpoints (`/laml/`) → Use REST API (`/api/calling/`, `/api/video/`)
+- **CXML** (XML markup) → Use SWML (YAML/JSON)
 
-## SignalWire Overview
+This skill documents ONLY modern APIs: REST with JSON, SWML, Relay SDK, AI Agents SDK.
 
-- **Phone Number**
-- **Call**
-  - **Participant**
-- **Messaging**
-  - **Message**
-- **Task**
-- **Space**
-- **User**
-- **API Key**
-- **Project**
+## SignalWire Technologies Quick Reference
 
-## Working with SignalWire
+| Technology | Use When | Format/Protocol |
+|------------|----------|-----------------|
+| **REST APIs** | Trigger actions from backend, query state | HTTP + JSON |
+| **SWML** | Define call flows, IVR, AI interactions | YAML/JSON documents |
+| **Relay SDK** | Real-time WebSocket control | JavaScript/Python |
+| **AI Agents SDK** | Build voice AI agents | Python decorators |
+| **Call Fabric** | Route between subscribers/resources | WebSocket framework |
+| **SWAIG** | AI agent calls server-side functions | HTTP POST to your endpoint |
 
-This skill uses the Membrane CLI to interact with SignalWire. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+## Practical Knowledge from Production
 
-### Install the CLI
+This skill combines technical API documentation with practical implementation guidance from real-world SignalWire deployments. Each workflow file includes:
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+- **Best Practices** - Production-tested techniques and patterns
+- **Common Patterns** - Real-world implementation examples
+- **Anti-Patterns** - What NOT to do, mistakes to avoid
+- **Production Tips** - Deployment, monitoring, and testing insights
+- **Real-World Examples** - Complete working patterns from live applications
 
-```bash
-npm install -g @membranehq/cli@latest
+These insights come from analysis of 89 SignalWire training videos, LiveWire sessions, and production deployments.
+
+## Workflows by Use Case
+
+**Getting Started:**
+- [Authentication & Setup](workflows/authentication-setup.md) | [Number Management](workflows/number-management.md)
+
+**Voice Calls:**
+- [Outbound Calling](workflows/outbound-calling.md) | [Inbound Handling](workflows/inbound-call-handling.md) | [Call Control](workflows/call-control.md)
+
+**AI Voice Agents:** Start with [Voice AI](workflows/voice-ai.md) overview
+- **SDK:** [Basics](workflows/ai-agent-sdk-basics.md) | [Prompting](workflows/ai-agent-prompting.md) | [Functions](workflows/ai-agent-functions.md) | [Deployment](workflows/ai-agent-deployment.md)
+- **Best Practices:** [Patterns](workflows/ai-agent-patterns.md) | [Error Handling](workflows/ai-agent-error-handling.md) | [Security](workflows/ai-agent-security.md) | [Testing](workflows/ai-agent-testing.md) | [Debug Webhooks](workflows/ai-agent-debug-webhooks.md)
+
+**Other:**
+- [Messaging](workflows/messaging.md) | [Video](workflows/video.md) | [Fabric & Relay](workflows/fabric-relay.md) | [Webhooks & Events](workflows/webhooks-events.md)
+
+## Quick Start Patterns
+
+**Authentication:** HTTP Basic Auth with Project ID (username) + API Token (password)
+
+**Space URL:** All API requests go to `https://{space-name}.signalwire.com`
+
+**SWML Variables:** `%{call.from}`, `%{call.to}`, `%{params.custom_field}`, `%{args.user_input}`
+
+**Webhooks:** HTTP POST with JSON (`call_id`, `call_state`, `from`, `to`, `direction`)
+
+**Errors:** REST returns HTTP status + JSON with `error`/`message`. SWML logs to Dashboard.
+
+## Key Concepts
+
+**Call States:** queued → created → ringing → answered → ended
+
+**SWML Sections:** `main` (required entry point) | `execute` (call + return) | `transfer` (goto)
+
+**Resources:** Subscribers, AI Agents, SWML Scripts, Video Rooms, SIP Gateways, Relay Apps (created via Dashboard or REST API)
+
+## Critical Pattern: Loop Protection
+
+SWML gather/prompt nodes can infinite loop. Always add counters:
+
+```yaml
+- set:
+    loop_counter: "{{loop_counter | default(0) | int + 1}}"
+- condition:
+    if: "{{loop_counter}} > 3"
+    then: hangup  # Prevent caller stuck in loop
 ```
 
-### Authentication
+For complete patterns, see [Inbound Call Handling](workflows/inbound-call-handling.md).
 
-```bash
-membrane login --tenant --clientName=<agentType>
-```
+## AI Agents SDK Reference
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+**IMPORTANT:** For AI agent tasks, start with [Voice AI](workflows/voice-ai.md) - it covers 90% of use cases with examples and best practices.
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+**Only load reference docs for:** Complete API parameters, advanced features (Contexts/Steps, Prefabs), platform-specific deployment (Lambda/GCF/Azure), or debugging production issues.
 
-```bash
-membrane login complete <code>
-```
+See [Voice AI workflow](workflows/voice-ai.md) "When to Pull Additional Documentation" section for detailed guidance on when to use each reference document.
 
-Add `--json` to any command for machine-readable JSON output.
+## Finding the Right Workflow
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+**New to SignalWire?** → [Authentication & Setup](workflows/authentication-setup.md)
 
-### Connecting to SignalWire
+**Building AI voice agent?** → [Voice AI](workflows/voice-ai.md)
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+**Making/receiving calls?** → [Outbound Calling](workflows/outbound-calling.md) or [Inbound Handling](workflows/inbound-call-handling.md)
 
-```bash
-membrane connection ensure "https://signalwire.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
+**Debugging webhooks/callbacks?** → [Webhooks & Events](workflows/webhooks-events.md)
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+**Need real-time control?** → [Fabric & Relay](workflows/fabric-relay.md)
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+## Additional Resources
 
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the SignalWire API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+- Main Documentation: https://developer.signalwire.com/
+- GitHub Examples: https://github.com/signalwire
+- AI Agents SDK: https://github.com/signalwire/signalwire-agents
+- Dashboard: `https://{your-space-name}.signalwire.com`

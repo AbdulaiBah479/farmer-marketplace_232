@@ -1,17 +1,72 @@
 ---
-name: ShippingLogistics
-description: |
-  UK, US, and Canadian shipping, logistics, customs, duties, and tariff expert with automotive commodity code expertise.
-  Covers import/export documentation, HS/HTS codes, rules of origin, FTAs, and landed cost calculations.
-
-  USE WHEN user says 'shipping', 'customs', 'tariff', 'duty', 'import', 'export', 'HS code', 'HTS code',
-  'commodity code', 'landed cost', 'incoterms', 'customs broker', 'freight', 'logistics',
-  'rules of origin', 'CUSMA', 'USMCA', 'TCA', or needs help with international trade compliance.
+name: Shippinglogistics
+description: UK, US, and Canadian shipping, logistics, customs, duties, and tariff expert with automotive commodity code expertise. Covers import/export documentation, HS/HTS codes, rules of origin, FTAs, and landed cost calculations.  USE WHEN user says 'shipping', 'customs', 'tariff', 'duty', 'import', 'export', 'HS code', 'HTS code', 'commodity code', 'landed cost', 'incoterms', 'customs broker', 'freight', 'logistics', 'rules of origin', 'CUSMA', 'USMCA', 'TCA', or needs help with international trade compliance.
 ---
 
 # ShippingLogistics
 
 Expert guidance on UK, US, and Canadian shipping, customs, duties, and tariffs with specialized automotive industry knowledge.
+
+---
+
+## Dual-Perspective Output (REQUIRED)
+
+**All customs, tariff, and trade compliance responses MUST provide two perspectives:**
+
+### Output Format
+
+```
+## 🛡️ Conservative View
+[Safest interpretation - what a risk-averse compliance officer would recommend]
+- Strictest reading of regulations
+- Assumes worst-case tariff classification
+- Recommends binding rulings before acting
+- Prioritises compliance certainty over cost savings
+- "When in doubt, pay the duty and claim back later"
+
+## 🚀 Aggressive View
+[Boundary-pushing interpretation - what a strategic trade consultant would explore]
+- Creative but defensible positions
+- Identifies available exemptions, reliefs, and programmes
+- Explores tariff engineering opportunities
+- Leverages FTA provisions to maximum extent
+- Considers procedural alternatives (FTZs, bonded warehouses, duty drawback)
+- "Find the opportunity within the rules"
+
+## ⚖️ Recommendation
+[Which approach fits this specific situation and why]
+- Risk tolerance assessment
+- Volume/value considerations
+- Compliance history factors
+- Strategic vs tactical decision
+```
+
+### When to Apply Dual Perspective
+
+| Scenario | Dual Output Required |
+|----------|---------------------|
+| Tariff classification queries | ✓ Always |
+| Rules of origin determinations | ✓ Always |
+| Duty rate questions | ✓ Always |
+| FTA eligibility assessments | ✓ Always |
+| Import/export strategy | ✓ Always |
+| Landed cost calculations | ✓ Include both scenarios |
+| Documentation questions | Optional (usually one correct answer) |
+| Process/procedure queries | Optional |
+
+### Conservative vs Aggressive Characteristics
+
+| Aspect | 🛡️ Conservative | 🚀 Aggressive |
+|--------|-----------------|---------------|
+| Classification | Higher duty code if ambiguous | Defensible lower duty code |
+| Origin | Assume non-qualifying unless proven | Calculate RVC to find qualifying path |
+| Valuation | Include all possible dutiable elements | Apply permitted deductions |
+| Documentation | Full formal entry, all certificates | Simplified procedures where eligible |
+| Timing | Clear goods, review later | Pre-plan to optimise before shipment |
+| Risk appetite | Zero tolerance | Calculated, documented positions |
+| Audit readiness | Bulletproof files | Defensible positions with reasoning |
+
+---
 
 ## Quick Reference
 

@@ -1,8 +1,18 @@
 ---
 name: rust-zero-cost
-description: 零成本抽象与泛型专家。处理泛型, trait, monomorphization, static dispatch, dynamic dispatch, impl Trait, dyn Trait, 泛型, 特征, 单态化, 零成本抽象--- # 零成本抽象与泛型 ## 核心问题 **需要编译时多态还是运行时多态？** 选择正确的抽象层次直接影响性能。
+description: "零成本抽象与泛型专家。处理泛型, trait, monomorphization, static dispatch, dynamic dispatch, impl Trait, dyn Trait, 泛型, 特征, 单态化, 零成本抽象"
+globs: ["**/*.rs"]
 ---
 
+# 零成本抽象与泛型
+
+## 核心问题
+
+**需要编译时多态还是运行时多态？**
+
+选择正确的抽象层次直接影响性能。
+
+---
 
 ## 泛型 vs Trait Object
 
@@ -14,6 +24,7 @@ description: 零成本抽象与泛型专家。处理泛型, trait, monomorphizat
 | 灵活性 | 类型必须已知 | 运行时决定 |
 | 异构集合 | 不支持 | `Vec<Box<dyn Trait>>` |
 
+---
 
 ## 何时用泛型
 
@@ -34,6 +45,7 @@ fn combine<A: Display, B: Display>(a: A, b: B) -> String {
 }
 ```
 
+---
 
 ## 何时用 trait object
 
@@ -54,6 +66,7 @@ let handlers: Vec<Box<dyn Handler>> = vec![
 ];
 ```
 
+---
 
 ## 对象安全规则
 
@@ -70,6 +83,7 @@ trait Good {
 }
 ```
 
+---
 
 ## impl Trait vs dyn Trait
 
@@ -85,6 +99,7 @@ fn create_processor() -> Box<dyn Processor> {
 }
 ```
 
+---
 
 ## 性能影响
 
@@ -103,6 +118,7 @@ fn process(item: &dyn Trait) {
 }
 ```
 
+---
 
 ## 常见错误
 
@@ -113,6 +129,7 @@ fn process(item: &dyn Trait) {
 | E0308 | 类型不匹配 | 统一类型或用泛型 |
 | E0599 | 未找到实现 | 实现 trait 或检查约束 |
 
+---
 
 ## 优化策略
 

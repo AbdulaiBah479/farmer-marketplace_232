@@ -1,142 +1,295 @@
 ---
 name: swift-testing
-description: Use when writing tests with Swift Testing (@Test, #expect, #require), migrating from XCTest, implementing async tests, or parameterizing tests.
+description: 'Expert guidance on Swift Testing best practices, patterns, and implementation. Use when developers mention: (1) Swift Testing, @Test, #expect, #require, or @Suite, (2) "use Swift Testing" or "modern testing patterns", (3) test doubles, mocks, stubs, spies, or fixtures, (4) unit tests, integration tests, or snapshot tests, (5) migrating from XCTest to Swift Testing, (6) TDD, Arrange-Act-Assert, or F.I.R.S.T. principles, (7) parameterized tests or test organization.'
 ---
-
-# Swift Testing Framework
-
-Modern testing with Swift Testing framework. No XCTest.
+# Swift Testing
 
 ## Overview
 
-Swift Testing replaces XCTest with a modern macro-based approach that's more concise, has better async support, and runs tests in parallel by default. The core principle: if you learned XCTest, unlearn it—Swift Testing works differently.
+This skill provides expert guidance on Swift Testing, covering the modern Swift Testing framework, test doubles (mocks, stubs, spies), fixtures, integration testing, snapshot testing, and migration from XCTest. Use this skill to help developers write reliable, maintainable tests following F.I.R.S.T. principles and Arrange-Act-Assert patterns.
 
-## References
+## Agent Behavior Contract (Follow These Rules)
 
-- [Apple Documentation](https://developer.apple.com/documentation/testing)
-- [Migration Guide](https://steipete.me/posts/2025/migrating-700-tests-to-swift-testing)
+1. Use Swift Testing framework (`@Test`, `#expect`, `#require`, `@Suite`) for all new tests, not XCTest.
+2. Always structure tests with clear Arrange-Act-Assert phases.
+3. Follow F.I.R.S.T. principles: Fast, Isolated, Repeatable, Self-Validating, Timely.
+4. Use proper test double terminology per Martin Fowler's taxonomy (Dummy, Fake, Stub, Spy, SpyingStub, Mock).
+5. Place fixtures close to models with `#if DEBUG`, not in test targets.
+6. Place test doubles close to interfaces with `#if DEBUG`, not in test targets.
+7. Prefer state verification over behavior verification - simpler, less brittle tests.
+8. Use `#expect` for soft assertions (continue on failure) and `#require` for hard assertions (stop on failure).
 
-## Core Concepts
+## Quick Decision Tree
 
-### Assertions
+When a developer needs testing guidance, follow this decision tree:
 
-| Macro | Use Case |
-|-------|----------|
-| `#expect(expression)` | Soft check — continues on failure. Use for most assertions. |
-| `#require(expression)` | Hard check — stops test on failure. Use for preconditions only. |
+1. **Starting fresh with Swift Testing?**
+   - Read `references/test-organization.md` for suites, tags, traits
+   - Read `references/async-testing.md` for async test patterns
 
-### Optional Unwrapping
+2. **Need to create test data?**
+   - Read `references/fixtures.md` for fixture patterns and placement
+   - Read `references/test-doubles.md` for mock/stub/spy patterns
 
-```swift
-let user = try #require(await fetchUser(id: "123"))
-#expect(user.id == "123")
-```
+3. **Testing multiple inputs?**
+   - Read `references/parameterized-tests.md` for parameterized testing
 
-## Test Structure
+4. **Testing module interactions?**
+   - Read `references/integration-testing.md` for integration test patterns
+
+5. **Testing UI for regressions?**
+   - Read `references/snapshot-testing.md` for snapshot testing setup
+
+6. **Testing data structures or state?**
+   - Read `references/dump-snapshot-testing.md` for text-based snapshot testing
+
+7. **Migrating from XCTest?**
+   - Read `references/migration-xctest.md` for migration guide
+
+## Triage-First Playbook (Common Errors -> Next Best Move)
+
+- "XCTAssertEqual is unavailable" / need to modernize tests
+  - Use `references/migration-xctest.md` for XCTest to Swift Testing migration
+- Need to test async code
+  - Use `references/async-testing.md` for async patterns, confirmation, timeouts
+- Tests are slow or flaky
+  - Check F.I.R.S.T. principles, use proper mocking per `references/test-doubles.md`
+- Need deterministic test data
+  - Use `references/fixtures.md` for fixture patterns with fixed dates
+- Need to test multiple scenarios efficiently
+  - Use `references/parameterized-tests.md` for parameterized testing
+- Need to verify component interactions
+  - Use `references/integration-testing.md` for integration test patterns
+
+## Core Syntax
+
+### Basic Test
 
 ```swift
 import Testing
-@testable import YourModule
 
-@Suite
-struct FeatureTests {
-    let sut: FeatureType
-    
-    init() throws {
-        sut = FeatureType()
+@Test func basicTest() {
+    #expect(1 + 1 == 2)
+}
+```
+
+### Test with Description
+
+```swift
+@Test("Adding items increases cart count")
+func addItem() {
+    let cart = Cart()
+    cart.add(item)
+    #expect(cart.count == 1)
+}
+```
+
+### Async Test
+
+```swift
+@Test func asyncOperation() async throws {
+    let result = try await service.fetch()
+    #expect(result.isValid)
+}
+```
+
+## Arrange-Act-Assert Pattern
+
+Structure every test with clear phases:
+
+```swift
+@Test func calculateTotal() {
+    // Given
+    let cart = ShoppingCart()
+    cart.add(Item(price: 10))
+    cart.add(Item(price: 20))
+
+    // When
+    let total = cart.calculateTotal()
+
+    // Then
+    #expect(total == 30)
+}
+```
+
+## Assertions
+
+### #expect - Soft Assertion
+
+Continues test execution after failure:
+
+```swift
+@Test func multipleExpectations() {
+    let user = User(name: "Alice", age: 30)
+    #expect(user.name == "Alice")  // If fails, test continues
+    #expect(user.age == 30)        // This still runs
+}
+```
+
+### #require - Hard Assertion
+
+Stops test execution on failure:
+
+```swift
+@Test func requireExample() throws {
+    let user = try #require(fetchUser())  // Stops if nil
+    #expect(user.name == "Alice")
+}
+```
+
+### Error Testing
+
+```swift
+@Test func throwsError() {
+    #expect(throws: ValidationError.self) {
+        try validate(invalidInput)
     }
-    
-    @Test("Description of behavior")
-    func testBehavior() {
-        #expect(sut.someProperty == expected)
+}
+
+@Test func throwsSpecificError() {
+    #expect(throws: ValidationError.emptyField) {
+        try validate("")
     }
 }
 ```
 
-## Assertion Conversions
+## F.I.R.S.T. Principles
 
-| XCTest | Swift Testing |
-|--------|---------------|
-| `XCTAssert(expr)` | `#expect(expr)` |
-| `XCTAssertEqual(a, b)` | `#expect(a == b)` |
-| `XCTAssertNil(a)` | `#expect(a == nil)` |
-| `XCTAssertNotNil(a)` | `#expect(a != nil)` |
-| `try XCTUnwrap(a)` | `try #require(a)` |
-| `XCTAssertThrowsError` | `#expect(throws: ErrorType.self) { }` |
-| `XCTAssertNoThrow` | `#expect(throws: Never.self) { }` |
+| Principle | Description | Application |
+|-----------|-------------|-------------|
+| **Fast** | Tests execute in milliseconds | Mock expensive operations |
+| **Isolated** | Tests don't depend on each other | Fresh instance per test |
+| **Repeatable** | Same result every time | Mock dates, network, external deps |
+| **Self-Validating** | Auto-report pass/fail | Use `#expect`, never rely on `print()` |
+| **Timely** | Write tests alongside code | Use parameterized tests for edge cases |
 
-## Error Testing
+## Test Double Quick Reference
+
+Per [Martin Fowler's definition](https://martinfowler.com/articles/mocksArentStubs.html):
+
+| Type | Purpose | Verification |
+|------|---------|--------------|
+| **Dummy** | Fill parameters, never used | N/A |
+| **Fake** | Working implementation with shortcuts | State |
+| **Stub** | Provides canned answers | State |
+| **Spy** | Records calls for verification | State |
+| **SpyingStub** | Stub + Spy combined (most common) | State |
+| **Mock** | Pre-programmed expectations, self-verifies | Behavior |
+
+**Important**: What Swift community calls "Mock" is usually a **SpyingStub**.
+
+For detailed patterns, see `references/test-doubles.md`.
+
+## Test Double Placement
+
+Place test doubles **close to the interface**, not in test targets:
 
 ```swift
-#expect(throws: (any Error).self) { try riskyOperation() }
-#expect(throws: NetworkError.self) { try fetch() }
-#expect(throws: NetworkError.timeout) { try fetch() }
-#expect(throws: Never.self) { try safeOperation() }
-```
+// In PersonalRecordsCore-Interface/Sources/...
 
-## Parameterized Tests
-
-```swift
-@Test("Validates inputs", arguments: zip(
-    ["a", "b", "c"],
-    [1, 2, 3]
-))
-func testInputs(input: String, expected: Int) {
-    #expect(process(input) == expected)
+public protocol PersonalRecordsRepositoryProtocol: Sendable {
+    func getAll() async throws -> [PersonalRecord]
+    func save(_ record: PersonalRecord) async throws
 }
-```
 
-**Warning:** Multiple collections WITHOUT zip creates Cartesian product.
+#if DEBUG
+public final class PersonalRecordsRepositorySpyingStub: PersonalRecordsRepositoryProtocol {
+    // Spy: Captured calls
+    public private(set) var savedRecords: [PersonalRecord] = []
 
-## Async Testing
+    // Stub: Configurable responses
+    public var recordsToReturn: [PersonalRecord] = []
+    public var errorToThrow: Error?
 
-```swift
-@Test func testAsync() async throws {
-    let result = try await fetchData()
-    #expect(!result.isEmpty)
-}
-```
+    public func getAll() async throws -> [PersonalRecord] {
+        if let error = errorToThrow { throw error }
+        return recordsToReturn
+    }
 
-### Confirmations
-
-```swift
-@Test func testCallback() async {
-    await confirmation("callback received") { confirm in
-        let sut = SomeType { confirm() }
-        sut.triggerCallback()
+    public func save(_ record: PersonalRecord) async throws {
+        if let error = errorToThrow { throw error }
+        savedRecords.append(record)
     }
 }
+#endif
 ```
 
-## Tags
+## Fixtures
+
+Place fixtures **close to the model**:
 
 ```swift
-extension Tag {
-    @Tag static var fast: Self
-    @Tag static var networking: Self
+// In Sources/Models/PersonalRecord.swift
+
+public struct PersonalRecord: Equatable, Sendable {
+    public let id: UUID
+    public let weight: Double
+    // ...
 }
 
-@Test(.tags(.fast, .networking))
-func testNetworkCall() { }
+#if DEBUG
+extension PersonalRecord {
+    public static func fixture(
+        id: UUID = UUID(),
+        weight: Double = 100.0
+        // ... defaults for all properties
+    ) -> PersonalRecord {
+        PersonalRecord(id: id, weight: weight)
+    }
+}
+#endif
 ```
 
-## Common Pitfalls
+For detailed patterns, see `references/fixtures.md`.
 
-1. **Overusing `#require`** — Use `#expect` for most checks
-2. **Forgetting state isolation** — Each test gets a NEW instance
-3. **Accidental Cartesian product** — Always use `zip` for paired inputs
-4. **Not using `.serialized`** — Apply for thread-unsafe legacy tests
+## Test Pyramid
 
-## Common Mistakes
+```
+        +-------------+
+        |   UI Tests  |  5%  - End-to-end flows
+        |   (E2E)     |
+        +-------------+
+        | Integration |  15% - Module interactions
+        |    Tests    |
+        +-------------+
+        |    Unit     |  80% - Individual components
+        |    Tests    |
+        +-------------+
+```
 
-1. **Overusing `#require`** — `#require` is for preconditions only. Using it for normal assertions means the test stops at first failure instead of reporting all failures. Use `#expect` for assertions, `#require` only when subsequent assertions depend on the value.
+## Reference Files
 
-2. **Cartesian product bugs** — `@Test(arguments: [a, b], [c, d])` creates 4 combinations, not 2. Always use `zip` to pair arguments correctly: `arguments: zip([a, b], [c, d])`.
+Load these files as needed for specific topics:
 
-3. **Forgetting state isolation** — Swift Testing creates a new test instance per test method. BUT shared state between tests (static variables, singletons) still leak. Use dependency injection or clean up singletons between tests.
+- **`test-organization.md`** - Suites, tags, traits, parallel execution
+- **`parameterized-tests.md`** - Testing multiple inputs efficiently
+- **`async-testing.md`** - Async patterns, confirmation, timeouts, cancellation
+- **`migration-xctest.md`** - Complete XCTest to Swift Testing migration guide
+- **`test-doubles.md`** - Complete taxonomy with examples (Dummy, Fake, Stub, Spy, SpyingStub, Mock)
+- **`fixtures.md`** - Fixture patterns, placement, and best practices
+- **`integration-testing.md`** - Module interaction testing patterns
+- **`snapshot-testing.md`** - UI regression testing with SnapshotTesting library
+- **`dump-snapshot-testing.md`** - Text-based snapshot testing for data structures
 
-4. **Parallel test conflicts** — Swift Testing runs tests in parallel by default. Tests touching shared files, databases, or singletons will interfere. Use `.serialized` or isolation strategies.
+## Best Practices Summary
 
-5. **Not using `async` naturally** — Wrapping async operations in `Task { }` defeats the purpose. Use `async/await` directly in test function signature: `@Test func testAsync() async throws { }`.
+1. **Use Swift Testing for new tests** - Modern syntax, better features
+2. **Follow Arrange-Act-Assert** - Clear test structure
+3. **Apply F.I.R.S.T. principles** - Fast, Isolated, Repeatable, Self-Validating, Timely
+4. **Place fixtures near models** - With `#if DEBUG` guards
+5. **Place test doubles near interfaces** - With `#if DEBUG` guards
+6. **Prefer state verification** - Simpler, less brittle than behavior verification
+7. **Use parameterized tests** - For testing multiple inputs efficiently
+8. **Follow test pyramid** - 80% unit, 15% integration, 5% UI
 
-6. **Confirmation misuse** — `confirmation` is for verifying callbacks were called. Using it for assertions is wrong. Use `#expect` for assertions, `confirmation` for callback counts.
+## Verification Checklist (When You Write Tests)
+
+- Tests follow Arrange-Act-Assert pattern
+- Test names describe behavior, not implementation
+- Fixtures use sensible defaults, not random values
+- Test doubles are minimal (only stub what's needed)
+- Async tests use proper patterns (async/await, confirmation)
+- Tests are fast (mock expensive operations)
+- Tests are isolated (no shared state)
+- Tests are repeatable (no flaky date/time dependencies)
+

@@ -1,132 +1,430 @@
 ---
 name: skill-manager
-description: Discover, audit, update, and organise skills across all agent skill directories. Use when asked to list installed skills, find duplicates or broken symlinks, update a skill with session learnings, promote a project skill to the personal collection, or audit skill health. Triggers on "list skills", "update skill", "skill audit", "promote skill", "skill inventory", "what skills do I have", "sync skills", or "skill health check".
+description: Native Python-based skill management for enabling/disabling skills, configuring permissions, and managing settings.local.json
+version: 1.0.0
+author: Generic Claude Code Framework
+tags: [skill-management, permissions, configuration, settings, productivity, native-script]
+auto-activate: false
 ---
 
 # Skill Manager
 
-Higher-order skill that wraps `skill-creator` for new skills and adds
-discovery, audit, and update workflows across all skill installation locations.
+**Native Python-based skill management for Claude Code - Zero token overhead!**
 
-## Skill topology
+## 🎯 Purpose
 
-Skills live at two levels:
+This skill provides a **native Python script** that handles skill discovery, enabling/disabling, and permission management WITHOUT requiring LLM parsing. This saves 90% tokens compared to LLM-based skill management.
 
-1. **Personal (L1)** — `{SKILLS_DIR}/` (canonical). Other agents symlink here:
-   - `~/.claude/skills → {SKILLS_DIR}`
-   - `~/.gemini/skills → {SKILLS_DIR}`
-   - `~/.kiro/skills → {SKILLS_DIR}`
+**Token Savings:**
+- LLM-based approach: ~800-1000 tokens (reading 6+ skill files)
+- This skill: ~50-100 tokens (single script execution)
+- **Savings: 750-900 tokens per operation (90%)**
 
-2. **Project (L2)** — `.github/skills/` in each repo. Scoped to that project.
+## 🔧 **BASH COMMAND ATTRIBUTION PATTERN**
 
-Personal skills come from multiple sources via symlinks:
-- `~/shalomb/agent-skills/skills/` — personal, git-tracked (sharable)
-- `~/projects/obra/superpowers/skills/` — obra's superpowers (upstream)
-- Local dirs in `{SKILLS_DIR}/` — not symlinked (codemap, _common)
-
-## Workflows
-
-### 1. Inventory
-
-```bash
-# Count by source
-echo "=== Skill sources ==="
-find {SKILLS_DIR} -maxdepth 1 -type l -exec readlink {} \; | \
-  sed 's|/[^/]*$||' | sort | uniq -c | sort -rn
-
-# List local (untracked) skills
-find {SKILLS_DIR} -maxdepth 1 -not -type l -type d | tail -n +2 | \
-  xargs -I{} basename {}
-
-# List project skills in current repo
-ls .github/skills/ 2>/dev/null
+**CRITICAL: Before executing EACH python/bash command, MUST output:**
+```
+🔧 [skill-manager] Running: <command>
 ```
 
-### 2. Audit
-
-Check for broken symlinks, missing SKILL.md, or skills not in git:
-
-```bash
-# Broken symlinks
-find {SKILLS_DIR} -maxdepth 1 -type l ! -exec test -e {} \; -print
-
-# Missing SKILL.md
-for d in {SKILLS_DIR}/*/; do
-  [ -f "$d/SKILL.md" ] || echo "MISSING: $d"
-done
-
-# Local skills not in agent-skills repo
-for d in {SKILLS_DIR}/*/; do
-  [ -L "$d" ] || echo "UNTRACKED: $(basename $d)"
-done
+**Examples:**
+```
+🔧 [skill-manager] Running: python .claude/skills/skill-manager/scripts/skill-manager.py discover
+🔧 [skill-manager] Running: python .claude/skills/skill-manager/scripts/skill-manager.py enable cli-modern-tools
+🔧 [skill-manager] Running: python .claude/skills/skill-manager/scripts/skill-manager.py toggle-feature cli-modern-tools eza
+🔧 [skill-manager] Running: bash .claude/skills/colored-output/color.sh success "" "Configuration updated"
 ```
 
-### 3. Update a skill from session learnings
+**Why:** This pattern helps users identify which skill is executing which command, improving transparency and debugging.
 
-When a session reveals new knowledge (gotchas, patterns, workflows):
+---
 
-1. **Identify the skill** — which skill's domain does the learning belong to?
-2. **Decide the scope** — does it go in SKILL.md body or a reference file?
-   - Core workflow change → SKILL.md
-   - Service-specific gotcha → `references/{topic}.md`
-   - Cross-reference to another skill → one-liner in References section
-3. **Edit and verify** — read the skill-creator SKILL.md for progressive
-   disclosure principles. Keep SKILL.md lean (ideally under 100-300 lines).
-4. **Commit** — if the skill is in a git-tracked location, use ACP.
+## 📋 Available Commands
 
-Key principle: **add what you fumbled with**. If you had to discover something
-through trial and error that wasn't in the skill, that's exactly what should
-be added.
-
-### 4. Promote a project skill to personal
-
-When a `.github/skills/` skill is generic enough to share:
+### Discover & List Skills
 
 ```bash
-SKILL="terraform-plan-parser"
-SOURCE=".github/skills/$SKILL"
-TARGET="$HOME/shalomb/agent-skills/skills/$SKILL"
+# Discover all skills (formatted output)
+python .claude/skills/skill-manager/scripts/skill-manager.py discover
 
-# 1. Copy, stripping org-specific references
-cp -r "$SOURCE" "$TARGET"
+# List all skills
+python .claude/skills/skill-manager/scripts/skill-manager.py list
 
-# 2. Audit for org-specific content
-grep -rni "takeda\|oneTakeda\|apms\|your-org" "$TARGET/"
+# List only enabled skills
+python .claude/skills/skill-manager/scripts/skill-manager.py list --filter enabled
 
-# 3. Replace hardcoded paths with env vars or placeholders
-#    e.g. ~/oneTakeda/repo → $REPO_ROOT or {REPO_PATH}
+# List only disabled skills
+python .claude/skills/skill-manager/scripts/skill-manager.py list --filter disabled
 
-# 4. Symlink from pi skills
-ln -sf "$TARGET" "$SKILLS_DIR/$SKILL"
-
-# 5. Commit to agent-skills repo
-cd ~/shalomb/agent-skills && git add "skills/$SKILL" && git commit -m "feat($SKILL): promote from project skills"
+# Output as JSON (for Claude to parse)
+python .claude/skills/skill-manager/scripts/skill-manager.py json
 ```
 
-### 5. Create a new skill
-
-Delegate to `skill-creator`:
+### Enable/Disable Skills
 
 ```bash
-# Read the skill-creator SKILL.md first for full guidance
-python3 {SKILLS_DIR}/skill-creator/scripts/init_skill.py <name> --path ~/shalomb/agent-skills/skills
+# Enable a skill
+python .claude/skills/skill-manager/scripts/skill-manager.py enable colored-output
+
+# Disable a skill
+python .claude/skills/skill-manager/scripts/skill-manager.py disable time-helper
 ```
 
-Then symlink: `ln -sf ~/shalomb/agent-skills/skills/<name> {SKILLS_DIR}/<name>`
+### View Skill Details
 
-## Decision: where does a skill live?
+```bash
+# Show detailed info about a skill
+python .claude/skills/skill-manager/scripts/skill-manager.py status changelog-manager
+```
 
-| Criterion | Personal (agent-skills) | Project (.github/skills/) |
-|-----------|------------------------|--------------------------|
-| Org-specific references (ARNs, team names, internal URLs) | ✗ | ✓ |
-| Reusable across orgs | ✓ | ✗ |
-| Depends on project codebase layout | ✗ | ✓ |
-| Generic tool/workflow (plan parser, git patterns) | ✓ | ✗ |
+### Export Configuration
 
-When in doubt: start in `.github/skills/`, promote later after stripping
-org-specific content.
+```bash
+# Export current configuration as JSON
+python .claude/skills/skill-manager/scripts/skill-manager.py export
+```
 
-## References
+---
 
-- `skill-creator` skill — SKILL.md structure, progressive disclosure, init/package scripts
-- See `references/skill-update-checklist.md` for the post-session update procedure
+## 🎨 VISUAL OUTPUT FORMATTING
+
+**Use colored-output skill for headers and results only (2 calls max):**
+
+```bash
+# START: Header only
+bash .claude/skills/colored-output/color.sh skill-header "skill-manager" "Managing skills..."
+
+# MIDDLE: Run Python script (produces formatted output)
+python .claude/skills/skill-manager/scripts/skill-manager.py list
+
+# END: Result only (if needed)
+bash .claude/skills/colored-output/color.sh success "" "Configuration updated!"
+```
+
+---
+
+## 🚀 Usage Workflow
+
+### When User Invokes: `/cs-skill-management`
+
+**Step 1: Run discovery script**
+
+```bash
+python .claude/skills/skill-manager/scripts/skill-manager.py json
+```
+
+**Output (JSON):**
+```json
+[
+  {
+    "skill_name": "changelog-manager",
+    "name": "changelog-manager",
+    "description": "Update project changelog...",
+    "version": "2.8.0",
+    "author": "Claude Code",
+    "tags": ["changelog", "versioning"],
+    "auto_activate": true,
+    "enabled": true,
+    "permissions": [
+      "Skill(changelog-manager)",
+      "Bash(python scripts/generate_docs.py:*)"
+    ]
+  },
+  ...
+]
+```
+
+**Step 2: Parse JSON and present interactive menu**
+
+Claude receives the JSON, parses it instantly (no file reads needed!), and displays:
+
+```
+⚙️  Skill Management - Interactive Mode
+========================================
+
+Available Skills: 7 total
+├─ Enabled: 4 skills
+├─ Not Configured: 3 skills
+└─ Categories: Release, CLI, Documentation, Time, Output, Development
+
+1. View All Skills (7)
+2. View Enabled Skills (4)
+3. View Not Configured Skills (3)
+4. Browse by Category
+5. Search for Skill
+
+🔧 Quick Actions:
+6. Enable a Skill
+7. Disable a Skill
+8. Configure Skill Permissions
+9. View Skill Details
+
+Enter choice (1-9) or 'q' to quit:
+```
+
+**Step 3: Execute user choice**
+
+If user chooses "6. Enable a Skill":
+
+```bash
+# User selects: colored-output
+python .claude/skills/skill-manager/scripts/skill-manager.py enable colored-output
+```
+
+**Output:**
+```
+✅ Enabled: colored-output
+```
+
+Settings.local.json is automatically updated!
+
+---
+
+## 🔧 Quick Actions (Argument-Based)
+
+Users can also call the slash command with arguments for instant actions:
+
+```bash
+# Quick enable
+/cs-skill-management enable colored-output
+
+# Quick disable
+/cs-skill-management disable time-helper
+
+# Quick status
+/cs-skill-management status changelog-manager
+
+# Quick list
+/cs-skill-management list enabled
+```
+
+**Implementation:**
+
+```bash
+# Claude detects arguments and calls:
+python .claude/skills/skill-manager/scripts/skill-manager.py enable colored-output
+```
+
+---
+
+## 📊 Script Capabilities
+
+### Discovery
+- Scans `.claude/skills/` directory
+- Parses YAML frontmatter from skill.md files
+- Extracts: name, description, version, author, tags, auto-activate
+- Checks enabled status from settings.local.json
+- Identifies all permissions related to each skill
+
+### Enable/Disable
+- Adds/removes `Skill(skill-name)` from settings.local.json
+- Identifies and removes related permissions (e.g., Bash permissions)
+- Validates JSON before saving
+- Provides clear success/error messages
+
+### Status & Details
+- Shows comprehensive skill information
+- Lists all permissions
+- Shows enabled/disabled status
+- Displays tags, version, author
+
+### Export
+- Exports full configuration as JSON
+- Can be used for backup/restore workflows
+- Portable configuration format
+
+---
+
+## 🎯 Integration with /cs-skill-management Command
+
+The slash command `.claude/commands/cs-skill-management.md` should be updated to:
+
+```markdown
+**When user invokes `/cs-skill-management [args]`:**
+
+1. **Parse arguments** (if any)
+2. **Run Python script** with appropriate action
+3. **Display results** to user
+4. **Handle interactive menu** (if no arguments)
+
+**Examples:**
+
+- `/cs-skill-management` → Interactive menu
+- `/cs-skill-management enable colored-output` → Quick enable
+- `/cs-skill-management list enabled` → Quick list
+```
+
+---
+
+## ⚡ Token Efficiency
+
+**Before (LLM-based):**
+1. Read 7 skill.md files (30 lines each) = ~600 tokens
+2. Read settings.local.json = ~50 tokens
+3. Parse and format = ~150 tokens
+4. **Total: ~800 tokens**
+
+**After (Script-based):**
+1. Run Python script = ~30 tokens
+2. Parse JSON output = ~20 tokens
+3. **Total: ~50 tokens**
+
+**Savings: 750 tokens (94% reduction)**
+
+---
+
+## 🛠️ Implementation Notes
+
+### Auto-Detection of Project Root
+The script automatically finds the project root by searching for `.claude/` directory:
+
+```python
+current = Path.cwd()
+while current != current.parent:
+    if (current / '.claude').exists():
+        self.project_root = current
+        break
+    current = current.parent
+```
+
+### Cross-Platform Compatibility
+- Uses `pathlib.Path` for Windows/Mac/Linux compatibility
+- Pure Python (no external dependencies)
+- Works with Python 3.6+
+
+### Error Handling
+- Validates JSON before saving
+- Handles missing files gracefully
+- Provides clear error messages
+- Safe fallbacks for parsing errors
+
+### YAML Parsing
+Simple frontmatter parser (no external deps):
+- Extracts YAML between `---` markers
+- Parses key: value pairs
+- Handles arrays in tags field
+- Falls back to defaults on errors
+
+---
+
+## 📝 Customization Points
+
+### Adding New Actions
+To add new script actions, modify `skill-manager.py`:
+
+```python
+# Add to argument choices
+parser.add_argument('action',
+                   choices=['discover', 'list', 'enable', 'disable',
+                            'status', 'export', 'json', 'YOUR_ACTION'],
+                   help='Action to perform')
+
+# Add handler in main()
+elif args.action == 'YOUR_ACTION':
+    manager.your_custom_method()
+```
+
+### Custom Filtering
+Add custom skill filters:
+
+```python
+def list_skills(self, filter_type: str = 'all') -> None:
+    skills = self.discover_skills()
+
+    if filter_type == 'by-tag':
+        # Custom tag-based filtering
+        skills = [s for s in skills if 'your-tag' in s['tags']]
+```
+
+---
+
+## 🔍 Example Output
+
+### Discover Command
+
+```
+$ python .claude/skills/skill-manager/scripts/skill-manager.py discover
+
+📋 Skills (7 total)
+
+✅ changelog-manager (v2.8.0)
+   Update project changelog with uncommitted changes
+   Permissions: 4 configured
+
+✅ cli-modern-tools (v1.0.0)
+   Auto-suggest modern CLI tool alternatives
+   Permissions: 1 configured
+
+⬜ colored-output (v1.0.0)
+   Centralized colored output formatter
+   Permissions: 0 configured
+
+...
+```
+
+### Status Command
+
+```
+$ python .claude/skills/skill-manager/scripts/skill-manager.py status changelog-manager
+
+📊 Skill Details: changelog-manager
+============================================================
+
+Basic Info:
+  Name: changelog-manager
+  Version: 2.8.0
+  Description: Update project changelog with uncommitted changes
+  Author: Claude Code
+
+Status:
+  ✅ Enabled
+  Auto-activate: Yes
+
+Permissions (4):
+  ✅ Skill(changelog-manager)
+  ✅ Bash(python scripts/generate_docs.py:*)
+  ✅ Bash(git tag:*)
+  ✅ Bash(git commit:*)
+
+Tags:
+  changelog, versioning, git, release-management
+```
+
+---
+
+## 📦 File Structure
+
+```
+.claude/skills/skill-manager/
+├── skill.md                    # This file (skill instructions)
+├── scripts/
+│   └── skill-manager.py        # Native Python script
+└── README.md                   # User documentation (optional)
+```
+
+---
+
+## 🚀 Future Enhancements
+
+Potential additions:
+1. **Interactive TUI** - Use `rich` or `textual` for terminal UI
+2. **Skill Templates** - Generate new skills from templates
+3. **Dependency Management** - Track skill dependencies
+4. **Backup/Restore** - Automatic backup before changes
+5. **Import Config** - Import exported configurations
+6. **Batch Operations** - Enable/disable multiple skills at once
+7. **Search** - Full-text search across skill descriptions
+
+---
+
+## Version History
+
+### v1.0.0
+- Initial release
+- Native Python implementation
+- Skill discovery and parsing
+- Enable/disable functionality
+- Status and details display
+- JSON export
+- Cross-platform support
+- Zero external dependencies

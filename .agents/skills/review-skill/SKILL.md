@@ -1,102 +1,142 @@
 ---
 name: review-skill
-description: >
-  Reviews an Agent Skills skill against a weighted quality rubric and produces
-  a score (0-100%) with actionable issues. Use when asked to review, score,
-  audit, or evaluate a skill or to check quality. Triggers on: "review this skill", "score the skill",
-  "audit skill quality", "is this skill ready to merge".
-license: Apache-2.0
+version: "1.0.0"
+description: "This skill should be used when the user asks to 'review skill', 'audit skill', 'check skill quality', 'review hooks', 'review plugin', or wants a comprehensive multi-agent review of a skill and its hooks/agents/helpers. Spawns skill-reviewer, skill-content-reviewer, and claude-code-guide in parallel."
 ---
 
-# Skill Review
+# Review Skill - Multi-Agent Skill Auditor
 
-Reviews a skill's quality against a rubric derived from the Agent Skills specification, team review standards, and community best practices. Produces a percentage score and a prioritised list of issues to fix.
-
-This is a read-only, single-skill review. Do not modify the skill being reviewed.
+Runs 3 specialized review agents in parallel against a skill and all its associated components (hooks, agents, helpers, tests).
 
 ---
 
-# Components
+## Arguments
 
-## Rubric dimensions
-
-The rubric evaluates 8 weighted dimensions. Read `references/rubric.md` for the full check definitions when running the evaluation.
-
-| # | Dimension | Weight |
-|---|-----------|--------|
-| 1 | Spec Compliance | 10% |
-| 2 | Description & Triggers | 15% |
-| 3 | Structure & Readability | 15% |
-| 4 | DRY & Portability | 20% |
-| 5 | Safety & Data Integrity | 15% |
-| 6 | UX & Communication | 10% |
-| 7 | Domain Expertise | 10% |
-| 8 | Content Quality | 5% |
-
-## Scoring
-
-Each check is scored **PASS** (1.0), **WARN** (0.5), **FAIL** (0.0), or **N/A** (excluded). All checks have equal weight within their dimension. See `references/rubric.md` for the full scoring formula and blocker overrides.
-
-| Score | Meaning |
-|-------|---------|
-| 90-100% | Ready for merge |
-| 75-89% | Minor issues — address before merge |
-| 60-74% | Significant issues — needs rework |
-| 40-59% | Major structural problems |
-| 0-39% | Fundamental redesign needed |
-
-## Issue severities
-
-| Severity | Meaning |
-|----------|---------|
-| Blocker | Cannot merge — spec violation or portability failure |
-| Major | Should not merge — causes user harm, data risk, or quality regression |
-| Minor | Should fix — quality or polish issue |
-| Suggestion | Optional improvement |
-
-## Output format
-
-The report must include, in order:
-1. **Header** — skill name, overall score %
-2. **Files reviewed** — each file with line count
-3. **Dimension scores** — each dimension with score %, visual bar, and weight
-4. **Issues** — sorted by severity (blockers first), each with: check name, file/location, what was found, how to fix
-5. **Summary** — issue counts by severity
+- `/review-skill {skill-name}` — Review a specific skill (e.g., `task-planner`)
+- `/review-skill {skill-name} --structure-only` — Only run Agent A (structural review)
+- `/review-skill {skill-name} --content-only` — Only run Agent B (content quality)
+- `/review-skill {skill-name} --hooks-only` — Only run Agent C (hooks best practices)
 
 ---
 
-# Execution
+## Workflow
 
-Follow these steps in order.
+### 1. Resolve Skill Name
 
-## 1. Locate and read the skill
+Parse the argument to get the skill name. If no argument provided, ask the user which skill to review.
 
-Accept the skill by name (search `plugins/*/skills/` and `skills/`) or by path. Read every file in the skill directory tree. Record file list and line counts. Flag unexpected meta-documentation files (README.md, CHANGELOG.md).
+### 2. Discover All Related Files
 
-## 2. Load rubric and evaluate
+Search these locations for files belonging to the skill:
 
-Read `references/rubric.md` for the full check definitions.
+```
+~/.claude/skills/{skill-name}/               → SKILL.md, templates.md, etc.
+~/.claude/agents/                            → agents referenced by skill
+~/.claude/hooks/PreToolUse/                  → PreToolUse hooks
+~/.claude/hooks/PostToolUse/                 → PostToolUse hooks
+~/.claude/hooks/SubagentStart/               → SubagentStart hooks
+~/.claude/hooks/SubagentStop/                → SubagentStop hooks
+~/.claude/hooks/Stop/                        → Stop hooks
+~/.claude/hooks/helpers/                     → helper scripts
+~/.claude/tests/                             → test files
+~/.claude/settings.json                      → hook registrations
+```
 
-For each dimension, evaluate every check:
-1. Determine if the check applies (mark N/A if not — e.g., mutation checks for read-only skills, hub-spoke checks for single-file skills).
-2. Score the check: PASS, WARN, or FAIL.
-3. Record a brief justification and the file/location where the issue was found.
-4. If the check fails, classify the issue severity (Blocker, Major, Minor, Suggestion).
+**Discovery strategy:**
 
-## 3. Compute scores
+1. Read `~/.claude/skills/{skill-name}/SKILL.md` — this is the primary file
+2. Glob `~/.claude/skills/{skill-name}/**/*` — all skill files (recursive)
+3. Read `~/.claude/settings.json` — find all registered hooks
+4. Grep hook scripts for references to the skill name or its state files
+5. Grep agent files for references to the skill name
+6. Check `~/.claude/tests/` for test files mentioning the skill
 
-1. For each dimension: compute the weighted average of applicable checks (excluding N/A).
-2. Compute the overall score: weighted sum of dimension scores using the weights in the dimension table.
-3. Apply blocker overrides if applicable.
+Build a **file inventory** — a categorized list of all discovered files with full paths.
 
-## 4. Present the report
+### 3. Spawn Review Agents in Parallel
 
-Output the report using the format above. Issues are sorted by severity (blockers first), then by dimension order within each severity level.
+Launch **all three agents in a single message** (parallel execution):
 
-## 5. Offer to help fix
+#### Agent A: Structural Review (`plugin-dev:skill-reviewer`)
 
-After the report, offer to generate a prioritised fix plan if issues were found.
+```
+Review the {skill-name} skill plugin and ALL its associated hooks, agents, and helpers for structural quality and best practices.
 
-# Notes
+Files to review:
+{file inventory}
 
-`mixpanel-mcp` should have the same content as `mixpanel-mcp-eu` and `mixpanel-mcp-in`. When reviewing files from there, check the files have the same content, and then review only `mixpanel-mcp` for the rubric checks. If there are differences between the files, that is a blocker issue.
+Review for:
+1. Plugin structure and conventions
+2. Hook registration correctness
+3. Agent definition quality
+4. Skill frontmatter and content structure
+5. Shell script quality and error handling
+6. Inter-component consistency
+```
+
+#### Agent B: Content Quality (`skill-content-reviewer`)
+
+```
+Review the content quality of the {skill-name} skill and all its associated components.
+
+Files to review:
+{file inventory}
+
+Evaluate:
+1. Is the guidance comprehensive and actionable?
+2. Are hook scripts doing the right things?
+3. Are there gaps in coverage (missing edge cases, hooks)?
+4. Is the content accurate — will it guide Claude Code correctly?
+5. Are templates well-structured?
+6. Do agent prompts give enough context?
+```
+
+#### Agent C: Hooks Best Practices (`claude-code-guide`)
+
+```
+I need expert guidance on Claude Code hooks best practices to evaluate the {skill-name} plugin.
+
+This plugin uses these hooks:
+{list hook events and scripts from file inventory}
+
+Please verify:
+1. Hook event usage — are the right events used for each purpose?
+2. Hook registration format — is settings.json correct?
+3. Input/output contracts — exit codes, stdin JSON, stderr usage
+4. State management patterns — atomic writes, locking, file paths
+5. Known limitations that apply to this plugin's hook usage
+6. Any anti-patterns or gotchas in the hook implementations
+```
+
+### 4. Synthesize Results
+
+After agents complete, present a unified summary. If an agent fails or returns empty output, note the failure and synthesize from the agents that succeeded — do not retry or block on the failed agent.
+
+```
+## Skill Review: {skill-name}
+
+### Structural Review
+{Agent A key findings — critical/major/minor counts}
+
+### Content Quality
+{Agent B key findings — gaps, strengths, accuracy}
+
+### Hooks Compliance
+{Agent C key findings — contract violations, anti-patterns}
+
+### Priority Fixes
+1. {most critical finding across all agents}
+2. ...
+```
+
+---
+
+## Constraints
+
+- MUST spawn all 3 agents in a single message (parallel)
+- MUST include full file paths in each agent prompt
+- MUST present unified summary after all complete
+- If `--structure-only`, `--content-only`, or `--hooks-only`, spawn only the relevant agent (A, B, or C respectively)
+- If an agent fails or returns empty, synthesize from available results and note the gap
+- If the target skill has no hooks, skip Agent C (hooks review) unless explicitly requested
+- If skill not found, list available skills and ask user to pick one

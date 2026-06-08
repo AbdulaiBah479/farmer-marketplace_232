@@ -1,152 +1,109 @@
 ---
 name: skill-improver
-description: "Iteratively reviews and fixes Claude Code skill quality issues until they meet standards. Runs automated fix-review cycles using the skill-reviewer agent. Use to fix skill quality issues, improve skill descriptions, run automated skill review loops, or iteratively refine a skill. Triggers on 'fix my skill', 'improve skill quality', 'skill improvement loop'. NOT for one-time reviews—use /skill-reviewer directly."
-allowed-tools:
-  - Task
-  - Read
-  - Edit
-  - Write
-  - Glob
-  - Grep
+description: Research and improve Claude skills with current best practices. Triggers on requests to improve skills, update skills, research best practices for skills, enhance skill quality, or modernize existing skills.
+allowed-tools: WebSearch, Read, Edit, Write, Glob, Task
 ---
 
-# Skill Improvement Methodology
+# Skill Improver
 
-Iteratively improve a Claude Code skill using the skill-reviewer agent until it meets quality standards.
+Research current best practices and improve existing Claude skills.
 
-## Prerequisites
+## Process Overview
 
-Requires the `plugin-dev` plugin which provides the `skill-reviewer` agent.
+1. Identify target skill and its domain
+2. Research current best practices (web search)
+3. Analyze existing skill against best practices
+4. Generate improvement recommendations
+5. Apply improvements (if requested)
 
-Verify it's enabled: run `/plugins` — `plugin-dev` should appear in the list. If missing, install from the Trail of Bits plugin repository.
+## Step 1: Identify Target
 
-## Core Loop
+Locate the skill to improve:
 
-1. **Review** - Call skill-reviewer on the target skill
-2. **Categorize** - Parse issues by severity
-3. **Fix** - Address critical and major issues
-4. **Evaluate** - Check minor issues for validity before fixing
-5. **Repeat** - Continue until quality bar is met
-
-## When to Use
-
-- Improving a skill with multiple quality issues
-- Iterating on a new skill until it meets standards
-- Automated fix-review cycles instead of manual editing
-- Consistent quality enforcement across skills
-
-## When NOT to Use
-
-- **One-time review**: Use `/skill-reviewer` directly instead
-- **Quick single fixes**: Edit the file directly
-- **Non-skill files**: Only works on SKILL.md files
-- **Experimental skills**: Manual iteration gives more control during exploration
-
-## Issue Categorization
-
-### Critical Issues (MUST fix immediately)
-
-These block skill loading or cause runtime failures:
-
-- Missing required frontmatter fields (name, description) — Claude cannot index or trigger the skill
-- Invalid YAML frontmatter syntax — Parsing fails, skill won't load
-- Referenced files that don't exist — Runtime errors when Claude follows links
-- Broken file paths — Same as above, leads to tool failures
-
-### Major Issues (MUST fix)
-
-These significantly degrade skill effectiveness:
-
-- Weak or vague trigger descriptions — Claude may not recognize when to use the skill
-- Wrong writing voice (second person "you" instead of imperative) — Inconsistent with Claude's execution model
-- SKILL.md exceeds 500 lines without using references/ — Overloads context, reduces comprehension
-- Missing "When to Use" or "When NOT to Use" sections — Required by project quality standards
-- Description doesn't specify when to trigger — Skill may never be selected
-
-### Minor Issues (Evaluate before fixing)
-
-These are polish items that may or may not improve the skill:
-
-- Subjective style preferences — Reviewer may have different taste than author
-- Optional enhancements — May add complexity without proportional value
-- "Nice to have" improvements — Consider cost-benefit before implementing
-- Formatting suggestions — Often valid but low impact
-
-## Minor Issue Evaluation
-
-Before implementing any minor issue fix, evaluate:
-
-1. **Is this a genuine improvement?** - Does it add real value or just satisfy a preference?
-2. **Could this be a false positive?** - Is the reviewer misunderstanding context?
-3. **Would this actually help Claude use the skill?** - Focus on functional improvements
-
-Only implement minor fixes that are clearly beneficial. Skill-reviewer may produce false positives.
-
-## Invoking skill-reviewer
-
-Use the skill-reviewer agent from the plugin-dev plugin. Request a review by asking Claude to:
-
-> Review the skill at [SKILL_PATH] using the plugin-dev:skill-reviewer agent. Provide a detailed quality assessment with issues categorized by severity.
-
-Replace `[SKILL_PATH]` with the absolute path to the skill directory (e.g., `/path/to/plugins/my-plugin/skills/my-skill`).
-
-## Example Fix Cycle
-
-**Iteration 1 — skill-reviewer output:**
-```text
-Critical: SKILL.md:1 - Missing required 'name' field in frontmatter
-Major: SKILL.md:3 - Description uses second person ("you should use")
-Major: Missing "When NOT to Use" section
-Minor: Line 45 is verbose
+```bash
+# Find skill location
+ls -la .claude/skills/<skill-name>/
 ```
 
-**Fixes applied:**
-- Added name field to frontmatter
-- Rewrote description in third person
-- Added "When NOT to Use" section
+Read SKILL.md and all references to understand current implementation.
 
-**Iteration 2 — run skill-reviewer again to verify fixes:**
-```text
-Minor: Line 45 is verbose
-```
+## Step 2: Research Best Practices
 
-**Minor issue evaluation:**
-Line 45 communicates effectively as-is. The verbosity provides useful context. Skip.
-
-**All critical/major issues resolved. Output the completion marker:**
-```
-<skill-improvement-complete>
-```
-
-Note: The marker MUST appear in the output. Statements like "quality bar met" or "looks good" will NOT stop the loop.
-
-## Completion Criteria
-
-**CRITICAL**: The stop hook ONLY checks for the explicit marker below. No other signal will terminate the loop.
-
-Output this marker when done:
+Use subagents (Task tool) to parallelize research across multiple topics:
 
 ```
-<skill-improvement-complete>
+Spawn parallel research agents for:
+1. "<domain> best practices 2026"
+2. "<domain> common mistakes to avoid"
+3. "Claude AI <domain> techniques" (if applicable)
 ```
 
-**When to output the marker:**
+Each subagent should return:
+- Key findings with sources
+- Actionable recommendations
 
-1. **skill-reviewer reports "Pass"** or **no issues found** → output marker immediately
-2. **All critical and major issues are fixed** AND you've verified the fixes → output marker
-3. **Remaining issues are only minor** AND you've evaluated them as false positives or not worth fixing → output marker
+Focus areas:
+- Industry standards and conventions
+- Common pitfalls and how to avoid them
+- Performance optimizations
+- Security considerations (if relevant)
+- Token efficiency for LLM skills
 
-**When NOT to output the marker:**
+## Step 3: Analyze Skill
 
-- Any critical issue remains unfixed
-- Any major issue remains unfixed
-- You haven't run skill-reviewer to verify your fixes worked
+Compare existing skill against:
 
-The marker is the ONLY way to complete the loop. Natural language like "looks good" or "quality bar met" will NOT stop the loop.
+| Aspect | Check |
+|--------|-------|
+| **Clarity** | Instructions unambiguous? |
+| **Completeness** | All use cases covered? |
+| **Efficiency** | Minimal tokens for max utility? |
+| **Accuracy** | Reflects current best practices? |
+| **Triggers** | Description covers all valid triggers? |
+| **Structure** | Follows skill-creator guidelines? |
 
-## Rationalizations to Reject
+## Step 4: Generate Recommendations
 
-- "I'll just mark it complete and come back later" - Fix issues now
-- "This minor issue seems wrong, I'll skip all of them" - Evaluate each one individually
-- "The reviewer is being too strict" - The quality bar exists for a reason
-- "It's good enough" - If there are major issues, it's not good enough
+Create improvement report:
+
+```markdown
+## Skill Improvement Report: <skill-name>
+
+### Summary
+- Current state assessment
+- Key findings from research
+
+### Recommendations
+
+#### High Priority
+1. [Issue]: [Recommended fix]
+
+#### Medium Priority
+1. [Issue]: [Recommended fix]
+
+#### Low Priority / Nice-to-Have
+1. [Suggestion]
+
+### Best Practices Found
+- [Practice 1]: [Source]
+- [Practice 2]: [Source]
+```
+
+## Step 5: Apply Improvements
+
+If user approves changes:
+
+1. Edit SKILL.md with improvements
+2. Update/add references if needed
+3. Update scripts if applicable
+4. Validate with `scripts/validate_skill.py`
+
+## Guidelines
+
+- **Preserve intent** - Improvements should enhance, not change skill purpose
+- **Cite sources** - Link to best practice sources when recommending changes
+- **Prioritize impact** - Focus on changes that meaningfully improve skill quality
+- **Maintain conciseness** - Don't bloat skills with unnecessary content
+- **Test triggers** - Ensure description still triggers appropriately after changes
+
+See `references/research-strategies.md` for search query templates and source evaluation guidelines.

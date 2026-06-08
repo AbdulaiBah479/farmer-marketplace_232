@@ -1,167 +1,398 @@
 ---
-name: Managing Secrets
-description: How secrets are stored, decrypted, and used on the devbox. Use when adding, removing, or debugging secrets.
+name: managing-secrets
+description: Managing secrets (API keys, database credentials, certificates) with Vault, cloud providers, and Kubernetes. Use when storing sensitive data, rotating credentials, syncing secrets to Kubernetes, implementing dynamic secrets, or scanning code for leaked secrets.
 ---
 
 # Managing Secrets
 
-Secrets are managed with sops-nix using age encryption. They're encrypted in the repo and auto-decrypted at boot.
+Secure storage, rotation, and delivery of secrets (API keys, database credentials, TLS certificates) for applications and infrastructure.
 
-## Current Secrets
+## When to Use This Skill
 
-| Secret | Usage | How it's consumed |
-|--------|-------|-------------------|
-| `github_ssh_key` | Git operations | Deployed to `~/.ssh/id_ed25519_github` |
-| `cloudflared_tunnel_token` | Cloudflare tunnel | Systemd service reads from `/run/secrets/` |
-| `cloudflare_api_token` | Wrangler CLI | Exported as `CLOUDFLARE_API_TOKEN` in bash |
-| `op_service_account_token` | 1Password bootstrap | Available at `/run/secrets/` for scripts |
-| `claude_personal_oauth_token` | Headless Claude Code | Exported as `CLAUDE_CODE_OAUTH_TOKEN` in bash |
+Use when:
+- Storing API keys, database credentials, or encryption keys
+- Implementing secret rotation (manual or automatic)
+- Syncing secrets from external stores to Kubernetes
+- Setting up dynamic secrets (database, cloud providers)
+- Scanning code for leaked secrets
+- Implementing zero-knowledge patterns
+- Meeting compliance requirements (SOC 2, ISO 27001, PCI DSS)
 
-## How Secrets Flow
+## Quick Decision Frameworks
 
-```
-secrets/devbox.yaml (encrypted in git)
-        ↓
-sops-nix decrypts at boot using /persist/sops-age-key.txt
-        ↓
-/run/secrets/<secret_name> (plaintext, mode 0400)
-        ↓
-Consumed by: systemd services, bash exports, or file deployment
-```
+### Framework 1: Choosing a Secret Store
 
-## Adding a New Secret
+| Scenario | Primary Choice | Alternative |
+|----------|----------------|-------------|
+| Kubernetes + Multi-Cloud | Vault + ESO | Cloud Secret Manager + ESO |
+| Kubernetes + Single Cloud | Cloud Secret Manager + ESO | Vault + ESO |
+| Serverless (AWS Lambda) | AWS Secrets Manager | AWS Parameter Store |
+| Multi-Cloud Enterprise | HashiCorp Vault | Doppler (SaaS) |
+| Small Team (<10 apps) | Doppler, Infisical | 1Password Secrets Automation |
+| GitOps-Centric | SOPS (git-encrypted) | Sealed Secrets (K8s-only) |
 
-### Step 1: Add to sops file
+**Decision Tree:**
+- Kubernetes? → External Secrets Operator (ESO) with chosen backend
+- Single cloud? → Cloud-native (AWS/GCP/Azure)
+- Multi-cloud/on-prem? → HashiCorp Vault
+- GitOps? → SOPS or Sealed Secrets
 
-```bash
-# Edit encrypted file (requires age key access)
-sudo nix-shell -p sops --run "SOPS_AGE_KEY_FILE=/persist/sops-age-key.txt sops secrets/devbox.yaml"
+### Framework 2: Static vs. Dynamic Secrets
 
-# Or use sops set for non-interactive:
-sudo nix-shell -p sops --run "SOPS_AGE_KEY_FILE=/persist/sops-age-key.txt sops set secrets/devbox.yaml '[\"my_new_secret\"]' '\"secret-value\"'"
-```
+| Secret Type | Use Dynamic? | TTL | Solution |
+|-------------|-------------|-----|----------|
+| Database credentials | YES | 1 hour | Vault DB engine |
+| Cloud IAM (AWS/GCP) | YES | 15 min | Vault cloud engine |
+| SSH/RDP access | YES | 5 min | Vault SSH engine |
+| TLS certificates | YES | 24 hours | Vault PKI / cert-manager |
+| Third-party API keys | NO | Quarterly | Vault KV v2 (manual rotation) |
 
-### Step 2: Declare in NixOS config
+### Framework 3: Kubernetes Secret Delivery
 
-Edit `hosts/devbox/configuration.nix`, add to `sops.secrets`:
+| Method | Use Case | Rotation | Restart Required |
+|--------|----------|----------|------------------|
+| **External Secrets Operator** | Static secrets, periodic sync | Polling (1h) | Yes |
+| **Secrets Store CSI Driver** | File-based, watch rotation | inotify | No |
+| **Vault Secrets Operator** | Vault-specific, dynamic | Automatic renewal | Optional |
 
-```nix
-sops.secrets = {
-  # ... existing secrets ...
+## HashiCorp Vault Fundamentals
 
-  my_new_secret = {
-    owner = "dev";
-    group = "dev";
-    mode = "0400";
-    # Optional: deploy to specific path instead of /run/secrets/
-    # path = "/home/dev/.config/app/secret";
-  };
-};
-```
+### Core Components
 
-### Step 3: Consume the secret
+- **Secrets Engines**: KV v2 (static), Database (dynamic), AWS, PKI, SSH
+- **Auth Methods**: Kubernetes, JWT/OIDC, AppRole, LDAP
+- **Policies**: HCL-based access control (least privilege)
+- **Leases**: TTL for secrets, auto-renewal, auto-revocation
 
-**Option A: Export as env var** (for CLI tools)
-
-Edit `users/dev/home.linux.nix`:
-
-```nix
-programs.bash.initExtra = lib.mkAfter ''
-  if [ -r /run/secrets/my_new_secret ]; then
-    export MY_ENV_VAR="$(cat /run/secrets/my_new_secret)"
-  fi
-'';
-```
-
-**Option B: Use in systemd service** (for daemons)
-
-```nix
-systemd.services.my-service = {
-  serviceConfig = {
-    ExecStart = "${pkgs.writeShellScript "run" ''
-      exec my-command --token "$(cat /run/secrets/my_new_secret)"
-    ''}";
-  };
-};
-```
-
-**Option C: Deploy as file** (for apps expecting file path)
-
-Set `path` in the secret declaration (Step 2).
-
-### Step 4: Apply changes
+### Static Secrets (KV v2)
 
 ```bash
-git add secrets/devbox.yaml hosts/devbox/configuration.nix
-git commit -m "feat: add my_new_secret"
+# Create secret
+vault kv put secret/myapp/config api_key=sk_live_EXAMPLE
 
-sudo nixos-rebuild switch --flake .#devbox
-home-manager switch --flake .#dev  # if you added bash export
+# Read secret
+vault kv get secret/myapp/config
+
+# List versions
+vault kv metadata get secret/myapp/config
 ```
 
-## Removing a Secret
-
-### Step 1: Remove from consumers
-
-- Remove any bash exports from `users/dev/home.linux.nix`
-- Remove any systemd service references
-- Remove declaration from `hosts/devbox/configuration.nix`
-
-### Step 2: Remove from sops file
+### Dynamic Database Credentials
 
 ```bash
-sudo nix-shell -p sops -p yq-go --run "
-  cd /home/dev/projects/workstation
-  SOPS_AGE_KEY_FILE=/persist/sops-age-key.txt sops -d secrets/devbox.yaml > /tmp/secrets-plain.yaml
-  yq -i 'del(.secret_to_remove)' /tmp/secrets-plain.yaml
-  SOPS_AGE_KEY_FILE=/persist/sops-age-key.txt sops encrypt --age age1kyd7dzxtgte0rcd0nj3chfvcfvammhywe63f25tlsrf8knhf3u8sxp8z9n --input-type yaml --output-type yaml /tmp/secrets-plain.yaml > secrets/devbox.yaml
-  rm /tmp/secrets-plain.yaml
-"
+# Configure PostgreSQL
+vault write database/config/postgres \
+  plugin_name=postgresql-database-plugin \
+  connection_url="postgresql://{{username}}:{{password}}@postgres:5432/mydb"
+
+# Create role
+vault write database/roles/app-role \
+  db_name=postgres \
+  creation_statements="CREATE ROLE \"{{name}}\"..." \
+  default_ttl="1h"
+
+# Generate credentials
+vault read database/creds/app-role
 ```
 
-### Step 3: Apply and commit
+For detailed Vault architecture, see `references/vault-architecture.md`.
+
+## Kubernetes Integration
+
+### External Secrets Operator (ESO)
+
+Syncs secrets from 30+ providers to Kubernetes Secrets.
+
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend
+spec:
+  provider:
+    vault:
+      server: "https://vault.example.com"
+      auth:
+        kubernetes:
+          role: "app-role"
+```
+
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: database-credentials
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+  target:
+    name: db-credentials
+  data:
+  - secretKey: password
+    remoteRef:
+      key: secret/data/database/config
+```
+
+### Vault Secrets Operator (VSO)
+
+Kubernetes-native Vault integration with automatic lease renewal.
+
+```yaml
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultDynamicSecret
+metadata:
+  name: postgres-creds
+spec:
+  vaultAuthRef: vault-auth
+  mount: database
+  path: creds/app-role
+  renewalPercent: 67  # Renew at 67% of TTL
+  destination:
+    name: dynamic-db-creds
+```
+
+For ESO vs CSI vs VSO comparison, see `references/kubernetes-integration.md`.
+
+## Secret Rotation Patterns
+
+### Pattern 1: Versioned Static Secrets (Blue/Green)
+
+1. Create new secret version in Vault
+2. Update staging environment
+3. Monitor for errors (24-48 hours)
+4. Gradual production rollout (10% → 50% → 100%)
+5. Revoke old secret (after 7 days)
+
+### Pattern 2: Dynamic Database Credentials
+
+Vault auto-generates credentials with short TTL:
+- App fetches credentials from Vault
+- Vault automatically renews lease (at 67% of TTL)
+- On expiration, Vault revokes access
+- On renewal failure, app requests new credentials
+
+### Pattern 3: TLS Certificate Rotation
+
+Using cert-manager + Vault PKI:
+- cert-manager requests certificate from Vault
+- Automatically renews before expiration (default: 67% of duration)
+- Updates Kubernetes Secret on renewal
+- Optional pod restart (via Reloader)
+
+For detailed rotation workflows, see `references/rotation-patterns.md`.
+
+## Multi-Language Integration
+
+### Python (hvac)
+
+```python
+import hvac
+
+client = hvac.Client(url='https://vault.example.com')
+client.auth.kubernetes(role='app-role', jwt=jwt)
+
+# Fetch dynamic credentials
+response = client.secrets.database.generate_credentials(name='postgres-role')
+username = response['data']['username']
+password = response['data']['password']
+```
+
+### Go (Vault API)
+
+```go
+import vault "github.com/hashicorp/vault/api"
+
+client, _ := vault.NewClient(vault.DefaultConfig())
+k8sAuth, _ := auth.NewKubernetesAuth("app-role")
+client.Auth().Login(context.Background(), k8sAuth)
+
+secret, _ := client.Logical().Read("database/creds/postgres-role")
+```
+
+### TypeScript (node-vault)
+
+```typescript
+import vault from 'node-vault';
+
+const client = vault({ endpoint: 'https://vault.example.com' });
+await client.kubernetesLogin({ role: 'app-role', jwt });
+
+const response = await client.read('database/creds/postgres-role');
+```
+
+For complete examples, see `examples/dynamic-db-credentials/`.
+
+## Secret Scanning
+
+### Pre-Commit Hooks (Gitleaks)
 
 ```bash
-git add -A && git commit -m "chore: remove secret_to_remove"
-sudo nixos-rebuild switch --flake .#devbox
+# Install Gitleaks
+brew install gitleaks
+
+# Run on staged files
+gitleaks protect --staged --verbose
 ```
 
-## Key Files
+Pre-commit hook prevents secrets from being committed.
+For setup, see `examples/secret-scanning/pre-commit`.
 
-| File | Purpose |
-|------|---------|
-| `secrets/devbox.yaml` | Encrypted secrets (committed to git) |
-| `secrets/.sops.yaml` | sops config (which keys can decrypt) |
-| `/persist/sops-age-key.txt` | Age private key (never in git, root-only) |
-| `hosts/devbox/configuration.nix` | Secret declarations for sops-nix |
-| `users/dev/home.linux.nix` | Bash exports for env vars |
+### CI/CD Integration
 
-## Troubleshooting
+```yaml
+# GitHub Actions
+- name: Run Gitleaks
+  uses: gitleaks/gitleaks-action@v2
+```
 
-### "permission denied" when editing secrets
+### Remediation Workflow
 
-The age key is root-only. Use `sudo` with nix-shell:
+When a secret is leaked:
+1. **Rotate immediately** (within 1 hour)
+2. **Revoke at provider**
+3. **Remove from Git history** (BFG Repo-Cleaner)
+4. **Force push** (notify team)
+5. **Audit access** (who had access during leak window)
+6. **Document incident**
+
+For detailed remediation, see `references/secret-scanning.md`.
+
+## Zero-Knowledge Patterns
+
+### Client-Side Encryption (E2EE)
+
+User password → PBKDF2 → encryption key → encrypt secret → send to server
+
+Server stores only encrypted blobs (cannot decrypt).
+
+### Shamir's Secret Sharing
+
+Split secret into N shares, require M to reconstruct (e.g., 3 of 5).
 
 ```bash
-sudo nix-shell -p sops --run "SOPS_AGE_KEY_FILE=/persist/sops-age-key.txt sops secrets/devbox.yaml"
+# Initialize Vault with Shamir shares
+vault operator init -key-shares=5 -key-threshold=3
+
+# Unseal requires 3 of 5 key shares
+vault operator unseal <KEY_1>
+vault operator unseal <KEY_2>
+vault operator unseal <KEY_3>
 ```
 
-### Secret not appearing after rebuild
+For implementations, see `references/zero-knowledge.md`.
 
-1. Check it's declared in `sops.secrets` in configuration.nix
-2. Run `sudo nixos-rebuild switch` (not just home-manager)
-3. Verify: `ls -la /run/secrets/`
+## Library Recommendations (2025)
 
-### Env var not exported
+### Secret Stores
 
-1. Check the export is in `home.linux.nix` (not `home.nix` - that's shared with Darwin)
-2. Run `home-manager switch`
-3. Start a new shell (exports only apply to new shells)
+| Library | Use Case | Trust Score |
+|---------|----------|-------------|
+| HashiCorp Vault | Enterprise, multi-cloud | High (73.3/100) |
+| External Secrets Operator | Kubernetes integration | High (85.0/100) |
+| AWS Secrets Manager | AWS workloads | High |
+| GCP Secret Manager | GCP workloads | High |
+| Azure Key Vault | Azure workloads | High |
 
-## Security Notes
+### Secret Scanning
 
-- Secrets are encrypted at rest with age (AES-256)
-- Decrypted secrets are mode 0400 (owner read-only)
-- The age key lives on `/persist/` which survives rebuilds but not re-provisioning
-- Never commit the age private key or decrypted secrets
-- Env var exports are in `home.linux.nix` so they only apply on devbox, not Darwin
+| Library | Use Case | Trust Score |
+|---------|----------|-------------|
+| Gitleaks | Pre-commit, CI/CD | High (89.9/100) |
+| TruffleHog | Git history scanning | Medium |
+
+### Client Libraries
+
+| Language | Library | Version |
+|----------|---------|---------|
+| Python | `hvac` | 2.2.0+ |
+| Go | `vault/api` | Latest |
+| TypeScript | `node-vault` | 0.10.2+ |
+| Rust | `vaultrs` | 0.7+ |
+
+## Common Workflows
+
+### Workflow 1: Vault + ESO on Kubernetes
+
+1. Install Vault (Helm chart)
+2. Initialize and unseal Vault
+3. Enable Kubernetes auth
+4. Install External Secrets Operator
+5. Create SecretStore (Vault connection)
+6. Create ExternalSecret (secret mapping)
+
+For step-by-step guide, see `examples/vault-eso-setup/`.
+
+### Workflow 2: Dynamic Database Credentials
+
+1. Enable database secrets engine
+2. Configure database connection
+3. Create role with TTL
+4. App fetches credentials
+5. Vault auto-renews lease
+
+For implementation, see `examples/dynamic-db-credentials/`.
+
+### Workflow 3: Secret Scanning Remediation
+
+1. Gitleaks detects secret
+2. Block commit (pre-commit hook)
+3. Developer removes secret
+4. Developer stores in Vault
+5. Developer references Vault path
+
+For setup, see `examples/secret-scanning/`.
+
+## Integration with Related Skills
+
+- **auth-security**: OAuth client secrets, JWT signing keys
+- **databases-***: Dynamic database credentials
+- **deploying-applications**: Container registry credentials
+- **observability**: Grafana/Datadog API keys
+- **infrastructure-as-code**: Cloud provider credentials
+
+## Security Best Practices
+
+1. Never commit secrets to Git (use Gitleaks pre-commit hook)
+2. Use dynamic secrets where possible
+3. Rotate secrets regularly (quarterly for static, hourly for dynamic)
+4. Implement least privilege (Vault policies, RBAC)
+5. Enable audit logging
+6. Encrypt at rest (Vault storage, etcd encryption)
+7. Use short TTLs (< 24 hours for dynamic secrets)
+8. Monitor failed access attempts
+
+## Common Pitfalls
+
+### Secrets in Environment Variables
+
+Environment variables visible in process lists.
+**Solution:** Use file-based secrets (Kubernetes volumes, CSI driver).
+
+### Hardcoded Secrets in Manifests
+
+Base64 is not encryption.
+**Solution:** Use External Secrets Operator.
+
+### No Secret Rotation
+
+Stale credentials increase breach risk.
+**Solution:** Use dynamic secrets or automate rotation.
+
+### Root Token in Production
+
+Unlimited permissions.
+**Solution:** Use auth methods with least privilege policies.
+
+## For Detailed Information, See
+
+- `references/vault-architecture.md` - Vault internals, HA setup, policies
+- `references/kubernetes-integration.md` - ESO, CSI driver, VSO comparison
+- `references/rotation-patterns.md` - Detailed rotation workflows
+- `references/secret-scanning.md` - Gitleaks, remediation procedures
+- `references/zero-knowledge.md` - E2EE, Shamir's secret sharing
+- `references/cloud-providers.md` - AWS, GCP, Azure secret managers
+- `examples/vault-eso-setup/` - Complete Kubernetes setup
+- `examples/dynamic-db-credentials/` - Multi-language examples
+- `examples/secret-scanning/` - Pre-commit hooks, CI/CD
+- `scripts/setup_vault.sh` - Automated Vault installation

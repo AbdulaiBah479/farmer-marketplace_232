@@ -1,6 +1,6 @@
 ---
 name: software-code-review
-description: Systematic code review patterns and checklists. Use when reviewing PRs or diffs for correctness, security, readability, and maintainability.
+description: Use when reviewing code, pull requests, or diffs. Provides patterns, checklists, and templates for systematic code review with a focus on correctness, security, readability, performance, and maintainability.
 ---
 
 # Code Reviewing Skill — Quick Reference
@@ -218,9 +218,6 @@ Use [assets/core/review-comment-guidelines.md](assets/core/review-comment-guidel
 - [references/automation-tools.md](references/automation-tools.md)
 - [references/dotnet-efcore-crypto-rules.md](references/dotnet-efcore-crypto-rules.md)
 - [references/psychological-safety-guide.md](references/psychological-safety-guide.md)
-- [references/large-pr-review-strategies.md](references/large-pr-review-strategies.md)
-- [references/security-focused-review-guide.md](references/security-focused-review-guide.md)
-- [references/code-review-metrics.md](references/code-review-metrics.md)
 
 **Templates**
 - [assets/core/pull-request-description-template.md](assets/core/pull-request-description-template.md)
@@ -280,9 +277,3 @@ After searching, provide:
 - Review bots and automation
 - Async review practices for distributed teams
 - Review metrics and analytics tools
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

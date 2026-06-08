@@ -1,103 +1,49 @@
 ---
-name: skill
-description: 'TODO: Brief description of what the Skill does and when to use it'
+id: engineering/bk-skill-creator
+name: Skill 创建指南
+category: engineering
+description: 指导如何创建符合渐进式披露架构的 skill 文档
+tags: [skill, knowledge, template, guide]
+updated_at: 2026-01-23
 ---
 
-# Answer Collector Skill
+# Skill 创建指南
 
-**Purpose:** Incrementally collect and validate product assessment responses in structured JSON format.
+## ⚠️ 核心规则
 
----
+1. **SKILL.md ≤ 2KB**: 超出内容必须移到 `references/`
+2. **必须包含 Front Matter**: id, name, category, description, tags, updated_at
+3. **按需加载引导**: 详细内容通过 `skill://` URI 引用
+4. **存放位置**: 所有 skill 必须放在 `bkui-knowledge/knowledge/skills/` 目录下
 
-## When to Use
+## 快速开始
 
-- Evaluating new product ideas with rigorous criteria
-- Conducting go/no-go assessments before committing resources
-- Building a decision audit trail for product decisions
-- Gathering structured input from teams or stakeholders
-- Progressive refinement of product hypotheses
-
----
-
-## How It Works
-
-### 1. Reading Questions
-
-Questions are organized in 4 sections (`questions.md`):
-- **WHY** (4 Q's): Problem, strategy, resources, timing
-- **WHO** (4 Q's): User, access, economics, scale
-- **WHAT** (5 Q's): Outcome, monetization, success metrics, fit, risk
-- **GO/NO-GO** (4 criteria): Checklist for final decision
-
-Each question is numbered 1-17.
-
-### 2. Writing JSON Incrementally
-
-Start with a template and add answers one at a time:
-
-```json
-{
-  "metadata": {
-    "product_name": "Your Product Name",
-    "created_at": "2025-11-03T00:00:00Z",
-    "status": "in_progress"
-  },
-  "answers": {
-    "why_section": {
-      "q1_problem_evidence": "Answer here..."
-    }
-  }
-}
+```bash
+cp -r knowledge/skills/.template knowledge/skills/your-skill-id
+vim knowledge/skills/your-skill-id/SKILL.md
+bash scripts/validate-skill.sh your-skill-id
 ```
 
-**Build incrementally:**
-- Add one answer per interaction
-- Preserve all previous answers
-- Update `last_updated` timestamp
-- Track `completion_percentage` in metadata
+详细步骤: `skill://bk-skill-creator/references/quick-start.md`
 
-### 3. Validation Logic
+## 📦 按需加载资源
 
-**Auto-calculate:**
-- `answered_questions`: Count non-empty answers
-- `completion_percentage`: (answered_questions / 17) × 100
-- `go_no_go_result`: "go" if all 4 checklist items true, else "no_go" or "pending"
+| 资源 | URI |
+|-----|-----|
+| 快速开始 | `skill://bk-skill-creator/references/quick-start.md` |
+| 目录结构 | `skill://bk-skill-creator/references/structure-guide.md` |
+| 常见错误 | `skill://bk-skill-creator/references/common-mistakes.md` |
+| 检查清单 | `skill://bk-skill-creator/references/skill-checklist.md` |
+| 写作技巧 | `skill://bk-skill-creator/references/writing-tips.md` |
 
-**Validation rules:**
-- All text answers must be non-empty and substantive
-- Checklist items (q14-q17) must be boolean (true/false)
-- Metadata fields (product_name) required to start
-- All timestamps in ISO 8601 format
 
 ---
+## 📦 可用资源
 
-## Quick Reference
+- `skill://bk-skill-creator/references/common-mistakes.md`
+- `skill://bk-skill-creator/references/quick-start.md`
+- `skill://bk-skill-creator/references/skill-checklist.md`
+- `skill://bk-skill-creator/references/structure-guide.md`
+- `skill://bk-skill-creator/references/writing-tips.md`
 
-| Section | Questions | Type |
-|---------|-----------|------|
-| WHY | 1-4 | Text |
-| WHO | 5-8 | Text |
-| WHAT | 9-13 | Text |
-| GO/NO-GO | 14-17 | Boolean |
-
----
-
-## Usage Pattern
-
-1. **Initialize:** Create JSON with metadata and product_name
-2. **Collect:** Answer one question, validate, save
-3. **Review:** Check completion_percentage and go_no_go_result
-4. **Decide:** When all answers complete, review go_no_go_result
-
----
-
-## File Structure
-
-```
-~/.claude/skills/answer-collector/
-├── SKILL.md           # This file
-├── questions.md       # The 17 assessment questions
-├── schema.json        # JSON validation schema
-└── assessments/       # (optional) Stored assessment JSONs
-    └── product-name.json
-```
+> 根据 SKILL.md 中的 IF-THEN 规则判断是否需要加载

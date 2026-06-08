@@ -1,106 +1,82 @@
 ---
-name: jest-testing
-# prettier-ignore
-description: Use when writing Jest tests - covers testing patterns for interpreters, parsers, and async code
+name: Jest Testing
+description: Expert Jest testing framework for JavaScript/TypeScript unit and integration testing
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
 ---
 
-# Jest Testing Best Practices
+# Jest Testing Skill
 
-## Quick Start
+## Overview
 
-```typescript
-import { run } from "../src/api";
+This skill provides expert-level capabilities for Jest-based testing, enabling comprehensive unit testing, snapshot testing, and integration with React Testing Library.
 
-describe("interpreter", () => {
-  it("evaluates arithmetic expressions", () => {
-    expect(run("2 + 3")).toBe(5);
-  });
+## Capabilities
 
-  it("handles errors gracefully", () => {
-    expect(() => run("undefined_var")).toThrow(/undefined/i);
-  });
-});
-```
+### Test Execution
+- Configure Jest for various project types (Node, React, TypeScript)
+- Execute tests with coverage collection
+- Parallel test execution configuration
+- Watch mode and selective test running
 
-## Core Principles
+### Unit Testing
+- Write unit tests with proper mocking
+- Configure custom matchers and test utilities
+- Mock module resolution and timer handling
+- Handle async testing patterns
 
-- **Arrange-Act-Assert**: Structure tests clearly
-- **One assertion focus**: Test one behavior per test
-- **Descriptive names**: Use "should" or behavior-based naming
-- **Isolation**: Tests should not depend on each other
+### Snapshot Testing
+- Configure and manage snapshot tests
+- Handle snapshot updates and reviews
+- Implement inline snapshots
 
-## Testing Patterns
+### Coverage Analysis
+- Coverage report generation and analysis
+- Configure coverage thresholds
+- Identify uncovered code paths
 
-### Interpreter Tests
+### React Integration
+- Integration with React Testing Library
+- Component testing patterns
+- Hook testing utilities
 
-```typescript
-describe("builtins", () => {
-  describe("map", () => {
-    it("transforms each element", () => {
-      const code = `[1, 2, 3] /> map((x) -> x * 2)`;
-      expect(run(code)).toEqual([2, 4, 6]);
-    });
+## Target Processes
 
-    it("passes index as second argument", () => {
-      const code = `["a", "b"] /> map((x, i) -> i)`;
-      expect(run(code)).toEqual([0, 1]);
-    });
-  });
-});
-```
+- `automation-framework.js` - Test framework setup
+- `mutation-testing.js` - Test quality assessment
+- `continuous-testing.js` - CI/CD integration
+- `shift-left-testing.js` - Early testing integration
 
-### Parser Tests
+## Dependencies
 
-```typescript
-describe("parser", () => {
-  it("parses pipe expressions", () => {
-    const ast = parse("x /> fn");
-    expect(ast.body[0]).toMatchObject({
-      type: "ExprStmt",
-      expression: {
-        type: "PipeExpr",
-        left: { type: "Identifier", name: "x" },
-        right: { type: "Identifier", name: "fn" }
+- `jest` - Test runner
+- `@testing-library/react` - React testing utilities
+- `ts-jest` - TypeScript support (optional)
+
+## Usage Example
+
+```javascript
+{
+  kind: 'skill',
+  skill: {
+    name: 'jest-testing',
+    context: {
+      action: 'execute-tests',
+      testPath: 'src/**/*.test.ts',
+      coverage: true,
+      coverageThreshold: {
+        global: { branches: 80, functions: 80, lines: 80 }
       }
-    });
-  });
-});
-```
-
-### Async Tests
-
-```typescript
-it("resolves async operations", async () => {
-  const result = await run(`
-    let fetch = () -> delay(10) /> then(() -> "done") #async
-    await fetch()
-  `);
-  expect(result).toBe("done");
-});
-```
-
-### Snapshot Tests
-
-```typescript
-it("formats code consistently", () => {
-  const formatted = format("let x=1+2");
-  expect(formatted).toMatchSnapshot();
-});
+    }
+  }
+}
 ```
 
 ## Configuration
 
-```javascript
-// jest.config.js
-module.exports = {
-  preset: "ts-jest",
-  testEnvironment: "node",
-  testMatch: ["**/__tests__/**/*.test.ts"],
-  collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts"],
-};
-```
-
-## Reference Files
-
-- [references/mocking.md](references/mocking.md) - Mocking strategies
-- [references/async-testing.md](references/async-testing.md) - Async test patterns
+The skill respects `jest.config.js` or `jest.config.ts` in the project root and can override settings as needed.

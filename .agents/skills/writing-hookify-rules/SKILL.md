@@ -1,5 +1,5 @@
 ---
-name: Writing Hookify Rules
+name: writing-hookify-rules
 description: This skill should be used when the user asks to "create a hookify rule", "write a hook rule", "configure hookify", "add a hookify rule", or needs guidance on hookify rule syntax and patterns.
 version: 0.1.0
 ---
@@ -29,19 +29,16 @@ Can include markdown formatting, warnings, suggestions, etc.
 ### Frontmatter Fields
 
 **name** (required): Unique identifier for the rule
-
 - Use kebab-case: `warn-dangerous-rm`, `block-console-log`
 - Be descriptive and action-oriented
 - Start with verb: warn, prevent, block, require, check
 
 **enabled** (required): Boolean to activate/deactivate
-
 - `true`: Rule is active
 - `false`: Rule is disabled (won't trigger)
 - Can toggle without deleting rule
 
 **event** (required): Which hook event to trigger on
-
 - `bash`: Bash tool commands
 - `file`: Edit, Write, MultiEdit tools
 - `stop`: When agent wants to stop
@@ -49,19 +46,16 @@ Can include markdown formatting, warnings, suggestions, etc.
 - `all`: All events
 
 **action** (optional): What to do when rule matches
-
 - `warn`: Show message but allow operation (default)
 - `block`: Prevent operation (PreToolUse) or stop session (Stop events)
 - If omitted, defaults to `warn`
 
 **pattern** (simple format): Regex pattern to match
-
 - Used for simple single-condition rules
 - Matches against command (bash) or new_text (file)
 - Python regex syntax
 
 **Example:**
-
 ```yaml
 event: bash
 pattern: rm\s+-rf
@@ -89,7 +83,6 @@ You're adding an API key to a .env file. Ensure this file is in .gitignore!
 ```
 
 **Condition fields:**
-
 - `field`: Which field to check
   - For bash: `command`
   - For file: `file_path`, `new_text`, `old_text`, `content`
@@ -109,14 +102,12 @@ You're adding an API key to a .env file. Ensure this file is in .gitignore!
 The markdown content after frontmatter is shown to Claude when the rule triggers.
 
 **Good messages:**
-
 - Explain what was detected
 - Explain why it's problematic
 - Suggest alternatives or best practices
 - Use formatting for clarity (bold, lists, etc.)
 
 **Example:**
-
 ```markdown
 ⚠️ **Console.log detected!**
 
@@ -149,7 +140,6 @@ Dangerous command detected!
 ```
 
 **Common patterns:**
-
 - Dangerous commands: `rm\s+-rf`, `dd\s+if=`, `mkfs`
 - Privilege escalation: `sudo\s+`, `su\s+`
 - Permission issues: `chmod\s+777`, `chown\s+root`
@@ -161,14 +151,13 @@ Match Edit/Write/MultiEdit operations:
 ```markdown
 ---
 event: file
-pattern: console\.log\(|innerHTML\s*=
+pattern: console\.log\(|eval\(|innerHTML\s*=
 ---
 
 Potentially problematic code pattern detected!
 ```
 
 **Match on different fields:**
-
 ```markdown
 ---
 event: file
@@ -185,9 +174,8 @@ Console.log in TypeScript file!
 ```
 
 **Common patterns:**
-
 - Debug code: `console\.log\(`, `debugger`, `print\(`
-- Security risks: `innerHTML\s*=`, React's dangerous HTML setter
+- Security risks: `eval\(`, `innerHTML\s*=`, `dangerouslySetInnerHTML`
 - Sensitive files: `\.env$`, `credentials`, `\.pem$`
 - Generated files: `node_modules/`, `dist/`, `build/`
 
@@ -208,7 +196,6 @@ Before stopping, verify:
 ```
 
 **Use for:**
-
 - Reminders about required steps
 - Completion checklists
 - Process enforcement
@@ -237,18 +224,15 @@ Production deployment checklist:
 ### Regex Basics
 
 **Literal characters:** Most characters match themselves
-
 - `rm` matches "rm"
 - `console.log` matches "console.log"
 
 **Special characters need escaping:**
-
 - `.` (any char) → `\.` (literal dot)
 - `(` `)` → `\(` `\)` (literal parens)
 - `[` `]` → `\[` `\]` (literal brackets)
 
 **Common metacharacters:**
-
 - `\s` - whitespace (space, tab, newline)
 - `\d` - digit (0-9)
 - `\w` - word character (a-z, A-Z, 0-9, _)
@@ -259,10 +243,10 @@ Production deployment checklist:
 - `|` - OR
 
 **Examples:**
-
-```text
+```
 rm\s+-rf         Matches: rm -rf, rm  -rf
 console\.log\(   Matches: console.log(
+(eval|exec)\(    Matches: eval( or exec(
 chmod\s+777      Matches: chmod 777, chmod  777
 API_KEY\s*=      Matches: API_KEY=, API_KEY =
 ```
@@ -280,23 +264,18 @@ Or use online regex testers (regex101.com with Python flavor).
 ### Common Pitfalls
 
 **Too broad:**
-
 ```yaml
 pattern: log    # Matches "log", "login", "dialog", "catalog"
 ```
-
 Better: `console\.log\(|logger\.`
 
 **Too specific:**
-
 ```yaml
 pattern: rm -rf /tmp  # Only matches exact path
 ```
-
 Better: `rm\s+-rf`
 
 **Escaping issues:**
-
 - YAML quoted strings: `"pattern"` requires double backslashes `\\s`
 - YAML unquoted: `pattern: \s` works as-is
 - **Recommendation**: Use unquoted patterns in YAML
@@ -308,14 +287,12 @@ Better: `rm\s+-rf`
 **Gitignore:** Add `.claude/*.local.md` to `.gitignore`
 
 **Good names:**
-
 - `hookify.dangerous-rm.local.md`
 - `hookify.console-log.local.md`
 - `hookify.require-tests.local.md`
 - `hookify.sensitive-files.local.md`
 
 **Bad names:**
-
 - `hookify.rule1.local.md` (not descriptive)
 - `hookify.md` (missing .local)
 - `danger.local.md` (missing hookify prefix)
@@ -342,10 +319,16 @@ Better: `rm\s+-rf`
 **Temporary:** Set `enabled: false` in frontmatter
 **Permanent:** Delete the `.local.md` file
 
+## Examples
+
+See `${CLAUDE_PLUGIN_ROOT}/examples/` for complete examples:
+- `dangerous-rm.local.md` - Block dangerous rm commands
+- `console-log-warning.local.md` - Warn about console.log
+- `sensitive-files-warning.local.md` - Warn about editing .env files
+
 ## Quick Reference
 
 **Minimum viable rule:**
-
 ```markdown
 ---
 name: my-rule
@@ -358,7 +341,6 @@ Warning message here
 ```
 
 **Rule with conditions:**
-
 ```markdown
 ---
 name: my-rule
@@ -377,7 +359,6 @@ Warning message
 ```
 
 **Event types:**
-
 - `bash` - Bash commands
 - `file` - File edits
 - `stop` - Completion checks
@@ -385,11 +366,9 @@ Warning message
 - `all` - All events
 
 **Field options:**
-
 - Bash: `command`
 - File: `file_path`, `new_text`, `old_text`, `content`
 - Prompt: `user_prompt`
 
 **Operators:**
-
 - `regex_match`, `contains`, `equals`, `not_contains`, `starts_with`, `ends_with`

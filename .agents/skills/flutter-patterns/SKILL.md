@@ -1,220 +1,129 @@
 ---
-id: SKL-flutter-FLUTTERPATTERNS
-name: Flutter Patterns
-description: Flutter development patterns cover project structure, widgets, state
-  management, navigation, and best practices for building cross-platform mobile applications.
-  Effective Flutter development uses prop
-version: 1.0.0
-status: active
-owner: '@cerebra-team'
-last_updated: '2026-02-22'
-category: Backend
-tags:
-- api
-- backend
-- server
-- database
-stack:
-- Python
-- Node.js
-- REST API
-- GraphQL
-difficulty: Intermediate
+name: flutter-patterns
+description: Comprehensive Flutter development patterns covering widgets, testing, performance, security, and animations. Use when you need quick reference for Flutter best practices, common UI patterns, performance optimization techniques, security guidelines, or animation implementations.
 ---
 
 # Flutter Patterns
 
-## Skill Profile
-*(Select at least one profile to enable specific modules)*
-- [ ] **DevOps**
-- [x] **Backend**
-- [ ] **Frontend**
-- [ ] **AI-RAG**
-- [ ] **Security Critical**
+A comprehensive collection of battle-tested Flutter patterns and best practices for building production-quality applications.
 
 ## Overview
-Flutter development patterns cover project structure, widgets, state management, navigation, and best practices for building cross-platform mobile applications. Effective Flutter development uses proper architecture, state management, and platform-specific optimizations.
 
-## Why This Matters
-- **Code Reusability**: Single codebase for multiple platforms
-- **Performance**: Flutter's rendering engine provides smooth animations
-- **Developer Experience**: Hot reload speeds up development
-- **Ecosystem**: Rich package ecosystem for common features
+This skill provides quick-reference patterns for:
+- **Widget Patterns**: Common UI components (cards, lists, forms, dialogs, navigation)
+- **Testing Patterns**: Unit, widget, and integration testing approaches
+- **Performance Patterns**: Optimization techniques and performance checklists
+- **Security Patterns**: Security best practices and vulnerability prevention
+- **Animation Patterns**: Common animation implementations and transitions
 
----
+## When to Use This Skill
 
-## Core Concepts & Rules
+Use this skill when you need:
+- Quick reference for standard Flutter UI patterns
+- Testing strategy guidance and examples
+- Performance optimization checklists
+- Security vulnerability prevention
+- Animation implementation examples
+- Best practices for common Flutter development scenarios
 
-### 1. Core Principles
-- Follow established patterns and conventions
-- Maintain consistency across codebase
-- Document decisions and trade-offs
+## Pattern Categories
 
-### 2. Implementation Guidelines
-- Start with the simplest viable solution
-- Iterate based on feedback and requirements
-- Test thoroughly before deployment
+### Widget Patterns
+See [patterns/flutter-widget-patterns.md](patterns/flutter-widget-patterns.md) for:
+- Card patterns (basic, image, custom)
+- List patterns (lazy loading, sectioned)
+- Form patterns with validation
+- Dialog and bottom sheet patterns
+- Loading and empty states
+- Navigation patterns
+- Responsive layouts
 
+### Testing Patterns
+See [patterns/flutter-testing-patterns.md](patterns/flutter-testing-patterns.md) for:
+- Unit test structure and best practices
+- Widget testing approaches
+- Integration test patterns
+- Mock and stub strategies
+- Test organization and naming conventions
+- Coverage best practices
 
-## Inputs / Outputs / Contracts
-* **Inputs**:
-  - Widget configuration parameters
-  - State data
-  - Navigation routes
-* **Entry Conditions**:
-  - Flutter SDK installed
-  - Project initialized
-  - Dependencies configured
-* **Outputs**:
-  - Rendered UI
-  - State updates
-  - Navigation events
-* **Artifacts Required (Deliverables)**:
-  - Project structure
-  - State management setup
-  - Navigation configuration
-  - Custom widgets
-* **Acceptance Evidence**:
-  - Unit tests for widgets
-  - Widget tests for UI components
-  - Integration tests for navigation
-* **Success Criteria**:
-  - Hot reload works
-  - State updates propagate correctly
-  - Navigation is type-safe
+### Performance Patterns
+See [patterns/flutter-performance-checklist.md](patterns/flutter-performance-checklist.md) for:
+- Build method optimization
+- Widget rebuilding minimization
+- List and grid performance
+- Image loading optimization
+- Memory leak prevention
+- Rendering performance tips
 
-## Skill Composition
-* **Depends on**: [Mobile CI/CD](31-mobile-development/mobile-ci-cd/SKILL.md), [Deep Linking](31-mobile-development/deep-linking/SKILL.md)
-* **Compatible with**: [Push Notifications](31-mobile-development/push-notifications/SKILL.md), [Offline Mode](31-mobile-development/offline-mode/SKILL.md)
-* **Conflicts with**: None
-* **Related Skills**: [Frontend Patterns](02-frontend/), [State Management](02-frontend/)
+### Security Patterns
+See [patterns/flutter-security-patterns.md](patterns/flutter-security-patterns.md) for:
+- Input validation and sanitization
+- Secure storage practices
+- API security best practices
+- Authentication and authorization patterns
+- Data encryption approaches
+- Common vulnerability prevention (XSS, injection, etc.)
 
----
+### Animation Patterns
+See [patterns/flutter-animation-patterns.md](patterns/flutter-animation-patterns.md) for:
+- Basic animation controllers
+- Tween animations
+- Hero animations
+- Page transitions
+- Implicit animations
+- Physics-based animations
+- Custom animation patterns
 
-## Quick Start / Implementation Example
+## Usage Examples
 
-1. Review requirements and constraints
-2. Set up development environment
-3. Implement core functionality following patterns
-4. Write tests for critical paths
-5. Run tests and fix issues
-6. Document any deviations or decisions
-
-```python
-# Example implementation following best practices
-def example_function():
-    # Your implementation here
-    pass
+**Example 1: Need a card UI pattern**
+```
+User: "I need to create a product card with an image and details"
+→ Reference Widget Patterns for image card implementation
 ```
 
+**Example 2: Writing tests**
+```
+User: "How should I structure my widget tests?"
+→ Reference Testing Patterns for widget test examples
+```
 
-## Assumptions / Constraints / Non-goals
+**Example 3: Performance issues**
+```
+User: "My list is laggy when scrolling"
+→ Reference Performance Patterns for list optimization techniques
+```
 
-* **Assumptions**:
-  - Development environment is properly configured
-  - Required dependencies are available
-  - Team has basic understanding of domain
-* **Constraints**:
-  - Must follow existing codebase conventions
-  - Time and resource limitations
-  - Compatibility requirements
-* **Non-goals**:
-  - This skill does not cover edge cases outside scope
-  - Not a replacement for formal training
+**Example 4: Security concern**
+```
+User: "How do I securely store user credentials?"
+→ Reference Security Patterns for secure storage approaches
+```
 
+**Example 5: Adding animations**
+```
+User: "I want to animate a page transition"
+→ Reference Animation Patterns for page transition examples
+```
 
-## Compatibility & Prerequisites
+## Pattern Quality
 
-* **Supported Versions**:
-  - Python 3.8+
-  - Node.js 16+
-  - Modern browsers (Chrome, Firefox, Safari, Edge)
-* **Required AI Tools**:
-  - Code editor (VS Code recommended)
-  - Testing framework appropriate for language
-  - Version control (Git)
-* **Dependencies**:
-  - Language-specific package manager
-  - Build tools
-  - Testing libraries
-* **Environment Setup**:
-  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
+All patterns in this skill are:
+- ✓ Production-tested and battle-proven
+- ✓ Following Flutter best practices
+- ✓ Performance-optimized
+- ✓ Security-conscious
+- ✓ Well-documented with code examples
 
+## Quick Access
 
-## Test Scenario Matrix (QA Strategy)
+For fast pattern lookup, each category file is self-contained with:
+- Complete, runnable code examples
+- Explanation of when to use each pattern
+- Common pitfalls and how to avoid them
+- Performance and security considerations
 
-| Type | Focus Area | Required Scenarios / Mocks |
-| :--- | :--- | :--- |
-| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
-| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
-| **E2E** | User Journey | Critical user flows to test |
-| **Performance** | Latency / Load | Benchmark requirements |
-| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
-| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
+---
 
-
-## Technical Guardrails & Security Threat Model
-
-### 1. Security & Privacy (Threat Model)
-* **Top Threats**: Injection attacks, authentication bypass, data exposure
-- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
-- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
-- [ ] **Authorization**: Validate user permissions before state changes
-
-### 2. Performance & Resources
-- [ ] **Execution Efficiency**: Consider time complexity for algorithms
-- [ ] **Memory Management**: Use streams/pagination for large data
-- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
-
-### 3. Architecture & Scalability
-- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
-- [ ] **Modularity**: Decouple logic from UI/Frameworks
-
-### 4. Observability & Reliability
-- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
-- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
-- [ ] **Error Handling**: Standardized error codes, no bare except
-- [ ] **Observability Artifacts**:
-    - **Log Fields**: timestamp, level, message, request_id
-    - **Metrics**: request_count, error_count, response_time
-    - **Dashboards/Alerts**: High Error Rate > 5%
-
-
-## Agent Directives & Error Recovery
-*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
-
-- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
-- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
-- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
-- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
-
-
-## Definition of Done (DoD) Checklist
-
-- [ ] Tests passed + coverage met
-- [ ] Lint/Typecheck passed
-- [ ] Logging/Metrics/Trace implemented
-- [ ] Security checks passed
-- [ ] Documentation/Changelog updated
-- [ ] Accessibility/Performance requirements met (if frontend)
-
-
-## Anti-patterns / Pitfalls
-
-* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
-* ⚠️ **Watch out for**: Common symptoms and quick fixes
-* 💡 **Instead**: Use proper error handling, pagination, and logging
-
-
-## Reference Links & Examples
-
-* Internal documentation and examples
-* Official documentation and best practices
-* Community resources and discussions
-
-
-## Versioning & Changelog
-
-* **Version**: 1.0.0
-* **Changelog**:
-  - 2026-02-22: Initial version with complete template structure
+**Pro tip**: Combine patterns from different categories for comprehensive solutions. For example, use Widget Patterns + Performance Patterns + Security Patterns together when building production features.

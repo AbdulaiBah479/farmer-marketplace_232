@@ -1,70 +1,53 @@
 ---
-name: spring-boot-security
-description: Spring Security 7 implementation for Spring Boot 4. Use when configuring authentication, authorization, OAuth2/JWT resource servers, method security, or CORS/CSRF. Covers the mandatory Lambda DSL migration, SecurityFilterChain patterns, @PreAuthorize, and password encoding. For testing secured endpoints, see spring-boot-testing skill.
+name: Spring Boot Security
+description: Spring Security 6+ standards, Lambda DSL, and Hardening
+metadata:
+  labels: [spring-boot, security, oauth2, jwt]
+  triggers:
+    files: ['**/*SecurityConfig.java', '**/*Filter.java']
+    keywords: [security-filter-chain, lambda-dsl, csrf, cors]
 ---
 
-# Spring Security 7 for Spring Boot 4
+# Spring Boot Security Standards
 
-Implements authentication and authorization with Spring Security 7's mandatory Lambda DSL.
+## **Priority: P0 (CRITICAL)**
 
-## Critical Breaking Changes
+## Implementation Guidelines
 
-| Removed API | Replacement | Status |
-|-------------|-------------|--------|
-| `and()` method | Lambda DSL closures | **Required** |
-| `authorizeRequests()` | `authorizeHttpRequests()` | **Required** |
-| `antMatchers()` | `requestMatchers()` | **Required** |
-| `WebSecurityConfigurerAdapter` | `SecurityFilterChain` bean | **Required** |
-| `@EnableGlobalMethodSecurity` | `@EnableMethodSecurity` | **Required** |
+### Configuration (Spring Security 6+)
 
-## Core Workflow
+- **Lambda DSL**: ALWAYS use Lambda DSL (`.authorizeHttpRequests(auth -> ...)`) for readability.
+- **SecurityFilterChain**: Expose as `@Bean`. Do not extend `WebSecurityConfigurerAdapter`.
+- **Statelessness**: Enforce `SessionCreationPolicy.STATELESS` for REST APIs.
 
-1. **Create SecurityFilterChain bean** → Configure with Lambda DSL
-2. **Define authorization rules** → `authorizeHttpRequests()` with `requestMatchers()`
-3. **Configure authentication** → Form login, HTTP Basic, or OAuth2
-4. **Add method security** → `@EnableMethodSecurity` + `@PreAuthorize`
-5. **Handle CORS/CSRF** → Configure for REST APIs
+### JWT Best Practices
 
-## Quick Patterns
+- **Algorithm**: Enforce `RS256` or `HS256`. **Reject `none` algorithm** explicitly in JWT configuration.
+- **Claims**: Validate `iss`, `aud`, and `exp` claims.
+- **Tokens**: Short-lived access tokens (15m), secure refresh tokens.
 
-See [EXAMPLES.md](EXAMPLES.md) for complete working examples including:
-- **REST API Security** with JWT/OAuth2 (Java + Kotlin)
-- **Form Login with Session Security** and CSRF
-- **Method Security** with @PreAuthorize and SpEL
-- **CORS Configuration** for cross-origin APIs
-- **Password Encoder** (Argon2 for Security 7)
+### Hardening
 
-## Spring Boot 4 Specifics
+- **CSRF**: Disable for stateless APIs. Enable + Cookie for Browser Apps.
+- **CORS**: Explain allowed origins. NEVER use `*` with credentials.
+- **Headers**: Enable default headers (HSTS, Content-Type-Options).
 
-- **Lambda DSL** is mandatory (no `and()` chaining)
-- **Argon2** password encoder: `Argon2PasswordEncoder.defaultsForSpring7()`
-- **CSRF for SPAs**: `CookieCsrfTokenRepository.withHttpOnlyFalse()`
-- **@EnableMethodSecurity** replaces `@EnableGlobalMethodSecurity`
+### Authorization
 
-## Detailed References
+- **Method Security**: Use `@EnableMethodSecurity`.
+- **Annotations**: Prefer `@PreAuthorize` over URL matching.
 
-- **Examples**: See [EXAMPLES.md](EXAMPLES.md) for complete working code examples
-- **Troubleshooting**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues and Boot 4 migration
-- **Security Configuration**: See [references/SECURITY-CONFIG.md](references/SECURITY-CONFIG.md) for complete SecurityFilterChain patterns
-- **Authentication**: See [references/AUTHENTICATION.md](references/AUTHENTICATION.md) for UserDetailsService, password encoding
-- **JWT/OAuth2**: See [references/JWT-OAUTH2.md](references/JWT-OAUTH2.md) for resource server, token validation
+## Anti-Patterns
 
-## Anti-Pattern Checklist
+- **Adapter Extension**: `**No Adapter**: Use SecurityFilterChain bean.`
+- **Chained Calls**: `**No .and()**: Use Lambda DSL.`
+- **Hardcoded Secrets**: `**No Secrets**: Use Vault/Env.`
+- **Legacy Matchers**: `**No antMatchers**: Use requestMatchers.`
 
-| Anti-Pattern | Fix |
-|--------------|-----|
-| Using `and()` chaining | Use Lambda DSL closures |
-| `antMatchers()` | Replace with `requestMatchers()` |
-| `authorizeRequests()` | Replace with `authorizeHttpRequests()` |
-| CSRF disabled without JWT | Keep CSRF for session-based auth |
-| Hardcoded credentials | Use environment variables or Secret Manager |
-| `permitAll()` on sensitive endpoints | Audit all permit rules |
-| Missing `authenticated()` default | End with `.anyRequest().authenticated()` |
+## References
 
-## Critical Reminders
+- [Implementation Examples](references/implementation.md)
 
-1. **Lambda DSL is mandatory** — No more `and()` chaining in Security 7
-2. **Order matters** — More specific `requestMatchers` before general ones
-3. **CSRF for sessions** — Only disable for stateless JWT APIs
-4. **Method security needs enabling** — Add `@EnableMethodSecurity`
-5. **Test security configuration** — Use `@WithMockUser` and JWT test support (see `spring-boot-testing`)
+## Related Topics
+
+common/security-standards | architecture

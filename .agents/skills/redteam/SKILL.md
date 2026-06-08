@@ -1,103 +1,126 @@
 ---
-name: RedTeam
-description: Adversarial analysis with 32 agents. USE WHEN red team, attack idea, counterarguments, critique, stress test. SkillSearch('redteam') for docs.
+name: redteam
+description: Red team adversarial analysis to find weaknesses, vulnerabilities, and failure modes. Use before launches, for security review, or when a plan feels too perfect.
+user-invocable: true
 ---
 
-## Customization
+# Red Team Analysis
 
-**Before executing, check for user customizations at:**
-`~/.claude/skills/PAI/USER/SKILLCUSTOMIZATIONS/RedTeam/`
+Conduct an adversarial analysis to find weaknesses, vulnerabilities, and failure modes in a plan, system, or strategy.
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
+## Instructions
 
+Think like an attacker. Your job is to break this, find the gaps, and expose what could go wrong. Be thorough and creative in your attacks.
 
-## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
+### Output Format
 
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
-
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:8888/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the RedTeam skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
-
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **RedTeam** skill to ACTION...
-   ```
-
-**This is not optional. Execute this curl command immediately upon skill invocation.**
-
-# RedTeam Skill
-
-Military-grade adversarial analysis using parallel agent deployment. Breaks arguments into atomic components, attacks from 32 expert perspectives (engineers, architects, pentesters, interns), synthesizes findings, and produces devastating counter-arguments with steelman representations.
-
-
-## Workflow Routing
-
-Route to the appropriate workflow based on the request.
-
-**When executing a workflow, output this notification directly:**
-
-```
-Running the **WorkflowName** workflow in the **RedTeam** skill to ACTION...
-```
-
-| Trigger | Workflow |
-|---------|----------|
-| Red team analysis (stress-test existing content) | `Workflows/ParallelAnalysis.md` |
-| Adversarial validation (produce new content via competition) | `Workflows/AdversarialValidation.md` |
+**Target**: [What we're attacking]
+**Objective**: [What would "breaking it" look like?]
 
 ---
 
-## Quick Reference
+## Target Understanding
 
-| Workflow | Purpose | Output |
-|----------|---------|--------|
-| **ParallelAnalysis** | Stress-test existing content | Steelman + Counter-argument (8-points each) |
-| **AdversarialValidation** | Produce new content via competition | Synthesized solution from competing proposals |
+**Summary of the Plan/System**
+[Brief description of what we're analyzing]
 
-**The Five-Phase Protocol (ParallelAnalysis):**
-1. **Decomposition** - Break into 24 atomic claims
-2. **Parallel Analysis** - 32 agents examine strengths AND weaknesses
-3. **Synthesis** - Identify convergent insights
-4. **Steelman** - Strongest version of the argument
-5. **Counter-Argument** - Strongest rebuttal
+**Key Assumptions**
+- [Assumption 1]
+- [Assumption 2]
 
 ---
 
-## Context Files
+## Attack Surface Analysis
 
-- `Philosophy.md` - Core philosophy, success criteria, agent types
-- `Integration.md` - Skill integration, FirstPrinciples usage, output format
-
----
-
-## Examples
-
-**Attack an architecture proposal:**
-```
-User: "red team this microservices migration plan"
---> Workflows/ParallelAnalysis.md
---> Returns steelman + devastating counter-argument (8 points each)
-```
-
-**Devil's advocate on a business decision:**
-```
-User: "poke holes in my plan to raise prices 20%"
---> Workflows/ParallelAnalysis.md
---> Surfaces the ONE core issue that could collapse the plan
-```
-
-**Adversarial validation for content:**
-```
-User: "battle of bots - which approach is better for this feature?"
---> Workflows/AdversarialValidation.md
---> Synthesizes best solution from competing ideas
-```
+**Entry Points / Vulnerabilities**
+| Vector | Description | Severity |
+|--------|-------------|----------|
+| [attack vector] | [how it could be exploited] | Critical/High/Med/Low |
 
 ---
 
-**Last Updated:** 2025-12-20
+## Failure Mode Analysis
+
+### Technical/Operational Failures
+| Failure Mode | Trigger | Impact |
+|--------------|---------|--------|
+| [what could fail] | [what causes it] | [effect] |
+
+### Human Failures
+| Failure Mode | Trigger | Impact |
+|--------------|---------|--------|
+| [human error] | [situation] | [consequence] |
+
+---
+
+## Adversary Scenarios
+
+**If I wanted this to fail, I would...**
+
+### Scenario 1: [Attack Name]
+- **Attack method**: [how they'd do it]
+- **Likelihood of success**: [High/Med/Low]
+- **Impact if successful**: [consequences]
+
+### Scenario 2: [Attack Name]
+- **Attack method**: [how]
+- **Likelihood of success**: [High/Med/Low]
+- **Impact if successful**: [consequences]
+
+---
+
+## Assumption Attacks
+
+| Assumption | Attack | What If Wrong? |
+|------------|--------|----------------|
+| [assumption] | [challenge to it] | [consequences] |
+
+---
+
+## Blind Spot Analysis
+
+**What are we not seeing?**
+- [Blind spot 1]
+- [Blind spot 2]
+
+**What are we too optimistic about?**
+- [Over-optimism 1]
+
+---
+
+## Red Team Findings
+
+### Critical Vulnerabilities (Must Address)
+| Vulnerability | Risk | Mitigation |
+|---------------|------|-----------|
+| [vulnerability] | [risk level] | [how to fix] |
+
+### High-Priority Concerns
+| Concern | Recommendation |
+|---------|----------------|
+| [concern] | [recommendation] |
+
+---
+
+## Hardening Recommendations
+
+**Immediate actions**:
+1. [Action 1]
+2. [Action 2]
+
+**Ongoing monitoring**:
+1. [What to watch]
+
+---
+
+**Bottom Line**
+> [Is this plan/system ready? What must change?]
+
+## Guidelines
+
+- Be adversarial, not just critical
+- Think creatively—real attackers don't follow rules
+- Look for cascading failures
+- The goal is to make it stronger, not just find flaws
+
+$ARGUMENTS

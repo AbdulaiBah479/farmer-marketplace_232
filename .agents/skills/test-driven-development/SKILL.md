@@ -1,371 +1,238 @@
 ---
-name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+name: Test-Driven Development
+description: This skill should be used when the user asks to "implement TDD", "write tests first", "follow RED-GREEN-REFACTOR", "use test-driven development", "create failing tests", or mentions TDD workflow patterns.
+version: 1.0.0
 ---
 
-# Test-Driven Development (TDD)
+# Test-Driven Development (TDD) Workflow
 
 ## Overview
 
-Write the test first. Watch it fail. Write minimal code to pass.
+Test-Driven Development enforces the RED → GREEN → REFACTOR discipline to ensure robust, well-tested code with clean design. This skill guides implementation of the three-phase TDD cycle for both Python and TypeScript/JavaScript codebases.
 
-**Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
+## TDD Three-Phase Cycle
 
-**Violating the letter of the rules is violating the spirit of the rules.**
+### Phase 1: RED - Write Failing Test
 
-## When to Use
+Write the smallest possible test that fails for the right reason.
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+**Principles:**
+- Test documents the intended behavior
+- Test must fail initially (verify failure)
+- Focus on one specific behavior per test
+- Use descriptive test names that explain the "should"
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
-
-Thinking "skip TDD just this once"? Stop. That's rationalization.
-
-## The Iron Law
-
+**Test Structure:**
 ```
-NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+// Arrange - Set up test data
+// Act - Execute the behavior
+// Assert - Verify the result
 ```
 
-Write code before the test? Delete it. Start over.
+### Phase 2: GREEN - Make Test Pass
 
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
+Write the minimal implementation to make the test pass.
 
-Implement fresh from tests. Period.
+**Principles:**
+- Implement only what's needed for the test to pass
+- Don't optimize or refactor yet
+- Hardcode values if necessary
+- Focus on correctness, not elegance
 
-## Red-Green-Refactor
+### Phase 3: REFACTOR - Clean Up Code
 
-```dot
-digraph tdd_cycle {
-    rankdir=LR;
-    red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
-    verify_red [label="Verify fails\ncorrectly", shape=diamond];
-    green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
-    refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
-    next [label="Next", shape=ellipse];
+Improve the code while keeping tests green.
 
-    red -> verify_red;
-    verify_red -> green [label="yes"];
-    verify_red -> red [label="wrong\nfailure"];
-    green -> verify_green;
-    verify_green -> refactor [label="yes"];
-    verify_green -> green [label="no"];
-    refactor -> verify_green [label="stay\ngreen"];
-    verify_green -> next;
-    next -> red;
-}
-```
-
-### RED - Write Failing Test
-
-Write one minimal test showing what should happen.
-
-<Good>
-```typescript
-test('retries failed operations 3 times', async () => {
-  let attempts = 0;
-  const operation = () => {
-    attempts++;
-    if (attempts < 3) throw new Error('fail');
-    return 'success';
-  };
-
-  const result = await retryOperation(operation);
-
-  expect(result).toBe('success');
-  expect(attempts).toBe(3);
-});
-```
-Clear name, tests real behavior, one thing
-</Good>
-
-<Bad>
-```typescript
-test('retry works', async () => {
-  const mock = jest.fn()
-    .mockRejectedValueOnce(new Error())
-    .mockRejectedValueOnce(new Error())
-    .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
-});
-```
-Vague name, tests mock not code
-</Bad>
-
-**Requirements:**
-- One behavior
-- Clear name
-- Real code (no mocks unless unavoidable)
-
-### Verify RED - Watch It Fail
-
-**MANDATORY. Never skip.**
-
-```bash
-npm test path/to/test.test.ts
-```
-
-Confirm:
-- Test fails (not errors)
-- Failure message is expected
-- Fails because feature missing (not typos)
-
-**Test passes?** You're testing existing behavior. Fix test.
-
-**Test errors?** Fix error, re-run until it fails correctly.
-
-### GREEN - Minimal Code
-
-Write simplest code to pass the test.
-
-<Good>
-```typescript
-async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
-  for (let i = 0; i < 3; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (i === 2) throw e;
-    }
-  }
-  throw new Error('unreachable');
-}
-```
-Just enough to pass
-</Good>
-
-<Bad>
-```typescript
-async function retryOperation<T>(
-  fn: () => Promise<T>,
-  options?: {
-    maxRetries?: number;
-    backoff?: 'linear' | 'exponential';
-    onRetry?: (attempt: number) => void;
-  }
-): Promise<T> {
-  // YAGNI
-}
-```
-Over-engineered
-</Bad>
-
-Don't add features, refactor other code, or "improve" beyond the test.
-
-### Verify GREEN - Watch It Pass
-
-**MANDATORY.**
-
-```bash
-npm test path/to/test.test.ts
-```
-
-Confirm:
-- Test passes
-- Other tests still pass
-- Output pristine (no errors, warnings)
-
-**Test fails?** Fix code, not test.
-
-**Other tests fail?** Fix now.
-
-### REFACTOR - Clean Up
-
-After green only:
+**Focus Areas:**
+- Extract repeated logic into functions
+- Improve naming and readability
+- Apply SOLID principles
 - Remove duplication
-- Improve names
-- Extract helpers
+- Optimize performance if needed
 
-Keep tests green. Don't add behavior.
+**Safety Net:** Run tests after each refactoring step.
 
-### Repeat
+## Implementation Workflow
 
-Next failing test for next feature.
+### Step 1: Understand Requirements
+- Clarify the feature's expected behavior
+- Identify edge cases and error conditions
+- Define acceptance criteria
 
-## Good Tests
+### Step 2: Write Integration Test First
+- Start with a higher-level test that describes user behavior
+- Use realistic test data and scenarios
+- Focus on the public interface
 
-| Quality | Good | Bad |
-|---------|------|-----|
-| **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
-| **Clear** | Name describes behavior | `test('test1')` |
-| **Shows intent** | Demonstrates desired API | Obscures what code should do |
+### Step 3: Follow TDD for Implementation
+- Write unit test (RED)
+- Implement minimal solution (GREEN)
+- Refactor and clean up (REFACTOR)
+- Repeat for each behavior
 
-## Why Order Matters
+### Step 4: Verify Complete Coverage
+- Run coverage report
+- Ensure all new code paths are tested
+- Add tests for any missing edge cases
 
-**"I'll write tests after to verify it works"**
+## Test Categories
 
-Tests written after code pass immediately. Passing immediately proves nothing:
-- Might test wrong thing
-- Might test implementation, not behavior
-- Might miss edge cases you forgot
-- You never saw it catch the bug
+### Unit Tests
+- Test individual functions/methods in isolation
+- Use mocks for external dependencies
+- Fast execution (< 100ms each)
+- High coverage of business logic
 
-Test-first forces you to see the test fail, proving it actually tests something.
+### Integration Tests
+- Test component interactions
+- Use real database/API connections where appropriate
+- Validate end-to-end workflows
+- Slower but comprehensive
 
-**"I already manually tested all the edge cases"**
+### Edge Case Tests
+- Null/undefined inputs
+- Empty collections
+- Boundary values (min/max)
+- Error conditions and exceptions
 
-Manual testing is ad-hoc. You think you tested everything but:
-- No record of what you tested
-- Can't re-run when code changes
-- Easy to forget cases under pressure
-- "It worked when I tried it" ≠ comprehensive
+## Language-Specific Patterns
 
-Automated tests are systematic. They run the same way every time.
+### Python (pytest)
+```python
+def test_should_calculate_total_with_tax():
+    # Arrange
+    cart = ShoppingCart()
+    cart.add_item("item1", price=100.00)
 
-**"Deleting X hours of work is wasteful"**
+    # Act
+    total = cart.calculate_total(tax_rate=0.08)
 
-Sunk cost fallacy. The time is already gone. Your choice now:
-- Delete and rewrite with TDD (X more hours, high confidence)
-- Keep it and add tests after (30 min, low confidence, likely bugs)
+    # Assert
+    assert total == 108.00
+```
 
-The "waste" is keeping code you can't trust. Working code without real tests is technical debt.
-
-**"TDD is dogmatic, being pragmatic means adapting"**
-
-TDD IS pragmatic:
-- Finds bugs before commit (faster than debugging after)
-- Prevents regressions (tests catch breaks immediately)
-- Documents behavior (tests show how to use code)
-- Enables refactoring (change freely, tests catch breaks)
-
-"Pragmatic" shortcuts = debugging in production = slower.
-
-**"Tests after achieve the same goals - it's spirit not ritual"**
-
-No. Tests-after answer "What does this do?" Tests-first answer "What should this do?"
-
-Tests-after are biased by your implementation. You test what you built, not what's required. You verify remembered edge cases, not discovered ones.
-
-Tests-first force edge case discovery before implementing. Tests-after verify you remembered everything (you didn't).
-
-30 minutes of tests after ≠ TDD. You get coverage, lose proof tests work.
-
-## Common Rationalizations
-
-| Excuse | Reality |
-|--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" |
-| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
-| "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
-| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
-| "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
-| "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
-| "Existing code has no tests" | You're improving it. Add tests for existing code. |
-
-## Red Flags - STOP and Start Over
-
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
-
-## Example: Bug Fix
-
-**Bug:** Empty email accepted
-
-**RED**
+### TypeScript (Jest)
 ```typescript
-test('rejects empty email', async () => {
-  const result = await submitForm({ email: '' });
-  expect(result.error).toBe('Email required');
+describe('ShoppingCart', () => {
+  it('should calculate total with tax', () => {
+    // Arrange
+    const cart = new ShoppingCart();
+    cart.addItem('item1', 100.00);
+
+    // Act
+    const total = cart.calculateTotal(0.08);
+
+    // Assert
+    expect(total).toBe(108.00);
+  });
 });
 ```
 
-**Verify RED**
-```bash
-$ npm test
-FAIL: expected 'Email required', got undefined
-```
+## Quality Gates
 
-**GREEN**
-```typescript
-function submitForm(data: FormData) {
-  if (!data.email?.trim()) {
-    return { error: 'Email required' };
-  }
-  // ...
-}
-```
+### Before Moving to GREEN
+- [ ] Test fails for the right reason
+- [ ] Test name clearly describes the behavior
+- [ ] Test is minimal and focused
+- [ ] All existing tests still pass
 
-**Verify GREEN**
-```bash
-$ npm test
-PASS
-```
+### Before Moving to REFACTOR
+- [ ] New test passes
+- [ ] Implementation is minimal
+- [ ] No over-engineering
+- [ ] All tests still pass
 
-**REFACTOR**
-Extract validation for multiple fields if needed.
-
-## Verification Checklist
-
-Before marking work complete:
-
-- [ ] Every new function/method has a test
-- [ ] Watched each test fail before implementing
-- [ ] Each test failed for expected reason (feature missing, not typo)
-- [ ] Wrote minimal code to pass each test
+### After REFACTOR
+- [ ] Code is clean and readable
+- [ ] No duplication
+- [ ] SOLID principles applied
 - [ ] All tests pass
-- [ ] Output pristine (no errors, warnings)
-- [ ] Tests use real code (mocks only if unavoidable)
-- [ ] Edge cases and errors covered
+- [ ] Coverage maintained
 
-Can't check all boxes? You skipped TDD. Start over.
+## Common Pitfalls to Avoid
 
-## When Stuck
+### Writing Too Much Code in GREEN
+**Problem:** Implementing multiple features at once
+**Solution:** Write only enough code to make the current test pass
 
-| Problem | Solution |
-|---------|----------|
-| Don't know how to test | Write wished-for API. Write assertion first. Ask your human partner. |
-| Test too complicated | Design too complicated. Simplify interface. |
-| Must mock everything | Code too coupled. Use dependency injection. |
-| Test setup huge | Extract helpers. Still complex? Simplify design. |
+### Skipping the RED Phase
+**Problem:** Writing tests after implementation
+**Solution:** Always write failing test first, verify it fails
 
-## Debugging Integration
+### Not Refactoring
+**Problem:** Accumulating technical debt
+**Solution:** Refactor immediately after GREEN, while context is fresh
 
-Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression.
+### Testing Implementation Details
+**Problem:** Tests break when refactoring
+**Solution:** Test public behavior, not internal implementation
 
-Never fix bugs without a test.
+## Tools and Commands
 
-## Testing Anti-Patterns
+### Running Tests
+```bash
+# Python
+pytest --cov=src tests/
+pytest -v --cov-report=html
 
-When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
-
-## Final Rule
-
+# TypeScript/Jest
+npm test
+npm run test:coverage
+npm run test:watch
 ```
-Production code → test exists and failed first
-Otherwise → not TDD
-```
 
-No exceptions without your human partner's permission.
+### Coverage Thresholds
+- **Lines:** 80% minimum
+- **Branches:** 80% minimum
+- **Functions:** 90% minimum
+- **New code:** 100% coverage required
+
+## Additional Resources
+
+### Reference Files
+For detailed patterns and advanced techniques, consult:
+- **`references/tdd-patterns.md`** - Common TDD patterns and best practices
+- **`references/testing-pyramid.md`** - Testing strategy and test types
+- **`references/mocking-strategies.md`** - Mock patterns for different scenarios
+
+### Example Files
+Working TDD examples in `examples/`:
+- **`examples/python-tdd-example.py`** - Complete Python TDD workflow
+- **`examples/typescript-tdd-example.ts`** - TypeScript TDD implementation
+- **`examples/api-endpoint-tdd.py`** - TDD for API endpoints
+
+### Scripts
+Utility scripts in `scripts/`:
+- **`scripts/run-tdd-cycle.sh`** - Automated TDD cycle runner
+- **`scripts/coverage-check.sh`** - Coverage validation script
+- **`scripts/test-watch.sh`** - Watch mode for continuous testing
+
+## TDD in Context
+
+### When to Use TDD
+- New feature development
+- Bug fixes with regression tests
+- Refactoring existing code
+- API design and validation
+
+### When to Consider Alternatives
+- Exploratory coding/prototyping
+- UI/UX experimentation
+- Performance optimization spikes
+- External system integration discovery
+
+## Success Metrics
+
+### Quantitative
+- Code coverage > 80%
+- Test execution time < 5 minutes
+- Test failure rate < 5%
+- Defect density reduction
+
+### Qualitative
+- Confidence in refactoring
+- Clear behavior documentation
+- Faster debugging cycles
+- Improved code design
+
+Apply TDD discipline consistently to build robust, maintainable code with comprehensive test coverage and clean architecture.

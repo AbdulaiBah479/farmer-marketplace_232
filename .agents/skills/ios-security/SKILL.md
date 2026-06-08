@@ -1,36 +1,46 @@
 ---
-name: ios-security
-description: "iOSアプリのセキュリティレビュー。OWASP Mobile Top 10、App Transport Security、Keychain使用をチェック。Use when: セキュリティ、脆弱性、認証、Keychain、ATS を依頼された時。"
+name: iOS Security
+description: Standards for Keychain, Biometrics, and Data Protection.
+metadata:
+  labels: [ios, security, keychain, encryption]
+  triggers:
+    files: ['**/*.swift']
+    keywords:
+      [SecItemAdd, kSecClassGenericPassword, LAContext, LocalAuthentication]
 ---
 
-# iOS セキュリティレビュー
+# iOS Security Standards
 
-## OWASP Mobile Top 10 チェック項目
+## **Priority: P0 (CRITICAL)**
 
-| ID | リスク | チェック内容 |
-|----|-------|-------------|
-| M1 | Improper Platform Usage | Info.plist の ATS設定、権限の最小化 |
-| M2 | Insecure Data Storage | Keychain使用、UserDefaults に機密情報なし |
-| M3 | Insecure Communication | HTTPS強制、証明書ピンニング |
-| M4 | Insecure Authentication | BiometricなしのKeychain保護、Token管理 |
+## Implementation Guidelines
 
-## Swift セキュリティパターン
+### Key Storage
 
-### 機密情報の保存
-- [ ] パスワード・トークンはKeychainに保存
-- [ ] UserDefaultsに機密情報を保存していない
-- [ ] ハードコードされたAPIキー・シークレットがない
+- **Keychain**: Use for sensitive tokens, passwords, and identifiers (UUIDs). Never store in `UserDefaults`.
+- **Valet**: Use high-level wrappers like SwiftKeychainWrapper or Valet to avoid raw Security.framework C-APIs.
+- **Biometrics**: Use `LocalAuthentication` for FaceID/TouchID. Verify availability with `canEvaluatePolicy(_:error:)` before evaluation.
 
-### 通信セキュリティ
-- [ ] Info.plistでATSが無効化されていない
-- [ ] URLSessionでカスタム証明書検証を適切に実装
-- [ ] デバッグ用のログに機密情報を出力していない
+### Data Protection
 
-### コード検査パターン
-```bash
-# ハードコード検索
-grep -rn "password\|secret\|apiKey\|api_key" Sources/
+- **File Encryption**: Use `Data.WritingOptions.completeFileProtection` when saving files to disk.
+- **App Sandboxing**: Respect the sandbox; do not attempt to access files outside of your container.
 
-# print/NSLogの確認（本番では削除推奨）
-grep -rn "print(\|NSLog(" Sources/
-```
+### Network Security
+
+- **ATS**: Don't disable App Transport Security (ATS) globally in `Info.plist`. Use exceptions only if strictly necessary.
+- **SSL Pinning**: Use TrustKit or Alamofire pinning for backend-critical applications.
+
+## Anti-Patterns
+
+- **UserDefaults for Secrets**: `**No Secrets in UserDefaults**: Use Keychain.`
+- **Ignoring LA Error Handles**: `**Handle LAError**: Check for userCancel, authenticationFailed, etc.`
+- **Print Tokens**: `**No logging of PII/Tokens**: Ensure logs are stripped in Release builds.`
+
+## References
+
+- [Keychain & Biometrics Implementation](references/implementation.md)
+
+## Related Topics
+
+common/security-standards | architecture

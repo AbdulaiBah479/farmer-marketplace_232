@@ -1,105 +1,43 @@
 ---
-name: Iterm2
-description: iTerm2 terminal emulator and tmux multiplexer expertise. USE WHEN user mentions iTerm2, tmux, terminal sessions, split panes, window management, OR terminal productivity on macOS.
+name: iterm2
+description: iTerm2 macOS terminal emulator. Use for terminal work.
 ---
 
-# Iterm2
+# iTerm2
 
-Complete reference for iTerm2 terminal emulator and tmux terminal multiplexer on macOS. Covers keyboard shortcuts, configuration, tmux integration, and productivity workflows.
+iTerm2 is the power-user terminal for Mac. v3.5/3.6 (2025) adds **AI Integration** (OpenAI key) and a built-in **Web Browser** panel.
 
-## Workflow Routing
+## When to Use
 
-**When executing a workflow, do BOTH of these:**
+- **macOS Power User**: Split panes, hotkey window (Quake style), search.
+- **Remote Integration**: Shell integration allows downloading files via drag-drop from SSH.
 
-1. **Call the notification script** (for observability tracking):
-   ```bash
-   ~/.claude/Tools/SkillWorkflowNotification WORKFLOWNAME Iterm2
-   ```
+## Core Concepts
 
-2. **Output the text notification** (for user visibility):
-   ```
-   Running the **WorkflowName** workflow from the **Iterm2** skill...
-   ```
+### Profiles
 
-| Workflow | Trigger | File |
-|----------|---------|------|
-| **SetupTmux** | "setup tmux", "configure tmux" | `workflows/SetupTmux.md` |
-| **TmuxSession** | "tmux session", "attach session", "detach" | `workflows/TmuxSession.md` |
-| **TroubleshootTmux** | "tmux not working", "fix tmux" | `workflows/TroubleshootTmux.md` |
+Define colors, fonts, and keyboard behavior per environment.
 
-## Examples
+### Triggers
 
-**Example 1: Split terminal into multiple panes**
-```
-User: "How do I split my terminal in iTerm2?"
-→ References Shortcuts.md
-→ Explains Cmd+D (vertical) and Cmd+Shift+D (horizontal)
-→ Shows navigation with Cmd+Option+Arrow
-```
+Regex that watches output and performs actions (e.g., highlight "Error", run a script, ring incomplete).
 
-**Example 2: Setup tmux with iTerm2 integration**
-```
-User: "How do I use tmux with iTerm2?"
-→ Invokes SetupTmux workflow
-→ Explains tmux -CC control mode
-→ Shows native window integration benefits
-```
+### Tmux Integration
 
-**Example 3: Manage persistent sessions over SSH**
-```
-User: "Keep my terminal running after disconnect"
-→ Invokes TmuxSession workflow
-→ Creates named session with tmux new -s
-→ Shows how to reattach after disconnect
-```
+`tmux -CC` makes remote tmux sessions appear as native iTerm2 windows/tabs.
 
-## Quick Reference
+## Best Practices (2025)
 
-### iTerm2 Essentials
+**Do**:
 
-| Action | Shortcut |
-|--------|----------|
-| Split Vertical | `Cmd+D` |
-| Split Horizontal | `Cmd+Shift+D` |
-| Navigate Panes | `Cmd+Option+Arrow` |
-| Maximize Pane | `Cmd+Shift+Enter` |
-| Next/Prev Tab | `Cmd+{` / `Cmd+}` |
-| Find | `Cmd+F` |
-| Autocomplete | `Cmd+;` |
-| Paste History | `Cmd+Shift+H` |
-| Instant Replay | `Cmd+Option+B` |
-| Find Cursor | `Cmd+/` |
+- **Use Shell Integration**: Install it to enable features like "Status Bar" on the prompt line.
+- **Use "Composer"**: Like Warp, iTerm2 has an input composer window (`Cmd+Shift+C`).
+- **Map Option to Meta**: Ensure `Option` key acts as `Esc+` for proper Emacs/Vim navigation.
 
-### tmux Essentials
+**Don't**:
 
-Default prefix: `Ctrl+b`
+- **Don't ignore the GPU renderer**: Enable Metal renderer for performance.
 
-| Action | Shortcut |
-|--------|----------|
-| New Session | `tmux new -s name` |
-| List Sessions | `tmux ls` or `Ctrl+b s` |
-| Attach Session | `tmux attach -t name` |
-| Detach | `Ctrl+b d` |
-| New Window | `Ctrl+b c` |
-| Split Vertical | `Ctrl+b %` |
-| Split Horizontal | `Ctrl+b "` |
-| Navigate Panes | `Ctrl+b Arrow` |
-| Zoom Pane | `Ctrl+b z` |
-| Close Pane | `Ctrl+b x` |
-| Copy Mode | `Ctrl+b [` |
+## References
 
-### iTerm2 + tmux Integration
-
-Run `tmux -CC` for native iTerm2 integration:
-- tmux windows appear as native iTerm2 windows
-- Use iTerm2 shortcuts instead of tmux prefix
-- Sessions persist through disconnects
-- Dashboard available via Shell > tmux > Dashboard
-
-## Documentation Index
-
-| Document | Purpose |
-|----------|---------|
-| `Shortcuts.md` | Complete keyboard shortcut reference |
-| `TmuxConfig.md` | tmux configuration (.tmux.conf) guide |
-| `TmuxCommands.md` | Full tmux command reference |
+- [iTerm2 Documentation](https://iterm2.com/documentation.html)

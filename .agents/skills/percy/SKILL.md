@@ -1,154 +1,182 @@
 ---
 name: percy
-description: |
-  Percy integration. Manage data, records, and automate workflows. Use when the user wants to interact with Percy data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
+description: When the user wants to perform visual testing with automated screenshot comparison using Percy by BrowserStack. Also use when the user mentions "percy," "visual testing," "screenshot comparison," "visual diff," "percy snapshot," or "BrowserStack visual." For Storybook-specific visual testing, see chromatic.
 metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+  author: terminal-skills
+  version: "1.0.0"
+  category: development
+  tags:
+    - visual-testing
+    - screenshots
+    - regression
+    - ci-integration
 ---
 
 # Percy
 
-Percy is a visual testing platform that helps developers catch visual bugs before they're deployed. It automates visual regression testing by comparing screenshots across different versions of a website or application. QA engineers and front-end developers use it to ensure UI changes don't introduce unexpected visual regressions.
+## Overview
 
-Official docs: https://docs.percy.io/docs
+You are an expert in Percy (by BrowserStack), the visual testing platform that captures screenshots and compares them against baselines. You help users integrate Percy into their existing test suites (Cypress, Playwright, Selenium, Storybook), configure responsive widths, manage visual baselines, and set up CI pipelines with Percy checks.
 
-## Percy Overview
+## Instructions
 
-- **Snapshots**
-  - **Comparisons**
-- **Projects**
-- **Organizations**
+### Initial Assessment
 
-Use action names and parameters as needed.
+1. **Test framework** — Cypress, Playwright, Selenium, or Storybook?
+2. **Pages/components** — What needs visual coverage?
+3. **Responsive** — Which viewport widths matter?
+4. **CI** — Which CI provider?
 
-## Working with Percy
-
-This skill uses the Membrane CLI to interact with Percy. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
+### Setup with Cypress
 
 ```bash
-npm install -g @membranehq/cli@latest
+# setup-percy-cypress.sh — Install Percy for Cypress.
+npm install --save-dev @percy/cli @percy/cypress
 ```
 
-### Authentication
+```javascript
+// cypress/support/e2e.js — Import Percy's Cypress commands.
+// Adds cy.percySnapshot() to all Cypress tests.
+import '@percy/cypress';
+```
+
+```javascript
+// cypress/e2e/homepage.cy.js — Cypress test with Percy visual snapshots.
+// Takes screenshots at key states for visual comparison.
+describe('Homepage', () => {
+  it('should render correctly', () => {
+    cy.visit('/');
+    cy.get('.hero-section').should('be.visible');
+    cy.percySnapshot('Homepage - Hero');
+
+    cy.get('.features-section').scrollIntoView();
+    cy.percySnapshot('Homepage - Features');
+  });
+
+  it('should render mobile layout', () => {
+    cy.viewport(375, 812);
+    cy.visit('/');
+    cy.percySnapshot('Homepage - Mobile');
+  });
+});
+```
+
+### Setup with Playwright
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+# setup-percy-playwright.sh — Install Percy for Playwright.
+npm install --save-dev @percy/cli @percy/playwright
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+```typescript
+// tests/visual.spec.ts — Playwright test with Percy snapshots.
+// Captures visual state after interactions.
+import { test, expect } from '@playwright/test';
+import percySnapshot from '@percy/playwright';
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+test('dashboard visual test', async ({ page }) => {
+  await page.goto('/dashboard');
+  await page.waitForSelector('.chart-container');
+  await percySnapshot(page, 'Dashboard - Charts Loaded');
+
+  await page.click('[data-testid="dark-mode-toggle"]');
+  await percySnapshot(page, 'Dashboard - Dark Mode');
+});
+```
+
+### Storybook Integration
 
 ```bash
-membrane login complete <code>
+# setup-percy-storybook.sh — Install Percy for Storybook.
+npm install --save-dev @percy/cli @percy/storybook
 ```
-
-Add `--json` to any command for machine-readable JSON output.
-
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Percy
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
 
 ```bash
-membrane connection ensure "https://percy.io/" --json
+# run-percy-storybook.sh — Run Percy on all Storybook stories.
+# Builds Storybook first, then snapshots every story.
+npx percy storybook http://localhost:6006
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+### Percy Configuration
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+```yaml
+# .percy.yml — Percy project configuration.
+# Controls snapshot widths, CSS overrides, and discovery settings.
+version: 2
+snapshot:
+  widths:
+    - 375
+    - 768
+    - 1280
+  min-height: 1024
+  percy-css: |
+    .animation, [data-animated] {
+      animation: none !important;
+      transition: none !important;
+    }
+    .timestamp {
+      visibility: hidden;
+    }
+discovery:
+  network-idle-timeout: 500
+  disable-cache: true
+```
 
-#### 1b. Wait for the connection to be ready
+### Per-Snapshot Configuration
 
-If the connection is in `BUILDING` state, poll until it's ready:
+```javascript
+// tests/visual-config.cy.js — Percy snapshots with per-snapshot options.
+// Override widths and CSS for specific snapshots.
+describe('Product Page', () => {
+  it('captures product card at specific widths', () => {
+    cy.visit('/products/1');
+    cy.get('.product-card').should('be.visible');
+
+    cy.percySnapshot('Product Card', {
+      widths: [375, 1280],
+      minHeight: 800,
+      percyCSS: '.price-timer { display: none; }',
+    });
+  });
+});
+```
+
+### CI Integration
+
+```yaml
+# .github/workflows/percy.yml — Run Percy visual tests in GitHub Actions.
+# Uses PERCY_TOKEN secret for authentication.
+name: Visual Tests
+on: [push, pull_request]
+jobs:
+  percy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx percy exec -- cypress run
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+```
+
+### Running Percy
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+# run-percy.sh — Common Percy commands.
+# Wrap your test command with percy exec.
+
+# With Cypress
+npx percy exec -- cypress run
+
+# With Playwright
+npx percy exec -- playwright test
+
+# With Storybook
+npx percy storybook http://localhost:6006
+
+# Finalize (useful in parallel CI)
+npx percy build:finalize
 ```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Percy API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.

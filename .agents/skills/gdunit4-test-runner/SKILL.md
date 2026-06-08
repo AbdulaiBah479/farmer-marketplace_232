@@ -1,20 +1,6 @@
 ---
-name: gdunit4-test-runner
-description: |
-  Run gdUnit4 tests for Godot projects.
-  Use after implementing features, fixing bugs, or modifying GDScript files.
-  USE PROACTIVELY to verify code changes.
-context: fork
-agent: gdunit4-test-runner
-allowed-tools:
-  - Bash
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/skills/gdunit4-test-runner/scripts/ensure-environment.sh"
-          once: true
+name: gdUnit4 Test Runner
+description: Run gdUnit4 tests for Godot projects. Use after implementing features, fixing bugs, or modifying GDScript files to verify correctness.
 ---
 
 # GDScript Test
@@ -31,12 +17,12 @@ Run GDUnit4 tests using the test wrapper script.
 
 ## Test Execution
 
-Run tests using the wrapper script included in this skill.
+Run tests using the wrapper script included in this skill (`scripts/run_test.sh`).
 
 ### Run All Tests
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/skills/gdunit4-test-runner/scripts/run_test.sh
+scripts/run_test.sh
 ```
 
 Scans entire project for tests.
@@ -44,25 +30,25 @@ Scans entire project for tests.
 ### Run Specific Test File
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/skills/gdunit4-test-runner/scripts/run_test.sh tests/test_foo.gd
+scripts/run_test.sh tests/test_foo.gd
 ```
 
 ### Run Multiple Tests
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/skills/gdunit4-test-runner/scripts/run_test.sh tests/test_foo.gd tests/test_bar.gd
+scripts/run_test.sh tests/test_foo.gd tests/test_bar.gd
 ```
 
 ### Run Tests in Directory
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/skills/gdunit4-test-runner/scripts/run_test.sh tests/application/
+scripts/run_test.sh tests/application/
 ```
 
 ### Verbose Mode
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/skills/gdunit4-test-runner/scripts/run_test.sh -v
+scripts/run_test.sh -v
 ```
 
 Shows all Godot logs (useful for debugging test issues).
@@ -119,21 +105,11 @@ The script outputs test results in JSON format for easy parsing.
     "crashed": true,
     "status": "crashed"
   },
-  "crash_details": {
-    "crash_info": "handle_crash: Program crashed with signal 11\n...",
-    "script_errors": "SCRIPT ERROR: Parse Error: ...\n...",
-    "engine_errors": "ERROR: Failed to load script ...\n..."
-  },
   "failures": []
 }
 ```
 
 Godot crashed during test execution. Only tests completed before crash are reported.
-
-The `crash_details` object includes:
-- `crash_info`: Crash signal and C++ backtrace (if available)
-- `script_errors`: GDScript parse errors with file paths and line numbers
-- `engine_errors`: Engine-level errors (resource loading failures, etc.)
 
 ## Exit Codes
 

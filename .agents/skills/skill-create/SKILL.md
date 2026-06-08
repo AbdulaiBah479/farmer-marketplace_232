@@ -1,45 +1,140 @@
 ---
-name: Skill Create
-description: Generates a new Betty Framework Skill directory and manifest. Use when you need to bootstrap a new skill in the Betty Framework.
+name: skill-create
+description: Create new Claude Code skills following project patterns and best practices. Use when building new skills, extracting reusable capabilities, or converting commands to skills.
 ---
 
-# Skill Create
+# Skill Creation
 
-## Purpose
-This skill automates the creation of a new Claude Code-compatible Skill inside the Betty Framework. It scaffolds the directory structure, generates the `skill.yaml` manifest file, and registers the skill in the internal registry. Use this when you want to add a new skill quickly and consistently.
+Create well-structured skills using progressive disclosure and project conventions.
 
-## Instructions
-1. Run the script `skill_create.py` with the following arguments:
-   ```bash
-   python skill_create.py <skill_name> "<description>" [--inputs input1,input2] [--outputs output1,output2]
-2. The script will create a folder under /skills/<skill_name>/ with:
-   * skill.yaml manifest (populated with version 0.1.0 and status draft)
-   * SKILL.md containing the description 
-   * A registration entry added to registry/skills.json
+> **Reference:** [best-practices.md](best-practices.md) for comprehensive guidance, [reference.md](reference.md) for project patterns and frontmatter specs.
 
-3. The new manifest will be validated via the skill.define skill.
+---
 
-4. After creation, review the generated skill.yaml for correctness, edit if necessary, and then mark status: active when ready for use.
+## Workflow
 
-## Example
+### Step 1: Understand Use Cases
+
+Gather concrete examples of how the skill will be used:
+
+- What tasks will it handle?
+- What would users say to trigger it?
+- What variations exist?
+
+Skip this step only when usage patterns are already clearly understood.
+
+### Step 2: Plan Contents
+
+Analyze each use case to identify reusable resources:
+
+| Resource Type | When to Use | Example |
+|---------------|-------------|---------|
+| `scripts/` | Same code rewritten repeatedly | `rotate_pdf.py` |
+| `references/` | Domain knowledge Claude needs | `schema.md`, `api.md` |
+| `assets/` | Files used in output | `template.html`, `logo.png` |
+| `templates/` | Document structure patterns | `report.md` |
+
+### Step 3: Choose Frontmatter
+
+**Required fields:**
+
+```yaml
+name: skill-name          # Lowercase, hyphens, max 64 chars
+description: |            # Max 1024 chars
+  [What it does]. Use when [context].
+```
+
+**Optional fields:**
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `context` | Run in forked sub-agent | `context: fork` |
+| `agent` | Specify agent type | `agent: haiku` |
+| `user-invocable` | Hide from slash menu | `user-invocable: false` |
+| `allowed-tools` | Restrict available tools | See reference.md |
+| `hooks` | Lifecycle hooks (PreToolUse, PostToolUse, Stop) | See reference.md |
+
+**Naming pattern:** `<namespace>[-<subnamespace>]-<action>`
+- `code-debug`, `spec-create`, `git-worktree-use`
+
+**Description format:** Third person, what + when.
+- "Generate GitHub issue drafts from spec directories. Use when converting specs to GitHub issues."
+
+### Step 4: Create Structure
 
 ```bash
-python skill_create.py workflow.compose "Compose and orchestrate multi-step workflows" --inputs workflow.yaml,context.schema --outputs execution_plan.json
+mkdir -p .claude/skills/{skill-name}
 ```
 
-This will generate:
+**Standard structure:**
 
 ```
-skills/
-  workflow.compose/
-    skill.yaml
-    README.md
-registry/skills.json  ← updated with workflow.compose entry
+.claude/skills/{skill-name}/
+├── SKILL.md              # Main instructions (<500 lines)
+├── templates/            # Document templates (.md)
+├── scripts/              # Executable code (.sh, .py)
+└── references/           # Extended documentation
 ```
 
-## Implementation Notes
+### Step 5: Implement & Test
 
-* The script uses forward-slash paths (e.g., `skills/workflow.compose/skill.yaml`) to remain cross-platform.
-* The manifest file format must include fields: `name`, `version`, `description`, `inputs`, `outputs`, `dependencies`, `status`.
-* This skill depends on `skill.define` (for validation) and `context.schema` (for input/output schema support).
-* After running, commit the changes to Git; version control provides traceability of new skills.
+**Write SKILL.md:**
+- Keep under 200 lines (500 max)
+- Progressive disclosure: SKILL.md → references/
+- Include concrete examples, no emojis
+- Reference authoritative docs (don't duplicate)
+
+**Test with real tasks:**
+1. Does the description trigger correctly?
+2. Can Claude find bundled resources?
+3. Does the workflow complete successfully?
+
+---
+
+## Degrees of Freedom
+
+Match specificity to task fragility:
+
+**High freedom** - Multiple approaches valid, context-dependent:
+```markdown
+## Code review
+1. Analyze structure and organization
+2. Check for bugs and edge cases
+3. Suggest improvements
+```
+
+**Low freedom** - Operations fragile, consistency critical:
+```markdown
+## Database migration
+Run exactly: `python scripts/migrate.py --verify --backup`
+Do not modify flags.
+```
+
+---
+
+## Skill Types
+
+| Type | Characteristics | Examples |
+|------|-----------------|----------|
+| **Operational** | Multi-step workflow, state changes, document templates | `spec-create`, `spec-archive` |
+| **Generation** | Transform input → structured output, format templates | `spec-issues-create` |
+| **Guidance** | Imperative instructions, code patterns | `code-implement`, `code-debug` |
+
+---
+
+## Success Criteria
+
+- Name follows `<namespace>[-<subnamespace>]-<action>`
+- Description is third person with what + when
+- SKILL.md under 200 lines (500 max)
+- Workflow steps numbered and actionable
+- Templates extracted to separate files
+- References point to authoritative sources
+- No emojis (text markers only)
+
+---
+
+## Reference
+
+- [best-practices.md](best-practices.md) - Core principles, patterns, checklist
+- [reference.md](reference.md) - Project patterns, frontmatter specs, anti-patterns

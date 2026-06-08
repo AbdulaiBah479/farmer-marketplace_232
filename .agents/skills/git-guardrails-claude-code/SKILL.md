@@ -1,44 +1,32 @@
 ---
 name: git-guardrails-claude-code
-description: Set up Claude Code hooks to block dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute. Use when user wants to prevent destructive git operations, add git safety hooks, or block git push/reset in Claude Code.
+description: Install a Claude-Code PreToolUse hook that blocks destructive git commands (push variants including force-push, hard reset, force clean, branch -D, checkout/restore overwrites) before Bash runs them. Use when the user wants git safety rails, force-push prevention, or repository-wipe protection.
 ---
 
-# Setup Git Guardrails
+Bash-tool PreToolUse hook. The harness invokes the script with the candidate command on stdin as JSON; the script greps for dangerous patterns and exits non-zero with an explanatory stderr message, which the harness surfaces to the model as a refusal. The model cannot override the block.
 
-Sets up a PreToolUse hook that intercepts and blocks dangerous git commands before Claude executes them.
+## Blocked patterns (default)
 
-## What Gets Blocked
+- `git push` — all variants, including `--force` and `--force-with-lease`.
+- `git reset --hard` — discards working tree and index irreversibly.
+- `git clean -f` and `git clean -fd` — deletes untracked files and directories.
+- `git branch -D` — force-deletes a branch, including unmerged work.
+- `git checkout .` and `git restore .` — bulk-overwrites uncommitted changes.
 
-- `git push` (all variants including `--force`)
-- `git reset --hard`
-- `git clean -f` / `git clean -fd`
-- `git branch -D`
-- `git checkout .` / `git restore .`
+## Install
 
-When blocked, Claude sees a message telling it that it does not have authority to access these commands.
+### 1. Choose scope
 
-## Steps
+- **Project-local** — `.claude/settings.json` and `.claude/hooks/block-dangerous-git.sh`. Travels with the repository.
+- **Global** — `~/.claude/settings.json` and `~/.claude/hooks/block-dangerous-git.sh`. Applies to every project.
 
-### 1. Ask scope
+### 2. Place the hook script
 
-Ask the user: install for **this project only** (`.claude/settings.json`) or **all projects** (`~/.claude/settings.json`)?
+Write the script (content below) to the chosen hooks directory. Mark executable with `chmod +x`.
 
-### 2. Copy the hook script
+### 3. Register the hook
 
-The bundled script is at: [scripts/block-dangerous-git.sh](scripts/block-dangerous-git.sh)
-
-Copy it to the target location based on scope:
-
-- **Project**: `.claude/hooks/block-dangerous-git.sh`
-- **Global**: `~/.claude/hooks/block-dangerous-git.sh`
-
-Make it executable with `chmod +x`.
-
-### 3. Add hook to settings
-
-Add to the appropriate settings file:
-
-**Project** (`.claude/settings.json`):
+Project (`.claude/settings.json`):
 
 ```json
 {
@@ -58,38 +46,49 @@ Add to the appropriate settings file:
 }
 ```
 
-**Global** (`~/.claude/settings.json`):
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/block-dangerous-git.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-If the settings file already exists, merge the hook into existing `hooks.PreToolUse` array — don't overwrite other settings.
-
-### 4. Ask about customization
-
-Ask if user wants to add or remove any patterns from the blocked list. Edit the copied script accordingly.
-
-### 5. Verify
-
-Run a quick test:
+### 4. Verify
 
 ```bash
-echo '{"tool_input":{"command":"git push origin main"}}' | <path-to-script>
+echo '{"tool_input":{"command":"git push origin main"}}' | /path/to/block-dangerous-git.sh
 ```
 
-Should exit with code 2 and print a BLOCKED message to stderr.
+Expected: exit code 2, stderr contains `BLOCKED:`. A benign command (`git status`) must exit 0 with no output.
+
+## Hook script (block-dangerous-git.sh)
+
+```bash
+#!/bin/bash
+
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command')
+
+DANGEROUS_PATTERNS=(
+  "git push"
+  "git reset --hard"
+  "git clean -fd"
+  "git clean -f"
+  "git branch -D"
+  "git checkout \."
+  "git restore \."
+  "push --force"
+  "reset --hard"
+)
+
+for pattern in "${DANGEROUS_PATTERNS[@]}"; do
+  if echo "$COMMAND" | grep -qE "$pattern"; then
+    echo "BLOCKED: '$COMMAND' matches dangerous pattern '$pattern'. The user has prevented you from doing this." >&2
+    exit 2
+  fi
+done
+
+exit 0
+```
+
+Dependencies: `bash`, `jq`. The script is the contract surface; SKILL.md prescribes how to install and extend it.
+
+## Cross-harness note
+
+The hook concept generalises but the install surface differs:
+
+- **Claude Code** — `PreToolUse` hook on the `Bash` matcher (this skill).
+- **Codex CLI / Gemini CLI / other harnesses** — typically a wrapper around the shell-exec tool or an MCP-level guard. The script body (pattern list, exit-2 contract) ports unchanged; the registration JSON does not.

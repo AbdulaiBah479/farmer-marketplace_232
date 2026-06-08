@@ -1,527 +1,595 @@
 ---
-name: debugging-strategies
-description: Master systematic debugging techniques, profiling tools, and root cause analysis to efficiently track down bugs across any codebase or technology stack. Use when investigating bugs, performance issues, or unexpected behavior.
+name: Debugging Strategies
+description: Advanced debugging patterns for test failures covering root cause analysis, flakiness investigation, performance debugging, and systematic troubleshooting methodologies.
+version: 1.0.0
+author: thetestingacademy
+license: MIT
+tags: [debugging, troubleshooting, test-failures, flakiness, root-cause-analysis, performance-debugging]
+testingTypes: [e2e, unit, integration]
+frameworks: [playwright, cypress, jest, pytest]
+languages: [typescript, javascript, python]
+domains: [web, api]
+agents: [claude-code, cursor, github-copilot, windsurf, codex, aider, continue, cline, zed, bolt]
 ---
 
-# Debugging Strategies
+# Debugging Strategies Skill
 
-Transform debugging from frustrating guesswork into systematic problem-solving with proven strategies, powerful tools, and methodical approaches.
-
-## When to Use This Skill
-
-- Tracking down elusive bugs
-- Investigating performance issues
-- Understanding unfamiliar codebases
-- Debugging production issues
-- Analyzing crash dumps and stack traces
-- Profiling application performance
-- Investigating memory leaks
-- Debugging distributed systems
+You are an expert QA engineer specializing in debugging test failures and systematic troubleshooting. When the user asks you to debug failing tests or investigate issues, follow these detailed instructions.
 
 ## Core Principles
 
-### 1. The Scientific Method
-
-**1. Observe**: What's the actual behavior?
-**2. Hypothesize**: What could be causing it?
-**3. Experiment**: Test your hypothesis
-**4. Analyze**: Did it prove/disprove your theory?
-**5. Repeat**: Until you find the root cause
-
-### 2. Debugging Mindset
-
-**Don't Assume:**
-- "It can't be X" - Yes it can
-- "I didn't change Y" - Check anyway
-- "It works on my machine" - Find out why
-
-**Do:**
-- Reproduce consistently
-- Isolate the problem
-- Keep detailed notes
-- Question everything
-- Take breaks when stuck
-
-### 3. Rubber Duck Debugging
-
-Explain your code and problem out loud (to a rubber duck, colleague, or yourself). Often reveals the issue.
+1. **Reproduce first** -- If you can't reproduce it, you can't fix it.
+2. **Isolate the problem** -- Narrow down to the smallest failing case.
+3. **Understand, don't guess** -- Know why it fails before attempting fixes.
+4. **Fix the root cause** -- Don't treat symptoms, fix the underlying issue.
+5. **Prevent recurrence** -- Add safeguards to prevent the same failure.
 
 ## Systematic Debugging Process
 
-### Phase 1: Reproduce
+### 1. Gather Information
 
-```markdown
-## Reproduction Checklist
+Before touching any code:
 
-1. **Can you reproduce it?**
-   - Always? Sometimes? Randomly?
-   - Specific conditions needed?
-   - Can others reproduce it?
-
-2. **Create minimal reproduction**
-   - Simplify to smallest example
-   - Remove unrelated code
-   - Isolate the problem
-
-3. **Document steps**
-   - Write down exact steps
-   - Note environment details
-   - Capture error messages
+```
+STEP 1: Collect Facts
+- When did it start failing? (new code? environment change?)
+- Does it fail consistently or intermittently?
+- Does it fail locally or only in CI?
+- Does it fail in all browsers or specific ones?
+- What's the error message? Full stack trace?
+- What were the recent changes to the codebase?
 ```
 
-### Phase 2: Gather Information
+**Checklist:**
+- [ ] Read the full error message and stack trace
+- [ ] Check test logs and screenshots
+- [ ] Review recent commits and PRs
+- [ ] Check CI/CD pipeline changes
+- [ ] Verify environment variables and config
+- [ ] Check if other tests are also failing
 
-```markdown
-## Information Collection
-
-1. **Error Messages**
-   - Full stack trace
-   - Error codes
-   - Console/log output
-
-2. **Environment**
-   - OS version
-   - Language/runtime version
-   - Dependencies versions
-   - Environment variables
-
-3. **Recent Changes**
-   - Git history
-   - Deployment timeline
-   - Configuration changes
-
-4. **Scope**
-   - Affects all users or specific ones?
-   - All browsers or specific ones?
-   - Production only or also dev?
-```
-
-### Phase 3: Form Hypothesis
-
-```markdown
-## Hypothesis Formation
-
-Based on gathered info, ask:
-
-1. **What changed?**
-   - Recent code changes
-   - Dependency updates
-   - Infrastructure changes
-
-2. **What's different?**
-   - Working vs broken environment
-   - Working vs broken user
-   - Before vs after
-
-3. **Where could this fail?**
-   - Input validation
-   - Business logic
-   - Data layer
-   - External services
-```
-
-### Phase 4: Test & Verify
-
-```markdown
-## Testing Strategies
-
-1. **Binary Search**
-   - Comment out half the code
-   - Narrow down problematic section
-   - Repeat until found
-
-2. **Add Logging**
-   - Strategic console.log/print
-   - Track variable values
-   - Trace execution flow
-
-3. **Isolate Components**
-   - Test each piece separately
-   - Mock dependencies
-   - Remove complexity
-
-4. **Compare Working vs Broken**
-   - Diff configurations
-   - Diff environments
-   - Diff data
-```
-
-## Debugging Tools
-
-### JavaScript/TypeScript Debugging
-
-```typescript
-// Chrome DevTools Debugger
-function processOrder(order: Order) {
-    debugger;  // Execution pauses here
-
-    const total = calculateTotal(order);
-    console.log('Total:', total);
-
-    // Conditional breakpoint
-    if (order.items.length > 10) {
-        debugger;  // Only breaks if condition true
-    }
-
-    return total;
-}
-
-// Console debugging techniques
-console.log('Value:', value);                    // Basic
-console.table(arrayOfObjects);                   // Table format
-console.time('operation'); /* code */ console.timeEnd('operation');  // Timing
-console.trace();                                 // Stack trace
-console.assert(value > 0, 'Value must be positive');  // Assertion
-
-// Performance profiling
-performance.mark('start-operation');
-// ... operation code
-performance.mark('end-operation');
-performance.measure('operation', 'start-operation', 'end-operation');
-console.log(performance.getEntriesByType('measure'));
-```
-
-**VS Code Debugger Configuration:**
-```json
-// .vscode/launch.json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Debug Program",
-            "program": "${workspaceFolder}/src/index.ts",
-            "preLaunchTask": "tsc: build - tsconfig.json",
-            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
-            "skipFiles": ["<node_internals>/**"]
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Debug Tests",
-            "program": "${workspaceFolder}/node_modules/jest/bin/jest",
-            "args": ["--runInBand", "--no-cache"],
-            "console": "integratedTerminal"
-        }
-    ]
-}
-```
-
-### Python Debugging
-
-```python
-# Built-in debugger (pdb)
-import pdb
-
-def calculate_total(items):
-    total = 0
-    pdb.set_trace()  # Debugger starts here
-
-    for item in items:
-        total += item.price * item.quantity
-
-    return total
-
-# Breakpoint (Python 3.7+)
-def process_order(order):
-    breakpoint()  # More convenient than pdb.set_trace()
-    # ... code
-
-# Post-mortem debugging
-try:
-    risky_operation()
-except Exception:
-    import pdb
-    pdb.post_mortem()  # Debug at exception point
-
-# IPython debugging (ipdb)
-from ipdb import set_trace
-set_trace()  # Better interface than pdb
-
-# Logging for debugging
-import logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-def fetch_user(user_id):
-    logger.debug(f'Fetching user: {user_id}')
-    user = db.query(User).get(user_id)
-    logger.debug(f'Found user: {user}')
-    return user
-
-# Profile performance
-import cProfile
-import pstats
-
-cProfile.run('slow_function()', 'profile_stats')
-stats = pstats.Stats('profile_stats')
-stats.sort_stats('cumulative')
-stats.print_stats(10)  # Top 10 slowest
-```
-
-### Go Debugging
-
-```go
-// Delve debugger
-// Install: go install github.com/go-delve/delve/cmd/dlv@latest
-// Run: dlv debug main.go
-
-import (
-    "fmt"
-    "runtime"
-    "runtime/debug"
-)
-
-// Print stack trace
-func debugStack() {
-    debug.PrintStack()
-}
-
-// Panic recovery with debugging
-func processRequest() {
-    defer func() {
-        if r := recover(); r != nil {
-            fmt.Println("Panic:", r)
-            debug.PrintStack()
-        }
-    }()
-
-    // ... code that might panic
-}
-
-// Memory profiling
-import _ "net/http/pprof"
-// Visit http://localhost:6060/debug/pprof/
-
-// CPU profiling
-import (
-    "os"
-    "runtime/pprof"
-)
-
-f, _ := os.Create("cpu.prof")
-pprof.StartCPUProfile(f)
-defer pprof.StopCPUProfile()
-// ... code to profile
-```
-
-## Advanced Debugging Techniques
-
-### Technique 1: Binary Search Debugging
+### 2. Reproduce Locally
 
 ```bash
-# Git bisect for finding regression
-git bisect start
-git bisect bad                    # Current commit is bad
-git bisect good v1.0.0            # v1.0.0 was good
+# Run the specific failing test
+npm test -- path/to/failing.test.js
 
-# Git checks out middle commit
-# Test it, then:
-git bisect good   # if it works
-git bisect bad    # if it's broken
+# Run with verbose output
+npm test -- --verbose path/to/failing.test.js
 
-# Continue until bug found
-git bisect reset  # when done
+# Run in debug mode
+node --inspect-brk node_modules/.bin/jest path/to/failing.test.js
+
+# Playwright debug mode
+npx playwright test --debug failing.spec.ts
+
+# Run with trace
+npx playwright test --trace on failing.spec.ts
 ```
 
-### Technique 2: Differential Debugging
+**Common reproduction scenarios:**
 
-Compare working vs broken:
+```javascript
+// Run test multiple times to check for flakiness
+for i in {1..10}; do npm test failing.test.js || break; done
 
-```markdown
-## What's Different?
+// Run in different environments
+NODE_ENV=development npm test
+NODE_ENV=production npm test
 
-| Aspect       | Working         | Broken          |
-|--------------|-----------------|-----------------|
-| Environment  | Development     | Production      |
-| Node version | 18.16.0         | 18.15.0         |
-| Data         | Empty DB        | 1M records      |
-| User         | Admin           | Regular user    |
-| Browser      | Chrome          | Safari          |
-| Time         | During day      | After midnight  |
-
-Hypothesis: Time-based issue? Check timezone handling.
+// Run with different browsers
+npx playwright test --project=chromium
+npx playwright test --project=firefox
+npx playwright test --project=webkit
 ```
 
-### Technique 3: Trace Debugging
+### 3. Isolate the Problem
 
-```typescript
-// Function call tracing
-function trace(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value;
+Use binary search approach:
 
-    descriptor.value = function(...args: any[]) {
-        console.log(`Calling ${propertyKey} with args:`, args);
-        const result = originalMethod.apply(this, args);
-        console.log(`${propertyKey} returned:`, result);
-        return result;
-    };
+```javascript
+describe('User registration flow', () => {
+  // Comment out sections to isolate
+  it('should validate email format', () => {
+    // Step 1: Setup
+    const email = 'invalid-email';
 
-    return descriptor;
-}
+    // Step 2: Action
+    const result = validateEmail(email);
 
-class OrderService {
-    @trace
-    calculateTotal(items: Item[]): number {
-        return items.reduce((sum, item) => sum + item.price, 0);
-    }
-}
-```
-
-### Technique 4: Memory Leak Detection
-
-```typescript
-// Chrome DevTools Memory Profiler
-// 1. Take heap snapshot
-// 2. Perform action
-// 3. Take another snapshot
-// 4. Compare snapshots
-
-// Node.js memory debugging
-if (process.memoryUsage().heapUsed > 500 * 1024 * 1024) {
-    console.warn('High memory usage:', process.memoryUsage());
-
-    // Generate heap dump
-    require('v8').writeHeapSnapshot();
-}
-
-// Find memory leaks in tests
-let beforeMemory: number;
-
-beforeEach(() => {
-    beforeMemory = process.memoryUsage().heapUsed;
+    // Step 3: Assertion
+    expect(result.isValid).toBe(false);
+  });
 });
 
-afterEach(() => {
-    const afterMemory = process.memoryUsage().heapUsed;
-    const diff = afterMemory - beforeMemory;
-
-    if (diff > 10 * 1024 * 1024) {  // 10MB threshold
-        console.warn(`Possible memory leak: ${diff / 1024 / 1024}MB`);
-    }
+// Isolate using .only
+it.only('specific failing test', () => {
+  // This is the only test that will run
 });
 ```
 
-## Debugging Patterns by Issue Type
+## Debugging Different Test Types
 
-### Pattern 1: Intermittent Bugs
+### 1. Debugging E2E Test Failures
 
-```markdown
-## Strategies for Flaky Bugs
+**Common E2E failure patterns:**
 
-1. **Add extensive logging**
-   - Log timing information
-   - Log all state transitions
-   - Log external interactions
+#### A. Element Not Found
 
-2. **Look for race conditions**
-   - Concurrent access to shared state
-   - Async operations completing out of order
-   - Missing synchronization
+```javascript
+// ❌ FAILING: Element not visible when test runs
+await page.click('.submit-button');
+// Error: Element is not visible
 
-3. **Check timing dependencies**
-   - setTimeout/setInterval
-   - Promise resolution order
-   - Animation frame timing
+// ✅ DEBUG: Add explicit wait
+await page.waitForSelector('.submit-button', { state: 'visible' });
+await page.click('.submit-button');
 
-4. **Stress test**
-   - Run many times
-   - Vary timing
-   - Simulate load
+// ✅ BETTER: Use auto-waiting locator
+await page.getByRole('button', { name: 'Submit' }).click();
 ```
 
-### Pattern 2: Performance Issues
+**Debug steps:**
+1. Take screenshot at failure point: `await page.screenshot({ path: 'debug.png' })`
+2. Check if element exists but is hidden: `await page.locator('.submit-button').count()`
+3. Verify selector accuracy: Use Playwright Inspector or DevTools
+4. Check for race conditions: Is element loaded after async operation?
 
-```markdown
+#### B. Timing Issues
+
+```javascript
+// ❌ PROBLEM: Test runs before data loads
+test('should display user data', async ({ page }) => {
+  await page.goto('/users/1');
+  await expect(page.getByText('John Doe')).toBeVisible();
+  // Fails because API hasn't responded yet
+});
+
+// ✅ SOLUTION: Wait for network response
+test('should display user data', async ({ page }) => {
+  await page.goto('/users/1');
+
+  // Wait for API call to complete
+  await page.waitForResponse(response =>
+    response.url().includes('/api/users/1') &&
+    response.status() === 200
+  );
+
+  await expect(page.getByText('John Doe')).toBeVisible();
+});
+
+// ✅ ALTERNATIVE: Wait for loading state
+test('should display user data', async ({ page }) => {
+  await page.goto('/users/1');
+
+  // Wait for loading spinner to disappear
+  await expect(page.getByTestId('loading')).not.toBeVisible();
+
+  await expect(page.getByText('John Doe')).toBeVisible();
+});
+```
+
+#### C. Flaky Assertions
+
+```javascript
+// ❌ FLAKY: Element count changes during test
+expect(await page.locator('.item').count()).toBe(5);
+
+// ✅ STABLE: Use auto-retry assertion
+await expect(page.locator('.item')).toHaveCount(5);
+
+// ❌ FLAKY: Text might not be loaded yet
+const text = await page.textContent('.result');
+expect(text).toContain('Success');
+
+// ✅ STABLE: Use auto-retry assertion
+await expect(page.locator('.result')).toContainText('Success');
+```
+
+### 2. Debugging Unit Test Failures
+
+#### A. Mock Issues
+
+```javascript
+// ❌ PROBLEM: Mock not being used
+jest.mock('./api');
+import { fetchUser } from './api'; // Import AFTER mock
+
+// ✅ SOLUTION: Import after mock
+jest.mock('./api');
+import { fetchUser } from './api';
+
+test('should use mocked function', async () => {
+  fetchUser.mockResolvedValue({ id: 1, name: 'Test' });
+  const user = await fetchUser('1');
+  expect(user.name).toBe('Test');
+});
+```
+
+**Debug mock issues:**
+
+```javascript
+// Check if mock is being called
+const mockFn = jest.fn();
+// ... test code ...
+console.log('Mock called:', mockFn.mock.calls);
+console.log('Mock call count:', mockFn.mock.calls.length);
+console.log('Mock results:', mockFn.mock.results);
+
+// Verify mock implementation
+test('debug mock', () => {
+  const mockFn = jest.fn((x) => x * 2);
+  console.log('Mock implementation:', mockFn.getMockImplementation());
+
+  const result = mockFn(5);
+  console.log('Result:', result); // Should be 10
+});
+```
+
+#### B. Async Issues
+
+```javascript
+// ❌ PROBLEM: Test completes before async operation
+test('should fetch data', () => {
+  fetchData().then(data => {
+    expect(data.id).toBe(1); // This assertion never runs!
+  });
+});
+
+// ✅ SOLUTION 1: Return the promise
+test('should fetch data', () => {
+  return fetchData().then(data => {
+    expect(data.id).toBe(1);
+  });
+});
+
+// ✅ SOLUTION 2: Use async/await
+test('should fetch data', async () => {
+  const data = await fetchData();
+  expect(data.id).toBe(1);
+});
+
+// ✅ SOLUTION 3: Use resolves
+test('should fetch data', async () => {
+  await expect(fetchData()).resolves.toMatchObject({ id: 1 });
+});
+```
+
+### 3. Debugging Integration Test Failures
+
+#### A. Database State Issues
+
+```javascript
+// ❌ PROBLEM: Tests affect each other
+test('test 1', async () => {
+  await db.users.create({ email: 'test@example.com' });
+  // ... assertions
+});
+
+test('test 2', async () => {
+  await db.users.create({ email: 'test@example.com' });
+  // Fails: duplicate email!
+});
+
+// ✅ SOLUTION: Clean up after each test
+beforeEach(async () => {
+  await db.users.deleteMany({});
+});
+
+// ✅ ALTERNATIVE: Use unique data
+test('test 1', async () => {
+  await db.users.create({ email: `test-${Date.now()}@example.com` });
+});
+```
+
+#### B. API Test Failures
+
+```javascript
+// Debug API test failures
+test('should create user', async () => {
+  // Log request details
+  console.log('Request body:', requestBody);
+
+  const response = await request.post('/api/users', requestBody);
+
+  // Log response for debugging
+  console.log('Response status:', response.status);
+  console.log('Response body:', response.body);
+  console.log('Response headers:', response.headers);
+
+  expect(response.status).toBe(201);
+});
+```
+
+## Root Cause Analysis Framework
+
+### The 5 Whys Technique
+
+```
+Test fails: "Element not found"
+
+Why? The element wasn't rendered
+Why? The API request failed
+Why? The API endpoint returned 500
+Why? The database connection timed out
+Why? Connection pool was exhausted
+ROOT CAUSE: Need to implement connection pooling correctly
+```
+
+### Divide and Conquer
+
+```javascript
+// Original failing test
+test('complex user flow', async () => {
+  await createUser();
+  await loginUser();
+  await updateProfile();
+  await uploadAvatar();
+  await logout();
+  // One of these steps fails - which one?
+});
+
+// Split into isolated tests
+test.only('step 1: create user', async () => {
+  await createUser();
+  // Pass ✓
+});
+
+test.only('step 2: login user', async () => {
+  await createUser();
+  await loginUser();
+  // Pass ✓
+});
+
+test.only('step 3: update profile', async () => {
+  await createUser();
+  await loginUser();
+  await updateProfile();
+  // FAIL ✗ - Found it!
+});
+```
+
+## Debugging Tools and Techniques
+
+### 1. Browser DevTools for E2E Tests
+
+```javascript
+test('debug with browser open', async ({ page }) => {
+  // Run in headed mode: npx playwright test --headed
+  // Run with debug: npx playwright test --debug
+
+  await page.goto('/');
+
+  // Pause execution for manual inspection
+  await page.pause();
+
+  // Open DevTools programmatically
+  await page.evaluate(() => debugger);
+});
+```
+
+### 2. Playwright Trace Viewer
+
+```bash
+# Record trace
+npx playwright test --trace on
+
+# View trace
+npx playwright show-trace trace.zip
+
+# Trace shows:
+# - Screenshots at each step
+# - Network requests
+# - Console logs
+# - DOM snapshots
+# - Action timeline
+```
+
+### 3. Custom Logging
+
+```javascript
+// test-logger.js
+export class TestLogger {
+  static info(message, data) {
+    console.log(`[INFO] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
+
+  static error(message, error) {
+    console.error(`[ERROR] ${message}`, error);
+  }
+
+  static step(stepName) {
+    console.log(`\n>>> STEP: ${stepName}`);
+  }
+}
+
+// Usage in tests
+test('with logging', async ({ page }) => {
+  TestLogger.step('Navigate to login page');
+  await page.goto('/login');
+
+  TestLogger.step('Fill login form');
+  await page.fill('#email', 'user@example.com');
+
+  TestLogger.info('Current URL', page.url());
+
+  TestLogger.step('Submit form');
+  await page.click('button[type="submit"]');
+});
+```
+
+### 4. Video Recording
+
+```typescript
+// playwright.config.ts
+export default defineConfig({
+  use: {
+    video: 'retain-on-failure', // or 'on' for all tests
+    screenshot: 'only-on-failure',
+  },
+});
+
+// Videos are saved in test-results/ folder
+```
+
+## Flakiness Investigation
+
+### Identifying Flaky Tests
+
+```bash
+# Run test 50 times and track failures
+for i in {1..50}; do
+  npm test failing-test.spec.js >> results.txt 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Failed on run $i" >> failures.txt
+  fi
+done
+
+# Check failure rate
+grep -c "Failed" failures.txt
+```
+
+### Common Flakiness Causes
+
+**1. Race Conditions**
+```javascript
+// ❌ FLAKY: Clicks too fast
+await page.click('#submit');
+await page.click('#confirm'); // Might not be ready yet
+
+// ✅ STABLE: Wait for element to be ready
+await page.click('#submit');
+await page.waitForSelector('#confirm', { state: 'visible' });
+await page.click('#confirm');
+```
+
+**2. Animations and Transitions**
+```javascript
+// ❌ FLAKY: Element moving during click
+await page.click('.menu-item');
+
+// ✅ STABLE: Wait for animations
+await page.click('.menu-item', { force: true }); // Force click
+// OR disable animations in test environment
+```
+
+**3. Non-Deterministic Data**
+```javascript
+// ❌ FLAKY: Timestamp changes between runs
+expect(result.createdAt).toBe('2024-01-15T10:30:00Z');
+
+// ✅ STABLE: Test relative to now
+expect(result.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+
+// ✅ BETTER: Mock time
+jest.useFakeTimers();
+jest.setSystemTime(new Date('2024-01-15'));
+```
+
+**4. External Dependencies**
+```javascript
+// ❌ FLAKY: Depends on real API
+const data = await fetch('https://api.example.com/data');
+
+// ✅ STABLE: Mock external calls
+jest.mock('node-fetch');
+fetch.mockResolvedValue({ json: () => ({ data: 'mocked' }) });
+```
+
 ## Performance Debugging
 
-1. **Profile first**
-   - Don't optimize blindly
-   - Measure before and after
-   - Find bottlenecks
+### Slow Test Diagnosis
 
-2. **Common culprits**
-   - N+1 queries
-   - Unnecessary re-renders
-   - Large data processing
-   - Synchronous I/O
+```javascript
+// Measure test execution time
+test('slow test', async () => {
+  const start = Date.now();
 
-3. **Tools**
-   - Browser DevTools Performance tab
-   - Lighthouse
-   - Python: cProfile, line_profiler
-   - Node: clinic.js, 0x
+  await performSlowOperation();
+
+  const duration = Date.now() - start;
+  console.log(`Operation took ${duration}ms`);
+
+  if (duration > 5000) {
+    console.warn('⚠️ Slow test detected!');
+  }
+});
+
+// Use test.slow() to increase timeout
+test.slow('known slow test', async () => {
+  // Timeout is 3x normal
+});
 ```
 
-### Pattern 3: Production Bugs
+### Profiling with Chrome DevTools
 
-```markdown
-## Production Debugging
+```javascript
+test('profile this test', async ({ page }) => {
+  // Start profiling
+  await page.evaluate(() => {
+    console.profile('MyTest');
+  });
 
-1. **Gather evidence**
-   - Error tracking (Sentry, Bugsnag)
-   - Application logs
-   - User reports
-   - Metrics/monitoring
+  // Run test steps
+  await page.goto('/');
+  await page.click('.button');
 
-2. **Reproduce locally**
-   - Use production data (anonymized)
-   - Match environment
-   - Follow exact steps
-
-3. **Safe investigation**
-   - Don't change production
-   - Use feature flags
-   - Add monitoring/logging
-   - Test fixes in staging
+  // Stop profiling
+  await page.evaluate(() => {
+    console.profileEnd('MyTest');
+  });
+});
 ```
 
-## Best Practices
+## Best Practices for Debuggable Tests
 
-1. **Reproduce First**: Can't fix what you can't reproduce
-2. **Isolate the Problem**: Remove complexity until minimal case
-3. **Read Error Messages**: They're usually helpful
-4. **Check Recent Changes**: Most bugs are recent
-5. **Use Version Control**: Git bisect, blame, history
-6. **Take Breaks**: Fresh eyes see better
-7. **Document Findings**: Help future you
-8. **Fix Root Cause**: Not just symptoms
+1. **Use descriptive test names** -- Know what's being tested at a glance.
+2. **Add comments for complex logic** -- Future you will thank you.
+3. **Log intermediate states** -- Don't just log errors, log success states too.
+4. **Use test.step() in Playwright** -- Organize test actions into logical steps.
+5. **Keep tests focused** -- One test should test one thing.
+6. **Use data-testid attributes** -- Makes debugging selector issues easier.
+7. **Add custom error messages** -- `expect(x).toBe(y, 'User ID should match')`
+8. **Record video on failure** -- Visual context is invaluable.
+9. **Use trace viewer** -- See exactly what happened step by step.
+10. **Fix flaky tests immediately** -- They erode trust in the test suite.
 
-## Common Debugging Mistakes
+## Anti-Patterns to Avoid
 
-- **Making Multiple Changes**: Change one thing at a time
-- **Not Reading Error Messages**: Read the full stack trace
-- **Assuming It's Complex**: Often it's simple
-- **Debug Logging in Prod**: Remove before shipping
-- **Not Using Debugger**: console.log isn't always best
-- **Giving Up Too Soon**: Persistence pays off
-- **Not Testing the Fix**: Verify it actually works
+1. **Adding wait timeouts** -- `page.waitForTimeout(5000)` hides the real problem.
+2. **Retrying flaky tests** -- Fix the flakiness, don't mask it.
+3. **Skipping failing tests** -- Fix or delete, don't skip indefinitely.
+4. **Not checking logs** -- Logs often contain the answer.
+5. **Debugging in production** -- Use staging or local environments.
+6. **Changing test assertions** -- If the assertion is correct, fix the code, not the test.
+7. **Not using version control** -- Git bisect is your friend.
+8. **Ignoring warnings** -- Warnings often indicate future failures.
+9. **Not documenting known issues** -- Add comments or tickets for workarounds.
+10. **Debugging alone** -- Pair programming on tough bugs saves time.
 
-## Quick Debugging Checklist
+## Debugging Checklist
 
-```markdown
-## When Stuck, Check:
+When a test fails:
 
-- [ ] Spelling errors (typos in variable names)
-- [ ] Case sensitivity (fileName vs filename)
-- [ ] Null/undefined values
-- [ ] Array index off-by-one
-- [ ] Async timing (race conditions)
-- [ ] Scope issues (closure, hoisting)
-- [ ] Type mismatches
-- [ ] Missing dependencies
-- [ ] Environment variables
-- [ ] File paths (absolute vs relative)
-- [ ] Cache issues (clear cache)
-- [ ] Stale data (refresh database)
-```
+- [ ] Read the full error message
+- [ ] Check screenshots/videos if available
+- [ ] Review recent code changes
+- [ ] Reproduce locally
+- [ ] Isolate the failing step
+- [ ] Add debug logging
+- [ ] Check environment variables
+- [ ] Verify test data
+- [ ] Review network requests
+- [ ] Check browser console logs
+- [ ] Run in different browsers
+- [ ] Test in CI environment
+- [ ] Use debugger/breakpoints
+- [ ] Check for race conditions
+- [ ] Verify mock setup
+- [ ] Review fixture data
+- [ ] Check database state
+- [ ] Test with different data
+- [ ] Simplify test to minimal case
+- [ ] Ask for help if stuck > 30 min
 
-## Resources
-
-- **references/debugging-tools-guide.md**: Comprehensive tool documentation
-- **references/performance-profiling.md**: Performance debugging guide
-- **references/production-debugging.md**: Debugging live systems
-- **assets/debugging-checklist.md**: Quick reference checklist
-- **assets/common-bugs.md**: Common bug patterns
-- **scripts/debug-helper.ts**: Debugging utility functions
+Debugging is a skill. The more systematic you are, the faster you'll find and fix issues. Document what you learn for future reference.

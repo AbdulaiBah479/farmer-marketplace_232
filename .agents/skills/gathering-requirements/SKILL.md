@@ -1,161 +1,232 @@
 ---
-name: gathering-requirements
-description: "Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by implementing-features during DISCOVER stage and by the Forged workflow."
+name: Gathering Requirements
+description: Systematically clarify user needs, preferences, and constraints before planning or implementation. Classifies work type, investigates existing systems, discovers edge cases and integration points, resolves assumptions, and creates detailed specifications. Use when building features, enhancements, or integrations where requirements need clarification.
 ---
 
-# Requirements Gathering
+# Gathering Requirements
 
-<ROLE>
-Requirements Architect channeling four archetype perspectives. You elicit comprehensive requirements by examining needs (Queen), constraints (Emperor), security surface (Hermit), and scope boundaries (Priestess). Your reputation depends on requirements documents that prevent downstream rework. Ambiguity here becomes bugs later.
-</ROLE>
+## When to Use
 
-## Reasoning Schema
+- User specifying HOW they want something done
+- Clarifying preferences or constraints
+- Understanding WHAT needs to be built
+- Gathering specifications before work begins
+- Building on existing systems (enhancement, integration)
 
-<analysis>Before elicitation: feature being defined, user inputs available, context from project, known constraints.</analysis>
+## Core Workflow
 
-<reflection>After elicitation: all four archetypes consulted, requirements structured, assumptions explicit, validation criteria defined.</reflection>
+### 1. Classify Request Type
 
-## Invariant Principles
+Ask 1-2 quick questions to understand context:
 
-1. **Four Perspectives Are Mandatory**: Every requirement set must address Queen, Emperor, Hermit, and Priestess.
-2. **Ambiguity Is Debt**: Vague requirements become bugs. Demand specificity.
-3. **Explicit Over Implicit**: Unstated assumptions are hidden requirements. Surface them.
-4. **User Value Anchors Everything**: Features without clear user value are scope creep.
-5. **Constraints Shape Solutions**: Understanding limits early prevents wasted design.
+**Q1: What type of work?**
+1. New feature - Building from scratch
+2. Enhancement - Improving existing functionality
+3. Integration - Connecting external system
+4. Refactor - Changing implementation without behavior change
 
-## Inputs / Outputs
+**Q2: Current knowledge level?**
+- Clear vision - User knows exactly what they want
+- General idea - Goal clear, implementation details fuzzy
+- Exploring options - Uncertain about approach
 
-| Input | Required | Description |
-|-------|----------|-------------|
-| `feature_description` | Yes | Natural language description of what to build |
-| `feedback_to_address` | No | Feedback from roundtable requiring revision |
+### 2. Pre-Investigation (If Needed)
 
-| Output | Type | Description |
-|--------|------|-------------|
-| `requirements_document` | File | At `~/.local/spellbook/docs/<project>/forged/<feature>/requirements.md` |
-| `open_questions` | Inline | Questions requiring user input |
+**When to investigate first:**
+- Enhancing existing feature (understand current implementation)
+- Integration unclear (explore existing patterns)
+- Technical constraints unknown (investigate capabilities)
+- Building on existing architecture
 
----
+**When to skip investigation:**
+- Green field feature (nothing exists yet)
+- Complete requirements already provided
+- Simple, clear scope with no dependencies
 
-## The Four Perspectives
+Delegate async investigation agents to understand existing system. Results saved in `agent-responses/`.
 
-### Queen: User Needs
-Who are the users? What problem is solved? What does success look like? User stories: "As a [type], I want [capability] so that [benefit]"
+Transform findings into informed questions:
+- ❌ Generic: "What authentication methods do you want?"
+- ✅ Informed: "I see JWT with refresh tokens. For MFA: TOTP app? SMS codes? Required for all users or optional?"
 
-### Emperor: Constraints
-Technical constraints (stack, platform). Resource constraints (time, team). Integration requirements. Performance targets (latency, throughput).
+### 3. Universal Discovery Questions
 
-### Hermit: Security Surface
-What sensitive data? Auth required? Attack vectors? Compliance requirements? What if compromised?
+Ask these core questions for any feature (adapt to context):
 
-### Priestess: Scope Boundaries
-What's IN scope? What's OUT of scope (with reasons)? Edge cases to handle vs defer? What assumptions are we making?
+**UQ-1: Happy Path**
+"Describe the successful scenario step-by-step from the user's perspective."
+- What triggers the feature?
+- What actions does user take?
+- What's the desired outcome?
 
-**Fractal exploration (optional):** When perspectives produce contradictory requirements, invoke fractal-thinking with intensity `pulse` and seed: "How can [requirement A] and [constraint B] be reconciled?". Use the synthesis to present Pareto-optimal requirement resolution options.
+**UQ-2: Edge Cases & Constraints**
+"What should happen for these scenarios?"
+- Empty state (no data)
+- Huge dataset (performance)
+- Invalid input (validation)
+- Network failure (offline)
+- Concurrent actions (conflicts)
 
----
+**UQ-3: Performance Expectations**
+"How should this feel to the user?"
+- Instant (<100ms) - UI updates, simple operations
+- Fast (<1s) - API calls, data fetching
+- Eventual (loading indicator) - Heavy processing
+- Background (no waiting) - Async operations
 
-## Elicitation Process
+**UQ-4: Failure Modes**
+"What should NEVER happen? What would frustrate users most?"
+- Data loss scenarios
+- Breaking existing workflows
+- Confusing error states
 
-1. **Initial Extraction**: Parse description for explicit requirements, implicit requirements, constraints, unknowns
-2. **Perspective Analysis**: Apply each lens, generate questions, answer from context, flag UNKNOWN
-3. **Gap Identification**: Questions without answers, assumptions without validation, conflicts
-4. **User Clarification**: Present questions (one at a time) or document gaps as UNKNOWN for roundtable
-5. **Document Generation**: Generate requirements with all four perspectives
+**UQ-5: Scope Boundaries**
+"What's explicitly OUT of scope for this iteration?"
+- Future enhancements
+- Advanced features
+- Edge cases to defer
 
----
+**UQ-6: Integration Points**
+"How does this interact with:"
+- Existing features
+- External APIs or services
+- Database or storage
+- Authentication/authorization
+- Third-party libraries
 
-## Requirements Document Structure
+### 4. Feature-Specific Discovery
 
-```markdown
-# Requirements: [Feature Name]
+Tailor questions based on feature type (select relevant):
 
-## Overview
-[2-3 sentence summary]
+**Authentication/Authorization:**
+- Credentials: Email/password? Social login? Magic link? 2FA/MFA?
+- Session: Duration? Remember me?
+- Password: Length/complexity requirements?
+- Failed login: Generic error / account lock / CAPTCHA / rate limit?
+- MFA: TOTP app? SMS? Email? Required or optional?
 
-## User Needs (Queen)
-- Primary users, problem statement, user stories, success criteria
+**CRUD Operations:**
+- Validation: Required fields? Format rules? Length limits? Unique constraints?
+- Concurrent edits: Last write wins / show conflict / lock?
+- Delete: Hard delete / soft delete / confirmation / undo?
+- Saves: Wait for server / optimistic update / show saving?
 
-## Constraints (Emperor)
-- Technical, resource, integration, performance
+**Search & Filter:**
+- Scope: Search specific fields / all text / metadata?
+- Timing: Live as typing / after pause / on Enter?
+- Matching: Exact / contains / fuzzy / full-text?
+- Sorting: Relevance / alphabetical / recent / user-selectable?
 
-## Security Surface (Hermit)
-- Data classification, auth, threat model, compliance
+**Forms & Input:**
+- Validation timing: On blur / on submit / as typing?
+- Error display: Inline / summary / toast?
+- Unsaved changes: Warning / auto-save / allow losing data?
+- Defaults: Previous values / smart defaults / empty / pre-populated?
 
-## Scope Boundaries (Priestess)
-- In scope, out of scope (with reasons), edge cases, assumptions
+**Real-time Features:**
+- Mechanism: Polling / WebSocket / Server-Sent Events?
+- Frequency: 1 second / 5-10 seconds / 1 minute / event-driven?
+- Offline: Queue actions / block usage / show offline mode?
+- Conflict: Show notification / auto-merge / manual resolution?
 
-## Functional Requirements
-| ID | Requirement | Priority | Source |
+**File Upload:**
+- Types & limits: Images only / docs / any file? Max size?
+- Multiple files: One at a time / simultaneous / batch?
+- Progress: Show progress bar / allow cancel?
+- Storage: Where stored? CDN? S3? Local?
 
-## Open Questions
-- [ ] [Question] (Blocker: yes/no)
-```
+**Data Visualization:**
+- Chart type: Bar / line / pie / scatter / custom?
+- Interactivity: Hover tooltips / click drill-down / zoom / pan?
+- Responsive: Mobile behavior? Simplified view?
+- Export: Download as image / CSV / PDF?
 
----
+### 5. Resolve All Unknowns
 
-## Example
+**Step 5a: Generate Technical Inferences Internally**
 
-<example>
-Feature: "User authentication with OAuth"
+Document assumptions with confidence levels:
 
-**Queen (User Needs):**
-- Users want single sign-on with existing Google/GitHub accounts
-- Success: Login < 5 clicks, no separate password
+- **HIGH:** User explicitly stated / only reasonable approach / industry standard / security requirement
+- **MEDIUM:** Common practice but alternatives exist / implied by requirements / standard pattern
+- **LOW:** Filling implementation gap / multiple valid approaches / assumption about preference
 
-**Emperor (Constraints):**
-- Must use existing FastAPI backend
-- Timeline: 1 sprint
-- Must support mobile and web
+**Step 5b: Present Inferences for Confirmation**
 
-**Hermit (Security):**
-- Handles: email, profile (PII)
-- Auth: OAuth 2.0 with PKCE
-- Threats: Token theft → short expiry + refresh rotation
+"Based on our discussion, here are my technical assumptions:
 
-**Priestess (Scope):**
-- IN: Google, GitHub OAuth
-- OUT: Apple Sign-in (future), password fallback (intentional)
-- Assumption: Users have Google/GitHub accounts
-</example>
+**High Confidence (will implement unless you object):**
+- [Assumption with reasoning]
 
----
+**Medium Confidence (common approach, alternatives exist):**
+- [Assumption - alternative: X]
 
-## Quality Gates
+**Low Confidence (need your input):**
+- [Question with proposed approach]
 
-| Check | Criteria |
-|-------|----------|
-| User value clear | At least 1 user story with measurable benefit |
-| Constraints documented | Technical and resource constraints explicit |
-| Security addressed | Threat model for sensitive features |
-| Scope bounded | In-scope AND out-of-scope lists |
-| No blocking unknowns | All UNKNOWN classified or escalated |
+Any objections or preferences?"
 
----
+**Step 5c: Resolve All Clarifications**
 
-<FORBIDDEN>
-- Skipping any of the four perspectives
-- Leaving UNKNOWN on blocking requirements
-- Accepting vague requirements ("fast", "secure")
-- Assuming requirements without documenting assumptions
-- Mixing requirements with design (WHAT, not HOW)
-</FORBIDDEN>
+Ask follow-up questions for remaining unknowns. **Do not proceed to Step 6 until ALL inferences are confirmed and ALL clarifications are resolved.**
 
----
+### 6. Create Requirements Specification
 
-## Self-Check
+Use the canonical template at `~/.claude/file-templates/requirements.template.md`.
 
-- [ ] All four perspectives addressed
-- [ ] Requirements specific and measurable
-- [ ] Scope boundaries explicit (in AND out)
-- [ ] Security surface documented
-- [ ] Open questions marked blocking or non-blocking
-- [ ] Roundtable feedback addressed (if any)
+Instructions:
+- Fill out every section with **CONFIRMED information only**
+- Document decisions in "Implementation Notes" with reasoning
+- Cross-reference relevant docs in `docs/`; create stubs if missing
+- Ensure "Relevant Files" section is comprehensive
+- Include "Artifacts" section referencing existing system findings
 
-If ANY unchecked: revise before returning.
+### 7. Present & Confirm Final Specification
 
----
+"Here's the requirements specification based on our confirmed decisions:
 
-<FINAL_EMPHASIS>
-Requirements are the foundation. Queen ensures we build what users need. Emperor ensures we build within constraints. Hermit ensures we build securely. Priestess ensures we build the right scope. All four perspectives, every time.
-</FINAL_EMPHASIS>
+[Show or link to requirements file]
+
+All technical decisions and clarifications have been incorporated. Ready to proceed to planning/implementation?"
+
+**Wait for user approval before next phase.**
+
+### 8. Update Project Documentation
+
+**If project has docs structure:**
+
+Update `docs/product-requirements.md`:
+- Add feature with next Feature ID (F-##)
+- Include requirements summary
+- Add acceptance criteria
+- Link to related features and integration points
+
+**Reference:**
+- `docs/system-design.md` - Architecture context
+- Investigation findings from `agent-responses/agent_<id>.md`
+
+## Quick Reference
+
+**Essential Questions:**
+1. Happy path scenario
+2. Key edge cases & performance expectations
+3. Failure modes
+4. Out of scope items
+5. Integration points
+
+**Investigation Artifacts:**
+- Input: `docs/product-requirements.md`, `docs/system-design.md`
+- Output: Requirements specification + updated project docs
+
+**Confidence Levels:**
+- HIGH: Explicit requirement or best practice
+- MEDIUM: Standard practice with alternatives
+- LOW: Turn into question for user
+
+## Common Pitfalls
+
+- ❌ Asking questions without understanding existing system
+- ❌ Proceeding to implementation with unresolved ambiguities
+- ❌ Mixing assumptions with confirmed requirements
+- ❌ Skipping edge case discovery
+- ✅ Investigate first → ask informed questions → resolve all unknowns → document → confirm

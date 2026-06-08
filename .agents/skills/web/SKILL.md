@@ -1,96 +1,65 @@
 ---
-name: Web应用测试
-description: 使用 Playwright 与本地 Web 应用程序交互和测试的工具包。支持验证前端功能、调试 UI 行为、捕获浏览器屏幕截图和查看浏览器日志。
-license: Complete terms in LICENSE.txt
+id: security/web-security-guide
+name: Web 安全漏洞学习指南
+category: security
+description: OWASP 十大漏洞原理、影响与修复方案，覆盖 Python/Java 场景
+tags: [security, owasp, vulnerability, injection, xss, csrf, ssrf]
+updated_at: 2026-01-23
 ---
 
-# Web Application Testing
+# Web 安全漏洞学习指南
 
-To test local web applications, write native Python Playwright scripts.
+## ⚠️ 核心规则
 
-**Helper Scripts Available**:
-- `scripts/with_server.py` - Manages server lifecycle (supports multiple servers)
+1. **永不信任用户输入** - 所有外部数据必须校验、转义、参数化
+2. **最小权限原则** - 仅授予完成任务所需的最小权限
+3. **纵深防御** - 多层安全措施，不依赖单一防护
 
-**Always run scripts with `--help` first** to see usage. DO NOT read the source until you try running the script first and find that a customized solution is abslutely necessary. These scripts can be very large and thus pollute your context window. They exist to be called directly as black-box scripts rather than ingested into your context window.
+## 十大漏洞速查
 
-## Decision Tree: Choosing Your Approach
+| 漏洞 | 危害 | 核心防御 |
+|------|------|----------|
+| 🔴 注入 | RCE/数据泄露 | 参数化查询 |
+| 🔴 XSS | 会话劫持 | 转义输出 |
+| 🔴 认证缺陷 | 账户接管 | 强Token+限速 |
+| 🔴 敏感数据泄露 | 隐私泄露 | 加密+脱敏 |
+| 🔴 访问控制缺失 | 越权操作 | 后端鉴权 |
+| 🟡 安全配置错误 | 信息泄露 | 关闭Debug |
+| 🟡 CSRF | 伪造操作 | Token验证 |
+| 🟡 反序列化 | RCE | 禁用危险接口 |
+| 🟡 SSRF | 内网探测 | 白名单URL |
+| ⚪ 日志不足 | 无法溯源 | 完整审计 |
 
-```
-User task → Is it static HTML?
-    ├─ Yes → Read HTML file directly to identify selectors
-    │         ├─ Success → Write Playwright script using selectors
-    │         └─ Fails/Incomplete → Treat as dynamic (below)
-    │
-    └─ No (dynamic webapp) → Is the server already running?
-        ├─ No → Run: python scripts/with_server.py --help
-        │        Then use the helper + write simplified Playwright script
-        │
-        └─ Yes → Reconnaissance-then-action:
-            1. Navigate and wait for networkidle
-            2. Take screenshot or inspect DOM
-            3. Identify selectors from rendered state
-            4. Execute actions with discovered selectors
-```
+## 📦 按需加载资源
 
-## Example: Using with_server.py
+| 漏洞类型 | URI |
+|----------|-----|
+| 注入漏洞 | `skill://web-security-guide/references/injection.md` |
+| XSS攻击 | `skill://web-security-guide/references/xss.md` |
+| 认证会话 | `skill://web-security-guide/references/auth-session.md` |
+| 数据泄露 | `skill://web-security-guide/references/data-exposure.md` |
+| 访问控制 | `skill://web-security-guide/references/access-control.md` |
+| 配置错误 | `skill://web-security-guide/references/security-config.md` |
+| CSRF | `skill://web-security-guide/references/csrf.md` |
+| 反序列化 | `skill://web-security-guide/references/deserialization.md` |
+| SSRF | `skill://web-security-guide/references/ssrf.md` |
+| 日志监控 | `skill://web-security-guide/references/logging-monitoring.md` |
 
-To start a server, run `--help` first, then use the helper:
+> 💡 先用速查表定位问题，再按需加载详细文档
 
-**Single server:**
-```bash
-python scripts/with_server.py --server "npm run dev" --port 5173 -- python your_automation.py
-```
 
-**Multiple servers (e.g., backend + frontend):**
-```bash
-python scripts/with_server.py \
-  --server "cd backend && python server.py" --port 3000 \
-  --server "cd frontend && npm run dev" --port 5173 \
-  -- python your_automation.py
-```
+---
+## 📦 可用资源
 
-To create an automation script, include only Playwright logic (servers are managed automatically):
-```python
-from playwright.sync_api import sync_playwright
+- `skill://web-security-guide/references/access-control.md`
+- `skill://web-security-guide/references/auth-session.md`
+- `skill://web-security-guide/references/csrf.md`
+- `skill://web-security-guide/references/data-exposure.md`
+- `skill://web-security-guide/references/deserialization.md`
+- `skill://web-security-guide/references/injection.md`
+- `skill://web-security-guide/references/logging-monitoring.md`
+- `skill://web-security-guide/references/security-config.md`
+- `skill://web-security-guide/references/ssrf.md`
+- `skill://web-security-guide/references/xss.md`
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True) # Always launch chromium in headless mode
-    page = browser.new_page()
-    page.goto('http://localhost:5173') # Server already running and ready
-    page.wait_for_load_state('networkidle') # CRITICAL: Wait for JS to execute
-    # ... your automation logic
-    browser.close()
-```
-
-## Reconnaissance-Then-Action Pattern
-
-1. **Inspect rendered DOM**:
-   ```python
-   page.screenshot(path='/tmp/inspect.png', full_page=True)
-   content = page.content()
-   page.locator('button').all()
-   ```
-
-2. **Identify selectors** from inspection results
-
-3. **Execute actions** using discovered selectors
-
-## Common Pitfall
-
-❌ **Don't** inspect the DOM before waiting for `networkidle` on dynamic apps
-✅ **Do** wait for `page.wait_for_load_state('networkidle')` before inspection
-
-## Best Practices
-
-- **Use bundled scripts as black boxes** - To accomplish a task, consider whether one of the scripts available in `scripts/` can help. These scripts handle common, complex workflows reliably without cluttering the context window. Use `--help` to see usage, then invoke directly. 
-- Use `sync_playwright()` for synchronous scripts
-- Always close the browser when done
-- Use descriptive selectors: `text=`, `role=`, CSS selectors, or IDs
-- Add appropriate waits: `page.wait_for_selector()` or `page.wait_for_timeout()`
-
-## Reference Files
-
-- **examples/** - Examples showing common patterns:
-  - `element_discovery.py` - Discovering buttons, links, and inputs on a page
-  - `static_html_automation.py` - Using file:// URLs for local HTML
-  - `console_logging.py` - Capturing console logs during automation
+> 根据 SKILL.md 中的 IF-THEN 规则判断是否需要加载

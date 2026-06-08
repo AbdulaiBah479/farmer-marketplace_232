@@ -1,203 +1,481 @@
 ---
-name: Excel Automation
-description: "Excel Automation: create workbooks, manage worksheets, read/write cell data, and format spreadsheets via Microsoft Excel and Google Sheets integration"
-requires:
-  mcp: [rube]
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLAUDE OFFICE SKILL - Enhanced Metadata v2.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Basic Information
+name: excel-automation
+description: ">"
+version: "1.0"
+author: claude-office-skills
+license: MIT
+
+# Categorization
+category: spreadsheet
+tags:
+  - excel
+  - automation
+  - macro
+  - workflow
+department: All
+
+# AI Model Compatibility
+models:
+  recommended:
+    - claude-sonnet-4
+    - claude-opus-4
+  compatible:
+    - claude-3-5-sonnet
+    - gpt-4
+    - gpt-4o
+
+# MCP Tools Integration
+mcp:
+  server: office-mcp
+  tools:
+    - read_xlsx
+    - create_xlsx
+    - apply_formula
+    - pivot_table
+
+# Skill Capabilities
+capabilities:
+  - automation
+  - data_processing
+  - reporting
+
+# Language Support
+languages:
+  - en
+  - zh
 ---
 
-# Excel Automation
+# Excel Automation Skill
 
-Automate spreadsheet operations including creating workbooks, writing data, formatting cells, upserting rows, and managing worksheets. Works with Microsoft Excel (OneDrive) and Google Sheets.
+## Overview
 
-**Toolkit docs:** [composio.dev/toolkits/excel](https://composio.dev/toolkits/excel)
+This skill enables advanced Excel automation using **xlwings** - a library that can interact with live Excel instances. Unlike openpyxl (file-only), xlwings can control Excel in real-time, execute VBA, update dashboards, and automate complex workflows.
 
----
+## How to Use
 
-## Setup
+1. Describe the Excel automation task you need
+2. Specify if you need live Excel interaction or file processing
+3. I'll generate xlwings code and execute it
 
-This skill requires the **Rube MCP server** connected at `https://rube.app/mcp`.
+**Example prompts:**
+- "Update this live Excel dashboard with new data"
+- "Run this VBA macro and get the results"
+- "Create an Excel add-in for data validation"
+- "Automate monthly report generation with live charts"
 
-Before executing any tools, ensure an active connection exists for the `excel` (and optionally `googlesheets`) toolkit. If no connection is active, initiate one via `RUBE_MANAGE_CONNECTIONS`.
+## Domain Knowledge
 
----
+### xlwings vs openpyxl
 
-## Core Workflows
+| Feature | xlwings | openpyxl |
+|---------|---------|----------|
+| Requires Excel | Yes | No |
+| Live interaction | Yes | No |
+| VBA execution | Yes | No |
+| Speed (large files) | Fast | Slow |
+| Server deployment | Limited | Easy |
 
-### 1. Create a New Excel Workbook
+### xlwings Fundamentals
 
-Use `EXCEL_CREATE_WORKBOOK` to generate a new `.xlsx` file and upload it to OneDrive.
+```python
+import xlwings as xw
 
-**Tool:** `EXCEL_CREATE_WORKBOOK`
+# Connect to active Excel workbook
+wb = xw.Book.caller()  # From Excel add-in
+wb = xw.books.active   # Active workbook
 
-**Steps:**
-1. Call `EXCEL_CREATE_WORKBOOK` with worksheet names and data
-2. The tool creates a `.xlsx` file and uploads it to OneDrive
-3. Use the returned file path/URL for subsequent operations
+# Open specific file
+wb = xw.Book('path/to/file.xlsx')
 
----
+# Create new workbook
+wb = xw.Book()
 
-### 2. Write Data to a Spreadsheet
-
-Use `GOOGLESHEETS_BATCH_UPDATE` to write values to a specific range or append rows.
-
-**Tool:** `GOOGLESHEETS_BATCH_UPDATE`
-
-**Key Parameters:**
-- `spreadsheet_id` (required) -- The spreadsheet ID from the URL (44-char alphanumeric string)
-- `sheet_name` (required) -- Tab name, e.g., `"Sheet1"`, `"Sales Data"`
-- `values` (required) -- 2D array of cell values, e.g., `[["Name","Amount"],["Alice",100]]`
-- `first_cell_location` -- Starting cell in A1 notation (e.g., `"A1"`, `"D3"`). Omit to append rows
-- `valueInputOption` -- `"USER_ENTERED"` (default, parses formulas) or `"RAW"` (stores as-is)
-
-**Example:**
-```
-Tool: GOOGLESHEETS_BATCH_UPDATE
-Arguments:
-  spreadsheet_id: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-  sheet_name: "Sheet1"
-  values: [["Item","Cost","Stocked"],["Wheel",20.50,true],["Screw",0.50,true]]
-  first_cell_location: "A1"
-```
-
----
-
-### 3. Upsert Rows by Key Column
-
-Use `GOOGLESHEETS_UPSERT_ROWS` to update existing rows by matching a key column, or append new rows if no match is found. Ideal for CRM syncs, inventory updates, and deduplication.
-
-**Tool:** `GOOGLESHEETS_UPSERT_ROWS`
-
-**Key Parameters:**
-- `spreadsheetId` (required) -- The spreadsheet ID
-- `sheetName` (required) -- Tab name
-- `rows` (required) -- 2D array of data rows (min 1 row). If `headers` is omitted, the first row is treated as headers
-- `headers` -- Column names for the data, e.g., `["Email","Phone","Status"]`
-- `keyColumn` -- Column header to match on, e.g., `"Email"`, `"SKU"`, `"Lead ID"`
-- `strictMode` -- `true` (default) errors on mismatched columns; `false` truncates silently
-
-**Example:**
-```
-Tool: GOOGLESHEETS_UPSERT_ROWS
-Arguments:
-  spreadsheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-  sheetName: "Contacts"
-  keyColumn: "Email"
-  headers: ["Email","Phone","Status"]
-  rows: [["john@example.com","555-0101","Active"],["jane@example.com","555-0102","Pending"]]
-```
-
----
-
-### 4. Format Cells
-
-Use `GOOGLESHEETS_FORMAT_CELL` to apply bold, italic, font size, and background colors to ranges.
-
-**Tool:** `GOOGLESHEETS_FORMAT_CELL`
-
-**Key Parameters:**
-- `spreadsheet_id` (required) -- The spreadsheet ID
-- `range` -- Cell range in A1 notation, e.g., `"A1:D1"`, `"B2:B10"` (recommended over index-based)
-- `sheet_name` -- Worksheet name, e.g., `"Sheet1"`
-- `bold` -- `true`/`false`
-- `italic` -- `true`/`false`
-- `fontSize` -- Font size in points, e.g., `12`
-- `red`, `green`, `blue` -- Background color components (0.0--1.0 float scale, NOT 0--255)
-
-**Example (bold header row with blue background):**
-```
-Tool: GOOGLESHEETS_FORMAT_CELL
-Arguments:
-  spreadsheet_id: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-  range: "A1:D1"
-  sheet_name: "Sheet1"
-  bold: true
-  fontSize: 12
-  red: 0.2
-  green: 0.4
-  blue: 0.9
+# Get sheet
+sheet = wb.sheets['Sheet1']
+sheet = wb.sheets[0]
 ```
 
----
+### Working with Ranges
 
-### 5. Add New Worksheet Tabs
+#### Reading and Writing
+```python
+# Single cell
+sheet['A1'].value = 'Hello'
+value = sheet['A1'].value
 
-Use `GOOGLESHEETS_ADD_SHEET` to create new tabs within an existing spreadsheet.
+# Range
+sheet['A1:C3'].value = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+data = sheet['A1:C3'].value  # Returns list of lists
 
-**Tool:** `GOOGLESHEETS_ADD_SHEET`
+# Named range
+sheet['MyRange'].value = 'Named data'
 
-**Key Parameters:**
-- `spreadsheetId` (required) -- The spreadsheet ID
-- `title` -- Name for the new tab, e.g., `"Q4 Report"`
-- `forceUnique` -- `true` (default) auto-appends suffix if name exists
-
-**Example:**
-```
-Tool: GOOGLESHEETS_ADD_SHEET
-Arguments:
-  spreadsheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-  title: "Q4 Report"
-  forceUnique: true
+# Expand range (detect data boundaries)
+sheet['A1'].expand().value  # All connected data
+sheet['A1'].expand('table').value  # Table format
 ```
 
----
+#### Dynamic Ranges
+```python
+# Current region (like Ctrl+Shift+End)
+data = sheet['A1'].current_region.value
 
-### 6. Read Data and Verify Content
+# Used range
+used = sheet.used_range.value
 
-Use `GOOGLESHEETS_BATCH_GET` to retrieve data from specified cell ranges for validation or further processing.
+# Last row with data
+last_row = sheet['A1'].end('down').row
 
-**Tool:** `GOOGLESHEETS_BATCH_GET`
+# Resize range
+rng = sheet['A1'].resize(10, 5)  # 10 rows, 5 columns
+```
 
-**Steps:**
-1. Call `GOOGLESHEETS_BATCH_GET` with the spreadsheet ID and target ranges
-2. Validate headers and data alignment
-3. Use results to inform subsequent write or update operations
+### Formatting
+```python
+# Font
+sheet['A1'].font.bold = True
+sheet['A1'].font.size = 14
+sheet['A1'].font.color = (255, 0, 0)  # RGB red
 
-**Supporting Tools:**
-- `GOOGLESHEETS_GET_SHEET_NAMES` -- List all tab names in a spreadsheet
-- `GOOGLESHEETS_GET_SPREADSHEET_INFO` -- Get metadata (sheet IDs, properties)
-- `GOOGLESHEETS_FIND_WORKSHEET_BY_TITLE` -- Check if a specific tab exists
+# Fill
+sheet['A1'].color = (255, 255, 0)  # Yellow background
 
----
+# Number format
+sheet['B1'].number_format = '$#,##0.00'
 
-## Recommended Execution Plan
+# Column width
+sheet['A:A'].column_width = 20
 
-1. **Create or locate the spreadsheet** using `GOOGLESHEETS_CREATE_GOOGLE_SHEET1` or reuse an existing `spreadsheetId`
-2. **Confirm the destination tab** using `GOOGLESHEETS_GET_SHEET_NAMES` or `GOOGLESHEETS_FIND_WORKSHEET_BY_TITLE`; create it with `GOOGLESHEETS_ADD_SHEET` if missing
-3. **Read existing headers** (optional) using `GOOGLESHEETS_BATCH_GET` to align columns
-4. **Write or upsert data** using `GOOGLESHEETS_BATCH_UPDATE` or `GOOGLESHEETS_UPSERT_ROWS`
-5. **Apply formatting** (optional) using `GOOGLESHEETS_FORMAT_CELL`
-6. **Verify results** (optional) using `GOOGLESHEETS_BATCH_GET`
-7. **Fallback:** If Google Sheets creation is blocked (HTTP 403), use `EXCEL_CREATE_WORKBOOK` for local `.xlsx` output
+# Row height
+sheet['1:1'].row_height = 30
 
----
+# Autofit
+sheet['A:D'].autofit()
+```
 
-## Known Pitfalls
+### Excel Features
 
-| Pitfall | Detail |
-|---------|--------|
-| **HTTP 403 on sheet creation** | `GOOGLESHEETS_CREATE_GOOGLE_SHEET1` fails when Drive create scope is missing. Reuse an existing `spreadsheetId` or fall back to `EXCEL_CREATE_WORKBOOK`. |
-| **Cell limit and rate throttling** | Google Sheets has a ~5,000,000 cell limit per spreadsheet. Excessive write frequency triggers HTTP 429. Batch changes and chunk large writes (~500 rows/call). |
-| **Format range off-by-one** | `GOOGLESHEETS_FORMAT_CELL` uses 0-based, endIndex-exclusive ranges when using index mode. Background color uses 0--1 float RGB, NOT 0--255 integer RGB. |
-| **Sheet title uniqueness** | Sheet titles are not guaranteed unique across API responses. Prefer operating by numeric `sheetId` and verify the resolved tab before writing. |
-| **Upsert payload shape** | `GOOGLESHEETS_UPSERT_ROWS` requires headers + 2D rows array. Sending list-of-dicts or empty `rows` causes validation errors. Ensure at least 1 data row. |
+#### Charts
+```python
+# Add chart
+chart = sheet.charts.add(left=100, top=100, width=400, height=250)
+chart.set_source_data(sheet['A1:B10'])
+chart.chart_type = 'column_clustered'
+chart.name = 'Sales Chart'
 
----
+# Modify existing chart
+chart = sheet.charts['Sales Chart']
+chart.chart_type = 'line'
+```
 
-## Quick Reference
+#### Tables
+```python
+# Create Excel Table
+rng = sheet['A1'].expand()
+table = sheet.tables.add(source=rng, name='SalesTable')
 
-| Tool Slug | Description |
-|-----------|-------------|
-| `EXCEL_CREATE_WORKBOOK` | Create a new `.xlsx` workbook and upload to OneDrive |
-| `GOOGLESHEETS_BATCH_UPDATE` | Write values to a range or append new rows |
-| `GOOGLESHEETS_UPSERT_ROWS` | Update existing rows by key or append new ones |
-| `GOOGLESHEETS_FORMAT_CELL` | Apply text/background formatting to cell ranges |
-| `GOOGLESHEETS_ADD_SHEET` | Add a new worksheet tab to a spreadsheet |
-| `GOOGLESHEETS_CREATE_GOOGLE_SHEET1` | Create a new Google Spreadsheet in Drive |
-| `GOOGLESHEETS_GET_SHEET_NAMES` | List all worksheet names in a spreadsheet |
-| `GOOGLESHEETS_GET_SPREADSHEET_INFO` | Retrieve spreadsheet metadata |
-| `GOOGLESHEETS_FIND_WORKSHEET_BY_TITLE` | Check if a worksheet exists by title |
-| `GOOGLESHEETS_BATCH_GET` | Read data from specified cell ranges |
+# Refresh table
+table.refresh()
 
----
+# Access table data
+table_data = table.data_body_range.value
+```
 
-*Powered by [Composio](https://composio.dev)*
+#### Pictures
+```python
+# Add picture
+sheet.pictures.add('logo.png', left=10, top=10, width=100, height=50)
+
+# Update picture from matplotlib
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot([1, 2, 3], [1, 4, 9])
+sheet.pictures.add(fig, name='MyPlot', update=True)
+```
+
+### VBA Integration
+```python
+# Run VBA macro
+wb.macro('MacroName')()
+
+# With arguments
+wb.macro('MyMacro')('arg1', 'arg2')
+
+# Get return value
+result = wb.macro('CalculateTotal')(100, 200)
+
+# Access VBA module
+vb_code = wb.api.VBProject.VBComponents('Module1').CodeModule.Lines(1, 10)
+```
+
+### User Defined Functions (UDFs)
+```python
+# Define a UDF (in Python file)
+import xlwings as xw
+
+@xw.func
+def my_sum(x, y):
+    """Add two numbers"""
+    return x + y
+
+@xw.func
+@xw.arg('data', ndim=2)
+def my_array_func(data):
+    """Process array data"""
+    import numpy as np
+    return np.sum(data)
+
+# These become Excel functions: =my_sum(A1, B1)
+```
+
+### Application Control
+```python
+# Excel application settings
+app = xw.apps.active
+app.screen_updating = False  # Speed up
+app.calculation = 'manual'   # Manual calc
+app.display_alerts = False   # Suppress dialogs
+
+# Perform operations...
+
+# Restore
+app.screen_updating = True
+app.calculation = 'automatic'
+app.display_alerts = True
+```
+
+## Best Practices
+
+1. **Disable Screen Updating**: For batch operations
+2. **Use Arrays**: Read/write entire ranges, not cell-by-cell
+3. **Manual Calculation**: Turn off auto-calc during data loading
+4. **Close Connections**: Properly close workbooks when done
+5. **Error Handling**: Handle Excel not being installed
+
+## Common Patterns
+
+### Performance Optimization
+```python
+import xlwings as xw
+
+def batch_update(data, workbook_path):
+    app = xw.App(visible=False)
+    try:
+        app.screen_updating = False
+        app.calculation = 'manual'
+        
+        wb = app.books.open(workbook_path)
+        sheet = wb.sheets['Data']
+        
+        # Write all data at once
+        sheet['A1'].value = data
+        
+        app.calculation = 'automatic'
+        wb.save()
+    finally:
+        wb.close()
+        app.quit()
+```
+
+### Dashboard Update
+```python
+def update_dashboard(data_dict):
+    wb = xw.books.active
+    
+    # Update data sheet
+    data_sheet = wb.sheets['Data']
+    for name, values in data_dict.items():
+        data_sheet[name].value = values
+    
+    # Refresh all charts
+    dashboard = wb.sheets['Dashboard']
+    for chart in dashboard.charts:
+        chart.refresh()
+    
+    # Update timestamp
+    from datetime import datetime
+    dashboard['A1'].value = f'Last Updated: {datetime.now()}'
+```
+
+### Report Generator
+```python
+def generate_monthly_report(month, data):
+    template = xw.Book('template.xlsx')
+    
+    # Fill data
+    sheet = template.sheets['Report']
+    sheet['B2'].value = month
+    sheet['A5'].value = data
+    
+    # Run calculations
+    template.app.calculate()
+    
+    # Export to PDF
+    sheet.api.ExportAsFixedFormat(0, f'report_{month}.pdf')
+    
+    template.save(f'report_{month}.xlsx')
+```
+
+## Examples
+
+### Example 1: Live Dashboard Update
+```python
+import xlwings as xw
+import pandas as pd
+from datetime import datetime
+
+# Connect to running Excel
+wb = xw.books.active
+dashboard = wb.sheets['Dashboard']
+data_sheet = wb.sheets['Data']
+
+# Fetch new data (simulated)
+new_data = pd.DataFrame({
+    'Date': pd.date_range('2024-01-01', periods=30),
+    'Sales': [1000 + i*50 for i in range(30)],
+    'Costs': [600 + i*30 for i in range(30)]
+})
+
+# Update data sheet
+data_sheet['A1'].value = new_data
+
+# Calculate profit
+data_sheet['D1'].value = 'Profit'
+data_sheet['D2'].value = '=B2-C2'
+data_sheet['D2'].expand('down').value = data_sheet['D2'].formula
+
+# Update KPIs on dashboard
+dashboard['B2'].value = new_data['Sales'].sum()
+dashboard['B3'].value = new_data['Costs'].sum()
+dashboard['B4'].value = new_data['Sales'].sum() - new_data['Costs'].sum()
+dashboard['A1'].value = f'Updated: {datetime.now().strftime("%Y-%m-%d %H:%M")}'
+
+# Refresh charts
+for chart in dashboard.charts:
+    chart.api.Refresh()
+
+print("Dashboard updated!")
+```
+
+### Example 2: Batch Processing Multiple Files
+```python
+import xlwings as xw
+from pathlib import Path
+
+def process_sales_files(folder_path, output_path):
+    """Consolidate multiple Excel files into one summary."""
+    
+    app = xw.App(visible=False)
+    app.screen_updating = False
+    
+    try:
+        # Create summary workbook
+        summary_wb = xw.Book()
+        summary_sheet = summary_wb.sheets[0]
+        summary_sheet.name = 'Consolidated'
+        
+        headers = ['File', 'Total Sales', 'Total Units', 'Avg Price']
+        summary_sheet['A1'].value = headers
+        
+        row = 2
+        for file in Path(folder_path).glob('*.xlsx'):
+            wb = app.books.open(str(file))
+            data_sheet = wb.sheets['Sales']
+            
+            # Extract summary
+            total_sales = data_sheet['B:B'].api.SpecialCells(11).Value  # xlCellTypeConstants
+            total_units = data_sheet['C:C'].api.SpecialCells(11).Value
+            
+            # Calculate and write
+            summary_sheet[f'A{row}'].value = file.name
+            summary_sheet[f'B{row}'].value = sum(total_sales) if isinstance(total_sales, (list, tuple)) else total_sales
+            summary_sheet[f'C{row}'].value = sum(total_units) if isinstance(total_units, (list, tuple)) else total_units
+            summary_sheet[f'D{row}'].value = f'=B{row}/C{row}'
+            
+            wb.close()
+            row += 1
+        
+        # Format summary
+        summary_sheet['A1:D1'].font.bold = True
+        summary_sheet['B:D'].number_format = '$#,##0.00'
+        summary_sheet['A:D'].autofit()
+        
+        summary_wb.save(output_path)
+        
+    finally:
+        app.quit()
+    
+    print(f"Consolidated {row-2} files to {output_path}")
+
+# Usage
+process_sales_files('/path/to/sales/', 'consolidated_sales.xlsx')
+```
+
+### Example 3: Excel Add-in with UDFs
+```python
+# myudfs.py - Place in xlwings project
+
+import xlwings as xw
+import numpy as np
+
+@xw.func
+@xw.arg('data', pd.DataFrame, index=False, header=False)
+@xw.ret(expand='table')
+def GROWTH_RATE(data):
+    """Calculate period-over-period growth rate"""
+    values = data.iloc[:, 0].values
+    growth = np.diff(values) / values[:-1] * 100
+    return [['Growth %']] + [[g] for g in growth]
+
+@xw.func
+@xw.arg('range1', np.array, ndim=2)
+@xw.arg('range2', np.array, ndim=2)
+def CORRELATION(range1, range2):
+    """Calculate correlation between two ranges"""
+    return np.corrcoef(range1.flatten(), range2.flatten())[0, 1]
+
+@xw.func
+def SENTIMENT(text):
+    """Basic sentiment analysis (placeholder)"""
+    positive = ['good', 'great', 'excellent', 'amazing']
+    negative = ['bad', 'poor', 'terrible', 'awful']
+    
+    text_lower = text.lower()
+    pos_count = sum(word in text_lower for word in positive)
+    neg_count = sum(word in text_lower for word in negative)
+    
+    if pos_count > neg_count:
+        return 'Positive'
+    elif neg_count > pos_count:
+        return 'Negative'
+    return 'Neutral'
+```
+
+## Limitations
+
+- Requires Excel to be installed
+- Limited support on macOS for some features
+- Not suitable for server-side processing
+- VBA features require trust settings
+- Performance varies with Excel version
+
+## Installation
+
+```bash
+pip install xlwings
+
+# For add-in functionality
+xlwings addin install
+```
+
+## Resources
+
+- [xlwings Documentation](https://docs.xlwings.org/)
+- [GitHub Repository](https://github.com/xlwings/xlwings)
+- [UDF Tutorial](https://docs.xlwings.org/en/stable/udfs.html)
+- [Excel VBA Reference](https://docs.microsoft.com/en-us/office/vba/api/overview/excel)

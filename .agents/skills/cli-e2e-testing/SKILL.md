@@ -1,367 +1,214 @@
 ---
-name: cli-e2e-testing
-description: CLI E2E testing patterns with BATS - parallelization, state sharing, and timeout management
-context: fork
+name: CLI E2E Testing
+description: Guidelines for writing robust CLI end-to-end tests using BATS
 ---
 
-# CLI E2E Testing Skill
+# CLI E2E Testing
 
-## When to Use This Skill
+Tests use BATS (Bash Automated Testing System) located in `e2e/`.
 
-Use this skill when:
-- Writing new CLI E2E tests in `e2e/tests/`
-- Reviewing E2E test code
-- Debugging slow or timing out E2E tests
-- Restructuring tests for better parallelization
-
----
-
-## Core Principles
-
-### 1. Happy Path Only
-
-E2E tests verify the system works end-to-end. Error cases belong in unit tests.
+## Quick Start
 
 ```bash
-# ✅ E2E: Test that the feature works
-@test "vm0 run executes agent successfully" {
-    run vm0 run "$AGENT" "echo hello"
-    assert_success
-}
+# Run all tests
+./e2e/run.sh
 
-# ❌ Don't test error cases in E2E - use unit tests instead
-@test "vm0 run fails with invalid agent" { ... }  # Move to unit test
+# Run specific test file
+./e2e/test/libs/bats/bin/bats e2e/tests/02-parallel/t03-volumes.bats
 ```
 
-### 2. `vm0 run` is Expensive (~15s)
-
-Each `vm0 run` call takes ~15 seconds due to:
-- API call to platform
-- E2B sandbox creation
-- Volume/artifact mounting
-- Mock Claude execution
-- Checkpoint creation
-
-**Minimize unnecessary `vm0 run` calls.**
-
-### 3. Parallelization Model
-
-```
-Files run in PARALLEL (up to -j 10)
-├── file-a.bats ──► case1 → case2 → case3  (SERIAL within file)
-├── file-b.bats ──► case1 → case2          (SERIAL within file)
-└── file-c.bats ──► case1                  (SERIAL within file)
-```
-
-- **Between files**: PARALLEL
-- **Within file**: SERIAL
-- **`$BATS_FILE_TMPDIR`**: Isolated per file (safe for parallel)
-
-### 4. State Sharing Strategy
-
-| Scenario | Strategy |
-|----------|----------|
-| Tests share state (session ID, checkpoint ID) | Same file, separate cases |
-| Tests are independent | Separate files (parallel) |
-
-### 5. Timeout Management
-
-Each test case has a timeout: **30s for serial**, **60s for parallel/runner tests**.
-
-**Don't stack multiple `vm0 run` in one case - will timeout!**
-
-```bash
-# ❌ BAD: 2 vm0 runs = 30s+ (timeout risk)
-@test "session test" {
-    run vm0 run "$AGENT" ...           # ~15s
-    run vm0 run continue "$SESSION_ID" # ~15s
-    # Total: ~30s+ in one case
-}
-
-# ✅ GOOD: Split into separate cases
-@test "step 1: create session" {
-    run vm0 run "$AGENT" ...           # ~15s
-    echo "$output" | grep -oP 'Session:\s*\K[a-f0-9-]+' > "$BATS_FILE_TMPDIR/session_id"
-}
-
-@test "step 2: continue from session" {
-    SESSION_ID=$(cat "$BATS_FILE_TMPDIR/session_id")
-    run vm0 run continue "$SESSION_ID" # ~15s
-}
-```
-
----
-
-## File Organization
-
-### Directory Structure
-
-```
-e2e/tests/
-├── 01-serial/              # Tests that MUST run serially (scope setup)
-├── 02-parallel/            # Tests that CAN run in parallel
-│   ├── t03-*.bats          # Independent tests (fast)
-│   ├── t06-session.bats    # State-sharing tests (slow, serial within)
-│   └── t07-checkpoint.bats # State-sharing tests (slow, serial within)
-└── 03-experimental-runner/ # Runner-specific tests
-```
-
-### When to Create Separate Files
-
-| Condition | Action |
-|-----------|--------|
-| Tests share state | Same file |
-| Tests are independent | Separate files |
-| Test is slow (>15s) but independent | Own file |
-
----
-
-## State Sharing with `$BATS_FILE_TMPDIR`
-
-`$BATS_FILE_TMPDIR` is a temporary directory:
-- **Shared** by all tests within the same file
-- **Isolated** between different files (parallel-safe)
-- **Automatically cleaned** after file completes
-
-### Pattern: Pass State Between Cases
-
-```bash
-setup_file() {
-    # One-time setup: compose agent (runs once per file)
-    export AGENT_NAME="e2e-session-$(date +%s%3N)"
-    vm0 compose "$CONFIG"
-}
-
-@test "step 1: create session" {
-    run vm0 run "$AGENT_NAME" --artifact-name "$ARTIFACT" "echo test"
-    assert_success
-
-    # Save state for next test
-    echo "$output" | grep -oP 'Session:\s*\K[a-f0-9-]+' > "$BATS_FILE_TMPDIR/session_id"
-}
-
-@test "step 2: continue from session" {
-    # Load state from previous test
-    SESSION_ID=$(cat "$BATS_FILE_TMPDIR/session_id")
-
-    run vm0 run continue "$SESSION_ID" "echo continue"
-    assert_success
-}
-
-teardown_file() {
-    # One-time cleanup (runs once per file)
-}
-```
-
-### Pattern: Share Multiple Values
-
-```bash
-@test "step 1: create resources" {
-    # ... create session and checkpoint
-
-    # Save multiple values
-    cat > "$BATS_FILE_TMPDIR/state.env" <<EOF
-SESSION_ID=$session_id
-CHECKPOINT_ID=$checkpoint_id
-ARTIFACT_VERSION=$version
-EOF
-}
-
-@test "step 2: use resources" {
-    # Load all values
-    source "$BATS_FILE_TMPDIR/state.env"
-
-    run vm0 run continue "$SESSION_ID" ...
-}
-```
-
----
-
-## Test Structure Template
-
-### For State-Sharing Tests (Multiple `vm0 run`)
+## Test File Template
 
 ```bash
 #!/usr/bin/env bats
 
 load '../../helpers/setup'
 
-# File-level constants
-AGENT_NAME="e2e-feature-$(date +%s%3N)"
-
-setup_file() {
-    # Create config and compose agent ONCE
-    export TEST_DIR="$(mktemp -d)"
-    export TEST_CONFIG="$TEST_DIR/vm0.yaml"
-
-    cat > "$TEST_CONFIG" <<EOF
-version: "1.0"
-agents:
-  ${AGENT_NAME}:
-    description: "Test agent"
-    framework: claude-code
-    image: "vm0/claude-code:dev"
-EOF
-
-    vm0 compose "$TEST_CONFIG"
-}
-
 setup() {
-    # Per-test setup: unique resources
-    export ARTIFACT_NAME="art-$(date +%s%3N)-$RANDOM"
+    # Use unique names with timestamp to avoid conflicts
+    export TEST_DIR="$(mktemp -d)"
+    export RESOURCE_NAME="e2e-test-$(date +%s)"
 }
 
 teardown() {
-    # Per-test cleanup (if needed)
+    # Always clean up temp directories
+    [ -n "$TEST_DIR" ] && [ -d "$TEST_DIR" ] && rm -rf "$TEST_DIR"
 }
 
-teardown_file() {
-    # File cleanup
-    rm -rf "$TEST_DIR"
-}
-
-@test "step 1: create session with vm0 run" {
-    # Create artifact
-    mkdir -p "/tmp/$ARTIFACT_NAME"
-    cd "/tmp/$ARTIFACT_NAME"
-    vm0 artifact init --name "$ARTIFACT_NAME"
-    vm0 artifact push
-
-    # Run agent (~15s)
-    run vm0 run "$AGENT_NAME" --artifact-name "$ARTIFACT_NAME" "echo hello"
+@test "descriptive test name" {
+    run $CLI_COMMAND subcommand args
     assert_success
-
-    # Save session ID for next test
-    echo "$output" | grep -oP 'Session:\s*\K[a-f0-9-]+' > "$BATS_FILE_TMPDIR/session_id"
+    assert_output --partial "expected text"
 }
+```
 
-@test "step 2: continue from session" {
-    SESSION_ID=$(cat "$BATS_FILE_TMPDIR/session_id")
+## Assertions
 
-    # Continue session (~15s)
-    run vm0 run continue "$SESSION_ID" "echo world"
+```bash
+# Exit status
+assert_success                    # exit code 0
+assert_failure                    # exit code != 0
+
+# Output matching
+assert_output --partial "text"    # output contains text
+refute_output --partial "text"    # output does NOT contain text
+assert_output --regexp "pattern"  # output matches regex
+
+# Line matching
+assert_line --index 0 "first line"
+```
+
+## Key Patterns
+
+### 1. Unique Resource Names
+
+```bash
+# Always use timestamp to prevent test conflicts
+export VOLUME_NAME="e2e-volume-$(date +%s)"
+export ARTIFACT_NAME="e2e-artifact-$(date +%s)"
+```
+
+### 2. Inline Config Files (Important!)
+
+**Always create config files inline within tests** instead of using shared fixture files. This avoids conflicts when multiple test suites run in parallel (each test suite may compose the same config simultaneously).
+
+```bash
+@test "vm0 compose with custom config" {
+    echo "# Create config inline"
+    cat > "$TEST_DIR/vm0.yaml" <<EOF
+version: "1.0"
+
+agents:
+  $AGENT_NAME:
+    provider: claude-code
+    description: "Test agent"
+EOF
+
+    run $CLI_COMMAND compose "$TEST_DIR/vm0.yaml"
     assert_success
 }
 ```
 
-### For Independent Tests (Single `vm0 run` or no run)
+**Why inline configs:**
+- Each test file gets its own isolated `$TEST_DIR` (created in `setup()`)
+- Parallel test execution won't conflict on shared config files
+- Test is self-contained and easier to understand
+
+### 3. Debug Output with Echo Comments
 
 ```bash
-#!/usr/bin/env bats
+@test "multi-step test" {
+    echo "# Step 1: Setup..."
+    # ... setup code ...
 
-load '../../helpers/setup'
+    echo "# Step 2: Execute..."
+    run $CLI_COMMAND ...
 
-setup() {
-    export UNIQUE_ID="$(date +%s%3N)-$RANDOM"
-}
-
-@test "vm0 artifact push creates new version" {
-    # Independent test - can be in separate file for parallelization
-    mkdir -p "/tmp/art-$UNIQUE_ID"
-    cd "/tmp/art-$UNIQUE_ID"
-
-    vm0 artifact init --name "test-$UNIQUE_ID"
-    echo "content" > file.txt
-
-    run vm0 artifact push
+    echo "# Step 3: Verify..."
     assert_success
-    assert_output --partial "Version:"
 }
 ```
 
----
-
-## Anti-Patterns
-
-### AP-1: Multiple `vm0 run` in One Case
+### 4. Extract IDs from Output
 
 ```bash
-# ❌ BAD: Will likely timeout (30s+)
-@test "full session workflow" {
-    run vm0 run "$AGENT" "create file"     # ~15s
-    run vm0 run continue "$SESSION" "read" # ~15s
-}
+# Extract UUID patterns
+CHECKPOINT_ID=$(echo "$output" | grep -oP 'Checkpoint:\s*\K[a-f0-9-]{36}' | head -1)
+SESSION_ID=$(echo "$output" | grep -oP 'Session:\s*\K[a-f0-9-]{36}' | head -1)
 
-# ✅ GOOD: Split into cases
-@test "step 1: create session" { ... }
-@test "step 2: continue session" { ... }
-```
-
-### AP-2: Independent Tests in Same File
-
-```bash
-# ❌ BAD: These run serially but don't need to
-# file: t10-mixed.bats
-@test "artifact push works" { ... }      # Independent
-@test "volume push works" { ... }        # Independent
-@test "compose validates config" { ... } # Independent
-
-# ✅ GOOD: Separate files for parallelization
-# file: t10a-artifact.bats
-@test "artifact push works" { ... }
-
-# file: t10b-volume.bats
-@test "volume push works" { ... }
-```
-
-### AP-3: Not Using `setup_file()` for Expensive Setup
-
-```bash
-# ❌ BAD: Composes agent for EVERY test
-setup() {
-    vm0 compose "$CONFIG"  # Runs before each test!
-}
-
-# ✅ GOOD: Compose once per file
-setup_file() {
-    vm0 compose "$CONFIG"  # Runs once before all tests
+# Verify extraction succeeded
+[ -n "$CHECKPOINT_ID" ] || {
+    echo "# Failed to extract checkpoint ID"
+    echo "$output"
+    return 1
 }
 ```
 
-### AP-4: Testing Error Cases in E2E
+### 5. Test Both Success and Failure
 
 ```bash
-# ❌ BAD: Error cases belong in unit tests
-@test "vm0 run fails with missing artifact" {
-    run vm0 run "$AGENT" --artifact-name "nonexistent"
+@test "valid input succeeds" {
+    run $CLI_COMMAND volume init
+    assert_success
+}
+
+@test "invalid input fails with error" {
+    run $CLI_COMMAND volume pull "nonexistent"
     assert_failure
-}
-
-# ✅ GOOD: E2E tests happy paths only
-@test "vm0 run succeeds with valid artifact" {
-    run vm0 run "$AGENT" --artifact-name "$VALID_ARTIFACT"
-    assert_success
+    assert_output --partial "not found"
 }
 ```
 
-### AP-5: Hardcoded Resource Names
+### 6. Suppress Output for Setup Commands
 
 ```bash
-# ❌ BAD: Will conflict in parallel runs
-ARTIFACT_NAME="test-artifact"
+# Use >/dev/null for setup commands that must succeed
+$CLI_COMMAND artifact init >/dev/null
+$CLI_COMMAND artifact push >/dev/null
 
-# ✅ GOOD: Unique names with timestamp + random
-ARTIFACT_NAME="test-artifact-$(date +%s%3N)-$RANDOM"
+# Only use `run` when you need to check output/status
+run $CLI_COMMAND artifact push
+assert_success
 ```
 
----
+## File Organization
 
-## Quick Checklist
+```
+e2e/
+├── tests/
+│   ├── 01-serial/         # Tests that must run sequentially (before parallel tests)
+│   │   ├── ser-t01-smoke.bats
+│   │   └── ser-t02-vm0-scope.bats
+│   └── 02-parallel/       # Feature-specific tests (run in parallel with -j 10)
+│       ├── t01-validation.bats
+│       ├── t03-volumes.bats
+│       └── t04-vm0-artifact-checkpoint.bats
+└── helpers/
+    └── setup.bash         # Shared setup (loads bats-assert)
+```
 
-Before committing E2E tests:
+### Serial vs Parallel Tests
 
-- [ ] Happy path only (error cases → unit tests)
-- [ ] Max ONE `vm0 run` per test case (timeout safety)
-- [ ] State-sharing tests in same file, independent tests in separate files
-- [ ] Use `setup_file()` for expensive one-time setup (compose)
-- [ ] Use `$BATS_FILE_TMPDIR` for state between cases
-- [ ] Unique resource names (timestamp + random)
-- [ ] Cleanup in `teardown()` or `teardown_file()`
+**Default:** Place tests in `02-parallel/`. Tests run in parallel with `-j 10`.
 
----
+**Use `01-serial/` when:**
+- Test modifies shared user state (e.g., `scope set --force`)
+- Test sets up state that parallel tests depend on
+- Race conditions could occur with parallel execution
 
-## Reference
+**Serial test naming:** Use `ser-tXX-name.bats` prefix for files in `01-serial/`.
 
-- BATS documentation: https://bats-core.readthedocs.io/en/stable/writing-tests.html
-- Test timeout: `BATS_TEST_TIMEOUT=30` (serial) / `BATS_TEST_TIMEOUT=60` (parallel/runner)
-- Parallelization: `-j 10 --no-parallelize-within-files`
+**Note:** Config files should be created inline within each test (see "Inline Config Files" pattern above), not stored in a shared fixtures directory.
+
+## Naming Convention
+
+- Serial test files: `ser-tXX-feature-name.bats` (in `01-serial/`)
+- Parallel test files: `tXX-feature-name.bats` (in `02-parallel/`)
+- Test resources: `e2e-{type}-$(date +%s)`
+
+## CI Integration
+
+Tests run in two steps:
+```bash
+# Step 1: Run serial tests sequentially (establishes shared state like scope)
+bats ./e2e/tests/01-serial/*.bats
+
+# Step 2: Run parallel tests with -j 10
+bats -j 10 --no-parallelize-within-files ./e2e/tests/02-parallel/*.bats
+```
+
+- Serial tests run first to establish stable shared state
+- `-j 10`: Run up to 10 test files in parallel
+- `--no-parallelize-within-files`: Tests within a file run sequentially
+
+## Checklist
+
+Before submitting:
+
+- [ ] Uses unique resource names with timestamp
+- [ ] Creates config files inline (not in shared fixtures)
+- [ ] Has `setup()` and `teardown()` for cleanup
+- [ ] Tests both success and failure cases
+- [ ] Includes debug echo comments for multi-step tests
+- [ ] Placed in correct directory (01-serial for shared state, 02-parallel for most tests)
+- [ ] Runs successfully: `./e2e/run.sh tests/02-parallel/your-test.bats`

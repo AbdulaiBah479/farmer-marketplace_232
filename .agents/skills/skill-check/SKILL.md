@@ -1,112 +1,120 @@
 ---
 name: skill-check
-description: "Validate Claude Code skills against the agentskills specification. Catches structural, semantic, and naming issues before users do."
-category: development
-risk: safe
-source: https://github.com/olgasafonova/SkillCheck-Free
-date_added: "2026-03-11"
-author: olgasafonova
-tags: [validation, linter, agentskills, skill-authoring, code-quality]
-tools: [claude, cursor, windsurf, codex-cli]
-license: MIT
-allowed-tools: Read Glob
-compatibility: claude-code
+description: Validate skill/command file format and structure
+user-invocable: true
 ---
 
-# SkillCheck
+# Skill File Validator
 
-## Overview
+Validate skill files for correct format.
 
-Validate SKILL.md files against the [agentskills specification](https://agentskills.io) and Anthropic best practices. Catches structural errors, semantic contradictions, naming anti-patterns, and quality gaps in a single read-only pass.
+---
 
-## When to Use This Skill
+## Validation Target
 
-- Use when user says "check skill", "skillcheck", or "validate SKILL.md"
-- Use when reviewing a skill before publishing to a marketplace
-- Use when debugging why a skill doesn't trigger correctly
-- Use when onboarding a team to skill authoring standards
-- Do NOT use for anti-slop detection, security scanning, or token analysis; use [SkillCheck Pro](https://getskillcheck.com) for those
+- With argument: validate specific file
+- Without: validate all `.claude/skills/*/SKILL.md`
 
-## How It Works
+---
 
-### Step 1: Parse
+## Required Frontmatter
 
-Read the target SKILL.md file and extract YAML frontmatter.
-
-### Step 2: Validate
-
-Apply all Free tier checks in order:
-
-| Category | Checks | What it catches |
-|----------|--------|----------------|
-| Structure (1.x) | Name format, description WHAT+WHEN, allowed-tools, categories, XML injection | Malformed frontmatter, missing fields |
-| Body (2.x) | Line count, hardcoded paths, stale dates, empty sections, deprecated syntax, MCP tool qualification | Content quality issues |
-| Naming (3.x) | Vague terms, single-word names, gerund suggestions | Poor discoverability |
-| Semantic (4.x) | Contradictions, ambiguous terms, missing output format, wisdom/platitudes, misplaced triggers | Logical inconsistencies |
-| Quality (8.x) | Examples, error handling, triggers, output format, prerequisites, negative triggers | Strengths (positive patterns) |
-
-### Step 3: Score
-
-Calculate overall score (0-100). Penalties: critical = -20, warning = -5, suggestion = -1.
-
-### Step 4: Report
-
-Return structured results: score, grade (Excellent/Good/Needs Work/Poor), issue list with check IDs, line numbers, messages, and fix suggestions.
-
-## Examples
-
-### Example 1: Validating a skill
-
-```
-User: check my skill at ~/.claude/skills/weekly-report/SKILL.md
-
-SkillCheck output:
-## weekly-report Check Results [FREE]
-
-Score: 85/100 (Good)
-
-### Warnings (2)
-  - 1.2-desc-when (line 3): Description missing WHEN clause
-  - 4.5-desc-no-triggers (line 3): Description lacks triggering conditions
-
-### Suggestions (1)
-  - 3.4-gerund-naming (line 2): Skill name could use gerund form
-
-### Passed Checks: 28
+```yaml
+---
+name: skill-name              # Required: lowercase, hyphenated
+description: What it does     # Required: shown in / menu
+version: 0.1.0              # Optional: semantic version
+user-invocable: true          # Optional: default true
+model: sonnet               # Optional: inherit, haiku, sonnet, opus, best, sonnet[1m], opus[1m], opusplan
+allowed-tools:                # Optional: restrict tools (YAML list)
+  - Read
+  - Write
+  - Bash
+context: fork                 # Optional: isolated context
+agent: agent-name             # Optional: run as specific agent
+argument-hint: "<hint>"       # Optional: hint for arguments
+when_to_use: Description of when this skill should be used  # Optional: underscore format
+arguments:                    # Optional: structured argument definitions
+  - name: arg-name
+    description: What the argument does
+    required: true
+disable-model-invocation: false  # Optional: prevent programmatic invocation
+hooks:                        # Optional: lifecycle hooks (same format as settings.json)
+  PreToolUse:
+    - matcher: Write
+      hooks:
+        - type: command
+          command: ./scripts/validate.sh
+  PostToolUse:
+    - matcher: Bash
+      hooks:
+        - type: command
+          command: ./scripts/log.sh
+  Stop:
+    - hooks:
+        - type: command
+          command: ./scripts/verify.sh
+          once: true
+---
 ```
 
-### Example 2: Clean skill passes all checks
-
+### Valid Tools (for allowed-tools)
 ```
-User: skillcheck ~/.claude/skills/processing-pdfs/SKILL.md
-
-Score: 100/100 (Excellent)
-All 31 checks passed. No issues found.
+Read, Write, Edit, Bash, Grep, Glob, Task,
+WebFetch, WebSearch, TodoWrite, NotebookEdit
 ```
 
-## Limitations
+---
 
-- Read-only: does not modify any files
-- Free tier covers structural, semantic, and naming checks only
-- Anti-slop, security, WCAG, token, enterprise, and workflow checks require [SkillCheck Pro](https://getskillcheck.com)
-- Semantic checks (contradiction detection, wisdom/platitude) are heuristic with ~5% false positive rate
-- Does not validate referenced files or scripts; only checks SKILL.md content
-- Single-file validation; does not cross-check against other skills in the same directory
+## Validation Checklist
 
-## Best Practices
+### Required Fields
+- [ ] `name` exists (lowercase, hyphenated)
+- [ ] `description` exists
 
-- Run SkillCheck before submitting skills to any marketplace
-- Fix all critical and warning issues; suggestions are optional
-- Use the check ID (e.g., `1.2-desc-when`) to find the exact rule in the skill body
-- Re-run after fixes to confirm the score improved
+### Optional Field Validation
+- [ ] `allowed-tools` are valid tool names (if specified)
+- [ ] `allowed-tools` uses YAML list format (if specified)
+- [ ] `agent` references existing agent file (if specified)
+- [ ] `version` is valid semver format (if specified)
+- [ ] `model` is valid value: inherit, haiku, sonnet, opus, best, sonnet[1m], opus[1m], opusplan (if specified)
+- [ ] `context` is valid value: fork (if specified)
+- [ ] `argument-hint` is a string (if specified)
+- [ ] `when_to_use` is a descriptive string (if specified)
+- [ ] `arguments` is a valid array with name/description/required entries (if specified)
+- [ ] `disable-model-invocation` is boolean (if specified)
+- [ ] `hooks` has valid structure (if specified)
 
-## Common Pitfalls
+### Content Structure
+- [ ] Clear instructions
+- [ ] Uses `$ARGUMENTS` if expecting input
+- [ ] Step-by-step process if complex
 
-- **Problem:** Score seems low due to many suggestions
-  **Solution:** Suggestions cap at -15 points total. Focus on warnings and criticals first.
+---
 
-- **Problem:** False positive on ambiguous terms inside code blocks
-  **Solution:** SkillCheck skips code blocks and inline code. If you still see false positives, wrap the term in backticks.
+## Output Format
 
-- **Problem:** Wisdom/platitude check flags legitimate instructions
-  **Solution:** Rephrase generic advice ("Remember that testing is important") as concrete directives ("Run tests before committing").
+```markdown
+## Skill Validation Report
+
+### Files Checked
+| File | Status | Issues |
+|------|--------|--------|
+| workflow/SKILL.md | OK | None |
+| my-skill/SKILL.md | WARN | Missing description |
+
+### Summary
+- Total: [N]
+- Valid: [N]
+- Needs fixes: [N]
+```
+
+---
+
+## Auto-Fix
+
+- Add missing `name` from directory name
+- Add missing `description`
+- Convert bracket array tools to YAML list format
+- Remove invalid frontmatter fields
+- Add `$ARGUMENTS` handling

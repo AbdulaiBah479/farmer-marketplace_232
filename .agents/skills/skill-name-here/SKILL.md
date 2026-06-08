@@ -1,61 +1,33 @@
 ---
-name: skill-name-here
-description: What this skill does and when to use it. Include trigger words users would naturally say. Max 1024 chars.
-allowed-tools: Read, Glob, Grep
+name: SKILL-NAME-HERE
+description: Clear, specific description of what this skill does and when Claude should use it. Include trigger terms users would naturally say. Maximum 1024 characters.
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - Bash
 ---
 
-# [SKILL NAME]
+# SKILL NAME
 
-## What This Does
-<!-- One sentence, benefit-driven - like a headline -->
-
-## Who It's For
-<!-- Your avatar -->
-
-## The Problem It Solves
-<!-- The pain point -->
-
----
+Brief overview of what this skill does.
 
 ## Instructions
 
-<!--
-The core instructions Claude will follow when this skill is activated.
-Be specific. Use step-by-step guidance where helpful.
--->
+[Provide clear, step-by-step instructions for Claude to follow]
 
----
+1. First, do X
+2. Then, do Y
+3. Finally, do Z
 
 ## Examples
 
-### Example 1: [Scenario]
-**User says:**
-```
-[Example prompt that would trigger this skill]
-```
+**Example 1:**
+- Input: User request example
+- Output: Expected result
 
-**Skill does:**
-```
-[What the skill produces]
-```
-
----
-
-## Guidelines
-
-- Guideline 1
-- Guideline 2
-- Guideline 3
-
----
-
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | [Date] | Initial build |
-
----
-
-## Notes & Learnings
-<!-- What we discovered building this. Update after each use. -->
+**Example 2:**
+- Input: Another example
+- Output: Expected result

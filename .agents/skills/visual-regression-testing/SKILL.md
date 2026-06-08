@@ -1,408 +1,512 @@
 ---
-name: visual-regression-testing
-description: Comprehensive visual regression testing using Playwright and jest-image-snapshot. Implements screenshot comparison, baseline management, CI/CD integration, and visual diff reporting following Ant Design best practices. Use for preventing visual bugs, ensuring UI consistency, and automating visual QA. (project)
-license: Complete terms in LICENSE.txt
+name: Visual Regression Testing
+description: Visual regression testing skill using Playwright, covering screenshot comparison, visual diff thresholds, responsive testing, baseline management, and CI integration.
+version: 1.0.0
+author: thetestingacademy
+license: MIT
+tags: [visual-regression, screenshot, playwright, visual-diff, responsive, baseline]
+testingTypes: [visual, e2e]
+frameworks: [playwright]
+languages: [typescript]
+domains: [web]
+agents: [claude-code, cursor, github-copilot, windsurf, codex, aider, continue, cline, zed, bolt]
 ---
 
-# Visual Regression Testing
+# Visual Regression Testing Skill
 
-This skill provides comprehensive visual regression testing capabilities to detect unintended visual changes in UI components and prevent visual bugs from being merged into production.
+You are an expert QA engineer specializing in visual regression testing with Playwright. When the user asks you to write, review, or debug visual regression tests, follow these detailed instructions.
 
-## Overview
+## Core Principles
 
-Visual regression testing works by:
-1. Taking screenshots of components/pages in a known-good state (baselines)
-2. Taking new screenshots after code changes
-3. Comparing new screenshots with baselines pixel-by-pixel
-4. Flagging differences for human review
+1. **Pixel-perfect baselines** -- Baseline screenshots are the source of truth for visual correctness.
+2. **Deterministic rendering** -- Eliminate sources of visual non-determinism (animations, fonts, dynamic data).
+3. **Threshold-based comparison** -- Allow small acceptable differences to reduce false positives.
+4. **Responsive coverage** -- Test key breakpoints, not just desktop resolution.
+5. **Component and page level** -- Test both individual components and full page layouts.
 
-**Framework**: Playwright + jest-image-snapshot
-**Approach**: Based on Ant Design's visual regression testing methodology
+## Project Structure
 
-## Core Capabilities
+```
+tests/
+  visual/
+    pages/
+      homepage.visual.spec.ts
+      login.visual.spec.ts
+      dashboard.visual.spec.ts
+    components/
+      navigation.visual.spec.ts
+      footer.visual.spec.ts
+      card.visual.spec.ts
+    responsive/
+      homepage.responsive.spec.ts
+      checkout.responsive.spec.ts
+    utils/
+      visual-helpers.ts
+      mask-helpers.ts
+  visual.config.ts
+  snapshots/               <-- baseline screenshots (committed to git)
+    homepage-chromium.png
+    login-chromium.png
+playwright.config.ts
+```
 
-### 1. Screenshot Baseline Management
+## Configuration
 
-Create and update baseline screenshots that serve as the source of truth for visual comparison.
-
-**Implementation**: `tests/shared/imageTest.tsx`
-
-Key features:
-- Automated baseline capture for all component demos
-- Version-controlled baseline storage
-- Easy baseline updates when intentional changes occur
-- Support for multiple viewport sizes and themes
-
-### 2. Visual Comparison Testing
-
-**Implementation**: `scripts/visual-regression/`
-
-Core testing workflow:
 ```typescript
-// Example structure from tests/shared/imageTest.tsx
+// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/visual',
+  snapshotDir: './tests/snapshots',
+  snapshotPathTemplate: '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}{-projectName}{ext}',
+  fullyParallel: true,
+  retries: 0, // Visual tests should not retry -- flaky visuals indicate real issues
+  use: {
+    baseURL: 'http://localhost:3000',
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+  },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: 100,           // Allow up to 100 pixels difference
+      maxDiffPixelRatio: 0.01,      // Or 1% of total pixels
+      threshold: 0.2,               // Per-pixel color threshold (0-1)
+      animations: 'disabled',       // Disable CSS animations
+    },
+    toMatchSnapshot: {
+      maxDiffPixelRatio: 0.01,
+    },
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Force consistent font rendering
+        launchOptions: {
+          args: ['--font-render-hinting=none', '--disable-skia-runtime-opts'],
+        },
+      },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-portrait',
+      use: {
+        ...devices['iPhone 13'],
+      },
+    },
+    {
+      name: 'tablet',
+      use: {
+        ...devices['iPad Pro 11'],
+      },
+    },
+  ],
+});
+```
+
+## Writing Visual Tests
+
+### Full Page Screenshots
+
+```typescript
 import { test, expect } from '@playwright/test';
 
-test('component visual regression', async ({ page }) => {
-  await page.goto('http://localhost:5173/component-demo');
-  await page.waitForLoadState('networkidle');
+test.describe('Homepage Visual Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  });
 
-  // Take screenshot and compare with baseline
-  const screenshot = await page.screenshot();
-  expect(screenshot).toMatchImageSnapshot({
-    customSnapshotsDir: '__image_snapshots__',
-    customDiffDir: '__image_snapshots__/diff',
-    threshold: 0.1, // 0.1% pixel difference tolerance
+  test('homepage should match baseline', async ({ page }) => {
+    await expect(page).toHaveScreenshot('homepage-full.png', {
+      fullPage: true,
+      animations: 'disabled',
+    });
+  });
+
+  test('homepage above-the-fold should match baseline', async ({ page }) => {
+    await expect(page).toHaveScreenshot('homepage-above-fold.png', {
+      fullPage: false, // Viewport only
+    });
+  });
+
+  test('homepage with content loaded should match baseline', async ({ page }) => {
+    // Wait for all dynamic content
+    await page.getByRole('heading', { name: 'Featured Products' }).waitFor();
+    await page.waitForSelector('img[src*="product"]', { state: 'visible' });
+
+    await expect(page).toHaveScreenshot('homepage-loaded.png', {
+      fullPage: true,
+    });
   });
 });
 ```
 
-### 3. CI/CD Integration
+### Component-Level Screenshots
 
-**Implementation**: `.github/workflows/visual-regression-*.yml`
+```typescript
+test.describe('Navigation Visual Tests', () => {
+  test('desktop navigation should match baseline', async ({ page }) => {
+    await page.goto('/');
+    const nav = page.getByRole('navigation', { name: 'Main' });
 
-Workflow files:
-- `visual-regression-pr.yml` - Runs on pull requests
-- `visual-regression-baseline.yml` - Updates baselines on main branch
-- `visual-regression-report.yml` - Generates and uploads diff reports
+    await expect(nav).toHaveScreenshot('nav-desktop.png');
+  });
 
-**PR Workflow**:
-1. Checkout code and install dependencies
-2. Start local server
-3. Run visual regression tests
-4. If differences found:
-   - Generate diff screenshots
-   - Upload artifacts to GitHub
-   - Post comment on PR with visual diff preview
-   - Mark check as failed
-5. If no differences, mark check as passed
+  test('navigation hover state should match baseline', async ({ page }) => {
+    await page.goto('/');
+    const productsLink = page.getByRole('link', { name: 'Products' });
 
-**Baseline Update Workflow**:
-1. Runs on main branch after merge
-2. Regenerates all baseline screenshots
-3. Commits updated baselines back to repo
+    await productsLink.hover();
+    await expect(page.getByRole('navigation')).toHaveScreenshot('nav-hover.png');
+  });
 
-## File Structure
+  test('navigation dropdown should match baseline', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Account' }).click();
 
-```
-.github/workflows/
-  ├── visual-regression-pr.yml          # PR visual checks
-  ├── visual-regression-baseline.yml    # Baseline updates
-  └── visual-regression-report.yml      # Diff reporting
-
-tests/shared/
-  └── imageTest.tsx                     # Baseline screenshot utilities
-
-scripts/visual-regression/
-  ├── capture-baselines.ts              # Generate baseline screenshots
-  ├── compare-screenshots.ts            # Compare current vs baseline
-  ├── generate-report.ts                # Create HTML diff report
-  └── upload-to-storage.ts              # Upload to OSS/S3
-
-__image_snapshots__/
-  ├── baseline/                         # Baseline screenshots
-  ├── current/                          # Latest test screenshots
-  └── diff/                             # Difference highlights
+    const dropdown = page.getByRole('menu');
+    await expect(dropdown).toHaveScreenshot('nav-dropdown.png');
+  });
+});
 ```
 
-## Usage Patterns
+### State-Based Visual Tests
 
-### For Component Development
+```typescript
+test.describe('Form Visual States', () => {
+  test('empty form should match baseline', async ({ page }) => {
+    await page.goto('/register');
+    await expect(page.locator('form')).toHaveScreenshot('form-empty.png');
+  });
 
-When developing a new component:
+  test('form with validation errors should match baseline', async ({ page }) => {
+    await page.goto('/register');
+    await page.getByRole('button', { name: 'Submit' }).click();
+
+    // Wait for validation messages to appear
+    await page.getByText('Email is required').waitFor();
+
+    await expect(page.locator('form')).toHaveScreenshot('form-errors.png');
+  });
+
+  test('form with filled data should match baseline', async ({ page }) => {
+    await page.goto('/register');
+    await page.getByLabel('Name').fill('John Doe');
+    await page.getByLabel('Email').fill('john@example.com');
+    await page.getByLabel('Password').fill('SecurePass123!');
+
+    await expect(page.locator('form')).toHaveScreenshot('form-filled.png');
+  });
+
+  test('disabled button state should match baseline', async ({ page }) => {
+    await page.goto('/register');
+    const button = page.getByRole('button', { name: 'Submit' });
+
+    await expect(button).toHaveScreenshot('button-disabled.png');
+  });
+});
+```
+
+### Responsive Visual Tests
+
+```typescript
+test.describe('Responsive Layout Tests', () => {
+  const viewports = [
+    { name: 'mobile', width: 375, height: 667 },
+    { name: 'tablet', width: 768, height: 1024 },
+    { name: 'desktop', width: 1280, height: 720 },
+    { name: 'wide', width: 1920, height: 1080 },
+  ];
+
+  for (const viewport of viewports) {
+    test(`homepage at ${viewport.name} (${viewport.width}x${viewport.height})`, async ({ page }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+
+      await expect(page).toHaveScreenshot(`homepage-${viewport.name}.png`, {
+        fullPage: true,
+      });
+    });
+  }
+});
+```
+
+## Handling Dynamic Content
+
+### Masking Dynamic Elements
+
+```typescript
+test('dashboard should match baseline with dynamic content masked', async ({ page }) => {
+  await page.goto('/dashboard');
+
+  await expect(page).toHaveScreenshot('dashboard.png', {
+    mask: [
+      page.locator('[data-testid="current-time"]'),
+      page.locator('[data-testid="user-avatar"]'),
+      page.locator('[data-testid="notification-count"]'),
+      page.locator('.chart-container'), // Dynamic chart data
+      page.locator('.ad-banner'),        // Third-party ads
+    ],
+    fullPage: true,
+  });
+});
+```
+
+### Replacing Dynamic Content
+
+```typescript
+test('profile page should match baseline', async ({ page }) => {
+  await page.goto('/profile');
+
+  // Replace dynamic text with consistent values
+  await page.evaluate(() => {
+    // Replace timestamps
+    document.querySelectorAll('[data-testid="timestamp"]').forEach((el) => {
+      el.textContent = 'January 1, 2024';
+    });
+
+    // Replace user-specific data
+    const nameEl = document.querySelector('[data-testid="user-name"]');
+    if (nameEl) nameEl.textContent = 'Test User';
+
+    // Remove random elements
+    document.querySelectorAll('.random-recommendation').forEach((el) => el.remove());
+  });
+
+  await expect(page).toHaveScreenshot('profile-page.png', {
+    fullPage: true,
+  });
+});
+```
+
+### Disabling Animations
+
+```typescript
+test.beforeEach(async ({ page }) => {
+  // Disable all CSS animations and transitions
+  await page.addStyleTag({
+    content: `
+      *, *::before, *::after {
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
+        transition-duration: 0s !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+      }
+    `,
+  });
+});
+```
+
+### Waiting for Fonts
+
+```typescript
+test('page with custom fonts should match baseline', async ({ page }) => {
+  await page.goto('/');
+
+  // Wait for fonts to load
+  await page.evaluate(() => document.fonts.ready);
+
+  // Additional wait for font rendering
+  await page.waitForTimeout(500); // acceptable for font rendering
+
+  await expect(page).toHaveScreenshot('page-with-fonts.png');
+});
+```
+
+## Baseline Management
+
+### Updating Baselines
+
 ```bash
-# 1. Create component and demos
-npm run dev
+# Update all baselines
+npx playwright test --update-snapshots
 
-# 2. Generate initial baseline
-npm run visual:baseline
+# Update baselines for specific tests
+npx playwright test tests/visual/homepage.visual.spec.ts --update-snapshots
 
-# 3. Make changes
-# ... edit component code ...
-
-# 4. Run visual regression test
-npm run visual:test
-
-# 5. Review diffs (if any)
-npm run visual:report
-
-# 6. Update baseline if changes are intentional
-npm run visual:update-baseline
+# Update baselines for specific project
+npx playwright test --project=chromium --update-snapshots
 ```
 
-### For PR Reviews
+### Baseline Workflow
 
-Reviewers can:
-1. Check CI status for visual regression failures
-2. Click artifact link in PR comment
-3. Review visual diff report
-4. Approve/request changes based on visual impact
+```markdown
+## Baseline Update Process
 
-### For CI/CD Pipeline
+1. **Intentional change:** Developer modifies UI deliberately
+2. **Visual tests fail:** CI detects the visual difference
+3. **Review the diff:** Download artifacts, inspect the visual diff
+4. **Approve the change:** If the change is intended:
+   a. Run `npx playwright test --update-snapshots` locally
+   b. Commit the updated baseline screenshots
+   c. Push and verify CI passes
+5. **Reject the change:** If the change is unintended:
+   a. Revert the code change causing the visual difference
+   b. Verify visual tests pass again
+```
+
+### Git LFS for Baselines
+
+```bash
+# Install Git LFS
+git lfs install
+
+# Track screenshot files
+git lfs track "tests/snapshots/**/*.png"
+git lfs track "tests/snapshots/**/*.jpg"
+
+# Add .gitattributes
+git add .gitattributes
+git commit -m "Track visual baselines with Git LFS"
+```
+
+## Visual Diff Analysis
+
+### Understanding Diff Output
+
+When a visual test fails, Playwright generates three images:
+
+```
+test-results/
+  homepage-visual-spec-ts/
+    homepage-full-chromium-expected.png    <-- Baseline (what it should look like)
+    homepage-full-chromium-actual.png      <-- Current (what it looks like now)
+    homepage-full-chromium-diff.png        <-- Diff (highlighted differences)
+```
+
+### Custom Diff Thresholds
+
+```typescript
+// Strict comparison for brand-critical pages
+test('brand logo should be pixel-perfect', async ({ page }) => {
+  await page.goto('/');
+  const logo = page.locator('[data-testid="brand-logo"]');
+  await expect(logo).toHaveScreenshot('brand-logo.png', {
+    maxDiffPixels: 0,        // Zero tolerance
+    threshold: 0,            // Exact pixel match
+  });
+});
+
+// Relaxed comparison for content-heavy pages
+test('blog listing visual check', async ({ page }) => {
+  await page.goto('/blog');
+  await expect(page).toHaveScreenshot('blog-listing.png', {
+    maxDiffPixelRatio: 0.05, // Allow 5% difference
+    threshold: 0.3,          // More color tolerance
+  });
+});
+```
+
+## Dark Mode and Theme Testing
+
+```typescript
+test.describe('Dark Mode Visual Tests', () => {
+  test('homepage in dark mode', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto('/');
+
+    await expect(page).toHaveScreenshot('homepage-dark.png', { fullPage: true });
+  });
+
+  test('homepage in light mode', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+
+    await expect(page).toHaveScreenshot('homepage-light.png', { fullPage: true });
+  });
+
+  test('reduced motion preference', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+
+    // Verify no animations are visible
+    await expect(page).toHaveScreenshot('homepage-reduced-motion.png');
+  });
+});
+```
+
+## CI Integration
+
+### GitHub Actions for Visual Tests
 
 ```yaml
-# Example from .github/workflows/visual-regression-pr.yml
-name: Visual Regression Testing
+visual-tests:
+  name: Visual Regression Tests
+  runs-on: ubuntu-latest
+  timeout-minutes: 30
+  container:
+    image: mcr.microsoft.com/playwright:v1.42.0-jammy
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        lfs: true  # Important: fetch LFS baselines
 
-on:
-  pull_request:
-    branches: [main, develop]
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
 
-jobs:
-  visual-regression:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    - run: npm ci
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+    - name: Run Visual Tests
+      run: npx playwright test tests/visual/
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Upload Visual Diff
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: visual-diffs
+        path: |
+          test-results/**/
+        retention-days: 14
 
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-
-      - name: Start dev server
-        run: npm run dev &
-
-      - name: Wait for server
-        run: npx wait-on http://localhost:5173
-
-      - name: Run visual regression tests
-        run: npm run visual:test
-
-      - name: Upload diff artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: visual-diffs
-          path: __image_snapshots__/diff/
-
-      - name: Generate report
-        if: failure()
-        run: npm run visual:report
-
-      - name: Comment PR with results
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('visual-report.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
+    - name: Comment PR with Visual Diff
+      if: failure() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: '## Visual Regression Detected\n\nVisual differences were found. Please download the artifacts to review the diffs.\n\n[View workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+          });
 ```
 
 ## Best Practices
 
-### 1. Baseline Management
+1. **Disable animations** -- CSS animations cause non-deterministic screenshots.
+2. **Wait for content** -- Always wait for dynamic content, images, and fonts to load.
+3. **Use deterministic data** -- Mock API responses to ensure consistent test data.
+4. **Mask dynamic regions** -- Cover timestamps, avatars, and third-party widgets.
+5. **Test key breakpoints** -- Cover mobile, tablet, and desktop at minimum.
+6. **Set reasonable thresholds** -- Too strict causes false positives; too loose misses real bugs.
+7. **Use consistent environments** -- Run visual tests in Docker containers for consistent rendering.
+8. **Review diffs carefully** -- Not every pixel change is a bug; some are expected.
+9. **Version baselines** -- Commit baselines to source control (with Git LFS for large repos).
+10. **Test component states** -- Cover hover, focus, active, disabled, error, and loading states.
 
-- **Version control baselines**: Commit baseline screenshots to git
-- **Update selectively**: Only update baselines for intentional visual changes
-- **Document updates**: Include baseline updates in PR descriptions
-- **Platform consistency**: Generate baselines in CI environment, not locally
+## Anti-Patterns to Avoid
 
-### 2. Test Writing
-
-- **Wait for stability**: Always use `page.waitForLoadState('networkidle')`
-- **Hide dynamic content**: Mask timestamps, animations, random data
-- **Test critical paths**: Focus on user-facing components
-- **Multiple viewports**: Test responsive breakpoints
-- **Theme variants**: Test light/dark modes if applicable
-
-### 3. Threshold Configuration
-
-```typescript
-// Strict comparison for critical UI
-expect(screenshot).toMatchImageSnapshot({ threshold: 0.01 });
-
-// Relaxed for minor anti-aliasing differences
-expect(screenshot).toMatchImageSnapshot({ threshold: 0.1 });
-
-// Very relaxed for charts/animations
-expect(screenshot).toMatchImageSnapshot({ threshold: 0.5 });
-```
-
-### 4. Performance Optimization
-
-- **Parallel execution**: Run tests in parallel across multiple workers
-- **Selective testing**: Only test affected components in PR
-- **Incremental baselines**: Cache and reuse unchanged baselines
-- **Headless mode**: Always run in headless mode in CI
-
-### 5. False Positive Reduction
-
-Common causes of false positives:
-- Font rendering differences across OS
-- Anti-aliasing variations
-- Animation timing
-- Browser version differences
-- System fonts
-
-Solutions:
-- Use Docker for consistent environment
-- Freeze animations with CSS
-- Use consistent browser versions
-- Increase threshold for minor differences
-
-## Integration with Existing Testing
-
-Visual regression testing complements existing testing strategies:
-
-```
-Unit Tests (Jest)
-  ↓
-Component Tests (React Testing Library)
-  ↓
-Visual Regression (Playwright + jest-image-snapshot)
-  ↓
-E2E Tests (Playwright)
-  ↓
-Manual QA
-```
-
-## Troubleshooting
-
-### "Screenshots don't match but look identical"
-
-**Cause**: Platform-specific rendering differences
-**Solution**:
-```typescript
-expect(screenshot).toMatchImageSnapshot({
-  failureThreshold: 0.01,
-  failureThresholdType: 'percent'
-});
-```
-
-### "Baselines outdated after dependency update"
-
-**Cause**: Library update changed component styling
-**Solution**:
-```bash
-# Review changes first
-npm run visual:test
-
-# Update all baselines if changes are expected
-npm run visual:update-baseline
-```
-
-### "CI fails but local tests pass"
-
-**Cause**: Different environments (fonts, OS, browser version)
-**Solution**: Use Docker or GitHub Actions locally
-```bash
-# Run in Docker matching CI environment
-docker run -v $(pwd):/app -w /app mcr.microsoft.com/playwright:v1.40.0 npm run visual:test
-```
-
-## References
-
-### Implementation Files
-
-- `.github/workflows/visual-regression-*.yml` - CI/CD workflows
-- `tests/shared/imageTest.tsx` - Baseline screenshot implementation
-- `scripts/visual-regression/` - Test code and utilities
-
-### External Resources
-
-- [Ant Design Visual Regression](https://ant.design/docs/blog/visual-regression/) - Original methodology
-- [Playwright Screenshots](https://playwright.dev/docs/screenshots) - Screenshot API docs
-- [jest-image-snapshot](https://github.com/americanexpress/jest-image-snapshot) - Snapshot matcher
-- [Argos CI](https://argos-ci.com/) - Visual testing platform (used by Ant Design)
-
-## Advanced Features
-
-### Multi-Browser Testing
-
-```typescript
-// Test across Chromium, Firefox, and WebKit
-import { devices } from '@playwright/test';
-
-const browsers = ['chromium', 'firefox', 'webkit'];
-for (const browser of browsers) {
-  test(`visual regression on ${browser}`, async ({ playwright }) => {
-    const browserInstance = await playwright[browser].launch();
-    const page = await browserInstance.newPage();
-    // ... test logic
-  });
-}
-```
-
-### Responsive Testing
-
-```typescript
-// Test multiple viewports
-const viewports = [
-  { width: 375, height: 667, name: 'mobile' },
-  { width: 768, height: 1024, name: 'tablet' },
-  { width: 1920, height: 1080, name: 'desktop' },
-];
-
-for (const viewport of viewports) {
-  test(`visual regression ${viewport.name}`, async ({ page }) => {
-    await page.setViewportSize(viewport);
-    // ... test logic
-  });
-}
-```
-
-### Component Isolation
-
-```typescript
-// Test individual component variants
-const variants = ['default', 'primary', 'danger', 'disabled'];
-
-for (const variant of variants) {
-  test(`button ${variant} variant`, async ({ page }) => {
-    await page.goto(`http://localhost:5173/button/${variant}`);
-    await page.waitForLoadState('networkidle');
-    const screenshot = await page.locator('[data-testid="button"]').screenshot();
-    expect(screenshot).toMatchImageSnapshot({
-      customSnapshotIdentifier: `button-${variant}`
-    });
-  });
-}
-```
-
-## Agent Capabilities
-
-When users request visual regression testing, the agent should:
-
-1. **Setup Infrastructure**
-   - Create GitHub Actions workflows
-   - Configure Playwright with jest-image-snapshot
-   - Set up baseline directory structure
-   - Add npm scripts for common operations
-
-2. **Generate Tests**
-   - Create test files for each component
-   - Configure appropriate thresholds
-   - Handle dynamic content masking
-   - Set up multi-viewport testing
-
-3. **Integrate with CI/CD**
-   - Configure PR checks
-   - Set up baseline update workflows
-   - Configure artifact uploads
-   - Add PR commenting with diff previews
-
-4. **Provide Documentation**
-   - Document baseline update process
-   - Create troubleshooting guides
-   - Add examples for common scenarios
-   - Document threshold configuration
-
-## Example: Full Implementation
-
-See the following files for complete implementation examples:
-- `.github/workflows/visual-regression-pr.yml:1` - Full PR workflow
-- `tests/shared/imageTest.tsx:1` - Baseline screenshot utilities
-- `scripts/visual-regression/compare-screenshots.ts:1` - Comparison logic
-
-This skill enables comprehensive visual regression testing that catches visual bugs before they reach production, maintaining UI consistency across the entire application.
+1. **No animation control** -- Animations make screenshots non-deterministic.
+2. **Testing with live data** -- Real API data changes, causing false failures.
+3. **Zero-pixel tolerance** -- Even anti-aliasing differences trigger failures.
+4. **Full-page screenshots only** -- Component-level screenshots catch more specific regressions.
+5. **Ignoring font loading** -- Fonts not loaded produce blank text in screenshots.
+6. **Not masking dynamic content** -- Timestamps and counters change every run.
+7. **Running visual tests locally only** -- Different OS renders fonts differently.
+8. **Too many visual tests** -- Maintain baselines only for critical pages and components.
+9. **Not reviewing failures** -- Auto-updating baselines without review hides real regressions.
+10. **Missing responsive tests** -- Desktop-only visual tests miss mobile layout bugs.

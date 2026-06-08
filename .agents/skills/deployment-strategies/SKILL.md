@@ -1,408 +1,151 @@
 ---
-name: Deployment Strategies
-description: This skill should be used when the user asks about "deployment", "CI/CD", "continuous integration", "GitHub Actions", "GitLab CI", "environments", "staging", "production", "rollback", "versioning", "gradual rollout", "canary deployment", "blue-green deployment", or discusses deploying Workers, managing multiple environments, or setting up automated deployment pipelines.
-version: 0.1.0
+name: deployment-strategies
+description: |
+  デプロイ戦略の選定、実装、検証、ロールバック計画を体系化するスキル。
+  Blue-Green/Canary/Rolling の適用判断と運用設計を整理する。
+
+  Anchors:
+  • Release It! / 適用: デプロイ安定性 / 目的: 本番運用の安全性
+  • Continuous Delivery / 適用: 段階的リリース / 目的: リスク低減
+  • Observability / 適用: 検証設計 / 目的: 監視による品質担保
+
+  Trigger:
+  Use when choosing deployment strategies, designing rollout plans, preparing rollback procedures, or validating deployment readiness.
+  blue green, canary, rolling deployment, rollback, smoke test
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 ---
+# deployment-strategies
 
-# Deployment Strategies
-
-## Purpose
-
-This skill provides guidance on deploying Cloudflare Workers, managing multiple environments, implementing CI/CD pipelines, and using deployment best practices. Use this skill when setting up deployment workflows, managing staging and production environments, implementing rollback strategies, or integrating with CI/CD systems.
-
-## Environment Management
-
-### Multi-Environment Configuration
-
-Use wrangler.jsonc environments for staging/production separation:
-
-```jsonc
-{
-  "name": "my-worker",
-  "main": "src/index.ts",
-
-  // Production configuration (default)
-  "vars": {
-    "ENVIRONMENT": "production"
-  },
-  "kv_namespaces": [
-    { "binding": "CACHE", "id": "prod-kv-id" }
-  ],
-
-  // Environment-specific overrides
-  "env": {
-    "staging": {
-      "vars": { "ENVIRONMENT": "staging" },
-      "kv_namespaces": [
-        { "binding": "CACHE", "id": "staging-kv-id" }
-      ]
-    },
-    "development": {
-      "vars": { "ENVIRONMENT": "development" },
-      "kv_namespaces": [
-        { "binding": "CACHE", "id": "dev-kv-id" }
-      ]
-    }
-  }
-}
-```
-
-Deploy to specific environment:
-```bash
-wrangler deploy --env staging
-wrangler deploy --env production
-```
-
-### Best Practices
-
-1. **Separate resources**: Use different KV namespaces, D1 databases, R2 buckets per environment
-2. **Environment variables**: Use `ENVIRONMENT` var to conditionally enable features
-3. **Secrets per environment**: `wrangler secret put API_KEY --env staging`
-4. **Test in staging**: Always deploy to staging before production
-5. **Monitor after deploy**: Use `wrangler tail --env production` after deployment
-
-## CI/CD Integration
-
-### GitHub Actions
-
-**`.github/workflows/deploy.yml`:**
-```yaml
-name: Deploy Worker
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    name: Deploy
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
-      - name: Deploy to staging
-        if: github.event_name == 'pull_request'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy --env staging
-
-      - name: Deploy to production
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy --env production
-```
-
-**Setup**:
-1. Add `CLOUDFLARE_API_TOKEN` to GitHub Secrets
-2. Get token from Cloudflare Dashboard → My Profile → API Tokens
-3. Create token with "Edit Cloudflare Workers" permissions
-
-### GitLab CI
-
-**`.gitlab-ci.yml`:**
-```yaml
-stages:
-  - test
-  - deploy
-
-variables:
-  NODE_VERSION: "20"
-
-test:
-  stage: test
-  image: node:\${NODE_VERSION}
-  script:
-    - npm ci
-    - npm test
-
-deploy_staging:
-  stage: deploy
-  image: node:\${NODE_VERSION}
-  only:
-    - merge_requests
-  script:
-    - npm ci
-    - npx wrangler deploy --env staging
-  variables:
-    CLOUDFLARE_API_TOKEN: \$CLOUDFLARE_API_TOKEN
-
-deploy_production:
-  stage: deploy
-  image: node:\${NODE_VERSION}
-  only:
-    - main
-  script:
-    - npm ci
-    - npx wrangler deploy --env production
-  variables:
-    CLOUDFLARE_API_TOKEN: \$CLOUDFLARE_API_TOKEN
-```
-
-## Deployment Workflows
-
-### Pre-Deployment Checklist
-
-```bash
-# 1. Run tests
-npm test
-
-# 2. Build (if applicable)
-npm run build
-
-# 3. Validate configuration
-wrangler deploy --dry-run --env production
-
-# 4. Check migrations (D1)
-wrangler d1 migrations list DB --remote
-
-# 5. Deploy to staging first
-wrangler deploy --env staging
-
-# 6. Test staging
-curl https://staging.example.com/health
-
-# 7. Deploy to production
-wrangler deploy --env production
+## 概要
 
-# 8. Monitor logs
-wrangler tail --env production
-```
+デプロイ戦略の選定から検証・ロールバックまでを一貫して支援する。
 
-### Post-Deployment
-
-```bash
-# Monitor real-time logs
-wrangler tail --env production
+## ワークフロー
 
-# Check for errors
-wrangler tail --env production --status error
+### Phase 1: 要件整理
 
-# Verify deployment
-curl https://production.example.com/health
+**目的**: デプロイ要件と制約を整理する。
 
-# Check deployment history
-wrangler deployments list
-```
+**アクション**:
 
-## Rollback Strategies
+1. `references/Level1_basics.md` で基本概念を確認する。
+2. `assets/deployment-strategy-template.md` で要件を整理する。
+3. `references/requirements-index.md` で要件整合を確認する。
 
-### Quick Rollback
+**Task**: `agents/analyze-deployment-requirements.md` を参照
 
-```bash
-# List recent deployments
-wrangler deployments list
+### Phase 2: 戦略設計
 
-# Rollback to previous deployment
-wrangler rollback <deployment-id>
+**目的**: デプロイパターンとロールバック戦略を設計する。
 
-# Verify rollback
-wrangler deployments list
-```
+**アクション**:
 
-### Version Pinning
+1. `references/deployment-patterns.md` でパターンを比較する。
+2. `references/rollback-strategies.md` で復旧方針を整理する。
+3. `assets/deployment-runbook.md` を更新する。
 
-```javascript
-// Add version to response headers
-export default {
-  async fetch(request, env) {
-    const response = await handleRequest(request, env);
-    response.headers.set('X-Worker-Version', env.VERSION || 'unknown');
-    return response;
-  }
-};
-```
+**Task**: `agents/design-deployment-strategy.md` を参照
 
-Set version in wrangler.jsonc:
-```jsonc
-{
-  "vars": {
-    "VERSION": "1.2.3"
-  }
-}
-```
+### Phase 3: 実装と準備
 
-### Canary Deployments
+**目的**: ヘルスチェックとスモークテストを準備する。
 
-Not natively supported; use percentage-based routing:
+**アクション**:
 
-```javascript
-export default {
-  async fetch(request, env) {
-    const random = Math.random();
+1. `assets/health-endpoint-template.ts` を確認する。
+2. `assets/smoke-test-template.ts` を準備する。
+3. `assets/rollback-checklist.md` で検証項目を整理する。
 
-    // 10% canary traffic
-    if (random < 0.1) {
-      return await newVersionHandler(request, env);
-    }
+**Task**: `agents/implement-deployment-plan.md` を参照
 
-    return await stableVersionHandler(request, env);
-  }
-};
-```
+### Phase 4: 検証と運用
 
-## Database Migrations
+**目的**: デプロイ前の検証と運用記録を残す。
 
-### D1 Migration Workflow
+**アクション**:
 
-```bash
-# 1. Create migration
-wrangler d1 migrations create DB add_users_table
+1. `scripts/health-check.mjs` で検証する。
+2. `agents/validate-deployment-readiness.md` の観点で評価する。
+3. `scripts/log_usage.mjs` で記録を更新する。
 
-# 2. Write SQL in migrations/0001_add_users_table.sql
-#    CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);
+**Task**: `agents/validate-deployment-readiness.md` を参照
 
-# 3. Apply locally
-wrangler d1 migrations apply DB
-
-# 4. Test locally
-wrangler dev
-
-# 5. Apply to staging
-wrangler d1 migrations apply DB --env staging --remote
-
-# 6. Test staging
-# ... test ...
-
-# 7. Apply to production
-wrangler d1 migrations apply DB --env production --remote
-
-# 8. Deploy Worker
-wrangler deploy --env production
-```
-
-**Important**: Always apply migrations before deploying Worker code that depends on them.
-
-## Secrets Management
-
-### Deployment Secrets
-
-```bash
-# Set secrets per environment
-wrangler secret put API_KEY --env staging
-wrangler secret put API_KEY --env production
-
-# Different values per environment
-wrangler secret put DATABASE_URL --env staging
-# Enter staging database URL
-
-wrangler secret put DATABASE_URL --env production
-# Enter production database URL
-
-# List secrets
-wrangler secret list --env production
-```
-
-### Secret Rotation
-
-```bash
-# 1. Add new secret with different name
-wrangler secret put API_KEY_NEW --env production
-
-# 2. Update Worker code to try new secret first, fall back to old
-# 3. Deploy updated Worker
-wrangler deploy --env production
-
-# 4. Verify new secret works
-# 5. Delete old secret
-wrangler secret delete API_KEY --env production
-```
-
-## Monitoring and Observability
-
-### Real-Time Monitoring
-
-```bash
-# All logs
-wrangler tail --env production
-
-# Errors only
-wrangler tail --env production --status error
-
-# Specific method
-wrangler tail --env production --method POST
-
-# Search logs
-wrangler tail --env production --search "user-id-123"
-```
-
-### Health Checks
-
-```javascript
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-
-    if (url.pathname === '/health') {
-      // Check dependencies
-      try {
-        await env.DB.prepare('SELECT 1').first();
-        await env.CACHE.get('health-check');
-
-        return new Response(JSON.stringify({
-          status: 'healthy',
-          version: env.VERSION,
-          environment: env.ENVIRONMENT
-        }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } catch (error) {
-        return new Response(JSON.stringify({
-          status: 'unhealthy',
-          error: error.message
-        }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
-    // Regular request handling
-    return await handleRequest(request, env);
-  }
-};
-```
-
-## Best Practices
-
-1. **Always test in staging** before production
-2. **Use semantic versioning** for releases
-3. **Automate deployments** with CI/CD
-4. **Monitor after every deployment**
-5. **Have rollback plan** ready
-6. **Apply database migrations** before code
-7. **Use environment-specific resources**
-8. **Keep secrets out of code** (use wrangler secret)
-9. **Tag releases** in git for tracking
-10. **Document deployment process**
-
-## Troubleshooting
-
-**Issue**: "Deployment failed - binding not found"
-- **Solution**: Ensure all bindings (KV, D1, R2) are created and IDs match wrangler.jsonc
-
-**Issue**: "Migration failed"
-- **Solution**: Check SQL syntax, ensure migrations run in order, verify database exists
-
-**Issue**: "Secrets not working after deployment"
-- **Solution**: Re-set secrets after creating new environment: `wrangler secret put KEY --env ENV`
-
-**Issue**: "Changes not reflecting"
-- **Solution**: Clear browser cache, check deployment logs, verify correct environment deployed
-
-For the latest deployment documentation, use the cloudflare-docs-specialist agent.
+## Task仕様ナビ
+
+| Task | 起動タイミング | 入力 | 出力 |
+| --- | --- | --- | --- |
+| analyze-deployment-requirements | Phase 1開始時 | 要件 | 要件メモ、制約一覧 |
+| design-deployment-strategy | Phase 2開始時 | 要件メモ | デプロイ戦略、ロールバック方針 |
+| implement-deployment-plan | Phase 3開始時 | 戦略メモ | 準備メモ、検証項目 |
+| validate-deployment-readiness | Phase 4開始時 | 準備メモ | 検証レポート、改善提案 |
+
+**詳細仕様**: 各Taskの詳細は `agents/` ディレクトリを参照
+
+## ベストプラクティス
+
+### すべきこと
+
+| 推奨事項 | 理由 |
+| --- | --- |
+| パターン選定理由を記録する | 追跡が容易になる |
+| ロールバック手順を明文化 | 障害対応が早くなる |
+| 検証項目を明確化 | リスクを減らせる |
+| 監視指標を整理する | 影響評価ができる |
+
+### 避けるべきこと
+
+| 禁止事項 | 問題点 |
+| --- | --- |
+| パターン選定を感覚で決める | リスク判断が不明確 |
+| 検証を省略する | 障害検知が遅れる |
+| ロールバック未定義 | 復旧が難しくなる |
+| 記録を残さない | 改善が継続しない |
+
+## リソース参照
+
+### scripts/（決定論的処理）
+
+| スクリプト | 機能 |
+| --- | --- |
+| `scripts/health-check.mjs` | ヘルスチェック |
+| `scripts/validate-skill.mjs` | スキル構造検証 |
+| `scripts/log_usage.mjs` | 使用記録と評価メトリクス更新 |
+
+### references/（詳細知識）
+
+| リソース | パス | 読込条件 |
+| --- | --- | --- |
+| レベル1 基礎 | [references/Level1_basics.md](references/Level1_basics.md) | 要件整理時 |
+| レベル2 実務 | [references/Level2_intermediate.md](references/Level2_intermediate.md) | 戦略設計時 |
+| レベル3 応用 | [references/Level3_advanced.md](references/Level3_advanced.md) | 実装時 |
+| レベル4 専門 | [references/Level4_expert.md](references/Level4_expert.md) | 検証時 |
+| デプロイパターン | [references/deployment-patterns.md](references/deployment-patterns.md) | 選定時 |
+| ヘルスチェック | [references/health-checks.md](references/health-checks.md) | 検証時 |
+| ロールバック | [references/rollback-strategies.md](references/rollback-strategies.md) | 復旧計画時 |
+| Railway運用 | [references/railway-deployment.md](references/railway-deployment.md) | Railway利用時 |
+| 要求仕様索引 | [references/requirements-index.md](references/requirements-index.md) | 仕様確認時 |
+| 旧スキル | [references/legacy-skill.md](references/legacy-skill.md) | 互換確認時 |
+
+### assets/（テンプレート・素材）
+
+| アセット | 用途 |
+| --- | --- |
+| `assets/deployment-runbook.md` | デプロイ手順 |
+| `assets/rollback-checklist.md` | ロールバック確認 |
+| `assets/health-endpoint-template.ts` | ヘルスチェック実装 |
+| `assets/smoke-test-template.ts` | スモークテスト |
+| `assets/deployment-strategy-template.md` | 戦略整理テンプレート |
+
+### 運用ファイル
+
+| ファイル | 目的 |
+| --- | --- |
+| `EVALS.json` | レベル評価・メトリクス管理 |
+| `LOGS.md` | 実行ログの蓄積 |
+| `CHANGELOG.md` | 改善履歴の記録 |

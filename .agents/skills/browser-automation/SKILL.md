@@ -1,70 +1,185 @@
 ---
-name: browser-automation
-description: "Browser automation powers web testing, scraping, and AI agent interactions. The difference between a flaky script and a reliable system comes down to understanding selectors, waiting strategies, and anti-detection patterns.  This skill covers Playwright (recommended) and Puppeteer, with patterns for testing, scraping, and agentic browser control. Key insight: Playwright won the framework war. Unless you need Puppeteer's stealth ecosystem or are Chrome-only, Playwright is the better choice in 202"
-source: vibeship-spawner-skills (Apache 2.0)
+name: Browser Automation
+description: Automate web browser interactions, scraping, testing, and workflow automation with Puppeteer/Playwright
+version: 1.0.0
+author: Claude Office Skills
+category: automation
+tags:
+  - browser
+  - puppeteer
+  - playwright
+  - scraping
+  - testing
+department: engineering
+models:
+  - claude-3-opus
+  - claude-3-sonnet
+  - gpt-4
+mcp:
+  server: browser-mcp
+  tools:
+    - browser_navigate
+    - browser_click
+    - browser_type
+    - browser_screenshot
+capabilities:
+  - Page navigation
+  - Element interaction
+  - Data extraction
+  - Screenshot capture
+input:
+  - URLs
+  - Selectors
+  - Actions
+  - Scripts
+output:
+  - Extracted data
+  - Screenshots
+  - Test results
+  - Automation logs
+languages:
+  - en
+related_skills:
+  - web-search
+  - deep-research
+  - etl-pipeline
 ---
 
 # Browser Automation
 
-You are a browser automation expert who has debugged thousands of flaky tests
-and built scrapers that run for years without breaking. You've seen the
-evolution from Selenium to Puppeteer to Playwright and understand exactly
-when each tool shines.
+Automate web browser interactions for scraping, testing, and workflow automation.
 
-Your core insight: Most automation failures come from three sources - bad
-selectors, missing waits, and detection systems. You teach people to think
-like the browser, use the right selectors, and let Playwright's auto-wait
-do its job.
+## Core Capabilities
 
-For scraping, yo
+### Navigation
+```yaml
+navigation:
+  goto:
+    url: "https://example.com"
+    wait_until: "networkidle"
+    timeout: 30000
+    
+  actions:
+    - wait_for_selector: ".content"
+    - scroll_to_bottom: true
+    - wait_for_navigation: true
+```
 
-## Capabilities
+### Element Interaction
+```yaml
+interactions:
+  click:
+    selector: "button.submit"
+    options:
+      click_count: 1
+      delay: 100
+      
+  type:
+    selector: "input[name='email']"
+    text: "user@example.com"
+    options:
+      delay: 50  # Human-like typing
+      
+  select:
+    selector: "select#country"
+    value: "US"
+    
+  file_upload:
+    selector: "input[type='file']"
+    files: ["document.pdf"]
+```
 
-- browser-automation
-- playwright
-- puppeteer
-- headless-browsers
-- web-scraping
-- browser-testing
-- e2e-testing
-- ui-automation
-- selenium-alternatives
+### Data Extraction
+```yaml
+scraping:
+  extract_text:
+    selector: ".article-content"
+    
+  extract_all:
+    selector: ".product-card"
+    fields:
+      name: ".product-name"
+      price: ".price"
+      url:
+        selector: "a"
+        attribute: "href"
+        
+  extract_table:
+    selector: "table.data"
+    output: json
+```
 
-## Patterns
+### Screenshots & PDF
+```yaml
+capture:
+  screenshot:
+    path: "screenshot.png"
+    full_page: true
+    type: "png"
+    
+  pdf:
+    path: "page.pdf"
+    format: "A4"
+    print_background: true
+```
 
-### Test Isolation Pattern
+## Workflow Examples
 
-Each test runs in complete isolation with fresh state
+### Form Automation
+```javascript
+// Login and fill form
+await page.goto('https://app.example.com/login');
+await page.fill('#email', 'user@example.com');
+await page.fill('#password', 'securepass');
+await page.click('button[type="submit"]');
+await page.waitForNavigation();
 
-### User-Facing Locator Pattern
+// Navigate to form
+await page.click('a[href="/new-entry"]');
+await page.fill('#title', 'Automated Entry');
+await page.fill('#description', 'Created via automation');
+await page.click('button.submit');
+```
 
-Select elements the way users see them
+### Web Scraping
+```yaml
+scraping_workflow:
+  - navigate: "https://news.example.com"
+  - wait: ".article-list"
+  - extract_all:
+      selector: ".article"
+      fields:
+        title: "h2"
+        summary: ".excerpt"
+        link:
+          selector: "a"
+          attribute: "href"
+  - paginate:
+      next_button: ".pagination .next"
+      max_pages: 10
+  - output: "articles.json"
+```
 
-### Auto-Wait Pattern
+### E2E Testing
+```yaml
+test_workflow:
+  - name: "User Registration"
+    steps:
+      - goto: "/register"
+      - fill:
+          "#email": "test@example.com"
+          "#password": "Test123!"
+      - click: "button[type='submit']"
+      - assert:
+          selector: ".success-message"
+          text_contains: "Welcome"
+```
 
-Let Playwright wait automatically, never add manual waits
+## Best Practices
 
-## Anti-Patterns
-
-### ❌ Arbitrary Timeouts
-
-### ❌ CSS/XPath First
-
-### ❌ Single Browser Context for Everything
-
-## ⚠️ Sharp Edges
-
-| Issue | Severity | Solution |
-|-------|----------|----------|
-| Issue | critical | # REMOVE all waitForTimeout calls |
-| Issue | high | # Use user-facing locators instead: |
-| Issue | high | # Use stealth plugins: |
-| Issue | high | # Each test must be fully isolated: |
-| Issue | medium | # Enable traces for failures: |
-| Issue | medium | # Set consistent viewport: |
-| Issue | high | # Add delays between requests: |
-| Issue | medium | # Wait for popup BEFORE triggering it: |
-
-## Related Skills
-
-Works well with: `agent-tool-builder`, `workflow-automation`, `computer-use-agents`, `test-architect`
+1. **Wait Strategies**: Use proper waits
+2. **Error Handling**: Catch navigation failures
+3. **Rate Limiting**: Be respectful to servers
+4. **Headless Mode**: Use for production
+5. **Selectors**: Prefer data-testid attributes
+6. **Screenshots**: Capture on failures

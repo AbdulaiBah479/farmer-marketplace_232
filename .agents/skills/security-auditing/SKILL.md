@@ -1,85 +1,182 @@
 ---
-name: security-auditing
-description: Assess system designs, data flows, and controls for security vulnerabilities and compliance. Use when performing threat modeling, penetration assessments, or policy alignment (Zero-Trust, Duke Verified) on pilot architectures and integrations.
+name: Security Auditing
+description: Audit security with vulnerability scanning, input validation checks, and auth/authz review against OWASP Top 10. Use when implementing authentication, reviewing security-sensitive code, or conducting security audits.
 ---
 
 # Security Auditing
 
-## Overview
+## Purpose
+Provides security best practices, patterns, and checklists for ensuring secure code implementation.
 
-[TODO: 1-2 sentences explaining what this skill enables]
+## When to Use
+- Implementing authentication or authorization systems
+- Reviewing code for security vulnerabilities
+- Validating input/output handling
+- Designing secure APIs
+- Conducting security audits
+- Analyzing data protection requirements
 
-## Structuring This Skill
+## Security Checklist
 
-[TODO: Choose the structure that best fits this skill's purpose. Common patterns:
+### Input Validation
+- ✅ Sanitize all external inputs
+- ✅ Validate data types and formats
+- ✅ Implement whitelist validation where possible
+- ✅ Prevent SQL injection via parameterized queries
+- ✅ Guard against XSS attacks
+- ✅ Validate file uploads (type, size, content)
 
-**1. Workflow-Based** (best for sequential processes)
-- Works well when there are clear step-by-step procedures
-- Example: DOCX skill with "Workflow Decision Tree" -> "Reading" -> "Creating" -> "Editing"
-- Structure: ## Overview -> ## Workflow Decision Tree -> ## Step 1 -> ## Step 2...
+### Authentication & Authorization
+- ✅ Use strong password hashing (bcrypt, Argon2)
+- ✅ Implement proper session management
+- ✅ Use secure token generation (JWT with proper signing)
+- ✅ Implement token expiration and refresh strategies
+- ✅ Apply role-based access control (RBAC)
+- ✅ Verify permissions at every access point
+- ✅ Use multi-factor authentication for sensitive operations
 
-**2. Task-Based** (best for tool collections)
-- Works well when the skill offers different operations/capabilities
-- Example: PDF skill with "Quick Start" -> "Merge PDFs" -> "Split PDFs" -> "Extract Text"
-- Structure: ## Overview -> ## Quick Start -> ## Task Category 1 -> ## Task Category 2...
+### Data Protection
+- ✅ Encrypt sensitive data at rest
+- ✅ Use TLS/HTTPS for data in transit
+- ✅ Implement proper key management
+- ✅ Avoid storing sensitive data in logs
+- ✅ Implement data retention policies
+- ✅ Comply with GDPR/HIPAA requirements if applicable
 
-**3. Reference/Guidelines** (best for standards or specifications)
-- Works well for brand guidelines, coding standards, or requirements
-- Example: Brand styling with "Brand Guidelines" -> "Colors" -> "Typography" -> "Features"
-- Structure: ## Overview -> ## Guidelines -> ## Specifications -> ## Usage...
+### API Security
+- ✅ Implement rate limiting
+- ✅ Use API keys or OAuth for authentication
+- ✅ Validate and sanitize all API inputs
+- ✅ Implement proper CORS policies
+- ✅ Use security headers (CSP, HSTS, X-Frame-Options)
+- ✅ Version APIs to manage breaking changes safely
 
-**4. Capabilities-Based** (best for integrated systems)
-- Works well when the skill provides multiple interrelated features
-- Example: Product Management with "Core Capabilities" -> numbered capability list
-- Structure: ## Overview -> ## Core Capabilities -> ### 1. Feature -> ### 2. Feature...
+### Audit Logging
+- ✅ Log all authentication attempts
+- ✅ Log authorization failures
+- ✅ Track sensitive data access
+- ✅ Log configuration changes
+- ✅ Implement secure log storage
+- ✅ Monitor logs for suspicious activity
 
-Patterns can be mixed and matched as needed. Most skills combine patterns (e.g., start with task-based, add workflow for complex operations).
+## Common Vulnerabilities
 
-Delete this entire "Structuring This Skill" section when done - it's just guidance.]
+### OWASP Top 10
+1. **Injection**: Use parameterized queries, input validation
+2. **Broken Authentication**: Implement secure session management
+3. **Sensitive Data Exposure**: Encrypt data, use HTTPS
+4. **XML External Entities (XXE)**: Disable XML external entity processing
+5. **Broken Access Control**: Verify permissions at every endpoint
+6. **Security Misconfiguration**: Follow security hardening guides
+7. **Cross-Site Scripting (XSS)**: Sanitize output, use CSP headers
+8. **Insecure Deserialization**: Validate serialized data
+9. **Using Components with Known Vulnerabilities**: Keep dependencies updated
+10. **Insufficient Logging & Monitoring**: Implement comprehensive logging
 
-## [TODO: Replace with the first main section based on chosen structure]
+## Security Patterns
 
-[TODO: Add content here. See examples in existing skills:
-- Code samples for technical skills
-- Decision trees for complex workflows
-- Concrete examples with realistic user requests
-- References to scripts/templates/references as needed]
+### Secure Configuration
+```yaml
+security_config:
+  session:
+    secure: true
+    httpOnly: true
+    sameSite: "strict"
+    maxAge: 3600
 
-## Resources (optional)
+  passwords:
+    minLength: 12
+    requireSpecialChars: true
+    hashAlgorithm: "argon2"
 
-Create only the resource directories this skill actually needs. Delete this section if no resources are required.
+  api:
+    rateLimit: 100/minute
+    corsOrigins: ["https://trusted-domain.com"]
+    requireApiKey: true
+```
 
-### scripts/
-Executable code (Python/Bash/etc.) that can be run directly to perform specific operations.
+### Authentication Flow
+```
+1. User submits credentials
+2. Validate input format
+3. Check against secure hash in database
+4. Generate secure session token (JWT)
+5. Set secure, httpOnly cookie
+6. Return success with minimal user info
+7. Log authentication event
+```
 
-**Examples from other skills:**
-- PDF skill: `fill_fillable_fields.py`, `extract_form_field_info.py` - utilities for PDF manipulation
-- DOCX skill: `document.py`, `utilities.py` - Python modules for document processing
+### Authorization Pattern
+```
+1. Receive request with token
+2. Validate token signature and expiration
+3. Extract user roles/permissions
+4. Check if user has required permission
+5. Execute action if authorized
+6. Log authorization decision
+7. Return 403 if unauthorized
+```
 
-**Appropriate for:** Python scripts, shell scripts, or any executable code that performs automation, data processing, or specific operations.
+## Security Commands
 
-**Note:** Scripts may be executed without loading into context, but can still be read by Codex for patching or environment adjustments.
+### Dependency Scanning
+```bash
+# Python
+pip-audit
 
-### references/
-Documentation and reference material intended to be loaded into context to inform Codex's process and thinking.
+# Node.js
+npm audit
+npm audit fix
 
-**Examples from other skills:**
-- Product management: `communication.md`, `context_building.md` - detailed workflow guides
-- BigQuery: API reference documentation and query examples
-- Finance: Schema documentation, company policies
+# General
+snyk test
+```
 
-**Appropriate for:** In-depth documentation, API references, database schemas, comprehensive guides, or any detailed information that Codex should reference while working.
+### Static Analysis
+```bash
+# Python
+bandit -r src/
 
-### assets/
-Files not intended to be loaded into context, but rather used within the output Codex produces.
+# Node.js
+npm run lint:security
+```
 
-**Examples from other skills:**
-- Brand styling: PowerPoint template files (.pptx), logo files
-- Frontend builder: HTML/React boilerplate project directories
-- Typography: Font files (.ttf, .woff2)
+### Secrets Detection
+```bash
+# Detect secrets in code
+trufflehog filesystem .
+git-secrets --scan
 
-**Appropriate for:** Templates, boilerplate code, document templates, images, icons, fonts, or any files meant to be copied or used in the final output.
+# Scan for API keys
+detect-secrets scan
+```
+
+## Best Practices
+
+### Code Review Security Checklist
+- [ ] All inputs validated and sanitized
+- [ ] Outputs properly encoded
+- [ ] Authentication required for sensitive operations
+- [ ] Authorization checked at every access point
+- [ ] Sensitive data encrypted
+- [ ] Error messages don't leak information
+- [ ] Dependencies up to date
+- [ ] Security headers implemented
+- [ ] Rate limiting in place
+- [ ] Audit logging configured
+
+### Secure Development Workflow
+1. **Design Phase**: Threat modeling, security requirements
+2. **Development**: Follow secure coding guidelines
+3. **Testing**: Security unit tests, penetration testing
+4. **Review**: Security-focused code review
+5. **Deployment**: Security configuration review
+6. **Monitoring**: Active security monitoring and alerts
+
+## Additional Resources
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
+- CWE Top 25: https://cwe.mitre.org/top25/
+- Security Headers: https://securityheaders.com/
 
 ---
-
-**Not every skill requires all three types of resources.**
+*Use this skill when implementing security features or conducting security reviews*

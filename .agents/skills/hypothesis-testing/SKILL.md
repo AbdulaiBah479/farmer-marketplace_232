@@ -1,262 +1,204 @@
 ---
-name: Hypothesis Testing
-description: Scientific approach to debugging with hypothesis formation and testing
-version: 1.0.0
-triggers:
-  - hypothesis
-  - theory about bug
-  - might be caused by
-  - test theory
-  - prove theory
-tags:
-  - debugging
-  - scientific-method
-  - investigation
-  - validation
-difficulty: intermediate
-estimatedTime: 15
-relatedSkills:
-  - debugging/root-cause-analysis
-  - debugging/trace-and-isolate
+name: hypothesis-testing
+description: Guides scientific hypothesis development and testing methodology. Use when formulating research questions, developing testable hypotheses, designing experiments, or evaluating research approaches. Triggers on phrases like "hypothesis", "test if", "experiment design", "research question", "how would I test", "is it true that".
+tools:
+  - WebSearch
+  - WebFetch
+  - Read
+  - Grep
+  - Glob
 ---
 
-# Hypothesis-Driven Debugging
+# Hypothesis Testing Workflow
 
-You are applying the scientific method to debugging. Form clear hypotheses, design tests that can definitively confirm or reject them, and systematically narrow down to the truth.
+This skill guides you through rigorous hypothesis development and testing methodology.
 
-## Core Principle
+## Phase 1: Observation and Question
 
-**Every debugging action should test a specific hypothesis. Random changes are not debugging.**
+### Starting Point Analysis
+- What observation or phenomenon prompted this inquiry?
+- What patterns or anomalies are you seeing?
+- What existing knowledge is relevant?
 
-## The Scientific Debugging Method
+### Research Question Formulation
+Good research questions are:
+- **Focused**: Specific enough to answer
+- **Researchable**: Can be investigated empirically
+- **Complex**: Requires analysis, not just facts
+- **Arguable**: Has multiple possible answers
 
-### 1. Observe - Gather Facts
+### Question Types
+| Type | Example | Hypothesis Style |
+|------|---------|------------------|
+| Descriptive | "What is X?" | Not hypothesis-driven |
+| Relational | "Is X related to Y?" | Correlation hypothesis |
+| Causal | "Does X cause Y?" | Causal hypothesis |
+| Comparative | "Is X different from Y?" | Difference hypothesis |
 
-Before forming hypotheses, collect observations:
+**CHECKPOINT**: Confirm research question with user.
 
-- What exactly happens? (specific symptoms)
-- When does it happen? (timing, frequency)
-- Where does it happen? (environment, component)
-- What changed recently? (code, config, data)
+## Phase 2: Hypothesis Construction
 
-**Write down observations objectively:**
+### Hypothesis Components
 ```
-Observations:
-- API returns 500 error on POST /orders
-- Happens only when cart has > 10 items
-- Started after deployment on 2024-01-15
-- Works fine in staging environment
-- Error logs show "connection refused" to inventory service
-```
-
-### 2. Hypothesize - Form Testable Theories
-
-A good hypothesis is:
-- **Specific** - Points to a particular cause
-- **Testable** - Can be proven true or false
-- **Falsifiable** - Possible to prove wrong
-
-**Bad hypotheses:**
-- "Something is wrong with the network"
-- "There might be a race condition"
-- "The code is buggy"
-
-**Good hypotheses:**
-- "The inventory service connection pool is exhausted when processing orders with >10 items"
-- "The order processing timeout (5s) is insufficient for large orders"
-- "The new inventory service endpoint (v2) returns different response format"
-
-### 3. Predict - Define Expected Results
-
-For each hypothesis, define:
-- If true, what should we observe?
-- If false, what should we observe?
-
-```
-Hypothesis: Connection pool exhausted for large orders
-
-If TRUE:
-- Active connections should hit max (20) during large orders
-- Small orders should still work during this time
-- Increasing pool size should fix the issue
-
-If FALSE:
-- Connection count stays well below max
-- Small orders also fail during the issue
-- Pool size change has no effect
+If [independent variable/condition]
+Then [dependent variable/outcome]
+Because [theoretical mechanism]
 ```
 
-### 4. Test - Experiment Systematically
+### Null vs Alternative Hypothesis
+- **H₀ (Null)**: No effect/relationship exists
+- **H₁ (Alternative)**: Effect/relationship exists
 
-Design tests that definitively confirm or reject:
+Example:
+- H₀: Training method has no effect on performance
+- H₁: Training method improves performance
 
+### Hypothesis Quality Check
+- [ ] Is it testable with available methods?
+- [ ] Is it falsifiable (can be proven wrong)?
+- [ ] Does it make specific predictions?
+- [ ] Is it parsimonious (simplest explanation)?
+- [ ] Is it consistent with existing knowledge?
+- [ ] Does it specify the mechanism?
+
+## Phase 3: Variable Mapping
+
+### Variable Identification
+| Variable | Type | Operationalization |
+|----------|------|-------------------|
+| [Name] | Independent (IV) | [How measured/manipulated] |
+| [Name] | Dependent (DV) | [How measured] |
+| [Name] | Control | [How held constant] |
+| [Name] | Confound | [Potential interference] |
+| [Name] | Mediator | [Explains mechanism] |
+| [Name] | Moderator | [Affects strength] |
+
+### Operationalization Criteria
+For each variable:
+- Concrete, observable indicators
+- Reliable measurement method
+- Valid representation of construct
+- Appropriate scale (nominal, ordinal, interval, ratio)
+
+## Phase 4: Prediction Generation
+
+### Specific Predictions
+From your hypothesis, derive:
+1. **If H₁ true**: [Specific observable outcome]
+2. **If H₀ true**: [Expected null result]
+3. **Effect direction**: [Increase/decrease/differ]
+4. **Effect magnitude**: [Expected size]
+
+### Boundary Conditions
+- Under what conditions should hypothesis hold?
+- Where might it not apply?
+- What would moderate the effect?
+
+**CHECKPOINT**: Validate predictions align with user's research goals.
+
+## Phase 5: Design Selection
+
+### Experimental vs Observational
 ```
-Test Plan for Connection Pool Hypothesis:
-
-1. Add connection pool monitoring
-   - Log active connections before/after each request
-   - Expected if true: Count reaches 20 during failures
-
-2. Artificial stress test
-   - Send 5 large orders simultaneously
-   - Expected if true: Failures start when pool exhausted
-
-3. Increase pool size to 50
-   - Repeat stress test
-   - Expected if true: Failures stop or threshold moves
-
-4. Control test with small orders
-   - Send 20 small orders simultaneously
-   - Expected if true: No failures (faster processing)
-```
-
-### 5. Analyze - Interpret Results
-
-After testing:
-
-- Did results match predictions for TRUE or FALSE?
-- Are results conclusive or ambiguous?
-- Do results suggest a different hypothesis?
-
-```
-Results:
-- Connection count reached 20/20 during failures ✓
-- Small orders succeeded during same period ✓
-- Pool size increase to 50 → failures stopped ✓
-
-Conclusion: Hypothesis CONFIRMED
-Connection pool exhaustion is the proximate cause.
-
-New question: Why do large orders exhaust the pool?
-New hypothesis: Large orders make multiple inventory calls per item
-```
-
-## Hypothesis Tracking Template
-
-```markdown
-## Bug: [Description]
-
-### Hypothesis 1: [Theory]
-**Status:** Testing | Confirmed | Rejected
-**Probability:** High | Medium | Low
-
-**Evidence For:**
-- [Evidence 1]
-- [Evidence 2]
-
-**Evidence Against:**
-- [Evidence 1]
-
-**Test Plan:**
-1. [Test 1] - Expected result if true
-2. [Test 2] - Expected result if false
-
-**Test Results:**
-- [Result 1]: [Supports/Contradicts]
-- [Result 2]: [Supports/Contradicts]
-
-**Conclusion:** [Confirmed/Rejected] because [reasoning]
-
----
-
-### Hypothesis 2: [Next Theory]
-...
+Can you manipulate the IV?
+├── Yes → Experimental design
+│   ├── Random assignment possible? → True experiment
+│   └── No random assignment? → Quasi-experiment
+└── No → Observational design
+    ├── Over time? → Longitudinal
+    └── Single point? → Cross-sectional
 ```
 
-## Common Debugging Hypotheses
+### Design Options
+| Design | Strengths | Limitations |
+|--------|-----------|-------------|
+| RCT | Causal inference | Artificial, expensive |
+| Quasi-experiment | More feasible | Weaker causal claims |
+| Cohort | Temporal sequence | Attrition, time |
+| Case-control | Efficient for rare outcomes | Recall bias |
+| Cross-sectional | Quick, inexpensive | No causation |
 
-### Performance Issues
-- "Query missing index on column X"
-- "N+1 query problem in relationship Y"
-- "Memory leak in component Z"
-- "Inefficient algorithm (O(n²)) in function F"
+### Control Strategies
+| Threat | Control Method |
+|--------|---------------|
+| Selection bias | Random assignment, matching |
+| History | Control group, isolation |
+| Maturation | Control group, short duration |
+| Testing effects | Control group, alternate forms |
+| Instrumentation | Standardization, calibration |
 
-### Data Issues
-- "Invalid data in field X for certain records"
-- "Character encoding mismatch (UTF-8 vs Latin-1)"
-- "Stale cache serving outdated data"
-- "Race condition corrupting shared state"
+## Phase 6: Confound Mitigation
 
-### Configuration Issues
-- "Environment variable X not set in production"
-- "Timeout value too low for operation Y"
-- "Feature flag F enabled in wrong environment"
+### Confound Analysis
+For each potential confound:
+1. How could it affect the DV?
+2. How might it correlate with the IV?
+3. What's the mitigation strategy?
 
-### Integration Issues
-- "API response format changed in version V"
-- "Certificate expired for service S"
-- "Rate limiting triggered by usage pattern P"
+### Mitigation Strategies
+| Strategy | How It Works |
+|----------|--------------|
+| Random assignment | Distributes confounds equally |
+| Matching | Pairs similar participants |
+| Statistical control | Adjust in analysis |
+| Counterbalancing | Vary order of conditions |
+| Blinding | Remove bias from knowledge |
+| Standardization | Same procedures for all |
 
-## Testing Techniques by Hypothesis Type
+## Phase 7: Falsifiability Statement
 
-### Testing Timing Hypotheses
-```typescript
-// Add timing instrumentation
-const start = performance.now();
-await suspectedSlowOperation();
-const duration = performance.now() - start;
-console.log(`Operation took ${duration}ms`);
-// Hypothesis confirmed if duration > expected
+### Define Falsification Criteria
+Specify exactly what results would falsify H₁:
+- What outcome pattern rejects the hypothesis?
+- What effect size is too small to matter?
+- What statistical threshold applies?
+
+### Pre-registration Elements
+- Hypothesis (before seeing data)
+- Analysis plan (before seeing data)
+- Sample size justification
+- Exclusion criteria
+- Success/failure criteria
+
+## Phase 8: Documentation
+
+### Output Structure
 ```
+# Hypothesis Development: [Topic]
 
-### Testing Data Hypotheses
-```typescript
-// Validate data at key points
-function processWithValidation(data) {
-  console.assert(data.id != null, 'Missing id');
-  console.assert(data.items?.length > 0, 'Empty items');
-  console.assert(typeof data.total === 'number', 'Invalid total');
-  // If assertions fail, data hypothesis likely true
-}
+## Research Question
+[Clearly stated question]
+
+## Hypotheses
+- H₀: [Null hypothesis]
+- H₁: [Alternative hypothesis]
+- Mechanism: [Why we expect this]
+
+## Variables
+| Variable | Type | Operationalization |
+|----------|------|-------------------|
+| [Name] | [Type] | [Definition] |
+
+## Predictions
+1. If H₁: [Expected outcome]
+2. If H₀: [Expected outcome]
+3. Effect size: [Expected magnitude]
+
+## Design
+- Type: [Design name]
+- Justification: [Why this design]
+
+## Confounds and Controls
+| Confound | Risk | Mitigation |
+|----------|------|------------|
+| [Name] | [Level] | [Strategy] |
+
+## Falsification Criteria
+[Specific conditions that would reject H₁]
+
+## Feasibility Notes
+- Resources needed: [List]
+- Ethical considerations: [List]
+- Timeline estimate: [Estimate]
 ```
-
-### Testing State Hypotheses
-```typescript
-// Snapshot state before and after
-const stateBefore = JSON.stringify(currentState);
-suspectedStateMutation();
-const stateAfter = JSON.stringify(currentState);
-if (stateBefore !== stateAfter) {
-  console.log('State changed:', diff(stateBefore, stateAfter));
-}
-```
-
-## Avoiding Hypothesis Bias
-
-### Confirmation Bias
-- Don't only look for evidence supporting your favorite theory
-- Actively try to disprove your hypothesis
-- Give equal weight to contradicting evidence
-
-### Anchoring Bias
-- Don't get stuck on first hypothesis
-- Be willing to abandon theories that don't fit evidence
-- Consider alternatives even when one seems likely
-
-### Premature Closure
-- Don't stop at first plausible explanation
-- Verify the hypothesis completely before declaring victory
-- Consider if there might be multiple causes
-
-## Decision Tree
-
-```
-Is the hypothesis testable?
-├── NO → Refine it to be more specific
-└── YES → Can I test it without side effects?
-    ├── NO → Design a safe test (staging, logs-only)
-    └── YES → Run the test
-        └── Results conclusive?
-            ├── NO → Design a better test
-            └── YES → Hypothesis confirmed or rejected?
-                ├── CONFIRMED → Root cause found?
-                │   ├── YES → Fix and verify
-                │   └── NO → Form next hypothesis (why?)
-                └── REJECTED → Form next hypothesis
-```
-
-## Integration with Other Skills
-
-- **root-cause-analysis**: Hypothesis testing is a key technique within RCA
-- **trace-and-isolate**: Use tracing to gather evidence for hypotheses
-- **testing/red-green-refactor**: Write test that confirms the bug before fixing

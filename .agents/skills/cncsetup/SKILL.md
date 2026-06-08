@@ -1,6 +1,10 @@
 ---
-name: Cncsetup
-description: Generate standardized CNC setup sheets for MNMUK machine shop. Covers DMG MORI mills/lathes, CITIZEN Swiss, MITSUBISHI EDM, and Haas machines. USE WHEN user says 'setup sheet', 'create setup', 'job setup', 'machine setup', 'tooling list', 'fixture setup', or 'new job' for any CNC operation.
+name: CNCSetup
+description: |
+  Generate standardized CNC setup sheets for MNMUK machine shop.
+  Covers DMG MORI mills/lathes, CITIZEN Swiss, MITSUBISHI EDM, and Haas machines.
+  USE WHEN user says 'setup sheet', 'create setup', 'job setup', 'machine setup',
+  'tooling list', 'fixture setup', or 'new job' for any CNC operation.
 ---
 
 # CNCSetup - MNMUK Setup Sheet Generator

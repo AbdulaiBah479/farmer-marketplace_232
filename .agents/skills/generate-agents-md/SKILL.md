@@ -1,138 +1,340 @@
 ---
 name: generate-agents-md
-description: Generates a project-specific AGENTS.md that captures conventions, build commands, module rules, and coding standards. This file is read at session start by coding agents and helps keep behavior consistent.
+description: |
+  Cross-tool compatibility workflow. Use when generating AGENTS.md files
+  for compatibility with other AI coding tools, or creating tool-specific
+  instruction files from CLAUDE.md.
 license: MIT
-compatibility: opencode
 metadata:
-  category: documentation
-  phase: setup
+  author: samuel
+  version: "1.0"
+  category: workflow
 ---
 
-# Skill: Generate AGENTS.md
+# Generate AGENTS.md
 
-## What This Skill Does
+Extract operational content from CLAUDE.md to create a universal AGENTS.md file for cross-tool compatibility with Cursor, Codex, Copilot, and other AI agents.
 
-Creates an `AGENTS.md` file in the project root that captures the conventions an agent needs before writing code. The file is read at the start of each agent session.
+## Overview
 
-A well-written `AGENTS.md` eliminates the 2-5k tokens that agents otherwise spend re-discovering project conventions (build commands, test patterns, naming rules, directory layout) at every session start.
+This workflow extracts the Operations and Boundaries sections from CLAUDE.md to generate a minimal, universal AGENTS.md file that works across 20+ AI coding tools.
+
+**Why generate instead of symlink?**
+- Symlinks may not work on all systems (Windows)
+- AGENTS.md can be customized without affecting CLAUDE.md
+- Some teams prefer explicit files over symlinks
+- Allows for tool-specific adjustments
 
 ## When to Use
 
-- When a project has no `AGENTS.md` yet
-- When `smart-start` detects a missing `AGENTS.md`
-- After significant project restructuring (new modules, changed build system)
-- When onboarding a project to AI-assisted development for the first time
+✅ **Use this workflow when:**
+- Team uses multiple AI tools (Cursor + Claude Code, Codex + Claude)
+- Deploying to systems where symlinks don't work well
+- Want a standalone AGENTS.md for open-source projects
+- Need to customize AGENTS.md separately from CLAUDE.md
 
-Use this skill to create or fully regenerate `AGENTS.md`. For small targeted edits, update `AGENTS.md` manually.
+❌ **Use symlink instead when:**
+- Only team uses Claude Code and one other tool
+- System supports symlinks reliably
+- Want single source of truth with no drift
 
-## Execution Model
+**Symlink command**: `ln -s CLAUDE.md AGENTS.md`
 
-- **Always**: the primary agent runs this skill directly.
-- **Rationale**: generating `AGENTS.md` requires analyzing project files (package.json, Makefile, CI configs, lint configs) and synthesizing conventions. The primary agent has the conversation context to ask clarifying questions via the `question` tool.
-- **Output**: `AGENTS.md` file in the project root.
+---
 
-## Workflow
+## Process
 
-### Step 1: Detect Project Stack
+### Step 1: Analyze CLAUDE.md
 
-Identify the project's technology stack by checking for presence of key files:
+AI reads CLAUDE.md and identifies:
+1. **Operations section** - Setup, Testing, Build, Code Style commands
+2. **Boundaries section** - Protected files, never commit, ask before
+3. **Project-specific customizations** (if any)
 
-- **Node.js**: `package.json`, `tsconfig.json`, `eslint.config.*`
-- **Python**: `pyproject.toml`, `setup.py`, `requirements.txt`, `ruff.toml`
-- **Go**: `go.mod`, `go.sum`
-- **Rust**: `Cargo.toml`
-- **Java/Kotlin**: `pom.xml`, `build.gradle`
-- **Multi-language**: check for monorepo indicators (`packages/`, `apps/`, `services/`)
+### Step 2: Generate AGENTS.md
 
-Read the detected config files to extract:
-
-- Project name and description
-- Dependencies and their versions
-- Build commands (`scripts` in package.json, targets in Makefile)
-- Test commands and frameworks
-
-### Step 2: Analyze Project Structure
-
-Map the directory layout:
-
-- Top-level directories and their purpose
-- Module/package boundaries
-- Source vs. test directory conventions
-- Configuration file locations
-
-### Step 3: Extract Conventions
-
-From config files and existing code, extract:
-
-- **Code style**: linter config (ESLint, Ruff, golangci-lint), formatter config (Prettier, Black)
-- **Naming conventions**: file naming patterns, export patterns
-- **Testing patterns**: test file naming, test framework, test directory structure
-- **Git conventions**: branch naming (from CI config), commit message format (from commitlint config or CONTRIBUTING.md)
-- **CI/CD**: which checks must pass, deployment targets
-
-### Step 4: Check for Existing Documentation
-
-Read any existing documentation that informs conventions:
-
-- `CONTRIBUTING.md`
-- `README.md` (development section)
-- `.editorconfig`
-- Existing `AGENTS.md` (if updating)
-
-### Step 5: Generate AGENTS.md
-
-Write the `AGENTS.md` file with the following structure:
+Create `AGENTS.md` with AGENTS.md standard structure:
 
 ```markdown
-# <Project Name> - Agent Instructions
+# AGENTS.md
+
+> Auto-generated from CLAUDE.md. For full methodology, see CLAUDE.md.
+> Last generated: [DATE]
 
 ## Project Overview
-<one paragraph: what the project does, its purpose>
+[Brief description - AI extracts from README or project.md if available]
 
-## Tech Stack
-<language, framework, key dependencies>
-
-## Project Structure
-<directory tree with purpose annotations>
-
-## Development Commands
-| Command | Purpose |
-|---------|---------|
-| `<cmd>` | <what it does> |
-
-## Code Conventions
-- <naming rules>
-- <import order>
-- <error handling patterns>
+## Setup Commands
+[Extracted from CLAUDE.md Operations section]
 
 ## Testing
-- Framework: <name>
-- Run: `<command>`
-- Naming: `<pattern>`
-- Coverage: <requirements>
+[Extracted from CLAUDE.md Operations section]
 
-## Module Rules
-<per-module constraints, e.g. "api/ must not import from cli/">
+## Build & Deploy
+[Extracted from CLAUDE.md Operations section]
 
-## Do NOT
-<explicit list of things the agent should avoid>
+## Code Style
+[Extracted from CLAUDE.md Operations section]
+
+## Boundaries
+[Extracted from CLAUDE.md Boundaries section]
+
+---
+
+*For detailed guardrails, 4D methodology, and workflows, see [CLAUDE.md](./CLAUDE.md)*
 ```
 
-### Step 6: Confirm with User
+### Step 3: Verify and Save
 
-Use the `question` tool to present the generated `AGENTS.md` summary and ask:
+1. AI presents generated AGENTS.md for review
+2. User approves or requests changes
+3. Save to project root: `./AGENTS.md`
 
-- Are there project-specific conventions not captured?
-- Are there modules with special rules?
-- Any explicit "do not" instructions?
+---
 
-Incorporate feedback before finalizing.
+## AGENTS.md Template
 
-## Rules
+```markdown
+# AGENTS.md
 
-1. **Analyze, don't guess**: every statement in AGENTS.md must be derived from actual project files. Do not assume conventions that aren't evidenced in config files or code patterns.
-2. **Concise over complete**: AGENTS.md should be ~50-150 lines. It's read at every session start, so brevity is critical. Link to detailed docs rather than duplicating them.
-3. **Actionable instructions**: every section should tell the agent what TO DO or NOT TO DO. Avoid descriptive prose that doesn't guide behavior.
-4. **Commands must work**: verify build/test commands by checking they exist in package.json/Makefile. Do not invent commands.
-5. **Module rules are valuable**: if the project has clear module boundaries, document them. This prevents agents from creating unwanted cross-module dependencies.
-6. **No built-in explore agent**: do NOT use the built-in `explore` subagent type.
+> Auto-generated from CLAUDE.md | Last updated: YYYY-MM-DD
+> Full documentation: [CLAUDE.md](./CLAUDE.md)
+
+## Project Overview
+
+[PROJECT_NAME] - [BRIEF_DESCRIPTION]
+
+**Tech Stack**: [PRIMARY_TECHNOLOGIES]
+**Language**: [PRIMARY_LANGUAGE]
+
+## Setup Commands
+
+```bash
+# Install dependencies
+[INSTALL_COMMAND]
+
+# Start development server
+[DEV_COMMAND]
+
+# Environment setup
+cp .env.example .env
+```
+
+## Testing
+
+```bash
+# Run all tests
+[TEST_COMMAND]
+
+# Run with coverage (target: >80% business logic)
+[COVERAGE_COMMAND]
+
+# Watch mode
+[WATCH_COMMAND]
+```
+
+## Build & Deploy
+
+```bash
+# Production build
+[BUILD_COMMAND]
+
+# Type check
+[TYPECHECK_COMMAND]
+
+# Lint
+[LINT_COMMAND]
+```
+
+## Code Style
+
+```bash
+# Format code
+[FORMAT_COMMAND]
+
+# Lint and fix
+[LINT_FIX_COMMAND]
+```
+
+**Conventions**:
+- [STYLE_RULE_1]
+- [STYLE_RULE_2]
+- [STYLE_RULE_3]
+
+## Boundaries
+
+### Do Not Modify
+- Lock files (`package-lock.json`, `yarn.lock`, `Cargo.lock`)
+- Environment files (`.env`, `.env.local`)
+- CI/CD configurations (`.github/workflows/`)
+- Applied database migrations
+
+### Never Commit
+- Secrets, API keys, credentials
+- `.env` files (use `.env.example`)
+- Build artifacts, `node_modules/`, `target/`
+
+### Ask Before Changing
+- Authentication/authorization logic
+- Database schemas
+- Public API contracts
+- Major dependencies
+
+---
+
+## Additional Context
+
+For detailed development guidelines, see:
+- **Full Methodology**: [CLAUDE.md](./CLAUDE.md)
+- **Skills**: [.claude/skills/](./agent/skills/)
+
+*This file follows the [AGENTS.md](https://agents.md) standard.*
+```
+
+---
+
+## Customization Guide
+
+### Project-Specific Adjustments
+
+When generating AGENTS.md, AI should:
+
+1. **Detect tech stack** from:
+   - `package.json` (Node.js)
+   - `requirements.txt` / `pyproject.toml` (Python)
+   - `go.mod` (Go)
+   - `Cargo.toml` (Rust)
+
+2. **Extract actual commands** from:
+   - `package.json` scripts
+   - `Makefile`
+   - `justfile`
+   - CI/CD workflows
+
+3. **Include project-specific boundaries** from:
+   - `CLAUDE.md` (if exists)
+   - Existing `.gitignore` patterns
+
+### Monorepo Support
+
+For monorepos, generate nested AGENTS.md files:
+
+```
+project/
+├── AGENTS.md              # Root-level (general)
+├── CLAUDE.md              # Full methodology
+├── packages/
+│   ├── api/
+│   │   └── AGENTS.md      # API-specific commands
+│   └── web/
+│       └── AGENTS.md      # Web-specific commands
+```
+
+Each nested AGENTS.md should:
+- Focus on that package's commands
+- Reference root AGENTS.md for general guidelines
+- Include package-specific boundaries
+
+---
+
+## Maintenance
+
+### When to Regenerate
+
+Regenerate AGENTS.md when:
+- CLAUDE.md Operations section changes
+- New build/test commands added
+- Project structure changes significantly
+- Tech stack updated
+
+### Keeping in Sync
+
+**Option A: Manual regeneration**
+```bash
+# Load this skill periodically when CLAUDE.md changes
+.claude/skills/generate-agents-md/SKILL.md
+```
+
+**Option B: Pre-commit hook**
+```bash
+# .husky/pre-commit or similar
+# Check if CLAUDE.md changed, regenerate AGENTS.md
+```
+
+**Option C: CI/CD check**
+```yaml
+# .github/workflows/check-agents-md.yml
+- name: Verify AGENTS.md is up to date
+  run: |
+    # Compare timestamps or checksums
+```
+
+---
+
+## Example Usage
+
+### Request
+```
+Generate AGENTS.md for this project using the generate-agents-md skill
+```
+
+### AI Response
+```
+I'll analyze your project and generate an AGENTS.md file.
+
+**Detected:**
+- Tech stack: TypeScript, React, Node.js
+- Package manager: npm
+- Test framework: Vitest
+- Linter: ESLint + Prettier
+
+**Generated AGENTS.md:**
+[Shows preview]
+
+**Save to:** ./AGENTS.md
+
+Approve? [Yes/No/Edit]
+```
+
+---
+
+## Integration with CLAUDE.md
+
+### How They Work Together
+
+| File | Purpose | Audience |
+|------|---------|----------|
+| `CLAUDE.md` | Full methodology + guardrails | Claude Code |
+| `AGENTS.md` | Operational commands | All AI tools |
+
+### Reading Priority (Claude Code)
+
+1. Claude Code reads `CLAUDE.md` (primary)
+2. If `CLAUDE.md` not found, reads `AGENTS.md` (fallback)
+3. Both can coexist (different purposes)
+
+### For Other Tools
+
+Most tools (Cursor, Codex, Copilot) read:
+1. `AGENTS.md` (primary)
+2. May also read `CLAUDE.md` if present
+
+---
+
+## Troubleshooting
+
+### Issue: AGENTS.md and CLAUDE.md out of sync
+**Solution**: Regenerate AGENTS.md or set up sync mechanism
+
+### Issue: Other tools not reading AGENTS.md
+**Solution**: Ensure file is in project root, named exactly `AGENTS.md`
+
+### Issue: Symlink not working
+**Solution**: Use this skill to generate actual file instead
+
+### Issue: Need different commands for different tools
+**Solution**: Generate AGENTS.md with common subset, add tool-specific comments
+
+---
+
+**Remember**: AGENTS.md is for operational commands. Keep it minimal and actionable. Full methodology stays in CLAUDE.md.

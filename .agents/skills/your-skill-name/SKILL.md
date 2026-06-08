@@ -1,49 +1,41 @@
 ---
-name: your-skill-name
-description: >
-  Clear description of what this skill does and when to use it.
-  Use when the user asks about X or wants to work with Y.
-  Include specific trigger phrases so agents auto-load it correctly.
-  Max 1024 characters.
-
-# ── Agent Skills spec fields (https://agentskills.io/specification) ──────────
-# license: Apache-2.0                    # Recommended for open-source skills
-# compatibility: Claude Code, Cursor     # Only if skill has specific env requirements (max 500 chars)
-# metadata:                              # Custom key-value pairs
-#   author: grafana-labs
-# allowed-tools: Bash(git:*) Read        # Pre-approved tools (experimental)
-
-# ── Claude Code extension fields (not part of the spec) ──────────────────────
-# user-invocable: true                   # Show in / menu (default: true)
-# disable-model-invocation: false        # Prevent agent auto-loading (default: false)
+name: "Your Skill Name"
+slug: "your-skill-slug"
+description: "A clear description of what this skill does and when to use it. Reference specific APIs, tools, or techniques."
+category: "Developer Tools"
+framework: "Claude Code"
+verification: listed
+source: "https://github.com/example/upstream-project"
 ---
 
-# Your Skill Title
+# Your Skill Name
 
-## Overview
+<!-- What does this skill do? When should someone use it? Be specific. -->
 
-Brief introduction to what this skill covers. Focus on Grafana-specific knowledge — don't explain
-general programming concepts the AI already knows well.
+A clear description of the skill. Mention the APIs, tools, or techniques it uses.
+Explain the problem it solves and who benefits from it.
 
-## Key Concepts
+## Installation
 
-Document the important concepts, patterns, or syntax. Code examples are more effective than prose.
+### OpenClaw
 
-```promql
-# Example
-rate(http_requests_total[5m])
+```bash
+clawhub install your-skill-slug
 ```
 
-## Common Patterns
+### Direct repo/manual install
 
-Describe the most frequently needed patterns or configurations.
+Clone the Agent Skill Exchange repository and copy this skill directory into the skill folder used by your agent runtime:
 
-## Best Practices
+```bash
+git clone https://github.com/agentskillexchange/skills.git
+cp -R skills/skills/your-skill-slug ~/.agent-skills/your-skill-slug
+```
 
-- List recommendations specific to this skill's domain
-- Include common pitfalls to avoid
+### Optional Third-Party Installer
 
----
+The `skills` npm package is maintained by Vercel Labs / third parties, not AgentSkillExchange. If you choose to use it, pin the package version:
 
-> **Keep SKILL.md under 500 lines.** Move detailed reference material to `references/` files and
-> link to them from here. See [agentskills.io/specification](https://agentskills.io/specification).
+```bash
+npm exec --package=skills@1.5.7 -- skills add agentskillexchange/skills --skill your-skill-slug
+```

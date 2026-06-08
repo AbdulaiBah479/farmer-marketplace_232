@@ -1,487 +1,243 @@
 ---
 name: paypal-integration
-description: "Master PayPal payment integration including Express Checkout, IPN handling, recurring billing, and refund workflows."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: "Add PayPal, Venmo, and Pay Later buttons to your store using the PayPal Commerce Platform SDK with Express Checkout for one-tap buying"
+category: payments-checkout
+risk: critical
+source: curated
+date_added: "2026-03-12"
+tags: [paypal, checkout, express, payments, pcp, venmo, pay-later, sdk]
+triggers: ["integrate paypal", "add paypal checkout", "paypal express", "paypal buttons", "paypal commerce", "venmo checkout"]
+tools: [claude-code, cursor, gemini-cli, copilot, codex-cli, kiro, opencode]
+platforms: [shopify, woocommerce, bigcommerce, custom]
+difficulty: intermediate
 ---
 
 # PayPal Integration
 
-Master PayPal payment integration including Express Checkout, IPN handling, recurring billing, and refund workflows.
+## Overview
 
-## Do not use this skill when
+PayPal Checkout lets shoppers pay using their PayPal balance, Venmo, Pay Later (installments), or a card processed by PayPal. It is particularly valuable in Germany, Netherlands, and Brazil where PayPal is the dominant payment method, and in any market where customers prefer not to enter card details. All major platforms have official PayPal integrations that require only credentials — no custom code needed for standard checkout.
 
-- The task is unrelated to paypal integration
-- You need a different domain or tool outside this scope
+## When to Use This Skill
 
-## Instructions
+- When adding PayPal as a payment option alongside a card processor
+- When implementing PayPal Express Checkout on the product page or cart (reduces steps to purchase)
+- When targeting markets where PayPal is the dominant payment method (Germany, Netherlands, Brazil)
+- When adding Venmo or Pay Later (installments) to appeal to younger shoppers
 
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
+## Core Instructions
 
-## Use this skill when
+### Step 1: Create and configure your PayPal Business account
 
-- Integrating PayPal as a payment option
-- Implementing express checkout flows
-- Setting up recurring billing with PayPal
-- Processing refunds and payment disputes
-- Handling PayPal webhooks (IPN)
-- Supporting international payments
-- Implementing PayPal subscriptions
+1. Sign up for a **PayPal Business account** at paypal.com/business if you do not already have one
+2. Verify your business identity (required before you can receive payments)
+3. For development and testing: sign up at **developer.paypal.com** and create sandbox buyer/seller accounts
+4. Create an app at **developer.paypal.com → My Apps → Create App** to get your Client ID and Secret
 
-## Core Concepts
+### Step 2: Install PayPal on your platform
 
-### 1. Payment Products
-**PayPal Checkout**
-- One-time payments
-- Express checkout experience
-- Guest and PayPal account payments
+---
 
-**PayPal Subscriptions**
-- Recurring billing
-- Subscription plans
-- Automatic renewals
+#### Shopify
 
-**PayPal Payouts**
-- Send money to multiple recipients
-- Marketplace and platform payments
+PayPal Express Checkout is built into Shopify and is enabled by default on most stores.
 
-### 2. Integration Methods
-**Client-Side (JavaScript SDK)**
-- Smart Payment Buttons
-- Hosted payment flow
-- Minimal backend code
+**To verify or reconfigure:**
+1. Go to **Settings → Payments**
+2. Under **Payment providers**, click **PayPal** or **Activate PayPal**
+3. If not already connected, click **Activate** and log in with your PayPal Business account to link it
+4. Choose between:
+   - **PayPal Express Checkout**: the classic checkout flow (recommended)
+   - **PayPal Complete Payments**: a newer integration that also supports Venmo and Pay Later
 
-**Server-Side (REST API)**
-- Full control over payment flow
-- Custom checkout UI
-- Advanced features
+**Enable Venmo and Pay Later:**
+1. In your PayPal Business dashboard, go to **Account Settings → Payment Preferences**
+2. Enable **Venmo** and **Pay Later** — these appear automatically in the Shopify checkout once activated on your PayPal account
+3. To show a Pay Later banner on product pages: install the **PayPal Pay Later Messaging** app from the Shopify App Store
 
-### 3. IPN (Instant Payment Notification)
-- Webhook-like payment notifications
-- Asynchronous payment updates
-- Verification required
+#### WooCommerce
 
-## Quick Start
+1. Install the **WooCommerce PayPal Payments** plugin (the official plugin maintained by WooCommerce/PayPal — available free from WordPress.org)
+2. Go to **WooCommerce → Settings → Payments → PayPal Payments → Set Up**
+3. Click **Connect to PayPal** and log in with your PayPal Business account (OAuth setup — no need to copy/paste API keys)
+4. The plugin automatically enables: PayPal Standard, Venmo, Pay Later, card fields, and the PayPal Credit option
+5. Configure button placement under **WooCommerce → Settings → Payments → PayPal Payments → Smart Payment Buttons**:
+   - Enable buttons on: product pages, cart page, checkout page
+   - Configure button color (gold, blue, silver, white, black)
+6. To show Pay Later messaging on product pages: go to **Pay Later Messaging** section in the plugin settings and enable it
+
+**PayPal Checkout (alternative, older integration):**
+The older **WooCommerce PayPal Checkout** plugin still works but the newer **WooCommerce PayPal Payments** plugin is recommended for all new setups.
+
+#### BigCommerce
+
+1. Go to **Settings → Payment Methods → Online Payment Methods**
+2. Find **PayPal Powered by Braintree** and click **Set Up**
+3. Click **Connect with PayPal** and authorize with your PayPal Business account
+4. Enable the payment methods you want: PayPal, Venmo, Pay Later
+5. Configure which pages show the PayPal buttons in the configuration panel
+
+Alternatively, BigCommerce supports **PayPal Commerce Platform** — go to **Settings → Payment Methods** and choose **PayPal Commerce Platform** for access to the full suite of PayPal payment options.
+
+---
+
+#### Custom / Headless
+
+For headless storefronts, use the PayPal JavaScript SDK with the Orders API v2:
+
+**Load the PayPal JavaScript SDK:**
+
+```html
+<!-- Always load from the CDN — never install as an npm package -->
+<script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD&intent=capture&components=buttons"></script>
+```
+
+**Create a PayPal order server-side:**
 
 ```javascript
-// Frontend - PayPal Smart Buttons
-<div id="paypal-button-container"></div>
+// POST /api/paypal/create-order
+async function createPayPalOrder(req, res) {
+  const { cartId } = req.body;
+  const cart = await db.carts.findUnique({ where: { id: cartId } });
+  const accessToken = await getPayPalAccessToken();
 
-<script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD"></script>
-<script>
-  paypal.Buttons({
-    createOrder: function(data, actions) {
-      return actions.order.create({
-        purchase_units: [{
-          amount: {
-            value: '25.00'
-          }
-        }]
-      });
+  const orderRes = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'PayPal-Request-Id': cartId, // Idempotency key
     },
-    onApprove: function(data, actions) {
-      return actions.order.capture().then(function(details) {
-        // Payment successful
-        console.log('Transaction completed by ' + details.payer.name.given_name);
-
-        // Send to backend for verification
-        fetch('/api/paypal/capture', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({orderID: data.orderID})
-        });
-      });
-    }
-  }).render('#paypal-button-container');
-</script>
-```
-
-```python
-# Backend - Verify and capture order
-from paypalrestsdk import Payment
-import paypalrestsdk
-
-paypalrestsdk.configure({
-    "mode": "sandbox",  # or "live"
-    "client_id": "YOUR_CLIENT_ID",
-    "client_secret": "YOUR_CLIENT_SECRET"
-})
-
-def capture_paypal_order(order_id):
-    """Capture a PayPal order."""
-    payment = Payment.find(order_id)
-
-    if payment.execute({"payer_id": payment.payer.payer_info.payer_id}):
-        # Payment successful
-        return {
-            'status': 'success',
-            'transaction_id': payment.id,
-            'amount': payment.transactions[0].amount.total
-        }
-    else:
-        # Payment failed
-        return {
-            'status': 'failed',
-            'error': payment.error
-        }
-```
-
-## Express Checkout Implementation
-
-### Server-Side Order Creation
-```python
-import requests
-import json
-
-class PayPalClient:
-    def __init__(self, client_id, client_secret, mode='sandbox'):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.base_url = 'https://api-m.sandbox.paypal.com' if mode == 'sandbox' else 'https://api-m.paypal.com'
-        self.access_token = self.get_access_token()
-
-    def get_access_token(self):
-        """Get OAuth access token."""
-        url = f"{self.base_url}/v1/oauth2/token"
-        headers = {"Accept": "application/json", "Accept-Language": "en_US"}
-
-        response = requests.post(
-            url,
-            headers=headers,
-            data={"grant_type": "client_credentials"},
-            auth=(self.client_id, self.client_secret)
-        )
-
-        return response.json()['access_token']
-
-    def create_order(self, amount, currency='USD'):
-        """Create a PayPal order."""
-        url = f"{self.base_url}/v2/checkout/orders"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.access_token}"
-        }
-
-        payload = {
-            "intent": "CAPTURE",
-            "purchase_units": [{
-                "amount": {
-                    "currency_code": currency,
-                    "value": str(amount)
-                }
-            }]
-        }
-
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
-
-    def capture_order(self, order_id):
-        """Capture payment for an order."""
-        url = f"{self.base_url}/v2/checkout/orders/{order_id}/capture"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.access_token}"
-        }
-
-        response = requests.post(url, headers=headers)
-        return response.json()
-
-    def get_order_details(self, order_id):
-        """Get order details."""
-        url = f"{self.base_url}/v2/checkout/orders/{order_id}"
-        headers = {
-            "Authorization": f"Bearer {self.access_token}"
-        }
-
-        response = requests.get(url, headers=headers)
-        return response.json()
-```
-
-## IPN (Instant Payment Notification) Handling
-
-### IPN Verification and Processing
-```python
-from flask import Flask, request
-import requests
-from urllib.parse import parse_qs
-
-app = Flask(__name__)
-
-@app.route('/ipn', methods=['POST'])
-def handle_ipn():
-    """Handle PayPal IPN notifications."""
-    # Get IPN message
-    ipn_data = request.form.to_dict()
-
-    # Verify IPN with PayPal
-    if not verify_ipn(ipn_data):
-        return 'IPN verification failed', 400
-
-    # Process IPN based on transaction type
-    payment_status = ipn_data.get('payment_status')
-    txn_type = ipn_data.get('txn_type')
-
-    if payment_status == 'Completed':
-        handle_payment_completed(ipn_data)
-    elif payment_status == 'Refunded':
-        handle_refund(ipn_data)
-    elif payment_status == 'Reversed':
-        handle_chargeback(ipn_data)
-
-    return 'IPN processed', 200
-
-def verify_ipn(ipn_data):
-    """Verify IPN message authenticity."""
-    # Add 'cmd' parameter
-    verify_data = ipn_data.copy()
-    verify_data['cmd'] = '_notify-validate'
-
-    # Send back to PayPal for verification
-    paypal_url = 'https://ipnpb.sandbox.paypal.com/cgi-bin/webscr'  # or production URL
-
-    response = requests.post(paypal_url, data=verify_data)
-
-    return response.text == 'VERIFIED'
-
-def handle_payment_completed(ipn_data):
-    """Process completed payment."""
-    txn_id = ipn_data.get('txn_id')
-    payer_email = ipn_data.get('payer_email')
-    mc_gross = ipn_data.get('mc_gross')
-    item_name = ipn_data.get('item_name')
-
-    # Check if already processed (prevent duplicates)
-    if is_transaction_processed(txn_id):
-        return
-
-    # Update database
-    # Send confirmation email
-    # Fulfill order
-    print(f"Payment completed: {txn_id}, Amount: ${mc_gross}")
-
-def handle_refund(ipn_data):
-    """Handle refund."""
-    parent_txn_id = ipn_data.get('parent_txn_id')
-    mc_gross = ipn_data.get('mc_gross')
-
-    # Process refund in your system
-    print(f"Refund processed: {parent_txn_id}, Amount: ${mc_gross}")
-
-def handle_chargeback(ipn_data):
-    """Handle payment reversal/chargeback."""
-    txn_id = ipn_data.get('txn_id')
-    reason_code = ipn_data.get('reason_code')
-
-    # Handle chargeback
-    print(f"Chargeback: {txn_id}, Reason: {reason_code}")
-```
-
-## Subscription/Recurring Billing
-
-### Create Subscription Plan
-```python
-def create_subscription_plan(name, amount, interval='MONTH'):
-    """Create a subscription plan."""
-    client = PayPalClient(CLIENT_ID, CLIENT_SECRET)
-
-    url = f"{client.base_url}/v1/billing/plans"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {client.access_token}"
-    }
-
-    payload = {
-        "product_id": "PRODUCT_ID",  # Create product first
-        "name": name,
-        "billing_cycles": [{
-            "frequency": {
-                "interval_unit": interval,
-                "interval_count": 1
-            },
-            "tenure_type": "REGULAR",
-            "sequence": 1,
-            "total_cycles": 0,  # Infinite
-            "pricing_scheme": {
-                "fixed_price": {
-                    "value": str(amount),
-                    "currency_code": "USD"
-                }
-            }
-        }],
-        "payment_preferences": {
-            "auto_bill_outstanding": True,
-            "setup_fee": {
-                "value": "0",
-                "currency_code": "USD"
-            },
-            "setup_fee_failure_action": "CONTINUE",
-            "payment_failure_threshold": 3
-        }
-    }
-
-    response = requests.post(url, headers=headers, json=payload)
-    return response.json()
-
-def create_subscription(plan_id, subscriber_email):
-    """Create a subscription for a customer."""
-    client = PayPalClient(CLIENT_ID, CLIENT_SECRET)
-
-    url = f"{client.base_url}/v1/billing/subscriptions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {client.access_token}"
-    }
-
-    payload = {
-        "plan_id": plan_id,
-        "subscriber": {
-            "email_address": subscriber_email
+    body: JSON.stringify({
+      intent: 'CAPTURE',
+      purchase_units: [{
+        reference_id: cartId,
+        amount: {
+          currency_code: 'USD',
+          value: cart.total.toFixed(2),
         },
-        "application_context": {
-            "return_url": "https://yourdomain.com/subscription/success",
-            "cancel_url": "https://yourdomain.com/subscription/cancel"
-        }
-    }
+      }],
+    }),
+  });
 
-    response = requests.post(url, headers=headers, json=payload)
-    subscription = response.json()
-
-    # Get approval URL
-    for link in subscription.get('links', []):
-        if link['rel'] == 'approve':
-            return {
-                'subscription_id': subscription['id'],
-                'approval_url': link['href']
-            }
+  const order = await orderRes.json();
+  res.json({ id: order.id });
+}
 ```
 
-## Refund Workflows
+**Render PayPal buttons and capture payment:**
 
-```python
-def create_refund(capture_id, amount=None, note=None):
-    """Create a refund for a captured payment."""
-    client = PayPalClient(CLIENT_ID, CLIENT_SECRET)
+```jsx
+useEffect(() => {
+  if (!window.paypal) return;
 
-    url = f"{client.base_url}/v2/payments/captures/{capture_id}/refund"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {client.access_token}"
-    }
+  window.paypal.Buttons({
+    style: { layout: 'vertical', color: 'gold', shape: 'rect' },
 
-    payload = {}
-    if amount:
-        payload["amount"] = {
-            "value": str(amount),
-            "currency_code": "USD"
-        }
+    createOrder: async () => {
+      const res = await fetch('/api/paypal/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cartId }),
+      });
+      const data = await res.json();
+      return data.id; // PayPal Order ID
+    },
 
-    if note:
-        payload["note_to_payer"] = note
+    onApprove: async (data) => {
+      // Always capture server-side — never trust client-side only
+      const res = await fetch('/api/paypal/capture-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: data.orderID, cartId }),
+      });
+      const result = await res.json();
+      if (result.success) router.push(`/orders/${result.shopOrderId}/confirmation`);
+    },
 
-    response = requests.post(url, headers=headers, json=payload)
-    return response.json()
+    onCancel: () => {
+      // User closed PayPal popup — leave cart intact, show no error
+    },
 
-def get_refund_details(refund_id):
-    """Get refund details."""
-    client = PayPalClient(CLIENT_ID, CLIENT_SECRET)
-
-    url = f"{client.base_url}/v2/payments/refunds/{refund_id}"
-    headers = {
-        "Authorization": f"Bearer {client.access_token}"
-    }
-
-    response = requests.get(url, headers=headers)
-    return response.json()
+    onError: (err) => {
+      console.error('PayPal error:', err);
+      setError('PayPal encountered an error. Please try again or use a card.');
+    },
+  }).render('#paypal-button-container');
+}, [cartId]);
 ```
 
-## Error Handling
+**Capture the payment server-side:**
 
-```python
-class PayPalError(Exception):
-    """Custom PayPal error."""
-    pass
+```javascript
+// POST /api/paypal/capture-order
+async function capturePayPalOrder(req, res) {
+  const { orderId, cartId } = req.body;
+  const accessToken = await getPayPalAccessToken();
 
-def handle_paypal_api_call(api_function):
-    """Wrapper for PayPal API calls with error handling."""
-    try:
-        result = api_function()
-        return result
-    except requests.exceptions.RequestException as e:
-        # Network error
-        raise PayPalError(f"Network error: {str(e)}")
-    except Exception as e:
-        # Other errors
-        raise PayPalError(f"PayPal API error: {str(e)}")
+  const captureRes = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'PayPal-Request-Id': `capture-${orderId}`, // Idempotency key
+    },
+  });
 
-# Usage
-try:
-    order = handle_paypal_api_call(lambda: client.create_order(25.00))
-except PayPalError as e:
-    # Handle error appropriately
-    log_error(e)
+  const capture = await captureRes.json();
+  if (capture.status !== 'COMPLETED') {
+    return res.status(400).json({ error: 'Payment capture failed' });
+  }
+
+  // Create your internal order record
+  const order = await createOrderFromCart(cartId, {
+    paymentMethod: 'paypal',
+    paypalOrderId: orderId,
+    paypalCaptureId: capture.purchase_units[0].payments.captures[0].id,
+  });
+
+  res.json({ success: true, shopOrderId: order.id });
+}
 ```
 
-## Testing
+**Handle PayPal webhooks:**
 
-```python
-# Use sandbox credentials
-SANDBOX_CLIENT_ID = "..."
-SANDBOX_SECRET = "..."
+Register webhooks in your PayPal developer dashboard for: `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED`. Verify webhook signatures using PayPal's signature verification API before processing.
 
-# Test accounts
-# Create test buyer and seller accounts at developer.paypal.com
+### Step 3: Test with PayPal sandbox
 
-def test_payment_flow():
-    """Test complete payment flow."""
-    client = PayPalClient(SANDBOX_CLIENT_ID, SANDBOX_SECRET, mode='sandbox')
-
-    # Create order
-    order = client.create_order(10.00)
-    assert 'id' in order
-
-    # Get approval URL
-    approval_url = next((link['href'] for link in order['links'] if link['rel'] == 'approve'), None)
-    assert approval_url is not None
-
-    # After approval (manual step with test account)
-    # Capture order
-    # captured = client.capture_order(order['id'])
-    # assert captured['status'] == 'COMPLETED'
-```
-
-## Resources
-
-- **references/express-checkout.md**: Express Checkout implementation guide
-- **references/ipn-handling.md**: IPN verification and processing
-- **references/refund-workflows.md**: Refund handling patterns
-- **references/billing-agreements.md**: Recurring billing setup
-- **assets/paypal-client.py**: Production PayPal client
-- **assets/ipn-processor.py**: IPN webhook processor
-- **assets/recurring-billing.py**: Subscription management
+1. Go to **developer.paypal.com → Sandbox → Accounts** and use the pre-created sandbox buyer and seller accounts
+2. Set environment variables to use sandbox:
+   ```
+   PAYPAL_CLIENT_ID=<sandbox-client-id>
+   PAYPAL_CLIENT_SECRET=<sandbox-client-secret>
+   PAYPAL_API_BASE=https://api-m.sandbox.paypal.com
+   ```
+3. Test a full purchase flow using the sandbox buyer account credentials
+4. Verify the webhook fires and your handler processes it correctly
 
 ## Best Practices
 
-1. **Always Verify IPN**: Never trust IPN without verification
-2. **Idempotent Processing**: Handle duplicate IPN notifications
-3. **Error Handling**: Implement robust error handling
-4. **Logging**: Log all transactions and errors
-5. **Test Thoroughly**: Use sandbox extensively
-6. **Webhook Backup**: Don't rely solely on client-side callbacks
-7. **Currency Handling**: Always specify currency explicitly
+- **Always capture server-side** — do not trust the `onApprove` client callback alone; always capture using the Orders API from your server
+- **Use `PayPal-Request-Id` header** — this idempotency key prevents double charges if a request is retried
+- **Enable Pay Later messaging on product pages** — showing "4 interest-free payments of $X" before checkout increases AOV; the WooCommerce plugin has this built in
+- **Handle `onCancel` gracefully** — when users close the PayPal popup, do not show an error; just let them try again or choose another payment method
+- **Verify webhook signatures** — PayPal can call your webhook endpoint with forged payloads; always verify the `paypal-transmission-sig` header
 
 ## Common Pitfalls
 
-- **Not Verifying IPN**: Accepting IPN without verification
-- **Duplicate Processing**: Not checking for duplicate transactions
-- **Wrong Environment**: Mixing sandbox and production URLs/credentials
-- **Missing Webhooks**: Not handling all payment states
-- **Hardcoded Values**: Not making configurable for different environments
+| Problem | Solution |
+|---------|----------|
+| "This seller doesn't accept payments" error | Ensure your PayPal account has completed seller onboarding (email verification, bank account linked); also verify sandbox vs. production credentials match |
+| PayPal popup blocked on some browsers | The `createOrder` callback must return a value immediately from a user click event; any async delay can trigger popup blockers — move server calls before the button renders or use PayPal's built-in API |
+| Order confirmed by webhook before capture completes | Use the `PAYMENT.CAPTURE.COMPLETED` webhook (not `CHECKOUT.ORDER.APPROVED`); the latter fires before funds are captured |
+| Duplicate order on webhook retry | Check for an existing order with the PayPal capture ID before creating a new one |
+| WooCommerce PayPal plugin not showing Venmo/Pay Later | Venmo and Pay Later must be enabled in your PayPal Business account settings (not just the plugin) — check **Account Settings → Payment Preferences** in PayPal |
+| Shopify PayPal not processing after reconnection | Disconnect and reconnect your PayPal account in **Shopify → Settings → Payments**; old OAuth tokens sometimes expire |
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+## Related Skills
+
+- @stripe-integration
+- @checkout-flow-optimization
+- @order-processing-pipeline
+- @buy-now-pay-later

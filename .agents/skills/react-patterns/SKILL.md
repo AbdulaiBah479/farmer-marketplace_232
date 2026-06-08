@@ -1,216 +1,263 @@
 ---
 name: react-patterns
-description: "Modern React patterns and principles. Hooks, composition, performance, TypeScript best practices."
-risk: safe
-source: community
-date_added: "2026-02-27"
+description: Build React applications with Remix — loaders, actions, hooks, Server/Client Components, nested routes, error boundaries, form handling, and streaming SSR. Use when building Shopify Hydrogen storefronts or Remix-based apps.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
-# React Patterns
+# React + Remix Patterns
 
-> Principles for building production-ready React applications.
+## Before writing code
 
----
+**Fetch live docs**:
+1. Fetch `https://remix.run/docs/en/main` for Remix documentation
+2. Fetch `https://react.dev/reference/react` for React API reference
+3. Web-search `site:shopify.dev hydrogen remix patterns` for Hydrogen-specific patterns
 
-## 1. Component Design Principles
+## Why Remix (Not Next.js)
 
-### Component Types
+Shopify's Hydrogen is built on Remix:
+- Server-first rendering with progressive enhancement
+- Loaders and actions for server-side data fetching and mutations
+- Nested routes for layout composition
+- Built-in form handling without client-side state management
+- Streaming SSR for fast perceived performance
 
-| Type | Use | State |
-|------|-----|-------|
-| **Server** | Data fetching, static | None |
-| **Client** | Interactivity | useState, effects |
-| **Presentational** | UI display | Props only |
-| **Container** | Logic/state | Heavy state |
+## Core Remix Concepts
 
-### Design Rules
+### Loaders (Data Fetching)
 
-- One responsibility per component
-- Props down, events up
-- Composition over inheritance
-- Prefer small, focused components
+Server-side function that runs on every GET request:
 
----
+```typescript
+import { json, type LoaderFunctionArgs } from '@remix-run/node';
 
-## 2. Hook Patterns
+export async function loader({ context, params }: LoaderFunctionArgs) {
+  const { storefront } = context;
+  const { products } = await storefront.query(PRODUCTS_QUERY);
+  return json({ products });
+}
 
-### When to Extract Hooks
+export default function ProductsPage() {
+  const { products } = useLoaderData<typeof loader>();
+  return <ProductGrid products={products} />;
+}
+```
 
-| Pattern | Extract When |
-|---------|-------------|
-| **useLocalStorage** | Same storage logic needed |
-| **useDebounce** | Multiple debounced values |
-| **useFetch** | Repeated fetch patterns |
-| **useForm** | Complex form state |
+### Actions (Mutations)
 
-### Hook Rules
+Server-side function for form submissions (POST/PUT/DELETE):
 
-- Hooks at top level only
-- Same order every render
-- Custom hooks start with "use"
-- Clean up effects on unmount
+```typescript
+import { redirect, type ActionFunctionArgs } from '@remix-run/node';
 
----
+export async function action({ request, context }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const variantId = formData.get('variantId') as string;
 
-## 3. State Management Selection
+  const { cart } = context;
+  await cart.addLines([{ merchandiseId: variantId, quantity: 1 }]);
 
-| Complexity | Solution |
-|------------|----------|
-| Simple | useState, useReducer |
-| Shared local | Context |
-| Server state | React Query, SWR |
-| Complex global | Zustand, Redux Toolkit |
+  return redirect('/cart');
+}
+```
 
-### State Placement
+### Nested Routes
 
-| Scope | Where |
-|-------|-------|
-| Single component | useState |
-| Parent-child | Lift state up |
-| Subtree | Context |
-| App-wide | Global store |
+Routes compose via `<Outlet>`:
 
----
+```
+app/routes/
+├── ($locale)._index.tsx                    # Homepage
+├── ($locale).products._index.tsx           # Product listing
+├── ($locale).products.$handle.tsx          # Product detail
+├── ($locale).collections.$handle.tsx       # Collection page
+├── ($locale).cart.tsx                       # Cart page
+└── ($locale).account.tsx                   # Account layout
+    ├── ($locale).account._index.tsx        # Account dashboard
+    └── ($locale).account.orders.tsx        # Order history
+```
 
-## 4. React 19 Patterns
+### Error Boundaries
 
-### New Hooks
+Per-route error handling:
+
+```typescript
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h1>{error.status}</h1>
+        <p>{error.statusText}</p>
+      </div>
+    );
+  }
+
+  return <div>Something went wrong</div>;
+}
+```
+
+## React Hooks
+
+### Core Hooks
 
 | Hook | Purpose |
 |------|---------|
-| **useActionState** | Form submission state |
-| **useOptimistic** | Optimistic UI updates |
-| **use** | Read resources in render |
+| `useState` | Local component state |
+| `useEffect` | Side effects (client only) |
+| `useRef` | Mutable ref / DOM access |
+| `useMemo` | Memoized computation |
+| `useCallback` | Memoized callback |
+| `useContext` | Context consumption |
+| `useReducer` | Complex state logic |
 
-### Compiler Benefits
+### Remix Hooks
 
-- Automatic memoization
-- Less manual useMemo/useCallback
-- Focus on pure components
+| Hook | Purpose |
+|------|---------|
+| `useLoaderData` | Access loader data |
+| `useActionData` | Access action response |
+| `useFetcher` | Non-navigation data fetching |
+| `useNavigation` | Navigation state (loading, submitting) |
+| `useRouteError` | Error boundary data |
+| `useSearchParams` | URL search parameters |
+| `useParams` | Route parameters |
+| `useMatches` | All matched routes data |
 
----
+## Server vs Client Components
 
-## 5. Composition Patterns
+### Server Components
 
-### Compound Components
+- Run only on the server
+- Can use `async/await` directly
+- Access databases, APIs, secrets
+- No event handlers, no `useState`, no `useEffect`
+- Default in Remix loaders
 
-- Parent provides context
-- Children consume context
-- Flexible slot-based composition
-- Example: Tabs, Accordion, Dropdown
+### Client Components
 
-### Render Props vs Hooks
+- Run in the browser
+- Use `"use client"` directive (in React 19+)
+- Handle interactivity: clicks, inputs, animations
+- Use `useState`, `useEffect`, `useRef`
 
-| Use Case | Prefer |
-|----------|--------|
-| Reusable logic | Custom hook |
-| Render flexibility | Render props |
-| Cross-cutting | Higher-order component |
+## Form Handling
 
----
+Remix enhances HTML forms:
 
-## 6. Performance Principles
+```typescript
+import { Form, useNavigation } from '@remix-run/react';
 
-### When to Optimize
+function AddToCartForm({ variantId }: { variantId: string }) {
+  const navigation = useNavigation();
+  const isAdding = navigation.state === 'submitting';
 
-| Signal | Action |
-|--------|--------|
-| Slow renders | Profile first |
-| Large lists | Virtualize |
-| Expensive calc | useMemo |
-| Stable callbacks | useCallback |
+  return (
+    <Form method="post" action="/cart">
+      <input type="hidden" name="variantId" value={variantId} />
+      <button type="submit" disabled={isAdding}>
+        {isAdding ? 'Adding...' : 'Add to Cart'}
+      </button>
+    </Form>
+  );
+}
+```
 
-### Optimization Order
+### Fetcher (Non-Navigation)
 
-1. Check if actually slow
-2. Profile with DevTools
-3. Identify bottleneck
-4. Apply targeted fix
+For mutations that shouldn't navigate:
 
----
+```typescript
+function AddToCartButton({ variantId }: { variantId: string }) {
+  const fetcher = useFetcher();
+  const isAdding = fetcher.state === 'submitting';
 
-## 7. Error Handling
+  return (
+    <fetcher.Form method="post" action="/cart">
+      <input type="hidden" name="variantId" value={variantId} />
+      <button disabled={isAdding}>
+        {isAdding ? 'Adding...' : 'Add to Cart'}
+      </button>
+    </fetcher.Form>
+  );
+}
+```
 
-### Error Boundary Usage
+## Streaming SSR
 
-| Scope | Placement |
-|-------|-----------|
-| App-wide | Root level |
-| Feature | Route/feature level |
-| Component | Around risky component |
+Defer non-critical data for faster initial render:
 
-### Error Recovery
+```typescript
+import { defer } from '@remix-run/node';
+import { Await, useLoaderData } from '@remix-run/react';
+import { Suspense } from 'react';
 
-- Show fallback UI
-- Log error
-- Offer retry option
-- Preserve user data
+export async function loader({ context }: LoaderFunctionArgs) {
+  const criticalData = await context.storefront.query(PRODUCT_QUERY);
+  const recommendedProducts = context.storefront.query(RECOMMENDATIONS_QUERY);
 
----
+  return defer({
+    product: criticalData.product,
+    recommended: recommendedProducts, // not awaited — streams later
+  });
+}
 
-## 8. TypeScript Patterns
+export default function ProductPage() {
+  const { product, recommended } = useLoaderData<typeof loader>();
 
-### Props Typing
+  return (
+    <div>
+      <ProductDetail product={product} />
+      <Suspense fallback={<Spinner />}>
+        <Await resolve={recommended}>
+          {(data) => <RecommendedProducts products={data.products} />}
+        </Await>
+      </Suspense>
+    </div>
+  );
+}
+```
 
-| Pattern | Use |
-|---------|-----|
-| Interface | Component props |
-| Type | Unions, complex |
-| Generic | Reusable components |
+## Component Patterns
 
-### Common Types
+### Composition
 
-| Need | Type |
-|------|------|
-| Children | ReactNode |
-| Event handler | MouseEventHandler |
-| Ref | RefObject<Element> |
+```typescript
+function ProductCard({ product, children }: { product: Product; children?: ReactNode }) {
+  return (
+    <article>
+      <ProductImage image={product.featuredImage} />
+      <ProductTitle title={product.title} />
+      <ProductPrice price={product.priceRange} />
+      {children}
+    </article>
+  );
+}
+```
 
----
+### Custom Hooks
 
-## 9. Testing Principles
+```typescript
+function useCart() {
+  const fetcher = useFetcher();
+  const addToCart = (variantId: string) => {
+    fetcher.submit({ variantId }, { method: 'post', action: '/cart' });
+  };
+  return { addToCart, isAdding: fetcher.state === 'submitting' };
+}
+```
 
-| Level | Focus |
-|-------|-------|
-| Unit | Pure functions, hooks |
-| Integration | Component behavior |
-| E2E | User flows |
+## Best Practices
 
-### Test Priorities
+- Use loaders for data fetching — never fetch in components with `useEffect`
+- Use actions for mutations — use Remix `<Form>` over manual `fetch`
+- Use `useFetcher` for mutations that should not cause navigation
+- Use `defer()` + `<Suspense>` for non-critical data (recommendations, reviews)
+- Implement error boundaries at route level for graceful degradation
+- Keep components small and focused — extract custom hooks for reusable logic
+- Prefer server rendering — only use client-side state when interactivity requires it
+- Avoid `useEffect` for data fetching — Remix loaders handle this
+- Use TypeScript for type safety across loader → component data flow
 
-- User-visible behavior
-- Edge cases
-- Error states
-- Accessibility
-
----
-
-## 10. Anti-Patterns
-
-| ❌ Don't | ✅ Do |
-|----------|-------|
-| Prop drilling deep | Use context |
-| Giant components | Split smaller |
-| useEffect for everything | Server components |
-| Premature optimization | Profile first |
-| Index as key | Stable unique ID |
-
----
-
-## 11. File Structure
-
-<img width="1150" height="1438" alt="image" src="https://github.com/user-attachments/assets/10369698-472c-4695-a494-2c0672103aa1" />
-
-Use this image as a reference for a better file structure of the project
-
----
-
-> **Remember:** React is about composition. Build small, combine thoughtfully.
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+Fetch the Remix and React documentation for exact API signatures, hook behavior, and streaming patterns before implementing.

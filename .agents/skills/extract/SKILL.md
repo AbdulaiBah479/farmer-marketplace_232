@@ -1,193 +1,99 @@
 ---
-name: "extract"
-description: "Turn a proven pattern or debugging solution into a standalone reusable skill with SKILL.md, reference docs, and examples."
+name: extract
+description: 'Extract decisions and learnings from Claude session transcripts. Triggers: "extract learnings", "process pending", SessionStart hook.'
 ---
 
-# /si:extract — Create Skills from Patterns
+# Extract Skill
 
-Transforms a recurring pattern or debugging solution into a standalone, portable skill that can be installed in any project.
+**Typically runs automatically via SessionStart hook.**
 
-## Usage
+Process pending learning extractions from previous sessions.
 
+## How It Works
+
+The SessionStart hook runs:
+```bash
+ao extract
 ```
-/si:extract <pattern description>                  # Interactive extraction
-/si:extract <pattern> --name docker-m1-fixes       # Specify skill name
-/si:extract <pattern> --output ./skills/            # Custom output directory
-/si:extract <pattern> --dry-run                     # Preview without creating files
-```
 
-## When to Extract
+This checks for queued extractions and outputs prompts for Claude to process.
 
-A learning qualifies for skill extraction when ANY of these are true:
+## Manual Execution
 
-| Criterion | Signal |
-|---|---|
-| **Recurring** | Same issue across 2+ projects |
-| **Non-obvious** | Required real debugging to discover |
-| **Broadly applicable** | Not tied to one specific codebase |
-| **Complex solution** | Multi-step fix that's easy to forget |
-| **User-flagged** | "Save this as a skill", "I want to reuse this" |
+Given `/extract`:
 
-## Workflow
-
-### Step 1: Identify the pattern
-
-Read the user's description. Search auto-memory for related entries:
+### Step 1: Check for Pending Extractions
 
 ```bash
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|%2F|g; s|%2F|/|; s|^/||')/memory"
-grep -rni "<keywords>" "$MEMORY_DIR/"
+ao extract 2>/dev/null
 ```
 
-If found in auto-memory, use those entries as source material. If not, use the user's description directly.
-
-### Step 2: Determine skill scope
-
-Ask (max 2 questions):
-- "What problem does this solve?" (if not clear)
-- "Should this include code examples?" (if applicable)
-
-### Step 3: Generate skill name
-
-Rules for naming:
-- Lowercase, hyphens between words
-- Descriptive but concise (2-4 words)
-- Examples: `docker-m1-fixes`, `api-timeout-patterns`, `pnpm-workspace-setup`
-
-**Reserved fragments — must NOT appear in the skill name:**
-- `claude`
-- `anthropic`
-
-For skills about Claude Code itself, use the `cc-` prefix instead:
-- ❌ `claude-code-settings` → ✅ `cc-settings`
-- ❌ `claude-code-maintenance` → ✅ `cc-maintenance`
-- ❌ `claude-mcp-tools` → ✅ `cc-mcp-tools`
-- ❌ `claude-plugin-development` → ✅ `cc-plugin-development`
-
-Before writing the skill directory, check the proposed name against this list.
-If a reserved fragment is present, transform it (drop the fragment or replace
-the `claude*`/`anthropic*` prefix with `cc-`) and confirm with the user.
-
-### Step 4: Create the skill files
-
-**Spawn the `skill-extractor` agent** for the actual file generation.
-
-The agent creates:
-
-```
-<skill-name>/
-├── SKILL.md            # Main skill file with frontmatter
-├── README.md           # Human-readable overview
-└── reference/          # (optional) Supporting documentation
-    └── examples.md     # Concrete examples and edge cases
+Or check the pending queue:
+```bash
+cat .agents/ao/pending.jsonl 2>/dev/null | head -5
 ```
 
-### Step 5: SKILL.md structure
+### Step 2: Process Each Pending Item
 
-The generated SKILL.md must follow this format:
+For each queued session:
+1. Read the session summary
+2. Extract actionable learnings
+3. Write to `.agents/learnings/`
+
+### Step 3: Write Learnings
+
+**Write to:** `.agents/learnings/YYYY-MM-DD-<session-id>.md`
 
 ```markdown
----
-name: "skill-name"
-description: "<one-line description>. Use when: <trigger conditions>."
----
+# Learning: <Short Title>
 
-# <Skill Title>
+**ID**: L1
+**Category**: <debugging|architecture|process|testing|security>
+**Confidence**: <high|medium|low>
 
-> One-line summary of what this skill solves.
+## What We Learned
 
-## Quick Reference
+<1-2 sentences describing the insight>
 
-| Problem | Solution |
-|---------|----------|
-| {{problem 1}} | {{solution 1}} |
-| {{problem 2}} | {{solution 2}} |
+## Why It Matters
 
-## The Problem
+<1 sentence on impact/value>
 
-{{2-3 sentences explaining what goes wrong and why it's non-obvious.}}
+## Source
 
-## Solutions
-
-### Option 1: {{Name}} (Recommended)
-
-{{Step-by-step with code examples.}}
-
-### Option 2: {{Alternative}}
-
-{{For when Option 1 doesn't apply.}}
-
-## Trade-offs
-
-| Approach | Pros | Cons |
-|----------|------|------|
-| Option 1 | {{pros}} | {{cons}} |
-| Option 2 | {{pros}} | {{cons}} |
-
-## Edge Cases
-
-- {{edge case 1 and how to handle it}}
-- {{edge case 2 and how to handle it}}
+Session: <session-id>
 ```
 
-### Step 6: Quality gates
+### Step 4: Clear the Queue
 
-Before finalizing, verify:
-
-- [ ] SKILL.md has valid YAML frontmatter with `name` and `description`
-- [ ] `name` matches the folder name (lowercase, hyphens)
-- [ ] `name` does NOT contain reserved fragments `claude` or `anthropic` (use `cc-` prefix for Claude Code skills)
-- [ ] Description includes "Use when:" trigger conditions
-- [ ] Solutions are self-contained (no external context needed)
-- [ ] Code examples are complete and copy-pasteable
-- [ ] No project-specific hardcoded values (paths, URLs, credentials)
-- [ ] No unnecessary dependencies
-
-### Step 7: Report
-
-```
-✅ Skill extracted: {{skill-name}}
-
-Files created:
-  {{path}}/SKILL.md          ({{lines}} lines)
-  {{path}}/README.md         ({{lines}} lines)
-  {{path}}/reference/examples.md  ({{lines}} lines)
-
-Install: /plugin install (copy to your skills directory)
-Publish: clawhub publish {{path}}
-
-Source: MEMORY.md entries at lines {{n, m, ...}} (retained — the skill is portable, the memory is project-specific)
+```bash
+ao extract --clear 2>/dev/null
 ```
 
-## Examples
+### Step 5: Report Completion
 
-### Extracting a debugging pattern
+Tell the user:
+- Number of learnings extracted
+- Key insights
+- Location of learning files
 
-```
-/si:extract "Fix for Docker builds failing on Apple Silicon with platform mismatch"
-```
-
-Creates `docker-m1-fixes/SKILL.md` with:
-- The platform mismatch error message
-- Three solutions (build flag, Dockerfile, docker-compose)
-- Trade-offs table
-- Performance note about Rosetta 2 emulation
-
-### Extracting a workflow pattern
+## The Knowledge Loop
 
 ```
-/si:extract "Always regenerate TypeScript API client after modifying OpenAPI spec"
+Session N ends:
+  → ao forge --last-session --queue
+  → Session queued in pending.jsonl
+
+Session N+1 starts:
+  → ao extract (this skill)
+  → Claude processes the queue
+  → Writes to .agents/learnings/
+  → Loop closed
 ```
 
-Creates `api-client-regen/SKILL.md` with:
-- Why manual regen is needed
-- The exact command sequence
-- CI integration snippet
-- Common failure modes
+## Key Rules
 
-## Tips
-
-- Extract patterns that would save time in a *different* project
-- Keep skills focused — one problem per skill
-- Include the error messages people would search for
-- Test the skill by reading it without the original context — does it make sense?
+- **Runs automatically** - usually via hook
+- **Process the queue** - don't leave extractions pending
+- **Be specific** - actionable learnings, not vague observations
+- **Close the loop** - extraction completes the knowledge cycle

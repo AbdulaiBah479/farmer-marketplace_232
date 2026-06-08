@@ -151,6 +151,12 @@
       "skillPath": "skills/omnibus/downloading-batch-export-files/SKILL.md",
       "computedHash": "81d311d4d647aa3b373a212cfdf56da2cfd7ed3a8d6cb924a70cb567f8043397"
     },
+    "effect-ts": {
+      "source": "effect-ts/skills",
+      "sourceType": "github",
+      "skillPath": "skills/effect-ts/SKILL.md",
+      "computedHash": "301521e167410dd42d834dd0e7cedbe9cfffa519f630a12241dbea7b1d932324"
+    },
     "elysiajs": {
       "source": "elysiajs/skills",
       "sourceType": "github",

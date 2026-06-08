@@ -1,123 +1,298 @@
 ---
 name: contract-review
-description: >
-  Lightweight NDA, MSA, and vendor contract review for SMBs without legal on
-  staff. Reads contracts from local files, Gmail attachments, or DocuSign
-  envelopes; flags non-standard terms; explains risks in plain English; and
-  outputs a marked-up redline as a separate DOCX. Use when the user says
-  "review this contract," "what am I signing," "red flags," "flag any concerns,"
-  "check the payment terms," or uploads/forwards a contract or legal agreement.
+description: Analyze and red-flag contracts systematically, identifying risks, unfavorable terms, and negotiation opportunities
+license: MIT
+metadata:
+  author: ClawFu
+  version: 1.0.0
+  mcp-server: "@clawfu/mcp-skills"
 ---
 
 # Contract Review
 
-## Quick start
+> Systematically analyze contracts to identify risks, unfavorable clauses, and negotiation opportunities before signing.
 
-Attach a contract file, forward the email containing it, or paste the text directly.
+## When to Use This Skill
 
+- Reviewing vendor/SaaS contracts
+- Analyzing partnership agreements
+- Evaluating client service agreements
+- Reviewing employment contracts
+- Due diligence on M&A documents
+
+## Methodology Foundation
+
+Based on **legal contract analysis frameworks** combined with:
+- Risk assessment matrices
+- Common clause libraries
+- Industry-standard benchmarks
+- Negotiation leverage analysis
+
+## What Claude Does vs What You Decide
+
+| Claude Does | You Decide |
+|-------------|------------|
+| Identifies risky clauses | Risk tolerance level |
+| Flags unusual terms | What to negotiate |
+| Compares to standards | Final accept/reject |
+| Suggests alternatives | Business trade-offs |
+| Summarizes obligations | Legal counsel needs |
+
+## Instructions
+
+### Step 1: Contract Overview
+
+**Initial Assessment:**
+| Element | What to Capture |
+|---------|-----------------|
+| Parties | Who's bound |
+| Type | Service, license, partnership |
+| Term | Duration, renewal |
+| Value | Total commitment |
+| Jurisdiction | Governing law |
+
+### Step 2: Risk Categories
+
+**Clause Risk Matrix:**
+| Category | Low Risk | Medium Risk | High Risk |
+|----------|----------|-------------|-----------|
+| **Liability** | Mutual caps | Uncapped | Unlimited indemnity |
+| **Term** | Monthly | Annual | Multi-year auto-renew |
+| **Data** | Standard DPA | Custom terms | Broad usage rights |
+| **IP** | License only | Work for hire | Assignment |
+| **Termination** | 30-day notice | For cause only | Penalties |
+
+### Step 3: Clause-by-Clause Analysis
+
+**Key Clauses to Review:**
+
+**Payment Terms:**
+- Net terms (30/60/90)
+- Late payment penalties
+- Price escalation clauses
+- Audit rights
+
+**Liability & Indemnification:**
+- Cap on liability (multiple of fees)
+- Carve-outs (willful misconduct, IP)
+- Indemnification scope
+- Insurance requirements
+
+**Termination:**
+- For convenience vs. for cause
+- Notice periods
+- Transition assistance
+- Data return/destruction
+
+**IP & Data:**
+- Ownership of deliverables
+- License scope
+- Data usage rights
+- Confidentiality obligations
+
+### Step 4: Benchmarking
+
+**Industry Standards:**
+| Clause | Typical | Favorable | Unfavorable |
+|--------|---------|-----------|-------------|
+| Liability cap | 12 mo fees | 24 mo fees | Uncapped |
+| Payment | Net 30 | Net 45 | Net 15 |
+| Termination | 30 days | 60 days | 90+ days |
+| Auto-renewal | 30-day opt-out | 60-day opt-out | 90-day opt-out |
+
+### Step 5: Generate Recommendations
+
+**Output Structure:**
+1. Executive summary (2-3 sentences)
+2. Risk rating (Low/Medium/High/Critical)
+3. Red flags (must address)
+4. Yellow flags (should negotiate)
+5. Green flags (acceptable)
+6. Recommended redlines
+7. Questions for counsel
+
+## Examples
+
+### Example 1: SaaS Vendor Contract Review
+
+**Input:**
 ```
-User: "Review this MSA and flag anything I should push back on."
-→ Skill reads the document, identifies parties and contract type,
-  analyzes 8 risk categories, returns a severity-tiered summary
-  with a negotiation playbook, and exports a redlined DOCX.
+Review this SaaS contract summary:
+- 3-year term with 90-day auto-renewal notice
+- Unlimited liability for data breaches
+- Vendor can change pricing with 30-day notice
+- Data can be used for "service improvement"
+- Termination only for material breach
 ```
 
-## Workflow
+**Output:**
+```
+## Contract Review: SaaS Vendor Agreement
 
-1. **Get the contract** — Pull from one of three sources, in order of preference:
-   - **Gmail**: Search for recent emails with contract attachments (see `reference/gmail-fetch.md`)
-   - **DocuSign**: Fetch the envelope by ID or search recent drafts awaiting signature (see `reference/docusign-fetch.md`)
-   - **Local file or paste**: Read the PDF (chunked via `pages` parameter for 10+ page files) or DOCX via Read tool. If the user pastes text directly, work with what's provided.
+### Risk Rating: HIGH
 
-   Read the full document before analyzing. Dangerous clauses are frequently in exhibits and schedules at the back.
+---
 
-2. **Identify contract type and parties** — Determine agreement type (NDA, MSA, SOW, SaaS subscription, consulting, subcontractor, vendor) and which party is the user's company vs. the counterparty. Note if it looks like a counterparty template — these are typically one-sided and the counterparty expects pushback.
+### Executive Summary
 
-3. **Analyze across 8 risk categories** — Work through the contract from the ops/finance perspective of a small business owner without in-house legal. Categories are ordered by typical risk severity; use judgment for context.
+This contract heavily favors the vendor with limited termination rights, uncapped liability exposure for you, and one-sided price increase provisions. Recommend significant negotiation before signing.
 
-   **Category 1: Payment terms and cash flow**
-   - Payment timing: Net-30 is standard; Net-60+ is flaggable; Net-90/120 is a hard negotiation point
-   - Payment triggers: acceptance periods that let the client slow-walk approvals indefinitely
-   - Late payment penalties: absence is a gap worth noting
-   - Invoicing requirements: rigid formats or PO numbers that can delay payment on technicalities
-   - Expense reimbursement: pre-approval requirements and caps
-   - Rate adjustments: annual increase mechanism for multi-year engagements
+---
 
-   **Category 2: Liability and indemnification**
-   - Liability caps: uncapped liability is always a red flag
-   - Mutual vs. one-sided indemnification
-   - Indemnification scope: "any and all claims arising from the services" is not standard
-   - Insurance requirements: E&O, cyber, general liability — achievability at the required limits
-   - Consequential damages waiver: missing = flag prominently
+### Red Flags (Must Address)
 
-   **Category 3: Termination and exit**
-   - Termination for convenience: is it mutual? 30-day notice is typical
-   - Termination for cause: cure period; vague "material breach" without definition
-   - Wind-down: payment for in-progress work at termination
-   - Transition assistance: paid vs. unpaid, time-limited vs. open-ended
-   - Survival clauses: indefinite indemnification survival = flag
+| Clause | Issue | Risk | Recommendation |
+|--------|-------|------|----------------|
+| **Auto-Renewal** | 90-day notice for 3-year contract | Lock-in risk | Reduce to 30-60 days |
+| **Pricing** | Vendor can change with 30-day notice | Budget risk | Cap increases at 5%/year or CPI |
+| **Termination** | Material breach only | Lock-in risk | Add termination for convenience with notice |
+| **Liability** | Unlimited for data breaches | Financial risk | Cap at 24 months of fees |
 
-   **Category 4: Intellectual property**
-   - IP assignment vs. license
-   - Pre-existing IP and background tools carve-out — absence means inadvertent assignment
-   - Work product definition breadth: drafts, notes, internal tools
+---
 
-   **Category 5: Scope and change management**
-   - Scope definition clarity
-   - Change order process: absence = scope creep without compensation
-   - Acceptance criteria: subjective ("to client's satisfaction") vs. defined
-   - Timeline asymmetry: user penalized for delays but client is not for slow feedback
+### Yellow Flags (Should Negotiate)
 
-   **Category 6: Non-compete and exclusivity**
-   - Non-compete scope, definition of "competitor," duration
-   - Exclusivity requirements on the user's company
-   - Non-solicitation: employee poaching is normal; industry-broad restrictions are not
+| Clause | Issue | Recommendation |
+|--------|-------|----------------|
+| **Data Usage** | "Service improvement" is vague | Define scope, exclude training AI |
+| **Term Length** | 3 years is long | Request 1-year with renewal option |
+| **SLA** | None mentioned | Require 99.9% uptime with credits |
 
-   **Category 7: Confidentiality and data**
-   - Confidentiality scope: "all information shared" with no exceptions is overly broad
-   - Duration: 2–3 years is typical; perpetual is aggressive
-   - Data handling security requirements vs. company size and data sensitivity
-   - Return/destruction requirements post-termination
+---
 
-   **Category 8: Operational concerns**
-   - Governing law and dispute resolution; mandatory arbitration
-   - Auto-renewal: opt-out window and notice period (missing a 60-day window is a common SMB mistake)
-   - Assignment rights, especially if the client gets acquired
-   - Most favored nation: constrains pricing across the entire client book
-   - Audit rights: scope and frequency
+### Green Flags (Acceptable)
 
-4. **Present flagged summary** — Organize by severity:
+- Standard confidentiality provisions
+- Reasonable IP license terms
+- Clear support response times
 
-   **🔴 Red flags (push back before signing)** — For each: quote the exact clause, explain the problem in plain language, suggest specific alternative language.
+---
 
-   **🟡 Yellow flags (negotiate, not deal-breakers)** — For each: quote the clause, explain the concern, describe what "better" looks like.
+### Recommended Redlines
 
-   **🟢 Key terms to note (awareness only)** — Payment schedules, notice periods, renewal dates, insurance requirements, key contacts.
+**Priority 1 (Deal Breakers):**
+```
+Section 8.2: Change "90 days" to "30 days"
+Section 12.1: Add "and termination for convenience
+              with 60 days written notice"
+Section 14.3: Add "not to exceed 24 months of fees
+              paid under this Agreement"
+```
 
-   **📋 Contract summary** — Plain-language summary: who does what, for how much, over what timeframe, under what conditions.
+**Priority 2 (Strongly Preferred):**
+```
+Section 5.1: Add "Price increases shall not exceed
+              5% annually"
+Section 9.4: Change "service improvement" to
+              "providing and improving the Service
+              for Customer"
+```
 
-   **💡 Negotiation playbook** — For each red and yellow flag: what to ask for, how to frame the ask, and what a reasonable compromise looks like.
+---
 
-5. **Export redline DOCX** — After presenting the summary, offer to export a redlined DOCX with the suggested changes marked up. Use the `docx` skill to generate a Word document that:
-   - Preserves the original contract structure
-   - Marks suggested deletions in strikethrough and additions in underline
-   - Adds a cover page summarizing the changes
+### Questions for Legal Counsel
 
-   Ask: "Want me to export a redlined DOCX you can send back to the counterparty?"
+1. Is unlimited data breach liability acceptable given our cyber insurance coverage?
+2. What's our exposure if we need to exit before term completion?
+3. Are there regulatory implications for the data usage clause?
 
-## Approval gates
+---
 
-- Never characterize the output as legal advice. Always recommend attorney review for red flags or binding decisions.
-- Quote actual clause language, not paraphrases. The user needs the exact text for negotiation calls.
-- Flag what's missing, not just what's there. A contract silent on liability caps or change orders is often more dangerous than one with unfavorable terms.
-- Do not flag standard boilerplate. If a clause is fair and market-standard, skip it. The user wants signal, not a clause-by-clause restatement.
-- Compare to market norms when flagging: "Net-90 is uncommon in professional services — Net-30 is standard."
-- Adjust recommendations to the power dynamic. A Fortune 500 procurement MSA is a different negotiation than a small startup agreement.
-- Never send the redlined DOCX to the counterparty without explicit user confirmation.
+### Negotiation Leverage
 
-## Reference
+**Your Position:** First-year customer, significant deal size
 
-- `reference/gotchas.md` — edge cases in contract analysis
-- `reference/docusign-fetch.md` — pulling envelopes from DocuSign
-- `reference/gmail-fetch.md` — finding contract attachments in Gmail
-- `reference/examples/flagged-summary-saas.md` — worked example: SaaS agreement review output
+**Their Likely Flex:**
+- Auto-renewal notice period
+- Liability caps
+- Pricing caps
+
+**Their Likely Firm:**
+- Base term length
+- Core data usage rights
+```
+
+### Example 2: Quick Risk Assessment
+
+**Input:**
+```
+Quick review - key concerns only:
+- Unlimited indemnification for IP claims
+- 2x annual fees liability cap
+- Net 45 payment terms
+- 60-day termination notice
+- Standard DPA included
+```
+
+**Output:**
+```
+## Quick Risk Assessment
+
+### Overall: MEDIUM RISK
+
+| Clause | Rating | Note |
+|--------|--------|------|
+| Indemnification | HIGH | Unlimited IP indemnity is risky |
+| Liability Cap | GREEN | 2x is standard |
+| Payment | GREEN | Net 45 is favorable |
+| Termination | GREEN | 60 days is reasonable |
+| Data Protection | GREEN | Standard DPA |
+
+### Priority Action
+
+**Address Indemnification:**
+- Request mutual cap on IP indemnity
+- Propose "lesser of [amount] or 12 months fees"
+- Alternative: carve out for willful infringement only
+
+**Everything Else:** Acceptable, proceed if IP indemnity resolved.
+```
+
+## Skill Boundaries
+
+### What This Skill Does Well
+- Identifying common risk patterns
+- Comparing to industry benchmarks
+- Structuring negotiation priorities
+- Flagging unusual clauses
+
+### What This Skill Cannot Do
+- Provide legal advice
+- Know jurisdiction-specific requirements
+- Assess strategic business importance
+- Replace qualified legal counsel
+
+### When to Escalate to Human
+- Contracts over $100K annual value
+- Non-standard or heavily negotiated terms
+- Any regulated industry requirements
+- Indemnification or liability questions
+
+## Iteration Guide
+
+**Follow-up Prompts:**
+- "What's the worst-case scenario for the liability clause?"
+- "Draft redline language for [specific clause]"
+- "How does this compare to [competitor] contracts?"
+- "What should we ask for in return if we accept [term]?"
+
+## References
+
+- ACC (Association of Corporate Counsel) Contract Guidelines
+- IACCM Contract Terms Benchmarking
+- Tech Contract Negotiation Best Practices
+- Standard SaaS Agreement Templates
+
+## Related Skills
+
+- `rfp-response` - Creating proposals
+- `nda-generator` - Confidentiality agreements
+- `terms-analyzer` - Terms of service review
+
+## Skill Metadata
+
+- **Domain**: Legal
+- **Complexity**: Intermediate
+- **Mode**: centaur
+- **Time to Value**: 30-60 min per contract
+- **Prerequisites**: Contract access, business context

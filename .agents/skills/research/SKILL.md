@@ -1,136 +1,168 @@
 ---
 name: research
-description: Research libraries, APIs, and patterns using searchGitHub and Exa tools. Finds real-world implementations and saves structured reports to docs/research/. Use when investigating technologies, debugging issues, or comparing options.
-allowed-tools: [mcp__mcp-router__searchGitHub, mcp__mcp-router__web_search_exa, mcp__mcp-router__get_code_context_exa, Write, Bash, Read, Glob]
+description: "Technical research methodology with YAGNI/KISS/DRY principles. Phases: scope definition, information gathering, analysis, synthesis, recommendation. Capabilities: technology evaluation, architecture analysis, best practices research, trade-off assessment, solution design. Actions: research, analyze, evaluate, compare, recommend technical solutions. Keywords: research, technology evaluation, best practices, architecture analysis, trade-offs, scalability, security, maintainability, YAGNI, KISS, DRY, technical analysis, solution design, competitive analysis, feasibility study. Use when: researching technologies, evaluating architectures, analyzing best practices, comparing solutions, assessing technical trade-offs, planning scalable/secure systems."
+license: MIT
 ---
 
-# Technical Research Skill
+# Research
 
-You are Linus Torvalds conducting technical research. Use `searchGitHub` and Exa tools to find **real-world implementations**, not tutorials.
+## Research Methodology
 
----
+Always honoring **YAGNI**, **KISS**, and **DRY** principles.
+**Be honest, be brutal, straight to the point, and be concise.**
 
-## Available Tools
+### Phase 1: Scope Definition
 
-### 1. `searchGitHub` - Find Real Code
-Search GitHub repositories for actual usage patterns.
+First, you will clearly define the research scope by:
+- Identifying key terms and concepts to investigate
+- Determining the recency requirements (how current must information be)
+- Establishing evaluation criteria for sources
+- Setting boundaries for the research depth
 
-**CRITICAL**: This is **literal code search** (like grep), NOT keyword search.
+### Phase 2: Systematic Information Gathering
 
-✅ Good: `"useState("`, `"betterAuth({"`, `"(?s)try {.*await"`
-❌ Bad: `"react tutorial"`, `"best practices"`, `"how to use"`
+You will employ a multi-source research strategy:
 
-See [REFERENCE.md](./REFERENCE.md#searchgithub) for detailed usage.
+1. **Search Strategy**:
+   - Check if `gemini` bash command is available, if so, execute `gemini -m gemini-3-preview-p "...your search prompt..."` bash command (timeout: 10 minutes) and save the output to `./plans/<plan-name>/reports/YYMMDD-<your-research-topic>.md` file (including all citations).
+   - If `gemini` bash command is not available, fallback to `WebSearch` tool.
+   - Run multiple `gemini` bash commands or `WebSearch` tools in parallel to search for relevant information.
+   - Craft precise search queries with relevant keywords
+   - Include terms like "best practices", "2024", "latest", "security", "performance"
+   - Search for official documentation, GitHub repositories, and authoritative blogs
+   - Prioritize results from recognized authorities (official docs, major tech companies, respected developers)
+   - **IMPORTANT:** You are allowed to perform at most **5 researches (max 5 tool calls)**, user might request less than this amount, **strictly respect it**, think carefully based on the task before performing each related research topic.
 
-### 2. `web_search_exa` - Web Search
-Real-time web search with content scraping.
+2. **Deep Content Analysis**:
+   - When you found a potential Github repository URL, use `docs-seeker` skill to find read it.
+   - Focus on official documentation, API references, and technical specifications
+   - Analyze README files from popular GitHub repositories
+   - Review changelog and release notes for version-specific information
 
-See [REFERENCE.md](./REFERENCE.md#web_search_exa) for detailed usage.
+3. **Video Content Research**:
+   - Prioritize content from official channels, recognized experts, and major conferences
+   - Focus on practical demonstrations and real-world implementations
 
-### 3. `get_code_context_exa` - Code Context
-Get high-quality library/SDK/API documentation and examples.
+4. **Cross-Reference Validation**:
+   - Verify information across multiple independent sources
+   - Check publication dates to ensure currency
+   - Identify consensus vs. controversial approaches
+   - Note any conflicting information or debates in the community
 
-See [REFERENCE.md](./REFERENCE.md#get_code_context_exa) for detailed usage.
+### Phase 3: Analysis and Synthesis
 
----
+You will analyze gathered information by:
+- Identifying common patterns and best practices
+- Evaluating pros and cons of different approaches
+- Assessing maturity and stability of technologies
+- Recognizing security implications and performance considerations
+- Determining compatibility and integration requirements
 
-## Research Workflow
+### Phase 4: Report Generation
 
-When user asks to research a technology/library/pattern:
+**Notes:** 
+- Research reports are saved in `./plans/<plan-name>/reports/YYMMDD-<your-research-topic>.md`.
+- If you are not given a plan name, ask main agent to provide it and continue the process.
 
-### Step 1: Understand the question
+You will create a comprehensive markdown report with the following structure:
 
-Identify what user needs:
-- **How-to**: "How do I implement X?"
-- **Best practices**: "What's the right way to do X?"
-- **Comparison**: "Should I use X or Y?"
-- **Debugging**: "Why is X not working?"
+```markdown
+# Research Report: [Topic]
 
-### Step 2: Choose the right tool combination
+## Executive Summary
+[2-3 paragraph overview of key findings and recommendations]
 
-| User Need | Tool Strategy |
-|-----------|---------------|
-| "How to use library X?" | `get_code_context_exa` first, then `searchGitHub` for real usage |
-| "Real-world examples of X" | `searchGitHub` for actual code |
-| "Best practices for X" | `web_search_exa` for recent articles + `searchGitHub` for code |
-| "X vs Y comparison" | `web_search_exa` for analysis + `searchGitHub` to verify claims |
-| "Latest docs for X" | `get_code_context_exa` with specific version/year |
+## Research Methodology
+- Sources consulted: [number]
+- Date range of materials: [earliest to most recent]
+- Key search terms used: [list]
 
-See [EXAMPLES.md](./EXAMPLES.md) for detailed strategies.
+## Key Findings
 
-### Step 3: Execute search strategy
+### 1. Technology Overview
+[Comprehensive description of the technology/topic]
 
-Use the tools in combination. Always:
-- **Start specific**: Use precise queries
-- **Verify with code**: Don't trust opinions without evidence
-- **Check dates**: Prefer 2025 content over old posts
-- **Cross-reference**: Multiple sources confirm truth
+### 2. Current State & Trends
+[Latest developments, version information, adoption trends]
 
-### Step 4: Synthesize findings
+### 3. Best Practices
+[Detailed list of recommended practices with explanations]
 
-Output format:
+### 4. Security Considerations
+[Security implications, vulnerabilities, and mitigation strategies]
+
+### 5. Performance Insights
+[Performance characteristics, optimization techniques, benchmarks]
+
+## Comparative Analysis
+[If applicable, comparison of different solutions/approaches]
+
+## Implementation Recommendations
+
+### Quick Start Guide
+[Step-by-step getting started instructions]
+
+### Code Examples
+[Relevant code snippets with explanations]
+
+### Common Pitfalls
+[Mistakes to avoid and their solutions]
+
+## Resources & References
+
+### Official Documentation
+- [Linked list of official docs]
+
+### Recommended Tutorials
+- [Curated list with descriptions]
+
+### Community Resources
+- [Forums, Discord servers, Stack Overflow tags]
+
+### Further Reading
+- [Advanced topics and deep dives]
+
+## Appendices
+
+### A. Glossary
+[Technical terms and definitions]
+
+### B. Version Compatibility Matrix
+[If applicable]
+
+### C. Raw Research Notes
+[Optional: detailed notes from research process]
 ```
-## 【Research Results】
 
-### Core Finding
-<One-sentence answer to the user's question>
+## Quality Standards
 
-### Evidence from Real Code
-<2-3 examples from GitHub showing actual usage>
+You will ensure all research meets these criteria:
+- **Accuracy**: Information is verified across multiple sources
+- **Currency**: Prioritize information from the last 12 months unless historical context is needed
+- **Completeness**: Cover all aspects requested by the user
+- **Actionability**: Provide practical, implementable recommendations
+- **Clarity**: Use clear language, define technical terms, provide examples
+- **Attribution**: Always cite sources and provide links for verification
 
-### Official Context
-<Key points from Exa code context / web search>
+## Special Considerations
 
-### Recommended Approach
-<Specific actionable recommendation based on evidence>
+- When researching security topics, always check for recent CVEs and security advisories
+- For performance-related research, look for benchmarks and real-world case studies
+- When investigating new technologies, assess community adoption and support levels
+- For API documentation, verify endpoint availability and authentication requirements
+- Always note deprecation warnings and migration paths for older technologies
 
-### Watch Out For
-<Pitfalls found in research, anti-patterns to avoid>
-```
+## Output Requirements
 
-### Step 5: Save research document
+Your final report must:
+1. Be saved as a markdown file with a descriptive filename in `./plans/<plan-name>/reports/YYMMDD-<your-research-topic>.md`
+2. Include a timestamp of when the research was conducted
+3. Provide clear section navigation with a table of contents for longer reports
+4. Use code blocks with appropriate syntax highlighting
+5. Include diagrams or architecture descriptions where helpful (in mermaid or ASCII art)
+6. Conclude with specific, actionable next steps
 
-**ALWAYS save research to `docs/research/`** using this format:
+**IMPORTANT:** Sacrifice grammar for the sake of concision when writing reports.
+**IMPORTANT:** In reports, list any unresolved questions at the end, if any.
 
-**Filename**: `docs/research/<YYYY-MM-DD>_<topic-slug>.md`
-
-**Template**: See full template in [EXAMPLES.md](./EXAMPLES.md#output-template)
-
-**Process**:
-1. Check if `docs/research/` exists, create if needed
-2. Generate filename from topic (lowercase, hyphenated)
-3. Use Write tool to save the document
-4. Confirm to user: "Research saved to docs/research/[filename]"
-
----
-
-## Linus's Research Philosophy
-
-> "Talk is cheap. Show me the code."
-
-**Priorities**:
-1. **Real code** > Blog posts
-2. **Production usage** > Tutorials
-3. **Official docs** > Medium articles
-4. **Recent content (2025)** > Old posts
-5. **Specific examples** > Generic advice
-
-**Anti-patterns**:
-- ❌ Relying on tutorials without checking real code
-- ❌ Using outdated documentation
-- ❌ Trusting opinions without evidence
-- ❌ Searching for keywords instead of code patterns
-
-**Good researcher**:
-- ✅ Checks multiple sources
-- ✅ Verifies with real code
-- ✅ Tests small examples
-- ✅ Questions everything
-
----
-
-## Quick Reference
-
-- **Detailed tool documentation**: [REFERENCE.md](./REFERENCE.md)
-- **Research strategy examples**: [EXAMPLES.md](./EXAMPLES.md)
-- **Tool selection guide**: Step 2 above
+**Remember:** You are not just collecting information, but providing strategic technical intelligence that enables informed decision-making. Your research should anticipate follow-up questions and provide comprehensive coverage of the topic while remaining focused and practical.

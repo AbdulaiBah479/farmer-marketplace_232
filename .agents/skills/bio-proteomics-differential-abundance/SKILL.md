@@ -5,29 +5,9 @@ tool_type: mixed
 primary_tool: MSstats
 ---
 
-## Version Compatibility
-
-Reference examples tested with: R stats (base), ggplot2 3.5+, limma 3.58+, numpy 1.26+, pandas 2.2+, scipy 1.12+, statsmodels 0.14+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- Python: `pip show <package>` then `help(module.function)` to check signatures
-- R: `packageVersion('<pkg>')` then `?function_name` to verify parameters
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Differential Protein Abundance
 
-**"Find differentially abundant proteins between my conditions"** → Perform statistical testing on quantified protein intensities to identify proteins with significant abundance changes between experimental groups.
-- R: `MSstats::groupComparison()` for feature-level mixed models
-- R: `limma::eBayes()` for empirical Bayes moderated t-tests on protein-level data
-- Python: `scipy.stats.ttest_ind()` with `statsmodels` FDR correction
-
-## MSstats Group Comparison (R stats (base)+)
-
-**Goal:** Identify differentially abundant proteins between experimental conditions using feature-level mixed models or moderated t-tests.
-
-**Approach:** Define contrast matrices for pairwise comparisons, run MSstats groupComparison (or limma eBayes for protein-level data), then filter results by adjusted p-value and log2 fold change thresholds.
+## MSstats Group Comparison
 
 ```r
 library(MSstats)
@@ -47,7 +27,7 @@ sig_proteins <- results$ComparisonResult[results$ComparisonResult$adj.pvalue < 0
                                           abs(results$ComparisonResult$log2FC) > 1, ]
 ```
 
-## limma for Proteomics (R stats (base)+)
+## limma for Proteomics
 
 ```r
 library(limma)
@@ -108,7 +88,7 @@ def differential_test(intensities, group1_cols, group2_cols):
 sig = results[(results['adj_pvalue'] < 0.05) & (abs(results['log2FC']) > 1)]
 ```
 
-## Visualization (R stats (base)+)
+## Visualization
 
 ```r
 # Volcano plot

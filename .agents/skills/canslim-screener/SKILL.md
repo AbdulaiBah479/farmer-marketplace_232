@@ -3,16 +3,16 @@ name: canslim-screener
 description: Screen US stocks using William O'Neil's CANSLIM growth stock methodology. Use when user requests CANSLIM stock screening, growth stock analysis, momentum stock identification, or wants to find stocks with strong earnings and price momentum following O'Neil's investment system.
 ---
 
-# CANSLIM Stock Screener - Phase 3 (Full CANSLIM)
+# CANSLIM Stock Screener - Phase 2
 
 ## Overview
 
 This skill screens US stocks using William O'Neil's proven CANSLIM methodology, a systematic approach for identifying growth stocks with strong fundamentals and price momentum. CANSLIM analyzes 7 key components: **C**urrent Earnings, **A**nnual Growth, **N**ewness/New Highs, **S**upply/Demand, **L**eadership/RS Rank, **I**nstitutional Sponsorship, and **M**arket Direction.
 
-**Phase 3** implements all 7 of 7 components (C, A, N, S, L, I, M), representing **100% of the full methodology**.
+**Phase 2** implements 6 of 7 components (C, A, N, S, I, M), representing **80% of the full methodology**. This phase adds critical volume analysis (S) and institutional ownership tracking (I) to the Phase 1 foundation.
 
 **Two-Stage Approach:**
-1. **Stage 1 (FMP API + Finviz)**: Analyze stock universe with all 7 CANSLIM components
+1. **Stage 1 (FMP API + Finviz)**: Analyze stock universe with 6 CANSLIM components
 2. **Stage 2 (Reporting)**: Rank by composite score and generate actionable reports
 
 **Key Features:**
@@ -23,30 +23,16 @@ This skill screens US stocks using William O'Neil's proven CANSLIM methodology, 
 - Interpretation bands: Exceptional+ (90+), Exceptional (80-89), Strong (70-79), Above Average (60-69)
 - Bear market protection (M component gating)
 
-**Phase 3.1 Component Weights (Original O'Neil weights):**
-- C (Current Earnings): 15%
-- A (Annual Growth): 20%
-- N (Newness): 15%
-- S (Supply/Demand): 15%
-- L (Leadership/RS Rank): 20% — multi-period weighted RS (3m/6m/12m vs configurable benchmark)
-- I (Institutional): 10%
-- M (Market Direction): 5%
-
-**Weighted RS Formula:**
-```
-Weighted RS = 0.40 × rel_3m + 0.30 × rel_6m + 0.30 × rel_12m
-```
-Available periods are re-normalized when some are missing. Default benchmark is `^GSPC`;
-override with `--rs-benchmark SPY/QQQ/IWM/...`.
-
-**Fallback hierarchy when multi-period data is incomplete:**
-1. No benchmark → weighted absolute stock performance + 20% penalty.
-2. All multi-period windows missing but >=50 bars of price history → fall back to the
-   legacy 365-day full-window absolute return as the scoring input (20% penalty if no
-   benchmark).
-3. <50 bars of price history → score=0 with `error` set.
+**Phase 2 Component Weights (Renormalized for 6 components):**
+- C (Current Earnings): 19%
+- A (Annual Growth): 25%
+- N (Newness): 19%
+- S (Supply/Demand): 19% ← **NEW**
+- I (Institutional): 13% ← **NEW**
+- M (Market Direction): 6%
 
 **Future Phases:**
+- Phase 3: Add L (Leadership/RS Rank) → 100% coverage (full CANSLIM)
 - Phase 4: FINVIZ Elite integration → 10x faster execution
 
 ---
@@ -70,50 +56,6 @@ override with `--rs-benchmark SPY/QQQ/IWM/...`.
 - Value investing focus (use value-dividend-screener instead)
 - Income/dividend focus (use dividend-growth-pullback-screener instead)
 - Bear market conditions (M component will flag - consider raising cash)
-
----
-
-## Prerequisites
-
-**API Requirements:**
-- **FMP API key** (free tier: 250 calls/day, sufficient for 35 stocks; Starter tier $29.99/mo for 40+ stocks)
-  - Sign up: https://site.financialmodelingprep.com/developer/docs
-  - Set via environment variable: `export FMP_API_KEY=your_key_here`
-
-**Python Dependencies:**
-- Python 3.7+
-- `requests` (FMP API calls)
-- `beautifulsoup4` (Finviz web scraping)
-- `lxml` (HTML parsing)
-
-**Installation:**
-```bash
-pip install requests beautifulsoup4 lxml
-```
-
----
-
-## Output
-
-**Output Directory:** `reports/` (default) or custom via `--output-dir`
-
-**Generated Files:**
-- `canslim_screener_YYYY-MM-DD_HHMMSS.json` - Structured data for programmatic use
-- `canslim_screener_YYYY-MM-DD_HHMMSS.md` - Human-readable report
-
-**Report Contents:**
-- Market Condition Summary (trend, M score, warnings)
-- Top N CANSLIM Candidates (ranked by composite score)
-- Component Breakdown for each stock (C, A, N, S, L, I, M scores with details)
-- Rating interpretation (Exceptional+/Exceptional/Strong/Above Average)
-- Quality warnings and data source notes
-- Summary statistics (rating distribution)
-
-**Rating Bands:**
-- **Exceptional+ (90-100):** All components near-perfect, aggressive buy
-- **Exceptional (80-89):** Outstanding fundamentals + momentum, strong buy
-- **Strong (70-79):** Solid across components, standard buy
-- **Above Average (60-69):** Meets thresholds with minor weaknesses, buy on pullback
 
 ---
 
@@ -167,20 +109,19 @@ python3 skills/canslim-screener/scripts/screen_canslim.py \
 **Option C: Sector-Specific**
 User can provide sector-focused list (Technology, Healthcare, etc.)
 
-**API Budget Considerations (Phase 3):**
-- 40 stocks × 7 FMP calls/stock = 280 API calls
-  - FMP: 7 calls/stock (profile, quote, income×2, historical_90d, historical_365d, institutional)
-  - Finviz: ~1.8 calls/stock (institutional ownership fallback, 2s rate limit, not counted in FMP budget)
-- Market data (^GSPC quote, ^VIX quote, ^GSPC 52-week history): 3 FMP calls
-- Total: ~283 FMP calls per screening run (exceeds 250 free tier)
-- **Recommendation**: Use `--max-candidates 35` for free tier (35 × 7 + 3 = 248 calls), or upgrade to FMP Starter tier ($29.99/mo, 750 calls/day) for full 40-stock screening
+**API Budget Considerations (Phase 2):**
+- 40 stocks × ~5.1 calls/stock = ~203 API calls (within free tier)
+  - FMP: ~3.3 calls/stock (income statements, quotes, prices, institutional holders)
+  - Finviz: ~1.8 calls/stock (institutional ownership fallback, 2s rate limit)
+- Market data (S&P 500, VIX): 3 calls
+- Total: ~206 calls per screening run
 
 ### Step 3: Execute CANSLIM Screening Script
 
 Run the main screening script with appropriate parameters:
 
 ```bash
-cd skills/canslim-screener/scripts
+cd /Users/takueisaotome/PycharmProjects/claude-trading-skills/skills/canslim-screener/scripts
 
 # Basic run (40 stocks, top 20 in report)
 python3 screen_canslim.py --api-key $FMP_API_KEY
@@ -191,33 +132,25 @@ python3 screen_canslim.py \
   --max-candidates 40 \
   --top 20 \
   --output-dir ../../../
-
-# Custom RS benchmark (Phase 3.1)
-python3 screen_canslim.py --rs-benchmark SPY
-
-# Disable L component (saves per-stock 365-day fetch; L fixed at neutral 50)
-python3 screen_canslim.py --disable-rs
 ```
 
-**Script Workflow (Phase 3 - Full CANSLIM):**
-1. **Market Direction (M)**: Analyze S&P 500 trend vs 50-day EMA (using real historical data for accurate EMA)
+**Script Workflow (Phase 2):**
+1. **Market Direction (M)**: Analyze S&P 500 trend vs 50-day EMA
    - If bear market detected (M=0), warn user to raise cash
-2. **S&P 500 Historical Data**: Fetch 52-week data for M component EMA and L component RS calculation
-3. **Stock Analysis**: For each stock, calculate:
+2. **Stock Analysis**: For each stock, calculate:
    - **C Component**: Quarterly EPS/revenue growth (YoY)
    - **A Component**: 3-year EPS CAGR and stability
    - **N Component**: Distance from 52-week high, breakout detection
-   - **S Component**: Volume-based accumulation/distribution (up-day vs down-day volume)
-   - **L Component**: 52-week Relative Strength vs S&P 500
-   - **I Component**: Institutional holder count + ownership % (with Finviz fallback)
-4. **Composite Scoring**: Weighted average with all 7 component breakdown
-5. **Ranking**: Sort by composite score (highest first)
-6. **Reporting**: Generate JSON + Markdown outputs
+   - **S Component**: Volume-based accumulation/distribution (up-day vs down-day volume) ← **NEW**
+   - **I Component**: Institutional holder count + ownership % (with Finviz fallback) ← **NEW**
+3. **Composite Scoring**: Weighted average with component breakdown
+4. **Ranking**: Sort by composite score (highest first)
+5. **Reporting**: Generate JSON + Markdown outputs
 
-**Expected Execution Time (Phase 3):**
-- 40 stocks: **~2 minutes** (additional 52-week history fetch per stock for L component)
+**Expected Execution Time (Phase 2):**
+- 40 stocks: **~1 minute 40 seconds** (tested: 101.42 seconds)
 - Finviz fallback adds ~2 seconds per stock (rate limiting)
-- L component requires 365-day historical data for each stock
+- Much faster than Phase 1 due to optimized API calls
 
 **Finviz Fallback Behavior:**
 - Triggers automatically when FMP `sharesOutstanding` unavailable
@@ -241,24 +174,20 @@ ls -lt canslim_screener_*.md | head -1
 cat canslim_screener_YYYY-MM-DD_HHMMSS.md
 ```
 
-**Report Structure (Phase 3 - Full CANSLIM):**
+**Report Structure (Phase 2):**
 - Market Condition Summary (trend, M score, warnings)
-- Top N CANSLIM Candidates (ranked, N = --top parameter)
+- Top 20 CANSLIM Candidates (ranked)
 - For each stock:
   - Composite Score and Rating (Exceptional+/Exceptional/Strong/etc.)
-  - Component Breakdown (C, A, N, S, L, I, M scores with details)
+  - Component Breakdown (C, A, N, **S**, **I**, M scores with details) ← **S and I added**
   - Interpretation (rating description, guidance, weakest component)
   - Warnings (quality issues, market conditions, data source notes)
 - Summary Statistics (rating distribution)
-- Methodology note (Phase 3: 7 components, 100% coverage)
+- Methodology note (Phase 2: 6 components)
 
-**Component Details in Report:**
+**New Component Details in Report:**
 - **S Component**: "Up/Down Volume Ratio: 1.06 ✓ Accumulation"
-- **L Component (Phase 3.1)**: "3m/6m/12m: +12.4%/+18.7%/+44.1% (rel +5.2%/+8.3%/+22.0%) | RS: 88 (Strong)"
 - **I Component**: "6199 holders, 68.3% ownership ⭐ Superinvestor"
-
-A new **Summary Table** appears above the candidate list in Phase 3.1 reports, showing
-rank, symbol, composite score, rating, RS rating, and RS percentile for quick scanning.
 
 ### Step 5: Analyze Top Candidates and Provide Recommendations
 
@@ -267,14 +196,14 @@ Review the top-ranked stocks and cross-reference with knowledge bases:
 **Reference Documents to Consult:**
 1. `references/interpretation_guide.md` - Understand rating bands and portfolio sizing
 2. `references/canslim_methodology.md` - Deep dive into component meanings (now includes S and I)
-3. `references/scoring_system.md` - Understand scoring formulas (Phase 3 weights)
+3. `references/scoring_system.md` - Understand scoring formulas (Phase 2 weights)
 
 **Analysis Framework:**
 
 For **Exceptional+ stocks (90-100 points)**:
-- All components near-perfect (C≥85, A≥85, N≥85, S≥80, L≥85, I≥80, M≥80)
+- All components near-perfect (C≥85, A≥85, N≥85, S≥80, I≥80, M≥80)
 - Guidance: Immediate buy, aggressive position sizing (15-20% of portfolio)
-- Example: "NVDA scores 97.2 - explosive quarterly earnings (100), strong 3-year growth (95), at new highs (98), volume accumulation (85), RS leader (92), strong institutional support (90), uptrend market (100)"
+- Example: "NVDA scores 97.2 - explosive quarterly earnings (100), strong 3-year growth (95), at new highs (98), volume accumulation (85), strong institutional support (90), uptrend market (100)"
 
 For **Exceptional stocks (80-89 points)**:
 - Outstanding fundamentals + strong momentum
@@ -283,7 +212,7 @@ For **Exceptional stocks (80-89 points)**:
 For **Strong stocks (70-79 points)**:
 - Solid across all components, minor weaknesses
 - Guidance: Buy, standard sizing (8-12% of portfolio)
-- Phase 3 Example: "Stock scores 77.5 - strong earnings (85), solid growth (80), near high (70), accumulation (60), RS leader (75), good institutions (60), uptrend (90)"
+- Phase 2 Example: "NVDA scores 77.5 - explosive earnings (100), strong growth (90), near high (60), accumulation (60), good institutions (60), uptrend (90)"
 
 For **Above Average stocks (60-69 points)**:
 - Meets thresholds, one component weak
@@ -301,11 +230,11 @@ Create a concise, actionable summary for the user:
 **Report Format:**
 
 ```markdown
-# CANSLIM Stock Screening Results (Phase 3 - Full CANSLIM)
+# CANSLIM Stock Screening Results (Phase 2)
 **Date:** YYYY-MM-DD
 **Market Condition:** [Trend] - M Score: [X]/100
 **Stocks Analyzed:** [N]
-**Components:** C, A, N, S, L, I, M (7 of 7, 100% coverage)
+**Components:** C, A, N, S, I, M (6 of 7)
 
 ## Market Summary
 [2-3 sentences on current market environment based on M component]
@@ -322,7 +251,6 @@ Create a concise, actionable summary for the user:
 - A (Growth): [X]/100 - [CAGR]% 3yr EPS CAGR
 - N (Newness): [X]/100 - [Distance]% from 52wk high
 - S (Supply/Demand): [X]/100 - Up/Down Volume Ratio: [X.XX]
-- L (Leadership): [X]/100 - 52wk: [+X.X]% ([+X.X]% vs S&P) RS: [XX]
 - I (Institutional): [X]/100 - [N] holders, [X.X]% ownership [⭐ Superinvestor if present]
 - M (Market): [X]/100 - [Trend]
 
@@ -359,7 +287,7 @@ Create a concise, actionable summary for the user:
 4. [If bear market: Wait for market recovery before deploying capital]
 
 ---
-**Note:** This is Phase 3 (Full CANSLIM: C, A, N, S, L, I, M - 100% coverage).
+**Note:** This is Phase 2 (C, A, N, S, I, M components - 80% coverage). Phase 3 will add L component for full 7-component CANSLIM.
 ```
 
 ---
@@ -407,12 +335,7 @@ Create a concise, actionable summary for the user:
   - Up-day volume vs down-day volume ratio (60-day lookback)
   - Scoring: ratio ≥2.0 = 100pts, 1.5-2.0 = 80pts, 1.0-1.5 = 60pts
 
-- `leadership_calculator.py` - L component (Leadership/Relative Strength)
-  - 52-week stock performance vs S&P 500 benchmark
-  - RS Rank estimation (1-99 scale, O'Neil style)
-  - Scoring: RS 90+ outperforming market = 100pts, RS 80-89 = 80pts
-
-- `institutional_calculator.py` - I component (Institutional)
+- `institutional_calculator.py` - I component (Institutional) ← **NEW**
   - Institutional holder count (from FMP)
   - Ownership % (from FMP or Finviz fallback)
   - Superinvestor detection (Berkshire Hathaway, Baupost, etc.)
@@ -425,51 +348,50 @@ Create a concise, actionable summary for the user:
 
 **Supporting Modules:**
 - `scorer.py` - Composite score calculation
-  - Phase 3 weighted average: C×15% + A×20% + N×15% + S×15% + L×20% + I×10% + M×5%
+  - Phase 2 weighted average: C×19% + A×25% + N×19% + S×19% + I×13% + M×6%
   - Rating interpretation (Exceptional+/Exceptional/Strong/etc.)
-  - Minimum threshold validation (all 7 components must meet baseline)
+  - Minimum threshold validation (all 6 components must meet baseline)
 
 - `report_generator.py` - Output generation
   - JSON export (programmatic use)
   - Markdown export (human-readable)
-  - Phase 3 component breakdown tables (all 7 components)
+  - Phase 2 component breakdown tables
   - Summary statistics calculation
 
 ### References Directory (`references/`)
 
 **Knowledge Bases:**
-- `references/canslim_methodology.md` (27KB) - Complete CANSLIM explanation
+- `canslim_methodology.md` (27KB) - Complete CANSLIM explanation ← **Updated for Phase 2**
   - All 7 components with O'Neil's original thresholds
-  - S component (Volume accumulation/distribution) detailed explanation
-  - L component (Leadership/Relative Strength) detailed explanation
-  - I component (Institutional sponsorship) detailed explanation
+  - **NEW**: S component (Volume accumulation/distribution) detailed explanation
+  - **NEW**: I component (Institutional sponsorship) detailed explanation
   - Historical examples (AAPL 2009, NFLX 2013, TSLA 2019, NVDA 2023)
+  - Phase 2 implementation notes
 
-- `references/scoring_system.md` (21KB) - Technical scoring specification (Phase 3)
-  - Phase 3 component weights and formulas (all 7 components)
+- `scoring_system.md` (21KB) - Technical scoring specification ← **Updated for Phase 2**
+  - Phase 2 component weights and formulas
   - Interpretation bands (90-100, 80-89, etc.)
-  - Minimum thresholds for all 7 components
+  - Minimum thresholds for 6 components
   - Composite score calculation examples
 
-- `references/fmp_api_endpoints.md` (18KB) - API integration guide (Phase 3)
-  - Required endpoints for all 7 components
-  - L component: 52-week historical prices endpoint
-  - Institutional holder endpoint documentation
-  - Finviz fallback strategy explanation
+- `fmp_api_endpoints.md` (18KB) - API integration guide ← **Updated for Phase 2**
+  - Required endpoints for each component
+  - **NEW**: Institutional holder endpoint documentation
+  - **NEW**: Finviz fallback strategy explanation
   - Rate limiting strategy
-  - Cost analysis (Phase 3: ~283 FMP calls for 40 stocks, exceeds 250 free tier)
+  - Cost analysis (Phase 2: ~203 calls for 40 stocks, within free tier)
 
-- `references/interpretation_guide.md` (18KB) - User guidance
+- `interpretation_guide.md` (18KB) - User guidance
   - Portfolio construction rules
   - Position sizing by rating
   - Entry/exit strategies
   - Bear market protection rules
 
 **How to Use References:**
-- Read `references/canslim_methodology.md` first to understand O'Neil's system (now includes S and I)
-- Consult `references/interpretation_guide.md` when analyzing results
-- Reference `references/scoring_system.md` if scores seem unexpected
-- Check `references/fmp_api_endpoints.md` for API troubleshooting or Finviz fallback issues
+- Read `canslim_methodology.md` first to understand O'Neil's system (now includes S and I)
+- Consult `interpretation_guide.md` when analyzing results
+- Reference `scoring_system.md` if scores seem unexpected
+- Check `fmp_api_endpoints.md` for API troubleshooting or Finviz fallback issues
 
 ---
 
@@ -599,22 +521,27 @@ Top 5 Stocks:
 
 ## Important Notes
 
-### Phase 3 Implementation Status
+### Phase 2 Implementation Status
 
-This is **Phase 3** implementing all 7 of 7 CANSLIM components:
+This is **Phase 2** implementing 6 of 7 CANSLIM components:
 - ✅ **C** (Current Earnings) - Implemented
 - ✅ **A** (Annual Growth) - Implemented
 - ✅ **N** (Newness) - Implemented
-- ✅ **S** (Supply/Demand) - Implemented
-- ✅ **L** (Leadership/RS Rank) - Implemented
-- ✅ **I** (Institutional) - Implemented
+- ✅ **S** (Supply/Demand) - Implemented (Phase 2) ← **NEW**
+- ❌ **L** (Leadership/RS Rank) - Not implemented (Phase 3)
+- ✅ **I** (Institutional) - Implemented (Phase 2) ← **NEW**
 - ✅ **M** (Market Direction) - Implemented
 
 **Implications:**
-- Composite scores represent **100% of full CANSLIM methodology**
-- Uses original O'Neil component weights (C 15%, A 20%, N 15%, S 15%, L 20%, I 10%, M 5%)
-- L component (20% weight) is the largest individual factor alongside A, emphasizing relative strength leadership
-- M component uses real 50-day EMA from historical data (not fallback estimate)
+- Composite scores represent **80% of full CANSLIM methodology**
+- Top scores typically max out at ~95 (full CANSLIM can reach 200+)
+- Missing component: Relative strength rank (L component)
+- Phase 2 provides highly accurate screening with volume and institutional analysis
+
+**Score Conversion:**
+- Phase 2 score 85+ ≈ Full CANSLIM 145-165 (Strong to Exceptional)
+- Phase 2 score 70-84 ≈ Full CANSLIM 125-144 (Above Average to Strong)
+- Phase 2 score 60-69 ≈ Full CANSLIM 110-124 (Average to Above Average)
 
 ### Finviz Integration Benefits
 
@@ -634,6 +561,11 @@ This is **Phase 3** implementing all 7 of 7 CANSLIM components:
 - No errors or IP blocks during testing
 
 ### Future Enhancements
+
+**Phase 3 (Planned):**
+- Add L component: RS Rank estimation (52-week high proxy, 80% accuracy)
+- Full 7-component CANSLIM: C 15%, A 20%, N 15%, S 15%, L 20%, I 10%, M 5%
+- Coverage: 100% of full CANSLIM
 
 **Phase 4 (Planned):**
 - FINVIZ Elite integration for pre-screening
@@ -659,13 +591,9 @@ This is **Phase 3** implementing all 7 of 7 CANSLIM components:
 
 ---
 
-**Version:** Phase 3.1 (multi-period RS)
-**Last Updated:** 2026-05-03
-**API Requirements:** FMP API (free tier: up to 35 stocks; Starter tier recommended for 40 stocks) + BeautifulSoup/requests/lxml for Finviz
-**Execution Time:** ~2 minutes for 40 stocks
-**Output Formats:** JSON + Markdown (now includes Summary Table and `schema_version: "3.1"`)
-**Components Implemented:** C, A, N, S, L, I, M (7 of 7, 100% coverage)
-**Phase 3.1 additions:** multi-period RS (3m/6m/12m), `--rs-benchmark`, `--disable-rs`,
-new RS fields (`rs_rating`, `rs_rank_percentile`, `rs_3m_return`, `rs_6m_return`,
-`rs_12m_return`, `rs_benchmark`, `rs_benchmark_relative_return`, `rs_component_score`,
-`benchmark_52w_performance`).
+**Version:** Phase 2
+**Last Updated:** 2026-01-12
+**API Requirements:** FMP API (free tier sufficient) + BeautifulSoup/requests/lxml for Finviz
+**Execution Time:** ~1 minute 40 seconds for 40 stocks
+**Output Formats:** JSON + Markdown
+**Components Implemented:** C, A, N, S, I, M (6 of 7, 80% coverage)

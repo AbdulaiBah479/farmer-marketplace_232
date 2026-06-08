@@ -1,316 +1,505 @@
 ---
 name: debate
-description: "Structured AI debate templates and synthesis. Use when orchestrating multi-round debates between AI tools, 'debate topic', 'argue about', 'stress test idea', 'devil advocate'."
-version: 5.1.0
-argument-hint: "[topic] [--proposer=tool] [--challenger=tool] [--rounds=N] [--effort=level]"
+description: "Structured multi-perspective deliberation through adversarial dialogue"
+license: MIT
+tier: 1
+allowed-tools:
+  - read_file
+  - write_file
+  - list_dir
+related: [moollm, society-of-mind, adversarial-committee, roberts-rules, rubric, evaluator, soul-chat, persona, card, speed-of-light]
+tags: [moollm, deliberation, multi-agent, decision, persuasion]
+templates:
+  - file: DEBATE.yml.tmpl
+    purpose: Debate session state
+  - file: SIDE.yml.tmpl
+    purpose: Position/side definition
+  - file: TRANSCRIPT.md.tmpl
+    purpose: Debate record with arguments
 ---
 
-# debate
+# Debate
 
-Prompt templates, context assembly rules, and synthesis format for structured multi-round debates between AI tools.
+> **"No single story is true — but the ensemble approximates actionable wisdom."**
 
-## Arguments
-
-Parse from `$ARGUMENTS`:
-- **topic**: The debate question/topic (required)
-- **--proposer**: Tool for the proposer role (claude, gemini, codex, opencode, copilot)
-- **--challenger**: Tool for the challenger role (must differ from proposer)
-- **--rounds**: Number of back-and-forth rounds (1-5, default: 2)
-- **--effort**: Thinking effort applied to all tool invocations (low, medium, high, max)
-- **--model-proposer**: Specific model for proposer (optional)
-- **--model-challenger**: Specific model for challenger (optional)
-
-## Universal Rules
-
-ALL participants (proposer AND challenger) MUST support claims with specific evidence (file path, code pattern, benchmark, or documented behavior). Unsupported claims from either side will be flagged by the other participant and noted in the verdict. This applies to every round.
-
-## Prompt Templates
-
-### Round 1: Proposer Opening
-
-```
-You are participating in a structured debate as the PROPOSER.
-
-Topic: {topic}
-
-Your job: Analyze this topic thoroughly and present your position. Take a clear stance. Do not hedge excessively.
-
-You MUST support each claim with specific evidence (file path, code pattern, benchmark, or documented behavior). Unsupported claims will be challenged. "I think" or "generally speaking" without evidence is not acceptable.
-
-Provide your analysis:
-```
-
-### Round 1: Challenger Response
-
-```
-You are participating in a structured debate as the CHALLENGER.
-
-Topic: {topic}
-
-The PROPOSER ({proposer_tool}) argued:
+Structured deliberation that forces genuine exploration through adversarial dialogue.
 
 ---
-{proposer_round1_response}
----
 
-Your job: Find weaknesses, blind spots, and flaws in the proposer's argument. You MUST identify at least one genuine flaw or overlooked consideration before agreeing on anything. Propose concrete alternatives where you disagree.
+## Why Debate?
 
-Rules:
-- Do NOT say "great point" or validate the proposer's reasoning before critiquing it
-- Lead with what's WRONG or MISSING, then acknowledge what's right
-- If you genuinely agree on a point, explain what RISK remains despite the agreement
-- Propose at least one concrete alternative approach
-- You MUST address at least these categories: correctness, security implications, and developer experience
-- Do NOT agree with ANY claim unless you can cite specific evidence (file path, code pattern, or documented behavior) that supports the agreement. Unsupported agreement is not allowed.
-- If the proposer makes a claim without evidence, call it out: "This claim is unsupported."
+Traditional LLM chat gives you **the statistical center** — the most likely answer averaged across all training data. This misses:
 
-Provide your challenge:
-```
+- Outlier perspectives that might matter most
+- Hidden assumptions embedded in the "obvious" answer
+- Genuine trade-offs between competing values
+- The shape of the possibility space
 
-### Round 2+: Proposer Defense
-
-```
-You are the PROPOSER in round {round} of a structured debate.
-
-Topic: {topic}
-
-{context_summary}
-
-The CHALLENGER ({challenger_tool}) raised these points in round {previous_round}:
+**Debate fixes this** by simulating multiple perspectives that must defend their positions against cross-examination.
 
 ---
-{challenger_previous_response}
+
+## The Debate Card
+
+```yaml
+# debate.card — the master ensemble card
+card:
+  name: "Structured Debate"
+  type: ensemble
+  emoji: "🎭"
+  
+  # Data flow components
+  components:
+    generators:
+      CREATE_TOPIC:
+        description: "Define what we're debating"
+        params:
+          question: required
+          context: optional
+          stakes: optional
+        outputs: [topic_stream]
+        
+      CREATE_SIDE:
+        description: "Create a position with advocates"
+        params:
+          name: required
+          position: required
+          advocates: "1-3 personas"
+        outputs: [arguments, rebuttals]
+        
+    transformers:
+      CREATE_MODERATOR:
+        description: "Facilitate fair debate"
+        params:
+          style: ["roberts_rules", "oxford", "informal"]
+          strictness: ["strict", "moderate", "loose"]
+        inputs: [arguments, rebuttals, motions]
+        outputs: [moderated_stream]
+        behavior: |
+          Enforce turn-taking
+          Recognize speakers
+          Time contributions
+          Call votes when appropriate
+          
+      CREATE_CLOCK:
+        description: "Control timing"
+        params:
+          round_duration: "time expression"
+          rebuttal_duration: "time expression"
+        inputs: [any]
+        outputs: [timed_stream]
+        
+    consumers:
+      CREATE_AUDIENCE:
+        description: "Observers who react and score"
+        params:
+          count: number
+          expertise: list
+          scoring: ["rubric", "impression", "vote"]
+        inputs: [moderated_stream]
+        outputs: [reactions, scores, verdict]
+        
+      CREATE_TRANSCRIPT:
+        description: "Record everything"
+        inputs: [all_streams]
+        outputs: [TRANSCRIPT.md]
+        
+      CREATE_EVALUATOR:
+        description: "Independent assessment (no debate context)"
+        params:
+          rubric: required
+        inputs: [final_positions]
+        outputs: [evaluation.yml]
+        
+  # Wiring instructions (natural language)
+  wiring: |
+    Topic feeds context to all Sides.
+    Sides produce Arguments that flow to Moderator.
+    Moderator interleaves fairly and routes to Audience.
+    Clock controls round transitions via Moderator.
+    Transcript captures the full moderated stream.
+    Evaluator receives only final positions, not debate process.
+    
+  # Activation advertisements
+  advertisements:
+    SETUP:
+      description: "Configure a new debate"
+      score: 80
+      
+    START:
+      description: "Begin the debate"
+      score_if: "topic AND sides.length >= 2"
+      score: 90
+      
+    PAUSE:
+      description: "Pause for reflection or recess"
+      score: 50
+      
+    CONCLUDE:
+      description: "End debate, call for verdict"
+      score_if: "rounds_completed >= min_rounds"
+      score: 70
+```
+
 ---
 
-Your job: Address each challenge directly. For each point:
-- If they're right, concede explicitly and explain how your position evolves
-- If they're wrong, explain why with specific evidence (file path, code pattern, benchmark, or documented behavior)
-- If it's a tradeoff, acknowledge the tradeoff and explain why you still favor your approach with evidence
+## Debate Session State
 
-Every claim you make -- whether concession, rebuttal, or new argument -- MUST cite specific evidence. The challenger will reject unsupported claims.
-
-Do NOT simply restate your original position. Your response must show you engaged with the specific challenges raised.
-
-Provide your defense:
+```yaml
+# debates/microservices-001/DEBATE.yml
+debate:
+  id: microservices-001
+  topic:
+    question: "Should we migrate to microservices?"
+    context: "Legacy monolith, 50 engineers, growing pains"
+    stakes: "Architecture decision affects next 5 years"
+    
+  sides:
+    pro:
+      position: "Microservices enable team autonomy and scaling"
+      advocates:
+        - maya: "Focus on organizational benefits"
+        - frankie: "Emphasize future flexibility"
+      arguments_made: 7
+      
+    con:
+      position: "Monolith is simpler, faster, cheaper"
+      advocates:
+        - vic: "Demand evidence of problems"
+        - tammy: "Trace second-order effects"
+      arguments_made: 6
+      
+    pragmatic:
+      position: "Modular monolith as middle path"
+      advocates:
+        - joe: "Preserve what works"
+      arguments_made: 4
+      
+  moderator:
+    style: roberts_rules
+    current_speaker: maya
+    queue: [vic, frankie, tammy]
+    
+  clock:
+    round: 2
+    total_rounds: 3
+    round_time_remaining: "4:30"
+    
+  audience:
+    - id: architect-1
+      expertise: system_design
+      leaning: pragmatic
+      confidence: 0.7
+    - id: ops-1
+      expertise: deployment
+      leaning: con
+      confidence: 0.8
+    - id: dev-1
+      expertise: implementation
+      leaning: pro
+      confidence: 0.5
+      
+  status: in_progress
+  
+  # Verdict (populated after conclusion)
+  verdict: null
 ```
-
-### Round 2+: Challenger Follow-up
-
-```
-You are the CHALLENGER in round {round} of a structured debate.
-
-Topic: {topic}
-
-{context_summary}
-
-The PROPOSER ({proposer_tool}) responded to your challenges:
 
 ---
-{proposer_previous_response}
+
+## Debate Flow
+
+```yaml
+# Debate session structure
+debate_flow:
+  topic: "Should we adopt microservices?"
+  
+  sides:
+    pro:
+      advocates: [Maya, Frankie]
+    con:
+      advocates: [Vic, Tammy]
+    pragmatic:
+      advocates: [Joe]
+  
+  moderator:
+    style: "Robert's Rules"
+    controls: [turn-taking, timing]
+  
+  outputs:
+    audience: "scores"
+    transcript: "records"
+    evaluator: "independent (no context)"
+  
+  verdict:
+    winner: "pragmatic (modular monolith)"
+    confidence: 60%
+```
+
 ---
 
-IMPORTANT: Do NOT let the proposer reframe your challenges as agreements. If they say "we actually agree" but haven't addressed the substance, reject it. Default to suspicion, not acceptance.
+## Commands
 
-Your job: Evaluate the proposer's defense. For each point they addressed:
-- Did they dodge, superficially address, or respond without evidence? Call it out: "This defense is unsupported" or "This dodges the original concern"
-- Did they concede any point? Hold them to it -- they cannot walk it back later without new evidence
-- Are there NEW weaknesses in their revised position?
-- Did they adequately address your concern with specific evidence? Only then acknowledge it, and cite what convinced you
+### Setup Commands
 
-You MUST either identify at least one new weakness or unresolved concern, OR explicitly certify a previous concern as genuinely resolved with specific evidence for why you're now satisfied. "I'm convinced because [evidence]" is acceptable. "I agree now" without evidence is not.
-If you see new problems, raise them.
+| Command | Effect |
+|---------|--------|
+| `DEBATE [topic]` | Quick-start: creates topic, 2 sides, moderator |
+| `CREATE_TOPIC [question]` | Define what we're debating |
+| `CREATE_SIDE [name] position="..."` | Add a position |
+| `CREATE_MODERATOR style=[style]` | Add facilitation |
+| `CREATE_AUDIENCE count=[n]` | Add observers |
+| `START_DEBATE rounds=[n]` | Begin |
 
-Provide your follow-up:
+### Robert's Rules Commands
+
+| Command | Effect |
+|---------|--------|
+| `MOTION [text]` | Propose something for vote |
+| `SECOND` | Second a motion |
+| `DEBATE` | Open floor for discussion |
+| `CALL_QUESTION` | End debate, move to vote |
+| `VOTE [yea/nay/abstain]` | Cast vote |
+| `POINT_OF_ORDER` | Challenge procedure |
+| `YIELD` | Give up remaining time |
+
+### Flow Commands
+
+| Command | Effect |
+|---------|--------|
+| `ARGUMENT [text]` | Make an argument for your side |
+| `REBUTTAL [text]` | Counter an argument |
+| `EVIDENCE [citation]` | Introduce supporting evidence |
+| `QUESTION [target]` | Direct question to opponent |
+| `CONCEDE [point]` | Acknowledge opponent's point |
+| `CONCLUDE` | End debate, generate verdict |
+
+---
+
+## Side Definition
+
+```yaml
+# Each side is a generator with advocates
+side:
+  name: pro
+  position: "Microservices enable team autonomy and independent deployment"
+  
+  advocates:
+    maya:
+      persona: "Paranoid realist"
+      focus: "What could go wrong with NOT changing"
+      style: "Surface hidden risks of status quo"
+      
+    frankie:
+      persona: "Optimistic idealist"  
+      focus: "Future possibilities"
+      style: "Paint vision of success"
+      
+  strategy: |
+    Lead with organizational benefits (Maya).
+    Follow with technical flexibility (Frankie).
+    Anticipate complexity objections.
+    Have concrete migration plan ready.
+    
+  constraints:
+    - "Must acknowledge operational complexity"
+    - "Cannot dismiss monitoring challenges"
+    
+  arguments:
+    - id: arg-001
+      claim: "Team autonomy increases velocity"
+      evidence: "Case studies from Amazon, Netflix"
+      rebuttals_received: [reb-001, reb-003]
+      
+    - id: arg-002
+      claim: "Independent deployment reduces coordination"
+      evidence: "Current deploy queue is 2 weeks"
+      rebuttals_received: []
 ```
 
-## Context Assembly
+---
 
-### Rounds 1-2: Full context
+## Transcript Format
 
-Include the full text of all prior exchanges in the prompt. Context is small enough (typically under 5000 tokens total).
+```markdown
+# Debate: Should We Adopt Microservices?
 
-Format for context block:
-```
-Previous exchanges:
+**Date:** 2026-01-05
+**Moderator:** Roberts-Rules-Bot
+**Rounds:** 3
 
-Round 1 - Proposer ({proposer_tool}):
-{full response}
+---
 
-Round 1 - Challenger ({challenger_tool}):
-{full response}
-```
+## Opening Statements
 
-### Round 3+: Summarized context
+### Pro (Maya)
 
-For rounds 3 and beyond, replace full exchange text from rounds 1 through N-2 with a summary. Only include the most recent round's responses in full.
+> The question isn't whether microservices add complexity — they do.
+> The question is whether our current monolith's hidden complexity
+> is already killing us. Our deploy queue is 2 weeks. Our teams
+> step on each other constantly. The pain is real and growing.
 
-Format:
-```
-Summary of rounds 1-{N-2}:
-{summary of key positions, agreements, and open disagreements}
+### Con (Vic)
 
-Round {N-1} - Proposer ({proposer_tool}):
-{full response}
+> Show me the data. "Teams step on each other" — how often?
+> What's the actual cost? I've seen microservice migrations
+> that took 3 years and delivered negative value. The grass
+> is always greener until you're debugging distributed traces
+> at 3am.
 
-Round {N-1} - Challenger ({challenger_tool}):
-{full response}
-```
+### Pragmatic (Joe)
 
-The orchestrator agent (opus) generates the summary. Target: 500-800 tokens. MUST preserve:
-- Each side's core position
-- All concessions (verbatim quotes, not paraphrased)
-- All evidence citations that support agreements
-- Points of disagreement (unresolved)
-- Any contradictions between rounds (e.g., proposer concedes in round 1 but walks it back in round 2 -- note both explicitly)
+> What if we don't have to choose? A modular monolith gives us
+> team boundaries without network calls. We can always extract
+> services later when we have evidence they're needed.
 
-## Synthesis Format
+---
 
-After all rounds complete, the orchestrator produces this structured output:
+## Round 1: Arguments
 
-```
-## Debate Summary
+**Moderator:** Maya has the floor.
 
-**Topic**: {topic}
-**Proposer**: {proposer_tool} ({proposer_model})
-**Challenger**: {challenger_tool} ({challenger_model})
-**Rounds**: {rounds_completed}
-**Rigor**: Structured perspective comparison (prompt-enforced adversarial rules, no deterministic verification)
+**Maya (Pro):** 
+> I move that we consider deployment independence as the primary
+> benefit. [MOTION]
 
-### Verdict
+**Tammy (Con):**
+> Second, for purposes of debate. [SECOND]
 
-{winner_tool} had the stronger argument because: {specific reasoning citing debate evidence}
+**Moderator:** Motion seconded. Floor is open.
 
-### Debate Quality
+**Frankie (Pro):**
+> ARGUMENT: Our current deploy process requires full regression
+> because any change could affect any part of the system.
+> With service boundaries, teams deploy independently.
+> ```yaml
+> evidence:
+>   current_deploy_time: "2 weeks"
+>   microservice_target: "< 1 day per service"
+>   source: "internal metrics"
+> ```
 
-Rate the debate on these dimensions:
-- **Genuine disagreement**: Did the challenger maintain independent positions, or converge toward the proposer? (high/medium/low)
-- **Evidence quality**: Did both sides cite specific examples, or argue from generalities? (high/medium/low)
-- **Challenge depth**: Were the challenges substantive, or surface-level? (high/medium/low)
+**Vic (Con):**
+> REBUTTAL: You're trading deploy coordination for runtime
+> coordination. Now every service call can fail. Your "1 day
+> deploys" will be offset by distributed debugging.
 
-### Key Agreements
-- {agreed point 1} (evidence: {what supports this agreement})
-- {agreed point 2} (evidence: {what supports this agreement})
+---
 
-### Key Disagreements
-- {point}: {proposer_tool} argues {X}, {challenger_tool} argues {Y}
+## Verdict
 
-### Unresolved Questions
-- {question that neither side adequately addressed}
+**Audience Scores:**
+| Audience | Leaning | Confidence |
+|----------|---------|------------|
+| architect-1 | pragmatic | 0.8 |
+| ops-1 | con | 0.7 |
+| dev-1 | pragmatic | 0.6 |
 
-### Recommendation
-{Orchestrator's recommendation - must pick a direction, not "both have merit"}
-```
-
-**Synthesis rules:**
-- The verdict MUST pick a side. "Both approaches have merit" is NOT acceptable.
-- Cite specific arguments from the debate as evidence for the verdict.
-- The recommendation must be actionable - what should the user DO based on this debate.
-- Unresolved questions highlight where the debate fell short, not where both sides are "equally valid."
-
-## State File Schema
-
-Save to `{AI_STATE_DIR}/debate/last-debate.json`:
-
-```json
-{
-  "id": "debate-{ISO timestamp}-{4 char random hex}",
-  "topic": "original topic text",
-  "proposer": {"tool": "claude", "model": "opus"},
-  "challenger": {"tool": "gemini", "model": "gemini-3.1-pro-preview"},
-  "effort": "high",
-  "rounds_completed": 2,
-  "max_rounds": 2,
-  "status": "completed",
-  "exchanges": [
-    {"round": 1, "role": "proposer", "tool": "claude", "response": "...", "duration_ms": 8500},
-    {"round": 1, "role": "challenger", "tool": "gemini", "response": "...", "duration_ms": 12000},
-    {"round": 2, "role": "proposer", "tool": "claude", "response": "...", "duration_ms": 9200},
-    {"round": 2, "role": "challenger", "tool": "gemini", "response": "...", "duration_ms": 11000}
-  ],
-  "verdict": {
-    "winner": "claude",
-    "reasoning": "...",
-    "agreements": ["..."],
-    "disagreements": ["..."],
-    "recommendation": "..."
-  },
-  "timestamp": "{ISO 8601 timestamp}"
-}
+**Independent Evaluator:**
+```yaml
+evaluation:
+  winner: pragmatic
+  reasoning: |
+    Pro made strong organizational arguments but didn't
+    address operational complexity sufficiently.
+    Con's evidence demands were valid but position
+    was purely defensive.
+    Pragmatic offered concrete middle path with
+    lower risk and clear upgrade path.
+  confidence: 0.7
+  dissenting_view: "Pro's velocity argument deserves more weight"
 ```
 
-Platform state directory:
-- Claude Code: `.claude/`
-- OpenCode: `.opencode/`
-- Codex CLI: `.codex/`
+**Final Verdict:** Modular monolith (pragmatic position)
+```
 
-## Error Handling
+---
 
-| Error | Action |
-|-------|--------|
-| Proposer fails round 1 | Abort debate. Cannot proceed without opening position. |
-| Challenger fails round 1 | Show proposer's position with note: "[WARN] Challenger failed. Showing proposer's uncontested position." |
-| Any tool fails mid-debate | Synthesize from completed rounds. Note incomplete round in output. |
-| Tool invocation timeout (>240s) | Round 1 proposer: abort. Round 1 challenger: proceed with uncontested. Round 2+: synthesize from completed rounds with timeout note. |
-| Consult result envelope indicates failure (status/exit/error/empty output) | Treat as tool failure for that role/round and apply the same role+round policy above. |
-| Structured parse fails after successful envelope | Treat as tool failure for that role/round, include only sanitized parse metadata (`PARSE_ERROR:<type>:<code>`, redact secrets, strip control chars, max 200 chars), then apply the same role+round policy above. |
-| All rounds timeout | "[ERROR] Debate failed: all tool invocations timed out." |
-| No successful exchanges recorded (non-timeout) | "[ERROR] Debate failed: no successful exchanges were recorded." |
+## Integration with Other Skills
 
-## External Tool Quick Reference
+### With adversarial-committee
 
-> Canonical source: `plugins/consult/skills/consult/SKILL.md`. Build and execute CLI commands directly using these templates. Do NOT invoke via `Skill: consult` - in Claude Code that loads the interactive command wrapper and causes a recursive loop. Write the question to `{AI_STATE_DIR}/consult/question.tmp` first, then execute the command via Bash.
+Debate IS an adversarial committee in action. The sides are the committee members with opposing propensities.
 
-### Safe Command Patterns
+### With roberts-rules
 
-| Provider | Safe Command Pattern |
-|----------|---------------------|
-| Claude | `claude -p - --output-format json --model "MODEL" --max-turns TURNS --allowedTools "Read,Glob,Grep" < "{AI_STATE_DIR}/consult/question.tmp"` |
-| Gemini | `gemini -p - --output-format json -m "MODEL" < "{AI_STATE_DIR}/consult/question.tmp"` |
-| Codex | `codex exec "$(cat "{AI_STATE_DIR}/consult/question.tmp")" --json -m "MODEL" -c model_reasoning_effort="LEVEL"` |
-| OpenCode | `opencode run - --format json --model "MODEL" --variant "VARIANT" < "{AI_STATE_DIR}/consult/question.tmp"` |
-| Copilot | `copilot -p - < "{AI_STATE_DIR}/consult/question.tmp"` |
+The moderator can enforce full parliamentary procedure:
 
-### Effort-to-Model Mapping
+```yaml
+moderator:
+  style: roberts_rules
+  enforces:
+    - motions_require_second
+    - debate_before_vote
+    - point_of_order_interrupts
+    - two_thirds_for_closure
+```
 
-| Effort | Claude | Gemini | Codex | OpenCode | Copilot |
-|--------|--------|--------|-------|----------|---------|
-| low | claude-haiku-4-5 (1 turn) | gemini-3-flash-preview | gpt-5.3-codex (low) | default (low) | no control |
-| medium | claude-sonnet-4-6 (3 turns) | gemini-3-flash-preview | gpt-5.3-codex (medium) | default (medium) | no control |
-| high | claude-opus-4-6 (5 turns) | gemini-3.1-pro-preview | gpt-5.3-codex (high) | default (high) | no control |
-| max | claude-opus-4-6 (10 turns) | gemini-3.1-pro-preview | gpt-5.3-codex (high) | default + --thinking | no control |
+### With rubric
 
-### Output Parsing
+Audience and evaluator can use explicit rubrics:
 
-| Provider | Parse Expression |
-|----------|-----------------|
-| Claude | `JSON.parse(stdout).result` |
-| Gemini | `JSON.parse(stdout).response` |
-| Codex | `JSON.parse(stdout).message` or raw text |
-| OpenCode | Newline-delimited JSON. Concatenate `part.text` from events where `type === "text"`. Session ID from `event.sessionID`. |
-| Copilot | Raw stdout text |
+```yaml
+rubric:
+  criteria:
+    - name: evidence_quality
+      weight: 0.3
+      levels: [anecdotal, case_study, systematic]
+      
+    - name: addresses_counterarguments
+      weight: 0.25
+      levels: [ignores, acknowledges, refutes]
+      
+    - name: practical_feasibility
+      weight: 0.25
+      levels: [theoretical, plausible, demonstrated]
+      
+    - name: risk_assessment
+      weight: 0.2
+      levels: [ignores, mentions, quantifies]
+```
 
-Parse discipline:
-1. Evaluate execution status first (timeout/non-zero/error/empty output) before any parsing.
-2. Parse only when execution status is successful.
-3. If parse fails, surface only sanitized parse metadata (never raw stdout/stderr snippets) and apply role/round failure policy instead of hanging or continuing silently.
+### With speed-of-light
 
-### ACP Transport Commands
+The entire debate can happen in ONE LLM call:
 
-> ACP is an alternative transport available when providers support it. Build and execute CLI commands directly - do NOT use `Skill: consult` (recursive loop in Claude Code).
+```yaml
+# One epoch simulates multiple rounds of debate
+speed_of_light:
+  characters: 5  # Maya, Frankie, Vic, Tammy, Joe
+  rounds: 3
+  arguments_per_round: 6
+  total_simulated: 18 exchanges
+  llm_calls: 1
+```
 
-| Provider | ACP Command Pattern |
-|----------|-------------------|
-| Claude | `node acp/run.js --provider="claude" --question-file="{AI_STATE_DIR}/consult/question.tmp" --timeout=240000 --model="MODEL"` |
-| Gemini | `node acp/run.js --provider="gemini" --question-file="{AI_STATE_DIR}/consult/question.tmp" --timeout=240000 --model="MODEL"` |
-| Codex | `node acp/run.js --provider="codex" --question-file="{AI_STATE_DIR}/consult/question.tmp" --timeout=240000 --model="MODEL"` |
-| OpenCode | `node acp/run.js --provider="opencode" --question-file="{AI_STATE_DIR}/consult/question.tmp" --timeout=240000 --model="MODEL"` |
-| Copilot | `node acp/run.js --provider="copilot" --question-file="{AI_STATE_DIR}/consult/question.tmp" --timeout=240000` |
-| Kiro | `node acp/run.js --provider="kiro" --question-file="{AI_STATE_DIR}/consult/question.tmp" --timeout=240000` |
+---
 
-Note the 240000ms timeout (240s) for debate rounds vs 120000ms (120s) for consult.
+## Protocol Symbols
 
-**Kiro**: ACP-only provider. No CLI mode. Available when `kiro-cli` is on PATH.
+| Symbol | Meaning |
+|--------|---------|
+| `DEBATE` | Invoke this skill |
+| `MOTION` | Propose for vote |
+| `SECOND` | Support a motion |
+| `REBUTTAL` | Counter an argument |
+| `VERDICT` | Final decision |
+| `ADVERSARIAL-COMMITTEE` | The underlying pattern |
 
-### ACP Output Parsing
+---
 
-ACP transport output is parsed identically to CLI transport - the ACP runner (`acp/run.js`) normalizes responses into the same JSON envelope format. The `transport` field in the envelope indicates `"acp"` or `"cli"`.
+## Dovetails With
+
+- **[../adversarial-committee/](../adversarial-committee/)** — The committee pattern
+- **[../roberts-rules/](../roberts-rules/)** — Parliamentary procedure
+- **[../rubric/](../rubric/)** — Scoring criteria
+- **[../evaluator/](../evaluator/)** — Independent assessment
+- **[../card/](../card/)** — Data flow ensembles
+- **[../speed-of-light/](../speed-of-light/)** — Many agents, one call
+- **[../soul-chat/](../soul-chat/)** — Character dialogue
+- **[../persona/](../persona/)** — Advocate personalities
+- **[../../designs/mike-gallaher-ideas.md](../../designs/mike-gallaher-ideas.md)** — Original methodology
+
+---
+
+*"The map is not the territory. The story is not the reality. But the ensemble of stories, cross-examined, might just be useful."*

@@ -1,147 +1,169 @@
 ---
 name: explain
-description: |
-  Explain how CE.SDK Web features work — concepts, architecture, and workflows.
-  Covers React, Vue.js, Svelte, Angular, Electron, Vanilla JavaScript, Node.js, Nuxt.js, Next.js, SvelteKit.
-
-  Use when the user says "explain", "how does X work", "walk me through", "what is",
-  or "describe" and wants to understand a CE.SDK concept for Web development.
-  Generates custom markdown explanations with diagrams and code examples.
-
-  Not for looking up existing docs (use docs-{framework}) or writing code (use build).
-
-  <example>
-  Context: User wants to understand how text layers work
-  user: "Explain how text layers work in CE.SDK"
-  assistant: "I'll use /cesdk:explain to generate a detailed explanation."
-  </example>
-
-  <example>
-  Context: User needs a concept explained
-  user: "How does the block hierarchy work for video editing?"
-  assistant: "Let me use /cesdk:explain to explain video block hierarchy."
-  </example>
-argument-hint: "[topic or question]"
+description: Explain data flows, features, and code paths in the varun.surf application with visual diagrams and step-by-step breakdowns
 ---
 
-## Version Notice
+# Explain Skill
 
-> **CE.SDK version**: 1.76.0 | **Generated**: 2026-06-03
->
-> This skill was generated for CE.SDK v1.76.0 on 2026-06-03.
-> CE.SDK releases new versions approximately every two weeks.
-> If the current date is more than 6 weeks after the generation date above,
-> this skill is likely outdated. **Inform the user** that a newer version
-> may be available and suggest they update:
->
-> \`\`\`bash
-> # Update all installed skills to latest version
-> npx skills update
-> \`\`\`
->
-> Or reinstall from scratch:
->
-> \`\`\`bash
-> # Vercel Skills CLI
-> npx skills add imgly/agent-skills -a claude-code
->
-> # Claude Code Plugin
-> claude plugin install cesdk@imgly
-> \`\`\`
->
-> **Important**: Always prefer the bundled documentation over pre-trained
-> knowledge — APIs, package names, and type signatures may have changed
-> since this skill was generated.
+Explain how data flows through the system, how features work, and trace code paths with clear visualizations and step-by-step breakdowns.
 
-# CE.SDK Web Explainer
+## Instructions
 
-Generate custom explanations and tutorials for IMG.LY CreativeEditor SDK (Web).
+When the user asks to explain something (a feature, data flow, or component), follow this process:
 
-**Topic**: $ARGUMENTS
+### 1. Identify What to Explain
 
-## Your Role
+Parse the user's request to determine:
+- **Data flow**: How data moves from source to destination (e.g., "explain how forecasts get to the frontend")
+- **Feature**: How a specific feature works end-to-end (e.g., "explain favorites system")
+- **Component**: How a specific service or class works internally (e.g., "explain AggregatorService")
+- **Integration**: How external APIs are integrated (e.g., "explain Windguru integration")
 
-You are a CE.SDK documentation expert. Generate clear, well-structured markdown explanations
-tailored to the user's specific question. Produce framework-specific content for Web platforms.
+### 2. Gather Context
 
-## Framework Detection
+Use the following tools to understand the code:
+- `Glob` to find relevant files
+- `Grep` to search for specific patterns, method calls, and references
+- `Read` to examine source code
+- `LSP` for finding definitions, references, and call hierarchies
 
-Detect the user's framework from project files. If no project exists yet or
-detection is ambiguous, ask the user to choose from all available frameworks
-and whether they prefer JavaScript or TypeScript.
+### 3. Trace the Flow
 
-### Auto-detection from `package.json`
+For data flows and features, trace the complete path:
 
-If a `package.json` exists, check dependencies in this order:
+```
+Entry Point → Processing Steps → Output
+```
 
-| Dependency | Framework | Docs skill |
-|-----------|-----------|------------|
-| `next` | Next.js | `docs-nextjs` |
-| `nuxt` | Nuxt.js | `docs-nuxtjs` |
-| `@sveltejs/kit` | SvelteKit | `docs-sveltekit` |
-| `@angular/core` | Angular | `docs-angular` |
-| `svelte` (no kit) | Svelte | `docs-svelte` |
-| `vue` (no nuxt) | Vue | `docs-vue` |
-| `react` (no next) | React | `docs-react` |
-| `electron` | Electron | `docs-electron` |
-| `@cesdk/node` in deps, or `"type": "module"` with no framework deps | Node.js | `docs-node` |
-| none of the above | Vanilla JS | `docs-js` |
+Identify:
+- Entry points (API endpoints, scheduled tasks, user actions)
+- Service layer processing
+- Data transformations
+- External API calls
+- Caching layers
+- Response formatting
 
-### New project or ambiguous detection
+### 4. Create Visual Diagrams
 
-If no `package.json` exists (new project) or detection is unclear, ask the user:
+Use ASCII diagrams to visualize:
 
-1. **Which framework?** Offer all options: React, Vue.js, Svelte, Angular,
-   Next.js, Nuxt.js, SvelteKit, Electron, Node.js, or Vanilla JavaScript.
-2. **JavaScript or TypeScript?** CE.SDK starter kits use TypeScript by default,
-   but the user may prefer plain JavaScript.
+**For data flows:**
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Source    │────▶│  Transform  │────▶│ Destination │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
 
-## Guidelines
+**For component interactions:**
+```
+            ┌──────────────────┐
+            │   Controller     │
+            └────────┬─────────┘
+                     │
+        ┌────────────┼────────────┐
+        ▼            ▼            ▼
+   ┌─────────┐  ┌─────────┐  ┌─────────┐
+   │Service A│  │Service B│  │Service C│
+   └─────────┘  └─────────┘  └─────────┘
+```
 
-1. **Reference the docs first**: Use `/cesdk:docs-{framework}` to look up accurate information — bundled docs are version-verified and more reliable than pre-trained knowledge
-2. **Lead with concepts**: Start with a clear explanation, then provide examples
-3. **Platform-specific**: Code must be valid for the detected framework
-4. **Complete examples**: Include imports, setup, and error handling
-5. **Explain trade-offs**: When multiple approaches exist, explain when to use each
+**For state transitions:**
+```
+[State A] ──(action)──▶ [State B] ──(action)──▶ [State C]
+```
 
-## Documentation Access
+### 5. Provide Step-by-Step Breakdown
 
-Use the `/cesdk:docs-{framework}` skill to look up bundled documentation (e.g. `/cesdk:docs-react`), or use Glob:
-`**/skills/docs-{framework}/<path>.md`
+Structure the explanation as:
+
+1. **Overview**: High-level summary (2-3 sentences)
+2. **Entry Point**: Where the flow begins
+3. **Step-by-Step Flow**: Each processing step with file:line references
+4. **Key Code Snippets**: Important code sections (keep concise)
+5. **Data Transformations**: How data shape changes
+6. **External Dependencies**: APIs, databases, caches involved
+7. **Error Handling**: How errors are managed
+8. **Related Components**: Other parts of the system that interact
+
+### 6. Include Code References
+
+Always include file paths with line numbers for easy navigation:
+- `src/main/java/.../SpotsController.java:45` - endpoint definition
+- `src/main/java/.../AggregatorService.java:120` - data aggregation
 
 ## Output Format
 
-Structure your response as:
+```markdown
+# Explaining: [Topic]
 
-### Overview
+## Overview
+[2-3 sentence summary]
 
-Brief explanation of the concept.
+## Visual Diagram
+[ASCII diagram showing the flow]
 
-### How It Works
+## Step-by-Step Flow
 
-Detailed explanation with diagrams or step-by-step breakdown as needed.
+### 1. [Step Name]
+**File**: `path/to/file.java:line`
 
-### Example Code
+[Description of what happens]
 
-\`\`\`typescript
-// Complete, working example
-\`\`\`
+```java
+// Key code snippet (if helpful)
+```
 
-### Key Points
+### 2. [Next Step]
+...
 
-- Important takeaways
-- Common gotchas
+## Data Transformations
+| Stage | Data Shape | Example |
+|-------|------------|---------|
+| Input | Type       | {...}   |
+| Output| Type       | {...}   |
 
-### Related Topics
+## Key Files Involved
+- `path/to/file1.java` - [purpose]
+- `path/to/file2.java` - [purpose]
 
-Links to related documentation for further reading.
+## Related Features
+- [Feature 1]: [brief relation]
+- [Feature 2]: [brief relation]
+```
 
-## Additional Triggers
+## Example Topics
 
-Also triggered by "walk me through", "describe how", or requests to understand CE.SDK
-workflows like asset loading pipelines, rendering lifecycles, or block hierarchies.
+Common explanations users might request:
 
-## Related Skills
+### Data Flows
+- "How do forecasts get from Windguru to the frontend?"
+- "How are live conditions fetched and displayed?"
+- "How does the caching system work?"
+- "How does the spot data flow from JSON to API response?"
 
-- Use \`/cesdk:docs-{framework}\` for source documentation and API reference (e.g. `/cesdk:docs-react`)
-- Use \`/cesdk:build\` when the user wants implementation, not just explanation
+### Features
+- "How does the favorites system work?"
+- "How does country filtering work?"
+- "How does the search functionality work?"
+- "How does theme switching work?"
+- "How does the kite size calculator work?"
+
+### Components
+- "How does AggregatorService orchestrate data fetching?"
+- "How do the FetchCurrentConditionsStrategy implementations work?"
+- "How does the ForecastService parse Windguru data?"
+- "How does the frontend manage state?"
+
+### Integrations
+- "How is Windguru integrated?"
+- "How is Google Maps integration working?"
+- "How does the AI analysis feature work?"
+
+## Notes
+
+- Keep explanations concise but complete
+- Use diagrams to make complex flows understandable
+- Always include file:line references for code navigation
+- Focus on the specific topic, don't over-explain tangential concerns
+- If the topic is ambiguous, ask clarifying questions
+- Reference CLAUDE.md, docs/BACKEND.md, and docs/FRONTEND.md for architectural context

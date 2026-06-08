@@ -40,9 +40,9 @@ This skill should be used when working with:
 ### Installation
 
 ```bash
-uv pip install torchdrug
+pip install torchdrug
 # Or with optional dependencies
-uv pip install torchdrug[full]
+pip install torchdrug[full]
 ```
 
 ### Quick Example

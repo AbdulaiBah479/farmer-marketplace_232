@@ -1,68 +1,90 @@
 ---
 name: codemap
-description: Analyze codebase structure, dependencies, changes, and multi-agent handoffs using codemap. Use this skill as the primary entry point when a task requires understanding project architecture, mapping dependencies, tracing logic, or generating cross-agent handoff artifacts. Always trigger this first when exploring unfamiliar code or when codemap output indicates noisy configurations.
+description: Use when the user wants to map, visualize, or understand codebase structure. Generates hierarchical code maps using LSP analysis with create and update modes.
+invocation: agent
 ---
 
-# Codemap
+# Code Map Creator
 
-Gives instant architectural context: project tree, dependency flow, hub detection, diff, intent classification, and multi-agent handoff.
+Generate or update a hierarchical code map using Claude Code's built-in LSP tools. Maps functions, classes, variables, and imports in a nested tree structure.
 
-## Commands
+## Modes
 
-```bash
-codemap .                       # Project tree with file counts and top files
-codemap --deps .                # Dependency flow + hub files (requires ast-grep)
-codemap --diff                  # Changes vs main branch
-codemap --diff --ref <branch>   # Changes vs specific branch
-codemap --importers <file>      # Who imports this file? Is it a hub?
-codemap handoff .               # Build + save cross-agent handoff artifact
-codemap handoff --latest .      # Read latest saved handoff
-codemap skill list              # Show available skills
-codemap skill show <name>       # Load full skill instructions
-codemap config show             # Show current project config
-codemap context --compact       # Minimal JSON context envelope
+### Create Mode (default)
+```
+/arc:specialized:codemap src/
+/arc:specialized:codemap . --ignore "node_modules,dist"
 ```
 
-## First-Use Setup
-
-Before deeper analysis in a new repo:
-1. Run `codemap .` — if output is noisy or config is missing, run `codemap skill show config-setup` first
-2. Run `codemap --deps .` — dependency graph and hub files
-3. Config is repo memory: once tuned, all future calls benefit automatically
-
-## When to use
-
-| Situation | Command |
-|---|---|
-| Starting any task | `codemap .` |
-| "Where is X?" / "What uses Y?" | `codemap --deps .` |
-| About to edit a file | `codemap --importers <file>` |
-| "What changed?" / before committing | `codemap --diff` |
-| Switching agents / resuming work | `codemap handoff .` |
-| Config missing or output noisy | `codemap skill show config-setup` |
-| Risk warning in hook output | `codemap skill show <matched-skill>` |
-
-## Hook output
-
-The `prompt-submit` hook fires on every message and emits:
-
+### Update Mode
 ```
-<!-- codemap:intent {"category":"refactor","risk":"high",...} -->
-<!-- codemap:skills [{"name":"hub-safety","score":5},...] -->
-Skills matched: hub-safety, explore — run `codemap skill show <name>` for guidance
+/arc:specialized:codemap --update .claude/maps/code-map-src-a3f9e.json --diff
+/arc:specialized:codemap --update .claude/maps/code-map-src-a3f9e.json --pr 456
 ```
 
-Skills are pull-based — names are surfaced automatically, full body loaded only when needed.
+## Instructions
 
-## Builtin skills
+### Step 1: Parse Input and Detect Mode
 
-| Skill | When to load |
-|---|---|
-| `config-setup` | Config missing, boilerplate, or output noisy |
-| `hub-safety` | Editing a file with 3+ importers |
-| `explore` | Understanding how code works |
-| `handoff` | Switching between agents |
+Parse input to determine mode:
 
-## Reference
+**Update Mode** (if `--update` present):
+1. Extract codemap path after `--update`
+2. Detect diff source (`--diff`, `--pr <id>`)
+3. Get list of changed files via Bash
 
-For MCP tools and HTTP API endpoints, load `references/codemap-api.md`.
+**Create Mode** (default):
+1. Root directory (required, first argument, default `.`)
+2. Ignore patterns (optional `--ignore`)
+
+### Step 2: Launch Agent
+
+**REQUIRED Task tool parameters:**
+
+**Create Mode:**
+```
+subagent_type: "arc:codemap-creator"
+run_in_background: true
+prompt: "MODE: create\nRoot: <root_dir>\nIgnore: <patterns or none>"
+```
+
+**Update Mode:**
+```
+subagent_type: "arc:codemap-creator"
+run_in_background: true
+prompt: "MODE: update\nCodemap: <codemap_path>\nChanged files:\n- file1.ts\n- file2.ts"
+```
+
+Output a status message and **end your turn**.
+
+### Step 3: Report Result
+
+**Create Mode:**
+```
+## Code Map Created (LSP)
+
+**Root**: <root_dir>
+**Map**: .claude/maps/code-map-<name>-<hash5>.json
+
+| Metric | Count |
+|--------|-------|
+| Directories | X |
+| Files | X |
+| Symbols | X |
+```
+
+**Update Mode:**
+```
+## Code Map Updated (LSP)
+
+**Map**: <codemap_path>
+**Files Updated**: X | **Added**: X | **Removed**: X
+```
+
+## Error Handling
+
+| Scenario | Action |
+|----------|--------|
+| Root directory not found | Report error, suggest valid paths |
+| Codemap not found | Report error, suggest create mode |
+| No changed files | Report "already up to date" |

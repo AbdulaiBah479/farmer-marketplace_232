@@ -7,25 +7,8 @@ description: Semantic code search and AI-powered codebase Q&A across indexed rep
 
 Semantic code intelligence across your entire code ecosystem — current project, organizational repos, dependencies, and any indexed codebase.
 
-## Authentication
-
-All scripts require a CodeAlive API key. If any script fails with "API key not configured", help the user set it up:
-
-**Option 1 (recommended):** Run the interactive setup and wait for the user to complete it:
-```bash
-python setup.py
-```
-
-**Option 2 (not recommended — key visible in chat history):** If the user pastes their API key directly in chat, save it via:
-```bash
-python setup.py --key THE_KEY
-```
-
-Do NOT retry the failed script until setup completes successfully.
-
 ## Table of Contents
 
-- [Authentication](#authentication)
 - [Tools Overview](#tools-overview)
 - [When to Use](#when-to-use)
 - [Quick Start](#quick-start)
@@ -202,17 +185,6 @@ export CODEALIVE_BASE_URL="https://your-instance.example.com"
 ```
 
 Get API keys at: https://app.codealive.ai/settings/api-keys
-
-## Using with CodeAlive MCP Server
-
-This skill works standalone, but delivers the best experience when combined with the [CodeAlive MCP server](https://github.com/CodeAlive-AI/codealive-mcp). The MCP server provides direct tool access via the Model Context Protocol, while this skill provides the workflow knowledge and query patterns to use those tools effectively.
-
-| Component | What it provides |
-|-----------|-----------------|
-| **This skill** | Query patterns, workflow guidance, cost-aware tool selection |
-| **MCP server** | Direct `codebase_search`, `codebase_consultant`, `get_data_sources` tools |
-
-When both are installed, prefer the MCP server's tools for direct operations and this skill's scripts for guided multi-step workflows like `explore.py`.
 
 ## Detailed Guides
 

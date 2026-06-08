@@ -1,11 +1,19 @@
 ---
 name: apify-brand-reputation-monitoring
-description: "Track reviews, ratings, sentiment, and brand mentions across Google Maps, Booking.com, TripAdvisor, Facebook, Instagram, YouTube, and TikTok. Use when user asks to monitor brand reputation, analyze..."
+description: "Scrape reviews, ratings, and brand mentions from multiple platforms using Apify Actors."
+risk: unknown
+source: community
 ---
 
 # Brand Reputation Monitoring
 
 Scrape reviews, ratings, and brand mentions from multiple platforms using Apify Actors.
+
+## When to Use
+
+- You need to monitor reviews, ratings, or brand mentions across social, travel, or map platforms.
+- The task is to select and run an Apify Actor for brand sentiment or reputation tracking.
+- You need exported monitoring results and a summary of reputation signals.
 
 ## Prerequisites
 (No need to check it upfront)
@@ -110,7 +118,6 @@ After completion, report:
 - File location and name
 - Key fields available
 - Suggested next steps (sentiment analysis, filtering)
-
 
 ## Error Handling
 

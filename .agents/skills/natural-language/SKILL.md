@@ -8,16 +8,9 @@ description: "Tokenize, tag, and analyze natural language text using Apple's Nat
 Analyze natural language text for tokenization, part-of-speech tagging, named
 entity recognition, sentiment analysis, language identification, and word/sentence
 embeddings. Translate text between languages with the Translation framework.
-Targets Swift 6.3 / iOS 26+.
+Targets Swift 6.2 / iOS 26+.
 
 > This skill covers two related frameworks: **NaturalLanguage** (`NLTokenizer`, `NLTagger`, `NLEmbedding`) for on-device text analysis, and **Translation** (`TranslationSession`, `LanguageAvailability`) for language translation.
-
-**Scope boundary:** Use this skill after you already have text. It owns
-tokenization, language identification, POS/NER tagging, sentiment, embeddings,
-custom `NLModel` classifiers/taggers, and in-app translation. Hand off OCR to
-`vision-framework`, speech-to-text to `speech-recognition`, UI strings and
-locale formatting to `ios-localization`, and generative summarization or Apple
-Intelligence workflows to `apple-on-device-ai`.
 
 ## Contents
 
@@ -37,12 +30,7 @@ Intelligence workflows to `apple-on-device-ai`.
 
 Import `NaturalLanguage` for text analysis and `Translation` for language
 translation. No special entitlements or capabilities are required for
-NaturalLanguage. Translation has split availability: system translation
-presentation is iOS 17.4+ / macOS 14.4+, while `TranslationSession`,
-`.translationTask()`, `LanguageAvailability`, and batch translation require
-iOS 18+ / macOS 15+.
-Direct `TranslationSession(installedSource:target:)` is the non-UI option, but
-only when the source and target languages are already installed on device.
+NaturalLanguage. Translation requires iOS 17.4+ / macOS 14.4+.
 
 ```swift
 import NaturalLanguage
@@ -239,14 +227,12 @@ struct TranslatableView: View {
     let text = "Hello, how are you?"
 
     var body: some View {
-        Button { showTranslation = true } label: {
-            Text(text)
-        }
-        .buttonStyle(.plain)
-        .translationPresentation(
-            isPresented: $showTranslation,
-            text: text
-        )
+        Text(text)
+            .onTapGesture { showTranslation = true }
+            .translationPresentation(
+                isPresented: $showTranslation,
+                text: text
+            )
     }
 }
 ```
@@ -258,7 +244,6 @@ Use `.translationTask()` for programmatic translations within a view context.
 ```swift
 struct TranslatingView: View {
     @State private var translatedText = ""
-    @State private var translationErrorMessage: String?
     @State private var configuration: TranslationSession.Configuration?
 
     var body: some View {
@@ -270,18 +255,8 @@ struct TranslatingView: View {
             }
         }
         .translationTask(configuration) { session in
-            do {
-                let response = try await session.translate("Hello, world!")
-                await MainActor.run {
-                    translatedText = response.targetText
-                    translationErrorMessage = nil
-                }
-            } catch {
-                let message = error.localizedDescription
-                await MainActor.run {
-                    translationErrorMessage = message
-                }
-            }
+            let response = try await session.translate("Hello, world!")
+            translatedText = response.targetText
         }
     }
 }
@@ -293,17 +268,13 @@ Translate multiple strings in a single session.
 
 ```swift
 .translationTask(configuration) { session in
-    do {
-        let requests = texts.enumerated().map { index, text in
-            TranslationSession.Request(sourceText: text,
-                                       clientIdentifier: "\(index)")
-        }
-        let responses = try await session.translations(from: requests)
-        for response in responses {
-            print("\(response.sourceText) -> \(response.targetText)")
-        }
-    } catch {
-        // Handle cancellation, unsupported languages, or download refusal.
+    let requests = texts.enumerated().map { index, text in
+        TranslationSession.Request(sourceText: text,
+                                    clientIdentifier: "\(index)")
+    }
+    let responses = try await session.translations(from: requests)
+    for response in responses {
+        print("\(response.sourceText) -> \(response.targetText)")
     }
 }
 ```
@@ -430,7 +401,7 @@ recognizer.processString("chat")
 
 ## References
 
-- Extended patterns (custom models, contextual embeddings, gazetteers): [references/translation-patterns.md](references/translation-patterns.md)
+- Extended patterns (custom models, contextual embeddings, gazetteers): `references/translation-patterns.md`
 - [Natural Language framework](https://sosumi.ai/documentation/naturallanguage)
 - [NLTokenizer](https://sosumi.ai/documentation/naturallanguage/nltokenizer)
 - [NLTagger](https://sosumi.ai/documentation/naturallanguage/nltagger)
@@ -438,5 +409,4 @@ recognizer.processString("chat")
 - [NLLanguageRecognizer](https://sosumi.ai/documentation/naturallanguage/nllanguagerecognizer)
 - [Translation framework](https://sosumi.ai/documentation/translation)
 - [TranslationSession](https://sosumi.ai/documentation/translation/translationsession)
-- [TranslationSession.Strategy](https://sosumi.ai/documentation/translation/translationsession/strategy)
 - [LanguageAvailability](https://sosumi.ai/documentation/translation/languageavailability)

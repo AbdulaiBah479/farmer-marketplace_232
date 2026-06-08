@@ -1,95 +1,148 @@
 ---
-name: deep-research
-description: Conducts a structured metric investigation in Mixpanel. Use when the user asks why a metric changed, what's driving a trend, requests a "deep dive" or "root cause," or wants to understand a phenomenon in their data. Walks through project / event / property scoping, plan confirmation, and an iterative query → interpret → hypothesise loop.
-license: Apache-2.0
+name: Deep Research
+description: Comprehensive web research with synthesis and actionable insights
+triggers:
+  - "research"
+  - "deep research"
+  - "investigate"
+  - "find information about"
+  - "best practices for"
 ---
 
-# Deep Research / Metric Investigation
+# Deep Research Skill
 
-This skill is a structured investigation, not a one-shot answer.
+Perform thorough research using web search, documentation, and intelligent synthesis to inform development decisions.
 
-## Requirements
+## Capabilities
 
-- Access to Mixpanel (query schemas, run queries, manage dashboards).
+- Web search via WebSearch tool
+- Documentation analysis
+- Technology trend research
+- Competitive analysis
+- Best practices discovery
+- Academic/technical paper review
 
----
+## Research Methodology
 
-## When to use this skill
+### Phase 1: Broad Search (10-15 sources)
+- Query multiple search engines
+- Scan for credibility (check date, author, domain)
+- Filter by relevance score
+- Prioritize official docs, established blogs, GitHub repos
 
-Trigger when the user wants to understand *why* something happened in their data. Common phrasings:
+### Phase 2: Deep Dive (Top 5 sources)
+- Read thoroughly
+- Extract key insights
+- Identify patterns and trends
+- Note contradictions or debates
+- Look for code examples and real-world applications
 
-- "Why did [metric] drop / spike / change?"
-- "Can you do a deep dive on [X]?"
-- "What's driving [trend]?"
-- "Root cause this for me."
-- "Help me understand what happened with [feature / cohort / segment]."
+### Phase 3: Synthesis
+- Combine findings into cohesive narrative
+- Create actionable recommendations
+- Document all sources
+- Generate summary report
 
-Do **not** trigger for one-off lookups ("what was DAU yesterday?"). Those are direct queries, not investigations.
+## Output Format
 
----
+Research saved to: `temp/research/{topic}-{timestamp}.md`
 
-## Workflow
+```markdown
+# Research: {Topic}
 
-### Phase 1 — Scope
+## Executive Summary
+[3-5 bullet points - key findings]
 
-Do not run analysis queries until scope is confirmed.
+## Key Findings
 
-Do your best to find the following information from the user's question and context. If anything is missing or ambiguous, ask clarifying questions before proceeding.
+### 1. {Finding Title}
+- **Source**: [Link](url)
+- **Insight**: What was learned
+- **Actionable**: How to apply this
+- **Code Example**: (if applicable)
 
-1. **Project.** Which Mixpanel project? If the user has access to several, ask.
-2. **Events.** Which events relate to the question?
-3. **Properties.** Which properties are relevant to break down by? (e.g. platform, utm_source, plan_tier)
+### 2. {Finding Title}
+...
 
-State your assumptions and ask the user to confirm before continuing. The final answer depends on this being right.
+## Recommendations
+1. **Immediate Action**: What to do now
+2. **Best Practice**: Pattern to follow
+3. **Avoid**: What not to do
 
-### Phase 2 — Validate and plan
+## Implementation Plan
+- [ ] Step 1
+- [ ] Step 2
 
-Run small exploratory queries to confirm data exists in the analysis window. Be resilient — try different approaches if your first attempts don't work.
-If volume is zero, partial, or anomalously low, surface that to the user before going further.
-
-Then present a compact plan:
-
+## Sources
+- [Title](URL) - Brief description
+- [Title](URL) - Brief description
 ```
-*Investigation Plan*
 
-• *Project:* `project name`
-• *Events:* `event_a`, `event_b`, `event_c`
-• *Properties:* `platform`, `utm_source`, `plan_tier`
+## Usage Examples
 
-*Initial Queries:*
-• Trend of event_a over 30 days to establish baseline
-• Breakdown by platform to isolate where the change happened
-• ...
-
-Say *yes* to continue the analysis.
+### Technology Research
+```bash
+"deep research on LangGraph supervisor pattern for production systems
+ Focus on: state management, error handling, scalability
+ Save to: temp/research/langgraph-supervisor.md"
 ```
 
-Wait for explicit confirmation before running the full investigation. If the user revises the plan, restate it and re-confirm before continuing.
+### Competitive Analysis
+```bash
+"research competitors in AI code generation space
+ Analyze: features, pricing, tech stack, user feedback
+ Identify: gaps we can fill, unique angles
+ Output: temp/research/competitive-analysis.md"
+```
 
-### Phase 3 — Investigate
+### Best Practices
+```bash
+"research React Server Components best practices for Next.js 14
+ Include: when to use vs client components, data fetching patterns, common pitfalls
+ Find: code examples from Vercel and community
+ Save: temp/research/rsc-best-practices.md"
+```
 
-Enter the research loop:
+## Integration with Build Process
 
-1. **Run** one or more queries from the plan.
-2. **Read and interpret** the results — what stands out, what doesn't?
-3. **Form a hypothesis.** If the data clearly answers the question, prepare to summarise. If not, return to step 1 with a sharper query.
+Research findings automatically:
+1. **Update Learning**: Add insights to `directives/learning.json`
+2. **Create Specs**: If features found → add to backlog
+3. **Improve Docs**: Suggest updates to INSTRUCTIONS.md
+4. **Inform Architecture**: Use findings in technical decisions
 
-Continue until you can answer the original question with evidence, or you can clearly articulate what data is missing. Stay creative — every dataset is different, so let the data shape the next query rather than following a fixed sequence.
+## Research Quality Checklist
+
+Before completing research:
+- [ ] At least 5 credible sources
+- [ ] Checked for recency (prefer <1 year old info)
+- [ ] Included official documentation
+- [ ] Found real-world examples/code
+- [ ] Synthesized conflicting information
+- [ ] Created actionable recommendations
+- [ ] Documented all sources with working links
+
+## Advanced Research Patterns
+
+### Comparative Research
+```bash
+"research and compare:
+ Option A: Using Prisma ORM
+ Option B: Using raw SQL with Postgres
+ Option C: Using Drizzle ORM
+
+ Compare: performance, DX, type safety, migrations, community support
+ Recommend: Best option for Next.js 14 + Supabase stack"
+```
+
+### Trend Analysis
+```bash
+"research current trends in AI agent orchestration frameworks
+ Analyze: LangGraph, CrewAI, AutoGPT, LangChain, Semantic Kernel
+ Identify: Which is gaining traction, production-ready, best for SaaS
+ Timeline: Last 6 months only"
+```
 
 ---
 
-## Guidelines
-
-- **Start broad, then narrow.** Establish the overall trend first; each subsequent query should be informed by the previous one.
-- **Break down by dimensions where you'd expect variation given the question.** Don't slice by every property — pick the ones most likely to show a delta.
-- **Correlate timing.** If a metric shifted on a specific date, ask what else changed: a deploy, a campaign, a policy, an outage.
-
----
-
-## Output
-
-When the investigation concludes, present:
-
-1. The **answer** to the original question, in one or two sentences.
-2. The **evidence** — create a dashboard using the `create-dashboard` skill to back your findings with live data.
-3. **Caveats** — anything the data doesn't tell you, alternative explanations you can't rule out, and follow-up queries the user might want to run.
+**Remember**: Great research leads to better decisions. Invest time in deep research before implementation!

@@ -14,7 +14,11 @@ UMAP (Uniform Manifold Approximation and Projection) is a dimensionality reducti
 ### Installation
 
 ```bash
-uv pip install umap-learn
+# Via conda
+conda install -c conda-forge umap-learn
+
+# Via pip
+pip install umap-learn
 ```
 
 ### Basic Usage
@@ -335,7 +339,7 @@ Parametric UMAP replaces direct embedding optimization with a learned neural net
 
 **Installation:**
 ```bash
-uv pip install umap-learn[parametric_umap]
+pip install umap-learn[parametric_umap]
 # Requires TensorFlow 2.x
 ```
 

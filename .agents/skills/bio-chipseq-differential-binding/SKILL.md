@@ -5,26 +5,9 @@ tool_type: r
 primary_tool: DiffBind
 ---
 
-## Version Compatibility
-
-Reference examples tested with: DESeq2 1.42+, edgeR 4.0+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- R: `packageVersion('<pkg>')` then `?function_name` to verify parameters
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Differential Binding with DiffBind
 
-**"Compare ChIP-seq binding between conditions"** → Identify genomic regions with statistically significant differences in transcription factor or histone mark occupancy between experimental groups.
-- R: `DiffBind::dba()` → `dba.count()` → `dba.contrast()` → `dba.analyze()`
-
 ## Create Sample Sheet
-
-**Goal:** Define the experimental design linking BAM files, peak files, and sample metadata for DiffBind.
-
-**Approach:** Build a data frame (or CSV) with required columns mapping each sample to its files and conditions.
 
 ```r
 # Create sample sheet as data frame or CSV
@@ -45,10 +28,6 @@ write.csv(samples, 'samples.csv', row.names = FALSE)
 
 ## Load Data
 
-**Goal:** Initialize a DiffBind object from the sample sheet containing all samples and peaks.
-
-**Approach:** Read the sample sheet CSV into a DBA object that identifies overlapping peaks across samples.
-
 ```r
 library(DiffBind)
 
@@ -61,12 +40,8 @@ dba_obj
 
 ## Count Reads in Peaks
 
-**Goal:** Quantify read coverage at consensus peak regions across all samples.
-
-**Approach:** Count reads in summit-centered windows using dba.count, creating a count matrix for statistical testing.
-
 ```r
-# Count reads in consensus peaks
+# Count reads in consensus peaks (DiffBind 3.0+ defaults)
 # summits=250 and bUseSummarizeOverlaps=TRUE are now defaults
 dba_obj <- dba.count(dba_obj)
 
@@ -80,10 +55,6 @@ dba_obj <- dba.count(
 
 ## Normalize Data
 
-**Goal:** Apply normalization to account for library size and composition differences between samples.
-
-**Approach:** Use dba.normalize which applies DESeq2/edgeR normalization factors to the count matrix.
-
 ```r
 # Normalize (required before analysis)
 dba_obj <- dba.normalize(dba_obj)
@@ -92,14 +63,10 @@ dba_obj <- dba.normalize(dba_obj)
 dba.normalize(dba_obj, bRetrieve = TRUE)
 ```
 
-## Set Up Contrast
-
-**Goal:** Define the comparison between experimental conditions for differential testing.
-
-**Approach:** Specify a design formula or category-based contrast that tells DiffBind which groups to compare.
+## Set Up Contrast (DiffBind 3.0+)
 
 ```r
-# Recommended: design formula approach
+# Recommended: design formula approach (DiffBind 3.0+)
 dba_obj <- dba.contrast(dba_obj, design = '~ Condition')
 
 # Or use categories for automatic contrast
@@ -112,10 +79,6 @@ dba_obj <- dba.contrast(dba_obj, categories = DBA_CONDITION)
 
 ## Run Differential Analysis
 
-**Goal:** Identify peaks with statistically significant binding differences between conditions.
-
-**Approach:** Apply DESeq2 or edgeR negative binomial models to the normalized count matrix.
-
 ```r
 # Analyze with DESeq2 (default)
 dba_obj <- dba.analyze(dba_obj, method = DBA_DESEQ2)
@@ -125,10 +88,6 @@ dba_obj <- dba.analyze(dba_obj, method = DBA_EDGER)
 ```
 
 ## View Results
-
-**Goal:** Retrieve and inspect differentially bound regions with fold changes and significance values.
-
-**Approach:** Extract results as a GRanges object with dba.report, sorted by significance.
 
 ```r
 # Summary of differential peaks
@@ -140,10 +99,6 @@ db_results
 ```
 
 ## Filter Results
-
-**Goal:** Subset differential peaks by significance and fold-change thresholds.
-
-**Approach:** Apply FDR and fold-change cutoffs to dba.report output.
 
 ```r
 # Get significant peaks (FDR < 0.05, |FC| > 2)

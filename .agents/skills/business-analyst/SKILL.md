@@ -1,9 +1,11 @@
 ---
 name: business-analyst
-description: Master modern business analysis with AI-powered analytics, real-time dashboards, and data-driven insights. Build comprehensive KPI frameworks, predictive models, and strategic recommendations.
-risk: unknown
-source: community
-date_added: '2026-02-27'
+description: Master modern business analysis with AI-powered analytics,
+  real-time dashboards, and data-driven insights. Build comprehensive KPI
+  frameworks, predictive models, and strategic recommendations. Use PROACTIVELY
+  for business intelligence or strategic analysis.
+metadata:
+  model: sonnet
 ---
 
 ## Use this skill when

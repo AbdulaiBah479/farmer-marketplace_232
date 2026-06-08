@@ -1,197 +1,95 @@
 ---
 name: news-aggregator-skill
-description: "Comprehensive news aggregator that fetches, filters, and deeply analyzes real-time content from 44+ sources including Hacker News, Lobsters, Dev.to, GitHub, arXiv, Hugging Face Papers, AIHOT, TLDR AI, Import AI, BBC, The Guardian, Al Jazeera, France 24, Reuters fallback, AI Newsletters, WallStreetCN, Weibo, 少数派, InfoQ 中文, Podcasts, and user-defined OPML feeds. Use when user requests 'daily scans', 'tech news', 'finance updates', 'AI briefings', 'international news', 'deep analysis', or says '如意如意' to open the interactive menu."
+description: "Comprehensive news aggregator that fetches, filters, and deeply analyzes real-time content from 8 major sources: Hacker News, GitHub Trending, Product Hunt, 36Kr, Tencent News, WallStreetCN, V2EX, and Weibo. Best for 'daily scans', 'tech news briefings', 'finance updates', and 'deep interpretations' of hot topics."
 ---
 
 # News Aggregator Skill
 
-Fetch real-time hot news from 44+ sources (including international news + AI curated aggregators + user-defined OPML feeds), generate deep analysis reports in Chinese.
+Fetch real-time hot news from multiple sources.
 
----
-
-## 🔄 Universal Workflow (3 Steps)
-
-**Every** news request follows the same workflow, regardless of source or combination:
-
-### Step 1: Fetch Data
-```bash
-# Single source
-python3 scripts/fetch_news.py --source <source_key> --no-save
-
-# Multiple sources (comma-separated)
-python3 scripts/fetch_news.py --source hackernews,github,wallstreetcn --no-save
-
-# All sources (broad scan)
-python3 scripts/fetch_news.py --source all --limit 15 --deep --no-save
-
-# With keyword filter (auto-expand: "AI" → "AI,LLM,GPT,Claude,Agent,RAG")
-python3 scripts/fetch_news.py --source hackernews --keyword "AI,LLM,GPT" --deep --no-save
-```
-
-### Step 2: Generate Report
-Read the output JSON and format **every** item using the **Unified Report Template** below. Translate all content to **Simplified Chinese**.
-
-### Step 3: Save & Present
-Save the report to `reports/YYYY-MM-DD/<source>_report.md`, then display the full content to the user.
-
----
-
-## 📰 Unified Report Template
-
-**All sources use this single template.** Show/hide optional fields based on data availability.
-
-```markdown
-#### N. [标题 (中文翻译)](https://original-url.com)
-- **Source**: 源名 | **Time**: 时间 | **Heat**: 🔥 热度值
-- **Links**: [Discussion](hn_url) | [GitHub](gh_url)     ← 仅在数据存在时显示
-- **Summary**: 一句话中文摘要。
-- **Deep Dive**: 💡 **Insight**: 深度分析（背景、影响、技术价值）。
-```
-
-### Source-Specific Adaptations
-
-Only the **differences** from the universal template:
-
-| Source | Adaptation |
-|---|---|
-| **Hacker News** | **MUST** include `[Discussion](hn_url)` link |
-| **GitHub** | Use `🌟 Stars` for Heat, add `Lang` field, add `#Tags` in Deep Dive |
-| **Hugging Face** | Use `🔥 +N` upvotes for Heat, include `[GitHub](url)` if present, write **深度解读** (not just translate abstract) |
-| **Weibo** | Preserve exact heat text (e.g. "108万") |
-| **AIHOT** | `summary` 已是中文编辑稿，**直接引用**不要再翻译；Heat 字段为空也别造数据；保留 `推荐理由` 风格的一句话点评 |
-| **TLDR AI** | 单条标题往往是多主题混合（`Topic A 💻, Topic B ⚡, Topic C ⛪`），**拆成 bullet 列出每个主题**；`summary` 是 HTML 段落，需要拆出每个主题对应的一两句概述 |
-| **Import AI** | 周刊长文，标题形如 `Import AI 458: 主题1; 主题2; 主题3`。**建议默认配 `--deep`**，否则 RSS summary 只是开头几句；Deep Dive 直接提炼 Jack Clark 的核心观点而非平铺事实 |
-| **International News** | **MUST** use the Unified Report Template for every item；只使用最近 24h RSS 条目，不用更早新闻 Smart Fill；英文标题与摘要翻译成简体中文，保留原始媒体名与链接；同一事件多家媒体重复时可合并观点但不能合并链接 |
-| **Reuters** | `reuters` 使用 Google News RSS 的 `site:reuters.com` fallback；报告里保留 `Reuters (Google News fallback)` source，不要写成官方公开 RSS |
-
----
-
-## 🛠️ Tools
+## Tools
 
 ### fetch_news.py
 
-| Arg | Description | Default |
-|---|---|---|
-| `--source` | Source key(s), comma-separated. See table below. | `all` |
-| `--limit` | Max items per source | `15` |
-| `--keyword` | Comma-separated keyword filter | None |
-| `--deep` | Download article text for richer analysis | Off |
-| `--save` | Force save to reports dir | Auto for single source |
-| `--outdir` | Custom output directory | `reports/YYYY-MM-DD/` |
-
-### Available Sources (44+ with user OPML)
-
-| Category | Key | Name |
-|---|---|---|
-| **Global News** | `hackernews` | Hacker News |
-| | `36kr` | 36氪 |
-| | `wallstreetcn` | 华尔街见闻 |
-| | `tencent` | 腾讯新闻 |
-| | `weibo` | 微博热搜 |
-| | `v2ex` | V2EX |
-| | `producthunt` | Product Hunt |
-| | `github` | GitHub Trending |
-| **Tech Community** (v2) | `lobsters` | Lobsters |
-| | `devto` | Dev.to |
-| **AI/Tech** | `huggingface` | HF Daily Papers |
-| | `arxiv` | arXiv (cs.AI/cs.CL/cs.LG, v2) |
-| | `ai_newsletters` | All AI Newsletters (aggregate) |
-| | `bensbites` | Ben's Bites |
-| | `interconnects` | Interconnects (Nathan Lambert) |
-| | `oneusefulthing` | One Useful Thing (Ethan Mollick) |
-| | `chinai` | ChinAI (Jeffrey Ding) |
-| | `memia` | Memia |
-| | `aitoroi` | AI to ROI |
-| | `kdnuggets` | KDnuggets |
-| **Chinese** (v2) | `sspai` | 少数派 |
-| | `infoq_cn` | InfoQ 中文站（RSS 只给标题，**推荐配 `--deep`** 拿正文） |
-| **AI Curated** (v3) | `aihot` | AIHOT 中文 AI 精选（跨源 + 中文编辑稿）|
-| | `tldr_ai` | TLDR AI 英文日刊 |
-| | `import_ai` | Import AI by Jack Clark 周刊（**推荐 `--deep`**）|
-| **International News** | `international` | 最近 24h 国际新闻聚合（BBC / Guardian / Al Jazeera / France 24 / Reuters fallback）|
-| | `bbc_top` | BBC Top News (24h) |
-| | `bbc_world` | BBC World (24h) |
-| | `bbc_chinese` | BBC 中文 (24h) |
-| | `guardian_world` | The Guardian World (24h) |
-| | `aljazeera` | Al Jazeera (24h) |
-| | `france24` | France 24 (24h) |
-| | `reuters` | Reuters via Google News RSS fallback (24h) |
-| **Podcasts** | `podcasts` | All Podcasts (aggregate) |
-| | `lexfridman` | Lex Fridman |
-| | `80000hours` | 80,000 Hours |
-| | `latentspace` | Latent Space |
-| **Essays** | `essays` | All Essays (aggregate) |
-| | `paulgraham` | Paul Graham |
-| | `waitbutwhy` | Wait But Why |
-| | `jamesclear` | James Clear |
-| | `farnamstreet` | Farnam Street |
-| | `scottyoung` | Scott Young |
-| | `dankoe` | Dan Koe |
-| **Custom** (v2) | `user` | Your OPML feeds (see below) |
-
-### 自定义订阅源 (User OPML)
-
-把你常看的 RSS/Atom 源写进 OPML，`--source user` 即可统一抓取。
-
-**1. 放置 OPML 文件**（按优先级查找）：
-- `~/.config/news-aggregator/user_sources.opml`（推荐，跨 skill 复用）
-- `<skill_root>/user_sources.opml`（本仓库内）
-
-**2. 文件格式**：标准 OPML 2.0，可直接从 Feedly / Inoreader / NetNewsWire 导出。参考 `user_sources.opml.example`：
-
-```xml
-<outline type="rss" text="Simon Willison" title="Simon Willison"
-         xmlUrl="https://simonwillison.net/atom/everything/" />
-```
-
-只 `xmlUrl` 必填，其它可选。
-
-**3. 运行**：`python3 scripts/fetch_news.py --source user --limit 15`
-
-
-### daily_briefing.py (Morning Routines)
-
-Pre-configured multi-source profiles:
+**Usage:**
 
 ```bash
-python3 scripts/daily_briefing.py --profile <profile>
+### Single Source (Limit 10)
+```bash
+### Global Scan (Option 12) - **Broad Fetch Strategy**
+> **NOTE**: This strategy is specifically for the "Global Scan" scenario where we want to catch all trends.
+
+```bash
+#  1. Fetch broadly (Massive pool for Semantic Filtering)
+python3 scripts/fetch_news.py --source all --limit 15 --deep
+
+# 2. SEMANTIC FILTERING:
+# Agent manually filters the broad list (approx 120 items) for user's topics.
 ```
 
-| Profile | Sources | Instruction File |
-|---|---|---|
-| `general` | HN, 36Kr, GitHub, Weibo, PH, WallStreetCN | `instructions/briefing_general.md` |
-| `finance` | WallStreetCN, 36Kr, Tencent | `instructions/briefing_finance.md` |
-| `tech` | GitHub, HN, Product Hunt | `instructions/briefing_tech.md` |
-| `social` | Weibo, V2EX, Tencent | `instructions/briefing_social.md` |
-| `ai_daily` | HF Papers, AI Newsletters | `instructions/briefing_ai_daily.md` |
-| `reading_list` | Essays, Podcasts | (Use universal template) |
+### Single Source & Combinations (Smart Keyword Expansion)
+**CRITICAL**: You MUST automatically expand the user's simple keywords to cover the entire domain field.
+*   User: "AI" -> Agent uses: `--keyword "AI,LLM,GPT,Claude,Generative,Machine Learning,RAG,Agent"`
+*   User: "Android" -> Agent uses: `--keyword "Android,Kotlin,Google,Mobile,App"`
+*   User: "Finance" -> Agent uses: `--keyword "Finance,Stock,Market,Economy,Crypto,Gold"`
 
-**Workflow**: Execute script → Read corresponding instruction file → Generate report following both the instruction file AND the universal template.
+```bash
+# Example: User asked for "AI news from HN" (Note the expanded keywords)
+python3 scripts/fetch_news.py --source hackernews --limit 20 --keyword "AI,LLM,GPT,DeepSeek,Agent" --deep
+```
 
----
+### Specific Keyword Search
+Only use `--keyword` for very specific, unique terms (e.g., "DeepSeek", "OpenAI").
+```bash
+python3 scripts/fetch_news.py --source all --limit 10 --keyword "DeepSeek" --deep
+```
 
-## ⚠️ Rules (Strict)
+**Arguments:**
 
-1. **Language**: ALL output in **Simplified Chinese (简体中文)**. Keep well-known English proper nouns (ChatGPT, Python, etc.).
-2. **Time**: **MANDATORY** field. Never skip. If missing in JSON, mark as "Unknown Time". Preserve "Real-time" / "Today" / "Hot" as-is.
-3. **Anti-Hallucination**: Only use data from the JSON. Never invent news items. Use simple SVO sentences. Do not fabricate causal relationships.
-4. **Smart Keyword Expansion**: When user says "AI" → auto-expand to `"AI,LLM,GPT,Claude,Agent,RAG,DeepSeek"`. Similar expansions for other domains.
-5. **Smart Fill**: If results < 5 items in a time window, supplement with high-value items from wider range. Mark supplementary items with ⚠️. **Exception**: International News sources are a hard 24h window; do not supplement with older items.
-6. **Save**: Always save report to `reports/YYYY-MM-DD/` before displaying.
+- `--source`: One of `hackernews`, `weibo`, `github`, `36kr`, `producthunt`, `v2ex`, `tencent`, `wallstreetcn`, `all`.
+- `--limit`: Max items per source (default 10).
+- `--keyword`: Comma-separated filters (e.g. "AI,GPT").
+- `--deep`: **[NEW]** Enable deep fetching. Downloads and extracts the main text content of the articles.
 
----
+**Output:**
+JSON array. If `--deep` is used, items will contain a `content` field associated with the article text.
 
-## 📋 Interactive Menu
+## Interactive Menu
 
-When the user says **"如意如意"** or asks for "menu/help":
+When the user says **"news-aggregator-skill 如意如意"** (or similar "menu/help" triggers):
+1.  **READ** the content of `templates.md` in the skill directory.
+2.  **DISPLAY** the list of available commands to the user exactly as they appear in the file.
+3.  **GUIDE** the user to select a number or copy the command to execute.
 
-1. Read `templates.md`
-2. Display the menu
-3. Execute the user's selection using the **Universal Workflow** above
+### Smart Time Filtering & Reporting (CRITICAL)
+If the user requests a specific time window (e.g., "past X hours") and the results are sparse (< 5 items):
+1.  **Prioritize User Window**: First, list all items that strictly fall within the user's requested time (Time < X).
+2.  **Smart Fill**: If the list is short, you MUST include high-value/high-heat items from a wider range (e.g. past 24h) to ensure the report provides at least 5 meaningful insights.
+2.  **Annotation**: Clearly mark these older items (e.g., "⚠️ 18h ago", "🔥 24h Hot") so the user knows they are supplementary.
+3.  **High Value**: Always prioritize "SOTA", "Major Release", or "High Heat" items even if they slightly exceed the time window.
+4.  **GitHub Trending Exception**: For purely list-based sources like **GitHub Trending**, strictly return the valid items from the fetched list (e.g. Top 10). **List ALL fetched items**. Do **NOT** perform "Smart Fill".
+    *   **Deep Analysis (Required)**: For EACH item, you **MUST** leverage your AI capabilities to analyze:
+        *   **Core Value (核心价值)**: What specific problem does it solve? Why is it trending?
+        *   **Inspiration (启发思考)**: What technical or product insights can be drawn?
+        *   **Scenarios (场景标签)**: 3-5 keywords (e.g. `#RAG #LocalFirst #Rust`).
 
----
+### 6. Response Guidelines (CRITICAL)
 
-## Requirements
+**Format & Style:**
+- **Language**: Simplified Chinese (简体中文).
+- **Style**: Magazine/Newsletter style (e.g., "The Economist" or "Morning Brew" vibe). Professional, concise, yet engaging.
+- **Structure**:
+    - **Global Headlines**: Top 3-5 most critical stories across all domains.
+    - **Tech & AI**: Specific section for AI, LLM, and Tech items.
+    - **Finance / Social**: Other strong categories if relevant.
+- **Item Format**:
+    - **Title**: **MUST be a Markdown Link** to the original URL.
+        - ✅ Correct: `### 1. [OpenAI Releases GPT-5](https://...)`
+        - ❌ Incorrect: `### 1. OpenAI Releases GPT-5`
+    - **Metadata Line**: Must include Source, **Time/Date**, and Heat/Score.
+    - **1-Liner Summary**: A punchy, "so what?" summary.
+    - **Deep Interpretation (Bulleted)**: 2-3 bullet points explaining *why* this matters, technical details, or context. (Required for "Deep Scan").
 
-- Python 3.8+, `pip install -r requirements.txt`
-- Playwright (for HF Papers & Ben's Bites): `playwright install chromium`
+**Output Artifact:**
+- Always save the full report to `reports/` directory with a timestamped filename (e.g., `reports/hn_news_YYYYMMDD_HHMM.md`).
+- Present the full report content to the user in the chat.

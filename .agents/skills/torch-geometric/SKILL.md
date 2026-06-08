@@ -25,12 +25,12 @@ This skill should be used when working with:
 ### Installation
 
 ```bash
-uv pip install torch_geometric
+pip install torch_geometric
 ```
 
 For additional dependencies (sparse operations, clustering):
 ```bash
-uv pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html
 ```
 
 ### Basic Graph Creation

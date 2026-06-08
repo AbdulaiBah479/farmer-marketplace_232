@@ -2,6 +2,15 @@
 name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
 ---
+<!--
+Adapted from obra/superpowers finishing-a-development-branch skill (v5.0.7),
+MIT-licensed, copyright 2025 Jesse Vincent. Modifications copyright 2026 Joe Amditis.
+Pure consumer port — no research phase per the v0.2.0 architecture, since
+branch finishing is a downstream wrap-up of work whose strategic decisions
+were already made upstream. SKILL.md byte-identical to upstream after the
+attribution block strip.
+See CREDITS.md.
+-->
 
 # Finishing a Development Branch
 

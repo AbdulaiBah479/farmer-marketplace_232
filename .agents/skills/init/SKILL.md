@@ -1,201 +1,130 @@
 ---
-name: "init"
-description: >-
-  Set up Playwright in a project. Use when user says "set up playwright",
-  "add e2e tests", "configure playwright", "testing setup", "init playwright",
-  or "add test infrastructure".
+name: init
+description: >
+  Frictionless setup. Detects missing daemon, installs it, configures local
+  memory, and verifies the full plugin → MCP → daemon round-trip. Run
+  after `/plugin install origin@7xuanlu`, or any time the user says "set up
+  origin", "is origin working", "fix origin".
+allowed-tools: ["Bash", "mcp__plugin_origin_origin__doctor", "mcp__plugin_origin_origin__context"]
 ---
 
-# Initialize Playwright Project
+# /init
 
-Set up a production-ready Playwright testing environment. Detect the framework, generate config, folder structure, example test, and CI workflow.
+Self-healing setup. Goal: 30 seconds, two user actions max (install plugin,
+type /init). Default backend is local memory — no local model, no API key, no
+prompts. Local model and Anthropic key are opt-in upgrades documented in
+`/help`.
 
 ## Steps
 
-### 1. Analyze the Project
+Run in order. Stop and report at the first failure that needs human
+attention. Otherwise, push through automatically.
 
-Use the `Explore` subagent to scan the project:
-
-- Check `package.json` for framework (React, Next.js, Vue, Angular, Svelte)
-- Check for `tsconfig.json` → use TypeScript; otherwise JavaScript
-- Check if Playwright is already installed (`@playwright/test` in dependencies)
-- Check for existing test directories (`tests/`, `e2e/`, `__tests__/`)
-- Check for existing CI config (`.github/workflows/`, `.gitlab-ci.yml`)
-
-### 2. Install Playwright
-
-If not already installed:
-
-```bash
-npm init playwright@latest -- --quiet
-```
-
-Or if the user prefers manual setup:
-
-```bash
-npm install -D @playwright/test
-npx playwright install --with-deps chromium
-```
-
-### 3. Generate `playwright.config.ts`
-
-Adapt to the detected framework:
-
-**Next.js:**
-```typescript
-import { defineConfig, devices } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './e2e',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [
-    ['html', { open: 'never' }],
-    ['list'],
-  ],
-  use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-  },
-  projects: [
-    { name: "chromium", use: { ...devices['Desktop Chrome'] } },
-    { name: "firefox", use: { ...devices['Desktop Firefox'] } },
-    { name: "webkit", use: { ...devices['Desktop Safari'] } },
-  ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
-});
-```
-
-**React (Vite):**
-- Change `baseURL` to `http://localhost:5173`
-- Change `webServer.command` to `npm run dev`
-
-**Vue/Nuxt:**
-- Change `baseURL` to `http://localhost:3000`
-- Change `webServer.command` to `npm run dev`
-
-**Angular:**
-- Change `baseURL` to `http://localhost:4200`
-- Change `webServer.command` to `npm run start`
-
-**No framework detected:**
-- Omit `webServer` block
-- Set `baseURL` from user input or leave as placeholder
-
-### 4. Create Folder Structure
+### 1. Daemon health probe
 
 ```
-e2e/
-├── fixtures/
-│   └── index.ts          # Custom fixtures
-├── pages/
-│   └── .gitkeep          # Page object models
-├── test-data/
-│   └── .gitkeep          # Test data files
-└── example.spec.ts       # First example test
+Bash: curl -fsS -m 1 http://127.0.0.1:7878/api/health
 ```
 
-### 5. Generate Example Test
+- 200 OK → skip to step 4.
+- Anything else → step 2.
 
-```typescript
-import { test, expect } from '@playwright/test';
+### 2. Bootstrap (auto-install if missing)
 
-test.describe('Homepage', () => {
-  test('should load successfully', async ({ page }) => {
-    await page.goto('/');
-    await expect(page).toHaveTitle(/.+/);
-  });
-
-  test('should have visible navigation', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByRole('navigation')).toBeVisible();
-  });
-});
-```
-
-### 6. Generate CI Workflow
-
-If `.github/workflows/` exists, create `playwright.yml`:
-
-```yaml
-name: "playwright-tests"
-
-on:
-  push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
-
-jobs:
-  test:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-      - name: "install-dependencies"
-        run: npm ci
-      - name: "install-playwright-browsers"
-        run: npx playwright install --with-deps
-      - name: "run-playwright-tests"
-        run: npx playwright test
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: "playwright-report"
-          path: playwright-report/
-          retention-days: 30
-```
-
-If `.gitlab-ci.yml` exists, add a Playwright stage instead.
-
-### 7. Update `.gitignore`
-
-Append if not already present:
+Detect whether the `origin` CLI is on PATH:
 
 ```
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+Bash: command -v origin >/dev/null 2>&1 && echo present || echo absent
 ```
 
-### 8. Add npm Scripts
+If `absent`, run the installer (no human prompts):
 
-Add to `package.json` scripts:
-
-```json
-{
-  "test:e2e": "playwright test",
-  "test:e2e:ui": "playwright test --ui",
-  "test:e2e:debug": "playwright test --debug"
-}
+```
+Bash: curl -fsSL https://raw.githubusercontent.com/7xuanlu/origin/v0.6.1/install.sh | bash
 ```
 
-### 9. Verify Setup
+Then add it to PATH for the current session and configure local memory
+non-interactively:
 
-Run the example test:
-
-```bash
-npx playwright test
+```
+Bash: export PATH="$HOME/.origin/bin:$PATH" && origin setup --basic && origin install
 ```
 
-Report the result. If it fails, diagnose and fix before completing.
+If `present` (CLI exists, daemon down), just install + start:
 
-## Output
+```
+Bash: origin setup --basic 2>/dev/null || true; origin install
+```
 
-Confirm what was created:
-- Config file path and key settings
-- Test directory and example test
-- CI workflow (if applicable)
-- npm scripts added
-- How to run: `npx playwright test` or `npm run test:e2e`
+`origin setup --basic` is idempotent — safe to re-run. `origin install`
+writes the launchd plist and starts the daemon.
+
+### 3. Re-probe daemon health
+
+```
+Bash: for i in 1 2 3 4 5; do curl -fsS -m 1 http://127.0.0.1:7878/api/health && break; sleep 1; done
+```
+
+If the daemon still isn't reachable after ~5s, surface the error and stop.
+Likely cause: launchd plist load failure, port 7878 occupied by another
+process, or macOS Tahoe Metal init issue (daemon degrades but still binds —
+check `lsof -ti :7878`).
+
+### 4. Doctor (verify backend)
+
+Call the `origin` MCP server's `doctor` tool:
+
+```
+doctor()
+```
+
+Expected: local memory configured (no model, no key). Capture the mode
+string for the final report.
+
+### 5. MCP round-trip
+
+```
+context()
+```
+
+Pass → continue. Fail → MCP not wired. Tell user:
+"origin-mcp didn't respond. Restart Claude Code so the plugin's
+`.mcp.json` re-spawns the server."
+
+### 6. Ready report
+
+Print:
+
+```
+Origin ready.
+  Daemon:   up on 127.0.0.1:7878
+  Mode:     <mode from doctor()>
+  MCP:      connected
+  Data:     ~/.origin/  (pages, sessions, db symlink)
+  Try:      /brief, /capture <thing>, /recall <query>, /help
+```
+
+If this was the first /init invocation in the session, dispatch `/help`
+once so the user sees the verb cheat-sheet without asking.
+
+## Optional upgrades (don't auto-run)
+
+Mention these in the ready report only if the user explicitly asks for
+"richer features" or asks about model-backed extraction:
+
+- `origin model install` — local Qwen for distill cycles.
+- `origin key set anthropic` — Anthropic for stronger synthesis.
+
+Default flow ignores both. Storage, search, recall, and MCP memory all
+work in local memory mode.
+
+## When to use
+
+- Right after `/plugin install origin@7xuanlu`.
+- Hook printed "daemon down — run /origin:init".
+- User says "set up origin", "is it working", "reinstall origin".
+
+## When NOT to use
+
+- Daemon already verified this session → `/brief` instead.
+- Editing one config field → `origin doctor` or settings file directly.

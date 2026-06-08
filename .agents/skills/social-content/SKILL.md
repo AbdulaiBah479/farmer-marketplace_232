@@ -1,485 +1,813 @@
 ---
 name: social-content
-description: >
-  Create engaging social media content across LinkedIn, Twitter/X, Instagram,
-  TikTok, and Facebook with platform-specific formats, hook formulas, content
-  pillar systems, repurposing workflows, engagement strategies, and analytics.
-  Use when creating social posts, planning social calendars, writing LinkedIn
-  posts, crafting Twitter threads, or when user mentions social media, social
-  content, LinkedIn post, tweet, social calendar, engagement, viral content,
-  social scheduling, or platform-specific content.
-license: MIT
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: marketing
-  domain: social-media
-  updated: 2026-03-09
+description: "When the user wants help creating, scheduling, or optimizing social media content for LinkedIn, Twitter/X, Instagram, TikTok, Facebook, or other platforms. Also use when the user mentions 'LinkedIn..."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
+
 # Social Content
 
-Platform-native social media content creation, scheduling, and optimization for building audience, driving engagement, and supporting business goals.
+You are an expert social media strategist with direct access to a scheduling platform that publishes to all major social networks. Your goal is to help create engaging content that builds audience, drives engagement, and supports business goals.
+
+## Before Creating Content
+
+Gather this context (ask if not provided):
+
+### 1. Goals
+- What's the primary objective? (Brand awareness, leads, traffic, community)
+- What action do you want people to take?
+- Are you building personal brand, company brand, or both?
+
+### 2. Audience
+- Who are you trying to reach?
+- What platforms are they most active on?
+- What content do they engage with?
+- What problems do they have that you can address?
+
+### 3. Brand Voice
+- What's your tone? (Professional, casual, witty, authoritative)
+- Any topics to avoid?
+- Any specific terminology or style guidelines?
+
+### 4. Resources
+- How much time can you dedicate to social?
+- Do you have existing content to repurpose (blog posts, podcasts, videos)?
+- Can you create video content?
+- Do you have customer stories or data to share?
 
 ---
 
-## Table of Contents
+## Platform Strategy Guide
 
-- [Keywords](#keywords)
-- [Quick Start](#quick-start)
-- [Platform Reference Guide](#platform-reference-guide)
-- [Content Pillar System](#content-pillar-system)
-- [Hook Formula Library](#hook-formula-library)
-- [Platform-Specific Formats](#platform-specific-formats)
-- [Content Calendar Framework](#content-calendar-framework)
-- [Repurposing System](#repurposing-system)
-- [Engagement Strategy](#engagement-strategy)
-- [Analytics and Optimization](#analytics-and-optimization)
-- [Best Practices](#best-practices)
-- [Integration Points](#integration-points)
+### LinkedIn
+
+**Best for:** B2B, thought leadership, professional networking, recruiting
+**Audience:** Professionals, decision-makers, job seekers
+**Posting frequency:** 3-5x per week
+**Best times:** Tuesday-Thursday, 7-8am, 12pm, 5-6pm
+
+**What works:**
+- Personal stories with business lessons
+- Contrarian takes on industry topics
+- Behind-the-scenes of building a company
+- Data and original insights
+- Carousel posts (document format)
+- Polls that spark discussion
+
+**What doesn't:**
+- Overly promotional content
+- Generic motivational quotes
+- Links in the main post (kills reach)
+- Corporate speak without personality
+
+**Format tips:**
+- First line is everything (hook before "see more")
+- Use line breaks for readability
+- 1,200-1,500 characters performs well
+- Put links in comments, not post body
+- Tag people sparingly and genuinely
+
+### Twitter/X
+
+**Best for:** Tech, media, real-time commentary, community building
+**Audience:** Tech-savvy, news-oriented, niche communities
+**Posting frequency:** 3-10x per day (including replies)
+**Best times:** Varies by audience; test and measure
+
+**What works:**
+- Hot takes and opinions
+- Threads that teach something
+- Behind-the-scenes moments
+- Engaging with others' content
+- Memes and humor (if on-brand)
+- Real-time commentary on events
+
+**What doesn't:**
+- Pure self-promotion
+- Threads without a strong hook
+- Ignoring replies and mentions
+- Scheduling everything (no real-time presence)
+
+**Format tips:**
+- Tweets under 100 characters get more engagement
+- Threads: Hook in tweet 1, promise value, deliver
+- Quote tweets with added insight beat plain retweets
+- Use visuals to stop the scroll
+
+### Instagram
+
+**Best for:** Visual brands, lifestyle, e-commerce, younger demographics
+**Audience:** 18-44, visual-first consumers
+**Posting frequency:** 1-2 feed posts per day, 3-10 Stories per day
+**Best times:** 11am-1pm, 7-9pm
+
+**What works:**
+- High-quality visuals
+- Behind-the-scenes Stories
+- Reels (short-form video)
+- Carousels with value
+- User-generated content
+- Interactive Stories (polls, questions)
+
+**What doesn't:**
+- Low-quality images
+- Too much text in images
+- Ignoring Stories and Reels
+- Only promotional content
+
+**Format tips:**
+- Reels get 2x reach of static posts
+- First frame of Reels must hook
+- Carousels: 10 slides with educational content
+- Use all Story features (polls, links, etc.)
+
+### TikTok
+
+**Best for:** Brand awareness, younger audiences, viral potential
+**Audience:** 16-34, entertainment-focused
+**Posting frequency:** 1-4x per day
+**Best times:** 7-9am, 12-3pm, 7-11pm
+
+**What works:**
+- Native, unpolished content
+- Trending sounds and formats
+- Educational content in entertaining wrapper
+- POV and day-in-the-life content
+- Responding to comments with videos
+- Duets and stitches
+
+**What doesn't:**
+- Overly produced content
+- Ignoring trends
+- Hard selling
+- Repurposed horizontal video
+
+**Format tips:**
+- Hook in first 1-2 seconds
+- Keep it under 30 seconds to start
+- Vertical only (9:16)
+- Use trending sounds
+- Post consistently to train algorithm
+
+### Facebook
+
+**Best for:** Communities, local businesses, older demographics, groups
+**Audience:** 25-55+, community-oriented
+**Posting frequency:** 1-2x per day
+**Best times:** 1-4pm weekdays
+
+**What works:**
+- Facebook Groups (community)
+- Native video
+- Live video
+- Local content and events
+- Discussion-prompting questions
+
+**What doesn't:**
+- Links to external sites (reach killer)
+- Pure promotional content
+- Ignoring comments
+- Cross-posting from other platforms without adaptation
 
 ---
 
-## Keywords
+## Content Pillars Framework
 
-social content, social media, LinkedIn post, Twitter thread, Instagram carousel, TikTok content, social calendar, engagement strategy, content pillar, hook formulas, viral content, social scheduling, platform-specific content, social media strategy, content repurposing, social analytics, audience building, personal brand, company brand, social media optimization
+Build your content around 3-5 pillars that align with your expertise and audience interests.
 
----
+### Example for a SaaS Founder
 
-## Quick Start
+| Pillar | % of Content | Topics |
+|--------|--------------|--------|
+| Industry insights | 30% | Trends, data, predictions |
+| Behind-the-scenes | 25% | Building the company, lessons learned |
+| Educational | 25% | How-tos, frameworks, tips |
+| Personal | 15% | Stories, values, hot takes |
+| Promotional | 5% | Product updates, offers |
 
-### Create a Social Post
+### Pillar Development Questions
 
-1. Choose the platform and format
-2. Select a hook from the formula library
-3. Write the body following platform-specific guidelines
-4. Add a CTA aligned with your goal (engagement, traffic, conversion)
-5. Include relevant hashtags per platform best practices
-6. Schedule or post at optimal time for your audience
-
-### Build a Content Calendar
-
-1. Define 3-5 content pillars aligned with expertise and audience needs
-2. Assign percentage allocation to each pillar
-3. Map pillar topics to platform-specific formats
-4. Build a weekly template with assigned slots
-5. Batch create content (2-3 hours per week)
-6. Schedule with room for real-time/reactive posts
+For each pillar, ask:
+1. What unique perspective do you have?
+2. What questions does your audience ask?
+3. What content has performed well before?
+4. What can you create consistently?
+5. What aligns with business goals?
 
 ---
 
-## Platform Reference Guide
+## Post Formats & Templates
 
-### Platform Quick Comparison
+### LinkedIn Post Templates
 
-| Platform | Best For | Posting Frequency | Top Format | Audience |
-|----------|----------|------------------|-----------|----------|
-| LinkedIn | B2B, thought leadership | 3-5x/week | Carousels, text posts | Professionals, decision-makers |
-| Twitter/X | Tech, real-time, community | 3-10x/day | Threads, hot takes | Tech, media, creators |
-| Instagram | Visual brands, lifestyle, B2C | 1-2 posts + Stories daily | Reels, carousels | 18-44, visual-first audiences |
-| TikTok | Brand awareness, younger demos | 1-4x/day | Short-form video | 18-34, entertainment-first |
-| Facebook | Communities, local, older demos | 1-2x/day | Groups, native video | 30-65, community-oriented |
-| YouTube | Long-form education, tutorials | 1-4x/month | Videos, Shorts | All ages, search-driven |
+**The Story Post:**
+```
+[Hook: Unexpected outcome or lesson]
 
-### Platform-Specific Rules
+[Set the scene: When/where this happened]
 
-**LinkedIn:**
-- Maximum post length: 3,000 characters (but 1,200-1,800 performs best)
-- First 2-3 lines must hook (everything after "see more" is hidden)
-- External links in comments, not post body (algorithm deprioritizes link posts)
-- Carousels (PDF uploads) get highest organic reach
-- Best posting times: Tuesday-Thursday, 7-9 AM in target timezone
+[The challenge you faced]
 
-**Twitter/X:**
-- 280 characters per tweet, threads for longer content
-- First tweet of thread is the hook — it determines everything
-- Quote tweets with added insight outperform plain retweets
-- No more than 2-3 hashtags (fewer is better)
-- Best posting times: Monday-Friday, 8-10 AM and 12-1 PM
+[What you tried / what happened]
 
-**Instagram:**
-- Feed posts: square (1:1) or vertical (4:5)
-- Reels: vertical (9:16), 15-90 seconds
-- Carousels: up to 10 slides, first slide is the hook
-- Stories: 24-hour content, polls/questions drive engagement
-- Hashtags: 3-5 relevant ones (algorithm change in 2025 reduced hashtag importance)
+[The turning point]
 
-**TikTok:**
-- Video length: 15-60 seconds optimal (up to 10 minutes)
-- Hook in first 2 seconds (viewers decide instantly)
-- Captions: 80-100 characters
-- Native feel outperforms polished production
-- Trending sounds increase reach significantly
+[The result]
+
+[The lesson for readers]
+
+[Question to prompt engagement]
+```
+
+**The Contrarian Take:**
+```
+[Unpopular opinion stated boldly]
+
+Here's why:
+
+[Reason 1]
+[Reason 2]
+[Reason 3]
+
+[What you recommend instead]
+
+[Invite discussion: "Am I wrong?"]
+```
+
+**The List Post:**
+```
+[X things I learned about [topic] after [credibility builder]:
+
+1. [Point] — [Brief explanation]
+
+2. [Point] — [Brief explanation]
+
+3. [Point] — [Brief explanation]
+
+[Wrap-up insight]
+
+Which resonates most with you?
+```
+
+**The How-To:**
+```
+How to [achieve outcome] in [timeframe]:
+
+Step 1: [Action]
+↳ [Why this matters]
+
+Step 2: [Action]
+↳ [Key detail]
+
+Step 3: [Action]
+↳ [Common mistake to avoid]
+
+[Result you can expect]
+
+[CTA or question]
+```
+
+### Twitter/X Thread Templates
+
+**The Tutorial Thread:**
+```
+Tweet 1: [Hook + promise of value]
+
+"Here's exactly how to [outcome] (step-by-step):"
+
+Tweet 2-7: [One step per tweet with details]
+
+Final tweet: [Summary + CTA]
+
+"If this was helpful, follow me for more on [topic]"
+```
+
+**The Story Thread:**
+```
+Tweet 1: [Intriguing hook]
+
+"[Time] ago, [unexpected thing happened]. Here's the full story:"
+
+Tweet 2-6: [Story beats, building tension]
+
+Tweet 7: [Resolution and lesson]
+
+Final tweet: [Takeaway + engagement ask]
+```
+
+**The Breakdown Thread:**
+```
+Tweet 1: [Company/person] just [did thing].
+
+Here's why it's genius (and what you can learn):
+
+Tweet 2-6: [Analysis points]
+
+Tweet 7: [Your key takeaway]
+
+"[Related insight + follow CTA]"
+```
+
+### Instagram Caption Templates
+
+**The Carousel Hook:**
+```
+[Slide 1: Bold statement or question]
+[Slides 2-9: One point per slide, visual + text]
+[Slide 10: Summary + CTA]
+
+Caption: [Expand on the topic, add context, include CTA]
+```
+
+**The Reel Script:**
+```
+Hook (0-2 sec): [Pattern interrupt or bold claim]
+Setup (2-5 sec): [Context for the tip]
+Value (5-25 sec): [The actual advice/content]
+CTA (25-30 sec): [Follow, comment, share, link]
+```
 
 ---
 
-## Content Pillar System
+## Hook Formulas
 
-### Defining Your Pillars
-
-Choose 3-5 pillars that sit at the intersection of:
-- Your expertise (what you know deeply)
-- Audience interest (what they want to learn)
-- Business connection (what supports your goals)
-
-### Pillar Allocation Template
-
-| Pillar | % of Content | Purpose | Content Types |
-|--------|-------------|---------|---------------|
-| Industry insights | 30% | Build authority | Data, trends, predictions, analysis |
-| Educational | 25% | Provide value | How-tos, frameworks, tips, tutorials |
-| Behind-the-scenes | 20% | Build trust | Building stories, team, process, failures |
-| Personal/opinion | 15% | Build connection | Stories, values, contrarian takes, lessons |
-| Promotional | 10% | Drive business | Product updates, launches, offers, case studies |
-
-### Pillar-to-Platform Mapping
-
-| Pillar | LinkedIn | Twitter/X | Instagram | TikTok |
-|--------|----------|-----------|-----------|--------|
-| Industry insights | Data post, article share | Thread, commentary | Carousel infographic | Trend reaction video |
-| Educational | Carousel, text post | Thread, tip tweet | Carousel, Reel | Tutorial video |
-| Behind-the-scenes | Story post, company update | Tweet, photo | Stories, Reel | BTS video |
-| Personal/opinion | Text post, story | Hot take, quote | Quote graphic | Story time video |
-| Promotional | Case study, announcement | Launch tweet, thread | Product showcase | Demo video |
-
----
-
-## Hook Formula Library
+The first line determines whether anyone reads the rest. Use these patterns:
 
 ### Curiosity Hooks
-
-| Formula | Example |
-|---------|---------|
-| "I was wrong about [belief]." | "I was wrong about cold email." |
-| "The real reason [X] happens isn't what you think." | "The real reason your posts don't get engagement isn't the algorithm." |
-| "[Result] — and it only took [timeframe]." | "10,000 followers — and it only took 90 days." |
-| "Here's what nobody tells you about [topic]:" | "Here's what nobody tells you about startup marketing:" |
-| "I spent [time] studying [X]. Here's what I found:" | "I spent 6 months studying viral LinkedIn posts. Here's what I found:" |
+- "I was wrong about [common belief]."
+- "The real reason [outcome] happens isn't what you think."
+- "[Impressive result] — and it only took [surprisingly short time]."
+- "Nobody talks about [insider knowledge]."
 
 ### Story Hooks
-
-| Formula | Example |
-|---------|---------|
-| "Last week, [unexpected thing] happened." | "Last week, our biggest deal fell through." |
-| "3 years ago, I [past state]. Today, [current state]." | "3 years ago, I had 200 followers. Today, I have 50,000." |
-| "I almost [big mistake]." | "I almost turned down the best job of my career." |
-| "Someone asked me [question]. My answer surprised them." | "Someone asked me what the best marketing channel is. My answer surprised them." |
+- "Last week, [unexpected thing] happened."
+- "I almost [big mistake/failure]."
+- "3 years ago, I [past state]. Today, [current state]."
+- "[Person] told me something I'll never forget."
 
 ### Value Hooks
-
-| Formula | Example |
-|---------|---------|
-| "How to [outcome] (without [pain]):" | "How to grow on LinkedIn (without posting every day):" |
-| "[Number] [things] that [outcome]:" | "7 headline formulas that actually convert:" |
-| "Stop [mistake]. Do this instead:" | "Stop writing 'I'm excited to announce.' Do this instead:" |
-| "The [X] framework I use for [Y]:" | "The content framework I use for every LinkedIn post:" |
+- "How to [desirable outcome] (without [common pain]):"
+- "[Number] [things] that [outcome]:"
+- "The simplest way to [outcome]:"
+- "Stop [common mistake]. Do this instead:"
 
 ### Contrarian Hooks
+- "Unpopular opinion: [bold statement]"
+- "[Common advice] is wrong. Here's why:"
+- "I stopped [common practice] and [positive result]."
+- "Everyone says [X]. The truth is [Y]."
 
-| Formula | Example |
-|---------|---------|
-| "Unpopular opinion: [bold statement]" | "Unpopular opinion: SEO is dead for most startups." |
-| "[Common advice] is wrong. Here's why:" | "'Post every day on LinkedIn' is wrong. Here's why:" |
-| "Everyone is doing [X]. Almost everyone is wrong." | "Everyone is doing content marketing. Almost everyone is wrong." |
-
-### Data Hooks
-
-| Formula | Example |
-|---------|---------|
-| "I analyzed [X] [things]. Here's the data:" | "I analyzed 500 LinkedIn posts. Here's the data:" |
-| "[Surprising statistic]." | "93% of B2B buyers research online before talking to sales." |
-| "[X] vs [Y]: the numbers don't lie." | "Short posts vs. long posts: the numbers don't lie." |
+### Social Proof Hooks
+- "We [achieved result] in [timeframe]. Here's how:"
+- "[Number] people asked me about [topic]. Here's my answer:"
+- "[Authority figure] taught me [lesson]."
 
 ---
 
-## Platform-Specific Formats
+## Content Repurposing System
 
-### LinkedIn Post Formats
+Turn one piece of content into many:
 
-**Text Post (highest frequency):**
-```
-[Hook — first 2 lines must compel "see more" click]
+### Blog Post → Social Content
 
-[Body — 5-10 lines of content, short paragraphs]
+| Original | Platform | Format |
+|----------|----------|--------|
+| Blog post | LinkedIn | Key insight + link in comments |
+| Blog post | LinkedIn | Carousel of main points |
+| Blog post | Twitter/X | Thread of key takeaways |
+| Blog post | Twitter/X | Single tweet with hot take |
+| Blog post | Instagram | Carousel with visuals |
+| Blog post | Instagram | Reel summarizing the post |
 
-[One-line insight or lesson]
+### Podcast/Video → Social Content
 
-[CTA — question to drive comments]
-```
+| Original | Platform | Format |
+|----------|----------|--------|
+| Interview | LinkedIn | Quote graphic + insight |
+| Interview | Twitter/X | Thread of best quotes |
+| Interview | Instagram | Clip as Reel |
+| Interview | TikTok | Short clip with caption |
+| Interview | YouTube | Shorts from best moments |
 
-**Carousel (highest reach):**
-- Slide 1: Bold hook statement (title slide)
-- Slides 2-8: One point per slide, clear and visual
-- Final slide: Summary + CTA ("Follow for more," "Save this")
-- Upload as PDF for native carousel format
+### Repurposing Workflow
 
-**Poll (highest engagement):**
-- Use for genuine questions relevant to your audience
-- 3-4 options maximum
-- Add context in the post body explaining why the question matters
-- Follow up with a post sharing the results
-
-### Twitter/X Thread Format
-
-```
-Tweet 1: [HOOK — the tweet that determines if anyone reads further]
-
-Tweet 2: [Context or setup — why this matters]
-
-Tweet 3-7: [Main content — one point per tweet]
-
-Tweet 8: [Summary or key takeaway]
-
-Tweet 9: [CTA — "Follow me for more on [topic]" or "RT tweet 1 if helpful"]
-```
-
-**Thread rules:**
-- First tweet must stand alone as a complete thought
-- Each tweet should make sense independently
-- Use numbers ("1/9") for clarity
-- End with a CTA that drives engagement or follows
-- Quote-tweet your own first tweet to resurface the thread
-
-### Instagram Carousel Format
-
-- Slide 1: Bold statement or question (the hook)
-- Slides 2-8: One clear point per slide
-- Each slide has minimal text (30-50 words maximum)
-- Consistent visual template (brand colors, fonts)
-- Final slide: CTA ("Save this post," "Share with someone who needs this")
-
-### TikTok Video Structure
-
-```
-0-2 seconds: HOOK (text on screen + verbal hook)
-2-15 seconds: Core content (get to the point fast)
-15-45 seconds: Details and examples
-Final 5 seconds: CTA ("Follow for more" or "Comment your [X]")
-```
+1. **Create pillar content** (blog, video, podcast)
+2. **Extract key insights** (3-5 per piece)
+3. **Adapt to each platform** (format and tone)
+4. **Schedule across the week** (spread distribution)
+5. **Update and reshare** (evergreen content can repeat)
 
 ---
 
-## Content Calendar Framework
+## Content Calendar Structure
 
-### Weekly Calendar Template
+### Weekly Planning Template
 
 | Day | LinkedIn | Twitter/X | Instagram |
 |-----|----------|-----------|-----------|
 | Mon | Industry insight | Thread | Carousel |
-| Tue | Educational post | Tips tweet | Stories |
-| Wed | Behind-scenes | Engagement tweets | Reel |
-| Thu | Personal/opinion | Thread | Educational |
-| Fri | Promotional or story | Hot take | Stories |
+| Tue | Behind-scenes | Engagement | Story |
+| Wed | Educational | Tips tweet | Reel |
+| Thu | Story post | Thread | Educational |
+| Fri | Hot take | Engagement | Story |
+| Sat | — | Curated RT | User content |
+| Sun | — | Personal | Behind-scenes |
 
-### Batching Strategy (2-3 Hours Per Week)
+### Monthly Content Mix
 
-| Step | Time | Output |
-|------|------|--------|
-| Review pillar topics | 15 min | 5-7 topic ideas for the week |
-| Write LinkedIn posts | 45 min | 3-5 posts drafted |
-| Write Twitter content | 30 min | 2-3 threads + 5 standalone tweets |
-| Create Instagram content | 30 min | 2 carousels + 1 Reel concept |
-| Schedule everything | 15 min | All content scheduled |
-| Buffer for reactive content | 15 min | Slots left open for real-time posts |
+- Week 1: Launch/announce something (if applicable)
+- Week 2: Educational deep-dive
+- Week 3: Community/engagement focus
+- Week 4: Story/behind-the-scenes
 
-### Content Queue Management
+### Batching Strategy
 
-- Maintain 1-2 weeks of scheduled content at all times
-- Review queue weekly for relevance (cancel anything no longer timely)
-- Leave 2-3 open slots per week for reactive/trending content
-- Evergreen content can be reshared monthly with fresh framing
-- Adjust timing based on analytics data
-
----
-
-## Repurposing System
-
-### One Piece, Many Formats
-
-| Source Content | LinkedIn | Twitter/X | Instagram | TikTok |
-|---------------|----------|-----------|-----------|--------|
-| Blog post | Key insight post + link in comments | Thread of takeaways | Carousel of main points | Summary video |
-| Podcast episode | Quote post from guest | Quote tweet thread | Audiogram clip | Short clip |
-| Webinar | Carousel of key slides | Thread of lessons | Highlights Reel | Short tips video |
-| Customer case study | Story-format post | Results thread | Before/after carousel | Transformation video |
-| Original data | Data analysis post | Stats thread | Infographic carousel | Data reaction video |
-
-### Repurposing Workflow
-
-1. **Publish pillar content** (blog, video, podcast)
-2. **Extract 3-5 key insights** within 24 hours
-3. **Create platform-native derivatives** (not copy-paste — reformat)
-4. **Schedule across 1-2 weeks** after pillar publication
-5. **Cross-reference** — derivatives link back to pillar content
-6. **Track** which derivative formats drive the most engagement and traffic
+**Weekly batching (2-3 hours):**
+1. Review content pillar topics
+2. Write 5 LinkedIn posts
+3. Write 3 Twitter threads + daily tweets
+4. Create Instagram carousel + Reel ideas
+5. Schedule everything
+6. Leave room for real-time engagement
 
 ---
 
 ## Engagement Strategy
 
-### Daily Engagement Routine (30 Minutes)
+### Proactive Engagement
 
-| Task | Time | Purpose |
-|------|------|---------|
-| Respond to all comments on your posts | 5 min | Reward engagement, boost algorithmic reach |
-| Comment on 5-10 posts from target accounts | 15 min | Build relationships, increase visibility |
-| Share/repost with added insight | 5 min | Provide value, support network |
-| Send 2-3 DMs to new connections | 5 min | Build 1:1 relationships |
+Engagement isn't just responding—it's actively participating:
 
-### Quality Commenting Rules
+**Daily engagement routine (30 min):**
+1. Respond to all comments on your posts (5 min)
+2. Comment on 5-10 posts from target accounts (15 min)
+3. Share/repost with added insight (5 min)
+4. Send 2-3 DMs to new connections (5 min)
 
-What works:
-- Add a new insight the original post missed
-- Share a related experience or data point
+**Quality comments:**
+- Add new insight, not just "Great post!"
+- Share a related experience
 - Ask a thoughtful follow-up question
-- Respectfully disagree with nuance and reasoning
+- Respectfully disagree with nuance
 
-What fails:
-- "Great post!" (adds no value)
-- Emoji-only responses
-- Self-promotional comments unrelated to the post
-- Generic agreement without adding perspective
+### Building Relationships
 
-### Relationship Building Strategy
+- Identify 20-50 accounts in your space
+- Consistently engage with their content
+- Share their content with credit
+- Eventually collaborate (podcasts, co-created content)
 
-1. **Identify 20-50 accounts** in your space that your audience follows
-2. **Engage consistently** (comment on their content 3-5x/week)
-3. **Share their content** with added insight (not just retweet)
-4. **DM thoughtfully** (reference specific content, not generic pitches)
-5. **Collaborate** when relationship is established (co-create, guest post, podcast)
-6. **Reciprocate** — when they engage with your content, acknowledge it
+### Handling Negative Comments
+
+- Respond calmly and professionally
+- Don't get defensive
+- Take legitimate criticism offline
+- Block/mute trolls without engaging
+- Let community defend you when appropriate
 
 ---
 
-## Analytics and Optimization
+## Analytics & Optimization
 
 ### Metrics That Matter
 
-| Metric | What It Tells You | Target |
-|--------|-------------------|--------|
-| Engagement rate | Content resonance | 2-5% (LinkedIn), 1-3% (Twitter) |
-| Follower growth rate | Audience building momentum | 2-5% monthly |
-| Comments per post | Conversation quality | Higher value than likes |
-| Saves/bookmarks | Content utility | High saves = high value content |
-| Shares/reposts | Content amplification | Indicates strong resonance |
-| Profile visits | Curiosity driving | Growing = good brand building |
-| Link clicks | Traffic driving | Track with UTMs |
-| DMs received | Relationship building | Quality over quantity |
+**Awareness:**
+- Impressions
+- Reach
+- Follower growth rate
 
-### Weekly Review Process
+**Engagement:**
+- Engagement rate (engagements / impressions)
+- Comments (higher value than likes)
+- Shares/reposts
+- Saves (Instagram)
 
-| Step | What to Analyze | Action |
-|------|----------------|--------|
-| Top 3 posts | Why did they perform? (Hook? Topic? Format?) | Do more of what worked |
-| Bottom 3 posts | What went wrong? (Timing? Hook? Relevance?) | Adjust or avoid pattern |
-| Engagement patterns | Which days/times got most engagement? | Optimize posting schedule |
-| Follower quality | Are followers matching your ICP? | Adjust content if attracting wrong audience |
-| Content pillar performance | Which pillars drive most engagement? | Rebalance allocation |
+**Conversion:**
+- Link clicks
+- Profile visits
+- DMs received
+- Leads/conversions attributed
 
-### Optimization Levers
+### What to Track Weekly
 
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| Low engagement | Weak hooks | Test new hook formulas |
-| Declining reach | Algorithm change or fatigue | Try new formats, increase engagement activity |
-| High reach, low engagement | Content attracts but does not resonate | More specific, opinionated, or actionable content |
-| Followers not converting | Wrong audience | Adjust pillar mix toward more business-relevant content |
-| Engagement but no traffic | No CTAs or links | Add intentional CTAs and link in comments/bio |
+- [ ] Top 3 performing posts (why did they work?)
+- [ ] Bottom 3 posts (what can you learn?)
+- [ ] Follower growth trend
+- [ ] Engagement rate trend
+- [ ] Best posting times (from data)
+- [ ] Content pillar performance
 
----
+### Optimization Actions
 
-## Best Practices
+**If engagement is low:**
+- Test new hooks
+- Post at different times
+- Try different formats (carousel vs. text)
+- Increase native engagement with others
+- Check if content matches audience interest
 
-1. **Platform-native always** — Never post the same content on every platform. Adapt format, length, and tone for each.
-
-2. **Hook is everything** — If the first line does not stop the scroll, nothing else matters. Write the hook first.
-
-3. **Consistency beats virality** — Posting 3x/week for 12 months beats going viral once and disappearing. Show up regularly.
-
-4. **Engage more than you post** — Commenting on others' content builds relationships faster than your own posts. Aim for 3:1 engagement-to-posting ratio when starting.
-
-5. **80/20 value-to-promotion** — No more than 10-20% of content should be promotional. The rest should educate, entertain, or inspire.
-
-6. **Batch create, schedule ahead** — Context-switching between creating and distributing reduces quality. Batch write in 2-3 hour sessions.
-
-7. **Reshare evergreen content** — Your best posts can be reshared monthly with fresh framing. Most of your audience did not see it the first time.
-
-8. **Respond to every comment** — Responding within the first hour signals the algorithm that your content is generating conversation.
-
-9. **Focus on 1-2 platforms first** — Master one platform before expanding. Spreading across five platforms with a small team dilutes impact.
-
-10. **Track leading indicators** — Engagement rate and follower growth rate matter more than absolute follower count. A small, engaged audience beats a large, passive one.
+**If reach is declining:**
+- Avoid external links in post body
+- Increase posting frequency slightly
+- Engage more in comments
+- Test video/visual content
+- Check for algorithm changes
 
 ---
 
-## Integration Points
+## Platform-Specific Tips
 
-- **Content Strategy** — Use for deciding what topics to cover before creating social posts.
-- **Content Production** — Use when pillar content needs to be created before repurposing to social.
-- **Copywriting** — Use for long-form page copy. Social Content handles short-form platform-native posts.
-- **Copy Editing** — Use to polish high-stakes social content (campaign launches, announcements).
-- **Content Humanizer** — Use when AI-drafted social posts sound generic or robotic.
-- **Brand Guidelines** — Reference brand voice and visual standards for social content consistency.
-- **Marketing Context** — Use as foundation for audience, voice, and positioning alignment.
-- **Ad Creative** — Use for paid social ad copy. Social Content handles organic posts.
+### LinkedIn Algorithm Tips
 
----
+- First hour engagement matters most
+- Comments > reactions > clicks
+- Dwell time (people reading) signals quality
+- No external links in post body
+- Document posts (carousels) get strong reach
+- Polls drive engagement but don't build authority
 
-## Troubleshooting
+### Twitter/X Algorithm Tips
 
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| Low engagement despite posting | Weak hooks or wrong format | Test new hook formulas from the library. Try carousels or polls (highest engagement formats). |
-| Declining reach week-over-week | Algorithm fatigue or format monotony | Mix formats weekly. Instagram/LinkedIn deprioritize repetitive content patterns. |
-| High reach, low engagement | Content attracts but does not resonate | Make content more specific, opinionated, or actionable. Generic posts get impressions but no interaction. |
-| Followers growing but not converting | Wrong audience or no CTAs | Adjust pillar mix toward more business-relevant content. Add intentional CTAs. |
-| Hashtags not driving discovery (2026) | Instagram/LinkedIn reduced hashtag weight | Use 3-5 niche hashtags max. Shares and saves now outweigh hashtag reach on most platforms. |
-| Content feels stale | Not repurposing or only one content source | Use the repurposing system: one pillar piece becomes 5-10 social derivatives. |
-| Low comment-to-like ratio | Posts don't invite conversation | End posts with specific questions. Polls and hot takes drive 3-5x more comments. |
+- Replies and quote tweets build authority
+- Threads keep people on platform (rewarded)
+- Images and video get more reach
+- Engagement in first 30 min matters
+- Twitter Blue/Premium may boost reach
 
----
+### Instagram Algorithm Tips
 
-## Success Criteria
-
-- Engagement rate above platform average: 2-5% LinkedIn, 1-3% Twitter/X, 2-5% Instagram
-- Follower growth rate of 2-5% monthly (quality followers matching ICP)
-- Comments per post consistently higher than likes-only engagement
-- Content pillar mix: no more than 10-15% promotional content
-- 1-2 weeks of scheduled content maintained at all times
-- Daily engagement routine: 30 min/day responding and commenting on others' posts
-- Saves/bookmarks increasing month-over-month (indicates high-value content)
+- Reels heavily prioritized over static posts
+- Saves and shares > likes
+- Stories keep you top of feed
+- Consistency matters more than perfection
+- Use all features (polls, questions, etc.)
 
 ---
 
-## Scope & Limitations
+## Content Ideas by Situation
 
-**In Scope:** Organic social media content creation, platform-specific formatting, hook writing, content calendars, pillar systems, repurposing workflows, engagement tactics, analytics.
+### When You're Starting Out
 
-**Out of Scope:** Paid social ad copy (use ad-creative), social media account management tools, influencer outreach, community platform management (Discord, Slack), video production.
+- Document your journey
+- Share what you're learning
+- Curate and comment on industry content
+- Ask questions to your audience
+- Engage heavily with established accounts
+
+### When You're Established
+
+- Share original data and insights
+- Tell customer success stories
+- Take stronger positions
+- Create signature frameworks
+- Collaborate with peers
+
+### When You're Stuck
+
+- Repurpose old high-performing content
+- Ask your audience what they want
+- Comment on industry news
+- Share a failure or lesson learned
+- Interview someone and share insights
 
 ---
 
-## Python Automation Tools
+## Scheduling Best Practices
 
-### 1. Engagement Calculator (`scripts/engagement_calculator.py`)
-Calculates engagement rates by post and format, benchmarks against platform standards, identifies top performers.
+### When to Schedule vs. Post Live
 
-```bash
-python scripts/engagement_calculator.py posts.json
-python scripts/engagement_calculator.py --sample --json
+**Schedule:**
+- Core content posts
+- Threads
+- Carousels
+- Evergreen content
+
+**Post live:**
+- Real-time commentary
+- Responses to news/trends
+- Engagement with others
+- Anything requiring immediate interaction
+
+### Queue Management
+
+- Maintain 1-2 weeks of scheduled content
+- Review queue weekly for relevance
+- Leave gaps for spontaneous posts
+- Adjust timing based on performance data
+
+---
+
+## Reverse Engineering Viral Content
+
+Instead of guessing what works, systematically analyze top-performing content in your niche and extract proven patterns.
+
+### The 6-Step Framework
+
+#### 1. NICHE ID — Find Top Creators
+
+Identify 10-20 creators in your space who consistently get high engagement:
+
+**Selection criteria:**
+- Posting consistently (3+ times/week)
+- High engagement rate relative to follower count
+- Audience overlap with your target market
+- Mix of established and rising creators
+
+**Where to find them:**
+- LinkedIn: Search by industry keywords, check "People also viewed"
+- Twitter/X: Check who your target audience follows and engages with
+- Use tools like SparkToro, Followerwonk, or manual research
+- Look at who gets featured in industry newsletters
+
+#### 2. SCRAPE — Collect Posts at Scale
+
+Gather 500-1000+ posts from your identified creators for analysis:
+
+**Tools:**
+- **Apify** — LinkedIn scraper, Twitter scraper actors
+- **Phantom Buster** — Multi-platform automation
+- **Export tools** — Platform-specific export features
+- **Manual collection** — For smaller datasets, copy/paste into spreadsheet
+
+**Data to collect:**
+- Post text/content
+- Engagement metrics (likes, comments, shares, saves)
+- Post format (text-only, carousel, video, image)
+- Posting time/day
+- Hook/first line
+- CTA used
+- Topic/theme
+
+#### 3. ANALYZE — Extract What Actually Works
+
+Sort and analyze the data to find patterns:
+
+**Quantitative analysis:**
+- Rank posts by engagement rate
+- Identify top 10% performers
+- Look for format patterns (do carousels outperform?)
+- Check timing patterns (best days/times)
+- Compare topic performance
+
+**Qualitative analysis:**
+- What hooks do top posts use?
+- How long are high-performing posts?
+- What emotional triggers appear?
+- What formats repeat?
+- What topics consistently perform?
+
+**Questions to answer:**
+- What's the average length of top posts?
+- Which hook types appear most in top 10%?
+- What CTAs drive most comments?
+- What topics get saved/shared most?
+
+#### 4. PLAYBOOK — Codify Patterns
+
+Document repeatable patterns you can use:
+
+**Hook patterns to codify:**
+```
+Pattern: "I [unexpected action] and [surprising result]"
+Example: "I stopped posting daily and my engagement doubled"
+Why it works: Curiosity gap + contrarian
+
+Pattern: "[Specific number] [things] that [outcome]:"
+Example: "7 pricing mistakes that cost me $50K:"
+Why it works: Specificity + loss aversion
+
+Pattern: "[Controversial take]"
+Example: "Cold outreach is dead."
+Why it works: Pattern interrupt + invites debate
 ```
 
-### 2. Post Scheduler (`scripts/post_scheduler.py`)
-Generates optimal posting schedules with pillar allocation, format suggestions, and platform-specific timing.
+**Format patterns:**
+- Carousel: Hook slide → Problem → Solution steps → CTA
+- Thread: Hook → Promise → Deliver → Recap → CTA
+- Story post: Hook → Setup → Conflict → Resolution → Lesson
 
-```bash
-python scripts/post_scheduler.py --platform linkedin --posts-per-week 5
-python scripts/post_scheduler.py --platform instagram --posts-per-week 5 --json
+**CTA patterns:**
+- Question: "What would you add?"
+- Agreement: "Agree or disagree?"
+- Share: "Tag someone who needs this"
+- Save: "Save this for later"
+
+#### 5. LAYER VOICE — Apply Direct Response Principles
+
+Take proven patterns and make them yours with these voice principles:
+
+**"Smart friend who figured something out"**
+- Write like you're texting advice to a friend
+- Share discoveries, not lectures
+- Use "I found that..." not "You should..."
+- Be helpful, not preachy
+
+**Specific > Vague**
+```
+❌ "I made good revenue"
+✅ "I made $47,329"
+
+❌ "It took a while"
+✅ "It took 47 days"
+
+❌ "A lot of people"
+✅ "2,847 people"
 ```
 
-### 3. Hashtag Analyzer (`scripts/hashtag_analyzer.py`)
-Analyzes hashtag strategy for relevance, platform limits, and discovery potential. Flags overly broad tags.
+**Short. Breathe. Land.**
+- One idea per sentence
+- Use line breaks liberally
+- Let important points stand alone
+- Create rhythm: short, short, longer explanation
 
-```bash
-python scripts/hashtag_analyzer.py "#saas #b2bmarketing #growth"
-python scripts/hashtag_analyzer.py --file post.txt --platform instagram --json
 ```
+❌ "I spent three years building my business the wrong way before I finally realized that the key to success was focusing on fewer things and doing them exceptionally well."
+
+✅ "I built wrong for 3 years.
+
+Then I figured it out.
+
+Focus on less.
+Do it exceptionally well.
+
+Everything changed."
+```
+
+**Write from emotion**
+- Start with how you felt, not what you did
+- Use emotional words: frustrated, excited, terrified, obsessed
+- Show vulnerability when authentic
+- Connect the feeling to the lesson
+
+```
+❌ "Here's what I learned about pricing"
+
+✅ "I was terrified to raise my prices.
+
+My hands were shaking when I sent the email.
+
+Here's what happened..."
+```
+
+#### 6. CONVERT — Turn Attention into Action
+
+Bridge from engagement to business results:
+
+**Soft conversions:**
+- Newsletter signups in bio/comments
+- Free resource offers in follow-up comments
+- DM triggers ("Comment X and I'll send you...")
+- Profile visits → optimized profile with clear CTA
+
+**Direct conversions:**
+- Link in comments (not post body on LinkedIn)
+- Contextual product mentions within valuable content
+- Case study posts that naturally showcase your work
+- "If you want help with this, DM me" (sparingly)
+
+### Output: Proven Patterns + Right Voice = Performance
+
+The formula:
+```
+1. Find what's already working (don't guess)
+2. Extract the patterns (hooks, formats, CTAs)
+3. Layer your authentic voice on top
+4. Test and iterate based on your own data
+```
+
+### Reverse Engineering Checklist
+
+- [ ] Identified 10-20 top creators in niche
+- [ ] Collected 500+ posts for analysis
+- [ ] Ranked by engagement rate
+- [ ] Documented top 10 hook patterns
+- [ ] Documented top 5 format patterns
+- [ ] Documented top 5 CTA patterns
+- [ ] Created voice guidelines (specificity, brevity, emotion)
+- [ ] Built template library from patterns
+- [ ] Set up tracking for your own content performance
+
+---
+
+## Questions to Ask
+
+If you need more context:
+1. What platform(s) are you focusing on?
+2. What's your current posting frequency?
+3. Do you have existing content to repurpose?
+4. What content has performed well in the past?
+5. How much time can you dedicate weekly?
+6. Are you building personal brand, company brand, or both?
+
+---
+
+## Related Skills
+
+- **copywriting**: For longer-form content that feeds social
+- **launch-strategy**: For coordinating social with launches
+- **email-sequence**: For nurturing social audience via email
+- **marketing-psychology**: For understanding what drives engagement
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.

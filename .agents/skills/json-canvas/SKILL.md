@@ -1,21 +1,28 @@
 ---
 name: json-canvas
+category: document-processing
 description: Create and edit JSON Canvas files (.canvas) with nodes, edges, groups, and connections. Use when working with .canvas files, creating visual canvases, mind maps, flowcharts, or when the user mentions Canvas files in Obsidian.
-risk: unknown
-source: "https://github.com/kepano/obsidian-skills"
-date_added: "2026-03-21"
 ---
 
-# JSON Canvas Skill
+# JSON Canvas
 
-## When to Use
-- Use when creating or editing `.canvas` files for Obsidian.
-- Use for mind maps, flowcharts, visual note structures, or connected canvases.
-- Use when the user explicitly mentions JSON Canvas or Obsidian Canvas files.
+This skill enables Claude Code to create and edit valid JSON Canvas files (`.canvas`) used in Obsidian and other applications.
+
+## Overview
+
+JSON Canvas is an open file format for infinite canvas data. Canvas files use the `.canvas` extension and contain valid JSON following the JSON Canvas Spec 1.0.
+
+## When to Use This Skill
+
+- Creating or editing .canvas files in Obsidian
+- Building visual mind maps or flowcharts
+- Creating project boards or planning documents
+- Organizing notes visually with connections
+- Building diagrams with linked content
 
 ## File Structure
 
-A canvas file (`.canvas`) contains two top-level arrays following the [JSON Canvas Spec 1.0](https://jsoncanvas.org/spec/1.0/):
+A canvas file contains two top-level arrays:
 
 ```json
 {
@@ -27,80 +34,50 @@ A canvas file (`.canvas`) contains two top-level arrays following the [JSON Canv
 - `nodes` (optional): Array of node objects
 - `edges` (optional): Array of edge objects connecting nodes
 
-## Common Workflows
-
-### 1. Create a New Canvas
-
-1. Create a `.canvas` file with the base structure `{"nodes": [], "edges": []}`
-2. Generate unique 16-character hex IDs for each node (e.g., `"6f0ad84f44ce9c17"`)
-3. Add nodes with required fields: `id`, `type`, `x`, `y`, `width`, `height`
-4. Add edges referencing valid node IDs via `fromNode` and `toNode`
-5. **Validate**: Parse the JSON to confirm it is valid. Verify all `fromNode`/`toNode` values exist in the nodes array
-
-### 2. Add a Node to an Existing Canvas
-
-1. Read and parse the existing `.canvas` file
-2. Generate a unique ID that does not collide with existing node or edge IDs
-3. Choose position (`x`, `y`) that avoids overlapping existing nodes (leave 50-100px spacing)
-4. Append the new node object to the `nodes` array
-5. Optionally add edges connecting the new node to existing nodes
-6. **Validate**: Confirm all IDs are unique and all edge references resolve to existing nodes
-
-### 3. Connect Two Nodes
-
-1. Identify the source and target node IDs
-2. Generate a unique edge ID
-3. Set `fromNode` and `toNode` to the source and target IDs
-4. Optionally set `fromSide`/`toSide` (top, right, bottom, left) for anchor points
-5. Optionally set `label` for descriptive text on the edge
-6. Append the edge to the `edges` array
-7. **Validate**: Confirm both `fromNode` and `toNode` reference existing node IDs
-
-### 4. Edit an Existing Canvas
-
-1. Read and parse the `.canvas` file as JSON
-2. Locate the target node or edge by `id`
-3. Modify the desired attributes (text, position, color, etc.)
-4. Write the updated JSON back to the file
-5. **Validate**: Re-check all ID uniqueness and edge reference integrity after editing
-
 ## Nodes
 
-Nodes are objects placed on the canvas. Array order determines z-index: first node = bottom layer, last node = top layer.
+Nodes are objects placed on the canvas. There are four node types:
+- `text` - Text content with Markdown
+- `file` - Reference to files/attachments
+- `link` - External URL
+- `group` - Visual container for other nodes
+
+### Z-Index Ordering
+
+First node = bottom layer (displayed below others)
+Last node = top layer (displayed above others)
 
 ### Generic Node Attributes
 
 | Attribute | Required | Type | Description |
 |-----------|----------|------|-------------|
-| `id` | Yes | string | Unique 16-char hex identifier |
-| `type` | Yes | string | `text`, `file`, `link`, or `group` |
+| `id` | Yes | string | Unique identifier for the node |
+| `type` | Yes | string | Node type: `text`, `file`, `link`, or `group` |
 | `x` | Yes | integer | X position in pixels |
 | `y` | Yes | integer | Y position in pixels |
 | `width` | Yes | integer | Width in pixels |
 | `height` | Yes | integer | Height in pixels |
-| `color` | No | canvasColor | Preset `"1"`-`"6"` or hex (e.g., `"#FF0000"`) |
+| `color` | No | canvasColor | Node color (see Color section) |
 
 ### Text Nodes
 
-| Attribute | Required | Type | Description |
-|-----------|----------|------|-------------|
-| `text` | Yes | string | Plain text with Markdown syntax |
+Text nodes contain Markdown content.
 
 ```json
 {
-  "id": "6f0ad84f44ce9c17",
+  "id": "text1",
   "type": "text",
   "x": 0,
   "y": 0,
-  "width": 400,
-  "height": 200,
-  "text": "# Hello World\n\nThis is **Markdown** content."
+  "width": 300,
+  "height": 150,
+  "text": "# Heading\n\nThis is **markdown** content."
 }
 ```
 
-**Newline pitfall**: Use `\n` for line breaks in JSON strings. Do **not** use the literal `\\n` -- Obsidian renders that as the characters `\` and `n`.
-
 ### File Nodes
+
+File nodes reference files or attachments (images, videos, PDFs, notes, etc.)
 
 | Attribute | Required | Type | Description |
 |-----------|----------|------|-------------|
@@ -109,88 +86,121 @@ Nodes are objects placed on the canvas. Array order determines z-index: first no
 
 ```json
 {
-  "id": "a1b2c3d4e5f67890",
+  "id": "file1",
   "type": "file",
-  "x": 500,
+  "x": 350,
   "y": 0,
   "width": 400,
   "height": 300,
-  "file": "Attachments/diagram.png"
+  "file": "Notes/My Note.md",
+  "subpath": "#Heading"
 }
 ```
 
 ### Link Nodes
 
-| Attribute | Required | Type | Description |
-|-----------|----------|------|-------------|
-| `url` | Yes | string | External URL |
+Link nodes display external URLs.
 
 ```json
 {
-  "id": "c3d4e5f678901234",
+  "id": "link1",
   "type": "link",
-  "x": 1000,
-  "y": 0,
-  "width": 400,
-  "height": 200,
-  "url": "https://obsidian.md"
+  "x": 0,
+  "y": 200,
+  "width": 300,
+  "height": 150,
+  "url": "https://example.com"
 }
 ```
 
 ### Group Nodes
 
-Groups are visual containers for organizing other nodes. Position child nodes inside the group's bounds.
+Group nodes are visual containers for organizing other nodes.
 
 | Attribute | Required | Type | Description |
 |-----------|----------|------|-------------|
 | `label` | No | string | Text label for the group |
 | `background` | No | string | Path to background image |
-| `backgroundStyle` | No | string | `cover`, `ratio`, or `repeat` |
+| `backgroundStyle` | No | string | Background rendering style |
+
+#### Background Styles
+
+| Value | Description |
+|-------|-------------|
+| `cover` | Fills entire width and height of node |
+| `ratio` | Maintains aspect ratio of background image |
+| `repeat` | Repeats image as pattern in both directions |
 
 ```json
 {
-  "id": "d4e5f6789012345a",
+  "id": "group1",
   "type": "group",
   "x": -50,
   "y": -50,
-  "width": 1000,
-  "height": 600,
-  "label": "Project Overview",
+  "width": 800,
+  "height": 500,
+  "label": "Project Ideas",
   "color": "4"
 }
 ```
 
 ## Edges
 
-Edges connect nodes via `fromNode` and `toNode` IDs.
+Edges are lines connecting nodes.
 
 | Attribute | Required | Type | Default | Description |
 |-----------|----------|------|---------|-------------|
-| `id` | Yes | string | - | Unique identifier |
-| `fromNode` | Yes | string | - | Source node ID |
-| `fromSide` | No | string | - | `top`, `right`, `bottom`, or `left` |
-| `fromEnd` | No | string | `none` | `none` or `arrow` |
-| `toNode` | Yes | string | - | Target node ID |
-| `toSide` | No | string | - | `top`, `right`, `bottom`, or `left` |
-| `toEnd` | No | string | `arrow` | `none` or `arrow` |
+| `id` | Yes | string | - | Unique identifier for the edge |
+| `fromNode` | Yes | string | - | Node ID where connection starts |
+| `fromSide` | No | string | - | Side where edge starts |
+| `fromEnd` | No | string | `none` | Shape at edge start |
+| `toNode` | Yes | string | - | Node ID where connection ends |
+| `toSide` | No | string | - | Side where edge ends |
+| `toEnd` | No | string | `arrow` | Shape at edge end |
 | `color` | No | canvasColor | - | Line color |
-| `label` | No | string | - | Text label |
+| `label` | No | string | - | Text label for the edge |
+
+### Side Values
+
+| Value | Description |
+|-------|-------------|
+| `top` | Top edge of node |
+| `right` | Right edge of node |
+| `bottom` | Bottom edge of node |
+| `left` | Left edge of node |
+
+### End Shapes
+
+| Value | Description |
+|-------|-------------|
+| `none` | No endpoint shape |
+| `arrow` | Arrow endpoint |
 
 ```json
 {
-  "id": "0123456789abcdef",
-  "fromNode": "6f0ad84f44ce9c17",
+  "id": "edge1",
+  "fromNode": "text1",
   "fromSide": "right",
-  "toNode": "a1b2c3d4e5f67890",
+  "toNode": "file1",
   "toSide": "left",
   "toEnd": "arrow",
-  "label": "leads to"
+  "label": "references"
 }
 ```
 
 ## Colors
 
-The `canvasColor` type accepts either a hex string or a preset number:
+The `canvasColor` type supports both hex colors and preset options.
+
+### Hex Colors
+
+```json
+{
+  "color": "#FF0000"
+}
+```
+
+### Preset Colors
 
 | Preset | Color |
 |--------|-------|
@@ -201,23 +211,331 @@ The `canvasColor` type accepts either a hex string or a preset number:
 | `"5"` | Cyan |
 | `"6"` | Purple |
 
-Preset color values are intentionally undefined -- applications use their own brand colors.
+Specific color values for presets are intentionally undefined, allowing applications to use their own brand colors.
+
+## Complete Examples
+
+### Simple Canvas with Text and Connections
+
+```json
+{
+  "nodes": [
+    {
+      "id": "idea1",
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 250,
+      "height": 100,
+      "text": "# Main Idea\n\nCore concept goes here"
+    },
+    {
+      "id": "idea2",
+      "type": "text",
+      "x": 350,
+      "y": -50,
+      "width": 200,
+      "height": 80,
+      "text": "## Supporting Point 1\n\nDetails..."
+    },
+    {
+      "id": "idea3",
+      "type": "text",
+      "x": 350,
+      "y": 100,
+      "width": 200,
+      "height": 80,
+      "text": "## Supporting Point 2\n\nMore details..."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "idea1",
+      "fromSide": "right",
+      "toNode": "idea2",
+      "toSide": "left",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "e2",
+      "fromNode": "idea1",
+      "fromSide": "right",
+      "toNode": "idea3",
+      "toSide": "left",
+      "toEnd": "arrow"
+    }
+  ]
+}
+```
+
+### Project Board with Groups
+
+```json
+{
+  "nodes": [
+    {
+      "id": "todo-group",
+      "type": "group",
+      "x": 0,
+      "y": 0,
+      "width": 300,
+      "height": 400,
+      "label": "To Do",
+      "color": "1"
+    },
+    {
+      "id": "progress-group",
+      "type": "group",
+      "x": 350,
+      "y": 0,
+      "width": 300,
+      "height": 400,
+      "label": "In Progress",
+      "color": "3"
+    },
+    {
+      "id": "done-group",
+      "type": "group",
+      "x": 700,
+      "y": 0,
+      "width": 300,
+      "height": 400,
+      "label": "Done",
+      "color": "4"
+    },
+    {
+      "id": "task1",
+      "type": "text",
+      "x": 20,
+      "y": 50,
+      "width": 260,
+      "height": 80,
+      "text": "## Task 1\n\nDescription of first task"
+    },
+    {
+      "id": "task2",
+      "type": "text",
+      "x": 370,
+      "y": 50,
+      "width": 260,
+      "height": 80,
+      "text": "## Task 2\n\nCurrently working on this"
+    },
+    {
+      "id": "task3",
+      "type": "text",
+      "x": 720,
+      "y": 50,
+      "width": 260,
+      "height": 80,
+      "text": "## Task 3\n\n~~Completed task~~"
+    }
+  ],
+  "edges": []
+}
+```
+
+### Research Canvas with Files and Links
+
+```json
+{
+  "nodes": [
+    {
+      "id": "central",
+      "type": "text",
+      "x": 200,
+      "y": 200,
+      "width": 200,
+      "height": 100,
+      "text": "# Research Topic\n\nMain research question",
+      "color": "6"
+    },
+    {
+      "id": "notes1",
+      "type": "file",
+      "x": 0,
+      "y": 0,
+      "width": 180,
+      "height": 150,
+      "file": "Research/Literature Review.md"
+    },
+    {
+      "id": "notes2",
+      "type": "file",
+      "x": 450,
+      "y": 0,
+      "width": 180,
+      "height": 150,
+      "file": "Research/Methodology.md"
+    },
+    {
+      "id": "source1",
+      "type": "link",
+      "x": 0,
+      "y": 350,
+      "width": 180,
+      "height": 100,
+      "url": "https://scholar.google.com"
+    },
+    {
+      "id": "source2",
+      "type": "link",
+      "x": 450,
+      "y": 350,
+      "width": 180,
+      "height": 100,
+      "url": "https://arxiv.org"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "central",
+      "toNode": "notes1",
+      "toEnd": "arrow",
+      "label": "literature"
+    },
+    {
+      "id": "e2",
+      "fromNode": "central",
+      "toNode": "notes2",
+      "toEnd": "arrow",
+      "label": "methods"
+    },
+    {
+      "id": "e3",
+      "fromNode": "central",
+      "toNode": "source1",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "e4",
+      "fromNode": "central",
+      "toNode": "source2",
+      "toEnd": "arrow"
+    }
+  ]
+}
+```
+
+### Flowchart
+
+```json
+{
+  "nodes": [
+    {
+      "id": "start",
+      "type": "text",
+      "x": 100,
+      "y": 0,
+      "width": 150,
+      "height": 60,
+      "text": "**Start**",
+      "color": "4"
+    },
+    {
+      "id": "decision",
+      "type": "text",
+      "x": 75,
+      "y": 120,
+      "width": 200,
+      "height": 80,
+      "text": "## Decision\n\nIs condition true?",
+      "color": "3"
+    },
+    {
+      "id": "yes-path",
+      "type": "text",
+      "x": -100,
+      "y": 280,
+      "width": 150,
+      "height": 60,
+      "text": "**Yes Path**\n\nDo action A"
+    },
+    {
+      "id": "no-path",
+      "type": "text",
+      "x": 300,
+      "y": 280,
+      "width": 150,
+      "height": 60,
+      "text": "**No Path**\n\nDo action B"
+    },
+    {
+      "id": "end",
+      "type": "text",
+      "x": 100,
+      "y": 420,
+      "width": 150,
+      "height": 60,
+      "text": "**End**",
+      "color": "1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "start",
+      "fromSide": "bottom",
+      "toNode": "decision",
+      "toSide": "top",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "e2",
+      "fromNode": "decision",
+      "fromSide": "left",
+      "toNode": "yes-path",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "Yes"
+    },
+    {
+      "id": "e3",
+      "fromNode": "decision",
+      "fromSide": "right",
+      "toNode": "no-path",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "No"
+    },
+    {
+      "id": "e4",
+      "fromNode": "yes-path",
+      "fromSide": "bottom",
+      "toNode": "end",
+      "toSide": "left",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "e5",
+      "fromNode": "no-path",
+      "fromSide": "bottom",
+      "toNode": "end",
+      "toSide": "right",
+      "toEnd": "arrow"
+    }
+  ]
+}
+```
 
 ## ID Generation
 
-Generate 16-character lowercase hexadecimal strings (64-bit random value):
+Node and edge IDs must be unique strings. Obsidian generates 16-character hexadecimal IDs.
 
-```
-"6f0ad84f44ce9c17"
-"a3b2c1d0e9f8a7b6"
-```
+Example format: `a1b2c3d4e5f67890`
 
 ## Layout Guidelines
 
+### Positioning
+
 - Coordinates can be negative (canvas extends infinitely)
-- `x` increases right, `y` increases down; position is the top-left corner
-- Space nodes 50-100px apart; leave 20-50px padding inside groups
-- Align to grid (multiples of 10 or 20) for cleaner layouts
+- `x` increases to the right
+- `y` increases downward
+- Position refers to top-left corner of node
+
+### Recommended Sizes
 
 | Node Type | Suggested Width | Suggested Height |
 |-----------|-----------------|------------------|
@@ -226,32 +544,26 @@ Generate 16-character lowercase hexadecimal strings (64-bit random value):
 | Large text | 400-600 | 300-500 |
 | File preview | 300-500 | 200-400 |
 | Link preview | 250-400 | 100-200 |
+| Group | Varies | Varies |
 
-## Validation Checklist
+### Spacing
 
-After creating or editing a canvas file, verify:
+- Leave 20-50px padding inside groups
+- Space nodes 50-100px apart for readability
+- Align nodes to grid (multiples of 10 or 20) for cleaner layouts
 
-1. All `id` values are unique across both nodes and edges
-2. Every `fromNode` and `toNode` references an existing node ID
-3. Required fields are present for each node type (`text` for text nodes, `file` for file nodes, `url` for link nodes)
-4. `type` is one of: `text`, `file`, `link`, `group`
-5. `fromSide`/`toSide` values are one of: `top`, `right`, `bottom`, `left`
-6. `fromEnd`/`toEnd` values are one of: `none`, `arrow`
-7. Color presets are `"1"` through `"6"` or valid hex (e.g., `"#FF0000"`)
-8. JSON is valid and parseable
+## Validation Rules
 
-If validation fails, check for duplicate IDs, dangling edge references, or malformed JSON strings (especially unescaped newlines in text content).
-
-## Complete Examples
-
-See [references/EXAMPLES.md](references/EXAMPLES.md) for full canvas examples including mind maps, project boards, research canvases, and flowcharts.
+1. All `id` values must be unique across nodes and edges
+2. `fromNode` and `toNode` must reference existing node IDs
+3. Required fields must be present for each node type
+4. `type` must be one of: `text`, `file`, `link`, `group`
+5. `backgroundStyle` must be one of: `cover`, `ratio`, `repeat`
+6. `fromSide`, `toSide` must be one of: `top`, `right`, `bottom`, `left`
+7. `fromEnd`, `toEnd` must be one of: `none`, `arrow`
+8. Color presets must be `"1"` through `"6"` or valid hex color
 
 ## References
 
 - [JSON Canvas Spec 1.0](https://jsoncanvas.org/spec/1.0/)
 - [JSON Canvas GitHub](https://github.com/obsidianmd/jsoncanvas)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

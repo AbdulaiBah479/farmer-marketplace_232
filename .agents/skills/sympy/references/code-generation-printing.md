@@ -202,10 +202,7 @@ sstr(expr)  # 'sin(x)**2'
 
 # Reproducible representation
 srepr(expr)  # "Pow(sin(Symbol('x')), Integer(2))"
-
-# Reconstruct from srepr via sympify (supported round-trip pattern)
-from sympy import sympify
-restored = sympify(srepr(expr))
+# This can be eval()'ed to recreate the expression
 ```
 
 ### Custom Printing
@@ -339,46 +336,26 @@ def plot_expr(a):
 
 ## Converting Between Representations
 
-### Parsing untrusted input
-
-**Security warning:** `parse_expr()` uses `eval` internally and must not be called on unsanitized user input. See the [SymPy parsing docs](https://docs.sympy.org/latest/modules/parsing.html). Prefer building expressions from typed values (`symbols()`, `Integer()`, operators) or a validated grammar. Never use Python `eval()` on `srepr()` output or parsed strings.
-
-For trusted/local strings only, use restricted parsing:
-
-```python
-from sympy.parsing.sympy_parser import parse_expr, standard_transformations
-from sympy import symbols
-
-x, y = symbols('x y')
-local_dict = {'x': x, 'y': y}
-
-# Restrict to standard_transformations only (no 'all' or implicit multiplication)
-expr = parse_expr('x**2 + 2*x + 1', local_dict=local_dict,
-                  transformations=standard_transformations)
-```
-
-If you must accept interactive input, validate first: limit length, allow only math characters, and reject strings containing `__`, `import`, `=`, or assignment syntax.
-
 ### String to SymPy
 
 ```python
-from sympy.parsing.sympy_parser import parse_expr, standard_transformations
+from sympy.parsing.sympy_parser import parse_expr
 from sympy import symbols
 
 x, y = symbols('x y')
-local_dict = {'x': x, 'y': y}
 
-# Parse trusted string literals (not raw user input)
-expr = parse_expr('x**2 + 2*x + 1', local_dict=local_dict,
-                  transformations=standard_transformations)
-expr = parse_expr('sin(x) + cos(y)', local_dict=local_dict,
-                  transformations=standard_transformations)
+# Parse string to expression
+expr = parse_expr('x**2 + 2*x + 1')
+expr = parse_expr('sin(x) + cos(y)')
 
-# Implicit multiplication — trusted input only
-from sympy.parsing.sympy_parser import implicit_multiplication_application
+# With transformations
+from sympy.parsing.sympy_parser import (
+    standard_transformations,
+    implicit_multiplication_application
+)
 
 transformations = standard_transformations + (implicit_multiplication_application,)
-expr = parse_expr('2x', local_dict={'x': x}, transformations=transformations)
+expr = parse_expr('2x', transformations=transformations)  # Treats '2x' as 2*x
 ```
 
 ### LaTeX to SymPy
@@ -540,29 +517,23 @@ with open('document.tex', 'w') as f:
     f.write(latex_doc)
 ```
 
-### Pattern 3: Interactive Computation (trusted input only)
+### Pattern 3: Interactive Computation
 
 ```python
-import re
-from sympy import symbols, simplify, expand, latex
-from sympy.parsing.sympy_parser import parse_expr, standard_transformations
+from sympy import symbols, simplify, expand
+from sympy.parsing.sympy_parser import parse_expr
 
 x, y = symbols('x y')
-local_dict = {'x': x, 'y': y}
 
-def parse_trusted_expr(s: str):
-    """Validate and parse a restricted math expression."""
-    if len(s) > 200 or re.search(r'__|import|=|\(', s):
-        raise ValueError("Invalid expression")
-    return parse_expr(s, local_dict=local_dict,
-                      transformations=standard_transformations)
+# Interactive input
+user_input = input("Enter expression: ")
+expr = parse_expr(user_input)
 
-# Trusted local example (do not pass raw user input without validation)
-expr = parse_trusted_expr('x**2 + 2*x + 1')
-
+# Process
 simplified = simplify(expr)
 expanded = expand(expr)
 
+# Display
 print(f"Simplified: {simplified}")
 print(f"Expanded: {expanded}")
 print(f"LaTeX: {latex(expr)}")
@@ -623,6 +594,6 @@ print(f"result = {reduced[0]}")
 
 5. **Compilation:** `autowrap` and `ufuncify` require a C/Fortran compiler and may need configuration on your system.
 
-6. **Parsing security:** `parse_expr()` calls `eval` internally — never use it on unsanitized input. Use `local_dict` with pre-defined symbols, restrict to `standard_transformations`, validate input (length, charset, reject `__` and assignment syntax), and reconstruct expressions with `sympify(srepr(expr))` instead of `eval()`. See [SymPy parsing docs](https://docs.sympy.org/latest/modules/parsing.html).
+6. **Parsing:** When parsing user input, validate and sanitize to avoid code injection vulnerabilities.
 
 7. **Jupyter:** For best results in Jupyter notebooks, call `init_printing()` at the start of your session.

@@ -318,17 +318,17 @@ indexer_client.create_or_update_indexer(indexer)
 
 ## Additional Azure AI Search Patterns
 
-### Additional SDK Focus
+# Azure AI Search Python SDK
 
 Write clean, idiomatic Python code for Azure AI Search using `azure-search-documents`.
 
-## Installation for Additional Patterns
+## Installation
 
 ```bash
 pip install azure-search-documents azure-identity
 ```
 
-## Environment Variables for Additional Patterns
+## Environment Variables
 
 ```bash
 AZURE_SEARCH_ENDPOINT=https://<search-service>.search.windows.net
@@ -337,7 +337,7 @@ AZURE_SEARCH_INDEX_NAME=<index-name>
 AZURE_SEARCH_API_KEY=<api-key>
 ```
 
-## Authentication for Additional Patterns
+## Authentication
 
 **DefaultAzureCredential (preferred)**:
 ```python
@@ -488,7 +488,7 @@ async with SearchClient(endpoint, index_name, credential) as client:
         print(result["title"])
 ```
 
-## Best Practices for Additional Patterns
+## Best Practices
 
 1. **Use environment variables** for endpoints, keys, and deployment names
 2. **Prefer `DefaultAzureCredential`** over API keys for production
@@ -529,8 +529,3 @@ except HttpResponseError as e:
 
 ## When to Use
 This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

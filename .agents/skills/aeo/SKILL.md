@@ -1,241 +1,214 @@
 ---
 name: aeo
-description: >
-  Answer Engine Optimization (AEO): optimize content to be cited by LLMs
-  (ChatGPT, Claude, Perplexity, Gemini, Copilot) when they answer user
-  questions. Use when designing content strategy for the LLM-citation era,
-  auditing existing content for LLM citability, structuring Q&A schema for
-  AI surfaces, tracking which content gets cited and where, or measuring
-  AEO performance against competitors. Distinct from our `ai-seo` skill —
-  that one is about ranking in AI search results (Perplexity, Google AI
-  Overviews); this one is about being the source LLMs cite in their answers.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: marketing
-  domain: marketing
-  updated: 2026-05-27
-  tags: [aeo, answer-engine-optimization, llm-citation, generative-search, ai-content, schema-qa, geo, llm-seo]
+description: "Answer Engine Optimization (AEO) skill — optimize content to be cited by AI language models (ChatGPT, Perplexity, Claude, Gemini, Mistral) as authoritative sources. Distinct from SEO — AEO optimizes for citation in LLM-generated responses, not search rankings. Use when planning content for AI-first search audiences, auditing existing content for E-E-A-T signals, tracking which pages get cited by which LLMs, or building a citation-friendly content strategy. Triggers — 'AEO audit', 'optimize for ChatGPT', 'get cited by Perplexity', 'LLM citation strategy', 'answer engine optimization', 'content for AI search', 'E-E-A-T audit'. Output is a markdown audit report (default) or JSON for pipeline integration. Stdlib-only Python tools."
 ---
 
 # Answer Engine Optimization (AEO)
 
-End-to-end practice of optimizing content to be cited by LLMs when they generate answers. Covers the technical foundations (how LLMs select sources), content structuring patterns (Q&A schema, citation-worthy patterns), measurement (which content gets cited, by which LLM, how often), and the strategic positioning that differentiates AEO from traditional SEO and from AI-SEO.
+**Get your content cited by ChatGPT, Perplexity, Claude, Gemini, and Mistral as the authoritative source.**
 
-This skill is provider-aware but provider-agnostic: works for content optimized for ChatGPT, Claude, Perplexity, Gemini, Copilot, and emerging AI surfaces.
+AEO is the practice of optimizing content for **citation** in LLM-generated responses — distinct from SEO, which optimizes for search rankings. This skill audits, optimizes, and tracks AEO performance.
 
----
+## Distinct From SEO
 
-## When to use this skill
+| | SEO | AEO |
+|---|---|---|
+| **Optimizes for** | Click-through rankings | Being cited as authoritative source |
+| **Audience** | Humans browsing search results | LLMs answering questions |
+| **Success metric** | Position 1-10, organic traffic | Citation count across LLMs |
+| **Key signals** | Backlinks, keywords, page speed | E-E-A-T, structured data, factual density |
+| **Update cadence** | Weeks-to-months | Days-to-weeks (LLM training cycles) |
 
-| Situation | Skill applies |
-|-----------|---------------|
-| Designing content strategy that targets LLM citation | Yes — start with **AEO fundamentals** |
-| Auditing existing content for LLM citability | Yes — `scripts/aeo_content_auditor.py` |
-| Adding Q&A schema to content | Yes — `scripts/schema_qa_generator.py` |
-| Tracking which content gets cited by LLMs | Yes — `scripts/citation_extractor.py` |
-| Choosing between AEO and traditional SEO investment | Yes — see **AEO vs SEO vs AI-SEO** |
-| Ranking in Perplexity / Google AI Overviews | Use `marketing/ai-seo` |
-| Traditional SEO (rank in Google search results) | Use `marketing/seo-specialist` |
+Both can coexist — the same content can rank #1 on Google AND get cited by Perplexity. But the techniques differ: SEO rewards keyword density + backlinks; AEO rewards primary-source signals + structured facts.
 
----
+## When To Use
 
-## AEO vs SEO vs AI-SEO
+- Planning a new content piece for an AI-first audience
+- Auditing existing content for E-E-A-T gaps before AI Overview rollout
+- Tracking which pages get cited by which LLM (citation ledger)
+- Researching what queries LLMs cite sources for (vs. what they answer from training)
+- Benchmarking against competitors' citation rates
+- Building a long-term AEO strategy aligned with traditional SEO
 
-Three distinct (but overlapping) practices. Confusing them leads to wasted investment.
+## When NOT To Use
 
-| Practice | Optimizes for | Surface | Success metric |
-|----------|---------------|---------|----------------|
-| **Traditional SEO** | Google / Bing rankings | SERPs (organic blue links) | Position, clicks |
-| **AI-SEO** | AI search engines | Perplexity, Google AI Overviews, You.com | Position in AI search results, traffic from citations |
-| **AEO (this skill)** | LLM citation in answers | ChatGPT, Claude, Gemini, Copilot answers | Citation rate, brand mention in LLM outputs |
+- Pure click-through SEO without LLM-citation intent — use `marketing-skill/skills/seo-audit` instead
+- Brand-voice content with no factual claims — citations require facts to cite
+- Content for a topic where LLMs already have strong training signal (e.g., elementary math) — citation upside is minimal
+- Time-sensitive content (breaking news) — LLM training lag means citations come months later
 
-### Strategic positioning
+## Core Capabilities
 
-For most B2B brands:
-- **Traditional SEO**: still 50-70% of organic traffic. Don't abandon.
-- **AI-SEO**: emerging 10-20% of search-driven engagement. Growing fast.
-- **AEO**: 5-15% of LLM-mediated user discovery. Largest growth potential.
+### 1. Content audit + E-E-A-T scoring
 
-Optimize content for all three simultaneously; the techniques substantially overlap.
+The auditor (`aeo_audit.py`) scores content across 4 dimensions:
 
----
+- **Experience**: First-person evidence, dated examples, case studies, "We ran X in 2026" claims
+- **Expertise**: Author bio, credentials, citations to peer-reviewed sources, technical depth
+- **Authoritativeness**: External backlinks from authority domains, schema.org markup, structured data
+- **Trustworthiness**: HTTPS, contact info, transparent corrections, factual density (number of verifiable claims per 1000 words)
 
-## The AEO funnel
+Composite score 0-100 with per-dimension breakdown. Output: markdown report with specific fix recommendations.
 
-Users find brands through LLMs in a different funnel than search:
+### 2. Content optimization
+
+The optimizer (`aeo_optimizer.py`) generates AEO-improved variants:
+
+- **Structure rewrite** — H2/H3 hierarchy optimized for LLM parsing
+- **Citation density boost** — adds `[1]`-style references with sources
+- **Schema injection** — generates JSON-LD for FAQ, HowTo, Article schemas
+- **Fact-first lede** — moves verifiable claims into the first 200 words
+
+Three modes: `conservative` (touch <10% of words), `balanced` (touch <30%), `aggressive` (rewrite for maximum AEO).
+
+### 3. Citation tracking
+
+The tracker (`citation_tracker.py`) maintains a local ledger of citations:
+
+- Manual entry: paste a citation found in ChatGPT/Perplexity/Claude/Gemini output
+- Track which URL, which LLM, which query, what date
+- Compute per-page citation count, citation velocity, LLM coverage
+- Export to CSV for reporting
+
+Stores in `~/.aeo-data/citations.json` (local, no telemetry).
+
+## Workflow
 
 ```
-Traditional search:           AEO funnel:
-1. User types query           1. User asks LLM a question
-2. SERPs show ~10 results     2. LLM generates answer
-3. User clicks one            3. LLM cites N sources (1-10)
-4. User reads page            4. User reads answer; may click cited source
-5. User converts              5. User attributes answer to LLM (less so to cited brand)
+1. Audit existing content
+   $ python3 scripts/aeo_audit.py --url https://example.com/blog/post
+   → markdown report with composite score + 4-dimension breakdown
+
+2. Apply optimization recommendations
+   $ python3 scripts/aeo_optimizer.py --input post.md --mode balanced --output post-aeo.md
+   → optimized variant with citations + schema + structural fixes
+
+3. Publish + monitor
+   $ python3 scripts/citation_tracker.py --action add --url https://example.com/blog/post \
+       --llm perplexity --query "what is AEO" --date 2026-05-17
+   → adds entry to local citations.json ledger
+
+4. Report
+   $ python3 scripts/citation_tracker.py --action report --url https://example.com/blog/post
+   → per-page citation stats: count, LLMs, queries, velocity
 ```
 
-Key implications:
-- **Citation is the new click.** When LLM cites your content, you don't always get a visit — but you get attribution.
-- **Brand-as-source becomes the goal.** Even without click, being cited builds brand association.
-- **Quality > volume.** LLMs cite a small number of sources; quality of citation matters more than ranking position.
-- **Trust signals matter more.** LLMs avoid citing low-authority sources.
+## Configuration
 
-See [references/aeo-fundamentals.md](references/aeo-fundamentals.md) for the deep mechanics of how LLMs select sources, the citation models per provider, and the trust signals that drive selection.
+The skill is industry-aware via per-run `--industry` flag. Supported: `saas`, `healthcare`, `finance`, `legal`, `ecommerce`, `b2b`, `media`, `education`.
 
----
+Industry affects:
+- **Authority signal requirements** — healthcare/finance need stricter source citations
+- **Fact-checking rigor** — legal/healthcare flag unverifiable claims as critical
+- **Citation style** — academic vs. trade-journal vs. blog conventions
 
-## The 5 content patterns that get cited
-
-After analysis of LLM citation behavior, five content patterns dominate:
-
-### Pattern 1: Definitional content with clear claims
-
-LLMs cite sources for definitions, facts, and short claims. Pages that answer "What is X?" with a clean 2-3 sentence definition followed by elaboration get cited often.
-
-**Structure:**
-```
-[Term] is [crisp definition in 1-2 sentences].
-
-[Elaboration with context and nuance — 1-3 paragraphs].
-
-[Related concepts / scope / boundaries — optional].
+Example:
+```bash
+python3 scripts/aeo_audit.py --url <url> --industry healthcare
+# → stricter E-E-A-T thresholds; flags any health claim without primary citation
 ```
 
-### Pattern 2: Comparative tables
+## Output Format
 
-LLMs use tables to extract comparisons. Markdown tables in published content (or HTML equivalents) get cited when users ask "X vs Y."
+### Markdown audit report (default)
 
 ```markdown
-| Feature | Product A | Product B |
-|---------|-----------|-----------|
-| Price | $X | $Y |
-| Speed | Z ms | W ms |
-| Support | 24/7 | Business hours |
+# AEO Audit Report — [Page Title]
+
+**URL:** https://example.com/blog/post
+**Date:** 2026-05-17
+**Industry:** saas
+**Composite Score:** 72/100 (B+)
+
+## Dimension Breakdown
+
+| Dimension | Score | Verdict |
+|---|---|---|
+| Experience | 80/100 | Strong — first-person case study present |
+| Expertise | 65/100 | Author bio missing credentials |
+| Authoritativeness | 75/100 | 4 backlinks from authority domains |
+| Trustworthiness | 68/100 | No corrections policy linked |
+
+## Top 3 Fixes
+
+1. Add author bio with credentials (Expertise +15)
+2. Link to corrections policy from footer (Trustworthiness +12)
+3. Inject FAQ schema for the 5 questions implicit in H2s (Authoritativeness +8)
+
+## All Recommendations
+[...]
+
+## Audit Trail
+[3-count of analysis steps, sources cited, time taken]
 ```
 
-### Pattern 3: Step-by-step procedural content
+### JSON for pipelines
 
-"How to [task]" content with explicit numbered steps. LLMs reproduce procedural steps; the cited source becomes the authoritative reference.
+```bash
+python3 scripts/aeo_audit.py --url <url> --output json
+```
 
-### Pattern 4: Statistics + data with sources
+Returns full structured data for integration with content management workflows.
 
-LLMs cite content that provides numerical facts with attribution. "According to [your study], X% of [thing] does Y" is repeatable and citable.
+## Industry-Specific E-E-A-T Thresholds
 
-### Pattern 5: Lists with explanations
+| Industry | Min Composite | Critical Signals |
+|---|---|---|
+| Healthcare | 85 | Medical reviewer byline, peer-reviewed citations, FDA disclosure |
+| Finance | 85 | Author CFA/CPA credentials, "not investment advice" disclaimer, dated examples |
+| Legal | 85 | Jurisdiction disclosed, attorney bio, "not legal advice" disclaimer |
+| SaaS | 70 | Product manager byline, case study with metrics, ROI calculator |
+| E-commerce | 65 | Product reviews aggregated, return policy, schema.org Product |
+| B2B | 70 | Industry analyst quotes, customer logos, ROI data |
+| Media | 70 | Editorial policy, fact-check link, original reporting |
+| Education | 75 | Instructor bio, learning outcomes, accreditation if applicable |
 
-"Top N approaches to X" with each item explained gets cited when users ask comparative or enumeration questions.
+## Anti-Patterns Rejected
 
-See [references/llm-content-structuring.md](references/llm-content-structuring.md) for deep patterns including FAQ schema, citation hooks, voice-search optimization, and LLM-readable structure markers.
+- **Keyword stuffing for AI** — LLMs already extract topic from semantics; keyword density doesn't boost citation likelihood
+- **Pure AI-generated content with no human review** — generic LLM output gets de-prioritized by RAG retrieval algorithms looking for distinctive signal
+- **Citation farms / link wheels** — modern LLM RAG penalizes low-authority linked networks
+- **Schema spam** — false or unverifiable schema.org claims get filtered; only mark up real, verifiable claims
+- **Optimizing for one LLM at expense of others** — citation distributions are highly correlated across major LLMs because they share training data sources; optimize for the shared signals (E-E-A-T) not per-LLM hacks
+- **Ignoring SEO entirely** — AEO citations often originate from sources that already rank well organically; AEO and SEO are complements, not substitutes
 
----
+## Dependencies
 
-## Quick start
+- **stdlib-only** for all 3 scripts — no `pip install` required
+- **Optional**: `requests` + `beautifulsoup4` if `--url` mode used (otherwise pass markdown via `--input` for file-based audits)
+- **Optional**: any LLM API key for `query_research` mode (currently scaffold-only — full LLM-driven query research is roadmap)
 
-1. **Audit existing content**: `python3 scripts/aeo_content_auditor.py --path ./content`
-2. **Add Q&A schema to high-value pages**: `python3 scripts/schema_qa_generator.py --content article.md`
-3. **Track citations from competitors**: `python3 scripts/citation_extractor.py --query "What is X?" --brand "Your Brand"`
-4. **Iterate**: monthly content review with AEO scoring
+## Storage
 
----
+All data is local-first:
+- `~/.aeo-data/citations.json` — citation ledger
+- `~/.aeo-data/patterns.json` — success patterns library
+- `~/.aeo-data/audits/<hash>.md` — saved audit reports
 
-## End-to-end workflows
+No telemetry. No cloud sync. Export to CSV anytime via `citation_tracker.py --action export`.
 
-### Workflow: AEO content strategy from scratch
+## Trigger Phrases
 
-1. **Identify target queries** — what questions do potential customers ask LLMs about your category?
-2. **Audit competitor citations** — which brands get cited for those queries? `scripts/citation_extractor.py`
-3. **Audit your existing content** — score current content for AEO patterns: `scripts/aeo_content_auditor.py`
-4. **Prioritize 10-20 high-value pages** — those that should be the canonical source
-5. **Restructure per AEO patterns** — definitional content, tables, step-by-step, statistics
-6. **Add structured data** — `scripts/schema_qa_generator.py` generates FAQ schema
-7. **Build authority signals** — backlinks, citations, mentions
-8. **Monitor monthly** — track citation rate trend
+- "AEO audit", "AEO check"
+- "optimize for ChatGPT / Perplexity / Claude / Gemini"
+- "get cited by [LLM]"
+- "LLM citation strategy"
+- "answer engine optimization"
+- "content for AI search"
+- "E-E-A-T audit"
+- "track AI citations"
+- "schema for AI"
 
-### Workflow: Audit individual content piece
+## Related Skills
 
-1. Run `scripts/aeo_content_auditor.py --path article.md --format markdown`
-2. Review per-pattern scoring (5 patterns above)
-3. Identify gaps: missing definition, no table, no clear steps, no stats, no list
-4. Restructure to add 2-3 missing patterns
-5. Add FAQ schema with `scripts/schema_qa_generator.py`
-6. Re-audit to confirm improvements
-
-### Workflow: Competitive citation analysis
-
-1. Identify 10-20 key queries in your category
-2. Query each LLM (ChatGPT, Claude, Perplexity, Gemini) with those questions
-3. Record citations + brands mentioned
-4. Analyze: which brands dominate? what content do they have?
-5. Identify white-space queries (no clear dominant source yet)
-6. Prioritize content creation for white-space queries
-
-### Workflow: Measure AEO performance
-
-1. **Citation rate**: % of queries where your brand is cited (target: 30%+ for category leaders)
-2. **Brand mention rate**: % of queries where your brand is mentioned (cited or not)
-3. **Source quality**: are you cited as primary source or supporting?
-4. **Click-through from citations**: traffic attributable to LLM citations (requires source tracking)
-5. **Voice tracking**: how is your brand characterized (positive / neutral / negative attributes)
-
-See [references/citation-tracking-and-measurement.md](references/citation-tracking-and-measurement.md) for measurement methodologies, attribution challenges, and competitive benchmarking.
-
----
-
-## Common AEO failures
-
-- **Optimizing only for Google SERP**: misses the LLM citation surface entirely
-- **Generic content without specific claims**: LLMs prefer specific, factual content over generic explanation
-- **No structure markers** (headings, lists, tables): LLMs can't extract specific information
-- **No FAQ schema**: missed opportunity for Q&A surfacing in AI Overviews
-- **Stuffed keyword content**: LLMs prefer natural language with clear meaning
-- **No authority signals**: LLMs avoid citing low-trust sources
-- **Outdated content**: LLMs prefer recent, current content
-- **Hidden behind paywalls**: LLMs can't cite what they can't access
-- **No structured data**: missed opportunity for richer extraction
-- **Brand-first content**: LLMs prefer informational content over promotional
+- `marketing-skill/skills/seo-audit` — traditional click-through SEO
+- `marketing-skill/skills/programmatic-seo` — template-driven SEO at scale
+- `marketing-skill/skills/content-strategy` — broader content planning
+- `marketing-skill/skills/copywriting` — voice + tone
+- `marketing-skill/skills/schema-markup` — structured data implementation
 
 ---
 
-## LLM-by-LLM citation behavior
-
-Different LLMs have different citation behaviors:
-
-| LLM | Citation style | What gets cited |
-|-----|----------------|-----------------|
-| ChatGPT | Inline citations (when web-enabled); fewer otherwise | Recent, authoritative sources |
-| Claude | Citations when grounding enabled (tools); generally avoids unsupported claims | High-quality sources, evidence-based |
-| Perplexity | Always cites sources prominently | Recent + authoritative sources |
-| Google Gemini / AI Overviews | Cites in AI Overviews + Gemini responses | High-ranking pages + structured data |
-| Copilot (Microsoft) | Cites sources prominently | Sources varied |
-| Meta AI | Lighter citation | Limited transparency |
-
-Optimize content with structure markers (headings, lists, tables) and authority signals (links, citations, expert attribution) — works across all of these.
-
----
-
-## Tooling
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/aeo_content_auditor.py` | Score content for AEO patterns (definition, table, steps, stats, list, structure markers) |
-| `scripts/citation_extractor.py` | Parse LLM responses (saved transcripts) for brand citations + competitive analysis |
-| `scripts/schema_qa_generator.py` | Generate JSON-LD FAQ schema from content (FAQPage / QAPage / HowTo) |
-
----
-
-## References
-
-- [aeo-fundamentals.md](references/aeo-fundamentals.md) — how LLMs select sources; citation mechanisms per provider; trust signals
-- [llm-content-structuring.md](references/llm-content-structuring.md) — content patterns; Q&A schema; voice-search; structure markers
-- [citation-tracking-and-measurement.md](references/citation-tracking-and-measurement.md) — measurement methodologies; attribution; benchmarking
-
----
-
-## Related skills
-
-- `marketing/ai-seo` — AI search engine ranking (Perplexity, Google AI Overviews); complementary to AEO
-- `marketing/seo-specialist` — traditional SEO (Google rankings); foundational; still 50-70% of organic
-- `marketing/seo-audit` — technical SEO audit
-- `marketing/programmatic-seo` — scaled content production with SEO patterns
-- `c-level-advisor/cs-cmo-advisor` — strategic AEO investment decisions
+**Version:** 2.7.3
+**Source:** Ported from [`alirezarezvani/aeo-box`](https://github.com/alirezarezvani/aeo-box) (`answer-engine-optimization/` skill, 2,464 LOC across 9 modules). This port distills the 9-module Python toolkit into 3 stdlib CLI tools per the claude-skills convention; preserves the E-E-A-T scoring methodology, citation-tracking schema, and industry-aware thresholds verbatim.
+**License:** MIT (matches upstream + this repo).

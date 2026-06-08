@@ -1,398 +1,409 @@
 #!/usr/bin/env python3
 """
-Dockerfile Analyzer - Analyze Dockerfiles for best practices, security, and optimization.
+docker-development: Dockerfile Analyzer
 
-Scans Dockerfiles for common issues including layer optimization, security
-misconfigurations, base image recommendations, and cache efficiency.
+Static analysis of Dockerfiles for optimization opportunities, anti-patterns,
+and security issues. Reports layer count, base image analysis, and actionable
+recommendations.
 
-Author: Claude Skills Engineering Team
-License: MIT
+Usage:
+    python scripts/dockerfile_analyzer.py Dockerfile
+    python scripts/dockerfile_analyzer.py Dockerfile --output json
+    python scripts/dockerfile_analyzer.py Dockerfile --security
 """
 
 import argparse
 import json
 import re
 import sys
-from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import List, Optional, Dict, Any
 
 
-@dataclass
-class Finding:
-    """A single analysis finding."""
-    severity: str  # critical, warning, info
-    category: str  # security, optimization, best-practice
-    line: int
-    instruction: str
-    message: str
-    recommendation: str
+# --- Analysis Rules ---
+
+ANTI_PATTERNS = [
+    {
+        "id": "AP001",
+        "name": "latest_tag",
+        "severity": "high",
+        "pattern": r"^FROM\s+\S+:latest",
+        "message": "Using :latest tag — pin to a specific version for reproducibility",
+        "fix": "Use a specific tag like :3.12-slim or pin by digest",
+    },
+    {
+        "id": "AP002",
+        "name": "no_tag",
+        "severity": "high",
+        "pattern": r"^FROM\s+([a-z][a-z0-9_.-]+)\s*$",
+        "message": "No tag specified on base image — defaults to :latest",
+        "fix": "Add a specific version tag",
+    },
+    {
+        "id": "AP003",
+        "name": "run_apt_no_clean",
+        "severity": "medium",
+        "pattern": r"^RUN\s+.*apt-get\s+install(?!.*rm\s+-rf\s+/var/lib/apt/lists)",
+        "message": "apt-get install without cleanup in same layer — bloats image",
+        "fix": "Add && rm -rf /var/lib/apt/lists/* in the same RUN instruction",
+    },
+    {
+        "id": "AP004",
+        "name": "run_apk_no_cache",
+        "severity": "medium",
+        "pattern": r"^RUN\s+.*apk\s+add(?!\s+--no-cache)",
+        "message": "apk add without --no-cache — retains package index",
+        "fix": "Use: apk add --no-cache <packages>",
+    },
+    {
+        "id": "AP005",
+        "name": "add_instead_of_copy",
+        "severity": "low",
+        "pattern": r"^ADD\s+(?!https?://)\S+",
+        "message": "Using ADD for local files — COPY is more explicit and predictable",
+        "fix": "Use COPY instead of ADD unless you need tar auto-extraction or URL fetching",
+    },
+    {
+        "id": "AP006",
+        "name": "multiple_cmd",
+        "severity": "medium",
+        "pattern": None,  # Custom check
+        "message": "Multiple CMD instructions — only the last one takes effect",
+        "fix": "Keep exactly one CMD instruction",
+    },
+    {
+        "id": "AP007",
+        "name": "env_secrets",
+        "severity": "critical",
+        "pattern": r"^(?:ENV|ARG)\s+\S*(?:PASSWORD|SECRET|TOKEN|KEY|API_KEY)\s*=",
+        "message": "Secrets in ENV/ARG — baked into image layers and visible in history",
+        "fix": "Use BuildKit secrets: RUN --mount=type=secret,id=mytoken",
+    },
+    {
+        "id": "AP008",
+        "name": "broad_copy",
+        "severity": "medium",
+        "pattern": r"^COPY\s+\.\s+\.",
+        "message": "COPY . . copies everything — may include secrets, git history, node_modules",
+        "fix": "Use .dockerignore and copy specific directories, or copy after dependency install",
+    },
+    {
+        "id": "AP009",
+        "name": "no_user",
+        "severity": "critical",
+        "pattern": None,  # Custom check
+        "message": "No USER instruction — container runs as root",
+        "fix": "Add USER nonroot or create a dedicated user",
+    },
+    {
+        "id": "AP010",
+        "name": "pip_no_cache",
+        "severity": "low",
+        "pattern": r"^RUN\s+.*pip\s+install(?!\s+--no-cache-dir)",
+        "message": "pip install without --no-cache-dir — retains pip cache in layer",
+        "fix": "Use: pip install --no-cache-dir -r requirements.txt",
+    },
+    {
+        "id": "AP011",
+        "name": "npm_install_dev",
+        "severity": "medium",
+        "pattern": r"^RUN\s+.*npm\s+install\s*$",
+        "message": "npm install includes devDependencies — use npm ci --omit=dev for production",
+        "fix": "Use: npm ci --omit=dev (or npm ci --production)",
+    },
+    {
+        "id": "AP012",
+        "name": "expose_all",
+        "severity": "low",
+        "pattern": r"^EXPOSE\s+\d+(?:\s+\d+){3,}",
+        "message": "Exposing many ports — only expose what the application actually needs",
+        "fix": "Remove unnecessary EXPOSE directives",
+    },
+    {
+        "id": "AP013",
+        "name": "curl_wget_without_cleanup",
+        "severity": "low",
+        "pattern": r"^RUN\s+.*(?:curl|wget)\s+.*(?!&&\s*rm)",
+        "message": "Download without cleanup — downloaded archives may remain in layer",
+        "fix": "Download, extract, and remove archive in the same RUN instruction",
+    },
+    {
+        "id": "AP014",
+        "name": "no_healthcheck",
+        "severity": "medium",
+        "pattern": None,  # Custom check
+        "message": "No HEALTHCHECK instruction — orchestrators can't determine container health",
+        "fix": "Add HEALTHCHECK CMD curl -f http://localhost:PORT/health || exit 1",
+    },
+    {
+        "id": "AP015",
+        "name": "shell_form_cmd",
+        "severity": "low",
+        "pattern": r'^(?:CMD|ENTRYPOINT)\s+(?!\[)["\']?\w',
+        "message": "Using shell form for CMD/ENTRYPOINT — exec form is preferred for signal handling",
+        "fix": 'Use exec form: CMD ["executable", "arg1", "arg2"]',
+    },
+]
+
+# Approximate base image sizes (MB)
+BASE_IMAGE_SIZES = {
+    "scratch": 0,
+    "alpine": 7,
+    "distroless/static": 2,
+    "distroless/base": 20,
+    "distroless/cc": 25,
+    "debian-slim": 80,
+    "debian": 120,
+    "ubuntu": 78,
+    "python-slim": 130,
+    "python-alpine": 50,
+    "python": 900,
+    "node-alpine": 130,
+    "node-slim": 200,
+    "node": 1000,
+    "golang-alpine": 250,
+    "golang": 800,
+    "rust-slim": 750,
+    "rust": 1400,
+    "nginx-alpine": 40,
+    "nginx": 140,
+}
 
 
-@dataclass
-class StageInfo:
-    """Information about a build stage."""
-    name: Optional[str]
-    base_image: str
-    line: int
-    instruction_count: int
-    run_count: int
-    copy_count: int
+# --- Demo Dockerfile ---
+
+DEMO_DOCKERFILE = """FROM python:3.12
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+ENV SECRET_KEY=mysecretkey123
+EXPOSE 8000 5432 6379
+CMD python manage.py runserver 0.0.0.0:8000
+"""
 
 
-class DockerfileAnalyzer:
-    """Analyzes Dockerfiles for best practices and issues."""
+def parse_dockerfile(content):
+    """Parse Dockerfile into structured instructions."""
+    instructions = []
+    current = ""
 
-    LARGE_BASE_IMAGES = {
-        "ubuntu", "debian", "centos", "fedora", "node", "python",
-        "ruby", "golang", "java", "openjdk", "php",
-    }
-
-    SLIM_ALTERNATIVES = {
-        "ubuntu": "ubuntu:22.04 (pin version) or use debian-slim",
-        "debian": "debian:bookworm-slim",
-        "node": "node:<version>-alpine or node:<version>-slim",
-        "python": "python:<version>-slim or python:<version>-alpine",
-        "ruby": "ruby:<version>-slim or ruby:<version>-alpine",
-        "golang": "golang:<version>-alpine (or multi-stage with scratch)",
-        "java": "eclipse-temurin:<version>-jre-alpine",
-        "openjdk": "eclipse-temurin:<version>-jre-alpine",
-        "php": "php:<version>-alpine",
-    }
-
-    SENSITIVE_PATTERNS = [
-        (r"(?i)(password|passwd|secret|token|api_key|apikey)\s*=", "Potential secret in ENV or ARG"),
-        (r"COPY.*\.(env|pem|key|crt|p12|pfx)", "Sensitive file copied into image"),
-        (r"curl.*\|.*sh", "Piping curl to shell is risky"),
-        (r"wget.*\|.*sh", "Piping wget to shell is risky"),
-    ]
-
-    def __init__(self, content: str, security_only: bool = False):
-        self.content = content
-        self.lines = content.strip().split("\n")
-        self.findings: List[Finding] = []
-        self.stages: List[StageInfo] = []
-        self.security_only = security_only
-        self._parse_stages()
-
-    def _parse_stages(self):
-        """Parse multi-stage build information."""
-        current_stage = None
-        for i, line in enumerate(self.lines, 1):
-            stripped = line.strip()
-            if stripped.startswith("#") or not stripped:
-                continue
-            upper = stripped.upper()
-            if upper.startswith("FROM "):
-                parts = stripped.split()
-                image = parts[1] if len(parts) > 1 else "unknown"
-                name = None
-                if "AS" in [p.upper() for p in parts]:
-                    as_idx = next(j for j, p in enumerate(parts) if p.upper() == "AS")
-                    if as_idx + 1 < len(parts):
-                        name = parts[as_idx + 1]
-                if current_stage:
-                    self.stages.append(current_stage)
-                current_stage = StageInfo(
-                    name=name, base_image=image, line=i,
-                    instruction_count=0, run_count=0, copy_count=0,
-                )
-            elif current_stage:
-                current_stage.instruction_count += 1
-                if upper.startswith("RUN "):
-                    current_stage.run_count += 1
-                elif upper.startswith("COPY "):
-                    current_stage.copy_count += 1
-        if current_stage:
-            self.stages.append(current_stage)
-
-    def analyze(self) -> List[Finding]:
-        """Run all analysis checks."""
-        self._check_base_images()
-        self._check_security()
-        self._check_layer_optimization()
-        self._check_cache_efficiency()
-        self._check_best_practices()
-        return self.findings
-
-    def _check_base_images(self):
-        """Check base image selections."""
-        for stage in self.stages:
-            image = stage.base_image
-            tag = ""
-            if ":" in image:
-                name, tag = image.rsplit(":", 1)
-            else:
-                name = image
-                tag = "latest"
-
-            if tag == "latest" or ":" not in stage.base_image:
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="best-practice",
-                    line=stage.line,
-                    instruction=f"FROM {stage.base_image}",
-                    message="Using 'latest' tag or no tag is non-deterministic.",
-                    recommendation="Pin to a specific version tag for reproducible builds.",
-                ))
-
-            base_name = name.split("/")[-1]
-            if base_name in self.LARGE_BASE_IMAGES and "slim" not in tag and "alpine" not in tag:
-                alt = self.SLIM_ALTERNATIVES.get(base_name, "a slim or alpine variant")
-                if not self.security_only:
-                    self.findings.append(Finding(
-                        severity="info",
-                        category="optimization",
-                        line=stage.line,
-                        instruction=f"FROM {stage.base_image}",
-                        message=f"Base image '{base_name}' may be larger than necessary.",
-                        recommendation=f"Consider using {alt} to reduce image size.",
-                    ))
-
-    def _check_security(self):
-        """Check for security issues."""
-        has_user = False
-        has_healthcheck = False
-
-        for i, line in enumerate(self.lines, 1):
-            stripped = line.strip()
-            if stripped.startswith("#") or not stripped:
-                continue
-            upper = stripped.upper()
-
-            if upper.startswith("USER ") and not upper.startswith("USER ROOT"):
-                has_user = True
-
-            if upper.startswith("HEALTHCHECK "):
-                has_healthcheck = True
-
-            # Check for sensitive patterns
-            for pattern, msg in self.SENSITIVE_PATTERNS:
-                if re.search(pattern, stripped):
-                    self.findings.append(Finding(
-                        severity="critical",
-                        category="security",
-                        line=i,
-                        instruction=stripped[:80],
-                        message=msg,
-                        recommendation="Use Docker secrets, build args, or runtime environment variables instead.",
-                    ))
-
-            # Check for ADD with URL (prefer COPY or curl)
-            if upper.startswith("ADD ") and ("http://" in stripped or "https://" in stripped):
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="security",
-                    line=i,
-                    instruction=stripped[:80],
-                    message="ADD with URL is less transparent than COPY + curl.",
-                    recommendation="Use RUN curl/wget to download, then COPY. This provides better caching and verification.",
-                ))
-
-            # Check for privileged apt-get
-            if "apt-get" in stripped and "--no-install-recommends" not in stripped and "install" in stripped:
-                if not self.security_only:
-                    self.findings.append(Finding(
-                        severity="info",
-                        category="optimization",
-                        line=i,
-                        instruction=stripped[:80],
-                        message="apt-get install without --no-install-recommends installs extra packages.",
-                        recommendation="Add --no-install-recommends to reduce image size.",
-                    ))
-
-        if not has_user:
-            self.findings.append(Finding(
-                severity="critical",
-                category="security",
-                line=0,
-                instruction="(global)",
-                message="No USER instruction found. Container will run as root.",
-                recommendation="Add 'RUN addgroup -S app && adduser -S app -G app' and 'USER app' before CMD/ENTRYPOINT.",
-            ))
-
-        if not has_healthcheck and not self.security_only:
-            self.findings.append(Finding(
-                severity="info",
-                category="best-practice",
-                line=0,
-                instruction="(global)",
-                message="No HEALTHCHECK instruction found.",
-                recommendation="Add HEALTHCHECK to enable container orchestrators to monitor health.",
-            ))
-
-    def _check_layer_optimization(self):
-        """Check for layer optimization opportunities."""
-        if self.security_only:
-            return
-
-        consecutive_runs = []
-        current_run_streak = 0
-        streak_start = 0
-
-        for i, line in enumerate(self.lines, 1):
-            stripped = line.strip()
-            if stripped.startswith("#") or not stripped:
-                continue
-            if stripped.upper().startswith("RUN "):
-                if current_run_streak == 0:
-                    streak_start = i
-                current_run_streak += 1
-            else:
-                if current_run_streak >= 3:
-                    consecutive_runs.append((streak_start, current_run_streak))
-                current_run_streak = 0
-
-        if current_run_streak >= 3:
-            consecutive_runs.append((streak_start, current_run_streak))
-
-        for start, count in consecutive_runs:
-            self.findings.append(Finding(
-                severity="warning",
-                category="optimization",
-                line=start,
-                instruction=f"{count} consecutive RUN instructions",
-                message=f"{count} consecutive RUN instructions create unnecessary layers.",
-                recommendation="Combine into a single RUN with && to reduce layer count.",
-            ))
-
-    def _check_cache_efficiency(self):
-        """Check for cache-busting patterns."""
-        if self.security_only:
-            return
-
-        copy_all_line = 0
-        run_install_after = False
-
-        for i, line in enumerate(self.lines, 1):
-            stripped = line.strip()
-            if stripped.startswith("#") or not stripped:
-                continue
-            upper = stripped.upper()
-
-            if upper.startswith("COPY . ") or upper.startswith("COPY ./ "):
-                copy_all_line = i
-
-            if copy_all_line and upper.startswith("RUN "):
-                if any(cmd in stripped for cmd in ["pip install", "npm install", "yarn install", "go mod download", "bundle install"]):
-                    run_install_after = True
-
-        if copy_all_line and run_install_after:
-            self.findings.append(Finding(
-                severity="warning",
-                category="optimization",
-                line=copy_all_line,
-                instruction="COPY . (followed by dependency install)",
-                message="Copying all files before installing dependencies breaks Docker cache.",
-                recommendation="Copy dependency files first (requirements.txt, package.json), install, then copy the rest.",
-            ))
-
-    def _check_best_practices(self):
-        """Check general best practices."""
-        if self.security_only:
-            return
-
-        has_dockerignore = Path(".dockerignore").exists()
-        if not has_dockerignore:
-            self.findings.append(Finding(
-                severity="info",
-                category="best-practice",
-                line=0,
-                instruction="(project)",
-                message="No .dockerignore file found in current directory.",
-                recommendation="Create a .dockerignore to exclude .git, node_modules, __pycache__, etc.",
-            ))
-
-        if len(self.stages) == 1 and self.stages[0].run_count > 5:
-            self.findings.append(Finding(
-                severity="info",
-                category="optimization",
-                line=1,
-                instruction="(global)",
-                message="Single-stage build with many instructions. Consider multi-stage builds.",
-                recommendation="Use a builder stage for compilation and a minimal runtime stage.",
-            ))
-
-
-def format_text(findings: List[Finding], stages: List[StageInfo]) -> str:
-    """Format results as human-readable text."""
-    lines = []
-    lines.append("=" * 60)
-    lines.append("DOCKERFILE ANALYSIS REPORT")
-    lines.append("=" * 60)
-
-    # Stage summary
-    lines.append(f"\nBuild Stages: {len(stages)}")
-    for s in stages:
-        name = s.name or "(unnamed)"
-        lines.append(f"  Stage '{name}': {s.base_image} ({s.instruction_count} instructions)")
-
-    # Findings by severity
-    critical = [f for f in findings if f.severity == "critical"]
-    warnings = [f for f in findings if f.severity == "warning"]
-    info = [f for f in findings if f.severity == "info"]
-
-    lines.append(f"\nFindings: {len(critical)} critical, {len(warnings)} warnings, {len(info)} info")
-    lines.append("-" * 60)
-
-    for severity, group in [("CRITICAL", critical), ("WARNING", warnings), ("INFO", info)]:
-        if not group:
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
             continue
-        lines.append(f"\n[{severity}]")
-        for f in group:
-            loc = f"line {f.line}" if f.line > 0 else "global"
-            lines.append(f"  [{f.category}] {loc}: {f.message}")
-            lines.append(f"    Instruction: {f.instruction}")
-            lines.append(f"    Fix: {f.recommendation}")
-            lines.append("")
+        if stripped.endswith("\\"):
+            current += stripped[:-1] + " "
+            continue
+        current += stripped
+        # Parse instruction
+        match = re.match(r"^(\w+)\s+(.*)", current.strip())
+        if match:
+            instructions.append({
+                "instruction": match.group(1).upper(),
+                "args": match.group(2),
+                "raw": current.strip(),
+            })
+        current = ""
+
+    return instructions
+
+
+def analyze_layers(instructions):
+    """Count and classify layers."""
+    layer_instructions = {"FROM", "RUN", "COPY", "ADD"}
+    layers = [i for i in instructions if i["instruction"] in layer_instructions]
+    stages = [i for i in instructions if i["instruction"] == "FROM"]
+    return {
+        "total_layers": len(layers),
+        "stages": len(stages),
+        "is_multistage": len(stages) > 1,
+        "run_count": sum(1 for i in instructions if i["instruction"] == "RUN"),
+        "copy_count": sum(1 for i in instructions if i["instruction"] == "COPY"),
+        "add_count": sum(1 for i in instructions if i["instruction"] == "ADD"),
+    }
+
+
+def analyze_base_image(instructions):
+    """Analyze base image choice."""
+    from_instructions = [i for i in instructions if i["instruction"] == "FROM"]
+    if not from_instructions:
+        return {"image": "unknown", "tag": "unknown", "estimated_size_mb": 0}
+
+    last_from = from_instructions[-1]["args"].split()[0]
+    parts = last_from.split(":")
+    image = parts[0]
+    tag = parts[1] if len(parts) > 1 else "latest"
+
+    # Estimate size
+    size = 0
+    image_base = image.split("/")[-1]
+    for key, val in BASE_IMAGE_SIZES.items():
+        if key in f"{image_base}-{tag}" or key == image_base:
+            size = val
+            break
+
+    return {
+        "image": image,
+        "tag": tag,
+        "estimated_size_mb": size,
+        "is_alpine": "alpine" in tag,
+        "is_slim": "slim" in tag,
+        "is_distroless": "distroless" in image,
+    }
+
+
+def run_pattern_checks(content, instructions):
+    """Run anti-pattern checks."""
+    findings = []
+
+    for rule in ANTI_PATTERNS:
+        if rule["pattern"] is not None:
+            for match in re.finditer(rule["pattern"], content, re.MULTILINE | re.IGNORECASE):
+                findings.append({
+                    "id": rule["id"],
+                    "severity": rule["severity"],
+                    "message": rule["message"],
+                    "fix": rule["fix"],
+                    "line": match.group(0).strip()[:80],
+                })
+
+    # Custom checks
+    # AP006: Multiple CMD
+    cmd_count = sum(1 for i in instructions if i["instruction"] == "CMD")
+    if cmd_count > 1:
+        r = next(r for r in ANTI_PATTERNS if r["id"] == "AP006")
+        findings.append({
+            "id": r["id"], "severity": r["severity"],
+            "message": r["message"], "fix": r["fix"],
+            "line": f"{cmd_count} CMD instructions found",
+        })
+
+    # AP009: No USER
+    has_user = any(i["instruction"] == "USER" for i in instructions)
+    if not has_user and instructions:
+        r = next(r for r in ANTI_PATTERNS if r["id"] == "AP009")
+        findings.append({
+            "id": r["id"], "severity": r["severity"],
+            "message": r["message"], "fix": r["fix"],
+            "line": "(no USER instruction found)",
+        })
+
+    # AP014: No HEALTHCHECK
+    has_healthcheck = any(i["instruction"] == "HEALTHCHECK" for i in instructions)
+    if not has_healthcheck and instructions:
+        r = next(r for r in ANTI_PATTERNS if r["id"] == "AP014")
+        findings.append({
+            "id": r["id"], "severity": r["severity"],
+            "message": r["message"], "fix": r["fix"],
+            "line": "(no HEALTHCHECK instruction found)",
+        })
+
+    return findings
+
+
+def generate_report(content, output_format="text", security_focus=False):
+    """Generate full analysis report."""
+    instructions = parse_dockerfile(content)
+    layers = analyze_layers(instructions)
+    base = analyze_base_image(instructions)
+    findings = run_pattern_checks(content, instructions)
+
+    if security_focus:
+        security_ids = {"AP007", "AP009", "AP008"}
+        security_severities = {"critical", "high"}
+        findings = [f for f in findings if f["id"] in security_ids or f["severity"] in security_severities]
+
+    # Deduplicate findings by id
+    seen_ids = set()
+    unique_findings = []
+    for f in findings:
+        key = (f["id"], f["line"])
+        if key not in seen_ids:
+            seen_ids.add(key)
+            unique_findings.append(f)
+    findings = unique_findings
+
+    # Sort by severity
+    severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    findings.sort(key=lambda f: severity_order.get(f["severity"], 4))
+
+    # Score (100 minus deductions)
+    deductions = {"critical": 25, "high": 15, "medium": 5, "low": 2}
+    score = max(0, 100 - sum(deductions.get(f["severity"], 0) for f in findings))
+
+    result = {
+        "score": score,
+        "base_image": base,
+        "layers": layers,
+        "findings": findings,
+        "finding_counts": {
+            "critical": sum(1 for f in findings if f["severity"] == "critical"),
+            "high": sum(1 for f in findings if f["severity"] == "high"),
+            "medium": sum(1 for f in findings if f["severity"] == "medium"),
+            "low": sum(1 for f in findings if f["severity"] == "low"),
+        },
+    }
+
+    if output_format == "json":
+        print(json.dumps(result, indent=2))
+        return result
+
+    # Text output
+    print(f"\n{'=' * 60}")
+    print(f"  Dockerfile Analysis Report")
+    print(f"{'=' * 60}")
+    print(f"  Score: {score}/100")
+    print(f"  Base: {base['image']}:{base['tag']} (~{base['estimated_size_mb']}MB)")
+    print(f"  Layers: {layers['total_layers']} | Stages: {layers['stages']} | Multi-stage: {'Yes' if layers['is_multistage'] else 'No'}")
+    print(f"  RUN: {layers['run_count']} | COPY: {layers['copy_count']} | ADD: {layers['add_count']}")
+    print()
+
+    counts = result["finding_counts"]
+    print(f"  Findings: {counts['critical']} critical | {counts['high']} high | {counts['medium']} medium | {counts['low']} low")
+    print(f"{'─' * 60}")
+
+    for f in findings:
+        icon = {"critical": "!!!", "high": "!!", "medium": "!", "low": "~"}.get(f["severity"], "?")
+        print(f"\n  [{f['id']}] {icon} {f['severity'].upper()}")
+        print(f"  {f['message']}")
+        print(f"  Line: {f['line']}")
+        print(f"  Fix:  {f['fix']}")
 
     if not findings:
-        lines.append("\nNo issues found. Dockerfile follows best practices.")
+        print("\n  No issues found. Dockerfile looks good.")
 
-    lines.append("=" * 60)
-    return "\n".join(lines)
-
-
-def format_json(findings: List[Finding], stages: List[StageInfo]) -> str:
-    """Format results as JSON."""
-    return json.dumps({
-        "stages": [asdict(s) for s in stages],
-        "findings": [asdict(f) for f in findings],
-        "summary": {
-            "total": len(findings),
-            "critical": sum(1 for f in findings if f.severity == "critical"),
-            "warnings": sum(1 for f in findings if f.severity == "warning"),
-            "info": sum(1 for f in findings if f.severity == "info"),
-        }
-    }, indent=2)
+    print(f"\n{'=' * 60}\n")
+    return result
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze Dockerfiles for best practices, security, and optimization."
+        description="docker-development: Dockerfile static analyzer"
     )
-    parser.add_argument("--file", "-f", required=True, help="Path to Dockerfile")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
-    parser.add_argument("--security-only", action="store_true", help="Only report security findings")
+    parser.add_argument("dockerfile", nargs="?", help="Path to Dockerfile (omit for demo)")
+    parser.add_argument(
+        "--output", "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--security",
+        action="store_true",
+        help="Security-focused analysis only",
+    )
     args = parser.parse_args()
 
-    path = Path(args.file)
-    if not path.exists():
-        print(f"Error: File not found: {args.file}", file=sys.stderr)
-        sys.exit(1)
-
-    content = path.read_text()
-    analyzer = DockerfileAnalyzer(content, security_only=args.security_only)
-    findings = analyzer.analyze()
-
-    if args.format == "json":
-        print(format_json(findings, analyzer.stages))
+    if args.dockerfile:
+        path = Path(args.dockerfile)
+        if not path.exists():
+            print(f"Error: File not found: {args.dockerfile}", file=sys.stderr)
+            sys.exit(1)
+        content = path.read_text(encoding="utf-8")
     else:
-        print(format_text(findings, analyzer.stages))
+        print("No Dockerfile provided. Running demo analysis...\n")
+        content = DEMO_DOCKERFILE
 
-    # Exit with non-zero if critical findings
-    if any(f.severity == "critical" for f in findings):
-        sys.exit(1)
+    generate_report(content, args.output, args.security)
 
 
 if __name__ == "__main__":

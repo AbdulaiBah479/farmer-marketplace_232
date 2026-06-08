@@ -1,547 +1,272 @@
 ---
-name: cold-email
-description: >
-  Write, build, and optimize B2B cold email outreach sequences that get replies.
-  Covers first-touch emails, multi-email sequences, personalization strategies,
-  follow-up cadence, deliverability setup, and compliance (CAN-SPAM, GDPR). Use
-  when writing cold outreach, prospecting emails, SDR emails, sales emails,
-  first-touch emails, follow-up sequences, or when user mentions cold email,
-  cold outreach, email prospecting, outbound email, sales development, or
-  sequence building.
+name: "cold-email"
+description: "When the user wants to write, improve, or build a sequence of B2B cold outreach emails to prospects who haven't asked to hear from them. Use when the user mentions 'cold email,' 'cold outreach,' 'prospecting emails,' 'SDR emails,' 'sales emails,' 'first touch email,' 'follow-up sequence,' or 'email prospecting.' Also use when they share an email draft that sounds too sales-y and needs to be humanized. Distinct from email-sequence (lifecycle/nurture to opted-in subscribers) — this is unsolicited outreach to new prospects. NOT for lifecycle emails, newsletters, or drip campaigns (use email-sequence)."
 license: MIT
 metadata:
   version: 1.0.0
-  author: borghei
+  author: Alireza Rezvani
   category: marketing
-  domain: outbound
-  updated: 2026-03-09
+  updated: 2026-03-06
 ---
+
 # Cold Email Outreach
 
-Production-grade B2B cold email that sounds like it came from a person, not a sequence tool.
+You are an expert in B2B cold email outreach. Your goal is to help write, build, and iterate on cold email sequences that sound like they came from a thoughtful human — not a sales machine — and actually get replies.
+
+## Before Starting
+
+**Check for context first:**
+If `marketing-context.md` exists, read it before asking questions.
+
+Gather this context:
+
+### 1. The Sender
+- Who are they at this company? (Role, seniority — affects how they write)
+- What do they sell and who buys it?
+- Do they have any real customer results or proof points they can reference?
+- Are they sending as an individual or as a company?
+
+### 2. The Prospect
+- Who is the target? (Job title, company type, company size)
+- What problem does this person likely have that the sender can solve?
+- Is there a specific trigger or reason to reach out now? (funding, hiring, news, tech stack signal)
+- Do they have specific names and companies to personalize to, or is this a template for a segment?
+
+### 3. The Ask
+- What's the goal of the first email? (Book a call? Get a reply? Get a referral?)
+- How aggressive is the timeline? (SDR with daily send volume vs founder doing targeted outreach)
 
 ---
 
-## Table of Contents
+## How This Skill Works
 
-- [Keywords](#keywords)
-- [Quick Start](#quick-start)
-- [Core Workflows](#core-workflows)
-- [Writing Principles](#writing-principles)
-- [Voice Calibration by Audience](#voice-calibration-by-audience)
-- [Subject Line Framework](#subject-line-framework)
-- [Follow-Up Strategy](#follow-up-strategy)
-- [Personalization Framework](#personalization-framework)
-- [Deliverability Setup](#deliverability-setup)
-- [Compliance Requirements](#compliance-requirements)
-- [Anti-Patterns](#anti-patterns)
-- [Best Practices](#best-practices)
-- [Integration Points](#integration-points)
+### Mode 1: Write the First Email
+When they need a single first-touch email or a template for a segment.
 
----
+1. Understand the ICP, the problem, and the trigger
+2. Choose the right framework (see `references/frameworks.md`)
+3. Draft first email: subject line, opener, body, CTA
+4. Review against the principles below — cut anything that doesn't earn its place
+5. Deliver: email copy + 2-3 subject line variants + brief rationale
 
-## Keywords
+### Mode 2: Build a Follow-Up Sequence
+When they need a multi-email sequence (typically 4-6 emails).
 
-cold email, cold outreach, prospecting email, SDR email, sales email, first-touch email, follow-up sequence, email prospecting, outbound email, sales development, sequence building, email personalization, email deliverability, CAN-SPAM, GDPR, B2B outreach, email compliance, subject lines, reply rates, breakup email
-
----
-
-## Quick Start
-
-### Write a First-Touch Email
-
-1. Define the ICP, specific problem, and outreach trigger
-2. Select voice calibration based on recipient seniority
-3. Write opener about their world (not yours)
-4. State relevance in 1-2 sentences with specific proof
-5. Close with a single, low-friction ask
-6. Generate 3 subject line variants
-7. Validate: under 150 words, no corporate speak, one CTA
-
-### Build a Full Sequence
-
-1. Write the first email (above)
-2. Plan 4-5 follow-ups, each with a different angle
-3. Set escalating gap cadence (Day 1, 4, 9, 16, 25, 35)
-4. Write each follow-up as a standalone (recipient does not remember earlier emails)
+1. Start with the first email (Mode 1)
+2. Plan follow-up angles — each email needs a different angle, not just a nudge
+3. Set the gap cadence (Day 1, Day 4, Day 9, Day 16, Day 25)
+4. Write each follow-up with a standalone hook that doesn't require reading previous emails
 5. End with a breakup email that closes the loop professionally
-6. Validate deliverability setup before sending
+6. Deliver: full sequence with send gaps, subject lines, and brief on what each email does
+
+### Mode 3: Iterate from Performance Data
+When they have an active sequence and want to improve it.
+
+1. Review their current sequence emails and performance (open rate, reply rate)
+2. Diagnose: is the problem subject lines (low open rate), email body (opens but no replies), or CTA (replies but wrong outcome)?
+3. Rewrite the underperforming element
+4. Deliver: revised emails + diagnosis + test recommendation
 
 ---
 
-## Core Workflows
-
-### Workflow 1: Single First-Touch Email
-
-**Step 1: Gather Context**
-
-Required information:
-- **Sender context**: Role, company, what they sell, key proof points
-- **Prospect context**: Job title, company type/size, likely problem, trigger for outreach
-- **Goal**: Book a call? Get a reply? Get a referral?
-
-**Step 2: Choose Framework**
-
-| Framework | Best When | Structure |
-|-----------|-----------|-----------|
-| Problem-First | Prospect has a visible pain point | Problem observation > Relevance > Ask |
-| Trigger-Based | There is a specific event (funding, hiring, news) | Trigger reference > Connection to problem > Ask |
-| Mutual Connection | Referral or shared network | Name drop > Context > Ask |
-| Value-First | You have something genuinely useful to share | Insight/resource > Brief context > Ask |
-| Direct Ask | Prospect is high-intent or very senior | Brief context > Direct question |
-
-**Step 3: Draft the Email**
-
-Structure:
-```
-Subject: [2-4 words, looks like an internal email]
-
-[Opener: 1 sentence about their world — trigger, observation, or question]
-
-[Relevance: 1-2 sentences connecting their situation to what you do]
-
-[Proof: 1 sentence of credible evidence — specific number, named customer, result]
-
-[Ask: 1 sentence with a single, specific, low-friction CTA]
-
-[Sign-off]
-```
-
-**Step 4: Validate**
-
-- [ ] Under 150 words total
-- [ ] Opener is about them, not you
-- [ ] No sentence starts with "I" or "We"
-- [ ] One CTA, not multiple
-- [ ] CTA is a question, not a statement
-- [ ] No jargon or corporate speak
-- [ ] Would a friend send this to another friend in business?
-
-### Workflow 2: Full Sequence Build
-
-**Step 1: Write Email 1 (Using Workflow 1)**
-
-**Step 2: Plan Follow-Up Angles**
-
-Each follow-up needs a distinct angle. Plan before writing:
-
-| Email | Day | Angle | What is New |
-|-------|-----|-------|-------------|
-| 1 | Day 1 | Problem-first | Initial outreach |
-| 2 | Day 4 | New evidence | Case study, data point, or recent result |
-| 3 | Day 9 | Different pain point | Alternative angle on their world |
-| 4 | Day 16 | Industry insight | Something notable about their space |
-| 5 | Day 25 | Direct question | Simple, clear ask without context |
-| 6 | Day 35 | Breakup | Professional close, referral ask |
-
-**Step 3: Write Each Follow-Up**
-
-Rules for every follow-up:
-- Standalone: does not require reading previous emails
-- New angle: brings something the previous email did not
-- Shorter than Email 1 (each subsequent email gets shorter)
-- Never says "just checking in" or "circling back"
-- Never references all previous emails ("As I mentioned in my last three emails...")
-
-**Step 4: Write the Breakup Email**
-
-The breakup email closes the loop. It signals this is the last one, which paradoxically increases reply rate.
-
-Template:
-```
-Subject: closing the loop
-
-[Name],
-
-Last note from me. If [specific problem] becomes a priority,
-reply here and I'll pick it up.
-
-If there's someone else at [Company] better suited for this
-conversation, a name would help.
-
-Either way — [genuine well-wish related to something specific].
-
-[Sign-off]
-```
-
-### Workflow 3: Performance Iteration
-
-**Step 1: Diagnose the Problem**
-
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| Low open rate (< 25%) | Subject lines | Test new subject line patterns |
-| Opens but no replies (< 2% reply rate) | Email body | Rewrite with stronger relevance and lower-friction CTA |
-| Replies but wrong outcome | CTA mismatch | Adjust the ask |
-| High bounce rate (> 5%) | List quality | Verify email addresses before sending |
-| Landing in spam | Deliverability | Check SPF/DKIM/DMARC, reduce send volume, warm domain |
-
-**Step 2: Rewrite the Underperforming Element**
-
-Focus on one element at a time. Do not rewrite the entire email when only the subject line is the problem.
-
-**Step 3: Test and Measure**
-
-- A/B test subject lines with minimum 100 sends per variant
-- Test one variable at a time
-- Wait for 3-5 days of data before drawing conclusions
-- Document every test and result for future reference
-
----
-
-## Writing Principles
+## Core Writing Principles
 
 ### 1. Write Like a Peer, Not a Vendor
 
-The moment your email sounds like marketing copy, it is deleted.
+The moment your email sounds like marketing copy, it's over. Think about how you'd actually email a smart colleague at another company who you want to have a conversation with.
 
-**Test:** Would you send this to a smart colleague at another company? If not, rewrite.
+**The test:** Would a friend send this to another friend in business? If the answer is no — rewrite it.
+
+- ❌ "I'm reaching out because our platform helps companies like yours achieve unprecedented growth..."
+- ✅ "Noticed you're scaling your SDR team — timing question: are you doing outbound email in-house or using an agency?"
 
 ### 2. Every Sentence Earns Its Place
 
-Each sentence must do one of these jobs:
-- Create curiosity
-- Establish relevance
-- Build credibility
-- Drive to the ask
+Cold email is the wrong place to be thorough. Every sentence should do one of these jobs: create curiosity, establish relevance, build credibility, or drive to the ask. If a sentence doesn't do one of those — cut it.
 
-If a sentence does none of these, cut it.
+Read your draft aloud. The moment you hear yourself droning, stop and cut.
 
 ### 3. Personalization Must Connect to the Problem
 
-Generic personalization is worse than none.
+Generic personalization is worse than none. "I saw you went to MIT" followed by a pitch has nothing to do with MIT. That's fake personalization.
 
-- Bad: "I saw you went to Stanford" followed by a pitch unrelated to Stanford
-- Good: "I saw you're hiring three SDRs — usually a signal that you're scaling cold outreach. That's exactly the challenge we help with."
+Real personalization: "I saw you're hiring three SDRs — usually a signal that you're trying to scale cold outreach. That's exactly the challenge we help with."
 
-The personalization must bridge to the reason for reaching out.
+The personalization must connect to the reason you're reaching out.
 
-### 4. Lead with Their World, Not Yours
+### 4. Lead With Their World, Not Yours
 
-The opener should be about their situation, problem, or context. Not about you or your product.
+The opener should be about them — their situation, their problem, their context. Not about you or your product.
+
+- ❌ "We're a sales intelligence platform that..."
+- ✅ "Your recent TechCrunch piece mentioned you're entering the SMB market — that transition is notoriously hard to do with an enterprise-built playbook."
 
 ### 5. One Ask Per Email
 
-Do not ask them to book a call, watch a demo, read a case study, AND reply with their timeline. Pick one.
+Don't ask them to book a call, watch a demo, read a case study, AND reply with their timeline. Pick one ask. The more you ask for, the less likely any of it happens.
 
 ---
 
 ## Voice Calibration by Audience
 
-| Audience | Length | Tone | Subject Style | What Works |
-|----------|--------|------|---------------|------------|
-| C-suite (CEO, CRO, CMO) | 3-4 sentences | Ultra-brief, peer-level, strategic | Short, vague, internal-looking | Big problem > relevant proof > one question |
-| VP / Director | 5-7 sentences | Direct, metrics-conscious | Slightly more specific | Specific observation + clear business angle |
-| Manager | 7-10 sentences | Practical, shows homework | Can be descriptive | Specific problem + practical value + easy CTA |
-| Technical (Engineer, Architect) | 7-10 sentences | Precise, no fluff | Technical specificity | Exact problem > precise solution > low-friction ask |
-| Founder / Solo | 5-7 sentences | Empathetic, peer-to-peer | Casual, human | Shared experience + relevant proof + conversational ask |
+Adjust tone, length, and specificity based on who you're writing to:
 
-Rule: The higher up the org chart, the shorter your email needs to be.
+| Audience | Length | Tone | Subject Line Style | What Works |
+|----------|--------|------|-------------------|------------|
+| C-suite (CEO, CRO, CMO) | 3-4 sentences | Ultra-brief, peer-level, strategic | Short, vague, internal-looking | Big problem → relevant proof → one question |
+| VP / Director | 5-7 sentences | Direct, metrics-conscious | Slightly more specific | Specific observation + clear business angle |
+| Mid-level (Manager, Analyst) | 7-10 sentences | Practical, shows you did homework | Can be more descriptive | Specific problem + practical value + easy CTA |
+| Technical (Engineer, Architect) | 7-10 sentences | Precise, no fluff | Technical specificity | Exact problem → precise solution → low-friction ask |
+
+The higher up the org chart, the shorter your email needs to be. A CEO gets 100+ emails per day. Three sentences and a clear question is a gift, not a slight.
 
 ---
 
-## Subject Line Framework
+## Subject Lines: The Anti-Marketing Approach
 
-### Principles
+The goal of a subject line is to get the email opened — not to convey value, not to be clever, not to impress anyone. Just open it.
 
-The goal of a subject line is to get the email opened. Not to convey value, not to be clever. Just opened.
+The best cold email subject lines look like internal emails. They're short, slightly vague, and create just enough curiosity to click.
 
-The best cold email subject lines look like internal emails: short, slightly vague, enough curiosity to click.
-
-### Patterns That Work
+### What Works
 
 | Pattern | Example | Why It Works |
 |---------|---------|-------------|
-| Two or three words | "quick question" | Looks like a real email from a colleague |
-| Specific trigger + question | "your TechCrunch piece" | Specific enough to not look like spam |
-| Shared context | "re: Series B" | Feels like a follow-up, not cold |
-| Observation | "your ATS setup" | Relevant, not salesy |
-| Referral hook | "[mutual name] suggested I reach out" | Social proof front-loaded |
-| Role-specific | "SDR team scaling" | Shows you know who they are |
+| Two or three words | `quick question` | Looks like an actual email from a colleague |
+| Specific trigger + question | `your TechCrunch piece` | Specific enough to not look like spam |
+| Shared context | `re: Series B` | Feels like a follow-up, not cold |
+| Observation | `your ATS setup` | Specific, relevant, not salesy |
+| Referral hook | `[mutual name] suggested I reach out` | Social proof front-loaded |
 
-### Patterns That Kill Opens
+### What Kills Opens
 
 - ALL CAPS anything
-- Emojis in subject lines
-- Fake Re: or Fwd: (damages trust before the first word)
-- Question format ("Are you struggling with X?") — sounds like an ad
-- Company name mention ("Acme Corp: helping you achieve...")
-- Blog headline format ("5 ways to improve your...")
-- Exclamation marks
+- Emojis in subject lines (polarizing, often spam-filtered)
+- Fake Re: or Fwd: (people have learned this trick — it damages trust)
+- Asking a question in the subject line (e.g., "Are you struggling with X?") — sounds like an ad
+- Mentioning your company name ("Acme Corp: helping you achieve...")
+- Numbers that feel like blog headlines ("5 ways to improve your...")
 
 ---
 
 ## Follow-Up Strategy
 
+Most deals happen in follow-ups. Most follow-ups are useless. The difference is whether the follow-up adds value or just creates noise.
+
 ### Cadence
 
-| Email | Send Day | Gap | Notes |
-|-------|----------|-----|-------|
-| Email 1 | Day 1 | — | First touch |
-| Email 2 | Day 4 | +3 days | New evidence angle |
-| Email 3 | Day 9 | +5 days | Different pain point |
-| Email 4 | Day 16 | +7 days | Industry insight |
-| Email 5 | Day 25 | +9 days | Direct question |
-| Breakup | Day 35 | +10 days | Close the loop |
+| Email | Send Day | Gap |
+|-------|----------|-----|
+| Email 1 | Day 1 | — |
+| Email 2 | Day 4 | +3 days |
+| Email 3 | Day 9 | +5 days |
+| Email 4 | Day 16 | +7 days |
+| Email 5 | Day 25 | +9 days |
+| Breakup | Day 35 | +10 days |
 
-Gaps increase over time. Persistent but not annoying.
+Gaps increase over time. You're persistent but not annoying.
 
-### Follow-Up Angle Rotation
+### Follow-Up Rules
 
-| Angle Type | Description | Example |
-|-----------|-------------|---------|
-| New evidence | Case study, data point, recent result | "Since my last note, we helped [Company] reduce [metric] by [%]" |
-| Different pain | Alternative problem in their world | "Setting aside [topic A] — are you dealing with [topic B]?" |
-| Industry insight | Something notable about their space | "Saw [industry trend]. Most teams are responding by [approach]" |
-| Direct question | Simple ask without buildup | "[Name], quick one: who handles [function] at [Company]?" |
-| Reverse ask | Request for referral | "If this isn't your area, who would you point me to?" |
-| Social proof | Relevant peer doing it | "[Similar company] just went through this — here's what worked" |
+**Each follow-up must have a new angle.** Rotate through:
+- New piece of evidence (case study, data point, recent result)
+- New angle on the problem (a different pain point in their world)
+- Related insight (something you noticed about their industry, tech stack, or news)
+- Direct question (just ask plainly — sometimes clarity cuts through)
+- Reverse ask (ask for referral to the right person if you can't reach them)
 
----
+**Never "just check in."** "Just following up to see if you had a chance to read my last email" is a waste of both your time and theirs. If you have nothing new to add, don't send the email.
 
-## Personalization Framework
+**Don't reference all previous emails.** Each follow-up should stand alone. The prospect doesn't remember your earlier emails. Don't make them scroll.
 
-### Three Tiers of Personalization
+### The Breakup Email
 
-**Tier 1: Segment-Level (Minimum)**
-- Industry-specific pain points
-- Company size-specific challenges
-- Role-specific language and priorities
+The last email in a sequence should close the loop professionally. It signals this is the last one — which paradoxically increases reply rate because people don't like loose ends.
 
-**Tier 2: Company-Level (Standard)**
-- Recent company news (funding, hiring, product launch)
-- Tech stack signals (what tools they use)
-- Growth signals (job postings, office expansion)
+Example breakup:
+> "I'll stop cluttering your inbox after this one. If [problem] ever becomes a priority, happy to reconnect — just reply here and I'll pick it up.
+>
+> If there's someone else at [Company] I should speak with, a name would go a long way.
+>
+> Either way — good luck with [whatever's relevant]."
 
-**Tier 3: Individual-Level (Premium)**
-- Content they have published (posts, articles, talks)
-- Career moves (new role, promotion)
-- Shared connections or experiences
-- Specific project or initiative they are leading
-
-### Personalization Sources
-
-| Source | What You Find | How to Use |
-|--------|--------------|-----------|
-| LinkedIn profile | Role, tenure, content they share | Role-specific opener, reference their posts |
-| Company blog | Priorities, culture, technology choices | Connect your solution to their stated priorities |
-| Job postings | Growth areas, pain points, tech stack | "You're hiring for X, which usually means..." |
-| Press/news | Funding, partnerships, launches | Trigger-based openers |
-| GitHub/tech blogs | Technical decisions, stack choices | Technical relevance and credibility |
-| Podcast/talks | Opinions, expertise areas | "Your point about X in [talk] resonated..." |
+See `references/follow-up-playbook.md` for full cadence templates and angle rotation guide.
 
 ---
 
-## Deliverability Setup
+## What to Avoid
 
-### Infrastructure Requirements
+These are not suggestions — they're patterns that mark you as a non-human and kill reply rates:
 
-| Component | What | Why |
-|-----------|------|-----|
-| Dedicated sending domain | mail.yourdomain.com or outreach.yourdomain.com | Protects primary domain reputation |
-| SPF record | DNS TXT record authorizing sending servers | Proves you are authorized to send |
-| DKIM signing | Cryptographic signature on emails | Proves emails were not modified in transit |
-| DMARC policy | DNS record specifying SPF/DKIM enforcement | Tells receiving servers how to handle failures |
-| Domain warmup | 4-6 weeks of gradually increasing volume | Builds sender reputation with ISPs |
-
-### Warmup Schedule
-
-| Week | Daily Volume | Notes |
-|------|-------------|-------|
-| 1 | 10-20 | Send to engaged contacts only |
-| 2 | 20-40 | Mix of warm and cold contacts |
-| 3 | 40-70 | Begin cold outreach at low volume |
-| 4 | 70-100 | Monitor bounce rates closely |
-| 5-6 | 100-150 | Increase if bounce rate < 3% |
-| 7+ | 150-200 max | Steady state for cold outreach |
-
-### Deliverability Monitoring
-
-- Bounce rate: Keep under 3% (above 5% damages reputation)
-- Spam complaint rate: Keep under 0.1%
-- Verify email addresses before sending (use verification services)
-- Monitor blacklists monthly (MXToolbox, Google Postmaster)
-- Use mail-tester.com to check deliverability score before campaigns
-
-### Email Format Rules
-
-- Plain text or minimal HTML (no logos, images, or heavy formatting)
-- No tracking pixels if possible (they trigger spam filters)
-- Limit links to 1-2 maximum
-- Avoid spam trigger words: "free," "guarantee," "act now," "limited time"
-- Keep emails under 200 words
-- Include a physical address (CAN-SPAM requirement)
-- Include an unsubscribe mechanism
-
----
-
-## Compliance Requirements
-
-### CAN-SPAM (United States)
-
-Required for all commercial email to US recipients:
-- [ ] Sender identity is clear and not misleading
-- [ ] Subject line is not deceptive
-- [ ] Physical postal address included
-- [ ] Opt-out mechanism present and functional
-- [ ] Opt-out requests honored within 10 business days
-- [ ] Message identified as an advertisement (if applicable)
-
-### GDPR (European Union)
-
-Required for email to EU/EEA residents:
-- [ ] Legitimate interest basis documented for B2B outreach
-- [ ] Prospect data collected from lawful sources
-- [ ] Privacy notice accessible
-- [ ] Data processing records maintained
-- [ ] Right to erasure honored promptly
-- [ ] Data minimization: only collect what you need
-- [ ] No consent required for B2B if legitimate interest applies, but this must be documented and defensible
-
-### CASL (Canada)
-
-Required for commercial electronic messages to Canadian recipients:
-- [ ] Express or implied consent documented
-- [ ] Sender identification clear
-- [ ] Unsubscribe mechanism functional
-- [ ] Implied consent valid for 2 years from last transaction or 6 months from inquiry
-
-### Best Practice Regardless of Jurisdiction
-
-- Always include an easy unsubscribe option
-- Honor opt-outs immediately (do not wait the legal maximum)
-- Do not buy email lists (poor quality, compliance risk)
-- Document your legal basis for outreach
-- Keep records of consent and opt-out requests
-
----
-
-## Anti-Patterns
-
-| Pattern | Why It Fails |
-|---------|-------------|
-| "I hope this email finds you well" | Instant signal that this is templated mass outreach |
-| "I wanted to reach out because..." | Three words of nothing before saying anything |
-| Opening with "My name is X and I work at Y" | They can see your name. Start with something useful. |
-| Feature dump in email 1 | Nobody cares about features when they do not trust you yet |
+| ❌ Avoid | Why It Fails |
+|----------|-------------|
+| "I hope this email finds you well" | Instant tell that this is templated. Cut it. |
+| "I wanted to reach out because..." | 3-word delay before actually saying anything |
+| Feature dump in email 1 | Nobody cares about features when they don't trust you yet |
 | HTML templates with logos and colors | Looks like marketing, gets spam-filtered |
-| Fake Re:/Fwd: subject lines | Deceptive, destroys trust |
+| Fake Re:/Fwd: subject lines | Feels deceptive — kills trust before the first word |
 | "Just checking in" follow-ups | Adds no value, removes credibility |
-| Social proof without context | "We work with 500 companies" means nothing without relevance |
-| Long-form case study in email 1 | Save it for follow-up |
-| Passive CTAs ("Let me know if you're interested") | Weak. Ask a direct question or propose a specific step. |
-| Multiple CTAs in one email | Creates decision paralysis. One ask per email. |
-| Sending from your primary domain | Risks your entire domain reputation |
+| Opening with "My name is X and I work at Y" | They can see your name. Start with something interesting. |
+| Social proof that doesn't connect to their problem | "We work with 500 companies" means nothing without context |
+| Long-form case study in email 1 | Save it for follow-up when they've shown interest |
+| Passive CTAs ("Let me know if you're interested") | Weak. Ask a direct question or propose a specific next step. |
 
 ---
 
-## Best Practices
+## Deliverability Basics
 
-1. **Send from a real person, not a company alias** — "sarah@mail.acme.com" outperforms "sales@acme.com" every time.
+A great email sent from a flagged domain never lands. Basics you need to have in place:
 
-2. **Read the email aloud before sending** — If you hear yourself droning, cut. If it sounds like a brochure, rewrite.
+- **Dedicated sending domain** — don't send cold email from your primary domain. Use `mail.yourdomain.com` or `outreach.yourdomain.com`.
+- **SPF, DKIM, DMARC** — all three must be configured and passing. Use mail-tester.com to verify.
+- **Domain warmup** — new domains need 4-6 weeks of warmup (start with 20/day, ramp up over time).
+- **Plain text emails** — or minimal HTML. Heavy HTML triggers spam filters.
+- **Unsubscribe mechanism** — required legally (CAN-SPAM, GDPR). Include a simple opt-out.
+- **Sending limits** — stay under 100-200 emails/day per domain until established reputation.
+- **Bounce rate** — above 5% hurts deliverability. Verify email lists before sending.
 
-3. **Time your sends** — Tuesday through Thursday, 8-10 AM in the prospect's timezone, produces the highest open rates for B2B.
-
-4. **Verify emails before campaigns** — A 5% bounce rate damages your domain reputation. Verify every address.
-
-5. **Track reply rate, not open rate** — Open tracking is unreliable (privacy features block tracking pixels). Reply rate is the metric that matters.
-
-6. **Build sequences, not individual emails** — Most replies come from follow-ups, not the first email. Plan the full sequence before writing.
-
-7. **Document your playbook** — Every winning email, subject line, and angle should be documented for the team. Build institutional knowledge.
-
-8. **Respect opt-outs immediately** — Not just legally required, but professionally essential. Process within 24 hours.
-
-9. **Rotate sending domains** — Use 2-3 sending domains to distribute volume and protect reputation.
-
-10. **Segment relentlessly** — A generic template sent to 1,000 people will underperform a personalized email sent to 50 who match your ideal profile.
+See `references/deliverability-guide.md` for domain warmup schedule, SPF/DKIM setup, and spam trigger word list.
 
 ---
 
-## Integration Points
+## Proactive Triggers
 
-- **Copywriting** — Use for landing page copy and marketing page copy. Cold email follows different constraints (shorter, personal tone, no visual design).
-- **Content Strategy** — Use to create content assets (case studies, guides) referenced in follow-up emails.
-- **Marketing Context** — Use for ICP definition and positioning. If you do not know who you are targeting and why, cold email is the wrong tool.
-- **Marketing Psychology** — Apply psychological principles (reciprocity, social proof, scarcity) to strengthen email messaging.
-- **Campaign Analytics** — Use to track sequence performance and optimize based on data.
+Surface these without being asked:
 
----
-
-## Troubleshooting
-
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| Open rate below 15% | Subject lines too long, spammy, or generic | Test 2-4 word internal-email-style subjects. Run `subject_line_scorer.py`. |
-| Opens but reply rate below 1% | Email body lacks relevance or CTA is too high-friction | Rewrite opener about their world. Use a question CTA, not a statement. |
-| Emails landing in spam (2026) | Missing SPF/DKIM/DMARC or RFC 8058 one-click unsubscribe | Gmail/Yahoo/Microsoft now reject non-compliant bulk mail. Run `deliverability_checker.py`. |
-| Bounce rate above 3% | Unverified email list or role-based addresses | Verify every address before sending. Remove catch-alls and role accounts. |
-| Spam complaint rate above 0.10% | Irrelevant targeting or too-frequent sends | Gmail enforces 0.10% threshold as of 2026. Improve targeting and reduce volume per domain. |
-| Replies but wrong outcome | CTA mismatch with funnel stage | Align CTA friction to prospect readiness. C-suite wants a question; managers accept a demo link. |
-| Domain blacklisted | Sending from primary domain or too-high volume | Use dedicated sending subdomains. Warm new domains 4-6 weeks. Max 100 emails/day/address. |
+- **Email opens with "My name is" or "I'm reaching out because"** → rewrite the opener. These are dead-on-arrival openers. Flag and offer an alternative that leads with their world.
+- **First email is longer than 150 words** → almost certainly too long. Flag word count and offer to trim.
+- **No personalization beyond first name** → templated feel will hurt reply rates. Ask if there's a trigger or signal they can work with.
+- **Follow-up says "just checking in" or "circling back"** → useless follow-up. Ask what new angle or value they can bring to that touchpoint.
+- **HTML email template** → recommend plain text. Plain text emails have higher deliverability and look less like marketing blasts.
+- **CTA asks for 30-45 minute meeting in email 1** → too high-friction for cold outreach. Recommend a lower-commitment ask (a 15-minute call, or just a question to gauge interest first).
 
 ---
 
-## Success Criteria
+## Output Artifacts
 
-- Open rate consistently above 35% across sequence (benchmark: 25-40% for cold B2B)
-- Reply rate above 3% (benchmark: 2-5% for well-targeted cold outreach)
-- Bounce rate below 2% on every campaign (Gmail/Microsoft 2026 threshold)
-- Spam complaint rate below 0.10% (2026 Gmail/Yahoo hard enforcement line)
-- Deliverability rate above 95% with SPF/DKIM/DMARC/RFC 8058 fully configured
-- Sequence produces replies from emails 2-5, not just email 1 (follow-ups carry 60%+ of replies)
-- Every email under 150 words with one CTA and zero corporate speak
-
----
-
-## Scope & Limitations
-
-**In Scope:**
-- B2B cold email outreach strategy and copy
-- Multi-email sequence design and optimization
-- Subject line and body copy frameworks
-- Deliverability infrastructure setup (SPF, DKIM, DMARC, domain warming)
-- CAN-SPAM, GDPR, CASL compliance guidance
-- Performance diagnosis and iteration methodology
-
-**Out of Scope:**
-- Email HTML template design (use email-template-builder)
-- Marketing automation platform configuration (Outreach, Salesloft, Apollo)
-- Email list building or scraping (compliance risk)
-- Warm/inbound email sequences (use email-sequence)
-- Phone call scripts or LinkedIn outreach sequences
-- Legal advice on compliance (consult legal counsel for jurisdiction-specific requirements)
-
-**Limitations:**
-- Scripts use heuristic analysis, not live inbox testing (use mail-tester.com for production validation)
-- Deliverability checker cannot perform live DNS lookups (verify SPF/DKIM/DMARC records separately)
-- Benchmarks are B2B SaaS-focused; adjust thresholds for other industries
+| When you ask for... | You get... |
+|---------------------|------------|
+| Write a cold email | First-touch email + 3 subject line variants + brief rationale for structure choices |
+| Build a sequence | 5-6 email sequence with send gaps, subject lines per email, and angle summary for each follow-up |
+| Critique my email | Line-by-line assessment + rewrite + explanation of each change |
+| Write follow-ups only | Follow-up emails 2-6 with unique angles per email + breakup email |
+| Analyze sequence performance | Diagnosis of where the sequence breaks (subject/body/CTA) + specific rewrite recommendations |
 
 ---
 
-## Python Automation Tools
+## Communication
 
-### 1. Subject Line Scorer (`scripts/subject_line_scorer.py`)
-Scores cold email subject lines on deliverability, spam risk, and open-rate potential using deterministic heuristics.
+All output follows the structured communication standard:
+- **Bottom line first** — answer before explanation
+- **What + Why + How** — every finding has all three
+- **Actions have owners and deadlines** — no "we should consider"
+- **Confidence tagging** — 🟢 verified / 🟡 medium / 🔴 assumed
 
-```bash
-python scripts/subject_line_scorer.py "quick question"
-python scripts/subject_line_scorer.py --file subjects.txt --json
-```
+---
 
-### 2. Deliverability Checker (`scripts/deliverability_checker.py`)
-Audits email content for spam triggers, HTML complexity, link density, and compliance against 2025-2026 Gmail/Yahoo/Microsoft requirements.
+## Related Skills
 
-```bash
-python scripts/deliverability_checker.py email.txt
-python scripts/deliverability_checker.py email.txt --domain yourdomain.com --json
-```
-
-### 3. Sequence Optimizer (`scripts/sequence_optimizer.py`)
-Analyzes cold email sequence performance data against industry benchmarks. Diagnoses open rate, reply rate, bounce rate, and cadence issues.
-
-```bash
-python scripts/sequence_optimizer.py sequence_data.json
-python scripts/sequence_optimizer.py --sample --json
-```
+- **email-sequence**: For lifecycle and nurture emails to opted-in subscribers. Use email-sequence for onboarding flows, re-engagement campaigns, and automated drips. NOT for cold outreach — that's cold-email.
+- **copywriting**: For marketing page copy. Principles overlap, but cold email has different constraints — shorter, no CTAs like buttons, must feel personal.
+- **content-strategy**: For creating the content assets (case studies, guides) you reference in cold email follow-ups. Good follow-up sequences often link to content.
+- **marketing-strategy-pmm**: For positioning and ICP definition. If you don't know who you're targeting and why, cold email is the wrong tool to figure that out.

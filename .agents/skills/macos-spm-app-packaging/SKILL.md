@@ -1,19 +1,12 @@
 ---
 name: macos-spm-app-packaging
-description: Scaffold, build, sign, and package SwiftPM macOS apps without Xcode projects.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Scaffold, build, and package SwiftPM-based macOS apps without an Xcode project. Use when you need a from-scratch macOS app layout, SwiftPM targets/resources, a custom .app bundle assembly script, or signing/notarization/appcast steps outside Xcode.
 ---
 
 # macOS SwiftPM App Packaging (No Xcode)
 
 ## Overview
 Bootstrap a complete SwiftPM macOS app folder, then build, package, and run it without Xcode. Use `assets/templates/bootstrap/` for the starter layout and `references/packaging.md` + `references/release.md` for packaging and release details.
-
-## When to Use
-- When the user needs a SwiftPM-based macOS app without relying on an Xcode project.
-- When you need packaging, signing, notarization, or appcast guidance for a SwiftPM app.
 
 ## Two-Step Workflow
 1) Bootstrap the project folder
@@ -102,8 +95,3 @@ spctl --assess --type execute --verbose build/HelloApp.app
 - Remove Sparkle steps if you do not use Sparkle for updates.
 - Sparkle relies on the bundle build number (`CFBundleVersion`), so `BUILD_NUMBER` in `version.env` must increase for each update.
 - For menu bar apps, set `MENU_BAR_APP=1` when packaging to emit `LSUIElement` in Info.plist.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

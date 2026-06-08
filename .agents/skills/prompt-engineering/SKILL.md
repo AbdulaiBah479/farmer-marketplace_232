@@ -1,67 +1,141 @@
 ---
 name: prompt-engineering
-description: Optimize prompts for LLMs and AI systems with structured techniques, evaluation patterns, and synthetic test data generation. Use when building AI features, improving agent performance, or crafting system prompts.
-keywords:
-  - prompt engineering
-  - LLM
-  - system prompt
-  - few-shot
-  - chain-of-thought
-  - synthetic data
-triggers:
-  - prompt engineering
-  - system prompt
-  - LLM optimization
-  - prompt template
-  - synthetic test data
+description: Prompt engineering patterns including structured prompts, chain-of-thought, few-shot learning, and system prompt design
 ---
 
 # Prompt Engineering
 
-Craft, test, and iterate prompts that deliver reliable outputs across LLMs. Covers prompt optimization techniques, structured prompt design, synthetic test data generation, and evaluation methodology.
+## Structured System Prompt
 
-## When to Use This Skill
+```
+You are a senior code reviewer. Your role is to analyze pull requests for:
+1. Correctness - logic errors, edge cases, off-by-one errors
+2. Security - injection, authentication, data exposure
+3. Performance - N+1 queries, unnecessary allocations, missing indexes
+4. Maintainability - naming, complexity, test coverage
 
-- Building or optimizing prompts for AI-powered features
-- Crafting system prompts for agents or assistants
-- Improving reliability and consistency of LLM outputs
-- Generating synthetic test data to validate prompt behavior
-- Evaluating prompt performance across edge cases
-- Designing prompt chains and pipelines
+For each issue found, respond with:
+- Severity: critical | warning | suggestion
+- File and line reference
+- What is wrong
+- How to fix it (with code snippet)
 
-## Quick Reference
+If the code is well-written, say so briefly. Do not invent problems.
+```
 
-| Task | Load reference |
-| --- | --- |
-| Prompt techniques and patterns | `skills/prompt-engineering/references/techniques.md` |
-| Synthetic test data generation | `skills/prompt-engineering/references/synthetic-data.md` |
+Structure system prompts with role, scope, output format, and constraints. Be explicit about what the model should NOT do.
 
-## Workflow
+## Chain-of-Thought
 
-1. **Research**: Gather the use case, constraints, and evaluation criteria. Audit existing prompts and model behaviors.
-2. **Design**: Draft structured prompts with examples, constraints, and evaluation hooks. Plan experiments and measurement strategy.
-3. **Generate test data**: Analyze prompt variables, generate diverse and realistic test cases to validate the prompt.
-4. **Validate**: Run prompt trials, capture outputs, document adjustments. Iterate until quality thresholds are met.
-5. **Deliver**: Hand off the final prompt with usage guidance and evaluation results.
+```
+Analyze this database query for performance issues.
 
-## Core Principle
+Think step by step:
+1. Identify the tables and joins involved
+2. Check if appropriate indexes exist for the WHERE and JOIN conditions
+3. Look for full table scans or cartesian products
+4. Estimate the row count at each step
+5. Suggest specific index creation or query restructuring
 
-When creating prompts, always display the complete prompt text in a clearly marked section. Never describe a prompt without showing it. The prompt must be copyable and self-contained.
+Query:
+SELECT o.*, u.name, p.title
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN products p ON o.product_id = p.id
+WHERE o.created_at > '2024-01-01'
+AND u.country = 'US'
+ORDER BY o.created_at DESC
+LIMIT 50;
+```
 
-## Deliverables Checklist
+Chain-of-thought prompting improves accuracy on reasoning tasks by forcing the model to show intermediate steps.
 
-For every prompt engineering task, produce:
+## Few-Shot Examples
 
-- [ ] The complete prompt text (displayed in full, properly formatted)
-- [ ] Explanation of design choices and techniques used
-- [ ] Usage guidelines (model, temperature, parameters)
-- [ ] Example expected outputs
-- [ ] Test cases covering happy path, edge cases, and adversarial inputs
+```
+Convert natural language to SQL. Follow these examples:
 
-## Example Interactions
+Input: "How many orders were placed last month?"
+Output: SELECT COUNT(*) FROM orders WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND created_at < DATE_TRUNC('month', CURRENT_DATE);
 
-- "Optimize this system prompt for our code review agent"
-- "Create a prompt for extracting structured data from support tickets"
-- "Generate test cases to validate this classification prompt"
-- "Design a prompt chain for multi-step document analysis"
-- "Improve consistency of this summarization prompt"
+Input: "Top 5 customers by total spending"
+Output: SELECT customer_id, SUM(total_amount) AS total_spent FROM orders GROUP BY customer_id ORDER BY total_spent DESC LIMIT 5;
+
+Input: "Products that have never been ordered"
+Output: SELECT p.* FROM products p LEFT JOIN order_items oi ON p.id = oi.product_id WHERE oi.id IS NULL;
+
+Now convert:
+Input: "Average order value per country for the last quarter"
+```
+
+Provide 3-5 diverse examples that demonstrate the expected format and edge cases.
+
+## Tool Use / Function Calling
+
+```json
+{
+  "tools": [
+    {
+      "name": "search_codebase",
+      "description": "Search for code patterns across the repository. Use when you need to find implementations, usages, or definitions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Regex pattern or keyword to search for"
+          },
+          "file_type": {
+            "type": "string",
+            "description": "File extension filter (e.g., 'ts', 'py')"
+          }
+        },
+        "required": ["query"]
+      }
+    }
+  ]
+}
+```
+
+Write tool descriptions that explain WHEN to use the tool, not just what it does.
+
+## Prompt Template Pattern
+
+```python
+def build_review_prompt(diff: str, context: str, rules: list[str]) -> str:
+    rules_text = "\n".join(f"- {rule}" for rule in rules)
+
+    return f"""Review this code diff against the following rules:
+{rules_text}
+
+Context about the codebase:
+{context}
+
+Diff to review:
+```
+{diff}
+```
+
+Respond with a JSON array of findings. If no issues, return an empty array.
+Each finding: {{"severity": "critical|warning|info", "line": number, "message": "string", "suggestion": "string"}}"""
+```
+
+## Anti-Patterns
+
+- Vague instructions like "be helpful" or "do your best"
+- Asking the model to "be creative" when you need deterministic output
+- Not specifying output format (JSON, markdown, plain text)
+- Stuffing too many unrelated tasks into a single prompt
+- Using negations ("don't do X") without saying what to do instead
+- Not testing prompts with adversarial or edge-case inputs
+
+## Checklist
+
+- [ ] System prompt defines role, scope, format, and constraints
+- [ ] Chain-of-thought used for multi-step reasoning tasks
+- [ ] Few-shot examples cover typical and edge cases
+- [ ] Output format explicitly specified (JSON schema, markdown, etc.)
+- [ ] Tool descriptions explain when and why to use each tool
+- [ ] Prompts tested with adversarial inputs
+- [ ] Temperature and top_p set appropriately for the task
+- [ ] Prompt templates are parameterized, not hardcoded strings

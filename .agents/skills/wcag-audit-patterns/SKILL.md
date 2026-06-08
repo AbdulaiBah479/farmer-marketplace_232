@@ -1,7 +1,7 @@
 ---
 name: wcag-audit-patterns
-description: "Comprehensive guide to auditing web content against WCAG 2.2 guidelines with actionable remediation strategies."
-risk: safe
+description: "Conduct WCAG 2.2 accessibility audits with automated testing, manual verification, and remediation guidance. Use when auditing websites for accessibility, fixing WCAG violations, or implementing ac..."
+risk: unknown
 source: community
 date_added: "2026-02-27"
 ---
@@ -42,8 +42,3 @@ Refer to `resources/implementation-playbook.md` for detailed patterns, checklist
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed patterns, checklists, and templates.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

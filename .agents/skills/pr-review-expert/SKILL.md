@@ -1,312 +1,296 @@
 ---
-name: pr-review-expert
-description: >
-  Systematic PR review with blast radius analysis, security scanning, breaking
-  change detection, test coverage delta, and performance impact assessment.
-  Produces prioritized findings with a 35+ item checklist. Use when reviewing
-  PRs that touch shared libraries, APIs, database schemas, auth, or
-  security-sensitive code.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: code-review
-  tier: POWERFUL
-  updated: 2026-03-09
-  frameworks: github, gitlab, review-checklist
+name: "pr-review-expert"
+description: "Use when the user asks to review pull requests, analyze code changes, check for security issues in PRs, or assess code quality of diffs."
 ---
+
 # PR Review Expert
 
 **Tier:** POWERFUL
-**Category:** Engineering / Quality Assurance
-**Maintainer:** Claude Skills Team
+**Category:** Engineering
+**Domain:** Code Review / Quality Assurance
+
+---
 
 ## Overview
 
-Structured, systematic code review for GitHub PRs and GitLab MRs. Goes beyond style nits to perform blast radius analysis, security vulnerability scanning, breaking change detection, test coverage delta calculation, and performance impact assessment. Produces reviewer-ready reports with prioritized findings categorized as must-fix, should-fix, and suggestions.
+Structured, systematic code review for GitHub PRs and GitLab MRs. Goes beyond style nits — this skill
+performs blast radius analysis, security scanning, breaking change detection, and test coverage delta
+calculation. Produces a reviewer-ready report with a 30+ item checklist and prioritized findings.
 
-## Keywords
-
-PR review, code review, pull request, merge request, blast radius, security scan, breaking changes, test coverage, review checklist, code quality
+---
 
 ## Core Capabilities
 
-### 1. Blast Radius Analysis
-- Trace which files, services, and downstream consumers could break
-- Identify shared libraries, types, and API contracts in the diff
-- Map cross-service dependencies in monorepos
-- Quantify impact severity (CRITICAL / HIGH / MEDIUM / LOW)
+- **Blast radius analysis** — trace which files, services, and downstream consumers could break
+- **Security scan** — SQL injection, XSS, auth bypass, secret exposure, dependency vulns
+- **Test coverage delta** — new code vs new tests ratio
+- **Breaking change detection** — API contracts, DB schema migrations, config keys
+- **Ticket linking** — verify Jira/Linear ticket exists and matches scope
+- **Performance impact** — N+1 queries, bundle size regression, memory allocations
 
-### 2. Security Scanning
-- SQL injection via string interpolation
-- XSS vectors (innerHTML, dangerouslySetInnerHTML)
-- Hardcoded secrets and credentials
-- Auth bypass patterns
-- Insecure cryptographic functions
-- Path traversal risks
-- Prototype pollution
-
-### 3. Breaking Change Detection
-- API endpoint removals or renames
-- Response schema modifications
-- Required field additions
-- Database column removals
-- Environment variable changes
-- TypeScript interface modifications
-
-### 4. Test Coverage Analysis
-- New code vs new test ratio
-- Missing tests for new public functions
-- Deleted tests without deleted code
-- Coverage delta calculation
-
-### 5. Performance Assessment
-- N+1 query pattern detection
-- Bundle size regression indicators
-- Unbounded queries without LIMIT
-- Missing database indexes for new query patterns
+---
 
 ## When to Use
 
-- Before merging any PR that touches shared libraries, APIs, or database schemas
+- Before merging any PR/MR that touches shared libraries, APIs, or DB schema
 - When a PR is large (>200 lines changed) and needs structured review
-- For PRs in security-sensitive code paths (auth, payments, PII handling)
-- After an incident to proactively review similar code changes
-- For onboarding new contributors whose PRs need thorough feedback
+- Onboarding new contributors whose PRs need thorough feedback
+- Security-sensitive code paths (auth, payments, PII handling)
+- After an incident — review similar PRs proactively
 
-## Review Workflow
+---
 
-### Step 1: Gather Context
+## Fetching the Diff
+
+### GitHub (gh CLI)
+```bash
+# View diff in terminal
+gh pr diff <PR_NUMBER>
+
+# Get PR metadata (title, body, labels, linked issues)
+gh pr view <PR_NUMBER> --json title,body,labels,assignees,milestone
+
+# List files changed
+gh pr diff <PR_NUMBER> --name-only
+
+# Check CI status
+gh pr checks <PR_NUMBER>
+
+# Download diff to file for analysis
+gh pr diff <PR_NUMBER> > /tmp/pr-<PR_NUMBER>.diff
+```
+
+### GitLab (glab CLI)
+```bash
+# View MR diff
+glab mr diff <MR_IID>
+
+# MR details as JSON
+glab mr view <MR_IID> --output json
+
+# List changed files
+glab mr diff <MR_IID> --name-only
+
+# Download diff
+glab mr diff <MR_IID> > /tmp/mr-<MR_IID>.diff
+```
+
+---
+
+## Workflow
+
+### Step 1 — Fetch Context
 
 ```bash
 PR=123
-
-# PR metadata
 gh pr view $PR --json title,body,labels,milestone,assignees | jq .
-
-# Files changed
 gh pr diff $PR --name-only
-
-# Full diff for analysis
 gh pr diff $PR > /tmp/pr-$PR.diff
-
-# CI status
-gh pr checks $PR
 ```
 
-### Step 2: Blast Radius Analysis
+### Step 2 — Blast Radius Analysis
 
-For each changed file, determine its impact scope:
+For each changed file, identify:
 
+1. **Direct dependents** — who imports this file?
 ```bash
-DIFF_FILES=$(gh pr diff $PR --name-only)
+# Find all files importing a changed module
+grep -r "from ['\"].*changed-module['\"]" src/ --include="*.ts" -l
+grep -r "require(['\"].*changed-module" src/ --include="*.js" -l
 
-# Find all files that import changed modules
-for file in $DIFF_FILES; do
-  module=$(basename "$file" .ts | sed 's/\..*$//')
-  echo "=== Dependents of $file ==="
-  grep -rl "from.*$module\|import.*$module\|require.*$module" src/ --include="*.ts" --include="*.tsx" -l 2>/dev/null
-done
-
-# Check if changes span multiple services (monorepo)
-echo "$DIFF_FILES" | cut -d/ -f1-2 | sort -u
-
-# Identify shared contracts
-echo "$DIFF_FILES" | grep -E "types/|interfaces/|schemas/|models/|shared/"
+# Python
+grep -r "from changed_module import\|import changed_module" . --include="*.py" -l
 ```
 
-**Blast Radius Severity:**
+2. **Service boundaries** — does this change cross a service?
+```bash
+# Check if changed files span multiple services (monorepo)
+gh pr diff $PR --name-only | cut -d/ -f1-2 | sort -u
+```
 
-| Severity | Criteria | Examples |
-|----------|----------|---------|
-| CRITICAL | Shared library used by 5+ consumers | `packages/utils/`, auth middleware, DB schema |
-| HIGH | Cross-service impact, shared config | API contracts, env vars, shared types |
-| MEDIUM | Single service internal change | Service handler, utility function |
-| LOW | Isolated change, no dependents | UI component, test file, documentation |
+3. **Shared contracts** — types, interfaces, schemas
+```bash
+gh pr diff $PR --name-only | grep -E "types/|interfaces/|schemas/|models/"
+```
 
-### Step 3: Security Scan
+**Blast radius severity:**
+- CRITICAL — shared library, DB model, auth middleware, API contract
+- HIGH     — service used by >3 others, shared config, env vars
+- MEDIUM   — single service internal change, utility function
+- LOW      — UI component, test file, docs
+
+### Step 3 — Security Scan
 
 ```bash
 DIFF=/tmp/pr-$PR.diff
 
-# SQL injection — raw string interpolation in queries
-grep -n "query\|execute\|raw(" $DIFF | grep -E '\$\{|f"|%s|format\(' | grep "^+"
+# SQL Injection — raw query string interpolation
+grep -n "query\|execute\|raw(" $DIFF | grep -E '\$\{|f"|%s|format\('
 
 # Hardcoded secrets
-grep -nE "(password|secret|api_key|token|private_key)\s*=\s*['\"][^'\"]{8,}" $DIFF | grep "^+"
+grep -nE "(password|secret|api_key|token|private_key)\s*=\s*['\"][^'\"]{8,}" $DIFF
 
-# AWS keys
+# AWS key pattern
 grep -nE "AKIA[0-9A-Z]{16}" $DIFF
 
+# JWT secret in code
+grep -nE "jwt\.sign\(.*['\"][^'\"]{20,}['\"]" $DIFF
+
 # XSS vectors
-grep -n "dangerouslySetInnerHTML\|innerHTML\s*=" $DIFF | grep "^+"
+grep -n "dangerouslySetInnerHTML\|innerHTML\s*=" $DIFF
 
-# Auth bypass indicators
-grep -n "bypass\|skip.*auth\|noauth\|TODO.*auth" $DIFF | grep "^+"
+# Auth bypass patterns
+grep -n "bypass\|skip.*auth\|noauth\|TODO.*auth" $DIFF
 
-# Insecure crypto
-grep -nE "md5\(|sha1\(|createHash\(['\"]md5|createHash\(['\"]sha1" $DIFF | grep "^+"
+# Insecure hash algorithms
+grep -nE "md5\(|sha1\(|createHash\(['\"]md5|createHash\(['\"]sha1" $DIFF
 
-# eval/exec
-grep -nE "\beval\(|\bexec\(|\bsubprocess\.call\(" $DIFF | grep "^+"
-
-# Path traversal
-grep -nE "path\.join\(.*req\.|readFile\(.*req\." $DIFF | grep "^+"
+# eval / exec
+grep -nE "\beval\(|\bexec\(|\bsubprocess\.call\(" $DIFF
 
 # Prototype pollution
-grep -n "__proto__\|constructor\[" $DIFF | grep "^+"
+grep -n "__proto__\|constructor\[" $DIFF
 
-# Sensitive data in logs
-grep -nE "console\.(log|info|warn|error).*password\|console\.(log|info|warn|error).*token\|console\.(log|info|warn|error).*secret" $DIFF | grep "^+"
+# Path traversal risk
+grep -nE "path\.join\(.*req\.|readFile\(.*req\." $DIFF
 ```
 
-### Step 4: Breaking Change Detection
+### Step 4 — Test Coverage Delta
 
 ```bash
-# API endpoint removals
-grep "^-" $DIFF | grep -E "router\.(get|post|put|delete|patch)\(|@app\.(get|post|put|delete)"
+# Count source vs test files changed
+CHANGED_SRC=$(gh pr diff $PR --name-only | grep -vE "\.test\.|\.spec\.|__tests__")
+CHANGED_TESTS=$(gh pr diff $PR --name-only | grep -E "\.test\.|\.spec\.|__tests__")
 
-# TypeScript interface/type removals
-grep "^-" $DIFF | grep -E "^-\s*(export\s+)?(interface|type) "
+echo "Source files changed: $(echo "$CHANGED_SRC" | wc -w)"
+echo "Test files changed:   $(echo "$CHANGED_TESTS" | wc -w)"
 
-# Required field additions to existing types
-grep "^+" $DIFF | grep -E ":\s*(string|number|boolean)\s*$" | grep -v "?" # non-optional additions
+# Lines of new logic vs new test lines
+LOGIC_LINES=$(grep "^+" /tmp/pr-$PR.diff | grep -v "^+++" | wc -l)
+echo "New lines added: $LOGIC_LINES"
 
-# Database migrations: destructive operations
-grep -E "DROP TABLE|DROP COLUMN|ALTER.*NOT NULL|TRUNCATE" $DIFF
-
-# Index removals
-grep -E "DROP INDEX|remove_index" $DIFF
-
-# Removed env vars
-grep "^-" $DIFF | grep -oE "process\.env\.[A-Z_]+" | sort -u
-
-# New env vars (may not be set in production)
-grep "^+" $DIFF | grep -oE "process\.env\.[A-Z_]+" | sort -u
+# Run coverage locally
+npm test -- --coverage --changedSince=main 2>/dev/null | tail -20
+pytest --cov --cov-report=term-missing 2>/dev/null | tail -20
 ```
 
-### Step 5: Test Coverage Delta
+**Coverage delta rules:**
+- New function without tests → flag
+- Deleted tests without deleted code → flag
+- Coverage drop >5% → block merge
+- Auth/payments paths → require 100% coverage
 
+### Step 5 — Breaking Change Detection
+
+#### API Contract Changes
 ```bash
-# Count source vs test changes
-SRC_FILES=$(gh pr diff $PR --name-only | grep -vE "\.test\.|\.spec\.|__tests__|\.stories\.")
-TEST_FILES=$(gh pr diff $PR --name-only | grep -E "\.test\.|\.spec\.|__tests__")
+# OpenAPI/Swagger spec changes
+grep -n "openapi\|swagger" /tmp/pr-$PR.diff | head -20
 
-echo "Source files changed: $(echo "$SRC_FILES" | grep -c .)"
-echo "Test files changed:   $(echo "$TEST_FILES" | grep -c .)"
+# REST route removals or renames
+grep "^-" /tmp/pr-$PR.diff | grep -E "router\.(get|post|put|delete|patch)\("
 
-# New lines of logic vs test
-LOGIC_LINES=$(grep "^+" $DIFF | grep -v "^+++" | grep -v "\.test\.\|\.spec\." | wc -l)
-TEST_LINES=$(grep "^+" $DIFF | grep -v "^+++" | grep "\.test\.\|\.spec\." | wc -l)
-echo "New logic lines: $LOGIC_LINES"
-echo "New test lines:  $TEST_LINES"
+# GraphQL schema removals
+grep "^-" /tmp/pr-$PR.diff | grep -E "^-\s*(type |field |Query |Mutation )"
+
+# TypeScript interface removals
+grep "^-" /tmp/pr-$PR.diff | grep -E "^-\s*(export\s+)?(interface|type) "
 ```
 
-**Coverage Rules:**
-- New public function without tests: flag as must-fix
-- Deleted tests without deleted code: flag as must-fix
-- Coverage drop >5%: block merge
-- Auth/payments paths: require near-100% coverage
+#### DB Schema Changes
+```bash
+# Migration files added
+gh pr diff $PR --name-only | grep -E "migrations?/|alembic/|knex/"
 
-### Step 6: Performance Impact
+# Destructive operations
+grep -E "DROP TABLE|DROP COLUMN|ALTER.*NOT NULL|TRUNCATE" /tmp/pr-$PR.diff
+
+# Index removals (perf regression risk)
+grep "DROP INDEX\|remove_index" /tmp/pr-$PR.diff
+```
+
+#### Config / Env Var Changes
+```bash
+# New env vars referenced in code (might be missing in prod)
+grep "^+" /tmp/pr-$PR.diff | grep -oE "process\.env\.[A-Z_]+" | sort -u
+
+# Removed env vars (could break running instances)
+grep "^-" /tmp/pr-$PR.diff | grep -oE "process\.env\.[A-Z_]+" | sort -u
+```
+
+### Step 6 — Performance Impact
 
 ```bash
-# N+1 patterns: DB calls that might be inside loops
-grep -n "\.find\|\.findOne\|\.query\|db\." $DIFF | grep "^+" | head -20
+# N+1 query patterns (DB calls inside loops)
+grep -n "\.find\|\.findOne\|\.query\|db\." /tmp/pr-$PR.diff | grep "^+" | head -20
+# Then check surrounding context for forEach/map/for loops
 
 # Heavy new dependencies
-grep "^+" $DIFF | grep -E '"[a-z@].*":\s*"[0-9^~]' | head -10
+grep "^+" /tmp/pr-$PR.diff | grep -E '"[a-z@].*":\s*"[0-9^~]' | head -20
 
 # Unbounded loops
-grep -n "while (true\|while(true" $DIFF | grep "^+"
+grep -n "while (true\|while(true" /tmp/pr-$PR.diff | grep "^+"
 
-# Missing await (accidentally sequential)
-grep -n "await.*await" $DIFF | grep "^+"
+# Missing await (accidentally sequential promises)
+grep -n "await.*await" /tmp/pr-$PR.diff | grep "^+" | head -10
 
-# Large allocations
-grep -n "new Array([0-9]\{4,\}\|Buffer\.alloc" $DIFF | grep "^+"
+# Large in-memory allocations
+grep -n "new Array([0-9]\{4,\}\|Buffer\.alloc" /tmp/pr-$PR.diff | grep "^+"
 ```
 
-## Review Report Format
+---
 
-Structure every review using this format:
+## Ticket Linking Verification
+
+```bash
+# Extract ticket references from PR body
+gh pr view $PR --json body | jq -r '.body' | \
+  grep -oE "(PROJ-[0-9]+|[A-Z]+-[0-9]+|https://linear\.app/[^)\"]+)" | sort -u
+
+# Verify Jira ticket exists (requires JIRA_API_TOKEN)
+TICKET="PROJ-123"
+curl -s -u "user@company.com:$JIRA_API_TOKEN" \
+  "https://your-org.atlassian.net/rest/api/3/issue/$TICKET" | \
+  jq '{key, summary: .fields.summary, status: .fields.status.name}'
+
+# Linear ticket
+LINEAR_ID="abc-123"
+curl -s -H "Authorization: $LINEAR_API_KEY" \
+  -H "Content-Type: application/json" \
+  --data "{\"query\": \"{ issue(id: \\\"$LINEAR_ID\\\") { title state { name } } }\"}" \
+  https://api.linear.app/graphql | jq .
+```
+
+---
+
+## Complete Review Checklist (30+ Items)
 
 ```markdown
-## PR Review: [PR Title] (#NUMBER)
+## Code Review Checklist
 
-**Blast Radius:** HIGH — changes `lib/auth` used by 5 services
-**Security:** 1 finding (medium severity)
-**Tests:** Coverage delta +2% (3 new tests for 5 new functions)
-**Breaking Changes:** None detected
-
----
-
-### MUST FIX (Blocking)
-
-**1. SQL Injection risk in `src/db/users.ts:42`**
-Raw string interpolation in WHERE clause.
-```diff
-- const user = await db.query(`SELECT * FROM users WHERE id = '${userId}'`)
-+ const user = await db.query('SELECT * FROM users WHERE id = $1', [userId])
-```
-
-**2. Missing auth check on `POST /api/admin/reset`**
-No role verification before destructive operation.
-Add `requireRole('admin')` middleware.
-
----
-
-### SHOULD FIX (Non-blocking)
-
-**3. N+1 pattern in `src/services/reports.ts:88`**
-`findUser()` called inside `results.map()` — batch with `findManyUsers(ids)`.
-
-**4. New env var `FEATURE_FLAG_X` not in `.env.example`**
-Add to `.env.example` with description so other developers know about it.
-
----
-
-### SUGGESTIONS
-
-**5. Consider pagination for `GET /api/projects`**
-Currently returns all projects without limit. Add `?limit=20&offset=0`.
-
----
-
-### LOOKS GOOD
-- Auth flow for new OAuth provider is thorough
-- DB migration has proper rollback (`down()` method)
-- Error handling is consistent with rest of codebase
-- Test names clearly describe what they verify
-```
-
-## Complete Review Checklist (35 Items)
-
-```markdown
-### Scope and Context
+### Scope & Context
 - [ ] PR title accurately describes the change
 - [ ] PR description explains WHY, not just WHAT
-- [ ] Linked ticket exists and matches scope
+- [ ] Linked Jira/Linear ticket exists and matches scope
 - [ ] No unrelated changes (scope creep)
 - [ ] Breaking changes documented in PR body
 
 ### Blast Radius
-- [ ] All files importing changed modules identified
+- [ ] Identified all files importing changed modules
 - [ ] Cross-service dependencies checked
-- [ ] Shared types/interfaces reviewed for breakage
+- [ ] Shared types/interfaces/schemas reviewed for breakage
 - [ ] New env vars documented in .env.example
-- [ ] DB migrations are reversible (have rollback)
+- [ ] DB migrations are reversible (have down() / rollback)
 
 ### Security
 - [ ] No hardcoded secrets or API keys
-- [ ] SQL queries use parameterized inputs
-- [ ] User inputs validated and sanitized
-- [ ] Auth/authorization on all new endpoints
+- [ ] SQL queries use parameterized inputs (no string interpolation)
+- [ ] User inputs validated/sanitized before use
+- [ ] Auth/authorization checks on all new endpoints
 - [ ] No XSS vectors (innerHTML, dangerouslySetInnerHTML)
 - [ ] New dependencies checked for known CVEs
 - [ ] No sensitive data in logs (PII, tokens, passwords)
-- [ ] File uploads validated (type, size, content)
+- [ ] File uploads validated (type, size, content-type)
 - [ ] CORS configured correctly for new endpoints
 
 ### Testing
@@ -314,107 +298,87 @@ Currently returns all projects without limit. Add `?limit=20&offset=0`.
 - [ ] Edge cases covered (empty, null, max values)
 - [ ] Error paths tested (not just happy path)
 - [ ] Integration tests for API endpoint changes
-- [ ] No tests deleted without clear justification
-- [ ] Test names describe what they verify
+- [ ] No tests deleted without clear reason
+- [ ] Test names clearly describe what they verify
 
 ### Breaking Changes
-- [ ] No API endpoints removed without deprecation
-- [ ] No required fields added to existing responses
-- [ ] No DB columns removed without migration plan
-- [ ] No env vars removed that may be in production
-- [ ] Backward-compatible for external consumers
+- [ ] No API endpoints removed without deprecation notice
+- [ ] No required fields added to existing API responses
+- [ ] No DB columns removed without two-phase migration plan
+- [ ] No env vars removed that may be set in production
+- [ ] Backward-compatible for external API consumers
 
 ### Performance
 - [ ] No N+1 query patterns introduced
 - [ ] DB indexes added for new query patterns
-- [ ] No unbounded loops on large datasets
+- [ ] No unbounded loops on potentially large datasets
 - [ ] No heavy new dependencies without justification
 - [ ] Async operations correctly awaited
-- [ ] Caching considered for expensive operations
+- [ ] Caching considered for expensive repeated operations
 
 ### Code Quality
 - [ ] No dead code or unused imports
-- [ ] Error handling present (no empty catch blocks)
-- [ ] Consistent with existing patterns
+- [ ] Error handling present (no bare empty catch blocks)
+- [ ] Consistent with existing patterns and conventions
 - [ ] Complex logic has explanatory comments
+- [ ] No unresolved TODOs (or tracked in ticket)
 ```
 
-## Comment Labels
+---
 
-Use consistent labels so authors can quickly prioritize:
+## Output Format
 
-| Label | Meaning | Action Required |
-|-------|---------|-----------------|
-| `must:` | Blocking issue | Must fix before merge |
-| `should:` | Important improvement | Should fix, but not blocking |
-| `nit:` | Style/preference | Take it or leave it |
-| `question:` | Need clarification | Respond before merge |
-| `suggestion:` | Alternative approach | Consider, no action needed |
-| `praise:` | Good pattern | No action needed |
+Structure your review comment as:
+
+```
+## PR Review: [PR Title] (#NUMBER)
+
+Blast Radius: HIGH — changes lib/auth used by 5 services
+Security: 1 finding (medium severity)
+Tests: Coverage delta +2%
+Breaking Changes: None detected
+
+--- MUST FIX (Blocking) ---
+
+1. SQL Injection risk in src/db/users.ts:42
+   Raw string interpolation in WHERE clause.
+   Fix: db.query("SELECT * WHERE id = $1", [userId])
+
+--- SHOULD FIX (Non-blocking) ---
+
+2. Missing auth check on POST /api/admin/reset
+   No role verification before destructive operation.
+
+--- SUGGESTIONS ---
+
+3. N+1 pattern in src/services/reports.ts:88
+   findUser() called inside results.map() — batch with findManyUsers(ids)
+
+--- LOOKS GOOD ---
+- Test coverage for new auth flow is thorough
+- DB migration has proper down() rollback method
+- Error handling consistent with rest of codebase
+```
+
+---
 
 ## Common Pitfalls
 
-- **Reviewing style over substance** — let the linter handle formatting; focus on logic, security, correctness
+- **Reviewing style over substance** — let the linter handle style; focus on logic, security, correctness
 - **Missing blast radius** — a 5-line change in a shared utility can break 20 services
-- **Approving untested happy paths** — always check that error paths have coverage
+- **Approving untested happy paths** — always verify error paths have coverage
 - **Ignoring migration risk** — NOT NULL additions need a default or two-phase migration
-- **Indirect secret exposure** — secrets in error messages and logs, not just hardcoded values
-- **Skipping large PRs** — if too large to review properly, request it be split
-- **Trickle feedback** — batch all comments in one review round; do not drip-feed over hours
+- **Indirect secret exposure** — secrets in error messages/logs, not just hardcoded values
+- **Skipping large PRs** — if a PR is too large to review properly, request it be split
+
+---
 
 ## Best Practices
 
-1. **Read the linked ticket first** — context prevents false positives in the review
-2. **Check CI before reviewing** — do not review code that fails to build
-3. **Prioritize blast radius and security over style** — these are where real bugs live
-4. **Label every comment** — `must:`, `nit:`, `question:` so authors know what matters
-5. **Batch all comments in one round** — multiple partial reviews frustrate authors
-6. **Acknowledge good patterns** — specific praise improves code quality culture
-7. **Reproduce locally for non-trivial changes** — especially auth and performance-sensitive code
-
-## Troubleshooting
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Blast radius analysis misses dependents | `grep` only searches `src/` by default | Expand search paths to include `packages/`, `libs/`, and monorepo service directories |
-| Security scan produces false positives on test files | Diff includes test fixtures with fake secrets | Filter scan output to exclude `*.test.*`, `*.spec.*`, `__tests__/`, and `fixtures/` paths |
-| Breaking change detection flags internal-only types | No distinction between exported and internal interfaces | Check whether flagged types are re-exported from the package entry point before reporting |
-| Test coverage delta shows 0 when tests exist | Test files use non-standard naming conventions | Adjust the `grep -E` pattern in Step 5 to match your project's test file naming (e.g., `*.unit.*`, `*_test.*`) |
-| `gh pr diff` returns empty output | PR has no commits yet or branch is not pushed | Verify the PR has at least one commit pushed to the remote with `gh pr view $PR --json commits` |
-| N+1 detection flags ORM eager-loaded queries | Pattern matching cannot distinguish eager vs lazy loading | Cross-reference flagged lines with ORM configuration to confirm whether relations are pre-loaded |
-| Review report is too long for PR comment | PR touches 50+ files across multiple services | Split the review into per-service comments or request the author break the PR into smaller scoped PRs |
-
-## Success Criteria
-
-- Review turnaround time under 30 minutes for PRs with fewer than 500 changed lines
-- Zero post-merge security findings on PRs that received a full review using this skill
-- Blast radius severity rating matches actual production impact in 90%+ of cases
-- All must-fix items are resolved before merge with no exceptions
-- Test coverage delta is calculated and reported on every reviewed PR
-- Breaking changes are detected before merge in 95%+ of cases, validated against deployment incidents
-- Reviewer feedback is batched into a single review round at least 90% of the time
-
-## Scope & Limitations
-
-**This skill covers:**
-- Structured review of GitHub PRs and GitLab MRs using a 35+ item checklist
-- Blast radius analysis for monorepo and multi-service architectures
-- Static security scanning of diffs for common vulnerability patterns (SQLi, XSS, secrets, auth bypass)
-- Breaking change detection for APIs, database schemas, TypeScript interfaces, and environment variables
-
-**This skill does NOT cover:**
-- Automated code fixes or refactoring — use `engineering/saas-scaffolder` or `engineering/migration-architect` for code generation
-- Runtime security analysis, SAST/DAST tool orchestration, or CVE database lookups — use `engineering/dependency-auditor` for dependency-level vulnerability scanning
-- CI/CD pipeline configuration or build failure triage — use `engineering/ci-cd-pipeline-builder` for pipeline design
-- Performance benchmarking or load testing — use `engineering/performance-profiler` for profiling and optimization guidance
-
-## Integration Points
-
-| Skill | Integration | Data Flow |
-|-------|-------------|-----------|
-| `engineering/dependency-auditor` | Run dependency audit before reviewing PRs that add or upgrade packages | Audit report feeds into the Security section of the review report |
-| `engineering/ci-cd-pipeline-builder` | Embed review checklist gates into CI pipelines as automated PR checks | Checklist items become pass/fail signals in the pipeline |
-| `engineering/performance-profiler` | Escalate N+1 and unbounded query findings for detailed profiling | Flagged code paths from review become profiling targets |
-| `engineering/migration-architect` | Validate database migration safety for PRs that include schema changes | Migration risk assessment supplements the Breaking Changes section |
-| `engineering/release-manager` | Feed breaking change detection results into release notes and changelogs | Detected breaking changes auto-populate release documentation |
-| `engineering/api-design-reviewer` | Cross-reference API endpoint changes with API design standards | API review findings merge into the Blast Radius and Breaking Changes sections |
+1. Read the linked ticket before looking at code — context prevents false positives
+2. Check CI status before reviewing — don't review code that fails to build
+3. Prioritize blast radius and security over style
+4. Reproduce locally for non-trivial auth or performance changes
+5. Label each comment clearly: "nit:", "must:", "question:", "suggestion:"
+6. Batch all comments in one review round — don't trickle feedback
+7. Acknowledge good patterns, not just problems — specific praise improves culture

@@ -1,18 +1,11 @@
 ---
 name: swiftui-ui-patterns
-description: Apply proven SwiftUI UI patterns for navigation, sheets, async state, and reusable screens.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Best practices and example-driven guidance for building SwiftUI views and components, including navigation hierarchies, custom view modifiers, and responsive layouts with stacks and grids. Use when creating or refactoring SwiftUI UI, designing tab architecture with TabView, composing screens with VStack/HStack, managing @State or @Binding, building declarative iOS interfaces, or needing component-specific patterns and examples.
 ---
 
 # SwiftUI UI Patterns
 
 ## Quick start
-
-## When to Use
-- When creating or refactoring SwiftUI screens, flows, or reusable UI components.
-- When you need guidance on navigation, sheets, async state, previews, or component patterns.
 
 Choose a track based on your goal:
 
@@ -100,8 +93,3 @@ Use `references/components-index.md` as the entry point. Each component referenc
 - Create `references/<component>.md`.
 - Keep it short and actionable; link to concrete files in the current repo.
 - Update `references/components-index.md` with the new entry.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

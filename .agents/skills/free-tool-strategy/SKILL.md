@@ -1,459 +1,582 @@
 ---
 name: free-tool-strategy
-description: >
-  Free tool marketing strategy covering idea evaluation, tool design, lead
-  capture architecture, SEO landing pages, launch playbook, and ROI measurement
-  for calculators, generators, checkers, graders, and interactive tools.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: business-growth
-  updated: 2026-03-31
-  tags:
-    - growth
-    - free-tools
-    - engineering-as-marketing
-    - lead-generation
-    - product-led-growth
----
-# Free Tool Strategy
-
-Production-grade framework for building free tools that generate traffic, leads, and backlinks. Covers idea evaluation with a 6-factor scoring system, tool design patterns, lead capture architecture, SEO landing page strategy, launch playbook, and ROI measurement. Applicable to calculators, generators, checkers, graders, converters, templates, and interactive visualizations.
-
+description: "When the user wants to plan, evaluate, or build a free tool for marketing purposes \u2014 lead generation, SEO value, or brand awareness. Also use when the user mentions \"engineering as mar..."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
-## Table of Contents
+# Free Tool Strategy (Engineering as Marketing)
 
-- [When to Build vs When Not To](#when-to-build-vs-when-not-to)
-- [Tool Type Selection](#tool-type-selection)
-- [6-Factor Evaluation Framework](#6-factor-evaluation-framework)
-- [Tool Design Principles](#tool-design-principles)
-- [Lead Capture Architecture](#lead-capture-architecture)
-- [SEO Landing Page Strategy](#seo-landing-page-strategy)
-- [Launch Playbook](#launch-playbook)
-- [Distribution Channels](#distribution-channels)
-- [Measurement Framework](#measurement-framework)
-- [Maintenance and Iteration](#maintenance-and-iteration)
-- [Output Artifacts](#output-artifacts)
-- [Related Skills](#related-skills)
+You are an expert in engineering-as-marketing strategy. Your goal is to help plan and evaluate free tools that generate leads, attract organic traffic, and build brand awareness.
+
+## Initial Assessment
+
+Before designing a tool strategy, understand:
+
+1. **Business Context**
+   - What's the core product/service?
+   - Who is the target audience?
+   - What problems do they have?
+
+2. **Goals**
+   - Lead generation primary goal?
+   - SEO/traffic acquisition?
+   - Brand awareness?
+   - Product education?
+
+3. **Resources**
+   - Technical capacity to build?
+   - Ongoing maintenance bandwidth?
+   - Budget for promotion?
 
 ---
 
-## When to Build vs When Not To
+## Core Principles
 
-**Build a free tool when:**
-- Search volume exists for "[topic] calculator/generator/checker" (> 500/month)
-- No excellent free alternative exists (or you can be 10x better)
-- The tool naturally connects to your paid product
-- You have engineering resources to build AND maintain it
-- The tool produces shareable, bookmark-worthy output
+### 1. Solve a Real Problem
+- Tool must provide genuine value
+- Solves a problem your audience actually has
+- Useful even without your main product
 
-**Do NOT build when:**
-- A well-established free tool already exists and is sufficient
-- The tool would be a thin wrapper with no unique value
-- You cannot maintain it post-launch
-- The tool requires data you do not have or cannot access
-- Total addressable search volume is < 200/month
+### 2. Adjacent to Core Product
+- Related to what you sell
+- Natural path from tool to product
+- Educates on problem you solve
 
----
+### 3. Simple and Focused
+- Does one thing well
+- Low friction to use
+- Immediate value
 
-## Tool Type Selection
-
-| Tool Type | What It Does | Build Complexity | Lead Capture Fit | SEO Value | Example |
-|-----------|-------------|-----------------|-----------------|-----------|---------|
-| Calculator | Takes inputs, outputs a number/range | Low-Medium | High (email the full report) | High | ROI calculator, LTV calculator, salary calculator |
-| Generator | Creates text, ideas, or structured content | Low (template) to High (AI) | Medium (save/download results) | High | Headline generator, name generator, bio writer |
-| Checker/Auditor | Analyzes a URL, text, or file and scores it | Medium-High | Very high (full report via email) | Very high | SEO audit, readability checker, accessibility checker |
-| Grader | Scores something against a rubric | Medium | High (detailed scorecard) | High | Website grader, email subject line grader |
-| Converter | Transforms input from one format to another | Low-Medium | Low (utility, quick use) | Medium | Unit converter, file converter, timezone converter |
-| Template Library | Pre-built fillable documents | Very low | Medium (download gated) | High | Contract templates, brief templates, spreadsheet templates |
-| Interactive Visualization | Shows data or concepts visually | High | Medium | Very high (link magnet) | Market maps, comparison charts, trend visualizers |
-
-### Selection Decision Tree
-
-```
-What do you want to generate?
-├── Leads (email capture) → Checker/Auditor or Calculator (report gating)
-├── SEO traffic → Calculator or Checker (high search volume keywords)
-├── Backlinks → Interactive Visualization or Template Library (link magnet)
-├── Brand awareness → Generator (shareable output, social virality)
-└── All of the above → Checker/Auditor (highest combined value)
-```
+### 4. Worth the Investment
+- Lead value × expected leads > build cost + maintenance
+- Consider SEO value
+- Consider brand halo effect
 
 ---
 
-## 6-Factor Evaluation Framework
+## Tool Types
 
-Score each tool idea 1-5 on each factor. Maximum score: 30.
+### Calculators
 
-| Factor | What to Check | 1 (Weak) | 3 (Moderate) | 5 (Strong) |
-|--------|--------------|----------|-------------|-----------|
-| Search Volume | Monthly searches for "free [tool]" | < 100/mo | 500-2,000/mo | > 5,000/mo |
-| Competition | Quality of existing free tools | Excellent tools exist | Decent tools, room to improve | No good free alternatives |
-| Build Effort | Engineering time required | Months of work | 1-2 weeks | Days |
-| Lead Capture Potential | Natural email gate opportunity | Forced gate kills UX | Reasonable gate | Natural fit (report, saved results) |
-| SEO Value | Topical authority and backlink potential | Thin, one-page utility | Moderate content depth | Deep use case, link magnet |
-| Viral Potential | Will users share results or embed? | Nobody would share | Some sharing potential | Results are inherently shareable |
+**Best for**: Decisions involving numbers, comparisons, estimates
 
-### Scoring Thresholds
+**Examples**:
+- ROI calculator
+- Savings calculator
+- Cost comparison tool
+- Salary calculator
+- Tax estimator
 
-| Score | Decision |
-|-------|----------|
-| 25-30 | Build immediately -- strong across all factors |
-| 20-24 | Strong candidate -- validate search volume before committing |
-| 15-19 | Conditional -- only if resources are available and strategic fit is strong |
-| < 15 | Do not build -- rethink the concept or find a different angle |
+**Why they work**:
+- Personalized output
+- High perceived value
+- Share-worthy results
+- Clear problem → solution
+
+### Generators
+
+**Best for**: Creating something useful quickly
+
+**Examples**:
+- Policy generator
+- Template generator
+- Name/tagline generator
+- Email subject line generator
+- Resume builder
+
+**Why they work**:
+- Tangible output
+- Saves time
+- Easily shared
+- Repeat usage
+
+### Analyzers/Auditors
+
+**Best for**: Evaluating existing work or assets
+
+**Examples**:
+- Website grader
+- SEO analyzer
+- Email subject tester
+- Headline analyzer
+- Security checker
+
+**Why they work**:
+- Curiosity-driven
+- Personalized insights
+- Creates awareness of problems
+- Natural lead to solution
+
+### Testers/Validators
+
+**Best for**: Checking if something works
+
+**Examples**:
+- Meta tag preview
+- Email rendering test
+- Accessibility checker
+- Mobile-friendly test
+- Speed test
+
+**Why they work**:
+- Immediate utility
+- Bookmark-worthy
+- Repeat usage
+- Professional necessity
+
+### Libraries/Resources
+
+**Best for**: Reference material
+
+**Examples**:
+- Icon library
+- Template library
+- Code snippet library
+- Example gallery
+- Directory
+
+**Why they work**:
+- High SEO value
+- Ongoing traffic
+- Establishes authority
+- Linkable asset
+
+### Interactive Educational
+
+**Best for**: Learning/understanding
+
+**Examples**:
+- Interactive tutorials
+- Code playgrounds
+- Visual explainers
+- Quizzes/assessments
+- Simulators
+
+**Why they work**:
+- Engages deeply
+- Demonstrates expertise
+- Shareable
+- Memory-creating
 
 ---
 
-## Tool Design Principles
+## Ideation Framework
 
-### Value Before Gate
+### Start with Pain Points
 
-**The cardinal rule:** Give the core value first. Gate the upgrade.
+1. **What problems does your audience Google?**
+   - Search query research
+   - Common questions
+   - "How to" searches
 
-| Good | Bad |
-|------|-----|
-| Show the score immediately, offer to email the full report | "Enter your email to see your results" |
-| Display the generated content, gate the save/export | Block all output behind email wall |
-| Free basic analysis, premium detailed breakdown | Nothing visible without signup |
+2. **What manual processes are tedious?**
+   - Tasks done in spreadsheets
+   - Repetitive calculations
+   - Copy-paste workflows
 
-### Minimal Friction Input
+3. **What do they need before buying your product?**
+   - Assessments of current state
+   - Planning/scoping
+   - Comparisons
 
-- Maximum 3 inputs to get initial results
-- No account required for core value
-- Progressive disclosure: simple first, detailed on request
-- Smart defaults where possible (auto-detect, pre-fill)
+4. **What information do they wish they had?**
+   - Data they can't easily access
+   - Personalized insights
+   - Industry benchmarks
 
-### Shareable Output
+### Validate the Idea
 
-Design results so users want to share them:
+**Search demand:**
+- Is there search volume for this problem?
+- What keywords would rank?
+- How competitive?
 
-| Mechanism | Implementation |
-|-----------|---------------|
-| Unique results URL | Each run gets a shareable permalink |
-| Social share buttons | "Tweet your score" with pre-filled text |
-| Downloadable report | PDF or CSV export |
-| Embeddable badge/widget | "Scored 92/100 by [Your Tool]" badge |
-| Visual score card | Social-media-ready image with result |
+**Uniqueness:**
+- What exists already?
+- How can you be 10x better or different?
+- What's your unique angle?
 
-### Mobile-First Design
+**Lead quality:**
+- Does this problem-audience match buyers?
+- Will users be your target customers?
+- Is there a natural path to your product?
 
-- All inputs work on touch screens
-- Results render cleanly on mobile
-- Share buttons trigger native share sheet
-- No hover-dependent UI elements
+**Build feasibility:**
+- How complex to build?
+- Can you scope an MVP?
+- Ongoing maintenance burden?
 
 ---
 
-## Lead Capture Architecture
+## SEO Considerations
+
+### Keyword Strategy
+
+**Tool landing page:**
+- "[thing] calculator"
+- "[thing] generator"
+- "free [tool type]"
+- "[industry] [tool type]"
+
+**Supporting content:**
+- "How to [use case]"
+- "What is [concept tool helps with]"
+- Blog posts that link to tool
+
+### Link Building
+
+Free tools attract links because:
+- Genuinely useful (people reference them)
+- Unique (can't link to just any page)
+- Shareable (social amplification)
+
+**Outreach opportunities:**
+- Roundup posts ("best free tools for X")
+- Resource pages
+- Industry publications
+- Blogs writing about the problem
+
+### Technical SEO
+
+- Fast load time critical
+- Mobile-friendly essential
+- Crawlable content (not just JS app)
+- Proper meta tags
+- Schema markup if applicable
+
+---
+
+## Lead Capture Strategy
 
 ### When to Gate
 
-| Gate Decision | Criteria |
-|--------------|---------|
-| Gate with email | Results are complex (report format), ongoing value (re-run monthly), personalized output |
-| Do NOT gate | Core result is a single number, competition offers the same ungated, primary goal is SEO/backlinks |
+**Fully gated (email required to use):**
+- High-value, unique tools
+- Personalized reports
+- Risk: Lower usage
 
-### Progressive Capture
+**Partially gated (email for full results):**
+- Show preview, gate details
+- Better balance
+- Most common pattern
 
-Do not ask for everything at once. Build the profile over multiple interactions.
+**Ungated with optional capture:**
+- Tool is free to use
+- Email to save/share results
+- Highest usage, lower capture
 
-| Interaction | What to Capture | How |
-|------------|----------------|-----|
-| First use | Email (to save or email results) | Inline form after results display |
-| Return use | Name + Role | Contextual prompt, not a blocking form |
-| Repeated use | Company + Team size | If they request team features or saved history |
+**Ungated entirely:**
+- Pure SEO/brand play
+- No direct leads
+- Maximum reach
 
-### Capture Form Design
+### Lead Capture Best Practices
 
-- Email-only first gate (single field + submit button)
-- Position the form AFTER results are shown (not before)
-- Explain the value: "Email me a detailed breakdown" not "Sign up"
-- Privacy text: "We'll send your report. No spam."
-- Never require account creation for the free tool
+- Value exchange clear: "Get your full report"
+- Minimal friction: Email only
+- Show preview of what they'll get
+- Optional: Segment by asking one qualifying question
+
+### Post-Capture
+
+- Immediate email with results/link
+- Nurture sequence relevant to tool topic
+- Clear path to main product
+- Don't spam—provide value
 
 ---
 
-## SEO Landing Page Strategy
+## Build vs. Buy vs. Embed
 
-### Page Structure
+### Build Custom
+
+**When:**
+- Unique concept, nothing exists
+- Core to brand/product
+- High strategic value
+- Have development capacity
+
+**Consider:**
+- Development time
+- Ongoing maintenance
+- Hosting costs
+- Bug fixes
+
+### Use No-Code Tools
+
+**Options:**
+- Outgrow, Involve.me (calculators/quizzes)
+- Typeform, Tally (forms/quizzes)
+- Notion, Coda (databases)
+- Bubble, Webflow (apps)
+
+**When:**
+- Speed to market
+- Limited dev resources
+- Testing concept viability
+
+### Embed Existing
+
+**When:**
+- Something good already exists
+- White-label options available
+- Not core differentiator
+
+**Consider:**
+- Branding limitations
+- Dependency on third party
+- Cost vs. build
+
+---
+
+## MVP Scope
+
+### Minimum Viable Tool
+
+1. **Core functionality only**
+   - Does the one thing
+   - No bells and whistles
+   - Works reliably
+
+2. **Essential UX**
+   - Clear input
+   - Obvious output
+   - Mobile works
+
+3. **Basic lead capture**
+   - Email collection works
+   - Leads go somewhere useful
+   - Follow-up exists
+
+### What to Skip Initially
+
+- Account creation
+- Saving results
+- Advanced features
+- Perfect design
+- Every edge case
+
+### Iterate Based on Use
+
+- Track where users drop off
+- See what questions they have
+- Add features that get requested
+- Improve based on data
+
+---
+
+## Promotion Strategy
+
+### Launch
+
+**Owned channels:**
+- Email list announcement
+- Blog post / landing page
+- Social media
+- Product hunt (if applicable)
+
+**Outreach:**
+- Relevant newsletters
+- Industry publications
+- Bloggers in space
+- Social influencers
+
+### Ongoing
+
+**SEO:**
+- Target tool-related keywords
+- Supporting content
+- Link building
+
+**Social:**
+- Share interesting results (anonymized)
+- Use case examples
+- Tips for using the tool
+
+**Product integration:**
+- Mention in sales process
+- Link from related product features
+- Include in email sequences
+
+---
+
+## Measurement
+
+### Metrics to Track
+
+**Acquisition:**
+- Traffic to tool
+- Traffic sources
+- Keyword rankings
+- Backlinks acquired
+
+**Engagement:**
+- Tool usage/completions
+- Time spent
+- Return visitors
+- Shares
+
+**Conversion:**
+- Email captures
+- Lead quality score
+- MQLs generated
+- Pipeline influenced
+- Customers attributed
+
+### Attribution
+
+- UTM parameters for paid promotion
+- Separate landing page for organic
+- Track lead source through funnel
+- Survey new customers
+
+---
+
+## Evaluation Framework
+
+### Tool Idea Scorecard
+
+Rate each factor 1-5:
+
+| Factor | Score |
+|--------|-------|
+| Search demand exists | ___ |
+| Audience match to buyers | ___ |
+| Uniqueness vs. existing tools | ___ |
+| Natural path to product | ___ |
+| Build feasibility | ___ |
+| Maintenance burden (inverse) | ___ |
+| Link-building potential | ___ |
+| Share-worthiness | ___ |
+
+**25+**: Strong candidate
+**15-24**: Promising, needs refinement
+**<15**: Reconsider or scope differently
+
+### ROI Projection
 
 ```
-H1: Free [Tool Name] -- [What It Does in One Phrase]
-Subhead: [Who it is for] + [what problem it solves]
+Estimated monthly leads: [X]
+Lead-to-customer rate: [Y%]
+Average customer value: [$Z]
 
-[THE TOOL -- above the fold, interactive]
+Monthly value: X × Y% × $Z = $___
 
-H2: How [Tool Name] Works
-  (3-4 steps with screenshots)
+Build cost: $___
+Monthly maintenance: $___
 
-H2: Why [Audience] Use [Tool Name]
-  (Benefits, use cases, 3-5 paragraphs)
-
-H2: [Related Question 1] (FAQ-style, keyword-targeted)
-H2: [Related Question 2]
-H2: [Related Question 3]
-
-H2: Frequently Asked Questions
-  (5-7 FAQs with FAQPage schema)
-```
-
-### SEO Requirements
-
-- Target keyword in: H1, URL slug, meta title, first 100 words, 2+ subheadings
-- Meta title: "Free [Tool Name]: [Action Verb] Your [Outcome] | [Brand]"
-- Meta description: Include the keyword + what the tool does + "Free, no signup required"
-- URL: `/tools/[tool-name]` or `/free-[tool-name]`
-
-### Schema Markup
-
-Add `SoftwareApplication` schema:
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Free [Tool Name]",
-  "applicationCategory": "BusinessApplication",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "description": "[What the tool does]",
-  "operatingSystem": "Web"
-}
-```
-
-Also add FAQPage schema for the FAQ section.
-
----
-
-## Launch Playbook
-
-### Pre-Launch (1-2 Weeks Before)
-
-- [ ] SEO landing page published and indexed
-- [ ] Schema markup validated
-- [ ] Outreach target list built (who links to similar tools?)
-- [ ] Product Hunt draft prepared (if applicable)
-- [ ] Social media teaser content created
-- [ ] Email announcement drafted for existing audience
-
-### Launch Week
-
-| Day | Channel | Action |
-|-----|---------|--------|
-| Day 1 | Email list | Announcement to existing subscribers |
-| Day 1 | Social media | Launch post on Twitter/X, LinkedIn |
-| Day 1 | Product Hunt | Submit (if applicable, aim for Tuesday-Thursday) |
-| Day 2 | Community | Share in relevant Slack groups, Discord, Reddit |
-| Day 3 | Outreach | Email bloggers, newsletter editors who cover tools |
-| Day 5 | Content | Publish blog post about the tool with use cases |
-| Day 7 | Social media | Results round-up, engagement post |
-
-### Post-Launch (Weeks 2-8)
-
-- [ ] Monitor search rankings for target keywords
-- [ ] Track backlinks with GSC or Ahrefs
-- [ ] Reach out to "best [category] tools" listicle authors
-- [ ] Submit to tool directories (Free Tools, AlternativeTo, etc.)
-- [ ] Iterate based on usage data (most-used features, drop-off points)
-
----
-
-## Distribution Channels
-
-### Organic Channels
-
-| Channel | Approach | Expected Impact |
-|---------|----------|----------------|
-| SEO | Target "[type] calculator/checker" keywords | Long-term, compounding traffic |
-| Product Hunt | Launch listing | Spike traffic + backlinks |
-| Hacker News | "Show HN" post if technically interesting | Spike traffic + developer backlinks |
-| Reddit | Share in relevant subreddits (genuinely helpful, not spammy) | Moderate traffic + community feedback |
-| Twitter/X | Launch thread with tool demo | Engagement + social proof |
-| LinkedIn | Professional use case post | B2B lead generation |
-| Industry newsletters | Pitch to curators | Targeted audience + backlinks |
-
-### Link Acquisition
-
-| Source | Approach |
-|--------|---------|
-| "Best [category] tools" listicles | Find existing lists, pitch for inclusion |
-| Resource pages | Find industry resource compilations, suggest your tool |
-| Blog posts mentioning the problem your tool solves | Reach out with "we built a free tool for this" |
-| Comparison sites | Submit to tool comparison platforms |
-| Educational content | Pitch to courses, tutorials, guides that cover related topics |
-
----
-
-## Measurement Framework
-
-### Key Metrics
-
-| Metric | What It Tells You | Target (90 days) |
-|--------|------------------|-----------------|
-| Tool usage (sessions) | Is anyone using it? | 500+ sessions/month |
-| Completion rate | Do users finish using it? | > 60% |
-| Lead conversion rate | Is it generating leads? | 5-15% of completions |
-| Organic traffic | Is it ranking? | 500+ sessions/month from organic |
-| Referring domains | Is it earning backlinks? | 10+ organic backlinks |
-| Email to pipeline rate | Is it generating qualified leads? | Track in CRM |
-| Bounce rate | Is the tool engaging? | < 50% |
-
-### ROI Calculation
-
-```
-Monthly Cost = Engineering hours x Hourly rate + Hosting cost
-Monthly Value = (Leads x Lead-to-Customer Rate x ACV) + (Backlink value estimate)
-
-Break-even month = Total build cost / Monthly value
-Target: Break-even within 6 months
+Payback period: Build cost / (Monthly value - Monthly maintenance)
 ```
 
 ---
 
-## Maintenance and Iteration
+## Output Format
 
-### Ongoing Maintenance Requirements
+### Tool Strategy Document
 
-| Task | Frequency | Why |
-|------|-----------|-----|
-| Check for broken APIs/data sources | Monthly | External dependencies change |
-| Update calculations/logic if standards change | As needed | Accuracy maintains trust |
-| Review and fix UX issues from user feedback | Quarterly | Continuous improvement |
-| Update SEO landing page content | Semi-annually | Content freshness |
-| Check analytics for usage trends | Monthly | Identify optimization opportunities |
+```
+# Free Tool Strategy: [Tool Name]
 
-### Iteration Based on Data
+## Concept
+[What it does in one paragraph]
 
-| Signal | Action |
-|--------|--------|
-| High usage, low lead capture | Improve gate positioning or offer |
-| Low usage, high search ranking | Improve tool UX and value |
-| High leads, low quality | Add qualifying questions to capture form |
-| High bounce rate | Improve above-fold messaging and tool visibility |
-| Low search ranking | Improve page content depth and backlink acquisition |
+## Target Audience
+[Who uses it, what problem it solves]
+
+## Lead Generation Fit
+[How this connects to your product/sales]
+
+## SEO Opportunity
+- Target keywords: [list]
+- Search volume: [estimate]
+- Competition: [assessment]
+
+## Build Approach
+- Custom / No-code / Embed
+- MVP scope: [core features]
+- Estimated effort: [time/cost]
+
+## Lead Capture Strategy
+- Gating approach: [Full/Partial/Ungated]
+- Capture mechanism: [description]
+- Follow-up sequence: [outline]
+
+## Success Metrics
+- [Metric 1]: [Target]
+- [Metric 2]: [Target]
+
+## Promotion Plan
+- Launch: [channels]
+- Ongoing: [strategy]
+
+## Timeline
+- Phase 1: [scope] - [timeframe]
+- Phase 2: [scope] - [timeframe]
+```
+
+### Implementation Spec
+If moving forward with build
+
+### Promotion Plan
+Detailed launch and ongoing strategy
 
 ---
 
-## Output Artifacts
+## Example Tool Concepts by Business Type
 
-| Artifact | Format | Description |
-|----------|--------|-------------|
-| Tool Idea Evaluation | Scored comparison matrix | 6-factor evaluation of candidate ideas |
-| Tool UX Specification | Inputs/outputs/flow design | Inputs, outputs, lead capture flow, share mechanics |
-| Landing Page Copy | Full page content | H1, subhead, how it works, FAQ, meta tags |
-| Launch Plan | Phased checklist | Pre-launch, launch week, post-launch with channel-specific actions |
-| Measurement Dashboard | Metric table | KPIs with targets at 30/60/90 days |
-| ROI Model | Revenue calculation | Break-even analysis based on traffic and conversion assumptions |
-| Maintenance Schedule | Task calendar | Ongoing tasks with frequency and ownership |
+### SaaS Product
+- Product ROI calculator
+- Competitor comparison tool
+- Readiness assessment quiz
+- Template library for use case
+
+### Agency/Services
+- Industry benchmark tool
+- Project scoping calculator
+- Portfolio review tool
+- Cost estimator
+
+### E-commerce
+- Product finder quiz
+- Comparison tool
+- Size/fit calculator
+- Savings calculator
+
+### Developer Tools
+- Code snippet library
+- Testing/preview tool
+- Documentation generator
+- Interactive tutorials
+
+### Finance
+- Financial calculators
+- Investment comparison
+- Budget planner
+- Tax estimator
+
+---
+
+## Questions to Ask
+
+If you need more context:
+1. What's your core product/service?
+2. What problems does your audience commonly face?
+3. What existing tools do they use for workarounds?
+4. How do you currently generate leads?
+5. What technical resources are available?
+6. What's the timeline and budget?
 
 ---
 
 ## Related Skills
 
-- **seo-audit** -- Use for auditing existing pages and keyword opportunities. Not for tool-based content assets.
-- **schema-markup** -- Use for implementing SoftwareApplication and FAQPage schema on the tool landing page.
-- **form-cro** -- Use for optimizing the lead capture form within the tool.
-- **page-cro** -- Use for optimizing the landing page conversion rate.
-- **content-creator** -- Use for writing the blog post and social content supporting the tool launch.
+- **page-cro**: For optimizing the tool's landing page
+- **seo-audit**: For SEO-optimizing the tool
+- **analytics-tracking**: For measuring tool usage
+- **email-sequence**: For nurturing leads from the tool
+- **programmatic-seo**: For building tool-based pages at scale
 
----
-
-## Tool Reference
-
-### 1. tool_idea_scorer.py
-
-**Purpose:** Score free tool ideas against the 6-factor evaluation framework and rank candidates.
-
-```bash
-python scripts/tool_idea_scorer.py tool_ideas.json
-python scripts/tool_idea_scorer.py tool_ideas.json --json
-```
-
-| Flag | Required | Description |
-|------|----------|-------------|
-| `tool_ideas.json` | Yes | JSON file with tool idea names and 6-factor scores |
-| `--json` | No | Output results as JSON |
-
-### 2. tool_roi_calculator.py
-
-**Purpose:** Calculate the ROI and break-even timeline for a free tool based on traffic, conversion, and cost assumptions.
-
-```bash
-python scripts/tool_roi_calculator.py --build-cost 5000 --monthly-traffic 2000 --conversion-rate 8 --lead-value 50
-python scripts/tool_roi_calculator.py --build-cost 5000 --monthly-traffic 2000 --conversion-rate 8 --lead-value 50 --json
-```
-
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--build-cost` | Yes | Total build cost in dollars (engineering time + design) |
-| `--monthly-traffic` | Yes | Expected monthly sessions after 90 days |
-| `--conversion-rate` | Yes | Expected lead conversion rate as percentage |
-| `--lead-value` | Yes | Dollar value per captured lead |
-| `--monthly-hosting` | No | Monthly hosting/maintenance cost (default: 50) |
-| `--json` | No | Output results as JSON |
-
-### 3. launch_checklist_generator.py
-
-**Purpose:** Generate a phased launch checklist (pre-launch, launch week, post-launch) customized to the tool type and distribution channels.
-
-```bash
-python scripts/launch_checklist_generator.py --tool-type calculator --channels seo,producthunt,social
-python scripts/launch_checklist_generator.py --tool-type checker --channels seo,email --json
-```
-
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--tool-type` | Yes | Tool type: calculator, generator, checker, grader, converter, template, visualization |
-| `--channels` | No | Comma-separated launch channels (default: seo,social,email) |
-| `--json` | No | Output results as JSON |
-
----
-
-## Troubleshooting
-
-| Problem | Likely Cause | Solution |
-|---------|-------------|----------|
-| High traffic to tool but low lead capture | Gate is too aggressive or positioned before value delivery | Show core results first, then gate the detailed report or export; use email-only capture form |
-| Tool built but no organic traffic after 3 months | SEO landing page is thin or keywords are too competitive | Add 1500+ words of supporting content (how it works, use cases, FAQ); target long-tail keywords |
-| Tool is used once but users do not return | No recurring value or no save/bookmark mechanism | Add saved results, email reports, or periodic re-run reminders; consider a "monitor" mode |
-| Build cost exceeded estimate | Scope creep during development | Use tool_roi_calculator.py upfront to set budget ceiling; define MVP scope and ship in 2 weeks max |
-| Product Hunt launch got minimal traction | Poor timing or weak positioning | Launch Tuesday-Thursday; lead with the user benefit, not the technology; get 5+ early upvotes from network |
-| Tool generates leads but low conversion to paid | Tool attracts wrong audience or no connection to paid product | Ensure the tool solves a problem your paid product also addresses; add contextual upgrade prompts |
-
----
-
-## Success Criteria
-
-- Tool scores 20+ on the 6-factor evaluation framework before committing to build
-- Tool achieves 500+ monthly sessions within 90 days of launch
-- Lead conversion rate of 5-15% of tool completions
-- Tool earns 10+ organic backlinks within 6 months
-- Break-even achieved within 6 months (verified by tool_roi_calculator.py)
-- Completion rate above 60% (users who start using the tool finish the workflow)
-- At least 1 supporting blog post and social launch content published at launch
-
----
-
-## Scope & Limitations
-
-- **In scope:** Tool idea evaluation, ROI modeling, launch planning, distribution strategy, lead capture architecture, SEO landing page strategy, measurement framework
-- **Out of scope:** Engineering implementation, design/UI work, paid advertising strategy, AI/ML-powered tool features
-- **Build constraint:** All tools should be buildable in 1-4 weeks; if longer, the scope is too large for a free marketing tool
-- **Maintenance cost:** Every tool requires ongoing maintenance (monthly checks, quarterly content updates); budget for this before building
-- **No API dependencies:** Free tools should use client-side logic where possible to avoid ongoing API costs and reliability issues
-
----
-
-## Integration Points
-
-- **form-cro** -- Use for optimizing the lead capture form embedded within the free tool
-- **page-cro** -- Use for optimizing the SEO landing page that hosts the tool for conversion
-- **seo-audit** -- Use for validating the tool landing page meets technical SEO requirements
-- **content-creator** -- Use for writing the launch blog post, social content, and outreach emails
-- **schema-markup** -- Use for implementing SoftwareApplication and FAQPage schema on the tool page
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.

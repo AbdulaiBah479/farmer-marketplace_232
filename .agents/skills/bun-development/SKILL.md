@@ -1,7 +1,7 @@
 ---
 name: bun-development
-description: "Fast, modern JavaScript/TypeScript development with the Bun runtime, inspired by [oven-sh/bun](https://github.com/oven-sh/bun)."
-risk: critical
+description: "Modern JavaScript/TypeScript development with Bun runtime. Covers package management, bundling, testing, and migration from Node.js. Use when working with Bun, optimizing JS/TS development speed, o..."
+risk: unknown
 source: community
 date_added: "2026-02-27"
 ---
@@ -28,17 +28,10 @@ Use this skill when:
 
 ```bash
 # macOS / Linux
-brew install oven-sh/bun/bun
-
-# Alternative: download the official installer, inspect it, then execute it
-tmpdir="$(mktemp -d)"
-trap 'rm -rf "$tmpdir"' EXIT
-curl -fsSLo "$tmpdir/bun-install.sh" https://bun.sh/install
-sed -n '1,160p' "$tmpdir/bun-install.sh"
-bash "$tmpdir/bun-install.sh"
+curl -fsSL https://bun.sh/install | bash
 
 # Windows
-powershell -NoProfile -Command "Invoke-WebRequest https://bun.sh/install.ps1 -OutFile $env:TEMP\\bun-install.ps1; Get-Content $env:TEMP\\bun-install.ps1 -TotalCount 120; powershell -ExecutionPolicy Bypass -File $env:TEMP\\bun-install.ps1"
+powershell -c "irm bun.sh/install.ps1 | iex"
 
 # Homebrew
 brew tap oven-sh/bun
@@ -593,7 +586,7 @@ console.log(__filename);
 
 ```bash
 # 1. Install Bun
-brew install oven-sh/bun/bun
+curl -fsSL https://bun.sh/install | bash
 
 # 2. Replace package manager
 rm -rf node_modules package-lock.json
@@ -699,8 +692,3 @@ bun run ./dist/index.js
 - [Bun GitHub](https://github.com/oven-sh/bun)
 - [Elysia Framework](https://elysiajs.com/)
 - [Bun Discord](https://bun.sh/discord)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

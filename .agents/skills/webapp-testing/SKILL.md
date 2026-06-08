@@ -1,7 +1,9 @@
 ---
 name: webapp-testing
-description: Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.
-license: Complete terms in LICENSE.txt
+description: "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browse..."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Web Application Testing
@@ -94,3 +96,224 @@ with sync_playwright() as p:
   - `element_discovery.py` - Discovering buttons, links, and inputs on a page
   - `static_html_automation.py` - Using file:// URLs for local HTML
   - `console_logging.py` - Capturing console logs during automation
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## When to Use This Skill
+
+Use this skill when you need to:
+- Test frontend functionality in a real browser
+- Verify UI behavior and interactions
+- Debug web application issues
+- Capture screenshots for documentation or debugging
+- Inspect browser console logs
+- Validate form submissions and user flows
+- Check responsive design across viewports
+
+## Prerequisites
+
+- Node.js installed on the system
+- A locally running web application (or accessible URL)
+- Playwright will be installed automatically if not present
+
+## Core Capabilities
+
+### 1. Browser Automation
+- Navigate to URLs
+- Click buttons and links
+- Fill form fields
+- Select dropdowns
+- Handle dialogs and alerts
+
+### 2. Verification
+- Assert element presence
+- Verify text content
+- Check element visibility
+- Validate URLs
+- Test responsive behavior
+
+### 3. Debugging
+- Capture screenshots
+- View console logs
+- Inspect network requests
+- Debug failed tests
+
+## Usage Examples
+
+### Example 1: Basic Navigation Test
+```javascript
+// Navigate to a page and verify title
+await page.goto('http://localhost:3000');
+const title = await page.title();
+console.log('Page title:', title);
+```
+
+### Example 2: Form Interaction
+```javascript
+// Fill out and submit a form
+await page.fill('#username', 'testuser');
+await page.fill('#password', 'password123');
+await page.click('button[type="submit"]');
+await page.waitForURL('**/dashboard');
+```
+
+### Example 3: Screenshot Capture
+```javascript
+// Capture a screenshot for debugging
+await page.screenshot({ path: 'debug.png', fullPage: true });
+```
+
+## Guidelines
+
+1. **Always verify the app is running** - Check that the local server is accessible before running tests
+2. **Use explicit waits** - Wait for elements or navigation to complete before interacting
+3. **Capture screenshots on failure** - Take screenshots to help debug issues
+4. **Clean up resources** - Always close the browser when done
+5. **Handle timeouts gracefully** - Set reasonable timeouts for slow operations
+6. **Test incrementally** - Start with simple interactions before complex flows
+7. **Use selectors wisely** - Prefer data-testid or role-based selectors over CSS classes
+
+## Common Patterns
+
+### Pattern: Wait for Element
+```javascript
+await page.waitForSelector('#element-id', { state: 'visible' });
+```
+
+### Pattern: Check if Element Exists
+```javascript
+const exists = await page.locator('#element-id').count() > 0;
+```
+
+### Pattern: Get Console Logs
+```javascript
+page.on('console', msg => console.log('Browser log:', msg.text()));
+```
+
+### Pattern: Handle Errors
+```javascript
+try {
+  await page.click('#button');
+} catch (error) {
+  await page.screenshot({ path: 'error.png' });
+  throw error;
+}
+```
+
+## Limitations
+
+- Requires Node.js environment
+- Cannot test native mobile apps (use React Native Testing Library instead)
+- May have issues with complex authentication flows
+- Some modern frameworks may require specific configuration
+
+## Setup
+
+```bash
+npm init playwright@latest
+```
+
+## Basic Test Structure
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('homepage has title', async ({ page }) => {
+  await page.goto('http://localhost:3000');
+  await expect(page).toHaveTitle(/My App/);
+});
+
+test('can navigate to about page', async ({ page }) => {
+  await page.goto('http://localhost:3000');
+  await page.click('text=About');
+  await expect(page).toHaveURL(/.*about/);
+});
+```
+
+## Common Actions
+
+### Navigation
+```typescript
+await page.goto('http://localhost:3000');
+await page.goBack();
+await page.reload();
+```
+
+### Clicking
+```typescript
+await page.click('button');
+await page.click('text=Submit');
+await page.click('#submit-btn');
+await page.click('[data-testid="submit"]');
+```
+
+### Form Input
+```typescript
+await page.fill('input[name="email"]', 'test@example.com');
+await page.fill('#password', 'secret123');
+await page.selectOption('select#country', 'USA');
+await page.check('input[type="checkbox"]');
+```
+
+### Waiting
+```typescript
+await page.waitForSelector('.loaded');
+await page.waitForURL('**/dashboard');
+await page.waitForResponse('**/api/data');
+await page.waitForTimeout(1000); // Avoid if possible
+```
+
+## Assertions
+
+```typescript
+await expect(page.locator('h1')).toHaveText('Welcome');
+await expect(page.locator('.items')).toHaveCount(5);
+await expect(page.locator('button')).toBeEnabled();
+await expect(page.locator('.modal')).toBeVisible();
+await expect(page.locator('input')).toHaveValue('test');
+```
+
+## Screenshots
+
+```typescript
+// Full page
+await page.screenshot({ path: 'screenshot.png', fullPage: true });
+
+// Element only
+await page.locator('.chart').screenshot({ path: 'chart.png' });
+```
+
+## Console Logs
+
+```typescript
+page.on('console', msg => console.log(msg.text()));
+page.on('pageerror', err => console.error(err.message));
+```
+
+## Network Interception
+
+```typescript
+await page.route('**/api/data', route => {
+  route.fulfill({
+    status: 200,
+    body: JSON.stringify({ items: [] })
+  });
+});
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+npx playwright test
+
+# Run specific file
+npx playwright test tests/login.spec.ts
+
+# Run in headed mode
+npx playwright test --headed
+
+# Run with UI
+npx playwright test --ui
+```

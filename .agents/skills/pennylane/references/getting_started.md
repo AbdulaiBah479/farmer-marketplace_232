@@ -6,26 +6,26 @@ PennyLane is a cross-platform Python library for quantum computing, quantum mach
 
 ## Installation
 
-Install PennyLane using uv. PennyLane 0.45.0 requires Python 3.11 or newer:
+Install PennyLane using uv:
 
 ```bash
-uv pip install "pennylane==0.45.0"
+uv pip install pennylane
 ```
 
 For specific device plugins (IBM, Amazon Braket, Google, Rigetti, etc.):
 
 ```bash
 # IBM Qiskit
-uv pip install "pennylane-qiskit==0.45.0"
+uv pip install pennylane-qiskit
 
 # Amazon Braket
-uv pip install "amazon-braket-pennylane-plugin==1.34.1"
+uv pip install amazon-braket-pennylane-plugin
 
 # Google Cirq
-uv pip install "pennylane-cirq==0.44.0"
+uv pip install pennylane-cirq
 
 # Rigetti
-uv pip install "pennylane-rigetti==0.40.0"
+uv pip install pennylane-rigetti
 ```
 
 ## Core Concepts
@@ -145,13 +145,8 @@ def circuit_simulator(x):
     qml.RX(x, wires=0)
     return qml.expval(qml.PauliZ(0))
 
-# Switch to IBM hardware after configuring qiskit-ibm-runtime credentials
-from qiskit_ibm_runtime import QiskitRuntimeService
-
-service = QiskitRuntimeService()
-backend = service.least_busy(operational=True, simulator=False, min_num_qubits=2)
-
-@qml.qnode(qml.device('qiskit.remote', wires=backend.num_qubits, backend=backend))
+# Switch to hardware (if available)
+@qml.qnode(qml.device('qiskit.ibmq', wires=2))
 def circuit_hardware(x):
     qml.RX(x, wires=0)
     return qml.expval(qml.PauliZ(0))

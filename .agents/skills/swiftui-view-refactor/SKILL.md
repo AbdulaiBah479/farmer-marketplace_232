@@ -1,19 +1,12 @@
 ---
 name: swiftui-view-refactor
-description: Refactor SwiftUI views into smaller components with stable, explicit data flow.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Refactor and review SwiftUI view files with strong defaults for small dedicated subviews, MV-over-MVVM data flow, stable view trees, explicit dependency injection, and correct Observation usage. Use when cleaning up a SwiftUI view, splitting long bodies, removing inline actions or side effects, reducing computed `some View` helpers, or standardizing `@Observable` and view model initialization patterns.
 ---
 
 # SwiftUI View Refactor
 
 ## Overview
 Refactor SwiftUI views toward small, explicit, stable view types. Default to vanilla SwiftUI: local state in the view, shared dependencies in the environment, business logic in services/models, and view models only when the request or existing code clearly requires one.
-
-## When to Use
-- When cleaning up a large SwiftUI view or splitting long `body` implementations.
-- When you need smaller subviews, explicit dependency injection, or better Observation usage.
 
 ## Core Guidelines
 
@@ -207,8 +200,3 @@ init(dependency: Dependency) {
 ## Large-view handling
 
 When a SwiftUI view file exceeds ~300 lines, split it aggressively. Extract meaningful sections into dedicated `View` types instead of hiding complexity in many computed properties. Use `private` extensions with `// MARK: -` comments for actions and helpers, but do not treat extensions as a substitute for breaking a giant screen into smaller view types. If an extracted subview is reused or independently meaningful, move it into its own file.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

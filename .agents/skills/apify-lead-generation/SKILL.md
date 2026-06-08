@@ -1,18 +1,11 @@
 ---
 name: apify-lead-generation
-description: "Scrape leads from multiple platforms using Apify Actors."
-risk: unknown
-source: community
+description: "Generates B2B/B2C leads by scraping Google Maps, websites, Instagram, TikTok, Facebook, LinkedIn, YouTube, and Google Search. Use when user asks to find leads, prospects, businesses, build lead lis..."
 ---
 
 # Lead Generation
 
 Scrape leads from multiple platforms using Apify Actors.
-
-## When to Use
-- You need business, creator, or contact leads from maps, search, social, or video platforms.
-- The task involves selecting an Apify Actor to discover prospects and extract outreach data.
-- You need exported lead data plus a concise summary of lead quality or segmentation.
 
 ## Prerequisites
 (No need to check it upfront)
@@ -117,6 +110,7 @@ After completion, report:
 - Key fields available
 - Suggested next steps (filtering, enrichment)
 
+
 ## Error Handling
 
 `APIFY_TOKEN not found` - Ask user to create `.env` with `APIFY_TOKEN=your_token`
@@ -124,8 +118,3 @@ After completion, report:
 `Actor not found` - Check Actor ID spelling
 `Run FAILED` - Ask user to check Apify console link in error output
 `Timeout` - Reduce input size or increase `--timeout`
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

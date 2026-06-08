@@ -1,230 +1,78 @@
 ---
 name: hipaa-compliance
-description: Ensure HIPAA compliance when handling PHI (Protected Health Information). Use when writing code that accesses user health data, check-ins, journal entries, or any sensitive information. Activates
-  for audit logging, data access, security events, and compliance questions.
-allowed-tools: Read,Write,Edit
-metadata:
-  category: Code Quality & Testing
-  tags:
-  - hipaa
-  - compliance
-  - security
-  pairs-with:
-  - skill: recovery-app-legal-terms
-    reason: HIPAA requirements directly inform privacy policy and terms of service content for health apps
-  - skill: security-auditor
-    reason: HIPAA technical safeguards overlap with security vulnerability scanning and access controls
-  - skill: recovery-social-features
-    reason: Social features handling health data must comply with HIPAA privacy and consent rules
-  - skill: crisis-response-protocol
-    reason: Crisis responses involving health disclosures must follow HIPAA breach notification rules
+description: HIPAA-specific entrypoint for healthcare privacy and security work. Use when a task is explicitly framed around HIPAA, PHI handling, covered entities, BAAs, breach posture, or US healthcare compliance requirements.
+origin: ECC direct-port adaptation
+version: "1.0.0"
 ---
 
-# HIPAA Compliance for Recovery Coach
+# HIPAA Compliance
 
-This skill helps you maintain HIPAA compliance when developing features that handle Protected Health Information (PHI).
+Use this as the HIPAA-specific entrypoint when a task is clearly about US healthcare compliance. This skill intentionally stays thin and canonical:
 
-## What is PHI in This Application?
+- `healthcare-phi-compliance` remains the primary implementation skill for PHI/PII handling, data classification, audit logging, encryption, and leak prevention.
+- `healthcare-reviewer` remains the specialized reviewer when code, architecture, or product behavior needs a healthcare-aware second pass.
+- `security-review` still applies for general auth, input-handling, secrets, API, and deployment hardening.
 
-| Data Type | PHI Status | Handling |
-|-----------|------------|----------|
-| Check-in mood/cravings | PHI | Audit all access |
-| Journal entries | PHI | Audit all access |
-| Chat conversations | PHI | Audit all access |
-| User profile (name, email) | PHI | Audit modifications |
-| Sobriety date | PHI | Audit access |
-| Emergency contacts | PHI | Audit access |
-| Usage analytics (aggregated) | NOT PHI | No audit needed |
-| Page views (no content) | NOT PHI | No audit needed |
+## When to Use
 
-## Audit Logging Requirements
+- The request explicitly mentions HIPAA, PHI, covered entities, business associates, or BAAs
+- Building or reviewing US healthcare software that stores, processes, exports, or transmits PHI
+- Assessing whether logging, analytics, LLM prompts, storage, or support workflows create HIPAA exposure
+- Designing patient-facing or clinician-facing systems where minimum necessary access and auditability matter
 
-### When to Log
+## How It Works
 
-**Always log these operations:**
-- Viewing any PHI (check-ins, journal, messages)
-- Creating/updating/deleting PHI
-- Exporting user data
-- Admin access to user information
-- Failed authentication attempts
-- Security events (rate limiting, unauthorized access)
+Treat HIPAA as an overlay on top of the broader healthcare privacy skill:
 
-### How to Log
+1. Start with `healthcare-phi-compliance` for the concrete implementation rules.
+2. Apply HIPAA-specific decision gates:
+   - Is this data PHI?
+   - Is this actor a covered entity or business associate?
+   - Does a vendor or model provider require a BAA before touching the data?
+   - Is access limited to the minimum necessary scope?
+   - Are read/write/export events auditable?
+3. Escalate to `healthcare-reviewer` if the task affects patient safety, clinical workflows, or regulated production architecture.
 
-Use the audit logging utilities in `src/lib/hipaa/audit.ts`:
+## HIPAA-Specific Guardrails
 
-```typescript
-import {
-  logPHIAccess,
-  logPHIModification,
-  logSecurityEvent,
-  logAdminAction
-} from '@/lib/hipaa/audit';
+- Never place PHI in logs, analytics events, crash reports, prompts, or client-visible error strings.
+- Never expose PHI in URLs, browser storage, screenshots, or copied example payloads.
+- Require authenticated access, scoped authorization, and audit trails for PHI reads and writes.
+- Treat third-party SaaS, observability, support tooling, and LLM providers as blocked-by-default until BAA status and data boundaries are clear.
+- Follow minimum necessary access: the right user should only see the smallest PHI slice needed for the task.
+- Prefer opaque internal IDs over names, MRNs, phone numbers, addresses, or other identifiers.
 
-// Viewing PHI
-await logPHIAccess(
-  userId,
-  'checkin',        // targetType
-  checkinId,        // targetId
-  AuditAction.PHI_VIEW
-);
+## Examples
 
-// Modifying PHI
-await logPHIModification(
-  userId,
-  'journal',
-  journalId,
-  AuditAction.PHI_UPDATE,
-  { field: 'content' }  // Never include actual content!
-);
+### Example 1: Product request framed as HIPAA
 
-// Security event
-await logSecurityEvent(
-  userId,
-  AuditAction.RATE_LIMIT,
-  { path: '/api/chat', attempts: 60 }
-);
+User request:
 
-// Admin action
-await logAdminAction(
-  adminId,
-  AuditAction.ADMIN_USER_VIEW,
-  'user',
-  targetUserId
-);
-```
+> Add AI-generated visit summaries to our clinician dashboard. We serve US clinics and need to stay HIPAA compliant.
 
-## Data Sanitization
+Response pattern:
 
-### Never Log These Fields
+- Activate `hipaa-compliance`
+- Use `healthcare-phi-compliance` to review PHI movement, logging, storage, and prompt boundaries
+- Verify whether the summarization provider is covered by a BAA before any PHI is sent
+- Escalate to `healthcare-reviewer` if the summaries influence clinical decisions
 
-The audit system automatically sanitizes, but be explicit:
+### Example 2: Vendor/tooling decision
 
-```typescript
-// BAD - Contains PHI
-await logPHIAccess(userId, 'journal', id, action, {
-  content: journalEntry.content  // NEVER DO THIS
-});
+User request:
 
-// GOOD - Only metadata
-await logPHIAccess(userId, 'journal', id, action, {
-  wordCount: journalEntry.content.length,
-  hasAttachments: false
-});
-```
+> Can we send support transcripts and patient messages into our analytics stack?
 
-### Sanitized Fields (Auto-Redacted)
+Response pattern:
 
-- `password`, `token`, `secret`, `key`
-- `authorization`, `cookie`, `session`
-- `credential`, `content`, `message`, `notes`
+- Assume those messages may contain PHI
+- Block the design unless the analytics vendor is approved for HIPAA-bound workloads and the data path is minimized
+- Require redaction or a non-PHI event model when possible
 
-## Session Security Requirements
+## Related Skills
 
-From `src/lib/auth.ts`:
-
-- **Session timeout**: 15 minutes of inactivity (HIPAA requirement)
-- **Max session**: 8 hours absolute maximum
-- **Failed login lockout**: 5 attempts = 30 minute ban
-- **Password requirements**: 12+ chars, mixed case, numbers, special chars
-
-## Code Patterns
-
-### API Route with Audit Logging
-
-```typescript
-import { getSession, requireAuth } from '@/lib/auth';
-import { logPHIAccess } from '@/lib/hipaa/audit';
-
-export async function GET(request: Request) {
-  const session = await getSession();
-  if (!session) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // Fetch the data
-  const data = await fetchUserData(session.userId);
-
-  // Log the access
-  await logPHIAccess(
-    session.userId,
-    'userdata',
-    session.userId,
-    AuditAction.PHI_VIEW
-  );
-
-  return Response.json(data);
-}
-```
-
-### Component with PHI Access
-
-```typescript
-'use client';
-
-import { useEffect } from 'react';
-
-export function JournalViewer({ entryId }: { entryId: string }) {
-  useEffect(() => {
-    // Log view on mount (server-side preferred, but client backup)
-    fetch('/api/audit/log', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'PHI_VIEW',
-        targetType: 'journal',
-        targetId: entryId
-      })
-    });
-  }, [entryId]);
-
-  // ... render
-}
-```
-
-## Compliance Checklist
-
-Before shipping any feature that touches PHI:
-
-- [ ] All PHI access is audit logged
-- [ ] No PHI content in logs (only IDs and metadata)
-- [ ] Data access requires authentication
-- [ ] Admin access has separate audit trail
-- [ ] Failed access attempts are logged
-- [ ] Data export includes audit entry
-- [ ] Sensitive fields are encrypted at rest
-- [ ] Session timeout is enforced
-
-## Audit Log Retention
-
-- **Minimum**: 6 years (HIPAA requirement)
-- **Format**: Raw logs for 1 year, compressed thereafter
-- **Location**: `audit_log` table in database
-- **Export**: Encrypted exports for compliance audits
-
-## Emergency Access (Break Glass)
-
-For emergency situations, use break-glass access:
-
-```typescript
-import { requestBreakGlassAccess } from '@/lib/hipaa/break-glass';
-
-// This creates enhanced audit trail
-const access = await requestBreakGlassAccess(
-  adminId,
-  targetUserId,
-  'Emergency support required - user reported crisis'
-);
-```
-
-Break glass access:
-- Requires written justification
-- Creates permanent audit record
-- Triggers alert to compliance officer
-- Must be reviewed within 24 hours
-
-## Resources
-
-- HIPAA Security Rule: 45 C.F.R. § 164.312
-- Audit controls standard: 45 C.F.R. § 164.312(b)
-- Incident response plan: `docs/INCIDENT-RESPONSE-PLAN.md`
-- Security documentation: `docs/SECURITY-HARDENING.md`
+- `healthcare-phi-compliance`
+- `healthcare-reviewer`
+- `healthcare-emr-patterns`
+- `healthcare-eval-harness`
+- `security-review`

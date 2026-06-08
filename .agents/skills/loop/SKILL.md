@@ -1,70 +1,122 @@
 ---
-name: Loop
-description: "Iterative improvement loop — revisit and refine a target across multiple Algorithm cycles toward an ideal state. USE WHEN loop, iterate, refine, improve iteratively, multiple passes, keep improving, loop mode, revisit, rework."
-disable-model-invocation: true
-effort: medium
+name: "loop"
+description: "Start an autonomous experiment loop with user-selected interval (10min, 1h, daily, weekly, monthly). Uses CronCreate for scheduling."
+command: /ar:loop
 ---
 
-# /loop — Iterative Improvement
+# /ar:loop — Autonomous Experiment Loop
 
-Run the Algorithm in `mode: loop` — multiple full Algorithm cycles on the same target, each iteration building on the last. Unlike `/optimize` (autonomous mutation loop), `/loop` runs full Algorithm passes with human review between iterations.
+Start a recurring experiment loop that runs at a user-selected interval.
 
-## Invocation
-
-```
-/loop --target "path/to/target" --iterations 5
-/loop --target "~/.claude/skills/Art/Workflows/TechnicalDiagrams.md" --goal "make diagrams more consistent"
-/loop --resume       # Resume a previous loop
-/loop --status       # Show iteration history
-```
-
-## What Happens
-
-Each iteration is a full Algorithm cycle (OBSERVE → THINK → PLAN → BUILD → EXECUTE → VERIFY → LEARN) with:
-- ISC criteria that evolve between iterations
-- Each cycle's LEARN phase informs the next cycle's OBSERVE
-- ISA tracks iteration count and cumulative improvements
-- Human approves/redirects between iterations
-
-## Arguments
-
-| Argument | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `--target PATH` | yes | | What to improve (file, directory, skill) |
-| `--goal TEXT` | | inferred | What "better" means for this target |
-| `--iterations N` | | 3 | Maximum number of Algorithm cycles |
-| `--resume` | | | Resume a previous loop |
-| `--status` | | | Show iteration history |
-| `--autoresearch` | | off | Opt-in autonomous mode — see below |
-
-## Algorithm Integration
-
-Sets `mode: loop` in ISA frontmatter. The `iteration` field tracks cycle count. Each cycle re-enters the Algorithm with accumulated context from prior iterations.
-
-## Autoresearch Mode (opt-in)
-
-`--autoresearch` switches /loop from supervised multi-pass improvement to autonomous iteration, borrowing three patterns from pi-autoresearch (davebcn87, MIT):
-
-1. **No human review between cycles** — each iteration's LEARN feeds directly into the next OBSERVE. Cycle continues until `--iterations` reached, target met, or explicit interrupt.
-2. **Dead-ends ledger** — ISA maintains a `## Dead Ends` section. Every failed iteration appends one line with the rejected approach and reason. Resumes read this to avoid retrying rejected paths.
-3. **MAD confidence on iteration score** — if the target has a measurable score, compute `|delta|/MAD(iteration_scores)` per cycle. Flag red (<1.0×) iterations as noise-floor and log `marginal`; do not update baseline. See `PAI/ALGORITHM/optimize-loop.md` → Confidence Gating.
-
-Invocation:
-```
-/loop --target "path" --goal "X" --iterations 20 --autoresearch
-```
-
-Default /loop behavior is unchanged — autoresearch is opt-in only. Intended for overnight runs on targets where human-in-the-loop review between cycles is too slow.
-
-## Examples
+## Usage
 
 ```
-/loop --target "~/.claude/skills/Research" --goal "improve output quality" --iterations 5
-/loop --target "prompts/summarize.md" --goal "more concise, less filler"
+/ar:loop engineering/api-speed             # Start loop (prompts for interval)
+/ar:loop engineering/api-speed 10m         # Every 10 minutes
+/ar:loop engineering/api-speed 1h          # Every hour
+/ar:loop engineering/api-speed daily       # Daily at ~9am
+/ar:loop engineering/api-speed weekly      # Weekly on Monday ~9am
+/ar:loop engineering/api-speed monthly     # Monthly on 1st ~9am
+/ar:loop stop engineering/api-speed        # Stop an active loop
 ```
 
-## Gotchas
+## What It Does
 
-- **Loop runs multiple full Algorithm cycles.** Each cycle is a complete OBSERVE→LEARN pass. This is expensive in time and tokens.
-- **Set a clear exit condition.** Without one, loops can run indefinitely.
-- **Human review happens between cycles.** Don't skip the review step — it's the feedback mechanism.
+### Step 1: Resolve experiment
+
+If no experiment specified, list experiments and let user pick.
+
+### Step 2: Select interval
+
+If interval not provided as argument, present options:
+
+```
+Select loop interval:
+  1. Every 10 minutes  (rapid — stay and watch)
+  2. Every hour         (background — check back later)
+  3. Daily at ~9am      (overnight experiments)
+  4. Weekly on Monday   (long-running experiments)
+  5. Monthly on 1st     (slow experiments)
+```
+
+Map to cron expressions:
+
+| Interval | Cron Expression | Shorthand |
+|----------|----------------|-----------|
+| 10 minutes | `*/10 * * * *` | `10m` |
+| 1 hour | `7 * * * *` | `1h` |
+| Daily | `57 8 * * *` | `daily` |
+| Weekly | `57 8 * * 1` | `weekly` |
+| Monthly | `57 8 1 * *` | `monthly` |
+
+### Step 3: Create the recurring job
+
+Use `CronCreate` with this prompt (fill in the experiment details):
+
+```
+You are running autoresearch experiment "{domain}/{name}".
+
+1. Read .autoresearch/{domain}/{name}/config.cfg for: target, evaluate_cmd, metric, metric_direction
+2. Read .autoresearch/{domain}/{name}/program.md for strategy and constraints
+3. Read .autoresearch/{domain}/{name}/results.tsv for experiment history
+4. Run: git checkout autoresearch/{domain}/{name}
+
+Then do exactly ONE iteration:
+- Review results.tsv: what worked, what failed, what hasn't been tried
+- Edit the target file with ONE change (strategy escalation based on run count)
+- Commit: git add {target} && git commit -m "experiment: {description}"
+- Evaluate: python {skill_path}/scripts/run_experiment.py --experiment {domain}/{name} --single
+- Read the output (KEEP/DISCARD/CRASH)
+
+Rules:
+- ONE change per experiment
+- NEVER modify the evaluator
+- If 5 consecutive crashes in results.tsv, delete this cron job (CronDelete) and alert
+- After every 10 experiments, update Strategy section of program.md
+
+Current best metric: {read from results.tsv or "no baseline yet"}
+Total experiments so far: {count from results.tsv}
+```
+
+### Step 4: Store loop metadata
+
+Write to `.autoresearch/{domain}/{name}/loop.json`:
+
+```json
+{
+  "cron_id": "{id from CronCreate}",
+  "interval": "{user selection}",
+  "started": "{ISO timestamp}",
+  "experiment": "{domain}/{name}"
+}
+```
+
+### Step 5: Confirm to user
+
+```
+Loop started for {domain}/{name}
+  Interval: {interval description}
+  Cron ID: {id}
+  Auto-expires: 3 days (CronCreate limit)
+
+  To check progress: /ar:status
+  To stop the loop:  /ar:loop stop {domain}/{name}
+
+  Note: Recurring jobs auto-expire after 3 days.
+  Run /ar:loop again to restart after expiry.
+```
+
+## Stopping a Loop
+
+When user runs `/ar:loop stop {experiment}`:
+
+1. Read `.autoresearch/{domain}/{name}/loop.json` to get the cron ID
+2. Call `CronDelete` with that ID
+3. Delete `loop.json`
+4. Confirm: "Loop stopped for {experiment}. {n} experiments completed."
+
+## Important Limitations
+
+- **3-day auto-expiry**: CronCreate jobs expire after 3 days. For longer experiments, the user must re-run `/ar:loop` to restart. Results persist — the new loop picks up where the old one left off.
+- **One loop per experiment**: Don't start multiple loops for the same experiment.
+- **Concurrent experiments**: Multiple experiments can loop simultaneously ONLY if they're on different git branches (which they are by default — each experiment gets `autoresearch/{domain}/{name}`).

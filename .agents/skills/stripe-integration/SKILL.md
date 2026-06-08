@@ -1,271 +1,457 @@
 ---
 name: stripe-integration
-description: "Build secure payment flows with Stripe — Payment Intents, subscription billing, webhook handling, and European SCA compliance for card payments"
-category: payments-checkout
-risk: critical
-source: curated
-date_added: "2026-03-12"
-tags: [stripe, payments, checkout, webhooks, sca, pci, subscriptions]
-triggers: ["integrate stripe", "add stripe payments", "stripe checkout", "payment processing"]
-tools: [claude-code, cursor, gemini-cli, copilot, codex-cli, kiro, opencode]
-platforms: [shopify, woocommerce, bigcommerce, custom]
-difficulty: intermediate
+description: "Implement Stripe payment processing for robust, PCI-compliant payment flows including checkout, subscriptions, and webhooks. Use when integrating Stripe payments, building subscription systems, or ..."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Stripe Integration
 
-## Overview
+Master Stripe payment processing integration for robust, PCI-compliant payment flows including checkout, subscriptions, webhooks, and refunds.
 
-Stripe is the most widely supported payment processor across ecommerce platforms. On Shopify, it powers Shopify Payments natively. On WooCommerce and BigCommerce, official plugins provide full Stripe Checkout with minimal configuration. Custom code is only required for headless storefronts — and even then, Stripe's hosted Checkout page and Elements components remove most of the complexity.
+## Do not use this skill when
 
-## When to Use This Skill
+- The task is unrelated to stripe integration
+- You need a different domain or tool outside this scope
 
-- When adding Stripe as a payment processor to an existing store
-- When setting up Stripe on a new WooCommerce or BigCommerce store
-- When implementing SCA-compliant checkout for European customers
-- When setting up webhook handlers for order fulfillment automation
-- When building a custom or headless storefront that needs Stripe payment processing
+## Instructions
 
-## Core Instructions
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
 
-### Step 1: Create and configure your Stripe account
+## Use this skill when
 
-1. Sign up at **stripe.com** — business verification takes 1–3 business days
-2. Complete **Stripe Dashboard → Activate account** to start accepting live payments
-3. Configure your **Statement descriptor** (how you appear on customers' bank statements) under **Settings → Public details**
-4. Set up **Stripe Tax** under **Dashboard → Tax** if you want Stripe to handle tax calculation automatically
+- Implementing payment processing in web/mobile applications
+- Setting up subscription billing systems
+- Handling one-time payments and recurring charges
+- Processing refunds and disputes
+- Managing customer payment methods
+- Implementing SCA (Strong Customer Authentication) for European payments
+- Building marketplace payment flows with Stripe Connect
 
-### Step 2: Install Stripe on your platform
+## Core Concepts
 
----
+### 1. Payment Flows
+**Checkout Session (Hosted)**
+- Stripe-hosted payment page
+- Minimal PCI compliance burden
+- Fastest implementation
+- Supports one-time and recurring payments
 
-#### Shopify
+**Payment Intents (Custom UI)**
+- Full control over payment UI
+- Requires Stripe.js for PCI compliance
+- More complex implementation
+- Better customization options
 
-Shopify Payments is powered by Stripe. It is the simplest possible Stripe integration:
+**Setup Intents (Save Payment Methods)**
+- Collect payment method without charging
+- Used for subscriptions and future payments
+- Requires customer confirmation
 
-1. Go to **Settings → Payments → Shopify Payments → Complete account setup**
-2. Verify your business details and banking information
-3. Shopify Payments automatically handles: card processing, Apple Pay, Google Pay, Shop Pay, and (with configuration) Klarna and Afterpay
-4. **No additional plugins or API keys are needed** — Shopify Payments handles everything
+### 2. Webhooks
+**Critical Events:**
+- `payment_intent.succeeded`: Payment completed
+- `payment_intent.payment_failed`: Payment failed
+- `customer.subscription.updated`: Subscription changed
+- `customer.subscription.deleted`: Subscription canceled
+- `charge.refunded`: Refund processed
+- `invoice.payment_succeeded`: Subscription payment successful
 
-If you need to use Stripe directly (e.g., for features Shopify Payments does not support):
-1. Install the **Stripe** payment provider under **Settings → Payments → Add payment methods → Stripe**
-2. Note: third-party payment providers on Shopify incur an additional transaction fee (0.5%–2%); Shopify Payments does not
+### 3. Subscriptions
+**Components:**
+- **Product**: What you're selling
+- **Price**: How much and how often
+- **Subscription**: Customer's recurring payment
+- **Invoice**: Generated for each billing cycle
 
-**Configure Stripe webhooks for Shopify:**
-Shopify handles webhook processing internally for Shopify Payments. If using Stripe directly, register your webhook endpoint under **Stripe Dashboard → Developers → Webhooks**.
+### 4. Customer Management
+- Create and manage customer records
+- Store multiple payment methods
+- Track customer metadata
+- Manage billing details
 
-#### WooCommerce
+## Quick Start
 
-1. Install the **WooCommerce Stripe Payment Gateway** plugin (free, from WordPress.org — by WooCommerce)
-2. Go to **WooCommerce → Settings → Payments → Stripe** and click **Enable**
-3. Enter your **Publishable key** and **Secret key** from **Stripe Dashboard → Developers → API Keys**
-4. Enable **Payment Request Buttons** (Apple Pay, Google Pay) — these appear automatically on product pages and checkout
+```python
+import stripe
 
-**Enable additional payment methods:**
-- Go to **WooCommerce → Settings → Payments → Stripe** and enable:
-  - **Express Checkout** (Apple Pay, Google Pay, Link)
-  - **SEPA Direct Debit** (for European customers)
-  - **iDEAL** (Netherlands), **Bancontact** (Belgium), **Sofort** (Germany/Austria)
-  - **Klarna** and **Afterpay** (if eligible)
+stripe.api_key = "sk_test_..."
 
-**Set up webhooks:**
-1. In the Stripe plugin settings, click **Configure webhooks**
-2. The plugin automatically registers the required webhook endpoint with Stripe
-3. Verify the webhook is active in **Stripe Dashboard → Developers → Webhooks**
+# Create a checkout session
+session = stripe.checkout.Session.create(
+    payment_method_types=['card'],
+    line_items=[{
+        'price_data': {
+            'currency': 'usd',
+            'product_data': {
+                'name': 'Premium Subscription',
+            },
+            'unit_amount': 2000,  # $20.00
+            'recurring': {
+                'interval': 'month',
+            },
+        },
+        'quantity': 1,
+    }],
+    mode='subscription',
+    success_url='https://yourdomain.com/success?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url='https://yourdomain.com/cancel',
+)
 
-**Enable Stripe Radar (fraud prevention):**
-Stripe Radar is enabled by default. Configure rules under **Stripe Dashboard → Radar → Rules** to block or review high-risk transactions.
-
-#### BigCommerce
-
-1. Go to **Settings → Payment Methods → Online Payment Methods**
-2. Find **Stripe** and click **Set Up**
-3. Enter your Stripe API keys (Publishable and Secret) from the Stripe Dashboard
-4. Enable the payment methods you want to offer under the Stripe configuration panel
-5. BigCommerce automatically registers the required Stripe webhooks
-
-**Enable Stripe Link (saved cards):**
-In the BigCommerce Stripe settings, enable **Stripe Link** to allow returning customers to pay with one click using their saved payment details.
-
----
-
-#### Custom / Headless
-
-**Install the Stripe SDK:**
-
-```bash
-npm install stripe @stripe/stripe-js @stripe/react-stripe-js
+# Redirect user to session.url
+print(session.url)
 ```
 
-**Option A: Stripe Checkout (hosted page — simplest)**
+## Payment Implementation Patterns
 
-For the fastest integration with no payment form to build:
-
-```javascript
-// Server: create a Checkout Session
-const session = await stripe.checkout.sessions.create({
-  line_items: [{
-    price_data: {
-      currency: 'usd',
-      product_data: { name: 'Order #' + orderNumber },
-      unit_amount: Math.round(orderTotal * 100), // cents
-    },
-    quantity: 1,
-  }],
-  mode: 'payment',
-  success_url: `${YOUR_DOMAIN}/orders/{CHECKOUT_SESSION_ID}/confirmation`,
-  cancel_url: `${YOUR_DOMAIN}/cart`,
-  metadata: { order_id: orderId },
-});
-
-// Redirect customer to session.url
-res.redirect(session.url);
+### Pattern 1: One-Time Payment (Hosted Checkout)
+```python
+def create_checkout_session(amount, currency='usd'):
+    """Create a one-time payment checkout session."""
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': currency,
+                    'product_data': {
+                        'name': 'Purchase',
+                        'images': ['https://example.com/product.jpg'],
+                    },
+                    'unit_amount': amount,  # Amount in cents
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url='https://yourdomain.com/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://yourdomain.com/cancel',
+            metadata={
+                'order_id': 'order_123',
+                'user_id': 'user_456'
+            }
+        )
+        return session
+    except stripe.error.StripeError as e:
+        # Handle error
+        print(f"Stripe error: {e.user_message}")
+        raise
 ```
 
-**Option B: Payment Intents with Stripe Elements (custom checkout form)**
+### Pattern 2: Custom Payment Intent Flow
+```python
+def create_payment_intent(amount, currency='usd', customer_id=None):
+    """Create a payment intent for custom checkout UI."""
+    intent = stripe.PaymentIntent.create(
+        amount=amount,
+        currency=currency,
+        customer=customer_id,
+        automatic_payment_methods={
+            'enabled': True,
+        },
+        metadata={
+            'integration_check': 'accept_a_payment'
+        }
+    )
+    return intent.client_secret  # Send to frontend
 
-```javascript
-// Server: create a Payment Intent
-const paymentIntent = await stripe.paymentIntents.create({
-  amount: Math.round(orderTotal * 100), // cents
-  currency: 'usd',
-  automatic_payment_methods: { enabled: true }, // Enables all eligible methods
-  metadata: { order_id: orderId, customer_email: customerEmail },
-});
-res.json({ clientSecret: paymentIntent.client_secret });
+# Frontend (JavaScript)
+"""
+const stripe = Stripe('pk_test_...');
+const elements = stripe.elements();
+const cardElement = elements.create('card');
+cardElement.mount('#card-element');
+
+const {error, paymentIntent} = await stripe.confirmCardPayment(
+    clientSecret,
+    {
+        payment_method: {
+            card: cardElement,
+            billing_details: {
+                name: 'Customer Name'
+            }
+        }
+    }
+);
+
+if (error) {
+    // Handle error
+} else if (paymentIntent.status === 'succeeded') {
+    // Payment successful
+}
+"""
 ```
 
-```jsx
-// Client: render the payment form using Stripe Elements
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+### Pattern 3: Subscription Creation
+```python
+def create_subscription(customer_id, price_id):
+    """Create a subscription for a customer."""
+    try:
+        subscription = stripe.Subscription.create(
+            customer=customer_id,
+            items=[{'price': price_id}],
+            payment_behavior='default_incomplete',
+            payment_settings={'save_default_payment_method': 'on_subscription'},
+            expand=['latest_invoice.payment_intent'],
+        )
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+        return {
+            'subscription_id': subscription.id,
+            'client_secret': subscription.latest_invoice.payment_intent.client_secret
+        }
+    except stripe.error.StripeError as e:
+        print(f"Subscription creation failed: {e}")
+        raise
+```
 
-function CheckoutForm({ onSuccess }) {
-  const stripe = useStripe();
-  const elements = useElements();
+### Pattern 4: Customer Portal
+```python
+def create_customer_portal_session(customer_id):
+    """Create a portal session for customers to manage subscriptions."""
+    session = stripe.billing_portal.Session.create(
+        customer=customer_id,
+        return_url='https://yourdomain.com/account',
+    )
+    return session.url  # Redirect customer here
+```
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: `${window.location.origin}/orders/confirmation` },
-    });
-    if (error) showError(error.message);
-    // On success, Stripe redirects to return_url automatically
-  }
+## Webhook Handling
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      <button type="submit" disabled={!stripe}>Pay Now</button>
-    </form>
-  );
+### Secure Webhook Endpoint
+```python
+from flask import Flask, request
+import stripe
+
+app = Flask(__name__)
+
+endpoint_secret = 'whsec_...'
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    payload = request.data
+    sig_header = request.headers.get('Stripe-Signature')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except ValueError:
+        # Invalid payload
+        return 'Invalid payload', 400
+    except stripe.error.SignatureVerificationError:
+        # Invalid signature
+        return 'Invalid signature', 400
+
+    # Handle the event
+    if event['type'] == 'payment_intent.succeeded':
+        payment_intent = event['data']['object']
+        handle_successful_payment(payment_intent)
+    elif event['type'] == 'payment_intent.payment_failed':
+        payment_intent = event['data']['object']
+        handle_failed_payment(payment_intent)
+    elif event['type'] == 'customer.subscription.deleted':
+        subscription = event['data']['object']
+        handle_subscription_canceled(subscription)
+
+    return 'Success', 200
+
+def handle_successful_payment(payment_intent):
+    """Process successful payment."""
+    customer_id = payment_intent.get('customer')
+    amount = payment_intent['amount']
+    metadata = payment_intent.get('metadata', {})
+
+    # Update your database
+    # Send confirmation email
+    # Fulfill order
+    print(f"Payment succeeded: {payment_intent['id']}")
+
+def handle_failed_payment(payment_intent):
+    """Handle failed payment."""
+    error = payment_intent.get('last_payment_error', {})
+    print(f"Payment failed: {error.get('message')}")
+    # Notify customer
+    # Update order status
+
+def handle_subscription_canceled(subscription):
+    """Handle subscription cancellation."""
+    customer_id = subscription['customer']
+    # Update user access
+    # Send cancellation email
+    print(f"Subscription canceled: {subscription['id']}")
+```
+
+### Webhook Best Practices
+```python
+import hashlib
+import hmac
+
+def verify_webhook_signature(payload, signature, secret):
+    """Manually verify webhook signature."""
+    expected_sig = hmac.new(
+        secret.encode('utf-8'),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+
+    return hmac.compare_digest(signature, expected_sig)
+
+def handle_webhook_idempotently(event_id, handler):
+    """Ensure webhook is processed exactly once."""
+    # Check if event already processed
+    if is_event_processed(event_id):
+        return
+
+    # Process event
+    try:
+        handler()
+        mark_event_processed(event_id)
+    except Exception as e:
+        log_error(e)
+        # Stripe will retry failed webhooks
+        raise
+```
+
+## Customer Management
+
+```python
+def create_customer(email, name, payment_method_id=None):
+    """Create a Stripe customer."""
+    customer = stripe.Customer.create(
+        email=email,
+        name=name,
+        payment_method=payment_method_id,
+        invoice_settings={
+            'default_payment_method': payment_method_id
+        } if payment_method_id else None,
+        metadata={
+            'user_id': '12345'
+        }
+    )
+    return customer
+
+def attach_payment_method(customer_id, payment_method_id):
+    """Attach a payment method to a customer."""
+    stripe.PaymentMethod.attach(
+        payment_method_id,
+        customer=customer_id
+    )
+
+    # Set as default
+    stripe.Customer.modify(
+        customer_id,
+        invoice_settings={
+            'default_payment_method': payment_method_id
+        }
+    )
+
+def list_customer_payment_methods(customer_id):
+    """List all payment methods for a customer."""
+    payment_methods = stripe.PaymentMethod.list(
+        customer=customer_id,
+        type='card'
+    )
+    return payment_methods.data
+```
+
+## Refund Handling
+
+```python
+def create_refund(payment_intent_id, amount=None, reason=None):
+    """Create a refund."""
+    refund_params = {
+        'payment_intent': payment_intent_id
+    }
+
+    if amount:
+        refund_params['amount'] = amount  # Partial refund
+
+    if reason:
+        refund_params['reason'] = reason  # 'duplicate', 'fraudulent', 'requested_by_customer'
+
+    refund = stripe.Refund.create(**refund_params)
+    return refund
+
+def handle_dispute(charge_id, evidence):
+    """Update dispute with evidence."""
+    stripe.Dispute.modify(
+        charge_id,
+        evidence={
+            'customer_name': evidence.get('customer_name'),
+            'customer_email_address': evidence.get('customer_email'),
+            'shipping_documentation': evidence.get('shipping_proof'),
+            'customer_communication': evidence.get('communication'),
+        }
+    )
+```
+
+## Testing
+
+```python
+# Use test mode keys
+stripe.api_key = "sk_test_..."
+
+# Test card numbers
+TEST_CARDS = {
+    'success': '4242424242424242',
+    'declined': '4000000000000002',
+    '3d_secure': '4000002500003155',
+    'insufficient_funds': '4000000000009995'
 }
 
-export function PaymentPage({ clientSecret }) {
-  return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <CheckoutForm />
-    </Elements>
-  );
-}
+def test_payment_flow():
+    """Test complete payment flow."""
+    # Create test customer
+    customer = stripe.Customer.create(
+        email="test@example.com"
+    )
+
+    # Create payment intent
+    intent = stripe.PaymentIntent.create(
+        amount=1000,
+        currency='usd',
+        customer=customer.id,
+        payment_method_types=['card']
+    )
+
+    # Confirm with test card
+    confirmed = stripe.PaymentIntent.confirm(
+        intent.id,
+        payment_method='pm_card_visa'  # Test payment method
+    )
+
+    assert confirmed.status == 'succeeded'
 ```
 
-**Handle webhooks for order fulfillment:**
+## Resources
 
-```javascript
-// POST /api/webhooks/stripe
-// IMPORTANT: use raw body parser — do not parse as JSON
-export async function handleStripeWebhook(req, res) {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.rawBody,   // raw buffer — not JSON.parse'd
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      await fulfillOrder(event.data.object);
-      break;
-    case 'payment_intent.payment_failed':
-      await handlePaymentFailed(event.data.object);
-      break;
-    case 'charge.refunded':
-      await handleRefund(event.data.object);
-      break;
-    case 'charge.dispute.created':
-      await handleDispute(event.data.object);
-      break;
-  }
-
-  res.json({ received: true });
-}
-
-// Always check if already fulfilled — webhooks can arrive multiple times
-async function fulfillOrder(paymentIntent) {
-  const orderId = paymentIntent.metadata.order_id;
-  const order = await db.orders.findUnique({ where: { id: orderId } });
-  if (order.status !== 'pending') return; // Idempotency check
-
-  await db.orders.update({ where: { id: orderId }, data: { status: 'confirmed', paidAt: new Date() } });
-  await sendOrderConfirmationEmail(orderId);
-}
-```
-
-**Local webhook testing:**
-
-```bash
-# Install Stripe CLI and forward events to your local server
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-# Copy the webhook signing secret printed by the CLI into your .env
-```
-
-### Step 3: PCI compliance and SCA
-
-**PCI DSS scope:**
-Using Stripe Elements or Stripe Checkout significantly reduces your PCI DSS compliance burden:
-- **SAQ A** (22 requirements): applicable when using Stripe Checkout (hosted page) — card data never touches your servers or your page
-- **SAQ A-EP** (191 requirements): applicable when your checkout page is served from your own domain and Stripe.js tokenizes cards in the browser
-
-The WooCommerce Stripe plugin and BigCommerce's Stripe integration both use Stripe.js for tokenization, qualifying most merchants for SAQ A-EP.
-
-**SCA (Strong Customer Authentication) for European customers:**
-Using `automatic_payment_methods: { enabled: true }` on Payment Intents automatically handles 3D Secure challenges when required by the customer's bank. No additional configuration needed.
+- **references/checkout-flows.md**: Detailed checkout implementation
+- **references/webhook-handling.md**: Webhook security and processing
+- **references/subscription-management.md**: Subscription lifecycle
+- **references/customer-management.md**: Customer and payment method handling
+- **references/invoice-generation.md**: Invoicing and billing
+- **assets/stripe-client.py**: Production-ready Stripe client wrapper
+- **assets/webhook-handler.py**: Complete webhook processor
+- **assets/checkout-config.json**: Checkout configuration templates
 
 ## Best Practices
 
-- **Always use Payment Intents** — the legacy Charges API does not support SCA and is not recommended for new integrations
-- **Never log or store raw card numbers** — use Stripe Elements or Checkout to stay out of PCI scope
-- **Use webhook events for fulfillment** — do not rely on the client-side redirect alone; customers can close the browser window
-- **Make all webhook handlers idempotent** — Stripe may deliver the same event multiple times; always check the current order status before processing
-- **Attach `order_id` to every Payment Intent metadata** — this enables reconciliation and dispute management
-- **Use Stripe Tax** if selling to multiple jurisdictions — configure under Stripe Dashboard → Tax rather than building tax calculation yourself
+1. **Always Use Webhooks**: Don't rely solely on client-side confirmation
+2. **Idempotency**: Handle webhook events idempotently
+3. **Error Handling**: Gracefully handle all Stripe errors
+4. **Test Mode**: Thoroughly test with test keys before production
+5. **Metadata**: Use metadata to link Stripe objects to your database
+6. **Monitoring**: Track payment success rates and errors
+7. **PCI Compliance**: Never handle raw card data on your server
+8. **SCA Ready**: Implement 3D Secure for European payments
 
 ## Common Pitfalls
 
-| Problem | Solution |
-|---------|----------|
-| Webhook signature verification fails | Pass the **raw request body** (not JSON-parsed) to `constructEvent`; configure your framework to skip JSON parsing for the webhook route |
-| 3DS challenges not triggering | Use `automatic_payment_methods: { enabled: true }` instead of manually listing payment method types |
-| WooCommerce Stripe plugin shows blank payment form | Check for JavaScript console errors; often caused by a CSP (Content Security Policy) blocking Stripe.js; add `js.stripe.com` to your CSP allowlist |
-| Stripe payment shows as succeeded but order not confirmed | Webhooks are the authoritative signal — if the webhook handler has an error, the order will not be confirmed; check your webhook logs in Stripe Dashboard → Developers → Webhooks → [Event] |
-| Test mode charges appearing in live data | Verify you are using live API keys in production; Stripe's Dashboard has a separate live/test toggle — confirm you are in the correct mode |
-| Currency amount wrong | Stripe uses the smallest currency unit — $20.00 = `2000` cents; JPY ¥3,000 = `3000` (no multiplication needed) |
-
-## Related Skills
-
-- @checkout-flow-optimization
-- @subscription-billing
-- @paypal-integration
-- @order-processing-pipeline
-- @buy-now-pay-later
+- **Not Verifying Webhooks**: Always verify webhook signatures
+- **Missing Webhook Events**: Handle all relevant webhook events
+- **Hardcoded Amounts**: Use cents/smallest currency unit
+- **No Retry Logic**: Implement retries for API calls
+- **Ignoring Test Mode**: Test all edge cases with test cards

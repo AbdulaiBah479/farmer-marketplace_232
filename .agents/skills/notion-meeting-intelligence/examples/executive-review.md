@@ -28,7 +28,7 @@ Notion:notion-fetch (5 pages)
 - **Product**: 3 major features shipped, 2 in beta
 - **Engineering**: 94% uptime (above 95% SLA)
 
-### 3. Add Codex Research Context
+### 3. Add Claude Research Context
 Added context on:
 - Industry benchmarks for SaaS metrics
 - Typical Q4 sales patterns

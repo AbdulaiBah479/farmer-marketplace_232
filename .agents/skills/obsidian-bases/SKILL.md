@@ -1,30 +1,31 @@
 ---
 name: obsidian-bases
+category: document-processing
 description: Create and edit Obsidian Bases (.base files) with views, filters, formulas, and summaries. Use when working with .base files, creating database-like views of notes, or when the user mentions Bases, table views, card views, filters, or formulas in Obsidian.
-risk: unknown
-source: "https://github.com/kepano/obsidian-skills"
-date_added: "2026-03-21"
 ---
 
-# Obsidian Bases Skill
+# Obsidian Bases
 
-## When to Use
-- Use when creating or editing `.base` files in Obsidian.
-- Use for database-like note views with filters, formulas, summaries, or cards/tables.
-- Use when the user asks about Obsidian Bases specifically.
+This skill enables Claude Code to create and edit valid Obsidian Bases (`.base` files) including views, filters, formulas, and all related configurations.
 
-## Workflow
+## Overview
 
-1. **Create the file**: Create a `.base` file in the vault with valid YAML content
-2. **Define scope**: Add `filters` to select which notes appear (by tag, folder, property, or date)
-3. **Add formulas** (optional): Define computed properties in the `formulas` section
-4. **Configure views**: Add one or more views (`table`, `cards`, `list`, or `map`) with `order` specifying which properties to display
-5. **Validate**: Verify the file is valid YAML with no syntax errors. Check that all referenced properties and formulas exist. Common issues: unquoted strings containing special YAML characters, mismatched quotes in formula expressions, referencing `formula.X` without defining `X` in `formulas`
-6. **Test in Obsidian**: Open the `.base` file in Obsidian to confirm the view renders correctly. If it shows a YAML error, check quoting rules below
+Obsidian Bases are YAML-based files that define dynamic views of notes in an Obsidian vault. A Base file can contain multiple views, global filters, formulas, property configurations, and custom summaries.
 
-## Schema
+## When to Use This Skill
 
-Base files use the `.base` extension and contain valid YAML.
+- Creating database-like views of notes in Obsidian
+- Building task trackers, reading lists, or project dashboards
+- Filtering and organizing notes by properties or tags
+- Creating calculated/formula fields
+- Setting up table, card, list, or map views
+- Working with .base files in an Obsidian vault
+
+## File Format
+
+Base files use the `.base` extension and contain valid YAML. They can also be embedded in Markdown code blocks.
+
+## Complete Schema
 
 ```yaml
 # Global filters apply to ALL views in the base
@@ -89,13 +90,13 @@ filters:
 # OR - any condition can be true
 filters:
   or:
-    - 'file.hasTag("book")'
-    - 'file.hasTag("article")'
+    - file.hasTag("book")
+    - file.hasTag("article")
 
 # NOT - exclude matching items
 filters:
   not:
-    - 'file.hasTag("archived")'
+    - file.hasTag("archived")
 
 # Nested filters
 filters:
@@ -121,7 +122,7 @@ filters:
 | `<=` | less than or equal |
 | `&&` | logical and |
 | `\|\|` | logical or |
-| <code>!</code> | logical not |
+| `!` | logical not |
 
 ## Properties
 
@@ -165,7 +166,7 @@ formulas:
   total: "price * quantity"
 
   # Conditional logic
-  status_icon: 'if(done, "✅", "⏳")'
+  status_icon: 'if(done, "check", "pending")'
 
   # String formatting
   formatted_price: 'if(price, price.toFixed(2) + " dollars")'
@@ -173,55 +174,124 @@ formulas:
   # Date formatting
   created: 'file.ctime.format("YYYY-MM-DD")'
 
-  # Calculate days since created (use .days for Duration)
-  days_old: '(now() - file.ctime).days'
-
-  # Calculate days until due date
-  days_until_due: 'if(due_date, (date(due_date) - today()).days, "")'
+  # Complex expressions
+  days_old: '((now() - file.ctime) / 86400000).round(0)'
 ```
 
-## Key Functions
+## Functions Reference
 
-Most commonly used functions. For the complete reference of all types (Date, String, Number, List, File, Link, Object, RegExp), see [FUNCTIONS_REFERENCE.md](references/FUNCTIONS_REFERENCE.md).
+### Global Functions
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `date()` | `date(string): date` | Parse string to date (`YYYY-MM-DD HH:mm:ss`) |
+| `date()` | `date(string): date` | Parse string to date |
+| `duration()` | `duration(string): duration` | Parse duration string |
 | `now()` | `now(): date` | Current date and time |
 | `today()` | `today(): date` | Current date (time = 00:00:00) |
 | `if()` | `if(condition, trueResult, falseResult?)` | Conditional |
-| `duration()` | `duration(string): duration` | Parse duration string |
-| `file()` | `file(path): file` | Get file object |
+| `min()` | `min(n1, n2, ...): number` | Smallest number |
+| `max()` | `max(n1, n2, ...): number` | Largest number |
+| `number()` | `number(any): number` | Convert to number |
 | `link()` | `link(path, display?): Link` | Create a link |
+| `list()` | `list(element): List` | Wrap in list if not already |
+| `file()` | `file(path): file` | Get file object |
+| `image()` | `image(path): image` | Create image for rendering |
+| `icon()` | `icon(name): icon` | Lucide icon by name |
+| `html()` | `html(string): html` | Render as HTML |
+| `escapeHTML()` | `escapeHTML(string): string` | Escape HTML characters |
 
-### Duration Type
+### Date Functions & Fields
 
-When subtracting two dates, the result is a **Duration** type (not a number).
+**Fields:** `date.year`, `date.month`, `date.day`, `date.hour`, `date.minute`, `date.second`, `date.millisecond`
 
-**Duration Fields:** `duration.days`, `duration.hours`, `duration.minutes`, `duration.seconds`, `duration.milliseconds`
-
-**IMPORTANT:** Duration does NOT support `.round()`, `.floor()`, `.ceil()` directly. Access a numeric field first (like `.days`), then apply number functions.
-
-```yaml
-# CORRECT: Calculate days between dates
-"(date(due_date) - today()).days"                    # Returns number of days
-"(now() - file.ctime).days"                          # Days since created
-"(date(due_date) - today()).days.round(0)"           # Rounded days
-
-# WRONG - will cause error:
-# "((date(due) - today()) / 86400000).round(0)"      # Duration doesn't support division then round
-```
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `date()` | `date.date(): date` | Remove time portion |
+| `format()` | `date.format(string): string` | Format with Moment.js pattern |
+| `time()` | `date.time(): string` | Get time as string |
+| `relative()` | `date.relative(): string` | Human-readable relative time |
+| `isEmpty()` | `date.isEmpty(): boolean` | Always false for dates |
 
 ### Date Arithmetic
 
 ```yaml
 # Duration units: y/year/years, M/month/months, d/day/days,
 #                 w/week/weeks, h/hour/hours, m/minute/minutes, s/second/seconds
+
+# Add/subtract durations
+"date + \"1M\""           # Add 1 month
+"date - \"2h\""           # Subtract 2 hours
 "now() + \"1 day\""       # Tomorrow
 "today() + \"7d\""        # A week from today
-"now() - file.ctime"      # Returns Duration
-"(now() - file.ctime).days"  # Get days as number
+
+# Subtract dates for millisecond difference
+"now() - file.ctime"
+
+# Complex duration arithmetic
+"now() + (duration('1d') * 2)"
 ```
+
+### String Functions
+
+**Field:** `string.length`
+
+| Function | Description |
+|----------|-------------|
+| `contains(value)` | Check substring |
+| `containsAll(...values)` | All substrings present |
+| `containsAny(...values)` | Any substring present |
+| `startsWith(query)` | Starts with query |
+| `endsWith(query)` | Ends with query |
+| `isEmpty()` | Empty or not present |
+| `lower()` | To lowercase |
+| `title()` | To Title Case |
+| `trim()` | Remove whitespace |
+| `replace(pattern, replacement)` | Replace pattern |
+| `repeat(count)` | Repeat string |
+| `reverse()` | Reverse string |
+| `slice(start, end?)` | Substring |
+| `split(separator, n?)` | Split to list |
+
+### Number Functions
+
+| Function | Description |
+|----------|-------------|
+| `abs()` | Absolute value |
+| `ceil()` | Round up |
+| `floor()` | Round down |
+| `round(digits?)` | Round to digits |
+| `toFixed(precision)` | Fixed-point notation |
+| `isEmpty()` | Not present |
+
+### List Functions
+
+**Field:** `list.length`
+
+| Function | Description |
+|----------|-------------|
+| `contains(value)` | Element exists |
+| `containsAll(...values)` | All elements exist |
+| `containsAny(...values)` | Any element exists |
+| `filter(expression)` | Filter by condition (uses `value`, `index`) |
+| `map(expression)` | Transform elements (uses `value`, `index`) |
+| `reduce(expression, initial)` | Reduce to single value (uses `value`, `index`, `acc`) |
+| `flat()` | Flatten nested lists |
+| `join(separator)` | Join to string |
+| `reverse()` | Reverse order |
+| `slice(start, end?)` | Sublist |
+| `sort()` | Sort ascending |
+| `unique()` | Remove duplicates |
+| `isEmpty()` | No elements |
+
+### File Functions
+
+| Function | Description |
+|----------|-------------|
+| `asLink(display?)` | Convert to link |
+| `hasLink(otherFile)` | Has link to file |
+| `hasTag(...tags)` | Has any of the tags |
+| `hasProperty(name)` | Has property |
+| `inFolder(folder)` | In folder or subfolder |
 
 ## View Types
 
@@ -265,13 +335,12 @@ views:
 
 ### Map View
 
-Requires latitude/longitude properties and the Maps community plugin.
+Requires latitude/longitude properties and the Maps plugin.
 
 ```yaml
 views:
   - type: map
     name: "Locations"
-    # Map-specific settings for lat/lng properties
 ```
 
 ## Default Summary Formulas
@@ -287,7 +356,6 @@ views:
 | `Stddev` | Number | Standard deviation |
 | `Earliest` | Date | Earliest date |
 | `Latest` | Date | Latest date |
-| `Range` | Date | Latest - Earliest |
 | `Checked` | Boolean | Count of true values |
 | `Unchecked` | Boolean | Count of false values |
 | `Empty` | Any | Count of empty values |
@@ -305,9 +373,9 @@ filters:
     - 'file.ext == "md"'
 
 formulas:
-  days_until_due: 'if(due, (date(due) - today()).days, "")'
+  days_until_due: 'if(due, ((date(due) - today()) / 86400000).round(0), "")'
   is_overdue: 'if(due, date(due) < today() && status != "done", false)'
-  priority_label: 'if(priority == 1, "🔴 High", if(priority == 2, "🟡 Medium", "🟢 Low"))'
+  priority_label: 'if(priority == 1, "High", if(priority == 2, "Medium", "Low"))'
 
 properties:
   status:
@@ -355,7 +423,7 @@ filters:
 
 formulas:
   reading_time: 'if(pages, (pages * 2).toString() + " min", "")'
-  status_icon: 'if(status == "reading", "📖", if(status == "done", "✅", "📚"))'
+  status_icon: 'if(status == "reading", "reading", if(status == "done", "done", "to-read"))'
   year_read: 'if(finished_date, date(finished_date).year, "")'
 
 properties:
@@ -388,6 +456,48 @@ views:
       - author
       - pages
       - formula.reading_time
+```
+
+### Project Notes Base
+
+```yaml
+filters:
+  and:
+    - file.inFolder("Projects")
+    - 'file.ext == "md"'
+
+formulas:
+  last_updated: 'file.mtime.relative()'
+  link_count: 'file.links.length'
+
+summaries:
+  avgLinks: 'values.filter(value.isType("number")).mean().round(1)'
+
+properties:
+  formula.last_updated:
+    displayName: "Updated"
+  formula.link_count:
+    displayName: "Links"
+
+views:
+  - type: table
+    name: "All Projects"
+    order:
+      - file.name
+      - status
+      - formula.last_updated
+      - formula.link_count
+    summaries:
+      formula.link_count: avgLinks
+    groupBy:
+      property: status
+      direction: ASC
+
+  - type: list
+    name: "Quick List"
+    order:
+      - file.name
+      - status
 ```
 
 ### Daily Notes Index
@@ -436,64 +546,52 @@ Embed in Markdown files:
 - Use double quotes for simple strings: `"My View Name"`
 - Escape nested quotes properly in complex expressions
 
-## Troubleshooting
+## Common Patterns
 
-### YAML Syntax Errors
-
-**Unquoted special characters**: Strings containing `:`, `{`, `}`, `[`, `]`, `,`, `&`, `*`, `#`, `?`, `|`, `-`, `<`, `>`, `=`, `!`, `%`, `@`, `` ` `` must be quoted.
+### Filter by Tag
 
 ```yaml
-# WRONG - colon in unquoted string
-displayName: Status: Active
-
-# CORRECT
-displayName: "Status: Active"
+filters:
+  and:
+    - file.hasTag("project")
 ```
 
-**Mismatched quotes in formulas**: When a formula contains double quotes, wrap the entire formula in single quotes.
+### Filter by Folder
 
 ```yaml
-# WRONG - double quotes inside double quotes
-formulas:
-  label: "if(done, "Yes", "No")"
-
-# CORRECT - single quotes wrapping double quotes
-formulas:
-  label: 'if(done, "Yes", "No")'
+filters:
+  and:
+    - file.inFolder("Notes")
 ```
 
-### Common Formula Errors
-
-**Duration math without field access**: Subtracting dates returns a Duration, not a number. Always access `.days`, `.hours`, etc.
+### Filter by Date Range
 
 ```yaml
-# WRONG - Duration is not a number
-"(now() - file.ctime).round(0)"
-
-# CORRECT - access .days first, then round
-"(now() - file.ctime).days.round(0)"
+filters:
+  and:
+    - 'file.mtime > now() - "7d"'
 ```
 
-**Missing null checks**: Properties may not exist on all notes. Use `if()` to guard.
+### Filter by Property Value
 
 ```yaml
-# WRONG - crashes if due_date is empty
-"(date(due_date) - today()).days"
-
-# CORRECT - guard with if()
-'if(due_date, (date(due_date) - today()).days, "")'
+filters:
+  and:
+    - 'status == "active"'
+    - 'priority >= 3'
 ```
 
-**Referencing undefined formulas**: Ensure every `formula.X` in `order` or `properties` has a matching entry in `formulas`.
+### Combine Multiple Conditions
 
 ```yaml
-# This will fail silently if 'total' is not defined in formulas
-order:
-  - formula.total
-
-# Fix: define it
-formulas:
-  total: "price * quantity"
+filters:
+  or:
+    - and:
+        - file.hasTag("important")
+        - 'status != "done"'
+    - and:
+        - 'priority == 1'
+        - 'due != ""'
 ```
 
 ## References
@@ -502,9 +600,3 @@ formulas:
 - [Functions](https://help.obsidian.md/bases/functions)
 - [Views](https://help.obsidian.md/bases/views)
 - [Formulas](https://help.obsidian.md/formulas)
-- [Complete Functions Reference](references/FUNCTIONS_REFERENCE.md)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

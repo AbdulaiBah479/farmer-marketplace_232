@@ -1,340 +1,279 @@
 #!/usr/bin/env python3
-"""
-Rotation Planner - Plan and schedule secret rotation cycles.
+"""Create a rotation schedule from a secret inventory file.
 
-Reads a secrets inventory and generates rotation schedules based on
-classification, compliance requirements, and organizational policy.
+Reads a JSON inventory of secrets and produces a rotation plan based on
+the selected policy (30d, 60d, 90d) with urgency classification.
 
-Author: Claude Skills Engineering Team
-License: MIT
+Usage:
+    python rotation_planner.py --inventory secrets.json --policy 30d
+    python rotation_planner.py --inventory secrets.json --policy 90d --json
+
+Inventory file format (JSON):
+[
+  {
+    "name": "prod-db-password",
+    "type": "database",
+    "store": "vault",
+    "last_rotated": "2026-01-15",
+    "owner": "platform-team",
+    "environment": "production"
+  },
+  ...
+]
 """
 
 import argparse
 import json
 import sys
-from dataclasses import dataclass, asdict, field
+import textwrap
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import List, Dict, Optional
 
 
-@dataclass
-class SecretEntry:
-    """A secret in the inventory."""
-    name: str
-    classification: str  # critical, high, medium, low
-    secret_type: str  # database, api-key, certificate, token, encryption-key, ssh-key, password
-    owner: str
-    last_rotated: str  # ISO date
-    auto_rotation: bool = False
-    compliance_tags: List[str] = field(default_factory=list)
-    description: str = ""
-
-
-@dataclass
-class RotationSchedule:
-    """Planned rotation for a secret."""
-    name: str
-    classification: str
-    secret_type: str
-    owner: str
-    last_rotated: str
-    next_rotation: str
-    days_until_rotation: int
-    overdue: bool
-    rotation_frequency_days: int
-    auto_rotation: bool
-    priority: str  # urgent, upcoming, scheduled, ok
-    action_required: str
-    compliance_tags: List[str] = field(default_factory=list)
-
-
-# Default rotation frequencies by classification (days)
-DEFAULT_FREQUENCIES = {
-    "critical": 30,
-    "high": 60,
-    "medium": 90,
-    "low": 180,
+POLICY_DAYS = {
+    "30d": 30,
+    "60d": 60,
+    "90d": 90,
 }
 
-# Override frequencies by secret type
-TYPE_OVERRIDES = {
-    "certificate": {"critical": 90, "high": 180, "medium": 365, "low": 365},
-    "encryption-key": {"critical": 90, "high": 180, "medium": 365, "low": 365},
-    "token": {"critical": 7, "high": 30, "medium": 60, "low": 90},
-    "ssh-key": {"critical": 30, "high": 60, "medium": 90, "low": 180},
+# Default rotation period by secret type if not overridden by policy
+TYPE_DEFAULTS = {
+    "database": 30,
+    "api-key": 90,
+    "tls-certificate": 60,
+    "ssh-key": 90,
+    "service-token": 1,
+    "encryption-key": 90,
+    "oauth-secret": 90,
+    "password": 30,
 }
 
-# Compliance-specific requirements
-COMPLIANCE_FREQUENCIES = {
-    "pci-dss": 90,    # PCI-DSS requires credential rotation at least quarterly
-    "hipaa": 90,      # HIPAA recommends quarterly
-    "soc2": 90,       # SOC 2 quarterly typical
-    "nist": 60,       # NIST recommends 60 days for privileged
-    "gdpr": 180,      # GDPR no specific requirement, 6 months recommended
+URGENCY_THRESHOLDS = {
+    "critical": 0,    # Already overdue
+    "high": 7,         # Due within 7 days
+    "medium": 14,      # Due within 14 days
+    "low": 30,         # Due within 30 days
 }
 
 
-def get_rotation_frequency(entry: SecretEntry, policy: Optional[Dict] = None) -> int:
-    """Determine rotation frequency for a secret."""
-    # Start with default based on classification
-    freq = DEFAULT_FREQUENCIES.get(entry.classification, 90)
-
-    # Apply type overrides
-    if entry.secret_type in TYPE_OVERRIDES:
-        type_freq = TYPE_OVERRIDES[entry.secret_type].get(entry.classification)
-        if type_freq:
-            freq = type_freq
-
-    # Apply compliance requirements (use strictest)
-    for tag in entry.compliance_tags:
-        compliance_freq = COMPLIANCE_FREQUENCIES.get(tag.lower())
-        if compliance_freq:
-            freq = min(freq, compliance_freq)
-
-    # Apply custom policy overrides
-    if policy:
-        custom = policy.get(entry.classification) or policy.get(entry.secret_type)
-        if custom:
-            freq = min(freq, int(custom))
-
-    return freq
-
-
-def create_schedule(entry: SecretEntry, policy: Optional[Dict] = None) -> RotationSchedule:
-    """Create a rotation schedule for a secret."""
-    freq = get_rotation_frequency(entry, policy)
-    now = datetime.now()
-
+def load_inventory(path):
+    """Load and validate secret inventory from JSON file."""
     try:
-        last = datetime.fromisoformat(entry.last_rotated.replace("Z", "+00:00").replace("+00:00", ""))
-    except (ValueError, AttributeError):
-        # If date can't be parsed, assume never rotated
-        last = now - timedelta(days=freq * 2)
+        with open(path, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"ERROR: Inventory file not found: {path}", file=sys.stderr)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"ERROR: Invalid JSON in {path}: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    next_rotation = last + timedelta(days=freq)
-    days_until = (next_rotation - now).days
+    if not isinstance(data, list):
+        print("ERROR: Inventory must be a JSON array of secret objects", file=sys.stderr)
+        sys.exit(1)
 
-    overdue = days_until < 0
+    validated = []
+    for i, entry in enumerate(data):
+        if not isinstance(entry, dict):
+            print(f"WARNING: Skipping entry {i} — not an object", file=sys.stderr)
+            continue
 
-    if overdue:
-        priority = "urgent"
-        action = f"OVERDUE by {abs(days_until)} days. Rotate immediately."
-    elif days_until <= 7:
-        priority = "upcoming"
-        action = f"Due in {days_until} days. Schedule rotation now."
-    elif days_until <= 30:
-        priority = "scheduled"
-        action = f"Due in {days_until} days. Plan rotation."
-    else:
-        priority = "ok"
-        action = f"Next rotation in {days_until} days."
+        name = entry.get("name", f"unnamed-{i}")
+        secret_type = entry.get("type", "unknown")
+        last_rotated = entry.get("last_rotated")
 
-    if entry.auto_rotation:
-        action += " (auto-rotation enabled)"
+        if not last_rotated:
+            print(f"WARNING: '{name}' has no last_rotated date — marking as overdue", file=sys.stderr)
+            last_rotated_dt = None
+        else:
+            try:
+                last_rotated_dt = datetime.strptime(last_rotated, "%Y-%m-%d")
+            except ValueError:
+                print(f"WARNING: '{name}' has invalid date '{last_rotated}' — marking as overdue", file=sys.stderr)
+                last_rotated_dt = None
 
-    return RotationSchedule(
-        name=entry.name,
-        classification=entry.classification,
-        secret_type=entry.secret_type,
-        owner=entry.owner,
-        last_rotated=entry.last_rotated,
-        next_rotation=next_rotation.strftime("%Y-%m-%d"),
-        days_until_rotation=days_until,
-        overdue=overdue,
-        rotation_frequency_days=freq,
-        auto_rotation=entry.auto_rotation,
-        priority=priority,
-        action_required=action,
-        compliance_tags=entry.compliance_tags,
-    )
+        validated.append({
+            "name": name,
+            "type": secret_type,
+            "store": entry.get("store", "unknown"),
+            "last_rotated": last_rotated_dt,
+            "owner": entry.get("owner", "unassigned"),
+            "environment": entry.get("environment", "unknown"),
+        })
 
-
-def load_inventory(path: Path) -> List[SecretEntry]:
-    """Load secrets inventory from JSON file."""
-    data = json.loads(path.read_text(encoding="utf-8"))
-    entries = []
-    for item in data.get("secrets", data if isinstance(data, list) else []):
-        entries.append(SecretEntry(
-            name=item["name"],
-            classification=item.get("classification", "medium"),
-            secret_type=item.get("secret_type", item.get("type", "password")),
-            owner=item.get("owner", "unknown"),
-            last_rotated=item.get("last_rotated", "2025-01-01"),
-            auto_rotation=item.get("auto_rotation", False),
-            compliance_tags=item.get("compliance_tags", []),
-            description=item.get("description", ""),
-        ))
-    return entries
+    return validated
 
 
-def generate_sample_inventory() -> str:
-    """Generate a sample inventory file."""
-    sample = {
-        "secrets": [
-            {
-                "name": "prod-database-root",
-                "classification": "critical",
-                "secret_type": "database",
-                "owner": "dba-team",
-                "last_rotated": "2026-02-15",
-                "auto_rotation": False,
-                "compliance_tags": ["soc2", "pci-dss"],
-                "description": "Production database root credentials"
-            },
-            {
-                "name": "api-gateway-key",
-                "classification": "high",
-                "secret_type": "api-key",
-                "owner": "platform-team",
-                "last_rotated": "2026-03-01",
-                "auto_rotation": True,
-                "compliance_tags": ["soc2"],
-                "description": "API gateway master key"
-            },
-            {
-                "name": "stripe-api-key",
-                "classification": "high",
-                "secret_type": "api-key",
-                "owner": "payments-team",
-                "last_rotated": "2026-01-10",
-                "auto_rotation": False,
-                "compliance_tags": ["pci-dss"],
-                "description": "Stripe payment processing API key"
-            },
-            {
-                "name": "tls-wildcard-cert",
-                "classification": "high",
-                "secret_type": "certificate",
-                "owner": "infra-team",
-                "last_rotated": "2025-12-01",
-                "auto_rotation": True,
-                "compliance_tags": [],
-                "description": "Wildcard TLS certificate for *.example.com"
-            },
-            {
-                "name": "ci-deploy-token",
-                "classification": "medium",
-                "secret_type": "token",
-                "owner": "devops-team",
-                "last_rotated": "2026-03-15",
-                "auto_rotation": False,
-                "compliance_tags": [],
-                "description": "CI/CD deployment token"
-            }
-        ]
+def compute_schedule(inventory, policy_days):
+    """Compute rotation schedule for each secret."""
+    now = datetime.now()
+    schedule = []
+
+    for secret in inventory:
+        # Determine rotation interval
+        type_default = TYPE_DEFAULTS.get(secret["type"], 90)
+        rotation_interval = min(policy_days, type_default)
+
+        if secret["last_rotated"] is None:
+            days_since = 999
+            next_rotation = now  # Immediate
+            days_until = -999
+        else:
+            days_since = (now - secret["last_rotated"]).days
+            next_rotation = secret["last_rotated"] + timedelta(days=rotation_interval)
+            days_until = (next_rotation - now).days
+
+        # Classify urgency
+        if days_until <= URGENCY_THRESHOLDS["critical"]:
+            urgency = "CRITICAL"
+        elif days_until <= URGENCY_THRESHOLDS["high"]:
+            urgency = "HIGH"
+        elif days_until <= URGENCY_THRESHOLDS["medium"]:
+            urgency = "MEDIUM"
+        else:
+            urgency = "LOW"
+
+        schedule.append({
+            "name": secret["name"],
+            "type": secret["type"],
+            "store": secret["store"],
+            "owner": secret["owner"],
+            "environment": secret["environment"],
+            "last_rotated": secret["last_rotated"].strftime("%Y-%m-%d") if secret["last_rotated"] else "NEVER",
+            "rotation_interval_days": rotation_interval,
+            "next_rotation": next_rotation.strftime("%Y-%m-%d"),
+            "days_until_due": days_until,
+            "days_since_rotation": days_since,
+            "urgency": urgency,
+        })
+
+    # Sort by urgency (critical first), then by days until due
+    urgency_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+    schedule.sort(key=lambda x: (urgency_order.get(x["urgency"], 4), x["days_until_due"]))
+
+    return schedule
+
+
+def build_summary(schedule):
+    """Build summary statistics."""
+    total = len(schedule)
+    by_urgency = {}
+    by_type = {}
+    by_owner = {}
+
+    for entry in schedule:
+        urg = entry["urgency"]
+        by_urgency[urg] = by_urgency.get(urg, 0) + 1
+        t = entry["type"]
+        by_type[t] = by_type.get(t, 0) + 1
+        o = entry["owner"]
+        by_owner[o] = by_owner.get(o, 0) + 1
+
+    return {
+        "total_secrets": total,
+        "by_urgency": by_urgency,
+        "by_type": by_type,
+        "by_owner": by_owner,
+        "overdue_count": by_urgency.get("CRITICAL", 0),
+        "due_within_7d": by_urgency.get("HIGH", 0),
     }
-    return json.dumps(sample, indent=2)
 
 
-def format_human(schedules: List[RotationSchedule]) -> str:
-    """Format rotation plan for human reading."""
-    lines = []
-    lines.append("=" * 70)
-    lines.append("SECRET ROTATION PLAN")
-    lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    lines.append("=" * 70)
+def print_human(schedule, summary, policy):
+    """Print human-readable rotation plan."""
+    print(f"=== Secret Rotation Plan (Policy: {policy}) ===")
+    print(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print(f"Total secrets: {summary['total_secrets']}")
+    print()
 
-    # Summary
-    urgent = [s for s in schedules if s.priority == "urgent"]
-    upcoming = [s for s in schedules if s.priority == "upcoming"]
-    scheduled = [s for s in schedules if s.priority == "scheduled"]
+    print("--- Urgency Summary ---")
+    for urg in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
+        count = summary["by_urgency"].get(urg, 0)
+        if count > 0:
+            print(f"  {urg:10s}  {count}")
+    print()
 
-    lines.append(f"\nTotal secrets: {len(schedules)}")
-    lines.append(f"  URGENT (overdue): {len(urgent)}")
-    lines.append(f"  UPCOMING (< 7 days): {len(upcoming)}")
-    lines.append(f"  SCHEDULED (< 30 days): {len(scheduled)}")
-    lines.append(f"  OK: {len(schedules) - len(urgent) - len(upcoming) - len(scheduled)}")
-    lines.append("")
+    if not schedule:
+        print("No secrets in inventory.")
+        return
 
-    # Sort: urgent first, then by days until rotation
-    sorted_schedules = sorted(schedules, key=lambda s: (
-        {"urgent": 0, "upcoming": 1, "scheduled": 2, "ok": 3}[s.priority],
-        s.days_until_rotation
-    ))
+    print("--- Rotation Schedule ---")
+    print(f"  {'Name':30s}  {'Type':15s}  {'Urgency':10s}  {'Last Rotated':12s}  {'Next Due':12s}  {'Owner'}")
+    print(f"  {'-'*30}  {'-'*15}  {'-'*10}  {'-'*12}  {'-'*12}  {'-'*15}")
 
-    for s in sorted_schedules:
-        marker = "!!!" if s.priority == "urgent" else "! " if s.priority == "upcoming" else "  "
-        auto = " [AUTO]" if s.auto_rotation else ""
-        lines.append(f"{marker} {s.name}{auto}")
-        lines.append(f"     Classification: {s.classification} | Type: {s.secret_type} | Owner: {s.owner}")
-        lines.append(f"     Last rotated: {s.last_rotated} | Next: {s.next_rotation} | Frequency: {s.rotation_frequency_days}d")
-        lines.append(f"     Action: {s.action_required}")
-        if s.compliance_tags:
-            lines.append(f"     Compliance: {', '.join(s.compliance_tags)}")
-        lines.append("")
+    for entry in schedule:
+        overdue_marker = " **OVERDUE**" if entry["urgency"] == "CRITICAL" else ""
+        print(
+            f"  {entry['name']:30s}  {entry['type']:15s}  {entry['urgency']:10s}  "
+            f"{entry['last_rotated']:12s}  {entry['next_rotation']:12s}  "
+            f"{entry['owner']}{overdue_marker}"
+        )
 
-    lines.append("=" * 70)
-    return "\n".join(lines)
+    print()
+    print("--- Action Items ---")
+    critical = [e for e in schedule if e["urgency"] == "CRITICAL"]
+    high = [e for e in schedule if e["urgency"] == "HIGH"]
 
-
-def format_json(schedules: List[RotationSchedule]) -> str:
-    """Format as JSON."""
-    data = {
-        "generated": datetime.now().isoformat(),
-        "total": len(schedules),
-        "summary": {
-            "urgent": sum(1 for s in schedules if s.priority == "urgent"),
-            "upcoming": sum(1 for s in schedules if s.priority == "upcoming"),
-            "scheduled": sum(1 for s in schedules if s.priority == "scheduled"),
-            "ok": sum(1 for s in schedules if s.priority == "ok"),
-        },
-        "schedules": [asdict(s) for s in schedules],
-    }
-    return json.dumps(data, indent=2)
+    if critical:
+        print(f"  IMMEDIATE: Rotate {len(critical)} overdue secret(s):")
+        for e in critical:
+            print(f"    - {e['name']} ({e['type']}, owner: {e['owner']})")
+    if high:
+        print(f"  THIS WEEK: Rotate {len(high)} secret(s) due within 7 days:")
+        for e in high:
+            print(f"    - {e['name']} (due: {e['next_rotation']}, owner: {e['owner']})")
+    if not critical and not high:
+        print("  No urgent rotations needed.")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Rotation Planner - Plan and schedule secret rotation cycles"
+        description="Create rotation schedule from a secret inventory file.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent("""\
+            Policies:
+              30d   Aggressive — all secrets rotate within 30 days max
+              60d   Standard — 60-day maximum rotation window
+              90d   Relaxed — 90-day maximum rotation window
+
+            Note: Some secret types (e.g., database passwords) have shorter
+            built-in defaults that override the policy maximum.
+
+            Example inventory file (secrets.json):
+            [
+              {"name": "prod-db", "type": "database", "store": "vault",
+               "last_rotated": "2026-01-15", "owner": "platform-team",
+               "environment": "production"}
+            ]
+        """),
     )
-    parser.add_argument("--inventory", help="Path to secrets inventory JSON file")
-    parser.add_argument("--generate-sample", action="store_true",
-                        help="Generate a sample inventory file")
-    parser.add_argument("--policy", help="Path to custom rotation policy JSON")
-    parser.add_argument("--filter-priority", choices=["urgent", "upcoming", "scheduled", "ok"],
-                        help="Show only secrets with this priority")
-    parser.add_argument("--filter-owner", help="Show only secrets owned by this team")
-    parser.add_argument("--format", choices=["human", "json"], default="human",
-                        help="Output format (default: human)")
+    parser.add_argument("--inventory", required=True, help="Path to JSON inventory file")
+    parser.add_argument(
+        "--policy",
+        required=True,
+        choices=["30d", "60d", "90d"],
+        help="Rotation policy (maximum rotation interval)",
+    )
+    parser.add_argument("--json", action="store_true", dest="json_output", help="Output as JSON")
 
     args = parser.parse_args()
 
-    if args.generate_sample:
-        print(generate_sample_inventory())
-        return
+    policy_days = POLICY_DAYS[args.policy]
+    inventory = load_inventory(args.inventory)
+    schedule = compute_schedule(inventory, policy_days)
+    summary = build_summary(schedule)
 
-    if not args.inventory:
-        print("Error: --inventory required (or use --generate-sample)", file=sys.stderr)
-        sys.exit(1)
+    result = {
+        "policy": args.policy,
+        "policy_days": policy_days,
+        "generated_at": datetime.now().isoformat(),
+        "summary": summary,
+        "schedule": schedule,
+    }
 
-    inv_path = Path(args.inventory)
-    if not inv_path.exists():
-        print(f"Error: File not found: {args.inventory}", file=sys.stderr)
-        sys.exit(1)
-
-    entries = load_inventory(inv_path)
-
-    policy = None
-    if args.policy:
-        policy = json.loads(Path(args.policy).read_text(encoding="utf-8"))
-
-    schedules = [create_schedule(e, policy) for e in entries]
-
-    if args.filter_priority:
-        schedules = [s for s in schedules if s.priority == args.filter_priority]
-
-    if args.filter_owner:
-        schedules = [s for s in schedules if s.owner == args.filter_owner]
-
-    if args.format == "json":
-        print(format_json(schedules))
+    if args.json_output:
+        print(json.dumps(result, indent=2))
     else:
-        print(format_human(schedules))
-
-    # Exit with code based on urgent items
-    urgent_count = sum(1 for s in schedules if s.priority == "urgent")
-    sys.exit(1 if urgent_count > 0 else 0)
+        print_human(schedule, summary, args.policy)
 
 
 if __name__ == "__main__":

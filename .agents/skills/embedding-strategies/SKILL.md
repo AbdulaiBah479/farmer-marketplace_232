@@ -1,6 +1,6 @@
 ---
 name: embedding-strategies
-description: "Guide to selecting and optimizing embedding models for vector search applications."
+description: "Select and optimize embedding models for semantic search and RAG applications. Use when choosing embedding models, implementing chunking strategies, or optimizing embedding quality for specific dom..."
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -492,8 +492,3 @@ def compute_embedding_similarity(
 - [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings)
 - [Sentence Transformers](https://www.sbert.net/)
 - [MTEB Benchmark](https://huggingface.co/spaces/mteb/leaderboard)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

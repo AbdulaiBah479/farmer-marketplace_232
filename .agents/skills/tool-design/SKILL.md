@@ -1,6 +1,6 @@
 ---
 name: tool-design
-description: "Build tools that agents can use effectively, including architectural reduction patterns. Use when creating new tools for agent systems, debugging tool-related failures or misuse, or optimizing existing tool sets for better agent performance."
+description: "Build tools that agents can use effectively, including architectural reduction patterns"
 risk: safe
 source: "https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/tree/main/skills/tool-design"
 date_added: "2026-02-27"
@@ -15,7 +15,8 @@ Use this skill when working with build tools that agents can use effectively, in
 
 Tools are the primary mechanism through which agents interact with the world. They define the contract between deterministic systems and non-deterministic agents. Unlike traditional software APIs designed for developers, tool APIs must be designed for language models that reason about intent, infer parameter values, and generate calls from natural language requests. Poor tool design creates failure modes that no amount of prompt engineering can fix. Effective tool design follows specific principles that account for how agents perceive and use tools.
 
-## When to Use
+## When to Activate
+
 Activate this skill when:
 - Creating new tools for agent systems
 - Debugging tool-related failures or misuse
@@ -316,8 +317,3 @@ External resources:
 **Last Updated**: 2025-12-23
 **Author**: Agent Skills for Context Engineering Contributors
 **Version**: 1.1.0
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

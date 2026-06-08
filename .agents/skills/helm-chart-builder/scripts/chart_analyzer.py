@@ -1,411 +1,541 @@
 #!/usr/bin/env python3
 """
-Helm Chart Analyzer - Analyze Helm chart structure, metadata, and templates.
+helm-chart-builder: Chart Analyzer
 
-Checks for required files, validates Chart.yaml metadata, inspects templates
-for common issues, and reviews dependency configurations.
+Static analysis of Helm chart directories for structural issues, template
+anti-patterns, missing labels, hardcoded values, and security baseline checks.
 
-Author: Claude Skills Engineering Team
-License: MIT
+Usage:
+    python scripts/chart_analyzer.py mychart/
+    python scripts/chart_analyzer.py mychart/ --output json
+    python scripts/chart_analyzer.py mychart/ --security
 """
 
 import argparse
 import json
 import re
 import sys
-from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import List, Dict, Optional, Any
 
 
-@dataclass
-class Finding:
-    """An analysis finding."""
-    severity: str  # critical, warning, info
-    category: str
-    message: str
-    recommendation: str
+# --- Analysis Rules ---
+
+REQUIRED_FILES = [
+    {"path": "Chart.yaml", "severity": "critical", "message": "Missing Chart.yaml — not a valid Helm chart"},
+    {"path": "values.yaml", "severity": "high", "message": "Missing values.yaml — chart has no configurable defaults"},
+    {"path": "templates/_helpers.tpl", "severity": "high", "message": "Missing _helpers.tpl — no shared label/name helpers"},
+    {"path": "templates/NOTES.txt", "severity": "medium", "message": "Missing NOTES.txt — no post-install instructions for users"},
+    {"path": ".helmignore", "severity": "low", "message": "Missing .helmignore — CI files, .git, tests may be packaged"},
+]
+
+CHART_YAML_CHECKS = [
+    {"field": "apiVersion", "severity": "critical", "message": "Missing apiVersion in Chart.yaml"},
+    {"field": "name", "severity": "critical", "message": "Missing name in Chart.yaml"},
+    {"field": "version", "severity": "critical", "message": "Missing version in Chart.yaml"},
+    {"field": "description", "severity": "medium", "message": "Missing description in Chart.yaml"},
+    {"field": "appVersion", "severity": "medium", "message": "Missing appVersion in Chart.yaml — operators won't know what app version is deployed"},
+    {"field": "type", "severity": "low", "message": "Missing type in Chart.yaml — defaults to 'application'"},
+]
+
+TEMPLATE_ANTI_PATTERNS = [
+    {
+        "id": "TP001",
+        "severity": "high",
+        "pattern": r'image:\s*["\']?[a-z][a-z0-9./-]+:[a-z0-9][a-z0-9._-]*["\']?\s*$',
+        "message": "Hardcoded image tag in template — must use .Values.image.repository and .Values.image.tag",
+        "fix": 'Use: image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"',
+    },
+    {
+        "id": "TP002",
+        "severity": "high",
+        "pattern": r'replicas:\s*\d+\s*$',
+        "message": "Hardcoded replica count — must be configurable via values",
+        "fix": "Use: replicas: {{ .Values.replicaCount }}",
+    },
+    {
+        "id": "TP003",
+        "severity": "medium",
+        "pattern": r'port:\s*\d+\s*$',
+        "message": "Hardcoded port number — should be configurable via values",
+        "fix": "Use: port: {{ .Values.service.port }}",
+    },
+    {
+        "id": "TP004",
+        "severity": "high",
+        "pattern": r'(?:name|namespace):\s*[a-z][a-z0-9-]+\s*$',
+        "message": "Hardcoded name/namespace — should use template helpers",
+        "fix": 'Use: name: {{ include "mychart.fullname" . }}',
+    },
+    {
+        "id": "TP005",
+        "severity": "medium",
+        "pattern": r'nodePort:\s*\d+',
+        "message": "Hardcoded nodePort — should be configurable or avoided",
+        "fix": "Use: nodePort: {{ .Values.service.nodePort }} with conditional",
+    },
+]
+
+SECURITY_CHECKS = [
+    {
+        "id": "SC001",
+        "severity": "critical",
+        "check": "no_security_context",
+        "message": "No securityContext found in any template — pods run as root with full capabilities",
+        "fix": "Add pod and container securityContext with runAsNonRoot, readOnlyRootFilesystem, drop ALL capabilities",
+    },
+    {
+        "id": "SC002",
+        "severity": "critical",
+        "check": "privileged_container",
+        "message": "Privileged container detected — full host access",
+        "fix": "Remove privileged: true. Use specific capabilities instead",
+    },
+    {
+        "id": "SC003",
+        "severity": "high",
+        "check": "no_run_as_non_root",
+        "message": "No runAsNonRoot: true — container may run as root",
+        "fix": "Add runAsNonRoot: true to pod securityContext",
+    },
+    {
+        "id": "SC004",
+        "severity": "high",
+        "check": "no_readonly_rootfs",
+        "message": "No readOnlyRootFilesystem — container filesystem is writable",
+        "fix": "Add readOnlyRootFilesystem: true and use emptyDir for writable paths",
+    },
+    {
+        "id": "SC005",
+        "severity": "medium",
+        "check": "no_network_policy",
+        "message": "No NetworkPolicy template — all pod-to-pod traffic allowed",
+        "fix": "Add a NetworkPolicy template with default-deny ingress and explicit allow rules",
+    },
+    {
+        "id": "SC006",
+        "severity": "medium",
+        "check": "automount_sa_token",
+        "message": "automountServiceAccountToken not set to false — pod can access K8s API",
+        "fix": "Set automountServiceAccountToken: false unless the pod needs K8s API access",
+    },
+    {
+        "id": "SC007",
+        "severity": "high",
+        "check": "host_network",
+        "message": "hostNetwork: true — pod shares host network namespace",
+        "fix": "Remove hostNetwork unless absolutely required (e.g., CNI plugin)",
+    },
+    {
+        "id": "SC008",
+        "severity": "critical",
+        "check": "host_pid_ipc",
+        "message": "hostPID or hostIPC enabled — pod can see host processes/IPC",
+        "fix": "Remove hostPID and hostIPC — never needed in application charts",
+    },
+]
+
+LABEL_PATTERNS = [
+    r"app\.kubernetes\.io/name",
+    r"app\.kubernetes\.io/instance",
+    r"app\.kubernetes\.io/version",
+    r"app\.kubernetes\.io/managed-by",
+    r"helm\.sh/chart",
+]
 
 
-@dataclass
-class ChartMetadata:
-    """Parsed Chart.yaml metadata."""
-    api_version: str
-    name: str
-    version: str
-    app_version: str
-    description: str
-    type: str
-    dependencies: List[Dict[str, str]]
+# --- Demo Chart ---
+
+DEMO_CHART_YAML = """apiVersion: v2
+name: demo-app
+version: 0.1.0
+"""
+
+DEMO_VALUES_YAML = """replicaCount: 1
+
+image:
+  repository: nginx
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+"""
+
+DEMO_DEPLOYMENT = """apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: demo-app
+          image: nginx:1.25
+          ports:
+            - containerPort: 80
+"""
 
 
-class SimpleYamlParser:
-    """Minimal YAML parser for Helm chart files (stdlib only)."""
+def parse_yaml_simple(content):
+    """Simple key-value parser for YAML (stdlib only)."""
+    result = {}
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if ":" in stripped and not stripped.startswith("-"):
+            key, _, val = stripped.partition(":")
+            key = key.strip()
+            val = val.strip().strip("'\"")
+            if val:
+                result[key] = val
+    return result
 
-    def parse(self, content: str) -> Dict[str, Any]:
-        """Parse simple YAML into a dict."""
-        result: Dict[str, Any] = {}
-        current_key = None
-        current_list: Optional[List] = None
-        current_list_item: Optional[Dict] = None
 
-        for line in content.split("\n"):
-            stripped = line.strip()
-            if not stripped or stripped.startswith("#"):
-                continue
+def check_structure(chart_dir):
+    """Check chart directory for required files."""
+    findings = []
+    for check in REQUIRED_FILES:
+        path = chart_dir / check["path"]
+        if not path.exists():
+            findings.append({
+                "id": "ST" + str(REQUIRED_FILES.index(check) + 1).zfill(3),
+                "severity": check["severity"],
+                "message": check["message"],
+                "fix": f"Create {check['path']}",
+                "file": check["path"],
+            })
+    return findings
 
-            indent = len(line) - len(line.lstrip())
 
-            # Top-level key: value
-            if indent == 0 and ":" in stripped:
-                if current_list_item and current_list is not None:
-                    current_list.append(current_list_item)
-                    current_list_item = None
-                current_list = None
+def check_chart_yaml(chart_dir):
+    """Validate Chart.yaml metadata."""
+    findings = []
+    chart_path = chart_dir / "Chart.yaml"
+    if not chart_path.exists():
+        return findings
 
-                key, _, value = stripped.partition(":")
-                key = key.strip()
-                value = value.strip()
-                current_key = key
-                if value:
-                    result[key] = value.strip('"').strip("'")
-                else:
-                    result[key] = None
+    content = chart_path.read_text(encoding="utf-8")
+    parsed = parse_yaml_simple(content)
 
-            # List item
-            elif stripped.startswith("- "):
-                if current_key and result.get(current_key) is None:
-                    result[current_key] = []
-                    current_list = result[current_key]
+    for check in CHART_YAML_CHECKS:
+        if check["field"] not in parsed:
+            findings.append({
+                "id": "CY" + str(CHART_YAML_CHECKS.index(check) + 1).zfill(3),
+                "severity": check["severity"],
+                "message": check["message"],
+                "fix": f"Add '{check['field']}:' to Chart.yaml",
+                "file": "Chart.yaml",
+            })
 
-                if current_list_item and current_list is not None:
-                    current_list.append(current_list_item)
+    # Check apiVersion value
+    if parsed.get("apiVersion") == "v1":
+        findings.append({
+            "id": "CY007",
+            "severity": "medium",
+            "message": "apiVersion: v1 is Helm 2 format — use v2 for Helm 3",
+            "fix": "Change apiVersion to v2",
+            "file": "Chart.yaml",
+        })
 
-                item_content = stripped[2:].strip()
-                if ":" in item_content:
-                    k, _, v = item_content.partition(":")
-                    current_list_item = {k.strip(): v.strip().strip('"').strip("'")}
-                elif current_list is not None:
-                    current_list.append(item_content)
-                    current_list_item = None
+    # Check version is semver
+    version = parsed.get("version", "")
+    if version and not re.match(r"^\d+\.\d+\.\d+", version):
+        findings.append({
+            "id": "CY008",
+            "severity": "high",
+            "message": f"Version '{version}' is not valid semver",
+            "fix": "Use semver format: MAJOR.MINOR.PATCH (e.g., 1.0.0)",
+            "file": "Chart.yaml",
+        })
 
-            # Continuation of list item
-            elif indent >= 4 and current_list_item is not None and ":" in stripped:
-                k, _, v = stripped.partition(":")
-                current_list_item[k.strip()] = v.strip().strip('"').strip("'")
+    return findings
 
-        if current_list_item and current_list is not None:
-            current_list.append(current_list_item)
 
+def check_templates(chart_dir):
+    """Scan templates for anti-patterns."""
+    findings = []
+    templates_dir = chart_dir / "templates"
+    if not templates_dir.exists():
+        return findings
+
+    template_files = list(templates_dir.glob("*.yaml")) + list(templates_dir.glob("*.yml")) + list(templates_dir.glob("*.tpl"))
+
+    all_content = ""
+    for tpl_file in template_files:
+        content = tpl_file.read_text(encoding="utf-8")
+        all_content += content + "\n"
+        rel_path = tpl_file.relative_to(chart_dir)
+
+        for rule in TEMPLATE_ANTI_PATTERNS:
+            # Skip patterns that would false-positive on template expressions
+            for match in re.finditer(rule["pattern"], content, re.MULTILINE):
+                line = match.group(0).strip()
+                # Skip if the line contains a template expression
+                if "{{" in line or "}}" in line:
+                    continue
+                findings.append({
+                    "id": rule["id"],
+                    "severity": rule["severity"],
+                    "message": rule["message"],
+                    "fix": rule["fix"],
+                    "file": str(rel_path),
+                    "line": line[:80],
+                })
+
+    # Check for standard labels
+    helpers_file = templates_dir / "_helpers.tpl"
+    if helpers_file.exists():
+        helpers_content = helpers_file.read_text(encoding="utf-8")
+        for label_pattern in LABEL_PATTERNS:
+            if not re.search(label_pattern, helpers_content) and not re.search(label_pattern, all_content):
+                label_name = label_pattern.replace("\\.", ".")
+                findings.append({
+                    "id": "LB001",
+                    "severity": "high",
+                    "message": f"Standard label '{label_name}' not found in helpers or templates",
+                    "fix": f"Add {label_name} to the labels helper in _helpers.tpl",
+                    "file": "templates/_helpers.tpl",
+                    "line": "(label not found)",
+                })
+
+    # Check for resource limits
+    if "resources:" not in all_content and template_files:
+        findings.append({
+            "id": "TP006",
+            "severity": "critical",
+            "message": "No resource requests/limits in any template — pods can consume unlimited node resources",
+            "fix": "Add resources section: {{ toYaml .Values.resources | nindent 12 }}",
+            "file": "templates/",
+            "line": "(no resources block found)",
+        })
+
+    # Check for probes
+    if "livenessProbe" not in all_content and "readinessProbe" not in all_content and template_files:
+        has_deployment = any("Deployment" in f.read_text(encoding="utf-8") for f in template_files if f.suffix in (".yaml", ".yml"))
+        if has_deployment:
+            findings.append({
+                "id": "TP007",
+                "severity": "high",
+                "message": "No liveness/readiness probes — Kubernetes cannot detect unhealthy pods",
+                "fix": "Add livenessProbe and readinessProbe with configurable values",
+                "file": "templates/deployment.yaml",
+                "line": "(no probes found)",
+            })
+
+    return findings
+
+
+def check_security(chart_dir):
+    """Run security-focused checks."""
+    findings = []
+    templates_dir = chart_dir / "templates"
+    if not templates_dir.exists():
+        return findings
+
+    template_files = list(templates_dir.glob("*.yaml")) + list(templates_dir.glob("*.yml"))
+    all_content = ""
+    for tpl_file in template_files:
+        all_content += tpl_file.read_text(encoding="utf-8") + "\n"
+
+    for check in SECURITY_CHECKS:
+        triggered = False
+
+        if check["check"] == "no_security_context":
+            if "securityContext" not in all_content and template_files:
+                triggered = True
+        elif check["check"] == "privileged_container":
+            if re.search(r"privileged:\s*true", all_content):
+                triggered = True
+        elif check["check"] == "no_run_as_non_root":
+            if "securityContext" in all_content and "runAsNonRoot" not in all_content:
+                triggered = True
+        elif check["check"] == "no_readonly_rootfs":
+            if "securityContext" in all_content and "readOnlyRootFilesystem" not in all_content:
+                triggered = True
+        elif check["check"] == "no_network_policy":
+            np_file = templates_dir / "networkpolicy.yaml"
+            if not np_file.exists() and "NetworkPolicy" not in all_content:
+                triggered = True
+        elif check["check"] == "automount_sa_token":
+            if "automountServiceAccountToken" not in all_content and template_files:
+                triggered = True
+        elif check["check"] == "host_network":
+            if re.search(r"hostNetwork:\s*true", all_content):
+                triggered = True
+        elif check["check"] == "host_pid_ipc":
+            if re.search(r"host(?:PID|IPC):\s*true", all_content):
+                triggered = True
+
+        if triggered:
+            findings.append({
+                "id": check["id"],
+                "severity": check["severity"],
+                "message": check["message"],
+                "fix": check["fix"],
+                "file": "templates/",
+            })
+
+    # Check for secrets in values.yaml
+    values_path = chart_dir / "values.yaml"
+    if values_path.exists():
+        values_content = values_path.read_text(encoding="utf-8")
+        for match in re.finditer(r"^(\s*\S*(?:password|secret|token|apiKey|api_key)\s*:\s*)(\S+)", values_content, re.MULTILINE | re.IGNORECASE):
+            val = match.group(2).strip("'\"")
+            if val and val not in ("null", "~", '""', "''", "changeme", "CHANGEME", "TODO"):
+                findings.append({
+                    "id": "SC009",
+                    "severity": "critical",
+                    "message": f"Potential secret in values.yaml default: {match.group(0).strip()[:60]}",
+                    "fix": "Remove default secret values. Use empty string or null with documentation",
+                    "file": "values.yaml",
+                    "line": match.group(0).strip()[:80],
+                })
+
+    return findings
+
+
+def analyze_chart(chart_dir, output_format="text", security_focus=False):
+    """Run full chart analysis."""
+    findings = []
+    findings.extend(check_structure(chart_dir))
+    findings.extend(check_chart_yaml(chart_dir))
+    findings.extend(check_templates(chart_dir))
+
+    if security_focus:
+        findings.extend(check_security(chart_dir))
+        # Filter to security-relevant items only
+        security_ids = {"SC001", "SC002", "SC003", "SC004", "SC005", "SC006", "SC007", "SC008", "SC009"}
+        security_severities = {"critical", "high"}
+        findings = [f for f in findings if f["id"] in security_ids or f["severity"] in security_severities]
+    else:
+        findings.extend(check_security(chart_dir))
+
+    # Deduplicate
+    seen = set()
+    unique = []
+    for f in findings:
+        key = (f["id"], f.get("line", ""), f.get("file", ""))
+        if key not in seen:
+            seen.add(key)
+            unique.append(f)
+    findings = unique
+
+    # Sort by severity
+    severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    findings.sort(key=lambda f: severity_order.get(f["severity"], 4))
+
+    # Score
+    deductions = {"critical": 25, "high": 15, "medium": 5, "low": 2}
+    score = max(0, 100 - sum(deductions.get(f["severity"], 0) for f in findings))
+
+    counts = {
+        "critical": sum(1 for f in findings if f["severity"] == "critical"),
+        "high": sum(1 for f in findings if f["severity"] == "high"),
+        "medium": sum(1 for f in findings if f["severity"] == "medium"),
+        "low": sum(1 for f in findings if f["severity"] == "low"),
+    }
+
+    # Chart metadata
+    chart_yaml_path = chart_dir / "Chart.yaml"
+    chart_meta = parse_yaml_simple(chart_yaml_path.read_text(encoding="utf-8")) if chart_yaml_path.exists() else {}
+
+    result = {
+        "score": score,
+        "chart_name": chart_meta.get("name", chart_dir.name),
+        "chart_version": chart_meta.get("version", "unknown"),
+        "app_version": chart_meta.get("appVersion", "unknown"),
+        "findings": findings,
+        "finding_counts": counts,
+    }
+
+    if output_format == "json":
+        print(json.dumps(result, indent=2))
         return result
 
+    # Text output
+    print(f"\n{'=' * 60}")
+    print(f"  Helm Chart Analysis Report")
+    print(f"{'=' * 60}")
+    print(f"  Score: {score}/100")
+    print(f"  Chart: {result['chart_name']} v{result['chart_version']}")
+    print(f"  App Version: {result['app_version']}")
+    print()
+    print(f"  Findings: {counts['critical']} critical | {counts['high']} high | {counts['medium']} medium | {counts['low']} low")
+    print(f"{'─' * 60}")
 
-class ChartAnalyzer:
-    """Analyzes Helm chart structure and quality."""
-
-    REQUIRED_FILES = ["Chart.yaml", "values.yaml"]
-    REQUIRED_DIRS = ["templates"]
-    RECOMMENDED_FILES = ["templates/NOTES.txt", "templates/_helpers.tpl"]
-    CHART_REQUIRED_FIELDS = ["apiVersion", "name", "version"]
-    SEMVER_PATTERN = re.compile(r'^\d+\.\d+\.\d+(-[\w.]+)?(\+[\w.]+)?$')
-
-    def __init__(self, chart_path: Path, strict: bool = False):
-        self.chart_path = chart_path
-        self.strict = strict
-        self.findings: List[Finding] = []
-        self.metadata: Optional[ChartMetadata] = None
-
-    def analyze(self) -> List[Finding]:
-        """Run full chart analysis."""
-        self._check_structure()
-        self._check_chart_yaml()
-        self._check_templates()
-        self._check_dependencies()
-        self._check_documentation()
-        return self.findings
-
-    def _check_structure(self):
-        """Check required files and directories exist."""
-        for req_file in self.REQUIRED_FILES:
-            if not (self.chart_path / req_file).exists():
-                self.findings.append(Finding(
-                    severity="critical",
-                    category="structure",
-                    message=f"Required file missing: {req_file}",
-                    recommendation=f"Create {req_file} in the chart root directory.",
-                ))
-
-        for req_dir in self.REQUIRED_DIRS:
-            if not (self.chart_path / req_dir).is_dir():
-                self.findings.append(Finding(
-                    severity="critical",
-                    category="structure",
-                    message=f"Required directory missing: {req_dir}/",
-                    recommendation=f"Create {req_dir}/ directory with template files.",
-                ))
-
-        for rec_file in self.RECOMMENDED_FILES:
-            if not (self.chart_path / rec_file).exists():
-                self.findings.append(Finding(
-                    severity="info",
-                    category="structure",
-                    message=f"Recommended file missing: {rec_file}",
-                    recommendation=f"Add {rec_file} for better chart usability.",
-                ))
-
-        # Check for Chart.lock if dependencies exist
-        if (self.chart_path / "Chart.yaml").exists():
-            chart_content = (self.chart_path / "Chart.yaml").read_text()
-            if "dependencies:" in chart_content and not (self.chart_path / "Chart.lock").exists():
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="dependencies",
-                    message="Chart has dependencies but no Chart.lock file.",
-                    recommendation="Run 'helm dependency update' to generate Chart.lock.",
-                ))
-
-    def _check_chart_yaml(self):
-        """Validate Chart.yaml metadata."""
-        chart_file = self.chart_path / "Chart.yaml"
-        if not chart_file.exists():
-            return
-
-        content = chart_file.read_text()
-        parser = SimpleYamlParser()
-        data = parser.parse(content)
-
-        # Check required fields
-        for field_name in self.CHART_REQUIRED_FIELDS:
-            if field_name not in data or not data[field_name]:
-                self.findings.append(Finding(
-                    severity="critical",
-                    category="metadata",
-                    message=f"Required field missing in Chart.yaml: {field_name}",
-                    recommendation=f"Add '{field_name}' to Chart.yaml.",
-                ))
-
-        # Check apiVersion
-        api_version = data.get("apiVersion", "")
-        if api_version and api_version != "v2":
-            self.findings.append(Finding(
-                severity="warning",
-                category="metadata",
-                message=f"Chart uses apiVersion '{api_version}'. Helm 3 expects 'v2'.",
-                recommendation="Set apiVersion to 'v2' for Helm 3 compatibility.",
-            ))
-
-        # Check version format
-        version = data.get("version", "")
-        if version and not self.SEMVER_PATTERN.match(version):
-            self.findings.append(Finding(
-                severity="warning",
-                category="metadata",
-                message=f"Chart version '{version}' is not valid SemVer.",
-                recommendation="Use semantic versioning format: MAJOR.MINOR.PATCH",
-            ))
-
-        # Check description
-        if not data.get("description"):
-            self.findings.append(Finding(
-                severity="info",
-                category="metadata",
-                message="Chart.yaml missing 'description' field.",
-                recommendation="Add a brief description of the chart's purpose.",
-            ))
-
-        # Check appVersion
-        if not data.get("appVersion"):
-            self.findings.append(Finding(
-                severity="info",
-                category="metadata",
-                message="Chart.yaml missing 'appVersion' field.",
-                recommendation="Add appVersion to track the application version deployed.",
-            ))
-
-        # Store metadata
-        deps = data.get("dependencies", [])
-        if not isinstance(deps, list):
-            deps = []
-        self.metadata = ChartMetadata(
-            api_version=data.get("apiVersion", ""),
-            name=data.get("name", ""),
-            version=data.get("version", ""),
-            app_version=data.get("appVersion", ""),
-            description=data.get("description", ""),
-            type=data.get("type", "application"),
-            dependencies=[d for d in deps if isinstance(d, dict)],
-        )
-
-    def _check_templates(self):
-        """Inspect template files for common issues."""
-        templates_dir = self.chart_path / "templates"
-        if not templates_dir.is_dir():
-            return
-
-        template_files = list(templates_dir.glob("*.yaml")) + list(templates_dir.glob("*.yml"))
-        tpl_files = list(templates_dir.glob("*.tpl"))
-
-        if not template_files and not tpl_files:
-            self.findings.append(Finding(
-                severity="warning",
-                category="templates",
-                message="No template files found in templates/ directory.",
-                recommendation="Add Kubernetes manifest templates (deployment.yaml, service.yaml, etc.).",
-            ))
-            return
-
-        for tpl in template_files:
-            content = tpl.read_text()
-
-            # Check for hardcoded namespace
-            if re.search(r'namespace:\s*["\']?\w+["\']?\s*$', content, re.MULTILINE):
-                if "{{ " not in content.split("namespace:")[0].split("\n")[-1]:
-                    nearby = [l for l in content.split("\n") if "namespace:" in l]
-                    for ns_line in nearby:
-                        if "{{" not in ns_line:
-                            self.findings.append(Finding(
-                                severity="warning",
-                                category="templates",
-                                message=f"Hardcoded namespace in {tpl.name}.",
-                                recommendation="Use {{ .Release.Namespace }} for namespace references.",
-                            ))
-                            break
-
-            # Check for hardcoded image tags
-            if re.search(r'image:\s*["\']?[\w/.-]+:\w+', content):
-                img_lines = [l for l in content.split("\n") if "image:" in l]
-                for img_line in img_lines:
-                    if "{{" not in img_line:
-                        self.findings.append(Finding(
-                            severity="warning",
-                            category="templates",
-                            message=f"Hardcoded image reference in {tpl.name}.",
-                            recommendation="Use templated image: {{ .Values.image.repository }}:{{ .Values.image.tag }}",
-                        ))
-                        break
-
-    def _check_dependencies(self):
-        """Check subchart dependency configurations."""
-        if not self.metadata or not self.metadata.dependencies:
-            return
-
-        for dep in self.metadata.dependencies:
-            name = dep.get("name", "unknown")
-            version = dep.get("version", "")
-
-            if not version:
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="dependencies",
-                    message=f"Dependency '{name}' has no version constraint.",
-                    recommendation=f"Pin dependency '{name}' to a version range.",
-                ))
-            elif version == "*":
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="dependencies",
-                    message=f"Dependency '{name}' uses wildcard version '*'.",
-                    recommendation=f"Pin to a specific version range like '~1.2.0' or '>=1.0.0 <2.0.0'.",
-                ))
-
-            if not dep.get("repository"):
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="dependencies",
-                    message=f"Dependency '{name}' has no repository specified.",
-                    recommendation="Add repository URL for the dependency.",
-                ))
-
-    def _check_documentation(self):
-        """Check for chart documentation."""
-        readme = self.chart_path / "README.md"
-        if not readme.exists():
-            self.findings.append(Finding(
-                severity="info",
-                category="documentation",
-                message="No README.md found in chart directory.",
-                recommendation="Add README.md documenting chart usage, values, and examples.",
-            ))
-
-
-def format_text(findings: List[Finding], chart_path: str, metadata: Optional[ChartMetadata]) -> str:
-    """Format as human-readable text."""
-    lines = []
-    lines.append("=" * 60)
-    lines.append("HELM CHART ANALYSIS REPORT")
-    lines.append("=" * 60)
-    lines.append(f"\nChart: {chart_path}")
-
-    if metadata:
-        lines.append(f"  Name: {metadata.name}")
-        lines.append(f"  Version: {metadata.version}")
-        lines.append(f"  App Version: {metadata.app_version}")
-        lines.append(f"  Dependencies: {len(metadata.dependencies)}")
-
-    critical = [f for f in findings if f.severity == "critical"]
-    warnings = [f for f in findings if f.severity == "warning"]
-    info = [f for f in findings if f.severity == "info"]
-
-    lines.append(f"\nFindings: {len(critical)} critical, {len(warnings)} warnings, {len(info)} info")
-    lines.append("-" * 60)
-
-    for severity, group in [("CRITICAL", critical), ("WARNING", warnings), ("INFO", info)]:
-        if not group:
-            continue
-        lines.append(f"\n[{severity}]")
-        for f in group:
-            lines.append(f"  [{f.category}] {f.message}")
-            lines.append(f"    Fix: {f.recommendation}")
-            lines.append("")
+    for f in findings:
+        icon = {"critical": "!!!", "high": "!!", "medium": "!", "low": "~"}.get(f["severity"], "?")
+        print(f"\n  [{f['id']}] {icon} {f['severity'].upper()}")
+        print(f"  {f['message']}")
+        if "file" in f:
+            print(f"  File: {f['file']}")
+        if "line" in f:
+            print(f"  Line: {f['line']}")
+        print(f"  Fix:  {f['fix']}")
 
     if not findings:
-        lines.append("\nNo issues found. Chart follows best practices.")
+        print("\n  No issues found. Chart looks good.")
 
-    lines.append("=" * 60)
-    return "\n".join(lines)
+    print(f"\n{'=' * 60}\n")
+    return result
 
 
-def format_json(findings: List[Finding], chart_path: str, metadata: Optional[ChartMetadata]) -> str:
-    """Format as JSON."""
-    return json.dumps({
-        "chart_path": chart_path,
-        "metadata": asdict(metadata) if metadata else None,
-        "findings": [asdict(f) for f in findings],
-        "summary": {
-            "total": len(findings),
-            "critical": sum(1 for f in findings if f.severity == "critical"),
-            "warnings": sum(1 for f in findings if f.severity == "warning"),
-            "info": sum(1 for f in findings if f.severity == "info"),
-        }
-    }, indent=2)
+def run_demo():
+    """Run analysis on demo chart data."""
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        chart_dir = Path(tmpdir) / "demo-app"
+        chart_dir.mkdir()
+        (chart_dir / "Chart.yaml").write_text(DEMO_CHART_YAML)
+        (chart_dir / "values.yaml").write_text(DEMO_VALUES_YAML)
+        templates_dir = chart_dir / "templates"
+        templates_dir.mkdir()
+        (templates_dir / "deployment.yaml").write_text(DEMO_DEPLOYMENT)
+
+        return chart_dir, analyze_chart
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze Helm chart structure, metadata, and templates."
+        description="helm-chart-builder: Helm chart static analyzer"
     )
-    parser.add_argument("--path", "-p", required=True, help="Path to Helm chart directory")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
-    parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
+    parser.add_argument("chartdir", nargs="?", help="Path to Helm chart directory (omit for demo)")
+    parser.add_argument(
+        "--output", "-o",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "--security",
+        action="store_true",
+        help="Security-focused analysis only",
+    )
     args = parser.parse_args()
 
-    chart_path = Path(args.path)
-    if not chart_path.is_dir():
-        print(f"Error: Not a directory: {args.path}", file=sys.stderr)
-        sys.exit(2)
-
-    analyzer = ChartAnalyzer(chart_path, strict=args.strict)
-    findings = analyzer.analyze()
-
-    if args.format == "json":
-        print(format_json(findings, str(chart_path), analyzer.metadata))
+    if args.chartdir:
+        chart_dir = Path(args.chartdir)
+        if not chart_dir.is_dir():
+            print(f"Error: Not a directory: {args.chartdir}", file=sys.stderr)
+            sys.exit(1)
+        analyze_chart(chart_dir, args.output, args.security)
     else:
-        print(format_text(findings, str(chart_path), analyzer.metadata))
-
-    has_critical = any(f.severity == "critical" for f in findings)
-    has_warning = any(f.severity == "warning" for f in findings)
-    if has_critical or (args.strict and has_warning):
-        sys.exit(1)
+        print("No chart directory provided. Running demo analysis...\n")
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            chart_dir = Path(tmpdir) / "demo-app"
+            chart_dir.mkdir()
+            (chart_dir / "Chart.yaml").write_text(DEMO_CHART_YAML)
+            (chart_dir / "values.yaml").write_text(DEMO_VALUES_YAML)
+            templates_dir = chart_dir / "templates"
+            templates_dir.mkdir()
+            (templates_dir / "deployment.yaml").write_text(DEMO_DEPLOYMENT)
+            analyze_chart(chart_dir, args.output, args.security)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 ---
 name: github-actions-templates
-description: "Production-ready GitHub Actions workflow patterns for testing, building, and deploying applications."
-risk: critical
+description: "Create production-ready GitHub Actions workflows for automated testing, building, and deploying applications. Use when setting up CI/CD with GitHub Actions, automating development workflows, or cre..."
+risk: unknown
 source: community
 date_added: "2026-02-27"
 ---
@@ -346,8 +346,3 @@ jobs:
 - `gitlab-ci-patterns` - For GitLab CI workflows
 - `deployment-pipeline-design` - For pipeline architecture
 - `secrets-management` - For secrets handling
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

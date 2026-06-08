@@ -1,150 +1,305 @@
 ---
-name: Interview
-description: "Runs a phased conversational interview across all PAI context files using InterviewScan.ts, which orders targets by PHASE and assigns conversation mode per file. Phase 1 (foundational TELOS) always runs first regardless of completeness: MISSION, GOALS, PROBLEMS, STRATEGIES, CHALLENGES, NARRATIVES, SPARKS, BELIEFS, WISDOM, MODELS, FRAMES in leverage order. Phase 2: IDEAL_STATE (HEALTH, MONEY, FREEDOM, RELATIONSHIPS, CREATIVE) in Fill mode. Phase 3: preferences (BOOKS, AUTHORS, BANDS, MOVIES, RESTAURANTS, FOOD_PREFERENCES, LEARNING, MEETUPS, CIVIC) in mixed mode. Phase 4: light touch on CURRENT_STATE/SNAPSHOT and PRINCIPAL_IDENTITY. Phase 9 (RHYTHMS) deferred. Review mode (≥80%) reads file then asks targeted questions one at a time — still accurate, outdated, missing, sharpen? Fill mode (<80%) walks scanner prompts one at a time. The principal answers in natural language; the DA formats into file structure. Voice confirms on actual changes only. Stop signals respected immediately. Target vs. north-star type confirmed per entry. Timestamped backup to TELOS/Backups/ before multi-edit at ≥50% of a file. TelosRenderer.ts regenerates PRINCIPAL_TELOS.md after foundational changes. USE WHEN /interview, resume interview, continue interview, start the interview, review TELOS, fill in context, what's missing in setup, conversational review, phased review, TELOS walkthrough, quarterly context refresh. NOT FOR single-file edits (use Telos Update workflow), intaking external content (use Migrate), identity edits (use _PROFILE)."
+name: interview
+description: |
+  This skill conducts discovery conversations to understand user intent and agree on approach before taking action. It should be used when the user explicitly calls /interview, asks for recommendations, needs brainstorming, wants to clarify, or when the request could be misunderstood. Prevents building the wrong thing by uncovering WHY behind WHAT.
 ---
 
-# Interview — phased conversational context review + fill
+# Interview Skill
 
-## 🚨 MANDATORY: Voice Notification
+Prevent building the wrong thing. Discover user's intent (WHY), validate assumptions, and agree on approach (WHAT) before taking action.
 
-Before running the workflow, send:
+## What This Skill Does
 
-```bash
-curl -s -X POST http://localhost:31337/notify \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Starting the interview. Scanning phases first."}' \
-  > /dev/null 2>&1 &
+- Discovers INTENT behind surface requests (WHY they want it)
+- Surfaces and validates AI's assumptions before acting
+- Explores solution options informed by intent
+- Reaches mutual agreement on both problem and solution
+- Works for any context: software, documents, brainstorming, automation
+
+## What This Skill Does NOT Do
+
+- Follow rigid scripts
+- Skip to implementation without understanding
+- Accept surface requests without exploring intent
+- Make assumptions without validating them
+
+---
+
+## Core Problem This Skill Solves
+
+**AI builds the wrong thing because it:**
+1. Takes surface requests literally without understanding intent
+2. Makes hidden assumptions it never validates
+3. Proceeds without confirming alignment
+
+**This skill ensures:**
+1. Intent (WHY) is discovered, not just request (WHAT)
+2. Assumptions are surfaced and validated
+3. Both problem and solution are agreed before proceeding
+
+---
+
+## The WHY + WHAT Model
+
+```
+Surface WHAT → Discover WHY → Surface Assumptions →
+Informed WHAT → Agree on Both → Proceed
 ```
 
-## What this skill does
+| Phase | Purpose | Example |
+|-------|---------|---------|
+| **Surface WHAT** | Capture initial request | "Add dark mode" |
+| **Discover WHY** | Uncover intent/problem | "Eye strain for night workers" |
+| **Surface Assumptions** | Expose AI's hidden assumptions | "Assuming web app, not mobile" |
+| **Informed WHAT** | Solution options based on WHY | "Dark mode + auto-brightness + schedule" |
+| **Agree on Both** | Confirm problem AND solution | "Solving eye strain via dark mode with auto-switch" |
 
-Runs a **phased conversational interview** across every PAI context file. Phase 1 (foundational TELOS) is the core — the DA always reviews it first, even if files look "complete," because foundational context is never actually done. Only after Phase 1 does the interview move to IDEAL_STATE dimensions, preferences, and identity.
+---
 
-### The phases
+## When to Trigger
 
-| Phase | Scope | Mode default |
-|---|---|---|
-| **Phase 1** | Foundational TELOS context — MISSION, GOALS, PROBLEMS, STRATEGIES, CHALLENGES, NARRATIVES, SPARKS, BELIEFS, WISDOM, MODELS, FRAMES | Review (files are typically already populated — surface updates/refinements) |
-| **Phase 2** | IDEAL_STATE dimensions (minus RHYTHMS) — HEALTH, MONEY, FREEDOM, RELATIONSHIPS, CREATIVE | Fill (typically sparse — walk through prompts) |
-| **Phase 3** | Preferences — BOOKS, AUTHORS, BANDS, MOVIES, RESTAURANTS, FOOD_PREFERENCES, LEARNING, MEETUPS, CIVIC | Mix — depends on completeness |
-| **Phase 4** | CURRENT_STATE/SNAPSHOT + PRINCIPAL_IDENTITY | Light touch |
-| **Phase 9** | Deferred — RHYTHMS (skipped in normal flow) | — |
+| Trigger | Example |
+|---------|---------|
+| Explicit invocation | `/interview`, "let's clarify" |
+| Request could be misunderstood | Ambiguous, complex, or multi-part requests |
+| Recommendations needed | "What should I use for..." |
+| Brainstorming | "Help me think through..." |
+| High-stakes work | Where wrong output wastes significant effort |
 
-### Review vs. Fill mode
+**Don't over-trigger**: Simple, clear requests don't need full discovery.
 
-- **Fill mode** (completeness < 80%): walk through the scanner's prompts, write answers to the file's structured slots.
-- **Review mode** (completeness ≥ 80%): read the file contents to the principal first, then ask targeted questions — "Anything outdated? Anything missing? Sharpen or refine any of these?"
+---
 
-The scanner marks each target's mode based on completeness. The DA respects that mode in the conversation.
+## Discovery Flow
 
-## Workflow
+### Before Starting
 
-### Step 1 — Scan
+Gather available context before asking questions:
 
-Run the scanner to see phase breakdown and current state:
+| Source | Gather |
+|--------|--------|
+| **Conversation** | User's stated request, prior context |
+| **Available Context** | Information already shared in session |
+| **Skill References** | Question patterns from `references/` |
 
-```bash
-bun ~/.claude/PAI/TOOLS/InterviewScan.ts
+### 1. Surface WHAT
+
+Capture the initial request clearly.
+
+```
+"Let me make sure I understand - you're asking for [X]?"
 ```
 
-The scanner orders items phase-first (Phase 1 always before Phase 2). Present the per-phase summary to the principal:
+### 2. Discover WHY
 
-> "Your setup is 85% overall. Phase 1 foundational TELOS is at 100% — but every file is worth a review pass. Phase 2 IDEAL_STATE is at 59%. Phase 3 preferences mostly good except FOOD_PREFERENCES at 7%. Starting with Phase 1: MISSION. Ready?"
+**This is the critical step most AI skips.**
 
-### Step 2 — Walk Phase 1 first
+Go beyond WHAT to understand WHY:
 
-**Do not skip Phase 1.** Even if every foundational TELOS file scores 100%, walk through each in priority order. These files are never truly "done" — a quarterly review pass is what keeps them current.
+| Ask | To Discover |
+|-----|-------------|
+| "What problem does this solve?" | The real need |
+| "Why now?" | Urgency and context |
+| "What happens if we don't do this?" | Stakes and priority |
+| "Who benefits and how?" | Users and value |
+| "What led to this request?" | Background and triggers |
 
-Phase 1 order (by leverage): MISSION → GOALS → PROBLEMS → STRATEGIES → CHALLENGES → NARRATIVES → SPARKS → BELIEFS → WISDOM → MODELS → FRAMES.
+**Techniques for WHY:**
 
-For each file:
-
-1. Get the per-file detail:
-   ```bash
-   bun ~/.claude/PAI/TOOLS/InterviewScan.ts --file <NAME>
-   ```
-2. Check the mode:
-   - `REVIEW mode` (≥80% complete) → read the file contents to the principal first, then ask review questions
-   - `FILL mode` (<80% complete) → walk through the scanner's prompts
-3. Run the conversation loop (below)
-4. When the principal says "next" or "done with this one," move to the next Phase 1 file
-
-### Step 3 — Conversation loop (per file)
-
-**Review mode** (for Phase 1 files at ≥80%):
-1. Read the file with the Read tool.
-2. Summarize what's there to the principal in 2-3 sentences. No voice here — text only.
-3. Ask targeted review questions ONE AT A TIME:
-   - "Is <specific item> still accurate?"
-   - "Anything outdated to retire?"
-   - "Any recent thinking that belongs here but isn't captured?"
-   - "Anything you'd sharpen, reframe, or expand?"
-4. The principal answers by voice or text.
-5. If the principal wants a change, the DA writes it via Edit tool — precise old_string/new_string, preserve surrounding structure.
-6. Voice-confirm only on actual changes:
-   ```bash
-   curl -s -X POST http://localhost:31337/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Updated <FILE> — captured the refinement."}' \
-     > /dev/null 2>&1 &
-   ```
-7. Ask: "Anything else for <FILE>, or move on?"
-
-**Fill mode** (for files below 80%):
-1. Ask the first scanner prompt — one at a time, never a firehose.
-2. The principal answers (voice or typed).
-3. The DA writes the answer into the correct slot in the file — replacing TBD markers, filling empty sections, appending items.
-4. Voice-confirm what got captured.
-5. Next prompt. Repeat until done with this file or the principal says "next."
-
-### Step 4 — Phase transitions
-
-After Phase 1 completes:
-1. Voice: "Phase 1 done. Ready for Phase 2 IDEAL_STATE, or break here?"
-2. If the principal says continue, proceed to Phase 2 top priority (usually HEALTH).
-3. If the principal says stop, run final scan, voice a summary of what changed, say goodbye.
-
-Same pattern Phase 2 → Phase 3 → Phase 4.
-
-### Step 5 — Regenerate PRINCIPAL_TELOS.md
-
-After foundational changes, regenerate the startup summary so future sessions pick up the updates:
-
-```bash
-bun ~/.claude/PAI/TOOLS/TelosRenderer.ts 2>/dev/null || true
+**Laddering** - Dig into abstract goals:
+```
+"Dark mode" → "Why?" → "Eye strain" → "Why an issue?" → "Night shift workers"
 ```
 
-## Rules
+**5 Whys** - Uncover root need:
+```
+"Export feature" → Why? → "Share reports" → Why? → "Stakeholder reviews" → Root need
+```
 
-- **One question at a time.** Never dump all prompts at once.
-- **The principal never types schema.** They speak/type the answer in their own words; the DA formats it into the file's structure.
-- **Always show the principal what got written** before moving on. Brief voice + one line text.
-- **Respect stop signals.** "Enough" / "stop" / "later" → save progress (state is already persistent in the files themselves), end gracefully.
-- **Don't ask again about filled fields.** The scanner's completeness score decides what's still gap-worthy.
-- **Narrative dimensions stay narrative.** For CREATIVE/RELATIONSHIPS, don't coerce answers into metrics — write prose that matches the principal's words.
-- **Target/North-Star classification.** After writing a target's entries, ask once: "Is this a concrete achievable target, or a north-star orientation?" Update the `type:` field accordingly. (Default `target`.)
-- **Back up before multi-edit.** If about to rewrite ≥50% of a file, save timestamped backup to `TELOS/Backups/FILENAME-YYYYMMDD-HHMMSS.md` first.
+**Structuring Clarifications**:
 
-## Examples
+When presenting multiple questions, distinguish must-know from nice-to-know:
 
-### User: `/interview`
+```
+## Required Clarifications
+1. [Critical question - blocks progress]
+2. [Critical question - affects core approach]
 
-The DA runs InterviewScan, presents top 3 gaps, asks the principal to pick.
+## Optional Clarifications (if relevant)
+3. [Nice-to-know - can assume reasonable default]
 
-### User: `/interview --resume`
+Note: Keep to 1-4 questions per round. Build on answers.
+```
 
-The DA runs scan (same as above — state is in the files themselves, no separate session to resume).
+### 3. Surface Assumptions
 
-### User: `/interview health`
+**This prevents "builds wrong thing."**
 
-The DA skips the full scan, jumps straight to the IDEAL_STATE/HEALTH interview.
+AI always makes assumptions. Surface them explicitly:
 
-### User: "next area" (mid-interview)
+```
+"I'm assuming:
+- This is for [platform/context]
+- Users are [type]
+- We need to support [X] but not [Y]
+- [Other assumption]
 
-The DA marks current section progress via file state (already saved by Edit tool), re-scans, asks the principal to pick next highest-priority or auto-continue.
+Are these correct?"
+```
 
-## Related
+**Common hidden assumptions:**
+- Technology/platform
+- User expertise level
+- Scale/performance needs
+- Integration requirements
+- What's in vs out of scope
 
-- `/migrate` — intake content from other sources (not an interview, a one-shot classification)
-- `/Telos` — edit a single TELOS file directly with backup
-- `/_PROFILE` — manage PRINCIPAL_IDENTITY directly
+### 4. Informed WHAT
+
+Now that WHY is clear, explore WHAT options:
+
+```
+"Given that you need [WHY], we could:
+1. [Option A] - [trade-off]
+2. [Option B] - [trade-off]
+3. [Option C] - [trade-off]
+
+Which fits your intent best?"
+```
+
+**Key**: Options should address the WHY, not just the surface WHAT.
+
+### 5. Agree on Both
+
+Confirm understanding of BOTH problem and solution:
+
+```
+## Understanding
+
+**Problem (WHY)**: [What we're solving and why it matters]
+
+**Solution (WHAT)**: [What we'll build/do]
+
+**Key decisions**:
+- [Decision 1]
+- [Decision 2]
+
+**Not included**: [Explicit scope boundaries]
+
+Does this capture it correctly?
+```
+
+**Only proceed after explicit confirmation.**
+
+---
+
+## Depth Check
+
+How do you know understanding is deep enough?
+
+### Surface Understanding (NOT enough)
+- Can repeat what user asked for
+- Know the immediate request
+- Haven't explored why
+
+### Deep Understanding (ENOUGH)
+- [ ] Know WHY they want it, not just WHAT
+- [ ] Know what problem it solves
+- [ ] Assumptions are surfaced and validated
+- [ ] Know who benefits and how
+- [ ] Know what's explicitly out of scope
+- [ ] Could explain it to someone else accurately
+- [ ] User confirmed understanding is correct
+
+**Test**: If you proceeded now and built something, would user say "yes, that's what I meant" or "no, you misunderstood"?
+
+---
+
+## Assumption Categories
+
+Surface assumptions in these areas:
+
+| Category | Example Assumptions |
+|----------|---------------------|
+| **Context** | Platform, environment, existing systems |
+| **Users** | Who they are, expertise level, needs |
+| **Scale** | Volume, performance requirements |
+| **Scope** | What's included vs excluded |
+| **Quality** | Standards, constraints, requirements |
+| **Timeline** | Urgency, phases, dependencies |
+
+---
+
+## Anti-Patterns
+
+| Anti-Pattern | What Happens | Fix |
+|--------------|--------------|-----|
+| Skip WHY | Build wrong solution | Always ask why before how |
+| Hidden assumptions | Surprise misalignment | Surface and validate explicitly |
+| Accept surface request | Miss real need | Dig deeper with laddering/5 whys |
+| Proceed without confirm | Waste effort | Get explicit "yes, proceed" |
+| Over-question simple requests | Annoy user | Match depth to complexity |
+
+---
+
+## Tool Adaptation
+
+Use whatever tools are available:
+
+| Goal | Approach |
+|------|----------|
+| Ask questions | Interactive tools if available, otherwise conversation |
+| Research context | Web search if needed and available |
+| Present options | Structured choices if available |
+
+The skill describes WHAT to do. The agent uses available tools.
+
+---
+
+## Output: Understanding Summary
+
+Match formality to situation:
+
+**Quick** (simple requests):
+```
+Got it: [WHAT] to solve [WHY]
+Proceeding with [approach]. Confirm?
+```
+
+**Standard** (most cases):
+```
+## Understanding
+
+**Problem (WHY)**: [Intent and problem being solved]
+**Solution (WHAT)**: [What we'll do]
+**Key points**: [Important details]
+**Not included**: [Scope boundaries]
+
+Ready to proceed?
+```
+
+**Detailed** (complex work):
+See `references/summary-templates.md`
+
+---
+
+## Quick Reference
+
+```
+1. Surface WHAT → "You're asking for X?"
+2. Discover WHY → "What problem does this solve?"
+3. Surface assumptions → "I'm assuming A, B, C - correct?"
+4. Informed WHAT → "Given WHY, we could do X, Y, or Z"
+5. Confirm both → "So we're solving [WHY] by doing [WHAT]?"
+6. Proceed → Only after explicit confirmation
+```
+
+---
+
+## Reference Files
+
+| File | Purpose |
+|------|---------|
+| `references/question-patterns.md` | Techniques for discovering WHY and surfacing assumptions |
+| `references/anti-patterns.md` | Common mistakes that lead to building wrong thing |
+| `references/summary-templates.md` | Output formats for different situations |

@@ -1,474 +1,253 @@
 ---
-name: change-management
-description: >
-  Framework for rolling out organizational changes without chaos. Covers the
-  ADKAR model adapted for startups, communication templates, resistance patterns
-  and responses, change fatigue management, and specific playbooks for process
-  changes, reorgs, strategy pivots, and culture changes. Use when announcing a
-  reorg, switching tools, pivoting strategy, killing a product, changing
-  leadership, rolling out new processes, or when user mentions change
-  management, change rollout, managing resistance, org change, reorg, pivot
-  communication, tool migration, or change fatigue.
-license: MIT + Commons Clause
+name: "change-management"
+description: "Framework for rolling out organizational changes without chaos. Covers the ADKAR model adapted for startups, communication templates, resistance patterns, and change fatigue management. Handles process changes, org restructures, strategy pivots, and culture changes. Use when announcing a reorg, switching tools, pivoting strategy, killing a product, changing leadership, or when user mentions change management, change rollout, managing resistance, org change, reorg, or pivot communication."
+license: MIT
 metadata:
-  version: 2.0.0
-  author: borghei
+  version: 1.0.0
+  author: Alireza Rezvani
   category: c-level
   domain: change-management
-  updated: 2026-03-09
-  frameworks:
-    - adkar-startup
-    - change-communication
-    - resistance-management
-    - change-fatigue
-    - change-playbooks
-    - adoption-measurement
-  triggers:
-    - change management
-    - ADKAR
-    - organizational change
-    - reorg
-    - restructure
-    - process change
-    - tool migration
-    - strategy pivot
-    - change resistance
-    - change fatigue
-    - change communication
-    - stakeholder management
-    - adoption
-    - compliance
-    - change rollout
-    - transition
-    - new process
-    - announce change
-    - manage resistance
+  updated: 2026-03-05
+  frameworks: change-playbook
 ---
+
 # Change Management Playbook
 
-Most changes fail at implementation, not design. This skill provides the complete framework for rolling out organizational changes -- from process tweaks to full strategic pivots -- with minimal disruption and maximum adoption.
+Most changes fail at implementation, not design. The ADKAR model tells you why and how to fix it.
 
 ## Keywords
-
 change management, ADKAR, organizational change, reorg, process change, tool migration, strategy pivot, change resistance, change fatigue, change communication, stakeholder management, adoption, compliance, change rollout, transition
 
----
+## Core Model: ADKAR Adapted for Startups
 
-## Change Type Selection
+ADKAR is a change management model by Prosci. Original version is for enterprises. This is the startup-speed adaptation.
 
-```
-START: Change is needed
-  |
-  v
-[What type of change?]
-  |
-  +-- Process Change (new tools, workflows)
-  |     Timeline: 4-8 weeks
-  |     Hardest phase: Ability
-  |     See: Process Change Playbook
-  |
-  +-- Org Change (reorg, new leader, team restructure)
-  |     Timeline: 3-6 months
-  |     Hardest phase: Desire
-  |     See: Org Change Playbook
-  |
-  +-- Strategy Pivot (new direction, killed products)
-  |     Timeline: 3-12 months
-  |     Hardest phase: Awareness
-  |     See: Strategy Pivot Playbook
-  |
-  +-- Culture Change (values refresh, behavior expectations)
-        Timeline: 12-24 months
-        Hardest phase: Reinforcement
-        See: Culture Change Playbook
-```
+### A — Awareness
+
+**What it is:** People understand WHY the change is happening — the business reason, not just the announcement.
+
+**The mistake:** Communicating the WHAT before the WHY. "We're moving to a new CRM" before "here's why our current process is killing us."
+
+**What people need to hear:**
+- What is the problem we're solving? (Be honest. If it's "we need to cut costs," say that.)
+- Why now? What would happen if we didn't change?
+- Who made this decision and how?
+
+**Startup shortcut:** A 5-minute video from the CEO or decision-maker explaining the "why" in plain language beats a formal change announcement document every time.
 
 ---
 
-## Core Model: ADKAR (Startup-Adapted)
+### D — Desire
 
-### Overview
+**What it is:** People want to make the change happen — or at least don't actively resist it.
 
-| Phase | What It Is | Failure Symptom |
-|-------|-----------|----------------|
-| **A**wareness | People understand WHY the change is happening | "Nobody told me why" |
-| **D**esire | People want to participate (or at least don't resist) | "I understand but I don't agree" |
-| **K**nowledge | People know HOW to do things the new way | "I want to but I don't know how" |
-| **A**bility | People have time, tools, and support to change | "I know how but I can't do it yet" |
-| **R**einforcement | The change sticks as the new default | "We tried but went back to the old way" |
+**The mistake:** Assuming communication creates desire. Awareness ≠ desire. People can understand a change and still hate it.
 
-### ADKAR Diagnostic
+**What creates desire:**
+- "What's in it for me?" — answer this for each stakeholder group, honestly
+- Involving people in the "how" even if the "what" is decided
+- Addressing fears directly: "Some people are worried this means their role is changing. Here's the truth: [honest answer]"
 
-When a change is struggling, identify which phase is broken:
+**What destroys desire:**
+- Pretending the change is better for everyone than it is
+- Ignoring the legitimate losses people will experience
+- Making announcements without any consultation
 
-| Symptom | Broken Phase | Fix |
-|---------|-------------|-----|
-| "Why are we doing this?" | Awareness | Re-communicate the WHY with data |
-| "This is a bad idea" | Desire | Address concerns, involve in HOW |
-| "I don't know how to do this" | Knowledge | Training, documentation, office hours |
-| "I keep reverting to old habits" | Ability | Practice time, reduce workload, support |
-| "We started but stopped" | Reinforcement | Measurement, recognition, remove old way |
-
-### ADKAR Implementation Timeline
-
-| Week | Phase | Key Activities |
-|------|-------|---------------|
-| -4 | Awareness prep | Identify stakeholders, draft communication |
-| -2 | Awareness launch | CEO/leader video explaining WHY |
-| -1 | Desire building | Concerns session, address fears, involve in HOW |
-| 0 | Knowledge + Go-live | Training, documentation, launch |
-| 1-2 | Ability support | Office hours, help desk, reduced load |
-| 3-4 | Ability + early Reinforcement | Adoption check, public wins, feedback |
-| 6-8 | Full Reinforcement | Old way deprecated, adoption measured, recognized |
+**Startup shortcut:** Run a short "concerns and questions" session within 48 hours of announcement. Not to reverse the decision — to address the fears and show you're listening.
 
 ---
 
-## Resistance Patterns and Responses
+### K — Knowledge
 
-### Resistance Diagnostic Matrix
+**What it is:** People know HOW to operate in the new world — the specific skills, behaviors, and processes.
 
-| Pattern | What They Say | What It Signals | Response |
-|---------|-------------|-----------------|---------|
-| Vocal opposition | "This won't work" | Awareness or credibility gap | Present evidence, acknowledge concern |
-| Timing challenge | "Why now?" | Awareness gap | Explain urgency and cost of delay |
-| Process complaint | "I wasn't consulted" | Desire gap | Acknowledge, involve in the HOW now |
-| Capacity excuse | "I don't have time" | Ability gap | Reduce load or extend timeline |
-| Historical reference | "We tried this before" | Trust gap | Name what is different this time |
-| Silent non-compliance | [No verbal pushback, just doesn't change] | Could be any phase | 1:1 conversation to diagnose |
-| Malicious compliance | [Does it technically but undermines] | Deep desire gap | Direct conversation about real concern |
+**The mistake:** Announcing the change and assuming people will figure it out.
 
-### Resistance Response Decision Tree
+**What people need:**
+- Step-by-step documentation of new processes
+- Training or practice sessions before go-live
+- Clear answers to "what do I do when [common scenario]?"
+- Who to ask when they're stuck
 
-```
-START: Resistance detected
-  |
-  v
-[Is it vocal or silent?]
-  |
-  +-- VOCAL --> Good. They care enough to push back.
-  |              |
-  |              v
-  |            [Is the concern valid?]
-  |              |
-  |              +-- YES --> Modify the change. Resistance is information.
-  |              +-- NO  --> Address with data and empathy. Do not dismiss.
-  |
-  +-- SILENT --> Dangerous. Could be any ADKAR phase.
-                 |
-                 v
-               [1:1 conversation with specific questions]
-                 "What concerns you about this change?"
-                 "What would need to be true for this to work for you?"
-                 "What support would help?"
-```
-
-### The Worst Response to Resistance
-
-"Some people are just resistant to change."
-
-This treats resistance as a personality flaw rather than a signal. Every resistance pattern is information about which ADKAR phase is broken. Diagnose before responding.
+**Types of knowledge transfer:**
+| Method | Best for | When |
+|--------|---------|------|
+| Live training | Skill-based changes, complex tools | Before go-live |
+| Documentation | Process changes, reference material | Always |
+| Video walkthroughs | Tool migrations | Available 24/7, self-paced |
+| Shadowing / peer learning | Behavior changes | Weeks 2–4 after launch |
+| Office hours | Any change with many edge cases | First 4–6 weeks |
 
 ---
 
-## Change Communication Framework
+### A — Ability
 
-### Communication Sequencing
+**What it is:** People have the time, tools, and support to actually do things differently.
 
-| Audience | Order | Channel | Content |
-|----------|-------|---------|---------|
-| Leadership team | 1st | In-person/video meeting | Full context + their role in rollout |
-| Directly affected employees | 2nd | Manager 1:1 or small group | Personal impact + support available |
-| All employees | 3rd | All-hands or written + Q&A | WHY + WHAT + timeline + FAQ |
-| External stakeholders | 4th (if applicable) | Appropriate channel | Need-to-know only |
+**The mistake:** "We've trained everyone" ≠ "everyone can now do it." Training is knowledge. Ability is practice.
 
-### Communication Template (CEO/Leader Announcement)
+**What creates ability:**
+- Time to practice before being evaluated
+- A safe environment to make mistakes (no public shaming for early struggles)
+- Reduced load during transition (if you're asking people to learn new skills, don't simultaneously pile on new work)
+- Access to help (a Slack channel, a point person, documentation)
 
-```
-Structure:
-  1. What is changing (1-2 sentences, direct)
-  2. Why it is changing (the business reason -- honest)
-  3. What this means for you (practical impact)
-  4. What is NOT changing (stability anchor)
-  5. Timeline (specific dates)
-  6. How to ask questions (channel, person, office hours)
-  7. What happens next (first concrete step)
-```
+**Signs of ability gap:**
+- People revert to old behavior under pressure
+- Workarounds emerge (people invent their own way around the new system)
+- Training scores are high but actual behavior hasn't changed
 
-### Communication Cadence by Change Type
+---
 
-| Change Type | Pre-announcement | Launch Day | Week 1 | Month 1 | Month 3 |
-|-------------|-----------------|-----------|--------|---------|---------|
-| Process | Heads-up to leads | All-hands email | FAQ published | Adoption check | Old way removed |
-| Org | 1:1s with affected | Synchronous meeting | FAQ + manager 1:1s | Retro | Health check |
-| Strategy | Leadership alignment | All-hands with Q&A | Team-level "what does this mean" | Resource proof | First milestone |
-| Culture | Input gathering | Story-based announcement | Behavior anchors | Reviews reflect it | Ongoing |
+### R — Reinforcement
+
+**What it is:** The change sticks. The new behavior becomes the default.
+
+**The mistake:** Declaring victory at go-live. Changes fail because they're never reinforced.
+
+**What creates reinforcement:**
+- Visible measurement (are we tracking adoption?)
+- Recognition of early adopters ("Sarah fully migrated to the new workflow in week 2 — ask her how")
+- Leader modeling (if the CEO uses the old way, everyone will)
+- Removing the old option (when possible — eliminate the path of least resistance)
+- Consequences for non-adoption (stated clearly, applied consistently)
+
+**Adoption vs. compliance:**
+- **Compliance:** People do it when watched, revert when not
+- **Adoption:** People do it because they believe it's better
+
+Only reinforcement creates adoption. Compliance is the result of enforcement. Aim for adoption.
+
+---
+
+## Change Types and ADKAR Application
+
+### Process Change (new tools, new workflows)
+
+**Timeline:** 4–8 weeks for full adoption
+**Hardest phase:** Ability (people know what to do but haven't built the habit)
+**Critical reinforcement:** Remove or deprecate the old tool/process
+
+**Communication sequence:**
+1. Week -2: Announce the why + go-live date
+2. Week -1: Training sessions available
+3. Week 0 (go-live): Launch + point person available
+4. Week 2: Adoption check-in (who's using it? Who isn't?)
+5. Week 4: Feedback collection + public wins
+6. Week 8: Old system deprecated
+
+---
+
+### Org Change (reorg, new leader, team splits/merges)
+
+**Timeline:** 3–6 months for full stabilization
+**Hardest phase:** Desire (people fear for their roles and relationships)
+**Critical reinforcement:** Consistent behavior from new leadership
+
+**Communication sequence:**
+1. Day 0: Announce the change with the "why" — in person or synchronous video
+2. Day 1: 1:1s with most affected team members by their manager
+3. Week 1: FAQ published with honest answers to the 10 most common concerns
+4. Week 2–4: New structure is operating (don't delay implementation)
+5. Month 2: First retrospective — what's working, what needs adjustment
+6. Month 3–6: Regular check-ins on team health and morale
+
+**What to say when a leader is leaving or being replaced:**
+Be honest about what you can share. Never: "We can't share the reasons." Always: either a truthful explanation or "we're not able to share the specifics, but I can tell you [what this means for you]."
+
+---
+
+### Strategy Pivot (new direction, killed products)
+
+**Timeline:** 3–12 months for full alignment
+**Hardest phase:** Awareness (people don't believe the pivot is real)
+**Critical reinforcement:** Resource reallocation that visibly proves the pivot is happening
+
+**Communication sequence:**
+1. Internal first, always. Employees should never hear about a pivot from a press release.
+2. All-hands with full context: what changed in the market, what you're doing, what it means for teams
+3. Each team leader runs a "what does this mean for us?" conversation with their team
+4. Resource reallocation announced within 2 weeks (if the money doesn't move, people won't believe the pivot)
+5. First milestone of the new direction celebrated publicly
+
+**What kills pivots:** Announcing a new direction while still funding the old one at the same level.
+
+---
+
+### Culture Change (values refresh, behavior expectations)
+
+**Timeline:** 12–24 months for genuine behavior change
+**Hardest phase:** Reinforcement (behavior doesn't change just because values were announced)
+**Critical reinforcement:** Visible decisions that reflect the new values
+
+**Communication sequence:**
+1. Build with input: involve a representative sample of the company in defining the change
+2. Announce with story: "Here's what we observed, here's what we're changing and why"
+3. Behavior anchors: for each culture change, state the specific behavior in observable terms
+4. Leader behavior: leadership team must visibly model the new behavior first
+5. Performance integration: new expected behaviors appear in reviews within one cycle
+6. Celebrate the right behaviors: when someone exemplifies the new culture, name it publicly
+
+---
+
+## Resistance Patterns
+
+Resistance is information, not defiance. Diagnose before responding.
+
+| Resistance pattern | What it signals | Response |
+|-------------------|-----------------|---------|
+| "This won't work" | Awareness gap or credibility gap | Explain the evidence base for the change |
+| "Why now?" | Awareness gap | Explain urgency — what happens if we don't change |
+| "I wasn't consulted" | Desire gap | Acknowledge the gap; involve them in the "how" now |
+| "I don't have time for this" | Ability gap | Reduce their load or push the timeline |
+| "We tried this before" | Trust gap | Acknowledge what's different this time. Be specific. |
+| Silent non-compliance | Could be any gap | 1:1 conversation to diagnose |
+
+**The worst response to resistance:** Dismissing it. "Some people are resistant to change" as if resistance is a personality flaw rather than a signal.
 
 ---
 
 ## Change Fatigue
 
-### Fatigue Detection
+When organizations change too fast, people stop believing any change will stick.
 
-| Signal | Severity | Response |
-|--------|----------|----------|
-| Eye-rolls during announcements | Early | Acknowledge the pace, show results of previous changes |
-| Low attendance at change sessions | Moderate | Make attendance optional but results visible |
-| Fast paper compliance, slow real adoption | Significant | Pause non-critical changes |
-| "Here we go again" comments | Significant | Audit change inventory, communicate stability |
-| Complete disengagement | Critical | Freeze changes, rebuild trust |
+### Signals
+- Eye-rolls during change announcements ("here we go again")
+- Low attendance at change-related sessions
+- Fast compliance on paper, slow adoption in practice
+- "Last month we were doing X, now we're doing Y" comments
 
-### Fatigue Prevention Rules
+### Prevention
+- **Finish what you start.** Don't announce a new change while the last one is still being absorbed.
+- **Space changes.** One significant change at a time. Give 2–3 months of stability between major changes.
+- **Announce what's NOT changing.** People in change-fatigue need to know what's stable.
+- **Show results.** Publish what the previous change achieved before launching the next.
 
-| Rule | Implementation |
-|------|---------------|
-| Finish what you start | Do not launch new change while previous is absorbing |
-| One major change at a time | Space 2-3 months between significant changes |
-| Announce stability | Explicitly state what is NOT changing |
-| Show results | Publish what previous change achieved before launching next |
-| Change budget | Treat organizational attention as a finite resource |
-
-### Change Inventory
-
-Before launching any new change, inventory all active changes:
-
-| Change | Phase | Start Date | Absorption % | Can It Pause? |
-|--------|-------|-----------|-------------|---------------|
-| New CRM rollout | Ability | 2 weeks ago | 60% | No |
-| Engineering reorg | Desire | 1 month ago | 40% | Yes |
-| Values refresh | Reinforcement | 3 months ago | 75% | No |
-
-**Rule**: If 3+ changes are active and < 70% absorbed, do not add another.
+### When you're already in change fatigue
+- Pause non-critical changes
+- Run a "change inventory": how many changes are in progress simultaneously?
+- Prioritize ruthlessly: which changes are essential now? Which can wait?
+- Communicate stability: "Here's what is NOT changing this quarter"
 
 ---
 
-## Playbook 1: Process Change
+## Key Questions for Change Management
 
-**Timeline**: 4-8 weeks | **Hardest Phase**: Ability
-
-| Week | Activity | Owner |
-|------|----------|-------|
-| -2 | Announce WHY + go-live date | Change sponsor |
-| -1 | Training sessions available | Change team |
-| 0 | Go-live + support person available | Change team |
-| 2 | Adoption check: who is using it, who is not | Change team |
-| 4 | Feedback collection + public wins | Change sponsor |
-| 8 | Old system deprecated | IT + Change team |
-
----
-
-## Playbook 2: Org Change
-
-**Timeline**: 3-6 months | **Hardest Phase**: Desire
-
-| Timing | Activity | Owner |
-|--------|----------|-------|
-| Day 0 | Announce with WHY -- synchronous, in-person preferred | CEO/leader |
-| Day 1 | 1:1s with most affected by their manager | Managers |
-| Week 1 | FAQ published with honest answers | HR + Change team |
-| Week 2-4 | New structure operating (do not delay) | All leaders |
-| Month 2 | First retrospective | Change team |
-| Month 3-6 | Regular health check-ins | HR |
-
-**What to say about a leader departure**: Be honest about what you can share. Never say "we can't share the reasons" without offering what you CAN say about what it means for the team.
-
----
-
-## Playbook 3: Strategy Pivot
-
-**Timeline**: 3-12 months | **Hardest Phase**: Awareness
-
-| Timing | Activity | Owner |
-|--------|----------|-------|
-| Pre-announcement | Leadership alignment (everyone must be on same page) | CEO |
-| Day 0 | Internal announcement first (employees BEFORE press) | CEO |
-| Week 1 | Team-level "what does this mean for us" conversations | Team leads |
-| Week 2 | Resource reallocation announced | CFO + COO |
-| Month 1 | First milestone of new direction visible | Relevant leader |
-| Ongoing | Regular updates on new direction progress | CEO |
-
-**What kills pivots**: Announcing a new direction while still funding the old one at the same level. Move the resources or the pivot is not real.
-
----
-
-## Playbook 4: Culture Change
-
-**Timeline**: 12-24 months | **Hardest Phase**: Reinforcement
-
-| Phase | Activity | Timeline |
-|-------|----------|----------|
-| Input | Involve representative sample in defining the change | Month 1-2 |
-| Announce | Story-based announcement with observed behaviors | Month 2 |
-| Anchor | Define observable behaviors for each culture change | Month 2-3 |
-| Model | Leadership team visibly models new behavior first | Month 3+ |
-| Integrate | New behaviors appear in performance reviews | Next review cycle |
-| Celebrate | Publicly recognize new behavior when observed | Ongoing |
-
----
-
-## Adoption Measurement
-
-### Adoption vs. Compliance
-
-| Dimension | Compliance | Adoption |
-|-----------|-----------|----------|
-| Behavior | Does it when watched | Does it because it is better |
-| Duration | Reverts when enforcement relaxes | Sustained without enforcement |
-| Attitude | Reluctant | Willing or enthusiastic |
-| Source | External pressure | Internal belief |
-
-Only reinforcement creates adoption. Compliance is the result of enforcement. Aim for adoption.
-
-### Adoption Metrics
-
-| Metric | How to Measure | Target |
-|--------|---------------|--------|
-| Usage rate | % of people actively using new process/tool | > 80% by week 8 |
-| Reversion rate | % reverting to old way | < 10% |
-| Satisfaction | Survey: "Is the new way better?" | > 60% agree |
-| Speed | Time to complete task old way vs. new way | New way faster by week 4 |
-| Support requests | Volume of help requests | Declining week over week |
-
----
+- "Who are the most skeptical people about this change? Have we talked to them directly?"
+- "Do people understand why we're doing this, or just what we're doing?"
+- "Have we given people time to practice before we measure performance on the new way?"
+- "Is the old way still available? If so, people will use it."
+- "Are leaders modeling the new behavior themselves?"
+- "How many changes are we running simultaneously right now?"
 
 ## Red Flags
 
-- Change announced on Friday afternoon -- people stew over the weekend
-- "This is final, questions are not welcome" framing -- creates underground resistance
-- No published FAQ or way to ask questions safely -- concerns go unaddressed
-- Old system still running 6 weeks after go-live -- change is not real
-- Leaders exempt from the change they are asking everyone to make -- destroys credibility
-- No measurement of adoption -- assuming go-live equals success
-- Multiple major changes running simultaneously -- change fatigue guaranteed
-- No post-change retrospective -- missing the feedback loop
-- Change announced without a named owner -- nobody is accountable for success
+- Change announced on Friday afternoon (people stew over the weekend)
+- "This is final, questions are not welcome" framing
+- No published FAQ or way to ask questions safely
+- Old system/process still running 6 weeks after "go-live"
+- Leaders exempted from the change they're asking everyone else to make
+- No measurement of adoption — assuming go-live = success
 
----
-
-## Integration with C-Suite
-
-| When... | Change Management Works With... | To... |
-|---------|-------------------------------|-------|
-| Process change | COO (`coo-advisor`) | Design new process before announcing |
-| Org restructure | CHRO + CEO | People impact assessment, communication |
-| Strategy pivot | CEO (`ceo-advisor`) | Alignment and narrative |
-| Culture change | Culture Architect (`culture-architect`) | Values-to-behaviors translation |
-| Tool migration | CTO (`cto-advisor`) | Technical rollout plan |
-| Operating system change | Company OS (`company-os`) | New rhythms and cadences |
-| Alignment after change | Strategic Alignment (`strategic-alignment`) | Verify cascade post-change |
-
----
-
-## Output Artifacts
-
-| Request | Deliverable |
-|---------|-------------|
-| "Plan a change rollout" | ADKAR-based change plan with timeline and owners |
-| "We're doing a reorg" | Org change playbook with communication plan |
-| "Manage resistance to [change]" | Resistance diagnosis + targeted responses |
-| "Are we in change fatigue?" | Change inventory + fatigue assessment + recommendations |
-| "Communication plan for [change]" | Sequenced communication with templates |
-| "Measure adoption of [change]" | Adoption metrics dashboard with targets |
-
----
-
-## Tool Reference
-
-### change_readiness_assessor.py
-
-Assesses organizational readiness using ADKAR model, identifies resistance patterns, measures change fatigue, and generates intervention plans.
-
-```bash
-# Run with demo data
-python scripts/change_readiness_assessor.py
-
-# Specify change type
-python scripts/change_readiness_assessor.py --type org
-
-# From JSON assessment data
-python scripts/change_readiness_assessor.py --input assessment.json
-
-# JSON output
-python scripts/change_readiness_assessor.py --json
-```
-
-### adoption_tracker.py
-
-Tracks usage rates, reversion rates, satisfaction, and support requests to distinguish real adoption from surface compliance.
-
-```bash
-# Run with demo data
-python scripts/adoption_tracker.py
-
-# From JSON with weekly data
-python scripts/adoption_tracker.py --input adoption_data.json
-
-# JSON output
-python scripts/adoption_tracker.py --json
-```
-
-### communication_planner.py
-
-Generates audience-sequenced communication plans with templates, channel recommendations, and timing.
-
-```bash
-# Generate for process change
-python scripts/communication_planner.py --type process --name "New CRM Rollout" --date 2026-04-15
-
-# Generate for org change
-python scripts/communication_planner.py --type org --name "Engineering Restructure"
-
-# From JSON
-python scripts/communication_planner.py --input comm_plan.json
-
-# JSON output
-python scripts/communication_planner.py --type strategy --json
-```
-
----
-
-## Troubleshooting
-
-| Problem | Likely Cause | Fix |
-|---------|-------------|-----|
-| Usage rate high but satisfaction low | Compliance without adoption -- people use it because forced to | Investigate satisfaction drivers; don't rely on enforcement alone; improve the tool/process itself |
-| Adoption plateaus at 60-70% | Remaining 30% have unaddressed ADKAR gaps (often Ability) | Segment non-adopters; run 1:1 diagnostics; provide targeted support |
-| Change reverts within weeks of go-live | Reinforcement phase skipped; old system still accessible | Remove old system access; measure and recognize new behavior; embed in performance reviews |
-| Leaders exempt themselves from the change | "Do as I say, not as I do" pattern | Leaders must go first and visibly. No exceptions. This is the #1 credibility destroyer |
-| Multiple changes running and all struggling | Change fatigue -- organizational attention exhausted | Inventory active changes; pause non-critical ones; space major changes 2-3 months apart |
-| Communication plan exists but concerns persist | Communication was broadcast-only with no feedback channel | Add Q&A sessions, named contact person, anonymous feedback channel |
-
----
-
-## Success Criteria
-
-- ADKAR readiness score above 70/100 before go-live (measured via change_readiness_assessor.py)
-- Adoption rate exceeds 80% within 8 weeks of go-live (usage, not just compliance)
-- Reversion rate below 10% by week 8 (measured by system usage data)
-- Satisfaction survey shows 60%+ agreement that "the new way is better" by week 8
-- Support requests decline week-over-week after week 2 (ability phase resolving)
-- No change announced on Friday afternoon (measured by communication log timestamps)
-- Post-change retrospective conducted within 90 days with documented lessons learned
-
----
-
-## Scope & Limitations
-
-**In Scope**: ADKAR-based readiness assessment, resistance diagnosis and response, change fatigue measurement, communication planning and sequencing, adoption tracking, playbooks for process/org/strategy/culture changes.
-
-**Out of Scope**: Specific tool migration execution (CRM, ERP configuration), legal compliance for workforce reductions, union negotiation, employment law, individual coaching or therapy.
-
-**Limitations**: ADKAR scores are based on assessment inputs -- they reflect perception, not objective measurement. Adoption tracker requires manual data collection for most metrics. Communication planner provides templates but cannot account for company-specific political dynamics. Change fatigue assessment is directional; actual organizational capacity varies by company culture.
-
----
-
-## Integration Points
-
-| Skill | Integration |
-|-------|-------------|
-| `coo-advisor` | Process change design before announcing; operational readiness |
-| `chro-advisor` | People impact assessment; communication sequencing for reorgs |
-| `ceo-advisor` | Strategy pivot narrative alignment; CEO as primary communicator |
-| `culture-architect` | Culture change playbook; values-to-behaviors translation |
-| `company-os` | New OS rollout follows ADKAR model; meeting rhythm changes |
-| `chief-of-staff` | Routes change management questions; orchestrates cross-functional alignment |
-| `strategic-alignment` | Verifies goal cascade post-change; validates new direction is reflected in OKRs |
+## Detailed References
+- `references/change-playbook.md` — ADKAR deep dive, resistance counter-strategies, communication templates, change fatigue management

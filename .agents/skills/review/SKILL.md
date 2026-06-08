@@ -1,110 +1,78 @@
 ---
 name: review
-description: >
-  Review a vendor agreement, NDA, or SaaS subscription against your playbook.
-  Identifies the agreement structure from titles, routes to the right review skill
-  (vendor-agreement-review, nda-review, saas-msa-review), and integrates the output
-  into a single memo. Use when the user says "review this contract", "check this
-  MSA", "is this NDA okay", "look at this SaaS agreement", or attaches an inbound
-  agreement for review.
-argument-hint: '[file path | Drive link | [CLM ID] | paste text]'
+description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/PRD asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
 ---
 
-# /review
+# Review
 
-Reviews an inbound agreement against the playbook in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. Identifies the agreement structure from titles, selects the appropriate skill(s), and — if confirm_routing is enabled — checks with the user before proceeding.
+Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 
-## Instructions
+- **Standards** — does the code conform to this repo's documented coding standards?
+- **Spec** — does the code faithfully implement the originating issue / PRD / spec?
 
-1. **Load `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`.** If placeholders present, stop and prompt: "Run `/commercial-legal:cold-start-interview` first — I need to learn your playbook before I can review against it."
+Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
 
-   Also read `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## Review preferences` → `confirm_routing`. If the field is missing, treat it as `true`.
+The issue tracker should have been provided to you — run `/setup-matt-pocock-skills` if `docs/agents/issue-tracker.md` is missing.
 
-2. **Get the agreement:** From file path, Drive link, [CLM ID], or pasted text. If none provided, ask.
+## Process
 
-3. **Read the document structure — titles first.**
+### 1. Pin the fixed point
 
-   Before reading the body, extract:
-   - The main agreement title (e.g., "Master Services Agreement", "Non-Disclosure Agreement")
-   - All exhibit, schedule, addendum, and attachment titles (e.g., "Exhibit A — Data Processing Addendum", "Schedule 1 — Subscription Order Form", "Annex B — Service Level Agreement")
+Whatever the user said is the fixed point — a commit SHA, branch name, tag, `main`, `HEAD~5`, etc. Don't be opinionated; pass it through. If they didn't specify one, ask: "Review against what — a branch, a commit, or `main`?" Don't proceed until you have it.
 
-   This is the routing signal. Do not rely on body keywords alone — a 40-page MSA with "confidential" throughout is not an NDA.
+Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
 
-4. **Select the skill(s) based on document structure.**
+### 2. Identify the spec source
 
-   Map each identified document or section to a skill:
+Look for the originating spec, in this order:
 
-   | Document / section title contains | Skill |
-   |---|---|
-   | Non-Disclosure, NDA, Confidentiality Agreement (as the *main* agreement) | **nda-review** |
-   | Master Services Agreement, Professional Services, Statement of Work, Consulting Agreement | **vendor-agreement-review** |
-   | Subscription, SaaS, Cloud Services, Order Form with auto-renewal, Software License with recurring fees | **saas-msa-review** (overlay on vendor-agreement-review) |
-   | Data Processing Addendum, DPA, Data Processing Agreement (as exhibit or standalone) | note for **vendor-agreement-review** → data protection section |
-   | Service Level Agreement, SLA (as exhibit) | note for **saas-msa-review** → SLA section |
+1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.) — fetch via the workflow in `docs/agents/issue-tracker.md`.
+2. A path the user passed as an argument.
+3. A PRD/spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
+4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
 
-   Multiple skills may apply. Common combinations:
-   - MSA + DPA exhibit → vendor-agreement-review, with DPA noted
-   - SaaS subscription + Order Form + SLA exhibit → saas-msa-review (covers all three)
-   - MSA + Order Form with auto-renewal → vendor-agreement-review + saas-msa-review overlay
+### 3. Identify the standards sources
 
-   When the structure is genuinely ambiguous after reading titles (e.g., a document titled "Agreement" with no exhibits listed), read the first two pages of the body to resolve it — then stop and route.
+Anything in the repo that documents how code should be written. Common locations:
 
-5. **Confirm routing if enabled.**
+- `CLAUDE.md`, `AGENTS.md`
+- `CONTRIBUTING.md`
+- `CONTEXT.md`, `CONTEXT-MAP.md`, per-context `CONTEXT.md` files
+- `docs/adr/` (architectural decisions are standards)
+- `.editorconfig`, `eslint.config.*`, `biome.json`, `prettier.config.*`, `tsconfig.json` (machine-enforced standards — note them but don't re-check what tooling already checks)
+- Any `STYLE.md`, `STANDARDS.md`, `STYLEGUIDE.md`, or similar at the repo root or under `docs/`
 
-   If `confirm_routing` is `true` in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` (or field is absent):
+Collect the list of files. The **Standards** sub-agent will read them.
 
-   ```
-   I'm going to review this as: [agreement type(s)].
+### 4. Spawn both sub-agents in parallel
 
-   Documents identified:
-   - [Main agreement title] → [skill]
-   - [Exhibit A title] → [how it will be handled]
-   - [Exhibit B title] → [how it will be handled]
+Send a single message with two `Agent` tool calls. Use the `general-purpose` subagent for both.
 
-   Sound right? (yes / no — or tell me what I got wrong)
-   ```
+**Standards sub-agent prompt** — include:
 
-   Wait for confirmation before proceeding. If the user corrects the routing, apply their instruction and proceed.
+- The full diff command and commit list.
+- The list of standards-source files you found in step 3.
+- The brief: "Read the standards docs. Then read the diff. Report — per file/hunk where relevant — every place the diff violates a documented standard. Cite the standard (file + the rule). Distinguish hard violations from judgement calls. Skip anything tooling enforces. Under 400 words."
 
-   If `confirm_routing` is `false`: proceed silently. Log the routing decision at the top of the review memo so the user can see what was applied.
+**Spec sub-agent prompt** — include:
 
-6. **Run the skill(s).** Follow each skill's workflow fully. If multiple skills apply, run them in sequence and integrate the output into a single memo — don't produce separate memos.
+- The diff command and commit list.
+- The path or fetched contents of the spec.
+- The brief: "Read the spec. Then read the diff. Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
 
-7. **Check for escalations:** If any issue exceeds the reviewer's authority per the `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` matrix, invoke **escalation-flagger** to route and draft the ask.
+If the spec is missing, skip the Spec sub-agent and note this in the final report.
 
-8. **Offer follow-ups:**
-   - Stakeholder summary for the business owner
-   - Redline .docx with tracked changes
-   - [CLM] record creation (if connected)
-   - Add to renewal register (if auto-renewal found)
+### 5. Aggregate
 
-## Configuring confirm_routing
+Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the two axes are deliberately separate so the user can see them independently.
 
-Add to `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## Review preferences`:
+End with a one-line summary: total findings per axis, and the worst single issue (if any) flagged.
 
-```markdown
-## Review preferences
+## Why two axes
 
-confirm_routing: true   # Set to false to skip routing confirmation and proceed automatically
-```
+A change can pass one axis and fail the other:
 
-The cold-start interview should ask about this preference. Default is `true` — confirmation on. As trust builds, the user can set it to `false`.
+- Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
+- Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
 
-## Examples
-
-```
-/commercial-legal:review vendor-msa.pdf
-```
-
-```
-/commercial-legal:review https://drive.google.com/file/d/ABC123
-```
-
-```
-/commercial-legal:review
-[paste agreement text]
-```
-
-## Output
-
-Full review memo per the skill's format. Routing decision logged at the top. Deviation-by-deviation, specific redline language, named approver. Saved where `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → House style says work product goes.
+Reporting them separately stops one axis from masking the other.

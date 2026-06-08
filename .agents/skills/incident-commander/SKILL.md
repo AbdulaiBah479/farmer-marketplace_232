@@ -1,236 +1,476 @@
 ---
-name: incident-commander
-description: >
-  Use when handling production incidents, classifying severity, reconstructing
-  timelines, writing postmortems, generating communication templates, or
-  building incident response playbooks. Provides automated severity scoring,
-  RCA frameworks (5 Whys, Fishbone, Bow Tie), and structured PIR generation.
-license: MIT + Commons Clause
-metadata:
-  version: 1.1.0
-  author: borghei
-  category: engineering
-  domain: incident-response
-  tier: POWERFUL
-  updated: 2026-04-02
-  tags: [incident-response, severity-classification, rca, postmortem]
-  python-tools: incident_classifier.py, severity_classifier.py, timeline_reconstructor.py, incident_timeline_builder.py, pir_generator.py, postmortem_generator.py
-  tech-stack: python, json, markdown
----
-# Incident Commander
-
-The agent classifies incident severity, reconstructs timelines from heterogeneous event sources, and generates structured post-incident reviews with root cause analysis and action items.
-
+name: "incident-commander"
+description: "Comprehensive incident response framework from detection through resolution and post-incident review. Battle-tested SRE/DevOps practices: severity classification, timeline reconstruction, structured post-incident analysis. Use when declaring an incident, coordinating multi-team response during an outage, leading a post-mortem, or setting up on-call practices for a new service."
 ---
 
-## Quick Start
+# Incident Commander Skill
 
-```bash
-# Classify an incident (JSON or stdin)
-echo '{"description": "Database connections timing out", "affected_users": "80%", "business_impact": "high"}' \
-  | python scripts/incident_classifier.py --format text
+**Category:** Engineering Team  
+**Tier:** POWERFUL  
+**Author:** Claude Skills Team  
+**Version:** 1.0.0  
+**Last Updated:** February 2026
 
-# Multi-dimensional severity scoring
-python scripts/severity_classifier.py incident.json --format markdown
+## Overview
 
-# Reconstruct timeline with phase detection and gap analysis
-python scripts/timeline_reconstructor.py --input events.json --detect-phases --gap-analysis --format markdown
+The Incident Commander skill provides a comprehensive incident response framework for managing technology incidents from detection through resolution and post-incident review. This skill implements battle-tested practices from SRE and DevOps teams at scale, providing structured tools for severity classification, timeline reconstruction, and thorough post-incident analysis.
 
-# Build structured timeline with MTTD/MTTR metrics
-python scripts/incident_timeline_builder.py incident_data.json --format markdown
+## Key Features
 
-# Generate Post-Incident Review
-python scripts/pir_generator.py --incident incident.json --rca-method fishbone --action-items --format markdown
+- **Automated Severity Classification** - Intelligent incident triage based on impact and urgency metrics
+- **Timeline Reconstruction** - Transform scattered logs and events into coherent incident narratives
+- **Post-Incident Review Generation** - Structured PIRs with multiple RCA frameworks
+- **Communication Templates** - Pre-built templates for stakeholder updates and escalations
+- **Runbook Integration** - Generate actionable runbooks from incident patterns
 
-# Generate postmortem with benchmark comparisons
-python scripts/postmortem_generator.py incident_data.json --format markdown
-```
+## Skills Included
 
-## Tools Overview
+### Core Tools
 
-| Tool | Input | Output |
-|------|-------|--------|
-| `incident_classifier.py` | Incident description JSON | Severity level, response teams, communication templates |
-| `severity_classifier.py` | Incident data with impact/signals | Multi-dimensional score across 5 weighted dimensions |
-| `timeline_reconstructor.py` | Timestamped events array | Chronological timeline with phases and gap analysis |
-| `incident_timeline_builder.py` | Incident + events JSON | Timeline with MTTD/MTTR, phase distribution, comms templates |
-| `pir_generator.py` | Incident data + optional timeline | PIR document with RCA (5 Whys, Fishbone, Timeline, Bow Tie) |
-| `postmortem_generator.py` | Incident + resolution + action items | Postmortem with benchmarks, factor analysis, coverage gaps |
+1. **Incident Classifier** (`incident_classifier.py`)
+   - Analyzes incident descriptions and outputs severity levels
+   - Recommends response teams and initial actions
+   - Generates communication templates based on severity
 
----
+2. **Timeline Reconstructor** (`timeline_reconstructor.py`)
+   - Processes timestamped events from multiple sources
+   - Reconstructs chronological incident timeline
+   - Identifies gaps and provides duration analysis
 
-## Workflow 1: Incident Response (Detection to Resolution)
+3. **PIR Generator** (`pir_generator.py`)
+   - Creates comprehensive Post-Incident Review documents
+   - Applies multiple RCA frameworks (5 Whys, Fishbone, Timeline)
+   - Generates actionable follow-up items
 
-**Step 1 -- Classify severity.**
+## Incident Response Framework
 
-```bash
-python scripts/severity_classifier.py incident.json --format json
-```
+### Severity Classification System
 
-The agent scores across five dimensions: revenue impact (25%), user scope (25%), data/security risk (20%), service criticality (15%), blast radius (15%).
+#### SEV1 - Critical Outage
+**Definition:** Complete service failure affecting all users or critical business functions
 
-| Severity | Definition | Response Time | Comms Cadence |
-|----------|-----------|---------------|---------------|
-| **SEV-1** | Complete outage, data loss, security breach | 15 min | Every 15 min |
-| **SEV-2** | Partial degradation, >25% users affected | 30 min | Every 30 min |
-| **SEV-3** | Single feature affected, workaround available | 2 hours | At milestones |
-| **SEV-4** | Cosmetic, dev/test only, no user impact | Next business day | Standard cycle |
+**Characteristics:**
+- Customer-facing services completely unavailable
+- Data loss or corruption affecting users
+- Security breaches with customer data exposure
+- Revenue-generating systems down
+- SLA violations with financial penalties
 
-**Validation checkpoint:** Severity classification includes confidence score and recommended escalation path.
+**Response Requirements:**
+- Immediate escalation to on-call engineer
+- Incident Commander assigned within 5 minutes
+- Executive notification within 15 minutes
+- Public status page update within 15 minutes
+- War room established
+- All hands on deck if needed
 
-**Step 2 -- Establish command.**
+**Communication Frequency:** Every 15 minutes until resolution
 
-The Incident Commander:
-- Assigns within 5 min (SEV-1) or 30 min (SEV-2)
-- Creates war room and incident tracking ticket
-- Sends initial notification using generated template
-- Coordinates between technical teams and stakeholders
-- Shields responders from external distractions
+#### SEV2 - Major Impact
+**Definition:** Significant degradation affecting subset of users or non-critical functions
 
-**Step 3 -- Investigate and mitigate.**
+**Characteristics:**
+- Partial service degradation (>25% of users affected)
+- Performance issues causing user frustration
+- Non-critical features unavailable
+- Internal tools impacting productivity
+- Data inconsistencies not affecting user experience
 
-The agent generates targeted investigation commands based on the affected service:
+**Response Requirements:**
+- On-call engineer response within 15 minutes
+- Incident Commander assigned within 30 minutes
+- Status page update within 30 minutes
+- Stakeholder notification within 1 hour
+- Regular team updates
 
-```bash
-kubectl get pods -n production -l app=<service>
-kubectl logs -l app=<service> --tail=100
-helm history <service> -n production
-```
+**Communication Frequency:** Every 30 minutes during active response
 
-**Decision framework for SEV-1/SEV-2:**
+#### SEV3 - Minor Impact
+**Definition:** Limited impact with workarounds available
+
+**Characteristics:**
+- Single feature or component affected
+- <25% of users impacted
+- Workarounds available
+- Performance degradation not significantly impacting UX
+- Non-urgent monitoring alerts
+
+**Response Requirements:**
+- Response within 2 hours during business hours
+- Next business day response acceptable outside hours
+- Internal team notification
+- Optional status page update
+
+**Communication Frequency:** At key milestones only
+
+#### SEV4 - Low Impact
+**Definition:** Minimal impact, cosmetic issues, or planned maintenance
+
+**Characteristics:**
+- Cosmetic bugs
+- Documentation issues
+- Logging or monitoring gaps
+- Performance issues with no user impact
+- Development/test environment issues
+
+**Response Requirements:**
+- Response within 1-2 business days
+- Standard ticket/issue tracking
+- No special escalation required
+
+**Communication Frequency:** Standard development cycle updates
+
+### Incident Commander Role
+
+#### Primary Responsibilities
+
+1. **Command and Control**
+   - Own the incident response process
+   - Make critical decisions about resource allocation
+   - Coordinate between technical teams and stakeholders
+   - Maintain situational awareness across all response streams
+
+2. **Communication Hub**
+   - Provide regular updates to stakeholders
+   - Manage external communications (status pages, customer notifications)
+   - Facilitate effective communication between response teams
+   - Shield responders from external distractions
+
+3. **Process Management**
+   - Ensure proper incident tracking and documentation
+   - Drive toward resolution while maintaining quality
+   - Coordinate handoffs between team members
+   - Plan and execute rollback strategies if needed
+
+4. **Post-Incident Leadership**
+   - Ensure thorough post-incident reviews are conducted
+   - Drive implementation of preventive measures
+   - Share learnings with broader organization
+
+#### Decision-Making Framework
+
+**Emergency Decisions (SEV1/2):**
+- Incident Commander has full authority
 - Bias toward action over analysis
-- Prefer rollbacks to risky fixes under pressure
-- Document every decision for later review
-- Consult SMEs but do not block on them
+- Document decisions for later review
+- Consult subject matter experts but don't get blocked
 
-**Step 4 -- Communicate.**
+**Resource Allocation:**
+- Can pull in any necessary team members
+- Authority to escalate to senior leadership
+- Can approve emergency spend for external resources
+- Make call on communication channels and timing
 
-The agent generates three communication templates per severity:
-1. **Internal notification** -- technical details, response team, war room link
-2. **Executive summary** -- business impact, ETA, leadership actions required
-3. **Customer communication** -- impact scope, what is being done, next update time
+**Technical Decisions:**
+- Lean on technical leads for implementation details
+- Make final calls on trade-offs between speed and risk
+- Approve rollback vs. fix-forward strategies
+- Coordinate testing and validation approaches
 
-**Validation checkpoint:** All stakeholders notified within committed timeframes.
+### Communication Templates
+
+#### Initial Incident Notification (SEV1/2)
+
+```
+Subject: [SEV{severity}] {Service Name} - {Brief Description}
+
+Incident Details:
+- Start Time: {timestamp}
+- Severity: SEV{level}
+- Impact: {user impact description}
+- Current Status: {investigating/mitigating/resolved}
+
+Technical Details:
+- Affected Services: {service list}
+- Symptoms: {what users are experiencing}
+- Initial Assessment: {suspected root cause if known}
+
+Response Team:
+- Incident Commander: {name}
+- Technical Lead: {name}
+- SMEs Engaged: {list}
+
+Next Update: {timestamp}
+Status Page: {link}
+War Room: {bridge/chat link}
 
 ---
-
-## Workflow 2: Post-Incident Review
-
-**Step 1 -- Reconstruct the timeline.**
-
-```bash
-python scripts/timeline_reconstructor.py --input events.json --detect-phases --gap-analysis --format markdown
+{Incident Commander Name}
+{Contact Information}
 ```
 
-The agent accepts events from logs, alerts, Slack messages, and deployment systems. Each event needs a `timestamp` and `description`. Optional fields: `source`, `type`, `actor`, `severity`.
+#### Executive Summary (SEV1)
 
-**Supported phases:** detection, declaration, escalation, investigation, mitigation, communication, resolution.
+```
+Subject: URGENT - Customer-Impacting Outage - {Service Name}
 
-**Step 2 -- Perform root cause analysis.**
+Executive Summary:
+{2-3 sentence description of customer impact and business implications}
 
-```bash
-python scripts/pir_generator.py --incident incident.json --timeline timeline.json --rca-method five_whys --action-items
+Key Metrics:
+- Time to Detection: {X minutes}
+- Time to Engagement: {X minutes} 
+- Estimated Customer Impact: {number/percentage}
+- Current Status: {status}
+- ETA to Resolution: {time or "investigating"}
+
+Leadership Actions Required:
+- [ ] Customer communication approval
+- [ ] PR/Communications coordination  
+- [ ] Resource allocation decisions
+- [ ] External vendor engagement
+
+Incident Commander: {name} ({contact})
+Next Update: {time}
+
+---
+This is an automated alert from our incident response system.
 ```
 
-Available RCA methods:
+#### Customer Communication Template
 
-| Method | Best For |
-|--------|----------|
-| `five_whys` | Linear causal chains, quick analysis |
-| `fishbone` | Multi-category analysis (People, Process, Technology, Environment) |
-| `timeline` | Identifying missed decision points and delays |
-| `bow_tie` | Barriers analysis, prevention and mitigation controls |
+```
+We are currently experiencing {brief description of issue} affecting {scope of impact}. 
 
-**Step 3 -- Generate action items.**
+Our engineering team was alerted at {time} and is actively working to resolve the issue. We will provide updates every {frequency} until resolved.
 
-The agent categorizes action items as: `immediate_fix`, `process_improvement`, `monitoring_alerting`, `documentation`, `training`, `architectural`, `tooling`.
+What we know:
+- {factual statement of impact}
+- {factual statement of scope}
+- {brief status of response}
 
-Each action item includes: title, owner, priority, deadline, success criteria, and dependencies.
+What we're doing:
+- {primary response action}
+- {secondary response action}
 
-**Step 4 -- Validate postmortem quality.**
+Workaround (if available):
+{workaround steps or "No workaround currently available"}
 
-```bash
-python scripts/postmortem_generator.py incident_data.json --format json
+We apologize for the inconvenience and will share more information as it becomes available.
+
+Next update: {time}
+Status page: {link}
 ```
 
-The agent checks:
-- Every contributing factor has at least one action item (coverage gap detection)
-- Action items have quality scores (0-100) based on specificity
-- MTTD/MTTR benchmarked against industry standards
-- Missing actions suggested for uncovered themes
+### Stakeholder Management
 
-**Validation checkpoint:** Zero coverage gaps. All P0 action items have owners and deadlines within 48 hours.
+#### Stakeholder Classification
 
----
+**Internal Stakeholders:**
+- **Engineering Leadership** - Technical decisions and resource allocation
+- **Product Management** - Customer impact assessment and feature implications
+- **Customer Support** - User communication and support ticket management
+- **Sales/Account Management** - Customer relationship management for enterprise clients
+- **Executive Team** - Business impact decisions and external communication approval
+- **Legal/Compliance** - Regulatory reporting and liability assessment
 
-## Workflow 3: Escalation Management
+**External Stakeholders:**
+- **Customers** - Service availability and impact communication
+- **Partners** - API availability and integration impacts
+- **Vendors** - Third-party service dependencies and support escalation
+- **Regulators** - Compliance reporting for regulated industries
+- **Public/Media** - Transparency for public-facing outages
 
-**Technical escalation path:**
+#### Communication Cadence by Stakeholder
 
-| Level | Role | SEV-1 Trigger | SEV-2 Trigger |
-|-------|------|---------------|---------------|
-| L1 | On-call engineer | Immediate | 15 min |
-| L2 | Senior engineer / Team lead | 30 min | 1 hour |
-| L3 | Engineering Manager / Staff | 45 min | 2 hours |
-| L4 | Director / CTO | 1 hour | 4 hours |
+| Stakeholder | SEV1 | SEV2 | SEV3 | SEV4 |
+|-------------|------|------|------|------|
+| Engineering Leadership | Real-time | 30min | 4hrs | Daily |
+| Executive Team | 15min | 1hr | EOD | Weekly |
+| Customer Support | Real-time | 30min | 2hrs | As needed |
+| Customers | 15min | 1hr | Optional | None |
+| Partners | 30min | 2hrs | Optional | None |
 
-**Business escalation:**
+### Runbook Generation Framework
 
-| Severity | Duration | Escalate To |
-|----------|----------|-------------|
-| SEV-1 | Immediate | VP Engineering |
-| SEV-1 | 30 min | CTO + Customer Success VP |
-| SEV-1 | 1 hour | CEO + Full Executive Team |
-| SEV-2 | 2 hours | VP Engineering |
-| SEV-2 | 4 hours | CTO |
+#### Dynamic Runbook Components
 
----
+1. **Detection Playbooks**
+   - Monitoring alert definitions
+   - Triage decision trees
+   - Escalation trigger points
+   - Initial response actions
 
-## Anti-Patterns
+2. **Response Playbooks**
+   - Step-by-step mitigation procedures
+   - Rollback instructions
+   - Validation checkpoints
+   - Communication checkpoints
 
-1. **Individual blame in postmortems** -- focus on system failures. "Why did the process allow this?" not "Why did Alice do this?"
-2. **Skipping PIR for SEV-2** -- every SEV-1 and SEV-2 gets a postmortem within 3 business days.
-3. **Action items without owners** -- every item needs a specific person and deadline.
-4. **Deploying fixes under pressure without validation** -- validate fixes before declaring resolution; plan for secondary failures.
-5. **Communication gaps** -- provide updates even when there is no new information.
+3. **Recovery Playbooks**
+   - Service restoration procedures
+   - Data consistency checks
+   - Performance validation
+   - User notification processes
 
----
+#### Runbook Template Structure
 
-## Troubleshooting
+```markdown
+# {Service/Component} Incident Response Runbook
 
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Classifier assigns SEV1 to minor issues | Description keywords trigger high severity without impact data | Provide `affected_users` percentage and `business_impact` fields |
-| Timeline shows "No valid events found" | Timestamps in unsupported format or missing `timestamp` key | Use ISO-8601, `YYYY-MM-DD HH:MM:SS`, or Unix epoch |
-| PIR produces shallow 5 Whys | Incident data lacks detail | Enrich input with `affected_services`, `customer_impact`; supply timeline via `--timeline` |
-| Postmortem marks all action items invalid | Missing required fields | Each action item needs `title`, `owner`, `priority`, `deadline` |
-| Severity score seems too low | Flat description without structured impact data | Provide full schema with `impact`, `signals`, `context` keys |
+## Quick Reference
+- **Severity Indicators:** {list of conditions for each severity level}
+- **Key Contacts:** {on-call rotations and escalation paths}
+- **Critical Commands:** {list of emergency commands with descriptions}
 
----
+## Detection
+### Monitoring Alerts
+- {Alert name}: {description and thresholds}
+- {Alert name}: {description and thresholds}
 
-## References
+### Manual Detection Signs
+- {Symptom}: {what to look for and where}
+- {Symptom}: {what to look for and where}
 
-| Guide | Path |
-|-------|------|
-| Incident Response Framework | `references/incident-response-framework.md` |
-| Severity Matrix | `references/incident_severity_matrix.md` |
-| Communication Templates | `references/communication_templates.md` |
-| RCA Frameworks Guide | `references/rca_frameworks_guide.md` |
-| SLA Management | `references/sla-management-guide.md` |
+## Initial Response (0-15 minutes)
+1. **Assess Severity**
+   - [ ] Check {primary metric}
+   - [ ] Verify {secondary indicator}
+   - [ ] Classify as SEV{level} based on {criteria}
 
----
+2. **Establish Command**
+   - [ ] Page Incident Commander if SEV1/2
+   - [ ] Create incident tracking ticket
+   - [ ] Join war room: {link/bridge info}
 
-## Integration Points
+3. **Initial Investigation**
+   - [ ] Check recent deployments: {deployment log location}
+   - [ ] Review error logs: {log location and queries}
+   - [ ] Verify dependencies: {dependency check commands}
 
-| Skill | Integration |
-|-------|-------------|
-| `senior-devops` | Monitoring alerts feed timeline; runbook templates inform playbooks |
-| `senior-secops` | Security incidents auto-escalate to SEV-1; breach indicators trigger SecOps response |
-| `release-orchestrator` | Deployment events feed timeline; rollback data informs release gates |
-| `senior-architect` | Architectural root causes escalate to architecture review |
-| `code-reviewer` | PIR action items route to code review workflows |
+## Mitigation Strategies
+### Strategy 1: {Name}
+**Use when:** {conditions}
+**Steps:**
+1. {detailed step with commands}
+2. {detailed step with expected outcomes}
+3. {validation step}
 
----
+**Rollback Plan:**
+1. {rollback step}
+2. {verification step}
 
-**Last Updated:** April 2026
-**Version:** 1.1.0
+### Strategy 2: {Name}
+{similar structure}
+
+## Recovery and Validation
+1. **Service Restoration**
+   - [ ] {restoration step}
+   - [ ] Wait for {metric} to return to normal
+   - [ ] Validate end-to-end functionality
+
+2. **Communication**
+   - [ ] Update status page
+   - [ ] Notify stakeholders
+   - [ ] Schedule PIR
+
+## Common Pitfalls
+- **{Pitfall}:** {description and how to avoid}
+- **{Pitfall}:** {description and how to avoid}
+
+## Reference Information
+→ See references/reference-information.md for details
+
+## Usage Examples
+
+### Example 1: Database Connection Pool Exhaustion
+
+```bash
+# Classify the incident
+echo '{"description": "Users reporting 500 errors, database connections timing out", "affected_users": "80%", "business_impact": "high"}' | python scripts/incident_classifier.py
+
+# Reconstruct timeline from logs
+python scripts/timeline_reconstructor.py --input assets/db_incident_events.json --output timeline.md
+
+# Generate PIR after resolution
+python scripts/pir_generator.py --incident assets/db_incident_data.json --timeline timeline.md --output pir.md
+```
+
+### Example 2: API Rate Limiting Incident
+
+```bash
+# Quick classification from stdin
+echo "API rate limits causing customer API calls to fail" | python scripts/incident_classifier.py --format text
+
+# Build timeline from multiple sources
+python scripts/timeline_reconstructor.py --input assets/api_incident_logs.json --detect-phases --gap-analysis
+
+# Generate comprehensive PIR
+python scripts/pir_generator.py --incident assets/api_incident_summary.json --rca-method fishbone --action-items
+```
+
+## Best Practices
+
+### During Incident Response
+
+1. **Maintain Calm Leadership**
+   - Stay composed under pressure
+   - Make decisive calls with incomplete information
+   - Communicate confidence while acknowledging uncertainty
+
+2. **Document Everything**
+   - All actions taken and their outcomes
+   - Decision rationale, especially for controversial calls
+   - Timeline of events as they happen
+
+3. **Effective Communication**
+   - Use clear, jargon-free language
+   - Provide regular updates even when there's no new information
+   - Manage stakeholder expectations proactively
+
+4. **Technical Excellence**
+   - Prefer rollbacks to risky fixes under pressure
+   - Validate fixes before declaring resolution
+   - Plan for secondary failures and cascading effects
+
+### Post-Incident
+
+1. **Blameless Culture**
+   - Focus on system failures, not individual mistakes
+   - Encourage honest reporting of what went wrong
+   - Celebrate learning and improvement opportunities
+
+2. **Action Item Discipline**
+   - Assign specific owners and due dates
+   - Track progress publicly
+   - Prioritize based on risk and effort
+
+3. **Knowledge Sharing**
+   - Share PIRs broadly within the organization
+   - Update runbooks based on lessons learned
+   - Conduct training sessions for common failure modes
+
+4. **Continuous Improvement**
+   - Look for patterns across multiple incidents
+   - Invest in tooling and automation
+   - Regularly review and update processes
+
+## Integration with Existing Tools
+
+### Monitoring and Alerting
+- PagerDuty/Opsgenie integration for escalation
+- Datadog/Grafana for metrics and dashboards
+- ELK/Splunk for log analysis and correlation
+
+### Communication Platforms
+- Slack/Teams for war room coordination
+- Zoom/Meet for video bridges
+- Status page providers (Statuspage.io, etc.)
+
+### Documentation Systems
+- Confluence/Notion for PIR storage
+- GitHub/GitLab for runbook version control
+- JIRA/Linear for action item tracking
+
+### Change Management
+- CI/CD pipeline integration
+- Deployment tracking systems
+- Feature flag platforms for quick rollbacks
+
+## Conclusion
+
+The Incident Commander skill provides a comprehensive framework for managing incidents from detection through post-incident review. By implementing structured processes, clear communication templates, and thorough analysis tools, teams can improve their incident response capabilities and build more resilient systems.
+
+The key to successful incident management is preparation, practice, and continuous learning. Use this framework as a starting point, but adapt it to your organization's specific needs, culture, and technical environment.
+
+Remember: The goal isn't to prevent all incidents (which is impossible), but to detect them quickly, respond effectively, communicate clearly, and learn continuously.

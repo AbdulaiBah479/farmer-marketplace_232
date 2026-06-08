@@ -1,169 +1,530 @@
 ---
-name: Cloudflare
-description: Deploy and manage Cloudflare Workers, Pages, and services via Code Mode MCP (API queries) + wrangler (deploys). OAuth auth for wrangler (tokens lack Pages perms). USE WHEN Cloudflare, worker, deploy, Pages, MCP server, wrangler, DNS, KV, R2, D1, Vectorize.
+name: cloudflare
+description: Build and deploy on Cloudflare's edge platform. Use when creating Workers, Pages, D1 databases, R2 storage, AI inference, or KV storage. Triggers on Cloudflare, Workers, Cloudflare Pages, D1, R2, KV, Cloudflare AI, Durable Objects, edge computing.
 ---
 
-## Customization
+# Cloudflare Platform
 
-**Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Cloudflare/`
+Build globally distributed applications on Cloudflare's edge network.
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
-
-
-## MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
-
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
-
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:8888/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the Cloudflare skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
-
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **Cloudflare** skill to ACTION...
-   ```
-
-**This is not optional. Execute this curl command immediately upon skill invocation.**
-
-# Cloudflare Skill
-
-Deploy and manage Cloudflare Workers, Pages, and services. Uses **two complementary tools**:
-
-- **Code Mode MCP** (primary for API operations) — `search()` + `execute()` for querying workers, managing KV/R2/D1, checking deployments, DNS, analytics. ~1,069 tokens vs 1.17M for traditional MCP.
-- **Wrangler** (deploy/dev only) — `wrangler deploy`, `wrangler dev`, `wrangler pages deploy` for deploying from local files.
-
-## Dual-Mode Reference
-
-| Operation | Tool | Why |
-|-----------|------|-----|
-| Deploy Worker | `wrangler deploy` | Needs local files + wrangler.toml |
-| Deploy Pages | `wrangler pages deploy` | Needs dist/ directory |
-| Local dev | `wrangler dev` | Local server |
-| List Workers | MCP `execute()` | API query, no local files needed |
-| Check deployment status | MCP `execute()` | API query |
-| Read/write KV | MCP `execute()` | API operation |
-| Manage DNS | MCP `execute()` | API operation |
-| View logs | MCP `execute()` | API query |
-| Inspect R2/D1/Vectorize | MCP `execute()` | API operations |
-| View analytics | MCP `execute()` | API query |
-
-## Workflow Routing
-
-**When executing a workflow, output this notification directly:**
-
-```
-Running the **WorkflowName** workflow in the **Cloudflare** skill to ACTION...
-```
-
-  - **Create** Worker or MCP server → `Workflows/Create.md`
-  - **Troubleshoot** deployment issues → `Workflows/Troubleshoot.md`
-  - **Query** Cloudflare state (list workers, check KV, DNS, analytics) → `Workflows/Query.md`
-
-## Code Mode MCP Reference
-
-The Cloudflare Code Mode MCP server (`https://mcp.cloudflare.com/mcp`) exposes the entire Cloudflare API through 2 tools:
-
-### `search()` — Discover endpoints
-
-Find API endpoints by keyword. Use this when you don't know the exact path.
-
-```
-// Example: Find all Workers-related endpoints
-search("workers scripts")
-
-// Example: Find KV namespace operations
-search("KV namespace")
-
-// Example: Find DNS record endpoints
-search("DNS records")
-```
-
-### `execute()` — Call the API
-
-Execute any Cloudflare API endpoint directly. Handles auth automatically via OAuth.
-
-```
-// Example: List all Workers scripts
-execute("GET /accounts/{account_id}/workers/scripts")
-
-// Example: Read a KV value
-execute("GET /accounts/{account_id}/storage/kv/namespaces/{namespace_id}/values/{key_name}")
-
-// Example: List DNS records
-execute("GET /zones/{zone_id}/dns_records")
-```
-
-### MCP Auth
-
-Code Mode MCP handles authentication via OAuth — no tokens needed. On first use, it will prompt for Cloudflare login. After that, auth is cached.
-
-## Quick Reference
-
-- **Account ID:** Set via `CF_ACCOUNT_ID` environment variable
-- **Worker URL format:** `https://[worker-name].[your-subdomain].workers.dev`
-
-## Deployment Commands
-
-### Workers Deployment
-```bash
-# Unset tokens that interfere with wrangler login-based auth
-(unset CF_API_TOKEN && unset CLOUDFLARE_API_TOKEN && wrangler deploy)
-```
-
-### Pages Deployment
-
-**CRITICAL: ALL env tokens lack Pages permissions. MUST unset them to use OAuth:**
+## Quick Start
 
 ```bash
-# ALWAYS unset tokens for Pages - OAuth login works, tokens don't
-(unset CF_API_TOKEN && unset CLOUDFLARE_API_TOKEN && bunx wrangler pages deploy dist --project-name=PROJECT_NAME --commit-dirty=true)
+# Install Wrangler CLI
+npm install -g wrangler
+
+# Login
+wrangler login
+
+# Create new Worker
+wrangler init my-worker
+
+# Deploy
+wrangler deploy
 ```
 
-## Critical Notes
+## Workers
 
-- **Workers:** Unset `CF_API_TOKEN` and `CLOUDFLARE_API_TOKEN` before deploying - they interfere with wrangler login-based auth
-- **Pages:** UNSET ALL TOKENS - None of the API tokens have Pages permissions. OAuth-based wrangler login is the ONLY method that works.
-- **API queries:** Use Code Mode MCP instead of manual `curl` or `fetch()` to `api.cloudflare.com`
-- **Wrangler stays for:** deploy, dev, pages deploy, and local config only
-
-## Examples
-
-**Example 1: Deploy a Worker**
-```
-User: "deploy the MCP server to Cloudflare"
--> Invokes CREATE workflow
--> Unsets env tokens, runs wrangler deploy
--> Verifies via MCP execute() that worker is live
--> "Deployed to https://mcp-server.[subdomain].workers.dev"
-```
-
-**Example 2: Query Cloudflare state**
-```
-User: "list all my workers"
--> Invokes QUERY workflow
--> MCP search("workers scripts") to find endpoint
--> MCP execute("GET /accounts/{id}/workers/scripts")
--> Returns list of all deployed workers
+### Basic Worker
+```typescript
+// src/index.ts
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(request.url);
+    
+    if (url.pathname === '/api/hello') {
+      return Response.json({ message: 'Hello from the edge!' });
+    }
+    
+    return new Response('Not Found', { status: 404 });
+  },
+};
 ```
 
-**Example 3: Fix deployment error**
-```
-User: "Cloudflare deploy is failing with auth error"
--> Invokes TROUBLESHOOT workflow
--> MCP execute() to check deployment status and logs
--> Identifies token interference
--> "Fixed - tokens were overriding OAuth. Redeployed successfully."
+### wrangler.toml Configuration
+```toml
+name = "my-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+# KV Namespace
+[[kv_namespaces]]
+binding = "MY_KV"
+id = "abc123"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "my-database"
+database_id = "def456"
+
+# R2 Bucket
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "my-bucket"
+
+# AI
+[ai]
+binding = "AI"
+
+# Durable Objects
+[[durable_objects.bindings]]
+name = "COUNTER"
+class_name = "Counter"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["Counter"]
 ```
 
-**Example 4: Check DNS records**
+### Request Routing
+```typescript
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const { pathname } = url;
+    
+    // Router pattern
+    const routes: Record<string, () => Promise<Response>> = {
+      '/api/users': () => handleUsers(request, env),
+      '/api/posts': () => handlePosts(request, env),
+    };
+    
+    const handler = routes[pathname];
+    if (handler) {
+      return handler();
+    }
+    
+    // Wildcard matching
+    if (pathname.startsWith('/api/users/')) {
+      const userId = pathname.split('/')[3];
+      return handleUser(userId, request, env);
+    }
+    
+    return new Response('Not Found', { status: 404 });
+  },
+};
 ```
-User: "what DNS records does example.com have?"
--> Invokes QUERY workflow
--> MCP search("DNS records") + execute() to list records
--> Returns full DNS record table
+
+## KV Storage
+
+```typescript
+interface Env {
+  MY_KV: KVNamespace;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    
+    // Set value
+    await env.MY_KV.put('key', 'value', {
+      expirationTtl: 3600, // 1 hour
+      metadata: { created: Date.now() },
+    });
+    
+    // Get value
+    const value = await env.MY_KV.get('key');
+    
+    // Get with metadata
+    const { value: data, metadata } = await env.MY_KV.getWithMetadata('key');
+    
+    // List keys
+    const list = await env.MY_KV.list({ prefix: 'user:' });
+    
+    // Delete
+    await env.MY_KV.delete('key');
+    
+    return Response.json({ value });
+  },
+};
 ```
+
+## D1 Database (SQLite)
+
+```typescript
+interface Env {
+  DB: D1Database;
+}
+
+// Create tables (run once via wrangler d1 execute)
+// wrangler d1 execute my-database --file=./schema.sql
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // Query
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM users WHERE id = ?'
+    ).bind(1).all();
+    
+    // Insert
+    const { meta } = await env.DB.prepare(
+      'INSERT INTO users (name, email) VALUES (?, ?)'
+    ).bind('Alice', 'alice@example.com').run();
+    
+    // Batch operations
+    const batch = await env.DB.batch([
+      env.DB.prepare('INSERT INTO logs (action) VALUES (?)').bind('login'),
+      env.DB.prepare('UPDATE users SET last_login = ? WHERE id = ?').bind(Date.now(), 1),
+    ]);
+    
+    // First result only
+    const user = await env.DB.prepare(
+      'SELECT * FROM users WHERE email = ?'
+    ).bind('alice@example.com').first();
+    
+    return Response.json({ results, insertId: meta.last_row_id });
+  },
+};
+```
+
+### Schema Example
+```sql
+-- schema.sql
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+## R2 Object Storage
+
+```typescript
+interface Env {
+  BUCKET: R2Bucket;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const key = url.pathname.slice(1);
+    
+    switch (request.method) {
+      case 'PUT': {
+        // Upload file
+        const body = await request.arrayBuffer();
+        await env.BUCKET.put(key, body, {
+          httpMetadata: {
+            contentType: request.headers.get('content-type') || 'application/octet-stream',
+          },
+          customMetadata: {
+            uploadedBy: 'api',
+          },
+        });
+        return new Response('Uploaded', { status: 201 });
+      }
+      
+      case 'GET': {
+        // Download file
+        const object = await env.BUCKET.get(key);
+        if (!object) {
+          return new Response('Not Found', { status: 404 });
+        }
+        
+        const headers = new Headers();
+        object.writeHttpMetadata(headers);
+        headers.set('etag', object.httpEtag);
+        
+        return new Response(object.body, { headers });
+      }
+      
+      case 'DELETE': {
+        await env.BUCKET.delete(key);
+        return new Response('Deleted');
+      }
+      
+      default:
+        return new Response('Method Not Allowed', { status: 405 });
+    }
+  },
+};
+
+// List objects
+async function listObjects(env: Env, prefix?: string) {
+  const listed = await env.BUCKET.list({
+    prefix,
+    limit: 100,
+  });
+  return listed.objects.map(obj => ({
+    key: obj.key,
+    size: obj.size,
+    uploaded: obj.uploaded,
+  }));
+}
+```
+
+## Cloudflare AI
+
+```typescript
+interface Env {
+  AI: Ai;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const { prompt } = await request.json();
+    
+    // Text generation (Llama, Mistral, etc.)
+    const response = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 1024,
+    });
+    
+    return Response.json(response);
+  },
+};
+
+// Image generation
+async function generateImage(env: Env, prompt: string) {
+  const response = await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0', {
+    prompt,
+    num_steps: 20,
+  });
+  
+  return new Response(response, {
+    headers: { 'content-type': 'image/png' },
+  });
+}
+
+// Text embeddings
+async function getEmbeddings(env: Env, text: string) {
+  const response = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+    text: [text],
+  });
+  return response.data[0]; // Float32Array
+}
+
+// Image classification
+async function classifyImage(env: Env, imageData: ArrayBuffer) {
+  const response = await env.AI.run('@cf/microsoft/resnet-50', {
+    image: [...new Uint8Array(imageData)],
+  });
+  return response;
+}
+
+// Speech to text
+async function transcribe(env: Env, audioData: ArrayBuffer) {
+  const response = await env.AI.run('@cf/openai/whisper', {
+    audio: [...new Uint8Array(audioData)],
+  });
+  return response.text;
+}
+```
+
+## Durable Objects
+
+```typescript
+// Durable Object class
+export class Counter {
+  state: DurableObjectState;
+  
+  constructor(state: DurableObjectState) {
+    this.state = state;
+  }
+  
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    
+    let value = (await this.state.storage.get<number>('count')) || 0;
+    
+    switch (url.pathname) {
+      case '/increment':
+        value++;
+        await this.state.storage.put('count', value);
+        break;
+      case '/decrement':
+        value--;
+        await this.state.storage.put('count', value);
+        break;
+    }
+    
+    return Response.json({ count: value });
+  }
+}
+
+// Worker using Durable Object
+interface Env {
+  COUNTER: DurableObjectNamespace;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // Get unique ID for this counter (e.g., per user)
+    const counterId = env.COUNTER.idFromName('global-counter');
+    const counter = env.COUNTER.get(counterId);
+    
+    // Forward request to Durable Object
+    return counter.fetch(request);
+  },
+};
+```
+
+## Cloudflare Pages
+
+### pages.toml (Functions Config)
+```toml
+[build]
+command = "npm run build"
+output_directory = "dist"
+
+[[redirects]]
+from = "/old-page"
+to = "/new-page"
+status = 301
+
+[[headers]]
+for = "/api/*"
+[headers.values]
+Access-Control-Allow-Origin = "*"
+```
+
+### Pages Functions
+```typescript
+// functions/api/hello.ts
+export const onRequestGet: PagesFunction = async (context) => {
+  return Response.json({ message: 'Hello!' });
+};
+
+export const onRequestPost: PagesFunction<Env> = async (context) => {
+  const body = await context.request.json();
+  
+  // Access bindings
+  await context.env.KV.put('key', JSON.stringify(body));
+  
+  return Response.json({ success: true });
+};
+
+// functions/api/users/[id].ts
+export const onRequestGet: PagesFunction = async (context) => {
+  const userId = context.params.id;
+  return Response.json({ userId });
+};
+
+// Middleware: functions/_middleware.ts
+export const onRequest: PagesFunction = async (context) => {
+  // Auth check
+  const auth = context.request.headers.get('Authorization');
+  if (!auth) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  
+  // Continue to next handler
+  return context.next();
+};
+```
+
+## Queues
+
+```typescript
+// Producer
+interface Env {
+  MY_QUEUE: Queue;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // Send message to queue
+    await env.MY_QUEUE.send({
+      type: 'email',
+      to: 'user@example.com',
+      subject: 'Welcome!',
+    });
+    
+    // Batch send
+    await env.MY_QUEUE.sendBatch([
+      { body: { task: 'process', id: 1 } },
+      { body: { task: 'process', id: 2 } },
+    ]);
+    
+    return Response.json({ queued: true });
+  },
+};
+
+// Consumer
+export default {
+  async queue(batch: MessageBatch<any>, env: Env): Promise<void> {
+    for (const message of batch.messages) {
+      try {
+        await processMessage(message.body);
+        message.ack();
+      } catch (error) {
+        message.retry();
+      }
+    }
+  },
+};
+```
+
+## Cron Triggers
+
+```toml
+# wrangler.toml
+[triggers]
+crons = ["0 0 * * *", "*/15 * * * *"]  # Daily at midnight, every 15 min
+```
+
+```typescript
+export default {
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    switch (event.cron) {
+      case '0 0 * * *':
+        await dailyCleanup(env);
+        break;
+      case '*/15 * * * *':
+        await checkHealthStatus(env);
+        break;
+    }
+  },
+};
+```
+
+## WebSockets
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const upgradeHeader = request.headers.get('Upgrade');
+    
+    if (upgradeHeader === 'websocket') {
+      const [client, server] = Object.values(new WebSocketPair());
+      
+      server.accept();
+      server.addEventListener('message', (event) => {
+        server.send(`Echo: ${event.data}`);
+      });
+      
+      return new Response(null, {
+        status: 101,
+        webSocket: client,
+      });
+    }
+    
+    return new Response('Expected WebSocket', { status: 400 });
+  },
+};
+```
+
+## Resources
+
+- **Workers Docs**: https://developers.cloudflare.com/workers/
+- **D1 Docs**: https://developers.cloudflare.com/d1/
+- **R2 Docs**: https://developers.cloudflare.com/r2/
+- **Pages Docs**: https://developers.cloudflare.com/pages/
+- **AI Docs**: https://developers.cloudflare.com/workers-ai/
+- **Wrangler CLI**: https://developers.cloudflare.com/workers/wrangler/

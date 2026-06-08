@@ -1,305 +1,109 @@
 ---
 name: tdd
-description: >-
-  Use this skill whenever the user wants to write code using TDD, test-driven
-  development, or test-first methodology. Triggers on: "/tdd", "let's do TDD",
-  "write a failing test", "red green refactor", "test-first", "start a TDD
-  cycle", or any request to implement a feature by writing tests before code.
-  Adaptive five-step cycle (RED-DOMAIN-GREEN-DOMAIN-COMMIT) that detects
-  harness capabilities and routes to guided (/tdd red|domain|green|commit)
-  or automated (/tdd) mode. NOT for running existing tests, debugging test
-  failures, or reviewing code -- only for the disciplined test-first cycle.
-license: CC0-1.0
-metadata:
-  author: jwilger
-  version: "2.4.1"
-  requires: []
-  context: [test-files, domain-types, source-files]
-  phase: build
-  standalone: true
-  constraint_resolution: true
-effort: high
+description: Test-driven development with red-green-refactor loop. Use when user wants to build features or fix bugs using TDD, mentions "red-green-refactor", wants integration tests, or asks for test-first development.
 ---
 
-# TDD
+# Test-Driven Development
 
-**Value:** Feedback -- short cycles with verifiable evidence keep AI-generated
-code honest and the human in control. Tests express intent; evidence confirms
-progress.
+## Philosophy
 
-## Purpose
+**Core principle**: Tests should verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't.
 
-Teaches a five-step TDD cycle (RED, DOMAIN, GREEN, DOMAIN, COMMIT) that
-adapts to whatever harness runs it. Detects available delegation primitives
-and routes to guided mode (human drives each phase) or automated mode
-(system orchestrates phases). Prevents primitive obsession, skipped reviews,
-and untested complexity regardless of mode.
+**Good tests** are integration-style: they exercise real code paths through public APIs. They describe _what_ the system does, not _how_ it does it. A good test reads like a specification - "user can checkout with valid cart" tells you exactly what capability exists. These tests survive refactors because they don't care about internal structure.
 
-## Practices
+**Bad tests** are coupled to implementation. They mock internal collaborators, test private methods, or verify through external means (like querying a database directly instead of using the interface). The warning sign: your test breaks when you refactor, but behavior hasn't changed. If you rename an internal function and tests fail, those tests were testing implementation, not behavior.
 
-### The Five-Step Cycle
+See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
 
-Every feature is built by repeating: RED -> DOMAIN -> GREEN -> DOMAIN -> COMMIT.
+## Anti-Pattern: Horizontal Slices
 
-1. **RED** -- Write one failing test with one assertion. Only edit test files.
-   Write the code you wish you had -- reference types and functions that do not
-   exist yet. Run the test. Paste the failure output. Stop.
-   Done when: tests run and FAIL (compilation error OR assertion failure).
+**DO NOT write all tests first, then all implementation.** This is "horizontal slicing" - treating RED as "write all tests" and GREEN as "write all code."
 
-2. **DOMAIN (after RED)** -- Review the test for primitive obsession and
-   invalid-state risks. Create type definitions with stub bodies (`todo!()`,
-   `raise NotImplementedError`, etc.). Do not implement logic. Stop.
-   Done when: tests COMPILE but still FAIL (assertion/panic, not compilation error).
+This produces **crap tests**:
 
-3. **GREEN** -- Address the immediate error — NEVER "make the test pass" in
-   one go. Scope check before every change: can this be fixed with
-   ~function-scope work (~20 lines, one file)? YES → make the change, run
-   tests, check the next error. NO → drill down by writing a failing unit
-   test for the smallest piece needed, then route it through a standard TDD
-   cycle with swapped roles. Only edit production files (except when drilling
-   down). Paste output after each change.
-   Done when: tests PASS with minimal implementation.
+- Tests written in bulk test _imagined_ behavior, not _actual_ behavior
+- You end up testing the _shape_ of things (data structures, function signatures) rather than user-facing behavior
+- Tests become insensitive to real changes - they pass when behavior breaks, fail when behavior is fine
+- You outrun your headlights, committing to test structure before understanding the implementation
 
-4. **DOMAIN (after GREEN)** -- Review the implementation for domain violations:
-   anemic models, leaked validation, primitive obsession that slipped through.
-   If violations found, raise a concern and propose a revision.
-   Done when: types are clean and tests still pass.
+**Correct approach**: Vertical slices via tracer bullets. One test → one implementation → repeat. Each test responds to what you learned from the previous cycle. Because you just wrote the code, you know exactly what behavior matters and how to verify it.
 
-5. **COMMIT** -- Run the full test suite. Stage all changes and create a git
-   commit referencing the GWT scenario. Run `git status` after committing to
-   verify no uncommitted files remain. This is a **hard gate**: no new RED
-   phase may begin until this commit exists and the working tree is clean.
-   Done when: git commit created, all tests passing, working tree clean.
-
-After step 5, either start the next RED phase or tidy the code (structural
-changes only, separate commit).
-
-A compilation failure IS a test failure. Do not pre-create types to avoid
-compilation errors. Types flow FROM tests, never precede them.
-
-Domain review has veto power over primitive obsession and invalid-state
-representability. Debate continues until resolved or escalated to the human —
-there is no round limit.
-
-### User-Facing Modes
-
-**Guided mode** (`/tdd red`, `/tdd domain`, `/tdd green`, `/tdd commit`):
-Each phase loads `references/{phase}.md` with detailed instructions for that
-step. For experienced engineers who want explicit phase control. Works on
-any harness -- no delegation primitives required. The human decides when to
-advance phases.
-
-**Automated mode** (`/tdd` or `/tdd auto`):
-The system detects harness capabilities, selects an execution strategy, and
-orchestrates the full cycle. The user sees working code, not sausage-making.
-For verbose output showing phase transitions and evidence, use `/tdd auto --verbose`.
-
-### Capability Detection (Automated Mode)
-
-When automated mode activates, detect available primitives in this order:
-
-1. **Subagents available?** Check for Agent tool. If present, use the
-   **subagents** strategy with focused per-phase agents.
-2. **Fallback.** Use the **chaining** strategy -- role-switch internally between
-   phases within a single context.
-
-Select the most capable strategy available. Do not attempt a higher strategy
-when its primitives are missing.
-
-**You are the orchestrator.** The agent reading this file performs capability
-detection and dispatches directly. Do NOT spawn a single "orchestrator"
-subagent to do it for you -- that hides work, bypasses strategy detection,
-and pre-selects the wrong strategy. Whether you were invoked by `/tdd`, by
-the pipeline, or by any other caller: you detect capabilities, you choose
-the strategy, you spawn the phase agents yourself.
-
-**After determining your strategy, read ONLY the entry-point file for that
-strategy:**
-
-| Strategy | Entry-point file |
-|----------|-----------------|
-| Subagents | `references/orchestrator.md` |
-| Chaining | (no entry file -- follow the chaining section below) |
-
-Do NOT read `orchestrator.md` when using chaining.
-
-`orchestrator.md` references `references/shared-rules.md` for rules that
-apply to all strategies (domain veto, outside-in progression, pipeline
-integration, pre-implementation context checklist). Read `shared-rules.md`
-when directed by your strategy's entry-point file.
-
-### Execution Strategy: Chaining (Fallback)
-
-Used when no delegation primitives are available. The agent plays each role
-sequentially:
-
-1. Load `references/red.md`. Execute the RED phase.
-2. Load `references/domain.md`. Execute DOMAIN review of the test.
-3. Load `references/green.md`. Execute the GREEN phase.
-4. Load `references/domain.md`. Execute DOMAIN review of the implementation.
-5. Load `references/commit.md`. Execute the COMMIT phase.
-6. Repeat.
-
-Role boundaries are advisory in this mode. The agent must self-enforce phase
-boundaries: only edit file types permitted by the current phase (see
-`references/phase-boundaries.md`).
-
-### Execution Strategy: Subagents
-
-Used when the Agent tool is available for spawning focused subagents. Each
-phase runs in an isolated subagent with constrained scope.
-
-- Spawn each phase agent using `Agent(subagent_type="<agent-name>", prompt="...")`
-  with the prompt template in `references/{phase}-prompt.md`.
-- The orchestrator follows `references/orchestrator.md` for coordination rules.
-- **Structural handoff schema** (`references/handoff-schema.md`): every phase
-  agent must return evidence fields (test output, file paths changed, domain
-  concerns). Missing evidence fields = handoff blocked. The orchestrator does
-  not proceed to the next phase until the schema is satisfied.
-- Context isolation provides structural enforcement: each subagent receives
-  only the files relevant to its phase.
-
-### Named Team Member Personas (Subagent Strategy)
-
-When `.claude/agents/` definitions exist (from the `ensemble-team` skill), the
-subagent strategy uses named personas for ping and pong roles. The orchestrator
-selects team members based on slice context, spawns them as subagents using
-`Agent(subagent_type="<agent-name>", prompt="...")`, and collects results to pass
-as context to the next subagent.
-
-See `references/orchestrator.md` for coordination rules and
-`references/ping-pong-pairing.md` for persona selection, rotation, and
-pairing history.
-
-### Phase Boundary Rules
-
-Each phase edits only its own file types. This prevents drift. See
-`references/phase-boundaries.md` for the complete file-type matrix.
-
-| Phase | Can Edit | Cannot Edit |
-|-------|----------|-------------|
-| RED | Test files | Production code, type definitions |
-| DOMAIN | Type definitions (stubs) | Test logic, implementation bodies |
-| GREEN | Implementation bodies | Test files, type signatures |
-| COMMIT | Nothing -- git operations only | All source files |
-
-If blocked by a boundary, stop and return to the orchestrator (automated) or
-report to the user (guided). Never circumvent boundaries.
-
-### Walking Skeleton First
-
-The first vertical slice must be a walking skeleton: the thinnest end-to-end
-path proving all architectural layers connect. It may use hardcoded values or
-stubs. Build it before any other slice. It de-risks the architecture and gives
-subsequent slices a proven wiring path to extend.
-
-### Outside-In TDD
-
-Start from an acceptance test at the application boundary -- the point where
-external input enters the system. Drill inward through unit tests. The outer
-acceptance test stays RED while inner unit tests go through their own
-red-green-domain-commit cycles. The slice is complete only when the outer
-acceptance test passes.
-
-A test that calls internal functions directly is a unit test, not an acceptance
-test -- even if it asserts on user-visible behavior.
-
-**Boundary enforcement by mode:**
-- **Pipeline mode:** The CYCLE_COMPLETE evidence must include `boundary_type`
-  and `boundary_evidence` on the acceptance test. The pipeline's TDD gate
-  rejects evidence where the acceptance test calls internal functions directly.
-- **Automated mode (non-pipeline):** The orchestrator checks boundary scope
-  and re-delegates if the first test is not a boundary test. Advisory -- no
-  gate blocks progression.
-- **Guided mode:** The human is responsible for ensuring boundary-level tests.
-  The skill text instructs correct behavior but cannot enforce it.
-
-### Cycle-Complete Evidence
-
-At the end of each complete RED-DOMAIN-GREEN-DOMAIN-COMMIT cycle, produce
-a CYCLE_COMPLETE evidence packet containing: slice_id, acceptance_test
-{file, name, output, boundary_type, boundary_evidence}, unit_tests
-{count, all_passing, output}, domain_reviews [{phase, verdict, concerns}],
-commits [{hash, message}], rework_cycles, team {ping, pong, domain_reviewer}.
-
-When `pipeline-state` is provided in context metadata, the TDD skill
-operates in **pipeline mode**: it receives a `slice_id` and stores
-evidence to `.factory/audit-trail/slices/<slice-id>/tdd-cycles/cycle-NNN.json`.
-When running standalone, the evidence is informational only (not stored).
-
-See `references/cycle-evidence.md` for full schema.
-
-### Harness-Specific Guidance
-
-If running on Claude Code, also read `references/claude-code.md` for
-harness-specific rules including hook-based enforcement. For maximum
-mechanical enforcement, ask the bootstrap skill to install optional hooks
-from `references/hooks/claude-code-hooks.json`.
-
-## Enforcement Note
-
-- **Guided mode**: Advisory. The human enforces by controlling phase transitions.
-- **Chaining mode**: Advisory. The agent self-enforces phase boundaries.
-- **Subagent mode**: Structural. Context isolation and handoff schemas enforce
-  phase boundaries. Missing evidence blocks handoffs.
-- **Pipeline mode**: Gating. Evidence gates reject incomplete phase transitions.
-- **Optional hooks** (Claude Code): Mechanical. Pre-tool-use hooks block
-  unauthorized file edits per phase. See `references/claude-code.md`.
-
-**Hard constraints:**
-- Phase boundary violation (wrong file type in wrong phase): `[H]`
-- Domain veto escalation (contested design decision): `[RP]`
-- Commit gate (no new RED before prior cycle committed): `[H]`
-
-See `references/constraint-resolution.md` in the template directory for
-pipeline rework budget conflicts and domain veto resolution in pipeline mode.
-
-## Constraints
-
-- **Chaining mode self-enforcement**: Self-enforcement means you produce the
-  same file-type restrictions as if separate agents were enforcing them.
-  Writing production code during RED phase violates this constraint even
-  though no mechanism prevents it. If you catch yourself reasoning about
-  why a phase boundary doesn't apply in chaining mode, you are violating it.
-- **"~20 lines, one file" scope check**: This is a judgment heuristic, not a
-  precise threshold. The spirit is: if the change touches multiple concerns,
-  multiple files, or requires understanding distant code, it is too large for
-  a single cycle. Do not game this by making a 40-line change across 2
-  functions in one file and claiming it's "one file."
-
-## Verification
-
-After completing a cycle, verify:
-
-- [ ] Every failing test was written BEFORE its implementation
-- [ ] Domain review occurred after EVERY RED and GREEN phase
-- [ ] Phase boundary rules were respected (file-type restrictions)
-- [ ] Evidence (test output) was provided at each handoff
-- [ ] Commit exists for every completed RED-GREEN cycle
-- [ ] GREEN phase iterated one failure at a time (not full implementation in one pass)
-- [ ] Working tree clean after every COMMIT (`git status` verified)
-- [ ] Walking skeleton completed first (first vertical slice)
-
-**HARD GATE -- COMMIT (must pass before any new RED phase):**
-
-- [ ] All tests pass
-- [ ] Git commit created with message referencing the current GWT scenario
-- [ ] No new RED phase started before this commit was made
-
-## Dependencies
-
-This skill works standalone. For enhanced workflows, it integrates with:
-
-- **domain-modeling:** Strengthens the domain review phases with parse-don't-validate,
-  semantic types, and invalid-state prevention principles.
-- **code-review:** Three-stage review (spec compliance, code quality, domain
-  integrity) after TDD cycles complete.
-- **mutation-testing:** Validates test quality by checking that tests detect
-  injected mutations in production code.
-- **ensemble-team:** Provides real-world expert personas for pair selection
-  and mob review.
-
-Missing a dependency? Install with:
 ```
-npx skills add jwilger/agent-skills --skill domain-modeling
+WRONG (horizontal):
+  RED:   test1, test2, test3, test4, test5
+  GREEN: impl1, impl2, impl3, impl4, impl5
+
+RIGHT (vertical):
+  RED→GREEN: test1→impl1
+  RED→GREEN: test2→impl2
+  RED→GREEN: test3→impl3
+  ...
+```
+
+## Workflow
+
+### 1. Planning
+
+When exploring the codebase, use the project's domain glossary so that test names and interface vocabulary match the project's language, and respect ADRs in the area you're touching.
+
+Before writing any code:
+
+- [ ] Confirm with user what interface changes are needed
+- [ ] Confirm with user which behaviors to test (prioritize)
+- [ ] Identify opportunities for [deep modules](deep-modules.md) (small interface, deep implementation)
+- [ ] Design interfaces for [testability](interface-design.md)
+- [ ] List the behaviors to test (not implementation steps)
+- [ ] Get user approval on the plan
+
+Ask: "What should the public interface look like? Which behaviors are most important to test?"
+
+**You can't test everything.** Confirm with the user exactly which behaviors matter most. Focus testing effort on critical paths and complex logic, not every possible edge case.
+
+### 2. Tracer Bullet
+
+Write ONE test that confirms ONE thing about the system:
+
+```
+RED:   Write test for first behavior → test fails
+GREEN: Write minimal code to pass → test passes
+```
+
+This is your tracer bullet - proves the path works end-to-end.
+
+### 3. Incremental Loop
+
+For each remaining behavior:
+
+```
+RED:   Write next test → fails
+GREEN: Minimal code to pass → passes
+```
+
+Rules:
+
+- One test at a time
+- Only enough code to pass current test
+- Don't anticipate future tests
+- Keep tests focused on observable behavior
+
+### 4. Refactor
+
+After all tests pass, look for [refactor candidates](refactoring.md):
+
+- [ ] Extract duplication
+- [ ] Deepen modules (move complexity behind simple interfaces)
+- [ ] Apply SOLID principles where natural
+- [ ] Consider what new code reveals about existing code
+- [ ] Run tests after each refactor step
+
+**Never refactor while RED.** Get to GREEN first.
+
+## Checklist Per Cycle
+
+```
+[ ] Test describes behavior, not implementation
+[ ] Test uses public interface only
+[ ] Test would survive internal refactor
+[ ] Code is minimal for this test
+[ ] No speculative features added
 ```

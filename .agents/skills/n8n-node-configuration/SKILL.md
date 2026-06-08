@@ -1,18 +1,23 @@
 ---
 name: n8n-node-configuration
-description: Operation-aware node configuration guidance. Use when configuring nodes, understanding property dependencies, determining required fields, choosing between get_node detail levels, or learning common configuration patterns by node type.
-risk: unknown
-source: community
+description: "Operation-aware node configuration guidance. Use when configuring nodes, understanding property dependencies, determining required fields, choosing between get_node detail levels, or learning commo..."
+risk: safe
+source: "https://github.com/czlonkowski/n8n-skills/tree/main/skills/n8n-node-configuration"
+date_added: "2026-02-27"
 ---
 
 # n8n Node Configuration
 
 Expert guidance for operation-aware node configuration with property dependencies.
 
-## When to Use
-- You need to configure an n8n node correctly for a specific resource and operation.
-- The task involves required fields, property dependencies, or choosing the right `get_node` detail level.
-- You are troubleshooting node setup rather than overall workflow architecture.
+## When to Use This Skill
+
+Use this skill when:
+- Configuring n8n nodes
+- Understanding property dependencies
+- Determining required fields
+- Choosing between get_node detail levels
+- Learning common configuration patterns by node type
 
 ---
 
@@ -790,8 +795,3 @@ For comprehensive guides on specific topics:
 - **n8n Validation Expert** - Interpret validation errors
 - **n8n Expression Syntax** - Configure expression fields
 - **n8n Workflow Patterns** - Apply patterns with proper configuration
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

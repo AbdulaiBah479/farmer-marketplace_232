@@ -1,210 +1,144 @@
 ---
 name: github-ops
-description: Provides comprehensive GitHub operations using gh CLI and GitHub API. Activates when working with pull requests, issues, repositories, workflows, or GitHub API operations including creating/viewing/merging PRs, managing issues, querying API endpoints, and handling GitHub workflows in enterprise or public GitHub environments.
+description: GitHub repository operations, automation, and management. Issue triage, PR management, CI/CD operations, release management, and security monitoring using the gh CLI. Use when the user wants to manage GitHub issues, PRs, CI status, releases, contributors, stale items, or any GitHub operational task beyond simple git commands.
+origin: ECC
 ---
 
 # GitHub Operations
 
-## Overview
+Manage GitHub repositories with a focus on community health, CI reliability, and contributor experience.
 
-This skill provides comprehensive guidance for GitHub operations using the `gh` CLI tool and GitHub REST/GraphQL APIs. Use this skill when performing any GitHub-related tasks including pull request management, issue tracking, repository operations, workflow automation, and API interactions.
+## When to Activate
 
-## When to Use This Skill
+- Triaging issues (classifying, labeling, responding, deduplicating)
+- Managing PRs (review status, CI checks, stale PRs, merge readiness)
+- Debugging CI/CD failures
+- Preparing releases and changelogs
+- Monitoring Dependabot and security alerts
+- Managing contributor experience on open-source projects
+- User says "check GitHub", "triage issues", "review PRs", "merge", "release", "CI is broken"
 
-This skill activates for tasks involving:
-- Creating, viewing, editing, or merging pull requests
-- Managing GitHub issues or repository settings
-- Querying GitHub API endpoints (REST or GraphQL)
-- Working with GitHub Actions workflows
-- Performing bulk operations on repositories
-- Integrating with GitHub Enterprise
-- Automating GitHub operations via CLI or API
+## Tool Requirements
 
-## Core Operations
+- **gh CLI** for all GitHub API operations
+- Repository access configured via `gh auth login`
 
-### Pull Requests
+## Issue Triage
 
-```bash
-# Create PR with NOJIRA prefix (bypasses JIRA enforcement checks)
-gh pr create --title "NOJIRA: Your PR title" --body "PR description"
+Classify each issue by type and priority:
 
-# List and view PRs
-gh pr list --state open
-gh pr view 123
+**Types:** bug, feature-request, question, documentation, enhancement, duplicate, invalid, good-first-issue
 
-# Manage PRs
-gh pr merge 123 --squash
-gh pr review 123 --approve
-gh pr comment 123 --body "LGTM"
-```
+**Priority:** critical (breaking/security), high (significant impact), medium (nice to have), low (cosmetic)
 
-📚 See `references/pr_operations.md` for comprehensive PR workflows
+### Triage Workflow
 
-**PR Title Convention:**
-- With JIRA ticket: `GR-1234: Descriptive title`
-- Without JIRA ticket: `NOJIRA: Descriptive title`
-
-### Issues
+1. Read the issue title, body, and comments
+2. Check if it duplicates an existing issue (search by keywords)
+3. Apply appropriate labels via `gh issue edit --add-label`
+4. For questions: draft and post a helpful response
+5. For bugs needing more info: ask for reproduction steps
+6. For good first issues: add `good-first-issue` label
+7. For duplicates: comment with link to original, add `duplicate` label
 
 ```bash
-# Create and manage issues
-gh issue create --title "Bug: Issue title" --body "Issue description"
-gh issue list --state open --label bug
-gh issue edit 456 --add-label "priority-high"
-gh issue close 456
+# Search for potential duplicates
+gh issue list --search "keyword" --state all --limit 20
+
+# Add labels
+gh issue edit <number> --add-label "bug,high-priority"
+
+# Comment on issue
+gh issue comment <number> --body "Thanks for reporting. Could you share reproduction steps?"
 ```
 
-📚 See `references/issue_operations.md` for detailed issue management
+## PR Management
 
-### Repositories
+### Review Checklist
+
+1. Check CI status: `gh pr checks <number>`
+2. Check if mergeable: `gh pr view <number> --json mergeable`
+3. Check age and last activity
+4. Flag PRs >5 days with no review
+5. For community PRs: ensure they have tests and follow conventions
+
+### Stale Policy
+
+- Issues with no activity in 14+ days: add `stale` label, comment asking for update
+- PRs with no activity in 7+ days: comment asking if still active
+- Auto-close stale issues after 30 days with no response (add `closed-stale` label)
 
 ```bash
-# View and manage repos
-gh repo view --web
-gh repo clone owner/repo
-gh repo create my-new-repo --public
+# Find stale issues (no activity in 14+ days)
+gh issue list --label "stale" --state open
+
+# Find PRs with no recent activity
+gh pr list --json number,title,updatedAt --jq '.[] | select(.updatedAt < "2026-03-01")'
 ```
 
-### Workflows
+## CI/CD Operations
+
+When CI fails:
+
+1. Check the workflow run: `gh run view <run-id> --log-failed`
+2. Identify the failing step
+3. Check if it is a flaky test vs real failure
+4. For real failures: identify the root cause and suggest a fix
+5. For flaky tests: note the pattern for future investigation
 
 ```bash
-# Manage GitHub Actions
-gh workflow list
-gh workflow run workflow-name
-gh run watch run-id
-gh run download run-id
+# List recent failed runs
+gh run list --status failure --limit 10
+
+# View failed run logs
+gh run view <run-id> --log-failed
+
+# Re-run a failed workflow
+gh run rerun <run-id> --failed
 ```
 
-📚 See `references/workflow_operations.md` for advanced workflow operations
+## Release Management
 
-### GitHub API
+When preparing a release:
 
-The `gh api` command provides direct access to GitHub REST API endpoints. Refer to `references/api_reference.md` for comprehensive API endpoint documentation.
-
-**Basic API operations:**
-```bash
-# Get PR details via API
-gh api repos/{owner}/{repo}/pulls/{pr_number}
-
-# Add PR comment
-gh api repos/{owner}/{repo}/issues/{pr_number}/comments \
-  -f body="Comment text"
-
-# List workflow runs
-gh api repos/{owner}/{repo}/actions/runs
-```
-
-For complex queries requiring multiple related resources, use GraphQL. See `references/api_reference.md` for GraphQL examples.
-
-## Authentication and Configuration
+1. Check all CI is green on main
+2. Review unreleased changes: `gh pr list --state merged --base main`
+3. Generate changelog from PR titles
+4. Create release: `gh release create`
 
 ```bash
-# Login to GitHub
-gh auth login
+# List merged PRs since last release
+gh pr list --state merged --base main --search "merged:>2026-03-01"
 
-# Login to GitHub Enterprise
-gh auth login --hostname github.enterprise.com
+# Create a release
+gh release create v1.2.0 --title "v1.2.0" --generate-notes
 
-# Check authentication status
-gh auth status
-
-# Set default repository
-gh repo set-default owner/repo
-
-# Configure gh settings
-gh config set editor vim
-gh config set git_protocol ssh
-gh config list
+# Create a pre-release
+gh release create v1.3.0-rc1 --prerelease --title "v1.3.0 Release Candidate 1"
 ```
 
-## Output Formats
-
-Control output format for programmatic processing:
+## Security Monitoring
 
 ```bash
-# JSON output
-gh pr list --json number,title,state,author
+# Check Dependabot alerts
+gh api repos/{owner}/{repo}/dependabot/alerts --jq '.[].security_advisory.summary'
 
-# JSON with jq processing
-gh pr list --json number,title | jq '.[] | select(.title | contains("bug"))'
+# Check secret scanning alerts
+gh api repos/{owner}/{repo}/secret-scanning/alerts --jq '.[].state'
 
-# Template output
-gh pr list --template '{{range .}}{{.number}}: {{.title}}{{"\n"}}{{end}}'
+# Review and auto-merge safe dependency bumps
+gh pr list --label "dependencies" --json number,title
 ```
 
-📚 See `references/best_practices.md` for shell patterns and automation strategies
+- Review and auto-merge safe dependency bumps
+- Flag any critical/high severity alerts immediately
+- Check for new Dependabot alerts weekly at minimum
 
-## Quick Reference
+## Quality Gate
 
-**Most Common Operations:**
-```bash
-gh pr create --title "NOJIRA: Title" --body "Description"  # Create PR
-gh pr list                                                  # List PRs
-gh pr view 123                                              # View PR details
-gh pr checks 123                                            # Check PR status
-gh pr merge 123 --squash                                    # Merge PR
-gh pr comment 123 --body "LGTM"                            # Comment on PR
-gh issue create --title "Title" --body "Description"       # Create issue
-gh workflow run workflow-name                               # Run workflow
-gh repo view --web                                          # Open repo in browser
-gh api repos/{owner}/{repo}/pulls/{pr_number}              # Direct API call
-```
-
-## Resources
-
-### references/pr_operations.md
-
-Comprehensive pull request operations including:
-- Detailed PR creation patterns (JIRA integration, body from file, targeting branches)
-- Viewing and filtering strategies
-- Review workflows and approval patterns
-- PR lifecycle management
-- Bulk operations and automation examples
-
-Load this reference when working with complex PR workflows or bulk operations.
-
-### references/issue_operations.md
-
-Detailed issue management examples including:
-- Issue creation with labels and assignees
-- Advanced filtering and search
-- Issue lifecycle and state management
-- Bulk operations on multiple issues
-- Integration with PRs and projects
-
-Load this reference when managing issues at scale or setting up issue workflows.
-
-### references/workflow_operations.md
-
-Advanced GitHub Actions workflow operations including:
-- Workflow triggers and manual runs
-- Run monitoring and debugging
-- Artifact management
-- Secrets and variables
-- Performance optimization strategies
-
-Load this reference when working with CI/CD workflows or debugging failed runs.
-
-### references/best_practices.md
-
-Shell scripting patterns and automation strategies including:
-- Output formatting (JSON, templates, jq)
-- Pagination and large result sets
-- Error handling and retry logic
-- Bulk operations and parallel execution
-- Enterprise GitHub patterns
-- Performance optimization
-
-Load this reference when building automation scripts or handling enterprise deployments.
-
-### references/api_reference.md
-
-Contains comprehensive GitHub REST API endpoint documentation including:
-- Complete API endpoint reference with examples
-- Request/response formats
-- Authentication patterns
-- Rate limiting guidance
-- Webhook configurations
-- Advanced GraphQL query patterns
-
-Load this reference when performing complex API operations or when needing detailed endpoint specifications.
+Before completing any GitHub operations task:
+- all issues triaged have appropriate labels
+- no PRs older than 7 days without a review or comment
+- CI failures have been investigated (not just re-run)
+- releases include accurate changelogs
+- security alerts are acknowledged and tracked

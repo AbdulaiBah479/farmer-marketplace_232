@@ -1,7 +1,7 @@
 ---
 name: reverse-engineer
 description: Expert reverse engineer specializing in binary analysis, disassembly, decompilation, and software analysis. Masters IDA Pro, Ghidra, radare2, x64dbg, and modern RE toolchains.
-risk: offensive
+risk: unknown
 source: community
 date_added: '2026-02-27'
 ---
@@ -167,8 +167,3 @@ Response: For authorized analysis of the DLL:
    - Map data structures
    - Note any security considerations
 ```
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,7 +1,7 @@
 ---
 name: service-mesh-observability
-description: "Complete guide to observability patterns for Istio, Linkerd, and service mesh deployments."
-risk: critical
+description: "Implement comprehensive observability for service meshes including distributed tracing, metrics, and visualization. Use when setting up mesh monitoring, debugging latency issues, or implementing SL..."
+risk: unknown
 source: community
 date_added: "2026-02-27"
 ---
@@ -396,8 +396,3 @@ spec:
 - [Linkerd Observability](https://linkerd.io/2.14/features/dashboard/)
 - [OpenTelemetry](https://opentelemetry.io/)
 - [Kiali](https://kiali.io/)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,155 +1,159 @@
 ---
 name: serpapi
-description: |
-  SerpApi integration. Manage data, records, and automate workflows. Use when the user wants to interact with SerpApi data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
+description: Google Flights cash prices, Google Hotels, and Google Travel Explore via SerpAPI. Use for award-vs-cash comparison, hotel search, and destination discovery.
+category: hotels
+summary: Google Hotels search and destination discovery.
+api_key: SerpAPI
 license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
 ---
 
-# SerpApi
+# SerpAPI Skill
 
-SerpApi provides real-time search engine results via an API. Developers use it to extract data from Google, Bing, and other search engines programmatically.
+Scrape Google Flights, Google Hotels, and Google Travel Explore via SerpAPI. Provides cash flight prices (for Chase/Amex portal comparison), hotel pricing, and destination discovery.
 
-Official docs: https://serpapi.com/
+**Source:** [serpapi.com](https://serpapi.com) — Free tier available, paid plans for higher volume.
 
-## SerpApi Overview
+## Authentication
 
-- **Search**
-  - **Search Results**
-- **Account**
-  - **Usage**
-  - **Pricing**
+`SERPAPI_API_KEY` is set in `.env`. All requests use `api_key` query parameter.
 
-Use action names and parameters as needed.
+## API Base
 
-## Working with SerpApi
-
-This skill uses the Membrane CLI to interact with SerpApi. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
-
-```bash
-npm install -g @membranehq/cli@latest
+```
+https://serpapi.com/search
 ```
 
-### Authentication
+## Google Flights (Cash Prices)
+
+Search for flight prices and schedules. Essential for comparing: "Is 88,000 United miles better than paying $900 cash through the Chase portal?" (Chase portal pricing is now dynamic via Points Boost, ~1.5-2.0 cpp on select bookings; verify the actual quote.)
+
+### One-Way Search
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+curl -s "https://serpapi.com/search?engine=google_flights&departure_id=SFO&arrival_id=NRT&outbound_date=2026-08-10&type=2&adults=2&travel_class=1&currency=USD&stops=2&sort_by=2&api_key=$SERPAPI_API_KEY" | jq '{best: [.best_flights[]? | {price: .price, duration: .total_duration, stops: (.layovers | length), flights: [.flights[] | {from: .departure_airport.id, to: .arrival_airport.id, airline: .airline, flight: .flight_number, depart: .departure_airport.time, arrive: .arrival_airport.time}]}], price_insights: .price_insights}'
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### Parameters
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+| Param | Required | Description |
+|-------|----------|-------------|
+| `engine` | Yes | `google_flights` |
+| `departure_id` | Yes | Airport code(s), comma-separated: `SFO,PDX` |
+| `arrival_id` | Yes | Airport code(s), comma-separated: `NRT,HND` |
+| `outbound_date` | Yes | `YYYY-MM-DD` |
+| `return_date` | Round trip | `YYYY-MM-DD` (required if type=1) |
+| `type` | No | `1` = round trip (default), `2` = one way, `3` = multi-city |
+| `adults` | No | Default 1 |
+| `children` | No | Default 0 |
+| `travel_class` | No | `1` = economy, `2` = premium economy, `3` = business, `4` = first |
+| `stops` | No | `0` = any, `1` = nonstop, `2` = 1 stop or fewer, `3` = 2 stops or fewer |
+| `sort_by` | No | `1` = top flights, `2` = price, `3` = departure, `4` = arrival, `5` = duration |
+| `include_airlines` | No | IATA codes: `SK,KL,UA` or alliances: `STAR_ALLIANCE,SKYTEAM,ONEWORLD` |
+| `max_price` | No | Maximum ticket price in USD |
+| `max_duration` | No | Maximum flight duration in minutes |
+| `bags` | No | Number of carry-on bags |
+| `deep_search` | No | `true` for browser-identical results (slower) |
+| `currency` | No | Default `USD` |
+
+### Multi-City (Open Jaw)
+
+Use `type=3` with `multi_city_json`:
 
 ```bash
-membrane login complete <code>
+curl -s "https://serpapi.com/search?engine=google_flights&type=3&multi_city_json=%5B%7B%22departure_id%22%3A%22SFO%22%2C%22arrival_id%22%3A%22NRT%22%2C%22date%22%3A%222026-08-05%22%7D%2C%7B%22departure_id%22%3A%22ICN%22%2C%22arrival_id%22%3A%22SFO%22%2C%22date%22%3A%222026-08-26%22%7D%5D&adults=2&travel_class=1&currency=USD&api_key=$SERPAPI_API_KEY" | jq '.'
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+The JSON value for multi_city_json is URL-encoded. Decoded:
+```json
+[{"departure_id":"SFO","arrival_id":"NRT","date":"2026-08-05"},{"departure_id":"ICN","arrival_id":"SFO","date":"2026-08-26"}]
+```
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+### Response Fields
 
-### Connecting to SerpApi
+Each flight in `best_flights[]` and `other_flights[]`:
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+| Field | Description |
+|-------|-------------|
+| `price` | Cash price in USD |
+| `total_duration` | Total minutes |
+| `flights[]` | Array of legs with airline, flight number, times, airplane, legroom |
+| `layovers[]` | Array with duration and airport for each connection |
+| `departure_token` | Token to get return flight options (round trip) |
+| `booking_token` | Token to get booking options |
+
+`price_insights` includes `lowest_price`, `price_level` (low/typical/high), and `typical_price_range`.
+
+### Portal Comparison Math
+
+Chase Sapphire Reserve: dynamic Points Boost pricing, typically 1.5-2.0 cpp on select bookings (not a fixed floor). Verify actual portal price for the specific booking.
+If cash price is $900, portal cost = 60,000 UR points.
+If award price is 88,000 United miles, cash via portal is better value.
+
+Amex: typically 1 cpp via portal (worse value, use transfers instead).
+
+Capital One Venture X: 1 cpp via portal, but transfer partners can be better.
+
+## Google Hotels
+
+Search hotels and vacation rentals with pricing from multiple OTAs.
 
 ```bash
-membrane connection ensure "https://serpapi.com/" --json
+curl -s "https://serpapi.com/search?engine=google_hotels&q=hotels+Tokyo+Japan&check_in_date=2026-08-10&check_out_date=2026-08-13&adults=2&currency=USD&sort_by=3&api_key=$SERPAPI_API_KEY" | jq '[.properties[]? | {name: .name, type: .type, rating: .overall_rating, reviews: .reviews, price: .rate_per_night.extracted_lowest, class: .extracted_hotel_class, amenities: .amenities}] | .[0:10]'
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+### Parameters
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+| Param | Required | Description |
+|-------|----------|-------------|
+| `engine` | Yes | `google_hotels` |
+| `q` | Yes | Search query: `hotels Tokyo Japan` |
+| `check_in_date` | Yes | `YYYY-MM-DD` |
+| `check_out_date` | Yes | `YYYY-MM-DD` |
+| `adults` | No | Default 2 |
+| `children` | No | Default 0 |
+| `sort_by` | No | `3` = lowest price, `8` = highest rating, `13` = most reviewed |
+| `min_price` / `max_price` | No | Price range filter |
+| `hotel_class` | No | `2,3,4,5` (comma-separated) |
+| `rating` | No | `7` = 3.5+, `8` = 4.0+, `9` = 4.5+ |
+| `vacation_rentals` | No | Set to `true` for Airbnb-style results |
+| `property_token` | No | Get details for a specific property |
 
-#### 1b. Wait for the connection to be ready
+## Google Travel Explore
 
-If the connection is in `BUILDING` state, poll until it's ready:
+Discover destinations and cheapest flights from an origin. Great for "where can I fly cheaply in August?"
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+curl -s "https://serpapi.com/search?engine=google_travel_explore&departure_id=SFO&outbound_date=2026-08-05&return_date=2026-08-26&adults=2&travel_class=1&currency=USD&api_key=$SERPAPI_API_KEY" | jq '[.destinations[]? | {name: .name, country: .country, airport: .destination_airport.code, price: .flight_price, duration: .flight_duration, stops: .number_of_stops, airline: .airline}] | .[0:15]'
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+### Parameters
 
-The resulting state tells you what to do next:
+| Param | Required | Description |
+|-------|----------|-------------|
+| `engine` | Yes | `google_travel_explore` |
+| `departure_id` | Yes | Airport code or kgmid |
+| `arrival_id` | No | Specific destination |
+| `arrival_area_id` | No | Region kgmid (e.g., `/m/02j9z` for Europe) |
+| `outbound_date` | No | `YYYY-MM-DD` |
+| `return_date` | No | `YYYY-MM-DD` |
+| `month` | No | `1`-`12` for flexible dates |
+| `travel_duration` | No | `1` = weekend, `2` = 1 week, `3` = 2 weeks |
+| `interest` | No | `/g/11bc58l13w` = Outdoors, `/m/0b3yr` = Beaches |
+| `include_airlines` | No | Filter by airline or alliance |
+| `max_price` | No | Maximum price |
+| `stops` | No | Same as Google Flights |
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+## Workflow: Compare Award vs Cash
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+1. Search cash prices on Google Flights via SerpAPI
+2. Estimate portal cost. Chase uses dynamic "Points Boost" pricing (~1.5-2.0cpp on select bookings, not a flat rate). Amex/Capital One ~1.0cpp. For rough math, run the actual portal quote against the cash price; do not assume a flat cpp on Chase.
+3. Compare with award price from Seats.aero
+4. Lower number wins (accounting for the value you place on each currency)
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
+## Notes
 
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the SerpApi API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+- Cached results are free (1hr cache). Set `no_cache=true` to force fresh.
+- `deep_search=true` gives browser-identical results but is slower.
+- Results include `price_insights` with historical price data and trend.
+- Multi-city supports open jaw itineraries natively.
+- Hotels support vacation rentals mode for Airbnb-style results.

@@ -1,370 +1,389 @@
 #!/usr/bin/env python3
 """
-Auth Setup Guide - Generate Google Workspace API authentication setup documentation.
+Google Workspace CLI Auth Setup Guide — Guided authentication configuration.
 
-Creates step-by-step setup guides for OAuth 2.0, service accounts, and
-domain-wide delegation for Google Workspace API access.
+Prints step-by-step instructions for OAuth and service account setup,
+generates .env templates, lists required scopes, and validates auth.
 
-Author: Claude Skills Engineering Team
-License: MIT
+Usage:
+    python3 auth_setup_guide.py --guide oauth
+    python3 auth_setup_guide.py --guide service-account
+    python3 auth_setup_guide.py --scopes gmail,drive,calendar
+    python3 auth_setup_guide.py --generate-env
+    python3 auth_setup_guide.py --validate [--json]
+    python3 auth_setup_guide.py --check [--json]
 """
 
 import argparse
 import json
+import shutil
+import subprocess
 import sys
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Optional
+from dataclasses import dataclass, field, asdict
+from typing import List, Dict
 
 
-API_SCOPES = {
-    "admin": {
-        "name": "Admin SDK Directory API",
-        "scopes": [
-            "https://www.googleapis.com/auth/admin.directory.user",
-            "https://www.googleapis.com/auth/admin.directory.user.readonly",
-            "https://www.googleapis.com/auth/admin.directory.group",
-            "https://www.googleapis.com/auth/admin.directory.orgunit",
-        ],
-        "description": "Manage users, groups, and organizational units.",
-    },
-    "drive": {
-        "name": "Google Drive API",
-        "scopes": [
-            "https://www.googleapis.com/auth/drive",
-            "https://www.googleapis.com/auth/drive.readonly",
-            "https://www.googleapis.com/auth/drive.file",
-            "https://www.googleapis.com/auth/drive.metadata.readonly",
-        ],
-        "description": "Access and manage Google Drive files and folders.",
-    },
-    "gmail": {
-        "name": "Gmail API",
-        "scopes": [
-            "https://www.googleapis.com/auth/gmail.readonly",
-            "https://www.googleapis.com/auth/gmail.send",
-            "https://www.googleapis.com/auth/gmail.settings.basic",
-            "https://www.googleapis.com/auth/gmail.labels",
-        ],
-        "description": "Read, send, and manage Gmail messages and settings.",
-    },
-    "calendar": {
-        "name": "Google Calendar API",
-        "scopes": [
-            "https://www.googleapis.com/auth/calendar",
-            "https://www.googleapis.com/auth/calendar.readonly",
-            "https://www.googleapis.com/auth/calendar.events",
-        ],
-        "description": "Access and manage Google Calendar events.",
-    },
-    "sheets": {
-        "name": "Google Sheets API",
-        "scopes": [
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/spreadsheets.readonly",
-        ],
-        "description": "Read and write Google Sheets data.",
-    },
-    "reports": {
-        "name": "Admin Reports API",
-        "scopes": [
-            "https://www.googleapis.com/auth/admin.reports.audit.readonly",
-            "https://www.googleapis.com/auth/admin.reports.usage.readonly",
-        ],
-        "description": "Access audit logs and usage reports.",
-    },
+SERVICE_SCOPES: Dict[str, List[str]] = {
+    "gmail": [
+        "https://www.googleapis.com/auth/gmail.modify",
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/gmail.labels",
+        "https://www.googleapis.com/auth/gmail.settings.basic",
+    ],
+    "drive": [
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive.metadata.readonly",
+    ],
+    "sheets": [
+        "https://www.googleapis.com/auth/spreadsheets",
+    ],
+    "calendar": [
+        "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/calendar.events",
+    ],
+    "tasks": [
+        "https://www.googleapis.com/auth/tasks",
+    ],
+    "chat": [
+        "https://www.googleapis.com/auth/chat.spaces.readonly",
+        "https://www.googleapis.com/auth/chat.messages",
+    ],
+    "docs": [
+        "https://www.googleapis.com/auth/documents",
+    ],
+    "admin": [
+        "https://www.googleapis.com/auth/admin.directory.user.readonly",
+        "https://www.googleapis.com/auth/admin.directory.group",
+        "https://www.googleapis.com/auth/admin.directory.orgunit.readonly",
+    ],
+    "meet": [
+        "https://www.googleapis.com/auth/meetings.space.created",
+    ],
 }
+
+OAUTH_GUIDE = """
+=== Google Workspace CLI: OAuth Setup Guide ===
+
+Step 1: Create a Google Cloud Project
+  1. Go to https://console.cloud.google.com/
+  2. Click "Select a project" -> "New Project"
+  3. Name it (e.g., "gws-cli-access") and click Create
+  4. Note the Project ID
+
+Step 2: Enable Required APIs
+  1. Go to APIs & Services -> Library
+  2. Search and enable each API you need:
+     - Gmail API
+     - Google Drive API
+     - Google Sheets API
+     - Google Calendar API
+     - Tasks API
+     - Admin SDK API (for admin operations)
+
+Step 3: Configure OAuth Consent Screen
+  1. Go to APIs & Services -> OAuth consent screen
+  2. Select "Internal" (for Workspace) or "External" (for personal)
+  3. Fill in app name, support email
+  4. Add scopes for the services you need
+  5. Save and continue
+
+Step 4: Create OAuth Credentials
+  1. Go to APIs & Services -> Credentials
+  2. Click "Create Credentials" -> "OAuth client ID"
+  3. Application type: "Desktop app"
+  4. Name it "gws-cli"
+  5. Download the JSON file
+
+Step 5: Configure gws CLI
+  1. Set environment variables:
+     export GWS_CLIENT_ID=<your-client-id>
+     export GWS_CLIENT_SECRET=<your-client-secret>
+
+  2. Or place the credentials JSON:
+     mv client_secret_*.json ~/.config/gws/credentials.json
+
+Step 6: Authenticate
+  gws auth setup
+  # Opens browser for consent, stores token in system keyring
+
+Step 7: Verify
+  gws auth status
+  gws gmail users getProfile me
+"""
+
+SERVICE_ACCOUNT_GUIDE = """
+=== Google Workspace CLI: Service Account Setup Guide ===
+
+Step 1: Create a Google Cloud Project
+  (Same as OAuth Step 1)
+
+Step 2: Create a Service Account
+  1. Go to IAM & Admin -> Service Accounts
+  2. Click "Create Service Account"
+  3. Name: "gws-cli-service"
+  4. Grant roles as needed (no role needed for Workspace API access)
+  5. Click "Done"
+
+Step 3: Create Key
+  1. Click on the service account
+  2. Go to "Keys" tab
+  3. Add Key -> Create new key -> JSON
+  4. Download and store securely
+
+Step 4: Enable Domain-Wide Delegation
+  1. On the service account page, click "Edit"
+  2. Check "Enable Google Workspace domain-wide delegation"
+  3. Save
+  4. Note the Client ID (numeric)
+
+Step 5: Authorize in Google Admin
+  1. Go to admin.google.com
+  2. Security -> API Controls -> Domain-wide Delegation
+  3. Add new:
+     - Client ID: <numeric client ID from Step 4>
+     - Scopes: (paste required scopes)
+  4. Authorize
+
+Step 6: Configure gws CLI
+  export GWS_SERVICE_ACCOUNT_KEY=/path/to/service-account-key.json
+  export GWS_DELEGATED_USER=admin@yourdomain.com
+
+Step 7: Verify
+  gws auth status
+  gws gmail users getProfile me
+"""
+
+ENV_TEMPLATE = """# Google Workspace CLI Configuration
+# Copy to .env and fill in values
+
+# OAuth Credentials (for interactive auth)
+GWS_CLIENT_ID=
+GWS_CLIENT_SECRET=
+GWS_TOKEN_PATH=~/.config/gws/token.json
+
+# Service Account (for headless/CI auth)
+# GWS_SERVICE_ACCOUNT_KEY=/path/to/key.json
+# GWS_DELEGATED_USER=admin@yourdomain.com
+
+# Defaults
+GWS_DEFAULT_FORMAT=json
+GWS_PAGINATION_LIMIT=100
+"""
 
 
 @dataclass
-class SetupStep:
-    """A setup step."""
-    number: int
-    title: str
-    instructions: List[str]
-    notes: List[str]
+class ValidationResult:
+    service: str
+    status: str  # PASS, FAIL
+    message: str
 
 
-def generate_oauth_guide(scope_keys: List[str], project_name: str) -> List[SetupStep]:
-    """Generate OAuth 2.0 setup guide."""
-    selected_scopes = []
-    for key in scope_keys:
-        if key in API_SCOPES:
-            selected_scopes.extend(API_SCOPES[key]["scopes"])
-
-    steps = [
-        SetupStep(
-            number=1,
-            title="Create Google Cloud Project",
-            instructions=[
-                "Go to https://console.cloud.google.com/",
-                "Click 'Select a project' > 'New Project'",
-                f"Enter project name: '{project_name}'",
-                "Click 'Create'",
-                "Wait for project creation to complete",
-            ],
-            notes=["Use a descriptive name that identifies this integration."],
-        ),
-        SetupStep(
-            number=2,
-            title="Enable Required APIs",
-            instructions=[
-                "Go to APIs & Services > Library",
-            ] + [f"Search for and enable: {API_SCOPES[k]['name']}" for k in scope_keys if k in API_SCOPES],
-            notes=["Each API must be explicitly enabled before use."],
-        ),
-        SetupStep(
-            number=3,
-            title="Configure OAuth Consent Screen",
-            instructions=[
-                "Go to APIs & Services > OAuth consent screen",
-                "Select 'Internal' (for Workspace users only) or 'External'",
-                f"App name: '{project_name}'",
-                "Add support email and developer contact",
-                "Click 'Save and Continue'",
-                "Add scopes:",
-            ] + [f"  - {scope}" for scope in selected_scopes],
-            notes=[
-                "Internal type limits access to your organization only (recommended).",
-                "External type requires verification for production use.",
-            ],
-        ),
-        SetupStep(
-            number=4,
-            title="Create OAuth Client ID",
-            instructions=[
-                "Go to APIs & Services > Credentials",
-                "Click '+ Create Credentials' > 'OAuth client ID'",
-                "Application type: 'Desktop app' (for CLI) or 'Web application'",
-                f"Name: '{project_name} OAuth Client'",
-                "Click 'Create'",
-                "Download the JSON credentials file",
-                "Save as 'credentials.json' in your project directory",
-            ],
-            notes=[
-                "IMPORTANT: Never commit credentials.json to version control.",
-                "Add credentials.json to .gitignore immediately.",
-            ],
-        ),
-        SetupStep(
-            number=5,
-            title="Test Authentication",
-            instructions=[
-                "Install the Google client library:",
-                "  pip install google-auth google-auth-oauthlib google-api-python-client",
-                "Run your first API call to trigger the OAuth flow",
-                "Complete the browser-based authorization",
-                "Token will be saved locally for future use",
-            ],
-            notes=["First run will open a browser for authorization."],
-        ),
-    ]
-
-    return steps
+@dataclass
+class ValidationReport:
+    auth_method: str = ""
+    user: str = ""
+    results: List[dict] = field(default_factory=list)
+    summary: str = ""
+    demo_mode: bool = False
 
 
-def generate_service_account_guide(scope_keys: List[str], project_name: str,
-                                     domain_delegation: bool = False) -> List[SetupStep]:
-    """Generate service account setup guide."""
-    selected_scopes = []
-    for key in scope_keys:
-        if key in API_SCOPES:
-            selected_scopes.extend(API_SCOPES[key]["scopes"])
-
-    steps = [
-        SetupStep(
-            number=1,
-            title="Create Google Cloud Project",
-            instructions=[
-                "Go to https://console.cloud.google.com/",
-                "Click 'Select a project' > 'New Project'",
-                f"Enter project name: '{project_name}'",
-                "Click 'Create'",
-            ],
-            notes=[],
-        ),
-        SetupStep(
-            number=2,
-            title="Enable Required APIs",
-            instructions=[
-                "Go to APIs & Services > Library",
-            ] + [f"Enable: {API_SCOPES[k]['name']}" for k in scope_keys if k in API_SCOPES],
-            notes=[],
-        ),
-        SetupStep(
-            number=3,
-            title="Create Service Account",
-            instructions=[
-                "Go to IAM & Admin > Service Accounts",
-                "Click '+ Create Service Account'",
-                f"Name: '{project_name}-service-account'",
-                "Click 'Create and Continue'",
-                "Grant role: 'Project > Editor' (or more restrictive)",
-                "Click 'Continue' then 'Done'",
-            ],
-            notes=["Use the most restrictive role that satisfies your requirements."],
-        ),
-        SetupStep(
-            number=4,
-            title="Create Service Account Key",
-            instructions=[
-                "Click on the service account you just created",
-                "Go to 'Keys' tab",
-                "Click 'Add Key' > 'Create new key'",
-                "Select JSON format",
-                "Click 'Create'",
-                "Save the downloaded JSON key file securely",
-            ],
-            notes=[
-                "CRITICAL: This key grants full service account access. Store securely.",
-                "Never commit key files to version control.",
-                "Rotate keys regularly (every 90 days recommended).",
-            ],
-        ),
-    ]
-
-    if domain_delegation:
-        steps.append(SetupStep(
-            number=5,
-            title="Configure Domain-Wide Delegation",
-            instructions=[
-                "Copy the service account's Client ID (numeric)",
-                "Go to Google Workspace Admin Console > Security > API Controls",
-                "Click 'Manage Domain Wide Delegation'",
-                "Click 'Add New'",
-                "Enter the Client ID",
-                "Add the following OAuth scopes:",
-            ] + [f"  {scope}" for scope in selected_scopes] + [
-                "Click 'Authorize'",
-            ],
-            notes=[
-                "Domain-wide delegation allows the service account to impersonate any user.",
-                "Only grant the minimum scopes required.",
-                "This requires super admin access to the Admin Console.",
-            ],
-        ))
-
-        steps.append(SetupStep(
-            number=6,
-            title="Test Domain-Wide Delegation",
-            instructions=[
-                "Install dependencies:",
-                "  pip install google-auth google-api-python-client",
-                "Create a test script that impersonates a user:",
-                "  from google.oauth2 import service_account",
-                "  credentials = service_account.Credentials.from_service_account_file(",
-                "      'key.json',",
-                f"      scopes={selected_scopes[:2]},",
-                "      subject='admin@yourdomain.com'",
-                "  )",
-                "Run the test script to verify delegation works",
-            ],
-            notes=["Replace 'admin@yourdomain.com' with a real user in your domain."],
-        ))
-    else:
-        steps.append(SetupStep(
-            number=5,
-            title="Test Service Account",
-            instructions=[
-                "Install dependencies:",
-                "  pip install google-auth google-api-python-client",
-                "Test authentication with the key file",
-                "Verify API calls succeed",
-            ],
-            notes=[],
-        ))
-
-    return steps
+DEMO_VALIDATION = ValidationReport(
+    auth_method="oauth",
+    user="admin@company.com",
+    results=[
+        {"service": "gmail", "status": "PASS", "message": "Gmail API accessible"},
+        {"service": "drive", "status": "PASS", "message": "Drive API accessible"},
+        {"service": "calendar", "status": "PASS", "message": "Calendar API accessible"},
+        {"service": "sheets", "status": "PASS", "message": "Sheets API accessible"},
+        {"service": "tasks", "status": "FAIL", "message": "Scope not authorized"},
+    ],
+    summary="4/5 services validated (demo mode)",
+    demo_mode=True,
+)
 
 
-def format_text_guide(steps: List[SetupStep], method: str, scope_keys: List[str]) -> str:
-    """Format guide as text."""
-    lines = []
-    lines.append("=" * 60)
-    lines.append(f"GOOGLE WORKSPACE API SETUP GUIDE")
-    lines.append(f"Method: {method.upper()}")
-    lines.append("=" * 60)
-
-    lines.append("\nRequired APIs and Scopes:")
-    for key in scope_keys:
-        if key in API_SCOPES:
-            api = API_SCOPES[key]
-            lines.append(f"\n  {api['name']}")
-            lines.append(f"  {api['description']}")
-            for scope in api["scopes"]:
-                lines.append(f"    - {scope}")
-
-    lines.append("\n" + "-" * 60)
-    lines.append("SETUP STEPS")
-    lines.append("-" * 60)
-
-    for step in steps:
-        lines.append(f"\n## Step {step.number}: {step.title}")
-        for inst in step.instructions:
-            lines.append(f"  {inst}")
-        if step.notes:
-            lines.append("")
-            for note in step.notes:
-                lines.append(f"  NOTE: {note}")
-
-    lines.append("\n" + "=" * 60)
-    return "\n".join(lines)
+def check_auth_status() -> dict:
+    """Check current gws auth status."""
+    try:
+        result = subprocess.run(
+            ["gws", "auth", "status", "--json"],
+            capture_output=True, text=True, timeout=15
+        )
+        if result.returncode == 0:
+            try:
+                return json.loads(result.stdout)
+            except json.JSONDecodeError:
+                return {"status": "authenticated", "raw": result.stdout.strip()}
+        return {"status": "not_authenticated", "error": result.stderr.strip()[:200]}
+    except (FileNotFoundError, OSError):
+        return {"status": "gws_not_found"}
 
 
-def format_json_guide(steps: List[SetupStep], method: str, scope_keys: List[str]) -> str:
-    """Format guide as JSON."""
-    apis = {}
-    for key in scope_keys:
-        if key in API_SCOPES:
-            apis[key] = API_SCOPES[key]
+def validate_services(services: List[str]) -> ValidationReport:
+    """Validate auth by testing each service."""
+    report = ValidationReport()
 
-    return json.dumps({
-        "method": method,
-        "apis": apis,
-        "steps": [asdict(s) for s in steps],
-        "total_steps": len(steps),
-    }, indent=2)
+    auth = check_auth_status()
+    if auth.get("status") == "gws_not_found":
+        report.summary = "gws CLI not installed"
+        return report
+    if auth.get("status") == "not_authenticated":
+        report.auth_method = "none"
+        report.summary = "Not authenticated"
+        return report
+
+    report.auth_method = auth.get("method", "oauth")
+    report.user = auth.get("user", auth.get("email", "unknown"))
+
+    service_cmds = {
+        "gmail": ["gws", "gmail", "users", "getProfile", "me", "--json"],
+        "drive": ["gws", "drive", "files", "list", "--limit", "1", "--json"],
+        "calendar": ["gws", "calendar", "calendarList", "list", "--limit", "1", "--json"],
+        "sheets": ["gws", "sheets", "spreadsheets", "get", "test", "--json"],
+        "tasks": ["gws", "tasks", "tasklists", "list", "--limit", "1", "--json"],
+    }
+
+    for svc in services:
+        cmd = service_cmds.get(svc)
+        if not cmd:
+            report.results.append(asdict(
+                ValidationResult(svc, "WARN", f"No test available for {svc}")
+            ))
+            continue
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+            if result.returncode == 0:
+                report.results.append(asdict(
+                    ValidationResult(svc, "PASS", f"{svc.title()} API accessible")
+                ))
+            else:
+                report.results.append(asdict(
+                    ValidationResult(svc, "FAIL", result.stderr.strip()[:100])
+                ))
+        except (subprocess.TimeoutExpired, OSError) as e:
+            report.results.append(asdict(
+                ValidationResult(svc, "FAIL", str(e)[:100])
+            ))
+
+    passed = sum(1 for r in report.results if r["status"] == "PASS")
+    total = len(report.results)
+    report.summary = f"{passed}/{total} services validated"
+    return report
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate Google Workspace API authentication setup documentation."
+        description="Guided authentication setup for Google Workspace CLI (gws)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s --guide oauth               # OAuth setup instructions
+  %(prog)s --guide service-account      # Service account setup
+  %(prog)s --scopes gmail,drive         # Show required scopes
+  %(prog)s --generate-env               # Generate .env template
+  %(prog)s --check                      # Check current auth status
+  %(prog)s --validate --json            # Validate all services (JSON)
+        """,
     )
-    parser.add_argument("--method", choices=["oauth", "service-account"],
-                       required=True, help="Authentication method")
-    parser.add_argument("--scopes", required=True,
-                       help="Comma-separated API scope keys: admin,drive,gmail,calendar,sheets,reports")
-    parser.add_argument("--project", default="my-gws-integration",
-                       help="Google Cloud project name")
-    parser.add_argument("--domain-delegation", action="store_true",
-                       help="Include domain-wide delegation setup (service-account only)")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
-    parser.add_argument("--list-scopes", action="store_true", help="List available API scopes")
+    parser.add_argument("--guide", choices=["oauth", "service-account"],
+                        help="Print setup guide")
+    parser.add_argument("--scopes", help="Comma-separated services to show scopes for")
+    parser.add_argument("--generate-env", action="store_true",
+                        help="Generate .env template")
+    parser.add_argument("--check", action="store_true",
+                        help="Check current auth status")
+    parser.add_argument("--validate", action="store_true",
+                        help="Validate auth by testing services")
+    parser.add_argument("--services", default="gmail,drive,calendar,sheets,tasks",
+                        help="Services to validate (default: gmail,drive,calendar,sheets,tasks)")
+    parser.add_argument("--json", action="store_true", help="Output JSON")
     args = parser.parse_args()
 
-    if args.list_scopes:
-        for key, api in API_SCOPES.items():
-            print(f"\n{key}: {api['name']}")
-            print(f"  {api['description']}")
-            for scope in api["scopes"]:
-                print(f"    {scope}")
+    if not any([args.guide, args.scopes, args.generate_env, args.check, args.validate]):
+        parser.print_help()
         return
 
-    scope_keys = [s.strip() for s in args.scopes.split(",")]
-    invalid = [s for s in scope_keys if s not in API_SCOPES]
-    if invalid:
-        print(f"Error: Unknown scope keys: {', '.join(invalid)}", file=sys.stderr)
-        print(f"Valid keys: {', '.join(API_SCOPES.keys())}", file=sys.stderr)
-        sys.exit(2)
+    if args.guide:
+        if args.guide == "oauth":
+            print(OAUTH_GUIDE)
+        else:
+            print(SERVICE_ACCOUNT_GUIDE)
+        return
 
-    if args.method == "oauth":
-        steps = generate_oauth_guide(scope_keys, args.project)
-    else:
-        steps = generate_service_account_guide(scope_keys, args.project, args.domain_delegation)
+    if args.scopes:
+        services = [s.strip() for s in args.scopes.split(",") if s.strip()]
+        if args.json:
+            output = {}
+            for svc in services:
+                output[svc] = SERVICE_SCOPES.get(svc, [])
+            print(json.dumps(output, indent=2))
+        else:
+            print(f"\n{'='*60}")
+            print(f"  REQUIRED OAUTH SCOPES")
+            print(f"{'='*60}\n")
+            for svc in services:
+                scopes = SERVICE_SCOPES.get(svc, [])
+                print(f"  {svc.upper()}:")
+                if scopes:
+                    for scope in scopes:
+                        print(f"    - {scope}")
+                else:
+                    print(f"    (no scopes defined for '{svc}')")
+                print()
+            # Print combined for easy copy-paste
+            all_scopes = []
+            for svc in services:
+                all_scopes.extend(SERVICE_SCOPES.get(svc, []))
+            if all_scopes:
+                print(f"  COMBINED (for consent screen):")
+                print(f"  {','.join(all_scopes)}")
+            print(f"\n{'='*60}\n")
+        return
 
-    if args.format == "json":
-        print(format_json_guide(steps, args.method, scope_keys))
-    else:
-        print(format_text_guide(steps, args.method, scope_keys))
+    if args.generate_env:
+        print(ENV_TEMPLATE)
+        return
+
+    if args.check:
+        if shutil.which("gws"):
+            status = check_auth_status()
+        else:
+            status = {"status": "gws_not_found",
+                      "note": "Install gws first: cargo install gws-cli  OR  https://github.com/googleworkspace/cli/releases"}
+        if args.json:
+            print(json.dumps(status, indent=2))
+        else:
+            print(f"\nAuth Status: {status.get('status', 'unknown')}")
+            for k, v in status.items():
+                if k != "status":
+                    print(f"  {k}: {v}")
+            print()
+        return
+
+    if args.validate:
+        services = [s.strip() for s in args.services.split(",") if s.strip()]
+        if not shutil.which("gws"):
+            report = DEMO_VALIDATION
+        else:
+            report = validate_services(services)
+
+        if args.json:
+            print(json.dumps(asdict(report), indent=2))
+        else:
+            print(f"\n{'='*60}")
+            print(f"  AUTH VALIDATION REPORT")
+            if report.demo_mode:
+                print(f"  (DEMO MODE)")
+            print(f"{'='*60}\n")
+            if report.user:
+                print(f"  User: {report.user}")
+                print(f"  Method: {report.auth_method}\n")
+            for r in report.results:
+                icon = "PASS" if r["status"] == "PASS" else "FAIL"
+                print(f"  [{icon}] {r['service']}: {r['message']}")
+            print(f"\n  {report.summary}")
+            print(f"\n{'='*60}\n")
 
 
 if __name__ == "__main__":

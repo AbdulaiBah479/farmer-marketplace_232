@@ -1,321 +1,212 @@
 ---
 name: semgrep
-description: "Run Semgrep static analysis scans and create custom detection rules. Use when asked to scan code with Semgrep, find security vulnerabilities, write custom YAML rules, or detect specific bug patterns. IMPORTANT: Also use this skill when users ask to 'scan for bugs', 'check code quality', 'find vulnerabilities', 'static analysis', 'lint for security', 'audit this code', or want to enforce coding standards — even if they don't mention Semgrep by name. Semgrep is the right tool for pattern-based code scanning across 30+ languages."
+description: >-
+  Run Semgrep static analysis scan on a codebase using parallel subagents.
+  Supports two scan modes — "run all" (full ruleset coverage) and "important
+  only" (high-confidence security vulnerabilities). Automatically detects and
+  uses Semgrep Pro for cross-file taint analysis when available. Use when asked
+  to scan code for vulnerabilities, run a security audit with Semgrep, find
+  bugs, or perform static analysis. Spawns parallel workers for multi-language
+  codebases.
+allowed-tools:
+  - Bash
+  - Read
+  - Glob
+  - Task
+  - AskUserQuestion
+  - TaskCreate
+  - TaskList
+  - TaskUpdate
 ---
 
-# Semgrep Static Analysis
+# Semgrep Security Scan
 
-Fast, pattern-based static analysis for security scanning and custom rule creation.
+Run a Semgrep scan with automatic language detection, parallel execution via Task subagents, and merged SARIF output.
 
-## MCP Tools Available
+## Essential Principles
 
-If Semgrep MCP tools are available in your environment, prefer them for scanning:
+1. **Always use `--metrics=off`** — Semgrep sends telemetry by default; `--config auto` also phones home. Every `semgrep` command must include `--metrics=off` to prevent data leakage during security audits.
+2. **User must approve the scan plan (Step 3 is a hard gate)** — The original "scan this codebase" request is NOT approval. Present exact rulesets, target, engine, and mode; wait for explicit "yes"/"proceed" before spawning scanners.
+3. **Third-party rulesets are required, not optional** — Trail of Bits, 0xdea, and Decurity rules catch vulnerabilities absent from the official registry. Include them whenever the detected language matches.
+4. **Spawn all scan Tasks in a single message** — Parallel execution is the core performance advantage. Never spawn Tasks sequentially; always emit all Task tool calls in one response.
+5. **Always check for Semgrep Pro before scanning** — Pro enables cross-file taint tracking and catches ~250% more true positives. Skipping the check means silently missing critical inter-file vulnerabilities.
 
-- **`semgrep_scan`** — Scan code files for security vulnerabilities using built-in rulesets. Pass absolute file paths and an optional config (e.g., `p/security-audit`, `auto`).
-- **`semgrep_scan_with_custom_rule`** — Scan code with a custom YAML rule you've written. Pass code content inline along with the rule.
-- **`semgrep_findings`** — Fetch existing findings from the Semgrep AppSec Platform for a repository.
-- **`semgrep_rule_schema`** — Get the full schema for writing Semgrep rules.
-- **`get_supported_languages`** — List all languages Semgrep supports.
+## When to Use
 
-When MCP tools aren't available, fall back to the CLI commands below.
+- Security audit of a codebase
+- Finding vulnerabilities before code review
+- Scanning for known bug patterns
+- First-pass static analysis
 
-## When to Use Semgrep
+## When NOT to Use
 
-**Ideal scenarios:**
-- Quick security scans (minutes, not hours)
-- Pattern-based bug and vulnerability detection
-- Enforcing coding standards and best practices
-- Finding known vulnerability patterns (OWASP, CWE)
-- Creating custom detection rules for your codebase
-- Data flow analysis with taint mode
+- Binary analysis → Use binary analysis tools
+- Already have Semgrep CI configured → Use existing pipeline
+- Need cross-file analysis but no Pro license → Consider CodeQL as alternative
+- Creating custom Semgrep rules → Use `semgrep-rule-creator` skill
+- Porting existing rules to other languages → Use `semgrep-rule-variant-creator` skill
 
-## Installation (CLI)
+## Output Directory
 
-```bash
-# pip (recommended)
-python3 -m pip install semgrep
+All scan results, SARIF files, and temporary data are stored in a single output directory.
 
-# Homebrew
-brew install semgrep
+- **If the user specifies an output directory** in their prompt, use it as `OUTPUT_DIR`.
+- **If not specified**, default to `./static_analysis_semgrep_1`. If that already exists, increment to `_2`, `_3`, etc.
 
-# Docker
-docker run --rm -v "${PWD}:/src" semgrep/semgrep semgrep --config auto /src
-```
-
----
-
-# Part 1: Running Scans
-
-## Quick Scan
+In both cases, **always create the directory** with `mkdir -p` before writing any files.
 
 ```bash
-semgrep --config auto .                    # Auto-detect rules
+# Resolve output directory
+if [ -n "$USER_SPECIFIED_DIR" ]; then
+  OUTPUT_DIR="$USER_SPECIFIED_DIR"
+else
+  BASE="static_analysis_semgrep"
+  N=1
+  while [ -e "${BASE}_${N}" ]; do
+    N=$((N + 1))
+  done
+  OUTPUT_DIR="${BASE}_${N}"
+fi
+mkdir -p "$OUTPUT_DIR/raw" "$OUTPUT_DIR/results"
 ```
 
-## Using Rulesets
+The output directory is resolved **once** at the start of Step 1 and used throughout all subsequent steps.
+
+```
+$OUTPUT_DIR/
+├── rulesets.txt                 # Approved rulesets (logged after Step 3)
+├── raw/                         # Per-scan raw output (unfiltered)
+│   ├── python-python.json
+│   ├── python-python.sarif
+│   ├── python-django.json
+│   ├── python-django.sarif
+│   └── ...
+└── results/                     # Final merged output
+    └── results.sarif
+```
+
+## Prerequisites
+
+**Required:** Semgrep CLI (`semgrep --version`). If not installed, see [Semgrep installation docs](https://semgrep.dev/docs/getting-started/).
+
+**Optional:** Semgrep Pro — enables cross-file taint tracking, inter-procedural analysis, and additional languages (Apex, C#, Elixir). Check with:
 
 ```bash
-semgrep --config p/<RULESET> .             # Single ruleset
-semgrep --config p/security-audit --config p/trailofbits .  # Multiple
+semgrep --pro --validate --config p/default 2>/dev/null && echo "Pro available" || echo "OSS only"
 ```
 
-| Ruleset | Description |
-|---------|-------------|
-| `p/default` | General security and code quality |
-| `p/security-audit` | Comprehensive security rules |
-| `p/owasp-top-ten` | OWASP Top 10 vulnerabilities |
-| `p/cwe-top-25` | CWE Top 25 vulnerabilities |
-| `p/trailofbits` | Trail of Bits security rules |
-| `p/python` | Python-specific |
-| `p/javascript` | JavaScript-specific |
-| `p/golang` | Go-specific |
+**Limitations:** OSS mode cannot track data flow across files. Pro mode uses `-j 1` for cross-file analysis (slower per ruleset, but parallel rulesets compensate).
 
-## Output Formats
+## Scan Modes
+
+Select mode in Step 2 of the workflow. Mode affects both scanner flags and post-processing.
+
+| Mode | Coverage | Findings Reported |
+|------|----------|-------------------|
+| **Run all** | All rulesets, all severity levels | Everything |
+| **Important only** | All rulesets, pre- and post-filtered | Security vulns only, medium-high confidence/impact |
+
+**Important only** applies two filter layers:
+1. **Pre-filter**: `--severity MEDIUM --severity HIGH --severity CRITICAL` (CLI flag)
+2. **Post-filter**: JSON metadata — keeps only `category=security`, `confidence∈{MEDIUM,HIGH}`, `impact∈{MEDIUM,HIGH}`
+
+See [scan-modes.md](references/scan-modes.md) for metadata criteria and jq filter commands.
+
+## Orchestration Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ MAIN AGENT (this skill)                                          │
+│ Step 1: Detect languages + check Pro availability                │
+│ Step 2: Select scan mode + rulesets (ref: rulesets.md)           │
+│ Step 3: Present plan + rulesets, get approval [⛔ HARD GATE]     │
+│ Step 4: Spawn parallel scan Tasks (approved rulesets + mode)     │
+│ Step 5: Merge results and report                                 │
+└──────────────────────────────────────────────────────────────────┘
+         │ Step 4
+         ▼
+┌─────────────────┐
+│ Scan Tasks      │
+│ (parallel)      │
+├─────────────────┤
+│ Python scanner  │
+│ JS/TS scanner   │
+│ Go scanner      │
+│ Docker scanner  │
+└─────────────────┘
+```
+
+## Workflow
+
+**Follow the detailed workflow in [scan-workflow.md](workflows/scan-workflow.md).** Summary:
+
+| Step | Action | Gate | Key Reference |
+|------|--------|------|---------------|
+| 1 | Resolve output dir, detect languages + Pro availability | — | Use Glob, not Bash |
+| 2 | Select scan mode + rulesets | — | [rulesets.md](references/rulesets.md) |
+| 3 | Present plan, get explicit approval | ⛔ HARD | AskUserQuestion |
+| 4 | Spawn parallel scan Tasks | — | [scanner-task-prompt.md](references/scanner-task-prompt.md) |
+| 5 | Merge results and report | — | Merge script (below) |
+
+**Task enforcement:** On invocation, create 5 tasks with blockedBy dependencies (each step blocks the previous). Step 3 is a HARD GATE — mark complete ONLY after user explicitly approves.
+
+**Merge command (Step 5):**
 
 ```bash
-semgrep --config p/security-audit --sarif -o results.sarif .   # SARIF
-semgrep --config p/security-audit --json -o results.json .     # JSON
+uv run {baseDir}/scripts/merge_sarif.py $OUTPUT_DIR/raw $OUTPUT_DIR/results/results.sarif
 ```
 
-## Scan Specific Paths
+## Agents
 
-```bash
-semgrep --config p/python app.py           # Single file
-semgrep --config p/javascript src/         # Directory
-semgrep --config auto --include='**/test/**' .  # Include tests
-```
+| Agent | Tools | Purpose |
+|-------|-------|---------|
+| `static-analysis:semgrep-scanner` | Bash | Executes parallel semgrep scans for a language category |
 
-## Configuration
-
-### .semgrepignore
-
-```
-tests/fixtures/
-**/testdata/
-generated/
-vendor/
-node_modules/
-```
-
-### Suppress False Positives
-
-```python
-password = get_from_vault()  # nosemgrep: hardcoded-password
-dangerous_but_safe()  # nosemgrep
-```
-
----
-
-# Part 2: Creating Custom Rules
-
-## When to Create Custom Rules
-
-- Detecting project-specific vulnerability patterns
-- Enforcing internal coding standards
-- Building security checks for custom frameworks
-- Creating taint-mode rules for data flow analysis
-
-## Approach Selection
-
-| Approach | Use When |
-|----------|----------|
-| **Taint mode** | Data flows from untrusted source to dangerous sink (injection vulnerabilities) |
-| **Pattern matching** | Syntactic patterns without data flow requirements (deprecated APIs, hardcoded values) |
-
-**Prioritize taint mode** for injection vulnerabilities. Pattern matching alone can't distinguish between `eval(user_input)` (vulnerable) and `eval("safe_literal")` (safe).
-
-## Quick Start: Pattern Matching
-
-```yaml
-rules:
-  - id: hardcoded-password
-    languages: [python]
-    message: "Hardcoded password detected: $PASSWORD"
-    severity: ERROR
-    pattern: password = "$PASSWORD"
-```
-
-## Quick Start: Taint Mode
-
-```yaml
-rules:
-  - id: command-injection
-    languages: [python]
-    message: User input flows to command execution
-    severity: ERROR
-    mode: taint
-    pattern-sources:
-      - pattern: request.args.get(...)
-      - pattern: request.form[...]
-    pattern-sinks:
-      - pattern: os.system(...)
-      - pattern: subprocess.call($CMD, shell=True, ...)
-    pattern-sanitizers:
-      - pattern: shlex.quote(...)
-```
-
-## Pattern Syntax Quick Reference
-
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| `...` | Match anything | `func(...)` |
-| `$VAR` | Capture metavariable | `$FUNC($INPUT)` |
-| `<... ...>` | Deep expression match | `<... user_input ...>` |
-
-| Operator | Description |
-|----------|-------------|
-| `pattern` | Match exact pattern |
-| `patterns` | All must match (AND) |
-| `pattern-either` | Any matches (OR) |
-| `pattern-not` | Exclude matches |
-| `pattern-inside` | Match only inside context |
-| `pattern-not-inside` | Match only outside context |
-| `metavariable-regex` | Regex on captured value |
-
-## Testing Rules
-
-**Test-first is mandatory.** Create test files with annotations:
-
-```python
-# test_rule.py
-def test_vulnerable():
-    user_input = request.args.get("id")
-    # ruleid: my-rule-id
-    cursor.execute("SELECT * FROM users WHERE id = " + user_input)
-
-def test_safe():
-    user_input = request.args.get("id")
-    # ok: my-rule-id
-    cursor.execute("SELECT * FROM users WHERE id = ?", (user_input,))
-```
-
-Run tests:
-```bash
-semgrep --test --config rule.yaml test-file
-```
-
-## Command Reference
-
-| Task | Command |
-|------|---------|
-| Run tests | `semgrep --test --config rule.yaml test-file` |
-| Validate YAML | `semgrep --validate --config rule.yaml` |
-| Dump AST | `semgrep --dump-ast -l <lang> <file>` |
-| Debug taint flow | `semgrep --dataflow-traces -f rule.yaml file` |
-
-## Rule Creation Workflow
-
-1. **Analyze the problem** - Understand the bug pattern, determine taint vs pattern approach
-2. **Create test cases first** - Write `ruleid:` and `ok:` annotations before the rule
-3. **Analyze AST** - Run `semgrep --dump-ast` to understand code structure
-4. **Write the rule** - Start simple, iterate
-5. **Test until 100% pass** - No "missed lines" or "incorrect lines"
-6. **Optimize patterns** - Remove redundancies only after tests pass
-
-**Output structure:**
-```
-<rule-id>/
-├── <rule-id>.yaml     # Semgrep rule
-└── <rule-id>.<ext>    # Test file
-```
-
-## Detailed References
-
-**Official Semgrep Documentation:**
-- [Rule Syntax](https://semgrep.dev/docs/writing-rules/rule-syntax) - Complete YAML structure, operators, and options
-- [Rule Schema](https://github.com/semgrep/semgrep-interfaces/blob/main/rule_schema_v1.yaml) - Full JSON schema specification
-
-**Local References:**
-- [Workflow Guide](references/workflow.md) - Complete step-by-step rule creation process
-- [Quick Reference](references/quick-reference.md) - Pattern operators and taint components
-
-## Anti-Patterns to Avoid
-
-**Too broad:**
-```yaml
-# BAD: Matches any function call
-pattern: $FUNC(...)
-
-# GOOD: Specific dangerous function
-pattern: eval(...)
-```
-
-**Missing safe cases:**
-```python
-# BAD: Only tests vulnerable case
-# ruleid: my-rule
-dangerous(user_input)
-
-# GOOD: Include safe cases
-# ruleid: my-rule
-dangerous(user_input)
-
-# ok: my-rule
-dangerous(sanitize(user_input))
-```
+Use `subagent_type: static-analysis:semgrep-scanner` in Step 4 when spawning Task subagents.
 
 ## Rationalizations to Reject
 
 | Shortcut | Why It's Wrong |
 |----------|----------------|
-| "Semgrep found nothing, code is clean" | Semgrep is pattern-based; can't track complex cross-function data flow |
-| "The pattern looks complete" | Untested rules have hidden false positives/negatives |
-| "It matches the vulnerable case" | Matching vulnerabilities is half the job; verify safe cases don't match |
-| "Taint mode is overkill" | For injection vulnerabilities, taint mode gives better precision |
-| "One test case is enough" | Include edge cases: different coding styles, sanitized inputs, safe alternatives |
+| "User asked for scan, that's approval" | Original request ≠ plan approval. Present plan, use AskUserQuestion, await explicit "yes" |
+| "Step 3 task is blocking, just mark complete" | Lying about task status defeats enforcement. Only mark complete after real approval |
+| "I already know what they want" | Assumptions cause scanning wrong directories/rulesets. Present plan for verification |
+| "Just use default rulesets" | User must see and approve exact rulesets before scan |
+| "Add extra rulesets without asking" | Modifying approved list without consent breaks trust |
+| "Third-party rulesets are optional" | Trail of Bits, 0xdea, Decurity catch vulnerabilities not in official registry — REQUIRED |
+| "Use --config auto" | Sends metrics; less control over rulesets |
+| "One Task at a time" | Defeats parallelism; spawn all Tasks together |
+| "Pro is too slow, skip --pro" | Cross-file analysis catches 250% more true positives; worth the time |
+| "Semgrep handles GitHub URLs natively" | URL handling fails on repos with non-standard YAML; always clone first |
+| "Cleanup is optional" | Cloned repos pollute the user's workspace and accumulate across runs |
+| "Use `.` or relative path as target" | Subagents need absolute paths to avoid ambiguity |
+| "Let the user pick an output dir later" | Output directory must be resolved at Step 1, before any files are created |
 
----
+## Reference Index
 
-# CI/CD Integration
+| File | Content |
+|------|---------|
+| [rulesets.md](references/rulesets.md) | Complete ruleset catalog and selection algorithm |
+| [scan-modes.md](references/scan-modes.md) | Pre/post-filter criteria and jq commands |
+| [scanner-task-prompt.md](references/scanner-task-prompt.md) | Template for spawning scanner subagents |
 
-## GitHub Actions
+| Workflow | Purpose |
+|----------|---------|
+| [scan-workflow.md](workflows/scan-workflow.md) | Complete 5-step scan execution process |
 
-```yaml
-name: Semgrep
+## Success Criteria
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-  schedule:
-    - cron: '0 0 1 * *'
-
-jobs:
-  semgrep:
-    runs-on: ubuntu-latest
-    container:
-      image: returntocorp/semgrep
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Semgrep
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            semgrep ci --baseline-commit ${{ github.event.pull_request.base.sha }}
-          else
-            semgrep ci
-          fi
-        env:
-          SEMGREP_RULES: >-
-            p/security-audit
-            p/owasp-top-ten
-            p/trailofbits
-```
-
----
-
-# Resources
-
-**Rule Writing:**
-- Rule Syntax: https://semgrep.dev/docs/writing-rules/rule-syntax
-- Pattern Syntax: https://semgrep.dev/docs/writing-rules/pattern-syntax
-- Rule Schema: https://github.com/semgrep/semgrep-interfaces/blob/main/rule_schema_v1.yaml
-
-**General:**
-- Registry: https://semgrep.dev/explore
-- Playground: https://semgrep.dev/playground
-- Docs: https://semgrep.dev/docs/
-- Trail of Bits Rules: https://github.com/trailofbits/semgrep-rules
+- [ ] Output directory resolved (user-specified or auto-incremented default)
+- [ ] All generated files stored inside `$OUTPUT_DIR`
+- [ ] Languages detected with file counts; Pro status checked
+- [ ] Scan mode selected by user (run all / important only)
+- [ ] Rulesets include third-party rules for all detected languages
+- [ ] User explicitly approved the scan plan (Step 3 gate passed)
+- [ ] All scan Tasks spawned in a single message and completed
+- [ ] Every `semgrep` command used `--metrics=off`
+- [ ] Approved rulesets logged to `$OUTPUT_DIR/rulesets.txt`
+- [ ] Raw per-scan outputs stored in `$OUTPUT_DIR/raw/`
+- [ ] `results.sarif` exists in `$OUTPUT_DIR/results/` and is valid JSON
+- [ ] Important-only mode: post-filter applied before merge; unfiltered results preserved in `raw/`
+- [ ] Results summary reported with severity and category breakdown
+- [ ] Cloned repos (if any) cleaned up from `$OUTPUT_DIR/repos/`

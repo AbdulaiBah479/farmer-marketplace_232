@@ -1,343 +1,444 @@
 ---
-name: gcp-cloud-architect
-description: >
-  Design, review, and validate Google Cloud (GCP) architectures. Use when picking
-  the right GCP compute (GKE / Cloud Run / Cloud Functions / GCE / Cloud Run Jobs),
-  data store (Cloud SQL / Spanner / Firestore / BigQuery / Bigtable / Cloud Storage),
-  networking (VPC / Private Service Connect / Cloud Load Balancing / Cloud Armor),
-  identity (IAM / Workload Identity Federation / Service Accounts), or applying the
-  Google Cloud Architecture Framework (Operational Excellence, Security, Reliability,
-  Cost Optimization, Performance Optimization) to a workload. Pairs with our existing
-  senior-cloud-architect (multi-cloud, abstract patterns) by going deep on GCP-specific
-  services, pricing, and operational defaults.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: engineering
-  updated: 2026-05-27
-  tags: [gcp, google-cloud, architecture, cloud-architecture-framework, gke, cloud-run, bigquery, iam, networking, cost-optimization]
+name: "gcp-cloud-architect"
+description: "Design GCP architectures for startups and enterprises. Use when asked to design Google Cloud infrastructure, deploy to GKE or Cloud Run, configure BigQuery pipelines, optimize GCP costs, or migrate to GCP. Covers Cloud Run, GKE, Cloud Functions, Cloud SQL, BigQuery, and cost optimization."
 ---
 
 # GCP Cloud Architect
 
-End-to-end GCP-specific architecture: service selection, Google Cloud Architecture Framework assessment, identity and networking patterns, cost optimization, operational defaults. Provider-specific complement to our generic `senior-cloud-architect` skill — that one covers cross-cloud patterns; this one knows when to pick Spanner over Cloud SQL, how Workload Identity Federation differs from Service Account keys, and the right Cloud Run vs GKE call.
+Design scalable, cost-effective Google Cloud architectures for startups and enterprises with infrastructure-as-code templates.
 
 ---
 
-## When to use this skill
+## Workflow
 
-| Situation | Skill applies |
-|-----------|---------------|
-| Designing a GCP architecture from scratch | Yes — start with **compute decision tree** |
-| Reviewing an existing GCP architecture | Yes — run **CAF assessment** via `scripts/gcp_caf_scorer.py` |
-| Validating a Terraform / Deployment Manager plan | Yes — `scripts/gcp_architecture_validator.py` |
-| Estimating GCP cost for a workload | Yes — `scripts/gcp_cost_estimator.py` |
-| Picking between GKE / Cloud Run / Functions / Cloud Run Jobs | Yes — see **compute decision tree** |
-| Setting up IAM / Workload Identity correctly | Yes — see **identity reference** |
-| Designing multi-region / multi-zone resilience | Yes — see **reliability reference** |
-| Picking Cloud SQL vs Spanner vs Firestore vs BigQuery | Yes — see **data store decision tree** |
-| Going to production without CAF review | Don't — run the CAF scorer first |
+### Step 1: Gather Requirements
 
----
-
-## Compute decision tree
-
-GCP gives you many compute paths; picking the wrong one wastes money and operational burden.
+Collect application specifications:
 
 ```
-Stateless HTTP service?
-├── Need full control over OS / sidecar / custom runtime?
-│   └── → GKE (Autopilot for managed; Standard for full control)
-├── Container-packaged service, want zero infra?
-│   ├── Auto-scale to zero acceptable? Per-request billing?
-│   │   └── → Cloud Run (Service)
-│   └── Long-running container (always-warm)?
-│       └── → Cloud Run with min-instances OR GKE Autopilot
-├── Function-style, event-driven?
-│   └── → Cloud Functions (2nd gen, runs on Cloud Run under the hood)
-├── Batch / job processing?
-│   ├── Containers, finite duration?
-│   │   └── → Cloud Run Jobs
-│   ├── Large-scale batch (HPC)?
-│   │   └── → Batch (compute engine pool) OR Dataflow (for data)
-└── Long-running stateful processes / legacy?
-    └── → Compute Engine VMs (MIGs for groups)
-
-Stateful service (DBs you self-manage)?
-├── → Generally prefer managed: Cloud SQL, Spanner, Firestore, BigQuery
-└── Or VM + your own DB (rarely the right call)
-
-ML inference?
-├── Realtime, GPU?
-│   └── → GKE (GPU node pools) OR Vertex AI online endpoints
-└── Batch?
-    └── → Vertex AI batch prediction OR Dataflow pipelines
-
-Static frontend?
-└── → Firebase Hosting OR Cloud Storage + Cloud CDN
-
-API gateway?
-├── In-VPC, internal-only?
-│   └── → Internal HTTP(S) Load Balancer
-├── Global edge, custom routing, WAF?
-│   └── → External HTTP(S) Load Balancer + Cloud Armor
-├── API management (rate limit, dev portal, monetization)?
-│   └── → Apigee
+- Application type (web app, mobile backend, data pipeline, SaaS)
+- Expected users and requests per second
+- Budget constraints (monthly spend limit)
+- Team size and GCP experience level
+- Compliance requirements (GDPR, HIPAA, SOC 2)
+- Availability requirements (SLA, RPO/RTO)
 ```
 
-See [references/gcp-services-reference.md](references/gcp-services-reference.md) for service-by-service depth: tiers, SLAs, limits, when to upgrade.
+### Step 2: Design Architecture
 
----
+Run the architecture designer to get pattern recommendations:
 
-## Data store decision tree
-
-```
-Relational?
-├── Standard OLTP, regional or multi-zone?
-│   └── → Cloud SQL (MySQL / PostgreSQL / SQL Server)
-├── Global, strong consistency, horizontal scale?
-│   └── → Cloud Spanner (regional or multi-region)
-├── Multi-region with high concurrency, fault-tolerant?
-│   └── → Cloud Spanner (true multi-region active-active)
-
-Document / NoSQL?
-├── Mobile/web client-direct, real-time updates?
-│   └── → Firestore (Native mode)
-├── Schemaless, low-latency, regional or multi-region?
-│   └── → Firestore OR Datastore (legacy Datastore Mode of Firestore)
-├── Wide-column at massive scale, < 10ms reads?
-│   └── → Bigtable
-
-Key-value cache?
-└── → Memorystore (Redis or Memcached)
-
-Object storage?
-└── → Cloud Storage (pick Standard / Nearline / Coldline / Archive)
-
-Time-series / metrics?
-├── Operational (Stackdriver-style)?
-│   └── → Cloud Monitoring (built-in metric store)
-├── Application time series?
-│   └── → Bigtable OR BigQuery (depending on cardinality/query pattern)
-
-Search?
-├── Full-text on app data?
-│   └── → Vertex AI Search OR self-managed Elasticsearch on GKE
-└── Vector search for ML?
-    └── → Vertex AI Vector Search OR pgvector on Cloud SQL OR Bigtable with vectors
-
-Data warehouse?
-└── → BigQuery (the answer to "should we use a warehouse?" on GCP)
-
-Analytical OLAP?
-└── → BigQuery (serverless) OR BigQuery + BigQuery BI Engine
-
-Stream processing?
-└── → Dataflow (Apache Beam) OR Pub/Sub + Dataflow
+```bash
+python scripts/architecture_designer.py --input requirements.json
 ```
 
----
+**Example output:**
 
-## Networking patterns
-
-### Three core building blocks
-
-| Component | What it does | When |
-|-----------|--------------|------|
-| **VPC** | L3 isolation; private IP space; global by default in GCP | Every non-trivial GCP deployment |
-| **Private Service Connect (PSC)** | Brings managed services into your VPC privately | Default for production access to managed services |
-| **Cloud Interconnect / VPN** | On-prem connectivity (Interconnect is dedicated; VPN is over internet) | Hybrid setups |
-
-### Load balancers
-
-| LB | When |
-|----|------|
-| **Global External HTTP(S) Load Balancer** | Global anycast; Cloud Armor; CDN; serverless backends |
-| **Regional External HTTP(S) LB** | Regional only; cheaper for non-global workloads |
-| **Internal HTTP(S) LB** | Internal services; supports serverless backends |
-| **TCP/UDP Network LB** | L4 load balancing; lower cost; for non-HTTP workloads |
-| **Internal TCP/UDP LB** | Internal L4 |
-
-### Common networking patterns
-
-| Pattern | What | When |
-|---------|------|------|
-| **Shared VPC** | Central host project owns VPC; service projects attach their resources | Enterprise / multi-team |
-| **VPC peering** | Connect two VPCs (transitive routing not supported) | Multi-project organizations |
-| **Private Service Connect** | Consumer endpoint in your VPC → producer service | Default for managed services |
-| **Cloud Armor + global LB** | DDoS protection + WAF rules at the edge | Public-facing apps |
-| **Hub-and-spoke via Network Connectivity Center** | Centralized routing for multi-VPC orgs | Large orgs |
-
----
-
-## Identity patterns
-
-### IAM, Service Accounts, Workload Identity Federation
-
-| Concept | Use |
-|---------|-----|
-| **Cloud IAM** | Role-based access control for users, groups, service accounts |
-| **Service Account (SA)** | Identity for an app or workload |
-| **Service Account Key** | Static credential for SA — avoid in modern setups |
-| **Workload Identity Federation** | Federated identity; on-prem / other-cloud workloads get GCP access without keys |
-| **Workload Identity (GKE)** | K8s service accounts mapped to GCP SAs; no key mounting in pods |
-| **Application Default Credentials (ADC)** | Standard library for auth; uses ambient credentials |
-
-### Choosing identity
-
-```
-Workload running on GCP that calls other GCP services?
-├── On GKE → GKE Workload Identity (KSA → GSA)
-├── On Cloud Run / Functions → service identity (built-in)
-├── On Compute Engine → instance service account
-└── In a CI/CD pipeline outside GCP → Workload Identity Federation (no keys)
-
-Workload outside GCP needing GCP access?
-├── From AWS / Azure / OIDC provider → Workload Identity Federation
-└── Last resort → Service Account key (rotate frequently)
-
-User-facing auth?
-└── Identity Platform (GCP's auth-as-a-service; or Firebase Auth for client-direct)
+```json
+{
+  "recommended_pattern": "serverless_web",
+  "service_stack": ["Cloud Storage", "Cloud CDN", "Cloud Run", "Firestore", "Identity Platform"],
+  "estimated_monthly_cost_usd": 30,
+  "pros": ["Low ops overhead", "Pay-per-use", "Auto-scaling", "No cold starts on Cloud Run min instances"],
+  "cons": ["Vendor lock-in", "Regional limitations", "Eventual consistency with Firestore"]
+}
 ```
 
-### Least-privilege IAM
+Select from recommended patterns:
+- **Serverless Web**: Cloud Storage + Cloud CDN + Cloud Run + Firestore
+- **Microservices on GKE**: GKE Autopilot + Cloud SQL + Memorystore + Cloud Pub/Sub
+- **Serverless Data Pipeline**: Pub/Sub + Dataflow + BigQuery + Looker
+- **ML Platform**: Vertex AI + Cloud Storage + BigQuery + Cloud Functions
 
-GCP supports three forms:
-- **Predefined roles** (e.g., `roles/storage.objectViewer`) — preferred
-- **Custom roles** at organization or project — when predefined doesn't fit
-- **Basic roles** (`owner`, `editor`, `viewer`) — too broad; avoid in production
+See `references/architecture_patterns.md` for detailed pattern specifications.
 
-Bind roles at the most specific scope:
-- Resource → preferred
-- Project → standard for project-scoped apps
-- Folder → for organizational sub-tree
-- Organization → only org-wide admins
+**Validation checkpoint:** Confirm the recommended pattern matches the team's operational maturity and compliance requirements before proceeding to Step 3.
+
+### Step 3: Estimate Cost
+
+Analyze estimated costs and optimization opportunities:
+
+```bash
+python scripts/cost_optimizer.py --resources current_setup.json --monthly-spend 2000
+```
+
+**Example output:**
+
+```json
+{
+  "current_monthly_usd": 2000,
+  "recommendations": [
+    { "action": "Right-size Cloud SQL db-custom-4-16384 to db-custom-2-8192", "savings_usd": 380, "priority": "high" },
+    { "action": "Purchase 1-yr committed use discount for GKE nodes", "savings_usd": 290, "priority": "high" },
+    { "action": "Move Cloud Storage objects >90 days to Nearline", "savings_usd": 75, "priority": "medium" }
+  ],
+  "total_potential_savings_usd": 745
+}
+```
+
+Output includes:
+- Monthly cost breakdown by service
+- Right-sizing recommendations
+- Committed use discount opportunities
+- Sustained use discount analysis
+- Potential monthly savings
+
+Use the [GCP Pricing Calculator](https://cloud.google.com/products/calculator) for detailed estimates.
+
+### Step 4: Generate IaC
+
+Create infrastructure-as-code for the selected pattern:
+
+```bash
+python scripts/deployment_manager.py --app-name my-app --pattern serverless_web --region us-central1
+```
+
+**Example Terraform HCL output (Cloud Run + Firestore):**
+
+```hcl
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+variable "project_id" {
+  description = "GCP project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "GCP region"
+  type        = string
+  default     = "us-central1"
+}
+
+resource "google_cloud_run_v2_service" "api" {
+  name     = "${var.environment}-${var.app_name}-api"
+  location = var.region
+
+  template {
+    containers {
+      image = "gcr.io/${var.project_id}/${var.app_name}:latest"
+      resources {
+        limits = {
+          cpu    = "1000m"
+          memory = "512Mi"
+        }
+      }
+      env {
+        name  = "FIRESTORE_PROJECT"
+        value = var.project_id
+      }
+    }
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 10
+    }
+  }
+}
+
+resource "google_firestore_database" "default" {
+  project     = var.project_id
+  name        = "(default)"
+  location_id = var.region
+  type        = "FIRESTORE_NATIVE"
+}
+```
+
+**Example gcloud CLI deployment:**
+
+```bash
+# Deploy Cloud Run service
+gcloud run deploy my-app-api \
+  --image gcr.io/$PROJECT_ID/my-app:latest \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --memory 512Mi \
+  --cpu 1 \
+  --min-instances 0 \
+  --max-instances 10
+
+# Create Firestore database
+gcloud firestore databases create --location=us-central1
+```
+
+> Full templates including Cloud CDN, Identity Platform, IAM, and Cloud Monitoring are generated by `deployment_manager.py` and also available in `references/architecture_patterns.md`.
+
+### Step 5: Configure CI/CD
+
+Set up automated deployment with Cloud Build or GitHub Actions:
+
+```yaml
+# cloudbuild.yaml
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/my-app:$COMMIT_SHA', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/my-app:$COMMIT_SHA']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'my-app-api'
+      - '--image=gcr.io/$PROJECT_ID/my-app:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+
+images:
+  - 'gcr.io/$PROJECT_ID/my-app:$COMMIT_SHA'
+```
+
+```bash
+# Connect repo and create trigger
+gcloud builds triggers create github \
+  --repo-name=my-app \
+  --repo-owner=my-org \
+  --branch-pattern="^main$" \
+  --build-config=cloudbuild.yaml
+```
+
+### Step 6: Security Review
+
+Verify security configuration:
+
+```bash
+# Review IAM bindings
+gcloud projects get-iam-policy $PROJECT_ID --format=json
+
+# Check service account permissions
+gcloud iam service-accounts list --project=$PROJECT_ID
+
+# Verify VPC Service Controls (if applicable)
+gcloud access-context-manager perimeters list --policy=$POLICY_ID
+```
+
+**Security checklist:**
+- IAM roles follow least privilege (prefer predefined roles over basic roles)
+- Service accounts use Workload Identity for GKE
+- VPC Service Controls configured for sensitive APIs
+- Cloud KMS encryption keys for customer-managed encryption
+- Cloud Audit Logs enabled for all admin activity
+- Organization policies restrict public access
+- Secret Manager used for all credentials
+
+**If deployment fails:**
+
+1. Check the failure reason:
+   ```bash
+   gcloud run services describe my-app-api --region us-central1
+   gcloud logging read "resource.type=cloud_run_revision" --limit=20
+   ```
+2. Review Cloud Logging for application errors.
+3. Fix the configuration or container image.
+4. Redeploy:
+   ```bash
+   gcloud run deploy my-app-api --image gcr.io/$PROJECT_ID/my-app:latest --region us-central1
+   ```
+
+**Common failure causes:**
+- IAM permission errors -- verify service account roles and `--allow-unauthenticated` flag
+- Quota exceeded -- request quota increase via IAM & Admin > Quotas
+- Container startup failure -- check container logs and health check configuration
+- Region not enabled -- enable the required APIs with `gcloud services enable`
 
 ---
 
-## Google Cloud Architecture Framework (CAF)
+## Tools
 
-GCP's framework has five pillars (same naming families as Azure/AWS but with Google flavor).
+### architecture_designer.py
 
-| Pillar | Core question |
-|--------|---------------|
-| **Operational Excellence** | Can the team operate, deploy, observe, and recover safely? |
-| **Security, Privacy, and Compliance** | Can the workload defend, contain, recover, and meet regulatory needs? |
-| **Reliability** | Will the workload remain available under expected and unexpected conditions? |
-| **Cost Optimization** | Is the workload spending only what's needed for the value delivered? |
-| **Performance Optimization** | Does it meet performance needs without over-provisioning? |
+Recommends GCP services based on workload requirements.
 
-Use `scripts/gcp_caf_scorer.py --workload-config workload.yaml` to score against each pillar.
+```bash
+python scripts/architecture_designer.py --input requirements.json --output design.json
+```
 
-See [references/gcp-well-architected.md](references/gcp-well-architected.md) for the per-pillar deep dive: 10-question checklist per pillar, common findings, remediation patterns.
+**Input:** JSON with app type, scale, budget, compliance needs
+**Output:** Recommended pattern, service stack, cost estimate, pros/cons
 
----
+### cost_optimizer.py
 
-## Cost optimization
+Analyzes GCP resources for cost savings.
 
-### Cost levers from biggest to smallest
+```bash
+python scripts/cost_optimizer.py --resources inventory.json --monthly-spend 5000
+```
 
-| Lever | Typical savings | Effort |
-|-------|----------------|--------|
-| **Right-sizing** | 30-50% | Low |
-| **Committed Use Discounts (CUDs) / Sustained Use Discounts (SUDs)** | 20-70% | Low (commitment) |
-| **Autoscaling** | 20-40% | Medium |
-| **Preemptible / Spot VMs** | up to 91% | Medium |
-| **Storage class tiering** | 30-95% on storage | Low |
-| **Egress reduction** (Cloud CDN; private peering) | Variable, large | Medium-High |
-| **Decommission unused** | Variable | Low |
-| **BigQuery slot reservations** | 30-50% on analytics | Medium |
-| **Region choice** | 10-25% | High (move) |
+**Output:** Recommendations for:
+- Idle resource removal
+- Machine type right-sizing
+- Committed use discounts
+- Storage class transitions
+- Network egress optimization
 
-### Cost anti-patterns
+### deployment_manager.py
 
-- **Premium service tiers by default.** Enterprise Spanner / large BigQuery on-demand / GKE Standard when Autopilot suffices.
-- **No autoscaling.** Always provisioned at peak. Easy 30-40% savings.
-- **Egress through public internet.** Multi-region without peering or Cloud CDN.
-- **Logs / metrics retention at default 30+ days for all data.** Tiering needed.
-- **BigQuery on-demand pricing for stable, high-query workloads.** Reserved slots beat on-demand at scale.
-- **Preemptible VMs not used for batch / fault-tolerant workloads.** Up to 91% savings missed.
-- **Public IPs forgotten.** Each costs a few dollars/mo; multiply by hundreds of orphans.
+Generates gcloud CLI deployment scripts and Terraform configurations.
 
-See [references/gcp-cost-optimization.md](references/gcp-cost-optimization.md) for the full lever catalog and detection patterns.
+```bash
+python scripts/deployment_manager.py --app-name my-app --pattern serverless_web --region us-central1
+```
+
+**Output:** Production-ready deployment scripts with:
+- Cloud Run or GKE deployment
+- Firestore or Cloud SQL setup
+- Identity Platform configuration
+- IAM roles with least privilege
+- Cloud Monitoring and Logging
 
 ---
 
-## End-to-end workflows
+## Quick Start
 
-### Workflow: Design a new workload
+### Web App on Cloud Run (< $100/month)
 
-1. **Understand requirements** — traffic, data scale, latency, region requirements, compliance.
-2. **Pick compute** using the decision tree.
-3. **Pick data stores** using the decision tree.
-4. **Design networking** — VPC topology, PSC, LB pattern.
-5. **Design identity** — Service Accounts, Workload Identity, IAM scopes.
-6. **Plan observability** — Cloud Logging, Cloud Monitoring, Cloud Trace, Cloud Profiler.
-7. **Estimate cost** with `scripts/gcp_cost_estimator.py`.
-8. **Validate against CAF** with `scripts/gcp_caf_scorer.py`.
-9. **Document** the architecture; share for review.
+```
+Ask: "Design a serverless web backend for a mobile app with 1000 users"
 
-### Workflow: Review an existing GCP architecture
+Result:
+- Cloud Run for API (auto-scaling, no cold start with min instances)
+- Firestore for data (pay-per-operation)
+- Identity Platform for authentication
+- Cloud Storage + Cloud CDN for static assets
+- Estimated: $15-40/month
+```
 
-1. **Gather artifacts** — Terraform code, network diagrams, service inventory.
-2. **Run the validator** — `scripts/gcp_architecture_validator.py --terraform ./infra/*.tf` flags structural issues.
-3. **Run CAF scorer** with the workload's actual config.
-4. **Identify high-cost components** with the cost estimator.
-5. **Produce findings** by pillar with severity and recommendation.
+### Microservices on GKE ($500-2000/month)
 
-### Workflow: Migrate from AWS / Azure to GCP
+```
+Ask: "Design a scalable architecture for a SaaS platform with 50k users"
 
-1. **Map services** — most have equivalents (SQS → Pub/Sub; SNS → Pub/Sub topics; Lambda → Cloud Functions / Cloud Run; DynamoDB → Bigtable or Firestore; S3 → Cloud Storage; RDS → Cloud SQL or Spanner).
-2. **Re-evaluate the architecture** in GCP-native terms (BigQuery is often the right answer for analytics in ways no other cloud quite matches).
-3. **Network parity** — VPC equivalent (global VPC is unique to GCP); IAM equivalent; private connectivity (PSC).
-4. **Data migration** — Database Migration Service for many SQL scenarios; Storage Transfer Service for object data; Datastream for CDC.
-5. **Cost re-estimate** — GCP pricing differs per-service; don't assume parity.
+Result:
+- GKE Autopilot for containerized workloads
+- Cloud SQL (PostgreSQL) with read replicas
+- Memorystore (Redis) for session caching
+- Cloud CDN for global delivery
+- Cloud Build for CI/CD
+- Multi-zone deployment
+```
 
----
+### Serverless Data Pipeline
 
-## Anti-patterns (GCP-specific)
+```
+Ask: "Design a real-time analytics pipeline for event data"
 
-- **Service Account keys committed to source control.** Use Workload Identity Federation everywhere possible.
-- **Single-zone production** — use multi-zone or regional resources by default.
-- **No org policies** — set up Org Policy constraints (e.g., disallowed services, allowed regions, no public IPs).
-- **Compute Engine VMs with public IPs by default.** Use NAT Gateway + private IPs.
-- **GCS bucket allUsers read** — almost never wanted; use IAM + signed URLs.
-- **Default network in use** — delete the default VPC; create your own with explicit subnets.
-- **BigQuery on-demand for known high-volume workloads.** Buy slot reservations.
-- **Cloud SQL without HA** — single-zone DB is one zone outage from disaster.
-- **Service account = same email as default Compute SA used everywhere.** Create distinct SAs per workload.
-- **Firestore Native + Datastore mixed** — same project can't have both modes simultaneously; design once.
-- **GKE Standard when Autopilot would work.** Autopilot eliminates node management; cheaper to operate.
+Result:
+- Pub/Sub for event ingestion
+- Dataflow (Apache Beam) for stream processing
+- BigQuery for analytics and warehousing
+- Looker for dashboards
+- Cloud Functions for lightweight transforms
+```
 
----
+### ML Platform
 
-## Tooling outputs
+```
+Ask: "Design a machine learning platform for model training and serving"
 
-| Script | Input | Output |
-|--------|-------|--------|
-| `scripts/gcp_architecture_validator.py` | Terraform file or YAML workload spec | Structural issues, anti-pattern findings, missing best-practice settings |
-| `scripts/gcp_cost_estimator.py` | YAML workload spec (services + tiers + scale) | Per-service monthly cost estimate, total, optimization opportunities |
-| `scripts/gcp_caf_scorer.py` | YAML workload spec | Score per CAF pillar, gap analysis, recommendations |
-
-All scripts: stdlib only, argparse CLI, JSON or markdown output.
+Result:
+- Vertex AI for training and prediction
+- Cloud Storage for datasets and model artifacts
+- BigQuery for feature store
+- Cloud Functions for preprocessing triggers
+- Cloud Monitoring for model drift detection
+```
 
 ---
 
-## References
+## Input Requirements
 
-- [gcp-services-reference.md](references/gcp-services-reference.md) — per-service depth: tiers, SLAs, limits, when to upgrade
-- [gcp-well-architected.md](references/gcp-well-architected.md) — 5-pillar CAF assessment with questions and remediations
-- [gcp-cost-optimization.md](references/gcp-cost-optimization.md) — cost levers, anti-patterns, detection heuristics
+Provide these details for architecture design:
+
+| Requirement | Description | Example |
+|-------------|-------------|---------|
+| Application type | What you're building | SaaS platform, mobile backend |
+| Expected scale | Users, requests/sec | 10k users, 100 RPS |
+| Budget | Monthly GCP limit | $500/month max |
+| Team context | Size, GCP experience | 3 devs, intermediate |
+| Compliance | Regulatory needs | HIPAA, GDPR, SOC 2 |
+| Availability | Uptime requirements | 99.9% SLA, 1hr RPO |
+
+**JSON Format:**
+
+```json
+{
+  "application_type": "saas_platform",
+  "expected_users": 10000,
+  "requests_per_second": 100,
+  "budget_monthly_usd": 500,
+  "team_size": 3,
+  "gcp_experience": "intermediate",
+  "compliance": ["SOC2"],
+  "availability_sla": "99.9%"
+}
+```
 
 ---
 
-## Related skills
+## Output Formats
 
-- `engineering/senior-cloud-architect` — generic multi-cloud architecture patterns
-- `engineering/aws-solution-architect` — AWS counterpart
-- `engineering/azure-cloud-architect` — Azure counterpart
-- `engineering/kubernetes-operator` — for GKE operator-pattern workloads
-- `ra-qm-team/information-security-manager-iso27001` — compliance-mapped controls (GCP has Security Command Center)
-- `ra-qm-team/soc2-compliance-expert` — GCP-specific SOC 2 evidence collection
+### Architecture Design
+
+- Pattern recommendation with rationale
+- Service stack diagram (ASCII)
+- Monthly cost estimate and trade-offs
+
+### IaC Templates
+
+- **Terraform HCL**: Production-ready Google provider configs
+- **gcloud CLI**: Scripted deployment commands
+- **Cloud Build YAML**: CI/CD pipeline definitions
+
+### Cost Analysis
+
+- Current spend breakdown with optimization recommendations
+- Priority action list (high/medium/low) and implementation checklist
+
+---
+
+## Anti-Patterns
+
+| Anti-Pattern | Why It Fails | Better Approach |
+|---|---|---|
+| Using default VPC for production | No isolation, shared firewall rules | Create custom VPC with private subnets |
+| Over-provisioning GKE node pools | Wasted cost on idle capacity | Use GKE Autopilot or cluster autoscaler |
+| Storing secrets in environment variables | Visible in Cloud Console, logs | Use Secret Manager with Workload Identity |
+| Ignoring sustained use discounts | Missing 20-30% automatic savings | Right-size VMs for consistent baseline usage |
+| Single-region deployment for SaaS | One region outage = full downtime | Multi-region with Cloud Load Balancing |
+| BigQuery on-demand for heavy workloads | Unpredictable costs at scale | Use BigQuery slots (flat-rate) for consistent workloads |
+| Running Cloud Functions for long tasks | 9-minute timeout, cold starts | Use Cloud Run for tasks > 60 seconds |
+
+---
+
+## Cross-References
+
+| Skill | Relationship |
+|-------|-------------|
+| `engineering-team/aws-solution-architect` | AWS equivalent — same 6-step workflow, different services |
+| `engineering-team/azure-cloud-architect` | Azure equivalent — completes the cloud trifecta |
+| `engineering-team/senior-devops` | Broader DevOps scope — pipelines, monitoring, containerization |
+| `engineering/terraform-patterns` | IaC implementation — use for Terraform modules targeting GCP |
+| `engineering/ci-cd-pipeline-builder` | Pipeline construction — automates Cloud Build and deployment |
+
+---
+
+## Reference Documentation
+
+| Document | Contents |
+|----------|----------|
+| `references/architecture_patterns.md` | 6 patterns: serverless, GKE microservices, three-tier, data pipeline, ML platform, multi-region |
+| `references/service_selection.md` | Decision matrices for compute, database, storage, messaging |
+| `references/best_practices.md` | Naming, labels, IAM, networking, monitoring, disaster recovery |

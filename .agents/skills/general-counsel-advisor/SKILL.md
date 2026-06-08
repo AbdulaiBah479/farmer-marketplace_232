@@ -1,188 +1,161 @@
 ---
-name: general-counsel-advisor
-description: >
-  Legal leadership advisor for General Counsels and senior legal leaders
-  on legal strategy, risk management, contract and commercial governance,
-  regulatory tracking, litigation management, and legal-team operating
-  model. Use when defining a legal strategy, scoring legal risk,
-  auditing the contract portfolio, building a regulatory calendar, or
-  preparing the legal section of a board update.
-license: MIT + Commons Clause
+name: "general-counsel-advisor"
+description: "General Counsel advisory for startups: contract review (MSA, SaaS, NDA, DPA, employment), IP strategy, term sheet decoding, and regulatory landscape mapping. Use when reviewing any contract or term sheet, deciding when to engage outside counsel, defining IP strategy, evaluating regulatory exposure (HIPAA, GDPR, FDA, fintech), or when user mentions general counsel, GC, legal review, contract risk, term sheet, IP assignment, or regulatory exposure. NOT a substitute for licensed counsel — surfaces questions to bring to qualified attorneys."
+license: MIT
 metadata:
   version: 1.0.0
-  author: borghei
-  category: executive-leadership
-  domain: c-level-advisor
-  updated: 2026-05-27
-  tags: [legal, gc, contracts, regulatory, litigation, governance, risk]
+  author: Alireza Rezvani
+  category: c-level
+  domain: general-counsel-leadership
+  updated: 2026-05-12
+  python-tools: contract_risk_scanner.py, term_sheet_analyzer.py
+  frameworks: contract-review, ip-strategy, term-sheet-decoding, regulatory-mapping
 ---
 
 # General Counsel Advisor
 
-The agent acts as a fractional General Counsel, providing legal strategy
-and operating-model guidance grounded in modern in-house counsel patterns,
-contract lifecycle management practices, and the regulatory landscape
-relevant to mid-to-late-stage technology and healthcare companies.
+Strategic legal frameworks for startup General Counsels and founders without one. Contract risk, IP strategy, term sheet decoding, regulatory landscape.
 
-This skill is strategic in scope. It is **not** a substitute for licensed
-legal advice on a specific matter. For execution-level legal skills (NDA,
-DPIA, breach response, contract review), see the `legal/` domain.
+This is **not legal advice**. It surfaces the right questions to bring to qualified outside counsel and catches the obvious traps before they reach a signature. Treat every output as a starting point for a conversation with a licensed attorney, not as a substitute for one.
 
-## When to use this skill
+## Keywords
 
-- Defining the **legal strategy** for the next 12–24 months
-- Scoring **legal risk** across categories (commercial, regulatory, IP,
-  privacy, employment, M&A, litigation)
-- Designing the **legal operating model**: in-house vs outside counsel mix,
-  embedded vs central, business-aligned vs product-aligned
-- Auditing the **contract portfolio**: counterparty concentration,
-  liability exposure, renewals, deviations from standards
-- Building or refreshing the **regulatory calendar** for the company's
-  jurisdictions and product areas
-- Preparing the **legal section of the board deck** (matters, exposures, asks)
+general counsel, GC, legal review, contract review, MSA, SaaS agreement, NDA, DPA, employment agreement, contractor agreement, IP assignment, invention assignment, open source license, OSS compliance, term sheet, liquidation preference, anti-dilution, option pool, vesting, acceleration, drag-along, pro-rata, board composition, regulatory, HIPAA, GDPR, CCPA, FDA, MDR, fintech, BSA/AML, money transmitter, AI Act, indemnity, liability cap, force majeure, auto-renewal, choice of law, venue, non-compete, non-solicit
 
-## Inputs the advisor expects
+## Quick Start
 
-- Company stage, sector, jurisdictions
-- Existing legal team composition (in-house roles, outside counsel panel, budget)
-- Critical regulatory exposure (GDPR, sector regs, export controls, sanctions)
-- Active litigation, pre-litigation matters, IP disputes
-- Contract portfolio overview: vendor + customer counts, MSAs, deviations
-- M&A posture: history, pipeline, integration backlog
-- Top business stakeholders + frictions (CEO, CFO, CRO, CTO, CISO, CHRO)
+```bash
+# Scan a contract for risky clauses (uses bundled sample if no path given)
+python scripts/contract_risk_scanner.py
+python scripts/contract_risk_scanner.py path/to/contract.txt
+
+# Analyze a term sheet for founder-friendliness
+python scripts/term_sheet_analyzer.py
+python scripts/term_sheet_analyzer.py path/to/term_sheet.json
+```
+
+## Key Questions (ask these first)
+
+- **Who owns the IP being created or shared?** (Founders forget that contractors don't auto-assign IP without a written clause.)
+- **What's the liability cap, and what's carved out?** (Standard: 12 months of fees, with carve-outs for IP infringement, data breach, willful misconduct.)
+- **Is there a DPA in place if any personal data flows?** (GDPR, CCPA, state laws — non-negotiable if EU/CA data is touched.)
+- **What's the termination right, notice period, and auto-renewal trap?** (5-year auto-renew with 60-day notice is a common founder mistake.)
+- **Does this contract or product launch trigger a new regulatory regime?** (Healthcare → HIPAA. Fintech → BSA/AML. Medical device → FDA/MDR.)
+- **For term sheets: liquidation preference, pre-money option pool, anti-dilution flavor?** (Three places where 5% of founder economics can quietly disappear.)
+
+## Core Responsibilities
+
+### 1. Contract Review
+
+Standard contracts a startup signs in its first 5 years:
+
+- **Vendor MSA** — Master Service Agreement (cloud, tooling, services)
+- **Customer SaaS Agreement** — your standard customer paper + customer redlines
+- **NDA** — mutual + one-way, with carve-outs for residuals + independent development
+- **DPA** — Data Processing Agreement (required when personal data flows)
+- **Employment Agreement** — offer letter, IP assignment, non-compete (where enforceable), arbitration
+- **Contractor / 1099 Agreement** — IP assignment is critical; misclassification risk
+- **Equity Agreements** — option grants, RSU agreements, advisor grants (FAST template, YC SAFE for advisors)
+
+**Run** `contract_risk_scanner.py` on the text. It flags the 12 most common founder-killer clauses.
+
+### 2. IP Strategy
+
+- **Invention assignment** — every employee and contractor signs one. No exceptions.
+- **Open source license compliance** — track every OSS dependency's license; AGPL and GPL trigger copyleft obligations.
+- **Trade secrets** — define what's protected and how (clean room dev, access controls, NDAs).
+- **Patents** — file provisional within 12 months of disclosure; PCT for international.
+- **Trademarks** — register the word mark first, design mark second; clear before launch.
+- **Copyright** — automatic on creation, but register for statutory damages eligibility.
+
+See `references/ip_and_regulatory.md`.
+
+### 3. Term Sheet Decoding
+
+When a term sheet arrives, the difference between a founder-friendly and founder-hostile sheet often hides in three clauses:
+
+- **Liquidation preference** — 1x non-participating is standard; 1x participating or 2x is hostile
+- **Pre-money vs post-money option pool** — pre-money pool dilutes founders; post-money dilutes everyone proportionally
+- **Anti-dilution** — broad-based weighted average is standard; full ratchet is hostile
+
+**Run** `term_sheet_analyzer.py` to get a 0-100 founder-friendliness score with flags.
+
+### 4. Regulatory Landscape
+
+When to engage outside counsel **before** committing:
+
+| Trigger | Regime | First Step |
+|---|---|---|
+| Healthcare data | HIPAA, HITECH, state breach laws | Specialist health-tech counsel |
+| Cardholder data | PCI DSS (industry standard, not law, but contractually required) | QSA + counsel |
+| Money movement | BSA/AML, state money-transmitter (50-state patchwork) | Fintech specialist |
+| Medical device claims | FDA 510(k) / De Novo / PMA, MDR (EU), ISO 13485 | Medical-device specialist |
+| EU residents' personal data | GDPR + EU AI Act if AI is deployed | EU privacy counsel |
+| California residents | CCPA / CPRA | Privacy generalist |
+| Securities (tokens, equity crowdfunding) | SEC rules (Reg D, Reg A+, Reg CF) | Securities counsel |
+| Defense / aerospace customers | ITAR, EAR, DFARS, CMMC | Export-control counsel |
+| AI in EU | EU AI Act (risk-tiered) | EU privacy + product counsel |
+| AI for hiring (NYC, CO, IL) | Local bias-audit laws | Employment counsel |
+
+See `references/ip_and_regulatory.md` for sequencing.
 
 ## Workflows
 
-### Workflow 1 — Score legal risk across 7 categories
+### Workflow 1: Contract Review
+1. Save the contract as plain text
+2. Run `contract_risk_scanner.py path/to/contract.txt`
+3. For each HIGH risk finding, draft a counter-proposal
+4. Bring the redline + counter-proposals to outside counsel
+5. Log the decision via `/cs:decide`
 
-1. Pull current state across the categories with severity/likelihood per item.
-2. Run `legal_risk_register.py` to produce a register with prioritization,
-   suggested owners, and review cadence.
-3. Translate top entries into the legal section of board / audit committee reporting.
+### Workflow 2: Term Sheet Response
+1. Save the term sheet as a JSON file matching the schema in `term_sheet_analyzer.py --help`
+2. Run `python scripts/term_sheet_analyzer.py path/to/term_sheet.json`
+3. Review the founder-friendliness score and per-clause flags
+4. Negotiate the worst 3 clauses (don't try to win all 20)
+5. Always have a securities/venture attorney review before signing
+6. Log via `/cs:decide` with `/cs:freeze 30` to prevent regret-driven re-opening
 
-```bash
-python3 general-counsel-advisor/scripts/legal_risk_register.py \
-  --input legal_risk_inputs.json --format markdown
+### Workflow 3: IP Hygiene Audit
+1. Confirm every employee and contractor (past 12 months) signed invention assignment
+2. Run an OSS license inventory (`pip-licenses`, `license-checker` for npm)
+3. Map AGPL/GPL dependencies and confirm compliance (or remove)
+4. File provisional patents on novel inventions (12-month deadline from disclosure)
+5. Register word-mark trademarks for the product name
+
+### Workflow 4: Regulatory Trigger Assessment
+1. List planned product features for the next 12 months
+2. Map each feature to the trigger table in this document
+3. For any HIPAA / FDA / fintech trigger, engage a specialist counsel **before** building
+4. Document the regulatory roadmap and budget alongside the product roadmap
+5. Pair with `cs-ciso-advisor` for ISO 27001 / SOC 2 sequencing
+
+## Output Standard (when invoked via `/cs:gc-review`)
+
+```
+**Bottom Line:** [sign / negotiate / do not sign]
+**The Risks:** [3 highest-severity issues]
+**Counter-Proposals:** [specific language]
+**Outside Counsel Action Items:** [what to bring to the attorney]
+**Your Decision:** [the call only the founder can make]
 ```
 
-### Workflow 2 — Audit the contract portfolio
+## Adjacent Skills
 
-1. Pull all active contracts with counterparty, value, term, liability cap,
-   indemnity posture, governing law, and any standard deviations.
-2. Run `contract_portfolio_analyzer.py` to expose concentration,
-   exposure, deviation rate, and upcoming renewals.
-3. Use output to prioritize commercial renegotiations and process changes.
-
-```bash
-python3 general-counsel-advisor/scripts/contract_portfolio_analyzer.py \
-  --input contracts.json --format markdown
-```
-
-### Workflow 3 — Build the regulatory calendar
-
-1. Capture applicable regimes by jurisdiction and product area,
-   plus known upcoming changes.
-2. Run `regulatory_calendar_generator.py` to produce a date-ordered
-   calendar with owner and action.
-3. Distribute to GC team, security, privacy, and operations.
-
-```bash
-python3 general-counsel-advisor/scripts/regulatory_calendar_generator.py \
-  --input regulatory_inputs.json --format markdown
-```
-
-## Decision frameworks
-
-### In-house vs outside counsel mix
-
-The right mix depends on:
-- **Frequency** — recurring matters justify in-house
-- **Specialization** — niche needs (e.g., FCPA, IPO, sector litigation) stay outside
-- **Sensitivity** — board-level and exec matters often stay outside for privilege + perspective
-- **Speed** — in-house is faster for commercial; outside is faster for novel issues
-
-A pragmatic mix at Series C: 5–10 in-house FTEs covering commercial,
-privacy/security, employment, IP basics, M&A support; a panel of 3–6
-specialist firms for litigation, IP, employment escalations, M&A, securities.
-
-### Embedded vs central legal
-
-| Pattern | Fits when | Breaks when |
-|---------|-----------|-------------|
-| Central legal | Early stage, single-product | Business teams build workarounds |
-| Embedded (BU-aligned) | Multi-product, large BUs | Standards drift; risk concentrates |
-| Hub-and-spoke | Default for ≥ Series C | Need clear standards and routing |
-| Product-aligned | Heavy product/regulatory overlap (e.g., medtech) | Cost; risk of duplication |
-
-### Build-vs-buy for legal tech
-
-- **CLM (Contract Lifecycle Management):** buy at ≥ 500 contracts/year
-- **eBilling:** buy at ≥ $2M outside-counsel spend
-- **Matter management:** buy at ≥ 50 active matters
-- **Privacy / DSAR automation:** buy when regulatory exposure is meaningful
-- **GenAI assist for drafting / review:** buy with strict no-training terms
-
-## Common engagements
-
-### "Help me make the case for an in-house GC"
-1. Quantify outside-counsel spend vs hire cost (typically break-even ~$1.5M+ annual spend).
-2. Map matters to in-house-handleable vs outside-only.
-3. Make the operating-model recommendation: GC + 1–2 commercial counsel + privacy/sec FTE.
-
-### "We're being sued"
-1. Engage outside counsel immediately; preserve privilege.
-2. Issue litigation hold; coordinate with IT and CISO.
-3. Initial board notification + regular cadence (monthly minimum).
-4. Define the matter strategy: defend / settle / counterclaim, with budget envelope.
-5. Track in the litigation register.
-
-### "We're doing an acquisition"
-1. Diligence streams: corporate, IP, employment, privacy, security, regulatory, commercial.
-2. Pull standard reps & warranties pack from prior deals.
-3. Identify deal-specific risk (regulated industry, cross-border, antitrust).
-4. Plan integration legal workstream from day one.
-
-### "Help me build the GC board section"
-1. Top 3 matters (status, exposure, next event).
-2. Regulatory updates affecting the business (with planned response).
-3. Risk register summary (top 5 by exposure).
-4. Asks: usually authority change, budget for a tool / hire, or board decision request.
-
-## Anti-patterns to avoid
-
-- **GC reporting to CFO at scale.** Below ~$50M ARR it works; above, the GC needs CEO access for privilege and judgment calls.
-- **Legal as gatekeeper.** Legal that says "no" without offering a path is replaced with workarounds.
-- **No standard MSA / DPA.** Every deal becomes bespoke; renewals are painful.
-- **Litigation as a surprise.** A pipeline of pre-litigation matters should be tracked monthly.
-- **Outside counsel without budgets.** Spend balloons; matter creep.
-- **Risk register that never gets reviewed.** Quarterly review with named owners.
-- **Privacy / security treated as wholly separate.** GC should sit on the AI council, the DPO's office, and CISO program reviews.
+- `../ciso-advisor/` — Compliance overlap (SOC 2, ISO 27001, HIPAA technical safeguards)
+- `../cfo-advisor/` — Term sheet → dilution math
+- `../ma-playbook/` — Acquisition agreements, integration playbooks
+- `../../../ra-qm-team/` — ISO 13485, MDR, FDA 510(k), GDPR execution
+- `../../c-level-agents/skills/gc-review/SKILL.md` — `/cs:gc-review` slash command
 
 ## References
 
-- `references/legal-strategy-and-risk.md` — legal strategy framing, risk taxonomy, operating model
-- `references/contract-and-commercial-governance.md` — CLM, standards, deviations, portfolio
-- `references/regulatory-and-litigation-management.md` — regulatory tracking, litigation, M&A legal
+- [contracts_playbook.md](references/contracts_playbook.md) — Standard contracts, clause checklist, common founder traps
+- [ip_and_regulatory.md](references/ip_and_regulatory.md) — IP protection + regulatory landscape mapping
+- [term_sheet_decoder.md](references/term_sheet_decoder.md) — Term sheet glossary + founder-friendly defaults + pushback strategies
 
-## Related skills
+---
 
-- `c-level-advisor/ceo-advisor` — board / governance overlap
-- `c-level-advisor/cfo-advisor` — securities, audit committee
-- `c-level-advisor/ciso-advisor` — security incident + breach
-- `c-level-advisor/chro-advisor` — employment matters
-- `c-level-advisor/chief-ai-officer-advisor` — AI governance + EU AI Act
-- `c-level-advisor/chief-data-officer-advisor` — data governance and privacy
-- `legal/contract-review` — execution-level contract review
-- `legal/breach-response` — execution-level breach handling
-- `legal/dpia-builder` — execution-level DPIA
-- `ra-qm-team/gdpr-dsgvo-expert` — deep privacy implementation
-- `ra-qm-team/eu-ai-act-specialist` — high-risk AI conformity
-
-## Output expectations
-
-When the advisor runs, you should walk away with:
-
-1. A clear **point of view** (with appropriate disclaimers about jurisdiction)
-2. **2–4 concrete next actions** with owners and timelines
-3. **Open questions** that materially change the recommendation
-4. References to scripts and reference docs that deepen the analysis
+**Version:** 1.0.0
+**Status:** Production Ready
+**Disclaimer:** Not legal advice. Always engage qualified counsel for binding decisions.

@@ -1,43 +1,328 @@
 ---
 name: aws-serverless
-description: Builds, deploys, manages, debugs, configures, and optimizes serverless applications on AWS using Lambda, API Gateway, Step Functions, EventBridge, and SAM/CDK. Covers cold starts, CORS debugging, event source mappings, troubleshooting, concurrency, SnapStart, Powertools, function URLs, EventBridge Scheduler, Lambda layers, Durable Functions, durable execution, checkpoint-and-replay, and production readiness. Use when the user mentions Lambda, API Gateway, Step Functions, SAM templates, CDK serverless stacks, DynamoDB stream triggers, SQS event sources, cold starts, timeouts, 502/504 errors, throttling, concurrency, CORS, Powertools, Durable Functions, durable execution, checkpoint-and-replay, or any event-driven architecture on AWS, even if they don't say "serverless." Do NOT use for EC2, ECS/Fargate containers, or Amplify hosting.
-version: 1
+description: "Specialized skill for building production-ready serverless applications on AWS. Covers Lambda functions, API Gateway, DynamoDB, SQS/SNS event-driven patterns, SAM/CDK deployment, and cold start opt..."
+risk: unknown
+source: "vibeship-spawner-skills (Apache 2.0)"
+date_added: "2026-02-27"
 ---
 
 # AWS Serverless
-## Overview
 
-Domain expertise for building serverless applications on AWS. Covers Lambda configuration, API Gateway debugging, Step Functions orchestration, EventBridge patterns, event source mappings, concurrency tuning, cold start optimization, deployment with SAM/CDK, production readiness, and troubleshooting across all serverless services.
+## Patterns
 
-**Works best with** the [AWS MCP server](https://docs.aws.amazon.com/aws-mcp/) — enables running CLI commands, querying CloudWatch, and validating configurations directly. All guidance also works with standard AWS CLI access.
+### Lambda Handler Pattern
 
-**Note:** Reference files contain specific runtime versions, quota values, and feature matrices that may change. When precision matters (e.g., deploying to production, choosing a runtime, or checking a quota), confirm values against current AWS documentation rather than relying solely on the values in these files.
+Proper Lambda function structure with error handling
 
-## Routing
+**When to use**: ['Any Lambda function implementation', 'API handlers, event processors, scheduled tasks']
 
-| User need | Action |
-|-----------|--------|
-| Building a new serverless app | Read [architecture.md](references/architecture.md) for pattern selection, then [deployment.md](references/deployment.md) for SAM/CDK templates |
-| Debugging an error | Read [troubleshooting.md](references/troubleshooting.md) — starts with the 5 most common fixes |
-| Optimizing performance or cost | Read [lambda.md](references/lambda.md) for cold starts and memory tuning, [production.md](references/production.md) for readiness checklist |
-| Configuring event sources (SQS, DDB Streams, SNS) | Read [event-sources.md](references/event-sources.md) |
-| Step Functions, EventBridge, or orchestration | Read [orchestration.md](references/orchestration.md) |
-| Concurrency configuration | Read [concurrency.md](references/concurrency.md) |
-| API Gateway setup | Read [api-gateway.md](references/api-gateway.md) |
-| Common anti-patterns | Read the anti-patterns section in [production.md](references/production.md) |
-| Starting with Powertools | Use [powertools-handler.py](assets/powertools-handler.py) as a template |
-| Spans multiple areas | Read the most specific reference first, then consult others as needed |
+```python
+```javascript
+// Node.js Lambda Handler
+// handler.js
 
-## Files
+// Initialize outside handler (reused across invocations)
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
-| File | Content |
-|------|---------|
-| [lambda.md](references/lambda.md) | Runtime, memory/CPU, cold starts, SnapStart, layers, containers |
-| [api-gateway.md](references/api-gateway.md) | REST vs HTTP API, stages, auth, throttling, mapping |
-| [event-sources.md](references/event-sources.md) | SQS, DDB Streams, SNS, S3, Kinesis triggers |
-| [orchestration.md](references/orchestration.md) | Step Functions, EventBridge rules/pipes/scheduler |
-| [concurrency.md](references/concurrency.md) | Reserved vs provisioned, scaling, ESM concurrency |
-| [architecture.md](references/architecture.md) | Patterns, reference architectures, service selection |
-| [deployment.md](references/deployment.md) | SAM/CDK resource types, globals, fast iteration |
-| [production.md](references/production.md) | Readiness checklist, observability, anti-patterns |
-| [troubleshooting.md](references/troubleshooting.md) | Error → cause → fix for all serverless services |
+const client = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(client);
+
+// Handler function
+exports.handler = async (event, context) => {
+  // Optional: Don't wait for event loop to clear (Node.js)
+  context.callbackWaitsForEmptyEventLoop = false;
+
+  try {
+    // Parse input based on event source
+    const body = typeof event.body === 'string'
+      ? JSON.parse(event.body)
+      : event.body;
+
+    // Business logic
+    const result = await processRequest(body);
+
+    // Return API Gateway compatible response
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify(result)
+    };
+  } catch (error) {
+    console.error('Error:', JSON.stringify({
+      error: error.message,
+      stack: error.stack,
+      requestId: context.awsRequestId
+    }));
+
+    return {
+      statusCode: error.statusCode || 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        error: error.message || 'Internal server error'
+      })
+    };
+  }
+};
+
+async function processRequest(data) {
+  // Your business logic here
+  const result = await docClient.send(new GetCommand({
+    TableName: process.env.TABLE_NAME,
+    Key: { id: data.id }
+  }));
+  return result.Item;
+}
+```
+
+```python
+# Python Lambda Handler
+# handler.py
+
+import json
+import os
+import logging
+import boto3
+from botocore.exceptions import ClientError
+
+# Initialize outside handler (reused across invocations)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(os.environ['TABLE_NAME'])
+
+def handler(event, context):
+    try:
+        # Parse i
+```
+
+### API Gateway Integration Pattern
+
+REST API and HTTP API integration with Lambda
+
+**When to use**: ['Building REST APIs backed by Lambda', 'Need HTTP endpoints for functions']
+
+```javascript
+```yaml
+# template.yaml (SAM)
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref ItemsTable
+
+Resources:
+  # HTTP API (recommended for simple use cases)
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - DELETE
+        AllowHeaders:
+          - "*"
+
+  # Lambda Functions
+  GetItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get.handler
+      Events:
+        GetItem:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /items/{id}
+            Method: GET
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ItemsTable
+
+  CreateItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/create.handler
+      Events:
+        CreateItem:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /items
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ItemsTable
+
+  # DynamoDB Table
+  ItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+```
+
+```javascript
+// src/handlers/get.js
+const { getItem } = require('../lib/dynamodb');
+
+exports.handler = async (event) => {
+  const id = event.pathParameters?.id;
+
+  if (!id) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Missing id parameter' })
+    };
+  }
+
+  const item =
+```
+
+### Event-Driven SQS Pattern
+
+Lambda triggered by SQS for reliable async processing
+
+**When to use**: ['Decoupled, asynchronous processing', 'Need retry logic and DLQ', 'Processing messages in batches']
+
+```python
+```yaml
+# template.yaml
+Resources:
+  ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/processor.handler
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ProcessingQueue.Arn
+            BatchSize: 10
+            FunctionResponseTypes:
+              - ReportBatchItemFailures  # Partial batch failure handling
+
+  ProcessingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 180  # 6x Lambda timeout
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 3
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600  # 14 days
+```
+
+```javascript
+// src/handlers/processor.js
+exports.handler = async (event) => {
+  const batchItemFailures = [];
+
+  for (const record of event.Records) {
+    try {
+      const body = JSON.parse(record.body);
+      await processMessage(body);
+    } catch (error) {
+      console.error(`Failed to process message ${record.messageId}:`, error);
+      // Report this item as failed (will be retried)
+      batchItemFailures.push({
+        itemIdentifier: record.messageId
+      });
+    }
+  }
+
+  // Return failed items for retry
+  return { batchItemFailures };
+};
+
+async function processMessage(message) {
+  // Your processing logic
+  console.log('Processing:', message);
+
+  // Simulate work
+  await saveToDatabase(message);
+}
+```
+
+```python
+# Python version
+import json
+import logging
+
+logger = logging.getLogger()
+
+def handler(event, context):
+    batch_item_failures = []
+
+    for record in event['Records']:
+        try:
+            body = json.loads(record['body'])
+            process_message(body)
+        except Exception as e:
+            logger.error(f"Failed to process {record['messageId']}: {e}")
+            batch_item_failures.append({
+                'itemIdentifier': record['messageId']
+            })
+
+    return {'batchItemFailures': batch_ite
+```
+
+## Anti-Patterns
+
+### ❌ Monolithic Lambda
+
+**Why bad**: Large deployment packages cause slow cold starts.
+Hard to scale individual operations.
+Updates affect entire system.
+
+### ❌ Large Dependencies
+
+**Why bad**: Increases deployment package size.
+Slows down cold starts significantly.
+Most of SDK/library may be unused.
+
+### ❌ Synchronous Calls in VPC
+
+**Why bad**: VPC-attached Lambdas have ENI setup overhead.
+Blocking DNS lookups or connections worsen cold starts.
+
+## ⚠️ Sharp Edges
+
+| Issue | Severity | Solution |
+|-------|----------|----------|
+| Issue | high | ## Measure your INIT phase |
+| Issue | high | ## Set appropriate timeout |
+| Issue | high | ## Increase memory allocation |
+| Issue | medium | ## Verify VPC configuration |
+| Issue | medium | ## Tell Lambda not to wait for event loop |
+| Issue | medium | ## For large file uploads |
+| Issue | high | ## Use different buckets/prefixes |
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.

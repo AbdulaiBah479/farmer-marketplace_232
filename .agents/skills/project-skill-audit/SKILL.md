@@ -1,9 +1,6 @@
 ---
 name: project-skill-audit
-description: Audit a project and recommend the highest-value skills to add or update.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Analyze a project's past Codex sessions, memory files, and existing local skills to recommend the highest-value skills to create or update. Use when a user asks what skills a project needs, wants skill ideas grounded in real project history, wants an audit of current project-local skills, or wants recommendations for updating stale or incomplete skills instead of creating duplicates.
 ---
 
 # Project Skill Audit
@@ -13,10 +10,6 @@ date_added: "2026-03-25"
 Audit the project's real recurring workflows before recommending skills. Prefer evidence from memory, rollout summaries, existing skill folders, and current repo conventions over generic brainstorming.
 
 Recommend updates before new skills when an existing project skill is already close to the needed behavior.
-
-## When to Use
-- When the user asks what skills a project needs or which existing skills should be updated.
-- When recommendations should be grounded in project history, memory files, and local conventions.
 
 ## Workflow
 
@@ -186,9 +179,4 @@ Return a compact audit with:
 
 ## Follow-up
 
-If the user asks to actually create or update one of the recommended skills, switch to `$skill-creator` and implement the chosen skill rather than continuing the audit.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+If the user asks to actually create or update one of the recommended skills, switch to [$skill-creator](/Users/dimillian/.codex/skills/.system/skill-creator/SKILL.md) and implement the chosen skill rather than continuing the audit.

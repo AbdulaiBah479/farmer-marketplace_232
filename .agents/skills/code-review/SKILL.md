@@ -1,119 +1,118 @@
 ---
 name: code-review
-description: Provide actionable feedback on code changes. Focuses on bugs, security issues, and structural problems.
+description: Review code changes for security, performance, and correctness. Trigger with a PR URL or diff, "review this before I merge", "is this code safe?", or when checking a change for N+1 queries, injection risks, missing edge cases, or error handling gaps.
+argument-hint: "<PR URL, diff, or file path>"
 ---
 
-# Code Review
+# /code-review
 
-Review code changes using THREE (3) to FIVE (5) parallel subagents and correlate results into a summary ranked by severity.
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
 
-Use the provided user guidance to steer the review and focus on specific code paths, changes, and/or areas of concern.
+Review code changes with a structured lens on security, performance, correctness, and maintainability.
 
-**User Guidance:** $ARGUMENTS
-
-## Default Behavior
-
-1. Review **uncommitted changes** by default (`git diff` and `git diff --staged`)
-2. If no uncommitted changes exist, review the **last commit** (`git show HEAD`)
-3. If the user provides a **pull request number or link**, use `gh pr diff <number>` to fetch changes
-
-## Workflow
-
-1. First, determine what to review based on the rules above
-2. Check if the changes include AWS infrastructure files:
-   - Terraform files (`*.tf`) containing AWS patterns (`provider "aws"`, `aws_` resources, or `hashicorp/aws`)
-   - CDK files (TypeScript files containing `aws-cdk`, `@aws-cdk`, `cdk.Stack`, `cdk.App`, or `Construct` patterns)
-3. Check if the changes add new dependencies by looking for additions in:
-   - `package.json` (new entries in `dependencies` or `devDependencies`)
-   - `requirements.txt`, `pyproject.toml`, `setup.py`, `setup.cfg`
-   - `Cargo.toml` (new entries in `[dependencies]` or `[dev-dependencies]`)
-   - `go.mod` (new `require` entries)
-   - `Gemfile`, `*.gemspec`
-   - `composer.json`
-   - Any other language-specific dependency manifest
-   - **Only trigger on newly added dependencies**, not version bumps of existing ones
-4. Launch parallel Task agents:
-   - THREE agents with `subagent_type: general-purpose`, each instructed to:
-     - Read the full file context (not just diffs) to understand surrounding logic
-     - Focus on different aspects: bugs/logic, security/auth, and patterns/structure
-     - Follow the detailed review guidelines below
-   - If AWS infrastructure detected: ONE additional agent with `subagent_type: aws-limits` to review AWS service quota violations in the changed infrastructure files
-   - If new dependencies detected: ONE additional agent with `subagent_type: general-purpose` to verify license compliance:
-     - Extract the list of newly added dependency names and versions from the diff
-     - For each new dependency, determine its license (use the package registry API or repository metadata — e.g. `npm view <pkg> license`, `pip show <pkg>`, `cargo info <pkg>`, or check the project's GitHub repo)
-     - Flag any dependency whose license is **not** in the permissive allowlist: `MIT`, `ISC`, `BSD-2-Clause`, `BSD-3-Clause`, `Apache-2.0`, `0BSD`, `Unlicense`, `CC0-1.0`, `BlueOak-1.0.0`
-     - For flagged dependencies, report: package name, detected license, and why it may be problematic (e.g. copyleft, proprietary, unknown)
-     - Severity: **Critical** for proprietary/unknown licenses, **High** for copyleft (GPL, AGPL, LGPL, MPL), **Medium** for weak copyleft or uncommon licenses
-5. Collect all findings and produce a **consolidated summary**
-6. Rank issues by severity: Critical > High > Medium > Low
-7. Include file paths and line numbers for each finding
-8. Suggest fixes where appropriate
-
-## Review Guidelines
-
-**Diffs alone are not enough.** Read the full file(s) being modified to understand context. Code that looks wrong in isolation may be correct given surrounding logic.
-
-### What to Look For
-
-#### Bugs — Primary focus
-- Logic errors, off-by-one mistakes, incorrect conditionals
-- Missing guards, unreachable code paths, broken error handling
-- Edge cases: null/empty inputs, race conditions
-- Security: injection, auth bypass, data exposure
-
-#### Structure — Does the code fit the codebase?
-- Follows existing patterns and conventions?
-- Uses established abstractions?
-- Excessive nesting that could be flattened?
-
-#### Performance — Only flag if obviously problematic
-- O(n²) on unbounded data, N+1 queries, blocking I/O on hot paths
-
-### Before You Flag Something
-
-- **Be certain.** Don't flag something as a bug if you're unsure — investigate first.
-- **Don't invent hypothetical problems.** If an edge case matters, explain the realistic scenario.
-- **Don't be a zealot about style.** Some "violations" are acceptable when they're the simplest option.
-- Only review the changes — not pre-existing code that wasn't modified.
-
-### Output Guidelines
-
-- Be direct about bugs and why they're bugs
-- Communicate severity honestly — don't overstate
-- Include file paths and line numbers
-- Suggest fixes when appropriate
-- Matter-of-fact tone, no flattery
-
-### Severity Levels
-
-- **Critical**: Security vulnerabilities, data loss, crashes in production
-- **High**: Bugs that will cause incorrect behavior, broken functionality
-- **Medium**: Code that works but has issues (poor error handling, edge cases)
-- **Low**: Style issues, minor improvements, suggestions
-
-## Output Format
+## Usage
 
 ```
-## Code Review Summary
+/code-review <PR URL or file path>
+```
 
-### Critical Issues
-- [file:line] Description of critical bug/security issue
+Review the provided code changes: @$1
 
-### High Priority
-- [file:line] Description
+If no specific file or URL is provided, ask what to review.
 
-### Medium Priority
-- [file:line] Description
+## How It Works
 
-### Low Priority / Suggestions
-- [file:line] Description
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      CODE REVIEW                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  STANDALONE (always works)                                       │
+│  ✓ Paste a diff, PR URL, or point to files                      │
+│  ✓ Security audit (OWASP top 10, injection, auth)               │
+│  ✓ Performance review (N+1, memory leaks, complexity)           │
+│  ✓ Correctness (edge cases, error handling, race conditions)    │
+│  ✓ Style (naming, structure, readability)                        │
+│  ✓ Actionable suggestions with code examples                    │
+├─────────────────────────────────────────────────────────────────┤
+│  SUPERCHARGED (when you connect your tools)                      │
+│  + Source control: Pull PR diff automatically                    │
+│  + Project tracker: Link findings to tickets                     │
+│  + Knowledge base: Check against team coding standards           │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### AWS Service Limits (if applicable)
-- [file:line] Description of limit concern
+## Review Dimensions
 
-### License Compliance (if applicable)
-- [package-name] License: <license> — Reason flagged
+### Security
+- SQL injection, XSS, CSRF
+- Authentication and authorization flaws
+- Secrets or credentials in code
+- Insecure deserialization
+- Path traversal
+- SSRF
+
+### Performance
+- N+1 queries
+- Unnecessary memory allocations
+- Algorithmic complexity (O(n²) in hot paths)
+- Missing database indexes
+- Unbounded queries or loops
+- Resource leaks
+
+### Correctness
+- Edge cases (empty input, null, overflow)
+- Race conditions and concurrency issues
+- Error handling and propagation
+- Off-by-one errors
+- Type safety
+
+### Maintainability
+- Naming clarity
+- Single responsibility
+- Duplication
+- Test coverage
+- Documentation for non-obvious logic
+
+## Output
+
+```markdown
+## Code Review: [PR title or file]
 
 ### Summary
-Brief overall assessment of the changes.
+[1-2 sentence overview of the changes and overall quality]
+
+### Critical Issues
+| # | File | Line | Issue | Severity |
+|---|------|------|-------|----------|
+| 1 | [file] | [line] | [description] | 🔴 Critical |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|------|------|------------|----------|
+| 1 | [file] | [line] | [description] | Performance |
+
+### What Looks Good
+- [Positive observations]
+
+### Verdict
+[Approve / Request Changes / Needs Discussion]
 ```
+
+## If Connectors Available
+
+If **~~source control** is connected:
+- Pull the PR diff automatically from the URL
+- Check CI status and test results
+
+If **~~project tracker** is connected:
+- Link findings to related tickets
+- Verify the PR addresses the stated requirements
+
+If **~~knowledge base** is connected:
+- Check changes against team coding standards and style guides
+
+## Tips
+
+1. **Provide context** — "This is a hot path" or "This handles PII" helps me focus.
+2. **Specify concerns** — "Focus on security" narrows the review.
+3. **Include tests** — I'll check test coverage and quality too.

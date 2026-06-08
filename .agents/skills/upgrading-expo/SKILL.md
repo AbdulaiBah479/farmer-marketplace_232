@@ -7,13 +7,12 @@ license: MIT
 
 ## References
 
-- ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
 - ./references/new-architecture.md -- SDK +53: New Architecture migration guide
+- ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
 - ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
 - ./references/native-tabs.md -- SDK +55: Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
-- ./references/expo-av-to-audio.md -- SDK +55: Migrate audio playback and recording from expo-av to expo-audio
-- ./references/expo-av-to-video.md -- SDK +55: Migrate video playback from expo-av to expo-video
-- ./references/react-navigation-to-expo-router.md -- SDK +56: Migrate `@react-navigation/*` imports to `expo-router` entry points (codemod + manual mapping)
+- ./references/expo-av-to-audio.md -- Migrate audio playback and recording from expo-av to expo-audio
+- ./references/expo-av-to-video.md -- Migrate video playback from expo-av to expo-video
 
 ## Beta/Preview Releases
 
@@ -54,8 +53,6 @@ watchman watch-del-all
 
 ## Prebuild for Native Changes
 
-**First check if `ios/` and `android/` directories exist in the project.** If neither directory exists, the project uses Continuous Native Generation (CNG) and native projects are regenerated at build time — skip this section and "Clear caches for bare workflow" entirely.
-
 If upgrading requires native changes:
 
 ```bash
@@ -65,8 +62,6 @@ npx expo prebuild --clean
 This regenerates the `ios` and `android` directories. Ensure the project is not a bare workflow app before running this command.
 
 ## Clear caches for bare workflow
-
-These steps only apply when `ios/` and/or `android/` directories exist in the project:
 
 - Clear the cocoapods cache for iOS: `cd ios && pod install --repo-update`
 - Clear derived data for Xcode: `npx expo run:ios --no-build-cache`
@@ -132,3 +127,137 @@ Since SDK 55, users can opt-in to use Hermes engine v1 for improved runtime perf
 ## New Architecture
 
 The new architecture is enabled by default, the app.json field `"newArchEnabled": true` is no longer needed as it's the default. Expo Go only supports the new architecture as of SDK +53.
+
+# Upgrading Expo
+
+
+## Overview
+
+Upgrade Expo SDK versions safely, handling breaking changes, dependencies, and configuration updates.
+
+
+## When to Use This Skill
+
+Use this skill when you need to upgrade Expo SDK versions.
+
+Use this skill when:
+- Upgrading to a new Expo SDK version
+- Handling breaking changes between SDK versions
+- Updating dependencies for compatibility
+- Migrating deprecated APIs to new versions
+- Preparing apps for new Expo features
+
+
+## Instructions
+
+This skill guides you through upgrading Expo SDK versions:
+
+1. **Pre-Upgrade Planning**: Review release notes and breaking changes
+2. **Dependency Updates**: Update packages for SDK compatibility
+3. **Configuration Migration**: Update app.json and configuration files
+4. **Code Updates**: Migrate deprecated APIs to new versions
+5. **Testing**: Verify app functionality after upgrade
+
+
+## Upgrade Process
+
+
+### 1. Pre-Upgrade Checklist
+
+- Review Expo SDK release notes
+- Identify breaking changes affecting your app
+- Check compatibility of third-party packages
+- Backup current project state
+- Create a feature branch for the upgrade
+
+
+### 2. Update Expo SDK
+
+```bash
+
+# Update Expo CLI
+npm install -g expo-cli@latest
+
+
+# Upgrade Expo SDK
+npx expo install expo@latest
+
+
+# Update all Expo packages
+npx expo install --fix
+```
+
+
+### 3. Handle Breaking Changes
+
+- Review migration guides for breaking changes
+- Update deprecated API calls
+- Modify configuration files as needed
+- Update native dependencies if required
+- Test affected features thoroughly
+
+
+### 4. Update Dependencies
+
+```bash
+
+# Check for outdated packages
+npx expo-doctor
+
+
+# Update packages to compatible versions
+npx expo install --fix
+
+
+# Verify compatibility
+npx expo-doctor
+```
+
+
+### 5. Testing
+
+- Test core app functionality
+- Verify native modules work correctly
+- Check for runtime errors
+- Test on both iOS and Android
+- Verify app store builds still work
+
+
+## Common Issues
+
+
+### Dependency Conflicts
+
+- Use `expo install` instead of `npm install` for Expo packages
+- Check package compatibility with new SDK version
+- Resolve peer dependency warnings
+
+
+### Configuration Changes
+
+- Update `app.json` for new SDK requirements
+- Migrate deprecated configuration options
+- Update native configuration files if needed
+
+
+### Breaking API Changes
+
+- Review API migration guides
+- Update code to use new APIs
+- Test affected features after changes
+
+
+## Best Practices
+
+- Always upgrade in a feature branch
+- Test thoroughly before merging
+- Review release notes carefully
+- Update dependencies incrementally
+- Keep Expo CLI updated
+- Use `expo-doctor` to verify setup
+
+
+## Resources
+
+For more information, see the [source repository](https://github.com/expo/skills/tree/main/plugins/upgrading-expo).
+

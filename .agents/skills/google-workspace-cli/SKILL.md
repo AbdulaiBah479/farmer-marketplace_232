@@ -1,155 +1,373 @@
 ---
-name: google-workspace-cli
-description: >
-  This skill should be used when the user asks to "audit Google Workspace",
-  "check GWS security settings", "set up Google Workspace authentication",
-  "diagnose Workspace issues", or "review Google admin configurations".
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: google-workspace
-  updated: 2026-04-02
-  tags: [google-workspace, gws, admin, security, audit]
+name: "google-workspace-cli"
+description: "Google Workspace administration via the gws CLI. Install, authenticate, and automate Gmail, Drive, Sheets, Calendar, Docs, Chat, and Tasks. Run security audits, execute 43 built-in recipes, and use 10 persona bundles. Use for Google Workspace admin, gws CLI setup, Gmail automation, Drive management, or Calendar scheduling."
 ---
+
 # Google Workspace CLI
 
-> **Category:** Engineering
-> **Domain:** Google Workspace Administration
+Expert guidance and automation for Google Workspace administration using the open-source `gws` CLI. Covers installation, authentication, 18+ service APIs, 43 built-in recipes, and 10 persona bundles for role-based workflows.
 
-## Overview
-
-The **Google Workspace CLI** skill provides tools for auditing Google Workspace configurations, generating authentication setup documentation, and diagnosing common GWS issues. It helps IT administrators maintain secure, well-configured Workspace environments without needing to navigate complex admin consoles.
+---
 
 ## Quick Start
 
-```bash
-# Audit Workspace security configuration
-python scripts/workspace_audit.py --config gws-config.json
-
-# Generate auth setup guide
-python scripts/auth_setup_guide.py --method oauth --scopes admin,drive
-
-# Run diagnostics
-python scripts/gws_doctor.py --check all
-
-# JSON output for automation
-python scripts/workspace_audit.py --config gws-config.json --format json
-```
-
-## Tools Overview
-
-### workspace_audit.py
-
-Audits Google Workspace configuration exports for security best practices.
-
-| Feature | Description |
-|---------|-------------|
-| 2FA enforcement | Checks if 2-step verification is required |
-| Password policy | Validates password strength requirements |
-| Sharing settings | Reviews external sharing configurations |
-| App access | Checks third-party app access policies |
-| Admin roles | Reviews admin role assignments |
-| Mobile management | Checks device management policies |
-| Drive settings | Validates Drive sharing and access controls |
-
-### auth_setup_guide.py
-
-Generates step-by-step authentication setup documentation for GWS API access.
-
-| Feature | Description |
-|---------|-------------|
-| OAuth setup | Generates OAuth 2.0 configuration guide |
-| Service account | Creates service account setup documentation |
-| API scopes | Lists required scopes for each API |
-| Domain delegation | Documents domain-wide delegation setup |
-| Testing guide | Provides verification steps |
-
-### gws_doctor.py
-
-Diagnostic tool for common Google Workspace configuration issues.
-
-| Feature | Description |
-|---------|-------------|
-| DNS checks | Validates MX, SPF, DKIM, DMARC records format |
-| SSL/TLS | Checks certificate and transport security settings |
-| Integration health | Validates common integration patterns |
-| Config consistency | Checks for conflicting settings |
-| Best practices | Compares against GWS recommended settings |
-
-## Workflows
-
-### Security Audit Workflow
-
-1. **Export config** - Export GWS settings to JSON via Admin SDK or manual export
-2. **Audit** - Run workspace_audit.py against the config file
-3. **Review findings** - Prioritize critical security gaps
-4. **Remediate** - Apply recommended settings in Admin Console
-5. **Re-audit** - Verify changes resolved findings
-
-### API Setup Workflow
-
-1. **Plan** - Determine which APIs and scopes are needed
-2. **Generate guide** - Run auth_setup_guide.py with desired method
-3. **Follow steps** - Create credentials in Google Cloud Console
-4. **Configure** - Set up domain delegation if needed
-5. **Verify** - Test API access with provided verification steps
-
-### Health Check Workflow
-
-1. **Run diagnostics** - Execute gws_doctor.py with all checks
-2. **Review results** - Check DNS, email, and integration health
-3. **Fix issues** - Address failures in priority order
-4. **Re-check** - Verify fixes pass diagnostics
-
-### Regular Maintenance
+### Check Installation
 
 ```bash
-# Monthly security audit
-python scripts/workspace_audit.py --config gws-export.json --format json > audit_$(date +%Y%m).json
-
-# Weekly health check
-python scripts/gws_doctor.py --check dns,email --format json
+# Verify gws is installed and authenticated
+python3 scripts/gws_doctor.py
 ```
 
-## Reference Documentation
+### Send an Email
 
-- [GWS Admin Guide](references/gws-admin-guide.md) - Security settings, API configuration, DNS requirements
+```bash
+gws gmail users.messages send me --to "team@company.com" \
+  --subject "Weekly Update" --body "Here's this week's summary..."
+```
 
-## Common Patterns Quick Reference
+### List Drive Files
 
-### Security Priorities
-| Setting | Priority | Impact |
-|---------|----------|--------|
-| 2FA enforcement | Critical | Prevents account takeover |
-| Password policy | Critical | Reduces credential attacks |
-| External sharing | High | Prevents data leakage |
-| App access control | High | Limits third-party risk |
-| Mobile management | Medium | Secures device access |
-| Admin role review | Medium | Limits privilege exposure |
+```bash
+gws drive files list --json --limit 20 | python3 scripts/output_analyzer.py --select "name,mimeType,modifiedTime" --format table
+```
 
-### DNS Records for Email
-| Record | Purpose | Example |
-|--------|---------|---------|
-| MX | Email routing | `ASPMX.L.GOOGLE.COM` |
-| SPF | Sender verification | `v=spf1 include:_spf.google.com ~all` |
-| DKIM | Email signing | Domain-specific CNAME |
-| DMARC | Policy enforcement | `v=DMARC1; p=reject; rua=mailto:...` |
+---
 
-### API Scopes
-| API | Scope | Purpose |
-|-----|-------|---------|
-| Admin SDK | `admin.directory.user` | User management |
-| Drive | `drive.readonly` | File listing |
-| Gmail | `gmail.settings.basic` | Email settings |
-| Calendar | `calendar.readonly` | Calendar access |
+## Installation
 
-### Common Issues
-| Issue | Symptom | Fix |
-|-------|---------|-----|
-| No 2FA | Account takeover risk | Enable 2FA enforcement |
-| Weak passwords | Credential stuffing | Set 12+ char minimum |
-| Open sharing | Data leakage | Restrict external sharing |
-| No DMARC | Email spoofing | Add DMARC DNS record |
-| Stale admins | Excessive privileges | Review admin roles quarterly |
+### npm (recommended)
+
+```bash
+npm install -g @anthropic/gws
+gws --version
+```
+
+### Cargo (from source)
+
+```bash
+cargo install gws-cli
+gws --version
+```
+
+### Pre-built Binaries
+
+Download from [github.com/googleworkspace/cli/releases](https://github.com/googleworkspace/cli/releases) for macOS, Linux, or Windows.
+
+### Verify Installation
+
+```bash
+python3 scripts/gws_doctor.py
+# Checks: PATH, version, auth status, service connectivity
+```
+
+---
+
+## Authentication
+
+### OAuth Setup (Interactive)
+
+```bash
+# Step 1: Create Google Cloud project and OAuth credentials
+python3 scripts/auth_setup_guide.py --guide oauth
+
+# Step 2: Run auth setup
+gws auth setup
+
+# Step 3: Validate
+gws auth status --json
+```
+
+### Service Account (Headless/CI)
+
+```bash
+# Generate setup instructions
+python3 scripts/auth_setup_guide.py --guide service-account
+
+# Configure with key file
+export GWS_SERVICE_ACCOUNT_KEY=/path/to/key.json
+export GWS_DELEGATED_USER=admin@company.com
+gws auth status
+```
+
+### Environment Variables
+
+```bash
+# Generate .env template
+python3 scripts/auth_setup_guide.py --generate-env
+```
+
+| Variable | Purpose |
+|----------|---------|
+| `GWS_CLIENT_ID` | OAuth client ID |
+| `GWS_CLIENT_SECRET` | OAuth client secret |
+| `GWS_TOKEN_PATH` | Custom token storage path |
+| `GWS_SERVICE_ACCOUNT_KEY` | Service account JSON key path |
+| `GWS_DELEGATED_USER` | User to impersonate (service accounts) |
+| `GWS_DEFAULT_FORMAT` | Default output format (json/ndjson/table) |
+
+### Validate Authentication
+
+```bash
+python3 scripts/auth_setup_guide.py --validate --json
+# Tests each service endpoint
+```
+
+---
+
+## Workflow 1: Gmail Automation
+
+**Goal:** Automate email operations — send, search, label, and filter management.
+
+### Send and Reply
+
+```bash
+# Send a new email
+gws gmail users.messages send me --to "client@example.com" \
+  --subject "Proposal" --body "Please find attached..." \
+  --attachment proposal.pdf
+
+# Reply to a thread
+gws gmail users.messages reply me --thread-id <THREAD_ID> \
+  --body "Thanks for your feedback..."
+
+# Forward a message
+gws gmail users.messages forward me --message-id <MSG_ID> \
+  --to "manager@company.com"
+```
+
+### Search and Filter
+
+```bash
+# Search emails
+gws gmail users.messages list me --query "from:client@example.com after:2025/01/01" --json \
+  | python3 scripts/output_analyzer.py --count
+
+# List labels
+gws gmail users.labels list me --json
+
+# Create a filter
+gws gmail users.settings.filters create me \
+  --criteria '{"from":"notifications@service.com"}' \
+  --action '{"addLabelIds":["Label_123"],"removeLabelIds":["INBOX"]}'
+```
+
+### Bulk Operations
+
+```bash
+# Archive all read emails older than 30 days
+gws gmail users.messages list me --query "is:read older_than:30d" --json \
+  | python3 scripts/output_analyzer.py --select "id" --format json \
+  | xargs -I {} gws gmail users.messages modify me {} --removeLabelIds INBOX
+```
+
+---
+
+## Workflow 2: Drive & Sheets
+
+**Goal:** Manage files, create spreadsheets, configure sharing, and export data.
+
+### File Operations
+
+```bash
+# List files
+gws drive files list --json --limit 50 \
+  | python3 scripts/output_analyzer.py --select "name,mimeType,size" --format table
+
+# Upload a file
+gws drive files create --name "Q1 Report" --upload report.pdf \
+  --parents <FOLDER_ID>
+
+# Create a Google Sheet
+gws sheets spreadsheets create --title "Budget 2026" --json
+
+# Download/export
+gws drive files export <FILE_ID> --mime "application/pdf" --output report.pdf
+```
+
+### Sharing
+
+```bash
+# Share with user
+gws drive permissions create <FILE_ID> \
+  --type user --role writer --emailAddress "colleague@company.com"
+
+# Share with domain (view only)
+gws drive permissions create <FILE_ID> \
+  --type domain --role reader --domain "company.com"
+
+# List who has access
+gws drive permissions list <FILE_ID> --json
+```
+
+### Sheets Data
+
+```bash
+# Read a range
+gws sheets spreadsheets.values get <SHEET_ID> --range "Sheet1!A1:D10" --json
+
+# Write data
+gws sheets spreadsheets.values update <SHEET_ID> --range "Sheet1!A1" \
+  --values '[["Name","Score"],["Alice",95],["Bob",87]]'
+
+# Append rows
+gws sheets spreadsheets.values append <SHEET_ID> --range "Sheet1!A1" \
+  --values '[["Charlie",92]]'
+```
+
+---
+
+## Workflow 3: Calendar & Meetings
+
+**Goal:** Schedule events, find available times, and generate standup reports.
+
+### Event Management
+
+```bash
+# Create an event
+gws calendar events insert primary \
+  --summary "Sprint Planning" \
+  --start "2026-03-15T10:00:00" --end "2026-03-15T11:00:00" \
+  --attendees "team@company.com" \
+  --location "Conference Room A"
+
+# List upcoming events
+gws calendar events list primary --timeMin "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --maxResults 10 --json
+
+# Quick event (natural language)
+gws helpers quick-event "Lunch with Sarah tomorrow at noon"
+```
+
+### Find Available Time
+
+```bash
+# Check free/busy for multiple people
+gws helpers find-time \
+  --attendees "alice@co.com,bob@co.com,charlie@co.com" \
+  --duration 60 --within "2026-03-15,2026-03-19" --json
+```
+
+### Standup Report
+
+```bash
+# Generate daily standup from calendar + tasks
+gws recipes standup-report --json \
+  | python3 scripts/output_analyzer.py --format table
+
+# Meeting prep (agenda + attendee info)
+gws recipes meeting-prep --event-id <EVENT_ID>
+```
+
+---
+
+## Workflow 4: Security Audit
+
+**Goal:** Audit Google Workspace security configuration and generate remediation commands.
+
+### Run Full Audit
+
+```bash
+# Full audit across all services
+python3 scripts/workspace_audit.py --json
+
+# Audit specific services
+python3 scripts/workspace_audit.py --services gmail,drive,calendar
+
+# Demo mode (no gws required)
+python3 scripts/workspace_audit.py --demo
+```
+
+### Audit Checks
+
+| Area | Check | Risk |
+|------|-------|------|
+| Drive | External sharing enabled | Data exfiltration |
+| Gmail | Auto-forwarding rules | Data exfiltration |
+| Gmail | DMARC/SPF/DKIM records | Email spoofing |
+| Calendar | Default sharing visibility | Information leak |
+| OAuth | Third-party app grants | Unauthorized access |
+| Admin | Super admin count | Privilege escalation |
+| Admin | 2-Step verification enforcement | Account takeover |
+
+### Review and Remediate
+
+```bash
+# Review findings
+python3 scripts/workspace_audit.py --json | python3 scripts/output_analyzer.py \
+  --filter "status=FAIL" --select "area,check,remediation"
+
+# Execute remediation (example: restrict external sharing)
+gws drive about get --json  # Check current settings
+# Follow remediation commands from audit output
+```
+
+---
+
+## Python Tools
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `gws_doctor.py` | Pre-flight diagnostics | `python3 scripts/gws_doctor.py [--json] [--services gmail,drive]` |
+| `auth_setup_guide.py` | Guided auth setup | `python3 scripts/auth_setup_guide.py --guide oauth` |
+| `gws_recipe_runner.py` | Recipe catalog & runner | `python3 scripts/gws_recipe_runner.py --list [--persona pm]` |
+| `workspace_audit.py` | Security/config audit | `python3 scripts/workspace_audit.py [--json] [--demo]` |
+| `output_analyzer.py` | JSON/NDJSON analysis | `gws ... --json \| python3 scripts/output_analyzer.py --count` |
+
+All scripts are stdlib-only, support `--json` output, and include demo mode with embedded sample data.
+
+---
+
+## Best Practices
+
+### Security
+
+1. Use OAuth with minimal scopes — request only what each workflow needs
+2. Store tokens in the system keyring, never in plain text files
+3. Rotate service account keys every 90 days
+4. Audit third-party OAuth app grants quarterly
+5. Use `--dry-run` before bulk destructive operations
+
+### Automation
+
+1. Pipe `--json` output through `output_analyzer.py` for filtering and aggregation
+2. Use recipes for multi-step operations instead of chaining raw commands
+3. Select a persona bundle to scope recipes to your role
+4. Use NDJSON format (`--format ndjson`) for streaming large result sets
+5. Set `GWS_DEFAULT_FORMAT=json` in your shell profile for scripting
+
+### Performance
+
+1. Use `--fields` to request only needed fields (reduces payload size)
+2. Use `--limit` to cap results when browsing
+3. Use `--page-all` only when you need complete datasets
+4. Batch operations with recipes rather than individual API calls
+5. Cache frequently accessed data (e.g., label IDs, folder IDs) in variables
+
+---
+
+## Limitations
+
+| Constraint | Impact |
+|------------|--------|
+| OAuth tokens expire after 1 hour | Re-auth needed for long-running scripts |
+| API rate limits (per-user, per-service) | Bulk operations may hit 429 errors |
+| Scope requirements vary by service | Must request correct scopes during auth |
+| Pre-v1.0 CLI status | Breaking changes possible between releases |
+| Google Cloud project required | Free, but requires setup in Cloud Console |
+| Admin API needs admin privileges | Some audit checks require Workspace Admin role |
+
+### Required Scopes by Service
+
+```bash
+# List scopes for specific services
+python3 scripts/auth_setup_guide.py --scopes gmail,drive,calendar,sheets
+```
+
+| Service | Key Scopes |
+|---------|-----------|
+| Gmail | `gmail.modify`, `gmail.send`, `gmail.labels` |
+| Drive | `drive.file`, `drive.metadata.readonly` |
+| Sheets | `spreadsheets` |
+| Calendar | `calendar`, `calendar.events` |
+| Admin | `admin.directory.user.readonly`, `admin.directory.group` |
+| Tasks | `tasks` |

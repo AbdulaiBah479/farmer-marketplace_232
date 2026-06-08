@@ -1,182 +1,274 @@
 ---
-name: research-summarizer
-description: >
-  User research synthesis and communication skill for PMs, researchers,
-  and design leads. Takes raw research artifacts (interview transcripts,
-  survey results, observations, support tickets, win/loss notes) and
-  produces structured insights, themed findings, and decision-ready briefs.
-  Use when synthesizing a batch of user interviews, building a findings
-  brief, separating signal from anecdote, or communicating research to
-  stakeholders who didn't participate.
-license: MIT + Commons Clause
+name: "research-summarizer"
+description: "Structured research summarization agent skill for non-dev users. Handles academic papers, web articles, reports, and documentation. Extracts key findings, generates comparative analyses, and produces properly formatted citations. Use when: user wants to summarize a research paper, compare multiple sources, extract citations from documents, or create structured research briefs. Plugin for Claude Code, Codex, Gemini CLI, and OpenClaw."
+license: MIT
 metadata:
   version: 1.0.0
-  author: borghei
-  category: product-team
-  domain: user-research
-  updated: 2026-05-27
-  tags: [user-research, synthesis, insights, qualitative, ux, communication]
+  author: Alireza Rezvani
+  category: product
+  updated: 2026-03-16
 ---
 
 # Research Summarizer
 
-A skill focused on **synthesizing and communicating** research — the part
-that comes after you've collected the data. Distinct from the research
-collection skills which guide interview design, recruiting, and protocol.
+> Read less. Understand more. Cite correctly.
 
-This skill assumes you have raw inputs (transcripts, notes, survey
-responses) and need to turn them into trustworthy insights that drive
-product decisions.
+Structured research summarization workflow that turns dense source material into actionable briefs. Built for product managers, analysts, founders, and anyone who reads more than they should have to.
 
-## When to use this skill
+Not a generic "summarize this" — a repeatable framework that extracts what matters, compares across sources, and formats citations properly.
 
-- Synthesizing a batch of **user interviews** (typically 5-30)
-- Pulling **themes from open-text survey responses**
-- Synthesizing **support tickets** for product-truth analysis
-- Building a **findings brief** for stakeholders
-- Separating **signal from anecdote** in qualitative data
-- Auditing existing **research summaries** for bias and reliability
-- Preparing a **research readout** for execs / cross-functional teams
+---
 
-## Inputs the advisor expects
+## Slash Commands
 
-- Type of research artifacts (interviews, surveys, tickets, observations, sales notes)
-- Volume and recency
-- Research question(s) the synthesis is answering
-- Audience for the output (PM team / exec / engineering)
-- Decision the output should inform
+| Command | What it does |
+|---------|-------------|
+| `/research:summarize` | Summarize a single source into a structured brief |
+| `/research:compare` | Compare 2-5 sources side-by-side with synthesis |
+| `/research:cite` | Extract and format all citations from a document |
 
-## Workflows
+---
 
-### Workflow 1 — Organize and theme raw research
+## When This Skill Activates
 
-1. Capture raw research items (one per row) with source, date, segment.
-2. Run `research_synthesis_organizer.py` to surface theme clusters
-   based on tagging, computed frequencies, and segment cross-cuts.
-3. Refine themes manually; promote to insights.
+Recognize these patterns from the user:
 
+- "Summarize this paper / article / report"
+- "What are the key findings in this document?"
+- "Compare these sources"
+- "Extract citations from this PDF"
+- "Give me a research brief on [topic]"
+- "Break down this whitepaper"
+- Any request involving: summarize, research brief, literature review, citation, source comparison
+
+If the user has a document and wants structured understanding → this skill applies.
+
+---
+
+## Workflow
+
+### `/research:summarize` — Single Source Summary
+
+1. **Identify source type**
+   - Academic paper → use IMRAD structure (Introduction, Methods, Results, Analysis, Discussion)
+   - Web article → use claim-evidence-implication structure
+   - Technical report → use executive summary structure
+   - Documentation → use reference summary structure
+
+2. **Extract structured brief**
+   ```
+   Title: [exact title]
+   Author(s): [names]
+   Date: [publication date]
+   Source Type: [paper | article | report | documentation]
+
+   ## Key Thesis
+   [1-2 sentences: the central argument or finding]
+
+   ## Key Findings
+   1. [Finding with supporting evidence]
+   2. [Finding with supporting evidence]
+   3. [Finding with supporting evidence]
+
+   ## Methodology
+   [How they arrived at these findings — data sources, sample size, approach]
+
+   ## Limitations
+   - [What the source doesn't cover or gets wrong]
+
+   ## Actionable Takeaways
+   - [What to do with this information]
+
+   ## Notable Quotes
+   > "[Direct quote]" (p. X)
+   ```
+
+3. **Assess quality**
+   - Source credibility (peer-reviewed, reputable outlet, primary vs secondary)
+   - Evidence strength (data-backed, anecdotal, theoretical)
+   - Recency (when published, still relevant?)
+   - Bias indicators (funding source, author affiliation, methodology gaps)
+
+### `/research:compare` — Multi-Source Comparison
+
+1. **Collect sources** (2-5 documents)
+2. **Summarize each** using the single-source workflow above
+3. **Build comparison matrix**
+
+   ```
+   | Dimension        | Source A        | Source B        | Source C        |
+   |------------------|-----------------|-----------------|-----------------|
+   | Central Thesis   | ...             | ...             | ...             |
+   | Methodology      | ...             | ...             | ...             |
+   | Key Finding      | ...             | ...             | ...             |
+   | Sample/Scope     | ...             | ...             | ...             |
+   | Credibility      | High/Med/Low    | High/Med/Low    | High/Med/Low    |
+   ```
+
+4. **Synthesize**
+   - Where do sources agree? (convergent findings = stronger signal)
+   - Where do they disagree? (divergent findings = needs investigation)
+   - What gaps exist across all sources?
+   - What's the weight of evidence for each position?
+
+5. **Produce synthesis brief**
+   ```
+   ## Consensus Findings
+   [What most sources agree on]
+
+   ## Contested Points
+   [Where sources disagree, with strongest evidence for each side]
+
+   ## Gaps
+   [What none of the sources address]
+
+   ## Recommendation
+   [Based on weight of evidence, what should the reader believe/do?]
+   ```
+
+### `/research:cite` — Citation Extraction
+
+1. **Scan document** for all references, footnotes, in-text citations
+2. **Extract and format** using the requested style (APA 7 default)
+3. **Classify citations** by type:
+   - Primary sources (original research, data)
+   - Secondary sources (reviews, meta-analyses, commentary)
+   - Tertiary sources (textbooks, encyclopedias)
+4. **Output** sorted bibliography with classification tags
+
+Supported citation formats:
+- **APA 7** (default) — social sciences, business
+- **IEEE** — engineering, computer science
+- **Chicago** — humanities, history
+- **Harvard** — general academic
+- **MLA 9** — arts, humanities
+
+---
+
+## Tooling
+
+### `scripts/extract_citations.py`
+
+CLI utility for extracting and formatting citations from text.
+
+**Features:**
+- Regex-based citation detection (DOI, URL, author-year, numbered references)
+- Multiple output formats (APA, IEEE, Chicago, Harvard, MLA)
+- JSON export for integration with reference managers
+- Deduplication of repeated citations
+
+**Usage:**
 ```bash
-python3 research-summarizer/scripts/research_synthesis_organizer.py \
-  --input research_items.json --format markdown
+# Extract citations from a file (APA format, default)
+python3 scripts/extract_citations.py document.txt
+
+# Specify format
+python3 scripts/extract_citations.py document.txt --format ieee
+
+# JSON output
+python3 scripts/extract_citations.py document.txt --format apa --output json
+
+# From stdin
+cat paper.txt | python3 scripts/extract_citations.py --stdin
 ```
 
-### Workflow 2 — Score insight quality
+### `scripts/format_summary.py`
 
-1. List proposed insights with supporting evidence count + segment coverage.
-2. Run `insight_quality_scorer.py` to grade each insight on Confidence,
-   Specificity, Action-readiness, and Bias risk.
-3. Keep High / Medium insights; demote Low to "questions for further research."
+CLI utility for generating structured research summaries.
 
+**Features:**
+- Multiple summary templates (academic, article, report, executive)
+- Configurable output length (brief, standard, detailed)
+- Markdown and plain text output
+- Key findings extraction with evidence tagging
+
+**Usage:**
 ```bash
-python3 research-summarizer/scripts/insight_quality_scorer.py \
-  --input insights.json --format markdown
+# Generate structured summary template
+python3 scripts/format_summary.py --template academic
+
+# Brief executive summary format
+python3 scripts/format_summary.py --template executive --length brief
+
+# All templates listed
+python3 scripts/format_summary.py --list-templates
+
+# JSON output
+python3 scripts/format_summary.py --template article --output json
 ```
 
-### Workflow 3 — Generate a findings brief
+---
 
-1. Capture the question, top insights, supporting evidence, decisions.
-2. Run `findings_brief_generator.py` to produce the structured brief.
+## Quality Assessment Framework
 
+Rate every source on four dimensions:
+
+| Dimension | High | Medium | Low |
+|-----------|------|--------|-----|
+| **Credibility** | Peer-reviewed, established author | Reputable outlet, known author | Blog, unknown author, no review |
+| **Evidence** | Large sample, rigorous method | Moderate data, sound approach | Anecdotal, no data, opinion |
+| **Recency** | Published within 2 years | 2-5 years old | 5+ years, may be outdated |
+| **Objectivity** | No conflicts, balanced view | Minor affiliations disclosed | Funded by interested party, one-sided |
+
+**Overall Rating:**
+- 4 Highs = Strong source — cite with confidence
+- 2+ Mediums = Adequate source — cite with caveats
+- 2+ Lows = Weak source — verify independently before citing
+
+---
+
+## Summary Templates
+
+See `references/summary-templates.md` for:
+- Academic paper summary template (IMRAD)
+- Web article summary template (claim-evidence-implication)
+- Technical report template (executive summary)
+- Comparative analysis template (matrix + synthesis)
+- Literature review template (thematic organization)
+
+See `references/citation-formats.md` for:
+- APA 7 formatting rules and examples
+- IEEE formatting rules and examples
+- Chicago, Harvard, MLA quick reference
+
+---
+
+## Proactive Triggers
+
+Flag these without being asked:
+
+- **Source has no date** → Note it. Undated sources lose credibility points.
+- **Source contradicts other sources** → Highlight the contradiction explicitly. Don't paper over disagreements.
+- **Source is behind a paywall** → Note limited access. Suggest alternatives if known.
+- **User provides only one source for a compare** → Ask for at least one more. Comparison needs 2+.
+- **Citations are incomplete** → Flag missing fields (year, author, title). Don't invent metadata.
+- **Source is 5+ years old in a fast-moving field** → Warn about potential obsolescence.
+
+---
+
+## Installation
+
+### One-liner (any tool)
 ```bash
-python3 research-summarizer/scripts/findings_brief_generator.py \
-  --input findings.json --format markdown
+git clone https://github.com/alirezarezvani/claude-skills.git
+cp -r claude-skills/product-team/research-summarizer ~/.claude/skills/
 ```
 
-## Decision frameworks
+### Multi-tool install
+```bash
+./scripts/convert.sh --skill research-summarizer --tool codex|gemini|cursor|windsurf|openclaw
+```
 
-### Observation → Pattern → Insight → Recommendation
+### OpenClaw
+```bash
+clawhub install cs-research-summarizer
+```
 
-A clean synthesis ladder:
+---
 
-1. **Observation** — direct quote or behavior ("user X said Y")
-2. **Pattern** — repeats across users ("4 of 7 users said Y")
-3. **Insight** — interpreted explanation ("users avoid Y because Z")
-4. **Recommendation** — action implied ("redesign Z to address Y avoidance")
+## Related Skills
 
-Each level requires more confidence than the last. Don't skip from
-observation directly to recommendation.
-
-### Insight quality dimensions
-
-- **Confidence:** how many independent sources support it
-- **Specificity:** is the insight specific enough to action?
-- **Bias risk:** is the sample / interpretation biased?
-- **Decision impact:** does this insight change anything?
-
-A high-quality insight scores well on all four. Most rough notes are
-strong on confidence but weak on specificity (or vice versa).
-
-### Sample size for qualitative research
-
-A rough heuristic for how many interviews are enough:
-
-| Goal | Suggested N |
-|------|-------------|
-| Discover the space (early product) | 5-8 |
-| Validate hypotheses | 8-12 |
-| Persona definition | 12-20 |
-| Detect quantitative signal in qual | 20-30+ |
-| Validate cross-segment | 5-8 per segment |
-
-Diminishing returns after the patterns repeat 2-3 times. If you keep
-hearing new things, you're not done.
-
-### When qualitative data lies (common biases)
-
-- **Confirmation bias** — interviewers pull the quotes they expected to hear
-- **Acquiescence bias** — participants agree to be polite
-- **Recall bias** — what users remember vs what they did
-- **Selection bias** — who agreed to interview is not representative
-- **Recency bias** — recent interviews carry disproportionate weight
-- **Anchor bias** — first interview shapes interpretation of later ones
-- **Demand characteristics** — participants guess what you want to hear
-
-Counter: use a **second coder**, structure your guide, sample diversely,
-and report negative evidence.
-
-## Common engagements
-
-### "Help me synthesize 12 user interviews"
-1. Make sure you have transcripts (or detailed notes).
-2. Tag each interview by demographic, journey stage, key behaviors.
-3. Surface 5-10 themes from initial tagging.
-4. For each theme, count: how many users? from which segments? evidence quality?
-5. Promote 3-5 themes to insights; demote the rest to "questions for next round."
-6. Add 1-2 unexpected findings (the "we didn't expect this" insight).
-
-### "Translate the research into a one-pager for execs"
-1. Lead with the question being asked.
-2. Lead with the answer (1-2 sentences); details follow.
-3. 3-5 insights with evidence; not more.
-4. Decisions / recommendations that follow.
-5. What you don't know yet (research limits + next-step questions).
-6. Methodology one-liner (N, segments, dates).
-
-### "Our research found contradictory things"
-1. First: is one finding from a different segment? Often the contradiction is segment-based.
-2. Second: was sample biased toward one side?
-3. Third: maybe both are true and the system has tensions worth surfacing.
-
-## Anti-patterns to avoid
-
-- **Cherry-picked quotes.** Always provide the count + context.
-- **Insight without evidence.** "Users want X" without supporting observations.
-- **Anecdotal generalization.** One angry user doesn't define the population.
-- **Reporting interview-by-interview.** Synthesis means seeing across users.
-- **Hiding the negative evidence.** Disconfirming evidence is valuable.
-- **Brief that's longer than needed.** Briefer = better-read.
-- **Mixing facts and interpretations.** Be clear which is which.
-- **Skipping methodology.** Readers need to evaluate the trust level.
-
-## References
-
-- `references/research-synthesis-frameworks.md` — affinity, thematic analysis, frameworks
-- `references/insight-quality-and-bias.md` — quality dimensions, bias catalog, validation
-- `references/communicating-research-findings.md` — brief formats, presentation patterns
-
-## Related skills
-
-- `product-team/ux-researcher-designer` — research design + collection
-- `product-team/product-strategist` — strategic input from insights
-- `product-team/product-analytics` — quant complement to qual
-- `c-level-advisor/chief-customer-officer-advisor` — VoC program context
+- **product-analytics** — Quantitative analysis. Complementary — use research-summarizer for qualitative sources, product-analytics for metrics.
+- **competitive-teardown** — Competitive research. Complementary — use research-summarizer for individual source analysis, competitive-teardown for market landscape.
+- **content-production** — Content writing. Research-summarizer feeds content-production — summarize sources first, then write.
+- **product-discovery** — Discovery frameworks. Complementary — research-summarizer for desk research, product-discovery for user research.

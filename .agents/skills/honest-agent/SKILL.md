@@ -1,54 +1,63 @@
 ---
 name: honest-agent
-description: Detect installed AI coding agents and append honest-feedback rules to their instruction files. Scans for config files (CLAUDE.md, copilot-instructions.md, .cursorrules, etc.), adapts output format per agent, and appends directives that disable sycophancy and enable constructive pushback. Use when setting up honest feedback, disabling people-pleasing, or enabling objective criticism. Triggers on honest agent, objective feedback, no sycophancy, honest criticism, contradict me, challenge assumptions, honest mode, brutal honesty.
+description: Configure AI coding agents to be honest, objective, and non-sycophantic. Use when the user wants to set up honest feedback, disable people-pleasing behavior, enable objective criticism, or configure agents to contradict when needed. Triggers on honest agent, objective feedback, no sycophancy, honest criticism, contradict me, challenge assumptions, honest mode, brutal honesty.
 ---
 
 # Honest Agent Configuration
 
-One-time setup skill: detects your AI coding agents and appends honesty directives to their instruction files.
+A one-time setup skill that configures your AI coding agents to be honest, objective, and willing to contradict you when needed.
 
-## Safety Rule: Append Only
+## CRITICAL: APPEND ONLY - NEVER REPLACE
 
-**Never overwrite existing instruction files.** Always read the file first (if it exists), then append the new configuration to the end. If the file does not exist, create it. This rule applies to every step below.
+**NEVER overwrite or replace existing instruction files.** Always:
+1. **READ the existing file first** (if it exists)
+2. **APPEND the new configuration** to the end of the file
+3. **PRESERVE all existing content** - do not modify or delete anything
 
-## Supported Agents
+If the file doesn't exist, create it. If it exists, append to it.
 
-| Agent | Project File | Global File |
-|-------|-------------|-------------|
-| Claude Code | `.claude/CLAUDE.md` | `~/.claude/CLAUDE.md` |
-| GitHub Copilot | `.github/copilot-instructions.md` | - |
-| Cursor | `.cursorrules` | `~/.cursor/rules/` |
-| Windsurf | `.windsurfrules` | - |
-| Cline | `.clinerules` | - |
-| Aider | `CONVENTIONS.md` | `~/.aider.conf.yml` |
-| Continue.dev | `.continuerules` | `~/.continue/config.json` |
+## Supported Agents & Verified File Locations
 
-## Workflow
+| Agent | Project Location | Global Location |
+|-------|------------------|-----------------|
+| **Claude Code** | `.claude/CLAUDE.md` | `~/.claude/CLAUDE.md` |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | - |
+| **Cursor** | `.cursorrules` | `~/.cursor/rules/` |
+| **Windsurf** | `.windsurfrules` | - |
+| **Cline** | `.clinerules` | - |
+| **Aider** | `CONVENTIONS.md` | `~/.aider.conf.yml` |
+| **Continue.dev** | `.continuerules` | `~/.continue/config.json` |
 
-### Step 1: Detect Agents
+## Instructions for AI Agent
 
-Scan the project root for each file in the table above. Record which files exist and which agents are present.
+When the user invokes this skill, perform these steps:
 
-### Step 2: Ask Scope
+### Step 1: Detect Existing Agent Configurations
 
-Prompt the user to choose:
-- **Project-level** -- current project only
-- **Global-level** -- all projects (where the agent supports it)
-- **Both**
+Check which instruction files/directories exist:
+- Look for `.claude/`, `.github/`, `.cursorrules`, `.windsurfrules`, `.clinerules`, `.continuerules`, `CONVENTIONS.md`
+- Note: Use appropriate file detection for the user's OS (Windows vs Unix)
 
-### Step 3: Append Configuration
+### Step 2: Ask User About Scope
 
-For each detected agent, read the existing file, then append the appropriate block below.
+Present options:
+- **Project-level**: Configure only for current project
+- **Global-level**: Configure for all projects (where supported)
+- **Both**: Configure both project and global settings
 
-**Markdown agents** (Claude Code, Copilot, Cline, Continue.dev):
+### Step 3: Apply Configuration (APPEND ONLY)
+
+**IMPORTANT: If the file exists, READ it first, then APPEND to the end. NEVER replace existing content.**
+
+Add the following section to the END of each instruction file:
 
 ```markdown
 ## Communication & Feedback Style
 
-- **Never tell me what I want to hear** -- prioritize truth over comfort
-- **Contradict me when you disagree** -- your informed opinions are valuable
-- **Challenge my assumptions** -- point out flaws in my reasoning
-- **Be direct and concise** -- skip unnecessary validation or praise
+- **Never tell me what I want to hear** - prioritize truth over comfort
+- **Contradict me when you disagree** - your informed opinions are valuable
+- **Challenge my assumptions** - point out flaws in my reasoning
+- **Be direct and concise** - skip unnecessary validation or praise
 - If my approach has problems, say so directly
 - If there's a better solution, recommend it even if I didn't ask
 - If my code has issues, don't sugarcoat the feedback
@@ -56,8 +65,14 @@ For each detected agent, read the existing file, then append the appropriate blo
 - Avoid phrases like "Great idea!" unless genuinely warranted
 ```
 
-**Plain-text agents** (Cursor `.cursorrules`, Windsurf `.windsurfrules`):
+### Step 4: Agent-Specific Formats (APPEND ONLY)
 
+**For agents using markdown** (Claude Code, Copilot, Cline, Continue.dev):
+- If file EXISTS: Read it first, then APPEND the configuration to the END
+- If file DOES NOT EXIST: Create new file with the configuration
+- **NEVER use Write tool to overwrite - use Edit tool to append, or read+write preserving content**
+
+**For `.cursorrules` and `.windsurfrules`**:
 ```
 Be honest, objective, and willing to disagree. Never be sycophantic.
 - Contradict me when I'm wrong
@@ -67,33 +82,40 @@ Be honest, objective, and willing to disagree. Never be sycophantic.
 - Provide direct, unfiltered technical feedback
 ```
 
-**Aider** (`CONVENTIONS.md`):
-
+**For Aider (`CONVENTIONS.md`)**:
 ```markdown
 # Communication Style
 Be honest and direct. Contradict me when you disagree. Challenge flawed assumptions. Skip unnecessary praise.
 ```
 
-### Step 4: Report Results
+### Step 5: Report Results
 
-Summarize what was done:
-1. Which files were created vs. appended to
-2. Which agents are now configured
-3. Remind the user to restart their IDE or agent session for changes to take effect
+After creating/updating files:
+1. List which files were created vs updated
+2. List which agents are now configured
+3. Remind user to restart IDE/agent if needed for changes to take effect
 
-## Example
+## Example Interaction
 
 **User**: "Set up honest agent"
 
-1. Agent scans project -- finds `.claude/CLAUDE.md` (50 lines) and `.github/copilot-instructions.md` (20 lines).
-2. Asks scope. User picks "Both".
-3. Reads each file, appends the markdown config block to the end.
-4. Reports: "Appended honesty directives to 2 existing files (Claude Code, GitHub Copilot). Existing content preserved. Restart your IDE for changes to take effect."
+**Agent**:
+1. Checks for existing config files
+2. Finds: `.claude/CLAUDE.md` (exists, 50 lines), `.github/copilot-instructions.md` (exists, 20 lines)
+3. Asks: "Configure project-level, global, or both?"
+4. User: "Both"
+5. **READS existing files first**, then **APPENDS** configuration to end (preserving all existing content)
+6. Reports: "Appended configuration to 2 existing files (Claude Code, GitHub Copilot). All existing content preserved. Restart your IDE for changes to take effect."
 
-## References
+**WRONG approach** (never do this):
+- Using Write tool to overwrite the entire file
+- Not reading the file first
+- Replacing existing content
 
-- [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code)
-- [Copilot custom instructions](https://docs.github.com/en/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot)
-- [Cursor rules](https://docs.cursor.com/context/rules-for-ai)
-- [Windsurf rules](https://docs.codeium.com/windsurf/memories#rules)
-- [Cline rules](https://github.com/cline/cline#custom-instructions)
+## Resources
+
+- **Claude Code**: https://docs.anthropic.com/en/docs/claude-code
+- **GitHub Copilot Instructions**: https://docs.github.com/en/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot
+- **Cursor Rules**: https://docs.cursor.com/context/rules-for-ai
+- **Windsurf Rules**: https://docs.codeium.com/windsurf/memories#rules
+- **Cline Rules**: https://github.com/cline/cline#custom-instructions

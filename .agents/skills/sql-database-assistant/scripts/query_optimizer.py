@@ -1,356 +1,347 @@
 #!/usr/bin/env python3
 """
-SQL Query Optimizer - Analyze SQL queries for performance issues.
+SQL Query Optimizer — Static Analysis
 
-Detects common anti-patterns like SELECT *, leading wildcards in LIKE,
-missing indexes, N+1 patterns, and full table scans.
+Analyzes SQL queries for common performance issues:
+- SELECT * usage
+- Missing WHERE clauses on UPDATE/DELETE
+- Cartesian joins (missing JOIN conditions)
+- Subqueries in SELECT list
+- Missing LIMIT on unbounded SELECTs
+- Function calls on indexed columns (non-sargable)
+- LIKE with leading wildcard
+- ORDER BY RAND()
+- UNION instead of UNION ALL
+- NOT IN with subquery (NULL-unsafe)
 
-Author: Claude Skills Engineering Team
-License: MIT
+Usage:
+    python query_optimizer.py --query "SELECT * FROM users"
+    python query_optimizer.py --query queries.sql --dialect postgres
+    python query_optimizer.py --query "SELECT * FROM orders" --json
 """
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, asdict
-from pathlib import Path
-from typing import List, Optional, Set
+from typing import List, Optional
 
 
 @dataclass
-class Finding:
-    """A query optimization finding."""
+class Issue:
+    """A single optimization issue found in a query."""
     severity: str  # critical, warning, info
-    category: str
-    query_excerpt: str
+    rule: str
     message: str
-    recommendation: str
+    suggestion: str
+    line: Optional[int] = None
 
 
-class SQLQueryAnalyzer:
-    """Analyzes SQL queries for performance issues."""
+@dataclass
+class QueryAnalysis:
+    """Analysis result for one SQL query."""
+    query: str
+    issues: List[Issue]
+    score: int  # 0-100, higher is better
 
-    def __init__(self):
-        self.findings: List[Finding] = []
+    def to_dict(self):
+        return {
+            "query": self.query[:200] + ("..." if len(self.query) > 200 else ""),
+            "issues": [asdict(i) for i in self.issues],
+            "issue_count": len(self.issues),
+            "score": self.score,
+        }
 
-    def analyze(self, sql: str, source: str = "") -> List[Finding]:
-        """Analyze a SQL query or batch of queries."""
-        self.findings = []
 
-        # Split on semicolons to handle multiple statements
-        statements = [s.strip() for s in sql.split(";") if s.strip()]
+# ---------------------------------------------------------------------------
+# Rule checkers
+# ---------------------------------------------------------------------------
 
-        for stmt in statements:
-            self._analyze_statement(stmt)
+def check_select_star(sql: str) -> Optional[Issue]:
+    """Detect SELECT * usage."""
+    if re.search(r'\bSELECT\s+\*\s', sql, re.IGNORECASE):
+        return Issue(
+            severity="warning",
+            rule="select-star",
+            message="SELECT * transfers unnecessary data and breaks on schema changes.",
+            suggestion="List only the columns you need: SELECT col1, col2, ...",
+        )
+    return None
 
-        return self.findings
 
-    def _analyze_statement(self, sql: str):
-        """Analyze a single SQL statement."""
-        upper = sql.upper()
-
-        if not any(upper.startswith(kw) for kw in ["SELECT", "INSERT", "UPDATE", "DELETE", "WITH"]):
-            return
-
-        self._check_select_star(sql, upper)
-        self._check_like_patterns(sql, upper)
-        self._check_missing_where(sql, upper)
-        self._check_subqueries(sql, upper)
-        self._check_joins(sql, upper)
-        self._check_or_conditions(sql, upper)
-        self._check_functions_on_columns(sql, upper)
-        self._check_distinct(sql, upper)
-        self._check_order_by(sql, upper)
-        self._check_limit(sql, upper)
-        self._check_null_comparisons(sql, upper)
-
-    def _check_select_star(self, sql: str, upper: str):
-        """Check for SELECT * usage."""
-        if re.search(r'\bSELECT\s+\*\s', upper):
-            # Exclude COUNT(*) and EXISTS(SELECT *)
-            if not re.search(r'\bCOUNT\s*\(\s*\*\s*\)', upper) and \
-               not re.search(r'\bEXISTS\s*\(\s*SELECT\s+\*', upper):
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="select",
-                    query_excerpt=sql[:100],
-                    message="SELECT * fetches all columns, including unnecessary data.",
-                    recommendation="List only the specific columns needed. This reduces I/O, memory, and network usage.",
-                ))
-
-    def _check_like_patterns(self, sql: str, upper: str):
-        """Check for leading wildcard LIKE patterns."""
-        # Match LIKE '%something' or LIKE '%something%'
-        leading_wildcard = re.findall(r"LIKE\s+['\"]%[^'\"]+['\"]", upper)
-        if leading_wildcard:
-            for pattern in leading_wildcard:
-                self.findings.append(Finding(
-                    severity="critical",
-                    category="index",
-                    query_excerpt=pattern,
-                    message="Leading wildcard in LIKE prevents index usage, causing full table scan.",
-                    recommendation="Use full-text search (FTS), trigram indexes, or restructure to avoid leading wildcards.",
-                ))
-
-        # Trailing wildcard is fine but note it
-        trailing_only = re.findall(r"LIKE\s+['\"][^%][^'\"]*%['\"]", upper)
-        if trailing_only:
-            for pattern in trailing_only:
-                self.findings.append(Finding(
-                    severity="info",
-                    category="index",
-                    query_excerpt=pattern,
-                    message="Trailing wildcard LIKE can use B-tree indexes efficiently.",
-                    recommendation="Ensure the column used in LIKE has a B-tree index.",
-                ))
-
-    def _check_missing_where(self, sql: str, upper: str):
-        """Check for queries without WHERE clause."""
-        if upper.startswith("SELECT") and "WHERE" not in upper:
-            # Skip if it's a simple lookup or has LIMIT
-            if "LIMIT" not in upper and "TOP" not in upper:
-                from_match = re.search(r'\bFROM\s+(\w+)', upper)
-                table = from_match.group(1) if from_match else "unknown"
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="scan",
-                    query_excerpt=sql[:100],
-                    message=f"SELECT from '{table}' without WHERE clause may cause full table scan.",
-                    recommendation="Add WHERE conditions to filter rows, or add LIMIT if fetching a sample.",
-                ))
-
-        if upper.startswith("UPDATE") and "WHERE" not in upper:
-            self.findings.append(Finding(
+def check_missing_where(sql: str) -> Optional[Issue]:
+    """Detect UPDATE/DELETE without WHERE."""
+    upper = sql.upper().strip()
+    for keyword in ("UPDATE", "DELETE"):
+        if upper.startswith(keyword) and "WHERE" not in upper:
+            return Issue(
                 severity="critical",
-                category="safety",
-                query_excerpt=sql[:100],
-                message="UPDATE without WHERE clause will modify ALL rows.",
-                recommendation="Add a WHERE clause to target specific rows.",
-            ))
+                rule="missing-where",
+                message=f"{keyword} without WHERE affects every row in the table.",
+                suggestion=f"Add a WHERE clause to restrict the {keyword} scope.",
+            )
+    return None
 
-        if upper.startswith("DELETE") and "WHERE" not in upper:
-            self.findings.append(Finding(
-                severity="critical",
-                category="safety",
-                query_excerpt=sql[:100],
-                message="DELETE without WHERE clause will remove ALL rows.",
-                recommendation="Add a WHERE clause to target specific rows. Use TRUNCATE if intentional.",
-            ))
 
-    def _check_subqueries(self, sql: str, upper: str):
-        """Check for correlated subqueries (N+1 pattern)."""
-        # Look for subqueries in SELECT or WHERE that reference outer table
-        subquery_in_select = re.findall(r'\(\s*SELECT\b[^)]+\)', upper)
-        for sq in subquery_in_select:
-            # Simple heuristic: if subquery is in SELECT clause
-            if "WHERE" in sq:
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="n+1",
-                    query_excerpt=sq[:80],
-                    message="Subquery in SELECT/WHERE may execute once per row (correlated subquery).",
-                    recommendation="Rewrite as a JOIN or use a CTE (WITH clause) for better performance.",
-                ))
+def check_cartesian_join(sql: str) -> Optional[Issue]:
+    """Detect comma-separated tables without explicit JOIN or WHERE join condition."""
+    upper = sql.upper()
+    if "SELECT" not in upper:
+        return None
+    from_match = re.search(r'\bFROM\s+(.+?)(?:\bWHERE\b|\bGROUP\b|\bORDER\b|\bLIMIT\b|\bHAVING\b|;|$)',
+                           sql, re.IGNORECASE | re.DOTALL)
+    if not from_match:
+        return None
+    from_clause = from_match.group(1)
+    # Skip if explicit JOINs are used
+    if re.search(r'\bJOIN\b', from_clause, re.IGNORECASE):
+        return None
+    # Count comma-separated tables
+    tables = [t.strip() for t in from_clause.split(",") if t.strip()]
+    if len(tables) > 1 and "WHERE" not in upper:
+        return Issue(
+            severity="critical",
+            rule="cartesian-join",
+            message="Multiple tables in FROM without JOIN or WHERE creates a cartesian product.",
+            suggestion="Use explicit JOIN syntax with ON conditions.",
+        )
+    return None
 
-    def _check_joins(self, sql: str, upper: str):
-        """Check JOIN patterns."""
-        # Check for implicit joins (comma-separated FROM)
-        from_match = re.search(r'\bFROM\s+(\w+\s*,\s*\w+(?:\s*,\s*\w+)*)', upper)
-        if from_match:
-            self.findings.append(Finding(
-                severity="info",
-                category="join",
-                query_excerpt=from_match.group(0)[:80],
-                message="Implicit join (comma syntax) found. Prefer explicit JOIN syntax.",
-                recommendation="Use explicit JOIN ... ON syntax for clarity and to prevent accidental cross joins.",
-            ))
 
-        # Check for CROSS JOIN
-        if "CROSS JOIN" in upper:
-            self.findings.append(Finding(
+def check_subquery_in_select(sql: str) -> Optional[Issue]:
+    """Detect correlated subqueries in SELECT list."""
+    select_match = re.search(r'\bSELECT\b(.+?)\bFROM\b', sql, re.IGNORECASE | re.DOTALL)
+    if select_match:
+        select_clause = select_match.group(1)
+        if re.search(r'\(\s*SELECT\b', select_clause, re.IGNORECASE):
+            return Issue(
                 severity="warning",
-                category="join",
-                query_excerpt="CROSS JOIN detected",
-                message="CROSS JOIN produces cartesian product of both tables.",
-                recommendation="Ensure CROSS JOIN is intentional. Consider INNER JOIN with ON condition.",
-            ))
-
-        # Check for missing ON in JOIN
-        join_without_on = re.findall(r'\bJOIN\s+\w+\s+(?:AS\s+)?\w+\s+(?!ON\b)', upper)
-        if join_without_on:
-            self.findings.append(Finding(
-                severity="warning",
-                category="join",
-                query_excerpt=str(join_without_on[0])[:80],
-                message="JOIN without ON condition detected.",
-                recommendation="Add ON condition to specify the join relationship.",
-            ))
-
-    def _check_or_conditions(self, sql: str, upper: str):
-        """Check for OR conditions that prevent index usage."""
-        or_count = len(re.findall(r'\bOR\b', upper))
-        if or_count >= 3:
-            self.findings.append(Finding(
-                severity="info",
-                category="index",
-                query_excerpt=f"{or_count} OR conditions",
-                message=f"Multiple OR conditions ({or_count}) may prevent efficient index usage.",
-                recommendation="Consider rewriting with IN clause, UNION, or separate indexed queries.",
-            ))
-
-    def _check_functions_on_columns(self, sql: str, upper: str):
-        """Check for functions applied to indexed columns in WHERE."""
-        function_patterns = [
-            (r'WHERE\s+\w+\s*\(\s*\w+\s*\)\s*=', "Function on column in WHERE"),
-            (r'WHERE\s+UPPER\s*\(', "UPPER() on column prevents index usage"),
-            (r'WHERE\s+LOWER\s*\(', "LOWER() on column prevents index usage"),
-            (r'WHERE\s+CAST\s*\(', "CAST() on column prevents index usage"),
-            (r'WHERE\s+COALESCE\s*\(', "COALESCE() on column prevents index usage"),
-            (r'WHERE\s+DATE\s*\(', "DATE() on column prevents index usage"),
-            (r'WHERE\s+YEAR\s*\(', "YEAR() on column prevents index usage"),
-        ]
-
-        for pattern, msg in function_patterns:
-            if re.search(pattern, upper):
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="index",
-                    query_excerpt=msg,
-                    message=f"{msg} - prevents index usage.",
-                    recommendation="Apply the function to the comparison value instead, or create a computed/expression index.",
-                ))
-
-    def _check_distinct(self, sql: str, upper: str):
-        """Check for DISTINCT usage that might indicate a JOIN issue."""
-        if re.search(r'\bSELECT\s+DISTINCT\b', upper):
-            self.findings.append(Finding(
-                severity="info",
-                category="query",
-                query_excerpt="SELECT DISTINCT",
-                message="DISTINCT may indicate duplicate rows from incorrect JOINs.",
-                recommendation="Review JOIN conditions. If duplicates are expected, DISTINCT is fine; otherwise fix the JOIN.",
-            ))
-
-    def _check_order_by(self, sql: str, upper: str):
-        """Check ORDER BY patterns."""
-        if re.search(r'ORDER\s+BY\s+\w+\s*,\s*\w+\s*,\s*\w+', upper):
-            self.findings.append(Finding(
-                severity="info",
-                category="performance",
-                query_excerpt="Multi-column ORDER BY",
-                message="Sorting by 3+ columns may be expensive without a matching composite index.",
-                recommendation="Ensure a composite index exists matching the ORDER BY column order.",
-            ))
-
-    def _check_limit(self, sql: str, upper: str):
-        """Check for large offset in LIMIT."""
-        offset_match = re.search(r'OFFSET\s+(\d+)', upper)
-        if offset_match:
-            offset = int(offset_match.group(1))
-            if offset > 1000:
-                self.findings.append(Finding(
-                    severity="warning",
-                    category="performance",
-                    query_excerpt=f"OFFSET {offset}",
-                    message=f"Large OFFSET ({offset}) requires scanning and discarding {offset} rows.",
-                    recommendation="Use keyset/cursor pagination instead of OFFSET for better performance.",
-                ))
-
-    def _check_null_comparisons(self, sql: str, upper: str):
-        """Check for incorrect NULL comparisons."""
-        if re.search(r'=\s*NULL\b', upper) or re.search(r'!=\s*NULL\b', upper) or re.search(r'<>\s*NULL\b', upper):
-            self.findings.append(Finding(
-                severity="critical",
-                category="correctness",
-                query_excerpt="comparison with NULL",
-                message="Using = or != with NULL always evaluates to NULL (unknown), not TRUE/FALSE.",
-                recommendation="Use IS NULL or IS NOT NULL instead.",
-            ))
+                rule="subquery-in-select",
+                message="Subquery in SELECT list executes once per row (correlated subquery).",
+                suggestion="Rewrite as a LEFT JOIN with aggregation.",
+            )
+    return None
 
 
-def format_text(findings: List[Finding], source: str) -> str:
-    """Format as human-readable text."""
+def check_missing_limit(sql: str) -> Optional[Issue]:
+    """Detect unbounded SELECT without LIMIT."""
+    upper = sql.upper().strip()
+    if not upper.startswith("SELECT"):
+        return None
+    # Skip if it's a subquery or aggregate-only
+    if re.search(r'\bCOUNT\s*\(', upper) and "GROUP BY" not in upper:
+        return None
+    if "LIMIT" not in upper and "FETCH" not in upper and "TOP " not in upper:
+        return Issue(
+            severity="info",
+            rule="missing-limit",
+            message="SELECT without LIMIT may return unbounded rows.",
+            suggestion="Add LIMIT to prevent returning excessive data.",
+        )
+    return None
+
+
+def check_function_on_column(sql: str) -> Optional[Issue]:
+    """Detect function calls on columns in WHERE (non-sargable)."""
+    where_match = re.search(r'\bWHERE\b(.+?)(?:\bGROUP\b|\bORDER\b|\bLIMIT\b|\bHAVING\b|;|$)',
+                            sql, re.IGNORECASE | re.DOTALL)
+    if not where_match:
+        return None
+    where_clause = where_match.group(1)
+    non_sargable = re.search(
+        r'\b(YEAR|MONTH|DAY|DATE|UPPER|LOWER|TRIM|CAST|COALESCE|IFNULL|NVL)\s*\(',
+        where_clause, re.IGNORECASE
+    )
+    if non_sargable:
+        func = non_sargable.group(1).upper()
+        return Issue(
+            severity="warning",
+            rule="non-sargable",
+            message=f"Function {func}() on column in WHERE prevents index usage.",
+            suggestion="Rewrite to compare the raw column against transformed constants.",
+        )
+    return None
+
+
+def check_leading_wildcard(sql: str) -> Optional[Issue]:
+    """Detect LIKE '%...' patterns."""
+    if re.search(r"LIKE\s+'%", sql, re.IGNORECASE):
+        return Issue(
+            severity="warning",
+            rule="leading-wildcard",
+            message="LIKE with leading wildcard prevents index usage.",
+            suggestion="Use full-text search (GIN index, FULLTEXT, FTS5) for substring matching.",
+        )
+    return None
+
+
+def check_order_by_rand(sql: str) -> Optional[Issue]:
+    """Detect ORDER BY RAND() / RANDOM()."""
+    if re.search(r'ORDER\s+BY\s+(RAND|RANDOM)\s*\(\)', sql, re.IGNORECASE):
+        return Issue(
+            severity="warning",
+            rule="order-by-rand",
+            message="ORDER BY RAND() scans and sorts the entire table.",
+            suggestion="Use application-side random sampling or TABLESAMPLE.",
+        )
+    return None
+
+
+def check_union_vs_union_all(sql: str) -> Optional[Issue]:
+    """Detect UNION without ALL (unnecessary dedup)."""
+    if re.search(r'\bUNION\b(?!\s+ALL\b)', sql, re.IGNORECASE):
+        return Issue(
+            severity="info",
+            rule="union-without-all",
+            message="UNION performs deduplication sort; use UNION ALL if duplicates are acceptable.",
+            suggestion="Replace UNION with UNION ALL unless you specifically need deduplication.",
+        )
+    return None
+
+
+def check_not_in_subquery(sql: str) -> Optional[Issue]:
+    """Detect NOT IN (SELECT ...) which is NULL-unsafe."""
+    if re.search(r'\bNOT\s+IN\s*\(\s*SELECT\b', sql, re.IGNORECASE):
+        return Issue(
+            severity="warning",
+            rule="not-in-subquery",
+            message="NOT IN with subquery returns no rows if any subquery result is NULL.",
+            suggestion="Use NOT EXISTS (SELECT 1 ...) instead.",
+        )
+    return None
+
+
+ALL_CHECKS = [
+    check_select_star,
+    check_missing_where,
+    check_cartesian_join,
+    check_subquery_in_select,
+    check_missing_limit,
+    check_function_on_column,
+    check_leading_wildcard,
+    check_order_by_rand,
+    check_union_vs_union_all,
+    check_not_in_subquery,
+]
+
+
+# ---------------------------------------------------------------------------
+# Analysis engine
+# ---------------------------------------------------------------------------
+
+def analyze_query(sql: str, dialect: str = "postgres") -> QueryAnalysis:
+    """Run all checks against a single SQL query."""
+    issues: List[Issue] = []
+    for check_fn in ALL_CHECKS:
+        issue = check_fn(sql)
+        if issue:
+            issues.append(issue)
+
+    # Score: start at 100, deduct per severity
+    score = 100
+    for issue in issues:
+        if issue.severity == "critical":
+            score -= 25
+        elif issue.severity == "warning":
+            score -= 10
+        else:
+            score -= 5
+    score = max(0, score)
+
+    return QueryAnalysis(query=sql.strip(), issues=issues, score=score)
+
+
+def split_queries(text: str) -> List[str]:
+    """Split SQL text into individual statements."""
+    queries = []
+    for stmt in text.split(";"):
+        stmt = stmt.strip()
+        if stmt and len(stmt) > 5:
+            queries.append(stmt + ";")
+    return queries
+
+
+# ---------------------------------------------------------------------------
+# Output formatting
+# ---------------------------------------------------------------------------
+
+SEVERITY_ICONS = {"critical": "[CRITICAL]", "warning": "[WARNING]", "info": "[INFO]"}
+
+
+def format_text(analyses: List[QueryAnalysis]) -> str:
+    """Format analysis results as human-readable text."""
     lines = []
-    lines.append("=" * 60)
-    lines.append("SQL QUERY OPTIMIZATION REPORT")
-    lines.append("=" * 60)
-    if source:
-        lines.append(f"Source: {source}")
-
-    critical = [f for f in findings if f.severity == "critical"]
-    warnings = [f for f in findings if f.severity == "warning"]
-    info = [f for f in findings if f.severity == "info"]
-
-    lines.append(f"\nFindings: {len(critical)} critical, {len(warnings)} warnings, {len(info)} info")
-    lines.append("-" * 60)
-
-    for sev, group in [("CRITICAL", critical), ("WARNING", warnings), ("INFO", info)]:
-        if not group:
-            continue
-        lines.append(f"\n[{sev}]")
-        for f in group:
-            lines.append(f"  [{f.category}] {f.message}")
-            lines.append(f"    Query: {f.query_excerpt}")
-            lines.append(f"    Fix: {f.recommendation}")
-            lines.append("")
-
-    if not findings:
-        lines.append("\nNo optimization issues found.")
-
-    lines.append("=" * 60)
+    for i, analysis in enumerate(analyses, 1):
+        lines.append(f"{'='*60}")
+        lines.append(f"Query {i} (Score: {analysis.score}/100)")
+        lines.append(f"  {analysis.query[:120]}{'...' if len(analysis.query) > 120 else ''}")
+        lines.append("")
+        if not analysis.issues:
+            lines.append("  No issues detected.")
+        for issue in analysis.issues:
+            icon = SEVERITY_ICONS.get(issue.severity, "")
+            lines.append(f"  {icon} {issue.rule}: {issue.message}")
+            lines.append(f"    -> {issue.suggestion}")
+        lines.append("")
     return "\n".join(lines)
 
 
-def format_json(findings: List[Finding], source: str) -> str:
-    """Format as JSON."""
-    return json.dumps({
-        "source": source,
-        "findings": [asdict(f) for f in findings],
-        "summary": {
-            "total": len(findings),
-            "critical": sum(1 for f in findings if f.severity == "critical"),
-            "warnings": sum(1 for f in findings if f.severity == "warning"),
-            "info": sum(1 for f in findings if f.severity == "info"),
-        }
-    }, indent=2)
+def format_json(analyses: List[QueryAnalysis]) -> str:
+    """Format analysis results as JSON."""
+    return json.dumps(
+        {"analyses": [a.to_dict() for a in analyses], "total_queries": len(analyses)},
+        indent=2,
+    )
 
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze SQL queries for performance issues and optimization opportunities."
+        description="Analyze SQL queries for common performance issues.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s --query "SELECT * FROM users"
+  %(prog)s --query queries.sql --dialect mysql
+  %(prog)s --query "DELETE FROM orders" --json
+        """,
     )
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--file", "-f", help="Path to SQL file")
-    group.add_argument("--query", "-q", help="SQL query string to analyze")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
-    parser.add_argument("--strict", action="store_true", help="Exit non-zero on any finding")
+    parser.add_argument(
+        "--query", required=True,
+        help="SQL query string or path to a .sql file",
+    )
+    parser.add_argument(
+        "--dialect", choices=["postgres", "mysql", "sqlite", "sqlserver"],
+        default="postgres", help="SQL dialect (default: postgres)",
+    )
+    parser.add_argument(
+        "--json", action="store_true", dest="json_output",
+        help="Output results as JSON",
+    )
     args = parser.parse_args()
 
-    analyzer = SQLQueryAnalyzer()
+    # Determine if query is a file path or inline SQL
+    sql_text = args.query
+    if os.path.isfile(args.query):
+        with open(args.query, "r") as f:
+            sql_text = f.read()
 
-    if args.file:
-        path = Path(args.file)
-        if not path.exists():
-            print(f"Error: File not found: {args.file}", file=sys.stderr)
-            sys.exit(2)
-        sql = path.read_text()
-        source = str(path)
+    queries = split_queries(sql_text)
+    if not queries:
+        # Treat the whole input as a single query
+        queries = [sql_text.strip()]
+
+    analyses = [analyze_query(q, args.dialect) for q in queries]
+
+    if args.json_output:
+        print(format_json(analyses))
     else:
-        sql = args.query
-        source = "inline"
-
-    findings = analyzer.analyze(sql, source)
-
-    if args.format == "json":
-        print(format_json(findings, source))
-    else:
-        print(format_text(findings, source))
-
-    if any(f.severity == "critical" for f in findings):
-        sys.exit(1)
-    if args.strict and findings:
-        sys.exit(1)
+        print(format_text(analyses))
 
 
 if __name__ == "__main__":

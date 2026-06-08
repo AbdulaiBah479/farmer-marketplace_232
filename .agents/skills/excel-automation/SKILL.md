@@ -1,313 +1,203 @@
 ---
-name: excel-automation
-description: Create, parse, and control Excel files on macOS. Professional formatting with openpyxl, complex xlsm parsing with stdlib zipfile+xml for investment bank financial models, and Excel window control via AppleScript. Use when creating formatted Excel reports, parsing financial models that openpyxl cannot handle, or automating Excel on macOS.
+name: Excel Automation
+description: "Excel Automation: create workbooks, manage worksheets, read/write cell data, and format spreadsheets via Microsoft Excel and Google Sheets integration"
+requires:
+  mcp: [rube]
 ---
 
 # Excel Automation
 
-Create professional Excel files, parse complex financial models, and control Excel on macOS.
+Automate spreadsheet operations including creating workbooks, writing data, formatting cells, upserting rows, and managing worksheets. Works with Microsoft Excel (OneDrive) and Google Sheets.
 
-## Quick Start
+**Toolkit docs:** [composio.dev/toolkits/excel](https://composio.dev/toolkits/excel)
 
-```bash
-# Create a formatted Excel report
-uv run --with openpyxl scripts/create_formatted_excel.py output.xlsx
+---
 
-# Parse a complex xlsm that openpyxl can't handle
-uv run scripts/parse_complex_excel.py model.xlsm              # List sheets
-uv run scripts/parse_complex_excel.py model.xlsm "DCF"        # Extract a sheet
-uv run scripts/parse_complex_excel.py model.xlsm --fix        # Fix corrupted names
+## Setup
 
-# Control Excel via AppleScript (with timeout to prevent hangs)
-timeout 5 osascript -e 'tell application "Microsoft Excel" to activate'
+This skill requires the **Rube MCP server** connected at `https://rube.app/mcp`.
+
+Before executing any tools, ensure an active connection exists for the `excel` (and optionally `googlesheets`) toolkit. If no connection is active, initiate one via `RUBE_MANAGE_CONNECTIONS`.
+
+---
+
+## Core Workflows
+
+### 1. Create a New Excel Workbook
+
+Use `EXCEL_CREATE_WORKBOOK` to generate a new `.xlsx` file and upload it to OneDrive.
+
+**Tool:** `EXCEL_CREATE_WORKBOOK`
+
+**Steps:**
+1. Call `EXCEL_CREATE_WORKBOOK` with worksheet names and data
+2. The tool creates a `.xlsx` file and uploads it to OneDrive
+3. Use the returned file path/URL for subsequent operations
+
+---
+
+### 2. Write Data to a Spreadsheet
+
+Use `GOOGLESHEETS_BATCH_UPDATE` to write values to a specific range or append rows.
+
+**Tool:** `GOOGLESHEETS_BATCH_UPDATE`
+
+**Key Parameters:**
+- `spreadsheet_id` (required) -- The spreadsheet ID from the URL (44-char alphanumeric string)
+- `sheet_name` (required) -- Tab name, e.g., `"Sheet1"`, `"Sales Data"`
+- `values` (required) -- 2D array of cell values, e.g., `[["Name","Amount"],["Alice",100]]`
+- `first_cell_location` -- Starting cell in A1 notation (e.g., `"A1"`, `"D3"`). Omit to append rows
+- `valueInputOption` -- `"USER_ENTERED"` (default, parses formulas) or `"RAW"` (stores as-is)
+
+**Example:**
+```
+Tool: GOOGLESHEETS_BATCH_UPDATE
+Arguments:
+  spreadsheet_id: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+  sheet_name: "Sheet1"
+  values: [["Item","Cost","Stocked"],["Wheel",20.50,true],["Screw",0.50,true]]
+  first_cell_location: "A1"
 ```
 
-## Overview
+---
 
-Three capabilities:
+### 3. Upsert Rows by Key Column
 
-| Capability | Tool | When to Use |
-|-----------|------|-------------|
-| **Create** formatted Excel | `openpyxl` | Reports, mockups, dashboards |
-| **Parse** complex xlsm/xlsx | `zipfile` + `xml.etree` | Financial models, VBA workbooks, >1MB files |
-| **Control** Excel window | AppleScript (`osascript`) | Zoom, scroll, select cells programmatically |
+Use `GOOGLESHEETS_UPSERT_ROWS` to update existing rows by matching a key column, or append new rows if no match is found. Ideal for CRM syncs, inventory updates, and deduplication.
 
-## Tool Selection Decision Tree
+**Tool:** `GOOGLESHEETS_UPSERT_ROWS`
 
+**Key Parameters:**
+- `spreadsheetId` (required) -- The spreadsheet ID
+- `sheetName` (required) -- Tab name
+- `rows` (required) -- 2D array of data rows (min 1 row). If `headers` is omitted, the first row is treated as headers
+- `headers` -- Column names for the data, e.g., `["Email","Phone","Status"]`
+- `keyColumn` -- Column header to match on, e.g., `"Email"`, `"SKU"`, `"Lead ID"`
+- `strictMode` -- `true` (default) errors on mismatched columns; `false` truncates silently
+
+**Example:**
 ```
-Is the file simple (data export, no VBA, <1MB)?
-├─ YES → openpyxl or pandas
-└─ NO
-   ├─ Is it .xlsm or from investment bank / >1MB?
-   │   └─ YES → zipfile + xml.etree.ElementTree (stdlib)
-   └─ Is it truly .xls (BIFF format)?
-       └─ YES → xlrd
-```
-
-**Signals of "complex" Excel**: file >1MB, `.xlsm` extension, from investment bank/broker, contains VBA macros.
-
-**IMPORTANT**: Always run `file <path>` first — extensions lie. A `.xls` file may actually be a ZIP-based xlsx.
-
-## Creating Excel Files (openpyxl)
-
-### Professional Color Convention (Investment Banking Standard)
-
-| Color | RGB Code | Meaning |
-|-------|----------|---------|
-| Blue | `0000FF` | User input / assumption |
-| Black | `000000` | Calculated value |
-| Green | `008000` | Cross-sheet reference |
-| White on dark blue | `FFFFFF` on `4472C4` | Section headers |
-| Dark blue text | `1F4E79` | Title |
-
-### Core Formatting Patterns
-
-```python
-from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
-
-# Fonts
-BLUE_FONT = Font(color="0000FF", size=10, name="Calibri")
-BLACK_FONT_BOLD = Font(color="000000", size=10, name="Calibri", bold=True)
-GREEN_FONT = Font(color="008000", size=10, name="Calibri")
-HEADER_FONT = Font(color="FFFFFF", size=12, name="Calibri", bold=True)
-
-# Fills
-DARK_BLUE_FILL = PatternFill("solid", fgColor="4472C4")
-LIGHT_BLUE_FILL = PatternFill("solid", fgColor="D9E1F2")
-INPUT_GREEN_FILL = PatternFill("solid", fgColor="E2EFDA")
-LIGHT_GRAY_FILL = PatternFill("solid", fgColor="F2F2F2")
-
-# Borders
-THIN_BORDER = Border(bottom=Side(style="thin", color="B2B2B2"))
-BOTTOM_DOUBLE = Border(bottom=Side(style="double", color="000000"))
+Tool: GOOGLESHEETS_UPSERT_ROWS
+Arguments:
+  spreadsheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+  sheetName: "Contacts"
+  keyColumn: "Email"
+  headers: ["Email","Phone","Status"]
+  rows: [["john@example.com","555-0101","Active"],["jane@example.com","555-0102","Pending"]]
 ```
 
-### Number Format Codes
+---
 
-| Format | Code | Example |
-|--------|------|---------|
-| Currency | `'$#,##0'` | $1,234 |
-| Currency with decimals | `'$#,##0.00'` | $1,234.56 |
-| Percentage | `'0.0%'` | 12.3% |
-| Percentage (2 decimal) | `'0.00%'` | 12.34% |
-| Number with commas | `'#,##0'` | 1,234 |
-| Multiplier | `'0.0x'` | 1.5x |
+### 4. Format Cells
 
-### Conditional Formatting (Sensitivity Tables)
+Use `GOOGLESHEETS_FORMAT_CELL` to apply bold, italic, font size, and background colors to ranges.
 
-Red-to-green gradient for sensitivity analysis:
+**Tool:** `GOOGLESHEETS_FORMAT_CELL`
 
-```python
-from openpyxl.formatting.rule import ColorScaleRule
+**Key Parameters:**
+- `spreadsheet_id` (required) -- The spreadsheet ID
+- `range` -- Cell range in A1 notation, e.g., `"A1:D1"`, `"B2:B10"` (recommended over index-based)
+- `sheet_name` -- Worksheet name, e.g., `"Sheet1"`
+- `bold` -- `true`/`false`
+- `italic` -- `true`/`false`
+- `fontSize` -- Font size in points, e.g., `12`
+- `red`, `green`, `blue` -- Background color components (0.0--1.0 float scale, NOT 0--255)
 
-rule = ColorScaleRule(
-    start_type="min", start_color="F8696B",   # Red (low)
-    mid_type="percentile", mid_value=50, mid_color="FFEB84",  # Yellow (mid)
-    end_type="max", end_color="63BE7B"         # Green (high)
-)
-ws.conditional_formatting.add(f"B2:F6", rule)
+**Example (bold header row with blue background):**
+```
+Tool: GOOGLESHEETS_FORMAT_CELL
+Arguments:
+  spreadsheet_id: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+  range: "A1:D1"
+  sheet_name: "Sheet1"
+  bold: true
+  fontSize: 12
+  red: 0.2
+  green: 0.4
+  blue: 0.9
 ```
 
-### Execution
+---
 
-```bash
-uv run --with openpyxl scripts/create_formatted_excel.py
+### 5. Add New Worksheet Tabs
+
+Use `GOOGLESHEETS_ADD_SHEET` to create new tabs within an existing spreadsheet.
+
+**Tool:** `GOOGLESHEETS_ADD_SHEET`
+
+**Key Parameters:**
+- `spreadsheetId` (required) -- The spreadsheet ID
+- `title` -- Name for the new tab, e.g., `"Q4 Report"`
+- `forceUnique` -- `true` (default) auto-appends suffix if name exists
+
+**Example:**
+```
+Tool: GOOGLESHEETS_ADD_SHEET
+Arguments:
+  spreadsheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+  title: "Q4 Report"
+  forceUnique: true
 ```
 
-Full template script: See `scripts/create_formatted_excel.py`
+---
 
-## Parsing Complex Excel (zipfile + xml)
+### 6. Read Data and Verify Content
 
-When openpyxl fails on complex xlsm files (corrupted DefinedNames, complex VBA), use stdlib directly.
+Use `GOOGLESHEETS_BATCH_GET` to retrieve data from specified cell ranges for validation or further processing.
 
-### XLSX Internal ZIP Structure
+**Tool:** `GOOGLESHEETS_BATCH_GET`
 
-```
-file.xlsx (ZIP archive)
-├── [Content_Types].xml
-├── xl/
-│   ├── workbook.xml          ← Sheet names + order
-│   ├── sharedStrings.xml     ← All text values (lookup table)
-│   ├── worksheets/
-│   │   ├── sheet1.xml        ← Cell data for sheet 1
-│   │   ├── sheet2.xml        ← Cell data for sheet 2
-│   │   └── ...
-│   └── _rels/
-│       └── workbook.xml.rels ← Maps rId → sheetN.xml
-└── _rels/.rels
-```
+**Steps:**
+1. Call `GOOGLESHEETS_BATCH_GET` with the spreadsheet ID and target ranges
+2. Validate headers and data alignment
+3. Use results to inform subsequent write or update operations
 
-### Sheet Name Resolution (Two-Step)
+**Supporting Tools:**
+- `GOOGLESHEETS_GET_SHEET_NAMES` -- List all tab names in a spreadsheet
+- `GOOGLESHEETS_GET_SPREADSHEET_INFO` -- Get metadata (sheet IDs, properties)
+- `GOOGLESHEETS_FIND_WORKSHEET_BY_TITLE` -- Check if a specific tab exists
 
-Sheet names in `workbook.xml` link to physical files via `_rels/workbook.xml.rels`:
+---
 
-```python
-import zipfile
-import xml.etree.ElementTree as ET
+## Recommended Execution Plan
 
-MAIN_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
-REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
-RELS_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
+1. **Create or locate the spreadsheet** using `GOOGLESHEETS_CREATE_GOOGLE_SHEET1` or reuse an existing `spreadsheetId`
+2. **Confirm the destination tab** using `GOOGLESHEETS_GET_SHEET_NAMES` or `GOOGLESHEETS_FIND_WORKSHEET_BY_TITLE`; create it with `GOOGLESHEETS_ADD_SHEET` if missing
+3. **Read existing headers** (optional) using `GOOGLESHEETS_BATCH_GET` to align columns
+4. **Write or upsert data** using `GOOGLESHEETS_BATCH_UPDATE` or `GOOGLESHEETS_UPSERT_ROWS`
+5. **Apply formatting** (optional) using `GOOGLESHEETS_FORMAT_CELL`
+6. **Verify results** (optional) using `GOOGLESHEETS_BATCH_GET`
+7. **Fallback:** If Google Sheets creation is blocked (HTTP 403), use `EXCEL_CREATE_WORKBOOK` for local `.xlsx` output
 
-def get_sheet_path(zf, sheet_name):
-    """Resolve sheet name to physical XML file path inside ZIP."""
-    # Step 1: workbook.xml → find rId for the sheet name
-    wb_xml = ET.fromstring(zf.read('xl/workbook.xml'))
-    sheets = wb_xml.findall(f'.//{{{MAIN_NS}}}sheet')
-    rid = None
-    for s in sheets:
-        if s.get('name') == sheet_name:
-            rid = s.get(f'{{{REL_NS}}}id')
-            break
-    if not rid:
-        raise ValueError(f"Sheet '{sheet_name}' not found")
+---
 
-    # Step 2: workbook.xml.rels → map rId to file path
-    rels_xml = ET.fromstring(zf.read('xl/_rels/workbook.xml.rels'))
-    for rel in rels_xml.findall(f'{{{RELS_NS}}}Relationship'):
-        if rel.get('Id') == rid:
-            return 'xl/' + rel.get('Target')
+## Known Pitfalls
 
-    raise ValueError(f"No file mapping for {rid}")
-```
+| Pitfall | Detail |
+|---------|--------|
+| **HTTP 403 on sheet creation** | `GOOGLESHEETS_CREATE_GOOGLE_SHEET1` fails when Drive create scope is missing. Reuse an existing `spreadsheetId` or fall back to `EXCEL_CREATE_WORKBOOK`. |
+| **Cell limit and rate throttling** | Google Sheets has a ~5,000,000 cell limit per spreadsheet. Excessive write frequency triggers HTTP 429. Batch changes and chunk large writes (~500 rows/call). |
+| **Format range off-by-one** | `GOOGLESHEETS_FORMAT_CELL` uses 0-based, endIndex-exclusive ranges when using index mode. Background color uses 0--1 float RGB, NOT 0--255 integer RGB. |
+| **Sheet title uniqueness** | Sheet titles are not guaranteed unique across API responses. Prefer operating by numeric `sheetId` and verify the resolved tab before writing. |
+| **Upsert payload shape** | `GOOGLESHEETS_UPSERT_ROWS` requires headers + 2D rows array. Sending list-of-dicts or empty `rows` causes validation errors. Ensure at least 1 data row. |
 
-### Cell Data Extraction
+---
 
-```python
-def extract_cells(zf, sheet_path):
-    """Extract all cell values from a sheet XML."""
-    # Build shared strings lookup
-    shared = []
-    try:
-        ss_xml = ET.fromstring(zf.read('xl/sharedStrings.xml'))
-        for si in ss_xml.findall(f'{{{MAIN_NS}}}si'):
-            texts = si.itertext()
-            shared.append(''.join(texts))
-    except KeyError:
-        pass  # No shared strings
+## Quick Reference
 
-    # Parse sheet cells
-    sheet_xml = ET.fromstring(zf.read(sheet_path))
-    rows = sheet_xml.findall(f'.//{{{MAIN_NS}}}row')
+| Tool Slug | Description |
+|-----------|-------------|
+| `EXCEL_CREATE_WORKBOOK` | Create a new `.xlsx` workbook and upload to OneDrive |
+| `GOOGLESHEETS_BATCH_UPDATE` | Write values to a range or append new rows |
+| `GOOGLESHEETS_UPSERT_ROWS` | Update existing rows by key or append new ones |
+| `GOOGLESHEETS_FORMAT_CELL` | Apply text/background formatting to cell ranges |
+| `GOOGLESHEETS_ADD_SHEET` | Add a new worksheet tab to a spreadsheet |
+| `GOOGLESHEETS_CREATE_GOOGLE_SHEET1` | Create a new Google Spreadsheet in Drive |
+| `GOOGLESHEETS_GET_SHEET_NAMES` | List all worksheet names in a spreadsheet |
+| `GOOGLESHEETS_GET_SPREADSHEET_INFO` | Retrieve spreadsheet metadata |
+| `GOOGLESHEETS_FIND_WORKSHEET_BY_TITLE` | Check if a worksheet exists by title |
+| `GOOGLESHEETS_BATCH_GET` | Read data from specified cell ranges |
 
-    data = {}
-    for row in rows:
-        for cell in row.findall(f'{{{MAIN_NS}}}c'):
-            ref = cell.get('r')         # e.g., "A1"
-            cell_type = cell.get('t')   # "s" = shared string, None = number
-            val_el = cell.find(f'{{{MAIN_NS}}}v')
+---
 
-            if val_el is not None and val_el.text:
-                if cell_type == 's':
-                    data[ref] = shared[int(val_el.text)]
-                else:
-                    try:
-                        data[ref] = float(val_el.text)
-                    except ValueError:
-                        data[ref] = val_el.text
-    return data
-```
-
-### Fixing Corrupted DefinedNames
-
-Investment bank xlsm files often have corrupted `<definedName>` entries containing "Formula removed":
-
-```python
-def fix_defined_names(zf_in_path, zf_out_path):
-    """Remove corrupted DefinedNames and repackage."""
-    import shutil, tempfile
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
-        with zipfile.ZipFile(zf_in_path, 'r') as zf:
-            zf.extractall(tmp)
-
-        wb_xml_path = tmp / 'xl' / 'workbook.xml'
-        tree = ET.parse(wb_xml_path)
-        root = tree.getroot()
-
-        ns = {'main': MAIN_NS}
-        defined_names = root.find('.//main:definedNames', ns)
-        if defined_names is not None:
-            for name in list(defined_names):
-                if name.text and "Formula removed" in name.text:
-                    defined_names.remove(name)
-
-        tree.write(wb_xml_path, encoding='utf-8', xml_declaration=True)
-
-        with zipfile.ZipFile(zf_out_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for fp in tmp.rglob('*'):
-                if fp.is_file():
-                    zf.write(fp, fp.relative_to(tmp))
-```
-
-Full template script: See `scripts/parse_complex_excel.py`
-
-## Controlling Excel on macOS (AppleScript)
-
-All commands verified on macOS with Microsoft Excel.
-
-### Verified Commands
-
-```bash
-# Activate Excel (bring to front)
-osascript -e 'tell application "Microsoft Excel" to activate'
-
-# Open a file
-osascript -e 'tell application "Microsoft Excel" to open POSIX file "/path/to/file.xlsx"'
-
-# Set zoom level (percentage)
-osascript -e 'tell application "Microsoft Excel"
-    set zoom of active window to 120
-end tell'
-
-# Scroll to specific row
-osascript -e 'tell application "Microsoft Excel"
-    set scroll row of active window to 45
-end tell'
-
-# Scroll to specific column
-osascript -e 'tell application "Microsoft Excel"
-    set scroll column of active window to 3
-end tell'
-
-# Select a cell range
-osascript -e 'tell application "Microsoft Excel"
-    select range "A1" of active sheet
-end tell'
-
-# Select a specific sheet by name
-osascript -e 'tell application "Microsoft Excel"
-    activate object sheet "DCF" of active workbook
-end tell'
-```
-
-### Timing and Timeout
-
-Always add `sleep 1` between AppleScript commands and subsequent operations (e.g., screenshot) to allow UI rendering.
-
-**IMPORTANT**: `osascript` will hang indefinitely if Excel is not running or not responding. Always wrap with `timeout`:
-
-```bash
-# Safe pattern: 5-second timeout
-timeout 5 osascript -e 'tell application "Microsoft Excel" to activate'
-
-# Check exit code: 124 = timed out
-if [ $? -eq 124 ]; then
-    echo "Excel not responding — is it running?"
-fi
-```
-
-## Common Mistakes
-
-| Mistake | Correction |
-|---------|-----------|
-| openpyxl fails on complex xlsm → try monkey-patching | Switch to `zipfile` + `xml.etree` immediately |
-| Count Chinese characters with `wc -c` | Use `wc -m` (chars, not bytes; Chinese = 3 bytes/char) |
-| Trust file extension | Run `file <path>` first to confirm actual format |
-| openpyxl `load_workbook` hangs on large xlsm | Use `zipfile` for targeted extraction instead of loading entire workbook |
-
-## Important Notes
-
-- Execute Python scripts with `uv run --with openpyxl` (never use system Python)
-- LibreOffice (`soffice --headless`) can convert formats and recalculate formulas
-- Detailed formatting reference: See `references/formatting-reference.md`
+*Powered by [Composio](https://composio.dev)*

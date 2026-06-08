@@ -1,119 +1,180 @@
-# Modal Secrets
-
-## Overview
-
-Modal Secrets securely deliver credentials and sensitive data to functions as environment variables. Secrets are stored encrypted and only available to your workspace.
+# Secrets and Environment Variables
 
 ## Creating Secrets
+
+### Via Dashboard
+
+Create secrets at https://modal.com/secrets
+
+Templates available for:
+- Database credentials (Postgres, MongoDB)
+- Cloud providers (AWS, GCP, Azure)
+- ML platforms (Weights & Biases, Hugging Face)
+- And more
 
 ### Via CLI
 
 ```bash
-# Create with key-value pairs
-modal secret create my-api-keys API_KEY=sk-xxx DB_PASSWORD=hunter2
+# Create secret with key-value pairs
+modal secret create my-secret KEY1=value1 KEY2=value2
 
-# Create from existing environment variables
-modal secret create my-env-keys API_KEY=$API_KEY
+# Use environment variables
+modal secret create db-secret PGHOST=uri PGPASSWORD="$PGPASSWORD"
 
-# List all secrets
+# List secrets
 modal secret list
 
-# Delete a secret
-modal secret delete my-api-keys
+# Delete secret
+modal secret delete my-secret
 ```
 
-### Via Dashboard
+### Programmatically
 
-Navigate to https://modal.com/secrets to create and manage secrets. Templates are available for common services (Postgres, MongoDB, Hugging Face, Weights & Biases, etc.).
-
-### Programmatic (Inline)
+From dictionary:
 
 ```python
-# From a dictionary (useful for development)
-secret = modal.Secret.from_dict({"API_KEY": "sk-xxx"})
+if modal.is_local():
+    local_secret = modal.Secret.from_dict({"FOO": os.environ["LOCAL_FOO"]})
+else:
+    local_secret = modal.Secret.from_dict({})
 
-# From a .env file
-secret = modal.Secret.from_dotenv()
-
-# From a named secret (created via CLI or dashboard)
-secret = modal.Secret.from_name("my-api-keys")
-```
-
-## Using Secrets in Functions
-
-### Basic Usage
-
-```python
-@app.function(secrets=[modal.Secret.from_name("my-api-keys")])
-def call_api():
+@app.function(secrets=[local_secret])
+def some_function():
     import os
-    api_key = os.environ["API_KEY"]
-    # Use the key
-    response = requests.get(url, headers={"Authorization": f"Bearer {api_key}"})
-    return response.json()
+    print(os.environ["FOO"])
+```
+
+From .env file:
+
+```python
+@app.function(secrets=[modal.Secret.from_dotenv()])
+def some_function():
+    import os
+    print(os.environ["USERNAME"])
+```
+
+## Using Secrets
+
+Inject secrets into functions:
+
+```python
+@app.function(secrets=[modal.Secret.from_name("my-secret")])
+def some_function():
+    import os
+    secret_key = os.environ["MY_PASSWORD"]
+    # Use secret
+    ...
 ```
 
 ### Multiple Secrets
 
 ```python
 @app.function(secrets=[
-    modal.Secret.from_name("openai-keys"),
     modal.Secret.from_name("database-creds"),
+    modal.Secret.from_name("api-keys"),
 ])
-def process():
-    import os
-    openai_key = os.environ["OPENAI_API_KEY"]
-    db_url = os.environ["DATABASE_URL"]
+def other_function():
+    # All keys from both secrets available
     ...
 ```
 
-Secrets are applied in order — if two secrets define the same key, the later one wins.
+Later secrets override earlier ones if keys clash.
 
-### With Classes
+## Environment Variables
+
+### Reserved Runtime Variables
+
+**All Containers**:
+- `MODAL_CLOUD_PROVIDER` - Cloud provider (AWS/GCP/OCI)
+- `MODAL_IMAGE_ID` - Image ID
+- `MODAL_REGION` - Region identifier (e.g., us-east-1)
+- `MODAL_TASK_ID` - Container task ID
+
+**Function Containers**:
+- `MODAL_ENVIRONMENT` - Modal Environment name
+- `MODAL_IS_REMOTE` - Set to '1' in remote containers
+- `MODAL_IDENTITY_TOKEN` - OIDC token for function identity
+
+**Sandbox Containers**:
+- `MODAL_SANDBOX_ID` - Sandbox ID
+
+### Setting Environment Variables
+
+Via Image:
 
 ```python
-@app.cls(secrets=[modal.Secret.from_name("huggingface")])
-class ModelService:
-    @modal.enter()
-    def load(self):
-        import os
-        token = os.environ["HF_TOKEN"]
-        self.model = AutoModel.from_pretrained("model-name", token=token)
+image = modal.Image.debian_slim().env({"PORT": "6443"})
+
+@app.function(image=image)
+def my_function():
+    import os
+    port = os.environ["PORT"]
 ```
 
-### From .env File
+Via Secrets:
 
 ```python
-# Reads .env file from current directory
-@app.function(secrets=[modal.Secret.from_dotenv()])
-def local_dev():
+secret = modal.Secret.from_dict({"API_KEY": "secret-value"})
+
+@app.function(secrets=[secret])
+def my_function():
     import os
     api_key = os.environ["API_KEY"]
 ```
 
-The `.env` file format:
+## Common Secret Patterns
 
+### AWS Credentials
+
+```python
+aws_secret = modal.Secret.from_name("my-aws-secret")
+
+@app.function(secrets=[aws_secret])
+def use_aws():
+    import boto3
+    s3 = boto3.client('s3')
+    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY automatically used
 ```
-API_KEY=sk-xxx
-DATABASE_URL=postgres://user:pass@host/db
-DEBUG=false
+
+### Hugging Face Token
+
+```python
+hf_secret = modal.Secret.from_name("huggingface")
+
+@app.function(secrets=[hf_secret])
+def download_model():
+    from transformers import AutoModel
+    # HF_TOKEN automatically used for authentication
+    model = AutoModel.from_pretrained("private-model")
 ```
 
-## Common Secret Templates
+### Database Credentials
 
-| Service | Typical Keys |
-|---------|-------------|
-| OpenAI | `OPENAI_API_KEY` |
-| Hugging Face | `HF_TOKEN` |
-| AWS | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
-| Postgres | `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` |
-| Weights & Biases | `WANDB_API_KEY` |
-| GitHub | `GITHUB_TOKEN` |
+```python
+db_secret = modal.Secret.from_name("postgres-creds")
+
+@app.function(secrets=[db_secret])
+def query_db():
+    import psycopg2
+    conn = psycopg2.connect(
+        host=os.environ["PGHOST"],
+        port=os.environ["PGPORT"],
+        user=os.environ["PGUSER"],
+        password=os.environ["PGPASSWORD"],
+    )
+```
+
+## Best Practices
+
+1. **Never hardcode secrets** - Always use Modal Secrets
+2. **Use specific secrets** - Create separate secrets for different purposes
+3. **Rotate secrets regularly** - Update secrets periodically
+4. **Minimal scope** - Only attach secrets to functions that need them
+5. **Environment-specific** - Use different secrets for dev/staging/prod
 
 ## Security Notes
 
-- Secrets are encrypted at rest and in transit
-- Only accessible to functions in your workspace
-- Never log or print secret values
-- Use `.from_name()` in production (not `.from_dict()`)
-- Rotate secrets regularly via the dashboard or CLI
+- Secrets are encrypted at rest
+- Only available to functions that explicitly request them
+- Not logged or exposed in dashboards
+- Can be scoped to specific environments

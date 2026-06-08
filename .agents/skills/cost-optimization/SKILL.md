@@ -1,294 +1,339 @@
 ---
 name: cost-optimization
-description: "Strategies and patterns for optimizing cloud costs across AWS, Azure, and GCP."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: "Audit and reduce infrastructure and tooling costs without sacrificing reliability or velocity. Use this skill when reviewing monthly cloud or SaaS spend, finding unused resources, rightsizing infrastructure, negotiating vendor contracts, deciding what to consolidate, or planning for budget cuts. Triggers on cost optimization, cloud spend, SaaS spend, rightsizing, unused resources, FinOps, infrastructure audit, vendor consolidation, budget cut, cost review. Also triggers when finance flags rising costs or when a contract renewal is up."
+category: cross-cutting
+catalog_summary: "Infrastructure spend audits, rightsizing, contract negotiation"
+display_order: 5
 ---
 
-# Cloud Cost Optimization
+# Cost Optimization
 
-Strategies and patterns for optimizing cloud costs across AWS, Azure, and GCP.
+Audit cloud, SaaS, and infrastructure spend. Cut what's not earning its keep. Rightsize what's oversized. Negotiate what's negotiable. Without breaking what works.
 
-## Do not use this skill when
+---
 
-- The task is unrelated to cloud cost optimization
-- You need a different domain or tool outside this scope
+## When to use
 
-## Instructions
+- Quarterly or annual cost review
+- Finance flags rising spend
+- Vendor contract renewal coming up
+- Budget cut required
+- New leadership wants the numbers
+- Migrating between providers (cost is part of the case)
+- Audit before scaling significantly (catch waste before it scales)
 
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
+## When NOT to use
 
-## Purpose
+- Active incident response (use `incident-response`)
+- Performance issues that happen to involve infrastructure (use `performance-optimization`)
+- Vendor evaluation for a new purchase (use `vendor-evaluation`)
+- Personnel or org costs (out of scope for this skill)
 
-Implement systematic cost optimization strategies to reduce cloud spending while maintaining performance and reliability.
+---
 
-## Use this skill when
+## Required inputs
 
-- Reduce cloud spending
-- Right-size resources
-- Implement cost governance
-- Optimize multi-cloud costs
-- Meet budget constraints
+- Current cost (monthly, ideally for the last 12 months)
+- Cost broken down by service or vendor
+- Inventory of cloud resources (instances, databases, storage, etc.)
+- Inventory of SaaS subscriptions
+- Owners per cost line (who decided to spend this, who uses it)
+- Constraints (compliance, performance, contract terms)
 
-## Cost Optimization Framework
+---
 
-### 1. Visibility
-- Implement cost allocation tags
-- Use cloud cost management tools
-- Set up budget alerts
-- Create cost dashboards
+## The framework: 5 levers
 
-### 2. Right-Sizing
-- Analyze resource utilization
-- Downsize over-provisioned resources
-- Use auto-scaling
-- Remove idle resources
+Every cost optimization opportunity falls into one of these levers.
 
-### 3. Pricing Models
-- Use reserved capacity
-- Leverage spot/preemptible instances
-- Implement savings plans
-- Use committed use discounts
+### Lever 1: Eliminate
 
-### 4. Architecture Optimization
-- Use managed services
-- Implement caching
-- Optimize data transfer
-- Use lifecycle policies
+Stop paying for things that aren't used.
 
-## AWS Cost Optimization
+- Idle resources (instances, databases, environments running but unused)
+- Subscriptions where no one logs in
+- Duplicate tools (multiple tools doing the same job)
+- Old projects still incurring cost
+- Test environments that should have been torn down
+- Forgotten domains, backups, snapshots, logs
 
-### Reserved Instances
-```
-Savings: 30-72% vs On-Demand
-Term: 1 or 3 years
-Payment: All/Partial/No upfront
-Flexibility: Standard or Convertible
-```
+This is usually the largest opportunity in the first audit. Often 10-30% of spend.
 
-### Savings Plans
-```
-Compute Savings Plans: 66% savings
-EC2 Instance Savings Plans: 72% savings
-Applies to: EC2, Fargate, Lambda
-Flexible across: Instance families, regions, OS
-```
+### Lever 2: Rightsize
 
-### Spot Instances
-```
-Savings: Up to 90% vs On-Demand
-Best for: Batch jobs, CI/CD, stateless workloads
-Risk: 2-minute interruption notice
-Strategy: Mix with On-Demand for resilience
-```
+Pay for what you actually use, not what you provisioned for the worst case three years ago.
 
-### S3 Cost Optimization
-```hcl
-resource "aws_s3_bucket_lifecycle_configuration" "example" {
-  bucket = aws_s3_bucket.example.id
+- Oversized instances (CPU and memory utilization low)
+- Over-provisioned databases (storage and throughput far above usage)
+- Over-purchased SaaS seats
+- Premium plans where standard would suffice
+- High-availability setups for non-critical systems
 
-  rule {
-    id     = "transition-to-ia"
-    status = "Enabled"
+Rightsizing requires real usage data, not theoretical needs.
 
-    transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
-    }
+### Lever 3: Restructure
 
-    transition {
-      days          = 90
-      storage_class = "GLACIER"
-    }
+Use cheaper structures for the same workload.
 
-    expiration {
-      days = 365
-    }
-  }
-}
-```
+- Reserved or committed-use pricing (1-3 year commitments at 30-70% discount)
+- Spot or preemptible instances for fault-tolerant work
+- Cold storage for data accessed rarely
+- Tiered storage (hot/warm/cold) by access pattern
+- CDN caching to reduce origin load
+- Compression and deduplication
+- Serverless for spiky workloads
+- Reserved instances for steady workloads
 
-## Azure Cost Optimization
+The right structure depends on the access pattern. Mismatch costs money.
 
-### Reserved VM Instances
-- 1 or 3 year terms
-- Up to 72% savings
-- Flexible sizing
-- Exchangeable
+### Lever 4: Negotiate
 
-### Azure Hybrid Benefit
-- Use existing Windows Server licenses
-- Up to 80% savings with RI
-- Available for Windows and SQL Server
+Pay less for the same thing.
 
-### Azure Advisor Recommendations
-- Right-size VMs
-- Delete unused resources
-- Use reserved capacity
-- Optimize storage
+- Annual contracts at lower rates than monthly
+- Volume discounts at higher tiers
+- Multi-year commitments for predictable workloads
+- Bundle deals (consolidating services with one vendor)
+- Renewal negotiation (vendors expect you to ask)
+- RFP / competitive bid (using alternatives as leverage)
 
-## GCP Cost Optimization
+Most enterprise vendors negotiate. Most SaaS vendors don't, except at higher tiers. Consumer-tier services usually don't.
 
-### Committed Use Discounts
-- 1 or 3 year commitment
-- Up to 57% savings
-- Applies to vCPUs and memory
-- Resource-based or spend-based
+### Lever 5: Reframe
 
-### Sustained Use Discounts
-- Automatic discounts
-- Up to 30% for running instances
-- No commitment required
-- Applies to Compute Engine, GKE
+Change the question.
 
-### Preemptible VMs
-- Up to 80% savings
-- 24-hour maximum runtime
-- Best for batch workloads
+- Build vs buy: maybe in-house is cheaper at scale
+- Buy vs build: maybe outsourcing is cheaper at small scale
+- Different architecture (e.g., monolith vs microservices) has different cost profiles
+- Different audience (do all customers need the same tier?)
+- Different stack (open source vs commercial)
 
-## Tagging Strategy
+Reframe is the longest-lead lever. Worth thinking about even if not actionable now.
 
-### AWS Tagging
-```hcl
-locals {
-  common_tags = {
-    Environment = "production"
-    Project     = "my-project"
-    CostCenter  = "engineering"
-    Owner       = "team@example.com"
-    ManagedBy   = "terraform"
-  }
-}
+---
 
-resource "aws_instance" "example" {
-  ami           = "ami-12345678"
-  instance_type = "t3.medium"
+## Workflow
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "web-server"
-    }
-  )
-}
-```
+### Step 1: Pull the spend data
 
-**Reference:** See `references/tagging-standards.md`
+Get monthly costs by service, vendor, and (where possible) team or project.
 
-## Cost Monitoring
+For cloud (AWS, GCP, Azure): the billing console and cost-explorer tools.
+For SaaS: each vendor's billing portal, plus an SaaS-management tool if available.
+For everything else: bank statements and accounting export.
 
-### Budget Alerts
-```hcl
-# AWS Budget
-resource "aws_budgets_budget" "monthly" {
-  name              = "monthly-budget"
-  budget_type       = "COST"
-  limit_amount      = "1000"
-  limit_unit        = "USD"
-  time_period_start = "2024-01-01_00:00"
-  time_unit         = "MONTHLY"
+12 months minimum. Trends matter as much as absolute numbers.
 
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 80
-    threshold_type            = "PERCENTAGE"
-    notification_type         = "ACTUAL"
-    subscriber_email_addresses = ["team@example.com"]
-  }
-}
-```
+### Step 2: Categorize
 
-### Cost Anomaly Detection
-- AWS Cost Anomaly Detection
-- Azure Cost Management alerts
-- GCP Budget alerts
+Organize spend into categories:
 
-## Architecture Patterns
+- **Hosting / compute**
+- **Storage**
+- **Database**
+- **Networking / CDN**
+- **Monitoring / observability**
+- **Email**
+- **CMS / hosting platforms**
+- **Analytics / marketing**
+- **Productivity / collaboration**
+- **Development tools**
+- **Security / compliance**
+- **Other**
 
-### Pattern 1: Serverless First
-- Use Lambda/Functions for event-driven
-- Pay only for execution time
-- Auto-scaling included
-- No idle costs
+The categories vary by business. The point is: similar costs grouped, easy to compare.
 
-### Pattern 2: Right-Sized Databases
-```
-Development: t3.small RDS
-Staging: t3.large RDS
-Production: r6g.2xlarge RDS with read replicas
-```
+### Step 3: Identify the biggest line items
 
-### Pattern 3: Multi-Tier Storage
-```
-Hot data: S3 Standard
-Warm data: S3 Standard-IA (30 days)
-Cold data: S3 Glacier (90 days)
-Archive: S3 Deep Archive (365 days)
-```
+80/20 rule. Usually 20% of vendors account for 80% of spend.
 
-### Pattern 4: Auto-Scaling
-```hcl
-resource "aws_autoscaling_policy" "scale_up" {
-  name                   = "scale-up"
-  scaling_adjustment     = 2
-  adjustment_type        = "ChangeInCapacity"
-  cooldown              = 300
-  autoscaling_group_name = aws_autoscaling_group.main.name
-}
+Focus the audit on the top 80%. The long tail can be cleaned up but rarely yields big savings per item.
 
-resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  alarm_name          = "cpu-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "80"
-  alarm_actions       = [aws_autoscaling_policy.scale_up.arn]
-}
-```
+### Step 4: Apply the 5 levers
 
-## Cost Optimization Checklist
+For each major line item, walk the levers:
 
-- [ ] Implement cost allocation tags
-- [ ] Delete unused resources (EBS, EIPs, snapshots)
-- [ ] Right-size instances based on utilization
-- [ ] Use reserved capacity for steady workloads
-- [ ] Implement auto-scaling
-- [ ] Optimize storage classes
-- [ ] Use lifecycle policies
-- [ ] Enable cost anomaly detection
-- [ ] Set budget alerts
-- [ ] Review costs weekly
-- [ ] Use spot/preemptible instances
-- [ ] Optimize data transfer costs
-- [ ] Implement caching layers
-- [ ] Use managed services
-- [ ] Monitor and optimize continuously
+| Lever | Question |
+|---|---|
+| Eliminate | Is it used? Could we stop using it? |
+| Rightsize | Are we paying for capacity we don't use? |
+| Restructure | Is there a cheaper pricing model or service tier? |
+| Negotiate | When was the last renewal? Did we negotiate? |
+| Reframe | Is this even the right approach? |
 
-## Tools
+Document the opportunity, the effort, the risk, and the savings estimate.
 
-- **AWS:** Cost Explorer, Cost Anomaly Detection, Compute Optimizer
-- **Azure:** Cost Management, Advisor
-- **GCP:** Cost Management, Recommender
-- **Multi-cloud:** CloudHealth, Cloudability, Kubecost
+### Step 5: Prioritize
 
-## Reference Files
+Plot opportunities on a 2x2:
+- Y axis: savings
+- X axis: effort
 
-- `references/tagging-standards.md` - Tagging conventions
-- `assets/cost-analysis-template.xlsx` - Cost analysis spreadsheet
+Quadrants:
+- High savings, low effort: do first
+- High savings, high effort: plan
+- Low savings, low effort: do as time allows
+- Low savings, high effort: skip
 
-## Related Skills
+Also consider risk:
+- Eliminate something used by no one: low risk
+- Rightsize a database: medium risk (test in staging first)
+- Replace a critical dependency: high risk (plan carefully)
 
-- `terraform-module-library` - For resource provisioning
-- `multi-cloud-architecture` - For cloud selection
+### Step 6: Execute the easy wins
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+For each easy-win opportunity:
+- Document the change
+- Get owner approval
+- Make the change
+- Monitor for unexpected impact
+- Confirm cost reduction in next billing cycle
+
+Easy wins typically include:
+- Canceling unused subscriptions
+- Tearing down idle resources
+- Switching off dev environments outside business hours
+- Moving cold data to cheaper storage tiers
+
+### Step 7: Plan the larger work
+
+For higher-effort opportunities:
+- Spec the change (use `pm-spec-writing` for the plan)
+- Test in staging
+- Roll out incrementally
+- Validate cost impact
+
+Examples:
+- Migrating to reserved instances
+- Consolidating monitoring vendors
+- Migrating from one CMS to another with cost benefit
+
+### Step 8: Set up ongoing visibility
+
+Optimization isn't one-time. Costs creep back up.
+
+- Monthly cost review (at least)
+- Cost dashboard (current, trend, by category)
+- Alerts on cost spikes (e.g., daily spend exceeds threshold)
+- Tagging or labeling on cloud resources (cost by team or project)
+- Quarterly deeper review
+
+### Step 9: Negotiate at renewal
+
+For vendor contracts up for renewal:
+- Start the conversation 60-90 days before renewal
+- Have alternatives identified (even if you don't switch)
+- Ask for a multi-year discount
+- Ask about volume tiers
+- Ask if usage rightsizing is possible
+- Be willing to walk (most vendors find a way to keep you)
+
+Pre-pandemic, many vendors auto-renewed at increases. Post-pandemic, many are hungry for retention. Ask.
+
+### Step 10: Document the policy
+
+Going forward:
+- New vendor evaluation requires cost justification
+- Resource provisioning has approval thresholds
+- Tagging and labeling are required for cloud resources
+- Quarterly review is calendared
+- Cost attribution is clear
+
+Without policy, costs creep.
+
+---
+
+## Common opportunities by category
+
+### Hosting and compute
+
+- Reserved or committed-use pricing for predictable workloads (30-70% off)
+- Spot or preemptible for fault-tolerant batch
+- Auto-scaling for variable loads
+- Right instance family (compute-optimized, memory-optimized, etc.)
+- Dev/staging instances stopped outside business hours
+
+### Storage
+
+- Lifecycle policies to move old data to cheaper tiers
+- Delete old logs, backups, snapshots
+- Compression for archival
+- Object versioning costs (every version is a stored object)
+
+### Database
+
+- Right size based on actual CPU/memory usage
+- Reserved capacity for predictable workloads
+- Read replicas for read-heavy workloads (cheaper than scaling primary)
+- Drop unused indexes (indexes cost storage and write performance)
+- Old data archived or deleted
+
+### Networking and CDN
+
+- CDN reduces origin egress costs (often the biggest cost category)
+- Compression on the wire
+- Image and video optimization
+- Region-aware routing
+
+### Monitoring and observability
+
+- Sample logs (don't ingest 100% of high-volume sources)
+- Retention policies (do you need 90 days or 30?)
+- Consolidate tools where possible
+- Free or open-source tooling for non-critical needs
+
+### SaaS
+
+- Audit logins per seat (inactive users on $X/seat = $X waste)
+- Renegotiate at renewal
+- Move to annual billing for the discount
+- Consolidate overlapping tools
+
+---
+
+## Failure patterns
+
+**Cost-cutting that breaks something.** Aggressive rightsizing without testing causes outages. The cost of an outage is usually larger than the savings.
+
+**Optimization that takes more time than it saves.** A team spends a quarter saving $5K/year. Math doesn't work. Focus on opportunities where savings exceed effort.
+
+**Renewal autopilot.** Annual renewals go through without review. Calendar them.
+
+**No tagging.** Cloud spend grows; no one knows whose. Tag everything from day one.
+
+**Free tier overruns.** "It's on the free tier." Then it's not, and bills surprise. Set alerts on free-tier services.
+
+**No environment differentiation.** Production-grade staging "to match prod." Costs as much as prod. Often unnecessary.
+
+**Untouched legacy.** "The old project still runs." Why? Often: nothing actually uses it. Audit and shut down.
+
+**Premium tiers for non-premium needs.** Enterprise plan because someone wanted a feature that's been since added to lower tiers. Recheck.
+
+**Vendor lock-in justifying cost.** "We can't switch." That's not a reason to overpay; it's a strategic problem to plan around.
+
+**Optimizing the small stuff while ignoring the big stuff.** Saving $50/month on tools while $5K/month sits in oversized infrastructure. Top-down first.
+
+**Penny-wise, pound-foolish.** Cutting a useful tool to save $20/month, then losing hours to manual work. Tools that pay for themselves shouldn't be cut.
+
+**No reinvestment.** Every dollar saved goes to bottom line; nothing reinvested in upgrades or capacity. Saved costs and improved capability aren't either/or.
+
+---
+
+## Output format
+
+A cost optimization document includes:
+
+- **Current state:** total spend, by category, trended
+- **Top line items:** the biggest costs
+- **Opportunities:** by lever (eliminate / rightsize / restructure / negotiate / reframe)
+- **Prioritized list:** with savings, effort, risk
+- **Action plan:** owners, dates
+- **Easy wins executed:** what's already done, results
+- **Ongoing governance:** dashboard, review cadence, tagging, approval thresholds
+
+---
+
+## Reference files
+
+- [`references/cloud-audit-checklist.md`](references/cloud-audit-checklist.md): A practical walkthrough for auditing a cloud account (compute, storage, database, network, monitoring) for waste and rightsizing opportunities.

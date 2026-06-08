@@ -1,260 +1,274 @@
-# Modal Functions and Classes
+# Modal Functions
 
-## Table of Contents
+## Basic Function Definition
 
-- [Functions](#functions)
-- [Remote Execution](#remote-execution)
-- [Classes with Lifecycle Hooks](#classes-with-lifecycle-hooks)
-- [Parallel Execution](#parallel-execution)
-- [Async Functions](#async-functions)
-- [Local Entrypoints](#local-entrypoints)
-- [Generators](#generators)
-
-## Functions
-
-### Basic Function
+Decorate Python functions with `@app.function()`:
 
 ```python
 import modal
 
-app = modal.App("my-app")
+app = modal.App(name="my-app")
 
 @app.function()
-def compute(x: int, y: int) -> int:
-    return x + y
+def my_function():
+    print("Hello from Modal!")
+    return "result"
 ```
 
-### Function Parameters
+## Calling Functions
 
-The `@app.function()` decorator accepts:
+### Remote Execution
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `image` | `Image` | Container image |
-| `gpu` | `str` | GPU type (e.g., `"H100"`, `"A100:2"`) |
-| `cpu` | `float` | CPU cores |
-| `memory` | `int` | Memory in MiB |
-| `timeout` | `int` | Max execution time in seconds |
-| `secrets` | `list[Secret]` | Secrets to inject |
-| `volumes` | `dict[str, Volume]` | Volumes to mount |
-| `schedule` | `Schedule` | Cron or periodic schedule |
-| `max_containers` | `int` | Max container count |
-| `min_containers` | `int` | Minimum warm containers |
-| `retries` | `int` | Retry count on failure |
-| `concurrency_limit` | `int` | Max concurrent inputs |
-| `ephemeral_disk` | `int` | Disk in MiB |
-
-## Remote Execution
-
-### `.remote()` — Synchronous Call
+Call `.remote()` to run on Modal:
 
 ```python
-result = compute.remote(3, 4)  # Runs in the cloud, blocks until done
+@app.local_entrypoint()
+def main():
+    result = my_function.remote()
+    print(result)
 ```
 
-### `.local()` — Local Execution
+### Local Execution
+
+Call `.local()` to run locally (useful for testing):
 
 ```python
-result = compute.local(3, 4)  # Runs locally (for testing)
+result = my_function.local()
 ```
 
-### `.spawn()` — Async Fire-and-Forget
+## Function Parameters
+
+Functions accept standard Python arguments:
 
 ```python
-call = compute.spawn(3, 4)  # Returns immediately
-# ... do other work ...
-result = call.get()  # Retrieve result later
+@app.function()
+def process(x: int, y: str):
+    return f"{y}: {x * 2}"
+
+@app.local_entrypoint()
+def main():
+    result = process.remote(42, "answer")
 ```
 
-`.spawn()` supports up to 1 million pending inputs.
+## Deployment
 
-## Classes with Lifecycle Hooks
+### Ephemeral Apps
 
-Use `@app.cls()` for stateful workloads where you want to load resources once:
-
-```python
-@app.cls(gpu="L40S", image=image)
-class Model:
-    @modal.enter()
-    def setup(self):
-        """Runs once when the container starts."""
-        import torch
-        self.model = torch.load("/weights/model.pt")
-        self.model.eval()  # PyTorch inference mode — not Python's built-in eval()
-
-    @modal.method()
-    def predict(self, text: str) -> dict:
-        """Callable remotely."""
-        return self.model(text)
-
-    @modal.exit()
-    def teardown(self):
-        """Runs when the container shuts down."""
-        cleanup_resources()
+Run temporarily:
+```bash
+modal run script.py
 ```
 
-### Lifecycle Decorators
+### Deployed Apps
 
-| Decorator | When It Runs |
-|-----------|-------------|
-| `@modal.enter()` | Once on container startup, before any inputs |
-| `@modal.method()` | For each remote call |
-| `@modal.exit()` | On container shutdown |
-
-### Calling Class Methods
-
-```python
-# Create instance and call method
-model = Model()
-result = model.predict.remote("Hello world")
-
-# Parallel calls
-results = list(model.predict.map(["text1", "text2", "text3"]))
+Deploy persistently:
+```bash
+modal deploy script.py
 ```
 
-### Parameterized Classes
+Access deployed functions from other code:
 
 ```python
-@app.cls()
-class Worker:
-    model_name: str = modal.parameter()
+f = modal.Function.from_name("my-app", "my_function")
+result = f.remote(args)
+```
 
-    @modal.enter()
-    def load(self):
-        self.model = load_model(self.model_name)
+## Entrypoints
 
-    @modal.method()
-    def run(self, data):
-        return self.model(data)
+### Local Entrypoint
 
-# Different model instances autoscale independently
-gpt = Worker(model_name="gpt-4")
-llama = Worker(model_name="llama-3")
+Code that runs on local machine:
+
+```python
+@app.local_entrypoint()
+def main():
+    result = my_function.remote()
+    print(result)
+```
+
+### Remote Entrypoint
+
+Use `@app.function()` without local_entrypoint - runs entirely on Modal:
+
+```python
+@app.function()
+def train_model():
+    # All code runs in Modal
+    ...
+```
+
+Invoke with:
+```bash
+modal run script.py::app.train_model
+```
+
+## Argument Parsing
+
+Entrypoints with primitive type arguments get automatic CLI parsing:
+
+```python
+@app.local_entrypoint()
+def main(foo: int, bar: str):
+    some_function.remote(foo, bar)
+```
+
+Run with:
+```bash
+modal run script.py --foo 1 --bar "hello"
+```
+
+For custom parsing, accept variable-length arguments:
+
+```python
+import argparse
+
+@app.function()
+def train(*arglist):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--foo", type=int)
+    args = parser.parse_args(args=arglist)
+```
+
+## Function Configuration
+
+Common parameters:
+
+```python
+@app.function(
+    image=my_image,           # Custom environment
+    gpu="A100",               # GPU type
+    cpu=2.0,                  # CPU cores
+    memory=4096,              # Memory in MB
+    timeout=3600,             # Timeout in seconds
+    retries=3,                # Number of retries
+    secrets=[my_secret],      # Environment secrets
+    volumes={"/data": vol},   # Persistent storage
+)
+def my_function():
+    ...
 ```
 
 ## Parallel Execution
 
-### `.map()` — Parallel Processing
+### Map
 
-Process multiple inputs across containers:
+Run function on multiple inputs in parallel:
 
 ```python
 @app.function()
-def process(item):
-    return heavy_computation(item)
+def evaluate_model(x):
+    return x ** 2
 
 @app.local_entrypoint()
 def main():
-    items = list(range(1000))
-    results = list(process.map(items))
-    print(f"Processed {len(results)} items")
+    inputs = list(range(100))
+    for result in evaluate_model.map(inputs):
+        print(result)
 ```
 
-- Results are returned in the same order as inputs
-- Modal autoscales containers to handle the workload
-- Use `return_exceptions=True` to collect errors instead of raising
+### Starmap
 
-### `.starmap()` — Multi-Argument Parallel
+For functions with multiple arguments:
 
 ```python
 @app.function()
-def add(x, y):
-    return x + y
+def add(a, b):
+    return a + b
 
-results = list(add.starmap([(1, 2), (3, 4), (5, 6)]))
-# [3, 7, 11]
+@app.local_entrypoint()
+def main():
+    results = list(add.starmap([(1, 2), (3, 4)]))
+    # [3, 7]
 ```
 
-### `.map()` with `order_outputs=False`
-
-For faster throughput when order doesn't matter:
+### Exception Handling
 
 ```python
-for result in process.map(items, order_outputs=False):
-    handle(result)  # Results arrive as they complete
+results = my_func.map(
+    range(3),
+    return_exceptions=True,
+    wrap_returned_exceptions=False
+)
+# [0, 1, Exception('error')]
 ```
 
 ## Async Functions
 
-Modal supports async/await natively:
+Define async functions:
 
 ```python
 @app.function()
-async def fetch_data(url: str) -> str:
-    import httpx
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
-        return response.text
-```
+async def async_function(x: int):
+    await asyncio.sleep(1)
+    return x * 2
 
-Async functions are especially useful with `@modal.concurrent()` for handling multiple requests per container.
-
-## Local Entrypoints
-
-The `@app.local_entrypoint()` runs on your machine and orchestrates remote calls:
-
-```python
 @app.local_entrypoint()
-def main():
-    # This code runs locally
-    data = load_local_data()
-
-    # These calls run in the cloud
-    results = list(process.map(data))
-
-    # Back to local
-    save_results(results)
+async def main():
+    result = await async_function.remote.aio(42)
 ```
 
-You can also define multiple entrypoints and select by function name:
+## Generator Functions
 
-```bash
-modal run script.py::train
-modal run script.py::evaluate
-```
-
-## Generators
-
-Functions can yield results as they're produced:
+Return iterators for streaming results:
 
 ```python
 @app.function()
 def generate_data():
-    for i in range(100):
-        yield process(i)
+    for i in range(10):
+        yield i
 
 @app.local_entrypoint()
 def main():
-    for result in generate_data.remote_gen():
-        print(result)
+    for value in generate_data.remote_gen():
+        print(value)
 ```
 
-## Retries
+## Spawning Functions
 
-Configure automatic retries on failure:
+Submit functions for background execution:
 
 ```python
-@app.function(retries=3)
-def flaky_operation():
-    ...
+@app.function()
+def process_job(data):
+    # Long-running job
+    return result
+
+@app.local_entrypoint()
+def main():
+    # Spawn without waiting
+    call = process_job.spawn(data)
+
+    # Get result later
+    result = call.get(timeout=60)
 ```
 
-For more control, use `modal.Retries`:
+## Programmatic Execution
+
+Run apps programmatically:
 
 ```python
-@app.function(retries=modal.Retries(max_retries=3, backoff_coefficient=2.0))
-def api_call():
-    ...
+def main():
+    with modal.enable_output():
+        with app.run():
+            result = some_function.remote()
 ```
 
-## Timeouts
+## Specifying Entrypoint
 
-Set maximum execution time:
+With multiple functions, specify which to run:
 
 ```python
-@app.function(timeout=3600)  # 1 hour
-def long_training():
-    ...
+@app.function()
+def f():
+    print("Function f")
+
+@app.function()
+def g():
+    print("Function g")
 ```
 
-Default timeout is 300 seconds (5 minutes). Maximum is 86400 seconds (24 hours).
+Run specific function:
+```bash
+modal run script.py::app.f
+modal run script.py::app.g
+```

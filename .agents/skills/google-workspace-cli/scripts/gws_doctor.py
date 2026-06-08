@@ -1,477 +1,244 @@
 #!/usr/bin/env python3
 """
-GWS Doctor - Diagnostic tool for common Google Workspace issues.
+Google Workspace CLI Doctor — Pre-flight diagnostics for gws CLI.
 
-Checks DNS record format, email configuration, and common integration
-patterns. Validates SPF, DKIM, DMARC records and provides fix guidance.
+Checks installation, version, authentication status, and service
+connectivity. Runs in demo mode with embedded sample data when gws
+is not installed.
 
-Author: Claude Skills Engineering Team
-License: MIT
+Usage:
+    python3 gws_doctor.py
+    python3 gws_doctor.py --json
+    python3 gws_doctor.py --services gmail,drive,calendar
 """
 
 import argparse
 import json
-import re
+import shutil
+import subprocess
 import sys
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Optional, Any
+from dataclasses import dataclass, field, asdict
+from typing import List, Optional
 
 
 @dataclass
-class DiagnosticResult:
-    """A diagnostic check result."""
-    check: str
-    status: str  # pass, fail, warn, skip
-    category: str
+class Check:
+    name: str
+    status: str  # PASS, WARN, FAIL
     message: str
-    detail: Optional[str]
-    fix: Optional[str]
+    fix: str = ""
 
 
-GOOGLE_MX_RECORDS = [
-    "ASPMX.L.GOOGLE.COM",
-    "ALT1.ASPMX.L.GOOGLE.COM",
-    "ALT2.ASPMX.L.GOOGLE.COM",
-    "ALT3.ASPMX.L.GOOGLE.COM",
-    "ALT4.ASPMX.L.GOOGLE.COM",
+@dataclass
+class DiagnosticReport:
+    gws_installed: bool = False
+    gws_version: str = ""
+    auth_status: str = ""
+    checks: List[dict] = field(default_factory=list)
+    summary: str = ""
+    demo_mode: bool = False
+
+
+DEMO_CHECKS = [
+    Check("gws-installed", "PASS", "gws v0.9.2 found at /usr/local/bin/gws"),
+    Check("gws-version", "PASS", "Version 0.9.2 (latest)"),
+    Check("auth-status", "PASS", "Authenticated as admin@company.com"),
+    Check("token-expiry", "WARN", "Token expires in 23 minutes",
+          "Run 'gws auth refresh' to extend token lifetime"),
+    Check("gmail-access", "PASS", "Gmail API accessible — user profile retrieved"),
+    Check("drive-access", "PASS", "Drive API accessible — root folder listed"),
+    Check("calendar-access", "PASS", "Calendar API accessible — primary calendar found"),
+    Check("sheets-access", "PASS", "Sheets API accessible"),
+    Check("tasks-access", "FAIL", "Tasks API not authorized",
+          "Run 'gws auth setup' and add 'tasks' scope"),
 ]
 
-SPF_PATTERN = re.compile(r'v=spf1\s+.*include:_spf\.google\.com\s+.*(?:~all|-all)')
-DMARC_PATTERN = re.compile(r'v=DMARC1;\s*p=(\w+)')
-DKIM_PATTERN = re.compile(r'v=DKIM1;\s*k=rsa;\s*p=\S+')
+SERVICE_TEST_COMMANDS = {
+    "gmail": ["gws", "gmail", "users", "getProfile", "me", "--json"],
+    "drive": ["gws", "drive", "files", "list", "--limit", "1", "--json"],
+    "calendar": ["gws", "calendar", "calendarList", "list", "--limit", "1", "--json"],
+    "sheets": ["gws", "sheets", "spreadsheets", "get", "test", "--json"],
+    "tasks": ["gws", "tasks", "tasklists", "list", "--limit", "1", "--json"],
+    "chat": ["gws", "chat", "spaces", "list", "--limit", "1", "--json"],
+    "docs": ["gws", "docs", "documents", "get", "test", "--json"],
+}
 
 
-class GWSDiagnostics:
-    """Runs diagnostic checks on Google Workspace configuration."""
-
-    def __init__(self, config: Dict[str, Any], checks: List[str]):
-        self.config = config
-        self.checks = checks
-        self.results: List[DiagnosticResult] = []
-
-    def run(self) -> List[DiagnosticResult]:
-        """Run selected diagnostics."""
-        check_map = {
-            "dns": self._check_dns,
-            "email": self._check_email,
-            "security": self._check_security,
-            "integration": self._check_integration,
-            "consistency": self._check_consistency,
-        }
-
-        for check_name in self.checks:
-            if check_name == "all":
-                for func in check_map.values():
-                    func()
-                break
-            elif check_name in check_map:
-                check_map[check_name]()
-
-        return self.results
-
-    def _check_dns(self):
-        """Check DNS record configurations."""
-        dns = self.config.get("dns", {})
-
-        # MX Records
-        mx_records = dns.get("mx_records", [])
-        if not mx_records:
-            self.results.append(DiagnosticResult(
-                check="MX Records",
-                status="fail",
-                category="dns",
-                message="No MX records configured.",
-                detail="MX records are required for email delivery.",
-                fix="Add Google Workspace MX records: ASPMX.L.GOOGLE.COM (priority 1), "
-                    "ALT1.ASPMX.L.GOOGLE.COM (priority 5), etc.",
-            ))
-        else:
-            google_mx_found = any(
-                any(gmx in str(mx).upper() for gmx in GOOGLE_MX_RECORDS)
-                for mx in mx_records
-            )
-            if google_mx_found:
-                self.results.append(DiagnosticResult(
-                    check="MX Records",
-                    status="pass",
-                    category="dns",
-                    message="Google Workspace MX records found.",
-                    detail=f"MX records: {', '.join(str(mx) for mx in mx_records[:3])}",
-                    fix=None,
-                ))
-            else:
-                self.results.append(DiagnosticResult(
-                    check="MX Records",
-                    status="warn",
-                    category="dns",
-                    message="MX records present but Google Workspace records not detected.",
-                    detail=f"Current MX: {', '.join(str(mx) for mx in mx_records[:3])}",
-                    fix="Verify MX records point to Google: ASPMX.L.GOOGLE.COM",
-                ))
-
-        # SPF Record
-        spf = dns.get("spf_record", "")
-        if not spf:
-            self.results.append(DiagnosticResult(
-                check="SPF Record",
-                status="fail",
-                category="dns",
-                message="No SPF record configured.",
-                detail="SPF validates email sender identity.",
-                fix='Add TXT record: "v=spf1 include:_spf.google.com ~all"',
-            ))
-        elif SPF_PATTERN.search(spf):
-            mechanism = "~all (softfail)" if "~all" in spf else "-all (hardfail)"
-            self.results.append(DiagnosticResult(
-                check="SPF Record",
-                status="pass",
-                category="dns",
-                message=f"SPF record correctly includes Google and uses {mechanism}.",
-                detail=spf,
-                fix=None,
-            ))
-        elif "_spf.google.com" in spf:
-            self.results.append(DiagnosticResult(
-                check="SPF Record",
-                status="warn",
-                category="dns",
-                message="SPF record includes Google but may have formatting issues.",
-                detail=spf,
-                fix='Ensure format is: "v=spf1 include:_spf.google.com ~all"',
-            ))
-        else:
-            self.results.append(DiagnosticResult(
-                check="SPF Record",
-                status="fail",
-                category="dns",
-                message="SPF record does not include Google Workspace.",
-                detail=spf,
-                fix='Add "include:_spf.google.com" to your SPF record.',
-            ))
-
-        # DKIM
-        dkim = dns.get("dkim_record", "")
-        if not dkim:
-            self.results.append(DiagnosticResult(
-                check="DKIM Record",
-                status="fail",
-                category="dns",
-                message="No DKIM record configured.",
-                detail="DKIM signs outgoing emails to prevent tampering.",
-                fix="Enable DKIM in Admin Console > Apps > Google Workspace > Gmail > Authenticate email. "
-                    "Then add the CNAME or TXT record to your DNS.",
-            ))
-        elif DKIM_PATTERN.search(dkim) or "CNAME" in str(dkim):
-            self.results.append(DiagnosticResult(
-                check="DKIM Record",
-                status="pass",
-                category="dns",
-                message="DKIM record found.",
-                detail=f"DKIM: {str(dkim)[:80]}...",
-                fix=None,
-            ))
-
-        # DMARC
-        dmarc = dns.get("dmarc_record", "")
-        if not dmarc:
-            self.results.append(DiagnosticResult(
-                check="DMARC Record",
-                status="fail",
-                category="dns",
-                message="No DMARC record configured.",
-                detail="DMARC enforces SPF and DKIM policies.",
-                fix='Add TXT record at _dmarc.yourdomain.com: '
-                    '"v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@yourdomain.com"',
-            ))
-        else:
-            dmarc_match = DMARC_PATTERN.search(dmarc)
-            if dmarc_match:
-                policy = dmarc_match.group(1).lower()
-                if policy == "none":
-                    self.results.append(DiagnosticResult(
-                        check="DMARC Record",
-                        status="warn",
-                        category="dns",
-                        message="DMARC policy is 'none' (monitoring only, no enforcement).",
-                        detail=dmarc,
-                        fix="After monitoring period, change p=none to p=quarantine or p=reject.",
-                    ))
-                else:
-                    self.results.append(DiagnosticResult(
-                        check="DMARC Record",
-                        status="pass",
-                        category="dns",
-                        message=f"DMARC record with '{policy}' policy found.",
-                        detail=dmarc,
-                        fix=None,
-                    ))
-
-    def _check_email(self):
-        """Check email configuration."""
-        email = self.config.get("email", {})
-
-        # Routing
-        routing = email.get("routing", "")
-        if routing:
-            self.results.append(DiagnosticResult(
-                check="Email Routing",
-                status="pass" if routing == "direct" else "warn",
-                category="email",
-                message=f"Email routing: {routing}.",
-                detail="Direct routing is simplest. Third-party routing adds complexity.",
-                fix=None if routing == "direct" else "Review routing configuration for necessity.",
-            ))
-
-        # Spam filtering
-        spam = email.get("spam_filtering", True)
-        if not spam:
-            self.results.append(DiagnosticResult(
-                check="Spam Filtering",
-                status="fail",
-                category="email",
-                message="Spam filtering appears to be disabled.",
-                detail=None,
-                fix="Enable spam filtering in Gmail > Spam, phishing, and malware.",
-            ))
-        else:
-            self.results.append(DiagnosticResult(
-                check="Spam Filtering",
-                status="pass",
-                category="email",
-                message="Spam filtering is enabled.",
-                detail=None,
-                fix=None,
-            ))
-
-    def _check_security(self):
-        """Check security settings."""
-        security = self.config.get("security", {})
-
-        # 2FA
-        tfa = security.get("2fa_enforcement", False)
-        self.results.append(DiagnosticResult(
-            check="2FA Enforcement",
-            status="pass" if tfa else "fail",
-            category="security",
-            message=f"2-Step Verification enforcement: {'enabled' if tfa else 'disabled'}.",
-            detail=None,
-            fix=None if tfa else "Enable 2FA enforcement in Admin Console > Security > Authentication.",
-        ))
-
-        # Session control
-        session = security.get("session_duration_hours", 24)
-        if session and int(session) > 12:
-            self.results.append(DiagnosticResult(
-                check="Session Duration",
-                status="warn",
-                category="security",
-                message=f"Session duration ({session}h) is longer than recommended (12h).",
-                detail=None,
-                fix="Reduce session duration to 12 hours or less.",
-            ))
-        else:
-            self.results.append(DiagnosticResult(
-                check="Session Duration",
-                status="pass",
-                category="security",
-                message=f"Session duration ({session}h) is within recommended range.",
-                detail=None,
-                fix=None,
-            ))
-
-    def _check_integration(self):
-        """Check common integration patterns."""
-        integrations = self.config.get("integrations", {})
-
-        # SSO
-        sso = integrations.get("sso_enabled", False)
-        sso_provider = integrations.get("sso_provider", "")
-        if sso:
-            self.results.append(DiagnosticResult(
-                check="SSO Configuration",
-                status="pass",
-                category="integration",
-                message=f"SSO enabled via {sso_provider or 'configured provider'}.",
-                detail=None,
-                fix=None,
-            ))
-        else:
-            self.results.append(DiagnosticResult(
-                check="SSO Configuration",
-                status="warn",
-                category="integration",
-                message="SSO is not configured.",
-                detail="SSO provides centralized authentication control.",
-                fix="Consider configuring SSO if using an identity provider (Okta, Azure AD, etc.).",
-            ))
-
-        # LDAP/Directory Sync
-        dir_sync = integrations.get("directory_sync", False)
-        if dir_sync:
-            self.results.append(DiagnosticResult(
-                check="Directory Sync",
-                status="pass",
-                category="integration",
-                message="Directory synchronization is active.",
-                detail=None,
-                fix=None,
-            ))
-
-    def _check_consistency(self):
-        """Check for configuration consistency issues."""
-        security = self.config.get("security", {})
-        drive = self.config.get("drive", {})
-
-        # Inconsistency: strict auth but open sharing
-        tfa = security.get("2fa_enforcement", False)
-        sharing = drive.get("external_sharing", "")
-        if tfa and sharing in ("allowed", "unrestricted"):
-            self.results.append(DiagnosticResult(
-                check="Auth-Sharing Consistency",
-                status="warn",
-                category="consistency",
-                message="2FA enforced but external sharing is unrestricted.",
-                detail="Strong auth with open sharing may still leak data.",
-                fix="Consider restricting external sharing to match the strict auth posture.",
-            ))
-
-        # Inconsistency: advanced mobile but no 2FA
-        mobile = self.config.get("devices", {}).get("mobile_management", "")
-        if mobile == "advanced" and not tfa:
-            self.results.append(DiagnosticResult(
-                check="Mobile-Auth Consistency",
-                status="warn",
-                category="consistency",
-                message="Advanced mobile management without 2FA enforcement.",
-                detail="Mobile management is less effective without mandatory 2FA.",
-                fix="Enable 2FA enforcement to complement mobile management.",
-            ))
+def check_installation() -> Check:
+    """Check if gws is installed and on PATH."""
+    path = shutil.which("gws")
+    if path:
+        return Check("gws-installed", "PASS", f"gws found at {path}")
+    return Check("gws-installed", "FAIL", "gws not found on PATH",
+                 "Install via: cargo install gws-cli  OR  download from https://github.com/googleworkspace/cli/releases")
 
 
-def generate_sample_config() -> Dict[str, Any]:
-    """Generate sample configuration for testing."""
-    return {
-        "dns": {
-            "mx_records": ["ASPMX.L.GOOGLE.COM", "ALT1.ASPMX.L.GOOGLE.COM"],
-            "spf_record": "v=spf1 include:_spf.google.com ~all",
-            "dkim_record": "",
-            "dmarc_record": "v=DMARC1; p=none; rua=mailto:dmarc@example.com",
-        },
-        "email": {
-            "routing": "direct",
-            "spam_filtering": True,
-        },
-        "security": {
-            "2fa_enforcement": False,
-            "session_duration_hours": 24,
-        },
-        "drive": {
-            "external_sharing": "allowed",
-        },
-        "devices": {
-            "mobile_management": "basic",
-        },
-        "integrations": {
-            "sso_enabled": False,
-            "directory_sync": False,
-        },
-    }
+def check_version() -> Check:
+    """Get gws version."""
+    try:
+        result = subprocess.run(
+            ["gws", "--version"], capture_output=True, text=True, timeout=10
+        )
+        version = result.stdout.strip()
+        if version:
+            return Check("gws-version", "PASS", f"Version: {version}")
+        return Check("gws-version", "WARN", "Could not parse version output")
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        return Check("gws-version", "FAIL", f"Version check failed: {e}")
 
 
-def format_text(results: List[DiagnosticResult]) -> str:
-    """Format as human-readable text."""
-    lines = []
-    lines.append("=" * 60)
-    lines.append("GOOGLE WORKSPACE DIAGNOSTIC REPORT")
-    lines.append("=" * 60)
-
-    passed = sum(1 for r in results if r.status == "pass")
-    failed = sum(1 for r in results if r.status == "fail")
-    warned = sum(1 for r in results if r.status == "warn")
-
-    lines.append(f"\nChecks: {len(results)} total")
-    lines.append(f"  PASS: {passed}  |  FAIL: {failed}  |  WARN: {warned}")
-    lines.append("-" * 60)
-
-    for status_label, status_key in [("FAILURES", "fail"), ("WARNINGS", "warn"), ("PASSED", "pass")]:
-        group = [r for r in results if r.status == status_key]
-        if not group:
-            continue
-
-        icon = {"fail": "FAIL", "warn": "WARN", "pass": "PASS"}[status_key]
-        lines.append(f"\n[{status_label}]")
-        for r in group:
-            lines.append(f"  [{icon}] {r.check} ({r.category})")
-            lines.append(f"    {r.message}")
-            if r.detail:
-                lines.append(f"    Detail: {r.detail}")
-            if r.fix:
-                lines.append(f"    Fix: {r.fix}")
-            lines.append("")
-
-    health = "HEALTHY" if failed == 0 else "NEEDS ATTENTION" if failed <= 2 else "CRITICAL"
-    lines.append(f"Overall Health: {health}")
-    lines.append("=" * 60)
-    return "\n".join(lines)
+def check_auth() -> Check:
+    """Check authentication status."""
+    try:
+        result = subprocess.run(
+            ["gws", "auth", "status", "--json"],
+            capture_output=True, text=True, timeout=15
+        )
+        if result.returncode == 0:
+            try:
+                data = json.loads(result.stdout)
+                user = data.get("user", data.get("email", "unknown"))
+                return Check("auth-status", "PASS", f"Authenticated as {user}")
+            except json.JSONDecodeError:
+                return Check("auth-status", "PASS", "Authenticated (could not parse details)")
+        return Check("auth-status", "FAIL", "Not authenticated",
+                     "Run 'gws auth setup' to configure authentication")
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        return Check("auth-status", "FAIL", f"Auth check failed: {e}",
+                     "Run 'gws auth setup' to configure authentication")
 
 
-def format_json(results: List[DiagnosticResult]) -> str:
-    """Format as JSON."""
-    return json.dumps({
-        "results": [asdict(r) for r in results],
-        "summary": {
-            "total": len(results),
-            "pass": sum(1 for r in results if r.status == "pass"),
-            "fail": sum(1 for r in results if r.status == "fail"),
-            "warn": sum(1 for r in results if r.status == "warn"),
-        }
-    }, indent=2)
+def check_service(service: str) -> Check:
+    """Test connectivity to a specific service."""
+    cmd = SERVICE_TEST_COMMANDS.get(service)
+    if not cmd:
+        return Check(f"{service}-access", "WARN", f"No test command for {service}")
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if result.returncode == 0:
+            return Check(f"{service}-access", "PASS", f"{service.title()} API accessible")
+        stderr = result.stderr.strip()[:100]
+        if "403" in stderr or "permission" in stderr.lower():
+            return Check(f"{service}-access", "FAIL",
+                         f"{service.title()} API permission denied",
+                         f"Add '{service}' scope: gws auth setup --scopes {service}")
+        return Check(f"{service}-access", "FAIL",
+                     f"{service.title()} API error: {stderr}",
+                     f"Check scope and permissions for {service}")
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        return Check(f"{service}-access", "FAIL", f"{service.title()} test failed: {e}")
+
+
+def run_diagnostics(services: List[str]) -> DiagnosticReport:
+    """Run all diagnostic checks."""
+    report = DiagnosticReport()
+    checks = []
+
+    # Installation check
+    install_check = check_installation()
+    checks.append(install_check)
+    report.gws_installed = install_check.status == "PASS"
+
+    if not report.gws_installed:
+        report.checks = [asdict(c) for c in checks]
+        report.summary = "FAIL: gws is not installed"
+        return report
+
+    # Version check
+    version_check = check_version()
+    checks.append(version_check)
+    if version_check.status == "PASS":
+        report.gws_version = version_check.message.replace("Version: ", "")
+
+    # Auth check
+    auth_check = check_auth()
+    checks.append(auth_check)
+    report.auth_status = auth_check.status
+
+    if auth_check.status != "PASS":
+        report.checks = [asdict(c) for c in checks]
+        report.summary = "FAIL: Authentication not configured"
+        return report
+
+    # Service checks
+    for svc in services:
+        checks.append(check_service(svc))
+
+    report.checks = [asdict(c) for c in checks]
+
+    # Summary
+    fails = sum(1 for c in checks if c.status == "FAIL")
+    warns = sum(1 for c in checks if c.status == "WARN")
+    passes = sum(1 for c in checks if c.status == "PASS")
+    if fails > 0:
+        report.summary = f"ISSUES FOUND: {passes} passed, {warns} warnings, {fails} failures"
+    elif warns > 0:
+        report.summary = f"MOSTLY OK: {passes} passed, {warns} warnings"
+    else:
+        report.summary = f"ALL CLEAR: {passes}/{passes} checks passed"
+
+    return report
+
+
+def run_demo() -> DiagnosticReport:
+    """Return demo report with embedded sample data."""
+    report = DiagnosticReport(
+        gws_installed=True,
+        gws_version="0.9.2",
+        auth_status="PASS",
+        checks=[asdict(c) for c in DEMO_CHECKS],
+        summary="MOSTLY OK: 7 passed, 1 warning, 1 failure (demo mode)",
+        demo_mode=True,
+    )
+    return report
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Diagnostic tool for common Google Workspace configuration issues."
+        description="Pre-flight diagnostics for Google Workspace CLI (gws)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                          # Run all checks
+  %(prog)s --json                   # JSON output
+  %(prog)s --services gmail,drive   # Check specific services only
+  %(prog)s --demo                   # Demo mode (no gws required)
+        """,
     )
-    parser.add_argument("--config", "-c", help="Path to GWS config JSON")
-    parser.add_argument("--sample", action="store_true", help="Run against sample config")
-    parser.add_argument("--check", default="all",
-                       help="Checks to run: all,dns,email,security,integration,consistency")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
-    parser.add_argument("--generate-sample", action="store_true", help="Output sample config")
+    parser.add_argument("--json", action="store_true", help="Output JSON")
+    parser.add_argument(
+        "--services", default="gmail,drive,calendar,sheets,tasks",
+        help="Comma-separated services to check (default: gmail,drive,calendar,sheets,tasks)"
+    )
+    parser.add_argument("--demo", action="store_true", help="Run with demo data")
     args = parser.parse_args()
 
-    if args.generate_sample:
-        print(json.dumps(generate_sample_config(), indent=2))
-        return
+    services = [s.strip() for s in args.services.split(",") if s.strip()]
 
-    if args.sample:
-        config = generate_sample_config()
-    elif args.config:
-        from pathlib import Path
-        path = Path(args.config)
-        if not path.exists():
-            print(f"Error: File not found: {args.config}", file=sys.stderr)
-            sys.exit(2)
-        try:
-            config = json.loads(path.read_text())
-        except json.JSONDecodeError as e:
-            print(f"Error: Invalid JSON: {e}", file=sys.stderr)
-            sys.exit(2)
+    # Use demo mode if requested or gws not installed
+    if args.demo or not shutil.which("gws"):
+        report = run_demo()
     else:
-        parser.error("Provide --config or --sample")
-        return
+        report = run_diagnostics(services)
 
-    checks = [c.strip() for c in args.check.split(",")]
-    diagnostics = GWSDiagnostics(config, checks)
-    results = diagnostics.run()
-
-    if args.format == "json":
-        print(format_json(results))
+    if args.json:
+        print(json.dumps(asdict(report), indent=2))
     else:
-        print(format_text(results))
+        print(f"\n{'='*60}")
+        print(f"  GWS CLI DIAGNOSTIC REPORT")
+        if report.demo_mode:
+            print(f"  (DEMO MODE — sample data)")
+        print(f"{'='*60}\n")
 
-    if any(r.status == "fail" for r in results):
-        sys.exit(1)
+        for c in report.checks:
+            icon = {"PASS": "PASS", "WARN": "WARN", "FAIL": "FAIL"}.get(c["status"], "????")
+            print(f"  [{icon}] {c['name']}: {c['message']}")
+            if c.get("fix") and c["status"] != "PASS":
+                print(f"         -> {c['fix']}")
+
+        print(f"\n  {'-'*56}")
+        print(f"  {report.summary}")
+        print(f"\n{'='*60}\n")
 
 
 if __name__ == "__main__":

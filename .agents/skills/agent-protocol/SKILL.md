@@ -1,662 +1,418 @@
 ---
-name: agent-protocol
-description: >
-  Design and implement AI agent communication protocols including MCP tool
-  schemas, Google A2A protocol, OpenAI function calling, structured inter-agent
-  messaging, and protocol negotiation. Use when building multi-agent systems,
-  defining tool interfaces, implementing agent-to-agent communication, or
-  standardizing LLM tool calling patterns across platforms.
-license: MIT + Commons Clause
+name: "agent-protocol"
+description: "Inter-agent communication protocol for C-suite agent teams. Defines invocation syntax, loop prevention, isolation rules, and response formats. Use when C-suite agents need to query each other, coordinate cross-functional analysis, or run board meetings with multiple agent roles."
+license: MIT
 metadata:
   version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: ai-agent-systems
-  tier: POWERFUL
-  updated: 2026-03-09
-  frameworks: mcp, a2a, openai-functions, langchain-tools
+  author: Alireza Rezvani
+  category: c-level
+  domain: agent-orchestration
+  updated: 2026-03-05
+  frameworks: invocation-patterns
 ---
-# Agent Protocol
 
-The agent designs tool schemas for MCP, Google A2A, and OpenAI Function Calling protocols. It implements transport selection, capability discovery, authentication flows (OAuth 2.1, API keys), structured error handling, rate limiting, and protocol bridges for heterogeneous agent ecosystems.
+# Inter-Agent Protocol
 
-## Core Capabilities
+How C-suite agents talk to each other. Rules that prevent chaos, loops, and circular reasoning.
 
-### 1. Protocol Selection and Comparison
-- **MCP (Model Context Protocol)**: Anthropic's standard for tool/resource/prompt serving
-- **Google A2A (Agent-to-Agent)**: Agent card discovery, task lifecycle, streaming
-- **OpenAI Function Calling**: JSON Schema tool definitions, parallel calls, strict mode
-- **LangChain/LangGraph Tools**: Python-native tool wrappers with callback integration
-- **Custom Protocols**: WebSocket, gRPC, and event-driven agent messaging
+## Keywords
+agent protocol, inter-agent communication, agent invocation, agent orchestration, multi-agent, c-suite coordination, agent chain, loop prevention, agent isolation, board meeting protocol
 
-### 2. Tool Schema Design
-- JSON Schema validation for inputs and outputs
-- Semantic naming conventions that improve agent tool selection
-- Description engineering for maximum LLM comprehension
-- Required vs optional parameter design
-- Enum constraints and default value strategies
+## Invocation Syntax
 
-### 3. Transport and Discovery
-- stdio, SSE, and WebSocket transport for MCP
-- HTTP+JSON-RPC for A2A task management
-- Agent card and capability advertisement
-- Health checking and graceful degradation
-- Protocol version negotiation
-
-### 4. Security and Authentication
-- OAuth 2.1 flows for MCP remote servers
-- API key rotation and scoping
-- Request signing and verification
-- Rate limiting per agent identity
-- Audit logging for all inter-agent calls
-
-## When to Use
-
-- Designing tool interfaces for LLM-powered agents
-- Building MCP servers that expose APIs to Claude, Cursor, or other clients
-- Implementing agent-to-agent communication in multi-agent systems
-- Bridging between different agent protocols (MCP to A2A, etc.)
-- Standardizing tool calling patterns across a team or organization
-- Debugging agent tool selection failures
-
-## Protocol Comparison Matrix
-
-| Feature | MCP | A2A | OpenAI Functions | LangChain Tools |
-|---------|-----|-----|-----------------|-----------------|
-| Transport | stdio/SSE/WebSocket | HTTP+JSON-RPC | HTTP REST | In-process |
-| Discovery | Server capabilities | Agent cards | API spec | Registry |
-| Streaming | SSE notifications | SSE streaming | Streaming deltas | Callbacks |
-| Auth | OAuth 2.1 | Agent auth | API key | N/A |
-| State | Resources + context | Task lifecycle | Conversation | Memory |
-| Multi-turn | Sampling | Task updates | Thread context | Chain state |
-| File handling | Resource URIs | Artifact parts | File search | Document loaders |
-| Best for | Tool serving | Agent networks | Single-model tools | Python pipelines |
-
-## Decision Framework
+Any agent can query another using:
 
 ```
-What are you building?
-│
-├─ Tools for a single LLM client (Claude, Cursor, Copilot)
-│  └─ Use MCP — it's the native protocol for tool serving
-│
-├─ Agent-to-agent communication across organizations
-│  └─ Use A2A — designed for cross-boundary agent discovery and delegation
-│
-├─ Tools for OpenAI models specifically
-│  └─ Use OpenAI Function Calling — tightest integration
-│
-├─ Python pipeline with multiple chained tools
-│  └─ Use LangChain Tools — simplest for in-process orchestration
-│
-└─ Heterogeneous agent ecosystem (multiple protocols)
-   └─ Use Protocol Bridge pattern — translate between protocols at boundaries
+[INVOKE:role|question]
 ```
 
-## MCP Tool Schema Design
-
-### Anatomy of a Well-Designed Tool
-
-```json
-{
-  "name": "search_documents",
-  "description": "Search the knowledge base for documents matching a query. Returns ranked results with titles, snippets, and relevance scores. Use this when the user asks a question that requires looking up information from stored documents.",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "query": {
-        "type": "string",
-        "description": "Natural language search query. Be specific — 'Q4 2025 revenue projections' works better than 'revenue'."
-      },
-      "limit": {
-        "type": "integer",
-        "description": "Maximum number of results to return.",
-        "default": 10,
-        "minimum": 1,
-        "maximum": 50
-      },
-      "filters": {
-        "type": "object",
-        "description": "Optional filters to narrow results.",
-        "properties": {
-          "date_after": {
-            "type": "string",
-            "format": "date",
-            "description": "Only return documents created after this date (YYYY-MM-DD)."
-          },
-          "document_type": {
-            "type": "string",
-            "enum": ["report", "memo", "presentation", "spreadsheet"],
-            "description": "Filter by document type."
-          }
-        }
-      }
-    },
-    "required": ["query"]
-  }
-}
+**Examples:**
+```
+[INVOKE:cfo|What's the burn rate impact of hiring 5 engineers in Q3?]
+[INVOKE:cto|Can we realistically ship this feature by end of quarter?]
+[INVOKE:chro|What's our typical time-to-hire for senior engineers?]
+[INVOKE:cro|What does our pipeline look like for the next 90 days?]
 ```
 
-### Tool Naming Rules
+**Valid roles:** `ceo`, `cfo`, `cro`, `cmo`, `cpo`, `cto`, `chro`, `coo`, `ciso`
+
+## Response Format
+
+Invoked agents respond using this structure:
 
 ```
-GOOD tool names (verb_noun, specific):
-  search_documents      — clear action + target
-  create_github_issue   — includes the service for disambiguation
-  get_user_profile      — standard CRUD verb
-  analyze_pr_diff       — describes the analysis action
-  send_slack_message    — action + channel type
-
-BAD tool names (vague, ambiguous, or too generic):
-  search                — search what?
-  do_thing              — meaningless
-  handler               — not a verb_noun
-  processData           — camelCase breaks conventions
-  get_stuff             — too vague for LLM selection
+[RESPONSE:role]
+Key finding: [one line — the actual answer]
+Supporting data:
+  - [data point 1]
+  - [data point 2]
+  - [data point 3 — optional]
+Confidence: [high | medium | low]
+Caveat: [one line — what could make this wrong]
+[/RESPONSE]
 ```
 
-### Description Engineering
-
-The description is the single most important field for agent tool selection. An LLM reads the description to decide whether to call this tool.
-
+**Example:**
 ```
-EFFECTIVE description pattern:
-"[What it does]. [What it returns]. [When to use it]."
-
-Example:
-"Search the knowledge base for documents matching a query. Returns ranked
-results with titles, snippets, and relevance scores. Use this when the
-user asks a question that requires looking up stored documents."
-
-INEFFECTIVE descriptions:
-"Searches documents."           — too short, no usage guidance
-"This tool is used for..."      — wastes tokens on filler
-"A powerful search engine..."   — marketing copy, not instructions
+[RESPONSE:cfo]
+Key finding: Hiring 5 engineers in Q3 extends runway from 14 to 9 months at current burn.
+Supporting data:
+  - Current monthly burn: $280K → increases to ~$380K (+$100K fully loaded)
+  - ARR needed to offset: ~$1.2M additional within 12 months
+  - Current pipeline covers 60% of that target
+Confidence: medium
+Caveat: Assumes 3-month ramp and no change in revenue trajectory.
+[/RESPONSE]
 ```
 
-## MCP Server Implementation (TypeScript)
+## Loop Prevention (Hard Rules)
 
-### Minimal Server with Tool and Resource
+These rules are enforced unconditionally. No exceptions.
 
-```typescript
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
-
-const server = new McpServer({
-  name: "project-tools",
-  version: "1.0.0",
-  capabilities: {
-    tools: {},
-    resources: {},
-  },
-});
-
-// Tool: search codebase
-server.tool(
-  "search_codebase",
-  "Search the project codebase for files matching a pattern. Returns file paths and line numbers with matching content. Use when looking for implementations, definitions, or usage of specific code patterns.",
-  {
-    pattern: z.string().describe("Regex or glob pattern to search for"),
-    file_type: z.enum(["ts", "py", "go", "rs", "all"]).default("all")
-      .describe("Filter by file extension"),
-    max_results: z.number().int().min(1).max(100).default(20)
-      .describe("Maximum results to return"),
-  },
-  async ({ pattern, file_type, max_results }) => {
-    // Implementation: run ripgrep or similar
-    const results = await searchFiles(pattern, file_type, max_results);
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify(results, null, 2),
-      }],
-    };
-  }
-);
-
-// Resource: project structure
-server.resource(
-  "project://structure",
-  "project://structure",
-  async (uri) => ({
-    contents: [{
-      uri: uri.href,
-      mimeType: "application/json",
-      text: JSON.stringify(await getProjectStructure()),
-    }],
-  })
-);
-
-// Start server
-const transport = new StdioServerTransport();
-await server.connect(transport);
+### Rule 1: No Self-Invocation
+An agent cannot invoke itself.
+```
+❌ CFO → [INVOKE:cfo|...] — BLOCKED
 ```
 
-### MCP Server with Authentication (SSE Transport)
-
-```typescript
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import express from "express";
-
-const app = express();
-
-// Authentication middleware
-function authenticateAgent(req, res, next) {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token || !verifyAgentToken(token)) {
-    return res.status(401).json({ error: "Invalid agent credentials" });
-  }
-  req.agentId = extractAgentId(token);
-  next();
-}
-
-// Rate limiting per agent
-const rateLimiter = new Map<string, { count: number; resetAt: number }>();
-function rateLimit(agentId: string, maxPerMinute = 60): boolean {
-  const now = Date.now();
-  const entry = rateLimiter.get(agentId) || { count: 0, resetAt: now + 60000 };
-  if (now > entry.resetAt) {
-    entry.count = 0;
-    entry.resetAt = now + 60000;
-  }
-  entry.count++;
-  rateLimiter.set(agentId, entry);
-  return entry.count <= maxPerMinute;
-}
-
-app.use("/mcp", authenticateAgent);
-
-app.get("/mcp/sse", (req, res) => {
-  if (!rateLimit(req.agentId)) {
-    return res.status(429).json({ error: "Rate limit exceeded" });
-  }
-  const transport = new SSEServerTransport("/mcp/messages", res);
-  server.connect(transport);
-});
-
-app.listen(3001, () => console.log("MCP server on :3001"));
+### Rule 2: Maximum Depth = 2
+Chains can go A→B→C. The third hop is blocked.
+```
+✅ CRO → CFO → COO (depth 2)
+❌ CRO → CFO → COO → CHRO (depth 3 — BLOCKED)
 ```
 
-## Google A2A Protocol Implementation
-
-### Agent Card (Discovery)
-
-```json
-{
-  "name": "Research Agent",
-  "description": "Performs web research and synthesizes findings into structured reports.",
-  "url": "https://research-agent.example.com",
-  "provider": {
-    "organization": "Acme Corp",
-    "url": "https://acme.example.com"
-  },
-  "version": "1.0.0",
-  "capabilities": {
-    "streaming": true,
-    "pushNotifications": false,
-    "stateTransitionHistory": true
-  },
-  "authentication": {
-    "schemes": ["Bearer"],
-    "credentials": "oauth2"
-  },
-  "defaultInputModes": ["text/plain"],
-  "defaultOutputModes": ["text/plain", "application/json"],
-  "skills": [
-    {
-      "id": "web-research",
-      "name": "Web Research",
-      "description": "Search the web and synthesize findings into a structured report with citations.",
-      "tags": ["research", "web", "synthesis"],
-      "examples": [
-        "Research the latest trends in AI agent frameworks",
-        "Find competitive pricing data for SaaS products in the CRM space"
-      ]
-    }
-  ]
-}
+### Rule 3: No Circular Calls
+If agent A called agent B, agent B cannot call agent A in the same chain.
+```
+✅ CRO → CFO → CMO
+❌ CRO → CFO → CRO (circular — BLOCKED)
 ```
 
-### A2A Task Lifecycle
-
+### Rule 4: Chain Tracking
+Each invocation carries its call chain. Format:
 ```
-Client                           Agent
-  │                                │
-  ├─ POST /tasks/send ────────────►│ Create task
-  │◄──────── task (submitted) ─────┤
-  │                                │
-  ├─ GET /tasks/{id} ─────────────►│ Poll status
-  │◄──────── task (working) ───────┤
-  │                                │
-  │  (agent processes...)          │
-  │                                │
-  ├─ GET /tasks/{id} ─────────────►│ Poll status
-  │◄──────── task (completed) ─────┤
-  │         + artifacts            │
+[CHAIN: cro → cfo → coo]
+```
+Agents check this chain before responding with another invocation.
+
+**When blocked:** Return this instead of invoking:
+```
+[BLOCKED: cannot invoke cfo — circular call detected in chain cro→cfo]
+State assumption used instead: [explicit assumption the agent is making]
 ```
 
-### A2A Client Implementation
+## Isolation Rules
 
-```python
-import httpx
-import json
-from dataclasses import dataclass
-from typing import Optional
-from enum import Enum
+### Board Meeting Phase 2 (Independent Analysis)
+**NO invocations allowed.** Each role forms independent views before cross-pollination.
+- Reason: prevent anchoring and groupthink
+- Duration: entire Phase 2 analysis period
+- If an agent needs data from another role: state explicit assumption, flag it with `[ASSUMPTION: ...]`
 
-class TaskState(Enum):
-    SUBMITTED = "submitted"
-    WORKING = "working"
-    INPUT_REQUIRED = "input-required"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELED = "canceled"
+### Board Meeting Phase 3 (Critic Role)
+Executive Mentor can **reference** other roles' outputs but **cannot invoke** them.
+- Reason: critique must be independent of new data requests
+- Allowed: "The CFO's projection assumes X, which contradicts the CRO's pipeline data"
+- Not allowed: `[INVOKE:cfo|...]` during critique phase
 
-@dataclass
-class A2AClient:
-    base_url: str
-    auth_token: str
-    timeout: float = 30.0
+### Outside Board Meetings
+Invocations are allowed freely, subject to loop prevention rules above.
 
-    def _headers(self) -> dict:
-        return {
-            "Authorization": f"Bearer {self.auth_token}",
-            "Content-Type": "application/json",
-        }
+## When to Invoke vs When to Assume
 
-    def discover(self) -> dict:
-        """Fetch the agent card for capability discovery."""
-        resp = httpx.get(
-            f"{self.base_url}/.well-known/agent.json",
-            headers=self._headers(),
-            timeout=self.timeout,
-        )
-        resp.raise_for_status()
-        return resp.json()
+**Invoke when:**
+- The question requires domain-specific data you don't have
+- An error here would materially change the recommendation
+- The question is cross-functional by nature (e.g., hiring impact on both budget and capacity)
 
-    def send_task(self, message: str, task_id: Optional[str] = None) -> dict:
-        """Send a task to the agent. Returns task object with status."""
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "tasks/send",
-            "params": {
-                "message": {
-                    "role": "user",
-                    "parts": [{"type": "text", "text": message}],
-                },
-            },
-            "id": task_id or self._generate_id(),
-        }
-        resp = httpx.post(
-            f"{self.base_url}/a2a",
-            json=payload,
-            headers=self._headers(),
-            timeout=self.timeout,
-        )
-        resp.raise_for_status()
-        return resp.json()["result"]
+**Assume when:**
+- The data is directionally clear and precision isn't critical
+- You're in Phase 2 isolation (always assume, never invoke)
+- The chain is already at depth 2
+- The question is minor compared to your main analysis
 
-    def get_task(self, task_id: str) -> dict:
-        """Poll task status."""
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "tasks/get",
-            "params": {"id": task_id},
-            "id": self._generate_id(),
-        }
-        resp = httpx.post(
-            f"{self.base_url}/a2a",
-            json=payload,
-            headers=self._headers(),
-            timeout=self.timeout,
-        )
-        resp.raise_for_status()
-        return resp.json()["result"]
-
-    def wait_for_completion(self, task_id: str, poll_interval: float = 2.0, max_polls: int = 60) -> dict:
-        """Poll until task reaches a terminal state."""
-        import time
-        terminal_states = {TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELED}
-        for _ in range(max_polls):
-            task = self.get_task(task_id)
-            if TaskState(task["status"]["state"]) in terminal_states:
-                return task
-            time.sleep(poll_interval)
-        raise TimeoutError(f"Task {task_id} did not complete within {max_polls * poll_interval}s")
-
-    @staticmethod
-    def _generate_id() -> str:
-        import uuid
-        return str(uuid.uuid4())
+**When assuming, always state it:**
+```
+[ASSUMPTION: runway ~12 months based on typical Series A burn profile — not verified with CFO]
 ```
 
-## Protocol Bridge Pattern
+## Conflict Resolution
 
-When your system uses multiple protocols, implement a bridge that translates between them.
+When two invoked agents give conflicting answers:
 
-```python
-class ProtocolBridge:
-    """Translates between MCP tool calls and A2A task delegation."""
+1. **Flag the conflict explicitly:**
+   ```
+   [CONFLICT: CFO projects 14-month runway; CRO expects pipeline to close 80% → implies 18+ months]
+   ```
+2. **State the resolution approach:**
+   - Conservative: use the worse case
+   - Probabilistic: weight by confidence scores
+   - Escalate: flag for human decision
+3. **Never silently pick one** — surface the conflict to the user.
 
-    def __init__(self, a2a_agents: dict[str, A2AClient]):
-        self.agents = a2a_agents  # skill_id -> A2AClient
+## Broadcast Pattern (Crisis / CEO)
 
-    def mcp_tool_to_a2a_task(self, tool_name: str, arguments: dict) -> dict:
-        """Convert an MCP tool call into an A2A task send."""
-        agent_id, skill = self._resolve_agent(tool_name)
-        client = self.agents[agent_id]
-
-        message = self._format_task_message(tool_name, arguments)
-        task = client.send_task(message)
-        result = client.wait_for_completion(task["id"])
-
-        return self._a2a_result_to_mcp_response(result)
-
-    def _resolve_agent(self, tool_name: str) -> tuple[str, str]:
-        """Map MCP tool name to A2A agent + skill."""
-        routing = {
-            "search_web": ("research-agent", "web-research"),
-            "analyze_data": ("analytics-agent", "data-analysis"),
-            "generate_code": ("code-agent", "code-generation"),
-        }
-        if tool_name not in routing:
-            raise ValueError(f"No A2A agent registered for tool: {tool_name}")
-        return routing[tool_name]
-
-    def _format_task_message(self, tool_name: str, arguments: dict) -> str:
-        return json.dumps({"tool": tool_name, "arguments": arguments})
-
-    def _a2a_result_to_mcp_response(self, task: dict) -> dict:
-        """Convert A2A task result to MCP tool response format."""
-        if task["status"]["state"] == "completed":
-            artifacts = task.get("artifacts", [])
-            text_parts = []
-            for artifact in artifacts:
-                for part in artifact.get("parts", []):
-                    if part["type"] == "text":
-                        text_parts.append(part["text"])
-            return {"content": [{"type": "text", "text": "\n".join(text_parts)}]}
-        else:
-            error_msg = task["status"].get("message", "Task failed")
-            return {"content": [{"type": "text", "text": f"Error: {error_msg}"}], "isError": True}
+CEO can broadcast to all roles simultaneously:
+```
+[BROADCAST:all|What's the impact if we miss the fundraise?]
 ```
 
-## Error Handling Standards
+Responses come back independently (no agent sees another's response before forming its own). Aggregate after all respond.
 
-### Structured Error Responses
+## Quick Reference
 
-Every protocol should return errors in a consistent format that agents can parse and recover from.
+| Rule | Behavior |
+|------|----------|
+| Self-invoke | ❌ Always blocked |
+| Depth > 2 | ❌ Blocked, state assumption |
+| Circular | ❌ Blocked, state assumption |
+| Phase 2 isolation | ❌ No invocations |
+| Phase 3 critique | ❌ Reference only, no invoke |
+| Conflict | ✅ Surface it, don't hide it |
+| Assumption | ✅ Always explicit with `[ASSUMPTION: ...]` |
 
-```json
-{
-  "error": {
-    "code": "RATE_LIMITED",
-    "message": "Too many requests. Retry after 30 seconds.",
-    "retryable": true,
-    "retry_after_seconds": 30,
-    "details": {
-      "limit": 60,
-      "window": "1m",
-      "current": 62
-    }
-  }
-}
+## Internal Quality Loop (before anything reaches the founder)
+
+No role presents to the founder without passing through this verification loop. The founder sees polished, verified output — not first drafts.
+
+### Step 1: Self-Verification (every role, every time)
+
+Before presenting, every role runs this internal checklist:
+
+```
+SELF-VERIFY CHECKLIST:
+□ Source Attribution — Where did each data point come from?
+  ✅ "ARR is $2.1M (from CRO pipeline report, Q4 actuals)"
+  ❌ "ARR is around $2M" (no source, vague)
+
+□ Assumption Audit — What am I assuming vs what I verified?
+  Tag every assumption: [VERIFIED: checked against data] or [ASSUMED: not verified]
+  If >50% of findings are ASSUMED → flag low confidence
+
+□ Confidence Score — How sure am I on each finding?
+  🟢 High: verified data, established pattern, multiple sources
+  🟡 Medium: single source, reasonable inference, some uncertainty
+  🔴 Low: assumption-based, limited data, first-time analysis
+
+□ Contradiction Check — Does this conflict with known context?
+  Check against company-context.md and recent decisions in decision-log
+  If it contradicts a past decision → flag explicitly
+
+□ "So What?" Test — Does every finding have a business consequence?
+  If you can't answer "so what?" in one sentence → cut it
 ```
 
-### Error Code Taxonomy
+### Step 2: Peer Verification (cross-functional validation)
 
-| Code | Meaning | Agent Action |
-|------|---------|-------------|
-| `INVALID_INPUT` | Bad parameters | Fix input and retry |
-| `NOT_FOUND` | Resource missing | Try alternative or report |
-| `AUTH_FAILED` | Credentials invalid | Refresh token and retry |
-| `AUTH_EXPIRED` | Token expired | Refresh and retry once |
-| `RATE_LIMITED` | Too many requests | Wait `retry_after` then retry |
-| `UPSTREAM_ERROR` | External service failed | Retry with backoff |
-| `INTERNAL_ERROR` | Server bug | Report, do not retry |
-| `CAPABILITY_UNAVAILABLE` | Tool/skill disabled | Use alternative tool |
+When a recommendation impacts another role's domain, that role validates BEFORE presenting.
 
-## Testing Agent Protocols
+| If your recommendation involves... | Validate with... | They check... |
+|-------------------------------------|-------------------|---------------|
+| Financial numbers or budget | CFO | Math, runway impact, budget reality |
+| Revenue projections | CRO | Pipeline backing, historical accuracy |
+| Headcount or hiring | CHRO | Market reality, comp feasibility, timeline |
+| Technical feasibility or timeline | CTO | Engineering capacity, technical debt load |
+| Operational process changes | COO | Capacity, dependencies, scaling impact |
+| Customer-facing changes | CRO + CPO | Churn risk, product roadmap conflict |
+| Security or compliance claims | CISO | Actual posture, regulation requirements |
+| Market or positioning claims | CMO | Data backing, competitive reality |
 
-### Tool Schema Validation
-
-```python
-import jsonschema
-
-def validate_mcp_tool(tool_def: dict) -> list[str]:
-    """Validate an MCP tool definition for common issues."""
-    issues = []
-
-    if not tool_def.get("name"):
-        issues.append("Missing tool name")
-    elif not tool_def["name"].replace("_", "").isalnum():
-        issues.append(f"Tool name '{tool_def['name']}' should use snake_case with alphanumeric chars")
-
-    desc = tool_def.get("description", "")
-    if len(desc) < 20:
-        issues.append("Description too short — LLMs need clear usage guidance")
-    if not any(word in desc.lower() for word in ["use when", "returns", "use this"]):
-        issues.append("Description should explain when to use the tool and what it returns")
-
-    schema = tool_def.get("inputSchema", {})
-    if schema.get("type") != "object":
-        issues.append("inputSchema must be type: object")
-
-    for prop_name, prop_def in schema.get("properties", {}).items():
-        if not prop_def.get("description"):
-            issues.append(f"Property '{prop_name}' missing description")
-        if prop_def.get("type") == "string" and not prop_def.get("description"):
-            issues.append(f"String property '{prop_name}' needs description for LLM context")
-
-    return issues
+**Peer validation format:**
+```
+[PEER-VERIFY:cfo]
+Validated: ✅ Burn rate calculation correct
+Adjusted: ⚠️ Hiring timeline should be Q3 not Q2 (budget constraint)
+Flagged: 🔴 Missing equity cost in total comp projection
+[/PEER-VERIFY]
 ```
 
-### Integration Testing Pattern
+**Skip peer verification when:**
+- Single-domain question with no cross-functional impact
+- Time-sensitive proactive alert (send alert, verify after)
+- Founder explicitly asked for a quick take
 
-```python
-import subprocess
-import json
+### Step 3: Critic Pre-Screen (high-stakes decisions only)
 
-def test_mcp_server_tools():
-    """Verify MCP server starts and lists expected tools."""
-    proc = subprocess.Popen(
-        ["node", "dist/index.js"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    # Send initialize request
-    init_msg = json.dumps({
-        "jsonrpc": "2.0",
-        "method": "initialize",
-        "params": {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "test"}},
-        "id": 1,
-    }) + "\n"
-    proc.stdin.write(init_msg.encode())
-    proc.stdin.flush()
+For decisions that are **irreversible, high-cost, or bet-the-company**, the Executive Mentor pre-screens before the founder sees it.
 
-    # Send tools/list
-    list_msg = json.dumps({
-        "jsonrpc": "2.0",
-        "method": "tools/list",
-        "params": {},
-        "id": 2,
-    }) + "\n"
-    proc.stdin.write(list_msg.encode())
-    proc.stdin.flush()
+**Triggers for pre-screen:**
+- Involves spending > 20% of remaining runway
+- Affects >30% of the team (layoffs, reorg)
+- Changes company strategy or direction
+- Involves external commitments (fundraising terms, partnerships, M&A)
+- Any recommendation where all roles agree (suspicious consensus)
 
-    # Read and validate response
-    # (In production, use proper JSON-RPC response parsing)
-    proc.terminate()
+**Pre-screen output:**
+```
+[CRITIC-SCREEN]
+Weakest point: [The single biggest vulnerability in this recommendation]
+Missing perspective: [What nobody considered]
+If wrong, the cost is: [Quantified downside]
+Proceed: ✅ With noted risks | ⚠️ After addressing [specific gap] | 🔴 Rethink
+[/CRITIC-SCREEN]
 ```
 
-## Common Pitfalls
+### Step 4: Course Correction (after founder feedback)
 
-- **Vague tool descriptions** that cause the LLM to select the wrong tool or skip it entirely
-- **Missing required field declarations** leading to agents sending incomplete parameters
-- **No error codes** in responses, forcing agents to parse error messages with heuristics
-- **Exposing internal implementation details** in tool schemas instead of user-intent abstractions
-- **No rate limiting** on MCP servers, allowing runaway agent loops to exhaust resources
-- **Mixing transport concerns with protocol logic** instead of keeping them separate
-- **No capability versioning** making it impossible to evolve tools without breaking clients
-- **Synchronous-only design** that blocks on long-running operations instead of using task lifecycle
+The loop doesn't end at delivery. After the founder responds:
 
-## Best Practices
+```
+FOUNDER FEEDBACK LOOP:
+1. Founder approves → log decision (Layer 2), assign actions
+2. Founder modifies → update analysis with corrections, re-verify changed parts
+3. Founder rejects → log rejection with DO_NOT_RESURFACE, understand WHY
+4. Founder asks follow-up → deepen analysis on specific point, re-verify
 
-1. **Description-first design** — write the tool description before the implementation
-2. **One intent per tool** — a tool that does three things gets selected for the wrong reason
-3. **Validate inputs on the server** — never trust that the LLM sent correct types
-4. **Return structured errors** with codes, not string messages
-5. **Version your protocol** — use capability negotiation at connection time
-6. **Log every tool call** with agent ID, inputs, outputs, and latency for debugging
-7. **Test tool selection** — present your tool list to an LLM and verify it picks the right one
-8. **Use protocol bridges** at boundaries rather than forcing all agents onto one protocol
+POST-DECISION REVIEW (30/60/90 days):
+- Was the recommendation correct?
+- What did we miss?
+- Update company-context.md with what we learned
+- If wrong → document the lesson, adjust future analysis
+```
 
-## Troubleshooting
+### Verification Level by Stakes
 
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| LLM never selects the correct tool | Tool description is vague or missing usage guidance | Rewrite description using the "[What it does]. [What it returns]. [When to use it]." pattern |
-| MCP server connects but no tools appear | Missing `tools` in server capabilities declaration | Add `capabilities: { tools: {} }` to the `McpServer` constructor options |
-| A2A task stuck in `working` state indefinitely | Agent has no timeout or heartbeat mechanism | Implement `max_polls` and `poll_interval` in `wait_for_completion`; add server-side task TTLs |
-| `AUTH_EXPIRED` errors after token refresh | Refreshed token not propagated to in-flight requests | Store tokens centrally and read from shared state per-request rather than caching on the client instance |
-| Protocol bridge drops artifacts from A2A responses | Bridge only extracts `text` parts, ignoring `file` or `data` parts | Extend `_a2a_result_to_mcp_response` to handle all artifact part types including binary and structured data |
-| Rate limiting triggers during normal multi-tool calls | Per-agent rate limit is too low for parallel tool execution | Increase the per-minute ceiling or implement token-bucket rate limiting with burst allowance |
-| Tool schema validation passes but agent sends wrong types | JSON Schema `type` is correct but lacks `format`, `enum`, or `pattern` constraints | Add tighter constraints (e.g., `"format": "date"`, `"pattern": "^[A-Z]{3}$"`) to catch malformed inputs early |
+| Stakes | Self-Verify | Peer-Verify | Critic Pre-Screen |
+|--------|-------------|-------------|-------------------|
+| Low (informational) | ✅ Required | ❌ Skip | ❌ Skip |
+| Medium (operational) | ✅ Required | ✅ Required | ❌ Skip |
+| High (strategic) | ✅ Required | ✅ Required | ✅ Required |
+| Critical (irreversible) | ✅ Required | ✅ Required | ✅ Required + board meeting |
 
-## Success Criteria
+### What Changes in the Output Format
 
-- **Tool selection accuracy >= 95%**: LLMs select the intended tool on the first attempt when presented with the full tool list and a matching user query.
-- **Schema validation coverage = 100%**: Every deployed tool passes `validate_mcp_tool()` with zero issues reported.
-- **Error response consistency**: All protocol endpoints return structured error objects with `code`, `message`, and `retryable` fields — no raw exception strings.
-- **Discovery latency < 500ms**: Agent card retrieval (A2A) and `tools/list` (MCP) responses complete within 500ms at the 95th percentile.
-- **Protocol bridge translation fidelity >= 99%**: Cross-protocol calls preserve all input parameters and output artifacts without data loss or type coercion errors.
-- **Authentication failure recovery < 2 retries**: Token refresh flows resolve `AUTH_EXPIRED` errors within a single retry cycle without user intervention.
-- **Mean time to integrate a new tool < 30 minutes**: A developer with access to this skill can define, validate, and deploy a new MCP or A2A tool in under 30 minutes.
+The verified output adds confidence and source information:
 
-## Scope & Limitations
+```
+BOTTOM LINE
+[Answer] — Confidence: 🟢 High
 
-**This skill covers:**
-- Designing tool schemas for MCP, A2A, OpenAI Function Calling, and LangChain Tools
-- Transport selection, capability discovery, and protocol version negotiation
-- Authentication, rate limiting, and structured error handling for agent communication
-- Protocol bridging between heterogeneous agent ecosystems
+WHAT
+• [Finding 1] [VERIFIED: Q4 actuals] 🟢
+• [Finding 2] [VERIFIED: CRO pipeline data] 🟢  
+• [Finding 3] [ASSUMED: based on industry benchmarks] 🟡
 
-**This skill does NOT cover:**
-- Building complete MCP server applications with business logic — see `engineering/mcp-server-builder`
-- Agent orchestration patterns, planning loops, or multi-step reasoning — see `engineering/agent-workflow-designer`
-- Designing agent personas, memory systems, or behavioral profiles — see `engineering/agent-designer`
-- Infrastructure deployment, CI/CD pipelines, or container orchestration for agent services — see `engineering/senior-devops`
+PEER-VERIFIED BY: CFO (math ✅), CTO (timeline ⚠️ adjusted to Q3)
+```
 
-## Integration Points
+---
 
-| Skill | Integration | Data Flow |
-|-------|-------------|-----------|
-| `engineering/mcp-server-builder` | Protocol schemas defined here feed directly into MCP server scaffolding | Tool definitions and inputSchema objects flow into server code generation |
-| `engineering/agent-workflow-designer` | Workflow orchestrators consume protocol interfaces to dispatch tasks | Agent-protocol defines the transport contract; workflow-designer defines execution order and branching |
-| `engineering/agent-designer` | Agent identity and capability profiles reference protocol-level skill declarations | Agent cards and capability metadata from protocol design inform agent persona configuration |
-| `engineering/senior-security` | Security review of auth flows, token scoping, and rate limiting configurations | OAuth 2.1 flows, API key rotation policies, and audit logging patterns flow into security assessments |
-| `engineering/api-design-reviewer` | REST and JSON-RPC endpoint design review for A2A and MCP HTTP transports | API schema and endpoint contracts feed into design review checklists |
-| `engineering/observability-designer` | Monitoring and tracing for inter-agent calls, latency tracking, and error budgets | Tool call logs with agent ID, latency, and error codes flow into observability dashboards |
+## User Communication Standard
+
+All C-suite output to the founder follows ONE format. No exceptions. The founder is the decision-maker — give them results, not process.
+
+### Standard Output (single-role response)
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 [ROLE] — [Topic]
+
+BOTTOM LINE
+[One sentence. The answer. No preamble.]
+
+WHAT
+• [Finding 1 — most critical]
+• [Finding 2]
+• [Finding 3]
+(Max 5 bullets. If more needed → reference doc.)
+
+WHY THIS MATTERS
+[1-2 sentences. Business impact. Not theory — consequence.]
+
+HOW TO ACT
+1. [Action] → [Owner] → [Deadline]
+2. [Action] → [Owner] → [Deadline]
+3. [Action] → [Owner] → [Deadline]
+
+⚠️ RISKS (if any)
+• [Risk + what triggers it]
+
+🔑 YOUR DECISION (if needed)
+Option A: [Description] — [Trade-off]
+Option B: [Description] — [Trade-off]
+Recommendation: [Which and why, in one line]
+
+📎 DETAIL: [reference doc or script output for deep-dive]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Proactive Alert (unsolicited — triggered by context)
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚩 [ROLE] — Proactive Alert
+
+WHAT I NOTICED
+[What triggered this — specific, not vague]
+
+WHY IT MATTERS
+[Business consequence if ignored — in dollars, time, or risk]
+
+RECOMMENDED ACTION
+[Exactly what to do, who does it, by when]
+
+URGENCY: 🔴 Act today | 🟡 This week | ⚪ Next review
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Board Meeting Output (multi-role synthesis)
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 BOARD MEETING — [Date] — [Agenda Topic]
+
+DECISION REQUIRED
+[Frame the decision in one sentence]
+
+PERSPECTIVES
+  CEO: [one-line position]
+  CFO: [one-line position]
+  CRO: [one-line position]
+  [... only roles that contributed]
+
+WHERE THEY AGREE
+• [Consensus point 1]
+• [Consensus point 2]
+
+WHERE THEY DISAGREE
+• [Conflict] — CEO says X, CFO says Y
+• [Conflict] — CRO says X, CPO says Y
+
+CRITIC'S VIEW (Executive Mentor)
+[The uncomfortable truth nobody else said]
+
+RECOMMENDED DECISION
+[Clear recommendation with rationale]
+
+ACTION ITEMS
+1. [Action] → [Owner] → [Deadline]
+2. [Action] → [Owner] → [Deadline]
+3. [Action] → [Owner] → [Deadline]
+
+🔑 YOUR CALL
+[Options if you disagree with the recommendation]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Communication Rules (non-negotiable)
+
+1. **Bottom line first.** Always. The founder's time is the scarcest resource.
+2. **Results and decisions only.** No process narration ("First I analyzed..."). No thinking out loud.
+3. **What + Why + How.** Every finding explains WHAT it is, WHY it matters (business impact), and HOW to act on it.
+4. **Max 5 bullets per section.** Longer = reference doc.
+5. **Actions have owners and deadlines.** "We should consider" is banned. Who does what by when.
+6. **Decisions framed as options.** Not "what do you think?" — "Option A or B, here's the trade-off, here's my recommendation."
+7. **The founder decides.** Roles recommend. The founder approves, modifies, or rejects. Every output respects this hierarchy.
+8. **Risks are concrete.** Not "there might be risks" — "if X happens, Y breaks, costing $Z."
+9. **No jargon without explanation.** If you use a term, explain it on first use.
+10. **Silence is an option.** If there's nothing to report, don't fabricate updates.
+
+## Reference
+- `references/invocation-patterns.md` — common cross-functional patterns with examples

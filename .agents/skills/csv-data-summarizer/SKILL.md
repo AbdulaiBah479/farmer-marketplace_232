@@ -1,149 +1,148 @@
 ---
 name: csv-data-summarizer
-description: Analyzes CSV files, generates summary stats, and plots quick visualizations using Python and pandas.
+description: CSV数据分析技能。使用Python和pandas分析CSV文件，生成统计摘要和快速可视化图表。当用户上传或提到CSV文件、需要分析表格数据时自动使用。
 metadata:
-  version: 2.1.0
+  version: "2.1.0"
   dependencies: python>=3.8, pandas>=2.0.0, matplotlib>=3.7.0, seaborn>=0.12.0
 ---
 
-# CSV Data Summarizer
+# CSV 数据分析器
 
-This Skill analyzes CSV files and provides comprehensive summaries with statistical insights and visualizations.
+此技能分析 CSV 文件并提供包含统计洞察和可视化的全面摘要。
 
-## When to Use This Skill
+## 何时使用此技能
 
-Claude should use this Skill whenever the user:
-- Uploads or references a CSV file
-- Asks to summarize, analyze, or visualize tabular data
-- Requests insights from CSV data
-- Wants to understand data structure and quality
+当用户：
+- 上传或提到 CSV 文件
+- 要求汇总、分析或可视化表格数据
+- 请求从 CSV 数据中获取洞察
+- 想了解数据结构和质量
 
-## How It Works
+## 工作原理
 
-## ⚠️ CRITICAL BEHAVIOR REQUIREMENT ⚠️
+## ⚠️ 关键行为要求 ⚠️
 
-**DO NOT ASK THE USER WHAT THEY WANT TO DO WITH THE DATA.**
-**DO NOT OFFER OPTIONS OR CHOICES.**
-**DO NOT SAY "What would you like me to help you with?"**
-**DO NOT LIST POSSIBLE ANALYSES.**
+**不要问用户想用数据做什么。**
+**不要提供选项或选择。**
+**不要说"您想让我帮您做什么？"**
+**不要列出可能的分析选项。**
 
-**IMMEDIATELY AND AUTOMATICALLY:**
-1. Run the comprehensive analysis
-2. Generate ALL relevant visualizations
-3. Present complete results
-4. NO questions, NO options, NO waiting for user input
+**立即自动执行：**
+1. 运行全面分析
+2. 生成所有相关可视化
+3. 展示完整结果
+4. 不提问、不给选项、不等待用户输入
 
-**THE USER WANTS A FULL ANALYSIS RIGHT AWAY - JUST DO IT.**
+**用户想要立即获得完整分析 - 直接做就行。**
 
-### Automatic Analysis Steps:
+### 自动分析步骤：
 
-**The skill intelligently adapts to different data types and industries by inspecting the data first, then determining what analyses are most relevant.**
+**该技能通过先检查数据，然后确定最相关的分析，智能适应不同的数据类型和行业。**
 
-1. **Load and inspect** the CSV file into pandas DataFrame
-2. **Identify data structure** - column types, date columns, numeric columns, categories
-3. **Determine relevant analyses** based on what's actually in the data:
-   - **Sales/E-commerce data** (order dates, revenue, products): Time-series trends, revenue analysis, product performance
-   - **Customer data** (demographics, segments, regions): Distribution analysis, segmentation, geographic patterns
-   - **Financial data** (transactions, amounts, dates): Trend analysis, statistical summaries, correlations
-   - **Operational data** (timestamps, metrics, status): Time-series, performance metrics, distributions
-   - **Survey data** (categorical responses, ratings): Frequency analysis, cross-tabulations, distributions
-   - **Generic tabular data**: Adapts based on column types found
+1. **加载并检查** CSV 文件到 pandas DataFrame
+2. **识别数据结构** - 列类型、日期列、数值列、类别
+3. **根据数据内容确定相关分析**：
+   - **销售/电商数据**（订单日期、收入、产品）：时间序列趋势、收入分析、产品表现
+   - **客户数据**（人口统计、细分、区域）：分布分析、细分、地理模式
+   - **财务数据**（交易、金额、日期）：趋势分析、统计摘要、相关性
+   - **运营数据**（时间戳、指标、状态）：时间序列、绩效指标、分布
+   - **调查数据**（分类响应、评分）：频率分析、交叉表、分布
+   - **通用表格数据**：根据找到的列类型调整
 
-4. **Only create visualizations that make sense** for the specific dataset:
-   - Time-series plots ONLY if date/timestamp columns exist
-   - Correlation heatmaps ONLY if multiple numeric columns exist
-   - Category distributions ONLY if categorical columns exist
-   - Histograms for numeric distributions when relevant
+4. **只创建对特定数据集有意义的可视化**：
+   - 时间序列图仅在存在日期/时间戳列时
+   - 相关性热图仅在存在多个数值列时
+   - 类别分布仅在存在分类列时
+   - 数值分布的直方图（相关时）
    
-5. **Generate comprehensive output** automatically including:
-   - Data overview (rows, columns, types)
-   - Key statistics and metrics relevant to the data type
-   - Missing data analysis
-   - Multiple relevant visualizations (only those that apply)
-   - Actionable insights based on patterns found in THIS specific dataset
+5. **自动生成全面输出**包括：
+   - 数据概览（行数、列数、类型）
+   - 与数据类型相关的关键统计和指标
+   - 缺失数据分析
+   - 多个相关可视化（仅适用的那些）
+   - 基于此特定数据集中发现的模式的可操作洞察
    
-6. **Present everything** in one complete analysis - no follow-up questions
+6. **一次性展示所有内容** - 不追问
 
-**Example adaptations:**
-- Healthcare data with patient IDs → Focus on demographics, treatment patterns, temporal trends
-- Inventory data with stock levels → Focus on quantity distributions, reorder patterns, SKU analysis  
-- Web analytics with timestamps → Focus on traffic patterns, conversion metrics, time-of-day analysis
-- Survey responses → Focus on response distributions, demographic breakdowns, sentiment patterns
+**适应示例：**
+- 带患者ID的医疗数据 → 专注于人口统计、治疗模式、时间趋势
+- 带库存水平的库存数据 → 专注于数量分布、补货模式、SKU分析
+- 带时间戳的网站分析 → 专注于流量模式、转化指标、时段分析
+- 调查响应 → 专注于响应分布、人口统计细分、情感模式
 
-### Behavior Guidelines
+### 行为指南
 
-✅ **CORRECT APPROACH - SAY THIS:**
-- "I'll analyze this data comprehensively right now."
-- "Here's the complete analysis with visualizations:"
-- "I've identified this as [type] data and generated relevant insights:"
-- Then IMMEDIATELY show the full analysis
+✅ **正确方法 - 这样说：**
+- "我现在对这些数据进行全面分析。"
+- "这是带可视化的完整分析："
+- "我识别出这是[类型]数据并生成了相关洞察："
+- 然后立即展示完整分析
 
-✅ **DO:**
-- Immediately run the analysis script
-- Generate ALL relevant charts automatically
-- Provide complete insights without being asked
-- Be thorough and complete in first response
-- Act decisively without asking permission
+✅ **要做：**
+- 立即运行分析脚本
+- 自动生成所有相关图表
+- 无需询问即提供完整洞察
+- 在第一次响应中就做到全面完整
+- 果断行动，不需征求许可
 
-❌ **NEVER SAY THESE PHRASES:**
-- "What would you like to do with this data?"
-- "What would you like me to help you with?"
-- "Here are some common options:"
-- "Let me know what you'd like help with"
-- "I can create a comprehensive analysis if you'd like!"
-- Any sentence ending with "?" asking for user direction
-- Any list of options or choices
-- Any conditional "I can do X if you want"
+❌ **永远不要说这些话：**
+- "您想用这些数据做什么？"
+- "您想让我帮您做什么？"
+- "这里有一些常见选项："
+- "让我知道您想要什么帮助"
+- "如果您愿意，我可以创建全面分析！"
+- 任何以"？"结尾询问用户方向的句子
+- 任何选项或选择列表
+- 任何条件性的"如果您想，我可以做X"
 
-❌ **FORBIDDEN BEHAVIORS:**
-- Asking what the user wants
-- Listing options for the user to choose from
-- Waiting for user direction before analyzing
-- Providing partial analysis that requires follow-up
-- Describing what you COULD do instead of DOING it
+❌ **禁止行为：**
+- 询问用户想要什么
+- 列出选项供用户选择
+- 在分析前等待用户指示
+- 提供需要后续跟进的部分分析
+- 描述你可以做什么而不是直接做
 
-### Usage
+### 使用方法
 
-The Skill provides a Python function `summarize_csv(file_path)` that:
-- Accepts a path to a CSV file
-- Returns a comprehensive text summary with statistics
-- Generates multiple visualizations automatically based on data structure
+该技能提供 Python 函数 `summarize_csv(file_path)`：
+- 接受 CSV 文件的路径
+- 返回带统计信息的全面文本摘要
+- 根据数据结构自动生成多个可视化
 
-### Example Prompts
+### 示例提示
 
-> "Here's `sales_data.csv`. Can you summarize this file?"
+> "这是 `sales_data.csv`。你能汇总这个文件吗？"
 
-> "Analyze this customer data CSV and show me trends."
+> "分析这个客户数据 CSV 并展示趋势。"
 
-> "What insights can you find in `orders.csv`?"
+> "你能从 `orders.csv` 中发现什么洞察？"
 
-### Example Output
+### 示例输出
 
-**Dataset Overview**
-- 5,000 rows × 8 columns  
-- 3 numeric columns, 1 date column  
+**数据集概览**
+- 5,000 行 × 8 列
+- 3 个数值列，1 个日期列
 
-**Summary Statistics**
-- Average order value: $58.2  
-- Standard deviation: $12.4
-- Missing values: 2% (100 cells)
+**统计摘要**
+- 平均订单价值：$58.2
+- 标准差：$12.4
+- 缺失值：2%（100个单元格）
 
-**Insights**
-- Sales show upward trend over time
-- Peak activity in Q4
-*(Attached: trend plot)*
+**洞察**
+- 销售随时间呈上升趋势
+- Q4活动达到峰值
+*（附：趋势图）*
 
-## Files
+## 文件
 
-- `analyze.py` - Core analysis logic
-- `requirements.txt` - Python dependencies
-- `resources/sample.csv` - Example dataset for testing
-- `resources/README.md` - Additional documentation
+- `analyze.py` - 核心分析逻辑
+- `requirements.txt` - Python 依赖
+- `resources/sample.csv` - 用于测试的示例数据集
+- `resources/README.md` - 附加文档
 
-## Notes
+## 注意事项
 
-- Automatically detects date columns (columns containing 'date' in name)
-- Handles missing data gracefully
-- Generates visualizations only when date columns are present
-- All numeric columns are included in statistical summary
-
+- 自动检测日期列（名称中包含 'date' 的列）
+- 优雅处理缺失数据
+- 仅在存在日期列时生成可视化
+- 所有数值列都包含在统计摘要中

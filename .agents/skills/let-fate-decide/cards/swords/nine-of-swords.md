@@ -9,6 +9,4 @@ Anxiety, worry, and fear keep you awake at night. Overthinking spirals into nigh
 Hope returns as despair loosens its grip. Reaching out to others brings comfort and perspective. Recovery from anxiety begins with a single honest conversation.
 
 ## In Technical Context
-Separate the real failure mode from the imagined one. Verify the concern with a
-test, trace, or concrete reproduction, then proceed based on evidence rather
-than anxiety.
+You're catastrophizing. The worst case isn't as bad as you think. Ship it.

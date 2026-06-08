@@ -1,195 +1,398 @@
 ---
 name: prompt-optimizer
-description: Transform vague prompts into precise, well-structured specifications using EARS (Easy Approach to Requirements Syntax) methodology. This skill should be used when users provide loose requirements, ambiguous feature descriptions, or need to enhance prompts for AI-generated code, products, or documents. Triggers include requests to "optimize my prompt", "improve this requirement", "make this more specific", or when raw requirements lack detail and structure.
+description: >-
+  Analyze raw prompts, identify intent and gaps, match ECC components
+  (skills/commands/agents/hooks), and output a ready-to-paste optimized
+  prompt. Advisory role only — never executes the task itself.
+  TRIGGER when: user says "optimize prompt", "improve my prompt",
+  "how to write a prompt for", "help me prompt", "rewrite this prompt",
+  or explicitly asks to enhance prompt quality. Also triggers on Chinese
+  equivalents: "优化prompt", "改进prompt", "怎么写prompt", "帮我优化这个指令".
+  DO NOT TRIGGER when: user wants the task executed directly, or says
+  "just do it" / "直接做". DO NOT TRIGGER when user says "优化代码",
+  "优化性能", "optimize performance", "optimize this code" — those are
+  refactoring/performance tasks, not prompt optimization.
+origin: community
+metadata:
+  author: YannJY02
+  version: "1.0.0"
 ---
 
 # Prompt Optimizer
 
-## Overview
-
-Optimize vague prompts into precise, actionable specifications using EARS (Easy Approach to Requirements Syntax) - a Rolls-Royce methodology for transforming natural language into structured, testable requirements.
-
-**Methodology inspired by:** This skill's approach to combining EARS with domain theory grounding was inspired by [阿星AI工作室 (A-Xing AI Studio)](https://mp.weixin.qq.com/s/yUVX-9FovSq7ZGChkHpuXQ), which demonstrated practical EARS application for prompt enhancement.
-
-**Four-layer enhancement process:**
-
-1. **EARS syntax transformation** - Convert descriptive language to normative specifications
-2. **Domain theory grounding** - Apply relevant industry frameworks (GTD, BJ Fogg, Gestalt, etc.)
-3. **Example extraction** - Surface concrete use cases with real data
-4. **Structured prompt generation** - Format using Role/Skills/Workflows/Examples/Formats framework
+Analyze a draft prompt, critique it, match it to ECC ecosystem components,
+and output a complete optimized prompt the user can paste and run.
 
 ## When to Use
 
-Apply when:
-- User provides vague feature requests ("build a dashboard", "create a reminder app")
-- Requirements lack specific conditions, triggers, or measurable outcomes
-- Natural language descriptions need conversion to testable specifications
-- User explicitly requests prompt optimization or requirement refinement
+- User says "optimize this prompt", "improve my prompt", "rewrite this prompt"
+- User says "help me write a better prompt for..."
+- User says "what's the best way to ask Claude Code to..."
+- User says "优化prompt", "改进prompt", "怎么写prompt", "帮我优化这个指令"
+- User pastes a draft prompt and asks for feedback or enhancement
+- User says "I don't know how to prompt for this"
+- User says "how should I use ECC for..."
+- User explicitly invokes `/prompt-optimize`
 
-## Six-Step Optimization Workflow
+### Do Not Use When
 
-### Step 1: Analyze Original Requirement
+- User wants the task done directly (just execute it)
+- User says "优化代码", "优化性能", "optimize this code", "optimize performance" — these are refactoring tasks, not prompt optimization
+- User is asking about ECC configuration (use `configure-ecc` instead)
+- User wants a skill inventory (use `skill-stocktake` instead)
+- User says "just do it" or "直接做"
 
-Identify weaknesses:
-- **Overly broad** - "Add user authentication" → Missing password requirements, session management
-- **Missing triggers** - "Send notifications" → Missing when/why notifications trigger
-- **Ambiguous actions** - "Make it user-friendly" → No measurable usability criteria
-- **No constraints** - "Process payments" → Missing security, compliance requirements
+## How It Works
 
-### Step 2: Apply EARS Transformation
+**Advisory only — do not execute the user's task.**
 
-Convert requirements to EARS patterns. See `references/ears_syntax.md` for complete syntax rules.
+Do NOT write code, create files, run commands, or take any implementation
+action. Your ONLY output is an analysis plus an optimized prompt.
 
-**Five core patterns:**
-1. **Ubiquitous**: `The system shall <action>`
-2. **Event-driven**: `When <trigger>, the system shall <action>`
-3. **State-driven**: `While <state>, the system shall <action>`
-4. **Conditional**: `If <condition>, the system shall <action>`
-5. **Unwanted behavior**: `If <condition>, the system shall prevent <unwanted action>`
+If the user says "just do it", "直接做", or "don't optimize, just execute",
+do not switch into implementation mode inside this skill. Tell the user this
+skill only produces optimized prompts, and instruct them to make a normal
+task request if they want execution instead.
 
-**Quick example:**
+Run this 6-phase pipeline sequentially. Present results using the Output Format below.
+
+### Analysis Pipeline
+
+### Phase 0: Project Detection
+
+Before analyzing the prompt, detect the current project context:
+
+1. Check if a `CLAUDE.md` exists in the working directory — read it for project conventions
+2. Detect tech stack from project files:
+   - `package.json` → Node.js / TypeScript / React / Next.js
+   - `go.mod` → Go
+   - `pyproject.toml` / `requirements.txt` → Python
+   - `Cargo.toml` → Rust
+   - `build.gradle` / `pom.xml` → Java / Kotlin (then check for `quarkus` in build file → Quarkus, or `spring-boot` → Spring Boot)
+   - `Package.swift` → Swift
+   - `Gemfile` → Ruby
+   - `composer.json` → PHP
+   - `*.csproj` / `*.sln` → .NET
+   - `Makefile` / `CMakeLists.txt` → C / C++
+   - `cpanfile` / `Makefile.PL` → Perl
+3. Note detected tech stack for use in Phase 3 and Phase 4
+
+If no project files are found (e.g., the prompt is abstract or for a new project),
+skip detection and flag "tech stack unknown" in Phase 4.
+
+### Phase 1: Intent Detection
+
+Classify the user's task into one or more categories:
+
+| Category | Signal Words | Example |
+|----------|-------------|---------|
+| New Feature | build, create, add, implement, 创建, 实现, 添加 | "Build a login page" |
+| Bug Fix | fix, broken, not working, error, 修复, 报错 | "Fix the auth flow" |
+| Refactor | refactor, clean up, restructure, 重构, 整理 | "Refactor the API layer" |
+| Research | how to, what is, explore, investigate, 怎么, 如何 | "How to add SSO" |
+| Testing | test, coverage, verify, 测试, 覆盖率 | "Add tests for the cart" |
+| Review | review, audit, check, 审查, 检查 | "Review my PR" |
+| Documentation | document, update docs, 文档 | "Update the API docs" |
+| Infrastructure | deploy, CI, docker, database, 部署, 数据库 | "Set up CI/CD pipeline" |
+| Design | design, architecture, plan, 设计, 架构 | "Design the data model" |
+
+### Phase 2: Scope Assessment
+
+If Phase 0 detected a project, use codebase size as a signal. Otherwise, estimate
+from the prompt description alone and mark the estimate as uncertain.
+
+| Scope | Heuristic | Orchestration |
+|-------|-----------|---------------|
+| TRIVIAL | Single file, < 50 lines | Direct execution |
+| LOW | Single component or module | Single command or skill |
+| MEDIUM | Multiple components, same domain | Command chain + /verify |
+| HIGH | Cross-domain, 5+ files | /plan first, then phased execution |
+| EPIC | Multi-session, multi-PR, architectural shift | Use blueprint skill for multi-session plan |
+
+### Phase 3: ECC Component Matching
+
+Map intent + scope + tech stack (from Phase 0) to specific ECC components.
+
+#### By Intent Type
+
+| Intent | Commands | Skills | Agents |
+|--------|----------|--------|--------|
+| New Feature | /plan, /tdd, /code-review, /verify | tdd-workflow, verification-loop | planner, tdd-guide, code-reviewer |
+| Bug Fix | /tdd, /build-fix, /verify | tdd-workflow | tdd-guide, build-error-resolver |
+| Refactor | /refactor-clean, /code-review, /verify | verification-loop | refactor-cleaner, code-reviewer |
+| Research | /plan | search-first, iterative-retrieval | — |
+| Testing | /tdd, /e2e, /test-coverage | tdd-workflow, e2e-testing | tdd-guide, e2e-runner |
+| Review | /code-review | security-review | code-reviewer, security-reviewer |
+| Documentation | /update-docs, /update-codemaps | — | doc-updater |
+| Infrastructure | /plan, /verify | docker-patterns, deployment-patterns, database-migrations | architect |
+| Design (MEDIUM-HIGH) | /plan | — | planner, architect |
+| Design (EPIC) | — | blueprint (invoke as skill) | planner, architect |
+
+#### By Tech Stack
+
+| Tech Stack | Skills to Add | Agent |
+|------------|--------------|-------|
+| Python / Django | django-patterns, django-tdd, django-security, django-verification, python-patterns, python-testing | python-reviewer |
+| Go | golang-patterns, golang-testing | go-reviewer, go-build-resolver |
+| Spring Boot / Java | springboot-patterns, springboot-tdd, springboot-security, springboot-verification, java-coding-standards, jpa-patterns | java-reviewer |
+| Quarkus / Java | quarkus-patterns, quarkus-tdd, quarkus-security, quarkus-verification, java-coding-standards, jpa-patterns | java-reviewer |
+| Kotlin / Android | kotlin-coroutines-flows, compose-multiplatform-patterns, android-clean-architecture | kotlin-reviewer |
+| TypeScript / React | frontend-patterns, backend-patterns, coding-standards | code-reviewer |
+| Swift / iOS | swiftui-patterns, swift-concurrency-6-2, swift-actor-persistence, swift-protocol-di-testing | code-reviewer |
+| PostgreSQL | postgres-patterns, database-migrations | database-reviewer |
+| Perl | perl-patterns, perl-testing, perl-security | code-reviewer |
+| C++ | cpp-coding-standards, cpp-testing | code-reviewer |
+| Other / Unlisted | coding-standards (universal) | code-reviewer |
+
+### Phase 4: Missing Context Detection
+
+Scan the prompt for missing critical information. Check each item and mark
+whether Phase 0 auto-detected it or the user must supply it:
+
+- [ ] **Tech stack** — Detected in Phase 0, or must user specify?
+- [ ] **Target scope** — Files, directories, or modules mentioned?
+- [ ] **Acceptance criteria** — How to know the task is done?
+- [ ] **Error handling** — Edge cases and failure modes addressed?
+- [ ] **Security requirements** — Auth, input validation, secrets?
+- [ ] **Testing expectations** — Unit, integration, E2E?
+- [ ] **Performance constraints** — Load, latency, resource limits?
+- [ ] **UI/UX requirements** — Design specs, responsive, a11y? (if frontend)
+- [ ] **Database changes** — Schema, migrations, indexes? (if data layer)
+- [ ] **Existing patterns** — Reference files or conventions to follow?
+- [ ] **Scope boundaries** — What NOT to do?
+
+**If 3+ critical items are missing**, ask the user up to 3 clarification
+questions before generating the optimized prompt. Then incorporate the
+answers into the optimized prompt.
+
+### Phase 5: Workflow & Model Recommendation
+
+Determine where this prompt sits in the development lifecycle:
+
 ```
-Before: "Create a reminder app with task management"
-
-After (EARS):
-1. When user creates a task, the system shall guide decomposition into executable sub-tasks
-2. When task deadline is within 30 minutes AND user has not started, the system shall send notification with sound alert
-3. When user completes a sub-task, the system shall update progress and provide positive feedback
+Research → Plan → Implement (TDD) → Review → Verify → Commit
 ```
 
-**Transformation checklist:**
-- [ ] Identify implicit conditions and make explicit
-- [ ] Specify triggering events or states
-- [ ] Use precise action verbs (shall, must, should)
-- [ ] Add measurable criteria ("within 30 minutes", "at least 8 characters")
-- [ ] Break compound requirements into atomic statements
-- [ ] Remove ambiguous language ("user-friendly", "fast")
+For MEDIUM+ tasks, always start with /plan. For EPIC tasks, use blueprint skill.
 
-### Step 3: Identify Domain Theories
+**Model recommendation** (include in output):
 
-Match requirements to established frameworks. See `references/domain_theories.md` for full catalog.
+| Scope | Recommended Model | Rationale |
+|-------|------------------|-----------|
+| TRIVIAL-LOW | Sonnet 4.6 | Fast, cost-efficient for simple tasks |
+| MEDIUM | Sonnet 4.6 | Best coding model for standard work |
+| HIGH | Sonnet 4.6 (main) + Opus 4.6 (planning) | Opus for architecture, Sonnet for implementation |
+| EPIC | Opus 4.6 (blueprint) + Sonnet 4.6 (execution) | Deep reasoning for multi-session planning |
 
-**Common domain mappings:**
-- **Productivity** → GTD, Pomodoro, Eisenhower Matrix
-- **Behavior Change** → BJ Fogg Model (B=MAT), Atomic Habits
-- **UX Design** → Hick's Law, Fitts's Law, Gestalt Principles
-- **Security** → Zero Trust, Defense in Depth, Privacy by Design
+**Multi-prompt splitting** (for HIGH/EPIC scope):
 
-**Selection process:**
-1. Identify primary domain from requirement keywords
-2. Match to 2-4 complementary theories
-3. Apply theory principles to specific features
-4. Cite theories in enhanced prompt for credibility
-
-### Step 4: Extract Concrete Examples
-
-Generate specific examples with real data:
-- User scenarios: "When user logs in on mobile device..."
-- Data examples: "Product: 'Laptop', Price: $999, Stock: 15"
-- Workflow examples: "Task: Write report → Sub-tasks: Research (2h), Draft (3h), Edit (1h)"
-
-Examples must be **realistic**, **specific**, **varied** (success/error/edge cases), and **testable**.
-
-### Step 5: Generate Enhanced Prompt
-
-Structure using the standard framework:
-
-```markdown
-# Role
-[Specific expert role with domain expertise]
-
-## Skills
-- [Core capability 1]
-- [Core capability 2]
-[List 5-8 skills aligned with domain theories]
-
-## Workflows
-1. [Phase 1] - [Key activities]
-2. [Phase 2] - [Key activities]
-[Complete step-by-step process]
-
-## Examples
-[Concrete examples with real data, not placeholders]
-
-## Formats
-[Precise output specifications:
-- File types, structure requirements
-- Design/styling expectations
-- Technical constraints
-- Deliverable checklist]
-```
-
-**Quality criteria:**
-- **Role specificity**: "Product designer specializing in time management apps" > "Designer"
-- **Theory grounding**: Reference frameworks explicitly
-- **Actionable workflows**: Clear inputs/outputs and decision points
-- **Concrete examples**: Real data, not "Example 1", "Example 2"
-- **Measurable formats**: Specific requirements, not "good design"
-
-### Step 6: Present Optimization Results
-
-Output in structured format:
-
-```markdown
-## Original Requirement
-[User's vague requirement]
-
-**Identified Issues:**
-- [Issue 1: e.g., "Lacks specific trigger conditions"]
-- [Issue 2: e.g., "No measurable success criteria"]
-
-## EARS Transformation
-[Numbered list of EARS-formatted requirements]
-
-## Domain & Theories
-**Primary Domain:** [e.g., Authentication Security]
-
-**Applicable Theories:**
-- **[Theory 1]** - [Brief relevance]
-- **[Theory 2]** - [Brief relevance]
-
-## Enhanced Prompt
-[Complete Role/Skills/Workflows/Examples/Formats prompt]
+For tasks that exceed a single session, split into sequential prompts:
+- Prompt 1: Research + Plan (use search-first skill, then /plan)
+- Prompt 2-N: Implement one phase per prompt (each ends with /verify)
+- Final Prompt: Integration test + /code-review across all phases
+- Use /save-session and /resume-session to preserve context between sessions
 
 ---
 
-**How to use:**
-[Brief guidance on applying the prompt]
+## Output Format
+
+Present your analysis in this exact structure. Respond in the same language
+as the user's input.
+
+### Section 1: Prompt Diagnosis
+
+**Strengths:** List what the original prompt does well.
+
+**Issues:**
+
+| Issue | Impact | Suggested Fix |
+|-------|--------|---------------|
+| (problem) | (consequence) | (how to fix) |
+
+**Needs Clarification:** Numbered list of questions the user should answer.
+If Phase 0 auto-detected the answer, state it instead of asking.
+
+### Section 2: Recommended ECC Components
+
+| Type | Component | Purpose |
+|------|-----------|---------|
+| Command | /plan | Plan architecture before coding |
+| Skill | tdd-workflow | TDD methodology guidance |
+| Agent | code-reviewer | Post-implementation review |
+| Model | Sonnet 4.6 | Recommended for this scope |
+
+### Section 3: Optimized Prompt — Full Version
+
+Present the complete optimized prompt inside a single fenced code block.
+The prompt must be self-contained and ready to copy-paste. Include:
+- Clear task description with context
+- Tech stack (detected or specified)
+- /command invocations at the right workflow stages
+- Acceptance criteria
+- Verification steps
+- Scope boundaries (what NOT to do)
+
+For items that reference blueprint, write: "Use the blueprint skill to..."
+(not `/blueprint`, since blueprint is a skill, not a command).
+
+### Section 4: Optimized Prompt — Quick Version
+
+A compact version for experienced ECC users. Vary by intent type:
+
+| Intent | Quick Pattern |
+|--------|--------------|
+| New Feature | `/plan [feature]. /tdd to implement. /code-review. /verify.` |
+| Bug Fix | `/tdd — write failing test for [bug]. Fix to green. /verify.` |
+| Refactor | `/refactor-clean [scope]. /code-review. /verify.` |
+| Research | `Use search-first skill for [topic]. /plan based on findings.` |
+| Testing | `/tdd [module]. /e2e for critical flows. /test-coverage.` |
+| Review | `/code-review. Then use security-reviewer agent.` |
+| Docs | `/update-docs. /update-codemaps.` |
+| EPIC | `Use blueprint skill for "[objective]". Execute phases with /verify gates.` |
+
+### Section 5: Enhancement Rationale
+
+| Enhancement | Reason |
+|-------------|--------|
+| (what was added) | (why it matters) |
+
+### Footer
+
+> Not what you need? Tell me what to adjust, or make a normal task request
+> if you want execution instead of prompt optimization.
+
+---
+
+## Examples
+
+### Trigger Examples
+
+- "Optimize this prompt for ECC"
+- "Rewrite this prompt so Claude Code uses the right commands"
+- "帮我优化这个指令"
+- "How should I prompt ECC for this task?"
+
+### Example 1: Vague Chinese Prompt (Project Detected)
+
+**User input:**
+```
+帮我写一个用户登录页面
 ```
 
-## Advanced Techniques
+**Phase 0 detects:** `package.json` with Next.js 15, TypeScript, Tailwind CSS
 
-For complex scenarios, see `references/advanced_techniques.md`:
-- **Multi-stakeholder requirements** - EARS statements for each user type
-- **Non-functional requirements** - Performance, security, scalability with quantified thresholds
-- **Complex conditional logic** - Nested conditions with boolean operators
+**Optimized Prompt (Full):**
+```
+使用项目现有技术栈（Next.js 15 + TypeScript + Tailwind CSS）实现用户登录页面。
 
-## Quick Reference
+技术要求：
+- 沿用项目现有的组件结构和路由约定
+- 表单验证使用项目中已有的验证方案（检查是否已用 Zod/Yup/其他）
+- 认证方式：沿用项目现有认证方案（如无，默认 JWT）
+- 包含：邮箱/密码登录表单、表单验证、错误提示、加载状态、响应式布局
 
-**Do's:**
-✅ Break down compound requirements (one EARS statement per requirement)
-✅ Specify measurable criteria (numbers, timeframes, percentages)
-✅ Include error/edge cases
-✅ Ground in established theories
-✅ Use concrete examples with real data
+工作流：
+1. /plan 先规划组件结构和认证流程，参考现有页面的模式
+2. /tdd 测试先行：编写登录表单的单元测试和认证流程的集成测试
+3. 实现登录页面和认证逻辑
+4. /code-review 审查实现
+5. /verify 验证所有测试通过且页面正常渲染
 
-**Don'ts:**
-❌ Avoid vague language ("fast", "user-friendly")
-❌ Don't assume implicit knowledge
-❌ Don't mix multiple actions in one statement
-❌ Don't use placeholders in examples
+安全要求：
+- 密码不明文传输
+- 防止暴力破解（rate limiting）
+- XSS 防护
+- CSRF token
 
-## Resources
+验收标准：
+- 所有测试通过，覆盖率 80%+
+- 页面在移动端和桌面端正常渲染
+- 登录成功跳转到 dashboard，失败显示错误信息
 
-Load these reference files as needed:
+不要做：
+- 不要实现注册页面
+- 不要实现忘记密码功能
+- 不要修改现有的路由结构
+```
 
-- **`references/ears_syntax.md`** - Complete EARS syntax rules, all 5 patterns, transformation guidelines, benefits
-- **`references/domain_theories.md`** - 40+ theories mapped to 10 domains (productivity, UX, gamification, learning, e-commerce, security, etc.)
-- **`references/examples.md`** - Four complete transformation examples (procrastination app, e-commerce product page, learning dashboard, password reset security) with before/after comparisons and reusable template
-- **`references/advanced_techniques.md`** - Multi-stakeholder requirements, non-functional specs, complex conditional logic patterns
+### Example 2: Moderate English Prompt
 
-**When to load references:**
-- EARS syntax clarification needed → `ears_syntax.md`
-- Domain theory selection requires extensive options → `domain_theories.md`
-- User requests multiple optimization examples → `examples.md`
-- Complex requirements with multiple stakeholders or non-functional specs → `advanced_techniques.md`
+**User input:**
+```
+Add a REST API endpoint for user profile updates with validation
+```
+
+**Phase 0 detects:** `go.mod` with Go 1.22, Chi router
+
+**Optimized Prompt (Full):**
+```
+Add a REST API endpoint for user profile updates (PATCH /api/users/:id).
+
+Tech stack: Go 1.22 + Chi router (detected from project)
+
+Requirements:
+- PATCH /api/users/:id — partial update of user profile
+- Input validation for fields: name, email, avatar_url, bio
+- Auth: require valid token, users can only update own profile
+- Return 200 with updated user on success
+- Return 400 with validation errors on invalid input
+- Return 401/403 for auth failures
+- Follow existing API patterns in the codebase
+
+Workflow:
+1. /plan the endpoint structure, middleware chain, and validation logic
+2. /tdd — write table-driven tests for success, validation failure, auth failure, not-found
+3. Implement following existing handler patterns
+4. /go-review
+5. /verify — run full test suite, confirm no regressions
+
+Do not:
+- Modify existing endpoints
+- Change the database schema (use existing user table)
+- Add new dependencies without checking existing ones first (use search-first skill)
+```
+
+### Example 3: EPIC Project
+
+**User input:**
+```
+Migrate our monolith to microservices
+```
+
+**Optimized Prompt (Full):**
+```
+Use the blueprint skill to plan: "Migrate monolith to microservices architecture"
+
+Before executing, answer these questions in the blueprint:
+1. Which domain boundaries exist in the current monolith?
+2. Which service should be extracted first (lowest coupling)?
+3. Communication pattern: REST APIs, gRPC, or event-driven (Kafka/RabbitMQ)?
+4. Database strategy: shared DB initially or database-per-service from start?
+5. Deployment target: Kubernetes, Docker Compose, or serverless?
+
+The blueprint should produce phases like:
+- Phase 1: Identify service boundaries and create domain map
+- Phase 2: Set up infrastructure (API gateway, service mesh, CI/CD per service)
+- Phase 3: Extract first service (strangler fig pattern)
+- Phase 4: Verify with integration tests, then extract next service
+- Phase N: Decommission monolith
+
+Each phase = 1 PR, with /verify gates between phases.
+Use /save-session between phases. Use /resume-session to continue.
+Use git worktrees for parallel service extraction when dependencies allow.
+
+Recommended: Opus 4.6 for blueprint planning, Sonnet 4.6 for phase execution.
+```
+
+---
+
+## Related Components
+
+| Component | When to Reference |
+|-----------|------------------|
+| `configure-ecc` | User hasn't set up ECC yet |
+| `skill-stocktake` | Audit which components are installed (use instead of hardcoded catalog) |
+| `search-first` | Research phase in optimized prompts |
+| `blueprint` | EPIC-scope optimized prompts (invoke as skill, not command) |
+| `strategic-compact` | Long session context management |
+| `cost-aware-llm-pipeline` | Token optimization recommendations |

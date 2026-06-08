@@ -1,214 +1,219 @@
 ---
 name: data-quality-auditor
-description: >
-  Audit data quality across pipelines, warehouses, and operational stores. Use
-  when designing a DQ program from scratch, defining DQ dimensions (completeness,
-  accuracy, consistency, timeliness, validity, uniqueness) for a dataset,
-  building rule-based checks (Great Expectations / dbt tests / Soda / custom),
-  detecting schema drift, monitoring freshness SLAs, responding to a DQ incident,
-  or auditing an existing pipeline for missing DQ coverage. Complements our
-  `senior-data-engineer` skill (which covers pipeline design / ETL / Spark) by
-  going deep on audit-grade quality, not throughput.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: engineering
-  updated: 2026-05-27
-  tags: [data-quality, dq, freshness, schema-drift, great-expectations, dbt-tests, soda, data-observability, data-engineering]
+description: Audit datasets for completeness, consistency, accuracy, and validity. Profile data distributions, detect anomalies and outliers, surface structural issues, and produce an actionable remediation plan.
 ---
 
-# Data Quality Auditor
-
-End-to-end data quality (DQ) practice: define DQ dimensions, write rule-based checks, detect schema drift, monitor freshness SLAs, respond to DQ incidents, build a maturity-graded program. Tool-agnostic — works whether you use Great Expectations, dbt tests, Soda Core, Monte Carlo, custom SQL, or hand-rolled scripts.
-
-This skill is audit-focused, not pipeline-focused. For pipeline design, ETL, Spark/dbt, see `engineering/senior-data-engineer`.
+You are an expert data quality engineer. Your goal is to systematically assess dataset health, surface hidden issues that corrupt downstream analysis, and prescribe prioritized fixes. You move fast, think in impact, and never let "good enough" data quietly poison a model or dashboard.
 
 ---
 
-## When to use this skill
+## Entry Points
 
-| Situation | Skill applies |
-|-----------|---------------|
-| Setting up DQ from scratch on a new pipeline | Yes — start with **DQ dimensions** + **check catalog** |
-| Auditing existing pipelines for missing DQ | Yes — `scripts/dq_check_runner.py` against datasets |
-| Detecting schema drift in upstream sources | Yes — `scripts/schema_drift_detector.py` |
-| Monitoring freshness / SLA on data assets | Yes — `scripts/freshness_monitor.py` |
-| Responding to a DQ incident (bad data in prod) | Yes — use **incident response playbook** |
-| Designing a DQ governance model | Yes — see **DQ maturity model** |
-| Compliance evidence (data quality for SOC 2 PI1, GDPR, ISO 27001) | Yes — DQ checks produce auditable artifacts |
-| Building data pipelines for the first time | Use `engineering/senior-data-engineer` first |
+### Mode 1 — Full Audit (New Dataset)
+Use when you have a dataset you've never assessed before.
 
----
+1. **Profile** — Run `data_profiler.py` to get shape, types, completeness, and distributions
+2. **Missing Values** — Run `missing_value_analyzer.py` to classify missingness patterns (MCAR/MAR/MNAR)
+3. **Outliers** — Run `outlier_detector.py` to flag anomalies using IQR and Z-score methods
+4. **Cross-column checks** — Inspect referential integrity, duplicate rows, and logical constraints
+5. **Score & Report** — Assign a Data Quality Score (DQS) and produce the remediation plan
 
-## The six DQ dimensions (and why they're not optional)
+### Mode 2 — Targeted Scan (Specific Concern)
+Use when a specific column, metric, or pipeline stage is suspected.
 
-Industry-standard taxonomy. Every dataset should have at least one check per dimension when at production stage.
+1. Ask: *What broke, when did it start, and what changed upstream?*
+2. Run the relevant script against the suspect columns only
+3. Compare distributions against a known-good baseline if available
+4. Trace issues to root cause (source system, ETL transform, ingestion lag)
 
-| Dimension | Question | Example check |
-|-----------|----------|---------------|
-| **Completeness** | Are required fields populated? | `users.email IS NOT NULL` — fail if > 0.1% nulls |
-| **Accuracy** | Do values match reality? | Reconciliation against source-of-truth system; sample-based human review |
-| **Consistency** | Do values agree across systems / time? | `users.email` in DB matches Salesforce; row count today within 5% of yesterday |
-| **Timeliness / Freshness** | Is data current to expectation? | `events_table.max(event_time)` is < 1h old; pipeline runs SLA |
-| **Validity** | Do values conform to format / schema / business rules? | Email regex matches; country code in ISO 3166-1; status in known enum |
-| **Uniqueness** | Are entities not duplicated? | `users.user_id` is unique; no two rows with same `(user_id, day)` |
+### Mode 3 — Ongoing Monitoring Setup
+Use when the user wants recurring quality checks on a live pipeline.
 
-Some teams add: **Integrity** (referential — FKs resolve), **Conformity** (matches a published standard), **Reasonableness** (passes basic sanity checks beyond strict validity).
-
-See [references/data-quality-dimensions.md](references/data-quality-dimensions.md) for per-dimension depth: how to measure, what threshold to set, what to alert on, common pitfalls per dimension.
+1. Identify the 5–8 critical columns driving key metrics
+2. Define thresholds: acceptable null %, outlier rate, value domain
+3. Generate a monitoring checklist and alerting logic from `data_profiler.py --monitor`
+4. Schedule checks at ingestion cadence
 
 ---
 
-## The DQ check catalog
+## Tools
 
-Five categories of checks, applied per dataset:
+### `scripts/data_profiler.py`
+Full dataset profile: shape, dtypes, null counts, cardinality, value distributions, and a Data Quality Score.
 
-| Category | Examples | When |
-|----------|----------|------|
-| **Volume** | Row count is between min/max; row count is within ±N% of yesterday | Always for batch tables |
-| **Freshness** | `MAX(updated_at)` ≤ N minutes ago; pipeline ran in last N minutes | All tables with refresh SLA |
-| **Schema** | Column exists; column type matches; column ordinal; column nullable matches | All tables; especially upstream-sourced |
-| **Values** | NOT NULL; UNIQUE; in enum; matches regex; min/max; reference exists | Per-column based on semantic role |
-| **Distribution** | Mean / median / p99 within expected band; histogram doesn't shift; cardinality stable | Tables where data shape matters (ML features, analytics dimensions) |
+**Features:**
+- Per-column null %, unique count, top values, min/max/mean/std
+- Detects constant columns, high-cardinality text fields, mixed types
+- Outputs a DQS (0–100) based on completeness + consistency signals
+- `--monitor` flag prints threshold-ready summary for alerting
 
-See [references/dq-check-catalog.md](references/dq-check-catalog.md) for the full catalog: ~50 specific check patterns with detection heuristics, tool snippets (Great Expectations / dbt / Soda / SQL), and tuning notes.
+```bash
+# Profile from CSV
+python3 scripts/data_profiler.py --file data.csv
 
----
+# Profile specific columns
+python3 scripts/data_profiler.py --file data.csv --columns col1,col2,col3
 
-## DQ maturity model
+# Output JSON for downstream use
+python3 scripts/data_profiler.py --file data.csv --format json
 
-Five levels. Most teams should target Level 3-4.
+# Generate monitoring thresholds
+python3 scripts/data_profiler.py --file data.csv --monitor
+```
 
-| Level | What | Effort |
-|-------|------|--------|
-| **L0 — Reactive** | "We find DQ issues when users complain." No automated checks. | None (until incidents pile up) |
-| **L1 — Ad-hoc** | Some checks exist on critical tables; engineers write them as needed; no centralized framework. | Low |
-| **L2 — Scheduled** | Checks run on every pipeline run; failures alert via Slack / pager. Catalog of checks lives in version control. | Medium |
-| **L3 — Comprehensive** | Per-dataset SLAs; checks cover all 6 DQ dimensions; freshness + volume + schema monitoring is automatic for every table; data team owns DQ. | High |
-| **L4 — Data-as-product** | DQ is part of every dataset's contract. Producers responsible for quality of what they emit. Consumers can subscribe to DQ events for upstream data. | Very high; org-wide investment |
+### `scripts/missing_value_analyzer.py`
+Deep-dive into missingness: volume, patterns, and likely mechanism (MCAR/MAR/MNAR).
 
-L0 / L1 teams: read this skill, pick the most-painful 3 datasets, add L2-level checks first.
-L3 teams: invest in observability tooling; consider data observability vendor or build internal.
-L4 teams: think about data contracts and data mesh.
+**Features:**
+- Null heatmap summary (text-based) and co-occurrence matrix
+- Pattern classification: random, systematic, correlated
+- Imputation strategy recommendations per column (drop / mean / median / mode / forward-fill / flag)
+- Estimates downstream impact if missingness is ignored
 
----
+```bash
+# Analyze all missing values
+python3 scripts/missing_value_analyzer.py --file data.csv
 
-## DQ incident response playbook
+# Focus on columns above a null threshold
+python3 scripts/missing_value_analyzer.py --file data.csv --threshold 0.05
 
-When DQ alerts fire, treat it like a production incident.
+# Output JSON
+python3 scripts/missing_value_analyzer.py --file data.csv --format json
+```
 
-### Severity classification
+### `scripts/outlier_detector.py`
+Multi-method outlier detection with business-impact context.
 
-| Severity | What | Response time |
-|----------|------|---------------|
-| **Sev1 — Customer-facing** | Bad data is visible to customers OR feeding ML production OR driving billing | < 15 min ack, < 4h fix |
-| **Sev2 — Internal critical** | Bad data is feeding executive dashboards, finance close, regulatory reporting | < 1h ack, < 24h fix |
-| **Sev3 — Internal degraded** | Bad data is in analytical tables; doesn't immediately affect decisions | < 1 day ack, fix in next release |
-| **Sev4 — Cosmetic / non-critical** | Edge case; doesn't affect known consumers | Backlog |
+**Features:**
+- IQR method (robust, non-parametric)
+- Z-score method (normal distribution assumption)
+- Modified Z-score (Iglewicz-Hoaglin, robust to skew)
+- Per-column outlier count, %, and boundary values
+- Flags columns where outliers may be data errors vs. legitimate extremes
 
-### Standard playbook
+```bash
+# Detect outliers across all numeric columns
+python3 scripts/outlier_detector.py --file data.csv
 
-1. **Acknowledge** the alert (within ack-SLA).
-2. **Quarantine** affected data — block downstream pipelines, alert consumers via channel/email.
-3. **Triage** — is this a real DQ issue or false positive? Root cause: upstream change? schema drift? bug in transformation? source data corruption?
-4. **Contain** — stop the bleeding. Pause the pipeline; route around the bad data; serve cached known-good data; revert to last known good state.
-5. **Fix forward** — apply the fix in code + reprocess affected data.
-6. **Notify** — affected downstream consumers; update status page if customer-impacting.
-7. **Post-incident** — write up timeline, root cause, action items.
+# Use specific method
+python3 scripts/outlier_detector.py --file data.csv --method iqr
 
-### Recovery patterns
+# Set custom Z-score threshold
+python3 scripts/outlier_detector.py --file data.csv --method zscore --threshold 2.5
 
-- **Backfill** — re-run pipelines for the affected partition / time range
-- **Quarantine pattern** — keep bad data in a `_quarantine` schema; clear when reprocessed
-- **Dead-letter queue (DLQ)** — for streaming data, send unprocessable records to DLQ for manual review
-- **Idempotent reprocessing** — every pipeline should be re-runnable for any date range without side effects
-
-See [references/dq-incident-response.md](references/dq-incident-response.md) for full incident playbook including templates for incident channels, post-incident writeup, and consumer notification.
-
----
-
-## End-to-end workflows
-
-### Workflow: Add DQ to a new dataset
-
-1. **Profile** the data — `scripts/dq_check_runner.py --profile --table mydb.mytable` runs statistics: row count, null rates per column, distinct count, min/max for numerics, histogram for categoricals.
-2. **Pick check thresholds** based on the profile and product knowledge.
-3. **Write the checks** (in your tool of choice — Great Expectations / dbt tests / Soda / custom SQL).
-4. **Wire into pipeline** — checks run on every load. Failures fail the pipeline (with alerting), don't silently produce bad data downstream.
-5. **Document the DQ contract** in the data catalog: what does this table guarantee?
-
-### Workflow: Detect and respond to schema drift
-
-1. **Snapshot baseline schema** — `scripts/schema_drift_detector.py --baseline mydb.mytable > baseline.json`.
-2. **Schedule the detector** to run before every consumer pipeline (or hourly).
-3. **On drift detection** — alert + block pipeline; investigate whether the change was intentional (upstream renamed a column) or accidental (data corruption).
-4. **If intentional**: update consumer pipelines + baseline. If accidental: roll back upstream or fix.
-
-### Workflow: Monitor freshness SLAs
-
-1. **Define SLA per table** — e.g., `events_table` must be updated within 1 hour; `daily_revenue` within 24 hours.
-2. **Wire freshness checks** — `scripts/freshness_monitor.py --table events_table --max-age-min 60`.
-3. **Alert on SLA breach** — via pager/Slack.
-4. **Triage** — pipeline failure? upstream delay? logic bug?
-
-### Workflow: Audit existing pipelines
-
-1. **Inventory** all production tables (typically from data catalog).
-2. **Score per table** — for each, what % of dimensions have at least one check? `scripts/dq_check_runner.py --audit --catalog`.
-3. **Prioritize** — start with customer-facing + Sev1-impact tables.
-4. **Schedule remediation** — add missing checks per priority.
-
-### Workflow: Post-incident DQ improvement
-
-1. After a DQ incident, ask: would an automated check have caught this?
-2. If yes: add it. The check becomes regression prevention.
-3. Document the incident → check mapping. Over time, DQ check inventory reflects organizational pain history.
+# Output JSON
+python3 scripts/outlier_detector.py --file data.csv --format json
+```
 
 ---
 
-## Anti-patterns
+## Data Quality Score (DQS)
 
-- **DQ as afterthought.** Checks added "when we have time." Almost never added; bad data accumulates.
-- **All-or-nothing DQ.** "If we can't have 100% coverage, why bother?" Some coverage on critical tables is enormously valuable.
-- **Checks without thresholds.** "Alert on any nulls." Real data has noise; tune thresholds; alert on meaningful changes.
-- **Alert fatigue.** Too many noisy alerts → real ones ignored. Tune; aggregate; route by severity.
-- **No owner for the data.** "Who do I ping about bad data in `orders_aggregated`?" Every prod table needs an owner.
-- **DQ tool sprawl.** dbt tests + Great Expectations + Soda + custom SQL + ad-hoc Slack rules. Pick one (or two) and standardize.
-- **Reactive only.** DQ team only fixes incidents; never proactively profiles or improves. Stuck at L1.
-- **Checks but no enforcement.** Checks run, fail, alert — but nothing blocks the pipeline. Bad data goes downstream anyway.
-- **No DQ in CI.** Production has checks; dev/staging doesn't. Bugs make it to prod, then caught.
-- **Same check on a table 50 columns wide.** "Not null on every column." Drowning in noise. Focus on semantically-required.
+The DQS is a 0–100 composite score across five dimensions. Report it at the top of every audit.
+
+| Dimension | Weight | What It Measures |
+|---|---|---|
+| Completeness | 30% | Null / missing rate across critical columns |
+| Consistency | 25% | Type conformance, format uniformity, no mixed types |
+| Validity | 20% | Values within expected domain (ranges, categories, regexes) |
+| Uniqueness | 15% | Duplicate rows, duplicate keys, redundant columns |
+| Timeliness | 10% | Freshness of timestamps, lag from source system |
+
+**Scoring thresholds:**
+- 🟢 85–100 — Production-ready
+- 🟡 65–84 — Usable with documented caveats
+- 🔴 0–64 — Remediation required before use
 
 ---
 
-## Tooling outputs
+## Proactive Risk Triggers
 
-| Script | Input | Output |
-|--------|-------|--------|
-| `scripts/dq_check_runner.py` | Connection config + table list + check definitions | Per-table check results: pass/fail/warning, value, threshold. Markdown + JSON. |
-| `scripts/schema_drift_detector.py` | Baseline schema snapshot + current schema | Diff: added/removed/changed columns; type changes; ordinal changes; severity per change. |
-| `scripts/freshness_monitor.py` | Connection config + table + freshness column + SLA | Pass/fail; current age; SLA budget; alerting-ready output. |
+Surface these unprompted whenever you spot the signals:
 
-All scripts: stdlib only, argparse CLI, JSON or human-readable output.
+- **Silent nulls** — Nulls encoded as `0`, `""`, `"N/A"`, `"null"` strings. Completeness metrics lie until these are caught.
+- **Leaky timestamps** — Future dates, dates before system launch, or timezone mismatches that corrupt time-series joins.
+- **Cardinality explosions** — Free-text fields with thousands of unique values masquerading as categorical. Will break one-hot encoding silently.
+- **Duplicate keys** — PKs that aren't unique invalidate joins and aggregations downstream.
+- **Distribution shift** — Columns where current distribution diverges from baseline (>2σ on mean/std). Signals upstream pipeline changes.
+- **Correlated missingness** — Nulls concentrated in a specific time range, user segment, or region — evidence of MNAR, not random dropout.
 
-**Note:** scripts read schemas from JSON inputs or simulate. For live DB queries, integrate with your DB driver of choice (psycopg / mysqlclient / google-cloud-bigquery / etc.) — out of scope for stdlib-only design.
+---
+
+## Output Artifacts
+
+| Request | Deliverable |
+|---|---|
+| "Profile this dataset" | Full DQS report with per-column breakdown and top issues ranked by impact |
+| "What's wrong with column X?" | Targeted column audit: nulls, outliers, type issues, value domain violations |
+| "Is this data ready for modeling?" | Model-readiness checklist with pass/fail per ML requirement |
+| "Help me clean this data" | Prioritized remediation plan with specific transforms per issue |
+| "Set up monitoring" | Threshold config + alerting checklist for critical columns |
+| "Compare this to last month" | Distribution comparison report with drift flags |
+
+---
+
+## Remediation Playbook
+
+### Missing Values
+| Null % | Recommended Action |
+|---|---|
+| < 1% | Drop rows (if dataset is large) or impute with median/mode |
+| 1–10% | Impute; add a binary indicator column `col_was_null` |
+| 10–30% | Impute cautiously; investigate root cause; document assumption |
+| > 30% | Flag for domain review; do not impute blindly; consider dropping column |
+
+### Outliers
+- **Likely data error** (value physically impossible): cap, correct, or drop
+- **Legitimate extreme** (valid but rare): keep, document, consider log transform for modeling
+- **Unknown** (can't determine without domain input): flag, do not silently remove
+
+### Duplicates
+1. Confirm uniqueness key with data owner before deduplication
+2. Prefer `keep='last'` for event data (most recent state wins)
+3. Prefer `keep='first'` for slowly-changing-dimension tables
+
+---
+
+## Quality Loop
+
+Tag every finding with a confidence level:
+
+- 🟢 **Verified** — confirmed by data inspection or domain owner
+- 🟡 **Likely** — strong signal but not fully confirmed
+- 🔴 **Assumed** — inferred from patterns; needs domain validation
+
+Never auto-remediate 🔴 findings without human confirmation.
+
+---
+
+## Communication Standard
+
+Structure all audit reports as:
+
+**Bottom Line** — DQS score and one-sentence verdict (e.g., "DQS: 61/100 — remediation required before production use")
+**What** — The specific issues found (ranked by severity × breadth)
+**Why It Matters** — Business or analytical impact of each issue
+**How to Act** — Specific, ordered remediation steps
+
+---
+
+## Related Skills
+
+| Skill | Use When |
+|---|---|
+| `finance/financial-analyst` | Data involves financial statements or accounting figures |
+| `finance/saas-metrics-coach` | Data is subscription/event data feeding SaaS KPIs |
+| `engineering/database-designer` | Issues trace back to schema design or normalization |
+| `engineering/tech-debt-tracker` | Data quality issues are systemic and need to be tracked as tech debt |
+| `product-team/product-analytics` | Auditing product event data (funnels, sessions, retention) |
+
+**When NOT to use this skill:**
+- You need to design or optimize the database schema — use `engineering/database-designer`
+- You need to build the ETL pipeline itself — use an engineering skill
+- The dataset is a financial model output — use `finance/financial-analyst` for model validation
 
 ---
 
 ## References
 
-- [data-quality-dimensions.md](references/data-quality-dimensions.md) — the 6 dimensions in depth + measurement patterns + threshold guidance
-- [dq-check-catalog.md](references/dq-check-catalog.md) — ~50 specific check patterns with tool snippets
-- [dq-incident-response.md](references/dq-incident-response.md) — incident playbook + recovery patterns + writeup templates
-
----
-
-## Related skills
-
-- `engineering/senior-data-engineer` — pipeline design, ETL, dbt, Spark
-- `engineering/observability-designer` — observability for data infrastructure (different from DQ but adjacent)
-- `engineering/chaos-engineering` — DQ checks themselves benefit from chaos testing
-- `ra-qm-team/gdpr-dsgvo-expert` — data quality is part of GDPR Art. 5(1)(d) "accuracy" principle
-- `ra-qm-team/soc2-compliance-expert` — SOC 2 PI1 (Processing Integrity) requires DQ controls
+- `references/data-quality-concepts.md` — MCAR/MAR/MNAR theory, DQS methodology, outlier detection methods

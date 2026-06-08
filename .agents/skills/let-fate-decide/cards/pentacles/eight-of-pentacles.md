@@ -1,6 +1,6 @@
 # Eight of Pentacles
 
-**Suit**: Pentacles | **Rank**: 8
+**Suit**: Pentacles | **Rank**: Eight
 
 ## Upright
 Diligence, mastery, and skill development. Repetitive, detail-oriented work

@@ -1,381 +1,301 @@
 #!/usr/bin/env python3
-"""Manage orchestration sessions for multi-agent workflows.
+"""AgentHub session state machine and lifecycle manager.
 
-Creates, updates, and queries session state. A session tracks the execution
-lifecycle of a workflow including agent states, outputs, timing, and history.
+Manages session states (init → running → evaluating → merged/archived),
+lists sessions, and handles cleanup of worktrees and branches.
 
 Usage:
-    python session_manager.py create --workflow workflow.json --output session.json
-    python session_manager.py status --session session.json
-    python session_manager.py update --session session.json --agent researcher --state COMPLETED --output-data '{"result": "..."}'
-    python session_manager.py history --session session.json
-    python session_manager.py list --dir ./sessions/
+    python session_manager.py --list
+    python session_manager.py --status 20260317-143022
+    python session_manager.py --update 20260317-143022 --state running
+    python session_manager.py --cleanup 20260317-143022
+    python session_manager.py --demo
 """
 
 import argparse
 import json
 import os
+import subprocess
 import sys
-import uuid
-from datetime import datetime
-from pathlib import Path
+from datetime import datetime, timezone
 
 
-def load_json(path):
-    """Load JSON from file."""
+SESSIONS_PATH = ".agenthub/sessions"
+
+VALID_STATES = ["init", "running", "evaluating", "merged", "archived"]
+
+VALID_TRANSITIONS = {
+    "init": ["running"],
+    "running": ["evaluating"],
+    "evaluating": ["merged", "archived"],
+    "merged": [],
+    "archived": [],
+}
+
+
+def load_state(session_id):
+    """Load session state.json."""
+    state_path = os.path.join(SESSIONS_PATH, session_id, "state.json")
+    if not os.path.exists(state_path):
+        return None
+    with open(state_path) as f:
+        return json.load(f)
+
+
+def save_state(session_id, state):
+    """Save session state.json."""
+    state_path = os.path.join(SESSIONS_PATH, session_id, "state.json")
+    state["updated"] = datetime.now(timezone.utc).isoformat()
+    with open(state_path, "w") as f:
+        json.dump(state, f, indent=2)
+        f.write("\n")
+
+
+def load_config(session_id):
+    """Load session config.yaml (simple key: value parsing)."""
+    config_path = os.path.join(SESSIONS_PATH, session_id, "config.yaml")
+    if not os.path.exists(config_path):
+        return None
+    config = {}
+    with open(config_path) as f:
+        for line in f:
+            line = line.strip()
+            if ":" in line and not line.startswith("#"):
+                key, val = line.split(":", 1)
+                config[key.strip()] = val.strip().strip('"')
+    return config
+
+
+def run_git(*args):
+    """Run a git command and return stdout."""
     try:
-        with open(path, "r") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError) as e:
-        print(f"Error loading {path}: {e}", file=sys.stderr)
-        sys.exit(1)
+        result = subprocess.run(
+            ["git"] + list(args),
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return ""
 
 
-def save_json(data, path):
-    """Save JSON to file."""
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2, default=str)
-
-
-def cmd_create(args):
-    """Create a new orchestration session from a workflow definition."""
-    workflow = load_json(args.workflow)
-    agents_def = workflow.get("agents", {})
-    config = workflow.get("config", {})
-
-    session_id = str(uuid.uuid4())[:8]
-    now = datetime.now().isoformat()
-
-    agents = {}
-    for agent_id, agent_def in agents_def.items():
-        deps = agent_def.get("dependencies", [])
-        agents[agent_id] = {
-            "state": "READY" if not deps else "PENDING",
-            "task": agent_def.get("task", ""),
-            "inputs": agent_def.get("inputs", []),
-            "expected_outputs": agent_def.get("outputs", []),
-            "dependencies": deps,
-            "outputs": None,
-            "started_at": None,
-            "completed_at": None,
-            "duration_s": None,
-            "retries": 0,
-            "max_retries": agent_def.get("config", {}).get("retries", config.get("retry_on_failure", 1)),
-            "eval_score": None,
-            "error": None,
-        }
-
-    session = {
-        "session_id": session_id,
-        "workflow_name": workflow.get("name", "unnamed"),
-        "workflow_description": workflow.get("description", ""),
-        "created_at": now,
-        "started_at": now,
-        "completed_at": None,
-        "state": "RUNNING",
-        "config": config,
-        "agents": agents,
-        "history": [
-            {"timestamp": now, "event": "session_created", "detail": f"Workflow: {workflow.get('name', 'unnamed')}"}
-        ],
-    }
-
-    output_path = args.output or f"session-{session_id}.json"
-    save_json(session, output_path)
-
-    return {
-        "action": "create",
-        "session_id": session_id,
-        "workflow_name": workflow.get("name"),
-        "agents_count": len(agents),
-        "ready_agents": sum(1 for a in agents.values() if a["state"] == "READY"),
-        "output_file": output_path,
-    }
-
-
-def cmd_status(args):
-    """Show current session status."""
-    session = load_json(args.session)
-    agents = session.get("agents", {})
-
-    by_state = {}
-    for agent_data in agents.values():
-        state = agent_data.get("state", "UNKNOWN")
-        by_state[state] = by_state.get(state, 0) + 1
-
-    total = len(agents)
-    completed = by_state.get("COMPLETED", 0)
-    failed = by_state.get("FAILED", 0)
-    running = by_state.get("RUNNING", 0)
-
-    # Determine overall health
-    if session.get("state") == "COMPLETED":
-        health = "COMPLETE"
-    elif failed > 0 and running == 0 and by_state.get("PENDING", 0) > 0:
-        health = "BLOCKED"
-    elif failed > 0:
-        health = "AT_RISK"
-    elif running > 0:
-        health = "RUNNING"
-    else:
-        health = "IDLE"
-
-    # Elapsed time
-    started = session.get("started_at", "")
-    elapsed = 0
-    if started:
-        try:
-            elapsed = (datetime.now() - datetime.fromisoformat(started)).total_seconds()
-        except ValueError:
-            pass
-
-    return {
-        "action": "status",
-        "session_id": session.get("session_id"),
-        "workflow_name": session.get("workflow_name"),
-        "state": session.get("state"),
-        "health": health,
-        "total_agents": total,
-        "by_state": by_state,
-        "progress_pct": round(completed / total * 100, 1) if total else 0,
-        "elapsed_s": round(elapsed),
-        "agents": {
-            aid: {
-                "state": adata.get("state"),
-                "duration_s": adata.get("duration_s"),
-                "eval_score": adata.get("eval_score"),
-            }
-            for aid, adata in agents.items()
-        },
-    }
-
-
-def cmd_update(args):
-    """Update an agent's state in the session."""
-    session = load_json(args.session)
-    agents = session.get("agents", {})
-
-    if args.agent not in agents:
-        return {"action": "update", "error": f"Agent '{args.agent}' not found"}
-
-    agent = agents[args.agent]
-    old_state = agent["state"]
-    now = datetime.now().isoformat()
-
-    # Update state
-    agent["state"] = args.state
-
-    if args.state == "RUNNING" and not agent.get("started_at"):
-        agent["started_at"] = now
-    elif args.state == "COMPLETED":
-        agent["completed_at"] = now
-        if agent.get("started_at"):
-            try:
-                started = datetime.fromisoformat(agent["started_at"])
-                agent["duration_s"] = round((datetime.now() - started).total_seconds(), 1)
-            except ValueError:
-                pass
-    elif args.state == "FAILED":
-        agent["completed_at"] = now
-        agent["error"] = args.error_msg or "Unknown error"
-
-    # Update outputs if provided
-    if args.output_data:
-        try:
-            agent["outputs"] = json.loads(args.output_data)
-        except json.JSONDecodeError:
-            agent["outputs"] = {"raw": args.output_data}
-
-    # Update eval score if provided
-    if args.eval_score is not None:
-        agent["eval_score"] = args.eval_score
-
-    # Check if dependents can now be set to READY
-    newly_ready = []
-    if args.state == "COMPLETED":
-        for other_id, other_agent in agents.items():
-            if other_agent["state"] == "PENDING":
-                deps = other_agent.get("dependencies", [])
-                all_met = all(
-                    agents.get(d, {}).get("state") == "COMPLETED"
-                    for d in deps
-                )
-                if all_met:
-                    other_agent["state"] = "READY"
-                    newly_ready.append(other_id)
-
-    # Check if all agents are done
-    all_done = all(
-        a["state"] in ("COMPLETED", "FAILED", "SKIPPED")
-        for a in agents.values()
-    )
-    if all_done:
-        session["state"] = "COMPLETED"
-        session["completed_at"] = now
-
-    # Log event
-    event = {
-        "timestamp": now,
-        "event": "agent_state_change",
-        "agent": args.agent,
-        "old_state": old_state,
-        "new_state": args.state,
-    }
-    if newly_ready:
-        event["newly_ready"] = newly_ready
-    session.setdefault("history", []).append(event)
-
-    save_json(session, args.session)
-
-    return {
-        "action": "update",
-        "agent": args.agent,
-        "old_state": old_state,
-        "new_state": args.state,
-        "newly_ready": newly_ready,
-        "session_complete": all_done,
-    }
-
-
-def cmd_history(args):
-    """Show session event history."""
-    session = load_json(args.session)
-    history = session.get("history", [])
-    return {
-        "action": "history",
-        "session_id": session.get("session_id"),
-        "event_count": len(history),
-        "events": history,
-    }
-
-
-def cmd_list(args):
-    """List all sessions in a directory."""
-    sessions_dir = Path(args.dir)
-    if not sessions_dir.is_dir():
-        return {"action": "list", "error": f"'{args.dir}' is not a directory"}
+def list_sessions(output_format="text"):
+    """List all sessions with their states."""
+    if not os.path.isdir(SESSIONS_PATH):
+        print("No sessions found. Run hub_init.py first.")
+        return
 
     sessions = []
-    for jf in sorted(sessions_dir.glob("session-*.json")):
-        try:
-            data = json.loads(jf.read_text())
-            sessions.append({
-                "file": str(jf),
-                "session_id": data.get("session_id"),
-                "workflow_name": data.get("workflow_name"),
-                "state": data.get("state"),
-                "created_at": data.get("created_at"),
-                "agents_count": len(data.get("agents", {})),
-            })
-        except (json.JSONDecodeError, OSError):
+    for sid in sorted(os.listdir(SESSIONS_PATH)):
+        session_dir = os.path.join(SESSIONS_PATH, sid)
+        if not os.path.isdir(session_dir):
             continue
+        state = load_state(sid)
+        config = load_config(sid)
+        if state and config:
+            sessions.append({
+                "session_id": sid,
+                "state": state.get("state", "unknown"),
+                "task": config.get("task", ""),
+                "agents": config.get("agent_count", "?"),
+                "created": state.get("created", ""),
+            })
 
-    return {"action": "list", "count": len(sessions), "sessions": sessions}
+    if output_format == "json":
+        print(json.dumps({"sessions": sessions}, indent=2))
+        return
+
+    if not sessions:
+        print("No sessions found.")
+        return
+
+    print("AgentHub Sessions")
+    print()
+    header = f"{'SESSION ID':<20} {'STATE':<12} {'AGENTS':<8} {'TASK'}"
+    print(header)
+    print("-" * 70)
+    for s in sessions:
+        task = s["task"][:40] + "..." if len(s["task"]) > 40 else s["task"]
+        print(f"{s['session_id']:<20} {s['state']:<12} {s['agents']:<8} {task}")
 
 
-def format_human(result):
-    """Format result for human output."""
-    action = result.get("action", "unknown")
-    lines = []
+def show_status(session_id, output_format="text"):
+    """Show detailed status for a session."""
+    state = load_state(session_id)
+    config = load_config(session_id)
 
-    if "error" in result:
-        return f"Error: {result['error']}"
+    if not state or not config:
+        print(f"Error: Session {session_id} not found", file=sys.stderr)
+        sys.exit(1)
 
-    if action == "create":
-        lines.append(f"Session Created: {result['session_id']}")
-        lines.append(f"  Workflow: {result['workflow_name']}")
-        lines.append(f"  Agents:  {result['agents_count']} ({result['ready_agents']} ready)")
-        lines.append(f"  File:    {result['output_file']}")
+    if output_format == "json":
+        print(json.dumps({"config": config, "state": state}, indent=2))
+        return
 
-    elif action == "status":
-        lines.append(f"Session: {result['session_id']} ({result['workflow_name']})")
-        lines.append(f"  Health:   {result['health']}")
-        lines.append(f"  Progress: {result['progress_pct']}% ({result['by_state']})")
-        lines.append(f"  Elapsed:  {result['elapsed_s']}s")
-        lines.append("")
-        for aid, adata in result.get("agents", {}).items():
-            dur = f"{adata['duration_s']}s" if adata.get("duration_s") else "---"
-            lines.append(f"  {aid:<20} {adata['state']:<12} {dur}")
+    print(f"Session: {session_id}")
+    print(f"  State: {state.get('state', 'unknown')}")
+    print(f"  Task: {config.get('task', '')}")
+    print(f"  Agents: {config.get('agent_count', '?')}")
+    print(f"  Base branch: {config.get('base_branch', '?')}")
+    if config.get("eval_cmd"):
+        print(f"  Eval: {config['eval_cmd']}")
+    if config.get("metric"):
+        print(f"  Metric: {config['metric']} ({config.get('direction', '?')})")
+    print(f"  Created: {state.get('created', '?')}")
+    print(f"  Updated: {state.get('updated', '?')}")
 
-    elif action == "update":
-        lines.append(f"Updated: {result['agent']} ({result['old_state']} -> {result['new_state']})")
-        if result.get("newly_ready"):
-            lines.append(f"  Newly ready: {', '.join(result['newly_ready'])}")
-        if result.get("session_complete"):
-            lines.append("  Session is now COMPLETE")
+    # Show agent branches
+    branches = run_git("branch", "--list", f"hub/{session_id}/*",
+                       "--format=%(refname:short)")
+    if branches:
+        print()
+        print("  Branches:")
+        for b in branches.split("\n"):
+            if b.strip():
+                print(f"    {b.strip()}")
 
-    elif action == "history":
-        lines.append(f"Session History ({result['event_count']} events)")
-        lines.append("-" * 50)
-        for evt in result.get("events", []):
-            ts = evt.get("timestamp", "")[:19]
-            event_type = evt.get("event", "")
-            detail = evt.get("detail", "")
-            agent = evt.get("agent", "")
-            if agent:
-                lines.append(f"  {ts}  {event_type}: {agent} ({evt.get('old_state', '')} -> {evt.get('new_state', '')})")
-            else:
-                lines.append(f"  {ts}  {event_type}: {detail}")
 
-    elif action == "list":
-        lines.append(f"Sessions ({result['count']} found)")
-        lines.append("-" * 60)
-        for s in result.get("sessions", []):
-            lines.append(f"  {s['session_id']}  {s['workflow_name']:<20}  {s['state']:<12}  {s['agents_count']} agents")
+def update_state(session_id, new_state):
+    """Transition session to a new state."""
+    state = load_state(session_id)
+    if not state:
+        print(f"Error: Session {session_id} not found", file=sys.stderr)
+        sys.exit(1)
 
-    return "\n".join(lines)
+    current = state.get("state", "unknown")
+
+    if new_state not in VALID_STATES:
+        print(f"Error: Invalid state '{new_state}'. "
+              f"Valid: {', '.join(VALID_STATES)}", file=sys.stderr)
+        sys.exit(1)
+
+    valid_next = VALID_TRANSITIONS.get(current, [])
+    if new_state not in valid_next:
+        print(f"Error: Cannot transition from '{current}' to '{new_state}'. "
+              f"Valid transitions: {', '.join(valid_next) or 'none (terminal)'}",
+              file=sys.stderr)
+        sys.exit(1)
+
+    state["state"] = new_state
+    save_state(session_id, state)
+    print(f"Session {session_id}: {current} → {new_state}")
+
+
+def cleanup_session(session_id):
+    """Clean up worktrees and optionally archive branches."""
+    config = load_config(session_id)
+    if not config:
+        print(f"Error: Session {session_id} not found", file=sys.stderr)
+        sys.exit(1)
+
+    # Find and remove worktrees for this session
+    worktree_output = run_git("worktree", "list", "--porcelain")
+    removed = 0
+    if worktree_output:
+        current_path = None
+        for line in worktree_output.split("\n"):
+            if line.startswith("worktree "):
+                current_path = line[len("worktree "):]
+            elif line.startswith("branch ") and current_path:
+                ref = line[len("branch "):]
+                if f"hub/{session_id}/" in ref:
+                    result = subprocess.run(
+                        ["git", "worktree", "remove", "--force", current_path],
+                        capture_output=True, text=True
+                    )
+                    if result.returncode == 0:
+                        removed += 1
+                        print(f"  Removed worktree: {current_path}")
+                current_path = None
+
+    print(f"Cleaned up {removed} worktrees for session {session_id}")
+
+
+def run_demo():
+    """Show demo output."""
+    print("=" * 60)
+    print("AgentHub Session Manager — Demo Mode")
+    print("=" * 60)
+    print()
+
+    print("--- Session List ---")
+    print("AgentHub Sessions")
+    print()
+    header = f"{'SESSION ID':<20} {'STATE':<12} {'AGENTS':<8} {'TASK'}"
+    print(header)
+    print("-" * 70)
+    print(f"{'20260317-143022':<20} {'merged':<12} {'3':<8} Optimize API response time below 100ms")
+    print(f"{'20260317-151500':<20} {'running':<12} {'2':<8} Refactor auth module for JWT support")
+    print(f"{'20260317-160000':<20} {'init':<12} {'4':<8} Implement caching strategy")
+    print()
+
+    print("--- Session Detail ---")
+    print("Session: 20260317-143022")
+    print("  State: merged")
+    print("  Task: Optimize API response time below 100ms")
+    print("  Agents: 3")
+    print("  Base branch: dev")
+    print("  Eval: pytest bench.py --json")
+    print("  Metric: p50_ms (lower)")
+    print("  Created: 2026-03-17T14:30:22Z")
+    print("  Updated: 2026-03-17T14:45:00Z")
+    print()
+    print("  Branches:")
+    print("    hub/20260317-143022/agent-1/attempt-1  (archived)")
+    print("    hub/20260317-143022/agent-2/attempt-1  (merged)")
+    print("    hub/20260317-143022/agent-3/attempt-1  (archived)")
+    print()
+
+    print("--- State Transitions ---")
+    print("Valid transitions:")
+    for state, transitions in VALID_TRANSITIONS.items():
+        arrow = " → ".join(transitions) if transitions else "(terminal)"
+        print(f"  {state}: {arrow}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Manage orchestration sessions for multi-agent workflows.",
+        description="AgentHub session state machine and lifecycle manager"
     )
-    parser.add_argument("--json", action="store_true", dest="json_output", help="Output as JSON")
-
-    sub = parser.add_subparsers(dest="command")
-
-    p_create = sub.add_parser("create", help="Create a new session")
-    p_create.add_argument("--workflow", required=True, help="Path to workflow JSON")
-    p_create.add_argument("--output", help="Output session file path")
-
-    p_status = sub.add_parser("status", help="Show session status")
-    p_status.add_argument("--session", required=True, help="Path to session JSON")
-
-    p_update = sub.add_parser("update", help="Update agent state")
-    p_update.add_argument("--session", required=True, help="Path to session JSON")
-    p_update.add_argument("--agent", required=True, help="Agent ID to update")
-    p_update.add_argument("--state", required=True,
-                          choices=["PENDING", "READY", "RUNNING", "COMPLETED", "FAILED", "SKIPPED", "EVALUATING"])
-    p_update.add_argument("--output-data", help="Agent output data (JSON string)")
-    p_update.add_argument("--eval-score", type=float, help="Evaluation score (0-1)")
-    p_update.add_argument("--error-msg", help="Error message (for FAILED state)")
-
-    p_history = sub.add_parser("history", help="Show session event history")
-    p_history.add_argument("--session", required=True, help="Path to session JSON")
-
-    p_list = sub.add_parser("list", help="List sessions in a directory")
-    p_list.add_argument("--dir", required=True, help="Directory containing session files")
-
+    parser.add_argument("--list", action="store_true",
+                        help="List all sessions with state")
+    parser.add_argument("--status", type=str, metavar="SESSION_ID",
+                        help="Show detailed session status")
+    parser.add_argument("--update", type=str, metavar="SESSION_ID",
+                        help="Update session state")
+    parser.add_argument("--state", type=str,
+                        help="New state for --update")
+    parser.add_argument("--cleanup", type=str, metavar="SESSION_ID",
+                        help="Remove worktrees and clean up session")
+    parser.add_argument("--format", choices=["text", "json"], default="text",
+                        help="Output format (default: text)")
+    parser.add_argument("--demo", action="store_true",
+                        help="Show demo output")
     args = parser.parse_args()
 
-    if not args.command:
-        parser.print_help()
-        sys.exit(1)
+    if args.demo:
+        run_demo()
+        return
 
-    commands = {
-        "create": cmd_create,
-        "status": cmd_status,
-        "update": cmd_update,
-        "history": cmd_history,
-        "list": cmd_list,
-    }
+    if args.list:
+        list_sessions(args.format)
+        return
 
-    result = commands[args.command](args)
+    if args.status:
+        show_status(args.status, args.format)
+        return
 
-    if args.json_output:
-        print(json.dumps(result, indent=2, default=str))
-    else:
-        print(format_human(result))
+    if args.update:
+        if not args.state:
+            print("Error: --update requires --state", file=sys.stderr)
+            sys.exit(1)
+        update_state(args.update, args.state)
+        return
+
+    if args.cleanup:
+        cleanup_session(args.cleanup)
+        return
+
+    parser.print_help()
 
 
 if __name__ == "__main__":

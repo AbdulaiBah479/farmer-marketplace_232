@@ -1,8 +1,6 @@
 ---
 name: apify-actorization
-description: "Actorization converts existing software into reusable serverless applications compatible with the Apify platform. Actors are programs packaged as Docker images that accept well-defined JSON input, perform an action, and optionally produce structured JSON output."
-risk: unknown
-source: community
+description: "Convert existing projects into Apify Actors - serverless cloud programs. Actorize JavaScript/TypeScript (SDK with Actor.init/exit), Python (async context manager), or any language (CLI wrapper). Us..."
 ---
 
 # Apify Actorization
@@ -35,10 +33,11 @@ apify --help
 If not installed:
 
 ```bash
-brew install apify-cli
+curl -fsSL https://apify.com/install-cli.sh | bash
 
+# Or (Mac): brew install apify-cli
+# Or (Windows): irm https://apify.com/install-cli.ps1 | iex
 # Or: npm install -g apify-cli
-# Or install from an official release package that your OS package manager verifies
 ```
 
 Verify CLI is logged in:
@@ -47,10 +46,10 @@ Verify CLI is logged in:
 apify info  # Should return your username
 ```
 
-If not logged in, check if `APIFY_TOKEN` environment variable is defined. If not, ask the user to generate one at https://console.apify.com/settings/integrations, add it to their shell or secret manager without putting the literal token in command history, then run:
+If not logged in, check if `APIFY_TOKEN` environment variable is defined. If not, ask the user to generate one at https://console.apify.com/settings/integrations, then:
 
 ```bash
-apify login
+apify login -t $APIFY_TOKEN
 ```
 
 ## Actorization Checklist
@@ -115,7 +114,7 @@ See [schemas-and-output.md](references/schemas-and-output.md) for detailed confi
 
 Validate schemas against `@apify/json_schemas` npm package.
 
-## Step 4: Test Locally
+## Step 7: Test Locally
 
 Run the actor with inline input (for JS/TS and Python actors):
 
@@ -131,7 +130,7 @@ apify run --input-file ./test-input.json
 
 **Important:** Always use `apify run`, not `npm start` or `python main.py`. The CLI sets up the proper environment and storage.
 
-## Step 5: Deploy
+## Step 8: Deploy
 
 ```bash
 apify push
@@ -183,8 +182,3 @@ Otherwise, the MCP Server url: `https://mcp.apify.com/?tools=docs`.
 - [Apify SDK for Python](https://docs.apify.com/sdk/python) - Full SDK reference
 - [Apify CLI Reference](https://docs.apify.com/cli) - CLI commands
 - [Actor Specification](https://raw.githubusercontent.com/apify/actor-whitepaper/refs/heads/master/README.md) - Complete specification
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

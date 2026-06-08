@@ -1,342 +1,202 @@
 ---
 name: partnerships-architect
-description: >
-  Design strategic partnerships — technology / channel / strategic / co-marketing
-  — and the programs that scale them. Use when evaluating a potential partner,
-  picking the right partnership type (tech integration vs reseller vs OEM vs
-  strategic alliance), designing a partner program from scratch, structuring a
-  specific partnership deal, modeling ROI on a partnership investment, or
-  auditing an existing partner portfolio for ROI / strategic fit. Pairs with
-  our channel-economics (financial mechanics) and deal-desk (per-deal approval)
-  — this skill is the strategy layer above both.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: commercial
-  domain: business-growth
-  updated: 2026-05-27
-  tags: [partnerships, strategic-alliances, channel-strategy, tech-partnerships, partner-program, partnership-design, gtm]
+description: "Use when a startup is approached by a prospective partner and someone has to decide should we sign this partner, at what partner tier (referral / reseller / OEM / SI-consulting / strategic alliance), with what joint GTM commitment, and at what revshare. Classifies partner tier from independent-demand evidence vs. preferential-terms hunting, designs a 90-day joint GTM plan, models revshare against direct-sale margin, and surfaces kill criteria for unwinding under-performing partnerships. For Head of Partnerships, Head of BD, and Founder-CEOs doing reseller agreement, OEM deal, or strategic alliance review — not technical sale enablement, not channel cost economics, not M&A."
+version: 2.8.0
+author: claude-code-skills
+license: MIT
+tags: [commercial, partnerships, channel-partners, joint-gtm, revshare, oem, reseller, strategic-alliance]
+compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
 ---
 
-# Partnerships Architect
+# partnerships-architect
 
-End-to-end strategic partnership design and scaling: partnership type selection (tech integration vs channel vs OEM vs strategic), deal structures, partner program design (tiers, benefits, requirements), partner evaluation, and ROI modeling that justifies (or kills) a partnership investment.
+## Purpose
 
-This skill is provider-agnostic and works across SaaS, infrastructure, marketplace, and platform companies.
+Help Head of Partnerships, Head of BD, and Founder-CEOs answer four questions when a
+prospective partner shows up:
 
----
+1. **Is this a real partner, or someone hunting preferential terms without independent demand?**
+2. **At what tier should we sign them?** (Referral / Reseller / OEM / SI-Consulting / Strategic Alliance)
+3. **What's the 90-day joint GTM plan that proves the partnership works?**
+4. **What revshare makes economic sense — and at what point does the partnership beat direct sale?**
 
-## When to use this skill
+The skill emits a tier verdict + GTM plan + revshare band with explicit kill criteria. It
+does **not** sign the deal. The human, after running this skill, decides.
 
-| Situation | Skill applies |
-|-----------|---------------|
-| Evaluating a potential partner | Yes — use `scripts/partner_evaluation_scorer.py` + **evaluation framework** |
-| Picking partnership type for a specific opportunity | Yes — see **partnership type decision tree** |
-| Designing a partner program from scratch | Yes — see **partner program design** + `scripts/partner_program_designer.py` |
-| Structuring a specific partnership deal | Yes — see **partnership deal structures** |
-| Modeling partnership ROI | Yes — `scripts/partnership_roi_modeler.py` |
-| Auditing existing partner portfolio | Yes — use evaluation scorer across all partners |
-| Per-deal partner economics | Use `business-growth/channel-economics` |
-| Per-deal partner approval | Use `business-growth/deal-desk` |
-| Writing the partner contract | Use `business-growth/contract-and-proposal-writer` |
+## When to use
 
----
+- A prospective partner has approached and asked for reseller / OEM / "strategic" terms
+- You're designing a new partner program tier structure
+- You're reviewing an existing partnership that's underperforming and need to decide: re-tier, restructure GTM, or unwind
+- A Big Logo wants a "strategic alliance" — and you need to validate it's real, not vendor-lock theatre
+- A consulting firm or SI wants services revshare on your product
+- A platform vendor offers OEM / white-label and you need to model the math
+- You suspect "partner-sourced" deals are actually your own pipeline being skimmed for margin
 
-## Partnership types — the decision tree
+**Do not use for:**
+- Technical demos and POCs → `business-growth/sales-engineer`
+- Cost-to-serve and ROI math on existing channel → sibling `channel-economics`
+- Whole-company revenue strategy → `c-level-advisor/cro-advisor`
+- Acquiring a company instead of partnering → `c-level-advisor/ma-playbook`
+- Per-deal discount approval inside a signed partner contract → `deal-desk`
 
-Five primary partnership types. Different goals; different structures; different success metrics.
+## Workflow
 
-```
-What's the primary goal of this partnership?
+### Step 1 — Intake (≈ 20 min)
 
-Grow our distribution reach
-├── Customer-pays-them, they-pay-us → Reseller / Distributor / VAR
-├── Customer-pays-us, we-pay-them → Affiliate / Referral
-└── Joint sale to mutual customer → Co-sell
+Fill `assets/partnership_intake_template.md`. Capture: partner_name, partner_type, evidence
+of independent demand (named accounts they've sourced, end-customer relationships,
+their sales team size), strategic value (geo / product / brand / channel economics),
+commitments they've offered (joint marketing spend, dedicated headcount, certification,
+sales targets).
 
-Embed our product in their offering
-├── Customer doesn't see us (white-label) → OEM
-├── Customer sees us as embedded → Embedded ISV / Powered-by
-└── We're an option in their marketplace → Marketplace listing
+If the intake template can't be honestly filled out, the prospective partner has not
+demonstrated enough substance to evaluate. Stop. Go back to them.
 
-Combine our product with theirs (better together)
-├── Pre-integrated, certified → Tech / Integration Partner
-├── Bundled offering → Solution Partner
-└── Joint product (rare) → Joint Venture
+### Step 2 — Tier classify
 
-Build market presence together
-├── Joint events, content, PR → Co-marketing Partner
-├── Industry positioning → Strategic Alliance
-└── Standards / consortium → Standards Partner
+Run `scripts/partner_tier_classifier.py --input intake.json --profile saas --output markdown`.
+Output ranks the partner into 1 of 5 tiers — REFERRAL / RESELLER / OEM / SI-CONSULTING /
+STRATEGIC — with deterministic floors. STRATEGIC requires named_accounts ≥ 5 AND
+multi-year commit AND dedicated resources. Skill emits rationale + kill criteria.
 
-Achieve a specific strategic goal
-├── Block a competitor → Defensive partnership
-├── Enter a new market → Market entry partnership
-└── Acquire capability → Strategic alliance (often pre-acquisition)
-```
+### Step 3 — Joint GTM plan
 
-See [references/partnership-types.md](references/partnership-types.md) for each type in depth: economic structure, contract patterns, KPIs, when each works / fails.
+Run `scripts/joint_gtm_planner.py --input gtm.json --profile saas --output markdown`.
+Output: 90-day plan with pre-launch milestones (training, certification, materials),
+launch motion (target accounts, sales play, MDF allocation), mid-quarter checkpoint, and
+90-day success criteria. Validates: cannot plan channel-led GTM for REFERRAL tier; cannot
+plan white-label for non-OEM tier.
 
----
+### Step 4 — Revshare model
 
-## Partner evaluation framework
+Run `scripts/revshare_modeler.py --input revshare.json --output markdown`. Computes
+margin per deal direct vs. via partner, recommended revshare % band based on partner
+contribution depth (sourced > influenced > delivered), break-even partner ROI, and
+long-term economics — at projected scale, does partner economics beat direct?
 
-Not every potential partner is worth the investment. Use this framework before committing.
+### Step 5 — Decide
 
-### Six evaluation dimensions
+Take tier + GTM plan + revshare band into the partnership committee. Skill does not sign
+the partner — you do. Document kill criteria in the contract so the unwind is mechanical
+when triggered.
 
-| Dimension | What to assess | Score (1-5) |
-|-----------|----------------|-------------|
-| **Strategic fit** | Does this partnership advance our strategy? Customer base overlap / vertical / region? | |
-| **Economic potential** | Realistic pipeline / revenue contribution over 24 months? | |
-| **Partner credibility** | Brand, financial stability, technical capability, customer references | |
-| **Mutual commitment** | Are they investing equally? Senior sponsor on their side? Resources committed? | |
-| **Operational fit** | Can our systems / processes / culture work together? | |
-| **Exit-ability** | If it doesn't work, can we wind down cleanly? Are we creating dependencies we can't reverse? |
+## Scripts
 
-### Scoring rubric
+- `scripts/partner_tier_classifier.py` — 5-tier classifier with deterministic floors per tier
+- `scripts/joint_gtm_planner.py` — 90-day joint GTM plan generator with tier-validated motion
+- `scripts/revshare_modeler.py` — revshare band + break-even ROI + long-term economics
 
-- 5 — strong yes
-- 4 — yes with minor caveats
-- 3 — mixed; substantial uncertainty
-- 2 — weak; significant concerns
-- 1 — no; deal-breaker
-
-**Total 25-30**: green-light; invest with confidence
-**Total 18-24**: yellow; structure carefully; small pilot first
-**Total < 18**: red; decline or substantially restructure
-
-Use `scripts/partner_evaluation_scorer.py --partner partner.yaml` to score a specific potential partner.
-
-### Killer questions to ask
-
-Before signing any significant partnership:
-
-1. **What does success look like in 12 months?** If both sides can't articulate the same answer, you don't have alignment.
-2. **What's their commitment level?** Headcount assigned? Budget? Executive sponsorship?
-3. **What's the realistic pipeline in next 12 months?** Specific accounts? Or vague "we have customers"?
-4. **Who's the day-to-day owner on each side?** Names + tenure + reporting line.
-5. **What happens if we don't hit our shared metrics?** Course-correct? Wind down? Renegotiate?
-
-If you can't get clear answers, the partnership is wishful thinking.
-
----
-
-## Partnership deal structures
-
-Different deal types call for different structures. Standard patterns:
-
-### Structure A: Standard reseller agreement
-
-- **Term**: 1-3 years, auto-renew
-- **Discount**: per published tier matrix
-- **Exclusivity**: usually non-exclusive
-- **Termination**: 90-day notice both sides
-- **Use when**: typical channel relationship
-
-### Structure B: Co-sell agreement (mutual customer)
-
-- **Term**: 1-2 years
-- **Compensation**: shared commission OR referral fee
-- **Joint marketing commitment**: optional
-- **Use when**: complementary offerings; existing or target shared customers
-
-### Structure C: OEM agreement
-
-- **Term**: 3-7 years (long; relationship-heavy)
-- **Royalty / rev-share**: % of partner revenue OR per-instance fee
-- **Exclusivity**: often partial (specific use case / market)
-- **Source code escrow**: usually required
-- **Termination**: complex (typically 12-24 months notice; transition rights)
-- **Use when**: deeply embedded technical relationship; high mutual investment
-
-### Structure D: Strategic alliance
-
-- **Term**: open-ended; reviewed annually
-- **Resources committed**: explicit (e.g., 2 FTEs per side, $X budget per year, joint roadmap session quarterly)
-- **Governance**: steering committee (executive sponsors meet quarterly)
-- **Specific deliverables**: joint product features, joint customer wins, joint thought leadership
-- **Use when**: 5+ year strategic relationship; not transactional
-
-### Structure E: Tech / integration partnership
-
-- **Term**: 1-3 years
-- **Compensation**: typically none direct; mutual value from joint customers
-- **Certification process**: defined (testing, documentation)
-- **Marketplace listing**: typically included
-- **Co-marketing**: optional but common
-- **Use when**: integration creates joint customer value; no direct revenue flow
-
-See [references/partnership-deal-structures.md](references/partnership-deal-structures.md) for the full deal-structure templates with negotiation guides.
-
----
-
-## Partner program design
-
-When you scale beyond a few partners, you need a program.
-
-### Three pillars of a partner program
-
-| Pillar | Components |
-|--------|------------|
-| **Recruitment** | Target partner profile; outreach motion; intake / qualification; onboarding |
-| **Enablement** | Training; certification; technical resources; sandbox; partner portal; marketing materials |
-| **Activation** | Deal registration; lead sharing; MDF / co-marketing; co-selling motion; quarterly business reviews |
-
-### Standard program elements
-
-- **Partner agreement** (master): tenant-of-the-relationship
-- **Tier structure** (Authorized → Silver → Gold → Platinum): different benefits + requirements per tier
-- **Deal registration**: protect partner-developed opportunities
-- **Certification program**: train + test partners on your product
-- **Partner portal**: deal reg, MDF, training, marketing materials, lead sharing
-- **MDF (Marketing Development Funds)**: co-funded marketing
-- **Channel manager(s)**: 1 per 10-15 active partners
-- **Annual partner conference**: community building + recognition
-
-See [references/partner-program-design.md](references/partner-program-design.md) for the full program template including tier definitions, benefit / requirement matrices, and the "Year 1 / Year 2 / Year 3" maturity model.
-
-Use `scripts/partner_program_designer.py --org-spec org.yaml` to generate a baseline program design based on company stage + ICP + target partner volume.
-
----
-
-## Partnership ROI modeling
-
-Partnerships consume real investment. Headcount, MDF, technology, executive time. Model the ROI before committing.
-
-### ROI model template
-
-```
-3-year cumulative partnership P&L
-
-Year 1 (investment year):
-  Revenue from partnership: $X
-  Costs:
-    Partnership manager headcount: $200k
-    Engineering integration (one-time): $300k
-    Marketing / co-launch: $50k
-    Partner enablement (content, training): $50k
-    Travel / events: $30k
-    TOTAL Y1 cost: $630k
-  Y1 net: $X - $630k
-
-Year 2:
-  Revenue from partnership: $Y (growth)
-  Costs:
-    Partnership manager: $200k
-    Engineering ongoing: $100k
-    Marketing: $80k
-    Enablement: $30k
-    Travel / events: $40k
-    TOTAL Y2 cost: $450k
-  Y2 net: $Y - $450k
-
-Year 3:
-  Revenue: $Z (mature)
-  Costs: $400k (stable)
-  Y3 net: $Z - $400k
-
-3-year cumulative net: ($X + $Y + $Z) - $1,480k
-```
-
-If 3-year cumulative net is negative, the partnership doesn't pay back. Common reasons:
-- Revenue estimates too optimistic
-- Forgotten costs (executive time, opportunity cost)
-- Partner under-performs on commitments
-- Market shift makes the partnership less relevant
-
-Use `scripts/partnership_roi_modeler.py --partnership partnership.yaml` for the full model.
-
----
-
-## End-to-end workflows
-
-### Workflow: Evaluate a new partner opportunity
-
-1. **Initial conversation** with potential partner — understand their pitch
-2. **Gather data** for evaluation: their company, their pipeline expectations, their commitment
-3. **Score using evaluation framework** — `scripts/partner_evaluation_scorer.py`
-4. **If score < 18**: decline or pilot-scope only
-5. **If score 18-24**: pilot scope (3-6 months, limited investment)
-6. **If score 25+**: standard partnership agreement; full investment
-
-### Workflow: Stand up a partner program
-
-1. **Define target partner profile (TPP)**: ideal partner attributes (size, vertical, region, capability)
-2. **Pick partnership types** in scope (resellers? OEM? tech partners?)
-3. **Design tier structure** — `scripts/partner_program_designer.py`
-4. **Build foundational tools**: partner portal, deal-reg, certification
-5. **Recruit pilot cohort** (3-5 partners) — manual, high-touch
-6. **Iterate based on pilot feedback** — usually 6 months
-7. **Scale recruitment** — content marketing, outbound, partner events
-8. **Add channel managers** as portfolio grows (1 per 10-15 active partners)
-
-### Workflow: Structure a specific partnership deal
-
-1. **Identify partnership type** using the decision tree
-2. **Score the partner** — `scripts/partner_evaluation_scorer.py`
-3. **Pick deal structure** matching the type
-4. **Model ROI** — `scripts/partnership_roi_modeler.py`
-5. **Draft term sheet** (key business terms)
-6. **Negotiate** — alignment on commitment, timelines, exit
-7. **Legal review** + contract — `business-growth/contract-and-proposal-writer`
-8. **Internal approval** — Deal Desk + CRO/CFO/CEO depending on scale
-
-### Workflow: Audit existing partner portfolio
-
-1. **List all active partners** + key data: revenue, costs, deals, tier
-2. **Score each** against evaluation framework — `scripts/partner_evaluation_scorer.py`
-3. **Identify low-ROI partners** — bottom quartile by contribution per investment hour
-4. **Decide per partner**:
-   - **Invest more** (top quartile, expand commitment)
-   - **Maintain** (middle, status quo)
-   - **Wind down** (bottom; explicit timeline to exit gracefully)
-5. **Quarterly review** of portfolio with CRO
-
----
-
-## Anti-patterns
-
-- **"Strategic" partnership that's actually transactional.** If the only thing exchanging is money, it's transactional; call it that. Strategic means joint goals + shared roadmap + executive commitment.
-- **Partner stack with no portfolio strategy.** Signing every partner that asks. Quality > quantity. 10 productive partners beat 100 zombies.
-- **No partnership owner.** Partnership exists in nobody's job. It withers.
-- **Resource asymmetry.** You commit 3 FTEs; they commit 0.5. The partnership skews to their convenience.
-- **Promises without commitments.** "We'll do joint webinars." When? With what budget? Whose role to organize?
-- **Open-ended exclusivity.** "Exclusive in this region forever" without performance gates. Lose flexibility for nothing in return.
-- **OEM deal with no source-code escrow.** Customer-impact risk if your company goes away.
-- **Strategic alliance with no governance.** No quarterly review = no executive engagement = partnership drifts.
-- **Partner program with no enablement.** Partners can't sell what they don't understand.
-- **Tier benefits that aren't worth tier requirements.** Partners don't advance because there's no incentive.
-- **Co-marketing dollars wasted on activities without pipeline.** Great event, zero attribution.
-
----
-
-## Tooling outputs
-
-| Script | Input | Output |
-|--------|-------|--------|
-| `scripts/partner_evaluation_scorer.py` | Partner spec YAML | 6-dimension score (1-5 each), total, recommendation (green-light / yellow / red) |
-| `scripts/partnership_roi_modeler.py` | Partnership spec YAML | 3-year P&L, payback period, sensitivity analysis |
-| `scripts/partner_program_designer.py` | Org spec YAML | Recommended program structure: tiers, benefits, requirements, headcount needed |
-
-All scripts: stdlib only, argparse CLI, JSON or markdown output.
-
----
+All scripts: stdlib only. `--help` and `--sample` work on all three.
 
 ## References
 
-- [partnership-types.md](references/partnership-types.md) — 5 partnership types in depth + economic structure + when each works
-- [partnership-deal-structures.md](references/partnership-deal-structures.md) — deal templates per type + negotiation guides
-- [partner-program-design.md](references/partner-program-design.md) — full program design with tier matrices + maturity model
+- `references/channel_partner_canon.md` — Caro on HP indirect channels, Chintagunta on channel economics, Hessling on partner programs, Forrester channel software stack, IDC channel research, Tien Tzuo subscription-channel models, Geoffrey Moore whole-product partnerships
+- `references/joint_gtm_canon.md` — Aaron Ross *Predictable Revenue* (cold-source vs partner), Winning by Design, Jay McBain on co-sell, Microsoft Partner Network playbook, AWS Partner Network research, SiriusDecisions partner benchmarks, Bridge Group SaaS partner data
+- `references/partnership_anti_patterns.md` — Forrester partner-led-from-your-pipeline research, Tom Tunguz on channel conflict, Hessling failure analyses, MIT Sloan on disproportionate strategic revshare, HP channel post-mortems, IBM channel-conflict cases, Salesforce AppExchange research
 
----
+## Assumptions
 
-## Related skills
+- A partner who cannot produce evidence of independent demand (named accounts, end-customer
+  relationships, their own sales team) is hunting preferential terms, not a partner.
+- Industry profiles (`--profile`) tune defaults — they don't override your data.
+- Revshare % bands are recommendations; the contract negotiation, MDF policy, and
+  exclusivity terms are human commercial decisions outside this skill.
+- "Partner-sourced" requires the partner to have introduced the deal AND owned the
+  primary relationship. "Partner-influenced" pays at a lower band. Pay attribution
+  matters more than slide-deck claims.
+- This skill is for partnership design, not signed-partner deal management — once
+  signed, per-deal commercial review routes to `deal-desk`.
+- Kill criteria are mandatory. A partnership without a written unwind trigger compounds
+  the bad-partner problem over years.
 
-- `business-growth/channel-economics` — per-deal financial mechanics underneath partnership structure
-- `business-growth/deal-desk` — per-deal approval mechanics for partner-mediated deals
-- `business-growth/pricing-strategy` — pricing flexibility / floor for partner deals
-- `business-growth/contract-and-proposal-writer` — partner contracts (MSA, partner agreement, OEM agreement)
-- `c-level-advisor/cs-cro-advisor` — strategic-level partnership decisions
-- `c-level-advisor/cs-ceo-advisor` — board-level alliance decisions
+## Anti-patterns
+
+- **"Partner = anyone who asked."** A partner with no independent demand is a discount hunter.
+  Run the tier classifier — REFERRAL tier exists precisely to absorb these without giving
+  away reseller margin.
+- **Granting OEM / white-label terms without margin sufficient to fund support.** OEM means
+  you support a customer you don't own. If the revshare doesn't fund Tier-2 support cost,
+  the OEM deal is a losing trade.
+- **Paying sourced-tier revshare on influenced-only deals.** Influenced ≠ sourced. The deal
+  was going to close anyway. Pay the influenced rate.
+- **No kill criteria for under-performing partner.** "Strategic alliances" without sunset
+  clauses become permanent obligations after the executive sponsor leaves.
+- **Channel conflict ignored until reps quit.** When your direct rep and your partner both
+  show up at the same account, you lose either the rep or the partner. Decide the rules of
+  engagement before, not after.
+- **Exclusive territory granted to a weak partner.** This locks out the strong partner who
+  would have actually sourced the deals.
+- **MDF without ROI accountability.** Market Development Funds without named pipeline,
+  reported ROI, and a quarterly true-up are subsidy, not investment.
+- **No offboarding plan when partnership ends.** Customer continuity, data hand-back, IP
+  cleanup, and brand take-down must be pre-negotiated. They're impossible to negotiate after
+  the relationship has soured.
+
+## Distinct from
+
+- **business-growth/sales-engineer** — technical sale: demos, POCs, integration scoping.
+  Operates after the partnership decision is made and a deal is in flight.
+- **channel-economics** (sibling) — cost-to-serve and ROI math on an existing channel.
+  Quantifies whether a signed partner is profitable. partnerships-architect decides
+  whether to sign in the first place and at what tier.
+- **c-level-advisor/cro-advisor** — strategic CRO judgment (when to hire a VP Channel,
+  whole-company revenue mix decisions). partnerships-architect is per-partnership.
+- **c-level-advisor/ma-playbook** — when the answer is "acquire them" not "partner with
+  them." Trigger: the partner has independent moat you cannot replicate, or the
+  partnership requires equity to align incentives. Re-route to ma-playbook.
+- **deal-desk** — per-deal discount approval on signed partner contracts.
+
+## Forcing-question library (Matt Pocock grill discipline)
+
+Walked one at a time by `/cs:grill-commercial` or the orchestrator. Recommended answer +
+canon citation per question. Never bundled. Lock 1-3 before opening 4-6.
+
+1. **"Name 5 end customers this partner has already sold to in the last 12 months — at companies you would target yourself."**
+   Recommended: if they cannot, they have no independent demand. Sign at REFERRAL tier only,
+   if at all. Reseller/OEM/Strategic floors require demonstrated end-customer relationships.
+   Canon: Joe Hessling — partner-program failure analyses identify "no independent demand"
+   as the #1 root cause of dead partner tiers.
+
+2. **"Is this partner asking for preferential commercial terms, or asking how to bring you customers?"**
+   Recommended: discount hunters lead with terms; real partners lead with accounts. Listen
+   to the first 30 minutes of the first meeting.
+   Canon: Forrester channel research — 60%+ of "partner inquiries" at early-stage SaaS are
+   discount hunting, not channel investment.
+
+3. **"What's the joint value proposition in one sentence, and who is the named end-customer it serves?"**
+   Recommended: if there is no joint value prop distinct from either party's solo offering,
+   there is no partnership — there is co-marketing at best.
+   Canon: Geoffrey Moore (*Crossing the Chasm*) — whole-product partnerships exist when
+   neither party alone delivers the customer outcome.
+
+4. **"At what % discount / revshare does this partnership beat the direct-sale economics, and at what scale?"**
+   Recommended: model break-even pipeline volume. If partner-sourced deals must exceed
+   30% of channel volume to beat direct, and partner can plausibly deliver 5%, you have
+   built a losing program.
+   Canon: Pradeep Chintagunta (Chicago Booth) on channel economics — channel partnerships
+   without volume floor break even in theory and lose money in practice.
+
+5. **"What are the named kill criteria for unwinding this partnership, and are they in the contract?"**
+   Recommended: minimum pipeline floor by quarter, minimum certified resources, minimum
+   joint deals closed, 90-day cure period. Unwinding without pre-agreed criteria becomes
+   a 2-year legal battle.
+   Canon: IBM channel-conflict case studies (1990s post-divestiture) — undocumented kill
+   criteria converted bad partners into permanent obligations.
+
+6. **"If this partner sells to one of YOUR direct accounts, who wins — your rep or them?"**
+   Recommended: Rules of Engagement in writing, signed before kickoff. Territory by named
+   account, by segment, or by geo. Conflict resolution at named human, not committee.
+   Canon: Jay McBain (Canalys) — channel conflict is the #1 partner program killer; written
+   ROE published before partner signs prevents 80% of disputes.
+
+7. **"Is this a partnership, or should this be an acquisition?"**
+   Recommended: if the partner has independent moat you cannot replicate AND the
+   partnership requires multi-year exclusivity AND the partnership requires equity-like
+   alignment, you're describing an acquisition. Re-route to `ma-playbook`.
+   Canon: HP channel post-mortems (Indigo, EDS partial integrations) — partnerships
+   structured as acquisitions-without-equity destroy more value than either pure path.
+
+Walk depth-first. Lock 1-3 (is this a real partner?) before opening 4-7 (is the structure
+right?). After all 7 are answered, invoke `partner_tier_classifier.py` →
+`joint_gtm_planner.py` → `revshare_modeler.py` in sequence.

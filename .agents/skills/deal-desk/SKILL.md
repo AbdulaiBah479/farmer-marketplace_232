@@ -1,373 +1,138 @@
 ---
 name: deal-desk
-description: >
-  Deal desk: the cross-functional function that reviews, approves, and structures
-  non-standard sales deals. Use when standing up a deal-desk function from scratch,
-  defining the deal-desk charter and SLA, building approval-threshold matrices
-  (discount %, contract length, custom terms, payment terms, custom SLAs),
-  designing a deal-review packet template, routing deals through the right
-  approvers, analyzing deal velocity to find bottlenecks, or auditing recent
-  deals for policy compliance. Pairs with our existing pricing-strategy
-  (sets the prices) and revenue-operations (measures the funnel) skills —
-  this one runs the operational machinery between those two.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: commercial
-  domain: business-growth
-  updated: 2026-05-27
-  tags: [deal-desk, sales-operations, discount-approval, commercial-operations, contract-review, deal-velocity, gtm]
+description: Use when reviewing a specific inbound deal before close — when sales has asked for a discount that exceeds AE authority, when the customer has redlined the MSA, when per-deal economics (margin after discount, multi-year payment shape, indemnity exposure) need to be quantified, or when discount approval needs to be routed to a named human approver (Sales Director, VP Sales, CFO, CRO, General Counsel). Covers deal review, discount approval routing, per-deal margin scoring, deal exception handling, MSA redline triage, contract landmine detection (uncapped indemnity, MFN, perpetual license-back, missing DPA), and named-approver chain assembly. NEVER auto-approves — every output is a numeric scorecard plus a routing recommendation to a named human.
+version: 2.8.0
+author: claude-code-skills
+license: MIT
+tags: [commercial, deal-desk, discount, margin, approval, redline, msa, terms]
+compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
 ---
 
-# Deal Desk
+# deal-desk
 
-End-to-end deal-desk operational practice: charter, approval thresholds, deal-review packet design, routing automation, velocity analysis, and the governance that turns "every deal is a snowflake" into "we close non-standard deals in 48 hours predictably."
+Per-deal review and discount-approval routing. Scores deal margin + risk, routes discount approval to the right human, redlines T&Cs against commercial policy. **Never auto-approves.** Every output is a score plus a routing recommendation to a named human approver.
 
-This skill is provider-agnostic: works whether your CRM is Salesforce, HubSpot, Pipedrive, or homegrown. The patterns and decisions transfer.
+## Purpose
 
----
+Deal Desk / RevOps / sales leadership live at the moment between *sales-team-asks-for-discount* and *CFO/CRO/legal-signs*. This skill quantifies the asks and routes them.
 
-## When to use this skill
+Three deterministic tools:
 
-| Situation | Skill applies |
-|-----------|---------------|
-| Starting a deal-desk function from scratch | Yes — start with **charter design** |
-| Reviewing existing deal-desk for slowness / inconsistency | Yes — use `scripts/deal_velocity_analyzer.py` + **bottleneck patterns** |
-| Defining who can approve what discount / term | Yes — use **approval threshold matrix** + `scripts/discount_authority_router.py` |
-| Building the deal-review packet template | Yes — see **deal-review packet** section + `scripts/deal_review_packet.py` |
-| Approving / declining a specific deal | Use the packet generator + approval router |
-| Setting pricing strategy | Use `business-growth/pricing-strategy` first |
-| Forecasting / measuring pipeline | Use `business-growth/revenue-operations` |
-| Negotiating an individual contract | Pair with `business-growth/contract-and-proposal-writer` |
+1. `deal_scorer.py` — Scores a deal 0-100 across 5 dimensions (margin, risk, strategic value, commercial fit, term shape) and assigns one of four verdicts: **APPROVE / REVIEW / ESCALATE / DECLINE** — each tied to a named approver chain.
+2. `discount_approval_router.py` — Maps a discount-percent + deal-size + tier to a named approver chain (AE → Manager → Director → VP → CFO/CRO) with estimated cycle days. Honors industry-tuned policy bands.
+3. `terms_redliner.py` — Detects 10 founder/seller-killer patterns in deal terms (uncapped indemnity, MFN, perpetual license-back, missing DPA, NET-60+, broad non-solicit, etc.) with severity + standard counter + named legal/commercial approver.
 
----
+## When to use
 
-## What deal desk does (and doesn't)
+Invoke this skill when:
 
-**Does:**
-- Review non-standard deals: discounts beyond rep authority, custom legal terms, custom SLAs, multi-product bundles, payment terms outside policy
-- Make the approval decision (or route to the right approver)
-- Structure the deal: pricing, terms, ramp schedule, success criteria
-- Maintain the deal-desk **policy** — what's standard, what needs approval
-- Track deal velocity (time from request → decision → signature)
-- Produce evidence for finance / audit (every concession traceable)
+- Sales has flagged a discount request above AE authority.
+- A customer has returned a redlined MSA and you need triage before routing to legal.
+- The deal needs CFO sign-off and you want a defensible margin breakdown.
+- An RFP response requires multi-year terms and you need to score the shape.
+- A renewal expansion is bundled with a discount and you need to verify policy fit.
+- You're building a deal-desk approval queue and need consistent routing.
 
-**Doesn't:**
-- Set the published pricing (that's pricing strategy)
-- Negotiate with the customer (that's the sales rep / AE)
-- Close the sale (that's the rep + customer success)
-- Run the order-to-cash workflow (that's billing / RevOps)
-- Replace legal review (legal is one of the approvers, not the function itself)
+**Do NOT use this skill to**: author the proposal (use `business-growth/contract-and-proposal-writer`), redesign the discount matrix (use the `commercial-policy` sibling skill), or do deep legal redline of full contract text (use `c-level-advisor/skills/general-counsel-advisor`).
 
-A clean deal-desk = the lubricant. Without it, every non-standard deal turns into a multi-week negotiation among engineering / product / legal / finance / executive. With it, those people are consulted by deal desk as needed and the rep gets a yes/no in days.
+## Workflow
 
----
+1. **Intake the deal** — Sales/AE fills `assets/deal_intake_template.md` with ARR, term, discount, payment terms, customer tier, strategic flags, and any customer-flagged term redlines (20-min fill-out).
+2. **Score margin + risk** — Run `deal_scorer.py --input deal.json --profile {saas|enterprise-software|services|marketplace}`. Read the composite + per-dimension breakdown + verdict.
+3. **Route the discount** — Run `discount_approval_router.py --input deal.json --profile <same>`. Get the named approver chain + estimated cycle days. Modifiers (enterprise floor, SMB fast-lane) are surfaced explicitly.
+4. **Flag the redlines** — Run `terms_redliner.py --input deal_terms.json`. Get ranked CRITICAL/HIGH/MEDIUM/LOW findings with the counter-language and the approver who must sign each.
+5. **Assemble the packet** — Combine the three outputs into a deal-desk review packet. Always include the named approver chain. The packet is **a recommendation**, not an approval.
 
-## Deal-desk charter (template)
+## Scripts
 
-Every deal desk needs a written charter. Use this template:
+| Script | Purpose | Industry profiles |
+|---|---|---|
+| `scripts/deal_scorer.py` | 5-dimension scorecard with verdict + chain | saas, enterprise-software, services, marketplace |
+| `scripts/discount_approval_router.py` | Discount % → named approver chain + cycle days | saas, enterprise-software, services, marketplace |
+| `scripts/terms_redliner.py` | 10-pattern landmine scanner with counters | n/a (terms-driven) |
 
-```yaml
-purpose:
-  Deal Desk reviews, approves, and structures non-standard deals to enable
-  sales to close faster while keeping commercial / legal / financial risk
-  within company tolerance.
-
-scope:
-  In-scope:
-    - All deals > $X ARR
-    - All deals with discount > Y%
-    - All deals with non-standard terms (custom SLAs, custom legal language,
-      payment terms beyond Net 30, ramp deals, multi-year discounts > 12 months
-      of standard, bundles spanning multiple product lines)
-    - All renewals with > 20% expansion or > 10% contraction
-    - All deals to enterprise (>1000 employees) or regulated industries
-  Out-of-scope:
-    - Self-serve / PLG transactions
-    - Standard renewals within auto-renewal terms
-    - Trial extensions < 30 days
-    - Add-ons < $X per existing customer
-
-sla:
-  - Standard deal-desk review (no exec approval needed): 1 business day
-  - Deal needing CFO/CRO approval: 2 business days
-  - Deal needing CEO/Board approval: 5 business days
-  - Legal-only review (no commercial concession): 2 business days
-
-intake_format:
-  Sales submits via [Salesforce form / CPQ tool / Slack form]. Required fields:
-    - Customer name + size + industry
-    - Product(s) + ACV
-    - Requested deviation from standard (specific list)
-    - Justification (competitor situation, customer constraint, strategic value)
-    - Standard-pricing total + requested total
-    - Contract length + payment terms
-    - Implementation / SLA requirements
-
-decision_inputs:
-  - Customer LTV estimate
-  - Strategic value (logo, reference, vertical foothold)
-  - Risk (credit, compliance, integration)
-  - Margin impact
-
-outputs:
-  - Approve / decline / counter
-  - If approve: signed approval packet with terms, conditions, expiration date
-  - If counter: list of negotiable items + non-negotiables
-  - If decline: reasoning + alternatives
-
-team:
-  Deal-desk lead: <name>
-  Deal-desk analysts: <names>
-  Standing approvers: CRO, CFO, General Counsel, VP Product (escalation paths)
-  Consulted as-needed: Engineering Lead, Security Lead, Customer Success Lead
-
-metrics:
-  - Median time-to-decision (target: 1 business day)
-  - Decision distribution (% approved, % declined, % countered)
-  - Discount-on-discount %  (deals where requested discount was further negotiated up)
-  - Discount % vs ACV (correlation; outliers reviewed monthly)
-  - Win rate of deal-desk-approved deals
-  - Concession follow-through (did the customer keep their side?)
-```
-
-See [references/deal-desk-charter-and-process.md](references/deal-desk-charter-and-process.md) for the full charter template, including sub-charters per region, intake form spec, and the standard SLAs.
-
----
-
-## Approval threshold matrix
-
-The matrix defines: for each deal characteristic (discount %, contract length, custom term type), who can approve it.
-
-### Standard matrix template
-
-| Deal characteristic | Rep | Sales Manager | Director | VP Sales | CRO | CFO | CEO |
-|---------------------|-----|---------------|----------|----------|-----|-----|-----|
-| Discount 0-10% | ✓ | | | | | | |
-| Discount 10-20% | | ✓ | | | | | |
-| Discount 20-30% | | | ✓ | | | | |
-| Discount 30-40% | | | | ✓ | | | |
-| Discount 40-50% | | | | | ✓ | | |
-| Discount > 50% | | | | | | | ✓ |
-| ACV > $250k | | ✓ | | | | | |
-| ACV > $1M | | | | ✓ | | | |
-| ACV > $5M | | | | | | | ✓ |
-| Multi-year > 12mo standard | | ✓ | | | | | |
-| Non-standard payment terms | | | | | | ✓ | |
-| Custom SLA / penalties | | | | (with CCO) | | | |
-| Custom legal language | | | | | | | (Legal must concur) |
-| MSA red-line on liability cap | | | | | | | (Legal must concur) |
-| Most-favored-nation clause | | | | | | ✓ | |
-| Acceptance criteria / payment-on-acceptance | | | | | | ✓ | |
-| Multi-product / cross-BU bundle | | | (each BU lead approves) | | | | |
-| Whitelabel / OEM rights | | | | | | | ✓ |
-
-Customize per company stage, ACV distribution, and authority preference (some orgs want CRO at 30%, others delegate further down).
-
-### Stacking rule
-
-When multiple non-standard items apply, **the highest required approver applies.** A $1M deal at 25% discount with custom SLA needs VP Sales (ACV) AND Director (discount) AND VP Sales+CCO (custom SLA) → effectively requires VP Sales sign-off + CCO + Legal concurrence.
-
-Use `scripts/discount_authority_router.py --deal deal.yaml` to compute the required approvers for any deal.
-
-See [references/approval-thresholds-and-routing.md](references/approval-thresholds-and-routing.md) for the full matrix design guide, regional variants, escalation paths, and routing automation patterns.
-
----
-
-## The deal-review packet
-
-Every non-standard deal gets a packet. Without it, approvers ask the same questions repeatedly and decisions take days instead of hours.
-
-### Standard packet structure
-
-```markdown
-# Deal Review: <Customer Name>
-
-## Summary
-- Customer: <name, size, industry>
-- ACV: $<amount>
-- Discount %: <%> (vs standard $<list-price>)
-- Contract: <length>, <payment terms>
-- Decision needed by: <date>
-
-## Standard vs Requested
-| Item | Standard | Requested | Delta |
-|------|----------|-----------|-------|
-| ACV  | $X       | $Y        | -Z%   |
-| Term | 12mo     | 36mo      | +24mo |
-| Payment | Net 30 | Net 60   | +30d  |
-| SLA  | 99.5%    | 99.9%     | +0.4% |
-| Liability cap | 1x fees | 2x fees | +1x |
-| Termination for convenience | No | Yes (90d) | New |
-
-## Justification
-- Why customer wants this: <competitor situation, budget cycle, etc.>
-- Why we're considering: <strategic value, logo, vertical>
-- Customer leverage: <alternatives they have>
-
-## Financial impact
-- Standard ARR: $X
-- Discounted ARR: $Y (Z% off)
-- Net new gross margin: $A (with cost overlay)
-- Projected LTV with this discount: $B
-- Discount payback if customer renews: <years>
-
-## Strategic value
-- Logo value: <high/medium/low — reasoning>
-- Reference value: <will they be a public ref? case study?>
-- Vertical foothold: <do we want this vertical?>
-- Competitive replacement: <who are we displacing?>
-
-## Risk
-- Credit risk: <score / payment history>
-- Compliance risk: <regulated? data residency?>
-- Technical fit risk: <integration complexity>
-- Concession follow-through: <are they likely to honor commitments?>
-
-## Required approvers (per matrix)
-- [ ] Director: <name>
-- [ ] VP Sales: <name>
-- [ ] CFO: <name>
-- [ ] Legal: <name>
-
-## Recommendation (from deal desk)
-<Approve / Counter / Decline> — with reasoning
-
-## Conditions if approved
-- Discount expires <date>
-- Customer must agree to: <reference call, case study, etc.>
-- Customer agrees this is single-instance (not precedent)
-- Payment must close by <date>
-```
-
-Use `scripts/deal_review_packet.py --deal deal.yaml` to generate this packet from a deal spec.
-
----
-
-## Velocity analysis
-
-A slow deal desk strangles sales. Measure and tune.
-
-### Key metrics
-
-| Metric | Healthy | Warning |
-|--------|---------|---------|
-| Median time-to-decision | < 1 business day | > 3 days |
-| 90th percentile time-to-decision | < 3 business days | > 7 days |
-| % of deals waiting on a single approver > 24h | < 10% | > 30% |
-| Deals stuck > 7 days | 0 | > 5 |
-| Sales rep satisfaction with deal desk (NPS) | > 50 | < 0 |
-| % approved (high approval rate may mean threshold too low) | 60-80% | > 95% or < 40% |
-| Discount-on-discount: deals where customer negotiated up after deal-desk approval | < 10% | > 30% |
-
-Run `scripts/deal_velocity_analyzer.py --deals deals.csv` to compute these from a CRM export.
-
-### Common bottlenecks
-
-| Bottleneck | Diagnosis | Fix |
-|------------|-----------|-----|
-| Single approver bottleneck (one person on everything) | Routing matrix concentrated authority | Delegate; add back-ups; raise thresholds |
-| Legal review takes a week | Legal sees every deal | Standard MSA + pre-approved clause library; Legal only on deviations |
-| Engineering needed for SLA review | Custom SLAs every time | Publish standard SLA tiers; only deviations route to eng |
-| Approval cycle back-and-forth | Packet missing key info | Use the standard packet template; reject incomplete submissions |
-| Long executive lag | Exec doesn't have context for every deal | Weekly deal review meeting for batch decisions on smaller items |
-| Sales submits incomplete packets | Reps don't know what to include | Intake form that enforces required fields |
-| No SLA enforcement | Deals sit in queue with no urgency | Publish + report SLA; aging dashboard visible to leadership |
-
-See [references/discount-and-concession-playbook.md](references/discount-and-concession-playbook.md) for the discount/concession patterns: legitimate reasons for each concession type, how to evaluate, alternatives to discounting, and how to structure performance-based discounts.
-
----
-
-## End-to-end workflows
-
-### Workflow: A rep submits a non-standard deal
-
-1. **Rep submits** via intake form: customer + ACV + requested deviation + justification
-2. **Deal desk triages** within 4h: assigns analyst, validates packet completeness, requests missing info
-3. **Deal desk reviews** within 1 business day: financial impact, strategic value, risk
-4. **Deal desk recommends** approve / counter / decline
-5. **Route to approver(s)** per matrix (auto via `scripts/discount_authority_router.py`)
-6. **Approver decides** within SLA
-7. **If approved**: packet signed off, conditions sent to rep with expiration
-8. **If countered**: deal desk works with rep on alternative structure
-9. **If declined**: clear reason + alternatives sent to rep + customer
-
-### Workflow: Stand up a deal desk from scratch
-
-1. **Draft charter** with sales, finance, legal sign-off
-2. **Build the approval matrix** — interview key stakeholders, document existing tribal knowledge
-3. **Design intake form** — CRM-integrated or Slack-bot
-4. **Hire / appoint deal desk lead + analyst(s)**
-5. **Train sales** — what triggers deal desk, what info is needed, what to expect
-6. **Soft launch** — manual operation for 1 month; track metrics
-7. **Iterate** — refine thresholds, automate routing, publish SLAs
-8. **Quarterly review** — metrics, threshold adjustments, charter updates
-
-### Workflow: Audit deal-desk performance
-
-1. **Export deals** from CRM for the period (CSV with deal IDs, stages, approval timestamps, discounts)
-2. **Run velocity analyzer** — compute medians, percentiles, aging, approver bottlenecks
-3. **Sample 10-20 deals** for qualitative review (was the packet complete? were conditions met?)
-4. **Identify patterns** — are certain reps over-discounting? are certain customers getting MFN clauses inappropriately?
-5. **Propose adjustments** — to charter, thresholds, intake form, training
-6. **Present to leadership** with metrics + recommendations
-
-### Workflow: Quarterly threshold review
-
-Thresholds drift. Quarterly:
-
-1. **Pull discount distribution** for the quarter
-2. **Identify outliers** — deals where discount % was anomalous for ACV / segment
-3. **Compare approval rates** by threshold — if 30%+ discount deals get approved 95%+ of the time, the threshold is too low
-4. **Compare win rates** by discount band — does deeper discount actually improve win rate, or does it just give up margin?
-5. **Adjust thresholds** based on data + market shift
-6. **Publish new matrix** with effective date; train sales
-
----
-
-## Anti-patterns
-
-- **Deal desk as bottleneck.** SLAs published but ignored; deals stack up; sales builds workarounds. Measure + enforce SLAs.
-- **Deal desk that always says yes.** Approval rate > 95% means thresholds are too low — you're rubber-stamping. Tighten or raise thresholds.
-- **Deal desk that always says no.** Approval rate < 40% means policy is too strict OR sales doesn't understand it. Investigate root cause.
-- **No deal-desk policy.** Every deal evaluated case-by-case. Inconsistent decisions; legal exposure; reps gaming the system.
-- **Concentrated authority.** One person approves everything → bottleneck + bus factor. Delegate.
-- **Pricing strategy disguised as deal-desk policy.** If 80% of deals need discounting, the published price is wrong. Fix pricing.
-- **Discount creep.** Each deal raises the bar for the next; eventually published price is irrelevant. Track + reset.
-- **Concession with no quid pro quo.** Customer asks for 20% discount; you give 20% discount. Always trade: 20% for case study, 20% for 3yr contract, etc.
-- **No expiration on quotes.** Customer can come back in 6 months and demand the same terms. Always time-box (typically 30-60 days).
-- **Single-instance language never enforced.** "This is a one-time exception" → next year the customer cites it as precedent.
-
----
-
-## Tooling outputs
-
-| Script | Input | Output |
-|--------|-------|--------|
-| `scripts/deal_review_packet.py` | Deal spec YAML | Markdown deal-review packet with summary, financials, strategic value, risk, approver list, recommendation template |
-| `scripts/discount_authority_router.py` | Deal spec YAML + approval matrix YAML | Required approver(s), routing order, escalation path, SLA-aware ordering |
-| `scripts/deal_velocity_analyzer.py` | CSV of deals from CRM export | Median / p90 time-to-decision, aging dashboard, approver bottleneck identification, discount-on-discount analysis |
-
-All scripts: stdlib only, argparse CLI, JSON or markdown output.
-
----
+All three: stdlib-only, `--help`, `--sample`, `--input <json>`, `--output {human,json}`.
 
 ## References
 
-- [deal-desk-charter-and-process.md](references/deal-desk-charter-and-process.md) — full charter template, intake form spec, SLA framework
-- [approval-thresholds-and-routing.md](references/approval-thresholds-and-routing.md) — matrix design, regional variants, escalation paths, automation patterns
-- [discount-and-concession-playbook.md](references/discount-and-concession-playbook.md) — concession types, legitimate reasons, alternatives, performance-based structures
+- `references/deal_desk_canon.md` — Deal-desk operating practice: SaaStr playbooks (Jason Lemkin), Winning by Design (van der Kooij + Reichl), Forrester research, RevOps Co-op, OpenView benchmarks, Bridge Group AE comp, Salesforce Deal Desk best practices.
+- `references/discount_economics.md` — Discount math + LTV impact: David Skok (For Entrepreneurs), Bessemer State of the Cloud, Tomasz Tunguz, OpenView NRR research, Pacific Crest + KeyBanc SaaS surveys, Insight Partners revenue ops. Includes worked margin math (a 30% discount on an 80% gross-margin product loses 37.5% of margin, not 30%).
+- `references/contract_landmines.md` — 10+ named landmine patterns with example counter-language: YC startup library, Robert Klingberg (Founder's Guide to SaaS Agreements), Bowman + Brooke redline guides, IACCM/WorldCC commercial management research, Practical Law contracts library, Bradley Tusk on enterprise contracts, GC100 guidance.
 
----
+## Assumptions
 
-## Related skills
+- The skill assumes the **commercial policy already exists** (discount bands, payment-terms norms, indemnity caps). It applies the policy; it does not design it. See the `commercial-policy` sibling skill for policy design.
+- Industry profiles bake in *customary* thresholds. If your company has a documented discount matrix, pass it via `policy_thresholds` in the input JSON to override.
+- The terms redliner detects the 10 most common landmines. It is **not** a substitute for General Counsel review on the full contract.
+- Scoring weights (margin 30%, risk 20%, strategic 15%, commercial 20%, term 15%) reflect a CFO-leaning bias. RevOps-led shops may want to reweight; the weights are constants at the top of `score_deal()` and are easy to tune.
 
-- `business-growth/pricing-strategy` — sets the prices that deal desk enforces deviations from
-- `business-growth/revenue-operations` — measures the pipeline; deal-desk metrics flow into RevOps dashboards
-- `business-growth/contract-and-proposal-writer` — drafts the final contract once deal desk approves
-- `business-growth/channel-economics` — channel deals have their own deal-desk patterns
-- `business-growth/partnerships-architect` — partner-mediated deals route through both deal desk + partnerships
-- `business-growth/commercial-policy` — the broader governance framework deal desk enforces
-- `sales-success/sales-engineer` — provides technical validation in packet
-- `sales-success/sales-operations` — owns CRM / forecast accuracy that deal desk feeds
+## Anti-patterns
+
+- **Auto-approving deals.** This skill never says "approved". Every verdict (including `APPROVE`) names the human(s) who must sign. The output is a recommendation.
+- **Skipping the redline scan** because the score is high. A high composite with `UNCAPPED_INDEMNITY` is still a DECLINE — critical signals override composite.
+- **Using this for legal review of arbitrary contract text.** This skill takes a *structured* terms JSON. For prose redlining, use `c-level-advisor/skills/general-counsel-advisor/scripts/contract_risk_scanner.py`.
+- **Treating the discount router as a discount calculator.** It routes a discount the AE/customer has already proposed; it does not calculate the right discount. Pricing logic lives in `commercial/skills/pricing-strategist`.
+- **Routing every deal to CFO.** The router stops at the lowest-authority hop that can sign the deal. Over-escalation slows the funnel and trains AEs to over-discount.
+- **Hand-editing the chain to skip a hop.** Modifiers (enterprise floor, SMB fast-lane) are explicit; hidden skips defeat the audit trail.
+
+## Distinct from
+
+| Sibling | Scope | Difference |
+|---|---|---|
+| `commercial/skills/pricing-strategist` | Sets the pricing **model** (per-seat vs usage vs tiered, list prices, packaging) | Operates at the strategy layer — not per deal |
+| `business-growth/contract-and-proposal-writer` | **Authors** proposals, SOWs, MSAs | Output is a document; deal-desk is the gate **before** signing |
+| `commercial/skills/commercial-policy` (sibling) | Designs the discount matrix and approval thresholds | Deal-desk **applies** that policy to one deal at a time |
+| `c-level-advisor/skills/general-counsel-advisor` | Deep legal redline + term-sheet analysis | Operates on full contract prose; deal-desk uses structured terms JSON |
+| `c-level-advisor/skills/cfo-advisor` | Burn rate, unit economics, fundraising models | Strategic finance; deal-desk is one-deal granularity |
+
+## Quick examples
+
+```bash
+# Score a deal
+python3 scripts/deal_scorer.py --sample
+python3 scripts/deal_scorer.py --input my_deal.json --profile enterprise-software
+
+# Route the discount
+python3 scripts/discount_approval_router.py --sample
+python3 scripts/discount_approval_router.py --input my_deal.json --profile saas
+
+# Flag the redlines
+python3 scripts/terms_redliner.py --sample
+python3 scripts/terms_redliner.py --input my_deal_terms.json --output json
+```
+
+The sample (a 28%-discount enterprise SaaS deal with uncapped indemnity + MFN) correctly DECLINEs at 55.4 / 100 composite and routes to AE → Deal Desk → VP Sales → CFO → CRO → General Counsel.
+
+## Forcing-question library (Matt Pocock grill discipline)
+
+Walked one at a time by `/cs:grill-commercial` or the Commercial orchestrator. Recommended answer + canon citation per question. Never bundled.
+
+1. **"What's the gross margin at full discount, AND what does next quarter's pipeline look like at the same terms?"**
+   Recommended: model both. Refuse to approve until the AE can articulate the precedent risk.
+   Canon: David Skok (For Entrepreneurs — discount math), Tomasz Tunguz benchmarks. Anti-pattern: one 40% precedent reshapes 3 quarters of pipeline.
+
+2. **"Is this discount inside or outside the standard discount matrix?"**
+   Recommended: if outside, surface the policy exception explicitly and route to the named exception approver.
+   Canon: OpenView discount benchmarks, RevOps Co-op playbooks.
+
+3. **"What's the strategic value beyond ARR — logo, reference, expansion path?"**
+   Recommended: require a named, verifiable expansion or reference commitment in writing.
+   Canon: SaaStr (Jason Lemkin) on logo discounts; Winning by Design on commitment language.
+
+4. **"Has the customer signed an indemnity cap, a liability cap, and a DPA (if EU data)?"**
+   Recommended: required. Uncapped indemnity is a critical-signal override that blocks APPROVE regardless of margin.
+   Canon: WorldCC (formerly IACCM) commercial management research, GC100 contract guidance.
+
+5. **"What payment terms — NET-30, NET-45, or NET-60+?"**
+   Recommended: prefer NET-30; NET-45+ is a cash flow drag worth quantifying.
+   Canon: KeyBanc SaaS Survey, Pacific Crest data — every 15 days of payment terms costs ~2% of effective deal value.
+
+6. **"Is the term multi-year with annual prepay, or annual auto-renew?"**
+   Recommended: multi-year prepay > annual prepay > annual auto-renew. Auto-renew without 60-day notice is a redline.
+   Canon: Salesforce Deal Desk best practices, OpenView NRR studies.
+
+7. **"Who is the named human approver at each hop of the discount chain?"**
+   Recommended: surface the name, not just the role. "VP Sales" is not an approver; "Maria Singh, VP Sales" is.
+   Canon: Bridge Group SaaS AE compensation research — named approval reduces precedent drift by 50%+.
+
+Walk depth-first. Lock 1-4 before opening 5-7. After all 7 are answered, invoke `deal_scorer.py` → `discount_approval_router.py` → `terms_redliner.py` in sequence.

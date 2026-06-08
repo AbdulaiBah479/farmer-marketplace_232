@@ -30,7 +30,7 @@ Notion:notion-fetch (4 pages)
 - **Competition**: Evaluating us vs. Competitor A and Competitor B
 
 ### 3. Add Research Context
-Codex research added:
+Claude research added:
 - Fintech industry compliance requirements
 - Common integration needs for financial products
 - Typical procurement processes for Series B companies

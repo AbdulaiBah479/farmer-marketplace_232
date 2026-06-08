@@ -1,20 +1,12 @@
 ---
 name: langfuse
-description: Expert in Langfuse - the open-source LLM observability platform.
-  Covers tracing, prompt management, evaluation, datasets, and integration with
-  LangChain, LlamaIndex, and OpenAI. Essential for debugging, monitoring, and
-  improving LLM applications in production.
+description: "Expert in Langfuse - the open-source LLM observability platform. Covers tracing, prompt management, evaluation, datasets, and integration with LangChain, LlamaIndex, and OpenAI. Essential for debug..."
 risk: unknown
-source: vibeship-spawner-skills (Apache 2.0)
-date_added: 2026-02-27
+source: "vibeship-spawner-skills (Apache 2.0)"
+date_added: "2026-02-27"
 ---
 
 # Langfuse
-
-Expert in Langfuse - the open-source LLM observability platform. Covers tracing,
-prompt management, evaluation, datasets, and integration with LangChain, LlamaIndex,
-and OpenAI. Essential for debugging, monitoring, and improving LLM applications
-in production.
 
 **Role**: LLM Observability Architect
 
@@ -22,14 +14,6 @@ You are an expert in LLM observability and evaluation. You think in terms of
 traces, spans, and metrics. You know that LLM applications need monitoring
 just like traditional software - but with different dimensions (cost, quality,
 latency). You use data to drive prompt improvements and catch regressions.
-
-### Expertise
-
-- Tracing architecture
-- Prompt versioning
-- Evaluation strategies
-- Cost optimization
-- Quality monitoring
 
 ## Capabilities
 
@@ -41,42 +25,11 @@ latency). You use data to drive prompt improvements and catch regressions.
 - Performance monitoring
 - A/B testing prompts
 
-## Prerequisites
+## Requirements
 
-- 0: LLM application basics
-- 1: API integration experience
-- 2: Understanding of tracing concepts
-- Required skills: Python or TypeScript/JavaScript, Langfuse account (cloud or self-hosted), LLM API keys
-
-## Scope
-
-- 0: Self-hosted requires infrastructure
-- 1: High-volume may need optimization
-- 2: Real-time dashboard has latency
-- 3: Evaluation requires setup
-
-## Ecosystem
-
-### Primary
-
-- Langfuse Cloud
-- Langfuse Self-hosted
-- Python SDK
-- JS/TS SDK
-
-### Common_integrations
-
-- LangChain
-- LlamaIndex
-- OpenAI SDK
-- Anthropic SDK
-- Vercel AI SDK
-
-### Platforms
-
-- Any Python/JS backend
-- Serverless functions
-- Jupyter notebooks
+- Python or TypeScript/JavaScript
+- Langfuse account (cloud or self-hosted)
+- LLM API keys
 
 ## Patterns
 
@@ -86,6 +39,7 @@ Instrument LLM calls with Langfuse
 
 **When to use**: Any LLM application
 
+```python
 from langfuse import Langfuse
 
 # Initialize client
@@ -137,6 +91,7 @@ trace.score(
 
 # Flush before exit (important in serverless)
 langfuse.flush()
+```
 
 ### OpenAI Integration
 
@@ -144,6 +99,7 @@ Automatic tracing with OpenAI SDK
 
 **When to use**: OpenAI-based applications
 
+```python
 from langfuse.openai import openai
 
 # Drop-in replacement for OpenAI client
@@ -183,6 +139,7 @@ async def main():
         messages=[{"role": "user", "content": "Hello"}],
         name="async-greeting"
     )
+```
 
 ### LangChain Integration
 
@@ -190,6 +147,7 @@ Trace LangChain applications
 
 **When to use**: LangChain-based applications
 
+```python
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langfuse.callback import CallbackHandler
@@ -236,267 +194,50 @@ result = agent_executor.invoke(
     {"input": "What's the weather?"},
     config={"callbacks": [langfuse_handler]}
 )
-
-### Prompt Management
-
-Version and deploy prompts
-
-**When to use**: Managing prompts across environments
-
-from langfuse import Langfuse
-
-langfuse = Langfuse()
-
-# Fetch prompt from Langfuse
-# (Create in UI or via API first)
-prompt = langfuse.get_prompt("customer-support-v2")
-
-# Get compiled prompt with variables
-compiled = prompt.compile(
-    customer_name="John",
-    issue="billing question"
-)
-
-# Use with OpenAI
-response = openai.chat.completions.create(
-    model=prompt.config.get("model", "gpt-4o"),
-    messages=compiled,
-    temperature=prompt.config.get("temperature", 0.7)
-)
-
-# Link generation to prompt version
-trace = langfuse.trace(name="support-chat")
-generation = trace.generation(
-    name="response",
-    model="gpt-4o",
-    prompt=prompt  # Links to specific version
-)
-
-# Create/update prompts via API
-langfuse.create_prompt(
-    name="customer-support-v3",
-    prompt=[
-        {"role": "system", "content": "You are a support agent..."},
-        {"role": "user", "content": "{{user_message}}"}
-    ],
-    config={
-        "model": "gpt-4o",
-        "temperature": 0.7
-    },
-    labels=["production"]  # or ["staging", "development"]
-)
-
-# Fetch specific label
-prompt = langfuse.get_prompt(
-    "customer-support-v3",
-    label="production"  # Gets latest with this label
-)
-
-### Evaluation and Scoring
-
-Evaluate LLM outputs systematically
-
-**When to use**: Quality assurance and improvement
-
-from langfuse import Langfuse
-
-langfuse = Langfuse()
-
-# Manual scoring in code
-trace = langfuse.trace(name="qa-flow")
-
-# After getting response
-trace.score(
-    name="relevance",
-    value=0.85,  # 0-1 scale
-    comment="Response addressed the question"
-)
-
-trace.score(
-    name="correctness",
-    value=1,  # Binary: 0 or 1
-    data_type="BOOLEAN"
-)
-
-# LLM-as-judge evaluation
-def evaluate_response(question: str, response: str) -> float:
-    eval_prompt = f"""
-    Rate the response quality from 0 to 1.
-
-    Question: {question}
-    Response: {response}
-
-    Output only a number between 0 and 1.
-    """
-
-    result = openai.chat.completions.create(
-        model="gpt-4o-mini",  # Cheaper model for eval
-        messages=[{"role": "user", "content": eval_prompt}]
-    )
-
-    return float(result.choices[0].message.content.strip())
-
-# Score asynchronously
-score = evaluate_response(question, response)
-trace.score(
-    name="quality-llm-judge",
-    value=score
-)
-
-# Create evaluation dataset
-dataset = langfuse.create_dataset(name="support-qa-v1")
-
-# Add items to dataset
-langfuse.create_dataset_item(
-    dataset_name="support-qa-v1",
-    input={"question": "How do I reset my password?"},
-    expected_output="Go to settings > security > reset password"
-)
-
-# Run evaluation on dataset
-dataset = langfuse.get_dataset("support-qa-v1")
-
-for item in dataset.items:
-    # Generate response
-    response = generate_response(item.input["question"])
-
-    # Link to dataset item
-    trace = langfuse.trace(name="eval-run")
-    trace.generation(
-        name="response",
-        input=item.input,
-        output=response
-    )
-
-    # Score against expected
-    similarity = calculate_similarity(response, item.expected_output)
-    trace.score(name="similarity", value=similarity)
-
-    # Link trace to dataset item
-    item.link(trace, "eval-run-1")
-
-### Decorator Pattern
-
-Clean instrumentation with decorators
-
-**When to use**: Function-based applications
-
-from langfuse.decorators import observe, langfuse_context
-
-@observe()  # Creates a trace
-def chat_handler(user_id: str, message: str) -> str:
-    # All nested @observe calls become spans
-    context = get_context(message)
-    response = generate_response(message, context)
-    return response
-
-@observe()  # Becomes a span under parent trace
-def get_context(message: str) -> str:
-    # RAG retrieval
-    docs = retriever.get_relevant_documents(message)
-    return "\n".join([d.page_content for d in docs])
-
-@observe(as_type="generation")  # LLM generation span
-def generate_response(message: str, context: str) -> str:
-    response = openai.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": f"Context: {context}"},
-            {"role": "user", "content": message}
-        ]
-    )
-    return response.choices[0].message.content
-
-# Add metadata and scores
-@observe()
-def main_flow(user_input: str):
-    # Update current trace
-    langfuse_context.update_current_trace(
-        user_id="user-123",
-        session_id="session-456",
-        tags=["production"]
-    )
-
-    result = process(user_input)
-
-    # Score the trace
-    langfuse_context.score_current_trace(
-        name="success",
-        value=1 if result else 0
-    )
-
-    return result
-
-# Works with async
-@observe()
-async def async_handler(message: str):
-    result = await async_generate(message)
-    return result
-
-## Collaboration
-
-### Delegation Triggers
-
-- agent|langgraph|graph -> langgraph (Need to build agent to monitor)
-- crewai|multi-agent|crew -> crewai (Need to build crew to monitor)
-- structured output|extraction -> structured-output (Need to build extraction to monitor)
-
-### Observable LangGraph Agent
-
-Skills: langfuse, langgraph
-
-Workflow:
-
-```
-1. Build agent with LangGraph
-2. Add Langfuse callback handler
-3. Trace all LLM calls and tool uses
-4. Score outputs for quality
-5. Monitor and iterate
 ```
 
-### Monitored RAG Pipeline
+## Anti-Patterns
 
-Skills: langfuse, structured-output
+### ❌ Not Flushing in Serverless
 
-Workflow:
+**Why bad**: Traces are batched.
+Serverless may exit before flush.
+Data is lost.
 
-```
-1. Build RAG with retrieval and generation
-2. Trace retrieval and LLM calls
-3. Score relevance and accuracy
-4. Track costs and latency
-5. Optimize based on data
-```
+**Instead**: Always call langfuse.flush() at end.
+Use context managers where available.
+Consider sync mode for critical traces.
 
-### Evaluated Agent System
+### ❌ Tracing Everything
 
-Skills: langfuse, langgraph, structured-output
+**Why bad**: Noisy traces.
+Performance overhead.
+Hard to find important info.
 
-Workflow:
+**Instead**: Focus on: LLM calls, key logic, user actions.
+Group related operations.
+Use meaningful span names.
 
-```
-1. Build agent with structured outputs
-2. Create evaluation dataset
-3. Run evaluations with traces
-4. Compare prompt versions
-5. Deploy best performers
-```
+### ❌ No User/Session IDs
+
+**Why bad**: Can't debug specific users.
+Can't track sessions.
+Analytics limited.
+
+**Instead**: Always pass user_id and session_id.
+Use consistent identifiers.
+Add relevant metadata.
+
+## Limitations
+
+- Self-hosted requires infrastructure
+- High-volume may need optimization
+- Real-time dashboard has latency
+- Evaluation requires setup
 
 ## Related Skills
 
 Works well with: `langgraph`, `crewai`, `structured-output`, `autonomous-agents`
 
 ## When to Use
-- User mentions or implies: langfuse
-- User mentions or implies: llm observability
-- User mentions or implies: llm tracing
-- User mentions or implies: prompt management
-- User mentions or implies: llm evaluation
-- User mentions or implies: monitor llm
-- User mentions or implies: debug llm
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+This skill is applicable to execute the workflow or actions described in the overview.

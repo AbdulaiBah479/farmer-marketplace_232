@@ -1,441 +1,590 @@
 ---
 name: mcp-builder
-description: "Build MCP servers in Python with FastMCP. Define tools / resources / prompts, build the server, test locally, deploy to FastMCP Cloud or Docker. Use whenever the user mentions building an MCP server, exposing tools to LLMs, FastMCP, building a Claude integration, or troubleshooting FastMCP module-level server, storage, lifespan, middleware, OAuth, or deployment errors."
-compatibility: claude-code-only
+description: Build Model Context Protocol (MCP) servers with mcp-use framework. Use when creating MCP servers, defining tools/resources/prompts, working with mcp-use, bootstrapping MCP projects, deploying MCP servers, or when user mentions MCP development, MCP tools, MCP resources, or MCP prompts.
 ---
 
-# MCP Builder
+# MCP Server Builder
 
-Build a working MCP server from a description of the tools you need. Produces a deployable Python server using FastMCP.
+Build production-ready MCP servers with the mcp-use framework. This Skill provides quick-start instructions and best practices for creating MCP servers.
 
-## Workflow
+## Quick Start
 
-### Step 1: Define What to Expose
-
-Ask what the server needs to provide:
-
-- **Tools** -- Functions Claude can call (API wrappers, calculations, file operations)
-- **Resources** -- Data Claude can read (database records, config, documents)
-- **Prompts** -- Reusable prompt templates with parameters
-
-A brief like "MCP server for querying our customer database" is enough.
-
-### Step 2: Scaffold the Server
+**Always bootstrap with `npx create-mcp-use-app`:**
 
 ```bash
-pip install fastmcp
+npx create-mcp-use-app my-mcp-server
+cd my-mcp-server
 ```
 
-Create the server file. The server instance MUST be at module level:
+**Choose template based on needs:**
+- `--template starter` - Full-featured with all MCP primitives (tools, resources, prompts) + example widgets
+- `--template mcp-apps` - Optimized for ChatGPT widgets with product search example
+- `--template blank` - Minimal starting point for custom implementation
 
-```python
-from fastmcp import FastMCP
-
-# MUST be at module level for FastMCP Cloud
-mcp = FastMCP("My Server")
-
-@mcp.tool()
-async def search_customers(query: str) -> str:
-    """Search customers by name or email."""
-    # Implementation here
-    return f"Found customers matching: {query}"
-
-@mcp.resource("customers://{customer_id}")
-async def get_customer(customer_id: str) -> str:
-    """Get customer details by ID."""
-    return f"Customer {customer_id} details"
-
-if __name__ == "__main__":
-    mcp.run()
+```bash
+# Example: MCP Apps template
+npx create-mcp-use-app my-server --template mcp-apps
+cd my-server
+yarn install
 ```
 
-### Step 3: Add Companion CLI Scripts (Optional)
+**Template Details:**
+- **starter**: Best for learning - includes all MCP features plus widgets
+- **mcp-apps**: Best for ChatGPT apps - includes product carousel/accordion example
+- **blank**: Best for experts - minimal boilerplate
 
-For Claude Code terminal use, add scripts alongside the MCP server:
+## MCP Apps Structure
+
+### Automatic Widget Registration
+
+The mcp-apps and starter templates automatically discover and register React widgets from the `resources/` folder:
+
+**Single-file widget pattern:**
+```
+resources/
+└── weather-display.tsx  # Widget name becomes "weather-display"
+```
+
+**Folder-based widget pattern:**
+```
+resources/
+└── product-search/      # Widget name becomes "product-search"
+    ├── widget.tsx       # Entry point (required name!)
+    ├── components/      # Sub-components
+    ├── hooks/           # Custom hooks
+    ├── types.ts
+    └── constants.ts
+```
+
+**What happens automatically:**
+1. Server scans `resources/` folder at startup
+2. Finds `.tsx` files or `widget.tsx` in folders
+3. Extracts `widgetMetadata` from each component
+4. Registers as MCP Tool (e.g., `weather-display`)
+5. Registers as MCP Resource (e.g., `ui://widget/weather-display.html`)
+6. Builds widget bundles with Vite
+
+**No manual registration needed!** Just export `widgetMetadata` and a default component.
+
+## Defining Tools
+
+Tools are executable functions that AI models can call:
+
+```typescript
+import { MCPServer, text, object } from "mcp-use/server";
+import { z } from "zod";
+
+const server = new MCPServer({
+  name: "my-server",
+  version: "1.0.0",
+  description: "My MCP server"
+});
+
+// Simple tool
+server.tool(
+  {
+    name: "greet-user",
+    description: "Greet a user by name",
+    schema: z.object({
+      name: z.string().describe("The user's name"),
+      formal: z.boolean().optional().describe("Use formal greeting")
+    })
+  },
+  async ({ name, formal }) => {
+    const greeting = formal ? `Good day, ${name}` : `Hey ${name}!`;
+    return text(greeting);
+  }
+);
+```
+
+**Key points:**
+- Use Zod for schema validation
+- Add `.describe()` to all parameters
+- Return appropriate response types (text, object, widget)
+
+## Defining Resources
+
+Resources expose data that clients can read:
+
+```typescript
+import { object, text, markdown } from "mcp-use/server";
+
+// Static resource
+server.resource(
+  {
+    uri: "config://settings",
+    name: "Application Settings",
+    description: "Current configuration",
+    mimeType: "application/json"
+  },
+  async () => {
+    return object({
+      theme: "dark",
+      version: "1.0.0"
+    });
+  }
+);
+
+// Dynamic resource
+server.resource(
+  {
+    uri: "stats://current",
+    name: "Current Stats",
+    description: "Real-time statistics",
+    mimeType: "application/json"
+  },
+  async () => {
+    const stats = await getStats();
+    return object(stats);
+  }
+);
+
+// Markdown resource
+server.resource(
+  {
+    uri: "docs://guide",
+    name: "User Guide",
+    description: "Documentation",
+    mimeType: "text/markdown"
+  },
+  async () => {
+    return markdown("# Guide\n\nWelcome!");
+  }
+);
+```
+
+**Response helpers available:**
+- `text(string)` - Plain text
+- `object(data)` - JSON objects
+- `markdown(string)` - Markdown content
+- `html(string)` - HTML content
+- `image(buffer, mimeType)` - Binary images
+- `audio(buffer, mimeType)` - Audio files
+- `binary(buffer, mimeType)` - Binary data
+- `mix(...contents)` - Combine multiple content types
+
+**Advanced response examples:**
+
+```typescript
+// Audio response
+import { audio } from 'mcp-use/server';
+
+// From base64 data
+return audio(base64Data, "audio/wav");
+
+// From file path (async)
+return await audio("/path/to/audio.mp3");
+
+// Binary data (PDFs, etc.)
+import { binary } from 'mcp-use/server';
+return binary(pdfBuffer, "application/pdf");
+
+// Mix multiple content types
+import { mix, text, object, resource } from 'mcp-use/server';
+return mix(
+  text("Analysis complete:"),
+  object({ score: 95, status: "pass" }),
+  resource("report://analysis-123", text("Full report..."))
+);
+```
+
+## Defining Prompts
+
+Prompts are reusable templates for AI interactions:
+
+```typescript
+server.prompt(
+  {
+    name: "code-review",
+    description: "Generate a code review template",
+    schema: z.object({
+      language: z.string().describe("Programming language"),
+      focusArea: z.string().optional().describe("Specific focus area")
+    })
+  },
+  async ({ language, focusArea }) => {
+    const focus = focusArea ? ` with focus on ${focusArea}` : "";
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Please review this ${language} code${focus}.`
+          }
+        }
+      ]
+    };
+  }
+);
+```
+
+## Testing Locally
+
+**Development mode (hot reload):**
+```bash
+yarn dev
+```
+
+**Production mode:**
+```bash
+yarn build
+yarn start
+```
+
+**Inspector UI:**
+Access at `http://localhost:3000/inspector` to test tools, view resources, and try prompts.
+
+**Tunneling (test with ChatGPT before deploying):**
+
+Option 1 - Auto-tunnel:
+```bash
+mcp-use start --port 3000 --tunnel
+```
+
+Option 2 - Separate tunnel:
+```bash
+yarn start  # Terminal 1
+npx @mcp-use/tunnel 3000  # Terminal 2
+```
+
+You'll get a public URL like `https://happy-cat.local.mcp-use.run/mcp`
+
+**Tunnel details:**
+- Expires after 24 hours
+- Closes after 1 hour of inactivity
+- Rate limit: 10 creations/hour, max 5 active per IP
+
+Learn more: https://mcp-use.com/docs/tunneling
+
+## Deployment
+
+**Deploy to mcp-use Cloud (recommended):**
+
+```bash
+# Login first (if not already)
+npx mcp-use login
+
+# Deploy
+yarn deploy
+```
+
+**If authentication error:**
+```bash
+npx mcp-use login
+yarn deploy
+```
+
+**After deployment:**
+- Public URL provided (e.g., `https://your-server.mcp-use.com/mcp`)
+- Auto-scaled and monitored
+- HTTPS enabled
+- Zero-downtime deployments
+
+## Best Practices
+
+**Tool Design:**
+- ✅ One tool = one focused capability
+- ✅ Descriptive names and descriptions
+- ✅ Use `.describe()` on all Zod fields
+- ✅ Handle errors gracefully
+- ✅ Return helpful error messages
+
+**Resource Design:**
+- ✅ Use clear URI schemes (config://, docs://, stats://)
+- ✅ Choose appropriate MIME types
+- ✅ Use response helpers for cleaner code
+- ✅ Make resources dynamic when needed
+
+**Prompt Design:**
+- ✅ Keep prompts reusable
+- ✅ Use system messages for context
+- ✅ Parameterize with Zod schemas
+- ✅ Include clear instructions
+
+**Testing:**
+- ✅ Test with Inspector UI first
+- ✅ Use tunneling to test with real clients before deploying
+- ✅ Verify all tools, resources, and prompts work as expected
+
+**Deployment:**
+- ✅ Test locally and with tunneling first
+- ✅ Run `npx mcp-use login` if deploy fails
+- ✅ Version your server semantically
+- ✅ Document breaking changes
+
+## Widget Support
+
+### Automatic Widget Registration
+
+When using the `mcp-apps` or `starter` template, widgets in the `resources/` folder are automatically registered:
+
+```tsx
+// resources/weather-display.tsx
+import { useWidget, McpUseProvider, type WidgetMetadata } from 'mcp-use/react';
+import { z } from 'zod';
+
+const propSchema = z.object({
+  city: z.string(),
+  temperature: z.number()
+});
+
+// Required: Export widget metadata
+export const widgetMetadata: WidgetMetadata = {
+  description: "Display weather information",
+  props: propSchema, // Use 'props', not 'schema'!
+};
+
+// Required: Export default component
+export default function WeatherDisplay() {
+  const { props, isPending } = useWidget<z.infer<typeof propSchema>>();
+  
+  // Always handle loading state
+  if (isPending) return <div>Loading...</div>;
+  
+  return (
+    <McpUseProvider autoSize>
+      <div>
+        <h2>{props.city}</h2>
+        <p>{props.temperature}°C</p>
+      </div>
+    </McpUseProvider>
+  );
+}
+```
+
+**Widget automatically becomes available as:**
+- MCP Tool: `weather-display`
+- MCP Resource: `ui://widget/weather-display.html`
+
+### Content Security Policy (CSP)
+
+Control what external resources widgets can access:
+
+```typescript
+export const widgetMetadata: WidgetMetadata = {
+  description: "Weather widget",
+  props: z.object({ city: z.string() }),
+  metadata: {
+    csp: {
+      // APIs to call
+      connectDomains: ["https://api.weather.com"],
+      // Static assets to load
+      resourceDomains: ["https://cdn.weather.com"],
+      // Iframes to embed
+      frameDomains: ["https://embed.weather.com"],
+      // Script directives
+      scriptDirectives: ["'unsafe-inline'"],
+    },
+  },
+};
+```
+
+Alternatively, set at server level:
+
+```typescript
+server.uiResource({
+  type: "mcpApps",
+  name: "my-widget",
+  htmlTemplate: `...`,
+  metadata: {
+    csp: {
+      connectDomains: ["https://api.example.com"],
+      resourceDomains: ["https://cdn.example.com"],
+    },
+  },
+});
+```
+
+## Dual-Protocol Widget Support
+
+mcp-use supports the **MCP Apps standard** (SEP-1865) with automatic dual-protocol support:
+
+```typescript
+import { MCPServer } from 'mcp-use/server';
+
+const server = new MCPServer({
+  name: 'my-server',
+  version: '1.0.0',
+  baseUrl: process.env.MCP_URL || 'http://localhost:3000', // Required for widgets
+});
+
+// Register a dual-protocol widget
+server.uiResource({
+  type: "mcpApps", // Works with BOTH MCP Apps clients AND ChatGPT
+  name: "weather-display",
+  htmlTemplate: `<!DOCTYPE html>...`,
+  metadata: {
+    csp: { connectDomains: ["https://api.weather.com"] },
+    prefersBorder: true,
+    autoResize: true,
+  },
+});
+```
+
+**What happens automatically:**
+- **MCP Apps clients** (Claude, Goose) receive: `text/html;profile=mcp-app` with `_meta.ui.*`
+- **ChatGPT** receives: `text/html+skybridge` with `_meta.openai/*`
+- Same widget code works everywhere!
+
+### Custom OpenAI Metadata
+
+Need ChatGPT-specific features? Combine both metadata fields:
+
+```typescript
+server.uiResource({
+  type: "mcpApps",
+  name: "my-widget",
+  htmlTemplate: `...`,
+  // Unified metadata (dual-protocol)
+  metadata: {
+    csp: { connectDomains: ["https://api.example.com"] },
+    prefersBorder: true,
+  },
+  // ChatGPT-specific overrides
+  appsSdkMetadata: {
+    "openai/widgetDescription": "ChatGPT-specific description",
+    "openai/customFeature": "some-value", // Any custom OpenAI metadata
+  },
+});
+```
+
+## Project Structure
 
 ```
 my-mcp-server/
-├── src/index.ts          # MCP server (for Claude.ai)
-├── scripts/
-│   ├── search.ts         # CLI version of search tool
-│   └── _shared.ts        # Shared auth/config
-├── SCRIPTS.md            # Documents available scripts
-└── package.json
+├── resources/           # React widgets (apps-sdk)
+│   └── widget.tsx
+├── public/             # Static assets
+├── index.ts            # Server entry point
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-CLI scripts provide file I/O, batch processing, and richer output that MCP can't.
-See `assets/SCRIPTS-TEMPLATE.md` and `assets/script-template.ts` for TypeScript templates.
-
-### Step 4: Test Locally
-
-**Quick test -- run directly:**
-
-```bash
-python server.py
-```
-
-**Dev mode with inspector UI (recommended):**
-
-```bash
-fastmcp dev server.py
-# Opens inspector at http://localhost:5173
-# Hot reload, detailed logging, tool/resource inspection
-```
-
-**HTTP mode for remote clients:**
-
-```bash
-python server.py --transport http --port 8000
-```
-
-**Automated test script using FastMCP Client:**
-
-```python
-import asyncio
-from fastmcp import Client
-
-async def test_server(server_path):
-    async with Client(server_path) as client:
-        # List everything
-        tools = await client.list_tools()
-        resources = await client.list_resources()
-        prompts = await client.list_prompts()
-
-        print(f"Tools: {[t.name for t in tools]}")
-        print(f"Resources: {[r.uri for r in resources]}")
-        print(f"Prompts: {[p.name for p in prompts]}")
-
-        # Call first tool
-        if tools:
-            result = await client.call_tool(tools[0].name, {})
-            print(f"Tool result: {result}")
-
-        # Read first resource
-        if resources:
-            data = await client.read_resource(resources[0].uri)
-            print(f"Resource data: {data}")
-
-asyncio.run(test_server("server.py"))
-```
-
-### Step 5: Pre-Deploy Checklist
-
-Run these checks before deploying. All required checks must pass.
-
-**Required (will cause deploy failure):**
-
-1. Server file exists
-2. Python syntax valid: `python3 -m py_compile server.py`
-3. Module-level server object (not inside a function):
-   ```bash
-   grep -q "^mcp = FastMCP\|^server = FastMCP\|^app = FastMCP" server.py
-   ```
-4. `requirements.txt` exists with PyPI packages only (no `git+`, `-e`, `.whl`, `.tar.gz`)
-5. No hardcoded secrets (check for `api_key = "..."` patterns excluding `os.getenv`/`os.environ`)
-
-**Advisory (warnings):**
-
-6. `fastmcp` listed in requirements.txt
-7. `.gitignore` includes `.env`
-8. No circular imports
-9. Git repository initialised with remote
-10. Server can load: `timeout 5 fastmcp inspect server.py`
-
-### Step 6: Deploy
-
-**FastMCP Cloud (simplest):**
-
-```bash
-git add . && git commit -m "Ready for deployment"
-git push -u origin main
-# Visit https://fastmcp.cloud, connect repo, add env vars, deploy
-# URL: https://your-project.fastmcp.app/mcp
-```
-
-Cloud requirements:
-- Module-level server object named `mcp`, `server`, or `app`
-- PyPI dependencies only in `requirements.txt`
-- Public GitHub repository
-- Environment variables for secrets (no hardcoded values)
-- Auto-deploys on push to main, PR preview deployments
-
-**Docker (self-hosted):**
-
-```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["python", "server.py", "--transport", "http", "--port", "8000"]
-```
-
-**Cloudflare Workers (edge):**
-See the cloudflare-worker-builder skill for Workers-based MCP servers.
-
----
-
-## Critical Patterns
-
-### Module-Level Server Instance
-
-FastMCP Cloud requires the server instance at module level:
-
-```python
-# CORRECT
-mcp = FastMCP("My Server")
-
-@mcp.tool()
-def my_tool(): ...
-
-# WRONG -- Cloud can't find the server
-def create_server():
-    mcp = FastMCP("My Server")
-    return mcp
-
-# FIX for factory pattern -- export at module level
-def create_server() -> FastMCP:
-    mcp = FastMCP("server")
-    return mcp
-mcp = create_server()
-```
-
-### Type Annotations Required
-
-FastMCP uses type annotations to generate tool schemas:
-
-```python
-@mcp.tool()
-async def search(
-    query: str,           # Required parameter
-    limit: int = 10,      # Optional with default
-    tags: list[str] = []  # Complex types supported
-) -> str:
-    """Docstring becomes the tool description."""
-    ...
-```
-
-### Error Handling
-
-Return errors as strings, don't raise exceptions:
-
-```python
-@mcp.tool()
-async def get_data(id: str) -> str:
-    try:
-        result = await fetch_data(id)
-        return json.dumps(result)
-    except NotFoundError:
-        return f"Error: No data found for ID {id}"
-```
-
-### Cloud-Ready Server Pattern
-
-```python
-import os
-from fastmcp import FastMCP
-
-mcp = FastMCP("production-server")
-API_KEY = os.getenv("API_KEY")
-
-@mcp.tool()
-async def production_tool(data: str) -> dict:
-    if not API_KEY:
-        return {"error": "API_KEY not configured"}
-    return {"status": "success", "data": data}
-
-if __name__ == "__main__":
-    mcp.run()
-```
-
----
-
-## Common Errors and Fixes
-
-These are the errors you will hit. Fix them before deploying.
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `RuntimeError: No server object found at module level` | Server inside a function | Export `mcp = FastMCP(...)` at module level |
-| `RuntimeError: no running event loop` | Missing async/await | Use `async def` for async operations |
-| `TypeError: missing required argument 'context'` | Context not type-hinted | Add `context: Context` with type hint |
-| `ValueError: Invalid resource URI` | Missing URI scheme | Use `data://`, `file://`, `info://`, `api://` |
-| Resource template parameter mismatch | Name mismatch | `user://{user_id}` needs `def get_user(user_id: str)` |
-| Pydantic validation error | Wrong type hints | Ensure hints match actual data types |
-| Transport mismatch | Client/server protocol differ | Match both to stdio or both to http |
-| Import errors with editable package | Package not installed | `pip install -e .` or add to PYTHONPATH |
-| `DeprecationWarning: mcp.settings` | Old API | Use `os.getenv()` instead |
-| Port already in use | Stale process | `lsof -ti:8000 \| xargs kill -9` |
-| Schema generation failure | Non-JSON types | Use JSON-compatible types (no NumPy arrays) |
-| JSON serialization error | datetime/bytes in response | Convert to `.isoformat()` or string |
-| Circular import | Factory in `__init__.py` | Use direct imports, avoid factory pattern |
-| Python 3.12+ datetime warning | `datetime.utcnow()` deprecated | Use `datetime.now(timezone.utc)` |
-| Import-time execution | Async resource at module level | Use lazy init pattern |
-
----
-
-## Production Patterns
-
-### Self-Contained Server
-
-Keep all utilities in one file to avoid circular imports:
-
-```python
-from fastmcp import FastMCP
-import os
-
-mcp = FastMCP("my-server")
-
-# Config
-class Config:
-    API_KEY = os.getenv("API_KEY", "")
-    BASE_URL = os.getenv("BASE_URL", "https://api.example.com")
-
-# Helpers
-def format_success(data): return {"status": "success", "data": data}
-def format_error(msg): return {"status": "error", "message": msg}
-
-@mcp.tool()
-async def my_tool(query: str) -> dict:
-    if not Config.API_KEY:
-        return format_error("API_KEY not configured")
-    return format_success({"query": query})
-```
-
-### Lazy Initialisation
-
-Don't create async resources at module level. Initialise on first use:
-
-```python
-_db = None
-
-async def get_db():
-    global _db
-    if _db is None:
-        _db = await create_connection(Config.DB_URL)
-    return _db
-```
-
-### Health Check Resource
-
-```python
-@mcp.resource("health://status")
-async def health_check() -> dict:
-    return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "checks": {
-            "api": "connected",
-            "database": "connected"
-        }
+## Common Patterns
+
+**Tool with dual-protocol widget:**
+```typescript
+import { MCPServer, widget, text } from 'mcp-use/server';
+import { z } from 'zod';
+
+const server = new MCPServer({
+  name: 'my-server',
+  version: '1.0.0',
+  baseUrl: process.env.MCP_URL || 'http://localhost:3000',
+});
+
+server.tool(
+  {
+    name: "show-data",
+    description: "Display data with visualization",
+    schema: z.object({
+      query: z.string()
+    }),
+    widget: {
+      name: "data-display", // Must exist in resources/
+      invoking: "Loading...",
+      invoked: "Data loaded"
     }
+  },
+  async ({ query }) => {
+    const data = await fetchData(query);
+    return widget({
+      props: { data },
+      output: text(`Found ${data.length} results`)
+    });
+  }
+);
 ```
 
-### Connection Pooling
-
-```python
-import httpx
-
-_client = None
-
-def get_client() -> httpx.AsyncClient:
-    global _client
-    if _client is None:
-        _client = httpx.AsyncClient(
-            base_url=Config.BASE_URL,
-            headers={"Authorization": f"Bearer {Config.API_KEY}"},
-            limits=httpx.Limits(max_connections=20, max_keepalive_connections=5),
-            timeout=30.0
-        )
-    return _client
+**Resource template (parameterized):**
+```typescript
+server.resourceTemplate(
+  {
+    uriTemplate: "user://{userId}/profile",
+    name: "User Profile",
+    description: "Get user by ID",
+    mimeType: "application/json"
+  },
+  async ({ userId }) => {
+    const user = await fetchUser(userId);
+    return object(user);
+  }
+);
 ```
 
-### Retry with Backoff
-
-```python
-async def retry_with_backoff(func, max_retries=3, initial_delay=1.0):
-    for attempt in range(max_retries):
-        try:
-            return await func()
-        except Exception as e:
-            if attempt == max_retries - 1:
-                raise
-            delay = initial_delay * (2 ** attempt)
-            await asyncio.sleep(delay)
+**Error handling:**
+```typescript
+server.tool(
+  {
+    name: "divide",
+    schema: z.object({
+      a: z.number(),
+      b: z.number()
+    })
+  },
+  async ({ a, b }) => {
+    if (b === 0) {
+      return text("Error: Cannot divide by zero");
+    }
+    return text(`Result: ${a / b}`);
+  }
+);
 ```
 
----
+## Detailed Examples
 
-## Context Features (Advanced)
+For comprehensive examples and advanced patterns, connect to the **mcp-use MCP server** which provides:
+- Complete example resources for all primitives
+- Full working server examples
+- Detailed documentation
+- Interactive widgets showcase
 
-### Context Injection
+## Learn More
 
-```python
-from fastmcp import Context
+- **Documentation**: https://docs.mcp-use.com
+- **MCP Apps Standard**: https://docs.mcp-use.com/typescript/server/mcp-apps (dual-protocol guide)
+- **Templates**: https://docs.mcp-use.com/typescript/server/templates (template comparison)
+- **Widget Guide**: https://docs.mcp-use.com/typescript/server/ui-widgets
+- **Examples**: https://github.com/mcp-use/mcp-use/tree/main/examples
+- **Tunneling Guide**: https://mcp-use.com/docs/tunneling
+- **Discord**: https://mcp-use.com/discord
+- **GitHub**: https://github.com/mcp-use/mcp-use
 
-@mcp.tool()
-async def tool_with_context(param: str, context: Context) -> dict:
-    # Context parameter MUST have type hint
-    pass
-```
+## Quick Reference
 
-### Progress Tracking
+**Commands:**
+- `npx create-mcp-use-app my-server` - Bootstrap
+- `yarn dev` - Development mode
+- `yarn build` - Build for production
+- `yarn start` - Run production server
+- `mcp-use start --tunnel` - Start with tunnel
+- `npx mcp-use login` - Authenticate
+- `yarn deploy` - Deploy to cloud
 
-```python
-@mcp.tool()
-async def long_task(items: list[str], context: Context) -> str:
-    for i, item in enumerate(items):
-        await context.report_progress(i + 1, len(items), f"Processing {item}")
-        await process(item)
-    return "Done"
-```
+**Response helpers:**
+- `text(str)`, `object(data)`, `markdown(str)`, `html(str)`
+- `image(buf, mime)`, `audio(buf, mime)`, `binary(buf, mime)`
+- `mix(...)` - Combine multiple content types
+- `widget({ props, output })` - Return widget with data
 
-### Sampling (LLM from within tools)
+**Server methods:**
+- `server.tool()` - Define executable tool
+- `server.resource()` - Define static/dynamic resource
+- `server.resourceTemplate()` - Define parameterized resource
+- `server.prompt()` - Define prompt template
+- `server.uiResource()` - Define widget resource
+- `server.listen()` - Start server
 
-```python
-@mcp.tool()
-async def summarise(text: str, context: Context) -> str:
-    result = await context.request_sampling(
-        messages=[{"role": "user", "content": f"Summarise: {text}"}],
-        max_tokens=200
-    )
-    return result
-```
+**Widget metadata fields:**
+- `description` - Widget description
+- `props` - Zod schema for widget props
+- `metadata` - Unified config (dual-protocol)
+- `metadata.csp` - Content Security Policy
+- `appsSdkMetadata` - ChatGPT-specific overrides
 
----
-
-## CLI Quick Reference
-
-```bash
-fastmcp dev server.py              # Dev mode with inspector UI
-fastmcp run server.py              # Run (stdio)
-fastmcp run server.py --transport http --port 8000  # Run (HTTP)
-fastmcp inspect server.py          # Inspect without running
-fastmcp install server.py          # Install to Claude Desktop
-fastmcp deploy server.py --name my-server  # Deploy to Cloud
-```
-
-Environment variables: `FASTMCP_LOG_LEVEL` (DEBUG/INFO/WARNING/ERROR), `FASTMCP_ENV` (development/staging/production).
-
----
-
-## Integration Patterns (Optional)
-
-For specific integration approaches, see `references/integration-patterns.md`:
-- **Manual API** -- `httpx.AsyncClient` with reusable client
-- **OpenAPI auto-generation** -- `FastMCP.from_openapi(spec, client, route_maps=[...])`
-- **FastAPI conversion** -- `FastMCP.from_fastapi(app)`
-
----
-
-## Asset Files
-
-- `assets/basic-server.py` -- Minimal FastMCP server template
-- `assets/self-contained-server.py` -- Server with storage and middleware
-- `assets/tools-examples.py` -- Tool patterns and type annotations
-- `assets/resources-examples.py` -- Resource URI patterns
-- `assets/prompts-examples.py` -- Prompt template patterns
-- `assets/client-example.py` -- MCP client usage
-- `assets/SCRIPTS-TEMPLATE.md` -- CLI companion docs template
-- `assets/script-template.ts` -- TypeScript CLI script template
+**Available templates:**
+- `starter` - Full-featured (tools, resources, prompts, widgets)
+- `mcp-apps` - ChatGPT-optimized with product example
+- `blank` - Minimal boilerplate

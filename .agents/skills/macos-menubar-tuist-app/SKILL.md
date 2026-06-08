@@ -1,18 +1,11 @@
 ---
 name: macos-menubar-tuist-app
-description: Build, refactor, or review SwiftUI macOS menubar apps that use Tuist.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Build, refactor, or review macOS menubar apps that use Tuist and SwiftUI. Use when creating or maintaining LSUIElement menubar utilities, defining Tuist targets/manifests, implementing model-client-store-view architecture, adding script-based launch flows, or validating reliable local build/run behavior without Xcode-first workflows.
 ---
 
 # macos-menubar-tuist-app
 
 Build and maintain macOS menubar apps with a Tuist-first workflow and stable launch scripts. Preserve strict architecture boundaries so networking, state, and UI remain testable and predictable.
-
-## When to Use
-- When working on LSUIElement menubar utilities built with Tuist and SwiftUI.
-- When you need Tuist manifests, launch scripts, or architecture guidance for a menubar app.
 
 ## Core Rules
 
@@ -106,8 +99,3 @@ Trace root cause in model/client/store before changing row/menu presentation.
 - Keep Tuist manifests and run scripts aligned with actual build/run flow.
 - Run the validation matrix for touched areas.
 - Report concrete commands run and outcomes.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

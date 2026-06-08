@@ -1,197 +1,274 @@
 ---
 name: spec-to-repo
-description: >
-  Translate product specs (PRDs, user stories, feature briefs) into a
-  clean, ship-ready repo structure: ticket decomposition, branch
-  strategy, PR sequencing, and definition-of-done. Use when planning
-  the implementation of a feature, breaking a PRD into engineering
-  tickets, designing the branch/PR sequence, or auditing existing
-  decomposition for shipping risk.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: product-team
-  domain: delivery
-  updated: 2026-05-27
-  tags: [prd, ticket-decomposition, branch-strategy, pr, definition-of-done, delivery]
+description: "Use when the user says 'build me an app', 'create a project from this spec', 'scaffold a new repo', 'generate a starter', 'turn this idea into code', 'bootstrap a project', 'I have requirements and need a codebase', or provides a natural-language project specification and expects a complete, runnable repository. Stack-agnostic: Next.js, FastAPI, Rails, Go, Rust, Flutter, and more."
 ---
 
 # Spec to Repo
 
-A delivery-focused skill that bridges product spec to repository work.
-Where PRD-writing skills focus on what to build, this skill focuses on
-**how to break it down for execution** — the ticket decomposition,
-branch strategy, PR sequencing, and acceptance criteria that make a
-spec actually ship.
+Turn a natural-language project specification into a complete, runnable starter repository. Not a template filler — a spec interpreter that generates real, working code for any stack.
 
-## When to use this skill
+## When to Use
 
-- Translating a **PRD or feature brief** into a sequence of tickets
-- Designing the **branch + PR sequence** for a multi-week feature
-- Auditing an existing **ticket decomposition** for risk (big tickets, hidden dependencies)
-- Defining **definition-of-done** that covers code, tests, docs, telemetry
-- Planning **incremental shipping** (feature flags, canaries, dark-launch)
-- Reviewing a **decomposition before sprint planning** to avoid mid-sprint surprises
+- User provides a text description of an app and wants code
+- User has a PRD, requirements doc, or feature list and needs a codebase
+- User says "build me an app that...", "scaffold this", "bootstrap a project"
+- User wants a working starter repo, not just a file tree
 
-## Inputs the advisor expects
+**Not this skill** when the user wants a SaaS app with Stripe + Auth specifically — use `product-team/saas-scaffolder` instead.
 
-- The PRD or spec document
-- Target ship window (1 sprint? 1 month? 1 quarter?)
-- Engineering team size + composition (FE, BE, ML, mobile)
-- Risk profile (greenfield vs production-impacting)
-- Feature-flag and rollout posture
+## Core Workflow
 
-## Workflows
+### Phase 1 — Parse & Interpret
 
-### Workflow 1 — Decompose a PRD into tickets
+Read the spec. Extract these fields silently:
 
-1. Pull the PRD; identify the user-facing capabilities.
-2. Run `prd_to_tickets_decomposer.py` with the user stories + technical
-   notes to surface a candidate ticket tree (epic → tickets → subtasks)
-   with size estimates and dependencies.
-3. Manually review; tune for team-specific patterns.
+| Field | Source | Required |
+|-------|--------|----------|
+| App name | Explicit or infer from description | yes |
+| Description | First sentence of spec | yes |
+| Features | Bullet points or sentences describing behavior | yes |
+| Tech stack | Explicit ("use FastAPI") or infer from context | yes |
+| Auth | "login", "users", "accounts", "roles" | if mentioned |
+| Database | "store", "save", "persist", "records", "schema" | if mentioned |
+| API surface | "endpoint", "API", "REST", "GraphQL" | if mentioned |
+| Deploy target | "Vercel", "Docker", "AWS", "Railway" | if mentioned |
+
+**Stack inference rules** (when user doesn't specify):
+
+| Signal | Inferred stack |
+|--------|---------------|
+| "web app", "dashboard", "SaaS" | Next.js + TypeScript |
+| "API", "backend", "microservice" | FastAPI (Python) or Express (Node) |
+| "mobile app" | Flutter or React Native |
+| "CLI tool" | Go or Python |
+| "data pipeline" | Python |
+| "high performance", "systems" | Rust or Go |
+
+After parsing, present a structured interpretation back to the user:
+
+```
+## Spec Interpretation
+
+**App:** [name]
+**Stack:** [framework + language]
+**Features:**
+1. [feature]
+2. [feature]
+
+**Database:** [yes/no — engine]
+**Auth:** [yes/no — method]
+**Deploy:** [target]
+
+Does this match your intent? Any corrections before I generate?
+```
+
+Flag ambiguities. Ask **at most 3** clarifying questions. If the user says "just build it", proceed with best-guess defaults.
+
+### Phase 2 — Architecture
+
+Design the project before writing any files:
+
+1. **Select template** — Match to a stack template from `references/stack-templates.md`
+2. **Define file tree** — List every file that will be created
+3. **Map features to files** — Each feature gets at minimum one file/component
+4. **Design database schema** — If applicable, define tables/collections with fields and types
+5. **Identify dependencies** — List every package with version constraints
+6. **Plan API routes** — If applicable, list every endpoint with method, path, request/response shape
+
+Present the file tree to the user before generating:
+
+```
+project-name/
+├── README.md
+├── .env.example
+├── .gitignore
+├── .github/workflows/ci.yml
+├── package.json / requirements.txt / go.mod
+├── src/
+│   ├── ...
+├── tests/
+│   ├── ...
+└── ...
+```
+
+### Phase 3 — Generate
+
+Write every file. Rules:
+
+- **Real code, not stubs.** Every function has a real implementation. No `// TODO: implement` or `pass` placeholders.
+- **Syntactically valid.** Every file must parse without errors in its language.
+- **Imports match dependencies.** Every import must correspond to a package in the manifest (package.json, requirements.txt, go.mod, etc.).
+- **Types included.** TypeScript projects use types. Python projects use type hints. Go projects use typed structs.
+- **Environment variables.** Generate `.env.example` with every required variable, commented with purpose.
+- **README.md.** Include: project description, prerequisites, setup steps (clone, install, configure env, run), and available scripts/commands.
+- **CI config.** Generate `.github/workflows/ci.yml` with: install, lint (if linter in deps), test, build.
+- **.gitignore.** Stack-appropriate ignores (node_modules, __pycache__, .env, build artifacts).
+
+**File generation order:**
+1. Manifest (package.json / requirements.txt / go.mod)
+2. Config files (.env.example, .gitignore, CI)
+3. Database schema / migrations
+4. Core business logic
+5. API routes / endpoints
+6. UI components (if applicable)
+7. Tests
+8. README.md
+
+### Phase 4 — Validate
+
+After generation, run through this checklist:
+
+- [ ] Every imported package exists in the manifest
+- [ ] Every file referenced by an import exists in the tree
+- [ ] `.env.example` lists every env var used in code
+- [ ] `.gitignore` covers build artifacts and secrets
+- [ ] README has setup instructions that actually work
+- [ ] No hardcoded secrets, API keys, or passwords
+- [ ] At least one test file exists
+- [ ] Build/start command is documented and would work
+
+Run `scripts/validate_project.py` against the generated directory to catch common issues.
+
+## Examples
+
+### Example 1: Task Management API
+
+**Input spec:**
+> "Build me a task management API. Users can create, list, update, and delete tasks. Tasks have a title, description, status (todo/in-progress/done), and due date. Use FastAPI with SQLite. Add basic auth with API keys."
+
+**Output file tree:**
+```
+task-api/
+├── README.md
+├── .env.example              # API_KEY, DATABASE_URL
+├── .gitignore
+├── .github/workflows/ci.yml
+├── requirements.txt          # fastapi, uvicorn, sqlalchemy, pytest
+├── main.py                   # FastAPI app, CORS, lifespan
+├── models.py                 # SQLAlchemy Task model
+├── schemas.py                # Pydantic request/response schemas
+├── database.py               # SQLite engine + session
+├── auth.py                   # API key middleware
+├── routers/
+│   └── tasks.py              # CRUD endpoints
+└── tests/
+    └── test_tasks.py         # Smoke tests for each endpoint
+```
+
+### Example 2: Recipe Sharing Web App
+
+**Input spec:**
+> "I want a recipe sharing website. Users sign up, post recipes with ingredients and steps, browse other recipes, and save favorites. Use Next.js with Tailwind. Store data in PostgreSQL."
+
+**Output file tree:**
+```
+recipe-share/
+├── README.md
+├── .env.example              # DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL
+├── .gitignore
+├── .github/workflows/ci.yml
+├── package.json              # next, react, tailwindcss, prisma, next-auth
+├── tailwind.config.ts
+├── tsconfig.json
+├── next.config.ts
+├── prisma/
+│   └── schema.prisma         # User, Recipe, Ingredient, Favorite models
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx          # Homepage — recipe feed
+│   │   ├── recipes/
+│   │   │   ├── page.tsx      # Browse recipes
+│   │   │   ├── [id]/page.tsx # Recipe detail
+│   │   │   └── new/page.tsx  # Create recipe form
+│   │   └── api/
+│   │       ├── auth/[...nextauth]/route.ts
+│   │       └── recipes/route.ts
+│   ├── components/
+│   │   ├── RecipeCard.tsx
+│   │   ├── RecipeForm.tsx
+│   │   └── Navbar.tsx
+│   └── lib/
+│       ├── prisma.ts
+│       └── auth.ts
+└── tests/
+    └── recipes.test.ts
+```
+
+### Example 3: CLI Expense Tracker
+
+**Input spec:**
+> "Python CLI tool for tracking expenses. Commands: add, list, summary, export-csv. Store in a local SQLite file. No external API."
+
+**Output file tree:**
+```
+expense-tracker/
+├── README.md
+├── .gitignore
+├── .github/workflows/ci.yml
+├── pyproject.toml
+├── src/
+│   └── expense_tracker/
+│       ├── __init__.py
+│       ├── cli.py            # argparse commands
+│       ├── database.py       # SQLite operations
+│       ├── models.py         # Expense dataclass
+│       └── formatters.py     # Table + CSV output
+└── tests/
+    └── test_cli.py
+```
+
+## Anti-Patterns
+
+| Anti-pattern | Fix |
+|---|---|
+| **Placeholder code** — `// TODO: implement`, `pass`, empty function bodies | Every function has a real implementation. If complex, implement a working simplified version. |
+| **Stack override** — picking Next.js when the user said Flask | Always honor explicit tech preferences. Only infer when the user doesn't specify. |
+| **Missing .gitignore** — committing node_modules or .env | Generate stack-appropriate .gitignore as one of the first files. |
+| **Phantom imports** — importing packages not in the manifest | Cross-check every import against package.json / requirements.txt before finishing. |
+| **Over-engineering MVP** — adding Redis caching, rate limiting, WebSockets to a v1 | Build the minimum that works. The user can iterate. |
+| **Ignoring stated preferences** — user says "PostgreSQL" and you generate MongoDB | Parse the spec carefully. Explicit preferences are non-negotiable. |
+| **Missing env vars** — code reads `process.env.X` but `.env.example` doesn't list it | Every env var used in code must appear in `.env.example` with a comment. |
+| **No tests** — shipping a repo with zero test files | At minimum: one smoke test per API endpoint or one test per core function. |
+| **Hallucinated APIs** — generating code that calls library methods that don't exist | Stick to well-documented, stable APIs. When unsure, use the simplest approach. |
+
+## Validation Script
+
+### `scripts/validate_project.py`
+
+Checks a generated project directory for common issues:
 
 ```bash
-python3 spec-to-repo/scripts/prd_to_tickets_decomposer.py \
-  --input prd.json --format markdown
+# Validate a generated project
+python3 scripts/validate_project.py /path/to/generated-project
+
+# JSON output
+python3 scripts/validate_project.py /path/to/generated-project --format json
 ```
 
-### Workflow 2 — Validate the branch and PR plan
+Checks performed:
+- README.md exists and is non-empty
+- .gitignore exists
+- .env.example exists (if code references env vars)
+- Package manifest exists (package.json, requirements.txt, go.mod, Cargo.toml, pubspec.yaml)
+- No .env file committed (secrets leak)
+- At least one test file exists
+- No TODO/FIXME placeholders in generated code
 
-1. Capture proposed branch + PR sequence.
-2. Run `pr_scope_analyzer.py` to flag oversized PRs, missing tests,
-   missing telemetry, and risky merges.
-3. Adjust before opening PRs.
+## Progressive Enhancement
 
-```bash
-python3 spec-to-repo/scripts/pr_scope_analyzer.py \
-  --input pr_plan.json --format markdown
-```
+For complex specs, generate in stages:
 
-### Workflow 3 — Lint branch names against convention
+1. **MVP** — Core feature only, working end-to-end
+2. **Auth** — Add authentication if requested
+3. **Polish** — Error handling, validation, loading states
+4. **Deploy** — Docker, CI, deploy config
 
-1. Capture branch list (e.g., `git branch --list`).
-2. Run `branch_naming_validator.py` to flag non-conformant names.
+Ask the user after MVP: "Core is working. Want me to add auth/polish/deploy next, or iterate on what's here?"
 
-```bash
-python3 spec-to-repo/scripts/branch_naming_validator.py \
-  --input branches.txt --format markdown
-```
+## Cross-References
 
-## Decision frameworks
-
-### Ticket sizing
-
-| Size | Effort | Description |
-|------|--------|-------------|
-| XS | < 0.5 day | Trivial; usually skip ticketing |
-| S | 0.5–1 day | One simple change |
-| M | 1–3 days | Single feature, well-scoped |
-| L | 3–5 days | Multi-day work; should split if possible |
-| XL | > 5 days | Always split — too big for confident estimate |
-
-A ticket that's L or XL almost always hides a missing decomposition. Push
-back on yourself.
-
-### The ticket tree
-
-```
-Epic — large product feature ("Notifications v2")
-├── Story — user-facing capability ("As a user I can mute by channel")
-│   ├── Ticket — one engineering work item (backend, frontend, infra)
-│   │   └── Subtask — atomic step (optional)
-```
-
-Most orgs:
-- Epic ≈ PRD-sized scope
-- Story ≈ one user-facing slice
-- Ticket ≈ one PR (or pair of PRs: BE + FE)
-
-### The "vertical slice"
-
-Best ticket: ships a small user-visible improvement end-to-end.
-- Backend change + frontend change + tests + telemetry + docs in one ship
-- Better than: BE-only ticket waiting for FE-only ticket waiting for QA
-
-When you can't slice vertically (e.g., backend is weeks before frontend):
-- Use feature flags to ship behind a switch
-- Dark-launch backend to validate before frontend
-- Communicate the lag explicitly
-
-### PR sequencing
-
-For a multi-PR feature:
-
-1. **PR 1 — Infrastructure / scaffolding** (no behavior change)
-2. **PR 2 — Backend changes** (behind flag; no frontend uses it)
-3. **PR 3 — Frontend changes** (behind flag; tests pass with flag on/off)
-4. **PR 4 — Telemetry + analytics events**
-5. **PR 5 — Documentation + runbook**
-6. **PR 6 — Flag enablement** (small change; reviewable cleanly)
-
-Each PR < 400 lines if possible. Reviewability collapses above 400.
-
-### Definition of done
-
-Per ticket:
-- Code: written, reviewed, merged
-- Tests: unit + integration as appropriate
-- Telemetry: events fired (and verified)
-- Docs: README / runbook / API doc updated as needed
-- Accessibility: meets the project bar
-- Feature flag: configured (if applicable)
-- Rollout plan: defined for non-flagged ships
-
-Per epic:
-- All tickets complete
-- Feature behind flag in production for 1+ week (if risky)
-- Flag enabled for X% (canary), then ramped
-- Telemetry shows expected behavior
-- Customer-facing comms drafted (if applicable)
-
-## Common engagements
-
-### "Help me decompose this PRD"
-1. List user-facing capabilities (1-line each).
-2. For each, list the backend, frontend, infra, telemetry, docs work.
-3. Estimate; flag anything > 3 days for further breakdown.
-4. Sequence: scaffolding first, behavior next, flag enablement last.
-5. Identify cross-team dependencies; engage before sprint start.
-
-### "Our team is shipping huge PRs"
-1. Audit the last 10 PRs: median size, P95 size.
-2. Identify the patterns: monolithic services + flag-less work + slow review.
-3. Pilot: feature flags + ticket-first decomposition + PR size SLA.
-4. Track: median PR size + lead time week-over-week.
-
-### "Help me plan the rollout"
-1. Define a successful launch criterion (e.g., < 0.5% error rate at 50%).
-2. Identify the kill switch (feature flag or quick-revert).
-3. Plan ramps: 1% → 5% → 25% → 50% → 100% with bake time.
-4. Define rollback criteria + comms plan.
-5. Coordinate with on-call + support.
-
-## Anti-patterns to avoid
-
-- **Decomposition as wishful thinking.** "3-day estimate" with no break-down is a 2-week-actual.
-- **Sequential ticket tree (everyone waits).** Plan parallel paths.
-- **Hidden dependencies on other teams.** Surface them in decomposition.
-- **No feature flag.** Shippable in chunks but every change goes to all users immediately.
-- **PRs > 1000 lines.** Reviewability dies; bugs hide.
-- **DoD that's just "code merged."** Forgets tests, docs, telemetry.
-- **Ticket = a day of work.** Sometimes tickets are 30 minutes; sometimes 3 days.
-
-## References
-
-- `references/spec-to-ticket-decomposition.md` — patterns for breaking specs into tickets
-- `references/branch-strategy-for-features.md` — branching, feature flags, dark-launch
-- `references/pr-discipline-and-conventions.md` — PR size, review, definition-of-done
-
-## Related skills
-
-- `product-team/agile-product-owner` — sprint planning, prioritization
-- `engineering/feature-flags-architect` — flag strategy
-- `engineering/observability-designer` — SLO / telemetry
-- `c-level-advisor/vpe-advisor` — broader delivery context
-- `project-management/` skills — ticket / sprint management tooling
+- Related: `product-team/saas-scaffolder` — SaaS-specific scaffolding (Next.js + Stripe + Auth)
+- Related: `engineering/spec-driven-workflow` — spec-first development methodology
+- Related: `engineering/database-designer` — database schema design patterns
+- Related: `engineering-team/senior-fullstack` — full-stack implementation patterns

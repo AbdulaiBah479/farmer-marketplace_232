@@ -1,7 +1,7 @@
 ---
 name: unity-ecs-patterns
-description: "Production patterns for Unity's Data-Oriented Technology Stack (DOTS) including Entity Component System, Job System, and Burst Compiler."
-risk: safe
+description: "Master Unity ECS (Entity Component System) with DOTS, Jobs, and Burst for high-performance game development. Use when building data-oriented games, optimizing performance, or working with large ent..."
+risk: unknown
 source: community
 date_added: "2026-02-27"
 ---
@@ -34,8 +34,3 @@ Production patterns for Unity's Data-Oriented Technology Stack (DOTS) including 
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed patterns and examples.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

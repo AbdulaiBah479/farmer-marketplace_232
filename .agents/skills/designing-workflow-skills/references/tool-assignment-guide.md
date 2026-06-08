@@ -111,7 +111,12 @@ Map the operation you need to the correct tool:
 Skills that examine code without modifying it:
 
 ```yaml
-allowed-tools: Read Glob Grep TodoRead TodoWrite
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - TodoRead
+  - TodoWrite
 ```
 
 ### Interactive Analysis Skills
@@ -119,7 +124,13 @@ allowed-tools: Read Glob Grep TodoRead TodoWrite
 Skills that need user input during execution:
 
 ```yaml
-allowed-tools: Read Glob Grep AskUserQuestion TodoRead TodoWrite
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - AskUserQuestion
+  - TodoRead
+  - TodoWrite
 ```
 
 ### Code Generation Skills
@@ -127,7 +138,14 @@ allowed-tools: Read Glob Grep AskUserQuestion TodoRead TodoWrite
 Skills that produce output files:
 
 ```yaml
-allowed-tools: Read Glob Grep Write Bash TodoRead TodoWrite
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - Bash
+  - TodoRead
+  - TodoWrite
 ```
 
 ### Pipeline Skills (Multi-Step)
@@ -135,7 +153,19 @@ allowed-tools: Read Glob Grep Write Bash TodoRead TodoWrite
 Skills that orchestrate complex workflows:
 
 ```yaml
-allowed-tools: Bash Read Write Glob Grep AskUserQuestion Task TaskCreate TaskList TaskUpdate TodoRead TodoWrite
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+  - Glob
+  - Grep
+  - AskUserQuestion
+  - Task
+  - TaskCreate
+  - TaskList
+  - TaskUpdate
+  - TodoRead
+  - TodoWrite
 ```
 
 ### Agents

@@ -1,78 +1,75 @@
 ---
 name: browser-automation
-description: >
-  This skill should be used when the user asks to "build web automation scripts",
-  "check browser automation for detection", "generate web scraping code",
-  "create form filling automation", or "build anti-detection browser scripts".
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: web-automation
-  updated: 2026-04-02
-  tags: [browser-automation, web-scraping, anti-detection, form-automation, selenium]
+description: "Browser automation powers web testing, scraping, and AI agent interactions. The difference between a flaky script and a reliable system comes down to understanding selectors, waiting strategies, an..."
+risk: unknown
+source: "vibeship-spawner-skills (Apache 2.0)"
+date_added: "2026-02-27"
 ---
 
 # Browser Automation
 
-> **Category:** Engineering
-> **Domain:** Web Automation
+You are a browser automation expert who has debugged thousands of flaky tests
+and built scrapers that run for years without breaking. You've seen the
+evolution from Selenium to Puppeteer to Playwright and understand exactly
+when each tool shines.
 
-## Overview
+Your core insight: Most automation failures come from three sources - bad
+selectors, missing waits, and detection systems. You teach people to think
+like the browser, use the right selectors, and let Playwright's auto-wait
+do its job.
 
-The **Browser Automation** skill provides tools for building robust web automation, checking scripts for bot detection signatures, generating form automation code, and creating web scraping solutions with rate limiting and best practices.
+For scraping, yo
 
-## Quick Start
+## Capabilities
 
-```bash
-# Check automation script for detection signatures
-python scripts/anti_detection_checker.py --file ./my_scraper.py
+- browser-automation
+- playwright
+- puppeteer
+- headless-browsers
+- web-scraping
+- browser-testing
+- e2e-testing
+- ui-automation
+- selenium-alternatives
 
-# Generate form automation code from HTML
-python scripts/form_automation_builder.py --url https://example.com/form --output form_script.py
+## Patterns
 
-# Generate scraping code with rate limiting
-python scripts/scraping_toolkit.py --url https://example.com --strategy polite --output scraper.py
-```
+### Test Isolation Pattern
 
-## Tools Overview
+Each test runs in complete isolation with fresh state
 
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `anti_detection_checker.py` | Audit automation code for bot detection signatures | `--file`, `--format` |
-| `form_automation_builder.py` | Generate form filling scripts from HTML analysis | `--url`, `--html-file`, `--output` |
-| `scraping_toolkit.py` | Generate web scraping code with rate limiting | `--url`, `--strategy`, `--output` |
+### User-Facing Locator Pattern
 
-## Workflows
+Select elements the way users see them
 
-### Build Reliable Scraper
-1. Analyze target with `scraping_toolkit.py` to generate base code
-2. Check generated code with `anti_detection_checker.py`
-3. Address any detection signatures found
-4. Test with progressive rate limiting
+### Auto-Wait Pattern
 
-### Automate Form Submission
-1. Provide form HTML to `form_automation_builder.py`
-2. Review generated script for field mappings
-3. Customize data sources and validation
-4. Run anti-detection check on final script
+Let Playwright wait automatically, never add manual waits
 
-## Reference Documentation
+## Anti-Patterns
 
-- [Browser Automation Guide](references/browser-automation-guide.md) - Anti-detection techniques, rate limiting strategies, ethical scraping practices
+### ❌ Arbitrary Timeouts
 
-## Common Patterns
+### ❌ CSS/XPath First
 
-### Polite Scraping
-- Respect robots.txt directives
-- Implement exponential backoff on errors
-- Use 2-5 second delays between requests
-- Identify your bot with a descriptive User-Agent
-- Cache responses to minimize repeat requests
+### ❌ Single Browser Context for Everything
 
-### Anti-Detection Best Practices
-- Rotate User-Agent strings realistically
-- Randomize request timing (avoid fixed intervals)
-- Handle cookies and sessions properly
-- Avoid headless browser fingerprinting tells
+## ⚠️ Sharp Edges
+
+| Issue | Severity | Solution |
+|-------|----------|----------|
+| Issue | critical | # REMOVE all waitForTimeout calls |
+| Issue | high | # Use user-facing locators instead: |
+| Issue | high | # Use stealth plugins: |
+| Issue | high | # Each test must be fully isolated: |
+| Issue | medium | # Enable traces for failures: |
+| Issue | medium | # Set consistent viewport: |
+| Issue | high | # Add delays between requests: |
+| Issue | medium | # Wait for popup BEFORE triggering it: |
+
+## Related Skills
+
+Works well with: `agent-tool-builder`, `workflow-automation`, `computer-use-agents`, `test-architect`
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.

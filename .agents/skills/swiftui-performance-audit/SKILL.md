@@ -1,9 +1,6 @@
 ---
 name: swiftui-performance-audit
-description: Audit SwiftUI performance issues from code review and profiling evidence.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Audit and improve SwiftUI runtime performance from code review and architecture. Use for requests to diagnose slow rendering, janky scrolling, high CPU/memory usage, excessive view updates, or layout thrash in SwiftUI apps, and to provide guidance for user-run Instruments profiling when code review alone is insufficient.
 ---
 
 # SwiftUI Performance Audit
@@ -11,10 +8,6 @@ date_added: "2026-03-25"
 ## Quick start
 
 Use this skill to diagnose SwiftUI performance issues from code first, then request profiling evidence when code review alone cannot explain the symptoms.
-
-## When to Use
-- When the user reports slow rendering, janky scrolling, layout thrash, or high CPU in SwiftUI.
-- When you need a code-first audit plus Instruments guidance if profiling evidence is required.
 
 ## Workflow
 
@@ -111,8 +104,3 @@ Use `references/report-template.md` when formatting the final audit.
 - Understanding and improving SwiftUI performance: `references/understanding-improving-swiftui-performance.md`
 - Understanding hangs in your app: `references/understanding-hangs-in-your-app.md`
 - Demystify SwiftUI performance (WWDC23): `references/demystify-swiftui-performance-wwdc23.md`
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

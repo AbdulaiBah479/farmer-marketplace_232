@@ -10,7 +10,6 @@ Supports: macOS, Linux, Windows
 GPU Detection: NVIDIA (CUDA), AMD (ROCm), Apple Silicon (Metal)
 """
 
-import datetime
 import json
 import os
 import platform
@@ -253,7 +252,7 @@ def detect_all_resources(output_path: str = None) -> Dict[str, Any]:
         output_path = os.path.join(os.getcwd(), ".claude_resources.json")
 
     resources = {
-        "timestamp": datetime.datetime.now().isoformat(),
+        "timestamp": __import__("datetime").datetime.now().isoformat(),
         "os": get_os_info(),
         "cpu": get_cpu_info(),
         "memory": get_memory_info(),

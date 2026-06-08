@@ -1,7 +1,7 @@
 ---
 name: deployment-pipeline-design
-description: "Architecture patterns for multi-stage CI/CD pipelines with approval gates and deployment strategies."
-risk: critical
+description: "Design multi-stage CI/CD pipelines with approval gates, security checks, and deployment orchestration. Use when architecting deployment workflows, setting up continuous delivery, or implementing Gi..."
+risk: unknown
 source: community
 date_added: "2026-02-27"
 ---
@@ -372,8 +372,3 @@ kubectl rollout undo deployment/my-app --to-revision=3
 - `github-actions-templates` - For GitHub Actions implementation
 - `gitlab-ci-patterns` - For GitLab CI implementation
 - `secrets-management` - For secrets handling
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,111 +1,159 @@
 ---
 name: deep-research
-description: Execute autonomous multi-step deep research on any topic. Use when the user asks for comprehensive research, literature reviews, competitive analysis, topic deep-dives, or wants to understand a complex subject from multiple angles. Triggers on "deep research", "research on", "investigate", "literature review", "comprehensive analysis", "what do we know about", "summarize research on".
+description: Multi-source deep research using firecrawl and exa MCPs. Searches the web, synthesizes findings, and delivers cited reports with source attribution. Use when the user wants thorough research on any topic with evidence and citations.
+origin: ECC
 ---
 
 # Deep Research
 
-Autonomous multi-step research that searches multiple sources, reads full content, synthesizes findings, and produces a structured report.
+> **Drift-prone skill.** Firecrawl/Exa MCP tool names, quotas, and result
+> shapes change. Verify the configured MCP tools and current API docs before
+> promising coverage or quoting live source counts.
 
-## When to Use
+Produce thorough, cited research reports from multiple web sources using firecrawl and exa MCP tools.
 
-- User wants a thorough understanding of a topic (medical condition, drug, treatment, technology)
-- User asks for a literature review or evidence summary
-- User wants competitive or landscape analysis
-- User wants to investigate an open question with multiple angles
-- User asks "what does the research say about X"
+## When to Activate
 
-## Research Strategy
+- User asks to research any topic in depth
+- Competitive analysis, technology evaluation, or market sizing
+- Due diligence on companies, investors, or technologies
+- Any question requiring synthesis from multiple sources
+- User says "research", "deep dive", "investigate", or "what's the current state of"
 
-### Step 1: Query Decomposition
-Break the research question into 3–5 sub-questions covering:
-- Core definition / mechanism
-- Current evidence / state of the art
-- Debates, limitations, or contradictions
-- Clinical / practical implications (if medical)
-- Recent developments (last 1–2 years)
+## MCP Requirements
 
-### Step 2: Multi-Source Search
-Run searches across complementary sources using the available search tools:
+At least one of:
+- **firecrawl** — `firecrawl_search`, `firecrawl_scrape`, `firecrawl_crawl`
+- **exa** — `web_search_exa`, `web_search_advanced_exa`, `crawling_exa`
 
-```python
-# Use multi-search-engine for broad web coverage
-# Use pubmed-search for peer-reviewed medical literature
-# Use agent-browser to read full-text articles and retrieve content blocked by snippets
+Both together give the best coverage. Configure in `~/.claude.json` or `~/.codex/config.toml`.
+
+## Workflow
+
+### Step 1: Understand the Goal
+
+Ask 1-2 quick clarifying questions:
+- "What's your goal — learning, making a decision, or writing something?"
+- "Any specific angle or depth you want?"
+
+If the user says "just research it" — skip ahead with reasonable defaults.
+
+### Step 2: Plan the Research
+
+Break the topic into 3-5 research sub-questions. Example:
+- Topic: "Impact of AI on healthcare"
+  - What are the main AI applications in healthcare today?
+  - What clinical outcomes have been measured?
+  - What are the regulatory challenges?
+  - What companies are leading this space?
+  - What's the market size and growth trajectory?
+
+### Step 3: Execute Multi-Source Search
+
+For EACH sub-question, search using available MCP tools:
+
+**With firecrawl:**
+```
+firecrawl_search(query: "<sub-question keywords>", limit: 8)
 ```
 
-**Search order:**
-1. PubMed (if medical/biomedical topic) — for peer-reviewed evidence
-2. Multi-search-engine (Bing, Google, DuckDuckGo) — for guidelines, reviews, news
-3. Wikipedia — for background and structured overviews
-4. agent-browser — for reading full articles, PDFs, clinical guidelines
+**With exa:**
+```
+web_search_exa(query: "<sub-question keywords>", numResults: 8)
+web_search_advanced_exa(query: "<keywords>", numResults: 5, startPublishedDate: "2025-01-01")
+```
 
-### Step 3: Source Evaluation
-For each source note:
-- Publication type (RCT, meta-analysis, guideline, review, news)
-- Date (prefer sources within 5 years for medical topics)
-- Authority (journal impact, organization credibility)
-- Relevance to the specific sub-question
+**Search strategy:**
+- Use 2-3 different keyword variations per sub-question
+- Mix general and news-focused queries
+- Aim for 15-30 unique sources total
+- Prioritize: academic, official, reputable news > blogs > forums
 
-### Step 4: Synthesis
-Synthesize across sources into a coherent narrative. Do NOT just concatenate summaries — identify:
-- Points of consensus
-- Contradictions or conflicting evidence
-- Knowledge gaps
-- Strongest evidence vs. weak/preliminary evidence
+### Step 4: Deep-Read Key Sources
 
-### Step 5: Structured Report
-Produce a well-formatted Markdown report with:
+For the most promising URLs, fetch full content:
+
+**With firecrawl:**
+```
+firecrawl_scrape(url: "<url>")
+```
+
+**With exa:**
+```
+crawling_exa(url: "<url>", tokensNum: 5000)
+```
+
+Read 3-5 key sources in full for depth. Do not rely only on search snippets.
+
+### Step 5: Synthesize and Write Report
+
+Structure the report:
 
 ```markdown
-# [Topic] — Deep Research Report
+# [Topic]: Research Report
+*Generated: [date] | Sources: [N] | Confidence: [High/Medium/Low]*
 
-## Summary
-2–3 sentence executive summary of the key finding.
+## Executive Summary
+[3-5 sentence overview of key findings]
 
-## Background
-What is this? Core definitions, mechanisms, or context.
+## 1. [First Major Theme]
+[Findings with inline citations]
+- Key point ([Source Name](url))
+- Supporting data ([Source Name](url))
 
-## Current Evidence
-What does the research show? Organized by sub-question or theme.
+## 2. [Second Major Theme]
+...
 
-## Key Debates / Open Questions
-Where do experts disagree? What is still unknown?
+## 3. [Third Major Theme]
+...
 
-## Clinical / Practical Implications
-(For medical topics) What should clinicians or patients know?
-
-## Recent Developments
-Anything notable from the past 12–24 months.
+## Key Takeaways
+- [Actionable insight 1]
+- [Actionable insight 2]
+- [Actionable insight 3]
 
 ## Sources
-Numbered list of all sources with titles, URLs/DOIs, and dates.
+1. [Title](url) — [one-line summary]
+2. ...
+
+## Methodology
+Searched [N] queries across web and news. Analyzed [M] sources.
+Sub-questions investigated: [list]
 ```
 
-## Medical Research Guidelines
+### Step 6: Deliver
 
-When researching medical topics:
-- **Prioritize evidence hierarchy**: Systematic reviews > RCTs > Cohort studies > Case reports > Expert opinion
-- **Include safety information**: Drug interactions, contraindications, adverse effects
-- **Note population specifics**: Pediatric vs. adult, special populations, comorbidities
-- **Flag regulatory status**: FDA/EMA approval status, off-label use
-- **Cite clinical guidelines**: NICE, AHA, ACC, IDSA, WHO guidelines where relevant
-- **Distinguish mechanistic from clinical evidence**: Lab/animal data ≠ human evidence
+- **Short topics**: Post the full report in chat
+- **Long reports**: Post the executive summary + key takeaways, save full report to a file
 
-## Depth Levels
+## Parallel Research with Subagents
 
-Adapt depth to user request:
-- **Quick overview** (user asks briefly): 3–5 sources, 1-page summary
-- **Standard research** (default): 8–15 sources, full structured report
-- **Comprehensive review** (user asks explicitly): 20+ sources, deep synthesis with evidence grading
+For broad topics, use Claude Code's Task tool to parallelize:
 
-## Example Execution
+```
+Launch 3 research agents in parallel:
+1. Agent 1: Research sub-questions 1-2
+2. Agent 2: Research sub-questions 3-4
+3. Agent 3: Research sub-question 5 + cross-cutting themes
+```
 
-**User:** "Research the evidence for metformin use in longevity/anti-aging"
+Each agent searches, reads sources, and returns findings. The main session synthesizes into the final report.
 
-1. Decompose: mechanism of action → RCT evidence → observational data → safety profile → current trials
-2. Search PubMed for "metformin longevity aging", "TAME trial metformin"
-3. Search web for "metformin anti-aging clinical trials 2024"
-4. Read key papers with agent-browser
-5. Synthesize: strong mechanistic evidence, TAME trial ongoing, limited long-term human RCT data
-6. Produce structured report with citations
+## Quality Rules
+
+1. **Every claim needs a source.** No unsourced assertions.
+2. **Cross-reference.** If only one source says it, flag it as unverified.
+3. **Recency matters.** Prefer sources from the last 12 months.
+4. **Acknowledge gaps.** If you couldn't find good info on a sub-question, say so.
+5. **No hallucination.** If you don't know, say "insufficient data found."
+6. **Separate fact from inference.** Label estimates, projections, and opinions clearly.
+
+## Examples
+
+```
+"Research the current state of nuclear fusion energy"
+"Deep dive into Rust vs Go for backend services in 2026"
+"Research the best strategies for bootstrapping a SaaS business"
+"What's happening with the US housing market right now?"
+"Investigate the competitive landscape for AI code editors"
+```

@@ -1,140 +1,84 @@
 ---
 name: help
-description: Shows available skills, common workflows, and quick reference for the plugin. Use when the user asks for help, what skills are available, or how to do something.
-model: haiku
+description: >
+  One-screen quick reference for the Origin plugin. Lists the daily
+  verbs, the daily flow, where data lives, and how to view it without a
+  GUI. Use when the user says "help", "what can I do", "list origin
+  commands", "how do I use origin", or invokes `/help`.
 allowed-tools: []
 ---
 
-## bitwize-music Plugin Help
+# /help
 
-Display this help information to the user in a clear, organized format.
+Print the Origin plugin reference card. Read-only — never calls a tool.
 
----
+## How to invoke
 
-### Getting Started
+When triggered, output the block below verbatim. No editing, no
+abbreviating, no embellishing. The user is asking for the menu.
 
-**New to the plugin?**
-- `/bitwize-music:tutorial` - Interactive guided album creation
-- `/bitwize-music:configure` - Set up configuration file
-- `/bitwize-music:about` - About bitwize and this plugin
+```
+Origin plugin — daily verbs
 
-**Resume existing work:**
-- `/bitwize-music:resume <album-name>` - Find an album and see status/next steps
+  /init         set up Origin (auto-installs daemon + local memory)
+  /brief        load identity + topic context (start of session)
+  /capture <x>  save one durable memory in flow
+  /recall <q>   search local memory
+  /distill [t]  synthesize pages from clusters (scoped to current repo)
+  /read <p>     preview a distilled page inline
+  /review <surface>   deep audit (surface = captures|revisions); /brief handles daily
+  /forget <id>  delete a memory by ID
+  /handoff      end-of-session ritual (session log + captures)
+  /debrief      alias for /handoff (brief/debrief symmetry)
+  /help         this card
 
----
+Daily flow (~1 min overhead per session):
 
-### Skills by Category
+  1. start session  →  hook auto-checks daemon, silent if up
+  2. /brief         →  ~5 s, load context
+  3. work normally  →  Claude proactively /captures durable facts
+  4. /recall X      →  as needed for lookups
+  5. /handoff       →  ~30 s, narrative session log + captures
 
-**Album & Track Creation**
-- `/bitwize-music:album-ideas` - Track and manage album ideas
-- `/bitwize-music:promote-idea` - Convert a Pending idea into a full album (one-shot)
-- `/bitwize-music:new-album` - Create new album with directory structure
-- `/bitwize-music:album-conceptualizer` - Album concepts and tracklist architecture
-- `/bitwize-music:lyric-writer` - Write/review lyrics, fix prosody
-- `/bitwize-music:suno-engineer` - Technical Suno prompting and genre selection
+Where your data lives (everything under ~/.origin/):
 
-**Research & Sources**
-- `/bitwize-music:researcher` - Main research coordinator, fact-checking
-- `/bitwize-music:document-hunter` - Automated document search/download
-- `/bitwize-music:researchers-legal` - Court documents, indictments
-- `/bitwize-music:researchers-gov` - DOJ/FBI/SEC releases
-- `/bitwize-music:researchers-tech` - Project histories, changelogs
-- `/bitwize-music:researchers-journalism` - Investigative articles
-- `/bitwize-music:researchers-security` - Malware analysis, CVEs
-- `/bitwize-music:researchers-financial` - SEC filings, market data
-- `/bitwize-music:researchers-historical` - Archives, timelines
-- `/bitwize-music:researchers-biographical` - Personal backgrounds
-- `/bitwize-music:researchers-primary-source` - Tweets, blogs, forums
-- `/bitwize-music:researchers-verifier` - Quality control, citation validation
+  ~/.origin/pages/      wiki pages distilled from your memories (md)
+  ~/.origin/sessions/   session logs by date (md)
+  ~/.origin/sessions/_status/  current per-project goals + last-handoff
+  ~/.origin/db/         memories + knowledge graph (symlink to libSQL)
+  ~/.origin/bin/        installed binaries
 
-**Quality Control**
-- `/bitwize-music:lyric-reviewer` - Pre-generation QC gate (14-point checklist)
-- `/bitwize-music:pronunciation-specialist` - Scan for pronunciation risks
-- `/bitwize-music:explicit-checker` - Verify explicit content flags
-- `/bitwize-music:plagiarism-checker` - Check lyrics for phrases matching existing songs
-- `/bitwize-music:voice-checker` - Detect AI-written patterns in lyrics and prose
-- `/bitwize-music:pre-generation-check` - Final pre-generation checkpoint (6 gates)
-- `/bitwize-music:validate-album` - Validate album structure and paths
+View it without a GUI:
 
-**Production & Release**
-- `/bitwize-music:album-art-director` - Visual concepts and AI art prompts
-- `/bitwize-music:mastering-engineer` - Audio mastering guidance
-- `/bitwize-music:promo-director` - Generate promo videos for social media
-- `/bitwize-music:cloud-uploader` - Upload promo videos to Cloudflare R2 or AWS S3
-- `/bitwize-music:sheet-music-publisher` - Convert audio to sheet music
-- `/bitwize-music:release-director` - Release coordination and distribution
+  open ~/.origin/                  browse in Finder
+  code ~/.origin/                  open in VS Code
+  git -C ~/.origin log --oneline   timeline of every memory + distill pass
+  ln -s ~/.origin/pages ~/Vault/origin   # symlink into Obsidian for graph view
 
-**File Management**
-- `/bitwize-music:import-track` - Move track .md files to album location
-- `/bitwize-music:import-audio` - Move audio files to album location
-- `/bitwize-music:import-art` - Place album art in correct locations
-- `/bitwize-music:clipboard` - Copy track lyrics/prompts to clipboard
+~/.origin/ is a git repo. Skills auto-commit per logical batch (one per
+session, distill pass, or forget). Use git log / git diff / git revert
+as a free audit trail. No remote — purely local history.
 
-**Workflow & Status**
-- `/bitwize-music:session-start` - Run session startup procedure
-- `/bitwize-music:next-step` - Get recommended next action
-- `/bitwize-music:album-dashboard` - Visual album progress dashboard
+Three classes of artifact:
+  - memories: granular, queryable, live in DB only (confirmed = stays in DB)
+  - pages:    synthesized wikis, DB + ~/.origin/pages/*.md projection
+  - sessions: chronological narrative, ~/.origin/sessions/*.md only
 
-**System & Maintenance**
-- `/bitwize-music:configure` - Edit plugin configuration
-- `/bitwize-music:test` - Run automated tests
-- `/bitwize-music:help` - Show this help (you are here!)
-- `/bitwize-music:about` - About bitwize and the plugin
+Daemon must run at 127.0.0.1:7878. Hook prints "/origin:init" if down.
 
----
+Optional upgrades for richer distill cycles:
+  origin model install            local Qwen, no API cost
+  origin key set anthropic        Anthropic API, higher quality
+```
 
-### Common Workflows
+## When to use
 
-**Creating a New Album:**
-1. `/bitwize-music:new-album <name> <genre>` - Create structure (or `/bitwize-music:promote-idea "<idea title>"` if the idea lives in `IDEAS.md`)
-2. Answer the 7 planning phases (concept, sonic direction, etc.)
-3. Write lyrics for each track
-4. Run `/bitwize-music:lyric-reviewer` before generation
-5. Generate in Suno, log results
-6. Master audio with `/bitwize-music:mastering-engineer`
-7. [Optional] Generate promo videos with `/bitwize-music:promo-director`
-8. [Optional] Upload to cloud with `/bitwize-music:cloud-uploader`
-9. Release with `/bitwize-music:release-director`
+- User explicitly types `/help`.
+- User asks "what can I do with origin", "list origin commands", "how
+  does this plugin work", "remind me what verbs are available".
+- First session after install — print this once on `/init` success too.
 
-**True-Story Albums (with research):**
-1. Use researcher skills to gather sources
-2. All sources must be verified by human before production
-3. Update track status from `❌ Pending` to `✅ Verified (DATE)`
-4. Then proceed with lyric writing and generation
+## When NOT to use
 
-**Resume Existing Work:**
-1. `/bitwize-music:resume <album-name>` - Get detailed status
-2. Follow the recommended next steps
-
----
-
-### Quick Tips
-
-- **Config file:** `~/.bitwize-music/config.yaml` (always read this for paths)
-- **Pronunciation:** Use phonetic spelling for tricky words (see pronunciation guide)
-- **Explicit content:** Use flag for: fuck, shit, bitch, cunt, cock, dick, pussy, etc.
-- **Mastering target:** -14 LUFS, -1.0 dBTP for streaming platforms
-- **Promo videos:** Generate after mastering, 15s vertical (9:16) for social media
-- **Track status flow:** Not Started → In Progress → Generated → Final
-- **Album status flow:** Concept → In Progress → Complete → Released
-
----
-
-### Key Documentation
-
-- **CLAUDE.md** - Main workflow instructions
-- **README.md** - Project overview
-- `${CLAUDE_PLUGIN_ROOT}/reference/suno/` - Suno V5 guides, pronunciation, tips
-- `${CLAUDE_PLUGIN_ROOT}/reference/workflows/` - Detailed workflow procedures
-- `${CLAUDE_PLUGIN_ROOT}/reference/mastering/` - Audio mastering documentation
-- `${CLAUDE_PLUGIN_ROOT}/templates/` - Templates for new content
-- `${CLAUDE_PLUGIN_ROOT}/skills/[skill-name]/SKILL.md` - Individual skill documentation
-
----
-
-### Getting Help
-
-- Use this skill anytime: `/bitwize-music:help`
-- For tutorial: `/bitwize-music:tutorial`
-- For status: `/bitwize-music:resume <album-name>`
-- Ask Claude: "What should I do next?" for guidance
+- Specific factual lookup → use `/recall`.
+- Setup troubleshooting → use `/init` (it diagnoses + auto-installs).

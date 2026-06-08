@@ -1,6 +1,6 @@
 ---
 name: backend-dev-guidelines
-description: "You are a senior backend engineer operating production-grade services under strict architectural and reliability constraints. Use when routes, controllers, services, repositories, express middleware, or prisma database access."
+description: "Opinionated backend development standards for Node.js + Express + TypeScript microservices. Covers layered architecture, BaseController pattern, dependency injection, Prisma repositories, Zod valid..."
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -57,7 +57,8 @@ BFRI = (Architectural Fit + Testability) − (Complexity + Data Risk + Operation
 
 ---
 
-## When to Use
+## 2. When to Use This Skill
+
 Automatically applies when working on:
 
 * Routes, controllers, services, repositories
@@ -70,7 +71,7 @@ Automatically applies when working on:
 
 ---
 
-## 2. Core Architecture Doctrine (Non-Negotiable)
+## 3. Core Architecture Doctrine (Non-Negotiable)
 
 ### 1. Layered Architecture Is Mandatory
 
@@ -186,7 +187,7 @@ No validation = bug.
 
 ---
 
-## 3. Directory Structure (Canonical)
+## 4. Directory Structure (Canonical)
 
 ```
 src/
@@ -207,7 +208,7 @@ src/
 
 ---
 
-## 4. Naming Conventions (Strict)
+## 5. Naming Conventions (Strict)
 
 | Layer      | Convention                |
 | ---------- | ------------------------- |
@@ -219,7 +220,7 @@ src/
 
 ---
 
-## 5. Dependency Injection Rules
+## 6. Dependency Injection Rules
 
 * Services receive dependencies via constructor
 * No importing repositories directly inside controllers
@@ -235,7 +236,7 @@ export class UserService {
 
 ---
 
-## 6. Prisma & Repository Rules
+## 7. Prisma & Repository Rules
 
 * Prisma client **never used directly in controllers**
 * Repositories:
@@ -250,7 +251,7 @@ await userRepository.findActiveUsers();
 
 ---
 
-## 7. Async & Error Handling
+## 8. Async & Error Handling
 
 ### asyncErrorWrapper Required
 
@@ -269,7 +270,7 @@ No unhandled promise rejections.
 
 ---
 
-## 8. Observability & Monitoring
+## 9. Observability & Monitoring
 
 ### Required
 
@@ -281,7 +282,7 @@ Every critical path must be observable.
 
 ---
 
-## 9. Testing Discipline
+## 10. Testing Discipline
 
 ### Required Tests
 
@@ -301,7 +302,7 @@ No tests → no merge.
 
 ---
 
-## 10. Anti-Patterns (Immediate Rejection)
+## 11. Anti-Patterns (Immediate Rejection)
 
 ❌ Business logic in routes
 ❌ Skipping service layer
@@ -313,7 +314,7 @@ No tests → no merge.
 
 ---
 
-## 11. Integration With Other Skills
+## 12. Integration With Other Skills
 
 * **frontend-dev-guidelines** → API contract alignment
 * **error-tracking** → Sentry standards
@@ -323,7 +324,7 @@ No tests → no merge.
 
 ---
 
-## 12. Operator Validation Checklist
+## 13. Operator Validation Checklist
 
 Before finalizing backend work:
 
@@ -337,16 +338,11 @@ Before finalizing backend work:
 
 ---
 
-## 13. Skill Status
+## 14. Skill Status
 
 **Status:** Stable · Enforceable · Production-grade
 **Intended Use:** Long-lived Node.js microservices with real traffic and real risk
 ---
 
-### When to Use
+## When to Use
 This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

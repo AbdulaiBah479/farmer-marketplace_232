@@ -1,18 +1,24 @@
 ---
 name: n8n-mcp-tools-expert
-description: Expert guide for using n8n-mcp MCP tools effectively. Use when searching for nodes, validating configurations, accessing templates, managing workflows, or using any n8n-mcp tool. Provides tool selection guidance, parameter formats, and common patterns.
-risk: unknown
-source: community
+description: "Expert guide for using n8n-mcp MCP tools effectively. Use when searching for nodes, validating configurations, accessing templates, managing workflows, or using any n8n-mcp tool. Provides tool sele..."
+risk: safe
+source: "https://github.com/czlonkowski/n8n-skills/tree/main/skills/n8n-mcp-tools-expert"
+date_added: "2026-02-27"
 ---
 
 # n8n MCP Tools Expert
 
 Master guide for using n8n-mcp MCP server tools to build workflows.
 
-## When to Use
-- You are using the `n8n-mcp` toolset to discover nodes, validate configs, or manage workflows.
-- The task involves choosing the right MCP tool or understanding its expected parameters and usage pattern.
-- You need guidance on workflow creation or editing through n8n MCP rather than through the n8n UI alone.
+## When to Use This Skill
+
+Use this skill when:
+- Searching for n8n nodes
+- Validating n8n configurations
+- Accessing n8n templates
+- Managing n8n workflows
+- Using any n8n-mcp tool
+- Need guidance on tool selection or parameter formats
 
 ---
 
@@ -647,8 +653,3 @@ For details, see:
 - n8n Node Configuration - Operation-specific requirements
 - n8n Code JavaScript - Write JavaScript in Code nodes
 - n8n Code Python - Write Python in Code nodes
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

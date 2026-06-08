@@ -1,295 +1,149 @@
 ---
 name: channel-economics
-description: >
-  Channel economics: design and analyze the financial structure of go-to-market
-  channels (direct sales, resellers, distributors, marketplaces, embedded
-  partners, MSPs, integrators). Use when picking the right channel mix for a
-  product, modeling partner margin / TCO, designing partner tiers with rebate
-  structures, analyzing channel conflict, or building the financial model that
-  justifies (or kills) a partnership. Pairs with our partnerships-architect
-  (partnership type / strategy) and deal-desk (partner-deal mechanics) — this
-  one is the spreadsheet behind those conversations.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: commercial
-  domain: business-growth
-  updated: 2026-05-27
-  tags: [channel-economics, channel-strategy, partner-program, margin-analysis, gtm, reseller, distributor, marketplace, msp]
+description: "Use when reviewing or rebalancing direct vs. partner-led channel economics — computing fully-loaded cost-to-serve per channel, channel ROI with cash / LTV / marginal lenses, and optimal channel mix subject to constraints. For Head of Commercial, RevOps, and VP Sales doing quarterly channel review when pipeline is mixed (e.g., 60% direct + 40% partner-led) and nobody actually knows which channel makes money after CAC, support load, partner discount, deal-velocity differences, retention differential, and overhead allocation are all loaded in. Outputs cost to serve, channel ROI verdicts (DOUBLE-DOWN / MAINTAIN / DEFUND / EXIT), a sensitivity-tested channel-mix recommendation, and the diminishing-returns inflection. Not channel structure (that's partnerships-architect — tiers, joint GTM, revshare). Not RevOps process (that's business-growth/revenue-operations — lead routing, SDR motion). Not strategic CRO judgment (that's c-level-advisor/cro-advisor — comp plans, when-to-hire-a-VP-Sales). Not historical close-and-report (that's finance/financial-analysis). This skill answers: direct vs partner profitability, channel profitability, channel mix, channel economics."
+version: 2.8.0
+author: claude-code-skills
+license: MIT
+tags: [commercial, channel-economics, cost-to-serve, channel-mix, channel-roi, direct-vs-partner, unit-economics]
+compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
 ---
 
-# Channel Economics
+# channel-economics
 
-End-to-end financial modeling and design of go-to-market channels: direct sales economics, reseller / distributor margin structures, marketplace fees, partner tier economics, channel conflict resolution, and the TCO frameworks that compare channel options apples-to-apples.
+## Purpose
 
-This skill provides the financial backbone for channel strategy. For strategic partnership design (which channel to invest in, how to structure the partnership), see `business-growth/partnerships-architect`. For partner-deal-level approval mechanics, see `business-growth/deal-desk`.
+Help Head of Commercial / RevOps / VP Sales answer three questions at the quarterly channel review:
 
----
+1. **What does each channel actually cost to serve, fully loaded?** (direct headcount, channel manager attribution, partner discount, MDF, enablement time, support load, allocated overhead)
+2. **What is the ROI of each channel under three lenses?** (cash ROI year-1, LTV-adjusted ROI, marginal ROI — next dollar of investment)
+3. **What is the optimal channel mix subject to our strategic constraints?** (minimum direct floor, maximum partner concentration ceiling, sensitivity to CAC shifts)
 
-## When to use this skill
+The skill emits **per-channel verdicts** (DOUBLE-DOWN / MAINTAIN / DEFUND / EXIT), a **sensitivity-tested mix recommendation**, and **the diminishing-returns inflection point**. It does not pick the strategy — humans do, with the numbers loaded honestly for the first time.
 
-| Situation | Skill applies |
-|-----------|---------------|
-| Deciding direct vs partner-led for a new product | Yes — start with **channel model decision tree** |
-| Designing a partner tier structure (silver/gold/platinum) | Yes — see **partner tier economics** |
-| Modeling a specific partner deal's margin / payback | Yes — `scripts/channel_margin_calculator.py` |
-| Analyzing channel conflict (overlapping direct + partner deals) | Yes — see **channel conflict** + `scripts/channel_mix_optimizer.py` |
-| Building a partner program rebate / SPIFF structure | Yes — see **rebate design** |
-| Comparing AWS Marketplace vs direct list-price economics | Yes — `scripts/channel_margin_calculator.py --channel marketplace` |
-| Negotiating a specific partner contract | Use `business-growth/contract-and-proposal-writer` for the contract; this for the economics |
-| Strategic partnership design (joint go-to-market, OEM, white-label) | Use `business-growth/partnerships-architect` first |
+## When to use
 
----
+- Quarterly channel review: pipeline is 60/40 or 50/50 direct vs partner and you don't actually know which one is profitable
+- Considering hiring a channel manager — need to know if the channel can clear the loaded-cost bar
+- Partner program ROI question from the board ("we spent $X on MDF — what did we get?")
+- A segment is over-indexed to one channel and you suspect mix dogma is blocking the other
+- About to expand into a new region and need to decide direct-first vs partner-first
+- M&A diligence: target company claims "partner-led at 70% gross margin" — need to validate after loading
 
-## The channel model decision tree
+**Do not use for:**
+- Designing partner tiers, joint GTM motion, revshare splits → `partnerships-architect`
+- SDR-to-AE routing, lead scoring, MQL definitions → `business-growth/revenue-operations`
+- Strategic CRO decisions ("should we hire a VP Sales?", comp plan design) → `c-level-advisor/cro-advisor`
+- Quarterly close, GAAP revenue recognition, channel-level P&L for historical reporting → `finance/financial-analysis`
+- Per-deal discount approval → `deal-desk`
+- Pricing model design → `pricing-strategist`
 
-Six core channel models. Most companies use a mix.
+## Workflow
 
-```
-What's the product's complexity + price point?
+### Step 1 — Intake channel data
 
-Low complexity, low price (< $10k ACV):
-├── Self-serve / PLG → no channel
-├── E-commerce → direct via web
-└── Marketplace (AWS / Azure / GCP / Salesforce AppExchange) → if buyer already there
+Fill `assets/channel_data_template.md` (≈ 20 min). Capture per channel: deal count TTM, ARR TTM, avg deal size, gross margin %, CAC, sales-cycle days, retention rate, expansion rate, partner discount %, all attributable costs (SDR / AE / SE / channel manager / CS / support / marketing / partner MDF / tooling / overhead allocation %).
 
-Medium complexity, mid-market price ($10k - $250k ACV):
-├── Inside sales / SDR-led direct → if buyer journey is well-understood
-├── Reseller / VAR (Value-Added Reseller) → if local presence / language matters
-├── Marketplace → if buyer prefers procurement via existing relationship
-└── Embedded / OEM → if your product is a component in someone else's offering
+The template surfaces the costs teams most often forget: partner enablement time, certification investment, channel-conflict resolution overhead, channel-manager headcount cost.
 
-High complexity, enterprise ($250k+ ACV):
-├── Direct field sales → standard for high-touch enterprise
-├── Strategic SI / Integrator (Accenture, Deloitte, etc.) → if implementation is a substantial project
-├── ISV / Embedded → if you're a feature in a larger platform
-└── Reseller / Distributor → for regional or vertical specialty
+### Step 2 — Compute cost-to-serve per channel
 
-Operational / managed-service buyer:
-└── MSP (Managed Service Provider) → if customer wants outsourced operations
-```
+Run `scripts/cost_to_serve_calculator.py --input channel.json --output markdown`.
 
-See [references/channel-models-direct-partner-marketplace.md](references/channel-models-direct-partner-marketplace.md) for each model in depth: economic structure, typical margin splits, when each works / fails, contract patterns.
+Output: fully-loaded cost-to-serve **per deal** AND **per dollar of ARR**, with direct costs broken out from allocated overhead, and a "true gross margin" line after channel-specific load. Flags double-counting and surfaces hidden costs.
 
----
+Run once per channel. The "true gross margin" line is the input the next two scripts care about.
 
-## Margin and TCO framework
+### Step 3 — Compute ROI per channel under three lenses
 
-Apples-to-apples channel comparison requires a consistent TCO model. The naive comparison ("direct gets 100%, reseller gets 70%") misses critical costs.
+Run `scripts/channel_roi_analyzer.py --input roi.json --profile saas --output markdown`.
 
-### True channel TCO formula
+Output: per channel, three ROI numbers (Cash year-1, LTV-adjusted, Marginal), the diminishing-returns inflection point, and a verdict: DOUBLE-DOWN / MAINTAIN / DEFUND / EXIT.
 
-```
-Channel Contribution Margin
-  = Channel-attributed Revenue
-  − COGS
-  − Partner Discount/Commission
-  − Channel-specific Sales Cost (allocated)
-  − Channel-specific Marketing Cost (MDF, co-marketing)
-  − Partner Enablement Cost (training, certification)
-  − Channel Operations Cost (channel manager headcount)
-  − Channel-specific Support Cost (T1 partner support)
-```
+Verdict logic is deterministic and surfaced in the report. Humans can override; the skill won't.
 
-### Side-by-side comparison
+### Step 4 — Optimize channel mix subject to constraints
 
-For a $100k ACV deal:
+Run `scripts/channel_mix_optimizer.py --input mix.json --profile saas --output markdown`.
 
-| Component | Direct | Reseller (30% off) | AWS Marketplace |
-|-----------|--------|---------------------|-----------------|
-| Customer payment | $100,000 | $100,000 | $100,000 |
-| Reseller / marketplace fee | $0 | -$30,000 (30% discount) | -$3,000 (3% AWS fee) |
-| Revenue to us | $100,000 | $70,000 | $97,000 |
-| COGS (15%) | -$15,000 | -$10,500 | -$14,550 |
-| Sales cost (allocated CAC) | -$25,000 | -$5,000 | -$8,000 |
-| Marketing cost (MDF / listing) | -$2,000 | -$8,000 | -$5,000 |
-| Partner enablement (amortized) | $0 | -$3,000 | -$1,500 |
-| Channel ops (amortized) | $0 | -$2,000 | -$1,000 |
-| Support cost | -$5,000 | -$3,000 | -$5,000 |
-| **Net contribution** | **$53,000** | **$38,500** | **$61,950** |
-| **% of ACV** | 53% | 38.5% | 62% |
+Output: recommended mix that maximizes effective ARR subject to constraints (min direct %, max partner concentration), plus a sensitivity table (what if direct CAC rises 20%? what if partner discount widens 5 points?).
 
-The "30% discount" reseller deal is more like 14.5% margin difference once everything's counted. Marketplace can look better than direct on per-deal basis (Amazon's sales team brings the buyer) — but volume varies.
+### Step 5 — Decide
 
-Use `scripts/channel_margin_calculator.py --deal deal.yaml --channel <type>` to model this for any deal.
+Take the three reports into the quarterly channel review. The skill recommends; the human commits.
 
-See [references/margin-and-tco-frameworks.md](references/margin-and-tco-frameworks.md) for the full TCO framework, per-cost-line guidance, and how to allocate "fully-loaded" sales / marketing / ops costs.
+## Scripts
 
----
+- `scripts/cost_to_serve_calculator.py` — fully-loaded cost-to-serve per deal AND per $ ARR, with hidden-cost surfacing
+- `scripts/channel_roi_analyzer.py` — 3-lens ROI (Cash / LTV / Marginal) with verdicts and diminishing-returns inflection
+- `scripts/channel_mix_optimizer.py` — constrained mix optimizer with sensitivity scenarios
 
-## Partner tier economics
-
-Multi-tier partner programs (Authorized → Silver → Gold → Platinum) are common. Designed badly, they reward effort that isn't valuable; designed well, they reward outcomes that drive growth.
-
-### Standard tier structure
-
-| Tier | Annual revenue threshold | Discount % | Other benefits | Requirements |
-|------|-------------------------|------------|----------------|--------------|
-| Authorized | None | 10% | Standard support | Sign partner agreement; 1 certified person |
-| Silver | $100k | 15% | Co-marketing eligible (limited MDF) | $100k achieved; 3 certified people; 2 customer wins |
-| Gold | $500k | 20% + 5% rebate at threshold | Dedicated channel manager; MDF; deal registration; lead sharing | $500k achieved; 5 certified; 5 wins; 80% renewal rate |
-| Platinum | $2M | 25% + 7% rebate at threshold | Top-tier support; joint roadmap; preferred status; press release rights | $2M achieved; 10 certified; 10 wins; 90% renewal; participation in advisory board |
-
-### Tier design principles
-
-1. **Outcome-based, not effort-based.** Reward revenue + retention, not training hours or marketing event count.
-2. **Achievable but stretching.** Each tier should be a 12-18 month stretch from the prior.
-3. **Differentiable benefits.** Each tier needs benefits a partner actively wants (not just "more support").
-4. **Renewable status.** Tiers re-evaluated annually. Partners can move down if they don't maintain.
-5. **Anti-gaming protection.** Discount-stacking, registration gaming, transfer pricing — design out.
-
-Use `scripts/partner_tier_economics.py --tiers tiers.yaml` to model tier economics: gross margin per tier, partner-side incentive, break-even revenue per partner per tier.
-
----
-
-## Rebate / SPIFF design
-
-Three common reward structures, each with trade-offs:
-
-### Front-end discount
-
-Partner buys from you at a discount; sells to customer at list (or close). Margin = the spread.
-
-**Pros:** Simple. Cash flow goes to partner immediately.
-**Cons:** Hard to incentivize specific behaviors. Discount is locked in regardless of performance.
-
-### Back-end rebate
-
-Partner pays full price (or near it); earns rebate quarterly / annually based on revenue / tier achievement.
-
-**Pros:** Ties reward to actual achievement; behaviors can be incentivized (e.g., bonus for selling new products).
-**Cons:** Cash-flow burden on partner. Complex to administer.
-
-### MDF (Marketing Development Funds) / SPIFF
-
-Per-deal or per-period bonuses for specific actions: bring leads, attend events, certify staff.
-
-**Pros:** Highly targetable. Rewards specific behaviors you want.
-**Cons:** Easy to game; admin overhead high; partners often expect it without producing.
-
-### Typical mix
-
-| Partner type | Front-end | Back-end | MDF/SPIFF |
-|--------------|-----------|----------|-----------|
-| Reseller (transactional) | 70-80% of total comp | 10-20% | 5-10% |
-| VAR (consultative selling) | 50-60% | 20-30% | 10-20% |
-| Distributor (volume play) | 80-90% | 5-15% | 5% |
-| ISV / Embedded | n/a (rev share) | 100% | 0 |
-| MSP | 40-60% | 20-30% | 10-30% |
-
----
-
-## Channel conflict
-
-Channel conflict happens when multiple sales paths chase the same customer. Common forms:
-
-### Direct-vs-partner conflict
-
-| Scenario | Resolution pattern |
-|----------|---------------------|
-| Direct rep finds opportunity also touched by partner | Deal registration: first to register wins; partner gets credit if they brought it |
-| Partner finds direct customer | If direct is already engaged: partner deferred (with consolation MDF perhaps); if not: partner leads |
-| Customer asks for direct after partner-led pilot | Honor partner relationship for term; transition at next renewal if appropriate |
-
-### Partner-vs-partner conflict
-
-| Scenario | Resolution pattern |
-|----------|---------------------|
-| Two resellers both pursuing same account | First-registered wins; second is offered alternative leads / regional swap |
-| Vertical specialist vs geographic | Vertical wins (customer values vertical expertise more) |
-| New partner pursues incumbent partner's customer | Incumbent has right of first refusal for 90 days |
-
-### Marketplace-vs-direct conflict
-
-Customer can buy via AWS Marketplace OR direct. If price is lower direct, customer feels gamed. If price is same, why not just use marketplace? Common resolution:
-
-- **Same price** direct vs marketplace (customer doesn't get punished for procurement choice)
-- **Quota credit** to the direct rep when customer chooses marketplace (so rep isn't disincentivized)
-- **Marketplace listing visibility** as a value-add, not as a different pricing channel
-
-See [references/channel-conflict-resolution.md](references/channel-conflict-resolution.md) for the full conflict-resolution playbook including deal registration process, neutral arbitration, conflict-of-interest disclosure.
-
----
-
-## End-to-end workflows
-
-### Workflow: Design a new partner program
-
-1. **Pick channel models** — direct + reseller? marketplace? OEM? — using the decision tree
-2. **Model the economics** — `scripts/channel_margin_calculator.py` per channel option at expected ACV
-3. **Design tier structure** — `scripts/partner_tier_economics.py` to size the gates and benefits
-4. **Define rebate / SPIFF mix** — per tier and partner type
-5. **Write the partner agreement** (with `business-growth/contract-and-proposal-writer`)
-6. **Build channel ops** — deal registration, MDF approval, certification tracking
-7. **Hire channel manager(s)** — usually 1 manager per 10-15 active partners
-8. **Pilot with 3-5 partners** — measure, iterate, then scale
-
-### Workflow: Evaluate a specific partner deal
-
-1. **Inputs**: ACV, partner discount %, expected close, partner's contribution (lead source? sales effort? implementation?)
-2. **Calculate net contribution** — `scripts/channel_margin_calculator.py --deal deal.yaml --channel partner`
-3. **Compare to direct alternative** — would this deal have closed direct? at what cost?
-4. **Decide**: approve / counter / decline (often via deal desk if it's a non-standard partner discount)
-
-### Workflow: Channel mix analysis
-
-1. **Inputs**: actual revenue by channel for last 4 quarters
-2. **Run mix optimizer** — `scripts/channel_mix_optimizer.py --revenue revenue.csv` examines contribution margin per channel + identifies under-/over-invested channels
-3. **Recommend rebalancing** — e.g., "Reseller channel: 20% of revenue, 8% of contribution margin — reduce investment; marketplace: 15% of revenue, 25% of contribution — increase listing visibility"
-4. **Quarterly review**: present to CRO / CFO
-
-### Workflow: Resolve a channel conflict
-
-1. **Document the conflict** — accounts involved, parties, history
-2. **Apply the registration rule** — first-registered partner wins absent overriding facts
-3. **Consider exceptions** — strategic logo, customer preference, vertical expertise
-4. **Communicate decision** — both parties, with reasoning, in writing
-5. **Compensate the loser** — alternative leads, MDF, regional swap; preserve the relationship
-
----
-
-## Anti-patterns
-
-- **Direct + partner at same price.** Customer feels punished for not using direct (or vice versa); kills partner motivation. Price-to-customer must be consistent across channels.
-- **Discount-only partner program.** Partners that only get a discount have no skin in your success; treat you as another vendor; switch easily.
-- **Endless partner expansion without enablement.** Signing 200 partners that don't sell anything; channel manager headcount can't scale; partners stale.
-- **Marketplace as afterthought.** Listing on AWS Marketplace without dedicated investment (listing optimization, co-sell programs) = marketplace generates nothing.
-- **Channel manager as glorified email forwarder.** CM should drive partner pipeline, not just relay leads.
-- **Rebates with no audit.** Partner self-reports revenue; you trust it; reality is 20% off. Build verification.
-- **MDF spent on activities that don't drive pipeline.** Partner runs a great event, generates no pipeline. MDF should require pipeline outcome.
-- **Channel conflict policy that isn't followed.** Policy says first-registered wins, but exec overrides every time → policy is theater.
-- **Different commission per channel for same deal.** Direct rep gets 8% on $100k deal, channel rep gets 6% on $100k deal — direct rep refuses partner help; channel rep undercut.
-- **OEM / embedded deals priced like resale.** OEM = customer doesn't see you at all; ASP can be 50-80% of list. Resale = customer sees you. Different economics; different price points.
-
----
-
-## Tooling outputs
-
-| Script | Input | Output |
-|--------|-------|--------|
-| `scripts/channel_margin_calculator.py` | Deal spec YAML + channel type | Per-channel net contribution margin, cost line breakdown, comparison vs direct baseline |
-| `scripts/partner_tier_economics.py` | Tier definitions YAML | Per-tier: gross margin to us, gross margin to partner, partner break-even, tier graduation incentive analysis |
-| `scripts/channel_mix_optimizer.py` | Revenue CSV (by channel + quarter) | Per-channel revenue contribution, per-channel margin contribution, recommended rebalancing |
-
-All scripts: stdlib only, argparse CLI, JSON or markdown output.
-
----
+All scripts: stdlib only. `--help`, `--sample`, `--input`, `--output` work on all three. Industry tuning via `--profile {saas,api,enterprise-software,marketplace,hardware}` on the two analyzers.
 
 ## References
 
-- [channel-models-direct-partner-marketplace.md](references/channel-models-direct-partner-marketplace.md) — 6 channel models in depth + economic structure + when each works
-- [margin-and-tco-frameworks.md](references/margin-and-tco-frameworks.md) — full TCO framework, allocation guidance, per-channel cost models
-- [channel-conflict-resolution.md](references/channel-conflict-resolution.md) — registration process, conflict patterns, arbitration
+- `references/channel_economics_canon.md` — Skok, Bessemer State of the Cloud, Tunguz, Pacific Crest / KeyBanc SaaS Survey, Ramanujam, Jay McBain (Canalys)
+- `references/cost_to_serve_canon.md` — Kaplan & Cooper (ABC), Horngren, Jeremy Hope, IBM CTS case studies, McKinsey, Gartner, BCG
+- `references/channel_anti_patterns.md` — Forrester, Tunguz, Hessling, HBR, SiriusDecisions, MIT Sloan, Gartner
 
----
+## Assumptions
 
-## Related skills
+- Channel economics is a **forward-looking** question. Historical channel P&L is finance's job; this skill loads forward economics for a decision.
+- "Channel" means a coherent go-to-market motion (direct outbound, partner-led, marketplace, reseller, OEM). It does not mean a marketing source.
+- Cost-to-serve requires **honest overhead allocation**. The script validates that overhead % is consistent across channels — false partner-margin lift from inconsistent allocation is the #1 anti-pattern.
+- LTV inputs (retention, expansion) are per-channel, not pooled. Partner-sourced customers often retain differently than direct-sourced — this difference is usually the largest economic variable and the most ignored.
+- Industry profiles (`--profile`) tune defaults for benchmarks (e.g., SaaS direct CAC payback target ~12mo, enterprise ~18mo) — they don't override your numbers.
+- This is a decision-support skill. Output is verdicts and a recommended mix, never an automatic resource reallocation.
 
-- `business-growth/partnerships-architect` — strategic partnership design (this skill = the economics; that one = the strategy)
-- `business-growth/deal-desk` — approval mechanics for partner deals (this skill = "what does it cost"; deal desk = "should we approve")
-- `business-growth/pricing-strategy` — sets list pricing that channel economics deviates from
-- `business-growth/revenue-operations` — channel revenue is segmented in RevOps reporting
-- `business-growth/contract-and-proposal-writer` — drafts partner agreements
-- `sales-success/sales-operations` — runs channel ops (deal registration, MDF approval, certification tracking)
-- `c-level-advisor/cs-cro-advisor` — strategic channel-mix decisions are CRO-level
+## Anti-patterns
+
+- **Treating "influenced" deals as "sourced" deals.** A partner that touched a deal your AE already had is not channel-sourced revenue. Loading this as partner revenue inflates partner ROI and inflates direct CAC simultaneously.
+- **Inconsistent overhead allocation.** Allocating 25% overhead to direct deals and 5% to partner deals because "the partner handles the overhead" is false. The partner manager, partner program, MDF, certification, and conflict-resolution all live in your P&L.
+- **Ignoring enablement time as a cost.** Every hour your AE spends co-selling with a partner is a direct cost charged to the partner channel — most teams forget to load it.
+- **MDF without ROI tracking.** Market Development Funds disbursed without an attributable pipeline ROI are just a partner-discount extension. The skill flags MDF with no return.
+- **Channel-mix dogma.** "We're a partner-first company" / "we don't sell direct" blocks profitable segments. Mix should follow the math, not the slogan.
+- **Computing channel ROI without retention differential.** If partner-sourced customers churn 5 points higher than direct, ignoring it overstates partner LTV by 30-50%. Per-channel retention is mandatory input.
+- **No cost-attribution for channel-manager headcount.** A $200k channel manager managing $4M of partner ARR is $50 of channel-manager cost per $1k ARR — material to the verdict.
+- **Confusing this skill with partnerships-architect.** That skill designs the partner program. This skill tells you whether the program pays for itself.
+
+## Distinct from
+
+- **commercial/partnerships-architect** — partner tier design, joint GTM motion, revshare splits, partner enablement. Partner program *structure*, not partner program *economics*. This skill consumes the program structure as input and emits the economic verdict.
+- **business-growth/revenue-operations** — lead routing, SDR motion, MQL definition, pipeline operations. RevOps owns the funnel mechanics; this skill loads the channel-level economic outcome.
+- **c-level-advisor/cro-advisor** — strategic CRO judgment: when to hire a VP Sales, comp plan philosophy, territory design, multi-year revenue strategy. CRO advisor consumes channel-economics output as one input among many.
+- **finance/financial-analysis** — close-and-report on historical channel P&L per GAAP. This skill is forward-looking decision support; finance is historical record. Different time horizon, different audience, different output.
+- **commercial/deal-desk** — per-deal discount approval. Operates daily; this skill operates quarterly.
+- **commercial/pricing-strategist** — pricing model and tier design. Pricing is input; channel economics is what happens at that pricing across channels.
+
+## Forcing-question library (Matt Pocock grill discipline)
+
+Walked one at a time by `/cs:grill-commercial` or the orchestrator. Recommended answer + canon citation per question. Never bundled.
+
+1. **"What's your fully-loaded cost-to-serve per channel — including channel-manager headcount, MDF, partner enablement time, and overhead allocation?"**
+   Recommended: load all four. Most teams load partner discount but forget the channel-manager headcount and the enablement time, inflating partner margin by 8-15 points.
+   Canon: Kaplan & Cooper (HBR 1988) — *Measure Costs Right: Make the Right Decisions*. Activity-Based Costing was invented precisely because channel costs hide in overhead and distort margin comparisons.
+
+2. **"What is the retention differential between direct-sourced and partner-sourced customers?"**
+   Recommended: instrument per-channel retention BEFORE running channel ROI. A 5-point retention gap moves LTV by 30-50%.
+   Canon: David Skok (*For Entrepreneurs* — SaaS Metrics 2.0). LTV = (ARPA × Gross Margin) / Churn. Channel-blind churn is the most common source of false channel ROI.
+
+3. **"What share of 'channel-sourced' pipeline did your team actually originate?"**
+   Recommended: if your AE already had the account, it's not channel-sourced — it's channel-influenced. Influence and source are different economic lines.
+   Canon: SiriusDecisions / Forrester channel attribution research — confused source vs. influence is the #1 reason partner ROI is overstated industry-wide.
+
+4. **"What is the marginal ROI of the next dollar invested in partner program vs. direct sales?"**
+   Recommended: compute the diminishing-returns curve on both. Average ROI hides the fact that the next dollar might earn 0.3x while the average earns 2.1x.
+   Canon: Tomasz Tunguz (*Tomasz Tunguz blog* — channel CAC analyses). Average ROI is a vanity metric; marginal ROI drives investment decisions.
+
+5. **"What's your MDF-to-attributable-pipeline ratio in the last 4 quarters?"**
+   Recommended: < 5:1 (every $1 of MDF should generate ≥ $5 of attributable pipeline within 2 quarters). Anything looser is partner-discount theatre.
+   Canon: Jay McBain (Canalys) — *State of the Channel* research. MDF without attribution discipline is the most expensive form of channel subsidy.
+
+6. **"Is your channel-mix dogma blocking a profitable segment?"**
+   Recommended: surface the dogma ("we're partner-first", "we don't sell direct in SMB") explicitly. Mix should follow the segment math.
+   Canon: MIT Sloan Management Review — *When Channel Conflict Means Growth*. Dogmatic single-channel strategies forfeit 15-25% of TAM in mid-market specifically.
+
+7. **"What overhead-allocation methodology are you applying — and is it consistent across direct and partner?"**
+   Recommended: same methodology, same denominator, both channels. Inconsistent allocation is the silent killer of channel-economics analysis.
+   Canon: Charles Horngren (*Cost Accounting: A Managerial Emphasis*) — allocation consistency is the precondition for cross-segment margin comparison. Without it, every conclusion is contaminated.
+
+Walk depth-first. Lock 1-3 before opening 4-7. After all 7 are answered, invoke `cost_to_serve_calculator.py` → `channel_roi_analyzer.py` → `channel_mix_optimizer.py` in sequence.

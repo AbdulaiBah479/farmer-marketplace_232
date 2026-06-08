@@ -1,18 +1,9 @@
 ---
 name: write-a-skill
-description: Create new agent skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, build, or author a new skill.
-license: MIT
-metadata:
-  derived_from: "https://github.com/mattpocock/skills/tree/main/skills/productivity/write-a-skill"
-  original_author: "Matt Pocock (@mattpocock)"
-  original_license: MIT
-  voice: "Matt Pocock — direct, concrete, imperative, example-driven"
-  version: 1.0.0
+description: Create new agent skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, or build a new skill.
 ---
 
 # Writing Skills
-
-> Derived from [Matt Pocock's write-a-skill](https://github.com/mattpocock/skills/tree/main/skills/productivity/write-a-skill) (MIT). Matt's voice and 3-phase workflow preserved verbatim. Additions: validation tools + references + cs-* wrapper (see *Tooling + Companions* below).
 
 ## Process
 
@@ -124,18 +115,3 @@ After drafting, verify:
 - [ ] Consistent terminology
 - [ ] Concrete examples included
 - [ ] References one level deep
-
-## Tooling + Companions
-
-Validation tools + cs-* wrapper sit alongside this skill. Run all 6 review-checklist items programmatically:
-
-```
-python scripts/skill_review_checklist_runner.py path/to/skill-folder
-```
-
-See [references/companion_tooling.md](references/companion_tooling.md) for the tool catalogue, cs-skill-author persona agent, and `/cs:write-a-skill` slash command.
-
----
-
-**Version:** 1.0.0
-**Derived:** Matt Pocock (MIT) + this repo's wrapper

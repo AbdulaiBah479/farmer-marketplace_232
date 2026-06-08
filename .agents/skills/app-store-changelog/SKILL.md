@@ -1,19 +1,12 @@
 ---
 name: app-store-changelog
-description: Generate user-facing App Store release notes from git history since the last tag.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Create user-facing App Store release notes by collecting and summarizing all user-impacting changes since the last git tag (or a specified ref). Use when asked to generate a comprehensive release changelog, App Store "What's New" text, or release notes based on git history or tags.
 ---
 
 # App Store Changelog
 
 ## Overview
 Generate a comprehensive, user-facing changelog from git history since the last tag, then translate commits into clear App Store release notes.
-
-## When to Use
-- When the user asks for App Store "What's New" text or release notes from git history.
-- When you need to turn raw commits into concise, user-facing release bullets.
 
 ## Workflow
 
@@ -72,8 +65,3 @@ What's New in Version 3.4
 ## Resources
 - `scripts/collect_release_changes.sh`: Collect commits and touched files since last tag.
 - `references/release-notes-guidelines.md`: Language, filtering, and QA rules for App Store notes.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

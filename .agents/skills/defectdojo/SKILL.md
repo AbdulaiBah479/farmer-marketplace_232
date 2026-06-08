@@ -812,14 +812,3 @@ KUBECONFIG=~/.kube/aks-rg-hypera-cafehyna-dev-config kubectl rollout restart dep
 
 - [Official Documentation](https://docs.defectdojo.com/)
 - [Swagger UI](https://defectdojo.dev.cafehyna.com.br/api/v2/oa3/swagger-ui/) - Interactive API docs
-
----
-
-## Gotchas
-
-- **Deduplication is per-product, not global:** The same CVE in two products counts twice — portfolio metrics inflate. Configure cross-product deduplication via hash_code algorithm if you need global counts.
-- **`reimport-scan` closes missing findings silently:** Reimporting a partial scan (one path instead of full) auto-closes every finding not in the new file. Use `do_not_reactivate=true` and scope tests carefully.
-- **`auto_create_context=true` creates duplicate products on name drift:** "MyApp" vs "myapp" vs "MyApp " produce three products. Normalize `product_name` upstream — DefectDojo does not fuzzy-match.
-- **API tokens are user-scoped, not team-scoped:** A pipeline token inherits the creator's full permissions. Create a dedicated CI user with API Importer role rather than reusing a human's token.
-- **`DD_SECURE_SSL_REDIRECT=True` behind NGINX Ingress causes redirect loops:** TLS terminates at the ingress, Django then redirects HTTP to HTTPS again. Set to `False` and rely on the ingress for TLS enforcement.
-- **Azure AD group sync only fires on login:** Adding a user to an Azure AD group does not retro-sync — the user must log out and back in before DefectDojo sees the new membership.

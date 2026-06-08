@@ -1,268 +1,141 @@
 ---
 name: design-review
-description: "Reviews a game design document for completeness, internal consistency, implementability, and adherence to project design standards. Run this before handing a design document to programmers."
-argument-hint: "[path-to-design-doc] [--depth full|lean|solo]"
-user-invocable: true
-allowed-tools: Read, Glob, Grep, Write, Edit, Task, AskUserQuestion
-model: sonnet
+description: Review and analyze design docs for health, quality, and improvement opportunities. Use when auditing design documentation, checking doc health, or identifying areas for improvement.
+allowed-tools: Read, Glob, Bash
+context: fork
+agent: design-doc-agent
 ---
 
-## Phase 0: Parse Arguments
+# Design Documentation Review
 
-Extract `--depth [full|lean|solo]` if present. Default is `full` when no flag is given.
+Analyzes design documentation for health, quality, and actionable improvement
+opportunities.
 
-**Note**: `--depth` controls the *analysis depth* of this skill (how many specialist agents are spawned). It is independent of the global review mode in `production/review-mode.txt`, which controls director gate spawning. These are two different concepts — `--depth` is about how thoroughly *this* skill analyses the document.
+## Overview
 
-- **`full`**: Complete review — all phases + specialist agent delegation (Phase 3b)
-- **`lean`**: All phases, no specialist agents — faster, single-session analysis
-- **`solo`**: Phases 1-4 only, no delegation, no Phase 5 next-step prompt — use when called from within another skill
+This skill performs comprehensive health checks on design documentation by:
 
----
+1. Reading all design docs for a module (or all modules)
+2. Analyzing frontmatter completeness and accuracy
+3. Checking documentation quality and thoroughness
+4. Identifying missing or outdated content
+5. Finding broken cross-references
+6. Assessing status progression and maintenance
+7. Providing prioritized recommendations
 
-## Phase 1: Load Documents
+## Quick Start
 
-Read the target design document in full. Read CLAUDE.md to understand project context and standards. Read related design documents referenced or implied by the target doc (check `design/gdd/` for related systems).
+**Review single module:**
 
-**Dependency graph validation:** For every system listed in the Dependencies section, use Glob to check whether its GDD file exists in `design/gdd/`. Flag any that don't exist yet — these are broken references that downstream authors will hit.
-
-**Lore/narrative alignment:** If `design/gdd/game-concept.md` or any file in `design/narrative/` exists, read it. Note any mechanical choices in this GDD that contradict established world rules, tone, or design pillars. Pass this context to `game-designer` in Phase 3b.
-
-**Prior review check:** Check whether `design/gdd/reviews/[doc-name]-review-log.md` exists. If it does, read the most recent entry — note what verdict was given and what blocking items were listed. This session is a re-review; track whether prior items were addressed.
-
----
-
-## Phase 2: Completeness Check
-
-Evaluate against the Design Document Standard checklist:
-
-- [ ] Has Overview section (one-paragraph summary)
-- [ ] Has Player Fantasy section (intended feeling)
-- [ ] Has Detailed Rules section (unambiguous mechanics)
-- [ ] Has Formulas section (all math defined with variables)
-- [ ] Has Edge Cases section (unusual situations handled)
-- [ ] Has Dependencies section (other systems listed)
-- [ ] Has Tuning Knobs section (configurable values identified)
-- [ ] Has Acceptance Criteria section (testable success conditions)
-
----
-
-## Phase 3: Consistency and Implementability
-
-**Internal consistency:**
-- Do the formulas produce values that match the described behavior?
-- Do edge cases contradict the main rules?
-- Are dependencies bidirectional (does the other system know about this one)?
-
-**Implementability:**
-- Are the rules precise enough for a programmer to implement without guessing?
-- Are there any "hand-wave" sections where details are missing?
-- Are performance implications considered?
-
-**Cross-system consistency:**
-- Does this conflict with any existing mechanic?
-- Does this create unintended interactions with other systems?
-- Is this consistent with the game's established tone and pillars?
-
----
-
-## Phase 3b: Adversarial Specialist Review (full mode only)
-
-**Skip this phase in `lean` or `solo` mode.**
-
-**This phase is MANDATORY in full mode.** Do not skip it.
-
-**Before spawning any agents**, print this notice:
-> "Full review: spawning specialist agents in parallel. This typically takes 8–15 minutes. Use `--review lean` for faster single-session analysis."
-
-### Step 1 — Identify all domains the GDD touches
-
-Read the GDD and identify every domain present. A GDD can touch multiple domains simultaneously — be thorough. Common signals:
-
-| If the GDD contains... | Spawn these agents |
-|------------------------|-------------------|
-| Costs, prices, drops, rewards, economy | `economy-designer` |
-| Combat stats, damage, health, DPS | `game-designer`, `systems-designer` |
-| AI behaviour, pathfinding, targeting | `ai-programmer` |
-| Level layout, spawning, wave structure | `level-designer` |
-| Player progression, XP, unlocks | `economy-designer`, `game-designer` |
-| UI, HUD, menus, player-facing displays | `ux-designer`, `ui-programmer` |
-| Dialogue, quests, story, lore | `narrative-director` |
-| Animation, feel, timing, juice | `gameplay-programmer` |
-| Multiplayer, sync, replication | `network-programmer` |
-| Audio cues, music triggers | `audio-director` |
-| Performance, draw calls, memory | `performance-analyst` |
-| Engine-specific patterns or APIs | Primary engine specialist (from `.claude/docs/technical-preferences.md`) |
-| Acceptance criteria, test coverage | `qa-lead` |
-| Data schema, resource structure | `systems-designer` |
-| Any gameplay system | `game-designer` (always) |
-
-Spawn `game-designer` for all GDDs that describe gameplay mechanics or player-facing rules.
-Spawn `systems-designer` for all GDDs that contain formulas or system interaction rules.
-These are the most common baselines — but not required for pure UI specs, audio specs, or lore documents. Use the domain table above to determine which specialists are truly relevant.
-
-### Step 2 — Spawn all relevant specialists in parallel
-
-**CRITICAL: Task in this skill spawns a SUBAGENT — a separate independent Claude session
-with its own context window. It is NOT task tracking. Do NOT simulate specialist
-perspectives internally. Do NOT reason through domain views yourself. You MUST issue
-actual Task calls. A simulated review is not a specialist review.**
-
-Issue all Task calls simultaneously. Do NOT spawn one at a time.
-
-**Prompt each specialist adversarially:**
-> "Here is the GDD for [system] and the main review's structural findings so far.
-> Your job is NOT to validate this design — your job is to find problems.
-> Challenge the design choices from your domain expertise. What is wrong,
-> underspecified, likely to cause problems, or missing entirely?
-> Be specific and critical. Disagreement with the main review is welcome."
-
-**Additional instructions per agent type:**
-
-- **`game-designer`**: Anchor your review to the Player Fantasy stated in Section B of this GDD. Does this design actually deliver that fantasy? Would a player feel the intended experience? Flag any rules that serve implementability but undermine the stated feeling.
-
-- **`systems-designer`**: For every formula in the GDD, plug in boundary values (minimum and maximum plausible inputs). Report whether any outputs go degenerate — negative values, division by zero, infinity, or nonsensical results at the extremes.
-
-- **`qa-lead`**: Review every acceptance criterion. Flag any that are not independently testable — phrases like "feels balanced", "works correctly", "performs well" are not ACs. Suggest concrete rewrites for any that fail this test.
-
-### Step 3 — Senior lead review
-
-After all specialists respond, spawn `creative-director` as the **senior reviewer**:
-- Provide: the GDD, all specialist findings, any disagreements between them
-- Ask: "Synthesise these findings. What are the most important issues? Do you agree with the specialists? What is your overall verdict on this design?"
-- The creative-director's synthesis becomes the **final verdict** in Phase 4.
-
-### Step 4 — Surface disagreements
-
-If specialists disagree with each other or with the creative-director, do NOT silently pick one view. Present the disagreement explicitly in Phase 4 so the user can adjudicate.
-
-Mark every finding with its source: `[game-designer]`, `[economy-designer]`, `[creative-director]` etc.
-
----
-
-## Phase 4: Output Review
-
-```
-## Design Review: [Document Title]
-Specialists consulted: [list agents spawned]
-Re-review: [Yes — prior verdict was X on YYYY-MM-DD / No — first review]
-
-### Completeness: [X/8 sections present]
-[List missing sections]
-
-### Dependency Graph
-[List each declared dependency and whether its GDD file exists on disk]
-- ✓ enemy-definition-data.md — exists
-- ✗ loot-system.md — NOT FOUND (file does not exist yet)
-
-### Required Before Implementation
-[Numbered list — blocking issues only. Each item tagged with source agent.]
-
-### Recommended Revisions
-[Numbered list — important but not blocking. Source-tagged.]
-
-### Specialist Disagreements
-[Any cases where agents disagreed with each other or with the main review.
-Present both sides — do not silently resolve.]
-
-### Nice-to-Have
-[Minor improvements, low priority.]
-
-### Senior Verdict [creative-director]
-[Creative director's synthesis and overall assessment.]
-
-### Scope Signal
-Estimate implementation scope based on: dependency count, formula count,
-systems touched, and whether new ADRs are required.
-- **S** — single system, no formulas, no new ADRs, <3 dependencies
-- **M** — moderate complexity, 1-2 formulas, 3-6 dependencies
-- **L** — multi-system integration, 3+ formulas, may require new ADR
-- **XL** — cross-cutting concern, 5+ dependencies, multiple new ADRs likely
-Label clearly: "Rough scope signal: M (producer should verify before sprint planning)"
-
-### Verdict: [APPROVED / NEEDS REVISION / MAJOR REVISION NEEDED]
+```bash
+/design-review effect-type-registry
 ```
 
-This skill is read-only — no files are written during Phase 4.
+**Review all modules:**
 
----
-
-## Phase 5: Next Steps
-
-Use `AskUserQuestion` for ALL closing interactions. Never plain text.
-
-**First widget — what to do next:**
-
-If APPROVED (first-pass, no revision needed), proceed directly to the systems-index widget, review-log widget, then the final closing widget. Do not show a separate "what to do" widget — the final closing widget covers next steps.
-
-If NEEDS REVISION or MAJOR REVISION NEEDED, options:
-- `[A] Revise the GDD now — address blocking items together`
-- `[B] Stop here — revise in a separate session`
-- `[C] Accept as-is and move on (only if all items are advisory)`
-
-**If user selects [A] — Revise now:**
-
-Work through all blocking items, asking for design decisions only where you cannot resolve the issue from the GDD and existing docs alone. Group all design-decision questions into a single multi-tab `AskUserQuestion` before making any edits — do not interrupt mid-revision for each blocker individually.
-
-After all revisions are complete, show a summary table (blocker → fix applied) and use `AskUserQuestion` for a **post-revision closing widget**:
-
-- Prompt: "Revisions complete — [N] blockers resolved. What next?"
-- Note current context usage: if context is above ~50%, add: "(Recommended: /clear before re-review — this session has used X% context. A full re-review runs 5 agents and needs clean context.)"
-- Options:
-  - `[A] Re-review in a new session — run /design-review [doc-path] after /clear`
-  - `[B] Accept revisions and mark Approved — update systems index, skip re-review`
-  - `[C] Move to next system — /design-system [next-system] (#N in design order)`
-  - `[D] Stop here`
-
-Never end the revision flow with plain text. Always close with this widget.
-
-**Second widget — tracking records (combined, for APPROVED path):**
-
-When the verdict is APPROVED, use a single `AskUserQuestion` with `multiSelect: true` to batch the two tracking updates:
-- Prompt: "Verdict: APPROVED. I can update the tracking records now. Select any you'd like me to complete:"
-- Options:
-  - `Update systems-index.md status to 'Approved' for [system]`
-  - `Append approval entry to design/gdd/reviews/[doc-name]-review-log.md`
-
-If the review-log option is selected, append the same format as below. Execute both selected actions before showing the final closing widget.
-
-When the verdict is NEEDS REVISION or MAJOR REVISION NEEDED, use separate widgets as before:
-
-Use a second `AskUserQuestion`:
-- Prompt: "May I update `design/gdd/systems-index.md` to mark [system] as [In Review / Approved]?"
-- Options: `[A] Yes — update it` / `[B] No — leave it as-is`
-
-Use a third `AskUserQuestion`:
-- Prompt: "May I append this review summary to `design/gdd/reviews/[doc-name]-review-log.md`? This creates a revision history so future re-reviews can track what changed."
-- Options: `[A] Yes — append to review log` / `[B] No — skip`
-
-If yes, append an entry in this format:
-```
-## Review — [YYYY-MM-DD] — Verdict: [APPROVED / NEEDS REVISION / MAJOR REVISION NEEDED]
-Scope signal: [S/M/L/XL]
-Specialists: [list]
-Blocking items: [count] | Recommended: [count]
-Summary: [2-3 sentence summary of key findings from creative-director verdict]
-Prior verdict resolved: [Yes / No / First review]
+```bash
+/design-review all
 ```
 
----
+**Detailed analysis:**
 
-**Final closing widget — always show after all file writes complete:**
+```bash
+/design-review all --verbose
+```
 
-Once the systems-index and review-log widgets are answered, check project state and show one final `AskUserQuestion`:
+**Focus on specific aspect:**
 
-Before building options, read:
-- `design/gdd/systems-index.md` — find any system with Status: In Review or NEEDS REVISION (other than the one just reviewed)
-- Count `.md` files in `design/gdd/` (excluding game-concept.md, systems-index.md) to determine if `/review-all-gdds` is worth offering (≥2 GDDs)
-- Find the next system with Status: Not Started in design order
+```bash
+/design-review rspress-plugin-api-extractor --focus=completeness
+```
 
-Build the option list dynamically — only include options that are genuinely next:
-- `[_] Run /design-review [other-gdd-path] — [system name] is still [In Review / NEEDS REVISION]` (include if another GDD needs review)
-- `[_] Run /consistency-check — verify this GDD's values don't conflict with existing GDDs` (always include if ≥1 other GDD exists)
-- `[_] Run /review-all-gdds — holistic design-theory review across all designed systems` (include if ≥2 GDDs exist)
-- `[_] Run /design-system [next-system] — next in design order` (always include, name the actual system)
-- `[_] Stop here`
+## Parameters
 
-Assign letters A, B, C… only to included options. Mark the most pipeline-advancing option as `(recommended)`.
+### Required
 
-Never end the skill with plain text after file writes. Always close with this widget.
+- `target` - Module name to review, or "all" for all modules
+
+### Optional
+
+- `verbose` - Show detailed analysis (default: false)
+- `focus` - Specific aspect: completeness | quality | references | maintenance
+
+## Workflow Overview
+
+1. **Parse Parameters** - Extract target and options
+2. **Load Configuration** - Read config for module paths and standards
+3. **Find Documents** - Glob all markdown files (skip `_` prefixed)
+4. **Analyze Each Document** - Run health checks (see
+   [analysis-checks.md](analysis-checks.md))
+5. **Calculate Scores** - Compute health scores (see
+   [scoring-reports.md](scoring-reports.md))
+6. **Generate Report** - Create comprehensive findings report
+7. **Focus Reports** - Generate targeted analysis if focus specified
+
+## Supporting Documentation
+
+### For Analysis Criteria
+
+See [analysis-checks.md](analysis-checks.md) for:
+
+- Frontmatter health check criteria (status, completeness, staleness)
+- Content quality assessment rules (overview, rationale, implementation)
+- Structure validation requirements (sections, TOC, formatting)
+- Cross-reference validation logic (related, dependencies, links)
+- Maintenance health indicators (abandonment, duplication, scope)
+
+**Load when:** Performing detailed document analysis or diagnosing specific
+issues
+
+### For Scoring and Reports
+
+See [scoring-reports.md](scoring-reports.md) for:
+
+- Health score calculation formulas (4 components: completeness, recency,
+  quality, references)
+- Scoring rubrics for each component (0-100 scale)
+- Report format templates (executive summary, findings, recommendations)
+- Priority classification system (critical, warning, info)
+- Recommendation frameworks (impact/effort matrix)
+
+**Load when:** Computing health scores or generating reports
+
+### For Usage Examples
+
+See [examples.md](examples.md) for:
+
+- Complete usage scenarios (basic, verbose, focused reviews)
+- Example outputs for different review types
+- Focus-specific reports (completeness, quality, references, maintenance)
+- Success report format
+
+**Load when:** User wants to see concrete examples or needs clarification on
+output format
+
+## Health Score Components
+
+Overall Health = (Completeness + Recency + Quality + References) / 4
+
+- 🟢 **Healthy** (80-100): Well-maintained, comprehensive documentation
+- 🟡 **Needs Attention** (60-79): Some issues, improvement recommended
+- 🔴 **Critical** (<60): Significant issues, immediate action required
+
+## Integration
+
+Use this skill with:
+
+- `/design-validate` - Fix structural/frontmatter issues first
+- `/design-update` - Apply recommended improvements
+- `/design-sync` - Address staleness and sync issues
+- `/design-prune` - Remove historical cruft identified in review
+
+## Success Criteria
+
+A successful review:
+
+- ✅ Analyzes all docs in target module(s)
+- ✅ Identifies critical issues requiring immediate action
+- ✅ Provides specific, actionable recommendations
+- ✅ Calculates accurate health scores
+- ✅ Prioritizes improvements by impact and effort
+- ✅ Gives clear next steps

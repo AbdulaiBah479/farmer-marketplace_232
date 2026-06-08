@@ -1,6 +1,6 @@
 ---
 name: data-sql-optimization
-description: "SQL optimization for OLTP systems: EXPLAIN analysis, indexing, schema design, migrations, HA, and security across major SQL platforms."
+description: "Production-grade SQL optimization for OLTP systems: EXPLAIN/plan analysis, balanced indexing, schema and query design, migrations, backup/recovery, HA, security, and safe performance tuning across PostgreSQL, MySQL, SQL Server, Oracle, SQLite."
 ---
 
 # SQL Optimization — Comprehensive Reference
@@ -106,9 +106,6 @@ Find detailed operational patterns and quick references in:
 - **SQL Anti-Patterns**: [references/sql-antipatterns.md](references/sql-antipatterns.md)
 - **External Sources**: [data/sources.json](data/sources.json) — vendor docs and reference links
 - **Operational Standards**: [references/operational-patterns.md](references/operational-patterns.md) — Deep operational checklists, database-specific guidance, and template selection trees
-- **Connection Pooling**: [references/connection-pooling-patterns.md](references/connection-pooling-patterns.md) — PgBouncer, RDS Proxy, pool sizing, connection leak troubleshooting
-- **Partition Strategies**: [references/partition-strategies.md](references/partition-strategies.md) — Range/list/hash partitioning, pruning, maintenance, migration patterns
-- **Monitoring & Alerting**: [references/monitoring-alerting-patterns.md](references/monitoring-alerting-patterns.md) — pg_stat_statements dashboards, alert thresholds, slow query pipelines
 
 Each file includes:
 - Copy-paste ready checklists (e.g., "query review", "index design", "explain review")
@@ -190,9 +187,6 @@ Templates are organized by database technology for precision and clarity:
 - [references/sql-antipatterns.md](references/sql-antipatterns.md)
 - [references/index-patterns.md](references/index-patterns.md)
 - [references/sql-best-practices.md](references/sql-best-practices.md)
-- [references/connection-pooling-patterns.md](references/connection-pooling-patterns.md)
-- [references/partition-strategies.md](references/partition-strategies.md)
-- [references/monitoring-alerting-patterns.md](references/monitoring-alerting-patterns.md)
 
 **Templates**
 - [assets/cross-platform/template-slow-query.md](assets/cross-platform/template-slow-query.md)
@@ -393,9 +387,3 @@ See [data/sources.json](data/sources.json) for 62+ curated resources including:
 ---
 
 Use [references/operational-patterns.md](references/operational-patterns.md) and the templates directory for detailed workflows, migration notes, and ready-to-run commands.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

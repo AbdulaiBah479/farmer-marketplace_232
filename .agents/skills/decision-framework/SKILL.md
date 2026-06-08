@@ -1,39 +1,122 @@
 ---
-name: decision-framework
-description: Thinking frameworks for decisions and problem analysis. Use when evaluating options, root causes, or prioritizing.
-type: skill
-category: dev
-status: stable
-origin: taches-cc-resources
-modified: true
-first_seen: 2026-02-07
-first_path: examples/decision-framework/SKILL.md
-superseded_by: null
+name: Decision Framework
+description: Autonomous decision-making CLI for strategy development (project)
 ---
-# Decision Frameworks
 
-| Situation | Framework |
-|-----------|-----------|
-| Challenge assumptions | First Principles |
-| Find root cause | 5 Whys |
-| Prioritize tasks | Eisenhower Matrix |
-| Focus effort | Pareto 80/20 |
-| Identify risks | Inversion |
-| Map consequences | Second-Order Thinking |
-| Compare options | Decision Matrix |
+# Decision Framework CLI
 
-## Processes
+Evaluate results and route to next phase: `venv/bin/python SCRIPTS/decision_cli.py` (use as `decision`)
 
-**First Principles:** State problem → list assumptions → challenge each → identify fundamentals → build from truths.
+## When to Load This Skill
 
-**5 Whys:** State problem → ask "why?" iteratively → verify chain backwards → act on deepest cause.
+- After backtest completes (Phase 3 decision)
+- After optimization completes (Phase 4 decision)
+- After validation completes (Phase 5 decision)
+- Need to route to next phase
 
-**Eisenhower:** Urgent+Important (do), Not-Urgent+Important (schedule), Urgent+Not-Important (delegate), Neither (eliminate).
+## CLI Commands (Progressive Disclosure)
 
-**Pareto:** List items → measure impact → sort → find ~20% driving ~80% → focus there.
+### Evaluate Backtest (Phase 3)
+```bash
+# Evaluate backtest results
+venv/bin/python SCRIPTS/decision_cli.py evaluate-backtest \
+  --results PROJECT_LOGS/backtest_result.json \
+  --state iteration_state.json
 
-**Inversion:** State goal → "what guarantees failure?" → list failure modes → invert into prevention.
+# JSON output
+venv/bin/python SCRIPTS/decision_cli.py evaluate-backtest --results backtest.json --json
+```
 
-**Second-Order:** Map effects → map what THOSE cause → find hidden costs → decide with full picture.
+**Decisions**: PROCEED_TO_OPTIMIZATION | PROCEED_TO_VALIDATION | ABANDON_HYPOTHESIS | ESCALATE_TO_HUMAN
 
-**Decision Matrix:** List options → weighted criteria → score each → sum → sanity check winner.
+### Evaluate Optimization (Phase 4)
+```bash
+# Evaluate optimization results
+venv/bin/python SCRIPTS/decision_cli.py evaluate-optimization \
+  --results PROJECT_LOGS/optimization_result.json \
+  --state iteration_state.json
+```
+
+**Decisions**: PROCEED_TO_VALIDATION | USE_BASELINE_PARAMS | ESCALATE_TO_HUMAN | PROCEED_WITH_ROBUST_PARAMS
+
+### Evaluate Validation (Phase 5)
+```bash
+# Evaluate validation results
+venv/bin/python SCRIPTS/decision_cli.py evaluate-validation \
+  --results PROJECT_LOGS/validation_result.json \
+  --state iteration_state.json
+```
+
+**Decisions**: DEPLOY_STRATEGY | PROCEED_WITH_CAUTION | ABANDON_HYPOTHESIS | ESCALATE_TO_HUMAN
+
+### Route to Next Phase
+```bash
+# Determine next action based on decision
+venv/bin/python SCRIPTS/decision_cli.py route \
+  --phase backtest \
+  --decision PROCEED_TO_OPTIMIZATION \
+  --iteration 1
+```
+
+## Workflow
+
+1. **Run Phase**: Execute backtest/optimization/validation
+2. **Evaluate**: `decision evaluate-<phase> --results results.json`
+3. **Route**: `decision route --phase <phase> --decision <DECISION>`
+4. **Execute Next**: Proceed to next phase based on routing
+
+## Decision Thresholds
+
+**Loaded from `iteration_state.json` (single source of truth)**:
+- `performance_criteria.minimum_viable` - Sharpe 0.5, DD 0.35, Trades 20
+- `performance_criteria.optimization_worthy` - Sharpe 0.7, DD 0.30, Trades 30
+- `performance_criteria.production_ready` - Sharpe 1.0, DD 0.20, Trades 50
+- `overfitting_signals.too_perfect_sharpe` - Sharpe > 3.0
+- `overfitting_signals.too_few_trades` - Trades < 10
+
+**Do not hardcode thresholds. Always read from iteration_state.json.**
+
+## Progressive Disclosure Pattern
+
+**Load only what you need:**
+- Phase 3: Use `evaluate-backtest` (only backtest logic loaded)
+- Phase 4: Use `evaluate-optimization` (only optimization logic loaded)
+- Phase 5: Use `evaluate-validation` (only validation logic loaded)
+
+**Before (old approach)**:
+- Load 500-line decision-framework skill
+- Load 300-line backtesting-analysis skill
+- Total: 800 lines for any decision
+
+**After (CLI approach)**:
+- Run `decision evaluate-backtest` (instant, 100-line skill)
+- Progressive disclosure: 87.5% context reduction
+
+## Authoritative Documentation
+
+**When confused about decision logic or thresholds:**
+- Read: `PREVIOUS_WORK/PROJECT_DOCUMENTATION/autonomous_decision_framework.md`
+- Contains: Complete decision tree, all thresholds, routing logic
+
+**Do not guess thresholds. Use authoritative docs as source of truth.**
+
+## CLI Help
+
+Use `--help` for command details:
+```bash
+venv/bin/python SCRIPTS/decision_cli.py --help
+venv/bin/python SCRIPTS/decision_cli.py evaluate-backtest --help
+venv/bin/python SCRIPTS/decision_cli.py route --help
+```
+
+**IMPORTANT: Do not read decision_cli.py source code unless strictly needed for debugging. Use --help for usage.**
+
+---
+
+**Context Savings**: 100 lines (vs 800 lines loading multiple skills) = 87.5% reduction
+
+**Progressive Disclosure**: Load only the evaluation logic you need (backtest vs optimization vs validation)
+
+**Trifecta**: CLI works for humans, teams, AND agents
+
+**Beyond MCP Pattern**: Use --help, not source code. Load only what you need.

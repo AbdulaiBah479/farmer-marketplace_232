@@ -1,335 +1,395 @@
 ---
 name: database-migrations
-description: Database migration best practices for schema changes, data migrations, rollbacks, and zero-downtime deployments across PostgreSQL, MySQL, and common ORMs (Prisma, Drizzle, Django, TypeORM, golang-migrate).
-origin: ECC
+description: Safe database migration strategies for zero-downtime deployments. Covers backward-compatible changes, data migrations, and rollback procedures.
+license: MIT
+compatibility: TypeScript/JavaScript, Python
+metadata:
+  category: database
+  time: 3h
+  source: drift-masterguide
 ---
 
-# Database Migration Patterns
+# Database Migrations
 
-Safe, reversible database schema changes for production systems.
+Change your schema without breaking production.
 
-## When to Activate
+## When to Use This Skill
 
-- Creating or altering database tables
-- Adding/removing columns or indexes
-- Running data migrations (backfill, transform)
-- Planning zero-downtime schema changes
-- Setting up migration tooling for a new project
+- Adding/removing columns
+- Changing data types
+- Creating indexes
+- Data transformations
+- Zero-downtime deployments
 
-## Core Principles
+## The Golden Rule
 
-1. **Every change is a migration** — never alter production databases manually
-2. **Migrations are forward-only in production** — rollbacks use new forward migrations
-3. **Schema and data migrations are separate** — never mix DDL and DML in one migration
-4. **Test migrations against production-sized data** — a migration that works on 100 rows may lock on 10M
-5. **Migrations are immutable once deployed** — never edit a migration that has run in production
+**Every migration must be backward compatible with the previous version of your code.**
 
-## Migration Safety Checklist
+Why? During deployment, both old and new code versions run simultaneously.
 
-Before applying any migration:
+## Safe Migration Patterns
 
-- [ ] Migration has both UP and DOWN (or is explicitly marked irreversible)
-- [ ] No full table locks on large tables (use concurrent operations)
-- [ ] New columns have defaults or are nullable (never add NOT NULL without default)
-- [ ] Indexes created concurrently (not inline with CREATE TABLE for existing tables)
-- [ ] Data backfill is a separate migration from schema change
-- [ ] Tested against a copy of production data
-- [ ] Rollback plan documented
-
-## PostgreSQL Patterns
-
-### Adding a Column Safely
+### Adding a Column
 
 ```sql
--- GOOD: Nullable column, no lock
-ALTER TABLE users ADD COLUMN avatar_url TEXT;
+-- ✅ SAFE: New column with default or nullable
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
 
--- GOOD: Column with default (Postgres 11+ is instant, no rewrite)
-ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
-
--- BAD: NOT NULL without default on existing table (requires full rewrite)
-ALTER TABLE users ADD COLUMN role TEXT NOT NULL;
--- This locks the table and rewrites every row
+-- ❌ UNSAFE: Required column without default
+ALTER TABLE users ADD COLUMN phone VARCHAR(20) NOT NULL;
 ```
 
-### Adding an Index Without Downtime
+### Removing a Column
 
-```sql
--- BAD: Blocks writes on large tables
-CREATE INDEX idx_users_email ON users (email);
-
--- GOOD: Non-blocking, allows concurrent writes
-CREATE INDEX CONCURRENTLY idx_users_email ON users (email);
-
--- Note: CONCURRENTLY cannot run inside a transaction block
--- Most migration tools need special handling for this
+```
+Phase 1: Stop using column in code (deploy)
+Phase 2: Remove column from database (migrate)
 ```
 
-### Renaming a Column (Zero-Downtime)
+### Renaming a Column
 
-Never rename directly in production. Use the expand-contract pattern:
-
-```sql
--- Step 1: Add new column (migration 001)
-ALTER TABLE users ADD COLUMN display_name TEXT;
-
--- Step 2: Backfill data (migration 002, data migration)
-UPDATE users SET display_name = username WHERE display_name IS NULL;
-
--- Step 3: Update application code to read/write both columns
--- Deploy application changes
-
--- Step 4: Stop writing to old column, drop it (migration 003)
-ALTER TABLE users DROP COLUMN username;
+```
+Phase 1: Add new column, write to both (deploy)
+Phase 2: Backfill data (migrate)
+Phase 3: Read from new column (deploy)
+Phase 4: Remove old column (migrate)
 ```
 
-### Removing a Column Safely
+## TypeScript Implementation
 
-```sql
--- Step 1: Remove all application references to the column
--- Step 2: Deploy application without the column reference
--- Step 3: Drop column in next migration
-ALTER TABLE orders DROP COLUMN legacy_status;
+### Migration Runner
 
--- For Django: use SeparateDatabaseAndState to remove from model
--- without generating DROP COLUMN (then drop in next migration)
-```
+```typescript
+// migration-runner.ts
+import { Pool } from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
 
-### Large Data Migrations
+interface Migration {
+  id: string;
+  name: string;
+  up: string;
+  down: string;
+}
 
-```sql
--- BAD: Updates all rows in one transaction (locks table)
-UPDATE users SET normalized_email = LOWER(email);
+class MigrationRunner {
+  constructor(private pool: Pool, private migrationsDir: string) {}
 
--- GOOD: Batch update with progress
-DO $$
-DECLARE
-  batch_size INT := 10000;
-  rows_updated INT;
-BEGIN
-  LOOP
-    UPDATE users
-    SET normalized_email = LOWER(email)
-    WHERE id IN (
-      SELECT id FROM users
-      WHERE normalized_email IS NULL
-      LIMIT batch_size
-      FOR UPDATE SKIP LOCKED
+  async run(): Promise<void> {
+    await this.ensureMigrationsTable();
+    
+    const applied = await this.getAppliedMigrations();
+    const pending = await this.getPendingMigrations(applied);
+
+    for (const migration of pending) {
+      console.log(`Running migration: ${migration.name}`);
+      
+      const client = await this.pool.connect();
+      try {
+        await client.query('BEGIN');
+        
+        // Run migration
+        await client.query(migration.up);
+        
+        // Record migration
+        await client.query(
+          'INSERT INTO migrations (id, name, applied_at) VALUES ($1, $2, NOW())',
+          [migration.id, migration.name]
+        );
+        
+        await client.query('COMMIT');
+        console.log(`✓ ${migration.name}`);
+      } catch (error) {
+        await client.query('ROLLBACK');
+        console.error(`✗ ${migration.name}:`, error);
+        throw error;
+      } finally {
+        client.release();
+      }
+    }
+  }
+
+  async rollback(steps = 1): Promise<void> {
+    const applied = await this.getAppliedMigrations();
+    const toRollback = applied.slice(-steps).reverse();
+
+    for (const migrationId of toRollback) {
+      const migration = await this.loadMigration(migrationId);
+      
+      const client = await this.pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query(migration.down);
+        await client.query('DELETE FROM migrations WHERE id = $1', [migration.id]);
+        await client.query('COMMIT');
+        console.log(`Rolled back: ${migration.name}`);
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    }
+  }
+
+  private async ensureMigrationsTable(): Promise<void> {
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS migrations (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        applied_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+  }
+
+  private async getAppliedMigrations(): Promise<string[]> {
+    const result = await this.pool.query(
+      'SELECT id FROM migrations ORDER BY applied_at'
     );
-    GET DIAGNOSTICS rows_updated = ROW_COUNT;
-    RAISE NOTICE 'Updated % rows', rows_updated;
-    EXIT WHEN rows_updated = 0;
-    COMMIT;
-  END LOOP;
-END $$;
+    return result.rows.map(r => r.id);
+  }
+
+  private async getPendingMigrations(applied: string[]): Promise<Migration[]> {
+    const files = fs.readdirSync(this.migrationsDir)
+      .filter(f => f.endsWith('.sql'))
+      .sort();
+
+    const pending: Migration[] = [];
+    for (const file of files) {
+      const id = file.replace('.sql', '');
+      if (!applied.includes(id)) {
+        pending.push(await this.loadMigration(id));
+      }
+    }
+    return pending;
+  }
+
+  private async loadMigration(id: string): Promise<Migration> {
+    const filePath = path.join(this.migrationsDir, `${id}.sql`);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    
+    const [up, down] = content.split('-- DOWN');
+    
+    return {
+      id,
+      name: id,
+      up: up.replace('-- UP', '').trim(),
+      down: down?.trim() || '',
+    };
+  }
+}
+
+export { MigrationRunner };
 ```
 
-## Prisma (TypeScript/Node.js)
+### Migration File Format
 
-### Workflow
+```sql
+-- migrations/20240115_001_add_phone_to_users.sql
 
-```bash
-# Create migration from schema changes
-npx prisma migrate dev --name add_user_avatar
+-- UP
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+CREATE INDEX idx_users_phone ON users(phone);
 
-# Apply pending migrations in production
-npx prisma migrate deploy
-
-# Reset database (dev only)
-npx prisma migrate reset
-
-# Generate client after schema changes
-npx prisma generate
+-- DOWN
+DROP INDEX idx_users_phone;
+ALTER TABLE users DROP COLUMN phone;
 ```
 
-### Schema Example
+### Zero-Downtime Column Rename
 
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  avatarUrl String?  @map("avatar_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  orders    Order[]
+```typescript
+// Step 1: Add new column (migration)
+// 20240115_001_add_display_name.sql
+`
+-- UP
+ALTER TABLE users ADD COLUMN display_name VARCHAR(255);
 
-  @@map("users")
-  @@index([email])
+-- DOWN
+ALTER TABLE users DROP COLUMN display_name;
+`
+
+// Step 2: Write to both columns (code change)
+async function updateUser(id: string, name: string) {
+  await db.query(
+    'UPDATE users SET name = $1, display_name = $1 WHERE id = $2',
+    [name, id]
+  );
+}
+
+// Step 3: Backfill existing data (migration)
+// 20240116_001_backfill_display_name.sql
+`
+-- UP
+UPDATE users SET display_name = name WHERE display_name IS NULL;
+
+-- DOWN
+-- No rollback needed for data backfill
+`
+
+// Step 4: Read from new column (code change)
+async function getUser(id: string) {
+  const result = await db.query(
+    'SELECT id, display_name as name FROM users WHERE id = $1',
+    [id]
+  );
+  return result.rows[0];
+}
+
+// Step 5: Remove old column (migration)
+// 20240117_001_remove_name_column.sql
+`
+-- UP
+ALTER TABLE users DROP COLUMN name;
+
+-- DOWN
+ALTER TABLE users ADD COLUMN name VARCHAR(255);
+UPDATE users SET name = display_name;
+`
+```
+
+### Safe Index Creation
+
+```sql
+-- ❌ UNSAFE: Locks table during creation
+CREATE INDEX idx_orders_user ON orders(user_id);
+
+-- ✅ SAFE: Non-blocking index creation
+CREATE INDEX CONCURRENTLY idx_orders_user ON orders(user_id);
+```
+
+### Data Migration with Batching
+
+```typescript
+// data-migration.ts
+async function migrateUserEmails(): Promise<void> {
+  const BATCH_SIZE = 1000;
+  let processed = 0;
+  let lastId = '';
+
+  while (true) {
+    const users = await db.query(`
+      SELECT id, email 
+      FROM users 
+      WHERE id > $1 
+      ORDER BY id 
+      LIMIT $2
+    `, [lastId, BATCH_SIZE]);
+
+    if (users.rows.length === 0) break;
+
+    for (const user of users.rows) {
+      await db.query(
+        'UPDATE users SET email_normalized = LOWER($1) WHERE id = $2',
+        [user.email, user.id]
+      );
+    }
+
+    lastId = users.rows[users.rows.length - 1].id;
+    processed += users.rows.length;
+    console.log(`Processed ${processed} users`);
+
+    // Avoid overwhelming the database
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
 }
 ```
 
-### Custom SQL Migration
-
-For operations Prisma cannot express (concurrent indexes, data backfills):
-
-```bash
-# Create empty migration, then edit the SQL manually
-npx prisma migrate dev --create-only --name add_email_index
-```
-
-```sql
--- migrations/20240115_add_email_index/migration.sql
--- Prisma cannot generate CONCURRENTLY, so we write it manually
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users (email);
-```
-
-## Drizzle (TypeScript/Node.js)
-
-### Workflow
-
-```bash
-# Generate migration from schema changes
-npx drizzle-kit generate
-
-# Apply migrations
-npx drizzle-kit migrate
-
-# Push schema directly (dev only, no migration file)
-npx drizzle-kit push
-```
-
-### Schema Example
-
-```typescript
-import { pgTable, text, timestamp, uuid, boolean } from "drizzle-orm/pg-core";
-
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
-  name: text("name"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-```
-
-## Django (Python)
-
-### Workflow
-
-```bash
-# Generate migration from model changes
-python manage.py makemigrations
-
-# Apply migrations
-python manage.py migrate
-
-# Show migration status
-python manage.py showmigrations
-
-# Generate empty migration for custom SQL
-python manage.py makemigrations --empty app_name -n description
-```
-
-### Data Migration
+## Python Implementation
 
 ```python
-from django.db import migrations
+# migration_runner.py
+import os
+import psycopg2
+from datetime import datetime
 
-def backfill_display_names(apps, schema_editor):
-    User = apps.get_model("accounts", "User")
-    batch_size = 5000
-    users = User.objects.filter(display_name="")
-    while users.exists():
-        batch = list(users[:batch_size])
-        for user in batch:
-            user.display_name = user.username
-        User.objects.bulk_update(batch, ["display_name"], batch_size=batch_size)
+class MigrationRunner:
+    def __init__(self, connection_string: str, migrations_dir: str):
+        self.conn = psycopg2.connect(connection_string)
+        self.migrations_dir = migrations_dir
 
-def reverse_backfill(apps, schema_editor):
-    pass  # Data migration, no reverse needed
+    def run(self):
+        self._ensure_migrations_table()
+        applied = self._get_applied_migrations()
+        pending = self._get_pending_migrations(applied)
 
-class Migration(migrations.Migration):
-    dependencies = [("accounts", "0015_add_display_name")]
+        for migration in pending:
+            print(f"Running: {migration['name']}")
+            cursor = self.conn.cursor()
+            try:
+                cursor.execute(migration['up'])
+                cursor.execute(
+                    "INSERT INTO migrations (id, name) VALUES (%s, %s)",
+                    (migration['id'], migration['name'])
+                )
+                self.conn.commit()
+                print(f"✓ {migration['name']}")
+            except Exception as e:
+                self.conn.rollback()
+                print(f"✗ {migration['name']}: {e}")
+                raise
 
-    operations = [
-        migrations.RunPython(backfill_display_names, reverse_backfill),
-    ]
+    def _ensure_migrations_table(self):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS migrations (
+                id VARCHAR(255) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                applied_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        self.conn.commit()
+
+    def _get_applied_migrations(self) -> list[str]:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id FROM migrations ORDER BY applied_at")
+        return [row[0] for row in cursor.fetchall()]
+
+    def _get_pending_migrations(self, applied: list[str]) -> list[dict]:
+        files = sorted(f for f in os.listdir(self.migrations_dir) if f.endswith('.sql'))
+        pending = []
+        for f in files:
+            migration_id = f.replace('.sql', '')
+            if migration_id not in applied:
+                pending.append(self._load_migration(migration_id))
+        return pending
+
+    def _load_migration(self, migration_id: str) -> dict:
+        path = os.path.join(self.migrations_dir, f"{migration_id}.sql")
+        with open(path) as f:
+            content = f.read()
+        up, down = content.split('-- DOWN') if '-- DOWN' in content else (content, '')
+        return {
+            'id': migration_id,
+            'name': migration_id,
+            'up': up.replace('-- UP', '').strip(),
+            'down': down.strip(),
+        }
 ```
 
-### SeparateDatabaseAndState
+## Pre-Deployment Checklist
 
-Remove a column from the Django model without dropping it from the database immediately:
-
-```python
-class Migration(migrations.Migration):
-    operations = [
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.RemoveField(model_name="user", name="legacy_field"),
-            ],
-            database_operations=[],  # Don't touch the DB yet
-        ),
-    ]
+```markdown
+- [ ] Migration is backward compatible
+- [ ] Indexes created with CONCURRENTLY
+- [ ] Large data migrations batched
+- [ ] Rollback script tested
+- [ ] Migration tested on production-like data
+- [ ] Estimated lock time acceptable
 ```
 
-## golang-migrate (Go)
+## Best Practices
 
-### Workflow
+1. **One change per migration** - Easier to rollback
+2. **Always write DOWN migrations** - You will need them
+3. **Test on production data copy** - Size matters
+4. **Use transactions** - Atomic changes
+5. **Monitor during migration** - Watch for locks
 
-```bash
-# Create migration pair
-migrate create -ext sql -dir migrations -seq add_user_avatar
+## Common Mistakes
 
-# Apply all pending migrations
-migrate -path migrations -database "$DATABASE_URL" up
-
-# Rollback last migration
-migrate -path migrations -database "$DATABASE_URL" down 1
-
-# Force version (fix dirty state)
-migrate -path migrations -database "$DATABASE_URL" force VERSION
-```
-
-### Migration Files
-
-```sql
--- migrations/000003_add_user_avatar.up.sql
-ALTER TABLE users ADD COLUMN avatar_url TEXT;
-CREATE INDEX CONCURRENTLY idx_users_avatar ON users (avatar_url) WHERE avatar_url IS NOT NULL;
-
--- migrations/000003_add_user_avatar.down.sql
-DROP INDEX IF EXISTS idx_users_avatar;
-ALTER TABLE users DROP COLUMN IF EXISTS avatar_url;
-```
-
-## Zero-Downtime Migration Strategy
-
-For critical production changes, follow the expand-contract pattern:
-
-```
-Phase 1: EXPAND
-  - Add new column/table (nullable or with default)
-  - Deploy: app writes to BOTH old and new
-  - Backfill existing data
-
-Phase 2: MIGRATE
-  - Deploy: app reads from NEW, writes to BOTH
-  - Verify data consistency
-
-Phase 3: CONTRACT
-  - Deploy: app only uses NEW
-  - Drop old column/table in separate migration
-```
-
-### Timeline Example
-
-```
-Day 1: Migration adds new_status column (nullable)
-Day 1: Deploy app v2 — writes to both status and new_status
-Day 2: Run backfill migration for existing rows
-Day 3: Deploy app v3 — reads from new_status only
-Day 7: Migration drops old status column
-```
-
-## Anti-Patterns
-
-| Anti-Pattern | Why It Fails | Better Approach |
-|-------------|-------------|-----------------|
-| Manual SQL in production | No audit trail, unrepeatable | Always use migration files |
-| Editing deployed migrations | Causes drift between environments | Create new migration instead |
-| NOT NULL without default | Locks table, rewrites all rows | Add nullable, backfill, then add constraint |
-| Inline index on large table | Blocks writes during build | CREATE INDEX CONCURRENTLY |
-| Schema + data in one migration | Hard to rollback, long transactions | Separate migrations |
-| Dropping column before removing code | Application errors on missing column | Remove code first, drop column next deploy |
+- Adding NOT NULL without default
+- Creating indexes without CONCURRENTLY
+- Large data migrations in single transaction
+- No rollback plan
+- Not testing with production data volume

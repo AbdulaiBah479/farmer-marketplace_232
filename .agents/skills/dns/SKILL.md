@@ -1,348 +1,187 @@
 ---
 name: dns
-description: DNS 配置与排查
-version: 1.0.0
-author: terminal-skills
-tags: [networking, dns, bind, coredns, resolution]
+description: |
+  Cloudflare DNS and infrastructure management. Manage DNS records, tunnels,
+  Access policies, SSL certificates, and CDN caching.
+examples:
+  - "/dns list"
+  - "/dns add staging.project.com A 1.2.3.4"
+  - "/dns purge project.com"
+  - "/dns ssl-status"
+  - "/dns tunnel status"
 ---
 
-# DNS 配置与排查
+# DNS & Cloudflare Skill
 
-## 概述
-DNS 配置、解析排查、BIND/CoreDNS 等技能。
+Manage Cloudflare DNS, tunnels, Access, and CDN configuration.
 
-## DNS 查询工具
+## Usage
 
-### dig
 ```bash
-# 基础查询
-dig example.com
-dig example.com A
-dig example.com AAAA
-dig example.com MX
-dig example.com NS
-dig example.com TXT
-dig example.com ANY
-
-# 简短输出
-dig +short example.com
-
-# 指定 DNS 服务器
-dig @8.8.8.8 example.com
-dig @1.1.1.1 example.com
-
-# 追踪解析过程
-dig +trace example.com
-
-# 反向解析
-dig -x 8.8.8.8
-
-# 查询特定记录
-dig example.com SOA
-dig example.com CNAME
-
-# 禁用递归
-dig +norecurse example.com
+/dns                           # Show DNS status for current project domains
+/dns list                      # List all DNS records for project domain
+/dns add <subdomain> <type> <value>    # Add DNS record
+/dns update <subdomain> <type> <value> # Update DNS record
+/dns delete <subdomain> <type>         # Delete DNS record
+/dns ssl-status                # Check SSL certificate status
+/dns purge [path]              # Purge Cloudflare cache
+/dns tunnel status             # Check Cloudflare Tunnel status
+/dns access list               # List Access applications
 ```
 
-### nslookup
+## DNS Management
+
+### List Records
+
 ```bash
-# 基础查询
-nslookup example.com
-nslookup example.com 8.8.8.8
+# Using wrangler CLI
+wrangler dns list ${DOMAIN}
 
-# 查询特定类型
-nslookup -type=mx example.com
-nslookup -type=ns example.com
-nslookup -type=txt example.com
-
-# 反向解析
-nslookup 8.8.8.8
+# Or using Cloudflare API
+curl -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+  -H "Authorization: Bearer ${CF_API_TOKEN}" \
+  -H "Content-Type: application/json"
 ```
 
-### host
+### Add/Update Records
+
 ```bash
-# 基础查询
-host example.com
-host -t mx example.com
-host -t ns example.com
+# Add A record (proxied through Cloudflare)
+wrangler dns create ${DOMAIN} A staging --content ${IP} --proxied
 
-# 反向解析
-host 8.8.8.8
+# Add CNAME record
+wrangler dns create ${DOMAIN} CNAME api --content ${TARGET} --proxied
 
-# 详细输出
-host -v example.com
+# Update existing record
+wrangler dns update ${DOMAIN} A staging --content ${NEW_IP}
 ```
 
-## 本地 DNS 配置
+### Delete Records
 
-### /etc/resolv.conf
 ```bash
-# 查看配置
-cat /etc/resolv.conf
-
-# 配置示例
-nameserver 8.8.8.8
-nameserver 8.8.4.4
-search example.com
-options timeout:2 attempts:3
-
-# 临时修改（可能被覆盖）
-echo "nameserver 8.8.8.8" > /etc/resolv.conf
+# Delete specific record
+wrangler dns delete ${DOMAIN} A staging
 ```
 
-### /etc/hosts
+## SSL Certificate Management
+
 ```bash
-# 查看
-cat /etc/hosts
+# Check certificate expiry
+echo | openssl s_client -servername ${DOMAIN} -connect ${DOMAIN}:443 2>/dev/null | \
+  openssl x509 -noout -dates
 
-# 添加记录
-echo "192.168.1.100 myserver.local" >> /etc/hosts
-
-# 格式
-127.0.0.1       localhost
-192.168.1.100   myserver myserver.local
+# Force SSL renewal (via Cloudflare dashboard or API)
+# Cloudflare auto-renews Universal SSL certificates
 ```
 
-### systemd-resolved
+## Cloudflare Tunnel
+
 ```bash
-# 查看状态
-systemd-resolve --status
-resolvectl status
+# List tunnels
+cloudflared tunnel list
 
-# 查询
-resolvectl query example.com
+# Create new tunnel
+cloudflared tunnel create ${TUNNEL_NAME}
 
-# 刷新缓存
-systemd-resolve --flush-caches
-resolvectl flush-caches
+# Route DNS to tunnel
+cloudflared tunnel route dns ${TUNNEL_NAME} ${SUBDOMAIN}.${DOMAIN}
 
-# 配置文件
-/etc/systemd/resolved.conf
+# Check tunnel status on VPS
+ssh ${USER}@${HOST} "sudo systemctl status cloudflared"
+
+# View tunnel logs
+ssh ${USER}@${HOST} "sudo journalctl -u cloudflared -n 50"
 ```
 
-## BIND DNS 服务器
+## Cloudflare Access (Zero-Trust)
 
-### 安装与管理
 ```bash
-# 安装
-apt install bind9 bind9utils          # Debian/Ubuntu
-yum install bind bind-utils           # CentOS/RHEL
+# List Access applications
+wrangler access list-apps
 
-# 服务管理
-systemctl start named
-systemctl enable named
-systemctl status named
+# Create Access application (usually via dashboard)
+# - Set application name
+# - Set domain (e.g., seq.tribevibe.events)
+# - Configure identity providers (email, GitHub, etc.)
+# - Set session duration
 
-# 检查配置
-named-checkconf
-named-checkzone example.com /etc/bind/zones/db.example.com
+# After Access is configured, nginx needs CORS headers:
+# add_header Access-Control-Allow-Origin "${ALLOWED_ORIGIN}" always;
+# add_header Access-Control-Allow-Credentials "true" always;
 ```
 
-### 主配置
+## Cache Management
+
 ```bash
-# /etc/bind/named.conf.options
-options {
-    directory "/var/cache/bind";
-    
-    forwarders {
-        8.8.8.8;
-        8.8.4.4;
-    };
-    
-    dnssec-validation auto;
-    
-    listen-on { any; };
-    listen-on-v6 { any; };
-    
-    allow-query { any; };
-    allow-recursion { 192.168.0.0/16; 10.0.0.0/8; };
-    
-    recursion yes;
-};
+# Purge specific URL
+wrangler purge https://${DOMAIN}/api/v1/users
+
+# Purge everything for domain
+wrangler purge --everything --zone ${ZONE_ID}
+
+# Purge by cache tags (if configured)
+wrangler purge --tags "static-assets"
 ```
 
-### 区域配置
+## Common Tasks
+
+### Setup New Subdomain
+
 ```bash
-# /etc/bind/named.conf.local
-zone "example.com" {
-    type master;
-    file "/etc/bind/zones/db.example.com";
-    allow-transfer { 192.168.1.2; };
-};
+# 1. Add DNS record pointing to VPS
+wrangler dns create ${DOMAIN} A ${SUBDOMAIN} --content ${VPS_IP} --proxied
 
-zone "1.168.192.in-addr.arpa" {
-    type master;
-    file "/etc/bind/zones/db.192.168.1";
-};
-```
+# 2. Configure nginx on VPS
+ssh ${USER}@${HOST} << 'EOF'
+cat > /etc/nginx/sites-available/${SUBDOMAIN}.conf << 'NGINX'
+server {
+    listen 443 ssl;
+    server_name ${SUBDOMAIN}.${DOMAIN};
 
-### 区域文件
-```bash
-# /etc/bind/zones/db.example.com
-$TTL    604800
-@       IN      SOA     ns1.example.com. admin.example.com. (
-                        2024011501      ; Serial
-                        604800          ; Refresh
-                        86400           ; Retry
-                        2419200         ; Expire
-                        604800 )        ; Negative Cache TTL
-
-; Name servers
-@       IN      NS      ns1.example.com.
-@       IN      NS      ns2.example.com.
-
-; A records
-@       IN      A       192.168.1.10
-ns1     IN      A       192.168.1.1
-ns2     IN      A       192.168.1.2
-www     IN      A       192.168.1.10
-mail    IN      A       192.168.1.20
-
-; CNAME records
-ftp     IN      CNAME   www.example.com.
-
-; MX records
-@       IN      MX      10 mail.example.com.
-```
-
-## CoreDNS
-
-### 配置文件
-```bash
-# Corefile
-.:53 {
-    forward . 8.8.8.8 8.8.4.4
-    cache 30
-    log
-    errors
-}
-
-example.com:53 {
-    file /etc/coredns/db.example.com
-    log
-    errors
-}
-```
-
-### Kubernetes CoreDNS
-```yaml
-# ConfigMap
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: coredns
-  namespace: kube-system
-data:
-  Corefile: |
-    .:53 {
-        errors
-        health {
-            lameduck 5s
-        }
-        ready
-        kubernetes cluster.local in-addr.arpa ip6.arpa {
-            pods insecure
-            fallthrough in-addr.arpa ip6.arpa
-            ttl 30
-        }
-        prometheus :9153
-        forward . /etc/resolv.conf {
-            max_concurrent 1000
-        }
-        cache 30
-        loop
-        reload
-        loadbalance
+    location / {
+        proxy_pass http://localhost:${PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
+}
+NGINX
+ln -sf /etc/nginx/sites-available/${SUBDOMAIN}.conf /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+EOF
+
+# 3. Verify SSL (Cloudflare provides automatic SSL)
+curl -I https://${SUBDOMAIN}.${DOMAIN}
 ```
 
-## 常见场景
-
-### 场景 1：DNS 解析排查
-```bash
-# 1. 检查本地配置
-cat /etc/resolv.conf
-
-# 2. 测试 DNS 服务器连通性
-ping 8.8.8.8
-
-# 3. 查询解析
-dig example.com
-dig @8.8.8.8 example.com
-
-# 4. 追踪解析路径
-dig +trace example.com
-
-# 5. 检查 DNS 缓存
-systemd-resolve --statistics
-```
-
-### 场景 2：清除 DNS 缓存
-```bash
-# systemd-resolved
-systemd-resolve --flush-caches
-
-# nscd
-systemctl restart nscd
-
-# dnsmasq
-systemctl restart dnsmasq
-
-# BIND
-rndc flush
-
-# macOS
-sudo dscacheutil -flushcache
-sudo killall -HUP mDNSResponder
-```
-
-### 场景 3：测试 DNS 性能
-```bash
-# 使用 dig 测试响应时间
-dig example.com | grep "Query time"
-
-# 批量测试
-for i in {1..10}; do
-    dig +noall +stats example.com | grep "Query time"
-done
-
-# 使用 dnsperf
-dnsperf -s 8.8.8.8 -d queries.txt
-```
-
-### 场景 4：配置内部 DNS
-```bash
-# 添加内部域名解析
-# /etc/hosts
-192.168.1.100   app.internal
-192.168.1.101   db.internal
-
-# 或配置 dnsmasq
-# /etc/dnsmasq.conf
-address=/internal/192.168.1.100
-server=8.8.8.8
-```
-
-## 故障排查
-
-| 问题 | 排查方法 |
-|------|----------|
-| 解析失败 | 检查 resolv.conf、DNS 服务器 |
-| 解析慢 | 检查 DNS 服务器响应、网络延迟 |
-| 缓存问题 | 清除本地缓存、检查 TTL |
-| 记录不存在 | 检查区域文件、SOA 序列号 |
+### Add Zero-Trust Protection
 
 ```bash
-# 检查 DNS 端口
-ss -ulnp | grep :53
-netstat -ulnp | grep :53
-
-# 测试 TCP/UDP
-dig +tcp example.com
-dig +notcp example.com
-
-# 检查 BIND 日志
-tail -f /var/log/named/query.log
-journalctl -u named -f
+# 1. Create Access application in Cloudflare dashboard
+# 2. Add allowed emails/groups
+# 3. Update nginx for CORS (if needed)
+# 4. Test authentication flow
 ```
+
+## Project Domain Lookup
+
+Domains are defined in `deployments.registry.json`:
+
+```json
+{
+  "projects": {
+    "tribevibe": {
+      "environments": {
+        "production": { "domain": "tribevibe.events" },
+        "staging": { "domain": "staging.tribevibe.events" }
+      }
+    }
+  }
+}
+```
+
+## Safety
+
+- NEVER delete production DNS records without backup plan
+- ALWAYS verify DNS changes propagate (use dig or nslookup)
+- Be aware of DNS propagation delays (up to 48h, usually minutes)
+- Cloudflare proxy provides DDoS protection - don't bypass unnecessarily

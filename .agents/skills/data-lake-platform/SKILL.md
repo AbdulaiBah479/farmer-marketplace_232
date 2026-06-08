@@ -1,6 +1,6 @@
 ---
 name: data-lake-platform
-description: "Data lake and lakehouse patterns: ingestion, CDC, Iceberg/Delta/Hudi, Trino/DuckDB, orchestration, and governance. Self-hosted and cloud."
+description: "Data lake and lakehouse platform patterns: ingestion/CDC, transformations, open table formats (Iceberg/Delta/Hudi), query and serving engines (Trino/ClickHouse/DuckDB), orchestration, governance/lineage, cost and operations. Self-hosted and cloud options."
 ---
 
 # Data Lake Platform
@@ -50,6 +50,7 @@ Build and operate production data lakes and lakehouses: ingest, transform, store
 - Medallion (bronze/silver/gold): `references/architecture-patterns.md`
 - Data mesh (domain-owned data products): `references/architecture-patterns.md`
 - Streaming-first (Kappa): `references/streaming-patterns.md`
+- Diagrams/mermaid snippets: `references/overview.md`
 
 ## Quick Start
 
@@ -89,6 +90,7 @@ sqlmesh plan && sqlmesh run
 
 | Resource | Purpose |
 |----------|---------|
+| [references/overview.md](references/overview.md) | Diagrams and decision flows |
 | [references/architecture-patterns.md](references/architecture-patterns.md) | Medallion, data mesh |
 | [references/ingestion-patterns.md](references/ingestion-patterns.md) | dlt vs Airbyte, CDC |
 | [references/transformation-patterns.md](references/transformation-patterns.md) | SQLMesh vs dbt |
@@ -100,9 +102,6 @@ sqlmesh plan && sqlmesh run
 | [references/cost-optimization.md](references/cost-optimization.md) | Cost levers and maintenance |
 | [references/operational-playbook.md](references/operational-playbook.md) | Monitoring and incident response |
 | [references/governance-catalog.md](references/governance-catalog.md) | Catalog, lineage, access control |
-| [references/data-mesh-patterns.md](references/data-mesh-patterns.md) | Domain ownership, data products, federated governance |
-| [references/data-quality-patterns.md](references/data-quality-patterns.md) | Quality gates, validation frameworks, SLOs, anomaly detection |
-| [references/security-access-patterns.md](references/security-access-patterns.md) | Row/column security, encryption, audit logging, compliance |
 
 ## Templates
 
@@ -124,9 +123,3 @@ sqlmesh plan && sqlmesh run
 | [ai-mlops](../ai-mlops/SKILL.md) | ML deployment |
 | [ai-ml-data-science](../ai-ml-data-science/SKILL.md) | Feature engineering |
 | [data-sql-optimization](../data-sql-optimization/SKILL.md) | OLTP optimization |
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

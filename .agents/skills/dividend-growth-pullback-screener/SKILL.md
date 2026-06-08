@@ -26,12 +26,6 @@ Use this skill when:
 - Looking for deep value plays with strict P/E or P/B requirements
 - Short-term trading focus (<6 months)
 
-## Prerequisites
-
-- **FMP API key** (required): Set `FMP_API_KEY` environment variable or pass `--fmp-api-key`. Free tier (250 calls/day) is sufficient for FMP-only mode (≤40 stocks). [Sign up](https://site.financialmodelingprep.com/developer/docs).
-- **FINVIZ Elite API key** (optional, recommended): Set `FINVIZ_API_KEY` environment variable or pass `--finviz-api-key`. Reduces execution time from 10–15 min to 2–3 min. [Sign up](https://elite.finviz.com/).
-- Python 3.8+ with `requests` and `pandas` libraries installed.
-
 ## Screening Workflow
 
 ### Step 1: Set API Keys
@@ -66,7 +60,8 @@ export FMP_API_KEY=your_key_here
 **Two-Stage Screening (RECOMMENDED):**
 
 ```bash
-python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_rsi.py --use-finviz
+cd dividend-growth-pullback-screener/scripts
+python3 screen_dividend_growth_rsi.py --use-finviz
 ```
 
 This executes:
@@ -76,23 +71,20 @@ This executes:
 **FMP-Only Screening:**
 
 ```bash
-python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_rsi.py --max-candidates 40
+python3 screen_dividend_growth_rsi.py --max-candidates 40
 ```
 
 **Customization Options:**
 
 ```bash
 # Two-stage with custom parameters
-python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_rsi.py \
-  --use-finviz --min-yield 2.0 --min-div-growth 15.0 --rsi-max 35
+python3 screen_dividend_growth_rsi.py --use-finviz --min-yield 2.0 --min-div-growth 15.0 --rsi-max 35
 
 # FMP-only with custom parameters
-python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_rsi.py \
-  --min-yield 2.0 --min-div-growth 10.0 --max-candidates 30
+python3 screen_dividend_growth_rsi.py --min-yield 2.0 --min-div-growth 10.0 --max-candidates 30
 
 # Provide API keys as arguments (instead of environment variables)
-python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_rsi.py \
-  --use-finviz --fmp-api-key YOUR_FMP_KEY --finviz-api-key YOUR_FINVIZ_KEY
+python3 screen_dividend_growth_rsi.py --use-finviz --fmp-api-key YOUR_FMP_KEY --finviz-api-key YOUR_FINVIZ_KEY
 ```
 
 ### Step 3: Review Results
@@ -131,21 +123,6 @@ For each qualified stock, the report includes:
 - Entry timing assessment (immediate vs. wait for confirmation)
 - Risk factors specific to the stock
 - Upside scenarios based on dividend growth compounding
-
-## Output
-
-The script saves two files to the current working directory (or `--output-dir` if specified):
-
-| File | Description |
-|---|---|
-| `dividend_growth_pullback_results_YYYY-MM-DD.json` | Structured data with all metrics (yield, dividend CAGR, RSI, composite score, etc.) |
-| `dividend_growth_pullback_screening_YYYY-MM-DD.md` | Human-readable report with stock profiles, entry timing, and investment recommendations |
-
-**Report structure (Markdown):**
-- Executive summary (number of candidates, market conditions)
-- Ranked stock profiles with dividend growth profile, technical timing, and quality metrics
-- Entry recommendations based on RSI zone (extreme oversold / strong oversold / early pullback)
-- Disclaimers
 
 ## Screening Criteria Details
 
@@ -261,7 +238,7 @@ Stocks ranked by composite score. Top scorers combine exceptional dividend growt
 
 **1. Use FINVIZ Two-Stage Approach (RECOMMENDED)**
 ```bash
-python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_rsi.py --use-finviz
+python3 screen_dividend_growth_rsi.py --use-finviz
 ```
 - FINVIZ pre-screening: 1 API call → 10-50 candidates (already filtered by RSI)
 - FMP analysis: 6 calls × 10-50 stocks = 60-300 FMP calls
@@ -269,7 +246,7 @@ python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_
 
 **2. Limit FMP-Only Candidates**
 ```bash
-python3 skills/dividend-growth-pullback-screener/scripts/screen_dividend_growth_rsi.py --max-candidates 40
+python3 screen_dividend_growth_rsi.py --max-candidates 40
 ```
 
 **3. Wait 24 Hours for Rate Limit Reset**

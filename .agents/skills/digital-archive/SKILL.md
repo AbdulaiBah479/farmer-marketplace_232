@@ -72,8 +72,7 @@ class HistoricalEra(Enum):
     ERA_2005_09 = '2005-2009'
     ERA_2010_15 = '2010-2015'
     ERA_2016_20 = '2016-2020'
-    ERA_2021_25 = '2021-2025'
-    ERA_2026_PRESENT = '2026-present'
+    ERA_2021_PRESENT = '2021-present'
 
 @dataclass
 class ArchiveRecord:
@@ -129,24 +128,9 @@ def generate_record_id(source: str, sequence: int) -> str:
 ### Taxonomy-based classification
 
 ```python
-# pip install google-genai
-# (the legacy `google-generativeai` SDK was deprecated in 2024 — the
-# new `google-genai` package is the supported path. Imports below
-# use the new shape.)
-import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 import json
 from typing import Optional
-
-# Default to the current Gemini 2.5 family. For 2026 production
-# workloads, the Gemini 3 family (gemini-3-flash, gemini-3-pro) is
-# also available — bump the model string when you've verified the
-# response shape against your taxonomy prompts.
-DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
-
-# Single client; reads GOOGLE_API_KEY (or pass api_key=...).
-_client = genai.Client(api_key=os.environ.get('GOOGLE_API_KEY'))
 
 TAXONOMY = {
     "thematic_categories": [
@@ -183,9 +167,8 @@ TAXONOMY = {
 }
 
 class ArchiveCategorizer:
-    def __init__(self, model: str = DEFAULT_GEMINI_MODEL, client: genai.Client = None):
-        self.model = model
-        self.client = client or _client
+    def __init__(self, model: str = 'gemini-2.0-flash'):
+        self.model = genai.GenerativeModel(model)
 
     def categorize(self, record: ArchiveRecord) -> dict:
         prompt = f"""Analyze this archival content and categorize it according to the taxonomy.
@@ -218,17 +201,7 @@ IMPORTANT:
 - Pull quote must be an exact excerpt from the text
 """
 
-        # response_mime_type='application/json' makes Gemini emit raw
-        # JSON without ```json fences — the markdown-stripping fallback
-        # in _parse_response() is kept as defense-in-depth for older
-        # models that still wrap output.
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type='application/json',
-            ),
-        )
+        response = self.model.generate_content(prompt)
         result = self._parse_response(response.text)
 
         # Validate against taxonomy
@@ -240,12 +213,8 @@ IMPORTANT:
         return result
 
     def _parse_response(self, text: str) -> dict:
-        """Extract JSON from response, tolerating ```json fences if any.
-
-        With response_mime_type='application/json' set on the request,
-        Gemini emits clean JSON; this stripping logic is a fallback for
-        older models or when the request config wasn't applied.
-        """
+        """Extract JSON from response, handling markdown code blocks."""
+        # Remove markdown code blocks if present
         if '```json' in text:
             text = text.split('```json')[1].split('```')[0]
         elif '```' in text:
@@ -365,11 +334,9 @@ class EntityRegistry:
 
 ```python
 class EntityExtractor:
-    def __init__(self, registry: EntityRegistry, model: str = DEFAULT_GEMINI_MODEL,
-                 client: genai.Client = None):
+    def __init__(self, registry: EntityRegistry):
         self.registry = registry
-        self.model = model
-        self.client = client or _client
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
 
     def extract(self, record: ArchiveRecord) -> tuple[list[Entity], list[Relationship]]:
         prompt = f"""Extract named entities and relationships from this archival content.
@@ -408,13 +375,7 @@ IMPORTANT:
 - Relationships must connect entities that appear in the same text
 """
 
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type='application/json',
-            ),
-        )
+        response = self.model.generate_content(prompt)
         data = json.loads(response.text)
 
         entities = []

@@ -1,152 +1,234 @@
 ---
 name: docker-best-practices
-description: Docker best practices including multi-stage builds, compose patterns, image optimization, and security
+description: Create optimized Dockerfiles with multi-stage builds, security hardening, layer caching, and health checks. Includes docker-compose patterns for development and production environments.
 ---
 
-# Docker Best Practices
+# Docker Best Practices Skill
 
-## Multi-Stage Build
+## When to Use
 
-```dockerfile
-FROM node:22-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --only=production
+Use this skill when:
+- Creating new Dockerfiles
+- Optimizing existing container images
+- Setting up docker-compose environments
+- Implementing health checks
+- Securing container deployments
+- Reducing image sizes
+- Configuring multi-stage builds
 
-FROM node:22-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+## Dockerfile Patterns
 
-FROM node:22-alpine AS runtime
-WORKDIR /app
-RUN addgroup -g 1001 -S appgroup && adduser -S appuser -u 1001 -G appgroup
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/package.json ./
-USER appuser
-EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:3000/healthz || exit 1
-CMD ["node", "dist/server.js"]
-```
-
-Separate dependency installation from build steps. Final stage contains only runtime artifacts.
-
-## Python Multi-Stage
+### 1. Multi-Stage Build (Python)
 
 ```dockerfile
+# Stage 1: Builder
 FROM python:3.12-slim AS builder
-WORKDIR /app
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.12-slim
 WORKDIR /app
-RUN useradd --create-home appuser
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-COPY . .
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Create non-root user
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+# Copy wheels from builder
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+
+# Copy application
+COPY --chown=appuser:appgroup . .
+
+# Switch to non-root user
 USER appuser
-CMD ["gunicorn", "app:create_app()", "-b", "0.0.0.0:8000", "-w", "4"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-## Docker Compose
+### 2. Layer Caching Optimization
+
+```dockerfile
+# ✅ Good: Dependencies first (cached if unchanged)
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+
+# ❌ Bad: Entire context first (cache invalidated on any change)
+COPY . .
+RUN pip install -r requirements.txt
+```
+
+### 3. Security Hardening
+
+```dockerfile
+# ✅ Security checklist:
+# 1. Non-root user
+USER appuser
+
+# 2. Read-only filesystem
+# docker run --read-only ...
+
+# 3. No new privileges
+# docker run --security-opt=no-new-privileges ...
+
+# 4. Drop capabilities
+# docker run --cap-drop=ALL ...
+
+# 5. Minimal base image
+FROM python:3.12-alpine  # or distroless
+
+# 6. No secrets in image
+# Use environment variables or secrets mount
+```
+
+### 4. Health Checks
+
+```dockerfile
+# HTTP health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# TCP health check (no curl)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD nc -z localhost 8000 || exit 1
+
+# Script health check
+HEALTHCHECK CMD ["/app/healthcheck.sh"]
+```
+
+## Docker Compose Patterns
+
+### Development Environment
 
 ```yaml
+version: "3.9"
+
 services:
-  api:
+  app:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: runtime
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app:cached
+      - /app/__pycache__  # Exclude pycache
     ports:
-      - "3000:3000"
+      - "8000:8000"
     environment:
-      - DATABASE_URL=postgres://user:pass@db:5432/app
-      - REDIS_URL=redis://cache:6379
+      - DEBUG=true
+      - DATABASE_URL=postgresql://...
     depends_on:
       db:
         condition: service_healthy
-      cache:
-        condition: service_started
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
+    
   db:
     image: postgres:16-alpine
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: app
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
+      - POSTGRES_DB=app
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=secret
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d app"]
+      test: ["CMD-SHELL", "pg_isready -U app"]
       interval: 5s
-      timeout: 3s
+      timeout: 5s
       retries: 5
 
-  cache:
-    image: redis:7-alpine
-    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
-
 volumes:
-  pgdata:
+  postgres_data:
 ```
 
-## .dockerignore
+### Production Environment
+
+```yaml
+version: "3.9"
+
+services:
+  app:
+    image: myapp:${VERSION:-latest}
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+## Image Size Optimization
 
 ```
-node_modules
-.git
-.env*
-*.md
-docker-compose*.yml
-.github
-coverage
-dist
+✅ Size reduction techniques:
+1. Use slim/alpine base images
+2. Multi-stage builds
+3. Combine RUN commands
+4. Clean up apt cache: && rm -rf /var/lib/apt/lists/*
+5. Use .dockerignore
+6. Remove build dependencies after install
+7. Use --no-cache-dir for pip
 ```
 
-Always include a `.dockerignore` to reduce build context size and prevent leaking secrets.
+## Output Format
 
-## Image Optimization Tips
+```markdown
+## Docker Analysis Report
 
-```bash
-# Check image size breakdown
-docker history --human --no-trunc <image>
+### Image Analysis
+- Base image: python:3.12-slim
+- Final size: 125MB
+- Layers: 12
+- Security: ✅ Non-root user
 
-# Use dive for layer analysis
-dive <image>
+### Optimization Suggestions
+1. [Current] → [Optimized] - [Size saved]
 
-# Multi-arch build
-docker buildx build --platform linux/amd64,linux/arm64 -t registry/app:1.0 --push .
+### Security Findings
+- ✅ Non-root user configured
+- ⚠️ Health check missing
+- ❌ Running as root
+
+### docker-compose Review
+- ✅ Health checks defined
+- ✅ Resource limits set
+- ⚠️ No restart policy
 ```
 
-Combine `RUN` commands to reduce layers. Order instructions from least to most frequently changing for cache efficiency.
+## Example Usage
 
-## Anti-Patterns
-
-- Running as root inside containers
-- Using `ADD` when `COPY` suffices (ADD auto-extracts tarballs, pulls URLs)
-- Storing secrets in environment variables in Dockerfiles
-- Not pinning base image versions (`FROM node:latest`)
-- Missing `.dockerignore` causing large build contexts
-- Installing dev dependencies in production images
-
-## Checklist
-
-- [ ] Multi-stage build separates build and runtime stages
-- [ ] Non-root user created and used with `USER` directive
-- [ ] Base images pinned to specific versions (e.g., `node:22-alpine`)
-- [ ] `.dockerignore` excludes `.git`, `node_modules`, `.env`
-- [ ] `HEALTHCHECK` instruction defined
-- [ ] Production image contains no build tools or dev dependencies
-- [ ] `docker-compose` uses `depends_on` with health conditions
-- [ ] Secrets passed via build secrets or runtime mounts, not `ENV` in Dockerfile
+```
+@docker Create optimized Dockerfile for FastAPI app
+@docker Review docker-compose.yml for production readiness
+@docker Reduce image size of the current Dockerfile
+@docker Add health checks to all services
+```

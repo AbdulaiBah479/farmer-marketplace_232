@@ -1,226 +1,305 @@
 ---
 name: doc-maintenance
-description: Systematic documentation audit and maintenance. This skill should be used when documentation may be stale, missing, or misorganized — after feature work, refactors, dependency upgrades, or as a periodic health check. It prescribes folder structure for docs/ and manual/, dispatches haiku subagents for codebase/doc scanning, and routes doc creation to specialized agents (reference-builder, technical-writer, learning-guide) with docs-architect as quality gate.
-keywords:
-  - doc maintenance
-  - doc audit
-  - stale docs
-  - doc
-  - maintenance
+description: |
+  Automatic documentation updates after task completion. Use when:
+  (1) completing tasks, (2) adding features, (3) fixing bugs,
+  (4) refactoring code. Updates root PLAN.md (consolidated) and
+  README.md when features change. Chains markdown-writer for style.
+category: documentation
+user-invocable: true
 ---
 
 # Documentation Maintenance
 
-Systematically audit, organize, and remediate project documentation by comparing the codebase
-against existing docs to find staleness, gaps, and misorganization.
+Automatically updates project documentation after task completion.
 
-## When to Trigger
+## Consolidated Plan Location
 
-- After merging a feature branch or completing a refactor
-- After dependency upgrades or API changes
-- When onboarding surfaces confusion about project docs
-- Periodic maintenance (monthly or per-release)
-- When `scripts/doc_audit.py` is run manually and reports findings
+All plan updates go to root `PLAN.md`. This is the single source of truth for project planning. Package-level PLAN.md files should be consolidated into the root PLAN.md.
 
-## Workflow Overview
+## Trigger Conditions
 
-```
-Phase 1: Audit       → Run deterministic scan + haiku search agents
-Phase 2: Triage      → Classify findings by severity and action type
-Phase 3: Remediate   → Dispatch specialized agents to fix/create docs
-Phase 4: Quality     → docs-architect reviews all changes
-```
+Invoke after:
+- Completing any task
+- Adding a new feature
+- Fixing a bug
+- Refactoring code
+- Resolving a blocked item
 
----
+Also invoke explicitly with:
+- `/doc-maintenance`
+- "update documentation"
+- "sync docs"
 
-## Phase 1: Audit
+### Pre-Merge Cleanup
 
-### Step 1a — Run the deterministic scan
-
-Execute the bundled audit script to get a baseline report:
+When owner says **"clean up before merge"** or similar, run this checklist:
 
 ```bash
-python3 skills/doc-maintenance/scripts/doc_audit.py
+# 1. Sync CLAUDE.md with installed skills (removes stale refs)
+skills claudemd sync
+
+# 2. Scan for test artifacts and slop
+skills hygiene scan
+
+# 3. If slop found, clean it
+skills hygiene clean --confirm
+
+# 4. Validate chain config (if chain files changed)
+chain validate
+
+# 5. Update PLAN.md with completed work
+# (follow doc-maintenance procedure below)
+
+# 6. Commit and push
+git add -A && git commit -m "chore: pre-merge cleanup" && git push
 ```
 
-The script produces a structured report covering:
-- Broken internal links (markdown `[text](path)` pointing to missing files)
-- Orphan docs (files not linked from any other doc or README)
-- Missing required structure (expected folders/files absent from `docs/` or `manual/`)
-- Stale-relative-to-code (docs whose referenced subtree has churned significantly since the doc was last touched — measured via git log of code commits between the doc's last edit and now, *not* absolute doc age, which produces noise on stable architecture docs)
-- Empty or stub files (< 3 lines of content)
+This is the standard cleanup before any PR merge.
 
-Pass `--json` for machine-readable output. Pass `--root PATH` to override project root detection.
+## Procedure
 
-### Step 1b — Dispatch search agents
+### Step 1: Read Current State
 
-After the deterministic scan, launch subagents to perform deeper analysis.
-Model selection is task-calibrated: haiku for pattern enumeration, sonnet for
-multi-file correlation and judgment. See `references/agent-dispatch.md` for
-full prompt templates.
+Read these files:
+- `PLAN.md` (root, consolidated project plan)
+- `README.md` (feature documentation)
+- `packages/*/PLAN.md` (check for package-level plans to consolidate into root)
+- Recent git commits (what changed)
 
-**Agent 1 — Code-to-doc coverage scan** (`subagent_type: "Explore"`, `model: "haiku"`):
-Search the codebase for public APIs, CLI commands, config schemas, and exported modules.
-Cross-reference against existing docs (presence-check via grep). Report anything undocumented.
-Haiku is sufficient because the inner loop is pattern enumeration plus a presence grep.
+### Step 2: Consolidate Package Plans
 
-**Agent 2 — Doc-to-code freshness scan** (`subagent_type: "general-purpose"`,
-`model: "sonnet"`, **per-docfile dispatch**):
-For each markdown file in scope, dispatch a sonnet agent with the file content. The
-agent (a) extracts every concrete code reference (function names, CLI flags, file paths,
-config keys, API endpoints), (b) verifies each against current code via grep / codanna /
-`Read`, (c) reports mismatches as RENAMED / REMOVED / CHANGED. Sonnet + per-docfile is
-needed because freshness verification often requires multi-file traces (handler →
-middleware → config) and distinguishing renamed from removed requires reading the new
-location, not just confirming the old one is gone.
+If `packages/*/PLAN.md` files exist, consolidate their content into root `PLAN.md`:
 
-**Agent 3 — Structure compliance scan** (`subagent_type: "Explore"`, `model: "haiku"`):
-Compare current `docs/` and `manual/` layout against the prescribed folder structure
-in `references/folder-structure.md`. Report missing folders, misplaced files, naming violations.
-Haiku is correct here — pure pattern matching against a spec.
+1. Each package gets a section: `## Package: {name}`
+2. Move completed items to the Completed section
+3. Move pending items to the appropriate sprint/backlog section
+4. Delete the package-level PLAN.md after consolidation
 
-**Agent 4a — ASCII diagram detector** (`subagent_type: "Explore"`, `model: "haiku"`):
-Scan markdown for box-drawing characters (─ │ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼), arrow notation
-(`-->`, `<--`, `==>`), or indented tree structures beyond a few nodes. Report each as
-a candidate for Mermaid conversion with the suggested diagram type. Haiku is correct
-because this is mechanical pattern detection — find the characters, report the location.
+Structure for root `PLAN.md`:
+```markdown
+# Project Plan
 
-**Agent 4b — Missing-diagram judgment scan** (`subagent_type: "general-purpose"`,
-`model: "sonnet"`, **per-docfile dispatch**):
-For each markdown file in scope, dispatch a sonnet agent. The agent reads the doc and
-flags sections where adding a diagram would *meaningfully* improve comprehension —
-multi-step flows where ordering matters, architecture relationships with named
-components, state transitions, request/response sequences. Crucially, sonnet flags
-*only* when a diagram adds value over the prose (not every step list needs a diagram).
-Haiku tends to either over-flag (every list looks diagrammable) or under-flag (misses
-implicit flow descriptions); sonnet's judgment is what makes this signal trustworthy.
+## Current Sprint
+- Active work items across all packages
 
-Launch agents 1, 2, 3, 4a, 4b in parallel — but agents 2 and 4b dispatch **internally
-per-docfile**, so the actual call count is `2 + (2 × N_docfiles)` rather than 5.
+## Package: chain
+- Package-specific in-progress work
 
-### Step 1c — Merge results
+## Package: cli
+- Package-specific in-progress work
 
-Combine the script output with agent findings into a single audit report. Deduplicate
-overlapping findings. The report becomes the input for Phase 2.
+## Backlog
+- Future work items
 
----
+## Completed
+- Timestamped completed items
 
-## Phase 2: Triage
-
-Classify each finding into one of these action categories:
-
-| Category | Description | Example |
-|----------|-------------|---------|
-| **stale** | Doc exists but references outdated code/behavior | CLI flag renamed but docs show old name |
-| **missing** | No doc exists for a documented-worthy item | Public API endpoint with no reference doc |
-| **orphan** | Doc exists but is unreachable / unlinked | Guide file not in any index or nav |
-| **misplaced** | Doc exists but is in the wrong folder | Tutorial sitting in `docs/architecture/` |
-| **irrelevant** | Doc covers removed functionality | Guide for a deleted feature |
-| **structural** | Folder structure deviates from prescribed layout | Missing `docs/security/` folder |
-| **diagram-convert** | ASCII/text diagram should be Mermaid | Complex box-drawing flowchart in architecture doc |
-| **diagram-missing** | Section would benefit from a diagram | Multi-step process described only in prose |
-
-Assign severity:
-- **P0** — User-facing doc is factually wrong (manual/)
-- **P1** — Developer doc references nonexistent code
-- **P2** — Missing doc for public API or feature
-- **P3** — Structural / organizational issues
-- **P4** — Minor staleness, cosmetic
-
----
-
-## Phase 3: Remediate
-
-Route each finding to the appropriate specialist agent. Use the Task tool with
-the subagent types listed below. See `references/agent-dispatch.md` for detailed
-prompt templates.
-
-| Doc type | Subagent type | Target location |
-|----------|---------------|-----------------|
-| API reference docs | `reference-builder` | `docs/reference/` or `docs/api/` |
-| Architecture docs | `technical-writer` | `docs/architecture/` |
-| Developer guides (style, local dev, workflows) | `technical-writer` | `docs/development/` |
-| Testing docs | `technical-writer` | `docs/testing/` |
-| Security docs | `technical-writer` | `docs/security/` |
-| User-facing tutorials | `learning-guide` | `manual/tutorials/` |
-| User-facing how-to guides | `learning-guide` | `manual/guides/` |
-| User-facing getting started | `learning-guide` | `manual/getting-started/` |
-| Plans and proposals | `technical-writer` | `docs/plans/` |
-| ASCII diagram conversion | `mermaid-expert` | Inline in existing doc |
-| New diagrams for prose sections | `mermaid-expert` | Inline in existing doc |
-
-**Parallel dispatch:** Group independent remediation tasks and dispatch them simultaneously.
-Only serialize when one doc depends on another (e.g., an API reference needed before a tutorial
-that links to it). Dispatch up to 4 remediation agents in parallel per batch.
-
-**For updates to existing docs:** Provide the agent with the current file contents and the
-specific finding to fix. Instruct it to make minimal, targeted edits.
-
-**For new docs:** Provide the agent with the relevant source code, the target file path,
-and the folder-structure spec so it follows naming conventions.
-
----
-
-## Phase 4: Quality Gate
-
-After all remediation agents complete, dispatch a single `docs-architect` agent to review
-the full set of changes. The quality gate checks:
-
-1. **Accuracy** — Do docs match current code?
-2. **Completeness** — Are all public interfaces covered?
-3. **Organization** — Does folder structure match the prescribed layout?
-4. **Cross-references** — Are all internal links valid?
-5. **Consistency** — Tone, formatting, heading levels
-6. **No orphans** — Every new doc is linked from an index or parent doc
-
-If the quality gate fails, loop back to Phase 3 for the specific issues flagged.
-Maximum 2 remediation loops before escalating to the user.
-
----
-
-## Folder Structure
-
-The prescribed folder layout is defined in `references/folder-structure.md`. Summary:
-
-### `docs/` — Internal / developer documentation
-
-```
-docs/
-├── architecture/    — System design, ADRs, component diagrams
-├── development/     — Developer guides: style, local setup, issue tracking
-├── plans/           — Proposals, RFCs, roadmaps
-├── reviews/         — Code review records, audit reports
-├── testing/         — Test strategy, coverage reports, test plans
-├── reports/         — Generated reports, metrics, analysis
-├── security/        — Security policies, threat models, audit findings
-├── api/             — Internal API docs (OpenAPI specs, gRPC protos)
-├── reference/       — CLI reference, config reference, manpages
-├── ideas/           — Exploratory notes, spikes, brainstorms
-└── archive/         — Deprecated docs preserved for history
+## Blocked
+- Items waiting on dependencies
 ```
 
-### `manual/` — User-facing documentation (project root)
+### Step 3: Analyze Changes
+
+Determine what was accomplished:
+- Which PLAN.md items are now complete?
+- Were new features added?
+- Were bugs fixed?
+- Did refactoring occur?
+- Were new issues discovered?
+
+### Step 4: Update PLAN.md
+
+**Mark completed items:**
+```markdown
+## Current Sprint
+- [x] Implement user authentication  # Was [ ]
+- [ ] Add password reset flow
+```
+
+**Add discovered work:**
+```markdown
+## Backlog
+- [ ] Discovered: Need rate limiting for auth endpoints
+- [ ] Tech debt: Refactor auth middleware
+```
+
+**Move completed items with timestamp:**
+```markdown
+## Completed
+- [x] Implement user authentication (2026-01-30)
+```
+
+**Update blocked items:**
+```markdown
+## Blocked
+- Password reset: Waiting for email service setup
+```
+
+### Step 5: Update README.md (If Features Changed)
+
+**When to update README.md:**
+- New user-facing feature added
+- API changed
+- New command available
+- Installation steps changed
+
+**What to update:**
+- Features list
+- Usage examples
+- API reference
+- Installation instructions
+
+### Step 6: Report Changes
+
+Output a summary:
 
 ```
-manual/
-├── getting-started/ — Installation, quickstart, first steps
-├── guides/          — How-to guides for common tasks
-├── tutorials/       — Step-by-step learning paths
-├── reference/       — User-facing command/config reference
-└── troubleshooting/ — FAQ, common errors, known issues
+Documentation updated:
+
+PLAN.md:
+  - Marked complete: "Implement user authentication"
+  - Added to backlog: "Need rate limiting for auth endpoints"
+  - Moved to completed: 1 item
+  - Consolidated from: packages/chain/PLAN.md
+
+README.md:
+  - Updated features list with authentication
+  - Added auth usage example
 ```
 
-### `README.md` — Project root
+## Skill Chaining
 
-The main README is audited for accuracy but not reorganized. Findings about the README
-are reported as stale/missing items for manual remediation.
+### With markdown-writer
 
----
+All documentation updates MUST follow markdown-writer style:
+- Short sentences, direct claims
+- No em dashes
+- Active voice
+- Tables for structured data
 
-## Anti-Patterns
+Implicitly chain markdown-writer when editing any .md file.
 
-- Do not delete docs without confirming the feature they describe is truly removed
-- Do not reorganize docs without updating all internal cross-references
-- Do not create stub files just to fill the folder structure — only create docs with real content
-- Do not duplicate content between `docs/` and `manual/` — link instead
-- Do not move user-facing docs into `docs/` or developer docs into `manual/`
+### After TDD Completion
+
+When TDD workflow completes (GREEN phase):
+1. Mark the related PLAN.md task as complete
+2. Add any discovered edge cases to backlog
+
+### After Bug Fix
+
+When a bug is fixed:
+1. Mark bug item as complete in PLAN.md
+2. Add regression test to PLAN.md if not present
+
+### After Refactoring
+
+When refactoring completes:
+1. Mark refactoring task as complete
+2. Update any affected API documentation
+
+### Terminal Chain
+
+After any documentation update: **repo-hygiene** (clean stale references)
+
+## Update Patterns
+
+### Marking Tasks Complete
+
+**Before:**
+```markdown
+- [ ] Implement feature X
+```
+
+**After:**
+```markdown
+- [x] Implement feature X
+```
+
+### Adding Discovered Work
+
+When you discover new tasks during implementation:
+
+```markdown
+## Backlog
+- [ ] (discovered) New task from implementation
+- [ ] (tech debt) Code that needs cleanup
+- [ ] (bug) Issue found during testing
+```
+
+### Timestamping Completed Items
+
+Add date to completed items:
+
+```markdown
+## Completed
+- [x] Task description (2026-01-30)
+```
+
+### Feature Documentation
+
+When adding a feature to README.md:
+
+```markdown
+## Features
+
+- **Authentication**: Secure user login with JWT tokens
+- **Password Reset**: Email-based password recovery
+```
+
+## Rationalizations (Do Not Skip)
+
+| Rationalization | Why It's Wrong | Required Action |
+|-----------------|----------------|-----------------|
+| "Too small to document" | Small changes accumulate | Update PLAN.md |
+| "I'll remember" | Context is lost between sessions | Write it down |
+| "README is fine" | Feature docs get stale | Verify accuracy |
+| "Just a bug fix" | Bugs deserve tracking | Mark complete |
+| "Package has its own PLAN" | Fragmentation causes confusion | Consolidate to root PLAN.md |
+
+## Example Session
+
+**Task:** Add user authentication
+
+**After completion:**
+
+```
+/doc-maintenance
+
+Analyzing changes...
+
+Found:
+- New auth middleware in src/middleware/auth.ts
+- New login endpoint in src/routes/auth.ts
+- 5 new test files
+- Git commit: "Add JWT authentication"
+- packages/chain/PLAN.md exists (needs consolidation)
+
+Updates:
+
+PLAN.md:
+  Current Sprint:
+    - [x] Implement user authentication
+  Backlog:
+    + [ ] (discovered) Add refresh token support
+    + [ ] (discovered) Rate limit login attempts
+  Consolidated:
+    - Merged packages/chain/PLAN.md content
+
+README.md:
+  Features:
+    + Authentication: JWT-based user authentication
+  Usage:
+    + Added auth example code
+```
+
+## Notes
+
+- All plan updates go to root `PLAN.md` (consolidated)
+- Package-level PLAN.md files should be consolidated, not maintained separately
+- Never removes items from PLAN.md (only marks complete)
+- Preserves existing formatting
+- Adds timestamps to completed items
+- Creates backlog items for discovered work
+- Only updates README.md when features change
+- Always follows markdown-writer style

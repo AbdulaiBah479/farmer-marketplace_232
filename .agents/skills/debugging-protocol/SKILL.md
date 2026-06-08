@@ -1,193 +1,61 @@
 ---
 name: debugging-protocol
-description: >-
-  Systematic 4-phase debugging: (1) understand the failure by reading the
-  complete error and reproducing it, (2) find working examples to compare
-  against, (3) test one hypothesis at a time with a single change, (4) fix
-  the root cause and verify with tests. Includes the Three Strikes Rule
-  (escalate after 3 failed fix attempts) and the Iron Law (no fixes without
-  investigation). Activate when tests fail unexpectedly, errors occur,
-  behavior is wrong, something that worked before is now broken, or a user
-  reports a bug. Triggers on: "debug", "why is this failing", "test failure",
-  "unexpected error", "bug", "broken", "investigate this error", "fix this
-  bug", "tests are failing", "weird behavior", "something broke", "track
-  down this issue". Also activates when multiple bugs need systematic
-  investigation (one at a time, not batch-fixed). NOT for: writing new tests
-  from scratch (use tdd), or general code review (use code-review).
-license: CC0-1.0
-compatibility: Designed for any coding agent (Claude Code, Codex, Cursor, OpenCode, etc.)
-metadata:
-  author: jwilger
-  version: "1.2.0"
-  requires: []
-  context: [source-files, test-files, git-history]
-  phase: build
-  standalone: true
-effort: high
+description: Comprehensive protocol for validating root causes of software issues. Use when you need to systematically debug a complex bug, flaky test, or unknown system behavior by forming hypotheses and validating them with specific tasks.
 ---
 
 # Debugging Protocol
 
-**Value:** Feedback -- systematic investigation produces understanding.
-Understanding produces correct fixes. Correct fixes prevent recurrence.
-Skipping investigation produces symptom fixes that hide bugs.
+## Overview
 
-## Purpose
+This skill provides a rigorous framework for debugging complex software issues. It moves beyond ad-hoc troubleshooting to a structured process of hypothesis generation and validation.
 
-Teaches a disciplined 4-phase debugging process that enforces root cause
-analysis before any fix attempt. Prevents the most common debugging failure
-mode: jumping to a fix without understanding why the problem exists.
+Use this skill to:
+1.  Formalize a debugging session.
+2.  Systematically eliminate potential root causes.
+3.  Document findings for future reference or team communication.
 
-## Practices
+## Protocol Workflow
 
-### The Iron Law: No Fixes Without Investigation
+To run a structured debugging session, follow these steps:
 
-Never change code to fix a bug until you have completed root cause
-investigation. When you see an error and immediately know the fix, that is
-exactly when you are most likely to be wrong. Investigate first.
+### 1. Initialize the Session
+Create a new debugging document using the provided template. This serves as the "source of truth" for the investigation.
 
-**Do:**
-- Read the complete error message and stack trace before doing anything else
-- Reproduce the bug consistently before investigating
-- Understand WHY something is broken, not just WHAT is broken
+Template location: `assets/debugging-session-template.md`
 
-**Do not:**
-- Add a null check because you see a null pointer error (symptom fix)
-- Try "a few things" to see what sticks (random debugging)
-- Skip investigation because "this is an easy one"
+### 2. Define the Problem
+Clearly articulate the **System Context** and **Problem Statement**.
+*   **Symptom**: What is the observable behavior? How does it differ from expected behavior?
+*   **Scope**: Which components are involved?
 
-### Phase 1: Understand the Failure
+### 3. Formulate Hypotheses
+List distinct, testable hypotheses.
+*   Avoid vague guesses.
+*   Differentiate between layers (e.g., "Frontend Hypothesis" vs "Backend Hypothesis").
+*   Example: "Race condition in UI state update" vs "Database schema misconfiguration".
 
-Gather facts. Do not interpret yet.
+### 4. Design Validation Tasks
+For each hypothesis, design a specific validation task.
+*   **Objective**: What are you trying to prove or disprove?
+*   **Steps**: Precise, reproducible actions.
+*   **Code Pattern**: Provide the exact code or command to run (e.g., a specific SQL query, a Python script using the client library, a `curl` command).
+*   **Success Criteria**: Explicitly state what output confirms the hypothesis.
 
-1. Read the full error message -- every line, not just the first
-2. Identify the exact file and line where the failure occurs
-3. Reproduce the failure consistently (if it does not reproduce, that is
-   important information)
-4. Check recent changes: `git log --oneline -10` and `git diff`
-5. Note the data flow: where does the bad value come from?
+### 5. Execute and Document
+Run the tasks in order. For each task, record:
+*   **Status**: ✅ VALIDATED, ❌ FAILED, or ⚠️ INCONCLUSIVE.
+*   **Findings**: Key observations and raw evidence (logs, screenshots).
+*   **Conclusion**: Does this support or refute the hypothesis?
 
-**Output:** A clear statement of what is happening, where, and since when.
+### 6. Determine Root Cause
+Synthesize the findings into a **Root Cause Analysis**.
+*   Identify the Primary Root Cause.
+*   Assign a Confidence Level.
+*   Propose specific fixes.
 
-### Phase 2: Find Working Examples
+## Best Practices
 
-Compare broken against working. The difference is the bug.
-
-1. Find similar code that works correctly
-2. Compare setup, inputs, state, and configuration
-3. Identify what differs between the working and failing case
-4. Check dependencies: did a library update? Did an environment change?
-
-**Output:** A specific difference between working and failing cases.
-
-### Phase 3: Test One Hypothesis
-
-Form a single, explicit hypothesis. Test it with one change. Learn from the
-result.
-
-1. State the hypothesis: "I believe the bug is caused by [X] because [evidence]"
-2. Make ONE change to test it
-3. Observe the result
-4. If the hypothesis is wrong, UNDO the change completely
-5. Form a new hypothesis incorporating what you learned
-
-**Do not** change multiple things at once. If you change the import, the type,
-and the logic simultaneously, you cannot know which change mattered.
-
-**Output:** Confirmed or refuted hypothesis with evidence.
-
-### Phase 4: Fix and Verify
-
-Fix with confidence because you understand the root cause.
-
-1. Write a failing test that reproduces the bug (if one does not already exist)
-2. Implement the fix targeting the root cause identified in Phase 3
-3. Verify: the new test passes, all existing tests still pass
-4. Confirm you fixed the cause, not the symptom
-
-**Output:** A fix backed by a test, with all tests green.
-
-### Escalation: Three Strikes Rule
-
-If three fix attempts fail, stop. The problem is not what you think it is.
-
-After the third failure:
-
-1. Stop attempting fixes entirely
-2. Document what you tried and why each attempt failed
-3. Question your assumptions: wrong abstraction? Wrong domain model? Wrong
-   problem entirely?
-4. Seek a broader perspective -- architecture review, domain expert, or
-   escalate to the user
-
-Three failed fixes almost always signal a design problem, not a code problem.
-More code fixes will not help.
-
-**Example:**
-```
-Attempt 1: Add caching (hypothesis: slow queries) -> Still slow
-Attempt 2: Add index (hypothesis: missing index) -> Still slow
-Attempt 3: Eager loading (hypothesis: N+1) -> Still slow
-STOP. Profile the system.
-Result: 90% of time in external API call. Not a database problem at all.
-```
-
-## Enforcement Note
-
-- **Standalone mode**: Advisory. The Iron Law is self-enforced.
-- **Pipeline mode**: Gating. Debugging evidence is required before fix
-  commits pass the TDD gate.
-
-**Hard constraints:**
-- Iron Law (investigate before fix): `[H]`
-- Three Strikes escalation: `[RP]`
-
-## Constraints
-
-- **Iron Law**: The temptation to skip investigation is strongest when the
-  fix seems obvious. That is exactly when investigation is most valuable --
-  because "obvious" fixes that are wrong waste more time than investigation
-  would have cost. If you're reasoning about why THIS bug is the exception
-  that doesn't need investigation, you're violating the Iron Law.
-- **Three Strikes**: After three failed hypotheses, the problem is not what
-  you think it is. "Stop" means stop fixing and return to investigation. It
-  does not mean stop working entirely. Re-examine your assumptions, widen
-  your investigation, look at adjacent systems. If you still can't identify
-  the root cause, escalate.
-- **Undo failed hypotheses**: "Undo completely" means the codebase returns
-  to exactly the state before the hypothesis was tested. Not "mostly undone
-  with a few improvements kept." Not "undone in the main file but I left the
-  debug logging." Every change from the failed hypothesis is reverted.
-
-## Verification
-
-After debugging guided by this skill, verify:
-
-- [ ] Completed Phase 1 investigation before any code changes
-- [ ] Read the complete error message (not just the first line)
-- [ ] Reproduced the bug consistently
-- [ ] Found a working example to compare against
-- [ ] Stated an explicit hypothesis before each fix attempt
-- [ ] Made only one change per hypothesis test
-- [ ] Undid failed hypotheses before trying new ones
-- [ ] Wrote or confirmed a failing test before implementing the fix
-- [ ] Verified all tests pass after the fix
-- [ ] Did not exceed three fix attempts without escalating
-
-If any criterion is not met, revisit the relevant phase.
-
-## Dependencies
-
-This skill works standalone with no required dependencies. It integrates with:
-
-- **tdd:** When a test fails unexpectedly during TDD, this skill guides
-  investigation before modifying code
-- **user-input-protocol:** When debugging reaches an ambiguous decision point,
-  pause and ask the user rather than guessing
-- **domain-modeling:** If three fixes fail, the root cause may be a domain
-  modeling problem -- escalate to domain review
-
-Missing a dependency? Install with:
-```
-npx skills add jwilger/agent-skills --skill tdd
-```
+*   **Be Specific**: Don't just say "check the logs." Say "grep for 'Error 500' in `/var/log/nginx/access.log`".
+*   **Isolate Variables**: Change one thing at a time.
+*   **Validate Assumptions**: Verify configuration and versions first (e.g., "Task 1: Validate Current Schema").
+*   **Preserve Evidence**: Keep the specific trace IDs, log timestamps, or reproduction scripts.

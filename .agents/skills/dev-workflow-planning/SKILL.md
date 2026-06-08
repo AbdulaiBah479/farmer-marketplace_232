@@ -1,6 +1,6 @@
 ---
 name: dev-workflow-planning
-description: Structured dev workflows via /brainstorm, /write-plan, /execute-plan. Use when breaking down complex projects into systematic steps.
+description: Structured development workflows using /brainstorm, /write-plan, and /execute-plan patterns. Transform ad-hoc conversations into systematic project execution with hypothesis-driven planning, incremental implementation, and progress tracking.
 ---
 
 # Workflow Planning Skill - Quick Reference
@@ -87,6 +87,9 @@ OUTPUT:
 - Dependencies: [what must exist first]
 - Verification: [how to confirm done]
 
+#### Step 2: [Name] (~Xh)
+...
+
 ### Risks & Mitigations
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
@@ -95,36 +98,6 @@ OUTPUT:
 ### Open Questions
 - [Questions to resolve before starting]
 ```
-
-#### Dependency Graph for Parallel Execution
-
-When a plan will be executed with multiple subagents, each task **must** declare its dependencies explicitly. This enables the orchestrator to determine which tasks can run in parallel.
-
-```text
-### Task Dependency Graph
-
-| Task ID | Name | depends_on | Files | Agent Scope |
-|---------|------|------------|-------|-------------|
-| T1 | Setup database schema | [] | db/schema.sql | db-engineer |
-| T2 | Create API routes | [T1] | src/routes/*.ts | backend-dev |
-| T3 | Build auth middleware | [T1] | src/middleware/auth.ts | backend-dev |
-| T4 | Frontend components | [] | src/components/*.tsx | frontend-dev |
-| T5 | Integration tests | [T2, T3, T4] | tests/integration/*.test.ts | qa-agent |
-```
-
-**Rules for dependency graphs:**
-- Every task declares `depends_on: []` with explicit task IDs (empty array = no blockers).
-- Tasks with no dependencies can start immediately (in parallel).
-- No circular dependencies — the graph must be a DAG (directed acyclic graph).
-- Each task should specify its file ownership to prevent parallel conflicts.
-
-#### Parallel Execution Strategies
-
-**Swarm Waves (Accuracy-First)** — Launch one subagent per unblocked task, in dependency-respecting waves. Wait for each wave to complete before launching the next. Best for production code and complex interdependencies.
-
-**Super Swarms (Speed-First)** — Launch as many subagents as possible at once, regardless of dependencies. Best for prototypes and greenfield scaffolding. Expect merge conflicts.
-
-See [references/planning-templates.md](references/planning-templates.md) for the full swarm-ready plan template.
 
 ### Phase 3: Execute Plan
 
@@ -147,49 +120,6 @@ EXECUTION PATTERN:
 
 ---
 
-## Worktree-First Delivery
-
-For production coding sessions, wrap `/execute-plan` with a delivery guardrail:
-
-1. Create one isolated worktree per feature.
-2. Execute only the approved plan scope in that worktree.
-3. Run repo-defined quality gate(s) before PR (example: `npm run test:analytics-gate`).
-4. Open one focused PR per feature branch.
-
-```bash
-./scripts/git/feature-workflow.sh start <feature-slug>
-cd .worktrees/<feature-slug>
-# implement plan steps
-../../scripts/git/feature-workflow.sh gate
-../../scripts/git/feature-workflow.sh pr --title "feat: <summary>"
-```
-
----
-
-## Agent Session Management
-
-**Key rules from production experience (Feb 2026):**
-
-- **One feature per session.** Context exhaustion causes rework. A sprawling session (38 messages, 3+ continuations) produced multiple errors; a focused session (5 messages) shipped clean.
-- **Write a plan before touching 3+ files.** Sessions with pre-written numbered plans had near-zero rework.
-- **Verify SDK types before executing plan steps.** Documentation may describe APIs that no longer match actual TypeScript definitions.
-
-See [references/session-patterns.md](references/session-patterns.md) for the full production evidence table and checkpoint protocol for long sessions.
-
----
-
-## Command Preflight Protocol
-
-Before broad edits, tests, or reviews — run a 60-second preflight:
-1. `pwd` / `git branch --show-current` / `ls -la`
-2. `test -e <path>` to verify target paths before heavy commands
-3. `npx <tool> --help` to validate flags before first use
-4. Quote paths containing `[]`, `*`, `?`, or spaces
-
-See [references/operational-checklists.md](references/operational-checklists.md) for the full git/branch safety preflight, E2E/server preflight, shell safety gate, and SDK type verification.
-
----
-
 ## Structured Patterns
 
 ### Hypothesis-Driven Development
@@ -207,56 +137,71 @@ Before implementing:
 
 ### Incremental Implementation
 
-Build in verifiable increments: smallest testable unit → implement and verify → expand scope → verify at each expansion → integrate and verify whole.
+```text
+PATTERN: Build in verifiable increments
 
-See [references/planning-templates.md](references/planning-templates.md) for an authentication feature example with 5 increments.
+For complex features:
+1. Identify smallest testable unit
+2. Implement and verify
+3. Expand scope incrementally
+4. Verify at each expansion
+5. Integrate and verify whole
+
+Example:
+Feature: User authentication
+- Increment 1: Basic login form (no backend)
+- Increment 2: API endpoint (hardcoded response)
+- Increment 3: Database integration
+- Increment 4: Session management
+- Increment 5: Password reset flow
+```
 
 ### Progress Tracking
 
 ```text
 PATTERN: Maintain visible progress
 
+After each action:
 [X] Step 1: Create database schema
 [X] Step 2: Implement API endpoints
 [IN PROGRESS] Step 3: Add frontend form
 [ ] Step 4: Write tests
+[ ] Step 5: Deploy to staging
 
-Current: Step 3 of 4 (75% complete)
+Current: Step 3 of 5 (60% complete)
 Blockers: None
 Next: Complete form validation
 ```
 
 ### Work in Progress (WIP) Limits
 
-Limit concurrent work: individual (2-3 tasks), team stories (team size + 1), in-progress column (3-5 items), code review (2-3 PRs). If limits are never reached, lower them. If constantly blocked, investigate the bottleneck.
+```text
+PATTERN: Limit concurrent work to improve flow
 
-See [references/planning-templates.md](references/planning-templates.md) for the full WIP limits reference and setting guidelines.
+WIP limits restrict maximum items in each workflow stage.
+Benefits: Makes blockers visible, reduces context switching,
+often increases throughput.
 
----
+RECOMMENDED LIMITS:
+| Level | Limit | Rationale |
+|-------|-------|-----------|
+| Individual | 2-3 tasks | Minimize context switching |
+| Team (stories) | Team size + 1 | Allow pairing without blocking |
+| In Progress column | 3-5 items | Force completion before starting |
+| Code Review | 2-3 PRs | Prevent review bottleneck |
 
-## Milestone Checkpointing and Scope Budgeting
+SETTING WIP LIMITS:
+1. Start with team size + 1
+2. Monitor for 2-4 weeks
+3. If limits never reached -> lower them
+4. If constantly blocked -> investigate bottleneck, don't raise limit
+5. Adjust based on actual flow data
 
-For multi-step execution, constrain scope and checkpoint progress at milestone boundaries.
-
-- Define explicit session scope at start: `1-2` deliverables only.
-- If a new request expands beyond scope, create a follow-up milestone.
-
-### Milestone Checkpoint Contract
-
-At each milestone, record:
-- completed outputs (files/features/tests)
-- verification results (commands + pass/fail)
-- unresolved blockers
-- next bounded action
-
-### Stop Conditions
-
-Stop and rescope when any occur:
-- repeated nonzero failures without new evidence
-- context churn (re-reading same files repeatedly)
-- more than 3 independent domains active in one session
-
-See [references/session-scope-budgeting.md](references/session-scope-budgeting.md) for full scope budgeting model and enforcement rules.
+WHEN TO VIOLATE (thoughtfully):
+- Emergency production fix
+- Unblocking another team
+- Document the exception and review in retro
+```
 
 ---
 
@@ -293,6 +238,7 @@ OUTPUT:
 
 ### Next Session
 - [ ] [First task for next time]
+- [ ] [Second task]
 
 ### Context to Preserve
 [Critical information for continuity]
@@ -307,11 +253,17 @@ When faced with choices:
 
 1. State the decision clearly
 2. List options (2-4)
-3. For each option: Pros / Cons / Effort / Risk
+3. For each option:
+   - Pros
+   - Cons
+   - Effort estimate
+   - Risk level
 4. Recommendation with justification
 5. Reversibility assessment
 
 Example:
+Decision: How to implement authentication?
+
 | Option | Pros | Cons | Effort | Risk |
 |--------|------|------|--------|------|
 | JWT | Stateless, scalable | Token management | 2 days | Low |
@@ -357,7 +309,14 @@ Step 5: Add edge case tests
 
 **[assets/template-work-item-ticket.md](assets/template-work-item-ticket.md)** - Ticket template with DoR/DoD and testable acceptance criteria.
 
-Key sections: Definition of Ready / Done checklists, Acceptance Criteria templates (Gherkin), Estimation Guidelines (story point scale 1-21+), Planning Levels (Roadmap → Sprint → Task), Cross-Functional RACI.
+### Key Sections
+
+- **Definition of Ready** - User story, bug, technical task checklists
+- **Definition of Done** - Feature, bug fix, spike completion criteria
+- **Acceptance Criteria Templates** - Gherkin (Given/When/Then), bullet list, rule-based
+- **Estimation Guidelines** - Story point reference scale (1-21+), slicing strategies
+- **Planning Levels** - Roadmap -> Milestone -> Sprint -> Task hierarchy
+- **Cross-Functional Coordination** - RACI matrix, handoff checklists
 
 ---
 
@@ -371,14 +330,17 @@ Key sections: Definition of Ready / Done checklists, Acceptance Criteria templat
 - Slice large stories (>8 points)
 - Document acceptance criteria upfront
 - Include risk buffer in estimates
+- Coordinate handoffs explicitly
 
 ### BAD: Avoid
 
 - Starting work without clear acceptance criteria
 - Declaring "done" without testing
+- Estimating without understanding scope
 - Working on stories too big to finish in sprint
 - Skipping code review "to save time"
 - Deploying without staging verification
+- Assuming handoffs happen automatically
 
 ---
 
@@ -395,7 +357,7 @@ Key sections: Definition of Ready / Done checklists, Acceptance Criteria templat
 
 ---
 
-## AI/Automation
+## Optional: AI/Automation
 
 > **Note**: AI can assist but should not replace human judgment on priorities and acceptance.
 
@@ -404,7 +366,19 @@ Key sections: Definition of Ready / Done checklists, Acceptance Criteria templat
 - **Dependency mapping** - Identify blocking relationships
 - **AI-augmented planning** - Use LLMs to draft plans, but validate assumptions
 
-AI-generated criteria and estimates require human calibration before committing to them.
+### AI-Assisted Planning Best Practices
+
+1. Planning first - Create a plan before coding
+2. Scope management - Keep tasks small and verifiable
+3. Iterative steps - Ship in increments with checkpoints
+4. Human oversight - Validate assumptions and outputs (tests, logs, metrics)
+
+### Bounded Claims
+
+- AI-generated acceptance criteria need human review
+- Story point estimates require team calibration
+- Dependency mapping suggestions need validation
+- AI impact on delivery stability requires monitoring
 
 ---
 
@@ -412,17 +386,11 @@ AI-generated criteria and estimates require human calibration before committing 
 
 ### Resources
 
-- [references/planning-templates.md](references/planning-templates.md) - Plan templates, incremental implementation, WIP limits
-- [references/session-patterns.md](references/session-patterns.md) - Multi-session management, production lessons (Feb 2026)
-- [references/session-scope-budgeting.md](references/session-scope-budgeting.md) - Scope budgeting rules and stop/rescope criteria
-- [references/operational-checklists.md](references/operational-checklists.md) - Preflight protocols, verification, failure ledger, subagent limits
+- [references/planning-templates.md](references/planning-templates.md) - Plan templates for common scenarios
+- [references/session-patterns.md](references/session-patterns.md) - Multi-session project management
 - [references/flow-metrics.md](references/flow-metrics.md) - DORA metrics, WIP limits, flow optimization
-- [references/agile-ceremony-patterns.md](references/agile-ceremony-patterns.md) - Sprint ceremonies, retrospectives, facilitation patterns
-- [references/technical-debt-management.md](references/technical-debt-management.md) - Debt classification, prioritization, remediation workflows
-- [references/remote-async-workflows.md](references/remote-async-workflows.md) - Async-first patterns, distributed team coordination
 - [assets/template-dor-dod.md](assets/template-dor-dod.md) - DoR/DoD checklists, estimation, cross-functional coordination
-- [assets/template-work-item-ticket.md](assets/template-work-item-ticket.md) - Work item ticket template
-- [assets/template-milestone-checkpoint.md](assets/template-milestone-checkpoint.md) - Milestone checkpoint record
+- [assets/template-work-item-ticket.md](assets/template-work-item-ticket.md) - Work item ticket template (DoR/DoD + acceptance criteria)
 - [data/sources.json](data/sources.json) - Workflow methodology references
 
 ### Related Skills

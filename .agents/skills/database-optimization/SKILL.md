@@ -1,174 +1,211 @@
 ---
-name: database-optimization
-description: Query optimization, indexing strategies, and database performance tuning for PostgreSQL and MySQL
+id: SKL-database-DATABASEOPTIMIZATION
+name: Database Optimization
+description: 'Database optimization involves improving query performance, reducing
+  resource consumption, and ensuring efficient data access patterns. This skill covers
+  query analysis, indexing strategies, caching, '
+version: 1.0.0
+status: active
+owner: '@cerebra-team'
+last_updated: '2026-02-22'
+category: Backend
+tags:
+- api
+- backend
+- server
+- database
+stack:
+- Python
+- Node.js
+- REST API
+- GraphQL
+difficulty: Intermediate
 ---
 
 # Database Optimization
 
-## EXPLAIN Analysis
+## Skill Profile
+*(Select at least one profile to enable specific modules)*
+- [ ] **DevOps**
+- [x] **Backend**
+- [ ] **Frontend**
+- [ ] **AI-RAG**
+- [ ] **Security Critical**
 
-Always run `EXPLAIN ANALYZE` before optimizing. Read the output bottom-up.
+## Overview
+Database optimization involves improving query performance, reducing resource consumption, and ensuring efficient data access patterns. This skill covers query analysis, indexing strategies, caching, and maintenance practices.
 
-```sql
--- PostgreSQL
-EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT ...;
+## Why This Matters
+Database optimization is critical because:
+- **Performance**: Faster queries improve user experience
+- **Scalability**: Optimized databases handle more load
+- **Cost Efficiency**: Reduced resource usage lowers infrastructure costs
+- **User Experience**: Faster response times increase satisfaction
+- **System Reliability**: Optimized queries reduce timeout and failure rates
 
--- MySQL
-EXPLAIN ANALYZE SELECT ...;
-```
+## Core Concepts & Rules
 
-Key metrics to watch:
-- **Seq Scan** on large tables = missing index
-- **Nested Loop** with high row count = consider hash/merge join
-- **Sort** without index = add index on sort column
-- **Rows estimated vs actual** divergence = stale statistics, run `ANALYZE`
+### 1. Core Principles
+- Follow established patterns and conventions
+- Maintain consistency across codebase
+- Document decisions and trade-offs
 
-## Index Strategies
+### 2. Implementation Guidelines
+- Start with the simplest viable solution
+- Iterate based on feedback and requirements
+- Test thoroughly before deployment
 
-### B-tree (default, most cases)
-```sql
-CREATE INDEX idx_users_email ON users (email);
-CREATE INDEX idx_orders_user_date ON orders (user_id, created_at DESC);
-```
-Use for: equality, range queries, sorting. Column order matters in composite indexes: put equality columns first, then range/sort columns.
 
-### Partial Index (PostgreSQL)
-```sql
-CREATE INDEX idx_orders_pending ON orders (created_at)
-  WHERE status = 'pending';
-```
-Use when queries always filter on a specific condition. Dramatically smaller than full indexes.
+## Inputs / Outputs / Contracts
+**Inputs:**
+- Database connection or pool
+- Query to analyze or optimize
+- Performance metrics data
+- Index configuration
 
-### GIN (PostgreSQL - arrays, JSONB, full-text)
-```sql
-CREATE INDEX idx_products_tags ON products USING GIN (tags);
-CREATE INDEX idx_docs_search ON documents USING GIN (to_tsvector('english', content));
-```
+**Outputs:**
+- Optimized query plans
+- Index recommendations
+- Performance improvements
+- Monitoring metrics
 
-### GiST (PostgreSQL - spatial, range types)
-```sql
-CREATE INDEX idx_locations_point ON locations USING GiST (coordinates);
-CREATE INDEX idx_events_period ON events USING GiST (tsrange(start_at, end_at));
-```
+**Contracts:**
+- Optimizations must be tested before production
+- Index changes must be monitored
+- Query changes must maintain correctness
+- Performance improvements must be measurable
 
-### Covering Index (index-only scans)
-```sql
--- PostgreSQL
-CREATE INDEX idx_users_email_name ON users (email) INCLUDE (name);
+## Skill Composition
+* **Depends on**: None
+* **Compatible with**: None
+* **Conflicts with**: None
+* **Related Skills**: None
 
--- MySQL
-CREATE INDEX idx_users_email_name ON users (email, name);
-```
+## Quick Start / Implementation Example
 
-## N+1 Query Detection
-
-Symptom: 1 query to fetch parent + N queries for each child.
-
-```python
-# BAD: N+1
-users = db.query(User).all()
-for user in users:
-    print(user.orders)  # triggers query per user
-
-# GOOD: eager load
-users = db.query(User).options(joinedload(User.orders)).all()
-```
-
-```javascript
-// BAD: N+1
-const users = await User.findAll();
-for (const user of users) {
-  const orders = await Order.findAll({ where: { userId: user.id } });
-}
-
-// GOOD: batch load
-const users = await User.findAll({ include: [Order] });
-```
-
-Detection: enable query logging, count queries per request. More than 10 queries for a single endpoint is a red flag.
-
-## Connection Pooling
-
-```
-Rule of thumb: pool_size = (core_count * 2) + disk_count
-Typical web app: 10-20 connections per app instance
-```
-
-PostgreSQL:
-- Use PgBouncer in transaction mode for serverless/high-connection scenarios
-- Set `idle_in_transaction_session_timeout = '30s'`
-- Monitor with `pg_stat_activity`
-
-MySQL:
-- Set `max_connections` based on available RAM (each connection uses ~10MB)
-- Use ProxySQL for connection multiplexing
-- Monitor with `SHOW PROCESSLIST`
-
-## Read Replicas
-
-- Route all `SELECT` queries to replicas
-- Route all writes to primary
-- Account for replication lag (typically 10-100ms)
-- Never read-after-write from a replica; use primary for consistency-critical reads
-- Use connection-level routing, not query-level
+1. Review requirements and constraints
+2. Set up development environment
+3. Implement core functionality following patterns
+4. Write tests for critical paths
+5. Run tests and fix issues
+6. Document any deviations or decisions
 
 ```python
-# SQLAlchemy read replica routing
-class RoutingSession(Session):
-    def get_bind(self, mapper=None, clause=None):
-        if self._flushing or self.is_modified():
-            return engines["primary"]
-        return engines["replica"]
+# Example implementation following best practices
+def example_function():
+    # Your implementation here
+    pass
 ```
 
-## Partition Strategies
 
-### Range Partitioning (time-series data)
-```sql
--- PostgreSQL
-CREATE TABLE events (
-    id bigint GENERATED ALWAYS AS IDENTITY,
-    created_at timestamptz NOT NULL,
-    data jsonb
-) PARTITION BY RANGE (created_at);
+## Assumptions / Constraints / Non-goals
 
-CREATE TABLE events_2025_q1 PARTITION OF events
-    FOR VALUES FROM ('2025-01-01') TO ('2025-04-01');
-CREATE TABLE events_2025_q2 PARTITION OF events
-    FOR VALUES FROM ('2025-04-01') TO ('2025-07-01');
-```
+* **Assumptions**:
+  - Development environment is properly configured
+  - Required dependencies are available
+  - Team has basic understanding of domain
+* **Constraints**:
+  - Must follow existing codebase conventions
+  - Time and resource limitations
+  - Compatibility requirements
+* **Non-goals**:
+  - This skill does not cover edge cases outside scope
+  - Not a replacement for formal training
 
-### Hash Partitioning (even distribution)
-```sql
-CREATE TABLE sessions (
-    id uuid PRIMARY KEY,
-    user_id bigint NOT NULL
-) PARTITION BY HASH (user_id);
 
-CREATE TABLE sessions_0 PARTITION OF sessions FOR VALUES WITH (MODULUS 4, REMAINDER 0);
-CREATE TABLE sessions_1 PARTITION OF sessions FOR VALUES WITH (MODULUS 4, REMAINDER 1);
-```
+## Compatibility & Prerequisites
 
-Partition when tables exceed 50-100GB or when you need to drop old data quickly.
+* **Supported Versions**:
+  - Python 3.8+
+  - Node.js 16+
+  - Modern browsers (Chrome, Firefox, Safari, Edge)
+* **Required AI Tools**:
+  - Code editor (VS Code recommended)
+  - Testing framework appropriate for language
+  - Version control (Git)
+* **Dependencies**:
+  - Language-specific package manager
+  - Build tools
+  - Testing libraries
+* **Environment Setup**:
+  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
 
-## Query Optimization Checklist
 
-1. Run `EXPLAIN ANALYZE` and read the plan
-2. Check for sequential scans on tables with >10K rows
-3. Verify index usage (check `idx_scan` in `pg_stat_user_indexes`)
-4. Look for implicit type casts that prevent index use
-5. Replace `SELECT *` with specific columns
-6. Add `LIMIT` to queries that only need a subset
-7. Use `EXISTS` instead of `COUNT(*) > 0`
-8. Batch `INSERT`/`UPDATE` operations (500-1000 rows per batch)
-9. Avoid functions on indexed columns in `WHERE` clauses
-10. Monitor slow query log (pg: `log_min_duration_statement = 100`)
+## Test Scenario Matrix (QA Strategy)
 
-## Dangerous Patterns
+| Type | Focus Area | Required Scenarios / Mocks |
+| :--- | :--- | :--- |
+| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
+| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
+| **E2E** | User Journey | Critical user flows to test |
+| **Performance** | Latency / Load | Benchmark requirements |
+| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
+| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
 
-- `LIKE '%term%'` on unindexed columns (use full-text search instead)
-- `ORDER BY RANDOM()` (use `TABLESAMPLE` or application-level randomization)
-- `SELECT DISTINCT` masking a join problem
-- Missing `WHERE` on `UPDATE`/`DELETE` (always verify with `SELECT` first)
-- Long-running transactions holding locks
-- Using `OFFSET` for deep pagination (use keyset/cursor pagination instead)
+
+## Technical Guardrails & Security Threat Model
+
+### 1. Security & Privacy (Threat Model)
+* **Top Threats**: Injection attacks, authentication bypass, data exposure
+- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
+- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
+- [ ] **Authorization**: Validate user permissions before state changes
+
+### 2. Performance & Resources
+- [ ] **Execution Efficiency**: Consider time complexity for algorithms
+- [ ] **Memory Management**: Use streams/pagination for large data
+- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+
+### 3. Architecture & Scalability
+- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
+- [ ] **Modularity**: Decouple logic from UI/Frameworks
+
+### 4. Observability & Reliability
+- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
+- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
+- [ ] **Error Handling**: Standardized error codes, no bare except
+- [ ] **Observability Artifacts**:
+    - **Log Fields**: timestamp, level, message, request_id
+    - **Metrics**: request_count, error_count, response_time
+    - **Dashboards/Alerts**: High Error Rate > 5%
+
+
+## Agent Directives & Error Recovery
+*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+
+- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
+- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
+- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
+- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+
+
+## Definition of Done (DoD) Checklist
+
+- [ ] Tests passed + coverage met
+- [ ] Lint/Typecheck passed
+- [ ] Logging/Metrics/Trace implemented
+- [ ] Security checks passed
+- [ ] Documentation/Changelog updated
+- [ ] Accessibility/Performance requirements met (if frontend)
+
+
+## Anti-patterns / Pitfalls
+
+* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
+* ⚠️ **Watch out for**: Common symptoms and quick fixes
+* 💡 **Instead**: Use proper error handling, pagination, and logging
+
+
+## Reference Links & Examples
+
+* Internal documentation and examples
+* Official documentation and best practices
+* Community resources and discussions
+
+
+## Versioning & Changelog
+
+* **Version**: 1.0.0
+* **Changelog**:
+  - 2026-02-22: Initial version with complete template structure
+

@@ -121,8 +121,14 @@ WEBHOOK_URL=https://your-domain.com/webhooks/deepgram
 For local webhook testing, install Hookdeck CLI:
 
 ```bash
+# Install via npm
+npm install -g hookdeck-cli
+
+# Or via Homebrew
+brew install hookdeck/hookdeck/hookdeck
+
 # Create a local tunnel (no account required)
-npx hookdeck-cli listen 3000 deepgram --path /webhooks/deepgram
+hookdeck listen 3000 --path /webhooks/deepgram
 
 # Use the provided URL as your callback URL when making Deepgram requests
 ```
@@ -169,4 +175,4 @@ For production handlers, install the patterns skill alongside this one. Key refe
 - [shopify-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/shopify-webhooks) - Shopify store webhooks
 - [github-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/github-webhooks) - GitHub repository webhooks
 - [webhook-handler-patterns](https://github.com/hookdeck/webhook-skills/tree/main/skills/webhook-handler-patterns) - Idempotency, error handling, retry logic
-- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Webhook infrastructure that replaces your queue — guaranteed delivery, automatic retries, replay, rate limiting, and observability for your webhook handlers
+- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Production webhook infrastructure (reliability, monitoring, replay)

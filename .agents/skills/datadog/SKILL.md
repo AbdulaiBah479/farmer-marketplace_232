@@ -1,128 +1,206 @@
 ---
 name: datadog
-description: Query Datadog observability data (logs, metrics, monitors, dashboards, hosts) via direct API. Use when investigating production issues, checking monitors, searching logs, or accessing Datadog data.
+description: Query logs, metrics, monitors, and dashboards from Datadog. Search logs, check alert status, and investigate incidents.
 ---
 
-# Datadog CLI
+# Datadog Monitoring
 
-Direct API access to Datadog observability data — logs, metrics, monitors, dashboards, hosts, and APM spans.
+This skill provides access to Datadog for monitoring, logging, and alerting via the Datadog API.
 
-## Prerequisites
+## Setup Required
 
-Set these environment variables:
+**You need to set up API credentials:**
 
+1. Go to Datadog → Organization Settings → API Keys
+2. Create or copy an API Key
+3. Go to Organization Settings → Application Keys
+4. Create an Application Key
+
+Set these as environment variables (add to your shell profile or .env):
 ```bash
-export DD_API_KEY="your-32-char-hex-api-key"
+export DD_API_KEY="your-api-key"
 export DD_APP_KEY="your-application-key"
-export DD_SITE="us5.datadoghq.com"  # or datadoghq.com, datadoghq.eu, etc.
+export DD_SITE="us3.datadoghq.com"  # Your Datadog site (from browser history: us3)
 ```
 
-**Get keys from Datadog:**
-- API Key: Organization Settings → API Keys
-- App Key: Organization Settings → Application Keys
+## When to Use
 
-**Required scopes** (for read-only access):
-- `dashboards_read`, `monitors_read`, `metrics_read`, `logs_read_data`, `incidents_read`, `hosts_read`, `apm_read`
+Use this skill when the user:
+- Asks about logs, errors, or application behavior
+- Wants to check monitor/alert status
+- Needs to investigate an incident
+- Asks about metrics or performance
+- Mentions "Datadog" or monitoring
 
-## Quick Start
+## API Endpoints
 
-```bash
-# Test credentials
-npx tsx <skill-path>/scripts/datadog.ts validate
-
-# Search logs
-npx tsx <skill-path>/scripts/datadog.ts search-logs "status:error" --from -1h
-
-# Query metrics
-npx tsx <skill-path>/scripts/datadog.ts query-metrics "avg:system.cpu.user{*}" --from -4h
-
-# List monitors
-npx tsx <skill-path>/scripts/datadog.ts list-monitors
-```
-
-## Commands
+Base URL: `https://api.$(printenv DD_SITE)/api/v1` or `v2`
 
 ### Logs
 
+**Search Logs** (POST /api/v2/logs/events/search):
 ```bash
-# Search logs (default: last hour, 50 results)
-npx tsx <skill-path>/scripts/datadog.ts search-logs "service:api status:error"
-npx tsx <skill-path>/scripts/datadog.ts search-logs "env:prod" --from -30m --limit 100
+curl -s -X POST "https://api.$(printenv DD_SITE)/api/v2/logs/events/search" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filter": {
+      "query": "service:my-service status:error",
+      "from": "now-1h",
+      "to": "now"
+    },
+    "sort": "-timestamp",
+    "page": {"limit": 50}
+  }'
+```
+
+Common log query filters:
+- `service:name` - Filter by service
+- `status:error` - Filter by log level (error, warn, info, debug)
+- `@http.status_code:500` - Filter by HTTP status
+- `host:hostname` - Filter by host
+- `env:production` - Filter by environment
+
+### Monitors (Alerts)
+
+**List All Monitors** (GET /api/v1/monitor):
+```bash
+curl -s "https://api.$(printenv DD_SITE)/api/v1/monitor" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
+```
+
+**Get Monitor by ID** (GET /api/v1/monitor/{id}):
+```bash
+curl -s "https://api.$(printenv DD_SITE)/api/v1/monitor/{MONITOR_ID}" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
+```
+
+**Search Monitors**:
+```bash
+curl -s "https://api.$(printenv DD_SITE)/api/v1/monitor?query=status:Alert" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
 ```
 
 ### Metrics
 
+**Query Metrics** (GET /api/v1/query):
 ```bash
-# Query metric timeseries
-npx tsx <skill-path>/scripts/datadog.ts query-metrics "avg:system.cpu.user{*}" --from -4h
-npx tsx <skill-path>/scripts/datadog.ts query-metrics "sum:requests.count{service:api}.as_count()" --from -1d
+curl -s -G "https://api.$(printenv DD_SITE)/api/v1/query" \
+  --data-urlencode "query=avg:system.cpu.user{*}" \
+  --data-urlencode "from=$(date -v-1H +%s)" \
+  --data-urlencode "to=$(date +%s)" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
 ```
 
-### Monitors
-
+**List Available Metrics** (GET /api/v1/metrics):
 ```bash
-# List all monitors
-npx tsx <skill-path>/scripts/datadog.ts list-monitors
+curl -s "https://api.$(printenv DD_SITE)/api/v1/metrics?from=$(date -v-1d +%s)" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
+```
 
-# Filter monitors
-npx tsx <skill-path>/scripts/datadog.ts list-monitors --query "status:alert"
+### Events
 
-# Get specific monitor
-npx tsx <skill-path>/scripts/datadog.ts get-monitor 12345
+**Query Events** (GET /api/v1/events):
+```bash
+curl -s "https://api.$(printenv DD_SITE)/api/v1/events?start=$(date -v-1d +%s)&end=$(date +%s)" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
 ```
 
 ### Dashboards
 
+**List Dashboards** (GET /api/v1/dashboard):
 ```bash
-npx tsx <skill-path>/scripts/datadog.ts list-dashboards
-```
-
-### Hosts
-
-```bash
-npx tsx <skill-path>/scripts/datadog.ts list-hosts
-npx tsx <skill-path>/scripts/datadog.ts list-hosts --filter "env:production"
+curl -s "https://api.$(printenv DD_SITE)/api/v1/dashboard" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
 ```
 
 ### Incidents
 
+**List Incidents** (GET /api/v2/incidents):
 ```bash
-npx tsx <skill-path>/scripts/datadog.ts list-incidents
+curl -s "https://api.$(printenv DD_SITE)/api/v2/incidents" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)"
 ```
 
-### APM (Spans & Services)
+## Common Workflows
 
+### Check for Recent Errors
 ```bash
-# Search spans
-npx tsx <skill-path>/scripts/datadog.ts search-spans "service:api @http.status_code:500" --from -1h
-
-# List services
-npx tsx <skill-path>/scripts/datadog.ts list-services
+# Search for error logs in the last hour
+curl -s -X POST "https://api.$(printenv DD_SITE)/api/v2/logs/events/search" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filter": {
+      "query": "status:error",
+      "from": "now-1h",
+      "to": "now"
+    },
+    "page": {"limit": 25}
+  }' | jq '.data[] | {timestamp: .attributes.timestamp, message: .attributes.message, service: .attributes.service}'
 ```
 
-## Time Formats
+### Check Alert Status
+```bash
+# List monitors that are currently alerting
+curl -s "https://api.$(printenv DD_SITE)/api/v1/monitor?query=status:Alert" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)" | jq '.[] | {name, overall_state, message}'
+```
 
-The `--from` and `--to` flags accept:
-- Relative: `-1h`, `-30m`, `-1d`, `-4h`
-- ISO 8601: `2026-03-20T00:00:00Z`
+### Investigate a Service
+```bash
+# Get logs for a specific service
+curl -s -X POST "https://api.$(printenv DD_SITE)/api/v2/logs/events/search" \
+  -H "DD-API-KEY: $(printenv DD_API_KEY)" \
+  -H "DD-APPLICATION-KEY: $(printenv DD_APP_KEY)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filter": {
+      "query": "service:SERVICE_NAME",
+      "from": "now-30m",
+      "to": "now"
+    },
+    "page": {"limit": 100}
+  }'
+```
 
-## Datadog Sites
+## Log Query Syntax
 
-| Region | DD_SITE value |
-|--------|---------------|
-| US1 | `datadoghq.com` |
-| US3 | `us3.datadoghq.com` |
-| US5 | `us5.datadoghq.com` |
-| EU | `datadoghq.eu` |
-| AP1 | `ap1.datadoghq.com` |
+Datadog uses a powerful query syntax for logs:
 
-## Troubleshooting
+| Operator | Example | Description |
+|----------|---------|-------------|
+| AND | `service:api status:error` | Both conditions (implicit) |
+| OR | `status:error OR status:warn` | Either condition |
+| NOT | `-status:debug` | Exclude matches |
+| Wildcard | `service:api-*` | Pattern matching |
+| Range | `@duration:>1000` | Numeric comparisons |
+| Exists | `@http.url:*` | Field exists |
 
-**403 Forbidden:**
-- Check DD_SITE matches your Datadog region
-- Verify app key has required scopes
-- Confirm API key is active
+## Time Ranges
 
-**Credentials not found:**
-- Ensure DD_API_KEY and DD_APP_KEY are exported
-- Check for typos in env var names
+For the `from` and `to` parameters:
+- `now` - Current time
+- `now-1h` - 1 hour ago
+- `now-1d` - 1 day ago
+- `now-7d` - 1 week ago
+- Unix timestamps (seconds)
+
+## Notes
+
+- Your Datadog site appears to be `us3.datadoghq.com` based on browser history
+- API rate limits apply - be mindful of query frequency
+- Log queries return max 1000 results per request; use pagination for more
+- Use `jq` to parse JSON responses
+- Monitor status values: OK, Alert, Warn, No Data

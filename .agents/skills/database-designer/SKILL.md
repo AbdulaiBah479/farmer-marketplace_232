@@ -1,289 +1,534 @@
 ---
-name: "database-designer"
-description: "Use when the user asks to design database schemas, plan data migrations, optimize queries, choose between SQL and NoSQL, or model data relationships."
+name: Database Designer
+description: Database design, schema modeling, and data architecture. USE WHEN user mentions database, schema, tables, columns, relations, SQL, NoSQL, migrations, normalization, ERD, data model, foreign key, or asks about how to structure data.
 ---
 
-# Database Designer - POWERFUL Tier Skill
+# Database Designer Skill
 
-## Overview
+AI-powered database design guidance for creating efficient, scalable, and maintainable data models with focus on proper normalization, relationship design, and query optimization.
 
-A comprehensive database design skill that provides expert-level analysis, optimization, and migration capabilities for modern database systems. This skill combines theoretical principles with practical tools to help architects and developers create scalable, performant, and maintainable database schemas.
+## What This Skill Does
 
-## Core Competencies
+This skill provides expert-level database design guidance including schema modeling, normalization, relationship design, indexing strategies, and migration planning. It combines database theory with practical, production-ready designs.
 
-### Schema Design & Analysis
-- **Normalization Analysis**: Automated detection of normalization levels (1NF through BCNF)
-- **Denormalization Strategy**: Smart recommendations for performance optimization
-- **Data Type Optimization**: Identification of inappropriate types and size issues
-- **Constraint Analysis**: Missing foreign keys, unique constraints, and null checks
-- **Naming Convention Validation**: Consistent table and column naming patterns
-- **ERD Generation**: Automatic Mermaid diagram creation from DDL
+**Key Capabilities:**
+- **Schema Design**: Tables, columns, constraints, types
+- **Relationship Modeling**: One-to-one, one-to-many, many-to-many
+- **Normalization**: 1NF through BCNF, denormalization trade-offs
+- **Indexing Strategy**: Primary, secondary, composite indexes
+- **Migration Planning**: Safe schema changes, zero-downtime migrations
+- **NoSQL Design**: Document, key-value, graph data modeling
 
-### Index Optimization
-- **Index Gap Analysis**: Identification of missing indexes on foreign keys and query patterns
-- **Composite Index Strategy**: Optimal column ordering for multi-column indexes
-- **Index Redundancy Detection**: Elimination of overlapping and unused indexes
-- **Performance Impact Modeling**: Selectivity estimation and query cost analysis
-- **Index Type Selection**: B-tree, hash, partial, covering, and specialized indexes
+## Core Principles
 
-### Migration Management
-- **Zero-Downtime Migrations**: Expand-contract pattern implementation
-- **Schema Evolution**: Safe column additions, deletions, and type changes
-- **Data Migration Scripts**: Automated data transformation and validation
-- **Rollback Strategy**: Complete reversal capabilities with validation
-- **Execution Planning**: Ordered migration steps with dependency resolution
+### The Database Design Mindset
+- **Model the Domain**: Schema should reflect business reality
+- **Normalize First**: Start normalized, denormalize with data
+- **Plan for Queries**: Design for how data will be accessed
+- **Think About Scale**: What happens with 10x, 100x data?
+- **Migrations Are Inevitable**: Design for change
 
-## Database Design Principles
-→ See references/database-design-reference.md for details
+### Design Quality Metrics
+1. **Data Integrity** - Constraints prevent invalid data
+2. **Query Performance** - Common queries are efficient
+3. **Flexibility** - Schema can evolve
+4. **Clarity** - Names and structure are self-documenting
+5. **Scalability** - Works at expected data volumes
 
-## Best Practices
+## Database Design Workflow
 
-### Schema Design
-1. **Use meaningful names**: Clear, consistent naming conventions
-2. **Choose appropriate data types**: Right-sized columns for storage efficiency
-3. **Define proper constraints**: Foreign keys, check constraints, unique indexes
-4. **Consider future growth**: Plan for scale from the beginning
-5. **Document relationships**: Clear foreign key relationships and business rules
+### 1. Requirements Gathering
+```
+Understand the domain:
+├── Entities (what objects exist?)
+├── Attributes (what properties do they have?)
+├── Relationships (how do they connect?)
+├── Constraints (what rules must hold?)
+└── Access Patterns (how will data be queried?)
+```
 
-### Performance Optimization
-1. **Index strategically**: Cover common query patterns without over-indexing
-2. **Monitor query performance**: Regular analysis of slow queries
-3. **Partition large tables**: Improve query performance and maintenance
-4. **Use appropriate isolation levels**: Balance consistency with performance
-5. **Implement connection pooling**: Efficient resource utilization
+### 2. Conceptual Design
+```
+Create high-level model:
+├── Entity-Relationship Diagram (ERD)
+├── Identify Primary Entities
+├── Define Relationships
+├── Document Cardinality
+└── Note Business Rules
+```
 
-### Security Considerations
-1. **Principle of least privilege**: Grant minimal necessary permissions
-2. **Encrypt sensitive data**: At rest and in transit
-3. **Audit access patterns**: Monitor and log database access
-4. **Validate inputs**: Prevent SQL injection attacks
-5. **Regular security updates**: Keep database software current
+### 3. Logical Design
+```
+Translate to schema:
+├── Define Tables
+├── Choose Data Types
+├── Set Primary Keys
+├── Create Foreign Keys
+├── Add Constraints
+└── Plan Indexes
+```
 
-## Query Generation Patterns
+### 4. Physical Design
+```
+Optimize for implementation:
+├── Index Strategy
+├── Partitioning (if needed)
+├── Storage Considerations
+├── Denormalization Decisions
+└── Migration Plan
+```
 
-### SELECT with JOINs
+## Entity-Relationship Modeling
 
+### ERD Notation
+```
+┌─────────────────┐         ┌─────────────────┐
+│     USERS       │         │     ORDERS      │
+├─────────────────┤         ├─────────────────┤
+│ PK id           │───┐     │ PK id           │
+│    email        │   │     │ FK user_id      │───┐
+│    name         │   │     │    total        │   │
+│    created_at   │   │     │    status       │   │
+└─────────────────┘   │     │    created_at   │   │
+                      │     └─────────────────┘   │
+                      │                           │
+                      │     ┌─────────────────┐   │
+                      │     │   ORDER_ITEMS   │   │
+                      │     ├─────────────────┤   │
+                      │     │ PK id           │   │
+                      └────►│ FK order_id     │◄──┘
+                            │ FK product_id   │
+                            │    quantity     │
+                            │    price        │
+                            └─────────────────┘
+```
+
+### Relationship Types
+
+#### One-to-One (1:1)
 ```sql
--- INNER JOIN: only matching rows
-SELECT o.id, c.name, o.total
-FROM orders o
-INNER JOIN customers c ON c.id = o.customer_id;
+-- User has one profile
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL
+);
 
--- LEFT JOIN: all left rows, NULLs for non-matches
-SELECT c.name, COUNT(o.id) AS order_count
-FROM customers c
-LEFT JOIN orders o ON o.customer_id = c.id
-GROUP BY c.name;
-
--- Self-join: hierarchical data (employees/managers)
-SELECT e.name AS employee, m.name AS manager
-FROM employees e
-LEFT JOIN employees m ON m.id = e.manager_id;
+CREATE TABLE profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE REFERENCES users(id),  -- UNIQUE enforces 1:1
+    bio TEXT,
+    avatar_url VARCHAR(500)
+);
 ```
 
-### Common Table Expressions (CTEs)
-
+#### One-to-Many (1:N)
 ```sql
--- Recursive CTE for org chart
-WITH RECURSIVE org AS (
-  SELECT id, name, manager_id, 1 AS depth
-  FROM employees WHERE manager_id IS NULL
-  UNION ALL
-  SELECT e.id, e.name, e.manager_id, o.depth + 1
-  FROM employees e INNER JOIN org o ON o.id = e.manager_id
-)
-SELECT * FROM org ORDER BY depth, name;
+-- User has many orders
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),  -- Many orders per user
+    total DECIMAL(10,2),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-### Window Functions
-
+#### Many-to-Many (M:N)
 ```sql
--- ROW_NUMBER for pagination / dedup
-SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC) AS rn
-FROM orders;
+-- Products belong to many categories, categories have many products
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10,2)
+);
 
--- RANK with gaps, DENSE_RANK without gaps
-SELECT name, score, RANK() OVER (ORDER BY score DESC) AS rank FROM leaderboard;
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
 
--- LAG/LEAD for comparing adjacent rows
-SELECT date, revenue,
-  revenue - LAG(revenue) OVER (ORDER BY date) AS daily_change
-FROM daily_sales;
+-- Junction/Bridge table
+CREATE TABLE product_categories (
+    product_id INTEGER REFERENCES products(id),
+    category_id INTEGER REFERENCES categories(id),
+    PRIMARY KEY (product_id, category_id)  -- Composite PK
+);
 ```
 
-### Aggregation Patterns
+## Normalization Guide
 
+### First Normal Form (1NF)
 ```sql
--- FILTER clause (PostgreSQL) for conditional aggregation
-SELECT
-  COUNT(*) AS total,
-  COUNT(*) FILTER (WHERE status = 'active') AS active,
-  AVG(amount) FILTER (WHERE amount > 0) AS avg_positive
-FROM accounts;
+-- ✗ WRONG: Repeating groups
+CREATE TABLE orders (
+    id INT,
+    customer_name VARCHAR(100),
+    item1 VARCHAR(100), item1_qty INT,
+    item2 VARCHAR(100), item2_qty INT,
+    item3 VARCHAR(100), item3_qty INT
+);
 
--- GROUPING SETS for multi-level rollups
-SELECT region, product, SUM(revenue)
-FROM sales
-GROUP BY GROUPING SETS ((region, product), (region), ());
+-- ✓ RIGHT: Atomic values, no repeating groups
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    customer_name VARCHAR(100)
+);
+
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id),
+    item_name VARCHAR(100),
+    quantity INT
+);
 ```
 
----
-
-## Migration Patterns
-
-### Up/Down Migration Scripts
-
-Every migration must have a reversible counterpart. Name files with a timestamp prefix for ordering:
-
-```
-migrations/
-├── 20260101_000001_create_users.up.sql
-├── 20260101_000001_create_users.down.sql
-├── 20260115_000002_add_users_email_index.up.sql
-└── 20260115_000002_add_users_email_index.down.sql
-```
-
-### Zero-Downtime Migrations (Expand/Contract)
-
-Use the expand-contract pattern to avoid locking or breaking running code:
-
-1. **Expand** — add the new column/table (nullable, with default)
-2. **Migrate data** — backfill in batches; dual-write from application
-3. **Transition** — application reads from new column; stop writing to old
-4. **Contract** — drop old column in a follow-up migration
-
-### Data Backfill Strategies
-
+### Second Normal Form (2NF)
 ```sql
--- Batch update to avoid long-running locks
-UPDATE users SET email_normalized = LOWER(email)
-WHERE id IN (SELECT id FROM users WHERE email_normalized IS NULL LIMIT 5000);
--- Repeat in a loop until 0 rows affected
+-- ✗ WRONG: Partial dependency on composite key
+-- (product_name depends only on product_id, not order_id)
+CREATE TABLE order_items (
+    order_id INT,
+    product_id INT,
+    product_name VARCHAR(100),  -- Depends only on product_id
+    quantity INT,
+    PRIMARY KEY (order_id, product_id)
+);
+
+-- ✓ RIGHT: Remove partial dependencies
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE order_items (
+    order_id INTEGER REFERENCES orders(id),
+    product_id INTEGER REFERENCES products(id),
+    quantity INT,
+    PRIMARY KEY (order_id, product_id)
+);
 ```
 
-### Rollback Procedures
-
-- Always test the `down.sql` in staging before deploying `up.sql` to production
-- Keep rollback window short — if the contract step has run, rollback requires a new forward migration
-- For irreversible changes (dropping columns with data), take a logical backup first
-
----
-
-## Performance Optimization
-
-### Indexing Strategies
-
-| Index Type | Use Case | Example |
-|------------|----------|---------|
-| **B-tree** (default) | Equality, range, ORDER BY | `CREATE INDEX idx_users_email ON users(email);` |
-| **GIN** | Full-text search, JSONB, arrays | `CREATE INDEX idx_docs_body ON docs USING gin(to_tsvector('english', body));` |
-| **GiST** | Geometry, range types, nearest-neighbor | `CREATE INDEX idx_locations ON places USING gist(coords);` |
-| **Partial** | Subset of rows (reduce size) | `CREATE INDEX idx_active ON users(email) WHERE active = true;` |
-| **Covering** | Index-only scans | `CREATE INDEX idx_cov ON orders(customer_id) INCLUDE (total, created_at);` |
-
-### EXPLAIN Plan Reading
-
+### Third Normal Form (3NF)
 ```sql
-EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT ...;
+-- ✗ WRONG: Transitive dependency
+-- (city and state depend on zip_code, not directly on user)
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    zip_code VARCHAR(10),
+    city VARCHAR(100),     -- Depends on zip_code
+    state VARCHAR(50)      -- Depends on zip_code
+);
+
+-- ✓ RIGHT: Remove transitive dependencies
+CREATE TABLE zip_codes (
+    code VARCHAR(10) PRIMARY KEY,
+    city VARCHAR(100),
+    state VARCHAR(50)
+);
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    zip_code VARCHAR(10) REFERENCES zip_codes(code)
+);
 ```
 
-Key signals to watch:
-- **Seq Scan** on large tables — missing index
-- **Nested Loop** with high row estimates — consider hash/merge join or add index
-- **Buffers shared read** much higher than **hit** — working set exceeds memory
+### When to Denormalize
+```
+Consider denormalization when:
+├── Read performance is critical
+├── Joins are too expensive
+├── Data rarely changes
+├── Reporting/analytics workloads
+└── Caching query results
 
-### N+1 Query Detection
+Common denormalization patterns:
+├── Duplicating frequently-accessed columns
+├── Pre-computed aggregates
+├── Materialized views
+└── Summary tables
+```
 
-Symptoms: application issues one query per row (e.g., fetching related records in a loop).
+## Data Types Guide
 
-Fixes:
-- Use `JOIN` or subquery to fetch in one round-trip
-- ORM eager loading (`select_related` / `includes` / `with`)
-- DataLoader pattern for GraphQL resolvers
+### Choosing the Right Type
+| Data | Recommended Type | Avoid |
+|------|------------------|-------|
+| **IDs** | SERIAL, BIGSERIAL, UUID | VARCHAR |
+| **Money** | DECIMAL(10,2), INTEGER (cents) | FLOAT, DOUBLE |
+| **Dates** | DATE, TIMESTAMP WITH TIME ZONE | VARCHAR |
+| **Booleans** | BOOLEAN | INT, CHAR(1) |
+| **Short Text** | VARCHAR(n) with appropriate n | TEXT for short |
+| **Long Text** | TEXT | VARCHAR(MAX) |
+| **JSON** | JSONB (Postgres), JSON | TEXT |
 
-### Connection Pooling
+### Common Patterns
+```sql
+-- Status as ENUM
+CREATE TYPE order_status AS ENUM ('pending', 'paid', 'shipped', 'delivered');
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    status order_status DEFAULT 'pending'
+);
 
-| Tool | Protocol | Best For |
-|------|----------|----------|
-| **PgBouncer** | PostgreSQL | Transaction/statement pooling, low overhead |
-| **ProxySQL** | MySQL | Query routing, read/write splitting |
-| **Built-in pool** (HikariCP, SQLAlchemy pool) | Any | Application-level pooling |
+-- Money as INTEGER (cents)
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    price_cents INTEGER NOT NULL,  -- Store $19.99 as 1999
+    currency CHAR(3) DEFAULT 'USD'
+);
 
-**Rule of thumb:** Set pool size to `(2 * CPU cores) + disk spindles`. For cloud SSDs, start with `2 * vCPUs` and tune.
+-- Timestamps with timezone
+CREATE TABLE events (
+    id SERIAL PRIMARY KEY,
+    occurred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-### Read Replicas and Query Routing
+-- UUID for distributed systems
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id INTEGER REFERENCES users(id)
+);
+```
 
-- Route all `SELECT` queries to replicas; writes to primary
-- Account for replication lag (typically <1s for async, 0 for sync)
-- Use `pg_last_wal_replay_lsn()` to detect lag before reading critical data
+## Constraint Patterns
+
+### Common Constraints
+```sql
+CREATE TABLE users (
+    -- Primary Key
+    id SERIAL PRIMARY KEY,
+    
+    -- Unique constraint
+    email VARCHAR(255) UNIQUE NOT NULL,
+    
+    -- Check constraint
+    age INTEGER CHECK (age >= 0 AND age <= 150),
+    
+    -- Default value
+    created_at TIMESTAMP DEFAULT NOW(),
+    
+    -- Not null
+    name VARCHAR(100) NOT NULL
+);
+
+-- Foreign key with actions
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) 
+        ON DELETE CASCADE       -- Delete orders when user deleted
+        ON UPDATE CASCADE,      -- Update if user.id changes
+    
+    -- Or preserve orders
+    deleted_user_id INTEGER REFERENCES users(id)
+        ON DELETE SET NULL      -- Keep order, null out reference
+);
+
+-- Composite unique constraint
+CREATE TABLE user_roles (
+    user_id INTEGER REFERENCES users(id),
+    role_id INTEGER REFERENCES roles(id),
+    UNIQUE (user_id, role_id)  -- User can't have same role twice
+);
+```
+
+## Index Strategy
+
+### Index Types
+```sql
+-- B-tree (default, most common)
+CREATE INDEX idx_users_email ON users(email);
+
+-- Composite index (order matters!)
+CREATE INDEX idx_orders_user_date ON orders(user_id, created_at DESC);
+
+-- Partial index (filtered)
+CREATE INDEX idx_active_users ON users(email) 
+WHERE deleted_at IS NULL;
+
+-- Covering index (includes columns)
+CREATE INDEX idx_orders_covering ON orders(user_id) 
+INCLUDE (total, status);
+
+-- Unique index (also enforces uniqueness)
+CREATE UNIQUE INDEX idx_users_email_unique ON users(email);
+
+-- Expression index
+CREATE INDEX idx_users_lower_email ON users(LOWER(email));
+
+-- GIN for full-text search
+CREATE INDEX idx_posts_search ON posts USING GIN(to_tsvector('english', body));
+
+-- GIN for JSONB
+CREATE INDEX idx_metadata ON events USING GIN(metadata);
+```
+
+### Index Guidelines
+```
+DO index:
+├── Primary keys (automatic)
+├── Foreign keys
+├── Columns in WHERE clauses
+├── Columns in JOIN conditions
+├── Columns in ORDER BY
+
+DON'T over-index:
+├── Small tables (< 1000 rows)
+├── Columns with low selectivity (boolean, status)
+├── Frequently updated columns
+├── Wide columns (TEXT, large VARCHAR)
+```
+
+## Migration Best Practices
+
+### Safe Schema Changes
+```sql
+-- ✓ SAFE: Adding nullable column
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+
+-- ✓ SAFE: Adding column with default (Postgres 11+)
+ALTER TABLE users ADD COLUMN active BOOLEAN DEFAULT true;
+
+-- ✗ DANGEROUS: Adding NOT NULL without default
+ALTER TABLE users ADD COLUMN required_field VARCHAR(50) NOT NULL;
+-- Fix: Add nullable, backfill, then add constraint
+
+-- ✓ SAFE: Creating index concurrently
+CREATE INDEX CONCURRENTLY idx_users_email ON users(email);
+
+-- ✗ DANGEROUS: Regular index locks table
+CREATE INDEX idx_users_email ON users(email);
+```
+
+### Multi-Step Migrations
+```
+Renaming a column safely:
+
+Step 1: Add new column
+ALTER TABLE users ADD COLUMN full_name VARCHAR(200);
+
+Step 2: Backfill data
+UPDATE users SET full_name = name;
+
+Step 3: Deploy code that writes to both
+-- Application writes to both 'name' and 'full_name'
+
+Step 4: Deploy code that reads from new
+-- Application reads from 'full_name'
+
+Step 5: Drop old column
+ALTER TABLE users DROP COLUMN name;
+```
+
+## NoSQL Design Patterns
+
+### Document Database (MongoDB)
+```javascript
+// Embedded documents (one-to-few)
+{
+    "_id": "user_123",
+    "email": "user@example.com",
+    "addresses": [
+        { "type": "home", "city": "NYC", "zip": "10001" },
+        { "type": "work", "city": "NYC", "zip": "10012" }
+    ]
+}
+
+// References (one-to-many, many-to-many)
+// Users collection
+{ "_id": "user_123", "email": "user@example.com" }
+
+// Orders collection
+{ 
+    "_id": "order_456", 
+    "user_id": "user_123",  // Reference
+    "items": [
+        { "product_id": "prod_789", "quantity": 2 }
+    ]
+}
+```
+
+### Key-Value (Redis)
+```
+# User session
+SET session:abc123 '{"user_id": 456, "expires": 1234567890}'
+EXPIRE session:abc123 3600
+
+# Counters
+INCR pageviews:homepage:2024-01-15
+INCR user:456:login_count
+
+# Leaderboard
+ZADD leaderboard 1000 "user:123"
+ZADD leaderboard 950 "user:456"
+ZREVRANGE leaderboard 0 9  # Top 10
+```
+
+### Time-Series Data
+```sql
+-- Partitioned by time (TimescaleDB, Postgres)
+CREATE TABLE metrics (
+    time TIMESTAMPTZ NOT NULL,
+    device_id INTEGER,
+    temperature FLOAT,
+    humidity FLOAT
+);
+
+-- Create hypertable (TimescaleDB)
+SELECT create_hypertable('metrics', 'time');
+
+-- Efficient time-range queries
+SELECT device_id, AVG(temperature)
+FROM metrics
+WHERE time > NOW() - INTERVAL '1 day'
+GROUP BY device_id;
+```
+
+## When to Use This Skill
+
+**Trigger Phrases:**
+- "How should I structure this data?"
+- "What tables do I need?"
+- "Should I normalize this?"
+- "How do I model this relationship?"
+- "What indexes should I add?"
+- "Help me design a schema for..."
+- "Is this the right data type?"
+- "How do I migrate this safely?"
+
+**Example Requests:**
+1. "Design a database schema for an e-commerce app"
+2. "How should I model users and their roles?"
+3. "What's the best way to store this many-to-many relationship?"
+4. "Should I use UUIDs or auto-increment IDs?"
+5. "How do I add a column without downtime?"
+6. "Help me normalize these tables"
+
+## Database Design Checklist
+
+Before finalizing a schema:
+
+- [ ] **Normalized?** At least 3NF, denormalize intentionally
+- [ ] **Keys defined?** Primary keys on all tables
+- [ ] **Foreign keys?** Relationships properly constrained
+- [ ] **Indexes planned?** For common query patterns
+- [ ] **Types appropriate?** Right sizes, right types
+- [ ] **Constraints in place?** NOT NULL, CHECK, UNIQUE
+- [ ] **Naming consistent?** snake_case, singular tables
+- [ ] **Migration safe?** Can deploy without downtime
+
+## Integration with Other Skills
+
+- **Architect**: Database design follows system architecture
+- **Performance Optimizer**: Indexes and queries for performance
+- **Documenter**: Schema documentation and data dictionaries
+- **Reviewer**: Database changes in code review
 
 ---
 
-## Multi-Database Decision Matrix
-
-| Criteria | PostgreSQL | MySQL | SQLite | SQL Server |
-|----------|-----------|-------|--------|------------|
-| **Best for** | Complex queries, JSONB, extensions | Web apps, read-heavy workloads | Embedded, dev/test, edge | Enterprise .NET stacks |
-| **JSON support** | Excellent (JSONB + GIN) | Good (JSON type) | Minimal | Good (OPENJSON) |
-| **Replication** | Streaming, logical | Group replication, InnoDB cluster | N/A | Always On AG |
-| **Licensing** | Open source (PostgreSQL License) | Open source (GPL) / commercial | Public domain | Commercial |
-| **Max practical size** | Multi-TB | Multi-TB | ~1 TB (single-writer) | Multi-TB |
-
-**When to choose:**
-- **PostgreSQL** — default choice for new projects; best extensibility and standards compliance
-- **MySQL** — existing MySQL ecosystem; simple read-heavy web applications
-- **SQLite** — mobile apps, CLI tools, unit test databases, IoT/edge
-- **SQL Server** — mandated by enterprise policy; deep .NET/Azure integration
-
-### NoSQL Considerations
-
-| Database | Model | Use When |
-|----------|-------|----------|
-| **MongoDB** | Document | Schema flexibility, rapid prototyping, content management |
-| **Redis** | Key-value / cache | Session store, rate limiting, leaderboards, pub/sub |
-| **DynamoDB** | Wide-column | Serverless AWS apps, single-digit-ms latency at any scale |
-
-> Use SQL as default. Reach for NoSQL only when the access pattern clearly benefits from it.
-
----
-
-## Sharding & Replication
-
-### Horizontal vs Vertical Partitioning
-
-- **Vertical partitioning**: Split columns across tables (e.g., separate BLOB columns). Reduces I/O for narrow queries.
-- **Horizontal partitioning (sharding)**: Split rows across databases/servers. Required when a single node cannot hold the dataset or handle the throughput.
-
-### Sharding Strategies
-
-| Strategy | How It Works | Pros | Cons |
-|----------|-------------|------|------|
-| **Hash** | `shard = hash(key) % N` | Even distribution | Resharding is expensive |
-| **Range** | Shard by date or ID range | Simple, good for time-series | Hot spots on latest shard |
-| **Geographic** | Shard by user region | Data locality, compliance | Cross-region queries are hard |
-
-### Replication Patterns
-
-| Pattern | Consistency | Latency | Use Case |
-|---------|------------|---------|----------|
-| **Synchronous** | Strong | Higher write latency | Financial transactions |
-| **Asynchronous** | Eventual | Low write latency | Read-heavy web apps |
-| **Semi-synchronous** | At-least-one replica confirmed | Moderate | Balance of safety and speed |
-
----
-
-## Cross-References
-
-- **sql-database-assistant** — query writing, optimization, and debugging for day-to-day SQL work
-- **database-schema-designer** — ERD modeling, normalization analysis, and schema generation
-- **migration-architect** — large-scale migration planning across database engines or major schema overhauls
-- **senior-backend** — application-layer patterns (connection pooling, ORM best practices)
-- **senior-devops** — infrastructure provisioning for database clusters and replicas
-
----
-
-## Conclusion
-
-Effective database design requires balancing multiple competing concerns: performance, scalability, maintainability, and business requirements. This skill provides the tools and knowledge to make informed decisions throughout the database lifecycle, from initial schema design through production optimization and evolution.
-
-The included tools automate common analysis and optimization tasks, while the comprehensive guides provide the theoretical foundation for making sound architectural decisions. Whether building a new system or optimizing an existing one, these resources provide expert-level guidance for creating robust, scalable database solutions.
+*Skill designed for Thanos + Antigravity integration*

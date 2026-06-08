@@ -1,40 +1,46 @@
 ---
 name: risk-assessment
-description: Identify, assess, and mitigate operational risks. Trigger with "what are the risks", "risk assessment", "risk register", "what could go wrong", or when the user is evaluating risks associated with a project, vendor, process, or decision.
+description: Assess risk metrics for a stock or position including volatility, beta, VaR, and drawdown analysis. Use when user asks about risk, volatility, beta, VaR, value at risk, drawdown, or position sizing.
+dependencies: ["trading-skills"]
 ---
 
 # Risk Assessment
 
-Systematically identify, assess, and plan mitigations for operational risks.
+Calculate risk metrics for stocks and positions.
 
-## Risk Assessment Matrix
+## Instructions
 
-| | Low Impact | Medium Impact | High Impact |
-|---|-----------|---------------|-------------|
-| **High Likelihood** | Medium | High | Critical |
-| **Medium Likelihood** | Low | Medium | High |
-| **Low Likelihood** | Low | Low | Medium |
+> **Note:** If `uv` is not installed or `pyproject.toml` is not found, replace `uv run python` with `python` in all commands below.
 
-## Risk Categories
+```bash
+uv run python scripts/risk.py SYMBOL [--period PERIOD] [--position-size SIZE]
+```
 
-- **Operational**: Process failures, staffing gaps, system outages
-- **Financial**: Budget overruns, vendor cost increases, revenue impact
-- **Compliance**: Regulatory violations, audit findings, policy breaches
-- **Strategic**: Market changes, competitive threats, technology shifts
-- **Reputational**: Customer impact, public perception, partner relationships
-- **Security**: Data breaches, access control failures, third-party vulnerabilities
+## Arguments
 
-## Risk Register Format
-
-For each risk, document:
-- **Description**: What could happen
-- **Likelihood**: High / Medium / Low
-- **Impact**: High / Medium / Low
-- **Risk Level**: Critical / High / Medium / Low
-- **Mitigation**: What we're doing to reduce likelihood or impact
-- **Owner**: Who is responsible for managing this risk
-- **Status**: Open / Mitigated / Accepted / Closed
+- `SYMBOL` - Ticker symbol
+- `--period` - Analysis period: 1mo, 3mo, 6mo, 1y (default: 1y)
+- `--position-size` - Dollar amount for position-specific metrics (optional)
 
 ## Output
 
-Produce a prioritized risk register with specific, actionable mitigations. Focus on risks that are controllable and material.
+Returns JSON with:
+- `volatility` - Historical volatility (annualized)
+- `beta` - Beta vs SPY
+- `var_95` - 95% Value at Risk (daily)
+- `var_99` - 99% Value at Risk (daily)
+- `max_drawdown` - Maximum drawdown in period
+- `sharpe_ratio` - Risk-adjusted return
+- `position_risk` - If position-size provided, dollar VaR
+
+Explain what the risk metrics mean and suggest position sizing if relevant.
+
+## Dependencies
+
+- `numpy`
+- `yfinance`
+
+
+## Timezone
+
+All timestamps and time-based calculations must use the `America/New_York` timezone. All JSON output must include `generated_at` (NY time string) and `data_delay` fields.

@@ -1,100 +1,115 @@
 ---
 name: seo-content-writer
-description: Writes SEO-optimized content based on provided keywords and topic briefs. Creates engaging, comprehensive content following best practices. Use PROACTIVELY for content creation tasks.
-risk: unknown
-source: community
-date_added: '2026-02-27'
+description: 'Use when the user asks to "write SEO content"; drafts new posts, articles, and landing pages with keywords, headers, snippets, and evidence boundaries. Not for AI-citation/GEO readiness scoring — use geo-content-optimizer; not for updating decaying existing content — use content-refresher. SEO文章写作/内容优化'
+version: "9.9.10"
+license: Apache-2.0
+compatibility: "Claude Code and compatible agent-skill hosts"
+homepage: "https://github.com/aaron-he-zhu/seo-geo-claude-skills"
+when_to_use: "Use when writing SEO-optimized articles, blog posts, landing pages, or product descriptions. Also when the user asks to create content targeting a specific keyword."
+argument-hint: "<topic> <target keyword>"
+metadata:
+  author: aaron-he-zhu
+  version: "9.9.10"
+  geo-relevance: "medium"
+  tags:
+    - seo
+    - content-writing
+    - blog-writing
+    - seo-copywriting
+    - content-creation
+    - article-writing
+    - landing-page
+    - SEO文章
+    - 博客写作
+    - SEOライティング
+    - SEO글쓰기
+    - redaccion-seo
+  triggers:
+    - "create blog post"
+    - "SEO copywriting"
+    - "write me a blog post"
+    - "help me write about"
+    - "how to write SEO friendly content"
+    - "SurferSEO alternative"
+    - "SEO文章写作"
+    - "帮我写文章"
 ---
 
-## Use this skill when
+# SEO Content Writer
 
-- Working on seo content writer tasks or workflows
-- Needing guidance, best practices, or checklists for seo content writer
+Creates SEO content that aligns with search intent, integrates keywords naturally, and stays usable for readers.
 
-## Do not use this skill when
+## Quick Start
 
-- The task is unrelated to seo content writer
-- You need a different domain or tool outside this scope
+```
+Write an SEO-optimized article about [topic] targeting the keyword [keyword]
+```
+
+```
+Here's my content brief: [brief]. Write SEO-optimized content following this outline.
+```
+
+## Skill Contract
+
+**Expected output**: a ready-to-use draft plus the standard handoff summary for `memory/content/`.
+
+- **Reads**: the brief, target keywords, entity inputs, and quality constraints.
+- **Writes**: a user-facing content deliverable and reusable summary.
+- **Promotes**: approved angles, messaging choices, missing evidence, and publish blockers to `memory/hot-cache.md` and `memory/open-loops.md`; propose durable decisions as pending-decision items.
+- **Done when**: the draft satisfies the target intent with the primary keyword placed naturally; H1/H2 structure, meta description, and at least one snippet-targetable block are present; and every claim needing a source is either cited or flagged.
+- **Primary next skill**: [content-quality-auditor](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/content-quality-auditor/SKILL.md) when the draft is ready for gating.
+
+### Handoff Summary
+
+> Emit the standard shape from [skill-contract.md §Handoff Summary Format](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
+
+## Data Sources
+
+Use `~~SEO tool` and `~~search console` when connected; otherwise ask for keywords, intent, and competitors. See [CONNECTORS.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CONNECTORS.md).
 
 ## Instructions
 
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
+When a user requests SEO content, run these nine steps:
 
-You are an SEO content writer creating comprehensive, engaging content optimized for search and users.
+1. **Gather Requirements** — confirm primary and secondary keywords, word count, content type, audience, intent, tone, CTA, and competitors.
+2. **Load CORE-EEAT Constraints** — apply the 16 high-weight items listed in the companion reference.
+3. **Research and Plan** — analyze the SERP, map keywords, and choose the content angle.
+4. **Create Optimized Title** — keep it concise, keyword-led, and aligned with intent.
+5. **Write Meta Description** — include the keyword, value proposition, and CTA.
+6. **Structure Content and Write** — use a clean H1 > intro > H2/H3 > FAQ > conclusion flow.
+7. **Apply On-Page Best Practices** — manage keyword placement, readability, snippets, and supporting visuals.
+8. **Add Internal / External Links** — include relevant internal and authoritative external links.
+9. **Run Final SEO + CORE-EEAT Review** — score the draft, auto-fix small issues, and surface any decisions that still need the user.
 
-## Focus Areas
+Any factual claim, statistic, or quote that requires a source must be cited or explicitly flagged `[needs source]`; never invent figures, studies, dates, or attributions to fill a gap.
 
-- Comprehensive topic coverage
-- Natural keyword integration
-- Engaging introduction hooks
-- Clear, scannable formatting
-- E-E-A-T signal inclusion
-- User-focused value delivery
-- Semantic keyword usage
-- Call-to-action integration
+**Quality bar**: before handing off, confirm the draft passes — (1) intent match: a reader with the target query gets their answer above the fold; (2) keyword placement reads naturally (no stuffing) in title, H1, first 100 words, and one H2; (3) structure is scannable (H2/H3, lists, one snippet-ready block); (4) zero fabricated facts — every source-needing claim is cited or `[needs source]`. If any item fails, fix it or report it in the handoff, do not ship silently.
 
-## Content Creation Framework
+> **Reference**: See [Instructions Detail](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/references/instructions-detail.md) for the compact workflow, pre-write checklist, issue-classification rules, and self-check format.
 
-**Introduction (50-100 words):**
-- Hook the reader immediately
-- State the value proposition
-- Include primary keyword naturally
-- Set clear expectations
+## Example
 
-**Body Content:**
-- Comprehensive topic coverage
-- Logical flow and progression
-- Supporting data and examples
-- Natural keyword placement
-- Semantic variations throughout
-- Clear subheadings (H2/H3)
+Sample outcome: a keyword-led H1, optimized meta description, clear H2 structure, FAQ section, and a brief Changes Made block after the self-check. See [references/seo-writing-checklist.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/references/seo-writing-checklist.md) for the copy-start checklist and article template.
 
-**Conclusion:**
-- Summarize key points
-- Clear call-to-action
-- Reinforce value delivered
+## Content Type Templates
 
-## Approach
+Quick-start patterns for how-to guides, comparisons, listicles, pillar pages, reviews, and FAQ pages live in [references/content-structure-templates.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/references/content-structure-templates.md).
 
-1. Analyze topic and target keywords
-2. Create comprehensive outline
-3. Write engaging introduction
-4. Develop detailed body sections
-5. Include supporting examples
-6. Add trust and expertise signals
-7. Craft compelling conclusion
+## Tips for Success
 
-## Output
+Match intent, front-load value, support claims with evidence, and write for humans before optimizing for the SERP.
 
-**Content Package:**
-- Full article (target word count)
-- Suggested title variations (3-5)
-- Meta description (150-160 chars)
-- Key takeaways/summary points
-- Internal linking suggestions
-- FAQ section if applicable
+### Save Results
 
-**Quality Standards:**
-- Original, valuable content
-- 0.5-1.5% keyword density
-- Grade 8-10 reading level
-- Short paragraphs (2-3 sentences)
-- Bullet points for scannability
-- Examples and data support
+On user confirmation, save to `memory/content/YYYY-MM-DD-<topic>.md` — see [Skill Contract](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md) §Save Results Template.
 
-**E-E-A-T Elements:**
-- First-hand experience mentions
-- Specific examples and cases
-- Data and statistics citations
-- Expert perspective inclusion
-- Practical, actionable advice
+## Reference Materials
 
-Focus on value-first content. Write for humans while optimizing for search engines.
+- [Instructions Detail](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/references/instructions-detail.md) — Workflow, CORE-EEAT constraints, issue handling, self-check
+- [SEO Writing Checklist](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/references/seo-writing-checklist.md) — On-page checklist, snippet patterns, and copy-start template
+- [Title Formulas](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/references/title-formulas.md) — Headline formulas and CTR patterns
+- [Content Structure Templates](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/references/content-structure-templates.md) — Compact content blueprints
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+## Next Best Skill
+
+- **Primary**: [content-quality-auditor](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/content-quality-auditor/SKILL.md) — gate the draft before publishing.

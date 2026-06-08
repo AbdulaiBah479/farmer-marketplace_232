@@ -1,358 +1,312 @@
 ---
 name: nda-review
 description: >
-  Deep clause-by-clause NDA review from Recipient or Discloser perspective.
-  Produces issue log with redlines, fallbacks, rationales, owners, deadlines.
-  Use when reviewing NDAs for negotiation or approval.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: The Glass Room
-  category: legal
-  domain: nda-analysis
-  updated: 2026-04-10
-  tags: [nda, review, clause-analysis, redline, negotiation]
+  Reference: fast triage of inbound NDAs into GREEN / YELLOW / RED so the team only
+  spends lawyer time on the ones that need it. Built for sales and BD to self-serve
+  before pinging legal. Loaded by /commercial-legal:review when an NDA is detected.
+user-invocable: false
 ---
-> **⚠️ EXPERIMENTAL** — This skill is provided for educational and informational purposes only. It does NOT constitute legal advice. All responsibility for usage rests with the user. Consult qualified legal professionals before acting on any output.
 
 # NDA Review
 
-Deep clause-by-clause NDA review tool that analyzes agreements from Recipient or Discloser perspective. Produces structured issue logs with preferred redlines, fallback positions, rationale, owners, and deadlines.
+## Matter context
+
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/commercial-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
-## Table of Contents
+## Destination check
 
-- [Tools](#tools)
-  - [NDA Clause Reviewer](#nda-clause-reviewer)
-- [Reference Guides](#reference-guides)
-- [Workflows](#workflows)
-  - [Full NDA Review](#full-nda-review)
-  - [Perspective-Based Review](#perspective-based-review)
-- [Immediate Red Flags](#immediate-red-flags)
-- [Review Checklists](#review-checklists)
-- [Variation Callouts](#variation-callouts)
-- [Risk Rating Guide](#risk-rating-guide)
-- [Common Pitfalls](#common-pitfalls)
-- [Troubleshooting](#troubleshooting)
-- [Success Criteria](#success-criteria)
-- [Scope & Limitations](#scope--limitations)
-- [Anti-Patterns](#anti-patterns)
-- [Tool Reference](#tool-reference)
+Before producing output, check where it's going. If the user has named a destination (a channel, a distribution list, a counterparty, "everyone"), ask whether it's inside the privilege circle. Public channels, company-wide lists, counterparty/opposing counsel, vendors, and clients (for work product) waive the protection. When the destination looks outside the circle, flag it and offer (a) the privileged version for legal only, (b) a sanitized version for the broader channel, or (c) both — don't silently apply a privileged header and then help paste it somewhere the header won't protect it. See the canonical `## Shared guardrails → Destination check` in this plugin's CLAUDE.md.
 
----
+## Purpose
 
-## Tools
+Most inbound NDAs are fine. A few have landmines. This skill sorts them in under a minute so legal only reads the ones that matter.
 
-### NDA Clause Reviewer
+**The goal:** a GREEN NDA should need nothing more than a signature. A YELLOW needs a lawyer's eyes on one or two specific things. A RED stops before anyone wastes time.
 
-Performs deep analysis of NDA text, extracting and classifying each clause against best practices. Detects overbroad definitions, missing carveouts, problematic residuals, IP grants, indemnification, and audit rights.
+## Load the playbook first
 
-```bash
-# Review from recipient perspective (default)
-python scripts/nda_clause_reviewer.py nda_draft.txt
+**Which side?** Before applying the playbook, determine which side the company is on for this NDA. Usually obvious from the context: if the counterparty is a vendor or partner evaluating your product, you're sales-side; if you're evaluating theirs, you're purchasing-side. Mutual NDAs still have a side — whose paper is it, and which direction is the evaluation running. If it's not obvious, ask. Read the matching playbook section (`### Sales-side playbook` or `### Purchasing-side playbook`) from the config. Note which side in the output so the reviewer knows which playbook was applied. If the matching side is `[Not configured]`, stop and tell the user to run `/commercial-legal:cold-start-interview --side <side>` before this triage can proceed.
 
-# Review from discloser perspective
-python scripts/nda_clause_reviewer.py nda_draft.txt --perspective discloser
+**Before triaging anything, read `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## Playbook` → the matching side → `NDA triage positions`.** That section is the source of truth for what makes an NDA GREEN, YELLOW, or RED for *this* team on *this* side. This skill does not ship with default positions on NDA terms — the law, the market, and each team's risk tolerance vary too much for hardcoded defaults to be safe.
 
-# JSON output for integration
-python scripts/nda_clause_reviewer.py nda_draft.txt --json
+If `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` doesn't have an `NDA triage positions` section yet, or it's silent on a term that comes up in the NDA you're reviewing, ask the user:
 
-# Save issue log
-python scripts/nda_clause_reviewer.py nda_draft.txt --output issues.json --json
+> Your playbook doesn't cover [term — e.g., "residuals clauses," "survival period," "one-way NDAs where you're the receiver"]. What's your default position — when should this be GREEN, when YELLOW, when RED? I'll add it to `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` so the next review is consistent.
+
+Then record the answer in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` and proceed with the triage using the new position.
+
+## Scope check
+
+**Before reviewing NDA-specific provisions, check whether the document is doing more than its name suggests.** Mutual commercial NDAs can hide: standstills, licensing grants, exclusivity, non-solicits, non-competes, IP assignments, right of first refusal, most-favored-nation clauses, and arbitration/jurisdiction clauses that govern far more than confidentiality disputes.
+
+If the NDA contains obligations beyond confidentiality: **auto-YELLOW regardless of the NDA-term analysis.** Flag the non-NDA provisions:
+
+> This document is labeled an NDA but contains [standstill / license grant / non-solicit / exclusivity / IP assignment / ROFR / MFN / broad arbitration]. It's more than an NDA. Route for attorney review.
+
+Do not silently push a document labeled "NDA" through NDA triage when the substantive obligations are a services agreement, a term sheet, or a covenant package in NDA clothing.
+
+## The triage
+
+Classify the NDA into one of three buckets by applying the positions from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. The bucket definitions below are stable; the *criteria* that fill each bucket come from the playbook.
+
+### GREEN — route to signature
+
+The NDA satisfies every position in the team's playbook, and no term triggers a RED flag per the playbook. Examples of checks the playbook typically covers: mutuality, term length, survival period, carveouts, governing law, restrictive covenants, fee-shifting. Confirm each one against `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` before calling GREEN.
+
+**GREEN requires attorney-reviewed playbook positions.** GREEN is the only path to signature without lawyer review. It cannot be issued against default or absent positions. Before issuing GREEN, check: does the practice profile have an attorney-reviewed `## NDA triage positions` section? If not:
+
+> I can't issue GREEN without attorney-reviewed NDA positions in your practice profile. Run `/commercial-legal:cold-start-interview --full` with your commercial counsel to set them, or route this NDA for attorney review. Issuing GREEN against defaults means a non-lawyer set the positions the next non-lawyer relies on.
+
+Do not route to signature on defaults. YELLOW is the right call when positions are missing — it surfaces the NDA to a human who can decide.
+
+**Output:**
+
+Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+
+```markdown
+[WORK-PRODUCT HEADER — per plugin config ## Outputs]
+
+## NDA Triage: [Counterparty]
+
+GREEN — route to signature
+
+### Executive Summary
+
+No red flags identified under the playbook. Route for signature per standard process.
+
+| Check | Status | Playbook reference |
+|---|---|---|
+| [Each playbook check] | [pass/fail] | [`~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` section] |
+
+**Next step:** [Submit to [CLM] standard NDA workflow | Send to [approver from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`] for signature]
 ```
 
-**What it produces:**
-- Clause-by-clause issue log with H/M/L risk ratings
-- Preferred redline for each issue
-- Fallback position if preferred is rejected
-- Rationale for each recommendation
-- Owner assignment (legal, business, executive)
-- Deadline category (pre-signing, 30-day, 90-day)
+**Before proceeding past GREEN to signature:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the Role is Non-lawyer:
 
----
+> This step has legal consequences (countersigning an NDA binds the company). Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
+>
+> [Generate a 1-page summary: counterparty, NDA direction (mutual / one-way), the playbook checks run, anything the playbook didn't cover, what could go wrong if signed as-is, and the three things to ask the attorney.]
+>
+> If you need to find an attorney, solicitor, barrister, or other authorised legal professional: contact your professional regulator (state bar in the US, SRA/Bar Standards Board in England & Wales, Law Society in Scotland/NI/Ireland/Canada/Australia, or your jurisdiction's equivalent) for a referral service.
 
-## Reference Guides
+Do not proceed past this gate without an explicit yes.
 
-### NDA Clause Reference
-`references/nda_clause_reference.md`
+### YELLOW — needs a lawyer's eyes on specific items
 
-Five deep reference modules:
-- Duration & Scope (term, survival, scope limitations)
-- Key Clauses (definition, purpose, permitted use, marking)
-- Party Obligations (standard of care, use restriction, disclosure limits)
-- Remedies & Liability (injunctive relief, damages, indemnification)
-- Standard Exceptions (public knowledge, prior possession, independent development, third-party receipt, legal compulsion)
+One or more terms deviate from the playbook but aren't categorical deal-breakers, OR a term appears that the playbook doesn't address. Surface each item individually so the approver can make the call.
 
-### NDA Review Templates
-`references/nda_review_templates.md`
+**Output:**
 
-Output templates and worked examples:
-- Executive Summary format
-- Clause-by-clause Issue Log table format
-- Ownership and timing defaults by topic category
-- Worked examples for social media endorsement and group licensing scenarios
+Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
 
----
+```markdown
+[WORK-PRODUCT HEADER — per plugin config ## Outputs]
 
-## Workflows
+## NDA Triage: [Counterparty]
 
-### Full NDA Review
+YELLOW — flag for [approver name from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`]
 
-1. **Triage first** -- Run `nda-triage` skill for quick GREEN/YELLOW/RED classification
-2. **Deep review** -- Run `nda_clause_reviewer.py` with appropriate `--perspective`
-3. **Review issue log** -- Address HIGH-risk items first, then MEDIUM, then LOW
-4. **Prepare redlines** -- Use preferred positions; prepare fallbacks
-5. **Assign owners** -- Legal owns clause language; business owns commercial terms
-6. **Set deadlines** -- Pre-signing items before next meeting; post-signing items within 30-90 days
-7. **Negotiate** -- Present redlines; use fallbacks as needed
-8. **Final review** -- Verify all issues resolved before execution
+### Executive Summary
 
-### Perspective-Based Review
+- [One-line actionable edit, e.g. "Strike non-solicit clause (Section 6)"]
+- [One-line actionable edit]
 
-| Perspective | Focus Areas | Key Concerns |
-|-------------|-------------|--------------|
-| Recipient | Scope of obligations, carveouts, residuals, return/destruction | Protecting freedom to operate; avoiding contamination claims |
-| Discloser | Definition breadth, remedies, duration, permitted disclosures | Maximizing protection; ensuring adequate enforcement |
+### Flagged items
 
----
+**1. [Issue]** — Section [X]
+   What: [one line]
+   Why flagged: [one line — which playbook position this hits, or "playbook is silent on this"]
+   **Legal risk:** [🔴/🟠/🟡/🟢] | **Business friction:** [🔴 Blocks deals / 🟠 Slows deals / 🟡 Confuses customers / 🟢 Invisible]
+   Likely resolution: [accept / push back on X / depends on deal context]
 
-## Immediate Red Flags
+[repeat for each flag]
 
-Stop review and escalate if any of these 7 red flags are present.
+### Everything else
 
-| # | Red Flag | Why It Matters | Escalation |
-|---|----------|---------------|------------|
-| 1 | Non-compete clause | Restricts business operations; requires separate consideration and analysis | Senior counsel immediately |
-| 2 | IP assignment or license grant | Transfers rights beyond confidentiality scope | Senior counsel immediately |
-| 3 | Non-solicitation of employees or customers | Employment law implications; may be unenforceable | Senior counsel within 24 hours |
-| 4 | Missing 3+ standard carveouts | Fundamentally deficient NDA | Counsel review before any response |
-| 5 | Liquidated damages or penalty clause | Transforms NDA into penalty contract | Senior counsel within 24 hours |
-| 6 | Perpetual obligations with no termination | Indefinite legal burden with no exit | Counsel review within 48 hours |
-| 7 | Exclusivity provision | Limits engagement with other parties | Business leadership + counsel |
+| Check | Status | Playbook reference |
+|---|---|---|
+| [playbook checks that passed] | pass | [`~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` section] |
 
----
-
-## Review Checklists
-
-### Recipient Checklist (8 Topics)
-
-| # | Topic | Key Questions | Risk if Missing |
-|---|-------|---------------|-----------------|
-| 1 | Definition Scope | Is confidential info bounded? Is there a marking requirement? | Overbroad definition traps all shared information |
-| 2 | Standard Carveouts | Are all 5 carveouts present and properly drafted? | Missing carveouts restrict legitimate business activities |
-| 3 | Permitted Use | Is use restricted to stated purpose? Can we share with advisors? | Overly restrictive use limits may impede evaluation |
-| 4 | Residuals | Is there a residuals clause? Is it narrow or broad? | Broad residuals clause benefits; narrow or absent protects discloser |
-| 5 | Return/Destruction | Return or destroy option? Retention exception for backups? | No retention exception is impractical for electronic data |
-| 6 | Term & Survival | Reasonable term? Reasonable survival period? Termination right? | Perpetual obligations are burdensome |
-| 7 | Remedies | Injunctive relief only? Or liquidated damages/indemnification? | Excessive remedies shift risk disproportionately |
-| 8 | Problematic Provisions | Non-compete? Non-solicitation? IP assignment? Audit rights? | These provisions have no place in a standard NDA |
-
-### Discloser Checklist (5 Topics)
-
-| # | Topic | Key Questions | Risk if Missing |
-|---|-------|---------------|-----------------|
-| 1 | Definition Breadth | Does definition cover all information we will share? All forms? | Gaps in definition leave information unprotected |
-| 2 | Obligation Strength | Standard of care adequate? Written agreements from recipients? | Weak obligations increase risk of unauthorized disclosure |
-| 3 | Remedies | Injunctive relief available? Is it meaningful in this jurisdiction? | Without adequate remedies, NDA is unenforceable in practice |
-| 4 | Duration | Is the term long enough? Does survival cover our exposure window? | Short terms may expire before information loses value |
-| 5 | Recipient Limits | Who can receive? Is need-to-know enforced? Downstream binding? | Unrestricted sharing exposes information to unauthorized parties |
-
----
-
-## Variation Callouts
-
-Different NDA contexts require different review emphasis.
-
-### M&A Context
-
-| Additional Concern | Reason | Recommended Position |
-|-------------------|--------|---------------------|
-| Standstill provision | Prevents hostile acquisition moves during due diligence | Accept if mutual and time-limited (12-18 months) |
-| Non-solicitation of employees | Standard in M&A NDAs | Accept if limited to key employees for 12 months |
-| Broader definition | M&A requires extensive information sharing | Accept broader definition with strong carveouts |
-| Longer survival | Sensitive strategic information shared | 3-5 year survival is appropriate |
-| Residuals clause sensitivity | Competitive intelligence at stake | Resist residuals clause or narrow significantly |
-
-### Employment Context
-
-| Additional Concern | Reason | Recommended Position |
-|-------------------|--------|---------------------|
-| Invention assignment | Employer IP ownership | Separate from NDA; use invention assignment agreement |
-| Post-employment obligations | Obligations after employment ends | Limit survival to 2 years; ensure enforceability |
-| Scope of work product | What the employee creates | Define in employment agreement, not NDA |
-| Non-compete enforceability | Varies by jurisdiction | Review local law before including; may be void |
-
-### VC / Fundraising Context
-
-| Additional Concern | Reason | Recommended Position |
-|-------------------|--------|---------------------|
-| Investor portfolio conflicts | VC may have portfolio companies in same space | Include portfolio company exclusion or conflict provision |
-| Residuals clause | VCs see many similar pitches | Resist; protect trade secrets and specific data |
-| Term limitations | VCs want short obligations | 2-3 year term acceptable; ensure adequate survival |
-| Definition scope | Founders want maximum protection | Balance with investor need for portfolio flexibility |
-
----
-
-## Risk Rating Guide
-
-| Rating | Criteria | Action | Timeline |
-|--------|----------|--------|----------|
-| HIGH (H) | Could result in material legal or financial exposure; deal-breaker potential | Must resolve before signing | Pre-signing |
-| MEDIUM (M) | Creates meaningful risk but manageable; strong preference to resolve | Should resolve; accept with documented risk if necessary | Within 30 days |
-| LOW (L) | Minor preference; improves agreement but not material | Nice to resolve; concede if needed for higher-priority wins | Within 90 days |
-
-### Risk Rating by Issue Type
-
-| Issue Type | Typical Rating | Escalation |
-|-----------|---------------|------------|
-| Missing carveout (any) | M-H | Counsel |
-| Overbroad definition | M | Counsel |
-| Non-compete/non-solicitation | H | Senior counsel |
-| IP assignment | H | Senior counsel |
-| Residuals clause (broad) | M | Counsel |
-| Perpetual obligations | M-H | Counsel |
-| No return/destruction | M | Counsel |
-| Liquidated damages | H | Senior counsel |
-| Missing governing law | L-M | Counsel |
-| One-sided obligations | M | Counsel |
-
----
-
-## Common Pitfalls
-
-| Pitfall | Impact | Fix |
-|---------|--------|-----|
-| Reviewing without knowing your perspective | Recipient and discloser have opposing interests on many clauses | Always set `--perspective` flag; review with clear role in mind |
-| Treating the NDA as "just a formality" | Missing problematic provisions that create real obligations | Run full clause review on every NDA, regardless of perceived importance |
-| Negotiating clause-by-clause in document order | Wastes time on early low-priority clauses; may not reach critical issues | Prioritize by risk rating; address H items first |
-| Accepting "standard" NDAs without review | Every organization's "standard" is different; one party's standard favors that party | No NDA is truly standard; always review |
-| Ignoring context (M&A, employment, VC) | Standard NDA review misses context-specific risks | Use variation callouts for specialized contexts |
-| Not preparing fallback positions | Stuck when counterparty rejects preferred redline | Prepare preferred + fallback for every H and M item |
-| Signing before resolving H-rated issues | Creates material legal exposure | Require all H items resolved or executive sign-off |
-
----
-
-## Troubleshooting
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| All issues rated LOW | NDA is genuinely well-drafted, or text extraction lost key sections | Manually verify critical sections (definition, carveouts, remedies) are in the input file |
-| Perspective flag has no effect | Tool adjusts weighting, not detection; same issues found either way | Perspective changes risk ratings and recommendations, not issue detection |
-| Too many issues generated | NDA is non-standard or poorly drafted | Focus on H-rated issues first; use the issue log as a negotiation roadmap |
-| Script misses embedded provisions | Non-compete or IP clause hidden in definitions or general provisions | Search full document for "compete", "assign", "license", "solicit" manually |
-| Output format does not match template | Tool outputs structured data, not final deliverable | Use `references/nda_review_templates.md` to format the output for stakeholders |
-
----
-
-## Success Criteria
-
-- **Complete clause-by-clause review in under 15 minutes:** Automated analysis replaces 1-2 hours of manual review.
-- **Zero missed HIGH-risk issues:** Every non-compete, IP assignment, and missing carveout is identified.
-- **Actionable redlines for every H and M issue:** Each issue has preferred position, fallback, and rationale.
-- **Clear ownership assignment:** Every issue has a designated owner (legal, business, executive).
-- **Perspective-appropriate recommendations:** Recipient and discloser reviews produce different risk weightings.
-- **Context-aware review:** M&A, employment, and VC variations are flagged when relevant.
-
----
-
-## Scope & Limitations
-
-**Covers:**
-- Deep clause-by-clause NDA analysis with pattern matching and risk classification
-- Perspective-based review (Recipient vs. Discloser)
-- Issue log generation with redlines, fallbacks, rationale, owners, and deadlines
-- Detection of 7 immediate red flags for triage
-- Context variation awareness (M&A, Employment, VC)
-
-**Does NOT cover:**
-- **Legal advice** -- this tool supports review, it does not replace qualified legal counsel
-- **Rapid triage** -- use `nda-triage` for quick GREEN/YELLOW/RED screening
-- **Contract types beyond NDAs** -- use `contract-review` for general commercial agreements
-- **Jurisdiction-specific enforceability analysis** -- requires local counsel assessment
-- **Non-English NDAs** -- pattern matching is English-language only
-
----
-
-## Anti-Patterns
-
-| Anti-Pattern | Why It Fails | Better Approach |
-|-------------|-------------|-----------------|
-| Running deep review without triage first | Wastes time on detailed analysis of NDAs that should be rejected outright (RED triage) | Always run `nda-triage` first; only proceed to deep review for YELLOW or GREEN-with-complexity |
-| Using Recipient perspective for both sides | Recipient perspective minimizes obligations and maximizes carveouts, which is wrong if you are the discloser | Always set the correct `--perspective` flag based on your role |
-| Accepting all LOW-rated issues without review | Some LOW issues are low-risk individually but create cumulative exposure when combined | Review the full issue log for interaction effects; multiple LOW issues in the same area may compound to MEDIUM |
-| Skipping the variation callouts for specialized contexts | Standard NDA review misses M&A standstill provisions, employment invention assignment, VC portfolio conflicts | Check the variation callouts section for your specific deal context |
-
----
-
-## Tool Reference
-
-### nda_clause_reviewer.py
-
-**Purpose:** Performs deep clause-by-clause NDA analysis. Detects overbroad definitions, missing carveouts, problematic provisions, and generates an issue log with redlines, fallbacks, rationale, owners, and deadlines.
-
-**Usage:**
-
-```bash
-python scripts/nda_clause_reviewer.py <nda_file> [--perspective PERSPECTIVE] [--json] [--output FILE]
+**Next step:** Ask [approver] about the flagged items, then route to signature if they're okay with it.
 ```
 
-**Flags:**
+### RED — stop, talk to legal first
 
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `nda_file` | *(positional)* | | Path to NDA text file (.txt or .md) |
-| `--perspective` | `-p` | `recipient` | Review perspective: `recipient` or `discloser` |
-| `--json` | | off | Output in JSON format |
-| `--output` | `-o` | *(stdout)* | Write output to file |
+The NDA hits a position on the playbook's "never accept" list, or the structure of the agreement is incompatible with the team's standard posture (e.g., a one-way NDA where the team's playbook requires mutual; a perpetual term where the playbook caps at a finite period; governing law on the "never" list).
 
-**Example Output (JSON):**
+**Output:**
 
-```json
-{
-  "file": "vendor_nda.txt",
-  "perspective": "recipient",
-  "issues": [
-    {
-      "id": 1,
-      "clause": "Definition of Confidential Information",
-      "issue": "Overbroad definition with no marking requirement",
-      "risk": "H",
-      "preferred_redline": "Narrow to information marked Confidential or confirmed in writing within 10 days",
-      "fallback": "Add marking requirement for written; 10-day confirmation for oral",
-      "rationale": "Overbroad definition traps all shared information as confidential",
-      "owner": "legal",
-      "deadline": "pre-signing"
-    }
-  ],
-  "summary": {
-    "total_issues": 5,
-    "high": 2,
-    "medium": 2,
-    "low": 1
-  }
-}
+Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+
+```markdown
+[WORK-PRODUCT HEADER — per plugin config ## Outputs]
+
+## NDA Triage: [Counterparty]
+
+RED — do not submit, talk to legal first
+
+### Executive Summary
+
+- [One-line actionable edit, e.g. "Section 4 — route to Legal for review"]
+- [One-line actionable edit]
+
+### Critical issues
+
+**1. [Issue]** — Section [X]
+   > "[exact quote]"
+   Why this is a problem: [specific risk; cite the playbook position it violates]
+   **Legal risk:** [🔴/🟠/🟡/🟢] | **Business friction:** [🔴 Blocks deals / 🟠 Slows deals / 🟡 Confuses customers / 🟢 Invisible]
+   Recommended response: [use our paper instead | push back with specific language | walk]
+
+**Next step:** Send this triage to [GC or named escalation person from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`]. Do not send to [CLM or approvals workflow]. Do not tell the counterparty we'll sign.
 ```
 
-**Example Output (Text):**
+## Redline granularity
+
+**Edit at the smallest possible granularity.** A redline is a negotiation artifact, not a rewrite. Wholesale clause replacement signals "we threw out your drafting" — it's aggressive, it forces the counterparty to re-read the whole clause, and it discards the parts of their drafting that were fine. Surgical redlines — strike a word, insert a phrase, restructure a subclause — signal "we have specific asks" and are faster to read, understand, and accept.
+
+Default to the smallest edit that achieves the playbook position:
+- Replace a **word** before a phrase. ("twelve (12)" → "twenty-four (24)")
+- Replace a **phrase** before a sentence. ("paid by the Buyer" → "paid and payable by the Buyer")
+- Restructure a **subclause** before replacing the sentence. (Add "(a)" and "(b)" to split a compound condition.)
+- Replace a **sentence** before replacing the clause.
+- Only replace a **whole clause** when the counterparty's version is so far from your position that surgical edits would be harder to read than a fresh draft — and when you do, say so in the transmittal: "We've replaced §8.2 rather than marking it up because the changes were extensive. Happy to walk you through the delta."
+
+When in doubt, smaller. A client who receives a surgical redline trusts that you read carefully. A client who receives a wholesale replacement wonders whether you read at all.
+
+## Jurisdiction assumption
+
+This triage applies the governing-law and restrictive-covenant positions recorded in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. Legal rules (enforceability of non-competes, non-solicits, fee-shifting, choice of law) vary materially by jurisdiction. If the NDA involves a jurisdiction outside the team's configured posture, flag it in the output and note that the triage may not transfer as written.
+
+## Output rules
+
+**Complexity filter:** If addressing an issue would require drafting new
+language, restructuring a clause, or inserting substantive new
+provisions — do not attempt it. Instead write:
+"Section [X] — route to Legal for review."
+Only include simple, mechanical actions in the Executive Summary
+(strike, delete, replace a word or phrase).
+
+**Clean NDA rule:** If the NDA passes all checks with no flags, the Executive Summary
+should say only: "No red flags identified. Route for signature per
+standard process."
+
+Do not produce a lengthy report for a clean NDA.
+
+## Detailed check reference
+
+For each check below, the bucket (GREEN/YELLOW/RED) is determined by `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. This skill lists the *categories* to check; it does not hardcode thresholds.
+
+### Mutuality
+
+Is the NDA mutual or one-way? Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook doesn't address one-way NDAs for this context, run the one-way questionnaire below and surface the result for a human.
+
+**One-way NDA questionnaire**
+
+When the NDA is unilateral (one party discloses, the other only receives), do not immediately flag RED or exit. Ask:
+
+> A one-way NDA is appropriate in some situations. Before flagging this,
+> let me ask a few quick questions:
+>
+> 1. In this relationship, are you the only party disclosing confidential
+>    information? (i.e., the other side shares nothing back)
+> 2. Is this for a limited, specific disclosure — for example, sharing
+>    your technology with a vendor who will work on it, but not sharing
+>    theirs with you?
+> 3. Is this related to M&A, employment, or investment? (If yes, stop —
+>    this skill is for commercial MNDAs only. Route to Legal.)
+
+Use the answers plus the `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` position to decide GREEN/YELLOW/RED. If `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` doesn't take a position on this fact pattern, flag YELLOW and surface the questionnaire answers for the approver.
+
+### Definition of Confidential Information
+
+Check scope (marked-only vs. everything-disclosed), marking requirements, and oral-disclosure confirmation windows. Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook is silent on any of these, ask.
+
+### Carveouts
+
+The five carveouts typically present in an NDA:
+
+1. Information that is or becomes public (other than through breach)
+2. Information the receiving party already had
+3. Information independently developed without reference to the CI
+4. Information received from a third party without restriction
+5. Information required to be disclosed by law or court order (with notice to discloser where legally permitted)
+
+Which carveouts the team requires, and how strictly, is a playbook question. Check `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` for the team's position on required carveouts, acceptable variations in wording, and what happens when one is missing.
+
+### Residuals
+
+A residuals clause lets the receiving party use information retained in unaided memory. Whether this is acceptable — and under what conditions (e.g., narrow "unaided memory" wording vs. broader scope covering notes or copies) — is a playbook question. Apply `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook doesn't address residuals, ask.
+
+### Term and survival
+
+Check the initial term length, the post-term survival period for confidentiality obligations, and whether trade secrets are carved out with longer protection. Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook doesn't cover one of these, ask.
+
+### Restrictive covenants
+
+Check for non-solicits (employee, customer), non-competes, exclusivity, and any restriction on who else the receiving party can engage with. Apply `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook is silent, ask — restrictive covenants are jurisdiction-sensitive and the team's posture matters.
+
+### Attorneys' fees
+
+Check for fee-shifting provisions and whether they are mutual, one-sided, or prevailing-party. Apply `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`.
+
+### Backup and archival carveout
+
+Check whether the destruction/return clause includes an exception for standard backup and archival retention systems. Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` — some teams require this carveout and will push to add it; others accept an NDA without it. If the playbook doesn't address this, ask.
+
+### Governing law
+
+Per `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Playbook` → `Governing law and venue`.
+
+## Counterparty context
+
+**BigCo NDAs:** Fortune 500 counterparties generally won't negotiate NDAs. Calibrate: is the RED flag truly a deal-breaker, or is it "different from our form"? If the business relationship matters, the call is whether to accept their paper — escalate that decision, don't make it.
+
+**Startup NDAs:** Will usually take our paper. If their NDA has issues, the fastest path is often "let's use ours" rather than redlining theirs.
+
+## Integration: CLM
+
+If connected:
+- GREEN → offer to create the CLM record in the standard NDA workflow
+- YELLOW → offer to create it with a note attached listing the flagged items
+- RED → do not create a record; the lawyer decides what happens next
+
+## What this skill does NOT do
+
+- It does not negotiate. It sorts.
+- It does not draft an NDA. If the answer is "use our paper," the user pulls our form from [CLM or document system].
+- It does not make the call on YELLOW items. It surfaces them for a human.
+- It does not state a position on any NDA term. Positions live in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`.
+
+## Closing action
+
+Read `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## NDA triage preferences` → `closing_action`.
+
+If configured, append the closing action verbatim at the end of every
+output. Example configurations:
 
 ```
-NDA CLAUSE REVIEW — ISSUE LOG
-==============================
-File: vendor_nda.txt
-Perspective: Recipient
-Issues Found: 5 (H:2 M:2 L:1)
+closing_action: "Send the full text of this analysis along with a copy
+of the NDA to Legal at legal@[yourcompany].com for final confirmation before
+signing."
 
- #  Risk  Clause                           Issue
- 1  H     Definition of Confidential Info  Overbroad definition; no marking requirement
-        Preferred: Narrow to marked information with 10-day oral confirmation
-        Fallback:  Add marking requirement for written; 10-day confirmation for oral
-        Rationale: Overbroad definition traps all shared information
-        Owner: legal | Deadline: pre-signing
+closing_action: "Submit to [CLM] using the standard NDA workflow.
+Legal will confirm before routing for signature."
 
- 2  H     Standard Carveouts               Missing independent development carveout
-        Preferred: Add standard independent development exception
-        Fallback:  Add with documentary evidence requirement
-        Rationale: Missing carveout blocks internal R&D
-        Owner: legal | Deadline: pre-signing
+closing_action: "Forward this output and the NDA to your contracts
+manager."
 ```
+
+If `closing_action` is not configured in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`, append:
+"Route final NDA through your standard approval process."
+
+The cold-start interview asks: "When someone finishes an NDA
+triage, what do you want them to do with the output? I'll add that as
+a standing instruction at the end of every review."
+
+## Close with the next-steps decision tree
+
+End with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the options to what this skill just produced — the five default branches (draft the X, escalate, get more facts, watch and wait, something else) are a starting point, not a lock-in. The tree is the output; the lawyer picks.
+

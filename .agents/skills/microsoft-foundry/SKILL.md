@@ -1,238 +1,287 @@
 ---
 name: microsoft-foundry
-description: "Deploy, evaluate, fine-tune, and manage Foundry agents end-to-end: Docker build, ACR push, hosted/prompt agent create, batch eval, continuous eval, prompt optimizer, Agent Optimizer scaffold, agent.yaml, dataset curation from traces, model fine-tuning (SFT/DPO/RFT). USE FOR: deploy agent, hosted agent, create agent, add tool to agent, invoke agent, evaluate agent, continuous eval, continuous monitoring, optimize prompt, improve prompt, optimize agent instructions, agent optimizer, deploy model, Foundry project, RBAC, role assignment, permissions, quota, capacity, region, troubleshoot agent, deployment failure, AI Services, create Foundry resource, provision, knowledge index, customize deployment, onboard, availability, fine-tune, SFT, DPO, RFT, training-data, grader, distillation, fine-tuned model, large file upload. DO NOT USE FOR: Azure Functions, App Service, general Azure deploy (use azure-deploy), general Azure prep (use azure-prepare)."
-license: MIT
+description: Expert knowledge for Microsoft Foundry (aka Azure AI Foundry) development including troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. Use when building Foundry agents with Azure OpenAI, model router patterns, MCP tools, private networking, or eval workflows, and other Microsoft Foundry related development tasks. Not for Microsoft Foundry Classic (use microsoft-foundry-classic), Microsoft Foundry Local (use microsoft-foundry-local), Microsoft Foundry Tools (use microsoft-foundry-tools).
+compatibility: Requires network access. Uses mcp_microsoftdocs:microsoft_docs_fetch or fetch_webpage to retrieve documentation.
 metadata:
-  author: Microsoft
-  version: "1.1.24"
+  generated_at: "2026-05-31"
+  generator: "docs2skills/1.0.0"
 ---
-
 # Microsoft Foundry Skill
 
-This skill helps developers work with Microsoft Foundry resources, covering model discovery and deployment, complete dev lifecycle of AI agent, evaluation workflows, and troubleshooting.
-
-## Pre-Execution Requirements
-
-> **MANDATORY: Before executing ANY workflow, you MUST first call the Azure MCP `foundry` tool and inspect the available Foundry MCP tools and related parameters.** Treat this initial `foundry` call as a discovery/help step. For this skill, Azure MCP `foundry` is the required entry point for Foundry-related MCP operations.
-
-## Sub-Skills
-
-> **MANDATORY: Before executing ANY workflow-specific steps, you MUST read the corresponding sub-skill document.** Do not call workflow-specific MCP tools for a workflow without reading its skill document. This applies even if you already know the MCP tool parameters — the skill document contains required workflow steps, pre-checks, and validation logic that must be followed. This rule applies on every new user message that triggers a different workflow, even if the skill is already loaded.
-
-This skill includes specialized sub-skills for specific workflows. **Use these instead of the main skill when they match your task:**
-
-| Sub-Skill | When to Use | Reference |
-|-----------|-------------|-----------|
-| **deploy** | Containerize, build, push to ACR, create/update/clone agent deployments | [deploy](foundry-agent/deploy/deploy.md) |
-| **invoke** | Send messages to an agent, single or multi-turn conversations | [invoke](foundry-agent/invoke/invoke.md) |
-| **invocations-ws** | Build, deploy, and connect to hosted agents that speak the `invocations_ws` duplex WebSocket protocol — voice agents, real-time streams, and signaling for out-of-band media transports. | [invocations-ws](foundry-agent/invocations-ws/invocations-ws.md) |
-| **observe** | Evaluate agent quality, run batch evals, analyze failures, optimize prompts, improve agent instructions, compare versions, set up CI/CD monitoring, and enable continuous production evaluation | [observe](foundry-agent/observe/observe.md) |
-| **trace** | Query traces, analyze latency/failures, correlate eval results to specific responses via App Insights `customEvents` | [trace](foundry-agent/trace/trace.md) |
-| **troubleshoot** | View hosted agent logs, query telemetry, diagnose failures | [troubleshoot](foundry-agent/troubleshoot/troubleshoot.md) |
-| **create** | Create new hosted agent applications. Supports Microsoft Agent Framework, LangGraph, or custom frameworks in Python or C#, across `responses`, `invocations`, or `invocations_ws` protocols. | [create](foundry-agent/create/create-hosted.md) |
-| **agent-optimizer** | Make existing Python hosted-agent code optimization-ready, configure eval.yaml, run Agent Optimizer jobs, apply candidates locally, and deploy through azd after review. | [agent-optimizer](foundry-agent/agent-optimizer/agent-optimizer.md) |
-| **eval-datasets** | Harvest production traces into evaluation datasets, manage dataset versions and splits, track evaluation metrics over time, detect regressions, and maintain full lineage from trace to deployment. Use for: create dataset from traces, dataset versioning, evaluation trending, regression detection, dataset comparison, eval lineage. | [eval-datasets](foundry-agent/eval-datasets/eval-datasets.md) |
-| **project/create** | Creating a new Azure AI Foundry project for hosting agents and models. Use when onboarding to Foundry or setting up new infrastructure. | [project/create/create-foundry-project.md](project/create/create-foundry-project.md) |
-| **resource/create** | Creating Azure AI Services multi-service resource (Foundry resource) using Azure CLI. Use when manually provisioning AI Services resources with granular control. | [resource/create/create-foundry-resource.md](resource/create/create-foundry-resource.md) |
-| **private-network** | Answer questions about Foundry network isolation **and** deploy Foundry with VNet isolation (BYO VNet, Managed VNet, hybrid). Covers architecture concepts, template selection, deployment, and post-deployment validation. | [resource/private-network/private-network.md](resource/private-network/private-network.md) |
-| **models/deploy-model** | Unified model deployment with intelligent routing. Handles quick preset deployments, fully customized deployments (version/SKU/capacity/RAI), and capacity discovery across regions. Routes to sub-skills: `preset` (quick deploy), `customize` (full control), `capacity` (find availability). | [models/deploy-model/SKILL.md](models/deploy-model/SKILL.md) |
-| **quota** | Managing quotas and capacity for Microsoft Foundry resources. Use when checking quota usage, troubleshooting deployment failures due to insufficient quota, requesting quota increases, or planning capacity. | [quota/quota.md](quota/quota.md) |
-| **rbac** | Managing RBAC permissions, role assignments, managed identities, and service principals for Microsoft Foundry resources. Use for access control, auditing permissions, and CI/CD setup. | [rbac/rbac.md](rbac/rbac.md) |
-| **finetuning** | Fine-tune models on Azure AI Foundry — SFT distillation, DPO preference optimization, RFT with graders and tool calling. Dataset preparation, grader calibration, training, checkpoint selection, deployment, evaluation. Use for: fine-tune, SFT, DPO, RFT, training data, grader, distillation, fine-tuned model, large file upload. | [finetuning/SKILL.md](finetuning/SKILL.md) |
-
-> 💡 **Tip:** For a complete onboarding flow: `project/create` (public) or `private-network` (VNet isolation) → `models/deploy-model` → agent workflows (`create` → `deploy` → `invoke`).
-
-> 💡 **Fine-Tuning:** Use `finetuning` for all model customization — SFT distillation, DPO preference optimization, and RFT with graders. Includes quickstart, grader calibration, and training curve analysis.
-
-> 💡 **Model Deployment:** Use `models/deploy-model` for all deployment scenarios — it intelligently routes between quick preset deployment, customized deployment with full control, and capacity discovery across regions.
-
-> 💡 **Prompt Optimization:** For requests like "optimize my prompt" or "improve my agent instructions," load [observe](foundry-agent/observe/observe.md) and use the `prompt_optimize` MCP tool through that eval-driven workflow.
-
-## Infrastructure Lifecycle
-
-Match user intent to the correct infrastructure workflow.
-
-| User Intent | Workflow |
-|-------------|---------|
-| "Create Foundry" / "Set up Foundry" (ambiguous) | Use `AskUserQuestion`: (a) just an AI Services resource, (b) a project with public access, or (c) a project with network isolation? Route: (a) → [resource/create](resource/create/create-foundry-resource.md), (b) → [project/create](project/create/create-foundry-project.md), (c) → [private-network](resource/private-network/private-network.md) |
-| Set up Foundry with VNet isolation | [private-network](resource/private-network/private-network.md) |
-| Create a Foundry project (public) | [project/create](project/create/create-foundry-project.md) |
-| Create a bare Foundry resource | [resource/create](resource/create/create-foundry-resource.md) |
-
-## Agent Development Lifecycle
-
-Match user intent to the correct agent workflow. Read each sub-skill in order before executing.
-
-| User Intent | Workflow (read in order) |
-|-------------|------------------------|
-| Create a new agent from scratch | [create](foundry-agent/create/create-hosted.md) → [deploy](foundry-agent/deploy/deploy.md) → [invoke](foundry-agent/invoke/invoke.md) |
-| Optimize existing Python hosted agent | [agent-optimizer](foundry-agent/agent-optimizer/agent-optimizer.md) → scaffold/review → eval.yaml → optimize → apply candidate → deploy → invoke |
-| Deploy an agent (code already exists) | deploy (includes eval-suite setup) → invoke → observe (evaluate/optimize) |
-| Update/redeploy an agent after code changes | deploy (includes eval-suite setup) → invoke → observe (evaluate/optimize) |
-| Invoke/test/chat with an agent | invoke |
-| Optimize / improve agent prompt or instructions | observe (Step 4: Optimize) |
-| Evaluate and optimize agent (full loop) | observe |
-| Enable continuous evaluation monitoring | observe (Step 6: CI/CD & Monitoring) |
-| Troubleshoot an agent issue | invoke → troubleshoot |
-| Fix a broken agent (troubleshoot + redeploy) | invoke → troubleshoot → apply fixes → deploy → invoke |
-
-## Agent: .foundry Workspace Standard
-
-Every agent source folder can keep Foundry-specific cache and overlay state under `.foundry/`:
-
-```text
-<agent-root>/
-  .foundry/
-    agent-metadata.yaml
-    agent-metadata.prod.yaml
-    suites/
-    datasets/
-    evaluators/
-    results/
-```
-
-- In azd projects, derive deployment context (project endpoint, agent name/version, ACR, App Insights) from `azure.yaml` plus `azd env get-values`; do not duplicate those values in metadata when azd already provides them.
-- `agent-metadata.yaml` is the preferred local/dev overlay for non-azd values, remote Foundry suite references, local cache paths, result summaries, and explicit overrides. Optional sidecar files such as `agent-metadata.prod.yaml` can hold a single prod or CI-targeted overlay without mixing multiple environments in one file.
-- `suites/`, `datasets/`, and `evaluators/` are local cache folders. Reuse them when they are current, and ask before refreshing or overwriting them.
-- See [Agent Metadata Contract](references/agent-metadata-contract.md) for the canonical schema and workflow rules.
-
-## Agent: Setup References
-
-- [Standard Agent Setup](references/standard-agent-setup.md) - Standard capability-host setup with customer-managed data, search, and AI Services resources.
-
-## Agent: Common Project Context Resolution
-
-Agent skills should run this step **only when they need configuration values they don't already have**. If a value (for example, agent root, environment, project endpoint, or agent name) is already known from the user's message or a previous skill in the same session, skip resolution for that value.
-
-### Step 1: Discover Agent Roots and azd Context
-
-First check whether the workspace has `azure.yaml` with services using `host: azure.ai.agent`.
-
-- **One azd agent service** -> use that service's `project` folder as the agent root.
-- **Multiple azd agent services** -> require the user to choose the target service/folder.
-- **No azd agent service** -> search the workspace for `.foundry/` folders that contain `agent-metadata.yaml` or `agent-metadata.<env>.yaml`.
-  - **One match** -> use that agent root.
-  - **Multiple matches** -> require the user to choose the target agent folder.
-  - **No matches** -> for create/deploy workflows, seed a new `.foundry/` folder during setup; for all other workflows, stop and ask the user which agent source folder to initialize.
-
-After selecting an agent root, keep all local `.foundry` cache inspection, source inspection, evaluator suggestions, dataset suggestions, and prompt-optimization context inside that folder only. Do **not** scan sibling agent folders unless the user explicitly switches roots.
-
-### Step 2: Resolve Environment and Deployment Context
-
-If `azure.yaml` is present, resolve the azd environment first:
-
-1. Environment explicitly named by the user
-2. `AZURE_ENV_NAME` from `azd env get-values`
-3. azd default environment from `.azure/config.json`
-4. Environment already selected earlier in the session
-
-Run `azd env get-values` for the selected environment when project/deployment values are not already known. Prefer azd values for deployment context:
-
-| azd Variable | Resolves To |
-|-------------|-------------|
-| `AZURE_AI_PROJECT_ENDPOINT` or `AZURE_AIPROJECT_ENDPOINT` | Project endpoint |
-| `AGENT_<SERVICE>_NAME` | Agent name for the selected azd service |
-| `AGENT_<SERVICE>_VERSION` | Agent version for the selected azd service |
-| `AZURE_CONTAINER_REGISTRY_NAME` or `AZURE_CONTAINER_REGISTRY_ENDPOINT` | ACR registry name / image URL prefix |
-| `APPLICATIONINSIGHTS_CONNECTION_STRING` | App Insights connection string for trace workflows |
-| `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, `AZURE_AI_ACCOUNT_NAME`, `AZURE_AI_PROJECT_NAME` | Azure resource lookup and Playground links |
-
-When azd supplies these values, use them as the source of truth and do not copy them into `.foundry/agent-metadata*.yaml` on metadata writes.
-
-### Step 3: Select Metadata Overlay and Resolve Environment
-
-Inside the selected agent root, choose the metadata file in this order:
-1. Metadata filename or path explicitly provided by the user or workflow
-2. If an explicit environment is already known and `.foundry/agent-metadata.<env>.yaml` exists, use that file
-3. `.foundry/agent-metadata.yaml`
-4. If multiple metadata files remain and no rule above selects one, prompt the user to choose
-
-Read the selected metadata file and resolve any remaining environment choice in this order:
-1. Environment explicitly named by the user
-2. If the selected metadata file defines exactly one environment, use it
-3. Environment already selected earlier in the session
-4. `defaultEnvironment` from metadata
-
-If the selected metadata file still contains multiple environments and none of the rules above selects one, prompt the user to choose. Keep the selected agent root, metadata file, environment, and whether context came from azd or metadata visible in every workflow summary.
-
-If the selected environment exposes older `testSuites[]` metadata but not `evaluationSuites[]`, treat `testSuites[]` as the source for this session and normalize each entry in memory to the `evaluationSuites[]` shape before continuing. If the metadata is older still and only exposes legacy `testCases[]`, normalize that list the same way. Preserve dataset and evaluator fields, keep any existing `tags`, and map legacy `priority` to `tags.tier` only when `tags.tier` is missing: `P0` -> `smoke`, `P1` -> `regression`, `P2` -> `coverage`.
-
-### Step 4: Resolve eval.yaml Local Evaluation Intent
-
-If `eval.yaml` exists in the selected agent root, parse it before generating new suites:
-
-- `agent.name` -> target agent candidate; verify it matches the selected azd/metadata agent before using it.
-- `dataset_file` -> local seed dataset candidate.
-- `evaluators[]` -> candidate Foundry evaluator names; verify with `evaluator_catalog_get` before treating them as remote evaluators.
-- `name` -> local eval/suite candidate; verify remotely before persisting as `suiteName`.
-- `options.eval_model`, `options.pass_threshold`, `max_samples`, `trace_days`, and `generation_instruction` -> setup defaults.
-
-Treat `eval.yaml` as local evaluation intent, not proof that a Foundry suite exists. Persist synced suite/dataset/evaluator references to `.foundry` only after remote lookup or registration succeeds.
-
-### Step 5: Resolve Common Configuration
-
-Layer sources in this order:
-
-1. Explicit user input and values already selected in the session
-2. azd environment values for deployment context
-3. `.foundry/agent-metadata*.yaml` overlay values and remote suite/cache references
-4. `agent.yaml` and `eval.yaml` local source configuration
-5. User prompts for anything still missing
-
-If azd and metadata both provide the same value and they differ, stop and ask which source is authoritative. If they match, use the azd value and avoid rewriting the duplicate on future metadata writes.
-
-| Effective Value | Preferred Source | Used By |
-|-----------------|------------------|---------|
-| Project endpoint | azd env | deploy, invoke, observe, trace, troubleshoot |
-| Agent name/version | azd agent variables, then `agent.yaml` | invoke, observe, trace, troubleshoot |
-| ACR | azd env | deploy |
-| Evaluation suites and cache paths | `.foundry/agent-metadata*.yaml` | observe, eval-datasets |
-| Local seed dataset/evaluator intent | `eval.yaml` | observe, eval-datasets |
-
-### Step 6: Write Metadata Overlay (Create/Deploy/Observe Only)
-
-On any metadata write (deploy, auto-setup, dataset refresh, or trace-to-dataset update), persist only non-derivable overlay/cache state in the selected metadata file:
-
-- azd binding (`azd.environmentName`, `azd.service`) when useful for future resolution
-- `evaluationSuites[]` with remote suite/dataset/evaluator references and local cache paths
-- `lastEval`, result files, comparison summaries, or explicit non-azd overrides
-
-Do not copy azd-owned deployment values into metadata when azd already provides them. If the selected file is a preferred single-environment file, rewrite only that one environment block. If the selected file is a legacy multi-environment file, rewrite only the selected environment block. Never copy or merge environments across sibling metadata files automatically. If the selected environment still uses older `testSuites[]` or legacy `testCases[]`, rewrite it to `evaluationSuites[]` and remove migrated `priority` fields from the rewritten entries.
-
-### Step 7: Collect Missing Values
-
-Use the `ask_user` or `askQuestions` tool **only for values not resolved** from the user's message, session context, metadata, or azd bootstrap. Common values skills may need:
-- **Agent root** — Target azd service project folder or folder containing `.foundry/agent-metadata*.yaml`
-- **Metadata file** — `agent-metadata.yaml` for local/dev, or an explicit sidecar such as `agent-metadata.prod.yaml`
-- **Environment** — azd environment, `dev`, `prod`, or another environment key from metadata
-- **Project endpoint** — AI Foundry project endpoint URL
-- **Agent name** — Name of the target agent
-
-> 💡 **Tip:** If the user already provides the agent path, environment, project endpoint, or agent name, extract it directly — do not ask again.
-
-## Agent: Agent Types
-
-All agent skills support two agent types:
-
-| Type | Kind | Description |
-|------|------|-------------|
-| **Prompt** | `"prompt"` | LLM-based agents backed by a model deployment |
-| **Hosted** | `"hosted"` | Container-based agents running custom code |
-
-Use `agent_get` MCP tool to determine an agent's type when needed.
-
-## Tool Usage Conventions
-
-- Use the `ask_user` or `askQuestions` tool whenever collecting information from the user
-- Use the `task` or `runSubagent` tool to delegate long-running or independent sub-tasks (e.g., env var scanning, status polling, Dockerfile generation)
-- Prefer Azure MCP tools over direct CLI commands when available
-- Reference official Microsoft documentation URLs instead of embedding CLI command syntax
-
-## Additional Resources
-
-- [Foundry Hosted Agents](https://learn.microsoft.com/azure/ai-foundry/agents/concepts/hosted-agents?view=foundry)
-- [Foundry Agent Runtime Components](https://learn.microsoft.com/azure/ai-foundry/agents/concepts/runtime-components?view=foundry)
-
-## SDK Quick Reference
-
-- [Python](references/sdk/foundry-sdk-py.md)
+This skill provides expert guidance for Microsoft Foundry. Covers troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. It combines local quick-reference content with remote documentation fetching capabilities.
+
+## How to Use This Skill
+
+> **IMPORTANT for Agent**: Use the **Category Index** below to locate relevant sections. For categories with line ranges (e.g., `L35-L120`), use `read_file` with the specified lines. For categories with file links (e.g., `[security.md](security.md)`), use `read_file` on the linked reference file
+
+> **IMPORTANT for Agent**: If `metadata.generated_at` is more than 3 months old, suggest the user pull the latest version from the repository. If `mcp_microsoftdocs` tools are not available, suggest the user install it: [Installation Guide](https://github.com/MicrosoftDocs/mcp/blob/main/README.md)
+
+This skill requires **network access** to fetch documentation content:
+- **Preferred**: Use `mcp_microsoftdocs:microsoft_docs_fetch` with query string `from=learn-agent-skill`. Returns Markdown.
+- **Fallback**: Use `fetch_webpage` with query string `from=learn-agent-skill&accept=text/markdown`. Returns Markdown.
+
+## Category Index
+
+| Category | Lines | Description |
+|----------|-------|-------------|
+| Troubleshooting | L37-L45 | Diagnosing and fixing Foundry issues: partner/community models, agent service recovery, eval/observability errors, Azure OpenAI webhooks, and known bugs/workarounds. |
+| Best Practices | L46-L60 | Best practices for prompts, tools, safety messages, routing, evaluation, and fine-tuning so you can design, operate, and measure high-quality Azure/Foundry AI agents in production |
+| Decision Making | L61-L97 | Guidance for choosing models, deployments, costs, migrations, and integration patterns in Foundry, including lifecycle, retirement, DR, and upgrading from legacy or other platforms. |
+| Architecture & Design Patterns | L98-L105 | Designing Foundry agent architectures: VNet/subnet sizing, isolated resource layouts, high availability patterns, and model router patterns for routing and scaling AI workloads. |
+| Limits & Quotas | L106-L125 | Quotas, rate limits, regions, and cost controls for Foundry agents and models, including sessions, function calls, evals, vector/file search, batch jobs, prompt caching, and Azure OpenAI limits. |
+| Security | L126-L161 | Securing and governing Foundry: auth (Entra, keyless, MCP, Agent2Agent), RBAC and policies, private networking/isolation, guardrails and content safety, data privacy, and compliance integrations. |
+| Configuration | L162-L214 | Configuring Foundry agents, models, and Azure OpenAI: endpoints, tools, skills, memory, security/guardrails, monitoring, tracing, BYO resources, and evaluation workflows. |
+| Integrations & Coding Patterns | L215-L273 | Patterns and code for integrating Foundry agents and models with tools, APIs, LangChain/LangGraph, MCP, Azure/M365 services, fine-tuning, tracing, audio/Realtime, and Responses/REST APIs. |
+| Deployment | L274-L287 | Deploying and operating Foundry agents/models: hosting from code or containers, portal/CLI deployments, migrations, outages, evaluations, red teaming, and custom/fine-tuned model imports. |
+
+### Troubleshooting
+| Topic | URL |
+|-------|-----|
+| Use partner and community models in Foundry | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-from-partners |
+| Recover Foundry Agent Service from resource and data loss | https://learn.microsoft.com/en-us/azure/foundry/how-to/agent-service-operator-disaster-recovery |
+| Troubleshoot Foundry evaluation and observability issues | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/troubleshooting |
+| Set up and troubleshoot Azure OpenAI webhooks | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/webhooks |
+| Known issues and workarounds for Microsoft Foundry services | https://learn.microsoft.com/en-us/azure/foundry/reference/foundry-known-issues |
+
+### Best Practices
+| Topic | URL |
+|-------|-----|
+| Apply tool usage best practices in Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/tool-best-practice |
+| Evaluate Azure AI agents with task-specific metrics | https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators |
+| Evaluate Foundry AI agents with built-in evaluators | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/evaluate-agent |
+| Improve Foundry agent prompts with Prompt Optimizer | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/prompt-optimizer |
+| Design effective system messages for Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/advanced-prompt-engineering |
+| Apply prompt engineering techniques for vision-enabled GPT models | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/gpt-4-v-prompt-engineering |
+| Apply routing modes and best practices for model router | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-router-how-it-works |
+| Apply safety system message templates in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/safety-system-message-templates |
+| Author safety-focused system messages in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/system-message |
+| Fine-tune GPT-4 vision models with images | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/fine-tuning-vision |
+| Operate provisioned throughput deployments in production | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/provisioned-get-started |
+
+### Decision Making
+| Topic | URL |
+|-------|-----|
+| Decide how to migrate to the new Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/migrate |
+| Decide and migrate from legacy Agent Applications to new Foundry model | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/migrate-agent-applications |
+| Use Bing grounding tools with agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/bing-tools |
+| Choose the right web grounding tool for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/web-overview |
+| Plan and manage Microsoft Foundry cost usage | https://learn.microsoft.com/en-us/azure/foundry/concepts/manage-costs |
+| Plan Microsoft Foundry rollout and environment strategy | https://learn.microsoft.com/en-us/azure/foundry/concepts/planning |
+| Optimize Foundry model cost and performance | https://learn.microsoft.com/en-us/azure/foundry/control-plane/how-to-optimize-cost-performance |
+| Choose Foundry deployment types and data residency options | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types |
+| Choose Foundry deployment types in Azure Government | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types-gov |
+| Manage model versioning and upgrade policies in Foundry | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/model-versions |
+| Choose and manage model version policies in Foundry Gov | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/model-versions-gov |
+| Choose region and deployment type for Foundry Models | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability |
+| Upgrade workloads from GitHub Models to Foundry Models | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/quickstart-github-models |
+| Plan disaster recovery for Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/how-to/agent-service-disaster-recovery |
+| Use Foundry model leaderboard for selection | https://learn.microsoft.com/en-us/azure/foundry/how-to/benchmark-model-in-catalog |
+| Select Foundry SDKs and endpoints for scenarios | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/sdk-overview |
+| Interpret and compare Foundry evaluation results | https://learn.microsoft.com/en-us/azure/foundry/how-to/evaluate-results |
+| Enable and choose Fireworks models in Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/fireworks/enable-fireworks-models |
+| Choose integration patterns for Microsoft Foundry APIs | https://learn.microsoft.com/en-us/azure/foundry/how-to/integrate-with-other-apps |
+| Migrate from Azure AI Inference SDK to OpenAI SDK | https://learn.microsoft.com/en-us/azure/foundry/how-to/model-inference-to-openai-migration |
+| Plan migration from classic to current Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/navigate-from-classic |
+| Decide when to upgrade Azure OpenAI to Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/upgrade-azure-openai |
+| Use Ask AI to upgrade or switch models | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/optimization-model-upgrade |
+| Choose content streaming and filtering modes in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/content-streaming |
+| Use Foundry model retirement schedule for migrations | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirement-schedule |
+| Use the Foundry Gov model retirement schedule for migration | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirement-schedule-gov |
+| Plan around Foundry model lifecycle and support | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirements |
+| Plan around Foundry model lifecycle and retirements in Gov | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/model-retirements-gov |
+| Plan and size provisioned throughput in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput |
+| Choose PTU billing mode and manage costs | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput-billing |
+| Identify retired Foundry models and alternatives | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/retired-models |
+| Estimate and manage fine-tuning costs in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/fine-tuning-cost-management |
+| Migrate from preview to GA Realtime API | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/realtime-audio-preview-api-migration-guide |
+
+### Architecture & Design Patterns
+| Topic | URL |
+|-------|-----|
+| Design networking and subnet sizing for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agents-networking-deep-dive |
+| Plan standard agent setup with isolated resources | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/standard-agent-setup |
+| Design high availability for Microsoft Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/how-to/high-availability-resiliency |
+| Apply model router patterns with Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/model-router-agents |
+
+### Limits & Quotas
+| Topic | URL |
+|-------|-----|
+| Quotas, limits, and regions for Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/limits-quotas-regions |
+| Use vector stores and file search limits in agents | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/vector-stores |
+| Manage hosted agents and lifecycle behavior in Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/manage-hosted-agent |
+| Manage hosted agent sessions and time-based limits | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/manage-hosted-sessions |
+| Use function calling and run time limits in Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/function-calling |
+| Understand Foundry evaluation limits and regions | https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-regions-limits-virtual-network |
+| Configure token rate limits and quotas for Foundry models | https://learn.microsoft.com/en-us/azure/foundry/control-plane/how-to-enforce-limits-models |
+| Generate synthetic training data in Foundry (Preview) | https://learn.microsoft.com/en-us/azure/foundry/fine-tuning/data-generation |
+| Reference quotas and limits for Foundry Models | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/quotas-limits |
+| Use Azure OpenAI global batch processing and quotas | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/batch |
+| Use prompt caching to reduce Azure OpenAI costs | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/prompt-caching |
+| Calculate PTU sizing using per-model throughput | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/provisioned-throughput-sizing |
+| Manage Azure OpenAI quota and rate limits in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/quota |
+| Use reinforcement fine-tuning with cost safeguards | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/reinforcement-fine-tuning |
+| Azure OpenAI quotas and limits in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/quotas-limits |
+| Reference quotas and limits for Azure OpenAI in Azure Government | https://learn.microsoft.com/en-us/azure/foundry/openai/quotas-limits-gov |
+
+### Security
+| Topic | URL |
+|-------|-----|
+| Configure Microsoft Agent 365 integration for Foundry agent governance | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-365-integration |
+| Configure and govern agent identities in Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-identity |
+| Configure authentication methods for Agent2Agent tools | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/agent-to-agent-authentication |
+| Reference hosted agent permissions and RBAC in Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/hosted-agent-permissions |
+| Configure environment and RBAC for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/environment-setup |
+| Govern and manage Foundry agents with Agent 365 | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/agent-365 |
+| Publish Foundry agents as secure Azure resources | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/agent-applications |
+| Configure Agent 365 data collection for Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/configure-agent-365-data-collection |
+| Control and disable Grounding with Bing access | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/manage-grounding-with-bing |
+| Configure authentication for MCP servers in Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/mcp-authentication |
+| Configure computer use tool securely for agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/computer-use |
+| Govern MCP tools via AI gateway and API Management | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/governance |
+| Configure private networking for Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/virtual-networks |
+| Configure authentication and authorization in Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/concepts/authentication-authorization-foundry |
+| Configure customer-managed keys for Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/concepts/encryption-keys-portal |
+| Use RBAC roles and scopes in Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry |
+| Govern Foundry agent infrastructure as Entra admin | https://learn.microsoft.com/en-us/azure/foundry/control-plane/govern-agent-infrastructure-entra-admin |
+| Manage Foundry compliance and security integrations | https://learn.microsoft.com/en-us/azure/foundry/control-plane/how-to-manage-compliance-security |
+| Create and apply Foundry guardrail policies | https://learn.microsoft.com/en-us/azure/foundry/control-plane/quickstart-create-guardrail-policy |
+| Configure keyless Entra ID authentication for Foundry Models | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/configure-entra-id |
+| Configure private link network isolation for Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/configure-private-link |
+| Create custom Azure Policy rules for Foundry resources | https://learn.microsoft.com/en-us/azure/foundry/how-to/custom-policy-definition |
+| Apply Azure AI Content Safety in LangChain agents | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/langchain-middleware |
+| Disable preview features in Microsoft Foundry using tags and RBAC | https://learn.microsoft.com/en-us/azure/foundry/how-to/disable-preview-features |
+| Secure Foundry with managed virtual network isolation | https://learn.microsoft.com/en-us/azure/foundry/how-to/managed-virtual-network |
+| Use built-in Azure Policy to govern Foundry model deployments | https://learn.microsoft.com/en-us/azure/foundry/how-to/model-deployment-policy |
+| Secure Foundry MCP Server with RBAC and policies | https://learn.microsoft.com/en-us/azure/foundry/mcp/security-best-practices |
+| Understand default guardrail safety policies in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/default-safety-policies |
+| Apply safety evaluation to fine-tuned models | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/fine-tuning-safety-evaluation |
+| Understand data privacy and security in Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/agents/data-privacy-security |
+| Understand data privacy and security for Claude in Foundry | https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/claude-models/data-privacy |
+| Understand data privacy and security for Foundry Models | https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy |
+
+### Configuration
+| Topic | URL |
+|-------|-----|
+| Configure capability hosts for Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/capability-hosts |
+| Configure and publish Microsoft Foundry agent endpoints | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/configure-agent |
+| Configure and manage memory in Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/memory-usage |
+| Configure a private tool catalog for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/private-tool-catalog |
+| Configure structured inputs to customize agent behavior | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/structured-inputs |
+| Configure custom MCP-based code interpreter for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/custom-code-interpreter |
+| Manage and configure skills for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/skills |
+| Configure toolbox integrations for Foundry hosted agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/toolbox |
+| Configure and use web search tool in Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/web-search |
+| Configure Foundry agents to use existing Azure resources | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/use-your-own-resources |
+| Use built-in evaluators in Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/concepts/built-in-evaluators |
+| Configure AI Gateway token limits and quotas | https://learn.microsoft.com/en-us/azure/foundry/configuration/enable-ai-api-management-gateway-portal |
+| Register and configure custom agents in Foundry | https://learn.microsoft.com/en-us/azure/foundry/control-plane/register-custom-agent |
+| Use Foundry Models endpoints and authentication correctly | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/endpoints |
+| Configure Claude Code CLI and VS Code for Foundry | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/configure-claude-code |
+| Configure Claude Desktop to use Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/configure-claude-desktop |
+| Generate text with Foundry Models using the Responses API | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/generate-responses |
+| Configure Azure Monitor for Foundry model deployments | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/monitor-models |
+| Configure guardrails and controls in Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/guardrails/how-to-create-guardrails |
+| Configure Foundry managed network access to on-premises | https://learn.microsoft.com/en-us/azure/foundry/how-to/access-on-premises-resources |
+| Configure bring-your-own storage for Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/bring-your-own-azure-storage-foundry |
+| Set up BYOS for Speech and Language in Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/bring-your-own-azure-storage-speech-language-services |
+| Run model and agent evaluations in Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/evaluate-generative-ai-app |
+| Connect VS Code to Foundry MCP Server | https://learn.microsoft.com/en-us/azure/foundry/mcp/get-started |
+| Configure Agent Monitoring Dashboard for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/how-to-monitor-agents-dashboard |
+| Configure human evaluation workflows for agents | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/human-evaluation |
+| Configure tracing for LangChain and other AI agent frameworks | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/trace-agent-framework |
+| Configure tracing for Microsoft Foundry AI agents | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/trace-agent-setup |
+| Configure and use Azure OpenAI v1 API in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/api-version-lifecycle |
+| Configure Prompt Shields for Foundry model security | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/content-filter-prompt-shields |
+| Configure priority processing for Foundry model deployments | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/priority-processing |
+| Automate Azure OpenAI deployments and TPM quota settings | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/automate-quota-deployments |
+| Call chat completion models with Azure OpenAI in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt |
+| Configure Azure OpenAI image generation models | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/dall-e |
+| Configure DPO fine-tuning for Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/fine-tuning-direct-preference-optimization |
+| Call vision-enabled chat models with Azure OpenAI in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/gpt-with-vision |
+| Configure and use Foundry OpenAI model router | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/model-router |
+| Configure spillover traffic for provisioned deployments | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/spillover-traffic-management |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Azure OpenAI v1 REST API parameters in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/latest |
+| Monitor Azure OpenAI Foundry with Azure Monitor | https://learn.microsoft.com/en-us/azure/foundry/openai/monitor-openai-reference |
+| Configure Azure OpenAI Realtime API events in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/realtime-audio-reference |
+
+### Integrations & Coding Patterns
+| Topic | URL |
+|-------|-----|
+| Use agents, conversations, and responses in Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/runtime-components |
+| Integrate external AI gateways with Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/ai-gateway |
+| Enable Agent2Agent endpoints for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/enable-agent-to-agent-endpoint |
+| Connect Foundry agents to Foundry IQ knowledge bases | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/foundry-iq-connect |
+| Connect Foundry agents to external A2A agent endpoints | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/agent-to-agent |
+| Connect Azure AI Search indexes to agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/ai-search |
+| Integrate Azure Speech MCP tool with Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/azure-ai-speech |
+| Integrate Azure Functions as tools for agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/azure-functions |
+| Configure browser automation tool for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/browser-automation |
+| Enable Code Interpreter tool for agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/code-interpreter |
+| Connect Microsoft Fabric data agent to Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric |
+| Integrate Foundry agents with Fabric IQ data | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/fabric-iq |
+| Integrate file search tool with Microsoft Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/file-search |
+| Use image generation tool in Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/image-generation |
+| Integrate Foundry agents with Model Context Protocol servers | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol |
+| Connect OpenAPI tools to Microsoft Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/openapi |
+| Integrate Foundry agents with SharePoint content | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/sharepoint |
+| Connect Foundry agents to Microsoft 365 via Work IQ | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/work-iq |
+| Run fine-tuning jobs with azd extension | https://learn.microsoft.com/en-us/azure/foundry/fine-tuning/fine-tune-cli |
+| Deploy and call Claude models in Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-claude |
+| Deploy and call DeepSeek-R1 in Foundry Models | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/tutorials/get-started-deepseek-r1 |
+| Integrate LangChain and LangGraph with Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/langchain |
+| Build LangGraph agents with Foundry Agent Service | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/langchain-agents |
+| Host LangGraph agents on Foundry hosted agent service | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/langchain-hosted-agents |
+| Add Foundry long-term memory to LangChain apps | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/langchain-memory |
+| Call Foundry models using LangChain integrations | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/langchain-models |
+| Trace LangChain apps with Foundry and Azure Monitor | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/langchain-traces |
+| Run AI Red Teaming Agent scans locally | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/run-scans-ai-red-teaming-agent |
+| Integrate Azure Key Vault with Microsoft Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/set-up-key-vault-connection |
+| Use Foundry MCP Server tools and prompts | https://learn.microsoft.com/en-us/azure/foundry/mcp/available-tools |
+| Build and register custom MCP servers for Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/mcp/build-your-own-mcp-server |
+| Add OpenTelemetry client-side tracing to Foundry agents | https://learn.microsoft.com/en-us/azure/foundry/observability/how-to/trace-agent-client-side |
+| Call Azure OpenAI audio models via API | https://learn.microsoft.com/en-us/azure/foundry/openai/audio-completions-quickstart |
+| Authoring preview REST APIs for Azure OpenAI Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/authoring-reference-preview |
+| Use groundedness detection with Foundry OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/content-filter-groundedness |
+| Configure and use Codex CLI with Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/codex |
+| Call o3-deep-research via Azure OpenAI Responses API | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/deep-research |
+| Fine-tune Foundry models via SDK and REST | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/fine-tuning |
+| Fine-tune tool calling behavior in Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/fine-tuning-functions |
+| Implement function calling with Azure OpenAI in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/function-calling |
+| Configure JSON mode responses for Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/json-mode |
+| Optimize latency with predicted outputs in Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/predicted-outputs |
+| Implement GPT Realtime audio with Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/realtime-audio |
+| Use GPT Realtime API over SIP | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/realtime-audio-sip |
+| Use GPT Realtime API over WebRTC | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/realtime-audio-webrtc |
+| Use GPT Realtime API over WebSockets | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/realtime-audio-websockets |
+| Call Azure OpenAI Responses API with Python and REST | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/responses |
+| Call Foundry models via Responses API and routing | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/responses-model-routing |
+| Use structured outputs and JSON schema with Azure OpenAI | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/structured-outputs |
+| Enable and configure web search tool in Responses API | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/web-search |
+| Use WebSocket mode with Azure OpenAI Responses API | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/websockets |
+| Use Azure OpenAI Foundry REST inference APIs | https://learn.microsoft.com/en-us/azure/foundry/openai/reference |
+| Use Azure OpenAI Foundry preview REST APIs | https://learn.microsoft.com/en-us/azure/foundry/openai/reference-preview |
+| Call Azure OpenAI Foundry v1 preview REST APIs | https://learn.microsoft.com/en-us/azure/foundry/openai/reference-preview-latest |
+| Use Azure OpenAI Whisper for speech to text | https://learn.microsoft.com/en-us/azure/foundry/openai/whisper-quickstart |
+
+### Deployment
+| Topic | URL |
+|-------|-----|
+| Deploy Foundry hosted agents from source code | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/deploy-hosted-agent-code |
+| Migrate hosted agents to the refreshed Foundry preview | https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/migrate-hosted-agent-preview |
+| Deploy containerized hosted agents to Foundry | https://learn.microsoft.com/en-us/azure/foundry/agents/quickstarts/quickstart-hosted-agent |
+| Deploy Foundry Models using Azure CLI and Bicep templates | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/create-model-deployments |
+| Deploy Foundry Models via Foundry portal for inference | https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/deploy-foundry-models |
+| Recover Foundry Agent Service from regional platform outages | https://learn.microsoft.com/en-us/azure/foundry/how-to/agent-service-platform-disaster-recovery |
+| Run AI Red Teaming Agent scans in the cloud | https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/run-ai-red-teaming-cloud |
+| Run Foundry evaluations in Azure DevOps | https://learn.microsoft.com/en-us/azure/foundry/how-to/evaluation-azure-devops |
+| Run Foundry evaluations in GitHub Actions | https://learn.microsoft.com/en-us/azure/foundry/how-to/evaluation-github-action |
+| Import and deploy custom Fireworks models in Foundry | https://learn.microsoft.com/en-us/azure/foundry/how-to/fireworks/import-custom-models |
+| Deploy fine-tuned Azure OpenAI models in Foundry | https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/fine-tuning-deploy |

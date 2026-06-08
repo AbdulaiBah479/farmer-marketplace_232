@@ -1,376 +1,378 @@
 ---
 name: error-handling
-description: Patterns for robust error handling across TypeScript, Python, and Go. Covers typed errors, error boundaries, retries, circuit breakers, and user-facing error messages.
-origin: ECC
+description: Structured error classes and API error responses for this project. Custom ApiError hierarchy with HTTP status codes, withErrorHandling middleware, Zod validation handling, Convex error pattern detection. Triggers on "ApiError", "error handling", "try catch", "throw", "BadRequestError", "NotFoundError", "UnauthorizedError".
 ---
 
-# Error Handling Patterns
+# Error Handling
 
-Consistent, robust error handling patterns for production applications.
+Custom error class hierarchy with HTTP status codes for API routes. Middleware wraps handlers, detects error types, logs structured JSON, returns API envelope format.
 
-## When to Activate
+## Error Class Hierarchy
 
-- Designing error types or exception hierarchies for a new module or service
-- Adding retry logic or circuit breakers for unreliable external dependencies
-- Reviewing API endpoints for missing error handling
-- Implementing user-facing error messages and feedback
-- Debugging cascading failures or silent error swallowing
-
-## Core Principles
-
-1. **Fail fast and loudly** — surface errors at the boundary where they occur; don't bury them
-2. **Typed errors over string messages** — errors are first-class values with structure
-3. **User messages ≠ developer messages** — show friendly text to users, log full context server-side
-4. **Never swallow errors silently** — every `catch` block must either handle, re-throw, or log
-5. **Errors are part of your API contract** — document every error code a client may receive
-
-## TypeScript / JavaScript
-
-### Typed Error Classes
+Base ApiError with statusCode + code + message:
 
 ```typescript
-// Define an error hierarchy for your domain
-export class AppError extends Error {
+// From apps/web/src/lib/api/errors.ts
+export class ApiError extends Error {
   constructor(
+    public statusCode: number,
     message: string,
-    public readonly code: string,
-    public readonly statusCode: number = 500,
-    public readonly details?: unknown,
+    public code: string,
   ) {
-    super(message)
-    this.name = this.constructor.name
-    // Maintain correct prototype chain in transpiled ES5 JavaScript.
-    // Required for `instanceof` checks (e.g., `error instanceof NotFoundError`)
-    // to work correctly when extending the built-in Error class.
-    Object.setPrototypeOf(this, new.target.prototype)
-  }
-}
-
-export class NotFoundError extends AppError {
-  constructor(resource: string, id: string) {
-    super(`${resource} not found: ${id}`, 'NOT_FOUND', 404)
-  }
-}
-
-export class ValidationError extends AppError {
-  constructor(message: string, details: { field: string; message: string }[]) {
-    super(message, 'VALIDATION_ERROR', 422, details)
-  }
-}
-
-export class UnauthorizedError extends AppError {
-  constructor(reason = 'Authentication required') {
-    super(reason, 'UNAUTHORIZED', 401)
-  }
-}
-
-export class RateLimitError extends AppError {
-  constructor(public readonly retryAfterMs: number) {
-    super('Rate limit exceeded', 'RATE_LIMITED', 429)
+    super(message);
+    this.name = "ApiError";
   }
 }
 ```
 
-### Result Pattern (no-throw style)
-
-For operations where failure is expected and common (parsing, external calls):
+Specialized subclasses:
 
 ```typescript
-type Result<T, E = AppError> =
-  | { ok: true; value: T }
-  | { ok: false; error: E }
-
-function ok<T>(value: T): Result<T> {
-  return { ok: true, value }
-}
-
-function err<E>(error: E): Result<never, E> {
-  return { ok: false, error }
-}
-
-// Usage
-async function fetchUser(id: string): Promise<Result<User>> {
-  try {
-    const user = await db.users.findUnique({ where: { id } })
-    if (!user) return err(new NotFoundError('User', id))
-    return ok(user)
-  } catch (e) {
-    return err(new AppError('Database error', 'DB_ERROR'))
+export class BadRequestError extends ApiError {
+  constructor(message: string) {
+    super(400, message, "BAD_REQUEST");
   }
 }
 
-const result = await fetchUser('abc-123')
-if (!result.ok) {
-  // TypeScript knows result.error here
-  logger.error('Failed to fetch user', { error: result.error })
-  return
+export class UnauthorizedError extends ApiError {
+  constructor(message = "Authentication required") {
+    super(401, message, "UNAUTHORIZED");
+  }
 }
-// TypeScript knows result.value here
-console.log(result.value.email)
+
+export class ForbiddenError extends ApiError {
+  constructor(message = "Access denied") {
+    super(403, message, "FORBIDDEN");
+  }
+}
+
+export class NotFoundError extends ApiError {
+  constructor(entity: string, id?: string) {
+    super(404, `${entity} not found${id ? `: ${id}` : ""}`, "NOT_FOUND");
+  }
+}
+
+export class ConflictError extends ApiError {
+  constructor(message: string) {
+    super(409, message, "CONFLICT");
+  }
+}
+
+export class InternalServerError extends ApiError {
+  constructor(message = "Internal server error") {
+    super(500, message, "INTERNAL_ERROR");
+  }
+}
 ```
 
-### API Error Handler (Next.js / Express)
+## Throwing Errors in API Routes
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
+// NotFoundError with entity name + optional ID
+if (!user) {
+  throw new NotFoundError("User", userId);
+}
+// Returns: "User not found: 123" with 404 status
 
-function handleApiError(error: unknown): NextResponse {
-  // Known application error
-  if (error instanceof AppError) {
-    return NextResponse.json(
-      {
-        error: {
-          code: error.code,
-          message: error.message,
-          ...(error.details ? { details: error.details } : {}),
-        },
-      },
-      { status: error.statusCode },
-    )
-  }
+// BadRequestError for validation
+if (!args.conversationId) {
+  throw new BadRequestError("conversationId is required");
+}
 
-  // Zod validation error
-  if (error instanceof z.ZodError) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Request validation failed',
-          details: error.issues.map(i => ({
-            field: i.path.join('.'),
-            message: i.message,
-          })),
-        },
-      },
-      { status: 422 },
-    )
-  }
+// UnauthorizedError (uses default message)
+if (!userId) {
+  throw new UnauthorizedError();
+}
+// Returns: "Authentication required" with 401 status
+```
 
-  // Unexpected error — log details, return generic message
-  console.error('Unexpected error:', error)
+## withErrorHandling Middleware
+
+Wrap all API route handlers with `withErrorHandling`:
+
+```typescript
+// From apps/web/src/lib/api/middleware/errors.ts
+import { withErrorHandling } from "@/lib/api/middleware/errors";
+
+export const GET = withErrorHandling(async (req: NextRequest) => {
+  // Your handler logic
+  const data = await fetchData();
+  return NextResponse.json(formatEntity(data, "user"));
+});
+```
+
+Middleware handles 4 error types:
+
+### 1. ApiError (Custom Classes)
+
+```typescript
+if (error instanceof ApiError) {
+  logger.warn(
+    { error: error.message, code: error.code, url: req.url },
+    "API error",
+  );
   return NextResponse.json(
-    { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
-    { status: 500 },
-  )
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    // ... handler logic
-  } catch (error) {
-    return handleApiError(error)
-  }
+    formatErrorEntity({
+      message: error.message,
+      code: error.code,
+    }),
+    { status: error.statusCode },
+  );
 }
 ```
 
-### React Error Boundary
+### 2. Zod Validation Errors
 
 ```typescript
-import { Component, ErrorInfo, ReactNode } from 'react'
-
-interface Props {
-  fallback: ReactNode
-  onError?: (error: Error, info: ErrorInfo) => void
-  children: ReactNode
-}
-
-interface State {
-  hasError: boolean
-  error: Error | null
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null }
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    this.props.onError?.(error, info)
-    console.error('Unhandled React error:', error, info)
-  }
-
-  render() {
-    if (this.state.hasError) return this.props.fallback
-    return this.props.children
-  }
-}
-
-// Usage
-<ErrorBoundary fallback={<p>Something went wrong. Please refresh.</p>}>
-  <MyComponent />
-</ErrorBoundary>
-```
-
-## Python
-
-### Custom Exception Hierarchy
-
-```python
-class AppError(Exception):
-    """Base application error."""
-    def __init__(self, message: str, code: str, status_code: int = 500):
-        super().__init__(message)
-        self.code = code
-        self.status_code = status_code
-
-class NotFoundError(AppError):
-    def __init__(self, resource: str, id: str):
-        super().__init__(f"{resource} not found: {id}", "NOT_FOUND", 404)
-
-class ValidationError(AppError):
-    def __init__(self, message: str, details: list[dict] | None = None):
-        super().__init__(message, "VALIDATION_ERROR", 422)
-        self.details = details or []
-```
-
-### FastAPI Global Exception Handler
-
-```python
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-
-app = FastAPI()
-
-@app.exception_handler(AppError)
-async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": {"code": exc.code, "message": str(exc)}},
-    )
-
-@app.exception_handler(Exception)
-async def generic_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    # Log full details, return generic message
-    logger.exception("Unexpected error", exc_info=exc)
-    return JSONResponse(
-        status_code=500,
-        content={"error": {"code": "INTERNAL_ERROR", "message": "An unexpected error occurred"}},
-    )
-```
-
-## Go
-
-### Sentinel Errors and Error Wrapping
-
-```go
-package domain
-
-import "errors"
-
-// Sentinel errors for type-checking
-var (
-    ErrNotFound    = errors.New("not found")
-    ErrUnauthorized = errors.New("unauthorized")
-    ErrConflict     = errors.New("conflict")
-)
-
-// Wrap errors with context — never lose the original
-func (r *UserRepository) FindByID(ctx context.Context, id string) (*User, error) {
-    user, err := r.db.QueryRow(ctx, "SELECT * FROM users WHERE id = $1", id)
-    if errors.Is(err, sql.ErrNoRows) {
-        return nil, fmt.Errorf("user %s: %w", id, ErrNotFound)
-    }
-    if err != nil {
-        return nil, fmt.Errorf("querying user %s: %w", id, err)
-    }
-    return user, nil
-}
-
-// At the handler level, unwrap to determine response
-func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
-    user, err := h.service.GetUser(r.Context(), chi.URLParam(r, "id"))
-    if err != nil {
-        switch {
-        case errors.Is(err, domain.ErrNotFound):
-            writeError(w, http.StatusNotFound, "not_found", err.Error())
-        case errors.Is(err, domain.ErrUnauthorized):
-            writeError(w, http.StatusForbidden, "forbidden", "Access denied")
-        default:
-            slog.Error("unexpected error", "err", err)
-            writeError(w, http.StatusInternalServerError, "internal_error", "An unexpected error occurred")
-        }
-        return
-    }
-    writeJSON(w, http.StatusOK, user)
+if (error instanceof z.ZodError) {
+  logger.warn({ issues: error.issues, url: req.url }, "Validation error");
+  return NextResponse.json(
+    formatErrorEntity({
+      message: "Validation failed",
+      code: "VALIDATION_ERROR",
+      details: error.issues,
+    }),
+    { status: 400 },
+  );
 }
 ```
 
-## Retry with Exponential Backoff
+### 3. Convex Error Pattern Detection
+
+Convex throws Error with text patterns. Parse message string:
 
 ```typescript
-interface RetryOptions {
-  maxAttempts?: number
-  baseDelayMs?: number
-  maxDelayMs?: number
-  retryIf?: (error: unknown) => boolean
-}
+if (error instanceof Error) {
+  const message = error.message;
 
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions = {},
+  // Not found pattern
+  if (message.includes("not found")) {
+    logger.warn({ error: message, url: req.url }, "Resource not found");
+    return NextResponse.json(formatErrorEntity("Resource not found"), {
+      status: 404,
+    });
+  }
+
+  // Unauthorized pattern
+  if (
+    message.includes("unauthorized") ||
+    message.includes("permission")
+  ) {
+    logger.warn({ error: message, url: req.url }, "Unauthorized");
+    return NextResponse.json(formatErrorEntity("Access denied"), {
+      status: 403,
+    });
+  }
+}
+```
+
+### 4. Unhandled Errors
+
+```typescript
+// Catch-all for unexpected errors
+logger.error(
+  {
+    error: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+    url: req.url,
+  },
+  "Unhandled error",
+);
+
+return NextResponse.json(formatErrorEntity("Internal server error"), {
+  status: 500,
+});
+```
+
+## Convex Error Handling
+
+Convex functions throw errors directly (no status codes):
+
+```typescript
+// In Convex queries/mutations
+export const getUser = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  },
+});
+```
+
+API middleware detects "not found" in message, returns 404.
+
+## Custom Error Classes for Domain Logic
+
+Create custom errors for specific scenarios:
+
+```typescript
+// From packages/backend/convex/lib/budgetTracker.ts
+export class TimeoutError extends Error {
+  constructor(
+    public readonly operation: string,
+    public readonly timeoutMs: number,
+  ) {
+    super(`${operation} timed out after ${timeoutMs}ms`);
+    this.name = "TimeoutError";
+  }
+}
+```
+
+Use in async operations:
+
+```typescript
+export async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operation: string,
 ): Promise<T> {
-  const {
-    maxAttempts = 3,
-    baseDelayMs = 500,
-    maxDelayMs = 10_000,
-    retryIf = () => true,
-  } = options
+  let timeoutId: ReturnType<typeof setTimeout>;
 
-  let lastError: unknown
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new TimeoutError(operation, timeoutMs));
+    }, timeoutMs);
+  });
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await fn()
-    } catch (error) {
-      lastError = error
-      if (attempt === maxAttempts || !retryIf(error)) throw error
-
-      const jitter = Math.random() * baseDelayMs
-      const delay = Math.min(baseDelayMs * 2 ** (attempt - 1) + jitter, maxDelayMs)
-      await new Promise(resolve => setTimeout(resolve, delay))
-    }
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId!);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId!);
+    throw error;
   }
-
-  throw lastError
 }
-
-// Usage: retry transient network errors, not 4xx
-const data = await withRetry(() => fetch('/api/data').then(r => r.json()), {
-  maxAttempts: 3,
-  retryIf: (error) => !(error instanceof AppError && error.statusCode < 500),
-})
 ```
 
-## User-Facing Error Messages
+## Logging Conventions
 
-Map error codes to human-readable messages. Keep technical details out of user-visible text.
+Always use structured Pino logging:
 
 ```typescript
-const USER_ERROR_MESSAGES: Record<string, string> = {
-  NOT_FOUND: 'The requested item could not be found.',
-  UNAUTHORIZED: 'Please sign in to continue.',
-  FORBIDDEN: "You don't have permission to do that.",
-  VALIDATION_ERROR: 'Please check your input and try again.',
-  RATE_LIMITED: 'Too many requests. Please wait a moment and try again.',
-  INTERNAL_ERROR: 'Something went wrong on our end. Please try again later.',
-}
+import logger from "@/lib/logger";
 
-export function getUserMessage(code: string): string {
-  return USER_ERROR_MESSAGES[code] ?? USER_ERROR_MESSAGES.INTERNAL_ERROR
+// Warn level for expected errors (4xx)
+logger.warn({ error: message, code, url }, "API error");
+
+// Error level for unexpected errors (5xx)
+logger.error({ error: message, stack, url }, "Unhandled error");
+```
+
+Log fields:
+- `error`: Error message (string)
+- `code`: Error code (e.g., "NOT_FOUND")
+- `stack`: Stack trace (for 5xx errors)
+- `url`: Request URL
+- `issues`: Zod validation issues array
+
+## API Response Format
+
+All errors return envelope format via `formatErrorEntity`:
+
+```typescript
+// Single error
+formatErrorEntity("User not found")
+// Returns:
+// {
+//   status: "error",
+//   sys: { entity: "error" },
+//   error: "User not found"
+// }
+
+// Error with code and details
+formatErrorEntity({
+  message: "Validation failed",
+  code: "VALIDATION_ERROR",
+  details: zodError.issues,
+})
+// Returns:
+// {
+//   status: "error",
+//   sys: { entity: "error" },
+//   error: {
+//     message: "Validation failed",
+//     code: "VALIDATION_ERROR",
+//     details: [...]
+//   }
+// }
+```
+
+## Key Files
+
+- `apps/web/src/lib/api/errors.ts` - Error class definitions
+- `apps/web/src/lib/api/middleware/errors.ts` - withErrorHandling middleware
+- `apps/web/src/lib/utils/formatEntity.ts` - formatErrorEntity helper
+- `apps/web/src/lib/logger.ts` - Pino structured logger
+- `packages/backend/convex/lib/budgetTracker.ts` - TimeoutError example
+
+## Error Handling Patterns
+
+### API Route Pattern
+
+```typescript
+import { withErrorHandling } from "@/lib/api/middleware/errors";
+import { BadRequestError, NotFoundError } from "@/lib/api/errors";
+import { formatEntity } from "@/lib/utils/formatEntity";
+
+export const GET = withErrorHandling(async (req: NextRequest) => {
+  const userId = req.nextUrl.searchParams.get("userId");
+  if (!userId) {
+    throw new BadRequestError("userId is required");
+  }
+
+  const user = await getUser(userId);
+  if (!user) {
+    throw new NotFoundError("User", userId);
+  }
+
+  return NextResponse.json(formatEntity(user, "user"));
+});
+```
+
+### Convex Query Pattern
+
+```typescript
+export const getUser = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    // Throws Error (no status codes in Convex)
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  },
+});
+```
+
+### Timeout Wrapper Pattern
+
+```typescript
+try {
+  const result = await withTimeout(
+    expensiveOperation(),
+    30000,
+    "expensiveOperation",
+  );
+} catch (error) {
+  if (error instanceof TimeoutError) {
+    logger.warn({ operation: error.operation, timeout: error.timeoutMs });
+    throw new InternalServerError("Operation timed out");
+  }
+  throw error;
 }
 ```
 
-## Error Handling Checklist
+## Avoid
 
-Before merging any code that touches error handling:
-
-- [ ] Every `catch` block handles, re-throws, or logs — no silent swallowing
-- [ ] API errors follow the standard envelope `{ error: { code, message } }`
-- [ ] User-facing messages contain no stack traces or internal details
-- [ ] Full error context is logged server-side
-- [ ] Custom error classes extend a base `AppError` with a `code` field
-- [ ] Async functions surface errors to callers — no fire-and-forget without fallback
-- [ ] Retry logic only retries retriable errors (not 4xx client errors)
-- [ ] React components are wrapped in `ErrorBoundary` for rendering errors
+- Don't throw raw Error in API routes - use ApiError subclasses
+- Don't return error responses directly - let middleware handle it
+- Don't use console.log - use structured logger
+- Don't forget to wrap API handlers with withErrorHandling
+- Don't check error.message string in API routes - use instanceof
+- Don't include stack traces in production error responses (middleware strips them)
+- Don't use HTTP status codes in Convex functions (throw Error only)

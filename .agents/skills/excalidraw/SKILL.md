@@ -1,199 +1,221 @@
 ---
 name: excalidraw
-description: "Hand-drawn Excalidraw JSON diagrams (arch, flow, seq)."
-version: 1.0.0
-author: Hermes Agent
-license: MIT
-dependencies: []
-platforms: [linux, macos, windows]
-metadata:
-  hermes:
-    tags: [Excalidraw, Diagrams, Flowcharts, Architecture, Visualization, JSON]
-    related_skills: []
-
+description: "Use when working with *.excalidraw or *.excalidraw.json files, user mentions diagrams/flowcharts, or requests architecture visualization - delegates all Excalidraw operations to subagents to prevent context exhaustion from verbose JSON (single files: 4k-22k tokens, can exceed read limits)"
 ---
 
-# Excalidraw Diagram Skill
+# Excalidraw Subagent Delegation
 
-Create diagrams by writing standard Excalidraw element JSON and saving as `.excalidraw` files. These files can be drag-and-dropped onto [excalidraw.com](https://excalidraw.com) for viewing and editing. No accounts, no API keys, no rendering libraries -- just JSON.
+## Overview
 
-## When to use
+**Core principle:** Main agents NEVER read Excalidraw files directly. Always delegate to subagents to isolate context consumption.
 
-Generate `.excalidraw` files for architecture diagrams, flowcharts, sequence diagrams, concept maps, and more. Files can be opened at excalidraw.com or uploaded for shareable links.
+Excalidraw files are JSON with high token cost but low information density. Single files range from 4k-22k tokens (largest can exceed read tool limits). Reading multiple diagrams quickly exhausts context budget (7 files = 67k tokens = 33% of budget).
 
-## Workflow
+## The Problem
 
-1. **Load this skill** (you already did)
-2. **Write the elements JSON** -- an array of Excalidraw element objects
-3. **Save the file** using `write_file` to create a `.excalidraw` file
-4. **Optionally upload** for a shareable link using `scripts/upload.py` via `terminal`
+Excalidraw JSON structure:
+- Each shape has 20+ properties (x, y, width, height, strokeColor, seed, version, etc.)
+- Most properties are visual metadata (positioning, styling, roughness)
+- Actual content: text labels and element relationships (<10% of file)
+- **Signal-to-noise ratio is extremely low**
 
-### Saving a Diagram
+Example: 14-element diagram = 596 lines, 16K, ~4k tokens. 79-element diagram = 2,916 lines, 88K, ~22k tokens (exceeds read limit).
 
-Wrap your elements array in the standard `.excalidraw` envelope and save with `write_file`:
+## When to Use
 
-```json
-{
-  "type": "excalidraw",
-  "version": 2,
-  "source": "hermes-agent",
-  "elements": [ ...your elements array here... ],
-  "appState": {
-    "viewBackgroundColor": "#ffffff"
-  }
-}
+**Trigger on ANY of these:**
+- File path contains `.excalidraw` or `.excalidraw.json`
+- User requests: "explain/update/create diagram", "show architecture", "visualize flow"
+- User mentions: "flowchart", "architecture diagram", "Excalidraw file"
+- Architecture/design documentation tasks involving visual artifacts
+
+**Use delegation even for:**
+- "Small" files (smallest is 4k tokens - still significant)
+- "Quick checks" (checking component names still loads full JSON)
+- Single file operations (isolation prevents context pollution)
+- Modifications (don't need full format understanding in main context)
+
+## Delegation Pattern
+
+### Main Agent Responsibilities
+
+**NEVER:**
+- ❌ Use Read tool on *.excalidraw files
+- ❌ Parse Excalidraw JSON in main context
+- ❌ Load multiple diagrams for comparison
+- ❌ Inspect file to "understand the format"
+
+**ALWAYS:**
+- ✅ Delegate ALL Excalidraw operations to subagents
+- ✅ Provide clear task description to subagent
+- ✅ Request text-only summaries (not raw JSON)
+- ✅ Keep diagram analysis isolated from main work
+
+### Subagent Task Templates
+
+#### Read/Understand Operation
+```
+Task: Extract and explain the components in [file.excalidraw.json]
+
+Approach:
+1. Read the Excalidraw JSON
+2. Extract only text elements (ignore positioning/styling)
+3. Identify relationships between components
+4. Summarize architecture/flow
+
+Return:
+- List of components/services with descriptions
+- Connection/dependency relationships
+- Key insights about the architecture
+- DO NOT return raw JSON or verbose element details
 ```
 
-Save to any path, e.g. `~/diagrams/my_diagram.excalidraw`.
+#### Modify Operation
+```
+Task: Add [component] to [file.excalidraw.json], connected to [existing-component]
 
-### Uploading for a Shareable Link
+Approach:
+1. Read file to identify existing elements
+2. Find [existing-component] and its position
+3. Create new element JSON for [component]
+4. Add arrow elements for connections
+5. Write updated file
 
-Run the upload script (located in this skill's `scripts/` directory) via terminal:
-
-```bash
-python skills/diagramming/excalidraw/scripts/upload.py ~/diagrams/my_diagram.excalidraw
+Return:
+- Confirmation of changes made
+- Position of new element
+- IDs of created elements
 ```
 
-This uploads to excalidraw.com (no account needed) and prints a shareable URL. Requires the `cryptography` pip package (`pip install cryptography`).
-
----
-
-## Element Format Reference
-
-### Required Fields (all elements)
-`type`, `id` (unique string), `x`, `y`, `width`, `height`
-
-### Defaults (skip these -- they're applied automatically)
-- `strokeColor`: `"#1e1e1e"`
-- `backgroundColor`: `"transparent"`
-- `fillStyle`: `"solid"`
-- `strokeWidth`: `2`
-- `roughness`: `1` (hand-drawn look)
-- `opacity`: `100`
-
-Canvas background is white.
-
-### Element Types
-
-**Rectangle**:
-```json
-{ "type": "rectangle", "id": "r1", "x": 100, "y": 100, "width": 200, "height": 100 }
+#### Create Operation
 ```
-- `roundness: { "type": 3 }` for rounded corners
-- `backgroundColor: "#a5d8ff"`, `fillStyle: "solid"` for filled
+Task: Create new Excalidraw diagram showing [description]
 
-**Ellipse**:
-```json
-{ "type": "ellipse", "id": "e1", "x": 100, "y": 100, "width": 150, "height": 150 }
+Approach:
+1. Design layout for [number] components
+2. Create rectangle elements with text labels
+3. Add arrows showing relationships
+4. Use consistent styling (colors, fonts)
+5. Write to [file.excalidraw.json]
+
+Return:
+- Confirmation of file created
+- Summary of components included
+- File location
 ```
 
-**Diamond**:
-```json
-{ "type": "diamond", "id": "d1", "x": 100, "y": 100, "width": 150, "height": 150 }
+#### Compare Operation
+```
+Task: Compare architecture approaches in [file1] vs [file2]
+
+Approach:
+1. Read both files
+2. Extract text labels from each
+3. Identify structural differences
+4. Compare component relationships
+
+Return:
+- Key differences in architecture
+- Components unique to each approach
+- Relationship/flow differences
+- DO NOT return full element details from both files
 ```
 
-**Labeled shape (container binding)** -- create a text element bound to the shape:
+## Common Rationalizations (STOP and Delegate Instead)
 
-> **WARNING:** Do NOT use `"label": { "text": "..." }` on shapes. This is NOT a valid
-> Excalidraw property and will be silently ignored, producing blank shapes. You MUST
-> use the container binding approach below.
+| Excuse | Reality | What to Do |
+|--------|---------|------------|
+| "Direct reading is most efficient" | Consumes 4k-22k tokens unnecessarily | Delegate to subagent |
+| "It's token-efficient to read directly" | Baseline tests showed 9-45% budget used | Always delegate |
+| "This is optimal for one-time analysis" | "One-time" still pollutes main context | Subagent isolation |
+| "The JSON is straightforward" | Simplicity ≠ token efficiency | Delegate anyway |
+| "I need to understand the format" | Format understanding not needed in main agent | Subagent handles format |
+| "Within reasonable bounds" (18k tokens) | "Reasonable" is subjective rationalization | Hard rule: delegate |
+| "Just a quick check of components" | "Quick check" still loads full JSON | Extract text via subagent |
+| "File is small (16K)" | 4k tokens is NOT small | Size threshold doesn't matter |
 
-The shape needs `boundElements` listing the text, and the text needs `containerId` pointing back:
-```json
-{ "type": "rectangle", "id": "r1", "x": 100, "y": 100, "width": 200, "height": 80,
-  "roundness": { "type": 3 }, "backgroundColor": "#a5d8ff", "fillStyle": "solid",
-  "boundElements": [{ "id": "t_r1", "type": "text" }] },
-{ "type": "text", "id": "t_r1", "x": 105, "y": 110, "width": 190, "height": 25,
-  "text": "Hello", "fontSize": 20, "fontFamily": 1, "strokeColor": "#1e1e1e",
-  "textAlign": "center", "verticalAlign": "middle",
-  "containerId": "r1", "originalText": "Hello", "autoResize": true }
+## Red Flags - STOP and Delegate
+
+Catch yourself about to:
+- Use Read tool on .excalidraw file
+- "Quickly check" what components exist
+- "Understand the structure" before modifying
+- Load file to "see what's there"
+- Compare multiple diagrams side-by-side
+- Parse JSON to "extract just the text"
+
+**All of these mean: Use Task tool with subagent instead.**
+
+## Quick Reference
+
+| Operation | Main Agent Action | Subagent Returns |
+|-----------|-------------------|------------------|
+| **Understand diagram** | Delegate with "Extract and explain" template | Component list + relationships |
+| **Modify diagram** | Delegate with "Add [X] connected to [Y]" template | Confirmation + changes made |
+| **Create diagram** | Delegate with "Create showing [description]" template | File location + summary |
+| **Compare diagrams** | Delegate with "Compare [A] vs [B]" template | Key differences (not raw JSON) |
+
+## Token Analysis (Why This Matters)
+
+Real data from baseline testing:
+
+| Scenario | Without Delegation | With Delegation | Savings |
+|----------|-------------------|-----------------|---------|
+| Single large file | 22k tokens (45% budget) | ~500 tokens (subagent summary) | 98% |
+| Two-file comparison | 18k tokens (9% budget) | ~800 tokens (diff summary) | 96% |
+| Modification task | 14k tokens (7% budget) | ~300 tokens (confirmation) | 98% |
+
+**Context pollution impact:**
+- Reading all 7 project diagrams: 67k tokens (33% of 200k budget)
+- With delegation: ~2k tokens (isolated in subagents)
+- **Savings: 97% context budget preserved**
+
+## Implementation Example
+
+**❌ BAD (Direct Read):**
 ```
-- Works on rectangle, ellipse, diamond
-- Text is auto-centered by Excalidraw when `containerId` is set
-- The text `x`/`y`/`width`/`height` are approximate -- Excalidraw recalculates them on load
-- `originalText` should match `text`
-- Always include `fontFamily: 1` (Virgil/hand-drawn font)
-
-**Labeled arrow** -- same container binding approach:
-```json
-{ "type": "arrow", "id": "a1", "x": 300, "y": 150, "width": 200, "height": 0,
-  "points": [[0,0],[200,0]], "endArrowhead": "arrow",
-  "boundElements": [{ "id": "t_a1", "type": "text" }] },
-{ "type": "text", "id": "t_a1", "x": 370, "y": 130, "width": 60, "height": 20,
-  "text": "connects", "fontSize": 16, "fontFamily": 1, "strokeColor": "#1e1e1e",
-  "textAlign": "center", "verticalAlign": "middle",
-  "containerId": "a1", "originalText": "connects", "autoResize": true }
-```
-
-**Standalone text** (titles and annotations only -- no container):
-```json
-{ "type": "text", "id": "t1", "x": 150, "y": 138, "text": "Hello", "fontSize": 20,
-  "fontFamily": 1, "strokeColor": "#1e1e1e", "originalText": "Hello", "autoResize": true }
-```
-- `x` is the LEFT edge. To center at position `cx`: `x = cx - (text.length * fontSize * 0.5) / 2`
-- Do NOT rely on `textAlign` or `width` for positioning
-
-**Arrow**:
-```json
-{ "type": "arrow", "id": "a1", "x": 300, "y": 150, "width": 200, "height": 0,
-  "points": [[0,0],[200,0]], "endArrowhead": "arrow" }
-```
-- `points`: `[dx, dy]` offsets from element `x`, `y`
-- `endArrowhead`: `null` | `"arrow"` | `"bar"` | `"dot"` | `"triangle"`
-- `strokeStyle`: `"solid"` (default) | `"dashed"` | `"dotted"`
-
-### Arrow Bindings (connect arrows to shapes)
-
-```json
-{
-  "type": "arrow", "id": "a1", "x": 300, "y": 150, "width": 150, "height": 0,
-  "points": [[0,0],[150,0]], "endArrowhead": "arrow",
-  "startBinding": { "elementId": "r1", "fixedPoint": [1, 0.5] },
-  "endBinding": { "elementId": "r2", "fixedPoint": [0, 0.5] }
-}
+User: "What architecture is shown in detailed-architecture.excalidraw.json?"
+Agent: Let me read that file... [reads 22k tokens into main context]
 ```
 
-`fixedPoint` coordinates: `top=[0.5,0]`, `bottom=[0.5,1]`, `left=[0,0.5]`, `right=[1,0.5]`
+**✅ GOOD (Subagent Delegation):**
+```
+User: "What architecture is shown in detailed-architecture.excalidraw.json?"
+Agent: I'll use a subagent to extract the architecture details.
 
-### Drawing Order (z-order)
-- Array order = z-order (first = back, last = front)
-- Emit progressively: background zones → shape → its bound text → its arrows → next shape
-- BAD: all rectangles, then all texts, then all arrows
-- GOOD: bg_zone → shape1 → text_for_shape1 → arrow1 → arrow_label_text → shape2 → text_for_shape2 → ...
-- Always place the bound text element immediately after its container shape
+[Dispatches Task tool with general-purpose subagent]
+Task: Extract and explain components in .ryanquinn3/ticketing/detailed-architecture.excalidraw.json
 
-### Sizing Guidelines
+[Receives ~500 token summary with component list and relationships]
+[Responds to user with architecture explanation, main context preserved]
+```
 
-**Font sizes:**
-- Minimum `fontSize`: **16** for body text, labels, descriptions
-- Minimum `fontSize`: **20** for titles and headings
-- Minimum `fontSize`: **14** for secondary annotations only (sparingly)
-- NEVER use `fontSize` below 14
+## Why "Straightforward JSON" Doesn't Matter
 
-**Element sizes:**
-- Minimum shape size: 120x60 for labeled rectangles/ellipses
-- Leave 20-30px gaps between elements minimum
-- Prefer fewer, larger elements over many tiny ones
+Agents often rationalize: "The format is simple, I can just read it."
 
-### Color Palette
+**The problem isn't complexity - it's verbosity:**
+- Simple structure with 20+ properties per element
+- Repetitive metadata (seed, version, nonce, roughness)
+- Positioning data (x, y, width, height) not semantically useful
+- Visual styling (strokeColor, opacity, fillStyle) irrelevant to content
 
-See `references/colors.md` for full color tables. Quick reference:
+**Token cost comes from volume, not complexity.**
 
-| Use | Fill Color | Hex |
-|-----|-----------|-----|
-| Primary / Input | Light Blue | `#a5d8ff` |
-| Success / Output | Light Green | `#b2f2bb` |
-| Warning / External | Light Orange | `#ffd8a8` |
-| Processing / Special | Light Purple | `#d0bfff` |
-| Error / Critical | Light Red | `#ffc9c9` |
-| Notes / Decisions | Light Yellow | `#fff3bf` |
-| Storage / Data | Light Teal | `#c3fae8` |
+Even "straightforward" JSON consumes 4k-22k tokens because:
+- 79 elements × ~280 tokens/element = 22k tokens
+- Most tokens are metadata noise
+- Only text labels and relationships matter (~10% of content)
 
-### Tips
-- Use the color palette consistently across the diagram
-- **Text contrast is CRITICAL** -- never use light gray on white backgrounds. Minimum text color on white: `#757575`
-- Do NOT use emoji in text -- they don't render in Excalidraw's font
-- For dark mode diagrams, see `references/dark-mode.md`
-- For larger examples, see `references/examples.md`
+## The Iron Law
 
+**Main agents NEVER read Excalidraw files. No exceptions.**
 
+Not for:
+- "Quick checks"
+- "Small files"
+- "Understanding format"
+- "One-time analysis"
+- "Optimal efficiency"
+
+**Always delegate. Isolation is free via subagents.**

@@ -1,7 +1,6 @@
 ---
 name: document-pdf
-description: Extract text/tables from PDFs, create formatted PDFs, merge/split/rotate, and handle forms. Use for any PDF generation or parsing task.
-allowed-tools: Bash, Read, Write, Glob, Grep
+description: Extract text/tables from PDFs, create formatted PDFs, merge/split/rotate, handle forms and metadata. Supports pdf-lib/pdfkit (Node.js) and pypdf/pdfplumber/ReportLab (Python).
 ---
 
 # Document PDF Skill — Quick Reference
@@ -158,9 +157,6 @@ Use only when explicitly requested and policy-compliant.
 **Resources**
 - [references/pdf-generation-patterns.md](references/pdf-generation-patterns.md) — Complex layouts, multi-page docs
 - [references/pdf-extraction-patterns.md](references/pdf-extraction-patterns.md) — Text, table, image extraction
-- [references/pdf-accessibility-compliance.md](references/pdf-accessibility-compliance.md) — Tagged PDFs, PDF/UA, EAA compliance
-- [references/pdf-forms-interactive.md](references/pdf-forms-interactive.md) — AcroForms, form filling, digital signatures
-- [references/pdf-security-redaction.md](references/pdf-security-redaction.md) — Encryption, permissions, real redaction
 - [data/sources.json](data/sources.json) — Library documentation links
 
 **Templates**
@@ -172,9 +168,3 @@ Use only when explicitly requested and policy-compliant.
 - [../document-docx/SKILL.md](../document-docx/SKILL.md) — Word document generation
 - [../document-xlsx/SKILL.md](../document-xlsx/SKILL.md) — Excel/spreadsheet workflows
 - [../document-pptx/SKILL.md](../document-pptx/SKILL.md) — PowerPoint presentations
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

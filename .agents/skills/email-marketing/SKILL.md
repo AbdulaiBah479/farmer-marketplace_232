@@ -1,285 +1,328 @@
 ---
 name: email-marketing
-description: "Create and optimize email marketing campaigns including sequences, newsletters, drip campaigns. Design subject line strategies, develop segmentation approaches, implement A/B testing, and establish analytics tracking for email performance."
+description: Эксперт по email-маркетингу. Используй для email кампаний, автоматизации, сегментации, deliverability и A/B тестов.
 ---
 
-# Email Marketing
+# Email Marketing Expert
 
-## Overview
-The Email Marketing skill enables marketers to design, execute, and optimize email campaigns that drive engagement and conversions. It covers strategy, segmentation, creative development, and performance analysis for various email types.
+Comprehensive expertise in email marketing strategy and execution.
 
-## When to Use This Skill
-- Building new email campaigns or sequences
-- Optimizing email performance and engagement rates
-- Creating segmentation strategies for personalization
-- Developing email nurture sequences
-- Planning email calendar and sending cadence
-- Analyzing campaign results and identifying improvements
+## Core Competencies
 
-## Email Campaign Framework
+### Strategy
+- List building and segmentation
+- Email calendar planning
+- Lifecycle marketing
+- Personalization strategy
+- A/B testing frameworks
 
-### Email Types and Use Cases
+### Automation
+- Welcome sequences
+- Nurture campaigns
+- Trigger-based emails
+- Re-engagement flows
+- Win-back sequences
 
-**Transactional Emails** (System-triggered)
-- Confirmations: Order, signup, password reset
-- Notifications: Shipment, delivery, alerts
-- Receipts: Purchase, invoice, download
-- Goal: Ensure delivery and clarity
-- Engagement opportunity: Cross-sell, upsell hints
+### Deliverability
+- Sender reputation management
+- Authentication (SPF, DKIM, DMARC)
+- List hygiene
+- Spam trap avoidance
+- ISP relationship management
 
-**Promotional Emails** (Direct sales focus)
-- Product launches: New features, products
-- Sales promotions: Limited-time offers, discounts
-- Flash sales: Urgency-driven campaigns
-- Goal: Drive immediate conversions
-- Best frequency: 1-2x per week max
+## Email Types
 
-**Newsletter Emails** (Content + offers)
-- Weekly/monthly roundups: Curated content
-- Educational series: Thought leadership
-- Company updates: News, milestones, insights
-- Goal: Build relationships, establish authority
-- Best frequency: Weekly or bi-weekly
+### Marketing Emails
+- Newsletters
+- Promotional campaigns
+- Product announcements
+- Event invitations
+- Content distribution
 
-**Nurture Sequences** (Multi-email progression)
-- Welcome series: 5-7 emails over 2 weeks
-- Product education: Feature deep-dives
-- Objection handling: Address customer concerns
-- Goal: Move prospects through funnel
-- Typical duration: 2-8 weeks
+### Automated Sequences
+- Welcome series
+- Onboarding sequences
+- Lead nurturing
+- Abandoned cart
+- Re-engagement
+- Win-back
 
-**Re-engagement Campaigns** (Inactive user focus)
-- Win-back emails: Special offer to re-engage
-- Survey/feedback: Understand disengagement
-- One-final-email: Last chance to retain
-- Goal: Reactivate or remove inactive users
-- Frequency: Quarterly or as-needed
+### Transactional Emails
+- Order confirmations
+- Shipping updates
+- Password resets
+- Account notifications
 
-### Email Segmentation Strategy
+## Email Authentication Setup
 
-**Behavioral Segmentation** (Action-based)
-```
-Segment: "High Engagement Users"
-- Criteria: Opened 3+ emails in last 30 days
-- Send frequency: 2x per week
-- Content: Advanced features, premium content
-- Goal: Maximize engagement and upgrades
+```dns
+# SPF Record
+v=spf1 include:_spf.google.com include:sendgrid.net ~all
 
-Segment: "Product Explorers"
-- Criteria: Visited pricing/demo page
-- Send frequency: 1x per week
-- Content: Product education, case studies
-- Goal: Drive conversion to paid plan
+# DKIM Record
+selector._domainkey.example.com IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3..."
 
-Segment: "At-Risk Users"
-- Criteria: No opens in 60+ days
-- Send frequency: 1x per week (re-engagement series)
-- Content: Value prop reminder, special offer
-- Goal: Reactivate or collect feedback
+# DMARC Record
+_dmarc.example.com IN TXT "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
 ```
 
-**Demographic Segmentation** (Profile-based)
-- By role: Sales, Marketing, Product, Finance
-- By company size: Enterprise, SMB, startup
-- By industry: Tech, Finance, Healthcare
-- By geography: Region, timezone, language
+## Key Metrics
 
-**Lifecycle Segmentation** (Customer journey)
-- Prospects: Early awareness stage
-- Early adopters: Trial/freemium users
-- Active customers: Regular product use
-- Loyal customers: High LTV, long tenure
-- Churned customers: Previously engaged
+| Metric | Benchmark | Description |
+|--------|-----------|-------------|
+| Open Rate | 20-25% | Unique opens / Delivered |
+| Click Rate | 2-5% | Unique clicks / Delivered |
+| Click-to-Open | 10-15% | Clicks / Opens |
+| Unsubscribe Rate | <0.5% | Unsubscribes / Delivered |
+| Bounce Rate | <2% | Bounces / Sent |
+| Spam Complaints | <0.1% | Complaints / Delivered |
+| Conversion Rate | Varies | Conversions / Clicks |
 
-## Subject Line Optimization Strategy
+## Segmentation Strategies
 
-### Subject Line Formulas (Proven patterns)
+```yaml
+Behavioral Segmentation:
+  - Purchase history
+  - Email engagement
+  - Website activity
+  - Product preferences
+  - Cart abandonment
 
-**Pattern 1: Curiosity Gap**
-- Template: "[Intriguing statement] [number of reasons]"
-- Example: "This one metric improved our retention by 40%"
-- Best for: Articles, insights, reports
-- Open rates: 35-45%
+Demographic Segmentation:
+  - Location/timezone
+  - Job title/industry
+  - Company size
+  - Age/gender
 
-**Pattern 2: Benefit-driven**
-- Template: "How to [achieve benefit] without [pain point]"
-- Example: "How to cut email send time in half without hiring"
-- Best for: Guides, tutorials, product features
-- Open rates: 32-42%
-
-**Pattern 3: Social proof**
-- Template: "[Number] companies are already [achieving result]"
-- Example: "4,200 marketers switched to us last quarter"
-- Best for: Product launches, social proof
-- Open rates: 30-40%
-
-**Pattern 4: Question-based**
-- Template: "Is your [area] [negative outcome]?"
-- Example: "Is your email list growing slower than competitors?"
-- Best for: Problem-aware segments
-- Open rates: 28-38%
-
-**Pattern 5: FOMO/Urgency**
-- Template: "[Number] days left: [benefit/offer]"
-- Example: "48 hours: Save 30% on annual plans"
-- Best for: Promotions, limited-time offers
-- Open rates: 30-40%
-
-### Subject Line Testing Matrix
-
-| Test | Example 1 | Example 2 | Winner | Open Rate |
-|------|-----------|-----------|--------|-----------|
-| Personalization | "Sarah's exclusive offer" | "Your VIP exclusive offer" | Test |  |
-| Length | "Boost productivity" | "Boost your team's productivity with smart automation" | Shorter often wins | |
-| Numbers | "5 ways to improve sales" | "Proven techniques to improve sales" | Numbers | |
-| Power words | "Discover your hidden potential" | "Learn your potential" | Emotional triggers | |
-| Question | "Is your CRM slowing you down?" | "CRM platform comparison" | Questions higher | |
-
-**Testing Best Practices:**
-- Test one variable per campaign
-- Minimum sample: 1,000 email addresses
-- Test duration: 24-48 hours
-- Statistical significance: 95% confidence
-- Winner: Usually 5-10% lift is significant
-
-## Drip Campaign Architecture
-
-### Welcome Sequence (7-email series over 14 days)
-
-**Email 1: Welcome (Immediate)**
-- Goal: Build excitement, set expectations
-- Copy focus: Welcome tone, quick value statement
-- CTA: Tour product or watch 2-minute video
-- Timing: Send at signup, or next business morning
-
-**Email 2: Customer Success Story (Day 2)**
-- Goal: Establish credibility, show ROI
-- Copy focus: Relatable case study, specific results
-- CTA: Read full case study
-- Timing: Morning send, when engagement high
-
-**Email 3: Feature Education (Day 4)**
-- Goal: Product familiarization
-- Copy focus: Top feature deep-dive with benefit
-- CTA: Start using [feature]
-- Timing: Mid-week send
-
-**Email 4: Objection Handling (Day 7)**
-- Goal: Address common concerns
-- Copy focus: FAQ format, benefit reframing
-- CTA: Schedule demo or read comparison
-- Timing: Week 2 start
-
-**Email 5: Social Proof (Day 10)**
-- Goal: Build confidence
-- Copy focus: Customer testimonials, user count
-- CTA: Join community or try feature
-- Timing: Mid-week engagement boost
-
-**Email 6: Advanced Feature (Day 12)**
-- Goal: Drive deeper engagement
-- Copy focus: Advanced capability, premium benefit
-- CTA: Upgrade or contact sales
-- Timing: Close to conversion point
-
-**Email 7: Final CTA (Day 14)**
-- Goal: Drive decision
-- Copy focus: Time-limited offer or strong benefit
-- CTA: Start trial/upgrade/schedule call
-- Timing: EOW to weekend consideration
-
-## Email Performance Metrics
-
-### Key Performance Indicators (KPIs)
-
-**Deliverability Metrics:**
-- Delivery rate: % emails delivered (target: >95%)
-- Bounce rate: % undeliverable (target: <2%)
-- Spam complaints: % marked as spam (target: <0.1%)
-
-**Engagement Metrics:**
-- Open rate: % recipients opening (target: 20-40%)
-- Click rate: % recipients clicking (target: 2-5%)
-- Click-to-open rate (CTOR): Engagement depth (target: 10-20%)
-
-**Conversion Metrics:**
-- Conversion rate: % leading to goal (target: 1-5%)
-- Revenue per email: Total revenue / total sends
-- Customer acquisition cost: Campaign spend / new customers
-
-**List Health Metrics:**
-- List growth rate: New subscribers - unsubscribes
-- Unsubscribe rate: % opting out (target: <0.5%)
-- Re-engagement rate: % returning after dormancy
-
-### Benchmark by Email Type
-
-| Email Type | Typical Open Rate | Typical Click Rate | Typical Conversion |
-|------------|------------------|-------------------|------------------|
-| Newsletter | 20-25% | 2-4% | 0.5-1.5% |
-| Promotional | 15-20% | 3-8% | 1-3% |
-| Transactional | 50-70% | 5-15% | 5-10% |
-| Abandoned cart | 25-35% | 4-8% | 2-4% |
-| Welcome | 40-60% | 8-15% | 2-5% |
-
-## Email Design Template
-
-### Mobile-First Structure
-
-**Header** (600px width)
-- Logo: Left-aligned, 120-180px wide
-- Headline: Larger font, mobile readable
-- Preview: Concise, benefit-focused
-
-**Body** (Single column optimal)
-- Subheading: Create scanning hierarchy
-- Copy blocks: 40-60 characters per line
-- Whitespace: Generous margins and spacing
-- CTA button: 44px+ height for mobile tapping
-
-**Footer**
-- Contact info: Business address, phone
-- Social links: Platforms you actively use
-- Unsubscribe: Required by CAN-SPAM
-
-### Content Blocks
-
-**Social proof block:**
-```
-[Customer logo] "Quote about results" - Customer Name
-[Star rating] [Review count] reviews on G2
+Lifecycle Stages:
+  - New subscribers
+  - Active customers
+  - At-risk (declining engagement)
+  - Churned (re-activation target)
+  - VIP/high-value
 ```
 
-**Feature highlight block:**
+## Automation Workflows
+
+### Welcome Sequence
+
+```yaml
+Day 0 - Welcome Email:
+  trigger: subscription_confirmed
+  content: Brand introduction, expectations
+  cta: Complete profile
+
+Day 2 - Value Email:
+  trigger: previous_opened OR time_delay
+  content: Top content, quick wins
+  cta: Explore resources
+
+Day 5 - Social Proof:
+  trigger: time_delay
+  content: Customer stories, testimonials
+  cta: See case studies
+
+Day 7 - Soft CTA:
+  trigger: time_delay
+  content: Product introduction
+  cta: Start free trial
 ```
-[Icon] Feature Name
-Brief description with benefit
-[Learn more link]
+
+### Abandoned Cart Flow
+
+```yaml
+Hour 1 - Reminder:
+  trigger: cart_abandoned
+  content: Items in cart reminder
+  cta: Complete purchase
+
+Hour 24 - Urgency:
+  trigger: no_purchase
+  content: Items may sell out
+  cta: Secure your items
+
+Hour 72 - Incentive:
+  trigger: no_purchase
+  content: Special discount offer
+  cta: Get 10% off
 ```
 
-## Email Marketing Checklist
+## A/B Testing Framework
 
-- [ ] Segmentation strategy defined
-- [ ] Audience list quality verified
-- [ ] Subject line tested and approved
-- [ ] Email template mobile-responsive
-- [ ] Copy edited and proofread (3x review)
-- [ ] All links verified and tracked with UTM
-- [ ] Preview images load correctly
-- [ ] CTA button prominent and actionable
-- [ ] Unsubscribe link compliant
-- [ ] Spam testing performed
-- [ ] Sending time optimized for audience
-- [ ] Follow-up email sequence planned
-- [ ] Analytics dashboard configured
-- [ ] Team trained on process
+### Test Elements
 
-## Output Deliverables
+```yaml
+Subject Lines:
+  - Length (short vs long)
+  - Personalization
+  - Emojis
+  - Questions vs statements
+  - Urgency words
 
-1. **Email Campaign Brief** - Goals, audience, messaging
-2. **Email Template** - Design and copy finalized
-3. **Segmentation Plan** - Audience breakdown and cadence
-4. **Subject Line Test Report** - Winning variations and results
-5. **Send Schedule** - Timing and frequency plan
-6. **Performance Dashboard** - Real-time metrics monitoring
-7. **Post-Campaign Analysis** - Results, learnings, optimizations
+Content:
+  - Layout (single vs multi-column)
+  - Image count and placement
+  - CTA button color/text
+  - Copy length
+  - Personalization depth
+
+Timing:
+  - Send day
+  - Send time
+  - Timezone optimization
+```
+
+### Statistical Significance
+
+```python
+import scipy.stats as stats
+
+def calculate_significance(control_opens, control_sent,
+                          variant_opens, variant_sent,
+                          confidence=0.95):
+    """Calculate if A/B test result is significant."""
+
+    control_rate = control_opens / control_sent
+    variant_rate = variant_opens / variant_sent
+
+    # Pooled proportion
+    pooled = (control_opens + variant_opens) / (control_sent + variant_sent)
+
+    # Standard error
+    se = (pooled * (1 - pooled) * (1/control_sent + 1/variant_sent)) ** 0.5
+
+    # Z-score
+    z = (variant_rate - control_rate) / se
+
+    # P-value
+    p_value = 2 * (1 - stats.norm.cdf(abs(z)))
+
+    return {
+        'control_rate': control_rate,
+        'variant_rate': variant_rate,
+        'lift': (variant_rate - control_rate) / control_rate * 100,
+        'p_value': p_value,
+        'significant': p_value < (1 - confidence)
+    }
+```
+
+## Best Practices
+
+### Subject Lines
+- Under 50 characters
+- Create curiosity or urgency
+- Personalize when appropriate
+- A/B test consistently
+- Avoid spam trigger words
+
+### Email Copy
+- Clear value proposition
+- Single primary CTA
+- Mobile-optimized layout
+- Scannable format with headers
+- Personalization tokens
+- Alt text for images
+
+### Deliverability
+- Clean lists regularly (remove bounces, unengaged)
+- Authenticate domains (SPF, DKIM, DMARC)
+- Maintain consistent sending volume
+- Monitor sender reputation
+- Use double opt-in
+- Honor unsubscribes immediately
+
+### Send Time Optimization
+
+```python
+def optimize_send_time(subscriber_data):
+    """Analyze historical engagement to find optimal send times."""
+
+    engagement_by_hour = {}
+
+    for subscriber in subscriber_data:
+        local_time = convert_to_local(subscriber['open_time'],
+                                      subscriber['timezone'])
+        hour = local_time.hour
+
+        if hour not in engagement_by_hour:
+            engagement_by_hour[hour] = {'opens': 0, 'total': 0}
+
+        engagement_by_hour[hour]['opens'] += 1
+        engagement_by_hour[hour]['total'] += 1
+
+    # Calculate open rates by hour
+    for hour, data in engagement_by_hour.items():
+        data['rate'] = data['opens'] / data['total']
+
+    # Find best hours
+    sorted_hours = sorted(engagement_by_hour.items(),
+                         key=lambda x: x[1]['rate'],
+                         reverse=True)
+
+    return sorted_hours[:3]  # Top 3 hours
+```
+
+## List Hygiene
+
+### Engagement Scoring
+
+```sql
+-- Calculate subscriber engagement score
+SELECT
+    subscriber_id,
+    email,
+    COUNT(CASE WHEN event_type = 'open' THEN 1 END) as opens_30d,
+    COUNT(CASE WHEN event_type = 'click' THEN 1 END) as clicks_30d,
+    MAX(event_date) as last_activity,
+    CASE
+        WHEN COUNT(CASE WHEN event_type = 'open' THEN 1 END) >= 5 THEN 'highly_engaged'
+        WHEN COUNT(CASE WHEN event_type = 'open' THEN 1 END) >= 2 THEN 'engaged'
+        WHEN COUNT(CASE WHEN event_type = 'open' THEN 1 END) >= 1 THEN 'somewhat_engaged'
+        ELSE 'unengaged'
+    END as engagement_tier
+FROM email_events
+WHERE event_date >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY subscriber_id, email;
+```
+
+### Sunset Policy
+
+```yaml
+Re-engagement Campaign:
+  trigger: no_opens_60_days
+  sequence:
+    - Day 0: "We miss you" email
+    - Day 7: "Last chance" with offer
+    - Day 14: Final warning
+
+  action_after_sequence:
+    if: no_engagement
+    then: move_to_suppression_list
+```
+
+## Tools Proficiency
+
+### ESP Platforms
+- **SMB:** Klaviyo, Mailchimp, ConvertKit
+- **Mid-Market:** HubSpot, ActiveCampaign, Drip
+- **Enterprise:** Salesforce Marketing Cloud, Marketo, Braze
+
+### Transactional
+- SendGrid, Postmark, Amazon SES, Mailgun
+
+### Testing & Preview
+- Litmus, Email on Acid
+
+### Analytics
+- Google Analytics (UTM tracking)
+- Native ESP analytics
+- Custom data warehouse
+
+## Лучшие практики
+
+1. **Permission-based** — только подтверждённые подписчики
+2. **Segmentation** — релевантный контент для сегментов
+3. **Testing** — постоянное A/B тестирование
+4. **Automation** — автоматизируйте lifecycle emails
+5. **Deliverability** — мониторинг репутации отправителя
+6. **Mobile-first** — 60%+ открытий на мобильных

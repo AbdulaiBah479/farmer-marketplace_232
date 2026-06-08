@@ -1,325 +1,362 @@
 ---
 name: explore-data
-description: Profile and explore a dataset to understand its shape, quality, and patterns. Use when encountering a new table or file, checking null rates and column distributions, spotting data quality issues like duplicates or suspicious values, or deciding which dimensions and metrics to analyze.
-argument-hint: "<table or file>"
+description: "Explores data in a Bauplan lakehouse safely using the Bauplan Python SDK. Use to inspect namespaces, tables, schemas, samples, and profiling queries; and to export larger result sets to files. Read-only exploration only; no writes or pipeline runs."
+allowed-tools:
+  - Bash(bauplan:*)
+  - Read
+  - Write
+  - Glob
+  - Grep
+  - WebFetch(domain:docs.bauplanlabs.com)
 ---
 
-# /explore-data - Profile and Explore a Dataset
+# Exploring Data in Bauplan
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+Explore and understand data stored in a Bauplan lakehouse using the Python SDK. This skill is read-only. It must not create tables, import data, run pipelines, or merge branches.
 
-Generate a comprehensive data profile for a table or uploaded file. Understand its shape, quality, and patterns before diving into analysis.
+If the user asks for any write operation, stop and suggest switching to a write-capable skill (data-pipeline or safe-ingestion).
 
-## Usage
+## Before You Start
 
-```
-/explore-data <table_name or file>
-```
+Ask the user which branch or ref to explore. All reads must be scoped to an explicit ref. Never rely on implicit defaults.
 
-## Workflow
+## Required Deliverables
 
-### 1. Access the Data
+Every exploration MUST produce a `summary.md` file in the project root. This file is written in Phase 4. If you reach the end of Phase 3, you MUST proceed to Phase 4 and write `summary.md`. Do not end the conversation after Phase 3. The exploration is incomplete without `summary.md`.
 
-**If a data warehouse MCP server is connected:**
+## Phased Execution (Critical)
 
-1. Resolve the table name (handle schema prefixes, suggest matches if ambiguous)
-2. Query table metadata: column names, types, descriptions if available
-3. Run profiling queries against the live data
+This skill runs in four phases. Each phase is a separate bash execution of `data_explorer.py`. After each phase, **report findings in the chat** before proceeding to the next phase. The user must see incremental progress throughout the exploration.
 
-**If a file is provided (CSV, Excel, Parquet, JSON):**
+The phases are:
 
-1. Read the file and load into a working dataset
-2. Infer column types from the data
+| Phase | Name | Typical duration | Gate |
+|-------|------|-----------------|------|
+| 1 | Discovery | <30s | Report table list. Ask which tables to explore. |
+| 2 | Schema + Semantics | 1-2 min | Report schemas and table descriptions. Proceed automatically. |
+| 3 | Profiling + Anomalies | 1-2 min per table | Announce each table before profiling, report findings after. |
+| 4 | Joins + Summary | <1 min | Write `summary.md`. Present to user. |
 
-**If neither:**
+**Between every phase, post a chat message summarizing what was found.** Do not chain all phases into a single bash call.
 
-1. Ask the user to provide a table name (with their warehouse connected) or upload a file
-2. If they describe a table schema, provide guidance on what profiling queries to run
+**Responsiveness rule (hard constraint):** Always post a chat message between consecutive bash calls. Never execute two bash calls back-to-back without a message to the user in between.
 
-### 2. Understand Structure
+## Single Script, Iterative Execution
 
-Before analyzing any data, understand its structure:
+All exploration code lives in one file: `data_explorer.py` in the project root. Overwrite this file at the start of each phase with the code for that phase. Each phase prints its findings to stdout. Do not create additional Python files or subdirectories.
 
-**Table-level questions:**
-- How many rows and columns?
-- What is the grain (one row per what)?
-- What is the primary key? Is it unique?
-- When was the data last updated?
-- How far back does the data go?
+## Setup Block
 
-**Column classification** — categorize each column as one of:
-- **Identifier**: Unique keys, foreign keys, entity IDs
-- **Dimension**: Categorical attributes for grouping/filtering (status, type, region, category)
-- **Metric**: Quantitative values for measurement (revenue, count, duration, score)
-- **Temporal**: Dates and timestamps (created_at, updated_at, event_date)
-- **Text**: Free-form text fields (description, notes, name)
-- **Boolean**: True/false flags
-- **Structural**: JSON, arrays, nested structures
+Write the following setup once at the top of `data_explorer.py`. All subsequent examples assume this block exists.
 
-### 3. Generate Data Profile
+```python
+import bauplan
+import polars as pl
+from datetime import datetime, timezone
 
-Run the following profiling checks:
-
-**Table-level metrics:**
-- Total row count
-- Column count and types breakdown
-- Approximate table size (if available from metadata)
-- Date range coverage (min/max of date columns)
-
-**All columns:**
-- Null count and null rate
-- Distinct count and cardinality ratio (distinct / total)
-- Most common values (top 5-10 with frequencies)
-- Least common values (bottom 5 to spot anomalies)
-
-**Numeric columns (metrics):**
-```
-min, max, mean, median (p50)
-standard deviation
-percentiles: p1, p5, p25, p75, p95, p99
-zero count
-negative count (if unexpected)
-```
-
-**String columns (dimensions, text):**
-```
-min length, max length, avg length
-empty string count
-pattern analysis (do values follow a format?)
-case consistency (all upper, all lower, mixed?)
-leading/trailing whitespace count
-```
-
-**Date/timestamp columns:**
-```
-min date, max date
-null dates
-future dates (if unexpected)
-distribution by month/week
-gaps in time series
-```
-
-**Boolean columns:**
-```
-true count, false count, null count
-true rate
-```
-
-**Present the profile as a clean summary table**, grouped by column type (dimensions, metrics, dates, IDs).
-
-### 4. Identify Data Quality Issues
-
-Apply the quality assessment framework below. Flag potential problems:
-
-- **High null rates**: Columns with >5% nulls (warn), >20% nulls (alert)
-- **Low cardinality surprises**: Columns that should be high-cardinality but aren't (e.g., a "user_id" with only 50 distinct values)
-- **High cardinality surprises**: Columns that should be categorical but have too many distinct values
-- **Suspicious values**: Negative amounts where only positive expected, future dates in historical data, obviously placeholder values (e.g., "N/A", "TBD", "test", "999999")
-- **Duplicate detection**: Check if there's a natural key and whether it has duplicates
-- **Distribution skew**: Extremely skewed numeric distributions that could affect averages
-- **Encoding issues**: Mixed case in categorical fields, trailing whitespace, inconsistent formats
-
-### 5. Discover Relationships and Patterns
-
-After profiling individual columns:
-
-- **Foreign key candidates**: ID columns that might link to other tables
-- **Hierarchies**: Columns that form natural drill-down paths (country > state > city)
-- **Correlations**: Numeric columns that move together
-- **Derived columns**: Columns that appear to be computed from others
-- **Redundant columns**: Columns with identical or near-identical information
-
-### 6. Suggest Interesting Dimensions and Metrics
-
-Based on the column profile, recommend:
-
-- **Best dimension columns** for slicing data (categorical columns with reasonable cardinality, 3-50 values)
-- **Key metric columns** for measurement (numeric columns with meaningful distributions)
-- **Time columns** suitable for trend analysis
-- **Natural groupings** or hierarchies apparent in the data
-- **Potential join keys** linking to other tables (ID columns, foreign keys)
-
-### 7. Recommend Follow-Up Analyses
-
-Suggest 3-5 specific analyses the user could run next:
-
-- "Trend analysis on [metric] by [time_column] grouped by [dimension]"
-- "Distribution deep-dive on [skewed_column] to understand outliers"
-- "Data quality investigation on [problematic_column]"
-- "Correlation analysis between [metric_a] and [metric_b]"
-- "Cohort analysis using [date_column] and [status_column]"
-
-## Output Format
-
-```
-## Data Profile: [table_name]
-
-### Overview
-- Rows: 2,340,891
-- Columns: 23 (8 dimensions, 6 metrics, 4 dates, 5 IDs)
-- Date range: 2021-03-15 to 2024-01-22
-
-### Column Details
-[summary table]
-
-### Data Quality Issues
-[flagged issues with severity]
-
-### Recommended Explorations
-[numbered list of suggested follow-up analyses]
+client = bauplan.Client()
+ref = "<ref_to_explore>"  # branch name or commit hash — always explicit
 ```
 
 ---
 
-## Quality Assessment Framework
+## Phase 1 — Discovery
 
-### Completeness Score
+**Goal:** List all namespaces and tables available on the ref. Report them. Ask the user which tables to explore in depth.
 
-Rate each column:
-- **Complete** (>99% non-null): Green
-- **Mostly complete** (95-99%): Yellow -- investigate the nulls
-- **Incomplete** (80-95%): Orange -- understand why and whether it matters
-- **Sparse** (<80%): Red -- may not be usable without imputation
+```python
+namespaces = list(client.get_namespaces(ref=ref))
+print("=== Namespaces ===")
+for ns in namespaces:
+    print(f"  {ns.namespace}")
 
-### Consistency Checks
+tables = list(client.get_tables(ref=ref))
+print("\n=== Tables ===")
+for t in tables:
+    print(f"  {t.namespace}.{t.name}")
+```
 
-Look for:
-- **Value format inconsistency**: Same concept represented differently ("USA", "US", "United States", "us")
-- **Type inconsistency**: Numbers stored as strings, dates in various formats
-- **Referential integrity**: Foreign keys that don't match any parent record
-- **Business rule violations**: Negative quantities, end dates before start dates, percentages > 100
-- **Cross-column consistency**: Status = "completed" but completed_at is null
+**After execution:** Post the table list in the chat. Ask: "Which tables should I explore in depth? I can inspect all of them, or you can pick a subset." If the user selects a subset, only those tables proceed to Phase 2. If the user says "all," proceed with all tables.
 
-### Accuracy Indicators
+---
 
-Red flags that suggest accuracy issues:
-- **Placeholder values**: 0, -1, 999999, "N/A", "TBD", "test", "xxx"
-- **Default values**: Suspiciously high frequency of a single value
-- **Stale data**: Updated_at shows no recent changes in an active system
-- **Impossible values**: Ages > 150, dates in the far future, negative durations
-- **Round number bias**: All values ending in 0 or 5 (suggests estimation, not measurement)
+## Phase 2 — Schema + Semantics
 
-### Timeliness Assessment
+**Goal:** For each selected table, inspect its schema, sample 20 rows, and produce a one-sentence description of its purpose and grain.
 
-- When was the table last updated?
-- What is the expected update frequency?
-- Is there a lag between event time and load time?
-- Are there gaps in the time series?
+### 2A. Schema and metadata
 
-## Pattern Discovery Techniques
+```python
+table = client.get_table(table="my_table", namespace="bauplan", ref=ref)
+print(f"\n=== {table.namespace}.{table.name} ===")
+print(f"Records: {table.records}")
+for c in table.fields:
+    print(f"  {c.name}: {c.type}")
+```
 
-### Distribution Analysis
+### 2B. Sample and semantics
 
-For numeric columns, characterize the distribution:
-- **Normal**: Mean and median are close, bell-shaped
-- **Skewed right**: Long tail of high values (common for revenue, session duration)
-- **Skewed left**: Long tail of low values (less common)
-- **Bimodal**: Two peaks (suggests two distinct populations)
-- **Power law**: Few very large values, many small ones (common for user activity)
-- **Uniform**: Roughly equal frequency across range (often synthetic or random)
+```python
+res = client.query("""
+    SELECT *
+    FROM bauplan.my_table
+    LIMIT 20
+""", ref=ref, max_rows=20)
+df = pl.from_arrow(res.to_arrow())
+print(df)
+```
 
-### Temporal Patterns
+From the schema and sample, produce a one-sentence description: what entity each row represents, what the grain is, and what the table likely feeds into. Print this description as part of the output.
 
-For time series data, look for:
-- **Trend**: Sustained upward or downward movement
-- **Seasonality**: Repeating patterns (weekly, monthly, quarterly, annual)
-- **Day-of-week effects**: Weekday vs. weekend differences
-- **Holiday effects**: Drops or spikes around known holidays
-- **Change points**: Sudden shifts in level or trend
-- **Anomalies**: Individual data points that break the pattern
+Example: `"bauplan.raw_ecommerce_events: one row per user interaction with a product, timestamped, grouped by session."`
 
-### Segmentation Discovery
+**After execution:** Post schemas and descriptions in the chat. Proceed to Phase 3 automatically.
 
-Identify natural segments by:
-- Finding categorical columns with 3-20 distinct values
-- Comparing metric distributions across segment values
-- Looking for segments with significantly different behavior
-- Testing whether segments are homogeneous or contain sub-segments
+If more than 5 tables are selected, split Phase 2 into batches of 5 tables per bash call. Post findings after each batch.
 
-### Correlation Exploration
+---
 
-Between numeric columns:
-- Compute correlation matrix for all metric pairs
-- Flag strong correlations (|r| > 0.7) for investigation
-- Note: Correlation does not imply causation -- flag this explicitly
-- Check for non-linear relationships (e.g., quadratic, logarithmic)
+## Phase 3 — Profiling + Anomalies
 
-## Schema Understanding and Documentation
+**Goal:** Profile each selected table and detect anomalies. Process one table at a time. Announce each table before running queries, then report findings immediately after.
 
-### Schema Documentation Template
+### Execution rule (hard constraint)
 
-When documenting a dataset for team use:
+**Profile ONE table per bash execution. Do not loop over multiple tables in a single script run.**
+
+The sequence for each table is:
+
+1. **Chat message.** Tell the user which table you are about to profile and where you are in the list: `"Profiling bauplan.orders (3 of 7)..."`
+2. **Rewrite `data_explorer.py`** with queries for that single table only.
+3. **Run it.** One bash call, one table.
+4. **Chat message.** Report findings using the compact format below.
+5. **Move to the next table.** Go back to step 1.
+
+Do not combine multiple tables into one script. Do not use a for-loop over tables. Each bash call must target exactly one table. This ensures the user sees progress after every table.
+
+**Report format:**
+
+```
+📊 bauplan.orders (3/7)
+  Rows: 1,234,567
+  Time range: 2024-01-01 → 2024-12-31 (56 days stale)
+  Null flags: shipping_address (72% null)
+  Duplicate keys: none
+```
+
+If standard checks raise a flag, tell the user before running deep checks: `"→ shipping_address is 72% null. Running deep checks..."` Then report those results in a follow-up message.
+
+### Standard checks (always run)
+
+Combine row count, time range, and null rates into a **single query** per table. Phase 2 already collected the schema, so you know every column name. Generate the query dynamically.
+
+```python
+# One query covers row count, time range, and null rates for all columns.
+# Adjust column names based on the schema collected in Phase 2.
+client.query("""
+    SELECT
+        COUNT(*) AS row_count,
+        MIN(event_time) AS min_t,
+        MAX(event_time) AS max_t,
+        1.0 - CAST(COUNT(order_id) AS DOUBLE) / COUNT(*) AS null_rate_order_id,
+        1.0 - CAST(COUNT(customer_id) AS DOUBLE) / COUNT(*) AS null_rate_customer_id,
+        1.0 - CAST(COUNT(shipping_address) AS DOUBLE) / COUNT(*) AS null_rate_shipping_address
+    FROM bauplan.orders
+""", ref=ref, max_rows=1)
+```
+
+For every timestamp column, compare `MAX` to today. If the gap exceeds what the table's grain implies (e.g., an hourly event table whose latest row is 30 days old), flag the table as potentially stale. Print the gap in days.
+
+Flag any column where the null rate exceeds 50%.
+
+**Candidate key duplicates** (second query). For columns whose names contain `_id` or that appear first in the schema, check for duplicates.
+
+```python
+client.query("""
+    SELECT order_id, COUNT(*) AS n
+    FROM bauplan.my_table
+    GROUP BY order_id
+    HAVING COUNT(*) > 1
+    LIMIT 10
+""", ref=ref, max_rows=10)
+```
+
+Report the count of duplicated keys and a few examples if any exist.
+
+That is two queries per table for standard checks.
+
+### Deep checks (opt-in)
+
+Run these when the standard checks raise a flag, or when the user explicitly requests a thorough inspection. Announce what triggered the deep check and which column you are investigating.
+
+**Cardinality surprises.** Compute distinct count for categorical columns (status, type, category) and identifiers (user_id, order_id). Flag if a categorical column has unexpectedly high cardinality or an identifier has unexpectedly low cardinality.
+
+```python
+client.query("""
+    SELECT
+        COUNT(DISTINCT status) AS distinct_status,
+        COUNT(DISTINCT user_id) AS distinct_user_id
+    FROM bauplan.my_table
+""", ref=ref, max_rows=1)
+```
+
+**Value distribution for flagged columns.** When a column has a high null rate or unexpected cardinality, sample its values.
+
+```python
+client.query("""
+    SELECT status, COUNT(*) AS n
+    FROM bauplan.my_table
+    GROUP BY status
+    ORDER BY n DESC
+    LIMIT 20
+""", ref=ref, max_rows=20)
+```
+
+**Type-value mismatches.** For columns whose names imply a specific format (email, url, phone, ip_address, zip_code), sample values and verify they match the expected pattern.
+
+```python
+client.query("""
+    SELECT email
+    FROM bauplan.my_table
+    WHERE email IS NOT NULL
+    LIMIT 20
+""", ref=ref, max_rows=20)
+```
+
+Inspect the sample. If values clearly violate the expected format, flag the column.
+
+---
+
+## Phase 4 — Joins + Summary
+
+**Goal:** Identify join candidates across tables, then write `summary.md`.
+
+### 4A. Join candidates
+
+After inspecting multiple tables, look for columns that serve as join keys.
+
+**Name matching.** Scan column names across all inspected tables. Columns with identical names or conventional foreign key patterns (e.g., `PULocationID` matching `LocationID`) are candidates.
+
+**Key overlap.** For each candidate pair, verify overlap.
+
+```python
+client.query("""
+    SELECT COUNT(*) AS overlap
+    FROM (
+        SELECT DISTINCT user_id FROM bauplan.orders
+        INTERSECT
+        SELECT DISTINCT user_id FROM bauplan.users
+    )
+""", ref=ref, max_rows=1)
+```
+
+**Join cardinality.** Determine whether the relationship is one-to-one, one-to-many, or many-to-many.
+
+```python
+client.query("""
+    SELECT
+        COUNT(*) AS total_rows,
+        COUNT(DISTINCT user_id) AS distinct_keys
+    FROM bauplan.orders
+""", ref=ref, max_rows=1)
+```
+
+If `total_rows == distinct_keys`, the key is unique on that side.
+
+For each viable join, print: the two tables, the join columns, the overlap count, and the cardinality (e.g., "orders.user_id → users.user_id: 98% overlap, many-to-one").
+
+### 4B. Write summary.md
+
+Write `summary.md` in the project root. This is a required deliverable. Use the template below.
 
 ```markdown
-## Table: [schema.table_name]
+# Data Exploration Summary
 
-**Description**: [What this table represents]
-**Grain**: [One row per...]
-**Primary Key**: [column(s)]
-**Row Count**: [approximate, with date]
-**Update Frequency**: [real-time / hourly / daily / weekly]
-**Owner**: [team or person responsible]
+**Ref:** <ref explored>
+**Date:** <timestamp>
+**Tables inspected:** <count>
 
-### Key Columns
+## Tables
 
-| Column | Type | Description | Example Values | Notes |
-|--------|------|-------------|----------------|-------|
-| user_id | STRING | Unique user identifier | "usr_abc123" | FK to users.id |
-| event_type | STRING | Type of event | "click", "view", "purchase" | 15 distinct values |
-| revenue | DECIMAL | Transaction revenue in USD | 29.99, 149.00 | Null for non-purchase events |
-| created_at | TIMESTAMP | When the event occurred | 2024-01-15 14:23:01 | Partitioned on this column |
+### <namespace>.<table_name>
 
-### Relationships
-- Joins to `users` on `user_id`
-- Joins to `products` on `product_id`
-- Parent of `event_details` (1:many on event_id)
+**Semantics:** <one-sentence description of purpose and grain>
 
-### Known Issues
-- [List any known data quality issues]
-- [Note any gotchas for analysts]
+**Stats:**
+- Rows: <count>
+- Time range: <min> → <max> (<N days stale> or "fresh")
 
-### Common Query Patterns
-- [Typical use cases for this table]
+**Schema (key columns):**
+| Column | Type |
+|--------|------|
+| col1   | type |
+| col2   | type |
+
+**Anomalies:**
+<List each flag from Phase 3. If none, state "No anomalies detected.">
+
+**Join candidates:**
+<List viable joins with overlap and cardinality. If none, state "No join candidates identified.">
+
+---
+
+(Repeat for each table.)
+
+## Cross-Table Observations
+
+<Any patterns that span multiple tables: shared keys, referential integrity gaps, schema inconsistencies, temporal misalignment between tables. If none, state "No cross-table observations.">
 ```
 
-### Schema Exploration Queries
+Separate facts (derived from queries) from inferences (suggested by patterns). Label inferences explicitly.
 
-When connected to a data warehouse, use these patterns to discover schema:
+**After execution:** Present `summary.md` to the user. The exploration is complete only after this file is delivered.
 
-```sql
--- List all tables in a schema (PostgreSQL)
-SELECT table_name, table_type
-FROM information_schema.tables
-WHERE table_schema = 'public'
-ORDER BY table_name;
+---
 
--- Column details (PostgreSQL)
-SELECT column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_name = 'my_table'
-ORDER BY ordinal_position;
+## Compare Across Refs
 
--- Table sizes (PostgreSQL)
-SELECT relname, pg_size_pretty(pg_total_relation_size(relid))
-FROM pg_catalog.pg_statio_user_tables
-ORDER BY pg_total_relation_size(relid) DESC;
+When the user needs to compare branches, run the same query with different `ref=` values.
 
--- Row counts for all tables (general pattern)
--- Run per-table: SELECT COUNT(*) FROM table_name
+```python
+q = "SELECT COUNT(*) AS n FROM bauplan.my_table"
+n_main = client.query(q, ref="main", max_rows=1)
+n_dev = client.query(q, ref="<username>.<branch>", max_rows=1)
 ```
 
-### Lineage and Dependencies
+## Export Results to File
 
-When exploring an unfamiliar data environment:
+Use CSV by default. Switch to Parquet when the result set exceeds ~1M rows.
 
-1. Start with the "output" tables (what reports or dashboards consume)
-2. Trace upstream: What tables feed into them?
-3. Identify raw/staging/mart layers
-4. Map the transformation chain from raw data to analytical tables
-5. Note where data is enriched, filtered, or aggregated
+```python
+# CSV (default)
+client.query_to_csv_file(
+    path="results.csv",
+    query="SELECT col1, col2 FROM bauplan.my_table WHERE event_date >= '2026-01-01'",
+    ref=ref,
+    max_rows=1_000_000,
+)
 
-## Tips
+# Parquet (large results only)
+client.query_to_parquet_file(
+    path="results.parquet",
+    query="SELECT col1, col2 FROM bauplan.my_table WHERE event_date >= '2026-01-01'",
+    ref=ref,
+    max_rows=10_000_000,
+)
+```
 
-- For very large tables (100M+ rows), profiling queries use sampling by default -- mention if you need exact counts
-- If exploring a new dataset for the first time, this command gives you the lay of the land before writing specific queries
-- The quality flags are heuristic -- not every flag is a real problem, but each is worth a quick look
+## Query Safety Rules
+
+- Every SELECT must include a `LIMIT` clause.
+- Every SELECT must list columns explicitly. The only exception is `SELECT *` in Phase 2 (semantics step) where the goal is to see all columns in a small sample.
+- Use `max_rows` as an additional SDK-level guardrail.
+- Avoid wide scans when a filter can reduce data early.
+
+## Outputs
+
+The exploration produces two artifacts:
+
+1. **`data_explorer.py`** — the exploration script in its final state.
+2. **`summary.md`** — structured summary of all findings, written in Phase 4.
+
+Both live in the project root.

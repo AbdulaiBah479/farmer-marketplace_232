@@ -162,14 +162,3 @@ For complete URL inventory with source file locations:
 
 - **[references/urls-detail.md](references/urls-detail.md)** - Complete URL reference
 - **[docs/external-urls-reference.md](../../../docs/external-urls-reference.md)** - Full documentation
-
----
-
-## Gotchas
-
-- **Private Link API endpoints require VPN, not just kubeconfig:** All `privatelink.eastus.azmk8s.io` URLs resolve only inside the corporate network. `kubectl` will hang for 30s then time out — not produce a clear DNS error — when VPN is dropped.
-- **`cafehyna.com.br` and `cafehyna.hypera.com.br` are different zones:** Records added to the wrong zone propagate fine and resolve fine in browsers, but cert-manager DNS-01 challenges fail because the ACME validator queries the apex zone's NS records. Verify the zone with `dig NS <domain>` before adding records.
-- **`adocyl.com.br` is the dev-only domain — don't reuse for hub:** Cross-environment hostname reuse breaks Let's Encrypt staging vs prod issuer scoping, and SonarQube/Sentry session cookies leak across envs if they share the apex.
-- **Azure DevOps Git URLs need URL-encoded project names:** `Cafehyna%20-%20Desenvolvimento%20Web` must keep the encoding — raw spaces break `git clone` with a cryptic 404. The Azure DevOps UI hides this; copy from the SSH tab or use the encoded form.
-- **`smtp.office365.com` requires modern auth (OAuth2) since Oct 2022:** Basic auth on port 587 is disabled tenant-wide. Apps still configured with username/password silently fail with `535 5.7.139`. Use SendGrid or app passwords with MFA bypass.
-- **East US vs East US 2 cluster mix breaks cross-region pod traffic:** painelclientes (EUS2) and cafehyna (EUS) clusters can't share private DNS zones without explicit VNet peering — ingress hostnames resolve but pod-to-pod fails. Check the region column before assuming connectivity.

@@ -1,255 +1,1186 @@
 ---
-name: experiment-design
-description: A discipline for designing experiments (A/B tests, multivariate, holdouts) so the results actually answer the question you asked. Hypothesis writing, sample size, duration, segment analysis, interpretation, decision-making, and the common failure modes that produce confidently wrong shipping decisions.
-category: product
-catalog_summary: "Hypothesis to decision: sample size, duration, segment analysis, interpretation, and the failure modes that produce wrong shipping calls"
-display_order: 4
+name: Experiment Design
+description: Comprehensive guide to A/B testing, multivariate testing, statistical significance, and experiment analysis for data-driven product decisions
 ---
 
 # Experiment Design
 
-A senior product manager's playbook for running experiments that produce trustworthy decisions.
+## Types of Experiments
 
-The default state of experimentation in most companies is sloppy. PMs run tests against vague hypotheses, look at results too early, ignore guardrails, stratify into noise, and ship features whose lift is mostly measurement error. The cost is real: ship the wrong thing, kill the right thing, learn the wrong lesson, repeat.
+### 1. A/B Test (Two Variants)
 
-This skill is the discipline that prevents most of those mistakes. It assumes you have a working experimentation platform (Statsig, PostHog, GrowthBook, Optimizely, Amplitude, Eppo, Kameleoon; the platform does not matter for the principles). It assumes you have product-design and engineering pipelines that can deliver real treatment changes. The hard part is the thinking, and that is what is here.
+**What:** Compare two versions (A vs B)
 
-When to use this skill: any time you are about to design or interpret an experiment. Read the relevant section before you start, not after the test is running.
+**Example:**
+- **Control (A):** Blue "Buy Now" button
+- **Treatment (B):** Green "Buy Now" button
 
----
+**When to Use:**
+- Testing single change
+- Clear hypothesis
+- Binary decision (ship or don't ship)
 
-## What this skill covers
+**Pros:**
+- Simple to implement
+- Easy to analyze
+- Clear winner
 
-The skill spans the full experiment lifecycle. Pre-experiment readiness (is this thing even worth testing). Hypothesis design (cause, effect, magnitude, mechanism). Sample size and minimum detectable effect (do you have enough traffic to learn anything). Duration (how long is long enough, when does the cycle bias the result). Running discipline (no peeking, guardrails, sequential testing). Interpretation (the three buckets and the inconclusive case). Decision-making (matching the result to a pre-committed rule).
+**Cons:**
+- Only tests one change
+- Can't test interactions
 
-The skill does not cover feature flag operational mechanics; those live in the `feature-flagging` skill, which handles flag taxonomy, environment management, and stale-flag cleanup as a separate discipline. The skill does not cover statistical analysis depth; for delta methods, variance reduction techniques like CUPED, and Bayesian alternatives, see the `experimentation-analytics` skill. The skill does not cover platform-specific tooling; for MCP commands, auth models, and platform-specific configuration, consult the chosen platform's official documentation. This skill produces the experiment design; the platform implements it.
+### 2. Multivariate Test (Multiple Changes)
 
-For the orchestration layer above (which experiments to run, in what order, with what cadence), see the forthcoming `experimentation-platform-orchestrator` skill. That skill schedules; this skill designs.
+**What:** Test multiple changes simultaneously
 
----
+**Example:**
+- **Variable 1:** Button color (Blue, Green, Red)
+- **Variable 2:** Button text ("Buy Now", "Add to Cart", "Get Started")
+- **Variants:** 3 × 3 = 9 combinations
 
-## The framework: 12 considerations for trustworthy experiment results
+**When to Use:**
+- Testing multiple elements
+- Want to find best combination
+- Have enough traffic
 
-A defensible experiment design sits at the intersection of twelve considerations. Each is covered in detail in its own section below.
+**Pros:**
+- Test interactions between variables
+- Find optimal combination
 
-1. **Hypothesis discipline.** Cause, effect, magnitude, and mechanism. The hypothesis names what is being tested, what should move, by how much, and why.
-2. **Sample size and minimum detectable effect (MDE).** Whether the test has enough traffic to detect the effect at the chosen power. Refuse to run underpowered tests.
-3. **Test duration.** Longer of the sample-size-hit duration and a full weekly cycle. UI/UX changes need at least 14 days regardless.
-4. **What NOT to A/B test.** UX bugs, legal-required changes, brand-philosophy questions, decisions already made, designs whose randomization cannot be clean.
-5. **Segment analysis.** Pre-registered segments are evidence; post-hoc segments are noise mining. The multiple comparisons problem is real.
-6. **Interaction effects.** Concurrent tests on the same surface can interfere. Mutex enforcement or coordination required.
-7. **Ratio metrics and variance estimation.** Naive variance estimators on ratios understate uncertainty. Confirm the platform uses a ratio-aware estimator.
-8. **Network effects and two-sided markets.** Treatment can leak into control via interference. Cluster randomization, switchback, or geographic isolation when needed.
-9. **Sequential testing and the peeking problem.** Daily peeking inflates false positive rates. Use sequential testing methods when available; pre-commit otherwise.
-10. **Pre-commitment vs p-hacking.** Write down the primary metric, MDE, duration, segments, and decision rule before launch. Apply mechanically when results come in.
-11. **Reading results and making the call.** Three buckets: clear win, clear loss, inconclusive. The inconclusive bucket exists for a reason; resist the pull to ship anyway.
-12. **Common failures and fixes.** A short rapid-fire pattern catalog, expanded in [`references/common-failures.md`](references/common-failures.md).
+**Cons:**
+- Requires much more traffic
+- Complex analysis
+- Longer test duration
 
-The sections below cover each consideration in turn. Read the relevant section before running the experiment, not after.
+### 3. Sequential Testing
 
----
+**What:** Continuously monitor and stop early if clear winner
 
-## Hypothesis discipline
+**Example:**
+- Start A/B test
+- Check results daily
+- Stop when statistical significance reached (could be day 3 or day 14)
 
-The most important section in the skill. Most experiment failures trace back to a vague hypothesis.
+**When to Use:**
+- Want to ship winners fast
+- High traffic
+- Using tools that support it (Statsig, GrowthBook)
 
-A real hypothesis has four parts: cause, effect, magnitude, mechanism. Cause is the change you are making. Effect is the metric you expect to move. Magnitude is how much you expect it to move and from what baseline. Mechanism is why you expect this change to produce this effect.
+**Pros:**
+- Faster results
+- Less opportunity cost
 
-Bad hypothesis, common shape: "We think the new pricing page will increase conversions." What is wrong with it: no magnitude (how much), no mechanism (why), and the metric is "conversions" rather than a specific event with a clear definition. The team will run this test, look at the result, and argue about what counts as a win. Pre-commitment is impossible because nothing was committed.
+**Cons:**
+- Requires special statistical methods
+- Can't "peek" with traditional A/B tests
 
-Good hypothesis, same domain: "Replacing the three-tier pricing comparison with a single recommended tier will increase signup-to-paid conversion by 8 percent (currently 12 percent, target 13 percent) by reducing decision friction for users who already know they want to subscribe." Cause is the tier replacement. Effect is signup-to-paid conversion, defined as the user reaches the paywall and completes payment within seven days. Magnitude is 8 percent relative lift, taking the rate from 12 to 13 percent absolute. Mechanism is decision friction reduction. Now the team has something to test, a number to hit, and a story to falsify.
+### 4. Holdout Groups (Long-Term Effects)
 
-Primary metric vs guardrails. The primary metric is the thing you are trying to move. Guardrails are the things that must not break: revenue, retention, support ticket volume, page load time, error rates. Pick exactly one primary metric. Pick three to five guardrails. Multiple primary metrics destroy the discipline because they let you cherry-pick the favorable one when results come in.
+**What:** Keep small % of users on old experience permanently
 
-Falsifiability test. Before launching the experiment, write down what would make you NOT ship this. If the answer is "nothing, we are committed to the change regardless," the hypothesis is not real and the experiment is theater. Skip the test, save the engineering time, and just ship the change.
+**Example:**
+- **95% of users:** New feature
+- **5% of users:** Old experience (holdout)
 
-Directional vs magnitude distinction. Knowing the change moves the needle is different from knowing it moves the needle enough to matter. A 0.3 percent absolute lift on signup conversion may be statistically significant with enough traffic and still not justify the engineering cost of maintaining the change. Magnitude matters as much as direction; the hypothesis names the magnitude that would justify shipping.
+**When to Use:**
+- Measure long-term effects
+- Detect delayed negative impacts
+- Validate cumulative changes
 
-For templates and worked examples across common metric types, see [`references/hypothesis-templates.md`](references/hypothesis-templates.md).
+**Pros:**
+- Detects long-term issues
+- Measures true impact
 
----
-
-## Sample size and minimum detectable effect
-
-Sample size grows with the inverse square of the effect you want to detect. Detecting a 1 percent lift requires roughly one hundred times the sample needed to detect a 10 percent lift. Most PMs underestimate this.
-
-The basic decision rule: if your minimum detectable effect (MDE) at current traffic and a reasonable test duration is greater than 5 percent absolute lift, you probably need a bigger MDE. Tiny changes that need huge samples to detect are usually not worth shipping anyway. The change is small either because the underlying mechanism is weak or because the implementation is timid. A weak mechanism is not worth a launch. A timid implementation should be made bolder before testing.
-
-The "we do not have enough traffic" trap. Real for very small products. Lazy for everyone else. If you have ten thousand users a week and you are trying to detect a half-percent absolute lift, you are not running an experiment, you are sampling noise. Pick changes whose expected effect is large enough to detect at your traffic level. If the change is genuinely small, ship it without a test (small upside, small downside, low cost) or do not ship it at all.
-
-Power. The test's ability to detect an effect that is actually present. The conventional floor is 80 percent. Below that, you are rolling dice; the test will frequently miss real effects. Higher power costs more sample. Most platforms default to 80; if you change it, document why.
-
-One-sided vs two-sided. Most PM tests are two-sided despite the temptation to claim otherwise. A one-sided test says "I only care about the positive direction; if the change makes things worse, I do not need to detect it." That is rarely true. If the new pricing page tanks conversion, you want to know. Default to two-sided. If you genuinely want one-sided, document the asymmetry before running.
-
-For pre-calculated sample size tables across common conversion rate baselines and MDEs, see [`references/sample-size-tables.md`](references/sample-size-tables.md). The tables are starting points, not substitutes for running the math against your specific traffic and metric.
-
----
-
-## Test duration
-
-Minimum duration is the longer of two constraints. Constraint one: the sample size hits the calculated requirement. Constraint two: the test runs at least one full weekly cycle. Testing only Monday through Wednesday misses weekend behavior, which on most consumer products differs meaningfully from weekday behavior.
-
-Novelty effects. New things attract attention. The first few days of a winning test often overstate the lift. Users notice the change, click it, and produce a temporary effect that fades as the novelty wears off. Run long enough to see if the lift survives the novelty period. Two weeks is the conventional minimum for any UI/UX experiment, even if the sample size hits faster.
-
-Primacy effects. The opposite problem. Existing users may resist the change in week one and adapt by week three. Common in UI rearrangement tests. Killing the test in week one because the result looks negative misses the point that primacy is bigger than the underlying effect at that timescale.
-
-Holdout periods. If the experiment changes a permanent feature (notification frequency, default settings, search ranking), keep a holdout group OFF the new behavior for at least a month after launch. The holdout measures long-term effect, not just the day-1 lift. Long-term effects are often different from short-term effects: a notification change that increases day-1 engagement may decrease month-three retention.
-
-Maximum duration. Usually four to six weeks. Beyond that, the world changes around the test. Seasonality shifts. Marketing campaigns launch. The product evolves. The comparison between treatment and control stops being clean because the underlying user population is no longer comparable across the test window. If the test needs to run longer than six weeks to hit power, the MDE is probably wrong; the change is too small to detect cleanly.
-
----
-
-## What NOT to A/B test
-
-This is a section many discussions of experimentation skip. Worth being direct about.
-
-UX bug fixes. If the current behavior is objectively broken (button does not work, copy says the wrong thing, accessibility fails), fix it. A/B testing it is theater. The right answer is not "let's see if our users prefer a working button"; the right answer is to ship the working button.
-
-Legal-required changes. GDPR consent flows, accessibility compliance, regulatory disclaimers. Ship them. The lift is irrelevant; the compliance is the point. A/B testing whether to comply with the law is not a serious question.
-
-Strategic or philosophical brand questions. "Should our voice be playful or serious?" is not an A/B test question; it is a brand strategy question that needs to be made by humans with context, weighed against brand equity, audience expectation, and long-term positioning. Picking the variant with the higher click-through rate does not answer it because click-through rate was not the brand decision. Use the experiment data as one input to the brand decision, not as the decision itself.
-
-Things you have already decided. If leadership has committed to a direction regardless of test result, do not run an experiment. A/B testing as theater (running tests where the outcome does not change the decision) corrodes trust in the experimentation discipline overall. Other PMs see the test, see the result ignored, and conclude that experiment results do not matter at this company. Then they stop pre-committing. Then the discipline collapses.
-
-Things where the test design is impossible. Cross-device experiences, network effects, internal tooling for a ten-person ops team, anything where the sample size is fundamentally too small or the randomization is fundamentally contaminated. Sometimes the right answer is qualitative research, longitudinal cohort analysis, or just shipping and watching. An experiment that cannot be designed cleanly will not produce a clean answer.
+**Cons:**
+- Some users get worse experience
+- Requires ongoing monitoring
 
 ---
 
-## Segment analysis
+## When to Experiment
 
-Pre-registered segments versus post-hoc segments. Declaring before the test runs that "we will look at the result for new users versus returning users" is fine. Discovering after the test that "users from California who signed up on Tuesdays via mobile" had a huge lift is almost always noise mining.
+### ✅ Experiment When:
 
-The multiple comparisons problem. Every additional segment you analyze increases the probability of finding a "significant" result by chance. With twenty independent segments at p equals 0.05, you expect one false positive purely by chance. With fifty segments, two or three. Do not analyze fifty segments and report the one that hit significance.
+1. **Significant Features (High Impact)**
+   - Major redesign
+   - New pricing model
+   - Core flow changes
 
-When stratification helps versus misleads. Stratification is useful when three things are true. The segment was pre-registered. There is a real prior reason to expect different behavior in this segment. There is enough sample within the segment to detect the effect at the chosen power. If any of the three is missing, stratification is noise mining. The default posture should be: report the overall result. Report pre-registered segments as additional context. Do not report unplanned segments.
+2. **Uncertain Outcomes**
+   - Don't know if it will work
+   - Conflicting opinions
+   - No clear data
 
-The "weighted average" reframe. If a treatment is positive for one segment and negative for another, the right question is "what is the weighted average effect across the population we will actually ship to" not "let's just ship to the segment where it works." Shipping to a segment usually requires UI complexity, audience targeting infrastructure, and ongoing maintenance that the segment-specific lift does not justify. The bias against segment-specific shipping is healthy.
+3. **Multiple Solution Options**
+   - Two different approaches
+   - Want to pick the best
 
----
+4. **Optimization Opportunities**
+   - Incremental improvements
+   - Conversion optimization
+   - Engagement optimization
 
-## Interaction effects
+### ❌ Don't Experiment When:
 
-The classic problem: you are running five concurrent A/B tests on the checkout flow. Each test individually shows a small lift. Together, the combinations may not multiply cleanly. They may not even sum cleanly. They may interfere in ways the individual tests cannot reveal.
+1. **Obvious Bugs/Fixes**
+   - Broken functionality
+   - Security issues
+   - Legal compliance
 
-Pre-experiment hygiene. Before launching a new experiment, check what other experiments are running on the same surface. Ask the other PM owners. Coordinate on which tests are mutually exclusive and which can overlap.
+2. **Very Low Traffic**
+   - Can't reach statistical significance
+   - Would take months
 
-Mutex (mutually exclusive) experiment groups. Most platforms support exclusion rules so users in test A are not also in test B. Use them when interactions are likely. The cost is sample size; the benefit is interpretable results. For a small set of high-stakes tests, mutex is the right call. For dozens of lower-stakes tests, full mutex is impractical; coordinate and document overlap instead.
+3. **Trivial Changes**
+   - Copy typo fix
+   - Minor styling adjustment
 
-The "we will analyze it later" fallacy. Post-hoc detangling of overlapping experiments is hard, expensive, and usually inconclusive. The factorial design that would isolate interaction effects requires sample sizes most products do not have. Coordinate up front rather than untangle afterwards.
-
----
-
-## Ratio metrics and the delta method
-
-The trap. Conversion rate is a ratio: conversions divided by users. Standard deviation calculations for raw counts do not apply directly to ratios. A naive variance estimate on a ratio metric tends to be too narrow, leading to overstated confidence and false-positive ship decisions.
-
-Why it matters. Many experimentation platforms quietly use the delta method (or bootstrap, or some other ratio-aware estimator) for ratio metrics. If yours does not, your confidence intervals are wrong. Wrong in the direction that matters: you ship things that look significant but are not.
-
-How to check. Ask your platform vendor: "What is your variance estimator for ratio metrics?" If the answer is "standard t-test on proportions," that is wrong for any ratio that is not a simple binary conversion (converted yes or no, with one row per user). If the answer is "delta method" or "bootstrap with re-sampling at the user level" or "linearization with Taylor expansion," that is correct. Other reasonable answers exist; the test is whether the platform team can articulate a ratio-aware estimator at all.
-
-Worked example. Revenue per user is a ratio: total revenue divided by total users. RPU lift estimates that do not use a ratio-aware estimator tend to overstate confidence. A 5 percent reported lift with p equals 0.04 might actually be a 5 percent point estimate with no statistical significance once the variance is computed correctly. Shipping based on the wrong math means shipping changes that do not produce the claimed effect in production.
-
-For deeper coverage of variance reduction (CUPED, stratified sampling, control variates), see the `experimentation-analytics` skill when it ships.
-
----
-
-## Network effects and two-sided markets
-
-The interference problem. In a two-sided marketplace (Uber, Airbnb, eBay, DoorDash, any platform with buyers and sellers), a treatment for buyers may affect sellers regardless of which group is in the test. A treatment that increases buyer demand changes seller behavior. The "control" buyers, who are competing for the same sellers, see different supply because of treatment buyers' actions. The test no longer measures the treatment effect cleanly; it measures treatment effect plus interference.
-
-Common pattern. Marketplace experiments where the control group is contaminated. The test reports a small effect because half the effect leaked into the control. The team underestimates the true effect, kills a winning idea, and learns the wrong lesson.
-
-Mitigations, none perfect. Cluster randomization assigns whole markets (cities, regions, market segments) to treatment or control rather than individual users. Eliminates within-cluster interference but reduces effective sample size by orders of magnitude. Switchback experiments alternate the entire population between treatment and control across time windows (week 1 treatment, week 2 control, week 3 treatment, etc.). Eliminates cross-user interference but requires careful temporal modeling. Geographic isolation runs the experiment in one city while keeping the rest of the network on the original behavior. Eliminates interference but is expensive and slow.
-
-When to call qualitative. If interference is severe and randomization cannot isolate it, the test will not tell you what you want to know. Switch to user research, longitudinal cohort analysis, or a phased rollout with careful instrumentation. The decision is "do we believe this works enough to invest in the rollout monitoring" rather than "did the lift hit significance."
+4. **Ethical Issues**
+   - Manipulative dark patterns
+   - Harmful to users
 
 ---
 
-## Sequential testing and the peeking problem
+## Experiment Design Process
 
-The peeking problem. If you check results every day and stop the test as soon as you see significance, your false positive rate is much higher than the nominal 5 percent. Standard statistical tests assume one analysis at the end of the test. Multiple analyses inflate alpha.
+### Step 1: Define Hypothesis
 
-The math. With one analysis, false positive rate is 5 percent (at alpha equals 0.05). With three analyses spread across the test, false positive rate climbs toward 14 percent. With daily peeking on a 28-day test, false positive rate can exceed 30 percent. You will see "significant" results that are not real, ship them, and watch them fail to replicate in production.
+**Template:**
+> "If we [change], then [metric] will [improve by X%], because [reasoning]."
 
-Sequential testing methods. Most modern platforms (Statsig, Eppo, parts of PostHog, GrowthBook with mSPRT) support sequential testing that adjusts the math to allow daily peeking without inflating alpha. The methods include sequential probability ratio tests, group sequential designs, and always-valid p-values via mixture sequential probability ratio tests (mSPRT). Use them when the platform offers them. They cost some statistical power in exchange for valid mid-test inference.
+**Example:**
+> "If we change the CTA button from blue to green, then click-through rate will increase by 10%, because green is more attention-grabbing."
 
-Pre-registered stopping rules. If the platform does not support sequential testing, declare the planned analysis date before the test runs. Save the pre-commitment. Do not look at results until that date. If you must look (some platforms make it hard not to), do not make decisions based on what you see. The decision happens at the pre-committed analysis date, not when the early peek looks favorable.
+### Step 2: Choose Metrics
 
-The "ship early because results look great" trap. Results almost always look more dramatic on day 3 than they do at day 14. Regression to the mean kicks in. Novelty fades. The metric stabilizes. The tests that survive the full window and still look great are the ones worth shipping. The ones that "looked great early" and were shipped early are disproportionately the ones that disappointed in production.
+**Primary Metric:** What you're optimizing
+- Example: Click-through rate
+
+**Secondary Metrics:** Other important outcomes
+- Example: Conversion rate, revenue per user
+
+**Counter Metrics:** Watch for negatives
+- Example: Bounce rate, time on page
+
+### Step 3: Determine Sample Size
+
+**Inputs:**
+- Baseline conversion rate: 5%
+- Expected improvement: 10% relative lift (5% → 5.5%)
+- Significance level: 0.05 (95% confidence)
+- Power: 0.80 (80% chance of detecting effect)
+
+**Output:**
+- Sample size needed: ~31,000 users per variant
+
+**Tools:**
+- Evan Miller's calculator: https://www.evanmiller.org/ab-testing/sample-size.html
+- Optimizely sample size calculator
+
+### Step 4: Set Test Duration
+
+**Factors:**
+- Sample size needed
+- Daily traffic
+- Weekly patterns (run at least 1-2 weeks)
+- Business cycles
+
+**Example:**
+- Sample size: 31,000 per variant (62,000 total)
+- Daily traffic: 5,000
+- Duration: 62,000 / 5,000 = 12.4 days → **Run for 2 weeks**
+
+### Step 5: Design Variants
+
+**Control (A):** Current experience
+**Treatment (B):** New experience
+
+**Best Practices:**
+- Change only one thing (for A/B test)
+- Make change meaningful (not trivial)
+- Ensure variants are distinct
+
+### Step 6: Launch Test
+
+**Checklist:**
+- [ ] Hypothesis documented
+- [ ] Metrics instrumented
+- [ ] Sample size calculated
+- [ ] Randomization working
+- [ ] QA tested both variants
+- [ ] Monitoring dashboard ready
+
+### Step 7: Analyze Results
+
+**Check:**
+- Statistical significance (p < 0.05)
+- Practical significance (is improvement meaningful?)
+- Secondary metrics (any red flags?)
+- Segment analysis (works for everyone?)
+
+### Step 8: Decide (Ship, Iterate, Kill)
+
+**Ship if:**
+- Positive, significant, no red flags
+
+**Iterate if:**
+- Mixed results, some segments good
+
+**Kill if:**
+- Negative, not significant, opportunity cost too high
 
 ---
 
-## Pre-commitment vs p-hacking
+## Choosing Metrics
 
-The p-hacking inventory. Things people do, often unconsciously, when results do not come out the way they hoped:
+### Primary Metric (What We're Optimizing)
 
-- Run additional segments until something hits significance
-- Drop "outliers" until the headline result moves
-- Switch the primary metric mid-flight
-- Extend the test duration "just a bit longer"
-- Reframe the hypothesis to match what the data showed
-- Combine multiple inconclusive tests into a "directional pattern" that justifies shipping
+**Characteristics:**
+- Directly tied to hypothesis
+- Sensitive to change
+- Measurable in test duration
 
-Each individually feels like a small judgment call. Cumulatively they destroy the discipline. The result is not "we found a real effect"; the result is "we ran enough analytical knobs that something looked significant."
+**Examples:**
+- Click-through rate (CTR)
+- Conversion rate
+- Sign-up completion rate
+- Time to first action
 
-The pre-commitment fix. Before the test runs, write down: the primary metric and how it is computed; the MDE you are powered to detect; the duration in calendar days; the segments you will analyze (if any); the decision rule that maps each possible result to a ship or kill. Save the pre-commitment somewhere with a timestamp. The PR description that ships the experiment configuration. A signed Slack message. A pinned ticket. Anywhere that makes it immutable.
+**Bad Primary Metrics:**
+- Revenue (too noisy, delayed)
+- Retention (takes too long to measure)
+- NPS (survey-based, low sample)
 
-When the results come in, follow the pre-commitment. If the result was clean and you want to ship, file the launch. If the result was bad and you want to kill, kill. If the result was inconclusive, follow the inconclusive resolution path described below; do not invent new analyses.
+### Secondary Metrics (Guardrails, Side Effects)
 
-The "we learned so much" trap. If the test ran and produced an inconclusive result, the answer is "inconclusive." Not "we learned that the underlying mechanism is more nuanced than expected" or "we discovered a fascinating segment dynamic." Inconclusive is inconclusive. The lesson, if there is one, is for the next hypothesis, not retrofitted onto this one.
+**Purpose:** Ensure we're not breaking other things
 
----
+**Examples:**
+- Revenue per user
+- Engagement (sessions per user)
+- Feature adoption
+- Customer satisfaction
 
-## Reading results and making the call
+### Counter Metrics (Watch for Negatives)
 
-Three buckets. Clear win: ship. Clear loss: kill. Inconclusive: the hardest case.
+**Purpose:** Detect unintended negative consequences
 
-Inconclusive resolution paths, ranked from most acceptable to least:
+**Examples:**
+- Bounce rate (users leaving immediately)
+- Error rate (technical issues)
+- Support tickets (confusion)
+- Churn rate (users leaving)
 
-1. Ship anyway because the change is cheap and reversible (defensible only if guardrails are clean and you genuinely have no information that the change is harmful). The bar here is high; "the directional movement was favorable" is not enough.
-2. Run a bigger version: more traffic, longer duration, larger MDE if the change can be made bolder. Use the inconclusive result as evidence that the original was underpowered or the effect is smaller than expected.
-3. Kill the idea. The most common right answer; the hardest to do because PMs have invested in the hypothesis.
-4. Iterate the hypothesis and re-test. Use the inconclusive result to refine the mechanism. The new test is a new test, not a continuation; pre-commit again.
+### Example: Checkout Flow Test
 
-Bayesian thinking layer. If your prior was strong (this should obviously work, given everything we know about user behavior), an inconclusive result should still update your belief somewhat. The prior was wrong, or the effect is smaller than expected, or the implementation was too timid to capture it. If your prior was weak (we genuinely had no idea what would happen), an inconclusive result means inconclusive; the prior was already uncertain and the result did not narrow it.
+**Hypothesis:**
+> "If we reduce checkout from 5 steps to 3 steps, conversion will increase by 15%."
 
-The hardest version. Positive primary metric, ambiguous guardrail. Revenue went up but support tickets ticked up. Conversion went up but session length went down. Use the pre-committed decision rule. If you did not pre-commit on the guardrail trade-off, default to "do not ship." The guardrails exist because you cared about them before you saw the result. Do not lower the bar after the fact.
-
-For a step-by-step results-reading checklist, see [`references/results-interpretation-checklist.md`](references/results-interpretation-checklist.md).
-
----
-
-## Common failures and fixes
-
-Rapid-fire reference. Each pattern is described in more detail in [`references/common-failures.md`](references/common-failures.md).
-
-- "We did not have enough traffic" means the MDE was too small. Pick bigger changes worth detecting.
-- "The lift disappeared after launch" means the test ran for 5 days and caught a novelty effect. Run longer next time; minimum two weeks for UI changes.
-- "It worked for new users but not returning users" means the segment was post-hoc, probably noise. Ship to all or kill, do not ship to the segment.
-- "The p-value crept up to 0.04 after 12 days of peeking" means the false-positive rate is much higher than nominal. Pre-commit and use sequential testing.
-- "Revenue went up but retention went down" means a guardrail was violated. Do not ship.
-- "We cannot replicate the result" means the original was probably noise or platform-bug. Investigate before re-running.
-- "Conversion went up but only because of the bot traffic from the new ad campaign" means the result was confounded by an external event. Pause campaigns during sensitive tests, or stratify by acquisition source.
-- "We ran the test, it was inconclusive, but the trend was directional so we shipped" means you ignored your own discipline. The inconclusive bucket exists for a reason; do not let directional patterns substitute for evidence.
+**Metrics:**
+- **Primary:** Checkout conversion rate
+- **Secondary:** Average order value, time to complete checkout
+- **Counter:** Cart abandonment rate, error rate, support tickets
 
 ---
 
-## Reference files
+## Statistical Significance
 
-- [`references/hypothesis-templates.md`](references/hypothesis-templates.md). Concrete formats for writing hypotheses that pass the cause-effect-magnitude-mechanism test, with worked examples across conversion, engagement, revenue, retention, and funnel-step metric types.
-- [`references/sample-size-tables.md`](references/sample-size-tables.md). Pre-calculated sample size tables for the most common conversion-rate experiments, with how-to-use guidance and the common pitfalls in sample-size planning.
-- [`references/common-failures.md`](references/common-failures.md). Fifteen anti-patterns that produce wrong shipping decisions, each with symptom, root cause, fix, and prevention.
-- [`references/results-interpretation-checklist.md`](references/results-interpretation-checklist.md). Step-by-step checklist for reading results, the three-bucket decision matrix (win, loss, inconclusive), and the post-launch monitoring discipline.
-- [`references/platform-comparison.md`](references/platform-comparison.md). Profiles of the major experimentation platforms (Statsig, PostHog, GrowthBook, Optimizely, Amplitude, Eppo, Kameleoon) with strengths, gotchas, and a decision matrix for choosing.
-- [`references/pre-experiment-readiness-checklist.md`](references/pre-experiment-readiness-checklist.md). Ten-item go/no-go checklist run through before launch.
-- [`references/post-experiment-decision-framework.md`](references/post-experiment-decision-framework.md). The moment-of-decision framework: confirm pre-commitment, apply rule mechanically, route to ship/kill/inconclusive paths, write the post-mortem within a week.
+### P-Value < 0.05 (95% Confidence)
+
+**What it Means:**
+- Less than 5% chance result is due to random chance
+- 95% confident the effect is real
+
+**Example:**
+- Control: 5.0% conversion
+- Treatment: 5.5% conversion
+- P-value: 0.03 ✅ (< 0.05, statistically significant)
+
+**Interpretation:**
+> "We're 95% confident that the treatment is better than control."
+
+### Statistical Power (80%+)
+
+**What it Means:**
+- 80% chance of detecting an effect if it exists
+- Reduces false negatives
+
+**Example:**
+- Power: 80%
+- Means: 20% chance of missing a real effect
+
+### Minimum Detectable Effect (MDE)
+
+**What it Means:**
+- Smallest effect size you can reliably detect
+- Depends on sample size
+
+**Example:**
+- Baseline: 5% conversion
+- Sample size: 10,000 per variant
+- MDE: 0.5% absolute (10% relative)
+- Can detect: 5.0% → 5.5% or larger
+
+**Trade-off:**
+- Larger sample size → Smaller MDE (detect smaller effects)
+- Smaller sample size → Larger MDE (only detect big effects)
 
 ---
 
-## Closing: when in doubt
+## Sample Size Calculation
 
-Default conservative posture. When results are unclear, do not ship. The cost of a false negative (you did not ship a real win) is usually smaller than the cost of a false positive (you shipped something that does not actually work and now you have to maintain it forever). The maintenance cost compounds; the missed-opportunity cost does not, because you can always test again.
+### Formula (Simplified)
 
-The discipline of experiment design is the discipline of saying "I do not know" out loud when you do not know. Saying it is often the most consequential thing a PM does in a given week. The instinct is to pretend the result is more conclusive than it is, ship to look decisive, and absorb the failure quietly when the change does not work in production. The discipline is to say "the test was inconclusive, here is what I would change to get a real answer, here is the new test plan." Saying that is professional. Pretending otherwise is theater.
+```
+n = (Z_α/2 + Z_β)² × (p₁(1-p₁) + p₂(1-p₂)) / (p₁ - p₂)²
 
-For platform-specific patterns (which platform handles which experiment type best, what the MCP commands look like, where the gotchas live), consult the chosen platform's documentation. For the operational layer below this skill (managing flags, retiring stale ones, coordinating environments), see the `feature-flagging` skill. For the analytical layer above this skill (variance reduction, Bayesian alternatives, sequential testing math), see the `experimentation-analytics` skill.
+Where:
+- n = sample size per variant
+- Z_α/2 = 1.96 (for 95% confidence)
+- Z_β = 0.84 (for 80% power)
+- p₁ = baseline conversion rate
+- p₂ = expected conversion rate
+```
+
+### Example Calculation
+
+**Inputs:**
+- Baseline conversion rate (p₁): 5% = 0.05
+- Expected improvement: 10% relative lift
+- New conversion rate (p₂): 5.5% = 0.055
+- Significance level (α): 0.05
+- Power (1-β): 0.80
+
+**Calculation:**
+```
+n = (1.96 + 0.84)² × (0.05×0.95 + 0.055×0.945) / (0.05 - 0.055)²
+n = 7.84 × (0.0475 + 0.052) / 0.000025
+n = 7.84 × 0.0995 / 0.000025
+n ≈ 31,200 per variant
+```
+
+**Total sample size:** 62,400 users
+
+### Using Online Calculators
+
+**Evan Miller's Calculator:**
+1. Go to https://www.evanmiller.org/ab-testing/sample-size.html
+2. Enter baseline conversion rate: 5%
+3. Enter minimum detectable effect: 10% (relative)
+4. Get sample size: ~31,000 per variant
+
+**Optimizely Calculator:**
+1. Go to Optimizely sample size calculator
+2. Enter baseline: 5%
+3. Enter minimum detectable effect: 0.5% (absolute)
+4. Get sample size: ~31,000 per variant
+
+---
+
+## Test Duration
+
+### Minimum Duration: 1-2 Weeks
+
+**Why:**
+- Capture weekly patterns (weekday vs weekend)
+- Avoid day-of-week bias
+- Account for user behavior cycles
+
+**Example:**
+- Don't run Monday-Wednesday only
+- Run at least Monday-Sunday (1 full week)
+
+### Full Business Cycles
+
+**Examples:**
+- **E-commerce:** Include payday (1st and 15th of month)
+- **B2B SaaS:** Include full week (avoid Friday-only)
+- **Seasonal:** Avoid holidays (unless testing holiday-specific)
+
+### Enough Data for Significance
+
+**Formula:**
+```
+Duration = Sample Size Needed / Daily Traffic
+```
+
+**Example:**
+- Sample size: 62,000 total
+- Daily traffic: 5,000
+- Duration: 62,000 / 5,000 = 12.4 days
+- **Run for:** 2 weeks (14 days)
+
+### Not Too Long (Opportunity Cost)
+
+**Trade-off:**
+- Longer test = More confidence
+- Longer test = Delayed learnings, slower iteration
+
+**Guideline:**
+- Most tests: 1-4 weeks
+- High-traffic sites: 1-2 weeks
+- Low-traffic sites: 2-4 weeks
+- Don't run > 1 month (diminishing returns)
+
+---
+
+## Experiment Variants
+
+### Control (Current Experience)
+
+**What:** The existing experience
+
+**Example:**
+- Current checkout flow (5 steps)
+- Current button color (blue)
+- Current pricing page
+
+**Purpose:** Baseline for comparison
+
+### Treatment (New Experience)
+
+**What:** The proposed change
+
+**Example:**
+- New checkout flow (3 steps)
+- New button color (green)
+- New pricing page
+
+**Purpose:** Test hypothesis
+
+### Multiple Treatments (If Testing Different Approaches)
+
+**Example:**
+- **Control:** 5-step checkout
+- **Treatment A:** 3-step checkout (combine steps)
+- **Treatment B:** 1-page checkout (all on one page)
+
+**Traffic Split:**
+- Control: 33%
+- Treatment A: 33%
+- Treatment B: 34%
+
+**Analysis:**
+- Compare each treatment to control
+- Compare treatments to each other
+
+---
+
+## Randomization
+
+### User-Level Randomization (Consistent Experience)
+
+**What:** Each user always sees same variant
+
+**How:**
+```javascript
+const variant = hashUserId(userId) % 2 === 0 ? 'control' : 'treatment';
+```
+
+**When to Use:**
+- Logged-in users
+- Want consistent experience
+- Testing flows (multi-step)
+
+**Pros:**
+- Consistent experience
+- No confusion
+
+**Cons:**
+- Requires user ID
+
+### Session-Level (For Anonymous Users)
+
+**What:** Each session sees same variant (but different sessions can differ)
+
+**How:**
+```javascript
+const variant = hashSessionId(sessionId) % 2 === 0 ? 'control' : 'treatment';
+```
+
+**When to Use:**
+- Anonymous users
+- Single-page tests
+
+**Pros:**
+- Works for anonymous users
+
+**Cons:**
+- Same user can see different variants across sessions
+
+### Stratified Sampling (For Segments)
+
+**What:** Ensure even distribution across segments
+
+**Example:**
+- Segment 1: Free users (50% control, 50% treatment)
+- Segment 2: Paid users (50% control, 50% treatment)
+
+**Why:**
+- Avoid imbalanced segments
+- Enable segment analysis
+
+---
+
+## Common Pitfalls
+
+### 1. Peeking (Stopping Test Early When "Winning")
+
+**Problem:**
+```
+Day 3: Treatment is winning! (p = 0.04) → Ship it!
+Day 7: Treatment is losing... (p = 0.12) → Oops.
+```
+
+**Why It's Bad:**
+- Increases false positive rate
+- P-value fluctuates during test
+
+**Solution:**
+- Decide sample size upfront
+- Don't look until test completes
+- Or use sequential testing (proper method)
+
+### 2. Sample Ratio Mismatch (Uneven Splits)
+
+**Problem:**
+```
+Expected: 50% control, 50% treatment
+Actual: 48% control, 52% treatment
+```
+
+**Why It's Bad:**
+- Indicates randomization bug
+- Results may be invalid
+
+**Solution:**
+- Check sample ratio before analyzing
+- Investigate if mismatch > 1%
+
+### 3. Novelty Effect (Users Trying New Thing)
+
+**Problem:**
+```
+Week 1: Treatment is winning! (+20%)
+Week 4: Treatment is same as control (0%)
+```
+
+**Why It's Bad:**
+- Users try new thing out of curiosity
+- Effect fades over time
+
+**Solution:**
+- Run test longer (2-4 weeks)
+- Use holdout group for long-term measurement
+- Segment by new vs returning users
+
+### 4. Seasonality (Testing During Holidays)
+
+**Problem:**
+```
+Test during Black Friday: +50% conversion
+Test during normal week: +5% conversion
+```
+
+**Why It's Bad:**
+- Holiday behavior is different
+- Results don't generalize
+
+**Solution:**
+- Avoid testing during holidays
+- Or run test across multiple weeks (include holiday + normal)
+
+---
+
+## Sequential Testing
+
+### What is Sequential Testing?
+
+**Traditional A/B Test:**
+- Decide sample size upfront
+- Run until sample size reached
+- Analyze once at end
+
+**Sequential Testing:**
+- Monitor continuously
+- Stop early if clear winner
+- Adjust significance threshold
+
+### How It Works
+
+**Algorithm:**
+- Use adjusted significance threshold (not 0.05)
+- Account for multiple looks
+- Stop when threshold crossed
+
+**Example (Simplified):**
+```
+Day 1: p = 0.10 → Continue
+Day 3: p = 0.03 → Continue
+Day 5: p = 0.001 → Stop! (clear winner)
+```
+
+### Tools That Support Sequential Testing
+
+- **Statsig:** Built-in sequential testing
+- **GrowthBook:** Bayesian statistics
+- **Optimizely:** Stats Engine (sequential)
+
+### Benefits
+
+- Faster results (stop early if clear winner)
+- Less opportunity cost
+- Detect large effects quickly
+
+### Drawbacks
+
+- Requires special tools
+- Can't use traditional p-value
+- More complex
+
+---
+
+## Holdout Groups
+
+### What is a Holdout Group?
+
+**Definition:** Small % of users kept on old experience permanently
+
+**Example:**
+- 95% of users: New feature
+- 5% of users: Old experience (holdout)
+
+### Why Use Holdout Groups?
+
+**Measure Long-Term Effects:**
+- A/B test shows +10% conversion in 2 weeks
+- Holdout shows +5% conversion after 6 months
+- **Learning:** Effect diminishes over time
+
+**Detect Delayed Negative Impacts:**
+- A/B test shows +15% signups
+- Holdout shows +10% churn after 3 months
+- **Learning:** Feature attracts wrong users
+
+### How Long to Keep Holdout?
+
+**Guideline:**
+- 1-3 months for most features
+- 6-12 months for major changes
+- Permanent for critical features
+
+### When to Remove Holdout?
+
+**Remove if:**
+- No long-term differences detected
+- Opportunity cost too high (5% of users on worse experience)
+- Feature is critical (everyone should have it)
+
+---
+
+## Experiment Analysis
+
+### Step 1: Compare Primary Metric
+
+**Example:**
+- Control: 5.0% conversion
+- Treatment: 5.5% conversion
+- Lift: +10% relative
+- P-value: 0.03 ✅
+
+**Decision:** Treatment is statistically significantly better.
+
+### Step 2: Check Secondary Metrics
+
+**Example:**
+- Revenue per user: $10.50 (control) vs $11.20 (treatment) ✅
+- Time to checkout: 3.2 min (control) vs 2.8 min (treatment) ✅
+
+**Decision:** Secondary metrics also improved.
+
+### Step 3: Check Counter Metrics
+
+**Example:**
+- Bounce rate: 30% (control) vs 32% (treatment) ⚠️
+- Error rate: 0.5% (control) vs 0.5% (treatment) ✅
+
+**Decision:** Slight increase in bounce rate, investigate.
+
+### Step 4: Segment Analysis
+
+**Did it work for everyone?**
+
+| Segment | Control | Treatment | Lift |
+|---------|---------|-----------|------|
+| Mobile | 4.5% | 5.2% | +15% ✅ |
+| Desktop | 5.5% | 5.8% | +5% ✅ |
+| Free users | 3.0% | 3.6% | +20% ✅ |
+| Paid users | 7.0% | 7.1% | +1% ⚠️ |
+
+**Learning:** Works great for mobile and free users, minimal impact on paid users.
+
+### Step 5: Statistical Significance
+
+**Check:**
+- P-value < 0.05 ✅
+- Confidence interval doesn't include 0 ✅
+
+**Example:**
+- Lift: +10%
+- 95% CI: [+5%, +15%]
+- Interpretation: We're 95% confident the true lift is between 5% and 15%.
+
+### Step 6: Practical Significance
+
+**Is the improvement meaningful?**
+
+**Example:**
+- Statistically significant: Yes (p = 0.04)
+- Lift: +0.1% (5.0% → 5.005%)
+- **Decision:** Not practically significant (too small to matter)
+
+**Guideline:**
+- Small lift but high volume → Ship (e.g., +0.1% on 1M users = 1,000 more conversions)
+- Large lift but low volume → Maybe ship (e.g., +50% on 100 users = 50 more conversions)
+
+---
+
+## Decision Framework
+
+### Ship If:
+
+✅ **Positive:** Treatment is better than control
+✅ **Significant:** P-value < 0.05
+✅ **No Red Flags:** Secondary and counter metrics look good
+✅ **Works for Key Segments:** At least works for majority
+
+**Example:**
+- Conversion: +10% (p = 0.03) ✅
+- Revenue: +8% (p = 0.05) ✅
+- Bounce rate: No change ✅
+- Works for mobile and desktop ✅
+- **Decision: Ship!**
+
+### Iterate If:
+
+⚠️ **Mixed Results:** Some metrics up, some down
+⚠️ **Works for Some Segments Only:** E.g., only mobile, not desktop
+⚠️ **Close to Significance:** P = 0.06 (just missed)
+
+**Example:**
+- Conversion: +10% (p = 0.03) ✅
+- Revenue: -5% (p = 0.08) ⚠️
+- **Decision: Iterate.** Conversion is up but revenue is down. Investigate why.
+
+### Kill If:
+
+❌ **Negative:** Treatment is worse than control
+❌ **Not Significant:** P-value > 0.05
+❌ **Opportunity Cost Too High:** Could be working on better ideas
+
+**Example:**
+- Conversion: +2% (p = 0.15) ❌
+- Took 4 weeks to test
+- **Decision: Kill.** Not significant, move on to next idea.
+
+---
+
+## Tools
+
+### Feature Flags
+
+**LaunchDarkly:**
+- Feature flag management
+- Gradual rollouts
+- Kill switches
+
+**Split.io:**
+- Feature flags + experimentation
+- Real-time metrics
+
+**Unleash:**
+- Open-source feature flags
+- Self-hosted option
+
+### Experimentation Platforms
+
+**Optimizely:**
+- Full-stack experimentation
+- Visual editor for web
+- Stats Engine (sequential testing)
+
+**VWO (Visual Website Optimizer):**
+- A/B testing for web
+- Heatmaps, session recordings
+- Visual editor
+
+**GrowthBook:**
+- Open-source experimentation
+- Bayesian statistics
+- Feature flags
+
+**Statsig:**
+- Modern experimentation platform
+- Sequential testing
+- Free tier
+
+### Analytics
+
+**Amplitude:**
+- Product analytics
+- Funnel analysis
+- Cohort analysis
+
+**Mixpanel:**
+- Event-based analytics
+- A/B test analysis
+- Retention analysis
+
+**PostHog:**
+- Open-source product analytics
+- Feature flags
+- Session replay
+
+---
+
+## A/B Testing for Engineers
+
+### 1. Feature Flag Implementation
+
+**Node.js (LaunchDarkly):**
+```javascript
+const LaunchDarkly = require('launchdarkly-node-server-sdk');
+
+const client = LaunchDarkly.init(process.env.LAUNCHDARKLY_SDK_KEY);
+
+await client.waitForInitialization();
+
+app.get('/checkout', async (req, res) => {
+  const user = {
+    key: req.user.id,
+    email: req.user.email,
+    custom: {
+      plan: req.user.plan
+    }
+  };
+  
+  const showNewCheckout = await client.variation('new-checkout-flow', user, false);
+  
+  if (showNewCheckout) {
+    res.render('checkout-new');
+  } else {
+    res.render('checkout-old');
+  }
+});
+```
+
+**Python (Statsig):**
+```python
+from statsig import statsig
+
+statsig.initialize(os.environ['STATSIG_SERVER_KEY'])
+
+@app.route('/checkout')
+def checkout():
+    user = {
+        'userID': current_user.id,
+        'email': current_user.email,
+        'custom': {
+            'plan': current_user.plan
+        }
+    }
+    
+    show_new_checkout = statsig.check_gate(user, 'new_checkout_flow')
+    
+    if show_new_checkout:
+        return render_template('checkout_new.html')
+    else:
+        return render_template('checkout_old.html')
+```
+
+### 2. Metric Instrumentation
+
+**Segment (Event Tracking):**
+```javascript
+const Analytics = require('analytics-node');
+const analytics = new Analytics(process.env.SEGMENT_WRITE_KEY);
+
+// Track checkout started
+analytics.track({
+  userId: user.id,
+  event: 'Checkout Started',
+  properties: {
+    variant: showNewCheckout ? 'treatment' : 'control',
+    cart_value: cart.total,
+    items_count: cart.items.length
+  }
+});
+
+// Track checkout completed
+analytics.track({
+  userId: user.id,
+  event: 'Checkout Completed',
+  properties: {
+    variant: showNewCheckout ? 'treatment' : 'control',
+    order_id: order.id,
+    revenue: order.total
+  }
+});
+```
+
+### 3. Data Pipeline
+
+**Architecture:**
+```
+Application
+    ↓ (events)
+Segment
+    ↓ (forwards to)
+├── Amplitude (analytics)
+├── Mixpanel (analytics)
+├── Data Warehouse (BigQuery, Snowflake)
+└── Statsig (experimentation)
+```
+
+### 4. Results Dashboard
+
+**Grafana Dashboard:**
+```json
+{
+  "dashboard": {
+    "title": "A/B Test: New Checkout Flow",
+    "panels": [
+      {
+        "title": "Conversion Rate by Variant",
+        "targets": [
+          {
+            "expr": "sum(checkout_completed{variant='control'}) / sum(checkout_started{variant='control'})",
+            "legendFormat": "Control"
+          },
+          {
+            "expr": "sum(checkout_completed{variant='treatment'}) / sum(checkout_started{variant='treatment'})",
+            "legendFormat": "Treatment"
+          }
+        ]
+      },
+      {
+        "title": "Sample Size",
+        "targets": [
+          {
+            "expr": "sum(checkout_started{variant='control'})",
+            "legendFormat": "Control"
+          },
+          {
+            "expr": "sum(checkout_started{variant='treatment'})",
+            "legendFormat": "Treatment"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Real Experiment Examples
+
+### Example 1: Button Color Test (Classic)
+
+**Hypothesis:**
+> "If we change the CTA button from blue to orange, click-through rate will increase by 10%, because orange is more attention-grabbing."
+
+**Test:**
+- Control: Blue button
+- Treatment: Orange button
+- Sample size: 10,000 per variant
+- Duration: 1 week
+
+**Results:**
+- Control: 5.2% CTR
+- Treatment: 5.7% CTR
+- Lift: +9.6%
+- P-value: 0.04 ✅
+
+**Decision:** Ship orange button.
+
+### Example 2: Checkout Flow Optimization
+
+**Hypothesis:**
+> "If we reduce checkout from 5 steps to 3 steps, conversion will increase by 15%, because users abandon due to flow length."
+
+**Test:**
+- Control: 5-step checkout
+- Treatment: 3-step checkout (combined steps)
+- Sample size: 50,000 per variant
+- Duration: 2 weeks
+
+**Results:**
+- Control: 8.5% conversion
+- Treatment: 9.8% conversion
+- Lift: +15.3%
+- P-value: 0.001 ✅
+
+**Secondary Metrics:**
+- Time to checkout: 4.2 min → 3.1 min ✅
+- Error rate: 2.1% → 1.8% ✅
+
+**Decision:** Ship 3-step checkout.
+
+### Example 3: Pricing Page Variants
+
+**Hypothesis:**
+> "If we show annual pricing first (instead of monthly), annual plan adoption will increase by 25%, because anchoring effect."
+
+**Test:**
+- Control: Monthly pricing shown first
+- Treatment: Annual pricing shown first
+- Sample size: 20,000 per variant
+- Duration: 3 weeks
+
+**Results:**
+- Control: 12% annual adoption
+- Treatment: 18% annual adoption
+- Lift: +50%
+- P-value: 0.001 ✅
+
+**Counter Metrics:**
+- Overall conversion: 10.5% → 10.2% ⚠️ (slight drop)
+
+**Decision:** Ship, but monitor overall conversion.
+
+### Example 4: Onboarding Flow
+
+**Hypothesis:**
+> "If we add an interactive tutorial in onboarding, activation rate will increase by 30%, because users don't know how to get started."
+
+**Test:**
+- Control: No tutorial
+- Treatment: Interactive tutorial (5 steps)
+- Sample size: 15,000 per variant
+- Duration: 2 weeks
+
+**Results:**
+- Control: 25% activation rate
+- Treatment: 28% activation rate
+- Lift: +12%
+- P-value: 0.08 ❌ (not significant)
+
+**Segment Analysis:**
+- New users: +20% (p = 0.03) ✅
+- Returning users: +2% (p = 0.5) ❌
+
+**Decision:** Iterate. Show tutorial only to new users.
+
+---
+
+## Advanced: Bayesian A/B Testing
+
+### Traditional (Frequentist) A/B Testing
+
+**Approach:**
+- Null hypothesis: No difference between A and B
+- P-value: Probability of seeing this result if null is true
+- Reject null if p < 0.05
+
+**Interpretation:**
+> "There's a 95% chance the result is not due to random chance."
+
+### Bayesian A/B Testing
+
+**Approach:**
+- Prior belief: What we believe before test
+- Likelihood: Data from test
+- Posterior belief: Updated belief after test
+
+**Interpretation:**
+> "There's a 95% probability that B is better than A."
+
+### Benefits of Bayesian
+
+1. **Easier to Interpret:**
+   - "95% probability B is better" (intuitive)
+   - vs "p = 0.03" (confusing)
+
+2. **Can Stop Early:**
+   - No peeking problem
+   - Stop when confident enough
+
+3. **Incorporates Prior Knowledge:**
+   - Use historical data
+   - More accurate with small samples
+
+### Tools That Use Bayesian
+
+- **GrowthBook:** Bayesian by default
+- **VWO:** Bayesian engine option
+- **Google Optimize:** Bayesian (deprecated)
+
+### Example
+
+**Test:**
+- Control: 5.0% conversion (1000 users)
+- Treatment: 5.5% conversion (1000 users)
+
+**Frequentist:**
+- P-value: 0.15 (not significant)
+- Decision: Can't conclude
+
+**Bayesian:**
+- Probability B > A: 87%
+- Expected lift: +10%
+- Decision: Likely better, but not confident enough (need 95%)
+
+---
+
+## Summary
+
+### Quick Reference
+
+**Experiment Types:**
+- A/B test: Two variants
+- Multivariate: Multiple changes
+- Sequential: Stop early
+- Holdout: Long-term measurement
+
+**When to Experiment:**
+- Significant features
+- Uncertain outcomes
+- Multiple options
+- Optimization
+
+**Process:**
+1. Define hypothesis
+2. Choose metrics
+3. Calculate sample size
+4. Set duration
+5. Design variants
+6. Launch
+7. Analyze
+8. Decide
+
+**Metrics:**
+- Primary: What we're optimizing
+- Secondary: Guardrails
+- Counter: Watch for negatives
+
+**Statistical Significance:**
+- P-value < 0.05
+- Power > 80%
+- Minimum detectable effect
+
+**Common Pitfalls:**
+- Peeking
+- Sample ratio mismatch
+- Novelty effect
+- Seasonality
+
+**Decision Framework:**
+- Ship: Positive, significant, no red flags
+- Iterate: Mixed results
+- Kill: Negative, not significant
+
+**Tools:**
+- Feature flags: LaunchDarkly, Split.io
+- Experimentation: Optimizely, Statsig, GrowthBook
+- Analytics: Amplitude, Mixpanel, PostHog

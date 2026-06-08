@@ -1,532 +1,152 @@
 ---
 name: electron
-description: >
-  Electron patterns for building cross-platform desktop applications.
-  Trigger: When building desktop apps, working with Electron main/renderer processes, IPC communication, or native integrations.
-metadata:
-  author: gentleman-programming
-  version: "1.0"
+description: Provides comprehensive guidance for Electron framework including main process, renderer process, IPC communication, window management, and desktop app development. Use when the user asks about Electron, needs to create desktop applications, implement Electron features, or build cross-platform desktop apps.
+license: Complete terms in LICENSE.txt
 ---
 
-## When to Use
-
-Load this skill when:
-- Building cross-platform desktop applications
-- Working with Electron's main and renderer processes
-- Implementing IPC (Inter-Process Communication)
-- Integrating native OS features (menus, notifications, file system)
-- Setting up Electron with React, Vue, or other frameworks
-- Configuring auto-updates and app distribution
-
-## Critical Patterns
-
-### Pattern 1: Project Structure
-
-```
-src/
-├── main/                    # Main process (Node.js)
-│   ├── index.ts            # Entry point
-│   ├── ipc/                # IPC handlers
-│   │   ├── handlers.ts
-│   │   └── channels.ts     # Type-safe channel names
-│   ├── services/           # Native services
-│   │   ├── store.ts        # electron-store
-│   │   └── updater.ts      # auto-updater
-│   └── windows/            # Window management
-│       └── main-window.ts
-├── renderer/               # Renderer process (browser)
-│   ├── src/
-│   │   ├── App.tsx
-│   │   ├── components/
-│   │   └── hooks/
-│   │       └── useIPC.ts   # IPC hooks
-│   └── index.html
-├── preload/                # Preload scripts
-│   └── index.ts            # Expose safe APIs
-└── shared/                 # Shared types
-    └── types.ts
-```
-
-### Pattern 2: Secure IPC Communication
-
-Always use contextBridge for secure communication:
-
-```typescript
-// preload/index.ts
-import { contextBridge, ipcRenderer } from 'electron';
-import type { IpcChannels } from '../shared/types';
-
-// Type-safe exposed API
-const electronAPI = {
-  // One-way: renderer -> main
-  send: <T extends keyof IpcChannels>(
-    channel: T, 
-    data: IpcChannels[T]['request']
-  ) => {
-    ipcRenderer.send(channel, data);
-  },
-
-  // Two-way: renderer -> main -> renderer
-  invoke: <T extends keyof IpcChannels>(
-    channel: T, 
-    data: IpcChannels[T]['request']
-  ): Promise<IpcChannels[T]['response']> => {
-    return ipcRenderer.invoke(channel, data);
-  },
-
-  // Listen: main -> renderer
-  on: <T extends keyof IpcChannels>(
-    channel: T, 
-    callback: (data: IpcChannels[T]['response']) => void
-  ) => {
-    const subscription = (_: Electron.IpcRendererEvent, data: IpcChannels[T]['response']) => {
-      callback(data);
-    };
-    ipcRenderer.on(channel, subscription);
-    return () => ipcRenderer.removeListener(channel, subscription);
-  },
-};
-
-contextBridge.exposeInMainWorld('electron', electronAPI);
-```
-
-### Pattern 3: Type-Safe IPC Channels
-
-Define all channels with request/response types:
-
-```typescript
-// shared/types.ts
-export interface IpcChannels {
-  'app:get-version': {
-    request: void;
-    response: string;
-  };
-  'file:read': {
-    request: { path: string };
-    response: { content: string } | { error: string };
-  };
-  'file:write': {
-    request: { path: string; content: string };
-    response: { success: boolean };
-  };
-  'dialog:open-file': {
-    request: { filters?: Electron.FileFilter[] };
-    response: string | null;
-  };
-  'store:get': {
-    request: { key: string };
-    response: unknown;
-  };
-  'store:set': {
-    request: { key: string; value: unknown };
-    response: void;
-  };
-}
-
-// Extend Window interface for renderer
-declare global {
-  interface Window {
-    electron: typeof electronAPI;
-  }
-}
-```
-
-## Code Examples
-
-### Example 1: Main Process Setup
-
-```typescript
-// main/index.ts
-import { app, BrowserWindow, ipcMain } from 'electron';
-import path from 'path';
-import { registerIpcHandlers } from './ipc/handlers';
-
-let mainWindow: BrowserWindow | null = null;
-
-async function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 800,
-    minHeight: 600,
-    webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
-      contextIsolation: true,  // Required for security
-      nodeIntegration: false,  // Required for security
-      sandbox: true,           // Extra security
-    },
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    trafficLightPosition: { x: 15, y: 10 },
-  });
-
-  // Register IPC handlers
-  registerIpcHandlers();
-
-  // Load the app
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-  }
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-}
-
-app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-```
-
-### Example 2: IPC Handlers
-
-```typescript
-// main/ipc/handlers.ts
-import { ipcMain, dialog, app } from 'electron';
-import fs from 'fs/promises';
-import Store from 'electron-store';
-
-const store = new Store();
-
-export function registerIpcHandlers() {
-  // Get app version
-  ipcMain.handle('app:get-version', () => {
-    return app.getVersion();
-  });
-
-  // File operations
-  ipcMain.handle('file:read', async (_, { path }) => {
-    try {
-      const content = await fs.readFile(path, 'utf-8');
-      return { content };
-    } catch (error) {
-      return { error: (error as Error).message };
-    }
-  });
-
-  ipcMain.handle('file:write', async (_, { path, content }) => {
-    try {
-      await fs.writeFile(path, content, 'utf-8');
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
-  });
-
-  // Native dialogs
-  ipcMain.handle('dialog:open-file', async (_, { filters }) => {
-    const result = await dialog.showOpenDialog({
-      properties: ['openFile'],
-      filters: filters || [{ name: 'All Files', extensions: ['*'] }],
-    });
-    return result.canceled ? null : result.filePaths[0];
-  });
-
-  // Persistent storage
-  ipcMain.handle('store:get', (_, { key }) => {
-    return store.get(key);
-  });
-
-  ipcMain.handle('store:set', (_, { key, value }) => {
-    store.set(key, value);
-  });
-}
-```
-
-### Example 3: React Hook for IPC
-
-```typescript
-// renderer/src/hooks/useIPC.ts
-import { useCallback, useEffect, useState } from 'react';
-
-export function useIPC<T>(
-  channel: string,
-  initialValue: T
-): [T, boolean, Error | null] {
-  const [data, setData] = useState<T>(initialValue);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    window.electron
-      .invoke(channel, undefined)
-      .then((result) => {
-        if (mounted) {
-          setData(result as T);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (mounted) {
-          setError(err);
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [channel]);
-
-  return [data, loading, error];
-}
-
-// Hook for IPC subscriptions
-export function useIPCListener<T>(
-  channel: string,
-  callback: (data: T) => void
-) {
-  useEffect(() => {
-    const unsubscribe = window.electron.on(channel, callback);
-    return unsubscribe;
-  }, [channel, callback]);
-}
-
-// Hook for IPC mutations
-export function useIPCMutation<TRequest, TResponse>(channel: string) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const mutate = useCallback(
-    async (data: TRequest): Promise<TResponse | null> => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await window.electron.invoke(channel, data);
-        return result as TResponse;
-      } catch (err) {
-        setError(err as Error);
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [channel]
-  );
-
-  return { mutate, loading, error };
-}
-```
-
-### Example 4: Auto-Updater Setup
-
-```typescript
-// main/services/updater.ts
-import { autoUpdater } from 'electron-updater';
-import { BrowserWindow } from 'electron';
-import log from 'electron-log';
-
-export function setupAutoUpdater(mainWindow: BrowserWindow) {
-  autoUpdater.logger = log;
-  autoUpdater.autoDownload = false;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  autoUpdater.on('checking-for-update', () => {
-    mainWindow.webContents.send('updater:checking');
-  });
-
-  autoUpdater.on('update-available', (info) => {
-    mainWindow.webContents.send('updater:available', info);
-  });
-
-  autoUpdater.on('update-not-available', () => {
-    mainWindow.webContents.send('updater:not-available');
-  });
-
-  autoUpdater.on('download-progress', (progress) => {
-    mainWindow.webContents.send('updater:progress', progress);
-  });
-
-  autoUpdater.on('update-downloaded', () => {
-    mainWindow.webContents.send('updater:downloaded');
-  });
-
-  autoUpdater.on('error', (error) => {
-    mainWindow.webContents.send('updater:error', error.message);
-  });
-
-  // Check for updates on startup (with delay)
-  setTimeout(() => {
-    autoUpdater.checkForUpdates();
-  }, 5000);
-}
-
-// IPC handlers for updater
-export function registerUpdaterHandlers() {
-  ipcMain.handle('updater:check', () => autoUpdater.checkForUpdates());
-  ipcMain.handle('updater:download', () => autoUpdater.downloadUpdate());
-  ipcMain.handle('updater:install', () => autoUpdater.quitAndInstall());
-}
-```
-
-### Example 5: Native Menu Setup
-
-```typescript
-// main/menu.ts
-import { Menu, shell, app, BrowserWindow } from 'electron';
-
-export function createMenu(mainWindow: BrowserWindow) {
-  const isMac = process.platform === 'darwin';
-
-  const template: Electron.MenuItemConstructorOptions[] = [
-    ...(isMac
-      ? [{
-          label: app.name,
-          submenu: [
-            { role: 'about' as const },
-            { type: 'separator' as const },
-            { role: 'services' as const },
-            { type: 'separator' as const },
-            { role: 'hide' as const },
-            { role: 'hideOthers' as const },
-            { role: 'unhide' as const },
-            { type: 'separator' as const },
-            { role: 'quit' as const },
-          ],
-        }]
-      : []),
-    {
-      label: 'File',
-      submenu: [
-        {
-          label: 'Open File',
-          accelerator: 'CmdOrCtrl+O',
-          click: () => mainWindow.webContents.send('menu:open-file'),
-        },
-        {
-          label: 'Save',
-          accelerator: 'CmdOrCtrl+S',
-          click: () => mainWindow.webContents.send('menu:save'),
-        },
-        { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' },
-      ],
-    },
-    {
-      label: 'Edit',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
-      ],
-    },
-    {
-      label: 'View',
-      submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-      ],
-    },
-    {
-      label: 'Help',
-      submenu: [
-        {
-          label: 'Documentation',
-          click: () => shell.openExternal('https://example.com/docs'),
-        },
-      ],
-    },
-  ];
-
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-}
-```
-
-## Anti-Patterns
-
-### Don't: Enable nodeIntegration
-
-```typescript
-// ❌ DANGEROUS - Never do this
-const win = new BrowserWindow({
-  webPreferences: {
-    nodeIntegration: true,    // Security vulnerability!
-    contextIsolation: false,  // Security vulnerability!
-  },
-});
-
-// ✅ Safe - Always use contextIsolation with preload
-const win = new BrowserWindow({
-  webPreferences: {
-    preload: path.join(__dirname, 'preload.js'),
-    contextIsolation: true,
-    nodeIntegration: false,
-    sandbox: true,
-  },
-});
-```
-
-### Don't: Use Remote Module
-
-```typescript
-// ❌ Bad - remote is deprecated and insecure
-const { BrowserWindow } = require('@electron/remote');
-
-// ✅ Good - Use IPC for all main process access
-// In renderer:
-const result = await window.electron.invoke('dialog:open-file', {});
-```
-
-### Don't: Expose Entire ipcRenderer
-
-```typescript
-// ❌ Bad - exposes everything
-contextBridge.exposeInMainWorld('electron', {
-  ipcRenderer: ipcRenderer, // Never expose the entire module!
-});
-
-// ✅ Good - expose only specific, typed methods
-contextBridge.exposeInMainWorld('electron', {
-  invoke: (channel: string, data: unknown) => {
-    const allowedChannels = ['app:get-version', 'file:read'];
-    if (allowedChannels.includes(channel)) {
-      return ipcRenderer.invoke(channel, data);
-    }
-    throw new Error(`Channel ${channel} not allowed`);
-  },
-});
-```
-
-## Quick Reference
-
-| Task | Pattern |
-|------|---------|
-| Create project | `npm create electron-vite@latest` |
-| Main process file access | Use Node.js `fs` module in main |
-| Renderer file access | IPC through preload |
-| Persistent storage | `electron-store` in main process |
-| Auto-updates | `electron-updater` |
-| Native notifications | `new Notification()` in main |
-| System tray | `Tray` class in main |
-| Keyboard shortcuts | `globalShortcut.register()` |
-| Deep linking | `app.setAsDefaultProtocolClient()` |
-| Code signing | `electron-builder` config |
+## When to use this skill
+
+Use this skill whenever the user wants to:
+- Build cross-platform desktop applications with Electron
+- Understand Electron architecture (main process, renderer process, preload)
+- Implement IPC (Inter-Process Communication) between processes
+- Create and manage BrowserWindow instances
+- Implement menus, tray icons, and native features
+- Package and distribute Electron applications
+- Use Electron Forge for project scaffolding and building
+- Debug and test Electron applications
+- Implement security best practices
+- Use Electron APIs (app, BrowserWindow, ipcMain, ipcRenderer, etc.)
+
+## How to use this skill
+
+This skill is organized to match the Electron official documentation structure (https://www.electronjs.org/zh/docs/latest/, https://www.electronjs.org/zh/docs/latest/api/app). When working with Electron:
+
+1. **Identify the topic** from the user's request:
+   - Getting started/快速开始 → `examples/getting-started/installation.md` or `examples/getting-started/quick-start.md`
+   - Main process/主进程 → `examples/processes/main-process.md`
+   - Renderer process/渲染进程 → `examples/processes/renderer-process.md`
+   - IPC communication/IPC 通信 → `examples/processes/ipc-communication.md`
+   - BrowserWindow/窗口 → `examples/api/browser-window.md`
+   - Menu/菜单 → `examples/api/menu.md`
+   - Packaging/打包 → `examples/advanced/packaging.md`
+   - Security/安全 → `examples/advanced/security.md`
+
+2. **Load the appropriate example file** from the `examples/` directory:
+
+   **Getting Started (快速开始) - `examples/getting-started/`**:
+   - `examples/getting-started/installation.md` - Installing Electron and basic setup
+   - `examples/getting-started/quick-start.md` - Quick start tutorial
+
+   **Processes (进程) - `examples/processes/`**:
+   - `examples/processes/main-process.md` - Main process concepts and usage
+   - `examples/processes/renderer-process.md` - Renderer process concepts
+   - `examples/processes/preload-scripts.md` - Preload scripts usage
+   - `examples/processes/ipc-communication.md` - IPC communication patterns
+
+   **API Examples (API 示例) - `examples/api/`**:
+   - `examples/api/browser-window.md` - BrowserWindow usage
+   - `examples/api/menu.md` - Menu and context menu
+   - `examples/api/tray.md` - System tray
+   - `examples/api/dialog.md` - File dialogs
+   - `examples/api/ipc-main.md` - ipcMain usage
+   - `examples/api/ipc-renderer.md` - ipcRenderer usage
+
+   **Advanced (高级) - `examples/advanced/`**:
+   - `examples/advanced/packaging.md` - Application packaging
+   - `examples/advanced/security.md` - Security best practices
+   - `examples/advanced/auto-updater.md` - Auto updater
+   - `examples/advanced/native-modules.md` - Native modules
+
+   **Tools (工具) - `examples/tools/`**:
+   - `examples/tools/electron-forge.md` - Electron Forge usage
+   - `examples/tools/electron-fiddle.md` - Electron Fiddle usage
+
+3. **Follow the specific instructions** in that example file for syntax, structure, and best practices
+
+   **Important Notes**:
+   - All examples follow Electron latest API
+   - Examples use both CommonJS (require) and ES modules (import)
+   - Each example file includes key concepts, code examples, and key points
+   - Always check the example file for best practices and common patterns
+   - Electron supports Windows, macOS, and Linux
+
+4. **Reference API documentation** in the `api/` directory when needed:
+   - `api/app.md` - app module API
+   - `api/browser-window.md` - BrowserWindow API
+   - `api/ipc-main.md` - ipcMain API
+   - `api/ipc-renderer.md` - ipcRenderer API
+   - `api/menu.md` - Menu API
+   - `api/tray.md` - Tray API
+
+5. **Use templates** from the `templates/` directory:
+   - `templates/main-process.md` - Main process template
+   - `templates/preload-script.md` - Preload script template
+   - `templates/renderer-process.md` - Renderer process template
+   - `templates/package-json.md` - package.json template
+
+
+### Doc mapping (one-to-one with official documentation)
+
+- `examples/` → https://www.electronjs.org/zh/docs/latest/
+- `api/` → https://www.electronjs.org/zh/docs/latest/api/app
+
+## Examples and Templates
+
+This skill includes detailed examples organized to match the official documentation structure. All examples are in the `examples/` directory (see mapping above).
+
+**To use examples:**
+- Identify the topic from the user's request
+- Load the appropriate example file from the mapping above
+- Follow the instructions, syntax, and best practices in that file
+- Adapt the code examples to your specific use case
+
+**To use templates:**
+- Reference templates in `templates/` directory for common scaffolding
+- Adapt templates to your specific needs and coding style
+
+## API Reference
+
+Detailed API documentation is available in the `api/` directory, organized to match the official Electron API documentation structure:
+
+### Core APIs (`api/`)
+- `api/app.md` - app module API
+- `api/browser-window.md` - BrowserWindow API
+- `api/ipc-main.md` - ipcMain API
+- `api/ipc-renderer.md` - ipcRenderer API
+- `api/menu.md` - Menu API
+- `api/tray.md` - Tray API
+- `api/dialog.md` - Dialog API
+
+**To use API reference:**
+1. Identify the API you need help with
+2. Load the corresponding API file from the `api/` directory
+3. Find the API signature, parameters, return type, and examples
+4. Reference the linked example files for detailed usage patterns
+5. All API files include links to relevant example files in the `examples/` directory
+
+## Best Practices
+
+1. **Security**: Never enable nodeIntegration in renderer process, use preload scripts
+2. **Process separation**: Keep main and renderer processes separate
+3. **IPC communication**: Use IPC for safe communication between processes
+4. **Resource management**: Properly clean up resources (windows, listeners)
+5. **Error handling**: Implement proper error handling and crash reporting
+6. **Performance**: Optimize for performance, use webContents for debugging
+7. **Packaging**: Use Electron Forge or electron-builder for packaging
+8. **Auto updates**: Implement auto-updater for production apps
+9. **Native modules**: Handle native module compatibility
+10. **Cross-platform**: Test on all target platforms
 
 ## Resources
 
-- [Electron Documentation](https://www.electronjs.org/docs/latest)
-- [Electron Forge](https://www.electronforge.io/)
-- [electron-vite](https://electron-vite.org/)
-- [electron-builder](https://www.electron.build/)
-- [Electron Security Checklist](https://www.electronjs.org/docs/latest/tutorial/security)
+- **Official Website**: https://www.electronjs.org/zh/
+- **Documentation**: https://www.electronjs.org/zh/docs/latest/
+- **API Reference**: https://www.electronjs.org/zh/docs/latest/api/app
+- **Electron Forge**: https://www.electronforge.io
+- **Electron Fiddle**: https://www.electronjs.org/zh/fiddle
+- **GitHub Repository**: https://github.com/electron/electron
+
+## Keywords
+
+Electron, desktop app, main process, renderer process, preload, IPC, BrowserWindow, Menu, Tray, Dialog, packaging, electron-builder, electron-forge, electron-fiddle, cross-platform, 桌面应用, 主进程, 渲染进程, IPC 通信, 窗口, 菜单, 托盘, 打包

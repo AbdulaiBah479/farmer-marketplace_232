@@ -1,7 +1,6 @@
 ---
 name: document-xlsx
-description: "Create/edit .xlsx spreadsheets with formulas, charts, and data validation. Use when asked to generate Excel reports, models, or exports."
-allowed-tools: Bash, Read, Write, Glob, Grep
+description: "Create, edit, audit, and extract Excel spreadsheets (.xlsx): generate reports/exports, apply formulas/formatting/charts/data validation, parse existing workbooks, and avoid spreadsheet risks (formula injection, broken links, hidden rows). Supports ExcelJS, openpyxl, pandas, XlsxWriter, and SheetJS."
 ---
 
 # Document XLSX Skill — Quick Reference
@@ -286,9 +285,6 @@ Use only when explicitly requested and policy-compliant.
 - [references/excel-formulas.md](references/excel-formulas.md) — Formula reference and patterns
 - [references/excel-formatting.md](references/excel-formatting.md) — Styling, conditional formatting
 - [references/excel-charts.md](references/excel-charts.md) — Chart types and customization
-- [references/excel-data-validation.md](references/excel-data-validation.md) — Dropdowns, input constraints, cascading validation
-- [references/excel-pivot-tables.md](references/excel-pivot-tables.md) — Pivot workarounds, summary patterns, pandas
-- [references/excel-security-protection.md](references/excel-security-protection.md) — Sheet protection, formula injection prevention
 - [data/sources.json](data/sources.json) — Library documentation links
 
 **Templates**
@@ -300,9 +296,3 @@ Use only when explicitly requested and policy-compliant.
 - [../document-pdf/SKILL.md](../document-pdf/SKILL.md) — PDF generation from data
 - [../ai-ml-data-science/SKILL.md](../ai-ml-data-science/SKILL.md) — Data analysis patterns
 - [../data-sql-optimization/SKILL.md](../data-sql-optimization/SKILL.md) — Database to Excel workflows
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

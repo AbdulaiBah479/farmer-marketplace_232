@@ -5197,6 +5197,12 @@
       "skillPath": "plugins/iso42001/skills/iso42001/SKILL.md",
       "computedHash": "ae1c6f93940b23141c7fe8c39dc0494205419df340c4307ba008029959d44a2e"
     },
+    "israeli-academic-scholarships": {
+      "source": "skills-il/education",
+      "sourceType": "github",
+      "skillPath": "israeli-academic-scholarships/SKILL.md",
+      "computedHash": "3af624bd72466f4acce79e2134b754ef62d4d6977698bd2053e3ee563ee26639"
+    },
     "israeli-ai-compliance-kit": {
       "source": "skills-il/security-compliance",
       "sourceType": "github",
@@ -5208,6 +5214,18 @@
       "sourceType": "github",
       "skillPath": "israeli-appsec-scanner/SKILL.md",
       "computedHash": "e58adf8ab6df43f14b08c946e9302be9c27fbaeda6b7a325bb40d754461ca81b"
+    },
+    "israeli-bagrut-psychometric": {
+      "source": "skills-il/education",
+      "sourceType": "github",
+      "skillPath": "israeli-bagrut-psychometric/SKILL.md",
+      "computedHash": "306d3d1034e2532444d231b7e45956c63c700c7086cd478dd90e76dc27a403fa"
+    },
+    "israeli-childcare-navigator": {
+      "source": "skills-il/education",
+      "sourceType": "github",
+      "skillPath": "israeli-childcare-navigator/SKILL.md",
+      "computedHash": "d9b031d3f7b58fdc3032bfe8551fcae10acd7a0c468692b8af657ff5bcfad37c"
     },
     "israeli-cyber-regulations": {
       "source": "skills-il/security-compliance",
@@ -5227,6 +5245,18 @@
       "skillPath": "israeli-ecommerce-compliance/SKILL.md",
       "computedHash": "0bc84cb6891ceb9547ee58db2d6b6926624610586b4456a119d97f1222999c5a"
     },
+    "israeli-genealogy-researcher": {
+      "source": "skills-il/education",
+      "sourceType": "github",
+      "skillPath": "israeli-genealogy-researcher/SKILL.md",
+      "computedHash": "2c1149c6704f2707d9db9670ff165f5073fc2d662610afd1ba842f6fe50ee3c6"
+    },
+    "israeli-heritage-explorer": {
+      "source": "skills-il/education",
+      "sourceType": "github",
+      "skillPath": "israeli-heritage-explorer/SKILL.md",
+      "computedHash": "0f0c548f1330ecda47b4235860cf78c587793ae51b0156cb56b034159cb769e2"
+    },
     "israeli-privacy-shield": {
       "source": "skills-il/security-compliance",
       "sourceType": "github",
@@ -5244,6 +5274,12 @@
       "sourceType": "github",
       "skillPath": "israeli-standards-import-checker/SKILL.md",
       "computedHash": "7a3f71f682f49b20076e78ec704d580be49e0acb416afea1579256f5a9d36091"
+    },
+    "israeli-tech-interview-prep": {
+      "source": "skills-il/education",
+      "sourceType": "github",
+      "skillPath": "israeli-tech-interview-prep/SKILL.md",
+      "computedHash": "12a514612d7a6b0c1d1bba483053187efa47030e06a8cf83efe900819ce25535"
     },
     "istio-traffic-management": {
       "source": "agent-skills-hub/agent-skills-hub",

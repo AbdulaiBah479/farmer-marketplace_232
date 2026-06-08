@@ -1,88 +1,138 @@
 ---
 name: enterprise
-description: Clean, high-contrast enterprise design for data-driven workflows with intuitive drag-and-drop patterns and structured layouts.
-license: MIT
-metadata:
-  author: typeui.sh
+description: Rent cars, manage reservations, and access Enterprise Plus benefits through Enterprise Rent-A-Car
+category: travel
 ---
 
-<!-- TYPEUI_SH_MANAGED_START -->
-# Enterprise Design System Skill (Universal)
+# Enterprise Rent-A-Car Skill
 
-## Mission
-You are an expert design-system guideline author for Enterprise.
-Create practical, implementation-ready guidance that can be directly used by engineers and designers.
+## Overview
+Enables Claude to search and book rental cars, manage reservations, access Enterprise Plus member benefits, and coordinate pickup and return through Enterprise's rental network.
 
-## Brand
-Everything you need – data, apps, and AI in an intuitive drag and drop interface to automate your workflows.
+## Quick Install
 
-## Style Foundations
-- Visual style: clean, high-contrast, enterprise
-- Typography scale: desktop-first expressive scale | Fonts: primary=Ubuntu, display=Oswald, mono=Ubuntu Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
-- Color palette: primary, success, warning, danger | Tokens: primary=#072C2C, secondary=#FF5F03, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#EDEADE, text=#111827
-- Spacing scale: comfortable density mode
+```bash
+curl -sSL https://canifi.com/skills/enterprise/install.sh | bash
+```
 
-- patterns
-- images
+Or manually:
+```bash
+cp -r skills/enterprise ~/.canifi/skills/
+```
 
-## Accessibility
-WCAG 2.2 AA, keyboard-first interactions, visible focus states
+## Setup
 
-## Writing Tone
-confident, helpful, friendly, professional
+Configure via [canifi-env](https://canifi.com/setup/scripts):
 
-## Rules: Do
-- prefer semantic tokens over raw values
-- preserve visual hierarchy
-- keep interaction states explicit
+```bash
+# First, ensure canifi-env is installed:
+# curl -sSL https://canifi.com/install.sh | bash
 
-## Rules: Don't
-- avoid low contrast text
-- avoid inconsistent spacing rhythm
-- avoid decorative motion without purpose
-- avoid ambiguous labels
-- avoid mixing multiple visual metaphors
-- avoid inaccessible hit areas
+canifi-env set ENTERPRISE_EMAIL "your-email@example.com"
+canifi-env set ENTERPRISE_PLUS "your-enterprise-plus-number"
+```
 
-## Expected Behavior
-- Follow the foundations first, then component consistency.
-- When uncertain, prioritize accessibility and clarity over novelty.
-- Provide concrete defaults and explain trade-offs when alternatives are possible.
-- Keep guidance opinionated, concise, and implementation-focused.
+## Privacy & Authentication
 
-## Guideline Authoring Workflow
-1. Restate the design intent in one sentence before proposing rules.
-2. Define tokens and foundational constraints before component-level guidance.
-3. Specify component anatomy, states, variants, and interaction behavior.
-4. Include accessibility acceptance criteria and content-writing expectations.
-5. Add anti-patterns and migration notes for existing inconsistent UI.
-6. End with a QA checklist that can be executed in code review.
+**Your credentials, your choice.** Canifi LifeOS respects your privacy.
 
-## Required Output Structure
-When generating design-system guidance, use this structure:
-- Context and goals
-- Design tokens and foundations
-- Component-level rules (anatomy, variants, states, responsive behavior)
-- Accessibility requirements and testable acceptance criteria
-- Content and tone standards with examples
-- Anti-patterns and prohibited implementations
-- QA checklist
+### Option 1: Manual Browser Login (Recommended)
+If you prefer not to share credentials with Claude Code:
+1. Complete the [Browser Automation Setup](/setup/automation) using CDP mode
+2. Login to the service manually in the Playwright-controlled Chrome window
+3. Claude will use your authenticated session without ever seeing your password
 
-## Component Rule Expectations
-- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
-- Describe interaction behavior for keyboard, pointer, and touch.
-- State spacing, typography, and color-token usage explicitly.
-- Include responsive behavior and edge cases (long labels, empty states, overflow).
+### Option 2: Environment Variables
+If you're comfortable sharing credentials, you can store them locally:
+```bash
+canifi-env set SERVICE_EMAIL "your-email"
+canifi-env set SERVICE_PASSWORD "your-password"
+```
 
-## Quality Gates
-- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
-- Every accessibility statement must be testable in implementation.
-- Prefer system consistency over one-off local optimizations.
-- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
+**Note**: Credentials stored in canifi-env are only accessible locally on your machine and are never transmitted.
 
-## Example Constraint Language
-- Use "must" for non-negotiable rules and "should" for recommendations.
-- Pair every do-rule with at least one concrete don't-example.
-- If introducing a new pattern, include migration guidance for existing components.
+## Capabilities
+- Search rental cars by location and dates
+- Compare vehicle classes and prices
+- Manage existing reservations
+- Access Enterprise Plus member benefits
+- Arrange pickup and return at different locations
+- Add insurance and additional driver options
 
-<!-- TYPEUI_SH_MANAGED_END -->
+## Usage Examples
+
+### Example 1: Book a Rental Car
+```
+User: "I need a rental car at LAX for next week, compact or midsize"
+Claude: I'll search Enterprise for LAX rentals.
+- Opens enterprise.com via Playwright MCP
+- Enters LAX location, next week dates
+- Compares vehicle classes:
+  - Compact (Corolla): $42/day, $294 total
+  - Midsize (Camry): $48/day, $336 total
+  - SUV (RAV4): $62/day, $434 total
+- Notes: Enterprise Plus members earn 1 point/dollar
+```
+
+### Example 2: One-Way Rental
+```
+User: "Can I rent from San Francisco and drop off in LA?"
+Claude: I'll check one-way availability.
+- Enters SFO pickup, LAX return
+- Shows one-way options:
+  - Midsize: $389 total (includes $75 drop fee)
+  - Full-size: $425 total
+  - SUV: $512 total
+- Notes: One-way fee varies by route
+- Airport locations typically have best availability
+```
+
+### Example 3: Check Enterprise Plus Status
+```
+User: "What's my Enterprise Plus status?"
+Claude: I'll check your Enterprise Plus account.
+- Logs into Enterprise Plus
+- Returns: Gold status
+- Points balance: 4,850
+- Free rental day at 850 points
+- Benefits: Skip the counter, guaranteed upgrades
+- Rentals this year: 8
+```
+
+## Authentication Flow
+1. Navigate to enterprise.com via Playwright MCP
+2. Click "Sign In" and enter Enterprise Plus number
+3. Enter password
+4. Handle security verification if prompted
+5. Verify Plus status displayed
+6. Maintain session for reservations
+
+## Error Handling
+- Login Failed: Retry with email, check credentials
+- No Availability: Check nearby locations, adjust dates
+- Class Sold Out: Suggest alternative vehicles
+- Session Expired: Re-authenticate automatically
+- Rate Limited: Wait 45 seconds, retry
+- Location Closed: Suggest alternate pickup times
+
+## Self-Improvement Instructions
+After each interaction:
+- Track pricing patterns by location
+- Note vehicle class availability
+- Log Enterprise Plus earning rates
+- Document UI changes
+
+Suggest updates when:
+- Enterprise updates booking interface
+- Enterprise Plus program changes
+- New vehicle classes added
+- Pricing structure changes
+
+## Notes
+- Enterprise picks you up at many locations
+- Weekend rates often better than weekday
+- Fuel purchase options available
+- Insurance coverage varies by state
+- Under-25 drivers face surcharge
+- Enterprise Plus is free to join
+- Points expire after 2 years of inactivity

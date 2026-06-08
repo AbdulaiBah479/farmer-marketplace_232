@@ -1,21 +1,6 @@
 ---
 name: documentation-production
 description: Use when generating, updating, or organizing documentation (component/API docs, project indexes, diagrams, tutorials, learning paths) - provides structured workflows and references for docs generation, indexing, diagrams, and teaching.
-keywords:
-  - doc index
-  - documentation
-  - generate docs
-  - learning path
-  - mermaid diagram
-  - sequence diagram
-  - tutorial
-file_patterns:
-  - '**/CODE_OF_CONDUCT*'
-  - '**/CONTRIBUTING*'
-  - '**/README*'
-  - '**/docs/**'
-  - '**/guides/**'
-confidence: 0.86
 ---
 
 # Documentation Production
@@ -43,7 +28,6 @@ Avoid when:
 | Mermaid diagrams | `skills/documentation-production/references/diagrams.md` |
 | Teach concepts / learning paths | `skills/documentation-production/references/teacher.md` |
 | Tutorials / workshops | `skills/documentation-production/references/tutorials.md` |
-| Writing process & style | `skills/documentation-production/references/writing-process.md` |
 
 ## Workflow
 1. Identify doc type and target audience.

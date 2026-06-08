@@ -1,79 +1,203 @@
 ---
 name: drag-and-drop
-description: "Implement drag-and-drop in LWC using HTML5 Drag and Drop API, keyboard alternatives, and accessible announcements. NOT for kanban migration from legacy Lightning."
-category: lwc
-salesforce-version: "Spring '25+"
-well-architected-pillars:
-  - User Experience
-  - Reliability
-triggers:
-  - "lwc drag drop"
-  - "reorder list lwc"
-  - "drag file into lwc"
-  - "kanban drag and drop lwc"
-  - "drag drop isn't working"
-  - "we're having issues with drag drop"
-tags:
-  - lwc
-  - drag-drop
-  - a11y
-inputs:
-  - "items to reorder or move"
-  - "accessibility requirements"
-outputs:
-  - "component with dragstart/dragover/drop handlers + keyboard fallback"
-dependencies: []
-version: 1.0.0
-author: Pranav Nagrecha
-updated: 2026-04-28
+description: Implement drag and drop using @atlaskit/pragmatic-drag-and-drop. Use when implementing sortable lists, reorderable items, kanban boards, or any drag-drop interactions. Covers draggable setup, drop targets, edge detection, drag previews, and critical state management patterns to avoid performance issues.
 ---
 
-# LWC Drag and Drop
+# Drag and Drop with Pragmatic DnD
 
-Native HTML5 Drag and Drop works in LWC — no library needed. The tricky parts are (1) preventing default on dragover, (2) carrying item identity via dataTransfer, and (3) providing a keyboard-accessible alternative (focus + arrow keys). This skill lays out the template, the JS handlers, and the ARIA live-region announcements.
+This project uses `@atlaskit/pragmatic-drag-and-drop` for drag-and-drop functionality.
 
-## Adoption Signals
+## Required Imports
 
-Any reordering UI (priority list, board columns, file drop zones). Not for complex trees (use a specialized library behind an LWC wrapper).
+```tsx
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
+import {
+  draggable,
+  dropTargetForElements,
+  type ElementDropTargetEventBasePayload,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
+import { pointerOutsideOfPreview } from "@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview"
+import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview"
+import {
+  attachClosestEdge,
+  type Edge,
+  extractClosestEdge,
+} from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge"
+import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box"
+```
 
-- HTML5 Drag and Drop API for in-component reordering — no third-party library required.
-- Custom drag handles when the list rows contain interactive controls that must keep their own click semantics.
+## Critical Pattern: Refs for Volatile State
 
-## Recommended Workflow
+**NEVER put volatile drag state in useEffect dependencies.** This causes handlers to re-register on every state change.
 
-1. Template: add `draggable="true"`, `@dragstart`, `@dragover` (with preventDefault), `@drop` on source/target elements.
-2. Pass identity via `event.dataTransfer.setData('text/plain', itemId)`.
-3. Keyboard alternative: `@keydown` on item, arrow keys reorder with the same handler logic.
-4. Announce drag start/drop via a `role="status"` aria-live region.
-5. Jest test: simulate dragstart/drop; assert reorder + announcement.
+```tsx
+// BAD - re-registers handlers on every edge change
+const [closestEdge, setClosestEdge] = useState<Edge | null>(null)
+useEffect(() => {
+  // ...handlers using closestEdge
+}, [closestEdge]) // Re-runs on every drag movement!
 
-## Key Considerations
+// GOOD - use ref + useCallback for volatile state
+const [closestEdge, setClosestEdge] = useState<Edge | null>(null)
+const closestEdgeRef = useRef<Edge | null>(null)
 
-- `dragover` must call `event.preventDefault()` or `drop` never fires.
-- Touch devices don't fire drag events — detect and show reorder buttons.
-- dataTransfer is cleared after drop — capture any data synchronously in dragstart.
-- aria-grabbed is deprecated; announce via live region instead.
+// Wrap in useCallback for lint compliance (exhaustive-deps)
+const updateClosestEdge = useCallback((edge: Edge | null) => {
+  closestEdgeRef.current = edge
+  setClosestEdge(edge) // Still update state for rendering
+}, [])
 
-## Worked Examples (see `references/examples.md`)
+useEffect(() => {
+  // ...handlers read closestEdgeRef.current instead
+}, [/* stable deps */, updateClosestEdge]) // Include updateClosestEdge
+```
 
-- *Priority list reorder* — Case priority list
-- *File drop zone* — Attachments upload
+**Import `useCallback`:**
+```tsx
+import { useCallback, useEffect, useRef, useState } from "react"
+```
 
-## Common Gotchas (see `references/gotchas.md`)
+## Basic Draggable Item Pattern
 
-- **Missing preventDefault** — Drop never fires; silent bug.
-- **Touch devices** — Mobile users can't reorder.
-- **No keyboard path** — A11y audit fails.
+```tsx
+function DraggableItem({ item, index, instanceId, onDrop }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const dragHandleRef = useRef<HTMLButtonElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [closestEdge, setClosestEdge] = useState<Edge | null>(null)
+  const closestEdgeRef = useRef<Edge | null>(null)
 
-## Top LLM Anti-Patterns (full list in `references/llm-anti-patterns.md`)
+  const updateClosestEdge = useCallback((edge: Edge | null) => {
+    closestEdgeRef.current = edge
+    setClosestEdge(edge)
+  }, [])
 
-- Using an external drag library for simple lists
-- Skipping keyboard support
-- No aria-live announcement
+  useEffect(() => {
+    const element = ref.current
+    const dragHandle = dragHandleRef.current
+    if (!element || !dragHandle) return
 
-## Official Sources Used
+    const itemData = { id: item.id, index, instanceId }
 
-- Lightning Web Components Developer Guide — https://developer.salesforce.com/docs/platform/lwc/guide/
-- Lightning Data Service — https://developer.salesforce.com/docs/platform/lwc/guide/data-wire-service-about.html
-- LWC Recipes — https://github.com/trailheadapps/lwc-recipes
-- SLDS 2 — https://www.lightningdesignsystem.com/2e/
+    return combine(
+      draggable({
+        element: dragHandle,
+        getInitialData: () => itemData,
+        onDragStart: () => setIsDragging(true),
+        onDrop: () => setIsDragging(false),
+        onGenerateDragPreview({ nativeSetDragImage }) {
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: pointerOutsideOfPreview({ x: "16px", y: "8px" }),
+            render({ container }) {
+              const preview = document.createElement("div")
+              preview.style.cssText = `
+                background: hsl(var(--background));
+                border: 2px solid hsl(var(--border));
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 14px;
+                color: hsl(var(--foreground));
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+              `
+              preview.textContent = item.label
+              container.appendChild(preview)
+            },
+          })
+        },
+      }),
+      dropTargetForElements({
+        element,
+        canDrop: ({ source }) =>
+          source.data.instanceId === instanceId && source.data.index !== index,
+        getData({ input }) {
+          return attachClosestEdge(itemData, {
+            element,
+            input,
+            allowedEdges: ["top", "bottom"],
+          })
+        },
+        onDrag({ source, self }: ElementDropTargetEventBasePayload) {
+          if (source.data.index === index) {
+            updateClosestEdge(null)
+            return
+          }
+
+          const edge = extractClosestEdge(self.data)
+          const sourceIndex = source.data.index
+          if (typeof sourceIndex !== "number") return
+
+          // Hide indicator when it would be redundant
+          const isItemBeforeSource = index === sourceIndex - 1
+          const isItemAfterSource = index === sourceIndex + 1
+          const isDropIndicatorHidden =
+            (isItemBeforeSource && edge === "bottom") ||
+            (isItemAfterSource && edge === "top")
+
+          updateClosestEdge(isDropIndicatorHidden ? null : edge)
+        },
+        onDragLeave: () => updateClosestEdge(null),
+        onDrop({ source }) {
+          const sourceIndex = source.data.index
+          if (typeof sourceIndex === "number" && sourceIndex !== index) {
+            const edge = closestEdgeRef.current // Read from ref!
+            const targetIndex = edge === "top" ? index : index + 1
+            const adjustedTargetIndex =
+              sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
+            onDrop(sourceIndex, adjustedTargetIndex)
+          }
+          updateClosestEdge(null)
+        },
+      }),
+    )
+  }, [item.id, item.label, index, instanceId, onDrop, updateClosestEdge])
+
+  return (
+    <div ref={ref} className="relative">
+      {closestEdge && <DropIndicator edge={closestEdge} gap="2px" />}
+      <div className={isDragging ? "opacity-50" : ""}>
+        <button ref={dragHandleRef} type="button" aria-label="Drag to reorder">
+          <GripVertical />
+        </button>
+        {/* Item content */}
+      </div>
+    </div>
+  )
+}
+```
+
+## Instance ID for Multiple Lists
+
+Use `Symbol` to scope drag operations to a single list:
+
+```tsx
+function SortableList({ items }) {
+  const [instanceId] = useState(() => Symbol("list"))
+  // Pass instanceId to each item
+}
+```
+
+## Reorder Handler
+
+```tsx
+const handleDrop = async (sourceIndex: number, targetIndex: number) => {
+  const newItems = [...items]
+  const [movedItem] = newItems.splice(sourceIndex, 1)
+  if (movedItem) {
+    newItems.splice(targetIndex, 0, movedItem)
+    const updated = newItems.map((item, i) => ({ ...item, position: i }))
+    setItems(updated) // Optimistic update
+    await saveOrder(updated) // Persist
+  }
+}
+```
+
+## Checklist
+
+- [ ] Refs for volatile state (closestEdge, etc.)
+- [ ] Wrap updateClosestEdge in useCallback (lint compliance)
+- [ ] Include updateClosestEdge in useEffect deps
+- [ ] Instance ID for list scoping
+- [ ] Drop indicator with edge detection
+- [ ] Custom drag preview
+- [ ] Optimistic UI updates

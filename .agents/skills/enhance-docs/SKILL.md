@@ -1,298 +1,70 @@
 ---
 name: enhance-docs
-description: "Use when improving documentation structure, accuracy, and RAG readiness."
-version: 5.1.0
-argument-hint: "[path] [--fix] [--ai]"
+description: Use when documentation needs to be updated, clarified, or reorganized to better serve users' jobs-to-be-done with low cognitive load and high signal.
 ---
 
-# enhance-docs
+# Enhance Docs
 
-Analyze documentation for readability, structure, and RAG optimization.
+## Overview
+Improve documentation so it is up to date, coherent, and centered on users' jobs-to-be-done. Favor less content with higher clarity.
 
-## Parse Arguments
+## Inputs (ask if missing, max 5)
+- Docs scope (which files or sections)
+- Primary audiences and their jobs-to-be-done
+- Source of truth for product behavior (code, APIs, changelog)
+- Recent changes or upcoming releases
+- Constraints (tone, length, compliance, deadlines)
 
-```javascript
-const args = '$ARGUMENTS'.split(' ').filter(Boolean);
-const targetPath = args.find(a => !a.startsWith('--')) || '.';
-const fix = args.includes('--fix');
-const aiMode = args.includes('--ai');
-```
-
-## Documentation Locations
-
-| Type | Location | Purpose |
-|------|----------|---------|
-| User docs | `docs/*.md`, `README.md` | Human-readable guides |
-| Agent docs | `agent-docs/*.md` | AI reference material |
-| Project memory | `CLAUDE.md`, `AGENTS.md` | AI context/instructions |
-
-## Optimization Modes
-
-### AI-Only Mode (`--ai`)
-For agent-docs and RAG-optimized documentation:
-- Aggressive token reduction
-- Dense information packing
-- Self-contained sections for retrieval
-- Optimal chunking boundaries
-
-### Both Mode (`--both`, default)
-For user-facing documentation:
-- Balance readability with AI-friendliness
-- Clear structure for both humans and retrievers
+## Principles
+- **Less is more**: reduce noise, keep only what helps users act.
+- **Low cognitive load**: short paragraphs, clear headings, predictable structure.
+- **High signal**: prioritize steps, outcomes, and decision points.
+- **JTBD-first**: structure around what users are trying to accomplish.
 
 ## Workflow
-
-1. **Discover** - Find all .md files
-2. **Parse** - Extract structure and content
-3. **Check** - Run pattern checks based on mode
-4. **Report** - Generate markdown output
-5. **Fix** - Apply auto-fixes if --fix
-
-## Detection Patterns
-
-### 1. Link Validation (HIGH)
-
-- Broken anchor links (`[text](#missing-anchor)`)
-- Links to non-existent files
-- Malformed link syntax
-
-### 2. Structure Validation (HIGH)
-
-**Heading hierarchy:**
-- No jumps (H1 → H3 without H2)
-- Single H1 per document
-- Code blocks with language tags
-
-**Position-aware content** (based on "lost in the middle" research):
-- Critical info at START or END of document
-- Supporting details in MIDDLE
-- Flag important content buried in middle sections
-
-**Recommended structure:**
-```
-1. Overview/Purpose (START - high attention)
-2. Quick Start / TL;DR
-3. Detailed Content
-4. Reference / API
-5. Summary / Key Points (END - high attention)
-```
-
-### 3. Token Efficiency (HIGH - AI Mode)
-
-**Token estimation:** `characters / 4` or `words * 1.3`
-
-**Unnecessary prose:**
-- "In this document..."
-- "As you can see..."
-- "Let's explore..."
-- "It's important to note that..."
-
-**Verbose phrases:**
-| Verbose | Concise |
-|---------|---------|
-| "in order to" | "to" |
-| "due to the fact that" | "because" |
-| "has the ability to" | "can" |
-| "at this point in time" | "now" |
-| "for the purpose of" | "for" |
-| "in the event that" | "if" |
-
-**Target:** ~1500 tokens for project memory files, flexible for reference docs.
-
-### 4. RAG Optimization (MEDIUM - AI Mode)
-
-**Chunk size guidelines:**
-| Size | Issue |
-|------|-------|
-| >1000 tokens | Too long, split into subtopics |
-| <50 tokens | Too short, merge with related content |
-| 200-500 tokens | Optimal for retrieval |
-
-**Semantic boundaries:**
-- Single topic per section
-- Self-contained sections (avoid "It", "This" at section start)
-- Clear section titles that describe content
-
-**Context anchors:**
-```markdown
-# Bad - ambiguous start
-## Configuration
-It requires several settings...
-
-# Good - self-contained
-## Configuration
-The plugin configuration requires several settings...
-```
-
-### 5. Information Density (MEDIUM - AI Mode)
-
-**Prefer tables over prose:**
-```markdown
-# Bad - verbose
-The function accepts a path parameter which is required,
-a limit parameter which defaults to 10, and an optional
-format parameter.
-
-# Good - dense
-| Param | Required | Default | Description |
-|-------|----------|---------|-------------|
-| path | Yes | - | File path |
-| limit | No | 10 | Max results |
-| format | No | json | Output format |
-```
-
-**Prefer lists over paragraphs** for sequential items.
-
-**Use code blocks** for examples, commands, configurations.
-
-### 6. Cross-Reference Quality (MEDIUM)
-
-- Internal links should use relative paths
-- External links should be stable (avoid commit hashes)
-- Reference sections should point to canonical sources
-
-### 7. Balance Suggestions (MEDIUM - Both Mode)
-
-- Missing section headers in long content (>500 words without heading)
-- Important information buried late in document
-- Missing TL;DR or summary for long documents
-
-## Auto-Fixes
-
-| Issue | Fix |
-|-------|-----|
-| Inconsistent headings | H1 → H3 becomes H1 → H2 |
-| Verbose phrases | Replace with concise alternatives |
-| Missing code language | Add based on content detection |
+1. **Map jobs-to-be-done**
+   - List top 3-5 user jobs and the docs that should enable each.
+2. **Check freshness and accuracy**
+   - Compare docs against current behavior, APIs, and recent changes.
+3. **Simplify and restructure**
+   - Remove redundancy, collapse long lists, and apply progressive disclosure.
+4. **Improve coherence**
+   - Align terminology, fix contradictions, and add consistent cross-links.
+5. **Clarify with examples**
+   - Add minimal examples only where they unblock action.
+6. **Deliver ranked improvements**
+   - Prioritize changes by impact on user success and confusion reduction.
 
 ## Output Format
+```
+## Documentation Enhancement
 
-```markdown
-## Documentation Analysis: {name}
+### Context Summary
+[1-3 sentences]
 
-**File**: {path}
-**Mode**: {AI-only | Both}
-**Tokens**: ~{count}
+### JTBD Map
+- Job: ... -> Docs: ... -> Success criteria: ...
 
-| Certainty | Count |
-|-----------|-------|
-| HIGH | {n} |
-| MEDIUM | {n} |
+### Issues (ranked)
+1) [Issue] — impact: high, evidence: ...
 
-### Link Issues
-| Line | Issue | Fix | Certainty |
+### Proposed Changes (ranked)
+1) [Change] — rationale: ...
 
-### Structure Issues
-| Line | Issue | Fix | Certainty |
+### Quick Wins
+- ...
 
-### Efficiency Issues [AI mode]
-| Line | Issue | Fix | Certainty |
-
-### RAG Issues [AI mode]
-| Line | Issue | Fix | Certainty |
+### Open Questions
+- ...
 ```
 
-## Pattern Statistics
+## Quick Reference
+- Trim before adding.
+- Structure by jobs and outcomes, not features.
+- Keep headings short and action-oriented.
 
-| Category | Patterns | Mode | Certainty |
-|----------|----------|------|-----------|
-| Links | 3 | shared | HIGH |
-| Structure | 4 | shared | HIGH |
-| Token Efficiency | 3 | ai | HIGH |
-| RAG Optimization | 3 | ai | MEDIUM |
-| Information Density | 2 | ai | MEDIUM |
-| Cross-Reference | 2 | shared | MEDIUM |
-| Balance | 3 | both | MEDIUM |
-| **Total** | **20** | - | - |
-
-<examples>
-### Verbose Phrase
-<bad_example>
-```markdown
-In order to configure the plugin, you need to...
-```
-</bad_example>
-<good_example>
-```markdown
-To configure the plugin...
-```
-</good_example>
-
-### RAG Chunking
-<bad_example>
-```markdown
-## Installation
-[2000+ tokens of mixed content covering install, config, and usage]
-```
-</bad_example>
-<good_example>
-```markdown
-## Installation
-[400 tokens - installation only]
-
-## Configuration
-[300 tokens - config only]
-
-## Usage
-[400 tokens - usage only]
-```
-</good_example>
-
-### Position-Aware Content
-<bad_example>
-```markdown
-## Introduction
-[Long background...]
-
-## History
-[More context...]
-
-## Critical Setup Steps
-[Important info buried in middle]
-```
-</bad_example>
-<good_example>
-```markdown
-## Quick Start (Critical)
-[Important setup steps at START]
-
-## Background
-[Supporting context in middle]
-
-## Reference
-[Details...]
-
-## Key Reminders
-[Critical points repeated at END]
-```
-</good_example>
-
-### Tables vs Prose
-<bad_example>
-```markdown
-The API accepts three parameters. The first is `query` which is required.
-The second is `limit` which defaults to 10. The third is `format`.
-```
-</bad_example>
-<good_example>
-```markdown
-| Param | Required | Default |
-|-------|----------|---------|
-| query | Yes | - |
-| limit | No | 10 |
-| format | No | json |
-```
-</good_example>
-</examples>
-
-## References
-
-- `agent-docs/CONTEXT-OPTIMIZATION-REFERENCE.md` - Token budgeting, position awareness, chunking
-- `agent-docs/PROMPT-ENGINEERING-REFERENCE.md` - Structure, information density
-
-## Constraints
-
-- Auto-fix only HIGH certainty issues
-- Preserve original tone and style
-- Balance AI optimization with human readability (default mode)
-- Don't remove content, only restructure or condense
+## Common Mistakes
+- Adding more text instead of removing noise
+- Mixing audiences in the same section
+- Describing features without user tasks
+- Missing cross-links or inconsistent terminology

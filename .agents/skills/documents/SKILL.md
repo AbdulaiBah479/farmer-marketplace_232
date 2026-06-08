@@ -1,12 +1,12 @@
 ---
 name: Documents
-description: Read, write, convert, and analyze documents — routes to PDF, DOCX, XLSX, PPTX sub-skills for creation, editing, extraction, and format conversion. USE WHEN document, process file, create document, convert format, extract text, PDF, DOCX, XLSX, PPTX, Word, Excel, spreadsheet, PowerPoint, presentation, slides, consulting report, large PDF, merge PDF, fill form, tracked changes, redlining.
+description: Document processing. USE WHEN document, process file. SkillSearch('documents') for docs.
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Documents/`
+`~/.claude/skills/PAI/USER/SKILLCUSTOMIZATIONS/Documents/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -32,11 +32,11 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 
 # Documents Skill
 
-## 🎯 Load Full PAI Context
+## 🎯 Load Full CORE Context
 
-**Before starting any task with this skill, load complete PAI context:**
+**Before starting any task with this skill, load complete CORE context:**
 
-`read ~/.claude/PAI/SKILL.md`
+`read ~/.claude/skills/PAI/SKILL.md`
 
 
 ## When to Activate This Skill
@@ -65,45 +65,9 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 - User needs to work with Excel tables, charts, or pivot tables
 - User wants to convert spreadsheets to/from other formats
 
-## Workflow Routing
+## 🔀 Document Type Routing
 
-| Request Pattern | Route To |
-|---|---|
-| Consulting report, McKinsey report, assessment report, professional PDF | `Workflows/ConsultingReport.md` |
-| Large PDF, process big PDF, Gemini PDF | `Workflows/ProcessLargePdfGemini3.md` |
-| Word document, DOCX, create docx, edit docx, tracked changes, redlining | `Docx/SKILL.md` |
-| PDF, create PDF, merge PDF, split PDF, extract text from PDF, fill form | `Pdf/SKILL.md` |
-| Presentation, PPTX, slides, PowerPoint, speaker notes | `Pptx/SKILL.md` |
-| Spreadsheet, XLSX, Excel, formulas, financial model, data analysis | `Xlsx/SKILL.md` |
-
-## Document Type Details
-
-This skill organizes document processing across 4 document types plus specialized workflows:
-
-### Consulting Reports (HTML + Playwright PDF)
-
-**Reference Documentation:**
-- `Workflows/ConsultingReport.md` - Complete consulting report generation workflow
-
-**Routing Logic:**
-- "Create consulting report", "generate report PDF" → ConsultingReport workflow
-- "Build assessment report", "strategic assessment" → ConsultingReport workflow
-- "McKinsey-style report", "professional report PDF" → ConsultingReport workflow
-
-**Pipeline:** Report Artifacts → Structured HTML → Playwright PDF
-
-**Key Capabilities:**
-- Parse report directories with mixed content (markdown, TypeScript data, images)
-- Professional CSS typography (Georgia serif body, Inter sans headings)
-- Color-coded callout boxes (red/amber/green) and severity badges
-- Auto-generated linked Table of Contents
-- Cover page with classification marking
-- Headers/footers with CONFIDENTIAL and page numbers
-- Image compression pipeline (PNG → JPEG, max 1200px)
-- A4 format with Playwright for pixel-perfect PDF output
-
-**Reference Implementation:** Quorum Cyber assessment at `/path/to/reference/generate-pdf.mjs`
-
+This skill organizes document processing across 4 document types:
 
 ### Word Documents (DOCX)
 
@@ -119,9 +83,9 @@ This skill organizes document processing across 4 document types plus specialize
 - "Document review", "track changes" → Redlining workflow
 
 **Supporting Resources:**
-- Scripts: `~/.claude/skills/Utilities/Documents/Docx/Scripts/`
-- OOXML tools: `~/.claude/skills/Utilities/Documents/Docx/ooxml/`
-- License: `~/.claude/skills/Utilities/Documents/Docx/LICENSE.txt`
+- Scripts: `~/.claude/skills/documents/docx/Scripts/`
+- OOXML tools: `~/.claude/skills/documents/docx/ooxml/`
+- License: `~/.claude/skills/documents/docx/LICENSE.txt`
 
 **Key Capabilities:**
 - Create professional documents with docx-js
@@ -145,8 +109,8 @@ This skill organizes document processing across 4 document types plus specialize
 - "Extract tables from PDF" → Table extraction (pdfplumber + pandas)
 
 **Supporting Resources:**
-- Scripts: `~/.claude/skills/Utilities/Documents/Pdf/Scripts/`
-- License: `~/.claude/skills/Utilities/Documents/Pdf/LICENSE.txt`
+- Scripts: `~/.claude/skills/documents/pdf/Scripts/`
+- License: `~/.claude/skills/documents/pdf/LICENSE.txt`
 
 **Key Capabilities:**
 - Create PDFs with reportlab
@@ -171,9 +135,9 @@ This skill organizes document processing across 4 document types plus specialize
 - "Create thumbnail grid" → Thumbnail workflow
 
 **Supporting Resources:**
-- Scripts: `~/.claude/skills/Utilities/Documents/Pptx/Scripts/`
-- OOXML tools: `~/.claude/skills/Utilities/Documents/Pptx/ooxml/`
-- License: `~/.claude/skills/Utilities/Documents/Pptx/LICENSE.txt`
+- Scripts: `~/.claude/skills/documents/pptx/Scripts/`
+- OOXML tools: `~/.claude/skills/documents/pptx/ooxml/`
+- License: `~/.claude/skills/documents/pptx/LICENSE.txt`
 
 **Key Capabilities:**
 - Create presentations with html2pptx (HTML → PPTX)
@@ -197,8 +161,8 @@ This skill organizes document processing across 4 document types plus specialize
 - "Recalculate formulas" → Recalculation workflow (recalc.py)
 
 **Supporting Resources:**
-- Recalc script: `~/.claude/skills/Utilities/Documents/Xlsx/recalc.py`
-- License: `~/.claude/skills/Utilities/Documents/Xlsx/LICENSE.txt`
+- Recalc script: `~/.claude/skills/documents/xlsx/recalc.py`
+- License: `~/.claude/skills/documents/xlsx/LICENSE.txt`
 
 **Key Capabilities:**
 - Create spreadsheets with formulas (openpyxl)
@@ -263,17 +227,6 @@ User: "Create a revenue projection spreadsheet"
 → Runs recalc.py to update calculations
 ```
 
-**Example 4: Generate professional consulting report PDF**
-```
-User: "Create a consulting report from the assessment data"
-→ Routes to ConsultingReport workflow
-→ Parses report directory for data files, markdown, diagrams
-→ Compresses images (PNG→JPEG, max 1200px)
-→ Generates styled HTML with professional typography
-→ Converts to PDF via Playwright with headers/footers
-→ Outputs McKinsey-quality A4 PDF with TOC, diagrams, color boxes
-```
-
 ## 🔗 Integration with Other Skills
 
 ### Feeds Into:
@@ -309,23 +262,23 @@ User: "Create a consulting report from the assessment data"
 ## 📚 Full Reference Documentation
 
 **Word Documents (DOCX):**
-- Main Guide: `~/.claude/skills/Utilities/Documents/Docx/SKILL.md`
-- Creation Reference: `~/.claude/skills/Utilities/Documents/Docx/docx-js.md`
-- Editing Reference: `~/.claude/skills/Utilities/Documents/Docx/ooxml.md`
+- Main Guide: `~/.claude/skills/documents/docx/SKILL.md`
+- Creation Reference: `~/.claude/skills/documents/docx/docx-js.md`
+- Editing Reference: `~/.claude/skills/documents/docx/ooxml.md`
 
 **PDF Processing:**
-- Main Guide: `~/.claude/skills/Utilities/Documents/Pdf/SKILL.md`
-- Forms Guide: `~/.claude/skills/Utilities/Documents/Pdf/forms.md`
-- Advanced Reference: `~/.claude/skills/Utilities/Documents/Pdf/reference.md`
+- Main Guide: `~/.claude/skills/documents/pdf/SKILL.md`
+- Forms Guide: `~/.claude/skills/documents/pdf/forms.md`
+- Advanced Reference: `~/.claude/skills/documents/pdf/reference.md`
 
 **PowerPoint Presentations (PPTX):**
-- Main Guide: `~/.claude/skills/Utilities/Documents/Pptx/SKILL.md`
-- Creation Reference: `~/.claude/skills/Utilities/Documents/Pptx/html2pptx.md`
-- Editing Reference: `~/.claude/skills/Utilities/Documents/Pptx/ooxml.md`
+- Main Guide: `~/.claude/skills/documents/pptx/SKILL.md`
+- Creation Reference: `~/.claude/skills/documents/pptx/html2pptx.md`
+- Editing Reference: `~/.claude/skills/documents/pptx/ooxml.md`
 
 **Excel Spreadsheets (XLSX):**
-- Main Guide: `~/.claude/skills/Utilities/Documents/Xlsx/SKILL.md`
-- Recalc Script: `~/.claude/skills/Utilities/Documents/Xlsx/recalc.py`
+- Main Guide: `~/.claude/skills/documents/xlsx/SKILL.md`
+- Recalc Script: `~/.claude/skills/documents/xlsx/recalc.py`
 
 ---
 

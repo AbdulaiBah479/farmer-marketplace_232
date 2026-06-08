@@ -2899,6 +2899,18 @@
       "skillPath": "skills/chai/SKILL.md",
       "computedHash": "e089082d32beca7ce23aa58186ca84d9ee8d8fa2f4caffbc805ae44443235606"
     },
+    "chdb-datastore": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/chdb-datastore/SKILL.md",
+      "computedHash": "8a652156aa260f4d01a14a15ec703c4b9c7b3bafb5824fa12e65089e096b17ba"
+    },
+    "chdb-sql": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/chdb-sql/SKILL.md",
+      "computedHash": "6eece2c3948e1c6178dff37d4e83be21c261111386a63b4de4adae494f3f65d1"
+    },
     "chembl-database": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -2958,6 +2970,48 @@
       "sourceType": "github",
       "skillPath": "ip-legal/skills/clearance/SKILL.md",
       "computedHash": "560e635ca3125ac3e0ce998bb9a2b75970bd987897353cfa0a108ebe824dade9"
+    },
+    "clickhouse-architecture-advisor": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/clickhouse-architecture-advisor/SKILL.md",
+      "computedHash": "5cecc53a1aa47ff41f84b7f984c1242d70af09b8bbce4f52d423dd5a06f5ae0b"
+    },
+    "clickhouse-best-practices": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/clickhouse-best-practices/SKILL.md",
+      "computedHash": "4523a31bd5911ec70b68533d7d15bc445bca2e77b1bd6f649d5a36d52bdcc099"
+    },
+    "clickhouse-js-node-coding": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/clickhouse-js-node-coding/SKILL.md",
+      "computedHash": "8e87bf6ce52d48d605897edf17e6cca377cd9f6c55c1624e210be0ae0a80e103"
+    },
+    "clickhouse-js-node-troubleshooting": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/clickhouse-js-node-troubleshooting/SKILL.md",
+      "computedHash": "18dcebb208d257ccf5cfaabaee0b115583193362f77b554945cf686592417bcb"
+    },
+    "clickhouse-managed-postgres-rca": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/clickhouse-managed-postgres-rca/SKILL.md",
+      "computedHash": "9115fcd317cfe39d4851396f1daa70de38ca6c009573ca5a2a301106b8e1a469"
+    },
+    "clickhousectl-cloud-deploy": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/clickhousectl-cloud-deploy/SKILL.md",
+      "computedHash": "94ce3179d4370b76383c9d376f1185b7e8ea25a78693130835b2a5899ed83945"
+    },
+    "clickhousectl-local-dev": {
+      "source": "clickhouse/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/clickhousectl-local-dev/SKILL.md",
+      "computedHash": "0a99c55a718d504fd5473d34c75da22a44179d4f33a8c5dc279b5963d3c6cbbd"
     },
     "client-comms-log": {
       "source": "anthropics/claude-for-legal",
@@ -3096,6 +3150,24 @@
       "sourceType": "github",
       "skillPath": "plugins/power-pages/skills/configure-env-variables/SKILL.md",
       "computedHash": "27f8b955229266028230b46aa04049df1a735656c325b1f6bee71f8375b54bbe"
+    },
+    "confluent-cloud-cdc-tableflow": {
+      "source": "confluentinc/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/confluent-cloud-cdc-tableflow/SKILL.md",
+      "computedHash": "13e07a576f98fc136282667bf173bd2094ac457a8ae1682e54ce9ef417f81405"
+    },
+    "confluent-skill-creator": {
+      "source": "confluentinc/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/confluent-skill-creator/SKILL.md",
+      "computedHash": "85d216293ad511c36eb048f50a7450fd1f0366a4e9baac44d325dadd799ecb32"
+    },
+    "confluent-skill-reviewer": {
+      "source": "confluentinc/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/confluent-skill-reviewer/SKILL.md",
+      "computedHash": "ee6996ecabae5a321f1b4901667ba9b0a670ebda124401237ca40085d7535137"
     },
     "context-audit": {
       "source": "WalletConnect/skills",
@@ -3270,6 +3342,12 @@
       "sourceType": "github",
       "skillPath": "litigation-legal/skills/deposition-prep/SKILL.md",
       "computedHash": "2e419a362a01e034ec7077c1537a1d4440e5a4ac7faf393549bc0e7ee59ed76a"
+    },
+    "developing-kafka-python-client": {
+      "source": "confluentinc/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/developing-kafka-python-client/SKILL.md",
+      "computedHash": "39fd5ff57a718ac92312dff1db54928296d70f7a430d2a5f92e139401c253be7"
     },
     "diagnose-deployment": {
       "source": "microsoft/power-platform-skills",
@@ -3522,6 +3600,12 @@
       "sourceType": "github",
       "skillPath": "law-student/skills/flashcards/SKILL.md",
       "computedHash": "1b11c8bf5e19d13b8dd39960ab4d352ffe527f392cfa54579b83d73b0a9c783d"
+    },
+    "flink-udf": {
+      "source": "confluentinc/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flink-udf/SKILL.md",
+      "computedHash": "df3be9d075f3d7aac9b2d10fbd94a4de2142c6043c49fbe4d9d9966530c1911f"
     },
     "flowio": {
       "source": "bitroc-ai/medical-skills",
@@ -4164,6 +4248,18 @@
       "sourceType": "github",
       "skillPath": "skills/jungian-psychologist/SKILL.md",
       "computedHash": "9c9ce23a4c59e9b97214f9418dcadaca82a49908d7689a8a559ea332e585bc71"
+    },
+    "kafka-schema-registry": {
+      "source": "confluentinc/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/kafka-schema-registry/SKILL.md",
+      "computedHash": "36ff3b2d7e2ff30b9b89480138e992cf3c4ad3295bb27e61ed4a5fe132b7a0a8"
+    },
+    "kafka-streams-programming": {
+      "source": "confluentinc/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/kafka-streams-programming/SKILL.md",
+      "computedHash": "0c57c81f74e9b05d4d92b2d8f7a7fb3906680bc8c27d9116bc0294527d9afb59"
     },
     "kegg-database": {
       "source": "bitroc-ai/medical-skills",

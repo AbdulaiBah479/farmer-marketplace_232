@@ -1,302 +1,150 @@
 ---
 name: jira-integration
-description: Use this skill when retrieving Jira tickets, analyzing requirements, updating ticket status, adding comments, or transitioning issues. Provides Jira API patterns via MCP or direct REST calls.
-origin: ECC
+description: >
+  Create and manage Jira tickets with severity-based processing. Includes
+  project discovery, ticket search, and branch naming.
+compatibility: All repositories with Jira integration
+metadata:
+  version: "1.0.0"
+  category: workflow
+  tags:
+    - jira
+    - tickets
+    - tracking
+    - severity-processing
+  triggers:
+    - on-demand
+  uses:
+    - pr-workflow
 ---
 
-# Jira Integration Skill
+# Jira Integration
 
-Retrieve, analyze, and update Jira tickets directly from your AI coding workflow. Supports both **MCP-based** (recommended) and **direct REST API** approaches.
+Best practices for AI agents to create and manage Jira tickets when performing automated work like fixing vulnerabilities, resolving SonarQube issues, or improving test coverage.
 
-## When to Activate
+## Core Principles
 
-- Fetching a Jira ticket to understand requirements
-- Extracting testable acceptance criteria from a ticket
-- Adding progress comments to a Jira issue
-- Transitioning a ticket status (To Do → In Progress → Done)
-- Linking merge requests or branches to a Jira issue
-- Searching for issues by JQL query
+1. **Create Ticket Before Work** - Always create/find a Jira ticket before starting
+2. **Discover Project Key** - Never hardcode project keys
+3. **Search Before Creating** - Check for existing tickets first
+4. **Severity-Based Processing** - Process issues one severity level at a time
+5. **Link Everything** - Connect Jira → Branch → Commits → PR
 
-## Prerequisites
+## Skill Contents
 
-### Option A: MCP Server (Recommended)
+### Sections
 
-Install the `mcp-atlassian` MCP server. This exposes Jira tools directly to your AI agent.
+- [Core Principles](#core-principles) (L25-L32)
+- [Workflow Overview](#workflow-overview) (L57-L66)
+- [Quick Reference](#quick-reference) (L67-L101)
+- [References](#references) (L102-L111)
+- [Severity-Based Processing](#severity-based-processing) (L112-L128)
+- [Best Practices](#best-practices) (L129-L136)
+- [Skill Dependencies](#skill-dependencies) (L137-L142)
+- [Related](#related) (L143-L146)
 
-**Requirements:**
-- Python 3.10+
-- `uvx` (from `uv`), installed via your package manager or the official `uv` installation documentation
+### Available Resources
 
-**Add to your MCP config** (e.g., `~/.claude.json` → `mcpServers`):
+**📚 references/** - Detailed documentation
+- [branch naming](references/branch-naming.md)
+- [project discovery](references/project-discovery.md)
+- [severity processing](references/severity-processing.md)
+- [ticket creation](references/ticket-creation.md)
+- [ticket search](references/ticket-search.md)
 
-```json
-{
-  "jira": {
-    "command": "uvx",
-    "args": ["mcp-atlassian==0.21.0"],
-    "env": {
-      "JIRA_URL": "https://YOUR_ORG.atlassian.net",
-      "JIRA_EMAIL": "your.email@example.com",
-      "JIRA_API_TOKEN": "your-api-token"
-    },
-    "description": "Jira issue tracking — search, create, update, comment, transition"
-  }
-}
+---
+
+## Workflow Overview
+
+| Step | Description | Reference |
+|------|-------------|-----------|
+| **0. Discover** | Find user's Jira project key | `references/project-discovery.md` |
+| **1. Search** | Check for existing open tickets | `references/ticket-search.md` |
+| **2. Create** | Create ticket if none exists | `references/ticket-creation.md` |
+| **3. Branch** | Create branch with Jira key | `references/branch-naming.md` |
+| **4. Process** | Fix by severity level | `references/severity-processing.md` |
+
+## Quick Reference
+
+### Emoji Conventions
+
+| Work Type | Emoji | Example |
+|-----------|-------|---------|
+| AI-assisted (all) | 🤖 | Required in ALL AI commits/PRs |
+| Security/Vulnerability | 🛡️ | `🤖 🛡️ fix(security): resolve critical CVE` |
+| Code Quality/SonarQube | ✅ | `🤖 ✅ fix(quality): resolve BLOCKER issues` |
+| Test Coverage | 🧪 | `🤖 🧪 test: improve coverage` |
+| Dependency Updates | 📦 | `🤖 📦 chore(deps): update Spring Boot` |
+| Documentation | 📝 | `🤖 📝 docs: update API documentation` |
+| Performance | ⚡ | `🤖 ⚡ perf: optimize queries` |
+| Refactoring | ♻️ | `🤖 ♻️ refactor: simplify error handling` |
+
+### Ticket Summary Format
+
+```text
+🤖🛡️ Fix [SEVERITY] Dependabot vulnerabilities in [repo-name]
+🤖✅ Resolve [SEVERITY] SonarQube issues in [repo-name]
+🤖🧪 Improve test coverage for [module/class]
+🤖📦 Update [dependency] to [version]
 ```
 
-> **Security:** Never hardcode secrets. Prefer setting `JIRA_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN` in your system environment (or a secrets manager). Only use the MCP `env` block for local, uncommitted config files.
+### Branch Naming
 
-**To get a Jira API token:**
-1. Go to <https://id.atlassian.com/manage-profile/security/api-tokens>
-2. Click **Create API token**
-3. Copy the token — store it in your environment, never in source code
-
-### Option B: Direct REST API
-
-If MCP is not available, use the Jira REST API v3 directly via `curl` or a helper script.
-
-**Required environment variables:**
-
-| Variable | Description |
-|----------|-------------|
-| `JIRA_URL` | Your Jira instance URL (e.g., `https://yourorg.atlassian.net`) |
-| `JIRA_EMAIL` | Your Atlassian account email |
-| `JIRA_API_TOKEN` | API token from id.atlassian.com |
-
-Store these in your shell environment, secrets manager, or an untracked local env file. Do not commit them to the repo.
-
-For direct `curl` examples, keep credentials out of command-line arguments by passing the Jira user config on stdin:
-
-```bash
-jira_curl() {
-  printf 'user = "%s:%s"\n' "$JIRA_EMAIL" "$JIRA_API_TOKEN" |
-    curl -s -K - "$@"
-}
+```text
+{type}/{JIRA-KEY}-{short-description}
 ```
 
-## MCP Tools Reference
+Examples:
+- `fix/PROJ-123-critical-vulnerabilities`
+- `fix/PROJ-456-blocker-sonar-issues`
+- `test/PROJ-789-coverage-payment-service`
 
-When the `mcp-atlassian` MCP server is configured, these tools are available:
+## References
 
-| Tool | Purpose | Example |
-|------|---------|---------|
-| `jira_search` | JQL queries | `project = PROJ AND status = "In Progress"` |
-| `jira_get_issue` | Fetch full issue details by key | `PROJ-1234` |
-| `jira_create_issue` | Create issues (Task, Bug, Story, Epic) | New bug report |
-| `jira_update_issue` | Update fields (summary, description, assignee) | Change assignee |
-| `jira_transition_issue` | Change status | Move to "In Review" |
-| `jira_add_comment` | Add comments | Progress update |
-| `jira_get_sprint_issues` | List issues in a sprint | Active sprint review |
-| `jira_create_issue_link` | Link issues (Blocks, Relates to) | Dependency tracking |
-| `jira_get_issue_development_info` | See linked PRs, branches, commits | Dev context |
+| Reference | Content |
+|-----------|---------|
+| `references/project-discovery.md` | How to discover user's Jira project key |
+| `references/ticket-search.md` | JQL queries to find existing tickets |
+| `references/ticket-creation.md` | Create tickets with proper format |
+| `references/branch-naming.md` | Branch naming with Jira keys |
+| `references/severity-processing.md` | Process by severity level |
 
-> **Tip:** Always call `jira_get_transitions` before transitioning — transition IDs vary per project workflow.
+## Severity-Based Processing
 
-## Direct REST API Reference
+### Vulnerability Severity Order
 
-### Fetch a Ticket
+1. **CRITICAL** - Fix first
+2. **HIGH** - Only after no CRITICAL remain
+3. **MEDIUM/MODERATE** - Only after no HIGH remain
+4. **LOW** - Only after no MEDIUM remain
 
-```bash
-jira_curl \
-  -H "Content-Type: application/json" \
-  "$JIRA_URL/rest/api/3/issue/PROJ-1234" | jq '{
-    key: .key,
-    summary: .fields.summary,
-    status: .fields.status.name,
-    priority: .fields.priority.name,
-    type: .fields.issuetype.name,
-    assignee: .fields.assignee.displayName,
-    labels: .fields.labels,
-    description: .fields.description
-  }'
-```
+### SonarQube Severity Order
 
-### Fetch Comments
-
-```bash
-jira_curl \
-  -H "Content-Type: application/json" \
-  "$JIRA_URL/rest/api/3/issue/PROJ-1234?fields=comment" | jq '.fields.comment.comments[] | {
-    author: .author.displayName,
-    created: .created[:10],
-    body: .body
-  }'
-```
-
-### Add a Comment
-
-```bash
-jira_curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{
-    "body": {
-      "version": 1,
-      "type": "doc",
-      "content": [{
-        "type": "paragraph",
-        "content": [{"type": "text", "text": "Your comment here"}]
-      }]
-    }
-  }' \
-  "$JIRA_URL/rest/api/3/issue/PROJ-1234/comment"
-```
-
-### Transition a Ticket
-
-```bash
-# 1. Get available transitions
-jira_curl \
-  "$JIRA_URL/rest/api/3/issue/PROJ-1234/transitions" | jq '.transitions[] | {id, name: .name}'
-
-# 2. Execute transition (replace TRANSITION_ID)
-jira_curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"transition": {"id": "TRANSITION_ID"}}' \
-  "$JIRA_URL/rest/api/3/issue/PROJ-1234/transitions"
-```
-
-### Search with JQL
-
-```bash
-jira_curl -G \
-  --data-urlencode "jql=project = PROJ AND status = 'In Progress'" \
-  "$JIRA_URL/rest/api/3/search"
-```
-
-## Analyzing a Ticket
-
-When retrieving a ticket for development or test automation, extract:
-
-### 1. Testable Requirements
-- **Functional requirements** — What the feature does
-- **Acceptance criteria** — Conditions that must be met
-- **Testable behaviors** — Specific actions and expected outcomes
-- **User roles** — Who uses this feature and their permissions
-- **Data requirements** — What data is needed
-- **Integration points** — APIs, services, or systems involved
-
-### 2. Test Types Needed
-- **Unit tests** — Individual functions and utilities
-- **Integration tests** — API endpoints and service interactions
-- **E2E tests** — User-facing UI flows
-- **API tests** — Endpoint contracts and error handling
-
-### 3. Edge Cases & Error Scenarios
-- Invalid inputs (empty, too long, special characters)
-- Unauthorized access
-- Network failures or timeouts
-- Concurrent users or race conditions
-- Boundary conditions
-- Missing or null data
-- State transitions (back navigation, refresh, etc.)
-
-### 4. Structured Analysis Output
-
-```
-Ticket: PROJ-1234
-Summary: [ticket title]
-Status: [current status]
-Priority: [High/Medium/Low]
-Test Types: Unit, Integration, E2E
-
-Requirements:
-1. [requirement 1]
-2. [requirement 2]
-
-Acceptance Criteria:
-- [ ] [criterion 1]
-- [ ] [criterion 2]
-
-Test Scenarios:
-- Happy Path: [description]
-- Error Case: [description]
-- Edge Case: [description]
-
-Test Data Needed:
-- [data item 1]
-- [data item 2]
-
-Dependencies:
-- [dependency 1]
-- [dependency 2]
-```
-
-## Updating Tickets
-
-### When to Update
-
-| Workflow Step | Jira Update |
-|---|---|
-| Start work | Transition to "In Progress" |
-| Tests written | Comment with test coverage summary |
-| Branch created | Comment with branch name |
-| PR/MR created | Comment with link, link issue |
-| Tests passing | Comment with results summary |
-| PR/MR merged | Transition to "Done" or "In Review" |
-
-### Comment Templates
-
-**Starting Work:**
-```
-Starting implementation for this ticket.
-Branch: feat/PROJ-1234-feature-name
-```
-
-**Tests Implemented:**
-```
-Automated tests implemented:
-
-Unit Tests:
-- [test file 1] — [what it covers]
-- [test file 2] — [what it covers]
-
-Integration Tests:
-- [test file] — [endpoints/flows covered]
-
-All tests passing locally. Coverage: XX%
-```
-
-**PR Created:**
-```
-Pull request created:
-[PR Title](https://github.com/org/repo/pull/XXX)
-
-Ready for review.
-```
-
-**Work Complete:**
-```
-Implementation complete.
-
-PR merged: [link]
-Test results: All passing (X/Y)
-Coverage: XX%
-```
-
-## Security Guidelines
-
-- **Never hardcode** Jira API tokens in source code or skill files
-- **Always use** environment variables or a secrets manager
-- **Add `.env`** to `.gitignore` in every project
-- **Rotate tokens** immediately if exposed in git history
-- **Use least-privilege** API tokens scoped to required projects
-- **Validate** that credentials are set before making API calls — fail fast with a clear message
-
-## Troubleshooting
-
-| Error | Cause | Fix |
-|---|---|---|
-| `401 Unauthorized` | Invalid or expired API token | Regenerate at id.atlassian.com |
-| `403 Forbidden` | Token lacks project permissions | Check token scopes and project access |
-| `404 Not Found` | Wrong ticket key or base URL | Verify `JIRA_URL` and ticket key |
-| `spawn uvx ENOENT` | IDE cannot find `uvx` on PATH | Use full path (e.g., `~/.local/bin/uvx`) or set PATH in `~/.zprofile` |
-| Connection timeout | Network/VPN issue | Check VPN connection and firewall rules |
+1. **BLOCKER** - Fix first
+2. **CRITICAL** - Only after no BLOCKER remain
+3. **MAJOR** - Only after no CRITICAL remain
+4. **MINOR** - Only after no MAJOR remain
+5. **INFO** - Only after no MINOR remain
 
 ## Best Practices
 
-- Update Jira as you go, not all at once at the end
-- Keep comments concise but informative
-- Link rather than copy — point to PRs, test reports, and dashboards
-- Use @mentions if you need input from others
-- Check linked issues to understand full feature scope before starting
-- If acceptance criteria are vague, ask for clarification before writing code
+1. **One severity per PR** - Keep PRs focused and reviewable
+2. **Batch related fixes** - Group similar issues in one commit
+3. **Clear descriptions** - Document what was fixed and why
+4. **Link everything** - Jira ticket ↔ Branch ↔ Commits ↔ PR
+5. **Update ticket status** - Move ticket through workflow as work progresses
+
+## Skill Dependencies
+
+| Skill | Purpose |
+|-------|---------|
+| `pr-workflow` | PR creation, commit formats, GitHub CLI |
+
+## Related
+
+- [pr-workflow](.claude/skills/pr-workflow/SKILL.md) - PR creation and management
+- [stacked-prs](.claude/skills/stacked-prs/SKILL.md) - Stacked PR workflows
+<!-- AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY -->
+<!-- Source: bitsoex/ai-code-instructions → global/skills/jira-integration/SKILL.md -->
+<!-- To modify, edit the source file and run the distribution workflow -->
+

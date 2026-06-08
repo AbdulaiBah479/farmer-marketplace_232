@@ -1,477 +1,386 @@
 ---
 name: helm-chart-review
-description: Use when performing code reviews of Helm charts, conducting security audits of charts, assessing chart quality and best practices, running automated chart analysis tools, or validating chart structure and organization
+description: Conduct comprehensive Helm chart security and quality audits with automated checks for security contexts, resource limits, and production readiness. Use when reviewing pull requests with Helm chart changes, conducting pre-release chart audits, security scanning Helm manifests, validating chart structure and best practices, or preparing charts for production deployment.
+version: 1.0.0
 ---
 
 # Helm Chart Review
 
-Review Helm charts including security, quality, best practices, and code review guidelines.
+## Purpose
 
-## Keywords
+Provide comprehensive review checklists and automated validation for ensuring Helm charts meet production quality and security standards before deployment.
 
-helm, chart, review, reviewing, security, quality, auditing, audit, best practices, code review, trivy, kubescape, polaris, pluto, lint, linting, validating, validation, analyzing, analysis
+## Complete Review Workflow
 
-## When to Use This Skill
+### Step 1: Run Automated Validation
 
-- Performing code reviews of Helm charts
-- Conducting security audits of charts
-- Assessing chart quality and best practices
-- Running automated chart analysis tools
-- Validating chart structure and organization
+```bash
+# Lint checks
+helm lint ./charts/mychart
 
-## Related Skills
+# Template rendering validation
+helm template mychart ./charts/mychart --debug
 
-- [helm-chart-development](../helm-chart-development) - Creating charts
-- [helm-chart-maintenance](../helm-chart-maintenance) - Maintaining charts
-- [k8s-security-hardening](../k8s-security-hardening) - Security best practices
-- [Shared: Pod Security Context](../_shared/references/pod-security-context.md)
-- [Shared: RBAC Patterns](../_shared/references/rbac-patterns.md)
+# Test with different value files
+helm template mychart ./charts/mychart -f values-prod.yaml
 
-## Quick Reference
-
-| Task | Command |
-|------|---------|
-| Lint chart | `helm lint mychart/ --strict` |
-| Security scan | `trivy config mychart/` |
-| Best practices | `helm template myrelease mychart/ \| polaris audit --audit-path -` |
-| Deprecated APIs | `helm template myrelease mychart/ \| pluto detect -` |
-| NSA framework | `helm template myrelease mychart/ \| kubescape scan framework nsa -` |
-
-## Review Checklist
-
-### Structure & Organization
-- [ ] Standard directory structure followed
-- [ ] Chart.yaml has required fields (apiVersion, name, version)
-- [ ] README.md exists and is complete
-- [ ] NOTES.txt provides useful post-install information
-- [ ] .helmignore excludes unnecessary files
-- [ ] Templates organized logically
-
-### Values Design
-- [ ] values.yaml has sensible defaults
-- [ ] All values documented with comments
-- [ ] values.schema.json validates inputs
-- [ ] No hardcoded values in templates
-- [ ] Sensitive values use secrets, not configmaps
-
-### Security
-- [ ] Pod security context defined
-- [ ] Container security context defined
-- [ ] Service account with minimal permissions
-- [ ] Network policies included (if applicable)
-- [ ] No privileged containers by default
-- [ ] Resource limits defined
-
-### Quality
-- [ ] Templates pass `helm lint`
-- [ ] Unit tests exist and pass
-- [ ] Labels follow Kubernetes conventions
-- [ ] Proper use of helpers (_helpers.tpl)
-- [ ] Consistent naming conventions
-
-## Security Review
-
-### Pod Security Checklist
-
-```yaml
-# REQUIRED security settings
-podSecurityContext:
-  runAsNonRoot: true       # ✓ Never run as root
-  fsGroup: 1000            # ✓ Set filesystem group
-  seccompProfile:
-    type: RuntimeDefault   # ✓ Use seccomp
-
-securityContext:
-  allowPrivilegeEscalation: false  # ✓ Block privilege escalation
-  readOnlyRootFilesystem: true     # ✓ Immutable container
-  runAsNonRoot: true               # ✓ Non-root user
-  runAsUser: 1000                  # ✓ Specific UID
-  capabilities:
-    drop:
-      - ALL                        # ✓ Drop all capabilities
+# Dry run installation
+helm install test ./charts/mychart --dry-run --debug --namespace test
 ```
 
-### Security Anti-Patterns
+### Step 2: Security Review Checklist
+
+**Critical security items (must pass):**
+
+- [ ] **No hardcoded secrets** in values.yaml or templates
+- [ ] **Image tags are specific** (no `:latest` tag)
+- [ ] **Security contexts are defined** and restrictive:
+  ```yaml
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  ```
+- [ ] **RBAC is properly configured** with least privilege
+- [ ] **Resource limits** are set for all containers
+- [ ] **Service accounts** are explicitly created (not using default)
+- [ ] **Secrets** use external secret management (not inline)
+
+**Security red flags:**
 
 ```yaml
-# ❌ BAD: Privileged container
+# ❌ NEVER allow these
 securityContext:
-  privileged: true
+  privileged: true # Unacceptable
+  runAsUser: 0 # Root user - requires justification
+  allowPrivilegeEscalation: true # Security risk
 
-# ❌ BAD: Running as root
-securityContext:
-  runAsUser: 0
+image:
+  tag: latest # Non-deterministic
 
-# ❌ BAD: Writable root filesystem
-securityContext:
-  readOnlyRootFilesystem: false
-
-# ❌ BAD: Host namespaces
-hostNetwork: true
-hostPID: true
-hostIPC: true
-
-# ❌ BAD: Dangerous volume mounts
-volumes:
-  - name: host
-    hostPath:
-      path: /
-
-# ❌ BAD: Secrets in environment variables (prefer mounted secrets)
-env:
-  - name: DB_PASSWORD
-    value: "hardcoded-password"
-
-# ❌ BAD: No resource limits
-resources: {}
+# Hardcoded secrets
+password: "hardcoded123" # NEVER hardcode secrets
 ```
 
-### RBAC Review
+### Step 3: Structure Review Checklist
+
+- [ ] **Chart.yaml** has all required fields:
+  - `apiVersion: v2`
+  - `name`, `description`, `type`
+  - `version` (follows SemVer2)
+  - `appVersion`
+  - `maintainers` with contact info
+- [ ] **Version follows SemVer2** format (MAJOR.MINOR.PATCH)
+- [ ] **Dependencies** use version ranges (~)
+- [ ] **One resource per file** in templates/
+- [ ] **Template helpers** are properly namespaced
+- [ ] **File naming** follows conventions (lowercase, dashes)
+- [ ] **NOTES.txt** provides useful post-install information
+- [ ] **README.md** exists with usage documentation
+
+### Step 4: Values Review Checklist
+
+- [ ] **All values are documented** with clear comments
+- [ ] **Naming is consistent** (camelCase throughout)
+- [ ] **Types are explicit** (strings quoted: `tag: "1.0"`)
+- [ ] **Flat structure** preferred over deep nesting
+- [ ] **Defaults are secure** and production-ready
+- [ ] **Environment-specific values** separated (values-{env}.yaml)
+- [ ] **Boolean values** use lowercase (`true`/`false`)
+- [ ] **Resource requests/limits** have realistic values
+
+**Good vs bad values:**
 
 ```yaml
-# ✓ GOOD: Minimal permissions
-rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["get", "list", "watch"]
-  resourceNames: ["my-config"]  # Even better: specific resources
+# ✅ Good
+replicaCount: 2 # Documented, reasonable default
 
-# ❌ BAD: Overly permissive
-rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["*"]
-
-# ❌ BAD: Cluster-wide access when namespace-scoped sufficient
-kind: ClusterRole  # Should be Role if namespace-scoped
-```
-
-### Image Security
-
-```yaml
-# ✓ GOOD: Specific tag
 image:
   repository: myapp
-  tag: "v1.2.3"  # Specific version
+  pullPolicy: IfNotPresent
+  tag: "" # Empty, uses appVersion
 
-# ❌ BAD: Latest tag
-image:
-  repository: myapp
-  tag: "latest"  # Mutable, unpredictable
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
 
-# ✓ GOOD: Digest pinning for critical apps
-image:
-  repository: myapp@sha256:abc123...
+# ❌ Bad
+replicas: 1 # Undocumented, single point of failure
+ImageTag: latest # Wrong case, non-specific tag
+database:
+  password: "changeme" # Hardcoded secret
 ```
 
-## Quality Review
+### Step 5: Template Review Checklist
 
-### Template Quality
+- [ ] **Labels are consistent** and follow k8s recommendations:
+  - `app.kubernetes.io/name`
+  - `app.kubernetes.io/instance`
+  - `app.kubernetes.io/version`
+  - `app.kubernetes.io/managed-by`
+- [ ] **Nil checks** for nested values (prevent nil pointer errors)
+- [ ] **Whitespace properly managed** (`{{-` and `-}}` used correctly)
+- [ ] **Helper functions** used for repeated logic
+- [ ] **Conditionals** properly structured
+- [ ] **Resources can be disabled** via values
+- [ ] **Image tags** default to Chart.AppVersion
+- [ ] **ConfigMap/Secret changes** trigger pod restarts (checksum annotations)
+- [ ] **Names truncated** to 63 characters
+
+**Template quality patterns:**
 
 ```yaml
-# ✓ GOOD: Use helpers for common patterns
+# ✅ Good
 metadata:
-  name: {{ include "myapp.fullname" . }}
+  name: {{ include "mychart.fullname" . }}
   labels:
-    {{- include "myapp.labels" . | nindent 4 }}
+    {{- include "mychart.labels" . | nindent 4 }}
+  annotations:
+    checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
 
-# ❌ BAD: Duplicated logic
-metadata:
-  name: {{ .Release.Name }}-{{ .Chart.Name }}
-  labels:
-    app: {{ .Chart.Name }}
-    release: {{ .Release.Name }}
-```
-
-### Whitespace & Formatting
-
-```yaml
-# ✓ GOOD: Proper indentation with nindent
-spec:
-  {{- with .Values.nodeSelector }}
-  nodeSelector:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-
-# ❌ BAD: Manual indentation (error-prone)
-spec:
-  {{- if .Values.nodeSelector }}
-  nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 4 }}
-  {{- end }}
-```
-
-### Conditional Resources
-
-```yaml
-# ✓ GOOD: Clean conditional
 {{- if .Values.ingress.enabled }}
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-...
+# ... conditional resource
 {{- end }}
 
-# ✓ GOOD: Required values
-image: {{ required "image.repository is required" .Values.image.repository }}
+image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
 
-# ❌ BAD: Silent failures
-image: {{ .Values.image.repository }}  # Empty if not set
+# Safe nil handling
+{{- with .Values.tolerations }}
+tolerations:
+  {{- toYaml . | nindent 8 }}
+{{- end }}
+
+# ❌ Bad
+name: my-app-{{ .Release.Name }}       # Hardcoded
+image: {{ .Values.image }}:latest      # Hardcoded latest
+{{ .Values.nested.value }}             # No nil check
 ```
 
-### Labels & Annotations
+### Step 6: Testing Review Checklist
 
-```yaml
-# ✓ GOOD: Standard Kubernetes labels
-metadata:
-  labels:
-    app.kubernetes.io/name: {{ include "myapp.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "myapp.chart" . }}
+- [ ] **helm lint** passes without errors or warnings
+- [ ] **helm template** renders correctly
+- [ ] **Dry run** succeeds
+- [ ] **Unit tests** exist and pass (helm-unittest)
+- [ ] **All conditional paths** tested (enabled/disabled features)
+- [ ] **Multiple environments** tested (dev, staging, prod values)
 
-# ❌ BAD: Non-standard labels
-metadata:
-  labels:
-    app: myapp
-    version: v1
+## Security Scanning Integration
+
+### Kubesec Analysis
+
+```bash
+# Scan rendered templates for security issues
+helm template mychart ./charts/mychart | kubesec scan -
+
+# Look for:
+# - Missing security contexts
+# - Privileged containers
+# - Host path mounts
+# - Host network usage
 ```
 
-## Values Review
+### Trivy Image Scanning
 
-### Documentation
+```bash
+# Extract images from chart
+helm template mychart ./charts/mychart | grep "image:" | sort -u
 
-```yaml
-# ✓ GOOD: Documented values
-# -- Number of pod replicas
-# @default -- 1
-replicaCount: 1
-
-# -- Image configuration
-image:
-  # -- Repository for the container image
-  repository: myapp
-  # -- Image pull policy
-  # @default -- IfNotPresent
-  pullPolicy: IfNotPresent
-
-# ❌ BAD: Undocumented values
-replicaCount: 1
-image:
-  repository: myapp
-  pullPolicy: IfNotPresent
+# Scan each image for vulnerabilities
+trivy image myapp:1.0.0
 ```
 
-### Defaults
+## Common Review Findings and Fixes
+
+### Finding: Missing Resource Limits
 
 ```yaml
-# ✓ GOOD: Sensible, secure defaults
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+# ❌ Problem
+containers:
+  - name: app
+    image: myapp:1.0
 
+# ✅ Solution
+containers:
+  - name: app
+    image: myapp:1.0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+```
+
+### Finding: Insecure Security Context
+
+```yaml
+# ❌ Problem
+securityContext: {}
+
+# ✅ Solution
 securityContext:
   runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
   readOnlyRootFilesystem: true
-
-# ❌ BAD: No defaults for critical settings
-resources: {}
-securityContext: {}
-```
-
-### Schema Validation
-
-```json
-// ✓ GOOD: Comprehensive schema
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "required": ["image"],
-  "properties": {
-    "replicaCount": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 100
-    },
-    "image": {
-      "type": "object",
-      "required": ["repository"],
-      "properties": {
-        "repository": {
-          "type": "string",
-          "minLength": 1
-        },
-        "pullPolicy": {
-          "type": "string",
-          "enum": ["Always", "IfNotPresent", "Never"]
-        }
-      }
-    }
-  }
-}
-```
-
-## Code Review Comments
-
-### Severity Levels
-
-| Level | Description | Action |
-|-------|-------------|--------|
-| 🔴 Critical | Security vulnerability, data loss risk | Must fix before merge |
-| 🟠 Major | Best practice violation, significant issue | Should fix |
-| 🟡 Minor | Style, minor improvement | Nice to have |
-| 🔵 Suggestion | Alternative approach | Consider |
-
-### Example Review Comments
-
-```markdown
-🔴 **Critical: Security - Privileged Container**
-The container is running as privileged which grants full host access.
-```yaml
-# Current
-securityContext:
-  privileged: true
-
-# Suggested
-securityContext:
-  privileged: false
   allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
 ```
 
----
+### Finding: Latest Image Tag
 
-🟠 **Major: Missing Resource Limits**
-No resource limits defined. This can lead to resource starvation.
 ```yaml
-# Add to values.yaml
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+# ❌ Problem
+image: myapp:latest
+
+# ✅ Solution
+image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
 ```
 
----
+### Finding: No Liveness/Readiness Probes
 
-🟡 **Minor: Use nindent instead of indent**
-`nindent` handles newlines automatically and is more reliable.
 ```yaml
-# Current
-{{ toYaml .Values.labels | indent 4 }}
+# ❌ Problem
+containers:
+  - name: app
+    image: myapp:1.0
 
-# Suggested
-{{- toYaml .Values.labels | nindent 4 }}
+# ✅ Solution
+containers:
+  - name: app
+    image: myapp:1.0
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: http
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 5
 ```
+
+## Review Severity Levels
+
+**BLOCKER** (must fix before merge):
+
+- Hardcoded secrets
+- Missing security contexts
+- Privileged containers
+- No resource limits
+- Use of `:latest` tag
+
+**CRITICAL** (must fix before production):
+
+- Missing liveness/readiness probes
+- Single replica without PDB
+- No pod disruption budget
+- Incorrect RBAC (too permissive)
+
+**MAJOR** (should fix):
+
+- Undocumented values
+- Missing tests
+- Incomplete README
+- No CHANGELOG entry
+
+**MINOR** (nice to have):
+
+- Improved comments
+- Additional examples
+- Optimization opportunities
+
+## Pre-Release Checklist
+
+**Before releasing chart:**
+
+- [ ] All security review items pass
+- [ ] All structure review items pass
+- [ ] All tests pass (lint, unit, integration, dry-run)
+- [ ] Security scanning completed (kubesec, trivy)
+- [ ] Documentation updated and accurate
+- [ ] CHANGELOG.md updated with version notes
+- [ ] Version bumped appropriately (major/minor/patch)
+- [ ] Tested in staging environment
+- [ ] Rollback procedure documented
+- [ ] Resource quotas validated
+- [ ] Network policies tested
+- [ ] Monitoring/alerting configured
+
+## CI/CD Quality Gates
+
+**Example pipeline checks:**
+
+```yaml
+# GitLab CI / GitHub Actions
+helm-lint:
+  stage: test
+  script:
+    - helm lint ./charts/*
+
+helm-unittest:
+  stage: test
+  script:
+    - helm unittest ./charts/*
+
+helm-security-scan:
+  stage: test
+  script:
+    - helm template ./charts/* | kubesec scan -
+    - helm template ./charts/* | trivy config -
+
+helm-dry-run:
+  stage: test
+  script:
+    - helm install test ./charts/mychart --dry-run --debug
+```
+
+## Documentation Review
+
+**README.md must include:**
+
+- [ ] Chart description and purpose
+- [ ] Prerequisites and dependencies
+- [ ] Installation instructions
+- [ ] Configuration options (values) table
+- [ ] Usage examples
+- [ ] Upgrade instructions
+
+**CHANGELOG.md must track:**
+
+- [ ] Version number and date
+- [ ] Added features
+- [ ] Changed behavior
+- [ ] Deprecated features
+- [ ] Removed features
+- [ ] Fixed bugs
+- [ ] Security fixes
+
+## Resources
+
+- [Helm Best Practices](https://helm.sh/docs/chart_best_practices/)
+- [Helm Chart Testing](https://github.com/helm/chart-testing)
+- [Helm Unittest Plugin](https://github.com/helm-unittest/helm-unittest)
+- [Kubesec Security Scanner](https://kubesec.io/)
+- [Trivy Scanner](https://trivy.dev/)
 
 ---
 
-🔵 **Suggestion: Consider using a helper**
-This pattern is repeated in multiple templates. Consider extracting to _helpers.tpl.
-```
+## Related Agent
 
-## Automated Review Tools
-
-### helm lint
-```bash
-# Basic linting
-helm lint mychart/
-
-# Strict mode
-helm lint mychart/ --strict
-
-# With values
-helm lint mychart/ -f values-production.yaml
-```
-
-### Trivy (Security)
-```bash
-# Scan chart for misconfigurations
-trivy config mychart/
-
-# JSON output
-trivy config mychart/ -f json -o results.json
-```
-
-### Kubescape
-```bash
-# Scan rendered templates
-helm template myrelease mychart/ | kubescape scan -
-
-# With specific framework
-helm template myrelease mychart/ | kubescape scan framework nsa -
-```
-
-### Polaris
-```bash
-# Scan for best practices
-helm template myrelease mychart/ | polaris audit --audit-path -
-```
-
-### Pluto (Deprecations)
-```bash
-# Check for deprecated APIs
-helm template myrelease mychart/ | pluto detect -
-```
-
-## Review Process
-
-### Before Review
-1. Run `helm lint` locally
-2. Run `helm template` to verify rendering
-3. Run security scans (Trivy, Kubescape)
-4. Run unit tests
-
-### During Review
-1. Check structure and organization
-2. Review values.yaml design
-3. Audit security settings
-4. Verify template quality
-5. Check documentation
-
-### After Review
-1. Verify all critical issues addressed
-2. Re-run automated checks
-3. Test deployment in dev environment
-4. Approve or request changes
-
-## Review Template
-
-```markdown
-## Helm Chart Review: [chart-name] v[version]
-
-### Summary
-[Brief description of changes]
-
-### Automated Checks
-- [ ] `helm lint` passes
-- [ ] `helm template` renders correctly
-- [ ] Unit tests pass
-- [ ] Security scan clean (Trivy/Kubescape)
-- [ ] No deprecated APIs (Pluto)
-
-### Manual Review
-- [ ] Chart structure follows conventions
-- [ ] Values documented and have sensible defaults
-- [ ] Security contexts properly configured
-- [ ] Resource limits defined
-- [ ] RBAC follows least privilege
-- [ ] Labels follow Kubernetes conventions
-- [ ] README accurate and complete
-
-### Issues Found
-| Severity | Issue | Location |
-|----------|-------|----------|
-| 🔴 | ... | ... |
-| 🟠 | ... | ... |
-
-### Recommendation
-[ ] ✅ Approve
-[ ] 🔄 Request changes
-[ ] ❌ Reject
-```
+For comprehensive Helm/Kubernetes guidance that coordinates this and other Helm skills, use the **`helm-kubernetes-expert`** agent.

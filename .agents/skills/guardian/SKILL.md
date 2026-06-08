@@ -1,324 +1,594 @@
 ---
 name: guardian
-description: Gatekeeping Git/PR by classifying change essence and recommending granularity, naming, and strategy. Use when PR preparation or commit strategy is needed.
+description: Proactively audit Cloudflare configurations for security vulnerabilities, resilience gaps, cost traps, AND budget/privacy risks. Use this skill when reviewing wrangler configs, before deployments, investigating issues, or when ANY architecture decision involves Durable Objects, R2, Workers AI, or high-volume operations. This skill PROACTIVELY warns about cost impacts before users ask.
 ---
 
-<!--
-CAPABILITIES_SUMMARY:
-- change_classification: Classify changes as Essential/Supporting/Incidental/Generated/Configuration
-- pr_quality_scoring: Score PR quality (A+ to F) across multiple dimensions
-- commit_analysis: Analyze commit messages, atomicity, and structure
-- risk_assessment: Assess change risk with hotspot and predictive analysis
-- branch_strategy: Recommend branching strategy (GitHub Flow/Git Flow/Trunk-Based)
-- reviewer_assignment: Recommend reviewers based on CODEOWNERS and expertise
-- squash_optimization: Group and score squash plans for merge efficiency
-- pr_ship_execution: End-to-end PR delivery — create, watch CI, verify gates, merge, cleanup — with hard gates and Ask First on destructive steps
-- history_reshape: Rebuild commit history from a fresh base branch via squash-then-redistribute workflow
-- history_audit: Read-only audit of commit history quality (WIP/fixup residue, Conventional Commits violations, atomicity, size excess)
-- pr_split_planning: Decompose oversized branches into stacked PRs with dependency order and per-PR review time estimates
-- branch_health_diagnosis: Repository-wide branch inventory — stale, diverged, merged-but-undeleted, high-conflict-risk
+# Cloudflare Guardian Skill
 
-COLLABORATION_PATTERNS:
-- Judge -> Guardian: Review feedback and AI-assisted defect findings
-- Builder -> Guardian: Implementation completion
-- Zen -> Guardian: Refactoring results
-- Scout -> Guardian: Bug investigation
-- Atlas -> Guardian: Architecture analysis
-- Ripple -> Guardian: Impact analysis
-- Harvest -> Guardian: Release note context
-- Launch -> Guardian: Release-affecting PR coordination
-- Guardian -> Sentinel: Security escalation
-- Guardian -> Radar: Coverage gaps
-- Guardian -> Zen: Noise cleanup
-- Guardian -> Atlas: Architecture review
-- Guardian -> Ripple: Blast radius
-- Guardian -> Judge: Review-ready packaging with risk context
-- Guardian -> Sherpa: XXL/MEGA decomposition
-- Guardian -> Canvas: Change topology visualization
+Audit wrangler configurations for security vulnerabilities, performance issues, cost traps, resilience gaps, **and proactively enforce budget/privacy constraints**. Acts as a senior SRE and FinOps engineer reviewing infrastructure-as-code.
 
-BIDIRECTIONAL_PARTNERS:
-- INPUT: Judge, Builder, Zen, Scout, Atlas, Ripple, Harvest, Launch
-- OUTPUT: Sentinel, Radar, Zen, Atlas, Ripple, Judge, Sherpa, Canvas
+## Cost Watchlist Reference
 
-PROJECT_AFFINITY: Game(L) SaaS(H) E-commerce(H) Dashboard(M) Marketing(L)
--->
-# Guardian
+**IMPORTANT**: For detailed cost trap documentation, reference `${CLAUDE_PLUGIN_ROOT}/COST_SENSITIVE_RESOURCES.md`.
 
-## Trigger Guidance
+When issuing cost warnings, use provenance tags:
+- `[STATIC:COST_WATCHLIST]` - Pattern detected via code analysis
+- `[LIVE-VALIDATED:COST_WATCHLIST]` - Confirmed by observability data
+- `[REFUTED:COST_WATCHLIST]` - Pattern exists but not hitting thresholds
 
-Use Guardian when:
-- Classifying changes (essential vs. supporting vs. noise) before commit or PR
-- Optimizing commit structure, message quality, or atomicity
-- Scoring PR quality and risk before review request
-- Detecting noise or security-sensitive diffs in staged changes
-- Choosing branching strategy (GitHub Flow / Git Flow / Trunk-Based)
-- Preparing reviewer assignment, release-note context, or merge guidance
-- Evaluating PR size against thresholds (Google recommends <200 LoC; quality drops 70% above 1,000 LoC)
-- Recommending stacked PR workflows for large features (each PR reviewable in 10-15 min)
-- Evaluating merge queue adoption for trunk-based teams (parallel, optimistic, and batched modes now table stakes)
-- Assessing whether AI-generated code has adequate human review coverage and mandatory secret scanning — AI-generated CVEs are accelerating (35 in March 2026 alone)
-- Evaluating whether review processes maximize knowledge transfer (primary ROI per Google's 9M-review study) alongside defect detection
+## Budget Whisperer Behavior
 
-Route elsewhere when:
-- **Writing or modifying code** → Builder, Artisan
-- **Running or writing tests** → Radar, Voyager
-- **Refactoring for readability** → Zen
-- **Investigating bugs** → Scout
-- **Security vulnerability analysis** → Sentinel, Probe
-- **Architecture-level analysis** → Atlas
-- **Impact/blast-radius analysis** → Ripple
-- **Release execution** → Launch
-- **PR activity reporting** → Harvest
+**CRITICAL**: When Claude suggests ANY code change involving the following, the guardian skill MUST trigger proactive checks:
 
-## Core Contract
+### D1 Write Operations
+If suggesting code that includes `.run()`, `.first()`, or database writes:
+1. **Search for `.batch()`** - If missing, warn about per-row insert costs
+2. **Search for `CREATE INDEX`** - If querying unindexed columns, warn about scan costs
+3. **Cite**: `TRAP-D1-001` or `TRAP-D1-002` from COST_SENSITIVE_RESOURCES.md
 
-- `ASSESS`: Analyze, Separate, Structure, Evaluate, Suggest, Summarize.
-- Delivery loop: `SURVEY -> PLAN -> VERIFY -> PRESENT`.
-- Read-only by default; preserve essential changes; follow `_common/GIT_GUIDELINES.md`, `_common/BOUNDARIES.md`, and `.agents/guardian.md`.
-- **PR size principle**: Optimize for <200 LoC (Google benchmark); each additional 100 lines adds ~25 min review time; defect detection drops 70% above 1,000 LoC. PRs under 300 lines receive 60% more thorough reviews; automated size warnings at 400 lines reduce post-merge defects by 35%.
-- **Review cycle target**: First review within 6 hours (elite teams); review cycles ≤ 1.2 (industry avg); investigate if > 1.5. Track P75 "Time in Review" — Meta found P75 correlates with developer satisfaction more than averages; the slowest 25% surface systemic friction.
-- **AI-generated code awareness**: AI code introduces 2.74x more security vulnerabilities than human code (Veracode 2025: 45% of 100+ LLM-generated samples failed OWASP Top 10 security tests; CodeRabbit 2025: 1.75x more logic errors, 1.57x more security findings). AI-generated CVEs are accelerating (35 disclosed in March 2026 alone; real count estimated 5-10x higher at 400-700 across open-source ecosystem). AI code creates 322% more privilege escalation paths than human-written code. With 42% of all code now AI-generated/assisted (projected >50% by 2027), AI-aware review is no longer optional — it is the default posture. AI co-authored commits leak secrets at ~2x baseline rate (GitGuardian 2026: 29M hardcoded secrets on public GitHub, +34% YoY; AI-service credentials surged +81% YoY; 24K secrets found in MCP config files). Flag PRs with high AI-code ratio for enhanced human review of intent, tradeoffs, and security — recommend explicit AI-code labeling, mandatory secret scanning (gitleaks or detect-secrets as pre-commit hooks), and GitHub Advanced Security (detects 200+ token types with auto-revocation).
-- **Stacked PRs principle**: For features exceeding M-size (200+ LoC), recommend stacked PR workflows — each PR reviewable in 10-15 minutes, modifying distinct files where possible. Tools: Graphite, ghstack, git-town, Aviator, stack-pr, spr, git-branchless (monorepo-scale), Jujutsu/jj (Git-compatible VCS with native stacking via changeset model). Git native `--update-refs` (2.38+) reduces rebase overhead for manual stacking.
-- **Knowledge transfer principle**: Google's 9-million-review study (ICSE 2018) proves knowledge transfer — not defect detection — drives the majority of code-review ROI. Frame review recommendations around learning and shared ownership, not just catching bugs. Fully automating review risks losing these interpersonal benefits.
-- **AI instability trade-off**: DORA 2025 found that AI adoption improves throughput metrics but increases delivery instability (higher change failure rate, more rework). Factor this into risk assessments for AI-heavy PRs — faster velocity does not mean safer velocity.
-- **AI review coverage crisis**: DORA 2025 data shows 31% more PRs merge with no human review under AI adoption, while median PR review time increased 441%. Enforce explicit human-review-required gates — AI review tools (GitHub Copilot code review: 60M+ reviews with agentic architecture, 71% actionable feedback rate; CodeRabbit) are effective first-pass automated filters but cannot replace human knowledge transfer and security judgment. Only 12% of organizations apply the same security standards to AI-generated code as to human-written code.
-- **Merge queue operations**: For trunk-based teams, merge queues are table stakes. Key operational parameters: `Throughput = Batch Size × Success Rate ÷ Duration`. Configure automatic bisection for failing batches to isolate bad PRs without blocking the queue. GitLab merge trains run up to 20 pipelines in parallel; GitHub merge queue and Graphite offer native batching with auto-bisection.
-- **Self-review gate**: Recommend PR authors self-review before requesting team review to reduce reviewer burden.
-- Author for Opus 4.8 defaults. Apply `_common/OPUS_48_AUTHORING.md` principles **P3 (eagerly Read diff, commit history, branch state, and CI results at CLASSIFY — PR strategy depends on grounding in actual change essence and blast radius), P5 (think step-by-step at granularity (split vs bundle), naming (Conventional Commits), merge-queue throughput, and AI-review coverage gating)** as critical for Guardian. P2 recommended: calibrated PR plan preserving classification, granularity rationale, and human-review gate. P1 recommended: front-load change type, target branch, and urgency at CLASSIFY.
-
-## Boundaries
-
-### Always
-
-- analyze full context
-- classify changes
-- score quality, risk, and predictive findings
-- identify hotspots
-- auto-route `CRITICAL` security to Sentinel, `noise_ratio > 0.30` to Zen, and `coverage_gap > 0.40` to Radar.
-
-### Ask First
-
-- release-affecting PR splits
-- force-push/history rewrite/shared-branch rebase
-- branch-strategy changes
-- excluding possibly intentional files
-- multiple blocking routes
-- threshold overrides.
-
-### Never
-
-- destructive Git ops (force-push, reset --hard, branch -D on shared branches) — can destroy team's in-progress work with no recovery path
-- discarding changes without confirmation — silent data loss is the highest-severity Git incident
-- merge-strategy guesswork — wrong merge strategy on long-lived branches causes cascading conflict debt (GitFlow anti-pattern: merge conflicts pile up as branch lifetime increases)
-- naming violations against `_common/GIT_GUIDELINES.md` conventions
-- skipping required `CRITICAL` security handoff to Sentinel — unreviewed security-sensitive diffs have caused real CVE exposures
-- overriding learned patterns without feedback loop calibration
-- proceeding with `quality_score < 35` — F-grade PRs have unacceptable defect escape rates
-- approving PRs > 1,000 LoC without split recommendation — 70% lower defect detection rate at this threshold
-- rubber-stamping AI-generated PRs without security-focused human review — AI code introduces 2.74x more vulnerabilities (Veracode 2025: 45% of LLM samples failed OWASP Top 10); AI-generated CVEs rose from 6 (Jan 2026) to 35 (Mar 2026); estimated real count 5-10x higher; 42% of all code is now AI-generated, making this the majority threat vector; DORA 2025: 31% more PRs merge unreviewed under AI adoption — automated AI review tool approval alone is insufficient for merge
-- committing sensitive data (API keys, passwords, tokens) — repository history is permanent; secret rotation costs compound per exposed credential; AI co-authored commits leak secrets at ~2x baseline rate; 64% of leaked secrets from 2022 remain unrevoked in 2026 due to governance gaps (GitGuardian 2026) — enforce pre-commit secret scanning hooks (gitleaks, detect-secrets).
-
-## Workflow
-
-`SURVEY → PLAN → VERIFY → PRESENT`
-
-| Phase | Goal | Required actions | Read |
-|------|------|------------------|------|
-| `SURVEY` | Understand the change | Inspect diff, commits, affected files, branch state, review context | `reference/` |
-| `PLAN` | Build the Git strategy | Classify changes, pick branch/PR strategy, suggest split or squash plan | `reference/` |
-| `VERIFY` | Check safety and reviewability | Score quality, risk, hotspot overlap, coverage, and predictive issues | `reference/` |
-| `PRESENT` | Deliver a usable recommendation | Output branch, commit, PR, risk, reviewer, and handoff guidance | `reference/` |
-
-## Critical Decision Rules
-
-Core classifications: change = `Essential / Supporting / Incidental / Generated / Configuration`; security = `CRITICAL / SENSITIVE / ADJACENT / NEUTRAL`; AI code = `Verified / Suspected / Untested / Human`.
-
-### Hard gates
-
-- `noise_ratio > 0.30` -> route to Zen
-- `coverage_gap > 0.40` -> route to Radar
-- `security_classification == CRITICAL` -> blocking Sentinel handoff
-- `quality_score < 35` -> stop and ask first
-- `risk_score > 85` -> treat as critical-risk change
-- `cross_module_changes > 3` -> consider Atlas or Ripple analysis
-- `high_confidence_prediction >= 80%` -> always warn
-- `medium_confidence_prediction 60-79%` -> warn only if `risk_score > 50`
-- `ai_code_ratio > 0.50` -> flag for enhanced security review (2.74x vulnerability risk) + mandatory secret scan
-- `rework_rate > 0.30` -> investigate upstream clarity (DORA 2025 5th metric — signals reactive churn)
-- `size >= M` and feature scope -> recommend stacked PR workflow
-
-| Size | Files / lines | Action |
-|------|---------------|--------|
-| `XS` | `1-3` files, `<50` lines | ideal |
-| `S` | `4-10` files, `50-200` lines | standard review |
-| `M` | `11-20` files, `200-500` lines | consider split |
-| `L` | `21-50` files, `500-1000` lines | should split |
-| `XL` | `50-100` files, `1000-3000` lines | guided split |
-| `XXL` | `100-200` files, `3000-5000` lines | mandatory split or Sherpa |
-| `MEGA` | `200+` files, `5000+` lines | Sherpa handoff |
-
-PR quality bands and Risk bands → see `reference/pr-quality-scoring.md` (Grade Mapping) and `reference/risk-assessment.md` (Risk Bands).
-
-Branch naming: default `<type>/<short-kebab-description>`; types `feat / fix / refactor / docs / test / chore / perf / security`. Branching strategy selection (GitHub Flow / Git Flow / Trunk-Based) and DORA-archetype correlation → `reference/branching-strategies.md`. Rework Rate gating (DORA 2025 5th metric) is enforced via the `rework_rate > 0.30` hard gate above.
-
-Review priority SLAs: hotfixes ≤ 2h, features ≤ 24h, refactoring ≤ 48h. Target 80%+ of PRs under team's size threshold.
-
-## Routing And Handoffs
-
-### Inbound
-
-`PLAN_TO_GUARDIAN_HANDOFF`, `BUILDER_TO_GUARDIAN_HANDOFF`, `JUDGE_TO_GUARDIAN_HANDOFF`, `JUDGE_TO_GUARDIAN_FEEDBACK`, `ZEN_TO_GUARDIAN_HANDOFF`, `SCOUT_TO_GUARDIAN_HANDOFF`, `ATLAS_TO_GUARDIAN_HANDOFF`, `HARVEST_TO_GUARDIAN_HANDOFF`, `RIPPLE_TO_GUARDIAN_HANDOFF`
-
-### Outbound
-
-`GUARDIAN_TO_SENTINEL_HANDOFF`, `GUARDIAN_TO_PROBE_HANDOFF`, `GUARDIAN_TO_RADAR_HANDOFF`, `GUARDIAN_TO_ZEN_HANDOFF`, `GUARDIAN_TO_ATLAS_HANDOFF`, `GUARDIAN_TO_RIPPLE_HANDOFF`, `GUARDIAN_TO_JUDGE_HANDOFF`, `GUARDIAN_TO_BUILDER_HANDOFF`, `GUARDIAN_TO_CANVAS_HANDOFF`, `GUARDIAN_TO_SHERPA_HANDOFF`
-
-Use these routes respectively for security, runtime verification, coverage, noise cleanup, architecture, blast radius, review-ready packaging, commit-plan delivery, visualization, and XXL/MEGA decomposition. Use Harvest only as a reporting follow-up, not as a formal new token.
-
-## Output Routing
-
-| Signal | Approach | Primary output | Read next |
-|--------|----------|----------------|-----------|
-| default request | Standard Guardian workflow | analysis / recommendation | `reference/` |
-| complex multi-agent task | Nexus-routed execution | structured handoff | `_common/BOUNDARIES.md` |
-| unclear request | Clarify scope and route | scoped analysis | `reference/` |
-
-Routing rules:
-
-- If the request matches another agent's primary role, route to that agent per `_common/BOUNDARIES.md`.
-- Always read relevant `reference/` files before producing output.
-
-## Recipes
-
-| Recipe | Subcommand | Default? | When to Use | Read First |
-|--------|-----------|---------|-------------|------------|
-| PR Preparation | `pr` | ✓ | PR preparation (title/body/review angles/risk assessment) | `reference/pr-workflow-patterns.md` |
-| Commit Granularity | `commit` | | Commit granularity split proposal (atomic commit design) | `reference/commit-analysis.md` |
-| Naming Review | `naming` | | Branch/commit naming check (Conventional Commits) | `reference/commit-conventions.md` |
-| Merge Strategy | `strategy` | | Merge strategy (squash/rebase/merge) selection | `reference/branching-strategies.md` |
-| Reshape History | `reshape` | | Create a new branch off the base, squash-import the development branch, then recommit at optimal granularity to reshape history | `reference/history-reshape.md` |
-| Audit History | `audit` | | Read-only diagnosis of a branch's commit history (WIP/fixup residue, Conventional Commits violations, atomicity, size deviation) | `reference/history-audit.md` |
-| Split into Stacked PRs | `split` | | Plan to decompose an M+ branch into stacked PRs (dependency order, file boundaries, estimated review time) | `reference/pr-split-strategy.md` |
-| Branch Health | `health` | | Repo-wide branch inventory (stale, diverged, merged-but-undeleted, conflict risk) | `reference/branch-health.md` |
-| Ship PR | `ship` | | End-to-end PR delivery: create PR, watch CI, verify gates, merge, cleanup. Consumes `pr` and `strategy` Recipe outputs. Merge step is always Ask First. | `reference/pr-ship-flow.md` |
-
-## Subcommand Dispatch
-
-Parse the first token of user input.
-- If it matches a Recipe Subcommand above → activate that Recipe; load only the "Read First" column files at the initial step.
-- Otherwise → default Recipe (`pr` = PR Preparation). Apply normal SURVEY → PLAN → VERIFY → PRESENT workflow.
-
-Behavior notes per Recipe:
-- `pr`: Execute in order Change Classification → Quality Score → Risk Assessment → PR title/body → Reviewer recommendation.
-- `commit`: Classify changes as Essential/Supporting/Incidental and generate a plan to split into atomic commits.
-- `naming`: Conventional Commits compliance check. Validate scope, verb, and 50-character limit.
-- `strategy`: Choose GitHub Flow / Git Flow / Trunk-Based based on DORA metrics and branch lifetime.
-- `reshape`: Create a new branch off the base → squash-import the development branch via `git merge --squash` → apply the same Change Classification as the `commit` Recipe to re-split into atomic commits and reshape history. **Backup branch creation is required**; force push or application to remote shared branches is Ask First; execution commands are proposals only and run after user consent.
-- `audit`: Read-only diagnosis of commit history in the specified range (`origin/main..HEAD` by default). Detect WIP/fixup residue, Conventional Commits violations, atomicity score, size deviation, and missing signatures, then recommend the next Recipe (`commit` / `reshape` / `pr` / proceed as-is). Zero side effects.
-- `split`: Generate a plan to decompose an M+ branch into stacked PRs. Size each PR to 10-15 minutes of review, and present dependency order (bottom-up), file boundaries, estimated review time, and tool selection (Graphite / ghstack / git-town / jj). Execution commands are proposals only; run in stages after user consent.
-- `health`: Inventory the repo's local/remote branches. Classify stale (30+ days without updates), upstream divergence, merged-but-undeleted, and high conflict-probability branches, and recommend delete, rebase, or archive. Branch deletion is Ask First.
-- `ship`: Execute end-to-end PR delivery — `PREFLIGHT → CREATE → WATCH → GATE → MERGE → CLEANUP`. Consume `pr` Recipe output for title/body/reviewers and `strategy` Recipe output for merge mode (default `--squash --delete-branch`). Hard gates: `quality_score >= 65`, `risk_score <= 85`, `security != CRITICAL`, all required CI green, `reviewDecision == APPROVED`, `mergeStateStatus == CLEAN`. Ask First on every MERGE execution; `--admin` bypass and force-merge over `UNSTABLE` are Ask First. Never auto-merge without explicit consent. For XXL/MEGA branches, refuse and route to `split` first.
-
-## Output Requirements
-
-Every deliverable MUST include:
-
-1. **Change Classification Table** — Each file categorized as Essential / Supporting / Incidental / Generated / Configuration with line counts
-2. **Size & Signal-to-Noise Ratio** — PR size band (XS–MEGA), total lines changed, noise ratio percentage
-3. **Quality Score** — Numerical score (0–100) with grade (A+–F), broken down by component weights per `reference/pr-quality-scoring.md`
-4. **Risk Assessment** — Risk band (Critical / High / Medium / Low) with contributing factors
-5. **Actionable Recommendation** — Concrete next step: merge, split, cleanup, or handoff with blocking status
-
-Additional sections as needed (use canonical headings from `reference/output-templates.md`):
-- `## Guardian Change Analysis` — Full change breakdown
-- `## PR Quality Score: {score}/100 ({grade})` — Detailed quality scoring
-- `## Commit Message Analysis` — Message quality, atomicity, conventional commit compliance
-- `## Change Risk Assessment` — Risk factors with hotspot amplification
-- `## Hotspot Analysis` — Files with high churn × complexity
-- `## Reviewer Recommendations` — Suggested reviewers based on CODEOWNERS and expertise; include review priority (hotfix: 2h, feature: 24h, refactor: 48h)
-- `## Branch Health Report` — Stale branches, conflict risk, divergence metrics
-- `## Pre-Merge Checklist` — CI status, coverage, approval count, security scan
-- `## Squash Optimization Report` — Grouping and synthesis plan
-
-## Collaboration
-
-**Receives:** Judge (review feedback, AI-assisted defect findings), Builder (implementation completion), Zen (refactoring results), Scout (bug investigation), Atlas (architecture analysis), Ripple (impact analysis), Harvest (release note context), Launch (release-affecting PR coordination)
-**Sends:** Sentinel (security escalation), Radar (coverage gaps), Zen (noise cleanup), Atlas (architecture review), Ripple (blast radius), Judge (review-ready packaging with risk context), Sherpa (decomposition for XXL/MEGA PRs), Canvas (visualization of change topology)
-
-**Overlap boundaries:** Guardian classifies and structures changes; Judge evaluates code quality within those changes. Guardian recommends split; Sherpa executes decomposition. Guardian flags security signals; Sentinel performs deep analysis.
-
-## Reference Map
-
-| Reference | Read this when... |
-|-----------|-------------------|
-| `reference/commit-conventions.md` | you need commit naming, atomicity, signing, or commitlint rules |
-| `reference/commit-analysis.md` | you are scoring commit messages or rewriting a commit sequence |
-| `reference/pr-workflow-patterns.md` | you are selecting PR size, stacked PR, draft PR, or description structure |
-| `reference/pr-quality-scoring.md` | you need the exact PR quality component weights and grade mapping |
-| `reference/branching-strategies.md` | you must choose GitHub Flow, Git Flow, or Trunk-Based workflow |
-| `reference/branch-health.md` | you are evaluating stale, risky, or conflict-prone branches |
-| `reference/history-audit.md` | you are running the `audit` recipe — read-only diagnosis of WIP/fixup residue, Conventional Commits violations, atomicity, and size deviation in a commit-history range |
-| `reference/history-reshape.md` | you are running the `reshape` recipe — squash-import a development branch onto a fresh base and re-split into atomic commits with backup-branch protocol |
-| `reference/pr-split-strategy.md` | you are running the `split` recipe — decompose an M+ branch into stacked PRs (10–15 min review each) with dependency order, file boundaries, and tool selection (Graphite/ghstack/git-town/jj) |
-| `reference/pr-ship-flow.md` | you are running the `ship` recipe — end-to-end PR delivery (create, watch CI, verify gates, merge, cleanup) with hard gates and Ask First on every MERGE execution |
-| `reference/code-review-guide.md` | you are assigning reviewers or checking review turnaround and CODEOWNERS fit |
-| `reference/git-automation.md` | you need hooks, secret detection, auto-merge, or monorepo CI defaults |
-| `reference/git-recipes.md` | you need concrete Git or `gh` command recipes |
-| `reference/squash-optimization.md` | you are grouping, scoring, or synthesizing squash plans |
-| `reference/risk-assessment.md` | you need risk-factor scoring, hotspot amplification, or rollout mitigation |
-| `reference/security-analysis.md` | you need security classification, patterns, or Sentinel/Probe escalation |
-| `reference/predictive-quality-gate.md` | you need Judge/Zen prediction rules and confidence handling |
-| `reference/coverage-integration.md` | you need CI coverage correlation and Radar escalation rules |
-| `reference/learning-loop.md` | you are calibrating Guardian from Judge, Zen, Harvest, or squash feedback |
-| `reference/collaboration-routing.md` | you need detailed cross-agent flows, token usage, and auto-routing priority/trigger rules |
-| `reference/output-templates.md` | you need canonical report headings and output skeletons |
-| `reference/autorun-mode.md` | you are running Guardian in AUTORUN mode |
-| `_common/OPUS_48_AUTHORING.md` | you are sizing the PR plan, deciding adaptive thinking depth at granularity/naming, or front-loading change type/target/urgency at CLASSIFY. Critical for Guardian: P3, P5. |
-| `_common/PROOF_CARRYING.md` | you prepare PRs with embedded evidence packages in `nexus acceptance` Phase 4. Lists the 12 required evidence fields, Hot-Fix Fast-Path rules (P0/P1 triage downgrades Tier-S→A, normal-Gate follow-up within 24h), and Success-PR random-review sampling (G2: 5% Tier-S / 2% Tier-A). |
-
-## Operational
-
-- Before starting (mandatory): read `.agents/guardian.md` and `.agents/PROJECT.md`; create if missing.
-- After task completion (mandatory): append `| YYYY-MM-DD | Guardian | (action) | (files) | (outcome) |` to `.agents/PROJECT.md`.
-- Journal file: `.agents/guardian.md` — log decisions, threshold calibrations, and pattern discoveries only when reusable.
-- Follow shared execution protocols and Pre-Handoff Checklist in `_common/OPERATIONAL.md`.
-
-## AUTORUN Support
-
-When Guardian receives `_AGENT_CONTEXT`, parse `task_type`, `description`, and `Constraints`, execute the standard workflow, and return `_STEP_COMPLETE`.
-
-### `_STEP_COMPLETE`
-
-```yaml
-_STEP_COMPLETE:
-  Agent: Guardian
-  Status: SUCCESS | PARTIAL | BLOCKED | FAILED
-  Output:
-    deliverable: [primary artifact]
-    parameters:
-      task_type: "[task type]"
-      scope: "[scope]"
-  Validations:
-    completeness: "[complete | partial | blocked]"
-    quality_check: "[passed | flagged | skipped]"
-  Next: [recommended next agent or DONE]
-  Reason: [Why this next step]
 ```
-## Nexus Hub Mode
-
-When input contains `## NEXUS_ROUTING`, do not call other agents directly. Return all work via `## NEXUS_HANDOFF`.
-
-### `## NEXUS_HANDOFF`
-
-```text
-## NEXUS_HANDOFF
-- Step: [X/Y]
-- Agent: Guardian
-- Summary: [1-3 lines]
-- Key findings / decisions:
-  - [domain-specific items]
-- Artifacts: [file paths or "none"]
-- Risks: [identified risks]
-- Suggested next agent: [AgentName] (reason)
-- Next action: CONTINUE
+Budget Whisperer Check:
+- Detected: D1 write operation in proposed code
+- Searched for: db.batch() usage
+- Found: ❌ Missing batch operations
+- Warning: [STATIC:COST_WATCHLIST] TRAP-D1-001
+  Per-row INSERT detected. At 10K rows, this costs $0.01 vs $0.00001 batched.
+  Recommendation: Wrap in db.batch() with max 1000 statements per batch.
 ```
+
+### D1 Read Operations (Row Read Explosion)
+**CRITICAL**: D1's primary danger for solo devs is **Row Reads**, not writes. Unoptimized queries can trigger millions of reads per page view. One user hit the 5 million daily limit just by browsing their own site.
+
+If suggesting code that includes `SELECT`, `.all()`, `.first()`, or database reads:
+1. **Check for WHERE clause** - SELECT without WHERE causes full table scans
+2. **Verify indexed columns** - WHERE on non-indexed column = full scan
+3. **Check for LIMIT** - Unbounded queries can read entire tables
+4. **Consider caching** - High-traffic reads should use KV cache first
+5. **Cite**: `TRAP-D1-004` from COST_SENSITIVE_RESOURCES.md
+
+```
+Row Read Explosion Check:
+- Detected: D1 SELECT query in proposed code
+- Pattern: SELECT * FROM users WHERE status = 'active'
+- Index Check: ❌ No index on 'status' column
+- Warning: [STATIC:COST_WATCHLIST] TRAP-D1-004
+  Unindexed query detected. With 100K rows, each request reads 100K rows.
+  At 1K requests/day = 100M rows/day = $25/day (Free tier: 5B/month = 166M/day)
+  Recommendation:
+  1. CREATE INDEX idx_users_status ON users(status)
+  2. Add LIMIT clause: LIMIT 100
+  3. For high-traffic endpoints, use KV-Cache-First pattern
+```
+
+**KV-Cache-First Pattern Detection**:
+For high-traffic endpoints (>100 requests/minute), always suggest:
+```typescript
+// EXPENSIVE: Direct D1 read on every request
+const users = await db.prepare('SELECT * FROM users WHERE status = ?').bind('active').all();
+// 1000 req/min × 100K rows = 6B rows/hour = $1.50/hour
+
+// OPTIMIZED: KV cache with D1 fallback
+const cacheKey = `users:active:${page}`;
+let users = await env.KV.get(cacheKey, 'json');
+if (!users) {
+  users = await db.prepare('SELECT * FROM users WHERE status = ? LIMIT 100').bind('active').all();
+  await env.KV.put(cacheKey, JSON.stringify(users), { expirationTtl: 60 });
+}
+// KV reads: $0.50/M, cache hit = no D1 cost
+```
+
+### R2 Write Operations (Class A)
+If suggesting code that includes `.put()`:
+1. **Check loop context** - Is `.put()` inside a loop or frequently called handler?
+2. **Search for buffering** - Any aggregation before write?
+3. **Cite**: `TRAP-R2-001` from COST_SENSITIVE_RESOURCES.md
+
+### R2 Read Operations (Class B)
+If suggesting code that includes `.get()` for public assets:
+1. **Check caching** - Is response cached at the edge?
+2. **Check Cache-Control headers** - Are objects served with proper cache headers?
+3. **Cite**: `TRAP-R2-003` from COST_SENSITIVE_RESOURCES.md
+
+```
+R2 Class B Cost Check:
+- Detected: Public R2 bucket serving assets
+- Pattern: await bucket.get(key) in request handler
+- Caching: ❌ No Cache-Control headers, no CDN cache
+- Warning: [STATIC:COST_WATCHLIST] TRAP-R2-003
+  Every request = $0.36/M Class B operation.
+  At 10M requests/month = $3.60/month (Free tier: 10M)
+  Recommendation:
+  1. Add Cache-Control: public, max-age=31536000 for static assets
+  2. Use Cache Rules or Cache API to cache at edge
+  3. See: r2-cdn-cache pattern
+```
+
+### R2 Infrequent Access (IA) Storage Trap
+**CRITICAL WARNING**: If code or config uses R2 Infrequent Access storage class:
+
+```
+R2 IA Billing Trap Check:
+- Detected: R2 Infrequent Access storage usage
+- Warning: [STATIC:COST_WATCHLIST] TRAP-R2-004 (CRITICAL)
+  ⚠️ R2 IA has MINIMUM BILLING UNITS.
+  A single operation can incur $9.00 minimum charge.
+
+  Explanation: Cloudflare rounds up to next billing unit.
+  1 file retrieval = rounds to minimum = $9.00
+
+  Safe Usage:
+  ✅ True cold storage (backups, archives)
+  ✅ Large files (>100MB) where retrieval cost is amortized
+  ✅ Objects never accessed after upload
+
+  Dangerous Usage:
+  ❌ Any bucket with regular read operations
+  ❌ Small files that might be accessed
+  ❌ User-facing asset storage
+```
+
+### Durable Objects Usage
+If suggesting DO architecture:
+1. **Check use case** - Is coordination/locking actually needed?
+2. **Suggest alternatives** - KV for simple storage, D1 for relational
+3. **Cite**: `TRAP-DO-001` from COST_SENSITIVE_RESOURCES.md
+
+## Vibecoder Proactive Safeguards
+
+**IMPORTANT**: This skill should proactively warn users about cost and privacy impacts BEFORE they deploy or even ask about costs. When reviewing ANY architecture that includes the following, immediately surface budget/privacy alerts:
+
+### Budget Enforcement Triggers
+
+| Service/Pattern | Threshold | Proactive Warning |
+|-----------------|-----------|-------------------|
+| Durable Objects | Any usage | "DO charges ~$0.15/GB-month storage + $0.50/M requests. Consider KV for simple key-value." |
+| R2 Class A ops | >1M/month | "R2 writes cost $4.50/M. Buffer writes or use presigned URLs for client uploads." |
+| R2 Class B ops | >10M/month | "R2 reads cost $0.36/M. For public buckets, add Cache Rules to serve from CDN (free)." |
+| R2 Infrequent Access | Any usage | "⚠️ R2 IA has minimum billing units. A single operation may incur $9.00 minimum charge." |
+| D1 Writes | >10M/month | "D1 writes cost $1/M. Detected pattern suggests >$10/mo. Batch to ≤1,000 rows." |
+| D1 Reads (unindexed) | Any unindexed query | "⚠️ Unindexed D1 query causes full table scan. 100K rows × 1K req = 100M reads/day." |
+| Workers AI (>8B) | Any usage | "Large models (Llama 11B+) cost $0.68/M tokens. Use 8B or smaller for bulk." |
+| Vectorize | >1M vectors | "Approaching 5M vector limit. Plan sharding strategy." |
+| KV Writes | >5M/month | "KV writes cost $5/M (10× reads). Consider D1 or R2 for write-heavy." |
+
+### Privacy Enforcement Triggers
+
+| Pattern | Severity | Proactive Warning |
+|---------|----------|-------------------|
+| PII in logs | CRITICAL | "Detected potential PII logging. Use structured logging with redaction." |
+| User data in KV keys | HIGH | "KV keys with user IDs may leak via Workers dashboard. Hash or encrypt." |
+| AI prompts with PII | HIGH | "AI Gateway logs may contain user data. Enable prompt redaction." |
+| R2 public buckets | HIGH | "R2 bucket appears public. Verify intentional or add authentication." |
+| Analytics with user IDs | MEDIUM | "User IDs in Analytics Engine may persist. Use anonymized identifiers." |
+
+## Audit Categories
+
+### Security Audit Rules
+
+| ID | Name | Severity | Check |
+|----|------|----------|-------|
+| SEC001 | Secrets in plaintext | CRITICAL | `vars.*` contains API_KEY, SECRET, PASSWORD, TOKEN patterns |
+| SEC002 | Missing route auth | HIGH | Routes without `cf.access` or auth middleware |
+| SEC003 | CORS wildcard | MEDIUM | `cors.origins` includes `*` |
+| SEC004 | Exposed admin routes | HIGH | `/admin/*` routes without auth |
+| SEC005 | Missing rate limiting | MEDIUM | No rate limit bindings for public APIs |
+| SEC006 | Debug mode enabled | LOW | `ENVIRONMENT` or `DEBUG` set to development/true |
+
+### Performance Audit Rules
+
+| ID | Name | Severity | Check |
+|----|------|----------|-------|
+| PERF001 | Missing Smart Placement | LOW | `placement.mode` not set |
+| PERF002 | D1 without indexes | MEDIUM | D1 bindings but no CREATE INDEX in migrations |
+| PERF003 | Large bundled dependencies | MEDIUM | Bundle >10MB (check `main` entry) |
+| PERF004 | Missing observability | LOW | No `observability` config block |
+| PERF005 | Frequent cron | LOW | Cron more often than every 5 minutes |
+
+### Cost Audit Rules
+
+| ID | Name | Severity | Check |
+|----|------|----------|-------|
+| COST001 | Queue retries high | MEDIUM | `max_retries > 1` for potentially idempotent consumers |
+| COST002 | No cron batching | LOW | Multiple crons that could be combined |
+| COST003 | AI without caching | MEDIUM | AI bindings but no AI Gateway |
+| COST004 | Large model usage | LOW | Workers AI with >8B parameter models |
+| COST005 | Missing Analytics Engine | INFO | Using D1/KV for metrics instead of free AE |
+
+### Resilience Audit Rules
+
+| ID | Name | Severity | Check |
+|----|------|----------|-------|
+| RES001 | Missing DLQ | HIGH | Queues without `dead_letter_queue` binding |
+| RES002 | No concurrency limit | MEDIUM | `max_concurrency` not set for queue consumers |
+| RES003 | Single region | LOW | No `cf.smart_placement` for latency-sensitive |
+| RES004 | Missing retry config | MEDIUM | Queue consumer without explicit retry config |
+| RES005 | No circuit breaker | LOW | External API calls without timeout/fallback |
+
+### Budget Audit Rules (Proactive)
+
+| ID | Name | Severity | Check |
+|----|------|----------|-------|
+| BUDGET001 | Durable Objects usage | INFO | Any DO binding - proactively explain cost model |
+| BUDGET002 | R2 write-heavy pattern | MEDIUM | Frequent R2 Class A ops without buffering |
+| BUDGET003 | D1 per-row inserts | HIGH | Loop-based INSERTs instead of batch |
+| BUDGET004 | Large AI model | MEDIUM | Workers AI with >8B parameter model |
+| BUDGET005 | KV write-heavy | MEDIUM | >5M KV writes/month pattern |
+| BUDGET006 | Vectorize scaling | INFO | >1M vectors - warn about 5M limit |
+| BUDGET007 | D1 row read explosion | CRITICAL | SELECT without index/LIMIT on high-traffic endpoint |
+| BUDGET008 | R2 Class B without cache | MEDIUM | Public R2 bucket reads without CDN caching |
+| BUDGET009 | R2 Infrequent Access trap | HIGH | R2 IA storage with minimum charge risk |
+
+### Privacy Audit Rules
+
+| ID | Name | Severity | Check |
+|----|------|----------|-------|
+| PRIV001 | PII in logs | CRITICAL | console.log with user data patterns |
+| PRIV002 | User IDs in KV keys | HIGH | KV key patterns containing user/email/phone |
+| PRIV003 | AI prompts PII | HIGH | AI bindings without redaction middleware |
+| PRIV004 | R2 public access | HIGH | R2 bucket without authentication |
+| PRIV005 | Analytics PII | MEDIUM | User identifiers in Analytics Engine writes |
+
+### Loop-Sensitive Resource Audit Rules (Billing Safety)
+
+**CRITICAL**: Infinite loops are direct billing multipliers. These rules detect patterns that could cause runaway costs.
+
+| ID | Name | Severity | Check |
+|----|------|----------|-------|
+| LOOP001 | Missing cpu_ms limit | HIGH | No `limits.cpu_ms` in wrangler config |
+| LOOP002 | D1 query in loop | CRITICAL | SQL operations inside for/while/forEach blocks |
+| LOOP003 | R2 write in loop | HIGH | `.put()` calls inside iteration without buffering |
+| LOOP004 | DO setInterval | HIGH | `setInterval` in Durable Object without termination |
+| LOOP005 | Worker self-fetch | CRITICAL | `fetch()` to same Worker URL without depth limit |
+| LOOP006 | Queue no DLQ | HIGH | Queue consumer without dead_letter_queue (retry loop) |
+| LOOP007 | Unbounded while | CRITICAL | `while(true)` or `for(;;)` without break condition |
+| LOOP008 | High retry count | MEDIUM | Queue `max_retries > 2` (cost multiplier) |
+
+## Audit Workflow
+
+### Step 1: Parse Wrangler Config
+
+Support both TOML and JSONC formats:
+```
+1. Read wrangler.toml or wrangler.jsonc
+2. Parse into structured format
+3. Extract: name, bindings, routes, triggers, vars
+```
+
+### Step 2: Run Security Checks
+
+```
+For each security rule:
+1. Check if pattern exists in config
+2. If violation found:
+   - Record rule ID, severity, location
+   - Generate specific recommendation
+   - Include docs URL if available
+```
+
+### Step 3: Run Performance Checks
+
+```
+For each performance rule:
+1. Check config for anti-patterns
+2. Cross-reference with migrations (for D1 index checks)
+3. Record findings with optimization recommendations
+```
+
+### Step 4: Run Cost Checks
+
+```
+For each cost rule:
+1. Identify cost-amplifying patterns
+2. Estimate impact if possible
+3. Provide specific fixes
+```
+
+### Step 5: Run Resilience Checks
+
+```
+For each resilience rule:
+1. Check for missing failure handling
+2. Identify single points of failure
+3. Recommend redundancy patterns
+```
+
+### Step 5b: Run Budget Enforcement Checks (Proactive)
+
+```
+For bindings that trigger budget warnings:
+1. Detect Durable Objects → Explain cost model proactively
+2. Detect R2 writes → Check for buffering patterns
+3. Detect D1 writes → Check for batch vs per-row
+4. Detect Workers AI → Check model size selection
+5. Detect high-volume KV → Suggest alternatives
+```
+
+**Key principle**: Surface budget impacts BEFORE the user asks about costs.
+
+### Step 5c: Run Privacy Checks
+
+```
+For privacy-sensitive patterns:
+1. Scan code for console.log with user data patterns
+2. Check KV key naming for PII patterns
+3. Verify AI prompts have redaction middleware
+4. Check R2 bucket access controls
+5. Review Analytics Engine write patterns
+```
+
+### Step 5d: Run Loop-Sensitive Resource Audit (Billing Safety)
+
+**CRITICAL**: These checks prevent "denial-of-wallet" attacks from runaway loops.
+
+```
+For loop-sensitive patterns:
+
+1. Check wrangler config for `limits.cpu_ms`:
+   - Missing → LOOP001 (HIGH)
+   - Suggest: Add limits.cpu_ms based on use case
+
+2. Scan code for D1 queries in loops:
+   Pattern: for|while|forEach.*\.prepare\(|\.run\(|\.first\(
+   - Found in loop → LOOP002 (CRITICAL)
+   - Cite: TRAP-D1-001 (N+1 query cost explosion)
+   - Fix: Use db.batch() or QueryBatcher pattern
+
+3. Scan code for R2 writes in loops:
+   Pattern: for|while|forEach.*\.put\(
+   - Found in loop → LOOP003 (HIGH)
+   - Cite: TRAP-R2-001 (Class A op explosion)
+   - Fix: Buffer writes, use batch upload
+
+4. Scan Durable Objects for setInterval:
+   Pattern: setInterval\(
+   - Found without clearInterval or alarm() → LOOP004 (HIGH)
+   - Duration billing continues while interval runs
+   - Fix: Use state.storage.setAlarm() for hibernation
+
+5. Scan for Worker self-fetch patterns:
+   Pattern: fetch\(.*request\.url|fetch\(.*self
+   - Missing X-Recursion-Depth handling → LOOP005 (CRITICAL)
+   - Reference: @skills/loop-breaker/SKILL.md
+
+6. Check queue config for DLQ:
+   - Consumer without dead_letter_queue → LOOP006 (HIGH)
+   - Each retry = additional message cost
+
+7. Scan for unbounded loops:
+   Pattern: while\s*\(\s*true\s*\)|for\s*\(\s*;\s*;\s*\)
+   - No break/return condition visible → LOOP007 (CRITICAL)
+
+8. Check queue max_retries:
+   - max_retries > 2 → LOOP008 (MEDIUM)
+   - Cost impact: (retries + 1) × message cost
+```
+
+### Loop-Sensitive Resource Audit Output
+
+When loop issues are found, include in the audit output:
+
+```markdown
+## Loop-Sensitive Resource Audit (Billing Safety)
+
+> **CRITICAL**: Detected patterns that could cause runaway billing.
+
+| ID | Location | Issue | Est. Cost Impact |
+|----|----------|-------|------------------|
+| LOOP002 | src/handlers/import.ts:45 | D1 query in forEach loop | $0.01 per 1K iterations |
+| LOOP005 | src/webhook.ts:23 | fetch(request.url) without depth limit | Unbounded |
+
+### LOOP002: D1 Query in Loop (CRITICAL)
+
+**Location**: `src/handlers/import.ts:45`
+
+**Pattern Detected**:
+```typescript
+for (const item of items) {
+  await db.prepare('INSERT INTO items ...').run();  // N queries
+}
+```
+
+**Cost Analysis**:
+- 10,000 items = 10,000 D1 write operations
+- Cost: 10,000 × $1/M = $0.01 per batch
+- At scale: 1M items/day = $1/day = $30/month
+
+**Fix**: [STATIC:COST_WATCHLIST] TRAP-D1-001
+```typescript
+// Use db.batch() - 1 operation per 1000 items
+const statements = items.map(item =>
+  db.prepare('INSERT INTO items ...').bind(item.name)
+);
+await db.batch(statements);
+```
+
+### LOOP005: Worker Self-Fetch (CRITICAL)
+
+**Location**: `src/webhook.ts:23`
+
+**Pattern Detected**:
+```typescript
+const response = await fetch(request.url, { ... });
+```
+
+**Risk**: Infinite recursion if this webhook triggers itself.
+
+**Fix**: Add recursion depth middleware
+```typescript
+import { recursionGuard } from './middleware/recursion-guard';
+app.use('*', recursionGuard({ maxDepth: 3 }));
+```
+
+See: @skills/loop-breaker/SKILL.md
+```
+
+### Step 6: Calculate Score
+
+```
+score = 100 - (critical × 25) - (high × 15) - (medium × 5) - (low × 2)
+```
+
+Grades:
+- 90-100: A (Production ready)
+- 80-89: B (Minor issues)
+- 70-79: C (Address before deployment)
+- 60-69: D (Significant issues)
+- <60: F (Critical problems)
+
+## Output Format
+
+```markdown
+# Cloudflare Configuration Audit
+
+**Score**: XX/100 (Grade: X)
+**File**: wrangler.jsonc
+
+## Proactive Budget & Privacy Alerts
+
+> **Budget Impact Detected**: [List any BUDGET* findings with cost estimates]
+> **Privacy Concern**: [List any PRIV* findings requiring attention]
+
+## Summary
+
+| Category | Critical | High | Medium | Low | Info |
+|----------|----------|------|--------|-----|------|
+| Security | X | X | X | X | - |
+| Performance | X | X | X | X | - |
+| Cost | X | X | X | X | - |
+| Resilience | X | X | X | X | - |
+| Budget | - | X | X | - | X |
+| Privacy | X | X | X | - | - |
+
+## Critical Issues (Must Fix)
+
+### SEC001: Secrets in plaintext
+- **Location**: `vars.API_KEY`
+- **Issue**: Plaintext API key in configuration
+- **Fix**: Use `wrangler secret put API_KEY`
+- **Docs**: https://developers.cloudflare.com/workers/configuration/secrets/
+
+## High Priority Issues
+
+### RES001: Missing dead letter queue
+- **Location**: `queues[0]` (harvest-queue)
+- **Issue**: No DLQ for failed message inspection
+- **Fix**: Add `dead_letter_queue = "harvest-dlq"`
+
+## Medium Priority Issues
+
+[List all medium issues]
+
+## Low Priority Issues
+
+[List all low issues]
+
+## Recommendations
+
+1. [ ] Move secrets to wrangler secret
+2. [ ] Add DLQ for all production queues
+3. [ ] Enable Smart Placement
+4. [ ] Consider Analytics Engine for metrics
+```
+
+## Migration Checks
+
+When D1 bindings exist, also scan migration files:
+
+```sql
+-- Good: Has index
+CREATE INDEX idx_projects_source ON projects(source);
+
+-- Bad: Missing index for common query pattern
+SELECT * FROM projects WHERE source = ? ORDER BY created_at DESC;
+```
+
+Flag missing indexes for:
+- Columns in WHERE clauses
+- Columns in ORDER BY
+- Compound queries (need compound indexes)
+
+## Wrangler Config Patterns
+
+### Good Patterns to Recognize
+
+```jsonc
+{
+  // Smart Placement enabled
+  "placement": { "mode": "smart" },
+
+  // Observability configured
+  "observability": { "logs": { "enabled": true } },
+
+  // Queue with DLQ
+  "queues": {
+    "consumers": [{
+      "queue": "my-queue",
+      "dead_letter_queue": "my-dlq",
+      "max_retries": 1,
+      "max_concurrency": 10
+    }]
+  }
+}
+```
+
+### Bad Patterns to Flag
+
+```jsonc
+{
+  // Secrets in vars
+  "vars": { "API_KEY": "sk-xxxxx" },
+
+  // No DLQ
+  "queues": { "consumers": [{ "queue": "my-queue" }] },
+
+  // High retries
+  "queues": { "consumers": [{ "max_retries": 10 }] }
+}
+```
+
+## Live Validation with Probes
+
+When MCP tools are available (via `--validate` mode in `/cf-audit`), enhance static findings with live data.
+
+Reference @skills/probes/SKILL.md for detailed query patterns.
+
+### Security Validation
+- **Error rate analysis**: High errors on specific paths may indicate attacks
+- **Request patterns**: Verify authentication is actually enforced
+- **Resource exposure**: Check KV/R2 for public access settings
+
+### Performance Validation
+- **EXPLAIN QUERY PLAN**: Verify D1 index usage
+- **Latency percentiles**: P50/P95/P99 analysis
+- **CPU time analysis**: Identify hotspots
+
+### Resilience Validation
+- **Queue health**: Check DLQ depth and retry rates
+- **Error patterns**: Identify cascading failures
+
+## Provenance Tagging
+
+Tag findings based on data source:
+- `[STATIC]` - Inferred from code/config analysis only
+- `[LIVE-VALIDATED]` - Confirmed by observability data
+- `[LIVE-REFUTED]` - Code smell not observed in production
+- `[INCOMPLETE]` - MCP tools unavailable for verification
+
+## Pattern Recommendations
+
+When issues are found, recommend applicable patterns from @skills/patterns/:
+
+| Finding | Recommended Pattern |
+|---------|-------------------|
+| Per-row D1 inserts | `d1-batching` |
+| External API issues | `circuit-breaker` |
+| Monolithic Worker | `service-bindings` |
+
+## Tips
+
+- Run before every deployment
+- Use `--validate` for production-ready verification
+- Focus on CRITICAL and HIGH first
+- Use `--fix` suggestions to auto-generate patches
+- Compare scores over time to track improvements
+- `[LIVE-REFUTED]` findings may still be worth fixing proactively

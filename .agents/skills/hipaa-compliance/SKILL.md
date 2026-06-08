@@ -1,176 +1,219 @@
 ---
 name: hipaa-compliance
-description: >
-  Expert HIPAA compliance assistant for healthcare and software contexts. Use this skill whenever
-  the user mentions HIPAA, PHI (Protected Health Information), ePHI, covered entities, business
-  associates, healthcare data privacy, medical records, health information security, BAA (Business
-  Associate Agreements), or any compliance review involving patient data. Also trigger for requests
-  to draft privacy notices, HIPAA policies, consent forms, security risk assessments, or breach
-  notification letters. Use for developers building healthcare software who need technical safeguard
-  guidance (encryption, access controls, audit logs), compliance officers reviewing documents or
-  procedures, and anyone asking "is this HIPAA compliant?" or "what does HIPAA require for X?".
-  When in doubt about whether a healthcare or data privacy question falls under this skill — use it.
+description: Ensure HIPAA compliance when handling PHI (Protected Health Information). Use when writing code that accesses user health data, check-ins, journal entries, or any sensitive information. Activates for audit logging, data access, security events, and compliance questions.
+allowed-tools: Read,Write,Edit
+category: Code Quality & Testing
+tags:
+  - hipaa
+  - compliance
+  - security
 ---
 
-# HIPAA Compliance Skill
+# HIPAA Compliance for Recovery Coach
 
-You are a knowledgeable HIPAA compliance advisor. You help users across four domains:
+This skill helps you maintain HIPAA compliance when developing features that handle Protected Health Information (PHI).
 
-1. **Compliance Review** — Analyze documents, workflows, or system designs for HIPAA issues
-2. **Template & Policy Generation** — Draft HIPAA-compliant policies, notices, and agreements
-3. **Technical Safeguards** — Advise developers on building HIPAA-compliant software systems
-4. **Education** — Explain HIPAA rules, requirements, and concepts in plain language
+## What is PHI in This Application?
 
-> ⚠️ **Always include this disclaimer when providing compliance guidance:**
-> "This guidance is for informational purposes only and does not constitute legal advice. For
-> formal compliance determinations, consult a qualified HIPAA attorney or compliance officer."
+| Data Type | PHI Status | Handling |
+|-----------|------------|----------|
+| Check-in mood/cravings | PHI | Audit all access |
+| Journal entries | PHI | Audit all access |
+| Chat conversations | PHI | Audit all access |
+| User profile (name, email) | PHI | Audit modifications |
+| Sobriety date | PHI | Audit access |
+| Emergency contacts | PHI | Audit access |
+| Usage analytics (aggregated) | NOT PHI | No audit needed |
+| Page views (no content) | NOT PHI | No audit needed |
 
----
+## Audit Logging Requirements
 
-## Reference Files
+### When to Log
 
-Load the appropriate reference file(s) based on the user's request:
+**Always log these operations:**
+- Viewing any PHI (check-ins, journal, messages)
+- Creating/updating/deleting PHI
+- Exporting user data
+- Admin access to user information
+- Failed authentication attempts
+- Security events (rate limiting, unauthorized access)
 
-| File | When to load |
-|------|-------------|
-| `references/privacy-rule.md` | Questions about patient rights, disclosures, minimum necessary, NPP |
-| `references/security-rule.md` | Technical/administrative/physical safeguards, risk assessments, ePHI |
-| `references/breach-notification.md` | Breach response, notification timelines, risk assessment, reporting |
-| `references/templates.md` | Generating policies, BAAs, notices, consent forms, or checklists |
+### How to Log
 
-Load **all relevant files** for broad requests (e.g., "review our entire HIPAA program").
+Use the audit logging utilities in `src/lib/hipaa/audit.ts`:
 
----
+```typescript
+import {
+  logPHIAccess,
+  logPHIModification,
+  logSecurityEvent,
+  logAdminAction
+} from '@/lib/hipaa/audit';
 
-## Workflow by Use Case
+// Viewing PHI
+await logPHIAccess(
+  userId,
+  'checkin',        // targetType
+  checkinId,        // targetId
+  AuditAction.PHI_VIEW
+);
 
-### 1. Compliance Review
+// Modifying PHI
+await logPHIModification(
+  userId,
+  'journal',
+  journalId,
+  AuditAction.PHI_UPDATE,
+  { field: 'content' }  // Never include actual content!
+);
 
-When a user submits a document, workflow, architecture diagram, or policy for review:
+// Security event
+await logSecurityEvent(
+  userId,
+  AuditAction.RATE_LIMIT,
+  { path: '/api/chat', attempts: 60 }
+);
 
-1. **Identify scope** — Is this a Covered Entity, Business Associate, or subcontractor?
-2. **Load relevant reference files** based on what's being reviewed
-3. **Structured review output:**
-   ```
-   ## HIPAA Compliance Review
-
-   **Scope:** [CE / BA / Both]
-   **Rules Applicable:** [Privacy / Security / Breach Notification]
-
-   ### ✅ Compliant Elements
-   - [List what's done well]
-
-   ### ⚠️ Issues Found
-   | Issue | Rule Reference | Risk Level | Recommendation |
-   |-------|---------------|------------|----------------|
-   | ...   | 45 CFR §...   | High/Med/Low | ...           |
-
-   ### 📋 Action Items
-   1. [Prioritized remediation steps]
-
-   *Disclaimer: ...*
-   ```
-
-### 2. Template & Policy Generation
-
-When generating HIPAA documents, load `references/templates.md` for structure guidance.
-
-Common documents to generate:
-- **Notice of Privacy Practices (NPP)** — Required for all Covered Entities
-- **Business Associate Agreement (BAA)** — Required before sharing PHI with vendors
-- **HIPAA Privacy Policy** — Internal staff-facing policy
-- **Workforce Training Acknowledgment**
-- **Incident/Breach Response Plan**
-- **Risk Assessment Template**
-- **Authorization Form** (for uses/disclosures beyond TPO)
-
-Always:
-- Include the organization's name as `[ORGANIZATION NAME]` placeholder
-- Include effective date as `[EFFECTIVE DATE]`
-- Cite the specific CFR section the clause satisfies (e.g., `// 45 CFR §164.520`)
-- Note which clauses are **required** vs. **addressable/recommended**
-
-### 3. Technical Safeguards Advice
-
-When advising developers or architects, load `references/security-rule.md`.
-
-Structure technical advice as:
-
-```
-## HIPAA Technical Assessment: [System/Feature Name]
-
-### ePHI in Scope
-- [What data qualifies as ePHI in this system]
-
-### Required Safeguards
-
-#### Administrative
-- [ ] Risk Analysis (§164.308(a)(1))
-- [ ] Workforce Training (§164.308(a)(5))
-- [ ] Access Management (§164.308(a)(4))
-
-#### Physical
-- [ ] Workstation controls (§164.310(b))
-- [ ] Device/media controls (§164.310(d))
-
-#### Technical
-- [ ] Unique user IDs (§164.312(a)(2)(i))
-- [ ] Audit controls / logging (§164.312(b))
-- [ ] Encryption at rest (§164.312(a)(2)(iv)) — Addressable
-- [ ] Encryption in transit (§164.312(e)(2)(ii)) — Addressable
-- [ ] Automatic logoff (§164.312(a)(2)(iii)) — Addressable
-
-### Implementation Notes
-[Specific guidance for their stack/architecture]
+// Admin action
+await logAdminAction(
+  adminId,
+  AuditAction.ADMIN_USER_VIEW,
+  'user',
+  targetUserId
+);
 ```
 
-**Key technical guidance:**
-- Encryption is "addressable" not "required" — but document your reasoning if not implementing
-- In practice, encryption (AES-256 at rest, TLS 1.2+ in transit) is the industry standard
-- Cloud providers: AWS, Azure, GCP all offer HIPAA-eligible services — a BAA is still required
-- Audit logs must capture: who accessed what PHI, when, from where
-- Minimum retention: 6 years for HIPAA-related records
+## Data Sanitization
 
-### 4. Education & Explanation
+### Never Log These Fields
 
-When explaining HIPAA concepts:
-- Lead with a plain-language summary, then provide the regulatory detail
-- Use concrete examples relevant to the user's context (developer, compliance officer, staff)
-- Always clarify: **Covered Entity vs. Business Associate vs. Neither**
-- When citing regulations, use format: `45 CFR §164.[section]`
+The audit system automatically sanitizes, but be explicit:
 
----
+```typescript
+// BAD - Contains PHI
+await logPHIAccess(userId, 'journal', id, action, {
+  content: journalEntry.content  // NEVER DO THIS
+});
 
-## Key HIPAA Concepts (Quick Reference)
+// GOOD - Only metadata
+await logPHIAccess(userId, 'journal', id, action, {
+  wordCount: journalEntry.content.length,
+  hasAttachments: false
+});
+```
 
-### Who Must Comply
-| Entity Type | Examples | Obligation |
-|------------|---------|-----------|
-| Covered Entity (CE) | Hospitals, clinics, health plans, clearinghouses | Full HIPAA compliance |
-| Business Associate (BA) | EHR vendors, billing companies, cloud storage used for PHI | Must sign BAA; Security Rule + parts of Privacy Rule |
-| Subcontractor of BA | Sub-processors handling ePHI | Also a BA; must sign BAA |
-| Employer (self-insured plan) | Company managing its own health plan | Limited HIPAA obligations |
+### Sanitized Fields (Auto-Redacted)
 
-### What is PHI?
-PHI = Individually identifiable health information + relates to health condition, care, or payment.
+- `password`, `token`, `secret`, `key`
+- `authorization`, `cookie`, `session`
+- `credential`, `content`, `message`, `notes`
 
-**18 HIPAA identifiers** (presence of any = PHI):
-Names, geographic data, dates (except year), phone, fax, email, SSN, MRN, health plan #, account #, certificate/license #, VIN, device IDs, URLs, IP addresses, biometric IDs, full-face photos, any other unique identifier.
+## Session Security Requirements
 
-**De-identification methods:**
-- **Safe Harbor**: Remove all 18 identifiers + no actual knowledge re-identification is possible
-- **Expert Determination**: Statistical/scientific expert certifies very small re-identification risk
+From `src/lib/auth.ts`:
 
-### Permitted Uses Without Authorization (TPO + More)
-- **Treatment, Payment, Operations (TPO)** — Core permitted uses
-- Public health activities, abuse reporting, health oversight, judicial proceedings, law enforcement (limited), research (with IRB/waiver), funeral directors, organ donation, serious threats to health/safety, workers' comp, government functions, limited data set (with DUA)
+- **Session timeout**: 15 minutes of inactivity (HIPAA requirement)
+- **Max session**: 8 hours absolute maximum
+- **Failed login lockout**: 5 attempts = 30 minute ban
+- **Password requirements**: 12+ chars, mixed case, numbers, special chars
 
----
+## Code Patterns
 
-## Tone & Approach
+### API Route with Audit Logging
 
-- **Be practical** — Users need actionable guidance, not just citations
-- **Flag ambiguity** — HIPAA has gray areas; name them honestly
-- **Risk-stratify** — Help users understand High / Medium / Low risk issues
-- **Be audience-aware** — Developers need technical specifics; compliance officers need citations; staff need plain language
-- **Never overstate certainty** — When in doubt, recommend legal counsel
+```typescript
+import { getSession, requireAuth } from '@/lib/auth';
+import { logPHIAccess } from '@/lib/hipaa/audit';
+
+export async function GET(request: Request) {
+  const session = await getSession();
+  if (!session) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Fetch the data
+  const data = await fetchUserData(session.userId);
+
+  // Log the access
+  await logPHIAccess(
+    session.userId,
+    'userdata',
+    session.userId,
+    AuditAction.PHI_VIEW
+  );
+
+  return Response.json(data);
+}
+```
+
+### Component with PHI Access
+
+```typescript
+'use client';
+
+import { useEffect } from 'react';
+
+export function JournalViewer({ entryId }: { entryId: string }) {
+  useEffect(() => {
+    // Log view on mount (server-side preferred, but client backup)
+    fetch('/api/audit/log', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'PHI_VIEW',
+        targetType: 'journal',
+        targetId: entryId
+      })
+    });
+  }, [entryId]);
+
+  // ... render
+}
+```
+
+## Compliance Checklist
+
+Before shipping any feature that touches PHI:
+
+- [ ] All PHI access is audit logged
+- [ ] No PHI content in logs (only IDs and metadata)
+- [ ] Data access requires authentication
+- [ ] Admin access has separate audit trail
+- [ ] Failed access attempts are logged
+- [ ] Data export includes audit entry
+- [ ] Sensitive fields are encrypted at rest
+- [ ] Session timeout is enforced
+
+## Audit Log Retention
+
+- **Minimum**: 6 years (HIPAA requirement)
+- **Format**: Raw logs for 1 year, compressed thereafter
+- **Location**: `audit_log` table in database
+- **Export**: Encrypted exports for compliance audits
+
+## Emergency Access (Break Glass)
+
+For emergency situations, use break-glass access:
+
+```typescript
+import { requestBreakGlassAccess } from '@/lib/hipaa/break-glass';
+
+// This creates enhanced audit trail
+const access = await requestBreakGlassAccess(
+  adminId,
+  targetUserId,
+  'Emergency support required - user reported crisis'
+);
+```
+
+Break glass access:
+- Requires written justification
+- Creates permanent audit record
+- Triggers alert to compliance officer
+- Must be reviewed within 24 hours
+
+## Resources
+
+- HIPAA Security Rule: 45 C.F.R. § 164.312
+- Audit controls standard: 45 C.F.R. § 164.312(b)
+- Incident response plan: `docs/INCIDENT-RESPONSE-PLAN.md`
+- Security documentation: `docs/SECURITY-HARDENING.md`

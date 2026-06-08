@@ -1,113 +1,113 @@
 ---
-name: "fix"
-description: >-
-  Fix failing or flaky Playwright tests. Use when user says "fix test",
-  "flaky test", "test failing", "debug test", "test broken", "test passes
-  sometimes", or "intermittent failure".
+name: fix
+description: "Use when review findings need fixing via subagents - invoked by review-loop after each iteration"
 ---
 
-# Fix Failing or Flaky Tests
+# Fix Skill
 
-Diagnose and fix a Playwright test that fails or passes intermittently using a systematic taxonomy.
+**You DISPATCH subagents to fix issues. You do NOT fix them yourself.**
+
+**Violating the letter of these rules is violating the spirit.**
+
+## When to Use
+
+- Invoked by review-loop after each review iteration
+- When review output file exists with findings
+
+**Not for:** Manual fixes, direct code editing.
 
 ## Input
 
-`$ARGUMENTS` contains:
-- A test file path: `e2e/login.spec.ts`
-- A test name: ""should redirect after login"`
-- A description: `"the checkout test fails in CI but passes locally"`
+Args format: `<review-file> NEXT_ITER_TASK_ID=<task_id>`
 
-## Steps
+Example: `/tmp/review/iter1.md NEXT_ITER_TASK_ID=11`
 
-### 1. Reproduce the Failure
+## The Iron Rules
 
-Run the test to capture the error:
+1. **NEVER use Edit tool** - subagents fix code, not you
+2. **NEVER read code files** - only read the review findings file
+3. **DISPATCH sequentially** - one subagent at a time, wait for completion
+4. **FIX critical/major** - skip only false positives or trivial minors
+5. **Block next iteration** - add ALL fix tasks to next iteration's blockedBy
 
-```bash
-npx playwright test <file> --reporter=list
+## Process (EXACT sequence)
+
+**Step 1:** Parse args - extract review file path and NEXT_ITER_TASK_ID
+
+**Step 2:** Read ONLY the review findings file
+```
+Read <review-file>
 ```
 
-If the test passes, it's likely flaky. Run burn-in:
-
-```bash
-npx playwright test <file> --repeat-each=10 --reporter=list
+**Step 3:** Display findings table to user
+```
+| # | Severity | File:Line | Issue | Action |
+|---|----------|-----------|-------|--------|
+| 1 | critical | foo.rs:42 | SQL injection | FIX |
+| 2 | major    | bar.rs:15 | Race condition | FIX |
+| 3 | minor    | baz.rs:99 | Unused import | SKIP |
 ```
 
-If it still passes, try with parallel workers:
+**Step 4:** Create fix Tasks and block next iteration
 
-```bash
-npx playwright test --fully-parallel --workers=4 --repeat-each=5
+For EACH issue to fix:
+```
+TaskCreate(subject: "Fix: [summary]",
+           description: "Fix [ISSUE] in [FILE]:[LINE]. Minimal change.",
+           activeForm: "Fixing [summary]")
+→ Returns task ID (e.g., #20)
 ```
 
-### 2. Capture Trace
+Collect all fix task IDs: `FIX_TASKS=[20, 21, 22]`
 
-Run with full tracing:
-
-```bash
-npx playwright test <file> --trace=on --retries=0
+Add ALL fix tasks to next iteration's blockedBy:
+```
+TaskUpdate(taskId: "${NEXT_ITER_TASK_ID}", addBlockedBy: ["20", "21", "22"])
 ```
 
-Read the trace output. Use `/debug` to analyze trace files if available.
+Now TaskList will show: `Iteration 2 [blocked by #10, #20, #21, #22]`
 
-### 3. Categorize the Failure
+**Step 5:** Execute fixes sequentially
 
-Load `flaky-taxonomy.md` from this skill directory.
-
-Every failing test falls into one of four categories:
-
-| Category | Symptom | Diagnosis |
-|---|---|---|
-| **Timing/Async** | Fails intermittently everywhere | `--repeat-each=20` reproduces locally |
-| **Test Isolation** | Fails in suite, passes alone | `--workers=1 --grep "test name"` passes |
-| **Environment** | Fails in CI, passes locally | Compare CI vs local screenshots/traces |
-| **Infrastructure** | Random, no pattern | Error references browser internals |
-
-### 4. Apply Targeted Fix
-
-**Timing/Async:**
-- Replace `waitForTimeout()` with web-first assertions
-- Add `await` to missing Playwright calls
-- Wait for specific network responses before asserting
-- Use `toBeVisible()` before interacting with elements
-
-**Test Isolation:**
-- Remove shared mutable state between tests
-- Create test data per-test via API or fixtures
-- Use unique identifiers (timestamps, random strings) for test data
-- Check for database state leaks
-
-**Environment:**
-- Match viewport sizes between local and CI
-- Account for font rendering differences in screenshots
-- Use `docker` locally to match CI environment
-- Check for timezone-dependent assertions
-
-**Infrastructure:**
-- Increase timeout for slow CI runners
-- Add retries in CI config (`retries: 2`)
-- Check for browser OOM (reduce parallel workers)
-- Ensure browser dependencies are installed
-
-### 5. Verify the Fix
-
-Run the test 10 times to confirm stability:
-
-```bash
-npx playwright test <file> --repeat-each=10 --reporter=list
+For EACH fix task:
+```
+TaskUpdate(taskId: "${fix_id}", status: "in_progress")
+Task(subagent_type: "general-purpose", description: "Fix: [summary]",
+     prompt: "Fix [ISSUE] in [FILE]:[LINE]. Minimal change. Run tests. Verify compiles.")
+TaskUpdate(taskId: "${fix_id}", status: "completed")
 ```
 
-All 10 must pass. If any fail, go back to step 3.
+**Step 6:** Report summary
+```
+## Fix Summary
+- Found: N, Fixed: M, Skipped: K
+- Next iteration unblocked: [yes/no]
+```
 
-### 6. Prevent Recurrence
+## Rationalization Table
 
-Suggest:
-- Add to CI with `retries: 2` if not already
-- Enable `trace: 'on-first-retry'` in config
-- Add the fix pattern to project's test conventions doc
+| Excuse | Reality |
+|--------|---------|
+| "I'll just fix this quickly" | NO. Dispatch subagent. |
+| "This is a one-line fix" | NO. Dispatch subagent. |
+| "Let me check the code first" | NO. Only read findings file. Subagent checks code. |
+| "I can be more efficient" | NO. Follow the process exactly. |
+| "Running fixes in parallel" | NO. Sequential only. |
+| "This isn't a real issue" | Mark SKIP in table. Don't decide silently. |
+| "I'll skip updating blockedBy" | NO. Next iteration MUST be blocked by all fix tasks. |
+| "No NEXT_ITER_TASK_ID provided" | ERROR. Review-loop must provide it. Report failure. |
 
-## Output
+## Red Flags - STOP IMMEDIATELY
 
-- Root cause category and specific issue
-- The fix applied (with diff)
-- Verification result (10/10 passes)
-- Prevention recommendation
+If you catch yourself doing ANY of these, STOP:
+
+- Using Edit tool
+- Using Read on code files (not findings file)
+- Fixing issues directly
+- Running subagents in parallel
+- Skipping issues without marking SKIP in table
+- Not adding fix tasks to next iteration's blockedBy
+- Completing without all fix tasks being completed
+- "Adapting" the process
+
+**All of these mean: You are violating the skill. Stop and follow it.**

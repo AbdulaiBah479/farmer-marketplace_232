@@ -1,210 +1,183 @@
 ---
 name: github-pr
-description: >
-  Create high-quality Pull Requests with conventional commits and proper descriptions.
-  Trigger: When creating PRs, writing PR descriptions, or using gh CLI for pull requests.
-metadata:
-  author: gentleman-programming
-  version: "1.0"
+description: GitHub PR utilities for code review workflows
+version: 0.1.0-beta
+license: MIT
+compatibility: opencode
 ---
 
-## When to Use
+## Overview
 
-- Creating a new Pull Request
-- Writing PR titles and descriptions
-- Preparing commits for review
-- Using `gh pr create` command
+CLI tools for GitHub pull request operations. Designed to support automated code review workflows. Requires the GitHub CLI (`gh`) to be installed and authenticated.
 
----
+## Prerequisites
 
-## Critical Patterns
-
-### PR Title = Conventional Commit
-
-```
-<type>(<scope>): <short description>
-
-feat     New feature
-fix      Bug fix  
-docs     Documentation
-refactor Code refactoring
-test     Adding tests
-chore    Maintenance
-```
-
-### PR Description Structure
-
-```markdown
-## Summary
-- 1-3 bullet points explaining WHAT and WHY
-
-## Changes
-- List main changes
-
-## Testing
-- [ ] Tests added/updated
-- [ ] Manual testing done
-
-Closes #123
-```
-
-### Atomic Commits
-
-```bash
-# Good: One thing per commit
-git commit -m "feat(user): add User model"
-git commit -m "feat(user): add UserService"
-git commit -m "test(user): add UserService tests"
-
-# Bad: Everything in one commit
-git commit -m "add user feature"
-```
-
----
-
-## Code Examples
-
-### Basic PR Creation
-
-```bash
-gh pr create \
-  --title "feat(auth): add OAuth2 login" \
-  --body "## Summary
-- Add Google OAuth2 authentication
-
-## Changes
-- Added AuthProvider component
-- Created useAuth hook
-
-Closes #42"
-```
-
-### PR with HEREDOC (Complex Description)
-
-```bash
-gh pr create --title "feat(dashboard): add analytics" --body "$(cat <<'EOF'
-## Summary
-- Add real-time analytics dashboard
-
-## Changes
-- Created AnalyticsProvider
-- Added LineChart, BarChart components
-
-## Testing
-- [x] Unit tests for components
-- [x] Manual testing complete
-
-## Screenshots
-![Dashboard](url)
-
-Closes #123
-EOF
-)"
-```
-
-### Draft PR
-
-```bash
-gh pr create --draft \
-  --title "wip: refactor auth" \
-  --body "Work in progress"
-```
-
-### PR with Reviewers and Labels
-
-```bash
-gh pr create \
-  --title "feat(api): add rate limiting" \
-  --body "Adds rate limiting to API" \
-  --reviewer "user1,user2" \
-  --label "enhancement,api"
-```
-
----
+- [bun](https://bun.sh) runtime installed
+- [GitHub CLI](https://cli.github.com/) installed and authenticated
+  ```bash
+  brew install gh
+  gh auth login
+  ```
 
 ## Commands
 
+### Check Review Needed
+
+Determines if a PR should be reviewed by checking various conditions.
+
 ```bash
-# Create PR
-gh pr create --title "type(scope): desc" --body "..."
+bun .opencode/skill/github-pr/check-review-needed.js [pr-number]
+```
 
-# Create with web editor
-gh pr create --web
+**Arguments:**
+- `pr-number` - PR number (optional, defaults to current branch's PR)
 
-# View PR status
-gh pr status
+**Output:**
+JSON object with:
+- `shouldReview` - boolean indicating if review should proceed
+- `reason` - explanation for the decision
+- `prNumber` - the PR number checked
 
-# View diff
-gh pr diff
+**Conditions checked:**
+- PR is not closed or merged
+- PR is not a draft
+- PR is not from a known bot (dependabot, renovate, etc.)
+- PR title doesn't indicate automation (bump, chore(deps), etc.)
+- PR has not already been reviewed by Claude/AI
+- PR is not trivial (2 or fewer lines changed)
 
-# Check CI status
-gh pr checks
+**Examples:**
+```bash
+# Check current branch's PR
+bun .opencode/skill/github-pr/check-review-needed.js
 
-# Merge with squash
-gh pr merge --squash
-
-# Add reviewer
-gh pr edit --add-reviewer username
+# Check specific PR
+bun .opencode/skill/github-pr/check-review-needed.js 123
 ```
 
 ---
 
-## Anti-Patterns
+### List Guideline Files
 
-### Don't: Vague Titles
+Finds AGENTS.md (or CLAUDE.md) files relevant to a PR's changes.
 
 ```bash
-# Bad
-gh pr create --title "fix bug"
-gh pr create --title "update"
-
-# Good
-gh pr create --title "fix(auth): prevent session timeout"
+bun .opencode/skill/github-pr/list-guideline-files.js [pr-number] [--json]
 ```
 
-### Don't: Giant PRs
+**Arguments:**
+- `pr-number` - PR number (optional, defaults to current branch's PR)
 
+**Options:**
+- `--json` - Output as JSON array with file contents
+
+**Search locations:**
+- Repository root
+- All directories containing files modified in the PR
+- Parent directories of modified files
+
+**Priority:** If both AGENTS.md and CLAUDE.md exist in the same directory, AGENTS.md takes precedence.
+
+**Examples:**
 ```bash
-# Bad: 50 files, 2000+ lines in one PR
+# List guideline files for current PR
+bun .opencode/skill/github-pr/list-guideline-files.js
 
-# Good: Split into logical PRs
-# PR 1: feat(models): add User model
-# PR 2: feat(api): add user endpoints
-# PR 3: feat(ui): add user pages
+# Get full content as JSON
+bun .opencode/skill/github-pr/list-guideline-files.js 123 --json
 ```
 
-### Don't: Empty Descriptions
-
-```bash
-# Bad
---body "Added feature"
-
-# Good
---body "## Summary
-- What you did and why
-
-## Changes  
-- Specific changes
-
-Closes #123"
+**JSON Output Format:**
+```json
+[
+  {
+    "path": "AGENTS.md",
+    "content": "# Project Guidelines\n..."
+  },
+  {
+    "path": "src/components/AGENTS.md",
+    "content": "# Component Guidelines\n..."
+  }
+]
 ```
 
 ---
 
-## Quick Reference
+### Post Inline Comment
 
-| Task | Command |
-|------|---------|
-| Create PR | `gh pr create -t "type: desc" -b "body"` |
-| Draft PR | `gh pr create --draft` |
-| Web editor | `gh pr create --web` |
-| Add reviewer | `--reviewer user1,user2` |
-| Add label | `--label bug,high-priority` |
-| Link issue | `Closes #123` in body |
-| View status | `gh pr status` |
-| Merge squash | `gh pr merge --squash` |
+Posts a review comment on a specific line or line range in a PR.
 
-## Resources
+```bash
+bun .opencode/skill/github-pr/post-inline-comment.js <pr-number> --path <file> --line <n> --body <text>
+```
 
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [GitHub CLI Manual](https://cli.github.com/manual/gh_pr_create)
+**Arguments:**
+- `pr-number` - PR number (optional if on a PR branch)
+
+**Options:**
+- `--path <file>` - File path to comment on (required)
+- `--line <n>` - Line number to comment on (required)
+- `--start-line <n>` - Start line for multi-line comments (optional)
+- `--body <text>` - Comment body in markdown (required)
+
+**Suggestion blocks:**
+Include a suggestion block for small fixes that can be committed directly:
+
+````markdown
+Fix the error handling:
+
+```suggestion
+try {
+  await authenticate();
+} catch (e) {
+  handleAuthError(e);
+}
+```
+````
+
+**Important:** Suggestions must be complete. The author should be able to click "Commit suggestion" without needing additional changes elsewhere.
+
+**Examples:**
+```bash
+# Single line comment
+bun .opencode/skill/github-pr/post-inline-comment.js 123 \
+  --path src/auth.ts \
+  --line 67 \
+  --body "Missing error handling for OAuth callback"
+
+# Multi-line comment (lines 65-70)
+bun .opencode/skill/github-pr/post-inline-comment.js 123 \
+  --path src/auth.ts \
+  --line 70 \
+  --start-line 65 \
+  --body "This authentication block needs refactoring"
+```
+
+---
+
+## Integration with gh CLI
+
+These tools wrap the GitHub CLI (`gh`). For operations not covered by these utilities, use `gh` directly:
+
+```bash
+# View PR details
+gh pr view 123 --json title,body,state,isDraft,files
+
+# Get PR diff
+gh pr diff 123
+
+# View PR comments
+gh pr view 123 --comments
+
+# Post a regular comment
+gh pr comment 123 --body "Comment text"
+
+# View file at PR head
+gh api repos/{owner}/{repo}/contents/{path}?ref={branch}
+```
+
+## Output Behavior
+
+- Command output is displayed directly to the user in the terminal
+- JSON output is formatted for readability and piping
+- Use `--json` flag when you need to process output programmatically

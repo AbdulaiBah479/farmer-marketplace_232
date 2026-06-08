@@ -1,541 +1,118 @@
 ---
 name: google-apps-script
-description: "Build Google Apps Script automation for Sheets and Workspace. Custom menus, triggers (onEdit / time-driven / form submit), dialogs, sidebars, email batches, PDF export, external API. Use whenever the user wants to automate a Google Sheet, build a Sheets menu / sidebar / dialog, hit a Sheets row from email or a webhook, schedule a Sheets workflow, or asks 'how do I script this in Sheets'."
-compatibility: claude-code-only
+description: Google Apps Script documentation, guides, and API reference for automating Google Workspace applications
 ---
 
-# Google Apps Script
+# Google-Apps-Script Skill
 
-Build automation scripts for Google Sheets and Workspace apps. Scripts run server-side on Google's infrastructure with a generous free tier.
+Comprehensive assistance with google-apps-script development, generated from official documentation.
 
-## What You Produce
+## When to Use This Skill
 
-- Apps Script code pasted into Extensions > Apps Script
-- Custom menus, dialogs, sidebars
-- Automated triggers (on edit, time-driven, form submit)
-- Email notifications, PDF exports, API integrations
+This skill should be triggered when:
+- Working with google-apps-script
+- Asking about google-apps-script features or APIs
+- Implementing google-apps-script solutions
+- Debugging google-apps-script code
+- Learning google-apps-script best practices
 
-## Workflow
+## Quick Reference
 
-### Step 1: Understand the Automation
+### Common Patterns
 
-Ask what the user wants automated. Common scenarios:
-- Custom menu with actions (report generation, data processing)
-- Auto-triggered behaviour (on edit, on form submit, scheduled)
-- Sidebar app for data entry
-- Email notifications from sheet data
-- PDF export and distribution
+**Pattern 1:** AI-generated Key Takeaways outlined_flag The Advanced Google Workspace Events service allows Apps Script to use the Google Workspace Events API to subscribe to resource changes like creations, updates, or deletions. Using this service requires an Apps Script project with a standard Google Cloud project, a Pub/Sub topic, and necessary authorization scopes. Specific prerequisites exist for subscribing to Chat events, including a configured Google Chat app. Sample code is provided for common actions such as creating, listing, getting, updating, reactivating, and deleting subscriptions, as well as getting operation details. The Advanced Google Workspace Events service lets you use the Google Workspace Events API in Apps Script. This API lets you subscribe to Google Workspace resources so that you receive relevant events that you're interested in. Events represent changes to resources, such as when resources are created, updated, or deleted. Prerequisites An Apps Script project using a standard Google Cloud project instead of the default one created automatically by Apps Script. A Pub/Sub topic created in the same Google Cloud project to receive subscription events. To create a Pub/Sub topic, see Create and subscribe to a Pub/Sub topic. To subscribe to Chat events, you must have a Google Chat app configured on the Chat API configuration page in the Google Cloud console. To create a Google Chat app, see Build a Google Chat app with Apps Script. The necessary authorization scopes added to the Apps Script project's appsscript.json file. The necessary scopes depend on the types of the subscriptions' target resources and events. For details, see Choose Google Workspace Events API scopes. For example: "oauthScopes": [ "https://www.googleapis.com/auth/chat.messages.readonly" ] Note: This is an advanced service that you must turn on before use. Reference For more information about this service, see the Google Workspace Events API reference documentation. Like all advanced services in Apps Script, the Google Workspace Events service uses the same objects, methods, and parameters as the public API. Sample code These samples show you how to perform common Google Workspace Events API actions using the advanced service. Create a subscription To create a subscription to a Google Workspace resource, add the following function to the Apps Script project's code: advanced/events.gs View on GitHub /** * Creates a subscription to receive events about a Google Workspace resource. * For a list of supported resources and event types, see the * [Google Workspace Events API Overview](https://developers.google.com/workspace/events#supported-events). * For additional information, see the * [subscriptions.create](https://developers.google.com/workspace/events/reference/rest/v1/subscriptions/create) * method reference. * @param {!string} targetResource The full resource name of the Google Workspace resource to subscribe to. * @param {!string|!Array<string>} eventTypes The types of events to receive about the resource. * @param {!string} pubsubTopic The resource name of the Pub/Sub topic that receives events from the subscription. */ function createSubscription(targetResource, eventTypes, pubsubTopic) { try { const operation = WorkspaceEvents.Subscriptions.create({ targetResource: targetResource, eventTypes: eventTypes, notificationEndpoint: { pubsubTopic: pubsubTopic, }, }); console.log(operation); } catch (err) { // TODO (developer) - Handle exception console.log('Failed to create subscription with error %s', err.message); } } List subscriptions To list subscriptions filtered by event types and target resource, add the following function to the Apps Script project's code: advanced/events.gs View on GitHub /** * Lists subscriptions created by the calling app filtered by one or more event types and optionally by a target resource. * For additional information, see the * [subscriptions.list](https://developers.google.com/workspace/events/reference/rest/v1/subscriptions/list) * method reference. * @param {!string} filter The query filter. */ function listSubscriptions(filter) { try { const response = WorkspaceEvents.Subscriptions.list({ filter }); console.log(response); } catch (err) { // TODO (developer) - Handle exception console.log('Failed to list subscriptions with error %s', err.message); } } Get subscription To get information about a subscription, add the following function to the Apps Script project's code: advanced/events.gs View on GitHub /** * Gets details about a subscription. * For additional information, see the * [subscriptions.get](https://developers.google.com/workspace/events/reference/rest/v1/subscriptions/get) * method reference. * @param {!string} name The resource name of the subscription. */ function getSubscription(name) { try { const subscription = WorkspaceEvents.Subscriptions.get(name); console.log(subscription); } catch (err) { // TODO (developer) - Handle exception console.log('Failed to get subscription with error %s', err.message); } } Update subscription To update or renew a subscription, add the following function to the Apps Script project's code: advanced/events.gs View on GitHub /** * Updates an existing subscription. * This can be used to renew a subscription that is about to expire. * For additional information, see the * [subscriptions.patch](https://developers.google.com/workspace/events/reference/rest/v1/subscriptions/patch) * method reference. * @param {!string} name The resource name of the subscription. */ function patchSubscription(name) { try { const operation = WorkspaceEvents.Subscriptions.patch({ // Setting the TTL to 0 seconds extends the subscription to its maximum expiration time. ttl: '0s', }, name); console.log(operation); } catch (err) { // TODO (developer) - Handle exception console.log('Failed to update subscription with error %s', err.message); } } Reactivate subscription To reactivate a subscription, add the following function to the Apps Script project's code: advanced/events.gs View on GitHub /** * Reactivates a suspended subscription. * Before reactivating, you must resolve any errors with the subscription. * For additional information, see the * [subscriptions.reactivate](https://developers.google.com/workspace/events/reference/rest/v1/subscriptions/reactivate) * method reference. * @param {!string} name The resource name of the subscription. */ function reactivateSubscription(name) { try { const operation = WorkspaceEvents.Subscriptions.reactivate({}, name); console.log(operation); } catch (err) { // TODO (developer) - Handle exception console.log('Failed to reactivate subscription with error %s', err.message); } } Delete subscription To delete a subscription, add the following function to the Apps Script project's code: advanced/events.gs View on GitHub /** * Deletes a subscription. * For additional information, see the * [subscriptions.delete](https://developers.google.com/workspace/events/reference/rest/v1/subscriptions/delete) * method reference. * @param {!string} name The resource name of the subscription. */ function deleteSubscription(name) { try { const operation = WorkspaceEvents.Subscriptions.remove(name); console.log(operation); } catch (err) { // TODO (developer) - Handle exception console.log('Failed to delete subscription with error %s', err.message); } } Get operation Most Google Workspace Events API methods return a long-running operation. To determine the status of the operation, you can use the operations.get() method. To get information about an operation, add the following function to the Apps Script project's code: advanced/events.gs View on GitHub /** * Gets details about an operation returned by one of the methods on the subscription * resource of the Google Workspace Events API. * For additional information, see the * [operations.get](https://developers.google.com/workspace/events/reference/rest/v1/operations/get) * method reference. * @param {!string} name The resource name of the operation. */ function getOperation(name) { try { const operation = WorkspaceEvents.Operations.get(name); console.log(operation); } catch (err) { // TODO (developer) - Handle exception console.log('Failed to get operation with error %s', err.message); } } To get the name of an operation, use the value from the name field returned from one of the Google Workspace Events API methods, such as subscriptions.create() or subscriptions.patch().
 
-### Step 2: Generate the Script
-
-Follow the structure template below. Every script needs a header comment, configuration constants at top, and `onOpen()` for menu setup.
-
-### Step 3: Provide Installation Instructions
-
-All scripts install the same way:
-1. Open the Google Sheet
-2. **Extensions > Apps Script**
-3. Delete any existing code in the editor
-4. Paste the script
-5. Click **Save**
-6. Close the Apps Script tab
-7. **Reload the spreadsheet** (onOpen runs on page load)
-
-### Step 4: First-Time Authorisation
-
-Each user gets a Google OAuth consent screen on first run. For unverified scripts (most internal scripts), users must click:
-
-**Advanced > Go to [Project Name] (unsafe) > Allow**
-
-This is a one-time step per user. Warn users about this in your output.
-
----
-
-## Script Structure Template
-
-Every script should follow this pattern:
-
-```javascript
-/**
- * [Project Name] - [Brief Description]
- *
- * [What it does, key features]
- *
- * INSTALL: Extensions > Apps Script > paste this > Save > Reload sheet
- */
-
-// --- CONFIGURATION ---
-const SOME_SETTING = 'value';
-
-// --- MENU SETUP ---
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('My Menu')
-    .addItem('Do Something', 'myFunction')
-    .addSeparator()
-    .addSubMenu(ui.createMenu('More Options')
-      .addItem('Option A', 'optionA'))
-    .addToUi();
-}
-
-// --- FUNCTIONS ---
-function myFunction() {
-  // Implementation
-}
+```
+appsscript.json
 ```
 
----
+**Pattern 2:** AI-generated Key Takeaways outlined_flag Script projects accessing user data require authorization, initiating an authorization flow when a script runs for the first time. OAuth scopes define the specific permissions a script needs, such as reading emails or creating calendar events. For most scripts, Apps Script automatically detects necessary scopes, but for published applications like add-ons, you should explicitly set the narrowest scopes possible in the manifest file. Granular OAuth permissions allow users to authorize specific scopes, and scripts should be designed to handle these permissions using requireScopes or getAuthorizationInfo methods. Scripts using sensitive or restricted OAuth scopes, especially for publicly published applications, may require OAuth client verification and adherence to additional data policies. Users must authorize script projects that access their data or act on their behalf. When a user runs a script that requires authorization for the first time, the UI presents a prompt to start the authorization flow. During this flow, the UI tells the user what the script wants permission to do. For example, a script might want permission to read the user's email messages or create events in their calendar. The script project defines these individual permissions as OAuth scopes. For most scripts, Apps Script automatically detects what scopes are needed for you; you can view the scopes a script uses at any time. You can also set scopes explicitly in your manifest using URL strings. Setting scopes explicitly is sometimes required for certain applications like add-ons, since published applications should always use the narrowest scopes possible. During the authorization flow, Apps Script presents human-readable descriptions of the required scopes to the user. For example, if your script needs read-only access to your spreadsheets, the manifest may have the scope https://www.googleapis.com/auth/spreadsheets.readonly. During the authorization flow, a script with this scope asks the user to allow this application to "View your Google Spreadsheets". Some scopes are inclusive of others. For example, when authorized the scope https://www.googleapis.com/auth/spreadsheets allows read and write access to spreadsheets. For some surfaces where scripts run, such as running a script directly from the Apps Script IDE, users are presented with the granular OAuth consent screen. This lets users select specific permissions to grant rather than granting all permissions at once. It's important to design your script to handle granular OAuth permissions. View scopes You can see the scopes your script project currently requires by doing the following: Open the script project. At the left, click Overview info_outline. View the scopes under Project OAuth Scopes. Set explicit scopes Apps Script automatically determines what scopes a script needs by scanning its code for function calls that require them. For most scripts this is sufficient and saves you time, but for published add-ons, web apps, Google Chat apps, and calls to Google Chat API you must exercise more direct control of the scopes. Apps Script sometimes automatically assigns projects very permissive scopes. This can mean your script asks the user for more than it needs, which is bad practice. For published scripts, you must replace broad scopes with a more limited set that cover the script's needs and no more. Warning: Always use the least permissive scope set possible. To protect user information, add-ons and other published applications should never ask for more scope permissions than they absolutely need. You can explicitly set the scopes your script project uses by editing its manifest file. The manifest field oauthScopes is an array of all scopes used by the project. To set your project's scopes, do the following: Open the script project. At the left, click Project Settings settings. Select the Show "appsscript.json" manifest file in editor checkbox. At the left, click Editor code. At the left, click the appsscript.json file. Locate the top-level field labeled oauthScopes. If it's not present, you can add it. The oauthScopes field specifies an array of strings. To set the scopes your project uses, replace the contents of this array with the scopes you want it to use. For example: { ... "oauthScopes": [ "https://www.googleapis.com/auth/spreadsheets.readonly", "https://www.googleapis.com/auth/userinfo.email" ], ... } At the top, click Save save. Handle granular OAuth permissions Note: The granular OAuth consent screen was first launched to the Apps Script IDE for users executing a script directly from Apps Script. The consent screen will progressively roll out to the remaining surfaces, such as macros, trigger executions, and add-ons over time. For more information, see Granular OAuth consent in Google Apps Script IDE executions. The granular OAuth consent screen lets users specify which individual OAuth scopes they want to authorize. Granular OAuth permissions give users more fine-grained control over what account data they choose to share with each script. For example, imagine you develop a script that requests permission for both email and calendar scopes. Your users might want to use your script only for its capabilities with Google Calendar, but not Gmail. With granular OAuth permissions, users can choose to only grant Calendar permission, but not Gmail. The following sections describe the main ways to handle granular OAuth permissions. Automatically require permission for necessary scopes If an execution flow needs permission for scopes in order to work, you can require users to grant those permissions before they can use it. Your script can check if the user has already given permission and, if not, automatically ask them for it. The following methods from the ScriptApp class let you validate permission for required scopes and automatically render the authorization prompt to request any missing permissions: requireScopes(authMode, oAuthScopes): Use this method for execution flows that rely on one or more scopes, but not all the scopes used by your script. requireAllScopes(authMode): Use this method if an execution flow relies on all of the scopes used by your script. Example The following example shows how to call the requireScopes(authMode, oAuthScopes) and requireAllScopes(authMode) methods. The script uses scopes for Gmail, Sheets, and Calendar. The sendEmail() function requires only the scopes for Gmail and Sheets while the createEventSendEmail() function requires all scopes used by the script. // This function requires the Gmail and Sheets scopes. function sendEmail() { // Validates that the user has granted permission for the Gmail and Sheets scopes. // If not, the execution ends and prompts the user for authorization. ScriptApp.requireScopes(ScriptApp.AuthMode.FULL, [ 'https://mail.google.com/', 'https://www.googleapis.com/auth/spreadsheets' ]); // Sends an email. GmailApp.sendEmail("dana@example.com", "Subject", "Body"); Logger.log("Email sent successfully!"); // Opens a spreadsheet and sheet to track the sent email. const ss = SpreadsheetApp.openById("abc1234567"); const sheet = ss.getSheetByName("Email Tracker") // Gets the last row of the sheet. const lastRow = sheet.getLastRow(); // Adds "Sent" to column E of the last row of the spreadsheet. sheet.getRange(lastRow, 5).setValue("Sent"); Logger.log("Sheet updated successfully!"); } // This function requires all scopes used by the script (Gmail, // Calendar, and Sheets). function createEventSendEmail() { // Validates that the user has granted permission for all scopes used by the // script. If not, the execution ends and prompts the user for authorization. ScriptApp.requireAllScopes(ScriptApp.AuthMode.FULL); // Creates an event. CalendarApp.getDefaultCalendar().createEvent( "Meeting", new Date("November 28, 2024 10:00:00"), new Date("November 28, 2024 11:00:00") ); Logger.log("Calendar event created successfully!"); // Sends an email. GmailApp.sendEmail("dana@example.com", "Subject 2", "Body 2"); Logger.log("Email sent successfully!"); // Opens a spreadsheet and sheet to track the created meeting and sent email. const ss = SpreadsheetApp.openById("abc1234567"); const sheet = ss.getSheetByName("Email and Meeting Tracker") // Gets the last row const lastRow = sheet.getLastRow(); // Adds "Sent" to column E of the last row sheet.getRange(lastRow, 5).setValue("Sent"); // Adds "Meeting created" to column F of the last row sheet.getRange(lastRow, 6).setValue("Meeting created"); Logger.log("Sheet updated successfully!"); } Create a custom experience for missing scopes You can get the permission details of the user running your script and design a custom experience based on their permission status. For example, you might decide to turn off specific features of your script that require permissions that the user hasn't granted, or present a custom dialog explaining the missing permissions. The following methods get an object with the user's permission information that includes which scopes the user has authorized and a URL to let you request any missing scopes: getAuthorizationInfo(authMode, oAuthScopes): Use this method to check the permission status for specific scopes. getAuthorizationInfo(authMode): Use this method to check the permission status for all scopes used by your script. To get the permission details from the authorization info object, such as a list of which scopes have been authorized and a URL to request missing permissions, use the methods from the AuthorizationInfo class. Example The following example shows how to call the getAuthorizationInfo(authMode, oAuthScopes) method to skip specific features within an execution flow where the required scopes haven't been granted. This lets the rest of the execution flow continue without having to prompt for authorization of the missing scopes. // This function uses the Gmail scope and skips the email // capabilities if the scope for Gmail hasn't been granted. function myFunction() { const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL, ['https://mail.google.com/']); if (authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.NOT_REQUIRED) { GmailApp.sendEmail("dana@example.com", "Subject", "Body"); Logger.log("Email sent successfully!"); } else { const scopesGranted = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL).getAuthorizedScopes(); console.warn(`Authorized scopes: ${scopesGranted} not enough to send mail, skipping.`); } // Continue the rest of the execution flow... } Ensure that trigger executions have permissions Functions associated with triggers can run automatically on certain events, and the user may not be present to provide more permissions. We recommended that you use requireScopes(authMode, oAuthScopes) before installing a trigger. This prompts the user for missing permissions and doesn't allow the installation of the trigger without them. Example // This function requires scope Sheets. function trackFormSubmissions(e){ // Opens a spreadsheet to track the sent email. const ss = SpreadsheetApp.openById("abc1234567"); const sheet = ss.getSheetByName("Submission Tracker") // Gets the last row of the sheet. const lastRow = sheet.getLastRow(); // Adds email address of user that submitted the form // to column E of the last row of the spreadsheet. sheet.getRange(lastRow, 5).setValue(e.name); Logger.log("Sheet updated successfully!"); } function installTrigger(){ // Validates that the user has granted permissions for trigger // installation and execution. If not, trigger doesn't get // installed and prompts the user for authorization. ScriptApp.requireScopes(ScriptApp.AuthMode.FULL, [ 'https://www.googleapis.com/auth/script.scriptapp', 'https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/forms.currentonly' ]); ScriptApp.newTrigger('trackFormSubmission') .forForm(FormApp.getActiveForm()) .onFormSubmit() .create(); } OAuth verification Certain OAuth scopes are sensitive because they allow access to Google User Data. If your script project uses scopes that allow access to user data, the project must go through OAuth client verification before you can publish it publicly as a web app or add-on. For more information, see the following guides: OAuth client verification for Apps Script Unverified apps OAuth verification FAQ Google APIs Service: User Data Policy Restricted scopes In addition to sensitive scopes, certain scopes are classified as restricted and subject to additional rules that help protect user data. If you intend to publish a web app or add-on that uses one or more restricted scopes, the app must comply with all the specified restrictions before it can be published. Review the full list of restricted scopes before you attempt to publish. If your app uses any of them, you must comply with the Additional Requirements for Specific API scopes prior to publishing. Note: Avoid using restricted scopes in your app if you can—it is easier to pass review for public publication if you don't use them. You can use restricted scopes freely for non-public apps and scripts.
 
-## Critical Rules
-
-### Public vs Private Functions
-
-Functions ending with `_` (underscore) are **private** and CANNOT be called from client-side HTML via `google.script.run`. This is a silent failure -- the call simply doesn't work with no error.
-
-```javascript
-// WRONG - dialog can't call this, fails silently
-function doWork_() { return 'done'; }
-
-// RIGHT - dialog can call this
-function doWork() { return 'done'; }
+```
+requireScopes
 ```
 
-**Also applies to**: Menu item function references must be public function names as strings.
+**Pattern 3:** AI-generated Key Takeaways outlined_flag Create a Google Chat app that echoes user messages using Apps Script and Google Cloud. This involves setting up your environment, configuring the script, publishing the app, and testing its functionality. Prerequisites include a Google Workspace account and a Google Cloud project. The app is designed to receive direct messages and participate in spaces, integrating with various Google services as needed. You can find troubleshooting information and cleanup instructions in the provided documentation. Note: This guide explains how to build an interactive Chat app using Chat API interaction events. You can also build your Chat app as a Google Workspace add-on. To learn about which framework to use, see Build an interactive Google Chat app. Create a Google Chat app that you can directly message and that responds by echoing your messages. The following diagram shows the architecture and messaging pattern: In the preceding diagram, a user interacting with an Apps Script Chat app has the following flow of information: A user sends a message to a Chat app, either in a direct message or in a Chat space. The Chat app logic that's implemented in Apps Script, which resides in Google Cloud, receives and processes the message. Optionally, the Chat app logic can integrate with Google Workspace services, such as a Calendar or Sheets, or other Google Services, such as Google Maps or YouTube. The Chat app logic sends a response back to the Chat app service in Chat. The response is delivered to the user. Objectives Set up your environment. Set up the script. Publish the Chat app. Test the Chat app. Prerequisites A Business or Enterprise Google Workspace account with access to Google Chat. A Google Cloud project. To create one, see Create a Google Cloud project. Set up your environment Open your Cloud project in the Google Cloud console If it's not open already, open the Cloud project that you intend to use for this sample: In the Google Cloud console, go to the Select a project page. Select a Cloud project Select the Google Cloud project you want to use. Or, click Create project and follow the on-screen instructions. If you create a Google Cloud project, you might need to turn on billing for the project. Turn on the Chat API Before using Google APIs, you need to turn them on in a Google Cloud project. You can turn on one or more APIs in a single Google Cloud project. In the Google Cloud console, enable the Google Chat API. Enable the API Configure the OAuth consent screen All apps using OAuth 2.0 require a consent screen configuration. Configuring your app's OAuth consent screen defines what is displayed to users and app reviewers, and registers your app so you can publish it later. In the Google Cloud console, go to Menu menu > Google Auth platform > Branding. Go to Branding If you have already configured the Google Auth platform, you can configure the following OAuth Consent Screen settings in Branding, Audience, and Data Access. If you see a message that says Google Auth platform not configured yet, click Get Started: Under App Information, in App name, enter a name for the app. In User support email, choose a support email address where users can contact you if they have questions about their consent. Click Next. Under Audience, select Internal. Click Next. Under Contact Information, enter an Email address where you can be notified about any changes to your project. Click Next. Under Finish, review the Google API Services User Data Policy and if you agree, select I agree to the Google API Services: User Data Policy. Click Continue. Click Create. For now, you can skip adding scopes. In the future, when you create an app for use outside of your Google Workspace organization, you must change the User type to External. Then add the authorization scopes that your app requires. To learn more, see the full Configure OAuth consent guide. Set up the script To set up the script, you use a template and then set your Cloud project in Apps Script. Create the script from the template Go to the Apps Script Getting Started page. Click the Chat App template at the top of the page. Click Untitled project, type Quickstart app, and click Rename. Copy the Cloud project number In the Google Cloud console, go to Menu menu > IAM & Admin > Settings. Go to IAM & Admin Settings In the Project number field, copy the value. Set the Apps Script project's Cloud project In the Chat app Apps Script project, click Project Settings . Under Google Cloud Platform (GCP) Project, click Change project. In GCP project number, paste the Google Cloud project number. Click Set project. You now have working app code that you can try out (as described in the following steps) and then customize to meet your requirements. Make sure that you're signed in to the correct Google Account when you open the Apps Script template. The current account can sometimes switch to your default account without you noticing. Create a test deployment You need a deployment ID for this Apps Script project, so that you can use it in the next step. To get the head deployment ID, do the following: In the Chat app Apps Script project, click Deploy > Test deployments. Copy the Head deployment ID for use in a later step and click Done. Publish the Chat app Publish the Chat app from the console. In the console, search for Google Chat API, and click Google Chat API. Click Manage. Click Configuration and set up the Chat app: Clear Build this Chat app as a Google Workspace add-on. A dialog opens asking you to confirm. In the dialog, click Disable. In the App name field, enter Quickstart app. In the Avatar URL field, enter https://developers.google.com/chat/images/quickstart-app-avatar.png. In the Description field, enter Quickstart app. Under Functionality, select Join spaces and group conversations. Under Connection settings, select Apps Script. In the Deployment ID field, paste the Head deployment ID that you previously copied. Under Visibility, select Specific people and groups in your domain, and enter your email. Click Save. The Chat app is ready to respond to messages. Test the Chat app To test your Chat app, open a direct message space with the Chat app and send a message: Open Google Chat using the Google Workspace account that you provided when you added yourself as a trusted tester. Go to Google Chat Click add New chat. In the Add 1 or more people field, type the name of your Chat app. Select your Chat app from the results. A direct message opens. Note: If you don't see your Chat app in the list of results, ensure that you've included your Google Workspace account in the Visibility settings of the Chat API Configuration page in the Google Cloud console. In the new direct message with the app, type Hello and press enter. The Chat app thanks you for adding it and echoes your message. To add trusted testers and learn more about testing interactive features, see Test interactive features for Google Chat apps. Troubleshoot When a Google Chat app or card returns an error, the Chat interface surfaces a message saying "Something went wrong." or "Unable to process your request." Sometimes the Chat UI doesn't display any error message, but the Chat app or card produces an unexpected result; for example, a card message might not appear. Although an error message might not display in the Chat UI, descriptive error messages and log data are available to help you fix errors when error logging for Chat apps is turned on. For help viewing, debugging, and fixing errors, see Troubleshoot and fix Google Chat errors. Clean up To avoid incurring charges to your Google Cloud account for the resources used in this tutorial, we recommend that you delete the Cloud project. Caution: Deleting a project has the following effects: Everything in the project is deleted. If you used an existing project for this tutorial, when you delete it, you also delete any other work you've done in the project. Custom project IDs are lost. When you created this project, you might have created a custom project ID that you want to use in the future. To preserve the URLs that use the project ID, such as a URL on appspot.com, delete the selected resources inside the project instead of deleting the whole project. If you plan to explore multiple tutorials and quickstarts, reusing projects can help you avoid exceeding project quota limits. In the Google Cloud console, go to the Manage resources page. Click Menu menu > IAM & Admin > Manage Resources. Go to Resource Manager In the project list, select the project you want to delete and then click Delete delete. In the dialog, type the project ID and then click Shut down to delete the project. Next steps Create interactive cards–Card messages support a defined layout, interactive UI elements like buttons, and rich media like images. Use card messages to present detailed information, gather information from users, and guide users to take a next step. Respond to commands–Commands help users discover and use key features of your Chat app. Launch dialogs–Dialogs are windowed, card-based interfaces that your app can open to interact with a user. Multiple cards can be strung together sequentially, which helps users complete multi-step processes, like filling in form data. code Codelab: Ready to build a more advanced Chat app? See the feedback Chat app from the codelab Build apps for Google Chat with Gemini.
 
-### Batch Operations (Critical for Performance)
-
-Read/write data in bulk, never cell-by-cell. The difference is 70x.
-
-```javascript
-// SLOW (70 seconds on 100x100) - reads one cell at a time
-for (let i = 1; i <= 100; i++) {
-  const val = sheet.getRange(i, 1).getValue();
-}
-
-// FAST (1 second) - reads all at once
-const allData = sheet.getRange(1, 1, 100, 1).getValues();
-for (const row of allData) {
-  const val = row[0];
-}
+```
+Quickstart app
 ```
 
-Always use `getRange().getValues()` / `setValues()` for bulk reads/writes.
+**Pattern 4:** AI-generated Key Takeaways outlined_flag Google Apps Script offers over 30 built-in services for interacting with user data, other Google systems, and external systems, provided as global objects. Google Apps Script supports both the modern V8 and older Rhino JavaScript runtimes, with the V8 runtime being strongly recommended for its support of modern ECMAScript features. The script editor provides an autocomplete feature that assists in identifying valid global objects, methods, and enums within the script's current context. Services are accessed through global objects, and methods can be called on these objects to perform actions or retrieve data, with the ability to chain method calls when they return other Apps Script classes. Child classes cannot be accessed directly but must be accessed by calling a method that returns an instance of that class, and some services use "interface" classes to represent generic types that can be cast to a precise class. Google Apps Script provides more than 30 built-in services for interacting with user data, other Google systems, and external systems. These services are provided as global objects akin to JavaScript's standard Math object. For example, just as Math offers methods like random() and constants like PI, Apps Script's Spreadsheet service offers methods like openById(id), classes (child objects) like Range, and enums like DataValidationCriteria. The reference documentation for services that control Google Workspace products are collected in the "Google Workspace Services" section under the "Reference" header in the sidebar of this site. Utility services (for things like creating user interfaces, parsing XML, or writing log data) are collected in the "Script Services" section. Modern JavaScript features Apps Script supports two JavaScript runtimes: the modern V8 runtime and an older one powered by Mozilla's Rhino JavaScript interpreter. The V8 runtime supports modern ECMAScript syntax and features. The Rhino runtime is based on the older JavaScript 1.6 standard, plus a few features from 1.7 and 1.8. You can freely choose which runtime to use with your script, but the V8 runtime is strongly recommended. Each runtime supports JavaScript classes and objects that are available to your script in addition to the built-in and advanced Google services. Your scripts can use common objects like Array, Date, RegExp, and so forth, as well as the Math and Object global objects. Note: Because Apps Script code runs on Google's servers (with the exception of HTML-service pages), browser-based JavaScript features like DOM manipulation or the Window API are not available in Apps Script. Using autocomplete The script editor provides a "content assist" feature, more commonly called "autocomplete," which reveals the global objects as well as methods and enums that are valid in the script's current context. Autocomplete suggestions appear automatically whenever you type a period after a global object, enum, or method call that returns an Apps Script class. For example: If you type the full name of a global object or select one from autocomplete, then type . (a period), you will see all methods and enums for that class. If you type a few characters, you'll see all valid suggestions that begin with those characters. Understanding global objects Each service provides at least one global (top-level) object; for example, the Gmail service is accessed solely from the GmailApp object. Some services provide multiple global objects; for example, the Base service includes four global objects: Browser, Logger, MimeType, and Session. Calling methods The global objects of nearly all built-in or advanced services include methods that return data or an Apps Script class. Scripts make method calls in this format: GlobalObjectName.methodName(argument1, argument2, ..., argumentN); For example, a script can send an email by calling the sendEmail(recipient, subject, body) method of the Gmail service like so: GmailApp.sendEmail('claire@example.com', 'Subject line', 'This is the body.'); If a method returns another Apps Script class, you can chain method calls on one line. (Return types are shown both in autocomplete and in a method's reference documentation.) For example, the method DocumentApp.create() returns a Document; thus, the following two sections of code are equivalent: var doc = DocumentApp.create('New document'); var body = doc.getTab('t.0').asDocumentTab().getBody(); body.appendParagraph('New paragraph.'); // Same result as above. DocumentApp.create('New document').getTab('t.0').asDocumentTab().getBody() .appendParagraph('New paragraph.'); Accessing child classes Every service includes one or more child classes that cannot be accessed from the top level as a global object can. You cannot use the new keyword to construct these classes, as you can with standard JavaScript classes like Date; you can only access a child class by calling a method that returns it. If you're not sure how to access a certain class, visit the root page for the service's reference documentation and look for a method that returns the class you want. Dealing with interfaces A handful of services include special classes that are labeled as "interfaces" in the reference documentation. These are generic classes used as return types for methods that cannot determine the precise type in advance; for example, the Document service method Body.getChild(childIndex) returns a generic Element object. Element is an interface that represents some other class, possibly a Paragraph or Table. Interface objects are rarely useful on their own; instead, you usually want to call a method like Element.asParagraph() to cast the object back to a precise class. Working with enums Most services include a few enums (enumerated types) of named values. For example, the Drive service uses the enums Access and Permission to determine which users have access to a file or folder. In almost all cases, you access these enums from the global object. For example, a call to the method Folder.setSharing(accessType, permissionType) looks like this: // Creates a folder that anyone on the Internet can read from and write to. (Domain administrators can // prohibit this setting for Google Workspace users.) var folder = DriveApp.createFolder('Shared Folder'); folder.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.EDIT);
 
-### V8 Runtime
-
-V8 is the **only** runtime (Rhino was removed January 2026). Supports modern JavaScript: `const`, `let`, arrow functions, template literals, destructuring, classes, async/generators.
-
-**NOT available** (use Apps Script alternatives):
-
-| Missing API | Apps Script Alternative |
-|-------------|------------------------|
-| `setTimeout` / `setInterval` | `Utilities.sleep(ms)` (blocking) |
-| `fetch` | `UrlFetchApp.fetch()` |
-| `FormData` | Build payload manually |
-| `URL` | String manipulation |
-| `crypto` | `Utilities.computeDigest()` / `Utilities.getUuid()` |
-
-### Flush Before Returning
-
-Call `SpreadsheetApp.flush()` before returning from functions that modify the sheet, especially when called from HTML dialogs. Without it, changes may not be visible when the dialog shows "Done."
-
-### Simple vs Installable Triggers
-
-| Feature | Simple (`onEdit`) | Installable |
-|---------|-------------------|-------------|
-| Auth required | No | Yes |
-| Send email | No | Yes |
-| Access other files | No | Yes |
-| URL fetch | No | Yes |
-| Open dialogs | No | Yes |
-| Runs as | Active user | Trigger creator |
-
-Use simple triggers for lightweight reactions. Use installable triggers (via `ScriptApp.newTrigger()`) when you need email, external APIs, or cross-file access.
-
-### Custom Spreadsheet Functions
-
-Functions used as `=MY_FUNCTION()` in cells have strict limitations:
-
-```javascript
-/**
- * Calculates something custom.
- * @param {string} input The input value
- * @return {string} The result
- * @customfunction
- */
-function MY_FUNCTION(input) {
-  // Can use: basic JS, Utilities, CacheService
-  // CANNOT use: MailApp, UrlFetchApp, SpreadsheetApp.getUi(), triggers
-  return input.toUpperCase();
-}
+```
+Math
 ```
 
-- Must include `@customfunction` JSDoc tag
-- 30-second execution limit (vs 6 minutes for regular functions)
-- Cannot access services requiring authorisation
+**Pattern 5:** The script editor provides a "content assist" feature, more commonly called "autocomplete," which reveals the global objects as well as methods and enums that are valid in the script's current context. Autocomplete suggestions appear automatically whenever you type a period after a global object, enum, or method call that returns an Apps Script class. For example:
 
----
-
-## Quotas and Limits
-
-| Resource | Free Account | Google Workspace |
-|----------|-------------|-----------------|
-| Script runtime | 6 min / execution | 6 min / execution |
-| Time-driven trigger runtime | 30 min | 30 min |
-| Triggers total daily runtime | 90 min | 6 hours |
-| Triggers total | 20 per user per script | 20 per user per script |
-| Email recipients/day | 100 | 1,500 |
-| URL Fetch calls/day | 20,000 | 100,000 |
-| Properties storage | 500 KB | 500 KB |
-| Custom function runtime | 30 seconds | 30 seconds |
-| Simultaneous executions | 30 | 30 |
-
----
-
-## Modal Progress Dialog
-
-Block user interaction during long operations with a spinner that auto-closes. Use for any operation taking more than a few seconds.
-
-**Pattern: menu function > showProgress() > dialog calls action function > auto-close**
-
-```javascript
-function showProgress(message, serverFn) {
-  const html = HtmlService.createHtmlOutput(`
-    <style>
-      body { font-family: 'Google Sans', Arial, sans-serif; display: flex;
-        flex-direction: column; align-items: center; justify-content: center;
-        height: 100%; margin: 0; padding: 20px; box-sizing: border-box; }
-      .spinner { width: 36px; height: 36px; border: 4px solid #e0e0e0;
-        border-top: 4px solid #1a73e8; border-radius: 50%;
-        animation: spin 0.8s linear infinite; margin-bottom: 16px; }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .message { font-size: 14px; color: #333; text-align: center; }
-      .done { color: #1e8e3e; font-weight: 500; }
-      .error { color: #d93025; font-weight: 500; }
-    </style>
-    <div class="spinner" id="spinner"></div>
-    <div class="message" id="msg">${message}</div>
-    <script>
-      google.script.run
-        .withSuccessHandler(function(r) {
-          document.getElementById('spinner').style.display = 'none';
-          var m = document.getElementById('msg');
-          m.className = 'message done';
-          m.innerText = 'Done! ' + (r || '');
-          setTimeout(function() { google.script.host.close(); }, 1200);
-        })
-        .withFailureHandler(function(err) {
-          document.getElementById('spinner').style.display = 'none';
-          var m = document.getElementById('msg');
-          m.className = 'message error';
-          m.innerText = 'Error: ' + err.message;
-          setTimeout(function() { google.script.host.close(); }, 3000);
-        })
-        .${serverFn}();
-    </script>
-  `).setWidth(320).setHeight(140);
-  SpreadsheetApp.getUi().showModalDialog(html, 'Working...');
-}
-
-// Menu calls this wrapper
-function menuDoWork() {
-  showProgress('Processing data...', 'doTheWork');
-}
-
-// MUST be public (no underscore) for the dialog to call it
-function doTheWork() {
-  // ... do the work ...
-  SpreadsheetApp.flush();
-  return 'Processed 50 rows';  // shown in success message
-}
+```
+.
 ```
 
----
+**Pattern 6:** AI-generated Key Takeaways outlined_flag The ScriptApp class in Google Apps Script allows users to manage script publishing and triggers. ScriptApp provides properties to identify authorization status, event types, and installation sources of scripts. You can use ScriptApp methods to create, delete, and retrieve installable triggers associated with a script or specific documents, forms, or spreadsheets. ScriptApp includes methods to get authorization information, access tokens, identity tokens, and the script project's unique ID. The class also allows invalidating script authorization and controlling web app publishing. ScriptApp Access and manipulate script publishing and triggers. This class allows users to create script triggers and control publishing the script as a service. Properties PropertyTypeDescription AuthModeAuthModeAn enumeration that identifies which categories of authorized services Apps Script is able to execute through a triggered function. AuthorizationStatusAuthorizationStatusAn enumeration denoting the authorization status of a script. EventTypeEventTypeAn enumeration denoting the type of triggered event. InstallationSourceInstallationSourceAn enumeration denoting how the script was installed to the user as an add-on. TriggerSourceTriggerSourceAn enumeration denoting the source of the event that causes the trigger to fire. WeekDayWeekdayAn enumeration representing the days of the week. Methods MethodReturn typeBrief description deleteTrigger(trigger)voidRemoves the given trigger so it no longer runs. getAuthorizationInfo(authMode)AuthorizationInfoGets an object that checks if the user has granted authorization for all the script requirements. getAuthorizationInfo(authMode, oAuthScopes)AuthorizationInfoGets an object that checks if the user has granted authorization for the requested scopes. getIdentityToken()StringGets an OpenID Connect identity token for the effective user, if the openid scope has been granted. getInstallationSource()InstallationSourceReturns an enum value that indicates how the script came to be installed as an add-on for the current user (for example, whether the user installed it personally through the Chrome Web Store, or whether a domain administrator installed it for all users). getOAuthToken()StringGets the OAuth 2.0 access token for the effective user. getProjectTriggers()Trigger[]Gets all installable triggers associated with the current project and current user. getScriptId()StringGets the script project's unique ID. getService()ServiceGets an object used to control publishing the script as a web app. getUserTriggers(document)Trigger[]Gets all installable triggers owned by this user in the given document, for this script or add-on only. getUserTriggers(form)Trigger[]Gets all installable triggers owned by this user in the given form, for this script or add-on only. getUserTriggers(spreadsheet)Trigger[]Gets all installable triggers owned by this user in the given spreadsheet, for this script or add-on only. invalidateAuth()voidInvalidates the authorization the effective user has to execute the current script. newStateToken()StateTokenBuilderCreates a builder for a state token that can be used in a callback API (like an OAuth flow). newTrigger(functionName)TriggerBuilderBegins the process of creating an installable trigger that, when fired, calls a given function. requireAllScopes(authMode)voidValidates if the user has granted consent for all of the scopes requested by the script. requireScopes(authMode, oAuthScopes)voidValidates if the user has granted consent for the requested scopes. Deprecated methods MethodReturn typeBrief description getProjectKey()StringGets the project key of the current script. getScriptTriggers()Trigger[]Gets all installable triggers associated with the current project and current user. Detailed documentation deleteTrigger(trigger) Removes the given trigger so it no longer runs. // Deletes all triggers in the current project. const triggers = ScriptApp.getProjectTriggers(); for (let i = 0; i < triggers.length; i++) { ScriptApp.deleteTrigger(triggers[i]); } Parameters NameTypeDescription triggerTriggerThe trigger to delete. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getAuthorizationInfo(authMode) Gets an object that checks if the user has granted authorization for all the script requirements. The object also provides an authorization URL for users to grant those permissions, in case any of the script requirements are not authorized. Some script executions can start without a user's consent for all required scopes used by the script. The information in this object lets you control access to sections of code that require certain scopes and request authorization of those scopes for subsequent executions. const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL); const status = authInfo.getAuthorizationStatus(); const url = authInfo.getAuthorizationUrl(); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which authorization information is requested; in almost all cases, the value for authMode should be ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL), since no other authorization mode requires that users grant authorization. Return AuthorizationInfo — An object that can provide information about the user's authorization status. getAuthorizationInfo(authMode, oAuthScopes) Gets an object that checks if the user has granted authorization for the requested scopes. The object also provides an authorization URL for users to grant those permissions, in case any of the requested scopes are not authorized. Some script executions can start without a user's consent for all required scopes used by the script. The information in this object lets you control access to sections of code that require certain scopes and request authorization of those scopes for subsequent executions. Scopes that are invalid or not required by the script lead to an error. const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL, [ 'https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/presentations', ]); const status = authInfo.getAuthorizationStatus(); const url = authInfo.getAuthorizationUrl(); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which authorization information is requested; in almost all cases, the value for authMode should be ScriptApp.AuthMode.FULL, since no other authorization mode requires that users grant authorization. oAuthScopesString[]The OAuth scopes for which authorization information is requested. Return AuthorizationInfo — An object that provides information about the user's authorization status and an authorization URL in case some consents are missing. getIdentityToken() Gets an OpenID Connect identity token for the effective user, if the openid scope has been granted. This scope is not included by default, and you must add it as an explicit scope in the manifest file to request it. Include the scopes https://www.googleapis.com/auth/userinfo.email or https://www.googleapis.com/auth/userinfo.profile to return additional user information in the token. The returned ID token is an encoded JSON Web Token (JWT), and it must be decoded to extract information from it. The following examples shows how to decode the token and extract the effective user's Google profile ID. const idToken = ScriptApp.getIdentityToken(); const body = idToken.split('.')[1]; const decoded = Utilities .newBlob( Utilities.base64Decode(body), ) .getDataAsString(); const payload = JSON.parse(decoded); Logger.log(`Profile ID: ${payload.sub}`); See the OpenID Connect documentation for the full list of fields (claims) returned.Return String — The identity token if available; otherwise null. getInstallationSource() Returns an enum value that indicates how the script came to be installed as an add-on for the current user (for example, whether the user installed it personally through the Chrome Web Store, or whether a domain administrator installed it for all users). Return InstallationSource — The source of installation. getOAuthToken() Gets the OAuth 2.0 access token for the effective user. If the script's OAuth scopes are sufficient to authorize another Google API that normally requires its own OAuth flow (like Google Picker), scripts can bypass the second authorization prompt by passing this token instead. The token expires after a time (a few minutes at minimum); scripts should handle authorization failures and call this method to obtain a fresh token when needed. The token returned by this method only includes scopes that the script currently needs. Scopes that were previously authorized but are no longer used by the script are not included in the returned token. If additional OAuth scopes are needed beyond what the script itself requires, they can be specified in the script's manifest file. You can use this method to call Google APIs that Apps Script doesn't directly support. Pass the returned token in the `Authorization` header of an HTTP request using UrlFetchApp.fetch(url, params). const url = 'https://www.googleapis.com/drive/v3/files'; const method = 'GET'; const headers = { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), }; const response = UrlFetchApp.fetch(url, { method, headers, }); Return String — A string representation of the OAuth 2.0 token. getProjectTriggers() Gets all installable triggers associated with the current project and current user. Logger.log( `Current project has ${ScriptApp.getProjectTriggers().length} triggers.`, ); Return Trigger[] — An array of the current user's triggers associated with this project. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getScriptId() Gets the script project's unique ID. This is the preferred method to get the unique identifier for the script project as opposed to getProjectKey(). This ID can be used in all places where project key was previously provided. Return String — The script project's ID. getService() Gets an object used to control publishing the script as a web app. // Get the URL of the published web app. const url = ScriptApp.getService().getUrl(); Return Service — An object used to observe and control publishing the script as a web app. getUserTriggers(document) Gets all installable triggers owned by this user in the given document, for this script or add-on only. This method cannot be used to see the triggers attached to other scripts. const doc = DocumentApp.getActiveDocument(); const triggers = ScriptApp.getUserTriggers(doc); // Log the handler function for the first trigger in the array. Logger.log(triggers[0].getHandlerFunction()); Parameters NameTypeDescription documentDocumentA Google Docs file that may contain installable triggers. Return Trigger[] — An array of triggers owned by this user in the given document. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getUserTriggers(form) Gets all installable triggers owned by this user in the given form, for this script or add-on only. This method cannot be used to see the triggers attached to other scripts. const form = FormApp.getActiveForm(); const triggers = ScriptApp.getUserTriggers(form); // Log the trigger source for the first trigger in the array. Logger.log(triggers[0].getTriggerSource()); Parameters NameTypeDescription formFormA Google Forms file that may contain installable triggers. Return Trigger[] — An array of triggers owned by this user in the given form. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getUserTriggers(spreadsheet) Gets all installable triggers owned by this user in the given spreadsheet, for this script or add-on only. This method cannot be used to see the triggers attached to other scripts. const ss = SpreadsheetApp.getActiveSpreadsheet(); const triggers = ScriptApp.getUserTriggers(ss); // Log the event type for the first trigger in the array. Logger.log(triggers[0].getEventType()); Parameters NameTypeDescription spreadsheetSpreadsheetA Google Sheets file that may contain installable triggers. Return Trigger[] — An array of triggers owned by this user in the given spreadsheet. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp invalidateAuth() Invalidates the authorization the effective user has to execute the current script. Used to invalidate any permissions for the current script. This is especially useful for functions tagged as one-shot authorization. Since one-shot authorization functions can only be called the first run after the script has acquired authorization, if you wish to perform an action afterwards, you must revoke any authorization the script had, so the user can see the authorization dialog again. ScriptApp.invalidateAuth(); Throws Error — when invalidation fails newStateToken() Creates a builder for a state token that can be used in a callback API (like an OAuth flow). // Generate a callback URL, given the name of a callback function. The script // does not need to be published as a web app; the /usercallback URL suffix // replaces /edit in any script's URL. function getCallbackURL(callbackFunction) { // IMPORTANT: Replace string below with the URL from your script, minus the // /edit at the end. const scriptUrl = 'https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz'; const urlSuffix = '/usercallback?state='; const stateToken = ScriptApp.newStateToken() .withMethod(callbackFunction) .withTimeout(120) .createToken(); return scriptUrl + urlSuffix + stateToken; } In most OAuth2 flows, the state token is passed to the authorization endpoint directly (not as part of the callback URL), and the authorization endpoint then passes it as part of the callback URL. For example: The script redirects the user to OAuth2 authorize URL: https://accounts.google.com/o/oauth2/auth?state=token_generated_with_this_method&callback_uri=https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz/usercallback&other_oauth2_parameters The user clicks authorize, and the OAuth2 authorization page redirects the user back to https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz/usercallback?state=token_generated_with_this_method&other_params_that_include_tokens_or_grants The above redirect (back to http://script.google.com/...), causes the browser request to /usercallback, which invokes the method specified by StateTokenBuilder.withMethod(method). Return StateTokenBuilder — An object used to continue the state-token-building process. newTrigger(functionName) Begins the process of creating an installable trigger that, when fired, calls a given function. // Creates an edit trigger for a spreadsheet identified by ID. ScriptApp.newTrigger('myFunction') .forSpreadsheet('1234567890abcdefghijklmnopqrstuvwxyz_a1b2c3') .onEdit() .create(); Before creating a trigger, verify that the associated function has all the necessary OAuth permissions Parameters NameTypeDescription functionNameStringThe function to call when the trigger fires. You can use functions from included libraries, such as Library.libFunction1. Return TriggerBuilder — An object used to continue the trigger-building process. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp requireAllScopes(authMode) Validates if the user has granted consent for all of the scopes requested by the script. Use this method if an execution flow relies on all of the scopes that a script requests. If any consents are missing, then this method ends the current execution and renders an authorization prompt to request the missing consents. This method only works when users run the script from a surface that supports granular consent, for example, from within the Apps Script IDE. When the script is run with missing consents from an unsupported surface, such as a Google Workspace add-on, the script renders an authorization prompt at the start of the execution to request all the scopes. ScriptApp.requireAllScopes(ScriptApp.AuthMode.FULL); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which script scopes needs to be evaluated, in almost all cases, the value for authMode should be ScriptApp.AuthMode.FULL, since no other authorization mode requires that users grant authorization. requireScopes(authMode, oAuthScopes) Validates if the user has granted consent for the requested scopes. Use this method if an execution flow relies on one or more services. If any of the specified consents are missing, then this method ends the current execution and renders an authorization prompt to request the missing consents. Scopes that are invalid or not required by the script lead to an error. This method only works when users run the script from a surface that supports granular consent, for example, from within the Apps Script IDE. When the script is run with missing consents from an unsupported surface, such as a Google Workspace add-on, the script renders an authorization prompt at the start of the execution to request all the scopes. ScriptApp.requireScopes(ScriptApp.AuthMode.FULL, [ 'https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/presentations', ]); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which requested scopes needs to be evaluated, in almost all cases, the value for authMode should be ScriptApp.AuthMode.FULL, since no other authorization mode requires that users grant authorization. oAuthScopesString[]The OAuth scopes that are required to complete the given execution flow. Deprecated methods getProjectKey() Deprecated. use getScriptId() instead. Gets the project key of the current script. The project key is a unique identifier for scripts and used to compose the callback URL used in conjunction with newStateToken(). When called in a library, this returns the project key of the outer-most script being executed. Return String — The project key of the current script. getScriptTriggers() Deprecated. This function is deprecated and should not be used in new scripts. Gets all installable triggers associated with the current project and current user. Logger.log( `Current script has ${ScriptApp.getScriptTriggers().length} triggers.`, ); Return Trigger[] — An array of the current user's triggers associated with this project. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp
 
-## Common Patterns
-
-### Toast Notifications
-
-```javascript
-SpreadsheetApp.getActiveSpreadsheet().toast('Operation complete!', 'Title', 5);
-// Arguments: message, title, duration in seconds (-1 = until dismissed)
+```
+ScriptApp
 ```
 
-### Alert and Prompt Dialogs
+**Pattern 7:** ScriptApp Access and manipulate script publishing and triggers. This class allows users to create script triggers and control publishing the script as a service. Properties PropertyTypeDescription AuthModeAuthModeAn enumeration that identifies which categories of authorized services Apps Script is able to execute through a triggered function. AuthorizationStatusAuthorizationStatusAn enumeration denoting the authorization status of a script. EventTypeEventTypeAn enumeration denoting the type of triggered event. InstallationSourceInstallationSourceAn enumeration denoting how the script was installed to the user as an add-on. TriggerSourceTriggerSourceAn enumeration denoting the source of the event that causes the trigger to fire. WeekDayWeekdayAn enumeration representing the days of the week. Methods MethodReturn typeBrief description deleteTrigger(trigger)voidRemoves the given trigger so it no longer runs. getAuthorizationInfo(authMode)AuthorizationInfoGets an object that checks if the user has granted authorization for all the script requirements. getAuthorizationInfo(authMode, oAuthScopes)AuthorizationInfoGets an object that checks if the user has granted authorization for the requested scopes. getIdentityToken()StringGets an OpenID Connect identity token for the effective user, if the openid scope has been granted. getInstallationSource()InstallationSourceReturns an enum value that indicates how the script came to be installed as an add-on for the current user (for example, whether the user installed it personally through the Chrome Web Store, or whether a domain administrator installed it for all users). getOAuthToken()StringGets the OAuth 2.0 access token for the effective user. getProjectTriggers()Trigger[]Gets all installable triggers associated with the current project and current user. getScriptId()StringGets the script project's unique ID. getService()ServiceGets an object used to control publishing the script as a web app. getUserTriggers(document)Trigger[]Gets all installable triggers owned by this user in the given document, for this script or add-on only. getUserTriggers(form)Trigger[]Gets all installable triggers owned by this user in the given form, for this script or add-on only. getUserTriggers(spreadsheet)Trigger[]Gets all installable triggers owned by this user in the given spreadsheet, for this script or add-on only. invalidateAuth()voidInvalidates the authorization the effective user has to execute the current script. newStateToken()StateTokenBuilderCreates a builder for a state token that can be used in a callback API (like an OAuth flow). newTrigger(functionName)TriggerBuilderBegins the process of creating an installable trigger that, when fired, calls a given function. requireAllScopes(authMode)voidValidates if the user has granted consent for all of the scopes requested by the script. requireScopes(authMode, oAuthScopes)voidValidates if the user has granted consent for the requested scopes. Deprecated methods MethodReturn typeBrief description getProjectKey()StringGets the project key of the current script. getScriptTriggers()Trigger[]Gets all installable triggers associated with the current project and current user. Detailed documentation deleteTrigger(trigger) Removes the given trigger so it no longer runs. // Deletes all triggers in the current project. const triggers = ScriptApp.getProjectTriggers(); for (let i = 0; i < triggers.length; i++) { ScriptApp.deleteTrigger(triggers[i]); } Parameters NameTypeDescription triggerTriggerThe trigger to delete. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getAuthorizationInfo(authMode) Gets an object that checks if the user has granted authorization for all the script requirements. The object also provides an authorization URL for users to grant those permissions, in case any of the script requirements are not authorized. Some script executions can start without a user's consent for all required scopes used by the script. The information in this object lets you control access to sections of code that require certain scopes and request authorization of those scopes for subsequent executions. const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL); const status = authInfo.getAuthorizationStatus(); const url = authInfo.getAuthorizationUrl(); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which authorization information is requested; in almost all cases, the value for authMode should be ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL), since no other authorization mode requires that users grant authorization. Return AuthorizationInfo — An object that can provide information about the user's authorization status. getAuthorizationInfo(authMode, oAuthScopes) Gets an object that checks if the user has granted authorization for the requested scopes. The object also provides an authorization URL for users to grant those permissions, in case any of the requested scopes are not authorized. Some script executions can start without a user's consent for all required scopes used by the script. The information in this object lets you control access to sections of code that require certain scopes and request authorization of those scopes for subsequent executions. Scopes that are invalid or not required by the script lead to an error. const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL, [ 'https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/presentations', ]); const status = authInfo.getAuthorizationStatus(); const url = authInfo.getAuthorizationUrl(); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which authorization information is requested; in almost all cases, the value for authMode should be ScriptApp.AuthMode.FULL, since no other authorization mode requires that users grant authorization. oAuthScopesString[]The OAuth scopes for which authorization information is requested. Return AuthorizationInfo — An object that provides information about the user's authorization status and an authorization URL in case some consents are missing. getIdentityToken() Gets an OpenID Connect identity token for the effective user, if the openid scope has been granted. This scope is not included by default, and you must add it as an explicit scope in the manifest file to request it. Include the scopes https://www.googleapis.com/auth/userinfo.email or https://www.googleapis.com/auth/userinfo.profile to return additional user information in the token. The returned ID token is an encoded JSON Web Token (JWT), and it must be decoded to extract information from it. The following examples shows how to decode the token and extract the effective user's Google profile ID. const idToken = ScriptApp.getIdentityToken(); const body = idToken.split('.')[1]; const decoded = Utilities .newBlob( Utilities.base64Decode(body), ) .getDataAsString(); const payload = JSON.parse(decoded); Logger.log(`Profile ID: ${payload.sub}`); See the OpenID Connect documentation for the full list of fields (claims) returned.Return String — The identity token if available; otherwise null. getInstallationSource() Returns an enum value that indicates how the script came to be installed as an add-on for the current user (for example, whether the user installed it personally through the Chrome Web Store, or whether a domain administrator installed it for all users). Return InstallationSource — The source of installation. getOAuthToken() Gets the OAuth 2.0 access token for the effective user. If the script's OAuth scopes are sufficient to authorize another Google API that normally requires its own OAuth flow (like Google Picker), scripts can bypass the second authorization prompt by passing this token instead. The token expires after a time (a few minutes at minimum); scripts should handle authorization failures and call this method to obtain a fresh token when needed. The token returned by this method only includes scopes that the script currently needs. Scopes that were previously authorized but are no longer used by the script are not included in the returned token. If additional OAuth scopes are needed beyond what the script itself requires, they can be specified in the script's manifest file. You can use this method to call Google APIs that Apps Script doesn't directly support. Pass the returned token in the `Authorization` header of an HTTP request using UrlFetchApp.fetch(url, params). const url = 'https://www.googleapis.com/drive/v3/files'; const method = 'GET'; const headers = { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), }; const response = UrlFetchApp.fetch(url, { method, headers, }); Return String — A string representation of the OAuth 2.0 token. getProjectTriggers() Gets all installable triggers associated with the current project and current user. Logger.log( `Current project has ${ScriptApp.getProjectTriggers().length} triggers.`, ); Return Trigger[] — An array of the current user's triggers associated with this project. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getScriptId() Gets the script project's unique ID. This is the preferred method to get the unique identifier for the script project as opposed to getProjectKey(). This ID can be used in all places where project key was previously provided. Return String — The script project's ID. getService() Gets an object used to control publishing the script as a web app. // Get the URL of the published web app. const url = ScriptApp.getService().getUrl(); Return Service — An object used to observe and control publishing the script as a web app. getUserTriggers(document) Gets all installable triggers owned by this user in the given document, for this script or add-on only. This method cannot be used to see the triggers attached to other scripts. const doc = DocumentApp.getActiveDocument(); const triggers = ScriptApp.getUserTriggers(doc); // Log the handler function for the first trigger in the array. Logger.log(triggers[0].getHandlerFunction()); Parameters NameTypeDescription documentDocumentA Google Docs file that may contain installable triggers. Return Trigger[] — An array of triggers owned by this user in the given document. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getUserTriggers(form) Gets all installable triggers owned by this user in the given form, for this script or add-on only. This method cannot be used to see the triggers attached to other scripts. const form = FormApp.getActiveForm(); const triggers = ScriptApp.getUserTriggers(form); // Log the trigger source for the first trigger in the array. Logger.log(triggers[0].getTriggerSource()); Parameters NameTypeDescription formFormA Google Forms file that may contain installable triggers. Return Trigger[] — An array of triggers owned by this user in the given form. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp getUserTriggers(spreadsheet) Gets all installable triggers owned by this user in the given spreadsheet, for this script or add-on only. This method cannot be used to see the triggers attached to other scripts. const ss = SpreadsheetApp.getActiveSpreadsheet(); const triggers = ScriptApp.getUserTriggers(ss); // Log the event type for the first trigger in the array. Logger.log(triggers[0].getEventType()); Parameters NameTypeDescription spreadsheetSpreadsheetA Google Sheets file that may contain installable triggers. Return Trigger[] — An array of triggers owned by this user in the given spreadsheet. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp invalidateAuth() Invalidates the authorization the effective user has to execute the current script. Used to invalidate any permissions for the current script. This is especially useful for functions tagged as one-shot authorization. Since one-shot authorization functions can only be called the first run after the script has acquired authorization, if you wish to perform an action afterwards, you must revoke any authorization the script had, so the user can see the authorization dialog again. ScriptApp.invalidateAuth(); Throws Error — when invalidation fails newStateToken() Creates a builder for a state token that can be used in a callback API (like an OAuth flow). // Generate a callback URL, given the name of a callback function. The script // does not need to be published as a web app; the /usercallback URL suffix // replaces /edit in any script's URL. function getCallbackURL(callbackFunction) { // IMPORTANT: Replace string below with the URL from your script, minus the // /edit at the end. const scriptUrl = 'https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz'; const urlSuffix = '/usercallback?state='; const stateToken = ScriptApp.newStateToken() .withMethod(callbackFunction) .withTimeout(120) .createToken(); return scriptUrl + urlSuffix + stateToken; } In most OAuth2 flows, the state token is passed to the authorization endpoint directly (not as part of the callback URL), and the authorization endpoint then passes it as part of the callback URL. For example: The script redirects the user to OAuth2 authorize URL: https://accounts.google.com/o/oauth2/auth?state=token_generated_with_this_method&callback_uri=https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz/usercallback&other_oauth2_parameters The user clicks authorize, and the OAuth2 authorization page redirects the user back to https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz/usercallback?state=token_generated_with_this_method&other_params_that_include_tokens_or_grants The above redirect (back to http://script.google.com/...), causes the browser request to /usercallback, which invokes the method specified by StateTokenBuilder.withMethod(method). Return StateTokenBuilder — An object used to continue the state-token-building process. newTrigger(functionName) Begins the process of creating an installable trigger that, when fired, calls a given function. // Creates an edit trigger for a spreadsheet identified by ID. ScriptApp.newTrigger('myFunction') .forSpreadsheet('1234567890abcdefghijklmnopqrstuvwxyz_a1b2c3') .onEdit() .create(); Before creating a trigger, verify that the associated function has all the necessary OAuth permissions Parameters NameTypeDescription functionNameStringThe function to call when the trigger fires. You can use functions from included libraries, such as Library.libFunction1. Return TriggerBuilder — An object used to continue the trigger-building process. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp requireAllScopes(authMode) Validates if the user has granted consent for all of the scopes requested by the script. Use this method if an execution flow relies on all of the scopes that a script requests. If any consents are missing, then this method ends the current execution and renders an authorization prompt to request the missing consents. This method only works when users run the script from a surface that supports granular consent, for example, from within the Apps Script IDE. When the script is run with missing consents from an unsupported surface, such as a Google Workspace add-on, the script renders an authorization prompt at the start of the execution to request all the scopes. ScriptApp.requireAllScopes(ScriptApp.AuthMode.FULL); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which script scopes needs to be evaluated, in almost all cases, the value for authMode should be ScriptApp.AuthMode.FULL, since no other authorization mode requires that users grant authorization. requireScopes(authMode, oAuthScopes) Validates if the user has granted consent for the requested scopes. Use this method if an execution flow relies on one or more services. If any of the specified consents are missing, then this method ends the current execution and renders an authorization prompt to request the missing consents. Scopes that are invalid or not required by the script lead to an error. This method only works when users run the script from a surface that supports granular consent, for example, from within the Apps Script IDE. When the script is run with missing consents from an unsupported surface, such as a Google Workspace add-on, the script renders an authorization prompt at the start of the execution to request all the scopes. ScriptApp.requireScopes(ScriptApp.AuthMode.FULL, [ 'https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/presentations', ]); Parameters NameTypeDescription authModeAuthModeThe authorization mode for which requested scopes needs to be evaluated, in almost all cases, the value for authMode should be ScriptApp.AuthMode.FULL, since no other authorization mode requires that users grant authorization. oAuthScopesString[]The OAuth scopes that are required to complete the given execution flow. Deprecated methods getProjectKey() Deprecated. use getScriptId() instead. Gets the project key of the current script. The project key is a unique identifier for scripts and used to compose the callback URL used in conjunction with newStateToken(). When called in a library, this returns the project key of the outer-most script being executed. Return String — The project key of the current script. getScriptTriggers() Deprecated. This function is deprecated and should not be used in new scripts. Gets all installable triggers associated with the current project and current user. Logger.log( `Current script has ${ScriptApp.getScriptTriggers().length} triggers.`, ); Return Trigger[] — An array of the current user's triggers associated with this project. Authorization Scripts that use this method require authorization with one or more of the following scopes: https://www.googleapis.com/auth/script.scriptapp
 
-```javascript
-const ui = SpreadsheetApp.getUi();
-
-// Yes/No confirmation
-const response = ui.alert('Delete this data?', 'This cannot be undone.',
-  ui.ButtonSet.YES_NO);
-if (response === ui.Button.YES) { /* proceed */ }
-
-// Prompt for input
-const result = ui.prompt('Enter your name:', ui.ButtonSet.OK_CANCEL);
-if (result.getSelectedButton() === ui.Button.OK) {
-  const name = result.getResponseText();
-}
+```
+AuthMode
 ```
 
-### Sidebar Apps
+**Pattern 8:** newStateToken() Creates a builder for a state token that can be used in a callback API (like an OAuth flow). // Generate a callback URL, given the name of a callback function. The script // does not need to be published as a web app; the /usercallback URL suffix // replaces /edit in any script's URL. function getCallbackURL(callbackFunction) { // IMPORTANT: Replace string below with the URL from your script, minus the // /edit at the end. const scriptUrl = 'https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz'; const urlSuffix = '/usercallback?state='; const stateToken = ScriptApp.newStateToken() .withMethod(callbackFunction) .withTimeout(120) .createToken(); return scriptUrl + urlSuffix + stateToken; } In most OAuth2 flows, the state token is passed to the authorization endpoint directly (not as part of the callback URL), and the authorization endpoint then passes it as part of the callback URL. For example: The script redirects the user to OAuth2 authorize URL: https://accounts.google.com/o/oauth2/auth?state=token_generated_with_this_method&callback_uri=https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz/usercallback&other_oauth2_parameters The user clicks authorize, and the OAuth2 authorization page redirects the user back to https://script.google.com/macros/d/1234567890abcdefghijklmonpqrstuvwxyz/usercallback?state=token_generated_with_this_method&other_params_that_include_tokens_or_grants The above redirect (back to http://script.google.com/...), causes the browser request to /usercallback, which invokes the method specified by StateTokenBuilder.withMethod(method). Return StateTokenBuilder — An object used to continue the state-token-building process.
 
-HTML panel on the right. Use `google.script.run` to call server functions.
-
-```javascript
-function showSidebar() {
-  const html = HtmlService.createHtmlOutput(`
-    <h3>Quick Entry</h3>
-    <select id="worker"><option>Craig</option><option>Steve</option></select>
-    <input id="suburb" placeholder="Suburb">
-    <button onclick="submit()">Add Job</button>
-    <script>
-      function submit() {
-        google.script.run.withSuccessHandler(function() { alert('Added!'); })
-          .addJob(document.getElementById('worker').value,
-                  document.getElementById('suburb').value);
-      }
-    </script>
-  `).setTitle('Job Entry').setWidth(300);
-  SpreadsheetApp.getUi().showSidebar(html);
-}
-
-function addJob(worker, suburb) { // MUST be public (no underscore)
-  SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().appendRow([new Date(), worker, suburb]);
-}
+```
+newStateToken()
 ```
 
-### Triggers
+## Reference Files
 
-**onEdit (simple trigger)** -- limited permissions but no auth needed:
+This skill includes comprehensive documentation in `references/`:
 
-```javascript
-function onEdit(e) {
-  const sheet = e.source.getActiveSheet();
-  if (sheet.getName() !== 'Data') return;
-  if (e.range.getColumn() !== 3) return;
-  // Auto-timestamp when column C is edited
-  sheet.getRange(e.range.getRow(), 4).setValue(new Date());
-}
-```
+- **getting_started.md** - Getting Started documentation
+- **other.md** - Other documentation
+- **reference.md** - Reference documentation
 
-**Installable triggers** -- create via script, run setup function once manually:
+Use `view` to read specific reference files when detailed information is needed.
 
-```javascript
-function createTriggers() {
-  // Time-driven: run every day at 8am
-  ScriptApp.newTrigger('dailyReport')
-    .timeBased().atHour(8).everyDays(1).create();
+## Working with This Skill
 
-  // On edit with full permissions (can send email, fetch URLs)
-  ScriptApp.newTrigger('onEditFull')
-    .forSpreadsheet(SpreadsheetApp.getActive()).onEdit().create();
+### For Beginners
+Start with the getting_started or tutorials reference files for foundational concepts.
 
-  // On form submit
-  ScriptApp.newTrigger('onFormSubmit')
-    .forSpreadsheet(SpreadsheetApp.getActive()).onFormSubmit().create();
-}
-```
+### For Specific Features
+Use the appropriate category reference file (api, guides, etc.) for detailed information.
 
-### Email from Sheets
+### For Code Examples
+The quick reference section above contains common patterns extracted from the official docs.
 
-```javascript
-function emailWeeklySchedule() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const data = sheet.getRange('A2:E10').getDisplayValues();
-  let body = '<h2>Weekly Schedule</h2><table border="1" cellpadding="8">';
-  body += '<tr><th>Job</th><th>Suburb</th><th>Time</th><th>Price</th></tr>';
-  for (const row of data) {
-    if (row[0]) body += '<tr>' + row.map(c => '<td>' + c + '</td>').join('') + '</tr>';
-  }
-  body += '</table>';
-  MailApp.sendEmail({ to: 'worker@example.com',
-    subject: 'Schedule - Week ' + sheet.getName(), htmlBody: body });
-}
-```
+## Resources
 
-### PDF Export
+### references/
+Organized documentation extracted from official sources. These files contain:
+- Detailed explanations
+- Code examples with language annotations
+- Links to original documentation
+- Table of contents for quick navigation
 
-Non-obvious URL construction -- export parameters are undocumented:
+### scripts/
+Add helper scripts here for common automation tasks.
 
-```javascript
-function exportSheetAsPdf() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const url = ss.getUrl().replace(/\/edit.*$/, '')
-    + '/export?exportFormat=pdf&format=pdf&size=A4&portrait=true'
-    + '&fitw=true&sheetnames=false&printtitle=false&gridlines=false'
-    + '&gid=' + ss.getActiveSheet().getSheetId();
-  const blob = UrlFetchApp.fetch(url, {
-    headers: { 'Authorization': 'Bearer ' + ScriptApp.getOAuthToken() }
-  }).getBlob().setName('report.pdf');
-  MailApp.sendEmail({ to: 'boss@example.com', subject: 'Weekly Report PDF',
-    body: 'Attached.', attachments: [blob] });
-}
-```
+### assets/
+Add templates, boilerplate, or example projects here.
 
-### External API Calls
+## Notes
 
-```javascript
-// GET
-function fetchData() {
-  const r = UrlFetchApp.fetch('https://api.example.com/data', {
-    headers: { 'Authorization': 'Bearer ' + getApiKey() } });
-  return JSON.parse(r.getContentText());
-}
+- This skill was automatically generated from official documentation
+- Reference files preserve the structure and examples from source docs
+- Code examples include language detection for better syntax highlighting
+- Quick reference patterns are extracted from common usage examples in the docs
 
-// POST (muteHttpExceptions to handle errors yourself)
-function postData(payload) {
-  const r = UrlFetchApp.fetch('https://api.example.com/submit', {
-    method: 'post', contentType: 'application/json',
-    payload: JSON.stringify(payload), muteHttpExceptions: true });
-  if (r.getResponseCode() !== 200) throw new Error('API error: ' + r.getContentText());
-  return JSON.parse(r.getContentText());
-}
-```
+## Updating
 
-### Data Validation Dropdowns
-
-```javascript
-// Dropdown from list
-const rule = SpreadsheetApp.newDataValidation()
-  .requireValueInList(['Option A', 'Option B', 'Option C'], true)
-  .setAllowInvalid(false).setHelpText('Select an option').build();
-sheet.getRange('C3:C50').setDataValidation(rule);
-
-// Dropdown from range (e.g. a Lookups sheet)
-const rule2 = SpreadsheetApp.newDataValidation()
-  .requireValueInRange(ss.getSheetByName('Lookups').getRange('A1:A100')).build();
-sheet.getRange('B3:B50').setDataValidation(rule2);
-```
-
-### Properties Service (Persistent Storage)
-
-Three scopes: `PropertiesService.getScriptProperties()` (shared), `.getUserProperties()` (per user), `.getDocumentProperties()` (per spreadsheet). All use `.setProperty(key, value)` / `.getProperty(key)`. 500 KB limit.
-
----
-
-## Recipes
-
-### Auto-Archive Completed Rows
-
-Move rows with "Complete" status to an Archive sheet. Processes bottom-up to avoid shifting row indices.
-
-```javascript
-function archiveCompleted() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const source = ss.getSheetByName('Active');
-  const archive = ss.getSheetByName('Archive');
-  const data = source.getDataRange().getValues();
-  const statusCol = 4; // column E (0-indexed)
-
-  for (let i = data.length - 1; i >= 1; i--) {
-    if (data[i][statusCol] === 'Complete') {
-      archive.appendRow(data[i]);
-      source.deleteRow(i + 1); // +1 for 1-indexed rows
-    }
-  }
-  SpreadsheetApp.flush();
-}
-```
-
-### Duplicate Detection and Highlighting
-
-Pattern: read column with `getValues()`, track seen values in an object, highlight both the original and duplicate rows with `setBackground('#f4cccc')`. Process all data in one `getValues()` call, then set backgrounds individually (unavoidable for scattered highlights).
-
-### Batch Email Sender
-
-Key pattern: check `MailApp.getRemainingDailyQuota()` before sending, mark status per row, wrap each send in try/catch.
-
-```javascript
-function sendBatchEmails() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Recipients');
-  const data = sheet.getRange('A2:C' + sheet.getLastRow()).getValues(); // Email, Name, Status
-  const remaining = MailApp.getRemainingDailyQuota();
-  if (remaining < data.length) {
-    SpreadsheetApp.getUi().alert('Only ' + remaining + ' emails left. Need ' + data.length);
-    return;
-  }
-  let sent = 0;
-  for (let i = 0; i < data.length; i++) {
-    const [email, name, status] = data[i];
-    if (!email || status === 'Sent') continue;
-    try {
-      MailApp.sendEmail({ to: email, subject: 'Your Weekly Update',
-        htmlBody: '<p>Hi ' + name + ',</p><p>Here is your update...</p>' });
-      sheet.getRange(i + 2, 3).setValue('Sent'); sent++;
-    } catch (e) { sheet.getRange(i + 2, 3).setValue('Error: ' + e.message); }
-  }
-  SpreadsheetApp.flush();
-}
-```
-
-### Summary Dashboard Generator
-
-Pattern: loop numbered weekly tabs (`01`-`52`), read summary cells from each, write aggregated rows into a Summary sheet. Use `ss.getSheetByName(tabName)` to iterate, `ss.insertSheet('Summary')` if it doesn't exist, `summary.autoResizeColumns()` at end, `flush()` before return.
-
----
-
-## Error Handling
-
-Always wrap external calls in try/catch. Use `muteHttpExceptions: true` to handle HTTP errors yourself. Re-throw for dialog error handlers.
-
-```javascript
-function fetchExternalData() {
-  try {
-    const response = UrlFetchApp.fetch('https://api.example.com/data', {
-      headers: { 'Authorization': 'Bearer ' + getApiKey() },
-      muteHttpExceptions: true
-    });
-    if (response.getResponseCode() !== 200)
-      throw new Error('API returned ' + response.getResponseCode());
-    return JSON.parse(response.getContentText());
-  } catch (e) { Logger.log('Error: ' + e.message); throw e; }
-}
-```
-
----
-
-## Error Prevention
-
-| Mistake | Fix |
-|---------|-----|
-| Dialog can't call function | Remove trailing `_` from function name |
-| Script is slow on large data | Use `getValues()`/`setValues()` batch operations |
-| Changes not visible after dialog | Add `SpreadsheetApp.flush()` before return |
-| `onEdit` can't send email | Use installable trigger via `ScriptApp.newTrigger()` |
-| Custom function times out | 30s limit -- simplify or move to regular function |
-| `setTimeout` not found | Use `Utilities.sleep(ms)` (blocking) |
-| Script exceeds 6 min | Break into chunks, use time-driven trigger for batches |
-| Auth popup doesn't appear | User must click Advanced > Go to (unsafe) > Allow |
-
-## Debugging
-
-- **Logger.log()** / **console.log()** -- View > Execution Log in Apps Script editor
-- **Run manually** -- select function in editor dropdown > Run
-- **Executions tab** -- shows all recent runs with errors and stack traces
-- **Trigger failures** -- script.google.com > My Projects > Executions
-- **Always test on a copy** of the sheet before deploying
-
-## Deployment Checklist
-
-- [ ] All functions called from HTML dialogs are public (no trailing underscore)
-- [ ] `SpreadsheetApp.flush()` called before returning from modifying functions
-- [ ] Error handling (try/catch) around external API calls and MailApp
-- [ ] Configuration constants at the top of the file
-- [ ] Header comment with install instructions
-- [ ] Tested on a copy of the sheet
-- [ ] Considered multi-user behaviour (different permissions, different active sheet)
-- [ ] Long operations use modal progress dialogs
-- [ ] No hardcoded sheet names -- use configuration constants
-- [ ] Checked email quota before batch sends
-
----
-
-## Reconstruct from Apps Script docs if needed
-
-- **Row/Column show/hide** — `sheet.hideRows()`, `showRows()`, `isRowHiddenByUser()`
-- **Formatting** — `setBackground()`, `setFontWeight()`, `setBorder()`, `setNumberFormat()`, conditional formatting
-- **Data protection** — `range.protect()`, `setUnprotectedRanges()`, editor management
-- **Multiple sheets** — `getSheetByName()`, looping numbered tabs, `copyTo()`, `insertSheet()`
-- **Auto-numbering rows** — `onEdit` trigger to auto-number column A when column B is edited
-- **Google Chat webhooks** — POST to `chat.googleapis.com` with JSON payload
+To refresh this skill with updated documentation:
+1. Re-run the scraper with the same configuration
+2. The skill will be rebuilt with the latest information

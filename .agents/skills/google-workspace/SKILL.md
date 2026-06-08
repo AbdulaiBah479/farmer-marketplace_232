@@ -1,335 +1,385 @@
 ---
 name: google-workspace
-description: "Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python."
-version: 1.1.0
-author: Nous Research
-license: MIT
-platforms: [linux, macos, windows]
-required_credential_files:
-  - path: google_token.json
-    description: Google OAuth2 token (created by setup script)
-  - path: google_client_secret.json
-    description: Google OAuth2 client credentials (downloaded from Google Cloud Console)
-metadata:
-  hermes:
-    tags: [Google, Gmail, Calendar, Drive, Sheets, Docs, Contacts, Email, OAuth]
-    homepage: https://github.com/NousResearch/hermes-agent
-    related_skills: [himalaya]
+description: |
+  Build integrations with Google Workspace APIs (Gmail, Calendar, Drive, Sheets, Docs, Chat, Meet, Forms, Tasks, Admin SDK). Covers OAuth 2.0, service accounts, rate limits, batch operations, and Cloudflare Workers patterns.
+
+  Use when building MCP servers, automation tools, or integrations with any Google Workspace API, or troubleshooting OAuth errors, rate limit 429 errors, scope issues, or API-specific gotchas.
+user-invocable: true
 ---
 
-# Google Workspace
+# Google Workspace APIs
 
-Gmail, Calendar, Drive, Contacts, Sheets, and Docs — through Hermes-managed OAuth and a thin CLI wrapper. When `gws` is installed, the skill uses it as the execution backend for broader Google Workspace coverage; otherwise it falls back to the bundled Python client implementation.
+**Status**: Production Ready
+**Last Updated**: 2026-01-09
+**Dependencies**: Cloudflare Workers (recommended), Google Cloud Project
+**Skill Version**: 1.0.0
 
-## References
+---
 
-- `references/gmail-search-syntax.md` — Gmail search operators (is:unread, from:, newer_than:, etc.)
+## Quick Reference
 
-## Scripts
+| API | Common Use Cases | Reference |
+|-----|------------------|-----------|
+| Gmail | Email automation, inbox management | [gmail-api.md](references/gmail-api.md) |
+| Calendar | Event management, scheduling | [calendar-api.md](references/calendar-api.md) |
+| Drive | File storage, sharing | [drive-api.md](references/drive-api.md) |
+| Sheets | Spreadsheet data, reporting | [sheets-api.md](references/sheets-api.md) |
+| Docs | Document generation | [docs-api.md](references/docs-api.md) |
+| Chat | Bots, webhooks, spaces | [chat-api.md](references/chat-api.md) |
+| Meet | Video conferencing | [meet-api.md](references/meet-api.md) |
+| Forms | Form responses, creation | [forms-api.md](references/forms-api.md) |
+| Tasks | Task management | [tasks-api.md](references/tasks-api.md) |
+| Admin SDK | User/group management | [admin-sdk.md](references/admin-sdk.md) |
+| People | Contacts management | [people-api.md](references/people-api.md) |
 
-- `scripts/setup.py` — OAuth2 setup (run once to authorize)
-- `scripts/google_api.py` — compatibility wrapper CLI. It prefers `gws` for operations when available, while preserving Hermes' existing JSON output contract.
+---
 
-## First-Time Setup
+## Shared Authentication Patterns
 
-The setup is fully non-interactive — you drive it step by step so it works
-on CLI, Telegram, Discord, or any platform.
+All Google Workspace APIs use the same authentication mechanisms. Choose based on your use case.
 
-Define a shorthand first:
+### Option 1: OAuth 2.0 (User Context)
 
-```bash
-GSETUP="python ${HERMES_HOME:-$HOME/.hermes}/skills/productivity/google-workspace/scripts/setup.py"
+Best for: Acting on behalf of a user, accessing user-specific data.
+
+```typescript
+// Authorization URL
+const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+authUrl.searchParams.set('client_id', env.GOOGLE_CLIENT_ID)
+authUrl.searchParams.set('redirect_uri', `${env.BASE_URL}/callback`)
+authUrl.searchParams.set('response_type', 'code')
+authUrl.searchParams.set('scope', SCOPES.join(' '))
+authUrl.searchParams.set('access_type', 'offline')  // For refresh tokens
+authUrl.searchParams.set('prompt', 'consent')       // Force consent for refresh token
+
+// Token exchange
+async function exchangeCode(code: string): Promise<TokenResponse> {
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: `${env.BASE_URL}/callback`,
+      grant_type: 'authorization_code',
+    }),
+  })
+  return response.json()
+}
+
+// Refresh token
+async function refreshToken(refresh_token: string): Promise<TokenResponse> {
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      refresh_token,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      grant_type: 'refresh_token',
+    }),
+  })
+  return response.json()
+}
 ```
 
-### Step 0: Check if already set up
+**Critical:**
+- Always request `access_type=offline` for refresh tokens
+- Use `prompt=consent` to ensure refresh token is returned
+- Store refresh tokens securely (Cloudflare KV or D1)
+- Access tokens expire in ~1 hour
 
-```bash
-$GSETUP --check
+### Option 2: Service Account (Server-to-Server)
+
+Best for: Backend automation, no user interaction, domain-wide delegation.
+
+```typescript
+import { SignJWT } from 'jose'
+
+async function getServiceAccountToken(
+  serviceAccount: ServiceAccountKey,
+  scopes: string[]
+): Promise<string> {
+  const now = Math.floor(Date.now() / 1000)
+
+  // Create JWT
+  const jwt = await new SignJWT({
+    iss: serviceAccount.client_email,
+    scope: scopes.join(' '),
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .sign(await importPKCS8(serviceAccount.private_key, 'RS256'))
+
+  // Exchange JWT for access token
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  })
+
+  const data = await response.json()
+  return data.access_token
+}
 ```
 
-If it prints `AUTHENTICATED`, skip to Usage — setup is already done.
-
-### Step 1: Triage — ask the user what they need
-
-Before starting OAuth setup, ask the user TWO questions:
-
-**Question 1: "What Google services do you need? Just email, or also
-Calendar/Drive/Sheets/Docs?"**
-
-- **Email only** → They don't need this skill at all. Use the `himalaya` skill
-  instead — it works with a Gmail App Password (Settings → Security → App
-  Passwords) and takes 2 minutes to set up. No Google Cloud project needed.
-  Load the himalaya skill and follow its setup instructions.
-
-- **Email + Calendar** → Continue with this skill, but use
-  `--services email,calendar` during auth so the consent screen only asks for
-  the scopes they actually need.
-
-- **Calendar/Drive/Sheets/Docs only** → Continue with this skill and use a
-  narrower `--services` set like `calendar,drive,sheets,docs`.
-
-- **Full Workspace access** → Continue with this skill and use the default
-  `all` service set.
-
-**Question 2: "Does your Google account use Advanced Protection (hardware
-security keys required to sign in)? If you're not sure, you probably don't
-— it's something you would have explicitly enrolled in."**
-
-- **No / Not sure** → Normal setup. Continue below.
-- **Yes** → Their Workspace admin must add the OAuth client ID to the org's
-  allowed apps list before Step 4 will work. Let them know upfront.
-
-### Step 2: Create OAuth credentials (one-time, ~5 minutes)
-
-Tell the user:
-
-> You need a Google Cloud OAuth client. This is a one-time setup:
->
-> 1. Create or select a project:
->    https://console.cloud.google.com/projectselector2/home/dashboard
-> 2. Enable the required APIs from the API Library:
->    https://console.cloud.google.com/apis/library
->    Enable: Gmail API, Google Calendar API, Google Drive API,
->    Google Sheets API, Google Docs API, People API
-> 3. Create the OAuth client here:
->    https://console.cloud.google.com/apis/credentials
->    Credentials → Create Credentials → OAuth 2.0 Client ID
-> 4. Application type: "Desktop app" → Create
-> 5. If the app is still in Testing, add the user's Google account as a test user here:
->    https://console.cloud.google.com/auth/audience
->    Audience → Test users → Add users
-> 6. Download the JSON file and tell me the file path
->
-> Important Hermes CLI note: if the file path starts with `/`, do NOT send only the bare path as its own message in the CLI, because it can be mistaken for a slash command. Send it in a sentence instead, like:
-> `The JSON file path is: /home/user/Downloads/client_secret_....json`
-
-Once they provide the path:
-
-```bash
-$GSETUP --client-secret /path/to/client_secret.json
+**Domain-Wide Delegation** (impersonate users):
+```typescript
+const jwt = await new SignJWT({
+  iss: serviceAccount.client_email,
+  sub: 'user@domain.com',  // User to impersonate
+  scope: scopes.join(' '),
+  aud: 'https://oauth2.googleapis.com/token',
+  iat: now,
+  exp: now + 3600,
+})
 ```
 
-If they paste the raw client ID / client secret values instead of a file path,
-write a valid Desktop OAuth JSON file for them yourself, save it somewhere
-explicit (for example `~/Downloads/hermes-google-client-secret.json`), then run
-`--client-secret` against that file.
+**Setup Required:**
+1. Create service account in Google Cloud Console
+2. Download JSON key file
+3. Enable domain-wide delegation in Admin Console (if impersonating)
+4. Store key as Cloudflare secret (JSON stringified)
 
-### Step 3: Get authorization URL
+---
 
-Use the service set chosen in Step 1. Examples:
+## Common Rate Limits
 
-```bash
-$GSETUP --auth-url --services email,calendar --format json
-$GSETUP --auth-url --services calendar,drive,sheets,docs --format json
-$GSETUP --auth-url --services all --format json
+All Google Workspace APIs enforce quotas. These are approximate - check each API's specific limits.
+
+### Per-User Limits (OAuth)
+
+| API | Reads | Writes | Notes |
+|-----|-------|--------|-------|
+| Gmail | 250/user/sec | 250/user/sec | Aggregate across all methods |
+| Calendar | 500/user/100sec | 500/user/100sec | Per calendar |
+| Drive | 1000/user/100sec | 1000/user/100sec | |
+| Sheets | 100/user/100sec | 100/user/100sec | Lower than others |
+
+### Per-Project Limits
+
+| API | Daily Quota | Per-Minute | Notes |
+|-----|-------------|------------|-------|
+| Gmail | 1B units | Varies | Unit-based (send = 100 units) |
+| Calendar | 1M queries | 500/sec | |
+| Drive | 1B queries | 1000/sec | |
+| Sheets | Unlimited | 500/user/100sec | |
+
+### Handling Rate Limits
+
+```typescript
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 5
+): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error: any) {
+      const status = error.status || error.code
+
+      if (status === 429 || status === 503) {
+        // Rate limited or service unavailable
+        const retryAfter = error.headers?.get('Retry-After') || Math.pow(2, i)
+        await new Promise(r => setTimeout(r, retryAfter * 1000))
+        continue
+      }
+
+      if (status === 403 && error.message?.includes('rateLimitExceeded')) {
+        // Quota exceeded - exponential backoff
+        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000))
+        continue
+      }
+
+      throw error
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
 ```
 
-This returns JSON with an `auth_url` field and also saves the exact URL to
-`~/.hermes/google_oauth_last_url.txt`.
+---
 
-Agent rules for this step:
-- Extract the `auth_url` field and send that exact URL to the user as a single line.
-- Tell the user that the browser will likely fail on `http://localhost:1` after approval, and that this is expected.
-- Tell them to copy the ENTIRE redirected URL from the browser address bar.
-- If the user gets `Error 403: access_denied`, send them directly to `https://console.cloud.google.com/auth/audience` to add themselves as a test user.
+## Batch Requests
 
-### Step 4: Exchange the code
+Most Google APIs support batching multiple requests into one HTTP call.
 
-The user will paste back either a URL like `http://localhost:1/?code=4/0A...&scope=...`
-or just the code string. Either works. The `--auth-url` step stores a temporary
-pending OAuth session locally so `--auth-code` can complete the PKCE exchange
-later, even on headless systems:
+```typescript
+async function batchRequest(
+  accessToken: string,
+  requests: BatchRequestItem[]
+): Promise<BatchResponse[]> {
+  const boundary = 'batch_boundary'
 
-```bash
-$GSETUP --auth-code "THE_URL_OR_CODE_THE_USER_PASTED" --format json
+  let body = ''
+  requests.forEach((req, i) => {
+    body += `--${boundary}\r\n`
+    body += 'Content-Type: application/http\r\n'
+    body += `Content-ID: <item${i}>\r\n\r\n`
+    body += `${req.method} ${req.path} HTTP/1.1\r\n`
+    body += 'Content-Type: application/json\r\n\r\n'
+    if (req.body) body += JSON.stringify(req.body)
+    body += '\r\n'
+  })
+  body += `--${boundary}--`
+
+  const response = await fetch('https://www.googleapis.com/batch/v1', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': `multipart/mixed; boundary=${boundary}`,
+    },
+    body,
+  })
+
+  // Parse multipart response...
+  return parseBatchResponse(await response.text())
+}
 ```
 
-If `--auth-code` fails because the code expired, was already used, or came from
-an older browser tab, it now returns a fresh `fresh_auth_url`. In that case,
-immediately send the new URL to the user and have them retry with the newest
-browser redirect only.
+**Limits:**
+- Max 100 requests per batch (most APIs)
+- Max 1000 requests per batch (some APIs like Drive)
+- Each request in batch counts toward quota
 
-### Step 5: Verify
+---
 
-```bash
-$GSETUP --check
+## Cloudflare Workers Configuration
+
+```jsonc
+// wrangler.jsonc
+{
+  "name": "google-workspace-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-03",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Store OAuth tokens
+  "kv_namespaces": [
+    { "binding": "TOKENS", "id": "xxx" }
+  ],
+
+  // Or use D1 for structured storage
+  "d1_databases": [
+    { "binding": "DB", "database_name": "workspace-mcp", "database_id": "xxx" }
+  ]
+}
 ```
 
-Should print `AUTHENTICATED`. Setup is complete — token refreshes automatically from now on.
-
-### Notes
-
-- Token is stored at `~/.hermes/google_token.json` and auto-refreshes.
-- Pending OAuth session state/verifier are stored temporarily at `~/.hermes/google_oauth_pending.json` until exchange completes.
-- If `gws` is installed, `google_api.py` points it at the same `~/.hermes/google_token.json` credentials file. Users do not need to run a separate `gws auth login` flow.
-- To revoke: `$GSETUP --revoke`
-
-## Usage
-
-All commands go through the API script. Set `GAPI` as a shorthand:
-
+**Secrets to set:**
 ```bash
-GAPI="python ${HERMES_HOME:-$HOME/.hermes}/skills/productivity/google-workspace/scripts/google_api.py"
+echo "your-client-id" | npx wrangler secret put GOOGLE_CLIENT_ID
+echo "your-client-secret" | npx wrangler secret put GOOGLE_CLIENT_SECRET
+# For service accounts:
+cat service-account.json | npx wrangler secret put GOOGLE_SERVICE_ACCOUNT
 ```
 
-### Gmail
+---
 
-```bash
-# Search (returns JSON array with id, from, subject, date, snippet)
-$GAPI gmail search "is:unread" --max 10
-$GAPI gmail search "from:boss@company.com newer_than:1d"
-$GAPI gmail search "has:attachment filename:pdf newer_than:7d"
+## Common Errors
 
-# Read full message (returns JSON with body text)
-$GAPI gmail get MESSAGE_ID
+### Error: "invalid_grant" on Token Refresh
+**Cause**: Refresh token revoked or expired (6 months of inactivity)
+**Fix**: Re-authenticate user, request new refresh token
 
-# Send
-$GAPI gmail send --to user@example.com --subject "Hello" --body "Message text"
-$GAPI gmail send --to user@example.com --subject "Report" --body "<h1>Q4</h1><p>Details...</p>" --html
-$GAPI gmail send --to user@example.com --subject "Hello" --from '"Research Agent" <user@example.com>' --body "Message text"
+### Error: "access_denied" on OAuth
+**Cause**: App not verified, or user not in test users list
+**Fix**: Add user to OAuth consent screen test users, or complete app verification
 
-# Reply (automatically threads and sets In-Reply-To)
-$GAPI gmail reply MESSAGE_ID --body "Thanks, that works for me."
-$GAPI gmail reply MESSAGE_ID --from '"Support Bot" <user@example.com>' --body "Thanks"
+### Error: "insufficientPermissions" (403)
+**Cause**: Missing required scope
+**Fix**: Check scopes in authorization URL, re-authenticate with correct scopes
 
-# Labels
-$GAPI gmail labels
-$GAPI gmail modify MESSAGE_ID --add-labels LABEL_ID
-$GAPI gmail modify MESSAGE_ID --remove-labels UNREAD
+### Error: "rateLimitExceeded" (403)
+**Cause**: Quota exceeded
+**Fix**: Implement exponential backoff, reduce request frequency, request quota increase
+
+### Error: "notFound" (404) on Known Resource
+**Cause**: Using wrong API version, or resource in trash
+**Fix**: Check API version in URL, check trash for deleted items
+
+---
+
+## API-Specific Guides
+
+Detailed patterns for each API are in the `references/` directory. Load these when working with specific APIs.
+
+### Gmail API
+See [references/gmail-api.md](references/gmail-api.md)
+- Message CRUD, labels, threads
+- MIME handling, attachments
+- Push notifications (Pub/Sub)
+
+### Calendar API
+See [references/calendar-api.md](references/calendar-api.md)
+- Events CRUD, recurring events
+- Free/busy queries
+- Calendar sharing
+
+### Drive API
+See [references/drive-api.md](references/drive-api.md)
+- File upload/download
+- Permissions, sharing
+- Search queries
+
+### Sheets API
+See [references/sheets-api.md](references/sheets-api.md)
+- Reading/writing cells
+- A1 notation, ranges
+- Batch updates
+
+### Chat API
+See [references/chat-api.md](references/chat-api.md)
+- Bots, webhooks
+- Cards v2, interactive forms
+- Spaces, members, reactions
+
+*(Additional API references added as MCP servers are built)*
+
+---
+
+## Package Versions (Verified 2026-01-09)
+
+```json
+{
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260109.0",
+    "wrangler": "^4.58.0",
+    "jose": "^6.1.3"
+  }
+}
 ```
 
-### Calendar
+---
 
-```bash
-# List events (defaults to next 7 days)
-$GAPI calendar list
-$GAPI calendar list --start 2026-03-01T00:00:00Z --end 2026-03-07T23:59:59Z
+## Official Documentation
 
-# Create event (ISO 8601 with timezone required)
-$GAPI calendar create --summary "Team Standup" --start 2026-03-01T10:00:00-06:00 --end 2026-03-01T10:30:00-06:00
-$GAPI calendar create --summary "Lunch" --start 2026-03-01T12:00:00Z --end 2026-03-01T13:00:00Z --location "Cafe"
-$GAPI calendar create --summary "Review" --start 2026-03-01T14:00:00Z --end 2026-03-01T15:00:00Z --attendees "alice@co.com,bob@co.com"
+- **Google Workspace APIs**: https://developers.google.com/workspace
+- **OAuth 2.0**: https://developers.google.com/identity/protocols/oauth2
+- **Service Accounts**: https://cloud.google.com/iam/docs/service-accounts
+- **API Explorer**: https://developers.google.com/apis-explorer
+- **Quotas Dashboard**: https://console.cloud.google.com/iam-admin/quotas
 
-# Delete event
-$GAPI calendar delete EVENT_ID
-```
+---
 
-### Drive
+## Skill Roadmap
 
-```bash
-# Search existing files
-$GAPI drive search "quarterly report" --max 10
-$GAPI drive search "mimeType='application/pdf'" --raw-query --max 5
+APIs documented as MCP servers are built:
 
-# Get metadata for a single file
-$GAPI drive get FILE_ID
-
-# Upload a local file (auto-detects MIME type)
-$GAPI drive upload /path/to/report.pdf
-$GAPI drive upload /path/to/image.png --name "Logo.png" --parent FOLDER_ID
-
-# Download (binary files download as-is; Google-native files export to a
-# sensible default — Docs→pdf, Sheets→csv, Slides→pdf, Drawings→png)
-$GAPI drive download FILE_ID
-$GAPI drive download DOC_ID --output ~/doc.pdf
-$GAPI drive download DOC_ID --export-mime text/plain --output ~/doc.txt
-
-# Create a folder
-$GAPI drive create-folder "Reports"
-$GAPI drive create-folder "Q4" --parent FOLDER_ID
-
-# Share
-$GAPI drive share FILE_ID --email alice@example.com --role reader
-$GAPI drive share FILE_ID --email alice@example.com --role writer --notify
-$GAPI drive share FILE_ID --type anyone --role reader        # anyone with link
-$GAPI drive share FILE_ID --type domain --domain example.com --role reader
-
-# Delete — defaults to trash (reversible). Use --permanent to skip the trash.
-$GAPI drive delete FILE_ID
-$GAPI drive delete FILE_ID --permanent
-```
-
-### Contacts
-
-```bash
-$GAPI contacts list --max 20
-```
-
-### Sheets
-
-```bash
-# Create a new spreadsheet
-$GAPI sheets create --title "Q4 Budget"
-$GAPI sheets create --title "Inventory" --sheet-name "Stock"
-
-# Read
-$GAPI sheets get SHEET_ID "Sheet1!A1:D10"
-
-# Write
-$GAPI sheets update SHEET_ID "Sheet1!A1:B2" --values '[["Name","Score"],["Alice","95"]]'
-
-# Append rows
-$GAPI sheets append SHEET_ID "Sheet1!A:C" --values '[["new","row","data"]]'
-```
-
-### Docs
-
-```bash
-# Read
-$GAPI docs get DOC_ID
-
-# Create a new Doc (optionally seeded with body text)
-$GAPI docs create --title "Meeting Notes"
-$GAPI docs create --title "Draft" --body "First paragraph..."
-
-# Append text to the end of an existing Doc
-$GAPI docs append DOC_ID --text "Additional content to append"
-```
-
-## Output Format
-
-All commands return JSON. Parse with `jq` or read directly. Key fields:
-
-- **Gmail search**: `[{id, threadId, from, to, subject, date, snippet, labels}]`
-- **Gmail get**: `{id, threadId, from, to, subject, date, labels, body}`
-- **Gmail send/reply**: `{status: "sent", id, threadId}`
-- **Calendar list**: `[{id, summary, start, end, location, description, htmlLink}]`
-- **Calendar create**: `{status: "created", id, summary, htmlLink}`
-- **Drive search**: `[{id, name, mimeType, modifiedTime, webViewLink}]`
-- **Drive get**: `{id, name, mimeType, modifiedTime, size, webViewLink, parents, owners}`
-- **Drive upload**: `{status: "uploaded", id, name, mimeType, webViewLink}`
-- **Drive download**: `{status: "downloaded", id, name, path, mimeType}`
-- **Drive create-folder**: `{status: "created", id, name, webViewLink}`
-- **Drive share**: `{status: "shared", permissionId, fileId, role, type}`
-- **Drive delete**: `{status: "trashed" | "deleted", fileId, permanent}`
-- **Contacts list**: `[{name, emails: [...], phones: [...]}]`
-- **Sheets get**: `[[cell, cell, ...], ...]`
-- **Sheets create**: `{status: "created", spreadsheetId, title, spreadsheetUrl}`
-- **Docs create**: `{status: "created", documentId, title, url}`
-- **Docs append**: `{status: "appended", documentId, inserted_at, characters}`
-
-## Rules
-
-1. **Never send email, create/delete calendar events, delete Drive files, share files, or modify Docs/Sheets without confirming with the user first.** Show what will be done (recipients, file IDs, content, share role) and ask for approval. For `drive delete`, prefer the default trash (reversible) over `--permanent`.
-2. **Check auth before first use** — run `setup.py --check`. If it fails, guide the user through setup.
-3. **Use the Gmail search syntax reference** for complex queries — load it with `skill_view("google-workspace", file_path="references/gmail-search-syntax.md")`.
-4. **Calendar times must include timezone** — always use ISO 8601 with offset (e.g., `2026-03-01T10:00:00-06:00`) or UTC (`Z`).
-5. **Respect rate limits** — avoid rapid-fire sequential API calls. Batch reads when possible.
-
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| `NOT_AUTHENTICATED` | Run setup Steps 2-5 above |
-| `REFRESH_FAILED` | Token revoked or expired — redo Steps 3-5 |
-| `HttpError 403: Insufficient Permission` | Missing API scope — `$GSETUP --revoke` then redo Steps 3-5 |
-| `AUTHENTICATED (partial)` or "Token missing scopes" | New write capabilities (Drive write/delete, Docs create/edit) require re-authorization. `$GSETUP --revoke` then redo Steps 3-5 to grant the upgraded scopes. |
-| `HttpError 403: Access Not Configured` | API not enabled — user needs to enable it in Google Cloud Console |
-| `ModuleNotFoundError` | Run `$GSETUP --install-deps` |
-| Advanced Protection blocks auth | Workspace admin must allowlist the OAuth client ID |
-
-## Revoking Access
-
-```bash
-$GSETUP --revoke
-```
+- [ ] Gmail API
+- [ ] Calendar API
+- [ ] Drive API
+- [ ] Sheets API
+- [ ] Docs API
+- [x] Chat API (migrated from google-chat-api skill)
+- [ ] Meet API
+- [ ] Forms API
+- [ ] Tasks API
+- [ ] Admin SDK
+- [ ] People API

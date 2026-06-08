@@ -1,25 +1,25 @@
 ---
 name: gwas-lookup
-description: Federated variant lookup across 9 genomic databases — GWAS Catalog, Open Targets, PheWeb (UKB, FinnGen, BBJ),
-  GTEx, eQTL Catalogue, and more.
-license: MIT
+description: Federated variant lookup across 9 genomic databases — GWAS Catalog, Open Targets, PheWeb (UKB, FinnGen, BBJ), GTEx, eQTL Catalogue, and more.
+version: 0.1.0
 metadata:
-  version: 0.1.0
   openclaw:
     requires:
       bins:
-      - python3
+        - python3
+      env: []
+      config: []
     always: false
-    emoji: 🔍
+    emoji: "🔍"
     homepage: https://github.com/ClawBio/ClawBio
-    os:
-    - darwin
-    - linux
+    os: [darwin, linux]
     install:
-    - kind: pip
-      package: requests
-    - kind: pip
-      package: matplotlib
+      - kind: pip
+        package: requests
+        bins: []
+      - kind: pip
+        package: matplotlib
+        bins: []
 ---
 
 # 🔍 GWAS Lookup

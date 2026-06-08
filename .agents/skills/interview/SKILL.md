@@ -1,305 +1,125 @@
 ---
 name: interview
-description: |
-  This skill conducts discovery conversations to understand user intent and agree on approach before taking action. It should be used when the user explicitly calls /interview, asks for recommendations, needs brainstorming, wants to clarify, or when the request could be misunderstood. Prevents building the wrong thing by uncovering WHY behind WHAT.
+description: Interview me about a plan to generate a detailed spec.
+argument-hint: [idea_or_plan]
+model: opus
 ---
 
-# Interview Skill
+You are an expert Requirements Analyst.
+Read the input "$ARGUMENTS" and interview me in detail using the `AskUserQuestion` tool.
 
-Prevent building the wrong thing. Discover user's intent (WHY), validate assumptions, and agree on approach (WHAT) before taking action.
+# Required Agents
 
-## What This Skill Does
+- **MANDATORY:** `@product-manager` - This skill MUST be executed by product-manager agent
+- `@monetization-expert` - Called automatically to assess revenue potential
+- `@tech-lead` - (Optional) To validate technical feasibility
 
-- Discovers INTENT behind surface requests (WHY they want it)
-- Surfaces and validates AI's assumptions before acting
-- Explores solution options informed by intent
-- Reaches mutual agreement on both problem and solution
-- Works for any context: software, documents, brainstorming, automation
+# Goal
 
-## What This Skill Does NOT Do
+Convert a vague idea into a concrete Specification (Spec).
 
-- Follow rigid scripts
-- Skip to implementation without understanding
-- Accept surface requests without exploring intent
-- Make assumptions without validating them
+# Rules
 
----
+1.  **Dig Deep:** Do not ask obvious questions. Ask about edge cases, error states, and user flow details.
+2.  **Challenge Me:** If I suggest something technically bad or expensive, push back politely.
+3.  **Iterate:** Continue interviewing until you have enough info to write a `SPEC.md`.
+4.  **Monetization:** Ask: "Is this feature free or paid?" and consult `@monetization-expert`.
 
-## Core Problem This Skill Solves
+# Interview Questions Checklist
 
-**AI builds the wrong thing because it:**
-1. Takes surface requests literally without understanding intent
-2. Makes hidden assumptions it never validates
-3. Proceeds without confirming alignment
+**User & Problem:**
+- Who is the target user?
+- What problem does this solve for them?
+- How do they solve this today (manual process or competitor)?
 
-**This skill ensures:**
-1. Intent (WHY) is discovered, not just request (WHAT)
-2. Assumptions are surfaced and validated
-3. Both problem and solution are agreed before proceeding
+**Solution & Scope:**
+- What is the core functionality (one sentence)?
+- What features are must-have for v1?
+- What features can wait for v2?
 
----
+**Technical:**
+- Does this require a database? What kind?
+- Does this need real-time updates (WebSockets)?
+- Are there third-party integrations (Stripe, Twilio, etc.)?
 
-## The WHY + WHAT Model
+**UX Flow:**
+- What's the happy path (step-by-step)?
+- What happens when something goes wrong (error states)?
+- What does the user see while loading?
 
+**Success Metrics:**
+- How will we measure success?
+- What's the expected usage (requests/day, users/month)?
+
+# Workflow
+
+1.  **Validate Arguments:** Check if `$ARGUMENTS` is provided
+   - If empty: Ask "What feature would you like to build?"
+
+2.  **Consult Product Manager:** Ensure `@product-manager` is handling this
+   - If not called by PM: "This skill requires @product-manager agent. Calling now..."
+
+3.  **Competitive Research:** `@product-manager` searches for competitors
+
+4.  **Interview User:** Ask 5-10 targeted questions using `AskUserQuestion`
+
+5.  **Monetization Check:** Call `@monetization-expert`
+   - "Should this be free or paid?"
+   - "How does this drive revenue?"
+
+6.  **Technical Feasibility:** (Optional) Consult `@tech-lead`
+   - "Is this technically feasible with our stack?"
+   - "What are the technical risks?"
+
+7.  **Generate Spec:** Use `.claude/templates/SPEC-TEMPLATE.md`
+
+8.  **Save Spec:** Write to `.claude/docs/specs/[feature-name].md`
+   - Feature name from arguments (lowercase, hyphens)
+   - Example: "user profile editing" → `user-profile-editing.md`
+
+9.  **Confirmation:** Show summary and ask for approval
+   - "Spec generated. Review at .claude/docs/specs/[name].md. Approve?"
+
+# Output Format
+
+Once the interview is complete, create (or update) a file named `.claude/docs/specs/[feature-name].md` with the full requirements using the template.
+
+**Success Message:**
 ```
-Surface WHAT → Discover WHY → Surface Assumptions →
-Informed WHAT → Agree on Both → Proceed
-```
+✅ Spec created: .claude/docs/specs/[feature-name].md
 
-| Phase | Purpose | Example |
-|-------|---------|---------|
-| **Surface WHAT** | Capture initial request | "Add dark mode" |
-| **Discover WHY** | Uncover intent/problem | "Eye strain for night workers" |
-| **Surface Assumptions** | Expose AI's hidden assumptions | "Assuming web app, not mobile" |
-| **Informed WHAT** | Solution options based on WHY | "Dark mode + auto-brightness + schedule" |
-| **Agree on Both** | Confirm problem AND solution | "Solving eye strain via dark mode with auto-switch" |
+📋 Summary:
+- Target User: [User type]
+- Core Value: [One sentence]
+- Monetization: [Free/Paid/Usage-based]
+- Effort: [Small/Medium/Large]
 
----
-
-## When to Trigger
-
-| Trigger | Example |
-|---------|---------|
-| Explicit invocation | `/interview`, "let's clarify" |
-| Request could be misunderstood | Ambiguous, complex, or multi-part requests |
-| Recommendations needed | "What should I use for..." |
-| Brainstorming | "Help me think through..." |
-| High-stakes work | Where wrong output wastes significant effort |
-
-**Don't over-trigger**: Simple, clear requests don't need full discovery.
-
----
-
-## Discovery Flow
-
-### Before Starting
-
-Gather available context before asking questions:
-
-| Source | Gather |
-|--------|--------|
-| **Conversation** | User's stated request, prior context |
-| **Available Context** | Information already shared in session |
-| **Skill References** | Question patterns from `references/` |
-
-### 1. Surface WHAT
-
-Capture the initial request clearly.
-
-```
-"Let me make sure I understand - you're asking for [X]?"
-```
-
-### 2. Discover WHY
-
-**This is the critical step most AI skips.**
-
-Go beyond WHAT to understand WHY:
-
-| Ask | To Discover |
-|-----|-------------|
-| "What problem does this solve?" | The real need |
-| "Why now?" | Urgency and context |
-| "What happens if we don't do this?" | Stakes and priority |
-| "Who benefits and how?" | Users and value |
-| "What led to this request?" | Background and triggers |
-
-**Techniques for WHY:**
-
-**Laddering** - Dig into abstract goals:
-```
-"Dark mode" → "Why?" → "Eye strain" → "Why an issue?" → "Night shift workers"
+➡️ Next Steps:
+1. Review the spec
+2. Call @tech-lead to validate architecture
+3. Use /step-by-step to start implementation
 ```
 
-**5 Whys** - Uncover root need:
-```
-"Export feature" → Why? → "Share reports" → Why? → "Stakeholder reviews" → Root need
-```
+# Error Handling
 
-**Structuring Clarifications**:
+**If $ARGUMENTS is empty:**
+- Prompt: "What feature or idea would you like to explore?"
 
-When presenting multiple questions, distinguish must-know from nice-to-know:
+**If .claude/docs/specs/ doesn't exist:**
+- Create the directory automatically
+- Log: "Created .claude/docs/specs/ directory"
 
-```
-## Required Clarifications
-1. [Critical question - blocks progress]
-2. [Critical question - affects core approach]
+**If user gives vague answers:**
+- Push back: "Can you be more specific? For example..."
+- Ask follow-up questions
 
-## Optional Clarifications (if relevant)
-3. [Nice-to-know - can assume reasonable default]
+**If technical feasibility is uncertain:**
+- Tag `@tech-lead`: "Is X technically feasible with our current stack?"
 
-Note: Keep to 1-4 questions per round. Build on answers.
-```
+**If feature is too large:**
+- Suggest: "This seems large. Can we break it into smaller features?"
+- Offer to create multiple specs
 
-### 3. Surface Assumptions
-
-**This prevents "builds wrong thing."**
-
-AI always makes assumptions. Surface them explicitly:
-
-```
-"I'm assuming:
-- This is for [platform/context]
-- Users are [type]
-- We need to support [X] but not [Y]
-- [Other assumption]
-
-Are these correct?"
-```
-
-**Common hidden assumptions:**
-- Technology/platform
-- User expertise level
-- Scale/performance needs
-- Integration requirements
-- What's in vs out of scope
-
-### 4. Informed WHAT
-
-Now that WHY is clear, explore WHAT options:
-
-```
-"Given that you need [WHY], we could:
-1. [Option A] - [trade-off]
-2. [Option B] - [trade-off]
-3. [Option C] - [trade-off]
-
-Which fits your intent best?"
-```
-
-**Key**: Options should address the WHY, not just the surface WHAT.
-
-### 5. Agree on Both
-
-Confirm understanding of BOTH problem and solution:
-
-```
-## Understanding
-
-**Problem (WHY)**: [What we're solving and why it matters]
-
-**Solution (WHAT)**: [What we'll build/do]
-
-**Key decisions**:
-- [Decision 1]
-- [Decision 2]
-
-**Not included**: [Explicit scope boundaries]
-
-Does this capture it correctly?
-```
-
-**Only proceed after explicit confirmation.**
-
----
-
-## Depth Check
-
-How do you know understanding is deep enough?
-
-### Surface Understanding (NOT enough)
-- Can repeat what user asked for
-- Know the immediate request
-- Haven't explored why
-
-### Deep Understanding (ENOUGH)
-- [ ] Know WHY they want it, not just WHAT
-- [ ] Know what problem it solves
-- [ ] Assumptions are surfaced and validated
-- [ ] Know who benefits and how
-- [ ] Know what's explicitly out of scope
-- [ ] Could explain it to someone else accurately
-- [ ] User confirmed understanding is correct
-
-**Test**: If you proceeded now and built something, would user say "yes, that's what I meant" or "no, you misunderstood"?
-
----
-
-## Assumption Categories
-
-Surface assumptions in these areas:
-
-| Category | Example Assumptions |
-|----------|---------------------|
-| **Context** | Platform, environment, existing systems |
-| **Users** | Who they are, expertise level, needs |
-| **Scale** | Volume, performance requirements |
-| **Scope** | What's included vs excluded |
-| **Quality** | Standards, constraints, requirements |
-| **Timeline** | Urgency, phases, dependencies |
-
----
-
-## Anti-Patterns
-
-| Anti-Pattern | What Happens | Fix |
-|--------------|--------------|-----|
-| Skip WHY | Build wrong solution | Always ask why before how |
-| Hidden assumptions | Surprise misalignment | Surface and validate explicitly |
-| Accept surface request | Miss real need | Dig deeper with laddering/5 whys |
-| Proceed without confirm | Waste effort | Get explicit "yes, proceed" |
-| Over-question simple requests | Annoy user | Match depth to complexity |
-
----
-
-## Tool Adaptation
-
-Use whatever tools are available:
-
-| Goal | Approach |
-|------|----------|
-| Ask questions | Interactive tools if available, otherwise conversation |
-| Research context | Web search if needed and available |
-| Present options | Structured choices if available |
-
-The skill describes WHAT to do. The agent uses available tools.
-
----
-
-## Output: Understanding Summary
-
-Match formality to situation:
-
-**Quick** (simple requests):
-```
-Got it: [WHAT] to solve [WHY]
-Proceeding with [approach]. Confirm?
-```
-
-**Standard** (most cases):
-```
-## Understanding
-
-**Problem (WHY)**: [Intent and problem being solved]
-**Solution (WHAT)**: [What we'll do]
-**Key points**: [Important details]
-**Not included**: [Scope boundaries]
-
-Ready to proceed?
-```
-
-**Detailed** (complex work):
-See `references/summary-templates.md`
-
----
-
-## Quick Reference
-
-```
-1. Surface WHAT → "You're asking for X?"
-2. Discover WHY → "What problem does this solve?"
-3. Surface assumptions → "I'm assuming A, B, C - correct?"
-4. Informed WHAT → "Given WHY, we could do X, Y, or Z"
-5. Confirm both → "So we're solving [WHY] by doing [WHAT]?"
-6. Proceed → Only after explicit confirmation
-```
-
----
-
-## Reference Files
-
-| File | Purpose |
-|------|---------|
-| `references/question-patterns.md` | Techniques for discovering WHY and surfacing assumptions |
-| `references/anti-patterns.md` | Common mistakes that lead to building wrong thing |
-| `references/summary-templates.md` | Output formats for different situations |
+**If @product-manager is not active:**
+- Error: "❌ This skill requires @product-manager agent. Please call the skill via: @product-manager /interview [idea]"
+- Exit gracefully

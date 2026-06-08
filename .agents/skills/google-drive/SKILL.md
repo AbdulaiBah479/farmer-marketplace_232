@@ -1,138 +1,197 @@
 ---
 name: google-drive
 description: |
-  Interact with Google Drive - search files, find folders, list contents, download files, upload files,
-  create folders, move, copy, rename, and trash files. Use when user asks to: search Google Drive,
-  find a file/folder, list Drive contents, download or upload files, create folders, move files,
-  or organize Drive content. Lightweight integration with standalone OAuth authentication supporting
-  full read/write access.
-license: Apache-2.0
-metadata:
-  author: sanjay3290
-  version: "1.0"
+  gogcli (gog) を使用してGoogle Driveを操作するスキル。ファイルの検索、アップロード、ダウンロード、共有、フォルダ管理などをCLI経由で実行。
+  Use when: (1) ドライブのファイルを検索したい、(2) ファイルをアップロードしたい、(3) ファイルをダウンロードしたい、(4) Google Driveを操作したい、(5) ファイルを共有したい、(6) フォルダを作成したい
+  Trigger: drive, ドライブ, google drive, ファイル検索, アップロード, ダウンロード, 共有
 ---
 
-# Google Drive
+# Google Drive Operations with gogcli
 
-Lightweight Google Drive integration with standalone OAuth authentication. No MCP server required. Full read/write access.
+`gog` CLIを使用してGoogle Driveを操作する。
 
-> **Requires Google Workspace account.** Personal Gmail accounts are not supported.
-
-## First-Time Setup
-
-Authenticate with Google (opens browser):
-```bash
-python scripts/auth.py login
-```
-
-Check authentication status:
-```bash
-python scripts/auth.py status
-```
-
-Logout when needed:
-```bash
-python scripts/auth.py logout
-```
-
-## Read Commands
-
-All operations via `scripts/drive.py`. Auto-authenticates on first use if not logged in.
+## Prerequisites
 
 ```bash
-# Search for files (full-text search)
-python scripts/drive.py search "quarterly report"
+# Installation
+brew install gogcli
 
-# Search by title only
-python scripts/drive.py search "title:budget"
-
-# Search using Google Drive URL (extracts ID automatically)
-python scripts/drive.py search "https://drive.google.com/drive/folders/1ABC123..."
-
-# Search files shared with you
-python scripts/drive.py search --shared-with-me
-
-# Search with pagination
-python scripts/drive.py search "report" --limit 5 --page-token "..."
-
-# Find a folder by exact name
-python scripts/drive.py find-folder "Project Documents"
-
-# List files in root Drive
-python scripts/drive.py list
-
-# List files in a specific folder
-python scripts/drive.py list 1ABC123xyz --limit 20
-
-# Download a file
-python scripts/drive.py download 1ABC123xyz ./downloads/report.pdf
+# Authentication (初回のみ)
+gog auth login
 ```
 
-## Write Commands
+## Commands Reference
+
+### List Files
 
 ```bash
-# Upload a file to Drive root
-python scripts/drive.py upload ~/Documents/report.pdf
+# ルートフォルダのファイル一覧
+gog drive ls
 
-# Upload to a specific folder
-python scripts/drive.py upload ~/Documents/report.pdf --folder 1ABC123xyz
+# 特定フォルダの一覧
+gog drive ls --parent="<folderId>"
 
-# Upload with a custom name
-python scripts/drive.py upload ~/Documents/report.pdf --name "Q4 Report.pdf"
+# 最大件数指定
+gog drive ls --max=50
 
-# Create a new folder
-python scripts/drive.py create-folder "Project Documents"
-
-# Create a folder inside another folder
-python scripts/drive.py create-folder "Attachments" --parent 1ABC123xyz
-
-# Move a file to a different folder
-python scripts/drive.py move FILE_ID DESTINATION_FOLDER_ID
-
-# Copy a file
-python scripts/drive.py copy FILE_ID
-python scripts/drive.py copy FILE_ID --name "Report Copy" --folder 1ABC123xyz
-
-# Rename a file or folder
-python scripts/drive.py rename FILE_ID "New Name.pdf"
-
-# Move a file to trash
-python scripts/drive.py trash FILE_ID
+# クエリフィルタ付き
+gog drive ls --query="mimeType='application/vnd.google-apps.folder'"
 ```
 
-## Search Query Formats
+### Search Files
 
-The search command supports multiple query formats:
+```bash
+# フルテキスト検索
+gog drive search "検索キーワード"
 
-| Format | Example | Description |
-|--------|---------|-------------|
-| Full-text | `"quarterly report"` | Searches file contents and names |
-| Title | `"title:budget"` | Searches file names only |
-| URL | `https://drive.google.com/...` | Extracts and uses file/folder ID |
-| Folder ID | `1ABC123...` | Lists folder contents (25+ char IDs) |
-| Native query | `mimeType='application/pdf'` | Pass-through Drive query syntax |
+# 複数キーワード
+gog drive search "報告書 2024"
 
-## File ID Format
+# JSON形式で出力
+gog drive search "議事録" --json --max=20
+```
 
-Google Drive uses long IDs like `1ABC123xyz_-abc123`. Get IDs from:
-- `search` results
-- `find-folder` results
-- `list` results
-- Google Drive URLs
+### Download Files
 
-## Download Limitations
+```bash
+# ファイルをダウンロード
+gog drive download <fileId>
 
-- Regular files (PDFs, images, etc.) download directly
-- Google Docs/Sheets/Slides cannot be downloaded via this tool
-- For Google Workspace files, use export or dedicated tools
+# 出力先を指定
+gog drive download <fileId> --out="/path/to/output.pdf"
 
-## Token Management
+# Google Docsのエクスポート形式を指定
+gog drive download <fileId> --format=pdf    # PDF形式
+gog drive download <fileId> --format=docx   # Word形式
+gog drive download <fileId> --format=xlsx   # Excel形式
+gog drive download <fileId> --format=pptx   # PowerPoint形式
+gog drive download <fileId> --format=csv    # CSV形式
+gog drive download <fileId> --format=txt    # テキスト形式
+```
 
-Tokens stored securely using the system keyring:
-- **macOS**: Keychain
-- **Windows**: Windows Credential Locker
-- **Linux**: Secret Service API (GNOME Keyring, KDE Wallet, etc.)
+### Upload Files
 
-Service name: `google-drive-skill-oauth`
+```bash
+# ファイルをアップロード（ルートへ）
+gog drive upload /path/to/file.pdf
 
-Automatically refreshes expired tokens using Google's cloud function.
+# ファイル名を変更してアップロード
+gog drive upload /path/to/file.pdf --name="新しいファイル名.pdf"
+
+# 特定フォルダへアップロード
+gog drive upload /path/to/file.pdf --parent="<folderId>"
+```
+
+### Create Folder
+
+```bash
+# ルートにフォルダ作成
+gog drive mkdir "新しいフォルダ"
+
+# 特定フォルダ内にサブフォルダ作成
+gog drive mkdir "サブフォルダ" --parent="<parentFolderId>"
+```
+
+### File Operations
+
+```bash
+# ファイルのメタデータ取得
+gog drive get <fileId>
+
+# ファイルをコピー
+gog drive copy <fileId> "コピー後の名前"
+
+# ファイルを移動
+gog drive move <fileId> --parent="<newParentFolderId>"
+
+# ファイル名を変更
+gog drive rename <fileId> "新しい名前"
+
+# ファイルを削除（ゴミ箱へ）
+gog drive delete <fileId>
+
+# WebのURLを取得
+gog drive url <fileId>
+```
+
+### Share Files
+
+```bash
+# 特定ユーザーと共有（閲覧権限）
+gog drive share <fileId> --email="user@example.com" --role="reader"
+
+# 特定ユーザーと共有（編集権限）
+gog drive share <fileId> --email="user@example.com" --role="writer"
+
+# 公開リンクを作成
+gog drive share <fileId> --anyone --role="reader"
+
+# 権限一覧を表示
+gog drive permissions <fileId>
+
+# 権限を削除
+gog drive unshare <fileId> <permissionId>
+```
+
+### Shared Drives
+
+```bash
+# 共有ドライブ一覧
+gog drive drives
+```
+
+### Comments
+
+```bash
+# ファイルのコメント一覧
+gog drive comments list <fileId>
+
+# コメントを追加
+gog drive comments add <fileId> "コメント内容"
+```
+
+## Common Workflows
+
+### 最近のファイルを確認
+
+```bash
+gog drive ls --max=10
+```
+
+### 特定の名前のファイルを検索
+
+```bash
+gog drive search "週報"
+```
+
+### Google Docsをローカルにダウンロード
+
+```bash
+# PDF形式でダウンロード
+gog drive download <fileId> --format=pdf --out="./document.pdf"
+```
+
+### ローカルファイルを特定フォルダにアップロード
+
+```bash
+# まずフォルダIDを確認
+gog drive search "プロジェクトフォルダ" --json
+
+# フォルダにアップロード
+gog drive upload ./report.pdf --parent="<folderId>"
+```
+
+## Output Formats
+
+| Flag | Description |
+|------|-------------|
+| `--json` | JSON形式で出力（スクリプト向け） |
+| `--plain` | TSV形式で出力（パース容易） |
+| (default) | 人間が読みやすい形式 |
+
+## Tips
+
+- `--account=email@example.com` で複数アカウントを切り替え
+- ファイルIDはURLから取得可能: `https://drive.google.com/file/d/<fileId>/view`
+- フォルダIDもURLから取得可能: `https://drive.google.com/drive/folders/<folderId>`
+- `--force` で確認をスキップ（削除時など注意して使用）

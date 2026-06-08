@@ -1,175 +1,192 @@
 ---
-name: frontend-excellence
-description: Modern frontend patterns for React Server Components, performance optimization, and Core Web Vitals
+name: "Frontend Excellence"
+description: "Design systems, component libraries, responsive UI/UX, accessibility. Build premium interfaces that enterprise clients expect."
+enabled: true
 ---
 
-# Frontend Excellence
+# FRONTEND EXCELLENCE SKILL
+## Premium UI/UX Architecture for Enterprise SaaS
 
-## React Server Components
+### 🎨 DESIGN SYSTEM PHILOSOPHY
 
-Server Components run on the server and send rendered HTML to the client. They can directly access databases, filesystems, and internal APIs without exposing them to the browser.
+**Rhino Brand Colors**
+- Primary: Teal (#208090) - Trust, professionalism, energy
+- Secondary: Slate Gray (#2F3F48) - Stability, data-driven
+- Accent: Deep Red (#C01530) - Urgency, attention, risk highlighting
+- Neutral: Cool Grays (#F5F5F5, #E0E0E0, #999999)
+- Status: Green (success #22C55E), Amber (warning #F59E0B), Red (error #EF4444)
 
-```tsx
-// app/products/page.tsx (Server Component by default)
-async function ProductsPage() {
-  const products = await db.query("SELECT * FROM products WHERE active = true");
-  return (
-    <main>
-      <h1>Products</h1>
-      <ProductList products={products} />
-      <AddToCartButton />  {/* Client Component */}
-    </main>
-  );
-}
+**Typography Hierarchy**
+- H1 (32px): Page titles, major sections
+- H2 (24px): Section headers
+- H3 (18px): Subsection headers
+- H4 (16px): Component labels
+- Body (14px): Primary content
+- Caption (12px): Metadata, timestamps, help text
+- Monospace (13px): Code, calculations, financial values
+
+**Spacing System** (8px grid)
+- xs: 4px (tight spacing)
+- sm: 8px (default gap)
+- md: 16px (section spacing)
+- lg: 24px (major separation)
+- xl: 32px (layout sections)
+
+### 🔧 CORE COMPONENTS
+
+**Form Components**
+- Text Input: Single line, validation states, placeholder text
+- Textarea: Multi-line with char count, min/max
+- Select Dropdown: Native + custom with search
+- Checkbox: Single and grouped options
+- Radio: Mutually exclusive selection
+- Toggle Switch: On/off states with labels
+- Date Picker: Calendar interface, range selection
+- Number Input: Increment/decrement, min/max, precision
+- File Upload: Drag-drop, file type validation
+
+**Data Display**
+- Table: Sortable columns, pagination, row selection, sticky header
+- Card: Container with padding, borders, shadow on hover
+- Modal: Center dialog, backdrop overlay, focus trap
+- Tooltip: Hover-triggered help text
+- Badge: Status indicators, counts, labels
+- Progress Bar: Linear progress with percentage
+- Alert: Error, warning, success, info messages
+
+**Navigation**
+- Navbar: Logo, menu items, user dropdown, search
+- Sidebar: Collapsible navigation, active state highlighting
+- Breadcrumbs: Path navigation with links
+- Tabs: Horizontal tab navigation
+- Pagination: Previous/next, page numbers, jump to page
+
+**Financial/Data Specific**
+- Number Display: Formatted currency ($M, thousands separator)
+- Percentage Display: With trend indicators (up/down arrows)
+- Chart Container: Responsive chart wrapper with legend
+- Data Row: Key-value pair with units
+- Comparison Widget: Side-by-side metric comparison
+
+### ✨ MICRO-INTERACTIONS & ANIMATIONS
+
+**Transitions**
+- Button hover: Subtle background color shift (150ms ease)
+- Link hover: Color change + underline fade in
+- Form focus: Border color change + shadow glow
+- Modal entrance: Fade in + slight scale up
+- List item: Slide in on first load
+
+**Loading States**
+- Skeleton screens: Placeholder shapes while loading
+- Progress indicators: Circular spinner for indeterminate
+- Percentage progress: Bar for determinate loads
+- Pulsing animation: Breathing effect on loading states
+
+**Feedback**
+- Toast notifications: Bottom-right corner, auto-dismiss
+- Loading cursor: Visual feedback during processing
+- Disabled state: 50% opacity, cursor-not-allowed
+- Error state: Red border, icon, help text
+
+### 📱 RESPONSIVE DESIGN
+
+**Breakpoints**
+- Mobile: < 640px (single column, stacked layout)
+- Tablet: 640px - 1024px (two columns, flexible sidebar)
+- Desktop: > 1024px (three columns, full navigation)
+
+**Mobile Optimizations**
+- Touch targets: Minimum 44px × 44px
+- Simplified forms: Fewer fields per screen
+- Bottom sheet modals: Easier thumb reach
+- Vertical scrolling: Avoid horizontal where possible
+- Font sizes: 16px+ for readable mobile
+
+### ♿ ACCESSIBILITY (WCAG 2.1 AA)
+
+**Color & Contrast**
+- Text contrast: 4.5:1 for normal text, 3:1 for large text
+- Don't rely on color alone: Use icons + text
+- Color blindness: Avoid red-green only distinction
+
+**Keyboard Navigation**
+- Tab order: Logical left-to-right, top-to-bottom
+- Focus indicators: Visible 2px outline around focused element
+- Escape key: Closes modals, dropdowns
+- Enter key: Submits forms, triggers actions
+
+**Screen Readers**
+- Semantic HTML: Use <button>, <nav>, <article>, not <div>
+- ARIA labels: aria-label for icon buttons
+- ARIA live regions: aria-live="polite" for dynamic content
+- Form labels: <label> with proper for= attribute
+- Link text: Descriptive "Edit Project" not "Click here"
+
+**Motion & Animation**
+- prefers-reduced-motion: Respect user's system setting
+- No autoplaying videos: User control always
+- Blinking/flashing: Avoid, or < 3 Hz if necessary
+
+### 🎯 STATE MANAGEMENT PATTERNS
+
+**React Component Structure**
+```
+App
+├── Layout
+│   ├── Navbar
+│   ├── Sidebar
+│   └── MainContent
+│       ├── Dashboard
+│       ├── ProjectList
+│       └── DetailView
+└── Modals
+    ├── CreateProject
+    └── EditMetadata
 ```
 
-Rules:
-- Server Components cannot use `useState`, `useEffect`, or browser APIs
-- Mark interactive components with `'use client'` at the top of the file
-- Pass serializable props from Server to Client Components (no functions, no classes)
-- Keep `'use client'` boundary as deep in the tree as possible
+**Data Flow**
+- Global state: Redux/Zustand for user, auth, app settings
+- Page state: Local component state for UI toggles
+- Server state: React Query for API data caching
+- Form state: React Hook Form for form management
 
-## Streaming SSR
+**Context Usage**
+- ThemeContext: Dark/light mode provider
+- AuthContext: User, permissions, authentication
+- NotificationContext: Toast alerts, messages
 
-```tsx
-import { Suspense } from 'react';
+### 🚀 PERFORMANCE OPTIMIZATION
 
-export default function Dashboard() {
-  return (
-    <div>
-      <Header />  {/* renders immediately */}
-      <Suspense fallback={<ChartSkeleton />}>
-        <AnalyticsChart />  {/* streams when ready */}
-      </Suspense>
-      <Suspense fallback={<TableSkeleton />}>
-        <RecentOrders />  {/* streams independently */}
-      </Suspense>
-    </div>
-  );
-}
+**Rendering**
+- Code splitting: Lazy load routes with React.lazy()
+- Memoization: React.memo() for expensive components
+- useMemo: Cache derived calculations
+- useCallback: Stable function references
+
+**Loading**
+- Lighthouse: Target 90+ score
+- First Contentful Paint (FCP): < 1.5s
+- Largest Contentful Paint (LCP): < 2.5s
+- Cumulative Layout Shift (CLS): < 0.1
+
+**Bundle Size**
+- Tree shaking: Remove unused code
+- Image optimization: WebP format, responsive sizes
+- CSS purging: Remove unused styles (Tailwind)
+- Code splitting: Separate vendor bundles
+
+### 🎭 DARK/LIGHT MODE
+
+**Theme Implementation**
+- CSS variables: --color-bg, --color-text, --color-border
+- Context provider: ThemeContext wraps app
+- LocalStorage persistence: Remember user preference
+- System preference detection: prefers-color-scheme media query
+- Smooth transition: 200ms fade between themes
+
+**Color Mapping**
+- Light mode: Light backgrounds, dark text
+- Dark mode: Dark backgrounds, light text
+- Both: Same semantic colors, different hex values
 ```
-
-Each `Suspense` boundary streams independently. Place boundaries around data-fetching components to avoid blocking the entire page.
-
-## Code Splitting
-
-```tsx
-import dynamic from 'next/dynamic';
-
-const HeavyEditor = dynamic(() => import('@/components/Editor'), {
-  loading: () => <EditorSkeleton />,
-  ssr: false,
-});
-
-const AdminPanel = dynamic(() => import('@/components/AdminPanel'));
-```
-
-Split on:
-- Route boundaries (automatic in Next.js App Router)
-- Conditionally rendered components (modals, drawers, admin panels)
-- Heavy libraries (chart libraries, rich text editors, maps)
-- Below-the-fold content
-
-## Bundle Optimization
-
-```javascript
-// next.config.js
-module.exports = {
-  experimental: {
-    optimizePackageImports: ['lucide-react', '@heroicons/react', 'lodash-es'],
-  },
-};
-```
-
-Checklist:
-- Run `npx next build` and review the output size per route
-- Use `@next/bundle-analyzer` to identify large dependencies
-- Replace `moment` with `date-fns` or `dayjs` (save ~200KB)
-- Import specific functions: `import { debounce } from 'lodash-es/debounce'`
-- Prefer CSS over JS for animations (no runtime cost)
-- Tree-shake icon libraries: `import { Search } from 'lucide-react'`
-
-## Core Web Vitals Targets
-
-| Metric | Good | Needs Work | Poor |
-|--------|------|------------|------|
-| LCP (Largest Contentful Paint) | <2.5s | 2.5-4.0s | >4.0s |
-| INP (Interaction to Next Paint) | <200ms | 200-500ms | >500ms |
-| CLS (Cumulative Layout Shift) | <0.1 | 0.1-0.25 | >0.25 |
-
-## LCP Optimization
-
-- Preload hero images: `<link rel="preload" as="image" href="..." />`
-- Use `priority` prop on above-the-fold `<Image>` components
-- Inline critical CSS, defer non-critical stylesheets
-- Avoid client-side rendering for above-the-fold content
-- Set explicit `width`/`height` on images to prevent layout shifts
-
-## Image Optimization
-
-```tsx
-import Image from 'next/image';
-
-<Image
-  src="/hero.jpg"
-  alt="Descriptive alt text"
-  width={1200}
-  height={630}
-  priority              // preload for LCP images
-  sizes="(max-width: 768px) 100vw, 50vw"
-  placeholder="blur"
-  blurDataURL={base64}  // inline tiny placeholder
-/>
-```
-
-- Use `next/image` or equivalent (automatic WebP/AVIF, responsive srcset)
-- Set `sizes` attribute to avoid downloading oversized images
-- Use `placeholder="blur"` with a base64 data URL for perceived performance
-- Lazy load below-the-fold images (default behavior)
-
-## Font Loading Strategy
-
-```tsx
-// app/layout.tsx
-import { Inter } from 'next/font/google';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',       // show fallback font immediately
-  preload: true,
-  variable: '--font-inter',
-});
-
-export default function RootLayout({ children }) {
-  return (
-    <html className={inter.variable}>
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
-- Use `next/font` for zero-CLS font loading with automatic subsetting
-- Set `display: 'swap'` to avoid invisible text during load
-- Self-host fonts instead of loading from Google CDN (saves DNS lookup)
-- Limit to 2 font families maximum
-
-## CLS Prevention
-
-- Always set `width` and `height` on images and videos
-- Use `aspect-ratio` CSS for responsive media containers
-- Reserve space for dynamic content (ads, embeds) with `min-height`
-- Avoid inserting content above existing content after load
-- Use CSS `contain: layout` for components that change size
-
-## Performance Monitoring
-
-```typescript
-import { onCLS, onINP, onLCP } from 'web-vitals';
-
-onCLS(console.log);
-onINP(console.log);
-onLCP(console.log);
-```
-
-Measure real user metrics (RUM), not just lab scores. Vercel Analytics and Google Search Console provide field data.

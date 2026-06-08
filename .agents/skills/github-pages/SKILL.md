@@ -1,217 +1,72 @@
 ---
 name: github-pages
-description: Complete GitHub Pages deployment and management system. Static site hosting with Jekyll, custom domains, and GitHub Actions. USE WHEN user mentions 'github pages', 'deploy static site', 'host website on github', 'jekyll site', 'custom domain for github', OR wants to publish a website from a repository.
+description: GitHub Pages static site hosting - setup, configuration, custom domains, Jekyll, and deployment
 ---
 
 # GitHub Pages Skill
 
-Complete guide for deploying, configuring, and managing GitHub Pages sites.
+Use when working with GitHub Pages static site hosting, generated from official GitHub documentation.
+
+## When to Use This Skill
+
+This skill should be triggered when:
+- Creating or configuring a GitHub Pages site
+- Setting up custom domains for GitHub Pages
+- Configuring publishing sources (branch, folder, or GitHub Actions)
+- Working with Jekyll themes and plugins
+- Troubleshooting GitHub Pages deployment issues
+- Setting up HTTPS for GitHub Pages sites
+- Understanding GitHub Pages limitations and features
 
 ## Quick Reference
 
-| Site Type | Repository Name | URL Pattern |
-|-----------|----------------|-------------|
-| User/Org Site | `<username>.github.io` | `https://<username>.github.io` |
-| Project Site | Any repository name | `https://<username>.github.io/<repo>` |
+### Site Types
 
-**Availability:**
-- Public repos: GitHub Free (all plans)
-- Private repos: GitHub Pro, Team, Enterprise
+| Type | Repository Name | URL |
+|------|-----------------|-----|
+| User site | `<username>.github.io` | `https://<username>.github.io` |
+| Organization site | `<org>.github.io` | `https://<org>.github.io` |
+| Project site | Any name | `https://<username>.github.io/<repo>` |
 
----
+### Publishing Sources
 
-## Workflow Routing
+1. **Branch publishing** - Deploy from a specific branch (e.g., `main`, `gh-pages`)
+2. **Folder publishing** - Deploy from `/` (root) or `/docs` folder
+3. **GitHub Actions** - Custom workflow for building and deploying
 
-**When executing a workflow, output this notification directly:**
+### Common Patterns
 
-```
-Running the **WorkflowName** workflow from the **GithubPages** skill...
-```
-
-| Workflow | Trigger | File |
-|----------|---------|------|
-| **QuickStart** | "setup github pages", "create pages site" | `workflows/QuickStart.md` |
-| **CustomDomain** | "add custom domain", "configure domain" | `workflows/CustomDomain.md` |
-| **JekyllSetup** | "setup jekyll", "add jekyll theme" | `workflows/JekyllSetup.md` |
-| **ActionsWorkflow** | "custom build", "github actions for pages" | `workflows/ActionsWorkflow.md` |
-| **Troubleshoot** | "pages not working", "fix github pages" | `workflows/Troubleshoot.md` |
-| **Deploy** | "deploy to github pages", "publish site" | `workflows/Deploy.md` |
-
----
-
-## Examples
-
-**Example 1: Create a new GitHub Pages site**
-```
-User: "Setup GitHub Pages for my project"
-→ Invokes QuickStart workflow
-→ Checks if user/org or project site
-→ Configures publishing source (branch or Actions)
-→ Creates initial content structure
-→ Verifies deployment
-```
-
-**Example 2: Add custom domain**
-```
-User: "Add my domain example.com to GitHub Pages"
-→ Invokes CustomDomain workflow
-→ Determines domain type (apex vs subdomain)
-→ Provides DNS configuration instructions
-→ Adds CNAME file or configures via Settings
-→ Enables HTTPS enforcement
-```
-
-**Example 3: Setup Jekyll theme**
-```
-User: "Add a theme to my GitHub Pages site"
-→ Invokes JekyllSetup workflow
-→ Lists available supported themes
-→ Configures _config.yml
-→ Sets up custom CSS/layouts if needed
-```
-
-**Example 4: Deploy with custom build**
-```
-User: "Deploy my Next.js site to GitHub Pages"
-→ Invokes ActionsWorkflow workflow
-→ Creates custom GitHub Actions workflow
-→ Configures build process
-→ Sets up artifact deployment
-```
-
----
-
-## Site Types
-
-### User/Organization Site
-
-**Requirements:**
-- Repository name MUST be `<username>.github.io`
-- Only ONE per account
-- Publishes from default branch
-
-**Setup:**
+#### Create a GitHub Pages site
 ```bash
-# Create repository named exactly: username.github.io
-# Enable Pages in Settings > Pages
-# Select source branch
+# Create repository named <username>.github.io for user site
+# Or any name for project site
+
+# Add index.html or index.md
+echo "# Hello World" > index.md
+git add index.md
+git commit -m "Initial GitHub Pages site"
+git push
 ```
 
-### Project Site
+#### Configure publishing source
+1. Go to repository Settings > Pages
+2. Under "Build and deployment", select source:
+   - "Deploy from a branch" for static files
+   - "GitHub Actions" for custom builds
+3. Select branch and folder if using branch deployment
 
-**Requirements:**
-- Can use any repository
-- Multiple project sites allowed
-- URL includes repository name
-
-**Setup:**
+#### Set up custom domain
 ```bash
-# Any repository works
-# Enable Pages in Settings > Pages
-# Choose: branch (root or /docs) OR GitHub Actions
+# Add CNAME file to repository root
+echo "example.com" > CNAME
+git add CNAME && git commit -m "Add custom domain" && git push
 ```
 
----
+DNS Configuration:
+- **Apex domain** (example.com): Add A records pointing to GitHub IPs
+- **Subdomain** (www.example.com): Add CNAME record pointing to `<username>.github.io`
 
-## Publishing Sources
-
-### Option 1: Deploy from Branch
-
-**Best for:** Jekyll sites, simple static sites
-
-**Configuration:**
-1. Go to Settings > Pages
-2. Select "Deploy from a branch"
-3. Choose branch (main, gh-pages, etc.)
-4. Choose folder: `/` (root) or `/docs`
-
-**Behavior:**
-- Pushes to branch trigger automatic builds
-- Jekyll processes Markdown by default
-- CNAME file auto-created for custom domains
-
-### Option 2: GitHub Actions Workflow
-
-**Best for:** Custom builds, non-Jekyll generators
-
-**Configuration:**
-1. Go to Settings > Pages
-2. Select "GitHub Actions"
-3. Create workflow file in `.github/workflows/`
-
-**Behavior:**
-- Full control over build process
-- Works with Hugo, Gatsby, Next.js, etc.
-- Artifacts uploaded and deployed
-
----
-
-## Jekyll Integration
-
-### Auto-Enabled Plugins
-
-These plugins work automatically on GitHub Pages:
-
-| Plugin | Purpose |
-|--------|---------|
-| jekyll-coffeescript | CoffeeScript support |
-| jekyll-default-layout | Automatic layouts |
-| jekyll-gist | GitHub Gist embedding |
-| jekyll-github-metadata | Repository metadata |
-| jekyll-optional-front-matter | Optional YAML front matter |
-| jekyll-paginate | Pagination |
-| jekyll-readme-index | README as index |
-| jekyll-titles-from-headings | Auto-generate titles |
-| jekyll-relative-links | Convert relative links |
-
-### Supported Themes
-
-Available without additional configuration:
-
-- Architect
-- Cayman
-- Dinky
-- Hacker
-- Leap day
-- Merlot
-- Midnight
-- Minima
-- Minimal
-- Modernist
-- Slate
-- Tactile
-- Time machine
-
-**Usage in `_config.yml`:**
-```yaml
-theme: jekyll-theme-minimal
-title: My Site
-description: Site description
-```
-
-### Remote Themes
-
-Use any Jekyll theme from GitHub:
-
-```yaml
-remote_theme: owner/repo-name
-```
-
----
-
-## Custom Domains
-
-### Domain Types
-
-| Type | Example | DNS Record |
-|------|---------|------------|
-| Apex | `example.com` | A or ALIAS |
-| WWW Subdomain | `www.example.com` | CNAME |
-| Custom Subdomain | `blog.example.com` | CNAME |
-
-### DNS Configuration
-
-**For Apex Domains (A Records):**
+GitHub IP addresses for A records:
 ```
 185.199.108.153
 185.199.109.153
@@ -219,110 +74,140 @@ remote_theme: owner/repo-name
 185.199.111.153
 ```
 
-**For Apex Domains (AAAA Records - IPv6):**
-```
-2606:50c0:8000::153
-2606:50c0:8001::153
-2606:50c0:8002::153
-2606:50c0:8003::153
-```
-
-**For Subdomains (CNAME Record):**
-```
-www.example.com → username.github.io
-blog.example.com → username.github.io
+#### Jekyll configuration
+```yaml
+# _config.yml
+title: My Site
+description: A GitHub Pages site
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
 ```
 
-### Verification Commands
+#### Custom GitHub Actions workflow
+```yaml
+# .github/workflows/pages.yml
+name: Deploy to GitHub Pages
 
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          # Your build commands here
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
+```
+
+#### Disable Jekyll processing
 ```bash
-# Check A records
-dig example.com +noall +answer -t A
-
-# Check AAAA records
-dig example.com +noall +answer -t AAAA
-
-# Check CNAME records
-dig www.example.com +nostats +nocomments +nocmd
+# Add .nojekyll file for non-Jekyll static sites
+touch .nojekyll
+git add .nojekyll && git commit -m "Disable Jekyll" && git push
 ```
 
----
+### Supported Static Site Generators
 
-## Usage Limits
+GitHub provides workflow templates for:
+- Jekyll (default)
+- Next.js
+- Nuxt.js
+- Gatsby
+- Hugo
+- Astro
+- Eleventy (11ty)
+- And more...
 
-| Resource | Limit |
-|----------|-------|
-| Repository size | 1 GB (recommended) |
-| Published site size | 1 GB (maximum) |
-| Bandwidth | 100 GB/month (soft) |
-| Builds | 10/hour (soft, branch only) |
-| Deployment timeout | 10 minutes |
+### Limitations
 
-**Restrictions:**
-- No server-side languages (PHP, Python, Ruby)
-- No commercial transactions or e-commerce
-- Must comply with GitHub Terms of Service
+- No server-side languages (PHP, Ruby, Python)
+- Repository size limits apply
+- Bandwidth and build time limits for free tier
+- Private repos require GitHub Pro/Team/Enterprise
 
----
+## Reference Files
 
-## Security Best Practices
+This skill includes comprehensive documentation in `references/`:
 
-1. **Verify custom domains** - Prevents domain takeover attacks
-2. **Avoid wildcard DNS** - `*.example.com` creates security risks
-3. **Enable HTTPS** - Always enforce HTTPS after certificate provisioning
-4. **Don't expose secrets** - Public sites accessible even from private repos
-5. **Update DNS promptly** - If disabling site, update/remove DNS records
+- **getting_started.md** - Site creation, publishing sources, workflows, HTTPS (5 articles)
+- **custom_domains.md** - Domain setup, DNS configuration (2 articles)
+- **jekyll.md** - Jekyll integration, themes, plugins (2 articles)
+- **troubleshooting.md** - 404 errors and common issues (1 article)
 
----
+Use `view` to read specific reference files when detailed information is needed.
 
-## Common Issues & Solutions
+## Working with This Skill
 
-| Issue | Solution |
-|-------|----------|
-| Site not publishing | Check branch/folder settings, verify entry file exists |
-| 404 errors | Ensure `index.html`, `index.md`, or `README.md` at root |
-| Custom domain not working | Wait 24h for DNS propagation, verify records with `dig` |
-| HTTPS not available | Wait up to 1 hour after DNS verification |
-| Mixed content warnings | Change `http://` to `https://` in all assets |
-| Build failures | Check Actions tab for error logs |
+### For Beginners
+Start with `references/getting_started.md` for foundational concepts on creating your first GitHub Pages site.
 
----
+### For Custom Domains
+See `references/custom_domains.md` for DNS configuration and HTTPS setup.
 
-## File References
+### For Jekyll Users
+Check `references/jekyll.md` for theme customization and Jekyll-specific features.
 
-| Topic | Reference File |
-|-------|----------------|
-| DNS Configuration | `references/DnsConfiguration.md` |
-| Jekyll Configuration | `references/JekyllConfiguration.md` |
-| Actions Workflows | `references/ActionsWorkflows.md` |
-| Troubleshooting Guide | `references/Troubleshooting.md` |
-| Best Practices | `references/BestPractices.md` |
+### For Debugging
+Review `references/troubleshooting.md` for common issues like 404 errors.
 
----
+## Common Issues
 
-## Scripts
+### 404 Error
+- Check repository visibility (must be public for free accounts)
+- Verify publishing source is configured correctly
+- Ensure index.html or index.md exists
+- Wait up to 10 minutes for changes to propagate
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/verify-dns.sh` | Verify DNS configuration for custom domains |
-| `scripts/check-site-status.sh` | Check if GitHub Pages site is live |
+### Build Failures
+- Check Jekyll syntax in _config.yml
+- Verify Gemfile dependencies are compatible
+- Review GitHub Actions logs for errors
 
----
+### Custom Domain Not Working
+- Verify DNS records are correct
+- Check CNAME file is in repository root
+- Ensure HTTPS is enforced in repository settings
+- DNS propagation can take up to 24 hours
 
-## External Documentation
+## Notes
 
-- [GitHub Pages Quickstart](https://docs.github.com/en/pages/quickstart)
-- [Custom Domain Configuration](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)
+- This skill was generated from official GitHub documentation
+- Reference files preserve the structure and examples from source docs
+- Content fetched via GitHub's Article API for accuracy
+- Last updated: January 2026
+
+## Updating
+
+To refresh this skill with updated documentation:
+1. Re-run the scraper using GitHub's Article API
+2. The skill will be rebuilt with the latest information
+
+## Resources
+
+- [GitHub Pages Documentation](https://docs.github.com/en/pages)
 - [Jekyll Documentation](https://jekyllrb.com/docs/)
-- [GitHub Actions for Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
-
----
-
-## Gotchas
-
-- **GitHub Pages caches at the CDN level for ~10 minutes** — recently-pushed changes may not appear immediately; check via `?nocache=$(date +%s)` query param.
-- **Custom domain requires CNAME record AND a `CNAME` file in the repo** — missing either breaks HTTPS cert generation, often silently.
-- **Jekyll plugins must be on GitHub's whitelist** — `Gemfile`-only plugins fail build silently in some old configs.
-- **Branch-vs-folder source**: `gh-pages` branch vs `/docs` folder on main vs `/` on main — switching sources requires an explicit redeploy to take effect.
-- **HTTPS enforcement is per-Page-property** — switching from Settings UI doesn't revoke HTTP-only access immediately; old caches serve HTTP until they expire.
-- **Build error logs are in Actions UI, NOT in Pages settings** — first-time users debug for hours in the wrong place.
+- [GitHub Actions for Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)

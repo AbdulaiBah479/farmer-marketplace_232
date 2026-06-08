@@ -1,441 +1,592 @@
 ---
 name: github-release
-description: >
-  Guides IA through releasing a new version of a GitHub library end-to-end.
-  Handles SemVer versioning and Keep a Changelog formatting automatically.
-compatibility: "requires: gh CLI and git"
+description: Use this skill when the user asks to "create a GitHub release", "publish a release", "make a release", "draft release notes", or needs guidance on using gh CLI to manage GitHub releases. This skill specializes in creating comprehensive, well-formatted GitHub releases using the GitHub CLI (gh).
+version: 1.0.0
+license: MIT
 ---
 
-# GitHub Release Skill
+# GitHub Release Creation Skill
 
-This skill automates the full release workflow for a single-package GitHub repository,
-from analysis through changelog authoring and PR creation. It relies exclusively on
-`gh` (GitHub CLI) and `git` no other tools needed.
-
-Steps 1 - 4 are **read-only reconnaissance** nothing is written to the repo until
-Step 5, once the version number is confirmed.
+This skill helps you create professional, comprehensive GitHub releases using
+the `gh` CLI tool. It covers release notes drafting, version management, and
+best practices for open-source release communication.
 
 ## When to Use This Skill
 
-Use this skill whenever the user wants to cut a new release, publish a new version,
-bump a version, create a release branch, generate a changelog, or open a release PR
-on a GitHub repository. Trigger even if the user says something casual like "let's
-ship a new version" or "time to release".
+Trigger this skill when you encounter requests like:
 
----
+- "Create a GitHub release for version X.Y.Z"
+- "Help me draft release notes"
+- "Publish a release with these changes"
+- "Compare version A.B.C and version X.Y.Z"
+- "Make a release for this project"
 
 ## Prerequisites
 
-Examples below include both Bash and PowerShell variants; Windows users should prefer
-the PowerShell blocks.
+1. **GitHub CLI (gh) must be installed and authenticated**
+   ```bash
+   gh auth status
+   ```
+   Should show: `✓ Logged in to github.com account <username>`
 
-Before starting, verify the environment:
+2. **Git repository should be properly tagged**
+   ```bash
+   git tag -l "v*"
+   ```
 
-```bash
-gh auth status                        # must be authenticated
-gh repo view --json nameWithOwner     # must be inside a GitHub repo
-git status                            # working tree should be clean
-```
+## Core Concepts
 
-If any check fails, stop and tell the user what to fix before continuing.
+### Version Numbering (Semantic Versioning)
 
-Then ask the user one question:
+- **Major (X.0.0)**: Breaking changes, major features
+- **Minor (x.Y.0)**: New features, backward compatible
+- **Patch (x.y.Z)**: Bug fixes, small improvements
 
-> *"Which directory contains your library's public-facing source code?
-> (e.g. `src/`, `lib/`, `pkg/` - used to focus the diff on what consumers
-> actually see. Press Enter to scan the whole repo.)"*
+### Release Types
 
-Store the answer as `PUBLIC_PATH`. If empty, `PUBLIC_PATH` is `.` (repo root).
-Exclude these paths from all diffs regardless: `tests/`, `test/`, `spec/`,
-`__tests__/`, `docs/`, `*.lock`, `*-lock.json`, `*.sum`, generated files
-(files with a "do not edit" header comment), and build artefacts.
+- **Stable Release**: Final production-ready version (e.g., v4.0.0)
+- **Pre-release**: Alpha, beta, or RC versions (e.g., v4.0.0-rc.1)
+- **Draft Release**: Work-in-progress release notes
 
----
+## Step-by-Step Release Creation Process
 
-## The 9-Step Release Workflow
+### Step 1: Analyze Changes Since Last Release
 
-Work through every step in order. Show the user what command you're about to run and
-its output. Pause and ask for confirmation only when explicitly noted.
-
----
-
-### Step 1 - Ensure main is up to date
+Identify the base version to compare against:
 
 ```bash
-git checkout main
-git pull origin main
+# Get latest tags
+git tag -l "v*" --sort=-version:refname | head -5
+
+# Get commits since last release
+git log v3.3.0..HEAD --oneline
+
+# Get detailed commit messages
+git log v3.3.0..HEAD --pretty=format:"%h|%ad|%s" --date=short
 ```
 
-Stay on `main` for now. The release branch is created in Step 5, after the version
-is confirmed.
+Key information to extract:
 
----
+- Commit count since last release
+- Major features added
+- Bug fixes and improvements
+- Breaking changes (if any)
+- Performance improvements
+- Documentation updates
 
-### Step 2 - Grab the latest version tag
+### Step 2: Determine Version Number
 
-> **Why not `gh release list`?** GitHub Releases are an optional layer on top of Git
-> tags. Many repos tag releases with `git tag` without ever creating a GitHub Release,
-> so `gh release list` can return empty even when version tags exist. Reading tags
-> directly from git is the reliable source of truth.
+**Guidelines for choosing version numbers:**
+
+| Scenario                               | Version Bump | Example                    |
+| -------------------------------------- | ------------ | -------------------------- |
+| New major features or breaking changes | Major        | v3.3.0 → v4.0.0            |
+| New backward-compatible features       | Minor        | v3.3.0 → v3.4.0            |
+| Bug fixes and minor improvements       | Patch        | v3.3.0 → v3.3.1            |
+| Pre-release versions                   | Suffix       | v4.0.0-beta.1, v4.0.0-rc.1 |
+
+**Questions to ask:**
+
+- Does this introduce breaking changes? → Major bump
+- Are there significant new features? → Minor bump
+- Is it primarily bug fixes? → Patch bump
+
+### Step 3: Draft Release Notes
+
+Structure professional release notes with these sections:
+
+#### 1. **Overview** (2-3 sentences)
+
+- High-level summary of the release
+- Key theme or focus area
+- Version significance (major/minor/patch)
+
+#### 2. **What's New** (categorized changes)
+
+Organize changes by type:
+
+- ✨ **Features**: New functionality
+- 🔧 **Performance**: Speed/resource improvements
+- 🐛 **Bug Fixes**: Resolved issues
+- 📚 **Documentation**: Doc updates
+- 💥 **Breaking Changes**: Incompatible changes (if any)
+- ♻️ **Refactoring**: Code quality improvements
+
+#### 3. **Comparison with Previous Version**
+
+Create comparison tables showing behavior changes:
+
+- Before (vX.Y.Z) → After (vX.Y.Z)
+- Performance metrics
+- Feature additions
+- Configuration changes
+
+#### 4. **Migration Guide** (if applicable)
+
+- Configuration changes needed
+- Breaking changes and how to adapt
+- Deprecated features
+- Upgrade steps
+
+#### 5. **Installation Instructions**
 
 ```bash
-# Fetch all tags from remote to ensure local view is current
-git fetch --tags
+# Docker
+docker pull user/repo:version
 
-# Find the latest version tag, sorted semantically
-# --sort=-version:refname handles 1.10.0 > 1.9.0 correctly (unlike alphabetical)
-PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-echo "Latest tag: $PREV_TAG"
+# Build from source
+git clone https://github.com/user/repo.git
+cd repo
+git checkout vX.Y.Z
+go build -o binary ./cmd/
+
+# Download binaries
+# Link to release assets
 ```
 
-```PowerShell
-# Fetch all tags from remote to ensure local view is current
-git fetch --tags
+#### 6. **Full Changelog**
 
-# Find the latest version tag, sorted semantically
-# --sort=-version:refname handles 1.10.0 > 1.9.0 correctly (unlike alphabetical)
-$prevTag = git tag --sort='-version:refname' | `
-  Select-String '^[vV]?\d+\.\d+\.\d+' | `
-  Select-Object -First 1 -ExpandProperty Line
-
-if ($prevTag) {
-  $prevSha = git rev-list -n 1 $prevTag
-} else {
-  $prevSha = git rev-list --max-parents=0 HEAD
-}
-
-Write-Output "Latest tag: $prevTag"
-```
-
-Then verify the tag exists on the remote (not just locally):
-
-```bash
-git ls-remote --tags origin | grep "refs/tags/$PREV_TAG$"
-```
-
-If the remote check returns nothing, warn the user that the tag appears to be local-only
-and hasn't been pushed - they may want to push it before continuing.
-
-- `PREV_TAG` is the tag name exactly as found (e.g. `v1.4.2`). Strip any leading `v`
-  when doing arithmetic; preserve it when naming things.
-- If **no tags exist at all**, treat `PREV_TAG` as `(none)`, set `PREV_SHA` to the
-  first commit, and default the new version to `1.0.0` (skip Step 4 versioning logic;
-  go straight to Step 5).
-- If the tag does not point to a real commit (orphaned tag), fall back to
-  `git rev-list --max-parents=0 HEAD` and warn the user.
-
-```bash
-PREV_SHA=$(git rev-list -n 1 "$PREV_TAG" 2>/dev/null || git rev-list --max-parents=0 HEAD)
-```
-
----
-
-### Step 3 - Analyse what changed since the last release
-
-This step uses **two complementary signals**. The code diff is the primary source of
-truth; commit messages provide supporting context about intent.
-
-#### 3a - Code diff (primary signal)
-
-```bash
-# Focused diff on the public source path, excluding noise
-git diff "$PREV_SHA"..HEAD -- "$PUBLIC_PATH" \
-  ':(exclude)tests/' ':(exclude)test/' ':(exclude)spec/' \
-  ':(exclude)__tests__/' ':(exclude)docs/' \
-  ':(exclude)*.lock' ':(exclude)*-lock.json' ':(exclude)*.sum'
-```
-
-```PowerShell
-# Focused diff on the public source path, excluding noise
-git diff "$($prevSha)..HEAD" -- $publicPath `
-  ':(exclude)tests/' ':(exclude)test/' ':(exclude)spec/' `
-  ':(exclude)__tests__/' ':(exclude)docs/' `
-  ':(exclude)*.lock' ':(exclude)*-lock.json' ':(exclude)*.sum'
-```
-
-Read the full diff output. For each changed file, identify:
-
-1. **Removed symbols** - functions, classes, methods, constants, exported names that
-   existed before and are now gone. ? Strong signal for MAJOR.
-2. **Changed signatures** - functions that exist in both versions but with different
-   parameters, return types, or thrown errors. ? Strong signal for MAJOR.
-3. **New exported symbols** - public functions, classes, constants that didn't exist
-   before. ? Signal for MINOR.
-4. **Internal-only changes** - modifications that don't touch any public interface
-   (private helpers, unexported functions, algorithm internals). ? PATCH.
-5. **Bug fixes** - corrections to logic that was provably wrong (e.g. off-by-one,
-   null check, wrong condition), without changing the public API. ? PATCH.
-
-If the diff is very large (thousands of lines), first run the stat summary to
-prioritise which files to read in full:
-
-```bash
-git diff "$PREV_SHA"..HEAD --stat -- "$PUBLIC_PATH"
-```
-
-Focus your detailed reading on files with the most changes and files whose names
-suggest they define public interfaces (e.g. `index.*`, `api.*`, `exports.*`,
-`public.*`, `mod.*`, `__init__.*`).
-
-#### 3b - Commit log (secondary signal)
-
-```bash
-git log "$PREV_SHA"..HEAD --oneline --no-merges
-```
-
-Use this to:
-- Understand the **intent** behind code changes that aren't self-explanatory from
-  the diff alone (e.g. a one-line security fix labelled as such).
-- Catch changes that may be in paths outside `PUBLIC_PATH` but are still user-visible
-  (e.g. a CLI flag change in a `cmd/` directory).
-- Fill in context for changelog entries where the code alone doesn't tell the whole
-  story.
-
-See `references/commit-classification.md` for mapping message patterns to change types.
-
-#### 3c - Reconcile the two signals
-
-When signals agree ? use that classification with confidence.
-
-When signals conflict ? **prefer the code diff**. Examples:
-- Commit says `fix: typo` but the diff shows a removed public method ? treat as MAJOR.
-- Commit says `feat: new API` but the diff only touches private internals ? treat as PATCH.
-- Commit says `chore: refactor` but the diff adds new exported symbols ? treat as MINOR.
-
-Document any conflicts you notice - flag them to the user during the changelog review
-in Step 6.
-
----
-
-### Step 4 - Determine the next SemVer version
-
-Apply these rules to your analysis from Step 3 (full rules in `references/semver-rules.md`):
-
-| Condition | Bump |
-|---|---|
-| Any breaking change to public API (removal, signature change, behaviour change) | MAJOR |
-| New exported symbol or feature, no breaking changes | MINOR |
-| Bug fix, perf improvement, security fix, docs, chore only | PATCH |
-
-When a release contains a mix, the **highest precedence wins**:
-`MAJOR > MINOR > PATCH`.
-
-Compute `NEXT_VERSION`:
-- Split `PREV_TAG` into `MAJOR.MINOR.PATCH` integers.
-- Apply the appropriate bump.
-- Format as `vMAJOR.MINOR.PATCH`.
-
-**Present the proposed version to the user** with a brief rationale that cites
-specific code findings, not just commit messages. Example:
-
-> *"I'm proposing v2.1.0. The diff shows two new exported functions (`NewClient` and
-> `WithTimeout`) in `src/client.go`, and no existing public symbols were removed or
-> changed. Commit messages corroborate this as feature additions."*
-
-Ask: *"Does this version look right, or would you like to adjust it?"*
-Wait for confirmation before proceeding.
-
----
-
-### Step 5 - Create the release branch
-
-Now that the version is confirmed, create the branch with the correct name from the start:
-
-```bash
-git checkout -b release/vX.Y.Z
-git push -u origin release/vX.Y.Z
-```
-
----
-
-### Step 6 - Update CHANGELOG.md
-
-Read the existing `CHANGELOG.md` (or create it if absent). Follow the
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format strictly.
-
-**Structure to insert** at the top (just below the `# Changelog` header):
+List all commits with hashes and dates:
 
 ```markdown
-## [X.Y.Z] - YYYY-MM-DD
+### Commits since v3.3.0
 
-### Added
-- ...
-
-### Changed
-- ...
-
-### Deprecated
-- ...
-
-### Removed
-- ...
-
-### Fixed
-- ...
-
-### Security
-- ...
+- `9a8ebda` - Fix: Bypass internal HTTP proxy server (2026-01-09)
+- `680f785` - Feat: Add SOCKS5 Direct Mode (2025-12-15)
 ```
 
-Rules:
-- Use today's date in `YYYY-MM-DD` format.
-- Omit sections that have no entries - don't leave empty headings.
-- Write entries in **plain English from a user's perspective**, derived primarily
-  from what the code diff shows, supplemented by commit message context.
-  Good: *"Added `WithTimeout` option to HTTP client constructor."*
-  Bad: *"feat: add timeout cfg param"*
-- Map findings to sections:
-  - New exported symbol ? Added
-  - Breaking removal ? Removed
-  - Breaking change to existing API ? Changed (flag it as breaking)
-  - Bug/logic fix, perf ? Fixed
-  - Security fix ? Security
-  - Internal refactor, docs, chore, test ? omit unless user-visible
-- If a commit message revealed intent that the code diff alone wouldn't convey
-  (e.g. a security fix disguised as a one-line change), include that context in
-  the changelog entry.
-- Also update the diff link at the bottom of the file:
-  ```markdown
-  [X.Y.Z]: https://github.com/OWNER/REPO/compare/vPREV...vNEXT
-  ```
+#### 7. **Additional Sections** (as needed)
 
-**Show the user the proposed changelog section before writing it to disk.**
-If any signal conflicts were found in Step 3c, flag them here so the user can verify.
-Ask: *"Does this changelog look accurate? Any entries to add, remove, or reword?"*
-Incorporate feedback, then write to disk.
+- Known Issues
+- Credits/Contributors
+- License information
+- Related links
 
----
-
-### Step 7 - Commit and push
+### Step 4: Create Git Tag
 
 ```bash
-git add CHANGELOG.md
-git commit -m "chore: release vX.Y.Z"
-git push origin release/vX.Y.Z
+# Create annotated tag
+git tag -a v4.0.0 -m "Release v4.0.0: Major performance improvements"
+
+# Or create lightweight tag
+git tag v4.0.0
+
+# Push tag to GitHub
+git push origin v4.0.0
+
+# Or push all tags
+git push origin --tags
 ```
 
-Confirm the push succeeded before moving on.
+### Step 5: Create GitHub Release Using gh CLI
 
----
-
-### Step 8 - Open a Pull Request
-
-**?? IMPORTANT:** Always use `--body-file` to pass PR body text, never `--body` with inline text.
-Inline escape sequences like `\n` are not interpreted as newlines by PowerShell and will appear
-as literal text in the PR. Using a file ensures proper markdown formatting.
+#### Basic Release Creation
 
 ```bash
-gh pr create \
-  --base main \
-  --head release/vX.Y.Z \
-  --title "Release vX.Y.Z" \
-  --body "$(cat <<'EOF'
-## Release vX.Y.Z
-
-This PR prepares the **vX.Y.Z** release.
-
-### What's included
-<!-- paste the changelog section here -->
-
-### Checklist
-- [ ] Changelog reviewed
-- [ ] Version bump verified
-- [ ] CI passing
-
-After merging, create the tag on the merge commit:
-\`\`\`
-git tag vX.Y.Z <merge-commit-sha>
-git push origin vX.Y.Z
-\`\`\`
-EOF
-)"
+gh release create v4.0.0 \
+  --title "v4.0.0 - Major Performance Release" \
+  --notes "Release notes here..."
 ```
 
-```PowerShell
-# Create PR body using here-string (preserves actual newlines, not escape sequences)
-$prBody = @"
-## Release vX.Y.Z
+#### Advanced Options
 
-This PR prepares the **vX.Y.Z** release.
+```bash
+# Create release from notes file
+gh release create v4.0.0 \
+  --title "v4.0.0" \
+  --notes-file RELEASE_NOTES.md
 
-### What's included
-<paste changelog here>
+# Create draft release (not published yet)
+gh release create v4.0.0 \
+  --title "v4.0.0" \
+  --notes "Draft notes" \
+  --draft
 
-### Checklist
-- [ ] Changelog reviewed
-- [ ] Version bump verified
-- [ ] CI passing
+# Create pre-release
+gh release create v4.0.0-beta.1 \
+  --title "v4.0.0-beta.1" \
+  --notes "Beta release notes" \
+  --prerelease
 
-After merging, create the tag on the merge commit:
-``````
-git tag vX.Y.Z <merge-commit-sha>
-git push origin vX.Y.Z
-``````
-"@
+# Release with target commit
+gh release create v4.0.0 \
+  --target main \
+  --title "v4.0.0" \
+  --notes "Release notes"
 
-# Write to file and use --body-file (do NOT use inline --body with escape sequences)
-$prBody | Out-File -FilePath release_pr_body.md -Encoding utf8 -NoNewline
-gh pr create --base main --head release/vX.Y.Z --title "Release vX.Y.Z" --body-file release_pr_body.md
+# Release from existing tag notes
+gh release create v4.0.0 \
+  --notes-tag \
+  --title "v4.0.0"
 ```
 
-Paste the changelog section into the PR body's "What's included" block (or leave placeholder for manual review).
+#### Release with Assets
 
+```bash
+# Attach binaries
+gh release create v4.0.0 \
+  --title "v4.0.0" \
+  --notes "Release notes" \
+  ./dist/binary-linux-amd64 \
+  ./dist/binary-darwin-amd64 \
+  ./dist/binary-windows-amd64.exe
+
+# Attach all files from directory
+gh release create v4.0.0 \
+  --title "v4.0.0" \
+  --notes "Release notes" \
+  ./dist/*
+```
+
+### Step 6: Publish and Verify
+
+```bash
+# View release
+gh release view v4.0.0
+
+# List all releases
+gh release list
+
+# Open in browser
+gh browse --release v4.0.0
+
+# Edit if needed
+gh release edit v4.0.0 --notes "Updated notes"
+```
+
+## Release Notes Template
+
+````markdown
+# [Project Name] v[VERSION]
+
+## 🎉 Overview
+
+[2-3 sentence summary of the release]
+
+## 🚀 What's New
+
+### ✨ Features
+
+- **Feature name**: Description of the feature
+  - Technical details
+  - Benefits for users
+
+### 🔧 Performance Improvements
+
+| Metric  | Previous Version | This Version | Improvement |
+| ------- | ---------------- | ------------ | ----------- |
+| Latency | ~100ms           | ~50ms        | 50% ↓       |
+| Memory  | 100MB            | 85MB         | 15% ↓       |
+
+### 🐛 Bug Fixes
+
+- Fixed issue where [description]
+- Resolved [problem] by [solution]
+
+### 📚 Documentation
+
+- Updated [file] with [information]
+- Added guide for [topic]
+
+## 📊 Comparison with v[PREVIOUS_VERSION]
+
+### Behavior Changes
+
+| Scenario  | v[PREVIOUS]  | v[CURRENT]       |
+| --------- | ------------ | ---------------- |
+| Feature A | Old behavior | **New behavior** |
+
+### Technical Details
+
+- **Architecture**: [description of changes]
+- **Modified Files**:
+  - [file1](link) - Change description
+  - [file2](link) - Change description
+
+## 🔄 Migration from v[PREVIOUS]
+
+### ✅ No Configuration Changes Required
+
+[If applicable: "This release is 100% backward compatible"]
+
+### Breaking Changes
+
+[If any: List breaking changes and migration steps]
+
+## 🛠️ Installation
+
+### Docker
+
+```bash
+docker pull user/repo:v[VERSION]
+```
+````
+
+### Build from Source
+
+```bash
+git clone https://github.com/user/repo.git
+cd repo
+git checkout v[VERSION]
+[build commands]
+```
+
+### Download Binaries
+
+Download from [Releases](https://github.com/user/repo/releases) page.
+
+## 📋 Full Changelog
+
+### Commits since v[PREVIOUS]
+
+- `hash` - **Type**: Description (date)
+- `hash` - **Type**: Description (date)
+
+## 🐛 Known Issues
+
+[List any known issues or "None reported"]
+
+## 🙏 Credits
+
+Contributors:
+
+- @username1
+- @username2
+
+## 📄 License
+
+[License information]
+
+## 🔗 Links
+
+- [Documentation](link)
+- [Migration Guide](link)
+- [GitHub Repository](link)
 
 ---
 
-### Step 9 - Hand off to the user
+**Full Changelog**:
+https://github.com/user/repo/compare/v[PREVIOUS]...v[CURRENT]
 
-Tell the user:
+````
+## Best Practices
 
-> **Release PR is open! ??**
->
-> New version: **vX.Y.Z**
->
-> Once the PR is reviewed and merged, you'll need to **create the tag yourself** on
-> the merge commit:
->
-> ```bash
-> git tag vX.Y.Z <merge-commit-sha>
-> git push origin vX.Y.Z
-> ```
->
-> Then go to GitHub Releases and publish the release from that tag. You can copy the
-> changelog section directly into the release notes.
+### DO ✅
+
+1. **Use semantic versioning** consistently
+2. **Write comprehensive release notes** that stand alone
+3. **Include installation instructions** for common use cases
+4. **Highlight breaking changes** prominently
+5. **Credit contributors** who helped with the release
+6. **Link to related issues/PRs** when relevant
+7. **Use consistent formatting** (Markdown tables, code blocks)
+8. **Test the release process** on a test repository first
+9. **Keep release notes concise but complete**
+10. **Include comparison data** for performance changes
+
+### DON'T ❌
+
+1. **NEVER create releases without proper tagging**
+2. **NEVER skip authentication check** before creating releases
+3. **NEVER publish release notes without review**
+4. **DON'T use internal jargon** without explanation
+5. **DON'T forget to verify** the release after creation
+6. **DON'T create major releases** for trivial changes
+7. **DON'T skip backward compatibility notes** for breaking changes
+8. **DON'T forget to push tags** to remote repository
+9. **DON'T use vague commit messages** (improves changelog quality)
+10. **NEVER release untested code** to production
+
+## Common Workflows
+
+### Workflow 1: Regular Feature Release
+
+```bash
+# 1. Checkout main branch
+git checkout main
+git pull
+
+# 2. Review changes since last release
+git tag -l "v*" --sort=-version:refname | head -1
+git log v3.3.0..HEAD --oneline
+
+# 3. Determine version (e.g., v3.4.0 for new features)
+
+# 4. Create tag
+git tag -a v3.4.0 -m "Release v3.4.0: New features and improvements"
+git push origin v3.4.0
+
+# 5. Create release (from prepared notes file)
+gh release create v3.4.0 \
+  --title "v3.4.0 - New Features" \
+  --notes-file RELEASE_NOTES.md
+````
+
+### Workflow 2: Hotfix Patch Release
+
+```bash
+# 1. Create hotfix branch
+git checkout -b hotfix/critical-bug-fix
+
+# 2. Make fix and commit
+git commit -m "fix: Critical security vulnerability"
+
+# 3. Create patch tag
+git tag -a v3.3.1 -m "Release v3.3.1: Critical security fix"
+git push origin hotfix/critical-bug-fix v3.3.1
+
+# 4. Create release with urgent notes
+gh release create v3.3.1 \
+  --title "v3.3.1 - Security Fix" \
+  --notes "## 🚨 Security Fix
+
+This release addresses a critical security vulnerability.
+
+**Upgrade immediately if you are affected.**
+
+[Fix details]"
+```
+
+### Workflow 3: Major Version Release
+
+```bash
+# 1. Comprehensive changelog analysis
+git log v3.0.0..HEAD --pretty=format:"%h|%ad|%s" --date=short > changes.txt
+
+# 2. Create migration guide
+# Write MIGRATION.md with breaking changes
+
+# 3. Create major tag
+git tag -a v4.0.0 -m "Release v4.0.0: Major architecture improvements"
+git push origin v4.0.0
+
+# 4. Create comprehensive release
+gh release create v4.0.0 \
+  --title "v4.0.0 - Major Release" \
+  --notes-file COMPREHENSIVE_NOTES.md \
+  --draft
+
+# 5. Review and publish
+gh release view v4.0.0 --web
+# (Review in browser, then publish when ready)
+```
+
+### Workflow 4: Pre-release (Beta/RC)
+
+```bash
+# 1. Create pre-release tag
+git tag -a v4.0.0-beta.1 -m "Beta 1 for v4.0.0"
+git push origin v4.0.0-beta.1
+
+# 2. Create pre-release
+gh release create v4.0.0-beta.1 \
+  --title "v4.0.0-beta.1 - Testing Release" \
+  --notes "## 🧪 Beta Release
+
+This is a pre-release for testing purposes.
+
+**Not recommended for production use.**
+
+[Features to test]" \
+  --prerelease
+
+# 3. After testing, create final release
+git tag -a v4.0.0 -m "Release v4.0.0"
+git push origin v4.0.0
+gh release create v4.0.0 --notes "Final release notes"
+```
+
+## Troubleshooting
+
+### Issue: "gh not authenticated"
+
+**Solution:**
+
+```bash
+gh auth login
+gh auth status  # Verify
+```
+
+### Issue: "Tag not found"
+
+**Solution:**
+
+```bash
+# Push tag first
+git push origin <tag-name>
+
+# Or verify tag exists
+git tag -l | grep <tag-name>
+```
+
+### Issue: "Release already exists"
+
+**Solution:**
+
+```bash
+# Delete existing release
+gh release delete <tag-name> --yes
+
+# Or edit existing release
+gh release edit <tag-name> --notes "New notes"
+```
+
+### Issue: "Permission denied"
+
+**Solution:**
+
+- Verify repository permissions: `gh repo view`
+- Check authentication: `gh auth status`
+- Ensure you have admin/write access
+
+## Additional Resources
+
+- [GitHub Releases Documentation](https://docs.github.com/en/repositories/releasing-projects-on-github)
+- [GitHub CLI Manual](https://cli.github.com/manual/)
+- [Semantic Versioning](https://semver.org/)
+- [Keep a Changelog](https://keepachangelog.com/)
+
+## Tips for High-Quality Releases
+
+1. **Start Early**: Begin drafting release notes during development
+2. **Track Features**: Maintain a CHANGELOG.md file
+3. **Communicate**: Use issues/PRs to discuss release plans
+4. **Test Thoroughly**: Test installation instructions
+5. **Be Honest**: Clearly document known issues
+6. **Celebrate**: Highlight community contributions
+7. **Stay Organized**: Use consistent structure across releases
+8. **Provide Context**: Explain why changes matter to users
+9. **Include Metrics**: Use data to demonstrate improvements
+10. **Link Forward**: Point to next version or roadmap
+
+## Example Commands Reference
+
+```bash
+# View all gh release commands
+gh release --help
+
+# Create release from stdin
+echo "Release notes" | gh release create v1.0.0
+
+# Create release with discussion
+gh release create v1.0.0 \
+  --discussion "Discuss v1.0.0 release"
+
+# Delete release
+gh release delete v1.0.0 --yes
+
+# Download release assets
+gh release download v1.0.0 \
+  --dir ./downloads \
+  --pattern "*.zip"
+
+# List releases
+gh release list \
+  --limit 20 \
+  --json name,tagName,publishedAt
+```
 
 ---
 
-## Error handling
-
-| Situation | What to do |
-|---|---|
-| `gh auth status` fails | Stop; tell user to run `gh auth login` |
-| Not inside a git repo | Stop; tell user to `cd` into their repo |
-| Working tree is dirty | Warn; ask if they want to stash or abort |
-| No commits since last tag | Tell user there's nothing to release |
-| Tag exists but points to no commit | Use first commit as diff base; warn user |
-| Latest tag exists locally but not on remote | Warn user; ask if they want to push the tag first or continue anyway |
-| Diff is empty for `PUBLIC_PATH` but commits exist | Warn; all changes may be internal; ask if they still want to proceed |
-| `git push` fails (e.g. protected branch rules) | Report the error verbatim; suggest they check branch protection settings |
-
----
-
-## Troubleshooting in PowerShell
-
-- If a command that works locally prints gh usage or treats a subcommand as separate token, ensure you're
-  invoking the gh.exe on PATH (Get-Command gh) and avoid passing unexpanded nested substitutions; use the PowerShell
-  patterns above.
-- Recommend tests: gh --version; git fetch --tags; run the PowerShell snippet to set $prevTag and run git diff --name-only $prevSha..HEAD -- src/
-
----
-
-## Limitations
-
-- Requires the `gh` CLI to be installed and authenticated.
-- Requires git tags to determine current version.
-
----
-
-## Reference files
-
-- `references/semver-rules.md` - Extended SemVer decision rules and edge cases
-- `references/commit-classification.md` - Heuristics for classifying commit messages into change types
+**Remember**: Good releases communicate value, build trust, and make users
+excited about your project!

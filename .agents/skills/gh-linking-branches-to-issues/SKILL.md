@@ -1,8 +1,6 @@
 ---
 name: gh-linking-branches-to-issues
 description: Creates and links a development branch to an issue. Use to start implementation work.
-metadata:
-  pattern: tool-wrapper
 ---
 
 # Linking Branches to Issues
@@ -28,7 +26,3 @@ Creates a new branch and links it to the issue.
 ```bash
 gh issue develop <issue-number> --name "feature-x"
 ```
-
-## 3. Reference
-
-See [references/commands.md](references/commands.md) for the full flag reference, branch naming conventions, and verification command.

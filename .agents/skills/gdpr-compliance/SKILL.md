@@ -1,245 +1,378 @@
 ---
 name: gdpr-compliance
-description: >
-  Expert GDPR compliance assistant covering all four core workflows: (1) auditing code and systems
-  for GDPR violations, (2) drafting GDPR-compliant documents such as privacy policies, Data
-  Processing Agreements (DPAs), and consent notices, (3) answering GDPR compliance questions with
-  authoritative article citations, and (4) reviewing data flows and PII handling practices.
-  Use this skill whenever the user mentions GDPR, data protection, privacy compliance, lawful basis,
-  data subject rights, DPA, privacy notices, consent management, data breaches, DPIAs, controller/
-  processor relationships, cross-border data transfers, or any EU/UK data privacy topic. Also trigger
-  for questions like "is this GDPR compliant?", "how do I handle personal data?", "what does a
-  privacy policy need?", or any request involving PII, personal data, or data retention in a
-  regulatory context.
+description: GDPR compliance planning including lawful bases, data subject rights, DPIA, and implementation patterns
+allowed-tools: Read, Glob, Grep, Write, Edit, Task
 ---
 
-# GDPR Compliance Skill
+# GDPR Compliance Planning
 
-You are a GDPR compliance expert combining deep legal knowledge with practical technical
-understanding. You serve both developers auditing systems and legal/DPO professionals drafting
-documents. Always cite the relevant GDPR article(s) when making compliance assertions.
+Comprehensive guidance for General Data Protection Regulation compliance before development begins.
 
----
+## When to Use This Skill
 
-## Core Principles
+- Planning systems that process EU residents' personal data
+- Designing consent management and preference centers
+- Implementing data subject rights (access, erasure, portability)
+- Conducting Data Protection Impact Assessments (DPIA)
+- Defining data processing agreements and controller/processor relationships
 
-- **Always cite articles**: Every compliance claim should reference the specific GDPR article.
-  Example: "Consent must be freely given, specific, informed, and unambiguous (Art. 7; Recital 32)."
-- **Dual audience**: Adapt tone per context — technical for code reviews, legal-precise for documents.
-- **No false certainty**: Flag genuinely ambiguous areas. Recommend a qualified DPO/lawyer for
-  high-stakes decisions. You assist, you do not replace legal counsel.
-- **UK GDPR — DUAA 2025**: The UK **Data (Use and Access) Act 2025** received Royal Assent on 19 June 2025 and materially diverges UK GDPR from EU GDPR. Key differences: (1) "Recognised Legitimate Interests" — a statutory list of purposes (national security, crime prevention, safeguarding, emergencies, public interest) that satisfy Art. 6(1)(f) without a balancing test; (2) international transfers assessed against a "not materially lower" protection standard, not the EU's "essentially equivalent" test; (3) "Senior Responsible Individual" (SRI) introduced as a role modifying/replacing the mandatory DPO requirement for some organisations; (4) automated decision-making rules (equivalent to EU Art. 22) are retained but less prescriptive. Always flag UK-specific questions as requiring UK-specific analysis under the DUAA, not just EU GDPR.
+## GDPR Fundamentals
 
----
+### The 7 Principles
 
-## Workflow 1: Code & System Audit
+| Principle | Description | Implementation Focus |
+|-----------|-------------|---------------------|
+| **Lawfulness, Fairness, Transparency** | Valid legal basis, fair processing, clear privacy notices | Consent flows, privacy policies |
+| **Purpose Limitation** | Collect for specified, explicit purposes | Purpose tracking, use restriction |
+| **Data Minimization** | Adequate, relevant, limited to purpose | Field-level justification |
+| **Accuracy** | Keep data accurate and up to date | Update mechanisms, verification |
+| **Storage Limitation** | Keep only as long as necessary | Retention policies, auto-deletion |
+| **Integrity and Confidentiality** | Appropriate security measures | Encryption, access control |
+| **Accountability** | Demonstrate compliance | Audit logs, documentation |
 
-When the user shares code, architecture diagrams, database schemas, or system descriptions for
-GDPR review:
+### Lawful Bases for Processing
 
-### Step 1 — Identify Personal Data
-Determine what personal data (Art. 4(1)) and special category data (Art. 9) is present or flows
-through the system. Flag:
-- Direct identifiers: name, email, IP address, device ID, cookies (Art. 4(1); Recital 30)
-- Special categories: health, biometric, racial/ethnic origin, etc. (Art. 9(1))
-- Inferred data that could re-identify individuals
-
-### Step 2 — Assess Lawful Basis
-For each processing activity, check whether a lawful basis exists (Art. 6(1)):
-- **Consent** (Art. 6(1)(a)): Must meet Art. 7 requirements — freely given, specific, informed,
-  unambiguous, withdrawable.
-- **Contract** (Art. 6(1)(b)): Processing necessary for contract performance.
-- **Legal obligation** (Art. 6(1)(c)): Required by EU/Member State law.
-- **Vital interests** (Art. 6(1)(d)): Life-or-death situations.
-- **Public task** (Art. 6(1)(e)): Public authority functions.
-- **Legitimate interests** (Art. 6(1)(f)): Must pass a 3-part LIA (purpose, necessity, balancing).
-
-### Step 3 — Data Minimisation & Purpose Limitation
-- Is only the minimum necessary data collected? (Art. 5(1)(c) — data minimisation)
-- Is data used only for the original stated purpose? (Art. 5(1)(b) — purpose limitation)
-- Flag any fields collected but unused, or reused for undisclosed secondary purposes.
-
-### Step 4 — Security & Technical Measures
-Evaluate against Art. 25 (Privacy by Design/Default) and Art. 32 (Security):
-- Encryption at rest and in transit (Art. 32(1)(a))
-- Pseudonymisation where feasible (Art. 32(1)(a); Art. 25(1))
-- Access controls — principle of least privilege
-- Logging and audit trails for accountability (Art. 5(2))
-- Data breach detection and response capability (Art. 33–34)
-
-### Step 5 — Retention & Deletion
-- Is there a defined retention period? (Art. 5(1)(e) — storage limitation)
-- Is there a deletion/anonymisation mechanism?
-- Are backups included in retention policy?
-
-### Step 6 — Third Parties & Transfers
-- Are processors bound by a DPA? (Art. 28)
-- Any cross-border transfers? Verify one of the following mechanisms (Art. 44–49):
-  - **Adequacy decision (Art. 45):** EU-US Data Privacy Framework (DPF, July 2023) covers US transfers — but note the DPF is under CJEU appeal (Case C-703/25 P, registered Oct 2025) and PCLOB oversight is currently suspended; controllers relying solely on DPF should maintain SCC-readiness as a backup. UK: EU adequacy renewed December 2025, valid through December 2031.
-  - **Standard Contractual Clauses (Art. 46(2)(c)):** 2021 SCCs remain current. A new module is in development for transfers to non-EEA entities already subject to GDPR via Art. 3(2) — not yet adopted; until then, Dutch DPA enforcement shows SCCs are still required in that scenario.
-  - **Binding Corporate Rules (Art. 47)** or other Art. 46 safeguards
-- Is there a Record of Processing Activities (RoPA) entry? (Art. 30)
-
-### Audit Output Format
-```
-## GDPR Audit Report
-
-### Personal Data Identified
-[List data types + legal classification]
-
-### Lawful Basis Assessment
-[Per processing activity]
-
-### Findings
-| # | Severity | Article | Issue | Recommendation |
-|---|----------|---------|-------|----------------|
-| 1 | 🔴 High   | Art. X  | ...   | ...            |
-| 2 | 🟡 Medium | Art. X  | ...   | ...            |
-| 3 | 🟢 Low    | Art. X  | ...   | ...            |
-
-### Summary
-[Overall compliance posture + priority actions]
+```text
+1. Consent - Freely given, specific, informed, unambiguous
+2. Contract - Necessary for contract performance
+3. Legal Obligation - Required by law
+4. Vital Interests - Protect someone's life
+5. Public Task - Official authority/public interest
+6. Legitimate Interest - Balanced against data subject rights
 ```
 
-Severity guide: 🔴 High = direct violation risk; 🟡 Medium = gap requiring remediation;
-🟢 Low = best-practice improvement.
+**Legitimate Interest Assessment (LIA):**
 
----
+1. Purpose test: Is there a legitimate interest?
+2. Necessity test: Is processing necessary for that interest?
+3. Balancing test: Do subject's interests override?
 
-## Workflow 2: Document Drafting
+## Data Subject Rights Implementation
 
-When asked to draft a GDPR document, load the appropriate reference file:
+### Rights Checklist
 
-All document templates are in `references/documents.md`. Load that file and navigate to the
-relevant section:
+| Right | Description | Response Time | Implementation |
+|-------|-------------|---------------|----------------|
+| Access | Copy of personal data | 1 month | Export endpoint |
+| Rectification | Correct inaccurate data | 1 month | Update endpoint |
+| Erasure ("Right to be Forgotten") | Delete personal data | 1 month | Deletion pipeline |
+| Restrict Processing | Limit use of data | 1 month | Processing flags |
+| Data Portability | Machine-readable export | 1 month | JSON/CSV export |
+| Object | Stop processing | Without undue delay | Opt-out mechanism |
+| Automated Decision-Making | Human review of decisions | Varies | Review queue |
 
-| Document Requested | Section in documents.md |
-|--------------------|-------------------------|
-| Privacy Policy / Notice | `# Privacy Notice / Privacy Policy Template` |
-| Data Processing Agreement (DPA) | `# Data Processing Agreement (DPA) Template` |
-| Consent Notice / Banner | `# Consent Notice / Cookie Banner Template` |
-| DPIA (Data Protection Impact Assessment) | `# DPIA Template` |
-| Data Retention Policy | `# Data Retention Policy Template` |
-| Data Subject Rights Procedure | `# Data Subject Rights Procedure` |
+### .NET Implementation Patterns
 
-**Before drafting**, gather:
-1. Organisation name and role (controller, processor, or joint controller — Art. 4(7–8))
-2. Types of personal data processed
-3. Purposes of processing
-4. Lawful basis for each purpose
-5. Third parties / processors involved
-6. Countries data is transferred to
-7. Retention periods
+```csharp
+// Data Subject Request Handling
+public interface IDataSubjectRequestHandler
+{
+    Task<DataExport> HandleAccessRequest(Guid subjectId, CancellationToken ct);
+    Task HandleErasureRequest(Guid subjectId, ErasureScope scope, CancellationToken ct);
+    Task<PortableData> HandlePortabilityRequest(Guid subjectId, string format, CancellationToken ct);
+}
 
-**Drafting standards**:
-- Plain, intelligible language accessible to data subjects (Art. 12(1))
-- All required Art. 13/14 information for privacy notices
-- Modular structure so sections can be updated independently
-- Insert `[PLACEHOLDER]` for organisation-specific details that must be confirmed
+public class DataSubjectRequestService : IDataSubjectRequestHandler
+{
+    private readonly IPersonalDataLocator _dataLocator;
+    private readonly IAuditLogger _auditLogger;
+    private readonly TimeProvider _timeProvider;
 
----
+    public async Task<DataExport> HandleAccessRequest(Guid subjectId, CancellationToken ct)
+    {
+        await _auditLogger.LogRequestReceived(subjectId, "Access", _timeProvider.GetUtcNow());
 
-## Workflow 3: Compliance Q&A
+        var locations = await _dataLocator.LocateAllPersonalData(subjectId, ct);
+        var export = new DataExport
+        {
+            SubjectId = subjectId,
+            GeneratedAt = _timeProvider.GetUtcNow(),
+            Categories = new List<DataCategory>()
+        };
 
-When answering GDPR questions:
+        foreach (var location in locations)
+        {
+            var data = await location.ExtractData(ct);
+            export.Categories.Add(new DataCategory
+            {
+                Name = location.CategoryName,
+                Purpose = location.ProcessingPurpose,
+                LawfulBasis = location.LawfulBasis,
+                RetentionPeriod = location.RetentionPolicy,
+                Data = data
+            });
+        }
 
-1. **State the direct answer first**, then support with article citations.
-2. **Structure complex answers** using: Rule → Article → Exception → Practical Implication.
-3. **Acknowledge Member State derogations** where relevant (e.g., age of consent Art. 8 varies
-   13–16 across Member States).
-4. **Flag high-risk areas** that warrant specialist legal advice (e.g., special category data,
-   cross-border enforcement, employee monitoring).
+        await _auditLogger.LogRequestCompleted(subjectId, "Access", _timeProvider.GetUtcNow());
+        return export;
+    }
 
-### Key Article Quick Reference
-| Topic | Articles |
-|-------|----------|
-| Definitions | Art. 4 |
-| Lawful basis | Art. 6 |
-| Special categories | Art. 9–10 |
-| Consent | Art. 7–8 |
-| Transparency & notices | Art. 12–14 |
-| Data subject rights | Art. 15–22 |
-| Controller obligations | Art. 24–25, 28–31 |
-| Security | Art. 32 |
-| Breach notification | Art. 33–34 |
-| DPIA | Art. 35–36 |
-| DPO | Art. 37–39 |
-| International transfers | Art. 44–49 |
-| Supervisory authority | Art. 51–59 |
-| Remedies & penalties | Art. 77–84 |
+    public async Task HandleErasureRequest(Guid subjectId, ErasureScope scope, CancellationToken ct)
+    {
+        // Check for legal holds or retention requirements
+        var blocks = await CheckErasureBlocks(subjectId, ct);
+        if (blocks.Any())
+        {
+            throw new ErasureBlockedException(blocks);
+        }
 
----
+        var locations = await _dataLocator.LocateAllPersonalData(subjectId, ct);
 
-## Workflow 4: Data Flow & PII Review
+        foreach (var location in locations)
+        {
+            if (scope.IncludesCategory(location.CategoryName))
+            {
+                // Soft delete with scheduled hard delete
+                await location.MarkForDeletion(_timeProvider.GetUtcNow().AddDays(30), ct);
+            }
+        }
 
-When reviewing data flows, data mapping, or PII handling:
+        await _auditLogger.LogErasureInitiated(subjectId, scope, _timeProvider.GetUtcNow());
+    }
+}
+```
 
-### Data Flow Analysis
-For each data flow, evaluate:
-1. **What** personal data moves (Art. 4(1))
-2. **Why** — purpose and lawful basis (Art. 5(1)(b), Art. 6)
-3. **Where** — source → processor(s) → destination, including third countries
-4. **Who** has access — roles, contractors, sub-processors (Art. 28(2))
-5. **How long** it is retained (Art. 5(1)(e))
-6. **How** it is protected in transit and at rest (Art. 32)
+### Consent Management
 
-### RoPA Alignment (Art. 30)
-Check whether the data flow is captured in a Record of Processing Activities:
-- Controller name and contact details (Art. 30(1)(a))
-- Purposes of processing (Art. 30(1)(b))
-- Categories of data subjects and personal data (Art. 30(1)(c))
-- Recipients (Art. 30(1)(d))
-- Third-country transfers and safeguards (Art. 30(1)(e))
-- Retention periods (Art. 30(1)(f))
-- Security measures (Art. 30(1)(g))
+```csharp
+// Consent tracking with granular purposes
+public class ConsentRecord
+{
+    public Guid SubjectId { get; init; }
+    public string Purpose { get; init; } = string.Empty;
+    public bool IsGranted { get; init; }
+    public DateTimeOffset Timestamp { get; init; }
+    public string ConsentMechanism { get; init; } = string.Empty; // e.g., "WebForm", "API"
+    public string ConsentVersion { get; init; } = string.Empty; // Version of consent text
+    public string? WithdrawalTimestamp { get; set; }
+}
 
-### PII Handling Checklist
-- [ ] Data classified by sensitivity (ordinary vs. special category)
-- [ ] Collection limited to stated purpose (Art. 5(1)(b–c))
-- [ ] Consent or other lawful basis recorded (Art. 7(1))
-- [ ] Data subject rights mechanism in place (Art. 15–22)
-- [ ] Processor contracts in place for all third parties (Art. 28)
-- [ ] International transfer mechanism documented (Art. 44–49)
-- [ ] Retention schedule defined and enforced (Art. 5(1)(e))
-- [ ] Breach response procedure documented (Art. 33–34)
-- [ ] DPIA conducted if high risk (Art. 35)
+public interface IConsentManager
+{
+    Task RecordConsent(ConsentRecord consent, CancellationToken ct);
+    Task WithdrawConsent(Guid subjectId, string purpose, CancellationToken ct);
+    Task<bool> HasValidConsent(Guid subjectId, string purpose, CancellationToken ct);
+    Task<IReadOnlyList<ConsentRecord>> GetConsentHistory(Guid subjectId, CancellationToken ct);
+}
 
----
+public class GdprConsentManager : IConsentManager
+{
+    private readonly IConsentRepository _repository;
+    private readonly IEventPublisher _events;
 
-## Escalation & Caveats
+    public async Task<bool> HasValidConsent(Guid subjectId, string purpose, CancellationToken ct)
+    {
+        var latest = await _repository.GetLatestConsent(subjectId, purpose, ct);
 
-Always include this note when advising on high-stakes matters:
+        if (latest is null)
+            return false;
 
-> **⚠️ Legal Advice Disclaimer**: This guidance is informational and based on the GDPR text and
-> established regulatory guidance. It does not constitute legal advice. For matters involving
-> significant compliance risk, supervisory authority interaction, or complex cross-border scenarios,
-> consult a qualified data protection lawyer or your DPO.
+        if (latest.WithdrawalTimestamp is not null)
+            return false;
 
-High-stakes triggers requiring this disclaimer:
-- Fines or enforcement risk (Art. 83–84)
-- Special category data processing (Art. 9)
-- International transfers — especially DPF reliance (CJEU appeal pending) and transfers to China
-- Employee/HR data processing
-- Children's data (Art. 8)
-- Law enforcement requests
-- AI system training or deployment on personal data (EDPB Opinion 28/2024 applies)
-- Online platforms hosting user-generated content with potential special category data (Russmedia ruling)
+        // Check if consent version is still current
+        var currentVersion = await _repository.GetCurrentConsentVersion(purpose, ct);
+        if (latest.ConsentVersion != currentVersion)
+        {
+            // Consent was given under old terms - needs re-consent
+            return false;
+        }
 
----
+        return latest.IsGranted;
+    }
+}
+```
 
-## Key Regulatory Updates (2024–2026)
+## Data Protection Impact Assessment (DPIA)
 
-Load `references/updates-2025.md` for detailed guidance on these material developments:
+### When DPIA is Required
 
-| Development | Summary |
-|---|---|
-| **EDPB Opinion 28/2024 on AI Models** | AI models are not automatically anonymous; legitimate interests can be used for AI training; unlawful training data can taint deployment |
-| **CJEU SRB ruling on pseudonymisation** | "Relative personal data" — pseudonymised data may not be personal in the hands of a specific recipient; critical for anonymisation defences and Art. 17 erasure |
-| **CJEU Russmedia ruling** | Online marketplace operators are controllers for special category data in user-generated ads, even if they don't create the content |
-| **UK Data (Use and Access) Act 2025** | Royal Assent 19 June 2025; new Recognised Legitimate Interests; different transfer test; Senior Responsible Individual role |
-| **EU adequacy — UK renewed** | UK adequacy decisions renewed 19 December 2025 through 27 December 2031 |
-| **EU–US Data Privacy Framework** | Valid but legally challenged: CJEU appeal (C-703/25 P) registered; PCLOB oversight suspended; maintain SCC fallback |
-| **ePrivacy Regulation withdrawn** | Formally withdrawn February 2025; Digital Omnibus proposes folding cookie rules into GDPR — still a proposal |
-| **EDPB Guidelines 1/2024 on Legitimate Interests** | Comprehensive new guidance replacing 2014 WP29 opinion; practical balancing test guidance |
-| **CEF 2025 — Right to Erasure** | Coordinated enforcement found widespread failures in erasure procedures, training, and technical deletion capability |
-| **Digital Omnibus (Nov 2025 proposal)** | Proposed GDPR amendments: RoPA threshold raised to 750 employees; AI as legitimate interest codified; cookie rules integrated; relative anonymisation — **not yet law** |
+DPIA is mandatory when processing is likely to result in high risk:
+
+- Systematic and extensive profiling with significant effects
+- Large-scale processing of special category data
+- Systematic monitoring of public areas
+- New technologies with unknown privacy impact
+- Automated decision-making with legal/similar effects
+- Large-scale processing of children's data
+
+### DPIA Template Structure
+
+```markdown
+## 1. Description of Processing
+- Nature: What will you do with the data?
+- Scope: How much data, how many subjects, geographic area?
+- Context: Internal/external factors affecting expectations?
+- Purpose: What are you trying to achieve?
+
+## 2. Necessity and Proportionality
+- Lawful basis and justification
+- Purpose limitation assessment
+- Data minimization measures
+- Data quality approach
+- Storage limitation policy
+
+## 3. Risk Assessment
+
+### Risks to Individuals
+| Risk | Likelihood | Severity | Score | Mitigation |
+|------|------------|----------|-------|------------|
+| Unauthorized access | Medium | High | 6 | Encryption, MFA |
+| Data breach | Low | Critical | 4 | Monitoring, IR plan |
+| Inaccurate profiling | Medium | Medium | 4 | Human review |
+
+### Residual Risk
+[After mitigations applied]
+
+## 4. Consultation
+- DPO advice obtained: [Date]
+- Supervisory authority consulted: [If required]
+- Data subject views considered: [How]
+
+## 5. Sign-Off
+| Role | Name | Approval | Date |
+|------|------|----------|------|
+| Project Owner | | [ ] | |
+| DPO | | [ ] | |
+| CISO | | [ ] | |
+```
+
+### Risk Scoring Matrix
+
+```text
+         SEVERITY
+         Low(1)  Medium(2)  High(3)  Critical(4)
+L   High(4)    4      8         12       16
+I   Med(3)     3      6          9       12
+K   Low(2)     2      4          6        8
+E   V.Low(1)   1      2          3        4
+```
+
+**Thresholds:**
+
+- 1-4: Acceptable risk
+- 5-8: Mitigations required
+- 9-12: Senior approval required
+- 13+: Consult supervisory authority
+
+## Privacy by Design Checklist
+
+### Architecture Phase
+
+- [ ] Data flows documented with personal data highlighted
+- [ ] Purpose for each data element defined
+- [ ] Lawful basis identified per purpose
+- [ ] Retention periods defined per category
+- [ ] Access control requirements specified
+- [ ] Encryption requirements defined
+- [ ] Pseudonymization opportunities identified
+
+### Development Phase
+
+- [ ] Consent collection implemented correctly
+- [ ] Data subject rights endpoints created
+- [ ] Audit logging captures processing activities
+- [ ] Data retention automation implemented
+- [ ] Encryption at rest and in transit
+- [ ] Input validation prevents excess collection
+- [ ] Error messages don't leak personal data
+
+### Testing Phase
+
+- [ ] Consent flows tested (grant, withdraw, re-consent)
+- [ ] All DSR endpoints functional
+- [ ] Retention automation verified
+- [ ] Access controls tested
+- [ ] Audit logs complete and accurate
+- [ ] Penetration testing for data exposure
+
+## Record of Processing Activities (ROPA)
+
+### Article 30 Requirements
+
+Controllers must maintain records of:
+
+```yaml
+Processing Activity: Customer Account Management
+Controller: [Organization Name]
+DPO Contact: dpo@example.com
+Purposes:
+  - Account authentication
+  - Order fulfillment
+  - Customer support
+Categories of Data Subjects:
+  - Customers
+  - Prospective customers
+Categories of Personal Data:
+  - Name, email, phone
+  - Address
+  - Order history
+  - Payment tokens (not card numbers)
+Recipients:
+  - Payment processor (Stripe)
+  - Shipping provider (FedEx)
+  - Customer support platform (Zendesk)
+International Transfers:
+  - Stripe Inc. (US) - SCCs
+  - None to third countries without safeguards
+Retention:
+  - Active account: Duration of relationship
+  - Closed account: 7 years (legal requirement)
+Security Measures:
+  - TLS 1.3 in transit
+  - AES-256 at rest
+  - Role-based access control
+  - Regular access reviews
+```
+
+## International Data Transfers
+
+### Transfer Mechanisms Post-Schrems II
+
+| Mechanism | Use Case | Requirements |
+|-----------|----------|--------------|
+| **Adequacy Decision** | EU-approved countries | None additional |
+| **Standard Contractual Clauses (SCCs)** | Most common | TIA required |
+| **Binding Corporate Rules** | Intra-group transfers | Supervisory approval |
+| **Derogations (Art. 49)** | Occasional transfers | Limited scope |
+
+### Transfer Impact Assessment (TIA)
+
+```markdown
+## Transfer Impact Assessment
+
+### 1. Transfer Details
+- Exporter: [EU entity]
+- Importer: [Third country entity]
+- Countries: [List]
+- Data types: [Categories]
+- Transfer mechanism: [SCCs/BCRs/etc.]
+
+### 2. Third Country Assessment
+- Laws requiring disclosure to authorities
+- Surveillance legislation
+- Rule of law / judicial independence
+- Practical access by authorities
+
+### 3. Supplementary Measures
+- Technical: [Encryption, pseudonymization]
+- Contractual: [Additional clauses]
+- Organizational: [Policies, training]
+
+### 4. Conclusion
+- Risk level: [Acceptable/Requires mitigation/Unacceptable]
+- Decision: [Proceed/Modify/Suspend]
+```
+
+## Cross-References
+
+- **CCPA/CPRA**: See similar concepts (disclosure, deletion, opt-out)
+- **AI Governance**: `ai-governance` skill for AI-specific requirements
+- **Security Frameworks**: `security-frameworks` for technical controls
+- **Data Classification**: `data-classification` for sensitivity levels
+
+## Resources
+
+- [GDPR Full Text](https://gdpr-info.eu/)
+- [EDPB Guidelines](https://edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en)
+- [ICO GDPR Guidance](https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/)

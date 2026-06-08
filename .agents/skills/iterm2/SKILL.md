@@ -1,5 +1,5 @@
 ---
-name: iterm2
+name: Iterm2
 description: iTerm2 terminal emulator and tmux multiplexer expertise. USE WHEN user mentions iTerm2, tmux, terminal sessions, split panes, window management, OR terminal productivity on macOS.
 ---
 
@@ -103,14 +103,3 @@ Run `tmux -CC` for native iTerm2 integration:
 | `Shortcuts.md` | Complete keyboard shortcut reference |
 | `TmuxConfig.md` | tmux configuration (.tmux.conf) guide |
 | `TmuxCommands.md` | Full tmux command reference |
-
----
-
-## Gotchas
-
-- **"Reuse previous session's directory" is per-profile and per-context:** New windows from Cmd-N use the profile's window setting; new tabs from Cmd-T use the tab setting. They differ — confusing when prompts open in unexpected directories.
-- **`tmux -CC` requires the tmux server to be installed and started:** If tmux is on a remote host but iTerm2 is local, `tmux -CC attach` works over SSH only when SSH was started from iTerm2 itself — not from a script that spawns a subshell.
-- **Cmd-D split uses the current pane's profile, NOT the window default:** Once a profile changes mid-session (via shell integration), new splits inherit the modified profile and can carry unwanted env or PATH.
-- **`Ctrl+b` prefix conflicts with readline `transpose-words`:** Vi-mode users who rebind it (`set -g prefix C-a`) must remember `Ctrl+a` also conflicts with screen and shell line-start — pick a free combo like `C-Space`.
-- **Shell integration injects OSC 1337 escape codes:** Pipelines that capture terminal output (script, asciinema) end up with garbled control sequences unless integration is disabled per-pane via `Edit Session > Disable Shell Integration`.
-- **Status bar updates run on the main thread:** Heavy custom status bar scripts (long `git status`, slow cloud CLIs) freeze the entire terminal — keep status callbacks under 100ms or run them async.

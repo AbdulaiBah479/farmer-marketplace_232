@@ -1,13 +1,12 @@
 ---
 name: import-track
-description: Moves track markdown files to the correct album location. Use when the user has track files in Downloads or other locations that need to be placed in an album.
+description: Move track markdown files to the correct album location
 argument-hint: <file-path> <album-name> [track-number]
-model: haiku
+model: claude-haiku-4-5-20251001
 allowed-tools:
   - Read
   - Bash
   - Glob
-  - bitwize-music-mcp
 ---
 
 ## Your Task
@@ -38,17 +37,32 @@ Usage: /import-track <file-path> <album-name> [track-number]
 Example: /import-track ~/Downloads/track.md sample-album 03
 ```
 
-## Step 2: Find Album and Resolve Path via MCP
+## Step 2: Read Config (REQUIRED)
 
-1. Call `find_album(album_name)` — fuzzy match by name, slug, or partial. Returns album metadata including genre.
-2. Call `resolve_path("tracks", album_slug)` — returns the full tracks directory path
+**ALWAYS read the config file first. Never skip this step.**
 
-If album not found, MCP returns available albums:
+```bash
+cat ~/.bitwize-music/config.yaml
+```
+
+Extract:
+- `paths.content_root` → The base content directory
+- `artist.name` → The artist name (e.g., "bitwize")
+
+## Step 3: Find Album and Determine Genre
+
+Search for the album directory to find its genre:
+
+```bash
+find {content_root}/artists/{artist}/albums -type d -name "{album-name}" 2>/dev/null
+```
+
+If album not found:
 ```
 Error: Album "{album-name}" not found.
 
 Available albums:
-[list from MCP response]
+[list albums found in artists/{artist}/albums/]
 
 Create album first with: /new-album {album-name} <genre>
 ```
@@ -146,22 +160,37 @@ Moved: ~/Downloads/t-day-beach.md
 
 ## Common Mistakes
 
-### ❌ Don't: Manually read config and search for albums
+### ❌ Don't: Skip reading config
 
 **Wrong:**
 ```bash
+# Assuming content_root path
+mv track.md ~/music-projects/artists/bitwize/albums/...
+```
+
+**Right:**
+```bash
+# Always read config first
 cat ~/.bitwize-music/config.yaml
+# Use paths.content_root and artist.name from config
+```
+
+### ❌ Don't: Search from wrong location
+
+**Wrong:**
+```bash
+# Searching from current directory
 find . -name "README.md" -path "*albums/$album_name*"
 ```
 
 **Right:**
-```
-# Use MCP to find album and resolve path
-find_album(album_name) → returns album metadata with genre
-resolve_path("tracks", album_slug) → returns full tracks directory path
+```bash
+# Search from content_root
+content_root=$(yq '.paths.content_root' ~/.bitwize-music/config.yaml)
+find "$content_root" -name "README.md" -path "*albums/$album_name*"
 ```
 
-**Why it matters:** MCP handles config reading, fuzzy matching, and path resolution in single calls.
+**Why it matters:** Album might not be in current working directory.
 
 ### ❌ Don't: Forget the tracks/ subdirectory
 
@@ -178,6 +207,21 @@ resolve_path("tracks", album_slug) → returns full tracks directory path
 ```
 
 **Why it matters:** Tracks always go in the `tracks/` subdirectory within the album folder.
+
+### ❌ Don't: Use hardcoded artist name
+
+**Wrong:**
+```bash
+# Assuming artist is bitwize
+find ~/music-projects/artists/bitwize/albums -name "README.md"
+```
+
+**Right:**
+```bash
+# Read artist.name from config
+artist=$(yq '.artist.name' ~/.bitwize-music/config.yaml)
+find "$content_root/artists/$artist/albums" -name "README.md"
+```
 
 ### ❌ Don't: Skip track number validation
 
@@ -207,9 +251,10 @@ mv track.md ~/music-projects/artists/bitwize/albums/electronic/sample-album/trac
 ```
 
 **Right:**
-```
-# Use MCP to find the album (handles genre resolution)
-find_album(album_name) → returns album metadata including genre and path
+```bash
+# Search for album across all genres
+find "$content_root/artists/$artist/albums" -type d -name "$album_name"
+# Album might be in hip-hop, electronic, folk, etc.
 ```
 
-**Why it matters:** Albums are organized by genre. `find_album` resolves the genre automatically.
+**Why it matters:** Albums are organized by genre. You need to find the album first, not assume its genre.

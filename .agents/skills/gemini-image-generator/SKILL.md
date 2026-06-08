@@ -1,195 +1,210 @@
 ---
-name: gemini-image-generator
-description: Generate images using Google Gemini NanoBanana via browser automation. Use this skill for general-purpose AI image generation from text prompts. Includes persistent authentication, automatic environment setup, and reference image support for style matching.
+name: Gemini Image Generator
+description: This skill should be used when the user asks to "generate an image", "create project images", "make illustrations", "generate icons", "create visual assets", "use Gemini for images", "generate with nono banana", or needs AI-generated images for their project using Google's Gemini API.
+version: 0.1.0
 ---
 
 # Gemini Image Generator
 
-Gemini NanoBananaを使った汎用AI画像生成スキル。
+Generate high-quality images for projects using Google's Gemini 3 Pro Image Preview model. This skill provides workflows for creating various types of project images including icons, illustrations, banners, and concept art.
 
-## When to Use This Skill
+## Overview
 
-Trigger when user:
-- Asks to generate/create images with AI
-- Mentions "Gemini image", "generate picture", "create artwork"
-- Requests visual content from text descriptions
-- Wants to produce illustrations or graphics
-- **Wants to create images matching a reference image's style** (NEW!)
+The Gemini 3 Pro Image Preview model (`gemini-3-pro-image-preview`) offers native image generation capabilities through the Generative Language API. It supports:
 
-**For specific use cases, use specialized skills:**
-- **LP/セールスレター画像** → `gemini-lp-generator`
-- **ウェビナースライド** → `gemini-slide-generator`
+- Text-to-image generation
+- Image editing and transformation
+- Style transfer
+- Multi-image composition
+
+## Prerequisites
+
+Before using this skill:
+
+1. Obtain a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+2. Set the environment variable: `export GEMINI_API_KEY="your-api-key"`
 
 ## Quick Start
 
-```bash
-cd /path/to/gemini-image-generator
+### Generate Image via Python Script
 
-# 1. Check authentication
-python scripts/run.py auth_manager.py status
-
-# 2. Authenticate (if needed)
-python scripts/run.py auth_manager.py setup
-
-# 3. Generate image (basic)
-python scripts/run.py image_generator.py \
-  --prompt "sunset over mountains, watercolor style" \
-  --output output/my_image.png
-
-# 4. Generate with reference image (NEW!)
-python scripts/run.py image_generator.py \
-  --prompt "犬を描いて" \
-  --reference-image "/path/to/reference.png" \
-  --output output/styled_dog.png
-```
-
-## How It Works
-
-### Basic Mode (テキストのみ)
-1. Navigate to `gemini.google.com`
-2. Click "ツール" (Tools) button
-3. Select "画像を作成" (Create Image) - Activates NanoBanana
-4. Enter prompt and generate
-5. Download generated image
-
-### Reference Image Mode (参考画像あり) - NEW!
-1. Upload reference image to Gemini
-2. AI analyzes visual elements (style, colors, lighting, etc.)
-3. Extract analysis as YAML format
-4. Generate optimized meta-prompt
-5. Create new image with matching style
-
-```
-┌────────────────┐     ┌────────────────┐     ┌────────────────┐
-│  📷 Reference  │ →   │  📋 YAML       │ →   │  📝 Optimized  │
-│     Image      │     │    Analysis    │     │     Prompt     │
-└────────────────┘     └────────────────┘     └────────────────┘
-                                                      │
-                                                      ▼
-                                              ┌────────────────┐
-                                              │  🖼️ Generated  │
-                                              │     Image      │
-                                              └────────────────┘
-```
-
-## Parameters
-
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `--prompt` | Yes | - | Image generation prompt |
-| `--output` | No | `output/generated_image.png` | Output file path |
-| `--reference-image` | No | - | Reference image for style extraction |
-| `--yaml-output` | No | - | Save YAML analysis to file |
-| `--show-browser` | No | False | Show browser for debugging |
-| `--timeout` | No | 180 | Max wait time in seconds |
-
-## Prompt Examples
-
-### Basic Examples (テキストのみ)
+Execute the bundled script to generate images:
 
 ```bash
-# Landscape
-python scripts/run.py image_generator.py \
-  --prompt "serene sunset over snow-capped mountains, warm orange sky, photorealistic"
-
-# Art style
-python scripts/run.py image_generator.py \
-  --prompt "watercolor painting of a cat sitting by window, soft colors"
-
-# Product photo
-python scripts/run.py image_generator.py \
-  --prompt "professional product photography, white background, soft lighting"
+python3 "${SKILL_DIR}/scripts/generate_image.py" \
+  --prompt "A cute banana character mascot for a mobile app, kawaii style, yellow and brown colors" \
+  --output "./generated_image.png"
 ```
 
-### Reference Image Examples (参考画像あり) - NEW!
+### Generate Image via cURL
+
+For direct API calls without dependencies:
 
 ```bash
-# Match style of reference image
-python scripts/run.py image_generator.py \
-  --prompt "犬を描いて" \
-  --reference-image "examples/watercolor_cat.png" \
-  --output output/watercolor_dog.png
-
-# Save YAML analysis for review
-python scripts/run.py image_generator.py \
-  --prompt "森の風景" \
-  --reference-image "examples/sunset.jpg" \
-  --yaml-output output/analysis.yaml \
-  --output output/forest.png
-
-# Debug mode with browser visible
-python scripts/run.py image_generator.py \
-  --prompt "カフェの内装" \
-  --reference-image "examples/cozy_room.png" \
-  --show-browser \
-  --output output/cafe.png
+curl -s -X POST \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${GEMINI_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [{"text": "Your prompt here"}]
+    }],
+    "generationConfig": {
+      "responseModalities": ["TEXT", "IMAGE"]
+    }
+  }' | python3 -c "
+import sys, json, base64
+data = json.load(sys.stdin)
+for part in data.get('candidates', [{}])[0].get('content', {}).get('parts', []):
+    if 'inlineData' in part:
+        img_data = base64.b64decode(part['inlineData']['data'])
+        with open('output.png', 'wb') as f:
+            f.write(img_data)
+        print('Image saved to output.png')
+"
 ```
 
-### Standalone Tools
+## Image Generation Workflows
+
+### Workflow 1: Project Icon Generation
+
+Generate app icons or project logos:
 
 ```bash
-# Extract YAML only (without generating image)
-python scripts/run.py prompt_extractor.py \
-  --image "examples/reference.png" \
-  --output analysis.yaml
-
-# Generate prompt from YAML
-python scripts/run.py meta_prompt.py \
-  --yaml analysis.yaml \
-  --request "猫を描いて"
+python3 "${SKILL_DIR}/scripts/generate_image.py" \
+  --prompt "Modern flat design app icon for [PROJECT_TYPE], minimalist style, vibrant colors, suitable for iOS/Android" \
+  --output "./icon.png" \
+  --aspect-ratio "1:1"
 ```
 
-## Authentication
+### Workflow 2: Banner/Hero Image
 
-This skill manages browser authentication for all Gemini-based skills:
-- `gemini-slide-generator` (shares browser profile)
-- `gemini-lp-generator` (shares browser profile)
+Create marketing banners or hero images:
 
 ```bash
-# Check status
-python scripts/run.py auth_manager.py status
-
-# Setup (opens browser for Google login)
-python scripts/run.py auth_manager.py setup
-
-# Clear session
-python scripts/run.py auth_manager.py clear
+python3 "${SKILL_DIR}/scripts/generate_image.py" \
+  --prompt "Professional banner image for [PROJECT_NAME], modern tech aesthetic, gradient background" \
+  --output "./banner.png" \
+  --aspect-ratio "16:9"
 ```
 
-## Troubleshooting
+### Workflow 3: Illustration Generation
 
-| Problem | Solution |
-|---------|----------|
-| Not authenticated | Run `auth_manager.py setup` |
-| Timeout | Increase with `--timeout 300` |
-| UI not found | Use `--show-browser` to debug |
-| Generation refused | Modify prompt (avoid restricted content) |
+Generate illustrations for documentation or UI:
 
-## Data Storage
-
-- `data/browser_profile/` - Browser session (shared with other Gemini skills)
-- `data/state.json` - Authentication state
-- `output/` - Generated images
-
-## Architecture
-
-```
-scripts/
-├── config.py           # Centralized settings
-├── browser_utils.py    # BrowserFactory and StealthUtils
-├── auth_manager.py     # Authentication management
-├── image_generator.py  # Image generation (with reference image support)
-├── prompt_extractor.py # Extract visual elements as YAML (NEW!)
-├── meta_prompt.py      # Generate optimized prompts from YAML (NEW!)
-└── run.py              # Wrapper script for venv
-
-docs/
-└── UPGRADE_SPEC.md     # Feature specification with diagrams
+```bash
+python3 "${SKILL_DIR}/scripts/generate_image.py" \
+  --prompt "Clean vector-style illustration showing [CONCEPT], soft colors, professional look" \
+  --output "./illustration.png"
 ```
 
-## Notes
+### Workflow 4: Image Editing/Transformation
 
-- **First generation takes longer** (browser startup)
-- **Subsequent generations faster** (session reuse)
-- **Authentication persists** ~7 days
-- **UI selectors may break** when Gemini updates
+Transform or edit existing images:
+
+```bash
+python3 "${SKILL_DIR}/scripts/generate_image.py" \
+  --prompt "Transform this image into a watercolor painting style while preserving the main subject" \
+  --input "./source_image.png" \
+  --output "./transformed.png"
+```
+
+## Prompt Engineering Tips
+
+### Effective Prompt Structure
+
+```
+[Subject] + [Style] + [Details] + [Technical specs]
+```
+
+**Example:**
+```
+A friendly robot mascot (subject)
+in pixel art style (style)
+with blue and orange colors, waving hand (details)
+on transparent background, 512x512 resolution (technical)
+```
+
+### Style Keywords
+
+| Category | Keywords |
+|----------|----------|
+| Art Style | minimalist, flat design, 3D render, watercolor, pixel art, vector, cartoon |
+| Mood | professional, playful, elegant, modern, vintage, futuristic |
+| Quality | high detail, photorealistic, clean lines, sharp edges |
+| Colors | vibrant, pastel, monochrome, gradient, neon |
+
+### Project-Specific Prompts
+
+For different project types:
+
+- **Mobile App**: "Modern app icon, rounded corners, gradient background, single symbolic element"
+- **Web Dashboard**: "Clean UI illustration, data visualization theme, blue corporate colors"
+- **Game**: "Game asset sprite, detailed pixel art, fantasy theme, transparent background"
+- **Documentation**: "Technical diagram style, clean vector illustration, explanatory visual"
+
+## Configuration Options
+
+### Aspect Ratios
+
+| Ratio | Use Case |
+|-------|----------|
+| 1:1 | App icons, profile pictures |
+| 16:9 | Banners, hero images |
+| 4:3 | Standard images, thumbnails |
+| 9:16 | Mobile stories, vertical banners |
+| 5:4 | Group photos, presentations |
+
+### Image Sizes
+
+| Size | Description |
+|------|-------------|
+| default | Standard resolution |
+| 2K | Higher quality (2048px) |
+| 4K | Maximum quality (4096px) |
+
+## Error Handling
+
+Common issues and solutions:
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| 401 Unauthorized | Invalid API key | Verify GEMINI_API_KEY is set correctly |
+| 400 Bad Request | Invalid prompt | Check prompt format, remove prohibited content |
+| 429 Rate Limited | Too many requests | Wait and retry, implement backoff |
+| Safety Block | Content policy violation | Modify prompt to comply with guidelines |
+
+## Bundled Resources
+
+### Scripts
+
+- **`scripts/generate_image.py`** - Main image generation script with full configuration options
+- **`scripts/batch_generate.py`** - Generate multiple images from a prompt list
+
+### References
+
+- **`references/api-reference.md`** - Complete Gemini API documentation
+- **`references/prompt-templates.md`** - Ready-to-use prompt templates for various project types
+
+### Examples
+
+- **`examples/generate_icon.sh`** - Example: Generate app icon
+- **`examples/generate_banner.sh`** - Example: Generate project banner
+- **`examples/batch_config.json`** - Example: Batch generation configuration
+
+## Best Practices
+
+1. **Be Specific**: Include detailed descriptions of desired output
+2. **Specify Style**: Always mention the artistic style explicitly
+3. **Define Colors**: List specific colors when brand consistency matters
+4. **Set Constraints**: Specify aspect ratio and size requirements upfront
+5. **Iterate**: Generate multiple variations and refine prompts based on results
+6. **Save Prompts**: Document successful prompts for future consistency
+
+## Integration Notes
+
+When integrating generated images into projects:
+
+1. Check image dimensions match target requirements
+2. Verify file format compatibility (PNG recommended for transparency)
+3. Consider compression for web assets
+4. Store original prompts alongside images for reproducibility

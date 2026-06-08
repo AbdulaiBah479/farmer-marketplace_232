@@ -1,43 +1,223 @@
 ---
 name: frontend-dev
-description: |
-  Full-stack frontend with cinematic animations, AI-generated media via MiniMax API, and generative art. Useful for hero pages and showcase sites.
-triggers:
-  - "frontend dev"
-  - "cinematic frontend"
-  - "generative web"
-  - "hero page"
-  - "showcase site"
-od:
-  mode: prototype
-  category: web-artifacts
-  upstream: "https://github.com/MiniMax-AI/skills"
+description: 前端开发规范，包含 Vue 3 编码规范、UI 风格约束、TypeScript 规范等
+version: v3.0
+paths:
+  - "**/*.vue"
+  - "**/*.tsx"
+  - "**/*.jsx"
+  - "**/*.ts"
+  - "**/*.js"
+  - "**/*.css"
+  - "**/*.scss"
+  - "**/*.less"
+  - "**/package.json"
+  - "**/vite.config.*"
 ---
 
-# frontend-dev
+# 前端开发规范
 
-> Curated from the MiniMax AI team.
+> 参考来源: Vue 官方风格指南、Element Plus 最佳实践
 
-## What it does
+---
 
-Full-stack frontend with cinematic animations, AI-generated media via MiniMax API, and generative art. Useful for hero pages and showcase sites.
+## UI 风格约束
 
-## Source
+### 严格禁止（常见 AI 风格）
 
-- Upstream: https://github.com/MiniMax-AI/skills
-- Category: `web-artifacts`
+- ❌ 蓝紫色霓虹渐变、发光描边、玻璃拟态
+- ❌ 大面积渐变、过多装饰性几何图形
+- ❌ 赛博风、暗黑科技风、AI 风格 UI
+- ❌ UI 文案中使用 emoji
 
-## How to use
+### 后台系统（默认风格）
 
-This catalogue entry advertises the skill in Open Design so the agent
-discovers it during planning. To run the full upstream workflow with
-its original assets, scripts, and references, install the upstream
-bundle into your active agent's skills directory:
+| 要素 | 要求 |
+|------|------|
+| 主题 | 使用组件库默认主题 |
+| 配色 | 黑白灰为主 + 1 个主色点缀 |
+| 动效 | 克制，仅保留必要交互反馈 |
 
-```bash
-# Inspect the upstream README for exact paths
-open https://github.com/MiniMax-AI/skills
+---
+
+## 技术栈
+
+| 层级 | Vue（首选） | React（备选） |
+|------|------------|--------------|
+| 框架 | Vue 3 + TypeScript | React 18 + TypeScript |
+| 构建 | Vite | Vite |
+| 路由 | Vue Router 4 | React Router 6 |
+| 状态 | Pinia | Zustand |
+| UI 库 | Element Plus | Ant Design |
+
+---
+
+## Vue 编码规范
+
+### 组件基础
+
+```vue
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import type { User } from '@/types'
+
+// Props & Emits
+const props = defineProps<{ userId: number }>()
+const emit = defineEmits<{ (e: 'update', value: string): void }>()
+
+// 响应式状态
+const loading = ref(false)
+const user = ref<User | null>(null)
+
+// 计算属性
+const displayName = computed(() => user.value?.name ?? '未知用户')
+
+// 生命周期
+onMounted(async () => { await fetchUser() })
+
+// 方法
+async function fetchUser() {
+  loading.value = true
+  try {
+    user.value = await api.getUser(props.userId)
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<template>
+  <div class="user-card">
+    <h3>{{ displayName }}</h3>
+  </div>
+</template>
+
+<style scoped>
+.user-card { padding: 16px; }
+</style>
 ```
 
-Then ask the agent to invoke this skill by name (`frontend-dev`) or with
-one of the trigger phrases listed in this skill's frontmatter.
+### 命名约定
+
+| 类型 | 约定 | 示例 |
+|------|------|------|
+| 组件文件 | PascalCase.vue | `UserCard.vue` |
+| Composables | useXxx.ts | `useAuth.ts` |
+| Store | useXxxStore.ts | `useUserStore.ts` |
+
+---
+
+## 状态管理（Pinia）
+
+```typescript
+// stores/user.ts
+export const useUserStore = defineStore('user', () => {
+  const user = ref<User | null>(null)
+  const token = ref<string>('')
+
+  const isLoggedIn = computed(() => !!token.value)
+
+  async function login(username: string, password: string) {
+    const res = await api.login(username, password)
+    token.value = res.token
+    user.value = res.user
+  }
+
+  return { user, token, isLoggedIn, login }
+})
+```
+
+---
+
+## 交互状态处理
+
+**必须处理的状态**: loading、empty、error、disabled、submitting
+
+```vue
+<template>
+  <el-skeleton v-if="loading" :rows="5" animated />
+  <el-result v-else-if="error" icon="error" :title="error">
+    <template #extra>
+      <el-button @click="fetchData">重试</el-button>
+    </template>
+  </el-result>
+  <el-empty v-else-if="list.length === 0" description="暂无数据" />
+  <template v-else>
+    <!-- 正常内容 -->
+  </template>
+</template>
+```
+
+---
+
+## TypeScript 规范
+
+```typescript
+// types/user.ts
+export interface User {
+  id: number
+  username: string
+  role: 'admin' | 'user'
+}
+
+export interface ApiResponse<T = unknown> {
+  code: number
+  message: string
+  data: T
+}
+```
+
+---
+
+## 性能优化
+
+| 场景 | 方案 |
+|------|------|
+| 大列表 | 虚拟滚动 |
+| 路由 | 懒加载 `() => import()` |
+| 计算 | 使用 `computed` 缓存 |
+| 大数据 | 使用 `shallowRef` |
+
+```typescript
+// 路由懒加载
+const routes = [
+  { path: '/dashboard', component: () => import('@/views/Dashboard.vue') }
+]
+
+// 请求防抖
+import { useDebounceFn } from '@vueuse/core'
+const debouncedSearch = useDebounceFn((keyword) => api.search(keyword), 300)
+```
+
+---
+
+## 目录结构
+
+```
+src/
+├── api/                 # API 请求
+├── components/          # 通用组件
+├── composables/         # 组合式函数
+├── router/              # 路由配置
+├── stores/              # Pinia stores
+├── types/               # TypeScript 类型
+├── utils/               # 工具函数
+├── views/               # 页面组件
+├── App.vue
+└── main.ts
+```
+
+---
+
+## 详细参考
+
+完整规范见 `references/frontend-style.md`，包含：
+- 完整 UI 风格约束
+- Vue 3 编码规范详解
+- Pinia 状态管理
+- API 请求封装
+- 性能优化详解
+
+---
+
+> 📋 本回复遵循：`frontend-dev` - [具体章节]

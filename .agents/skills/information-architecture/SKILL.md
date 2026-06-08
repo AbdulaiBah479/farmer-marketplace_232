@@ -1,254 +1,552 @@
 ---
 name: information-architecture
-description: "Design the structure of a website or product including sitemap, navigation, URL structure, content types, taxonomy, and labeling. Use this skill whenever the user asks to plan a sitemap, design navigation, structure URLs, define content types, build taxonomies, design site search, or organize content at the system level. Triggers on sitemap, site structure, navigation, IA, information architecture, URL structure, content types, taxonomy, categorization, breadcrumbs, hub pages, faceted navigation, site search, labeling. Also triggers when content is being created without a structural plan, or when an existing site's structure is being audited or restructured."
-category: strategy-and-discovery
-catalog_summary: "Sitemap, navigation, URL structure, content types, taxonomy"
-display_order: 4
+description: Design information architecture - site structure, navigation, card sorting, tree testing, taxonomy, labeling systems, and findability.
+allowed-tools: Read, Glob, Grep, Task
 ---
 
 # Information Architecture
 
-Design the structure that holds the content. Stack-agnostic. Applies to marketing sites, product surfaces, knowledge bases, e-commerce, and editorial content.
+Design and validate information structures that help users find and understand content.
 
-A well-designed IA makes the rest of the project easier. A poorly-designed IA forces every downstream decision to fight the structure.
+## When to Use This Skill
 
----
+Use this skill when:
 
-## When to use
+- **Information Architecture tasks** - Working on design information architecture - site structure, navigation, card sorting, tree testing, taxonomy, labeling systems, and findability
+- **Planning or design** - Need guidance on Information Architecture approaches
+- **Best practices** - Want to follow established patterns and standards
 
-- Designing a new site or major section from scratch
-- Restructuring an existing site
-- Adding a new content type or category
-- Designing site navigation or menu systems
-- Defining URL structure and slug patterns
-- Building taxonomies or tag systems
-- Auditing an existing IA for problems
+## MANDATORY: Skill Loading First
 
-## When NOT to use
+Before answering ANY information architecture question:
 
-- Single-page design (use `design-standards`)
-- Content production (use `content-and-copy`)
-- SEO-driven content planning (use `seo-keyword`)
-- Initial brand and audience discovery (use `brand-discovery`)
+2. Use established IA methodology (Rosenfeld & Morville, Abby Covert)
+3. Base all guidance on validated IA practices
 
----
+## IA Foundations
 
-## Required inputs
+### The Four Systems of IA
 
-- The site or product scope
-- The audience and what they're trying to do
-- The content that exists or is planned
-- Any constraints (parent IA, regulatory, technical)
+| System | Question Answered | Components |
+|--------|-------------------|------------|
+| **Organization** | How is content grouped? | Schemes, structures, taxonomies |
+| **Labeling** | What do we call things? | Labels, terminology, naming |
+| **Navigation** | How do users move around? | Menus, links, breadcrumbs |
+| **Search** | How do users find specific items? | Search UI, indexing, results |
 
-If audience is unclear, run `brand-discovery` first. If content scope is unclear, run `content-strategy` first.
+### IA Deliverables
 
----
+| Deliverable | Purpose | When |
+|-------------|---------|------|
+| **Content Inventory** | Audit existing content | Discovery |
+| **Site Map** | Hierarchical structure | Design |
+| **Taxonomy** | Classification scheme | Design |
+| **Navigation Model** | Menu and wayfinding | Design |
+| **Wireframes** | Page-level IA | Design |
+| **Card Sort Results** | User mental models | Validation |
+| **Tree Test Results** | Findability validation | Validation |
 
-## The framework: 6 layers
+## Organization Systems
 
-Information architecture has six layers. Each builds on the one below.
+### Organization Schemes
 
-### 1. Mental models
+| Scheme | Description | Example |
+|--------|-------------|---------|
+| **Exact** | Objectively defined | Alphabetical, chronological, geographical |
+| **Ambiguous** | Subjectively defined | By topic, audience, task, metaphor |
+| **Hybrid** | Combination | Primary navigation + search + filters |
 
-Before structure, understand how the audience thinks about the domain.
+### Organization Structures
 
-- What concepts do they group together naturally?
-- What words do they use? (Often different from what the company uses.)
-- What is the dominant frame of reference? (By task? By role? By topic? By time?)
-- What do they expect to find where, based on conventions in similar products?
+```mermaid
+graph TD
+    subgraph Hierarchical
+    A[Top] --> B[Category 1]
+    A --> C[Category 2]
+    B --> D[Sub 1.1]
+    B --> E[Sub 1.2]
+    end
 
-**Methods:**
+    subgraph Database
+    F[(Products)] --> G[Filters]
+    F --> H[Sort]
+    F --> I[Search]
+    end
 
-- **Card sorting** (open or closed): Give the audience the content items, ask them to group them. Open card sorts surface natural groupings. Closed card sorts validate proposed groupings.
-- **Tree testing:** Give a proposed structure, ask users to find specific items. Surfaces where the structure breaks down.
-- **First-click testing:** Given a goal, where do users click first? If first clicks are wrong, the labels and structure are wrong.
-
-### 2. Sitemap
-
-The map of all pages and how they relate.
-
-**Sitemap deliverables:**
-
-- A hierarchy diagram showing parent-child relationships
-- Indication of page types (static, dynamic, listing, detail)
-- Cross-references showing how pages relate beyond the hierarchy
-- Sometimes a separate user-flow overlay for key journeys
-
-**Sitemap types:**
-
-- **Hub-and-spoke** (cornerstone content + supporting content): Common for content marketing
-- **Tree** (strict hierarchy, every page has one parent): Common for product documentation
-- **Faceted** (content lives in many overlapping categories): Common for e-commerce
-- **Flat** (everything reachable from the home): Common for small sites
-
-Most sites blend types. Pick the dominant pattern and document the exceptions.
-
-### 3. URL structure
-
-URLs are part of the IA. They are user-facing, indexed by search engines, and shape how content is referenced.
-
-**URL principles:**
-
-- Reflect the content hierarchy
-- Lowercase, hyphen-separated
-- Predictable (same pattern across same content type)
-- Stable (URLs don't change without redirects)
-- Short (under 60 characters where possible)
-- Descriptive (slug indicates the content)
-- Free of dates unless time-bound
-- Free of session IDs and tracking parameters in canonical form
-
-**Common patterns:**
-
-```
-/                                   home
-/[section]                          section landing
-/[section]/[subsection]             subsection landing
-/[section]/[subsection]/[item]      detail page
-/blog                               blog index
-/blog/[slug]                        blog post
-/blog/category/[category]           category index
-/blog/tag/[tag]                     tag index
-/products                           product catalog
-/products/[category]                category page
-/products/[category]/[product]      product detail
+    subgraph Hypertext
+    J[Page A] <--> K[Page B]
+    K <--> L[Page C]
+    L <--> J
+    end
 ```
 
-Pick a pattern and stick to it. Inconsistent URL patterns confuse users, crawlers, and analytics.
+### Hierarchy Depth Guidelines
 
-### 4. Navigation
+| Depth | Use Case | Considerations |
+|-------|----------|----------------|
+| **Flat (2-3)** | Simple sites, mobile | Easy to scan, limited content |
+| **Medium (4-5)** | Most websites | Balance breadth/depth |
+| **Deep (6+)** | Large catalogs, documentation | Risk of getting lost |
 
-The chrome that gets users where they need to go.
+**Rule of thumb:** Prefer broader over deeper. Users can scan 5-7 items quickly.
 
-**Primary navigation:**
+## Card Sorting
 
-- The top-level structure of the site
-- Should reflect what the audience cares about, not what the org chart looks like
-- 5 to 7 items maximum (more becomes cognitively heavy)
-- Each label is recognizable in 2 to 3 words
-- Order matters (left/first gets the most attention)
+### Card Sort Types
 
-**Secondary navigation:**
+| Type | Description | Best For |
+|------|-------------|----------|
+| **Open** | Users create their own categories | Discovery, understanding mental models |
+| **Closed** | Users sort into predefined categories | Validating proposed structure |
+| **Hybrid** | Predefined categories + can add new | Validating with flexibility |
 
-- Within-section navigation
-- Often shown as sidebars, sub-menus, or in-page tabs
-- Supports the primary nav, doesn't duplicate it
+### Running a Card Sort
 
-**Utility navigation:**
+#### Preparation
 
-- Account, search, login, support
-- Visually subordinate to primary nav
-- Often top-right (LTR languages)
+```csharp
+// Card sort configuration
+public class CardSortStudy
+{
+    public Guid Id { get; init; }
+    public required string Name { get; init; }
+    public required CardSortType Type { get; init; }
+    public required List<Card> Cards { get; init; }
+    public List<Category>? PredefinedCategories { get; init; } // For closed/hybrid
+    public bool AllowNewCategories { get; init; } // For hybrid
+    public int TargetParticipants { get; init; } = 30;
+}
 
-**Breadcrumbs:**
+public record Card(int Id, string Label, string? Description = null);
+public record Category(int Id, string Name, string? Description = null);
 
-- For nested hierarchies (3+ levels deep)
-- Always linked except the current page
-- Match the URL hierarchy or the conceptual hierarchy
-- Marked up with BreadcrumbList schema
+public class CardSortResult
+{
+    public required Guid ParticipantId { get; init; }
+    public required List<CategoryAssignment> Assignments { get; init; }
+    public required List<Category> CreatedCategories { get; init; } // Open/hybrid
+    public TimeSpan Duration { get; init; }
+    public string? Feedback { get; init; }
+}
 
-**Footer navigation:**
+public record CategoryAssignment(int CardId, int CategoryId, int? SortOrder = null);
+```
 
-- Comprehensive; sometimes includes everything
-- Organized by category for findability
-- Includes secondary content (privacy, terms, contact)
+#### Card Selection Guidelines
 
-### 5. Taxonomy and metadata
+- **15-40 cards** typical for open sort
+- **30-60 cards** manageable for closed sort
+- Use real content labels, not placeholders
+- Include mix of "easy" and "difficult" items
+- Avoid duplicate concepts
 
-The classification system applied to content.
+### Card Sort Analysis
 
-**Categories:**
+#### Similarity Matrix
 
-- A small, controlled list (typically 5 to 15)
-- Mutually exclusive ideal (one item, one category)
-- Used for structural navigation
+Shows how often cards were sorted together:
 
-**Tags:**
+```text
+         Card A  Card B  Card C  Card D
+Card A     -      85%     12%     45%
+Card B    85%      -      10%     50%
+Card C    12%     10%      -      90%
+Card D    45%     50%     90%      -
+```
 
-- A larger, often growing list (50+)
-- Multi-assignment (one item, many tags)
-- Used for cross-cutting connections, related-content, and long-tail discovery
+Cards frequently sorted together should likely be grouped.
 
-**Metadata fields:**
+#### Dendrogram (Hierarchical Clustering)
 
-- Author, date, content type, audience segment
-- Whatever is useful for filtering, sorting, and surfacing
+```text
+              |
+      ________|________
+      |               |
+   ___|___         ___|___
+   |     |         |     |
+Card A  Card B  Card C  Card D
+```
 
-**Common failures:**
+Shows natural groupings and relationships.
 
-- Categories that overlap (item could go in 3 different categories)
-- Tags that are unmaintained (sprawl into thousands, become useless)
-- Metadata fields that get filled inconsistently
-- Different content types using different taxonomies for the same thing (chaos)
+#### Category Analysis
 
-### 6. Labeling
+For open sorts, analyze:
 
-What you call things.
+- **Category names** - What labels do users create?
+- **Category frequency** - How many users created similar categories?
+- **Standardized categories** - Group similar labels together
 
-**Label principles:**
+```csharp
+public class CardSortAnalysis
+{
+    public required int TotalParticipants { get; init; }
+    public required Dictionary<(int CardA, int CardB), decimal> SimilarityMatrix { get; init; }
+    public required List<DendrogramNode> Dendrogram { get; init; }
+    public required List<CategoryPattern> DiscoveredPatterns { get; init; }
+    public required List<ProblematicCard> DifficultCards { get; init; }
+}
 
-- Audience language, not internal language
-- Specific enough to be useful, short enough to scan
-- Consistent across the site (call it "Product" or "Solutions" but not both)
-- Tested with real users (closed card sort or tree test surfaces label problems)
+public record CategoryPattern(
+    string StandardizedName,
+    List<string> Variations,
+    List<int> CardIds,
+    int Frequency
+);
 
-**Common label problems:**
+public record ProblematicCard(
+    int CardId,
+    string Label,
+    decimal Disagreement, // How often it was sorted inconsistently
+    string Issue // "Ambiguous label", "Fits multiple categories", etc.
+);
+```
 
-- "Solutions" (vague; usually means "products with marketing copy")
-- "Resources" (catch-all; everything ends up there)
-- Internal jargon ("PRD," "OKRs") that doesn't match user vocabulary
-- Labels that change meaning across the site
+## Tree Testing
 
----
+### What is Tree Testing?
 
-## Workflow
+Users navigate a text-only version of your hierarchy to find items. No visual design, just structure.
 
-1. **Understand the audience and content.** Use existing discovery and content strategy if available.
-2. **Card sort or interview** to surface mental models.
-3. **Draft the sitemap.** Hierarchy, page types, cross-references.
-4. **Define URL patterns.** One pattern per content type.
-5. **Design navigation.** Primary, secondary, utility, footer, breadcrumbs.
-6. **Build taxonomy.** Categories (controlled, small) and tags (open, large).
-7. **Validate labels.** Tree test or closed card sort with target users.
-8. **Document.** Use the template in [`references/ia-document-template.md`](references/ia-document-template.md).
-9. **Hand off to design and development.** IA decisions inform navigation components, URL routing, and taxonomy implementation.
+### Running a Tree Test
 
----
+```csharp
+public class TreeTestStudy
+{
+    public Guid Id { get; init; }
+    public required string Name { get; init; }
+    public required TreeNode Root { get; init; }
+    public required List<TreeTestTask> Tasks { get; init; }
+    public int TargetParticipants { get; init; } = 50;
+}
 
-## Failure patterns
+public class TreeNode
+{
+    public int Id { get; init; }
+    public required string Label { get; init; }
+    public List<TreeNode> Children { get; init; } = [];
+    public bool IsCorrectAnswer { get; set; } // For current task
+}
 
-- **IA designed by org chart.** "Engineering" and "Marketing" sections make sense to the company, not to the audience.
-- **Categories that proliferate.** Every team adds a category for their thing. Becomes unscannable. Hold the line at 5 to 15.
-- **Tags that sprawl.** No tag governance. Tags become a junk drawer.
-- **Inconsistent URL patterns.** Some posts at /blog/[slug], some at /[slug], some at /articles/[slug]. Pick one.
-- **Navigation that hides primary content.** The most important pages should be one click from home.
-- **Search as a substitute for IA.** "Just use search" is not a structure. Search supports IA, doesn't replace it.
-- **No validation.** Card sorts, tree tests, and first-click tests are cheap and surface huge problems early.
-- **Treating IA as a one-time deliverable.** IA evolves with content. Plan for evolution.
+public class TreeTestTask
+{
+    public required int Order { get; init; }
+    public required string TaskDescription { get; init; }
+    public required List<int> CorrectAnswerPaths { get; init; } // Multiple valid paths
+}
 
----
+public class TreeTestResult
+{
+    public required Guid ParticipantId { get; init; }
+    public required int TaskId { get; init; }
+    public required List<int> PathTaken { get; init; }
+    public required int FinalSelection { get; init; }
+    public required bool IsDirectSuccess { get; init; } // Found it first try
+    public required bool IsIndirectSuccess { get; init; } // Found after backtracking
+    public required TimeSpan Duration { get; init; }
+}
+```
 
-## Output format
+### Tree Test Metrics
 
-Default output is an IA document at `information-architecture.md` plus visual assets:
+| Metric | Definition | Target |
+|--------|------------|--------|
+| **Success Rate** | Found correct answer | >80% |
+| **Directness** | Found without backtracking | >60% |
+| **Time** | Seconds to complete | Task-dependent |
+| **First Click** | Correct first navigation | >60% |
 
-1. Executive summary
-2. Audience and mental models (synthesized)
-3. Sitemap (hierarchical diagram)
-4. URL structure (per content type)
-5. Navigation specification (primary, secondary, utility, footer, breadcrumbs)
-6. Taxonomy (categories and tag governance)
-7. Labels (validated wording for navigation, categories, content types)
-8. Implementation notes for design and development
+### Pietree Analysis
 
-Visual deliverables:
-- Sitemap diagram (Whimsical, Figma, OmniGraffle, etc.)
-- Navigation wireframes for primary surfaces
-- Optional: card sort and tree test results
+Visualize where users went for each task:
 
----
+```text
+Task: "Find return policy"
 
-## Reference files
+Customer Service [45%] ✓ Correct path
+├── Returns [40%] ✓
+├── FAQ [3%]
+└── Contact [2%]
 
-- [`references/ia-document-template.md`](references/ia-document-template.md) - Template for the IA deliverable.
-- [`references/url-pattern-library.md`](references/url-pattern-library.md) - URL pattern conventions for common content types.
+Help [30%]
+├── FAQ [20%]
+└── Contact [10%]
+
+Account [15%] ✗ Wrong tree
+└── Order History [15%]
+
+About [10%] ✗ Wrong tree
+└── Policies [10%]
+```
+
+### Identifying Problems
+
+| Pattern | Indication | Solution |
+|---------|------------|----------|
+| Low success, low directness | Wrong location in hierarchy | Restructure |
+| Low success, high first-click | Right area, wrong label | Rename |
+| High success, low directness | Findable but confusing path | Simplify |
+| Split decisions | Ambiguous placement | Cross-reference or restructure |
+
+## Navigation Design
+
+### Navigation Types
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| **Global** | Site-wide access | Header menu |
+| **Local** | Section-specific | Sidebar in current area |
+| **Contextual** | Content-related | "Related items" links |
+| **Utility** | Tools/account | Login, cart, help |
+| **Footer** | Secondary access | Policies, contact |
+| **Breadcrumbs** | Location awareness | Home > Products > Shoes |
+
+### Navigation Patterns
+
+```csharp
+// Navigation model
+public class NavigationStructure
+{
+    public required List<NavItem> GlobalNav { get; init; }
+    public required List<NavItem> UtilityNav { get; init; }
+    public required List<NavItem> FooterNav { get; init; }
+    public Dictionary<string, List<NavItem>> LocalNav { get; init; } = [];
+}
+
+public class NavItem
+{
+    public required string Label { get; init; }
+    public required string Url { get; init; }
+    public List<NavItem>? Children { get; init; }
+    public bool IsCurrentSection { get; set; }
+    public string? Icon { get; init; }
+    public NavItemType Type { get; init; } = NavItemType.Link;
+}
+
+public enum NavItemType
+{
+    Link,
+    Dropdown,
+    Megamenu,
+    Flyout,
+    Button // For CTAs like "Sign Up"
+}
+```
+
+### Mega Menu Structure
+
+For sites with many categories:
+
+```text
+┌─────────────────────────────────────────────────────┐
+│ PRODUCTS ▼                                          │
+├─────────────────────────────────────────────────────┤
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐  │
+│ │ Category A   │ │ Category B   │ │ Category C   │  │
+│ │ - Sub A1     │ │ - Sub B1     │ │ - Sub C1     │  │
+│ │ - Sub A2     │ │ - Sub B2     │ │ - Sub C2     │  │
+│ │ - Sub A3     │ │ - Sub B3     │ │ - Sub C3     │  │
+│ │ > View All   │ │ > View All   │ │ > View All   │  │
+│ └──────────────┘ └──────────────┘ └──────────────┘  │
+│                                                      │
+│ [Featured: Spring Collection]  [Featured: New]      │
+└─────────────────────────────────────────────────────┘
+```
+
+### Mobile Navigation Considerations
+
+| Pattern | When to Use |
+|---------|-------------|
+| **Hamburger** | Complex nav, frequent users |
+| **Tab Bar** | 3-5 primary destinations |
+| **Bottom Sheet** | Secondary actions |
+| **Progressive Disclosure** | Deep hierarchies |
+
+## Labeling Systems
+
+### Label Evaluation Criteria
+
+| Criterion | Question | Test |
+|-----------|----------|------|
+| **Clarity** | Is meaning obvious? | 5-second test |
+| **Consistency** | Same concept = same label? | Content audit |
+| **Completeness** | All content labeled? | Gap analysis |
+| **Audience-fit** | Uses user language? | Card sort, interviews |
+
+### Label Testing Methods
+
+1. **Highlight Test** - Can users identify what label refers to?
+2. **Cloze Test** - Fill in the blank with expected label
+3. **Card Sort** - What do users call these groups?
+4. **First-Click Test** - Do users click correct label for task?
+
+### Common Labeling Problems
+
+| Problem | Example | Solution |
+|---------|---------|----------|
+| **Jargon** | "SKU Manager" | Use user language: "Product Catalog" |
+| **Ambiguity** | "Resources" | Be specific: "Documentation", "Downloads" |
+| **Overlap** | "Support" vs "Help" | Consolidate or differentiate |
+| **Inconsistency** | "Docs" / "Documentation" / "Help Files" | Standardize |
+
+## Taxonomy Design
+
+### Taxonomy Structure
+
+```csharp
+public class Taxonomy
+{
+    public Guid Id { get; init; }
+    public required string Name { get; init; }
+    public required TaxonomyType Type { get; init; }
+    public required List<TaxonomyTerm> Terms { get; init; }
+
+    public TaxonomyTerm? FindTerm(string label) =>
+        Terms.SelectMany(Flatten).FirstOrDefault(t => t.Label == label);
+
+    private IEnumerable<TaxonomyTerm> Flatten(TaxonomyTerm term) =>
+        new[] { term }.Concat(term.Children.SelectMany(Flatten));
+}
+
+public enum TaxonomyType
+{
+    Hierarchical,   // Tree structure
+    Faceted,        // Multiple dimensions
+    Network,        // Many-to-many relationships
+    Flat            // No hierarchy
+}
+
+public class TaxonomyTerm
+{
+    public int Id { get; init; }
+    public required string Label { get; init; }
+    public string? Definition { get; init; }
+    public List<string> Synonyms { get; init; } = [];
+    public List<TaxonomyTerm> Children { get; init; } = [];
+    public int? ParentId { get; init; }
+    public List<int> RelatedTermIds { get; init; } = [];
+}
+```
+
+### Faceted Classification
+
+Multiple ways to categorize the same content:
+
+```text
+Product: "Blue Running Shoes"
+
+Facets:
+├── Category: Footwear > Athletic > Running
+├── Color: Blue
+├── Brand: Nike
+├── Price: $100-150
+├── Size: 10
+├── Gender: Men's
+└── Activity: Running, Walking
+```
+
+## Site Map Documentation
+
+### Visual Site Map
+
+```text
+Home
+├── Products
+│   ├── Category A
+│   │   ├── Subcategory A1
+│   │   └── Subcategory A2
+│   └── Category B
+├── About
+│   ├── Company
+│   ├── Team
+│   └── Careers
+├── Blog
+│   └── [Dynamic: Post pages]
+└── Contact
+
+Utility:
+├── Search
+├── Account
+│   ├── Profile
+│   ├── Orders
+│   └── Settings
+└── Cart
+```
+
+### Site Map Spreadsheet
+
+| ID | Page Name | Parent | Level | URL Pattern | Template | Notes |
+|----|-----------|--------|-------|-------------|----------|-------|
+| 1 | Home | - | 0 | / | Homepage | |
+| 2 | Products | 1 | 1 | /products | Category Listing | |
+| 3 | Category A | 2 | 2 | /products/{slug} | Category | Dynamic |
+| 4 | Product Detail | 3 | 3 | /products/{cat}/{slug} | PDP | Dynamic |
+
+## IA Auditing
+
+### Content Inventory Template
+
+```markdown
+| URL | Title | Type | Category | Last Updated | Owner | Notes |
+|-----|-------|------|----------|--------------|-------|-------|
+| /about | About Us | Page | Company | 2024-01-15 | Marketing | Needs update |
+| /blog/post-1 | Post Title | Blog | News | 2024-02-01 | Editor | Current |
+```
+
+### IA Evaluation Checklist
+
+- [ ] **Organization**: Is grouping logical and consistent?
+- [ ] **Labeling**: Are labels clear and user-centered?
+- [ ] **Navigation**: Can users orient themselves?
+- [ ] **Search**: Does search return relevant results?
+- [ ] **Findability**: Can users complete key tasks?
+- [ ] **Scalability**: Will structure handle growth?
+
+## .NET IA Tools
+
+```csharp
+// Generate sitemap from content model
+public class SitemapGenerator
+{
+    public XDocument GenerateXmlSitemap(IEnumerable<ContentItem> content)
+    {
+        var urlset = new XElement(
+            XName.Get("urlset", "http://www.sitemaps.org/schemas/sitemap/0.9"),
+            content.Select(item => new XElement("url",
+                new XElement("loc", item.CanonicalUrl),
+                new XElement("lastmod", item.ModifiedDate.ToString("yyyy-MM-dd")),
+                new XElement("changefreq", GetChangeFrequency(item.Type)),
+                new XElement("priority", GetPriority(item.Depth))
+            ))
+        );
+
+        return new XDocument(
+            new XDeclaration("1.0", "UTF-8", null),
+            urlset
+        );
+    }
+
+    private static string GetChangeFrequency(ContentType type) => type switch
+    {
+        ContentType.Homepage => "daily",
+        ContentType.Blog => "weekly",
+        ContentType.Product => "weekly",
+        _ => "monthly"
+    };
+
+    private static decimal GetPriority(int depth) => depth switch
+    {
+        0 => 1.0m,
+        1 => 0.8m,
+        2 => 0.6m,
+        _ => 0.4m
+    };
+}
+```
+
+## Related Skills
+
+- `user-research-planning` - Card sort and tree test planning
+- `usability-testing` - Testing navigation
+- `accessibility-planning` - Accessible navigation patterns
+- `service-blueprinting` - Service touchpoint structure

@@ -1,61 +1,52 @@
 ---
 name: git-commit-formatter
-description: Use this skill to structure and format Git commits. Trigger this whenever you are about to make a commit. This enforces the Atomic Commit Protocol (ACP), ensuring commits are self-contained, tested, documented, and conform to Conventional Commits format.
+description: 生成符合 Conventional Commits 规范的 Git 提交信息。当用户要求生成提交、创建 commit 或写提交信息时使用
 ---
 
-# Commit — Atomic Commit Protocol (ACP)
+# Git 提交信息格式化器
 
-You must adhere to the Atomic Commit Protocol (ACP) before making any git commit. The ACP guarantees that every commit is a complete, self-contained, and logically indivisible unit of work.
+## 任务说明
 
-## Core ACP Composition Rules
+分析暂存区的代码变更，生成符合 Conventional Commits 规范的提交信息。
 
-An Atomic Commit MUST contain the following elements. Do not commit until all conditions are met:
+## 规范说明
 
-1. **One Logical Change:** Do NOT mix functional changes with refactoring or formatting. Split unrelated changes into separate commits.
-2. **Implementation & Verification:** 
-   - You MUST include TDD tests that validate the implementation. At least one test MUST have failed prior to the implementation and pass afterward.
-   - Run the test suite and confirm it passes. **Never commit broken code.**
-3. **Documentation:** You MUST include updates to end-user documentation or inline code comments that reflect the change and explain non-obvious logic.
-4. **Cleanliness:** You MUST remove all temporary files, build artifacts, debug statements (`console.log`, `print`), and leftover comments before committing.
-5. **Intentional Staging:** Use `git add <files>` for specific paths. **Do NOT use `git add .`** blindly.
+提交信息格式：`<type>(<scope>): <subject>`
 
-For the full formal specification, including rationale and TDD mapping, read: **[references/acp-spec.md](references/acp-spec.md)**
+类型定义：
+- feat: 新功能
+- fix: 修复缺陷
+- docs: 文档更新
+- style: 代码格式调整（不影响逻辑）
+- refactor: 重构代码
+- perf: 性能优化
+- test: 测试相关
+- build: 构建系统或依赖更新
+- ci: CI 配置更新
+- chore: 其他不修改源代码的更改
 
-## Commit Message Format
+## 执行步骤
+
+1. 运行 `git diff --cached` 查看暂存的变更
+2. 分析文件变更，识别主要修改类型
+3. 确定影响范围（scope）
+4. 生成简洁的主题（subject），限制在 50 字符内
+5. 如有重大变更，添加 BREAKING CHANGE 说明
+
+## 质量标准
+
+必须遵守：
+- subject 使用动词开头，现在时态
+- subject 不以句号结尾
+- scope 用括号包裹，可选但建议提供
+- 如有详细说明，body 每行不超过 72 字符
+
+## 示例输出
 
 ```
-<type>(<scope>): <Summary starting with Capital letter>
+feat(auth): 实现 JWT 令牌认证
 
-<Body explaining the "why", wrapped at 72 chars>
-
-<Impact and Testing evidence>
+- 添加 JWT 生成和验证逻辑
+- 实现令牌刷新机制
+- 添加相关单元测试
 ```
-
-### 1. The Header (Subject Line)
-- **Type (Required):** `feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `perf`, `style`, `ci`
-- **Scope (Optional):** Short noun for the affected area (e.g., `auth`, `api`)
-- **Summary (Required):** 
-  - MUST be 50 characters or less.
-  - MUST be in the **imperative mood** (e.g., "Add feature", not "Added feature").
-  - SHOULD be **Capitalized**.
-  - MUST NOT end with a period.
-
-### 2. The Body
-- MUST be separated from the header by a single blank line.
-- MUST explain the reasoning and context behind the change (the "why"), rather than just repeating what the code does.
-- SHOULD wrap lines at 72 characters.
-- SHOULD include an `Impact:` section and a `Testing:` section detailing how the code was verified (see Appendix B in the spec for an example).
-
-## What NOT to Do
-
-- Do NOT add `Signed-off-by` or sign-off footers unless explicitly requested.
-- Do NOT include breaking-change markers or BREAKING CHANGE footers unless explicitly requested.
-- Do NOT push — only commit. The user decides when to push.
-
-## Steps Before Committing
-
-1. **Review Diff:** Run `git diff --cached` to catch accidental debug lines or unrelated changes.
-2. **Verify Tests:** Run tests (e.g., `make test`, `pytest`, `npm test`) and ensure the GREEN state.
-3. **Match Conventions:** Run `git log -n 5 --pretty=format:%s` to match existing project style.
-4. **Draft Message:** Ensure it follows the ACP format and explains the "why".
-5. **Commit:** Execute the commit. If the change spans multiple logical units, make separate, sequential atomic commits.

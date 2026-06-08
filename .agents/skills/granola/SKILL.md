@@ -1,103 +1,189 @@
 ---
 name: granola
-description: This skill should be used when importing, listing, or exporting Granola meeting recordings and transcripts. Queries Granola's Personal API to list meetings, extract transcripts, and export to Obsidian notes in Fathom-compatible format.
+description: Extract and analyze Granola meeting notes. USE WHEN user asks to "extract granola meetings", "analyze my meetings", or "what meetings did I have". OUTPUT structured markdown with people, companies, TODOs, and insights to ~/.granola-archivist/output/
 ---
 
-# Granola Meeting Importer
+# Granola Meeting Extraction
 
-Query Granola via Personal API to list notes, view transcripts, and export to Obsidian vault in the same format as the Fathom skill.
+Extract and archive Granola meeting notes with optional AI intelligence.
 
-## Prerequisites
+## When to Use
 
-- Granola Business or Enterprise plan (Personal API required)
-- API key in sops-encrypted `~/Brains/brain/.env.granola` as `GRANOLA_API_KEY=grn_...`
-- No additional dependencies (uses stdlib only)
+- User asks: "Extract my last 7 days of Granola meetings"
+- User asks: "Analyze my meeting with [Person]"
+- User asks: "What companies did I discuss this week?"
+- User asks: "What TODOs came from my meetings?"
+
+## Requirements
+
+1. **Granola installed** on macOS with at least one recorded meeting
+2. **OpenAI API key** stored in `~/.granola-archivist/.env` (optional, only for AI extraction)
+
+## Setup Instructions
+
+### First-Time Setup
+
+Tell the user:
+```
+To enable AI extraction, you need to set up your OpenAI API key.
+
+Run these commands:
+mkdir -p ~/.granola-archivist
+echo "OPENAI_API_KEY=sk-your_key_here" > ~/.granola-archivist/.env
+
+Then try: "Extract my last 7 days of Granola meetings"
+```
+
+### Checking Setup
+
+Before running AI extraction, check if `.env` exists:
+- File exists at `~/.granola-archivist/.env` → proceed
+- File missing → show setup instructions above
 
 ## Usage
 
-```bash
-python3 ~/.claude/skills/granola/scripts/granola.py <command> [options]
-```
+### Extract Recent Meetings
 
-### Commands
+**User**: "Extract my last 5 Granola meetings"
 
-| Command | Description |
-|---------|-------------|
-| `list` | List notes from Personal API |
-| `show <note_id>` | Show note details (summary, attendees, optionally transcript) |
-| `export <note_id>` | Export note to Obsidian markdown (Fathom-compatible format) |
+**You should**:
+1. If AI is requested, check setup (`~/.granola-archivist/.env` exists)
+2. Run: `python skills/granola/extract.py --days 7` (add `--no-intelligence` if no AI)
+3. Show results: Meeting titles, attendees, where files were saved
 
-### Options
+### Get Intelligence from Meetings
 
-| Option | Applies to | Description |
-|--------|-----------|-------------|
-| `--format text\|json` | list, show | Output format (default: text) |
-| `--after <ISO date>` | list | Filter notes created after date |
-| `--all` | list | Paginate through all results |
-| `--transcript` | show | Include transcript in output |
-| `--vault <path>` | export | Obsidian vault path (default: ~/Brains/brain) |
-| `--output <path>` | export | Custom output file path |
+**User**: "What companies did I discuss this week?"
 
-## Examples
+**You should**:
+1. Extract last 7 days of meetings
+2. Parse output files from `~/.granola-archivist/output/`
+3. Summarize companies mentioned across all meetings
 
-### List recent meetings
-```bash
-python3 ~/.claude/skills/granola/scripts/granola.py list
-python3 ~/.claude/skills/granola/scripts/granola.py list --format json
-python3 ~/.claude/skills/granola/scripts/granola.py list --after 2026-05-01
-```
+### Extract TODOs
 
-### Show note with transcript
-```bash
-python3 ~/.claude/skills/granola/scripts/granola.py show not_5FkswTp4Omkpm5
-python3 ~/.claude/skills/granola/scripts/granola.py show not_5FkswTp4Omkpm5 --transcript --format json
-```
+**User**: "What action items came from my meetings?"
 
-### Export to Obsidian
-```bash
-python3 ~/.claude/skills/granola/scripts/granola.py export not_5FkswTp4Omkpm5
-python3 ~/.claude/skills/granola/scripts/granola.py export not_5FkswTp4Omkpm5 --vault ~/Brains/brain
-```
+**You should**:
+1. Extract recent meetings with intelligence (requires API key)
+2. Parse TODO sections from output files
+3. Present consolidated TODO list with owners and deadlines
 
 ## Output Format
 
-Exported notes match Fathom skill format for consistency:
+Files are saved to: `~/.granola-archivist/output/`
 
-```markdown
----
-granola_id: not_xxxx
-title: "Meeting Title"
-date: YYYY-MM-DD
-participants: ['Name 1', 'Name 2']
-duration: HH:MM
-source: granola
----
+Filename format: `YYYY-MM-DD-meeting-title-attendee-name.md`
 
-# Meeting Title
+Each file contains:
+- Meeting metadata (title, date, attendees, location)
+- Your manual notes from Granola
+- AI-generated summary from Granola
+- Extracted intelligence:
+  - People (with roles, insights, network connections)
+  - Companies discussed (with stage, funding, context)
+  - Network connections (who knows who)
+  - TODOs (with owners, deadlines, context)
+  - Key insights (investment opportunities, market insights)
 
-## Summary
-{AI-generated summary}
+## Examples
 
-## Transcript
-**Speaker Name**: What they said...
+### Example 1: Extract Recent Meetings
+
+```
+User: "Extract my last 3 Granola meetings"
+
+You: "I'll extract your last 3 Granola meetings. Let me check your setup first..."
+
+[Checks ~/.granola-archivist/.env exists]
+
+You: "Setup looks good. Extracting meetings..."
+
+[Runs: python skills/granola/extract.py --days 7 --limit 3]
+
+You: "✓ Extracted 3 meetings:
+- 2026-01-14: Fund Discussion with Srihita Vatsavaya
+- 2026-01-13: Rollout AI Sync with Camden Ko
+- 2026-01-12: Notion Strategy with Jade Doan
+
+Files saved to: ~/.granola-archivist/output/
+
+Would you like me to:
+1. Show summaries of all 3 meetings
+2. Extract companies discussed
+3. Pull out action items"
 ```
 
-Files saved as: `YYYYMMDD-meeting-title-slug.md`
+### Example 2: Missing Setup
 
-## API Details
+```
+User: "Extract my Granola meetings"
 
-- **Base URL**: `https://public-api.granola.ai/v1`
-- **Auth**: Bearer token (Personal API key, never expires)
-- **Rate limits**: 25 req burst / 5 req/sec sustained
-- **Important**: API only returns notes with generated summaries — in-progress meetings won't appear
+You: "If you'd like AI extraction, set up your OpenAI API key first. Please run:
 
-## Known Limitations
+mkdir -p ~/.granola-archivist
+echo 'OPENAI_API_KEY=sk-your_key_here' > ~/.granola-archivist/.env
 
-- **No live/in-progress access** — notes appear only after Granola generates the AI summary
-- **No per-utterance speaker names** — Granola provides `source` (microphone vs speaker) and optional `diarization_label`. Export assigns meeting owner to microphone utterances
-- **Note IDs required** — use `list` first to get `not_xxxx` IDs, then `show`/`export`
+Replace 'sk-your_key_here' with your actual OpenAI API key.
 
-## Integration
+If you prefer no AI, I can still export your meetings without a key."
+```
 
-- **transcript-analyzer**: After export, run transcript-analyzer on the output file for deeper analysis
-- **Fathom skill**: Granola exports use the same frontmatter and transcript format as Fathom exports, so downstream tools work with both
+### Example 3: Extract Companies
+
+```
+User: "What companies did I discuss this week?"
+
+You: "Let me extract your meetings from the last 7 days and analyze them..."
+
+[Extracts meetings, parses output files]
+
+You: "Here are the companies discussed across 5 meetings this week:
+
+**Rollout AI** (mentioned 8 times)
+- Stage: Series A
+- Discussed in: Camden meeting, Investor call
+- Context: Potential investment target, strong growth
+
+**Notion** (mentioned 5 times)
+- Stage: Late-stage
+- Discussed in: Jade meeting
+- Context: Partnership opportunity
+
+**OpenAI** (mentioned 3 times)
+- Discussed in: Multiple meetings
+- Context: API integration plans
+
+Would you like more details on any of these?"
+```
+
+## Cost Information
+
+Using GPT-5-nano (cheapest model):
+- Cost per meeting: ~$0.0009
+- 30 meetings/month: ~$0.03
+
+## Troubleshooting
+
+### "Granola cache not found"
+- Ensure Granola is installed
+- Record at least one meeting
+- Check: `~/Library/Application Support/Granola/cache-v3.json` exists
+
+### "OpenAI API key not found"
+- Setup .env file: `~/.granola-archivist/.env`
+- Format: `OPENAI_API_KEY=sk-...`
+
+### Legacy config
+- If `~/.granola-claude/` exists, it will still be detected
+
+### "No meetings found"
+- Check date range (default: last 7 days)
+- Ensure Granola has meetings in that period
+
+## Privacy
+
+- No data collection or tracking
+- Transcripts stay on your machine
+- Only sent to your OpenAI account (you control your data)
+- Your API key = you control your data

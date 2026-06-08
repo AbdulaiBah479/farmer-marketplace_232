@@ -1,193 +1,549 @@
 ---
-name: "git-worktree-manager"
-description: "Run parallel feature work safely with Git worktrees. Standardizes branch isolation, port allocation, environment sync, and cleanup so each worktree behaves like an independent local app. Optimized for multi-agent workflows where each agent or terminal session owns one worktree. Use when running multiple feature branches simultaneously, isolating experimental work, or coordinating multi-agent development across the same repo."
+name: git-worktree-manager
+description: Manage git worktrees for efficient multi-branch development. Use when you need to create worktrees for feature branches, organize worktree directories, clean up unused worktrees, or implement worktree-based workflows.
 ---
 
 # Git Worktree Manager
 
-**Tier:** POWERFUL  
-**Category:** Engineering  
-**Domain:** Parallel Development & Branch Isolation
+Manage git worktrees to enable efficient multi-branch development while keeping the main working directory clean.
 
-## Overview
+## Purpose
 
-Use this skill to run parallel feature work safely with Git worktrees. It standardizes branch isolation, port allocation, environment sync, and cleanup so each worktree behaves like an independent local app without stepping on another branch.
-
-This skill is optimized for multi-agent workflows where each agent or terminal session owns one worktree.
-
-## Core Capabilities
-
-- Create worktrees from new or existing branches with deterministic naming
-- Auto-allocate non-conflicting ports per worktree and persist assignments
-- Copy local environment files (`.env*`) from main repo to new worktree
-- Optionally install dependencies based on lockfile detection
-- Detect stale worktrees and uncommitted changes before cleanup
-- Identify merged branches and safely remove outdated worktrees
+Enable parallel development on multiple branches without switching contexts, allowing isolation and organization of work across multiple features, bugfixes, and experiments.
 
 ## When to Use
 
-- You need 2+ concurrent branches open locally
-- You want isolated dev servers for feature, hotfix, and PR validation
-- You are working with multiple agents that must not share a branch
-- Your current branch is blocked but you need to ship a quick fix now
-- You want repeatable cleanup instead of ad-hoc `rm -rf` operations
+Use this skill when:
+- **Creating Worktrees**: Setting up worktrees for new feature branches
+- **Organizing Worktrees**: Structuring worktree directories for better management
+- **Cleaning Up**: Removing unused or orphaned worktrees
+- **Multi-Branch Development**: Working on multiple features simultaneously
+- **Isolated Development**: Keeping experimental changes separate from main work
+- **CI/CD Workflows**: Using worktrees for testing and deployment
+- **Worktree Maintenance**: Listing, switching, and managing multiple worktrees
 
-## Key Workflows
+## Worktree Fundamentals
 
-### 1. Create a Fully-Prepared Worktree
+### What is a Git Worktree?
 
-1. Pick a branch name and worktree name.
-2. Run the manager script (creates branch if missing).
-3. Review generated port map.
-4. Start app using allocated ports.
+A git worktree is a linked working tree attached to the same repository. Each worktree allows you to:
+- Check out different branches simultaneously
+- Work on multiple features in parallel
+- Keep main working directory clean
+- Test changes without switching branches
 
-```bash
-python scripts/worktree_manager.py \
-  --repo . \
-  --branch feature/new-auth \
-  --name wt-auth \
-  --base-branch main \
-  --install-deps \
-  --format text
+### Directory Structure
+
+Recommended organization:
+```
+project/
+├── main-repo/          # Main working directory (default)
+└── worktrees/          # All worktrees organized here
+    ├── feature/feature-1/
+    ├── bugfix/bug-2/
+    ├── hotfix/critical-3/
+    └── experiment/new-architecture/
 ```
 
-If you use JSON automation input:
+### Naming Conventions
 
+- **Branch-Based**: Name worktrees after their branches
+- **Type Prefix**: Use prefixes for organization (feature/, bugfix/, hotfix/, experiment/)
+- **Descriptive Names**: Clear, meaningful names that indicate purpose
+- **No Special Characters**: Avoid spaces, special characters in names
+
+## Core Operations
+
+### 1. Create a Worktree
+
+#### From Existing Branch
 ```bash
-cat config.json | python scripts/worktree_manager.py --format json
-# or
-python scripts/worktree_manager.py --input config.json --format json
+# Navigate to main repository
+cd /path/to/project
+
+# Create worktree from existing branch
+git worktree add ../worktrees/feature-name feature-branch-name
+
+# Verify creation
+cd ../worktrees/feature-name
+git status
 ```
 
-### 2. Run Parallel Sessions
-
-Recommended convention:
-
-- Main repo: integration branch (`main`/`develop`) on default port
-- Worktree A: feature branch + offset ports
-- Worktree B: hotfix branch + next offset
-
-Each worktree contains `.worktree-ports.json` with assigned ports.
-
-### 3. Cleanup with Safety Checks
-
-1. Scan all worktrees and stale age.
-2. Inspect dirty trees and branch merge status.
-3. Remove only merged + clean worktrees, or force explicitly.
-
+#### Create New Branch
 ```bash
-python scripts/worktree_cleanup.py --repo . --stale-days 14 --format text
-python scripts/worktree_cleanup.py --repo . --remove-merged --format text
+# Create worktree with new branch
+git worktree add -b feature/new-feature ../worktrees/new-feature
+
+# Switch to worktree
+cd ../worktrees/new-feature
 ```
 
-### 4. Docker Compose Pattern
+#### Detached HEAD Worktree
+```bash
+# Create worktree at specific commit
+git worktree add ../worktrees/temp-checkout HEAD~5
+```
 
-Use per-worktree override files mapped from allocated ports. The script outputs a deterministic port map; apply it to `docker-compose.worktree.yml`.
+### 2. List Worktrees
 
-See [docker-compose-patterns.md](references/docker-compose-patterns.md) for concrete templates.
+#### Basic Listing
+```bash
+# List all worktrees
+git worktree list
 
-### 5. Port Allocation Strategy
+# List with porcelain format (machine-readable)
+git worktree list --porcelain
+```
 
-Default strategy is `base + (index * stride)` with collision checks:
+#### Detailed Status Check
+```bash
+# Check status of all worktrees
+for wt in $(git worktree list --porcelain | grep worktree | sed 's/worktree //'); do
+    echo "=== $wt ==="
+    cd "$wt" && git status --short && git log --oneline -1
+done
+```
 
-- App: `3000`
-- Postgres: `5432`
-- Redis: `6379`
-- Stride: `10`
+### 3. Navigate Between Worktrees
 
-See [port-allocation-strategy.md](references/port-allocation-strategy.md) for the full strategy and edge cases.
+#### Quick Navigation
+```bash
+# Function to navigate to worktree
+goto-worktree() {
+    local wt=$1
+    local project_root=$(git rev-parse --show-toplevel)
+    local worktree_path="$project_root/../worktrees/$wt"
+    
+    if [ -d "$worktree_path" ]; then
+        cd "$worktree_path"
+        echo "Switched to worktree: $wt"
+    else
+        echo "Worktree not found: $wt"
+    fi
+}
+```
 
-## Script Interfaces
+#### Use with Projects
+```bash
+# In .bashrc or .zshrc
+alias gwt='goto-worktree'
 
-- `python scripts/worktree_manager.py --help`
-  - Create/list worktrees
-  - Allocate/persist ports
-  - Copy `.env*` files
-  - Optional dependency installation
-- `python scripts/worktree_cleanup.py --help`
-  - Stale detection by age
-  - Dirty-state detection
-  - Merged-branch detection
-  - Optional safe removal
+# Then use:
+gwt feature-name
+```
 
-Both tools support stdin JSON and `--input` file mode for automation pipelines.
+### 4. Manage Worktree Status
 
-## Common Pitfalls
+#### Lock and Unlock
+```bash
+# Lock a worktree (prevent operations)
+git worktree lock ../worktrees/feature-name
 
-1. Creating worktrees inside the main repo directory
-2. Reusing `localhost:3000` across all branches
-3. Sharing one database URL across isolated feature branches
-4. Removing a worktree with uncommitted changes
-5. Forgetting to prune old metadata after branch deletion
-6. Assuming merged status without checking against the target branch
+# Unlock a worktree
+git worktree unlock ../worktrees/feature-name
+
+# Check locked status
+git worktree list
+```
+
+#### Prune Worktrees
+```bash
+# Clean up worktree administrative data
+git worktree prune
+
+# Prune with verbose output
+git worktree prune -v
+```
+
+## Worktree Cleanup
+
+### Identify Unused Worktrees
+
+#### Check for Orphaned Worktrees
+```bash
+# Find worktrees with deleted branches
+git worktree list | while read path commit branch; do
+    if ! git show-ref --verify --quiet "refs/heads/${branch#*/}"; then
+        echo "Orphaned: $path ($branch)"
+    fi
+done
+```
+
+#### Check for Uncommitted Changes
+```bash
+# List worktrees with uncommitted changes
+for wt in $(git worktree list --porcelain | grep worktree | sed 's/worktree //'); do
+    if [ -n "$(cd "$wt" && git status --porcelain)" ]; then
+        echo "Uncommitted changes: $wt"
+    fi
+done
+```
+
+### Safe Removal
+
+#### Remove a Worktree
+```bash
+# Safe removal (if clean)
+git worktree remove ../worktrees/feature-name
+
+# Force removal (ignores uncommitted changes)
+git worktree remove --force ../worktrees/feature-name
+```
+
+#### Remove Multiple Worktrees
+```bash
+# Remove all worktrees matching pattern
+for wt in ../worktrees/feature-*; do
+    git worktree remove "$wt"
+done
+```
+
+## Workflow Integration
+
+### Feature Development Workflow
+```markdown
+1. Create worktree for new feature
+   ```bash
+   git worktree add -b feature/new-ui ../worktrees/feature/new-ui
+   ```
+
+2. Develop feature in isolation
+   ```bash
+   cd ../worktrees/feature/new-ui
+   # ... develop feature ...
+   ```
+
+3. Test changes locally
+   ```bash
+   cargo test
+   ```
+
+4. Commit and push to branch
+   ```bash
+   git add .
+   git commit -m "Implement new UI"
+   git push
+   ```
+
+5. Merge back to main
+   ```bash
+   cd /path/to/main-repo
+   git checkout main
+   git merge feature/new-ui
+   ```
+
+6. Clean up worktree
+   ```bash
+   git worktree remove ../worktrees/feature/new-ui
+   ```
+```
+
+### Parallel Testing Workflow
+```bash
+# Test multiple branches simultaneously
+for branch in feature/a feature/b feature/c; do
+    git worktree add ../worktrees/$branch $branch
+    cd ../worktrees/$branch
+    cargo test &
+done
+
+# Wait for all tests to complete
+wait
+```
+
+### Bugfix Workflow
+```bash
+# Create worktree for urgent bugfix
+git worktree add -b hotfix/critical-issue ../worktrees/hotfix/critical-issue
+
+# Fix and test in isolation
+cd ../worktrees/hotfix/critical-issue
+# ... fix bug ...
+
+# Test thoroughly
+cargo test
+
+# Merge to release branch
+git checkout release/v1.2
+git merge hotfix/critical-issue
+
+# Clean up
+git worktree remove ../worktrees/hotfix/critical-issue
+```
+
+### CI/CD Integration
+```yaml
+# GitHub Actions workflow example
+- name: Test with Worktrees
+  run: |
+    # Create worktree for testing
+    git worktree add /tmp/ci-test $GITHUB_SHA
+    
+    # Run tests in worktree
+    cd /tmp/ci-test
+    cargo test --all
+    
+    # Clean up
+    rm -rf /tmp/ci-test
+```
+
+### Code Review Workflow
+```bash
+# Create worktree for PR review
+git worktree add ../worktrees/review/pr-123 origin/pr-123
+
+# Review changes in isolation
+cd ../worktrees/review/pr-123
+# ... review code ...
+
+# Run tests
+cargo test
+
+# Clean up after review
+git worktree remove ../worktrees/review/pr-123
+```
+
+## Git Configuration
+
+### Worktree-Specific Configuration
+```bash
+# Configure behavior in specific worktree
+cd ../worktrees/feature-name
+
+# Set up local Git config
+git config user.name "Developer Name"
+git config user.email "developer@example.com"
+
+# Configure branch-specific settings
+git config branch.feature-name.mergeoptions "no-ff"
+```
+
+### Aliases for Common Operations
+```bash
+# Add to ~/.gitconfig
+[alias]
+    wt-list = worktree list
+    wt-add = "!f() { git worktree add ../worktrees/$1 ${2:--b $2}; }; f"
+    wt-remove = "!f() { git worktree remove ../worktrees/$1; }; f"
+    wt-prune = worktree prune
+```
 
 ## Best Practices
 
-1. One branch per worktree, one agent per worktree.
-2. Keep worktrees short-lived; remove after merge.
-3. Use a deterministic naming pattern (`wt-<topic>`).
-4. Persist port mappings in file, not memory or terminal notes.
-5. Run cleanup scan weekly in active repos.
-6. Use `--format json` for machine flows and `--format text` for human review.
-7. Never force-remove dirty worktrees unless changes are intentionally discarded.
+### DO:
+✓ Organize worktrees in dedicated directory (../worktrees/)
+✓ Use descriptive branch names and worktree paths
+✓ Clean up worktrees after merging or abandoning work
+✓ Test in worktree before merging to main branch
+✓ Use worktrees for isolated, parallel development
+✓ Prune worktrees regularly to remove orphaned data
+✓ Lock worktrees during automated operations
+✓ Verify worktree status before major operations
 
-## Validation Checklist
+### DON'T:
+✗ Create worktrees in random locations
+✗ Use worktrees as long-term storage (use branches instead)
+✗ Leave worktrees with uncommitted changes indefinitely
+✗ Forget to prune worktree administrative data
+✗ Create worktrees with conflicting branches
+✗ Mix worktree and non-worktree workflows without clear separation
+✗ Remove worktrees without checking for uncommitted changes
+✗ Use worktrees for unrelated changes (keep them focused)
 
-Before claiming setup complete:
+## Advanced Patterns
 
-1. `git worktree list` shows expected path + branch.
-2. `.worktree-ports.json` exists and contains unique ports.
-3. `.env` files copied successfully (if present in source repo).
-4. Dependency install command exits with code `0` (if enabled).
-5. Cleanup scan reports no unintended stale dirty trees.
+### Main Branch Protection
+```bash
+# Keep main branch clean
+# Never commit directly to main from worktree
+# Always create feature branches from main
+# Merge feature branches into main from main checkout
 
-## References
+# Example safe workflow:
+# 1. In main: create-feature-branch
+# 2. In worktree: develop and test
+# 3. In main: merge-feature-branch
+# 4. Remove worktree
+```
 
-- [port-allocation-strategy.md](references/port-allocation-strategy.md)
-- [docker-compose-patterns.md](references/docker-compose-patterns.md)
-- [README.md](README.md) for quick start and installation details
+### Worktree Isolation
+```bash
+# Each worktree is isolated environment
+# No shared state between worktrees
+# Each worktree has its own .git/config
+# Changes in worktree don't affect main until merged
+```
 
-## Decision Matrix
+### Stashing in Worktrees
+```bash
+# Stash works independently in each worktree
+cd ../worktrees/feature-a
+git stash save "WIP feature A"
 
-Use this quick selector before creating a new worktree:
+cd ../worktrees/feature-b
+git stash save "WIP feature B"
+```
 
-- Need isolated dependencies and server ports -> create a new worktree
-- Need only a quick local diff review -> stay on current tree
-- Need hotfix while feature branch is dirty -> create dedicated hotfix worktree
-- Need ephemeral reproduction branch for bug triage -> create temporary worktree and cleanup same day
+### Submodule Considerations
+```bash
+# Worktrees interact with submodules carefully
+# Each worktree has its own submodule checkout
+# Be aware of submodule init/update operations
+```
 
-## Operational Checklist
+## Troubleshooting
 
-### Before Creation
+### Common Issues
 
-1. Confirm main repo has clean baseline or intentional WIP commits.
-2. Confirm target branch naming convention.
-3. Confirm required base branch exists (`main`/`develop`).
-4. Confirm no reserved local ports are already occupied by non-repo services.
+#### Issue: Worktree Already Exists
+```bash
+# Error: fatal: 'worktrees/feature-name' already exists
+# Solution: Remove existing worktree first
+git worktree remove ../worktrees/feature-name
+# Then recreate
+git worktree add ../worktrees/feature-name feature-branch-name
+```
 
-### After Creation
+#### Issue: Detached HEAD
+```bash
+# Worktree in detached HEAD state
+# Solution: Check out appropriate branch
+cd ../worktrees/feature-name
+git checkout feature-branch-name
+```
 
-1. Verify `git status` branch matches expected branch.
-2. Verify `.worktree-ports.json` exists.
-3. Verify app boots on allocated app port.
-4. Verify DB and cache endpoints target isolated ports.
+#### Issue: Merge Conflicts
+```bash
+# Conflicts when merging from worktree
+# Solution: Resolve in worktree, then merge
+cd ../worktrees/feature-name
+git merge main
+# Resolve conflicts
+git commit
+git checkout main
+git merge feature-name
+```
 
-### Before Removal
+#### Issue: Large .git Directory
+```bash
+# Worktrees can bloat .git directory
+# Solution: Use prune regularly
+git worktree prune
+# Consider using sparse checkout for large repos
+```
 
-1. Verify branch has upstream and is merged when intended.
-2. Verify no uncommitted files remain.
-3. Verify no running containers/processes depend on this worktree path.
+## Tools and Commands Reference
 
-## CI and Team Integration
+### Quick Reference
+```bash
+# List all worktrees
+git worktree list
 
-- Use worktree path naming that maps to task ID (`wt-1234-auth`).
-- Include the worktree path in terminal title to avoid wrong-window commits.
-- In automated setups, persist creation metadata in CI artifacts/logs.
-- Trigger cleanup report in scheduled jobs and post summary to team channel.
+# Create from branch
+git worktree add ../worktrees/name branch-name
 
-## Failure Recovery
+# Create with new branch
+git worktree add -b new-branch ../worktrees/name
 
-- If `git worktree add` fails due to existing path: inspect path, do not overwrite.
-- If dependency install fails: keep worktree created, mark status and continue manual recovery.
-- If env copy fails: continue with warning and explicit missing file list.
-- If port allocation collides with external service: rerun with adjusted base ports.
+# Remove worktree
+git worktree remove ../worktrees/name
+
+# Force remove
+git worktree remove --force ../worktrees/name
+
+# Prune administrative data
+git worktree prune
+
+# Move a worktree
+git worktree move ../worktrees/old-path ../worktrees/new-path
+
+# Lock worktree
+git worktree lock ../worktrees/name
+
+# Unlock worktree
+git worktree unlock ../worktrees/name
+```
+
+### Status Checking
+```bash
+# Check all worktree statuses
+git worktree list
+
+# Get detailed information
+git worktree list --porcelain
+
+# Find worktree for a branch
+git worktree list | grep feature-branch-name
+```
+
+## Integration with Development Workflows
+
+### With IDE
+```bash
+# VS Code: Add multiple workspace roots
+# Settings -> Workspace -> Add Folder...
+# Add: /path/to/project, /path/to/worktrees/*
+
+# JetBrains: Configure multiple project roots
+# File -> Open -> Add Directory to Project
+```
+
+### With Testing
+```bash
+# Parallel test execution
+for branch in $(git branch -r | grep -v HEAD); do
+    git worktree add /tmp/test-$branch $branch
+    cd /tmp/test-$branch && cargo test
+    rm -rf /tmp/test-$branch
+done
+```
+
+### With CI/CD
+```yaml
+# GitHub Actions: Use worktrees for isolated testing
+- name: Parallel Testing
+  run: |
+    for branch in test-1 test-2 test-3; do
+      git worktree add /tmp/$branch origin/$branch
+      cd /tmp/$branch && cargo test
+      rm -rf /tmp/$branch
+    done
+```
+
+## Maintenance
+
+### Regular Cleanup Schedule
+- **Daily**: Prune worktrees
+- **Weekly**: Check for orphaned worktrees
+- **Monthly**: Review and clean up old worktree directories
+
+### Monitoring
+```bash
+# Monitor worktree usage
+git worktree list | wc -l  # Count active worktrees
+
+# Monitor disk usage
+du -sh ../worktrees/
+
+# Check for large .git directories
+du -sh .git
+```
+
+### Backup Considerations
+```bash
+# Worktrees don't need separate backups
+# All data is in shared git repository
+# Main worktree is primary working directory
+# Worktrees are temporary workspaces
+```
+
+## Summary
+
+Git worktrees enable:
+- **Parallel Development**: Multiple branches simultaneously
+- **Isolation**: Clean main working directory
+- **Flexibility**: Easy to create and remove workspaces
+- **Organization**: Structured worktree management
+- **Efficiency**: Faster context switching between features
+
+Use worktrees for efficient, isolated multi-branch development while maintaining a clean main working directory.

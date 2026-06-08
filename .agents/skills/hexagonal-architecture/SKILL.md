@@ -1,276 +1,171 @@
 ---
 name: hexagonal-architecture
-description: Design, implement, and refactor Ports & Adapters systems with clear domain boundaries, dependency inversion, and testable use-case orchestration across TypeScript, Java, Kotlin, and Go services.
-origin: ECC
+description: Design, implement, and maintain applications using hexagonal architecture (ports and adapters). Use when (1) designing new systems requiring clear separation between domain logic and infrastructure, (2) refactoring monolithic or tightly-coupled codebases toward cleaner boundaries, (3) reviewing architecture for dependency rule violations or layer leakage, (4) establishing testing strategies that isolate domain logic, or (5) evaluating whether hexagonal architecture suits a given problem domain.
 ---
 
 # Hexagonal Architecture
 
-Hexagonal architecture (Ports and Adapters) keeps business logic independent from frameworks, transport, and persistence details. The core app depends on abstract ports, and adapters implement those ports at the edges.
+Hexagonal architecture (Alistair Cockburn, 2005) isolates domain logic from infrastructure concerns through explicit boundaries called ports (interfaces the domain exposes or requires) and adapters (implementations that connect ports to the outside world).
 
-## When to Use
+## Core Invariants
 
-- Building new features where long-term maintainability and testability matter.
-- Refactoring layered or framework-heavy code where domain logic is mixed with I/O concerns.
-- Supporting multiple interfaces for the same use case (HTTP, CLI, queue workers, cron jobs).
-- Replacing infrastructure (database, external APIs, message bus) without rewriting business rules.
+These rules must hold throughout the codebase:
 
-Use this skill when the request involves boundaries, domain-centric design, refactoring tightly coupled services, or decoupling application logic from specific libraries.
+1. **Dependency rule**: All dependencies point inward. Domain knows nothing of adapters.
+2. **Port ownership**: The domain defines port interfaces. Adapters implement them.
+3. **Domain purity**: No framework imports, I/O operations, or infrastructure types in domain code.
+4. **Adapter isolation**: Adapters never call each other directly; coordination happens through the domain.
 
-## Core Concepts
+## When Hexagonal Architecture Applies
 
-- **Domain model**: Business rules and entities/value objects. No framework imports.
-- **Use cases (application layer)**: Orchestrate domain behavior and workflow steps.
-- **Inbound ports**: Contracts describing what the application can do (commands/queries/use-case interfaces).
-- **Outbound ports**: Contracts for dependencies the application needs (repositories, gateways, event publishers, clock, UUID, etc.).
-- **Adapters**: Infrastructure and delivery implementations of ports (HTTP controllers, DB repositories, queue consumers, SDK wrappers).
-- **Composition root**: Single wiring location where concrete adapters are bound to use cases.
+**Strong fit:**
+- Business logic complexity exceeds infrastructure complexity
+- Multiple delivery mechanisms (API, CLI, queue consumers, scheduled jobs)
+- Infrastructure likely to change (database migrations, vendor switches)
+- Testability of domain logic is a priority
+- Team scales beyond 2-3 engineers working on same codebase
 
-Outbound port interfaces usually live in the application layer (or in domain only when the abstraction is truly domain-level), while infrastructure adapters implement them.
+**Poor fit:**
+- CRUD-dominant applications with trivial business rules
+- Prototypes or throwaway code
+- Glue services that primarily transform and forward data
+- Performance-critical paths where indirection cost matters
 
-Dependency direction is always inward:
+**Evaluate carefully:**
+- Existing codebase with heavy framework coupling (high migration cost)
+- Single delivery mechanism with stable infrastructure
+- Small team with strong shared context
 
-- Adapters -> application/domain
-- Application -> port interfaces (inbound/outbound contracts)
-- Domain -> domain-only abstractions (no framework or infrastructure dependencies)
-- Domain -> nothing external
+## Workflow
 
-## How It Works
+### 1. Domain Discovery
 
-### Step 1: Model a use case boundary
+Before writing code, identify the bounded context:
 
-Define a single use case with a clear input and output DTO. Keep transport details (Express `req`, GraphQL `context`, job payload wrappers) outside this boundary.
+1. **List domain operations** - What actions can actors perform? (e.g., "place order", "cancel subscription")
+2. **Identify domain events** - What state changes matter to the business? (e.g., "order placed", "payment failed")
+3. **Map external dependencies** - What does the domain need from the outside world? (databases, APIs, time, randomness)
+4. **Enumerate delivery mechanisms** - How do actors interact with the system? (HTTP, CLI, message queues)
 
-### Step 2: Define outbound ports first
+### 2. Port Design
 
-Identify every side effect as a port:
+Ports divide into two categories:
 
-- persistence (`UserRepositoryPort`)
-- external calls (`BillingGatewayPort`)
-- cross-cutting (`LoggerPort`, `ClockPort`)
+**Driving ports (primary)** - How the outside world invokes the domain:
+- Application services / use cases
+- Command handlers
+- Query handlers
 
-Ports should model capabilities, not technologies.
+**Driven ports (secondary)** - What the domain needs from infrastructure:
+- Repository interfaces
+- External service gateways
+- Notification dispatchers
+- Clock/random abstractions
 
-### Step 3: Implement the use case with pure orchestration
+Design principles for ports:
+- Name ports using domain language, not technical terms (`OrderRepository` not `PostgresOrderStore`)
+- Keep port interfaces minimal—single responsibility per port
+- Return domain types from ports, never infrastructure types
+- Avoid leaking implementation details through port signatures
 
-Use case class/function receives ports via constructor/arguments. It validates application-level invariants, coordinates domain rules, and returns plain data structures.
+See [references/port-design.md](references/port-design.md) for detailed patterns.
 
-### Step 4: Build adapters at the edge
+### 3. Directory Structure
 
-- Inbound adapter converts protocol input to use-case input.
-- Outbound adapter maps app contracts to concrete APIs/ORM/query builders.
-- Mapping stays in adapters, not inside use cases.
+Canonical layout (language-agnostic):
 
-### Step 5: Wire everything in a composition root
-
-Instantiate adapters, then inject them into use cases. Keep this wiring centralized to avoid hidden service-locator behavior.
-
-### Step 6: Test per boundary
-
-- Unit test use cases with fake ports.
-- Integration test adapters with real infra dependencies.
-- E2E test user-facing flows through inbound adapters.
-
-## Architecture Diagram
-
-```mermaid
-flowchart LR
-  Client["Client (HTTP/CLI/Worker)"] --> InboundAdapter["Inbound Adapter"]
-  InboundAdapter -->|"calls"| UseCase["UseCase (Application Layer)"]
-  UseCase -->|"uses"| OutboundPort["OutboundPort (Interface)"]
-  OutboundAdapter["Outbound Adapter"] -->|"implements"| OutboundPort
-  OutboundAdapter --> ExternalSystem["DB/API/Queue"]
-  UseCase --> DomainModel["DomainModel"]
 ```
-
-## Suggested Module Layout
-
-Use feature-first organization with explicit boundaries:
-
-```text
 src/
-  features/
-    orders/
-      domain/
-        Order.ts
-        OrderPolicy.ts
-      application/
-        ports/
-          inbound/
-            CreateOrder.ts
-          outbound/
-            OrderRepositoryPort.ts
-            PaymentGatewayPort.ts
-        use-cases/
-          CreateOrderUseCase.ts
-      adapters/
-        inbound/
-          http/
-            createOrderRoute.ts
-        outbound/
-          postgres/
-            PostgresOrderRepository.ts
-          stripe/
-            StripePaymentGateway.ts
-      composition/
-        ordersContainer.ts
+├── domain/                 # Pure business logic
+│   ├── model/              # Entities, value objects, aggregates
+│   ├── services/           # Domain services (stateless logic)
+│   ├── events/             # Domain events
+│   └── ports/              # Port interfaces (driven)
+├── application/            # Use cases / application services
+│   ├── commands/           # Write operations
+│   ├── queries/            # Read operations
+│   └── ports/              # Driving port interfaces (if separated)
+├── adapters/               # Infrastructure implementations
+│   ├── inbound/            # Driving adapters (HTTP, CLI, etc.)
+│   │   ├── http/
+│   │   └── cli/
+│   └── outbound/           # Driven adapters (DB, APIs, etc.)
+│       ├── persistence/
+│       └── external/
+└── config/                 # Composition root, DI wiring
 ```
 
-## TypeScript Example
+Alternative flat structure for smaller projects:
 
-### Port definitions
-
-```typescript
-export interface OrderRepositoryPort {
-  save(order: Order): Promise<void>;
-  findById(orderId: string): Promise<Order | null>;
-}
-
-export interface PaymentGatewayPort {
-  authorize(input: { orderId: string; amountCents: number }): Promise<{ authorizationId: string }>;
-}
+```
+src/
+├── domain/
+├── ports/
+├── adapters/
+└── main.py
 ```
 
-### Use case
+### 4. Implementation Sequence
 
-```typescript
-type CreateOrderInput = {
-  orderId: string;
-  amountCents: number;
-};
+1. **Domain model first** - Entities, value objects, domain services. No dependencies.
+2. **Define driven ports** - Repository interfaces, gateway interfaces.
+3. **Implement application services** - Orchestrate domain logic, depend only on ports.
+4. **Build driven adapters** - Database repositories, API clients. Implement port interfaces.
+5. **Build driving adapters** - HTTP handlers, CLI commands. Call application services.
+6. **Wire at composition root** - Dependency injection, configuration.
 
-type CreateOrderOutput = {
-  orderId: string;
-  authorizationId: string;
-};
+### 5. Testing Strategy
 
-export class CreateOrderUseCase {
-  constructor(
-    private readonly orderRepository: OrderRepositoryPort,
-    private readonly paymentGateway: PaymentGatewayPort
-  ) {}
+Layer-specific testing approach:
 
-  async execute(input: CreateOrderInput): Promise<CreateOrderOutput> {
-    const order = Order.create({ id: input.orderId, amountCents: input.amountCents });
+| Layer | Test Type | Dependencies | Purpose |
+|-------|-----------|--------------|---------|
+| Domain | Unit | None | Verify business rules in isolation |
+| Application | Unit | Mocked ports | Verify orchestration logic |
+| Adapters | Integration | Real infrastructure | Verify adapter correctness |
+| System | E2E | Full stack | Verify wiring and contracts |
 
-    const auth = await this.paymentGateway.authorize({
-      orderId: order.id,
-      amountCents: order.amountCents,
-    });
+Key principle: Domain tests must run without any infrastructure. If a domain test requires a database connection, the architecture has leaked.
 
-    // markAuthorized returns a new Order instance; it does not mutate in place.
-    const authorizedOrder = order.markAuthorized(auth.authorizationId);
-    await this.orderRepository.save(authorizedOrder);
+See [references/testing-strategies.md](references/testing-strategies.md) for implementation patterns.
 
-    return {
-      orderId: order.id,
-      authorizationId: auth.authorizationId,
-    };
-  }
-}
-```
+### 6. Maintenance and Drift Detection
 
-### Outbound adapter
+Architectural drift occurs when code violates the dependency rule over time. Detect and prevent drift through:
 
-```typescript
-export class PostgresOrderRepository implements OrderRepositoryPort {
-  constructor(private readonly db: SqlClient) {}
+**Static analysis:**
+- Import linting rules (domain must not import from adapters)
+- Architecture fitness functions in CI
+- Dependency analysis tools
 
-  async save(order: Order): Promise<void> {
-    await this.db.query(
-      "insert into orders (id, amount_cents, status, authorization_id) values ($1, $2, $3, $4)",
-      [order.id, order.amountCents, order.status, order.authorizationId]
-    );
-  }
+**Code review checklist:**
+- [ ] No infrastructure imports in domain/
+- [ ] No domain types with ORM decorators or framework annotations
+- [ ] Adapters implement port interfaces, not ad-hoc contracts
+- [ ] New external dependencies introduced via ports, not direct calls
 
-  async findById(orderId: string): Promise<Order | null> {
-    const row = await this.db.oneOrNone("select * from orders where id = $1", [orderId]);
-    return row ? Order.rehydrate(row) : null;
-  }
-}
-```
+**Refactoring triggers:**
+- Port interface grows beyond 5-7 methods (split by cohesion)
+- Adapter requires domain knowledge to function (abstraction leak)
+- Test requires infrastructure to verify domain rule (boundary violation)
+- Same data transformation appears in multiple adapters (missing domain concept)
 
-### Composition root
+See [references/anti-patterns.md](references/anti-patterns.md) for common violations and remediation.
 
-```typescript
-export const buildCreateOrderUseCase = (deps: { db: SqlClient; stripe: StripeClient }) => {
-  const orderRepository = new PostgresOrderRepository(deps.db);
-  const paymentGateway = new StripePaymentGateway(deps.stripe);
+## Language-Specific Notes
 
-  return new CreateOrderUseCase(orderRepository, paymentGateway);
-};
-```
+Consult [references/language-specific.md](references/language-specific.md) for:
+- Python: Protocol classes, ABC, structural vs nominal typing
+- TypeScript: Interface patterns, dependency injection approaches
+- Go: Interface satisfaction, package organisation
+- Rust: Trait definitions, module boundaries
 
-## Multi-Language Mapping
+## Decision Records
 
-Use the same boundary rules across ecosystems; only syntax and wiring style change.
+When establishing hexagonal architecture in a project, document these decisions:
 
-- **TypeScript/JavaScript**
-  - Ports: `application/ports/*` as interfaces/types.
-  - Use cases: classes/functions with constructor/argument injection.
-  - Adapters: `adapters/inbound/*`, `adapters/outbound/*`.
-  - Composition: explicit factory/container module (no hidden globals).
-- **Java**
-  - Packages: `domain`, `application.port.in`, `application.port.out`, `application.usecase`, `adapter.in`, `adapter.out`.
-  - Ports: interfaces in `application.port.*`.
-  - Use cases: plain classes (Spring `@Service` is optional, not required).
-  - Composition: Spring config or manual wiring class; keep wiring out of domain/use-case classes.
-- **Kotlin**
-  - Modules/packages mirror the Java split (`domain`, `application.port`, `application.usecase`, `adapter`).
-  - Ports: Kotlin interfaces.
-  - Use cases: classes with constructor injection (Koin/Dagger/Spring/manual).
-  - Composition: module definitions or dedicated composition functions; avoid service locator patterns.
-- **Go**
-  - Packages: `internal/<feature>/domain`, `application`, `ports`, `adapters/inbound`, `adapters/outbound`.
-  - Ports: small interfaces owned by the consuming application package.
-  - Use cases: structs with interface fields plus explicit `New...` constructors.
-  - Composition: wire in `cmd/<app>/main.go` (or dedicated wiring package), keep constructors explicit.
-
-## Anti-Patterns to Avoid
-
-- Domain entities importing ORM models, web framework types, or SDK clients.
-- Use cases reading directly from `req`, `res`, or queue metadata.
-- Returning database rows directly from use cases without domain/application mapping.
-- Letting adapters call each other directly instead of flowing through use-case ports.
-- Spreading dependency wiring across many files with hidden global singletons.
-
-## Migration Playbook
-
-1. Pick one vertical slice (single endpoint/job) with frequent change pain.
-2. Extract a use-case boundary with explicit input/output types.
-3. Introduce outbound ports around existing infrastructure calls.
-4. Move orchestration logic from controllers/services into the use case.
-5. Keep old adapters, but make them delegate to the new use case.
-6. Add tests around the new boundary (unit + adapter integration).
-7. Repeat slice-by-slice; avoid full rewrites.
-
-### Refactoring Existing Systems
-
-- **Strangler approach**: keep current endpoints, route one use case at a time through new ports/adapters.
-- **No big-bang rewrites**: migrate per feature slice and preserve behavior with characterization tests.
-- **Facade first**: wrap legacy services behind outbound ports before replacing internals.
-- **Composition freeze**: centralize wiring early so new dependencies do not leak into domain/use-case layers.
-- **Slice selection rule**: prioritize high-churn, low-blast-radius flows first.
-- **Rollback path**: keep a reversible toggle or route switch per migrated slice until production behavior is verified.
-
-## Testing Guidance (Same Hexagonal Boundaries)
-
-- **Domain tests**: test entities/value objects as pure business rules (no mocks, no framework setup).
-- **Use-case unit tests**: test orchestration with fakes/stubs for outbound ports; assert business outcomes and port interactions.
-- **Outbound adapter contract tests**: define shared contract suites at port level and run them against each adapter implementation.
-- **Inbound adapter tests**: verify protocol mapping (HTTP/CLI/queue payload to use-case input and output/error mapping back to protocol).
-- **Adapter integration tests**: run against real infrastructure (DB/API/queue) for serialization, schema/query behavior, retries, and timeouts.
-- **End-to-end tests**: cover critical user journeys through inbound adapter -> use case -> outbound adapter.
-- **Refactor safety**: add characterization tests before extraction; keep them until new boundary behavior is stable and equivalent.
-
-## Best Practices Checklist
-
-- Domain and use-case layers import only internal types and ports.
-- Every external dependency is represented by an outbound port.
-- Validation occurs at boundaries (inbound adapter + use-case invariants).
-- Use immutable transformations (return new values/entities instead of mutating shared state).
-- Errors are translated across boundaries (infra errors -> application/domain errors).
-- Composition root is explicit and easy to audit.
-- Use cases are testable with simple in-memory fakes for ports.
-- Refactoring starts from one vertical slice with behavior-preserving tests.
-- Language/framework specifics stay in adapters, never in domain rules.
+1. **Bounded context scope** - What's in, what's out
+2. **Port granularity** - One repository per aggregate vs shared
+3. **Error handling strategy** - Domain exceptions vs result types
+4. **Event handling** - Sync vs async, in-process vs distributed
+5. **Query model** - CQRS separation level (shared model, separate read model, separate store)

@@ -1,124 +1,273 @@
 ---
 name: generate-docs
-description: Generate project documentation from an existing codebase. This documentation shall serve Agents and Humans. Creates a project overview, module documentation, and feature documentation with explicit inventories (files/dirs + symbols) for each module. Use this skill when onboarding a new project or creating initial documentation for an undocumented codebase.
-license: MIT
-compatibility: opencode
-metadata:
-  category: documentation
-  phase: initial
+description: |
+  Generate configuration reference documentation from conclaude-schema.json using src/bin/generate-docs.rs.
+  USE WHEN the schema file changes, configuration options are added/modified, or documentation needs to be regenerated for the website.
 ---
 
-# Skill: Generate Documentation
+# Generate Documentation
 
-## What This Skill Does
+This skill helps you generate the configuration reference documentation for conclaude. The documentation is generated from `conclaude-schema.json` and output as Markdown files ready for the Starlight-based documentation site.
 
-Creates structured project documentation from an existing codebase. This documentation shall serve Agents and Humans when working in consecutive sessions with the project.
+## USE WHEN
 
-Produces three artifact types:
+**Use this skill when:**
 
-1. **Project Overview** (`docs/overview.md`) - High-level architecture, module listing, feature listing
-2. **Module Documentation** (`docs/modules/<name>.md`) - Overview + exhaustive inventories (files/dirs + symbols)
-3. **Feature Documentation** (`docs/features/<name>.md`) - How features work, with implementation references
+- The `conclaude-schema.json` file has been updated
+- New configuration sections or properties have been added
+- Configuration descriptions or examples have been modified in the schema
+- Documentation is out of sync with the configuration schema
+- Preparing documentation updates for a release
+- Setting up or rebuilding the documentation site
+- Schema descriptions, types, or default values have changed
+- Adding new configuration examples to the schema
 
-## When to Use
+**Do NOT use this skill when:**
 
-- When a project has no structured documentation yet
-- When onboarding to an unfamiliar codebase
-- When the user asks to "document this project" or "create documentation"
+- Just viewing or reading the existing documentation
+- Making changes unrelated to configuration
+- Working on non-documentation features
+- The schema hasn't changed since last doc generation
 
-Do NOT use this skill to update existing documentation - use `update-docs` instead.
+## How It Works
 
-## Execution Model
+The documentation generator (`src/bin/generate-docs.rs`) processes the JSON Schema file to create structured documentation:
 
-- The primary agent spawns `doc-explorer`. `doc-explorer` explores the repo and writes artifacts under `docs/`.
-- Rationale: documentation is primarily anchored in the codebase (not in the conversation). Keeping exploration + writing in the same subagent session reduces context loss.
-- For large codebases with multiple modules, `doc-explorer` self-delegates: it spawns additional `doc-explorer` instances scoped to individual modules (see Self-Delegation below).
-- The primary agent should keep chat output minimal (paths changed + any open questions).
+1. **Reads** `conclaude-schema.json` from the workspace root
+2. **Parses** the schema to extract:
+   - Configuration sections and their properties
+   - Type information and default values
+   - Descriptions and documentation strings
+   - YAML examples embedded in descriptions
+   - Nested type definitions
+3. **Generates** Markdown files with Starlight frontmatter:
+   - Overview page with quick reference table
+   - Individual section pages with detailed properties
+   - Nested type documentation
+   - Complete configuration examples
+4. **Outputs** to `docs/src/content/docs/reference/config/` by default
 
-## Self-Delegation
+The generated documentation integrates seamlessly with the Starlight documentation site.
 
-For projects with 3+ modules or modules with 50+ files, doc-explorer SHOULD delegate per-module work to separate doc-explorer instances via the Task tool:
+## Instructions
 
-1. **Orchestrator instance**: Identifies modules, creates `docs/overview.md`, spawns per-module instances
-2. **Per-module instance**: Receives scoped task ("document module X in directory Y"), explores only that module, writes `docs/modules/<name>.md`
-3. **Orchestrator**: Collects status, writes cross-cutting feature docs
+### Step 1: Ensure Schema is Up-to-Date
 
-This prevents unnecessary context growth from accumulating the entire codebase analysis in a single context.
+First, make sure your schema file reflects the current configuration:
 
-## Workflow
+```bash
+# If you've made config changes, regenerate schema first
+cargo run --bin generate-schema
+```
 
-### Step 1: Assess the Project
+### Step 2: Generate Documentation
 
-Gather information using read/glob/grep and git history.
+Run the documentation generator:
 
-- Identify the project type, language, framework
-- Find the entry points, main modules, key directories
-- Identify major features from code, tests, or existing README
-- Check if any documentation already exists (skip what exists, or ask user)
+```bash
+cargo run --bin generate-docs
+```
 
-### Step 2: Identify Modules
+This will:
+- Read the schema from `conclaude-schema.json`
+- Generate an overview page at `docs/src/content/docs/reference/config/configuration.md`
+- Create individual section pages (e.g., `hooks.md`, `files.md`, etc.)
+- Extract and format YAML examples from schema descriptions
+- Document nested types used by configuration properties
 
-A module is a self-contained part of the project. Criteria for module boundaries:
+### Step 3: Custom Output Directory (Optional)
 
-- Has its own directory/package structure
-- Has a clear responsibility (e.g., "authentication", "API layer", "database")
-- Could theoretically be replaced independently
-- For single-module projects: the entire project is one module
+To generate docs to a different location:
 
-For large codebases, self-delegate per-module analysis to separate doc-explorer instances.
+```bash
+cargo run --bin generate-docs -- --output path/to/output/dir
+```
 
-### Step 3: Create the Project Overview
+### Step 4: Verify Generated Documentation
 
-Create `docs/overview.md` following the template structure:
+Check the generated files:
 
-- Fill in project purpose and architecture description
-- List all identified modules with brief descriptions
-- List key features with brief descriptions  
-- Include development setup if discoverable (package.json, Makefile, etc.)
-- Link to module and feature docs (even if not yet created)
+```bash
+ls -l docs/src/content/docs/reference/config/
+cat docs/src/content/docs/reference/config/configuration.md
+```
 
-### Step 4: Create Module Documentation
+Look for:
+- Overview page with all configuration sections listed
+- Individual section pages with property tables
+- Properly formatted YAML examples
+- Nested type definitions where applicable
+- Starlight frontmatter with title and description
 
-For each identified module, create `docs/modules/<module-name>.md`:
+### Step 5: Review in the Documentation Site
 
-- **Overview section** (always): Responsibility, dependencies, boundaries
-- **Structure**: Exhaustive directory/file inventory for the module (each entry has a purpose)
-- **Key Symbols**: Exhaustive symbol inventory for the module (each entry has a purpose + location)
-- **Data Flow**: How data moves through this module
+If you have the docs site running locally:
 
-For large modules, self-delegate: spawn a separate doc-explorer instance scoped to that module's directory.
+```bash
+cd docs
+npm run dev
+```
 
-### Step 5: Create Feature Documentation
+Navigate to `/reference/config/configuration` to review the generated documentation in context.
 
-For each identified feature, create `docs/features/<feature-name>.md`:
+### Step 6: Commit the Documentation
 
-- User flow: what the user experiences
-- Technical flow: what happens under the hood
-- Implementation references: which modules and symbols are involved
-- Edge cases and limitations
+Include the generated docs in your commit:
 
-Feature docs are inherently incomplete - document what is discoverable and note gaps.
+```bash
+git add docs/src/content/docs/reference/config/
+git commit -m "Update configuration reference documentation"
+```
 
-### Step 6: Verify and Report
+## Expected Output
 
-- Ensure all cross-references between documents are valid
-- Present a summary of created documents
-- Flag any gaps or areas that need manual enrichment
+When successful, you'll see:
 
-## Rules
+```
+Conclaude Documentation Generator
+==================================
 
-1. **File-based interface**: All output goes into `docs/` directory files. Do not return documentation as chat messages.
-2. **No redundancy**: Don't duplicate information between overview and module/feature docs. Use references.
-3. **Stack-agnostic**: Do not assume any specific language or framework. Discover everything from the codebase.
-4. **Inventories are explained**: File/dir and symbol listings MUST include a purpose; listings without explanation are not acceptable.
-5. **No built-in explore agent**: Do NOT use the built-in `explore` subagent type. Self-delegate to `doc-explorer` instead.
-6. **Self-delegate for scale**: For large codebases, spawn additional `doc-explorer` instances per module via the Task tool.
-7. **Create directories**: Ensure `docs/`, `docs/modules/`, and `docs/features/` exist before writing.
+Reading schema from conclaude-schema.json...
+Parsing JSON schema...
+Creating output directory: docs/src/content/docs/reference/config
+Generating configuration overview page...
+Generating documentation for section: files
+Generating documentation for section: hooks
+Generating documentation for section: preventGeneratedFileEdits
+Generating documentation for section: sessionStart
 
-## Templates
+Documentation generation complete!
+Generated files in: docs/src/content/docs/reference/config
+```
 
-This skill includes normative templates as bundled files. Only read the templates when processing them. Output MUST follow the template headings and frontmatter keys:
+Generated files include:
+- `configuration.md` - Overview page with quick reference
+- `hooks.md` - Hooks configuration documentation
+- `files.md` - File protection rules documentation
+- `session-start.md` - Session startup configuration
+- Additional section pages as needed
 
-- `tpl-project-overview.md` - Structure for the project overview
-- `tpl-module-documentation.md` - Structure for module documentation
-- `tpl-feature-documentation.md` - Structure for feature documentation
+## Common Issues
+
+### Schema File Not Found
+
+If the generator can't find the schema:
+- Ensure `conclaude-schema.json` exists in the workspace root
+- Run from the workspace root directory
+- Regenerate the schema: `cargo run --bin generate-schema`
+
+### Build Errors
+
+If the generator fails to build:
+- Ensure Rust toolchain is installed: `cargo --version`
+- Check that all dependencies are available: `cargo build`
+- Verify `src/bin/generate-docs.rs` compiles
+
+### Output Directory Creation Failed
+
+If it fails to create the output directory:
+- Check file system permissions
+- Ensure parent directories exist
+- Try specifying an absolute path with `--output`
+
+### Missing Examples or Descriptions
+
+If generated docs lack examples or seem incomplete:
+- Check that schema descriptions include YAML examples in ` ```yaml ` code blocks
+- Verify schema descriptions are properly formatted
+- Ensure nested types are defined in the `definitions` section
+
+### Incorrect Markdown Formatting
+
+If the output has formatting issues:
+- Review the schema descriptions for special characters
+- Check that YAML examples are properly escaped
+- Verify Starlight frontmatter is correctly formatted
+
+## Output File Structure
+
+The generator creates the following structure:
+
+```
+docs/src/content/docs/reference/config/
+├── configuration.md          # Overview with quick reference table
+├── hooks.md                  # Hooks configuration section
+├── files.md                  # File protection rules section
+├── session-start.md          # Session startup configuration
+└── [other-sections].md       # Additional configuration sections
+```
+
+Each section page includes:
+- Starlight frontmatter (title, description)
+- Section overview
+- Configuration properties table with types and defaults
+- Nested type definitions (if applicable)
+- Complete YAML examples
+- Navigation links back to overview
+
+## Related Files
+
+- `src/bin/generate-docs.rs` - The documentation generator binary
+- `conclaude-schema.json` - Input JSON Schema file
+- `docs/src/content/docs/reference/config/` - Output directory for generated docs
+- `src/bin/generate-schema.rs` - Schema generator (run before this)
+
+## Schema Description Format
+
+For best documentation output, schema descriptions should follow this format:
+
+```rust
+/// Main description of the configuration section.
+/// This part appears in the overview and section introduction.
+///
+/// # Examples
+///
+/// ```yaml
+/// sectionName:
+///   property: value
+///   anotherProperty: "example"
+/// ```
+///
+/// Additional context or notes can go here.
+```
+
+The generator will:
+- Extract the main description (before `# Examples`)
+- Parse and format YAML code blocks as separate examples
+- Include type information from the schema
+- Document nested types automatically
+
+## Tips for Maintaining Documentation
+
+1. **Always regenerate after schema changes**: Documentation should stay in sync with the schema
+2. **Keep schema descriptions clear**: They become user-facing documentation
+3. **Include practical examples**: YAML examples in schema descriptions are extracted and displayed
+4. **Document nested types**: Complex configuration structures are automatically documented
+5. **Use consistent terminology**: Match the language used in configuration files
+6. **Review generated output**: Always verify the generated docs render correctly in Starlight
+
+## Command Reference
+
+```bash
+# Basic usage (default output directory)
+cargo run --bin generate-docs
+
+# Custom output directory
+cargo run --bin generate-docs -- --output path/to/docs
+
+# Show help
+cargo run --bin generate-docs -- --help
+
+# Complete workflow: schema + docs
+cargo run --bin generate-schema && cargo run --bin generate-docs
+```
+
+## Notes
+
+- Documentation is automatically generated from the schema, so manual edits to generated files will be overwritten
+- Always regenerate documentation after updating the schema
+- The generator creates deterministic output (sorted sections/properties)
+- Generated files include Starlight frontmatter for proper site integration
+- YAML examples are extracted from schema description fields
+- Nested types are automatically detected and documented
+- The documentation site must be rebuilt to see changes: `cd docs && npm run build`

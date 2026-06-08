@@ -1,234 +1,243 @@
 ---
 name: glab
-description: Expert guidance for using the GitLab CLI (glab) to manage GitLab issues, merge requests, CI/CD pipelines, repositories, and other GitLab operations from the command line. Use this skill when the user needs to interact with GitLab resources or perform GitLab workflows.
-license: MIT
-compatibility: opencode
+description: GitLab CLI (glab) for merge requests, issues, and CI/CD pipelines. Use when working with GitLab repositories for MR creation/review, issue management, pipeline debugging, or any GitLab API operations. Triggers on GitLab URLs, mentions of "merge request" or "MR" (not "PR"), gitlab.com, or glab commands.
 ---
 
-# GitLab CLI (glab) Skill
+# glab - GitLab CLI
 
-Provides guidance for using `glab`, the official GitLab CLI, to perform GitLab operations from the terminal.
-
-## When to Use This Skill
-
-Invoke when the user needs to:
-
-- Create, review, or manage merge requests
-- Work with GitLab issues
-- Monitor or trigger CI/CD pipelines
-- Clone or manage repositories
-- Perform any GitLab operation from the command line
-
-## Prerequisites
-
-Verify glab installation before executing commands:
+## Quick Reference
 
 ```bash
-glab --version
+# Authentication
+glab auth login                    # Interactive login
+glab auth status                   # Check auth status
+
+# Merge Requests
+glab mr create                     # Create MR interactively
+glab mr list                       # List open MRs
+glab mr view <id>                  # View MR details
+glab mr merge <id>                 # Merge an MR
+glab mr checkout <id>              # Checkout MR branch locally
+
+# Issues
+glab issue create                  # Create issue interactively
+glab issue list                    # List open issues
+glab issue view <id>               # View issue details
+glab issue close <id>              # Close an issue
+
+# Pipelines
+glab ci status                     # Current branch pipeline status
+glab ci view                       # View pipeline in browser
+glab ci list                       # List recent pipelines
+glab ci trace                      # Stream job logs live
 ```
 
-If not installed, inform the user and provide platform-specific installation guidance.
-
-## Authentication Quick Start
-
-Most glab operations require authentication:
+## MR Creation Flow
 
 ```bash
-# Interactive authentication
-glab auth login
+# Create MR with options
+glab mr create \
+  --title "feat: add user authentication" \
+  --description "Implements OAuth2 login flow" \
+  --assignee @me \
+  --reviewer @teammate \
+  --label "feature,needs-review" \
+  --milestone "v1.0"
 
-# Check authentication status
-glab auth status
+# Create draft MR
+glab mr create --draft --title "WIP: refactoring auth"
 
-# For self-hosted GitLab
-glab auth login --hostname gitlab.example.org
+# Create MR targeting specific branch
+glab mr create --target-branch develop
 
-# Using environment variables
-export GITLAB_TOKEN=your-token
-export GITLAB_HOST=gitlab.example.org  # for self-hosted
+# Push and create MR in one step
+glab mr create --push
 ```
 
-## Core Workflows
-
-### Creating a Merge Request
+### MR Review Workflow
 
 ```bash
-# 1. Ensure branch is pushed
-git push -u origin feature-branch
-
-# 2. Create MR
-glab mr create --title "Add feature" --description "Implements X"
-
-# With reviewers and labels
-glab mr create --title "Fix bug" --reviewer=alice,bob --label="bug,urgent"
-```
-
-### Reviewing Merge Requests
-
-```bash
-# 1. List MRs awaiting your review
+# List MRs needing review
 glab mr list --reviewer=@me
 
-# 2. Checkout MR locally to test
-glab mr checkout <mr-number>
+# Checkout MR for local testing
+glab mr checkout 42
+# ... test locally ...
 
-# 3. After testing, approve
-glab mr approve <mr-number>
+# Approve MR
+glab mr approve 42
 
-# 4. Add review comments
-glab mr note <mr-number> -m "Please update tests"
+# Merge when ready
+glab mr merge 42 --squash --remove-source-branch
 ```
 
-### Managing Issues
+## Issue Management
 
+### Creating Issues with Descriptions
+
+**Simple inline description:**
 ```bash
-# Create issue with labels
-glab issue create --title "Bug in login" --label=bug
-
-# Link MR to issue
-glab mr create --title "Fix login" --description "Closes #<issue-number>"
-
-# List your assigned issues
-glab issue list --assignee=@me
+glab issue create --title "Fix login bug" --description "Users cannot log in"
 ```
 
-### Monitoring CI/CD
+**Multiline descriptions - use `$'...'` syntax for newlines:**
+```bash
+glab issue create \
+  --title "Bug: login fails on mobile" \
+  --description $'## Summary\nLogin fails on iOS devices.\n\n## Steps to Reproduce\n1. Open app\n2. Tap login\n3. Enter credentials\n\n## Expected\nUser logs in successfully'
+```
+
+**Complex descriptions - use a temp file (most reliable):**
+```bash
+cat << 'EOF' > /tmp/issue-body.md
+## Summary
+Login fails on iOS devices when using OAuth.
+
+## Steps to Reproduce
+1. Open the app on iOS 17+
+2. Tap "Login with Google"
+3. Complete OAuth flow
+4. App crashes on redirect
+
+## Expected Behavior
+User should be logged in and see dashboard.
+
+## Environment
+- iOS 17.2
+- App version 2.3.1
+EOF
+
+glab issue create \
+  --title "Bug: OAuth login crashes on iOS" \
+  --label "bug,priority::high" \
+  --assignee @me \
+  < /tmp/issue-body.md
+```
+
+**Interactive mode (opens editor):**
+```bash
+glab issue create  # Opens $EDITOR for description
+```
+
+### Updating Issues
 
 ```bash
-# Watch pipeline in progress
-glab pipeline ci view
+# Update description (use -d flag)
+glab issue update 123 -d "New description here"
 
-# Check pipeline status
+# Multiline description update
+glab issue update 123 -d $'## Updated\n\nNew multiline description'
+
+# Open editor for description (-d "-" opens $EDITOR)
+glab issue update 123 -d -
+
+# Update from file
+glab issue update 123 -d "$(cat /tmp/new-description.md)"
+
+# Other updates
+glab issue update 123 --title "New title"
+glab issue update 123 -l "in-progress"
+glab issue update 123 --unlabel "needs-triage"
+glab issue update 123 --assignee @teammate
+glab issue update 123 --milestone "v1.0"
+```
+
+**Note:** For very complex updates, the API gives more control:
+```bash
+glab api --method PUT projects/:fullpath/issues/123 \
+  -f description="$(cat /tmp/description.md)"
+```
+
+### Issue Search and Filtering
+
+```bash
+glab issue list --search "authentication"
+glab issue list --label "bug"
+glab issue list --label "bug" --label "priority::high"  # AND logic
+glab issue list --assignee @me
+glab issue list --author @me
+glab issue list --closed
+glab issue list --milestone "v1.0"
+```
+
+### Linking Issues to MRs
+
+In MR descriptions, use keywords to auto-close issues on merge:
+- `Closes #123`
+- `Fixes #123`
+- `Resolves #123`
+
+```bash
+glab issue close 123
+glab issue reopen 123
+```
+
+## Pipeline Debugging
+
+```bash
+# Check current pipeline status
 glab ci status
 
-# View logs if failed
+# List recent pipelines
+glab ci list
+glab ci list --status=failed
+
+# View pipeline interactively (shows jobs, allows actions)
+glab ci view
+
+# View specific branch pipeline
+glab ci view main
+```
+
+### Job Operations
+
+```bash
+# Stream live logs (interactive job selection)
 glab ci trace
 
-# Retry failed pipeline
-glab ci retry
+# Stream logs from specific job (by name or ID)
+glab ci trace build
+glab ci trace 224356863
 
-# Lint CI config before pushing
-glab ci lint
+# Retry a failed job
+glab ci retry deploy
+glab ci retry 224356863
+
+# Trigger a manual job
+glab ci trigger deploy-production
+
+# Cancel running pipeline or job
+glab ci cancel pipeline
+glab ci cancel job 224356863
 ```
 
-## Common Patterns
-
-### Working Outside Repository Context
-
-When not in a Git repository, specify the repository:
+### Artifacts
 
 ```bash
-glab mr list -R owner/repo
-glab issue list -R owner/repo
+# Download artifacts (use glab job artifact)
+glab job artifact main build
+glab job artifact main build --path="./artifacts/"
 ```
 
-### Self-Hosted GitLab
-
-Set hostname for all commands:
+## Project Operations
 
 ```bash
-export GITLAB_HOST=gitlab.example.org
-# or per-command
-glab repo clone gitlab.example.org/owner/repo
+# Clone with glab
+glab repo clone owner/repo
+
+# Fork a project
+glab repo fork owner/repo
+
+# View project in browser
+glab repo view --web
+
+# List project members
+glab api projects/:id/members
 ```
 
-### Automation and Scripting
+## Tips
 
-Use JSON output for parsing:
-
-```bash
-glab mr list --output=json | jq '.[] | .title'
-```
-
-### Using the API Command
-
-The `glab api` command provides direct GitLab API access:
-
-```bash
-# Basic API call
-glab api projects/:id/merge_requests
-
-# IMPORTANT: Pagination uses query parameters in URL, NOT flags
-# ❌ WRONG: glab api --per-page=100 projects/:id/jobs
-# ✓ CORRECT: glab api "projects/:id/jobs?per_page=100"
-
-# Auto-fetch all pages
-glab api --paginate "projects/:id/pipelines/123/jobs?per_page=100"
-
-# POST with data
-glab api --method POST projects/:id/issues --field title="Bug" --field description="Details"
-```
-
-## Best Practices
-
-1. **Verify authentication** before executing commands: `glab auth status`
-2. **Use `--help`** to explore command options: `glab <command> --help`
-3. **Link MRs to issues** using "Closes #123" in MR description
-4. **Lint CI config** before pushing: `glab ci lint`
-5. **Check repository context** when commands fail: `git remote -v`
-
-## Common Commands Quick Reference
-
-**Merge Requests:**
-
-- `glab mr list --assignee=@me` - Your assigned MRs
-- `glab mr list --reviewer=@me` - MRs for you to review
-- `glab mr create` - Create new MR
-- `glab mr checkout <number>` - Test MR locally
-- `glab mr approve <number>` - Approve MR
-- `glab mr merge <number>` - Merge approved MR
-
-**Issues:**
-
-- `glab issue list` - List all issues
-- `glab issue create` - Create new issue
-- `glab issue close <number>` - Close issue
-
-**CI/CD:**
-
-- `glab pipeline ci view` - Watch pipeline
-- `glab ci status` - Check status
-- `glab ci lint` - Validate .gitlab-ci.yml
-- `glab ci retry` - Retry failed pipeline
-
-**Repository:**
-
-- `glab repo clone owner/repo` - Clone repository
-- `glab repo view` - View repo details
-- `glab repo fork` - Fork repository
-
-## Progressive Disclosure
-
-For detailed command documentation, refer to:
-
-- **references/commands-detailed.md** - Comprehensive command reference with all flags and options
-- **references/quick-reference.md** - Condensed command cheat sheet
-- **references/troubleshooting.md** - Detailed error scenarios and solutions
-
-Load these references when:
-
-- User needs specific flag or option details
-- Troubleshooting authentication or connection issues
-- Working with advanced features (API, schedules, variables, etc.)
-
-## Common Issues Quick Fixes
-
-**"command not found: glab"** - Install glab or verify PATH
-
-**"401 Unauthorized"** - Run `glab auth login`
-
-**"404 Project Not Found"** - Verify repository name and access permissions
-
-**"not a git repository"** - Navigate to repo or use `-R owner/repo` flag
-
-**"source branch already has a merge request"** - Use `glab mr list` to find existing MR
-
-For detailed troubleshooting, load **references/troubleshooting.md**.
-
-## Notes
-
-- glab auto-detects repository context from Git remote
-- Most commands have `--web` flag to open in browser
-- Use `--output=json` for scripting and automation
-- Multiple GitLab accounts can be authenticated simultaneously
-- Commands respect Git configuration and current repository context
+- Use `--web` or `-w` flag to open result in browser
+- Use `glab alias set` to create shortcuts
+- Environment variable `GITLAB_TOKEN` for CI/CD auth
+- Use `glab api` for any GitLab API endpoint not covered by commands

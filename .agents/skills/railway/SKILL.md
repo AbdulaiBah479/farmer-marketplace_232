@@ -1,200 +1,259 @@
 ---
 name: railway
-description: Deploy applications on Railway platform. Use when deploying containerized apps, setting up databases, configuring private networking, or managing Railway projects. Triggers on Railway, railway.app, deploy container, Railway database.
+description: Railway deployment and infrastructure management skill. This skill should be used when deploying applications to Railway, managing Railway services, checking deployment status, viewing logs, configuring environment variables, or troubleshooting Railway deployments.
 ---
 
-# Railway Deployment
+# Railway Deployment Skill
 
-Deploy and manage applications on Railway's platform.
+This skill provides workflows and knowledge for deploying and managing applications on Railway.
 
-## Quick Start
+## Overview
 
-```bash
-# Install Railway CLI
-npm i -g @railway/cli
+Railway is a modern cloud platform for deploying applications. This skill integrates with the Railway MCP tools to provide deployment, monitoring, and management capabilities.
 
-# Login
-railway login
+## Prerequisites
 
-# Initialize project
-railway init
+Before using Railway MCP tools:
 
-# Deploy
-railway up
-```
+1. **Install Railway CLI:** https://docs.railway.com/guides/cli
+2. **Authenticate:** Run `railway login` in terminal
+3. **Link project:** Run `railway link` in the project directory
 
-## railway.toml Configuration
+## Available MCP Tools
 
+| Tool | Purpose |
+|------|---------|
+| `check-railway-status` | Verify CLI is installed and authenticated |
+| `list-projects` | List all Railway projects for the account |
+| `list-services` | List services in the linked project |
+| `list-deployments` | List deployments with status and metadata |
+| `list-variables` | Show environment variables for a service |
+| `set-variables` | Set environment variables |
+| `get-logs` | Get build or deployment logs |
+| `deploy` | Upload and deploy from local directory |
+| `generate-domain` | Generate a Railway domain for the service |
+| `link-service` | Link to a specific Railway service |
+| `link-environment` | Link to a specific Railway environment |
+| `create-environment` | Create a new Railway environment |
+| `create-project-and-link` | Create and link a new Railway project |
+| `deploy-template` | Search and deploy Railway templates |
+
+## Deployment Workflow
+
+### First-Time Setup
+
+1. **Verify CLI authentication:**
+   ```
+   Use check-railway-status to confirm Railway CLI is logged in
+   ```
+
+2. **Link project (if not linked):**
+   - User runs `railway login` in terminal
+   - User runs `railway link` in the project directory
+   - Or use `create-project-and-link` for new projects
+
+3. **Configure root directory** (for monorepos):
+   - If app is in a subdirectory (e.g., `web/`, `app/`, `frontend/`), configure in Railway Dashboard:
+   - Service → Settings → Source → Root Directory
+
+### Deployment Process
+
+1. **Check current status:**
+   ```
+   list-deployments with json=true to see recent deployment statuses
+   ```
+
+2. **If deployment failed, check logs:**
+   ```
+   get-logs with logType="build" and the failed deploymentId
+   ```
+
+3. **Common build failures:**
+   - Missing root directory configuration (monorepos)
+   - Syntax errors in code
+   - Missing dependencies
+   - Invalid environment variables
+
+4. **Deploy changes:**
+   - Push to GitHub (auto-deploy if connected)
+   - Or use `deploy` tool for manual deployment
+
+### Environment Variables
+
+1. **View current variables:**
+   ```
+   list-variables with json=true
+   ```
+
+2. **Set new variables:**
+   ```
+   set-variables with variables array like ["KEY=value", "KEY2=value2"]
+   ```
+
+3. **Common patterns:**
+   - `NEXT_PUBLIC_*` - Next.js client-safe public variables
+   - `DATABASE_URL` - Database connection string
+   - `*_API_KEY` - API keys (server-side only)
+
+### Domain Configuration
+
+1. **Generate Railway domain:**
+   ```
+   generate-domain to get a *.up.railway.app domain
+   ```
+
+2. **Custom domains:**
+   - Configure in Railway Dashboard: Service → Settings → Public Networking
+   - Add CNAME record at DNS provider pointing to Railway domain
+
+## Framework-Specific Configuration
+
+### Next.js
+
+**railway.toml** (place in app root):
 ```toml
 [build]
 builder = "nixpacks"
-buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npm start"
-healthcheckPath = "/health"
+startCommand = "npm run start"
+healthcheckPath = "/"
 healthcheckTimeout = 300
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
-
-[service]
-internalPort = 3000
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
 ```
 
-## Nixpacks Configuration
+### Node.js/Express
 
+**railway.toml:**
 ```toml
-# nixpacks.toml
-[phases.setup]
-nixPkgs = ["nodejs-18_x", "python311"]
-
-[phases.install]
-cmds = ["npm ci"]
-
-[phases.build]
-cmds = ["npm run build"]
-
-[start]
-cmd = "npm start"
-```
-
-## Environment Variables
-
-```bash
-# Set variable
-railway variables set DATABASE_URL="postgres://..."
-
-# Set from file
-railway variables set < .env
-
-# Link to service
-railway service
-railway variables set API_KEY="secret"
-```
-
-## Database Services
-
-### PostgreSQL
-```bash
-# Add PostgreSQL
-railway add -d postgres
-
-# Get connection string
-railway variables get DATABASE_URL
-```
-
-### Redis
-```bash
-railway add -d redis
-# Access via REDIS_URL
-```
-
-### MySQL
-```bash
-railway add -d mysql
-# Access via MYSQL_URL
-```
-
-## Private Networking
-
-```yaml
-# Services can communicate via internal DNS
-# Format: ${{service-name}}.railway.internal
-
-# Example: API calling database service
-DATABASE_HOST: ${{postgres.railway.internal}}
-DATABASE_PORT: 5432
-```
-
-## Volumes (Persistent Storage)
-
-```bash
-# Create volume
-railway volume create my-data
-
-# Mount in service
-railway volume attach my-data:/app/data
-```
-
-In code:
-```javascript
-// Data persists across deploys
-const dataPath = '/app/data';
-fs.writeFileSync(`${dataPath}/file.json`, JSON.stringify(data));
-```
-
-## Cron Jobs
-
-```toml
-# railway.toml
-[deploy]
-startCommand = "node cron.js"
-cronSchedule = "0 */6 * * *"  # Every 6 hours
-```
-
-## Multi-Service Setup
-
-```
-my-project/
-├── api/
-│   ├── railway.toml
-│   └── ...
-├── worker/
-│   ├── railway.toml
-│   └── ...
-└── frontend/
-    ├── railway.toml
-    └── ...
-```
-
-Deploy each:
-```bash
-cd api && railway up
-cd ../worker && railway up
-cd ../frontend && railway up
-```
-
-## Dockerfile Deploy
-
-```dockerfile
-FROM node:18-alpine
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-```toml
-# railway.toml
 [build]
-builder = "dockerfile"
-dockerfilePath = "./Dockerfile"
-```
+builder = "nixpacks"
 
-## Health Checks
-
-```typescript
-// Express health endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy',
-    timestamp: new Date().toISOString()
-  });
-});
-```
-
-```toml
-# railway.toml
 [deploy]
+startCommand = "node server.js"
 healthcheckPath = "/health"
-healthcheckTimeout = 100
 ```
 
-## Resources
+### Python/FastAPI
 
-- **Railway Docs**: https://docs.railway.app
-- **Railway CLI**: https://docs.railway.app/develop/cli
+**railway.toml:**
+```toml
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+```
+
+### Python/Django
+
+**railway.toml:**
+```toml
+[build]
+builder = "nixpacks"
+buildCommand = "python manage.py collectstatic --noinput"
+
+[deploy]
+startCommand = "gunicorn myproject.wsgi --bind 0.0.0.0:$PORT"
+healthcheckPath = "/health"
+```
+
+## Troubleshooting
+
+### "Railpack could not determine how to build"
+
+**Cause:** Root directory not set for monorepo structures.
+
+**Fix:** Set Root Directory in Railway Dashboard → Service → Settings → Source.
+
+### Build Syntax Errors
+
+**Cause:** Code pushed with syntax errors.
+
+**Fix:** 
+1. Check build logs: `get-logs` with `logType="build"`
+2. Fix the error locally
+3. Push the fix to trigger new deployment
+
+### Missing Environment Variables
+
+**Cause:** Required environment variables not set.
+
+**Fix:**
+1. Check current vars: `list-variables`
+2. Set missing vars: `set-variables`
+
+### Domain Not Working
+
+**Cause:** DNS not configured or not propagated.
+
+**Fix:**
+1. Verify CNAME record points to Railway domain
+2. Wait for DNS propagation (up to 72 hours)
+3. Check Railway Dashboard for verification status
+
+### Port Configuration
+
+Railway automatically provides a `PORT` environment variable. Ensure your application listens on `0.0.0.0:$PORT`.
+
+**Node.js:**
+```javascript
+const port = process.env.PORT || 3000;
+app.listen(port, '0.0.0.0', () => console.log(`Listening on ${port}`));
+```
+
+**Python:**
+```python
+import os
+port = int(os.environ.get("PORT", 8000))
+```
+
+## Custom Domain Setup by Provider
+
+### Cloudflare (Recommended)
+
+1. Add CNAME record: `@` → Railway domain
+2. Enable Cloudflare proxy (orange cloud)
+3. Set SSL/TLS to "Full" (not Full Strict)
+4. Enable Universal SSL
+
+### GoDaddy / Providers Without CNAME Flattening
+
+GoDaddy and some providers don't support CNAME flattening for root domains. Options:
+
+1. **Use subdomain:** `www.domain.com` or `app.domain.com` with CNAME record
+2. **Migrate DNS to Cloudflare:** Change nameservers in registrar
+3. **Use forwarding:** Forward root to www subdomain
+
+### Standard CNAME Setup
+
+For subdomains on any provider:
+
+1. In Railway: Add custom domain (e.g., `app.yourdomain.com`)
+2. Copy the CNAME target (e.g., `abc123.up.railway.app`)
+3. In DNS: Add CNAME record pointing subdomain to Railway target
+4. Wait for verification in Railway Dashboard
+
+## Project Configuration Template
+
+After importing this skill, add project-specific details to your local skill copy:
+
+```markdown
+## Project Configuration
+
+- **Project Name:** [Your Project]
+- **Project ID:** [from Railway Dashboard]
+- **Environment ID:** [from Railway Dashboard]
+- **Service ID:** [from Railway Dashboard]
+- **Root Directory:** [e.g., web/, app/, or /]
+- **Custom Domain:** [if configured]
+- **Dashboard URL:** https://railway.com/project/[project-id]
+
+### Required Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| ... | ... |
+```

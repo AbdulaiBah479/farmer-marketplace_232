@@ -1,77 +1,233 @@
 ---
 name: polymarket
-description: "Query Polymarket: markets, prices, orderbooks, history."
-version: 1.0.0
-author: Hermes Agent + Teknium
-tags: [polymarket, prediction-markets, market-data, trading]
-platforms: [linux, macos, windows]
+description: Comprehensive Polymarket skill covering prediction markets, API, trading, market data, and real-time WebSocket data streaming. Build applications with Polymarket services, monitor live trades, and integrate market predictions.
 ---
 
-# Polymarket — Prediction Market Data
+# Polymarket Comprehensive Skill
 
-Query prediction market data from Polymarket using their public REST APIs.
-All endpoints are read-only and require zero authentication.
+Complete assistance with Polymarket development - covering the full platform (API, trading, market data) and the real-time data streaming client (WebSocket subscriptions for live market activity).
 
-See `references/api-endpoints.md` for the full endpoint reference with curl examples.
+## When to Use This Skill
 
-## When to Use
+This skill should be triggered when:
 
-- User asks about prediction markets, betting odds, or event probabilities
-- User wants to know "what are the odds of X happening?"
-- User asks about Polymarket specifically
-- User wants market prices, orderbook data, or price history
-- User asks to monitor or track prediction market movements
+**Platform & API:**
+- Working with Polymarket prediction markets
+- Using Polymarket API for market data
+- Implementing trading strategies
+- Building applications with Polymarket services
+- Learning Polymarket best practices
 
-## Key Concepts
+**Real-Time Data Streaming:**
+- Connecting to Polymarket's WebSocket service
+- Building prediction market monitoring tools
+- Processing live trades, orders, and market updates
+- Monitoring market comments and social reactions
+- Tracking RFQ (Request for Quote) activity
+- Integrating crypto price feeds
 
-- **Events** contain one or more **Markets** (1:many relationship)
-- **Markets** are binary outcomes with Yes/No prices between 0.00 and 1.00
-- Prices ARE probabilities: price 0.65 means the market thinks 65% likely
-- `outcomePrices` field: JSON-encoded array like `["0.80", "0.20"]`
-- `clobTokenIds` field: JSON-encoded array of two token IDs [Yes, No] for price/book queries
-- `conditionId` field: hex string used for price history queries
-- Volume is in USDC (US dollars)
+## Quick Reference
 
-## Three Public APIs
+### Real-Time Data Client Setup
 
-1. **Gamma API** at `gamma-api.polymarket.com` — Discovery, search, browsing
-2. **CLOB API** at `clob.polymarket.com` — Real-time prices, orderbooks, history
-3. **Data API** at `data-api.polymarket.com` — Trades, open interest
+**Installation:**
+```bash
+npm install @polymarket/real-time-data-client
+```
 
-## Typical Workflow
+**Basic Usage:**
+```typescript
+import { RealTimeDataClient } from "@polymarket/real-time-data-client";
 
-When a user asks about prediction market odds:
+const onMessage = (message: Message): void => {
+    console.log(message.topic, message.type, message.payload);
+};
 
-1. **Search** using the Gamma API public-search endpoint with their query
-2. **Parse** the response — extract events and their nested markets
-3. **Present** market question, current prices as percentages, and volume
-4. **Deep dive** if asked — use clobTokenIds for orderbook, conditionId for history
+const onConnect = (client: RealTimeDataClient): void => {
+    client.subscribe({
+        subscriptions: [{
+            topic: "activity",
+            type: "trades"
+        }]
+    });
+};
 
-## Presenting Results
+new RealTimeDataClient({ onMessage, onConnect }).connect();
+```
 
-Format prices as percentages for readability:
-- outcomePrices `["0.652", "0.348"]` becomes "Yes: 65.2%, No: 34.8%"
-- Always show the market question and probability
-- Include volume when available
+### Supported WebSocket Topics
 
-Example: `"Will X happen?" — 65.2% Yes ($1.2M volume)`
+**1. Activity (`activity`)**
+- `trades` - Completed trades
+- `orders_matched` - Order matching events
+- Filters: `{"event_slug":"string"}` OR `{"market_slug":"string"}`
 
-## Parsing Double-Encoded Fields
+**2. Comments (`comments`)**
+- `comment_created`, `comment_removed`
+- `reaction_created`, `reaction_removed`
+- Filters: `{"parentEntityID":number,"parentEntityType":"Event"}`
 
-The Gamma API returns `outcomePrices`, `outcomes`, and `clobTokenIds` as JSON strings
-inside JSON responses (double-encoded). When processing with Python, parse them with
-`json.loads(market['outcomePrices'])` to get the actual array.
+**3. RFQ (`rfq`)**
+- Request/Quote lifecycle events
+- No filters, no auth required
 
-## Rate Limits
+**4. Crypto Prices (`crypto_prices`, `crypto_prices_chainlink`)**
+- `update` - Real-time price feeds
+- Filters: `{"symbol":"BTC"}` (optional)
 
-Generous — unlikely to hit for normal usage:
-- Gamma: 4,000 requests per 10 seconds (general)
-- CLOB: 9,000 requests per 10 seconds (general)
-- Data: 1,000 requests per 10 seconds (general)
+**5. CLOB User (`clob_user`)** ⚠️ Requires Auth
+- `order` - User's order updates
+- `trade` - User's trade executions
 
-## Limitations
+**6. CLOB Market (`clob_market`)**
+- `price_change` - Price movements
+- `agg_orderbook` - Aggregated order book
+- `last_trade_price` - Latest prices
+- `market_created`, `market_resolved`
 
-- This skill is read-only — it does not support placing trades
-- Trading requires wallet-based crypto authentication (EIP-712 signatures)
-- Some new markets may have empty price history
-- Geographic restrictions apply to trading but read-only data is globally accessible
+### Authentication for User Data
+
+```typescript
+client.subscribe({
+    subscriptions: [{
+        topic: "clob_user",
+        type: "*",
+        clob_auth: {
+            key: "your-api-key",
+            secret: "your-api-secret",
+            passphrase: "your-passphrase"
+        }
+    }]
+});
+```
+
+### Common Use Cases
+
+**Monitor Specific Market:**
+```typescript
+client.subscribe({
+    subscriptions: [{
+        topic: "activity",
+        type: "trades",
+        filters: `{"market_slug":"btc-above-100k-2024"}`
+    }]
+});
+```
+
+**Track Multiple Markets:**
+```typescript
+client.subscribe({
+    subscriptions: [{
+        topic: "clob_market",
+        type: "price_change",
+        filters: `["100","101","102"]`
+    }]
+});
+```
+
+**Monitor Event Comments:**
+```typescript
+client.subscribe({
+    subscriptions: [{
+        topic: "comments",
+        type: "*",
+        filters: `{"parentEntityID":12345,"parentEntityType":"Event"}`
+    }]
+});
+```
+
+## Reference Files
+
+This skill includes comprehensive documentation in `references/`:
+
+**Platform Documentation:**
+- **api.md** - Polymarket API documentation
+- **getting_started.md** - Getting started guide
+- **guides.md** - Development guides
+- **learn.md** - Learning resources
+- **trading.md** - Trading documentation
+- **other.md** - Additional resources
+
+**Real-Time Client:**
+- **README.md** - WebSocket client API and examples
+- **llms.md** - LLM integration guide
+- **llms-full.md** - Complete LLM documentation
+
+Use `view` to read specific reference files for detailed information.
+
+## Key Features
+
+**Platform Capabilities:**
+✅ Prediction market creation and resolution
+✅ Trading API (REST & WebSocket)
+✅ Market data queries
+✅ User portfolio management
+✅ Event and market discovery
+
+**Real-Time Streaming:**
+✅ WebSocket-based persistent connections
+✅ Topic-based subscriptions
+✅ Dynamic subscription management
+✅ Filter support for targeted data
+✅ User authentication for private data
+✅ TypeScript with full type safety
+✅ Initial data dumps on connection
+
+## Best Practices
+
+### WebSocket Connection Management
+- Use `onConnect` callback for subscriptions
+- Implement reconnection logic for production
+- Clean up with `disconnect()` when done
+- Handle authentication errors gracefully
+
+### Subscription Strategy
+- Use wildcards (`"*"`) sparingly
+- Apply filters to reduce data volume
+- Unsubscribe from unused streams
+- Process messages asynchronously
+
+### Performance
+- Consider batching high-frequency data
+- Use filters to minimize client processing
+- Validate message payloads before use
+
+## Requirements
+
+- **Node.js**: 14+ recommended
+- **TypeScript**: Optional but recommended
+- **Package Manager**: npm or yarn
+
+## Resources
+
+### Official Links
+- **Polymarket Platform**: https://polymarket.com
+- **Real-Time Client Repo**: https://github.com/Polymarket/real-time-data-client
+- **API Documentation**: See references/api.md
+
+### Working with This Skill
+
+**For Beginners:**
+Start with `getting_started.md` for foundational concepts.
+
+**For API Integration:**
+Use `api.md` and `trading.md` for REST API details.
+
+**For Real-Time Data:**
+Use `README.md` for WebSocket client implementation.
+
+**For LLM Integration:**
+Use `llms.md` and `llms-full.md` for AI/ML use cases.
+
+## Notes
+
+- Real-Time Client is TypeScript/JavaScript (not Python)
+- Some WebSocket topics require authentication
+- Use filters to manage message volume effectively
+- All timestamps are Unix timestamps
+- Market IDs are strings (e.g., "100", "101")
+- Platform documentation covers both REST API and WebSocket usage
+
+---
+
+**This comprehensive skill combines Polymarket platform expertise with real-time data streaming capabilities!**

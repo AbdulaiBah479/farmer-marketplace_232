@@ -1,72 +1,192 @@
 ---
 name: mutation-testing
-description: "Configures mewt or muton mutation testing campaigns — scopes targets, tunes timeouts, and optimizes long-running runs. Use when the user mentions mewt, muton, mutation testing, or wants to configure or optimize a mutation testing campaign."
-allowed-tools: Read Write Bash Grep
+description: Validate test effectiveness with mutation testing using Stryker (TypeScript/JavaScript) and mutmut (Python). Find weak tests that pass despite code mutations. Use to improve test quality.
+allowed-tools: Bash, Read, Edit, Write, Grep, Glob, TodoWrite
 ---
 
-# Mutation Testing — Campaign Configuration (mewt/muton)
+# Mutation Testing
 
-> **Note**: muton and mewt share identical interfaces but target different languages — mewt for general-purpose languages (Rust, Solidity, Go, TypeScript, JavaScript), muton for TON smart contracts (Tact, Tolk, FunC). All examples use `mewt` commands, but they work exactly the same with `muton`. File names change accordingly: `mewt.toml` → `muton.toml`, `mewt.sqlite` → `muton.sqlite`.
+Expert knowledge for mutation testing - validating that your tests actually catch bugs by introducing deliberate code mutations.
 
-## When to Use
+## Core Concept
 
-Use this skill when the user:
-- Mentions "mewt", "muton", or "mutation testing"
-- Needs to configure or optimize a mutation testing campaign
-- Wants to run `mewt run` and needs help getting set up first
+- **Mutants**: Small code changes introduced automatically
+- **Killed**: Test fails with mutation (good - test caught the bug)
+- **Survived**: Test passes with mutation (bad - weak test)
+- **Score**: Percentage of mutants killed (aim for 80%+)
 
-## When NOT to Use
+## TypeScript/JavaScript (Stryker)
 
-Do not use this skill when the user:
-- Wants to analyze or report on completed campaign results
-- Asks about tests or coverage without mentioning mutation testing
-
----
-
-## Quick Start
-
-Load [workflows/configuration.md](workflows/configuration.md) — a 5-phase guide from `mewt init` to a validated, ready-to-run campaign.
-
-**General question or unfamiliar command?**
-Run `mewt --help` or `mewt <subcommand> --help`, then assist.
-
----
-
-## Reference Index
-
-| File | Content |
-|------|---------|
-| [workflows/configuration.md](workflows/configuration.md) | 5-phase guide: init, scope, optimize, validate, run |
-| [references/optimization-strategies.md](references/optimization-strategies.md) | Per-file targeting, two-phase campaigns, mutation type filtering |
-
----
-
-## Essential Commands
+### Installation
 
 ```bash
-# Initialize and mutate
-mewt init                    # Create mewt.toml and mewt.sqlite
-mewt mutate [paths]          # Generate mutants without running tests
-mewt run [paths]             # Run the full campaign
+# Using Bun
+bun add -d @stryker-mutator/core @stryker-mutator/vitest-runner
 
-# Inspect configuration and scope
-mewt print config            # View effective configuration
-mewt print targets           # Table of all targeted files
-mewt print mutations --language [lang]  # Available mutation types
-mewt status                  # Mutant count and per-file breakdown
-
-# Investigate specific mutants
-mewt print mutants --target [path]   # All mutants for a file
-mewt print mutants --severity high   # Filter by severity
-mewt print mutant --id [id]          # View mutated code diff
-mewt test --ids [ids]                # Re-test specific mutants
+# Using npm
+npm install -D @stryker-mutator/core @stryker-mutator/vitest-runner
 ```
 
----
+### Configuration
 
-## What Results Mean
+```typescript
+// stryker.config.mjs
+export default {
+  packageManager: 'bun',
+  reporters: ['html', 'clear-text', 'progress'],
+  testRunner: 'vitest',
+  coverageAnalysis: 'perTest',
+  mutate: ['src/**/*.ts', '!src/**/*.test.ts'],
+  thresholds: { high: 80, low: 60, break: 60 },
+  incremental: true,
+}
+```
 
-- **Caught/TestFail**: Tests detected the mutation (good)
-- **Uncaught**: Mutation survived — indicates untested logic
-- **Timeout**: Tests took too long, inconclusive
-- **Skipped**: A more severe mutant already failed on the same line
+### Running Stryker
+
+```bash
+# Run mutation testing
+bunx stryker run
+
+# Incremental mode (only changed files)
+bunx stryker run --incremental
+
+# Specific files
+bunx stryker run --mutate "src/utils/**/*.ts"
+
+# Open HTML report
+open reports/mutation/html/index.html
+```
+
+### Example: Weak Test
+
+```typescript
+// Source code
+function calculateDiscount(price: number, percentage: number): number {
+  return price - (price * percentage / 100)
+}
+
+// ❌ WEAK: Test passes even if we mutate calculation
+test('applies discount', () => {
+  expect(calculateDiscount(100, 10)).toBeDefined() // Too weak!
+})
+
+// ✅ STRONG: Test catches mutation
+test('applies discount correctly', () => {
+  expect(calculateDiscount(100, 10)).toBe(90)
+  expect(calculateDiscount(100, 20)).toBe(80)
+  expect(calculateDiscount(50, 10)).toBe(45)
+})
+```
+
+## Python (mutmut)
+
+### Installation
+
+```bash
+uv add --dev mutmut
+```
+
+### Running mutmut
+
+```bash
+# Run mutation testing
+uv run mutmut run
+
+# Show results
+uv run mutmut results
+
+# Show specific mutant
+uv run mutmut show 1
+
+# Generate HTML report
+uv run mutmut html
+open html/index.html
+```
+
+## Common Mutation Types
+
+```typescript
+// Arithmetic Operator
+// Original: a + b → a - b, a * b, a / b
+
+// Relational Operator
+// Original: a > b → a >= b, a < b, a <= b
+
+// Logical Operator
+// Original: a && b → a || b
+
+// Boolean Literal
+// Original: true → false
+```
+
+## Mutation Score Targets
+
+| Score | Quality | Action |
+|-------|---------|--------|
+| 90%+ | Excellent | Maintain quality |
+| 80-89% | Good | Small improvements |
+| 70-79% | Acceptable | Focus on weak areas |
+| < 60% | Poor | Major improvements needed |
+
+## Improving Weak Tests
+
+### Pattern: Insufficient Assertions
+
+```typescript
+// Before: Mutation survives
+test('calculates sum', () => {
+  expect(sum([1, 2, 3])).toBeGreaterThan(0) // Weak!
+})
+
+// After: Mutation killed
+test('calculates sum correctly', () => {
+  expect(sum([1, 2, 3])).toBe(6)
+  expect(sum([0, 0, 0])).toBe(0)
+  expect(sum([])).toBe(0)
+})
+```
+
+### Pattern: Boundary Conditions
+
+```typescript
+// After: Tests boundaries
+test('validates age boundaries', () => {
+  expect(isValidAge(18)).toBe(true)   // Min valid
+  expect(isValidAge(17)).toBe(false)  // Just below
+  expect(isValidAge(100)).toBe(true)  // Max valid
+  expect(isValidAge(101)).toBe(false) // Just above
+})
+```
+
+## Best Practices
+
+- Start with core business logic modules
+- Ensure 80%+ coverage before mutation testing
+- Run incrementally (only changed files)
+- Focus on important files first
+- Don't expect 100% mutation score (equivalent mutants exist)
+
+## Workflow
+
+```bash
+# 1. Ensure good coverage first
+bun test --coverage
+# Target: 80%+ coverage
+
+# 2. Run mutation testing
+bunx stryker run
+
+# 3. Check report
+open reports/mutation/html/index.html
+
+# 4. Fix survived mutants
+# 5. Re-run incrementally
+bunx stryker run --incremental
+# or: npx stryker run --incremental
+```
+
+## See Also
+
+- `vitest-testing` - Unit testing framework
+- `test-quality-analysis` - Detecting test smells

@@ -1,249 +1,128 @@
 ---
 name: nextjs-shadcn
-argument-hint: "[component or page]"
-description: Creates Next.js frontends with shadcn/ui. Use when building React UIs, components, pages, or applications with shadcn, Tailwind, or modern frontend patterns. Also use when the user asks to create a new Next.js project, add UI components, style pages, or build any web interface — even if they don't mention shadcn explicitly.
+description: shadcn/ui for Next.js App Router with TanStack Form. Use when building UI components, forms, dialogs, tables, toasts, or accessible components.
+versions:
+  shadcn-ui: 3.8.0
+  nextjs: 16
+  tailwindcss: 4
+user-invocable: true
+references: references/installation.md, references/configuration.md, references/theming.md, references/button.md, references/input.md, references/label.md, references/textarea.md, references/card.md, references/select.md, references/checkbox.md, references/switch.md, references/radio-group.md, references/slider.md, references/toggle.md, references/toggle-group.md, references/input-otp.md, references/dialog.md, references/alert-dialog.md, references/sheet.md, references/drawer.md, references/popover.md, references/tooltip.md, references/hover-card.md, references/context-menu.md, references/collapsible.md, references/toast.md, references/alert.md, references/skeleton.md, references/progress.md, references/spinner.md, references/table.md, references/tabs.md, references/accordion.md, references/badge.md, references/avatar.md, references/separator.md, references/scroll-area.md, references/aspect-ratio.md, references/resizable.md, references/carousel.md, references/chart.md, references/dropdown.md, references/command.md, references/breadcrumb.md, references/navigation-menu.md, references/menubar.md, references/sidebar.md, references/pagination.md, references/calendar.md, references/field-patterns.md, references/form-examples.md
+related-skills: nextjs-16, nextjs-tanstack-form, tailwindcss, solid-nextjs
 ---
 
-# Next.js + shadcn/ui
+# shadcn/ui for Next.js
 
-Build distinctive, production-grade interfaces that avoid generic "AI slop" aesthetics.
+Beautiful, accessible components built on Radix UI with Tailwind CSS styling.
 
-## Core Principles
+## Agent Workflow (MANDATORY)
 
-1. **Minimize noise** - Icons communicate; excessive labels don't
-2. **No generic AI-UI** - Avoid purple gradients, excessive shadows, predictable layouts
-3. **Context over decoration** - Every element serves a purpose
-4. **Theme consistency** - Use CSS variables from `globals.css`, never hardcode colors
+Before ANY implementation, launch in parallel:
 
-## Quick Start
+1. **fuse-ai-pilot:explore-codebase** - Analyze existing components and patterns
+2. **fuse-ai-pilot:research-expert** - Verify latest shadcn/ui docs via Context7/Exa
+3. **mcp__shadcn__*** - Search registry for component availability
 
-```bash
-bunx --bun shadcn@latest init -t next
-```
+After implementation, run **fuse-ai-pilot:sniper** for validation.
 
-For a custom design system, generate a preset code in `shadcn/create` and apply it:
+---
 
-```bash
-bunx --bun shadcn@latest init --preset <CODE> --template next
-```
+## Overview
 
-## Component Rules
+### When to Use
 
-### Page Structure
+- Building UI components for Next.js App Router applications
+- Need accessible, customizable form components (inputs, selects, checkboxes)
+- Implementing dialogs, sheets, drawers, or overlay patterns
+- Creating data tables with sorting, filtering, and pagination
+- Building navigation menus, sidebars, or command palettes
+- Need toast notifications or alert feedback components
 
-```tsx
-// page.tsx - content only, no layout chrome
-export default function Page() {
-  return (
-    <>
-      <HeroSection />
-      <Features />
-      <Testimonials />
-    </>
-  );
-}
+### Why shadcn/ui
 
-// layout.tsx - shared UI (header, footer, sidebar)
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <Header />
-      <main>{children}</main>
-      <Footer />
-    </>
-  );
-}
-```
+| Feature | Benefit |
+|---------|---------|
+| Copy/paste model | Components copied to your project, full ownership |
+| Radix UI foundation | Accessibility built-in, unstyled primitives |
+| Tailwind CSS styling | Utility-first, easy customization |
+| TanStack Form ready | Modern form library with Field pattern |
+| Server Components | RSC-compatible, optimal bundle size |
+| Lucide icons | Consistent, customizable icon set |
 
-### Client Boundaries
+---
 
-- `"use client"` only at leaf components (smallest boundary)
-- Props must be serializable (data or Server Actions, no functions/classes)
-- Pass server content via `children`
+## Critical Rules
 
-### Import Aliases
+1. **NEVER create components manually** - Always install with `bunx --bun shadcn@latest add`
+2. **TanStack Form only** - NOT React Hook Form for all form implementations
+3. **Radix UI primitives** - Components built on Radix (NOT Base UI)
+4. **Lucide icons** - Default icon library, NOT Remix icons or others
+5. **Field pattern** - Use Field, FieldLabel, FieldError for form fields
+6. **SOLID paths** - Components at `@/modules/cores/shadcn/components/ui/`
 
-Always use `@/` alias (e.g., `@/lib/utils`) instead of relative paths (`../../lib/utils`).
+---
 
-### Style Merging
+## Architecture
 
-```tsx
-import { cn } from "@/lib/utils";
+### Component Foundation
 
-function Button({ className, ...props }) {
-  return <button className={cn("px-4 py-2 rounded", className)} {...props} />;
-}
-```
+- **Radix UI** - Headless, accessible primitives (Dialog, Select, Popover, Tabs)
+- **Tailwind CSS v4** - Styling via utility classes, CSS-first config
+- **class-variance-authority** - Variant management for component styles
+- **clsx + tailwind-merge** - Conditional class composition via `cn()` utility
 
-## File Organization
+### Project Structure
 
-```
-app/
-├── (protected)/         # Auth required routes
-│   ├── dashboard/
-│   ├── settings/
-│   ├── components/      # Route-specific components
-│   └── lib/             # Route-specific utils/types
-├── (public)/            # Public routes
-│   ├── login/
-│   └── register/
-├── actions/             # Server Actions (global)
-├── api/                 # API routes
-├── layout.tsx           # Root layout
-└── globals.css          # Theme tokens
-components/              # Shared components
-├── ui/                  # shadcn primitives
-└── shared/              # Business components
-hooks/                   # Custom React hooks
-lib/                     # Shared utils
-data/                    # Database queries
-ai/                      # AI logic (tools, agents, prompts)
-```
+Components installed to `@/modules/cores/shadcn/components/ui/` following SOLID architecture. Utils at `@/modules/cores/lib/utils.ts` with `cn()` helper function.
 
-## Next.js 16 Features
+---
 
-### Async Params
+## MCP Server Integration
 
-```tsx
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { id } = await params;
-  const { q } = await searchParams;
-}
-```
+Create `.mcp.json` at project root for Claude Code integration with shadcn registry.
 
-### Data Fetching vs Server Actions
+### Available MCP Tools
 
-**CRITICAL RULE:**
-- **Server Actions** = ONLY for mutations (create, update, delete)
-- **Data fetching** = In Server Components or `'use cache'` functions
+- `mcp__shadcn__search_items_in_registries` - Search available components
+- `mcp__shadcn__view_items_in_registries` - View component source code
+- `mcp__shadcn__get_item_examples_from_registries` - Get usage examples
+- `mcp__shadcn__get_add_command_for_items` - Get installation commands
 
-```tsx
-// ❌ WRONG: Server Action for data fetching
-"use server"
-export async function getUsers() {
-  return await db.users.findMany()
-}
+See [installation.md](references/installation.md) for complete MCP setup.
 
-// ✅ CORRECT: Data function with caching
-// data/users.ts
-export async function getUsers() {
-  "use cache"
-  cacheTag("users")
-  cacheLife("hours")
-  return await db.users.findMany()
-}
+---
 
-// ✅ CORRECT: Read cookies in Server Component directly
-export default async function Page() {
-  const theme = (await cookies()).get("theme")?.value ?? "light"
-  return <App theme={theme} />
-}
-```
+## Component Categories
 
-### Caching
+| Category | Components | Primary Reference |
+|----------|------------|-------------------|
+| Setup | Init, configuration, theming, icons | [installation.md](references/installation.md) |
+| Forms | Button, Input, Field, Select, Checkbox, Switch, Slider | [field-patterns.md](references/field-patterns.md) |
+| Overlay | Dialog, Sheet, Drawer, Popover, Tooltip, HoverCard | [dialog.md](references/dialog.md) |
+| Feedback | Alert, Toast (Sonner), Progress, Skeleton, Spinner | [toast.md](references/toast.md) |
+| Data Display | Table, Badge, Avatar, Calendar, Chart, Carousel | [table.md](references/table.md) |
+| Navigation | Breadcrumb, DropdownMenu, Command, Sidebar, Tabs | [sidebar.md](references/sidebar.md) |
+| Layout | Card, Accordion, Separator, ScrollArea, Resizable | [card.md](references/card.md) |
 
-```tsx
-"use cache";
+---
 
-import { cacheTag, cacheLife } from "next/cache";
+## Best Practices
 
-export async function getProducts() {
-  cacheTag("products");
-  cacheLife("hours");
-  return await db.products.findMany();
-}
-```
+1. **Field components** - Use new Field pattern for consistent form field structure
+2. **Server Components default** - Add `'use client'` only when interactivity needed
+3. **Sonner for toasts** - Modern toast notifications over legacy toast
+4. **MCP tools first** - Use `mcp__shadcn__*` to explore before implementing
+5. **Theming via CSS variables** - Customize colors in `globals.css` `:root`
+6. **Accessibility** - Rely on Radix UI keyboard navigation and ARIA
 
-### Server Actions (Mutations Only)
+---
 
-```tsx
-"use server";
+## Reference Guide
 
-import { updateTag, revalidateTag } from "next/cache";
-import { z } from "zod";
-
-const schema = z.object({
-  title: z.string().min(1),
-  content: z.string(),
-});
-
-export async function createPost(formData: FormData) {
-  // Always validate input
-  const parsed = schema.parse({
-    title: formData.get("title"),
-    content: formData.get("content"),
-  });
-
-  await db.insert(posts).values(parsed);
-  updateTag("posts"); // Read-your-writes
-}
-```
-
-### Proxy API
-
-Use `proxy.ts` for request interception (replaces middleware). Place at project root:
-
-```tsx
-// proxy.ts (project root, same level as app/)
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-
-export function proxy(request: NextRequest) {
-  // Auth checks, redirects, etc.
-}
-
-export const config = {
-  matcher: ['/dashboard/:path*'],
-}
-```
-
-## Dev Tools (next-devtools-mcp)
-
-Next.js 16+ ships an MCP endpoint at `/_next/mcp` that exposes the dev server's
-internals to coding agents. When working in a Next.js 16 project, recommend the
-user add `next-devtools-mcp` to `.mcp.json`:
-
-```json filename=".mcp.json"
-{
-  "mcpServers": {
-    "next-devtools": {
-      "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"]
-    }
-  }
-}
-```
-
-Tools it provides (when dev server is running):
-
-- `get_errors` — live build/runtime/type errors (esp. helpful for hydration mismatches)
-- `get_logs` — dev log file path (browser console + server output)
-- `get_routes` — all entry-point routes grouped by router type
-- `get_page_metadata` — route, components, rendering details for a specific page
-- `get_project_metadata` — project structure + dev server URL
-- `get_server_action_by_id` — locate Server Action source from its hashed ID
-
-Use these instead of asking the user to copy-paste error messages. Reference:
-[nextjs.org/docs/app/guides/mcp](https://nextjs.org/docs/app/guides/mcp).
-
-## References
-
-- **Architecture**: [references/architecture.md](references/architecture.md) - Components, routing, Suspense, data patterns, AI directory structure
-- **Styling**: [references/styling.md](references/styling.md) - Themes, fonts, radius, animations, CSS variables
-- **Sidebar**: [references/sidebar.md](references/sidebar.md) - shadcn sidebar with nested layouts
-- **Project Setup**: [references/project-setup.md](references/project-setup.md) - bun commands, presets
-- **shadcn/ui**: [llms.txt](https://ui.shadcn.com/llms.txt) - Official AI-optimized reference
-
-## Package Manager
-
-**Always use bun**, never npm or npx:
-
-- `bun install` (not npm install)
-- `bun add` (not npm install package)
-- `bunx --bun` (not npx)
+| Need | Reference |
+|------|-----------|
+| Initial setup | [installation.md](references/installation.md), [configuration.md](references/configuration.md) |
+| Form patterns | [field-patterns.md](references/field-patterns.md), [form-examples.md](references/form-examples.md) |
+| Theme customization | [theming.md](references/theming.md) |
+| Data tables | [table.md](references/table.md) |
+| Modal dialogs | [dialog.md](references/dialog.md), [alert-dialog.md](references/alert-dialog.md) |
+| Navigation | [sidebar.md](references/sidebar.md), [navigation-menu.md](references/navigation-menu.md) |

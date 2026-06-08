@@ -1,186 +1,313 @@
 ---
 name: laravel-expert
-description: "Senior Laravel Engineer role for production-grade, maintainable, and idiomatic Laravel solutions. Focuses on clean architecture, security, performance, and modern standards (Laravel 10/11+)."
-risk: safe
-source: community
-date_added: "2026-02-27"
+description: Especialista em desenvolvimento Laravel para criação de Models, Controllers, Migrations, Seeders, Form Requests, Resources, Policies, Jobs, Events, Listeners, Notifications e Service Providers seguindo convenções oficiais. Usar quando precisar criar componentes Laravel, implementar funcionalidades seguindo best practices, configurar relacionamentos Eloquent, criar APIs RESTful, implementar queues e eventos, ou resolver dúvidas sobre arquitetura Laravel.
 ---
 
 # Laravel Expert
 
-## Skill Metadata
+Skill para desenvolvimento Laravel seguindo convenções oficiais e best practices.
 
-Name: laravel-expert  
-Focus: General Laravel Development  
-Scope: Laravel Framework (10/11+)
+## Convenções de Nomenclatura
 
----
+```
+Model:          singular, PascalCase        → User, EventContract
+Controller:     PascalCase + Controller     → UserController, EventContractController
+Migration:      snake_case com timestamp    → 2024_01_15_create_users_table
+Seeder:         PascalCase + Seeder         → UserSeeder
+Factory:        PascalCase + Factory        → UserFactory
+Request:        PascalCase + Request        → StoreUserRequest, UpdateUserRequest
+Resource:       PascalCase + Resource       → UserResource, UserCollection
+Policy:         PascalCase + Policy         → UserPolicy
+Job:            PascalCase + Job            → ProcessPaymentJob
+Event:          PascalCase descritivo       → UserRegistered, PaymentProcessed
+Listener:       PascalCase descritivo       → SendWelcomeEmail
+Notification:   PascalCase descritivo       → InvoicePaid
+Middleware:     PascalCase                  → EnsureUserIsAdmin
+```
 
-## Role
+## Estrutura de Arquivos
 
-You are a Senior Laravel Engineer.
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   └── Api/           # Controllers de API separados
+│   ├── Requests/          # Form Requests para validação
+│   ├── Resources/         # API Resources
+│   └── Middleware/
+├── Models/
+├── Services/              # Business logic (não nativo, recomendado)
+├── Repositories/          # Data access (não nativo, recomendado)
+├── Actions/               # Single-action classes
+├── Policies/
+├── Jobs/
+├── Events/
+├── Listeners/
+└── Notifications/
+```
 
-You provide production-grade, maintainable, and idiomatic Laravel solutions.
+## Criação de Componentes
 
-You prioritize:
+### Model com Relacionamentos
 
-- Clean architecture
-- Readability
-- Testability
-- Security best practices
-- Performance awareness
-- Convention over configuration
+```php
+<?php
 
-You follow modern Laravel standards and avoid legacy patterns unless explicitly required.
+namespace App\Models;
 
----
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-## Use This Skill When
+class Contract extends Model
+{
+    use HasFactory, SoftDeletes;
 
-- Building new Laravel features
-- Refactoring legacy Laravel code
-- Designing APIs
-- Creating validation logic
-- Implementing authentication/authorization
-- Structuring services and business logic
-- Optimizing database interactions
-- Reviewing Laravel code quality
+    protected $fillable = [
+        'client_id',
+        'event_date',
+        'value',
+        'status',
+    ];
 
----
+    protected $casts = [
+        'event_date' => 'date',
+        'value' => 'decimal:2',
+        'status' => ContractStatus::class, // Enum casting
+    ];
 
-## Do NOT Use When
+    // Relacionamentos
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
 
-- The project is not Laravel-based
-- The task is framework-agnostic PHP only
-- The user requests non-PHP solutions
-- The task is unrelated to backend engineering
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
 
----
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', ContractStatus::Active);
+    }
 
-## Engineering Principles
+    public function scopeByPeriod($query, $start, $end)
+    {
+        return $query->whereBetween('event_date', [$start, $end]);
+    }
 
-### Architecture
+    // Accessors & Mutators (Laravel 9+)
+    protected function formattedValue(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => 'R$ ' . number_format($this->value, 2, ',', '.')
+        );
+    }
+}
+```
 
-- Keep controllers thin
-- Move business logic into Services
-- Use FormRequest for validation
-- Use API Resources for API responses
-- Use Policies/Gates for authorization
-- Apply Dependency Injection
-- Avoid static abuse and global state
+### Controller RESTful
 
-### Routing
+```php
+<?php
 
-- Use route model binding
-- Group routes logically
-- Apply middleware properly
-- Separate web and api routes
+namespace App\Http\Controllers\Api;
 
-### Validation
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreContractRequest;
+use App\Http\Requests\UpdateContractRequest;
+use App\Http\Resources\ContractResource;
+use App\Models\Contract;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-- Always validate input
-- Never use request()->all() blindly
-- Prefer FormRequest classes
-- Return structured validation errors for APIs
+class ContractController extends Controller
+{
+    public function index(): AnonymousResourceCollection
+    {
+        $contracts = Contract::with(['client', 'payments'])
+            ->latest()
+            ->paginate(15);
 
-### Eloquent & Database
+        return ContractResource::collection($contracts);
+    }
 
-- Use guarded/fillable correctly
-- Avoid N+1 (use eager loading)
-- Prefer query scopes for reusable filters
-- Avoid raw queries unless necessary
-- Use transactions for critical operations
+    public function store(StoreContractRequest $request): ContractResource
+    {
+        $contract = Contract::create($request->validated());
 
-### API Development
+        return new ContractResource($contract->load('client'));
+    }
 
-- Use API Resources
-- Standardize JSON structure
-- Use proper HTTP status codes
-- Implement pagination
-- Apply rate limiting
+    public function show(Contract $contract): ContractResource
+    {
+        return new ContractResource($contract->load(['client', 'payments']));
+    }
 
-### Authentication
+    public function update(UpdateContractRequest $request, Contract $contract): ContractResource
+    {
+        $contract->update($request->validated());
 
-- Use Laravel’s native auth system
-- Prefer Sanctum for SPA/API
-- Implement password hashing securely
-- Never expose sensitive data in responses
+        return new ContractResource($contract->fresh('client'));
+    }
 
-### Queues & Jobs
+    public function destroy(Contract $contract): \Illuminate\Http\Response
+    {
+        $contract->delete();
 
-- Offload heavy operations to queues
-- Use dispatchable jobs
-- Ensure idempotency where needed
+        return response()->noContent();
+    }
+}
+```
 
-### Caching
+### Form Request
 
-- Cache expensive queries
-- Use cache tags if supported
-- Invalidate cache properly
+```php
+<?php
 
-### Blade & Views
+namespace App\Http\Requests;
 
-- Escape user input
-- Avoid business logic in views
-- Use components for reuse
+use App\Enums\ContractStatus;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
----
+class StoreContractRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', Contract::class);
+    }
 
-## Anti-Patterns to Avoid
+    public function rules(): array
+    {
+        return [
+            'client_id' => ['required', 'exists:clients,id'],
+            'event_date' => ['required', 'date', 'after:today'],
+            'value' => ['required', 'numeric', 'min:0'],
+            'status' => ['required', Rule::enum(ContractStatus::class)],
+        ];
+    }
 
-- Fat controllers
-- Business logic in routes
-- Massive service classes
-- Direct model manipulation without validation
-- Blind mass assignment
-- Hardcoded configuration values
-- Duplicated logic across controllers
+    public function messages(): array
+    {
+        return [
+            'client_id.required' => 'O cliente é obrigatório.',
+            'event_date.after' => 'A data do evento deve ser futura.',
+        ];
+    }
+}
+```
 
----
+### API Resource
 
-## Response Standards
+```php
+<?php
 
-When generating code:
+namespace App\Http\Resources;
 
-- Provide complete, production-ready examples
-- Include namespace declarations
-- Use strict typing when possible
-- Follow PSR standards
-- Use proper return types
-- Add minimal but meaningful comments
-- Do not over-engineer
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-When reviewing code:
+class ContractResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'event_date' => $this->event_date->format('Y-m-d'),
+            'event_date_formatted' => $this->event_date->format('d/m/Y'),
+            'value' => $this->value,
+            'value_formatted' => $this->formatted_value,
+            'status' => $this->status->value,
+            'status_label' => $this->status->label(),
+            'client' => new ClientResource($this->whenLoaded('client')),
+            'payments' => PaymentResource::collection($this->whenLoaded('payments')),
+            'created_at' => $this->created_at->toISOString(),
+        ];
+    }
+}
+```
 
-- Identify structural problems
-- Suggest Laravel-native improvements
-- Explain tradeoffs clearly
-- Provide refactored example if necessary
+## Migration Best Practices
 
----
+```php
+<?php
 
-## Output Structure
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-When designing a feature:
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('contracts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+            $table->date('event_date')->index();
+            $table->decimal('value', 10, 2);
+            $table->string('status', 20)->default('pending')->index();
+            $table->text('notes')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
 
-1. Architecture Overview
-2. File Structure
-3. Code Implementation
-4. Explanation
-5. Possible Improvements
+            // Índices compostos para queries frequentes
+            $table->index(['status', 'event_date']);
+        });
+    }
 
-When refactoring:
+    public function down(): void
+    {
+        Schema::dropIfExists('contracts');
+    }
+};
+```
 
-1. Identified Issues
-2. Refactored Version
-3. Why It’s Better
+## Service Layer Pattern
 
----
+Para lógica de negócio complexa, usar Services:
 
-## Behavioral Constraints
+```php
+<?php
 
-- Prefer Laravel-native solutions over third-party packages
-- Avoid unnecessary abstractions
-- Do not introduce microservice architecture unless requested
-- Do not assume cloud infrastructure
-- Keep solutions pragmatic and realistic
+namespace App\Services;
+
+use App\Models\Contract;
+use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
+
+class ContractService
+{
+    public function createWithPayments(array $data, array $payments): Contract
+    {
+        return DB::transaction(function () use ($data, $payments) {
+            $contract = Contract::create($data);
+
+            foreach ($payments as $payment) {
+                $contract->payments()->create($payment);
+            }
+
+            return $contract->load('payments');
+        });
+    }
+
+    public function calculateTotalReceivable(Contract $contract): float
+    {
+        $paid = $contract->payments()
+            ->where('status', 'paid')
+            ->sum('amount');
+
+        return $contract->value - $paid;
+    }
+}
+```
+
+## Referências Adicionais
+
+- **Eloquent avançado**: Ver `references/eloquent-advanced.md`
+- **Queues e Jobs**: Ver `references/queues.md`
+- **Events e Listeners**: Ver `references/events.md`
+- **Testing**: Ver `references/testing.md`

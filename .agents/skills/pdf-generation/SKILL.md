@@ -1,174 +1,527 @@
 ---
 name: pdf-generation
-description: Professional PDF generation from markdown using Pandoc with Eisvogel template and EB Garamond fonts. Use when converting markdown to PDF, creating white papers, research documents, marketing materials, or technical documentation. Supports both English and Russian documents with professional typography and color-coded themes. Mobile-optimized layout (6x9) by default for Telegram bot context, desktop/print layout (A4) for other contexts.
+description: Professional PDF documentation generation. Convert Markdown to PDF with custom templates, styling, table of contents, cross-references, and optimized output for print and archival.
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+backlog-id: SK-020
+metadata:
+  author: babysitter-sdk
+  version: "1.0.0"
 ---
 
-# PDF Generation
+# PDF Generation Skill
 
-## Overview
+Professional PDF documentation generation.
 
-Generate professional PDFs from markdown files using Pandoc with Eisvogel template styling. Supports English and Russian documents with customizable themes, table of contents, and professional typography including EB Garamond font for Russian text.
+## Capabilities
 
-## Quick Start
+- Markdown to PDF conversion
+- Custom PDF templates and styling
+- Table of contents generation
+- Cross-reference and link handling
+- Image optimization for print
+- PDF/A compliance for archival
+- Multi-chapter document assembly
+- Cover page and headers/footers
 
-Basic commands:
+## Usage
 
-```bash
-# Desktop/Print PDF (A4 format)
-pandoc doc.md -o doc.pdf --pdf-engine=xelatex --toc --toc-depth=2 -V geometry:margin=2.5cm -V fontsize=11pt -V documentclass=article
+Invoke this skill when you need to:
+- Generate PDF documentation from Markdown
+- Create printable user guides
+- Archive documentation as PDF
+- Produce branded PDF output
+- Build multi-chapter manuals
 
-# Mobile-friendly PDF (6x9 phone screen optimized)
-pandoc doc.md -o doc-mobile.pdf --pdf-engine=xelatex --toc --toc-depth=2 -V geometry:paperwidth=6in -V geometry:paperheight=9in -V geometry:margin=0.5in -V fontsize=10pt -V linestretch=1.2
+## Inputs
 
-# Russian PDF with EB Garamond
-pandoc doc-ru.md -o doc.pdf --pdf-engine=xelatex --toc --toc-depth=2 -V geometry:margin=2.5cm -V fontsize=11pt -V documentclass=article -V mainfont="EB Garamond"
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| inputPath | string | Yes | Path to Markdown source(s) |
+| outputPath | string | Yes | Output PDF file path |
+| template | string | No | Path to PDF template |
+| config | object | No | PDF generation options |
+| metadata | object | No | Document metadata |
+| toc | boolean | No | Generate table of contents |
 
-# Russian Mobile PDF
-pandoc doc-ru.md -o doc-mobile.pdf --pdf-engine=xelatex --toc --toc-depth=2 -V geometry:paperwidth=6in -V geometry:paperheight=9in -V geometry:margin=0.5in -V fontsize=10pt -V linestretch=1.2 -V mainfont="EB Garamond"
+### Input Example
+
+```json
+{
+  "inputPath": "./docs",
+  "outputPath": "./output/documentation.pdf",
+  "template": "./templates/manual.html",
+  "toc": true,
+  "metadata": {
+    "title": "Product Documentation",
+    "author": "Documentation Team",
+    "version": "1.0.0"
+  }
+}
 ```
 
-## Document Theme Colors
+## Output Structure
 
-- **White Papers** - Blue (1e3a8a)
-- **Marketing** - Green (059669)
-- **Research** - Purple (7c3aed)
-- **Technical** - Gray (374151)
+### Single PDF Output
 
-## YAML Frontmatter Example
+```
+output/
+└── documentation.pdf
+    ├── Cover page
+    ├── Table of Contents
+    ├── Chapter 1: Getting Started
+    │   ├── Installation
+    │   └── Quick Start
+    ├── Chapter 2: User Guide
+    │   ├── Configuration
+    │   └── Features
+    ├── Chapter 3: API Reference
+    └── Appendix
+```
+
+### Multi-PDF Output
+
+```
+output/
+├── getting-started.pdf
+├── user-guide.pdf
+├── api-reference.pdf
+└── complete-manual.pdf
+```
+
+## Pandoc Configuration
+
+### pandoc-defaults.yaml
 
 ```yaml
----
-title: "Document Title"
-subtitle: "Subtitle"
-author: "Author"
-date: "2025-11-18"
-titlepage: true
-titlepage-color: "1e3a8a"
-titlepage-text-color: "ffffff"
-book: true
----
+from: markdown+smart+yaml_metadata_block+implicit_figures+table_captions
+to: pdf
+pdf-engine: xelatex
+
+variables:
+  documentclass: report
+  papersize: letter
+  fontsize: 11pt
+  geometry:
+    - margin=1in
+    - top=1.25in
+    - bottom=1.25in
+  mainfont: "Source Serif Pro"
+  sansfont: "Source Sans Pro"
+  monofont: "Source Code Pro"
+  linkcolor: blue
+  urlcolor: blue
+  toccolor: black
+  toc-depth: 3
+
+include-before-body:
+  - cover.tex
+
+include-in-header:
+  - preamble.tex
+
+metadata:
+  title: "Documentation"
+  author: "Documentation Team"
+  date: "2026-01-24"
+  lang: en-US
+
+toc: true
+toc-title: "Table of Contents"
+number-sections: true
+colorlinks: true
+highlight-style: pygments
 ```
 
-See references/frontmatter_templates.md for complete templates.
+### LaTeX Preamble (preamble.tex)
 
+```latex
+% Custom styling
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
 
-## Markdown Formatting Best Practices
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{\small Documentation v1.0}
 
-For optimal PDF rendering, ensure:
+% Code block styling
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
 
-1. **Blank lines before lists** - Required for proper list rendering
-2. **Blank lines after headings** - Improves spacing
-3. **Nested list indentation** - Use 3 spaces for sub-items
+% Heading styles
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
 
-### Common Claude Code Pattern
-
-Lists after colons need blank lines:
-
-```markdown
-Your data spans 9 years with complete tracking:
-
-- Item 1
-- Item 2
+% Link colors
+\definecolor{linkblue}{RGB}{0,102,204}
 ```
 
-Without blank line after colon, renders as inline text.
+## WeasyPrint Configuration
 
-### Automatic Fix
+### weasyprint-config.css
 
-Use preprocessing script:
+```css
+@page {
+    size: letter;
+    margin: 1in;
+    margin-top: 1.25in;
+    margin-bottom: 1.25in;
+
+    @top-center {
+        content: string(chapter-title);
+        font-size: 10pt;
+        color: #666;
+    }
+
+    @bottom-center {
+        content: "Page " counter(page) " of " counter(pages);
+        font-size: 9pt;
+    }
+}
+
+@page :first {
+    @top-center { content: none; }
+    @bottom-center { content: none; }
+}
+
+/* Cover page */
+.cover {
+    page: cover;
+    text-align: center;
+    padding-top: 3in;
+}
+
+.cover h1 {
+    font-size: 36pt;
+    color: #333;
+}
+
+.cover .version {
+    font-size: 14pt;
+    color: #666;
+    margin-top: 1in;
+}
+
+/* Table of contents */
+#toc {
+    page-break-after: always;
+}
+
+#toc h2 {
+    font-size: 24pt;
+    margin-bottom: 0.5in;
+}
+
+#toc a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#toc a::after {
+    content: leader('.') target-counter(attr(href), page);
+}
+
+/* Chapters */
+h1 {
+    string-set: chapter-title content();
+    page-break-before: always;
+    font-size: 28pt;
+    border-bottom: 2px solid #333;
+    padding-bottom: 0.25in;
+}
+
+h2 { font-size: 20pt; margin-top: 0.5in; }
+h3 { font-size: 16pt; margin-top: 0.3in; }
+
+/* Code blocks */
+pre {
+    background-color: #f5f5f5;
+    padding: 0.5em;
+    border-radius: 4px;
+    font-size: 9pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+}
+
+code {
+    font-family: "Source Code Pro", monospace;
+    background-color: #f0f0f0;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    page-break-inside: avoid;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+    text-align: left;
+}
+
+th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+/* Images */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+figure {
+    text-align: center;
+    page-break-inside: avoid;
+}
+
+figcaption {
+    font-style: italic;
+    color: #666;
+    margin-top: 0.5em;
+}
+
+/* Links */
+a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+/* Print optimizations */
+@media print {
+    a[href^="http"]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #666;
+    }
+}
+```
+
+## Cover Page Template
+
+### cover.html
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: "Source Sans Pro", sans-serif;
+            text-align: center;
+            padding-top: 200px;
+        }
+        .logo {
+            max-width: 200px;
+            margin-bottom: 50px;
+        }
+        h1 {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 100px;
+        }
+        .version {
+            font-size: 18px;
+            color: #999;
+        }
+        .date {
+            font-size: 14px;
+            color: #999;
+            margin-top: 10px;
+        }
+        .footer {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <img src="logo.png" alt="Company Logo" class="logo">
+    <h1>{{title}}</h1>
+    <p class="subtitle">{{subtitle}}</p>
+    <p class="version">Version {{version}}</p>
+    <p class="date">{{date}}</p>
+    <div class="footer">
+        <p>{{company}}</p>
+        <p>Confidential</p>
+    </div>
+</body>
+</html>
+```
+
+## Multi-Chapter Assembly
+
+### build-manual.js
+
+```javascript
+const pandoc = require('pandoc');
+const fs = require('fs');
+const path = require('path');
+
+async function buildManual(config) {
+  const chapters = [
+    { title: 'Getting Started', files: ['intro.md', 'installation.md', 'quickstart.md'] },
+    { title: 'User Guide', files: ['configuration.md', 'features.md', 'advanced.md'] },
+    { title: 'API Reference', files: ['api/*.md'] },
+    { title: 'Appendix', files: ['glossary.md', 'changelog.md'] }
+  ];
+
+  // Combine all Markdown files
+  let combined = '';
+
+  for (const chapter of chapters) {
+    combined += `# ${chapter.title}\n\n`;
+
+    for (const filePattern of chapter.files) {
+      const files = glob.sync(filePattern, { cwd: config.docsDir });
+      for (const file of files) {
+        const content = fs.readFileSync(path.join(config.docsDir, file), 'utf8');
+        // Adjust heading levels
+        const adjusted = adjustHeadings(content, 1);
+        combined += adjusted + '\n\n';
+      }
+    }
+  }
+
+  // Write combined file
+  const tempFile = '/tmp/combined.md';
+  fs.writeFileSync(tempFile, combined);
+
+  // Run Pandoc
+  await pandoc({
+    input: tempFile,
+    output: config.outputPath,
+    args: [
+      '--defaults', config.pandocDefaults,
+      '--metadata-file', config.metadataFile
+    ]
+  });
+
+  return { output: config.outputPath };
+}
+```
+
+## PDF/A Compliance
+
+### Generate Archival PDF
 
 ```bash
-scripts/fix_markdown.py input.md output.md
-```
-
-Automatically detects and fixes:
-- Lists after colons (Claude Code format)
-- Lists after headings
-- Nested list spacing
-
-## Layout Options
-
-### Desktop/Print Layout (A4)
-- Paper: 210mm x 297mm (A4)
-- Margins: 2.5cm
-- Font size: 11pt
-- Best for: Printing, reading on large screens, archival
-
-### Mobile Layout (Phone-optimized)
-- Paper: 6in x 9in (phone aspect ratio)
-- Margins: 0.5in (minimal for screen space)
-- Font size: 10pt with 1.2 line spacing
-- Best for: Phone/tablet reading, Telegram/messaging apps
-
-**Default for Telegram Bot**: Use mobile layout for all PDFs sent via Telegram unless user explicitly requests print/desktop version.
-
-## Generation Workflows
-
-### Workflow 1: Simple PDF
-
-1. Check context (Telegram = mobile, otherwise desktop)
-2. Check if Russian (use EB Garamond if yes)
-3. Run appropriate pandoc command
-4. Verify output
-
-### Workflow 2: Professional Title Page
-
-1. Add YAML frontmatter with theme color
-2. Include metadata (title, author, date)
-3. Choose layout (mobile vs desktop)
-4. Generate with xelatex
-
-### Workflow 3: Using Script
-
-```bash
-scripts/generate_pdf.py doc.md -t white-paper
-scripts/generate_pdf.py doc.md -t marketing --russian
-scripts/generate_pdf.py doc.md --mobile  # Mobile layout
-```
-
-## Resources
-
-- **scripts/generate_pdf.py** - Automated generation
-- **references/frontmatter_templates.md** - YAML templates
-- **references/pandoc_reference.md** - Command reference
-
-## Troubleshooting
-
-Install pandoc: `brew install pandoc`
-Install LaTeX: `brew install --cask mactex`
-## Mobile-Friendly PDFs
-
-For phone and tablet reading, use the mobile layout option:
-
-```bash
-# Using script (recommended)
-scripts/generate_pdf.py doc.md --mobile
-
-# Direct pandoc command
-pandoc doc.md -o doc-mobile.pdf \
+# Using Pandoc with PDF/A output
+pandoc input.md \
+  -o output.pdf \
   --pdf-engine=xelatex \
-  --toc --toc-depth=2 \
-  -V geometry:paperwidth=6in \
-  -V geometry:paperheight=9in \
-  -V geometry:margin=0.5in \
-  -V fontsize=10pt \
-  -V linestretch=1.2 \
-  -V colorlinks=true \
-  -V linkcolor=blue \
-  -V urlcolor=blue
+  -V 'pdfa=1b' \
+  --include-in-header=pdfa-header.tex
+
+# pdfa-header.tex
+\usepackage{hyperref}
+\hypersetup{
+    pdfstartview=,
+    colorlinks=false,
+    pdfpagelayout=SinglePage
+}
+\usepackage[a-1b]{pdfx}
 ```
 
-**Mobile layout features**:
-- 6x9 inch page size (optimal for mobile screens)
-- 10pt font (readable on smaller screens)
-- 0.5in margins (maximizes content area)
-- 1.2 line spacing (improved readability)
-- Auto-generated `-mobile.pdf` filename suffix
+## Workflow
 
-**When to use mobile layout**:
-- Sharing research via Telegram/messaging apps
-- Reading on phones or tablets
-- Creating portable reference documents
-- Quick consumption on the go
+1. **Collect sources** - Gather Markdown files
+2. **Preprocess** - Handle includes and variables
+3. **Convert** - Transform Markdown to intermediate format
+4. **Apply template** - Add styling and structure
+5. **Generate TOC** - Build table of contents
+6. **Render PDF** - Output final PDF
+7. **Optimize** - Compress images and fonts
 
-**Default context**: Mobile layout is used by default when generating PDFs through the Telegram bot for optimal mobile reading experience.
+## Dependencies
+
+```json
+{
+  "devDependencies": {
+    "pandoc": "^0.2.0",
+    "weasyprint": "via pip",
+    "puppeteer": "^21.0.0",
+    "pdf-lib": "^1.17.0"
+  }
+}
+```
+
+### System Dependencies
+
+```bash
+# macOS
+brew install pandoc
+brew install --cask basictex
+pip install weasyprint
+
+# Ubuntu
+sudo apt install pandoc texlive-xetex texlive-fonts-recommended
+pip install weasyprint
+
+# Windows (via Chocolatey)
+choco install pandoc miktex
+pip install weasyprint
+```
+
+## CLI Commands
+
+```bash
+# Single file with Pandoc
+pandoc input.md -o output.pdf --defaults pandoc-defaults.yaml
+
+# Multiple files combined
+pandoc docs/*.md -o manual.pdf --toc --number-sections
+
+# Using WeasyPrint
+weasyprint input.html output.pdf -s style.css
+
+# Using Puppeteer (for HTML-based PDFs)
+node generate-pdf.js --input docs/ --output manual.pdf
+```
+
+## Best Practices Applied
+
+- Use vector graphics when possible
+- Optimize images for print (300 DPI)
+- Include page numbers and headers
+- Generate hyperlinked TOC
+- Handle page breaks for code blocks
+- Embed fonts for consistency
+- Test on different PDF readers
+
+## References
+
+- Pandoc: https://pandoc.org/
+- WeasyPrint: https://weasyprint.org/
+- LaTeX: https://www.latex-project.org/
+- PDF/A: https://www.pdfa.org/
+
+## Target Processes
+
+- docs-versioning.js
+- user-guide-docs.js
+- runbook-docs.js
+- adr-docs.js

@@ -1,24 +1,14 @@
 ---
 name: recovery-community-moderator
-description: Trauma-informed AI moderator for addiction recovery communities. Applies harm reduction principles, honors 12-step traditions, distinguishes healthy conflict from abuse, detects crisis posts.
-  Activate on 'community moderation', 'moderate forum', 'review post', 'check content', 'crisis detection'. NOT for legal documents (use recovery-app-legal-terms), app development (use domain skills), or
-  therapy (use jungian-psychologist).
-allowed-tools: Read, Write, Edit
-metadata:
-  category: Lifestyle & Personal
-  tags:
+description: Trauma-informed AI moderator for addiction recovery communities. Applies harm reduction principles, honors 12-step traditions, distinguishes healthy conflict from abuse, detects crisis posts. Activate on 'community moderation', 'moderate forum', 'review post', 'check content', 'crisis detection'. NOT for legal documents (use recovery-app-legal-terms), app development (use domain skills), or therapy (use jungian-psychologist).
+category: Lifestyle & Personal
+tags:
   - analysis
   - validation
   - health
   - psychology
   - production-ready
-  pairs-with:
-  - skill: crisis-response-protocol
-    reason: Community moderators must escalate crisis situations through safe response protocols
-  - skill: recovery-education-writer
-    reason: Moderation decisions are informed by recovery education principles and harm reduction
-  - skill: sober-addict-protector
-    reason: Daily sobriety protection patterns complement community-level moderation
+allowed-tools: Read, Write, Edit
 ---
 
 # Recovery Community Moderator

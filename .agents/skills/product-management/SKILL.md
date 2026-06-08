@@ -1,369 +1,295 @@
 ---
 name: product-management
-description: "Founder-PM toolkit for discovery, roadmaps, prioritization, and PMF measurement. Use when planning product strategy, metrics, or roadmaps."
+description: Assist with core product management activities including writing PRDs, analyzing features, synthesizing user research, planning roadmaps, and communicating product decisions. Use when you need help with PM documentation, analysis, or planning workflows that integrate with your codebase.
 ---
+# Skill: Product management AI
 
-# Product Management (Jan 2026)
+## Purpose
 
-This skill turns the assistant into an operator, not a lecturer.
+Assist with core product management activities including writing product requirements documents (PRDs), analyzing feature requests, synthesizing user research, planning roadmaps, and communicating product decisions to stakeholders and engineering teams.
 
-Everything here is:
-- **Executable**: templates, checklists, decision flows
-- **Decision-first**: measurable outcomes, explicit trade-offs, clear ownership
-- **Organized**: resources for depth; templates for immediate copy-paste
+## When to use this skill
 
----
+- You need to **write or update PRDs** with clear requirements, success metrics, and technical considerations.
+- You're **evaluating feature requests** and need structured analysis of impact, effort, and priority.
+- You need to **synthesize user research** findings into actionable insights.
+- You're **planning roadmaps** and need to organize, prioritize, and communicate plans.
+- You need to **communicate product decisions** clearly to engineering, design, and business stakeholders.
+- You're doing **competitive analysis** or market research synthesis.
+- You need to **track and analyze product metrics** to inform decisions.
 
-**Modern Best Practices (Jan 2026)**:
-- Evidence quality beats confidence: label signals strong/medium/weak; write what would change your mind.
-- Outcomes > output: roadmaps are bets with measurable impact and guardrails, not feature inventories.
-- Metrics must be defined (formula + timeframe + data source) to be actionable.
-- Privacy, security, and accessibility are requirements, not afterthoughts.
-- Hybrid decision loops: AI surfaces anomalies, patterns, and forecasts; humans apply context, ethics, and long-term strategy.
-- Accountability: product is often held responsible for business outcomes; confirm the operating model in your org and validate benchmarks with current sources.
-- Portfolio diversification: a common heuristic is 70% core, 20% adjacent, 10% transformational; adapt to strategy and constraints.
+## Key capabilities
 
-## When to Use This Skill
+Unlike point-solution PM tools:
 
-Use this skill when the user asks to do real product work, such as:
+- **Integrated with codebase**: Can reference actual code, APIs, and technical constraints.
+- **Context-aware**: Understands your specific product, architecture, and technical debt.
+- **Flexible templates**: Adapt documentation to your organization's needs.
+- **Version controlled**: All artifacts live in git alongside code.
+- **Collaborative**: Works within existing dev workflows (PRs, issues, docs).
 
-- “Create / refine a PRD / spec / business case / 1-pager”
-- “Turn this idea into a roadmap” / “Outcome roadmap for X”
-- “Design a discovery plan / interview script / experiment plan”
-- “Define success metrics / OKRs / metric tree”
-- “Position this product against competitors”
-- “Run a difficult conversation / feedback / 1:1 / negotiation”
-- “Plan a product strategy / vision / opportunity assessment”
+## Inputs
 
-Do not use this skill for:
-- Book summaries, philosophy, or general education
-- Long case studies or storytelling
+- **Product context**: Current state, key stakeholders, strategic goals.
+- **Feature requests**: User feedback, business needs, or strategic initiatives.
+- **Technical constraints**: Known limitations, dependencies, or technical debt.
+- **User research**: Interview notes, survey results, analytics data.
+- **Business goals**: Metrics, OKRs, or success criteria to optimize for.
 
----
+## Out of scope
 
-## Quick Reference
+- Making final product decisions (this is the PM's job; the skill assists).
+- Managing stakeholder relationships and politics.
+- Detailed UI/UX design work (use design tools and collaborate with designers).
+- Project management and sprint planning (use project management tools).
 
-| Task | Template | Domain | Output |
-|------|----------|---------|---------|
-| Discovery interview | `customer-interview-template.md` | Discovery | Interview script with Mom Test patterns |
-| Opportunity mapping | `opportunity-solution-tree.md` | Discovery | OST with outcomes, problems, solutions |
-| PMF survey | `pmf-survey-template.md` | Discovery | Sean Ellis + NPS + usage survey |
-| Outcome roadmap | `outcome-roadmap.md` | Roadmap | Now/Next/Later with outcomes and themes |
-| OKR definition | `okr-template.md` | Metrics | 1-3 objectives with 2-4 key results each |
-| Product positioning | `positioning-template.md` | Strategy | Competitive alternatives -> value -> segment |
-| Product vision | `product-vision-template.md` | Strategy | From→To narrative with 3-5 year horizon |
-| Quarterly review | `quarterly-product-review.md` | Strategy | Keep / cut / double-down product audit |
-| Prioritization | `prioritization-scorecard.md` | Prioritization | RICE/ICE scoring with kill criteria |
-| Kill criteria | `kill-criteria-template.md` | Prioritization | Pre-defined stop conditions per initiative |
-| 1:1 meeting | `1-1-template.md` | Leadership | Check-in, progress, blockers, growth |
-| Post-incident debrief | `a3-debrief.md` | Leadership | Intent vs actual, root cause, action items |
+## Conventions and best practices
 
----
+### PRD structure
+A good PRD should include:
 
-## Decision Tree: Choosing the Right Workflow
+1. **Problem statement**: What user pain point or business need are we addressing?
+2. **Goals and success metrics**: What does success look like quantitatively?
+3. **User stories and use cases**: Who will use this and how?
+4. **Requirements**: Functional and non-functional requirements, prioritized.
+5. **Technical considerations**: Architecture implications, dependencies, constraints.
+6. **Design and UX notes**: Key interaction patterns or design requirements.
+7. **Risks and mitigations**: What could go wrong and how to address it.
+8. **Launch plan**: Rollout strategy, feature flags, monitoring.
+9. **Open questions**: What still needs to be decided or researched.
 
-```text
-User needs: [Product Work Type]
-    ├─ Discovery / Validation?
-    │   ├─ Customer insights? → Customer interview template
-    │   ├─ Hypothesis testing? → Assumption test template
-    │   └─ Opportunity mapping? → Opportunity Solution Tree
-    │
-    ├─ Strategy / Vision?
-    │   ├─ Long-term direction? → Product vision template
-    │   ├─ Market positioning? → Positioning template (Dunford)
-    │   ├─ Big opportunity? → Opportunity assessment
-    │   └─ Amazon-style spec? → PR/FAQ template
-    │
-    ├─ Planning / Roadmap?
-    │   ├─ Outcome-driven? → Outcome roadmap (Now/Next/Later)
-    │   ├─ Theme-based? → Theme roadmap
-    │   └─ Metrics / OKRs? → Metric tree + OKR template
-    │
-    ├─ Prioritization / Focus?
-    │   ├─ What to build next? → Prioritization scorecard (RICE/ICE)
-    │   ├─ What to stop? → Kill criteria template + quarterly review
-    │   ├─ Scope too large? → Scope negotiation patterns
-    │   └─ PMF check? → PMF survey + retention curve analysis
-    │
-    └─ Leadership / Team Ops?
-        ├─ 1:1 meeting? → 1-1 template
-        ├─ Giving feedback? → Feedback template (SBI model)
-        ├─ Post-incident? → A3 debrief
-        ├─ Stakeholder pushback? → Stakeholder management patterns
-        └─ Negotiation? → Negotiation one-sheet (Voss)
+### Feature prioritization
+Use structured frameworks to evaluate features:
+
+- **RICE**: Reach × Impact × Confidence / Effort
+- **ICE**: Impact × Confidence × Ease
+- **Value vs. Effort**: 2×2 matrix plotting value against implementation cost
+- **Kano Model**: Categorize features into basic, performance, and delighters
+
+### User research synthesis
+When synthesizing research:
+
+1. **Identify patterns**: What themes emerge across participants?
+2. **Quote verbatim**: Include actual user quotes to illustrate points.
+3. **Quantify when possible**: "7 out of 10 participants said..."
+4. **Segment findings**: Different user types may have different needs.
+5. **Connect to metrics**: How do qualitative findings explain quantitative data?
+
+### Roadmap planning
+Effective roadmaps should:
+
+- **Theme-based**: Group work into strategic themes, not just feature lists.
+- **Time-horizoned**: Now / Next / Later or Quarterly structure.
+- **Outcome-focused**: Emphasize goals and outcomes, not just outputs.
+- **Flexible**: Leave room for learning and adjustment.
+- **Communicated clearly**: Different views for different audiences.
+
+## Required behavior
+
+1. **Understand context deeply**: Review existing docs, code, and prior discussions before proposing changes.
+2. **Ask clarifying questions**: Don't assume; clarify ambiguous requirements or goals.
+3. **Be specific and actionable**: Avoid vague language; provide concrete, testable requirements.
+4. **Consider tradeoffs**: Explicitly discuss pros/cons of different approaches.
+5. **Connect to strategy**: Tie features and decisions back to higher-level goals.
+6. **Involve stakeholders**: Identify who needs to review or approve.
+7. **Think through edge cases**: Don't just focus on happy paths.
+8. **Make it measurable**: Propose concrete metrics to track success.
+
+## Required artifacts
+
+Depending on the task, generate:
+
+- **PRD document**: Comprehensive product requirements in markdown format.
+- **Feature analysis**: Structured evaluation of a feature request.
+- **Research synthesis**: Summary of user research findings with insights.
+- **Roadmap document**: Organized view of planned work with themes and timelines.
+- **Decision document**: Record of key product decisions and rationale.
+- **Competitive analysis**: Comparison of competitor features and approaches.
+- **Metric definitions**: Clear definitions of success metrics and how to measure them.
+
+## Implementation checklist
+
+### Writing a PRD
+- [ ] Understand the problem space and strategic context
+- [ ] Review related code, APIs, and technical constraints
+- [ ] Interview key stakeholders (engineering, design, business)
+- [ ] Research user needs and competitive landscape
+- [ ] Draft problem statement and goals
+- [ ] Define user stories and use cases
+- [ ] Specify functional and non-functional requirements
+- [ ] Document technical considerations and dependencies
+- [ ] Define success metrics and measurement approach
+- [ ] Identify risks and mitigation strategies
+- [ ] Plan rollout and launch approach
+- [ ] Review with stakeholders and iterate
+
+### Analyzing a feature request
+- [ ] Clarify the user problem or business need
+- [ ] Identify target users and use cases
+- [ ] Estimate impact (users affected, business value)
+- [ ] Assess implementation effort and complexity
+- [ ] Identify dependencies and risks
+- [ ] Check alignment with product strategy
+- [ ] Compare against alternatives
+- [ ] Calculate prioritization score (RICE, ICE, etc.)
+- [ ] Make recommendation with clear reasoning
+
+### Synthesizing user research
+- [ ] Review all research materials (transcripts, notes, data)
+- [ ] Identify key themes and patterns
+- [ ] Extract representative quotes
+- [ ] Segment findings by user type if relevant
+- [ ] Connect qualitative findings to quantitative data
+- [ ] Formulate insights and implications
+- [ ] Generate actionable recommendations
+- [ ] Prioritize recommendations by impact
+
+### Planning a roadmap
+- [ ] Review strategic goals and OKRs
+- [ ] Collect input from stakeholders
+- [ ] Assess current state and technical debt
+- [ ] Group potential work into strategic themes
+- [ ] Prioritize themes and initiatives
+- [ ] Estimate sizing and dependencies
+- [ ] Organize into time horizons (Now/Next/Later)
+- [ ] Define success criteria for each initiative
+- [ ] Create views for different audiences
+- [ ] Review and socialize with stakeholders
+
+## Example workflows
+
+### Example 1: Writing a PRD for a new feature
+
+```markdown
+# PRD: Advanced Search Functionality
+
+## Problem Statement
+Users frequently report difficulty finding specific items in our catalog when they have multiple criteria (price range, location, category, features). Our current search only supports simple text queries, leading to:
+- High bounce rates on search results pages (65% bounce rate vs 32% site average)
+- Increased support tickets asking for search help (150/month)
+- Lost conversion opportunities (estimated $500K annual revenue impact)
+
+## Goals and Success Metrics
+**Primary Goal**: Enable users to find relevant items quickly using multiple filters.
+
+**Success Metrics**:
+- Reduce search result page bounce rate from 65% to <40%
+- Increase search-to-purchase conversion rate by 25%
+- Reduce search-related support tickets by 50%
+- 70% of users engage with at least one filter within 30 days
+
+## User Stories
+
+### Must Have
+1. As a buyer, I want to filter by price range so I can find items within my budget
+2. As a buyer, I want to filter by location so I can find items near me
+3. As a buyer, I want to filter by category so I can narrow down item types
+4. As a buyer, I want to combine multiple filters so I can find exactly what I need
+5. As a buyer, I want to see filter counts so I know how many items match before applying
+
+### Should Have
+6. As a buyer, I want to save my filter preferences so I don't have to reapply them
+7. As a buyer, I want to see suggested filters based on my search query
+8. As a buyer, I want to sort filtered results by relevance, price, or date
+
+### Nice to Have
+9. As a buyer, I want to create saved searches that notify me of new matches
+10. As a buyer, I want to share a filtered search URL with others
 ```
 
----
+### Example 2: Feature request analysis
 
-## Do / Avoid (Jan 2026)
+```markdown
+# Feature Analysis: Dark Mode Support
 
-### Do
+## Request Summary
+**Source**: User feedback (150+ requests in past 6 months), competitive pressure
+**Description**: Add dark mode theme option to web and mobile apps
 
-- Start from the decision: what are we deciding, by when, and with what evidence.
-- Define metrics precisely (formula + timeframe + data source) and add guardrails.
-- Use discovery to de-risk value before building; prioritize by evidence, not opinions.
-- Write “match vs ignore” competitive decisions, not feature grids.
+## User Need
+Users working in low-light environments report eye strain with current light-only theme. Power users (25% of DAU) spend 3+ hours/day in app and strongly prefer dark mode.
 
-### Avoid
+## Prioritization Score
 
-- Roadmap theater (shipping lists) without outcomes and learning loops.
-- Vanity KPIs (raw signups, impressions) without activation/retention definitions.
-- "Build-first validation" (shipping MVPs without falsifiable hypotheses).
-- Collecting customer data without purpose limitation, retention, and access controls.
-- Building for engineering elegance instead of user value (technical founder trap).
-- Feature creep without kill criteria (every feature should have a pre-defined stop condition).
-- Saying "yes" to stakeholder requests without trade-off analysis.
-- Measuring PMF once instead of continuously across segments.
+Using RICE framework:
+- **Reach**: 750K users = 750
+- **Impact**: 8/10 (high for target segment) = 0.8
+- **Confidence**: 85% = 0.85
+- **Effort**: 7 weeks = 7
 
-## Prioritization & Saying No
+**RICE Score**: (750 × 0.8 × 0.85) / 7 = **73.2**
 
-The most common founder-PM failure: building everything, killing nothing, and running out of time before impact.
+## Recommendation
 
-### Prioritization Frameworks
+**Proceed with Option 1 (Full Dark Mode)**
 
-| Framework | Formula / Method | Best For | Watch For |
-|-----------|-----------------|----------|-----------|
-| **RICE** | (Reach x Impact x Confidence) / Effort | Comparing features with data | Gaming confidence scores |
-| **ICE** | Impact x Confidence x Ease | Quick gut-check prioritization | Over-simplification |
-| **Opportunity Scoring** | Importance x (Importance - Satisfaction) | Discovery-driven, JTBD-aligned | Requires user research data |
-| **Cost of Delay** | Value per unit time / Duration | Time-sensitive decisions | Harder to estimate accurately |
-| **Weighted Shortest Job First (WSJF)** | Cost of Delay / Job Size | SAFe/Lean, flow optimization | Requires calibrated estimates |
-
-Pick one. Use it consistently. The framework matters less than the discipline of scoring everything the same way.
-
-### Kill Criteria
-
-Every initiative should have pre-defined conditions for stopping:
-
-- **Usage threshold**: If <X% of target users adopt within Y weeks, stop.
-- **Cost ceiling**: If development exceeds X hours/dollars, pause and re-evaluate.
-- **Time limit**: If not shipped within X weeks, kill or radically descope.
-- **Metric guardrail**: If [guardrail metric] degrades by >X%, roll back.
-
-Use `assets/prioritization/kill-criteria-template.md` to define these before starting.
-
-### Feature Bridge Migration
-
-When replacing an existing feature with a new one, don't hard-kill the old feature. Use a **bridge migration** pattern to prevent user loss.
-
-**Bridge mode**: Run both old and new features simultaneously. Route users to the new experience by default but keep the old path accessible (via link, fallback, or settings toggle).
-
-**Substitution-based kill rule**:
-1. Define the absorption metric: % of old-feature users who now use the new feature for the same job.
-2. Set the kill threshold: new feature absorbs ≥80% of old-feature users.
-3. Set the duration: threshold must hold for 14 consecutive days with no retention regression.
-4. Only kill the old feature when all three conditions are met.
-
-```text
-BRIDGE MIGRATION SEQUENCE:
-
-1. Ship new feature alongside old feature
-2. Default new users to new experience
-3. Migrate existing users gradually (progressive rollout)
-4. Monitor: absorption rate, retention by cohort, support tickets
-5. Old feature absorbs ≥80% for 14 days + no retention drop?
-   ├─ Yes → Kill old feature, remove code
-   └─ No → Investigate gaps, iterate new feature, extend bridge
+**Reasoning**:
+- High impact for large user segment (45% of base)
+- Strong user demand and competitive pressure
+- Effort is reasonable relative to value
+- RICE score above our threshold (>50)
+- Aligns with product, technical, and business strategy
 ```
 
-**When NOT to bridge**: Security vulnerabilities, compliance requirements, or features with near-zero usage (<1% MAU). These can be killed directly with notice.
+## Common PM artifacts
 
-### Scope Negotiation
+### PRD (Product Requirements Document)
+Comprehensive specification of what to build and why. Include problem statement, goals, user stories, requirements, technical considerations, risks, and launch plan.
 
-When stakeholders push for more scope:
-- Reframe as trade-offs: "We can add X if we cut Y — which matters more?"
-- Anchor on outcomes: "The goal is [metric]. Does this addition move it?"
-- Offer phased delivery: "V1 without this; measure; add in V2 if data supports it."
-- Document non-goals explicitly in every spec.
+### Feature Brief
+Lighter-weight than PRD; quick summary of a feature idea with key details. Use for early-stage exploration before committing to full PRD.
 
-### "What to Stop Doing" Quarterly Review
+### User Research Synthesis
+Summary of user research findings (interviews, surveys, usability tests) with patterns, insights, and recommendations.
 
-Every quarter, review the product with `assets/strategy/quarterly-product-review.md`:
-- Which features have <5% usage? → Candidate for removal
-- Which initiatives produced no measurable outcome? → Stop or pivot
-- Which ongoing costs (maintenance, support) exceed their value? → Sunset
-- What are you doing "because we always have" but nobody asked for? → Question
+### Roadmap
+Strategic plan of what to build over time. Organize by themes and time horizons; focus on outcomes not just outputs.
 
-For detailed prioritization patterns and worked examples: see `references/prioritization-frameworks.md`.
+### Decision Document
+Record of important product decisions, the options considered, the decision made, and the reasoning. Critical for institutional memory.
 
----
+### Launch Plan
+Detailed plan for rolling out a feature including phases, feature flags, metrics, monitoring, and rollback procedures.
 
-## Product-Market Fit Measurement
+### Competitive Analysis
+Comparison of competitors' features, approaches, and positioning. Inform product strategy and feature prioritization.
 
-PMF is not a binary event. It's a signal you measure across multiple dimensions.
+### One-Pager
+Executive summary of a product initiative. Use to communicate to leadership and get alignment.
 
-### Sean Ellis Test
+## Best practices for AI-assisted PM work
 
-Survey users: "How would you feel if you could no longer use [product]?"
-- **Very disappointed**: Target >40% for PMF signal
-- **Somewhat disappointed**: Useful but not dependent
-- **Not disappointed**: Not finding value
+### When using AI to write PRDs
+- Provide comprehensive context about the product, users, and technical constraints.
+- Review and edit generated content carefully; AI may miss nuances or make wrong assumptions.
+- Use AI for structure and first drafts; refine with human judgment and stakeholder input.
+- Validate technical details with engineering; don't assume AI knows your architecture.
 
-Use `assets/discovery/pmf-survey-template.md` for the full survey (combines Sean Ellis + NPS + usage questions).
+### When using AI for feature analysis
+- Provide quantitative data when possible (usage numbers, customer feedback counts).
+- Use structured frameworks (RICE, ICE) to make analysis consistent and defensible.
+- Don't let AI make the final decision; use it to organize thinking and surface considerations.
+- Supplement AI analysis with qualitative stakeholder input and strategic context.
 
-### Retention Curve Analysis
+### When using AI for research synthesis
+- Provide full transcripts or detailed notes for best results.
+- Ask AI to identify patterns but validate with your own reading of the data.
+- Use AI to extract quotes and organize themes; add your own interpretation and implications.
+- Don't let AI over-summarize; sometimes important details are in the nuances.
 
-- Plot cohort retention over time (weekly or monthly depending on product cadence)
-- **Flattening curve** = PMF signal (users who stay, stay)
-- **Declining curve** = No PMF (even retained users eventually leave)
-- Segment by ICP: you may have PMF in one segment but not another
+## Safety and escalation
 
-### Engagement Scoring
+- **Strategic decisions**: AI should inform, not make, key product decisions. Involve human PMs and stakeholders.
+- **User data**: Don't feed PII or sensitive user data to AI without proper data handling procedures.
+- **Technical feasibility**: Always validate technical assumptions and effort estimates with engineering.
+- **Competitive intelligence**: Be cautious about including confidential competitive info in prompts.
+- **Tone and voice**: Review and adjust tone for your audience; AI may be too formal or informal.
 
-Define activation precisely (formula + timeframe + data source):
-- What actions constitute "activated"? (not just signed up)
-- What's the activation window? (first 7 days, first 14 days?)
-- What engagement depth separates power users from casual?
+## Integration with other skills
 
-### Feature Audit
+This skill can be combined with:
 
-Periodically audit feature usage to identify what to keep, improve, or remove:
-- Top 20% features by usage → invest, polish
-- Middle 60% → maintain, don't expand
-- Bottom 20% → candidate for removal or redesign
-- Features with high support cost relative to usage → redesign or sunset
-
-### Segmented PMF
-
-PMF varies by segment. Measure separately for:
-- ICP vs non-ICP customers
-- Free vs paid users
-- Self-serve vs sales-assisted
-- By company size, industry, or geography
-
-For detailed PMF measurement methodology: see `references/pmf-measurement.md`.
-
----
-
-## Stakeholder Management
-
-Founders manage board members, investors, early customers, co-founders, and (eventually) team leads — often without formal PM training.
-
-Key patterns:
-- **Board / investors**: Update monthly with metrics + decisions + asks. Use narrative format, not slide decks. Lead with "what we learned" not "what we shipped."
-- **Early customers**: They are partners, not just users. Share roadmap intent (not commitments). Ask for input on priorities, not feature requests.
-- **Co-founder alignment**: Weekly sync on priorities. Disagree and commit. Document decisions.
-- **Saying no to stakeholders**: "We're not doing X because [reason tied to strategy]. Here's what we're doing instead and why."
-
-For detailed stakeholder management patterns: see `references/stakeholder-management.md`.
-
----
-
-## What Good Looks Like
-
-- Evidence: 5–10 real user touchpoints or equivalent primary data for material bets.
-- Scope: clear non-goals and acceptance criteria that can be tested.
-- Learning: post-launch review with metric deltas, guardrail impact, and next decision.
-
-## PRDs and Specs
-
-For PRDs/specs and writing-quality requirements, use the templates in `../docs-ai-prd/`:
-
-- PRD templates: [../docs-ai-prd/assets/prd/prd-template.md](../docs-ai-prd/assets/prd/prd-template.md) and [../docs-ai-prd/assets/prd/ai-prd-template.md](../docs-ai-prd/assets/prd/ai-prd-template.md)
-
-## Optional: AI / Automation
-
-Use only when explicitly requested and policy-compliant.
-
-- AI system lifecycle: [assets/ai/ai-lifecycle-template.md](assets/ai/ai-lifecycle-template.md)
-- Agentic workflow docs: [assets/ai/agentic-ai-orchestration.md](assets/ai/agentic-ai-orchestration.md)
-- AI product patterns: [references/ai-product-patterns.md](references/ai-product-patterns.md)
-
-## Navigation
-
-**Resources**
-- [references/discovery-best-practices.md](references/discovery-best-practices.md)
-- [references/roadmap-patterns.md](references/roadmap-patterns.md)
-- [references/delivery-best-practices.md](references/delivery-best-practices.md)
-- [references/strategy-patterns.md](references/strategy-patterns.md)
-- [references/positioning-patterns.md](references/positioning-patterns.md)
-- [references/data-product-best-practices.md](references/data-product-best-practices.md)
-- [references/interviewing-patterns.md](references/interviewing-patterns.md)
-- [references/metrics-best-practices.md](references/metrics-best-practices.md)
-- [references/leadership-decision-frameworks.md](references/leadership-decision-frameworks.md)
-- [references/operational-guide.md](references/operational-guide.md)
-- [references/prioritization-frameworks.md](references/prioritization-frameworks.md)
-- [references/pmf-measurement.md](references/pmf-measurement.md)
-- [references/stakeholder-management.md](references/stakeholder-management.md)
-- [data/sources.json](data/sources.json)
-
-**Templates**
-- Discovery: [assets/discovery/customer-interview-template.md](assets/discovery/customer-interview-template.md), [assets/discovery/assumption-test-template.md](assets/discovery/assumption-test-template.md), [assets/discovery/opportunity-solution-tree.md](assets/discovery/opportunity-solution-tree.md), [assets/discovery/pmf-survey-template.md](assets/discovery/pmf-survey-template.md)
-- Prioritization: [assets/prioritization/prioritization-scorecard.md](assets/prioritization/prioritization-scorecard.md), [assets/prioritization/kill-criteria-template.md](assets/prioritization/kill-criteria-template.md)
-- Strategy/Vision: [assets/strategy/product-vision-template.md](assets/strategy/product-vision-template.md), [assets/strategy/opportunity-assessment.md](assets/strategy/opportunity-assessment.md), [assets/strategy/positioning-template.md](assets/strategy/positioning-template.md), [assets/strategy/PRFAQ-template.md](assets/strategy/PRFAQ-template.md), [assets/strategy/quarterly-product-review.md](assets/strategy/quarterly-product-review.md)
-- Data: [assets/data/data-product-canvas.md](assets/data/data-product-canvas.md)
-- Roadmaps: [assets/roadmap/outcome-roadmap.md](assets/roadmap/outcome-roadmap.md), [assets/roadmap/theme-roadmap.md](assets/roadmap/theme-roadmap.md)
-- Metrics: [assets/metrics/metric-tree.md](assets/metrics/metric-tree.md), [assets/metrics/okr-template.md](assets/metrics/okr-template.md)
-- Ops/Leadership: [assets/ops/1-1-template.md](assets/ops/1-1-template.md), [assets/ops/feedback-template.md](assets/ops/feedback-template.md), [assets/ops/a3-debrief.md](assets/ops/a3-debrief.md), [assets/ops/negotiation-one-sheet.md](assets/ops/negotiation-one-sheet.md)
-
-**Related Skills**
-- [../docs-ai-prd/SKILL.md](../docs-ai-prd/SKILL.md) — PRD, stories, and prompt/playbook templates
-- [../software-architecture-design/SKILL.md](../software-architecture-design/SKILL.md) — System design guidance for specs and PRDs
-- [../software-frontend/SKILL.md](../software-frontend/SKILL.md) — UI implementation considerations for product specs
-- [../software-backend/SKILL.md](../software-backend/SKILL.md) — Backend/API implications of product decisions
-- [../startup-growth-playbooks/SKILL.md](../startup-growth-playbooks/SKILL.md) — PLG case studies for activation design
-
----
-
-## Operational Guide
-
-See [references/operational-guide.md](references/operational-guide.md) for detailed patterns, template walkthroughs, example flows, and execution checklists. Keep SKILL.md as the navigation hub; use assets/ when producing artifacts.
-
----
-
-## External Resources
-
-See [data/sources.json](data/sources.json) for official frameworks (Lean Startup, OST, PR/FAQ, OKRs) and AI/LLM safety references.
-
----
-
-Use the quick reference and decision tree above to choose a template, then follow the operational guide for depth.
-
----
-
-## Trend Awareness Protocol
-
-**IMPORTANT**: When users ask recommendation questions about product management tools, frameworks, or practices, use a web search tool to check current trends before answering. If web search is unavailable, use `data/sources.json` and state clearly what you verified vs assumed.
-
-### Trigger Conditions
-
-- "What's the best tool for [roadmapping/product analytics/discovery]?"
-- "What should I use for [OKRs/metrics/customer feedback]?"
-- "What's the latest in product management?"
-- "Current best practices for [discovery/roadmaps/prioritization]?"
-- "Is [framework/tool] still relevant in 2026?"
-- "[Linear] vs [Jira] vs [other]?" or "[Amplitude] vs [Mixpanel]?"
-- "Best approach for [AI product management/agentic products]?"
-
-### Required Searches
-
-1. Search: `"product management best practices 2026"`
-2. Search: `"[specific tool] vs alternatives 2026"`
-3. Search: `"product management trends January 2026"`
-4. Search: `"[discovery/roadmap/OKR] frameworks 2026"`
-
-### What to Report
-
-After searching, provide:
-
-- **Current landscape**: What PM tools/frameworks are popular NOW
-- **Emerging trends**: New tools, methods, or patterns gaining traction
-- **Deprecated/declining**: Frameworks/tools losing relevance
-- **Recommendation**: Based on fresh data, not just static knowledge
-
-### Example Topics (verify with fresh search)
-
-- Product management tools (Linear, Productboard, Notion, Coda)
-- Analytics platforms (Amplitude, Mixpanel, PostHog)
-- Discovery and research tools (Maze, UserTesting, Dovetail)
-- Roadmapping approaches (outcome-based, theme-based, now/next/later)
-- AI product management patterns
-- Prioritization frameworks (RICE, ICE, opportunity scoring)
-- OKR and metrics tools
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.
+- **Data querying**: To analyze product metrics and user behavior data.
+- **AI data analyst**: To perform deeper quantitative analysis for feature decisions.
+- **Frontend UI integration**: To implement features designed in PRDs.
+- **Internal tools**: To build PM tools like feature flag dashboards or metrics viewers.

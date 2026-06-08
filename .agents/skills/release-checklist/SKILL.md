@@ -1,182 +1,160 @@
 ---
 name: release-checklist
-description: "Generates a comprehensive pre-release validation checklist covering build verification, certification requirements, store metadata, and launch readiness."
-argument-hint: "[platform: pc|console|mobile|all]"
+description: Run a final release checklist before shipping. Verifies no TODOs, no debug code, docs updated, tests passing, dependencies justified, and security reviewed.
+tools: Read, Grep, Glob, Bash
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Write
-model: sonnet
 ---
 
-> **Explicit invocation only**: This skill should only run when the user explicitly requests it with `/release-checklist`. Do not auto-invoke based on context matching.
+# Release Checklist
 
-## Phase 1: Parse Arguments
+A final quality gate before shipping code. This skill runs through everything a senior developer would check before approving a release.
 
-Read the argument for the target platform (`pc`, `console`, `mobile`, or `all`). If no platform is specified, default to `all`.
+## Quick Start
 
----
-
-## Phase 2: Load Project Context
-
-- Read `CLAUDE.md` for project context, version information, and platform targets.
-- Read the current milestone from `production/milestones/` to understand what features and content should be included in this release.
-
----
-
-## Phase 3: Scan Codebase
-
-Scan for outstanding issues:
-
-- Count `TODO` comments
-- Count `FIXME` comments
-- Count `HACK` comments
-- Note their locations and severity
-
-Check for test results in any test output directories or CI logs if available.
-
----
-
-## Phase 4: Generate the Release Checklist
-
-```markdown
-## Release Checklist: [Version] -- [Platform]
-Generated: [Date]
-
-### Codebase Health
-- TODO count: [N] ([list top 5 if many])
-- FIXME count: [N] ([list all -- these are potential blockers])
-- HACK count: [N] ([list all -- these need review])
-
-### Build Verification
-- [ ] Clean build succeeds on all target platforms
-- [ ] No compiler warnings (zero-warning policy)
-- [ ] All assets included and loading correctly
-- [ ] Build size within budget ([target size])
-- [ ] Build version number correctly set ([version])
-- [ ] Build is reproducible from tagged commit
-
-### Quality Gates
-- [ ] Zero S1 (Critical) bugs
-- [ ] Zero S2 (Major) bugs -- or documented exceptions with producer approval
-- [ ] All critical path features tested and signed off by QA
-- [ ] Performance within budgets:
-  - [ ] Target FPS met on minimum spec hardware
-  - [ ] Memory usage within budget
-  - [ ] Load times within budget
-  - [ ] No memory leaks over extended play sessions
-- [ ] No regression from previous build
-- [ ] Soak test passed (4+ hours continuous play)
-
-### Content Complete
-- [ ] All placeholder assets replaced with final versions
-- [ ] All TODO/FIXME in content files resolved or documented
-- [ ] All player-facing text proofread
-- [ ] All text localization-ready (no hardcoded strings)
-- [ ] Audio mix finalized and approved
-- [ ] Credits complete and accurate
+```
+/release-checklist
 ```
 
-Add platform-specific sections based on the argument:
-
-**For `pc`:**
-```markdown
-### Platform Requirements: PC
-- [ ] Minimum and recommended specs verified and documented
-- [ ] Keyboard+mouse controls fully functional
-- [ ] Controller support tested (Xbox, PlayStation, generic)
-- [ ] Resolution scaling tested (1080p, 1440p, 4K, ultrawide)
-- [ ] Windowed, borderless, and fullscreen modes working
-- [ ] Graphics settings save and load correctly
-- [ ] Steam/Epic/GOG SDK integrated and tested
-- [ ] Achievements functional
-- [ ] Cloud saves functional
-- [ ] Steam Deck compatibility verified (if targeting)
+Or specify a scope:
+```
+/release-checklist src/auth/
 ```
 
-**For `console`:**
-```markdown
-### Platform Requirements: Console
-- [ ] TRC/TCR/Lotcheck requirements checklist complete
-- [ ] Platform-specific controller prompts display correctly
-- [ ] Suspend/resume works correctly
-- [ ] User switching handled properly
-- [ ] Network connectivity loss handled gracefully
-- [ ] Storage full scenario handled
-- [ ] Parental controls respected
-- [ ] Platform-specific achievement/trophy integration tested
-- [ ] First-party certification submission prepared
+## The Checklist
+
+Run through each section systematically. Any failure blocks the release.
+
+### 1. Code Completeness
+
+```bash
+# Search for incomplete code markers
+grep -r "TODO\|FIXME\|XXX\|HACK\|WIP" --include="*.ts" --include="*.js" --include="*.py" --include="*.go" --include="*.rs" --include="*.rb" --include="*.ex" src/
 ```
 
-**For `mobile`:**
-```markdown
-### Platform Requirements: Mobile
-- [ ] App store guidelines compliance verified
-- [ ] All required device permissions justified and documented
-- [ ] Privacy policy linked and accurate
-- [ ] Data safety/nutrition labels completed
-- [ ] Touch controls tested on multiple screen sizes
-- [ ] Battery usage within acceptable range
-- [ ] Background behavior correct (pause, resume, terminate)
-- [ ] Push notification permissions handled correctly
-- [ ] In-app purchase flow tested (if applicable)
-- [ ] App size within store limits
+- [ ] No TODO comments remain
+- [ ] No FIXME markers
+- [ ] No HACK or XXX notes
+- [ ] No WIP (work in progress) code
+- [ ] No placeholder implementations (`throw new Error('Not implemented')`)
+- [ ] No commented-out code that should be removed
+
+### 2. Debug Code Removed
+
+```bash
+# Search for debug statements
+grep -rn "console\.log\|print(\|debugger\|binding\.pry\|byebug\|IEx\.pry" --include="*.ts" --include="*.js" --include="*.py" --include="*.rb" --include="*.ex" src/
 ```
 
-**Store and launch sections (all platforms):**
-```markdown
-### Store / Distribution
-- [ ] Store page metadata complete and proofread
-  - [ ] Short description
-  - [ ] Long description
-  - [ ] Feature list
-  - [ ] System requirements (PC)
-- [ ] Screenshots up to date and per-platform resolution requirements met
-- [ ] Trailers up to date
-- [ ] Key art and capsule images current
-- [ ] Age rating obtained and configured:
-  - [ ] ESRB
-  - [ ] PEGI
-  - [ ] Other regional ratings as required
-- [ ] Legal notices, EULA, and privacy policy in place
-- [ ] Third-party license attributions complete
-- [ ] Pricing configured for all regions
+- [ ] No `console.log` in production code (logging libraries OK)
+- [ ] No `print()` statements (Python)
+- [ ] No `debugger` statements
+- [ ] No `binding.pry` / `byebug` (Ruby)
+- [ ] No `IEx.pry` (Elixir)
+- [ ] No hardcoded test data or mock values
 
-### Launch Readiness
-- [ ] Analytics / telemetry verified and receiving data
-- [ ] Crash reporting configured and dashboard accessible
-- [ ] Day-one patch prepared and tested (if needed)
-- [ ] On-call team schedule set for first 72 hours
-- [ ] Community launch announcements drafted
-- [ ] Press/influencer keys prepared for distribution
-- [ ] Support team briefed on known issues and FAQ
-- [ ] Rollback plan documented (if critical issues found post-launch)
+### 3. Documentation Updated
 
-### Go / No-Go: [READY / NOT READY]
+- [ ] README reflects current functionality
+- [ ] API documentation matches implementation
+- [ ] CHANGELOG has entries for all changes
+- [ ] Configuration options documented
+- [ ] Breaking changes clearly noted
+- [ ] Migration guide if needed
 
-**Rationale:**
-[Summary of readiness assessment. List any blocking items that must be
-resolved before launch. If NOT READY, list the specific items that need
-resolution and estimated time to address them.]
+### 4. Tests Passing
 
-**Sign-offs Required:**
-- [ ] QA Lead
-- [ ] Technical Director
-- [ ] Producer
-- [ ] Creative Director
+Run all test commands from CLAUDE.md:
+
+```bash
+# Example - adapt to your project
+npm test        # or pytest, go test, etc.
+npm run lint    # or ruff, golangci-lint, etc.
+npm run typecheck  # or mypy, tsc, etc.
+npm run build   # verify it compiles
 ```
 
----
+- [ ] All unit tests pass
+- [ ] All integration tests pass
+- [ ] Lint checks pass (no errors)
+- [ ] Type checks pass (no errors)
+- [ ] Build succeeds
 
-## Phase 5: Save Checklist
+### 5. Dependencies Justified
 
-Present the checklist to the user with: total checklist items, number of known blockers (FIXME/HACK counts, known bugs).
+For any new dependencies added:
 
-Ask: "May I write this to `production/releases/release-checklist-[version].md`?"
+- [ ] Each dependency has a clear reason for inclusion
+- [ ] Licenses are compatible (MIT, Apache, BSD, etc.)
+- [ ] Packages are actively maintained
+- [ ] No known security vulnerabilities
+- [ ] Versions are pinned appropriately
+- [ ] Lockfile is committed
 
-If yes, write the file, creating the directory if needed.
+```bash
+# Check for outdated or vulnerable packages
+npm audit       # Node.js
+pip-audit       # Python
+go list -m -u all  # Go
+cargo audit     # Rust
+bundle audit    # Ruby
+mix deps.audit  # Elixir (with mix_audit)
+```
 
----
+### 6. Security Review
 
-## Phase 6: Next Steps
+- [ ] No hardcoded secrets, keys, or tokens
+- [ ] Input validation on all external data
+- [ ] SQL queries use parameterized statements
+- [ ] User content is escaped before rendering
+- [ ] Authentication/authorization enforced
+- [ ] Sensitive data not logged
+- [ ] Error messages don't leak internals
 
-- Run `/gate-check` for a formal phase gate verdict before proceeding to release.
-- Coordinate final sign-offs via `/team-release`.
+### 7. Production Readiness
+
+- [ ] Structured logging (not print statements)
+- [ ] Errors categorized appropriately
+- [ ] Health check endpoint works (if applicable)
+- [ ] Graceful shutdown handling
+- [ ] Environment-specific config externalized
+- [ ] No hardcoded URLs or environment assumptions
+
+## Output Format
+
+```markdown
+## Release Checklist Results
+
+### Passed
+- [x] No TODO/FIXME markers
+- [x] No debug statements
+- [x] Tests passing
+- [x] Lint passing
+- [x] Build succeeds
+
+### Failed
+- [ ] CHANGELOG not updated (missing entry for new auth feature)
+- [ ] Found console.log at src/api/users.ts:45
+
+### Warnings
+- [ ] New dependency 'lodash' added - verify it's needed (could use native methods)
+
+### Verdict
+**BLOCKED** - Fix the failures above before releasing.
+```
+
+## When to Use
+
+- Before merging a feature branch
+- Before cutting a release tag
+- Before deploying to production
+- As the final step in a wiggum loop
+
+## Integration with Wiggum
+
+When used as part of a wiggum loop, this checklist runs during Phase 5 (Final Verification). All items must pass before the loop can complete.
+
+## Remember
+
+This checklist exists because senior developers do these checks naturally. Making them explicit ensures nothing slips through, especially in automated workflows.
+
+**If any item fails, the release is blocked.** Fix the issue and run the checklist again.

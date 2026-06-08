@@ -1,6 +1,6 @@
 ---
 name: pre-write-checklist
-description: "Activates automatically before chapter writing to enforce the 9-item mandatory file reading checklist - prevents AI focus degradation in long-form fiction by ensuring all context is loaded before each writing session"
+description: "在章节写作前自动激活，强制执行9项必读文件检查清单 - 通过确保每次写作前加载所有上下文来防止AI在长篇小说中的焦点退化"
 allowed-tools: Read, Grep
 ---
 
@@ -13,6 +13,7 @@ allowed-tools: Read, Grep
 ### 问题根源
 
 用户反馈：使用novel-writer创作，前30章质量很好，但30章后AI开始：
+
 - 忘记前文设定
 - 角色性格不一致
 - 情节重复或矛盾
@@ -35,9 +36,9 @@ allowed-tools: Read, Grep
 
 ✓ 1. memory/constitution.md - 创作宪法
 ✓ 2. memory/style-reference.md - 风格参考（如有）
-✓ 3. stories/*/specification.md - 故事规格
-✓ 4. stories/*/creative-plan.md - 创作计划
-✓ 5. stories/*/tasks.md - 当前任务
+✓ 3. stories/_/specification.md - 故事规格
+✓ 4. stories/_/creative-plan.md - 创作计划
+✓ 5. stories/\*/tasks.md - 当前任务
 ✓ 6. spec/tracking/character-state.json - 角色状态
 ✓ 7. spec/tracking/relationships.json - 关系网络
 ✓ 8. spec/tracking/plot-tracker.json - 情节追踪（如有）
@@ -107,34 +108,34 @@ allowed-tools: Read, Grep
 📋 写作前检查清单（已完成）：
 
 ✓ 1. memory/constitution.md - 创作宪法
-   → 核心原则：[列出2-3条关键原则]
+→ 核心原则：[列出2-3条关键原则]
 
 ✓ 2. memory/style-reference.md - 风格参考
-   → 风格要点：[提取关键风格要求]
+→ 风格要点：[提取关键风格要求]
 
 ✓ 3. stories/xxx/specification.md - 故事规格
-   → 故事类型：[言情/悬疑/历史等]
-   → P0元素：[必须包含的元素]
+→ 故事类型：[言情/悬疑/历史等]
+→ P0元素：[必须包含的元素]
 
 ✓ 4. stories/xxx/creative-plan.md - 创作计划
-   → 当前阶段：[第X卷/第X章]
-   → 本章目标：[情节/情感目标]
+→ 当前阶段：[第X卷/第X章]
+→ 本章目标：[情节/情感目标]
 
 ✓ 5. stories/xxx/tasks.md - 当前任务
-   → 待写章节：[第X章]
-   → 任务状态：[pending/in_progress]
+→ 待写章节：[第X章]
+→ 任务状态：[pending/in_progress]
 
 ✓ 6. spec/tracking/character-state.json - 角色状态
-   → 主要角色：[列出角色名和当前状态]
+→ 主要角色：[列出角色名和当前状态]
 
 ✓ 7. spec/tracking/relationships.json - 关系网络
-   → 核心关系：[主角与谁的关系变化]
+→ 核心关系：[主角与谁的关系变化]
 
 ✓ 8. spec/tracking/plot-tracker.json - 情节追踪
-   → 活跃线索：[当前进行中的情节线]
+→ 活跃线索：[当前进行中的情节线]
 
 ✓ 9. spec/tracking/validation-rules.json - 验证规则
-   → 自动修复：[启用/禁用]
+→ 自动修复：[启用/禁用]
 
 📊 上下文加载状态：✅ 完成（加载9个文件，约XXXX tokens）
 
@@ -175,6 +176,7 @@ allowed-tools: Read, Grep
 ⛔ 错误：缺少必需文件，无法继续写作
 
 必须先完成：
+
 1. 运行 `/constitution` 创建创作宪法
 2. 运行 `/specify` 定义故事规格
 3. 运行 `/plan` 制定创作计划
@@ -238,6 +240,7 @@ allowed-tools: Read, Grep
 ```
 
 **逻辑**：没有这些文件，AI不知道：
+
 - 要遵循什么原则
 - 故事是关于什么的
 - 当前写到哪里了
@@ -252,6 +255,7 @@ allowed-tools: Read, Grep
 ```
 
 **逻辑**：这些文件增强质量，但不是最低要求：
+
 - style-reference：某些用户不用/book-internalize
 - plot-tracker：简单故事可能不需要
 - validation-rules：非必需的自动化
@@ -293,12 +297,12 @@ allowed-tools: Read, Grep
 
 ### 效果对比
 
-| 对比维度 | 无检查清单 | 有检查清单 |
-|---------|----------|----------|
-| 第1-10章 | ✓ 质量好 | ✓ 质量好 |
+| 对比维度  | 无检查清单    | 有检查清单 |
+| --------- | ------------- | ---------- |
+| 第1-10章  | ✓ 质量好      | ✓ 质量好   |
 | 第11-30章 | ⚠️ 开始不稳定 | ✓ 保持稳定 |
-| 第31-50章 | ❌ 明显失焦 | ✓ 依然稳定 |
-| 第51+章 | ❌ 严重失焦 | ✓ 长期稳定 |
+| 第31-50章 | ❌ 明显失焦   | ✓ 依然稳定 |
+| 第51+章   | ❌ 严重失焦   | ✓ 长期稳定 |
 
 ---
 
@@ -307,12 +311,14 @@ allowed-tools: Read, Grep
 ### 调整严格度
 
 **默认：严格模式**（推荐）
+
 ```
 "使用严格检查清单模式"
 → 缺少必需文件则阻止写作
 ```
 
 **宽松模式**（不推荐）
+
 ```
 "使用宽松检查清单模式"
 → 允许跳过部分文件（不推荐，可能失焦）
@@ -373,11 +379,13 @@ allowed-tools: Read, Grep
 ### Q: 每次写作都要读这么多文件，会不会很慢？
 
 **A**: 不会。
+
 - 文件读取很快（毫秒级）
 - token消耗合理（~1700 tokens）
 - 换来的是长期质量保证
 
 **对比**：
+
 - 不用检查清单：第30章质量差 → 用户要求重写10章 → 浪费数万tokens
 - 用检查清单：每章+1700 tokens → 50章也只+85000 tokens → 但质量稳定
 

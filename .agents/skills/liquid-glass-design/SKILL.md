@@ -1,279 +1,971 @@
 ---
 name: liquid-glass-design
-description: iOS 26 Liquid Glass design system — dynamic glass material with blur, reflection, and interactive morphing for SwiftUI, UIKit, and WidgetKit.
+description: iOS 26/macOS 26 Liquid Glass design system with complete API coverage. Use when user asks about iOS 26 design, Liquid Glass, glassEffect modifier, GlassEffectContainer, morphing animations, HIG compliance, visual styling, or the new Apple design language.
+allowed-tools: Bash, Read, Write, Edit
 ---
 
-# Liquid Glass Design System (iOS 26)
+# Liquid Glass Design System
 
-Patterns for implementing Apple's Liquid Glass — a dynamic material that blurs content behind it, reflects color and light from surrounding content, and reacts to touch and pointer interactions. Covers SwiftUI, UIKit, and WidgetKit integration.
+Comprehensive guide to iOS 26 and macOS Tahoe's revolutionary Liquid Glass design system, including complete SwiftUI API coverage, Human Interface Guidelines, morphing animations, and implementation best practices.
 
-## When to Activate
+## Prerequisites
 
-- Building or updating apps for iOS 26+ with the new design language
-- Implementing glass-style buttons, cards, toolbars, or containers
-- Creating morphing transitions between glass elements
-- Applying Liquid Glass effects to widgets
-- Migrating existing blur/material effects to the new Liquid Glass API
+- Xcode 26+
+- iOS 26 / macOS Tahoe deployment target
+- SwiftUI framework
 
-## Core Pattern — SwiftUI
+---
 
-### Basic Glass Effect
+## Overview
 
-The simplest way to add Liquid Glass to any view:
+Liquid Glass is Apple's new design language introduced at WWDC 2025. It creates a lightweight, dynamic material that:
 
-```swift
-Text("Hello, World!")
-    .font(.title)
-    .padding()
-    .glassEffect()  // Default: regular variant, capsule shape
+- **Bends light** in real-time (lensing effect)
+- **Responds to motion** with specular highlights
+- **Adapts** to content behind it
+- **Morphs** between states fluidly
+- **Respects accessibility** settings automatically
+
+### Design Philosophy
+
+Liquid Glass establishes a clear **visual hierarchy**:
+1. **Content Layer** - Your app's main content sits at the bottom
+2. **Navigation Layer** - Glass controls float above content
+
+> **Key Principle**: Reserve glass for navigation and controls, NOT for content.
+
+---
+
+## Material Properties
+
+### Light Behavior
+
+```
+┌─────────────────────────────────────┐
+│  Liquid Glass Material Properties   │
+├─────────────────────────────────────┤
+│  • Translucency with depth          │
+│  • Real-time light refraction       │
+│  • Specular highlights on motion    │
+│  • Adaptive shadows                 │
+│  • Color informed by backdrop       │
+│  • Light/dark environment aware     │
+└─────────────────────────────────────┘
 ```
 
-### Customizing Shape and Tint
+### Visual Characteristics
+
+- **Lensing**: Content behind glass appears subtly magnified/distorted
+- **Specular Highlights**: Bright spots that respond to device tilt
+- **Adaptive Tint**: Glass picks up colors from underlying content
+- **Depth**: Material has apparent thickness and dimension
+
+---
+
+## Glass Variants
+
+### Regular Glass (Default)
+
+The versatile, adaptive variant. Use for most UI elements.
 
 ```swift
-Text("Hello, World!")
-    .font(.title)
-    .padding()
-    .glassEffect(.regular.tint(.orange).interactive(), in: .rect(cornerRadius: 16.0))
-```
-
-Key customization options:
-- `.regular` — standard glass effect
-- `.tint(Color)` — add color tint for prominence
-- `.interactive()` — react to touch and pointer interactions
-- Shape: `.capsule` (default), `.rect(cornerRadius:)`, `.circle`
-
-### Glass Button Styles
-
-```swift
-Button("Click Me") { /* action */ }
-    .buttonStyle(.glass)
-
-Button("Important") { /* action */ }
-    .buttonStyle(.glassProminent)
-```
-
-### GlassEffectContainer for Multiple Elements
-
-Always wrap multiple glass views in a container for performance and morphing:
-
-```swift
-GlassEffectContainer(spacing: 40.0) {
-    HStack(spacing: 40.0) {
-        Image(systemName: "scribble.variable")
-            .frame(width: 80.0, height: 80.0)
-            .font(.system(size: 36))
-            .glassEffect()
-
-        Image(systemName: "eraser.fill")
-            .frame(width: 80.0, height: 80.0)
-            .font(.system(size: 36))
-            .glassEffect()
-    }
-}
-```
-
-The `spacing` parameter controls merge distance — closer elements blend their glass shapes together.
-
-### Uniting Glass Effects
-
-Combine multiple views into a single glass shape with `glassEffectUnion`:
-
-```swift
-@Namespace private var namespace
-
-GlassEffectContainer(spacing: 20.0) {
-    HStack(spacing: 20.0) {
-        ForEach(symbolSet.indices, id: \.self) { item in
-            Image(systemName: symbolSet[item])
-                .frame(width: 80.0, height: 80.0)
-                .glassEffect()
-                .glassEffectUnion(id: item < 2 ? "group1" : "group2", namespace: namespace)
-        }
-    }
-}
-```
-
-### Morphing Transitions
-
-Create smooth morphing when glass elements appear/disappear:
-
-```swift
-@State private var isExpanded = false
-@Namespace private var namespace
-
-GlassEffectContainer(spacing: 40.0) {
-    HStack(spacing: 40.0) {
-        Image(systemName: "scribble.variable")
-            .frame(width: 80.0, height: 80.0)
-            .glassEffect()
-            .glassEffectID("pencil", in: namespace)
-
-        if isExpanded {
-            Image(systemName: "eraser.fill")
-                .frame(width: 80.0, height: 80.0)
-                .glassEffect()
-                .glassEffectID("eraser", in: namespace)
-        }
-    }
-}
-
-Button("Toggle") {
-    withAnimation { isExpanded.toggle() }
+Button("Action") {
+    performAction()
 }
 .buttonStyle(.glass)
 ```
 
-### Extending Horizontal Scrolling Under Sidebar
+**Characteristics:**
+- Adapts to light/dark mode automatically
+- Picks up underlying content colors
+- Standard blur and translucency
+- Best for most use cases
 
-To allow horizontal scroll content to extend under a sidebar or inspector, ensure the `ScrollView` content reaches the leading/trailing edges of the container. The system automatically handles the under-sidebar scrolling behavior when the layout extends to the edges — no additional modifier is needed.
+### Clear Glass
 
-## Core Pattern — UIKit
-
-### Basic UIGlassEffect
+Permanently transparent variant with minimal visual impact.
 
 ```swift
-let glassEffect = UIGlassEffect()
-glassEffect.tintColor = UIColor.systemBlue.withAlphaComponent(0.3)
-glassEffect.isInteractive = true
-
-let visualEffectView = UIVisualEffectView(effect: glassEffect)
-visualEffectView.translatesAutoresizingMaskIntoConstraints = false
-visualEffectView.layer.cornerRadius = 20
-visualEffectView.clipsToBounds = true
-
-view.addSubview(visualEffectView)
-NSLayoutConstraint.activate([
-    visualEffectView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-    visualEffectView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-    visualEffectView.widthAnchor.constraint(equalToConstant: 200),
-    visualEffectView.heightAnchor.constraint(equalToConstant: 120)
-])
-
-// Add content to contentView
-let label = UILabel()
-label.text = "Liquid Glass"
-label.translatesAutoresizingMaskIntoConstraints = false
-visualEffectView.contentView.addSubview(label)
-NSLayoutConstraint.activate([
-    label.centerXAnchor.constraint(equalTo: visualEffectView.contentView.centerXAnchor),
-    label.centerYAnchor.constraint(equalTo: visualEffectView.contentView.centerYAnchor)
-])
+Button("Subtle Action") {
+    performAction()
+}
+.buttonStyle(.glassClear)
 ```
 
-### UIGlassContainerEffect for Multiple Elements
+**Characteristics:**
+- Higher transparency
+- Requires background dimming for contrast
+- Use when content visibility is paramount
+- Less prominent than regular glass
+
+### Identity Glass
+
+No glass effect applied. Use for comparisons or opt-out.
 
 ```swift
-let containerEffect = UIGlassContainerEffect()
-containerEffect.spacing = 40.0
-
-let containerView = UIVisualEffectView(effect: containerEffect)
-
-let firstGlass = UIVisualEffectView(effect: UIGlassEffect())
-let secondGlass = UIVisualEffectView(effect: UIGlassEffect())
-
-containerView.contentView.addSubview(firstGlass)
-containerView.contentView.addSubview(secondGlass)
+.glassEffect(.identity)
 ```
 
-### Scroll Edge Effects
+---
+
+## Critical Design Rule
+
+> **NEVER mix Regular and Clear glass variants in the same interface.**
+
+This creates visual inconsistency and violates HIG principles.
 
 ```swift
-scrollView.topEdgeEffect.style = .automatic
-scrollView.bottomEdgeEffect.style = .hard
-scrollView.leftEdgeEffect.isHidden = true
+// WRONG - Mixed variants
+HStack {
+    Button("Save") { }
+        .buttonStyle(.glass)        // Regular
+    Button("Cancel") { }
+        .buttonStyle(.glassClear)   // Clear - DON'T MIX
+}
+
+// CORRECT - Consistent variant
+HStack {
+    Button("Save") { }
+        .buttonStyle(.glass)
+    Button("Cancel") { }
+        .buttonStyle(.glass)
+}
 ```
 
-### Toolbar Glass Integration
+---
+
+## SwiftUI API Reference
+
+### Basic Glass Effect
 
 ```swift
-let favoriteButton = UIBarButtonItem(image: UIImage(systemName: "heart"), style: .plain, target: self, action: #selector(favoriteAction))
-favoriteButton.hidesSharedBackground = true  // Opt out of shared glass background
+// Simple glass effect with default shape
+View()
+    .glassEffect()
+
+// Glass with specific shape
+View()
+    .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+
+// Glass with variant and shape
+View()
+    .glassEffect(.regular, in: Capsule())
+
+// Conditional glass
+View()
+    .glassEffect(in: Circle(), isEnabled: showGlass)
 ```
 
-## Core Pattern — WidgetKit
-
-### Rendering Mode Detection
+### Glass Effect Signature
 
 ```swift
-struct MyWidgetView: View {
-    @Environment(\.widgetRenderingMode) var renderingMode
+func glassEffect(
+    _ glass: Glass = .regular,
+    in shape: some Shape = .rect,
+    isEnabled: Bool = true
+) -> some View
+```
+
+### Glass Enum
+
+```swift
+enum Glass {
+    case regular      // Adaptive, versatile (default)
+    case clear        // High transparency
+    case identity     // No effect
+}
+```
+
+---
+
+## Glass Effect Modifiers
+
+### Tint
+
+Add color tint to glass elements:
+
+```swift
+Button("Tinted") { }
+    .buttonStyle(.glass)
+    .tint(.blue)
+
+// Or with glass directly
+View()
+    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+    .tint(.green)
+```
+
+### Interactive
+
+Enable interactive behaviors for glass:
+
+```swift
+View()
+    .glassEffect(.regular.interactive(), in: Capsule())
+```
+
+### Button Styles
+
+```swift
+// Standard glass button
+Button("Glass") { }
+    .buttonStyle(.glass)
+
+// Prominent glass button (more opaque)
+Button("Prominent") { }
+    .buttonStyle(.glassProminent)
+
+// Borderless glass
+Button("Borderless") { }
+    .buttonStyle(.glassBorderless)
+```
+
+---
+
+## GlassEffectContainer
+
+`GlassEffectContainer` combines multiple glass shapes into a single morphable unit with shared visual properties.
+
+### Basic Usage
+
+```swift
+GlassEffectContainer {
+    HStack {
+        Button("First") { }
+            .glassEffect(in: Capsule())
+
+        Button("Second") { }
+            .glassEffect(in: Capsule())
+
+        Button("Third") { }
+            .glassEffect(in: Capsule())
+    }
+}
+```
+
+### Spacing Parameter
+
+The `spacing` parameter controls the threshold distance for morphing:
+
+```swift
+// Buttons close together will merge
+GlassEffectContainer(spacing: 8) {
+    HStack(spacing: 4) {  // Less than container spacing
+        Button("A") { }
+            .glassEffect(in: Capsule())
+        Button("B") { }
+            .glassEffect(in: Capsule())
+    }
+    // These buttons will visually merge into one glass shape
+}
+
+// Buttons far apart stay separate
+GlassEffectContainer(spacing: 8) {
+    HStack(spacing: 20) {  // Greater than container spacing
+        Button("A") { }
+            .glassEffect(in: Capsule())
+        Button("B") { }
+            .glassEffect(in: Capsule())
+    }
+    // These buttons maintain individual glass shapes
+}
+```
+
+### Container Benefits
+
+When views are inside a `GlassEffectContainer`:
+
+1. **Automatic Blending** - Overlapping shapes blend seamlessly
+2. **Consistent Effects** - Shared blur and lighting
+3. **Morphing Transitions** - Smooth animations between states
+4. **Performance** - Optimized rendering for multiple glass elements
+
+### Container Example: Expandable Menu
+
+```swift
+struct ExpandableMenu: View {
+    @State private var isExpanded = false
+    @Namespace private var animation
 
     var body: some View {
-        if renderingMode == .accented {
-            // Tinted mode: white-tinted, themed glass background
-        } else {
-            // Full color mode: standard appearance
+        GlassEffectContainer {
+            if isExpanded {
+                VStack {
+                    Button("Option 1") { }
+                        .glassEffect(in: Capsule())
+                        .glassEffectID("menu", in: animation)
+
+                    Button("Option 2") { }
+                        .glassEffect(in: Capsule())
+
+                    Button("Option 3") { }
+                        .glassEffect(in: Capsule())
+                }
+            } else {
+                Button("Menu") {
+                    withAnimation(.spring) {
+                        isExpanded.toggle()
+                    }
+                }
+                .glassEffect(in: Capsule())
+                .glassEffectID("menu", in: animation)
+            }
         }
     }
 }
 ```
 
-### Accent Groups for Visual Hierarchy
+---
+
+## Morphing Animations
+
+### Glass Effect ID
+
+Link glass elements across states for fluid morphing:
 
 ```swift
+@Namespace private var animation
+
+// Source state
+Button("Collapsed") { }
+    .glassEffect(in: Capsule())
+    .glassEffectID("button", in: animation)
+
+// Expanded state
 HStack {
-    VStack(alignment: .leading) {
-        Text("Title")
-            .widgetAccentable()  // Accent group
-        Text("Subtitle")
-            // Primary group (default)
-    }
-    Image(systemName: "star.fill")
-        .widgetAccentable()  // Accent group
+    Button("Edit") { }
+        .glassEffect(in: Capsule())
+        .glassEffectID("button", in: animation)  // Same ID = morph
+
+    Button("Delete") { }
+        .glassEffect(in: Capsule())
 }
 ```
 
-### Image Rendering in Accented Mode
+### Glass Effect Union
+
+Combine multiple glass shapes into one:
 
 ```swift
-Image("myImage")
-    .widgetAccentedRenderingMode(.monochrome)
-```
-
-### Container Background
-
-```swift
-VStack { /* content */ }
-    .containerBackground(for: .widget) {
-        Color.blue.opacity(0.2)
+GlassEffectContainer {
+    ForEach(items) { item in
+        ItemView(item: item)
+            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+            .glassEffectUnion(id: "group", namespace: animation)
     }
+}
 ```
 
-## Key Design Decisions
+### Glass Effect Transition
 
-| Decision | Rationale |
-|----------|-----------|
-| GlassEffectContainer wrapping | Performance optimization, enables morphing between glass elements |
-| `spacing` parameter | Controls merge distance — fine-tune how close elements must be to blend |
-| `@Namespace` + `glassEffectID` | Enables smooth morphing transitions on view hierarchy changes |
-| `interactive()` modifier | Explicit opt-in for touch/pointer reactions — not all glass should respond |
-| UIGlassContainerEffect in UIKit | Same container pattern as SwiftUI for consistency |
-| Accented rendering mode in widgets | System applies tinted glass when user selects tinted Home Screen |
+Control how glass appears/disappears:
+
+```swift
+View()
+    .glassEffect(in: Capsule())
+    .glassEffectTransition(.scale, isEnabled: true)
+
+// Transition types
+.glassEffectTransition(.opacity)
+.glassEffectTransition(.scale)
+.glassEffectTransition(.slide)
+.glassEffectTransition(.identity)  // No transition
+```
+
+### Complete Morphing Example
+
+```swift
+struct MorphingToolbar: View {
+    @State private var mode: Mode = .browse
+    @Namespace private var morphing
+
+    enum Mode {
+        case browse, edit, select
+    }
+
+    var body: some View {
+        GlassEffectContainer {
+            switch mode {
+            case .browse:
+                HStack {
+                    Button("Edit") {
+                        withAnimation(.spring(duration: 0.4)) {
+                            mode = .edit
+                        }
+                    }
+                    .glassEffect(in: Capsule())
+                    .glassEffectID("primary", in: morphing)
+                }
+
+            case .edit:
+                HStack {
+                    Button("Done") {
+                        withAnimation(.spring(duration: 0.4)) {
+                            mode = .browse
+                        }
+                    }
+                    .glassEffect(in: Capsule())
+                    .glassEffectID("primary", in: morphing)
+
+                    Button("Select All") { }
+                        .glassEffect(in: Capsule())
+                        .glassEffectTransition(.scale)
+                }
+
+            case .select:
+                HStack {
+                    Button("Cancel") {
+                        withAnimation(.spring(duration: 0.4)) {
+                            mode = .browse
+                        }
+                    }
+                    .glassEffect(in: Capsule())
+                    .glassEffectID("primary", in: morphing)
+
+                    Spacer()
+
+                    Button("Delete") { }
+                        .glassEffect(in: Capsule())
+                        .tint(.red)
+                }
+            }
+        }
+        .padding()
+    }
+}
+```
+
+---
+
+## Known Issues
+
+### iOS 26.1: Menu in GlassEffectContainer
+
+> **Bug**: Placing a `Menu` inside a `GlassEffectContainer` breaks morphing animations.
+
+```swift
+// AVOID in iOS 26.1
+GlassEffectContainer {
+    Menu("Options") {  // This breaks morphing
+        Button("Edit") { }
+        Button("Delete") { }
+    }
+    .glassEffect(in: Capsule())
+}
+
+// WORKAROUND: Move Menu outside container
+VStack {
+    Menu("Options") {
+        Button("Edit") { }
+        Button("Delete") { }
+    }
+    .buttonStyle(.glass)
+
+    GlassEffectContainer {
+        // Other morphing content
+    }
+}
+```
+
+---
+
+## Toolbar Integration
+
+### Glass Toolbars
+
+Toolbars automatically adopt Liquid Glass in iOS 26:
+
+```swift
+struct ContentView: View {
+    var body: some View {
+        NavigationStack {
+            ContentList()
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Add", systemImage: "plus") {
+                            addItem()
+                        }
+                    }
+
+                    ToolbarSpacer(.fixed)  // NEW: Group related items
+
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button("Edit") {
+                            editMode.toggle()
+                        }
+                    }
+                }
+        }
+    }
+}
+```
+
+### Toolbar Spacer
+
+New in iOS 26 for grouping toolbar items:
+
+```swift
+.toolbar {
+    // Group 1
+    ToolbarItem(placement: .primaryAction) {
+        Button("Save") { }
+    }
+
+    ToolbarSpacer(.fixed)  // Creates visual separation
+
+    // Group 2
+    ToolbarItem(placement: .secondaryAction) {
+        Button("Share") { }
+    }
+    ToolbarItem(placement: .secondaryAction) {
+        Button("Delete") { }
+    }
+}
+```
+
+### Close Button Role
+
+New button role for dismiss actions with glass X styling:
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .cancellationAction) {
+        Button("Close", role: .close) {
+            dismiss()
+        }
+        // Automatically renders as glass X button
+    }
+}
+```
+
+### Toolbar Glass Visibility
+
+Control glass background visibility:
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .primaryAction) {
+        Button("Action") { }
+    }
+}
+.toolbarBackgroundVisibility(.visible, for: .navigationBar)
+// Options: .automatic, .visible, .hidden
+```
+
+---
+
+## Navigation with Glass
+
+### Navigation Bar
+
+```swift
+NavigationStack {
+    ContentView()
+        .navigationTitle("My App")
+        .navigationBarTitleDisplayMode(.large)
+        // Glass navigation bar is automatic in iOS 26
+}
+```
+
+### Tab Bar
+
+```swift
+TabView {
+    HomeView()
+        .tabItem {
+            Label("Home", systemImage: "house")
+        }
+
+    SearchView()
+        .tabItem {
+            Label("Search", systemImage: "magnifyingglass")
+        }
+        .tab(role: .search)  // NEW: Search morphs into field
+}
+// Glass tab bar is automatic
+```
+
+### Split View
+
+```swift
+NavigationSplitView {
+    Sidebar()
+} content: {
+    ContentList()
+} detail: {
+    DetailView()
+}
+// Glass adapts to column visibility
+```
+
+---
+
+## Accessibility
+
+Liquid Glass **automatically** respects accessibility settings:
+
+### Reduce Transparency
+
+When enabled:
+- Glass becomes more opaque/frosty
+- Background content is more obscured
+- Better contrast for readability
+
+```swift
+// Check setting in code if needed
+@Environment(\.accessibilityReduceTransparency) var reduceTransparency
+
+var body: some View {
+    if reduceTransparency {
+        // Provide alternative styling if needed
+    }
+}
+```
+
+### Increase Contrast
+
+When enabled:
+- Glass shifts to predominantly black/white
+- Borders become more prominent
+- Higher contrast ratios
+
+```swift
+@Environment(\.colorSchemeContrast) var contrast
+
+var body: some View {
+    if contrast == .increased {
+        // Adjust colors for higher contrast
+    }
+}
+```
+
+### Reduce Motion
+
+When enabled:
+- Morphing animations are subdued
+- Transitions are shorter/simpler
+- Less visual movement
+
+```swift
+@Environment(\.accessibilityReduceMotion) var reduceMotion
+
+var body: some View {
+    withAnimation(reduceMotion ? .none : .spring) {
+        // Animation
+    }
+}
+```
+
+---
+
+## UIKit/AppKit Integration
+
+### Scene Bridging
+
+Bring SwiftUI glass into UIKit apps:
+
+```swift
+class ViewController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        let swiftUIView = GlassButtonView()
+        let hostingController = UIHostingController(rootView: swiftUIView)
+
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.didMove(toParent: self)
+    }
+}
+
+struct GlassButtonView: View {
+    var body: some View {
+        Button("SwiftUI Glass") { }
+            .buttonStyle(.glass)
+    }
+}
+```
+
+### UIViewControllerRepresentable
+
+Wrap UIKit in SwiftUI with glass:
+
+```swift
+struct LegacyViewWrapper: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> LegacyViewController {
+        LegacyViewController()
+    }
+
+    func updateUIViewController(_ vc: LegacyViewController, context: Context) {}
+}
+
+// Usage with glass overlay
+struct ContentView: View {
+    var body: some View {
+        ZStack {
+            LegacyViewWrapper()
+
+            VStack {
+                Spacer()
+                HStack {
+                    Button("Control") { }
+                        .buttonStyle(.glass)
+                }
+                .padding()
+            }
+        }
+    }
+}
+```
+
+---
+
+## App Icon Guidelines
+
+### Redesigning for Liquid Glass
+
+iOS 26 introduces new icon aesthetics:
+
+1. **Grid System** - Follow the updated icon grid
+2. **Safe Areas** - Respect new safe margins
+3. **Translucency** - Consider subtle glass effects in icon
+4. **Simplicity** - Reduce complexity for glass aesthetic
+5. **Color** - Use colors that complement glass UI
+
+### Icon Specifications
+
+```
+┌─────────────────────────────────┐
+│     iOS 26 App Icon Grid        │
+│                                 │
+│  ┌─────────────────────────┐   │
+│  │                         │   │
+│  │    Safe Content Area    │   │
+│  │                         │   │
+│  │  ┌─────────────────┐   │   │
+│  │  │                 │   │   │
+│  │  │   Main Element  │   │   │
+│  │  │                 │   │   │
+│  │  └─────────────────┘   │   │
+│  │                         │   │
+│  └─────────────────────────┘   │
+│                                 │
+│  1024x1024 @ 1x                │
+└─────────────────────────────────┘
+```
+
+---
 
 ## Best Practices
 
-- **Always use GlassEffectContainer** when applying glass to multiple sibling views — it enables morphing and improves rendering performance
-- **Apply `.glassEffect()` after** other appearance modifiers (frame, font, padding)
-- **Use `.interactive()`** only on elements that respond to user interaction (buttons, toggleable items)
-- **Choose spacing carefully** in containers to control when glass effects merge
-- **Use `withAnimation`** when changing view hierarchies to enable smooth morphing transitions
-- **Test across appearances** — light mode, dark mode, and accented/tinted modes
-- **Ensure accessibility contrast** — text on glass must remain readable
+### DO
 
-## Anti-Patterns to Avoid
+1. **Use glass for navigation elements** - Toolbars, tab bars, floating buttons
+2. **Keep content behind glass** - Let users see through to their content
+3. **Use morphing for state changes** - Connect related UI with glassEffectID
+4. **Test accessibility** - Verify with Reduce Transparency enabled
+5. **Maintain visual hierarchy** - Glass floats, content grounds
 
-- Using multiple standalone `.glassEffect()` views without a GlassEffectContainer
-- Nesting too many glass effects — degrades performance and visual clarity
-- Applying glass to every view — reserve for interactive elements, toolbars, and cards
-- Forgetting `clipsToBounds = true` in UIKit when using corner radii
-- Ignoring accented rendering mode in widgets — breaks tinted Home Screen appearance
-- Using opaque backgrounds behind glass — defeats the translucency effect
+### DON'T
 
-## When to Use
+1. **Glass on content** - Don't apply glass to cards, lists, text containers
+2. **Mix variants** - Never combine regular and clear glass
+3. **Nest glass** - Avoid glass-on-glass layering
+4. **Overuse morphing** - Reserve for meaningful state transitions
+5. **Ignore accessibility** - Always test with accessibility settings
 
-- Navigation bars, toolbars, and tab bars with the new iOS 26 design
-- Floating action buttons and card-style containers
-- Interactive controls that need visual depth and touch feedback
-- Widgets that should integrate with the system's Liquid Glass appearance
-- Morphing transitions between related UI states
+---
+
+## Complete Example: Glass Interface
+
+```swift
+import SwiftUI
+
+struct GlassInterfaceView: View {
+    @State private var isEditing = false
+    @State private var selectedTab = 0
+    @Namespace private var morphing
+
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            // Home Tab
+            NavigationStack {
+                ScrollView {
+                    ContentGrid()
+                }
+                .navigationTitle("Home")
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        GlassEffectContainer {
+                            if isEditing {
+                                HStack {
+                                    Button("Done") {
+                                        withAnimation(.spring(duration: 0.35)) {
+                                            isEditing = false
+                                        }
+                                    }
+                                    .glassEffect(in: Capsule())
+                                    .glassEffectID("edit", in: morphing)
+
+                                    Button("Select All") { }
+                                        .glassEffect(in: Capsule())
+                                        .glassEffectTransition(.scale)
+                                }
+                            } else {
+                                Button("Edit") {
+                                    withAnimation(.spring(duration: 0.35)) {
+                                        isEditing = true
+                                    }
+                                }
+                                .glassEffect(in: Capsule())
+                                .glassEffectID("edit", in: morphing)
+                            }
+                        }
+                    }
+                }
+            }
+            .tabItem {
+                Label("Home", systemImage: "house")
+            }
+            .tag(0)
+
+            // Search Tab
+            SearchView()
+                .tabItem {
+                    Label("Search", systemImage: "magnifyingglass")
+                }
+                .tab(role: .search)
+                .tag(1)
+
+            // Settings Tab
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tag(2)
+        }
+    }
+}
+
+struct ContentGrid: View {
+    let items = (1...20).map { "Item \($0)" }
+
+    var body: some View {
+        LazyVGrid(columns: [
+            GridItem(.adaptive(minimum: 150))
+        ], spacing: 16) {
+            ForEach(items, id: \.self) { item in
+                ContentCard(title: item)
+            }
+        }
+        .padding()
+    }
+}
+
+struct ContentCard: View {
+    let title: String
+
+    var body: some View {
+        VStack {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.secondary.opacity(0.2))
+                .frame(height: 100)
+
+            Text(title)
+                .font(.headline)
+        }
+        // NO glass on content cards - they're content, not navigation
+        .padding()
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+struct SearchView: View {
+    @State private var query = ""
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(searchResults, id: \.self) { result in
+                    Text(result)
+                }
+            }
+            .navigationTitle("Search")
+            .searchable(text: $query)
+        }
+    }
+
+    var searchResults: [String] {
+        // Filter results based on query
+        []
+    }
+}
+
+struct SettingsView: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Account") {
+                    NavigationLink("Profile") { Text("Profile") }
+                    NavigationLink("Privacy") { Text("Privacy") }
+                }
+
+                Section("App") {
+                    NavigationLink("Appearance") { Text("Appearance") }
+                    NavigationLink("Notifications") { Text("Notifications") }
+                }
+            }
+            .navigationTitle("Settings")
+        }
+    }
+}
+
+#Preview {
+    GlassInterfaceView()
+}
+```
+
+---
+
+## Debugging Glass Effects
+
+### Visual Debugging
+
+```swift
+// Temporarily add borders to see glass boundaries
+View()
+    .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+    .border(.red)  // Debug: see actual frame
+```
+
+### Check Container Scope
+
+```swift
+// Verify GlassEffectContainer is wrapping correctly
+GlassEffectContainer {
+    VStack {
+        // All glass effects here share container
+    }
+}
+.border(.blue)  // Debug: see container bounds
+```
+
+### Animation Debugging
+
+```swift
+// Slow down animations for debugging
+withAnimation(.spring(duration: 2.0)) {  // Slower for inspection
+    state.toggle()
+}
+```
+
+---
+
+## Official Resources
+
+- [Meet Liquid Glass - WWDC25](https://developer.apple.com/videos/play/wwdc2025/219/)
+- [Get to know the new design system - WWDC25](https://developer.apple.com/videos/play/wwdc2025/356/)
+- [Build a SwiftUI app with the new design - WWDC25](https://developer.apple.com/videos/play/wwdc2025/323/)
+- [Applying Liquid Glass to custom views](https://developer.apple.com/documentation/SwiftUI/Applying-Liquid-Glass-to-custom-views)
+- [Human Interface Guidelines - Materials](https://developer.apple.com/design/human-interface-guidelines/materials)

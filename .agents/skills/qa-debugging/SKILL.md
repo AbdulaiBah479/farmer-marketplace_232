@@ -1,6 +1,6 @@
 ---
 name: qa-debugging
-description: "Systematic debugging for crashes, regressions, flakes, and production bugs. Use when diagnosing stack traces, logs, traces, or profiling data."
+description: "Systematic debugging playbook for application errors and incidents: crashes, regressions, intermittent failures, production-only bugs, performance issues, stack traces, log/trace analysis, profiling, and distributed systems root cause analysis."
 ---
 
 # QA Debugging (Jan 2026)
@@ -61,22 +61,6 @@ Prevent:
 | Production-only | Compare configs/data volume/feature flags; use safe observability | Debugging interactively in prod without a plan |
 | Distributed issue | Use end-to-end trace; follow a single request across services | Searching logs without correlation IDs |
 
-## External Input Normalization Boundary (Mandatory)
-
-When debugging failures involving URLs, domains, IDs, or third-party payloads, classify and validate at the earliest boundary before downstream analyzers execute.
-
-### Boundary Protocol
-
-1. Classify input type (`domain`, `display_name`, `uuid`, `slug`, `email`, `free_text`).
-2. Canonicalize using deterministic normalizers.
-3. Reject or skip invalid values with explicit reason codes.
-4. Continue processing valid values; do not fail whole batch on one invalid record.
-5. Log structured skip metrics to prevent silent degradation.
-
-### Why This Is Mandatory
-
-Without boundary normalization, invalid upstream inputs become downstream DNS/HTTP failures that hide the real root cause and waste retries.
-
 ## Production & Incident Safety
 
 - Mitigate first when impact is ongoing (rollback, kill switch, flag off, degrade gracefully).
@@ -92,14 +76,9 @@ Without boundary normalization, invalid upstream inputs become downstream DNS/HT
 | Debugging approaches | Methodologies | `references/debugging-methodologies.md` |
 | What/when to log | Logging guide | `references/logging-best-practices.md` |
 | Safe prod debugging | Production patterns | `references/production-debugging-patterns.md` |
-| Memory leaks | Detection + profiling | `references/memory-leak-detection.md` |
-| Race conditions | Diagnosis + concurrency bugs | `references/race-condition-diagnosis.md` |
-| Distributed debugging | Cross-service RCA | `references/distributed-debugging.md` |
-| Input boundary normalization | Prevent invalid identifiers from propagating downstream | `references/external-input-normalization-boundary.md` |
 | Copy-paste checklist | Debugging checklist | `assets/debugging/template-debugging-checklist.md` |
 | One-page triage | Debugging worksheet | `assets/debugging/template-debugging-worksheet.md` |
 | Incident response | Incident template | `assets/incidents/template-incident-response.md` |
-| Root cause to guardrail | Convert incident findings into concrete prevention actions | `assets/debugging/template-root-cause-to-guardrail.md` |
 | Logging setup examples | Logging template | `assets/observability/template-logging-setup.md` |
 | Curated external links | Sources list | `data/sources.json` |
 
@@ -111,60 +90,3 @@ Without boundary normalization, invalid upstream inputs become downstream DNS/HT
 - `../data-sql-optimization/SKILL.md` (DB performance and query tuning)
 - `../ops-devops-platform/SKILL.md` (infra/CI/CD/incident operations)
 - `../dev-api-design/SKILL.md` (API behavior, contracts, error handling)
-
----
-
-## Operational Addendum (Feb 2026)
-
-### Fast Failure Taxonomy (Default)
-
-Classify every failure first:
-- `path/glob`: missing path, shell expansion, quoting
-- `cli-contract`: invalid flag/unsupported option
-- `baseline`: pre-existing repo failure unrelated to current change
-- `logic`: regression introduced by current edits
-- `env/toolchain`: missing runtime/binary/version mismatch
-
-### Nonzero Exit Handling Standard
-
-On any nonzero command:
-1. Record first failing line.
-2. Classify with taxonomy above.
-3. Choose smallest confirming command.
-4. Retry only after changing one variable (command/path/env/input).
-
-### Path/Glob Guardrail
-
-Before using bracketed/dynamic paths:
-
-```bash
-test -e "<path>" || echo "missing path"
-```
-
-Prefer quoted paths and explicit file discovery:
-
-```bash
-rg --files <root> | rg '<needle>'
-```
-
-### Baseline Noise Control
-
-When broad checks fail due to unrelated baseline issues:
-- isolate task-relevant errors,
-- continue with targeted verification,
-- report baseline errors separately as `pre-existing`.
-
-### Debugging Output Minimum
-
-Every debugging report includes:
-- failure signature,
-- reproduction status,
-- root-cause class,
-- fix verification command,
-- prevention mechanism added.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

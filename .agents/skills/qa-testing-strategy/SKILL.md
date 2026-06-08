@@ -1,6 +1,6 @@
 ---
 name: qa-testing-strategy
-description: Risk-based test strategy for software delivery. Use when defining coverage, setting CI gates, managing flaky tests, or establishing release criteria.
+description: Risk-based quality engineering test strategy for software delivery. Use when defining or updating test strategy, selecting unit/integration/contract/E2E/performance/security coverage, setting CI quality gates and suite budgets, managing flaky tests and test data, and operationalizing observability-first debugging and release criteria.
 ---
 
 # QA Testing Strategy (Jan 2026)
@@ -170,25 +170,6 @@ class LoginPage {
 - Sleeps/time-based waits (use event-based)
 - Coverage % as primary quality KPI
 
-## Feature Matrix vs Test Matrix Gate (Release Blocking)
-
-Before release, run a coverage audit that maps product features/backlog IDs to direct test evidence.
-
-### Gate Rules
-
-- Every release-scoped feature must map to at least one direct automated test, or an explicit waiver with owner/date.
-- Evidence must include file path and test identifier (suite/spec/case).
-- "Covered indirectly" is not accepted without written rationale and risk acknowledgment.
-- If critical features have no direct evidence, release is blocked.
-
-### Minimal Audit Output
-
-- feature/backlog id
-- coverage status (`direct`, `indirect`, `none`)
-- evidence reference
-- risk level
-- owner and due date for gaps
-
 ## Resources
 
 | Resource | Purpose |
@@ -202,10 +183,6 @@ Before release, run a coverage audit that maps product features/backlog IDs to d
 | [observability-driven-testing.md](references/observability-driven-testing.md) | OpenTelemetry, trace-based |
 | [contract-testing-2026.md](references/contract-testing-2026.md) | Pact, Specmatic |
 | [synthetic-test-data.md](references/synthetic-test-data.md) | Privacy-safe, ephemeral test data |
-| [test-environment-management.md](references/test-environment-management.md) | Environment provisioning and lifecycle |
-| [quality-metrics-dashboard.md](references/quality-metrics-dashboard.md) | Quality metrics and dashboards |
-| [compliance-testing.md](references/compliance-testing.md) | SOC2, HIPAA, GDPR, PCI-DSS testing |
-| [feature-matrix-vs-test-matrix-gate.md](references/feature-matrix-vs-test-matrix-gate.md) | Release-blocking feature-to-test coverage audit |
 
 ## Templates
 
@@ -221,7 +198,6 @@ Before release, run a coverage audit that maps product features/backlog IDs to d
 | [template-k6-load-testing.md](assets/performance/template-k6-load-testing.md) | k6 performance |
 | [automation-pipeline-template.md](assets/automation-pipeline-template.md) | CI stages, budgets, gates |
 | [template-cucumber-gherkin.md](assets/bdd/template-cucumber-gherkin.md) | BDD feature files and steps |
-| [template-release-coverage-audit.md](assets/runbooks/template-release-coverage-audit.md) | Feature matrix vs test matrix release audit |
 
 ## Data
 
@@ -235,46 +211,3 @@ Before release, run a coverage audit that maps product features/backlog IDs to d
 - [qa-agent-testing](../qa-agent-testing/SKILL.md) — Testing AI agents
 - [software-backend](../software-backend/SKILL.md) — API patterns to test
 - [ops-devops-platform](../ops-devops-platform/SKILL.md) — CI/CD pipelines
-
-## Ops Gate: Release-Safe Verification Sequence
-
-Use this sequence for feature branches that touch user flows, pricing, localization, or analytics.
-
-```bash
-# 1) Static checks
-npm run lint
-npm run typecheck
-
-# 2) Fast correctness
-npm run test:unit
-
-# 3) Critical path checks
-npm run test:e2e -- --grep "@critical"
-
-# 4) Instrumentation gate (if configured)
-npm run test:analytics-gate
-
-# 5) Production build
-npm run build
-```
-
-### If a Gate Fails
-
-1. Capture exact failing command and first error line.
-2. Classify: environment issue, baseline known failure, or regression.
-3. Re-run only the failed gate once after fix.
-4. Do not continue to later gates while earlier required gates are red.
-
-### Agent Output Contract for QA Handoff
-
-Always report:
-- commands run,
-- pass/fail per gate,
-- whether failures are pre-existing or introduced,
-- next blocking action.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

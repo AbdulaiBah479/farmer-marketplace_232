@@ -1,282 +1,131 @@
 ---
 name: python-best-practices
-description: Pythonic code with modern type hints, dataclasses, async patterns, packaging, and testing
+description: Python 코딩 표준 및 스타일 가이드. 타입 힌트, import 정렬, 예외 처리 등.
 ---
 
 # Python Best Practices
 
-## Type Hints (3.12+ Syntax)
+이 프로젝트의 Python 코딩 표준입니다.
+
+## 타입 힌트
+
+Python 3.10+ 스타일 사용:
 
 ```python
-# Use built-in generics (3.9+), no need for typing.List, typing.Dict
-def process_items(items: list[str]) -> dict[str, int]:
-    return {item: len(item) for item in items}
-
-# Union with | syntax (3.10+)
-def find_user(user_id: int) -> User | None:
+# Good
+def process(items: list[str]) -> dict[str, int]:
     ...
 
-# Type parameter syntax (3.12+)
-type Vector[T] = list[T]
-type Matrix[T] = list[Vector[T]]
-
-def first[T](items: list[T]) -> T:
-    return items[0]
-
-# TypedDict for structured dicts
-from typing import TypedDict
-
-class UserResponse(TypedDict):
-    id: int
-    name: str
-    email: str
-    active: bool
+# Avoid (Python 3.9 스타일)
+from typing import List, Dict
+def process(items: List[str]) -> Dict[str, int]:
+    ...
 ```
 
-Always type function signatures. Use `mypy --strict` or `pyright` in CI. Use `type: ignore` comments sparingly with justification.
+## Import 정렬
 
-## Dataclasses vs Pydantic
-
-### Dataclasses (internal data, no validation needed)
-```python
-from dataclasses import dataclass, field
-
-@dataclass(frozen=True, slots=True)
-class Point:
-    x: float
-    y: float
-
-    def distance_to(self, other: "Point") -> float:
-        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
-
-@dataclass
-class Config:
-    host: str = "localhost"
-    port: int = 8080
-    tags: list[str] = field(default_factory=list)
-```
-
-Use `frozen=True` for immutable value objects. Use `slots=True` for memory efficiency.
-
-### Pydantic (external input, validation required)
-```python
-from pydantic import BaseModel, Field, field_validator
-
-class CreateUserRequest(BaseModel):
-    model_config = {"strict": True}
-
-    email: str = Field(max_length=255)
-    name: str = Field(min_length=1, max_length=100)
-    age: int = Field(ge=13, le=150)
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v: str) -> str:
-        if "@" not in v:
-            raise ValueError("Invalid email format")
-        return v.lower()
-```
-
-Rule: Use dataclasses for domain models and internal structs. Use Pydantic for API boundaries, config files, and external data parsing.
-
-## Async Patterns
+ruff I 규칙을 따름 (isort 호환):
 
 ```python
-import asyncio
-import httpx
+# 1. 표준 라이브러리
+import os
+from pathlib import Path
 
-async def fetch_user(client: httpx.AsyncClient, user_id: int) -> User:
-    response = await client.get(f"/users/{user_id}")
-    response.raise_for_status()
-    return User(**response.json())
+# 2. 서드파티
+import boto3
+from rich.console import Console
 
-async def fetch_all_users(user_ids: list[int]) -> list[User]:
-    async with httpx.AsyncClient(base_url="https://api.example.com") as client:
-        tasks = [fetch_user(client, uid) for uid in user_ids]
-        return await asyncio.gather(*tasks)
-
-async def process_with_semaphore(items: list[str], max_concurrent: int = 10):
-    semaphore = asyncio.Semaphore(max_concurrent)
-    async def bounded_process(item: str):
-        async with semaphore:
-            return await process_item(item)
-    return await asyncio.gather(*[bounded_process(i) for i in items])
+# 3. 로컬
+from core.parallel import get_client, parallel_collect
 ```
 
-Rules:
-- Use `httpx` instead of `requests` for async HTTP
-- Use `asyncio.gather` for concurrent tasks, `asyncio.Semaphore` for rate limiting
-- Never call blocking I/O in async functions (use `asyncio.to_thread` for legacy code)
-- Use `async with` for resource management (connections, sessions)
+## Docstring
 
-## Project Structure
+한글 docstring 허용. Google 스타일 권장:
 
-```
-my-project/
-  src/
-    my_project/
-      __init__.py
-      main.py
-      models.py
-      services/
-        __init__.py
-        user_service.py
-      api/
-        __init__.py
-        routes.py
-  tests/
-    conftest.py
-    test_models.py
-    test_services/
-      test_user_service.py
-  pyproject.toml
+```python
+def analyze_resource(resource_id: str, region: str) -> dict:
+    """리소스 분석 수행.
+
+    Args:
+        resource_id: AWS 리소스 ID
+        region: AWS 리전
+
+    Returns:
+        분석 결과 딕셔너리
+    """
 ```
 
-Use `src` layout to prevent accidental imports from the project root.
+## 문자열 포맷팅
 
-## pyproject.toml
+f-string 사용 (ruff UP 규칙):
 
-```toml
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+```python
+# Good
+name = f"resource-{resource_id}"
 
-[project]
-name = "my-project"
-version = "1.0.0"
-requires-python = ">=3.12"
-dependencies = [
-    "httpx>=0.27",
-    "pydantic>=2.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-cov",
-    "pytest-asyncio",
-    "mypy",
-    "ruff",
-]
-
-[project.scripts]
-my-project = "my_project.main:cli"
-
-[tool.ruff]
-line-length = 100
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
-
-[tool.mypy]
-strict = true
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
+# Avoid
+name = "resource-{}".format(resource_id)
+name = "resource-%s" % resource_id
 ```
 
-Use `pyproject.toml` for all tool configuration. Use Ruff instead of flake8 + isort + black (single tool, 10-100x faster).
+## 예외 처리
 
-## Virtual Environments
+구체적인 예외 타입 사용:
+
+```python
+# Good
+try:
+    client.describe_instances()
+except ClientError as e:
+    if e.response['Error']['Code'] == 'AccessDenied':
+        logger.warning("권한 부족")
+    raise
+
+# Avoid
+try:
+    client.describe_instances()
+except Exception:
+    pass
+```
+
+## 컬렉션 처리
+
+리스트 컴프리헨션 선호:
+
+```python
+# Good
+active = [i for i in instances if i['State'] == 'running']
+
+# 복잡한 경우 generator 사용
+def get_active():
+    for instance in instances:
+        if is_valid(instance) and is_active(instance):
+            yield instance
+```
+
+## Context Manager
+
+리소스 정리에 with 사용:
+
+```python
+with open(file_path, 'r') as f:
+    data = f.read()
+```
+
+## 상수
+
+모듈 레벨 상수는 대문자:
+
+```python
+MAX_RETRIES = 3
+DEFAULT_REGION = "ap-northeast-2"
+```
+
+## 린트 명령
 
 ```bash
-# Use uv for fast dependency management
-uv venv
-uv pip install -e ".[dev]"
-
-# Or standard venv
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+ruff check cli core plugins --fix
+ruff format cli core plugins
+mypy cli core plugins
 ```
-
-Always use virtual environments. Never install packages globally. Pin exact versions in a lockfile (`uv.lock` or `requirements.txt` generated from `pip freeze`).
-
-## Testing with pytest
-
-```python
-import pytest
-from unittest.mock import AsyncMock, patch
-
-@pytest.fixture
-def user_service(db_session):
-    return UserService(session=db_session)
-
-async def test_create_user_returns_user_with_hashed_password(user_service):
-    user = await user_service.create(email="test@example.com", password="secret")
-    assert user.email == "test@example.com"
-    assert user.password_hash != "secret"
-
-async def test_create_user_rejects_duplicate_email(user_service):
-    await user_service.create(email="test@example.com", password="secret")
-    with pytest.raises(DuplicateEmailError):
-        await user_service.create(email="test@example.com", password="other")
-
-@pytest.fixture
-def mock_http_client():
-    client = AsyncMock(spec=httpx.AsyncClient)
-    client.get.return_value = httpx.Response(200, json={"id": 1, "name": "Alice"})
-    return client
-
-async def test_fetch_user_parses_response(mock_http_client):
-    user = await fetch_user(mock_http_client, user_id=1)
-    assert user.name == "Alice"
-    mock_http_client.get.assert_called_once_with("/users/1")
-```
-
-Use `conftest.py` for shared fixtures. Use `pytest.mark.parametrize` for test variations. Use `tmp_path` fixture for file system tests.
-
-## Pythonic Idioms
-
-```python
-# Unpacking
-first, *rest = items
-x, y = point
-
-# Comprehensions over map/filter
-squares = [x**2 for x in numbers if x > 0]
-lookup = {u.id: u for u in users}
-
-# Context managers for resource cleanup
-with open(path) as f:
-    data = f.read()
-
-# Walrus operator for assign-and-test
-if (match := pattern.search(text)) is not None:
-    process(match.group(1))
-
-# Structural pattern matching (3.10+)
-match command:
-    case {"action": "move", "direction": d}:
-        move(d)
-    case {"action": "quit"}:
-        sys.exit(0)
-    case _:
-        raise ValueError(f"Unknown command: {command}")
-```
-
-## Error Handling
-
-```python
-class AppError(Exception):
-    def __init__(self, message: str, code: str):
-        super().__init__(message)
-        self.code = code
-
-class NotFoundError(AppError):
-    def __init__(self, resource: str, id: str):
-        super().__init__(f"{resource} {id} not found", "NOT_FOUND")
-
-# Specific exceptions, never bare except
-try:
-    user = await get_user(user_id)
-except NotFoundError:
-    return {"error": "User not found"}, 404
-except DatabaseError as e:
-    logger.exception("Database error fetching user")
-    return {"error": "Internal error"}, 500
-```
-
-Never use bare `except:`. Catch the most specific exception. Use `logger.exception()` to include tracebacks. Define custom exception hierarchies for your application.

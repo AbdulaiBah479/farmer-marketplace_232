@@ -1,197 +1,115 @@
 ---
 name: mermaid-diagramming
-description: Mermaid diagram creation covering flowcharts, sequence diagrams, ERDs, state machines, Gantt charts, and architecture views. Use when creating or updating technical diagrams in documentation.
-version: 1.0.0
-tags:
-  - mermaid
-  - diagrams
-  - visualization
-  - documentation
-triggers:
-  - mermaid diagram
-  - flowchart
-  - sequence diagram
-  - entity relationship diagram
-  - state diagram
-  - gantt chart
-  - architecture diagram
-  - class diagram
-dependencies:
-  skills:
-    - documentation-production
-  tools:
-    - Read
-    - Write
-token_estimate: ~2500
-keywords:
-  - create diagram
-  - flowchart
-  - sequence diagram
-  - ERD
-  - mermaid
-  - diagramming
-  - mermaid diagramming
+type: standard
+depth: extended
+description: >-
+  Creates Mermaid v11+ diagrams with ELK layout and YAML frontmatter. Covers 22 diagram types:
+  flowchart, mindmap, block, sequence, journey, state, ER, class, requirement, pie, quadrant,
+  sankey, xy, radar, gantt, treemap, C4, architecture, packet, timeline, gitgraph, kanban. Use
+  when visualizing: logic flow, interactions, state machines, data models, charts, system
+  architecture, or any diagram requiring theming, classDef styling, or accessibility.
 ---
 
-# Mermaid Diagramming
+# [H1][MERMAID-DIAGRAMMING]
+>**Dictum:** *Modern Mermaid syntax produces consistent, styled diagrams.*
 
-Create clear, professional Mermaid diagrams for technical documentation. Covers all major
-diagram types with both basic and styled variants, rendering guidance, and export recommendations.
+<br>
 
-## When to Use This Skill
+Mermaid v11+ diagram creation with frontmatter YAML, ELK layout, Dracula palette. 22 diagram types across 5 semantic categories.
 
-- Creating flowcharts for process documentation or decision trees
-- Drawing sequence diagrams for API interactions or system communication
-- Building ERDs for database schema documentation
-- Designing state machine diagrams for workflow states
-- Producing Gantt charts for project timelines
-- Documenting system architecture with C4 or network diagrams
-- Adding visual aids to README files, ADRs, or design docs
+**Scope:**
+- *Create:* New diagrams from requirements. Select category, load syntax reference, apply styling.
+- *Reference:* Syntax lookup for nodes, edges, relationships, charts, architecture.
 
-## Quick Reference
-
-| Resource | Purpose | Load when |
-|----------|---------|-----------|
-| `references/diagram-types.md` | Syntax, patterns, and code examples for every Mermaid diagram type | Choosing or building a diagram |
-
----
-
-## Workflow Overview
-
-```
-Phase 1: Scope     → Identify what to visualize, audience, and diagram type
-Phase 2: Draft     → Write base Mermaid code with correct syntax
-Phase 3: Style     → Add theming, colors, and accessibility annotations
-Phase 4: Deliver   → Provide rendering instructions and suggest iterations
-```
+**Domain Navigation:**
+- *[CONFIG]* — Frontmatter YAML, ELK 5-phase layout, direction, limits. Load FIRST for all diagrams.
+- *[STYLING]* — Theme presets, themeVariables, classDef, linkStyle, palette. Load for visual customization.
+- *[GRAPH]* — Flowchart, mindmap, block. Load for: decision trees, hierarchies, system decomposition.
+- *[INTERACTION]* — Sequence, journey. Load for: protocols, request-response, user experience.
+- *[MODELING]* — State, ER, class, requirement. Load for: FSM, data models, OOP structure, traceability.
+- *[CHARTS]* — Pie, quadrant, sankey, xy, radar, gantt, treemap. Load for: data visualization, project timelines.
+- *[ARCHITECTURE]* — C4, architecture-beta, packet-beta, timeline, gitgraph, kanban. Load for: system views, infrastructure, network protocols, version control flow, project boards.
 
 ---
+## [1][INSTRUCTIONS]
+>**Dictum:** *Progressive loading optimizes context.*
 
-## Phase 1: Scope
+<br>
 
-Before writing any code, clarify:
+**Required Tasks:**
+1. Read [→global-config.md](./references/global-config.md): Frontmatter YAML, ELK layout (required for ALL diagrams).
+2. Read [→styling.md](./references/styling.md): Theme, classDef, palette.
+3. Select diagram category per §2 table, load corresponding syntax reference.
 
-1. **What is the narrative?** The diagram should tell a story or answer a question.
-2. **Who is the audience?** Developers need detail; stakeholders need overview.
-3. **What entities and relationships exist?** List nodes and edges before drawing.
-4. **Which diagram type fits?** Use the selection guide below.
+[REFERENCE]: [→index.md](./references/index.md) — Complete file listing.
 
-### Diagram Type Selection
+**Guidance:**
+- `Config First` — Frontmatter YAML must precede diagram declaration. Mermaid parses config before nodes.
+- `ELK Layout` — ELK provides comprehensive graph layout via five algorithmic phases: cycle breaking, layering, crossing minimization, node placement, edge routing.
 
-| If you need to show... | Use |
-|------------------------|-----|
-| Process flow, decisions, branching | `flowchart` |
-| Interactions over time between systems/actors | `sequenceDiagram` |
-| Data model and relationships | `erDiagram` |
-| Object structure and inheritance | `classDiagram` |
-| States and transitions | `stateDiagram-v2` |
-| Project schedule and dependencies | `gantt` |
-| Proportions or distribution | `pie` |
-| Hierarchical idea mapping | `mindmap` |
-| Events over time | `timeline` |
-| System architecture layers | C4 context/container diagrams |
-| Code version history | `gitGraph` |
-| User experience flow | `journey` |
+**Best-Practices:**
+- *Load Sequence* — global-config.md → styling.md → {category}.md → compose. Never skip configuration.
+- *Frontmatter Only* — `%%{init:...}%%` directives deprecated v10.5.0. Use YAML frontmatter exclusively.
 
 ---
+## [2][DIAGRAM_SELECTION]
+>**Dictum:** *Category determines semantic structure.*
 
-## Phase 2: Draft
+<br>
 
-### Structure Rules
+| [CATEGORY]   | [TYPES]                                              | [REFERENCE]                                               |
+| :----------- | ---------------------------------------------------- | --------------------------------------------------------- |
+| Graph        | flowchart, mindmap, block                            | [→graph.md](./references/graph.md)               |
+| Interaction  | sequence, journey                                    | [→interaction.md](./references/interaction.md)   |
+| Modeling     | state, ER, class, requirement                        | [→modeling.md](./references/modeling.md)         |
+| Charts       | pie, quadrant, sankey, xy, radar, gantt, treemap     | [→charts.md](./references/charts.md)             |
+| Architecture | C4, architecture, packet, timeline, gitgraph, kanban | [→architecture.md](./references/architecture.md) |
 
-1. **One concept per diagram** — split complex systems into multiple views
-2. **Limit nodes** — keep under 15 nodes per diagram; split if larger
-3. **Meaningful labels** — use descriptive text, not single letters
-4. **Consistent direction** — prefer top-to-bottom (`TB`) or left-to-right (`LR`)
-5. **Group related nodes** — use `subgraph` to cluster related elements
+**Type Headers:**
 
-### Code Conventions
+| [INDEX] | [TYPE]       | [HEADER]             | [DIR] | [CATEGORY]   |
+| :-----: | ------------ | -------------------- | :---: | ------------ |
+|   [1]   | Flowchart    | `flowchart LR`       |  LR   | Graph        |
+|   [2]   | Mindmap      | `mindmap`            |   —   | Graph        |
+|   [3]   | Block        | `block-beta`         |   —   | Graph        |
+|   [4]   | Sequence     | `sequenceDiagram`    |  TB   | Interaction  |
+|   [5]   | Journey      | `journey`            |   —   | Interaction  |
+|   [6]   | State        | `stateDiagram-v2`    |  TB   | Modeling     |
+|   [7]   | ER           | `erDiagram`          |  LR   | Modeling     |
+|   [8]   | Class        | `classDiagram`       |  TB   | Modeling     |
+|   [9]   | Requirement  | `requirementDiagram` |   —   | Modeling     |
+|  [10]   | Pie          | `pie`                |   —   | Charts       |
+|  [11]   | Quadrant     | `quadrantChart`      |   —   | Charts       |
+|  [12]   | Sankey       | `sankey-beta`        |   —   | Charts       |
+|  [13]   | XY           | `xychart-beta`       |   —   | Charts       |
+|  [14]   | Radar        | `radar-beta`         |   —   | Charts       |
+|  [15]   | Gantt        | `gantt`              |   —   | Charts       |
+|  [16]   | Treemap      | `treemap-beta`       |   —   | Charts       |
+|  [17]   | C4           | `C4Context`          |   —   | Architecture |
+|  [18]   | Architecture | `architecture-beta`  |   —   | Architecture |
+|  [19]   | Packet       | `packet-beta`        |   —   | Architecture |
+|  [20]   | Timeline     | `timeline`           |   —   | Architecture |
+|  [21]   | GitGraph     | `gitGraph`           |   —   | Architecture |
+|  [22]   | Kanban       | `kanban`             |   —   | Architecture |
 
-```mermaid
-%% Always start with a comment describing the diagram's purpose
-%% Use consistent quoting for labels with special characters
-flowchart LR
-    A["User Request"] --> B{"Auth Check"}
-    B -->|Valid| C["Process Request"]
-    B -->|Invalid| D["Return 401"]
-```
+**Guidance:**
+- `LR Default` — Horizontal flow matches reading order. Sequence/State force TB implicitly.
+- `Beta Status` — block, sankey, xy, radar, treemap, architecture, packet, kanban are beta; syntax may change.
 
-- Use double quotes for labels containing special characters
-- Add comments (`%%`) explaining non-obvious relationships
-- Prefer `-->` for solid lines, `-.->` for dashed, `==>` for thick
-- Use descriptive edge labels: `-->|"reason"| TargetNode`
-
----
-
-## Phase 3: Style
-
-### Theming
-
-Apply consistent styling using `%%{init: ...}%%` directives:
-
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#4A90D9'}}}%%
-flowchart TB
-    A["Start"] --> B["End"]
-```
-
-### Node Styling
-
-```mermaid
-flowchart LR
-    A["Normal"]
-    B["Highlighted"]:::highlight
-    classDef highlight fill:#f9f,stroke:#333,stroke-width:2px
-```
-
-### Accessibility
-
-- Use high-contrast color combinations
-- Do not rely on color alone to convey meaning — add labels and shapes
-- Include alt text when embedding: `![Diagram description](path)`
-- Provide a text summary alongside complex diagrams
+**Best-Practices:**
+- *Category Match* — Select by primary concern: flow→Graph, time→Interaction, structure→Modeling, data→Charts, system→Architecture.
 
 ---
+## [3][VALIDATION]
+>**Dictum:** *Gates prevent rendering failures.*
 
-## Phase 4: Deliver
+<br>
 
-### Always Provide
+[VERIFY] Before diagram creation:
+- [ ] Frontmatter: valid YAML with `config:` key (before diagram declaration).
+- [ ] Direction: LR for flowchart/ER, implicit TB for sequence/state.
+- [ ] Reserved words avoided: `end`, `default`, `subgraph`, `class` in node IDs.
+- [ ] classDef: placed at diagram end, after node definitions.
+- [ ] Accessibility: accTitle/accDescr present after diagram type.
 
-1. **Basic version** — clean, unstyled diagram that renders anywhere
-2. **Styled version** — themed variant with colors and emphasis
-3. **Rendering note** — where to preview (GitHub, Mermaid Live, VS Code extension)
-4. **Suggestions** — complementary diagrams or next iterations
-
-### Rendering Options
-
-| Platform | Support |
-|----------|---------|
-| GitHub markdown | Native rendering in `.md` files |
-| GitLab markdown | Native rendering |
-| Mermaid Live Editor | `https://mermaid.live` for interactive editing |
-| VS Code | Mermaid extension for preview |
-| Docusaurus / MkDocs | Plugin-based rendering |
-
-### Export Formats
-
-- **SVG**: Best for web and docs (scalable, searchable text)
-- **PNG**: Fallback for platforms without Mermaid support
-- **PDF**: For print or formal documentation
-
----
-
-## Best Practices
-
-- **Start simple** — get the structure right before adding style
-- **Test rendering** — verify on the target platform before committing
-- **Version diagrams** — update diagrams when the underlying system changes
-- **Colocate with docs** — keep diagrams in the same directory as related documentation
-- **Use subgraphs** — group related nodes to reduce visual complexity
-
-## Anti-Patterns
-
-- Putting too many nodes in one diagram (split at 15+ nodes)
-- Using single-letter node IDs without labels
-- Relying on color alone to convey meaning
-- Hard-coding pixel widths that break on different renderers
-- Leaving diagrams out of date after system changes
+[REFERENCE]: [→validation.md](./references/validation.md) — Full validation checklists and anti-patterns.

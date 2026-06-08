@@ -1,140 +1,407 @@
 ---
 name: metadata
-description: |
-  Sports metadata via TheSportsDB free API (key=3). Team logos and badges, player photos, stadium info, league info, and biographical data across 100+ leagues. No API key required, zero config.
-
-  Use when: user asks for a team logo, crest, badge, banner, jersey, kit, player photo or headshot, stadium info, club description, or wants to search for teams or players by name across sports. Good for enriching responses from other skills with images and visual identifiers.
-  Don't use when: user asks for scores, standings, fixtures, stats, or odds — use the sport-specific skill instead: football-data (soccer), nfl-data (NFL), nba-data (NBA), wnba-data (WNBA), nhl-data (NHL), mlb-data (MLB), tennis-data (tennis), golf-data (golf), cricket-data (cricket), cfb-data (college football), cbb-data (college basketball), fastf1 (F1), volleyball-data (Dutch volleyball), xctf-data (NCAA XC/TF). Don't use for prediction markets — use polymarket or kalshi.
-license: MIT
-metadata:
-  author: machina-sports
-  version: "0.1.0"
+description: HTML metadata and head content. Use when writing or reviewing page head sections including SEO, social sharing, performance hints, and bot control.
+allowed-tools: Read, Write, Edit, Bash
 ---
 
-# Sports Metadata
+# Metadata Skill
 
-Wraps the free [TheSportsDB](https://www.thesportsdb.com) API for team logos, player photos, and stadium info. No API key, no signup.
+This skill provides guidance for writing complete, well-structured HTML `<head>` content. It covers essential meta tags, social sharing, performance optimization, and bot control.
 
-## Quick Start
+## Quick Reference Template
+
+Copy this template and customize for each page:
+
+```html
+<head>
+  <!-- Essential (order matters) -->
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Page Title - Site Name</title>
+  <meta name="description" content="Concise page description (150-160 chars)."/>
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://example.com/page"/>
+
+  <!-- Authorship -->
+  <meta name="author" content="Author Name"/>
+
+  <!-- Bot Control -->
+  <meta name="robots" content="index, follow"/>
+
+  <!-- Open Graph (Social Sharing) -->
+  <meta property="og:title" content="Page Title"/>
+  <meta property="og:description" content="Description for social sharing."/>
+  <meta property="og:image" content="https://example.com/images/share.jpg"/>
+  <meta property="og:url" content="https://example.com/page"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Site Name"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <!-- Performance Hints -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="dns-prefetch" href="//analytics.example.com"/>
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#ffffff"/>
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" sizes="32x32"/>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml"/>
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/styles/main.css"/>
+</head>
+```
+
+---
+
+## Element Order in `<head>`
+
+Order matters for performance and correctness:
+
+1. `<meta charset>` - **Must be first** (within first 1024 bytes)
+2. `<meta name="viewport">` - Before any CSS
+3. `<title>` - Early for perceived performance
+4. `<meta name="description">` - SEO critical
+5. `<link rel="canonical">` - URL normalization
+6. Other meta tags (author, robots, etc.)
+7. Open Graph / Twitter meta
+8. Performance hints (preconnect, dns-prefetch)
+9. Favicon links
+10. Stylesheets
+11. Scripts (usually at end of body, but critical JS here)
+
+---
+
+## Metadata Categories
+
+### 1. Essential (Required for All Pages)
+
+| Element | Purpose | Notes |
+|---------|---------|-------|
+| `<meta charset="utf-8"/>` | Character encoding | Must be first element |
+| `<meta name="viewport" content="width=device-width, initial-scale=1"/>` | Responsive design | Required for mobile |
+| `<title>Page - Site</title>` | Browser tab, search results | 50-60 characters max |
+| `<meta name="description" content="..."/>` | Search snippets | 150-160 characters |
+
+**Example:**
+```html
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Widget Pro - DemoCompany</title>
+<meta name="description" content="The Widget Pro offers enhanced durability and a 5-year warranty. Our best-selling widget for professional use."/>
+```
+
+### 2. Authorship & Attribution
+
+| Element | Purpose |
+|---------|---------|
+| `<meta name="author" content="..."/>` | Content author |
+| `<link rel="canonical" href="..."/>` | Authoritative URL (prevents duplicate content) |
+| `<meta name="generator" content="..."/>` | CMS/tool that generated the page |
+| `<meta name="copyright" content="..."/>` | Copyright notice |
+
+**Example:**
+```html
+<meta name="author" content="DemoCompany Editorial Team"/>
+<link rel="canonical" href="https://democompany.com/products/widget-pro"/>
+```
+
+### 3. Bot Control (Robots)
+
+| Directive | Meaning |
+|-----------|---------|
+| `index` | Allow indexing (default) |
+| `noindex` | Prevent indexing |
+| `follow` | Follow links (default) |
+| `nofollow` | Don't follow links |
+| `noarchive` | Don't cache the page |
+| `nosnippet` | Don't show text snippets |
+| `noimageindex` | Don't index images |
+
+**Examples:**
+```html
+<!-- Standard public page -->
+<meta name="robots" content="index, follow"/>
+
+<!-- Private/internal page -->
+<meta name="robots" content="noindex, nofollow"/>
+
+<!-- Legal page (index but don't cache) -->
+<meta name="robots" content="index, follow, noarchive"/>
+
+<!-- Search results page -->
+<meta name="robots" content="noindex, follow"/>
+```
+
+**Google-specific:**
+```html
+<meta name="googlebot" content="notranslate"/>
+```
+
+### 4. Open Graph (Social Sharing)
+
+Required for rich social media previews on Facebook, LinkedIn, etc.
+
+| Property | Purpose | Recommended |
+|----------|---------|-------------|
+| `og:title` | Share title | 60 characters |
+| `og:description` | Share description | 200 characters |
+| `og:image` | Share image | 1200x630px |
+| `og:url` | Canonical URL | Absolute URL |
+| `og:type` | Content type | website, article, product |
+| `og:site_name` | Site name | Brand name |
+
+**Example:**
+```html
+<meta property="og:title" content="Widget Pro - Professional Grade Widget"/>
+<meta property="og:description" content="Enhanced durability, 5-year warranty. Perfect for professional use."/>
+<meta property="og:image" content="https://democompany.com/images/widget-pro-share.jpg"/>
+<meta property="og:url" content="https://democompany.com/products/widget-pro"/>
+<meta property="og:type" content="product"/>
+<meta property="og:site_name" content="DemoCompany"/>
+```
+
+**Article-specific:**
+```html
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2024-01-15T08:00:00Z"/>
+<meta property="article:modified_time" content="2024-01-20T10:30:00Z"/>
+<meta property="article:author" content="Jane Smith"/>
+<meta property="article:section" content="Technology"/>
+```
+
+### 5. Twitter Cards
+
+| Property | Purpose |
+|----------|---------|
+| `twitter:card` | Card type: summary, summary_large_image, player |
+| `twitter:site` | @username of website |
+| `twitter:creator` | @username of author |
+
+**Example:**
+```html
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:site" content="@democompany"/>
+<meta name="twitter:creator" content="@janesmith"/>
+```
+
+### 6. Network Performance Hints
+
+| Element | Purpose | When to Use |
+|---------|---------|-------------|
+| `<link rel="dns-prefetch">` | Pre-resolve DNS | Third-party domains |
+| `<link rel="preconnect">` | Establish early connection | Critical third-parties |
+| `<link rel="preload">` | High-priority fetch | Fonts, critical CSS |
+| `<link rel="prefetch">` | Low-priority fetch | Next-page resources |
+| `<link rel="prerender">` | Pre-render entire page | Very likely next page |
+
+**Examples:**
+```html
+<!-- DNS prefetch for analytics -->
+<link rel="dns-prefetch" href="//www.google-analytics.com"/>
+
+<!-- Preconnect for fonts (includes DNS + TCP + TLS) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+
+<!-- Preload critical font -->
+<link rel="preload" href="/fonts/brand.woff2" as="font" type="font/woff2" crossorigin="anonymous"/>
+
+<!-- Preload critical CSS -->
+<link rel="preload" href="/css/critical.css" as="style"/>
+
+<!-- Prefetch likely next page -->
+<link rel="prefetch" href="/products/widget-pro"/>
+```
+
+### 7. Security
+
+| Element | Purpose |
+|---------|---------|
+| `<meta name="referrer">` | Control referrer information |
+| `<meta http-equiv="Content-Security-Policy">` | Inline CSP (prefer HTTP header) |
+
+**Referrer values:**
+- `no-referrer` - Never send referrer
+- `origin` - Send only origin (domain)
+- `strict-origin-when-cross-origin` - Full URL same-origin, origin cross-origin (recommended)
+
+**Example:**
+```html
+<meta name="referrer" content="strict-origin-when-cross-origin"/>
+```
+
+### 8. Mobile & PWA
+
+| Element | Purpose |
+|---------|---------|
+| `<meta name="theme-color">` | Browser chrome color |
+| `<meta name="apple-mobile-web-app-capable">` | iOS standalone mode |
+| `<meta name="apple-mobile-web-app-status-bar-style">` | iOS status bar |
+| `<link rel="manifest">` | PWA manifest |
+
+**Example:**
+```html
+<meta name="theme-color" content="#1a73e8"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="manifest" href="/manifest.json"/>
+```
+
+### 9. Favicon
+
+Modern favicon setup:
+
+```html
+<!-- Standard favicon -->
+<link rel="icon" href="/favicon.ico" sizes="32x32"/>
+
+<!-- SVG favicon (modern browsers) -->
+<link rel="icon" href="/icon.svg" type="image/svg+xml"/>
+
+<!-- Apple touch icon -->
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+
+<!-- Web app manifest (includes icons) -->
+<link rel="manifest" href="/manifest.webmanifest"/>
+```
+
+---
+
+## Page Type Profiles
+
+Different pages need different metadata:
+
+### Homepage
+```html
+<meta name="robots" content="index, follow"/>
+<meta property="og:type" content="website"/>
+<!-- Include full Open Graph set -->
+<!-- Include performance hints for common resources -->
+```
+
+### Article/Blog Post
+```html
+<meta name="author" content="Author Name"/>
+<meta name="robots" content="index, follow"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2024-01-15T08:00:00Z"/>
+<meta property="article:author" content="Author Name"/>
+```
+
+### Product Page
+```html
+<meta name="robots" content="index, follow"/>
+<meta property="og:type" content="product"/>
+<meta property="product:price:amount" content="79.99"/>
+<meta property="product:price:currency" content="USD"/>
+```
+
+### Legal/Policy Pages
+```html
+<meta name="robots" content="noindex, follow"/>
+<!-- Or if should be indexed: -->
+<meta name="robots" content="index, follow, noarchive"/>
+```
+
+### Search Results
+```html
+<meta name="robots" content="noindex, follow"/>
+```
+
+### Error Pages (404, 500)
+```html
+<meta name="robots" content="noindex, follow"/>
+```
+
+---
+
+## Validation
+
+Run metadata validation:
 
 ```bash
-sports-skills metadata get_team_logo --team_name="Arsenal"
-sports-skills metadata get_team_info --team_name="Real Madrid"
-sports-skills metadata get_player_photo --player_name="Messi"
-sports-skills metadata search_teams --query="Manchester"
-sports-skills metadata search_players --query="LeBron"
+npm run lint:meta
 ```
 
-Python SDK:
+The validator checks:
+- Required elements present
+- Elements in correct order
+- Content meets length requirements
+- URLs are absolute where required
+- Image dimensions adequate for social sharing
 
-```python
-from sports_skills import metadata
+---
 
-metadata.get_team_logo(team_name="Arsenal")
-metadata.get_team_info(team_name="Real Madrid")
-metadata.get_player_photo(player_name="Messi")
-metadata.search_teams(query="Manchester")
-metadata.search_players(query="LeBron")
+## Common Mistakes
+
+### 1. Charset Not First
+```html
+<!-- Wrong -->
+<title>Page</title>
+<meta charset="utf-8"/>
+
+<!-- Correct -->
+<meta charset="utf-8"/>
+<title>Page</title>
 ```
 
-## CRITICAL: Before Any Query
+### 2. Relative URLs in Open Graph
+```html
+<!-- Wrong -->
+<meta property="og:image" content="/images/share.jpg"/>
 
-CRITICAL: Before calling any metadata command, verify:
-- Team names use the **full official name** — especially for NBA (e.g., `"Los Angeles Lakers"`, **not** `"Lakers"`).
-- For `get_team_logo`, the `sport` parameter defaults to `"Soccer"`. Pass `sport="Basketball"`, `"American Football"`, `"Baseball"`, `"Ice Hockey"`, `"Motorsport"`, or `"Cricket"` when the team is not a soccer team — otherwise the lookup falls back to "first result regardless of sport," which may return the wrong team.
-- Player searches use just the player name (e.g., `"Messi"`, `"LeBron James"`, `"Tiger Woods"`).
+<!-- Correct -->
+<meta property="og:image" content="https://example.com/images/share.jpg"/>
+```
 
-## Coverage
+### 3. Missing Viewport
+Results in pages rendering at desktop width on mobile.
 
-**Teams (logos, banners, stadium info):**
-- Soccer: 100+ leagues worldwide (Premier League, La Liga, Bundesliga, Serie A, MLS, and many more)
-- NFL (American Football)
-- NBA (Basketball) — requires full team names
-- MLB (Baseball)
-- NHL (Ice Hockey)
-- F1 (Motorsport)
-- Cricket (IPL, international)
+### 4. Duplicate Titles/Descriptions
+Each page should have unique title and description.
 
-**Players (photos, bios):**
-- All team sports above
-- Tennis (ATP/WTA players)
-- Golf (PGA/LPGA players)
+### 5. Title Too Long
+Search engines truncate after ~60 characters. Put important words first.
 
-**Not covered:** MMA/UFC, Rugby, Esports, Boxing.
+### 6. Missing Canonical
+Can cause duplicate content issues, especially with URL parameters.
 
-## Commands
+---
 
-| Command | Required | Optional | Description |
-|---|---|---|---|
-| `get_team_logo` | team_name | sport | Team logo / badge URL |
-| `get_team_info` | team_name | | Full team info: stadium, description, social links, banner |
-| `get_player_photo` | player_name | | Player photo URL |
-| `search_teams` | query | | Fuzzy search for teams across sports |
-| `search_players` | query | | Fuzzy search for players across sports |
+## Extensibility
 
-## Workflows
+Metadata profiles are defined in JSON files in `profiles/`:
 
-### Enrich a Standings Response
+```json
+{
+  "name": "article",
+  "extends": "default",
+  "required": [
+    { "name": "author" },
+    { "property": "article:published_time" }
+  ],
+  "recommended": [
+    { "property": "article:author" },
+    { "property": "article:section" },
+    { "property": "article:tag" }
+  ]
+}
+```
 
-1. Call the sport-specific skill (e.g., `football get_season_standings`) for the standings table.
-2. For each team in the standings, call `get_team_logo --team_name=<name>` to attach a badge URL.
-3. Render the standings with logos alongside team names.
+Create custom profiles by:
+1. Adding a new JSON file to `profiles/`
+2. Setting `extends` to inherit from another profile
+3. Adding `required` and `recommended` arrays
 
-### Build a Team Profile Page
+## Related Skills
 
-1. Call `get_team_info --team_name="<name>"` for stadium, description, founding year, social links.
-2. The same response includes `badge` and `banner` URLs — no second call needed.
-
-### Resolve an Ambiguous Team Name
-
-1. Call `search_teams --query="<partial-name>"` to disambiguate.
-2. Use the exact `name` field from the result for follow-up `get_team_info` calls.
-
-## Examples
-
-Example 1: Get a Premier League team logo
-User says: "What does the Arsenal logo look like?"
-Actions:
-1. Call `get_team_logo(team_name="Arsenal")` — `sport` defaults to "Soccer", which is correct here.
-Result: Logo URL, sport, league, and country.
-
-Example 2: NBA team — full name required
-User says: "Get the Lakers logo"
-Actions:
-1. Call `get_team_logo(team_name="Los Angeles Lakers", sport="Basketball")` — both the full name AND the sport filter are needed.
-Result: Lakers badge from the NBA branch of TheSportsDB.
-
-Example 3: Player photo
-User says: "Show me a photo of Messi"
-Actions:
-1. Call `get_player_photo(player_name="Messi")`.
-Result: Player photo URL, sport, team, and nationality.
-
-Example 4: Disambiguate "Manchester"
-User says: "Find me Manchester teams"
-Actions:
-1. Call `search_teams(query="Manchester")`.
-Result: List of teams matching "Manchester" — Manchester United, Manchester City, etc. — each with sport, league, and country.
-
-## Commands that DO NOT exist — never call these
-
-- ~~`get_stadium_info`~~ — does not exist. Stadium info is included in `get_team_info`.
-- ~~`get_league_logo`~~ — does not exist. Use `get_team_logo` for team badges only.
-- ~~`get_player_stats`~~ — does not exist on this skill. TheSportsDB metadata does not include stats; use the sport-specific skill (e.g., `football get_player_profile`, `nba get_player_stats`).
-- ~~`search_leagues`~~ — does not exist.
-
-If a command is not listed in the Commands table above, it does not exist.
-
-## Troubleshooting
-
-Error: `get_team_logo` returns the wrong team
-Cause: A short or ambiguous team name (e.g., "Lakers", "Arsenal") matched a different sport first
-Solution: Pass an explicit `sport` parameter and use the team's full official name
-
-Error: `get_player_photo` returns null / empty
-Cause: Player not in TheSportsDB, or the name spelling differs (e.g., "Cristiano Ronaldo" vs "Ronaldo")
-Solution: Use `search_players --query=<partial>` first to find the canonical spelling, then retry
-
-Error: Logo URL works but the image is low resolution
-Cause: TheSportsDB returns the badge as-is from contributors
-Solution: This is an upstream limitation. Most badges are 200×200 or larger; very small icons indicate a low-quality submission. No workaround.
+- **xhtml-author** - Write valid XHTML-strict HTML5 markup
+- **performance** - Write performance-friendly HTML pages
+- **security** - Write secure web pages and applications
+- **i18n** - Write internationalization-friendly HTML pages

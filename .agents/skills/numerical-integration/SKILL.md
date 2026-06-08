@@ -1,166 +1,72 @@
 ---
 name: numerical-integration
-description: Select and configure time integration methods for ODE/PDE simulations. Use when choosing explicit/implicit schemes, setting error tolerances, adapting time steps, diagnosing integration accuracy, planning IMEX splitting, or handling stiff/non-stiff coupled systems.
-allowed-tools: Read, Bash, Write, Grep, Glob
+description: "Problem-solving strategies for numerical integration in numerical methods"
+allowed-tools: [Bash, Read]
 ---
 
 # Numerical Integration
 
-## Goal
+## When to Use
 
-Provide a reliable workflow to select integrators, set tolerances, and manage adaptive time stepping for time-dependent simulations.
+Use this skill when working on numerical-integration problems in numerical methods.
 
-## Requirements
+## Decision Tree
 
-- Python 3.8+
-- NumPy (for some scripts)
-- No heavy dependencies for core functionality
 
-## Inputs to Gather
+1. **Identify Integral Type**
+   - Definite integral over finite interval?
+   - Improper integral (infinite bounds or singularities)?
+   - Multiple dimensions?
 
-| Input | Description | Example |
-|-------|-------------|---------|
-| Problem type | ODE/PDE, stiff/non-stiff | `stiff PDE` |
-| Jacobian available | Can compute ∂f/∂u? | `yes` |
-| Target accuracy | Desired error level | `1e-6` |
-| Constraints | Memory, implicit allowed? | `implicit OK` |
-| Time scale | Characteristic time | `1e-3 s` |
+2. **Select Quadrature Method**
+   - Smooth function, finite interval: Gaussian quadrature
+   - Oscillatory integrand: specialized methods (Filon, Levin)
+   - Singularity at endpoint: adaptive methods
+   - `scipy.integrate.quad(f, a, b)` for general 1D
 
-## Decision Guidance
+3. **Adaptive Integration**
+   - Let algorithm subdivide where needed
+   - Specify error tolerances (rtol, atol)
+   - `scipy.integrate.quad(f, a, b, epsabs=1e-8, epsrel=1e-8)`
 
-### Choosing an Integrator
+4. **Multiple Dimensions**
+   - `scipy.integrate.dblquad` for 2D
+   - `scipy.integrate.tplquad` for 3D
+   - Monte Carlo for higher dimensions
 
-```
-Is the problem stiff?
-├── YES → Is Jacobian available?
-│   ├── YES → Use Rosenbrock or BDF
-│   └── NO → Use BDF with numerical Jacobian
-└── NO → Is high accuracy needed?
-    ├── YES → Use RK45 or DOP853
-    └── NO → Use RK4 or Adams-Bashforth
-```
+5. **Verify Accuracy**
+   - Compare with known analytic solutions
+   - Check convergence by refining tolerance
+   - `sympy_compute.py integrate "f(x)" --var x --from a --to b`
 
-### Stiff vs Non-Stiff Detection
 
-| Symptom | Likely Stiff | Action |
-|---------|--------------|--------|
-| dt shrinks to tiny values | Yes | Switch to implicit |
-| Eigenvalues span many decades | Yes | Use BDF/Radau |
-| Smooth solution, reasonable dt | No | Stay explicit |
+## Tool Commands
 
-## Script Outputs (JSON Fields)
-
-| Script | Key Outputs |
-|--------|-------------|
-| `scripts/error_norm.py` | `error_norm`, `scale_min`, `scale_max` |
-| `scripts/adaptive_step_controller.py` | `accept`, `dt_next`, `factor` |
-| `scripts/integrator_selector.py` | `recommended`, `alternatives`, `notes` |
-| `scripts/imex_split_planner.py` | `implicit_terms`, `explicit_terms`, `splitting_strategy` |
-| `scripts/splitting_error_estimator.py` | `error_estimate`, `substeps` |
-
-## Workflow
-
-1. **Classify stiffness** - Check eigenvalue spread or use stiffness_detector
-2. **Choose tolerances** - See `references/tolerance_guidelines.md`
-3. **Select integrator** - Run `scripts/integrator_selector.py`
-4. **Compute error norms** - Use `scripts/error_norm.py` for step acceptance
-5. **Adapt step size** - Use `scripts/adaptive_step_controller.py`
-6. **Plan IMEX/splitting** - If mixed stiff/nonstiff, use `scripts/imex_split_planner.py`
-7. **Validate convergence** - Repeat with tighter tolerances
-
-## Conversational Workflow Example
-
-**User**: I'm solving the Allen-Cahn equation with a stiff double-well potential. What integrator should I use?
-
-**Agent workflow**:
-1. Check integrator options:
-   ```bash
-   python3 scripts/integrator_selector.py --stiff --jacobian-available --accuracy high --json
-   ```
-2. Plan the IMEX splitting (diffusion implicit, reaction explicit):
-   ```bash
-   python3 scripts/imex_split_planner.py --stiff-terms diffusion --nonstiff-terms reaction --coupling weak --json
-   ```
-3. Recommend: Use IMEX-BDF2 with diffusion term implicit, double-well reaction explicit.
-
-## Pre-Integration Checklist
-
-- [ ] Identify stiffness and dominant time scales
-- [ ] Set `rtol`/`atol` consistent with physics and units
-- [ ] Confirm integrator compatibility with stiffness
-- [ ] Use error norm to accept/reject steps
-- [ ] Verify convergence with tighter tolerance run
-
-## CLI Examples
-
+### Scipy_Quad
 ```bash
-# Select integrator for stiff problem with Jacobian
-python3 scripts/integrator_selector.py --stiff --jacobian-available --accuracy high --json
-
-# Compute scaled error norm
-python3 scripts/error_norm.py --error 0.01,0.02 --solution 1.0,2.0 --rtol 1e-3 --atol 1e-6 --json
-
-# Adaptive step control with PI controller
-python3 scripts/adaptive_step_controller.py --dt 1e-2 --error-norm 0.8 --order 4 --controller pi --json
-
-# Plan IMEX splitting
-python3 scripts/imex_split_planner.py --stiff-terms diffusion,elastic --nonstiff-terms reaction --coupling strong --json
-
-# Estimate splitting error
-python3 scripts/splitting_error_estimator.py --dt 1e-4 --scheme strang --commutator-norm 50 --target-error 1e-6 --json
+uv run python -c "from scipy.integrate import quad; import numpy as np; result, err = quad(lambda x: np.sin(x), 0, np.pi); print('Integral:', result, 'Error:', err)"
 ```
 
-## Error Handling
+### Scipy_Dblquad
+```bash
+uv run python -c "from scipy.integrate import dblquad; result, err = dblquad(lambda y, x: x*y, 0, 1, 0, 1); print('Integral:', result)"
+```
 
-| Error | Cause | Resolution |
-|-------|-------|------------|
-| `rtol and atol must be positive` | Invalid tolerances | Use positive values |
-| `error-norm must be positive` | Negative error norm | Check error computation |
-| `Unknown controller` | Invalid controller type | Use `i`, `pi`, or `pid` |
-| `Splitting requires at least one term` | Empty term list | Specify stiff or nonstiff terms |
+### Sympy_Integrate
+```bash
+uv run python -m runtime.harness scripts/sympy_compute.py integrate "sin(x)" --var x --from 0 --to "pi"
+```
 
-## Interpretation Guidance
+## Key Techniques
 
-### Error Norm Values
+*From indexed textbooks:*
 
-| Error Norm | Meaning | Action |
-|------------|---------|--------|
-| < 1.0 | Step acceptable | Accept, maybe increase dt |
-| ≈ 1.0 | At tolerance boundary | Accept with current dt |
-| > 1.0 | Step rejected | Reject, reduce dt |
+- [An Introduction to Numerical Analysis... (Z-Library)] Even though the topic of numerical integration is one of the oldest in numerical analysis and there is a very large literature, new papers continue to appear at a fairly high rate. Many of these results give methods for special classes of problems, for example, oscillatory integrals, and others are a response to changes in computers, for example, the use of vector pipeline architectures. The best survey of numerical integration is the large and detailed work of Davis and Rabinowitz (1984).
+- [An Introduction to Numerical Analysis... (Z-Library)] Automatic computation of improper integrals over a bounded or unbounded planar region, Computing 27, 253-284. Approximate Calculation of Multiple Integrals. Prentice-Hall, Englewood Cliffs, N.
+- [Numerical analysis (Burden R.L., Fair... (Z-Library)] Composite Numerical Integration 4. Survey of Methods and Software 235 250 5 Initial-Value Problems for Ordinary Differential Equations 259 5. The Elementary Theory of Initial-Value Problems 5.
+- [An Introduction to Numerical Analysis... (Z-Library)] A comparison of numerical integration programs, J. Numerical methods based on Whittaker cardinal or sine Wahba, G. Ill-posed problems: Numerical and statistical methods for mildly, moderately, and severely ill-posed problems with noisy data, Tech.
+- [Elementary Differential Equations and... (Z-Library)] August 7, 2012 21:05 c08 Sheet number 1 Page number 451 cyan black C H A P T E R Numerical Methods Up to this point we have discussed methods for solving differential equations by using analytical techniques such as integration or series expansions. Usually, the emphasis was on nding an exact expression for the solution. Unfortunately, there are many important problems in engineering and science, especially nonlinear ones, to which these methods either do not apply or are very complicated to use.
 
-### Controller Selection
+## Cognitive Tools Reference
 
-| Controller | Properties | Best For |
-|------------|------------|----------|
-| I (integral) | Simple, some overshoot | Non-stiff, moderate accuracy |
-| PI (proportional-integral) | Smooth, robust | General use |
-| PID | Aggressive adaptation | Rapidly varying dynamics |
-
-### IMEX Strategy
-
-| Coupling | Strategy |
-|----------|----------|
-| Weak | Simple operator splitting |
-| Moderate | Strang splitting |
-| Strong | Fully coupled IMEX-RK |
-
-## Limitations
-
-- **No automatic stiffness detection**: Use stiffness_detector from numerical-stability
-- **Splitting assumes separability**: Terms must be cleanly separable
-- **Jacobian requirement**: Some methods need analytical or numerical Jacobian
-
-## References
-
-- `references/method_catalog.md` - Integrator options and properties
-- `references/tolerance_guidelines.md` - Choosing rtol/atol
-- `references/error_control.md` - Error norm and adaptation formulas
-- `references/imex_guidelines.md` - Stiff/non-stiff splitting
-- `references/splitting_catalog.md` - Operator splitting patterns
-- `references/multiphase_field_patterns.md` - Phase-field specific splits
-
-## Version History
-
-- **v1.1.0** (2024-12-24): Enhanced documentation, decision guidance, examples
-- **v1.0.0**: Initial release with 5 integration scripts
+See `.maestro/skills/math-mode/SKILL.md` for full tool documentation.

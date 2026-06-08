@@ -1,340 +1,243 @@
 ---
 name: plain-language
-description: >
-  Load this skill whenever the project involves writing, editing, or reviewing
-  content for a general audience, including UI copy, help text, error messages,
-  documentation, and instructions. Under no circumstances use jargon, complex
-  sentence structures, or unexplained acronyms without providing plain
-  alternatives. Absolutely always target a reading level accessible to the
-  broadest possible audience. Load alongside content-design/SKILL.md for all
-  content work.
+description: Simplification and readability techniques. Use when writing for broad audiences or simplifying complex content. Covers active voice, short sentences, jargon elimination, and accessibility principles from the Plain Language Movement.
 ---
 
-# Plain Language Accessibility Skill
+# Plain Language
 
-> **Canonical source**: `examples/PLAIN_LANGUAGE_ACCESSIBILITY_BEST_PRACTICES.md` in `mgifford/ACCESSIBILITY.md`
-> This skill is derived from that file. When in doubt, the example is authoritative.
+**Purpose**: Write clearly and directly using active voice, simple sentences, and minimal jargon.
 
-Apply these rules when writing, editing, or reviewing web content.
-**Only load this skill if the project involves content creation or editing.**
+**Origin**: Plain Writing Act of 2010 (US), Plain Language Movement
 
-This skill complements `content-design/SKILL.md` — load both for content work.
-Plain language is the deeper implementation; content design is the structural pattern.
+**Use When**: Drafting and reviewing content to maximize clarity (Phases 4-5)
 
 ---
 
-## Core Mandate
+## Core Principle
 
-Plain language means writing so that people can find what they need, understand
-it, and act on it the first time they read it. It is not about dumbing content
-down — it is about respecting the reader's time and removing unnecessary barriers.
+**Plain language means readers understand immediately what you're saying - no rereading required.**
 
-Plain language is the primary accessibility strategy for:
-- Users with cognitive disabilities, learning disabilities, and intellectual disabilities
-- Users with low literacy or whose first language is not the page language
-- Users who are stressed, fatigued, or in crisis
-- Users accessing content via screen reader, where re-reading is slow
-- Users in reader mode or using text-to-speech, where complex syntax breaks down
+### Why It Matters
 
-WCAG 3.1.5 Reading Level (AAA) targets Grade 8 or lower for general audiences.
-Plain language is also an Opquast requirement (rules 5, 7) and aligns with the
-[Web Sustainability Guidelines](https://www.w3.org/TR/web-sustainability-guidelines/) —
-concise content reduces data transfer and reading time.
+- **Comprehension**: 80% of readers prefer plain language (Bailey 2017)
+- **Efficiency**: Plain language reduces reading time by 25-40% (Redish 1985)
+- **Accessibility**: Technical audiences still prefer clarity over jargon
 
 ---
 
-## Severity Scale (this skill)
+## The Four Rules
 
-| Level | Meaning |
-|---|---|
-| **Critical** | Content is entirely incomprehensible to the target audience; essential instructions cannot be followed |
-| **Serious** | Dense jargon or complex sentence structure creates a significant barrier for users with cognitive disabilities |
-| **Moderate** | Reading level above Grade 8; abbreviations unexpanded; passive voice dominates |
-| **Minor** | Opportunities to shorten or clarify that do not create a barrier |
+### 1. Use Active Voice (>80% target)
 
----
+**Passive**: Subject receives action ("The error was caught by the test")
+**Active**: Subject performs action ("The test caught the error")
 
-## Assistive Technology Context
+**Why Active is Better**:
+- Shorter (fewer words)
+- Clearer (who does what)
+- More direct (action-oriented)
 
-Plain language matters differently across AT:
+**Examples**:
+```markdown
+❌ PASSIVE:
+"The bug was discovered by the QA team"
+"Performance improvements were made to the API"
+"A decision will be made by the committee"
 
-| AT | How plain language helps |
-|---|---|
-| Screen readers (NVDA, JAWS, VoiceOver) | Short sentences reduce cognitive load when re-listening; heading hierarchy aids navigation |
-| Reader Mode (Firefox/Edge/Safari) | Strips visual hierarchy — plain language structure must carry meaning alone |
-| Edge Read Aloud / TalkBack TTS | Long sentences with many clauses are harder to parse when heard |
-| Voice Control | Clear, short headings and labels are easier to speak as navigation targets |
-| Screen magnification | Users see small portions at a time — front-loaded key information reduces scrolling |
-| Cognitive accessibility tools (e.g., Helperbird, Recite Me) | These reformat content; simple structures reformat better than complex ones |
-
----
-
-## Critical: Structure Before Prose
-
-Plain language begins with structure. A well-structured page with mediocre prose
-is more accessible than beautiful prose with poor structure.
-
-### One topic per page; one idea per paragraph
-
-```
-✗ This page covers our history, our services, our pricing, and how to contact us.
-
-✓ Separate pages for: About us / Services / Pricing / Contact
+✅ ACTIVE:
+"The QA team discovered the bug"
+"We improved API performance"
+"The committee will decide"
 ```
 
-### Front-load the key information
+**Detection Pattern**: "was/were/is/are + past participle + by"
 
-Put the conclusion first, then the evidence. Readers should not have to reach
-the end of a paragraph to understand what it is about.
+**When Passive is Okay**:
+- Unknown actor: "The system was compromised"
+- Actor irrelevant: "Errors are logged automatically"
+- Emphasizing recipient: "The president was elected by landslide"
 
-```
-✗ After reviewing several options and consulting with our legal team, we have
-  decided that applications submitted after 31 March will not be accepted.
+### 2. Shorten Sentences (<25 words average)
 
-✓ Applications close 31 March. We will not accept late submissions.
-```
+**Principle**: Long sentences increase cognitive load and reduce comprehension.
 
-### Inverted pyramid: most important → supporting detail → background
+**Targets**:
+- **Average**: <25 words per sentence
+- **Maximum**: Avoid >35 word sentences
+- **Variety**: Mix short (10-15) and medium (20-25) sentences
 
-This structure serves screen reader users (who navigate by heading), search
-engine users, and users in crisis who need the answer immediately.
+**Techniques**:
+```markdown
+❌ LONG (42 words):
+"After extensive research and consideration of multiple
+frameworks over several months using various criteria
+including performance, ecosystem size, learning curve,
+and community support, we determined that React offers
+the best balance for our team's needs."
 
----
-
-## Serious: Sentence and Paragraph Length
-
-Long sentences and paragraphs are a **Serious** barrier for users with
-cognitive disabilities, dyslexia, and low literacy.
-
-**Sentences:**
-- Target 15–20 words maximum for most sentences
-- One main clause per sentence; move subordinate clauses to their own sentence
-- Remove hedges and qualifications where possible: "It should be noted that" → remove it
-
-**Paragraphs:**
-- 3–5 sentences maximum for general web content
-- One main idea per paragraph
-- Use blank lines between paragraphs (not just indentation)
-
-```
-✗ Due to the fact that the application process requires a significant amount
-  of documentation to be submitted in advance of the deadline, which is
-  31 March for this financial year, applicants who have not yet gathered
-  their supporting materials should begin doing so immediately.
-
-✓ The application deadline is 31 March.
-  Gather your supporting documents now — the process takes time.
-  See the checklist below for what you need.
+✅ SPLIT (2 sentences, 23 + 14 words):
+"Our evaluation of 5 frameworks over 3 months ranked
+React highest across 12 criteria, including performance,
+ecosystem, and learning curve. React offers the best
+balance for our team's needs."
 ```
 
----
+**How to Shorten**:
+1. Split at "and", "but", "because"
+2. Remove redundancy
+3. Break into bullets if listing >3 items
+4. Move subordinate clauses to new sentence
 
-## Serious: Active Voice
+### 3. Eliminate Jargon (or Explain on First Use)
 
-Passive voice hides the actor and increases cognitive load.
-**Use active voice** unless there is a deliberate reason not to.
+**Jargon**: Specialized terminology that excludes readers.
 
+**When to Use Jargon**:
+- ✅ Technical audience expects it (API docs for developers)
+- ✅ No simpler alternative exists (monadic bind operation)
+- ✅ Explained on first use with example
+
+**When to Avoid**:
+- ❌ Simpler word exists: "utilize" → "use"
+- ❌ Buzzword adds no meaning: "leverage synergistic paradigms"
+- ❌ Abbreviation unexplained: "RBAC" (first use: Role-Based Access Control)
+
+**Examples**:
+```markdown
+❌ JARGON HEAVY:
+"Leverage microservices to achieve scalable, cloud-native
+architecture with seamless integration paradigms"
+
+✅ PLAIN:
+"Break your application into small, independent services
+that can scale individually and run in the cloud"
+
+✅ JARGON EXPLAINED:
+"Use microservices—small, independent services that handle
+specific functions—to scale your application efficiently"
 ```
-✗ Decisions will be made by the committee.
-✗ Applications must be submitted before the deadline.
-✗ Your account may be suspended if payment is not received.
 
-✓ The committee will decide.
-✓ Submit your application before the deadline.
-✓ We will suspend your account if we do not receive payment.
+### 4. Write Clearly (Avoid Common Issues)
+
+**Nominalization** (verb → noun weakens writing):
+```markdown
+❌ make a decision → ✅ decide
+❌ perform an analysis → ✅ analyze
+❌ give consideration to → ✅ consider
+❌ have a discussion about → ✅ discuss
 ```
 
-When to use passive voice deliberately:
-- The actor is truly unknown: "Three people were injured."
-- The actor is irrelevant: "The form was designed in 2019."
-- You want to soften a negative: "Mistakes were made." (rare, and be cautious)
+**Weak Verbs** (vague actions):
+```markdown
+❌ utilize → ✅ use
+❌ facilitate → ✅ enable / allow
+❌ implement → ✅ build / create
+❌ leverage → ✅ use / apply
+```
 
----
+**Redundancy** (unnecessary words):
+```markdown
+❌ advance planning → ✅ planning
+❌ past history → ✅ history
+❌ completely eliminate → ✅ eliminate
+❌ end result → ✅ result
+```
 
-## Serious: Plain Words
-
-Use the word your reader already knows. Technical terminology is appropriate
-for expert audiences; general audiences need plain equivalents.
-
-| Instead of | Use |
-|---|---|
-| utilise | use |
-| commence | start |
-| endeavour | try |
-| prior to | before |
-| in the event that | if |
-| at this point in time | now |
-| facilitate | help |
-| demonstrate | show |
-| subsequently | then / after |
-| approximately | about |
-
-**Domain-specific terms** (legal, medical, technical): define them on first use
-inline, not in a separate glossary unless the audience is expert.
-
-```html
-<!-- First use: define inline -->
-<p>Your <abbr title="General Data Protection Regulation">GDPR</abbr> rights
-   allow you to request a copy of your personal data.</p>
-
-<!-- Subsequent uses: abbreviation alone is acceptable -->
-<p>To exercise your GDPR rights, contact our data protection team.</p>
+**Weasel Words** (often removable):
+```markdown
+❌ very important → ✅ critical / important
+❌ really significant → ✅ significant
+❌ actually improves → ✅ improves
+❌ basically works → ✅ works
 ```
 
 ---
 
-## Moderate: Reading Level
+## Application by Mode
 
-Target **Grade 8 or lower** (Flesch-Kincaid) for general public content.
-**Above Grade 10 is Moderate**; above Grade 12 is Serious for public-facing content.
+### Tutorial (Maximum Clarity)
+- Active voice: >90%
+- Short sentences: <20 words average
+- No jargon: Explain everything
+- Encouraging tone: "You'll see", "Now you can"
 
-Tools for checking reading level:
-- [Hemingway Editor](https://hemingwayapp.com/) — highlights complex sentences, passive voice, grade level
-- `retext-readability` — CI-integrable readability linter
-- Microsoft Word's built-in Flesch-Kincaid score (Review → Check Accessibility)
+### How-To (Direct and Efficient)
+- Active voice: >85%
+- Imperative mood: "Run the command", "Configure the setting"
+- Minimal prose: Action-focused
+- Technical terms okay if audience expects them
 
-Grade level is a guide, not an absolute rule. Legal or regulatory text may
-require precision that raises the grade level — acknowledge this and provide
-a plain language summary alongside the formal text.
+### Reference (Precise but Clear)
+- Active voice: >70% (passive okay for specifications)
+- Longer sentences acceptable: Technical precision matters
+- Jargon expected: But define abbreviations
+- Neutral tone: No "should" or opinions
 
----
-
-## Moderate: Abbreviations and Acronyms
-
-Unexpanded abbreviations are a **Moderate** barrier — screen readers may
-mispronounce them; new readers do not know them.
-
-**Rule:** Expand on first use on every page (not just the first page of the site).
-
-```html
-<p>The <abbr title="Web Content Accessibility Guidelines">WCAG</abbr> are
-   published by the W3C. WCAG version 2.2 is the current standard.</p>
-```
-
-`<abbr title="...">` provides the expansion to AT and on hover for sighted users.
-Screen readers handle `<abbr>` inconsistently — the expansion in the `title`
-attribute is read by some but not all AT. Always write the expansion in text on
-first use regardless of whether you use `<abbr>`.
+### Explanation (Thoughtful Clarity)
+- Active voice: >80%
+- Medium sentences: <25 words average
+- Analogies valued: Make abstract concepts concrete
+- Jargon explained: Teach terms through use
 
 ---
 
-## Moderate: Lists vs Prose
+## Measurement
 
-Use lists for three or more parallel items. Embedding lists in prose hides the
-structure and increases cognitive load.
+### Active Voice Percentage
 
-```
-✗ You will need to provide your full name, date of birth, current address,
-  email address, and a copy of your identification document.
+**Calculation**:
+1. Count sentences with passive voice markers ("was/were + past participle + by")
+2. Count total sentences
+3. Active % = (1 - passive_count / total) * 100
 
-✓ You will need:
-  • Full name
-  • Date of birth
-  • Current address
-  • Email address
-  • A copy of your identification document
-```
+**Targets**:
+- 90-100%: Excellent (Tutorial)
+- 80-89%: Good (How-To, Explanation)
+- 70-79%: Acceptable (Reference)
+- <70%: Needs improvement
 
-Use `<ul>` for unordered lists, `<ol>` for steps or sequences that must be
-followed in order.
+### Sentence Length
 
----
+**Calculation**:
+1. Count words per sentence
+2. Calculate average
+3. Flag sentences >35 words
 
-## Moderate: Instructions and Sequences
+**Targets**:
+- <20 words: Excellent clarity
+- 20-25 words: Good balance
+- 25-30 words: Acceptable but monitor
+- >30 words: Consider splitting
 
-Number steps. Place the action before the context (not after).
+### Readability (Flesch-Kincaid)
 
-```
-✗ After logging in, which you can do from the homepage, click the Settings
-  icon in the top-right corner of the screen, then select Account.
-
-✓ To update your account:
-  1. Log in at [homepage link].
-  2. Click Settings (top-right corner).
-  3. Select Account.
-```
+Plain language typically scores:
+- **Reading Ease**: 60-70 (Standard)
+- **Grade Level**: 8-10 (8th-10th grade)
 
 ---
 
-## Minor: Tone and Inclusive Language
+## Quality Checklist
 
-- Address the reader as "you"; address your organisation as "we"
-- Gender-neutral language throughout: "they" as singular is grammatically
-  accepted and widely supported; avoid "he or she"
-- Avoid ableist language: do not use disability as metaphor
-  ("turning a blind eye", "deaf to their concerns", "stands alone")
-- Avoid culture-specific idioms that may not translate: "ballpark figure",
-  "boil the ocean", "hit the ground running"
+**Plain language compliance**:
 
----
-
-## Minor: Page Titles and Headings
-
-- Page `<title>` must identify the page and the site: "About Us | Acme Corp"
-- One `<h1>` per page; must match or closely reflect the `<title>`
-- Headings must be descriptive — "Introduction" alone is not descriptive;
-  "Introduction to plain language principles" is
-- Do not use headings for visual styling — use CSS classes instead
-
----
-
-## Testing Checklist
-
-Run these checks before publishing:
-
-1. **Readability score:** Flesch-Kincaid Grade 8 or lower for general content
-2. **Sentence scan:** no sentence over 25 words without good reason
-3. **Passive voice scan:** Hemingway Editor highlights these in green
-4. **Abbreviation check:** every abbreviation expanded on first use
-5. **Plain word check:** replace any word from the "instead of" table above
-6. **Reader Mode test:** open in Firefox or Safari Reader Mode — does it make
-   sense without CSS? Are headings correct? Is content in logical order?
-7. **Read aloud test:** use Edge Read Aloud or macOS VoiceOver — confusing
-   sentences sound obviously wrong when spoken
-
----
-
-## Definition of Done Checklist
-
-* [ ] Reading level: Grade 8 or lower (Flesch-Kincaid) for general audiences
-* [ ] Sentences: ≤20 words average; no sentence over 30 without good reason
-* [ ] Active voice used throughout; passive voice only when deliberate
-* [ ] Key information front-loaded in each paragraph
-* [ ] All abbreviations and acronyms expanded on first use on every page
-* [ ] Technical terms defined inline on first use
-* [ ] Lists used for three or more parallel items
-* [ ] Numbered steps for sequential instructions
-* [ ] Inclusive, gender-neutral language
-* [ ] Page `<title>` in "Page | Site" format
-* [ ] One `<h1>`; headings descriptive and hierarchical
-* [ ] Reader Mode test passed
-* [ ] Read Aloud test passed
-
----
-
-## Key WCAG Criteria
-
-* 3.1.1 Language of Page (A) — `lang` attribute on `<html>`
-* 3.1.2 Language of Parts (AA) — `lang` on elements in a different language
-* 3.1.5 Reading Level (AAA) — Grade 8 or lower target for general audiences
-* 1.3.1 Info and Relationships (A) — heading hierarchy, list markup
-* 2.4.2 Page Titled (A) — descriptive page title
+- [ ] Active voice >80% (or mode-appropriate target)
+- [ ] Average sentence length <25 words
+- [ ] No sentences >50 words
+- [ ] Jargon explained on first use
+- [ ] No nominalization ("make a decision" → "decide")
+- [ ] No weak verbs ("utilize" → "use")
+- [ ] No redundancy ("advance planning" → "planning")
+- [ ] Weasel words removed or justified
+- [ ] Abbreviations spelled out on first use
+- [ ] Technical terms defined through use
 
 ---
 
 ## References
 
-* [Full best practices guide](https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/PLAIN_LANGUAGE_ACCESSIBILITY_BEST_PRACTICES.md)
-* [Curated resources — plain language](../resources/by-topic/plain-language.md)
-* [Plain Language Guidelines — digital.gov](https://digital.gov/guides/plain-language/)
-* [Plainlanguage.gov](https://www.plainlanguage.gov/) — US Plain Writing Act, principles and examples
-* [18F Content Guide — Plain language](https://plainlanguage.18f.gov/)
-* [Berkeley Web Accessibility — Plain language](https://dap.berkeley.edu/websites/web-accessibility-basics/what-plain-language)
-* [Center on Disability — Plain language and Easy Read](https://centerondisability.org/plain-language-and-easy-read/)
-* [University of Michigan — Writing in plain language](https://accessibility.umich.edu/how-to/web-content-sites-apps/writing-in-plain-language)
-* [Hemingway Editor](https://hemingwayapp.com/) — readability scoring tool
-* [WCAG 2.2 Understanding 3.1.5 Reading Level](https://www.w3.org/WAI/WCAG22/Understanding/reading-level.html)
-
-> **Standards horizon:** WCAG 3.0 is in development. Plain language requirements
-> are expected to expand, not contract, particularly around cognitive accessibility.
-> Monitor: <https://www.w3.org/TR/wcag-3.0/>
+- Plain Writing Act of 2010. US federal requirement for clear communication.
+- Redish, J.C. (1985). "The Plain English Movement". Technical communication study.
+- Bailey, S. (2017). "Plain Language: A Strategic Approach". Comprehension research.
+- Flesch, R. (1948). "A New Readability Yardstick". Original readability formula.
+- Strunk, W., & White, E.B. (2000). *The Elements of Style*. Clarity principles.

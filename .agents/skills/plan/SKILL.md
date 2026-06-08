@@ -1,338 +1,220 @@
 ---
 name: plan
-description: "Plan mode: write an actionable markdown plan to .hermes/plans/, no execution. Bite-sized tasks, exact paths, complete code."
-version: 2.0.0
-author: Hermes Agent (writing-craft adapted from obra/superpowers)
-license: MIT
-platforms: [linux, macos, windows]
-metadata:
-  hermes:
-    tags: [planning, plan-mode, implementation, workflow, design, documentation]
-    related_skills: [subagent-driven-development, test-driven-development, requesting-code-review]
+description: Generate plan.md and tasks.md for PLANNING increment using Architect Agent
 ---
 
-# Plan Mode
+# /sw:plan - Generate Implementation Plan
 
-Use this skill when the user wants a plan instead of execution.
+**⚠️ FOR EXISTING INCREMENTS ONLY - NOT for creating new increments!**
 
-## Core behavior
+**When to use `/sw:plan`:**
+- You already have `spec.md` created
+- Increment status is PLANNING or ACTIVE
+- You need to generate/regenerate `plan.md` and `tasks.md`
 
-For this turn, you are planning only.
-
-- Do not implement code.
-- Do not edit project files except the plan markdown file.
-- Do not run mutating terminal commands, commit, push, or perform external actions.
-- You may inspect the repo or other context with read-only commands/tools when needed.
-- Your deliverable is a markdown plan saved inside the active workspace under `.hermes/plans/`.
-
-## Output requirements
-
-Write a markdown plan that is concrete and actionable.
-
-Include, when relevant:
-- Goal
-- Current context / assumptions
-- Proposed approach
-- Step-by-step plan
-- Files likely to change
-- Tests / validation
-- Risks, tradeoffs, and open questions
-
-If the task is code-related, include exact file paths, likely test targets, and verification steps.
-
-## Save location
-
-Save the plan with `write_file` under:
-- `.hermes/plans/YYYY-MM-DD_HHMMSS-<slug>.md`
-
-Treat that as relative to the active working directory / backend workspace. Hermes file tools are backend-aware, so using this relative path keeps the plan with the workspace on local, docker, ssh, modal, and daytona backends.
-
-If the runtime provides a specific target path, use that exact path.
-If not, create a sensible timestamped filename yourself under `.hermes/plans/`.
-
-## Interaction style
-
-- If the request is clear enough, write the plan directly.
-- If no explicit instruction accompanies `/plan`, infer the task from the current conversation context.
-- If it is genuinely underspecified, ask a brief clarifying question instead of guessing.
-- After saving the plan, reply briefly with what you planned and the saved path.
+**When NOT to use `/sw:plan`:**
+- Creating a brand new increment from scratch → Use `/sw:increment` instead
+- No `spec.md` exists yet → Use `/sw:increment` instead
 
 ---
 
-# Writing the Plan Well
+Generate `plan.md` and `tasks.md` for an increment using Architect Agent and test-aware-planner.
 
-The rest of this skill is the craft of authoring a *good* implementation plan — the content that goes inside the markdown file above.
-
-## Overview
-
-Write comprehensive implementation plans assuming the implementer has zero context for the codebase and questionable taste. Document everything they need: which files to touch, complete code, testing commands, docs to check, how to verify. Give them bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
-
-Assume the implementer is a skilled developer but knows almost nothing about the toolset or problem domain. Assume they don't know good test design very well.
-
-**Core principle:** A good plan makes implementation obvious. If someone has to guess, the plan is incomplete.
-
-## When a Full Implementation Plan Helps
-
-**Always use before:**
-- Implementing multi-step features
-- Breaking down complex requirements
-- Delegating to subagents via subagent-driven-development
-
-**Don't skip when:**
-- Feature seems simple (assumptions cause bugs)
-- You plan to implement it yourself (future you needs guidance)
-- Working alone (documentation matters)
-
-## Bite-Sized Task Granularity
-
-**Each task = 2-5 minutes of focused work.**
-
-Every step is one action:
-- "Write the failing test" — step
-- "Run it to make sure it fails" — step
-- "Implement the minimal code to make the test pass" — step
-- "Run the tests and make sure they pass" — step
-- "Commit" — step
-
-**Too big:**
-```markdown
-### Task 1: Build authentication system
-[50 lines of code across 5 files]
-```
-
-**Right size:**
-```markdown
-### Task 1: Create User model with email field
-[10 lines, 1 file]
-
-### Task 2: Add password hash field to User
-[8 lines, 1 file]
-
-### Task 3: Create password hashing utility
-[15 lines, 1 file]
-```
-
-## Plan Document Structure
-
-### Header (Required)
-
-Every plan MUST start with:
-
-```markdown
-# [Feature Name] Implementation Plan
-
-> **For Hermes:** Use subagent-driven-development skill to implement this plan task-by-task.
-
-**Goal:** [One sentence describing what this builds]
-
-**Architecture:** [2-3 sentences about approach]
-
-**Tech Stack:** [Key technologies/libraries]
-
----
-```
-
-### Task Structure
-
-Each task follows this format:
-
-````markdown
-### Task N: [Descriptive Name]
-
-**Objective:** What this task accomplishes (one sentence)
-
-**Files:**
-- Create: `exact/path/to/new_file.py`
-- Modify: `exact/path/to/existing.py:45-67` (line numbers if known)
-- Test: `tests/path/to/test_file.py`
-
-**Step 1: Write failing test**
-
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
-
-**Step 2: Run test to verify failure**
-
-Run: `pytest tests/path/test.py::test_specific_behavior -v`
-Expected: FAIL — "function not defined"
-
-**Step 3: Write minimal implementation**
-
-```python
-def function(input):
-    return expected
-```
-
-**Step 4: Run test to verify pass**
-
-Run: `pytest tests/path/test.py::test_specific_behavior -v`
-Expected: PASS
-
-**Step 5: Commit**
+## Usage
 
 ```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
-````
-
-## Writing Process
-
-### Step 1: Understand Requirements
-
-Read and understand:
-- Feature requirements
-- Design documents or user description
-- Acceptance criteria
-- Constraints
-
-### Step 2: Explore the Codebase
-
-Use Hermes tools to understand the project:
-
-```python
-# Understand project structure
-search_files("*.py", target="files", path="src/")
-
-# Look at similar features
-search_files("similar_pattern", path="src/", file_glob="*.py")
-
-# Check existing tests
-search_files("*.py", target="files", path="tests/")
-
-# Read key files
-read_file("src/app.py")
+/sw:plan                      # Auto-detect PLANNING increment
+/sw:plan 0039                 # Explicit increment ID
+/sw:plan --force              # Overwrite existing plan/tasks
+/sw:plan 0039 --verbose       # Verbose output
 ```
 
-### Step 3: Design Approach
+## What It Does
 
-Decide:
-- Architecture pattern
-- File organization
-- Dependencies needed
-- Testing strategy
+1. **Auto-detect increment** (if not specified):
+   - Prefers PLANNING status
+   - Falls back to single ACTIVE increment
 
-### Step 4: Write Tasks
+2. **Validate pre-conditions**:
+   - spec.md exists and is not empty
+   - Increment is not COMPLETED/ABANDONED
+   - plan.md/tasks.md don't exist (unless --force)
 
-Create tasks in order:
-1. Setup/infrastructure
-2. Core functionality (TDD for each)
-3. Edge cases
-4. Integration
-5. Cleanup/documentation
+   **Error Handling:**
+   ```typescript
+   import { ERROR_MESSAGES, formatError } from './src/utils/error-formatter.js';
 
-### Step 5: Add Complete Details
+   // If spec.md not found
+   if (!specExists) {
+     formatError(ERROR_MESSAGES.SPEC_NOT_FOUND(incrementId));
+     return;
+   }
 
-For each task, include:
-- **Exact file paths** (not "the config file" but `src/config/settings.py`)
-- **Complete code examples** (not "add validation" but the actual code)
-- **Exact commands** with expected output
-- **Verification steps** that prove the task works
+   // If increment not found
+   if (!incrementExists) {
+     formatError(ERROR_MESSAGES.INCREMENT_NOT_FOUND(incrementId));
+     return;
+   }
 
-### Step 6: Review the Plan
+   // If user tries to use /sw:plan for NEW increments
+   if (userIsCreatingNew) {
+     formatError(ERROR_MESSAGES.WRONG_COMMAND_FOR_NEW_INCREMENT());
+     return;
+   }
+   ```
 
-Check:
-- [ ] Tasks are sequential and logical
-- [ ] Each task is bite-sized (2-5 min)
-- [ ] File paths are exact
-- [ ] Code examples are complete (copy-pasteable)
-- [ ] Commands are exact with expected output
-- [ ] No missing context
-- [ ] DRY, YAGNI, TDD principles applied
+3. **Generate plan.md** (via Architect Agent):
+   - Technical approach
+   - Architecture design
+   - Dependencies
+   - Risk assessment
 
-## Principles
+4. **Generate tasks.md** (via test-aware-planner):
+   - Checkable task list
+   - Embedded test plans (BDD format)
+   - Coverage targets
 
-### DRY (Don't Repeat Yourself)
+5. **Update metadata**:
+   - PLANNING → ACTIVE transition (tasks.md now exists)
+   - Update lastUpdated timestamp
 
-**Bad:** Copy-paste validation in 3 places
-**Good:** Extract validation function, use everywhere
+## Options
 
-### YAGNI (You Aren't Gonna Need It)
+- `--force`: Overwrite existing plan.md/tasks.md
+- `--preserve-task-status`: Keep existing task completion status (requires --force)
+- `--verbose`: Show detailed execution information
 
-**Bad:** Add "flexibility" for future requirements
-**Good:** Implement only what's needed now
+## Examples
 
-```python
-# Bad — YAGNI violation
-class User:
-    def __init__(self, name, email):
-        self.name = name
-        self.email = email
-        self.preferences = {}  # Not needed yet!
-        self.metadata = {}     # Not needed yet!
-
-# Good — YAGNI
-class User:
-    def __init__(self, name, email):
-        self.name = name
-        self.email = email
-```
-
-### TDD (Test-Driven Development)
-
-Every task that produces code should include the full TDD cycle:
-1. Write failing test
-2. Run to verify failure
-3. Write minimal code
-4. Run to verify pass
-
-See `test-driven-development` skill for details.
-
-### Frequent Commits
-
-Commit after every task:
+**Auto-detect and plan**:
 ```bash
-git add [files]
-git commit -m "type: description"
+/sw:plan
+# ✅ Auto-detected increment: 0039-ultra-smart-next-command
+# ✅ Generated plan.md (2.5K)
+# ✅ Generated tasks.md (4.2K, 15 tasks)
+# ✅ Transitioned PLANNING → ACTIVE
 ```
 
-## Common Mistakes
-
-### Vague Tasks
-
-**Bad:** "Add authentication"
-**Good:** "Create User model with email and password_hash fields"
-
-### Incomplete Code
-
-**Bad:** "Step 1: Add validation function"
-**Good:** "Step 1: Add validation function" followed by the complete function code
-
-### Missing Verification
-
-**Bad:** "Step 3: Test it works"
-**Good:** "Step 3: Run `pytest tests/test_auth.py -v`, expected: 3 passed"
-
-### Missing File Paths
-
-**Bad:** "Create the model file"
-**Good:** "Create: `src/models/user.py`"
-
-## Execution Handoff
-
-After saving the plan, offer the execution approach:
-
-**"Plan complete and saved. Ready to execute using subagent-driven-development — I'll dispatch a fresh subagent per task with two-stage review (spec compliance then code quality). Shall I proceed?"**
-
-When executing, use the `subagent-driven-development` skill:
-- Fresh `delegate_task` per task with full context
-- Spec compliance review after each task
-- Code quality review after spec passes
-- Proceed only when both reviews approve
-
-## Remember
-
-```
-Bite-sized tasks (2-5 min each)
-Exact file paths
-Complete code (copy-pasteable)
-Exact commands with expected output
-Verification steps
-DRY, YAGNI, TDD
-Frequent commits
+**Force regenerate**:
+```bash
+/sw:plan 0039 --force
+# ⚠️  Overwriting existing plan.md
+# ⚠️  Overwriting existing tasks.md
+# ✅ Generated plan.md (2.8K)
+# ✅ Generated tasks.md (5.1K, 18 tasks)
 ```
 
-**A good plan makes implementation obvious.**
+**Multiple PLANNING increments**:
+```bash
+/sw:plan
+# ❌ Multiple increments in PLANNING status found:
+#    - 0040-feature-a
+#    - 0041-feature-b
+# Please specify: /sw:plan 0040
+```
+
+## Self-Awareness Check
+
+**🎯 OPTIONAL**: Detect if planning for SpecWeave framework increment.
+
+Before generating plan.md, check repository context:
+
+```typescript
+import { detectSpecWeaveRepository } from './src/utils/repository-detector.js';
+
+const repoInfo = detectSpecWeaveRepository(process.cwd());
+
+if (repoInfo.isSpecWeaveRepo) {
+  console.log('ℹ️  Planning for SpecWeave framework increment');
+  console.log('');
+  console.log('   💡 Framework Planning Considerations:');
+  console.log('      • Design for backward compatibility');
+  console.log('      • Consider impact on existing user projects');
+  console.log('      • Plan for migration guides if breaking');
+  console.log('      • Document new patterns in CLAUDE.md');
+  console.log('      • Add ADR for significant architectural changes');
+  console.log('');
+}
+```
+
+**Why This Helps**:
+Planning for framework features requires different considerations than user apps:
+- Backward compatibility is critical
+- Changes affect ALL SpecWeave users
+- Architecture decisions need ADRs
+- Workflow changes need CLAUDE.md updates
+
+---
+
+## Workflow Integration
+
+**Typical workflow**:
+```bash
+# 1. Create increment (generates spec.md)
+/sw:increment "Add user authentication"
+# Status: BACKLOG → PLANNING (spec.md created)
+
+# 2. Edit spec.md (add requirements, ACs)
+# ... edit spec.md ...
+
+# 3. Generate plan and tasks
+/sw:plan
+# Status: PLANNING → ACTIVE (tasks.md created)
+
+# 4. Execute tasks
+/sw:do
+```
+
+## Error Handling
+
+**spec.md not found**:
+```bash
+❌ spec.md not found in increment '0039-ultra-smart-next-command'
+💡 Create spec.md first using `/sw:increment` or manually
+```
+
+**plan.md already exists**:
+```bash
+❌ plan.md already exists in increment '0039'
+💡 Use --force to overwrite existing plan.md
+```
+
+**Increment closed**:
+```bash
+❌ Cannot generate plan for COMPLETED increment
+💡 Reopen increment with `/sw:reopen` first
+```
+
+## Architecture
+
+**Components**:
+- `IncrementDetector`: Auto-detect or validate increment
+- `PlanValidator`: Validate pre-conditions
+- `ArchitectAgentInvoker`: Generate plan.md via Architect Agent
+- `TaskGeneratorInvoker`: Generate tasks.md via test-aware-planner
+- `PlanCommandOrchestrator`: Coordinate execution pipeline
+
+**State transitions**:
+- PLANNING → ACTIVE (when tasks.md created)
+- ACTIVE → ACTIVE (regenerate plan/tasks)
+- BACKLOG → (no change - spec.md already exists)
+
+## Related Commands
+
+- `/sw:increment` - Create new increment (generates spec.md)
+- `/sw:do` - Execute tasks from tasks.md
+- `/sw:validate` - Validate increment structure
+- `/sw:sync-docs` - Sync spec changes to living docs
+
+## Notes
+
+- **Auto-transition**: Creating tasks.md automatically transitions PLANNING → ACTIVE
+- **Force mode**: Use with caution - overwrites existing work
+- **Preserve status**: Use `--preserve-task-status` to keep completion checkmarks when regenerating
+- **Architect Agent**: Requires ~10-30 seconds for plan generation
+- **Test coverage**: tasks.md includes embedded test plans for each task
+
+---
+
+**Part of**: Increment 0039 (Ultra-Smart Next Command)
+**Status**: Phase 1 - Foundation (US-007)

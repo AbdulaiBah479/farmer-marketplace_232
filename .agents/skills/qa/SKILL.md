@@ -1,130 +1,295 @@
 ---
 name: qa
-description: Interactive QA session where user reports bugs or issues conversationally, and the agent files GitHub issues. Explores the codebase in the background for context and domain language. Use when user wants to report bugs, do QA, file issues conversationally, or mentions "QA session".
+description: Run quality assessment on a SpecWeave increment with risk scoring and quality gate decisions
 ---
 
-# QA Session
+# /sw:qa - Quality Assessment Command
 
-Run an interactive QA session. The user describes problems they're encountering. You clarify, explore the codebase for context, and file GitHub issues that are durable, user-focused, and use the project's domain language.
+**IMPORTANT**: You MUST invoke the CLI `specweave qa` command using the Bash tool. The slash command provides guidance and orchestration only.
 
-## For each issue the user raises
+## Purpose
 
-### 1. Listen and lightly clarify
+Run comprehensive quality assessment on an increment using:
+- ✅ **Gate 1: Rule-based validation** (130+ automated checks)
+- ✅ **Gate 2: LLM-as-Judge** (AI quality assessment with chain-of-thought reasoning)
+- ✅ **Gate 3: Risk scoring** (BMAD Probability × Impact quantitative assessment)
+- ✅ **Quality gate decisions** (PASS/CONCERNS/FAIL)
 
-Let the user describe the problem in their own words. Ask **at most 2-3 short clarifying questions** focused on:
+## LLM-as-Judge Pattern
 
-- What they expected vs what actually happened
-- Steps to reproduce (if not obvious)
-- Whether it's consistent or intermittent
+This command implements the **LLM-as-Judge** pattern - an established AI/ML evaluation technique where an LLM evaluates outputs using structured reasoning.
 
-Do NOT over-interview. If the description is clear enough to file, move on.
-
-### 2. Explore the codebase in the background
-
-While talking to the user, kick off an Agent (subagent_type=Explore) in the background to understand the relevant area. The goal is NOT to find a fix — it's to:
-
-- Learn the domain language used in that area (check UBIQUITOUS_LANGUAGE.md)
-- Understand what the feature is supposed to do
-- Identify the user-facing behavior boundary
-
-This context helps you write a better issue — but the issue itself should NOT reference specific files, line numbers, or internal implementation details.
-
-### 3. Assess scope: single issue or breakdown?
-
-Before filing, decide whether this is a **single issue** or needs to be **broken down** into multiple issues.
-
-Break down when:
-
-- The fix spans multiple independent areas (e.g. "the form validation is wrong AND the success message is missing AND the redirect is broken")
-- There are clearly separable concerns that different people could work on in parallel
-- The user describes something that has multiple distinct failure modes or symptoms
-
-Keep as a single issue when:
-
-- It's one behavior that's wrong in one place
-- The symptoms are all caused by the same root behavior
-
-### 4. File the GitHub issue(s)
-
-Create issues with `gh issue create`. Do NOT ask the user to review first — just file and share URLs.
-
-Issues must be **durable** — they should still make sense after major refactors. Write from the user's perspective.
-
-#### For a single issue
-
-Use this template:
-
+**How it works:**
 ```
-## What happened
-
-[Describe the actual behavior the user experienced, in plain language]
-
-## What I expected
-
-[Describe the expected behavior]
-
-## Steps to reproduce
-
-1. [Concrete, numbered steps a developer can follow]
-2. [Use domain terms from the codebase, not internal module names]
-3. [Include relevant inputs, flags, or configuration]
-
-## Additional context
-
-[Any extra observations from the user or from codebase exploration that help frame the issue — e.g. "this only happens when using the Docker layer, not the filesystem layer" — use domain language but don't cite files]
+┌─────────────────────────────────────────────────────────────┐
+│                    LLM-as-Judge Gate                        │
+├─────────────────────────────────────────────────────────────┤
+│  Input: spec.md, plan.md, tasks.md                         │
+│                                                             │
+│  Process:                                                   │
+│  1. Chain-of-thought analysis (7 dimensions)               │
+│  2. Evidence-based scoring (0-100 per dimension)           │
+│  3. Risk identification (BMAD P×I formula)                 │
+│  4. Formal verdict (PASS/CONCERNS/FAIL)                    │
+│                                                             │
+│  Output: Structured quality report with:                   │
+│  - Blockers (MUST fix)                                     │
+│  - Concerns (SHOULD fix)                                   │
+│  - Recommendations (NICE to fix)                           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-#### For a breakdown (multiple issues)
+**Why LLM-as-Judge?**
+- **Consistency**: Applies uniform evaluation criteria
+- **Depth**: Catches nuanced issues humans might miss
+- **Speed**: ~30 seconds vs hours of manual review
+- **Documented reasoning**: Explains WHY something is an issue
 
-Create issues in dependency order (blockers first) so you can reference real issue numbers.
+## Usage
 
-Use this template for each sub-issue:
-
-```
-## Parent issue
-
-#<parent-issue-number> (if you created a tracking issue) or "Reported during QA session"
-
-## What's wrong
-
-[Describe this specific behavior problem — just this slice, not the whole report]
-
-## What I expected
-
-[Expected behavior for this specific slice]
-
-## Steps to reproduce
-
-1. [Steps specific to THIS issue]
-
-## Blocked by
-
-- #<issue-number> (if this issue can't be fixed until another is resolved)
-
-Or "None — can start immediately" if no blockers.
-
-## Additional context
-
-[Any extra observations relevant to this slice]
+```bash
+/sw:qa <increment-id> [options]
 ```
 
-When creating a breakdown:
+### Examples
 
-- **Prefer many thin issues over few thick ones** — each should be independently fixable and verifiable
-- **Mark blocking relationships honestly** — if issue B genuinely can't be tested until issue A is fixed, say so. If they're independent, mark both as "None — can start immediately"
-- **Create issues in dependency order** so you can reference real issue numbers in "Blocked by"
-- **Maximize parallelism** — the goal is that multiple people (or agents) can grab different issues simultaneously
+```bash
+# Quick mode (default)
+/sw:qa 0008
 
-#### Rules for all issue bodies
+# Pre-implementation check
+/sw:qa 0008 --pre
 
-- **No file paths or line numbers** — these go stale
-- **Use the project's domain language** (check UBIQUITOUS_LANGUAGE.md if it exists)
-- **Describe behaviors, not code** — "the sync service fails to apply the patch" not "applyPatch() throws on line 42"
-- **Reproduction steps are mandatory** — if you can't determine them, ask the user
-- **Keep it concise** — a developer should be able to read the issue in 30 seconds
+# Quality gate check (comprehensive)
+/sw:qa 0008 --gate
 
-After filing, print all issue URLs (with blocking relationships summarized) and ask: "Next issue, or are we done?"
+# Export blockers to tasks.md
+/sw:qa 0008 --export
 
-### 5. Continue the session
+# CI mode (exit 1 on FAIL)
+/sw:qa 0008 --ci
 
-Keep going until the user says they're done. Each issue is independent — don't batch them.
+# Skip AI assessment (rule-based only)
+/sw:qa 0008 --no-ai
+
+# Force run even if rule-based fails
+/sw:qa 0008 --force
+```
+
+### Options
+
+- `--quick` - Quick mode (default) - Fast assessment with core checks
+- `--pre` - Pre-implementation mode - Check before starting work
+- `--gate` - Quality gate mode - Comprehensive check before closing
+- `--full` - Full multi-agent mode (Phase 3)
+- `--ci` - CI mode - Exit 1 on FAIL (for automation)
+- `--no-ai` - Skip AI assessment - Rule-based validation only (free, fast)
+- `--export` - Export blockers/concerns to tasks.md
+- `--force` - Force run even if rule-based validation fails
+- `-v, --verbose` - Show recommendations in addition to blockers/concerns
+
+## What It Does
+
+### Step 1: Rule-Based Validation (Always First, Always Free)
+
+The command runs 120+ validation checks on increment files:
+- ✅ File existence (spec.md, plan.md, tasks.md)
+- ✅ YAML frontmatter structure
+- ✅ AC-ID traceability (spec.md → tasks.md)
+- ✅ Link integrity
+- ✅ Format consistency
+
+**If rule-based fails** → Stop (don't waste AI tokens) unless `--force` flag used
+
+### Step 2: AI Quality Assessment (Optional, skip with `--no-ai`)
+
+**IMPORTANT**: This step uses the `increment-quality-judge-v2` **skill** (auto-activated).
+
+The skill provides guidance and the CLI handles execution:
+```bash
+# CLI invokes quality assessment directly
+specweave qa 0008 --pre
+```
+
+**DO NOT spawn agents for quality assessment** - use the CLI command which handles everything internally.
+
+The assessment evaluates:
+- **7 Dimensions**:
+  1. Clarity (18% weight)
+  2. Testability (22% weight)
+  3. Completeness (18% weight)
+  4. Feasibility (13% weight)
+  5. Maintainability (9% weight)
+  6. Edge Cases (9% weight)
+  7. **Risk Assessment (11% weight)**
+
+**Risk Assessment** uses quantitative method:
+- Probability (0.0-1.0) × Impact (1-10) = Risk Score (0.0-10.0)
+- 4 categories: Security, Technical, Implementation, Operational
+- Severity: CRITICAL (≥9.0), HIGH (6.0-8.9), MEDIUM (3.0-5.9), LOW (<3.0)
+
+### Step 3: Quality Gate Decision
+
+Based on thresholds:
+
+**FAIL** if any:
+- Risk score ≥ 9.0 (CRITICAL)
+- Test coverage < 60%
+- Spec quality < 50
+- Critical security vulnerabilities ≥ 1
+
+**CONCERNS** if any:
+- Risk score 6.0-8.9 (HIGH)
+- Test coverage < 80%
+- Spec quality < 70
+- High security vulnerabilities ≥ 1
+
+**PASS** otherwise
+
+### Step 4: Display Report
+
+Show results with:
+- 🟢 PASS / 🟡 CONCERNS / 🔴 FAIL decision
+- Blockers (MUST fix)
+- Concerns (SHOULD fix)
+- Recommendations (NICE to fix, with `--verbose`)
+- Spec quality scores (7 dimensions)
+- Summary (duration, tokens, cost)
+
+### Step 5: Export (Optional)
+
+If `--export` flag provided:
+- Append blockers/concerns to tasks.md
+- Add priority (P0 for blockers, P1 for concerns)
+- Include mitigation strategies
+
+## Implementation
+
+**When user runs `/qa <increment-id>`**:
+
+1. **Parse and normalize arguments**
+   ```typescript
+   let incrementId = args[0]; // e.g., "0008" or "0008-feature-name"
+
+   // Normalize increment ID
+   if (incrementId.includes('-')) {
+     // Extract numeric portion: "0008-feature-name" → "0008"
+     incrementId = incrementId.split('-')[0];
+   }
+   // Convert to 4-digit format: "8" → "0008"
+   incrementId = incrementId.padStart(4, '0');
+
+   const options = parseOptions(args.slice(1));
+   ```
+   Both formats work: `/sw:qa 0153` or `/sw:qa 0153-feature-name`
+
+2. **Invoke CLI command via Bash tool**
+   ```bash
+   specweave qa 0008 --pre --export
+   ```
+
+3. **CLI handles everything**:
+   - Rule-based validation
+   - AI assessment invocation
+   - Quality gate decision
+   - Report display
+   - Export to tasks.md
+
+4. **Return result to user**
+   - Show CLI output (already formatted)
+   - Suggest next steps based on decision
+
+## Modes Explained
+
+### Quick Mode (Default)
+
+**Use when**: Quick check during development
+**Checks**: Rule-based + AI spec quality + risk assessment
+**Time**: ~30 seconds
+**Cost**: ~$0.025-$0.050
+
+### Pre-Implementation Mode (`--pre`)
+
+**Use when**: Before starting increment work
+**Checks**: All quick mode checks + architecture review
+**Time**: ~1 minute
+**Cost**: ~$0.05-$0.10
+
+### Quality Gate Mode (`--gate`)
+
+**Use when**: Before closing increment (via `/sw:done`)
+**Checks**: All pre-implementation checks + test coverage + security audit
+**Time**: ~2-3 minutes
+**Cost**: ~$0.10-$0.20
+
+### Full Multi-Agent Mode (`--full`, Phase 3)
+
+**Use when**: Comprehensive audit for critical increments
+**Checks**: 6 specialized subagents in parallel
+**Time**: ~5 minutes
+**Cost**: ~$0.50-$1.00
+
+## Cost Breakdown
+
+| Mode | Tokens | Cost (USD) | Time |
+|------|--------|------------|------|
+| Quick | ~2,500 | ~$0.025 | 30s |
+| Pre | ~5,000 | ~$0.050 | 1m |
+| Gate | ~10,000 | ~$0.100 | 2-3m |
+| Full | ~50,000 | ~$0.500 | 5m |
+
+**Optimization**: Use Haiku model by default (cheapest, fastest)
+
+## Exit Codes (for CI)
+
+When `--ci` flag used:
+- **Exit 0**: PASS or CONCERNS (warning, but not blocking)
+- **Exit 1**: FAIL (blocking issues found)
+
+**CI Integration Example**:
+```yaml
+# .github/workflows/qa-check.yml
+- name: Run QA Check
+  run: specweave qa ${{ env.INCREMENT_ID }} --gate --ci
+```
+
+## Error Handling
+
+**Common errors**:
+- ❌ Increment not found → Check ID format (4 digits: 0001, 0008)
+- ❌ Missing files → Run `/sw:inc` to create increment first
+- ❌ Rule-based fails → Fix validation errors before AI assessment
+- ❌ AI timeout → Retry with `--quick` mode or `--no-ai`
+
+## Integration Points
+
+**Auto-invoked by**:
+- `/sw:done` - Runs `--gate` mode before closing increment
+- Post-task-completion hook (optional) - Runs `--quick` mode after tasks complete
+
+**Manual invocation**:
+- During development - `/qa 0008` for quick checks
+- Before commit - `/qa 0008 --pre` to catch issues early
+- Before PR - `/qa 0008 --gate --export` for comprehensive check
+
+## Best Practices
+
+1. **Run early and often** - Use `--quick` during development
+2. **Fix blockers immediately** - Don't proceed with FAIL decision
+3. **Address concerns before release** - CONCERNS = should fix
+4. **Use risk scores to prioritize** - Fix CRITICAL (≥9.0) risks first
+5. **Export to tasks.md** - Convert blockers/concerns to actionable tasks
+6. **CI integration** - Block PRs with FAIL decision
+
+## Related
+
+- **Skill**: `increment-quality-judge-v2` (7 dimensions with risk assessment)
+- **Command**: `/sw:done` (auto-runs QA gate)
+- **CLI**: `specweave qa` (direct invocation)
+- **Types**: `src/core/qa/types.ts` (TypeScript definitions)
+- **Tests**: `tests/unit/qa/` (58 test cases, 100% passing)
+
+## Example Session
+
+```
+User: /sw:qa 0008

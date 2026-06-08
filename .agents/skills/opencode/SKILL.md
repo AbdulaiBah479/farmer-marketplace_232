@@ -1,219 +1,668 @@
 ---
 name: opencode
-description: "Delegate coding to OpenCode CLI (features, PR review)."
-version: 1.2.0
-author: Hermes Agent
-license: MIT
-platforms: [linux, macos, windows]
-metadata:
-  hermes:
-    tags: [Coding-Agent, OpenCode, Autonomous, Refactoring, Code-Review]
-    related_skills: [claude-code, codex, hermes-agent]
+version: "1.0.0"
+description: OpenCode - Open source AI coding agent for terminal, desktop, and IDE with multi-provider LLM support, custom agents, MCP integration, and granular permissions
 ---
 
-# OpenCode CLI
+# OpenCode Skill
 
-Use [OpenCode](https://opencode.ai) as an autonomous coding worker orchestrated by Hermes terminal/process tools. OpenCode is a provider-agnostic, open-source AI coding agent with a TUI and CLI.
+**OpenCode** is an open source AI coding agent available as a terminal interface (TUI), desktop app, or IDE extension. It enables developers to work on code projects through conversational interactions with intelligent assistance for code explanation, implementation planning, code modification, and more.
 
-## When to Use
+**Key Value Proposition**: A flexible, multi-provider AI assistant with customizable agents, granular permissions, and extensive tool integrations that can be tailored for specific workflows like code review, documentation, security auditing, or development.
 
-- User explicitly asks to use OpenCode
-- You want an external coding agent to implement/refactor/review code
-- You need long-running coding sessions with progress checks
-- You want parallel task execution in isolated workdirs/worktrees
+## When to Use This Skill
 
-## Prerequisites
+- Setting up OpenCode for a new development environment
+- Creating custom agents for specialized coding workflows
+- Configuring permissions for team-based development
+- Building automated scripts with OpenCode CLI
+- Integrating MCP servers for extended capabilities
+- Troubleshooting OpenCode configuration or tool issues
+- Comparing OpenCode features with other AI coding assistants
 
-- OpenCode installed: `npm i -g opencode-ai@latest` or `brew install anomalyco/tap/opencode`
-- Auth configured: `opencode auth login` or set provider env vars (OPENROUTER_API_KEY, etc.)
-- Verify: `opencode auth list` should show at least one provider
-- Git repository for code tasks (recommended)
-- `pty=true` for interactive TUI sessions
+## When NOT to Use This Skill
 
-## Binary Resolution (Important)
+- For Claude Code/Claude CLI specific features (different product)
+- For GitHub Copilot configuration (use copilot-specific docs)
+- For Cursor IDE settings (different AI editor)
+- For generic LLM API usage (use provider-specific skills)
 
-Shell environments may resolve different OpenCode binaries. If behavior differs between your terminal and Hermes, check:
+---
 
-```
-terminal(command="which -a opencode")
-terminal(command="opencode --version")
-```
+## Core Concepts
 
-If needed, pin an explicit binary path:
-
-```
-terminal(command="$HOME/.opencode/bin/opencode run '...'", workdir="~/project", pty=true)
-```
-
-## One-Shot Tasks
-
-Use `opencode run` for bounded, non-interactive tasks:
+### Architecture Overview
 
 ```
-terminal(command="opencode run 'Add retry logic to API calls and update tests'", workdir="~/project")
+┌─────────────────────────────────────────────────────────────────┐
+│                         OpenCode                                 │
+│            Terminal UI / Desktop App / IDE Extension             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│    Agents     │    │    Tools      │    │  Permissions  │
+├───────────────┤    ├───────────────┤    ├───────────────┤
+│ • Build       │    │ • read/write  │    │ • allow       │
+│ • Plan        │    │ • edit/patch  │    │ • ask         │
+│ • Custom...   │    │ • bash        │    │ • deny        │
+│ • Subagents   │    │ • grep/glob   │    │ • Wildcards   │
+└───────────────┘    │ • webfetch    │    └───────────────┘
+                     │ • lsp         │
+                     │ • MCP servers │
+                     └───────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│  LLM Providers │   │   Sessions    │    │   Commands    │
+├───────────────┤    ├───────────────┤    ├───────────────┤
+│ • OpenAI      │    │ • SQLite      │    │ • /init       │
+│ • Claude      │    │ • Persistence │    │ • /undo       │
+│ • Gemini      │    │ • Export/     │    │ • /share      │
+│ • Groq        │    │   Import      │    │ • Custom...   │
+│ • Bedrock     │    └───────────────┘    └───────────────┘
+└───────────────┘
 ```
 
-Attach context files with `-f`:
+### Agent Types
 
-```
-terminal(command="opencode run 'Review this config for security issues' -f config.yaml -f .env.example", workdir="~/project")
-```
+| Type | Description | Use Case |
+|------|-------------|----------|
+| **Primary Agent** | Main assistant for direct interaction | Day-to-day development |
+| **Subagent** | Specialized assistant for specific tasks | Research, exploration |
+| **Build** (built-in) | Full tool access for development | Writing and modifying code |
+| **Plan** (built-in) | Read-only for analysis | Planning without changes |
+| **General** (subagent) | Multi-step task execution | Research and investigation |
+| **Explore** (subagent) | Codebase navigation | Quick file/code searching |
 
-Show model thinking with `--thinking`:
+---
 
-```
-terminal(command="opencode run 'Debug why tests fail in CI' --thinking", workdir="~/project")
-```
+## Installation
 
-Force a specific model:
+### Quick Install (Recommended)
 
-```
-terminal(command="opencode run 'Refactor auth module' --model openrouter/anthropic/claude-sonnet-4", workdir="~/project")
-```
+```bash
+# Install script
+curl -fsSL https://raw.githubusercontent.com/opencode-ai/opencode/refs/heads/main/install | bash
 
-## Interactive Sessions (Background)
+# Homebrew (macOS/Linux)
+brew install opencode-ai/tap/opencode
 
-For iterative work requiring multiple exchanges, start the TUI in background:
+# npm
+npm install -g opencode
 
-```
-terminal(command="opencode", workdir="~/project", background=true, pty=true)
-# Returns session_id
-
-# Send a prompt
-process(action="submit", session_id="<id>", data="Implement OAuth refresh flow and add tests")
-
-# Monitor progress
-process(action="poll", session_id="<id>")
-process(action="log", session_id="<id>")
-
-# Send follow-up input
-process(action="submit", session_id="<id>", data="Now add error handling for token expiry")
-
-# Exit cleanly — Ctrl+C
-process(action="write", session_id="<id>", data="\x03")
-# Or just kill the process
-process(action="kill", session_id="<id>")
+# Go
+go install github.com/opencode-ai/opencode@latest
 ```
 
-**Important:** Do NOT use `/exit` — it is not a valid OpenCode command and will open an agent selector dialog instead. Use Ctrl+C (`\x03`) or `process(action="kill")` to exit.
+### Verify Installation
 
-### TUI Keybindings
-
-| Key | Action |
-|-----|--------|
-| `Enter` | Submit message (press twice if needed) |
-| `Tab` | Switch between agents (build/plan) |
-| `Ctrl+P` | Open command palette |
-| `Ctrl+X L` | Switch session |
-| `Ctrl+X M` | Switch model |
-| `Ctrl+X N` | New session |
-| `Ctrl+X E` | Open editor |
-| `Ctrl+C` | Exit OpenCode |
-
-### Resuming Sessions
-
-After exiting, OpenCode prints a session ID. Resume with:
-
-```
-terminal(command="opencode -c", workdir="~/project", background=true, pty=true)  # Continue last session
-terminal(command="opencode -s ses_abc123", workdir="~/project", background=true, pty=true)  # Specific session
+```bash
+opencode --version
 ```
 
-## Common Flags
+---
 
-| Flag | Use |
-|------|-----|
-| `run 'prompt'` | One-shot execution and exit |
-| `--continue` / `-c` | Continue the last OpenCode session |
-| `--session <id>` / `-s` | Continue a specific session |
-| `--agent <name>` | Choose OpenCode agent (build or plan) |
-| `--model provider/model` | Force specific model |
-| `--format json` | Machine-readable output/events |
-| `--file <path>` / `-f` | Attach file(s) to the message |
-| `--thinking` | Show model thinking blocks |
-| `--variant <level>` | Reasoning effort (high, max, minimal) |
-| `--title <name>` | Name the session |
-| `--attach <url>` | Connect to a running opencode server |
+## Configuration
 
-## Procedure
+### Configuration Files
 
-1. Verify tool readiness:
-   - `terminal(command="opencode --version")`
-   - `terminal(command="opencode auth list")`
-2. For bounded tasks, use `opencode run '...'` (no pty needed).
-3. For iterative tasks, start `opencode` with `background=true, pty=true`.
-4. Monitor long tasks with `process(action="poll"|"log")`.
-5. If OpenCode asks for input, respond via `process(action="submit", ...)`.
-6. Exit with `process(action="write", data="\x03")` or `process(action="kill")`.
-7. Summarize file changes, test results, and next steps back to user.
+OpenCode uses `opencode.json` in your project root or global config at `~/.config/opencode/`:
 
-## PR Review Workflow
-
-OpenCode has a built-in PR command:
-
-```
-terminal(command="opencode pr 42", workdir="~/project", pty=true)
+```json
+{
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-20250514",
+  "permission": {
+    "edit": "ask",
+    "bash": "ask"
+  },
+  "agent": {
+    "build": {
+      "model": "claude-sonnet-4-20250514"
+    },
+    "plan": {
+      "model": "claude-sonnet-4-20250514",
+      "tools": {
+        "write": false,
+        "bash": false
+      }
+    }
+  }
+}
 ```
 
-Or review in a temporary clone for isolation:
+### Environment Variables
 
-```
-terminal(command="REVIEW=$(mktemp -d) && git clone https://github.com/user/repo.git $REVIEW && cd $REVIEW && opencode run 'Review this PR vs main. Report bugs, security risks, test gaps, and style issues.' -f $(git diff origin/main --name-only | head -20 | tr '\n' ' ')", pty=true)
-```
+```bash
+# API Keys (choose your provider)
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export GOOGLE_API_KEY="..."
+export GROQ_API_KEY="..."
 
-## Parallel Work Pattern
-
-Use separate workdirs/worktrees to avoid collisions:
-
-```
-terminal(command="opencode run 'Fix issue #101 and commit'", workdir="/tmp/issue-101", background=true, pty=true)
-terminal(command="opencode run 'Add parser regression tests and commit'", workdir="/tmp/issue-102", background=true, pty=true)
-process(action="list")
-```
-
-## Session & Cost Management
-
-List past sessions:
-
-```
-terminal(command="opencode session list")
+# OpenCode Settings
+export OPENCODE_CONFIG="~/.config/opencode/opencode.json"
+export OPENCODE_PERMISSION="ask"  # Default permission level
+export OPENCODE_AUTO_SHARE="true"  # Auto-share sessions
+export OPENCODE_EXPERIMENTAL_LSP_TOOL="true"  # Enable LSP
 ```
 
-Check token usage and costs:
+---
+
+## Tools Reference
+
+### Built-in Tools
+
+| Tool | Description | Permission |
+|------|-------------|------------|
+| `read` | Read file contents from codebase | allow |
+| `write` | Create or overwrite files | edit |
+| `edit` | Modify files using exact string replacements | edit |
+| `patch` | Apply patch files to code | edit |
+| `grep` | Search file contents using regex | allow |
+| `glob` | Find files by pattern (e.g., `**/*.js`) | allow |
+| `list` | List files and directories | allow |
+| `bash` | Execute shell commands | ask |
+| `webfetch` | Fetch and read web pages | ask |
+| `lsp` | Language Server Protocol (experimental) | allow |
+| `skill` | Load SKILL.md file content | allow |
+| `question` | Ask user questions during execution | allow |
+| `todoread/todowrite` | Task tracking during sessions | allow |
+
+### Tool Configuration
+
+```json
+{
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "grep": "allow",
+    "glob": "allow",
+    "list": "allow",
+    "bash": {
+      "*": "ask",
+      "git *": "allow",
+      "npm *": "allow",
+      "rm *": "deny"
+    }
+  }
+}
+```
+
+---
+
+## Creating Custom Agents
+
+### Interactive Creation
+
+```bash
+opencode agent create
+```
+
+This guides you through:
+1. Selecting storage location (global or project)
+2. Defining agent purpose
+3. Auto-generating system prompts
+4. Choosing accessible tools
+5. Creating markdown configuration
+
+### Agent Configuration (JSON)
+
+```json
+{
+  "agent": {
+    "reviewer": {
+      "description": "Code review specialist",
+      "mode": "subagent",
+      "model": "claude-sonnet-4-20250514",
+      "temperature": 0.3,
+      "prompt": ".opencode/agent/reviewer.md",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true,
+        "edit": false,
+        "bash": false
+      },
+      "permission": {
+        "webfetch": "deny"
+      },
+      "maxSteps": 20
+    }
+  }
+}
+```
+
+### Agent Configuration (Markdown)
+
+Create `.opencode/agent/reviewer.md`:
+
+```markdown
+---
+description: Code review specialist for quality and security
+mode: subagent
+model: claude-sonnet-4-20250514
+temperature: 0.3
+tools:
+  read: true
+  grep: true
+  glob: true
+  edit: false
+  bash: false
+---
+
+You are a code review specialist focused on:
+
+1. Code quality and best practices
+2. Security vulnerabilities
+3. Performance issues
+4. Maintainability concerns
+
+When reviewing code:
+- Identify issues by severity (critical, major, minor)
+- Provide specific line references
+- Suggest concrete improvements
+- Consider the project's existing patterns
+```
+
+### Agent Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `description` | string | Brief explanation (required) |
+| `mode` | string | `primary`, `subagent`, or `all` |
+| `model` | string | Override default model |
+| `temperature` | float | Response randomness (0.0-1.0) |
+| `prompt` | string | Path to system prompt file |
+| `tools` | object | Enable/disable specific tools |
+| `permission` | object | Override permissions |
+| `maxSteps` | number | Limit iterations before text-only |
+
+---
+
+## Custom Commands
+
+### Command Structure
+
+Create `.opencode/command/review.md`:
+
+```markdown
+---
+description: Review code changes
+agent: reviewer
+---
+
+Review the following code changes:
+
+$ARGUMENTS
+
+Focus on:
+1. Security vulnerabilities
+2. Performance issues
+3. Code style violations
+4. Missing tests
+```
+
+### Using Arguments
+
+```markdown
+---
+description: Create a component
+---
+
+Create a new React component named $1 in the $2 directory.
+
+Requirements:
+- TypeScript
+- Styled with Tailwind
+- Include tests
+```
+
+Usage: `/component Button components/ui`
+
+### Including Shell Output
+
+```markdown
+---
+description: Review recent changes
+---
+
+Review the following git diff:
+
+`!git diff HEAD~1`
+
+Summarize changes and identify any issues.
+```
+
+### File References
+
+```markdown
+---
+description: Explain architecture
+---
+
+Based on the architecture documentation:
+
+@ARCHITECTURE.md
+
+Explain how the authentication system works.
+```
+
+---
+
+## CLI Reference
+
+### TUI Mode (Default)
+
+```bash
+# Start in current directory
+opencode
+
+# Start in specific project
+opencode /path/to/project
+
+# Continue last session
+opencode --continue
+
+# Use specific session
+opencode --session <session-id>
+
+# Override model
+opencode --model claude-sonnet-4-20250514
+```
+
+### Non-Interactive Mode
+
+```bash
+# Run single prompt
+opencode run "explain this codebase"
+
+# Run with file context
+opencode run --file src/main.ts "add error handling"
+
+# Run custom command
+opencode run --command review
+
+# Output format
+opencode run --format json "list all functions"
+```
+
+### Server Mode
+
+```bash
+# Start headless server
+opencode serve --port 8080
+
+# Start with web interface
+opencode web --port 8080
+
+# Connect to remote server
+opencode attach http://localhost:8080
+```
+
+### Agent Management
+
+```bash
+# Create new agent
+opencode agent create
+
+# List all agents
+opencode agent list
+```
+
+### MCP Integration
+
+```bash
+# Add MCP server
+opencode mcp add <server-name>
+
+# List MCP servers
+opencode mcp list
+
+# Debug MCP connection
+opencode mcp debug <server-name>
+```
+
+### Session Management
+
+```bash
+# List sessions
+opencode session list --max-count 10
+
+# Export session
+opencode export <session-id>
+
+# Import session
+opencode import session.json
+
+# View usage stats
+opencode stats --days 7
+```
+
+---
+
+## Project Initialization
+
+### Generate AGENTS.md
+
+```bash
+opencode
+/init
+```
+
+This analyzes your project and generates `AGENTS.md` containing:
+- Project structure overview
+- Key patterns and conventions
+- Technology stack
+- Important files and directories
+
+**Best Practice**: Commit `AGENTS.md` to version control so OpenCode understands your codebase.
+
+---
+
+## Permissions System
+
+### Permission Levels
+
+| Level | Behavior |
+|-------|----------|
+| `allow` | Executes without approval |
+| `ask` | Prompts for user approval |
+| `deny` | Blocks execution |
+
+### Approval Responses
+
+When prompted:
+- `once` - Approve single request
+- `always` - Approve matching requests for session
+- `reject` - Deny the request
+
+### Default Permissions
+
+Most tools default to `allow`, except:
+- `doom_loop` - `ask` (safety feature)
+- `external_directory` - `ask` (safety feature)
+- `.env*` files - `deny` (security)
+
+### Agent-Level Overrides
+
+Agent permissions take precedence over global:
+
+```json
+{
+  "permission": {
+    "bash": "ask"
+  },
+  "agent": {
+    "build": {
+      "permission": {
+        "bash": "allow"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Common Use Cases
+
+### Code Review Agent
+
+```markdown
+---
+description: Systematic code review
+mode: subagent
+tools:
+  read: true
+  grep: true
+  edit: false
+  bash: false
+---
+
+You are a code reviewer. For each review:
+
+1. Check for security vulnerabilities
+2. Identify performance bottlenecks
+3. Ensure code follows project patterns
+4. Verify test coverage
+5. Suggest improvements
+
+Format findings as:
+- CRITICAL: [issue]
+- MAJOR: [issue]
+- MINOR: [issue]
+```
+
+### Documentation Agent
+
+```markdown
+---
+description: Documentation writer
+mode: subagent
+tools:
+  read: true
+  glob: true
+  write: true
+  bash: false
+---
+
+You write clear, comprehensive documentation.
+
+When documenting:
+1. Follow project's existing doc style
+2. Include code examples
+3. Document edge cases
+4. Keep language accessible
+```
+
+### Security Audit Agent
+
+```markdown
+---
+description: Security vulnerability scanner
+mode: subagent
+tools:
+  read: true
+  grep: true
+  bash: false
+  webfetch: true
+---
+
+You are a security auditor. Scan for:
+
+1. Injection vulnerabilities (SQL, XSS, command)
+2. Authentication/authorization issues
+3. Sensitive data exposure
+4. Insecure dependencies
+5. Misconfigurations
+
+Reference OWASP Top 10 for classification.
+```
+
+---
+
+## Troubleshooting
+
+### Agent Not Invoking
 
 ```
-terminal(command="opencode stats")
-terminal(command="opencode stats --days 7 --models anthropic/claude-sonnet-4")
+Issue: Custom agent doesn't respond to @mention
 ```
 
-## Pitfalls
+**Solutions:**
+1. Verify agent file is in correct location (`.opencode/agent/` or `~/.config/opencode/agent/`)
+2. Check `mode` is set correctly (`subagent` for @mentions)
+3. Ensure YAML frontmatter is valid
+4. Try `opencode agent list` to verify registration
 
-- Interactive `opencode` (TUI) sessions require `pty=true`. The `opencode run` command does NOT need pty.
-- `/exit` is NOT a valid command — it opens an agent selector. Use Ctrl+C to exit the TUI.
-- PATH mismatch can select the wrong OpenCode binary/model config.
-- If OpenCode appears stuck, inspect logs before killing:
-  - `process(action="log", session_id="<id>")`
-- Avoid sharing one working directory across parallel OpenCode sessions.
-- Enter may need to be pressed twice to submit in the TUI (once to finalize text, once to send).
-
-## Verification
-
-Smoke test:
+### Permission Denied
 
 ```
-terminal(command="opencode run 'Respond with exactly: OPENCODE_SMOKE_OK'")
+Issue: Tool execution blocked unexpectedly
 ```
 
-Success criteria:
-- Output includes `OPENCODE_SMOKE_OK`
-- Command exits without provider/model errors
-- For code tasks: expected files changed and tests pass
+**Solutions:**
+1. Check global permissions in `opencode.json`
+2. Verify agent-specific overrides
+3. Use `opencode run --permission allow` for testing
+4. Check for conflicting wildcard patterns
 
-## Rules
+### Tool Not Working
 
-1. Prefer `opencode run` for one-shot automation — it's simpler and doesn't need pty.
-2. Use interactive background mode only when iteration is needed.
-3. Always scope OpenCode sessions to a single repo/workdir.
-4. For long tasks, provide progress updates from `process` logs.
-5. Report concrete outcomes (files changed, tests, remaining risks).
-6. Exit interactive sessions with Ctrl+C or kill, never `/exit`.
+```
+Issue: grep/glob returns no results
+```
+
+**Solutions:**
+1. Check if files are in `.gitignore` (excluded by default)
+2. Create `.ignore` file to include ignored directories
+3. Verify pattern syntax is correct
+
+### LLM Connection Issues
+
+```
+Issue: Provider not responding
+```
+
+**Solutions:**
+1. Verify API key is set correctly
+2. Check network connectivity
+3. Run `opencode models` to list available models
+4. Try `opencode models --refresh` to refresh cache
+
+---
+
+## Resources
+
+### Official Documentation
+- [OpenCode Docs](https://opencode.ai/docs/)
+- [Agents Guide](https://opencode.ai/docs/agents/)
+- [Tools Reference](https://opencode.ai/docs/tools/)
+- [Permissions](https://opencode.ai/docs/permissions/)
+- [CLI Reference](https://opencode.ai/docs/cli/)
+
+### Source Code
+- [GitHub Repository](https://github.com/opencode-ai/opencode)
+
+### Related Projects
+- [Charm](https://github.com/charmbracelet) - Terminal UI framework
+- [MCP Protocol](https://modelcontextprotocol.io/) - Model Context Protocol
+
+---
+
+## Version History
+
+- **1.0.0** (2026-01-12): Initial skill release
+  - Complete OpenCode agent system documentation
+  - Built-in and custom agent configuration
+  - Tools reference with permission system
+  - CLI commands and usage patterns
+  - Custom commands and SKILL.md integration
+  - MCP server integration
+  - Common agent templates (review, docs, security)
+  - Troubleshooting guide

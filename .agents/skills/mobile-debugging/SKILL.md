@@ -1,670 +1,536 @@
 ---
 name: mobile-debugging
-description: Remote JavaScript console access and debugging on mobile devices. Use when debugging web pages on phones/tablets, accessing console errors without desktop DevTools, testing responsive designs on real devices, or diagnosing mobile-specific issues. Covers Eruda, vConsole, Chrome/Safari remote debugging, and cloud testing platforms.
+description: React Native debugging with Flipper, React DevTools, and crash analysis. Use for mobile app debugging or network request issues.
 ---
 
-# Mobile debugging methodology
+# Mobile Debugging Expert
 
-Patterns for accessing JavaScript console and debugging web pages on mobile devices without traditional desktop DevTools.
+Specialized in debugging React Native and Expo applications across iOS and Android platforms. Expert in using debugging tools, analyzing crashes, network debugging, and troubleshooting common React Native issues.
 
-## Quick-start: Inject console on any page
+## What I Know
 
-### Eruda bookmarklet (recommended)
+### Debugging Tools
 
-Add this as a bookmark on your mobile browser, then tap it on any page:
+**React DevTools**
+- Component tree inspection
+- Props and state inspection
+- Profiler for performance analysis
+- Component re-render tracking
+- Installation: `npm install -g react-devtools`
+- Usage: `react-devtools` before starting app
 
+**Chrome DevTools (Remote Debugging)**
+- JavaScript debugger access
+- Breakpoints and step-through debugging
+- Console for logging and evaluation
+- Network tab for API inspection
+- Source maps for original code navigation
+
+**Flipper (Meta's Debugging Platform)**
+- Layout inspector for UI debugging
+- Network inspector with request/response details
+- Logs viewer with filtering
+- React DevTools plugin integration
+- Database inspector
+- Crash reporter integration
+- Performance metrics monitoring
+
+**React Native Debugger (Standalone)**
+- All-in-one debugging solution
+- Redux DevTools integration
+- React DevTools integration
+- Network inspection
+- AsyncStorage inspection
+
+### Debugging Techniques
+
+**Console Logging Strategies**
 ```javascript
-javascript:(function(){var script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/eruda';document.body.append(script);script.onload=function(){eruda.init();}})();
-```
+// Basic logging
+console.log('Debug:', value);
 
-### vConsole bookmarklet
-
-```javascript
-javascript:(function(){var script=document.createElement('script');script.src='https://unpkg.com/vconsole@latest/dist/vconsole.min.js';document.body.append(script);script.onload=function(){new VConsole();}})();
-```
-
-## In-page console tools
-
-### Eruda setup
-
-Eruda provides a full DevTools-like experience in a floating panel. Eruda 3.x (3.4.3 current as of 2026-05) is the right baseline; it ships ES2020 syntax and assumes a modern mobile browser.
-
-```html
-<!-- CDN (development only) -->
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
-<!-- Conditional loading (recommended for production) -->
-<script>
-(function() {
-    var src = 'https://cdn.jsdelivr.net/npm/eruda';
-    // Only load when ?eruda=true or localStorage flag set
-    if (!/eruda=true/.test(window.location) &&
-        localStorage.getItem('active-eruda') !== 'true') return;
-
-    var script = document.createElement('script');
-    script.src = src;
-    script.onload = function() { eruda.init(); };
-    document.body.appendChild(script);
-})();
-</script>
-```
-
-```javascript
-// NPM installation
-// npm install eruda --save-dev
-
-import eruda from 'eruda';
-
-// Initialize with options
-eruda.init({
-    container: document.getElementById('eruda-container'),
-    tool: ['console', 'elements', 'network', 'resources', 'info'],
-    useShadowDom: true,
-    autoScale: true
+// Structured logging
+console.log({
+  component: 'UserProfile',
+  action: 'loadData',
+  userId: user.id,
+  timestamp: new Date().toISOString()
 });
 
-// Add custom buttons
-eruda.add({
-    name: 'Clear Storage',
-    init($el) {
-        $el.html('<button>Clear All Storage</button>');
-        $el.find('button').on('click', () => {
-            localStorage.clear();
-            sessionStorage.clear();
-            console.log('Storage cleared');
-        });
-    }
-});
+// Conditional logging
+if (__DEV__) {
+  console.log('Development only:', debugData);
+}
 
-// Remove when done
-eruda.destroy();
+// Performance logging
+console.time('DataLoad');
+await fetchData();
+console.timeEnd('DataLoad');
+
+// Table logging for arrays
+console.table(users);
 ```
 
-**Eruda features:**
-- Console (logs, errors, warnings)
-- Elements (DOM inspector)
-- Network (XHR/fetch requests)
-- Resources (localStorage, cookies, sessionStorage)
-- Sources (page source code)
-- Info (page/device information)
-- Snippets (saved code snippets)
-
-### vConsole setup
-
-Lighter weight alternative, official tool for WeChat debugging.
-
-```html
-<!-- CDN -->
-<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-<script>
-var vConsole = new VConsole();
-</script>
-```
-
+**Breakpoint Debugging**
 ```javascript
-// NPM
-// npm install vconsole
+// Debugger statement
+function processData(data) {
+  debugger; // Execution pauses here when debugger attached
+  return data.map(item => transform(item));
+}
 
-import VConsole from 'vconsole';
-
-// Initialize with options
-const vConsole = new VConsole({
-    theme: 'dark',
-    onReady: function() {
-        console.log('vConsole is ready');
-    },
-    log: {
-        maxLogNumber: 1000
-    }
-});
-
-// Dynamic configuration
-vConsole.setOption('log.maxLogNumber', 5000);
-
-// Destroy when done
-vConsole.destroy();
+// Conditional breakpoints in DevTools
+// Right-click on line number → Add conditional breakpoint
+// Condition: userId === '12345'
 ```
 
-**vConsole features:**
-- Log panel (console.log, info, warn, error)
-- System panel (device info)
-- Network panel (XHR, fetch)
-- Element panel (DOM tree)
-- Storage panel (cookies, localStorage)
-
-### Comparison: Eruda vs vConsole
-
-| Feature | Eruda | vConsole |
-|---------|-------|----------|
-| Size | ~100KB | ~85KB |
-| DOM Editing | Yes | View only |
-| Network Details | Full | Basic |
-| Plugin System | Yes | Yes |
-| Dark Theme | Via plugin | Built-in |
-| Best For | Full debugging | Quick logging |
-
-## Native remote debugging
-
-### Chrome DevTools (Android)
-
-```bash
-# 1. Enable USB debugging on Android
-#    Settings → Developer Options → USB Debugging = ON
-
-# 2. Connect via USB to computer
-
-# 3. Open Chrome on computer, navigate to:
-#    chrome://inspect#devices
-
-# 4. Enable "Discover USB devices"
-
-# 5. Accept debugging prompt on Android device
-
-# 6. Click "Inspect" next to the page you want to debug
-```
-
-**Port forwarding for localhost:**
-```bash
-# In chrome://inspect, click "Port forwarding"
-# Add: localhost:3000 → localhost:3000
-# Now Android Chrome can access your dev server at localhost:3000
-```
-
-**Android 11+ wireless debugging (no USB needed):**
-```bash
-# 1. On the Android device:
-#    Settings → Developer Options → Wireless debugging = ON
-#    Tap "Pair device with pairing code"
-#    Note the IP:PORT and 6-digit code shown
-
-# 2. On the computer (Android Platform Tools 30.0.0+):
-adb pair <DEVICE_IP>:<PAIRING_PORT>
-# Enter the 6-digit code when prompted
-
-# 3. Connect to the debug port (different from pairing port):
-adb connect <DEVICE_IP>:<DEBUG_PORT>
-
-# 4. Verify and proceed to chrome://inspect#devices as usual:
-adb devices
-```
-
-Wireless debugging persists across reboots once paired, but the `adb connect` step is needed each session.
-
-### Safari Web Inspector (iOS)
-
-```bash
-# 1. On iPhone/iPad:
-#    Settings → Safari → Advanced → Web Inspector = ON
-
-# 2. On Mac:
-#    Safari → Preferences → Advanced → "Show Develop menu" = ON
-
-# 3. Connect device via USB (or enable Wi-Fi debugging)
-
-# 4. Open Safari on Mac:
-#    Develop → [Device Name] → [Page to debug]
-
-# Wireless debugging (after initial USB setup):
-#    Develop → [Device] → Connect via Network
-```
-
-### Firefox Remote Debugging (Android)
-
-```bash
-# 1. On Android Firefox:
-#    Settings → Advanced → Remote debugging = ON
-
-# 2. On Desktop Firefox:
-#    Open about:debugging
-
-# 3. Connect Android via USB
-
-# 4. Enable USB devices in about:debugging
-
-# 5. Click "Connect" next to your device
-```
-
-## iOS debugging without Mac
-
-### Using ios-webkit-debug-proxy
-
-```bash
-# Install on Windows (via Scoop)
-scoop bucket add extras
-scoop install ios-webkit-debug-proxy
-
-# Install on Linux
-sudo apt-get install ios-webkit-debug-proxy
-
-# Install on Mac
-brew install ios-webkit-debug-proxy
-
-# Run the proxy
-ios_webkit_debug_proxy -f chrome-devtools://devtools/bundled/inspector.html
-
-# Connect to http://localhost:9221 to see connected devices
-```
-
-### Commercial: Inspect.dev
-
-Inspect.dev provides iOS debugging from Windows/Linux with a familiar DevTools interface.
-
-```bash
-# Download from https://inspect.dev/
-# 1. Install application
-# 2. Connect iOS device via USB
-# 3. Enable Web Inspector on iOS
-# 4. Inspect.dev auto-detects pages
-# 5. Click to open DevTools interface
-```
-
-## Cloud testing platforms
-
-### LambdaTest (freemium)
-
-```python
-# LambdaTest provides real device cloud with console access
-# Free tier: 100 minutes/month
-
-import requests
-
-# LambdaTest REST API for automation
-LAMBDATEST_API = "https://api.lambdatest.com/automation/api/v1"
-
-# For manual testing:
-# 1. Go to https://www.lambdatest.com/
-# 2. Select device/browser
-# 3. Enter URL
-# 4. DevTools available in toolbar
-
-# Selenium/Playwright integration for automated console capture
-from playwright.sync_api import sync_playwright
-
-def test_on_lambdatest():
-    with sync_playwright() as p:
-        # Connect to LambdaTest
-        browser = p.chromium.connect(
-            f"wss://cdp.lambdatest.com/playwright?capabilities="
-            f"{{\"browserName\":\"Chrome\",\"platform\":\"android\"}}"
-        )
-        page = browser.new_page()
-
-        # Capture console logs
-        logs = []
-        page.on('console', lambda msg: logs.append(msg.text()))
-
-        page.goto('https://example.com')
-        browser.close()
-
-        return logs
-```
-
-### BrowserStack
-
-```python
-# BrowserStack: $29/month+, 10,000+ real devices
-# Selenium 4 removed DesiredCapabilities — pass capabilities via Options instead.
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-def get_browserstack_driver():
-    """Create BrowserStack WebDriver with console logging."""
-
-    options = Options()
-    bstack_options = {
-        'deviceName': 'Samsung Galaxy S21',
-        'osVersion': '11.0',
-        'realMobile': 'true',
-        'consoleLogs': 'verbose',     # Capture console logs
-        'networkLogs': 'true',
-        'userName': 'YOUR_USERNAME',
-        'accessKey': 'YOUR_KEY'
-    }
-    options.set_capability('bstack:options', bstack_options)
-    options.set_capability('browserName', 'chrome')
-
-    driver = webdriver.Remote(
-        command_executor='https://hub-cloud.browserstack.com/wd/hub',
-        options=options
-    )
-
-    return driver
-
-# After test, retrieve logs from BrowserStack dashboard or API
-```
-
-## Programmatic console capture
-
-### Playwright console capture
-
+**Error Boundaries**
 ```javascript
-const { chromium, devices } = require('playwright');
+import React from 'react';
+import { View, Text } from 'react-native';
 
-async function captureConsoleLogs(url) {
-    const browser = await chromium.launch();
+class ErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
 
-    // Emulate mobile device. Playwright ships an updated devices map per
-    // release; iPhone 15 / Pixel 8 are reasonable 2026 baselines. List with
-    // `npx playwright devices` if you need an exact name.
-    const context = await browser.newContext({
-        ...devices['iPhone 15']
-    });
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
 
-    const page = await context.newPage();
+  componentDidCatch(error, errorInfo) {
+    // Log to error tracking service
+    console.error('Error caught:', error, errorInfo);
+    logErrorToService(error, errorInfo);
+  }
 
-    // Capture all console messages
-    const logs = [];
-    page.on('console', msg => {
-        logs.push({
-            type: msg.type(),
-            text: msg.text(),
-            location: msg.location(),
-            timestamp: new Date().toISOString()
-        });
-    });
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View>
+          <Text>Something went wrong.</Text>
+          <Text>{this.state.error?.message}</Text>
+        </View>
+      );
+    }
 
-    // Capture page errors
-    const errors = [];
-    page.on('pageerror', error => {
-        errors.push({
-            message: error.message,
-            stack: error.stack,
-            timestamp: new Date().toISOString()
-        });
-    });
-
-    // Capture failed requests
-    const failedRequests = [];
-    page.on('requestfailed', request => {
-        failedRequests.push({
-            url: request.url(),
-            failure: request.failure().errorText,
-            timestamp: new Date().toISOString()
-        });
-    });
-
-    await page.goto(url);
-    await page.waitForLoadState('networkidle');
-
-    await browser.close();
-
-    return { logs, errors, failedRequests };
+    return this.props.children;
+  }
 }
 
 // Usage
-captureConsoleLogs('https://example.com')
-    .then(result => console.log(JSON.stringify(result, null, 2)));
+<ErrorBoundary>
+  <App />
+</ErrorBoundary>
 ```
 
-### Puppeteer console capture
+### Network Debugging
 
+**Intercepting Network Requests**
 ```javascript
-const puppeteer = require('puppeteer');
+// Using Flipper (recommended)
+// Automatically intercepts fetch() and XMLHttpRequest
 
-async function debugMobilePage(url) {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+// Manual interception for custom debugging
+const originalFetch = global.fetch;
+global.fetch = async (...args) => {
+  console.log('Fetch Request:', args[0], args[1]);
+  const response = await originalFetch(...args);
+  console.log('Fetch Response:', response.status);
+  return response;
+};
 
-    // Set mobile viewport
-    await page.setViewport({
-        width: 375,
-        height: 812,
-        isMobile: true,
-        hasTouch: true
+// Using React Native Debugger Network tab
+// Automatically works with fetch() and axios
+```
+
+**API Response Debugging**
+```javascript
+// Wrapper for API calls with detailed logging
+async function apiCall(endpoint, options = {}) {
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(endpoint, options);
+    const duration = Date.now() - startTime;
+
+    console.log({
+      endpoint,
+      method: options.method || 'GET',
+      status: response.status,
+      duration: `${duration}ms`,
+      success: response.ok
     });
 
-    // Mobile user agent
-    await page.setUserAgent(
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) ' +
-        'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
-    );
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('API Error Response:', error);
+      throw new Error(`API Error: ${response.status}`);
+    }
 
-    // Console capture with full details
-    page.on('console', async msg => {
-        const args = await Promise.all(
-            msg.args().map(arg => arg.jsonValue().catch(() => arg.toString()))
-        );
-
-        console.log(`[${msg.type().toUpperCase()}]`, ...args);
-
-        // Get source location
-        const location = msg.location();
-        if (location.url) {
-            console.log(`  at ${location.url}:${location.lineNumber}`);
-        }
+    return await response.json();
+  } catch (error) {
+    console.error('API Call Failed:', {
+      endpoint,
+      error: error.message,
+      duration: `${Date.now() - startTime}ms`
     });
-
-    // Unhandled promise rejections
-    page.on('pageerror', err => {
-        console.error('[PAGE ERROR]', err.message);
-    });
-
-    await page.goto(url, { waitUntil: 'networkidle0' });
-
-    // Execute JavaScript and capture result
-    const result = await page.evaluate(() => {
-        // Check for common mobile issues
-        return {
-            viewportWidth: window.innerWidth,
-            devicePixelRatio: window.devicePixelRatio,
-            touchSupport: 'ontouchstart' in window,
-            errors: window.__capturedErrors || []
-        };
-    });
-
-    console.log('Page info:', result);
-
-    await browser.close();
+    throw error;
+  }
 }
 ```
 
-## Error monitoring services
+### Platform-Specific Debugging
 
-### Sentry integration
+**iOS Debugging**
+- Safari Web Inspector for JSContext debugging
+- Xcode Console for native logs
+- Instruments for performance profiling
+- Crash logs: `~/Library/Logs/DiagnosticReports/`
+- System logs: `log stream --predicate 'processImagePath contains "MyApp"'`
+
+**Android Debugging**
+- Chrome DevTools for JavaScript debugging
+- Android Studio Logcat for system logs
+- ADB logcat filtering: `adb logcat *:E` (errors only)
+- Native crash logs: `adb logcat AndroidRuntime:E`
+- Monitoring device: `adb shell top`
+
+### Common Debugging Scenarios
+
+**App Crashes on Startup**
+```bash
+# iOS: Check Xcode console
+# Open Xcode → Window → Devices and Simulators → Select device → View logs
+
+# Android: Check logcat
+adb logcat *:E
+
+# Look for:
+# - Missing native modules
+# - JavaScript bundle errors
+# - Permission issues
+# - Initialization errors
+```
+
+**White Screen / Blank Screen**
+```javascript
+// Add error boundary to root
+import { ErrorBoundary } from 'react-error-boundary';
+
+function ErrorFallback({ error }) {
+  return (
+    <View>
+      <Text>App crashed: {error.message}</Text>
+    </View>
+  );
+}
+
+<ErrorBoundary FallbackComponent={ErrorFallback}>
+  <App />
+</ErrorBoundary>
+```
+
+**Red Screen Errors**
+```javascript
+// Globally catch errors in development
+if (__DEV__) {
+  ErrorUtils.setGlobalHandler((error, isFatal) => {
+    console.log('Global Error:', { error, isFatal });
+    // Log to crash reporting service in production
+  });
+}
+```
+
+**Network Request Failures**
+```bash
+# Check if Metro bundler is accessible
+curl http://localhost:8081/status
+
+# Check if API is accessible from device
+# iOS Simulator: localhost works
+# Android Emulator: use 10.0.2.2 instead of localhost
+# Real device: use computer's IP address
+
+# Test network connectivity
+adb shell ping 8.8.8.8  # Android
+```
+
+**Performance Issues**
+```javascript
+// Use React DevTools Profiler
+import { Profiler } from 'react';
+
+function onRenderCallback(
+  id,
+  phase,
+  actualDuration,
+  baseDuration,
+  startTime,
+  commitTime
+) {
+  console.log({
+    component: id,
+    phase,
+    actualDuration,
+    baseDuration
+  });
+}
+
+<Profiler id="App" onRender={onRenderCallback}>
+  <App />
+</Profiler>
+```
+
+## When to Use This Skill
+
+Ask me when you need help with:
+- Setting up debugging tools (Flipper, React DevTools)
+- Debugging crashes or error screens
+- Inspecting network requests and responses
+- Finding performance bottlenecks
+- Analyzing component re-renders
+- Debugging native module issues
+- Reading crash logs and stack traces
+- Setting up error boundaries
+- Remote debugging on physical devices
+- Debugging platform-specific issues
+- Troubleshooting "white screen" errors
+- Inspecting AsyncStorage or databases
+
+## Essential Debugging Commands
+
+### Start Debugging
+```bash
+# Open React DevTools
+react-devtools
+
+# Start app with remote debugging
+npm start
+
+# In app: Shake device → Debug Remote JS
+# Or: Press "d" in Metro bundler terminal
+```
+
+### Platform Logs
+```bash
+# iOS System Logs (real device)
+idevicesyslog
+
+# iOS Simulator Logs
+xcrun simctl spawn booted log stream --level=debug
+
+# Android Logs (all)
+adb logcat
+
+# Android Logs (app only, errors)
+adb logcat *:E | grep com.myapp
+
+# Android Logs (React Native only)
+adb logcat ReactNative:V ReactNativeJS:V *:S
+
+# Clear Android logs
+adb logcat -c
+```
+
+### Performance Analysis
+```bash
+# iOS: Use Instruments
+# Xcode → Open Developer Tool → Instruments → Time Profiler
+
+# Android: Use Systrace
+react-native log-android
+
+# React Native performance monitor
+# Shake device → Show Perf Monitor
+```
+
+### Flipper Setup
+```bash
+# Install Flipper Desktop
+brew install --cask flipper
+
+# For Expo dev clients, add to app.json:
+{
+  "expo": {
+    "plugins": ["react-native-flipper"]
+  }
+}
+
+# Rebuild dev client
+eas build --profile development --platform all
+```
+
+## Pro Tips & Tricks
+
+### 1. Custom Dev Menu
+
+Add custom debugging tools to dev menu:
 
 ```javascript
-// npm install @sentry/browser
-// Sentry SDK v8+ uses functional integrations; class-based
-// `new Sentry.BrowserTracing()` / `new Sentry.Replay()` were
-// deprecated in v8 and removed in v9.
+import { DevSettings } from 'react-native';
 
-import * as Sentry from '@sentry/browser';
+if (__DEV__) {
+  DevSettings.addMenuItem('Clear AsyncStorage', async () => {
+    await AsyncStorage.clear();
+    console.log('AsyncStorage cleared');
+  });
+
+  DevSettings.addMenuItem('Log Redux State', () => {
+    console.log('Redux State:', store.getState());
+  });
+
+  DevSettings.addMenuItem('Toggle Debug Mode', () => {
+    global.DEBUG = !global.DEBUG;
+    console.log('Debug mode:', global.DEBUG);
+  });
+}
+```
+
+### 2. Network Request Logger
+
+Comprehensive network debugging:
+
+```javascript
+// Create a network logger file
+import axios from 'axios';
+
+if (__DEV__) {
+  axios.interceptors.request.use(
+    (config) => {
+      console.log('→ API Request', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        data: config.data,
+        headers: config.headers
+      });
+      return config;
+    },
+    (error) => {
+      console.error('→ Request Error', error);
+      return Promise.reject(error);
+    }
+  );
+
+  axios.interceptors.response.use(
+    (response) => {
+      console.log('← API Response', {
+        status: response.status,
+        url: response.config.url,
+        data: response.data
+      });
+      return response;
+    },
+    (error) => {
+      console.error('← Response Error', {
+        status: error.response?.status,
+        url: error.config?.url,
+        data: error.response?.data
+      });
+      return Promise.reject(error);
+    }
+  );
+}
+```
+
+### 3. React Query DevTools (for data fetching)
+
+```javascript
+import { useReactQueryDevTools } from '@tanstack/react-query-devtools';
+
+function App() {
+  // Development only
+  if (__DEV__) {
+    useReactQueryDevTools();
+  }
+
+  return <YourApp />;
+}
+```
+
+### 4. Debugging State Updates
+
+Track state changes with custom hook:
+
+```javascript
+import { useEffect, useRef } from 'react';
+
+function useTraceUpdate(props, componentName) {
+  const prev = useRef(props);
+
+  useEffect(() => {
+    const changedProps = Object.entries(props).reduce((acc, [key, value]) => {
+      if (prev.current[key] !== value) {
+        acc[key] = {
+          from: prev.current[key],
+          to: value
+        };
+      }
+      return acc;
+    }, {});
+
+    if (Object.keys(changedProps).length > 0) {
+      console.log(`[${componentName}] Changed props:`, changedProps);
+    }
+
+    prev.current = props;
+  });
+}
+
+// Usage
+function MyComponent(props) {
+  useTraceUpdate(props, 'MyComponent');
+  return <View>...</View>;
+}
+```
+
+### 5. Debugging Offline/Online State
+
+```javascript
+import NetInfo from '@react-native-community/netinfo';
+
+// Monitor network state
+NetInfo.addEventListener(state => {
+  console.log('Network State:', {
+    isConnected: state.isConnected,
+    type: state.type,
+    isInternetReachable: state.isInternetReachable
+  });
+});
+```
+
+### 6. Production Error Tracking
+
+Integrate with error tracking services:
+
+```javascript
+// Using Sentry (example)
+import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
-    dsn: 'YOUR_SENTRY_DSN',
-    environment: 'production',
-
-    integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration()  // Session replay for debugging
-    ],
-
-    // Sample rates
-    tracesSampleRate: 0.1,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-
-    beforeSend(event) {
-        // Filter or modify events
-        return event;
-    }
+  dsn: 'YOUR_SENTRY_DSN',
+  enableInExpoDevelopment: true,
+  debug: __DEV__
 });
 
-// Manual error capture
+// Capture custom errors
 try {
-    riskyOperation();
+  await riskyOperation();
 } catch (error) {
-    Sentry.captureException(error);
-}
-
-// Add context (also functional in v8+)
-Sentry.setUser({ id: 'user123' });
-Sentry.setTag('page', 'checkout');
-```
-
-### LogRocket for session replay
-
-```javascript
-// npm install logrocket
-
-import LogRocket from 'logrocket';
-
-LogRocket.init('your-app/your-project');
-
-// Identify user
-LogRocket.identify('user123', {
-    name: 'Test User',
-    email: 'user@example.com'
-});
-
-// Console logs automatically captured
-console.log('This appears in LogRocket');
-
-// Manual logging
-LogRocket.log('Custom event', { data: 'value' });
-
-// Track errors
-LogRocket.captureException(new Error('Something went wrong'));
-```
-
-## Android screen mirroring with Scrcpy
-
-```bash
-# Install scrcpy
-# Windows: scoop install scrcpy
-# Mac: brew install scrcpy
-# Linux: apt install scrcpy
-
-# Basic mirroring
-scrcpy
-
-# With specific options
-scrcpy --max-size 1024 --bit-rate 2M
-
-# Wireless connection (after initial USB)
-adb tcpip 5555
-adb connect <device-ip>:5555
-scrcpy
-
-# Record session
-scrcpy --record session.mp4
-
-# Turn off device screen while mirroring
-scrcpy --turn-screen-off
-```
-
-## Mobile debugging workflow
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                  MOBILE DEBUGGING DECISION TREE                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Q: Do you have physical access to the device?                  │
-│      │                                                           │
-│      ├─ YES: Can you connect via USB?                           │
-│      │   │                                                       │
-│      │   ├─ Android: Use Chrome DevTools Remote                 │
-│      │   │           chrome://inspect#devices                    │
-│      │   │                                                       │
-│      │   └─ iOS: Have a Mac?                                    │
-│      │       │                                                   │
-│      │       ├─ YES: Use Safari Web Inspector                   │
-│      │       │                                                   │
-│      │       └─ NO: Use Inspect.dev or                          │
-│      │              ios-webkit-debug-proxy                       │
-│      │                                                           │
-│      └─ NO USB: Inject Eruda/vConsole via bookmarklet           │
-│                                                                  │
-│  Q: Remote/production debugging?                                │
-│      │                                                           │
-│      ├─ Add conditional Eruda loading                           │
-│      │  (?eruda=true parameter)                                 │
-│      │                                                           │
-│      └─ Set up Sentry/LogRocket for error monitoring            │
-│                                                                  │
-│  Q: Automated testing?                                          │
-│      │                                                           │
-│      ├─ Playwright/Puppeteer with mobile emulation              │
-│      │                                                           │
-│      └─ Cloud platforms (LambdaTest, BrowserStack)              │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Common mobile debugging issues
-
-### Touch events not firing
-
-```javascript
-// Check if touch events are supported
-eruda.init();
-console.log('Touch support:', 'ontouchstart' in window);
-console.log('Pointer events:', 'onpointerdown' in window);
-
-// Debug touch events
-document.addEventListener('touchstart', e => {
-    console.log('touchstart', e.touches.length, 'touches');
-}, { passive: true });
-
-document.addEventListener('click', e => {
-    console.log('click at', e.clientX, e.clientY);
-});
-```
-
-### Viewport issues
-
-```javascript
-// Log viewport information
-console.log('Viewport:', {
-    innerWidth: window.innerWidth,
-    innerHeight: window.innerHeight,
-    outerWidth: window.outerWidth,
-    outerHeight: window.outerHeight,
-    devicePixelRatio: window.devicePixelRatio,
-    orientation: screen.orientation?.type
-});
-
-// Check meta viewport
-const viewport = document.querySelector('meta[name="viewport"]');
-console.log('Viewport meta:', viewport?.content);
-```
-
-### Performance debugging
-
-```javascript
-// Check performance timing
-const perf = performance.getEntriesByType('navigation')[0];
-console.log('Page load timing:', {
-    dns: perf.domainLookupEnd - perf.domainLookupStart,
-    tcp: perf.connectEnd - perf.connectStart,
-    request: perf.responseStart - perf.requestStart,
-    response: perf.responseEnd - perf.responseStart,
-    domParsing: perf.domInteractive - perf.responseEnd,
-    domComplete: perf.domComplete - perf.domInteractive,
-    total: perf.loadEventEnd - perf.navigationStart
-});
-
-// Check memory (Chrome only)
-if (performance.memory) {
-    console.log('Memory:', {
-        usedJSHeapSize: (performance.memory.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
-        totalJSHeapSize: (performance.memory.totalJSHeapSize / 1048576).toFixed(2) + ' MB'
-    });
+  Sentry.captureException(error, {
+    tags: { feature: 'user-profile' },
+    extra: { userId: user.id }
+  });
 }
 ```
 
-## Platform comparison
+## Integration with SpecWeave
 
-| Tool | Cost | Platforms | Setup Difficulty | Best For |
-|------|------|-----------|------------------|----------|
-| **Eruda** | Free | All browsers | Easy (bookmarklet) | Quick debugging |
-| **vConsole** | Free | All browsers | Easy | WeChat apps |
-| **Chrome Remote** | Free | Android only | Medium | Full DevTools |
-| **Safari Inspector** | Free | iOS only | Easy (Mac required) | Full DevTools |
-| **Inspect.dev** | Paid | iOS from any OS | Easy | iOS without Mac |
-| **LambdaTest** | Freemium | All | Easy | Cloud testing |
-| **BrowserStack** | Paid | All | Easy | Real devices |
-| **Sentry** | Freemium | All | Medium | Error monitoring |
+**During Development**
+- Document debugging approaches in increment `reports/`
+- Track known issues and workarounds in `spec.md`
+- Include debugging steps in `tasks.md` test plans
+
+**Production Monitoring**
+- Set up error boundaries for all features
+- Integrate crash reporting (Sentry, Bugsnag)
+- Document debugging procedures in runbooks
+- Track common errors in living documentation

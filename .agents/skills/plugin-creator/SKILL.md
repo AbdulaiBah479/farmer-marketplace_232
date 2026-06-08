@@ -1,160 +1,205 @@
 ---
 name: plugin-creator
-description: Create and scaffold plugin directories for Codex with a required `.codex-plugin/plugin.json`, optional plugin folders/files, and baseline placeholders you can edit before publishing or testing. Use when Codex needs to create a new local plugin, add optional plugin structure, or generate or update repo-root `.agents/plugins/marketplace.json` entries for plugin ordering and availability metadata.
+description: Automatically creates new Claude Code plugins with proper structure, validation, and marketplace integration when user mentions creating a plugin, new plugin, or plugin from template. Specific to claude-code-plugins repository workflow.
+allowed-tools: Write, Read, Grep, Bash
 ---
 
 # Plugin Creator
 
-## Quick Start
+## Purpose
+Automatically scaffolds new Claude Code plugins with complete directory structure, required files, proper formatting, and marketplace catalog integration - specifically optimized for the claude-code-plugins repository.
 
-1. Run the scaffold script:
+## Trigger Keywords
+- "create plugin" or "new plugin"
+- "plugin from template"
+- "scaffold plugin"
+- "generate plugin"
+- "add new plugin to marketplace"
 
-```bash
-  # Plugin names are normalized to lower-case hyphen-case and must be <= 64 chars.
-  # The generated folder and plugin.json name are always the same.
-# Run from repo root (or replace .agents/... with the absolute path to this SKILL).
-# By default creates in <repo_root>/plugins/<plugin-name>.
-python3 .agents/skills/plugin-creator/scripts/create_basic_plugin.py <plugin-name>
-```
+## Plugin Creation Process
 
-2. Open `<plugin-path>/.codex-plugin/plugin.json` and replace `[TODO: ...]` placeholders.
+When activated, I will:
 
-3. Generate or update the repo marketplace entry when the plugin should appear in Codex UI ordering:
+1. **Gather Requirements**
+   - Plugin name (kebab-case)
+   - Category (productivity, security, devops, etc.)
+   - Type (commands, agents, skills, MCP, or combination)
+   - Description and keywords
+   - Author information
 
-```bash
-# marketplace.json always lives at <repo-root>/.agents/plugins/marketplace.json
-python3 .agents/skills/plugin-creator/scripts/create_basic_plugin.py my-plugin --with-marketplace
-```
+2. **Create Directory Structure**
+   ```
+   plugins/[category]/[plugin-name]/
+   ├── .claude-plugin/
+   │   └── plugin.json
+   ├── README.md
+   ├── LICENSE
+   └── [commands|agents|skills|hooks|mcp]/
+   ```
 
-For a home-local plugin, treat `<home>` as the root and use:
+3. **Generate Required Files**
+   - **plugin.json** with proper schema (name, version, description, author)
+   - **README.md** with comprehensive documentation
+   - **LICENSE** (MIT by default)
+   - Component files based on type
 
-```bash
-python3 .agents/skills/plugin-creator/scripts/create_basic_plugin.py my-plugin \
-  --path ~/plugins \
-  --marketplace-path ~/.agents/plugins/marketplace.json \
-  --with-marketplace
-```
+4. **Add to Marketplace Catalog**
+   - Update `.claude-plugin/marketplace.extended.json`
+   - Run `npm run sync-marketplace` automatically
+   - Validate catalog schema
 
-4. Generate/adjust optional companion folders as needed:
+5. **Validate Everything**
+   - Run `./scripts/validate-all.sh` on new plugin
+   - Check JSON syntax with `jq`
+   - Verify frontmatter in markdown files
+   - Ensure scripts are executable
 
-```bash
-python3 .agents/skills/plugin-creator/scripts/create_basic_plugin.py my-plugin --path <parent-plugin-directory> \
-  --with-skills --with-hooks --with-scripts --with-assets --with-mcp --with-apps --with-marketplace
-```
+## Plugin Types Supported
 
-`<parent-plugin-directory>` is the directory where the plugin folder `<plugin-name>` will be created (for example `~/code/plugins`).
+### Commands Plugin
+- Creates `commands/` directory
+- Generates example command with proper frontmatter
+- Includes `/demo-command` example
 
-## What this skill creates
+### Agents Plugin
+- Creates `agents/` directory
+- Generates example agent with capabilities
+- Includes model specification
 
-- If the user has not made the plugin location explicit, ask whether they want a repo-local plugin or a home-local plugin before generating marketplace entries.
-- Creates plugin root at `/<parent-plugin-directory>/<plugin-name>/`.
-- Always creates `/<parent-plugin-directory>/<plugin-name>/.codex-plugin/plugin.json`.
-- Fills the manifest with the full schema shape, placeholder values, and the complete `interface` section.
-- Creates or updates `<repo-root>/.agents/plugins/marketplace.json` when `--with-marketplace` is set.
-  - If the marketplace file does not exist yet, seed top-level `name` plus `interface.displayName` placeholders before adding the first plugin entry.
-- `<plugin-name>` is normalized using skill-creator naming rules:
-  - `My Plugin` → `my-plugin`
-  - `My--Plugin` → `my-plugin`
-  - underscores, spaces, and punctuation are converted to `-`
-  - result is lower-case hyphen-delimited with consecutive hyphens collapsed
-- Supports optional creation of:
-  - `skills/`
-  - `hooks/`
-  - `scripts/`
-  - `assets/`
-  - `.mcp.json`
-  - `.app.json`
+### Skills Plugin
+- Creates `skills/skill-name/` directory
+- Generates SKILL.md with proper format
+- Includes trigger keywords and allowed-tools
 
-## Marketplace workflow
+### MCP Plugin
+- Creates `src/`, `dist/`, `mcp/` directories
+- Generates TypeScript boilerplate
+- Includes package.json with MCP SDK
+- Adds to pnpm workspace
 
-- `marketplace.json` always lives at `<repo-root>/.agents/plugins/marketplace.json`.
-- For a home-local plugin, use the same convention with `<home>` as the root:
-  `~/.agents/plugins/marketplace.json` plus `./plugins/<plugin-name>`.
-- Marketplace root metadata supports top-level `name` plus optional `interface.displayName`.
-- Treat plugin order in `plugins[]` as render order in Codex. Append new entries unless a user explicitly asks to reorder the list.
-- `displayName` belongs inside the marketplace `interface` object, not individual `plugins[]` entries.
-- Each generated marketplace entry must include all of:
-  - `policy.installation`
-  - `policy.authentication`
-  - `category`
-- Default new entries to:
-  - `policy.installation: "AVAILABLE"`
-  - `policy.authentication: "ON_INSTALL"`
-- Override defaults only when the user explicitly specifies another allowed value.
-- Allowed `policy.installation` values:
-  - `NOT_AVAILABLE`
-  - `AVAILABLE`
-  - `INSTALLED_BY_DEFAULT`
-- Allowed `policy.authentication` values:
-  - `ON_INSTALL`
-  - `ON_USE`
-- Treat `policy.products` as an override. Omit it unless the user explicitly requests product gating.
-- The generated plugin entry shape is:
+### Full Plugin
+- Combines all types
+- Creates complete example structure
+- Ready for customization
 
+## File Templates
+
+### plugin.json Template
 ```json
 {
   "name": "plugin-name",
-  "source": {
-    "source": "local",
-    "path": "./plugins/plugin-name"
+  "version": "1.0.0",
+  "description": "Clear description",
+  "author": {
+    "name": "Author Name",
+    "email": "[email protected]"
   },
-  "policy": {
-    "installation": "AVAILABLE",
-    "authentication": "ON_INSTALL"
-  },
-  "category": "Productivity"
+  "repository": "https://github.com/jeremylongshore/claude-code-plugins",
+  "license": "MIT",
+  "keywords": ["keyword1", "keyword2"]
 }
 ```
 
-- Use `--force` only when intentionally replacing an existing marketplace entry for the same plugin name.
-- If `<repo-root>/.agents/plugins/marketplace.json` does not exist yet, create it with top-level `"name"`, an `"interface"` object containing `"displayName"`, and a `plugins` array, then add the new entry.
+### Command Template
+```markdown
+---
+name: command-name
+description: What this command does
+model: sonnet
+---
 
-- For a brand-new marketplace file, the root object should look like:
+# Command Title
 
-```json
-{
-  "name": "[TODO: marketplace-name]",
-  "interface": {
-    "displayName": "[TODO: Marketplace Display Name]"
-  },
-  "plugins": [
-    {
-      "name": "plugin-name",
-      "source": {
-        "source": "local",
-        "path": "./plugins/plugin-name"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    }
-  ]
-}
+Instructions for Claude...
 ```
 
-## Required behavior
+### Skill Template
+```markdown
+---
+name: Skill Name
+description: What it does AND when to use it
+allowed-tools: Read, Write, Grep
+---
 
-- Outer folder name and `plugin.json` `"name"` are always the same normalized plugin name.
-- Do not remove required structure; keep `.codex-plugin/plugin.json` present.
-- Keep manifest values as placeholders until a human or follow-up step explicitly fills them.
-- If creating files inside an existing plugin path, use `--force` only when overwrite is intentional.
-- Preserve any existing marketplace `interface.displayName`.
-- When generating marketplace entries, always write `policy.installation`, `policy.authentication`, and `category` even if their values are defaults.
-- Add `policy.products` only when the user explicitly asks for that override.
-- Keep marketplace `source.path` relative to repo root as `./plugins/<plugin-name>`.
+# Skill Name
 
-## Reference to exact spec sample
+## Purpose
+[What this skill does]
 
-For the exact canonical sample JSON for both plugin manifests and marketplace entries, use:
+## Trigger Keywords
+- keyword1
+- keyword2
 
-- `references/plugin-json-spec.md`
-
-## Validation
-
-After editing `SKILL.md`, run:
-
-```bash
-python3 <path-to-skill-creator>/scripts/quick_validate.py .agents/skills/plugin-creator
+## Instructions
+[Step-by-step for Claude]
 ```
+
+## Marketplace Integration
+
+I automatically:
+1. Add plugin entry to `marketplace.extended.json`
+2. Run `npm run sync-marketplace` to update CLI catalog
+3. Validate both catalogs with `jq`
+4. Check for duplicate names
+5. Verify source paths exist
+
+## Validation Steps
+
+After creation:
+- ✅ All required files present
+- ✅ Valid JSON (plugin.json, catalogs)
+- ✅ Proper frontmatter in markdown
+- ✅ Scripts executable (`chmod +x`)
+- ✅ No duplicate plugin names
+- ✅ Category is valid
+- ✅ Keywords present
+
+## Repository-Specific Features
+
+**For claude-code-plugins repo:**
+- Follows exact directory structure
+- Uses correct marketplace slug (`claude-code-plugins-plus`)
+- Includes proper LICENSE file
+- Adds to correct category folder
+- Validates against existing plugins
+- Updates version in marketplace
+
+## Output
+
+I provide:
+```
+✅ Created plugin: plugin-name
+📁 Location: plugins/category/plugin-name/
+📝 Files created: 8
+🔍 Validation: PASSED
+📦 Marketplace: UPDATED
+✨ Ready to commit!
+
+Next steps:
+1. Review files in plugins/category/plugin-name/
+2. Customize README.md and component files
+3. Run: git add plugins/category/plugin-name/
+4. Run: git commit -m "feat: Add plugin-name plugin"
+```
+
+## Examples
+
+**User says:** "Create a new security plugin called 'owasp-scanner' with commands"
+
+**I automatically:**
+1. Create directory: `plugins/security/owasp-scanner/`
+2. Generate plugin.json, README, LICENSE
+3. Create `commands/` with example
+4. Add to marketplace.extended.json
+5. Sync marketplace.json
+6. Validate all files
+7. Report success
+
+**User says:** "Scaffold a Skills plugin for code review"
+
+**I automatically:**
+1. Create directory with `skills/` subdirectories
+2. Generate SKILL.md templates
+3. Add trigger keywords for code review
+4. Add to marketplace
+5. Validate and report

@@ -249,7 +249,7 @@ Don't double-wrap expressions:
 
 ## Common Mistakes
 
-Complete catalog of expression errors with explanations and fixes.
+For complete error catalog with fixes, see [COMMON_MISTAKES.md](COMMON_MISTAKES.md)
 
 ### Quick Fixes
 
@@ -261,50 +261,6 @@ Complete catalog of expression errors with explanations and fixes.
 | `{{{$json.field}}}` | `{{$json.field}}` |
 | `{{$json.name}}` (webhook) | `{{$json.body.name}}` |
 | `'={{$json.email}}'` (Code node) | `$json.email` |
-
-### Complete List of Common Mistakes
-
-1. **Missing Curly Braces** - Expressions must be wrapped in {{ }}
-   ```javascript
-   ❌ $json.field
-   ✅ {{$json.field}}
-   ```
-
-2. **Webhook Data Path Error** - Webhook data is under .body
-   ```javascript
-   ❌ {{$json.name}}  
-   ✅ {{$json.body.name}}
-   ```
-
-3. **Node Names with Spaces** - Must use bracket notation
-   ```javascript
-   ❌ {{$node.HTTP Request.json.field}}
-   ✅ {{$node["HTTP Request"].json.field}}
-   ```
-
-4. **Double Wrapping Expressions** - Don't nest braces
-   ```javascript
-   ❌ {{{$json.field}}}
-   ✅ {{$json.field}}
-   ```
-
-5. **Case Sensitivity** - Node names are case-sensitive
-   ```javascript
-   ❌ {{$node["http request"].json}}
-   ✅ {{$node["HTTP Request"].json}}
-   ```
-
-6. **Using Expressions in Code Nodes** - Code nodes use direct JavaScript
-   ```javascript
-   ❌ const email = '={{$json.email}}';
-   ✅ const email = $json.email;
-   ```
-
-7. **Missing Quotes for Special Characters** - Fields with spaces need brackets
-   ```javascript
-   ❌ {{$json.field name}}
-   ✅ {{$json['field name']}}
-   ```
 
 ---
 

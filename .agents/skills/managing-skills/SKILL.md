@@ -1,147 +1,323 @@
 ---
 name: managing-skills
-description: "Install, find, update, and manage agent skills. Use when the user wants to add a new skill, search for skills that do something, check if skills are up to date, or update existing skills. Triggers on: install skill, add skill, get skill, find skill, search skill, update skill, check skills, list skills."
+description: Install, update, list, and remove Claude Code and OpenCode skills. Supports GitHub repositories (user/repo), GitHub subdirectory URLs, and .skill zip files. Can set up interoperability between Claude Code and OpenCode via symlinks. Use when user wants to install, add, download, update, sync, list, remove, uninstall, delete skills, or share skills between Claude Code and OpenCode.
 ---
 
 <objective>
-Manage agent skills via the `npx skills` CLI. Handle installing skills from GitHub repos, searching for available skills, checking for updates, and updating installed skills.
+Manage Claude Code and OpenCode skills from multiple source types. Handle installation, updates, listing, and removal of skills at both user and project levels.
 </objective>
 
 <quick_start>
-Determine which operation the user wants and run the appropriate command. Always include `--yes` to skip confirmations. Default to project-level install and the current agent type unless told otherwise.
+**Install a skill from GitHub:**
+```bash
+# User-level (available everywhere)
+git clone https://github.com/user/repo ~/.claude/skills/repo
 
-Primary commands:
+# Project-level (as submodule)
+git submodule add https://github.com/user/repo .claude/skills/repo
 ```
-npx skills add {source} --yes --agent {agent-type}
-npx skills find {keyword} --yes
-npx skills check --yes
-npx skills update --yes
-npx skills add --list --yes
-```
+
+**Always ask the user which location they want before installing.**
 </quick_start>
 
-<context>
-<agent_type>
-Detect the agent you are running as. Map to the correct `--agent` flag value:
+<install_locations>
+Skills can be installed in multiple locations depending on the tool:
 
-| Agent | Flag value |
-|-------|-----------|
-| Amp | `amp` |
-| Claude Code | `claude-code` |
-| Cline | `cline` |
-| Codex | `codex` |
-| Continue | `continue` |
-| Cursor | `cursor` |
-| Gemini CLI | `gemini-cli` |
-| GitHub Copilot | `github-copilot` |
-| Goose | `goose` |
-| Kilo Code | `kilo` |
-| Kiro CLI | `kiro-cli` |
-| OpenCode | `opencode` |
-| Qwen Code | `qwen-code` |
-| Roo Code | `roo` |
-| Trae | `trae` |
-| Windsurf | `windsurf` |
+**Claude Code:**
+- User skills: `~/.claude/skills/<skill-name>/` - available in all projects
+- Project skills: `<project>/.claude/skills/<skill-name>/` - available only in that project
 
-If unsure, check for config directories (e.g., `.claude/`, `.codex/`, `.cursor/`).
-Only include additional agent types if the user explicitly requests it (e.g., "install for all agents" or "also install for codex").
-</agent_type>
+**OpenCode:**
+- User skills: `~/.config/opencode/skill/<skill-name>/` - available in all projects
+- Project skills: `<project>/.opencode/skill/<skill-name>/` - available only in that project
 
-<install_scope>
-- **Project** (default): Installs to `./<agent>/skills/` in the current project.
-- **Global** (`-g`): Installs to `~/<agent>/skills/`. Only use when the user says "global", "globally", or "for all projects".
-</install_scope>
-</context>
+**Important:** Always ask the user which location they want before installing.
+</install_locations>
+
+<skill_reference_types>
+
+<type name="github-repository">
+A dedicated GitHub repo containing a skill.
+
+**How to recognize:**
+- Shorthand: `user/repo`
+- Full URL: `https://github.com/user/repo`
+- May contain `/tree/<branch>` but NO path after the branch
+
+**Install (User - Claude Code):**
+```bash
+mkdir -p ~/.claude/skills
+git clone https://github.com/user/repo ~/.claude/skills/repo
+```
+
+**Install (User - OpenCode):**
+```bash
+mkdir -p ~/.config/opencode/skill
+git clone https://github.com/user/repo ~/.config/opencode/skill/repo
+```
+
+**Install (Project - as submodule):**
+```bash
+mkdir -p .claude/skills
+git submodule add https://github.com/user/repo .claude/skills/repo
+```
+
+**Update (User):**
+```bash
+git -C ~/.claude/skills/skill-name pull
+```
+
+**Update (Project):**
+```bash
+git -C .claude/skills/skill-name pull
+git add .claude/skills/skill-name
+```
+</type>
+
+<type name="github-subdirectory">
+A skill living as a subdirectory within a larger repository.
+
+**How to recognize:**
+- Contains `/tree/<branch>/` followed by a path within the repo
+- Example: `https://github.com/org/repo/tree/main/skills/my-skill`
+- Differs from Type 1: there's a path AFTER the branch name
+
+**Parse the URL:**
+- Repository: `https://github.com/org/repo`
+- Subpath: `skills/my-skill`
+- Skill name: `my-skill` (last path component)
+
+**Install (User or Project):**
+```bash
+# Clone to temp directory
+git clone --depth 1 https://github.com/org/repo /tmp/skill-clone-$$
+
+# Copy subdirectory to target
+mkdir -p ~/.claude/skills
+cp -r /tmp/skill-clone-$$/skills/my-skill ~/.claude/skills/my-skill
+
+# Create .skill-manager-ref with source URL
+echo "https://github.com/org/repo/tree/main/skills/my-skill" > ~/.claude/skills/my-skill/.skill-manager-ref
+
+# Cleanup
+rm -rf /tmp/skill-clone-$$
+```
+
+**Update:**
+```bash
+# Read source URL
+SOURCE_URL=$(cat ~/.claude/skills/my-skill/.skill-manager-ref)
+
+# Re-run installation (same steps as above, overwrites existing)
+```
+</type>
+
+<type name="skill-zip">
+A `.skill` zip file hosted at any URL.
+
+**How to recognize:**
+- URL ends with `.skill`
+- Example: `https://example.com/skills/my-skill.skill`
+
+**Parse the URL:**
+- Skill name: filename without `.skill` extension
+
+**Install (User or Project):**
+```bash
+# Download to temp
+curl -L -o /tmp/skill-$$.zip "https://example.com/skills/my-skill.skill"
+
+# Create target and extract
+mkdir -p ~/.claude/skills/my-skill
+unzip -o /tmp/skill-$$.zip -d ~/.claude/skills/my-skill
+
+# If zip contained a single directory, move contents up
+if [ $(ls -1 ~/.claude/skills/my-skill | wc -l) -eq 1 ] && [ -d ~/.claude/skills/my-skill/* ]; then
+  mv ~/.claude/skills/my-skill/*/* ~/.claude/skills/my-skill/
+  rmdir ~/.claude/skills/my-skill/*/
+fi
+
+# Create .skill-manager-ref with source URL
+echo "https://example.com/skills/my-skill.skill" > ~/.claude/skills/my-skill/.skill-manager-ref
+
+# Cleanup
+rm /tmp/skill-$$.zip
+```
+
+**Update:**
+```bash
+# Read source URL
+SOURCE_URL=$(cat ~/.claude/skills/my-skill/.skill-manager-ref)
+
+# Re-run installation (same steps as above, overwrites existing)
+```
+</type>
+
+</skill_reference_types>
 
 <operations>
 
-<operation name="install">
-<trigger>User says: install, add, get, set up a skill</trigger>
-<steps>
-1. Identify the skill source. Accepts:
-   - `owner/repo` — installs all skills from the repo
-   - Full GitHub/GitLab URL to a repo, directory, or SKILL.md file (e.g., `https://github.com/owner/repo/tree/main/skills/foo`)
-   - Local filesystem path
-   - Use `-s skill-name` to cherry-pick a specific skill by name from a multi-skill repo
-2. Determine scope: project (default) or global (`-g`).
-3. Determine agent type(s) to target.
-4. Run:
+<operation name="remove">
+**User skill:**
 ```bash
-npx skills add {source} --yes --agent {agent-type}
+rm -rf ~/.claude/skills/skill-name
 ```
-Add `-g` if global. Add multiple `--agent` flags if targeting multiple agents.
-</steps>
-<examples>
-"Install the vercel-labs/skills skill" →
-`npx skills add vercel-labs/skills --yes --agent claude-code`
 
-"Install just the managing-skills skill from that repo" →
-`npx skills add vercel-labs/skills --yes -s managing-skills --agent claude-code`
-
-"Install this skill: github.com/owner/repo/tree/main/skills/foo" →
-`npx skills add https://github.com/owner/repo/tree/main/skills/foo --yes --agent claude-code`
-
-"Globally install foo/bar for all agents" →
-`npx skills add foo/bar --yes -g --all`
-</examples>
-</operation>
-
-<operation name="find">
-<trigger>User says: find, search, discover, look for, browse skills</trigger>
-<steps>
-1. If user gave a keyword, pass it directly.
-2. Run:
+**Project skill (submodule):**
 ```bash
-npx skills find {keyword} --yes
+git submodule deinit -f .claude/skills/skill-name
+git rm -f .claude/skills/skill-name
+rm -rf .git/modules/.claude/skills/skill-name
 ```
-3. Present results to the user. If they pick one, follow the install operation.
-</steps>
-</operation>
 
-<operation name="check">
-<trigger>User says: check for updates, are my skills up to date</trigger>
-<steps>
-Run:
+**Project skill (not a submodule):**
 ```bash
-npx skills check --yes
+rm -rf .claude/skills/skill-name
 ```
-Report which skills have updates available. Offer to update if any are found.
-</steps>
-</operation>
-
-<operation name="update">
-<trigger>User says: update skills, upgrade skills</trigger>
-<steps>
-Run:
-```bash
-npx skills update --yes
-```
-Report what was updated.
-</steps>
 </operation>
 
 <operation name="list">
-<trigger>User says: list skills, show installed skills, what skills do I have</trigger>
-<steps>
-Run:
 ```bash
-npx skills add --list --yes
+# Claude Code
+ls ~/.claude/skills/
+ls .claude/skills/
+
+# OpenCode
+ls ~/.config/opencode/skill/
+ls .opencode/skill/
 ```
-</steps>
+</operation>
+
+<operation name="check-source">
+**GitHub repo:**
+```bash
+git -C ~/.claude/skills/skill-name remote get-url origin
+git -C ~/.claude/skills/skill-name rev-parse --short HEAD
+```
+
+**Subdirectory or Zip (has .skill-manager-ref):**
+```bash
+cat ~/.claude/skills/skill-name/.skill-manager-ref
+```
+</operation>
+
+<operation name="post-install">
+After installing any skill, check for and install dependencies:
+
+```bash
+# Python dependencies
+if [ -f ~/.claude/skills/skill-name/requirements.txt ]; then
+  pip install -r ~/.claude/skills/skill-name/requirements.txt
+fi
+
+# Node dependencies
+if [ -f ~/.claude/skills/skill-name/package.json ]; then
+  cd ~/.claude/skills/skill-name && npm install
+fi
+```
+</operation>
+
+<operation name="interop">
+Make skills available to both Claude Code and OpenCode using symlinks.
+
+**User-level (share skills globally):**
+
+First, check which tool already has skills:
+```bash
+ls -la ~/.claude/skills 2>/dev/null
+ls -la ~/.config/opencode/skill 2>/dev/null
+```
+
+If Claude Code has skills, make them available to OpenCode:
+```bash
+mkdir -p ~/.config/opencode
+ln -s ~/.claude/skills ~/.config/opencode/skill
+```
+
+If OpenCode has skills, make them available to Claude Code:
+```bash
+mkdir -p ~/.claude
+ln -s ~/.config/opencode/skill ~/.claude/skills
+```
+
+**Project-level (share skills in a project):**
+
+If Claude Code has project skills, make them available to OpenCode:
+```bash
+mkdir -p .opencode
+ln -s ../.claude/skills .opencode/skill
+```
+
+If OpenCode has project skills, make them available to Claude Code:
+```bash
+mkdir -p .claude
+ln -s ../.opencode/skill .claude/skills
+```
+
+**Important considerations:**
+- Only ONE directory should contain actual files; the other should be a symlink
+- If both directories already exist with different skills, ask user which to keep as primary
+- Symlinks should be committed to git for project-level interop (use relative paths)
+- After creating symlinks, verify with `ls -la` that the link points correctly
 </operation>
 
 </operations>
 
-<guidelines>
-- Always use `--yes` to skip confirmation prompts.
-- Default to project scope unless the user explicitly says global.
-- Default to the current agent type only. Add others only if the user asks.
-- If a command fails, show the error output and suggest fixes (e.g., check the source URL, network).
-- After installing, confirm success and mention where the skill was installed.
-</guidelines>
+<error_handling>
+
+<error name="clone-failed">
+**Symptom:** `git clone` fails with "repository not found" or network error
+
+**Resolution:**
+1. Verify the URL is correct: `curl -I https://github.com/user/repo`
+2. Check if repo is private (requires auth): `gh auth status`
+3. For private repos, use SSH: `git clone git@github.com:user/repo`
+</error>
+
+<error name="skill-exists">
+**Symptom:** Target directory already exists
+
+**Resolution:**
+1. Ask user: "Skill already exists. Update it or reinstall fresh?"
+2. Update: `git -C <path> pull`
+3. Reinstall: `rm -rf <path>` then clone again
+</error>
+
+<error name="invalid-url">
+**Symptom:** Cannot parse GitHub URL
+
+**Resolution:**
+1. Check URL format matches expected patterns (user/repo or full GitHub URL)
+2. Normalize shorthand `user/repo` to `https://github.com/user/repo`
+3. Ask user to verify the URL
+</error>
+
+<error name="missing-skill-md">
+**Symptom:** Cloned directory has no SKILL.md
+
+**Resolution:**
+1. Check if skill uses different structure (look for README or other entry point)
+2. Warn user: "This doesn't appear to be a valid skill (no SKILL.md found)"
+3. Ask if they want to keep it anyway
+</error>
+
+</error_handling>
 
 <success_criteria>
-- The requested skill operation completed successfully.
-- Output was shown to the user confirming what happened.
-- Scope and agent targeting matched user intent (project/global, correct agent).
+Installation is successful when:
+- [ ] Target directory exists
+- [ ] SKILL.md file is present in the directory
+- [ ] For git repos: `.git` directory exists (or is a submodule)
+- [ ] For subdirectory/zip: `.skill-manager-ref` file exists with source URL
+- [ ] Any dependencies have been installed
+
+Update is successful when:
+- [ ] `git pull` completes without errors (for git repos)
+- [ ] New files are present after re-download (for subdirectory/zip)
+
+Removal is successful when:
+- [ ] Target directory no longer exists
+- [ ] For submodules: no entry in `.gitmodules` or `.git/modules/`
+
+**Important:** After installing, updating, or removing skills, always tell the user they need to restart Claude Code/OpenCode for changes to take effect.
 </success_criteria>

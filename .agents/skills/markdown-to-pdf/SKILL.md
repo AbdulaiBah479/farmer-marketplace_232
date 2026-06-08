@@ -1,67 +1,86 @@
 ---
 name: markdown-to-pdf
-description: Convert a markdown file to PDF using mistune + reportlab. Use when the user wants to convert a .md file to PDF, or when another skill needs to produce a PDF from markdown output.
-user_invocable: true
-arguments:
-  - name: file
-    description: Path to the input markdown file
-    required: true
-  - name: output
-    description: Output PDF path. Defaults to same directory and basename as the input file.
-    required: false
-dependencies: ["trading-skills"]
+description: Convert markdown files to PDF with custom styling. Use when generating PDF documents from markdown, creating printable documentation, or exporting reports.
+allowed-tools: Bash, Read
 ---
 
-# Markdown to PDF Converter
+# markdown-to-pdf
 
-Converts a markdown file to a professionally formatted PDF. Pure Python — no system tools required.
+Convert markdown files to professionally-styled PDF documents.
 
-## Dependencies
-
-Requires two Python packages (already in `pyproject.toml`):
-
-```
-mistune>=3.2
-reportlab>=4.0
-```
-
-Install with: `uv sync` (or `pip install mistune reportlab`)
-
-## Instructions
+## Installation Required
 
 ```bash
-uv run python .claude/skills/markdown-to-pdf/scripts/markdown_to_pdf.py <input.md> [output.pdf]
+cd .claude/skills/markdown-to-pdf
+npm install
 ```
 
-- `input.md` — path to the markdown file (required)
-- `output.pdf` — output path (optional; defaults to same directory and basename as input)
+**Dependencies:** `md-to-pdf` (includes Puppeteer, auto-downloads Chromium ~200MB)
 
-## Output
-
-The script returns JSON with:
-- `success` — `true` or `false`
-- `input` — resolved absolute path of the input file
-- `output` — resolved absolute path of the generated PDF
-- `error` — error message if `success` is `false`
-- `generated_at` — NY timezone timestamp
-- `data_delay` — always `"real-time"`
-
-After conversion, tell the user the output PDF path.
-
-## Examples
+## Quick Start
 
 ```bash
-# Convert sandbox/report.md → sandbox/report.pdf (default output)
-uv run python .claude/skills/markdown-to-pdf/scripts/markdown_to_pdf.py sandbox/report.md
+# Basic conversion
+node .claude/skills/markdown-to-pdf/scripts/convert.cjs \
+  --file ./README.md
 
-# Explicit output path
-uv run python .claude/skills/markdown-to-pdf/scripts/markdown_to_pdf.py sandbox/report.md sandbox/AAPL_Report_2026-05-20_1430.pdf
+# Custom output path
+node .claude/skills/markdown-to-pdf/scripts/convert.cjs \
+  --file ./doc.md \
+  --output ./output/doc.pdf
+
+# Custom styling
+node .claude/skills/markdown-to-pdf/scripts/convert.cjs \
+  --file ./report.md \
+  --style ./custom-style.css
 ```
 
-## Supported Markdown
+## CLI Options
 
-- Headings (H1–H3)
-- Paragraphs, bold, italic
-- Tables (pipe syntax)
-- Fenced code blocks
-- Unordered and ordered lists
+| Option            | Required | Description                                  |
+| ----------------- | -------- | -------------------------------------------- |
+| `--file <path>`   | Yes      | Input markdown file                          |
+| `--output <path>` | No       | Output PDF path (default: input name + .pdf) |
+| `--style <path>`  | No       | Custom CSS file                              |
+
+## Output Format (JSON)
+
+```json
+{
+  "success": true,
+  "input": "/path/to/input.md",
+  "output": "/path/to/output.pdf",
+  "pages": 5
+}
+```
+
+## Default Styling
+
+- GitHub-flavored markdown
+- Code syntax highlighting (highlight.js)
+- Sans-serif body (system fonts)
+- Monospace code blocks
+- A4 page size, 2cm margins
+
+## Customization
+
+Create custom CSS:
+
+```css
+body {
+  font-family: Georgia, serif;
+  font-size: 12pt;
+  line-height: 1.6;
+}
+h1 { color: #2c3e50; border-bottom: 2px solid #3498db; }
+code { background: #f4f4f4; padding: 2px 6px; }
+```
+
+## Troubleshooting
+
+**Chromium download fails:** Set `PUPPETEER_SKIP_DOWNLOAD=1` then manually install Chrome
+**Memory issues:** Large docs may need `--max-old-space-size=4096`
+
+## IMPORTANT Task Planning Notes
+- Always plan and break many small todo tasks
+- Always add a final review todo task to review the works done at the end to find any fix or enhancement needed

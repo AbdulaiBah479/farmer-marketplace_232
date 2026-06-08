@@ -347,13 +347,3 @@ Before finalizing code, verify:
 | Blocking in async | Async-native libraries |
 | Missing types | Type annotations on all public APIs |
 | Only happy path tests | Test errors and edge cases |
-
----
-
-## Gotchas
-
-- **Mutable default arguments share state across calls:** `def f(x=[]):` — every call without `x` accesses the same list. Use `x=None` and create inside.
-- **Bare `except:` or `except Exception:` catches `KeyboardInterrupt` only via `BaseException`** — a long-running loop with bare except silently absorbs Ctrl+C.
-- **`__slots__` saves memory but breaks pickling, weakref, and multiple inheritance** unless declared exactly right with `__weakref__` and `__dict__` entries where needed.
-- **`is` vs `==` for cached small ints/strings** — `a is b` works for small ints (-5..256) and interned strings, fails unpredictably otherwise. Always `==` for value comparison.
-- **`assert` is stripped by `python -O`** — never use for runtime validation; only for code-internal invariants.

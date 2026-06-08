@@ -357,13 +357,3 @@ def process_large_batch(
 8. **Document failure modes** - Docstrings should list possible exceptions
 9. **Log with context** - Include IDs, counts, and other debugging info
 10. **Test error paths** - Verify exceptions are raised correctly
-
----
-
-## Gotchas
-
-- **`raise X from None` suppresses the cause chain; `raise X` preserves `__context__`** — different stack traces. Use `from None` when the lower exception is noise.
-- **`raise` (bare) inside `except` re-raises the original; `raise e` re-raises with a NEW traceback** — debugging hint: only bare `raise` preserves the location.
-- **`assert` stripped by `python -O`** — runtime validation MUST use explicit `if + raise`, never `assert`.
-- **Exception groups (3.11+) need `except*`, not `except`** — `except ExceptionGroup` catches the group but doesn't unwrap; `except*` does selective sub-exception handling.
-- **`finally` runs even after `return`** and overrides the return value if it has its own return — accidentally returning from `finally` swallows exceptions.

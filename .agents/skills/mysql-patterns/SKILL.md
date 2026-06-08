@@ -1,412 +1,214 @@
 ---
 name: mysql-patterns
-description: MySQL and MariaDB schema, query, indexing, transaction, replication, and connection-pool patterns for production backends.
-origin: ECC
+description: MySQL database patterns for query optimization, schema design, indexing, and security. Quick reference for common patterns.
 ---
 
 # MySQL Patterns
 
-Use this skill when working on MySQL or MariaDB schema design, migrations,
-slow-query investigation, queue-style transactions, connection pools, or
-production database configuration. Prefer exact version checks before applying a
-feature-specific pattern because MySQL and MariaDB have diverged in several SQL
-details.
+Quick reference for MySQL best practices. For detailed guidance, use the `mysql-database-reviewer` agent.
 
-## Activation
+## When to Activate
 
-- Designing MySQL or MariaDB tables, indexes, and constraints
-- Reviewing migrations before they run on large production tables
-- Debugging slow queries, lock waits, deadlocks, or connection exhaustion
-- Adding keyset pagination, upserts, full-text search, JSON columns, or queues
-- Configuring application connection pools, read replicas, TLS, or slow logs
+- Writing SQL queries or migrations
+- Designing database schemas
+- Troubleshooting slow queries
+- Setting up connection pooling
+- Implementing multi-tenant isolation
 
-## Version Check
+## Quick Reference
 
-Start by identifying the engine and version:
+### Index Cheat Sheet
+
+| Query Pattern             | Index Type       | Example                               |
+| ------------------------- | ---------------- | ------------------------------------- |
+| `WHERE col = value`       | B-tree (default) | `CREATE INDEX idx ON t (col)`         |
+| `WHERE col > value`       | B-tree           | `CREATE INDEX idx ON t (col)`         |
+| `WHERE a = x AND b > y`   | Composite        | `CREATE INDEX idx ON t (a, b)`        |
+| `MATCH(...) AGAINST(...)` | FULLTEXT         | `CREATE FULLTEXT INDEX ft ON t (col)` |
+| Long string prefix        | Prefix           | `CREATE INDEX idx ON t (col(50))`     |
+| Geographic data           | SPATIAL          | `CREATE SPATIAL INDEX idx ON t (col)` |
+
+### Data Type Quick Reference
+
+| Use Case      | Correct Type      | Avoid                        |
+| ------------- | ----------------- | ---------------------------- |
+| IDs           | `bigint unsigned` | `int`, random UUID as PK     |
+| Business code | `varchar(64)`     | `char`, `text`               |
+| Strings       | `varchar(n)`      | `text` for short strings     |
+| Timestamps    | `datetime`        | `timestamp` (2038 problem)   |
+| Money         | `decimal(10,2)`   | `float`, `double`            |
+| Flags         | `tinyint`         | `varchar`, `boolean` literal |
+| Status        | `tinyint`         | `enum` (hard to modify)      |
+| JSON data     | `json`            | `text` for structured data   |
+
+### Common Patterns
+
+**Composite Index Order:**
 
 ```sql
-SELECT VERSION();
-SHOW VARIABLES LIKE 'version_comment';
+-- Equality columns first, then range columns
+CREATE INDEX idx_status_created ON t_order (status, created_at);
+-- Works for: WHERE status = 'pending' AND created_at > '2024-01-01'
+-- Does NOT work for: WHERE created_at > '2024-01-01' alone
 ```
 
-Keep MySQL and MariaDB guidance separate when syntax differs:
-
-- MySQL documents row aliases as the replacement for `VALUES(col)` in
-  `ON DUPLICATE KEY UPDATE`; `VALUES(col)` is deprecated there.
-- MariaDB documents `VALUES(col)` as the supported way to reference inserted
-  values in `ON DUPLICATE KEY UPDATE`; use it for cross-engine compatibility.
-- `SKIP LOCKED` is appropriate for queue-like work only. It skips locked rows
-  and can return an inconsistent view, so do not use it for general accounting
-  or integrity-sensitive reads.
-
-## Schema Defaults
+**Prefix Index (Long Strings):**
 
 ```sql
-CREATE TABLE orders (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    account_id BIGINT UNSIGNED NOT NULL,
-    status VARCHAR(32) NOT NULL,
-    total DECIMAL(15, 2) NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL,
-    PRIMARY KEY (id),
-    KEY idx_orders_account_status_created (account_id, status, created_at),
-    KEY idx_orders_active (account_id, deleted_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX idx_url ON t_page (url(100));
+-- Index only first 100 characters
 ```
 
-Default choices:
-
-| Use Case | Prefer | Avoid |
-| --- | --- | --- |
-| Surrogate primary keys | `BIGINT UNSIGNED AUTO_INCREMENT` | `INT` for tables that can grow beyond 2B rows |
-| UUID lookup keys | `BINARY(16)` with conversion helpers | `VARCHAR(36)` primary keys on hot tables |
-| Money and exact quantities | `DECIMAL(p, s)` | `FLOAT` or `DOUBLE` |
-| User-facing text | `utf8mb4` tables and indexes | MySQL `utf8` / `utf8mb3` defaults |
-| Application timestamps | `DATETIME` with UTC managed by the app | Assuming `DATETIME` stores time zone metadata |
-| Soft deletes | `deleted_at DATETIME NULL` plus scoped indexes | Filtering soft-deleted rows without an index |
-| Extensible status values | lookup table or constrained `VARCHAR` | `ENUM` when values change often |
-
-## Indexing
-
-Composite index order usually follows equality predicates first, then range or
-sort columns:
+**Generated Column + Index (JSON):**
 
 ```sql
-CREATE INDEX idx_orders_account_status_created
-    ON orders (account_id, status, created_at);
-
-SELECT id, total
-FROM orders
-WHERE account_id = ?
-  AND status = 'pending'
-  AND created_at >= ?
-ORDER BY created_at DESC
-LIMIT 50;
+ALTER TABLE t_product
+ADD COLUMN brand varchar(100) GENERATED ALWAYS AS (attributes->>'$.brand') STORED;
+CREATE INDEX idx_brand ON t_product (brand);
 ```
 
-Use `EXPLAIN` before adding or changing an index:
+**UPSERT (ON DUPLICATE KEY):**
 
 ```sql
-EXPLAIN
-SELECT id, total
-FROM orders
-WHERE account_id = 123 AND status = 'pending'
-ORDER BY created_at DESC
-LIMIT 50;
-```
-
-Signals to investigate:
-
-| Field | Risk Signal |
-| --- | --- |
-| `type` | `ALL` on a large table |
-| `key` | `NULL` when a selective predicate exists |
-| `rows` | Very high row estimate for an interactive path |
-| `Extra` | `Using temporary`, `Using filesort`, or broad `Using where` |
-
-Avoid adding indexes blindly. Each index increases write cost, migration time,
-backup size, and buffer-pool pressure.
-
-## Query Patterns
-
-### Upsert
-
-Cross-engine-compatible form:
-
-```sql
-INSERT INTO user_settings (user_id, setting_key, setting_value)
-VALUES (?, ?, ?)
+INSERT INTO t_setting (user_code, `key`, `value`)
+VALUES ('u123', 'theme', 'dark')
 ON DUPLICATE KEY UPDATE
-    setting_value = VALUES(setting_value),
-    updated_at = CURRENT_TIMESTAMP;
+  `value` = VALUES(`value`),
+  updated_at = NOW();
 ```
 
-MySQL row-alias form:
+**Cursor Pagination:**
 
 ```sql
-INSERT INTO user_settings (user_id, setting_key, setting_value)
-VALUES (?, ?, ?) AS new
-ON DUPLICATE KEY UPDATE
-    setting_value = new.setting_value,
-    updated_at = CURRENT_TIMESTAMP;
+SELECT * FROM t_product WHERE id > ? ORDER BY id LIMIT 20;
+-- O(1) vs OFFSET which is O(n)
 ```
 
-Use the row-alias form only after confirming the target is MySQL. Use
-`VALUES(col)` for MariaDB or mixed MySQL/MariaDB fleets.
-
-### Keyset Pagination
-
-```sql
-SELECT id, name, created_at
-FROM products
-WHERE (created_at, id) < (?, ?)
-ORDER BY created_at DESC, id DESC
-LIMIT 50;
-```
-
-Back it with an index that matches the cursor:
-
-```sql
-CREATE INDEX idx_products_created_id ON products (created_at, id);
-```
-
-Do not use deep `OFFSET` pagination on large tables; it makes the server scan
-and discard rows before returning the page.
-
-### JSON Fields
-
-Use JSON columns for extension data, not for fields that need heavy relational
-filtering or constraints.
-
-```sql
-CREATE TABLE events (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    payload JSON NOT NULL,
-    event_type VARCHAR(64)
-        GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(payload, '$.type'))) STORED,
-    KEY idx_events_type (event_type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
-
-For frequently queried JSON paths, expose a generated column and index that
-column. Keep foreign keys, ownership, tenancy, and lifecycle fields relational.
-
-### Full-Text Search
-
-```sql
-ALTER TABLE articles ADD FULLTEXT KEY ft_articles_title_body (title, body);
-
-SELECT id, title, MATCH(title, body) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
-FROM articles
-WHERE MATCH(title, body) AGAINST (? IN NATURAL LANGUAGE MODE)
-ORDER BY score DESC
-LIMIT 20;
-```
-
-Use external search when you need typo tolerance, complex ranking, cross-table
-facets, or language-specific analysis beyond built-in full-text behavior.
-
-## Transactions
-
-Keep transactions short and lock rows in a consistent order:
+**Queue Processing (MySQL 8.0+):**
 
 ```sql
 START TRANSACTION;
-
-SELECT id, balance
-FROM accounts
-WHERE id IN (?, ?)
-ORDER BY id
-FOR UPDATE;
-
-UPDATE accounts SET balance = balance - ? WHERE id = ?;
-UPDATE accounts SET balance = balance + ? WHERE id = ?;
-
-COMMIT;
-```
-
-Deadlock and lock-wait checklist:
-
-- Lock rows in a deterministic order across code paths.
-- Do external API calls before opening the transaction, not inside it.
-- Add indexes for predicates used in `UPDATE`, `DELETE`, and locking reads.
-- On deadlock, roll back and retry the whole transaction with a bounded retry
-  budget.
-- Capture `SHOW ENGINE INNODB STATUS\G` soon after a deadlock; it is overwritten
-  by later events.
-
-Queue-style worker claim:
-
-```sql
-START TRANSACTION;
-
-SELECT id
-FROM jobs
+SELECT * FROM t_job
 WHERE status = 'pending'
-ORDER BY created_at
-LIMIT 1
+ORDER BY created_at LIMIT 1
 FOR UPDATE SKIP LOCKED;
-
-UPDATE jobs
-SET status = 'processing', started_at = CURRENT_TIMESTAMP
-WHERE id = ?;
-
+-- Process job...
+UPDATE t_job SET status = 'processing' WHERE id = ?;
 COMMIT;
 ```
 
-Use `SKIP LOCKED` only for queue-like workloads where skipping a locked row is
-acceptable. It is not a replacement for normal transactional consistency.
-
-## Connection Pools
-
-SQLAlchemy example:
-
-```python
-from sqlalchemy import create_engine
-
-engine = create_engine(
-    "mysql+mysqlconnector://app:secret@db.internal/app",
-    pool_size=10,
-    max_overflow=5,
-    pool_timeout=30,
-    pool_recycle=240,
-    pool_pre_ping=True,
-    connect_args={"connect_timeout": 5},
-)
-```
-
-Node.js `mysql2` example:
-
-```javascript
-import mysql from 'mysql2/promise';
-
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 30000,
-});
-
-const [rows] = await pool.execute(
-  'SELECT id, total FROM orders WHERE account_id = ? LIMIT 50',
-  [accountId],
-);
-```
-
-Keep application pool recycling below the server `wait_timeout`. If the server
-uses `wait_timeout = 300`, a `pool_recycle` around 240 seconds is coherent;
-`pool_pre_ping` still helps recover from network and failover events.
-
-## Diagnostics
-
-Useful first-pass commands:
+**Batch Insert:**
 
 ```sql
-SHOW FULL PROCESSLIST;
-SHOW ENGINE INNODB STATUS\G;
-SHOW VARIABLES LIKE 'slow_query_log';
-SHOW VARIABLES LIKE 'long_query_time';
+INSERT INTO t_event (user_code, action) VALUES
+  ('u1', 'click'),
+  ('u2', 'view'),
+  ('u3', 'click');
+-- 1 round trip instead of 3
 ```
 
-Enable the slow log in a controlled environment:
+### Anti-Pattern Detection
 
 ```sql
+-- Find tables without primary key
+SELECT t.table_name
+FROM information_schema.tables t
+LEFT JOIN information_schema.key_column_usage k
+  ON t.table_schema = k.table_schema
+  AND t.table_name = k.table_name
+  AND k.constraint_name = 'PRIMARY'
+WHERE t.table_schema = DATABASE()
+  AND k.constraint_name IS NULL
+  AND t.table_type = 'BASE TABLE';
+
+-- Find slow queries (performance_schema)
+SELECT DIGEST_TEXT, COUNT_STAR,
+  ROUND(AVG_TIMER_WAIT/1000000000, 2) as avg_ms
+FROM performance_schema.events_statements_summary_by_digest
+WHERE AVG_TIMER_WAIT > 100000000  -- > 100ms
+ORDER BY AVG_TIMER_WAIT DESC LIMIT 10;
+
+-- Find unused indexes (sys schema)
+SELECT * FROM sys.schema_unused_indexes
+WHERE object_schema = DATABASE();
+
+-- Find redundant indexes
+SELECT * FROM sys.schema_redundant_indexes
+WHERE table_schema = DATABASE();
+
+-- Check table fragmentation
+SELECT table_name, data_free,
+  ROUND(data_free/(data_length+index_length+data_free)*100, 2) as frag_pct
+FROM information_schema.tables
+WHERE table_schema = DATABASE() AND data_free > 1000000
+ORDER BY data_free DESC;
+```
+
+### Configuration Template
+
+```sql
+-- Connection limits
+SET GLOBAL max_connections = 200;
+SET GLOBAL max_user_connections = 50;
+
+-- Timeouts
+SET GLOBAL wait_timeout = 300;
+SET GLOBAL interactive_timeout = 600;
+SET GLOBAL max_execution_time = 30000;  -- 30s query timeout (MySQL 5.7.8+)
+
+-- Slow query log
 SET GLOBAL slow_query_log = 'ON';
 SET GLOBAL long_query_time = 1;
 SET GLOBAL log_queries_not_using_indexes = 'ON';
+
+-- InnoDB settings (my.cnf recommended)
+-- innodb_buffer_pool_size = 70% of RAM
+-- innodb_log_file_size = 256M
+-- innodb_flush_log_at_trx_commit = 1
 ```
 
-Use `EXPLAIN ANALYZE` only when it is safe to execute the query. It runs the
-statement and can be expensive on production-sized data.
-
-## Replication
-
-Read replicas can lag. Do not route read-your-own-write paths, checkout flows,
-permission checks, or idempotency-key reads to a replica immediately after a
-write.
+### Table Template
 
 ```sql
--- MySQL legacy terminology, still common in existing fleets
-SHOW SLAVE STATUS\G;
+CREATE TABLE `t_example` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'PK',
+  `example_code` varchar(64) NOT NULL COMMENT 'Business code (UUID)',
 
--- Newer terminology where supported
-SHOW REPLICA STATUS\G;
+  -- Business fields here
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '0-inactive, 1-active',
+
+  -- Audit fields (5 fields)
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation time',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time',
+  `created_by` varchar(64) NOT NULL DEFAULT '' COMMENT 'Creator (user_code)',
+  `updated_by` varchar(64) NOT NULL DEFAULT '' COMMENT 'Modifier (user_code)',
+  `deleted_at` datetime DEFAULT NULL COMMENT 'Soft delete marker',
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_example_code` (`example_code`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-Check the engine/version before standardizing on one command. Monitor replica
-SQL thread health, IO thread health, and lag, not just whether the TCP
-connection is alive.
-
-## Security
+### EXPLAIN Analysis
 
 ```sql
-CREATE USER 'app'@'%' IDENTIFIED BY 'use-a-secret-manager';
-GRANT SELECT, INSERT, UPDATE, DELETE ON appdb.* TO 'app'@'%';
-
-ALTER USER 'app'@'%' REQUIRE SSL;
-
-SELECT user, host
-FROM mysql.user
-WHERE user = '';
-
-DROP USER IF EXISTS ''@'localhost';
-DROP USER IF EXISTS ''@'%';
+EXPLAIN ANALYZE SELECT * FROM t_order WHERE user_code = 'u123';
 ```
 
-Security review points:
-
-- Do not grant `ALL PRIVILEGES` or `*.*` to application users.
-- Require TLS for application users when traffic crosses hosts or networks.
-- Store credentials in the platform secret manager, not in examples, scripts, or
-  repository files.
-- Separate migration/admin users from runtime application users.
-- Audit public network exposure and bind addresses before tuning performance.
-
-## Configuration
-
-Example starting point for a dedicated database host:
-
-```ini
-[mysqld]
-innodb_buffer_pool_size = 4G
-innodb_flush_log_at_trx_commit = 1
-sync_binlog = 1
-
-max_connections = 300
-thread_cache_size = 50
-
-wait_timeout = 300
-interactive_timeout = 300
-innodb_lock_wait_timeout = 10
-
-slow_query_log = ON
-long_query_time = 1
-log_queries_not_using_indexes = ON
-
-log_bin = mysql-bin
-binlog_format = ROW
-binlog_expire_logs_seconds = 604800
-```
-
-Treat configuration values as a prompt for review, not a universal preset. Size
-memory, connections, log retention, and durability settings from workload,
-hardware, backup policy, and recovery objectives.
-
-## Anti-Patterns
-
-| Anti-Pattern | Risk | Better Pattern |
-| --- | --- | --- |
-| `SELECT *` in hot paths | Over-fetching and brittle clients | Select explicit columns |
-| Deep `OFFSET` pagination | Linear scans and slow pages | Keyset pagination |
-| No index on foreign-key joins | Slow joins and lock-heavy deletes | Index FK columns intentionally |
-| Long transactions | Lock waits and large undo history | Commit small units of work |
-| Direct DML against `mysql.user` | Grant-table corruption risk | Use `CREATE USER`, `ALTER USER`, `DROP USER` |
-| Application user with admin grants | High blast radius | Least-privilege runtime user |
-| Pool recycle above `wait_timeout` | Stale pooled connections | Recycle below timeout and pre-ping |
-| Replica reads after writes | Stale user-facing state | Pin read-after-write flows to primary |
-
-## Output Expectations
-
-When this skill is used for review, return:
-
-1. Engine/version assumptions.
-2. Highest-risk correctness, lock, security, and migration issues.
-3. Exact SQL or code changes for the safe path.
-4. Validation plan: `EXPLAIN`, migration dry run, lock/deadlock check, and
-   rollback criteria.
-5. Any MySQL/MariaDB syntax differences that affect the recommendation.
+| Indicator         | Problem             | Solution           |
+| ----------------- | ------------------- | ------------------ |
+| `type: ALL`       | Full table scan     | Add index          |
+| `type: index`     | Full index scan     | Check WHERE        |
+| `Using filesort`  | Sorting not indexed | Add ORDER BY index |
+| `Using temporary` | Temp table          | Optimize GROUP BY  |
+| High `rows`       | Poor selectivity    | Review conditions  |
 
 ## Related
 
-- Skill: `postgres-patterns` - PostgreSQL-specific schema and query patterns
-- Skill: `database-migrations` - migration planning and rollout safety
-- Skill: `backend-patterns` - API and service-layer patterns
-- Skill: `security-review` - secret handling, auth, and least privilege
-- Agent: `database-reviewer` - broader database review workflow
+- Agent: `mysql-database-reviewer` - Full database review workflow
+
+---
+
+_Quick reference for MySQL 5.7+ / 8.0+_

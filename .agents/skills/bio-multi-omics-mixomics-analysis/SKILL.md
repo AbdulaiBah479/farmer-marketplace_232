@@ -5,26 +5,9 @@ tool_type: r
 primary_tool: mixOmics
 ---
 
-## Version Compatibility
-
-Reference examples tested with: mixOmics 6.26+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- R: `packageVersion("<pkg>")` then `?function_name` to verify parameters
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # mixOmics Multi-Omics Analysis
 
-**"Integrate my multi-omics data with supervised analysis"** → Identify cross-omics feature signatures that discriminate between groups using sparse PLS and multi-block discriminant analysis.
-- R: `mixOmics::block.splsda()` (DIABLO), `mixOmics::spls()` for pairwise integration
-
 ## Setup and Data Preparation
-
-**Goal:** Load and align omics matrices with matching sample labels and phenotype information.
-
-**Approach:** Read each omics layer and phenotype, then intersect to common samples.
 
 ```r
 library(mixOmics)
@@ -42,10 +25,6 @@ Y <- Y[match(common, read.csv('phenotype.csv')$Sample)]
 ```
 
 ## Pairwise Integration: sPLS
-
-**Goal:** Identify correlated features between two omics layers using sparse partial least squares.
-
-**Approach:** Tune component count, fit sPLS with feature selection (keepX/keepY), and visualize cross-omics correlations.
 
 ```r
 # Sparse Partial Least Squares for two datasets
@@ -70,10 +49,6 @@ cim(spls_result, comp = 1)
 ```
 
 ## DIABLO: Multi-Block Discriminant Analysis
-
-**Goal:** Find multi-omics feature signatures that discriminate between experimental conditions.
-
-**Approach:** Define block correlation design, tune keepX per block via cross-validation, and fit the supervised DIABLO model.
 
 ```r
 # DIABLO integrates multiple blocks with supervision
@@ -106,10 +81,6 @@ plot(perf_diablo)
 
 ## DIABLO Visualization
 
-**Goal:** Visualize DIABLO results including sample separation, inter-block correlations, and feature networks.
-
-**Approach:** Use mixOmics plotting functions for consensus plots, circos plots, and correlation networks.
-
 ```r
 # Sample plots
 plotIndiv(diablo, comp = c(1, 2), blocks = 'consensus', group = Y,
@@ -134,10 +105,6 @@ cimDiablo(diablo, margin = c(8, 20))
 
 ## Extract Selected Features
 
-**Goal:** Retrieve the discriminant features selected by DIABLO for each omics block and export for pathway analysis.
-
-**Approach:** Use selectVar() to get selected variable names and plotLoadings() for contribution plots, then write to CSV.
-
 ```r
 # Get selected variables per block
 selected_rna <- selectVar(diablo, block = 'RNA', comp = 1)$RNA$name
@@ -153,10 +120,6 @@ write.csv(data.frame(protein = selected_protein), 'diablo_protein_features.csv',
 ```
 
 ## MINT: Multi-Study Integration
-
-**Goal:** Integrate data from multiple studies while accounting for study-specific batch effects.
-
-**Approach:** Fit MINT model with study indicator, then visualize global and per-study sample projections.
 
 ```r
 # MINT for integrating multiple studies
@@ -176,10 +139,6 @@ perf_mint <- perf(mint_result, validation = 'Mfold', folds = 5)
 
 ## Unsupervised: sPCA and sPLS-DA Single Omics
 
-**Goal:** Perform sparse dimensionality reduction or classification on a single omics dataset.
-
-**Approach:** Apply sPCA for unsupervised exploration or sPLS-DA for supervised classification with feature selection.
-
 ```r
 # Sparse PCA (single omics)
 spca_result <- spca(X_rna, ncomp = 3, keepX = c(50, 50, 50))
@@ -196,10 +155,6 @@ plotIndiv(splsda_result, group = Y, background = background)
 ```
 
 ## Model Performance and Validation
-
-**Goal:** Assess DIABLO classification performance via cross-validation error rates and AUC.
-
-**Approach:** Run repeated M-fold cross-validation and compute AUC per block and component.
 
 ```r
 # Cross-validation performance

@@ -1,147 +1,340 @@
 ---
 name: postgres-optimization
-description: PostgreSQL optimization including indexes, query plans, partitioning, JSONB operations, and connection pooling
+description: Unconventional PostgreSQL optimization techniques
+license: MIT
+tier: 2
+allowed-tools:
+  - read_file
+  - write_file
+  - run_terminal_cmd
+  - grep
+related: [debugging, plan-then-execute, robust-first]
+tags: [moollm, database, postgresql, performance, optimization, indexing]
+inputs:
+  query:
+    type: string
+    required: false
+    description: "Query to optimize"
+  table:
+    type: string
+    required: false
+    description: "Table to analyze"
+outputs:
+  - OPTIMIZATION.md
+  - EXPLAIN-ANALYSIS.txt
+credits:
+  source:
+    title: "Unconventional PostgreSQL Optimizations"
+    author: "Haki Benita"
+    url: "https://hakibenita.com/postgresql-unconventional-optimizations"
 ---
 
-# PostgreSQL Optimization
+# 🐘 PostgreSQL Optimization
 
-## Index Strategies
+> **"Beyond 'just add an index' — creative solutions for real performance problems."**
+
+Unconventional optimization techniques for PostgreSQL that go beyond standard DBA playbooks.
+
+## Purpose
+
+When conventional approaches fall short — query rewrites, adding indexes, VACUUM, ANALYZE — these techniques offer creative solutions:
+
+- Eliminate impossible query scans with constraint exclusion
+- Reduce index size with function-based indexes
+- Enforce uniqueness with hash indexes instead of B-Trees
+
+## When to Use
+
+- Ad-hoc query environments where users make mistakes
+- Large indexes approaching table size
+- Uniqueness constraints on large text values (URLs, documents)
+- Timestamp columns queried at coarser granularity
+
+---
+
+## Technique 1: Constraint Exclusion
+
+### The Problem
+
+Check constraints prevent invalid data, but PostgreSQL doesn't use them to optimize queries by default.
 
 ```sql
--- B-tree index for equality and range queries (default)
-CREATE INDEX idx_orders_customer_id ON orders (customer_id);
-
--- Composite index (column order matters: equality columns first, range last)
-CREATE INDEX idx_orders_status_created ON orders (status, created_at DESC);
-
--- Partial index (smaller, faster for filtered queries)
-CREATE INDEX idx_orders_pending ON orders (created_at)
-  WHERE status = 'pending';
-
--- Covering index (avoids table lookup entirely)
-CREATE INDEX idx_users_email_name ON users (email) INCLUDE (name, avatar_url);
-
--- GIN index for JSONB containment queries
-CREATE INDEX idx_products_metadata ON products USING GIN (metadata);
-
--- GiST index for full-text search
-CREATE INDEX idx_articles_search ON articles USING GiST (
-  to_tsvector('english', title || ' ' || body)
+CREATE TABLE users (
+    id INT PRIMARY KEY,
+    username TEXT NOT NULL,
+    plan TEXT NOT NULL,
+    CONSTRAINT plan_check CHECK (plan IN ('free', 'pro'))
 );
-
--- Concurrent index creation (no table lock)
-CREATE INDEX CONCURRENTLY idx_large_table_col ON large_table (col);
 ```
 
-## Reading Query Plans
+An analyst writes:
 
 ```sql
-EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT o.id, o.total, u.name
-FROM orders o
-JOIN users u ON o.user_id = u.id
-WHERE o.status = 'shipped'
-  AND o.created_at > NOW() - INTERVAL '30 days'
-ORDER BY o.created_at DESC
-LIMIT 20;
+SELECT * FROM users WHERE plan = 'Pro';  -- Note: capital P
 ```
 
-Key things to look for in the plan:
-- `Seq Scan` on large tables indicates a missing index
-- `Nested Loop` with high row estimates suggests missing join index
-- `Sort` without `Index Scan` means the sort is happening in memory/disk
-- `Buffers: shared hit` vs `shared read` shows cache efficiency
+Despite the check constraint making this condition impossible, PostgreSQL scans the entire table.
 
-## Partitioning
+### The Solution
 
 ```sql
-CREATE TABLE events (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY,
-    event_type  TEXT NOT NULL,
-    payload     JSONB NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-) PARTITION BY RANGE (created_at);
-
-CREATE TABLE events_2024_q1 PARTITION OF events
-    FOR VALUES FROM ('2024-01-01') TO ('2024-04-01');
-CREATE TABLE events_2024_q2 PARTITION OF events
-    FOR VALUES FROM ('2024-04-01') TO ('2024-07-01');
-
--- Index on each partition (inherited automatically in PG 11+)
-CREATE INDEX ON events (created_at, event_type);
+SET constraint_exclusion TO 'on';
 ```
 
-Partition tables with more than 10M rows when queries consistently filter on the partition key.
-
-## JSONB Operations
+With constraint exclusion enabled:
 
 ```sql
--- Query nested JSONB fields
-SELECT * FROM products
-WHERE metadata @> '{"category": "electronics"}'
-  AND (metadata ->> 'price')::numeric < 500;
-
--- Update nested JSONB
-UPDATE products
-SET metadata = jsonb_set(metadata, '{stock}', to_jsonb(stock - 1))
-WHERE id = 'abc';
-
--- Aggregate JSONB arrays
-SELECT id, jsonb_array_elements_text(metadata -> 'tags') AS tag
-FROM products
-WHERE metadata ? 'tags';
+EXPLAIN ANALYZE SELECT * FROM users WHERE plan = 'Pro';
 ```
 
-## Connection Pooling
-
-```ini
-# pgbouncer.ini
-[databases]
-app = host=localhost port=5432 dbname=app
-
-[pgbouncer]
-pool_mode = transaction
-max_client_conn = 1000
-default_pool_size = 25
-min_pool_size = 5
-reserve_pool_size = 5
-server_idle_timeout = 300
+```
+Result  (cost=0.00..0.00 rows=0 width=0)
+  One-Time Filter: false
+Execution Time: 0.008 ms
 ```
 
-Use transaction-level pooling for web applications. Session-level pooling for apps that use prepared statements or temp tables.
+PostgreSQL recognizes the condition contradicts the constraint and skips the scan entirely.
 
-## Common Tuning Parameters
+### When to Enable
+
+| Environment | Recommendation |
+|-------------|----------------|
+| OLTP production | Leave as 'partition' (default) |
+| BI / Data Warehouse | Set to 'on' |
+| Ad-hoc query tools | Set to 'on' |
+| Reporting databases | Set to 'on' |
+
+### Tradeoffs
+
+- **Benefit**: Eliminates impossible query scans
+- **Cost**: Extra planning overhead evaluating constraints against conditions
+- **Default**: 'partition' — only used for partition pruning
+
+---
+
+## Technique 2: Function-Based Indexes for Lower Cardinality
+
+### The Problem
+
+You have a sales table with timestamps:
 
 ```sql
--- Check for slow queries
-SELECT query, calls, mean_exec_time, total_exec_time
-FROM pg_stat_statements
-ORDER BY total_exec_time DESC
-LIMIT 10;
-
--- Find unused indexes
-SELECT indexrelname, idx_scan, pg_size_pretty(pg_relation_size(indexrelid))
-FROM pg_stat_user_indexes
-WHERE idx_scan = 0
-ORDER BY pg_relation_size(indexrelid) DESC;
+CREATE TABLE sale (
+    id INT PRIMARY KEY,
+    sold_at TIMESTAMPTZ NOT NULL,
+    charged INT NOT NULL
+);
 ```
 
-## Anti-Patterns
+Analysts query by day:
 
-- Creating indexes on every column instead of analyzing actual query patterns
-- Using `SELECT *` when only a few columns are needed
-- Not using `EXPLAIN ANALYZE` to verify index usage
-- Storing large blobs in JSONB when a separate table with proper types is better
-- Missing connection pooling (each connection uses ~10MB of server memory)
-- Running `VACUUM FULL` during peak hours (locks the entire table)
+```sql
+SELECT date_trunc('day', sold_at AT TIME ZONE 'UTC'), SUM(charged)
+FROM sale
+WHERE sold_at BETWEEN '2025-01-01 UTC' AND '2025-02-01 UTC'
+GROUP BY 1;
+```
 
-## Checklist
+You add a B-Tree index on `sold_at` — 214 MB for a 160 MB table. The index is almost half the table size!
 
-- [ ] Indexes match actual query patterns (check `pg_stat_statements`)
-- [ ] Composite indexes ordered: equality, then sort, then range columns
-- [ ] `EXPLAIN ANALYZE` run on all critical queries
-- [ ] Partial indexes used for frequently filtered subsets
-- [ ] Connection pooler (PgBouncer/pgcat) in front of PostgreSQL
-- [ ] Table partitioning considered for tables over 10M rows
-- [ ] Unused indexes identified and dropped
-- [ ] `pg_stat_statements` enabled for query performance monitoring
+### The Solution
+
+Index only what queries need:
+
+```sql
+CREATE INDEX sale_sold_at_date_ix 
+ON sale((date_trunc('day', sold_at AT TIME ZONE 'UTC'))::date);
+```
+
+| Index | Size |
+|-------|------|
+| `sale_sold_at_ix` (full timestamp) | 214 MB |
+| `sale_sold_at_date_ix` (date only) | 66 MB |
+
+The function-based index is **3x smaller** because:
+- Dates are 4 bytes vs 8 bytes for timestamptz
+- Fewer distinct values enable deduplication
+
+### The Discipline Problem
+
+Function-based indexes require exact expression match:
+
+```sql
+-- Uses the index ✓
+WHERE date_trunc('day', sold_at AT TIME ZONE 'UTC')::date 
+      BETWEEN '2025-01-01' AND '2025-01-31'
+
+-- Does NOT use the index ✗
+WHERE (sold_at AT TIME ZONE 'UTC')::date 
+      BETWEEN '2025-01-01' AND '2025-01-31'
+```
+
+### Solution: Virtual Generated Columns (PostgreSQL 18+)
+
+```sql
+ALTER TABLE sale ADD sold_at_date DATE
+GENERATED ALWAYS AS (date_trunc('day', sold_at AT TIME ZONE 'UTC'));
+```
+
+Now queries use the virtual column:
+
+```sql
+SELECT sold_at_date, SUM(charged)
+FROM sale
+WHERE sold_at_date BETWEEN '2025-01-01' AND '2025-01-31'
+GROUP BY 1;
+```
+
+**Benefits:**
+- Smaller index
+- Faster queries
+- No discipline required — column guarantees correct expression
+- No ambiguity about timezones
+
+**Limitation:** PostgreSQL 18 doesn't support indexes directly on virtual columns (yet).
+
+---
+
+## Technique 3: Hash Index for Uniqueness
+
+### The Problem
+
+You have a table with large URLs:
+
+```sql
+CREATE TABLE urls (
+    id INT PRIMARY KEY,
+    url TEXT NOT NULL,
+    data JSON
+);
+```
+
+You add a unique B-Tree index:
+
+```sql
+CREATE UNIQUE INDEX urls_url_unique_ix ON urls(url);
+```
+
+| Size |
+|------|
+| Table: 160 MB |
+| B-Tree index: 154 MB |
+
+The index is almost as large as the table because B-Tree stores actual values in leaf blocks.
+
+### The Solution
+
+Use an exclusion constraint with a hash index:
+
+```sql
+ALTER TABLE urls 
+ADD CONSTRAINT urls_url_unique_hash 
+EXCLUDE USING HASH (url WITH =);
+```
+
+| Index | Size |
+|-------|------|
+| B-Tree | 154 MB |
+| Hash | 32 MB |
+
+The hash index is **5x smaller** because it stores hash values, not the actual URLs.
+
+### Uniqueness Is Enforced
+
+```sql
+INSERT INTO urls (id, url) VALUES (1000002, 'https://example.com');
+-- ERROR: conflicting key value violates exclusion constraint
+```
+
+### Queries Still Fast
+
+```sql
+EXPLAIN ANALYZE SELECT * FROM urls WHERE url = 'https://example.com';
+```
+
+```
+Index Scan using urls_url_unique_hash on urls
+Execution Time: 0.022 ms  -- Faster than B-Tree's 0.046 ms!
+```
+
+### Limitations
+
+| Feature | B-Tree Unique | Hash Exclusion |
+|---------|--------------|----------------|
+| Foreign key reference | ✓ | ✗ |
+| `ON CONFLICT (column)` | ✓ | ✗ |
+| `ON CONFLICT ON CONSTRAINT` | ✓ | ✓ (DO NOTHING only) |
+| `ON CONFLICT DO UPDATE` | ✓ | ✗ |
+| `MERGE` | ✓ | ✓ |
+
+### Workaround: Use MERGE
+
+Instead of `INSERT ... ON CONFLICT DO UPDATE`:
+
+```sql
+MERGE INTO urls t
+USING (VALUES (1000004, 'https://example.com')) AS s(id, url)
+ON t.url = s.url
+WHEN MATCHED THEN UPDATE SET id = s.id
+WHEN NOT MATCHED THEN INSERT (id, url) VALUES (s.id, s.url);
+```
+
+---
+
+## Quick Reference
+
+### Diagnostic Queries
+
+**Check index sizes:**
+```sql
+\di+ table_*
+```
+
+**Compare index to table size:**
+```sql
+SELECT 
+    relname AS name,
+    pg_size_pretty(pg_relation_size(oid)) AS size
+FROM pg_class 
+WHERE relname LIKE 'your_table%'
+ORDER BY pg_relation_size(oid) DESC;
+```
+
+**Check constraint_exclusion setting:**
+```sql
+SHOW constraint_exclusion;
+```
+
+### Decision Tree
+
+```
+Is the query scanning impossibly?
+├── Yes → Enable constraint_exclusion
+└── No
+    ↓
+Is index nearly as large as table?
+├── Yes, timestamp column → Function-based index on date
+├── Yes, large text column → Hash exclusion constraint
+└── No → Standard B-Tree is fine
+```
+
+---
+
+## Commands
+
+| Command | Action |
+|---------|--------|
+| `ANALYZE [table]` | Analyze query performance |
+| `CHECK-CONSTRAINTS` | Evaluate constraint exclusion opportunity |
+| `LOWER-CARDINALITY` | Find function-based index opportunities |
+| `HASH-UNIQUE` | Evaluate hash index for large values |
+| `COMPARE-INDEXES` | Compare index sizes and performance |
+
+---
+
+## Integration
+
+| Direction | Skill | Relationship |
+|-----------|-------|--------------|
+| ← | [debugging](../debugging/) | Query debugging leads here |
+| → | [plan-then-execute](../plan-then-execute/) | Systematic optimization |

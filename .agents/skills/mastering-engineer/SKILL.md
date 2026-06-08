@@ -1,11 +1,8 @@
 ---
 name: mastering-engineer
-description: Guides audio mastering for streaming platforms including loudness optimization and tonal balance. Use when the user has approved tracks and wants to master audio files.
+description: Audio mastering guidance, loudness optimization, platform delivery specs
 argument-hint: <folder-path or "master for [platform]">
-model: sonnet
-effort: low
-prerequisites:
-  - import-audio
+model: claude-sonnet-4-5-20250929
 allowed-tools:
   - Read
   - Edit
@@ -13,7 +10,6 @@ allowed-tools:
   - Grep
   - Glob
   - Bash
-  - bitwize-music-mcp
 requirements:
   python:
     - matchering
@@ -80,9 +76,10 @@ See [genre-presets.md](genre-presets.md) for detailed genre settings.
 Check for custom mastering presets:
 
 ### Loading Override
-1. Call `load_override("mastering-presets.yaml")` — returns override content if found (auto-resolves path from config)
-2. If found: load and apply custom presets
-3. If not found: use base genre presets only
+1. Read `~/.bitwize-music/config.yaml` → `paths.overrides`
+2. Check for `{overrides}/mastering-presets.yaml`
+3. If exists: load and apply custom presets
+4. If not exists: use base genre presets only
 
 ### Override File Format
 
@@ -92,100 +89,56 @@ Check for custom mastering presets:
 
 genres:
   dark-electronic:
-    cut_highmid: -3         # More aggressive cut
-    target_lufs: -12        # Louder master
-    compress_ratio: 2.0     # Heavier compression
-    compress_attack: 15.0   # Faster attack
+    cut_highmid: -3  # More aggressive cut
+    boost_sub: 2     # More sub bass
+    target_lufs: -12 # Louder master
 
   ambient:
-    cut_highmid: -1         # Gentle cut
-    target_lufs: -16        # Quieter, more dynamic
-    compress_ratio: 1.2     # Very light compression
-
-defaults:
-  dither_bits: 24           # 24-bit output for archival
+    cut_highmid: -1  # Gentle cut
+    boost_sub: 0     # Natural bass
+    target_lufs: -16 # Quieter, more dynamic
 ```
-
-**Available preset fields:**
-
-| Category | Fields |
-|----------|--------|
-| Loudness | `target_lufs`, `target_lra` |
-| EQ cuts | `cut_highmid`, `cut_highs` |
-| EQ high-mid | `eq_highmid_freq`, `eq_highmid_q` |
-| EQ highs | `eq_highs_freq`, `eq_highs_q` |
-| EQ low shelf | `eq_low_freq`, `eq_low_gain`, `eq_low_q` |
-| EQ sub-bass | `eq_sub_cut_freq` |
-| EQ options | `eq_linear_phase` |
-| Compression | `compress_ratio`, `compress_threshold`, `compress_attack`, `compress_release`, `compress_mix`, `compress_makeup` |
-| Multiband | `multiband_enabled`, `multiband_low_crossover`, `multiband_high_crossover`, `multiband_low_ratio`, `multiband_mid_ratio`, `multiband_high_ratio`, `multiband_low_threshold`, `multiband_mid_threshold`, `multiband_high_threshold` |
-| Mid/side EQ | `midside_low_gain`, `midside_low_freq`, `midside_high_gain`, `midside_high_freq` |
-| Stereo | `stereo_width`, `stereo_bass_mono_freq` |
-| De-essing | `deess_enabled`, `deess_freq`, `deess_bandwidth`, `deess_threshold`, `deess_ratio` |
-| Limiting | `limiter_lookahead_ms`, `limiter_release_ms` |
-| Processing | `dc_filter_freq`, `processing_oversample` |
-| Output | `output_bits`, `dither_bits`, `output_sample_rate`, `track_gap` |
 
 ### How to Use Override
 1. Load at invocation start
 2. Check for genre-specific presets when mastering
-3. Override presets take precedence over base genre presets (field-level merge)
-4. Only specify fields you want to change — unset fields inherit from built-in
+3. Override presets take precedence over base genre presets
+4. Use override target_lufs instead of default -14
 
 **Example:**
 - Mastering "dark-electronic" genre
 - Override has custom preset
-- Result: Apply -3 highmid cut, 2.0:1 compression with 15ms attack, target -12 LUFS
-
----
-
-## Path Resolution (REQUIRED)
-
-Before mastering, resolve audio path via MCP:
-
-1. Call `resolve_path("audio", album_slug)` — returns the full audio directory path
-
-**Example**: For album "my-album", returns `~/bitwize-music/audio/artists/bitwize/albums/electronic/my-album/`.
-
-**Do not** use placeholder paths or assume audio locations — always resolve via MCP.
+- Result: Apply -3 highmid cut, +2 sub boost, target -12 LUFS
 
 ---
 
 ## Mastering Workflow
 
-### Step 1: Pre-Flight Check
+### Important: Script Location
 
-Before mastering, verify:
-1. **Audio folder exists** — call `resolve_path("audio", album_slug)` to confirm
-2. **WAV files present** — check for at least one `.wav` file in the folder
-3. If no WAV files found, report: "No WAV files in [path]. Download tracks from Suno as WAV (highest quality) first."
-4. If folder contains only MP3s, warn: "MP3 files found but mastering requires WAV. Re-download from Suno as WAV."
+**CRITICAL**: Mastering scripts live in the plugin directory and should **never be copied** to audio folders.
 
-### Step 1.5: Confirm Genre Settings
-
-Before analyzing or mastering, confirm genre settings with the user:
-
-1. **Look up album genre** — call `find_album(album_slug)` to get the genre from album state
-2. **Present genre and ask for confirmation**:
-   - "This album is filed under **[genre]**. Should I use the **[genre]** mastering preset?"
-   - If user wants a different genre, let them pick from available presets
-   - If no genre found in state, ask the user to choose one
-3. **Ask about per-track variations**:
-   - "Are all tracks the same style, or do any need different mastering settings?"
-   - If the user identifies tracks with a different style (e.g., "track 5 is more of a ballad"):
-     - Note which tracks need different treatment and what genre/settings to use
-     - Master in two passes: main genre for most tracks, then override settings for the exceptions
-4. **Record the decisions** — note genre choices in the mastering report for the handoff
-
-**Per-track override workflow:**
-- Master all tracks with the primary genre first
-- Then re-master override tracks by calling `master_audio` again with the different genre
-  and copying the re-mastered output over the previous version in `mastered/`
-
-### Step 2: Analyze Tracks
-
+**Find plugin directory** (version-independent):
+```bash
+PLUGIN_DIR=$(find ~/.claude/plugins/cache/bitwize-music/bitwize-music -maxdepth 1 -type d -name "0.*" | sort -V | tail -1)
+MASTERING_DIR="$PLUGIN_DIR/tools/mastering"
 ```
-analyze_audio(album_slug)
+
+This finds the latest installed version automatically.
+
+### Step 1: Analyze Tracks
+
+```bash
+# Find plugin directory
+PLUGIN_DIR=$(find ~/.claude/plugins/cache/bitwize-music/bitwize-music -maxdepth 1 -type d -name "0.*" | sort -V | tail -1)
+
+# Analyze tracks in audio folder
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" /path/to/audio/folder
+```
+
+**Example with full path**:
+```bash
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" ~/bitwize-music/audio/bitwize/my-album
 ```
 
 **What to check**:
@@ -199,76 +152,44 @@ analyze_audio(album_slug)
 - True peak >0.0 dBTP (clipping)
 - LUFS <-20 or >-8 (too quiet or too loud)
 
-### Step 2.5: Audio QC Gate
-
-Run technical QC **before** mastering to catch source issues, and **after** to verify mastered output:
-
-```
-# Pre-mastering: check raw files
-qc_audio(album_slug, "")
-
-# Post-mastering: check mastered output
-qc_audio(album_slug, "mastered")
-```
-
-**7 checks**: mono compatibility, phase correlation, clipping, clicks/pops, silence, format validation, spectral balance.
-
-**Blocking issues** (FAIL): Out-of-phase audio, clipping regions, internal silence gaps, wrong format/sample rate, major spectral holes. Fix these before proceeding.
-
-**Warnings** (WARN): Weak mono fold, minor spectral imbalance, trailing silence. Note in mastering report but don't block.
-
-Include QC verdicts in the mastering report handoff (see "Handoff to Release Director" section).
-
-### One-Call Pipeline (Recommended)
-
-Use the `master_album` MCP tool to run **Steps 2–7 in a single call**:
-
-```
-master_album(album_slug, genre="country", cut_highmid=-2.0)
-```
-
-This executes: analyze → pre-QC → master → verify → post-QC → update statuses. Stops on any failure and returns per-stage results. Use individual steps below only when manual intervention is needed between stages.
-
-**Note:** `master_album` applies one genre to all tracks. If Step 1.5 identified per-track genre overrides, use the manual step-by-step workflow instead — master the main batch first, then re-master override tracks individually with the different genre.
-
-### Step 3: Choose Settings
+### Step 2: Choose Settings
 
 **Standard (most cases)**:
-```
-master_audio(album_slug, cut_highmid=-2.0)
+```bash
+python3 "$PLUGIN_DIR/tools/mastering/master_tracks.py" /path/to/audio/folder --cut-highmid -2
 ```
 
 **Genre-specific**:
-```
-master_audio(album_slug, genre="country")
+```bash
+python3 "$PLUGIN_DIR/tools/mastering/master_tracks.py" /path/to/audio/folder --genre [genre]
 ```
 
 **Reference-based** (advanced):
-```
-master_with_reference(album_slug, reference_filename="reference.wav")
+```bash
+python3 "$PLUGIN_DIR/tools/mastering/reference_master.py" /path/to/audio/folder --reference reference_track.wav
 ```
 
-### Step 4: Dry Run (Preview)
+### Step 3: Dry Run (Preview)
 
-```
-master_audio(album_slug, cut_highmid=-2.0, dry_run=True)
+```bash
+python3 "$PLUGIN_DIR/tools/mastering/master_tracks.py" /path/to/audio/folder --dry-run --cut-highmid -2
 ```
 
 Shows what will happen without modifying files.
 
-### Step 5: Master
+### Step 4: Master
 
-```
-master_audio(album_slug, cut_highmid=-2.0)
+```bash
+python3 "$PLUGIN_DIR/tools/mastering/master_tracks.py" /path/to/audio/folder --cut-highmid -2
 ```
 
 Creates `mastered/` subdirectory in audio folder with processed files.
 
-### Step 6: Verify
+### Step 5: Verify
 
-```
+```bash
 # Analyze the mastered output
-analyze_audio(album_slug, subfolder="mastered")
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" /path/to/audio/folder/mastered
 ```
 
 **Quality check**:
@@ -277,72 +198,61 @@ analyze_audio(album_slug, subfolder="mastered")
 - No clipping
 - Album consistency < 1 dB range
 
-### Fix Outlier Tracks
-
-If a track has excessive dynamic range and won't reach target LUFS:
-
-```
-fix_dynamic_track(album_slug, track_filename="05-problem-track.wav")
-```
-
-### Step 6.5: Real-listener QC artifacts (`mastering_samples/`)
-
-After verification, `master_album` writes operator-listening artifacts to a
-sibling directory so `mastered/` stays byte-identical to what gets uploaded
-to streaming platforms:
-
-```
-{audio_root}/.../[album]/
-├── mastered/                         # Final masters — UPLOAD THIS
-│   ├── 01-track.wav
-│   └── ...
-└── mastering_samples/                # Operator QA only — DO NOT UPLOAD
-    ├── 01-track.aac.m4a              # 128 kbps AAC for Bluetooth listening
-    ├── 01-track.mono.wav             # Mono fold-down sample
-    └── 01-track.MONO_FOLD.md         # Per-band delta report + verdict
-```
-
-**Two automated checks run here**:
-- **Codec preview** — renders each master to 128 kbps AAC. Audition on
-  AirPods / car Bluetooth before release; compressed playback exposes
-  warbly sibilance, lost sub-bass, and pumping that the full-resolution
-  master hides.
-- **Mono fold-down** — sums stereo to mono, measures per-band drops vs.
-  stereo. A >6 dB drop in any band hard-fails the pipeline (phase
-  cancellation). Listen to `.mono.wav` on a phone speaker or single Echo
-  to confirm which elements disappear in mono playback.
-
-Standalone tools (run independently of the full pipeline):
-```
-render_codec_preview(album_slug)        # writes .aac.m4a files
-mono_fold_check(album_slug)             # writes .MONO_FOLD.md + .mono.wav
-```
-
-Re-run cleanup (regenerable artifacts):
-```
-reset_mastering(album_slug, subfolders=["mastering_samples"], dry_run=False)
-```
-
-Configurable thresholds live in `tools/mastering/genre-presets.yaml`
-under `defaults:` (`mono_fold_band_drop_fail_db`, etc.) — override per-user
-in `~/.bitwize-music/overrides/mastering-presets.yaml`.
-
 ---
 
-## MCP Tools Reference
+## Tools Integration
 
-All mastering operations are available as MCP tools. **Use these instead of running Python scripts via bash.**
+### Available Tools
 
-| MCP Tool | Purpose |
-|----------|---------|
-| `analyze_audio` | Measure LUFS, true peak, dynamic range |
-| `qc_audio` | Technical QC (mono, phase, clipping, clicks, silence, format, spectral) |
-| `master_audio` | Master tracks to target LUFS with EQ options |
-| `master_with_reference` | Match mastering to a reference track |
-| `fix_dynamic_track` | Fix tracks with extreme dynamic range |
-| `master_album` | End-to-end pipeline — all steps in one call |
-| `render_codec_preview` | Render 128 kbps AAC previews to `mastering_samples/` |
-| `mono_fold_check` | Mono fold-down QC: per-band deltas, sample audio, MD report |
+Located in `/tools/mastering/`:
+
+| Tool | Purpose |
+|------|---------|
+| `analyze_tracks.py` | Measure LUFS, true peak, dynamic range |
+| `master_tracks.py` | Master tracks to target LUFS |
+| `fix_dynamic_track.py` | Fix tracks with extreme dynamic range |
+
+### Setup (One-Time)
+```bash
+# Create shared venv in {tools_root}
+mkdir -p ~/.bitwize-music
+python3 -m venv ~/.bitwize-music/mastering-env
+source ~/.bitwize-music/mastering-env/bin/activate
+pip install matchering pyloudnorm scipy numpy soundfile
+```
+
+### Per-Album Session
+
+**IMPORTANT**: Scripts run from plugin directory, never copied to audio folders.
+
+```bash
+# Activate venv
+source ~/.bitwize-music/mastering-env/bin/activate
+
+# Find plugin directory (version-independent)
+PLUGIN_DIR=$(find ~/.claude/plugins/cache/bitwize-music/bitwize-music -maxdepth 1 -type d -name "0.*" | sort -V | tail -1)
+
+# Set audio path
+AUDIO_DIR="/path/to/audio/folder"
+
+# Analyze
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" "$AUDIO_DIR"
+
+# Master
+python3 "$PLUGIN_DIR/tools/mastering/master_tracks.py" "$AUDIO_DIR" --cut-highmid -2
+
+# Verify
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" "$AUDIO_DIR/mastered"
+
+# Deactivate
+deactivate
+```
+
+**Why this approach?**
+- Scripts always use latest plugin version
+- No duplicate copies in audio folders
+- Updates to plugin automatically apply
+- Audio folders stay clean (only audio files)
 
 ---
 
@@ -387,48 +297,87 @@ Test on:
 
 ## Common Mistakes
 
-### ❌ Don't: Run Python scripts via bash
+### ❌ Don't: Copy scripts to audio folders
 
 **Wrong:**
+```bash
+cd ~/audio/my-album
+cp ~/.claude/plugins/.../tools/mastering/*.py .
+python3 analyze_tracks.py
+```
+
+**Right:**
+```bash
+PLUGIN_DIR=$(find ~/.claude/plugins/cache/bitwize-music/bitwize-music -maxdepth 1 -type d -name "0.*" | sort -V | tail -1)
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" ~/audio/my-album
+```
+
+**Why it matters:**
+- Copying creates duplicates that don't get updated
+- Audio folders should only contain audio files
+- Scripts won't work after plugin updates
+
+### ❌ Don't: Hardcode plugin version number
+
+**Wrong:**
+```bash
+cd ~/.claude/plugins/cache/bitwize-music/bitwize-music/0.12.0/tools/mastering
+```
+
+**Right:**
+```bash
+PLUGIN_DIR=$(find ~/.claude/plugins/cache/bitwize-music/bitwize-music -maxdepth 1 -type d -name "0.*" | sort -V | tail -1)
+cd "$PLUGIN_DIR/tools/mastering"
+```
+
+**Why it matters:** Plugin version changes with every update. Hardcoding breaks after updates.
+
+### ❌ Don't: Run scripts without path argument
+
+**Wrong:**
+```bash
+cd ~/audio/my-album
+python3 /path/to/analyze_tracks.py  # Analyzes wrong directory
+```
+
+**Right:**
 ```bash
 python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" ~/audio/my-album
 ```
 
-**Right:**
-```
-analyze_audio("my-album")
-```
+**Why it matters:** Scripts analyze current directory by default. Pass explicit path to ensure correct folder.
 
-**Why it matters:** Bash hits system Python which lacks dependencies. MCP tools run inside the venv automatically.
-
-### ❌ Don't: Analyze originals after mastering
+### ❌ Don't: Forget to activate venv
 
 **Wrong:**
-```
-analyze_audio("my-album")  # Checks originals, not mastered output
+```bash
+python3 analyze_tracks.py  # Missing dependencies
 ```
 
 **Right:**
-```
-analyze_audio("my-album", subfolder="mastered")
+```bash
+source ~/.bitwize-music/mastering-env/bin/activate
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" ~/audio/my-album
+deactivate
 ```
 
-**Why it matters:** `master_audio` creates a `mastered/` subdirectory. Verify that output, not the originals.
+**Why it matters:** Mastering scripts require pyloudnorm, matchering, etc. Must activate venv first.
 
-### ❌ Don't: Skip the dry run
+### ❌ Don't: Use wrong path for mastered verification
 
 **Wrong:**
-```
-master_audio("my-album", cut_highmid=-3.0)  # Writes files immediately
+```bash
+# After mastering, analyzing wrong directory
+python3 analyze_tracks.py ~/audio/my-album  # Analyzes originals, not mastered
 ```
 
 **Right:**
-```
-master_audio("my-album", cut_highmid=-3.0, dry_run=True)  # Preview first
-master_audio("my-album", cut_highmid=-3.0)                 # Then commit
+```bash
+# Analyze the mastered output
+python3 "$PLUGIN_DIR/tools/mastering/analyze_tracks.py" ~/audio/my-album/mastered
 ```
 
-**Why it matters:** Dry run shows gain changes without writing files. Catches bad settings before they hit disk.
+**Why it matters:** master_tracks.py creates `mastered/` subdirectory. Must verify that folder, not originals.
 
 ---
 
@@ -456,7 +405,7 @@ After all tracks mastered and verified:
 
 ## Remember
 
-1. **Load override first** - Call `load_override("mastering-presets.yaml")` at invocation
+1. **Load override first** - Check for `{overrides}/mastering-presets.yaml` at invocation
 2. **Apply custom presets** - Use override genre settings if available
 3. **-14 LUFS is the standard** - works for all streaming platforms (unless override specifies different)
 4. **Preserve dynamics** - don't crush to hit target

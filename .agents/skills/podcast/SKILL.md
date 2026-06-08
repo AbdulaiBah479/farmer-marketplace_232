@@ -1,235 +1,169 @@
 ---
 name: podcast
-description: Generate a podcast episode from content you provide. Paste text, point to local files, or describe a topic. Two AI hosts discuss it in a natural conversation. Listen locally or in your favorite podcast app via RSS.
+description: Creates audio podcasts from text using browser text-to-speech. Use when user mentions podcast, audio conversation, dialogue, spoken content, voice narration, audio book, or text-to-speech generation. Supports multiple speakers with automatic language detection. Zero cost, no API keys, works in browser.
+allowed-tools: Read, Write
 ---
 
-## Path convention
+# Podcast Generator
 
-Throughout this file:
-- `SKILL_DIR` = the directory where this SKILL.md file lives (the skill's install location)
-- `DATA_DIR` = `~/.personalized-podcast` (where user data, config, and episodes are stored)
+Generates podcast-style audio that plays directly in the browser. Zero cost, no API keys needed.
 
-Resolve these to absolute paths before running any commands.
+## Workflow Decision Tree
 
-# Personalized Podcast
+### User provides formatted dialogue
+→ Use existing dialogue as-is if quality is good
+→ Refine structure only if flow needs improvement
 
-When the user invokes this skill, start by introducing it:
+### User provides article, list, or text content
+→ Create dialogue from content (see "Dialogue Creation Process")
 
-> "This skill turns any content into a podcast episode with two AI hosts who discuss it in a natural, conversational style. Think NotebookLM, but you control everything: the script prompt, the hosts' voices, the show format.
->
-> You can use it to:
->
-> - **Listen to anything on the go.** Paste an article, point to a file, drop a URL. Instead of reading, you get two people breaking it down while you walk, commute, or cook.
-> - **Understand yourself from the outside.** Feed it personal content like meeting transcripts, your resume, or journal entries, and have the hosts share their impressions of you. It's genuinely illuminating.
-> - **Create your own show.** Set up an RSS feed and new episodes show up in the podcast app you already use (Apple Podcasts, Spotify, Overcast, Snipd). No new app to download.
->
-> Let's get started. What content do you want to turn into a podcast?"
+### User provides topic only
+→ Request source material before proceeding
 
-If the user already provided content with their `/podcast` command, skip the question and go straight to setup check.
+## Dialogue Creation Process
 
----
+Follow this two-phase workflow when creating podcast dialogue from content:
 
-## First-time setup
+### Phase 1: Analyze Source Content
 
-If `DATA_DIR/config.yaml` does not exist, run through this setup BEFORE generating. Do each step yourself - don't ask the user to run commands.
+1. **Read source material completely**
+2. **Detect language** from content (en, de, fr, es, it, etc.)
+3. **Identify key information**: facts, dates, names, numbers, details
+4. **Organize by theme**: chronology, category, or logical grouping
 
-### Step 1: Install dependencies
+### Phase 2: Create Dialogue
 
-```bash
-mkdir -p DATA_DIR/{scripts_output,episodes,logs}
-python3 -m venv DATA_DIR/venv
-DATA_DIR/venv/bin/pip install httpx pydub pyyaml python-dotenv jinja2 audioop-lts
+1. **Structure conversation**:
+   - Host (Speaker 1): ~20% - questions and transitions
+   - Expert (Speaker 2): ~80% - factual responses from source
+   - Length: as many exchanges as needed to cover all content (typically 10-50+ lines)
+
+2. **Apply TTS formatting**: Read [reference/tts-formatting.md](./reference/tts-formatting.md) for complete rules
+
+3. **Generate JSX file** from template (see "Implementation Steps")
+
+## Information Accuracy
+
+Convert text to audio. Use only source material facts.
+
+**Expert responses:**
+- Use only names, dates, numbers, details explicitly stated in source
+- Never invent examples, context, or explanations not in source
+- Never add interpretations, opinions, or evaluations
+- Never explain WHY something happened unless source explains it
+
+**Host phrases:**
+- Use neutral transitions: "I see", "Tell me more", "Can you elaborate?"
+- Reference previous statements: "You mentioned X - how does that connect to Y?" (when source shows connection)
+- Never add new facts, context, or interpretations
+
+## Dialogue Format Guidelines
+
+### Host (Speaker 1) - ~20% of content
+
+- Introduce topic with opening question
+- Ask transition questions between topics
+- Reference Expert's previous statements: "You mentioned X - can you elaborate?"
+- Use conversational acknowledgments: "I see", "Tell me more"
+- Never introduce facts not in source
+
+### Expert (Speaker 2) - ~80% of content
+
+- Provide comprehensive factual responses from source material
+- Include specific details: names, dates, numbers, locations
+- Organize information logically by theme, chronology, or category
+- Structure facts narratively using only source material
+- Never repeat information already stated
+- Never add context or examples not in source
+
+### Natural Conversation Techniques
+
+Use these patterns without adding information:
+- Vary question styles: "What happened next?" / "Can you explain that further?" / "Tell me about..."
+- Ask follow-up questions based on Expert's previous response
+- Expert elaborates when source provides multiple details about a topic
+- Clear transitions between sections: "Moving to the next category...", "In the European context..."
+
+### Avoid
+
+- Personal opinions: "I think...", "That's crazy..."
+- Value judgments: "amazing", "fascinating", "interesting"
+- Humor, irony, jokes
+- Rapid back-and-forth after every sentence
+
+## Implementation Steps
+
+When user requests a podcast:
+
+1. **Analyze source content** and create dialogue following format above
+2. **Detect language** from content
+3. **Read template** from `assets/podcast-template.jsx`
+4. **Replace values** in template:
+   - `PODCAST_SCRIPT` - your generated dialogue
+   - `PODCAST_TITLE` - descriptive title from content
+   - `PODCAST_LANGUAGE` - detected language code
+5. **Save as JSX file** - Use the Write tool to save the modified template as a `.jsx` file. The file will render as an interactive podcast player.
+6. **Recommend Microsoft Edge browser** for best voice quality (250+ Natural voices vs Chrome's 19)
+
+## Technical Reference
+
+### Script Format
+```
+<speaker1>Host's question or statement.
+<speaker2>Expert's response with factual information.
 ```
 
-Check ffmpeg is installed:
-
-```bash
-ffmpeg -version
-```
-
-If not found, install it: `brew install ffmpeg` (macOS) or `sudo apt install ffmpeg` (Linux).
-
-### Step 2: Create config with default voices
-
-```bash
-cp SKILL_DIR/config/config.example.yaml DATA_DIR/config.yaml
-```
-
-The config comes with two pre-picked voices that work out of the box. No voice selection needed for first use.
-
-### Step 3: Get Fish Audio API key
-
-Tell the user:
-
-> "To turn your script into audio, this skill uses Fish Audio for text-to-speech. They have a free tier with 2 million+ voices. You just need an API key:
->
-> 1. Go to https://fish.audio and create a free account
-> 2. Go to https://fish.audio/app/api-keys/ and create an API key"
-
-Then create the .env file and open it:
-
-```bash
-echo "FISH_API_KEY=your_key_here" > DATA_DIR/.env
-open DATA_DIR/.env
-```
-
-Tell them: "Paste your Fish Audio API key in this file, replacing 'your_key_here'. Save and close."
-
-IMPORTANT: Never ask the user to paste API keys in the chat. Always use the .env file.
-
-### Step 4: Done
-
-Tell the user:
-
-> "You're all set! The default show has two hosts - Alex (curious, energetic) and Sam (analytical, witty) - with voices pre-configured. Let's generate your first episode."
-
-Then proceed to generate the episode. Do NOT set up RSS or GitHub Pages during first-time setup. That's optional and comes later.
-
----
-
-## Generating an episode
-
-### Step 1: Read the content
-
-Read all the content the user provided. If they pointed to files, read them with the Read tool. If they pasted a URL, fetch it. Combine everything into your understanding of the source material.
-
-### Step 2: Write the podcast script
-
-Read the prompt file at `SKILL_DIR/PROMPT.md` for the hosts, style, structure, and output format. Follow those instructions to write the script.
-
-If the user included custom instructions in their `/podcast` message (e.g., "make it a debate" or "hosts should eavesdrop on my conversation"), incorporate those. The user's inline instructions override PROMPT.md for that episode.
-
-Save the script as a JSON array using the Write tool to: `DATA_DIR/scripts_output/YYYY-MM-DD.json` (use today's date). If a file for today already exists, append a number (e.g., `2026-04-05-2.json`).
-
-### Step 3: Generate audio
-
-Tell the user: "Script written. Now generating audio - this takes about a minute depending on episode length."
-
-Run the speak script:
-
-```bash
-DATA_DIR/venv/bin/python SKILL_DIR/scripts/speak.py --script <path_to_script.json>
-```
-
-This outputs the path to the generated MP3 file.
-
-### Step 4: Play the audio
-
-IMMEDIATELY open the audio file for the user:
-
-```bash
-open <path_to_mp3>
-```
-
-On Linux use `xdg-open` instead of `open`.
-
-### Step 5: Post-generation tips
-
-After the audio plays, tell the user:
-
-> "Your episode is ready! A few things you can do from here:
->
-> **Try different show formats.** The default is two hosts chatting, but you can do anything. Just describe it when you run `/podcast`:
->
-> - "/podcast make it a debate about this article"
-> - "/podcast hosts should eavesdrop on my conversation and share their impressions of me"
-> - "/podcast interview format, one host asks questions and the other is the expert"
-> - "/podcast solo narrator, walk me through this research paper"
-> - "/podcast news roundup, read each tweet aloud then discuss"
->
-> Or edit `PROMPT.md` to permanently change your show's format.
->
-> **Pick your own voices.** The default voices are solid, but Fish Audio has 2 million+ to choose from. Browse https://fish.audio/discovery, find two you like, and update the voice IDs in `DATA_DIR/config.yaml`.
->
-> **Listen in your podcast app.** Want new episodes delivered to Apple Podcasts, Spotify, Overcast, or Snipd automatically? Just ask me to set up an RSS feed for you - takes about a minute."
-
-Only show these tips the FIRST time, or if the user asks about customization.
-
----
-
-## RSS feed setup (only when user asks)
-
-When the user wants to set up an RSS feed, explain why it's useful:
-
-> "This creates a personal podcast feed that works in any podcast app. Once it's set up, every time you generate a new episode, it gets published to the feed and shows up where you already listen to podcasts. No new app needed."
-
-Then walk them through these steps:
-
-### 1. Create a public GitHub repo
-
-Ask for their GitHub username, then:
-
-```bash
-gh repo create USERNAME/podcast-feed --public --description "Personal podcast feed"
-```
-
-### 2. Enable GitHub Pages
-
-```bash
-cd /tmp && mkdir podcast-feed && cd podcast-feed && git init
-echo '[]' > episodes.json
-```
-
-Generate an initial empty feed.xml using the template, then push and enable GitHub Pages:
-
-```bash
-gh api repos/USERNAME/podcast-feed/pages -X POST --input - << 'EOF'
-{"source":{"branch":"main","path":"/"},"build_type":"legacy"}
-EOF
-```
-
-### 3. Update config
-
-Update `DATA_DIR/config.yaml` with:
-
-```yaml
-publish:
-  github_repo: "USERNAME/podcast-feed"
-  base_url: "https://USERNAME.github.io/podcast-feed"
-```
-
-### 4. Subscribe in a podcast app
-
-Tell the user their feed URL and give them the steps for their preferred app:
-
-| App                     | How to subscribe                                       |
-| ----------------------- | ------------------------------------------------------ |
-| Apple Podcasts (Mac)    | Menu bar: File > Add a Show by URL                     |
-| Apple Podcasts (iPhone) | Library > Edit (top right) > Add a Show by URL         |
-| Overcast                | "+" (top right) > Add URL                              |
-| Pocket Casts            | Discover tab > paste URL in search bar > Subscribe     |
-| Castro                  | Search tab > paste URL in search bar > Add Podcast     |
-| Snipd                   | Home > Podcasts > three-dot menu (top right) > Add RSS |
-| Spotify                 | See Spotify instructions below                         |
-
-Feed URL: `https://USERNAME.github.io/podcast-feed/feed.xml`
-
-**Spotify setup (one-time, takes 24-48 hours for approval):**
-
-IMPORTANT: Before proceeding, warn the user: "Heads up - submitting to Spotify makes your podcast **public**. Anyone on Spotify can find and listen to it. The other apps above are private - only people you share the RSS URL with can find your show. Want to proceed with Spotify?"
-
-If they want to proceed:
-
-1. Make sure `owner_email` is set in config.yaml. If not, ask for their email and add it.
-2. Go to [podcasters.spotify.com](https://podcasters.spotify.com) and sign in
-3. Click "Add existing podcast"
-4. Paste the feed URL
-5. Spotify sends a verification email - click to verify
-6. The show appears on Spotify within 24-48 hours
-
-### 5. Publish episodes
-
-After the RSS feed is set up, future episodes can be published with:
-
-```bash
-DATA_DIR/venv/bin/python SKILL_DIR/scripts/publish.py --mp3 <path_to_mp3> --title "<title>" --description "<description>"
-```
-
----
-
-## Troubleshooting
-
-- **"API key not found"** - Check DATA_DIR/.env has a valid FISH_API_KEY
-- **"ffmpeg not installed"** - Run: `brew install ffmpeg` (macOS) or `sudo apt install ffmpeg` (Linux)
-- **"gh not authenticated"** - Run: `gh auth login`
-- **TTS quota exceeded** - Fish Audio free tier has monthly limits. Wait for reset or upgrade your plan.
+### Voice Configuration (automatic)
+- Speaker 1 (Host): Pitch 1.05, Rate 0.95
+- Speaker 2 (Expert): Pitch 0.88, Rate 0.93
+
+### Platform-Aware Voice Selection
+
+**Platform detection:**
+- Automatically detects iOS, Android, Desktop Edge, or Desktop
+- Selects best available voices based on platform
+
+**Desktop Edge:**
+- Priority: Microsoft Neural/Natural voices (Katja, Conrad, Aria, Guy, etc.)
+- 250+ high-quality voices available
+
+**Desktop Chrome:**
+- Priority: Google voices (Google UK English Female, Google Deutsch, etc.)
+- ~19 voices available (lower quality than Edge)
+- Fallback: local system voices
+
+**iOS (Safari/Mobile):**
+- Priority: Native Siri voices (Samantha, Anna, Daniel, etc.)
+- Best quality on iOS devices
+
+**Android (Chrome/Mobile):**
+- Priority: Google TTS voices (Google Deutsch, Google UK English Female, etc.)
+- Wavenet voices preferred when available
+
+**Voice assignment:**
+- Automatically assigns different voices to Speaker 1 and Speaker 2
+- Uses modulo distribution for 3+ speakers
+- Ensures distinct voices even with limited availability
+
+### Player Features
+- Play/Pause/Resume with full playback control
+- Stop to reset to beginning
+- Click any transcript line to resume from there
+- Progress bar shows current position
+- Auto-scroll follows current line
+
+### Technical Constraints
+- Keep sentences under 14 seconds (Chrome limitation)
+- 350ms pause between speakers
+- Microsoft Edge browser provides 250+ high-quality Natural voices (best option)
+- Chrome provides only 19 lower-quality voices with utterance bugs
+- Firefox has very limited voice support
+
+## Quality Requirements
+
+- **Factual Accuracy**: Expert responses use only source facts
+- **Natural Flow**: Avoid rapid back-and-forth, value judgments
+- **TTS Compliance**: All text must play without pronunciation errors
+- **Zero Hallucination**: No invented examples or context
+- **Complete Coverage**: Include all important facts from source
+- **No Duplicates**: Each fact appears exactly once

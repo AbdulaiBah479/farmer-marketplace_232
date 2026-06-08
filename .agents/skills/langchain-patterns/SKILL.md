@@ -1,165 +1,477 @@
 ---
-id: SKL-langchain-LANGCHAINPATTERNS
-name: Langchain Patterns
-description: LangChain is a framework for building applications powered by LLMs. It
-  helps manage the complexity of prompt chaining, memory, retrieval, agents, and tool
-  use, making it faster to build AI application
-version: 1.0.0
-status: active
-owner: '@cerebra-team'
-last_updated: '2026-02-22'
-category: Backend
-tags:
-- api
-- backend
-- server
-- database
-stack:
-- Python
-- Node.js
-- REST API
-- GraphQL
-difficulty: Intermediate
+name: LangChain Patterns
+description: Building LLM applications with LangChain - chains, agents, RAG, memory, and production patterns for AI-powered apps.
 ---
 
-# Langchain Patterns
-
-## Skill Profile
-*(Select at least one profile to enable specific modules)*
-- [ ] **DevOps**
-- [x] **Backend**
-- [ ] **Frontend**
-- [ ] **AI-RAG**
-- [ ] **Security Critical**
+# LangChain Patterns
 
 ## Overview
-LangChain is a framework for building applications powered by LLMs. It helps manage the complexity of prompt chaining, memory, retrieval, agents, and tool use, making it faster to build AI applications. This skill covers basic setup, structured output, RAG (Retrieval-Augmented Generation), conversational memory, agents with tools, streaming, document loaders, LangSmith integration for production monitoring, and production deployment patterns.
+
+LangChain เป็น framework สำหรับ building applications powered by LLMs ช่วยจัดการ complexity ของ prompt chaining, memory, retrieval, agents, และ tool use ทำให้สร้าง AI applications ได้เร็วขึ้น
 
 ## Why This Matters
-LangChain is essential for production AI applications because:
-- **Abstraction**: Unified interface for various LLM providers
-- **Composability**: Chain components together easily
-- **RAG Ready**: Built-in retrieval and vector store integrations
-- **Production**: LangSmith for monitoring and debugging
-- **Ecosystem**: Extensive library of integrations and tools
 
-## Core Concepts & Rules
+- **Abstraction**: Unified interface สำหรับ LLM providers ต่างๆ
+- **Composability**: Chain components เข้าด้วยกันได้ง่าย
+- **RAG Ready**: Built-in retrieval และ vector store integrations
+- **Production**: LangSmith สำหรับ monitoring และ debugging
 
-### 1. Core Principles
-- Follow established patterns and conventions
-- Maintain consistency across codebase
-- Document decisions and trade-offs
+---
 
-### 2. Implementation Guidelines
-- Start with the simplest viable solution
-- Iterate based on feedback and requirements
-- Test thoroughly before deployment
+## Core Concepts
 
+### 1. Basic Setup
 
-## Inputs / Outputs / Contracts
-#
+```typescript
+// lib/langchain.ts
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-## Skill Composition
-* **Depends on**: None
-* **Compatible with**: None
-* **Conflicts with**: None
-* **Related Skills**: None
+// Initialize models
+export const openai = new ChatOpenAI({
+  modelName: 'gpt-4-turbo-preview',
+  temperature: 0,
+  openAIApiKey: process.env.OPENAI_API_KEY,
+});
+
+export const claude = new ChatAnthropic({
+  modelName: 'claude-3-opus-20240229',
+  temperature: 0,
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+// Simple chain
+const prompt = ChatPromptTemplate.fromMessages([
+  ['system', 'You are a helpful assistant that translates {input_language} to {output_language}.'],
+  ['human', '{text}'],
+]);
+
+const chain = prompt.pipe(openai).pipe(new StringOutputParser());
+
+// Usage
+const result = await chain.invoke({
+  input_language: 'English',
+  output_language: 'Thai',
+  text: 'Hello, how are you?',
+});
+```
+
+### 2. Structured Output
+
+```typescript
+import { z } from 'zod';
+import { StructuredOutputParser } from 'langchain/output_parsers';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+
+// Define schema
+const productSchema = z.object({
+  name: z.string().describe('Product name'),
+  description: z.string().describe('Product description'),
+  price: z.number().describe('Price in USD'),
+  category: z.enum(['electronics', 'clothing', 'food', 'other']),
+  tags: z.array(z.string()).describe('Product tags'),
+});
+
+const parser = StructuredOutputParser.fromZodSchema(productSchema);
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ['system', `Extract product information from the text.
+{format_instructions}`],
+  ['human', '{text}'],
+]);
+
+const chain = prompt.pipe(openai).pipe(parser);
+
+const result = await chain.invoke({
+  text: 'New iPhone 15 Pro, amazing camera, $999, perfect for photography enthusiasts',
+  format_instructions: parser.getFormatInstructions(),
+});
+
+// result: { name: 'iPhone 15 Pro', description: '...', price: 999, category: 'electronics', tags: ['photography', 'camera'] }
+```
+
+### 3. RAG (Retrieval-Augmented Generation)
+
+```typescript
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { createRetrievalChain } from 'langchain/chains/retrieval';
+import { createStuffDocumentsChain } from 'langchain/chains/combine_documents';
+
+// Setup vector store
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
+
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+});
+
+const vectorStore = new SupabaseVectorStore(embeddings, {
+  client: supabase,
+  tableName: 'documents',
+  queryName: 'match_documents',
+});
+
+// Index documents
+async function indexDocuments(documents: string[]) {
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+  });
+
+  const docs = await splitter.createDocuments(documents);
+  await vectorStore.addDocuments(docs);
+}
+
+// Create RAG chain
+const retriever = vectorStore.asRetriever({
+  k: 5,
+  searchType: 'similarity',
+});
+
+const qaPrompt = ChatPromptTemplate.fromMessages([
+  ['system', `Answer the question based on the following context:
+
+{context}
+
+If you don't know the answer, say "I don't have enough information to answer that."`],
+  ['human', '{input}'],
+]);
+
+const documentChain = await createStuffDocumentsChain({
+  llm: openai,
+  prompt: qaPrompt,
+});
+
+const ragChain = await createRetrievalChain({
+  combineDocsChain: documentChain,
+  retriever,
+});
+
+// Usage
+const response = await ragChain.invoke({
+  input: 'What is our refund policy?',
+});
+
+console.log(response.answer);
+console.log(response.context); // Source documents
+```
+
+### 4. Conversational Memory
+
+```typescript
+import { BufferMemory, ConversationSummaryMemory } from 'langchain/memory';
+import { ConversationChain } from 'langchain/chains';
+import { UpstashRedisChatMessageHistory } from '@langchain/community/stores/message/upstash_redis';
+
+// Simple buffer memory
+const bufferMemory = new BufferMemory({
+  returnMessages: true,
+  memoryKey: 'history',
+});
+
+// Redis-backed memory (for production)
+const redisMemory = new BufferMemory({
+  chatHistory: new UpstashRedisChatMessageHistory({
+    sessionId: `user-${userId}-session-${sessionId}`,
+    config: {
+      url: process.env.UPSTASH_REDIS_URL!,
+      token: process.env.UPSTASH_REDIS_TOKEN!,
+    },
+  }),
+  returnMessages: true,
+  memoryKey: 'history',
+});
+
+// Summary memory (for long conversations)
+const summaryMemory = new ConversationSummaryMemory({
+  llm: openai,
+  returnMessages: true,
+});
+
+// Conversation chain with memory
+const conversationChain = new ConversationChain({
+  llm: openai,
+  memory: redisMemory,
+  verbose: true,
+});
+
+// Multi-turn conversation
+await conversationChain.call({ input: 'My name is John' });
+await conversationChain.call({ input: 'What is my name?' }); // Remembers "John"
+```
+
+### 5. Agents with Tools
+
+```typescript
+import { ChatOpenAI } from '@langchain/openai';
+import { createOpenAIFunctionsAgent, AgentExecutor } from 'langchain/agents';
+import { DynamicTool, DynamicStructuredTool } from '@langchain/core/tools';
+import { pull } from 'langchain/hub';
+import { z } from 'zod';
+
+// Define tools
+const searchTool = new DynamicTool({
+  name: 'search',
+  description: 'Search the web for current information',
+  func: async (query: string) => {
+    // Implement search logic
+    const results = await searchWeb(query);
+    return JSON.stringify(results);
+  },
+});
+
+const calculatorTool = new DynamicStructuredTool({
+  name: 'calculator',
+  description: 'Perform mathematical calculations',
+  schema: z.object({
+    expression: z.string().describe('Mathematical expression to evaluate'),
+  }),
+  func: async ({ expression }) => {
+    try {
+      const result = eval(expression); // Use a safe math parser in production
+      return `Result: ${result}`;
+    } catch (error) {
+      return `Error: Invalid expression`;
+    }
+  },
+});
+
+const databaseTool = new DynamicStructuredTool({
+  name: 'query_database',
+  description: 'Query the product database',
+  schema: z.object({
+    query: z.string().describe('Search query for products'),
+    category: z.string().optional().describe('Filter by category'),
+    maxPrice: z.number().optional().describe('Maximum price filter'),
+  }),
+  func: async ({ query, category, maxPrice }) => {
+    const products = await prisma.product.findMany({
+      where: {
+        name: { contains: query, mode: 'insensitive' },
+        ...(category && { category }),
+        ...(maxPrice && { price: { lte: maxPrice } }),
+      },
+      take: 5,
+    });
+    return JSON.stringify(products);
+  },
+});
+
+// Create agent
+const tools = [searchTool, calculatorTool, databaseTool];
+const prompt = await pull<ChatPromptTemplate>('hwchase17/openai-functions-agent');
+
+const agent = await createOpenAIFunctionsAgent({
+  llm: openai,
+  tools,
+  prompt,
+});
+
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+  verbose: true,
+  maxIterations: 5,
+});
+
+// Usage
+const result = await agentExecutor.invoke({
+  input: 'Find me a laptop under $1000 and calculate the price with 10% tax',
+});
+```
+
+### 6. Streaming
+
+```typescript
+import { ChatOpenAI } from '@langchain/openai';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+
+const model = new ChatOpenAI({
+  modelName: 'gpt-4-turbo-preview',
+  streaming: true,
+});
+
+// Stream with callbacks
+const stream = await model.stream('Write a story about a robot');
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.content);
+}
+
+// Stream in Next.js API route
+// app/api/chat/route.ts
+import { StreamingTextResponse, LangChainStream } from 'ai';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+  
+  const { stream, handlers } = LangChainStream();
+  
+  const chain = prompt.pipe(model).pipe(new StringOutputParser());
+  
+  chain.invoke(
+    { messages },
+    { callbacks: [handlers] }
+  );
+  
+  return new StreamingTextResponse(stream);
+}
+```
+
+### 7. Document Loaders
+
+```typescript
+import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
+import { CSVLoader } from 'langchain/document_loaders/fs/csv';
+import { WebBaseLoader } from 'langchain/document_loaders/web/web_base';
+import { NotionAPILoader } from 'langchain/document_loaders/web/notionapi';
+import { GithubRepoLoader } from 'langchain/document_loaders/web/github';
+
+// Load PDF
+const pdfLoader = new PDFLoader('path/to/document.pdf', {
+  splitPages: true,
+});
+const pdfDocs = await pdfLoader.load();
+
+// Load CSV
+const csvLoader = new CSVLoader('path/to/data.csv', {
+  column: 'text', // Column to use as page content
+});
+const csvDocs = await csvLoader.load();
+
+// Load from web
+const webLoader = new WebBaseLoader('https://example.com/article');
+const webDocs = await webLoader.load();
+
+// Load from Notion
+const notionLoader = new NotionAPILoader({
+  clientOptions: {
+    auth: process.env.NOTION_API_KEY,
+  },
+  id: 'page-or-database-id',
+  type: 'page',
+});
+const notionDocs = await notionLoader.load();
+
+// Load from GitHub repo
+const githubLoader = new GithubRepoLoader(
+  'https://github.com/username/repo',
+  {
+    branch: 'main',
+    recursive: true,
+    unknown: 'warn',
+    accessToken: process.env.GITHUB_TOKEN,
+  }
+);
+const repoDocs = await githubLoader.load();
+```
+
+### 8. LangSmith Integration (Production Monitoring)
+
+```typescript
+// Enable tracing
+process.env.LANGCHAIN_TRACING_V2 = 'true';
+process.env.LANGCHAIN_API_KEY = 'your-langsmith-api-key';
+process.env.LANGCHAIN_PROJECT = 'my-project';
+
+// Or configure programmatically
+import { Client } from 'langsmith';
+import { LangChainTracer } from 'langchain/callbacks';
+
+const client = new Client({
+  apiKey: process.env.LANGSMITH_API_KEY,
+});
+
+const tracer = new LangChainTracer({
+  projectName: 'my-project',
+  client,
+});
+
+// Use with any chain
+const result = await chain.invoke(
+  { input: 'Hello' },
+  { callbacks: [tracer] }
+);
+
+// Evaluate runs
+import { evaluate } from 'langsmith/evaluation';
+
+await evaluate(
+  (input) => chain.invoke(input),
+  {
+    data: 'my-dataset-name',
+    evaluators: [
+      // Custom evaluators
+      async ({ run, example }) => {
+        const score = calculateScore(run.outputs, example.outputs);
+        return { key: 'accuracy', score };
+      },
+    ],
+  }
+);
+```
 
 ## Quick Start
-#
 
-## Assumptions
-- API keys are available in environment variables
-- Vector database is configured and accessible
-- Documents are in supported formats (PDF, CSV, text)
-- Network connectivity for external services
-- Sufficient memory for document processing
+1. **Install packages:**
+   ```bash
+   npm install langchain @langchain/openai @langchain/community
+   ```
 
-## Compatibility
-- Node.js 18+
-- TypeScript 5.0+
-- LangChain 0.1+
-- OpenAI API 1.0+
-- Anthropic API 1.0+
-- Supabase 2.0+
-- Redis 6.0+
+2. **Set environment variables:**
+   ```bash
+   OPENAI_API_KEY=sk-...
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_API_KEY=ls-...
+   ```
 
-## Test Scenario Matrix (QA Strategy)
+3. **Create a simple chain:**
+   ```typescript
+   import { ChatOpenAI } from '@langchain/openai';
+   import { ChatPromptTemplate } from '@langchain/core/prompts';
+   
+   const chain = ChatPromptTemplate
+     .fromTemplate('Tell me a joke about {topic}')
+     .pipe(new ChatOpenAI())
+     .pipe(new StringOutputParser());
+   
+   const joke = await chain.invoke({ topic: 'programming' });
+   ```
 
-| Type | Focus Area | Required Scenarios / Mocks |
-| :--- | :--- | :--- |
-| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
-| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
-| **E2E** | User Journey | Critical user flows to test |
-| **Performance** | Latency / Load | Benchmark requirements |
-| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
-| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
+## Production Checklist
 
-
-## Technical Guardrails & Security Threat Model
-
-### 1. Security & Privacy (Threat Model)
-* **Top Threats**: Injection attacks, authentication bypass, data exposure
-- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
-- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
-- [ ] **Authorization**: Validate user permissions before state changes
-
-### 2. Performance & Resources
-- [ ] **Execution Efficiency**: Consider time complexity for algorithms
-- [ ] **Memory Management**: Use streams/pagination for large data
-- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
-
-### 3. Architecture & Scalability
-- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
-- [ ] **Modularity**: Decouple logic from UI/Frameworks
-
-### 4. Observability & Reliability
-- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
-- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
-- [ ] **Error Handling**: Standardized error codes, no bare except
-- [ ] **Observability Artifacts**:
-    - **Log Fields**: timestamp, level, message, request_id
-    - **Metrics**: request_count, error_count, response_time
-    - **Dashboards/Alerts**: High Error Rate > 5%
-
-
-## Agent Directives & Error Recovery
-*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
-
-- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
-- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
-- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
-- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
-
-
-## Definition of Done (DoD) Checklist
-
-- [ ] Tests passed + coverage met
-- [ ] Lint/Typecheck passed
-- [ ] Logging/Metrics/Trace implemented
-- [ ] Security checks passed
-- [ ] Documentation/Changelog updated
-- [ ] Accessibility/Performance requirements met (if frontend)
-
+- [ ] LangSmith tracing enabled
+- [ ] Error handling and retries configured
+- [ ] Rate limiting implemented
+- [ ] Caching layer for embeddings
+- [ ] Token usage monitoring
+- [ ] Fallback models configured
+- [ ] Input validation
+- [ ] Output validation/guardrails
 
 ## Anti-patterns
-1. **No Streaming**: Not streaming long responses
-2. **Ignoring Token Limits**: Not monitoring context length
-3. **No Error Handling**: LLM calls can fail
-4. **Hardcoded Prompts**: Not using prompt templates
-5. **No Memory**: Stateless conversations
-6. **Blocking Operations**: Not using async/await properly
 
-## Reference Links & Examples
+1. **No streaming for long responses**: Always stream for better UX
+2. **Ignoring token limits**: Monitor and handle context length
+3. **No error handling**: LLM calls can fail - handle gracefully
+4. **Hardcoded prompts**: Use prompt templates and versioning
 
-* Internal documentation and examples
-* Official documentation and best practices
-* Community resources and discussions
+## Integration Points
 
+- **Vector Stores**: Pinecone, Supabase, Chroma, Weaviate
+- **LLMs**: OpenAI, Anthropic, Google, Cohere, local models
+- **Memory**: Redis, PostgreSQL, in-memory
+- **Tools**: Custom APIs, databases, search engines
 
-## Versioning & Changelog
+## Further Reading
 
-* **Version**: 1.0.0
-* **Changelog**:
-  - 2026-02-22: Initial version with complete template structure
-
+- [LangChain Documentation](https://js.langchain.com/docs)
+- [LangSmith](https://smith.langchain.com/)
+- [LangChain Templates](https://github.com/langchain-ai/langchain/tree/master/templates)

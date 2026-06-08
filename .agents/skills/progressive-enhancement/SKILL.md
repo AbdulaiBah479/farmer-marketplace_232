@@ -1,268 +1,888 @@
 ---
 name: progressive-enhancement
-description: >
-  Load this skill when building any web feature, reviewing architecture
-  decisions, or evaluating JavaScript dependencies. Under no circumstances
-  build features that break completely when JavaScript is unavailable or fails.
-  Absolutely always start with semantic HTML, layer CSS enhancements, and add
-  JavaScript as the final, optional layer. Prioritize resilience and universal
-  access over cutting-edge features.
+description: HTML-first development with CSS-only interactivity patterns. Use when building features that work without JavaScript, using native HTML elements, CSS pseudo-classes, and the View Transitions API.
+allowed-tools: Read, Write, Edit
 ---
 
-# Progressive Enhancement Accessibility Skill
+# Progressive Enhancement Skill
 
-> **Canonical source**: `examples/PROGRESSIVE_ENHANCEMENT_BEST_PRACTICES.md` in `mgifford/ACCESSIBILITY.md`
-> This skill is derived from that file. When in doubt, the example is authoritative.
+This skill covers HTML-first development patterns where functionality works without JavaScript. CSS provides visual feedback and interactivity through pseudo-classes, the `:has()` selector, and native HTML elements.
 
-Apply these rules when building any web feature or reviewing architecture decisions.
+## Philosophy
 
----
+Build in layers:
+```
+Layer 1: HTML      → Works in any browser, screen readers, search engines
+Layer 2: CSS       → Layout, theming, validation feedback, animations
+Layer 3: JS (opt)  → Enhanced interactions (only when truly necessary)
+```
 
-## Core Mandate
-
-Start with a solid foundation that works for every user, then layer enhancements.
-Every user — regardless of browser capability, network speed, assistive technology,
-or JavaScript availability — must be able to access core content and complete core
-tasks.
-
-Progressive enhancement is also a sustainability practice. Pages that work without
-JavaScript are dramatically lighter: fewer bytes transferred, less CPU spent on
-parsing and executing scripts, and less energy consumed per page view. See
-[SUSTAINABILITY.md](https://github.com/mgifford/SUSTAINABILITY.md) and the
-[Web Sustainability Guidelines](https://www.w3.org/TR/web-sustainability-guidelines/).
+Every feature should have a **baseline HTML-only experience** that CSS enhances.
 
 ---
 
-## Severity Scale (this skill)
+## Native HTML Elements for Interactivity
 
-| Level | Meaning |
-| --- | --- |
-| **Critical** | Core content or task inaccessible without JS/CSS |
-| **Serious** | Core content accessible but significantly degraded without JS/CSS |
-| **Moderate** | Enhancement degrades gracefully but with friction |
-| **Minor** | Best-practice gap; marginal impact |
+### `<details>` and `<summary>` for Accordions
 
----
+No JavaScript needed for expand/collapse:
 
-## The Three Layers
+```html
+<details>
+  <summary>What is your return policy?</summary>
+  <p>We offer a 30-day hassle-free return policy for all unused items.</p>
+</details>
+```
 
-### Layer 1 — Semantic HTML (always required)
+```css
+details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
 
-**Failure here is Critical.**
+  & summary {
+    cursor: pointer;
+    font-weight: var(--font-weight-semibold);
 
-* All core content readable in plain HTML — no CSS or JS required
-* Forms submittable with native browser behaviour
-* Navigation functions as standard links
-* Headings, lists, tables, and landmarks accurately reflect document structure
+    &::marker {
+      color: var(--primary);
+    }
+  }
 
-### Layer 2 — CSS (enhance presentation)
-
-**Failure here is Moderate to Serious.**
-
-* External stylesheets that can be disabled without losing content
-* Respect user preferences: `prefers-reduced-motion`, `prefers-color-scheme`,
-  `prefers-contrast`, `forced-colors`
-* Page remains usable if stylesheets fail to load
-
-### Layer 3 — JavaScript (enhance interactivity)
-
-**JS that gates core content or tasks is Critical.**
-
-* JS enhances; it does not gate access to core content or tasks
-* Apply JS-dependent classes/behaviours from scripts, not static markup
-* Handle script failure gracefully — the HTML layer must still work
-* Use feature detection, not browser detection:
-
-```js
-if ('fetch' in window && 'querySelector' in document) {
-  // apply enhanced experience
+  &[open] summary {
+    margin-bottom: var(--spacing-md);
+  }
 }
 ```
 
-### Layer 3 extension — Service Workers (offline capability)
+### `<dialog>` for Modals
 
-Service Workers are a Layer 3 enhancement: they require JavaScript, are
-registered by a script, and must degrade gracefully when unavailable (private
-browsing, unsupported browsers, HTTPS not available).
+Native modal with backdrop and focus trapping—**fully declarative with `command`/`commandfor`**:
 
-When implemented, they extend both accessibility and sustainability:
+```html
+<button commandfor="settings-dialog" command="show-modal">
+  Open Settings
+</button>
 
-* **Accessibility**: users on unreliable connections (common in rural areas,
-  low-income households, and developing regions) can continue to access
-  previously loaded content offline
-* **Sustainability**: cached responses eliminate repeat network requests,
-  reducing data transfer and server energy per page view
+<dialog id="settings-dialog">
+  <h2>Settings</h2>
+  <form method="dialog">
+    <!-- Form content -->
+    <button type="submit">Close</button>
+    <!-- Or explicit close button -->
+    <button commandfor="settings-dialog" command="close">Cancel</button>
+  </form>
+</dialog>
+```
 
-```js
-// Register Service Worker only if supported — classic PE feature detection
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch((err) => {
-    // Registration failure: page continues to work normally without it
-    console.warn('Service Worker registration failed:', err);
-  });
+```css
+dialog {
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 32rem;
+  padding: var(--spacing-lg);
+
+  &::backdrop {
+    background: oklch(0% 0 0 / 0.5);
+  }
 }
 ```
 
-**Offline fallback pattern:**
+**No JavaScript required.** The browser handles:
+- Opening/closing
+- Focus management
+- `aria-expanded` states
+- Backdrop clicks (with `method="dialog"`)
 
-```js
-// sw.js — cache-first with network fallback
-const CACHE_NAME = 'v1';
-const OFFLINE_URL = '/offline.html';
+### Popover API
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll([OFFLINE_URL, '/', '/styles.css'])
-    )
-  );
-});
+Popovers provide lightweight, non-modal overlays:
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
-    );
+```html
+<button commandfor="user-menu" command="toggle-popover">
+  Menu
+</button>
+
+<div popover id="user-menu">
+  <nav>
+    <a href="/profile">Profile</a>
+    <a href="/settings">Settings</a>
+    <a href="/logout">Logout</a>
+  </nav>
+</div>
+```
+
+```css
+[popover] {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+
+  /* Entry animation */
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition: opacity 0.2s, transform 0.2s, display 0.2s allow-discrete;
+
+  &:popover-open {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Starting style for animation */
+  @starting-style {
+    &:popover-open {
+      opacity: 0;
+      transform: translateY(-0.5rem);
+    }
+  }
+}
+```
+
+#### Popover Commands
+
+| Command | Behavior |
+|---------|----------|
+| `toggle-popover` | Toggle open/closed |
+| `show-popover` | Open only |
+| `hide-popover` | Close only |
+
+#### Dialog vs Popover
+
+| Feature | `<dialog>` | `popover` |
+|---------|-----------|-----------|
+| Modal blocking | Yes (with `show-modal`) | No |
+| Backdrop | Yes | Optional |
+| Light dismiss | With `method="dialog"` | Yes (click outside) |
+| Focus trapping | Yes | No |
+| Use case | Confirmations, forms | Menus, tooltips, dropdowns |
+
+### The `command` and `commandfor` Attributes
+
+These attributes enable **declarative button behaviors** without JavaScript:
+
+```html
+<button commandfor="target-id" command="action">Label</button>
+```
+
+#### Built-in Commands
+
+| Command | Target | Effect |
+|---------|--------|--------|
+| `show-modal` | `<dialog>` | Opens as modal |
+| `close` | `<dialog>` | Closes dialog |
+| `toggle-popover` | `[popover]` | Toggles popover |
+| `show-popover` | `[popover]` | Opens popover |
+| `hide-popover` | `[popover]` | Closes popover |
+
+#### Custom Commands
+
+Define custom behaviors with `--` prefix:
+
+```html
+<button commandfor="gallery" command="--next-slide">Next</button>
+<button commandfor="gallery" command="--prev-slide">Previous</button>
+
+<div id="gallery">
+  <!-- Gallery content -->
+</div>
+```
+
+```javascript
+// JavaScript handles custom commands
+document.getElementById('gallery').addEventListener('command', (event) => {
+  switch (event.command) {
+    case '--next-slide':
+      // Next slide logic
+      break;
+    case '--prev-slide':
+      // Previous slide logic
+      break;
   }
 });
 ```
 
-The offline fallback page (`/offline.html`) must itself be a valid Layer 1
-HTML document — semantic, readable without CSS or JS.
+#### Benefits Over onclick
 
-Service Worker caching strategies (cache-first, network-first, stale-while-
-revalidate) should be chosen based on content update frequency. Avoid caching
-strategies that serve stale content for content that changes frequently without
-a cache-invalidation plan.
+| `onclick` | `command`/`commandfor` |
+|-----------|------------------------|
+| Inline JavaScript | Declarative HTML |
+| CSP violations possible | CSP-friendly |
+| Manual aria management | Automatic accessibility |
+| Framework state needed | Browser handles state |
 
----
-
-## Critical: Core Content Must Not Require JavaScript
-
-Rendering page content exclusively in JavaScript is **Critical** — users with
-JS disabled, AT users encountering compatibility issues, and low-bandwidth users
-are completely excluded.
-
-* Deliver complete HTML from the server; hydrate interactivity in the browser
-* Core content must be in the initial HTML response
-* When using React/Vue/Angular/Svelte: configure SSR or static generation
-* Avoid SPA patterns that require JS to render any visible content
-
-Every byte of JavaScript that is not needed to access core content is unnecessary
-energy consumption. Prefer server rendering — it transfers HTML once; a JS bundle
-transfers code that must then be parsed, compiled, and executed on every visit.
-
----
-
-## Critical: Forms Must Work Without JavaScript
+### `<datalist>` for Autocomplete
 
 ```html
-<!-- Layer 1: works without JS -->
-<form action="/search" method="get">
-  <label for="query">Search</label>
-  <input id="query" name="q" type="search">
-  <button type="submit">Search</button>
-</form>
+<label for="browser">Choose a browser:</label>
+<input list="browsers" id="browser" name="browser"/>
+<datalist id="browsers">
+  <option value="Chrome"/>
+  <option value="Firefox"/>
+  <option value="Safari"/>
+  <option value="Edge"/>
+</datalist>
 ```
 
-Enhance with JS for instant results, autocomplete, or inline validation —
-while keeping the server-processed form as fallback.
-
-**A form that cannot be submitted without JS is Critical.**
-
 ---
 
-## Critical: Navigation Must Work Without JavaScript
+## CSS-Only Interactivity Patterns
+
+### The Checkbox Hack
+
+Use hidden checkboxes to toggle state without JavaScript:
 
 ```html
-<!-- Layer 1: plain links always work -->
-<nav aria-label="Main">
+<input type="checkbox" id="menu-toggle" hidden/>
+<label for="menu-toggle" data-menu-trigger>Menu</label>
+<nav data-mobile-nav>
   <ul>
+    <li><a href="/">Home</a></li>
     <li><a href="/about">About</a></li>
-    <li><a href="/contact">Contact</a></li>
   </ul>
 </nav>
 ```
 
-Enhance with JS for dropdowns or animated transitions.
+```css
+nav[data-mobile-nav] {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
 
----
+#menu-toggle:checked ~ nav[data-mobile-nav] {
+  max-height: 500px;
+}
 
-## Serious: Dynamic Content Must Have a Fallback Route
+/* Toggle icon state */
+[data-menu-trigger]::before {
+  content: "☰";
+}
 
-```js
-if ('fetch' in window) {
-  loadContentAsync(url);
-} else {
-  // Standard link navigation works automatically
+#menu-toggle:checked ~ [data-menu-trigger]::before {
+  content: "✕";
 }
 ```
 
-Use `aria-live` regions only after confirming the base content is accessible
-without them.
+### Theme Toggle with Radio Buttons
+
+```html
+<fieldset data-theme-selector>
+  <legend>Theme</legend>
+  <label>
+    <input type="radio" name="theme" id="theme-light" checked/>
+    Light
+  </label>
+  <label>
+    <input type="radio" name="theme" id="theme-dark"/>
+    Dark
+  </label>
+  <label>
+    <input type="radio" name="theme" id="theme-auto"/>
+    Auto
+  </label>
+</fieldset>
+```
+
+```css
+:root {
+  --bg: white;
+  --text: #1f2937;
+}
+
+:root:has(#theme-dark:checked) {
+  --bg: #1f2937;
+  --text: #f9fafb;
+}
+
+:root:has(#theme-auto:checked) {
+  @media (prefers-color-scheme: dark) {
+    --bg: #1f2937;
+    --text: #f9fafb;
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+```
+
+### Tab Panels with Radio Buttons
+
+```html
+<div data-tabs>
+  <input type="radio" name="tabs" id="tab-1" checked hidden/>
+  <input type="radio" name="tabs" id="tab-2" hidden/>
+  <input type="radio" name="tabs" id="tab-3" hidden/>
+
+  <nav>
+    <label for="tab-1">Overview</label>
+    <label for="tab-2">Features</label>
+    <label for="tab-3">Pricing</label>
+  </nav>
+
+  <section data-tab="1">Overview content...</section>
+  <section data-tab="2">Features content...</section>
+  <section data-tab="3">Pricing content...</section>
+</div>
+```
+
+```css
+[data-tabs] {
+  & section {
+    display: none;
+  }
+
+  &:has(#tab-1:checked) section[data-tab="1"],
+  &:has(#tab-2:checked) section[data-tab="2"],
+  &:has(#tab-3:checked) section[data-tab="3"] {
+    display: block;
+  }
+
+  & nav label {
+    cursor: pointer;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  &:has(#tab-1:checked) label[for="tab-1"],
+  &:has(#tab-2:checked) label[for="tab-2"],
+  &:has(#tab-3:checked) label[for="tab-3"] {
+    background: var(--primary);
+    color: white;
+  }
+}
+```
 
 ---
 
-## Moderate: CSS User Preferences Must Be Respected
+## The `:has()` Selector
 
-`prefers-reduced-motion`, `prefers-color-scheme`, `prefers-contrast`, and
-`forced-colors` are Layer 2 responsibilities. Ignoring them is **Moderate** at
-minimum; ignoring `prefers-reduced-motion` for fast or flashing animations can
-reach **Serious**.
+The `:has()` selector enables parent-based styling:
 
----
+### Conditional Parent Styling
 
-## What to Avoid
+```css
+/* Style parent when it contains a specific child */
+article:has(img) {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+}
 
-* Rendering page content exclusively in JavaScript — **Critical**
-* `display:none` / `visibility:hidden` on content required at the HTML layer — **Critical**
-* Requiring JS to navigate between pages without a server-rendered fallback — **Critical**
-* `user-scalable=no` — **Serious** (prevents zoom for low-vision users)
-* Assuming scripts will execute — always handle failure states
-* Polyfills as a substitute for progressive enhancement (they patch features;
-  PE builds around their absence)
-* Shipping large JS bundles for functionality that could be server-rendered —
-  this is both an accessibility risk and a sustainability cost
+/* Form field styling based on input state */
+form-field:has(input:required) label::after {
+  content: " *";
+  color: var(--error);
+}
 
----
+/* Card highlight when checkbox is checked */
+product-card:has(input:checked) {
+  border-color: var(--primary);
+}
+```
 
-## Definition of Done Checklist
+### Sibling-Based Styling
 
-* [ ] Core content readable with JavaScript disabled
-* [ ] Core tasks completable with JavaScript disabled
-* [ ] Forms submit via native browser behaviour
-* [ ] Navigation works as standard HTML links
-* [ ] CSS respects `prefers-reduced-motion`, `prefers-color-scheme`, `prefers-contrast`
-* [ ] Script failure handled gracefully
-* [ ] Feature detection used (not browser detection)
-* [ ] SSR or static generation configured for JS frameworks
-* [ ] Service Worker registered with feature detection and silent failure handling
-* [ ] Offline fallback page is valid Layer 1 HTML
-* [ ] Caching strategy documented and matched to content update frequency
-* [ ] Tested: disable JS → verify core content; disable CSS → verify logical reading order
+```css
+/* Style elements when sibling checkbox is checked */
+input:checked + label {
+  font-weight: bold;
+}
 
----
-
-## Key WCAG Criteria
-
-* 2.1.1 Keyboard (A) — native elements have built-in keyboard support
-* 4.1.2 Name, Role, Value (A)
-
-> **Note:** WCAG 4.1.1 Parsing was **removed in WCAG 2.2** (August 2023).
-> Modern browsers handle parsing errors uniformly. Valid semantic HTML remains
-> important as a progressive enhancement foundation, but it is no longer a
-> testable WCAG criterion. Do not cite it in audits or compliance statements.
+/* Style nav based on hidden checkbox state */
+#nav-toggle:checked ~ nav {
+  max-height: 500px;
+}
+```
 
 ---
 
-## References
+## Form Validation Pseudo-Classes
 
-* [Full best practices guide](https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/PROGRESSIVE_ENHANCEMENT_BEST_PRACTICES.md)
-* [SUSTAINABILITY.md](https://github.com/mgifford/SUSTAINABILITY.md) — PE reduces page weight and energy use; see WSG alignment
-* [Web Sustainability Guidelines (WSG) 1.0](https://www.w3.org/TR/web-sustainability-guidelines/)
-* [MDN: Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
-* [MDN: Offline and background operation](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation)
+### `:user-valid` and `:user-invalid`
 
-> **Standards horizon:** WCAG 3.0 is in development. No breaking changes to
-> progressive enhancement principles are anticipated.
-> Monitor: <https://www.w3.org/TR/wcag-3.0/>
+These apply only **after user interaction**, preventing premature error states:
+
+```css
+/* Only show valid state after user has typed */
+input:user-valid {
+  border-color: var(--success);
+}
+
+/* Only show error after user has interacted */
+input:user-invalid {
+  border-color: var(--error);
+}
+
+/* Parent styling based on input state */
+form-field:has(input:user-valid) output {
+  color: var(--success);
+}
+
+form-field:has(input:user-invalid) output {
+  color: var(--error);
+}
+```
+
+### `:valid` and `:invalid` (Immediate)
+
+These apply immediately, even before interaction:
+
+```css
+/* Use for optional "preview" validation */
+input:valid {
+  /* Subtle indication */
+}
+
+input:invalid {
+  /* Avoid strong error styling - user hasn't finished */
+}
+```
+
+### `:placeholder-shown`
+
+Style based on whether input has content:
+
+```css
+input:placeholder-shown {
+  /* Empty input styles */
+}
+
+input:not(:placeholder-shown) {
+  /* Has content */
+}
+```
+
+### `:required` and `:optional`
+
+```css
+input:required {
+  /* Required field indicator */
+}
+
+label:has(+ input:required)::after {
+  content: " *";
+  color: var(--error);
+}
+```
+
+---
+
+## View Transitions API
+
+Smooth page-to-page animations without JavaScript:
+
+### Enable View Transitions
+
+```html
+<meta name="view-transition" content="same-origin"/>
+```
+
+### Default Transition
+
+With the meta tag, all same-origin navigations get a crossfade by default.
+
+### Named Transitions
+
+```css
+/* Assign transition names */
+.hero-image {
+  view-transition-name: hero;
+}
+
+/* Or use data attributes */
+[data-vt="card-1"] {
+  view-transition-name: card-1;
+}
+
+/* Custom animation */
+::view-transition-old(hero) {
+  animation: fade-out 0.3s ease-out;
+}
+
+::view-transition-new(hero) {
+  animation: fade-in 0.3s ease-in;
+}
+
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+```
+
+### Card-to-Detail Transition
+
+```html
+<!-- List page -->
+<article data-vt="product-123">
+  <img src="product.jpg" style="view-transition-name: product-123-img"/>
+  <h2 style="view-transition-name: product-123-title">Product Name</h2>
+</article>
+
+<!-- Detail page -->
+<article>
+  <img src="product.jpg" style="view-transition-name: product-123-img"/>
+  <h1 style="view-transition-name: product-123-title">Product Name</h1>
+</article>
+```
+
+---
+
+## Animation Patterns
+
+For CSS animations including scroll-driven animations, transitions, and motion accessibility (`prefers-reduced-motion`), see the **`animation-motion`** skill.
+
+---
+
+## CSS-Only Show/Hide Patterns
+
+### Content Reveal on Focus
+
+```css
+/* Hidden by default */
+[data-tooltip] {
+  position: relative;
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s;
+  }
+
+  &:hover::after,
+  &:focus::after {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+```
+
+### Disclosure Widget
+
+```css
+/* Summary arrow rotation */
+details summary::before {
+  content: "▶";
+  display: inline-block;
+  transition: transform 0.2s;
+  margin-right: 0.5em;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+```
+
+---
+
+## Accessibility Considerations
+
+### Focus Management
+
+CSS can style focus, but focus order requires HTML structure or JS:
+
+```css
+/* Visible focus indicators */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Remove default outline only when using custom */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+### Reduced Motion
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+### Hidden Checkbox Labels
+
+When using checkbox hacks, ensure labels are accessible:
+
+```html
+<input type="checkbox" id="toggle" hidden/>
+<label for="toggle">
+  <span class="sr-only">Toggle menu</span>
+  <span aria-hidden="true">☰</span>
+</label>
+```
+
+```css
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+```
+
+---
+
+## When JavaScript IS Needed
+
+Progressive enhancement means JavaScript enhances, not enables. Use JS when:
+
+1. **Complex state management** - More than simple on/off
+2. **Async operations** - Fetching data, form submission
+3. **Focus management** - Moving focus programmatically
+4. **Real-time updates** - WebSocket, polling
+5. **Complex animations** - Scroll-triggered, gesture-based
+
+Even then, provide a baseline:
+- Forms should submit without JS
+- Navigation should work without JS
+- Content should be readable without JS
+
+---
+
+## Graceful Degradation for JS-Required Applications
+
+When an application **requires** JavaScript to function (SPAs, complex editors, real-time apps), provide graceful degradation patterns.
+
+### The `<noscript>` Element
+
+#### Error Message in Body
+
+Display a clear message when JavaScript is disabled:
+
+```html
+<body>
+  <noscript>
+    <div class="js-required-notice">
+      <h2>JavaScript Required</h2>
+      <p>This application requires JavaScript to function.
+         Please enable JavaScript in your browser settings.</p>
+    </div>
+  </noscript>
+  <!-- App content -->
+</body>
+```
+
+#### Hide JS-Only UI in Head
+
+Use `<noscript>` in `<head>` to inject styles hiding JS-dependent elements:
+
+```html
+<head>
+  <noscript>
+    <style>
+      [data-js-required] { display: none !important; }
+      .js-required-notice { display: block !important; }
+    </style>
+  </noscript>
+</head>
+```
+
+```html
+<body>
+  <div class="js-required-notice" hidden>JavaScript is required.</div>
+  <main data-js-required>
+    <!-- JS-only app content -->
+  </main>
+</body>
+```
+
+#### Redirect with Fallback Link
+
+For full-page JS apps, redirect to a static fallback:
+
+```html
+<head>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=/no-javascript.html"/>
+  </noscript>
+</head>
+<body>
+  <noscript>
+    <p>Redirecting... <a href="/no-javascript.html">Click here</a> if not redirected.</p>
+  </noscript>
+</body>
+```
+
+### CSS Scripting Media Query
+
+Modern CSS can detect JavaScript availability:
+
+```css
+/* When JS is disabled */
+@media (scripting: none) {
+  [data-js-required] {
+    display: none;
+  }
+
+  .no-js-message {
+    display: block;
+  }
+}
+
+/* When JS is enabled */
+@media (scripting: enabled) {
+  .no-js-message {
+    display: none;
+  }
+}
+```
+
+**Browser support:** Chrome 120+, Firefox 113+, Safari 17+
+
+### Server-Side JS Detection
+
+Track JavaScript-disabled users for analytics:
+
+```html
+<!-- Image beacon in noscript -->
+<noscript>
+  <img src="/api/analytics?js=disabled" alt="" width="1" height="1"/>
+</noscript>
+```
+
+Or check for a JS-set cookie on the server:
+
+```javascript
+// In your app initialization
+document.cookie = 'js_enabled=true; path=/';
+```
+
+### When to Use These Patterns
+
+| Scenario | Recommended Pattern |
+|----------|---------------------|
+| Content-first pages | Don't need `<noscript>` - progressive enhancement handles it |
+| SPA/complex web apps | `<noscript>` message + CSS hiding |
+| Full-page JS apps | Redirect to static fallback |
+| Analytics needs | Image beacon |
+
+---
+
+## CSS Feature Detection with `@supports`
+
+Use `@supports` for non-Baseline CSS features. This applies the same progressive enhancement philosophy to CSS itself.
+
+### Pattern: Baseline Fallback + Enhancement
+
+```css
+/* Base: Baseline-safe fallback */
+p {
+  word-break: break-word;
+}
+
+/* Enhancement: non-Baseline feature */
+@supports (text-wrap: pretty) {
+  p {
+    text-wrap: pretty;
+  }
+}
+```
+
+### Common Progressive CSS Enhancements
+
+```css
+/* Typography enhancement */
+@supports (text-wrap: balance) {
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+}
+
+/* Color enhancement */
+@supports (color: oklch(50% 0.2 260)) {
+  :root {
+    --primary: oklch(55% 0.22 260);
+  }
+}
+
+/* Container query fallback */
+@supports not (container-type: inline-size) {
+  /* Fallback layout when container queries unavailable */
+  product-card {
+    display: block;
+  }
+}
+```
+
+### Multiple Feature Detection
+
+```css
+/* Combine features with and/or */
+@supports (display: grid) and (container-type: inline-size) {
+  product-grid {
+    display: grid;
+    container-type: inline-size;
+  }
+}
+
+/* Negation for fallbacks */
+@supports not (gap: 1rem) {
+  .flex-container > * + * {
+    margin-inline-start: 1rem;
+  }
+}
+```
+
+### JavaScript Feature Detection
+
+For features that can't be detected with `@supports`, use JavaScript with data attributes:
+
+```javascript
+// Detect and expose to CSS
+if (CSS.supports('view-transition-name', 'test')) {
+  document.documentElement.dataset.viewTransitions = 'supported';
+}
+```
+
+```css
+[data-view-transitions="supported"] {
+  /* Enhanced styles */
+}
+```
+
+---
+
+## Checklist
+
+When building interactive features:
+
+- [ ] Does it work without JavaScript?
+- [ ] Is there semantic HTML structure?
+- [ ] Are native elements used where applicable (`<details>`, `<dialog>`, `[popover]`)?
+- [ ] Are `command`/`commandfor` used for dialogs and popovers (not `onclick`)?
+- [ ] Is state managed via checkboxes/radios for CSS access?
+- [ ] Are data attributes used instead of classes for state?
+- [ ] Is `:has()` used appropriately for parent styling?
+- [ ] Are `:user-valid`/`:user-invalid` used over `:valid`/`:invalid`?
+- [ ] Is `prefers-reduced-motion` respected?
+- [ ] Are focus states visible and clear?
+- [ ] Is View Transitions meta tag included?
+- [ ] If JS is required, does `<noscript>` provide a fallback message?
+- [ ] Are non-Baseline CSS features wrapped in `@supports`?
+
+## Related Skills
+
+- **css-author** - Modern CSS organization with native @import, @layer casca...
+- **javascript-author** - Write vanilla JavaScript for Web Components with function...
+- **data-attributes** - Using data-* attributes as the HTML/CSS/JS bridge for sta...
+- **forms** - HTML-first form patterns with CSS-only validation

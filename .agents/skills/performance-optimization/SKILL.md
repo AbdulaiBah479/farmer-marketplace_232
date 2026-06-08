@@ -1,350 +1,656 @@
 ---
 name: performance-optimization
-description: Optimizes application performance. Use when performance requirements exist, when you suspect performance regressions, or when Core Web Vitals or load times need improvement. Use when profiling reveals bottlenecks that need fixing.
+description: Skill for performance profiling and optimization of web applications. Use when conducting Lighthouse audits, analyzing bundles, implementing code splitting, optimizing images, configuring caching strategies, or improving Core Web Vitals. Provides patterns for frontend and backend performance improvements, including browser, CDN, and server caching.
 ---
 
 # Performance Optimization
 
+Skill for profiling and optimizing web application performance.
+
 ## Overview
 
-Measure before optimizing. Performance work without measurement is guessing — and guessing leads to premature optimization that adds complexity without improving what matters. Profile first, identify the actual bottleneck, fix it, measure again. Optimize only what measurements prove matters.
+This skill provides guidance for:
+1. **Performance Profiling** - Lighthouse, bundle analysis, profiling tools
+2. **Frontend Optimization** - Code splitting, lazy loading, image optimization
+3. **Caching Strategies** - Browser, CDN, server-side caching
+4. **Core Web Vitals** - LCP, FID/INP, CLS optimization
 
-## When to Use
+## Core Web Vitals
 
-- Performance requirements exist in the spec (load time budgets, response time SLAs)
-- Users or monitoring report slow behavior
-- Core Web Vitals scores are below thresholds
-- You suspect a change introduced a regression
-- Building features that handle large datasets or high traffic
+### Metrics Overview
 
-**When NOT to use:** Don't optimize before you have evidence of a problem. Premature optimization adds complexity that costs more than the performance it gains.
+| Metric | Target | Description |
+|--------|--------|-------------|
+| LCP (Largest Contentful Paint) | < 2.5s | Time to render largest content element |
+| INP (Interaction to Next Paint) | < 200ms | Responsiveness to user interactions |
+| CLS (Cumulative Layout Shift) | < 0.1 | Visual stability during page load |
 
-## Core Web Vitals Targets
+### Measurement Tools
 
-| Metric | Good | Needs Improvement | Poor |
-|--------|------|-------------------|------|
-| **LCP** (Largest Contentful Paint) | ≤ 2.5s | ≤ 4.0s | > 4.0s |
-| **INP** (Interaction to Next Paint) | ≤ 200ms | ≤ 500ms | > 500ms |
-| **CLS** (Cumulative Layout Shift) | ≤ 0.1 | ≤ 0.25 | > 0.25 |
-
-## The Optimization Workflow
-
-```
-1. MEASURE  → Establish baseline with real data
-2. IDENTIFY → Find the actual bottleneck (not assumed)
-3. FIX      → Address the specific bottleneck
-4. VERIFY   → Measure again, confirm improvement
-5. GUARD    → Add monitoring or tests to prevent regression
-```
-
-### Step 1: Measure
-
-Two complementary approaches — use both:
-
-- **Synthetic (Lighthouse, DevTools Performance tab):** Controlled conditions, reproducible. Best for CI regression detection and isolating specific issues.
-- **RUM (web-vitals library, CrUX):** Real user data in real conditions. Required to validate that a fix actually improved user experience.
-
-**Frontend:**
 ```bash
-# Synthetic: Lighthouse in Chrome DevTools (or CI)
-# Chrome DevTools → Performance tab → Record
-# Chrome DevTools MCP → Performance trace
+# Lighthouse CLI
+npx lighthouse https://example.com --output=json --output-path=./lighthouse-report.json
 
-# RUM: Web Vitals library in code
+# Web Vitals in code
+npm install web-vitals
+```
+
+```typescript
+// lib/web-vitals.ts
 import { onLCP, onINP, onCLS } from 'web-vitals';
 
-onLCP(console.log);
-onINP(console.log);
-onCLS(console.log);
+export function reportWebVitals() {
+  onLCP((metric) => {
+    console.log('LCP:', metric.value);
+    // Send to analytics
+  });
+
+  onINP((metric) => {
+    console.log('INP:', metric.value);
+  });
+
+  onCLS((metric) => {
+    console.log('CLS:', metric.value);
+  });
+}
 ```
 
-**Backend:**
+## Lighthouse Audits
+
+### Running Audits
+
 ```bash
-# Response time logging
-# Application Performance Monitoring (APM)
-# Database query logging with timing
+# Full audit
+npx lighthouse https://example.com --view
 
-# Simple timing
-console.time('db-query');
-const result = await db.query(...);
-console.timeEnd('db-query');
+# Specific categories
+npx lighthouse https://example.com --only-categories=performance,accessibility
+
+# Mobile simulation
+npx lighthouse https://example.com --preset=mobile
+
+# CI integration
+npx lighthouse https://example.com --budget-path=./budget.json --output=json
 ```
 
-### Where to Start Measuring
+### Performance Budget
 
-Use the symptom to decide what to measure first:
-
+```json
+// budget.json
+[
+  {
+    "resourceSizes": [
+      { "resourceType": "script", "budget": 300 },
+      { "resourceType": "image", "budget": 500 },
+      { "resourceType": "stylesheet", "budget": 100 },
+      { "resourceType": "total", "budget": 1000 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "script", "budget": 10 },
+      { "resourceType": "third-party", "budget": 5 }
+    ],
+    "timings": [
+      { "metric": "largest-contentful-paint", "budget": 2500 },
+      { "metric": "first-contentful-paint", "budget": 1500 },
+      { "metric": "interactive", "budget": 3500 }
+    ]
+  }
+]
 ```
-What is slow?
-├── First page load
-│   ├── Large bundle? --> Measure bundle size, check code splitting
-│   ├── Slow server response? --> Measure TTFB in DevTools Network waterfall
-│   │   ├── DNS long? --> Add dns-prefetch / preconnect for known origins
-│   │   ├── TCP/TLS long? --> Enable HTTP/2, check edge deployment, keep-alive
-│   │   └── Waiting (server) long? --> Profile backend, check queries and caching
-│   └── Render-blocking resources? --> Check network waterfall for CSS/JS blocking
-├── Interaction feels sluggish
-│   ├── UI freezes on click? --> Profile main thread, look for long tasks (>50ms)
-│   ├── Form input lag? --> Check re-renders, controlled component overhead
-│   └── Animation jank? --> Check layout thrashing, forced reflows
-├── Page after navigation
-│   ├── Data loading? --> Measure API response times, check for waterfalls
-│   └── Client rendering? --> Profile component render time, check for N+1 fetches
-└── Backend / API
-    ├── Single endpoint slow? --> Profile database queries, check indexes
-    ├── All endpoints slow? --> Check connection pool, memory, CPU
-    └── Intermittent slowness? --> Check for lock contention, GC pauses, external deps
+
+### Common Lighthouse Issues and Fixes
+
+| Issue | Impact | Fix |
+|-------|--------|-----|
+| Render-blocking resources | LCP | Async/defer scripts, inline critical CSS |
+| Large DOM size | All | Virtualization, pagination |
+| Unused JavaScript | LCP | Code splitting, tree shaking |
+| Unoptimized images | LCP | Next/Image, WebP, lazy loading |
+| Layout shifts | CLS | Size attributes, font-display |
+| Long tasks | INP | Code splitting, web workers |
+
+## Bundle Analysis
+
+### Webpack Bundle Analyzer
+
+```bash
+# Install
+npm install --save-dev webpack-bundle-analyzer
+
+# Next.js configuration
+npm install @next/bundle-analyzer
 ```
 
-### Step 2: Identify the Bottleneck
+```javascript
+// next.config.js
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
 
-Common bottlenecks by category:
-
-**Frontend:**
-
-| Symptom | Likely Cause | Investigation |
-|---------|-------------|---------------|
-| Slow LCP | Large images, render-blocking resources, slow server | Check network waterfall, image sizes |
-| High CLS | Images without dimensions, late-loading content, font shifts | Check layout shift attribution |
-| Poor INP | Heavy JavaScript on main thread, large DOM updates | Check long tasks in Performance trace |
-| Slow initial load | Large bundle, many network requests | Check bundle size, code splitting |
-
-**Backend:**
-
-| Symptom | Likely Cause | Investigation |
-|---------|-------------|---------------|
-| Slow API responses | N+1 queries, missing indexes, unoptimized queries | Check database query log |
-| Memory growth | Leaked references, unbounded caches, large payloads | Heap snapshot analysis |
-| CPU spikes | Synchronous heavy computation, regex backtracking | CPU profiling |
-| High latency | Missing caching, redundant computation, network hops | Trace requests through the stack |
-
-### Step 3: Fix Common Anti-Patterns
-
-#### N+1 Queries (Backend)
-
-```typescript
-// BAD: N+1 — one query per task for the owner
-const tasks = await db.tasks.findMany();
-for (const task of tasks) {
-  task.owner = await db.users.findUnique({ where: { id: task.ownerId } });
-}
-
-// GOOD: Single query with join/include
-const tasks = await db.tasks.findMany({
-  include: { owner: true },
+module.exports = withBundleAnalyzer({
+  // Next.js config
 });
 ```
 
-#### Unbounded Data Fetching
+```bash
+# Run analysis
+ANALYZE=true npm run build
+```
+
+### Identifying Bundle Issues
+
+| Issue | Indicator | Solution |
+|-------|-----------|----------|
+| Large dependencies | Single package > 100KB | Find smaller alternative |
+| Duplicate packages | Same package multiple versions | Dedupe, peer dependencies |
+| Unused exports | Large modules partially used | Tree shaking, selective imports |
+| Dev dependencies in prod | moment locales, lodash full | Selective imports |
+
+### Import Optimization
 
 ```typescript
-// BAD: Fetching all records
-const allTasks = await db.tasks.findMany();
+// BAD: Imports entire library
+import _ from 'lodash';
+const result = _.debounce(fn, 300);
 
-// GOOD: Paginated with limits
-const tasks = await db.tasks.findMany({
-  take: 20,
-  skip: (page - 1) * 20,
-  orderBy: { createdAt: 'desc' },
-});
+// GOOD: Import only what you need
+import debounce from 'lodash/debounce';
+const result = debounce(fn, 300);
+
+// BAD: Barrel imports
+import { Button, Input, Modal } from '@/components';
+
+// GOOD: Direct imports (when barrel causes issues)
+import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
 ```
 
-#### Missing Image Optimization (Frontend)
+## Code Splitting Strategies
 
-```html
-<!-- BAD: No dimensions, no format optimization -->
-<img src="/hero.jpg" />
-
-<!-- GOOD: Hero / LCP image — art direction + resolution switching, high priority -->
-<!--
-  Two techniques combined:
-  - Art direction (media): different crop/composition per breakpoint
-  - Resolution switching (srcset + sizes): right file size per screen density
--->
-<picture>
-  <!-- Mobile: portrait crop (8:10) -->
-  <source
-    media="(max-width: 767px)"
-    srcset="/hero-mobile-400.avif 400w, /hero-mobile-800.avif 800w"
-    sizes="100vw"
-    width="800"
-    height="1000"
-    type="image/avif"
-  />
-  <source
-    media="(max-width: 767px)"
-    srcset="/hero-mobile-400.webp 400w, /hero-mobile-800.webp 800w"
-    sizes="100vw"
-    width="800"
-    height="1000"
-    type="image/webp"
-  />
-  <!-- Desktop: landscape crop (2:1) -->
-  <source
-    srcset="/hero-800.avif 800w, /hero-1200.avif 1200w, /hero-1600.avif 1600w"
-    sizes="(max-width: 1200px) 100vw, 1200px"
-    width="1200"
-    height="600"
-    type="image/avif"
-  />
-  <source
-    srcset="/hero-800.webp 800w, /hero-1200.webp 1200w, /hero-1600.webp 1600w"
-    sizes="(max-width: 1200px) 100vw, 1200px"
-    width="1200"
-    height="600"
-    type="image/webp"
-  />
-  <img
-    src="/hero-desktop.jpg"
-    width="1200"
-    height="600"
-    fetchpriority="high"
-    alt="Hero image description"
-  />
-</picture>
-
-<!-- GOOD: Below-the-fold image — lazy loaded + async decoding -->
-<img
-  src="/content.webp"
-  width="800"
-  height="400"
-  loading="lazy"
-  decoding="async"
-  alt="Content image description"
-/>
-```
-
-#### Unnecessary Re-renders (React)
-
-```tsx
-// BAD: Creates new object on every render, causing children to re-render
-function TaskList() {
-  return <TaskFilters options={{ sortBy: 'date', order: 'desc' }} />;
-}
-
-// GOOD: Stable reference
-const DEFAULT_OPTIONS = { sortBy: 'date', order: 'desc' } as const;
-function TaskList() {
-  return <TaskFilters options={DEFAULT_OPTIONS} />;
-}
-
-// Use React.memo for expensive components
-const TaskItem = React.memo(function TaskItem({ task }: Props) {
-  return <div>{/* expensive render */}</div>;
-});
-
-// Use useMemo for expensive computations
-function TaskStats({ tasks }: Props) {
-  const stats = useMemo(() => calculateStats(tasks), [tasks]);
-  return <div>{stats.completed} / {stats.total}</div>;
-}
-```
-
-#### Large Bundle Size
+### Route-Based Splitting (Next.js)
 
 ```typescript
-// Modern bundlers (Vite, webpack 5+) handle named imports with tree-shaking automatically,
-// provided the dependency ships ESM and is marked `sideEffects: false` in package.json.
-// Profile before changing import styles — the real gains come from splitting and lazy loading.
+// Automatic with App Router - each page is a separate chunk
+// app/dashboard/page.tsx - separate chunk
+// app/settings/page.tsx - separate chunk
+```
 
-// GOOD: Dynamic import for heavy, rarely-used features
-const ChartLibrary = lazy(() => import('./ChartLibrary'));
+### Component-Based Splitting
 
-// GOOD: Route-level code splitting wrapped in Suspense
-const SettingsPage = lazy(() => import('./pages/Settings'));
+```typescript
+// Dynamic import for heavy components
+import dynamic from 'next/dynamic';
 
-function App() {
+// Lazy load with loading state
+const HeavyChart = dynamic(() => import('@/components/HeavyChart'), {
+  loading: () => <ChartSkeleton />,
+  ssr: false, // Disable SSR for client-only components
+});
+
+// Conditional loading
+const AdminPanel = dynamic(() => import('@/components/AdminPanel'), {
+  loading: () => <div>Loading admin panel...</div>,
+});
+
+export default function Dashboard({ isAdmin }) {
   return (
-    <Suspense fallback={<Spinner />}>
-      <SettingsPage />
-    </Suspense>
+    <div>
+      <HeavyChart data={data} />
+      {isAdmin && <AdminPanel />}
+    </div>
   );
 }
 ```
 
-#### Missing Caching (Backend)
+### Library Splitting
 
 ```typescript
-// Cache frequently-read, rarely-changed data
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-let cachedConfig: AppConfig | null = null;
-let cacheExpiry = 0;
+// Lazy load heavy libraries
+const loadPdfLib = () => import('pdf-lib');
 
-async function getAppConfig(): Promise<AppConfig> {
-  if (cachedConfig && Date.now() < cacheExpiry) {
-    return cachedConfig;
-  }
-  cachedConfig = await db.config.findFirst();
-  cacheExpiry = Date.now() + CACHE_TTL;
-  return cachedConfig;
+async function generatePdf() {
+  const { PDFDocument } = await loadPdfLib();
+  const doc = await PDFDocument.create();
+  // ...
+}
+```
+
+## Image Optimization
+
+### Next.js Image Component
+
+```typescript
+import Image from 'next/image';
+
+// Responsive image with automatic optimization
+export function HeroImage() {
+  return (
+    <Image
+      src="/hero.jpg"
+      alt="Hero image"
+      width={1200}
+      height={600}
+      priority // Preload for LCP
+      placeholder="blur"
+      blurDataURL={blurDataUrl}
+    />
+  );
 }
 
-// HTTP caching headers for static assets
-app.use('/static', express.static('public', {
-  maxAge: '1y',           // Cache for 1 year
-  immutable: true,        // Never revalidate (use content hashing in filenames)
-}));
-
-// Cache-Control for API responses
-res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
+// Fill container
+export function BackgroundImage() {
+  return (
+    <div className="relative w-full h-64">
+      <Image
+        src="/background.jpg"
+        alt="Background"
+        fill
+        style={{ objectFit: 'cover' }}
+        sizes="100vw"
+      />
+    </div>
+  );
+}
 ```
 
-## Performance Budget
+### Image Format Selection
 
-Set budgets and enforce them:
+| Format | Use Case | Browser Support |
+|--------|----------|-----------------|
+| WebP | General purpose, photos | Modern browsers |
+| AVIF | Best compression, photos | Chrome, Firefox |
+| SVG | Icons, logos, illustrations | All |
+| PNG | Transparency needed | All |
+| JPEG | Photos (fallback) | All |
 
+### Responsive Images
+
+```typescript
+// next.config.js
+module.exports = {
+  images: {
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ['image/avif', 'image/webp'],
+  },
+};
 ```
-JavaScript bundle: < 200KB gzipped (initial load)
-CSS: < 50KB gzipped
-Images: < 200KB per image (above the fold)
-Fonts: < 100KB total
-API response time: < 200ms (p95)
-Time to Interactive: < 3.5s on 4G
-Lighthouse Performance score: ≥ 90
+
+```typescript
+// Specify sizes for responsive loading
+<Image
+  src="/product.jpg"
+  alt="Product"
+  fill
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+/>
 ```
 
-**Enforce in CI:**
-```bash
-# Bundle size check
-npx bundlesize --config bundlesize.config.json
+## Caching Strategies
 
-# Lighthouse CI
-npx lhci autorun
+### Browser Caching
+
+```typescript
+// next.config.js - Static asset caching
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
+};
 ```
 
-## See Also
+### CDN Caching
 
-For detailed performance checklists, optimization commands, and anti-pattern reference, see `references/performance-checklist.md`.
+```typescript
+// API route with CDN caching
+export async function GET(request: Request) {
+  const data = await fetchData();
 
+  return Response.json(data, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+    },
+  });
+}
+```
 
-## Common Rationalizations
+### Cache Control Headers
 
-| Rationalization | Reality |
-|---|---|
-| "We'll optimize later" | Performance debt compounds. Fix obvious anti-patterns now, defer micro-optimizations. |
-| "It's fast on my machine" | Your machine isn't the user's. Profile on representative hardware and networks. |
-| "This optimization is obvious" | If you didn't measure, you don't know. Profile first. |
-| "Users won't notice 100ms" | Research shows 100ms delays impact conversion rates. Users notice more than you think. |
-| "The framework handles performance" | Frameworks prevent some issues but can't fix N+1 queries or oversized bundles. |
+| Directive | Use Case |
+|-----------|----------|
+| `public, max-age=31536000, immutable` | Versioned static assets (CSS, JS) |
+| `public, max-age=3600` | Semi-static content |
+| `public, s-maxage=60, stale-while-revalidate=300` | CDN caching with background refresh |
+| `private, no-cache` | User-specific data |
+| `no-store` | Sensitive data |
 
-## Red Flags
+### Server-Side Caching (FastAPI)
 
-- Optimization without profiling data to justify it
-- N+1 query patterns in data fetching
-- List endpoints without pagination
-- Images without dimensions, lazy loading, or responsive sizes
-- Bundle size growing without review
-- No performance monitoring in production
-- `React.memo` and `useMemo` everywhere (overusing is as bad as underusing)
+```python
+# Redis caching for API responses
+from fastapi import FastAPI
+from functools import wraps
+import redis
+import json
 
-## Verification
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
-After any performance-related change:
+def cache_response(ttl_seconds: int = 300):
+    """Cache decorator for API endpoints."""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Generate cache key
+            cache_key = f"{func.__name__}:{str(args)}:{str(kwargs)}"
 
-- [ ] Before and after measurements exist (specific numbers)
-- [ ] The specific bottleneck is identified and addressed
-- [ ] Core Web Vitals are within "Good" thresholds
-- [ ] Bundle size hasn't increased significantly
-- [ ] No N+1 queries in new data fetching code
-- [ ] Performance budget passes in CI (if configured)
-- [ ] Existing tests still pass (optimization didn't break behavior)
+            # Check cache
+            cached = redis_client.get(cache_key)
+            if cached:
+                return json.loads(cached)
+
+            # Execute and cache
+            result = await func(*args, **kwargs)
+            redis_client.setex(cache_key, ttl_seconds, json.dumps(result))
+            return result
+        return wrapper
+    return decorator
+
+@app.get("/products")
+@cache_response(ttl_seconds=300)
+async def get_products():
+    return await product_service.get_all()
+```
+
+### Database Query Caching
+
+```python
+# SQLAlchemy query caching
+from sqlalchemy import event
+from functools import lru_cache
+
+class CachedRepository:
+    def __init__(self, session):
+        self.session = session
+        self._cache = {}
+
+    async def get_by_id(self, entity_id: int):
+        cache_key = f"entity:{entity_id}"
+
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        result = await self.session.get(Entity, entity_id)
+        self._cache[cache_key] = result
+        return result
+
+    def invalidate(self, entity_id: int):
+        cache_key = f"entity:{entity_id}"
+        self._cache.pop(cache_key, None)
+```
+
+## Frontend Performance Patterns
+
+### Virtualization for Long Lists
+
+```typescript
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+function VirtualList({ items }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50,
+    overscan: 5,
+  });
+
+  return (
+    <div ref={parentRef} className="h-96 overflow-auto">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          position: 'relative',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <div
+            key={virtualItem.key}
+            style={{
+              position: 'absolute',
+              top: 0,
+              transform: `translateY(${virtualItem.start}px)`,
+              height: `${virtualItem.size}px`,
+            }}
+          >
+            {items[virtualItem.index].name}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### Debouncing User Input
+
+```typescript
+import { useDeferredValue, useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
+
+function SearchInput() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+
+  // Or with explicit debounce
+  const debouncedSearch = useDebouncedCallback(
+    (value: string) => {
+      performSearch(value);
+    },
+    300
+  );
+
+  return (
+    <input
+      value={query}
+      onChange={(e) => {
+        setQuery(e.target.value);
+        debouncedSearch(e.target.value);
+      }}
+    />
+  );
+}
+```
+
+### Optimistic Updates
+
+```typescript
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+function TodoItem({ todo }) {
+  const queryClient = useQueryClient();
+
+  const toggleMutation = useMutation({
+    mutationFn: (completed: boolean) =>
+      api.updateTodo(todo.id, { completed }),
+
+    onMutate: async (completed) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+
+      // Snapshot previous value
+      const previousTodos = queryClient.getQueryData(['todos']);
+
+      // Optimistically update
+      queryClient.setQueryData(['todos'], (old: Todo[]) =>
+        old.map((t) =>
+          t.id === todo.id ? { ...t, completed } : t
+        )
+      );
+
+      return { previousTodos };
+    },
+
+    onError: (err, completed, context) => {
+      // Rollback on error
+      queryClient.setQueryData(['todos'], context?.previousTodos);
+    },
+  });
+
+  return (
+    <input
+      type="checkbox"
+      checked={todo.completed}
+      onChange={(e) => toggleMutation.mutate(e.target.checked)}
+    />
+  );
+}
+```
+
+## Backend Performance Patterns
+
+### Database Query Optimization
+
+```python
+# Eager loading to avoid N+1 queries
+from sqlalchemy.orm import joinedload, selectinload
+
+# BAD: N+1 queries
+users = session.query(User).all()
+for user in users:
+    print(user.orders)  # Separate query for each user!
+
+# GOOD: Eager load relationships
+users = session.query(User).options(
+    selectinload(User.orders)
+).all()
+
+# For nested relationships
+users = session.query(User).options(
+    selectinload(User.orders).selectinload(Order.items)
+).all()
+```
+
+### Connection Pooling
+
+```python
+# SQLAlchemy connection pool configuration
+from sqlalchemy import create_engine
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=20,           # Number of persistent connections
+    max_overflow=10,        # Additional connections when pool exhausted
+    pool_timeout=30,        # Timeout waiting for connection
+    pool_recycle=1800,      # Recycle connections after 30 mins
+    pool_pre_ping=True,     # Verify connection before use
+)
+```
+
+### Async Operations
+
+```python
+from fastapi import FastAPI
+import asyncio
+
+@app.get("/dashboard")
+async def get_dashboard():
+    # Run independent queries concurrently
+    user_data, orders, notifications = await asyncio.gather(
+        get_user_profile(),
+        get_recent_orders(),
+        get_notifications(),
+    )
+
+    return {
+        "user": user_data,
+        "orders": orders,
+        "notifications": notifications,
+    }
+```
+
+## Performance Monitoring
+
+### Real User Monitoring (RUM)
+
+```typescript
+// Send performance data to analytics
+export function trackPagePerformance() {
+  if (typeof window === 'undefined') return;
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const timing = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+
+      const metrics = {
+        dns: timing.domainLookupEnd - timing.domainLookupStart,
+        tcp: timing.connectEnd - timing.connectStart,
+        ttfb: timing.responseStart - timing.requestStart,
+        download: timing.responseEnd - timing.responseStart,
+        domInteractive: timing.domInteractive - timing.fetchStart,
+        domComplete: timing.domComplete - timing.fetchStart,
+        loadComplete: timing.loadEventEnd - timing.fetchStart,
+      };
+
+      // Send to analytics
+      analytics.track('page_performance', metrics);
+    }, 0);
+  });
+}
+```
+
+## Performance Optimization Checklist
+
+### Frontend
+
+- [ ] Lighthouse score > 90 for Performance
+- [ ] LCP < 2.5s
+- [ ] INP < 200ms
+- [ ] CLS < 0.1
+- [ ] Bundle size within budget
+- [ ] Images optimized (WebP/AVIF, lazy loading)
+- [ ] Critical CSS inlined
+- [ ] JavaScript async/deferred
+- [ ] Code splitting implemented
+- [ ] Fonts optimized (font-display: swap)
+
+### Backend
+
+- [ ] Database queries optimized (no N+1)
+- [ ] Connection pooling configured
+- [ ] Caching strategy implemented
+- [ ] Async operations where beneficial
+- [ ] Response compression enabled
+- [ ] Indexes on frequently queried columns
+
+### Caching
+
+- [ ] Static assets cached with long TTL
+- [ ] CDN configured for static content
+- [ ] API responses cached appropriately
+- [ ] Cache invalidation strategy defined
+
+## References
+
+For detailed guidance, see:
+- `references/lighthouse-guide.md` - Comprehensive Lighthouse optimization
+- `references/caching-patterns.md` - Advanced caching strategies

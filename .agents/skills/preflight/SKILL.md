@@ -1,154 +1,164 @@
 ---
 name: preflight
-description: |
-  PreFlight integration. Manage data, records, and automate workflows. Use when the user wants to interact with PreFlight data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Pre-PR check for common issues - run before pushing to catch problems early
 ---
 
-# PreFlight
+# Preflight
 
-PreFlight is a platform that automates infrastructure and compliance checks. DevOps and security engineers use it to ensure their systems meet security and regulatory requirements before deployment.
+Run this before creating a PR to catch common issues in changed files.
 
-Official docs: https://developer.preflight.com/
+## Instructions
 
-## PreFlight Overview
+1. Run `git diff main --name-only` to get list of changed files
+2. For each changed file, run the checks below
+3. Report issues with `file:line` references
+4. Group by category for readability
 
-- **Flights**
-  - **Flight Details**
-- **User**
-- **Notifications**
+## Checks
 
-Use action names and parameters as needed.
+### TypeScript Strict
 
-## Working with PreFlight
-
-This skill uses the Membrane CLI to interact with PreFlight. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
+- [ ] No `any` types - find proper type or use `unknown`
+- [ ] No `@ts-ignore` or `@ts-expect-error` without explanation
+- [ ] Local interfaces use `Props` not `ComponentNameProps`
+- [ ] Type check passes (use `make types` if available, else `pnpm tsc --noEmit`)
 
 ```bash
-npm install -g @membranehq/cli@latest
+# Check if 'types' target is available in make output
+make 2>/dev/null | grep -q 'types' && make types || pnpm tsc --noEmit
 ```
 
-### Authentication
+### React Patterns
+
+- [ ] `'use client'` only where actually needed (hooks, browser APIs, event handlers)
+- [ ] Browser-only libs use `dynamic(() => import(...), { ssr: false })`
+- [ ] No `console.log` left in code (use proper logging or remove)
+
+### Route Structure
+
+- [ ] Routes have `loading.tsx` with skeleton
+- [ ] Routes have `error.tsx` with reset button
+- [ ] Page components are server components unless they need client features
+
+### Data Fetching
+
+- [ ] Prisma queries use `select` to specify fields (not bare `findMany()`)
+- [ ] No N+1 patterns (queries inside loops)
+- [ ] tRPC routers return flat structures
+
+### Validation
+
+- [ ] Zod schemas in `validations/` not inline in components
+
+### Environment Variables
+
+- [ ] No `process.env.*` outside `constants/` directory
+- [ ] New env vars added to `.env.example`
+- [ ] `NEXT_PUBLIC_` prefix only for client-safe values
+- [ ] Server-only secrets not accessed in client components
+
+### Imports
+
+- [ ] Use `@/` path alias (no `../../../` climbs)
+- [ ] Barrel exports updated when adding new files
+
+### Dead Code
+
+- [ ] No unused imports
+- [ ] No unused variables or parameters
+- [ ] No unused functions or components
+- [ ] No commented-out code blocks (delete or restore)
+- [ ] No unreachable code after return/throw
+
+### Security
+
+- [ ] No hardcoded secrets or API keys
+- [ ] No `dangerouslySetInnerHTML` without sanitization
+- [ ] No raw SQL queries (use parameterized/Prisma)
+- [ ] No sensitive data in console.log or error messages
+- [ ] User input validated before use
+
+### Dependency Vulnerabilities
+
+Quick audit check (not full analysis - use `/audit` for that):
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+pnpm audit 2>/dev/null | head -20
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+- [ ] No critical/high vulnerabilities in **direct** dependencies
+- Transitive/dev-only vulnerabilities: note but don't block (run `/audit` for full analysis)
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+### Git Hygiene
 
-```bash
-membrane login complete <code>
+- [ ] No merge conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
+- [ ] No `.only` or `.skip` left in test files
+- [ ] No `debugger` statements
+- [ ] No `.env.local` or other local config committed
+- [ ] No large binary files that shouldn't be in git
+
+### Performance
+
+- [ ] Large objects/arrays use `useMemo` if recreated each render
+- [ ] Images have explicit `width` and `height` (prevents layout shift)
+- [ ] No synchronous heavy operations in render path
+- [ ] Lists over 100 items paginated or virtualized
+- [ ] No `useEffect` without dependency array
+
+### Styling
+
+- [ ] Theme-aware colors (`text-muted-foreground`) not hardcoded (`text-gray-500`)
+- [ ] Images use `<Image>` from `next/image`
+
+### Dates
+
+- [ ] Use `formatInTimeZone` from `date-fns-tz`, not `format` from `date-fns`
+- [ ] Display dates in `facilityTimezone`, store in UTC
+
+### Accessibility
+
+- [ ] Images have `alt` attributes
+- [ ] Interactive elements have proper `aria-*` attributes
+- [ ] Form inputs have associated labels
+
+### Code Style
+
+- [ ] No semicolons
+- [ ] Files end with single newline
+- [ ] Empty lines have no whitespace
+- [ ] No trailing whitespace
+
+## Output Format
+
+```markdown
+## Preflight Report
+
+> Note: Not running test suites (vitest/playwright) - assuming you've run them or will before pushing. CI is the backstop.
+
+### TypeScript (2 issues)
+- app/users/page.tsx:15 - `any` type used, consider `User[]`
+- components/modal.tsx:8 - uses `UserModalProps` instead of `Props`
+
+### Route Structure (1 issue)
+- app/bookings/ - missing loading.tsx
+
+### Imports (1 issue)
+- lib/utils.ts:3 - relative import `../../components`, use `@/components`
+
+### Passed
+- React Patterns
+- Data Fetching
+- Validation
+- Styling
+- Dates
+- Accessibility
+- Code Style
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+## Severity
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+Report issues but don't block. Developer decides what to fix. Some checks are style preferences, others are bugs waiting to happen.
 
-### Connecting to PreFlight
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://preflight.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the PreFlight API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+**Must fix:** Security issues, merge conflict markers, hardcoded secrets, `.only`/`.skip` in tests
+**Should fix:** `any` types, missing error boundaries, N+1 queries, timezone bugs, unused code, performance issues
+**Nice to fix:** Naming conventions, import style, semicolons

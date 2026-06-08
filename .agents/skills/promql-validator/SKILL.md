@@ -1,420 +1,139 @@
 ---
 name: promql-validator
-description: Validate, lint, audit, or fix PromQL queries and alerting rules; detects anti-patterns.
+depth: extended
+description: >-
+    Validates existing PromQL query syntax, detects anti-patterns, checks best practices, and optimizes performance. Use when validating/auditing/reviewing queries, NOT creating new ones (use promql-generator instead).
 ---
 
-## How This Skill Works
-
-This skill performs multi-level validation and provides interactive query planning:
-
-1. **Syntax Validation**: Checks for syntactically correct PromQL expressions
-2. **Semantic Validation**: Ensures queries make logical sense (e.g., rate() on counters, not gauges)
-3. **Anti-Pattern Detection**: Identifies common mistakes and inefficient patterns
-4. **Optimization Suggestions**: Recommends performance improvements
-5. **Query Explanation**: Translates PromQL to plain English
-6. **Interactive Planning**: Helps users clarify intent and refine queries
-
-## Workflow
-
-When a user provides a PromQL query, follow this workflow:
-
-### Working Directory Requirement
-
-Run validation commands from the repository root so relative paths resolve correctly:
-
-```bash
-cd "$(git rev-parse --show-toplevel)"
-```
-
-If running from another location, use absolute paths to `scripts/` files.
-
-### Step 1: Validate Syntax
-
-Run the syntax validation script to check for basic correctness:
-
-```bash
-python3 devops-skills-plugin/skills/promql-validator/scripts/validate_syntax.py "<query>"
-```
-
-Output parsing notes:
-- Exit `0`: syntax valid
-- Exit non-zero: syntax failure; include stderr and pinpoint token/position
-- Prefer quoting the smallest failing fragment, then provide corrected query
-
-The script will check for:
-- Valid metric names and label matchers
-- Correct operator usage
-- Proper function syntax
-- Valid time durations and ranges
-- Balanced brackets and quotes
-- Correct use of modifiers (offset, @)
-
-### Step 2: Check Best Practices
-
-Run the best practices checker to detect anti-patterns and optimization opportunities:
-
-```bash
-python3 devops-skills-plugin/skills/promql-validator/scripts/check_best_practices.py "<query>"
-```
-
-Output parsing notes:
-- Treat script sections as independent findings (cardinality, metric-type misuse, regex misuse, etc.)
-- If script output is empty but query is complex, add a manual sanity pass and mark it as `manual-review`
-- Preserve script wording for finding labels, then add remediation in plain English
-
-The script will identify:
-- High cardinality queries without label filters
-- Inefficient regex matchers that could be exact matches
-- Missing rate()/increase() on counter metrics
-- rate() used on gauge metrics
-- Averaging pre-calculated quantiles
-- Subqueries with excessive time ranges
-- irate() over long time ranges
-- Opportunities to add more specific label filters
-- Complex queries that should use recording rules
-
-### Step 3: Explain the Query
-
-Parse and explain what the query does in plain English:
-- What metrics are being queried
-- What type of metrics they are (counter, gauge, histogram, summary)
-- What functions are applied and why
-- What the query calculates
-- What labels will be in the output
-- What the expected result structure looks like
-
-**Required Output Details** (always include these explicitly):
-
-```
-**Output Labels**: [list labels that will be in the result, or "None (fully aggregated to scalar)"]
-**Expected Result Structure**: [instant vector / range vector / scalar] with [N series / single value]
-```
-
-Example:
-```
-**Output Labels**: job, instance
-**Expected Result Structure**: Instant vector with one series per job/instance combination
-```
-
-### Line-Number Citation Method (Required)
-
-When citing examples/docs in recommendations, include file path + 1-based line numbers:
-
-```text
-examples/good_queries.promql:42
-docs/best_practices.md:88
-```
-
-Rules:
-- Cite the most relevant single line (or start line if multi-line snippet)
-- Keep citations tight; do not cite full files
-- If line numbers are unavailable, state `line number unavailable` and provide file path
-
-### Step 4: Interactive Query Planning (Phase 1 - STOP AND WAIT)
-
-Ask the user clarifying questions to verify the query matches their intent:
-
-1. **Understand the Goal**: "What are you trying to monitor or measure?"
-   - Request rate, error rate, latency, resource usage, etc.
-
-2. **Verify Metric Type**: "Is this a counter (always increasing), gauge (can go up/down), histogram, or summary?"
-   - This affects which functions to use
-
-3. **Clarify Time Range**: "What time window do you need?"
-   - Instant value, rate over time, historical analysis
-
-4. **Confirm Aggregation**: "Do you need to aggregate data across labels? If so, which labels?"
-   - by (job), by (instance), without (pod), etc.
-
-5. **Check Output Intent**: "Are you using this for alerting, dashboarding, or ad-hoc analysis?"
-   - Affects optimization priorities
-
-> **IMPORTANT: Two-Phase Dialogue**
->
-> After presenting Steps 1-4 results (Syntax, Best Practices, Query Explanation, and Intent Questions):
->
-> **⏸️ STOP HERE AND WAIT FOR USER RESPONSE**
->
-> Do NOT proceed to Steps 5-7 until the user answers the clarifying questions.
-> This ensures the subsequent recommendations are tailored to the user's actual intent.
-
-### Step 5: Compare Intent vs Implementation (Phase 2 - After User Response)
-
-**Only proceed to this step after the user has answered the clarifying questions from Step 4.**
-
-After understanding the user's intent:
-- Explain what the current query actually does
-- Highlight any mismatches between intent and implementation
-- Suggest corrections if the query doesn't match the goal
-- Offer alternative approaches if applicable
-
-When relevant, mention known limitations:
-- Note when metric type detection is heuristic-based (e.g., "The script inferred this is a gauge based on the `_bytes` suffix. Please confirm if this is correct.")
-- Acknowledge when high-cardinality warnings might be false positives (e.g., "This warning may not apply if you're using a recording rule or know your cardinality is low.")
-
-### Step 6: Offer Optimizations
-
-Based on validation results:
-- Suggest more efficient query patterns
-- Recommend recording rules for complex/repeated queries
-- Propose better label matchers to reduce cardinality
-- Advise on appropriate time ranges
-
-**Reference Examples**: When suggesting corrections, cite relevant examples using this format:
-
-```
-As shown in `examples/bad_queries.promql` (lines 91-97):
-❌ BAD: `avg(http_request_duration_seconds{quantile="0.95"})`
-✅ GOOD: Use histogram_quantile() with histogram buckets
-```
-
-Citation sources:
-- `examples/good_queries.promql` - for well-formed patterns
-- `examples/optimization_examples.promql` - for before/after comparisons
-- `examples/bad_queries.promql` - for showing what to avoid
-- `docs/best_practices.md` - for detailed explanations
-- `docs/anti_patterns.md` - for anti-pattern deep dives
-
-**Citation Format**: `file_path (lines X-Y)` with the relevant code snippet quoted
-
-### Step 7: Let User Plan/Refine
-
-Give the user control:
-- Ask if they want to modify the query
-- Offer to help rewrite it for better performance
-- Provide multiple alternatives if applicable
-- Explain trade-offs between different approaches
-
-## Key Validation Rules
-
-### Syntax Rules
-
-1. **Metric Names**: Must match `[a-zA-Z_:][a-zA-Z0-9_:]*` or use UTF-8 quoting syntax (Prometheus 3.0+):
-   - Quoted form: `{"my.metric.with.dots"}`
-   - Using __name__ label: `{__name__="my.metric.with.dots"}`
-2. **Label Matchers**: `=` (equal), `!=` (not equal), `=~` (regex match), `!~` (regex not match)
-3. **Time Durations**: `[0-9]+(ms|s|m|h|d|w|y)` - e.g., `5m`, `1h`, `7d`
-4. **Range Vectors**: `metric_name[duration]` - e.g., `http_requests_total[5m]`
-5. **Offset Modifier**: `offset <duration>` - e.g., `metric_name offset 5m`
-6. **@ Modifier**: `@ <timestamp>` or `@ start()` / `@ end()`
-
-### Semantic Rules
-
-1. **rate() and irate()**: Should only be used with counter metrics (metrics ending in `_total`, `_count`, `_sum`, or `_bucket`)
-2. **Counters**: Should typically use `rate()` or `increase()`, not raw values
-3. **Gauges**: Should not use `rate()` or `increase()`
-4. **Histograms**: Use `histogram_quantile()` with `le` label and `rate()` on `_bucket` metrics
-5. **Summaries**: Don't average quantiles; calculate from `_sum` and `_count`
-6. **Aggregations**: Use `by()` or `without()` to control output labels
-
-### Performance Rules
-
-1. **Cardinality**: Always use specific label matchers to reduce series count
-2. **Regex**: Use `=` instead of `=~` when possible for exact matches
-3. **Rate Range**: Should be at least 4x the scrape interval (typically `[2m]` minimum)
-4. **irate()**: Best for short ranges (<5m); use `rate()` for longer periods
-5. **Subqueries**: Avoid excessive time ranges that process millions of samples
-6. **Recording Rules**: Use for complex queries accessed frequently
-
-## Anti-Patterns to Detect
-
-### High Cardinality Issues
-
-❌ **Bad**: `http_requests_total{}`
-- Matches all time series without filtering
-
-✅ **Good**: `http_requests_total{job="api", instance="prod-1"}`
-- Specific label filters reduce cardinality
-
-### Regex Overuse
-
-❌ **Bad**: `http_requests_total{status=~"2.."}`
-- Regex is slower and less precise
-
-✅ **Good**: `http_requests_total{status="200"}`
-- Exact match is faster
-
-### Missing rate() on Counters
-
-❌ **Bad**: `http_requests_total`
-- Counter raw values are not useful (always increasing)
-
-✅ **Good**: `rate(http_requests_total[5m])`
-- Rate shows requests per second
-
-### rate() on Gauges
-
-❌ **Bad**: `rate(memory_usage_bytes[5m])`
-- Gauges measure current state, not cumulative values
-
-✅ **Good**: `memory_usage_bytes`
-- Use gauge value directly or with `avg_over_time()`
-
-### Averaging Quantiles
-
-❌ **Bad**: `avg(http_request_duration_seconds{quantile="0.95"})`
-- Mathematically invalid to average pre-calculated quantiles
-
-✅ **Good**: `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))`
-- Calculate quantile from histogram buckets
-
-### Excessive Subquery Ranges
-
-❌ **Bad**: `rate(metric[5m])[90d:1m]`
-- Processes millions of samples, very slow
-
-✅ **Good**: Use recording rules or limit range to necessary duration
-
-### irate() Over Long Ranges
-
-❌ **Bad**: `irate(metric[1h])`
-- irate() only looks at last two samples, range is wasted
-
-✅ **Good**: `rate(metric[1h])` or `irate(metric[5m])`
-- Use rate() for longer ranges or reduce irate() range
-
-### Mixed Metric Types
-
-❌ **Bad**: `avg(http_request_duration_seconds{quantile="0.95"}) / rate(node_memory_usage_bytes[1h]) + sum(http_requests_total)`
-- Combines summary quantiles, gauge metrics, and counters in arithmetic
-- Produces meaningless results
-
-✅ **Good**: Keep each metric type in separate, purpose-specific queries:
-- Latency: `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))`
-- Memory: `node_memory_usage_bytes{instance="prod-1"}`
-- Request rate: `rate(http_requests_total{job="api"}[5m])`
-
-## Output Format
-
-Provide validation results in this structure:
+# [H1][PROMQL_VALIDATOR]
+>**Dictum:** *Validation catches errors that generation misses.*
+
+<br>
+
+Validate PromQL for Prometheus 3.8-3.10 (native histograms stable, feature flag no-op since 3.9). Cross-references: **promql-generator** for query creation, **observability-stack** for alert rule deployment.
+
+**Tasks:**
+1. **Syntax**: `python3 .claude/skills/promql-validator/scripts/validate_syntax.py validate "<query>"`.
+2. **Best Practices**: `python3 .claude/skills/promql-validator/scripts/check_best_practices.py check "<query>"`.
+3. **Explain**: Parse and describe -- metrics, types, functions, output labels, result structure.
+4. **Clarify Intent (STOP AND WAIT)**: Ask user -- goal, metric type, time window, aggregation, use case.
+5. **Compare**: Highlight mismatches between intent and implementation.
+6. **Optimize**: Suggest recording rules, better matchers, appropriate ranges.
+7. **Refine**: Offer alternatives, explain trade-offs, iterate.
+
+---
+## [1][VERSION_MATRIX]
+>**Dictum:** *Version awareness prevents false positives.*
+
+<br>
+
+| [INDEX] | [VERSION]   | [KEY_CHANGES]                                                                     |
+| :-----: | ----------- | --------------------------------------------------------------------------------- |
+|   [1]   | **3.0**     | UTF-8 `{"my.metric"}`, `info()` experimental, `holt_winters` renamed.             |
+|   [2]   | **3.5 LTS** | `mad_over_time`, `ts_of_min/max/last_over_time` experimental.                     |
+|   [3]   | **3.6**     | `step()`, duration expressions (`promql-duration-expr` flag).                     |
+|   [4]   | **3.7**     | `first_over_time`, anchored+smoothed rate.                                        |
+|   [5]   | **3.8**     | Native histograms **stable** (`scrape_native_histograms: true` in scrape config). |
+|   [6]   | **3.9**     | Native histogram flag is **no-op**; `/api/v1/features` endpoint.                  |
+|   [7]   | **3.10**    | Maintenance release (Feb 2026); stability fixes only.                             |
+
+---
+## [2][VALIDATION_RULES]
+>**Dictum:** *Rules detect errors before Prometheus does.*
+
+<br>
+
+| [INDEX] | [CATEGORY]   | [RULE]                                                                   | [SEVERITY] |
+| :-----: | ------------ | ------------------------------------------------------------------------ | ---------- |
+|   [1]   | **Syntax**   | Metric names: `[a-zA-Z_:][a-zA-Z0-9_:]*` or UTF-8 `{"metric"}`.          | error.     |
+|   [2]   | **Syntax**   | Label matchers: `=`, `!=`, `=~`, `!~` only.                              | error.     |
+|   [3]   | **Syntax**   | Durations: `[0-9]+(ms\|s\|m\|h\|d\|w\|y)`.                               | error.     |
+|   [4]   | **Semantic** | `rate()`/`irate()` only on counters (`_total`, `_count`, `_bucket`).     | warning.   |
+|   [5]   | **Semantic** | Never `rate()` on gauges -- use `avg_over_time()` or direct.             | warning.   |
+|   [6]   | **Semantic** | `histogram_quantile()` needs `rate()` on `_bucket` + `le` in `by()`.     | warning.   |
+|   [7]   | **Semantic** | Never average summary quantiles -- use histogram buckets.                | error.     |
+|   [8]   | **Semantic** | `holt_winters()` deprecated 3.0 -- use `double_exponential_smoothing()`. | warning.   |
+|   [9]   | **Perf**     | Always use specific label matchers to reduce cardinality.                | warning.   |
+|  [10]   | **Perf**     | `=` over `=~` for exact matches (5-10x faster index lookup).             | info.      |
+|  [11]   | **Perf**     | `rate()` range >= 4x scrape interval (typically `[2m]` minimum).         | warning.   |
+|  [12]   | **Perf**     | `irate()` range <= 5m (only uses last 2 samples).                        | warning.   |
+|  [13]   | **Perf**     | Subquery ranges < 7d; recording rules for longer.                        | warning.   |
+|  [14]   | **Native**   | Native histogram queries omit `le` from `by()` clause.                   | info.      |
+|  [15]   | **Native**   | `histogram_avg(rate(m[5m]))` replaces `_sum/_count` division (3.8+).     | info.      |
+|  [16]   | **Native**   | `histogram_fraction(0, t, rate(m[5m]))` for latency SLOs (3.8+).         | info.      |
+
+---
+## [3][ANTI_PATTERNS]
+>**Dictum:** *Anti-patterns waste resources or produce incorrect results.*
+
+<br>
+
+| [INDEX] | [ANTI_PATTERN]                | [BAD]                                    | [GOOD]                                                      |
+| :-----: | ----------------------------- | ---------------------------------------- | ----------------------------------------------------------- |
+|   [1]   | **No filters**                | `http_requests_total{}`.                 | `http_requests_total{job="api"}`.                           |
+|   [2]   | **Regex for exact**           | `{status=~"200"}`.                       | `{status="200"}`.                                           |
+|   [3]   | **Raw counter**               | `http_requests_total`.                   | `rate(http_requests_total[5m])`.                            |
+|   [4]   | **Rate on gauge**             | `rate(memory_usage_bytes[5m])`.          | `avg_over_time(memory_usage_bytes[5m])`.                    |
+|   [5]   | **Avg quantiles**             | `avg(metric{quantile="0.95"})`.          | `histogram_quantile(0.95, sum by (le) (rate(bucket[5m])))`. |
+|   [6]   | **Long irate**                | `irate(metric[1h])`.                     | `rate(metric[1h])` or `irate(metric[2m])`.                  |
+|   [7]   | **Deprecated fn**             | `holt_winters(m[5m], 0.5, 0.5)`.         | `double_exponential_smoothing(m[5m], 0.5, 0.5)`.            |
+|   [8]   | **Classic when native avail** | `sum by (job, le) (rate(m_bucket[5m]))`. | `sum by (job) (rate(m[5m]))`.                               |
+|   [9]   | **Missing group_left**        | `metric * on(l) info_metric`.            | `metric * on(l) group_left(labels) info_metric`.            |
+|  [10]   | **Unquoted UTF-8 (3.0+)**     | `http.server.request.duration`.          | `{"http.server.request.duration"}`.                         |
+
+---
+## [4][OUTPUT_FORMAT]
+>**Dictum:** *Structured output enables actionable remediation.*
+
+<br>
 
 ```
 ## PromQL Validation Results
 
 ### Syntax Check
-- Status: ✅ VALID / ⚠️ WARNING / ❌ ERROR
-- Issues: [list any syntax errors with line/position]
+- Status: VALID / WARNING / ERROR
+- Issues: [list with severity and WHY]
 
 ### Semantic Check
-- Status: ✅ VALID / ⚠️ WARNING / ❌ ERROR
-- Issues: [list any logical problems]
+- Status: VALID / WARNING / ERROR
+- Issues: [list with severity and WHY]
 
 ### Performance Analysis
-- Status: ✅ OPTIMIZED / ⚠️ CAN BE IMPROVED / ❌ INEFFICIENT
-- Issues: [list optimization opportunities]
-- Suggestions: [specific improvements]
+- Status: OPTIMIZED / CAN BE IMPROVED / INEFFICIENT
+- Suggestions: [list with estimated improvement]
 
 ### Query Explanation
-Your query: `<query>`
-
-This query does:
-- [Plain English explanation]
-- Metrics: [list metrics and their types]
-- Functions: [explain each function]
-- Output: [describe result structure]
+- Metrics: [names and types]
+- Functions: [what each does]
+- Output Labels: [labels in result, or "None (fully aggregated)"]
+- Expected Result Structure: [instant/range vector, scalar] with [series count]
 
 ### Intent Verification
-Let me verify this matches your needs:
-
-1. What are you trying to measure? [your goal here]
-2. Is this a counter/gauge/histogram/summary? [metric type]
-3. What time range interests you? [time window]
-4. Do you need aggregation? If so, by which labels? [aggregation needs]
-5. Is this for alerting, dashboarding, or analysis? [use case]
-
-### Recommendations
-[Based on the analysis, suggest improvements or alternatives]
+1. What are you measuring?
+2. Counter/gauge/histogram/summary?
+3. Time window?
+4. Aggregation labels?
+5. Alerting, dashboarding, or analysis?
 ```
 
-## Interactive Dialogue
+---
+## [5][KNOWN_LIMITATIONS]
+>**Dictum:** *Known boundaries set realistic expectations.*
 
-After validation, engage in dialogue:
+<br>
 
-**Claude**: "I've validated your query. It's syntactically correct, but I notice it queries `http_requests_total` without any label filters. This could match thousands of time series. What specific service or endpoint are you trying to monitor?"
+- **Metric type detection**: Heuristic from naming conventions; custom names may misclassify.
+- **Native histogram detection**: Cannot distinguish classic from native without runtime context.
+- **No runtime context**: Cannot verify metric existence or label validity -- test against Prometheus.
 
-**User**: [provides intent]
+---
+## [6][CITATION_SOURCES]
+>**Dictum:** *Source attribution enables verification.*
 
-**Claude**: "Great! Based on that, here's an optimized version: `rate(http_requests_total{job="api-service", path="/users"}[5m])`. This calculates the per-second rate of requests to the /users endpoint over the last 5 minutes. Does this match what you need?"
+<br>
 
-**User**: [confirms or asks for changes]
-
-**Claude**: [provides refined query or alternatives]
-
-## Examples
-
-See the `examples/` directory for:
-- `good_queries.promql`: Well-written queries following best practices
-- `bad_queries.promql`: Common mistakes and anti-patterns (with corrections)
-- `optimization_examples.promql`: Before/after optimization examples
-
-## Documentation
-
-See the `docs/` directory for:
-- `best_practices.md`: Comprehensive PromQL best practices guide
-- `anti_patterns.md`: Detailed anti-pattern reference with explanations
-
-## Important Notes
-
-1. **Be Interactive**: Always ask clarifying questions to understand user intent
-2. **Be Educational**: Explain WHY something is wrong, not just THAT it's wrong
-3. **Be Helpful**: Offer to rewrite queries, don't just criticize
-4. **Be Context-Aware**: Consider the user's use case (alerting vs dashboarding)
-5. **Be Thorough**: Check all four levels (syntax, semantics, performance, intent)
-6. **Be Practical**: Suggest realistic optimizations, not theoretical perfection
-
-## Integration
-
-This skill can be used:
-- Standalone for query review
-- During monitoring setup to validate alert rules
-- When troubleshooting slow Prometheus queries
-- As part of code review for recording rules
-- For teaching PromQL to team members
-
-## Validation Tools
-
-The skill uses two main Python scripts:
-
-1. **validate_syntax.py**: Pure syntax checking using regex patterns
-2. **check_best_practices.py**: Semantic and performance analysis
-
-Both scripts output JSON for programmatic parsing and human-readable messages for display.
-
-## Success Criteria
-
-A successful validation session should:
-1. Identify all syntax errors
-2. Detect semantic problems
-3. Suggest at least one optimization (if applicable)
-4. Clearly explain what the query does
-5. Verify the query matches user intent
-6. Provide actionable next steps
-
-## Known Limitations
-
-The validation scripts have some limitations to be aware of:
-
-### Metric Type Detection
-- **Heuristic-based**: Metric types (counter, gauge, histogram, summary) are inferred from naming conventions (e.g., `_total`, `_bytes`)
-- **Custom metrics**: Metrics with non-standard names may not be correctly classified
-- **Recommendation**: When the script can't determine metric type, ask the user to clarify
-
-### High Cardinality Detection
-- **Conservative approach**: The script flags metrics without label selectors, but some use cases legitimately query all series
-- **Recording rules**: Queries using recording rule metrics (e.g., `job:http_requests:rate5m`) are valid without label filters
-- **Recommendation**: Use judgment - if the user knows their cardinality is manageable, the warning can be safely ignored
-
-### Semantic Validation
-- **No runtime context**: The scripts cannot verify if metrics actually exist or if label values are valid
-- **Schema-agnostic**: No knowledge of specific Prometheus deployments or metric schemas
-- **Recommendation**: For production validation, test queries against actual Prometheus instances
-
-### Script Detection Coverage
-The scripts detect common anti-patterns but cannot catch:
-- Business logic errors (e.g., calculating the wrong KPI)
-- Context-specific optimizations (depends on scrape interval, retention, etc.)
-- Custom function behavior from extensions
-
-## Remember
-
-The goal is not just to validate queries, but to help users write better PromQL and understand their monitoring data. Always be educational, interactive, and helpful!
+- `scripts/_common.py` -- shared constants, CheckSpec dataclass, parsing utilities.
+- `scripts/validate_syntax.py` -- data-driven syntax validation via CheckSpec tuples.
+- `scripts/check_best_practices.py` -- data-driven semantic/performance checks.
+- `docs/best_practices.md` -- rules reference with native histogram patterns.
+- `docs/anti_patterns.md` -- 33 anti-patterns with WHY column.

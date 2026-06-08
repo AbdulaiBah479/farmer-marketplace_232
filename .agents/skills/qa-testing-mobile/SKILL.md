@@ -1,6 +1,6 @@
 ---
 name: qa-testing-mobile
-description: "Mobile QA for iOS and Android. Use when planning automation frameworks, device matrix, flake control, or CI/CD release gates."
+description: "Mobile app testing strategy and execution for iOS and Android (native + cross-platform): choose automation frameworks, define device matrix, control flakes, validate performance/reliability/accessibility, and set CI + release gates. Use when you need a mobile QA plan, device lab/CI setup, or guidance on XCUITest/Espresso/Appium/Detox/Maestro/Flutter testing."
 ---
 
 # QA Mobile Testing
@@ -21,11 +21,6 @@ Design and execute reliable, cost-aware mobile testing across iOS and Android (n
 - Choose automation frameworks and CI + device lab setup.
 - Address performance, network/offline, backgrounding, and permissions.
 - Define pre-release gates, staged rollout, and store readiness checks.
-
-## When NOT to Use
-
-- Platform-specific iOS test command details -> [qa-testing-ios](../qa-testing-ios/SKILL.md)
-- Platform-specific Android test command details -> [qa-testing-android](../qa-testing-android/SKILL.md)
 
 ## Inputs
 
@@ -74,9 +69,6 @@ Design and execute reliable, cost-aware mobile testing across iOS and Android (n
 
 - `references/framework-comparison.md` for choosing between XCUITest, Espresso/Compose, Appium, Detox, Maestro, and Flutter testing.
 - `references/flake-management.md` for flake control guidance.
-- `references/device-farm-strategies.md` for cloud device farm selection and cost optimization.
-- `references/mobile-performance-testing.md` for startup, jank, memory, and battery testing.
-- `references/cross-platform-test-patterns.md` for React Native, Flutter, and KMP testing patterns.
 - `data/sources.json` for curated documentation and device lab links.
 
 ## Related Skills
@@ -85,9 +77,3 @@ Design and execute reliable, cost-aware mobile testing across iOS and Android (n
 - Use [qa-testing-android](../qa-testing-android/SKILL.md) for Android specific depth (Espresso, Compose Testing, UIAutomator).
 - Use [qa-testing-playwright](../qa-testing-playwright/SKILL.md) for web and webview testing.
 - Use [software-mobile](../software-mobile/SKILL.md) for mobile architecture guidance.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

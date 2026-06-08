@@ -409,13 +409,3 @@ def calculate_discount(user: User, order_history: list[Order]) -> float:
 8. **Delete before abstracting** - Remove dead code, then consider patterns
 9. **Test each layer** - Isolated tests for each concern
 10. **Explicit over clever** - Readable code beats elegant code
-
----
-
-## Gotchas
-
-- **Singleton via `__new__` doesn't work with subclasses** — each subclass gets its own instance. Use `__init_subclass__` or a metaclass if subclass-aware singletons matter.
-- **Dataclass `frozen=True` doesn't freeze nested mutable fields** — a frozen dataclass with a `list` field still allows `.append` on that list.
-- **Observer pattern with strong references leaks memory** when subscribers go out of scope but the publisher holds them. Use `weakref.WeakSet` for subscribers.
-- **`functools.lru_cache` on instance methods retains the instance forever** (via the cache holding `self`) — apply to module-level functions or use `methodtools.lru_cache`.
-- **Abstract base classes (ABC): `@abstractmethod` is enforced at instantiation, not at subclass definition** — a subclass missing the abstract method silently passes type-checking until you try to construct it.

@@ -1,15 +1,14 @@
 ---
 name: monte-carlo-prevent
-description: "Surfaces Monte Carlo data observability context (table health, alerts, lineage, blast radius) before SQL/dbt edits."
-category: data
-risk: safe
-source: community
-source_repo: monte-carlo-data/mc-agent-toolkit
-source_type: community
-date_added: "2026-04-08"
-author: monte-carlo-data
-tags: [data-observability, dbt, schema, monte-carlo, lineage]
-tools: [claude, cursor, codex]
+description: |
+  Automatically activates when a dbt model, SQL file, or table is referenced.
+  Surfaces Monte Carlo context — table health, active alerts, lineage, blast
+  radius — before any code is written, and uses those findings to shape code
+  recommendations. Generates and optionally deploys monitors for new transformation
+  logic. After a change is made, generates targeted SQL validation queries to
+  verify the change behaved as intended. Do not wait to be asked: run the
+  appropriate workflow as soon as a relevant file or table is referenced.
+version: 1.0.0
 ---
 
 # Monte Carlo Prevent Skill
@@ -250,8 +249,3 @@ Use only the table/model name (NOT the full MCON). This allows the plugin's hook
 to remind the engineer about monitor coverage at commit time. Only output this
 marker when the gap is specifically about the columns or logic being changed —
 not for general table-level monitor absence.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

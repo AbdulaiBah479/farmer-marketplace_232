@@ -366,13 +366,3 @@ class Settings(BaseSettings):
 8. **Document all variables** - README should list required env vars
 9. **Validate early** - Check config correctness at boot time
 10. **Use secrets_dir** - Support mounted secrets in containers
-
----
-
-## Gotchas
-
-- **`pydantic-settings` reads env at class IMPORT, not at instantiation** — tests that monkeypatch env after import see cached values. Reload the module or instantiate before patching.
-- **Nested BaseSettings models need `env_nested_delimiter` explicitly set** — without it, `DB_HOST` and `DB_PORT` don't auto-bind to `Settings.db.host`.
-- **`SecretStr` redacts in `__repr__` but NOT in `__str__`** — `print(secret)` leaks; `f"{secret}"` leaks; only `repr(secret)` redacts.
-- **`.env` file precedence vs process env**: pydantic-settings reads .env FIRST then overlays process env. A CI secret in process env wins over a developer's .env — but stale .env values stick if process env is missing the key.
-- **Pydantic v1 vs v2 BaseSettings have different API surfaces** — `Field(env=...)` vs `model_config = SettingsConfigDict(...)`. Mixing breaks silently in some paths.

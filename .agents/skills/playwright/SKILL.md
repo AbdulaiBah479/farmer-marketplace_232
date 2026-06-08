@@ -1,147 +1,117 @@
 ---
-name: "playwright"
-description: "Use when the task requires automating a real browser from the terminal (navigation, form filling, snapshots, screenshots, data extraction, UI-flow debugging) via `playwright-cli` or the bundled wrapper script."
+name: playwright
+description: Playwright testing best practices for Next.js applications (formerly test-playwright). This skill should be used when writing, reviewing, or debugging E2E tests with Playwright. Triggers on tasks involving test selectors, flaky tests, authentication state, API mocking, hydration testing, parallel execution, CI configuration, or debugging test failures.
 ---
 
+# Playwright + Next.js Testing Best Practices
 
-# Playwright CLI Skill
+Comprehensive testing optimization guide for Playwright with Next.js applications. Contains 43 rules across 8 categories, prioritized by impact to guide reliable, fast, and maintainable E2E tests.
 
-Drive a real browser from the terminal using `playwright-cli`. Prefer the bundled wrapper script so the CLI works even when it is not globally installed.
-Treat this skill as CLI-first automation. Do not pivot to `@playwright/test` unless the user explicitly asks for test files.
+## When to Apply
 
-## Prerequisite check (required)
+Reference these guidelines when:
+- Writing new Playwright tests for Next.js apps
+- Debugging flaky or failing tests
+- Optimizing test execution speed
+- Setting up authentication state reuse
+- Configuring CI/CD pipelines for testing
+- Testing Server Components and App Router features
+- Reviewing test code for reliability issues
 
-Before proposing commands, check whether `npx` is available (the wrapper depends on it):
+## Rule Categories by Priority
 
-```bash
-command -v npx >/dev/null 2>&1
-```
+| Priority | Category | Impact | Prefix |
+|----------|----------|--------|--------|
+| 1 | Test Architecture | CRITICAL | `arch-` |
+| 2 | Selectors & Locators | CRITICAL | `loc-` |
+| 3 | Waiting & Assertions | HIGH | `wait-` |
+| 4 | Authentication & State | HIGH | `auth-` |
+| 5 | Mocking & Network | MEDIUM-HIGH | `mock-` |
+| 6 | Next.js Integration | MEDIUM | `next-` |
+| 7 | Performance & Speed | MEDIUM | `perf-` |
+| 8 | Debugging & CI | LOW-MEDIUM | `debug-` |
 
-If it is not available, pause and ask the user to install Node.js/npm (which provides `npx`). Provide these steps verbatim:
+## Quick Reference
 
-```bash
-# Verify Node/npm are installed
-node --version
-npm --version
+### 1. Test Architecture (CRITICAL)
 
-# If missing, install Node.js/npm, then:
-npm install -g @playwright/cli@latest
-playwright-cli --help
-```
+- [`arch-test-isolation`](references/arch-test-isolation.md) - Use fresh browser context for each test
+- [`arch-parallel-execution`](references/arch-parallel-execution.md) - Enable parallel test execution
+- [`arch-page-object-model`](references/arch-page-object-model.md) - Use Page Object Model for complex pages
+- [`arch-fixtures`](references/arch-fixtures.md) - Use fixtures for shared setup
+- [`arch-test-production`](references/arch-test-production.md) - Test against production builds
+- [`arch-cleanup-state`](references/arch-cleanup-state.md) - Clean up test state after each test
 
-Once `npx` is present, proceed with the wrapper script. A global install of `playwright-cli` is optional.
+### 2. Selectors & Locators (CRITICAL)
 
-## Skill path (set once)
+- [`loc-role-selectors`](references/loc-role-selectors.md) - Use role-based selectors over CSS
+- [`loc-data-testid`](references/loc-data-testid.md) - Use data-testid for dynamic elements
+- [`loc-label-selectors`](references/loc-label-selectors.md) - Use getByLabel for form inputs
+- [`loc-text-selectors`](references/loc-text-selectors.md) - Use getByText for static content
+- [`loc-avoid-xpath`](references/loc-avoid-xpath.md) - Avoid XPath selectors
+- [`loc-chained-locators`](references/loc-chained-locators.md) - Chain locators for specificity
+- [`loc-placeholder-selector`](references/loc-placeholder-selector.md) - Use getByPlaceholder sparingly
 
-```bash
-# Set SKILL_DIR to the directory containing this SKILL.md
-export PWCLI="<path-to-skill>/scripts/playwright_cli.sh"
-```
+### 3. Waiting & Assertions (HIGH)
 
-Replace `<path-to-skill>` with the actual skill installation directory (e.g. `.skills/playwright` or `~/.letta/skills/playwright`).
+- [`wait-web-first-assertions`](references/wait-web-first-assertions.md) - Use web-first assertions
+- [`wait-avoid-hard-waits`](references/wait-avoid-hard-waits.md) - Avoid hard waits
+- [`wait-network-idle`](references/wait-network-idle.md) - Use network idle for complex pages
+- [`wait-action-retries`](references/wait-action-retries.md) - Let actions auto-wait before interacting
+- [`wait-soft-assertions`](references/wait-soft-assertions.md) - Use soft assertions for non-critical checks
+- [`wait-custom-timeout`](references/wait-custom-timeout.md) - Configure timeouts appropriately
 
-## Quick start
+### 4. Authentication & State (HIGH)
 
-Use the wrapper script:
+- [`auth-storage-state`](references/auth-storage-state.md) - Reuse authentication with storage state
+- [`auth-multiple-roles`](references/auth-multiple-roles.md) - Use separate storage states for different roles
+- [`auth-session-storage`](references/auth-session-storage.md) - Handle session storage for auth
+- [`auth-api-login`](references/auth-api-login.md) - Use API login for faster auth setup
+- [`auth-parallel-workers`](references/auth-parallel-workers.md) - Use worker-scoped auth for parallel tests
 
-```bash
-"$PWCLI" open https://playwright.dev --headed
-"$PWCLI" snapshot
-"$PWCLI" click e15
-"$PWCLI" type "Playwright"
-"$PWCLI" press Enter
-"$PWCLI" screenshot
-```
+### 5. Mocking & Network (MEDIUM-HIGH)
 
-If the user prefers a global install, this is also valid:
+- [`mock-api-responses`](references/mock-api-responses.md) - Mock API responses for deterministic tests
+- [`mock-intercept-modify`](references/mock-intercept-modify.md) - Intercept and modify real responses
+- [`mock-har-files`](references/mock-har-files.md) - Use HAR files for complex mock scenarios
+- [`mock-abort-requests`](references/mock-abort-requests.md) - Abort unnecessary requests
+- [`mock-network-conditions`](references/mock-network-conditions.md) - Simulate network conditions
 
-```bash
-npm install -g @playwright/cli@latest
-playwright-cli --help
-```
+### 6. Next.js Integration (MEDIUM)
 
-## Core workflow
+- [`next-wait-hydration`](references/next-wait-hydration.md) - Wait for hydration before interacting
+- [`next-server-components`](references/next-server-components.md) - Test server components correctly
+- [`next-app-router-navigation`](references/next-app-router-navigation.md) - Test App Router navigation patterns
+- [`next-server-actions`](references/next-server-actions.md) - Test server actions end-to-end
+- [`next-baseurl-config`](references/next-baseurl-config.md) - Configure baseURL for clean navigation
 
-1. Open the page.
-2. Snapshot to get stable element refs.
-3. Interact using refs from the latest snapshot.
-4. Re-snapshot after navigation or significant DOM changes.
-5. Capture artifacts (screenshot, pdf, traces) when useful.
+### 7. Performance & Speed (MEDIUM)
 
-Minimal loop:
+- [`perf-sharding`](references/perf-sharding.md) - Use sharding for large test suites
+- [`perf-headless-ci`](references/perf-headless-ci.md) - Use headless mode in CI
+- [`perf-browser-selection`](references/perf-browser-selection.md) - Select browsers strategically
+- [`perf-reuse-server`](references/perf-reuse-server.md) - Reuse development server when possible
+- [`perf-retries`](references/perf-retries.md) - Configure retries for flaky test recovery
 
-```bash
-"$PWCLI" open https://example.com
-"$PWCLI" snapshot
-"$PWCLI" click e3
-"$PWCLI" snapshot
-```
+### 8. Debugging & CI (LOW-MEDIUM)
 
-## When to snapshot again
+- [`debug-trace-viewer`](references/debug-trace-viewer.md) - Use trace viewer for failed tests
+- [`debug-screenshots-videos`](references/debug-screenshots-videos.md) - Capture screenshots and videos on failure
+- [`debug-inspector`](references/debug-inspector.md) - Use Playwright Inspector for interactive debugging
+- [`debug-ci-reporters`](references/debug-ci-reporters.md) - Configure reporters for CI integration
 
-Snapshot again after:
+## How to Use
 
-- navigation
-- clicking elements that change the UI substantially
-- opening/closing modals or menus
-- tab switches
+Read individual reference files for detailed explanations and code examples:
 
-Refs can go stale. When a command fails due to a missing ref, snapshot again.
+- [Section definitions](references/_sections.md) - Category structure and impact levels
+- [Rule template](assets/templates/_template.md) - Template for adding new rules
 
-## Recommended patterns
+## Reference Files
 
-### Form fill and submit
-
-```bash
-"$PWCLI" open https://example.com/form
-"$PWCLI" snapshot
-"$PWCLI" fill e1 "user@example.com"
-"$PWCLI" fill e2 "password123"
-"$PWCLI" click e3
-"$PWCLI" snapshot
-```
-
-### Debug a UI flow with traces
-
-```bash
-"$PWCLI" open https://example.com --headed
-"$PWCLI" tracing-start
-# ...interactions...
-"$PWCLI" tracing-stop
-```
-
-### Multi-tab work
-
-```bash
-"$PWCLI" tab-new https://example.com
-"$PWCLI" tab-list
-"$PWCLI" tab-select 0
-"$PWCLI" snapshot
-```
-
-## Wrapper script
-
-The wrapper script uses `npx --package @playwright/cli playwright-cli` so the CLI can run without a global install:
-
-```bash
-"$PWCLI" --help
-```
-
-Prefer the wrapper unless the repository already standardizes on a global install.
-
-## References
-
-Open only what you need:
-
-- CLI command reference: `references/cli.md`
-- Practical workflows and troubleshooting: `references/workflows.md`
-
-## Guardrails
-
-- Always snapshot before referencing element ids like `e12`.
-- Re-snapshot when refs seem stale.
-- Prefer explicit commands over `eval` and `run-code` unless needed.
-- When you do not have a fresh snapshot, use placeholder refs like `eX` and say why; do not bypass refs with `run-code`.
-- Use `--headed` when a visual check will help.
-- When capturing artifacts in this repo, use `output/playwright/` and avoid introducing new top-level artifact folders.
-- Default to CLI commands and workflows, not Playwright test specs.
+| File | Description |
+|------|-------------|
+| [AGENTS.md](AGENTS.md) | Complete compiled guide with all rules |
+| [references/_sections.md](references/_sections.md) | Category definitions and ordering |
+| [assets/templates/_template.md](assets/templates/_template.md) | Template for new rules |
+| [metadata.json](metadata.json) | Version and reference information |

@@ -1,292 +1,410 @@
 ---
 name: playwright-e2e-testing
-description: End-to-end, API, and responsive testing for web applications using Playwright with TypeScript. Use when asked to write, run, debug, or maintain Playwright (@playwright/test) TypeScript tests for UI behavior, form submissions, user flows, API validation, responsive design, or visual regression. Covers browser automation, network interception, mocking, Page Object Model, fixtures, and parallel execution.
+description: Write end-to-end tests with Playwright for web applications. Includes fixtures, page objects, test templates, visual regression testing, and accessibility audits.
 ---
 
-# Playwright E2E Testing (TypeScript)
+# Playwright E2E Testing Skill
 
-Comprehensive toolkit for end-to-end testing of web applications using Playwright with TypeScript. Enables robust UI testing, API validation, and responsive design verification following best practices.
+## When to Use
 
-> **Activation:** This skill is triggered when working with Playwright tests, browser automation, E2E testing, API testing with Playwright, or test infrastructure setup.
+Use this skill when:
+- Testing user workflows (sign up, login, checkout)
+- Verifying form submission and validation
+- Testing responsive design across devices
+- Running visual regression tests
+- Checking accessibility (WCAG AA)
+- Testing dynamic content and API interactions
+- Creating smoke tests for CI/CD
 
-## When to Use This Skill
+## Setup
 
-- **Write E2E tests** for user flows, forms, navigation, and authentication
-- **API testing** via `request` fixture or network interception during UI tests
-- **Responsive testing** across mobile, tablet, and desktop viewports
-- **Debug flaky tests** using traces, screenshots, videos, and Playwright Inspector
-- **Setup test infrastructure** with Page Object Model and fixtures
-- **Mock/intercept APIs** for isolated, deterministic testing
-- **Visual regression testing** with screenshot comparisons
-
-## Prerequisites
-
-| Requirement     | Details                                             |
-| --------------- | --------------------------------------------------- |
-| Node.js         | v18+ recommended                                    |
-| Package Manager | npm, yarn, or pnpm                                  |
-| Playwright      | `@playwright/test` package                          |
-| TypeScript      | `typescript` + `ts-node` (optional but recommended) |
-| Browsers        | Installed via `npx playwright install`              |
-
-### Quick Setup
+### Install Playwright
 
 ```bash
-# Initialize new project
-npm init playwright@latest
-
-# Or add to existing project
-npm install -D @playwright/test
-npx playwright install
+pip install pytest-playwright
+playwright install  # Download browsers (chromium, firefox, webkit)
 ```
 
-## First Questions to Ask
+### Project Structure
 
-Before writing tests, clarify:
-
-1. **App URL**: Local dev server command + port, or staging URL?
-2. **Critical flows**: Which user journeys must be covered (happy path + error states)?
-3. **Browsers/devices**: Chrome, Firefox, Safari? Mobile viewports?
-4. **API strategy**: Real backend, mocked responses, or hybrid?
-5. **Test data**: Seed data available? Reset/cleanup strategy?
-
----
-
-## Core Principles
-
-### 1. Test Runner & TypeScript
-
-Always use `@playwright/test` with TypeScript for type safety and better IDE support.
-
-```typescript
-import { test, expect } from "@playwright/test";
-
-test("user can login", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill("user@test.com");
-  await page.getByLabel("Password").fill("password123");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/.*dashboard/);
-});
+```
+tests/
+  ├── conftest.py              # Pytest fixtures
+  ├── e2e/
+  │   ├── test_homepage.py
+  │   ├── test_product_search.py
+  │   └── test_checkout.py
+  └── pages/
+      ├── base_page.py
+      ├── homepage.py
+      ├── product_page.py
+      └── checkout_page.py
 ```
 
-### 2. Locator Strategy (Priority Order)
+## Code Patterns
 
-| Priority | Locator                | Example                                   |
-| -------- | ---------------------- | ----------------------------------------- |
-| 1        | Role + accessible name | `getByRole('button', { name: 'Submit' })` |
-| 2        | Label                  | `getByLabel('Email')`                     |
-| 3        | Placeholder            | `getByPlaceholder('Enter email')`         |
-| 4        | Text                   | `getByText('Welcome')`                    |
-| 5        | Test ID                | `getByTestId('submit-btn')`               |
-| 6        | CSS (avoid)            | `locator('.btn-primary')`                 |
+### 1. Page Object Model (POM)
 
-See [Locator Strategies Guide](./references/locator_strategies.md) for detailed patterns.
+```python
+# tests/pages/base_page.py
+from playwright.async_api import Page, expect
 
-### 3. Auto-Waiting & Web-First Assertions
-
-Playwright auto-waits for elements. Never use `sleep()` or arbitrary timeouts.
-
-```typescript
-// ✅ Web-first assertions (auto-retry)
-await expect(page.getByRole("alert")).toBeVisible();
-await expect(page).toHaveURL(/dashboard/);
-await expect(page.getByTestId("status")).toHaveText("Success!");
-
-// ❌ Avoid manual waits
-await page.waitForTimeout(2000); // Bad practice
+class BasePage:
+    """Base page class with common methods"""
+    
+    def __init__(self, page: Page):
+        self.page = page
+    
+    async def goto(self, url: str):
+        """Navigate to URL"""
+        await self.page.goto(url)
+    
+    async def wait_for_element(self, selector: str, timeout: int = 5000):
+        """Wait for element to appear"""
+        await self.page.locator(selector).wait_for(timeout=timeout)
+    
+    async def click(self, selector: str):
+        """Click element"""
+        await self.page.locator(selector).click()
+    
+    async def fill(self, selector: str, text: str):
+        """Fill input field"""
+        await self.page.locator(selector).fill(text)
+    
+    async def get_text(self, selector: str) -> str:
+        """Get element text"""
+        return await self.page.locator(selector).text_content()
+    
+    async def expect_visible(self, selector: str):
+        """Assert element is visible"""
+        await expect(self.page.locator(selector)).to_be_visible()
+    
+    async def expect_text(self, selector: str, text: str):
+        """Assert element contains text"""
+        await expect(self.page.locator(selector)).to_contain_text(text)
+    
+    async def screenshot(self, name: str):
+        """Take screenshot for visual regression"""
+        await self.page.screenshot(path=f"tests/screenshots/{name}.png")
 ```
 
-### 4. Test Structure with Steps
+### 2. Page Object for Product Search
 
-Use `test.step()` for readable reports and failure localization:
+```python
+# tests/pages/product_page.py
+from playwright.async_api import Page
+from tests.pages.base_page import BasePage
 
-```typescript
-test("checkout flow", async ({ page }) => {
-  await test.step("Add item to cart", async () => {
-    await page.goto("/products/1");
-    await page.getByRole("button", { name: "Add to Cart" }).click();
-  });
-
-  await test.step("Complete checkout", async () => {
-    await page.goto("/checkout");
-    await page.getByRole("button", { name: "Pay Now" }).click();
-  });
-
-  await test.step("Verify confirmation", async () => {
-    await expect(page.getByRole("heading")).toContainText("Order Confirmed");
-  });
-});
+class ProductPage(BasePage):
+    """Product search and listing page"""
+    
+    # Selectors
+    SEARCH_INPUT = 'input[placeholder="Buscar ofertas"]'
+    SEARCH_BUTTON = 'button[type="submit"]'
+    PRODUCT_CARD = '.product-card'
+    PRODUCT_TITLE = '.product-title'
+    PRODUCT_PRICE = '.product-price'
+    PRODUCT_RATING = '.rating'
+    SORT_DROPDOWN = 'select[name="sort"]'
+    CATEGORY_FILTER = 'input[name="category"]'
+    
+    async def search(self, query: str):
+        """Search for products"""
+        await self.fill(self.SEARCH_INPUT, query)
+        await self.click(self.SEARCH_BUTTON)
+        await self.page.wait_for_load_state("networkidle")
+    
+    async def get_product_count(self) -> int:
+        """Count visible products"""
+        return await self.page.locator(self.PRODUCT_CARD).count()
+    
+    async def get_first_product_title(self) -> str:
+        """Get first product title"""
+        return await self.get_text(f"{self.PRODUCT_CARD}:first-child {self.PRODUCT_TITLE}")
+    
+    async def click_product(self, index: int = 0):
+        """Click product by index"""
+        products = self.page.locator(self.PRODUCT_CARD)
+        await products.nth(index).click()
+    
+    async def filter_by_category(self, category: str):
+        """Filter products by category"""
+        await self.click(f'{self.CATEGORY_FILTER}[value="{category}"]')
+        await self.page.wait_for_load_state("networkidle")
+    
+    async def sort_by(self, sort_type: str):
+        """Sort products"""
+        # sort_type: 'price-low-high', 'rating', 'newest'
+        await self.page.select_option(self.SORT_DROPDOWN, sort_type)
+        await self.page.wait_for_load_state("networkidle")
+    
+    async def get_price_range(self) -> tuple:
+        """Get min/max price from current results"""
+        prices = []
+        price_elements = await self.page.locator(self.PRODUCT_PRICE).all()
+        
+        for element in price_elements:
+            text = await element.text_content()
+            # Parse "R$ 99,99" → 99.99
+            price = float(text.replace("R$", "").replace(",", ".").strip())
+            prices.append(price)
+        
+        return (min(prices), max(prices)) if prices else (0, 0)
 ```
 
----
+### 3. Test Fixtures
 
-## Key Workflows
+```python
+# tests/conftest.py
+import pytest
+from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+from tests.pages.product_page import ProductPage
 
-### Forms & Navigation
+BASE_URL = "http://localhost:3000"
 
-```typescript
-// Form submit and wait for navigation (auto-waiting)
-await page.getByRole("button", { name: "Login" }).click();
-await expect(page).toHaveURL(/.*dashboard/);
+@pytest.fixture(scope="session")
+async def browser() -> Browser:
+    """Create browser session"""
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        yield browser
+        await browser.close()
 
-// Form with API response validation
-const responsePromise = page.waitForResponse(
-  (r) => r.url().includes("/api/login") && r.status() === 200,
-);
-await page.getByRole("button", { name: "Login" }).click();
-const response = await responsePromise;
+@pytest.fixture
+async def context(browser: Browser) -> BrowserContext:
+    """Create browser context"""
+    context = await browser.new_context()
+    yield context
+    await context.close()
+
+@pytest.fixture
+async def page(context: BrowserContext) -> Page:
+    """Create page object"""
+    return await context.new_page()
+
+@pytest.fixture
+async def product_page(page: Page) -> ProductPage:
+    """Instantiate ProductPage"""
+    product_page = ProductPage(page)
+    await product_page.goto(BASE_URL)
+    return product_page
+
+# Async test marker
+def pytest_collection_modifyitems(items):
+    for item in items:
+        item.add_marker(pytest.mark.asyncio)
 ```
 
-### API Testing (Request Fixture)
+### 4. E2E Test Examples
 
-```typescript
-test("API health check", async ({ request }) => {
-  const response = await request.get("/api/health");
-  expect(response.ok()).toBeTruthy();
-  expect(await response.json()).toMatchObject({ status: "ok" });
-});
+```python
+# tests/e2e/test_product_search.py
+import pytest
+from tests.pages.product_page import ProductPage
+
+class TestProductSearch:
+    """Test product search functionality"""
+    
+    @pytest.mark.asyncio
+    async def test_search_returns_results(self, product_page: ProductPage):
+        """Should return products for valid search"""
+        await product_page.search("smartphone")
+        
+        count = await product_page.get_product_count()
+        assert count > 0, "Should return at least one product"
+        
+        title = await product_page.get_first_product_title()
+        assert "smartphone" in title.lower(), "Product should match search query"
+    
+    @pytest.mark.asyncio
+    async def test_search_no_results(self, product_page: ProductPage):
+        """Should handle empty results"""
+        await product_page.search("xyzabc123nonexistent")
+        
+        count = await product_page.get_product_count()
+        assert count == 0, "Should return no products"
+        
+        # Verify "no results" message
+        await product_page.expect_text('.no-results', "Nenhum produto encontrado")
+    
+    @pytest.mark.asyncio
+    async def test_filter_by_category(self, product_page: ProductPage):
+        """Should filter products by category"""
+        await product_page.filter_by_category("electronics")
+        
+        count = await product_page.get_product_count()
+        assert count > 0, "Should return electronics products"
+    
+    @pytest.mark.asyncio
+    async def test_sort_by_price(self, product_page: ProductPage):
+        """Should sort products by price (low to high)"""
+        await product_page.search("smartphone")
+        await product_page.sort_by("price-low-high")
+        
+        min_price, max_price = await product_page.get_price_range()
+        assert min_price <= max_price, "Prices should be in ascending order"
+    
+    @pytest.mark.asyncio
+    async def test_pagination(self, product_page: ProductPage):
+        """Should paginate results"""
+        await product_page.search("teclado")
+        
+        # Get products on page 1
+        count_page1 = await product_page.get_product_count()
+        
+        # Go to page 2
+        await product_page.click('a[aria-label="Next page"]')
+        await product_page.page.wait_for_load_state("networkidle")
+        
+        count_page2 = await product_page.get_product_count()
+        assert count_page1 > 0 and count_page2 > 0, "Both pages should have products"
 ```
 
-### API Mocking & Interception
+### 5. Visual Regression Testing
 
-```typescript
-test("handles API error", async ({ page }) => {
-  await page.route("**/api/users", (route) =>
-    route.fulfill({
-      status: 500,
-      body: JSON.stringify({ error: "Server error" }),
-    }),
-  );
-  await page.goto("/users");
-  await expect(page.getByRole("alert")).toContainText("Something went wrong");
-});
+```python
+# tests/e2e/test_visual_regression.py
+import pytest
+
+class TestVisualRegression:
+    """Test visual consistency across changes"""
+    
+    @pytest.mark.asyncio
+    async def test_homepage_visual(self, product_page: ProductPage):
+        """Compare homepage visual appearance"""
+        await product_page.goto("http://localhost:3000")
+        
+        # Compare with baseline screenshot
+        await product_page.page.expect_screenshot(
+            name="homepage.png",
+            mask_locator='[aria-label="Last updated"]'  # Ignore dynamic elements
+        )
+    
+    @pytest.mark.asyncio
+    async def test_product_card_visual(self, product_page: ProductPage):
+        """Compare product card design"""
+        await product_page.search("monitor")
+        
+        product_element = product_page.page.locator('.product-card').first
+        
+        await expect(product_element).to_have_screenshot("product-card.png")
 ```
 
-### Responsive Testing
+### 6. Accessibility Testing
 
-```typescript
-const viewports = [
-  { width: 375, height: 667, name: "mobile" },
-  { width: 768, height: 1024, name: "tablet" },
-  { width: 1280, height: 720, name: "desktop" },
-];
+```python
+# tests/e2e/test_accessibility.py
+import pytest
+from playwright.async_api import expect
 
-for (const vp of viewports) {
-  test(`navigation works on ${vp.name}`, async ({ page }) => {
-    await page.setViewportSize(vp);
-    await page.goto("/");
-    // Mobile: hamburger menu
-    if (vp.width < 768) {
-      await page.getByRole("button", { name: /menu/i }).click();
-    }
-    await page.getByRole("link", { name: "About" }).click();
-    await expect(page).toHaveURL(/about/);
-  });
-}
+class TestAccessibility:
+    """Test WCAG AA compliance"""
+    
+    @pytest.mark.asyncio
+    async def test_form_labels(self, page):
+        """All inputs should have associated labels"""
+        await page.goto("http://localhost:3000")
+        
+        inputs = await page.locator('input').all()
+        
+        for input_elem in inputs:
+            # Check for associated label
+            input_id = await input_elem.get_attribute("id")
+            
+            if input_id:
+                label = page.locator(f'label[for="{input_id}"]')
+                await expect(label).to_be_visible()
+    
+    @pytest.mark.asyncio
+    async def test_button_contrast(self, page):
+        """Buttons should have sufficient color contrast"""
+        await page.goto("http://localhost:3000")
+        
+        buttons = await page.locator('button').all()
+        
+        for button in buttons:
+            # This would require a contrast checking library
+            # Example: check computed styles
+            color = await button.evaluate("el => window.getComputedStyle(el).color")
+            bg_color = await button.evaluate("el => window.getComputedStyle(el).backgroundColor")
+            
+            # Verify contrast ratio >= 4.5:1
+            # Use contrast checking library for precise calculation
+    
+    @pytest.mark.asyncio
+    async def test_keyboard_navigation(self, page):
+        """Page should be navigable with keyboard"""
+        await page.goto("http://localhost:3000")
+        
+        # Tab through interactive elements
+        await page.keyboard.press("Tab")
+        
+        # Check focus is visible
+        focused = await page.evaluate("document.activeElement")
+        assert focused is not None, "Focus should be visible after Tab"
+    
+    @pytest.mark.asyncio
+    async def test_mobile_responsive(self, browser):
+        """Test on mobile viewport (375x667)"""
+        context = await browser.new_context(
+            viewport={"width": 375, "height": 667}
+        )
+        page = await context.new_page()
+        
+        await page.goto("http://localhost:3000")
+        
+        # Verify content is readable
+        await expect(page.locator('h1')).to_be_visible()
+        await expect(page.locator('nav')).to_be_visible()
+        
+        await context.close()
 ```
 
----
+### 7. Running Tests
 
-## Configuration
+```bash
+# Run all tests
+pytest tests/e2e/
 
-Use `playwright.config.ts` for project-wide settings:
+# Run specific test file
+pytest tests/e2e/test_product_search.py
 
-```typescript
-import { defineConfig, devices } from "@playwright/test";
+# Run with verbose output
+pytest -v tests/e2e/
 
-export default defineConfig({
-  testDir: "./tests",
-  retries: process.env.CI ? 2 : 0,
-  reporter: [["html"], ["junit", { outputFile: "results.xml" }]],
-  use: {
-    baseURL: "http://localhost:3000",
-    trace: "on-first-retry",
-    screenshot: "only-on-failure",
-    video: "retain-on-failure",
-  },
-  projects: [
-    { name: "chromium", use: devices["Desktop Chrome"] },
-    { name: "mobile", use: devices["Pixel 5"] },
-  ],
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-  },
-});
+# Run in headed mode (see browser)
+pytest tests/e2e/ --headed
+
+# Run specific test
+pytest tests/e2e/test_product_search.py::TestProductSearch::test_search_returns_results
+
+# Generate HTML report
+pytest tests/e2e/ --html=report.html
+
+# Run with screenshots on failure
+pytest tests/e2e/ --screenshot=only-on-failure
 ```
 
----
+## Best Practices
 
-## Troubleshooting
+✅ Use **Page Object Model** for maintainability  
+✅ **Wait for elements** properly (not sleep)  
+✅ **Test user flows**, not implementation details  
+✅ **Mock external APIs** when possible  
+✅ **Use fixtures** for setup/teardown  
+✅ **Name tests clearly** (test_search_returns_results)  
+✅ **Keep tests independent** (no test order dependency)  
+✅ **Screenshot baselines** for visual regression  
+✅ **Check accessibility** in every test  
 
-| Problem                | Cause                         | Solution                                                |
-| ---------------------- | ----------------------------- | ------------------------------------------------------- |
-| Element not found      | Wrong locator or not rendered | Use `PWDEBUG=1` to inspect, verify with `getByRole`     |
-| Timeout waiting        | Element hidden or slow load   | Check for overlays, increase timeout, use `waitFor()`   |
-| Flaky tests            | Race conditions, animations   | Add `test.step()`, use proper waits, disable animations |
-| Strict mode violation  | Multiple elements match       | Use `.first()`, `.filter()`, or more specific locator   |
-| Screenshots differ     | Dynamic content               | Mask dynamic areas, use deterministic data              |
-| CI fails, local passes | Environment differences       | Check `baseURL`, timeouts, `webServer` config           |
-| API mock not working   | Route pattern mismatch        | Use `**/api/...` glob, verify with `page.on('request')` |
+## Related Files
 
----
-
-## CLI Quick Reference
-
-| Command                                  | Description                   |
-| ---------------------------------------- | ----------------------------- |
-| `npx playwright test`                    | Run all tests headless        |
-| `npx playwright test --ui`               | Open UI mode (interactive)    |
-| `npx playwright test --headed`           | Run with visible browser      |
-| `npx playwright test --debug`            | Run with Playwright Inspector |
-| `npx playwright test -g "login"`         | Run tests matching pattern    |
-| `npx playwright test --project=chromium` | Run specific project          |
-| `npx playwright show-report`             | Open HTML report              |
-| `npx playwright codegen`                 | Generate tests by recording   |
-| `PWDEBUG=1 npx playwright test`          | Debug with Inspector          |
-| `DEBUG=pw:api npx playwright test`       | Verbose API logging           |
-
----
-
-## Common Rationalizations
-
-> Common shortcuts and "good enough" excuses that erode test quality — and the reality behind each.
-
-| Rationalization                     | Reality                                                                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| "I'll add assertions later"         | A test without assertions is a script, not a test. Add meaningful assertions now — later never comes.        |
-| "This selector is stable enough"    | CSS selectors break on refactor. Use `data-testid` or role-based locators for stability.                     |
-| "The test passes on my machine"     | Local passes don't guarantee CI passes. Always validate in the target environment.                           |
-| "Skip the edge cases for now"       | Edge cases are where production bugs live. Test them first, not last.                                        |
-| "Visual tests aren't needed"        | Visual regression catches CSS/layout bugs that functional assertions miss entirely.                          |
-| "This API won't change"             | APIs evolve constantly. Contract tests prevent silent downstream failures.                                   |
-| "One browser is enough"             | Cross-browser issues are real and common. Test at least Chromium and Firefox.                                |
-| "`networkidle` is fine for waiting" | `networkidle` is deprecated and unreliable. Wait for specific conditions (elements, responses, URL changes). |
-
----
+- [page-factory.py](./page-factory.py) - Page object factory
+- [test-templates.py](./test-templates.py) - Copy-paste test templates
+- [ci-config.yml](./ci-config.yml) - GitHub Actions workflow
 
 ## References
 
-| Document                                                 | Content                                |
-| -------------------------------------------------------- | -------------------------------------- |
-| [Snippets](./references/snippets.md)                     | Ready-to-use code patterns             |
-| [Locator Strategies](./references/locator_strategies.md) | Complete locator guide                 |
-| [Page Object Model](./references/page_object_model.md)   | POM implementation patterns            |
-| [Debugging Guide](./references/debugging.md)             | Troubleshooting & debugging techniques |
-
----
-
-## Verification
-
-After completing this skill's workflow, confirm:
-
-- [ ] **Test file follows naming convention** — File named `*.spec.ts` in the appropriate directory
-- [ ] **Uses custom fixture injection** — No `new PageObject()` calls in spec files; all POMs injected via fixtures
-- [ ] **Locators use recommended strategies** — All locators use `getByRole()`, `getByTestId()`, or `getByText()`; no CSS selectors for interactive elements
-- [ ] **Auto-waiting patterns used** — No `page.waitForTimeout()` or `sleep()` calls; all waits use `waitForSelector()`, `waitForURL()`, or built-in auto-waiting
-- [ ] **Tests are independent** — Each test sets up and tears down its own state; no `beforeAll` with shared mutable state
-- [ ] **Error states covered** — At least one test verifies error/empty/loading states alongside happy path
-- [ ] **All tests pass** — `npx playwright test` exits with code 0
-- [ ] **No skipped tests** — `grep -R -E "test\.skip|test\.fixme" --include="*.spec.ts" .` returns no results
+- Playwright: https://playwright.dev/python/
+- Pytest: https://docs.pytest.org/
+- Playwright BDD: https://playwright.dev/python/docs/bdd

@@ -1,220 +1,155 @@
 ---
-name: Model Evaluator
-slug: model-evaluator
-description: Evaluate and compare ML model performance with rigorous testing methodologies
-category: ai-ml
-complexity: advanced
-version: "1.0.0"
-author: "ID8Labs"
-triggers:
-  - "evaluate model"
-  - "compare models"
-  - "model performance"
-  - "benchmark ML"
-  - "model metrics"
-tags:
-  - evaluation
-  - benchmarking
-  - metrics
-  - machine-learning
-  - testing
+name: model-evaluator
+description: |
+  Comprehensive ML model evaluation with multiple metrics, cross-validation, and statistical testing. Activates for "evaluate model", "model metrics", "model performance", "compare models", "validation metrics", "test accuracy", "precision recall", "ROC AUC". Generates detailed evaluation reports with visualizations and statistical significance tests, integrated with SpecWeave increment documentation.
 ---
 
 # Model Evaluator
 
-The Model Evaluator skill helps you rigorously assess and compare machine learning model performance across multiple dimensions. It guides you through selecting appropriate metrics, designing evaluation protocols, avoiding common statistical pitfalls, and making data-driven decisions about model selection.
+## Overview
 
-Proper model evaluation goes beyond accuracy scores. This skill covers evaluation across the full spectrum: predictive performance, computational efficiency, robustness, fairness, calibration, and production readiness. It helps you answer not just "which model is best?" but "which model is best for my specific use case and constraints?"
+Provides comprehensive, unbiased model evaluation following ML best practices. Goes beyond simple accuracy to evaluate models across multiple dimensions, ensuring confident deployment decisions.
 
-Whether you are comparing LLMs, classifiers, or custom models, this skill ensures your evaluation methodology is sound and your conclusions are reliable.
+## Core Evaluation Framework
 
-## Core Workflows
+### 1. Classification Metrics
+- Accuracy, Precision, Recall, F1-score
+- ROC AUC, PR AUC
+- Confusion matrix
+- Per-class metrics (for multi-class)
+- Class imbalance handling
 
-### Workflow 1: Design Evaluation Protocol
-1. **Define** evaluation objectives:
-   - Primary goal (accuracy, speed, cost, etc.)
-   - Secondary constraints
-   - Failure modes to test
-   - Real-world conditions to simulate
-2. **Select** appropriate metrics:
-   | Task Type | Primary Metrics | Secondary Metrics |
-   |-----------|-----------------|-------------------|
-   | Classification | Accuracy, F1, AUC-ROC | Precision, Recall, Confusion Matrix |
-   | Regression | RMSE, MAE, R-squared | Residual analysis, prediction intervals |
-   | Ranking | NDCG, MRR, MAP | Precision@k, Recall@k |
-   | Generation | BLEU, ROUGE, BERTScore | Human eval, Faithfulness |
-   | LLM | Task-specific accuracy | Latency, cost, consistency |
-3. **Design** test sets:
-   - Held-out test data
-   - Edge case collections
-   - Adversarial examples
-   - Distribution shift tests
-4. **Plan** statistical methodology:
-   - Sample sizes for significance
-   - Confidence intervals
-   - Multiple comparison corrections
+### 2. Regression Metrics
+- RMSE, MAE, MAPE
+- R² score, Adjusted R²
+- Residual analysis
+- Prediction interval coverage
 
-### Workflow 2: Execute Comparative Evaluation
-1. **Prepare** evaluation infrastructure:
-   ```python
-   class ModelEvaluator:
-       def __init__(self, test_data, metrics):
-           self.test_data = test_data
-           self.metrics = metrics
-           self.results = {}
+### 3. Ranking Metrics (Recommendations)
+- Precision@K, Recall@K
+- NDCG@K, MAP@K
+- MRR (Mean Reciprocal Rank)
+- Coverage, Diversity
 
-       def evaluate(self, model, model_name):
-           predictions = model.predict(self.test_data.inputs)
-           scores = {}
-           for metric in self.metrics:
-               scores[metric.name] = metric.compute(
-                   predictions,
-                   self.test_data.labels
-               )
-           self.results[model_name] = scores
-           return scores
+### 4. Statistical Validation
+- Cross-validation (K-fold, stratified, time-series)
+- Confidence intervals
+- Statistical significance testing
+- Calibration curves
 
-       def compare(self):
-           return statistical_comparison(self.results)
-   ```
-2. **Run** evaluations consistently across models
-3. **Compute** confidence intervals
-4. **Test** for statistical significance
-5. **Generate** comparison report
+## Usage
 
-### Workflow 3: LLM-Specific Evaluation
-1. **Define** evaluation dimensions:
-   - Task accuracy (factual, reasoning, coding)
-   - Response quality (coherence, relevance, style)
-   - Safety and alignment
-   - Efficiency (tokens, latency, cost)
-2. **Create** evaluation datasets:
-   - Representative prompts
-   - Ground truth answers (where applicable)
-   - Human preference data
-3. **Implement** LLM evaluation:
-   - Automated metrics (exact match, semantic similarity)
-   - LLM-as-judge evaluations
-   - Human evaluation protocols
-4. **Analyze** results across dimensions
-5. **Make** recommendations with tradeoffs
+```python
+from specweave import ModelEvaluator
 
-## Quick Reference
+evaluator = ModelEvaluator(
+    model=trained_model,
+    X_test=X_test,
+    y_test=y_test,
+    increment="0042"
+)
 
-| Action | Command/Trigger |
-|--------|-----------------|
-| Design evaluation | "How should I evaluate [model type]" |
-| Choose metrics | "What metrics for [task type]" |
-| Compare models | "Compare these models: [list]" |
-| LLM evaluation | "Evaluate LLM performance" |
-| Statistical testing | "Is this difference significant" |
-| Bias evaluation | "Check model for bias" |
+# Comprehensive evaluation
+report = evaluator.evaluate_all()
+
+# Generates:
+# - .specweave/increments/0042.../evaluation-report.md
+# - Visualizations (confusion matrix, ROC curves, etc.)
+# - Statistical tests
+```
+
+## Evaluation Report Structure
+
+```markdown
+# Model Evaluation Report: XGBoost Classifier
+
+## Overall Performance
+- **Accuracy**: 0.87 ± 0.02 (95% CI: [0.85, 0.89])
+- **ROC AUC**: 0.92 ± 0.01
+- **F1 Score**: 0.85 ± 0.02
+
+## Per-Class Performance
+| Class   | Precision | Recall | F1   | Support |
+|---------|-----------|--------|------|---------|
+| Class 0 | 0.88      | 0.85   | 0.86 | 1000    |
+| Class 1 | 0.84      | 0.87   | 0.86 | 800     |
+
+## Confusion Matrix
+[Visualization embedded]
+
+## Cross-Validation Results
+- 5-fold CV accuracy: 0.86 ± 0.03
+- Fold scores: [0.85, 0.88, 0.84, 0.87, 0.86]
+- No overfitting detected (train=0.89, val=0.86, gap=0.03)
+
+## Statistical Tests
+- Comparison vs baseline: p=0.001 (highly significant)
+- Comparison vs previous model: p=0.042 (significant)
+
+## Recommendations
+✅ Deploy: Model meets accuracy threshold (>0.85)
+✅ Stable: Low variance across folds
+⚠️  Monitor: Class 1 recall slightly lower (0.84)
+```
+
+## Model Comparison
+
+```python
+from specweave import compare_models
+
+models = {
+    "baseline": baseline_model,
+    "xgboost": xgb_model,
+    "lightgbm": lgbm_model,
+    "neural-net": nn_model
+}
+
+comparison = compare_models(
+    models,
+    X_test,
+    y_test,
+    metrics=["accuracy", "auc", "f1"],
+    increment="0042"
+)
+```
+
+**Output**:
+```
+Model Comparison Report
+=======================
+
+| Model      | Accuracy | ROC AUC | F1   | Inference Time | Model Size |
+|------------|----------|---------|------|----------------|------------|
+| baseline   | 0.65     | 0.70    | 0.62 | 1ms           | 10KB       |
+| xgboost    | 0.87     | 0.92    | 0.85 | 35ms          | 12MB       |
+| lightgbm   | 0.86     | 0.91    | 0.84 | 28ms          | 8MB        |
+| neural-net | 0.85     | 0.90    | 0.83 | 120ms         | 45MB       |
+
+Recommendation: XGBoost
+- Best accuracy and AUC
+- Acceptable inference time (<50ms requirement)
+- Good size/performance tradeoff
+```
 
 ## Best Practices
 
-- **Use Multiple Metrics**: No single metric tells the whole story
-  - Include both aggregate and granular metrics
-  - Report confidence intervals, not just point estimates
-  - Show performance across subgroups
+1. **Always compare to baseline** - Random, majority, rule-based
+2. **Use cross-validation** - Never trust single split
+3. **Check calibration** - Are probabilities meaningful?
+4. **Analyze errors** - What types of mistakes?
+5. **Test statistical significance** - Is improvement real?
 
-- **Test on Realistic Data**: Evaluation data should match production
-  - Same distribution as real inputs
-  - Include edge cases and hard examples
-  - Test on data the model hasn't seen
+## Integration with SpecWeave
 
-- **Account for Variance**: Models and data have randomness
-  - Run multiple seeds for training-based evaluations
-  - Bootstrap confidence intervals
-  - Use proper statistical tests for comparison
+```bash
+# Evaluate model in increment
+/ml:evaluate-model 0042
 
-- **Consider All Costs**: Performance isn't just accuracy
-  - Inference latency and throughput
-  - Memory and compute requirements
-  - API costs for hosted models
-  - Maintenance and update burden
+# Compare all models in increment
+/ml:compare-models 0042
 
-- **Test Robustness**: How does the model handle adversity?
-  - Input perturbations and noise
-  - Distribution shift
-  - Adversarial examples
-  - Missing or malformed inputs
-
-- **Evaluate Fairly**: Ensure fair comparison across models
-  - Same test data for all models
-  - Consistent preprocessing
-  - Equivalent hyperparameter tuning effort
-  - Document any advantages/disadvantages
-
-## Advanced Techniques
-
-### Multi-Dimensional Evaluation
-Score models across multiple axes:
-```python
-def multi_dim_evaluate(model, test_data):
-    return {
-        "accuracy": compute_accuracy(model, test_data),
-        "latency_p50": measure_latency(model, test_data, percentile=50),
-        "latency_p99": measure_latency(model, test_data, percentile=99),
-        "memory_mb": measure_memory(model),
-        "cost_per_1k": compute_cost(model, n=1000),
-        "robustness": adversarial_accuracy(model, test_data),
-        "fairness": demographic_parity(model, test_data)
-    }
+# Generate full evaluation report
+/ml:evaluation-report 0042
 ```
 
-### LLM-as-Judge Protocol
-Use LLMs to evaluate LLM outputs:
-```
-Prompt template:
-"Rate the following response on a scale of 1-5 for:
-- Accuracy: Is the information correct?
-- Helpfulness: Does it address the user's need?
-- Clarity: Is it easy to understand?
-
-Question: {question}
-Response: {response}
-Ground truth (if available): {ground_truth}
-
-Provide scores and brief justification."
-```
-
-### A/B Testing Framework
-For production evaluation:
-```python
-class ABTest:
-    def __init__(self, model_a, model_b, traffic_split=0.5):
-        self.models = {"A": model_a, "B": model_b}
-        self.split = traffic_split
-        self.results = {"A": [], "B": []}
-
-    def serve(self, request):
-        variant = "A" if random.random() < self.split else "B"
-        response = self.models[variant].predict(request)
-        return response, variant
-
-    def record_outcome(self, variant, success):
-        self.results[variant].append(success)
-
-    def compute_significance(self):
-        return statistical_test(self.results["A"], self.results["B"])
-```
-
-### Calibration Analysis
-Ensure predicted probabilities are meaningful:
-```
-- Expected Calibration Error (ECE)
-- Reliability diagrams
-- Brier score decomposition
-- Temperature scaling for recalibration
-```
-
-## Common Pitfalls to Avoid
-
-- Overfitting to the test set through repeated evaluation
-- Ignoring statistical significance in model comparisons
-- Using inappropriate metrics for the task (accuracy for imbalanced classes)
-- Evaluating on data too similar to training data
-- Ignoring computational costs in model selection
-- Not testing robustness to distribution shift
-- Conflating correlation with causation in A/B tests
-- Failing to account for multiple comparisons in statistical tests
+Evaluation results automatically included in increment COMPLETION-SUMMARY.md.

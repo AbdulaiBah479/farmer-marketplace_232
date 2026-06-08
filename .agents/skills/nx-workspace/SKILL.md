@@ -1,140 +1,186 @@
 ---
 name: nx-workspace
-description: Configure, explore, and optimize Nx monorepo workspaces. Use when setting up Nx, exploring workspace structure, configuring project boundaries, analyzing affected projects, optimizing build caching, or implementing CI/CD with affected commands. Keywords — nx, monorepo, workspace, projects, targets, affected. Do NOT use for running tasks (use nx-run-tasks) or code generation with generators (use nx-generate).
+description: "Explore and understand Nx workspaces. USE WHEN answering any questions about the nx workspace, the projects in it or tasks to run. EXAMPLES: 'What projects are in this workspace?', 'How is project X configured?', 'What targets can I run?', 'What's affected by my changes?', 'Which projects depend on library Y?', or any questions about Nx workspace structure, project configuration, or available tasks."
 ---
 
-# Nx Workspace Management
+# Nx Workspace Exploration
 
-## Quick Start
+This skill provides read-only exploration of Nx workspaces. Use it to understand workspace structure, project configuration, available targets, and dependencies.
 
-**Exploring workspace**: `nx show projects` and `nx show project <name> --json`  
-**Running tasks**: `nx <target> <project>` (e.g., `nx build my-app`)  
-**Affected analysis**: `nx show projects --affected` or `nx affected -t <target>`
+Keep in mind that you might have to prefix commands with `npx`/`pnpx`/`yarn` if nx isn't installed globally. Check the lockfile to determine the package manager in use.
 
-> **Note**: Prefix commands with `npx`/`pnpx`/`yarn` if nx isn't installed globally.
+## Listing Projects
 
-## Core Commands
-
-### List and Explore Projects
+Use `nx show projects` to list projects in the workspace.
 
 ```bash
 # List all projects
 nx show projects
 
-# Filter by type, pattern, or target
-nx show projects --type app
+# Filter by pattern (glob)
 nx show projects --projects "apps/*"
-nx show projects --withTarget build
+nx show projects --projects "shared-*"
 
-# Find affected projects
+# Filter by project type
+nx show projects --type app
+nx show projects --type lib
+nx show projects --type e2e
+
+# Filter by target (projects that have a specific target)
+nx show projects --withTarget build
+nx show projects --withTarget e2e
+
+# Find affected projects (changed since base branch)
+nx show projects --affected
 nx show projects --affected --base=main
+nx show projects --affected --type app
+
+# Combine filters
+nx show projects --type lib --withTarget test
+nx show projects --affected --exclude="*-e2e"
+
+# Output as JSON
+nx show projects --json
 ```
 
-### Get Project Information
+## Project Configuration
 
-**Critical**: Always use `nx show project <name> --json` for full resolved configuration. Do NOT read `project.json` directly - it contains only partial configuration.
+Use `nx show project <name> --json` to get the full resolved configuration for a project.
+
+**Important**: Do NOT read `project.json` directly - it only contains partial configuration. The `nx show project` command returns the full resolved config including inferred targets from plugins.
+
+You can read the full project schema at `node_modules/nx/schemas/project-schema.json` to understand nx project configuration options.
 
 ```bash
-# Get full configuration
+# Get full project configuration
 nx show project my-app --json
 
-# Extract targets
+# Extract specific parts from the JSON
+nx show project my-app --json | jq '.targets'
+nx show project my-app --json | jq '.targets.build'
 nx show project my-app --json | jq '.targets | keys'
+
+
+# Check project metadata
+nx show project my-app --json | jq '{name, root, sourceRoot, projectType, tags}'
 ```
 
-Configuration schemas:
+## Target Information
 
-- Workspace: `node_modules/nx/schemas/nx-schema.json`
-- Project: `node_modules/nx/schemas/project-schema.json`
-
-### Run Tasks
+Targets define what tasks can be run on a project.
 
 ```bash
-# Run specific project
-nx build web --configuration=production
+# List all targets for a project
+nx show project my-app --json | jq '.targets | keys'
 
-# Run affected
-nx affected -t test --base=main
+# Get full target configuration
+nx show project my-app --json | jq '.targets.build'
 
-# View dependency graph
-nx graph
+# Check target executor/command
+nx show project my-app --json | jq '.targets.build.executor'
+nx show project my-app --json | jq '.targets.build.command'
+
+# View target options
+nx show project my-app --json | jq '.targets.build.options'
+
+# Check target inputs/outputs (for caching)
+nx show project my-app --json | jq '.targets.build.inputs'
+nx show project my-app --json | jq '.targets.build.outputs'
+
+# Find projects with a specific target
+nx show projects --withTarget serve
+nx show projects --withTarget e2e
 ```
 
-## Workspace Architecture
+## Workspace Configuration
 
-```
-workspace/
-├── apps/              # Deployable applications
-├── libs/              # Shared libraries
-│   ├── shared/        # Shared across scopes
-│   └── feature/       # Feature-specific
-├── nx.json            # Workspace configuration
-└── tools/             # Custom executors/generators
-```
-
-### Library Types
-
-| Type            | Purpose                          | Example             |
-| --------------- | -------------------------------- | ------------------- |
-| **feature**     | Business logic, smart components | `feature-auth`      |
-| **ui**          | Presentational components        | `ui-buttons`        |
-| **data-access** | API calls, state management      | `data-access-users` |
-| **util**        | Pure functions, helpers          | `util-formatting`   |
-
-## Detailed Resources
-
-**Configuration**: See [reference/configuration.md](reference/configuration.md) for:
-
-- nx.json templates and options
-- project.json structure
-- Module boundary rules
-- Remote caching setup
-
-**Commands**: See [reference/commands.md](reference/commands.md) for:
-
-- Complete command reference
-- Advanced filtering options
-- Common workflows
-
-**CI/CD**: See [reference/ci-cd.md](reference/ci-cd.md) for:
-
-- GitHub Actions configuration
-- GitLab CI setup
-- Jenkins, Azure Pipelines, CircleCI examples
-- Affected commands in pipelines
-
-**Best Practices**: See [reference/best-practices.md](reference/best-practices.md) for:
-
-- Do's and don'ts
-- Complete troubleshooting guide
-- Performance optimization
-- Migration guides
-
-## Common Workflows
-
-**"What's in this workspace?"**
+Read `nx.json` directly for workspace-level configuration.
+You can read the full project schema at `node_modules/nx/schemas/nx-schema.json` to understand nx project configuration options.
 
 ```bash
-nx show projects --type app  # List applications
-nx show projects --type lib  # List libraries
+# Read the full nx.json
+cat nx.json
+
+# Or use jq for specific sections
+cat nx.json | jq '.targetDefaults'
+cat nx.json | jq '.namedInputs'
+cat nx.json | jq '.plugins'
+cat nx.json | jq '.generators'
 ```
 
-**"How do I run project X?"**
+Key nx.json sections:
+
+- `targetDefaults` - Default configuration applied to all targets of a given name
+- `namedInputs` - Reusable input definitions for caching
+- `plugins` - Nx plugins and their configuration
+- ...and much more, read the schema or nx.json for details
+
+## Affected Projects
+
+Find projects affected by changes in the current branch.
+
+```bash
+# Affected since base branch (auto-detected)
+nx show projects --affected
+
+# Affected with explicit base
+nx show projects --affected --base=main
+nx show projects --affected --base=origin/main
+
+# Affected between two commits
+nx show projects --affected --base=abc123 --head=def456
+
+# Affected apps only
+nx show projects --affected --type app
+
+# Affected excluding e2e projects
+nx show projects --affected --exclude="*-e2e"
+
+# Affected by uncommitted changes
+nx show projects --affected --uncommitted
+
+# Affected by untracked files
+nx show projects --affected --untracked
+```
+
+## Common Exploration Patterns
+
+### "What's in this workspace?"
+
+```bash
+nx show projects
+nx show projects --type app
+nx show projects --type lib
+```
+
+### "How do I build/test/lint project X?"
 
 ```bash
 nx show project X --json | jq '.targets | keys'
+nx show project X --json | jq '.targets.build'
 ```
 
-**"What changed?"**
+### "What depends on library Y?"
 
 ```bash
-nx show projects --affected --base=main
+# Find projects that may depend on Y by searching for imports
+# (Nx doesn't have a direct "dependents" command via CLI)
+grep -r "from '@myorg/Y'" --include="*.ts" --include="*.tsx" apps/ libs/
 ```
 
-## Quick Troubleshooting
+### "What configuration options are available?"
 
-- **Targets not showing**: Use `nx show project <name> --json`, not project.json
-- **Affected not working**: Ensure git history available (`fetch-depth: 0` in CI)
-- **Cache issues**: Run `nx reset`
+```bash
+cat node_modules/nx/schemas/nx-schema.json | jq '.properties | keys'
+cat node_modules/nx/schemas/project-schema.json | jq '.properties | keys'
+```
 
-For detailed troubleshooting, see [reference/best-practices.md](reference/best-practices.md).
+### "Why is project X affected?"
+
+```bash
+# Check what files changed
+git diff --name-only main
+
+# See which project owns those files
+nx show project X --json | jq '.root'
+```

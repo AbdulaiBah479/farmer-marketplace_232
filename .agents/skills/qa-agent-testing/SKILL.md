@@ -1,6 +1,6 @@
 ---
 name: qa-agent-testing
-description: "QA harness for LLM agents: scenario suites, flake controls, tool sandboxing, LLM-as-judge scoring, and regression protocols."
+description: "QA harness for agentic systems: scenario suites, determinism/flake controls, tool sandboxing, scoring rubrics (including LLM-as-judge), and regression protocols covering success, safety, reliability, latency, and cost."
 ---
 
 # QA Agent Testing (Jan 2026)
@@ -80,9 +80,6 @@ Avoid:
 | Sandbox tools | Isolation tiers + hardening | `references/tool-sandboxing.md` |
 | Test multi-agent systems | Coordination patterns + suite template | `references/multi-agent-testing.md` |
 | Use LLM-as-judge safely | Biases + mitigations | `references/llm-judge-limitations.md` |
-| Test prompt injection attacks | Injection taxonomy + test cases | `references/prompt-injection-testing.md` |
-| Detect hallucinations | Detection methods + scoring | `references/hallucination-detection.md` |
-| Design eval datasets | Dataset construction + maintenance | `references/eval-dataset-design.md` |
 | Start from templates | Harness + scoring sheet + log | `assets/` |
 
 ## Decision Tree
@@ -117,9 +114,6 @@ Testing an agent?
 - `references/tool-sandboxing.md` - sandbox tiers, tool hardening, injection/exfil test ideas
 - `references/multi-agent-testing.md` - coordination testing patterns + suite template
 - `references/llm-judge-limitations.md` - LLM-as-judge biases, limits, mitigations
-- `references/prompt-injection-testing.md` - Injection taxonomy, test cases, and defense validation
-- `references/hallucination-detection.md` - Hallucination detection methods, scoring, and benchmarks
-- `references/eval-dataset-design.md` - Evaluation dataset construction, versioning, and maintenance
 
 ### Templates
 
@@ -150,9 +144,3 @@ See [data/sources.json](data/sources.json) for:
 7. Log results in regression log
 
 > **Success Criteria:** Each of the 10 tasks scores >= 12/18 and each refusal scores >= 2/3 (or PASS by your policy oracle), with stable results across reruns and no new hard failures.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

@@ -1,111 +1,232 @@
 ---
 name: product-strategy
-description: "Create a comprehensive product strategy using the 9-section Product Strategy Canvas — vision, segments, costs, value propositions, trade-offs, metrics, growth, capabilities, and defensibility. Use when building a product strategy, creating a strategic plan, or defining product direction."
+description: Create Product Strategies. Use when users ask for "product strategy", "product strategy document", or need to define the strategic vision and direction of a product.
 ---
-# Product Strategy Canvas
 
-## Metadata
-- **Name**: product-strategy
-- **Description**: Generate a comprehensive product strategy using the 9-section Product Strategy Canvas. Covers vision, market segments, costs, value propositions, trade-offs, metrics, growth, capabilities, and defensibility.
-- **Triggers**: product strategy, strategy canvas, strategic plan, product strategy document
+# Product Strategy Generator
 
-## Instructions
+## Overview
 
-You are an experienced product strategist developing a comprehensive product strategy for $ARGUMENTS.
+Guide users in creating comprehensive Product Strategies:
 
-Your task is to create a detailed Product Strategy Canvas that outlines how the product will compete, win, and grow in the market.
+```
+Product Strategy = Vision + Insights + Challenges + Approaches + Accountability
 
-## Input Requirements
-- Product description and current positioning
-- Market context, competitors, and customer insights
-- Company resources, constraints, and priorities
-- Any relevant business or market data
+```
 
-## Product Strategy Canvas Template
+This skill helps product managers create strategic documents that align stakeholders, define clear direction, and establish accountability metrics.
 
-### 1. Vision
-- How can we inspire people?
-- What are we aspiring to achieve?
-- What values do we uphold?
+## Main Workflow
 
-### 2. Market Segments
-- Market defined by people's problems (not demographics)
-- Jobs to Be Done (JTBD), desired outcomes, constraints
-- Who is our first segment?
-- Why this segment first?
+When a user requests to create a Product Strategy (e.g., "create a product strategy for App Gabriel"), follow this 5-phase workflow.
 
-### 3. Relative Costs
-- Do we optimize for low cost (like Southwest Airlines)?
-- Or do we emphasize unique value (like Starbucks)?
-- What's our cost position relative to competitors?
+### Phase 1: Product Vision (ESSENCE)
 
-### 4. Value Proposition
-For each target segment:
-- **What before**: The customer's current situation, pain, or need
-- **How**: How your product delivers the solution
-- **What after**: The improved outcome or future state
-- **Alternatives**: What customers use today instead
+**Objective:** Define the essence of the product—the what, for whom, and why now.
 
-### 5. Trade-offs
-- What will we NOT do?
-- What features or markets are out of scope?
-- How does saying "no" create focus and amplify our value?
+**Discovery Questions:**
 
-### 6. Key Metrics
-- **North Star Metric**: Single metric that drives overall business success
-- **OMTM (One Metric That Matters)**: The one metric we optimize for this quarter
+```
+1. What problem are you solving? (WHAT)
+2. Who are you solving it for? (WHO)
+3. Why is now the right time? (WHY)
 
-### 7. Growth
-- Sales-Led Growth or Product-Led Growth?
-- Primary acquisition channels
-- How do we scale?
-- What's our unit economics?
+```
 
-### 8. Capabilities
-- What competencies and resources do we need?
-- What do we build vs. partner for?
-- What capabilities must we develop to win?
+**Generate Vision Statement using the format:**
 
-### 9. Can't/Won't
-- Why can't competitors easily copy this?
-- What defensibility do we have (network effects, switching costs, IP)?
-- What barriers to entry exist for new competitors?
+| Field           | Description                                          |
+| --------------- | ---------------------------------------------------- |
+| **For**         | (Target customer)                                    |
+| **Who**         | (Need or opportunity) - What problem are we solving? |
+| **The**         | (Product name) is a (product category)               |
+| **That**        | (Key benefit, reason to buy)                         |
+| **Unlike**      | (Primary competitive alternative)                    |
+| **Our Product** | (Primary differentiation statement)                  |
 
-## Output Process
-1. Define the vision and aspirational impact
-2. Identify 2-3 target market segments with their JTBD
-3. Establish cost positioning (low cost vs. premium value)
-4. Develop value propositions for each segment
-5. List explicit trade-offs (what we won't do)
-6. Set North Star and quarterly OMTM
-7. Outline growth strategy and channels
-8. Document required capabilities and partnerships
-9. Explain defensibility and barriers to competition
-10. Validate strategy coherence: ensure elements reinforce each other
-11. Surface critical hypotheses that must be true for success
-12. Suggest low-effort experiments to test key assumptions
+**Vision Characteristics:**
 
-## Notes
-- Ensure all 9 elements fit together logically
-- Identify what must be true for this strategy to work (hypotheses)
-- Propose validation experiments with minimal effort
-- Strategy guides decisions; clarity enables faster execution
-- Revisit quarterly as market conditions change
+- Connects with the company vision.
+- Aspirational, long-term goal.
+- Relatively stable; pivots less than the strategy.
 
 ---
 
-### Templates
+### Phase 2: Product Insights (LOGIC)
 
-- [Product Strategy Canvas (PPTX)](https://docs.google.com/presentation/d/1xRBqSOISvAKzwM_z5tC8fiuO5O2YhboB/edit?usp=sharing&ouid=111307342557889008106&rtpof=true&sd=true)
+**Objective:** Gather data and logic that underpin the strategy.
+
+**Components:**
+
+**1. Competitors (Competitive Analysis)**
+
+- Use WebSearch to research competitors.
+- Document differentiators and similarities.
+- Include quantitative data when available.
+
+**2. Market Insight (TAM, audience, opportunity)**
+
+- Define audience and target market.
+- Identify market opportunities.
+- Estimate market size if possible.
+
+**3. Market Trends**
+
+- Identify relevant trends.
+- Use WebSearch for updated data.
+- Connect trends with product timing.
+
+**4. Customer Insights (Personas)**
+
+- Define 2-3 main personas.
+- Include behaviors, needs, and pain points.
+- Search Slack for discussions about user feedback.
+
+**Research Strategy:**
+
+1. Search Slack for discussions about the product/problem.
+2. Use WebSearch for competitive analysis.
+3. Check Linear for related projects/issues.
+4. Consolidate insights from all sources.
 
 ---
 
-### Further Reading
+### Phase 3: Challenges (ROADBLOCKS)
 
-- [Product Strategy Canvas: From Vision to Action](https://www.productcompass.pm/p/product-strategy-canvas)
-- [Product Strategy Examples: Google Maps, Netflix, OpenAI](https://www.productcompass.pm/p/product-strategy-examples)
-- [Product Vision vs Strategy vs Objectives vs Roadmap: The Advanced Edition](https://www.productcompass.pm/p/product-vision-strategy-goals-and)
-- [Product Model First Principles: Product Team and Product Strategy In Depth](https://www.productcompass.pm/p/product-model-first-principles-transformed-cagan)
-- [Introducing the Product Strategy Canvas](https://www.productcompass.pm/p/new-product-strategy-canvas)
-- [Business Outcomes vs Product Outcomes vs Customer Outcomes](https://www.productcompass.pm/p/business-outcomes-vs-product-outcomes)
-- [From Strategy to Objectives Masterclass](https://www.productcompass.pm/p/product-vision-strategy-objectives-course) (video course)
+**Objective:** Identify anticipated obstacles and risks.
+
+**Challenge Categories:**
+
+| Category                 | Guiding Question                                                                 |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| **Technical**            | What technical hurdles do we anticipate?                                         |
+| **Customer Pain Points** | What customer problems will we face? Include emotional/psychological challenges. |
+| **GTM Risks**            | What go-to-market risks exist? Why now?                                          |
+| **Legal/Regulatory**     | What regulatory requirements do we need to mitigate?                             |
+
+**Tips:**
+
+- Be realistic but not pessimistic.
+- Connect challenges with mitigations in the next phase.
+- Consider internal challenges (team, resources) and external challenges (market, regulation).
+
+---
+
+### Phase 4: Approaches (PATHS)
+
+**Objective:** Define the strategic path to achieve the vision.
+
+**Components:**
+
+**1. Approach (Chosen Strategy)**
+
+- Single approach or multi-prong approach.
+- Can vary for different customer segments.
+- Justify the choice of approach.
+
+**2. Overcoming Challenges**
+
+- High-level plan to overcome each challenge from Phase 3.
+- Be specific but not excessively detailed.
+- Prioritize critical challenges.
+
+**3. Do's & Don'ts (Guardrails)**
+
+- What we WILL do along the way.
+- What we WILL NOT do along the way.
+- Maintain focus and avoid scope creep.
+
+**Example Structure:**
+
+```markdown
+**Approach:** Multi-prong approach focused on:
+
+1. [Approach 1]
+2. [Approach 2]
+
+**Overcome Challenges:**
+
+- Technical: [mitigation plan]
+- GTM: [mitigation plan]
+
+**Do's:**
+
+- [Allowed action 1]
+
+**Don'ts:**
+
+- [Prohibited action 1]
+```
+
+---
+
+### Phase 5: Accountability (MEASURE)
+
+**Objective:** Define how to measure success and maintain accountability.
+
+**Components:**
+
+**1. North Star Metric**
+
+- Unique strategic and visionary metric.
+- Represents the core value delivered to the customer.
+- Aligned with the vision.
+
+**2. Supporting Metrics**
+
+- Perceptual metrics: engagement, satisfaction, happiness.
+- Value metrics: sales, leads, ROI.
+- Mix of leading and lagging indicators.
+
+**3. Targets (Specific Goals)**
+
+- Current baseline.
+- Short-term goal (3-6 months).
+- Long-term goal (12+ months).
+
+**4. Progress Tracking**
+
+- How and when to review progress.
+- Who is responsible for tracking.
+- Review rituals.
+
+---
+
+## Supported Modes
+
+### Full Mode (~5 pages)
+
+**When to use:** New products, significant pivots, annual strategies.
+**Output:** Full markdown document with all 5 detailed phases.
+
+### Quick Mode / One-Pager (~1 page)
+
+**When to use:** Initial iteration, quick alignment, specific features.
+**Output:** Summarized one-pager with essential points from each phase.
+
+---
+
+## Output and Saving
+
+**File Location:** Save at `products/{product}/strategy.md`
+
+---
+
+## Best Practices
+
+**DO:**
+
+- Think deeply before writing.
+- Collaborate with stakeholders 1:1 during creation.
+- Share drafts early and often.
+- Update as learning emerges.
+
+**DON'T:**
+
+- Wait to have all the answers to start.
+- Work in isolation.
+- Treat it as a static document.
+
+---
+
+**Product Strategy skill is active. Would you like to start a discovery session for a new product strategy or update an existing one?**

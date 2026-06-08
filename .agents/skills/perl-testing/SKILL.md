@@ -1,475 +1,431 @@
 ---
 name: perl-testing
-description: Perl testing patterns using Test2::V0, Test::More, prove runner, mocking, coverage with Devel::Cover, and TDD methodology.
-origin: ECC
+description: 'This skill should be used when the user asks to "write Perl tests", "test Perl code", "use Test::More", "run prove", "create test suite", "mock Perl", or mentions Perl testing, TAP, Test::Class, Test::Deep, or test-driven development in Perl.'
 ---
 
-# Perl Testing Patterns
+# Perl Testing Guide
 
-Comprehensive testing strategies for Perl applications using Test2::V0, Test::More, prove, and TDD methodology.
+Comprehensive guide for testing Perl code using Test::More, Test::Class, and related modules.
 
-## When to Activate
+## Test::More Basics
 
-- Writing new Perl code (follow TDD: red, green, refactor)
-- Designing test suites for Perl modules or applications
-- Reviewing Perl test coverage
-- Setting up Perl testing infrastructure
-- Migrating tests from Test::More to Test2::V0
-- Debugging failing Perl tests
+The foundation of Perl testing.
 
-## TDD Workflow
-
-Always follow the RED-GREEN-REFACTOR cycle.
+### Simple Test File
 
 ```perl
-# Step 1: RED — Write a failing test
-# t/unit/calculator.t
-use v5.36;
-use Test2::V0;
-
-use lib 'lib';
-use Calculator;
-
-subtest 'addition' => sub {
-    my $calc = Calculator->new;
-    is($calc->add(2, 3), 5, 'adds two numbers');
-    is($calc->add(-1, 1), 0, 'handles negatives');
-};
-
-done_testing;
-
-# Step 2: GREEN — Write minimal implementation
-# lib/Calculator.pm
-package Calculator;
-use v5.36;
-use Moo;
-
-sub add($self, $a, $b) {
-    return $a + $b;
-}
-
-1;
-
-# Step 3: REFACTOR — Improve while tests stay green
-# Run: prove -lv t/unit/calculator.t
-```
-
-## Test::More Fundamentals
-
-The standard Perl testing module — widely used, ships with core.
-
-### Basic Assertions
-
-```perl
-use v5.36;
+#!/usr/bin/env perl
+use strict;
+use warnings;
 use Test::More;
 
-# Plan upfront or use done_testing
-# plan tests => 5;  # Fixed plan (optional)
+# Basic assertions
+ok(1, 'truth is true');
+ok(!0, 'false is not true');
 
 # Equality
-is($result, 42, 'returns correct value');
-isnt($result, 0, 'not zero');
+is($got, $expected, 'values are equal');
+isnt($got, $unexpected, 'values differ');
 
-# Boolean
-ok($user->is_active, 'user is active');
-ok(!$user->is_banned, 'user is not banned');
+# String comparison
+is($string, 'expected', 'string matches');
+like($string, qr/pattern/, 'matches regex');
+unlike($string, qr/bad/, 'does not match regex');
 
-# Deep comparison
-is_deeply(
-    $got,
-    { name => 'Alice', roles => ['admin'] },
-    'returns expected structure'
-);
+# Numeric comparison
+cmp_ok($num, '>', 10, 'greater than 10');
+cmp_ok($num, '==', 42, 'equals 42');
 
-# Pattern matching
-like($error, qr/not found/i, 'error mentions not found');
-unlike($output, qr/password/, 'output hides password');
+# Data structures
+is_deeply(\@got, \@expected, 'arrays match');
+is_deeply(\%got, \%expected, 'hashes match');
 
-# Type check
-isa_ok($obj, 'MyApp::User');
-can_ok($obj, 'save', 'delete');
-
-done_testing;
+done_testing();
 ```
 
-### SKIP and TODO
+### Test Planning
 
 ```perl
-use v5.36;
+# Declare expected test count
+use Test::More tests => 5;
+
+# Or count at end
 use Test::More;
+# ... tests ...
+done_testing();
 
-# Skip tests conditionally
-SKIP: {
-    skip 'No database configured', 2 unless $ENV{TEST_DB};
-
-    my $db = connect_db();
-    ok($db->ping, 'database is reachable');
-    is($db->version, '15', 'correct PostgreSQL version');
-}
-
-# Mark expected failures
-TODO: {
-    local $TODO = 'Caching not yet implemented';
-    is($cache->get('key'), 'value', 'cache returns value');
-}
-
-done_testing;
+# Skip remaining tests
+use Test::More;
+# ... tests ...
+done_testing(10);  # Explicit count
 ```
 
-## Test2::V0 Modern Framework
+## Running Tests
 
-Test2::V0 is the modern replacement for Test::More — richer assertions, better diagnostics, and extensible.
+### prove Command
 
-### Why Test2?
+```bash
+# Run all tests in t/
+prove
 
-- Superior deep comparison with hash/array builders
-- Better diagnostic output on failures
-- Subtests with cleaner scoping
-- Extensible via Test2::Tools::* plugins
-- Backward-compatible with Test::More tests
+# Verbose output
+prove -v
 
-### Deep Comparison with Builders
+# Run specific test
+prove t/basic.t
 
-```perl
-use v5.36;
-use Test2::V0;
+# Recursive with color
+prove -r --color
 
-# Hash builder — check partial structure
-is(
-    $user->to_hash,
-    hash {
-        field name  => 'Alice';
-        field email => match(qr/\@example\.com$/);
-        field age   => validator(sub { $_ >= 18 });
-        # Ignore other fields
-        etc();
-    },
-    'user has expected fields'
-);
+# With library path
+prove -l t/  # Adds lib/ to @INC
 
-# Array builder
-is(
-    $result,
-    array {
-        item 'first';
-        item match(qr/^second/);
-        item DNE();  # Does Not Exist — verify no extra items
-    },
-    'result matches expected list'
-);
+# Parallel execution
+prove -j4
 
-# Bag — order-independent comparison
-is(
-    $tags,
-    bag {
-        item 'perl';
-        item 'testing';
-        item 'tdd';
-    },
-    'has all required tags regardless of order'
-);
+# Shuffle order
+prove --shuffle
 ```
 
-### Subtests
+### Common prove Flags
 
-```perl
-use v5.36;
-use Test2::V0;
+| Flag           | Purpose                    |
+| -------------- | -------------------------- |
+| `-v`           | Verbose TAP output         |
+| `-l`           | Add lib/ to @INC           |
+| `-b`           | Add blib/ to @INC          |
+| `-r`           | Recursive directory search |
+| `-j N`         | Run N tests in parallel    |
+| `--color`      | Colored output             |
+| `--shuffle`    | Randomize test order       |
+| `--state=save` | Save test state            |
 
-subtest 'User creation' => sub {
-    my $user = User->new(name => 'Alice', email => 'alice@example.com');
-    ok($user, 'user object created');
-    is($user->name, 'Alice', 'name is set');
-    is($user->email, 'alice@example.com', 'email is set');
-};
-
-subtest 'User validation' => sub {
-    my $warnings = warns {
-        User->new(name => '', email => 'bad');
-    };
-    ok($warnings, 'warns on invalid data');
-};
-
-done_testing;
-```
-
-### Exception Testing with Test2
-
-```perl
-use v5.36;
-use Test2::V0;
-
-# Test that code dies
-like(
-    dies { divide(10, 0) },
-    qr/Division by zero/,
-    'dies on division by zero'
-);
-
-# Test that code lives
-ok(lives { divide(10, 2) }, 'division succeeds') or note($@);
-
-# Combined pattern
-subtest 'error handling' => sub {
-    ok(lives { parse_config('valid.json') }, 'valid config parses');
-    like(
-        dies { parse_config('missing.json') },
-        qr/Cannot open/,
-        'missing file dies with message'
-    );
-};
-
-done_testing;
-```
-
-## Test Organization and prove
+## Test Organization
 
 ### Directory Structure
 
 ```text
-t/
-├── 00-load.t              # Verify modules compile
-├── 01-basic.t             # Core functionality
-├── unit/
-│   ├── config.t           # Unit tests by module
-│   ├── user.t
-│   └── util.t
-├── integration/
-│   ├── database.t
-│   └── api.t
+project/
 ├── lib/
-│   └── TestHelper.pm      # Shared test utilities
-└── fixtures/
-    ├── config.json        # Test data files
-    └── users.csv
+│   └── MyApp/
+│       ├── Module.pm
+│       └── Utils.pm
+├── t/
+│   ├── 00-compile.t
+│   ├── 01-basic.t
+│   ├── 02-module.t
+│   └── lib/
+│       └── Test/
+│           └── MyApp.pm
+└── xt/
+    ├── author/
+    │   └── pod.t
+    └── release/
+        └── manifest.t
 ```
 
-### prove Commands
-
-```bash
-# Run all tests
-prove -l t/
-
-# Verbose output
-prove -lv t/
-
-# Run specific test
-prove -lv t/unit/user.t
-
-# Recursive search
-prove -lr t/
-
-# Parallel execution (8 jobs)
-prove -lr -j8 t/
-
-# Run only failing tests from last run
-prove -l --state=failed t/
-
-# Colored output with timer
-prove -l --color --timer t/
-
-# TAP output for CI
-prove -l --formatter TAP::Formatter::JUnit t/ > results.xml
-```
-
-### .proverc Configuration
-
-```text
--l
---color
---timer
--r
--j4
---state=save
-```
-
-## Fixtures and Setup/Teardown
-
-### Subtest Isolation
+### Compile Test (t/00-compile.t)
 
 ```perl
-use v5.36;
-use Test2::V0;
-use File::Temp qw(tempdir);
-use Path::Tiny;
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Test::More;
 
-subtest 'file processing' => sub {
-    # Setup
-    my $dir = tempdir(CLEANUP => 1);
-    my $file = path($dir, 'input.txt');
-    $file->spew_utf8("line1\nline2\nline3\n");
+use_ok('MyApp::Module');
+use_ok('MyApp::Utils');
 
-    # Test
-    my $result = process_file("$file");
-    is($result->{line_count}, 3, 'counts lines');
-
-    # Teardown happens automatically (CLEANUP => 1)
-};
+done_testing();
 ```
 
-### Shared Test Helpers
+## Test::More Functions
 
-Place reusable helpers in `t/lib/TestHelper.pm` and load with `use lib 't/lib'`. Export factory functions like `create_test_db()`, `create_temp_dir()`, and `fixture_path()` via `Exporter`.
-
-## Mocking
-
-### Test::MockModule
+### Assertions
 
 ```perl
-use v5.36;
-use Test2::V0;
+# Boolean
+ok($condition, $description);
+
+# Equality
+is($got, $expected, $desc);       # String comparison
+isnt($got, $expected, $desc);
+cmp_ok($got, $op, $expected, $desc);  # Any operator
+
+# Pattern matching
+like($got, qr/pattern/, $desc);
+unlike($got, qr/pattern/, $desc);
+
+# Data structures
+is_deeply($got, $expected, $desc);
+
+# Reference type
+isa_ok($obj, 'ClassName');
+can_ok($obj, 'method1', 'method2');
+
+# Pass/fail
+pass($desc);
+fail($desc);
+```
+
+### Diagnostics
+
+```perl
+# Additional output on failure
+is($got, $expected, 'test') or diag("Got: $got");
+
+# Always print
+note("Debug info: $value");
+
+# Dump structure
+use Data::Dumper;
+diag(Dumper($complex_structure));
+```
+
+### Skipping and TODO
+
+```perl
+# Skip tests conditionally
+SKIP: {
+    skip "No database connection", 3 unless $db;
+
+    ok($db->ping, 'database responds');
+    is($db->version, '5.7', 'correct version');
+    ok($db->tables > 0, 'has tables');
+}
+
+# Mark tests as TODO
+TODO: {
+    local $TODO = "Feature not implemented";
+
+    is(new_feature(), 'expected', 'new feature works');
+}
+
+# Skip all tests in file
+plan skip_all => 'Module not installed' unless eval { require Optional::Module };
+```
+
+## Test::Exception
+
+Test that code dies or lives correctly.
+
+```perl
+use Test::More;
+use Test::Exception;
+
+# Test that code dies
+dies_ok { divide(1, 0) } 'division by zero dies';
+
+# Test that code lives
+lives_ok { safe_operation() } 'safe operation lives';
+
+# Test specific exception
+throws_ok { bad_call() } qr/invalid argument/i, 'throws expected error';
+
+# Test exception type
+throws_ok { bad_call() } 'MyApp::Exception', 'throws correct class';
+
+# Combine with return value
+lives_and { is(calc(2, 2), 4) } 'calc lives and returns correct value';
+
+done_testing();
+```
+
+## Test::Deep
+
+Deep structure comparison with flexibility.
+
+```perl
+use Test::More;
+use Test::Deep;
+
+# Ignore certain values
+cmp_deeply(
+    $got,
+    {
+        id => ignore(),        # Any value
+        name => 'test',
+        created => re(qr/^\d{4}-\d{2}-\d{2}$/),  # Pattern match
+    },
+    'structure matches'
+);
+
+# Bag comparison (order doesn't matter)
+cmp_deeply(
+    \@got,
+    bag(1, 2, 3),  # Same elements, any order
+    'contains all elements'
+);
+
+# Subset matching
+cmp_deeply(
+    $got,
+    superhashof({ required => 'value' }),
+    'contains required keys'
+);
+
+# Type checking
+cmp_deeply(
+    $data,
+    {
+        count => code(sub { $_[0] > 0 }),
+        items => array_each(isa('MyApp::Item')),
+    },
+    'types correct'
+);
+
+done_testing();
+```
+
+## Test::MockModule
+
+Mock module behavior for isolation.
+
+```perl
+use Test::More;
 use Test::MockModule;
 
-subtest 'mock external API' => sub {
-    my $mock = Test::MockModule->new('MyApp::API');
+# Mock a module
+my $mock = Test::MockModule->new('MyApp::Database');
 
-    # Good: Mock returns controlled data
-    $mock->mock(fetch_user => sub ($self, $id) {
-        return { id => $id, name => 'Mock User', email => 'mock@test.com' };
-    });
+# Replace a method
+$mock->mock('connect', sub { return 'fake_handle' });
 
-    my $api = MyApp::API->new;
-    my $user = $api->fetch_user(42);
-    is($user->{name}, 'Mock User', 'returns mocked user');
+# Mock with return value
+$mock->mock('fetch', sub { return { id => 1, name => 'test' } });
 
-    # Verify call count
-    my $call_count = 0;
-    $mock->mock(fetch_user => sub { $call_count++; return {} });
-    $api->fetch_user(1);
-    $api->fetch_user(2);
-    is($call_count, 2, 'fetch_user called twice');
+# Verify mock was called
+my $called = 0;
+$mock->mock('save', sub { $called++; return 1 });
 
-    # Mock is automatically restored when $mock goes out of scope
-};
+# Run code under test
+my $result = MyApp::Service->new->process();
 
-# Bad: Monkey-patching without restoration
-# *MyApp::API::fetch_user = sub { ... };  # NEVER — leaks across tests
+is($called, 1, 'save was called');
+
+# Restore original
+$mock->unmock('connect');
+
+done_testing();
 ```
 
-For lightweight mock objects, use `Test::MockObject` to create injectable test doubles with `->mock()` and verify calls with `->called_ok()`.
+## Test::Class
 
-## Coverage with Devel::Cover
-
-### Running Coverage
-
-```bash
-# Basic coverage report
-cover -test
-
-# Or step by step
-perl -MDevel::Cover -Ilib t/unit/user.t
-cover
-
-# HTML report
-cover -report html
-open cover_db/coverage.html
-
-# Specific thresholds
-cover -test -report text | grep 'Total'
-
-# CI-friendly: fail under threshold
-cover -test && cover -report text -select '^lib/' \
-  | perl -ne 'if (/Total.*?(\d+\.\d+)/) { exit 1 if $1 < 80 }'
-```
-
-### Integration Testing
-
-Use in-memory SQLite for database tests, mock HTTP::Tiny for API tests.
+Object-oriented testing with setup/teardown.
 
 ```perl
-use v5.36;
-use Test2::V0;
+package Test::MyApp::User;
+use parent 'Test::Class';
+use Test::More;
+use MyApp::User;
+
+# Run before each test method
+sub setup : Test(setup) {
+    my $self = shift;
+    $self->{user} = MyApp::User->new(name => 'Test');
+}
+
+# Run after each test method
+sub teardown : Test(teardown) {
+    my $self = shift;
+    $self->{user} = undef;
+}
+
+# Test methods
+sub test_creation : Test(2) {
+    my $self = shift;
+    isa_ok($self->{user}, 'MyApp::User');
+    is($self->{user}->name, 'Test', 'name is set');
+}
+
+sub test_validation : Test(1) {
+    my $self = shift;
+    ok($self->{user}->is_valid, 'user is valid');
+}
+
+# Run all Test::Class tests
+Test::Class->runtests;
+```
+
+### Test::Class Runner
+
+```perl
+#!/usr/bin/env perl
+# t/run_all.t
+use strict;
+use warnings;
+
+use lib 't/lib';
+use Test::MyApp::User;
+use Test::MyApp::Order;
+
+Test::Class->runtests;
+```
+
+## Fixtures and Test Data
+
+### Test Data Files
+
+```perl
+use Path::Tiny;
+use JSON::PP;
+
+sub load_fixture {
+    my ($name) = @_;
+    my $file = path("t/fixtures/$name.json");
+    return decode_json($file->slurp_utf8);
+}
+
+# In test
+my $data = load_fixture('users');
+```
+
+### Database Fixtures
+
+```perl
+use Test::More;
 use DBI;
 
-subtest 'database integration' => sub {
-    my $dbh = DBI->connect('dbi:SQLite:dbname=:memory:', '', '', {
-        RaiseError => 1,
-    });
+my $dbh;
+
+sub setup_test_db {
+    $dbh = DBI->connect('dbi:SQLite::memory:', '', '');
     $dbh->do('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)');
+    $dbh->do("INSERT INTO users VALUES (1, 'test')");
+}
 
-    $dbh->prepare('INSERT INTO users (name) VALUES (?)')->execute('Alice');
-    my $row = $dbh->selectrow_hashref('SELECT * FROM users WHERE name = ?', undef, 'Alice');
-    is($row->{name}, 'Alice', 'inserted and retrieved user');
-};
+sub teardown_test_db {
+    $dbh->disconnect if $dbh;
+}
 
-done_testing;
+# Use in tests
+setup_test_db();
+# ... run tests ...
+teardown_test_db();
 ```
 
-## Best Practices
-
-### DO
-
-- **Follow TDD**: Write tests before implementation (red-green-refactor)
-- **Use Test2::V0**: Modern assertions, better diagnostics
-- **Use subtests**: Group related assertions, isolate state
-- **Mock external dependencies**: Network, database, file system
-- **Use `prove -l`**: Always include lib/ in `@INC`
-- **Name tests clearly**: `'user login with invalid password fails'`
-- **Test edge cases**: Empty strings, undef, zero, boundary values
-- **Aim for 80%+ coverage**: Focus on business logic paths
-- **Keep tests fast**: Mock I/O, use in-memory databases
-
-### DON'T
-
-- **Don't test implementation**: Test behavior and output, not internals
-- **Don't share state between subtests**: Each subtest should be independent
-- **Don't skip `done_testing`**: Ensures all planned tests ran
-- **Don't over-mock**: Mock boundaries only, not the code under test
-- **Don't use `Test::More` for new projects**: Prefer Test2::V0
-- **Don't ignore test failures**: All tests must pass before merge
-- **Don't test CPAN modules**: Trust libraries to work correctly
-- **Don't write brittle tests**: Avoid over-specific string matching
-
-## Quick Reference
-
-| Task | Command / Pattern |
-|---|---|
-| Run all tests | `prove -lr t/` |
-| Run one test verbose | `prove -lv t/unit/user.t` |
-| Parallel test run | `prove -lr -j8 t/` |
-| Coverage report | `cover -test && cover -report html` |
-| Test equality | `is($got, $expected, 'label')` |
-| Deep comparison | `is($got, hash { field k => 'v'; etc() }, 'label')` |
-| Test exception | `like(dies { ... }, qr/msg/, 'label')` |
-| Test no exception | `ok(lives { ... }, 'label')` |
-| Mock a method | `Test::MockModule->new('Pkg')->mock(m => sub { ... })` |
-| Skip tests | `SKIP: { skip 'reason', $count unless $cond; ... }` |
-| TODO tests | `TODO: { local $TODO = 'reason'; ... }` |
-
-## Common Pitfalls
-
-### Forgetting `done_testing`
-
-```perl
-# Bad: Test file runs but doesn't verify all tests executed
-use Test2::V0;
-is(1, 1, 'works');
-# Missing done_testing — silent bugs if test code is skipped
-
-# Good: Always end with done_testing
-use Test2::V0;
-is(1, 1, 'works');
-done_testing;
-```
-
-### Missing `-l` Flag
+## Coverage
 
 ```bash
-# Bad: Modules in lib/ not found
-prove t/unit/user.t
-# Can't locate MyApp/User.pm in @INC
+# Install Devel::Cover
+cpanm Devel::Cover
 
-# Good: Include lib/ in @INC
-prove -l t/unit/user.t
+# Run tests with coverage
+cover -test
+
+# Generate HTML report
+cover -report html
+
+# View report
+open cover_db/coverage.html
 ```
 
-### Over-Mocking
+## Additional Resources
 
-Mock the *dependency*, not the code under test. If your test only verifies that a mock returns what you told it to, it tests nothing.
+### Reference Files
 
-### Test Pollution
+- [Test Examples](./references/test-examples/) - Complete working test files
+- [Mock Patterns](./references/mock-patterns.md) - Common mocking strategies
 
-Use `my` variables inside subtests — never `our` — to prevent state leaking between tests.
+### Related Skills
 
-**Remember**: Tests are your safety net. Keep them fast, focused, and independent. Use Test2::V0 for new projects, prove for running, and Devel::Cover for accountability.
+For modern Perl coding patterns, see the **perl-development** skill.

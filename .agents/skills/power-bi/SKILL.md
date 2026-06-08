@@ -1,232 +1,458 @@
 ---
 name: power-bi
-description: Power BI development with PBIP format — TMDL models, Power Query (M), DAX measures, star schema design, report authoring, publishing to Power BI Service, scheduled refresh, and connector troubleshooting. USE WHEN user mentions Power BI, PBIP, TMDL, DAX measures, Power Query, semantic model, PBI report, star schema for PBI, publish to Power BI, scheduled refresh, data gateway, PBI connector, cost management connector, EA connector, Power BI template app, or any Power BI development task. Also use when editing .tmdl, .pq, .pbip, .pbir, .pbism files, or working with HyperaTheme.json.
+description: Master Power BI development including DAX formulas, Power Query M, data modeling, and report optimization
+sasmp_version: "1.3.0"
+bonded_agent: 04-excel-power-bi
+bond_type: PRIMARY_BOND
+parameters:
+  task:
+    type: string
+    required: true
+    enum: [dax_measure, power_query, data_model, visualization, performance]
+  complexity:
+    type: string
+    enum: [basic, intermediate, advanced]
+    default: intermediate
+  context:
+    type: string
+    enum: [row, filter, query]
+    default: filter
+retry_config:
+  max_retries: 3
+  backoff_ms: [1000, 2000, 4000]
 ---
 
-# Power BI Development Skill
+# Power BI Skill
 
-End-to-end Power BI project development using the PBIP (Power BI Project) format — the git-friendly, text-based format for version-controlled Power BI solutions.
+Master Microsoft Power BI development including DAX formulas, Power Query transformations, data modeling, and report optimization.
 
-## When This Skill Applies
+## Quick Start (5 minutes)
 
-- Creating or modifying Power BI semantic models (TMDL files)
-- Writing or debugging Power Query (M) expressions (.pq files)
-- Authoring DAX measures
-- Designing star schema data models
-- Publishing reports to Power BI Service
-- Configuring scheduled refresh and data gateways
-- Troubleshooting PBI connectors (especially Azure Cost Management / EA)
-- Working with any .tmdl, .pq, .pbip, .pbir, .pbism files
+```dax
+// 3 essential DAX patterns:
 
-## PBIP Project Structure
+// 1. Basic measure
+Total Sales = SUM(Sales[Amount])
 
-```
-ProjectName/
-├── ProjectName.pbip                    # Open this in PBI Desktop
-├── ProjectName.Report/
-│   ├── report.json                     # Report visuals (edit in PBI Desktop)
-│   ├── definition.pbir                 # Report definition pointer
-│   └── StaticResources/
-│       └── SharedResources/BaseThemes/ # Custom themes (.json)
-├── ProjectName.SemanticModel/
-│   ├── definition.pbism                # Semantic model pointer
-│   └── definition/
-│       ├── model.tmdl                  # Model-level settings
-│       ├── tables/                     # Table definitions + measures (.tmdl)
-│       ├── expressions/                # Power Query scripts (.pq)
-│       └── relationships.tmdl          # Star schema joins
-├── scripts/                            # Python automation (optional)
-└── docs/                               # Documentation
+// 2. Time intelligence
+Sales YTD = TOTALYTD([Total Sales], 'Date'[Date])
+
+// 3. Safe division
+Profit Margin = DIVIDE([Profit], [Revenue], 0)
 ```
 
-## Workflow Routing
+## Core Concepts
 
-| Workflow | Trigger | File |
-|----------|---------|------|
-| NewProject | "create PBI project", "scaffold PBIP", "new Power BI project" | `workflows/new-project.md` |
-| AddTable | "add table", "new fact table", "new dimension", "add PQ source" | `workflows/add-table.md` |
-| AddMeasure | "add DAX measure", "create measure", "new KPI" | `workflows/add-measure.md` |
-| DataModeling | "star schema", "add relationship", "data model design" | `workflows/data-modeling.md` |
-| PublishRefresh | "publish to service", "scheduled refresh", "data gateway" | `workflows/publish-refresh.md` |
-| ConnectorAuth | "connector auth", "EA connector", "cost management connector", "PBI sign in failed" | `workflows/connector-auth.md` |
-| Troubleshooting | "PBI error", "refresh failed", "data not loading", "type error" | `workflows/troubleshooting.md` |
+### DAX Evaluation Context
 
-## Reference Files
-
-Read these as needed — don't load all at once:
-
-| Reference | When to Read | File |
-|-----------|-------------|------|
-| TMDL Syntax | Writing or editing .tmdl files | `references/tmdl-syntax.md` |
-| Power Query Patterns | Writing or editing .pq files | `references/power-query-patterns.md` |
-| DAX Patterns | Writing DAX measures | `references/dax-patterns.md` |
-| Star Schema Guide | Data model design decisions | `references/star-schema-guide.md` |
-| PBI Service & Gateway | Publishing and refresh config | `references/pbi-service-gateway.md` |
-
-## Tools
-
-### File Operations (PBIP Development)
-
-| Tool | Use For |
-|------|---------|
-| **Read** | Read .tmdl, .pq, .pbip, .pbir, .pbism, report.json, theme.json files |
-| **Write** | Create new .tmdl, .pq, .json files for new tables, expressions, themes |
-| **Edit** | Modify existing .tmdl files (add measures, columns), edit .pq expressions, update relationships.tmdl |
-| **Glob** | Find files by pattern: `**/*.tmdl`, `**/*.pq`, `**/expressions/*.pq` |
-| **Grep** | Search across TMDL/PQ files: find measure names, lineageTags, column references |
-
-### Code Search & Navigation
-
-| Tool | Use For |
-|------|---------|
-| **Grep** `pattern: "lineageTag"` | Verify lineageTag uniqueness across all .tmdl files |
-| **Grep** `pattern: "displayFolder"` | List all measure folders for organization |
-| **Grep** `pattern: "USERELATIONSHIP"` | Find measures using inactive relationships |
-| **Grep** `pattern: "isActive: false"` | Find inactive relationships that need USERELATIONSHIP |
-| **Glob** `pattern: "**/*.pq"` | List all Power Query expressions |
-| **Glob** `pattern: "**/tables/*.tmdl"` | List all table definitions |
-
-### Automation & Scripting
-
-| Tool | Use For |
-|------|---------|
-| **Bash** | Run Python scripts: `python scripts/export_billing_data.py --period YYYYMM` |
-| **Bash** | Run anomaly detection: `python scripts/detect_anomalies.py --data-folder ./data` |
-| **Bash** | Git operations on PBIP files (commit, diff, branch) |
-| **Bash** | Install Python dependencies: `pip install -r scripts/requirements.txt` |
-| **Bash** | Azure CLI for data export auth: `az login`, `az account set` |
-
-### Browser Automation (Power BI Service)
-
-| Tool | Use For |
-|------|---------|
-| **Browser tools** (mcp__claude-in-chrome__*) | Navigate Power BI Service web UI |
-| **navigate** | Open Power BI workspaces, dataset settings, refresh history |
-| **form_input** | Configure scheduled refresh, data source credentials, parameters |
-| **get_page_text** / **read_page** | Read refresh history, error messages, dataset settings |
-| **javascript_tool** | Interact with PBI Service UI elements |
-| **tabs_create_mcp** | Open new tabs for PBI Service pages |
-| **gif_creator** | Record multi-step PBI Service configuration for documentation |
-
-### Research & Documentation
-
-| Tool | Use For |
-|------|---------|
-| **WebSearch** | Look up DAX functions, TMDL syntax changes, PBI release notes |
-| **WebFetch** | Fetch Microsoft Learn docs for PBI/DAX/M reference |
-| **microsoft_docs_search** (MCP) | Search official Microsoft PBI documentation |
-| **microsoft_docs_fetch** (MCP) | Fetch full PBI documentation pages |
-| **microsoft_code_sample_search** (MCP) | Find DAX/M code samples from Microsoft docs |
-| **context7** (MCP) | Fetch current library docs for Azure SDK, PBI REST API |
-
-### Data Inspection
-
-| Tool | Use For |
-|------|---------|
-| **Read** | Inspect CSV billing exports (preview first rows) |
-| **Bash** `wc -l` | Count rows in large CSV files |
-| **Bash** `head -5` | Preview CSV headers and first rows |
-| **Grep** on CSV | Search for specific resource groups, subscriptions, or cost values |
-
-### Common Tool Sequences
-
-**Adding a new measure:**
-1. `Grep` for existing lineageTags → ensure uniqueness
-2. `Read` _Measures.tmdl → understand patterns
-3. `Edit` _Measures.tmdl → add the new measure
-
-**Adding a new table:**
-1. `Write` expressions/NewTable.pq → create PQ expression
-2. `Write` tables/NewTable.tmdl → create table definition
-3. `Edit` relationships.tmdl → add relationship
-4. `Grep` for lineageTags → verify no conflicts
-
-**Troubleshooting connector auth:**
-1. `Read` workflows/connector-auth.md → get diagnosis steps
-2. Browser tools → navigate to EA portal or PBI Service settings
-3. `Read` project memory → check known EA enrollment details
-
-**Publishing and refresh:**
-1. Browser tools → navigate to PBI Service workspace
-2. `read_page` → check current dataset settings
-3. `form_input` → configure refresh schedule
-4. `get_page_text` → verify refresh history
-
-## Critical Rules
-
-1. **PBIP format only** — Never suggest .pbix for version-controlled projects. PBIP is the git-friendly format (TMDL = text, PQ = text, clean diffs).
-
-2. **Localization awareness** — Ask the user what language their labels should be in. For Brazilian projects, use pt-BR labels, BRL currency format (`R$ #,##0.00`), and Portuguese month names.
-
-3. **Star schema discipline** — All relationships must be M:1 from fact to dimension tables. Use `crossFilteringBehavior: oneDirection`. Use `isActive: false` + `USERELATIONSHIP()` in DAX for ambiguous paths (e.g., multiple date relationships).
-
-4. **Measures table pattern** — All DAX measures go in a dedicated `_Measures` table (calculated table with `ROW("MeasureColumn", 0)`). Organize measures into `displayFolder` groups.
-
-5. **Power Query parameter** — Use a `Parameter_ExportFolder` parameter for folder-based CSV ingestion. This makes the data source path configurable without editing PQ code.
-
-6. **lineageTag convention** — Every table, measure, column, and relationship needs a unique `lineageTag`. Use descriptive kebab-case: `m-custo-total`, `t-fact-usage`, `rel-usage-date`.
-
-7. **Format strings** — Currency: `R$ #,##0.00` (or locale-appropriate). Percentage: `0.0%;-0.0%;0.0%`. Integer: `#,##0`. Use the three-part format for percentages to handle negative values.
-
-8. **EA connector vs Azure RBAC** — The PBI Cost Management connector for EA enrollments requires **Enterprise Administrator (read-only)** role at the billing account level. Standard Azure RBAC roles (Cost Management Reader, Billing Reader) do NOT work. See `workflows/connector-auth.md`.
-
-## Quick Examples
-
-### TMDL Measure
 ```
-measure 'Custo Total' =
-    SUM(Fact_Usage[PretaxCost])
-    formatString: R$ #,##0.00
-    displayFolder: Custo
-    lineageTag: m-custo-total
+┌─────────────────────────────────────────────────────────────┐
+│                    CONTEXT IN DAX                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ROW CONTEXT                    FILTER CONTEXT              │
+│  ────────────                   ──────────────              │
+│  Created by:                    Created by:                 │
+│  • Calculated columns           • Slicers                   │
+│  • Iterators (SUMX, etc.)       • Filters                   │
+│  • Row-level security           • Rows/Columns in visual    │
+│                                 • CALCULATE                  │
+│  Accesses:                      Accesses:                   │
+│  • Current row values           • Filtered table            │
+│                                                             │
+│  CALCULATE triggers CONTEXT TRANSITION                      │
+│  (Row context → Filter context)                             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### TMDL Relationship
-```
-relationship Fact_Usage_to_Dim_Date
-    fromColumn: Fact_Usage.DateKey
-    toColumn: Dim_Date.Date
-    crossFilteringBehavior: oneDirection
+### Measure vs Calculated Column
+
+| Aspect | Measure | Calculated Column |
+|--------|---------|-------------------|
+| Calculated | Query time | Refresh time |
+| Storage | None | In model |
+| Context | Filter | Row |
+| Use when | Aggregations | Row-level values |
+| Performance | Better for large data | Impacts model size |
+
+### CALCULATE Deep Dive
+
+```dax
+// CALCULATE structure
+CALCULATE(
+    <expression>,           // What to calculate
+    <filter1>,              // Modify filter context
+    <filter2>,              // Additional filters
+    ...
+)
+
+// CALCULATE actions:
+// 1. Context transition (row → filter)
+// 2. Apply filters (modify filter context)
+// 3. Evaluate expression (in new context)
+
+// Examples:
+Sales All Products = CALCULATE([Total Sales], ALL(Products))
+Sales Current Region = CALCULATE([Total Sales], REMOVEFILTERS())
+Sales Top Category = CALCULATE([Total Sales], TOPN(1, Categories, [Total Sales]))
 ```
 
-### Power Query — Folder-based CSV ingestion
-```m
+## Code Examples
+
+### Time Intelligence Measures
+```dax
+// Year-to-Date
+Sales YTD =
+TOTALYTD(
+    [Total Sales],
+    'Date'[Date]
+)
+
+// Prior Year
+Sales PY =
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR('Date'[Date])
+)
+
+// Year-over-Year Growth
+YoY Growth % =
+VAR CurrentSales = [Total Sales]
+VAR PriorSales = [Sales PY]
+RETURN
+DIVIDE(
+    CurrentSales - PriorSales,
+    PriorSales,
+    BLANK()
+)
+
+// Rolling 12 Months
+Sales Rolling 12M =
+CALCULATE(
+    [Total Sales],
+    DATESINPERIOD(
+        'Date'[Date],
+        MAX('Date'[Date]),
+        -12,
+        MONTH
+    )
+)
+
+// Month-to-Date
+Sales MTD =
+TOTALMTD(
+    [Total Sales],
+    'Date'[Date]
+)
+
+// Previous Month
+Sales PM =
+CALCULATE(
+    [Total Sales],
+    PREVIOUSMONTH('Date'[Date])
+)
+```
+
+### Dynamic Segmentation
+```dax
+// Customer Segment based on Sales
+Customer Segment =
+VAR CustomerSales = [Total Sales]
+RETURN
+SWITCH(
+    TRUE(),
+    CustomerSales >= 100000, "Platinum",
+    CustomerSales >= 50000, "Gold",
+    CustomerSales >= 10000, "Silver",
+    "Bronze"
+)
+
+// ABC Analysis (Pareto)
+ABC Category =
+VAR CurrentProduct = SELECTEDVALUE(Products[ProductName])
+VAR AllProducts =
+    ADDCOLUMNS(
+        ALLSELECTED(Products[ProductName]),
+        "@Sales", [Total Sales]
+    )
+VAR RankedProducts =
+    ADDCOLUMNS(
+        AllProducts,
+        "@Rank", RANKX(AllProducts, [@Sales],, DESC, DENSE),
+        "@CumSales", SUMX(
+            FILTER(AllProducts, RANKX(AllProducts, [@Sales],, DESC, DENSE) <= RANKX(AllProducts, [@Sales],, DESC, DENSE)),
+            [@Sales]
+        )
+    )
+VAR TotalSales = SUMX(AllProducts, [@Sales])
+VAR CumPct =
+    MAXX(
+        FILTER(RankedProducts, [Products[ProductName]] = CurrentProduct),
+        [@CumSales] / TotalSales
+    )
+RETURN
+SWITCH(
+    TRUE(),
+    CumPct <= 0.8, "A",
+    CumPct <= 0.95, "B",
+    "C"
+)
+```
+
+### Power Query M Patterns
+```powerquery
+// Incremental Refresh Setup
 let
-    Source = Folder.Files(Parameter_ExportFolder),
-    Filtered = Table.SelectRows(Source, each
-        Text.Contains([Name], "UsageDetails") and Text.EndsWith([Name], ".csv")),
-    Combined = Table.Combine(
-        Table.AddColumn(Filtered, "Data", each
-            Csv.Document([Content], [Delimiter=",", Encoding=65001])
-        )[Data]
+    Source = Sql.Database("server", "database"),
+    // RangeStart and RangeEnd are incremental refresh parameters
+    FilteredRows = Table.SelectRows(
+        Source,
+        each [ModifiedDate] >= RangeStart and [ModifiedDate] < RangeEnd
     )
 in
-    Combined
+    FilteredRows
+
+// Dynamic Column Pivoting
+let
+    Source = Excel.CurrentWorkbook(){[Name="Data"]}[Content],
+    Unpivoted = Table.UnpivotOtherColumns(
+        Source,
+        {"Product"},
+        "Attribute",
+        "Value"
+    )
+in
+    Unpivoted
+
+// Error Handling
+let
+    Source = try Sql.Database("server", "db")
+             otherwise #table({"Status"}, {{"Connection Failed"}}),
+    Result = if Table.RowCount(Source) > 0
+             then Source
+             else error "No data returned"
+in
+    Result
+
+// Custom Function
+let
+    CalculateMargin = (Revenue as number, Cost as number) as number =>
+        if Revenue = 0 then 0 else (Revenue - Cost) / Revenue
+in
+    CalculateMargin
 ```
 
-### DAX — Month-over-Month variance with safe division
+## Best Practices
+
+### DAX Formatting Standard
 ```dax
-measure 'Variacao MoM %' =
-    VAR CustoAtual = [Custo Mes Atual]
-    VAR CustoAnterior = [Custo Mes Anterior]
-    RETURN
-        IF(
-            CustoAnterior <> 0,
-            DIVIDE(CustoAtual - CustoAnterior, CustoAnterior),
-            BLANK()
-        )
-    formatString: 0.0%;-0.0%;0.0%
-    displayFolder: Variacao
+// Format: Sentence case with units
+Revenue per Customer ($) =
+VAR TotalRevenue = SUM(Sales[Revenue])
+VAR CustomerCount = DISTINCTCOUNT(Sales[CustomerID])
+RETURN
+DIVIDE(
+    TotalRevenue,
+    CustomerCount,
+    0  // Alternate result for division by zero
+)
 ```
 
----
+### Model Optimization Checklist
+```
+□ Remove unused columns
+□ Disable Auto Date/Time
+□ Use star schema (avoid snowflake)
+□ Create a proper Date table (mark as date table)
+□ Use integer keys for relationships
+□ Avoid bidirectional filtering (use only when necessary)
+□ Set column data types correctly
+□ Hide foreign key columns from report view
+□ Group measures in display folders
+□ Add descriptions to measures
+```
 
-## Gotchas
+### Performance Anti-Patterns
+```dax
+// ❌ AVOID: FILTER with large tables
+Sales Filtered =
+CALCULATE([Total Sales], FILTER(ALL(Products), Products[Category] = "A"))
 
-- **PBIP vs PBIX one-way regeneration:** Re-saving a `.pbip` as `.pbix` and back can silently regenerate every `lineageTag` GUID and rewrite TMDL whitespace, producing a massive zero-semantic diff. Always round-trip through PBIP and review diffs before committing.
-- **EA connector ignores Azure RBAC:** `Cost Management Reader` and `Billing Reader` roles always fail for EA enrollments. Only **Enterprise Administrator (read-only)** at billing account level works. MCA enrollments use a completely different auth path.
-- **`Parameter_ExportFolder` must be Text type, not a path literal:** PQ accepts literals during dev but Service refresh evaluates parameters before credentials, throwing an opaque "formula.firewall" error that never names the offending parameter.
-- **Three-part format strings flip on zero:** `0.0%;-0.0%;0.0%` shows zero in positive form. Use `0.0%;-0.0%;"-"` if zero should render as a dash — positives look identical in review.
-- **Folder.Files on a live export folder is non-deterministic:** If exports overwrite the same filename mid-refresh, PQ may read a partial file with no error. Filter by `Date.From([Date modified])` or partition by YYYYMM in the export path.
-- **`crossFilteringBehavior: oneDirection` is the only correct spelling:** `singleDirection` parses on import but is silently ignored. Misspelling makes a star schema go bidirectional, killing performance and creating ambiguous paths.
+// ✓ BETTER: Direct filter
+Sales Filtered =
+CALCULATE([Total Sales], Products[Category] = "A")
 
+// ❌ AVOID: SUMX over entire table
+Total Margin =
+SUMX(Sales, Sales[Revenue] - Sales[Cost])
+
+// ✓ BETTER: Pre-calculated column or simpler aggregate
+Total Margin =
+SUM(Sales[Revenue]) - SUM(Sales[Cost])
+```
+
+## Common Patterns
+
+### Conditional Formatting Values
+```dax
+// Return values for conditional formatting
+Status Icon =
+VAR Actual = [Total Sales]
+VAR Target = [Target]
+VAR Variance = DIVIDE(Actual - Target, Target)
+RETURN
+SWITCH(
+    TRUE(),
+    Variance >= 0.1, "▲",  // Green up
+    Variance >= 0, "●",    // Yellow neutral
+    "▼"                    // Red down
+)
+
+// Background color value
+KPI Color =
+VAR Variance = [Variance %]
+RETURN
+SWITCH(
+    TRUE(),
+    Variance >= 0.1, "#22C55E",
+    Variance >= 0, "#F59E0B",
+    "#EF4444"
+)
+```
+
+### Dynamic Top N
+```dax
+// With parameter table
+Top N Sales =
+VAR TopNValue = SELECTEDVALUE('Parameters'[TopN], 10)
+VAR RankedProducts =
+    ADDCOLUMNS(
+        SUMMARIZE(Sales, Products[ProductName]),
+        "@Sales", [Total Sales],
+        "@Rank", RANKX(ALL(Products[ProductName]), [Total Sales],, DESC)
+    )
+RETURN
+SUMX(
+    FILTER(RankedProducts, [@Rank] <= TopNValue),
+    [@Sales]
+)
+```
+
+### Disconnected Table Pattern
+```dax
+// Create slicer options without relationships
+// DateGranularity table: Day, Week, Month, Quarter, Year
+
+Selected Granularity Label =
+VAR Selection = SELECTEDVALUE('DateGranularity'[Granularity], "Month")
+RETURN
+SWITCH(
+    Selection,
+    "Day", FORMAT([Date], "MMM DD, YYYY"),
+    "Week", "Week " & WEEKNUM([Date]),
+    "Month", FORMAT([Date], "MMM YYYY"),
+    "Quarter", "Q" & QUARTER([Date]) & " " & YEAR([Date]),
+    "Year", FORMAT([Date], "YYYY")
+)
+```
+
+## Retry Logic
+
+```typescript
+const refreshDataset = async (datasetId: string) => {
+  const retryConfig = {
+    maxRetries: 3,
+    backoffMs: [60000, 120000, 300000]  // 1min, 2min, 5min
+  };
+
+  for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+    try {
+      return await powerBIService.refreshDataset(datasetId);
+    } catch (error) {
+      if (attempt === retryConfig.maxRetries) throw error;
+      if (error.code === 'REFRESH_ALREADY_IN_PROGRESS') {
+        await waitForRefreshComplete(datasetId);
+        return;
+      }
+      await sleep(retryConfig.backoffMs[attempt]);
+    }
+  }
+};
+```
+
+## Logging Hooks
+
+```typescript
+const powerBIHooks = {
+  onMeasureEvaluate: (measureName, duration) => {
+    console.log(`[DAX] ${measureName} evaluated in ${duration}ms`);
+    if (duration > 1000) {
+      console.warn(`[DAX] Slow measure: ${measureName}`);
+    }
+  },
+
+  onRefreshStart: (datasetId) => {
+    console.log(`[REFRESH] Starting: ${datasetId}`);
+  },
+
+  onRefreshComplete: (datasetId, status, duration) => {
+    console.log(`[REFRESH] ${datasetId}: ${status} in ${duration}s`);
+  }
+};
+```
+
+## Unit Test Template
+
+```typescript
+describe('Power BI Skill', () => {
+  describe('DAX Measures', () => {
+    it('should calculate YoY correctly', async () => {
+      const result = await evaluateMeasure('YoY Growth %', {
+        'Date[Year]': 2024
+      });
+      expect(result).toBeCloseTo(0.15, 2);
+    });
+
+    it('should handle division by zero', async () => {
+      const result = await evaluateMeasure('Profit Margin', {
+        'Sales[Amount]': 0
+      });
+      expect(result).toBe(0);  // Not error
+    });
+  });
+
+  describe('Data Model', () => {
+    it('should have star schema structure', () => {
+      const relationships = getModelRelationships();
+      const factsToFacts = relationships.filter(
+        r => r.fromTable.startsWith('Fact_') && r.toTable.startsWith('Fact_')
+      );
+      expect(factsToFacts.length).toBe(0);
+    });
+  });
+});
+```
+
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Circular dependency | Self-referencing | Use VAR or EARLIER() |
+| Wrong totals | Filter context leakage | Use ALL() or REMOVEFILTERS() |
+| Slow visuals | Complex iterator | Use SUMMARIZECOLUMNS |
+| Blank results | Missing relationship | Check model relationships |
+| #ERROR | Division by zero | Use DIVIDE() function |
+
+## Resources
+
+- **SQLBI**: DAX Patterns and best practices
+- **DAX Guide**: Complete function reference
+- **Power Query M Reference**: Microsoft documentation
+- **DAX Studio**: Performance analysis tool
+
+## Version History
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2024-01 | Initial release |
+| 2.0.0 | 2025-01 | Production-grade with optimization |

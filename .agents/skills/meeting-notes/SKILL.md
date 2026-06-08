@@ -1,49 +1,139 @@
 ---
 name: meeting-notes
-description: Use this skill to process meeting transcripts (VTT/SRT format) to extract structured minutes, action items, and decisions. Trigger this whenever given a transcript file, or when asked to "create meeting documentation", "extract action items", or "summarize the meeting". This will also optionally integrate the findings into GitHub, Jira, or Slack.
+description: Generate structured meeting notes with action items, decisions, and summaries from transcripts. Use when documenting meetings or creating meeting summaries.
 ---
 
 # Meeting Notes Skill
 
-Process Microsoft Teams meeting transcripts (VTT format) to extract meeting minutes, action items, and decisions.
+会議の議事録を構造化して生成するスキルです。
 
-## Task Flow
+## 概要
 
-1. **Transcript Parsing**: Read VTT (WebVTT) format files. See [references/formats.md](references/formats.md) for parsing logic.
-2. **Analysis**: Identify decisions, actions, and key discussions using NLP and pattern matching.
-3. **Generation**: Produce structured markdown meeting minutes. See [references/examples.md](references/examples.md) for standard output format.
-4. **Integration**: Offer to update GitHub issues, Jira tickets, or Slack messages.
+会議の音声文字起こしやメモから、整理された議事録を自動生成します。
 
-## Output Structure
+## 主な機能
 
-The primary output is markdown minutes containing:
-- **Meeting Header** (title, date, attendees, duration)
-- **Executive Summary** (1-2 sentence overview)
-- **Decisions** (bulleted list with rationale and owners)
-- **Action Items** (table format with owner, description, and due date)
-- **Key Discussion Points** (organized by topic)
-- **Blockers & Follow-ups** (open questions, escalations)
+- **アジェンダ抽出**: 会議のトピックを整理
+- **決定事項**: 合意された内容を明確化
+- **アクションアイテム**: タスクと担当者を抽出
+- **参加者リスト**: 出席者の記録
+- **要約生成**: エグゼクティブサマリー
+- **フォローアップ**: 次回までのTO DO
 
-## Reference Materials
+## 使用方法
 
-- **Formats & Logic**: [references/formats.md](references/formats.md) - VTT format details, parsing logic, and system integration commands.
-- **Examples**: [references/examples.md](references/examples.md) - Comprehensive before-and-after demonstration of a meeting processing workflow.
+```
+以下の会議メモから議事録を作成：
 
-## Features
+[会議の文字起こしやメモ]
 
-- **Automatic Detection**: Identify speakers, decisions ("we agreed"), and actions ("@owner will").
-- **Confidence Scoring**: Heuristic-based scoring for decision certainty and action clarity.
-- **System Integration**: Automated `gh issue comment`, `jira issue create`, and `slack chat postMessage`.
+含める内容:
+- 決定事項
+- アクションアイテム（担当者と期限）
+- 次回会議の予定
+```
 
-## Related Skills & Tools
+## 出力例
 
-- `github-cli` - For posting to GitHub issues
-- `jira` - For creating Jira tickets
-- `slack-api` - For posting to Slack channels
-- `markdown` - For formatting output
+```markdown
+# 週次開発ミーティング議事録
 
-## Troubleshooting
+**日時**: 2024年6月15日 10:00-11:00
+**場所**: 会議室A / Zoom
+**参加者**: 田中(PM)、佐藤(Dev)、鈴木(Design)、山田(QA)
+**欠席者**: なし
+**議事録作成**: 田中
 
-- **Poor Transcript Quality**: Manually provide speaker list in the first line of the VTT.
-- **False-Positives**: Use the summary prompt to manually filter incorrect actions before integration.
-- **Large Meetings**: Be concise in discussion summaries to avoid context bloat.
+## アジェンダ
+
+1. 前回のアクションアイテム確認
+2. v2.1リリース進捗報告
+3. バグ修正状況
+4. 次スプリント計画
+
+## 決定事項
+
+### 1. v2.1リリース日程
+- **決定**: 6月30日にリリース
+- **理由**: QAテスト完了予定が6月28日
+- **承認**: 全員一致
+
+### 2. ダークモード機能の優先度
+- **決定**: 次スプリント（7月）に実装
+- **理由**: ユーザーからの要望が多い
+- **担当**: 佐藤（開発）、鈴木（デザイン）
+
+### 3. バグ#156の対応
+- **決定**: ホットフィックスとして即日対応
+- **理由**: 決済機能に影響
+- **担当**: 佐藤
+
+## アクションアイテム
+
+| タスク | 担当者 | 期限 | ステータス |
+|--------|--------|------|-----------|
+| バグ#156の修正 | 佐藤 | 6/16 | 🔴 緊急 |
+| QA最終テスト | 山田 | 6/28 | 🟡 進行中 |
+| リリースノート作成 | 田中 | 6/27 | ⚪ 未着手 |
+| ダークモードデザイン | 鈴木 | 7/5 | ⚪ 未着手 |
+| ダークモード実装 | 佐藤 | 7/15 | ⚪ 未着手 |
+
+## 討議内容
+
+### v2.1 リリース進捗
+
+**佐藤（開発）**:
+- 実装完了率: 95%
+- 残タスク: バグ修正2件のみ
+- パフォーマンステスト: 合格
+
+**山田（QA）**:
+- テスト進捗: 80%
+- 発見バグ: 3件（1件Critical、2件Medium）
+- Critical バグ#156は即日対応必要
+
+**鈴木（デザイン）**:
+- UIレビュー完了
+- アクセシビリティチェック完了
+- 軽微な調整を2箇所依頼
+
+### 次スプリント計画
+
+- ダークモード機能を最優先
+- パフォーマンス改善タスクを並行
+- 技術的負債の解消（リファクタリング）
+
+## 懸念事項・リスク
+
+1. **バグ#156の修正**: 決済関連のため慎重な対応が必要
+   - 対策: ステージング環境で十分なテスト
+   - レビュー: 田中がコードレビュー実施
+
+2. **QAスケジュール**: タイトなスケジュール
+   - 対策: 必要に応じて他メンバーもテスト支援
+
+## 次回会議
+
+- **日時**: 2024年6月22日 10:00-11:00
+- **場所**: 会議室A / Zoom
+- **アジェンダ**:
+  - v2.1リリース最終確認
+  - ダークモード仕様レビュー
+  - 7月スプリント計画詳細
+
+## 参考資料
+
+- [v2.1 マイルストーン](https://github.com/project/milestone/5)
+- [バグ#156](https://github.com/project/issues/156)
+- [ダークモード提案書](https://docs.example.com/dark-mode)
+
+---
+
+**承認**: 田中（PM） ✓
+**配布**: 全開発チーム、経営陣
+```
+
+## バージョン情報
+
+- スキルバージョン: 1.0.0
+- 最終更新: 2025-01-22

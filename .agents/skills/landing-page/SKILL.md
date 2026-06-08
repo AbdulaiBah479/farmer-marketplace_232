@@ -1,187 +1,231 @@
 ---
 name: landing-page
-description: "Generate a complete, deployable landing page from a brief. Produces a single self-contained HTML file with Tailwind CSS (via CDN), responsive design, dark mode, semantic HTML, and OG meta tags. Sections: hero with CTA, features, social proof, pricing (optional), FAQ, footer. Use when building a marketing page, product launch page, coming soon page, or any standalone landing page. Triggers: 'landing page', 'create a page', 'marketing page', 'launch page', 'coming soon page', 'one-page site'."
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-compatibility: claude-code-only
+description: Create high-converting landing pages with persuasive copy, clear CTAs, social proof, and optimized structure. Use when building sales pages, product pages, lead capture pages, or conversion-focused pages.
 ---
 
-# Landing Page Generator
+# Landing Page Skill
 
-Generate a complete, deployable landing page as a single HTML file. No build step, no dependencies — open it in a browser or deploy anywhere.
+## Instructions
 
-## Workflow
+When creating landing pages:
 
-### 1. Gather the Brief
-
-Ask the user for:
-
-| Field | Required | Example |
-|-------|----------|---------|
-| Business/product name | Yes | "Acme Plumbing" |
-| Value proposition | Yes | "24/7 emergency plumbing across Newcastle" |
-| Target audience | Yes | "Homeowners in the Hunter Valley" |
-| Primary CTA | Yes | "Call Now" / "Get a Quote" / "Sign Up" |
-| Secondary CTA | No | "Learn More" / "View Pricing" |
-| Brand colours | No | Primary: #1E40AF, accent: #F59E0B |
-| Logo URL or text | No | URL to logo image, or just use business name |
-| Phone / email | No | For contact section |
-| Sections wanted | No | Default: hero, features, testimonials, FAQ, footer |
-
-If no brand colours provided, suggest using the `color-palette` skill to generate them, or use a sensible default (slate/blue).
-
-### 2. Generate the HTML
-
-Produce a **single HTML file** with:
+### 1. Page Structure
 
 ```
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-  <!-- Meta, OG tags, favicon -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind config with custom colours</script>
-</head>
-<body>
-  <!-- Nav -->
-  <!-- Hero -->
-  <!-- Features -->
-  <!-- Social Proof -->
-  <!-- Pricing (optional) -->
-  <!-- FAQ -->
-  <!-- Footer -->
-  <!-- Dark mode toggle script -->
-</body>
-</html>
+┌─────────────────────────────────────┐
+│           HERO SECTION              │
+│  Headline + Subheadline + CTA       │
+│           + Hero Image              │
+├─────────────────────────────────────┤
+│         SOCIAL PROOF BAR            │
+│    Logos / "As seen in" / Stats     │
+├─────────────────────────────────────┤
+│         PROBLEM SECTION             │
+│     Pain points your audience has   │
+├─────────────────────────────────────┤
+│         SOLUTION SECTION            │
+│    How your product solves it       │
+├─────────────────────────────────────┤
+│         FEATURES/BENEFITS           │
+│    3-6 key features with benefits   │
+├─────────────────────────────────────┤
+│         HOW IT WORKS                │
+│       3-step process                │
+├─────────────────────────────────────┤
+│         TESTIMONIALS                │
+│    Customer quotes + photos         │
+├─────────────────────────────────────┤
+│         PRICING                     │
+│    Clear pricing options            │
+├─────────────────────────────────────┤
+│            FAQ                      │
+│    Objection handling               │
+├─────────────────────────────────────┤
+│         FINAL CTA                   │
+│    Last push with urgency           │
+├─────────────────────────────────────┤
+│           FOOTER                    │
+│    Trust badges, links, legal       │
+└─────────────────────────────────────┘
 ```
 
-### 3. Section Patterns
+### 2. Hero Section
 
-#### Navigation
-- Sticky top nav with logo/name + anchor links to sections
-- Mobile hamburger menu (CSS-only or minimal JS)
-- CTA button in nav (right-aligned)
+**Headline Formulas:**
+- [Achieve outcome] without [pain point]
+- The [adjective] way to [desired result]
+- [Product] that [key benefit]
+- Stop [bad thing]. Start [good thing].
+- [Number] [people] use [Product] to [outcome]
 
-#### Hero
-- Full-width, above the fold
-- Headline (h1) — the value proposition, not the business name
-- Subheadline — supporting detail, 1-2 sentences
-- Primary CTA button (large, contrasting colour)
-- Optional: hero image placeholder or gradient background
-- Pattern: text-left on desktop (60/40 split with image), centred on mobile
+**Subheadline:**
+- Expand on the headline
+- Add specificity
+- Include secondary benefit
 
-#### Features / Services
-- 3-6 items in a responsive grid (1 col mobile, 2-3 cols desktop)
-- Each: icon placeholder + heading + short description
-- Use semantic headings (h2 for section, h3 for items)
-
-#### Social Proof / Testimonials
-- 2-3 testimonial cards with quote, name, role/company
-- Star rating if applicable
-- Alternative: logo bar of client/partner logos
-
-#### Pricing (optional)
-- 2-3 tier cards (basic/pro/enterprise pattern)
-- Highlighted "recommended" tier
-- Feature comparison list per tier
-- CTA button per tier
-
-#### FAQ
-- Accordion pattern (details/summary — no JS needed)
-- 4-6 common questions
-- Schema.org FAQPage markup for SEO
-
-#### Footer
-- Business name, contact info, social links
-- Legal links (privacy, terms) as placeholders
-- Copyright year (use JS for auto-update)
-
-### 4. Technical Requirements
-
-**Responsive**: Mobile-first with three breakpoints
-```
-Default: mobile (< 640px)
-sm: 640px+ (tablet)
-lg: 1024px+ (desktop)
+**Example:**
+```html
+<section class="hero">
+  <h1>Build WordPress Themes 10x Faster</h1>
+  <p class="subheadline">
+    The developer toolkit that eliminates repetitive coding
+    so you can focus on what matters — shipping great themes.
+  </p>
+  <a href="#" class="cta-button">Start Free Trial</a>
+  <p class="microcopy">No credit card required • 14-day trial</p>
+</section>
 ```
 
-**Dark mode**: Three-state toggle (light/dark/system)
-- CSS custom properties for colours
-- `.dark` class on `<html>` — no CSS media query
-- Small JS snippet for toggle + localStorage persistence
+### 3. Social Proof Types
 
-**Accessibility**:
-- Proper heading hierarchy (h1 → h2 → h3, no skips)
-- Alt text placeholders on all images
-- Focus-visible styles on interactive elements
-- Sufficient colour contrast (4.5:1 minimum)
-- Skip-to-content link
+**Logo Bar:**
+```html
+<section class="social-proof">
+  <p>Trusted by 10,000+ developers at</p>
+  <div class="logos">
+    <img src="logo1.svg" alt="Company 1">
+    <img src="logo2.svg" alt="Company 2">
+    ...
+  </div>
+</section>
+```
 
-**SEO**:
-- Semantic HTML5 elements (header, main, section, footer)
-- OG meta tags (title, description, image, url)
-- Twitter card meta tags
-- Canonical URL
-- JSON-LD for LocalBusiness if it's a local business (reference `seo-local-business` skill)
+**Stats Bar:**
+```html
+<div class="stats">
+  <div class="stat">
+    <span class="number">50,000+</span>
+    <span class="label">Active Users</span>
+  </div>
+  <div class="stat">
+    <span class="number">4.9/5</span>
+    <span class="label">Average Rating</span>
+  </div>
+  <div class="stat">
+    <span class="number">99.9%</span>
+    <span class="label">Uptime</span>
+  </div>
+</div>
+```
 
-**Performance**:
-- No JS required for core content rendering
-- Lazy-load images (`loading="lazy"`)
-- System font stack (no external font requests)
-- Single file — no external CSS/JS beyond Tailwind CDN
+**Testimonials:**
+```html
+<blockquote class="testimonial">
+  <p>"Quote that highlights specific results..."</p>
+  <footer>
+    <img src="avatar.jpg" alt="Name">
+    <cite>
+      <strong>Name</strong>
+      <span>Title, Company</span>
+    </cite>
+  </footer>
+</blockquote>
+```
 
-### 5. Colour Application
+### 4. Features Section
 
-If user provides brand colours, configure Tailwind inline:
+**Format: Feature → Benefit**
+```html
+<div class="feature">
+  <div class="feature-icon">🚀</div>
+  <h3>One-Click Deployment</h3>
+  <p>Deploy to production in seconds, not hours.
+     Spend more time building, less time configuring.</p>
+</div>
+```
+
+### 5. Pricing Section
 
 ```html
-<script>
-tailwind.config = {
-  darkMode: 'class',
-  theme: {
-    extend: {
-      colors: {
-        primary: { DEFAULT: '#1E40AF', light: '#3B82F6', dark: '#1E3A8A' },
-        accent: { DEFAULT: '#F59E0B', light: '#FBBF24', dark: '#D97706' },
-      }
-    }
-  }
-}
-</script>
+<div class="pricing-card popular">
+  <span class="badge">Most Popular</span>
+  <h3>Pro Plan</h3>
+  <div class="price">
+    <span class="currency">$</span>
+    <span class="amount">49</span>
+    <span class="period">/month</span>
+  </div>
+  <ul class="features">
+    <li>✓ Feature 1</li>
+    <li>✓ Feature 2</li>
+    <li>✓ Feature 3</li>
+  </ul>
+  <a href="#" class="cta-button">Get Started</a>
+  <p class="guarantee">30-day money-back guarantee</p>
+</div>
 ```
 
-If no colours provided, use Tailwind's built-in palette (slate for neutrals, blue for primary).
+### 6. CTA Best Practices
 
-### 6. Output
+**Button Copy:**
+- Start Free Trial
+- Get Started Now
+- Download Free Guide
+- Join 10,000+ Users
+- Claim Your Discount
 
-Write the file to the user's specified location, or default to `./index.html`.
+**Supporting Elements:**
+- Risk reducers (money-back guarantee)
+- Urgency (limited time)
+- Scarcity (only X left)
+- Social proof (join X others)
 
-After generating:
-1. Tell the user how to preview: `open index.html` (macOS) or `python3 -m http.server` for a local server
-2. Suggest deployment options: drag to Cloudflare Pages, Netlify drop, or `wrangler deploy` for Workers
-3. List placeholder content that needs replacing (images, testimonials, phone numbers)
+### 7. FAQ Section
 
-## Quality Rules
+```html
+<details class="faq-item">
+  <summary>Common objection as a question?</summary>
+  <p>Answer that overcomes the objection with
+     specifics and reassurance.</p>
+</details>
+```
 
-1. **No placeholder lorem ipsum** — generate realistic placeholder text based on the business type
-2. **No broken layouts** — test the responsive grid mentally: 1 col → 2 col → 3 col
-3. **No inline styles** — use Tailwind classes exclusively
-4. **Real interactions** — smooth scroll to sections, working accordion, working dark mode toggle
-5. **Accessible by default** — don't sacrifice accessibility for aesthetics
-6. **Australian conventions** — if the business is Australian, use +61 phone format, Australian spelling, ABN placeholder
+**Common FAQ Topics:**
+- Pricing/refunds
+- Technical requirements
+- Support availability
+- Comparison to alternatives
+- Getting started process
 
-## Variations
+### 8. Conversion Optimization
 
-| Request | Approach |
-|---------|----------|
-| "Coming soon page" | Hero only + email signup form + countdown timer |
-| "Product launch" | Hero + features + pricing + CTA-heavy |
-| "Portfolio" | Hero + project grid + about + contact |
-| "Event page" | Hero + schedule + speakers + venue + register CTA |
-| "App download" | Hero + features + screenshots + app store badges |
+**Above the Fold:**
+- Clear value proposition
+- Primary CTA visible
+- Trust indicator
 
-Adapt the section selection to match the page purpose. Not every page needs pricing or FAQ.
+**Throughout Page:**
+- Multiple CTAs (same action)
+- Progressive disclosure
+- Visual hierarchy
+- Mobile optimization
+
+**Reduce Friction:**
+- Minimal form fields
+- Clear next steps
+- Fast page load
+- No distractions
+
+### 9. Copywriting Tips
+
+**Power Words:**
+- Free, New, Proven, Easy
+- Instant, Guaranteed, Limited
+- Exclusive, Premium, Ultimate
+
+**Avoid:**
+- Jargon and buzzwords
+- Vague claims
+- Walls of text
+- Multiple CTAs
+
+### 10. Landing Page Checklist
+
+- [ ] Clear, benefit-focused headline
+- [ ] Single, focused CTA
+- [ ] Social proof present
+- [ ] Mobile responsive
+- [ ] Fast loading (<3s)
+- [ ] Trust signals visible
+- [ ] FAQ addresses objections
+- [ ] Analytics tracking set up

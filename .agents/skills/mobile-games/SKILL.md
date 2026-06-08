@@ -1,9 +1,7 @@
 ---
 name: mobile-games
-description: "Mobile game development principles. Touch input, battery, performance, app stores."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Mobile game development principles. Touch input, battery, performance, app stores.
+allowed-tools: Read, Write, Edit, Glob, Grep
 ---
 
 # Mobile Game Development
@@ -108,6 +106,3 @@ date_added: "2026-02-27"
 ---
 
 > **Remember:** Mobile is the most constrained platform. Respect battery and attention.
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.

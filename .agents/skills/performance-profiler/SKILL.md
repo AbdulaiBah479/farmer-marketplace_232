@@ -1,170 +1,311 @@
 ---
-name: "performance-profiler"
-description: "Systematic performance profiling for Node.js, Python, and Go applications. Identifies CPU, memory, and I/O bottlenecks, generates flamegraphs, analyzes bundle sizes, optimizes database queries, runs load tests with k6 and Artillery. Always measures before and after. Use when investigating a slow endpoint, planning a performance budget, or hunting a memory leak in production."
+name: performance-profiler
+description: Auto-activates when user mentions performance, profiling, optimization, slow code, or bottlenecks. Profiles and optimizes code performance.
+category: performance
 ---
 
 # Performance Profiler
 
-**Tier:** POWERFUL  
-**Category:** Engineering  
-**Domain:** Performance Engineering  
+Analyzes and optimizes code performance with actionable recommendations.
 
----
+## When This Activates
 
-## Overview
+- User says: "profile this", "performance", "optimize", "why is this slow?"
+- Code is running slowly
+- Before production deployment (performance audit)
 
-Systematic performance profiling for Node.js, Python, and Go applications. Identifies CPU, memory, and I/O bottlenecks; generates flamegraphs; analyzes bundle sizes; optimizes database queries; detects memory leaks; and runs load tests with k6 and Artillery. Always measures before and after.
+## Performance Analysis Checklist
 
-## Core Capabilities
+### 1. Time Complexity Analysis
+- [ ] Identify algorithm complexity (Big O notation)
+- [ ] Find nested loops (O(n²) or worse)
+- [ ] Check recursion depth
+- [ ] Analyze sort/search operations
 
-- **CPU profiling** — flamegraphs for Node.js, py-spy for Python, pprof for Go
-- **Memory profiling** — heap snapshots, leak detection, GC pressure
-- **Bundle analysis** — webpack-bundle-analyzer, Next.js bundle analyzer
-- **Database optimization** — EXPLAIN ANALYZE, slow query log, N+1 detection
-- **Load testing** — k6 scripts, Artillery scenarios, ramp-up patterns
-- **Before/after measurement** — establish baseline, profile, optimize, verify
+### 2. Database Performance
+- [ ] Check for N+1 query problems
+- [ ] Verify indexes exist on queried columns
+- [ ] Analyze query execution plans
+- [ ] Check for missing pagination
 
----
+### 3. Memory Usage
+- [ ] Check for memory leaks
+- [ ] Analyze object retention
+- [ ] Verify proper cleanup (event listeners, timers)
+- [ ] Check for large data structures
 
-## When to Use
+### 4. Network Performance
+- [ ] Check API request count
+- [ ] Verify response caching
+- [ ] Check for sequential requests (should be parallel)
+- [ ] Analyze payload sizes
 
-- App is slow and you don't know where the bottleneck is
-- P99 latency exceeds SLA before a release
-- Memory usage grows over time (suspected leak)
-- Bundle size increased after adding dependencies
-- Preparing for a traffic spike (load test before launch)
-- Database queries taking >100ms
+### 5. Frontend Performance
+- [ ] Check bundle size
+- [ ] Analyze render performance
+- [ ] Verify lazy loading
+- [ ] Check for unnecessary re-renders
 
----
+## Profiling Tools
 
-## Quick Start
-
+### JavaScript/TypeScript
 ```bash
-# Analyze a project for performance risk indicators
-python3 scripts/performance_profiler.py /path/to/project
+# Node.js profiling
+node --prof app.js
+node --prof-process isolate-*-v8.log > processed.txt
 
-# JSON output for CI integration
-python3 scripts/performance_profiler.py /path/to/project --json
+# Chrome DevTools
+# Open DevTools → Performance → Record
 
-# Custom large-file threshold
-python3 scripts/performance_profiler.py /path/to/project --large-file-threshold-kb 256
+# Lighthouse
+npx lighthouse https://yoursite.com --view
+
+# Bundle analysis
+npx webpack-bundle-analyzer stats.json
 ```
 
----
+### Python
+```python
+# cProfile
+python -m cProfile -s cumtime script.py
 
-## Golden Rule: Measure First
-
-```bash
-# Establish baseline BEFORE any optimization
-# Record: P50, P95, P99 latency | RPS | error rate | memory usage
-
-# Wrong: "I think the N+1 query is slow, let me fix it"
-# Right: Profile → confirm bottleneck → fix → measure again → verify improvement
+# line_profiler
+@profile
+def slow_function():
+    # Code to profile
+    pass
 ```
 
----
+## Common Performance Issues
 
-## Node.js Profiling
-→ See references/profiling-recipes.md for details
+### Issue 1: N+1 Query Problem
 
-## Before/After Measurement Template
+**Bad:**
+```javascript
+// 1 query to get users + N queries to get posts
+const users = await db.query('SELECT * FROM users');
+for (const user of users) {
+  user.posts = await db.query('SELECT * FROM posts WHERE user_id = $1', [user.id]);
+}
+```
+
+**Good:**
+```javascript
+// 1 query with JOIN
+const users = await db.query(`
+  SELECT u.*, json_agg(p.*) as posts
+  FROM users u
+  LEFT JOIN posts p ON p.user_id = u.id
+  GROUP BY u.id
+`);
+```
+
+### Issue 2: Missing Indexes
+
+**Diagnosis:**
+```sql
+-- Check query performance
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'user@example.com';
+-- If "Seq Scan", missing index!
+```
+
+**Fix:**
+```sql
+CREATE INDEX idx_users_email ON users(email);
+```
+
+### Issue 3: Memory Leak
+
+**Bad:**
+```javascript
+// Event listener never removed
+element.addEventListener('click', handler);
+// Memory leak if element is removed from DOM
+```
+
+**Good:**
+```javascript
+const controller = new AbortController();
+element.addEventListener('click', handler, {
+  signal: controller.signal
+});
+// Cleanup
+controller.abort();
+```
+
+### Issue 4: Unnecessary Re-renders (React)
+
+**Bad:**
+```javascript
+function Component() {
+  // Creates new array on every render
+  const items = users.map(u => transform(u));
+  return <List items={items} />;
+}
+```
+
+**Good:**
+```javascript
+function Component() {
+  // Memoize expensive computation
+  const items = useMemo(
+    () => users.map(u => transform(u)),
+    [users]
+  );
+  return <List items={items} />;
+}
+```
+
+### Issue 5: Large Bundle Size
+
+**Diagnosis:**
+```bash
+npx webpack-bundle-analyzer dist/stats.json
+```
+
+**Fixes:**
+```javascript
+// Lazy load routes
+const Dashboard = lazy(() => import('./Dashboard'));
+
+// Tree-shake unused code
+import { specific } from 'library';  // not: import * as lib
+
+// Use lighter alternatives
+// lodash (full): 71KB → lodash-es (single function): 1KB
+import debounce from 'lodash-es/debounce';
+```
+
+## Performance Report
 
 ```markdown
-## Performance Optimization: [What You Fixed]
+## ⚡ Performance Analysis Report
 
-**Date:** 2026-03-01  
-**Engineer:** @username  
-**Ticket:** PROJ-123  
+### 📊 Metrics
 
-### Problem
-[1-2 sentences: what was slow, how was it observed]
+**Before:**
+- Page load: 4.2s
+- Time to Interactive (TTI): 5.8s
+- First Contentful Paint: 2.1s
+- Bundle size: 850KB
+- API calls: 15 requests
 
-### Root Cause
-[What the profiler revealed]
+**After:**
+- Page load: 1.8s ✅ (57% faster)
+- TTI: 2.3s ✅ (60% faster)
+- FCP: 0.9s ✅ (57% faster)
+- Bundle size: 320KB ✅ (62% reduction)
+- API calls: 3 requests ✅ (80% reduction)
 
-### Baseline (Before)
-| Metric | Value |
-|--------|-------|
-| P50 latency | 480ms |
-| P95 latency | 1,240ms |
-| P99 latency | 3,100ms |
-| RPS @ 50 VUs | 42 |
-| Error rate | 0.8% |
-| DB queries/req | 23 (N+1) |
+### 🐌 Bottlenecks Found
 
-Profiler evidence: [link to flamegraph or screenshot]
+1. **N+1 Query Problem** (src/api/users.ts:45)
+   - Impact: 2.5s added to response time
+   - Fix: Use JOIN query instead of loop
+   - Priority: HIGH
 
-### Fix Applied
-[What changed — code diff or description]
+2. **Missing Index** (users.email)
+   - Impact: 800ms per query
+   - Fix: `CREATE INDEX idx_users_email ON users(email)`
+   - Priority: HIGH
 
-### After
-| Metric | Before | After | Delta |
-|--------|--------|-------|-------|
-| P50 latency | 480ms | 48ms | -90% |
-| P95 latency | 1,240ms | 120ms | -90% |
-| P99 latency | 3,100ms | 280ms | -91% |
-| RPS @ 50 VUs | 42 | 380 | +804% |
-| Error rate | 0.8% | 0% | -100% |
-| DB queries/req | 23 | 1 | -96% |
+3. **Large Bundle** (moment.js: 280KB)
+   - Impact: 1.2s additional load time
+   - Fix: Replace with date-fns (11KB)
+   - Priority: MEDIUM
 
-### Verification
-Load test run: [link to k6 output]
+4. **Unnecessary Re-renders** (Dashboard component)
+   - Impact: Laggy UI, CPU usage
+   - Fix: Add React.memo() and useMemo()
+   - Priority: MEDIUM
+
+### ✅ Optimizations Applied
+
+1. Implemented query batching → **2.5s saved**
+2. Added database indexes → **800ms saved per query**
+3. Replaced heavy libraries → **530KB bundle reduction**
+4. Memoized React components → **60% fewer renders**
+5. Enabled response caching → **70% fewer API calls**
+
+### 📈 Performance Score
+
+- **Before:** 45/100 (Poor)
+- **After:** 92/100 (Excellent) ✅
+
+### 💡 Next Steps
+
+1. Implement lazy loading for dashboard routes
+2. Add CDN for static assets
+3. Enable HTTP/2 server push
+4. Consider service worker for offline support
 ```
 
----
+## Benchmarking
 
-## Optimization Checklist
+```javascript
+// Measure execution time
+console.time('operation');
+expensiveOperation();
+console.timeEnd('operation');
 
-### Quick wins (check these first)
+// More precise
+const start = performance.now();
+expensiveOperation();
+const end = performance.now();
+console.log(`Took ${end - start}ms`);
 
-```
-Database
-□ Missing indexes on WHERE/ORDER BY columns
-□ N+1 queries (check query count per request)
-□ Loading all columns when only 2-3 needed (SELECT *)
-□ No LIMIT on unbounded queries
-□ Missing connection pool (creating new connection per request)
-
-Node.js
-□ Sync I/O (fs.readFileSync) in hot path
-□ JSON.parse/stringify of large objects in hot loop
-□ Missing caching for expensive computations
-□ No compression (gzip/brotli) on responses
-□ Dependencies loaded in request handler (move to module level)
-
-Bundle
-□ Moment.js → dayjs/date-fns
-□ Lodash (full) → lodash/function imports
-□ Static imports of heavy components → dynamic imports
-□ Images not optimized / not using next/image
-□ No code splitting on routes
-
-API
-□ No pagination on list endpoints
-□ No response caching (Cache-Control headers)
-□ Serial awaits that could be parallel (Promise.all)
-□ Fetching related data in a loop instead of JOIN
+// Benchmark multiple runs
+function benchmark(fn, runs = 100) {
+  const times = [];
+  for (let i = 0; i < runs; i++) {
+    const start = performance.now();
+    fn();
+    times.push(performance.now() - start);
+  }
+  const avg = times.reduce((a, b) => a + b) / times.length;
+  console.log(`Average: ${avg}ms`);
+  console.log(`Min: ${Math.min(...times)}ms`);
+  console.log(`Max: ${Math.max(...times)}ms`);
+}
 ```
 
----
+## Performance Budget
 
-## Common Pitfalls
+Set performance budgets:
 
-- **Optimizing without measuring** — you'll optimize the wrong thing
-- **Testing in development** — profile against production-like data volumes
-- **Ignoring P99** — P50 can look fine while P99 is catastrophic
-- **Premature optimization** — fix correctness first, then performance
-- **Not re-measuring** — always verify the fix actually improved things
-- **Load testing production** — use staging with production-size data
-
----
+```json
+{
+  "budgets": [
+    {
+      "resourceSizes": [
+        { "resourceType": "script", "budget": 300 },
+        { "resourceType": "total", "budget": 500 }
+      ]
+    },
+    {
+      "timings": [
+        { "metric": "interactive", "budget": 3000 },
+        { "metric": "first-contentful-paint", "budget": 1000 }
+      ]
+    }
+  ]
+}
+```
 
 ## Best Practices
 
-1. **Baseline first, always** — record metrics before touching anything
-2. **One change at a time** — isolate the variable to confirm causation
-3. **Profile with realistic data** — 10 rows in dev, millions in prod — different bottlenecks
-4. **Set performance budgets** — `p(95) < 200ms` in CI thresholds with k6
-5. **Monitor continuously** — add Datadog/Prometheus metrics for key paths
-6. **Cache invalidation strategy** — cache aggressively, invalidate precisely
-7. **Document the win** — before/after in the PR description motivates the team
+✅ **DO:**
+- Profile before optimizing (measure first!)
+- Focus on bottlenecks (80/20 rule)
+- Use production mode for realistic metrics
+- Test with realistic data sizes
+- Measure impact of optimizations
+
+❌ **DON'T:**
+- Premature optimization
+- Optimize without profiling
+- Sacrifice readability for micro-optimizations
+- Forget to test after optimizations
+- Optimize everything at once
+
+**Profile code, identify bottlenecks, suggest optimizations, measure improvements.**

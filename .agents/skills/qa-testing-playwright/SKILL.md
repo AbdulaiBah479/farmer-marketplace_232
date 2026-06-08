@@ -1,6 +1,6 @@
 ---
 name: qa-testing-playwright
-description: "E2E web testing with Playwright. Use when writing tests, debugging flakes, or setting up CI with selectors, sharding, and network mocking."
+description: "Use when writing E2E web tests, debugging flaky tests, or setting up Playwright CI. Covers: stable selectors (getByRole), parallelization/sharding, flake control, network mocking, visual testing, MCP/AI automation, and CI/CD integration."
 ---
 
 # QA Testing (Playwright)
@@ -102,52 +102,6 @@ If something is flaky:
 - Weakening assertions to "fix" flakes
 - Auto-healing that weakens assertions
 
-## Execution Preflight (High ROI)
-
-Run this preflight before expensive E2E runs to prevent avoidable failures.
-
-### Preflight Checklist
-
-1. Repository shape:
-- Confirm working directory and expected app root exist.
-- Verify spec paths before execution (`rg --files tests/e2e | rg <target>`).
-
-2. Port/process hygiene:
-- Check and clear stale dev server port before run (example: `lsof -i :3001`).
-- Avoid parallel local servers colliding with Playwright `webServer`.
-
-3. Command validity:
-- Validate CLI flags for current tool versions before batch runs.
-- Prefer exact spec paths or `--grep` over broad globs during triage.
-
-4. Artifact expectations:
-- Confirm result artifact paths exist before reading (`test -f <error-context.md>`).
-- If artifact path missing, inspect latest `test-results` index first.
-
-### Mandatory Sandbox/Port Decisions
-
-Before running Playwright in constrained environments (sandboxed terminals, CI containers, shared dev hosts), decide and document:
-
-- Bind host/port: confirm whether app server must use `127.0.0.1` or `0.0.0.0`, and verify selected port is free.
-- Escalation path: if bind attempts fail with `EPERM`/`EACCES`, escalate immediately instead of retry loops.
-- Long-flow timeout budget: set explicit per-test timeout for API-heavy flows (generation/checkout/report) instead of inflating global timeout.
-- Build lock hygiene: clear stale `.next/lock` and terminate stale build/dev PIDs before rerun.
-
-### Triage Sequence (Fastest Signal)
-
-1. Reproduce one failing test with `--workers=1`.
-2. Capture trace/video/screenshot for that single failure.
-3. Fix determinism root cause.
-4. Re-run targeted suite.
-5. Only then run broad regression.
-
-### Failure Patterns to Treat as Environment, Not Product Bugs
-
-- `EADDRINUSE` on Playwright web server port
-- Missing spec/result paths from stale assumptions
-- Shell glob expansion failures for bracketed route segments
-
-
 ## Resources
 
 | Resource | Purpose |
@@ -155,10 +109,6 @@ Before running Playwright in constrained environments (sandboxed terminals, CI c
 | [references/playwright-mcp.md](references/playwright-mcp.md) | MCP & AI testing |
 | [references/playwright-patterns.md](references/playwright-patterns.md) | Advanced patterns |
 | [references/playwright-ci.md](references/playwright-ci.md) | CI configurations |
-| [references/playwright-authentication.md](references/playwright-authentication.md) | Auth patterns and session management |
-| [references/visual-regression-testing.md](references/visual-regression-testing.md) | Visual regression strategies |
-| [references/api-testing-playwright.md](references/api-testing-playwright.md) | API testing with APIRequestContext |
-| [references/playwright-preflight-sandbox.md](references/playwright-preflight-sandbox.md) | Sandbox/port preflight and escalation decisions |
 | [data/sources.json](data/sources.json) | Documentation links |
 
 ## Templates
@@ -167,7 +117,6 @@ Before running Playwright in constrained environments (sandboxed terminals, CI c
 |----------|---------|
 | [assets/template-playwright-e2e-review-checklist.md](assets/template-playwright-e2e-review-checklist.md) | E2E review checklist |
 | [assets/template-playwright-fail-on-flaky-reporter.js](assets/template-playwright-fail-on-flaky-reporter.js) | Fail CI on rerun-pass flakes |
-| [assets/template-playwright-preflight-checklist.md](assets/template-playwright-preflight-checklist.md) | Preflight checklist for port/sandbox/timeouts |
 
 ## Related Skills
 
@@ -176,9 +125,3 @@ Before running Playwright in constrained environments (sandboxed terminals, CI c
 | [qa-testing-strategy](../qa-testing-strategy/SKILL.md) | Overall test strategy |
 | [software-frontend](../software-frontend/SKILL.md) | Frontend development |
 | [ops-devops-platform](../ops-devops-platform/SKILL.md) | CI/CD integration |
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

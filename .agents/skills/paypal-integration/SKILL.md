@@ -7,19 +7,7 @@ description: Integrate PayPal payment processing with support for express checko
 
 Master PayPal payment integration including Express Checkout, IPN handling, recurring billing, and refund workflows.
 
-## Do not use this skill when
-
-- The task is unrelated to paypal integration
-- You need a different domain or tool outside this scope
-
-## Instructions
-
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
-
-## Use this skill when
+## When to Use This Skill
 
 - Integrating PayPal as a payment option
 - Implementing express checkout flows

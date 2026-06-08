@@ -1,185 +1,259 @@
 ---
 name: mcp-development
-description: MCP server development including tool design, resource endpoints, prompt templates, and transport configuration
+description: MCPサーバー開発を支援します。プロトコル準拠、Pydanticスキーマ設計、Playwright統合のベストプラクティスを提供します。
+allowed-tools: Read Edit Write Glob Grep Bash
 ---
 
-# MCP Development
+# MCP Development スキル
 
-## MCP Server with Tools
+このスキルは、**Constitution Article 3: MCP Protocol Compliance** を支援し、MCPサーバー開発のベストプラクティスを提供します。
 
-```typescript
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
+## 起動条件
 
-const server = new McpServer({
-  name: "project-tools",
-  version: "1.0.0",
-});
+以下の状況で起動します：
 
-server.tool(
-  "search_files",
-  "Search for files matching a glob pattern in the project directory",
-  {
-    pattern: z.string().describe("Glob pattern (e.g., '**/*.ts')"),
-    directory: z.string().optional().describe("Base directory to search from"),
-  },
-  async ({ pattern, directory }) => {
-    const files = await glob(pattern, { cwd: directory ?? process.cwd() });
-    return {
-      content: [
-        {
-          type: "text",
-          text: files.length > 0
-            ? files.join("\n")
-            : `No files found matching ${pattern}`,
-        },
-      ],
-    };
-  }
-);
+1. **MCPツール実装時**: 新しいMCPツールを追加する際
+2. **スキーマ設計時**: 入出力スキーマを定義する際
+3. **Playwright統合時**: ブラウザ自動化を実装する際
+4. **セッション管理実装時**: 認証状態を管理する際
+5. **エラーハンドリング設計時**: MCPエラーレスポンスを設計する際
 
-server.tool(
-  "run_query",
-  "Execute a read-only SQL query against the application database",
-  {
-    query: z.string().describe("SQL SELECT query to execute"),
-    limit: z.number().default(100).describe("Maximum rows to return"),
-  },
-  async ({ query, limit }) => {
-    if (!query.trim().toUpperCase().startsWith("SELECT")) {
-      return {
-        content: [{ type: "text", text: "Only SELECT queries are allowed" }],
-        isError: true,
-      };
-    }
-    const rows = await db.query(`${query} LIMIT ${limit}`);
-    return {
-      content: [{ type: "text", text: JSON.stringify(rows, null, 2) }],
-    };
-  }
-);
+## MCPプロトコル要件
+
+### ツール定義
+
+MCPツールは以下の構造を持つ必要があります：
+
+```python
+from mcp.types import Tool, TextContent
+from pydantic import BaseModel, Field
+
+class CreateDraftInput(BaseModel):
+    """下書き作成の入力パラメータ"""
+    title: str = Field(..., description="記事のタイトル")
+    body: str = Field(..., description="記事の本文（Markdown形式）")
+    tags: list[str] | None = Field(None, description="記事のタグ一覧")
+
+# ツール定義
+create_draft_tool = Tool(
+    name="create_draft",
+    description="note.comに記事の下書きを作成します",
+    inputSchema=CreateDraftInput.model_json_schema(),
+)
 ```
 
-## Resources
+### Pydanticモデル設計
 
-```typescript
-server.resource(
-  "schema",
-  "db://schema",
-  "Current database schema with all tables, columns, and relationships",
-  async () => {
-    const schema = await db.query(`
-      SELECT table_name, column_name, data_type, is_nullable
-      FROM information_schema.columns
-      WHERE table_schema = 'public'
-      ORDER BY table_name, ordinal_position
-    `);
-    return {
-      contents: [
-        {
-          uri: "db://schema",
-          mimeType: "application/json",
-          text: JSON.stringify(schema, null, 2),
-        },
-      ],
-    };
-  }
-);
+**必須ルール**:
 
-server.resource(
-  "config",
-  "config://app",
-  "Application configuration (secrets redacted)",
-  async () => {
-    const config = await loadConfig();
-    const safe = redactSecrets(config);
-    return {
-      contents: [
-        {
-          uri: "config://app",
-          mimeType: "application/json",
-          text: JSON.stringify(safe, null, 2),
-        },
-      ],
-    };
-  }
-);
+1. **すべての入力パラメータはPydanticモデルで検証**
+2. **Fieldに説明を必ず付与**
+3. **型アノテーションを明確に指定**
+
+```python
+from pydantic import BaseModel, Field, field_validator
+
+class ArticleContent(BaseModel):
+    """記事コンテンツのスキーマ"""
+    title: str = Field(..., min_length=1, max_length=200, description="記事タイトル")
+    body: str = Field(..., min_length=1, description="記事本文")
+    status: str = Field("draft", pattern="^(draft|published)$", description="記事状態")
+
+    @field_validator("title")
+    @classmethod
+    def title_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("タイトルは空にできません")
+        return v.strip()
 ```
 
-## Prompt Templates
+### エラーレスポンス
 
-```typescript
-server.prompt(
-  "review-code",
-  "Review code changes for bugs, security issues, and style",
-  {
-    diff: z.string().describe("Git diff or code to review"),
-    focus: z.enum(["security", "performance", "style", "all"]).default("all"),
-  },
-  async ({ diff, focus }) => ({
-    messages: [
-      {
-        role: "user",
-        content: {
-          type: "text",
-          text: `Review this code diff. Focus: ${focus}\n\n${diff}`,
-        },
-      },
-    ],
-  })
-);
+MCPエラーは適切な形式で返す必要があります：
+
+```python
+from mcp.types import TextContent, ErrorData
+from mcp.shared.exceptions import McpError
+
+class NoteApiError(McpError):
+    """note.com API関連のエラー"""
+    pass
+
+class AuthenticationError(NoteApiError):
+    """認証エラー"""
+    def __init__(self, message: str = "認証が必要です"):
+        super().__init__(ErrorData(code=-32001, message=message))
+
+class SessionExpiredError(NoteApiError):
+    """セッション期限切れエラー"""
+    def __init__(self):
+        super().__init__(ErrorData(
+            code=-32002,
+            message="セッションの有効期限が切れました。再ログインしてください。"
+        ))
 ```
 
-## Client Configuration
+## Playwright統合
 
-```json
-{
-  "mcpServers": {
-    "project-tools": {
-      "command": "node",
-      "args": ["./mcp-server/dist/index.js"],
-      "env": {
-        "DATABASE_URL": "postgres://localhost:5432/app"
-      }
-    },
-    "remote-server": {
-      "url": "https://mcp.example.com/sse",
-      "headers": {
-        "Authorization": "Bearer ${MCP_TOKEN}"
-      }
-    }
-  }
-}
+### ブラウザライフサイクル管理
+
+```python
+from playwright.async_api import async_playwright, Browser, Page
+from contextlib import asynccontextmanager
+
+class BrowserManager:
+    """ブラウザインスタンスのライフサイクル管理"""
+
+    def __init__(self) -> None:
+        self._browser: Browser | None = None
+        self._page: Page | None = None
+
+    async def get_page(self) -> Page:
+        """既存のページを再利用、なければ新規作成"""
+        if self._page is not None and not self._page.is_closed():
+            return self._page
+
+        if self._browser is None:
+            playwright = await async_playwright().start()
+            self._browser = await playwright.chromium.launch(headless=False)
+
+        self._page = await self._browser.new_page()
+        return self._page
+
+    async def close(self) -> None:
+        """リソースのクリーンアップ"""
+        if self._page:
+            await self._page.close()
+        if self._browser:
+            await self._browser.close()
 ```
 
-## Transport Setup
+### 作業ウィンドウの再利用
 
-```typescript
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+```python
+async def show_preview(self, article_id: str) -> None:
+    """プレビューを表示（既存ウィンドウを再利用）"""
+    page = await self.browser_manager.get_page()
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
+    # 既にプレビューページにいる場合はリロード
+    current_url = page.url
+    preview_url = f"https://note.com/api/v1/text_notes/{article_id}/preview"
+
+    if current_url == preview_url:
+        await page.reload()
+    else:
+        await page.goto(preview_url)
 ```
 
-For HTTP-based servers, use the SSE transport for streaming responses to clients.
+## セッション管理
 
-## Anti-Patterns
+### セキュアなセッション保存
 
-- Creating tools with vague descriptions that don't explain when to use them
-- Not validating inputs with Zod schemas before processing
-- Returning raw error stack traces to the client
-- Missing `isError: true` flag on error responses
-- Creating too many fine-grained tools instead of composable ones
-- Not redacting secrets in resource responses
+OSのキーチェーン/資格情報マネージャーを使用：
 
-## Checklist
+```python
+import keyring
+from dataclasses import dataclass
+from datetime import datetime
+import json
 
-- [ ] Each tool has a clear description explaining when and why to use it
-- [ ] Input parameters validated with Zod schemas and descriptive messages
-- [ ] Error responses include `isError: true` with user-friendly messages
-- [ ] Resources expose read-only data with secrets redacted
-- [ ] Prompt templates provide structured starting points for common tasks
-- [ ] Server handles graceful shutdown on SIGINT/SIGTERM
-- [ ] Tools are composable (do one thing well) rather than monolithic
-- [ ] Client configuration documented with required environment variables
+SERVICE_NAME = "note-mcp"
+
+@dataclass
+class Session:
+    """セッション情報"""
+    cookies: dict[str, str]
+    user_id: str
+    expires_at: datetime
+
+    def is_valid(self) -> bool:
+        """セッションが有効かチェック"""
+        return datetime.now() < self.expires_at
+
+def save_session(session: Session) -> None:
+    """セッションをセキュアに保存"""
+    keyring.set_password(
+        SERVICE_NAME,
+        "session",
+        json.dumps({
+            "cookies": session.cookies,
+            "user_id": session.user_id,
+            "expires_at": session.expires_at.isoformat(),
+        })
+    )
+
+def load_session() -> Session | None:
+    """保存されたセッションを読み込み"""
+    data = keyring.get_password(SERVICE_NAME, "session")
+    if data is None:
+        return None
+
+    parsed = json.loads(data)
+    session = Session(
+        cookies=parsed["cookies"],
+        user_id=parsed["user_id"],
+        expires_at=datetime.fromisoformat(parsed["expires_at"]),
+    )
+
+    if not session.is_valid():
+        keyring.delete_password(SERVICE_NAME, "session")
+        return None
+
+    return session
+```
+
+### セッション期限切れ処理
+
+```python
+async def execute_with_session(self, operation: Callable) -> Any:
+    """セッションを確認して操作を実行"""
+    session = load_session()
+
+    if session is None:
+        raise AuthenticationError("ログインが必要です")
+
+    if not session.is_valid():
+        raise SessionExpiredError()
+
+    try:
+        return await operation()
+    except SessionExpiredError:
+        # セッションをクリアして再認証を促す
+        keyring.delete_password(SERVICE_NAME, "session")
+        raise
+```
+
+## 実装チェックリスト
+
+### MCPツール作成時
+
+- [ ] Pydanticモデルで入力を定義
+- [ ] Fieldに説明を付与
+- [ ] ツール定義にdescriptionを記載
+- [ ] 適切なエラーレスポンスを実装
+
+### Playwright統合時
+
+- [ ] ブラウザライフサイクルを管理
+- [ ] 作業ウィンドウを再利用
+- [ ] クリーンアップ処理を実装
+- [ ] エラー時のリカバリを考慮
+
+### セッション管理時
+
+- [ ] OSのセキュアストレージを使用
+- [ ] 有効期限チェックを実装
+- [ ] 期限切れ時のエラーメッセージを明確に
+- [ ] 再認証フローを提供
+
+## 参考リソース
+
+- MCP Protocol仕様: https://modelcontextprotocol.io/
+- Pydantic v2ドキュメント: https://docs.pydantic.dev/
+- Playwright Pythonドキュメント: https://playwright.dev/python/
+
+## 注意事項
+
+- note.comの非公式APIを使用するため、仕様変更で動作しなくなる可能性あり
+- レート制限を遵守（目安: 10リクエスト/分）
+- 自己責任・無保証での公開を前提

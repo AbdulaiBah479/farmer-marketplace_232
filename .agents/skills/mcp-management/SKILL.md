@@ -1,6 +1,6 @@
 ---
 name: mcp-management
-description: Manage Model Context Protocol (MCP) servers - discover, analyze, and execute tools/prompts/resources from configured MCP servers. Use when working with MCP integrations, need to discover available MCP capabilities, filter MCP tools for specific tasks, execute MCP tools programmatically, access MCP prompts/resources, or implement MCP client functionality. Supports intelligent tool selection, multi-server management, and context-efficient capability discovery.
+description: Manage MCP servers - discover, analyze, execute tools/prompts/resources. Use for MCP integrations, intelligent tool selection, multi-server management, context-efficient capability discovery.
 ---
 
 # MCP Management
@@ -31,14 +31,27 @@ Use this skill when:
 
 ### 1. Configuration Management
 
-MCP servers configured in `.claude/.mcp.json`.
+MCP servers configured in `.opencode/.mcp.json`.
 
 **Gemini CLI Integration** (recommended): Create symlink to `.gemini/settings.json`:
 ```bash
-mkdir -p .gemini && ln -sf .claude/.mcp.json .gemini/settings.json
+mkdir -p .gemini && ln -sf .opencode/.mcp.json .gemini/settings.json
 ```
 
 See [references/configuration.md](references/configuration.md) and [references/gemini-cli-integration.md](references/gemini-cli-integration.md).
+
+**GEMINI.md Response Format**: Project root contains `GEMINI.md` that Gemini CLI auto-loads, enforcing structured JSON responses:
+```json
+{"server":"name","tool":"name","success":true,"result":<data>,"error":null}
+```
+
+This ensures parseable, consistent output instead of unpredictable natural language. The file defines:
+- Mandatory JSON-only response format (no markdown, no explanations)
+- Maximum 500 character responses
+- Error handling structure
+- Available MCP servers reference
+
+**Benefits**: Programmatically parseable output, consistent error reporting, DRY configuration (format defined once), context-efficient (auto-loaded by Gemini CLI).
 
 ### 2. Capability Discovery
 
@@ -58,7 +71,8 @@ LLM analyzes `assets/tools.json` directly - better than keyword matching algorit
 
 **Primary: Gemini CLI** (if available)
 ```bash
-gemini -y -m gemini-2.5-flash -p "Take a screenshot of https://example.com"
+# IMPORTANT: Use stdin piping, NOT -p flag (deprecated, skips MCP init)
+echo "Take a screenshot of https://example.com" | gemini -y -m <gemini.model>
 ```
 
 **Secondary: Direct Scripts**
@@ -74,14 +88,28 @@ See [references/gemini-cli-integration.md](references/gemini-cli-integration.md)
 
 ### Pattern 1: Gemini CLI Auto-Execution (Primary)
 
-Use Gemini CLI for automatic tool discovery and execution. See [references/gemini-cli-integration.md](references/gemini-cli-integration.md) for complete guide.
+Use Gemini CLI for automatic tool discovery and execution. Gemini CLI auto-loads `GEMINI.md` from project root to enforce structured JSON responses.
 
 **Quick Example**:
 ```bash
-gemini -y -m gemini-2.5-flash -p "Take a screenshot of https://example.com"
+# IMPORTANT: Use stdin piping, NOT -p flag (deprecated, skips MCP init)
+# Add "Return JSON only per GEMINI.md instructions" to enforce structured output
+echo "Take a screenshot of https://example.com. Return JSON only per GEMINI.md instructions." | gemini -y -m <gemini.model>
 ```
 
-**Benefits**: Automatic tool discovery, natural language execution, faster than subagent orchestration.
+**Expected Output**:
+```json
+{"server":"puppeteer","tool":"screenshot","success":true,"result":"screenshot.png","error":null}
+```
+
+**Benefits**:
+- Automatic tool discovery
+- Structured JSON responses (parseable by Claude)
+- GEMINI.md auto-loaded for consistent formatting
+- Faster than subagent orchestration
+- No natural language ambiguity
+
+See [references/gemini-cli-integration.md](references/gemini-cli-integration.md) for complete guide.
 
 ### Pattern 2: Subagent-Based Execution (Fallback)
 
@@ -102,7 +130,7 @@ Coordinate tools across multiple servers. Each tool knows its source server for 
 ### scripts/mcp-client.ts
 
 Core MCP client manager class. Handles:
-- Config loading from `.claude/.mcp.json`
+- Config loading from `.opencode/.mcp.json`
 - Connecting to multiple MCP servers
 - Listing tools/prompts/resources across all servers
 - Executing tools with proper error handling
@@ -123,13 +151,17 @@ Command-line interface for MCP operations. Commands:
 **Method 1: Gemini CLI** (recommended)
 ```bash
 npm install -g gemini-cli
-mkdir -p .gemini && ln -sf .claude/.mcp.json .gemini/settings.json
-gemini -y -m gemini-2.5-flash -p "Take a screenshot of https://example.com"
+mkdir -p .gemini && ln -sf .opencode/.mcp.json .gemini/settings.json
+# IMPORTANT: Use stdin piping, NOT -p flag (deprecated, skips MCP init)
+# GEMINI.md auto-loads to enforce JSON responses
+echo "Take a screenshot of https://example.com. Return JSON only per GEMINI.md instructions." | gemini -y -m <gemini.model>
 ```
+
+Returns structured JSON: `{"server":"puppeteer","tool":"screenshot","success":true,"result":"screenshot.png","error":null}`
 
 **Method 2: Scripts**
 ```bash
-cd .claude/skills/mcp-management/scripts && npm install
+cd .opencode/skills/mcp-management/scripts && npm install
 npx tsx cli.ts list-tools  # Saves to assets/tools.json
 npx tsx cli.ts call-tool memory create_entities '{"entities":[...]}'
 ```
@@ -153,7 +185,8 @@ See [references/mcp-protocol.md](references/mcp-protocol.md) for:
 
 1. **Gemini CLI** (Primary): Fast, automatic, intelligent tool selection
    - Check: `command -v gemini`
-   - Execute: `gemini -y -m gemini-2.5-flash -p "<task>"`
+   - Execute: `echo "<task>" | gemini -y -m <gemini.model>`
+   - **IMPORTANT**: Use stdin piping, NOT `-p` flag (deprecated, skips MCP init)
    - Best for: All tasks when available
 
 2. **Direct CLI Scripts** (Secondary): Manual tool specification

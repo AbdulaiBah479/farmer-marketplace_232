@@ -1,7 +1,15 @@
 ---
 name: managing-infra
 description: Infrastructure patterns for Kubernetes, Terraform, Helm, Kustomize, and GitHub Actions. Use when making K8s architectural decisions, choosing between Helm vs Kustomize, structuring Terraform modules, writing CI/CD workflows, or applying security best practices.
-allowed-tools: Read, Bash, Grep, Glob
+user-invocable: false
+context: fork
+agent: infra-engineer
+allowed-tools:
+  - Read
+  - Bash
+  - Grep
+  - Glob
+  - Bash(kubectl:*)
 ---
 
 # Infrastructure Patterns
@@ -49,14 +57,3 @@ kubectl apply -k ./              # Apply kustomize
 helm upgrade --install NAME .    # Install/upgrade chart
 terraform plan && terraform apply
 ```
-
----
-
-## Gotchas
-
-- **Terraform state lock contention**: default 10-min lock timeout; bumped timeout doesn't help if the lock holder hung — force-unlock only after confirming the process is dead.
-- **Helm release name reuse on uninstalled-but-not-purged release** fails install with "already exists" — use `--no-hooks` + explicit purge, or never reuse names.
-- **Kustomize patches that match nothing silently produce empty diffs** — verify with `kustomize build` after every patch addition.
-- **Terraform `for_each` over a computed value forces apply-time count** — can cause spurious re-creation of resources between plans.
-- **`helm upgrade --install` on a changed values schema** can silently drop fields that no longer match — diff the rendered output, not just the values file.
-- **`kubectl apply --server-side` vs client-side conflicts** when both have been used: client-side last-applied-config can shadow server-side managed fields without error.

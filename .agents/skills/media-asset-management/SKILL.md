@@ -1,305 +1,486 @@
 ---
 name: media-asset-management
-description: "Plan and run a media pipeline for images, video, and downloadable assets. Use this skill when designing image storage and delivery, choosing formats (WebP, AVIF), setting up responsive images, picking a video host, organizing a brand asset library, or auditing a slow image pipeline. Triggers on image pipeline, asset library, DAM, image optimization, WebP, AVIF, responsive images, video hosting, image CDN, asset workflow, media management. Also triggers when images are slow, broken, or scattered across systems."
-category: operations
-catalog_summary: "Image pipelines, video hosting, asset libraries, format selection"
-display_order: 9
+description: Use when designing digital asset management systems, media libraries, upload pipelines, or asset metadata schemas. Covers media storage patterns, file organization, metadata extraction, and media APIs for headless CMS.
+allowed-tools: Read, Glob, Grep, Task, Skill
 ---
 
 # Media Asset Management
 
-Design how images, video, and downloadable files get stored, processed, organized, and served. Stack-agnostic. The principles apply whether you're running a custom pipeline or using a hosted service.
+Guidance for designing digital asset management systems, media libraries, and upload pipelines for headless CMS.
 
----
+## When to Use This Skill
 
-## When to use
+- Designing media library architecture
+- Implementing file upload pipelines
+- Planning asset metadata schemas
+- Configuring storage providers
+- Building media search and filtering
 
-- Designing or redesigning the image and media pipeline
-- Choosing a media CDN or image service
-- Setting up responsive image delivery
-- Planning a digital asset management (DAM) system
-- Auditing media performance issues
-- Picking video hosting and embedding strategy
-- Setting up workflows for designers and writers to upload assets
-- Migrating media from one platform to another
+## Media Asset Model
 
-## When NOT to use
+### Core Entity
 
-- Performance optimization beyond media (use `performance-optimization`)
-- Brand identity or photography direction (use `brand-identity`, `art-direction`)
-- Content production strategy (use `content-strategy`)
-- Single-image optimization (covered in `performance-optimization`)
+```csharp
+public class MediaItem
+{
+    public Guid Id { get; set; }
 
----
+    // File information
+    public string FileName { get; set; } = string.Empty;
+    public string Extension { get; set; } = string.Empty;
+    public string MimeType { get; set; } = string.Empty;
+    public long SizeBytes { get; set; }
 
-## Required inputs
+    // Storage
+    public string StorageProvider { get; set; } = string.Empty;
+    public string StoragePath { get; set; } = string.Empty;
+    public string PublicUrl { get; set; } = string.Empty;
 
-- Current media inventory: where assets live, in what formats
-- Volume: how many assets, how much storage, how much traffic
-- Sources: who creates and uploads media (designers, writers, automated tools)
-- Platforms: where media is consumed (web, email, app, partners)
-- Performance baseline: current image sizes, load times
-- Budget reality: hosted services have monthly costs
+    // Organization
+    public Guid? FolderId { get; set; }
+    public MediaFolder? Folder { get; set; }
+    public List<string> Tags { get; set; } = new();
 
----
+    // Metadata
+    public MediaMetadata Metadata { get; set; } = new();
 
-## The framework: 4 stages
+    // Audit
+    public string UploadedBy { get; set; } = string.Empty;
+    public DateTime UploadedUtc { get; set; }
+    public DateTime? ModifiedUtc { get; set; }
+}
 
-The media pipeline has four stages. Each has its own decisions.
+public class MediaMetadata
+{
+    // Common
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public string? Alt { get; set; }
+    public string? Caption { get; set; }
+    public string? Credit { get; set; }
 
-### Stage 1: Source
+    // Image-specific
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+    public string? ColorSpace { get; set; }
 
-Where assets enter the system.
+    // Document-specific
+    public int? PageCount { get; set; }
+    public string? Author { get; set; }
 
-**Sources:**
-- Designers (Figma exports, Photoshop, Illustrator)
-- Photographers (RAW or JPEG from camera)
-- Stock photo libraries
-- AI-generated images
-- User-generated content (uploads)
-- Automated systems (e.g., screenshots, generated thumbnails)
+    // Video-specific
+    public TimeSpan? Duration { get; set; }
+    public string? Codec { get; set; }
+    public int? Bitrate { get; set; }
 
-**At source, decide:**
-- File formats accepted (RAW, TIFF, PSD, AI vs delivered formats)
-- Naming conventions
-- Required metadata (alt text, captions, credits, rights)
-- Maximum source resolution (high enough to derive any size; not so high it's wasteful)
-- Where source files live (separate from delivered assets)
+    // EXIF/XMP
+    public Dictionary<string, string> ExifData { get; set; } = new();
+}
 
-**Anti-pattern:** sources and delivered assets in the same place. Hard to find masters. Hard to regenerate. Hard to audit usage.
-
-### Stage 2: Process
-
-Transforming source files into delivery formats.
-
-**Processing decisions:**
-- Resize to standard sizes (e.g., a fixed set of widths: 320, 640, 960, 1280, 1920, 2560)
-- Compress (lossy or lossless, with quality targets)
-- Convert formats (JPEG, WebP, AVIF for raster; SVG for vector)
-- Generate thumbnails and previews
-- Strip metadata (EXIF, GPS) unless intentionally retained
-- Color profile management (sRGB for web)
-
-**Process options:**
-- **Build-time:** Static assets processed during deploy. Predictable, fast at runtime, hard to vary.
-- **On-demand:** A service generates the right format/size when requested. Flexible, requires a processing layer.
-- **Hybrid:** Static processed sizes plus on-demand for edge cases.
-
-For sites with many image variants and ongoing change, on-demand wins. For tightly controlled marketing sites, build-time can be simpler.
-
-### Stage 3: Deliver
-
-Getting assets to users efficiently.
-
-**Delivery decisions:**
-- CDN: required for any non-trivial volume. Edge caching, global distribution.
-- Format negotiation: serve AVIF to browsers that support it, WebP otherwise, JPEG as fallback. Use the `<picture>` element or content negotiation.
-- Responsive images: `srcset` and `sizes` attributes so browsers pick the right size for the viewport.
-- Lazy loading: `loading="lazy"` for below-the-fold images.
-- Async decoding: `decoding="async"` for non-critical images.
-- Width and height attributes: always set, prevents layout shift.
-
-**Modern HTML pattern:**
-
-```html
-<img 
-  src="/image-1280.jpg" 
-  srcset="/image-640.jpg 640w, /image-960.jpg 960w, /image-1280.jpg 1280w, /image-1920.jpg 1920w" 
-  sizes="(max-width: 768px) 100vw, 50vw"
-  width="1280"
-  height="720"
-  loading="lazy"
-  decoding="async"
-  alt="Descriptive alt text">
+public class MediaFolder
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
+    public Guid? ParentId { get; set; }
+    public List<MediaFolder> Children { get; set; } = new();
+}
 ```
 
-Or for format negotiation:
+## Storage Architecture
 
-```html
-<picture>
-  <source type="image/avif" srcset="/image.avif">
-  <source type="image/webp" srcset="/image.webp">
-  <img src="/image.jpg" alt="Descriptive alt text" width="1280" height="720">
-</picture>
+### Storage Provider Abstraction
+
+```csharp
+public interface IMediaStorageProvider
+{
+    string ProviderName { get; }
+
+    Task<string> UploadAsync(Stream stream, string path, string contentType);
+    Task<Stream> DownloadAsync(string path);
+    Task DeleteAsync(string path);
+    Task<bool> ExistsAsync(string path);
+    string GetPublicUrl(string path);
+}
+
+// Azure Blob Storage
+public class AzureBlobStorageProvider : IMediaStorageProvider
+{
+    public string ProviderName => "AzureBlob";
+
+    public async Task<string> UploadAsync(
+        Stream stream, string path, string contentType)
+    {
+        var blobClient = _containerClient.GetBlobClient(path);
+
+        await blobClient.UploadAsync(stream, new BlobHttpHeaders
+        {
+            ContentType = contentType,
+            CacheControl = "public, max-age=31536000"
+        });
+
+        return path;
+    }
+
+    public string GetPublicUrl(string path)
+    {
+        return $"{_containerClient.Uri}/{path}";
+    }
+}
+
+// AWS S3
+public class S3StorageProvider : IMediaStorageProvider
+{
+    public string ProviderName => "S3";
+
+    public async Task<string> UploadAsync(
+        Stream stream, string path, string contentType)
+    {
+        var request = new PutObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = path,
+            InputStream = stream,
+            ContentType = contentType,
+            CannedACL = S3CannedACL.PublicRead
+        };
+
+        await _s3Client.PutObjectAsync(request);
+        return path;
+    }
+}
+
+// Local file system
+public class LocalStorageProvider : IMediaStorageProvider
+{
+    public string ProviderName => "Local";
+
+    public async Task<string> UploadAsync(
+        Stream stream, string path, string contentType)
+    {
+        var fullPath = Path.Combine(_basePath, path);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+
+        await using var fileStream = File.Create(fullPath);
+        await stream.CopyToAsync(fileStream);
+
+        return path;
+    }
+}
 ```
 
-### Stage 4: Manage
+### Path Generation
 
-Keeping the system organized and useful over time.
+```csharp
+public class MediaPathGenerator
+{
+    public string GeneratePath(string fileName, PathStrategy strategy)
+    {
+        var ext = Path.GetExtension(fileName);
+        var name = Path.GetFileNameWithoutExtension(fileName);
+        var safeName = Slugify(name);
 
-**Management decisions:**
-- Asset library or DAM (digital asset management): centralized place for the team to find assets
-- Tagging and search
-- Version control (designers updating an asset, old version still in use)
-- Rights and licensing tracking
-- Audit and cleanup (what's not used anymore?)
-- Permissions (who can upload, edit, delete)
+        return strategy switch
+        {
+            PathStrategy.DateBased => $"{DateTime.UtcNow:yyyy/MM/dd}/{safeName}-{Guid.NewGuid():N}{ext}",
+            PathStrategy.HashBased => $"{ComputeHash(fileName)[..2]}/{ComputeHash(fileName)[2..4]}/{Guid.NewGuid():N}{ext}",
+            PathStrategy.Flat => $"{Guid.NewGuid():N}{ext}",
+            PathStrategy.OriginalName => $"{safeName}-{DateTime.UtcNow:yyyyMMddHHmmss}{ext}",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+}
 
-A simple shared folder works at low scale. A real DAM is necessary above a few thousand assets or with multiple teams.
+public enum PathStrategy
+{
+    DateBased,      // 2025/01/15/image-abc123.jpg
+    HashBased,      // ab/cd/abc123.jpg
+    Flat,           // abc123.jpg
+    OriginalName    // my-image-20250115103045.jpg
+}
+```
 
----
+## Upload Pipeline
 
-## Format reference
+### Upload Service
 
-For typical web use:
+```csharp
+public class MediaUploadService
+{
+    public async Task<MediaItem> UploadAsync(
+        Stream stream,
+        string fileName,
+        string contentType,
+        UploadOptions? options = null)
+    {
+        options ??= new UploadOptions();
 
-| Format | Use for | Avoid for |
-|---|---|---|
-| AVIF | Photographs, complex images. Best compression. | Browser support edge cases (rare in 2026, ubiquitous now) |
-| WebP | Photographs, illustrations. Good compression. Wide support. | Print, archival |
-| JPEG | Photographs (fallback). Universal support. | Sharp-edged graphics, transparent backgrounds |
-| PNG | Sharp-edged graphics, transparent backgrounds, screenshots. Lossless. | Photographs (file size) |
-| SVG | Logos, icons, simple illustrations. Scalable. | Photographs, complex art |
-| GIF | Effectively obsolete. Use video formats for animation. | Anything modern |
-| MP4 (H.264) | Video, universal support. | Static content |
-| WebM (VP9 / AV1) | Video, better compression. | Older browsers |
+        // Validate
+        ValidateFile(fileName, contentType, stream.Length, options);
 
-For most sites: serve AVIF/WebP for modern browsers, JPEG/PNG fallback. SVG for vector. MP4 for video.
+        // Generate path
+        var path = _pathGenerator.GeneratePath(fileName, options.PathStrategy);
 
----
+        // Process (resize, optimize)
+        var processedStream = await ProcessMediaAsync(stream, contentType, options);
 
-## Workflow
+        // Upload to storage
+        var storagePath = await _storageProvider.UploadAsync(
+            processedStream, path, contentType);
 
-### Step 1: Inventory
+        // Extract metadata
+        var metadata = await ExtractMetadataAsync(processedStream, contentType);
 
-What assets exist? Where? In what state?
+        // Create record
+        var mediaItem = new MediaItem
+        {
+            Id = Guid.NewGuid(),
+            FileName = fileName,
+            Extension = Path.GetExtension(fileName),
+            MimeType = contentType,
+            SizeBytes = processedStream.Length,
+            StorageProvider = _storageProvider.ProviderName,
+            StoragePath = storagePath,
+            PublicUrl = _storageProvider.GetPublicUrl(storagePath),
+            FolderId = options.FolderId,
+            Tags = options.Tags ?? new List<string>(),
+            Metadata = metadata,
+            UploadedBy = _currentUser.UserId,
+            UploadedUtc = DateTime.UtcNow
+        };
 
-- Image count and total storage
-- Average sizes (KB) per format
-- Image-related performance metrics
-- Number of pages with broken or missing images
-- Source files vs delivered files
+        await _repository.AddAsync(mediaItem);
 
-### Step 2: Audit performance
+        // Raise event
+        await _mediator.Publish(new MediaUploadedEvent(mediaItem));
 
-For a sample of pages:
-- Image weight per page (target: under 500KB total for marketing pages)
-- Number of image requests
-- Are responsive images used?
-- Are modern formats served?
-- Is there layout shift from missing dimensions?
+        return mediaItem;
+    }
 
-Tools: Lighthouse, WebPageTest, your CDN's analytics.
+    private void ValidateFile(
+        string fileName, string contentType, long size, UploadOptions options)
+    {
+        // Check file size
+        if (size > options.MaxFileSizeBytes)
+            throw new MediaValidationException($"File exceeds maximum size of {options.MaxFileSizeBytes} bytes");
 
-### Step 3: Pick the pipeline
+        // Check allowed types
+        if (options.AllowedMimeTypes?.Any() == true &&
+            !options.AllowedMimeTypes.Contains(contentType))
+            throw new MediaValidationException($"File type {contentType} is not allowed");
 
-Three reasonable patterns:
+        // Check extension
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        if (options.BlockedExtensions?.Contains(ext) == true)
+            throw new MediaValidationException($"File extension {ext} is blocked");
+    }
+}
 
-**Pattern A: Static, build-time**
-- Assets in repo or storage bucket
-- Build process generates sizes and formats
-- Served via CDN
-- Good for: static sites, low asset churn, tight performance control
+public class UploadOptions
+{
+    public Guid? FolderId { get; set; }
+    public List<string>? Tags { get; set; }
+    public PathStrategy PathStrategy { get; set; } = PathStrategy.DateBased;
+    public long MaxFileSizeBytes { get; set; } = 10 * 1024 * 1024; // 10MB
+    public List<string>? AllowedMimeTypes { get; set; }
+    public List<string>? BlockedExtensions { get; set; }
+    public bool ExtractMetadata { get; set; } = true;
+    public ImageProcessingOptions? ImageOptions { get; set; }
+}
+```
 
-**Pattern B: Image CDN with on-demand**
-- Source uploads to a bucket or service
-- An image CDN (Cloudinary, imgix, Cloudflare Images, Bunny, etc.) processes on-demand via URL parameters
-- Good for: mid-to-large sites, frequent asset changes, multiple variants
+### Metadata Extraction
 
-**Pattern C: Headless CMS with built-in image API**
-- CMS holds source assets
-- CMS provides image API for resizing, format conversion
-- Good for: content-heavy sites, non-technical content uploaders, when CMS is already chosen
+```csharp
+public class MetadataExtractor
+{
+    public async Task<MediaMetadata> ExtractAsync(Stream stream, string contentType)
+    {
+        var metadata = new MediaMetadata();
 
-The patterns aren't mutually exclusive. Big sites often use Pattern A for design assets, Pattern B for content images.
+        if (contentType.StartsWith("image/"))
+        {
+            await ExtractImageMetadataAsync(stream, metadata);
+        }
+        else if (contentType.StartsWith("video/"))
+        {
+            await ExtractVideoMetadataAsync(stream, metadata);
+        }
+        else if (contentType == "application/pdf")
+        {
+            await ExtractPdfMetadataAsync(stream, metadata);
+        }
 
-### Step 4: Define standards
+        return metadata;
+    }
 
-Document:
-- Naming conventions
-- Required metadata (alt text, attribution)
-- Maximum source dimensions
-- Minimum source dimensions per use case
-- Approved formats
-- File size targets
+    private async Task ExtractImageMetadataAsync(Stream stream, MediaMetadata metadata)
+    {
+        using var image = await Image.LoadAsync(stream);
 
-Make these enforceable through tooling where possible (CI checks on file sizes, alt text required by CMS).
+        metadata.Width = image.Width;
+        metadata.Height = image.Height;
 
-### Step 5: Set up workflows
+        // Extract EXIF
+        if (image.Metadata.ExifProfile != null)
+        {
+            foreach (var value in image.Metadata.ExifProfile.Values)
+            {
+                metadata.ExifData[value.Tag.ToString()] = value.GetValue()?.ToString() ?? "";
+            }
+        }
+    }
+}
+```
 
-For each source type:
+## Media Library Features
 
-| Source | Workflow |
-|---|---|
-| Designer | Export from Figma, drop into bucket, automated processing handles the rest |
-| Writer | Upload through CMS, CMS prompts for alt text |
-| Photographer | RAW into source bucket, designer or automation creates web variants |
-| User upload | Pass through the image service, automatic moderation if applicable |
+### Folder Management
 
-Document who does what. Workflows that aren't documented break.
+```csharp
+public class MediaFolderService
+{
+    public async Task<MediaFolder> CreateFolderAsync(string name, Guid? parentId = null)
+    {
+        var folder = new MediaFolder
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            ParentId = parentId,
+            Path = await BuildPathAsync(name, parentId)
+        };
 
-### Step 6: Build the asset library
+        await _repository.AddAsync(folder);
+        return folder;
+    }
 
-For all but the smallest sites:
-- Centralized DAM or shared library
-- Tag taxonomy (subject, style, brand, campaign, etc.)
-- Search across tags and metadata
-- Documented rights for each asset (stock license, custom commission, work-for-hire, etc.)
-- Sunset workflow (rights expire, asset retires)
+    public async Task<List<MediaFolder>> GetFolderTreeAsync()
+    {
+        var folders = await _repository.GetAllAsync();
+        return BuildTree(folders.Where(f => f.ParentId == null));
+    }
+}
+```
 
-### Step 7: Monitor and audit
+### Media Search
 
-- Performance metrics on image-heavy pages
-- Storage costs
-- CDN costs
-- Broken image alerts (404 on referenced media)
-- Unused asset cleanup (storage costs accumulate)
+```csharp
+public class MediaSearchService
+{
+    public async Task<PagedResult<MediaItem>> SearchAsync(MediaSearchQuery query)
+    {
+        var queryable = _context.MediaItems.AsQueryable();
 
-### Step 8: Document the pipeline
+        // Filter by folder
+        if (query.FolderId.HasValue)
+        {
+            queryable = queryable.Where(m => m.FolderId == query.FolderId);
+        }
 
-A pipeline document covers:
-- Diagram of source → process → deliver → manage
-- Tools used at each stage
-- Standards and naming conventions
-- Workflows for common cases
-- Escalation when something breaks
+        // Filter by type
+        if (!string.IsNullOrEmpty(query.MediaType))
+        {
+            queryable = query.MediaType switch
+            {
+                "image" => queryable.Where(m => m.MimeType.StartsWith("image/")),
+                "video" => queryable.Where(m => m.MimeType.StartsWith("video/")),
+                "document" => queryable.Where(m =>
+                    m.MimeType == "application/pdf" ||
+                    m.MimeType.Contains("document")),
+                _ => queryable
+            };
+        }
 
----
+        // Filter by tags
+        if (query.Tags?.Any() == true)
+        {
+            queryable = queryable.Where(m =>
+                query.Tags.All(t => m.Tags.Contains(t)));
+        }
 
-## Failure patterns
+        // Search text
+        if (!string.IsNullOrEmpty(query.SearchText))
+        {
+            var search = query.SearchText.ToLower();
+            queryable = queryable.Where(m =>
+                m.FileName.ToLower().Contains(search) ||
+                m.Metadata.Title!.ToLower().Contains(search) ||
+                m.Metadata.Description!.ToLower().Contains(search));
+        }
 
-**Source files in the delivery bucket.** 50MB RAW files served to users. Fix: separate sources from delivered.
+        // Apply sorting
+        queryable = query.SortBy switch
+        {
+            "name" => queryable.OrderBy(m => m.FileName),
+            "date" => queryable.OrderByDescending(m => m.UploadedUtc),
+            "size" => queryable.OrderByDescending(m => m.SizeBytes),
+            _ => queryable.OrderByDescending(m => m.UploadedUtc)
+        };
 
-**Single image format for every browser.** JPEG-only when AVIF could be 30-50% smaller. Use format negotiation.
+        return await queryable.ToPagedResultAsync(query.Page, query.PageSize);
+    }
+}
 
-**Missing width and height attributes.** Causes layout shift, hurts CLS metric. Set always.
+public class MediaSearchQuery
+{
+    public Guid? FolderId { get; set; }
+    public string? MediaType { get; set; }
+    public List<string>? Tags { get; set; }
+    public string? SearchText { get; set; }
+    public string? SortBy { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+}
+```
 
-**Lazy loading hero images.** Above-the-fold images shouldn't be lazy-loaded. Lazy below the fold.
+## Media API
 
-**Eager loading everything.** All images load on page load. Use `loading="lazy"` for below-fold.
+### Endpoints
 
-**No responsive images.** Mobile gets the desktop image. Wasteful, slow. Use `srcset` and `sizes`.
+```text
+POST   /api/media/upload              # Upload single file
+POST   /api/media/upload/bulk         # Bulk upload
+GET    /api/media                     # List/search media
+GET    /api/media/{id}                # Get media item
+DELETE /api/media/{id}                # Delete media
+PATCH  /api/media/{id}                # Update metadata
 
-**One source resolution.** Source is the delivery resolution. Can't generate retina or larger. Source should be 2-3x the largest delivered size.
+# Folders
+GET    /api/media/folders             # Get folder tree
+POST   /api/media/folders             # Create folder
+DELETE /api/media/folders/{id}        # Delete folder
+```
 
-**Stripping all metadata.** Removes alt text, removes attribution. Strip GPS and personal EXIF; keep semantic metadata.
+### Media Response
 
-**Random naming.** `IMG_4823.jpg`, `Screenshot 2024-03-15.png`. Hard to find later. Use a naming convention.
+```json
+{
+  "data": {
+    "id": "media-123",
+    "fileName": "hero-image.jpg",
+    "mimeType": "image/jpeg",
+    "sizeBytes": 245678,
+    "url": "https://cdn.example.com/media/2025/01/15/hero-image-abc123.jpg",
+    "metadata": {
+      "title": "Homepage Hero",
+      "alt": "Team working together",
+      "width": 1920,
+      "height": 1080
+    },
+    "folder": {
+      "id": "folder-456",
+      "name": "Homepage",
+      "path": "/Marketing/Homepage"
+    },
+    "tags": ["hero", "homepage", "team"],
+    "uploadedBy": "user-789",
+    "uploadedUtc": "2025-01-15T10:30:00Z"
+  }
+}
+```
 
-**No alt text.** Accessibility failure, SEO failure. Make alt text required at upload.
+## Related Skills
 
-**Storage growing unbounded.** Old, unused assets pile up. Quarterly cleanup or automated lifecycle policies.
-
-**One person knows the pipeline.** When they're out, no one can fix issues or onboard new sources. Document.
-
----
-
-## Output format
-
-A media pipeline document includes:
-
-- **Inventory:** current asset count, formats, storage
-- **Pipeline diagram:** source → process → deliver → manage with tools at each stage
-- **Format and size standards:** what gets generated, when
-- **Naming and metadata conventions:** with examples
-- **Workflows by source type:** designer, writer, photographer, user
-- **Performance baseline and targets:** weight per page, format adoption, etc.
-- **Asset library:** tool, taxonomy, search, rights tracking
-- **Monitoring:** performance, costs, broken assets
-- **Roadmap:** improvements over the next 1-2 quarters
-
----
-
-## Reference files
-
-- [`references/responsive-image-patterns.md`](references/responsive-image-patterns.md): Copy-paste HTML patterns for common responsive image scenarios (hero, content, art-directed, format negotiation), with explanations.
+- `image-optimization` - Image processing and optimization
+- `cdn-media-delivery` - CDN configuration and delivery
+- `content-type-modeling` - Media fields in content types

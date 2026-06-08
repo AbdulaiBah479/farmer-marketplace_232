@@ -1,118 +1,394 @@
 ---
 name: php-patterns
-description: Apply PHP design patterns — Repository, Factory, Strategy, Decorator, Observer, Singleton, Builder, and Dependency Injection patterns in PHP. Use when architecting PHP applications or understanding patterns used in Magento and other frameworks.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: Implementação de Design Patterns em PHP moderno incluindo Repository, Service Layer, Factory, Strategy, Observer, Decorator, Adapter, e Specification. Usar para arquitetura de aplicações, desacoplamento de código, implementação de SOLID, criação de camadas de abstração, e estruturação de código enterprise.
 ---
 
-# PHP Design Patterns
+# PHP Patterns
 
-## Before writing code
+Design Patterns para PHP 8.x com foco em aplicações Laravel/enterprise.
 
-**Fetch live docs**: Web-search `php design patterns examples` for current community patterns and best practices. For Magento-specific patterns, web-search `site:developer.adobe.com commerce php development components`.
+## Repository Pattern
 
-## Creational Patterns
+Abstrai acesso a dados e permite trocar implementações.
 
-### Factory
+```php
+// Interface
+interface ContractRepositoryInterface
+{
+    public function find(int $id): ?Contract;
+    public function findOrFail(int $id): Contract;
+    public function all(): Collection;
+    public function create(array $data): Contract;
+    public function update(Contract $contract, array $data): Contract;
+    public function delete(Contract $contract): bool;
+    public function findByClient(int $clientId): Collection;
+}
 
-Creates objects without exposing instantiation logic. In Magento, auto-generated Factory classes (`SomeModelFactory`) create non-injectable objects via `$factory->create()`.
+// Implementação Eloquent
+class EloquentContractRepository implements ContractRepositoryInterface
+{
+    public function __construct(
+        private Contract $model
+    ) {}
 
-**When to use**: When you need new instances (entities, models) rather than shared singletons. When the caller shouldn't know the concrete class.
+    public function find(int $id): ?Contract
+    {
+        return $this->model->find($id);
+    }
 
-### Builder
+    public function findOrFail(int $id): Contract
+    {
+        return $this->model->findOrFail($id);
+    }
 
-Constructs complex objects step by step. Magento's `SearchCriteriaBuilder`, `FilterBuilder`, `SortOrderBuilder` follow this pattern.
+    public function all(): Collection
+    {
+        return $this->model->all();
+    }
 
-**When to use**: When object construction requires many optional parameters or multi-step assembly.
+    public function create(array $data): Contract
+    {
+        return $this->model->create($data);
+    }
 
-### Singleton (Shared Instance)
+    public function update(Contract $contract, array $data): Contract
+    {
+        $contract->update($data);
+        return $contract->fresh();
+    }
 
-Single instance shared across the application. Magento's Object Manager shares instances by default. Explicit singleton is generally an anti-pattern — prefer DI container sharing.
+    public function delete(Contract $contract): bool
+    {
+        return $contract->delete();
+    }
 
-**When to use**: Rarely — let the DI container manage instance sharing.
+    public function findByClient(int $clientId): Collection
+    {
+        return $this->model->where('client_id', $clientId)->get();
+    }
+}
 
-## Structural Patterns
+// Service Provider binding
+$this->app->bind(ContractRepositoryInterface::class, EloquentContractRepository::class);
+```
 
-### Proxy
+## Service Layer Pattern
 
-Delays instantiation of resource-intensive dependencies. Magento auto-generates Proxy classes (`SomeClass\Proxy`) that create the real object only when a method is called.
+Encapsula lógica de negócio complexa.
 
-**When to use**: When a class injects a heavy dependency it doesn't always use.
+```php
+class ContractService
+{
+    public function __construct(
+        private ContractRepositoryInterface $repository,
+        private PaymentService $paymentService,
+        private NotificationService $notifications,
+        private EventDispatcherInterface $events
+    ) {}
 
-### Decorator
+    public function create(CreateContractDTO $dto): Contract
+    {
+        DB::beginTransaction();
+        
+        try {
+            $contract = $this->repository->create($dto->toArray());
+            
+            if ($dto->generateInvoice) {
+                $this->paymentService->generateInvoice($contract);
+            }
+            
+            $this->events->dispatch(new ContractCreated($contract));
+            
+            DB::commit();
+            return $contract;
+            
+        } catch (Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
 
-Wraps an object to add behavior without modifying the original. Used in Magento composite components and cache decorators.
+    public function cancel(Contract $contract, string $reason): Contract
+    {
+        if (!$contract->canBeCancelled()) {
+            throw new ContractCannotBeCancelledException($contract);
+        }
 
-**When to use**: When you need to add behavior to an object dynamically without subclassing.
+        $contract = $this->repository->update($contract, [
+            'status' => ContractStatus::Cancelled,
+            'cancelled_at' => now(),
+            'cancellation_reason' => $reason,
+        ]);
 
-### Composite
+        $this->notifications->notifyContractCancelled($contract);
+        $this->events->dispatch(new ContractCancelled($contract));
 
-Treats individual objects and compositions uniformly. Magento's UI component tree and layout container system follow this pattern.
+        return $contract;
+    }
+}
+```
 
-**When to use**: When you have tree-structured data or components.
+## Factory Pattern
 
-## Behavioral Patterns
+Criação de objetos complexos.
 
-### Strategy
+```php
+interface NotificationFactory
+{
+    public function create(string $type, array $data): Notification;
+}
 
-Defines a family of algorithms, encapsulates each one, makes them interchangeable. Magento shipping carriers and payment methods are strategy implementations.
+class ConcreteNotificationFactory implements NotificationFactory
+{
+    public function create(string $type, array $data): Notification
+    {
+        return match($type) {
+            'email' => new EmailNotification($data),
+            'sms' => new SmsNotification($data),
+            'push' => new PushNotification($data),
+            'slack' => new SlackNotification($data),
+            default => throw new InvalidNotificationTypeException($type),
+        };
+    }
+}
 
-**When to use**: When you have multiple algorithms for the same task and want runtime selection.
+// Uso com container
+class NotificationService
+{
+    public function __construct(
+        private NotificationFactory $factory
+    ) {}
 
-### Observer
+    public function send(string $type, array $data): void
+    {
+        $notification = $this->factory->create($type, $data);
+        $notification->send();
+    }
+}
+```
 
-Defines a one-to-many dependency. When one object changes state, all dependents are notified. Magento's event/observer system is a direct implementation.
+## Strategy Pattern
 
-**When to use**: When changes in one object should trigger actions in others without tight coupling.
+Algoritmos intercambiáveis.
 
-### Repository
+```php
+interface PricingStrategy
+{
+    public function calculate(Contract $contract): float;
+}
 
-Mediates between domain and data mapping layers. Magento's repository interfaces (`ProductRepositoryInterface`) centralize all data access through a clean API.
+class StandardPricing implements PricingStrategy
+{
+    public function calculate(Contract $contract): float
+    {
+        return $contract->baseValue;
+    }
+}
 
-**When to use**: Always — for any data access beyond simple reads. It's the standard Magento pattern.
+class DiscountPricing implements PricingStrategy
+{
+    public function __construct(
+        private float $discountPercentage
+    ) {}
 
-### Command
+    public function calculate(Contract $contract): float
+    {
+        return $contract->baseValue * (1 - $this->discountPercentage / 100);
+    }
+}
 
-Encapsulates a request as an object. Magento's Payment Gateway Command pattern uses this — authorize, capture, refund are separate command objects.
+class TieredPricing implements PricingStrategy
+{
+    public function calculate(Contract $contract): float
+    {
+        return match(true) {
+            $contract->baseValue >= 10000 => $contract->baseValue * 0.85,
+            $contract->baseValue >= 5000 => $contract->baseValue * 0.90,
+            $contract->baseValue >= 1000 => $contract->baseValue * 0.95,
+            default => $contract->baseValue,
+        };
+    }
+}
 
-**When to use**: When you need to parameterize, queue, or log requests.
+// Context
+class PricingCalculator
+{
+    public function __construct(
+        private PricingStrategy $strategy
+    ) {}
 
-## Architectural Patterns
+    public function setStrategy(PricingStrategy $strategy): void
+    {
+        $this->strategy = $strategy;
+    }
 
-### Dependency Injection
+    public function calculate(Contract $contract): float
+    {
+        return $this->strategy->calculate($contract);
+    }
+}
+```
 
-Objects receive their dependencies through constructors rather than creating them. Magento's DI container (Object Manager + di.xml) is the foundation of the entire framework.
+## Specification Pattern
 
-**When to use**: Always — it's the core pattern. Inject interfaces, not concrete classes.
+Regras de negócio compostas.
 
-### Service Layer
+```php
+interface Specification
+{
+    public function isSatisfiedBy(Contract $contract): bool;
+}
 
-Defines an application's boundary with a layer of services that encapsulates business logic. Magento's Service Contracts (interfaces in `Api/`) form this layer.
+class ActiveContractSpecification implements Specification
+{
+    public function isSatisfiedBy(Contract $contract): bool
+    {
+        return $contract->status === ContractStatus::Active;
+    }
+}
 
-**When to use**: Always — expose module functionality through service interfaces.
+class MinimumValueSpecification implements Specification
+{
+    public function __construct(
+        private float $minimumValue
+    ) {}
 
-### Data Transfer Object (DTO)
+    public function isSatisfiedBy(Contract $contract): bool
+    {
+        return $contract->value >= $this->minimumValue;
+    }
+}
 
-Simple objects that carry data between processes. Magento's Data Interfaces (`Api/Data/`) are DTOs — they have getters/setters but no business logic.
+// Composite specifications
+class AndSpecification implements Specification
+{
+    public function __construct(
+        private Specification $left,
+        private Specification $right
+    ) {}
 
-**When to use**: When passing data across architectural boundaries (API, service layer).
+    public function isSatisfiedBy(Contract $contract): bool
+    {
+        return $this->left->isSatisfiedBy($contract) 
+            && $this->right->isSatisfiedBy($contract);
+    }
+}
 
-## Anti-Patterns to Avoid
+// Trait para fluent interface
+trait ComposableSpecification
+{
+    public function and(Specification $other): Specification
+    {
+        return new AndSpecification($this, $other);
+    }
 
-- **God Object** — classes that do too much (split into focused services)
-- **Service Locator** — calling Object Manager directly (use constructor injection)
-- **Anemic Domain Model** — models with only getters/setters (add behavior where appropriate)
-- **Tight Coupling** — depending on concrete classes (depend on interfaces)
-- **Hard-coded Dependencies** — instantiating with `new` (use factories or DI)
+    public function or(Specification $other): Specification
+    {
+        return new OrSpecification($this, $other);
+    }
+}
 
-## Best Practices
+// Uso
+$spec = (new ActiveContractSpecification())
+    ->and(new MinimumValueSpecification(1000));
 
-- Program to interfaces, not implementations
-- Favor composition over inheritance
-- Keep classes focused (Single Responsibility)
-- Use DI container for dependency management
-- Use factories for creating non-shared instances
-- Use proxies for lazy-loading expensive dependencies
-- Use the strategy pattern for swappable algorithms
-- Document which pattern a class implements
+$eligibleContracts = $contracts->filter(
+    fn($c) => $spec->isSatisfiedBy($c)
+);
+```
 
-Fetch current framework documentation for exact interface signatures and implementation patterns before applying.
+## Action Pattern (Single Action Classes)
+
+```php
+class CreateContractAction
+{
+    public function __construct(
+        private ContractRepositoryInterface $repository,
+        private EventDispatcherInterface $events
+    ) {}
+
+    public function execute(CreateContractDTO $dto): Contract
+    {
+        $contract = $this->repository->create($dto->toArray());
+        $this->events->dispatch(new ContractCreated($contract));
+        return $contract;
+    }
+}
+
+// Controller limpo
+class ContractController
+{
+    public function store(
+        StoreContractRequest $request,
+        CreateContractAction $action
+    ): ContractResource {
+        $contract = $action->execute(
+            CreateContractDTO::fromRequest($request)
+        );
+        return new ContractResource($contract);
+    }
+}
+```
+
+## DTO Pattern
+
+```php
+readonly class CreateContractDTO
+{
+    public function __construct(
+        public int $clientId,
+        public float $value,
+        public DateTimeImmutable $eventDate,
+        public ContractStatus $status = ContractStatus::Pending,
+        public ?string $notes = null,
+    ) {}
+
+    public static function fromRequest(Request $request): self
+    {
+        return new self(
+            clientId: $request->integer('client_id'),
+            value: $request->float('value'),
+            eventDate: new DateTimeImmutable($request->string('event_date')),
+            status: ContractStatus::tryFrom($request->string('status')) ?? ContractStatus::Pending,
+            notes: $request->string('notes'),
+        );
+    }
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            clientId: $data['client_id'],
+            value: (float) $data['value'],
+            eventDate: new DateTimeImmutable($data['event_date']),
+            status: ContractStatus::from($data['status'] ?? 'pending'),
+            notes: $data['notes'] ?? null,
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'client_id' => $this->clientId,
+            'value' => $this->value,
+            'event_date' => $this->eventDate->format('Y-m-d'),
+            'status' => $this->status->value,
+            'notes' => $this->notes,
+        ];
+    }
+}
+```
+
+## Estrutura de Diretórios Recomendada
+
+```
+app/
+├── Actions/           # Single-action classes
+├── DTOs/              # Data Transfer Objects
+├── Repositories/
+│   ├── Contracts/     # Interfaces
+│   └── Eloquent/      # Implementações
+├── Services/          # Business logic
+├── Specifications/    # Business rules
+├── Factories/         # Object creation
+└── Strategies/        # Interchangeable algorithms
+```

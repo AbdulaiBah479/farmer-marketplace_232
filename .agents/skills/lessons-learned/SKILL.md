@@ -1,105 +1,121 @@
 ---
 name: lessons-learned
-description: "Analyze recent code changes via git history and extract software engineering lessons. Use when the user asks 'what is the lesson here?', 'what can I learn from this?', 'engineering takeaway', 'what did I just learn?', 'reflect on this code', or wants to extract principles from recent work."
+description: Use when capturing discoveries after phase completion, before shipping, or when reflecting on completed work to extract reusable patterns
 ---
+
+<!-- TOKEN BUDGET: 150 lines / ~450 tokens -->
 
 # Lessons Learned
 
-Extract specific, grounded software engineering lessons from actual code changes. Not a lecture -- a mirror. Show the user what their code already demonstrates.
+## Overview
 
-## Before You Begin
+The lessons-learned system captures discoveries, patterns, and pitfalls found during implementation and feeds them back into project memory. Lessons are stored in `.shipyard/LESSONS.md` and optionally surfaced in `CLAUDE.md` so future agents benefit from past experience.
 
-**Load the principles reference first.**
+## When to Use
 
-1. Read `references/se-principles.md` to have the principle catalog available
-2. Optionally read `references/anti-patterns.md` if you suspect the changes include areas for improvement
-3. Determine the scope of analysis (see Phase 1)
+- After phase completion during `/shipyard:ship` (Step 3a)
+- When reflecting on completed work to extract reusable knowledge
+- When a build summary contains notable discoveries worth preserving
 
-**Do not proceed until you've loaded at least `se-principles.md`.**
+## LESSONS.md Format
 
-## Phase 1: Determine Scope
-
-Ask the user or infer from context what to analyze.
-
-| Scope | Git Commands | When to Use |
-|-------|-------------|-------------|
-| Feature branch | `git log main..HEAD --oneline` + `git diff main...HEAD` | User is on a non-main branch (default) |
-| Last N commits | `git log --oneline -N` + `git diff HEAD~N..HEAD` | User specifies a range, or on main (default N=5) |
-| Specific commit | `git show <sha>` | User references a specific commit |
-| Working changes | `git diff` + `git diff --cached` | User says "what about these changes?" before committing |
-
-**Default behavior:**
-- If on a feature branch: analyze branch commits vs main
-- If on main: analyze the last 5 commits
-- If the user provides a different scope, use that
-
-## Phase 2: Gather Changes
-
-1. Run `git log` with the determined scope to get the commit list and messages
-2. Run `git diff` for the full diff of the scope
-3. If the diff is large (>500 lines), use `git diff --stat` first, then selectively read the top 3-5 most-changed files
-4. **Read commit messages carefully** -- they contain intent that raw diffs miss
-5. Only read changed files. Do not read the entire repo.
-
-## Phase 3: Analyze
-
-Identify the **dominant pattern** -- the single most instructive thing about these changes.
-
-Look for:
-- **Structural decisions** -- How was the code organized? Why those boundaries?
-- **Trade-offs made** -- What was gained vs. sacrificed? (readability vs. performance, DRY vs. clarity, speed vs. correctness)
-- **Problems solved** -- What was the before/after? What made the "after" better?
-- **Missed opportunities** -- Where could the code improve? (present gently as "next time, consider...")
-
-Map findings to specific principles from `references/se-principles.md`. Be specific -- quote actual code, reference actual file names and line changes.
-
-## Phase 4: Present the Lesson
-
-Use this template:
+Store lessons in `.shipyard/LESSONS.md` using this exact structure:
 
 ```markdown
-## Lesson: [Principle Name]
+# Shipyard Lessons Learned
 
-**What happened in the code:**
-[2-3 sentences describing the specific change, referencing files and commits]
+## [YYYY-MM-DD] Phase N: {Phase Name}
 
-**The principle at work:**
-[1-2 sentences explaining the SE principle]
+### What Went Well
+- {Bullet point}
 
-**Why it matters:**
-[1-2 sentences on the practical consequence -- what would go wrong without this, or what goes right because of it]
+### Surprises / Discoveries
+- {Pattern discovered}
 
-**Takeaway for next time:**
-[One concrete, actionable sentence the user can apply to future work]
-```
+### Pitfalls to Avoid
+- {Anti-pattern encountered}
 
-If there is a second lesson worth noting (maximum 2 additional):
+### Process Improvements
+- {Workflow enhancement}
 
-```markdown
 ---
-
-### Also worth noting: [Principle Name]
-
-**In the code:** [1 sentence]
-**The principle:** [1 sentence]
-**Takeaway:** [1 sentence]
 ```
 
-## What NOT to Do
+New entries are prepended after the `# Shipyard Lessons Learned` heading so the most recent phase appears first. Each phase gets its own dated section with all four subsections.
 
-| Avoid | Why | Instead |
-|-------|-----|---------|
-| Listing every principle that vaguely applies | Overwhelming and generic | Pick the 1-2 most relevant |
-| Analyzing files that were not changed | Scope creep | Stick to the diff |
-| Ignoring commit messages | They contain intent that diffs miss | Read them as primary context |
-| Abstract advice disconnected from the code | Not actionable | Always reference specific files/lines |
-| Negative-only feedback | Demoralizing | Lead with what works, then suggest improvements |
-| More than 3 lessons | Dilutes the insight | One well-grounded lesson beats seven vague ones |
+## Structured Prompts
 
-## Conversation Style
+Present these four questions to the user during lesson capture:
 
-- **Reflective, not prescriptive.** Use the user's own code as primary evidence.
-- **Never say "you should have..."** -- instead use "the approach here shows..." or "next time you face this, consider..."
-- **If the code is good, say so.** Not every lesson is about what went wrong. Recognizing good patterns reinforces them.
-- **If the changes are trivial** (a single config tweak, a typo fix), say so honestly rather than forcing a lesson. "These changes are straightforward -- no deep lesson here, just good housekeeping."
-- **Be specific.** Generic advice is worthless. Every claim must point to a concrete code change.
+1. **What went well in this phase?** -- Patterns, tools, or approaches that worked effectively.
+2. **What surprised you or what did you learn?** -- Unexpected behaviors, new techniques, or revised assumptions.
+3. **What should future work avoid?** -- Anti-patterns, dead ends, or approaches that caused problems.
+4. **Any process improvements discovered?** -- Workflow changes, tooling suggestions, or efficiency gains.
+
+Pre-populate suggested answers from build artifacts before asking (see Pre-Population below).
+
+## Pre-Population
+
+Before presenting prompts, extract candidate lessons from completed build summaries:
+
+1. Read all `SUMMARY-*.md` files in `.shipyard/phases/{N}/results/`.
+2. Extract entries from **"Issues Encountered"** sections -- these often contain workarounds and edge cases.
+3. Extract entries from **"Decisions Made"** sections -- these capture rationale worth preserving.
+4. Present extracted items as pre-populated suggestions the user can accept, edit, or discard.
+
+This reduces friction and ensures discoveries documented during building are not lost.
+
+## Memory Enrichment
+
+If the `shipyard:memory` skill is available and memory is enabled:
+
+1. Search memory for the milestone's date range and project path.
+2. Use Haiku to extract insights about:
+   - Debugging struggles and resolutions
+   - Rejected approaches and why they failed
+   - Key decisions and their rationale
+3. Add memory-derived insights to candidates (marked separately from summary-derived).
+
+Memory captures implicit knowledge from conversation context that may not appear in formal SUMMARY.md files.
+
+## CLAUDE.md Integration
+
+After the user approves lessons, optionally append a summary to the project's `CLAUDE.md`:
+
+1. **Check for CLAUDE.md** -- If no `CLAUDE.md` exists in the project root, skip this step entirely.
+2. **Find existing section** -- Look for a `## Lessons Learned` heading in `CLAUDE.md`.
+3. **Append if exists** -- Add new bullet points under the existing `## Lessons Learned` section.
+4. **Create if missing** -- If `CLAUDE.md` exists but has no `## Lessons Learned` section, append the section at the end of the file.
+5. **Format for CLAUDE.md** -- Use concise single-line bullets. Omit phase dates; focus on actionable guidance:
+   ```markdown
+   ## Lessons Learned
+   - Bash `set -e` interacts poorly with pipelines -- use explicit error checks after pipes
+   - jq `.field // "default"` prevents null propagation in optional config values
+   ```
+
+## Quality Standards
+
+Lessons must be **specific, actionable, and reusable**. Apply these filters:
+
+**Good lessons** (specific, transferable):
+- "Bash `set -e` interacts poorly with pipelines -- use explicit error checks after pipes"
+- "jq `.field // \"default\"` prevents null propagation in optional config values"
+- "bats-core `run` captures exit code but swallows stderr -- use `2>&1` to capture both"
+
+**Bad lessons** (too vague or too specific):
+- "Tests are important" -- too generic, not actionable
+- "Fixed a bug on line 47" -- too specific, not transferable
+- "Code should be clean" -- vague platitude
+- "Changed variable name from x to y" -- implementation detail, not a lesson
+
+**Anti-Patterns to reject:**
+- Lessons that duplicate existing entries in LESSONS.md
+- Lessons that reference specific line numbers or ephemeral file locations
+- Lessons that are generic truisms rather than discovered knowledge
+- Lessons longer than two sentences -- split or summarize
+
+## Integration
+
+**Referenced by:** `commands/ship.md` Step 3a for post-phase lesson capture.
+
+**Pairs with:** `shipyard:shipyard-verification` for validating lesson quality before persisting.

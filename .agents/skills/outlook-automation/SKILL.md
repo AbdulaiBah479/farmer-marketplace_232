@@ -1,195 +1,257 @@
 ---
 name: outlook-automation
-description: "Automate Outlook tasks via Rube MCP (Composio): emails, calendar, contacts, folders, attachments. Always search tools first for current schemas."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: >
+  Automates reading, searching, drafting, and sending emails AND calendar events
+  in Classic Outlook on Windows using local COM automation. Use this skill when
+  the user asks to process Outlook emails, create drafts, send messages, save
+  attachments, manage calendar events, create meetings, or respond to invitations
+  from the authenticated Outlook session on their Windows Devbox. Requires
+  Classic Outlook (not New Outlook) to be running.
 ---
 
-# Outlook Automation via Rube MCP
+# Outlook Automation
 
-Automate Microsoft Outlook operations through Composio's Outlook toolkit via Rube MCP.
+This skill enables email and calendar automation through Classic Outlook on Windows using the `outlookctl` CLI tool.
 
-## Prerequisites
+## How to Run Commands
 
-- Rube MCP must be connected (RUBE_SEARCH_TOOLS available)
-- Active Outlook connection via `RUBE_MANAGE_CONNECTIONS` with toolkit `outlook`
-- Always call `RUBE_SEARCH_TOOLS` first to get current tool schemas
+Run all commands using this pattern from any directory:
 
-## Setup
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli <command> [options]
+```
 
-**Get Rube MCP**: Add `https://rube.app/mcp` as an MCP server in your client configuration. No API keys needed — just add the endpoint and it works.
+For convenience, define this alias at the start of your session:
+```bash
+alias outlookctl='uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli'
+```
 
+## Quick Start
 
-1. Verify Rube MCP is available by confirming `RUBE_SEARCH_TOOLS` responds
-2. Call `RUBE_MANAGE_CONNECTIONS` with toolkit `outlook`
-3. If connection is not ACTIVE, follow the returned auth link to complete Microsoft OAuth
-4. Confirm connection status shows ACTIVE before running any workflows
+Before using any commands, verify the environment:
 
-## Core Workflows
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli doctor
+```
 
-### 1. Search and Filter Emails
+## Available Commands
 
-**When to use**: User wants to find specific emails across their mailbox
+### Email Commands
 
-**Tool sequence**:
-1. `OUTLOOK_SEARCH_MESSAGES` - Search with KQL syntax across all folders [Required]
-2. `OUTLOOK_GET_MESSAGE` - Get full message details [Optional]
-3. `OUTLOOK_LIST_OUTLOOK_ATTACHMENTS` - List message attachments [Optional]
-4. `OUTLOOK_DOWNLOAD_OUTLOOK_ATTACHMENT` - Download attachment [Optional]
+| Command | Description |
+|---------|-------------|
+| `doctor` | Validate environment and prerequisites |
+| `list` | List messages from a folder |
+| `get` | Get a single message by ID |
+| `search` | Search messages with filters |
+| `draft` | Create a draft message (supports --reply-all) |
+| `send` | Send a draft or new message |
+| `move` | Move message to another folder |
+| `delete` | Delete a message (soft or permanent) |
+| `mark-read` | Mark message as read/unread |
+| `forward` | Create a forward draft |
+| `attachments save` | Save attachments to disk |
 
-**Key parameters**:
-- `query`: KQL search string (from:, to:, subject:, received:, hasattachment:)
-- `from_index`: Pagination start (0-based)
-- `size`: Results per page (max 25)
-- `message_id`: Message ID (use hitId from search results)
+### Calendar Commands
 
-**Pitfalls**:
-- Only works with Microsoft 365/Enterprise accounts (not @hotmail.com/@outlook.com)
-- Pagination relies on hitsContainers[0].moreResultsAvailable; stop only when false
-- Use hitId from search results as message_id for downstream calls, not resource.id
-- Index latency: very recent emails may not appear immediately
-- Inline images appear as attachments; filter by mimetype for real documents
+| Command | Description |
+|---------|-------------|
+| `calendar calendars` | List all available calendars (including subscribed ICS) |
+| `calendar list` | List calendar events (default: next 7 days, use --all for all calendars) |
+| `calendar get` | Get event details by ID |
+| `calendar create` | Create an event or meeting (draft by default) |
+| `calendar send` | Send meeting invitations |
+| `calendar respond` | Accept, decline, or tentatively respond to a meeting |
+| `calendar update` | Update event subject, time, location, etc. |
+| `calendar delete` | Delete/cancel an event (sends cancellations if needed) |
 
-### 2. Query Emails in a Folder
+**Tip:** Use `--calendar "Name"` to access non-default calendars (e.g., `--calendar "Family"`).
 
-**When to use**: User wants to list emails in a specific folder with OData filters
+## Safety Rules
 
-**Tool sequence**:
-1. `OUTLOOK_LIST_MAIL_FOLDERS` - List mail folders to get folder IDs [Prerequisite]
-2. `OUTLOOK_QUERY_EMAILS` - Query emails with structured filters [Required]
+**CRITICAL: Follow these rules when handling email and calendar operations:**
 
-**Key parameters**:
-- `folder`: Folder name ('inbox', 'sentitems', 'drafts') or folder ID
-- `filter`: OData filter (e.g., `isRead eq false and importance eq 'high'`)
-- `top`: Max results (1-1000)
-- `orderby`: Sort field and direction
-- `select`: Array of fields to return
+### Email Safety
+1. **Never auto-send emails** - Always create drafts first and get explicit user confirmation before sending
+2. **Draft-first workflow** - Use `draft` to create drafts, show the user a preview, then send only after approval
+3. **Explicit confirmation required** - The send command requires `--confirm-send YES` flag
+4. **Metadata by default** - Body content is only retrieved when explicitly requested
 
-**Pitfalls**:
-- QUERY_EMAILS searches a SINGLE folder only; use SEARCH_MESSAGES for cross-folder search
-- Custom folders require folder IDs, not display names; use LIST_MAIL_FOLDERS
-- Always check response['@odata.nextLink'] for pagination
-- Cannot filter by recipient or body content; use SEARCH_MESSAGES for that
+### Calendar Safety
+1. **Meetings are drafts by default** - When creating a meeting with attendees, invitations are NOT sent automatically
+2. **Explicit send required** - Use `calendar send --confirm-send YES` to send meeting invitations
+3. **Show preview first** - Always show the user meeting details before sending invitations
+4. **Responding is safe** - Accepting/declining meetings does not require extra confirmation
 
-### 3. Manage Calendar Events
+## Workflows
 
-**When to use**: User wants to list, search, or inspect calendar events
+### Reading and Searching Email
 
-**Tool sequence**:
-1. `OUTLOOK_LIST_EVENTS` - List events with filters [Optional]
-2. `OUTLOOK_GET_CALENDAR_VIEW` - Get events in a time window [Optional]
-3. `OUTLOOK_GET_EVENT` - Get specific event details [Optional]
-4. `OUTLOOK_LIST_CALENDARS` - List available calendars [Optional]
-5. `OUTLOOK_GET_SCHEDULE` - Get free/busy info [Optional]
+To list recent emails:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli list --count 10
+```
 
-**Key parameters**:
-- `filter`: OData filter (use start/dateTime, NOT receivedDateTime)
-- `start_datetime`/`end_datetime`: ISO 8601 for calendar view
-- `timezone`: IANA timezone (e.g., 'America/New_York')
-- `calendar_id`: Optional non-primary calendar ID
-- `select`: Fields to return
+To search for specific emails:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli search --from "sender@example.com" --since 2025-01-01
+```
 
-**Pitfalls**:
-- Use calendar event properties only (start/dateTime, end/dateTime), NOT email properties (receivedDateTime)
-- Calendar view requires start_datetime and end_datetime
-- Recurring events need `expand_recurring_events=true` to see individual occurrences
-- Decline status is per-attendee via attendees[].status.response
+To get full message content (only when user asks):
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli get --id "<entry_id>" --store "<store_id>" --include-body
+```
 
-### 4. Manage Contacts
+### Creating and Sending Email (Draft-First)
 
-**When to use**: User wants to list, create, or organize contacts
+**Step 1: Create a draft**
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli draft --to "recipient@example.com" --subject "Subject" --body-text "Message body"
+```
 
-**Tool sequence**:
-1. `OUTLOOK_LIST_CONTACTS` - List contacts [Optional]
-2. `OUTLOOK_CREATE_CONTACT` - Create a new contact [Optional]
-3. `OUTLOOK_GET_CONTACT_FOLDERS` - List contact folders [Optional]
-4. `OUTLOOK_CREATE_CONTACT_FOLDER` - Create contact folder [Optional]
+**Step 2: Show user the preview** (subject, recipients, body summary)
 
-**Key parameters**:
-- `givenName`/`surname`: Contact name
-- `emailAddresses`: Array of email objects
-- `displayName`: Full display name
-- `contact_folder_id`: Optional folder for contacts
+**Step 3: Only after user confirms, send the draft**
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli send --draft-id "<entry_id>" --draft-store "<store_id>" --confirm-send YES
+```
 
-**Pitfalls**:
-- Contact creation supports many fields but only givenName or surname is needed
+### Replying to Messages
 
-### 5. Manage Mail Folders
+```bash
+# Create reply draft
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli draft --to "recipient@example.com" --subject "Re: Original" --body-text "Reply text" --reply-to-id "<entry_id>" --reply-to-store "<store_id>"
+```
 
-**When to use**: User wants to organize mail folders
+### Saving Attachments
 
-**Tool sequence**:
-1. `OUTLOOK_LIST_MAIL_FOLDERS` - List top-level folders [Required]
-2. `OUTLOOK_LIST_CHILD_MAIL_FOLDERS` - List subfolders [Optional]
-3. `OUTLOOK_CREATE_MAIL_FOLDER` - Create a new folder [Optional]
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli attachments save --id "<entry_id>" --store "<store_id>" --dest "./attachments"
+```
 
-**Key parameters**:
-- `parent_folder_id`: Well-known name or folder ID
-- `displayName`: New folder name
-- `include_hidden_folders`: Show hidden folders
+## Calendar Workflows
 
-**Pitfalls**:
-- Well-known folder names: 'inbox', 'sentitems', 'drafts', 'deleteditems', 'junkemail', 'archive'
-- Custom folder operations require the folder ID, not display name
+### Viewing Calendar Events
 
-## Common Patterns
+To list upcoming events (next 7 days by default):
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar list
+```
 
-### KQL Search Syntax
+To list events for a specific date range:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar list --start "2025-01-20" --days 14
+```
 
-**Property filters**:
-- `from:user@example.com` - From sender
-- `to:recipient@example.com` - To recipient
-- `subject:invoice` - Subject contains
-- `received>=2025-01-01` - Date filter
-- `hasattachment:yes` - Has attachments
+To view a shared calendar:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar list --calendar "colleague@example.com"
+```
 
-**Combinators**:
-- `AND` - Both conditions
-- `OR` - Either condition
-- Parentheses for grouping
+To get full event details:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar get --id "<entry_id>" --store "<store_id>" --include-body
+```
 
-### OData Filter Syntax
+### Creating Events (Personal Appointments)
 
-**Email filters**:
-- `isRead eq false` - Unread emails
-- `importance eq 'high'` - High importance
-- `hasAttachments eq true` - Has attachments
-- `receivedDateTime ge 2025-01-01T00:00:00Z` - Date filter
+For events without attendees (no invitations needed):
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar create --subject "Focus Time" --start "2025-01-20 14:00" --duration 120
+```
 
-**Calendar filters**:
-- `start/dateTime ge '2025-01-01T00:00:00Z'` - Events after date
-- `contains(subject, 'Meeting')` - Subject contains text
+### Creating Meetings (Draft-First Workflow)
 
-## Known Pitfalls
+**Step 1: Create the meeting (saved as draft, no invitations sent)**
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar create \
+  --subject "Team Sync" \
+  --start "2025-01-20 10:00" \
+  --duration 60 \
+  --location "Conference Room A" \
+  --attendees "alice@example.com,bob@example.com" \
+  --body "Agenda:\n1. Project updates\n2. Next steps"
+```
 
-**Account Types**:
-- SEARCH_MESSAGES requires Microsoft 365/Enterprise accounts
-- Personal accounts (@hotmail.com, @outlook.com) have limited API access
+**Step 2: Show user the meeting preview** (subject, time, attendees, location)
 
-**Field Confusion**:
-- Email properties (receivedDateTime) differ from calendar properties (start/dateTime)
-- Do NOT use email fields in calendar queries or vice versa
+**Step 3: Only after user confirms, send the invitations**
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar send --id "<entry_id>" --store "<store_id>" --confirm-send YES
+```
 
-## Quick Reference
+### Creating Meetings with Teams Link
 
-| Task | Tool Slug | Key Params |
-|------|-----------|------------|
-| Search emails | OUTLOOK_SEARCH_MESSAGES | query, from_index, size |
-| Query folder | OUTLOOK_QUERY_EMAILS | folder, filter, top |
-| Get message | OUTLOOK_GET_MESSAGE | message_id |
-| List attachments | OUTLOOK_LIST_OUTLOOK_ATTACHMENTS | message_id |
-| Download attachment | OUTLOOK_DOWNLOAD_OUTLOOK_ATTACHMENT | message_id, attachment_id |
-| List folders | OUTLOOK_LIST_MAIL_FOLDERS | (none) |
-| Child folders | OUTLOOK_LIST_CHILD_MAIL_FOLDERS | parent_folder_id |
-| List events | OUTLOOK_LIST_EVENTS | filter, timezone |
-| Calendar view | OUTLOOK_GET_CALENDAR_VIEW | start_datetime, end_datetime |
-| Get event | OUTLOOK_GET_EVENT | event_id |
-| List calendars | OUTLOOK_LIST_CALENDARS | (none) |
-| Free/busy | OUTLOOK_GET_SCHEDULE | schedules, times |
-| List contacts | OUTLOOK_LIST_CONTACTS | top, filter |
-| Create contact | OUTLOOK_CREATE_CONTACT | givenName, emailAddresses |
-| Contact folders | OUTLOOK_GET_CONTACT_FOLDERS | (none) |
+To include a Teams meeting URL in the body:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar create \
+  --subject "Virtual Meeting" \
+  --start "2025-01-20 15:00" \
+  --duration 30 \
+  --attendees "team@example.com" \
+  --teams-url "https://teams.microsoft.com/l/meetup-join/..."
+```
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+Note: The Teams URL is embedded in the meeting body. For full Teams integration (automatic link generation), create the meeting in Outlook manually.
+
+### Creating Recurring Events
+
+Weekly standup every Monday and Wednesday:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar create \
+  --subject "Daily Standup" \
+  --start "2025-01-20 09:00" \
+  --duration 15 \
+  --recurrence "weekly:monday,wednesday:until:2025-12-31"
+```
+
+### Responding to Meeting Invitations
+
+To accept a meeting:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar respond --id "<entry_id>" --store "<store_id>" --response accept
+```
+
+To decline a meeting:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar respond --id "<entry_id>" --store "<store_id>" --response decline
+```
+
+To tentatively accept:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar respond --id "<entry_id>" --store "<store_id>" --response tentative
+```
+
+To respond without notifying the organizer:
+```bash
+uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cli calendar respond --id "<entry_id>" --store "<store_id>" --response accept --no-response
+```
+
+## Output Format
+
+All commands output JSON with a consistent structure. Key fields:
+
+- `version`: Schema version (currently "1.0")
+- `success`: Boolean for operation result
+- Message IDs include `entry_id` and `store_id` for stable references
+
+## Reference Documentation
+
+For detailed information, see:
+- [CLI Reference](reference/cli.md) - Complete command options
+- [JSON Schema](reference/json-schema.md) - Output format details
+- [Security](reference/security.md) - Data handling and safety
+- [Troubleshooting](reference/troubleshooting.md) - Common issues
+
+## Requirements
+
+- Windows with Classic Outlook running
+- uv installed and in PATH
+- outlookctl project at: `C:/Users/GordonMickel/work/outlookctl`
+
+## Error Handling
+
+If commands fail, check:
+1. Classic Outlook is running (not New Outlook)
+2. `doctor` command passes all checks
+3. Message IDs are valid and not expired

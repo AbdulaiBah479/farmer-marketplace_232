@@ -1,283 +1,182 @@
 ---
 name: pr-writer
-description: Create, refresh, and rewrite PR titles and descriptions following Sentry conventions. Use when opening a PR, writing or updating a PR title/body/description, refreshing an existing PR after material changes, or preparing branch changes for review.
+description: |
+  This skill should be used when the user asks to "create a PR", "open a pull request",
+  "write a PR description", "push and create PR", or needs to generate a best-in-class
+  pull request description based on commits. Provides industry-standard PR description
+  formatting following conventional commits, Microsoft Engineering Playbook, and
+  HackerOne best practices.
 ---
 
-# PR Writer
+# PR Writer Skill
 
-Create pull requests following Sentry's engineering practices.
+Generate industry best-in-class pull request descriptions by analyzing commits and
+producing clear, comprehensive, and reviewer-friendly PR content.
 
-**Requires**: GitHub CLI (`gh`) authenticated and available.
+## Best Practices Sources
 
-## Prerequisites
+This skill synthesizes PR description best practices from:
+- [Microsoft Engineering Playbook](https://microsoft.github.io/code-with-engineering-playbook/code-reviews/pull-requests/)
+- [HackerOne PR Guide](https://www.hackerone.com/blog/writing-great-pull-request-description)
+- [Graphite PR Best Practices](https://graphite.com/guides/github-pr-description-best-practices)
+- Conventional Commits specification
 
-Before creating a PR, ensure all changes are committed **to a feature branch**, not to the default branch.
+## PR Title Format
 
-```bash
-# Check current branch and for uncommitted changes
-git branch --show-current
-git status --porcelain
+Follow the Conventional Commits format:
+
+```
+<type>[optional scope]: <concise description>
 ```
 
-If on `main` or `master`, create a feature branch and move any uncommitted changes onto it before committing — a PR cannot be opened from the default branch against itself. If there are uncommitted changes, commit them on the feature branch before proceeding.
+**Types:**
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `style` - Code style/formatting (no logic change)
+- `refactor` - Code refactoring (no feature/fix)
+- `perf` - Performance improvement
+- `test` - Adding/updating tests
+- `chore` - Build process, dependencies, tooling
+- `ci` - CI/CD changes
+- `revert` - Reverting previous changes
 
-## Process
+**Examples:**
+- `feat(auth): add OAuth2 login support`
+- `fix(api): handle null response in user endpoint`
+- `refactor(live-tutor): extract model connection classes`
 
-### Step 1: Verify Branch State
-
-```bash
-# Detect the default branch — note the output for use in subsequent commands
-gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
-```
-
-```bash
-# Check current branch and status (substitute the detected branch name above for BASE)
-git status
-git log BASE..HEAD --oneline
-```
-
-Ensure:
-- All changes are committed
-- Branch is up to date with remote
-- Changes are rebased on the base branch if needed
-
-### Step 2: Analyze Changes
-
-Review what will be included in the PR:
-
-```bash
-# See all commits that will be in the PR (substitute detected branch name for BASE)
-git log BASE..HEAD
-
-# See the full diff
-git diff BASE...HEAD
-```
-
-Understand the scope and purpose of all changes before writing the description.
-
-### Step 3: Check Existing PR
-
-If the current branch already has an open PR, inspect the current title and body before rewriting either one:
-
-```bash
-gh pr view PR_NUMBER --json number,title,body,url,baseRefName,headRefName
-```
-
-Treat the current PR title and body as inputs, not source of truth. Compare them against the current diff, not the diff from when the PR was first opened.
-
-When refreshing a PR:
-- Keep the current title only if it still matches the dominant change.
-- Rewrite vague or stale titles.
-- Rewrite the body as a fresh description of the current diff, not an append-only update log.
-
-If the branch already has an open PR, refresh it after material follow-up changes even if the user did not explicitly ask for a PR edit.
-
-Refresh when follow-up commits change reviewer expectations, such as a scope change, a new implementation approach from review feedback, or new context the current title/body no longer explains. Skip trivial edits like typos or rename-only diffs.
-
-### Step 4: Write or Update the PR Title
-
-Write or re-evaluate the title before finalizing the body.
-
-Title format: `<type>(<scope>): <Subject>` or `<type>: <Subject>`.
-
-Allowed types: `feat`, `fix`, `ref`, `perf`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `meta`, `license`, `revert`.
-
-Rules:
-- The dominant change, not the latest commit
-- The narrowest accurate type and scope
-- No bracketed labels like `[codex]`, `[claude]`, `[ai]`, `[bot]`, or `[wip]`
-- No agent, tool, or automation attribution
-- No vague process titles like `update`, `cleanup`, `misc`, `fix stuff`, or `address feedback`
-- No trailing period
-
-Rewrite invalid titles before creating or updating the PR:
-
-- `[codex] Paginate replay segment downloads` -> `fix(replay): Paginate recording segment downloads`
-
-Use this test on updates: if a reviewer read only the title, would they still form the right expectation about the current diff? If not, rewrite it.
-
-### Step 5: Write or Update the PR Description
-
-Write a reviewer-facing cover note, not a generated changelog.
-
-Default to 1-2 short paragraphs:
+## PR Description Template
 
 ```markdown
-<What changed and what effect it has.>
+## Summary
 
-<Why this approach, tradeoff, risk, or review focus matters, if it is not obvious from the diff.>
+<2-3 sentences explaining what changed at a high level>
+
+## Motivation
+
+<Why this change is needed - business goal or engineering improvement>
+
+## Changes
+
+<Bullet list of key changes, organized by area if multiple>
+
+- Changed X to do Y
+- Added Z for W
+- Removed deprecated Q
+
+## Testing
+
+<How the changes were tested>
+
+- [ ] Unit tests pass
+- [ ] Manual testing performed
+- [ ] E2E tests updated (if applicable)
+
+## Screenshots
+
+<For UI changes, include before/after screenshots>
+
+## Breaking Changes
+
+<If any, describe what breaks and migration path>
+
+## Related Issues
+
+<Link to tickets, issues, or related PRs>
+
+Closes #123
+Related to #456
 ```
 
-Write enough context that a reviewer can predict the shape and intent of the diff before opening it. The body should answer the questions that code alone will not: why the change exists, what behavior changes, what tradeoff was chosen, and what deserves careful review.
+## Writing Guidelines
 
-Use structure only when the change needs it:
+### The "What" Section (Summary)
+- Be explicit and concise - a few short sentences
+- Describe changes at a high level, not implementation details
+- Reference tickets AFTER explaining the change, not instead of
 
-| Change shape | Useful body shape |
-|--------------|-------------------|
-| Small obvious change | one concise paragraph; no headings |
-| Bug fix | problem/root cause/fix in prose; headings only if the body would be confusing without them |
-| API, schema, payload, config, permissions, or CLI change | before/after fenced blocks when direct comparison is clearer than prose |
-| Performance or reliability change | include measured impact or expected tradeoff when known; do not invent numbers |
-| Broad, generated, or cross-cutting change | explain the organizing principle and where reviewers should start |
-| Review feedback update | rewrite the whole body around the current final diff; do not append a progress log |
+### The "Why" Section (Motivation)
+- Articulate the business or engineering goal
+- Explain the problem being solved
+- The "why" is often more important than the "what"
 
-Rules:
-- Lead with changed behavior or effect, then implementation detail only when useful.
-- Prefer paragraphs over headings and bullets.
-- Use bullets only to guide review order, list genuine alternatives/tradeoffs, or compare independent contract changes.
-- When verification matters, fold it into the relevant prose instead of adding a separate checklist.
-- Include issue references only when the exact ID or URL is present in user input, branch name, commits, or verified tracker output; omit the line entirely otherwise.
-- Keep links self-contained by summarizing the relevant context in the body.
-- Prefer synthesized reviewer context over file-by-file narration, copied commit logs, generic headings like "Summary" or "Changes", and stale template scaffolding.
+### The "How" Section (Changes)
+- Highlight significant design decisions
+- Explain non-obvious implementation choices
+- Help reviewers understand the approach
 
-Hard constraints:
-- Customer data — customer/org names, user emails, support ticket contents, or PII. Describe the technical symptom, not who hit it, and use the Issue References syntax below only when a verified ticket is available. PRs are typically public on open-source repos.
-- Never invent issue references or leave placeholders like `XXXXX`, `<issue>`, or `TODO`.
-- Generate reviewer prose only. Do not add new agent trace links, "action taken on behalf" lines, or tool attribution. When refreshing an existing PR, preserve an existing integration-owned footer only if it appears intentional and the user did not ask to remove it.
+### Testing Section
+- Document how the code was tested
+- Include edge cases not covered and associated risks
+- Provide steps for reviewers to verify
 
-When updating, rewrite the body as one coherent description of the current PR.
+### Visual Evidence
+- Screenshots for UI changes (before/after)
+- CLI output for infrastructure changes
+- Use collapsible sections for large outputs
 
-### Step 6: Create or Update the PR
+## Commit Analysis Process
 
-For a new PR, create a draft with the rewritten title and body:
+To generate a PR description from commits:
 
-```bash
-gh pr create --draft --title "<type>(<scope>): <description>" --body "$(cat <<'EOF'
-<description body here>
-EOF
-)"
-```
+1. **Gather commit information**
+   ```bash
+   git log origin/develop..HEAD --oneline
+   git diff origin/develop...HEAD --stat
+   ```
 
-Before running the create or update command, strip any issue reference not backed by known context. Never emit placeholder IDs (`XXXXX`, `<issue>`, `TODO`).
+2. **Analyze the changes**
+   - Identify the primary type (feat, fix, refactor, etc.)
+   - Determine the scope (module, feature area)
+   - List all files changed and categorize by purpose
 
-For an existing PR, patch the title and body after you have re-evaluated both. If the current title still fits, keep it intentionally rather than skipping title review.
+3. **Synthesize the summary**
+   - Combine related commits into coherent narrative
+   - Focus on the outcome, not the journey
+   - Highlight the most significant changes
 
-```bash
-gh api -X PATCH repos/{owner}/{repo}/pulls/PR_NUMBER \
-  -f title='fix(scope): Preserve replay segment cursor' \
-  -f body="$(cat <<'EOF'
-<updated description body here>
-EOF
-)"
-```
+4. **Determine testing approach**
+   - Check if tests were added/modified
+   - Note any test commands that should be run
+   - Flag areas needing manual verification
 
-## PR Description Examples
+## Output Quality Checklist
 
-### Simple PR
+Before finalizing a PR description, verify:
 
-```markdown
-The AI Customizations section in the sessions sidebar now starts collapsed so
-it does not consume space before users need it. Expanding the section keeps the
-same persisted preference behavior as before.
-```
+- [ ] Title follows conventional commits format
+- [ ] Summary is 2-3 sentences, not a wall of text
+- [ ] Motivation explains the "why", not just "what"
+- [ ] Changes are organized and scannable (bullet points)
+- [ ] Testing section is actionable
+- [ ] No implementation details that belong in code comments
+- [ ] Links to related issues are included
+- [ ] Breaking changes are clearly called out
 
-### Feature PR
+## Anti-Patterns to Avoid
 
-```markdown
-Alert updates and resolves now reply to the original Slack message instead of
-creating a new channel message. This keeps the notification timeline grouped in
-one thread and reduces channel noise.
-```
+- Generic titles like "Update code" or "Fix bug"
+- Descriptions that just reference a ticket with no context
+- Overly verbose descriptions (keep it conversational)
+- Missing the "why" - jumping straight to "what"
+- No testing information
+- Burying breaking changes in the middle of text
 
-### Bug Fix PR
+## Adapting to PR Size
 
-```markdown
-Inactive authenticated users now go to account reactivation before the login
-view honors a `next` URL.
+**Small PRs (1-3 files, simple fix):**
+- Shorter summary (1-2 sentences)
+- May skip "How" section
+- Simple testing note
 
-The GET login path could previously bounce an inactive user between
-`/auth/login/` and a protected view because it redirected authenticated users
-without checking `is_active`. The POST path already handled this case, so this
-applies the same guard to the GET redirect and covers the loop with a regression
-test.
-```
+**Medium PRs (feature or refactor):**
+- Full template
+- Clear organization by area
+- Comprehensive testing section
 
-### Schema Change PR
-
-````markdown
-Run logs now write one versioned record per analyzed chunk instead of one
-large skill-level record. This lets `warden runs follow` show findings as
-chunks complete while preserving durable run reconstruction at finalization.
-
-Before, each line represented a full skill result:
-
-```jsonc
-{
-  "run": {...},
-  "skill": "security-review",
-  "summary": "Found 2 issues",
-  "findings": [...],
-  "files": [...]
-}
-```
-
-After, each line represents one chunk result:
-
-```jsonc
-{
-  "schemaVersion": 1,
-  "run": {...},
-  "skill": "security-review",
-  "chunk": {
-    "file": "src/api/auth.ts",
-    "index": 1,
-    "total": 2,
-    "lineRange": "42-45"
-  },
-  "status": "ok",
-  "findings": [...]
-}
-```
-
-````
-
-### Refactor PR
-
-````markdown
-Duplicate validation code from the alerts, issues, and projects endpoints now
-lives in a shared validator class without changing endpoint behavior.
-Future validation rules can now be added in one place instead of being copied
-across each endpoint.
-````
-
-### Broad Review PR
-
-```markdown
-The admin layout now holds together at narrow viewport widths: the shared
-header, details grid, result table, and sidebar wrap, collapse, or scroll
-instead of overflowing the viewport. The changes are intentionally limited to
-responsive layout behavior; table column prioritization is left out because it
-needs product judgment.
-
-Review the shared layout and table wrappers first, then check individual
-component breakpoints for regressions.
-```
-
-## Issue References
-
-Reference issues in the PR body:
-
-| Syntax | Effect |
-|--------|--------|
-| `Fixes #1234` | Closes GitHub issue on merge |
-| `Fixes SENTRY-1234` | Closes Sentry issue |
-| `Refs GH-1234` | Links without closing |
-| `Refs LINEAR-ABC-123` | Links Linear issue |
-
-These are syntax examples — do not copy example IDs into a real PR body.
-
-## Guidelines
-
-- **One PR per feature/fix** - Don't bundle unrelated changes
-- **Keep PRs reviewable** - Smaller PRs get faster, better reviews
-- **Explain the why** - Code shows what; description explains why
-- **Mark WIP early** - Use draft PRs for early feedback
-- **Rewrite, don't append** - Updated PRs should read like a fresh description of the current diff
-- **Re-evaluate the title on updates** - Do not assume the existing title still fits after scope changes
-
-Note: `gh pr edit` is currently broken due to GitHub's Projects (classic) deprecation.
-
-## References
-
-- [Sentry Code Review Guidelines](https://develop.sentry.dev/engineering-practices/code-review/)
-- [Sentry Commit Messages](https://develop.sentry.dev/engineering-practices/commit-messages/)
+**Large PRs (major feature, architecture change):**
+- Consider breaking into smaller PRs
+- Detailed "How" section with design decisions
+- May include architecture diagrams
+- Highlight areas needing careful review

@@ -1,219 +1,212 @@
 ---
 name: mobile-development
-description: Mobile development patterns for React Native and Flutter including navigation, state management, and responsive design
+description: "Cross-platform and native mobile development. Frameworks: React Native, Flutter, Swift/SwiftUI, Kotlin/Jetpack Compose. Capabilities: mobile UI, offline-first architecture, push notifications, deep linking, biometrics, app store deployment. Actions: build, create, implement, optimize, test, deploy mobile apps. Keywords: iOS, Android, React Native, Flutter, Swift, Kotlin, mobile app, offline sync, push notification, deep link, biometric auth, App Store, Play Store, iOS HIG, Material Design, battery optimization, memory management, mobile performance. Use when: building mobile apps, implementing mobile-first UX, choosing native vs cross-platform, optimizing battery/memory/network, deploying to app stores, handling mobile-specific features."
+license: MIT
+version: 1.0.0
 ---
 
-# Mobile Development
+# Mobile Development Skill
 
-## React Native Component Structure
+Production-ready mobile development with modern frameworks, best practices, and mobile-first thinking patterns.
 
-```tsx
-import { View, Text, FlatList, StyleSheet, Platform } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+## When to Use
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-}
+- Building mobile applications (iOS, Android, or cross-platform)
+- Implementing mobile-first design and UX patterns
+- Optimizing for mobile constraints (battery, memory, network, small screens)
+- Making native vs cross-platform technology decisions
+- Implementing offline-first architecture and data sync
+- Following platform-specific guidelines (iOS HIG, Material Design)
+- Optimizing mobile app performance and user experience
+- Implementing mobile security and authentication
+- Testing mobile applications (unit, integration, E2E)
+- Deploying to App Store and Google Play
 
-function ProductList({ products }: { products: Product[] }) {
-  return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ProductCard product={item} />}
-        contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={<EmptyState message="No products found" />}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-      />
-    </SafeAreaView>
-  );
-}
+## Technology Selection Guide
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  list: {
-    padding: 16,
-  },
-  separator: {
-    height: 12,
-  },
-});
-```
+**Cross-Platform Frameworks:**
+- **React Native**: JavaScript expertise, web code sharing, mature ecosystem (121K stars, 67% familiarity)
+- **Flutter**: Performance-critical apps, complex animations, fastest-growing (170K stars, 46% adoption)
 
-Use `FlatList` for scrollable lists (never `ScrollView` with `.map()`). Set `windowSize` and `maxToRenderPerBatch` for large lists.
+**Native Development:**
+- **iOS (Swift/SwiftUI)**: Maximum iOS performance, latest features, Apple ecosystem integration
+- **Android (Kotlin/Jetpack Compose)**: Maximum Android performance, Material Design 3, platform optimization
 
-## React Native Navigation
+See: `references/mobile-frameworks.md` for detailed framework comparisons
 
-```tsx
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+## Mobile Development Mindset
 
-type RootStackParams = {
-  Tabs: undefined;
-  ProductDetail: { productId: string };
-  Cart: undefined;
-};
+**The 10 Commandments of Mobile Development:**
 
-const Stack = createNativeStackNavigator<RootStackParams>();
-const Tab = createBottomTabNavigator();
+1. **Performance is Foundation, Not Feature** - 70% abandon apps >3s load time
+2. **Every Kilobyte, Every Millisecond Matters** - Mobile constraints are real
+3. **Offline-First by Default** - Network is unreliable, design for it
+4. **User Context > Developer Environment** - Think real-world usage scenarios
+5. **Platform Awareness Without Platform Lock-In** - Respect platform conventions
+6. **Iterate, Don't Perfect** - Ship, measure, improve cycle is survival
+7. **Security and Accessibility by Design** - Not afterthoughts
+8. **Test on Real Devices** - Simulators lie about performance
+9. **Architecture Scales with Complexity** - Don't over-engineer simple apps
+10. **Continuous Learning is Survival** - Mobile landscape evolves rapidly
 
-function TabNavigator() {
-  return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-}
+See: `references/mobile-mindset.md` for thinking patterns and decision frameworks
 
-function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-        <Stack.Screen name="Cart" component={CartScreen} options={{ presentation: "modal" }} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-```
+## Reference Navigation
 
-## Flutter Widget Pattern
+**Core Technologies:**
+- `mobile-frameworks.md` - React Native, Flutter, Swift, Kotlin, framework comparison matrices, when to use each
+- `mobile-ios.md` - Swift 6, SwiftUI, iOS architecture patterns, HIG, App Store requirements, platform capabilities
+- `mobile-android.md` - Kotlin, Jetpack Compose, Material Design 3, Play Store, Android-specific features
 
-```dart
-class ProductCard extends StatelessWidget {
-  final Product product;
-  final VoidCallback onTap;
+**Best Practices & Development Mindset:**
+- `mobile-best-practices.md` - Mobile-first design, performance optimization, offline-first architecture, security, testing, accessibility, deployment, analytics
+- `mobile-debugging.md` - Debugging tools, performance profiling, crash analysis, network debugging, platform-specific debugging
+- `mobile-mindset.md` - Thinking patterns, decision frameworks, platform-specific thinking, common pitfalls, debugging strategies
 
-  const ProductCard({
-    super.key,
-    required this.product,
-    required this.onTap,
-  });
+## Key Best Practices (2024-2025)
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        elevation: 2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-              child: Image.network(
-                product.imageUrl,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 64),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(product.name, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text("\$${product.price.toStringAsFixed(2)}",
-                      style: Theme.of(context).textTheme.bodyLarge),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-```
+**Performance Targets:**
+- App launch: <2 seconds (70% abandon if >3s)
+- Memory usage: <100MB for typical screens
+- Network requests: Batch and cache aggressively
+- Battery impact: Respect Doze Mode and background restrictions
+- Animation: 60 FPS (16.67ms per frame)
 
-## Responsive Layout
+**Architecture:**
+- MVVM for small-medium apps (clean separation, testable)
+- MVVM + Clean Architecture for large enterprise apps
+- Offline-first with hybrid sync (push + pull)
+- State management: Zustand (React Native), Riverpod 3 (Flutter), StateFlow (Android)
 
-```tsx
-import { useWindowDimensions } from "react-native";
+**Security (OWASP Mobile Top 10):**
+- OAuth 2.0 + JWT + Biometrics for authentication
+- Keychain (iOS) / KeyStore (Android) for sensitive data
+- Certificate pinning for network security
+- Never hardcode credentials or API keys
+- Implement proper session management
 
-function useResponsive() {
-  const { width } = useWindowDimensions();
-  return {
-    isPhone: width < 768,
-    isTablet: width >= 768 && width < 1024,
-    isDesktop: width >= 1024,
-    columns: width < 768 ? 1 : width < 1024 ? 2 : 3,
-  };
-}
+**Testing Strategy:**
+- Unit tests: 70%+ coverage for business logic
+- Integration tests: Critical user flows
+- E2E tests: Detox (React Native), Appium (cross-platform), XCUITest (iOS), Espresso (Android)
+- Real device testing mandatory before release
 
-function ProductGrid({ products }: { products: Product[] }) {
-  const { columns } = useResponsive();
+**Deployment:**
+- Fastlane for automation across platforms
+- Staged rollouts: Internal → Closed → Open → Production
+- Mandatory: iOS 17 SDK (2024), Android 15 API 35 (Aug 2025)
+- CI/CD saves 20% development time
 
-  return (
-    <FlatList
-      data={products}
-      numColumns={columns}
-      key={columns}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <View style={{ flex: 1, maxWidth: `${100 / columns}%`, padding: 8 }}>
-          <ProductCard product={item} />
-        </View>
-      )}
-    />
-  );
-}
-```
+## Quick Decision Matrix
 
-## Platform-Specific Code
+| Need | Choose |
+|------|--------|
+| JavaScript team, web code sharing | React Native |
+| Performance-critical, complex animations | Flutter |
+| Maximum iOS performance, latest features | Swift/SwiftUI native |
+| Maximum Android performance, Material 3 | Kotlin/Compose native |
+| Rapid prototyping | React Native + Expo |
+| Desktop + mobile | Flutter |
+| Enterprise with JavaScript skills | React Native |
+| Startup with limited resources | Flutter or React Native |
+| Gaming or heavy graphics | Native (Swift/Kotlin) or Unity |
 
-```tsx
-import { Platform } from "react-native";
+## Framework Quick Comparison (2024-2025)
 
-const styles = StyleSheet.create({
-  shadow: Platform.select({
-    ios: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    android: {
-      elevation: 4,
-    },
-    default: {},
-  }),
-});
-```
+| Criterion | React Native | Flutter | Swift/SwiftUI | Kotlin/Compose |
+|-----------|--------------|---------|---------------|----------------|
+| **Stars** | 121K | 170K | N/A | N/A |
+| **Adoption** | 35% | 46% | iOS only | Android only |
+| **Performance** | 80-90% native | 85-95% native | 100% native | 100% native |
+| **Dev Speed** | Fast (hot reload) | Very fast (hot reload) | Fast (Xcode Previews) | Fast (Live Edit) |
+| **Learning Curve** | Easy (JavaScript) | Medium (Dart) | Medium (Swift) | Medium (Kotlin) |
+| **UI Paradigm** | Component-based | Widget-based | Declarative | Declarative |
+| **Community** | Huge (npm) | Growing | Apple ecosystem | Android ecosystem |
+| **Best For** | JS teams, web sharing | Performance, animations | iOS-only apps | Android-only apps |
 
-## Anti-Patterns
+## Implementation Checklist
 
-- Using `ScrollView` with `.map()` for dynamic lists (use `FlatList` or `SectionList`)
-- Storing all state in a global store instead of colocating with components
-- Not handling safe areas (notch, status bar, home indicator)
-- Inline styles on every render (define with `StyleSheet.create`)
-- Blocking the JS thread with heavy computation (use `InteractionManager`)
-- Ignoring platform-specific UX conventions (iOS back swipe, Android back button)
+**Project Setup:**
+- Choose framework → Initialize project → Configure dev environment → Setup version control → Configure CI/CD → Team standards
 
-## Checklist
+**Architecture:**
+- Choose pattern (MVVM/Clean) → Setup folders → State management → Navigation → API layer → Error handling → Logging
 
-- [ ] `FlatList` used for all scrollable lists with `keyExtractor`
-- [ ] Navigation typed with TypeScript route params
-- [ ] Safe area insets handled with `SafeAreaView`
-- [ ] Styles defined with `StyleSheet.create` (not inline objects)
-- [ ] Responsive layouts adapt to phone, tablet, and desktop
-- [ ] Platform-specific styles handled with `Platform.select`
-- [ ] Images cached and loaded with error/loading states
-- [ ] Heavy computation offloaded from the JS thread
+**Core Features:**
+- Authentication → Data persistence → API integration → Offline sync → Push notifications → Deep linking → Analytics
+
+**UI/UX:**
+- Design system → Platform guidelines → Accessibility → Responsive layouts → Dark mode → Localization → Animations
+
+**Performance:**
+- Image optimization → Lazy loading → Memory profiling → Network optimization → Battery testing → Launch time optimization
+
+**Quality:**
+- Unit tests (70%+) → Integration tests → E2E tests → Accessibility testing → Performance testing → Security audit
+
+**Security:**
+- Secure storage → Authentication flow → Network security → Input validation → Session management → Encryption
+
+**Deployment:**
+- App icons/splash → Screenshots → Store listings → Privacy policy → TestFlight/Internal testing → Staged rollout → Monitoring
+
+## Platform-Specific Guidelines
+
+**iOS (Human Interface Guidelines):**
+- Native navigation patterns (tab bar, navigation bar)
+- iOS design patterns (pull to refresh, swipe actions)
+- San Francisco font, iOS color system
+- Haptic feedback, 3D Touch/Haptic Touch
+- Respect safe areas and notch
+
+**Android (Material Design 3):**
+- Material navigation (bottom nav, navigation drawer)
+- Floating action buttons, material components
+- Roboto font, Material You dynamic colors
+- Touch feedback (ripple effects)
+- Respect system bars and gestures
+
+## Common Pitfalls to Avoid
+
+1. **Testing only on simulators** - Real devices show true performance
+2. **Ignoring platform conventions** - Users expect platform-specific patterns
+3. **No offline handling** - Network failures will happen
+4. **Poor memory management** - Leads to crashes and poor UX
+5. **Hardcoded credentials** - Security vulnerability
+6. **No accessibility** - Excludes 15%+ of users
+7. **Premature optimization** - Optimize based on metrics, not assumptions
+8. **Over-engineering** - Start simple, scale as needed
+9. **Skipping real device testing** - Simulators don't show battery/network issues
+10. **Not respecting battery** - Background processing must be justified
+
+## Performance Budgets
+
+**Recommended Targets:**
+- **App size**: <50MB initial download, <200MB total
+- **Launch time**: <2 seconds to interactive
+- **Screen load**: <1 second for cached data
+- **Network request**: <3 seconds for API calls
+- **Memory**: <100MB for typical screens, <200MB peak
+- **Battery**: <5% drain per hour of active use
+- **Frame rate**: 60 FPS (16.67ms per frame)
+
+## Resources
+
+**Official Documentation:**
+- React Native: https://reactnative.dev/
+- Flutter: https://flutter.dev/
+- iOS HIG: https://developer.apple.com/design/human-interface-guidelines/
+- Material Design: https://m3.material.io/
+- OWASP Mobile: https://owasp.org/www-project-mobile-top-10/
+
+**Tools & Testing:**
+- Detox E2E: https://wix.github.io/Detox/
+- Appium: https://appium.io/
+- Fastlane: https://fastlane.tools/
+- Firebase: https://firebase.google.com/
+
+**Community:**
+- React Native Directory: https://reactnative.directory/
+- Pub.dev (Flutter packages): https://pub.dev/
+- Awesome React Native: https://github.com/jondot/awesome-react-native
+- Awesome Flutter: https://github.com/Solido/awesome-flutter

@@ -1,6 +1,6 @@
 ---
 name: qa-api-testing-contracts
-description: API contract testing across REST, GraphQL, and gRPC. Use when you need schema validation, breaking-change detection, and CI quality gates.
+description: API testing and contract validation across REST (OpenAPI 3.1), GraphQL (SDL), and gRPC (proto). Use when you need schema linting/validation, breaking-change detection (openapi diff, GraphQL schema diff, buf breaking), consumer/provider contract tests (Pact or schema-driven), negative/security testing, and CI quality gates.
 ---
 
 # QA API Testing and Contracts
@@ -96,9 +96,6 @@ Choose one or combine:
 
 - Change safety and CDC patterns: `references/contract-testing-patterns.md`
 - AI-assisted tooling and decision matrix: `references/ai-contract-testing.md`
-- API versioning and backward compatibility: `references/api-versioning-strategies.md`
-- Schema-driven and property-based testing: `references/schema-driven-testing.md`
-- OWASP API security testing: `references/api-security-testing.md`
 - Curated authoritative links: `data/sources.json`
 
 ## Related Skills
@@ -107,9 +104,3 @@ Choose one or combine:
 - Use [qa-testing-strategy](../qa-testing-strategy/SKILL.md) for overall testing strategy.
 - Use [qa-resilience](../qa-resilience/SKILL.md) for chaos and reliability testing.
 - Use [software-security-appsec](../software-security-appsec/SKILL.md) for API security review.
-
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.

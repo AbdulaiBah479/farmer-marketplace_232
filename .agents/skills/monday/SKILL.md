@@ -1,175 +1,313 @@
 ---
 name: monday
-description: |
-  Monday integration. Manage project management data, records, and workflows. Use when the user wants to interact with Monday data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Monday.com GraphQL API via curl. Use this skill to manage boards, items, and projects.
+vm0_secrets:
+  - MONDAY_API_KEY
 ---
 
-# Monday
+# Monday.com API
 
-Monday.com is a work operating system where teams can plan, track, and manage their work. It's used by project managers, marketing teams, and sales teams to improve collaboration and execution.
+Use the Monday.com GraphQL API via direct `curl` calls to **manage boards, items, and project data**.
 
-Official docs: https://developers.monday.com/
+> Official docs: `https://developer.monday.com/api-reference/`
 
-## Monday Overview
+---
 
-- **Board**
-  - **Item**
-    - **Column**
-- **User**
+## When to Use
 
-When to use which actions: Use action names and parameters as needed.
+Use this skill when you need to:
 
-## Working with Monday
+- **Query boards and items** from Monday.com
+- **Create, update, or delete items** in boards
+- **Manage board columns and groups**
+- **Sync data** between Monday.com and other systems
+- **Automate project workflows**
 
-This skill uses the Membrane CLI to interact with Monday. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+---
 
-### Install the CLI
+## Prerequisites
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
-
-```bash
-npm install -g @membranehq/cli@latest
-```
-
-### Authentication
+1. Log in to [Monday.com](https://monday.com/)
+2. Go to your avatar → Developers → My Access Tokens
+3. Generate a new API token
+4. Store it in the environment variable `MONDAY_API_KEY`
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+export MONDAY_API_KEY="your-api-token"
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### API Info
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+- GraphQL endpoint: `https://api.monday.com/v2`
+- All requests are POST
+- Requires `Authorization` header with API token
+- Requires `API-Version` header (use `2024-10`)
+
+---
+
+
+> **Important:** When using `$VAR` in a command that pipes to another command, wrap the command containing `$VAR` in `bash -c '...'`. Due to a Claude Code bug, environment variables are silently cleared when pipes are used directly.
+> ```bash
+> bash -c 'curl -s "https://api.example.com" -H "Authorization: Bearer $API_KEY"'
+> ```
+
+## How to Use
+
+All examples below assume you have `MONDAY_API_KEY` set.
+
+---
+
+### 1. Get Current User
+
+Query the authenticated user's info:
+
+Write to `/tmp/monday_request.json`:
+
+```json
+{
+  "query": "query { me { id name email } }"
+}
+```
+
+Then run:
 
 ```bash
-membrane login complete <code>
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+---
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+### 2. List All Boards
 
-### Connecting to Monday
+Get all boards in your account:
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+Write to `/tmp/monday_request.json`:
+
+```json
+{
+  "query": "query { boards (limit: 10) { id name state items_count } }"
+}
+```
+
+Then run:
 
 ```bash
-membrane connection ensure "" --json
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+---
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+### 3. Get Board Details
 
-#### 1b. Wait for the connection to be ready
+Get a specific board with its groups and columns:
 
-If the connection is in `BUILDING` state, poll until it's ready:
+Write to `/tmp/monday_request.json`:
+
+```json
+{
+  "query": "query { boards (ids: <your-board-id>) { id name groups { id title } columns { id title type } } }"
+}
+```
+
+Replace `<your-board-id>` with an actual board ID from the "List All Boards" response (example 2).
+
+Then run:
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+---
 
-The resulting state tells you what to do next:
+### 4. Get Items from a Board
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+Get items (rows) from a specific board:
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+Write to `/tmp/monday_request.json`:
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
+```json
+{
+  "query": "query { boards (ids: <your-board-id>) { items_page (limit: 10) { items { id name column_values { id text value } } } } }"
+}
+```
 
-### Searching for actions
+Replace `<your-board-id>` with an actual board ID from the "List All Boards" response (example 2).
 
-Search using a natural language description of what you want to do:
+Then run:
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
 ```
 
-You should always search for actions in the context of a specific connection.
+---
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+### 5. Create a New Item
 
-## Popular actions
+Create a new item in a board:
 
-| Name | Key | Description |
-|---|---|---|
-| List Boards | list-boards | Retrieves a list of boards from Monday.com |
-| List Items | list-items | Retrieves items from a board with pagination support |
-| List Users | list-users | Retrieves a list of users in the account |
-| List Updates | list-updates | List updates (comments) for a specific item or across boards |
-| Get Board | get-board | Retrieves a specific board by ID with its groups and columns |
-| Get Item | get-item | Retrieves a specific item by ID |
-| Get Item Updates | get-item-updates | Get updates (comments) for a specific item |
-| Get Current User | get-current-user | Retrieves the current authenticated user's information |
-| Create Board | create-board | Creates a new board in Monday.com |
-| Create Item | create-item | Creates a new item on a board |
-| Create Group | create-group | Creates a new group on a board |
-| Create Update | create-update | Create an update (comment) on an item |
-| Create Column | create-column | Creates a new column on a board |
-| Update Board | update-board | Updates board attributes like name or description |
-| Update Item Column Values | update-item-column-values | Updates multiple column values on an item |
-| Update Group | update-group | Updates a group's title, color, or position |
-| Delete Board | delete-board | Permanently deletes a board from Monday.com |
-| Delete Item | delete-item | Permanently deletes an item from a board |
-| Delete Group | delete-group | Permanently deletes a group and all its items |
-| Delete Update | delete-update | Delete an update (comment) |
+Write to `/tmp/monday_request.json`:
 
-### Running actions
+```json
+{
+  "query": "mutation { create_item (board_id: <your-board-id>, group_id: \"<your-group-id>\", item_name: \"<your-item-name>\") { id name } }"
+}
+```
+
+Replace the following values:
+- `<your-board-id>`: An actual board ID from the "List All Boards" response (example 2)
+- `<your-group-id>`: A group ID from the "Get Board Details" response (example 3, groups array)
+- `<your-item-name>`: Your desired name for the new item
+
+Then run:
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
 ```
 
-To pass JSON parameters:
+---
+
+### 6. Create Item with Column Values
+
+Create an item with specific column values:
+
+Write to `/tmp/monday_request.json`:
+
+```json
+{
+  "query": "mutation ($boardId: ID!, $groupId: String!, $itemName: String!, $columnValues: JSON!) { create_item (board_id: $boardId, group_id: $groupId, item_name: $itemName, column_values: $columnValues) { id name } }",
+  "variables": {
+    "boardId": "<your-board-id>",
+    "groupId": "<your-group-id>",
+    "itemName": "<your-item-name>",
+    "columnValues": "{\"status\": {\"label\": \"Working on it\"}, \"date\": {\"date\": \"2025-01-15\"}}"
+  }
+}
+```
+
+Replace the following values:
+- `<your-board-id>`: An actual board ID from the "List All Boards" response (example 2)
+- `<your-group-id>`: A group ID from the "Get Board Details" response (example 3, groups array)
+- `<your-item-name>`: Your desired name for the new item
+
+Then run:
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
 ```
 
-The result is in the `output` field of the response.
+---
 
+### 7. Update an Item
 
-### Proxy requests
+Update an existing item's column values:
 
-When the available actions don't cover your use case, you can send requests directly to the Monday API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+Write to `/tmp/monday_request.json`:
+
+```json
+{
+  "query": "mutation ($boardId: ID!, $itemId: ID!, $columnValues: JSON!) { change_multiple_column_values (board_id: $boardId, item_id: $itemId, column_values: $columnValues) { id name } }",
+  "variables": {
+    "boardId": "<your-board-id>",
+    "itemId": "<your-item-id>",
+    "columnValues": "{\"status\": {\"label\": \"Done\"}}"
+  }
+}
+```
+
+Replace the following values:
+- `<your-board-id>`: An actual board ID from the "List All Boards" response (example 2)
+- `<your-item-id>`: An item ID from the "Get Items from a Board" response (example 4)
+
+Then run:
 
 ```bash
-membrane request CONNECTION_ID /path/to/endpoint
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
 ```
 
-Common options:
+---
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+### 8. Delete an Item
 
+Delete an item from a board:
 
-## Best practices
+Write to `/tmp/monday_request.json`:
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+```json
+{
+  "query": "mutation { delete_item (item_id: <your-item-id>) { id } }"
+}
+```
+
+Replace `<your-item-id>` with an actual item ID from the "Get Items from a Board" response (example 4).
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
+```
+
+---
+
+### 9. Create a New Board
+
+Create a new board:
+
+Write to `/tmp/monday_request.json`:
+
+```json
+{
+  "query": "mutation { create_board (board_name: \"My New Board\", board_kind: public) { id name } }"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
+```
+
+---
+
+### 10. Search Items
+
+Search for items across boards:
+
+Write to `/tmp/monday_request.json`:
+
+```json
+{
+  "query": "query { items_page_by_column_values (limit: 10, board_id: <your-board-id>, columns: [{column_id: \"name\", column_values: [\"Task\"]}]) { items { id name } } }"
+}
+```
+
+Replace `<your-board-id>` with an actual board ID from the "List All Boards" response (example 2).
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.monday.com/v2" --header "Authorization: ${MONDAY_API_KEY}" --header "API-Version: 2024-10" --header "Content-Type: application/json" -d @/tmp/monday_request.json'
+```
+
+---
+
+## Common Column Types
+
+| Column Type | Value Format |
+|-------------|--------------|
+| Status | `{"label": "Done"}` |
+| Date | `{"date": "2025-01-15"}` |
+| Text | `"Your text here"` |
+| Number | `"123"` |
+| Person | `{"id": 12345678}` |
+| Dropdown | `{"labels": ["Option1", "Option2"]}` |
+| Checkbox | `{"checked": true}` |
+
+---
+
+## Guidelines
+
+1. **Use variables for complex queries**: GraphQL variables make escaping easier
+2. **Check column IDs**: Use the board query to get exact column IDs before updating
+3. **API versioning**: Always include `API-Version` header for consistent behavior
+4. **Rate limits**: API has rate limits; add delays for bulk operations
+5. **Column values are JSON strings**: When using `column_values`, pass as escaped JSON string

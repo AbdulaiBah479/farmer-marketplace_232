@@ -1,124 +1,119 @@
 ---
-name: Parser
-description: Extract structured JSON from URLs, files, videos, PDFs with entity extraction and batch support. USE WHEN parse, extract, URL, transcript, entities, JSON, batch, content, YouTube, PDF, article, newsletter, Twitter, browser extension, collision detection, detect content type, extract article, extract newsletter, extract YouTube, extract PDF, parse content.
+description: Imported skill parser from agentskills
+name: parser
+signature: 9a74c9a90eb217b82bec27570332eab74547acfbee2973c0a8bcd23f6c7bc211
+source: /a0/tmp/skills_research/agentskills/skills-ref/src/skills_ref/parser.py
 ---
 
-## Customization
+"""YAML frontmatter parsing for SKILL.md files."""
 
-**Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Parser/`
+from pathlib import Path
+from typing import Optional
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
+import strictyaml
 
-
-## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
-
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
-
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:8888/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the Parser skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
-
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **Parser** skill to ACTION...
-   ```
-
-**This is not optional. Execute this curl command immediately upon skill invocation.**
-
-# Parser
-
-Parse any content into structured JSON with entity extraction and collision detection.
-
----
+from .errors import ParseError, ValidationError
+from .models import SkillProperties
 
 
-## Workflow Routing
+def find_skill_md(skill_dir: Path) -> Optional[Path]:
+    """Find the SKILL.md file in a skill directory.
 
-**When executing a workflow, output this notification:**
+    Prefers SKILL.md (uppercase) but accepts skill.md (lowercase).
 
-```
-Running the **WorkflowName** workflow in the **Parser** skill to ACTION...
-```
+    Args:
+        skill_dir: Path to the skill directory
 
-| Workflow | Trigger | File |
-|----------|---------|------|
-| **ParseContent** | "parse this", "extract from URL" | `Workflows/ParseContent.md` |
-| **BatchEntityExtractionGemini3** | "batch extract", "Gemini extraction" | `Workflows/BatchEntityExtractionGemini3.md` |
-| **CollisionDetection** | "check duplicates", "entity collision" | `Workflows/CollisionDetection.md` |
-| **DetectContentType** | "what type is this", "auto-detect" | `Workflows/DetectContentType.md` |
+    Returns:
+        Path to the SKILL.md file, or None if not found
+    """
+    for name in ("SKILL.md", "skill.md"):
+        path = skill_dir / name
+        if path.exists():
+            return path
+    return None
 
-### Content Type Workflows
 
-| Workflow | Trigger | File |
-|----------|---------|------|
-| **ExtractNewsletter** | "parse newsletter" | `Workflows/ExtractNewsletter.md` |
-| **ExtractTwitter** | "parse tweet", "X thread" | `Workflows/ExtractTwitter.md` |
-| **ExtractArticle** | "parse article", "web page" | `Workflows/ExtractArticle.md` |
-| **ExtractYoutube** | "parse YouTube", "video transcript" | `Workflows/ExtractYoutube.md` |
-| **ExtractPdf** | "parse PDF", "document" | `Workflows/ExtractPdf.md` |
+def parse_frontmatter(content: str) -> tuple[dict, str]:
+    """Parse YAML frontmatter from SKILL.md content.
 
-### Security Workflows
+    Args:
+        content: Raw content of SKILL.md file
 
-| Workflow | Trigger | File |
-|----------|---------|------|
-| **ExtractBrowserExtension** | "analyze extension", "browser extension security" | `Workflows/ExtractBrowserExtension.md` |
+    Returns:
+        Tuple of (metadata dict, markdown body)
 
----
+    Raises:
+        ParseError: If frontmatter is missing or invalid
+    """
+    if not content.startswith("---"):
+        raise ParseError("SKILL.md must start with YAML frontmatter (---)")
 
-## Context Files
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        raise ParseError("SKILL.md frontmatter not properly closed with ---")
 
-- **EntitySystem.md** - Entity extraction, GUIDs, collision detection reference
+    frontmatter_str = parts[1]
+    body = parts[2].strip()
 
----
+    try:
+        parsed = strictyaml.load(frontmatter_str)
+        metadata = parsed.data
+    except strictyaml.YAMLError as e:
+        raise ParseError(f"Invalid YAML in frontmatter: {e}")
 
-## Core Paths
+    if not isinstance(metadata, dict):
+        raise ParseError("SKILL.md frontmatter must be a YAML mapping")
 
-- **Schema:** `Schema/content-schema.json`
-- **Entity Index:** `entity-index.json`
-- **Output:** `Output/`
+    if "metadata" in metadata and isinstance(metadata["metadata"], dict):
+        metadata["metadata"] = {str(k): str(v) for k, v in metadata["metadata"].items()}
 
----
+    return metadata, body
 
-## Examples
 
-**Example 1: Parse YouTube video**
-```
-User: "parse this YouTube video for the newsletter"
---> Invokes Youtube workflow
---> Extracts transcript via YouTube API
---> Identifies people, companies, topics mentioned
---> Returns structured JSON with entities and key insights
-```
+def read_properties(skill_dir: Path) -> SkillProperties:
+    """Read skill properties from SKILL.md frontmatter.
 
-**Example 2: Batch parse article URLs**
-```
-User: "parse these 5 URLs into JSON for the database"
---> Invokes ParseContent workflow for each
---> Detects content type for each URL
---> Extracts entities with collision detection
---> Assigns GUIDs, checks for duplicates
---> Returns validated JSON per schema
-```
+    This function parses the frontmatter and returns properties.
+    It does NOT perform full validation. Use validate() for that.
 
-**Example 3: Check for duplicate content**
-```
-User: "have I already parsed this article?"
---> Invokes CollisionDetection workflow
---> Checks URL against entity index
---> Returns existing content ID if found
---> Skips re-parsing, saves time
-```
+    Args:
+        skill_dir: Path to the skill directory
 
----
+    Returns:
+        SkillProperties with parsed metadata
 
-## Quick Reference
+    Raises:
+        ParseError: If SKILL.md is missing or has invalid YAML
+        ValidationError: If required fields (name, description) are missing
+    """
+    skill_dir = Path(skill_dir)
+    skill_md = find_skill_md(skill_dir)
 
-- **Schema Version:** 1.0.0
-- **Output Format:** JSON validated against `Schema/content-schema.json`
-- **Entity Types:** people, companies, links, sources, topics
-- **Deduplication:** Via entity-index.json with UUID v4 GUIDs
+    if skill_md is None:
+        raise ParseError(f"SKILL.md not found in {skill_dir}")
+
+    content = skill_md.read_text()
+    metadata, _ = parse_frontmatter(content)
+
+    if "name" not in metadata:
+        raise ValidationError("Missing required field in frontmatter: name")
+    if "description" not in metadata:
+        raise ValidationError("Missing required field in frontmatter: description")
+
+    name = metadata["name"]
+    description = metadata["description"]
+
+    if not isinstance(name, str) or not name.strip():
+        raise ValidationError("Field 'name' must be a non-empty string")
+    if not isinstance(description, str) or not description.strip():
+        raise ValidationError("Field 'description' must be a non-empty string")
+
+    return SkillProperties(
+        name=name.strip(),
+        description=description.strip(),
+        license=metadata.get("license"),
+        compatibility=metadata.get("compatibility"),
+        allowed_tools=metadata.get("allowed-tools"),
+        metadata=metadata.get("metadata"),
+    )

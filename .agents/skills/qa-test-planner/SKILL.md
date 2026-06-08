@@ -1,11 +1,12 @@
 ---
 name: qa-test-planner
-description: Comprehensive QA toolkit for creating test plans, manual test cases, automated Playwright tests, regression suites, and bug reports. Uses safe, non-executable templates following skill best practices. Ideal for QA Automation engineers.
+description: Generate comprehensive test plans, manual test cases, regression test suites, and bug reports for QA engineers. Includes Figma MCP integration for design validation.
+trigger: explicit
 ---
 
 # QA Test Planner
 
-A comprehensive skill for QA Automation engineers to create test plans, generate manual test cases, build automated Playwright tests, create regression test suites, validate UI with browser automation, and document bugs effectively.
+A comprehensive skill for QA engineers to create test plans, generate manual test cases, build regression test suites, validate designs against Figma, and document bugs effectively.
 
 > **Activation:** This skill is triggered only when explicitly called by name (e.g., `/qa-test-planner`, `qa-test-planner`, or `use the skill qa-test-planner`).
 
@@ -14,78 +15,41 @@ A comprehensive skill for QA Automation engineers to create test plans, generate
 ## Quick Start
 
 **Create a test plan:**
-
 ```
-"Create a test plan for the user authentication feature using the test-plan.md template"
+"Create a test plan for the user authentication feature"
 ```
 
 **Generate test cases:**
-
 ```
-"Generate manual test cases for the checkout flow using the test-case.md template"
-```
-
-**Create automated Playwright tests:**
-
-```
-"Create Playwright automated tests for the login flow using the playwright-test.md template"
-```
-
-**Validate UI with browser:**
-
-```
-"Navigate to the login page and validate all form elements are visible using Playwright MCP"
+"Generate manual test cases for the checkout flow"
 ```
 
 **Build regression suite:**
-
 ```
-"Build a regression test suite for the payment module using test-case.md templates grouped by priority"
+"Build a regression test suite for the payment module"
+```
+
+**Validate against Figma:**
+```
+"Compare the login page against the Figma design at [URL]"
 ```
 
 **Create bug report:**
-
 ```
-"Create a bug report for the form validation issue using the bug-report.md template"
+"Create a bug report for the form validation issue"
 ```
 
 ---
 
 ## Quick Reference
 
-| Task           | Template                       | Time          |
-| -------------- | ------------------------------ | ------------- |
-| Test Plan      | `templates/test-plan.md`       | 10-15 min     |
-| Test Case      | `templates/test-case.md`       | 5-10 min each |
-| Automated Test | `templates/playwright-test.md` | 5-15 min each |
-| Bug Report     | `templates/bug-report.md`      | 5 min         |
-
----
-
-## When to Use This Skill
-
-Use this skill when you need to:
-
-- Create or review **test plans** and **test strategies**
-- Generate **test cases** from requirements or user stories
-- Write **bug reports** with clear reproduction steps
-- Build **regression suites** with risk-based selection
-- Implement **Playwright automation** with best practices
-- Document **test execution** and results
-- Conduct **exploratory testing** sessions
-- Validate **UI elements** with browser automation
-
----
-
-## Prerequisites
-
-| Requirement    | Notes                                       |
-| -------------- | ------------------------------------------- |
-| Node.js 18+    | Required for Playwright automation          |
-| Playwright     | `npm init playwright@latest` for automation |
-| Text editor    | For creating/editing markdown files         |
-| Git            | Recommended for testware version control    |
-| Playwright MCP | Optional, for browser-based validation      |
+| Task | What You Get | Time |
+|------|--------------|------|
+| Test Plan | Strategy, scope, schedule, risks | 10-15 min |
+| Test Cases | Step-by-step instructions, expected results | 5-10 min each |
+| Regression Suite | Smoke tests, critical paths, execution order | 15-20 min |
+| Figma Validation | Design-implementation comparison, discrepancy list | 10-15 min |
+| Bug Report | Reproducible steps, environment, evidence | 5 min |
 
 ---
 
@@ -96,27 +60,17 @@ Your Request
     │
     ▼
 ┌─────────────────────────────────────────────────────┐
-│ 1. ANALYZE                                        │
+│ 1. ANALYZE                                          │
 │    • Parse feature/requirement                      │
-│    • Identify test types needed (manual/automated)  │
+│    • Identify test types needed                     │
 │    • Determine scope and priorities                 │
 ├─────────────────────────────────────────────────────┤
-│ 2. SELECT TEMPLATE                                │
-│    • Choose appropriate template from assets/        │
-│    • Review template structure and sections         │
-│    • Identify placeholders to fill                 │
+│ 2. GENERATE                                         │
+│    • Create structured deliverables                 │
+│    • Apply templates and best practices             │
+│    • Include edge cases and variations              │
 ├─────────────────────────────────────────────────────┤
-│ 3. CUSTOMIZE                                      │
-│    • Fill in placeholders with project details      │
-│    • Add specific test steps and scenarios         │
-│    • Apply Playwright best practices               │
-├─────────────────────────────────────────────────────┤
-│ 4. EXECUTE (with Playwright MCP)                 │
-│    • Navigate and interact with browser             │
-│    • Capture screenshots and evidence               │
-│    • Validate UI elements and behavior              │
-├─────────────────────────────────────────────────────┤
-│ 5. VALIDATE                                       │
+│ 3. VALIDATE                                         │
 │    • Check completeness                             │
 │    • Verify traceability                            │
 │    • Ensure actionable steps                        │
@@ -128,79 +82,30 @@ QA Deliverable Ready
 
 ---
 
-## Workflows
+## Commands
 
-### 1) Create a Test Plan
+### Interactive Scripts
 
-1. Use `templates/test-plan.md` as your starting point
-2. Identify test objectives, scope, assumptions, and constraints
-3. Define test levels and types (functional, UI, performance, etc.)
-4. Specify environments, test data, tooling, and configuration needs
-5. Define entry/exit criteria, deliverables, and reporting cadence
-6. Add a risk matrix and mitigation actions
-7. Prioritize testing accordingly (risk-based testing)
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `./scripts/generate_test_cases.sh` | Create test cases interactively | Step-by-step prompts |
+| `./scripts/create_bug_report.sh` | Generate bug reports | Guided input collection |
 
-**Template:** [`templates/test-plan.md`](templates/test-plan.md)
+### Natural Language
 
-### 2) Generate Test Cases
-
-1. Use `templates/test-case.md` for individual test cases
-2. Convert requirements into test conditions (what to test)
-3. Pick a test design technique:
-   - Equivalence partitions and boundary values for inputs
-   - Decision tables for rule combinations
-   - State transitions for lifecycle/flows
-   - Use-case/scenario tests for end-to-end journeys
-4. Write test cases that are atomic, unambiguous, and traceable
-5. Add expected results that are observable and measurable
-6. Add priority and risk tags to support risk-based regression
-7. Mark automation candidates using stability + value criteria
-
-**Templates:**
-
-- [`templates/test-case.md`](templates/test-case.md) - Individual test case
-
-### 3) Implement Automation Test Scripts (Playwright)
-
-1. Use `templates/playwright-test.md` as a template
-2. Keep tests readable and aligned with test cases
-3. Prefer stable locators (e.g., `getByTestId`) over brittle selectors
-4. Avoid arbitrary sleeps; rely on Playwright auto-waits and explicit assertions
-5. Make tests independent (setup preconditions explicitly)
-6. Use tagging in test titles (e.g., `@smoke`, `@regression`) for suite runs
-7. Capture artifacts for triage (screenshots/video/trace) when debugging
-
-**Template:** [`templates/playwright-test.md`](templates/playwright-test.md)
-
-### 4) Build and Maintain Regression Suites
-
-1. Use `templates/regression-suite.md` to define the suite
-2. Define suite tiers: smoke (critical paths), sanity (build verification), regression (broad), full (release)
-3. Select tests using risk + frequency + criticality + defect history
-4. Tag tests consistently and document selection rules
-5. Review the suite regularly: remove obsolete coverage, add coverage for escaped defects
-
-**Template:** Use individual `test-case.md` templates grouped by priority
-
-### 5) Create Bug Reports
-
-1. Use `templates/bug-report.md` as your starting point
-2. Reproduce reliably; reduce to minimal steps
-3. Note variability (frequency) and scope
-4. Capture environment details (build/app version, OS, browser/device, account/role)
-5. Describe expected vs actual behavior
-6. Include impact; set severity and priority consistently
-7. Attach evidence (screenshots, console logs, network traces, Playwright trace)
-8. Track lifecycle: triage notes, owner, fix version, verification steps
-
-**Template:** [`templates/bug-report.md`](templates/bug-report.md)
+| Request | Output |
+|---------|--------|
+| "Create test plan for {feature}" | Complete test plan document |
+| "Generate {N} test cases for {feature}" | Numbered test cases with steps |
+| "Build smoke test suite" | Critical path tests |
+| "Compare with Figma at {URL}" | Visual validation checklist |
+| "Document bug: {description}" | Structured bug report |
 
 ---
 
 ## Core Deliverables
 
 ### 1. Test Plans
-
 - Test scope and objectives
 - Testing approach and strategy
 - Environment requirements
@@ -208,136 +113,60 @@ QA Deliverable Ready
 - Risk assessment
 - Timeline and milestones
 
-**Template:** [`templates/test-plan.md`](templates/test-plan.md)
-
 ### 2. Manual Test Cases
-
 - Step-by-step instructions
 - Expected vs actual results
 - Preconditions and setup
-- Test data requirements (use placeholders)
+- Test data requirements
 - Priority and severity
 
-**Templates:**
-
-- [`templates/test-case.md`](templates/test-case.md) - Individual test case
-
 ### 3. Regression Suites
+- Smoke tests (15-30 min)
+- Full regression (2-4 hours)
+- Targeted regression (30-60 min)
+- Execution order and dependencies
 
-- Smoke tests (15-30 min) - P0 tests only
-- Full regression (2-4 hours) - P0, P1, P2 tests
-- Targeted regression (30-60 min) - Tests for specific feature
-- Execution order by priority (P0 first, then P1, then P2)
+### 4. Figma Validation
+- Component-by-component comparison
+- Spacing and typography checks
+- Color and visual consistency
+- Interactive state validation
 
-**Template:** Use individual `test-case.md` templates grouped by priority
-
-### 4. Automated Playwright Tests
-
-- Role-based locator strategies
-- Web-first assertions
-- Page Object Model structure
-- test.step() grouping for readability
-- Screenshot capture on failure
-
-**Template:** [`templates/playwright-test.md`](templates/playwright-test.md)
-
-### 5. Browser Validation (via Playwright MCP)
-
-- Live UI element verification
-- Screenshot capture for evidence
-- Console log inspection
-- Form interaction testing
-- Responsive viewport validation
-
-### 6. Bug Reports
-
+### 5. Bug Reports
 - Clear reproduction steps
 - Environment details
 - Evidence (screenshots, logs)
 - Severity and priority
 
-**Template:** [`templates/bug-report.md`](templates/bug-report.md)
-
----
-
-## Security Guidelines
-
-### Credential Handling
-
-**NEVER embed real credentials in test cases or code.** Use placeholders instead:
-
-| Instead of                    | Use                                                   |
-| ----------------------------- | ----------------------------------------------------- |
-| `test@example.com / Test123!` | `${TEST_USER_EMAIL}` or `process.env.TEST_USER_EMAIL` |
-| `password: "actualpassword"`  | `password: "${TEST_PASSWORD}"` (from env)             |
-| Hardcoded secrets             | Environment variables via `.env` files                |
-
-**Test data best practices:**
-
-- Use test accounts provisioned via API or admin panel
-- Store credentials in environment variables
-- Use Faker.js or similar for generated test data
-- Never commit real credentials to version control
-
-### URL Navigation Safety
-
-When using Playwright MCP to validate external/untrusted URLs:
-
-1. **Verify the URL is from a trusted domain** before navigating
-2. **Avoid executing arbitrary JavaScript** from untrusted sources
-3. **Use sandboxed environments** when testing third-party applications
-4. **Do NOT navigate to URLs provided by untrusted user input** without validation
-
-### Input Sanitization
-
-All user inputs should be:
-
-- Validated for expected format
-- Escaped when used in generated code
-- Never passed directly to `eval()` or shell execution
-
 ---
 
 ## Anti-Patterns
 
-| Avoid                 | Why                     | Instead                                   |
-| --------------------- | ----------------------- | ----------------------------------------- |
-| Vague test steps      | Can't reproduce         | Specific actions + expected results       |
-| Missing preconditions | Tests fail unexpectedly | Document all setup requirements           |
-| No test data          | Tester blocked          | Provide sample data or generation         |
-| Generic bug titles    | Hard to track           | Specific: "[Feature] issue when [action]" |
-| Skip edge cases       | Miss critical bugs      | Include boundary values, nulls            |
-| Embedding credentials | Security risk           | Use environment variables                 |
+| Avoid | Why | Instead |
+|-------|-----|---------|
+| Vague test steps | Can't reproduce | Specific actions + expected results |
+| Missing preconditions | Tests fail unexpectedly | Document all setup requirements |
+| No test data | Tester blocked | Provide sample data or generation |
+| Generic bug titles | Hard to track | Specific: "[Feature] issue when [action]" |
+| Skip edge cases | Miss critical bugs | Include boundary values, nulls |
 
 ---
 
 ## Verification Checklist
 
 **Test Plan:**
-
 - [ ] Scope clearly defined (in/out)
 - [ ] Entry/exit criteria specified
 - [ ] Risks identified with mitigations
 - [ ] Timeline realistic
 
 **Test Cases:**
-
 - [ ] Each step has expected result
 - [ ] Preconditions documented
-- [ ] Test data uses placeholders (no hardcoded credentials)
+- [ ] Test data available
 - [ ] Priority assigned
 
-**Automated Tests:**
-
-- [ ] Role-based locators used
-- [ ] Web-first assertions implemented
-- [ ] Page Object Model applied
-- [ ] test.step() grouping for clarity
-- [ ] Error handling and screenshots
-- [ ] Credentials loaded from environment variables
-
 **Bug Reports:**
-
 - [ ] Reproducible steps
 - [ ] Environment documented
 - [ ] Screenshots/evidence attached
@@ -345,127 +174,437 @@ All user inputs should be:
 
 ---
 
-## Templates
-
-### Available Templates
-
-| Template                                             | Purpose                                      | Format   |
-| ---------------------------------------------------- | -------------------------------------------- | -------- |
-| [`test-plan.md`](templates/test-plan.md)             | ISTQB-aligned test plan structure            | Markdown |
-| [`test-case.md`](templates/test-case.md)             | Individual test case with full sections      | Markdown |
-| [`bug-report.md`](templates/bug-report.md)           | Detailed defect report                       | Markdown |
-| [`playwright-test.md`](templates/playwright-test.md) | Playwright test template with best practices | Markdown |
-
-### Template Usage
-
-All templates are located in `templates/`. To use them:
-
-1. **Copy the template** to your project directory
-2. **Fill in placeholders** (marked with `[brackets]` or `${VARIABLE}`)
-3. **Customize sections** based on your specific needs
-4. **Remove or add sections** as appropriate
-5. **Save and version control** the completed document
-
----
-
 ## References
 
-- [`references/test_case_templates.md`](references/test_case_templates.md) - Standard formats for all test types
-- [`references/bug_report_templates.md`](references/bug_report_templates.md) - Documentation templates
-- [`references/regression_testing.md`](references/regression_testing.md) - Suite building and execution
-- [`references/playwright_automation.md`](references/playwright_automation.md) - Browser automation and test generation
+- [Test Case Templates](references/test_case_templates.md) - Standard formats for all test types
+- [Bug Report Templates](references/bug_report_templates.md) - Documentation templates
+- [Regression Testing Guide](references/regression_testing.md) - Suite building and execution
+- [Figma Validation Guide](references/figma_validation.md) - Design-implementation validation
 
 ---
 
-## Examples
-
 <details>
-<summary><strong>Example: Using the Test Case Template</strong></summary>
+<summary><strong>Deep Dive: Test Case Structure</strong></summary>
 
-**Request:**
+### Standard Test Case Format
 
+```markdown
+## TC-001: [Test Case Title]
+
+**Priority:** High | Medium | Low
+**Type:** Functional | UI | Integration | Regression
+**Status:** Not Run | Pass | Fail | Blocked
+
+### Objective
+[What are we testing and why]
+
+### Preconditions
+- [Setup requirement 1]
+- [Setup requirement 2]
+- [Test data needed]
+
+### Test Steps
+1. [Action to perform]
+   **Expected:** [What should happen]
+
+2. [Action to perform]
+   **Expected:** [What should happen]
+
+3. [Action to perform]
+   **Expected:** [What should happen]
+
+### Test Data
+- Input: [Test data values]
+- User: [Test account details]
+- Configuration: [Environment settings]
+
+### Post-conditions
+- [System state after test]
+- [Cleanup required]
+
+### Notes
+- [Edge cases to consider]
+- [Related test cases]
+- [Known issues]
 ```
-"Create a test case for user login with valid credentials using the test-case.md template"
-```
 
-**Result:**
-The AI will:
+### Test Types
 
-1. Open `templates/test-case.md`
-2. Fill in the placeholders with specific details:
-   - TC-ID: `TC-LOGIN-001`
-   - Title: `Verify valid user login with correct credentials`
-   - Priority: `P0 (Critical)`
-   - Type: `Functional`
-   - Objective: `Verify users can successfully login with valid credentials`
-   - Preconditions: `User account exists in test environment; Browser cookies cleared`
-   - Test Steps: Fill with specific login steps
-   - Test Data: Use `${TEST_USER_EMAIL}` and `${TEST_USER_PASSWORD}` placeholders
-3. Provide the completed test case markdown file
+| Type | Focus | Example |
+|------|-------|---------|
+| Functional | Business logic | Login with valid credentials |
+| UI/Visual | Appearance, layout | Button matches Figma design |
+| Integration | Component interaction | API returns data to frontend |
+| Regression | Existing functionality | Previous features still work |
+| Performance | Speed, load handling | Page loads under 3 seconds |
+| Security | Vulnerabilities | SQL injection prevented |
 
 </details>
 
 <details>
-<summary><strong>Example: Using the Bug Report Template</strong></summary>
+<summary><strong>Deep Dive: Test Plan Template</strong></summary>
 
-**Request:**
+### Test Plan Structure
 
+```markdown
+# Test Plan: [Feature/Release Name]
+
+## Executive Summary
+- Feature/product being tested
+- Testing objectives
+- Key risks
+- Timeline overview
+
+## Test Scope
+
+**In Scope:**
+- Features to be tested
+- Test types (functional, UI, performance)
+- Platforms and environments
+- User flows and scenarios
+
+**Out of Scope:**
+- Features not being tested
+- Known limitations
+- Third-party integrations (if applicable)
+
+## Test Strategy
+
+**Test Types:**
+- Manual testing
+- Exploratory testing
+- Regression testing
+- Integration testing
+- User acceptance testing
+
+**Test Approach:**
+- Black box testing
+- Positive and negative testing
+- Boundary value analysis
+- Equivalence partitioning
+
+## Test Environment
+- Operating systems
+- Browsers and versions
+- Devices (mobile, tablet, desktop)
+- Test data requirements
+- Backend/API environments
+
+## Entry Criteria
+- [ ] Requirements documented
+- [ ] Designs finalized
+- [ ] Test environment ready
+- [ ] Test data prepared
+- [ ] Build deployed
+
+## Exit Criteria
+- [ ] All high-priority test cases executed
+- [ ] 90%+ test case pass rate
+- [ ] All critical bugs fixed
+- [ ] No open high-severity bugs
+- [ ] Regression suite passed
+
+## Risk Assessment
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| [Risk 1] | H/M/L | H/M/L | [Mitigation] |
+
+## Test Deliverables
+- Test plan document
+- Test cases
+- Test execution reports
+- Bug reports
+- Test summary report
 ```
-"Create a bug report for a login form validation issue using the bug-report.md template"
-```
-
-**Result:**
-The AI will:
-
-1. Open `templates/bug-report.md`
-2. Generate a unique bug ID (e.g., `BUG-1715345678`)
-3. Fill in the placeholders:
-   - Title: `Login form accepts invalid email format`
-   - Severity: `High`
-   - Priority: `P1`
-   - Environment: Fill with actual OS, browser, build details
-   - Steps to Reproduce: Add specific, reproducible steps
-   - Expected vs Actual: Clear description of the issue
-   - Impact: Describe user and business impact
-4. Provide the completed bug report markdown file
 
 </details>
 
 <details>
-<summary><strong>Example: Using the Playwright Spec Template</strong></summary>
+<summary><strong>Deep Dive: Bug Reporting</strong></summary>
 
-**Request:**
+### Bug Report Template
 
+```markdown
+# BUG-[ID]: [Clear, specific title]
+
+**Severity:** Critical | High | Medium | Low
+**Priority:** P0 | P1 | P2 | P3
+**Type:** Functional | UI | Performance | Security
+**Status:** Open | In Progress | Fixed | Closed
+
+## Environment
+- **OS:** [Windows 11, macOS 14, etc.]
+- **Browser:** [Chrome 120, Firefox 121, etc.]
+- **Device:** [Desktop, iPhone 15, etc.]
+- **Build:** [Version/commit]
+- **URL:** [Page where bug occurs]
+
+## Description
+[Clear, concise description of the issue]
+
+## Steps to Reproduce
+1. [Specific step]
+2. [Specific step]
+3. [Specific step]
+
+## Expected Behavior
+[What should happen]
+
+## Actual Behavior
+[What actually happens]
+
+## Visual Evidence
+- Screenshot: [attached]
+- Video: [link if applicable]
+- Console errors: [paste errors]
+
+## Impact
+- **User Impact:** [How many users affected]
+- **Frequency:** [Always, Sometimes, Rarely]
+- **Workaround:** [If one exists]
+
+## Additional Context
+- Related to: [Feature/ticket]
+- Regression: [Yes/No]
+- Figma design: [Link if UI bug]
 ```
-"Create Playwright tests for the login flow using the playwright-test.md template"
-```
 
-**Result:**
-The AI will:
+### Severity Definitions
 
-1. Open `templates/playwright-test.md`
-2. Customize the test describe block for login functionality
-3. Add specific test cases:
-   - `TC-LOGIN-001 @smoke @regression` - Valid login
-   - `TC-LOGIN-002 @regression @negative` - Invalid credentials
-   - `TC-LOGIN-003 @regression @boundary` - Password validation
-4. Implement test steps using Playwright best practices:
-   - Role-based locators (`getByRole`)
-   - Web-first assertions (`toBeVisible`, `toHaveText`)
-   - test.step() grouping for readability
-5. Add security notes about environment variables
-6. Provide the completed markdown template with TypeScript code examples
+| Level | Criteria | Examples |
+|-------|----------|----------|
+| **Critical (P0)** | System crash, data loss, security | Payment fails, login broken |
+| **High (P1)** | Major feature broken, no workaround | Search not working |
+| **Medium (P2)** | Feature partial, workaround exists | Filter missing one option |
+| **Low (P3)** | Cosmetic, rare edge cases | Typo, minor alignment |
 
 </details>
 
----
+<details>
+<summary><strong>Deep Dive: Figma MCP Integration</strong></summary>
 
-## Best Practices
+### Design Validation Workflow
+
+**Prerequisites:**
+- Figma MCP server configured
+- Access to Figma design files
+- Figma URLs for components/pages
+
+**Process:**
+
+1. **Get Design Specs from Figma**
+```
+"Get the button specifications from Figma file [URL]"
+
+Response includes:
+- Dimensions (width, height)
+- Colors (background, text, border)
+- Typography (font, size, weight)
+- Spacing (padding, margin)
+- Border radius
+- States (default, hover, active, disabled)
+```
+
+2. **Compare Implementation**
+```
+TC: Primary Button Visual Validation
+1. Inspect primary button in browser dev tools
+2. Compare against Figma specs:
+   - Dimensions: 120x40px
+   - Border-radius: 8px
+   - Background color: #0066FF
+   - Font: 16px Medium #FFFFFF
+3. Document discrepancies
+```
+
+3. **Create Bug if Mismatch**
+```
+BUG: Primary button color doesn't match design
+Severity: Medium
+Expected (Figma): #0066FF
+Actual (Implementation): #0052CC
+Screenshot: [attached]
+Figma link: [specific component]
+```
+
+### What to Validate
+
+| Element | What to Check | Tool |
+|---------|---------------|------|
+| Colors | Hex values exact | Browser color picker |
+| Spacing | Padding/margin px | DevTools computed styles |
+| Typography | Font, size, weight | DevTools font panel |
+| Layout | Width, height, position | DevTools box model |
+| States | Hover, active, focus | Manual interaction |
+| Responsive | Breakpoint behavior | DevTools device mode |
+
+### Example Queries
+```
+"Get button specifications from Figma design [URL]"
+"Compare navigation menu implementation against Figma design"
+"Extract spacing values for dashboard layout from Figma"
+"List all color tokens used in Figma design system"
+```
+
+</details>
+
+<details>
+<summary><strong>Deep Dive: Regression Testing</strong></summary>
+
+### Suite Structure
+
+| Suite Type | Duration | Frequency | Coverage |
+|------------|----------|-----------|----------|
+| Smoke | 15-30 min | Daily | Critical paths only |
+| Targeted | 30-60 min | Per change | Affected areas |
+| Full | 2-4 hours | Weekly/Release | Comprehensive |
+| Sanity | 10-15 min | After hotfix | Quick validation |
+
+### Building a Regression Suite
+
+**Step 1: Identify Critical Paths**
+- What can users NOT live without?
+- What generates revenue?
+- What handles sensitive data?
+- What's used most frequently?
+
+**Step 2: Prioritize Test Cases**
+
+| Priority | Description | Must Run |
+|----------|-------------|----------|
+| P0 | Business-critical, security | Always |
+| P1 | Major features, common flows | Weekly+ |
+| P2 | Minor features, edge cases | Releases |
+
+**Step 3: Execution Order**
+1. Smoke first - if fails, stop and fix build
+2. P0 tests next - must pass before proceeding
+3. P1 then P2 - track all failures
+4. Exploratory - find unexpected issues
+
+### Pass/Fail Criteria
+
+**PASS:**
+- All P0 tests pass
+- 90%+ P1 tests pass
+- No critical bugs open
+
+**FAIL (Block Release):**
+- Any P0 test fails
+- Critical bug discovered
+- Security vulnerability
+- Data loss scenario
+
+**CONDITIONAL:**
+- P1 failures with workarounds
+- Known issues documented
+- Fix plan in place
+
+</details>
+
+<details>
+<summary><strong>Deep Dive: Test Execution Tracking</strong></summary>
+
+### Test Run Report Template
+
+```markdown
+# Test Run: [Release Version]
+
+**Date:** 2024-01-15
+**Build:** v2.5.0-rc1
+**Tester:** [Name]
+**Environment:** Staging
+
+## Summary
+- Total Test Cases: 150
+- Executed: 145
+- Passed: 130
+- Failed: 10
+- Blocked: 5
+- Not Run: 5
+- Pass Rate: 90%
+
+## Test Cases by Priority
+
+| Priority | Total | Pass | Fail | Blocked |
+|----------|-------|------|------|---------|
+| P0 (Critical) | 25 | 23 | 2 | 0 |
+| P1 (High) | 50 | 45 | 3 | 2 |
+| P2 (Medium) | 50 | 45 | 3 | 2 |
+| P3 (Low) | 25 | 17 | 2 | 1 |
+
+## Critical Failures
+- TC-045: Payment processing fails
+  - Bug: BUG-234
+  - Status: Open
+
+## Blocked Tests
+- TC-112: Dashboard widget (API endpoint down)
+
+## Risks
+- 2 critical bugs blocking release
+- Payment integration needs attention
+
+## Next Steps
+- Retest after BUG-234 fix
+- Complete remaining 5 test cases
+- Run full regression before sign-off
+```
+
+### Coverage Tracking
+
+```markdown
+## Coverage Matrix
+
+| Feature | Requirements | Test Cases | Status | Gaps |
+|---------|--------------|------------|--------|------|
+| Login | 8 | 12 | Complete | None |
+| Checkout | 15 | 10 | Partial | Payment errors |
+| Dashboard | 12 | 15 | Complete | None |
+```
+
+</details>
+
+<details>
+<summary><strong>QA Process Workflow</strong></summary>
+
+### Phase 1: Planning
+- [ ] Review requirements and designs
+- [ ] Create test plan
+- [ ] Identify test scenarios
+- [ ] Estimate effort and timeline
+- [ ] Set up test environment
+
+### Phase 2: Test Design
+- [ ] Write test cases
+- [ ] Review test cases with team
+- [ ] Prepare test data
+- [ ] Build regression suite
+- [ ] Get Figma design access
+
+### Phase 3: Execution
+- [ ] Execute test cases
+- [ ] Log bugs with clear steps
+- [ ] Validate against Figma (UI tests)
+- [ ] Track test progress
+- [ ] Communicate blockers
+
+### Phase 4: Reporting
+- [ ] Compile test results
+- [ ] Analyze coverage
+- [ ] Document risks
+- [ ] Provide go/no-go recommendation
+- [ ] Archive test artifacts
+
+</details>
+
+<details>
+<summary><strong>Best Practices</strong></summary>
 
 ### Test Case Writing
 
 **DO:**
-
 - Be specific and unambiguous
 - Include expected results for each step
 - Test one thing per test case
@@ -473,7 +612,6 @@ The AI will:
 - Keep test cases maintainable
 
 **DON'T:**
-
 - Assume knowledge
 - Make test cases too long
 - Skip preconditions
@@ -483,7 +621,6 @@ The AI will:
 ### Bug Reporting
 
 **DO:**
-
 - Provide clear reproduction steps
 - Include screenshots/videos
 - Specify exact environment details
@@ -491,7 +628,6 @@ The AI will:
 - Link to Figma for UI bugs
 
 **DON'T:**
-
 - Report without reproduction steps
 - Use vague descriptions
 - Skip environment details
@@ -501,7 +637,6 @@ The AI will:
 ### Regression Testing
 
 **DO:**
-
 - Automate repetitive tests when possible
 - Maintain regression suite regularly
 - Prioritize critical paths
@@ -509,81 +644,114 @@ The AI will:
 - Update suite after each release
 
 **DON'T:**
-
 - Skip regression before releases
 - Let suite become outdated
 - Test everything every time
 - Ignore failed regression tests
 
-### Security Best Practices
-
-**DO:**
-
-- Use environment variables for credentials
-- Use test accounts provisioned for testing
-- Validate URLs before navigating
-- Report suspicious content
-
-**DON'T:**
-
-- Embed real credentials in code
-- Navigate to untrusted URLs
-- Execute arbitrary JavaScript from user input
-- Commit secrets to version control
+</details>
 
 ---
 
-## Quality Gates (Self-Check)
+## Examples
 
-- **Test plan** includes scope, approach, risks, environments, entry/exit criteria, deliverables, and metrics
-- **Test cases** are traceable, atomic, deterministic, and include clear oracles and data
-- **Automation** is maintainable (stable locators, minimal flake, independent tests, clear assertions)
-- **Regression** is risk-based, tagged, and curated with clear add/remove rules
-- **Bug reports** are reproducible, actionable, and contain evidence + environment + impact
+<details>
+<summary><strong>Example: Login Flow Test Case</strong></summary>
 
----
+```markdown
+## TC-LOGIN-001: Valid User Login
 
-## Troubleshooting
+**Priority:** P0 (Critical)
+**Type:** Functional
+**Estimated Time:** 2 minutes
 
-| Problem                      | Cause                             | Solution                                                   |
-| ---------------------------- | --------------------------------- | ---------------------------------------------------------- |
-| Test cases lack traceability | Missing requirement IDs           | Add `requirement_id` column; link to user stories/ACs      |
-| Bug reports get rejected     | Insufficient reproduction steps   | Use minimal steps; include exact data and environment      |
-| Regression suite too slow    | Too many tests, no prioritization | Apply risk-based selection; tier into smoke/sanity/full    |
-| Flaky automated tests        | Unstable locators or timing       | Use `data-testid`; avoid sleeps; use Playwright auto-waits |
-| Test estimates are wrong     | Scope creep, missing risks        | Add contingency; re-estimate when scope changes            |
+### Objective
+Verify users can successfully login with valid credentials
 
----
+### Preconditions
+- User account exists (test@example.com / Test123!)
+- User is not already logged in
+- Browser cookies cleared
 
-## Common Rationalizations
+### Test Steps
+1. Navigate to https://app.example.com/login
+   **Expected:** Login page displays with email and password fields
 
-> Common shortcuts and "good enough" excuses that erode test quality — and the reality behind each.
+2. Enter email: test@example.com
+   **Expected:** Email field accepts input
 
-| Rationalization                         | Reality                                                                                                     |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| "Test plans are documentation theater"  | A good test plan prevents scope creep, missed scenarios, and misaligned expectations before testing begins. |
-| "We can figure out test cases as we go" | Ad-hoc testing leaves gaps. Structured test cases ensure systematic coverage and traceability.              |
-| "Bug reports can be informal"           | Reproducible bug reports with exact steps save hours of back-and-forth between tester and developer.        |
-| "Estimation is just guessing"           | Test estimation techniques (function point analysis, Delphi method) improve accuracy and credibility.       |
-| "Regression suites maintain themselves" | Without curation, suites grow bloated and slow. Regular review and pruning are mandatory.                   |
-| "Templates slow us down"                | Templates ensure nothing is forgotten and standardize quality across the team.                              |
+3. Enter password: Test123!
+   **Expected:** Password field shows masked characters
+
+4. Click "Login" button
+   **Expected:**
+   - Loading indicator appears
+   - User redirected to /dashboard
+   - Welcome message shown: "Welcome back, Test User"
+   - Avatar/profile image displayed in header
+
+### Post-conditions
+- User session created
+- Auth token stored
+- Analytics event logged
+
+### Edge Cases to Consider
+- TC-LOGIN-002: Invalid password
+- TC-LOGIN-003: Non-existent email
+- TC-LOGIN-004: SQL injection attempt
+- TC-LOGIN-005: Very long password
+```
+
+</details>
+
+<details>
+<summary><strong>Example: Responsive Design Test Case</strong></summary>
+
+```markdown
+## TC-UI-045: Mobile Navigation Menu
+
+**Priority:** P1 (High)
+**Type:** UI/Responsive
+**Devices:** Mobile (iPhone, Android)
+
+### Objective
+Verify navigation menu works correctly on mobile devices
+
+### Preconditions
+- Access from mobile device or responsive mode
+- Viewport width: 375px (iPhone SE) to 428px (iPhone Pro Max)
+
+### Test Steps
+1. Open homepage on mobile device
+   **Expected:** Hamburger menu icon visible (top-right)
+
+2. Tap hamburger icon
+   **Expected:**
+   - Menu slides in from right
+   - Overlay appears over content
+   - Close (X) button visible
+
+3. Tap menu item
+   **Expected:** Navigate to section, menu closes
+
+4. Compare against Figma mobile design [link]
+   **Expected:**
+   - Menu width: 280px
+   - Slide animation: 300ms ease-out
+   - Overlay opacity: 0.5, color #000000
+   - Font size: 16px, line-height 24px
+
+### Breakpoints to Test
+- 375px (iPhone SE)
+- 390px (iPhone 14)
+- 428px (iPhone 14 Pro Max)
+- 360px (Galaxy S21)
+```
+
+</details>
 
 ---
 
 **"Testing shows the presence, not the absence of bugs." - Edsger Dijkstra**
 
 **"Quality is not an act, it is a habit." - Aristotle**
-
----
-
-## Verification
-
-After completing this skill's workflow, confirm:
-
-- [ ] **Test strategy document created** — Covers scope, approach, resources, schedule, and risks
-- [ ] **Test levels defined** — Unit, integration, E2E, and acceptance levels with criteria
-- [ ] **Entry/exit criteria documented** — Clear definition of when testing starts and ends
-- [ ] **Risk-based prioritization** — Tests prioritized by impact x likelihood
-- [ ] **Environment requirements listed** — Hardware, software, data, and network requirements
-- [ ] **Defect management process defined** — How bugs are reported, tracked, and resolved
-- [ ] **Stakeholder sign-off** — Test plan reviewed and approved by relevant stakeholders

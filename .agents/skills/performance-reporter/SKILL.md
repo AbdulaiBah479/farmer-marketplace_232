@@ -1,118 +1,440 @@
 ---
 name: performance-reporter
-description: 'Use when the user asks to "generate an SEO report" or "出月报"; builds multi-metric stakeholder reports and dashboards spanning traffic, rankings, authority, and content progress. Not for raw ranking deltas — use rank-tracker. SEO报告/绩效仪表盘'
-version: "9.9.10"
-license: Apache-2.0
-compatibility: "Claude Code and compatible agent-skill hosts"
-homepage: "https://github.com/aaron-he-zhu/seo-geo-claude-skills"
-when_to_use: "Use when generating multi-metric SEO/GEO performance reports, traffic summaries, stakeholder dashboards, SEO报告, 流量报告, 月报, 周报, or 汇报给老板. Not for raw ranking deltas — use rank-tracker."
-argument-hint: "<domain> [date range]"
-metadata:
-  author: aaron-he-zhu
-  version: "9.9.10"
-  geo-relevance: "medium"
-  tags:
-    - seo
-    - geo
-    - seo-reporting
-    - performance-report
-    - kpi-dashboard
-    - traffic-report
-    - monthly-report
-    - stakeholder-report
-    - SEO报告
-    - SEOレポート
-    - SEO리포트
-    - informe-seo
-  triggers:
-    - "performance report"
-    - "traffic report"
-    - "SEO dashboard"
-    - "monthly SEO report"
-    - "show me my SEO results"
-    - "report to my boss"
-    - "how is my SEO performing"
-    - "汇报给老板"
-    - "出月报"
-    - "周报"
+description: Generates comprehensive SEO and GEO performance reports combining rankings, traffic, backlinks, and AI visibility metrics. Creates executive summaries and detailed analyses for stakeholder reporting.
 ---
 
 # Performance Reporter
 
-Aggregates SEO/GEO data, builds stakeholder reports, benchmarks goals/competitors, calculates ROI, and turns deltas into prioritized recommendations.
+This skill creates comprehensive SEO and GEO performance reports that combine multiple metrics into actionable insights. It produces executive summaries, detailed analyses, and visual data presentations for stakeholder communication.
 
-## Quick Start
+## When to Use This Skill
 
-```text
+- Monthly/quarterly SEO reporting
+- Executive stakeholder updates
+- Client reporting for agencies
+- Tracking campaign performance
+- Combining multiple SEO metrics
+- Creating GEO visibility reports
+- Documenting ROI from SEO efforts
+
+## What This Skill Does
+
+1. **Data Aggregation**: Combines multiple SEO data sources
+2. **Trend Analysis**: Identifies patterns across metrics
+3. **Executive Summaries**: Creates high-level overviews
+4. **Visual Reports**: Presents data in clear formats
+5. **Benchmark Comparison**: Tracks against goals and competitors
+6. **ROI Calculation**: Measures SEO investment returns
+7. **Recommendations**: Suggests actions based on data
+
+## How to Use
+
+### Generate Performance Report
+
+```
 Create an SEO performance report for [domain] for [time period]
+```
+
+### Executive Summary
+
+```
 Generate an executive summary of SEO performance for [month/quarter]
+```
+
+### Specific Report Types
+
+```
 Create a GEO visibility report for [domain]
+```
+
+```
 Generate a content performance report
 ```
 
-## Skill Contract
-
-**Expected output**: a delta summary, alert/report output, and a short handoff summary ready for `memory/monitoring/`.
-
-- **Reads**: current and prior-period metrics across traffic/rankings/authority/content, report audience, date range, and any user-provided or tool data.
-- **Writes**: a user-facing monitoring deliverable plus a reusable summary that can be stored under `memory/monitoring/`.
-- **Promotes**: significant changes, confirmed anomalies, follow-up actions, and pending decisions to `memory/open-loops.md`.
-- **Done when**: each in-scope section (traffic, rankings, GEO, authority, backlinks, content) is present or marked "Not yet evaluated"; every metric is source-tagged and compared to the prior period; and recommendations carry owner, priority, and expected impact.
-- **Primary next skill**: use the `Next Best Skill` below when a change needs action.
-
-### Handoff Summary
-
-> Emit the standard shape from [skill-contract.md §Handoff Summary Format](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
-
-## Data Sources
-
-All integrations optional (see [CONNECTORS.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CONNECTORS.md)). With tools connected, aggregates traffic from ~~analytics, search data from ~~search console, rankings/backlinks from ~~SEO tool, and AI visibility from ~~AI monitor. Without tools, ask user for analytics exports, Search Console data, ranking data, and KPIs.
-
-## Decision Gates
-
-**Stop and ask the user when:**
-- No reporting period or comparison period can be determined and none is in context — offer: (1) last 30 days vs prior 30, (2) last calendar month vs prior month, (3) a custom range. A period comparison is required, not optional.
-
-**Continue silently (never stop for):**
-- A section's source data is missing — mark that section "Not yet evaluated" and proceed; do not fabricate the metric.
-- Audience not stated — default to the executive template and note the assumption.
-
 ## Instructions
 
-When a user requests a performance report, use [Report Output Templates](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/performance-reporter/references/report-output-templates.md) and cover:
+When a user requests a performance report:
 
-1. **Define Report Parameters** — Domain, period, comparison period, report type, audience, focus areas, and data freshness.
-2. **Create Executive Summary** — Overall rating, wins, watch areas, required actions, metrics at a glance (traffic, rankings, conversions, DA/authority, AI citations), and SEO ROI; tag each metric Measured / User-provided / Estimated.
-3. **Report Organic Traffic** — Sessions, users, pageviews, engagement/bounce, trend visualization, source/device split, top pages, each figure source-tagged.
-4. **Report Keyword Rankings** — Position ranges, distribution change, top improvements/declines, SERP features. For raw position-by-position deltas, defer to rank-tracker rather than recomputing here.
-5. **Report GEO/AI Performance** — AI citation overview, citations by topic, GEO wins, and optimization opportunities.
-6. **Report Domain Authority (CITE)** — Include CITE dimension scores and veto status when available; otherwise mark "Not yet evaluated."
-7. **Report Content Quality (CORE-EEAT)** — Include average scores and trends when available; otherwise mark "Not yet evaluated."
-8. **Report Backlinks** — Link profile summary, acquisition trend, notable links, competitive position.
-9. **Report Content Performance** — Publishing summary, top content, content needing attention, and content ROI.
-10. **Generate Recommendations** — Immediate, short-term, and long-term actions with priority, owner, expected impact, and next-period goals.
-11. **Compile Full Report** — Add table of contents, appendix, data sources, methodology, and glossary.
+1. **Define Report Parameters**
 
-Label every metric **Measured** (tool/export), **User-provided**, or **Estimated** (model inference); never present an estimate as measured; if a required metric is unavailable, mark it N/A — do not invent it. Likewise separate an **observed change** from a **plausible explanation** (corroborate before stating it as the cause), an **optimization opportunity**, and **follow-up** needing crawl/SERP/rank/audit — never report an unverified explanation as a confirmed cause.
+   ```markdown
+   ## Report Configuration
+   
+   **Domain**: [domain]
+   **Report Period**: [start date] to [end date]
+   **Comparison Period**: [previous period for comparison]
+   **Report Type**: [Monthly/Quarterly/Annual/Custom]
+   **Audience**: [Executive/Technical/Client]
+   **Focus Areas**: [Rankings/Traffic/Content/Backlinks/GEO]
+   ```
+
+2. **Create Executive Summary**
+
+   ```markdown
+   # SEO Performance Report
+   
+   **Domain**: [domain]
+   **Period**: [date range]
+   **Prepared**: [date]
+   
+   ---
+   
+   ## Executive Summary
+   
+   ### Overall Performance: [Excellent/Good/Needs Attention/Critical]
+   
+   **Key Highlights**:
+   
+   🟢 **Wins**:
+   - [Win 1 - e.g., "Organic traffic increased 25%"]
+   - [Win 2 - e.g., "3 new #1 rankings achieved"]
+   - [Win 3 - e.g., "Conversion rate improved 15%"]
+   
+   🟡 **Watch Areas**:
+   - [Area 1 - e.g., "Mobile rankings declining slightly"]
+   - [Area 2 - e.g., "Competitor gaining ground on key terms"]
+   
+   🔴 **Action Required**:
+   - [Issue 1 - e.g., "Technical SEO audit needed"]
+   
+   ### Key Metrics at a Glance
+   
+   | Metric | This Period | Last Period | Change | Target | Status |
+   |--------|-------------|-------------|--------|--------|--------|
+   | Organic Traffic | [X] | [Y] | [+/-Z%] | [T] | ✅/⚠️/❌ |
+   | Keyword Rankings (Top 10) | [X] | [Y] | [+/-Z] | [T] | ✅/⚠️/❌ |
+   | Organic Conversions | [X] | [Y] | [+/-Z%] | [T] | ✅/⚠️/❌ |
+   | Domain Authority | [X] | [Y] | [+/-Z] | [T] | ✅/⚠️/❌ |
+   | AI Citations | [X] | [Y] | [+/-Z%] | [T] | ✅/⚠️/❌ |
+   
+   ### SEO ROI
+   
+   **Investment**: $[X] (content, tools, effort)
+   **Organic Revenue**: $[Y]
+   **ROI**: [Z]%
+   ```
+
+3. **Report Organic Traffic Performance**
+
+   ```markdown
+   ## Organic Traffic Analysis
+   
+   ### Traffic Overview
+   
+   | Metric | This Period | vs Last Period | vs Last Year |
+   |--------|-------------|----------------|--------------|
+   | Sessions | [X] | [+/-Y%] | [+/-Z%] |
+   | Users | [X] | [+/-Y%] | [+/-Z%] |
+   | Pageviews | [X] | [+/-Y%] | [+/-Z%] |
+   | Avg. Session Duration | [X] | [+/-Y%] | [+/-Z%] |
+   | Bounce Rate | [X]% | [+/-Y%] | [+/-Z%] |
+   | Pages per Session | [X] | [+/-Y] | [+/-Z] |
+   
+   ### Traffic Trend
+   
+   ```
+   [Month 1]  ████████████████████ [X]
+   [Month 2]  █████████████████████ [Y]
+   [Month 3]  ███████████████████████ [Z]
+   [Current]  ████████████████████████ [W]
+   ```
+   
+   ### Traffic by Source
+   
+   | Channel | Sessions | % of Total | Change |
+   |---------|----------|------------|--------|
+   | Organic Search | [X] | [Y]% | [+/-Z%] |
+   | Direct | [X] | [Y]% | [+/-Z%] |
+   | Referral | [X] | [Y]% | [+/-Z%] |
+   | Social | [X] | [Y]% | [+/-Z%] |
+   
+   ### Top Performing Pages
+   
+   | Page | Sessions | Change | Conversions |
+   |------|----------|--------|-------------|
+   | [Page 1] | [X] | [+/-Y%] | [Z] |
+   | [Page 2] | [X] | [+/-Y%] | [Z] |
+   | [Page 3] | [X] | [+/-Y%] | [Z] |
+   
+   ### Traffic by Device
+   
+   | Device | Sessions | Change | Conv. Rate |
+   |--------|----------|--------|------------|
+   | Desktop | [X] ([Y]%) | [+/-Z%] | [%] |
+   | Mobile | [X] ([Y]%) | [+/-Z%] | [%] |
+   | Tablet | [X] ([Y]%) | [+/-Z%] | [%] |
+   ```
+
+4. **Report Keyword Rankings**
+
+   ```markdown
+   ## Keyword Ranking Performance
+   
+   ### Rankings Overview
+   
+   | Position Range | Keywords | Change | Traffic Impact |
+   |----------------|----------|--------|----------------|
+   | Position 1 | [X] | [+/-Y] | [Z] sessions |
+   | Position 2-3 | [X] | [+/-Y] | [Z] sessions |
+   | Position 4-10 | [X] | [+/-Y] | [Z] sessions |
+   | Position 11-20 | [X] | [+/-Y] | [Z] sessions |
+   | Position 21-50 | [X] | [+/-Y] | [Z] sessions |
+   
+   ### Ranking Distribution Change
+   
+   ```
+   Last Period:  ▓▓▓▓░░░░░░░░░░░░
+   This Period:  ▓▓▓▓▓▓░░░░░░░░░░
+                 ↑ More keywords in top positions
+   ```
+   
+   ### Top Ranking Improvements
+   
+   | Keyword | Previous | Current | Change | Traffic |
+   |---------|----------|---------|--------|---------|
+   | [kw 1] | [X] | [Y] | +[Z] | [sessions] |
+   | [kw 2] | [X] | [Y] | +[Z] | [sessions] |
+   | [kw 3] | [X] | [Y] | +[Z] | [sessions] |
+   
+   ### Rankings That Declined
+   
+   | Keyword | Previous | Current | Change | Impact | Action |
+   |---------|----------|---------|--------|--------|--------|
+   | [kw 1] | [X] | [Y] | -[Z] | -[sessions] | [action] |
+   
+   ### SERP Feature Performance
+   
+   | Feature | Won | Lost | Opportunities |
+   |---------|-----|------|---------------|
+   | Featured Snippets | [X] | [Y] | [Z] |
+   | People Also Ask | [X] | [Y] | [Z] |
+   | Local Pack | [X] | [Y] | [Z] |
+   ```
+
+5. **Report GEO/AI Performance**
+
+   ```markdown
+   ## GEO (AI Visibility) Performance
+   
+   ### AI Citation Overview
+   
+   | Metric | This Period | Last Period | Change |
+   |--------|-------------|-------------|--------|
+   | Keywords with AI Overview | [X]/[Y] | [X]/[Y] | [+/-Z] |
+   | Your AI Citations | [X] | [Y] | [+/-Z%] |
+   | Citation Rate | [X]% | [Y]% | [+/-Z%] |
+   | Avg Citation Position | [X] | [Y] | [+/-Z] |
+   
+   ### AI Citation by Topic
+   
+   | Topic Cluster | Opportunities | Citations | Rate |
+   |---------------|---------------|-----------|------|
+   | [Topic 1] | [X] | [Y] | [Z]% |
+   | [Topic 2] | [X] | [Y] | [Z]% |
+   | [Topic 3] | [X] | [Y] | [Z]% |
+   
+   ### GEO Wins This Period
+   
+   | Query | Citation Status | Source Page | Impact |
+   |-------|-----------------|-------------|--------|
+   | [query 1] | 🆕 New citation | [page] | High visibility |
+   | [query 2] | ⬆️ Improved position | [page] | Better exposure |
+   
+   ### GEO Optimization Opportunities
+   
+   | Query | AI Overview | You Cited? | Gap | Action |
+   |-------|-------------|------------|-----|--------|
+   | [query] | Yes | No | [gap] | [action] |
+   ```
+
+6. **Report Backlink Performance**
+
+   ```markdown
+   ## Backlink Performance
+   
+   ### Link Profile Summary
+   
+   | Metric | This Period | Last Period | Change |
+   |--------|-------------|-------------|--------|
+   | Total Backlinks | [X] | [Y] | [+/-Z] |
+   | Referring Domains | [X] | [Y] | [+/-Z] |
+   | Domain Authority | [X] | [Y] | [+/-Z] |
+   | Avg. Link DA | [X] | [Y] | [+/-Z] |
+   
+   ### Link Acquisition
+   
+   | Period | New Links | Lost Links | Net |
+   |--------|-----------|------------|-----|
+   | Week 1 | [X] | [Y] | [+/-Z] |
+   | Week 2 | [X] | [Y] | [+/-Z] |
+   | Week 3 | [X] | [Y] | [+/-Z] |
+   | Week 4 | [X] | [Y] | [+/-Z] |
+   | **Total** | **[X]** | **[Y]** | **[+/-Z]** |
+   
+   ### Notable New Links
+   
+   | Source | DA | Type | Value |
+   |--------|-----|------|-------|
+   | [domain 1] | [DA] | [type] | High |
+   | [domain 2] | [DA] | [type] | High |
+   
+   ### Competitive Position
+   
+   Your referring domains rank #[X] of [Y] competitors.
+   ```
+
+7. **Report Content Performance**
+
+   ```markdown
+   ## Content Performance
+   
+   ### Content Publishing Summary
+   
+   | Metric | This Period | Last Period | Target |
+   |--------|-------------|-------------|--------|
+   | New articles published | [X] | [Y] | [Z] |
+   | Content updates | [X] | [Y] | [Z] |
+   | Total word count | [X] | [Y] | - |
+   
+   ### Top Performing Content
+   
+   | Content | Traffic | Rankings | Conversions | Status |
+   |---------|---------|----------|-------------|--------|
+   | [Title 1] | [X] | [Y] keywords | [Z] | ⭐ Top performer |
+   | [Title 2] | [X] | [Y] keywords | [Z] | 📈 Growing |
+   | [Title 3] | [X] | [Y] keywords | [Z] | ✅ Stable |
+   
+   ### Content Needing Attention
+   
+   | Content | Issue | Traffic Change | Action |
+   |---------|-------|----------------|--------|
+   | [Title] | [issue] | -[X]% | [action] |
+   
+   ### Content ROI
+   
+   | Content Piece | Investment | Traffic Value | ROI |
+   |---------------|------------|---------------|-----|
+   | [Title 1] | $[X] | $[Y] | [Z]% |
+   | [Title 2] | $[X] | $[Y] | [Z]% |
+   ```
+
+8. **Generate Recommendations**
+
+   ```markdown
+   ## Recommendations & Next Steps
+   
+   ### Immediate Actions (This Week)
+   
+   | Priority | Action | Expected Impact | Owner |
+   |----------|--------|-----------------|-------|
+   | 🔴 High | [Action 1] | [Impact] | [Owner] |
+   | 🔴 High | [Action 2] | [Impact] | [Owner] |
+   
+   ### Short-term (This Month)
+   
+   | Priority | Action | Expected Impact | Owner |
+   |----------|--------|-----------------|-------|
+   | 🟡 Medium | [Action 1] | [Impact] | [Owner] |
+   | 🟡 Medium | [Action 2] | [Impact] | [Owner] |
+   
+   ### Long-term (This Quarter)
+   
+   | Priority | Action | Expected Impact | Owner |
+   |----------|--------|-----------------|-------|
+   | 🟢 Planned | [Action 1] | [Impact] | [Owner] |
+   
+   ### Goals for Next Period
+   
+   | Metric | Current | Target | Action to Achieve |
+   |--------|---------|--------|-------------------|
+   | Organic Traffic | [X] | [Y] | [action] |
+   | Keywords Top 10 | [X] | [Y] | [action] |
+   | AI Citations | [X] | [Y] | [action] |
+   | Referring Domains | [X] | [Y] | [action] |
+   ```
+
+9. **Compile Full Report**
+
+   ```markdown
+   # [Company] SEO & GEO Performance Report
+   
+   ## [Month/Quarter] [Year]
+   
+   ---
+   
+   ### Table of Contents
+   
+   1. Executive Summary
+   2. Organic Traffic Performance
+   3. Keyword Rankings
+   4. GEO/AI Visibility
+   5. Backlink Analysis
+   6. Content Performance
+   7. Technical Health
+   8. Competitive Landscape
+   9. Recommendations
+   10. Appendix
+   
+   ---
+   
+   [Include all sections from above]
+   
+   ---
+   
+   ## Appendix
+   
+   ### Data Sources
+   - Google Analytics 4
+   - Google Search Console
+   - [SEO Tool]
+   - [Rank Tracker]
+   
+   ### Methodology
+   [Explain how metrics were calculated]
+   
+   ### Glossary
+   - **GEO**: Generative Engine Optimization
+   - **DA**: Domain Authority
+   - [Additional terms]
+   ```
+
+## Report Templates by Audience
+
+### Executive Report (1 page)
+
+Focus on: Business impact, ROI, top-line metrics, key recommendations
+
+### Marketing Team Report (3-5 pages)
+
+Focus on: Detailed metrics, content performance, campaign results
+
+### Technical SEO Report (5-10 pages)
+
+Focus on: Crawl data, technical issues, detailed rankings, backlink analysis
+
+### Client Report (2-3 pages)
+
+Focus on: Progress against goals, wins, clear recommendations
 
 ## Example
 
-Sample output: an executive summary with overall status, metrics-at-a-glance for traffic/rankings/conversions/authority/AI citations, SEO ROI, and immediate/month/quarter actions with owners and dates.
+**User**: "Create a monthly SEO report for December 2024"
+
+**Output**: [Full report following the structure above with period-specific data and insights]
 
 ## Tips for Success
 
-Lead with insights, compare periods, state data freshness, include owner/deadline/impact for actions, tailor depth to audience, and track GEO/AI citation metrics when in scope.
+1. **Lead with insights** - Start with what matters, not raw data
+2. **Visualize data** - Charts and graphs improve comprehension
+3. **Compare periods** - Context makes data meaningful
+4. **Include actions** - Every report should drive decisions
+5. **Customize for audience** - Executives need different info than technical teams
+6. **Track GEO metrics** - AI visibility is increasingly important
 
-### Save Results
+## Related Skills
 
-Ask "Save these results?" If yes, write to `memory/monitoring/` — see [Skill Contract](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md) §Save Results Template.
+- [rank-tracker](../rank-tracker/) - Detailed ranking data
+- [backlink-analyzer](../backlink-analyzer/) - Link profile data
+- [alert-manager](../alert-manager/) - Set up report triggers
+- [serp-analysis](../../research/serp-analysis/) - SERP composition data
 
-## Reference Materials
-
-- [Report Output Templates](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/performance-reporter/references/report-output-templates.md) — Compact starter blocks for all 11 report sections
-- [KPI Definitions](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/performance-reporter/references/kpi-definitions.md) — SEO/GEO metric definitions with benchmarks, thresholds, trend analysis, and attribution guidance
-- [Report Templates by Audience](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/performance-reporter/references/report-templates.md) — Copy-ready templates for executive, marketing, technical, and client audiences
-
-## Next Best Skill
-
-Recurring monitoring needed → [alert-manager](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/alert-manager/SKILL.md) — turn reporting insights into ongoing monitoring rules. One-off report → Terminal. Visited-set rule applies per [Skill Contract](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).

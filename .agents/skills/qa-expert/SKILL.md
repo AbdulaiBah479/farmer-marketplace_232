@@ -1,289 +1,435 @@
 ---
 name: qa-expert
-description: This skill should be used when establishing comprehensive QA testing processes for any software project. Use when creating test strategies, writing test cases following Google Testing Standards, executing test plans, tracking bugs with P0-P4 classification, calculating quality metrics, or generating progress reports. Includes autonomous execution capability via master prompts and complete documentation templates for third-party QA team handoffs. Implements OWASP security testing and achieves 90% coverage targets.
-keywords: [qa, testing, test-cases, bug-tracking, google-standards, owasp, security, automation, quality-gates, metrics]
+version: 1.0.0
+description: Expert-level quality assurance, testing strategies, automation, and QA processes
+category: qa
+tags: [qa, testing, test-automation, quality-assurance, selenium]
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash(*)
 ---
 
-# QA Expert
+# Quality Assurance Expert
 
-Establish world-class QA testing processes for any software project using proven methodologies from Google Testing Standards and OWASP security best practices.
+Expert guidance for quality assurance, testing strategies, test automation, and QA best practices.
 
-## When to Use This Skill
+## Core Concepts
 
-Trigger this skill when:
-- Setting up QA infrastructure for a new or existing project
-- Writing standardized test cases (AAA pattern compliance)
-- Executing comprehensive test plans with progress tracking
-- Implementing security testing (OWASP Top 10)
-- Filing bugs with proper severity classification (P0-P4)
-- Generating QA reports (daily summaries, weekly progress)
-- Calculating quality metrics (pass rate, coverage, gates)
-- Preparing QA documentation for third-party team handoffs
-- Enabling autonomous LLM-driven test execution
+### Testing Types
+- Unit testing
+- Integration testing
+- System testing
+- Acceptance testing
+- Regression testing
+- Performance testing
+- Security testing
 
-## Quick Start
+### Test Automation
+- Selenium WebDriver
+- Cypress, Playwright
+- API testing (Postman, REST Assured)
+- Mobile testing (Appium)
+- CI/CD integration
+- Test frameworks (JUnit, pytest, Jest)
 
-**One-command initialization**:
-```bash
-python scripts/init_qa_project.py <project-name> [output-directory]
+### QA Processes
+- Test planning
+- Test case design
+- Defect management
+- Test metrics and reporting
+- Risk-based testing
+- Exploratory testing
+
+## Test Automation Framework
+
+```python
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from typing import Dict, List
+
+class BasePage:
+    """Base page object"""
+
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 10)
+
+    def find_element(self, locator):
+        return self.wait.until(EC.presence_of_element_located(locator))
+
+    def click(self, locator):
+        element = self.find_element(locator)
+        element.click()
+
+    def type_text(self, locator, text):
+        element = self.find_element(locator)
+        element.clear()
+        element.send_keys(text)
+
+    def get_text(self, locator):
+        element = self.find_element(locator)
+        return element.text
+
+class LoginPage(BasePage):
+    """Login page object"""
+
+    USERNAME_INPUT = (By.ID, "username")
+    PASSWORD_INPUT = (By.ID, "password")
+    LOGIN_BUTTON = (By.ID, "login-button")
+    ERROR_MESSAGE = (By.CLASS_NAME, "error-message")
+
+    def login(self, username: str, password: str):
+        self.type_text(self.USERNAME_INPUT, username)
+        self.type_text(self.PASSWORD_INPUT, password)
+        self.click(self.LOGIN_BUTTON)
+
+    def get_error_message(self):
+        return self.get_text(self.ERROR_MESSAGE)
+
+class TestRunner:
+    """Test execution framework"""
+
+    def __init__(self, browser: str = "chrome"):
+        self.browser = browser
+        self.driver = None
+        self.results = []
+
+    def setup(self):
+        if self.browser == "chrome":
+            options = webdriver.ChromeOptions()
+            options.add_argument("--headless")
+            self.driver = webdriver.Chrome(options=options)
+        elif self.browser == "firefox":
+            self.driver = webdriver.Firefox()
+
+        self.driver.implicitly_wait(10)
+
+    def teardown(self):
+        if self.driver:
+            self.driver.quit()
+
+    def run_test(self, test_func, test_name: str):
+        try:
+            test_func()
+            self.results.append({"test": test_name, "status": "PASS"})
+        except Exception as e:
+            self.results.append({
+                "test": test_name,
+                "status": "FAIL",
+                "error": str(e)
+            })
+
+    def generate_report(self) -> Dict:
+        total = len(self.results)
+        passed = sum(1 for r in self.results if r["status"] == "PASS")
+        failed = total - passed
+
+        return {
+            "total": total,
+            "passed": passed,
+            "failed": failed,
+            "pass_rate": (passed / total * 100) if total > 0 else 0,
+            "results": self.results
+        }
+
+# Pytest fixtures
+@pytest.fixture
+def driver():
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    driver = webdriver.Chrome(options=options)
+    yield driver
+    driver.quit()
+
+@pytest.fixture
+def login_page(driver):
+    driver.get("https://example.com/login")
+    return LoginPage(driver)
+
+# Test cases
+def test_successful_login(login_page):
+    login_page.login("testuser", "password123")
+    assert "Dashboard" in login_page.driver.title
+
+def test_invalid_credentials(login_page):
+    login_page.login("invalid", "wrong")
+    error = login_page.get_error_message()
+    assert "Invalid credentials" in error
 ```
 
-**What gets created**:
-- Directory structure (`tests/docs/`, `tests/e2e/`, `tests/fixtures/`)
-- Tracking CSVs (`TEST-EXECUTION-TRACKING.csv`, `BUG-TRACKING-TEMPLATE.csv`)
-- Documentation templates (`BASELINE-METRICS.md`, `WEEKLY-PROGRESS-REPORT.md`)
-- Master QA Prompt for autonomous execution
-- README with complete quickstart guide
+## API Testing
 
-**For autonomous execution** (recommended): See `references/master_qa_prompt.md` - single copy-paste command for 100x speedup.
+```python
+import requests
+from typing import Dict, Any
 
-## Core Capabilities
+class APITestClient:
+    """API testing client"""
 
-### 1. QA Project Initialization
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+        self.session = requests.Session()
+        self.test_results = []
 
-Initialize complete QA infrastructure with all templates:
+    def test_get_endpoint(self, endpoint: str, expected_status: int = 200,
+                         expected_keys: List[str] = None) -> Dict:
+        """Test GET endpoint"""
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.get(url)
 
-```bash
-python scripts/init_qa_project.py <project-name> [output-directory]
+        result = {
+            "endpoint": endpoint,
+            "method": "GET",
+            "status_code": response.status_code,
+            "passed": response.status_code == expected_status
+        }
+
+        if expected_keys and response.status_code == 200:
+            data = response.json()
+            missing_keys = [k for k in expected_keys if k not in data]
+            result["missing_keys"] = missing_keys
+            result["passed"] = result["passed"] and len(missing_keys) == 0
+
+        self.test_results.append(result)
+        return result
+
+    def test_post_endpoint(self, endpoint: str, payload: Dict,
+                          expected_status: int = 201) -> Dict:
+        """Test POST endpoint"""
+        url = f"{self.base_url}{endpoint}"
+        response = self.session.post(url, json=payload)
+
+        result = {
+            "endpoint": endpoint,
+            "method": "POST",
+            "status_code": response.status_code,
+            "passed": response.status_code == expected_status,
+            "response_time_ms": response.elapsed.total_seconds() * 1000
+        }
+
+        self.test_results.append(result)
+        return result
+
+    def test_authentication(self, login_endpoint: str,
+                           credentials: Dict) -> bool:
+        """Test API authentication"""
+        response = self.session.post(
+            f"{self.base_url}{login_endpoint}",
+            json=credentials
+        )
+
+        if response.status_code == 200:
+            token = response.json().get("token")
+            if token:
+                self.session.headers.update({"Authorization": f"Bearer {token}"})
+                return True
+
+        return False
+
+    def test_rate_limiting(self, endpoint: str, requests_count: int = 100):
+        """Test rate limiting"""
+        url = f"{self.base_url}{endpoint}"
+        rate_limited = False
+
+        for i in range(requests_count):
+            response = self.session.get(url)
+            if response.status_code == 429:
+                rate_limited = True
+                break
+
+        return {
+            "rate_limited": rate_limited,
+            "requests_before_limit": i if rate_limited else requests_count
+        }
 ```
 
-Creates directory structure, tracking CSVs, documentation templates, and master prompt for autonomous execution.
+## Test Data Management
 
-**Use when**: Starting QA from scratch or migrating to structured QA process.
+```python
+import random
+from faker import Faker
+from typing import Dict, List
 
-### 2. Test Case Writing
+class TestDataGenerator:
+    """Generate test data"""
 
-Write standardized, reproducible test cases following AAA pattern (Arrange-Act-Assert):
+    def __init__(self):
+        self.faker = Faker()
 
-1. Read template: `assets/templates/TEST-CASE-TEMPLATE.md`
-2. Follow structure: Prerequisites (Arrange) → Test Steps (Act) → Expected Results (Assert)
-3. Assign priority: P0 (blocker) → P4 (low)
-4. Include edge cases and potential bugs
+    def generate_user(self) -> Dict:
+        """Generate user test data"""
+        return {
+            "username": self.faker.user_name(),
+            "email": self.faker.email(),
+            "first_name": self.faker.first_name(),
+            "last_name": self.faker.last_name(),
+            "phone": self.faker.phone_number(),
+            "address": {
+                "street": self.faker.street_address(),
+                "city": self.faker.city(),
+                "state": self.faker.state(),
+                "zip": self.faker.zipcode()
+            }
+        }
 
-**Test case format**: TC-[CATEGORY]-[NUMBER] (e.g., TC-CLI-001, TC-WEB-042, TC-SEC-007)
+    def generate_users(self, count: int) -> List[Dict]:
+        """Generate multiple users"""
+        return [self.generate_user() for _ in range(count)]
 
-**Reference**: See `references/google_testing_standards.md` for complete AAA pattern guidelines and coverage thresholds.
+    def generate_order(self, user_id: str) -> Dict:
+        """Generate order test data"""
+        return {
+            "order_id": self.faker.uuid4(),
+            "user_id": user_id,
+            "items": [
+                {
+                    "product_id": self.faker.uuid4(),
+                    "quantity": random.randint(1, 5),
+                    "price": round(random.uniform(10, 500), 2)
+                }
+                for _ in range(random.randint(1, 5))
+            ],
+            "total": 0,  # Calculate based on items
+            "status": random.choice(["pending", "processing", "shipped", "delivered"])
+        }
 
-### 3. Test Execution & Tracking
+    def generate_invalid_data(self, field: str) -> Any:
+        """Generate invalid test data for boundary testing"""
+        invalid_patterns = {
+            "email": ["not-an-email", "missing@domain", "@nodomain.com"],
+            "phone": ["123", "abc-def-ghij", "+++"],
+            "zip": ["ABC", "123", "12345678"],
+            "date": ["99/99/9999", "2023-13-45", "invalid"]
+        }
 
-**Ground Truth Principle** (critical):
-- **Test case documents** (e.g., `02-CLI-TEST-CASES.md`) = **authoritative source** for test steps
-- **Tracking CSV** = execution status only (do NOT trust CSV for test specifications)
-- See `references/ground_truth_principle.md` for preventing doc/CSV sync issues
-
-**Manual execution**:
-1. Read test case from category document (e.g., `02-CLI-TEST-CASES.md`) ← **always start here**
-2. Execute test steps exactly as documented
-3. Update `TEST-EXECUTION-TRACKING.csv` **immediately** after EACH test (never batch)
-4. File bug in `BUG-TRACKING-TEMPLATE.csv` if test fails
-
-**Autonomous execution** (recommended):
-1. Copy master prompt from `references/master_qa_prompt.md`
-2. Paste to LLM session
-3. LLM auto-executes, auto-tracks, auto-files bugs, auto-generates reports
-
-**Innovation**: 100x faster vs manual + zero human error in tracking + auto-resume capability.
-
-### 4. Bug Reporting
-
-File bugs with proper severity classification:
-
-**Required fields**:
-- Bug ID: Sequential (BUG-001, BUG-002, ...)
-- Severity: P0 (24h fix) → P4 (optional)
-- Steps to Reproduce: Numbered, specific
-- Environment: OS, versions, configuration
-
-**Severity classification**:
-- **P0 (Blocker)**: Security vulnerability, core functionality broken, data loss
-- **P1 (Critical)**: Major feature broken with workaround
-- **P2 (High)**: Minor feature issue, edge case
-- **P3 (Medium)**: Cosmetic issue
-- **P4 (Low)**: Documentation typo
-
-**Reference**: See `BUG-TRACKING-TEMPLATE.csv` for complete template with examples.
-
-### 5. Quality Metrics Calculation
-
-Calculate comprehensive QA metrics and quality gates status:
-
-```bash
-python scripts/calculate_metrics.py <path/to/TEST-EXECUTION-TRACKING.csv>
+        return random.choice(invalid_patterns.get(field, ["invalid"]))
 ```
 
-**Metrics dashboard includes**:
-- Test execution progress (X/Y tests, Z% complete)
-- Pass rate (passed/executed %)
-- Bug analysis (unique bugs, P0/P1/P2 breakdown)
-- Quality gates status (✅/❌ for each gate)
+## Defect Tracking
 
-**Quality gates** (all must pass for release):
-| Gate | Target | Blocker |
-|------|--------|---------|
-| Test Execution | 100% | Yes |
-| Pass Rate | ≥80% | Yes |
-| P0 Bugs | 0 | Yes |
-| P1 Bugs | ≤5 | Yes |
-| Code Coverage | ≥80% | Yes |
-| Security | 90% OWASP | Yes |
+```python
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
 
-### 6. Progress Reporting
+class Severity(Enum):
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
-Generate QA reports for stakeholders:
+class Priority(Enum):
+    P0 = "p0"
+    P1 = "p1"
+    P2 = "p2"
+    P3 = "p3"
 
-**Daily summary** (end-of-day):
-- Tests executed, pass rate, bugs filed
-- Blockers (or None)
-- Tomorrow's plan
+@dataclass
+class Defect:
+    defect_id: str
+    title: str
+    description: str
+    severity: Severity
+    priority: Priority
+    status: str
+    reported_by: str
+    assigned_to: str
+    created_at: datetime
+    environment: str
+    steps_to_reproduce: List[str]
+    expected_result: str
+    actual_result: str
 
-**Weekly report** (every Friday):
-- Use template: `WEEKLY-PROGRESS-REPORT.md` (created by init script)
-- Compare against baseline: `BASELINE-METRICS.md`
-- Assess quality gates and trends
+class DefectTracker:
+    """Track and manage defects"""
 
-**Reference**: See `references/llm_prompts_library.md` for 30+ ready-to-use reporting prompts.
+    def __init__(self):
+        self.defects: Dict[str, Defect] = {}
 
-### 7. Security Testing (OWASP)
+    def create_defect(self, defect: Defect) -> str:
+        """Create new defect"""
+        self.defects[defect.defect_id] = defect
+        return defect.defect_id
 
-Implement OWASP Top 10 security testing:
+    def update_status(self, defect_id: str, new_status: str):
+        """Update defect status"""
+        if defect_id in self.defects:
+            self.defects[defect_id].status = new_status
 
-**Coverage targets**:
-1. **A01: Broken Access Control** - RLS bypass, privilege escalation
-2. **A02: Cryptographic Failures** - Token encryption, password hashing
-3. **A03: Injection** - SQL injection, XSS, command injection
-4. **A04: Insecure Design** - Rate limiting, anomaly detection
-5. **A05: Security Misconfiguration** - Verbose errors, default credentials
-6. **A07: Authentication Failures** - Session hijacking, CSRF
-7. **Others**: Data integrity, logging, SSRF
+    def get_critical_defects(self) -> List[Defect]:
+        """Get all critical defects"""
+        return [d for d in self.defects.values()
+                if d.severity == Severity.CRITICAL and d.status != "closed"]
 
-**Target**: 90% OWASP coverage (9/10 threats mitigated).
+    def generate_metrics(self) -> Dict:
+        """Generate defect metrics"""
+        total = len(self.defects)
+        by_severity = {}
+        by_status = {}
 
-Each security test follows AAA pattern with specific attack vectors documented.
+        for defect in self.defects.values():
+            severity = defect.severity.value
+            status = defect.status
 
-## Day 1 Onboarding
+            by_severity[severity] = by_severity.get(severity, 0) + 1
+            by_status[status] = by_status.get(status, 0) + 1
 
-For new QA engineers joining a project, complete 5-hour onboarding guide:
-
-**Read**: `references/day1_onboarding.md`
-
-**Timeline**:
-- Hour 1: Environment setup (database, dev server, dependencies)
-- Hour 2: Documentation review (test strategy, quality gates)
-- Hour 3: Test data setup (users, CLI, DevTools)
-- Hour 4: Execute first test case
-- Hour 5: Team onboarding & Week 1 planning
-
-**Checkpoint**: By end of Day 1, environment running, first test executed, ready for Week 1.
-
-## Autonomous Execution (⭐ Recommended)
-
-Enable LLM-driven autonomous QA testing with single master prompt:
-
-**Read**: `references/master_qa_prompt.md`
-
-**Features**:
-- Auto-resume from last completed test (reads tracking CSV)
-- Auto-execute test cases (Week 1-5 progression)
-- Auto-track results (updates CSV after each test)
-- Auto-file bugs (creates bug reports for failures)
-- Auto-generate reports (daily summaries, weekly reports)
-- Auto-escalate P0 bugs (stops testing, notifies stakeholders)
-
-**Benefits**:
-- 100x faster execution vs manual
-- Zero human error in tracking
-- Consistent bug documentation
-- Immediate progress visibility
-
-**Usage**: Copy master prompt, paste to LLM, let it run autonomously for 5 weeks.
-
-## Adapting for Your Project
-
-### Small Project (50 tests)
-- Timeline: 2 weeks
-- Categories: 2-3 (e.g., Frontend, Backend)
-- Daily: 5-7 tests
-- Reports: Daily summary only
-
-### Medium Project (200 tests)
-- Timeline: 4 weeks
-- Categories: 4-5 (CLI, Web, API, DB, Security)
-- Daily: 10-12 tests
-- Reports: Daily + weekly
-
-### Large Project (500+ tests)
-- Timeline: 8-10 weeks
-- Categories: 6-8 (multiple components)
-- Daily: 10-15 tests
-- Reports: Daily + weekly + bi-weekly stakeholder
-
-## Reference Documents
-
-Access detailed guidelines from bundled references:
-
-- **`references/day1_onboarding.md`** - 5-hour onboarding guide for new QA engineers
-- **`references/master_qa_prompt.md`** - Single command for autonomous LLM execution (100x speedup)
-- **`references/llm_prompts_library.md`** - 30+ ready-to-use prompts for specific QA tasks
-- **`references/google_testing_standards.md`** - AAA pattern, coverage thresholds, fail-fast validation
-- **`references/ground_truth_principle.md`** - Preventing doc/CSV sync issues (critical for test suite integrity)
-
-## Assets & Templates
-
-Test case templates and bug report formats:
-
-- **`assets/templates/TEST-CASE-TEMPLATE.md`** - Complete template with CLI and security examples
-
-## Scripts
-
-Automation scripts for QA infrastructure:
-
-- **`scripts/init_qa_project.py`** - Initialize QA infrastructure (one command setup)
-- **`scripts/calculate_metrics.py`** - Generate quality metrics dashboard
-
-## Common Patterns
-
-### Pattern 1: Starting Fresh QA
-```
-1. python scripts/init_qa_project.py my-app ./
-2. Fill in BASELINE-METRICS.md (document current state)
-3. Write test cases using assets/templates/TEST-CASE-TEMPLATE.md
-4. Copy master prompt from references/master_qa_prompt.md
-5. Paste to LLM → autonomous execution begins
+        return {
+            "total_defects": total,
+            "by_severity": by_severity,
+            "by_status": by_status,
+            "critical_open": len(self.get_critical_defects())
+        }
 ```
 
-### Pattern 2: LLM-Driven Testing (Autonomous)
-```
-1. Read references/master_qa_prompt.md
-2. Copy the single master prompt (one paragraph)
-3. Paste to LLM conversation
-4. LLM executes all 342 test cases over 5 weeks
-5. LLM updates tracking CSVs automatically
-6. LLM generates weekly reports automatically
-```
+## Best Practices
 
-### Pattern 3: Adding Security Testing
-```
-1. Read references/google_testing_standards.md (OWASP section)
-2. Write TC-SEC-XXX test cases for each OWASP threat
-3. Target 90% coverage (9/10 threats)
-4. Document mitigations in test cases
-```
+### Test Strategy
+- Define clear test objectives
+- Use risk-based testing
+- Maintain test coverage metrics
+- Automate regression tests
+- Perform exploratory testing
+- Test early and often
+- Review and update test cases
 
-### Pattern 4: Third-Party QA Handoff
-```
-1. Ensure all templates populated
-2. Verify BASELINE-METRICS.md complete
-3. Package tests/docs/ folder
-4. Include references/master_qa_prompt.md for autonomous execution
-5. QA team can start immediately (Day 1 onboarding → 5 weeks testing)
-```
+### Automation
+- Follow Page Object Model
+- Make tests independent
+- Use explicit waits
+- Implement proper error handling
+- Maintain test data separately
+- Use CI/CD integration
+- Monitor test stability
 
-## Success Criteria
+### Defect Management
+- Write clear bug reports
+- Include reproduction steps
+- Attach screenshots/logs
+- Prioritize appropriately
+- Track to closure
+- Analyze root causes
+- Share lessons learned
 
-This skill is effective when:
-- ✅ Test cases are reproducible by any engineer
-- ✅ Quality gates objectively measured
-- ✅ Bugs fully documented with repro steps
-- ✅ Progress visible in real-time (CSV tracking)
-- ✅ Autonomous execution enabled (LLM can execute full plan)
-- ✅ Third-party QA teams can start testing immediately
+## Anti-Patterns
+
+❌ Testing only happy paths
+❌ No test automation strategy
+❌ Vague bug reports
+❌ Testing without requirements
+❌ Ignoring flaky tests
+❌ No regression testing
+❌ Testing in production only
+
+## Resources
+
+- Selenium: https://www.selenium.dev/
+- Pytest: https://docs.pytest.org/
+- Cypress: https://www.cypress.io/
+- ISTQB: https://www.istqb.org/
+- Test Automation University: https://testautomationu.applitools.com/

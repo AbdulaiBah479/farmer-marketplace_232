@@ -1,13 +1,15 @@
 ---
 name: qa-resilience
-description: "Design and test distributed-system resilience. Use when adding retries, circuit breakers, chaos experiments, or SLO-based reliability gates."
+description: "Use when designing or testing resilience for distributed systems: timeouts/deadlines, retries (backoff + jitter, retry budgets), circuit breakers, bulkheads, backpressure/load shedding, graceful degradation, health checks, chaos experiments/game days/DR drills, and SLO-based reliability gates."
 ---
 
 # QA Resilience (Jan 2026) - Failure Mode Testing & Production Hardening
 
 This skill provides execution-ready patterns for building resilient, fault-tolerant systems that handle failures gracefully, and for validating those behaviors with tests.
 
-Core sources are curated in `data/sources.json`.
+Core sources: Principles of Chaos Engineering (https://principlesofchaos.org/), AWS Well-Architected Reliability Pillar (https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html), and Kubernetes probes (https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/). For additional curated sources, see `data/sources.json`.
+
+---
 
 ## Common Requests
 
@@ -33,6 +35,8 @@ Use this skill when a user requests:
 - Pure batch jobs with manual retry — scheduled job frameworks handle this
 - Frontend-only validation — see [software-frontend](../software-frontend/SKILL.md) instead
 
+---
+
 ## Quick Start (Default Workflow)
 
 If key context is missing, ask for: critical user journeys, dependency inventory (including third parties), SLO/SLI targets, current timeout/retry/circuit-breaker settings, idempotency/dedup strategy, and where fault injection is allowed (local/staging/prod).
@@ -42,6 +46,8 @@ If key context is missing, ask for: critical user journeys, dependency inventory
 3. Choose a test harness: deterministic fault injection first (mocks/fakes, fault proxy, service mesh faults), then staged chaos experiments, then game day/DR drills if applicable.
 4. Define pass/fail signals: error budget burn, p95/p99 budgets, fallback rates, queue backlog, circuit breaker state changes, and recovery time.
 5. Produce artifacts (use templates): [Resilience Test Plan Template](assets/testing/template-resilience-test-plan.md), [Fault Injection Playbook](assets/testing/fault-injection-playbook.md), [Resilience Runbook Template](assets/runbooks/resilience-runbook-template.md).
+
+---
 
 ## Core QA (Default)
 
@@ -100,6 +106,8 @@ Avoid:
 | Health Checks | K8s liveness/readiness/startup probes | Orchestration and load balancing | Liveness shallow; readiness checks critical deps (bounded); startup for slow init; add graceful shutdown |
 | Chaos / Fault Injection | Fault proxies, service-mesh faults, managed chaos tools | Validate behavior under real failure modes | Start in non-prod; control blast radius; timebox; predefine stop conditions; record experiment parameters |
 
+---
+
 ## Decision Tree: Resilience Pattern Selection
 
 ```text
@@ -140,6 +148,8 @@ Failure scenario: [System Dependency Type]
         └─ Continuous chaos? → Low-blast-radius fault injection with strong guardrails
 ```
 
+---
+
 ## Navigation: Core Resilience Patterns
 
 - **[Circuit Breaker Patterns](references/circuit-breaker-patterns.md)** - Prevent cascading failures
@@ -171,20 +181,7 @@ Failure scenario: [System Dependency Type]
   - Kubernetes probe configuration
   - Shallow vs deep health checks
 
-- **[Load Shedding & Backpressure](references/load-shedding-backpressure.md)** - Overload protection patterns
-  - Admission control and queue-based shedding
-  - Backpressure propagation across services
-  - Priority-based request handling
-
-- **[Cascading Failure Prevention](references/cascading-failure-prevention.md)** - Multi-layer containment
-  - Failure propagation analysis
-  - Dependency isolation strategies
-  - Blast radius limitation techniques
-
-- **[Disaster Recovery Testing](references/disaster-recovery-testing.md)** - DR drill execution
-  - RTO/RPO verification
-  - Failover and failback procedures
-  - Game day planning and execution
+---
 
 ## Navigation: Operational Resources
 
@@ -198,6 +195,8 @@ Failure scenario: [System Dependency Type]
   - Planning chaos experiments
   - Common failure injection scenarios
   - Execution steps and debrief checklist
+
+---
 
 ## Navigation: Templates
 
@@ -216,6 +215,8 @@ Failure scenario: [System Dependency Type]
   - Fault matrix and expected behavior
   - Observability signals and pass/fail criteria
 
+---
+
 ## Quick Decision Matrix
 
 | Scenario | Recommendation |
@@ -230,6 +231,8 @@ Failure scenario: [System Dependency Type]
 | Transient failures | Retry with exponential backoff + jitter |
 | Cascading failures | Circuit breaker + bulkhead |
 
+---
+
 ## Anti-Patterns to Avoid
 
 - **No timeouts** - Infinite waits exhaust resources
@@ -242,6 +245,8 @@ Failure scenario: [System Dependency Type]
 - **Failover never tested** - DR plan fails during a real incident
 - **Testing only happy path** - Production reveals failures
 
+---
+
 ## Optional: AI / Automation
 
 Do:
@@ -251,6 +256,8 @@ Do:
 Avoid:
 - "Scenario generation" without a risk map (creates noise and wasted load).
 - Letting AI relax timeouts/retries or remove guardrails.
+
+---
 
 ## Related Skills
 
@@ -263,6 +270,8 @@ Avoid:
 - [../qa-debugging/SKILL.md](../qa-debugging/SKILL.md) — Production debugging and incident investigation
 - [../data-sql-optimization/SKILL.md](../data-sql-optimization/SKILL.md) — Database resilience, connection pooling, and query timeouts
 - [../dev-api-design/SKILL.md](../dev-api-design/SKILL.md) — API design patterns including error handling and retry semantics
+
+---
 
 ## Usage Notes
 
@@ -287,10 +296,6 @@ Avoid:
 - Set blast radius limits and auto-revert
 - Document learnings and action items
 
-Success criteria: systems gracefully handle failures, recover automatically, maintain partial functionality during outages, and fail fast to prevent cascading failures. Resilience is tested proactively through fault injection and game days (with guardrails).
+---
 
-## Fact-Checking
-
-- Use web search/web fetch to verify current external facts, versions, pricing, deadlines, regulations, or platform behavior before final answers.
-- Prefer primary sources; report source links and dates for volatile information.
-- If web access is unavailable, state the limitation and mark guidance as unverified.
+> **Success Criteria:** Systems gracefully handle failures, recover automatically, maintain partial functionality during outages, and fail fast to prevent cascading failures. Resilience is tested proactively through chaos engineering.

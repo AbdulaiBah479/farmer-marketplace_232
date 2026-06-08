@@ -7,21 +7,6 @@ description: Comprehensive market environment analysis and reporting tool. Analy
 
 Comprehensive analysis tool for understanding market conditions and creating professional market reports anytime.
 
-## When to Use
-
-- When you need a comprehensive overview of global market conditions
-- Before making trading or investment decisions
-- For daily/weekly market briefings
-- When assessing risk-on/risk-off sentiment
-- For understanding inter-market correlations and sector rotation
-- When preparing market reports for clients or personal records
-
-## Prerequisites
-
-- **WebSearch access**: Required for fetching real-time market data
-- **No API keys required**: This skill uses web search for data collection
-- **Optional**: Economic calendar data for event-driven analysis
-
 ## Core Workflow
 
 ### 1. Initial Data Collection
@@ -72,14 +57,14 @@ python scripts/market_utils.py
 
 ## Reference Documentation
 
-### Key Indicators Interpretation
-Load `references/indicators.md` when you need:
+### Key Indicators Interpretation (references/indicators.md)
+Reference when you need:
 - Important levels for each index
 - Technical analysis key points
 - Sector-specific focus areas
 
-### Analysis Patterns
-Load `references/analysis_patterns.md` when analyzing:
+### Analysis Patterns (references/analysis_patterns.md)
+Reference when analyzing:
 - Risk-on/Risk-off criteria
 - Economic indicator interpretation
 - Inter-market correlations
@@ -152,9 +137,3 @@ Adjust based on user's investment style:
 - **Long-term Investors**: Fundamentals, macro economics focus
 - **Forex Traders**: Currency correlations, interest rate differentials
 - **Options Traders**: Volatility analysis, Greeks monitoring
-
-## Resources
-
-- `references/indicators.md` - Key market indicators and interpretation guides
-- `references/analysis_patterns.md` - Risk-on/risk-off criteria and inter-market correlations
-- `scripts/market_utils.py` - Utility functions for report formatting and market status
